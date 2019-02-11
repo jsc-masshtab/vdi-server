@@ -1,0 +1,20 @@
+[[source]]
+name = "pypi"
+url = "https://pypi.org/simple"
+verify_ssl = true
+
+[dev-packages]
+ipython = "*"
+pytest = "*"
+ipdb = "*"
+
+[packages]
+starlette = "*"
+uvicorn = "*"
+tornado = "*"
+pytest-asyncio = "*"
+vdi = {editable = true,path = "."}
+g-tasks = {editable = true,path = "./gtasks"}
+
+[requires]
+python_version = "3.7"
