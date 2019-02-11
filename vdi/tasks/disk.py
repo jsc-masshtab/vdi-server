@@ -22,17 +22,17 @@ class DefaultDatapool(Task):
         response = json.loads(response.body)
         for rec in response['results']:
             if 'default datapool' in rec['verbose_name'].lower():
-                return rec['id']
+                return rec
 
 
 class Image(Task):
 
     async def run(self):
         token = await Token()
-        datapool_id = await DefaultDatapool()
+        datapool = await DefaultDatapool()
         params = g.request.query_params
         vm_type = params['vm_type']
-        url = f'{CONTROLLER_URL}/api/library/?datapool_id={datapool_id}'
+        url = f"{CONTROLLER_URL}/api/library/?datapool_id={datapool['id']}"
         http_client = AsyncHTTPClient()
         headers = {
             'Authorization': f'jwt {token}'
