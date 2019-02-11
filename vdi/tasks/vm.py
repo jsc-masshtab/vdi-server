@@ -17,7 +17,7 @@ from . import disk
 
 class GetNode(Task):
 
-
+    1
 
 
 class CreateDomain(Task):
