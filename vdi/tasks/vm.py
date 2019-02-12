@@ -78,7 +78,6 @@ class CheckDomain(Task):
             if time.time() - t < self.delta_t:
                 await asyncio.sleep(self.delta_t)
             t = time.time()
-            return r
 
 
 class AttachVdisk(Task):
