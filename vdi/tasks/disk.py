@@ -59,4 +59,8 @@ class ImportDisk(Task):
         }
         body = json.dumps({'verbose_name': vm_name})
         response = await http_client.fetch(url, method='POST', headers=headers, body=body)
-        return True
+        response = json.loads(response.body)
+        entities = response['_task']['entities']
+        for k, v in entities.items():
+            if v == 'vdisk':
+                return k

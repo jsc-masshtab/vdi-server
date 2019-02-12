@@ -9,7 +9,8 @@ app = Starlette(**settings)
 
 from g_tasks import g
 
-from . import tasks
+from .tasks import disk, vm
+from .pool import pool
 
 # import typing
 #
@@ -18,7 +19,7 @@ from . import tasks
 #     name: str
 
 @app.middleware("http")
-async def add_custom_header(request, call_next):
+async def init_g_context(request, call_next):
     g.init()
     g.set_attr('request', request)
     response = await call_next(request)
@@ -40,9 +41,17 @@ async def debug(request, call_next):
 
 @app.route('/vm')
 async def homepage(request):
-    await tasks.ImportDisk()
+    domain = await vm.SetupDomain()
     r = {
-        'name': request.query_params['vm_name']
+        'name': request.query_params['vm_name'],
+        'id': domain['id'],
     }
     return JSONResponse(r)
+
+
+@app.on_event('startup')
+def startup():
+    # only schedule
+    # TODO
+    pool.initial_tasks()
 
