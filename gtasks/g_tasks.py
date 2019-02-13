@@ -5,7 +5,7 @@ import contextvars
 
 
 class Tasks:
-    _tasks = contextvars.ContextVar('tasks', default={})
+    _tasks = contextvars.ContextVar('tasks')
 
     def __contains__(self, item):
         return item in self._tasks.get()
@@ -21,19 +21,18 @@ class Tasks:
 
 
 class Context:
-    _values = contextvars.ContextVar('values', default={})
-
+    values = contextvars.ContextVar('values')
     tasks = Tasks()
 
     def __getattr__(self, item):
-        return self._values.get()[item]
+        return self.values.get()[item]
 
     def set_attr(self, key, value):
-        values = self._values.get()
+        values = self.values.get()
         values[key] = value
 
     def init(self):
-        self._values.set({})
+        self.values.set({})
         self.tasks._tasks.set({})
 
 
@@ -48,7 +47,7 @@ class Task:
     _source = 'class'
 
     def __await__(self):
-        return self.task.__await__()
+        return self.ensure_task().__await__()
 
     @classmethod
     def from_co(cls, f):
@@ -72,8 +71,7 @@ class Task:
         assert self._source == 'co'
         return self._co
 
-    @property
-    def task(self):
+    def ensure_task(self):
         tasks = g.tasks._tasks.get()
         if self.id in tasks:
             return tasks[self.id]

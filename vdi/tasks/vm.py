@@ -1,5 +1,5 @@
 import asyncio
-from g_tasks import g, Task
+from g_tasks import Task
 
 import urllib
 import time
@@ -7,7 +7,7 @@ import time
 import json
 from tornado.httpclient import AsyncHTTPClient
 
-from .base import CONTROLLER_URL, Token
+from .base import CONTROLLER_URL, Token, get_vm_name
 from . import disk
 from .client import HttpClient
 
@@ -36,7 +36,7 @@ class CreateDomain(Task):
             'node': node_id,
             'os_type': "Other",
             'sound': {'model': "ich6", 'codec': "micro"},
-            'verbose_name': g.request.query_params['vm_name'],
+            'verbose_name': get_vm_name(),
             'video': {'type': "cirrus", 'vram': "16384", 'heads': "1"},
         }
 
@@ -66,7 +66,7 @@ class CheckDomain(Task):
         }
 
     async def run(self):
-        vm_name = g.request.query_params['vm_name']
+        vm_name = get_vm_name()
         await CreateDomain()
         t = start = time.time()
         while t - start < self.timeout:

@@ -12,11 +12,6 @@ from g_tasks import g
 from .tasks import disk, vm
 from .pool import pool
 
-# import typing
-#
-# class VmInfo(typing.NamedTuple):
-#     type: str
-#     name: str
 
 @app.middleware("http")
 async def init_g_context(request, call_next):
@@ -40,18 +35,22 @@ async def debug(request, call_next):
 
 
 @app.route('/vm')
-async def homepage(request):
-    domain = await vm.SetupDomain()
-    r = {
-        'name': request.query_params['vm_name'],
-        'id': domain['id'],
+async def get_vm(request):
+    vm = await pool.queue.get()
+    pool.on_vm_taken()
+    return JSONResponse({
+        vm['id']: vm
+    })
+
+@app.route('/available')
+async def pool_state(request):
+    vms = {
+        vm['id']: vm for vm in pool.queue._queue
     }
-    return JSONResponse(r)
+    return JSONResponse(vms)
 
 
 @app.on_event('startup')
-def startup():
-    # only schedule
-    # TODO
-    pool.initial_tasks()
+async def startup():
+    await pool.initial_tasks()
 

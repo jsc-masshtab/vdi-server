@@ -1,64 +1,49 @@
 import json
 import attr
-import uuid
 
 import asyncio
-from tornado.httpclient import AsyncHTTPClient
+from .asyncio_utils import callback
 
-from . import settings
-
-from . import tasks
-
-'''
-TODO
-'''
+from g_tasks import g
 
 @attr.s(auto_attribs=True)
-class Pool(dict):
-    pending: set = set()
+class Pool:
     queue: asyncio.Queue = asyncio.Queue()
 
-    @classmethod
-    def get_pool(cls, vm_config):
-        return cls.instance  # a stub
-
-    def get_info(self):
-        return {
-            'pending': list(self.pending),
-            'available': list(self.queue._queue),
-        }
-
-    @property
-    def min_size(self):
-        return settings.pool_size
-
-    max_size = min_size
-
-    def has_reserve(self):
-        '''
-        Pool has extra vms for some reason.
-        Prevents the creation of a new vm after taking one from queue.
-        '''
-        return False
-
-    def initial_tasks(self):
-        for i in range(self.min_size):
-            yield self.create_vm()
-
-    async def create_vm(self):
-        id = str(uuid.uuid1()).split('-')[0]
-        name = f'vdi_{id}'
-        http_client = AsyncHTTPClient()
-        # FIXME use a func. call
-        url = f'http://localhost:8003/create_disk?vm_name={name}&vm_type=fedora'
-        self.pending.add(id)
-        await http_client.fetch(url, **tasks.TIMEOUT)
-        await self.queue.put(name)
+    @callback
+    async def on_vm_created(self, fut):
+        if fut.exception():
+            # FIXME
+            print(fut.exception())
+            return
+        domain = fut.result()
+        await self.queue.put(domain)
         self.queue.task_done()
-        self.pending.discard(id)
 
+    def on_vm_taken(self):
+        self.add_domain()
 
-# TODO cli tio remove disks
+    def add_domain(self):
+        from vdi.tasks import vm
+        g.init()
+        task = vm.SetupDomain().ensure_task()
+        task.add_done_callback(self.on_vm_created)
+
+    async def initial_tasks(self):
+        conf = self.get_config()
+        initial_size = conf['initial_size']
+
+        for i in range(initial_size):
+            self.add_domain()
+
+    def get_config(self):
+        conf = {
+            'vm_type': 'disco',
+            'vm_name_prefix': 'ubuntu',
+            'initial_size': 2,
+            'reserve_size': 2,
+        }
+        return conf
 
 
 pool = Pool()

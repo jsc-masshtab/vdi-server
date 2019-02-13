@@ -1,7 +1,9 @@
 
-from g_tasks import g, Task
+from g_tasks import Task
 
-from .base import CONTROLLER_URL, Token
+from .base import CONTROLLER_URL, Token, get_vm_name
+
+from ..pool import pool
 
 import json
 from tornado.httpclient import AsyncHTTPClient
@@ -30,8 +32,8 @@ class Image(Task):
     async def run(self):
         token = await Token()
         datapool = await DefaultDatapool()
-        params = g.request.query_params
-        vm_type = params['vm_type']
+        pool_config = pool.get_config()
+        vm_type = pool_config['vm_type']
         url = f"{CONTROLLER_URL}/api/library/?datapool_id={datapool['id']}"
         http_client = AsyncHTTPClient()
         headers = {
@@ -49,8 +51,7 @@ class ImportDisk(Task):
     async def run(self):
         image_id = await Image()
         token = await Token()
-        params = g.request.query_params
-        vm_name = params['vm_name']
+        vm_name = get_vm_name()
         http_client = AsyncHTTPClient()
         url = f'{CONTROLLER_URL}/api/library/{image_id}/import/?async=1'
         headers = {
