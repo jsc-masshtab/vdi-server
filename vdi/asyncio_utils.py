@@ -47,3 +47,10 @@ def callback(async_fun):
         asyncio.create_task(async_fun(*args))
 
     return wrapper
+
+async def sleep(n):
+    n = int(n)
+    for i in range(n):
+        await asyncio.sleep(1)
+        print('.', end='')
+    print()

@@ -11,6 +11,8 @@ from .base import CONTROLLER_URL, Token, get_vm_name
 from . import disk
 from .client import HttpClient
 
+from ..asyncio_utils import sleep
+
 
 class Node(Task):
 
@@ -95,23 +97,28 @@ class AttachVdisk(Task):
             "storage": datapool['id'],
             "driver_cache": "none",
             "target_bus": "virtio",
-            "vdisk": vdisk
+            "vdisk": vdisk,
         }
-        return json.dumps(params)
+        # return json.dumps(params)
+
+        return urllib.parse.urlencode(params)
 
     async def run(self):
         token = await Token()
         headers = {
             'Authorization': f'jwt {token}'
         }
-        response = HttpClient().fetch_using(self)
+        response = await HttpClient().fetch_using(self, headers=headers)
+        print('attach vdisk', response)
         return response
 
 
 class SetupDomain(Task):
 
     async def run(self):
+        await disk.ImportDisk()
+        # await sleep(4)
         domain = await CreateDomain()
-        await CheckDomain()
+        # await sleep(4)
         await AttachVdisk()
         return domain

@@ -1,39 +1,62 @@
 
-
+import threading
 import asyncio
 import contextvars
 
-
-class Tasks:
-    _tasks = contextvars.ContextVar('tasks')
-
-    def __contains__(self, item):
-        return item in self._tasks.get()
-
-    def __getitem__(self, key):
-        tasks = self._tasks.get()
-        if key in tasks:
-            task = tasks[key]
-            return task
-        loop = asyncio.events.get_event_loop()
-        tasks[key] = loop.create_future()
-        return tasks[key]
-
+local_ctx = threading.local()
+local_ctx.use_me = False
+local_ctx.g = {}
 
 class Context:
-    values = contextvars.ContextVar('values')
-    tasks = Tasks()
+    _values = contextvars.ContextVar('values')
+    _tasks = contextvars.ContextVar('tasks')
+
+    @property
+    def values(self):
+        var = self._values
+        if local_ctx.use_me:
+            return local_ctx.g[var]
+        return var.get()
+
+    @values.setter
+    def values(self, value):
+        var = self._values
+        if local_ctx.use_me:
+            local_ctx.g[var] = value
+        var.set(value)
+
+    @property
+    def tasks(self):
+        var = self._tasks
+        if local_ctx.use_me:
+            return local_ctx.g[var]
+        return var.get()
+
+    @tasks.setter
+    def tasks(self, value):
+        var = self._tasks
+        if local_ctx.use_me:
+            local_ctx.g[var] = value
+        var.set(value)
+
+    def use_threadlocal(self):
+        local_ctx.use_me = True
+        try:
+            g.tasks
+        except KeyError:
+            g.init()
 
     def __getattr__(self, item):
-        return self.values.get()[item]
+        return self.values[item]
 
     def set_attr(self, key, value):
-        values = self.values.get()
-        values[key] = value
+        self.values[key] = value
 
     def init(self):
-        self.values.set({})
-        self.tasks._tasks.set({})
+        self.values = {}
+        self.tasks = {}
+
+
 
 
 g = Context()
@@ -72,7 +95,7 @@ class Task:
         return self._co
 
     def ensure_task(self):
-        tasks = g.tasks._tasks.get()
+        tasks = g.tasks
         if self.id in tasks:
             return tasks[self.id]
         task = asyncio.create_task(self.co())
@@ -80,5 +103,10 @@ class Task:
         tasks[self.id] = task
         return task
 
-    def __call__(self):
-        return self
+    async def fresh_context(self):
+        g.init()
+        return (await self)
+
+    def __init__(self, *, context=None):
+        self._context = context
+

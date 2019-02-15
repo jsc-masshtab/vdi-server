@@ -25,7 +25,7 @@ class Token(Task):
 
 
 def get_vm_name():
-    if 'vm_name' in g.values.get():
+    if 'vm_name' in g.values:
         return g.vm_name
     pool_config = pool.get_config()
     uid = str(uuid.uuid1()).split('-')[0]

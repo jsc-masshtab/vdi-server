@@ -1,1 +1,0 @@
-# TODO cli to remove disks & vms & servers

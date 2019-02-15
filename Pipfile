@@ -8,6 +8,7 @@ ipython = "*"
 pytest = "*"
 ipdb = "*"
 jupyterlab = "*"
+jupyter = "*"
 
 [packages]
 starlette = "*"
@@ -16,6 +17,7 @@ tornado = "*"
 pytest-asyncio = "*"
 vdi = {editable = true,path = "."}
 g-tasks = {editable = true,path = "./gtasks"}
+docopt = "*"
 
 [requires]
 python_version = "3.7"
