@@ -2,6 +2,7 @@
 import threading
 import asyncio
 import contextvars
+from functools import wraps
 
 local_ctx = threading.local()
 local_ctx.use_me = False
@@ -63,7 +64,18 @@ g = Context()
 
 # a decorator
 def task(co):
-    return Task.from_co(co)
+    @wraps(co)
+    def wrapper(*args): # co should not have parameters
+        # args can be only [self]
+        if not args:
+            return Task.from_co(co)
+
+        async def new_co():
+            return (await co(*args))
+
+        return Task.from_co(new_co)
+
+    return wrapper
 
 class Task:
 
@@ -103,10 +115,7 @@ class Task:
         tasks[self.id] = task
         return task
 
-    async def fresh_context(self):
-        g.init()
-        return (await self)
-
-    def __init__(self, *, context=None):
-        self._context = context
-
+    # async def fresh_context(self):
+    #     g.init()
+    #     return (await self)
+    #

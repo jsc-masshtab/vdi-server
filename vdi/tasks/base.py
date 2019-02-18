@@ -7,14 +7,14 @@ from tornado.httpclient import AsyncHTTPClient
 
 from ..pool import pool
 
-CONTROLLER_URL = 'http://192.168.20.120'
+CONTROLLER_URL = '192.168.20.120'
 
 class Token(Task):
     creds = {
         'username': 'admin',
         'password': 'veil',
     }
-    url = f'{CONTROLLER_URL}/auth/'
+    url = f'http://{CONTROLLER_URL}/auth/'
 
     async def run(self):
         http_client = AsyncHTTPClient()

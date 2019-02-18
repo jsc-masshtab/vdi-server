@@ -10,6 +10,7 @@ from tornado.httpclient import AsyncHTTPClient
 from .base import CONTROLLER_URL, Token, get_vm_name
 from . import disk
 from .client import HttpClient
+from .ws import WsConnection
 
 from ..asyncio_utils import sleep
 
@@ -27,7 +28,7 @@ class Node(Task):
 
 class CreateDomain(Task):
 
-    url = f'{CONTROLLER_URL}/api/domains/'
+    url = f'http://{CONTROLLER_URL}/api/domains/'
 
     async def params(self):
         node_id = await Node()
@@ -42,75 +43,79 @@ class CreateDomain(Task):
             'video': {'type': "cirrus", 'vram': "16384", 'heads': "1"},
         }
 
+    async def check_done(self, task_id):
+        async for msg in self.ws:
+            try:
+                if msg['object']['status'] == 'Выполнена' and msg['id'] == task_id:
+                    return True
+            except KeyError:
+                pass
+
+    def is_done(self, msg):
+        obj = msg['object']
+        if not obj['status'] == 'Выполнена':
+            return
+        for id, e in obj['entities'].items():
+            if e == 'domain':
+                return id == self.domain['id']
+
     async def run(self):
         token = await Token()
         headers = {
             'Authorization': f'jwt {token}'
         }
+        ws = await WsConnection()
+        await ws.send('add /tasks/')
         http_client = AsyncHTTPClient()
         params = await self.params()
         body = urllib.parse.urlencode(params)
         response = await http_client.fetch(self.url, method='POST', headers=headers, body=body)
-        return json.loads(response.body)
-
-
-class CheckDomain(Task):
-
-    url = f"{CONTROLLER_URL}/api/domains"
-
-    delta_t = 0.1
-    timeout = 5
-
-    async def headers(self):
-        token = await Token()
-        return {
-            'Authorization': f'jwt {token}'
-        }
-
-    async def run(self):
-        vm_name = get_vm_name()
-        await CreateDomain()
-        t = start = time.time()
-        while t - start < self.timeout:
-            r = await HttpClient().fetch_using(self)
-            for domain in r['results']:
-                if domain['verbose_name'] == vm_name:
-                    return domain
-            print('.', end='')
-            if time.time() - t < self.delta_t:
-                await asyncio.sleep(self.delta_t)
-            t = time.time()
+        self.domain = json.loads(response.body)
+        await ws.match_message(self.is_done)
+        return self.domain
 
 
 class AttachVdisk(Task):
     method = 'POST'
 
     async def url(self):
-        domain = await CreateDomain()  # ['id']
-        return f"{CONTROLLER_URL}/api/domains/{domain['id']}/attach-vdisk/"
+        return f"http://{CONTROLLER_URL}/api/domains/{self.domain['id']}/attach-vdisk/"
 
     async def body(self):
-        vdisk = await disk.ImportDisk()
         datapool = await disk.DefaultDatapool()
         params = {
             "type_storage": "local",
             "storage": datapool['id'],
             "driver_cache": "none",
             "target_bus": "virtio",
-            "vdisk": vdisk,
+            "vdisk": self.vdisk,
         }
-        # return json.dumps(params)
-
         return urllib.parse.urlencode(params)
+
+    def is_done(self, msg):
+        obj = msg['object']
+        if obj['status'] != 'Выполнена':
+            return
+        for k, v in obj['entities']:
+            if v == 'vdisk' and self.vdisk != k:
+                return
+            if v == 'domain' and self.domain['id'] != k:
+                return
+        return True
 
     async def run(self):
         token = await Token()
+        self.domain = await CreateDomain() # ?? may be attaching to existing vm
+        self.vdisk = await disk.ImportDisk()
+        ws = await WsConnection()
+        await ws.send('add /tasks/')
         headers = {
             'Authorization': f'jwt {token}'
         }
-        response = await HttpClient().fetch_using(self, headers=headers)
-        print('attach vdisk', response)
-        return response
+        self.response = await HttpClient().fetch_using(self, headers=headers)
+        print('attach vdisk', self.response)
+        await ws.match_message(self.is_done)
+        return True
 
 
 class SetupDomain(Task):

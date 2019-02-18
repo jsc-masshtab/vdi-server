@@ -54,3 +54,16 @@ async def sleep(n):
         await asyncio.sleep(1)
         print('.', end='')
     print()
+
+
+class Awaitable:
+    """
+    Class-based coroutine.
+    The main coroutine is called run
+    """
+
+    def __await__(self):
+        return self.run().__await__()
+
+    async def run(self):
+        raise NotImplementedError
