@@ -7,6 +7,8 @@ import time
 import json
 from tornado.httpclient import AsyncHTTPClient
 
+from dataclasses import dataclass
+
 from .base import CONTROLLER_URL, Token, get_vm_name
 from . import disk
 from .client import HttpClient
@@ -75,8 +77,12 @@ class CreateDomain(Task):
         return self.domain
 
 
+@dataclass()
 class AttachVdisk(Task):
     method = 'POST'
+
+    domain: object
+    vdisk: str
 
     async def url(self):
         return f"http://{CONTROLLER_URL}/api/domains/{self.domain['id']}/attach-vdisk/"
@@ -96,7 +102,7 @@ class AttachVdisk(Task):
         obj = msg['object']
         if obj['status'] != 'Выполнена':
             return
-        for k, v in obj['entities']:
+        for k, v in obj['entities'].items():
             if v == 'vdisk' and self.vdisk != k:
                 return
             if v == 'domain' and self.domain['id'] != k:
@@ -104,16 +110,13 @@ class AttachVdisk(Task):
         return True
 
     async def run(self):
-        token = await Token()
-        self.domain = await CreateDomain() # ?? may be attaching to existing vm
-        self.vdisk = await disk.ImportDisk()
         ws = await WsConnection()
         await ws.send('add /tasks/')
+        token = await Token()
         headers = {
             'Authorization': f'jwt {token}'
         }
         self.response = await HttpClient().fetch_using(self, headers=headers)
-        print('attach vdisk', self.response)
         await ws.match_message(self.is_done)
         return True
 
@@ -121,9 +124,7 @@ class AttachVdisk(Task):
 class SetupDomain(Task):
 
     async def run(self):
-        await disk.ImportDisk()
-        # await sleep(4)
+        vdisk = await disk.ImportDisk()
         domain = await CreateDomain()
-        # await sleep(4)
-        await AttachVdisk()
+        await AttachVdisk(vdisk=vdisk, domain=domain)
         return domain
