@@ -142,12 +142,12 @@ class CopyDomain(Task):
             'Authorization': f'jwt {token}'
         }
         response = await HttpClient().fetch_using(headers=headers, url=url)
-        li = []
-        for vdisk in response['results']:
-            if vdisk['status'] != 'ACTIVE':
+        vdisks = []
+        for d in response['results']:
+            if d['status'] != 'ACTIVE':
                 continue
-            li.append(vdisk['id'])
-        return li
+            vdisks.append(d['id'])
+        return vdisks
 
     async def run(self):
         [vdisk0] = await self.list_vdisks()
