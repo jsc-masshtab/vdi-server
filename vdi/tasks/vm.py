@@ -102,10 +102,10 @@ class AttachVdisk(Task):
         obj = msg['object']
         if obj['status'] != 'Выполнена':
             return
-        for k, v in obj['entities'].items():
-            if v == 'vdisk' and self.vdisk != k:
+        for e_id, e_type in obj['entities'].items():
+            if e_type == 'vdisk' and self.vdisk != e_id:
                 return
-            if v == 'domain' and self.domain['id'] != k:
+            if e_type == 'domain' and self.domain['id'] != e_id:
                 return
         return True
 
@@ -128,3 +128,29 @@ class SetupDomain(Task):
         domain = await CreateDomain()
         await AttachVdisk(vdisk=vdisk, domain=domain)
         return domain
+
+
+@dataclass()
+class CopyDomain(Task):
+
+    domain_id: str
+
+    async def list_vdisks(self):
+        url = f'http://{CONTROLLER_URL}/api/vdisks/?domain={self.domain_id}'
+        token = await Token()
+        headers = {
+            'Authorization': f'jwt {token}'
+        }
+        response = await HttpClient().fetch_using(headers=headers, url=url)
+        li = []
+        for vdisk in response['results']:
+            if vdisk['status'] != 'ACTIVE':
+                continue
+            li.append(vdisk['id'])
+        return li
+
+    async def run(self):
+        [vdisk0] = await self.list_vdisks()
+        domain = await CreateDomain()
+        vdisk = await disk.CopyDisk(vdisk=vdisk0, verbose_name=domain['verbose_name'])
+        await AttachVdisk(domain=domain, vdisk=vdisk)

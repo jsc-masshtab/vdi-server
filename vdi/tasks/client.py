@@ -28,7 +28,7 @@ class HttpClient:
             'url', 'method', 'body', 'headers',
         ]
 
-    async def fetch_using(self, ns, **dic):
+    async def fetch_using(self, ns=None, **dic):
         '''
         fetch a resource using parameters from namespace ns
         '''
@@ -38,14 +38,14 @@ class HttpClient:
             if k in all_params
         }
         for name in self.get_essential_params():
-            if name in dic:
+            if name in dic or ns is None:
                 continue
             method = getattr(ns, name, None)
             if method is None:
                 continue
             if inspect.iscoroutinefunction(method):
                 dic[name] = await method()
-            elif inspect.isfunction(method):
+            elif callable(method):
                 dic[name] = method()
             else:
                 # is actually an attribute
