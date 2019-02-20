@@ -5,7 +5,7 @@ from starlette.responses import JSONResponse
 
 from .settings import settings
 
-app = Starlette(**settings)
+from . import app
 
 from g_tasks import g
 
@@ -42,6 +42,10 @@ async def get_vm(request):
         vm['id']: vm
     })
 
+# @app.route('/pools', method='POST')
+# async def add_pool(request):
+#     'TODO'
+
 @app.route('/available')
 async def pool_state(request):
     vms = {
@@ -54,3 +58,5 @@ async def pool_state(request):
 async def startup():
     await pool.initial_tasks()
 
+
+import vdi.gql

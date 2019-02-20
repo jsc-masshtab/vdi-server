@@ -11,7 +11,6 @@ jupyterlab = "*"
 jupyter = "*"
 
 [packages]
-starlette = "*"
 uvicorn = "*"
 tornado = "*"
 pytest-asyncio = "*"
@@ -19,6 +18,8 @@ vdi = {editable = true,path = "."}
 g-tasks = {editable = true,path = "./gtasks"}
 docopt = "*"
 cached-property = "*"
+graphene = "*"
+starlette = "*"
 
 [requires]
 python_version = "3.7"

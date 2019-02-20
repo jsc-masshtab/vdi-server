@@ -24,6 +24,7 @@ class Pool:
         self.add_domain()
 
     def add_domain(self):
+        #FIXME
         from vdi.tasks import vm
         g.init()
         task = vm.SetupDomain().ensure_task()
