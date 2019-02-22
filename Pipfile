@@ -20,6 +20,9 @@ docopt = "*"
 cached-property = "*"
 graphene = "*"
 starlette = "*"
+help = "*"
+psycopg2 = "*"
+asyncpg = "*"
 
 [requires]
 python_version = "3.7"
