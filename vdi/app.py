@@ -10,7 +10,8 @@ from . import app
 from g_tasks import g
 
 from .tasks import disk, vm
-from .pool import pool
+from .pool import Pool
+from .db import db
 
 
 @app.middleware("http")
@@ -56,7 +57,8 @@ async def pool_state(request):
 
 @app.on_event('startup')
 async def startup():
-    await pool.initial_tasks()
+    await db.init()
+    # await pool.initial_tasks()
 
 
 import vdi.gql

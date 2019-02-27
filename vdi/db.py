@@ -3,20 +3,34 @@ from cached_property import cached_property as cached
 import asyncpg
 from functools import wraps
 
-from contextlib import contextmanager
+from typed_contextmanager import typed_contextmanager
+
+from asyncpg.connection import Connection
+
+# from abc import ABC
+#
+# class Connection(ABC):
+#     pass
+#
+# Connection.register()
 
 class DbApp:
 
-    @cached
-    def pool(self):
-        p = await asyncpg.create_pool(database='postgres',
+    async def init(self):
+        self.pool = await asyncpg.create_pool(database='vdi',
                                       user='postgres')
-        return p
 
-    @contextmanager
-    def transaction_conn(self):
+    @typed_contextmanager
+    async def transaction(self) -> Connection:
         async with self.pool.acquire() as c:
             async with c.transaction():
                 yield c
+
+    @typed_contextmanager
+    async def connect(self) -> Connection:
+        async with self.pool.acquire() as c:
+            yield c
+
+
 
 db = DbApp()

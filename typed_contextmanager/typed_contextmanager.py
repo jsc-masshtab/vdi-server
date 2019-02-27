@@ -30,11 +30,12 @@ def typed_contextmanager(f):
         else:
             get_context = lambda t: cm_func(*args, **kwargs)
 
-        return CMInfo(
+        ret = CMInfo(
             get_context=get_context,
             context_types=(return_type,),
             is_async=is_async,
         )
+        return ret
 
     return wrapper
 
@@ -71,6 +72,7 @@ def type_union_factory(f):
             context_types=context_types
         )
 
+
     return wrapper
 
 
@@ -84,18 +86,29 @@ class CMInfo:
 
     def __call__(self, target):
         if self.is_async:
-            print('!Sync')
-            return AsyncTargetWrapper(
+            tw = AsyncTargetWrapper(
                 get_context=self.get_context,
                 context_types=self.context_types,
                 target=target
             )
-        print('Sync')
-        return SyncTargetWrapper(
+            @wraps(target)
+            async def wrapper(*args, **kw):
+                res = await tw(*args, **kw)
+                return res
+
+            return wrapper
+
+        tw = SyncTargetWrapper(
             get_context=self.get_context,
             context_types=self.context_types,
             target=target
         )
+
+        @wraps(target)
+        def wrapper(*args, **kw):
+            return tw(*args, **kw)
+
+        return wrapper
 
 
 @dataclass()
@@ -123,7 +136,7 @@ class TargetWrapper:
         sig = inspect.signature(self.target)
         params = dict(sig.parameters)
         del params[self.context_param.name]
-        return inspect.Signature(params)
+        return inspect.Signature(params.values())
 
 
 class SyncTargetWrapper(TargetWrapper):

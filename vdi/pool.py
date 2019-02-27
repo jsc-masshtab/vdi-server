@@ -6,9 +6,19 @@ from .asyncio_utils import callback
 
 from g_tasks import g
 
-@attr.s(auto_attribs=True)
+from dataclasses import dataclass
+
+from cached_property import cached_property as cached
+
+@dataclass()
 class Pool:
-    queue: asyncio.Queue = asyncio.Queue()
+    template_id: str
+    name: str = None
+
+
+    @cached
+    def queue(self):
+        return asyncio.Queue()
 
     @callback
     async def on_vm_created(self, fut):
@@ -24,10 +34,9 @@ class Pool:
         self.add_domain()
 
     def add_domain(self):
-        #FIXME
         from vdi.tasks import vm
         g.init()
-        task = vm.SetupDomain().ensure_task()
+        task = vm.CopyDomain(domain_id=self.template_id).ensure_task()
         task.add_done_callback(self.on_vm_created)
 
     async def initial_tasks(self):
@@ -37,7 +46,9 @@ class Pool:
         for i in range(initial_size):
             self.add_domain()
 
-    def get_config(self):
+    @classmethod
+    def get_config(cls):
+        # FIXME remove
         conf = {
             'vm_type': 'disco',
             'vm_name_prefix': 'ubuntu',
@@ -46,6 +57,8 @@ class Pool:
         }
         return conf
 
+    instances = {}
 
-pool = Pool()
+
+# pool = Pool()
 

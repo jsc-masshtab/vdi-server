@@ -9,20 +9,20 @@ pytest = "*"
 ipdb = "*"
 jupyterlab = "*"
 jupyter = "*"
+pytest-asyncio = "*"
 
 [packages]
 uvicorn = "*"
 tornado = "*"
-pytest-asyncio = "*"
 vdi = {editable = true,path = "."}
 g-tasks = {editable = true,path = "./gtasks"}
-docopt = "*"
+typed_contextmanager = {editable = true,path = "./typed_contextmanager"}
 cached-property = "*"
 graphene = "*"
 starlette = "*"
-help = "*"
 psycopg2 = "*"
 asyncpg = "*"
+mi = {path = "/home/pwtail/ro/records-migrate"}
 
 [requires]
 python_version = "3.7"

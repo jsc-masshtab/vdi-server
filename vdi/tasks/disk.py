@@ -5,7 +5,7 @@ from .base import CONTROLLER_URL, Token, get_vm_name
 from .ws import WsConnection
 from .client import HttpClient
 
-from ..pool import pool
+from ..pool import Pool
 
 import json
 from tornado.httpclient import AsyncHTTPClient
@@ -36,7 +36,7 @@ class Image(Task):
     async def run(self):
         token = await Token()
         datapool = await DefaultDatapool()
-        pool_config = pool.get_config()
+        pool_config = Pool.get_config()
         vm_type = pool_config['vm_type']
         url = f"http://{CONTROLLER_URL}/api/library/?datapool_id={datapool['id']}"
         http_client = AsyncHTTPClient()
