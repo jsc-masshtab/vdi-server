@@ -1,5 +1,8 @@
+import sys
+
 import json
 import inspect
+from pprint import pprint
 from tornado.httpclient import HTTPRequest
 from tornado.httpclient import AsyncHTTPClient
 
@@ -51,7 +54,15 @@ class HttpClient:
                 # is actually an attribute
                 dic[name] = method
         url = dic.pop('url')
-        response = await self._client.fetch(url, **dic)
+        try:
+            response = await self._client.fetch(url, **dic)
+        except:
+            print(url, file=sys.stderr)
+            e_t, e, tb = sys.exc_info()
+            v = e.response.buffer.read()
+            pprint(json.loads(v))
+            # TODO
+            raise
         if self._json:
             response = json.loads(response.body)
         return response

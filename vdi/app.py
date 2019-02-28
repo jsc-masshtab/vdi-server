@@ -35,13 +35,13 @@ async def debug(request, call_next):
         raise
 
 
-@app.route('/vm')
-async def get_vm(request):
-    vm = await pool.queue.get()
-    pool.on_vm_taken()
-    return JSONResponse({
-        vm['id']: vm
-    })
+# @app.route('/vm')
+# async def get_vm(request):
+#     vm = await pool.queue.get()
+#     pool.on_vm_taken()
+#     return JSONResponse({
+#         vm['id']: vm
+#     })
 
 # @app.route('/pools', method='POST')
 # async def add_pool(request):

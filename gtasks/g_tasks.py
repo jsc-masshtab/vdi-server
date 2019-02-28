@@ -40,11 +40,11 @@ class Context:
             local_ctx.g[var] = value
         var.set(value)
 
-    def use_threadlocal(self):
-        local_ctx.use_me = True
+    def use_threadlocal(self, yes=True):
+        local_ctx.use_me = yes
         try:
             g.tasks
-        except KeyError:
+        except:
             g.init()
 
     def __getattr__(self, item):

@@ -14,6 +14,8 @@ from . import disk
 from .client import HttpClient
 from .ws import WsConnection
 
+from g_tasks import g
+
 from ..asyncio_utils import sleep
 
 
@@ -150,7 +152,10 @@ class CopyDomain(Task):
         return vdisks
 
     async def run(self):
+        # this is a root task
+        g.init()
         [vdisk0] = await self.list_vdisks()
         domain = await CreateDomain()
         vdisk = await disk.CopyDisk(vdisk=vdisk0, verbose_name=domain['verbose_name'])
         await AttachVdisk(domain=domain, vdisk=vdisk)
+        return domain

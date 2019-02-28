@@ -1,6 +1,7 @@
-create table templatevm
+create table vm
 (
 	id varchar(100),
-	constraint templatevm_pk
+	is_template boolean DEFAULT 'no',
+	constraint vm_pk
 		primary key (id)
 );
