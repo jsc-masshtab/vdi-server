@@ -7,32 +7,14 @@ import sys
 from cached_property import cached_property as cached
 
 
-from .app import app
-
-from .db import db
-
-from .settings import settings
-
-from .pool import Pool
+from ..app import app
+from ..db import db
+from ..settings import settings
+from ..pool import Pool
 
 from asyncpg.connection import Connection
 
 import json
-
-from graphql.backend import get_default_backend
-from graphql.execution import ExecutionResult
-
-# class GraphQLApp(starlette_GraphQLApp):
-#
-#     async def handle_graphql(self, request):
-#         resp = await super().handle_graphql(request)
-#         # a sad line
-#         dic = json.loads(resp.body)
-#         if dic['errors']:
-#             del dic['data']
-#             return JSONResponse(dic)
-#         return JSONResponse(dic['data'])
-
 import graphene
 
 class RunningState(graphene.Enum):
@@ -41,7 +23,9 @@ class RunningState(graphene.Enum):
 
 class PoolType(graphene.ObjectType):
     id = graphene.Int()
-    template_id = graphene.String()
+    template_id = graphene.String(required=True)
+    initial_size = graphene.Int()
+    reserve_size = graphene.Int()
     name = graphene.String()
     state = graphene.Field(lambda: PoolState)
 
@@ -55,6 +39,14 @@ class PoolType(graphene.ObjectType):
         state = PoolState(running=True)
         state.pool = Pool.instances[self.pool_id]
         return state
+
+    @classmethod
+    def get_defaults(cls):
+        # this will be settable in the UI
+        return {
+            'initial_size': 2,
+            'reserve_size': 2,
+        }
 
 
 class VmType(graphene.ObjectType):
@@ -94,23 +86,28 @@ class AddPool(graphene.Mutation):
     id = graphene.Int()
 
     @db.transaction()
-    async def mutate(self, info, args, conn: Connection):
+    async def mutate(self, info, conn: Connection, template_id, name, autostart):
         # insert vm
         vm_query = '''
         INSERT INTO vm (id) VALUES ($1) ON CONFLICT (id) DO NOTHING;
-        ''', args['template_id']
+        ''', template_id
         await conn.fetch(*vm_query)
-        # insert pool
-        pool_query = '''INSERT INTO pool (template_id, name) VALUES ($1, $2) RETURNING id
-        ''', args['template_id'], args['name']
+        params = dict(
+            PoolType.get_defaults(),
+            template_id=template_id, name=name, autostart=autostart
+        )
+        pool_query = '''
+        INSERT INTO pool (template_id, name, initial_size, reserve_size)
+        VALUES ($1, $2, $3, $4) RETURNING id
+        ''', params['template_id'], params['name'], params['initial_size'], params['reserve_size']
         [res] = await conn.fetch(*pool_query)
         pool = {
             'id': res['id'],
-            'name': args['name'],
-            'template_id': args['template_id'],
+            'name': name,
+            'template_id': template_id,
         }
-        if args['autostart']:
-            ins = Pool(**pool)
+        if autostart:
+            ins = Pool(params=pool)
             Pool.instances[pool['id']] = ins
             ins.schedule_tasks()
         return AddPool(id=pool['id'])
@@ -134,8 +131,7 @@ class LaunchPool(graphene.Mutation):
             [dic] = await conn.fetch(qu)
             pool = Pool(**dic)
             Pool.instances[id] = pool
-            task = pool.schedule_tasks()
-            asyncio.create_task(task)
+            asyncio.create_task(pool.schedule_tasks())
         state = PoolState(running=True)
         state.pool = pool
         return LaunchPool(state=state)
@@ -193,7 +189,7 @@ from graphql.execution.executors.asyncio import AsyncioExecutor
 
 schema = graphene.Schema(query=PoolQuery, mutation=PoolMutations, auto_camelcase=False)
 
-app.add_route('/', GraphQLApp(schema, executor_class=AsyncioExecutor))
+app.add_route('/pool', GraphQLApp(schema, executor_class=AsyncioExecutor))
 
 
 

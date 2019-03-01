@@ -1,4 +1,6 @@
 import asyncio
+
+import uuid
 from g_tasks import Task
 
 import urllib
@@ -9,7 +11,7 @@ from tornado.httpclient import AsyncHTTPClient
 
 from dataclasses import dataclass
 
-from .base import CONTROLLER_URL, Token, get_vm_name
+from .base import CONTROLLER_URL, Token
 from . import disk
 from .client import HttpClient
 from .ws import WsConnection
@@ -30,7 +32,10 @@ class Node(Task):
                 return node['id']
 
 
+@dataclass()
 class CreateDomain(Task):
+
+    vm_name: str
 
     url = f'http://{CONTROLLER_URL}/api/domains/'
 
@@ -43,7 +48,7 @@ class CreateDomain(Task):
             'node': node_id,
             'os_type': "Other",
             'sound': {'model': "ich6", 'codec': "micro"},
-            'verbose_name': get_vm_name(),
+            'verbose_name': self.vm_name,
             'video': {'type': "cirrus", 'vram': "16384", 'heads': "1"},
         }
 
@@ -123,11 +128,18 @@ class AttachVdisk(Task):
         return True
 
 
+@dataclass()
 class SetupDomain(Task):
 
+    image_name: str
+    vm_name: str = None
+
     async def run(self):
-        vdisk = await disk.ImportDisk()
-        domain = await CreateDomain()
+        if self.vm_name is None:
+            uid = str(uuid.uuid1()).split('-')[0]
+            self.vm_name = f'{self.image_name}-{uid}'
+        vdisk = await disk.ImportDisk(image_name=self.image_name, vm_name=self.vm_name)
+        domain = await CreateDomain(vm_name=self.vm_name)
         await AttachVdisk(vdisk=vdisk, domain=domain)
         return domain
 
@@ -136,6 +148,7 @@ class SetupDomain(Task):
 class CopyDomain(Task):
 
     domain_id: str
+
 
     async def list_vdisks(self):
         url = f'http://{CONTROLLER_URL}/api/vdisks/?domain={self.domain_id}'

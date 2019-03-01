@@ -147,13 +147,33 @@ class SyncTargetWrapper(TargetWrapper):
             params[self.context_param.name] = ctx
             return self.target(**params)
 
+from inspect import Parameter
+
+class MISSING:
+    pass
 
 class AsyncTargetWrapper(TargetWrapper):
+
 
     async def __call__(self, *args, **kwargs):
         mgr = await self.get_context(self.context_type)
         async with mgr as ctx:
-            params = self.signature.bind(*args, **kwargs).arguments
-            params[self.context_param.name] = ctx
-            result = await self.target(**params)
+            bound_args = self.signature.bind(*args, **kwargs)
+            arguments = bound_args.arguments
+            args = []
+            kwargs = {}
+            sig = inspect.signature(self.target)
+            for key, p in sig.parameters.items():
+                val = arguments.get(key, MISSING)
+                if val is MISSING:
+                    args.append(ctx)
+                elif p.kind == Parameter.VAR_KEYWORD:
+                    kwargs.update(val)
+                elif p.kind == Parameter.VAR_POSITIONAL:
+                    args.extend(val)
+                elif p.kind in [Parameter.POSITIONAL_ONLY, Parameter.POSITIONAL_OR_KEYWORD]:
+                    args.append(val)
+                else:
+                    kwargs[key] = val
+            result = await self.target(*args, **kwargs)
             return result

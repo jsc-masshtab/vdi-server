@@ -1,7 +1,7 @@
 
 from g_tasks import Task, task
 
-from .base import CONTROLLER_URL, Token, get_vm_name
+from .base import CONTROLLER_URL, Token
 from .ws import WsConnection
 from .client import HttpClient
 
@@ -31,13 +31,18 @@ class DefaultDatapool(Task):
                 return rec
 
 
+class ImageNotFound(Exception):
+    pass
+
+
+@dataclass()
 class Image(Task):
+
+    image_name: str
 
     async def run(self):
         token = await Token()
         datapool = await DefaultDatapool()
-        pool_config = Pool.get_config()
-        vm_type = pool_config['vm_type']
         url = f"http://{CONTROLLER_URL}/api/library/?datapool_id={datapool['id']}"
         http_client = AsyncHTTPClient()
         headers = {
@@ -46,24 +51,29 @@ class Image(Task):
         response = await http_client.fetch(url, headers=headers)
         response = json.loads(response.body)
         for file in response["results"]:
-            if vm_type in file["filename"].lower():
+            if self.image_name in file["filename"].lower():
                 return file["id"]
+        else:
+            raise ImageNotFound(self.image_name)
 
 
+@dataclass()
 class ImportDisk(Task):
     """
     From a .qcow image
     """
 
+    image_name: str
+    vm_name: str
+
     def is_done(self, msg):
         return msg['object']['status'] == 'Выполнена' and msg['id'] == self.task['id']
 
     async def run(self):
-        image_id = await Image()
+        image_id = await Image(image_name=self.image_name)
         token = await Token()
         ws = await WsConnection()
         await ws.send('add /tasks/')
-        vm_name = get_vm_name()
 
         http_client = AsyncHTTPClient()
         url = f'http://{CONTROLLER_URL}/api/library/{image_id}/import/?async=1'
@@ -71,7 +81,7 @@ class ImportDisk(Task):
             'Authorization': f'jwt {token}',
             'Content-Type': 'application/json',
         }
-        body = json.dumps({'verbose_name': vm_name})
+        body = json.dumps({'verbose_name': self.vm_name})
         response = await http_client.fetch(url, method='POST', headers=headers, body=body)
         response = json.loads(response.body)
         self.task = response['_task']

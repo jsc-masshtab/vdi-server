@@ -47,12 +47,12 @@ async def debug(request, call_next):
 # async def add_pool(request):
 #     'TODO'
 
-@app.route('/available')
-async def pool_state(request):
-    vms = {
-        vm['id']: vm for vm in pool.queue._queue
-    }
-    return JSONResponse(vms)
+# @app.route('/available')
+# async def pool_state(request):
+#     vms = {
+#         vm['id']: vm for vm in pool.queue._queue
+#     }
+#     return JSONResponse(vms)
 
 
 @app.on_event('startup')
@@ -61,4 +61,5 @@ async def startup():
     # await pool.initial_tasks()
 
 
-import vdi.gql
+import vdi.graphql.pool
+import vdi.graphql.vm

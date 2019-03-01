@@ -12,8 +12,7 @@ from cached_property import cached_property as cached
 
 @dataclass()
 class Pool:
-    template_id: str
-    name: str = None
+    params: dict
     pending: int = 0
 
 
@@ -42,15 +41,14 @@ class Pool:
     def add_domain(self):
         from vdi.tasks import vm
         g.init()
-        task = vm.CopyDomain(domain_id=self.template_id).ensure_task()
+        template_id = self.params.template_id
+        task = vm.CopyDomain(domain_id=template_id).ensure_task()
         task.add_done_callback(self.on_vm_created)
         self.pending += 1
         return task
 
     async def schedule_tasks(self):
-        conf = self.get_config()
-        initial_size = conf['initial_size']
-
+        initial_size = self.params.initial_size
         domains = []
 
         for i in range(initial_size):
@@ -59,17 +57,6 @@ class Pool:
 
         return domains
 
-
-    @classmethod
-    def get_config(cls):
-        # FIXME remove
-        conf = {
-            'vm_type': 'disco',
-            'vm_name_prefix': 'ubuntu',
-            'initial_size': 2,
-            'reserve_size': 2,
-        }
-        return conf
 
     instances = {}
 
