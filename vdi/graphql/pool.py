@@ -11,6 +11,7 @@ from ..app import app
 from ..db import db
 from ..settings import settings
 from ..pool import Pool
+from ..tasks import vm
 
 from asyncpg.connection import Connection
 
@@ -28,6 +29,8 @@ class PoolType(graphene.ObjectType):
     reserve_size = graphene.Int()
     name = graphene.String()
     state = graphene.Field(lambda: PoolState)
+
+    sql_fields = ['id', 'template_id', 'initial_size', 'reserve_size', 'name']
 
     @cached
     def pool_id(self):
@@ -61,14 +64,16 @@ class PoolState(graphene.ObjectType):
     pending = graphene.Int() # will change
                              # will be the ids of vms
 
-    @cached
-    def pool(self):
-        raise NotImplementedError
+    pool = None
 
     async def resolve_pending(self, info):
+        if self.pool is None:
+            return None
         return self.pool.pending
 
     async def resolve_available(self, info):
+        if self.pool is None:
+            return []
         qu = self.pool.queue._queue
         ret = []
         for vm in qu:
@@ -76,17 +81,20 @@ class PoolState(graphene.ObjectType):
             ret.append(VmType(id=vm['id'], info=info))
         return ret
 
+# TODO dict of pending tasks
 
 class AddPool(graphene.Mutation):
     class Arguments:
         template_id = graphene.String()
-        name = graphene.String()
+        name = graphene.String(required=True)
         autostart = graphene.Boolean(default_value=True)
+        block = graphene.Boolean(default_value=False)
 
     id = graphene.Int()
+    # TODO return PoolState
 
     @db.transaction()
-    async def mutate(self, info, conn: Connection, template_id, name, autostart):
+    async def mutate(self, info, conn: Connection, template_id, name, autostart, block):
         # insert vm
         vm_query = '''
         INSERT INTO vm (id) VALUES ($1) ON CONFLICT (id) DO NOTHING;
@@ -105,44 +113,47 @@ class AddPool(graphene.Mutation):
             'id': res['id'],
             'name': name,
             'template_id': template_id,
+            'initial_size': params['initial_size']
         }
         if autostart:
             ins = Pool(params=pool)
             Pool.instances[pool['id']] = ins
-            ins.schedule_tasks()
+            add_domains = ins.add_domains()
+            if block:
+                await add_domains
+            else:
+                asyncio.create_task(add_domains)
         return AddPool(id=pool['id'])
 
 
 class LaunchPool(graphene.Mutation):
     class Arguments:
         id = graphene.Int()
+        block = graphene.Boolean(default_value=False)
 
     state = graphene.Field(PoolState)
 
     @db.connect()
-    async def mutate(self, info, id, conn: Connection):
+    async def mutate(self, info, id, block, conn: Connection):
         if id in Pool.instances:
             pool = Pool.instances[id]
         else:
             qu = f'''
-            SELECT template_id, name FROM pool
+            SELECT template_id, name, initial_size, reserve_size FROM pool
             WHERE id = '{id}'
             '''
             [dic] = await conn.fetch(qu)
-            pool = Pool(**dic)
+            pool = Pool(params=dic)
             Pool.instances[id] = pool
-            asyncio.create_task(pool.schedule_tasks())
+            add_domains = pool.add_domains()
+            if block:
+                await add_domains
+            else:
+                asyncio.create_task(add_domains)
         state = PoolState(running=True)
         state.pool = pool
         return LaunchPool(state=state)
 
-
-# TODO create template vm
-
-
-class PoolMutations(graphene.ObjectType):
-    add = AddPool.Field()
-    launch = LaunchPool.Field()
 
 def get_selections(info):
     return [
@@ -157,7 +168,10 @@ class PoolQuery(graphene.ObjectType):
 
     @db.connect()
     async def resolve_instance(self, info, id, conn: Connection):
-        fields = get_selections(info)
+        fields = [
+            f for f in get_selections(info)
+            if f in PoolType.sql_fields
+        ]
         qu = f'''
         SELECT {', '.join(fields)} FROM pool
         WHERE id = '{id}'
@@ -184,6 +198,30 @@ class PoolQuery(graphene.ObjectType):
             items.append(PoolType(**p))
         return items
 
+
+class CreateTemplate(graphene.Mutation):
+    '''
+    Awaits the result. Mostly for development use
+    '''
+    class Arguments:
+        image_name = graphene.String()
+
+    id = graphene.String()
+
+    @db.connect()
+    async def mutate(self, info, image_name, conn: Connection):
+        domain = await vm.SetupDomain(image_name=image_name)
+        qu = '''
+            INSERT INTO vm (id, is_template) VALUES ($1, $2)
+            ''', domain['id'], True
+        await conn.fetch(*qu)
+        return CreateTemplate(id=domain['id'])
+
+
+class PoolMutations(graphene.ObjectType):
+    add = AddPool.Field()
+    launch = LaunchPool.Field()
+    createTemplate = CreateTemplate.Field()
 
 from graphql.execution.executors.asyncio import AsyncioExecutor
 

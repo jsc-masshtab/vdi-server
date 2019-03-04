@@ -1,5 +1,6 @@
 import json
 import attr
+import uuid
 
 import asyncio
 from .asyncio_utils import callback
@@ -38,17 +39,22 @@ class Pool:
     def on_vm_taken(self):
         self.add_domain()
 
+    def generate_name(self):
+        uid = uuid.uuid4()
+        return f"{self.params['name']}-{uid}"
+
     def add_domain(self):
         from vdi.tasks import vm
         g.init()
-        template_id = self.params.template_id
-        task = vm.CopyDomain(domain_id=template_id).ensure_task()
+        template_id = self.params['template_id']
+        vm_name = self.generate_name()
+        task = vm.CopyDomain(domain_id=template_id, vm_name=vm_name).ensure_task()
         task.add_done_callback(self.on_vm_created)
         self.pending += 1
         return task
 
-    async def schedule_tasks(self):
-        initial_size = self.params.initial_size
+    async def add_domains(self):
+        initial_size = self.params['initial_size']
         domains = []
 
         for i in range(initial_size):

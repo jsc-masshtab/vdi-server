@@ -62,4 +62,3 @@ async def startup():
 
 
 import vdi.graphql.pool
-import vdi.graphql.vm
