@@ -92,4 +92,5 @@ ENV/
 .vscode/**
 .idea/**
 
+Pipfile.lock
 .mi.json

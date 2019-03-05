@@ -17,12 +17,12 @@ tornado = "*"
 vdi = {editable = true,path = "."}
 g-tasks = {editable = true,path = "./gtasks"}
 typed_contextmanager = {editable = true,path = "./typed_contextmanager"}
+mi = {editable = true,path = "./mi-pkg"}
 cached-property = "*"
 graphene = "*"
 starlette = "*"
 psycopg2 = "*"
 asyncpg = "*"
-mi = {path = "/home/pwtail/ro/records-migrate"}
 
 [requires]
 python_version = "3.7"

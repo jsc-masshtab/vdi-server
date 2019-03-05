@@ -218,10 +218,27 @@ class CreateTemplate(graphene.Mutation):
         return CreateTemplate(id=domain['id'])
 
 
+class AddTemplate(graphene.Mutation):
+    class Arguments:
+        id = graphene.String()
+
+    ok = graphene.Boolean()
+
+    @db.connect()
+    async def mutate(self, info, id, conn: Connection):
+        qu = '''
+            INSERT INTO vm (id, is_template) VALUES ($1, $2)
+            ''', id, True
+        await conn.fetch(*qu)
+        return AddTemplate(ok=True)
+
+
+
 class PoolMutations(graphene.ObjectType):
     add = AddPool.Field()
     launch = LaunchPool.Field()
     createTemplate = CreateTemplate.Field()
+    addTemplate = AddTemplate.Field()
 
 from graphql.execution.executors.asyncio import AsyncioExecutor
 

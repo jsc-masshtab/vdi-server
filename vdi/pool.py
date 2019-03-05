@@ -11,6 +11,9 @@ from dataclasses import dataclass
 
 from cached_property import cached_property as cached
 
+from vdi.db import db
+from asyncpg.connection import Connection
+
 @dataclass()
 class Pool:
     params: dict
@@ -26,12 +29,14 @@ class Pool:
         'TODO'
 
     @callback
-    async def on_vm_created(self, fut):
+    @db.connect()
+    async def on_vm_created(self, fut, conn: Connection):
         if fut.exception():
             # FIXME
             print(fut.exception())
             return
         domain = fut.result()
+        1
         await self.queue.put(domain)
         self.queue.task_done()
         self.pending -= 1
