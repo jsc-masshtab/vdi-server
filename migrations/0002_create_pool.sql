@@ -9,6 +9,6 @@ create table pool
 	constraint pool_pk
 		primary key (id),
     constraint pool_templatevm_fk
-		foreign key (template_id) references vm (id)
+		foreign key (template_id) references template_vm (id)
 
 );

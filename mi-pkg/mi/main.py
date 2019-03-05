@@ -116,7 +116,7 @@ CREATE TABLE migrations (
     def get_unapplied_migrations(self):
         if self.args['<names>']:
             return [
-                self._resolve_name(name) for name in self.args['<name>']
+                self._resolve_name(name) for name in self.args['<names>']
             ]
         applied = self.exec("SELECT name from migrations")
         applied = [name for (name,) in applied]

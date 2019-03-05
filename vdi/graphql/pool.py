@@ -95,11 +95,6 @@ class AddPool(graphene.Mutation):
 
     @db.transaction()
     async def mutate(self, info, conn: Connection, template_id, name, autostart, block):
-        # insert vm
-        vm_query = '''
-        INSERT INTO vm (id) VALUES ($1) ON CONFLICT (id) DO NOTHING;
-        ''', template_id
-        await conn.fetch(*vm_query)
         params = dict(
             PoolType.get_defaults(),
             template_id=template_id, name=name, autostart=autostart
@@ -127,6 +122,9 @@ class AddPool(graphene.Mutation):
 
 
 class LaunchPool(graphene.Mutation):
+    #
+    # development only ?
+    #
     class Arguments:
         id = graphene.Int()
         block = graphene.Boolean(default_value=False)
@@ -136,20 +134,36 @@ class LaunchPool(graphene.Mutation):
     @db.connect()
     async def mutate(self, info, id, block, conn: Connection):
         if id in Pool.instances:
-            pool = Pool.instances[id]
+            from graphql import GraphQLError
+            raise GraphQLError('pool is launched')
+
+        qu = f'''
+        SELECT template_id, name, initial_size, reserve_size, vm.id as vm_id, vm.state as vm_state 
+        FROM pool LEFT JOIN vm
+        WHERE id = '{id}' AND vm.pool_id == pool.id
+        '''
+        records = await conn.fetch(qu)
+        rec = records[0]
+        dic = {
+            'template_id': rec['template_id'],
+            'name': rec['name'],
+            'initial_size': rec['initial_size'],
+            'reserve_size': rec['reserve_size'],
+        }
+        pool = Pool(params=dic)
+        Pool.instances[id] = pool
+        vms = [
+            rec['vm_id'] for rec in records if rec['vm_state'] == 'queued'
+        ]
+        for vm in vms:
+            await pool.queue.put()
+            pool.queue.task_done()
+            # TODO
+        add_domains = pool.add_domains()
+        if block:
+            await add_domains
         else:
-            qu = f'''
-            SELECT template_id, name, initial_size, reserve_size FROM pool
-            WHERE id = '{id}'
-            '''
-            [dic] = await conn.fetch(qu)
-            pool = Pool(params=dic)
-            Pool.instances[id] = pool
-            add_domains = pool.add_domains()
-            if block:
-                await add_domains
-            else:
-                asyncio.create_task(add_domains)
+            asyncio.create_task(add_domains)
         state = PoolState(running=True)
         state.pool = pool
         return LaunchPool(state=state)

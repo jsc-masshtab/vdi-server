@@ -1,5 +1,4 @@
 import json
-import attr
 import uuid
 
 import asyncio
@@ -24,6 +23,8 @@ class Pool:
     def queue(self):
         return asyncio.Queue()
 
+    # TODO make vm info optional?
+
     @cached
     def tasks(self):
         'TODO'
@@ -36,10 +37,14 @@ class Pool:
             print(fut.exception())
             return
         domain = fut.result()
-        1
         await self.queue.put(domain)
         self.queue.task_done()
         self.pending -= 1
+        # insert into db
+        qu = f"""
+        insert into vm (id, pool_id, state) values ($1, $2, $3)
+        """, domain['id'], self.params['id'], 'queued'
+        await conn.execute(*qu)
 
     def on_vm_taken(self):
         self.add_domain()
