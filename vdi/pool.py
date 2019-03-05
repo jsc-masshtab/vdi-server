@@ -66,6 +66,8 @@ class Pool:
 
     instances = {}
 
+    # TODO from_db
+    # TODO any created vm -> db
 
 # pool = Pool()
 

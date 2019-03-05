@@ -227,7 +227,7 @@ from graphql.execution.executors.asyncio import AsyncioExecutor
 
 schema = graphene.Schema(query=PoolQuery, mutation=PoolMutations, auto_camelcase=False)
 
-app.add_route('/pool', GraphQLApp(schema, executor_class=AsyncioExecutor))
+app.add_route('/admin', GraphQLApp(schema, executor_class=AsyncioExecutor))
 
 
 

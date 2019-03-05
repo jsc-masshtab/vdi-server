@@ -35,30 +35,33 @@ async def debug(request, call_next):
         raise
 
 
-# @app.route('/vm')
-# async def get_vm(request):
-#     vm = await pool.queue.get()
-#     pool.on_vm_taken()
-#     return JSONResponse({
-#         vm['id']: vm
-#     })
+def get_pool():
+    # FIXME:
+    # p.params
+    # < Record
+    # template_id = '6ad6fb58-ba94-46d8-9769-f445c68dc44e'
+    # name = 'pub-2'
+    # initial_size = 2
+    # reserve_size = 2 >
+    for _, p in Pool.instances.items():
+        if p.params['name'] and 'pub' in p.params['name']:
+            return p
+    assert 0
 
-# @app.route('/pools', method='POST')
-# async def add_pool(request):
-#     'TODO'
+@app.route('/client', methods=['POST', 'GET'])
+async def get_vm(request):
+    pool = get_pool()
+    vm = await pool.queue.get()
+    pool.on_vm_taken()
+    return JSONResponse({
+        vm['id']: vm
+    })
 
-# @app.route('/available')
-# async def pool_state(request):
-#     vms = {
-#         vm['id']: vm for vm in pool.queue._queue
-#     }
-#     return JSONResponse(vms)
 
 
 @app.on_event('startup')
 async def startup():
     await db.init()
-    # await pool.initial_tasks()
 
 
 import vdi.graphql.pool
