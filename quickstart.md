@@ -1,6 +1,6 @@
 <table border="0">
   <tr>
-    <td>
+    <td valign="top">
 <pre>
 {
  instance(id: 2) {
@@ -13,7 +13,7 @@
 }
 </pre>
     </td>
-    <td>
+    <td valign="top">
 <pre>
 {
   "data": {
