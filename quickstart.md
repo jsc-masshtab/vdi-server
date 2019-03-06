@@ -1,12 +1,13 @@
 
-  <tr>
-    <td>
+ <div class="row">
+  <div class="column">
     <pre>
     import smth
     </pre>
-    </td>
-    <td>
+  </div>
+  <div class="column">
     <pre>
     import other
     </pre>
-  </tr>
+  </div>
+</div> 
