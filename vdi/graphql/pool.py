@@ -180,8 +180,8 @@ def get_selections(info):
 
 
 class PoolQuery(graphene.ObjectType):
-    list = graphene.List(PoolType)
-    instance = graphene.Field(PoolType, id=graphene.Int())
+    pools = graphene.List(PoolType)
+    pool = graphene.Field(PoolType, id=graphene.Int())
 
     @db.connect()
     async def resolve_instance(self, info, id, conn: Connection):
@@ -252,8 +252,8 @@ class AddTemplate(graphene.Mutation):
 
 
 class PoolMutations(graphene.ObjectType):
-    add = AddPool.Field()
-    launch = LaunchPool.Field()
+    addPool = AddPool.Field()
+    launchPool = LaunchPool.Field()
     createTemplate = CreateTemplate.Field()
     addTemplate = AddTemplate.Field()
 
