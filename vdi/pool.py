@@ -47,7 +47,9 @@ class Pool:
         await conn.execute(*qu)
 
     def on_vm_taken(self):
-        self.add_domain()
+        initial_size = self.params['initial_size']
+        if initial_size > len(self.queue._queue):
+            self.add_domain()
 
     def generate_name(self):
         uid = uuid.uuid4()
@@ -67,7 +69,11 @@ class Pool:
         initial_size = self.params['initial_size']
         domains = []
 
-        for i in range(initial_size):
+        delta = initial_size - len(self.queue._queue)
+        if delta < 0:
+            delta = 0
+
+        for i in range(delta):
             d = await self.add_domain()
             domains.append(d)
 

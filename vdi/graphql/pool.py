@@ -138,13 +138,14 @@ class LaunchPool(graphene.Mutation):
             raise GraphQLError('pool is launched')
 
         qu = f'''
-        SELECT template_id, name, initial_size, reserve_size, vm.id as vm_id, vm.state as vm_state 
+        SELECT pool.id, template_id, name, initial_size, reserve_size, vm.id as "vm.id"
         FROM pool LEFT JOIN vm
-        WHERE id = '{id}' AND vm.pool_id == pool.id
-        '''
-        records = await conn.fetch(qu)
+        ON vm.pool_id = pool.id WHERE pool.id = $1 AND vm.state = 'queued'
+        ''', id
+        records = await conn.fetch(*qu)
         rec = records[0]
         dic = {
+            'id': rec['id'],
             'template_id': rec['template_id'],
             'name': rec['name'],
             'initial_size': rec['initial_size'],
@@ -153,12 +154,14 @@ class LaunchPool(graphene.Mutation):
         pool = Pool(params=dic)
         Pool.instances[id] = pool
         vms = [
-            rec['vm_id'] for rec in records if rec['vm_state'] == 'queued'
+            {
+                'id': rec['vm.id'] # TODO: what about vm info?
+            }
+            for rec in records
         ]
         for vm in vms:
-            await pool.queue.put()
+            await pool.queue.put(vm)
             pool.queue.task_done()
-            # TODO
         add_domains = pool.add_domains()
         if block:
             await add_domains
@@ -226,8 +229,8 @@ class CreateTemplate(graphene.Mutation):
     async def mutate(self, info, image_name, conn: Connection):
         domain = await vm.SetupDomain(image_name=image_name)
         qu = '''
-            INSERT INTO vm (id, is_template) VALUES ($1, $2)
-            ''', domain['id'], True
+            INSERT INTO template_vm (id) VALUES ($1)
+            ''', domain['id']
         await conn.fetch(*qu)
         return CreateTemplate(id=domain['id'])
 
