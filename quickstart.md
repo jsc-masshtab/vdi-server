@@ -1,14 +1,13 @@
 <table>
   <tr>
     <td>
-    ```python
+    <pre>
     import smth
-    ```
+    </pre>
     </td>
     <td>
-    ```python
+    <pre>
     import other
-    ```
-    </td>
+    </pre>
   </tr>
 </table>
