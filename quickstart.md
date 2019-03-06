@@ -1,4 +1,4 @@
-<table>
+
   <tr>
     <td>
     <pre>
@@ -10,4 +10,3 @@
     import other
     </pre>
   </tr>
-</table>
