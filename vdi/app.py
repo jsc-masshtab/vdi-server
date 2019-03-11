@@ -36,13 +36,6 @@ async def debug(request, call_next):
 
 
 def get_pool():
-    # FIXME:
-    # p.params
-    # < Record
-    # template_id = '6ad6fb58-ba94-46d8-9769-f445c68dc44e'
-    # name = 'pub-2'
-    # initial_size = 2
-    # reserve_size = 2 >
     for _, p in Pool.instances.items():
         if p.params['name'] and 'pub' in p.params['name']:
             return p
@@ -50,6 +43,7 @@ def get_pool():
 
 @app.route('/client', methods=['POST', 'GET'])
 async def get_vm(request):
+    breakpoint()
     pool = get_pool()
     vm = await pool.queue.get()
     pool.on_vm_taken()
@@ -57,6 +51,10 @@ async def get_vm(request):
         vm['id']: vm
     })
 
+
+@app.route('/client/login', methods=['POST', 'GET'])
+async def login(request):
+    1
 
 
 @app.on_event('startup')
