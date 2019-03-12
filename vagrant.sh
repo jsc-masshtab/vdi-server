@@ -10,7 +10,7 @@ echo "Setting postgresql..."
 su postgres -c "initdb -D /var/lib/postgres/data"
 systemctl enable postgresql
 systemctl start postgresql
-sudo su postgres -c "psql -c \create database vdi\" "
+sudo su postgres -c "psql -c \"create database vdi;\" "
 
 
 echo "Setting env..."
