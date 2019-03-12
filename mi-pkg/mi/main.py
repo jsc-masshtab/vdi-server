@@ -63,7 +63,7 @@ class Mi:
 
     @cached
     def files(self):
-        ret = self.dir.glob('*.sql')
+        ret = self.dir.glob('*.*')
         ret = sorted(ret, key=lambda p: p.name) # unneeded?
         return ret
 
@@ -74,7 +74,7 @@ class Mi:
     @classmethod
     def get_last_number(cls, names):
         names = reversed(names)
-        regexp = re.compile(r'^(\d+)(_\w+)?.sql')
+        regexp = re.compile(r'^(\d+)(_\w+)?.(sql|py)')
         for name in names:
             m = regexp.match(name)
             if not m:
@@ -109,7 +109,7 @@ CREATE TABLE migrations (
             raise ExitError(f'No file matches {name}')
         elif len(paths) > 1:
             matches = ', '.join(p.name for p in paths)
-            raise ExitError(f'Multiple mathes for {name}: {matches}')
+            raise ExitError(f'Multiple matches for {name}: {matches}')
         [p] = paths
         return p.name
 
@@ -183,9 +183,20 @@ CREATE TABLE migrations (
         p.touch()
         print(f'{p.absolute()} is generated. Please fill it with meaning.')
 
+    def apply_module(self, name):
+        import sys
+        sys.path.insert(0, str(self.dir.absolute()))
+        m = __import__(name)
+        m.run()
+        del sys.path[0]
+
     def do_apply(self):
         unapplied = self.get_unapplied_migrations()
         for name in unapplied:
+            if name.endswith('.py'):
+                self.apply_module(name[:-3])
+                self.exec(f"INSERT INTO migrations VALUES ('{name}');")
+                continue
             p = self.dir / name
             with p.open() as f:
                 sql = f.read()
