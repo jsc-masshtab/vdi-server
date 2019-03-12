@@ -42,7 +42,6 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   config.vm.box = "generic/debian10"
   config.vm.hostname = "vdihost"
 
-  config.vm.provision "prepare-shell", type: "shell", inline: "sudo sed -i '/tty/!s/mesg n/tty -s \\&\\& mesg n/' /root/.profile", privileged: false
   config.vm.provision "initial-setup", type: "shell", inline: $script
   config.vm.synced_folder '.', '/home/vagrant'
 
