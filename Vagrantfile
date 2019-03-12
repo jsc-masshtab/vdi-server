@@ -14,23 +14,26 @@ RAM = "4096"
 
 $script = <<SCRIPT
 
-# Get the ARCH
-ARCH="$(uname -m | sed 's|i686|386|' | sed 's|x86_64|amd64|')"
-
 # Install Prereq Packages
 export DEBIAN_PRIORITY=critical
 export DEBIAN_FRONTEND=noninteractive
 export DEBCONF_NONINTERACTIVE_SEEN=true
-APT_OPTS="--assume-yes --no-install-suggests --no-install-recommends -o Dpkg::Options::=\"--force-confdef\" -o Dpkg::Options::=\"--force-confold\""
+APT_OPTS="--assume-yes --no-install-suggests --no-install-recommends"
 echo "Upgrading packages ..."
 apt-get update ${APT_OPTS} >/dev/null
 apt-get upgrade ${APT_OPTS} >/dev/null
 echo "Installing prerequisites ..."
-apt-get install ${APT_OPTS} build-essential curl git pipenv >/dev/null
+apt-get install ${APT_OPTS} build-essential curl python3-dev python3-pip >/dev/null
 
-git clone git@gitlab.bazalt.team:vdi/vdiserver.git
-cd vdiserver
-pipenv install && pipenv run uvicorn vdi.app:app
+echo "Installing pipenv..."
+python3 -m pip install pipenv
+
+
+echo "Pipenv"
+export PIPENV_SKIP_LOCK=1
+
+pipenv install
+# pipenv run uvicorn vdi.app:app
 
 
 SCRIPT
@@ -41,7 +44,11 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 
   config.vm.provision "prepare-shell", type: "shell", inline: "sudo sed -i '/tty/!s/mesg n/tty -s \\&\\& mesg n/' /root/.profile", privileged: false
   config.vm.provision "initial-setup", type: "shell", inline: $script
-#   config.vm.synced_folder '.', '/opt/gopath/src/github.com/hashicorp/terraform'
+  config.vm.synced_folder '.', '/home/vagrant'
+
+  config.vm.network :forwarded_port, guest: 8000, host: 8000, host_ip: "127.0.0.1"
+  config.vm.network :forwarded_port, guest: 8001, host: 8001, host_ip: "127.0.0.1"
 
 
 end
+

@@ -7,7 +7,8 @@ from tornado.httpclient import AsyncHTTPClient
 
 from ..pool import Pool
 
-CONTROLLER_URL = '192.168.20.120'
+from ..settings import settings
+CONTROLLER_URL = settings['controller_url']
 
 class Token(Task):
     creds = {

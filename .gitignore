@@ -91,6 +91,7 @@ ENV/
 
 .vscode/**
 .idea/**
+.vagrant/**
 
 Pipfile.lock
 .mi.json

@@ -1,12 +1,9 @@
 
-class Settings(dict):
-    debug = True
+from . import SettingsDict
 
-    def __init__(self):
-        cls = self.__class__
-        super().__init__(**{
-            k: v for k, v in cls.__dict__.items()
-            if not k.startswith('__')
-        })
+class Settings(SettingsDict):
+    debug = True
+    controller_url = '192.168.20.120'
+
 
 settings = Settings()
