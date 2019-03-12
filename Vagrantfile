@@ -33,7 +33,7 @@ echo "Pipenv"
 export PIPENV_SKIP_LOCK=1
 
 pipenv install
-# pipenv run uvicorn vdi.app:app
+pipenv run uvicorn vdi.app:app
 
 
 SCRIPT
