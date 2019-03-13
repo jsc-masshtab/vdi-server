@@ -16,7 +16,6 @@ sudo su postgres -c "psql -c \"create database vdi;\" "
 
 
 echo "Setting env..."
-# cd /home/vagrant/vdiserver
 echo "export PIPENV_SKIP_LOCK=1" >> /home/vagrant/.bashrc
 export PIPENV_SKIP_LOCK=1
 pipenv install

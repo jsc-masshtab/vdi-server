@@ -25,7 +25,7 @@ Helps manage migrations in raw sql.
 Usage:
   mi init [--db=db]
   mi check
-  mi new [<name>]
+  mi new [<name>] [--py | --python]
   mi apply [<names>...]
   mi -h | --help
   mi help
@@ -79,7 +79,7 @@ class Mi:
             m = regexp.match(name)
             if not m:
                 continue
-            number, title = m.groups()
+            number, title, ext = m.groups()
             return int(number)
 
     @cached
@@ -171,14 +171,18 @@ CREATE TABLE migrations (
         print(f"Unapplied: {s}")
 
     def do_new(self):
+        if self.args['--py'] or self.args['--python']:
+            suffix = 'py'
+        else:
+            suffix = 'sql'
         names = [p.name for p in self.files]
         num = self.get_last_number(names) or 0
         num += 1
         title = self.args['<name>']
         if title:
-            name = f'{num:04d}_{title}.sql'
+            name = f'{num:04d}_{title}.{suffix}'
         else:
-            name = f'{num:04d}.sql'
+            name = f'{num:04d}.{suffix}'
         p = self.dir / name
         p.touch()
         print(f'{p.absolute()} is generated. Please fill it with meaning.')

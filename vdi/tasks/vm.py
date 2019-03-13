@@ -52,14 +52,6 @@ class CreateDomain(Task):
             'video': {'type': "cirrus", 'vram': "16384", 'heads': "1"},
         }
 
-    async def check_done(self, task_id):
-        async for msg in self.ws:
-            try:
-                if msg['object']['status'] == 'Выполнена' and msg['id'] == task_id:
-                    return True
-            except KeyError:
-                pass
-
     def is_done(self, msg):
         obj = msg['object']
         if not obj['status'] == 'Выполнена':

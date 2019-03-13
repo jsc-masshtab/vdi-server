@@ -22,6 +22,8 @@ graphene = "*"
 starlette = "*"
 psycopg2 = "*"
 asyncpg = "*"
+requests = "*"
+aiofiles = "*"
 
 [requires]
 python_version = "3.7"
