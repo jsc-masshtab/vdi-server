@@ -1,0 +1,4 @@
+{
+    "database_url": "postgresql://postgres:postgres@localhost:5432/vdi",
+    "migrations_dir": "migrations"
+}

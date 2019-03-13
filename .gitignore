@@ -94,4 +94,3 @@ ENV/
 .vagrant/**
 
 Pipfile.lock
-.mi.json
