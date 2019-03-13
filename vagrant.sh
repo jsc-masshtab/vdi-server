@@ -6,6 +6,8 @@ pacman --noconfirm -S --needed base-devel
 pacman --noconfirm -S python-pip postgresql
 python -m pip install pipenv
 
+cd /vagrant
+
 echo "Setting postgresql..."
 su postgres -c "initdb -D /var/lib/postgres/data"
 systemctl enable postgresql
@@ -14,6 +16,7 @@ sudo su postgres -c "psql -c \"create database vdi;\" "
 
 
 echo "Setting env..."
+# cd /home/vagrant/vdiserver
 echo "export PIPENV_SKIP_LOCK=1" >> /home/vagrant/.bashrc
 export PIPENV_SKIP_LOCK=1
 pipenv install
