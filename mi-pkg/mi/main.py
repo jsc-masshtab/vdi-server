@@ -1,3 +1,4 @@
+import asyncio
 from pathlib import Path
 
 import os
@@ -14,6 +15,8 @@ from cached_property import cached_property as cached
 from docopt import docopt
 
 from contextlib import ExitStack
+
+import inspect
 
 
 
@@ -191,7 +194,10 @@ CREATE TABLE migrations (
         import sys
         sys.path.insert(0, str(self.dir.absolute()))
         m = __import__(name)
-        m.run()
+        if inspect.iscoroutinefunction(m.run):
+            asyncio.run(m.run())
+        else:
+            m.run()
         del sys.path[0]
 
     def do_apply(self):
