@@ -206,6 +206,7 @@ CREATE TABLE migrations (
             if name.endswith('.py'):
                 self.apply_module(name[:-3])
                 self.exec(f"INSERT INTO migrations VALUES ('{name}');")
+                print(f"Applied: {name}")
                 continue
             p = self.dir / name
             with p.open() as f:

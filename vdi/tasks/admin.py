@@ -34,19 +34,40 @@ AsyncHTTPClient.configure("tornado.simple_httpclient.SimpleAsyncHTTPClient",
                           max_body_size=MAX_BODY_SIZE,
                           )
 
+#FIXME: http errors
+
 class AddNode(Task):
 
     url = f'http://{CONTROLLER_URL}/api/nodes/?async=1'
     method = 'POST'
 
-    body = json.dumps({
+    body = {
         "management_ip": "192.168.20.121",
         "controller_ip": "192.168.20.120",
         "ssh_password": "bazalt",
         "verbose_name": "node1",
-    })
+    }
+
+    async def check_present(self):
+        client = AsyncHTTPClient()
+        url = f"http://{CONTROLLER_URL}/api/nodes/"
+        token = await Token()
+        headers = {
+            'Authorization': f'jwt {token}',
+            'Content-Type': 'application/json',
+        }
+        res = await client.fetch(url, headers=headers)
+        res = json.loads(res.body)
+        for node in res['results']:
+            if node['management_ip'] == self.body['management_ip'] and node['verbose_name'] == self.body['verbose_name']:
+                return True
+            assert node['management_ip'] != self.body['management_ip']
+            assert node['verbose_name'] != self.body['verbose_name']
 
     async def run(self):
+        present = await self.check_present()
+        if present:
+            return
         ws = await WsConnection()
         await ws.send('add /tasks/')
         token = await Token()
@@ -54,7 +75,7 @@ class AddNode(Task):
             'Authorization': f'jwt {token}',
             'Content-Type': 'application/json',
         }
-        response = await HttpClient().fetch_using(self, headers=headers)
+        response = await HttpClient().fetch_using(self, headers=headers, body=json.dumps(self.body))
         self.task_id = response['_task']['id']
         await ws.match_message(self.is_done)
 
@@ -277,6 +298,20 @@ class DownloadImage(Task):
 class UploadImage(Task):
     filename: str
 
+    async def check_present(self):
+        token = await Token()
+        datapool = await DefaultDatapool()
+        url = f"http://{CONTROLLER_URL}/api/library/?datapool_id={datapool['id']}"
+        http_client = AsyncHTTPClient()
+        headers = {
+            'Authorization': f'jwt {token}'
+        }
+        response = await http_client.fetch(url, headers=headers)
+        response = json.loads(response.body)
+        for file in response["results"]:
+            if file["filename"] == self.filename:
+                return True
+
     async def get_upload_url(self):
         client = AsyncHTTPClient()
         token = await Token()
@@ -324,6 +359,9 @@ class UploadImage(Task):
 
 
     async def run(self):
+        present = await self.check_present()
+        if present:
+            return
         upload_url = await self.get_upload_url()
         ws = await WsConnection()
         await ws.send(f"add /tasks/")
