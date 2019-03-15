@@ -3,13 +3,14 @@ pacman --noconfirm -Syu
 
 echo "Installing packages..."
 pacman --noconfirm -S --needed base-devel
-pacman --noconfirm -S python-pip postgresql git
+pacman --noconfirm -S python-pip git
 python -m pip install pipenv
 
 cd /vagrant
 
-if [ -x "$(command -v psql)" ]; then
+if ! [ -x "$(command -v psql)" ]; then
   echo "Setting postgresql..."
+  pacman --noconfirm -S postgresql
   su postgres -c "initdb -D /var/lib/postgres/data"
   systemctl enable postgresql
   systemctl start postgresql
