@@ -3,15 +3,20 @@ pacman --noconfirm -Syu
 
 echo "Installing packages..."
 pacman --noconfirm -S --needed base-devel
-pacman --noconfirm -S python-pip postgresql
+pacman --noconfirm -S python-pip postgresql git
 python -m pip install pipenv
 
 cd /vagrant
 
-echo "Setting postgresql..."
-su postgres -c "initdb -D /var/lib/postgres/data"
-systemctl enable postgresql
-systemctl start postgresql
+if ! [ -x "$(command -v psql)" ]; then
+  echo "Setting postgresql..."
+  su postgres -c "initdb -D /var/lib/postgres/data"
+  systemctl enable postgresql
+  systemctl start postgresql
+fi
+
+
+sudo su postgres -c "psql -c \"drop database vdi;\" "
 sudo su postgres -c "psql -c \"create database vdi;\" "
 
 
