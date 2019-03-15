@@ -8,7 +8,7 @@ python -m pip install pipenv
 
 cd /vagrant
 
-if ! [ -x "$(command -v psql)" ]; then
+if [ -x "$(command -v psql)" ]; then
   echo "Setting postgresql..."
   su postgres -c "initdb -D /var/lib/postgres/data"
   systemctl enable postgresql
