@@ -2,16 +2,24 @@ import sys
 
 import json
 import inspect
-from pprint import pprint
-from tornado.httpclient import HTTPRequest
+from tornado.httpclient import HTTPRequest, HTTPError
 from tornado.httpclient import AsyncHTTPClient
 
-# TODO logging
+MAX_BODY_SIZE = 10 * 1024 * 1024 * 1024
 
-class FetchException:
-    'TODO'
+AsyncHTTPClient.configure("tornado.simple_httpclient.SimpleAsyncHTTPClient",
+                          max_body_size=MAX_BODY_SIZE,
+                          )
+
+class FetchException(Exception):
+
+    def __init__(self, obj):
+        super().__init__(repr(obj))
+
 
 class HttpClient:
+
+    request_timeout = 24 * 3600
 
     def __init__(self, json=True):
         self._client = AsyncHTTPClient()
@@ -54,16 +62,18 @@ class HttpClient:
                 # is actually an attribute
                 dic[name] = method
         url = dic.pop('url')
-        try:
-            response = await self._client.fetch(url, **dic)
-        except:
-            print(url, file=sys.stderr)
-            e_t, e, tb = sys.exc_info()
-            v = e.response.buffer.read()
-            pprint(json.loads(v))
-            # TODO
-            raise
+        response = await self.fetch(url, **dic)
         if self._json:
             response = json.loads(response.body)
         return response
 
+
+    async def fetch(self, *args, **kwargs):
+        if not 'request_timeout' in kwargs:
+            kwargs['request_timeout'] = self.request_timeout
+        try:
+            response = await self._client.fetch(*args, **kwargs)
+        except HTTPError as e:
+            val = e.response.buffer.read()
+            raise FetchException(val)
+        return response

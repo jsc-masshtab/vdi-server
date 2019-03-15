@@ -2,24 +2,17 @@ import json
 import uuid
 from dataclasses import dataclass
 from g_tasks import Task
-from tornado.httpclient import AsyncHTTPClient
+from vdi.tasks.client import HttpClient
 
 from .base import CONTROLLER_URL, Token
 from .client import HttpClient
 from .disk import DefaultDatapool
 from .ws import WsConnection
 
-MAX_BODY_SIZE = 10 * 1024 * 1024 * 1024
-
-AsyncHTTPClient.configure("tornado.simple_httpclient.SimpleAsyncHTTPClient",
-                          max_body_size=MAX_BODY_SIZE,
-                          )
 
 from cached_property import cached_property as cached
 
 from pathlib import Path
-
-#FIXME: http errors
 
 class AddNode(Task):
 
@@ -34,7 +27,7 @@ class AddNode(Task):
     }
 
     async def check_present(self):
-        client = AsyncHTTPClient()
+        client = HttpClient()
         url = f"http://{CONTROLLER_URL}/api/nodes/"
         token = await Token()
         headers = {
@@ -78,7 +71,7 @@ class DownloadImage(Task):
         target = Path(self.target)
         if target.exists():
             return
-        client = AsyncHTTPClient()
+        client = HttpClient()
 
         with target.open('wb') as f:
             def on_chunk(c):
@@ -95,7 +88,7 @@ class UploadImage(Task):
         token = await Token()
         datapool = await DefaultDatapool()
         url = f"http://{CONTROLLER_URL}/api/library/?datapool_id={datapool['id']}"
-        http_client = AsyncHTTPClient()
+        http_client = HttpClient()
         headers = {
             'Authorization': f'jwt {token}'
         }
@@ -106,7 +99,7 @@ class UploadImage(Task):
                 return True
 
     async def get_upload_url(self):
-        client = AsyncHTTPClient()
+        client = HttpClient()
         token = await Token()
         datapool = await DefaultDatapool()
         headers = {
@@ -160,7 +153,7 @@ class UploadImage(Task):
         await ws.send(f"add /tasks/")
         await ws.send(f"add /events/")
 
-        client = AsyncHTTPClient()
+        client = HttpClient()
         token = await Token()
         headers = {
             "Content-Type": "multipart/form-data; boundary=%s" % self.boundary,

@@ -8,7 +8,7 @@ from .client import HttpClient
 from ..pool import Pool
 
 import json
-from tornado.httpclient import AsyncHTTPClient
+from vdi.tasks.client import HttpClient
 
 from dataclasses import dataclass
 
@@ -23,7 +23,7 @@ class DefaultDatapool(Task):
         headers = {
             'Authorization': f'jwt {token}'
         }
-        http_client = AsyncHTTPClient()
+        http_client = HttpClient()
         response = await http_client.fetch(url, headers=headers)
         response = json.loads(response.body)
         for rec in response['results']:
@@ -44,7 +44,7 @@ class Image(Task):
         token = await Token()
         datapool = await DefaultDatapool()
         url = f"http://{CONTROLLER_URL}/api/library/?datapool_id={datapool['id']}"
-        http_client = AsyncHTTPClient()
+        http_client = HttpClient()
         headers = {
             'Authorization': f'jwt {token}'
         }
@@ -75,7 +75,7 @@ class ImportDisk(Task):
         ws = await WsConnection()
         await ws.send('add /tasks/')
 
-        http_client = AsyncHTTPClient()
+        http_client = HttpClient()
         url = f'http://{CONTROLLER_URL}/api/library/{image_id}/import/?async=1'
         headers = {
             'Authorization': f'jwt {token}',

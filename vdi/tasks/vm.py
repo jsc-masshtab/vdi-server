@@ -7,7 +7,7 @@ import urllib
 import time
 
 import json
-from tornado.httpclient import AsyncHTTPClient
+from vdi.tasks.client import HttpClient
 
 from dataclasses import dataclass
 
@@ -67,7 +67,7 @@ class CreateDomain(Task):
         }
         ws = await WsConnection()
         await ws.send('add /tasks/')
-        http_client = AsyncHTTPClient()
+        http_client = HttpClient()
         params = await self.params()
         body = urllib.parse.urlencode(params)
         response = await http_client.fetch(self.url, method='POST', headers=headers, body=body)
