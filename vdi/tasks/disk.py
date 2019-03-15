@@ -67,7 +67,7 @@ class ImportDisk(Task):
     vm_name: str
 
     def is_done(self, msg):
-        return msg['object']['status'] == 'Выполнена' and msg['id'] == self.task['id']
+        return msg['object']['status'] == 'SUCCESS' and msg['id'] == self.task['id']
 
     async def run(self):
         image_id = await Image(image_name=self.image_name)
@@ -124,7 +124,7 @@ class CopyDisk(Task):
 
     def is_done(self, msg):
         obj = msg['object']
-        return obj['id'] == self.task['id'] and obj['status'] == 'Выполнена'
+        return obj['id'] == self.task['id'] and obj['status'] == 'SUCCESS'
 
     def get_result(self):
         """

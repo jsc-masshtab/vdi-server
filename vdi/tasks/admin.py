@@ -59,7 +59,7 @@ class AddNode(Task):
 
     def is_done(self, msg):
         obj = msg['object']
-        return obj['status'] == 'Выполнена' and obj['id'] == self.task_id
+        return obj['status'] == 'SUCCESS' and obj['id'] == self.task_id
 
 
 @dataclass()

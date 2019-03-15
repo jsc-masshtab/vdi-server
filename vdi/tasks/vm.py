@@ -54,7 +54,7 @@ class CreateDomain(Task):
 
     def is_done(self, msg):
         obj = msg['object']
-        if not obj['status'] == 'Выполнена':
+        if not obj['status'] == 'SUCCESS':
             return
         for id, e in obj['entities'].items():
             if e == 'domain':
@@ -99,7 +99,7 @@ class AttachVdisk(Task):
 
     def is_done(self, msg):
         obj = msg['object']
-        if obj['status'] != 'Выполнена':
+        if obj['status'] != 'SUCCESS':
             return
         for e_id, e_type in obj['entities'].items():
             if e_type == 'vdisk' and self.vdisk != e_id:

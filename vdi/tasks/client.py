@@ -24,7 +24,6 @@ class HttpClient:
     def __init__(self, json=True):
         self._client = AsyncHTTPClient()
         self._json = json
-
     @classmethod
     def get_params(cls):
         sig = inspect.signature(HTTPRequest)
