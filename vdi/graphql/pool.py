@@ -184,7 +184,7 @@ class PoolQuery(graphene.ObjectType):
     pool = graphene.Field(PoolType, id=graphene.Int())
 
     @db.connect()
-    async def resolve_instance(self, info, id, conn: Connection):
+    async def resolve_pool(self, info, id, conn: Connection):
         fields = [
             f for f in get_selections(info)
             if f in PoolType.sql_fields
@@ -202,7 +202,7 @@ class PoolQuery(graphene.ObjectType):
         return ret
 
     @db.connect()
-    async def resolve_list(self, info, conn: Connection):
+    async def resolve_pools(self, info, conn: Connection):
         fields = get_selections(info)
         qu = f'''
         SELECT ({', '.join(fields)}) FROM pool'''
@@ -244,8 +244,8 @@ class AddTemplate(graphene.Mutation):
     @db.connect()
     async def mutate(self, info, id, conn: Connection):
         qu = '''
-            INSERT INTO vm (id, is_template) VALUES ($1, $2)
-            ''', id, True
+            INSERT INTO template_vm (id) VALUES ($1)
+            ''', id
         await conn.fetch(*qu)
         return AddTemplate(ok=True)
 

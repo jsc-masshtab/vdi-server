@@ -27,7 +27,7 @@ class DefaultDatapool(Task):
         response = await http_client.fetch(url, headers=headers)
         response = json.loads(response.body)
         for rec in response['results']:
-            if 'default datapool' in rec['verbose_name'].lower():
+            if 'default' in rec['verbose_name'].lower():
                 return rec
 
 
