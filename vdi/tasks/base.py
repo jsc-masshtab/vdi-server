@@ -9,14 +9,14 @@ from ..pool import Pool
 from vdi.tasks.client import HttpClient
 
 from ..settings import settings
-CONTROLLER_URL = settings['controller_url']
+CONTROLLER_IP = settings['controller_ip']
 
 class Token(Task):
     creds = {
         'username': 'admin',
         'password': 'veil',
     }
-    url = f'http://{CONTROLLER_URL}/auth/'
+    url = f'http://{CONTROLLER_IP}/auth/'
 
     async def run(self):
 

@@ -11,7 +11,7 @@ from vdi.tasks.client import HttpClient
 
 from dataclasses import dataclass
 
-from .base import CONTROLLER_URL, Token
+from .base import CONTROLLER_IP, Token
 from . import disk
 from .client import HttpClient
 from .ws import WsConnection
@@ -37,7 +37,7 @@ class CreateDomain(Task):
 
     vm_name: str
 
-    url = f'http://{CONTROLLER_URL}/api/domains/'
+    url = f'http://{CONTROLLER_IP}/api/domains/'
 
     async def params(self):
         node_id = await Node()
@@ -72,7 +72,7 @@ class CreateDomain(Task):
         body = urllib.parse.urlencode(params)
         response = await http_client.fetch(self.url, method='POST', headers=headers, body=body)
         self.domain = json.loads(response.body)
-        await ws.match_message(self.is_done)
+        await ws.wait_message(self.is_done)
         return self.domain
 
 
@@ -84,7 +84,7 @@ class AttachVdisk(Task):
     vdisk: str
 
     async def url(self):
-        return f"http://{CONTROLLER_URL}/api/domains/{self.domain['id']}/attach-vdisk/"
+        return f"http://{CONTROLLER_IP}/api/domains/{self.domain['id']}/attach-vdisk/"
 
     async def body(self):
         datapool = await disk.DefaultDatapool()
@@ -116,7 +116,7 @@ class AttachVdisk(Task):
             'Authorization': f'jwt {token}'
         }
         self.response = await HttpClient().fetch_using(self, headers=headers)
-        await ws.match_message(self.is_done)
+        await ws.wait_message(self.is_done)
         return True
 
 
@@ -144,7 +144,7 @@ class CopyDomain(Task):
 
 
     async def list_vdisks(self):
-        url = f'http://{CONTROLLER_URL}/api/vdisks/?domain={self.domain_id}'
+        url = f'http://{CONTROLLER_IP}/api/vdisks/?domain={self.domain_id}'
         token = await Token()
         headers = {
             'Authorization': f'jwt {token}'

@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from g_tasks import Task
 from vdi.tasks.client import HttpClient
 
-from .base import CONTROLLER_URL, Token
+from .base import CONTROLLER_IP, Token
 from .client import HttpClient
 from .disk import DefaultDatapool
 from .ws import WsConnection
@@ -14,13 +14,15 @@ from cached_property import cached_property as cached
 
 from pathlib import Path
 
+@dataclass()
 class AddNode(Task):
 
-    url = f'http://{CONTROLLER_URL}/api/nodes/?async=1'
+    management_ip: str = '192.168.20.121'
+    url = f'http://{CONTROLLER_IP}/api/nodes/?async=1'
     method = 'POST'
 
     body = {
-        "management_ip": "192.168.20.121",
+        "management_ip": management_ip,
         "controller_ip": "192.168.20.120",
         "ssh_password": "bazalt",
         "verbose_name": "node1",
@@ -28,7 +30,7 @@ class AddNode(Task):
 
     async def check_present(self):
         client = HttpClient()
-        url = f"http://{CONTROLLER_URL}/api/nodes/"
+        url = f"http://{CONTROLLER_IP}/api/nodes/"
         token = await Token()
         headers = {
             'Authorization': f'jwt {token}',
@@ -55,7 +57,7 @@ class AddNode(Task):
         }
         response = await HttpClient().fetch_using(self, headers=headers, body=json.dumps(self.body))
         self.task_id = response['_task']['id']
-        await ws.match_message(self.is_done)
+        await ws.wait_message(self.is_done)
 
     def is_done(self, msg):
         obj = msg['object']
@@ -87,7 +89,7 @@ class UploadImage(Task):
     async def check_present(self):
         token = await Token()
         datapool = await DefaultDatapool()
-        url = f"http://{CONTROLLER_URL}/api/library/?datapool_id={datapool['id']}"
+        url = f"http://{CONTROLLER_IP}/api/library/?datapool_id={datapool['id']}"
         http_client = HttpClient()
         headers = {
             'Authorization': f'jwt {token}'
@@ -106,14 +108,14 @@ class UploadImage(Task):
             'Authorization': f'jwt {token}',
             'Content-Type': 'application/json',
         }
-        url = f'http://{CONTROLLER_URL}/api/library/'
+        url = f'http://{CONTROLLER_IP}/api/library/'
         body = json.dumps({
             'datapool': datapool['id'],
             'filename': self.filename,
         })
         res = await client.fetch(url, method='PUT', body=body, headers=headers)
         res = json.loads(res.body)
-        return f"http://{CONTROLLER_URL}{res['upload_url']}"
+        return f"http://{CONTROLLER_IP}{res['upload_url']}"
 
     @cached
     def boundary(self):

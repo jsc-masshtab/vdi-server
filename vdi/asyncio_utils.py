@@ -20,7 +20,8 @@ class Wait:
         def on_done(fut, results=self.results[:]):
             if fut.cancelled():
                 r = asyncio.CancelledError()
-            r = fut.exception() or fut.result()
+            else:
+                r = fut
             results.pop().set_result(r)
 
         for task in awaitables:
@@ -30,11 +31,17 @@ class Wait:
         return self
 
     async def __anext__(self):
+        async for r, task in self.items():
+            return r
+        raise StopIteration
+
+    async def items(self):
         while self.results:
             fut = self.results.pop()
-            r = await fut
-            return r
-        raise StopAsyncIteration
+            awaited = await fut
+            r = awaited.exception() or awaited.result()
+            yield (r, awaited)
+
 
 
 def callback(async_fun):
@@ -67,3 +74,5 @@ class Awaitable:
 
     async def run(self):
         raise NotImplementedError
+
+

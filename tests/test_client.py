@@ -2,7 +2,7 @@ import pytest
 
 from g_tasks import g, Task
 
-from vdi.tasks import disk, vm, CONTROLLER_URL
+from vdi.tasks import disk, vm, CONTROLLER_IP
 from vdi.tasks.client import HttpClient
 
 
@@ -13,7 +13,7 @@ from vdi.tasks.client import HttpClient
 async def test_attrs():
 
     class ListDomains(Task):
-        url = f"http://{CONTROLLER_URL}/api/domains"
+        url = f"http://{CONTROLLER_IP}/api/domains"
 
         async def headers(self):
             token = await disk.Token()
@@ -35,7 +35,7 @@ async def test_attrs():
 async def test_http_request():
 
     class ListDomains(Task):
-        url = f"http://{CONTROLLER_URL}/api/domains"
+        url = f"http://{CONTROLLER_IP}/api/domains"
 
         async def http_request(self):
             token = await disk.Token()

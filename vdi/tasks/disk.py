@@ -1,7 +1,7 @@
 
 from g_tasks import Task, task
 
-from .base import CONTROLLER_URL, Token
+from .base import CONTROLLER_IP, Token
 from .ws import WsConnection
 from .client import HttpClient
 
@@ -19,7 +19,7 @@ class DefaultDatapool(Task):
 
     async def run(self):
         token = await Token()
-        url = f'http://{CONTROLLER_URL}{self.url}'
+        url = f'http://{CONTROLLER_IP}{self.url}'
         headers = {
             'Authorization': f'jwt {token}'
         }
@@ -43,7 +43,7 @@ class Image(Task):
     async def run(self):
         token = await Token()
         datapool = await DefaultDatapool()
-        url = f"http://{CONTROLLER_URL}/api/library/?datapool_id={datapool['id']}"
+        url = f"http://{CONTROLLER_IP}/api/library/?datapool_id={datapool['id']}"
         http_client = HttpClient()
         headers = {
             'Authorization': f'jwt {token}'
@@ -76,7 +76,7 @@ class ImportDisk(Task):
         await ws.send('add /tasks/')
 
         http_client = HttpClient()
-        url = f'http://{CONTROLLER_URL}/api/library/{image_id}/import/?async=1'
+        url = f'http://{CONTROLLER_IP}/api/library/{image_id}/import/?async=1'
         headers = {
             'Authorization': f'jwt {token}',
             'Content-Type': 'application/json',
@@ -91,7 +91,7 @@ class ImportDisk(Task):
             if v == 'vdisk':
                 disk_id = k
                 break
-        await ws.match_message(self.is_done)
+        await ws.wait_message(self.is_done)
         return disk_id
 
 
@@ -104,7 +104,7 @@ class CopyDisk(Task):
     method = 'POST'
 
     def url(self):
-        return f'http://{CONTROLLER_URL}/api/vdisks/{self.vdisk}/copy/?async=1'
+        return f'http://{CONTROLLER_IP}/api/vdisks/{self.vdisk}/copy/?async=1'
 
     async def headers(self):
         token = await Token()
@@ -139,5 +139,5 @@ class CopyDisk(Task):
         await ws.send('add /tasks/')
         response = await HttpClient().fetch_using(self)
         self.task = response['_task']
-        await ws.match_message(self.is_done)
+        await ws.wait_message(self.is_done)
         return self.get_result()

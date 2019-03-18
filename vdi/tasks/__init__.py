@@ -1,3 +1,3 @@
 
-from .base import Token, CONTROLLER_URL
+from .base import Token, CONTROLLER_IP
 from . import disk, vm
