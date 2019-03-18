@@ -59,6 +59,7 @@ async def login(request):
 
 @app.on_event('startup')
 async def startup():
+    g.use_threadlocal(False)
     await db.init()
 
 

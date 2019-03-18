@@ -50,9 +50,9 @@ class WsConnection(Awaitable):
                 pass
 
     def make_sleep_task(self, timeout):
-        async def co():
+        async def sleep_co():
             await asyncio.sleep(timeout)
-        t = asyncio.create_task(co())
+        t = asyncio.create_task(sleep_co())
         t.i_am_timeout = True
         return t
 

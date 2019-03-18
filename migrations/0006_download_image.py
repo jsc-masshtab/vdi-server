@@ -7,6 +7,5 @@ from g_tasks import g
 async def run():
     if not settings['debug']:
         return
-    g.init()
     await admin.AddNode(management_ip='192.168.20.121')
     await admin.DownloadImage(target='image.qcow2')

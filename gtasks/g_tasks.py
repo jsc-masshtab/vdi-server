@@ -19,12 +19,12 @@ class Context:
             return local_ctx.g[var]
         return var.get()
 
-    @values.setter
-    def values(self, value):
-        var = self._values
-        if local_ctx.use_me:
-            local_ctx.g[var] = value
-        var.set(value)
+    # @values.setter
+    # def values(self, value):
+    #     var = self._values
+    #     if local_ctx.use_me:
+    #         local_ctx.g[var] = value
+    #     var.set(value)
 
     @property
     def tasks(self):
@@ -33,19 +33,21 @@ class Context:
             return local_ctx.g[var]
         return var.get()
 
-    @tasks.setter
-    def tasks(self, value):
-        var = self._tasks
-        if local_ctx.use_me:
-            local_ctx.g[var] = value
-        var.set(value)
+
+    # @tasks.setter
+    # def tasks(self, value):
+    #     var = self._tasks
+    #     if local_ctx.use_me:
+    #         local_ctx.g[var] = value
+    #     var.set(value)
 
     def use_threadlocal(self, yes=True):
         local_ctx.use_me = yes
         try:
             g.tasks
-        except:
-            g.init()
+        except LookupError:
+            local_ctx.g[self._tasks] = {}
+            local_ctx.g[self._values] = {}
 
     def __getattr__(self, item):
         return self.values[item]
@@ -54,8 +56,8 @@ class Context:
         self.values[key] = value
 
     def init(self):
-        self.values = {}
-        self.tasks = {}
+        self._values.set({})
+        self._tasks.set({})
 
 
 

@@ -158,8 +158,6 @@ class CopyDomain(Task):
         return vdisks
 
     async def run(self):
-        # this is a root task
-        g.init()
         [vdisk0] = await self.list_vdisks()
         domain = await CreateDomain(vm_name=self.vm_name)
         vdisk = await disk.CopyDisk(vdisk=vdisk0, verbose_name=domain['verbose_name'])
