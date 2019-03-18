@@ -29,4 +29,4 @@ echo "Applying migrations..."
 pipenv run mi apply
 
 echo "Running the server..."
-pipenv run uvicorn vdi.app:app --host 0.0.0.0
+pipenv run uvicorn vdi.app:app --host 0.0.0.0 --port 80
