@@ -24,6 +24,7 @@ psycopg2 = "*"
 asyncpg = "*"
 requests = "*"
 aiofiles = "*"
+itsdangerous = "*"
 
 [requires]
 python_version = "3.7"

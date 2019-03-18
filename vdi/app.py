@@ -1,11 +1,20 @@
 import sys
 
 from starlette.applications import Starlette
-from starlette.responses import JSONResponse
+from starlette.responses import JSONResponse, PlainTextResponse
+from starlette.authentication import AuthenticationError
+
+import base64
+import binascii
+
+import json
+
+from asyncpg.connection import Connection
 
 from .settings import settings
 
 from . import app
+from .db import db
 
 from g_tasks import g
 
@@ -53,9 +62,28 @@ async def get_vm(request):
 
 
 @app.route('/client/login', methods=['POST', 'GET'])
-async def login(request):
-    1
+@db.connect()
+async def login(request, conn: Connection):
+    data = request.query_params
+    # data = json.loads(request.data)
 
+    qu = "select password from public.user where username = $1", data['username']
+    [[value]] = await conn.fetch(*qu)
+    assert value == data['password']
+    request.session.update(username=data['username'])
+    return PlainTextResponse('ok')
+
+
+from starlette.authentication import requires
+
+
+@app.route('/check')
+@requires(['authenticated'])
+def check(request):
+    username = request.session['username']
+    return JSONResponse({
+        'user': username
+    })
 
 @app.on_event('startup')
 async def startup():
@@ -63,4 +91,6 @@ async def startup():
     await db.init()
 
 
-import vdi.graphql.pool
+import vdi.graphql.schema
+import vdi.auth
+

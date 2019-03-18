@@ -1,22 +1,13 @@
 import asyncio
-from starlette.responses import JSONResponse
-from starlette.graphql import GraphQLApp # as starlette_GraphQLApp
-import graphene
 
-import sys
+import graphene
+import json
+from asyncpg.connection import Connection
 from cached_property import cached_property as cached
 
-
-from ..app import app
 from ..db import db
-from ..settings import settings
 from ..pool import Pool
-from ..tasks import vm
 
-from asyncpg.connection import Connection
-
-import json
-import graphene
 
 class RunningState(graphene.Enum):
     RUNNING = 1
@@ -170,98 +161,6 @@ class LaunchPool(graphene.Mutation):
         state = PoolState(running=True)
         state.pool = pool
         return LaunchPool(state=state)
-
-
-def get_selections(info):
-    return [
-        f.name.value
-        for f in info.field_asts[0].selection_set.selections
-    ]
-
-
-class PoolQuery(graphene.ObjectType):
-    pools = graphene.List(PoolType)
-    pool = graphene.Field(PoolType, id=graphene.Int())
-
-    @db.connect()
-    async def resolve_pool(self, info, id, conn: Connection):
-        fields = [
-            f for f in get_selections(info)
-            if f in PoolType.sql_fields
-        ]
-        qu = f'''
-        SELECT {', '.join(fields)} FROM pool
-        WHERE id = '{id}'
-        '''
-        [pool] = await conn.fetch(qu)
-        dic = {
-            f: pool[f] for f in fields
-        }
-        ret = PoolType(**dic)
-        ret.pool_id = id
-        return ret
-
-    @db.connect()
-    async def resolve_pools(self, info, conn: Connection):
-        fields = get_selections(info)
-        qu = f'''
-        SELECT ({', '.join(fields)}) FROM pool'''
-        pools = await conn.fetch(qu)
-        items = []
-        for p in pools:
-            p = {
-                f: p[f] for f in fields
-            }
-            items.append(PoolType(**p))
-        return items
-
-
-class CreateTemplate(graphene.Mutation):
-    '''
-    Awaits the result. Mostly for development use
-    '''
-    class Arguments:
-        image_name = graphene.String()
-
-    id = graphene.String()
-
-    @db.connect()
-    async def mutate(self, info, image_name, conn: Connection):
-        domain = await vm.SetupDomain(image_name=image_name)
-        qu = '''
-            INSERT INTO template_vm (id) VALUES ($1)
-            ''', domain['id']
-        await conn.fetch(*qu)
-        return CreateTemplate(id=domain['id'])
-
-
-class AddTemplate(graphene.Mutation):
-    class Arguments:
-        id = graphene.String()
-
-    ok = graphene.Boolean()
-
-    @db.connect()
-    async def mutate(self, info, id, conn: Connection):
-        qu = '''
-            INSERT INTO template_vm (id) VALUES ($1)
-            ''', id
-        await conn.fetch(*qu)
-        return AddTemplate(ok=True)
-
-
-
-class PoolMutations(graphene.ObjectType):
-    addPool = AddPool.Field()
-    launchPool = LaunchPool.Field()
-    createTemplate = CreateTemplate.Field()
-    addTemplate = AddTemplate.Field()
-
-from graphql.execution.executors.asyncio import AsyncioExecutor
-
-schema = graphene.Schema(query=PoolQuery, mutation=PoolMutations, auto_camelcase=False)
-
-app.add_route('/admin', GraphQLApp(schema, executor_class=AsyncioExecutor))
 
 
 
