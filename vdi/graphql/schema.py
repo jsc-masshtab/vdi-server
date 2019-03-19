@@ -2,7 +2,7 @@ import graphene
 from asyncpg.connection import Connection
 from starlette.graphql import GraphQLApp  # as starlette_GraphQLApp
 
-from .pool import PoolType, LaunchPool, AddPool
+from .pool import PoolType, LaunchPool, AddPool, PoolMixin
 from .util import get_selections
 from .vm import CreateTemplate, AddTemplate
 from .users import CreateUser, ListUsers
@@ -18,40 +18,8 @@ class PoolMutations(graphene.ObjectType):
     addTemplate = AddTemplate.Field()
     createUser = CreateUser.Field()
 
-class PoolQuery(ListUsers, graphene.ObjectType):
-    pools = graphene.List(PoolType)
-    pool = graphene.Field(PoolType, id=graphene.Int())
-
-    @db.connect()
-    async def resolve_pool(self, info, id, conn: Connection):
-        fields = [
-            f for f in get_selections(info)
-            if f in PoolType.sql_fields
-        ]
-        qu = f'''
-        SELECT {', '.join(fields)} FROM pool
-        WHERE id = '{id}'
-        '''
-        [pool] = await conn.fetch(qu)
-        dic = {
-            f: pool[f] for f in fields
-        }
-        ret = PoolType(**dic)
-        ret.pool_id = id
-        return ret
-
-    @db.connect()
-    async def resolve_pools(self, info, conn: Connection):
-        fields = get_selections(info)
-        qu = f"SELECT {', '.join(fields)} FROM pool"
-        pools = await conn.fetch(qu)
-        items = []
-        for p in pools:
-            p = {
-                f: p[f] for f in fields
-            }
-            items.append(PoolType(**p))
-        return items
+class PoolQuery(ListUsers, PoolMixin, graphene.ObjectType):
+    1
 
 
 

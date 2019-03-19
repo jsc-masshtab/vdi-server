@@ -13,6 +13,7 @@ from .util import get_selections
 class UserType(graphene.ObjectType):
     username = graphene.String()
     password = graphene.String()
+    email = graphene.String()
 
 
 class CreateUser(graphene.Mutation):

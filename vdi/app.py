@@ -64,8 +64,10 @@ async def get_vm(request):
 @app.route('/client/login', methods=['POST', 'GET'])
 @db.connect()
 async def login(request, conn: Connection):
-    data = request.query_params
-    # data = json.loads(request.data)
+    if request.method == 'GET':
+        data = request.query_params
+    else:
+        data = json.loads(request.data)
 
     qu = "select password from public.user where username = $1", data['username']
     [[value]] = await conn.fetch(*qu)
