@@ -19,27 +19,12 @@ class Context:
             return local_ctx.g[var]
         return var.get()
 
-    # @values.setter
-    # def values(self, value):
-    #     var = self._values
-    #     if local_ctx.use_me:
-    #         local_ctx.g[var] = value
-    #     var.set(value)
-
     @property
     def tasks(self):
         var = self._tasks
         if local_ctx.use_me:
             return local_ctx.g[var]
         return var.get()
-
-
-    # @tasks.setter
-    # def tasks(self, value):
-    #     var = self._tasks
-    #     if local_ctx.use_me:
-    #         local_ctx.g[var] = value
-    #     var.set(value)
 
     def use_threadlocal(self, yes=True):
         local_ctx.use_me = yes
@@ -116,11 +101,6 @@ class Task:
         task = asyncio.shield(task)
         tasks[self.id] = task
         return task
-
-    # async def fresh_context(self):
-    #     g.init()
-    #     return (await self)
-    #
 
     def __init__(self, **kwargs):
         self.__dict__.update(kwargs)

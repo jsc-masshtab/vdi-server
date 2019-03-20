@@ -4,7 +4,7 @@ from starlette.graphql import GraphQLApp  # as starlette_GraphQLApp
 
 from .pool import PoolType, LaunchPool, AddPool, PoolMixin
 from .util import get_selections
-from .vm import CreateTemplate, AddTemplate
+from .vm import CreateTemplate, AddTemplate, TemplateMixin
 from .users import CreateUser, ListUsers
 
 from ..app import app
@@ -18,7 +18,7 @@ class PoolMutations(graphene.ObjectType):
     addTemplate = AddTemplate.Field()
     createUser = CreateUser.Field()
 
-class PoolQuery(ListUsers, PoolMixin, graphene.ObjectType):
+class PoolQuery(ListUsers, PoolMixin, TemplateMixin, graphene.ObjectType):
     1
 
 

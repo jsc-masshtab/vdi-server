@@ -1,10 +1,16 @@
 import graphene
+import json
 
 from asyncpg.connection import Connection
 
 from ..db import db
 from ..tasks import vm
 
+from .util import get_selections
+
+class TemplateType(graphene.ObjectType):
+    id = graphene.String()
+    info = graphene.String()
 
 
 class CreateTemplate(graphene.Mutation):
@@ -14,16 +20,18 @@ class CreateTemplate(graphene.Mutation):
     class Arguments:
         image_name = graphene.String()
 
-    id = graphene.String()
+    template = graphene.Field(TemplateType)
 
     @db.connect()
     async def mutate(self, info, image_name, conn: Connection):
         domain = await vm.SetupDomain(image_name=image_name)
+        veil_info = json.dumps(domain)
         qu = '''
-            INSERT INTO template_vm (id) VALUES ($1)
-            ''', domain['id']
+            INSERT INTO template_vm (id, veil_info) VALUES ($1, $2)
+            ''', domain['id'], veil_info
         await conn.fetch(*qu)
-        return CreateTemplate(id=domain['id'])
+        t = TemplateType(id=domain['id'], info=veil_info)
+        return CreateTemplate(template=t)
 
 
 class AddTemplate(graphene.Mutation):
@@ -43,3 +51,20 @@ class AddTemplate(graphene.Mutation):
 
 
 
+class TemplateMixin:
+
+    templates = graphene.List(TemplateType)
+
+    @db.connect()
+    async def resolve_templates(self, info, conn: Connection):
+        selections = get_selections(info)
+        fields = selections[:]
+        if 'info' in selections:
+            fields[fields.index('info')] = 'veil_info'
+        qu = f"SELECT {', '.join(fields)} FROM template_vm"
+        templates = await conn.fetch(qu)
+        li = []
+        for t in templates:
+            t = dict(zip(selections, t))
+            li.append(TemplateType(**t))
+        return li
