@@ -91,7 +91,7 @@ ENV/
 
 .vscode/**
 .idea/**
-.vagrant/**
+.vagrant/
 *.qcow2
 
 Pipfile.lock
