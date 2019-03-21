@@ -3,6 +3,11 @@ import sys
 from starlette.applications import Starlette
 from starlette.responses import JSONResponse, PlainTextResponse
 from starlette.authentication import AuthenticationError
+from starlette.middleware.authentication import AuthenticationMiddleware
+from starlette.middleware.sessions import SessionMiddleware
+from starlette.middleware.cors import CORSMiddleware
+
+from .auth import SessionAuthBackend
 
 import base64
 import binascii
@@ -95,4 +100,13 @@ async def startup():
 
 import vdi.graphql.schema
 import vdi.auth
+
+
+
+app.add_middleware(AuthenticationMiddleware, backend=SessionAuthBackend())
+app.add_middleware(SessionMiddleware, secret_key='sphere')
+if settings.get('debug'):
+    app.add_middleware(CORSMiddleware, allow_origins=['*'], allow_methods=['*'], allow_headers=['*'],
+                       allow_credentials=True)
+
 
