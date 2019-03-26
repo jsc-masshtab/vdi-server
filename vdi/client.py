@@ -3,6 +3,7 @@
 from g_tasks import Task
 from dataclasses import dataclass
 import urllib
+import json
 
 from .tasks.client import HttpClient
 
@@ -27,6 +28,7 @@ class PrepareVm(Task):
         })
         url = f"http://{CONTROLLER_IP}/api/domains/{self.domain_id}/remote-access/"
         r = await client.fetch(url, method='POST', headers=headers, body=body)
+        r = json.loads(r.body) #FIXME
         return {
             'host': CONTROLLER_IP,
             'port': r['remote_access_port'],

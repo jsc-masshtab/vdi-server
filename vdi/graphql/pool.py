@@ -198,7 +198,7 @@ class PoolMixin:
         selections = get_selections(info)
         # ?
         dic = await PoolMixin._select_pool(self, selections, id, conn=conn)
-        u_fields = get_selections(info, 'users')
+        u_fields = get_selections(info, 'users') or ()
         u_fields_joined = ', '.join(f'u.{f}' for f in u_fields)
         if u_fields:
             qu = f"""

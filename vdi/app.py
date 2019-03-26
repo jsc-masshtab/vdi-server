@@ -6,6 +6,7 @@ from starlette.authentication import AuthenticationError
 from starlette.middleware.authentication import AuthenticationMiddleware
 from starlette.middleware.sessions import SessionMiddleware
 from starlette.middleware.cors import CORSMiddleware
+from starlette.authentication import requires
 
 from .auth import SessionAuthBackend
 
@@ -50,19 +51,20 @@ async def debug(request, call_next):
         raise
 
 
-def get_pool():
-    for _, p in Pool.instances.items():
-        if p.params['name'] and 'pub' in p.params['name']:
-            return p
-    assert 0
 
-@app.route('/client', methods=['POST', 'GET'])
+@app.route('/client/{pool}', methods=['POST', 'GET'])
+# @requires('authenticated')
 async def get_vm(request):
-    pool = get_pool()
+    name = request.path_params['pool']
+    for pool in Pool.instances.values():
+        if pool.params['name'] == name:
+            break
+    else:
+        assert 0
     vm = await pool.queue.get()
     pool.on_vm_taken()
     addr = await client.PrepareVm(domain_id=vm['id'])
-    return addr
+    return JSONResponse(addr)
 
 
 @app.route('/client/login', methods=['POST', 'GET'])
