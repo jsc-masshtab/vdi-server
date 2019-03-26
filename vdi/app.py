@@ -26,6 +26,7 @@ from g_tasks import g
 from .tasks import disk, vm
 from .pool import Pool
 from .db import db
+from . import client
 
 
 @app.middleware("http")
@@ -57,13 +58,11 @@ def get_pool():
 
 @app.route('/client', methods=['POST', 'GET'])
 async def get_vm(request):
-    breakpoint()
     pool = get_pool()
     vm = await pool.queue.get()
     pool.on_vm_taken()
-    return JSONResponse({
-        vm['id']: vm
-    })
+    addr = await client.PrepareVm(domain_id=vm['id'])
+    return addr
 
 
 @app.route('/client/login', methods=['POST', 'GET'])

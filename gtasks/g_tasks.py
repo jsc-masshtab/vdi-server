@@ -100,6 +100,7 @@ class Task:
         task = asyncio.create_task(self.co())
         task = asyncio.shield(task)
         tasks[self.id] = task
+        task.type = self.__class__
         return task
 
     def __init__(self, **kwargs):

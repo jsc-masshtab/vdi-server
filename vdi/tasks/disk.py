@@ -29,6 +29,8 @@ class DefaultDatapool(Task):
         for rec in response['results']:
             if 'default' in rec['verbose_name'].lower():
                 return rec
+            if 'базовый' in rec['verbose_name'].lower():
+                return rec
 
 
 class ImageNotFound(Exception):

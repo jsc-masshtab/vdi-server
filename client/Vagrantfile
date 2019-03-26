@@ -17,7 +17,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do | config |
  config.vm.network "private_network", type: "dhcp"
 
  config.vm.define "vvhost" do | vvhost |
-   vvhost.vm.box = "generic/fedora29"
+   vvhost.vm.box = "roboxes/fedora29"
    vvhost.vm.hostname = "vvhost"
    
 

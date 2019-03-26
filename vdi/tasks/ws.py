@@ -15,7 +15,7 @@ class WsTimeout(Exception):
 
 class WsConnection(Awaitable):
 
-    timeout = 30
+    timeout = 5 * 60
 
     async def send(self, msg):
         return (await self._conn.write_message(msg))
