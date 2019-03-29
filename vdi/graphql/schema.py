@@ -1,6 +1,8 @@
 import graphene
 from asyncpg.connection import Connection
 from starlette.graphql import GraphQLApp  # as starlette_GraphQLApp
+from graphql.execution.executors.asyncio import AsyncioExecutor
+
 
 from .pool import PoolType, LaunchPool, AddPool, PoolMixin
 from .util import get_selections
@@ -23,9 +25,17 @@ class PoolQuery(ListUsers, PoolMixin, TemplateMixin, graphene.ObjectType):
 
 
 
-from graphql.execution.executors.asyncio import AsyncioExecutor
+
 
 schema = graphene.Schema(query=PoolQuery, mutation=PoolMutations, auto_camelcase=False)
 
 app.add_route('/admin', GraphQLApp(schema, executor_class=AsyncioExecutor))
 
+
+from graphql.execution.executors.asyncio import AsyncioExecutor
+from graphql.graphql import graphql
+
+
+async def exec(query):
+    r = await graphql(schema, query, executor=AsyncioExecutor(), return_promise=True)
+    return r
