@@ -32,13 +32,15 @@ async def image_name():
 async def test(image_name):
     qu = f'''
     mutation {{
-      createTemplate(image_name: {image_name}) {{
-        id
+      createTemplate(image_name: "{image_name}") {{
+        template {{
+            id
+        }}
       }}
     }}
     '''
     r = await exec(qu)
-    print(r.data)
+    assert r.data
 
 
 #TODO teardown fixture

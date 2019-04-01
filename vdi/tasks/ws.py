@@ -38,6 +38,7 @@ class WsConnection(Awaitable):
             if hasattr(task, 'i_am_timeout'):
                 ws_task.cancel()
                 raise WsTimeout
+            sleep_task.cancel()
             return result
 
 
