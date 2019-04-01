@@ -79,9 +79,7 @@ class Awaitable:
 
     @cached
     def task(self):
-        t = asyncio.create_task(self.run())
-        t.type = self.__class__
-        return t
+        return asyncio.create_task(self.run())
 
     def __await__(self):
         return self.task.__await__()
@@ -90,11 +88,18 @@ class Awaitable:
         raise NotImplementedError
 
 
+    class SleepResult:
+        pass
+
+    async def _sleep(self, seconds):
+        await asyncio.sleep(seconds)
+        return self.SleepResult()
+
     async def timeout(self, seconds):
-        sleep_task = Sleep(seconds)
+        sleep_task = asyncio.create_task(self._sleep(seconds))
 
         async for result in Wait(self, sleep_task):
-            if isinstance(result, Sleep.Result):
+            if isinstance(result, self.SleepResult):
                 self.task.cancel()
                 raise TaskTimeout(self.__class__)
             sleep_task.cancel()
@@ -105,14 +110,3 @@ class Awaitable:
 class TaskTimeout(Exception):
     task: type
 
-
-@dataclass()
-class Sleep(Awaitable):
-    timeout: float
-
-    class Result:
-        pass
-
-    async def run(self):
-        await asyncio.sleep(self.timeout)
-        return self.Result()
