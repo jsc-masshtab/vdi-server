@@ -5,11 +5,13 @@ import { Component, OnInit } from '@angular/core';
   templateUrl: './main-menu.component.html',
   styleUrls: ['./main-menu.component.scss']
 })
+
+
 export class MainMenuComponent implements OnInit {
 
   public listMenu: object[] = [{name:'Ресурсы',icon:'database'},{name:'Пулы',icon:'desktop'}];
 
-  constructor() { }
+  constructor() {}
 
   ngOnInit() {
   }

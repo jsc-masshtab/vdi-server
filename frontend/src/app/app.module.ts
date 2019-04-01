@@ -10,12 +10,15 @@ import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { library } from '@fortawesome/fontawesome-svg-core'
 import { faDesktop,faDatabase } from '@fortawesome/free-solid-svg-icons';
 import { MainMenuComponent } from './main-menu/main-menu.component';
+import { TeplatesService } from './templates/templates.service';
+import { TemplatesComponent } from './templates/templates.component';
 
 
 @NgModule({
   declarations: [
     AppComponent,
-    MainMenuComponent
+    MainMenuComponent,
+    TemplatesComponent
   ],
   imports: [
     BrowserModule,
@@ -23,13 +26,14 @@ import { MainMenuComponent } from './main-menu/main-menu.component';
     GraphQLModule,
     HttpClientModule,
     FontAwesomeModule
+
   ],
-  providers: [],
+  providers: [TeplatesService],
   bootstrap: [AppComponent]
 })
 export class AppModule {
   constructor() { 
-    library.add(faDesktop,faDatabase);
+    library.add(faDesktop,faDatabase); // Неиспользуемые иконки при финальной сборке удаляются
   }
 
 
