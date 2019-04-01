@@ -1,0 +1,19 @@
+main {
+    width:200px;
+    background-color: #44505a;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    padding: 10px;
+}
+
+.menu-item {
+    color: #FFF;
+    font-size: 20px;
+    margin-bottom: 10px;
+    cursor: pointer;
+
+    &:last-child {
+       margin-bottom: 0px;
+    }
+}

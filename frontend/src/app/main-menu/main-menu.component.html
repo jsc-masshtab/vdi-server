@@ -1,0 +1,8 @@
+<main>
+  <ul>
+    <li *ngFor="let item of listMenu" class="menu-item">
+      <fa-icon [icon]="['fas',item.icon]"></fa-icon>
+      {{item.name}}
+    </li>
+  </ul>
+</main>
