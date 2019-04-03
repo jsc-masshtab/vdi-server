@@ -9,7 +9,7 @@ import { Component, OnInit } from '@angular/core';
 
 export class MainMenuComponent implements OnInit {
 
-  public listMenu: object[] = [{name:'Ресурсы',icon:'database'},{name:'Пулы',icon:'desktop'}];
+  public listMenu: object[] = [{name:'Ресурсы',icon:'database',nested: [{name:'Шаблоны ВМ',icon:'desktop'}]},{name:'Пулы',icon:'desktop'}];
 
   constructor() {}
 

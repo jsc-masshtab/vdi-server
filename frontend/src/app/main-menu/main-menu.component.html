@@ -1,8 +1,14 @@
-<main>
+<nav>
   <ul>
-    <li *ngFor="let item of listMenu" class="menu-item">
+    <li *ngFor="let item of listMenu" class="menu-item" [class.activeNav]="item.name == 'Ресурсы'">
       <fa-icon [icon]="['fas',item.icon]"></fa-icon>
-      {{item.name}}
+      <span>{{item.name}}</span>
+      <ul *ngIf="item.nested" class="menu-nested">
+        <li *ngFor="let itemNested of item.nested">
+          <fa-icon [icon]="['fas',itemNested.icon]"></fa-icon>
+          <span>{{itemNested.name}}</span>
+        </li>
+      </ul>
     </li>
   </ul>
-</main>
+</nav>
