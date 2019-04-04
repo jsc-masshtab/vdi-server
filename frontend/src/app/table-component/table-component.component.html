@@ -4,13 +4,14 @@
       {{item.title}}
     </div>
   </header>
-<!-- 
-  <div class="table-area">
-    <div *ngFor="let item of collection" class="table-area-object">
-      <div class="table-area-property"  *ngFor="let prop of item">
-        data[prop]
-      </div>
-    </div>
-  </div> -->
 
+  <div class="table-area">
+    <div *ngFor="let item of data" class="table-area-object">   <!--полоска-->
+      <div class="table-area-property" *ngFor="let obj of collection">
+        <span *ngIf="obj.property_lv2">{{ item[obj.property][obj.property_lv2]}}</span>
+        <span *ngIf="!obj.property_lv2">{{ item[obj.property] }}</span>
+        <span *ngIf="obj.property_lv2_wrap"><span>/</span>{{ item[obj.property][obj.property_lv2_wrap]}}</span>
+      </div> 
+    </div>
+  </div>
 </div>

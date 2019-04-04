@@ -1,0 +1,45 @@
+.table-component {
+    background: #FFF;
+    box-shadow: 0 0 10px rgba(119, 136, 153,0.2);
+
+    header {
+        display: flex;
+        width: 100%;
+        padding: 5px;
+        font-size: 15px;
+        background: #708090;
+        color: #FFFFFF;
+    }
+
+    .table-header-part {
+        flex: 1;
+        text-align: center;
+    }
+
+    .table-area {
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        font-size: 15px;
+    }
+
+    .table-area-object {
+        display: flex;
+        border-bottom: 1px solid #DCDCDC;
+        color: #44505a;
+    }
+
+    .table-area-property {
+        display: flex;
+        flex: 1;
+        border-right: 1px solid #DCDCDC;
+        padding: 5px;
+        padding-top: 3px;
+        padding-bottom: 3px;
+        justify-content: center;
+
+        &:last-child {
+            border-right: none;
+        }
+    }
+}

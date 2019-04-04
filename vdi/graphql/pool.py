@@ -32,8 +32,8 @@ class PoolType(graphene.ObjectType):
 
     def resolve_state(self, info):
         if self.pool_id not in Pool.instances:
-            return PoolState(running=False)
-        state = PoolState(running=True)
+            return PoolState(running=RunningState.STOPPED)
+        state = PoolState(running=RunningState.RUNNING)
         state.pool = Pool.instances[self.pool_id]
         return state
 

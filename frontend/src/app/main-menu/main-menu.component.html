@@ -1,6 +1,6 @@
 <nav>
   <ul>
-    <li *ngFor="let item of listMenu" class="menu-item" [class.activeNav]="item.name == 'Ресурсы'">
+    <li *ngFor="let item of listMenu" class="menu-item" [routerLink]="[item.route]" routerLinkActive="activeNav">
       <fa-icon [icon]="['fas',item.icon]"></fa-icon>
       <span>{{item.name}}</span>
       <ul *ngIf="item.nested" class="menu-nested">

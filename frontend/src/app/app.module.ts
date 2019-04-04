@@ -1,3 +1,4 @@
+import { PoolsService } from './polls/polls.service';
 import { BrowserModule } from '@angular/platform-browser';
 import { NgModule } from '@angular/core';
 
@@ -13,6 +14,7 @@ import { MainMenuComponent } from './main-menu/main-menu.component';
 import { TeplatesService } from './templates/templates.service';
 import { TemplatesComponent } from './templates/templates.component';
 import { TableComponentComponent } from './table-component/table-component.component';
+import { PollsComponent } from './polls/polls.component';
 
 
 @NgModule({
@@ -20,7 +22,8 @@ import { TableComponentComponent } from './table-component/table-component.compo
     AppComponent,
     MainMenuComponent,
     TemplatesComponent,
-    TableComponentComponent
+    TableComponentComponent,
+    PollsComponent
   ],
   imports: [
     BrowserModule,
@@ -30,7 +33,7 @@ import { TableComponentComponent } from './table-component/table-component.compo
     FontAwesomeModule
 
   ],
-  providers: [TeplatesService],
+  providers: [TeplatesService, PoolsService],
   bootstrap: [AppComponent]
 })
 export class AppModule {
