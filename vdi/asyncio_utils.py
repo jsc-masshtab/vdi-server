@@ -9,14 +9,15 @@ def list(gen_func):
 
 function = type(lambda: None)
 
-class Wait:
+import inspect
+
+class wait:
     '''
     Async iterator, constructed from a list of awaitables.
     Returns results or exceptions as soon as they are ready.
     '''
 
-    # FIXME use dict by default
-    # FIXME do not wrap futures twice
+    include_ids = False
 
     @cached
     def results(self):
@@ -28,44 +29,43 @@ class Wait:
 
     def __init__(self, *awaitables, suppress_exceptions=False, **kwargs):
         self.suppress_exceptions = suppress_exceptions
-        if not awaitables:
-            self.awaitables = self._wrap_awaitables(kwargs)
+        if not awaitables and kwargs:
+            self.include_ids = True
+            self.awaitables = kwargs
         else:
-            self.awaitables = [asyncio.ensure_future(aw) for aw in awaitables]
-
+            self.awaitables = {self.get_identity(task): task for task in awaitables}
 
         results = self.results[:]
 
-        def cb(fut):
-            target = results.pop()
-            self.copy_result(fut, target)
-
-        for task in self.awaitables:
-            task.add_done_callback(cb)
-
-    async def __aiter__(self):
-        while self.results:
-            fut = self.results.pop()
-            yield await fut
-
-    def _wrap_awaitables(self, dic):
-        loop = asyncio.events.get_event_loop()
-        li = [
-            loop.create_future() for _ in dic
-        ]
-
-        for (key, src), target in zip(dic.items(), li):
-            def cb(fut, key=key, target=target):
+        for key, src in self.awaitables.items():
+            def cb(fut, key=key):
+                target = results.pop()
                 if not fut.cancelled() and not fut.exception():
                     result = (key, fut.result())
                     target.set_result(result)
                 else:
                     self.copy_result(fut, target)
 
-            src = asyncio.tasks.ensure_future(src)
+            src = asyncio.ensure_future(src)
             src.add_done_callback(cb)
 
-        return li
+
+    async def items(self):
+        """
+        Include the identities for awaitables:
+        for iden, result in wait(*tasks):
+          ...
+        """
+        while self.results:
+            fut = self.results.pop()
+            yield await fut
+
+    async def __aiter__(self):
+        async for key, result in self.items():
+            if self.include_ids:
+                yield key, result
+            else:
+                yield result
 
     def copy_result(self, fut, target):
         # Copies the result of one future to another
@@ -83,6 +83,16 @@ class Wait:
             return
         r = fut.result()
         target.set_result(r)
+
+    def get_identity(self, awaitable):
+        if hasattr(awaitable, 'get_identity'):
+            return awaitable.get_identity()
+        if inspect.iscoroutine(awaitable):
+            return awaitable.__name__
+        if isinstance(awaitable, asyncio.Task):
+            coro = awaitable._coro
+            return self.get_identity(coro)
+        raise NotImplementedError
 
 
 def callback(async_fun):
@@ -124,6 +134,9 @@ class Awaitable:
     def type(self):
         return self.__class__
 
+    def get_identity(self):
+        return self.type
+
     @cached
     def task(self):
         return asyncio.create_task(self.co())
@@ -153,6 +166,8 @@ class Awaitable:
             sleep_task.cancel()
             return result
 
+
+Wait = wait
 
 @dataclass()
 class TaskTimeout(Exception):
