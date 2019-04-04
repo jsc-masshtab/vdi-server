@@ -250,5 +250,7 @@ class PoolMixin:
             p = dict(zip(fields, [id] + values))
             if u_fields:
                 p['users'] = pools_users[id]
-            items.append(PoolType(**p))
+            pt = PoolType(**p)
+            pt.pool_id = id
+            items.append(pt)
         return items
