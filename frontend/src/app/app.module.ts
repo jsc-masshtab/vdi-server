@@ -13,8 +13,9 @@ import { faDesktop,faDatabase } from '@fortawesome/free-solid-svg-icons';
 import { MainMenuComponent } from './main-menu/main-menu.component';
 import { TeplatesService } from './templates/templates.service';
 import { TemplatesComponent } from './templates/templates.component';
-import { TableComponentComponent } from './table-component/table-component.component';
+
 import { PollsComponent } from './polls/polls.component';
+import { TableComponentComponent } from './components/table-component/table-component.component';
 
 
 @NgModule({
