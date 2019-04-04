@@ -80,11 +80,11 @@ class CreateDomain(Task):
 class AttachVdisk(Task):
     method = 'POST'
 
-    domain: object
+    domain_id: str
     vdisk: str
 
     async def url(self):
-        return f"http://{CONTROLLER_IP}/api/domains/{self.domain['id']}/attach-vdisk/"
+        return f"http://{CONTROLLER_IP}/api/domains/{self.domain_id}/attach-vdisk/"
 
     async def body(self):
         datapool = await disk.DefaultDatapool()
@@ -104,7 +104,7 @@ class AttachVdisk(Task):
         for e_id, e_type in obj['entities'].items():
             if e_type == 'vdisk' and self.vdisk != e_id:
                 return
-            if e_type == 'domain' and self.domain['id'] != e_id:
+            if e_type == 'domain' and self.domain_id != e_id:
                 return
         return True
 
@@ -132,7 +132,7 @@ class SetupDomain(Task):
             self.vm_name = f'{self.image_name}-{uid}'
         vdisk = await disk.ImportDisk(image_name=self.image_name, vm_name=self.vm_name)
         domain = await CreateDomain(vm_name=self.vm_name)
-        await AttachVdisk(vdisk=vdisk, domain=domain)
+        await AttachVdisk(vdisk=vdisk, domain_id=domain['id'])
         return domain
 
 
@@ -161,5 +161,5 @@ class CopyDomain(Task):
         [vdisk0] = await self.list_vdisks()
         domain = await CreateDomain(vm_name=self.vm_name)
         vdisk = await disk.CopyDisk(vdisk=vdisk0, verbose_name=domain['verbose_name'])
-        await AttachVdisk(domain=domain, vdisk=vdisk)
+        await AttachVdisk(domain_id=domain['id'], vdisk=vdisk)
         return domain

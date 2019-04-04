@@ -167,3 +167,38 @@ class UploadImage(Task):
                                  request_timeout=24 * 3600)
 
         return json.loads(res.body)
+
+
+@dataclass()
+class DropDomain(Task):
+    id: str
+
+    @cached
+    def url(self):
+        return f'http://{CONTROLLER_IP}/api/domains/{self.id}'
+
+    async def params(self):
+        node_id = await Node()
+        return {
+            'cpu_count': 1,
+            'cpu_priority': "10",
+            'memory_count': 1024,
+            'node': node_id,
+            'os_type': "Other",
+            'sound': {'model': "ich6", 'codec': "micro"},
+            'verbose_name': self.vm_name,
+            'video': {'type': "cirrus", 'vram': "16384", 'heads': "1"},
+        }
+
+
+    async def run(self):
+        token = await Token()
+        headers = {
+            'Authorization': f'jwt {token}'
+        }
+
+        http_client = HttpClient()
+        response = await http_client.fetch(self.url, method='POST', headers=headers, body=b'')
+        self.domain = json.loads(response.body)
+        await ws.wait_message(self.is_done)
+        return self.domain

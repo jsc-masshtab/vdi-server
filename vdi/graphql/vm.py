@@ -4,7 +4,7 @@ import json
 from asyncpg.connection import Connection
 
 from ..db import db
-from ..tasks import vm
+from ..tasks import vm, admin
 
 from .util import get_selections
 
@@ -32,6 +32,19 @@ class CreateTemplate(graphene.Mutation):
         await conn.fetch(*qu)
         t = TemplateType(id=domain['id'], info=veil_info)
         return CreateTemplate(template=t)
+
+
+class DropTemplate(graphene.Mutation):
+
+    class Arguments:
+        id: graphene.String()
+
+    @db.connect()
+    async def mutate(self, info, id, conn: Connection):
+        await admin.DropDomain(id=id)
+        qu = "DROP from template_vm WHERE id = $1", id
+        await conn.fetch(*qu)
+
 
 
 class AddTemplate(graphene.Mutation):

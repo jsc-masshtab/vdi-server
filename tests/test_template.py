@@ -29,7 +29,7 @@ async def image_name():
 #     return r
 
 @pytest.mark.asyncio
-async def test(image_name):
+async def test_create_template(image_name):
     qu = f'''
     mutation {{
       createTemplate(image_name: "{image_name}") {{
@@ -42,5 +42,8 @@ async def test(image_name):
     r = await exec(qu)
     assert r.data
 
+@pytest.mark.asyncio
+async def test_drop_template(template_id):
+    1
 
 #TODO teardown fixture
