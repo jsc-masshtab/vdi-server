@@ -1,0 +1,11 @@
+<ul id="breadcrumbs-one">
+  <!-- <li><a><fa-icon [icon]="['fas','database']" size="xs"></fa-icon>Ресурсы</a></li>
+  <li><a><fa-icon [icon]="['fas','desktop']" size="xs"></fa-icon>Шаблоны виртуальных машин</a></li> -->
+
+  <li *ngFor="let crumb of data">
+    <div>
+      <fa-icon [icon]="['fas',crumb.icon]" size="xs"></fa-icon>
+      <span>{{ crumb.title }}</span>
+    </div>
+  </li>
+</ul>

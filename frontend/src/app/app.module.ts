@@ -6,16 +6,23 @@ import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 import { GraphQLModule } from './graphql.module';
 import { HttpClientModule } from '@angular/common/http';
-import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 
+
+
+/*  -----------------------------------   icons   --------------------------------------*/
+import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { library } from '@fortawesome/fontawesome-svg-core'
 import { faDesktop,faDatabase } from '@fortawesome/free-solid-svg-icons';
+/*  -----------------------------------   icons   --------------------------------------*/
+
+
 import { MainMenuComponent } from './main-menu/main-menu.component';
 import { TeplatesService } from './templates/templates.service';
 import { TemplatesComponent } from './templates/templates.component';
 
 import { PollsComponent } from './polls/polls.component';
-import { TableComponentComponent } from './components/table-component/table-component.component';
+import { TableComponentComponent } from './common/table-component/table-component.component';
+import { BreadcrumbsComponent } from './common/breadcrumbs/breadcrumbs.component';
 
 
 @NgModule({
@@ -24,7 +31,8 @@ import { TableComponentComponent } from './components/table-component/table-comp
     MainMenuComponent,
     TemplatesComponent,
     TableComponentComponent,
-    PollsComponent
+    PollsComponent,
+    BreadcrumbsComponent
   ],
   imports: [
     BrowserModule,

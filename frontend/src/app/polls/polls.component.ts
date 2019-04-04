@@ -9,12 +9,33 @@ import { PoolsService } from './polls.service';
 })
 export class PollsComponent implements OnInit {
   public pools: [];
-  public collection: object[] = [];
+  
+  public collection: object[] = [
+    {
+      title: 'Название',
+      property: 'name'
+    },
+    {
+      title: 'Размер (ГБ)',
+      property: 'initial_size'
+    },
+    {
+      title: 'Состояние',
+      property: 'state',
+      property_lv2: 'running'
+    }
+  ];
+
+  public crumbs: object[] = [
+    {
+      title: 'Пулы виртуальных машин',
+      icon: 'desktop'
+    }
+  ];
 
   constructor(private service: PoolsService){}
 
   ngOnInit() {
-    this.collectionAction();
     this.getAllPools();
   }
 
@@ -25,23 +46,5 @@ export class PollsComponent implements OnInit {
          console.log(this.pools);
       });
   }
-
-  public collectionAction() {
-    this.collection = [
-      {
-        title: 'Название',
-        property: 'name'
-      },
-      {
-        title: 'Размер (ГБ)',
-        property: 'initial_size'
-      },
-      {
-        title: 'Состояние',
-        property: 'state',
-        property_lv2: 'running'
-      }
-    ]
-}
 
 }
