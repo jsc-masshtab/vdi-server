@@ -23,13 +23,16 @@ async def main():
         if not settings['debug']:
             return
         node = '192.168.20.121'
-        add_node = admin.AddNode(management_ip=node).ensure_task()
-        download_image = admin.DownloadImage(target='image.qcow2').ensure_task()
-        async for result, task in Wait(add_node, download_image).items():
-            if task.type is admin.AddNode:
+        tasks = {
+            'add_node': admin.AddNode(management_ip=node),
+            'download_image': admin.DownloadImage(target='image.qcow2'),
+        }
+        # async for name, result in Wait(**tasks):
+        async for name, _ in Wait(**tasks):
+            if name == 'add_node':
                 print(f'Node {node} is added.')
-            elif task.type is admin.DownloadImage:
-                print('.qcow image is downloaded.')
+            elif name == 'download_image':
+                print('.qcow2 image is downloaded.')
         await admin.UploadImage(filename='image.qcow2')
         print('File upload finished.')
 
@@ -51,4 +54,5 @@ class drop_into_debugger:
         pdb.post_mortem(tb)
 
 
-asyncio.run(main())
+if __name__ == '__main__':
+    asyncio.run(main())

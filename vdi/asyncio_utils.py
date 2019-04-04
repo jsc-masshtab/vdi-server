@@ -4,6 +4,10 @@ from functools import wraps
 from cached_property import cached_property as cached
 from dataclasses import dataclass
 
+def list(gen_func):
+    return list(gen_func())
+
+function = type(lambda: None)
 
 class Wait:
     '''
@@ -11,42 +15,74 @@ class Wait:
     Returns results or exceptions as soon as they are ready.
     '''
 
-    def __init__(self, *awaitables):
+    # FIXME use dict by default
+    # FIXME do not wrap futures twice
+
+    @cached
+    def results(self):
+        # We await on these in __aiter__
         loop = asyncio.events.get_event_loop()
-        awaitables = [
-            asyncio.tasks.ensure_future(aw) for aw in awaitables
-        ]
-        self.results = [
-            loop.create_future()
-            for _ in awaitables
+        return [
+            loop.create_future() for _ in self.awaitables
         ]
 
-        def on_done(fut, results=self.results[:]):
-            if fut.cancelled():
-                r = asyncio.CancelledError() # ?
-            else:
-                r = fut
-            results.pop().set_result(r)
+    def __init__(self, *awaitables, suppress_exceptions=False, **kwargs):
+        self.suppress_exceptions = suppress_exceptions
+        if not awaitables:
+            self.awaitables = self._wrap_awaitables(kwargs)
+        else:
+            self.awaitables = [asyncio.ensure_future(aw) for aw in awaitables]
 
-        for task in awaitables:
-            task.add_done_callback(on_done)
 
-    def __aiter__(self):
-        return self
+        results = self.results[:]
 
-    async def __anext__(self):
-        async for r, task in self.items():
-            return r
-        raise StopIteration
+        def cb(fut):
+            target = results.pop()
+            self.copy_result(fut, target)
 
-    async def items(self):
+        for task in self.awaitables:
+            task.add_done_callback(cb)
+
+    async def __aiter__(self):
         while self.results:
             fut = self.results.pop()
-            awaited = await fut
-            r = awaited.exception() or awaited.result()
-            print('!:', r, awaited)
-            yield (r, awaited)
+            yield await fut
 
+    def _wrap_awaitables(self, dic):
+        loop = asyncio.events.get_event_loop()
+        li = [
+            loop.create_future() for _ in dic
+        ]
+
+        for (key, src), target in zip(dic.items(), li):
+            def cb(fut, key=key, target=target):
+                if not fut.cancelled() and not fut.exception():
+                    result = (key, fut.result())
+                    target.set_result(result)
+                else:
+                    self.copy_result(fut, target)
+
+            src = asyncio.tasks.ensure_future(src)
+            src.add_done_callback(cb)
+
+        return li
+
+    def copy_result(self, fut, target):
+        # Copies the result of one future to another
+        #
+        if fut.cancelled():
+            r = asyncio.CancelledError()  # ?
+            target.set_result(r)
+            return
+        r = fut.exception()
+        if r:
+            if not self.suppress_exceptions:
+                target.set_exception(r)
+            else:
+                target.set_result(r)
+            return
+        r = fut.result()
+        target.set_result(r)
 
 
 def callback(async_fun):
@@ -74,12 +110,23 @@ class Awaitable:
     The main coroutine is called run
     """
 
+    timeout = None
+
     def cancel(self):
         self.task.cancel()
 
+    def co(self):
+        if self.timeout:
+            return self.run_with_timeout(self.timeout)
+        return self.run()
+
+    @cached
+    def type(self):
+        return self.__class__
+
     @cached
     def task(self):
-        return asyncio.create_task(self.run())
+        return asyncio.create_task(self.co())
 
     def __await__(self):
         return self.task.__await__()
@@ -95,13 +142,14 @@ class Awaitable:
         await asyncio.sleep(seconds)
         return self.SleepResult()
 
-    async def timeout(self, seconds):
+    async def run_with_timeout(self, seconds):
         sleep_task = asyncio.create_task(self._sleep(seconds))
+        main_task = asyncio.create_task(self.run())
 
-        async for result in Wait(self, sleep_task):
+        async for result in Wait(main_task, sleep_task):
             if isinstance(result, self.SleepResult):
-                self.task.cancel()
-                raise TaskTimeout(self.__class__)
+                main_task.cancel()
+                raise TaskTimeout(self.type)
             sleep_task.cancel()
             return result
 
@@ -110,3 +158,61 @@ class Awaitable:
 class TaskTimeout(Exception):
     task: type
 
+
+from g_tasks import g
+
+class Task(Awaitable):
+
+    # g_tasks.Task v2
+
+    @cached
+    def init_kwargs(self):
+        kwargs = dict(self.__dict__)
+        if 'run' in kwargs and callable(kwargs['run']):
+            del kwargs['run']
+        return kwargs
+
+    def __post_init__(self):
+        # if is a dataclass
+        self.init_kwargs
+
+    def __init__(self, **kwargs):
+        self.__dict__.update(kwargs)
+        self.init_kwargs
+
+
+    @cached # frozen?
+    def serialized(self):
+        data = dict(type=self.type, **self.init_kwargs)
+        return tuple(data.items())
+
+    @cached
+    def task(self):
+        tasks = g.tasks
+        if self.serialized in tasks:
+            return tasks[self.serialized]
+        task = asyncio.create_task(self.co())
+        task = asyncio.shield(task)
+        tasks[self.serialized] = task
+        return task
+
+
+def timeout(seconds):
+    return task(timeout=seconds)
+
+def task(timeout=None):
+    def decorate(f):
+        task = Awaitable()
+        task.timeout = timeout
+        task.type = f
+
+        @wraps(f)
+        async def wrapper(*args, **kw):
+            async def run():
+                return await f(*args, **kw)
+            task.run = run
+            return await task
+
+        return wrapper
+
+    return decorate

@@ -69,6 +69,8 @@ class DownloadImage(Task):
     target: str
     src: str = 'https://cloud-images.ubuntu.com/cosmic/current/cosmic-server-cloudimg-amd64.img'
 
+    timeout = 5 * 60
+
     async def run(self):
         target = Path(self.target)
         if target.exists():
