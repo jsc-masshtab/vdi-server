@@ -66,7 +66,7 @@ class ImportDisk(Task):
     vm_name: str
 
     def is_done(self, msg):
-        return msg['object']['status'] == 'SUCCESS' and msg['id'] == self.task['id']
+        return msg['object']['status'] == 'SUCCESS' and msg['id'] == self.task_obj['id']
 
     async def run(self):
         image_id = await Image(image_name=self.image_name)
@@ -82,9 +82,9 @@ class ImportDisk(Task):
         }
         body = json.dumps({'verbose_name': self.vm_name})
         response = await http_client.fetch(url, method='POST', headers=headers, body=body)
-        self.task = response['_task']
+        self.task_obj = response['_task']
         # ? self.response
-        entities = self.task['entities']
+        entities = self.task_obj['entities']
         for k, v in entities.items():
             if v == 'vdisk':
                 disk_id = k
@@ -122,13 +122,13 @@ class CopyDisk(Task):
 
     def is_done(self, msg):
         obj = msg['object']
-        return obj['id'] == self.task['id'] and obj['status'] == 'SUCCESS'
+        return obj['id'] == self.task_obj['id'] and obj['status'] == 'SUCCESS'
 
     def get_result(self):
         """
         The copied disk
         """
-        for e_id, e_type in self.task['entities'].items():
+        for e_id, e_type in self.task_obj['entities'].items():
             if e_type == 'vdisk' and e_id != self.vdisk:
                 return e_id
 
@@ -136,6 +136,6 @@ class CopyDisk(Task):
         ws = await WsConnection()
         await ws.send('add /tasks/')
         response = await HttpClient().fetch_using(self)
-        self.task = response['_task']
+        self.task_obj = response['_task']
         await ws.wait_message(self.is_done)
         return self.get_result()

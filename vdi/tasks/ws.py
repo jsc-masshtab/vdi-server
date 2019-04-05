@@ -10,10 +10,6 @@ import asyncio
 from vdi.asyncio_utils import task
 
 
-class WsTimeout(Exception):
-    pass
-
-
 class WsConnection(Awaitable):
 
     timeout = 5 * 60

@@ -217,14 +217,14 @@ def timeout(seconds):
 
 def task(timeout=None):
     def decorate(f):
-        task = Awaitable()
-        task.timeout = timeout
-        task.type = f
-
         @wraps(f)
         async def wrapper(*args, **kw):
             async def run():
                 return await f(*args, **kw)
+
+            task = Awaitable()
+            task.timeout = timeout
+            task.type = f
             task.run = run
             return await task
 

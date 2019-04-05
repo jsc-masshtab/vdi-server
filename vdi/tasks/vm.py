@@ -153,6 +153,7 @@ class CopyDomain(Task):
         [vdisk0] = await self.list_vdisks()
         domain = await CreateDomain(vm_name=self.vm_name)
         vdisk = await disk.CopyDisk(vdisk=vdisk0, verbose_name=domain['verbose_name'])
+
         await AttachVdisk(domain_id=domain['id'], vdisk=vdisk)
         return domain
 
