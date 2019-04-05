@@ -8,8 +8,9 @@ import { PoolsService } from './polls.service';
   styleUrls: ['./polls.component.scss']
 })
 export class PollsComponent implements OnInit {
+
   public pools: [];
-  
+
   public collection: object[] = [
     {
       title: 'Название',
@@ -23,6 +24,14 @@ export class PollsComponent implements OnInit {
       title: 'Состояние',
       property: 'state',
       property_lv2: 'running'
+    },
+    {
+      title: 'Занятые ВМ',
+      property: 'initial_size'
+    },
+    {
+      title: 'Свободные ВМ',
+      property: 'reserve_size'
     }
   ];
 

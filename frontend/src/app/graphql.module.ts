@@ -7,7 +7,7 @@ const uri = 'http://192.168.20.110/admin';
 
 export function createApollo(httpLink: HttpLink) {
   return {
-    link: httpLink.create({uri, includeQuery: true, includeExtensions: false}),
+    link: httpLink.create({uri, includeQuery: true, includeExtensions: false }),
     cache: new InMemoryCache({ addTypename: false })
   };
 }

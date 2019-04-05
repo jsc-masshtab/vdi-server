@@ -12,7 +12,7 @@ import { HttpClientModule } from '@angular/common/http';
 /*  -----------------------------------   icons   --------------------------------------*/
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { library } from '@fortawesome/fontawesome-svg-core'
-import { faDesktop,faDatabase } from '@fortawesome/free-solid-svg-icons';
+import { faDesktop,faDatabase, faLayerGroup } from '@fortawesome/free-solid-svg-icons';
 /*  -----------------------------------   icons   --------------------------------------*/
 
 
@@ -47,22 +47,8 @@ import { BreadcrumbsComponent } from './common/breadcrumbs/breadcrumbs.component
 })
 export class AppModule {
   constructor() { 
-    library.add(faDesktop,faDatabase); // Неиспользуемые иконки при финальной сборке удаляются
+    library.add(faDesktop,faDatabase,faLayerGroup); // Неиспользуемые иконки при финальной сборке удаляются
   }
 
 
- }
-
-
-// link?: ApolloLink;
-//     cache: ApolloCache<TCacheShape>;
-//     ssrForceFetchDelay?: number;
-//     ssrMode?: boolean;
-//     connectToDevTools?: boolean;
-//     queryDeduplication?: boolean;
-//     defaultOptions?: DefaultOptions;
-//     resolvers?: Resolvers | Resolvers[];
-//     typeDefs?: string | string[] | DocumentNode | DocumentNode[];
-//     fragmentMatcher?: FragmentMatcher;
-//     name?: string;
-//     version?: string;
+}
