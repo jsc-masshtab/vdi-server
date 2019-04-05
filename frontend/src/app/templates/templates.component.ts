@@ -13,6 +13,18 @@ export class TemplatesComponent implements OnInit {
 
   public infoTemplates: [];
   public collection: object[] = [];
+  public crumbs: object[] = [
+    {
+      title: 'Ресурсы',
+      icon: 'desktop'
+    },
+    {
+      title: 'Шаблоны виртуальных машин',
+      icon: 'desktop'
+    }
+
+  ];
+
 
   constructor(private service: TeplatesService){}
 
