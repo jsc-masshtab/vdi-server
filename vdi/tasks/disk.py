@@ -8,7 +8,6 @@ from .client import HttpClient
 from ..pool import Pool
 
 import json
-from vdi.tasks.client import HttpClient
 
 from dataclasses import dataclass
 
@@ -25,7 +24,6 @@ class DefaultDatapool(Task):
         }
         http_client = HttpClient()
         response = await http_client.fetch(url, headers=headers)
-        response = json.loads(response.body)
         for rec in response['results']:
             if 'default' in rec['verbose_name'].lower():
                 return rec
@@ -51,7 +49,6 @@ class Image(Task):
             'Authorization': f'jwt {token}'
         }
         response = await http_client.fetch(url, headers=headers)
-        response = json.loads(response.body)
         for file in response["results"]:
             if self.image_name in file["filename"].lower():
                 return file["id"]
@@ -85,7 +82,6 @@ class ImportDisk(Task):
         }
         body = json.dumps({'verbose_name': self.vm_name})
         response = await http_client.fetch(url, method='POST', headers=headers, body=body)
-        response = json.loads(response.body)
         self.task = response['_task']
         # ? self.response
         entities = self.task['entities']

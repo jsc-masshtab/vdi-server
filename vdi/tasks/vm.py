@@ -1,24 +1,16 @@
-import asyncio
-
-import uuid
-from g_tasks import Task
-
-import urllib
-import time
-
 import json
-from vdi.tasks.client import HttpClient
-
+import urllib
+import uuid
 from dataclasses import dataclass
 
-from .base import CONTROLLER_IP, Token
+from cached_property import cached_property as cached
+
+from g_tasks import Task
+
 from . import disk
+from .base import CONTROLLER_IP, Token
 from .client import HttpClient
 from .ws import WsConnection
-
-from g_tasks import g
-
-from ..asyncio_utils import sleep
 
 
 class Node(Task):
@@ -70,18 +62,18 @@ class CreateDomain(Task):
         http_client = HttpClient()
         params = await self.params()
         body = urllib.parse.urlencode(params)
-        response = await http_client.fetch(self.url, method='POST', headers=headers, body=body)
-        self.domain = json.loads(response.body)
+        self.domain = await http_client.fetch(self.url, method='POST', headers=headers, body=body)
         await ws.wait_message(self.is_done)
         return self.domain
 
 
 @dataclass()
 class AttachVdisk(Task):
-    method = 'POST'
 
     domain_id: str
     vdisk: str
+
+    method = 'POST'
 
     async def url(self):
         return f"http://{CONTROLLER_IP}/api/domains/{self.domain_id}/attach-vdisk/"
@@ -163,3 +155,21 @@ class CopyDomain(Task):
         vdisk = await disk.CopyDisk(vdisk=vdisk0, verbose_name=domain['verbose_name'])
         await AttachVdisk(domain_id=domain['id'], vdisk=vdisk)
         return domain
+
+
+@dataclass()
+class DropDomain(Task):
+    id: str
+
+    @cached
+    def url(self):
+        return f'http://{CONTROLLER_IP}/api/domains/{self.id}'
+
+    async def run(self):
+        token = await Token()
+        headers = {
+            'Authorization': f'jwt {token}'
+        }
+
+        http_client = HttpClient()
+        await http_client.fetch(self.url, method='POST', headers=headers, body=b'')

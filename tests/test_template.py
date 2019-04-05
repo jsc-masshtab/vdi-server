@@ -10,13 +10,13 @@ from vdi.graphql.schema import exec
 @pytest.fixture
 async def image_name():
     node = '192.168.20.121'
-    add_node = admin.AddNode(management_ip=node).ensure_task()
+    add_node = admin.AddNode(management_ip=node)
     image_name = 'image.qcow2'
-    download_image = admin.DownloadImage(target=image_name).ensure_task()
-    async for result, task in Wait(add_node, download_image).items():
-        if task.type is admin.AddNode:
+    download_image = admin.DownloadImage(target=image_name)
+    async for result, type in Wait(add_node, download_image).items():
+        if type is admin.AddNode:
             print(f'Node {node} is added.')
-        elif task.type is admin.DownloadImage:
+        elif type is admin.DownloadImage:
             print('.qcow image is downloaded.')
     await admin.UploadImage(filename=image_name)
     print('File upload finished.')

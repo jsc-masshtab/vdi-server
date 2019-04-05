@@ -64,10 +64,7 @@ class HttpClient:
                 # is actually an attribute
                 dic[name] = method
         url = dic.pop('url')
-        response = await self.fetch(url, **dic)
-        if self._json:
-            response = json.loads(response.body)
-        return response
+        return await self.fetch(url, **dic)
 
 
     async def fetch(self, *args, **kwargs):
@@ -78,4 +75,6 @@ class HttpClient:
         except HTTPError as e:
             val = e.response.buffer.read()
             raise FetchException(val)
+        if self._json:
+            response = json.loads(response.body)
         return response

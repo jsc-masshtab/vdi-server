@@ -60,7 +60,7 @@ class Pool:
         g.init()
         template_id = self.params['template_id']
         vm_name = self.generate_name()
-        task = vm.CopyDomain(domain_id=template_id, vm_name=vm_name).ensure_task()
+        task = vm.CopyDomain(domain_id=template_id, vm_name=vm_name).task
         task.add_done_callback(self.on_vm_created)
         self.pending += 1
         return task

@@ -2,7 +2,6 @@ import json
 import uuid
 from dataclasses import dataclass
 from g_tasks import Task
-from vdi.tasks.client import HttpClient
 
 from .base import CONTROLLER_IP, Token
 from .client import HttpClient
@@ -37,7 +36,6 @@ class AddNode(Task):
             'Content-Type': 'application/json',
         }
         res = await client.fetch(url, headers=headers)
-        res = json.loads(res.body)
         for node in res['results']:
             if node['management_ip'] == self.body['management_ip'] and node['verbose_name'] == self.body['verbose_name']:
                 return True
@@ -74,15 +72,18 @@ class DownloadImage(Task):
     async def run(self):
         target = Path(self.target)
         if target.exists():
-            return
+            return {
+                'used_existing': True
+            }
         client = HttpClient()
 
         with target.open('wb') as f:
             def on_chunk(c):
                 f.write(c)
-            res = await client.fetch(self.src, streaming_callback=on_chunk, request_timeout=24 * 3600)
-        return res
-
+            await client.fetch(self.src, streaming_callback=on_chunk, request_timeout=24 * 3600)
+            return {
+                'used_existing': False
+            }
 
 @dataclass()
 class UploadImage(Task):
@@ -97,7 +98,6 @@ class UploadImage(Task):
             'Authorization': f'jwt {token}'
         }
         response = await http_client.fetch(url, headers=headers)
-        response = json.loads(response.body)
         for file in response["results"]:
             if file["filename"] == self.filename:
                 return True
@@ -116,7 +116,6 @@ class UploadImage(Task):
             'filename': self.filename,
         })
         res = await client.fetch(url, method='PUT', body=body, headers=headers)
-        res = json.loads(res.body)
         return f"http://{CONTROLLER_IP}{res['upload_url']}"
 
     @cached
@@ -163,42 +162,5 @@ class UploadImage(Task):
             "Content-Type": "multipart/form-data; boundary=%s" % self.boundary,
             'Authorization': f'jwt {token}',
         }
-        res = await client.fetch(upload_url, method="POST", headers=headers, body_producer=self.body_producer,
+        return await client.fetch(upload_url, method="POST", headers=headers, body_producer=self.body_producer,
                                  request_timeout=24 * 3600)
-
-        return json.loads(res.body)
-
-
-@dataclass()
-class DropDomain(Task):
-    id: str
-
-    @cached
-    def url(self):
-        return f'http://{CONTROLLER_IP}/api/domains/{self.id}'
-
-    async def params(self):
-        node_id = await Node()
-        return {
-            'cpu_count': 1,
-            'cpu_priority': "10",
-            'memory_count': 1024,
-            'node': node_id,
-            'os_type': "Other",
-            'sound': {'model': "ich6", 'codec': "micro"},
-            'verbose_name': self.vm_name,
-            'video': {'type': "cirrus", 'vram': "16384", 'heads': "1"},
-        }
-
-
-    async def run(self):
-        token = await Token()
-        headers = {
-            'Authorization': f'jwt {token}'
-        }
-
-        http_client = HttpClient()
-        response = await http_client.fetch(self.url, method='POST', headers=headers, body=b'')
-        self.domain = json.loads(response.body)
-        await ws.wait_message(self.is_done)
-        return self.domain

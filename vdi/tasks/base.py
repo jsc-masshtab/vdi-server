@@ -23,6 +23,5 @@ class Token(Task):
         http_client = HttpClient()
         params = urllib.parse.urlencode(self.creds)
         response = await http_client.fetch(self.url, method='POST', body=params)
-        response = json.loads(response.body)
         return response['token']
 
