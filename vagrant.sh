@@ -29,7 +29,7 @@ echo "Applying migrations..."
 pipenv run mi apply
 
 echo "Prepare qcow image"
-pipenv run python prepare.py
+pipenv run python -m vdi.prepare
 
 echo "Running the server..."
 pipenv run uvicorn vdi.app:app --host 0.0.0.0 --port 80

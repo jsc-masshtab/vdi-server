@@ -35,15 +35,17 @@ class CreateTemplate(graphene.Mutation):
 
 
 class DropTemplate(graphene.Mutation):
-
     class Arguments:
-        id: graphene.String()
+        id = graphene.String()
+
+    ok = graphene.Boolean()
 
     @db.connect()
     async def mutate(self, info, id, conn: Connection):
-        await admin.DropDomain(id=id)
-        qu = "DROP from template_vm WHERE id = $1", id
+        await vm.DropDomain(id=id)
+        qu = "DELETE from template_vm WHERE id = $1", id
         await conn.fetch(*qu)
+        return DropTemplate(ok=True)
 
 
 

@@ -17,8 +17,6 @@ class wait:
     Returns results or exceptions as soon as they are ready.
     '''
 
-    include_ids = False
-
     @cached
     def results(self):
         # We await on these in __aiter__
@@ -30,7 +28,6 @@ class wait:
     def __init__(self, *awaitables, suppress_exceptions=False, **kwargs):
         self.suppress_exceptions = suppress_exceptions
         if not awaitables and kwargs:
-            self.include_ids = True
             self.awaitables = kwargs
         else:
             self.awaitables = {self.get_identity(task): task for task in awaitables}
@@ -62,10 +59,7 @@ class wait:
 
     async def __aiter__(self):
         async for key, result in self.items():
-            if self.include_ids:
-                yield key, result
-            else:
-                yield result
+            yield result
 
     def copy_result(self, fut, target):
         # Copies the result of one future to another
@@ -147,23 +141,16 @@ class Awaitable:
     async def run(self):
         raise NotImplementedError
 
-
-    class SleepResult:
-        pass
-
-    async def _sleep(self, seconds):
-        await asyncio.sleep(seconds)
-        return self.SleepResult()
-
     async def run_with_timeout(self, seconds):
-        sleep_task = asyncio.create_task(self._sleep(seconds))
-        main_task = asyncio.create_task(self.run())
-
-        async for result in Wait(main_task, sleep_task):
-            if isinstance(result, self.SleepResult):
-                main_task.cancel()
+        tasks = {
+            'main': asyncio.ensure_future(self.run()),
+            'timeout': asyncio.ensure_future(asyncio.sleep(seconds)),
+        }
+        async for key, result in wait(**tasks).items():
+            if key == 'timeout':
+                tasks['main'].cancel()
                 raise TaskTimeout(self.type)
-            sleep_task.cancel()
+            tasks['timeout'].cancel()
             return result
 
 

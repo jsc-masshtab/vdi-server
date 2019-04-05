@@ -164,13 +164,12 @@ class DropDomain(Task):
 
     @cached
     def url(self):
-        return f'http://{CONTROLLER_IP}/api/domains/{self.id}'
+        return f'http://{CONTROLLER_IP}/api/domains/{self.id}/remove/'
 
     async def run(self):
         token = await Token()
         headers = {
-            'Authorization': f'jwt {token}'
+            'Authorization': f'jwt {token}',
         }
-
         http_client = HttpClient()
         await http_client.fetch(self.url, method='POST', headers=headers, body=b'')

@@ -5,6 +5,8 @@ from contextlib import suppress
 
 from vdi.asyncio_utils import Awaitable
 
+
+
 class Task(Awaitable):
 
     def __init__(self, *, artifact=None):
