@@ -11,6 +11,9 @@ from ..pool import Pool
 from .util import get_selections
 from .users import UserType
 
+from vdi.tasks import vm
+from vdi.asyncio_utils import wait
+
 class RunningState(graphene.Enum):
     RUNNING = 1
     STOPPED = 0
@@ -52,6 +55,24 @@ class VmType(graphene.ObjectType):
     info = graphene.String()
 
 
+# class PoolSettingsFields(graphene.AbstractType):
+#     initial_size = graphene.Int()
+#     reserve_size = graphene.Int()
+#
+#
+# class PoolSettings(graphene.ObjectType, PoolSettingsFields):
+#     pass
+
+
+class PoolSettings(graphene.ObjectType):
+    initial_size = graphene.Int()
+    reserve_size = graphene.Int()
+#
+#
+# class PoolSettingsInput(graphene.InputObjectType, PoolSettingsFields):
+#     pass
+
+
 class PoolState(graphene.ObjectType):
     running = graphene.Field(RunningState)
     available = graphene.List(VmType)
@@ -59,6 +80,7 @@ class PoolState(graphene.ObjectType):
                              # will be the ids of vms
 
     pool = None
+
 
     async def resolve_pending(self, info):
         if self.pool is None:
@@ -82,13 +104,13 @@ class AddPool(graphene.Mutation):
         template_id = graphene.String()
         name = graphene.String(required=True)
         autostart = graphene.Boolean(default_value=True)
-        block = graphene.Boolean(default_value=False)
 
     id = graphene.Int()
-    # TODO return PoolState
+    state = graphene.Field(PoolState)
+    settings = graphene.Field(PoolSettings)
 
     @db.transaction()
-    async def mutate(self, info, conn: Connection, template_id, name, autostart, block):
+    async def mutate(self, info, conn: Connection, template_id, name, autostart):
         params = dict(
             PoolType.get_defaults(),
             template_id=template_id, name=name, autostart=autostart
@@ -98,21 +120,61 @@ class AddPool(graphene.Mutation):
         VALUES ($1, $2, $3, $4) RETURNING id
         ''', params['template_id'], params['name'], params['initial_size'], params['reserve_size']
         [res] = await conn.fetch(*pool_query)
+
         pool = {
             'id': res['id'],
             'name': name,
             'template_id': template_id,
             'initial_size': params['initial_size']
         }
+        running = False
         if autostart:
             ins = Pool(params=pool)
             Pool.instances[pool['id']] = ins
             add_domains = ins.add_domains()
-            if block:
-                await add_domains
-            else:
-                asyncio.create_task(add_domains)
-        return AddPool(id=pool['id'])
+            asyncio.create_task(add_domains)
+            running = True
+        settings = PoolSettings(**{
+            'initial_size': params['initial_size'],
+            'reserve_size': params['initial_size'],
+        })
+        state = PoolState(pending=0, available=[], running=running)
+        return AddPool(id=pool['id'], state=state, settings=settings)
+
+
+# TODO list of vms
+# TODO delete, drop, remove: use a single word
+
+class RemovePool(graphene.Mutation):
+    class Arguments:
+        id = graphene.Int()
+
+    ok = graphene.Boolean()
+    ids = graphene.List(graphene.String)
+
+    @db.connect()
+    async def mutate(self, info, id, conn: Connection):
+        qu = f'''
+        SELECT vm.id FROM vm JOIN pool ON vm.pool_id = pool.id WHERE pool.id = $1
+        ''', id
+        ids = await conn.fetch(*qu)
+        ids = [
+            id for (id,) in ids
+        ]
+
+        async def drop_vm(id):
+            await vm.DropDomain(id=id)
+            await conn.fetch("DELETE FROM vm WHERE id = $1)", id)
+
+        tasks = [
+            drop_vm(id) for id in ids
+        ]
+        async for _ in wait(*tasks):
+            pass
+
+        await conn.fetch("DELETE FROM pool WHERE id = $1", id)
+        return RemovePool(ok=True, ids=ids)
+
 
 
 class LaunchPool(graphene.Mutation):
@@ -121,12 +183,11 @@ class LaunchPool(graphene.Mutation):
     #
     class Arguments:
         id = graphene.Int()
-        block = graphene.Boolean(default_value=False)
 
     state = graphene.Field(PoolState)
 
     @db.connect()
-    async def mutate(self, info, id, block, conn: Connection):
+    async def mutate(self, info, id, conn: Connection):
         if id in Pool.instances:
             from graphql import GraphQLError
             raise GraphQLError('pool is launched')
@@ -157,10 +218,7 @@ class LaunchPool(graphene.Mutation):
             await pool.queue.put(vm)
             pool.queue.task_done()
         add_domains = pool.add_domains()
-        if block:
-            await add_domains
-        else:
-            asyncio.create_task(add_domains)
+        asyncio.create_task(add_domains)
         state = PoolState(running=True)
         state.pool = pool
         return LaunchPool(state=state)

@@ -29,7 +29,8 @@ async def template_vm(db, image_name):
     }
     ''' % locals()
     r = await schema.exec(qu)
-    yield r.data['createTemplate']['template']['id']
+    id = r.data['createTemplate']['template']['id']
+    yield id
     qu = '''
     mutation {
       dropTemplate(id: "%(id)s") {
@@ -38,3 +39,9 @@ async def template_vm(db, image_name):
     }
     ''' % locals()
     await exec(qu)
+
+
+@pytest.fixture
+async def pool():
+    # TODO
+    1

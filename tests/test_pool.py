@@ -23,12 +23,14 @@ async def test_create_pool(template_vm):
             await asyncio.sleep(1)
             yield i + 1
 
-    async for t in counter(5):
+    t = 0
+    dt = 2
+    while t < 20:
         qu = """{
-          pool(id: %(id)s){
+          pool(id: %(id)s) {
             state {
               running
-              available{
+              available {
                 id
               }
             }
@@ -39,5 +41,8 @@ async def test_create_pool(template_vm):
         if len(li) == 2:
             return
         # FIXME
+        await asyncio.sleep(dt)
+        t += dt
 
+    print(f'^^^^ {len(li)}')
     assert False
