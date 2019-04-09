@@ -20,7 +20,7 @@ export class TemplatesComponent implements OnInit {
     },
     {
       title: 'Шаблоны виртуальных машин',
-      icon: 'desktop'
+      icon: 'layer-group'
     }
 
   ];

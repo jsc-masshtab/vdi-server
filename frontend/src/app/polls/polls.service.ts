@@ -17,6 +17,7 @@ export class PoolsService  {
                                     template_id
                                     name
                                     initial_size
+                                    reserve_size
                                     state {
                                         running
                                         pending
@@ -26,6 +27,24 @@ export class PoolsService  {
                         
             
                     `,
+            variables: {
+                method: 'GET'
+            }
+        }) 
+    }
+
+    public getAllTemplates(): QueryRef<any,any> {
+        return  this.service.watchQuery({
+            query:  gql` query allTemplates {
+                                templates {
+                                    id
+                                    info
+                                    name
+                                }  
+                            }
+                         
+             
+                     `,
             variables: {
                 method: 'GET'
             }

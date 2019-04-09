@@ -1,5 +1,6 @@
-import { PoolsService } from './polls/polls.service';
+
 import { BrowserModule } from '@angular/platform-browser';
+import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
 import { NgModule } from '@angular/core';
 
 import { AppRoutingModule } from './app-routing.module';
@@ -12,7 +13,7 @@ import { HttpClientModule } from '@angular/common/http';
 /*  -----------------------------------   icons   --------------------------------------*/
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { library } from '@fortawesome/fontawesome-svg-core'
-import { faDesktop,faDatabase } from '@fortawesome/free-solid-svg-icons';
+import { faDesktop,faDatabase, faLayerGroup } from '@fortawesome/free-solid-svg-icons';
 /*  -----------------------------------   icons   --------------------------------------*/
 
 
@@ -23,6 +24,15 @@ import { TemplatesComponent } from './templates/templates.component';
 import { PollsComponent } from './polls/polls.component';
 import { TableComponentComponent } from './common/table-component/table-component.component';
 import { BreadcrumbsComponent } from './common/breadcrumbs/breadcrumbs.component';
+import { PoolAddComponent } from './polls/pool-add/pool-add.component';
+import { PoolsService } from './polls/polls.service';
+
+
+/*  -----------------------------------   material   --------------------------------------*/
+import { MAT_DIALOG_DEFAULT_OPTIONS } from '@angular/material';
+import { MatDialogModule } from '@angular/material/dialog';
+/*  -----------------------------------   material   --------------------------------------*/
+
 
 
 @NgModule({
@@ -32,37 +42,35 @@ import { BreadcrumbsComponent } from './common/breadcrumbs/breadcrumbs.component
     TemplatesComponent,
     TableComponentComponent,
     PollsComponent,
-    BreadcrumbsComponent
+    BreadcrumbsComponent,
+    PoolAddComponent
   ],
   imports: [
     BrowserModule,
+    BrowserAnimationsModule,
     AppRoutingModule,
     GraphQLModule,
     HttpClientModule,
-    FontAwesomeModule
-
+    FontAwesomeModule,
+    MatDialogModule
   ],
-  providers: [TeplatesService, PoolsService],
+  entryComponents: [
+    PoolAddComponent
+  ],
+  providers: 
+            [
+              TeplatesService,
+              PoolsService,
+              { provide: MAT_DIALOG_DEFAULT_OPTIONS, useValue: { hasBackdrop: true, restoreFocus: true } }
+            ],
   bootstrap: [AppComponent]
 })
+
+
 export class AppModule {
   constructor() { 
-    library.add(faDesktop,faDatabase); // Неиспользуемые иконки при финальной сборке удаляются
+    library.add(faDesktop,faDatabase,faLayerGroup); // Неиспользуемые иконки при финальной сборке удаляются
   }
 
 
- }
-
-
-// link?: ApolloLink;
-//     cache: ApolloCache<TCacheShape>;
-//     ssrForceFetchDelay?: number;
-//     ssrMode?: boolean;
-//     connectToDevTools?: boolean;
-//     queryDeduplication?: boolean;
-//     defaultOptions?: DefaultOptions;
-//     resolvers?: Resolvers | Resolvers[];
-//     typeDefs?: string | string[] | DocumentNode | DocumentNode[];
-//     fragmentMatcher?: FragmentMatcher;
-//     name?: string;
-//     version?: string;
+}
