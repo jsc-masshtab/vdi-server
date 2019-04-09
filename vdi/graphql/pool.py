@@ -220,23 +220,35 @@ class RemovePool(graphene.Mutation):
 
 class AlterPool(graphene.Mutation):
 
+    def mutate(self, *args):
+        # TODO
+        pass
+
     class Arguments:
         id = graphene.Int()
 
 
 class PoolMixin:
     pools = graphene.List(PoolType)
-    pool = graphene.Field(PoolType, id=graphene.Int())
+    pool = graphene.Field(PoolType, id=graphene.Int(required=False), name=graphene.String(required=False))
 
-    async def _select_pool(self, selections, id, conn: Connection):
+    async def _select_pool(self, selections, id, name, conn: Connection):
+        if id:
+            where, param = "WHERE id = $1", id
+        else:
+            assert name
+            where, param = "WHERE name = $1", name
         fields = [
             f for f in selections
             if f in PoolType.sql_fields
         ]
+        if not id and 'id' not in fields:
+            fields.append('id')
+
         if not fields:
             return {}
 
-        qu = f"SELECT {', '.join(fields)} FROM pool WHERE id = $1", id
+        qu = f"SELECT {', '.join(fields)} FROM pool {where}", param
         [pool] = await conn.fetch(*qu)
         dic = {
             f: pool[f] for f in fields
@@ -253,13 +265,12 @@ class PoolMixin:
 
     @db.connect()
     async def resolve_pool(self, info, id, conn: Connection):
-
-        def get_where():
-            1
-
+        name = None # TODO
         selections = get_selections(info)
         # ?
-        dic = await PoolMixin._select_pool(self, selections, id, conn=conn)
+        dic = await PoolMixin._select_pool(self, selections, id, name, conn=conn)
+        if not id:
+            id = dic['id']
         u_fields = get_selections(info, 'users') or ()
         u_fields_joined = ', '.join(f'u.{f}' for f in u_fields)
         if u_fields:

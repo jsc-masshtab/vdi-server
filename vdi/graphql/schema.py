@@ -4,7 +4,7 @@ from starlette.graphql import GraphQLApp  # as starlette_GraphQLApp
 from graphql.execution.executors.asyncio import AsyncioExecutor
 
 
-from .pool import PoolType, LaunchPool, AddPool, PoolMixin, RemovePool
+from .pool import PoolType, AddPool, PoolMixin, RemovePool
 from .util import get_selections
 from .vm import CreateTemplate, AddTemplate, DropTemplate, TemplateMixin
 from .users import CreateUser, ListUsers
@@ -16,7 +16,7 @@ from ..db import db
 class PoolMutations(graphene.ObjectType):
     removePool = RemovePool.Field()
     addPool = AddPool.Field()
-    launchPool = LaunchPool.Field()
+    # launchPool = LaunchPool.Field()
     createTemplate = CreateTemplate.Field()
     addTemplate = AddTemplate.Field()
     dropTemplate = DropTemplate.Field()
