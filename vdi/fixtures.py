@@ -42,6 +42,34 @@ async def template_vm(db, image_name):
 
 
 @pytest.fixture
-async def pool():
-    # TODO
-    1
+def pool_name():
+    import random, string
+    uid = ''.join(
+        random.choice(string.ascii_letters) for _ in range(3)
+    )
+    return f"pool-{uid}"
+
+
+@pytest.fixture
+async def pool(template_vm, pool_name):
+    qu = '''
+    mutation {
+      addPool(name: "%(pool_name)s", template_id: %(template_vm)s) {
+        id
+      }
+    }
+    ''' % locals()
+    r = await schema.exec(qu)
+    id = r.data['addPool']['id']
+    yield {
+        'id': id,
+        'name': r.data['addPool']['name'],
+    }
+    qu = '''
+        mutation {
+          dropTemplate(id: "%(id)s") {
+            ok
+          }
+        }
+        ''' % locals()
+    await exec(qu)

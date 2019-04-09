@@ -31,6 +31,7 @@ class WsConnection(Awaitable):
         async for msg in self:
             try:
                 if match_func(msg):
+                    self._conn.close()
                     return msg
             except:
                 pass

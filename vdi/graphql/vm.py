@@ -10,6 +10,7 @@ from .util import get_selections
 
 class TemplateType(graphene.ObjectType):
     id = graphene.String()
+    name = graphene.String()
     info = graphene.String()
 
 
@@ -18,6 +19,7 @@ class CreateTemplate(graphene.Mutation):
     Awaits the result. Mostly for development use
     '''
     class Arguments:
+        name = graphene.String()
         image_name = graphene.String()
 
     template = graphene.Field(TemplateType)
@@ -30,7 +32,7 @@ class CreateTemplate(graphene.Mutation):
             INSERT INTO template_vm (id, veil_info) VALUES ($1, $2)
             ''', domain['id'], veil_info
         await conn.fetch(*qu)
-        t = TemplateType(id=domain['id'], info=veil_info)
+        t = TemplateType(id=domain['id'], info=veil_info, name=domain['verbose_name'])
         return CreateTemplate(template=t)
 
 
@@ -65,7 +67,6 @@ class AddTemplate(graphene.Mutation):
 
 
 
-
 class TemplateMixin:
 
     templates = graphene.List(TemplateType)
@@ -73,13 +74,35 @@ class TemplateMixin:
     @db.connect()
     async def resolve_templates(self, info, conn: Connection):
         selections = get_selections(info)
-        fields = selections[:]
-        if 'info' in selections:
-            fields[fields.index('info')] = 'veil_info'
+
+        fields = []
+        for s in selections:
+            if s == 'info':
+                fields.append('veil_info')
+            elif s == 'name' and 'veil_info' not in fields:
+                fields.append('veil_info')
+            else:
+                fields.append(s)
+
         qu = f"SELECT {', '.join(fields)} FROM template_vm"
-        templates = await conn.fetch(qu)
-        li = []
-        for t in templates:
-            t = dict(zip(selections, t))
-            li.append(TemplateType(**t))
-        return li
+        data = await conn.fetch(qu)
+
+        templates = [
+            dict(zip(fields, t)) for t in data
+        ]
+
+        def make_template(t):
+            if 'veil_info' in t:
+                t['info'] = t['veil_info']
+            if 'name' in selections:
+                info = json.loads(t['veil_info'])
+                t['name'] = info['verbose_name']
+            if 'info' not in selections:
+                t.pop('veil_info', None)
+            return TemplateType(**t)
+
+        return [
+            make_template(t) for t in templates
+        ]
+
+

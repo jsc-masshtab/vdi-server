@@ -15,3 +15,7 @@ def get_selections(info, path=''):
     return [
         field.name.value for field in selections
     ]
+
+
+def as_list(gen):
+    return list(gen())
