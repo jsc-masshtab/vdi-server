@@ -32,4 +32,22 @@ export class PoolsService  {
             }
         }) 
     }
+
+    public getAllTemplates(): QueryRef<any,any> {
+        return  this.service.watchQuery({
+            query:  gql` query allTemplates {
+                                templates {
+                                    id
+                                    info
+                                    name
+                                }  
+                            }
+                         
+             
+                     `,
+            variables: {
+                method: 'GET'
+            }
+        }) 
+    }
 }

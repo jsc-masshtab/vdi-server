@@ -1,12 +1,16 @@
 import { Component, OnInit } from '@angular/core';
 import { map } from 'rxjs/operators';
 import { PoolsService } from './polls.service';
+import { PoolAddComponent } from './pool-add/pool-add.component';
+
+import {MatDialog, MatDialogRef, MAT_DIALOG_DATA} from '@angular/material';
 
 @Component({
   selector: 'vdi-polls',
   templateUrl: './polls.component.html',
   styleUrls: ['./polls.component.scss']
 })
+
 export class PollsComponent implements OnInit {
 
   public pools: [];
@@ -42,10 +46,17 @@ export class PollsComponent implements OnInit {
     }
   ];
 
-  constructor(private service: PoolsService){}
+  constructor(private service: PoolsService,public dialog: MatDialog){}
 
   ngOnInit() {
     this.getAllPools();
+  }
+
+  private openC() {
+    let dialogRef = this.dialog.open(PoolAddComponent, {
+      height: '400px',
+      width: '600px',
+    });
   }
 
   private getAllPools() {
