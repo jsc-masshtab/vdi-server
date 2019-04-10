@@ -165,15 +165,21 @@ class AsyncTargetWrapper(TargetWrapper):
             sig = inspect.signature(self.target)
             for key, p in sig.parameters.items():
                 val = arguments.get(key, MISSING)
-                if val is MISSING:
-                    args.append(ctx)
-                elif p.kind == Parameter.VAR_KEYWORD:
+                if val is MISSING and issubclass(self.context_type, p.annotation): #?
+                        args.append(ctx)
+                elif p.kind == Parameter.VAR_KEYWORD and val is not MISSING:
                     kwargs.update(val)
                 elif p.kind == Parameter.VAR_POSITIONAL:
                     args.extend(val)
-                elif p.kind in [Parameter.POSITIONAL_ONLY, Parameter.POSITIONAL_OR_KEYWORD]:
+                elif p.kind == Parameter.POSITIONAL_ONLY:
                     args.append(val)
-                else:
+                elif p.kind == Parameter.POSITIONAL_OR_KEYWORD:
+                    if val is MISSING:
+                        if p.default is not Parameter.empty:
+                            args.append(p.default)
+                    else:
+                        args.append(val)
+                elif val is not MISSING:
                     kwargs[key] = val
             result = await self.target(*args, **kwargs)
             return result

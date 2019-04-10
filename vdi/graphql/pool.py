@@ -92,7 +92,7 @@ class AddPool(graphene.Mutation):
     class Arguments:
         template_id = graphene.String(required=True)
         name = graphene.String(required=True)
-        # settings = PoolSettingsInput(required=False)
+        settings = PoolSettingsInput(required=False)
         autostart = graphene.Boolean(default_value=True)
 
     id = graphene.Int()
@@ -101,9 +101,7 @@ class AddPool(graphene.Mutation):
     settings = graphene.Field(PoolSettings)
 
     @db.transaction()
-    async def mutate(self, info, conn: Connection, template_id, name, autostart):
-        settings = () # FIXME
-
+    async def mutate(self, conn: Connection, info, template_id, name, autostart, settings=()):
         def get_setting(name):
             if name in settings:
                 return settings[name]
@@ -265,10 +263,8 @@ class PoolMixin:
         """, id
 
     @db.connect()
-    async def resolve_pool(self, info, id, conn: Connection):
-        name = None # TODO
+    async def resolve_pool(self, info, conn: Connection, id=None, name=None):
         selections = get_selections(info)
-        # ?
         dic = await PoolMixin._select_pool(self, selections, id, name, conn=conn)
         if not id:
             id = dic['id']
