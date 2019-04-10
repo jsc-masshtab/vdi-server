@@ -1,0 +1,54 @@
+.form {
+    padding: 30px 20px;
+    display: flex;
+    height: 100%;;
+    flex-direction: column;
+    background: rgba(220, 220, 220, 0.5);
+
+    .field {
+        margin-bottom: 15px;
+
+        &:last-child {
+            margin-bottom: 0px;
+        }
+
+        input,ba-select,textarea {
+            width: 100%;
+        }
+
+        input {
+            padding: 5px;
+            font-size: 12px;
+            color: #111;
+            border: none;
+            height: 30px;
+
+            &:focus {
+                border: 1px solid rgba(17, 17, 17, 0.3);
+            }
+        }
+    }
+
+    .field-name {
+        font-size: 15px;
+        margin-bottom: 5px;
+    }
+
+    .btn-form-action {
+        padding: 5px;
+        padding-left: 10px;
+        padding-right: 10px;
+        background: #FFF;
+        transition: background 0.2s ease;
+        border-radius: 5px;
+        color: #111;
+        border: none;
+        margin-top: auto;
+        width: max-content;
+
+        &:hover {
+            background: #323232;
+            color: #FFF;
+        }
+    }
+}

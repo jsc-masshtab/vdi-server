@@ -1,9 +1,15 @@
-<div>
-
-<label>
-  <p>Добавить пул</p>
-  
-</label>
-
-
+<div class="form">
+  <label class="field">
+    <p class="field-name">Выберите шаблон ВМ</p>
+    <ba-select
+      [inputData]= "options || []"
+      (outputData)="selectValue($event)"
+      defaultData="- нет доступных шаблонов -">
+    </ba-select>
+  </label>
+  <label class="field">
+    <p class="field-name">Введите имя пула</p>
+    <input type="text" [(ngModel)]="la">
+  </label>
+  <button (click)="send()" class="btn-form-action">Создать</button>
 </div>

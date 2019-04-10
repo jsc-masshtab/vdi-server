@@ -38,7 +38,6 @@ export class PoolsService  {
             query:  gql` query allTemplates {
                                 templates {
                                     id
-                                    info
                                     name
                                 }  
                             }

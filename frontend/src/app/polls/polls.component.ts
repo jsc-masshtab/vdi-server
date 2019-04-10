@@ -54,8 +54,7 @@ export class PollsComponent implements OnInit {
 
   private openC() {
     let dialogRef = this.dialog.open(PoolAddComponent, {
-      height: '400px',
-      width: '600px',
+      width: '500px',
     });
   }
 

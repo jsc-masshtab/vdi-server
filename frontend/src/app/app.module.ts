@@ -2,6 +2,7 @@
 import { BrowserModule } from '@angular/platform-browser';
 import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
 import { NgModule } from '@angular/core';
+import { ReactiveFormsModule, FormsModule } from '@angular/forms';
 
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
@@ -20,6 +21,7 @@ import { faDesktop,faDatabase, faLayerGroup,faPlusCircle } from '@fortawesome/fr
 import { MainMenuComponent } from './main-menu/main-menu.component';
 import { TeplatesService } from './templates/templates.service';
 import { TemplatesComponent } from './templates/templates.component';
+import { BaSelect } from './common/baSelect';
 
 import { PollsComponent } from './polls/polls.component';
 import { TableComponentComponent } from './common/table-component/table-component.component';
@@ -31,6 +33,7 @@ import { PoolsService } from './polls/polls.service';
 /*  -----------------------------------   material   --------------------------------------*/
 import { MAT_DIALOG_DEFAULT_OPTIONS } from '@angular/material';
 import { MatDialogModule } from '@angular/material/dialog';
+
 /*  -----------------------------------   material   --------------------------------------*/
 
 
@@ -43,7 +46,8 @@ import { MatDialogModule } from '@angular/material/dialog';
     TableComponentComponent,
     PollsComponent,
     BreadcrumbsComponent,
-    PoolAddComponent
+    PoolAddComponent,
+    BaSelect
   ],
   imports: [
     BrowserModule,
@@ -52,6 +56,8 @@ import { MatDialogModule } from '@angular/material/dialog';
     GraphQLModule,
     HttpClientModule,
     FontAwesomeModule,
+    ReactiveFormsModule,
+    FormsModule,
     MatDialogModule
   ],
   entryComponents: [
