@@ -219,14 +219,14 @@ class RemovePool(graphene.Mutation):
 #         return LaunchPool(state=state)
 
 
-class AlterPool(graphene.Mutation):
+# class AlterPool(graphene.Mutation):
 
-    def mutate(self, *args):
-        # TODO
-        pass
+#     def mutate(self, *args):
+#         # TODO
+#         pass
 
-    class Arguments:
-        id = graphene.Int()
+#     class Arguments:
+#         id = graphene.Int()
 
 
 class PoolMixin:
