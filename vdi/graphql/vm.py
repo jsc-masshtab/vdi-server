@@ -93,9 +93,10 @@ class TemplateMixin:
 
         def make_template(t):
             if 'veil_info' in t:
-                t['info'] = t['veil_info']
+                t['info'] = t.pop('veil_info')
+
             if 'name' in selections:
-                info = json.loads(t['veil_info'])
+                info = json.loads(t['info'])
                 t['name'] = info['verbose_name']
             if 'info' not in selections:
                 t.pop('veil_info', None)
