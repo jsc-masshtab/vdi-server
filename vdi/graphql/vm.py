@@ -7,6 +7,7 @@ from ..db import db
 from ..tasks import vm, admin
 
 from .util import get_selections
+from vdi.context_utils import enter_context
 
 class TemplateType(graphene.ObjectType):
     id = graphene.String()
@@ -24,8 +25,8 @@ class CreateTemplate(graphene.Mutation):
 
     template = graphene.Field(TemplateType)
 
-    @db.connect()
-    async def mutate(self, info, image_name, conn: Connection):
+    @enter_context(lambda: db.connect())
+    async def mutate(conn: Connection, self, info, image_name):
         domain = await vm.SetupDomain(image_name=image_name)
         veil_info = json.dumps(domain)
         qu = '''
@@ -42,8 +43,8 @@ class DropTemplate(graphene.Mutation):
 
     ok = graphene.Boolean()
 
-    @db.connect()
-    async def mutate(self, info, id, conn: Connection):
+    @enter_context(lambda: db.connect())
+    async def mutate(conn: Connection, self, info, id):
         await vm.DropDomain(id=id)
         qu = "DELETE from template_vm WHERE id = $1", id
         await conn.fetch(*qu)
@@ -57,8 +58,8 @@ class AddTemplate(graphene.Mutation):
 
     ok = graphene.Boolean()
 
-    @db.connect()
-    async def mutate(self, info, id, conn: Connection):
+    @enter_context(lambda: db.connect())
+    async def mutate(conn: Connection, self, info, id):
         qu = '''
             INSERT INTO template_vm (id) VALUES ($1)
             ''', id
@@ -71,8 +72,8 @@ class TemplateMixin:
 
     templates = graphene.List(TemplateType)
 
-    @db.connect()
-    async def resolve_templates(self, info, conn: Connection):
+    @enter_context(lambda: db.connect())
+    async def resolve_templates(conn: Connection, self, info):
         selections = get_selections(info)
 
         fields = []

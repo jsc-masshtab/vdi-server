@@ -17,6 +17,8 @@ import json
 
 from asyncpg.connection import Connection
 
+from vdi.context_utils import enter_context
+
 from .settings import settings
 
 from . import app
@@ -68,8 +70,8 @@ async def get_vm(request):
 
 
 @app.route('/client/login', methods=['POST', 'GET'])
-@db.connect()
-async def login(request, conn: Connection):
+@enter_context(lambda: db.connect())
+async def login(conn: Connection, request):
     if request.method == 'GET':
         data = request.query_params
     else:

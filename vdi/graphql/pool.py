@@ -13,6 +13,7 @@ from .users import UserType
 
 from vdi.tasks import vm
 from vdi.asyncio_utils import wait
+from vdi.context_utils import enter_context
 
 from vdi.settings import settings as settings_file
 
@@ -23,9 +24,8 @@ class RunningState(graphene.Enum):
 class PoolType(graphene.ObjectType):
     id = graphene.Int()
     template_id = graphene.String(required=True)
-    initial_size = graphene.Int()
-    reserve_size = graphene.Int()
     name = graphene.String()
+    settings = graphene.Field(lambda: PoolSettings)
     state = graphene.Field(lambda: PoolState)
     users = graphene.List(UserType)
 
@@ -100,8 +100,8 @@ class AddPool(graphene.Mutation):
     state = graphene.Field(PoolState)
     settings = graphene.Field(PoolSettings)
 
-    @db.transaction()
-    async def mutate(self, conn: Connection, info, template_id, name, autostart, settings=()):
+    @enter_context(lambda: db.transaction())
+    async def mutate(conn: Connection, self, info, template_id, name, autostart, settings=()):
         def get_setting(name):
             if name in settings:
                 return settings[name]
@@ -145,8 +145,8 @@ class RemovePool(graphene.Mutation):
     ok = graphene.Boolean()
     ids = graphene.List(graphene.String)
 
-    @db.connect()
-    async def mutate(self, info, id, conn: Connection):
+    @enter_context(lambda: db.connect())
+    async def mutate(conn: Connection, self, info, id):
         qu = f'''
         SELECT vm.id FROM vm JOIN pool ON vm.pool_id = pool.id WHERE pool.id = $1
         ''', id
@@ -262,8 +262,8 @@ class PoolMixin:
         WHERE pool_id = $1
         """, id
 
-    @db.connect()
-    async def resolve_pool(self, info, conn: Connection, id=None, name=None):
+    @enter_context(lambda: db.connect())
+    async def resolve_pool(conn: Connection, self, info, id=None, name=None):
         selections = get_selections(info)
         dic = await PoolMixin._select_pool(self, selections, id, name, conn=conn)
         if not id:
@@ -301,8 +301,8 @@ class PoolMixin:
             map.setdefault(pool_id, []).append(UserType(**u))
         return map
 
-    @db.connect()
-    async def resolve_pools(self, info, conn: Connection):
+    @enter_context(lambda: db.connect())
+    async def resolve_pools(conn: Connection, self, info):
         selections = get_selections(info)
         fields = [
             f for f in selections

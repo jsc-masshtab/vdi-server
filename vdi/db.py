@@ -3,9 +3,9 @@ from cached_property import cached_property as cached
 import asyncpg
 from functools import wraps
 
-from typed_contextmanager import typed_contextmanager
-
 from asyncpg.connection import Connection
+
+from contextlib import asynccontextmanager
 
 # from abc import ABC
 #
@@ -20,13 +20,13 @@ class DbApp:
         self.pool = await asyncpg.create_pool(database='vdi',
                                       user='postgres')
 
-    @typed_contextmanager
+    @asynccontextmanager
     async def transaction(self) -> Connection:
         async with self.pool.acquire() as c:
             async with c.transaction():
                 yield c
 
-    @typed_contextmanager
+    @asynccontextmanager
     async def connect(self) -> Connection:
         async with self.pool.acquire() as c:
             yield c

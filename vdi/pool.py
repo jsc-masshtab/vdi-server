@@ -3,6 +3,7 @@ import uuid
 
 import asyncio
 from .asyncio_utils import callback
+from .context_utils import enter_context
 
 from g_tasks import g
 
@@ -30,8 +31,8 @@ class Pool:
         'TODO'
 
     @callback
-    @db.connect()
-    async def on_vm_created(self, fut, conn: Connection):
+    @enter_context(lambda: db.connect())
+    async def on_vm_created(conn: Connection, self, fut):
         if fut.exception():
             # FIXME
             print(fut.exception())
