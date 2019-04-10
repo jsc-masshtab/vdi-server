@@ -99,7 +99,7 @@ class TemplateMixin:
                 info = json.loads(t['info'])
                 t['name'] = info['verbose_name']
             if 'info' not in selections:
-                t.pop('veil_info', None)
+                t.pop('info', None)
             return TemplateType(**t)
 
         return [
