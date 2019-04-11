@@ -7,9 +7,15 @@ import { map } from 'rxjs/operators';
   templateUrl: './pool-add.component.html',
   styleUrls: ['./pool-add.component.scss']
 })
+
 export class PoolAddComponent implements OnInit {
 
-  constructor(private poolsService: PoolsService) {}
+  public options: object[];
+  private tmId: string;
+  public la:string;
+
+  constructor(private poolsService: PoolsService) {
+  }
 
   ngOnInit() {
     this.getTemplate();
@@ -17,8 +23,22 @@ export class PoolAddComponent implements OnInit {
 
   private getTemplate() {
     this.poolsService.getAllTemplates().valueChanges.pipe(map(data => data.data.templates)).subscribe((res)=> {
-      console.log(res);
+      this.options = res.map((item) => {
+        return {
+          'output': item.id,
+          'input': item.name
+        }
+      })
     });
+  }
+
+  private selectValue(data) {
+    this.tmId = data[0];
+    console.log(data);
+  }
+
+  public send() {
+    console.log(this.la);
   }
 
 }

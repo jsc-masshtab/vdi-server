@@ -2,6 +2,7 @@
 import { BrowserModule } from '@angular/platform-browser';
 import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
 import { NgModule } from '@angular/core';
+import { ReactiveFormsModule, FormsModule } from '@angular/forms';
 
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
@@ -13,13 +14,14 @@ import { HttpClientModule } from '@angular/common/http';
 /*  -----------------------------------   icons   --------------------------------------*/
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { library } from '@fortawesome/fontawesome-svg-core'
-import { faDesktop,faDatabase, faLayerGroup } from '@fortawesome/free-solid-svg-icons';
+import { faDesktop,faDatabase, faLayerGroup,faPlusCircle } from '@fortawesome/free-solid-svg-icons';
 /*  -----------------------------------   icons   --------------------------------------*/
 
 
 import { MainMenuComponent } from './main-menu/main-menu.component';
 import { TeplatesService } from './templates/templates.service';
 import { TemplatesComponent } from './templates/templates.component';
+import { BaSelect } from './common/baSelect';
 
 import { PollsComponent } from './polls/polls.component';
 import { TableComponentComponent } from './common/table-component/table-component.component';
@@ -31,6 +33,7 @@ import { PoolsService } from './polls/polls.service';
 /*  -----------------------------------   material   --------------------------------------*/
 import { MAT_DIALOG_DEFAULT_OPTIONS } from '@angular/material';
 import { MatDialogModule } from '@angular/material/dialog';
+
 /*  -----------------------------------   material   --------------------------------------*/
 
 
@@ -43,7 +46,8 @@ import { MatDialogModule } from '@angular/material/dialog';
     TableComponentComponent,
     PollsComponent,
     BreadcrumbsComponent,
-    PoolAddComponent
+    PoolAddComponent,
+    BaSelect
   ],
   imports: [
     BrowserModule,
@@ -52,6 +56,8 @@ import { MatDialogModule } from '@angular/material/dialog';
     GraphQLModule,
     HttpClientModule,
     FontAwesomeModule,
+    ReactiveFormsModule,
+    FormsModule,
     MatDialogModule
   ],
   entryComponents: [
@@ -69,7 +75,8 @@ import { MatDialogModule } from '@angular/material/dialog';
 
 export class AppModule {
   constructor() { 
-    library.add(faDesktop,faDatabase,faLayerGroup); // Неиспользуемые иконки при финальной сборке удаляются
+    library.add(faDesktop,faDatabase,faLayerGroup,faPlusCircle
+      ); // Неиспользуемые иконки при финальной сборке удаляются
   }
 
 
