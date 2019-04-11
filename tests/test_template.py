@@ -17,7 +17,7 @@ async def test_create_drop_template(db, image_name):
     }
     ''' % locals()
     r = await exec(qu)
-    id = r.data['createTemplate']['template']['id']
+    id = r['createTemplate']['template']['id']
     qu = '''
     mutation {
       dropTemplate(id: "%(id)s") {
@@ -26,6 +26,6 @@ async def test_create_drop_template(db, image_name):
     }
     ''' % locals()
     r = await exec(qu)
-    assert r.data['dropTemplate']['ok']
+    assert r['dropTemplate']['ok']
 
 

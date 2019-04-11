@@ -11,6 +11,8 @@ from ..pool import Pool
 from .util import get_selections
 from .users import UserType
 
+# TODO TemplateType == VmType
+
 from vdi.tasks import vm
 from vdi.asyncio_utils import wait
 from vdi.context_utils import enter_context
@@ -83,7 +85,7 @@ class PoolState(graphene.ObjectType):
         ret = []
         for vm in qu:
             info = json.dumps(vm)
-            ret.append(VmType(id=vm['id'], info=info))
+            ret.append(VmType(id=vm['id'], info=info, name=vm['verbose_name']))
         return ret
 
 # TODO dict of pending tasks
@@ -93,6 +95,7 @@ class AddPool(graphene.Mutation):
         template_id = graphene.String(required=True)
         name = graphene.String(required=True)
         settings = PoolSettingsInput(required=False)
+        block = graphene.Boolean(required=False)
         autostart = graphene.Boolean(default_value=True)
 
     id = graphene.Int()
@@ -100,8 +103,9 @@ class AddPool(graphene.Mutation):
     state = graphene.Field(PoolState)
     settings = graphene.Field(PoolSettings)
 
-    @enter_context(lambda: db.transaction())
-    async def mutate(conn: Connection, self, info, template_id, name, autostart, settings=()):
+    @enter_context(lambda: db.connect())
+    async def mutate(conn: Connection, self, info, template_id, name, autostart, settings=(),
+                     block=False):
         def get_setting(name):
             if name in settings:
                 return settings[name]
@@ -111,7 +115,12 @@ class AddPool(graphene.Mutation):
         INSERT INTO pool (template_id, name, initial_size, reserve_size)
         VALUES ($1, $2, $3, $4) RETURNING id
         ''', template_id, name, get_setting('initial_size'), get_setting('reserve_size')
+
+
+
         [res] = await conn.fetch(*pool_query)
+
+        print('RETURNING', res['id'])
 
         pool = {
             'id': res['id'],
@@ -125,13 +134,21 @@ class AddPool(graphene.Mutation):
             ins = Pool(params=pool)
             Pool.instances[pool['id']] = ins
             add_domains = ins.add_domains()
-            asyncio.create_task(add_domains)
+            if block:
+                domains = await add_domains
+                available = [
+                    VmType(id=infa['id'], info=infa, name=infa['verbose_name'])
+                    for infa in domains
+                ]
+            else:
+                asyncio.create_task(add_domains)
+                available = []
             running = True
         settings = PoolSettings(**{
             'initial_size': get_setting('initial_size'),
             'reserve_size': get_setting('reserve_size'),
         })
-        state = PoolState(pending=0, available=[], running=running)
+        state = PoolState(pending=0, available=available, running=running)
         return AddPool(id=pool['id'], state=state, settings=settings, name=name)
 
 
@@ -147,6 +164,9 @@ class RemovePool(graphene.Mutation):
 
     @enter_context(lambda: db.connect())
     async def mutate(conn: Connection, self, info, id):
+        vms = await vm.ListVms()
+        vms = {v['id'] for v in vms}
+
         qu = f'''
         SELECT vm.id FROM vm JOIN pool ON vm.pool_id = pool.id WHERE pool.id = $1
         ''', id
@@ -156,8 +176,9 @@ class RemovePool(graphene.Mutation):
         ]
 
         async def drop_vm(id):
-            await vm.DropDomain(id=id)
-            await conn.fetch("DELETE FROM vm WHERE id = $1)", id)
+            if id in vms:
+                await vm.DropDomain(id=id)
+            await conn.fetch("DELETE FROM vm WHERE id = $1", id)
 
         tasks = [
             drop_vm(id) for id in ids
@@ -166,6 +187,7 @@ class RemovePool(graphene.Mutation):
             pass
 
         await conn.fetch("DELETE FROM pool WHERE id = $1", id)
+
         return RemovePool(ok=True, ids=ids)
 
 
@@ -231,7 +253,9 @@ class PoolMixin:
     pools = graphene.List(PoolType)
     pool = graphene.Field(PoolType, id=graphene.Int(required=False), name=graphene.String(required=False))
 
-    async def _select_pool(self, selections, id, name, conn: Connection):
+    async def _select_pool(self, info, id, name, conn: Connection):
+        selections = get_selections(info)
+        settings_selections = get_selections(info, 'settings') or []
         if id:
             where, param = "WHERE id = $1", id
         else:
@@ -244,14 +268,18 @@ class PoolMixin:
         if not id and 'id' not in fields:
             fields.append('id')
 
-        if not fields:
+        if not fields and not settings_selections:
             return {}
 
-        qu = f"SELECT {', '.join(fields)} FROM pool {where}", param
+        qu = f"SELECT {', '.join(fields + settings_selections)} FROM pool {where}", param
         [pool] = await conn.fetch(*qu)
         dic = {
             f: pool[f] for f in fields
         }
+        settings = {}
+        for sel in settings_selections:
+            settings[sel] = pool[sel]
+        dic['settings'] = PoolSettings(**settings)
         return dic
 
     async def _select_pool_users(self, selections, id, conn: Connection):
@@ -264,8 +292,7 @@ class PoolMixin:
 
     @enter_context(lambda: db.connect())
     async def resolve_pool(conn: Connection, self, info, id=None, name=None):
-        selections = get_selections(info)
-        dic = await PoolMixin._select_pool(self, selections, id, name, conn=conn)
+        dic = await PoolMixin._select_pool(self, info, id, name, conn=conn)
         if not id:
             id = dic['id']
         u_fields = get_selections(info, 'users') or ()

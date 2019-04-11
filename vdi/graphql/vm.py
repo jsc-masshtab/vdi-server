@@ -71,9 +71,12 @@ class AddTemplate(graphene.Mutation):
 class TemplateMixin:
 
     templates = graphene.List(TemplateType)
+    vms = graphene.List(TemplateType)
 
     @enter_context(lambda: db.connect())
     async def resolve_templates(conn: Connection, self, info):
+        vms = await vm.ListVms()
+        vms = {vm['id'] for vm in vms}
         selections = get_selections(info)
 
         fields = []
@@ -85,6 +88,9 @@ class TemplateMixin:
             else:
                 fields.append(s)
 
+        if 'id' not in fields:
+            fields.append('id')
+
         qu = f"SELECT {', '.join(fields)} FROM template_vm"
         data = await conn.fetch(qu)
 
@@ -92,7 +98,11 @@ class TemplateMixin:
             dict(zip(fields, t)) for t in data
         ]
 
+        templates = [t for t in templates if t['id'] in vms]
+
         def make_template(t):
+            if 'id' not in selections:
+                t.pop('id', None)
             if 'veil_info' in t:
                 t['info'] = t.pop('veil_info')
 
@@ -107,4 +117,12 @@ class TemplateMixin:
             make_template(t) for t in templates
         ]
 
+
+    @enter_context(lambda: db.connect())
+    async def resolve_vms(conn: Connection, self, info):
+        vms = await vm.ListVms()
+        return [
+            TemplateType(name=vm['verbose_name'], id=vm['id'], info=json.dumps(vm))
+            for vm in vms
+        ]
 

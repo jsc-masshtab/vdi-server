@@ -12,6 +12,8 @@ from .base import CONTROLLER_IP, Token
 from .client import HttpClient
 from .ws import WsConnection
 
+from vdi.asyncio_utils import wait
+
 
 class Node(Task):
 
@@ -173,3 +175,31 @@ class DropDomain(Task):
         }
         http_client = HttpClient()
         await http_client.fetch(self.url, method='POST', headers=headers, body=b'')
+
+
+class ListVms(Task):
+
+    url = f"http://{CONTROLLER_IP}/api/domains/"
+
+    async def run(self):
+        token = await Token()
+        headers = {
+            'Authorization': f'jwt {token}',
+        }
+        http_client = HttpClient()
+        res = await http_client.fetch(self.url, headers=headers)
+        return res['results']
+
+
+class DropAllDomains(Task):
+
+    async def run(self):
+        vms = await ListVms()
+
+        tasks = [
+            DropDomain(id=vm['id']) for vm in vms
+        ]
+        # async for _ in wait(*tasks):
+        #     pass
+        for t in tasks:
+            await t

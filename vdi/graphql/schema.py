@@ -38,6 +38,12 @@ from graphql.execution.executors.asyncio import AsyncioExecutor
 from graphql.graphql import graphql
 
 
+class ExecError(Exception):
+    pass
+
+
 async def exec(query):
     r = await graphql(schema, query, executor=AsyncioExecutor(), return_promise=True)
-    return r
+    if r.errors:
+        raise ExecError(repr(r.errors))
+    return r.data

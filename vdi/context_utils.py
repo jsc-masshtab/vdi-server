@@ -6,8 +6,6 @@ from contextlib import AbstractContextManager, AbstractAsyncContextManager
 
 from functools import wraps
 
-from typing import Union
-
 function = type(lambda: None)
 
 @dataclass()

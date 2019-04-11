@@ -28,13 +28,15 @@ class wait:
     def __init__(self, *awaitables, suppress_exceptions=False, **kwargs):
         self.suppress_exceptions = suppress_exceptions
         if not awaitables and kwargs:
-            self.awaitables = kwargs
+            self.awaitables = kwargs.items()
         else:
-            self.awaitables = {self.get_identity(task): task for task in awaitables}
+            self.awaitables = [
+                (self.get_identity(task), task) for task in awaitables
+            ]
 
         results = self.results[:]
 
-        for key, src in self.awaitables.items():
+        for key, src in self.awaitables:
             def cb(fut, key=key):
                 target = results.pop()
                 if not fut.cancelled() and not fut.exception():
