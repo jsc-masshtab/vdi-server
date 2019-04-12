@@ -8,7 +8,7 @@ from starlette.middleware.sessions import SessionMiddleware
 from starlette.middleware.cors import CORSMiddleware
 from starlette.authentication import requires
 
-from .auth import SessionAuthBackend
+from .auth.jwt import JWTAuthenticationBackend
 
 import base64
 import binascii
@@ -87,10 +87,10 @@ async def login(conn: Connection, request):
 from starlette.authentication import requires
 
 
-@app.route('/check')
+@app.route('/check', methods=['GET', 'POST'])
 @requires(['authenticated'])
 def check(request):
-    username = request.session['username']
+    username = request.user.username
     return JSONResponse({
         'user': username
     })
@@ -106,8 +106,9 @@ import vdi.auth
 
 
 
-app.add_middleware(AuthenticationMiddleware, backend=SessionAuthBackend())
+app.add_middleware(AuthenticationMiddleware, backend=JWTAuthenticationBackend())
 app.add_middleware(SessionMiddleware, secret_key='sphere')
+
 if settings.get('debug'):
     app.add_middleware(CORSMiddleware, allow_origins=['*'], allow_methods=['*'], allow_headers=['*'],
                        allow_credentials=True)

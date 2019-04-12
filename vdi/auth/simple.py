@@ -13,3 +13,6 @@ class SessionAuthBackend(AuthenticationBackend):
         if username:
             return AuthCredentials(["authenticated"]), SimpleUser(username)
 
+
+######
+

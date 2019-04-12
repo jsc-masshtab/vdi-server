@@ -192,61 +192,18 @@ class RemovePool(graphene.Mutation):
 
 
 
-# class LaunchPool(graphene.Mutation):
-#     #
-#     # development only ?
-#     #
-#     class Arguments:
-#         id = graphene.Int()
-#
-#     state = graphene.Field(PoolState)
-#
-#     @db.connect()
-#     async def mutate(self, info, id, conn: Connection):
-#         if id in Pool.instances:
-#             from graphql import GraphQLError
-#             raise GraphQLError('pool is launched')
-#
-#         qu = f'''
-#         SELECT pool.id, template_id, name, initial_size, reserve_size, vm.id as "vm.id"
-#         FROM pool LEFT JOIN vm
-#         ON vm.pool_id = pool.id WHERE pool.id = $1 AND vm.state = 'queued'
-#         ''', id
-#         records = await conn.fetch(*qu)
-#         rec = records[0]
-#         dic = {
-#             'id': rec['id'],
-#             'template_id': rec['template_id'],
-#             'name': rec['name'],
-#             'initial_size': rec['initial_size'],
-#             'reserve_size': rec['reserve_size'],
-#         }
-#         pool = Pool(params=dic)
-#         Pool.instances[id] = pool
-#         vms = [
-#             {
-#                 'id': rec['vm.id'] # TODO: what about vm info?
-#             }
-#             for rec in records
-#         ]
-#         for vm in vms:
-#             await pool.queue.put(vm)
-#             pool.queue.task_done()
-#         add_domains = pool.add_domains()
-#         asyncio.create_task(add_domains)
-#         state = PoolState(running=True)
-#         state.pool = pool
-#         return LaunchPool(state=state)
-
-
 # class AlterPool(graphene.Mutation):
-
-#     def mutate(self, *args):
+#
+#     def mutate(self, id, name, newName):
 #         # TODO
 #         pass
-
+#
 #     class Arguments:
-#         id = graphene.Int()
+#         id = graphene.String(required=False)
+#         name = graphene.String(required=False)
+#         newName = graphene.String(required=False)
+#         settings = PoolSettingsInput(required=False)
+#         block = graphene.Boolean(required=False)
 
 
 class PoolMixin:
