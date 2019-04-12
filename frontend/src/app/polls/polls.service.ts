@@ -10,6 +10,7 @@ export class PoolsService  {
     constructor(private service: Apollo) {}
 
     public getAllPools(): QueryRef<any,any> {
+        console.log('piy');
        return  this.service.watchQuery({
             query:  gql` query allPools {
                                 pools {
@@ -21,6 +22,11 @@ export class PoolsService  {
                                     state {
                                         running
                                         pending
+                                        available {
+                                            name
+                                            id
+                                            info
+                                        }
                                       }
                                 }  
                             }
@@ -31,6 +37,21 @@ export class PoolsService  {
                 method: 'GET'
             }
         }) 
+    }
+
+    public getAllPoolsCache() {
+        return  this.service.getClient().readQuery({
+            query:  gql` query allPools {
+                                pools {
+                                    id
+                                    template_id
+                                }  
+                            }
+                    `,
+            variables: {
+                method: 'GET'
+            }
+        })
     }
 
     public getAllTemplates(): QueryRef<any,any> {
@@ -48,5 +69,22 @@ export class PoolsService  {
                 method: 'GET'
             }
         }) 
+    }
+
+    public createPoll(name:string,id:string) {
+        return this.service.mutate<any>({
+            mutation: gql`  
+                            mutation AddPool($name: String!,$id: String!) {
+                                addPool(name: $name, template_id: $id) {
+                                    id
+                                }
+                            }
+            `,
+            variables: {
+                method: 'POST',
+                id: id,
+                name: name
+            }
+        })
     }
 }

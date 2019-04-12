@@ -6,7 +6,7 @@ import { PollsComponent } from './polls/polls.component';
 const routes: Routes = [
   {
     path:'',
-    redirectTo: 'resources',
+    redirectTo: 'resourses',
     pathMatch: 'full'
   },
   {
@@ -19,7 +19,7 @@ const routes: Routes = [
   },
   {
     path: '**',
-    redirectTo: 'resources'
+    redirectTo: 'resourses'
   }
 ];
 

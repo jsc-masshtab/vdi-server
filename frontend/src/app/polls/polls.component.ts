@@ -61,6 +61,14 @@ export class PollsComponent implements OnInit {
   private getAllPools() {
     this.service.getAllPools().valueChanges.pipe(map(data => data.data.pools))
       .subscribe( (data) => {
+        console.log(data,'Запрос на все пулы!ee');
+        this.pools = data;
+      });
+  }
+
+  private getAllPoolsCache() {
+    this.service.getAllPoolsCache().valueChanges
+      .subscribe( (data) => {
         this.pools = data;
          console.log(this.pools);
       });

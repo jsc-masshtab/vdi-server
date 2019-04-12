@@ -38,7 +38,12 @@ export class PoolAddComponent implements OnInit {
   }
 
   public send() {
-    console.log(this.la);
+    this.poolsService.createPoll(this.la,this.tmId).subscribe((res) => {
+      if(res) {
+        this.poolsService.getAllPools().valueChanges.subscribe();
+      }
+
+    });
   }
 
 }
