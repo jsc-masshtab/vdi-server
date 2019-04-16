@@ -2,105 +2,12 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="ee823ba7-64f1-406e-87b7-ba3fc9bf04c1" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/../Pipfile" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../Vagrantfile" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../asyncio_utils.ipynb" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/auth_server.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/auth_server.iml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/requirements.txt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../classy_async/classy_async/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/../classy_async/classy_async/__init__.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../classy_async/tests/test_asyncio_utils.py" beforeDir="false" afterPath="$PROJECT_DIR$/../classy_async/tests/test_asyncio_utils.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../classy_async/tests/test_awaitable.py" beforeDir="false" afterPath="$PROJECT_DIR$/../classy_async/tests/test_awaitable.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../client/01_mingw.sh" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../client/02_more.sh" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../client/03_msitools.sh" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../client/04_build.sh" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../client/Vagrantfile" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../client/vagrant.sh" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../dev/Untitled.ipynb" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../dev/asyncio_utils.ipynb" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../dev/bench/core-next/Pipfile" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../dev/bench/core-next/Untitled.ipynb" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../dev/bench/core-next/requirements.txt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../dev/bench/core-next/resolvers.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../dev/bench/core-next/run.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../dev/bench/core-next/schema.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../dev/bench/core-next/useast.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../dev/bench/phene/Pipfile" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../dev/bench/phene/Untitled.ipynb" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../dev/bench/phene/app.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../dev/bench/phene/requirements.txt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../dev/bench/phene/schema.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../dev/bench/settings.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../dev/cached_prop.ipynb" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../dev/contextvar.ipynb" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../dev/graphql.ipynb" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../dev/http_client.ipynb" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../dev/import_disk.ipynb" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../dev/py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../dev/tasks.ipynb" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../dev/test_timeouts.ipynb" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../dev/transaction.ipynb" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../dev/ws.ipynb" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../gtasks/README.md" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../gtasks/g_tasks.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../gtasks/setup.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../gtasks/tests/__init__.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../gtasks/tests/conftest.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../gtasks/tests/test_class.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../gtasks/tests/test_decorate.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../gtasks/tests/test_main.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../imports/README.md" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../imports/imports/__init__.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../imports/imports/db.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../imports/imports/settings.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../imports/setup.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../migrations/0001_create_templatevm.sql" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../migrations/0002_create_pool.sql" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../migrations/0003_user.sql" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../migrations/0004_alter_vm_add_pool.sql" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../migrations/0008_user_pk.sql" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../migrations/0009_pools_users_relation.sql" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../migrations/0010_user_add_email.sql" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../migrations/0011_templatevm_add_veil_info.sql" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../setup.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../specs.4.8.gz" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../test.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../tests/test_asyncio_utils.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../tests/test_awaitable.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../tests/test_client.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../tests/test_pool.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../tests/test_template.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../vagrant.sh" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../vdi/__init__.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../vdi/app.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../vdi/asyncio_utils.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../vdi/auth/__init__.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../vdi/auth/jwt.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../vdi/auth/simple.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../vdi/client.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../vdi/context_utils.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../vdi/db.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../vdi/fixtures.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../vdi/graphql/__init__.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../vdi/graphql/pool.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../vdi/graphql/schema.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../vdi/graphql/users.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../vdi/graphql/util.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../vdi/graphql/vm.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../vdi/pool.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../vdi/prepare.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../vdi/settings.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../vdi/tasks/__init__.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../vdi/tasks/admin.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../vdi/tasks/base.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../vdi/tasks/client.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../vdi/tasks/disk.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../vdi/tasks/vm.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../vdi/tasks/ws.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../frontend/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/package-lock.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../vdi_server/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../vdi_server/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../vdi_server/Pipfile" beforeDir="false" afterPath="$PROJECT_DIR$/../vdi_server/Pipfile" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../vdi_server/Vagrantfile" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../vdi_server/vagrant.sh" beforeDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -114,7 +21,7 @@
         <entry file="file://$PROJECT_DIR$/main.py">
           <provider selected="true" editor-type-id="text-editor">
             <state relative-caret-position="234">
-              <caret line="96" column="36" lean-forward="true" selection-start-line="96" selection-start-column="36" selection-end-line="96" selection-end-column="36" />
+              <caret line="96" column="36" selection-start-line="96" selection-start-column="36" selection-end-line="96" selection-end-column="36" />
               <folding>
                 <element signature="e#0#9#0" expanded="true" />
               </folding>
@@ -246,7 +153,7 @@
     <entry file="file://$PROJECT_DIR$/main.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="234">
-          <caret line="96" column="36" lean-forward="true" selection-start-line="96" selection-start-column="36" selection-end-line="96" selection-end-column="36" />
+          <caret line="96" column="36" selection-start-line="96" selection-start-column="36" selection-end-line="96" selection-end-column="36" />
           <folding>
             <element signature="e#0#9#0" expanded="true" />
           </folding>

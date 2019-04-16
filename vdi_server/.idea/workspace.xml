@@ -2,104 +2,12 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="c169dffb-dfce-4cff-898b-42c92c5cce62" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/../Pipfile" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../Vagrantfile" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../asyncio_utils.ipynb" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../auth_server/.idea/auth_server.iml" beforeDir="false" afterPath="$PROJECT_DIR$/../auth_server/.idea/auth_server.iml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../auth_server/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../auth_server/.idea/misc.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../auth_server/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../auth_server/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../auth_server/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/../auth_server/main.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../auth_server/requirements.txt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../classy_async/classy_async/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/../classy_async/classy_async/__init__.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../classy_async/tests/test_asyncio_utils.py" beforeDir="false" afterPath="$PROJECT_DIR$/../classy_async/tests/test_asyncio_utils.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../classy_async/tests/test_awaitable.py" beforeDir="false" afterPath="$PROJECT_DIR$/../classy_async/tests/test_awaitable.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../client/01_mingw.sh" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../client/02_more.sh" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../client/03_msitools.sh" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../client/04_build.sh" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../client/Vagrantfile" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../client/vagrant.sh" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../dev/Untitled.ipynb" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../dev/asyncio_utils.ipynb" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../dev/bench/core-next/Pipfile" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../dev/bench/core-next/Untitled.ipynb" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../dev/bench/core-next/requirements.txt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../dev/bench/core-next/resolvers.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../dev/bench/core-next/run.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../dev/bench/core-next/schema.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../dev/bench/core-next/useast.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../dev/bench/phene/Pipfile" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../dev/bench/phene/Untitled.ipynb" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../dev/bench/phene/app.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../dev/bench/phene/requirements.txt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../dev/bench/phene/schema.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../dev/bench/settings.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../dev/cached_prop.ipynb" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../dev/contextvar.ipynb" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../dev/graphql.ipynb" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../dev/http_client.ipynb" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../dev/import_disk.ipynb" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../dev/py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../dev/tasks.ipynb" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../dev/test_timeouts.ipynb" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../dev/transaction.ipynb" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../dev/ws.ipynb" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../gtasks/README.md" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../gtasks/g_tasks.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../gtasks/setup.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../gtasks/tests/__init__.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../gtasks/tests/conftest.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../gtasks/tests/test_class.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../gtasks/tests/test_decorate.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../gtasks/tests/test_main.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../imports/README.md" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../imports/imports/__init__.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../imports/imports/db.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../imports/imports/settings.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../imports/setup.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../migrations/0001_create_templatevm.sql" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../migrations/0002_create_pool.sql" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../migrations/0003_user.sql" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../migrations/0004_alter_vm_add_pool.sql" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../migrations/0008_user_pk.sql" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../migrations/0009_pools_users_relation.sql" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../migrations/0010_user_add_email.sql" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../migrations/0011_templatevm_add_veil_info.sql" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../setup.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../specs.4.8.gz" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../test.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../tests/test_asyncio_utils.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../tests/test_awaitable.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../tests/test_client.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../tests/test_pool.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../tests/test_template.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../vagrant.sh" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../vdi/__init__.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../vdi/app.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../vdi/asyncio_utils.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../vdi/auth/__init__.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../vdi/auth/jwt.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../vdi/auth/simple.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../vdi/client.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../vdi/context_utils.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../vdi/db.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../vdi/fixtures.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../vdi/graphql/__init__.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../vdi/graphql/pool.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../vdi/graphql/schema.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../vdi/graphql/users.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../vdi/graphql/util.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../vdi/graphql/vm.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../vdi/pool.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../vdi/prepare.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../vdi/settings.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../vdi/tasks/__init__.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../vdi/tasks/admin.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../vdi/tasks/base.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../vdi/tasks/client.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../vdi/tasks/disk.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../vdi/tasks/vm.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../vdi/tasks/ws.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../frontend/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/package-lock.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Pipfile" beforeDir="false" afterPath="$PROJECT_DIR$/Pipfile" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Vagrantfile" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/vagrant.sh" beforeDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -141,49 +49,28 @@
         <entry file="file://$PROJECT_DIR$/vdi/app/auth/jwt.py">
           <provider selected="true" editor-type-id="text-editor">
             <state relative-caret-position="561">
-              <caret line="48" lean-forward="true" selection-start-line="48" selection-end-line="48" />
+              <caret line="48" selection-start-line="48" selection-end-line="48" />
               <folding>
                 <element signature="e#0#10#0" expanded="true" />
               </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/vdi/settings.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="374">
+              <caret line="22" column="21" lean-forward="true" selection-start-line="22" selection-start-column="21" selection-end-line="22" selection-end-column="21" />
             </state>
           </provider>
         </entry>
       </file>
       <file pinned="false" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/vdi/settings.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="374">
-              <caret line="22" column="1" lean-forward="true" selection-start-line="22" selection-start-column="1" selection-end-line="22" selection-end-column="1" />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/vdi/app/base.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="59">
-              <caret line="13" selection-start-line="13" selection-end-line="13" />
-              <folding>
-                <element signature="e#0#10#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/vdi/app/client_routes.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="51">
-              <caret line="3" column="45" selection-start-line="3" selection-start-column="45" selection-end-line="3" selection-end-column="45" />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/Pipfile">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="357">
-              <caret line="21" column="14" selection-start-line="21" selection-start-column="14" selection-end-line="21" selection-end-column="14" />
+            <state relative-caret-position="255">
+              <caret line="15" column="34" lean-forward="true" selection-start-line="15" selection-start-column="34" selection-end-line="15" selection-end-column="34" />
             </state>
           </provider>
         </entry>
@@ -204,7 +91,7 @@
         <entry file="file://$PROJECT_DIR$/vdi/app/__init__.py">
           <provider selected="true" editor-type-id="text-editor">
             <state relative-caret-position="68">
-              <caret line="4" lean-forward="true" selection-start-line="4" selection-end-line="4" />
+              <caret line="4" selection-start-line="4" selection-end-line="4" />
               <folding>
                 <element signature="e#1#18#0" expanded="true" />
               </folding>
@@ -252,7 +139,6 @@
         <option value="$PROJECT_DIR$/vdi/pool.py" />
         <option value="$PROJECT_DIR$/vdi/fixtures.py" />
         <option value="$PROJECT_DIR$/vdi/tasks/thin_client.py" />
-        <option value="$PROJECT_DIR$/Pipfile" />
         <option value="$PROJECT_DIR$/vdi/tasks/base.py" />
         <option value="$PROJECT_DIR$/vdi/graphql/schema.py" />
         <option value="$PROJECT_DIR$/vdi/app/admin.py" />
@@ -265,14 +151,8 @@
         <option value="$PROJECT_DIR$/vdi/server/__init__.py" />
         <option value="$PROJECT_DIR$/vdi/graphql/pool.py" />
         <option value="$PROJECT_DIR$/vdi/__init__.py" />
-      </list>
-    </option>
-  </component>
-  <component name="ProjectConfigurationFiles">
-    <option name="files">
-      <list>
-        <option value="$PROJECT_DIR$/.idea/vcs.xml" />
-        <option value="$PROJECT_DIR$/../imports/.idea/imports.iml" />
+        <option value="$PROJECT_DIR$/Pipfile" />
+        <option value="$PROJECT_DIR$/vagrant.sh" />
       </list>
     </option>
   </component>
@@ -320,7 +200,7 @@
   </component>
   <component name="PropertiesComponent">
     <property name="SHARE_PROJECT_CONFIGURATION_FILES" value="true" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$/../imports" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/.." />
     <property name="settings.editor.selected.configurable" value="com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable" />
   </component>
   <component name="RecentsManager">
@@ -457,13 +337,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/Pipfile">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="357">
-          <caret line="21" column="14" selection-start-line="21" selection-start-column="14" selection-end-line="21" selection-end-column="14" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/vdi/__main__.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="34">
@@ -513,7 +386,7 @@
     <entry file="file://$PROJECT_DIR$/vdi/app/auth/jwt.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="561">
-          <caret line="48" lean-forward="true" selection-start-line="48" selection-end-line="48" />
+          <caret line="48" selection-start-line="48" selection-end-line="48" />
           <folding>
             <element signature="e#0#10#0" expanded="true" />
           </folding>
@@ -533,7 +406,7 @@
     <entry file="file://$PROJECT_DIR$/vdi/app/__init__.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="68">
-          <caret line="4" lean-forward="true" selection-start-line="4" selection-end-line="4" />
+          <caret line="4" selection-start-line="4" selection-end-line="4" />
           <folding>
             <element signature="e#1#18#0" expanded="true" />
           </folding>
@@ -543,7 +416,24 @@
     <entry file="file://$PROJECT_DIR$/vdi/settings.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="374">
-          <caret line="22" column="1" lean-forward="true" selection-start-line="22" selection-start-column="1" selection-end-line="22" selection-end-column="1" />
+          <caret line="22" column="21" lean-forward="true" selection-start-line="22" selection-start-column="21" selection-end-line="22" selection-end-column="21" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/Vagrantfile">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/vagrant.sh">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="119">
+          <caret line="7" column="13" selection-start-line="7" selection-start-column="13" selection-end-line="7" selection-end-column="13" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/Pipfile">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="255">
+          <caret line="15" column="34" lean-forward="true" selection-start-line="15" selection-start-column="34" selection-end-line="15" selection-end-column="34" />
         </state>
       </provider>
     </entry>
