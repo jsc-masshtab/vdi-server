@@ -14,3 +14,8 @@ jwt = {
     'leeway': 180,
     'verify_exp': True,
 }
+
+db = {
+    'user': 'postgres',
+    'database': 'vdi',
+}
