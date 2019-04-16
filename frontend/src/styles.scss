@@ -11,4 +11,10 @@ html,body {
 
 .mat-dialog-container {
     padding: 0px !important;
+    overflow: inherit !important;
+    background: transparent;
+}
+
+.breadcrumbs-wrap {
+    margin-bottom: 28px;
 }

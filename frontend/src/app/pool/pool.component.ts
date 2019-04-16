@@ -1,15 +1,15 @@
 import { Component, OnInit } from '@angular/core';
-import { TeplatesService } from './templates.service';
+import { PoolService } from './pool.service';
 import { map } from 'rxjs/operators';
 
 @Component({
-  selector: 'vdi-templates',
+  selector: 'vdi-pool',
   templateUrl: './templates.component.html',
   styleUrls: ['./templates.component.scss']
 })
 
 
-export class TemplatesComponent implements OnInit {
+export class PoolComponent implements OnInit {
 
   public infoTemplates: [];
   public collection: object[] = [];
@@ -25,7 +25,7 @@ export class TemplatesComponent implements OnInit {
   ];
 
 
-  constructor(private service: TeplatesService){}
+  constructor(private service: PoolService){}
 
   ngOnInit() {
     this.collectionAction();

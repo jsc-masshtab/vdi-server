@@ -1,3 +1,4 @@
+import { MatDialogRef } from '@angular/material';
 import { Component, OnInit } from '@angular/core';
 import { PoolsService } from './../polls.service';
 import { map } from 'rxjs/operators';
@@ -10,11 +11,12 @@ import { map } from 'rxjs/operators';
 
 export class PoolAddComponent implements OnInit {
 
-  public options: object[];
+  public dataSelect: object[];
   private tmId: string;
-  public la:string;
+  public poolName:string;
 
-  constructor(private poolsService: PoolsService) {
+  constructor(private poolsService: PoolsService,
+              private dialogRef: MatDialogRef<PoolAddComponent>) {
   }
 
   ngOnInit() {
@@ -23,7 +25,7 @@ export class PoolAddComponent implements OnInit {
 
   private getTemplate() {
     this.poolsService.getAllTemplates().valueChanges.pipe(map(data => data.data.templates)).subscribe((res)=> {
-      this.options = res.map((item) => {
+      this.dataSelect= res.map((item) => {
         return {
           'output': item.id,
           'input': item.name
@@ -34,11 +36,15 @@ export class PoolAddComponent implements OnInit {
 
   private selectValue(data) {
     this.tmId = data[0];
-    console.log(data);
   }
 
   public send() {
-    console.log(this.la);
+    this.poolsService.createPoll(this.poolName,this.tmId).subscribe((res) => {
+      if(res) {
+        this.poolsService.getAllPools().valueChanges.subscribe();
+        this.dialogRef.close();
+      }
+    });
   }
 
 }

@@ -1,4 +1,4 @@
-#breadcrumbs-one{
+#breadcrumbs-one {
     background: rgba(220, 220, 220, 0.5);
     border-width: 1px;
     border-style: solid;
@@ -7,6 +7,8 @@
     box-shadow: 0 0 2px rgba(0,0,0,.2);
     overflow: hidden;
     width: 100%;
+    position: fixed;
+    top: 0px;
   }
 
   fa-icon {

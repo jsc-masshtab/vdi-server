@@ -1,3 +1,4 @@
+import { PoolComponent } from './pool/pool.component';
 
 import { BrowserModule } from '@angular/platform-browser';
 import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
@@ -33,6 +34,7 @@ import { PoolsService } from './polls/polls.service';
 /*  -----------------------------------   material   --------------------------------------*/
 import { MAT_DIALOG_DEFAULT_OPTIONS } from '@angular/material';
 import { MatDialogModule } from '@angular/material/dialog';
+import { FocusMeDirective } from './common/directives/focusMe.directive';
 
 /*  -----------------------------------   material   --------------------------------------*/
 
@@ -47,7 +49,10 @@ import { MatDialogModule } from '@angular/material/dialog';
     PollsComponent,
     BreadcrumbsComponent,
     PoolAddComponent,
-    BaSelect
+    BaSelect,
+    FocusMeDirective,
+    //SmartList,
+    //PoolComponent
   ],
   imports: [
     BrowserModule,
@@ -67,7 +72,9 @@ import { MatDialogModule } from '@angular/material/dialog';
             [
               TeplatesService,
               PoolsService,
-              { provide: MAT_DIALOG_DEFAULT_OPTIONS, useValue: { hasBackdrop: true, restoreFocus: true } }
+              { provide: MAT_DIALOG_DEFAULT_OPTIONS, useValue: { hasBackdrop: true, restoreFocus: true } },
+             // SmartListService,
+              //PoolsService
             ],
   bootstrap: [AppComponent]
 })
