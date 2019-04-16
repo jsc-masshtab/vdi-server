@@ -3,7 +3,7 @@ import { map } from 'rxjs/operators';
 import { PoolsService } from './polls.service';
 import { PoolAddComponent } from './pool-add/pool-add.component';
 
-import {MatDialog, MatDialogRef, MAT_DIALOG_DATA} from '@angular/material';
+import { MatDialog } from '@angular/material';
 
 @Component({
   selector: 'vdi-polls',
@@ -25,17 +25,17 @@ export class PollsComponent implements OnInit {
       property: 'initial_size'
     },
     {
-      title: 'Состояние',
-      property: 'state',
-      property_lv2: 'running'
-    },
-    {
       title: 'Занятые ВМ',
       property: 'initial_size'
     },
     {
       title: 'Свободные ВМ',
       property: 'reserve_size'
+    },
+    {
+      title: 'Состояние',
+      property: 'state',
+      property_lv2: 'running'
     }
   ];
 
@@ -52,26 +52,18 @@ export class PollsComponent implements OnInit {
     this.getAllPools();
   }
 
-  private openC() {
-    let dialogRef = this.dialog.open(PoolAddComponent, {
-      width: '500px',
+  public openCreatePool() {
+    this.dialog.open(PoolAddComponent, {
+      width: '500px'
     });
   }
 
   private getAllPools() {
     this.service.getAllPools().valueChanges.pipe(map(data => data.data.pools))
       .subscribe( (data) => {
-        console.log(data,'Запрос на все пулы!ee');
         this.pools = data;
-      });
-  }
-
-  private getAllPoolsCache() {
-    this.service.getAllPoolsCache().valueChanges
-      .subscribe( (data) => {
-        this.pools = data;
-         console.log(this.pools);
-      });
+        //console.log(data);
+    });
   }
 
 }

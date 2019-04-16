@@ -1,16 +1,27 @@
 <div class="form">
-  <h1>Создание пула виртуальных машин</h1>
-  <label class="field">
-    <p class="field-name">Выберите шаблон ВМ</p>
-    <ba-select
-      [inputData]= "options || []"
-      (outputData)="selectValue($event)"
-      defaultData="- нет доступных шаблонов -">
-    </ba-select>
-  </label>
-  <label class="field">
-    <p class="field-name">Введите имя пула</p>
-    <input type="text" [(ngModel)]="la">
-  </label>
-  <button (click)="send()" class="btn-form-action">Создать</button>
+
+  <div class="form-header">
+    <h1>Создание пула виртуальных машин</h1>
+  </div>
+
+  <div class="form-fields">
+    <label class="field">
+      <p class="field-name">Введите имя пула</p>
+      <input type="text" [(ngModel)]="poolName" [focusMe]="true">
+    </label>
+    <label class="field">
+      <p class="field-name">Выберите шаблон ВМ</p>
+      <ba-select
+          [inputData]= "dataSelect || []"
+          (outputData)="selectValue($event)"
+          defaultData="- нет доступных шаблонов -">
+      </ba-select>
+    </label>
+  </div>
+
+  <div class="form-actions">
+    <button class="form-btn" [mat-dialog-close]="true">Закрыть</button>
+    <button (click)="send()" class="form-btn">Создать</button>
+  </div>
+
 </div>

@@ -1,9 +1,31 @@
 .form {
-    padding: 30px 20px;
     display: flex;
-    height: 100%;;
     flex-direction: column;
-    background: rgba(220, 220, 220, 0.5);
+    background: #ebebeb;
+    padding-bottom: 20px;
+    border-radius: 10px;
+
+    .form-header {
+        padding: 8px;
+        padding-left: 20px;
+        background: #44505a;
+        color: #FFF;
+        border-top-left-radius: 10px;
+        border-top-right-radius: 10px;
+
+        + h1 {
+            font-size: 18px;
+            margin-bottom: 20px;
+            font-size: 16px;
+        }
+
+    }
+
+    .form-fields {
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+    }
 
     .field {
         margin-bottom: 15px;
@@ -18,7 +40,7 @@
 
         input {
             padding: 5px;
-            font-size: 12px;
+            font-size: 14px;
             color: #111;
             border: none;
             height: 30px;
@@ -34,7 +56,14 @@
         margin-bottom: 5px;
     }
 
-    .btn-form-action {
+    .form-actions {
+        display: flex;
+        justify-content: flex-end;
+        padding-left: 20px;
+        padding-right: 20px;
+    }
+
+    .form-btn {
         padding: 5px;
         padding-left: 10px;
         padding-right: 10px;
@@ -45,15 +74,16 @@
         border: none;
         margin-top: auto;
         width: max-content;
+        margin-right: 10px;
+        font-size: 15px;
 
         &:hover {
-            background: #323232;
+            background: #44505a;
             color: #FFF;
         }
-    }
 
-    h1 {
-        font-size: 18px;
-        margin-bottom: 20px;
+        &:last-child {
+            margin-right: 0px;
+        }
     }
 }
