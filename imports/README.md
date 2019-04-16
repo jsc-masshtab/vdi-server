@@ -1,3 +1,0 @@
-
-
-VDI settings
