@@ -37,10 +37,10 @@ class AddNode(Task):
         }
         res = await client.fetch(url, headers=headers)
         for node in res['results']:
-            if node['management_ip'] == self.body['management_ip'] and node['verbose_name'] == self.body['verbose_name']:
+            if node['management_ip'] == self.body['management_ip']:
                 return True
-            assert node['management_ip'] != self.body['management_ip']
-            assert node['verbose_name'] != self.body['verbose_name']
+        return False
+
 
     async def run(self):
         present = await self.check_present()
