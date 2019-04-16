@@ -2,14 +2,8 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="ee823ba7-64f1-406e-87b7-ba3fc9bf04c1" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../frontend/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend/package-lock.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../vdi_server/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../vdi_server/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../vdi_server/Pipfile" beforeDir="false" afterPath="$PROJECT_DIR$/../vdi_server/Pipfile" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../vdi_server/Vagrantfile" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../vdi_server/vagrant.sh" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../vdi_server/vdi/app/auth/jwt.py" beforeDir="false" afterPath="$PROJECT_DIR$/../vdi_server/vdi/app/auth/jwt.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../vdi_server/vdi/app/client_routes.py" beforeDir="false" afterPath="$PROJECT_DIR$/../vdi_server/vdi/app/client_routes.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
