@@ -3,11 +3,11 @@ pacman --noconfirm -Syu
 
 echo "Installing packages..."
 pacman --noconfirm -S --needed base-devel
-pacman --noconfirm -S python-pip postgresql git
+pacman --noconfirm -S python-pip postgresql git nodejs npm
 
 python -m pip install pipenv
 
-cd /vagrant/vdi_server
+cd /vagrant/backend/vdi_server
 pkill uvicorn
 
 # FIXME: rm -rf /var/lib/postgres/data
@@ -33,4 +33,10 @@ echo "Prepare qcow image"
 pipenv run python -m vdi.prepare
 
 echo "Running the server..."
-pipenv run uvicorn vdi.app:app --host 0.0.0.0 --port 80
+pipenv run uvicorn vdi.app:app --host 0.0.0.0 --port 80 &
+
+
+# frontend
+cd /vagrant/frontend
+npm install
+npm run ng serve -- --host 0.0.0.0 &
