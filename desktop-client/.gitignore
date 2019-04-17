@@ -24,6 +24,5 @@ __pycache__/
 *.glade*
 
 
-# Settings
-settings.py
+# Temp
 user_input.json

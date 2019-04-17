@@ -8,8 +8,8 @@ verify_ssl = true
 [packages]
 urllib3 = "==1.22"
 requests = "==2.18.4"
-pygobject = "*"
 pycairo = "*"
+pygobject = "*"
 
 [requires]
 python_version = "2.7"
