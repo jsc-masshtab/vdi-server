@@ -1,0 +1,29 @@
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info
+
+# C extensions
+*.so
+
+
+.pytest_cache
+.cache
+.coverage
+
+*.glade*
+
+
+# Settings
+settings.py
+user_input.json
