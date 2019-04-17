@@ -75,7 +75,6 @@ class TemplateMixin:
 
     @enter_context(lambda: db.connect())
     async def resolve_templates(conn: Connection, self, info):
-        breakpoint()
         vms = await vm.ListVms()
         vms = {vm['id'] for vm in vms}
         selections = get_selections(info)

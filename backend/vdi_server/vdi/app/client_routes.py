@@ -15,23 +15,21 @@ from . import app
 # @requires('authenticated')
 async def get_vm(request):
     #FIXME filter by user
-    data = {
-        id: pool.params
+    li = [
+        {
+            'id': id,
+            'name': pool.params['name']
+        }
         for id, pool in Pool.instances.items()
-    }
-    return JSONResponse(data)
+    ]
+    return JSONResponse(li)
 
 
-@app.route('/client/{pool_id}', methods=['POST', 'GET'])
+@app.route('/client/pools/{pool_id}')
 # @requires('authenticated')
 async def get_vm(request):
     pool_id = int(request.path_params['pool_id'])
     pool = Pool.instances[pool_id]
-    # for pool in Pool.instances.values():
-    #     if pool.params['name'] == name:
-    #         break
-    # else:
-    #     assert 0
     vm = await pool.queue.get()
     pool.on_vm_taken()
     addr = await thin_client.PrepareVm(domain_id=vm['id'])
