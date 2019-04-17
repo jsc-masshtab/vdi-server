@@ -32,11 +32,17 @@ pipenv run mi apply
 echo "Prepare qcow image"
 pipenv run python -m vdi.prepare
 
-echo "Running the server..."
-pipenv run uvicorn vdi.app:app --host 0.0.0.0 --port 80 &
+echo "Running the API server..."
+nohup pipenv run uvicorn vdi.app:app --host 0.0.0.0 --port 80 &
 
 
-# frontend
+echo "Running the auth server..."
+cd /vagrant/backend/auth_server
+pipenv install
+nohup pipenv run python -m sanic main.app --host=0.0.0.0 --port=5000 --workers=4 &
+
+
+echo "Running the frontend server..."
 cd /vagrant/frontend
 npm install
-npm run ng serve -- --host 0.0.0.0 &
+nohup npm run ng serve -- --host 0.0.0.0 &
