@@ -18,7 +18,7 @@ async def get_vm(request):
     li = [
         {
             'id': id,
-            'name': pool.params['name']
+            'name': pool.params['name'],
         }
         for id, pool in Pool.instances.items()
     ]
