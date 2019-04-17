@@ -10,9 +10,12 @@ from vdi.settings import settings
 from vdi.db import db
 
 if settings['debug']:
-    from aoiklivereload import LiveReloader
-    reloader = LiveReloader()
-    reloader.start_watcher_thread()
+    try:
+        from aoiklivereload import LiveReloader
+        reloader = LiveReloader()
+        reloader.start_watcher_thread()
+    except:
+        pass
 
 from vdi.context_utils import enter_context
 
