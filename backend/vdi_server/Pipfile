@@ -1,0 +1,30 @@
+[[source]]
+name = "pypi"
+url = "https://pypi.org/simple"
+verify_ssl = true
+
+[dev-packages]
+pytest = "*"
+ipdb = "*"
+jupyterlab = "*"
+jupyter = "*"
+pytest-asyncio = "*"
+
+[packages]
+uvicorn = "*"
+tornado = "*"
+vdi = {editable = true,path = "."}
+classy_async = {editable = true,path = "./../classy_async"}
+mi = {editable = true,path = "./../mi-pkg"}
+cached-property = "*"
+graphene = "*"
+starlette = "*"
+psycopg2 = "*"
+asyncpg = "*"
+requests = "*"
+aiofiles = "*"
+itsdangerous = "*"
+pyjwt = "*"
+
+[requires]
+python_version = "3.7"

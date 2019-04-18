@@ -7,7 +7,7 @@ import logging
 
 try:
     import queue
-except ModuleNotFoundError:
+except ImportError:
     import Queue as queue
 
 import threading

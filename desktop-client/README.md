@@ -1,9 +1,20 @@
-- Запуск:
+# **Запуск**
+
+**Windows:**
+
+`запустить MinGW 32-bit`
+```
+cd <desktop-client>
+python -m vdi_thin
+```
+**Linux:**
 
 ```
-python -m /<path_to_vdi_thin_client-us2.7>/vdi_thin
+cd <desktop-client>
+pipenv run python -m vdi_thin
 ```
 
 - Запуск тестов:
 
-`пока не реализован`
+`:(`
+

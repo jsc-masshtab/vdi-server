@@ -1,0 +1,21 @@
+[[source]]
+name = "pypi"
+url = "https://pypi.org/simple"
+verify_ssl = true
+
+[dev-packages]
+jupyter = "*"
+ipdb = "*"
+aoiklivereload = "*"
+
+[packages]
+sanic = "*"
+sanic-jwt = "*"
+PyJWT = "*"
+vdi = {editable = true,path = "./../vdi_server"}
+asyncpg = "*"
+classy-async = {editable = true,path = "./../classy_async"}
+cached-property = "*"
+
+[requires]
+python_version = "3.7"

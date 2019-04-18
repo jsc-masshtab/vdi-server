@@ -159,25 +159,6 @@ class Viewer(Gtk.ApplicationWindow):
 
         webview.load_uri("http://mashtab.org/files/veil/index.html")
 
-        # webview.load_plain_text(
-        #     """
-        #     Привет
-        #     Как дела?
-        #     """)
-
-        # webview.load_html('''<!DOCTYPE html>
-        # <html lang="en">
-        # <head>
-        #     <meta charset="UTF-8">
-        #     <title>Help</title>
-        # </head>
-        # <body>
-        # <h1>Помощь уже в пути!</h1>
-        # <p>затаитесь и ждите</p>
-        # </body>
-        # </html>
-        # ''')
-
     def _vm_control(self, *args):
         print(self._has_agent())
         print('Not implemented on server side yet')

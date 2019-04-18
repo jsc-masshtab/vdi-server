@@ -21,9 +21,7 @@ __pycache__/
 .cache
 .coverage
 
-*.glade*
+.idea/
 
-
-# Settings
-settings.py
+# Temp
 user_input.json
