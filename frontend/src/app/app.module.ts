@@ -37,7 +37,7 @@ import { MAT_DIALOG_DEFAULT_OPTIONS } from '@angular/material';
 import { MatDialogModule } from '@angular/material/dialog';
 import { FocusMeDirective } from './common/directives/focusMe.directive';
 import { TableIntoComponent } from './common/table-into-component/table-into';
-import { SmartList, SmartListService } from './common/smart-list';
+
 
 /*  -----------------------------------   material   --------------------------------------*/
 
@@ -55,7 +55,6 @@ import { SmartList, SmartListService } from './common/smart-list';
     BaSelect,
     FocusMeDirective,
     TableIntoComponent,
-    SmartList,
     PoolComponent
   ],
   imports: [
@@ -77,7 +76,6 @@ import { SmartList, SmartListService } from './common/smart-list';
               TeplatesService,
               PoolsService,
               { provide: MAT_DIALOG_DEFAULT_OPTIONS, useValue: { hasBackdrop: true, restoreFocus: true } },
-             SmartListService,
               PoolService
             ],
   bootstrap: [AppComponent]
