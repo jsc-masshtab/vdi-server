@@ -17,19 +17,19 @@ export class PollsComponent implements OnInit {
 
   public collection: object[] = [
     {
+      title: '№',
+      property: 'index'
+    },
+    {
       title: 'Название',
       property: 'name'
     },
     {
-      title: 'Размер (ГБ)',
+      title: 'Начальный размер пула',
       property: 'initial_size'
     },
     {
-      title: 'Занятые ВМ',
-      property: 'initial_size'
-    },
-    {
-      title: 'Свободные ВМ',
+      title: 'Размер пула',
       property: 'reserve_size'
     },
     {
@@ -62,7 +62,6 @@ export class PollsComponent implements OnInit {
     this.service.getAllPools().valueChanges.pipe(map(data => data.data.pools))
       .subscribe( (data) => {
         this.pools = data;
-        //console.log(data);
     });
   }
 

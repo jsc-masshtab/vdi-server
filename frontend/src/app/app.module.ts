@@ -1,3 +1,4 @@
+import { PoolService } from './pool/pool.service';
 import { PoolComponent } from './pool/pool.component';
 
 import { BrowserModule } from '@angular/platform-browser';
@@ -35,6 +36,8 @@ import { PoolsService } from './polls/polls.service';
 import { MAT_DIALOG_DEFAULT_OPTIONS } from '@angular/material';
 import { MatDialogModule } from '@angular/material/dialog';
 import { FocusMeDirective } from './common/directives/focusMe.directive';
+import { TableIntoComponent } from './common/table-into-component/table-into';
+import { SmartList, SmartListService } from './common/smart-list';
 
 /*  -----------------------------------   material   --------------------------------------*/
 
@@ -51,8 +54,9 @@ import { FocusMeDirective } from './common/directives/focusMe.directive';
     PoolAddComponent,
     BaSelect,
     FocusMeDirective,
-    //SmartList,
-    //PoolComponent
+    TableIntoComponent,
+    SmartList,
+    PoolComponent
   ],
   imports: [
     BrowserModule,
@@ -73,8 +77,8 @@ import { FocusMeDirective } from './common/directives/focusMe.directive';
               TeplatesService,
               PoolsService,
               { provide: MAT_DIALOG_DEFAULT_OPTIONS, useValue: { hasBackdrop: true, restoreFocus: true } },
-             // SmartListService,
-              //PoolsService
+             SmartListService,
+              PoolService
             ],
   bootstrap: [AppComponent]
 })

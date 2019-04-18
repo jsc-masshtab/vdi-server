@@ -1,83 +1,70 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, Input, OnChanges } from '@angular/core';
 import { PoolService } from './pool.service';
 import { map } from 'rxjs/operators';
 
 @Component({
-  selector: 'vdi-pool',
-  templateUrl: './templates.component.html',
-  styleUrls: ['./templates.component.scss']
+  selector: 'vdi-pool-component',
+  templateUrl: './pool.component.html',
+  styleUrls: ['./pool.component.scss']
 })
 
 
-export class PoolComponent implements OnInit {
+export class PoolComponent implements OnInit, OnChanges {
 
-  public infoTemplates: [];
-  public collection: object[] = [];
-  public crumbs: object[] = [
-    {
-      title: 'Ресурсы',
-      icon: 'desktop'
-    },
-    {
-      title: 'Шаблоны виртуальных машин',
-      icon: 'layer-group'
-    }
-  ];
+ @Input() rowData: object;
 
+ public pools: object[];
+ public empty: string = 'Нет доступных виртуальных машин';
+
+public collection: object[] = [
+  {
+    title: '№',
+    property: 'index'
+  },
+  {
+    title: 'Название ВМ',
+    property: 'verbose_name'
+  },
+  {
+    title: 'Операционная система',
+    property: 'os_type'
+  },
+  {
+    title: 'Оперативная память(МБ)',
+    property: 'memory_count'
+  },
+  {
+    title: 'Графический адаптер',
+    property: 'video',
+    property_lv2: 'type'
+  },
+  {
+    title: 'Звуковой адаптер',
+    property: 'sound'
+  }
+]
 
   constructor(private service: PoolService){}
 
   ngOnInit() {
-    this.collectionAction();
-    this.getAllTeplates();
+  
   }
 
-  private getAllTeplates() {
-    this.service.getAllTeplates().valueChanges.pipe(map(data => data.data.templates))
+  ngOnChanges() {
+    if(this.rowData) {
+      this.getPool();
+    }
+  }
+
+  private getPool() {
+    this.service.getPool(this.rowData['id']).valueChanges.pipe(map(data => data.data.pool.state.available))
       .subscribe( (data) => {
-        this.infoTemplates = data.map((item) => JSON.parse(item.info));
-        console.log(this.infoTemplates);
+        this.pools = data.map(item => JSON.parse(item.info));
+        console.log(data);
       });
   }
 
-  public collectionAction() {
-    this.collection = [
-      {
-        title: 'Название',
-        property: 'verbose_name'
-      },
-      {
-        title: 'Cервер',
-        property: "node",
-        property_lv2: 'verbose_name'
-      },
-      {
-        title: 'Операционная система',
-        property: 'os_type'
-      },
-      {
-        title: 'Оперативная память (MБ)',
-        property: 'memory_count'
-      },
-      {
-        title: 'Графический адаптер',
-        property: 'video',
-        property_lv2: 'type'
-      },
-      {
-        title: 'Звуковой адаптер',
-        property: 'sound',
-        property_lv2: 'model',
-        property_lv2_wrap: 'codec'
-      },
-      {
-        title: 'Высокая доступность',
-        property: 'ha_enabled'
-      }
-    ];
-  }
 
-
-
+ // .pipe(map(data => data.data.templates))
 
 }

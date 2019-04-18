@@ -1,0 +1,177 @@
+
+<!--
+  (c) 2017 АО "НИИ "МАСШТАБ"
+-->
+
+<div class="smart-list" *ngIf="hasProperty || show_empty">
+  <div class="entity-details-id" *ngIf="object.id">
+      <span class="entity-details-id-title">id:</span>
+      <span class="entity-details-id-block">{{object.id || '--'}}</span>
+  </div>
+
+	<div class="smart-line" *ngFor="let line of showLines" [class.line-header]="line.header" [class.is-hidden]="line.is_hidden" [class.direction-column]="line.direction == 'column'" [hidden]="line.hide">
+		<div class="smart-line-title" *ngIf="!line.no_header" [class.no-bottom]="!line.is_hidden">
+
+			<i *ngIf="line.infocon" class="smart-line-title-icon {{line.infocon}}"></i>
+
+      <span>{{line.title}} {{line.uncount ? '' : line.count ? '(' + line.count + ')' : '(0)'}}</span>
+
+      <div class="line-controls" [style.paddingRight]="'0'" *ngIf="line.header">
+        <button class="line-button button-toggle" (click)="toggle_list(showLines)">
+          <i *ngIf="line.is_hidden" class="fa fa-angle-down"></i>
+          <i *ngIf="!line.is_hidden" class="fa fa-angle-up"></i>
+        </button>
+      </div>
+
+      <div class="line-controls" [style.paddingRight]="'0'" *ngIf="line.toggle && (line.count || line.uncount)">
+        <button class="line-button button-toggle" (click)="toggle(line)">
+          <i *ngIf="line.is_hidden" class="fa fa-angle-down"></i>
+          <i *ngIf="!line.is_hidden" class="fa fa-angle-up"></i>
+        </button>
+      </div>
+
+      <div class="line-controls">
+        <button *ngFor="let button of line.buttons" class="line-button {{button.class}}" [hidden]="(!checkPermissions(line, button.permission) && button.permission) || button.hide" (click)="action(button.action, line)">
+            <i [class]="button.icon || 'fa fa-cog'"></i>
+        </button>
+
+        <button *ngIf="line.add" class="line-button button-add" [hidden]="!checkPermissions(line, 'add')" (click)="action(line.add, line)">
+          <i class="fa fa-plus-circle"></i>
+        </button>
+
+        <button *ngIf="line.edit" class="line-button button-edit" [hidden]="!checkPermissions(line, 'edit')" (click)="action(line.edit, line)">
+          <i class="fa fa-pencil-square-o"></i>
+        </button>
+
+        <button *ngIf="line.down" class="line-button button-alter" [hidden]="!checkPermissions(line, 'down')" (click)="action(line.down, line)">
+          <i class="fa fa-minus-square"></i>
+        </button>
+
+        <button *ngIf="line.up" class="line-button button-alter" [hidden]="!checkPermissions(line, 'up')" (click)="action(line.up, line)">
+          <i class="fa fa-plus-square"></i>
+        </button>
+
+        <button *ngIf="line.remove" class="line-button button-remove" [hidden]="!checkPermissions(line, 'remove')" (click)="action(line.remove, line)">
+          <i class="fa fa-trash"></i>
+        </button>
+      </div>
+
+			<div class="smart-line-error" *ngIf="validators[line.key]">
+				<i class="fa fa-exclamation-triangle" *ngIf="validators[line.key]"></i>
+				<span>{{ validators[line.key] }}</span>
+			</div>
+		</div>
+
+		<div *ngIf="(!line.header && !line.is_hidden) || line.direction == 'row'" class="smart-line-value" [hidden]="line.header" [ngSwitch]="line.type" [class.line-array]="line.type == 'array'" [class.line-list]="line.type == 'list'">
+			<ng-template [ngSwitchCase]="'string'">
+				<div class="smart-line-value-into">
+					<div class="line-content" [class.line-link]="line.link">
+						{{ line.invisible ? '*************' : line.value || '--'}}
+					</div>
+				</div>
+			</ng-template>
+
+			<!-- <ng-template [ngSwitchCase]="'with_key'">
+				<div class="smart-line-value-into">
+					<div class="line-list-content">
+						<div class="smart-list">
+							<div class="smart-line" *ngFor="let v of line.value | keys">
+								<div class="smart-line-title"> {{line.titleKey}} {{v.key}} </div>
+								<div class="smart-line-value">
+									<div class="smart-line-value-into">
+										<div class="line-content"> {{v.value || '--'}}</div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</ng-template> -->
+<!-- 
+			<ng-template [ngSwitchCase]="'without_key'">
+				<div class="smart-line-value-into">
+					<div class="line-list-content">
+						<div class="smart-list">
+							<div class="smart-line" *ngFor="let v of line.value | keys">
+								<div class="smart-line-value">
+									<div class="smart-line-value-into">
+										<div class="line-content"> {{v.value}}</div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</ng-template> -->
+
+			<ng-template [ngSwitchCase]="'boolean'">
+				<div class="smart-line-value-into">
+					<div class="line-content">
+						{{ line.value || '--'}}
+					</div>
+				</div>
+			</ng-template>
+
+			<ng-template [ngSwitchCase]="'array'">
+				<div class="smart-line-value-into" *ngFor="let subline of line.value" [hidden]="!subline && line.add">
+					<div class="line-content" [class.line-link]="line.link">
+						<i *ngIf="subline.infocon" class="smart-line-title-icon {{subline.infocon}}"></i>
+
+						{{ subline[line.property] || subline || '--' }}
+          </div>
+
+          <div class="line-controls">
+						<button *ngFor="let button of line.buttons_each" class="line-button {{button.class}}" [hidden]="!checkPermissions(line, button.permission) && button.permission" (click)="action(button.action, subline)">
+								<i [class]="button.icon || 'fa fa-cog'"></i>
+						</button>
+          </div>
+				</div>
+			</ng-template>
+
+			<ng-template [ngSwitchCase]="'list'">
+				<div class="smart-line-value-into">
+					<div class="line-list-content">
+						<smart-list
+							[object]="line.value"
+							[showLines]="line.list"
+							(actions)="action('deep-smart-action', $event)">
+						</smart-list>
+					</div>
+				</div>
+			</ng-template>
+
+			<ng-template [ngSwitchCase]="'list-array'">
+				<div class="smart-line-value-into" *ngFor="let subline of line.value">
+					<div class="line-list-content">
+						<smart-list
+							[object]="subline"
+							[showLines]="line.list"
+							(actions)="action('deep-smart-action', $event)"
+							[parent]="line.parent">
+						</smart-list>
+					</div>
+				</div>
+			</ng-template>
+
+			<ng-template [ngSwitchCase]="'object_group'">
+				<div class="smart-line-value-into">
+					<div class="line-list-content">
+						<smart-list
+							[object]="line.value"
+							[showLines]="line.list"
+							(actions)="action('deep-smart-action', $event)">
+						</smart-list>
+					</div>
+				</div>
+			</ng-template>
+
+			<ng-template [ngSwitchCase]="'component'">
+					<div class="smart-line-value-into">
+							<div class="line-list-content">
+								<ng-template #component></ng-template>
+							</div>
+					</div>
+			</ng-template>
+		</div>
+	</div>
+</div>

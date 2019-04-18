@@ -1,4 +1,4 @@
-<div class="table-component" *ngIf="data && data.length;else message">
+<div class="table-component">
   <header>
     <div *ngFor="let obj of collection" class="table-header-part" [class.index-column]="obj.property == 'index'">
       {{obj.title}}
@@ -6,7 +6,7 @@
   </header>
 
   <div class="table-area">
-    <div *ngFor="let item of data;let i = index" class="table-area-object" (click)="clickRow(item)" tabindex="-1">   <!--строка-->
+    <div *ngFor="let item of data;let i = index" class="table-area-object">   <!--строка-->
       <div class="table-area-property" *ngFor="let obj of collection" [class.index-column]="obj.property == 'index'"> <!--столбец-->
         <span *ngIf="obj.property == 'index'">{{ i+1 }}</span>
         <span *ngIf="obj.property_lv2">{{ item[obj.property][obj.property_lv2]}}</span>
@@ -16,6 +16,3 @@
     </div>
   </div>
 </div>
-<ng-template #message *ngIf="clickRowNow">
-  {{ empty }}
-</ng-template>
