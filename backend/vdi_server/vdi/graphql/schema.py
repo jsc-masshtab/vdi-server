@@ -5,12 +5,8 @@ from graphql.execution.executors.asyncio import AsyncioExecutor
 
 
 from .pool import PoolType, AddPool, PoolMixin, RemovePool
-from .util import get_selections
 from .vm import CreateTemplate, AddTemplate, DropTemplate, TemplateMixin
 from .users import CreateUser, ListUsers
-
-from ..app import app
-from ..db import db
 
 
 class PoolMutations(graphene.ObjectType):

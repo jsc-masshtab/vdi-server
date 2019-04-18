@@ -10,7 +10,7 @@ import asyncio
 def query_addPool(template_vm, pool_name):
     return '''
     mutation {
-      addPool(name: "%(pool_name)s", template_id: "%(template_vm)s", settings: {initial_size: 1}) {
+      addPool(name: "%(pool_name)s", template_id: "%(template_vm)s", block: true, settings: {initial_size: 1}) {
         id
       }
     }
@@ -20,11 +20,6 @@ def query_addPool(template_vm, pool_name):
 @pytest.mark.asyncio
 async def test_create_pool(pool, query_addPool):
     id = pool['id']
-
-    t = 0
-    dt = 2
-
-    await asyncio.sleep(10)
 
     qu = """{
       pool(id: %(id)s) {
