@@ -24,6 +24,8 @@ export class TemplatesComponent implements OnInit {
     }
   ];
 
+  public spinner:boolean = true;
+
 
   constructor(private service: TeplatesService){}
 
@@ -36,11 +38,14 @@ export class TemplatesComponent implements OnInit {
     this.service.getAllTeplates().valueChanges.pipe(map(data => data.data.templates))
       .subscribe( (data) => {
         this.infoTemplates = data.map((item) => JSON.parse(item.info));
-        console.log(this.infoTemplates);
+        this.spinner = false;
+      },
+      (error)=> {
+        this.spinner = false;
       });
   }
 
-  public collectionAction() {
+  public collectionAction(): void {
     this.collection = [
       {
         title: 'Название',
@@ -68,11 +73,13 @@ export class TemplatesComponent implements OnInit {
         title: 'Звуковой адаптер',
         property: 'sound',
         property_lv2: 'model',
-        property_lv2_wrap: 'codec'
+        property_lv2_prop2: 'codec'
       },
       {
         title: 'Высокая доступность',
-        property: 'ha_enabled'
+        property_boolean: 'ha_enabled',
+        property_boolean_true: 'Включена',
+        property_boolean_false: 'Выключена'
       }
     ];
   }

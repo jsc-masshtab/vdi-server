@@ -1,4 +1,4 @@
-import { Component, OnInit, Input, OnChanges, Output,  EventEmitter} from '@angular/core';
+import { Component,Input, Output, EventEmitter} from '@angular/core';
 
 
 @Component({
@@ -8,19 +8,20 @@ import { Component, OnInit, Input, OnChanges, Output,  EventEmitter} from '@angu
 })
 export class TableComponentComponent  {
 
-  public clickRowNow:boolean = false;
 
   @Input() data: object[] = [];
+  @Input() spinner:boolean = false;
   @Input() collection: object[] = [];
-  @Input() empty: string = 'Ничего нет';
   @Output() clickRowData:EventEmitter<any> = new EventEmitter();
 
   constructor() {}
 
+  ngOnChanges() {
+    console.log(this.data);
+  }
 
 
   public clickRow(item) {
-    this.clickRowNow = true;
     this.clickRowData.emit(item);
   }
 

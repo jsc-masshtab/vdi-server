@@ -14,6 +14,7 @@ import { MatDialog } from '@angular/material';
 export class PollsComponent implements OnInit {
 
   public pools: [];
+  public spinner:boolean = true;
 
   public collection: object[] = [
     {
@@ -62,7 +63,11 @@ export class PollsComponent implements OnInit {
     this.service.getAllPools().valueChanges.pipe(map(data => data.data.pools))
       .subscribe( (data) => {
         this.pools = data;
-    });
+        this.spinner = false;
+      },
+      (error)=> {
+        this.spinner = false;
+      });
   }
 
 }

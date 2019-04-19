@@ -14,35 +14,35 @@ export class PoolComponent implements OnInit, OnChanges {
  @Input() rowData: object;
 
  public pools: object[];
- public empty: string = 'Нет доступных виртуальных машин';
+ public spinner:boolean = true;
 
-public collection: object[] = [
-  {
-    title: '№',
-    property: 'index'
-  },
-  {
-    title: 'Название ВМ',
-    property: 'verbose_name'
-  },
-  {
-    title: 'Операционная система',
-    property: 'os_type'
-  },
-  {
-    title: 'Оперативная память(МБ)',
-    property: 'memory_count'
-  },
-  {
-    title: 'Графический адаптер',
-    property: 'video',
-    property_lv2: 'type'
-  },
-  {
-    title: 'Звуковой адаптер',
-    property: 'sound'
-  }
-]
+  public collection: object[] = [
+    {
+      title: '№',
+      property: 'index'
+    },
+    {
+      title: 'Название ВМ',
+      property: 'verbose_name'
+    },
+    {
+      title: 'Операционная система',
+      property: 'os_type'
+    },
+    {
+      title: 'Оперативная память(МБ)',
+      property: 'memory_count'
+    },
+    {
+      title: 'Графический адаптер',
+      property: 'video',
+      property_lv2: 'type'
+    },
+    {
+      title: 'Звуковой адаптер',
+      property: 'sound'
+    }
+  ]
 
   constructor(private service: PoolService){}
 
@@ -61,6 +61,10 @@ public collection: object[] = [
       .subscribe( (data) => {
         this.pools = data.map(item => JSON.parse(item.info));
         console.log(data);
+        this.spinner = false;
+      },
+      (error)=> {
+        this.spinner = false;
       });
   }
 

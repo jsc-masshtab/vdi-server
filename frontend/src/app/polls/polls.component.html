@@ -5,4 +5,3 @@
     <button (click)="openCreatePool()"><fa-icon [icon]="['fas','plus-circle']" size="xs"></fa-icon><span>Создать пул</span></button>
 </div>
 <vdi-table-component [data]="pools" [collection]="collection" (clickRowData)="la=$event"></vdi-table-component>
-<vdi-pool-component [rowData]="la"></vdi-pool-component>
