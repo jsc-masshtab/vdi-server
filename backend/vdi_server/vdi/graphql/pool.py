@@ -286,20 +286,29 @@ class PoolMixin:
     @enter_context(lambda: db.connect())
     async def resolve_pools(conn: Connection, self, info):
         selections = get_selections(info)
+        settings_selections = get_selections(info, 'settings') or []
         fields = [
             f for f in selections
             if f in PoolType.sql_fields and f != 'id'
         ]
         fields.insert(0, 'id')
-        qu = f"SELECT {', '.join(fields)} FROM pool"
+        qu = f"SELECT {', '.join(fields + settings_selections)} FROM pool"
+
         pools = await conn.fetch(qu)
 
         u_fields = get_selections(info, 'users')
         if u_fields:
             pools_users = await PoolMixin.get_pools_users_map(self, u_fields, conn=conn)
         items = []
-        for id, *values in pools:
-            p = dict(zip(fields, [id] + values))
+        for pool in pools:
+            p = {
+                f: pool[f] for f in fields
+            }
+            settings = {}
+            for sel in settings_selections:
+                settings[sel] = pool[sel]
+            if settings:
+                p['settings'] = PoolSettings(**settings)
             if u_fields:
                 p['users'] = pools_users[id]
             pt = PoolType(**p)

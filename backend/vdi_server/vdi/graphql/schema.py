@@ -17,6 +17,7 @@ class PoolMutations(graphene.ObjectType):
     dropTemplate = DropTemplate.Field()
     createUser = CreateUser.Field()
 
+
 class PoolQuery(ListUsers, PoolMixin, TemplateMixin, graphene.ObjectType):
     pass
 
