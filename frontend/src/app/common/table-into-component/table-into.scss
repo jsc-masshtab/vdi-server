@@ -45,11 +45,6 @@
             background: rgba(220, 220, 220, 0.3);
             cursor: pointer;
         }
-
-        &:focus {
-            background: rgba(220, 220, 220, 0.3);
-            cursor: pointer;
-        }
     }
 
     .table-area-property {
@@ -75,10 +70,4 @@
         width: 50px;
         flex: inherit;
     }
-}
-
-.cdk-overlay-container {
-    display: flex;
-    justify-content: center;
-    align-items: center;
 }

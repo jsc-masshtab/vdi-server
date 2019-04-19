@@ -139,7 +139,7 @@ class Login(Gtk.ApplicationWindow):
         try:
             with open('user_input.json', 'r') as f:
                 return json.load(f)
-        except TypeError:
+        except:
             with open('user_input.json', 'w') as f:
                 f.write(json.dumps({}))
             return {}

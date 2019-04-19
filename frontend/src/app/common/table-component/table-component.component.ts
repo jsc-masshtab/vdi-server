@@ -1,4 +1,5 @@
-import { Component, OnInit, Input, OnChanges} from '@angular/core';
+import { Component,Input, Output, EventEmitter} from '@angular/core';
+
 
 @Component({
   selector: 'vdi-table-component',
@@ -7,10 +8,22 @@ import { Component, OnInit, Input, OnChanges} from '@angular/core';
 })
 export class TableComponentComponent  {
 
+
   @Input() data: object[] = [];
-	@Input() collection: object[] = [];
+  @Input() spinner:boolean = false;
+  @Input() collection: object[] = [];
+  @Output() clickRowData:EventEmitter<any> = new EventEmitter();
 
   constructor() {}
+
+  ngOnChanges() {
+    console.log(this.data);
+  }
+
+
+  public clickRow(item) {
+    this.clickRowData.emit(item);
+  }
 
   
 }

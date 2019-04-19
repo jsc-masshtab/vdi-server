@@ -1,3 +1,4 @@
+import { PoolService } from './pool/pool.service';
 import { PoolComponent } from './pool/pool.component';
 
 import { BrowserModule } from '@angular/platform-browser';
@@ -15,7 +16,7 @@ import { HttpClientModule } from '@angular/common/http';
 /*  -----------------------------------   icons   --------------------------------------*/
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { library } from '@fortawesome/fontawesome-svg-core'
-import { faDesktop,faDatabase, faLayerGroup,faPlusCircle } from '@fortawesome/free-solid-svg-icons';
+import { faDesktop,faDatabase, faLayerGroup,faPlusCircle,faSpinner } from '@fortawesome/free-solid-svg-icons';
 /*  -----------------------------------   icons   --------------------------------------*/
 
 
@@ -35,6 +36,8 @@ import { PoolsService } from './polls/polls.service';
 import { MAT_DIALOG_DEFAULT_OPTIONS } from '@angular/material';
 import { MatDialogModule } from '@angular/material/dialog';
 import { FocusMeDirective } from './common/directives/focusMe.directive';
+import { TableIntoComponent } from './common/table-into-component/table-into';
+
 
 /*  -----------------------------------   material   --------------------------------------*/
 
@@ -51,8 +54,8 @@ import { FocusMeDirective } from './common/directives/focusMe.directive';
     PoolAddComponent,
     BaSelect,
     FocusMeDirective,
-    //SmartList,
-    //PoolComponent
+    TableIntoComponent,
+    PoolComponent
   ],
   imports: [
     BrowserModule,
@@ -73,8 +76,7 @@ import { FocusMeDirective } from './common/directives/focusMe.directive';
               TeplatesService,
               PoolsService,
               { provide: MAT_DIALOG_DEFAULT_OPTIONS, useValue: { hasBackdrop: true, restoreFocus: true } },
-             // SmartListService,
-              //PoolsService
+              PoolService
             ],
   bootstrap: [AppComponent]
 })
@@ -82,8 +84,7 @@ import { FocusMeDirective } from './common/directives/focusMe.directive';
 
 export class AppModule {
   constructor() { 
-    library.add(faDesktop,faDatabase,faLayerGroup,faPlusCircle
-      ); // Неиспользуемые иконки при финальной сборке удаляются
+    library.add(faDesktop,faDatabase,faLayerGroup,faPlusCircle,faSpinner); // Неиспользуемые иконки при финальной сборке удаляются
   }
 
 
