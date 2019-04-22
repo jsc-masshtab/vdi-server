@@ -17,8 +17,10 @@ export class PoolsService  {
                                     id
                                     template_id
                                     name
-                                    initial_size
-                                    reserve_size
+                                    settings {
+                                        initial_size
+                                        reserve_size
+                                    }
                                     state {
                                         running
                                         pending

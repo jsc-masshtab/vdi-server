@@ -1,3 +1,5 @@
+import { ClustersService } from './clusters/clusters.service';
+import { ClustersComponent } from './clusters/clusters.component';
 import { PoolService } from './pool/pool.service';
 import { PoolComponent } from './pool/pool.component';
 
@@ -16,7 +18,7 @@ import { HttpClientModule } from '@angular/common/http';
 /*  -----------------------------------   icons   --------------------------------------*/
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { library } from '@fortawesome/fontawesome-svg-core'
-import { faDesktop,faDatabase, faLayerGroup,faPlusCircle,faSpinner } from '@fortawesome/free-solid-svg-icons';
+import { faDesktop,faDatabase, faLayerGroup,faPlusCircle,faSpinner,faServer } from '@fortawesome/free-solid-svg-icons';
 /*  -----------------------------------   icons   --------------------------------------*/
 
 
@@ -37,6 +39,8 @@ import { MAT_DIALOG_DEFAULT_OPTIONS } from '@angular/material';
 import { MatDialogModule } from '@angular/material/dialog';
 import { FocusMeDirective } from './common/directives/focusMe.directive';
 import { TableIntoComponent } from './common/table-into-component/table-into';
+import { NodesComponent } from './nodes/nodes.component';
+import { NodesService } from './nodes/nodes.service';
 
 
 /*  -----------------------------------   material   --------------------------------------*/
@@ -55,7 +59,9 @@ import { TableIntoComponent } from './common/table-into-component/table-into';
     BaSelect,
     FocusMeDirective,
     TableIntoComponent,
-    PoolComponent
+    PoolComponent,
+    NodesComponent,
+    ClustersComponent
   ],
   imports: [
     BrowserModule,
@@ -76,7 +82,9 @@ import { TableIntoComponent } from './common/table-into-component/table-into';
               TeplatesService,
               PoolsService,
               { provide: MAT_DIALOG_DEFAULT_OPTIONS, useValue: { hasBackdrop: true, restoreFocus: true } },
-              PoolService
+              PoolService,
+              NodesService,
+              ClustersService
             ],
   bootstrap: [AppComponent]
 })
@@ -84,7 +92,7 @@ import { TableIntoComponent } from './common/table-into-component/table-into';
 
 export class AppModule {
   constructor() { 
-    library.add(faDesktop,faDatabase,faLayerGroup,faPlusCircle,faSpinner); // Неиспользуемые иконки при финальной сборке удаляются
+    library.add(faDesktop,faDatabase,faLayerGroup,faPlusCircle,faSpinner,faServer); // Неиспользуемые иконки при финальной сборке удаляются
   }
 
 

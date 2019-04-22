@@ -16,9 +16,6 @@ export class TableComponentComponent  {
 
   constructor() {}
 
-  ngOnChanges() {
-    console.log(this.data);
-  }
 
 
   public clickRow(item) {
