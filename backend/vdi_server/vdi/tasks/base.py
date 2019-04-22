@@ -1,14 +1,11 @@
-from classy_async import g, Task
-
-import uuid
-import json
 import urllib
 
-from ..pool import Pool
-
-from vdi.tasks.client import HttpClient
+from cached_property import cached_property as cached
+from classy_async import Task
 
 from vdi.settings import settings
+from vdi.tasks.client import HttpClient
+
 CONTROLLER_IP = settings['controller_ip']
 
 class Token(Task):
@@ -25,3 +22,15 @@ class Token(Task):
         response = await http_client.fetch(self.url, method='POST', body=params)
         return response['token']
 
+
+class UrlFetcher(Task):
+
+    async def headers(self):
+        return {
+            'Authorization': f'jwt {await Token()}',
+            'Content-Type': 'application/json',
+        }
+
+    async def run(self):
+        client = HttpClient()
+        return await client.fetch_using(self)
