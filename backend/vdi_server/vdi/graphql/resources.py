@@ -145,17 +145,14 @@ class AddController(graphene.Mutation):
         description = graphene.String(required=False)
 
     ok = graphene.Boolean()
-    has_clusters = graphene.Boolean()
 
     @enter_context(lambda: db.connect())
     async def mutate(conn: Connection, self, info, ip, description=None):
         try:
             resp = await resources.ListClusters(controller_ip=ip)
-            clusters = resp['results']
         except FetchException:
             return AddController(ok=False)
-        if not clusters:
-            return AddController(has_clusters=False, ok=True)
+
         query = '''
         INSERT INTO controller (ip, description) VALUES ($1, $2)
         ON CONFLICT DO NOTHING
@@ -163,5 +160,5 @@ class AddController(graphene.Mutation):
 
         await conn.fetch(*query)
 
-        return AddController(ok=True, has_clusters=True)
+        return AddController(ok=True)
 
