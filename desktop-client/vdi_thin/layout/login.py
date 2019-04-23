@@ -15,14 +15,12 @@ from vdi_thin.commands.login import LoginCommand
 from vdi_thin.services.api_session import ApiSession
 
 
-#class Login(Gtk.Dialog):
 class Login(Gtk.ApplicationWindow):
     def __init__(self, app):
         super(Login, self).__init__()
         LOG.debug("init_login")
         self.app = app
         self.set_application(app)
-        #self.set_transient_for(parent_window)
         self.set_destroy_with_parent(True)
         self.set_can_focus(False)
         self.set_title(app.NAME)
@@ -43,8 +41,8 @@ class Login(Gtk.ApplicationWindow):
         self.vbox = Gtk.VBox()
 
         hbox = Gtk.HBox(False, 0)
-        self.ip_field = Entry(placeholder="server IP-address",
-                              tooltip="Server IP-address",
+        self.ip_field = Entry(placeholder="IP-address",
+                              tooltip="IP-address",
                               action=self.on_ip_field_changed,
                               text=form_data.get('ip'))
         self.port_field = Spin(value=form_data.get('port'),
@@ -73,7 +71,7 @@ class Login(Gtk.ApplicationWindow):
 
         logo = Image(self.app.LOGO)
 
-        self.remember_user = Gtk.CheckButton("- remember me")
+        self.remember_user = Gtk.CheckButton("- remember")
         self.remember_user.set_margin_left(20)
 
         self.vbox.pack_end(buttonbox1, True, True, 0)
@@ -81,7 +79,8 @@ class Login(Gtk.ApplicationWindow):
         self.vbox.pack_end(self.msg_field, True, True, 0)
         self.vbox.pack_end(self.remember_user, False, False, 0)
         self.vbox.pack_end(self.password_field, True, True, 0)
-        self.vbox.pack_end(self.username_field, True, True, 0)
+        if self.app.mode == 'default_mode':
+            self.vbox.pack_end(self.username_field, True, True, 0)
         self.vbox.pack_end(hbox, False, False, 0)
         self.vbox.pack_end(logo, False, False, 0)
 
@@ -126,22 +125,35 @@ class Login(Gtk.ApplicationWindow):
             self.save_form(ip, port, username, password)
         else:
             self.save_form(ip, port, username)
-        server = "http://{ip}:{port}".format(ip=ip, port=port)
-        cmd = LoginCommand(self.app, api_session=ApiSession(username, password, server),
-                           login_handler=self)
-        self.wait_state(cmd(retry_count=2))
+        if self.app.mode == 'default_mode':
+            server = "http://{ip}:{port}".format(ip=ip, port=port)
+            cmd = LoginCommand(self.app, api_session=ApiSession(username, password, server),
+                               login_handler=self)
+            self.wait_state(cmd(retry_count=2))
+        elif self.app.mode == 'manual_mode':
+            self.app.viewer_input = dict(host=ip, port=str(port), password=password)
+            self.app.do_viewer()
 
     def save_form(self, ip, port, username, password=''):
-        with open('user_input.json', 'w') as f:
-            f.write(json.dumps(dict(ip=ip, port=port, username=username, password=password)))
+        f = open('user_input.json', 'r')
+        f_data = json.load(f)
+        f_data[self.app.mode] = dict(ip=ip, port=port, username=username, password=password)
+        f.close()
+        f = open('user_input.json', 'w')
+        json.dump(f_data, f)
+        f.close()
 
     def load_form(self):
         try:
             with open('user_input.json', 'r') as f:
-                return json.load(f)
-        except:
+                return json.load(f).get(self.app.mode, {})
+        except IOError, ioe:
+            print str(ioe)
+            logging.debug(str(ioe))
+            return {}
+        except Exception, e:
             with open('user_input.json', 'w') as f:
-                f.write(json.dumps({}))
+                f.write(json.dumps({self.app.mode: {}}))
             return {}
 
     def set_msg(self, msg=None):
@@ -178,10 +190,15 @@ class Login(Gtk.ApplicationWindow):
             self.login_button.set_sensitive(False)
 
     def check_all_fields_filled(self):
-        return (self.username_field.get_text() and
-                self.password_field.get_text() and
-                self.ip_field.get_text() and
-                self.port_field.get_value)
+        if self.app.mode == 'default_mode':
+            return (self.username_field.get_text() and
+                    self.password_field.get_text() and
+                    self.ip_field.get_text() and
+                    self.port_field.get_value)
+        else:
+            return (self.password_field.get_text() and
+                    self.ip_field.get_text() and
+                    self.port_field.get_value)
 
 
 # class Button(Gtk.Button):
