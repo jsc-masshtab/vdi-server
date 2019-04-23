@@ -1,5 +1,6 @@
-import { ClustersComponent } from './clusters/clusters.component';
-import { NodesComponent } from './nodes/nodes.component';
+import { VdiClusterComponent } from './main-vdi-cluster/vdi-cluster';
+import { ClustersComponent } from './main-vdi-cluster/clusters/clusters.component';
+import { NodesComponent } from './main-vdi-cluster/nodes/nodes.component';
 import { NgModule } from '@angular/core';
 import { Routes, RouterModule } from '@angular/router';
 import { TemplatesComponent } from './templates/templates.component';
@@ -12,13 +13,18 @@ const routes: Routes = [
     pathMatch: 'full'
   },
   {
-    path: 'nodes',
-    component: NodesComponent,
+    path: 'page',
+    component: VdiClusterComponent,
     children: [
       {
-        path: ':id/clusters',
+        path: 'nodes',
+        component: NodesComponent
+      },
+      {
+        path: 'nodes/:id/clusters',
         component: ClustersComponent
       }
+      
     ]
   },
   {

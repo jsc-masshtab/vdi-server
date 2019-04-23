@@ -1,4 +1,5 @@
 import { Component, OnInit, Input } from '@angular/core';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'vdi-breadcrumbs',
@@ -9,9 +10,15 @@ export class BreadcrumbsComponent implements OnInit {
 
   @Input() data: object[];
 
-  constructor() {}
+  constructor(private router: Router) {}
 
   ngOnInit() {
+    console.log(this.data);
+  }
+
+  la(crumb) {
+    console.log(crumb);
+    this.router.navigate([crumb.route]);
   }
 
 }

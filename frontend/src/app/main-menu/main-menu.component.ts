@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 
+
 @Component({
   selector: 'vdi-main-menu',
   templateUrl: './main-menu.component.html',
@@ -9,7 +10,7 @@ import { Component, OnInit } from '@angular/core';
 
 export class MainMenuComponent implements OnInit {
 
-  public listMenu: object[] = [ { name: 'Серверы', icon:'server', route:'nodes' },
+  public listMenu: object[] = [ { name: 'Серверы', icon:'server', route:'page/nodes' },
                                 { name: 'Ресурсы', icon:'database', route:'resourses', nested: [{ name:'Шаблоны ВМ', icon:'layer-group' }]},
                                 { name: 'Пулы', icon:'desktop', route:'pools' }
                               ];

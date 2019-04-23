@@ -18,7 +18,8 @@ export class NodesComponent implements OnInit {
   public crumbs: object[] = [
     {
       title: 'Серверы',
-      icon: 'server'
+      icon: 'server',
+      route: '/page/nodes/'
     }
   ];
 
@@ -79,7 +80,7 @@ export class NodesComponent implements OnInit {
 
   public clickNode(event): void {
     this.nodeId = event.id;
-    this.router.navigate([`nodes/${this.nodeId}/clusters`]);
+    this.router.navigate([`page/nodes/${this.nodeId}/clusters`]);
   }
 
 

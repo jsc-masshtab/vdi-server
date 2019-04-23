@@ -16,11 +16,13 @@ export class ClustersComponent implements OnInit {
   public crumbs: object[] = [
     {
       title: 'Серверы',
-      icon: 'server'
+      icon: 'server',
+      route: 'page/nodes'
     },
     {
       title: 'Кластеры',
-      icon: 'server'
+      icon: 'server',
+      route: 'nodes/:id/clusters'
     }
   ];
 
@@ -47,7 +49,7 @@ export class ClustersComponent implements OnInit {
   public collectionAction(): void {
     this.collection = [
       {
-        title: 'Названиеrrr',
+        title: 'Название кластера',
         property: 'verbose_name'
       },
       {
