@@ -72,19 +72,26 @@ class CreateDomain(Task):
 @dataclass()
 class AttachVdisk(Task):
 
+    controller_ip: str
+    datapool_id: str
     domain_id: str
     vdisk: str
 
     method = 'POST'
 
     async def url(self):
-        return f"http://{CONTROLLER_IP}/api/domains/{self.domain_id}/attach-vdisk/"
+        return f"http://{self.controller_ip}/api/domains/{self.domain_id}/attach-vdisk/"
 
-    async def body(self):
-        datapool = await disk.DefaultDatapool()
+    async def headers(self):
+        token = await Token()
+        return {
+            'Authorization': f'jwt {token}'
+        }
+
+    def body(self):
         params = {
             "type_storage": "local",
-            "storage": datapool['id'],
+            "storage": self.datapool_id,
             "driver_cache": "none",
             "target_bus": "virtio",
             "vdisk": self.vdisk,
@@ -105,40 +112,38 @@ class AttachVdisk(Task):
     async def run(self):
         ws = await WsConnection()
         await ws.send('add /tasks/')
-        token = await Token()
-        headers = {
-            'Authorization': f'jwt {token}'
-        }
-        self.response = await HttpClient().fetch_using(self, headers=headers)
+        self.response = await HttpClient().fetch_using(self)
         await ws.wait_message(self.is_done)
         return True
 
-
-@dataclass()
-class SetupDomain(Task):
-
-    image_name: str
-    vm_name: str = None
-
-    async def run(self):
-        if self.vm_name is None:
-            uid = str(uuid.uuid1()).split('-')[0]
-            self.vm_name = f'{self.image_name}-{uid}'
-        vdisk = await disk.ImportDisk(image_name=self.image_name, vm_name=self.vm_name)
-        domain = await CreateDomain(vm_name=self.vm_name)
-        await AttachVdisk(vdisk=vdisk, domain_id=domain['id'])
-        return domain
+#
+# @dataclass()
+# class SetupDomain(Task):
+#
+#     image_name: str
+#     vm_name: str = None
+#
+#     async def run(self):
+#         if self.vm_name is None:
+#             uid = str(uuid.uuid1()).split('-')[0]
+#             self.vm_name = f'{self.image_name}-{uid}'
+#         vdisk = await disk.ImportDisk(image_name=self.image_name, vm_name=self.vm_name)
+#         domain = await CreateDomain(vm_name=self.vm_name)
+#         await AttachVdisk(vdisk=vdisk, domain_id=domain['id'])
+#         return domain
 
 
 @dataclass()
 class CopyDomain(Task):
 
+    controller_ip: str
+    datapool_id: str
     domain_id: str
     vm_name: str
 
 
     async def list_vdisks(self):
-        url = f'http://{CONTROLLER_IP}/api/vdisks/?domain={self.domain_id}'
+        url = f'http://{self.controller_ip}/api/vdisks/?domain={self.domain_id}'
         token = await Token()
         headers = {
             'Authorization': f'jwt {token}'
@@ -152,11 +157,19 @@ class CopyDomain(Task):
         return vdisks
 
     async def run(self):
-        [vdisk0] = await self.list_vdisks()
+        vdisks = await self.list_vdisks()
         domain = await CreateDomain(vm_name=self.vm_name)
-        vdisk = await disk.CopyDisk(vdisk=vdisk0, verbose_name=domain['verbose_name'])
 
-        await AttachVdisk(domain_id=domain['id'], vdisk=vdisk)
+        async def task(vdisk):
+            new_vdisk = await disk.CopyDisk(vdisk=vdisk, verbose_name=domain['verbose_name'])
+            await AttachVdisk(domain_id=domain['id'], vdisk=new_vdisk, datapool_id=self.datapool_id)
+
+        tasks = [
+            task(vdisk) for vdisk in vdisks
+        ]
+        async for _ in wait(*tasks):
+            pass
+
         return domain
 
 

@@ -94,3 +94,30 @@ class Context:
 
 g = Context()
 
+
+class Var:
+
+    @classmethod
+    def _get_var(cls):
+        if not hasattr(cls, '_contextvar'):
+            if hasattr(cls, 'KEY'):
+                KEY = cls.KEY
+            else:
+                KEY = f'{cls.__module__}.{cls.__qualname__}'
+            cls._contextvar = contextvars.ContextVar(KEY)
+        return cls._contextvar
+
+    def set(self):
+        var = self._get_var()
+        if local_ctx.use_me:
+            local_ctx.g[var] = self
+            return
+        var.set(self)
+
+    @classmethod
+    def get(cls):
+        var = cls._get_var()
+        if local_ctx.use_me:
+            return local_ctx.g[var]
+        return var.get()
+

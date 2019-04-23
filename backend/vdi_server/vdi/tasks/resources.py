@@ -5,7 +5,6 @@ from classy_async import Task
 
 from .base import CONTROLLER_IP, Token
 from .client import HttpClient
-from .disk import DefaultDatapool
 from .ws import WsConnection
 
 from . import UrlFetcher
@@ -60,5 +59,4 @@ class ListDatapools(UrlFetcher):
             pools.append(pool)
 
         return pools
-
 

@@ -14,6 +14,8 @@ from .users import UserType
 # TODO TemplateType == VmType
 
 from vdi.tasks import vm
+from vdi.tasks.pool import PoolSettings
+
 from classy_async import wait
 from vdi.context_utils import enter_context
 
@@ -52,6 +54,10 @@ class VmType(graphene.ObjectType):
 
 
 class PoolSettingsFields(graphene.AbstractType):
+    controller_ip = graphene.String()
+    cluster_id = graphene.String()
+    datapool_id = graphene.String()
+
     initial_size = graphene.Int()
     reserve_size = graphene.Int()
 
@@ -94,7 +100,7 @@ class AddPool(graphene.Mutation):
     class Arguments:
         template_id = graphene.String(required=True)
         name = graphene.String(required=True)
-        settings = PoolSettingsInput(required=False)
+        settings = PoolSettingsInput()
         block = graphene.Boolean(required=False)
         autostart = graphene.Boolean(default_value=True)
 
@@ -103,13 +109,22 @@ class AddPool(graphene.Mutation):
     state = graphene.Field(PoolState)
     settings = graphene.Field(PoolSettings)
 
+    @classmethod
+    def remember_settings(cls, settings):
+        settings = dict(settings)
+        settings.pop('reserve_size', None)
+        settings.pop('initial_size', None)
+        PoolSettings(**settings).set()
+
     @enter_context(lambda: db.connect())
-    async def mutate(conn: Connection, self, info, template_id, name, autostart, settings=(),
-                     block=False):
+    async def mutate(conn: Connection, self, info, template_id, name,
+                     settings=(), autostart=True, block=False):
         def get_setting(name):
             if name in settings:
                 return settings[name]
             return settings_file['pool'][name]
+
+        AddPool.remember_settings(settings)
 
         pool_query = '''
         INSERT INTO pool (template_id, name, initial_size, reserve_size)

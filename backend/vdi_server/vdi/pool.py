@@ -56,17 +56,17 @@ class Pool:
         uid = uuid.uuid4()
         return f"{self.params['name']}-{uid}"
 
-    def add_domain(self):
+    def add_domain(self, controller_ip):
         from vdi.tasks import vm
         g.init()
         template_id = self.params['template_id']
         vm_name = self.generate_name()
-        task = vm.CopyDomain(domain_id=template_id, vm_name=vm_name).task
+        task = vm.CopyDomain(controller_ip=controller_ip, domain_id=template_id, vm_name=vm_name).task
         task.add_done_callback(self.on_vm_created)
         self.pending += 1
         return task
 
-    async def add_domains(self):
+    async def add_domains(self, controller_ip):
         initial_size = self.params['initial_size']
         domains = []
 
@@ -75,7 +75,7 @@ class Pool:
             delta = 0
 
         for i in range(delta):
-            d = await self.add_domain()
+            d = await self.add_domain(controller_ip)
             domains.append(d)
 
         return domains

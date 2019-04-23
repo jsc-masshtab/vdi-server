@@ -13,6 +13,7 @@ from dataclasses import dataclass
 
 
 class DefaultDatapool(Task):
+    "Only for debug"
 
     url = '/api/data-pools/'
 
@@ -96,13 +97,15 @@ class ImportDisk(Task):
 @dataclass()
 class CopyDisk(Task):
 
+    controller_ip: str
+    datapool_id: str
     vdisk: object
     verbose_name: str
 
     method = 'POST'
 
     def url(self):
-        return f'http://{CONTROLLER_IP}/api/vdisks/{self.vdisk}/copy/?async=1'
+        return f'http://{self.controller_ip}/api/vdisks/{self.vdisk}/copy/?async=1'
 
     async def headers(self):
         token = await Token()
@@ -111,11 +114,10 @@ class CopyDisk(Task):
             'Content-Type': 'application/json',
         }
 
-    async def body(self):
-        datapool = await DefaultDatapool()
+    def body(self):
         dic = {
             'verbose_name': self.verbose_name,
-            'datapool': datapool['id'],
+            'datapool': self.datapool_id,
         }
         return json.dumps(dic)
 
