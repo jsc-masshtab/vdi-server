@@ -38,3 +38,20 @@ async def test_create_pool(pool, query_addPool):
     assert r['pool']['settings']['initial_size'] == 1
     li = r['pool']['state']['available']
     assert len(li) == 1
+
+
+@pytest.mark.asyncio
+async def test_pools_list(pool, query_addPool):
+    qu = """{
+      pools {
+        id
+        settings {
+          initial_size
+          reserve_size
+        }
+      }
+    }""" % locals()
+    r = await schema.exec(qu)
+    for p in r['pools']:
+        assert p['settings']['initial_size']
+        assert p['settings']['reserve_size']
