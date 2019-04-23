@@ -36,7 +36,7 @@ def build_keycombo_menu(on_send_key_fn):
     return menu
 
 
-def build_reset_menu(on_vm_manage_fn):
+def build_reset_menu(on_vm_manage_fn, no_fast_mode=True):
     menu = Gtk.Menu()
 
     def make_item(name, combo=None):
@@ -53,8 +53,9 @@ def build_reset_menu(on_vm_manage_fn):
     menu.add(Gtk.SeparatorMenuItem())
     make_item("Force reset")
     make_item("Force off")
-    menu.add(Gtk.SeparatorMenuItem())
-    make_item("Disconnect")
+    if no_fast_mode:
+        menu.add(Gtk.SeparatorMenuItem())
+        make_item("Disconnect")
 
     menu.show_all()
     return menu
@@ -88,7 +89,7 @@ class Viewer(Gtk.ApplicationWindow):
         self._usbdev_manager = None
         self.fs = False
 
-        self._overlay_toolbar_fullscreen = OverlayToolbar()
+        self._overlay_toolbar_fullscreen = OverlayToolbar(self.app)
         self._overlay = self._overlay_toolbar_fullscreen.create(
             name="Fullscreen Toolbar",
             tooltip_text="Leave fullscreen",
@@ -132,7 +133,7 @@ class Viewer(Gtk.ApplicationWindow):
         keycombom.set_submenu(keys_menu)
         self.mb.append(keycombom)
 
-        vm_menu = build_reset_menu(self._vm_control)
+        vm_menu = build_reset_menu(self._vm_control, bool(self.app.mode != 'fast_mode'))
         vmm = Gtk.MenuItem("Virtual Machine")
         vmm.set_submenu(vm_menu)
         self.mb.append(vmm)
@@ -463,7 +464,8 @@ class _TimedRevealer(GObject.GObject):
 
 
 class OverlayToolbar:
-    def __init__(self):
+    def __init__(self, app):
+        self.app = app
         self.send_key_button = None
         self.vm_button = None
         self.timed_revealer = None
@@ -480,7 +482,7 @@ class OverlayToolbar:
                on_close_fn, close_tooltip):
         self.keycombo_menu = build_keycombo_menu(on_send_key_fn)
         self.keycombo_menu.loc = 2
-        self.vm_menu = build_reset_menu(on_vm_manage_fn)
+        self.vm_menu = build_reset_menu(on_vm_manage_fn, bool(self.app.mode != 'fast_mode'))
         self.vm_menu.loc = 3
 
         self.overlay_toolbar = Gtk.Toolbar()
