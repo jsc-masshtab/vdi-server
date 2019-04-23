@@ -10,5 +10,5 @@ pipenv run mi apply
 echo "vdi_server: prepare qcow image"
 pipenv run python -m vdi.prepare
 
-echo "Running the API server..."
+echo "vdi_server: starting server..."
 nohup pipenv run uvicorn vdi.app:app --host 0.0.0.0 --port 80 &
