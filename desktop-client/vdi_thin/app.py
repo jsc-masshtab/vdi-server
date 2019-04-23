@@ -197,6 +197,7 @@ class Application(Gtk.Application):
         LOG.debug('quit')
         self.force_stop_workers()
         self.quit()
+        Gtk.main_quit()
 
     def do_logout(self):
         LOG.debug("logout")

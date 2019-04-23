@@ -21,7 +21,7 @@ class Login(Gtk.ApplicationWindow):
         LOG.debug("init_login")
         self.app = app
         self.set_application(app)
-        self.set_destroy_with_parent(True)
+        # self.set_destroy_with_parent(True)
         self.set_can_focus(False)
         self.set_title(app.NAME)
         self.set_resizable(False)

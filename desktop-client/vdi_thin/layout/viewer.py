@@ -36,12 +36,13 @@ def build_keycombo_menu(on_send_key_fn):
     return menu
 
 
-def build_reset_menu(on_send_key_fn):
+def build_reset_menu(on_vm_manage_fn):
     menu = Gtk.Menu()
 
     def make_item(name, combo=None):
         item = Gtk.MenuItem.new_with_mnemonic(name)
-        item.connect("activate", on_send_key_fn, combo)
+        item.item_name = name
+        item.connect("activate", on_vm_manage_fn, combo)
         menu.add(item)
 
     make_item("Run")
@@ -52,6 +53,8 @@ def build_reset_menu(on_send_key_fn):
     menu.add(Gtk.SeparatorMenuItem())
     make_item("Force reset")
     make_item("Force off")
+    menu.add(Gtk.SeparatorMenuItem())
+    make_item("Disconnect")
 
     menu.show_all()
     return menu
@@ -103,11 +106,11 @@ class Viewer(Gtk.ApplicationWindow):
 
         self.mb = Gtk.MenuBar()
 
-        disconnectmenu = Gtk.Menu()
-        disconnectm = Gtk.MenuItem("Disconnect")
-        disconnectm.set_submenu(disconnectmenu)
-        self.mb.append(disconnectm)
-        self.add_menu_item(disconnectmenu, self.disconnect, "Disconnect")
+        # disconnectmenu = Gtk.Menu()
+        # disconnectm = Gtk.MenuItem("Disconnect")
+        # disconnectm.set_submenu(disconnectmenu)
+        # self.mb.append(disconnectm)
+        # self.add_menu_item(disconnectmenu, self.disconnect, "Disconnect")
 
         viewmenu = Gtk.Menu()
         viewm = Gtk.MenuItem("View")
@@ -151,6 +154,14 @@ class Viewer(Gtk.ApplicationWindow):
     def on_viewer_delete_event(self, *args):
         LOG.debug("quit viewer")
         if self.app.confirm_quit():
+            if self.session is not None:
+                self.session.disconnect()
+            self.session = None
+            self.audio = None
+            if self.display:
+                self.display.destroy()
+            self.display = None
+            self.display_channel = None
             self.app.do_quit()
         else:
             return True
@@ -184,8 +195,10 @@ class Viewer(Gtk.ApplicationWindow):
         webview.load_uri("http://mashtab.org/files/veil/index.html")
 
     def _vm_control(self, *args):
-        print(self._has_agent())
-        print('Not implemented on server side yet')
+        if args[0].item_name == 'Disconnect':
+            self.disconnect()
+        else:
+            print('Not implemented on server side yet')
 
     def _do_send_key(self, src, keys):
         ignore = src
@@ -332,7 +345,7 @@ class Viewer(Gtk.ApplicationWindow):
         if self.kwargs['password']:
             self.session.set_property("password", self.kwargs['password'])
             self.session.connect()
-            self.connect("destroy", self.terminate)
+            # self.connect("destroy", self.terminate)
             self.show_all()
             # self.toggle_fullscreen()
             Gtk.main()
@@ -351,7 +364,8 @@ class Viewer(Gtk.ApplicationWindow):
             self.display.destroy()
         self.display = None
         self.display_channel = None
-        Gtk.main_quit()
+        self.app.do_quit()
+        # Gtk.main_quit()
 
 
 class _TimedRevealer(GObject.GObject):
