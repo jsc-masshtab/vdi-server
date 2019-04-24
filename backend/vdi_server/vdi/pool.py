@@ -60,6 +60,7 @@ class Pool:
             'domain_id': self.params['template_id'],
             'datapool_id': self.params['datapool_id'],
             'controller_ip': self.params['controller_ip'],
+            'node_id': self.params['node_id'],
         }
         task = vm.CopyDomain(**params).task
         task.add_done_callback(self.on_vm_created)

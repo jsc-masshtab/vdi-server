@@ -3,9 +3,12 @@ import uuid
 from dataclasses import dataclass
 from classy_async import Task
 
-from .base import CONTROLLER_IP, Token
+from .base import Token
 from .client import HttpClient
 from .ws import WsConnection
+
+from vdi.settings import settings
+from vdi.tasks import resources
 
 
 from cached_property import cached_property as cached
@@ -15,20 +18,26 @@ from pathlib import Path
 @dataclass()
 class AddNode(Task):
 
+    controller_ip: str
     management_ip: str = '192.168.20.121'
-    url = f'http://{CONTROLLER_IP}/api/nodes/?async=1'
     method = 'POST'
 
-    body = {
-        "management_ip": management_ip,
-        "controller_ip": "192.168.20.120",
-        "ssh_password": "bazalt",
-        "verbose_name": "node1",
-    }
+    @cached
+    def url(self):
+        return f'http://{self.controller_ip}/api/nodes/?async=1'
+
+    @cached
+    def body(self):
+        return {
+            "management_ip": self.management_ip,
+            "controller_ip": self.controller_ip,
+            "ssh_password": "bazalt",
+            "verbose_name": "node1",
+        }
 
     async def check_present(self):
         client = HttpClient()
-        url = f"http://{CONTROLLER_IP}/api/nodes/"
+        url = f"http://{self.controller_ip}/api/nodes/"
         token = await Token()
         headers = {
             'Authorization': f'jwt {token}',
@@ -87,11 +96,12 @@ class DownloadImage(Task):
 @dataclass()
 class UploadImage(Task):
     filename: str
+    datapool_id: str
+    controller_ip: str
 
     async def check_present(self):
         token = await Token()
-        datapool = await DefaultDatapool()
-        url = f"http://{CONTROLLER_IP}/api/library/?datapool_id={datapool['id']}"
+        url = f"http://{self.controller_ip}/api/library/?datapool_id={self.datapool_id}"
         http_client = HttpClient()
         headers = {
             'Authorization': f'jwt {token}'
@@ -104,18 +114,17 @@ class UploadImage(Task):
     async def get_upload_url(self):
         client = HttpClient()
         token = await Token()
-        datapool = await DefaultDatapool()
         headers = {
             'Authorization': f'jwt {token}',
             'Content-Type': 'application/json',
         }
-        url = f'http://{CONTROLLER_IP}/api/library/'
+        url = f'http://{self.controller_ip}/api/library/'
         body = json.dumps({
-            'datapool': datapool['id'],
+            'datapool': self.datapool_id,
             'filename': self.filename,
         })
         res = await client.fetch(url, method='PUT', body=body, headers=headers)
-        return f"http://{CONTROLLER_IP}{res['upload_url']}"
+        return f"http://{self.controller_ip}{res['upload_url']}"
 
     @cached
     def boundary(self):
@@ -163,3 +172,15 @@ class UploadImage(Task):
         }
         return await client.fetch(upload_url, method="POST", headers=headers, body_producer=self.body_producer,
                                  request_timeout=24 * 3600)
+
+
+async def discover_resources():
+    controller_ip = settings['controller_ip']
+    resp = await resources.ListClusters(controller_ip=controller_ip)
+    [cluster] = resp['results']
+    resp = await resources.ListNodes(controller_ip=controller_ip, cluster_id=cluster['id'])
+    [node] = resp['results']
+    [datapool] = await resources.ListDatapools(controller_ip=controller_ip, node_id=node['id'])
+    return {
+        'node': node, 'cluster': cluster, 'datapool': datapool, 'controller_ip': controller_ip,
+    }

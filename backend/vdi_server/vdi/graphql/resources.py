@@ -158,14 +158,6 @@ class Resources:
         resp = await resources.ListNodes(controller_ip=controller_ip, cluster_id=cluster['id'])
         [node] = resp['results']
         [datapool] = await resources.ListDatapools(controller_ip=controller_ip, node_id=node['id'])
-        # results = conn.fetch("SELECT id FROM template_vm")
-        # ids = [r['id'] for r in results]
-        #
-        # for template in vm.ListVms(controller_ip):
-        #     if template['id'] in ids:
-        #         break
-        # else:
-        #     assert False
 
         params = {
             'initial_size': 1,
@@ -173,7 +165,7 @@ class Resources:
             'controller_ip': controller_ip,
             'cluster_id': cluster['id'],
             'datapool_id': datapool['id'],
-            # 'name': name,
+            'node_id': node['id'],
         }
         return PoolSettings(**params)
 

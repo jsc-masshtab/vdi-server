@@ -133,19 +133,9 @@ class SetupDomain(Task):
         uid = str(uuid.uuid1()).split('-')[0]
         return f'{self.image_name}-{uid}'
 
-    async def params(self):
-        controller_ip = settings['controller_ip']
-        resp = await resources.ListClusters(controller_ip=controller_ip)
-        [cluster] = resp['results']
-        resp = await resources.ListNodes(controller_ip=controller_ip, cluster_id=cluster['id'])
-        [node] = resp['results']
-        [datapool] = await resources.ListDatapools(controller_ip=controller_ip, node_id=node['id'])
-        return {
-            'node': node, 'cluster': cluster, 'datapool': datapool, 'controller_ip': controller_ip,
-        }
-
     async def run(self):
-        params = await self.params()
+        from vdi.tasks.admin import discover_resources
+        params = await discover_resources()
         vdisk = await disk.ImportDisk(image_name=self.image_name, vm_name=self.vm_name,
                                       controller_ip=params['controller_ip'], datapool_id=params['datapool']['id'])
         domain = await CreateDomain(vm_name=self.vm_name,
@@ -162,6 +152,7 @@ class CopyDomain(Task):
     controller_ip: str
     datapool_id: str
     domain_id: str
+    node_id: str
 
     @cached
     def vm_name(self):
@@ -184,7 +175,7 @@ class CopyDomain(Task):
 
     async def run(self):
         vdisks = await self.list_vdisks()
-        domain = await CreateDomain(vm_name=self.vm_name)
+        domain = await CreateDomain(controller_ip=self.controller_ip, node_id=self.node_id, vm_name=self.vm_name)
 
         async def task(vdisk):
             new_vdisk = await disk.CopyDisk(controller_ip=self.controller_ip, datapool_id=self.datapool_id,

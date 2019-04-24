@@ -57,6 +57,7 @@ class PoolSettingsFields(graphene.AbstractType):
     cluster_id = graphene.String()
     datapool_id = graphene.String()
     template_id = graphene.String()
+    node_id = graphene.String()
     initial_size = graphene.Int()
     reserve_size = graphene.Int()
 
@@ -98,13 +99,16 @@ class PoolState(graphene.ObjectType):
 class AddPool(graphene.Mutation):
     class Arguments:
         name = graphene.String(required=True)
+
         template_id = graphene.String()
         controller_ip = graphene.String()
         cluster_id = graphene.String()
         datapool_id = graphene.String()
+        node_id = graphene.String()
         settings = PoolSettingsInput()
         initial_size = graphene.Int()
         reserve_size = graphene.Int()
+
         block = graphene.Boolean()
         autostart = graphene.Boolean(default_value=True)
 
@@ -118,7 +122,7 @@ class AddPool(graphene.Mutation):
     @enter_context(lambda: db.connect())
     async def mutate(conn: Connection, self, info,
                      name,
-                     template_id=None, controller_ip=None, cluster_id=None, datapool_id=None,
+                     template_id=None, controller_ip=None, cluster_id=None, datapool_id=None, node_id=None,
                      settings=(), initial_size=None, reserve_size=None, autostart=True, block=False):
         def get_setting(name):
             if name in settings:
@@ -130,6 +134,7 @@ class AddPool(graphene.Mutation):
             'reserve_size': reserve_size or get_setting('reserve_size'),
             'controller_ip': controller_ip or settings['controller_ip'],
             'cluster_id': cluster_id or settings['cluster_id'],
+            'node_id': cluster_id or settings['node_id'],
             'datapool_id': datapool_id or settings['datapool_id'],
             'template_id': template_id or settings['template_id'],
             'name': name,
