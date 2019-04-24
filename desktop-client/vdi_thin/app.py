@@ -16,13 +16,33 @@ LOG = logging.getLogger()
 from .layout.splash import Splash
 from .layout.login import Login
 from .layout.main import Main
+from .layout.viewer import Viewer
 from .commands.splashcommand import SplashCommand
 
 
-class AppState():
+def help(msg='Help page'):
+    print '''
+{}
+            
+ECP Veil VDI client has tree modes:
+
+    1) Default mode. NO keys. Starts VDI server login dialog.
+
+    2) Manual mode. Only one key "-m". Start GUI dialog for enter ip, port and
+       password for connect VM. VDI server is not needed.
+        -m  - manual mode
+
+    3) Fast mode for open VM viewer right away. VDI server is not needed.
+        -ip <ip-address>
+        -p  <port>
+        -pw <password>
+        '''.format(msg)
+
+
+class AppState:
     def __init__(self, app):
         self.app = app
-        self.viewer_process = {}
+        # self.viewer_process = {}
 
     @property
     def logged_in(self):
@@ -37,9 +57,11 @@ class Application(Gtk.Application):
     NAME_MANAGER = "ECP Veil VDI manager"
 
     def __init__(self, *args, **kwargs):
-        super(Application, self).__init__(*args, application_id="org.mashtab.vdi_client",
-                         flags=Gio.ApplicationFlags.HANDLES_COMMAND_LINE,
-                         **kwargs)
+        super(Application, self).__init__(*args,
+                                          application_id="org.mashtab.vdi_client",
+                                          flags=Gio.ApplicationFlags.HANDLES_COMMAND_LINE,
+                                          **kwargs)
+
         self.first_login = True
         self.window = None
 
@@ -49,6 +71,11 @@ class Application(Gtk.Application):
         self.api_session = None
 
         self.workers_promises = {}
+
+    def run(self, args):
+        self._args = args
+        self._args.pop(0)
+        Gtk.Application.run(self)
 
     def init_menu(self):
         pass
@@ -73,15 +100,57 @@ class Application(Gtk.Application):
 
     def do_activate(self):
         LOG.debug('activate')
-        if self.api_session:
-            self.do_main()
+
+        def get_value(k):
+            try:
+                val = self._args[self._args.index(k)+1]
+            except IndexError:
+                return False
+            if val[0] != '-':
+                return val
+            else:
+                return False
+
+        if len(self._args) == 0:
+            self.mode = 'default_mode'
+            if self.api_session:
+                self.do_main()
+            else:
+                self.do_login()
+        elif len(self._args) == 1:
+            if '-m' in self._args:
+                self.mode = 'manual_mode'
+                self.do_login()
+            elif '-h' in self._args or '-help' in self._args:
+                help()
+            else:
+                help('Error:\n    Wrong key for Manual mode: {}'.format(self._args[0]))
         else:
-            self.do_login()
+            allowed_keys = ['-ip', '-p', '-pw']
+            values = dict()
+            for key in self._args:
+                if key in allowed_keys:
+                    value = get_value(key)
+                    if value:
+                        values[key] = value
+            missed_keys = list(set(allowed_keys) - set(values.keys()))
+            if not missed_keys:
+                self.mode = 'fast_mode'
+                self.viewer_input = dict(host=values['-ip'], port=values['-p'], password=values['-pw'])
+                self.do_viewer()
+            else:
+                help('Error:\n    Missed key(s) or its value(s): {}'.format(', '.join(missed_keys)))
 
     def destroy_active_window(self):
         if self.window:
             self.window.destroy()
             self.window = None
+
+    def do_viewer(self, *args, **kwargs):
+        LOG.debug('viewer')
+        self.destroy_active_window()
+        self.window = Viewer(self, False, **self.viewer_input)
+        self.window.present()
 
     def do_main(self):
         LOG.debug('main')
@@ -90,22 +159,17 @@ class Application(Gtk.Application):
         self.window.present()
 
     def _login(self, *args):
-        #self.window.hide()
-        self.destroy_active_window()
-        #login_dialog = Login(self, self.window)
-        self.window = Login(self)
-        self.window.present()
-        #login_dialog.present()
-
-    def do_login(self):
         LOG.debug('login')
         self.destroy_active_window()
-
-        self.window = Splash(self)
+        self.window = Login(self)
         self.window.present()
-        if self.first_login:
-            self.first_login = False
 
+    def do_login(self):
+        if self.first_login:
+            LOG.debug('splash')
+            self.first_login = False
+            self.window = Splash(self)
+            self.window.present()
             cmd = SplashCommand(self, on_finish=self._login)
             cmd()
         else:
@@ -116,7 +180,7 @@ class Application(Gtk.Application):
         options = command_line.get_options_dict()
 
         if options.contains("test"):
-            LOG.debug("Test argument recieved")
+            LOG.debug("Test argument received")
 
         self.activate()
         return 0
@@ -133,11 +197,12 @@ class Application(Gtk.Application):
         LOG.debug('quit')
         self.force_stop_workers()
         self.quit()
+        Gtk.main_quit()
 
     def do_logout(self):
         LOG.debug("logout")
         self.api_session = None
-        self.window.hide()
+        # self.window.hide()
         self.do_login()
 
     def register_worker_promise(self, promise):

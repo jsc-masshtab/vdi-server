@@ -7,7 +7,6 @@ LOG = logging.getLogger()
 
 from vdi_thin.commands.start_vm import StartVmCommand
 from vdi_thin.commands.load_vms import LoadVms
-from vdi_thin.layout.viewer import Viewer
 
 
 class Main(Gtk.ApplicationWindow):
@@ -113,8 +112,7 @@ class Main(Gtk.ApplicationWindow):
         self.main_content_flowbox.forall(lambda w: self.main_content_flowbox.remove(w))
         for vm in vm_data:
             vm_widget = widget_gen.generate_widget(vm,
-                                                   self.on_vm_widget_connect_clicked,
-                                                   self.on_vm_widget_disconnect_clicked)
+                                                   self.on_vm_widget_connect_clicked)
             self.main_content_flowbox.add(vm_widget)
 
     def on_vm_widget_connect_clicked(self, elem, vm_widget):
@@ -124,71 +122,36 @@ class Main(Gtk.ApplicationWindow):
         vm_widget.wait_state()
         cmd(vm_widget.dp_id)
 
-    def on_vm_widget_disconnect_clicked(self, elem, vm_widget):
-        vm_widget.kill_viewer_window()
-
     def on_vm_connect(self, context, result):
-        vm_widget = context["vm_widget"]
-        vm_widget.connected_state()
-        p = Viewer(self.app, vm_widget)
-        vm_widget.viewer_process = p
-        p.main_loop(result['host'], result['port'], result['password'])
+        self.app.viewer_input = dict(host=result['host'], port=result['port'], password=result['password'])
+        self.app.do_viewer()
 
 
 class VmWidget(Gtk.Frame):
     WIDGET_HEIGHT = 100
     WIDGET_WIDTH = 100
 
-    def __init__(self, app, vm_data, icon, start_handler, stop_handler, *args, **kwargs):
+    def __init__(self, app, vm_data, icon, start_handler, *args, **kwargs):
         super(VmWidget, self).__init__(*args, **kwargs)
         self.connect_btn = None
-        self.disconnect_btn = None
         self.app = app
         self.dp_id = vm_data["id"]
         self.vm_data = vm_data
-        self.set_label(self.vm_data['name'])
-        self.set_label_align(0.5, 0.5)
         self.icon = icon
         self.screenshot = None
         self.wait_spinner = Gtk.Spinner()
         self.dimmer = self.build_content_dim()
         self.start_handler = start_handler
-        self.stop_handler = stop_handler
         self.vm_repr = self.build_vm_repr()
         self.base_layout = self.build_base_layout(self.vm_repr)
         self.add(self.base_layout)
 
-    @property
-    def viewer_process(self):
-        return self.app.state.viewer_process
-
-    def is_viewer_connected(self):
-        if self.app.state.viewer_process.get(self.dp_id):
-            return True
-
-    @viewer_process.setter
-    def viewer_process(self, process):
-        self.app.state.viewer_process[self.dp_id] = process
-
     def on_show(self, *args):
-        if self.is_viewer_connected():
-            self.connected_state()
-        else:
-            self.disconnected_state()
+        self.normal_state()
 
     def wait_state(self):
         self.dimmer.set_visible(True)
         self.wait_spinner.start()
-
-    def disconnected_state(self):
-        self.connect_btn.set_visible(True)
-        self.disconnect_btn.set_visible(False)
-        self.normal_state()
-
-    def connected_state(self):
-        self.connect_btn.set_visible(False)
-        self.disconnect_btn.set_visible(True)
-        self.normal_state()
 
     def normal_state(self):
         self.wait_spinner.stop()
@@ -217,35 +180,26 @@ class VmWidget(Gtk.Frame):
         ctx.rectangle(0, 0, da.get_allocated_width(), da.get_allocated_height())
         ctx.fill()
 
-    def build_action_button(self, label, action):
-        #btn = Gtk.Button(label)
-        if label == "Connect":
-            btn = Gtk.Button.new_from_stock(Gtk.STOCK_CONNECT)
-        else:
-            btn = Gtk.Button.new_from_stock(Gtk.STOCK_DISCONNECT)
+    def build_action_button(self, action):
+        btn = Gtk.Button.new_from_stock(Gtk.STOCK_CONNECT)
         btn.set_always_show_image(True)
         btn.connect("clicked", action, self)
-        # btn.set_margin_top(10)
         btn.set_margin_start(10)
         btn.set_margin_end(10)
         btn.set_margin_bottom(10)
         return btn
 
     def build_vm_repr(self):
-        self.connect_btn = self.build_action_button("Connect", self.start_handler)
-        self.disconnect_btn = self.build_action_button("Disconnect", self.stop_handler)
+        self.connect_btn = self.build_action_button(self.start_handler)
         vm_repr = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
-        # vm_name = Gtk.Label.new(str(self.vm_data["name"]))
+        vm_name = Gtk.Label.new(str(self.vm_data["name"]))
+        vm_name.set_margin_top(10)
         if not self.vm_data["can_start_vm"]:
             self.connect_btn.set_sensitive(False)
-        # vm_repr.pack_start(vm_name, True, True, 0)
+        vm_repr.pack_start(vm_name, True, True, 0)
         vm_repr.pack_start(self.icon, True, True, 0)
         vm_repr.pack_start(self.connect_btn, True, True, 0)
-        vm_repr.pack_start(self.disconnect_btn, True, True, 0)
         return vm_repr
-
-    def kill_viewer_window(self):
-        self.app.state.viewer_process[self.dp_id].destroy()
 
 
 class VmWidgetGenerator:
@@ -285,8 +239,8 @@ class VmWidgetGenerator:
         except KeyError:
             return icon_map["OTHER"]()
 
-    def generate_widget(self, vm_data, start_handler, stop_handler):
+    def generate_widget(self, vm_data, start_handler):
         vm_icon = self.select_vm_icon(vm_data)
-        widget = VmWidget(self.app, vm_data, vm_icon, start_handler, stop_handler)
+        widget = VmWidget(self.app, vm_data, vm_icon, start_handler)
         return widget
 

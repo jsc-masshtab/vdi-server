@@ -36,12 +36,13 @@ def build_keycombo_menu(on_send_key_fn):
     return menu
 
 
-def build_reset_menu(on_send_key_fn):
+def build_reset_menu(on_vm_manage_fn, no_fast_mode=True):
     menu = Gtk.Menu()
 
     def make_item(name, combo=None):
         item = Gtk.MenuItem.new_with_mnemonic(name)
-        item.connect("activate", on_send_key_fn, combo)
+        item.item_name = name
+        item.connect("activate", on_vm_manage_fn, combo)
         menu.add(item)
 
     make_item("Run")
@@ -52,22 +53,31 @@ def build_reset_menu(on_send_key_fn):
     menu.add(Gtk.SeparatorMenuItem())
     make_item("Force reset")
     make_item("Force off")
+    if no_fast_mode:
+        menu.add(Gtk.SeparatorMenuItem())
+        make_item("Disconnect")
 
     menu.show_all()
     return menu
 
 
 class Viewer(Gtk.ApplicationWindow):
-    def __init__(self, app, vm_widget):
-        super(Viewer, self).__init__()
-        self.app = app
+    title = 'ECP Veil VDI Client'
 
-        self.set_title(vm_widget.vm_data['name'])
-        self.set_icon(self.app.LOGO)
+    def __init__(self, app, vm_widget, **kwargs):
+        super(Viewer, self).__init__()
+        LOG.debug("init_viewer")
+        self.app = app
         self.set_application(app)
-        self.set_destroy_with_parent(True)
+        self.set_can_focus(False)
+        self.set_icon(self.app.LOGO)
+        self.set_default_geometry(1280, 720)
+        self.set_position(Gtk.WindowPosition.CENTER)
+        self.kwargs = kwargs
 
         self.connect("key-press-event", self.on_key_press_event)
+        self.connect("delete-event", self.on_viewer_delete_event)
+        self.connect("show", self.on_viewer_show)
 
         self.vm_widget = vm_widget
 
@@ -79,7 +89,7 @@ class Viewer(Gtk.ApplicationWindow):
         self._usbdev_manager = None
         self.fs = False
 
-        self._overlay_toolbar_fullscreen = OverlayToolbar()
+        self._overlay_toolbar_fullscreen = OverlayToolbar(self.app)
         self._overlay = self._overlay_toolbar_fullscreen.create(
             name="Fullscreen Toolbar",
             tooltip_text="Leave fullscreen",
@@ -97,11 +107,11 @@ class Viewer(Gtk.ApplicationWindow):
 
         self.mb = Gtk.MenuBar()
 
-        filemenu = Gtk.Menu()
-        filem = Gtk.MenuItem("File")
-        filem.set_submenu(filemenu)
-        self.mb.append(filem)
-        self.add_menu_item(filemenu, self.destroy, "Close")
+        # disconnectmenu = Gtk.Menu()
+        # disconnectm = Gtk.MenuItem("Disconnect")
+        # disconnectm.set_submenu(disconnectmenu)
+        # self.mb.append(disconnectm)
+        # self.add_menu_item(disconnectmenu, self.disconnect, "Disconnect")
 
         viewmenu = Gtk.Menu()
         viewm = Gtk.MenuItem("View")
@@ -123,7 +133,7 @@ class Viewer(Gtk.ApplicationWindow):
         keycombom.set_submenu(keys_menu)
         self.mb.append(keycombom)
 
-        vm_menu = build_reset_menu(self._vm_control)
+        vm_menu = build_reset_menu(self._vm_control, bool(self.app.mode != 'fast_mode'))
         vmm = Gtk.MenuItem("Virtual Machine")
         vmm.set_submenu(vm_menu)
         self.mb.append(vmm)
@@ -142,6 +152,32 @@ class Viewer(Gtk.ApplicationWindow):
         self.overlay.add(vbox)
         self.add(self.overlay)
 
+    def on_viewer_delete_event(self, *args):
+        LOG.debug("quit viewer")
+        if self.app.confirm_quit():
+            if self.session is not None:
+                self.session.disconnect()
+            self.session = None
+            self.audio = None
+            if self.display:
+                self.display.destroy()
+            self.display = None
+            self.display_channel = None
+            self.app.do_quit()
+        else:
+            return True
+
+    def disconnect(self, *args):
+        if self.app.confirm_logout():
+            if self.app.mode == 'default_mode':
+                self.app.do_main()
+            else:
+                self.app.do_logout()
+
+    def on_viewer_show(self, *args):
+        LOG.debug("viewer show")
+        self.main_loop()
+
     def show_help(self, *args):
         mydir = path.abspath(path.dirname(__file__))
         ctx = WebKit2.WebContext.get_default()
@@ -149,7 +185,7 @@ class Viewer(Gtk.ApplicationWindow):
         ctx.set_web_extensions_initialization_user_data(GLib.Variant.new_string("test string"))
 
         help_window = Gtk.Window()
-        help_window.set_title("Official ECP Vail page")
+        help_window.set_title("Official ECP Veil page")
         webview = WebKit2.WebView.new_with_context(ctx)
         help_window.add(webview)
         help_window.set_transient_for(self)
@@ -160,16 +196,15 @@ class Viewer(Gtk.ApplicationWindow):
         webview.load_uri("http://mashtab.org/files/veil/index.html")
 
     def _vm_control(self, *args):
-        print(self._has_agent())
-        print('Not implemented on server side yet')
+        if args[0].item_name == 'Disconnect':
+            self.disconnect()
+        else:
+            print('Not implemented on server side yet')
 
     def _do_send_key(self, src, keys):
         ignore = src
         if keys is not None:
             self._send_keys(keys)
-
-    def destroy(self, *args):
-        Gtk.Window.destroy(self)
 
     def on_key_press_event(self, widget, event):
         # print("Key press on widget: ", widget)
@@ -273,14 +308,15 @@ class Viewer(Gtk.ApplicationWindow):
     def control_vm_usb_redirection(self, action):
         ignore = action
         spice_usbdev_widget = self._get_usb_widget()
+        spice_usbdev_widget.set_margin_left(10)
+        spice_usbdev_widget.set_margin_right(10)
         if not spice_usbdev_widget:
             return
         spice_usbdev_dialog = Gtk.MessageDialog(self,
                                                 title="Redirection USB devices",
                                                 flags=Gtk.DialogFlags.DESTROY_WITH_PARENT,
-                                                message_type=Gtk.MessageType.INFO,
+                                                # message_type=Gtk.MessageType.INFO,
                                                 buttons=Gtk.ButtonsType.CLOSE)
-        spice_usbdev_dialog.set_property("text", "Select USB device")
         spice_usbdev_dialog.get_content_area().add(spice_usbdev_widget)
         spice_usbdev_dialog.show_all()
         spice_usbdev_dialog.run()
@@ -289,7 +325,7 @@ class Viewer(Gtk.ApplicationWindow):
     def _get_usb_widget(self, *args):
         if not self.session:
             return
-        usbwidget = SpiceClientGtk.UsbDeviceWidget.new(self.session, None)
+        usbwidget = SpiceClientGtk.UsbDeviceWidget.new(self.session, '%s, %s')
         usbwidget.connect("connect-failed", self._usbdev_redirect_error)
         return usbwidget
 
@@ -299,18 +335,18 @@ class Viewer(Gtk.ApplicationWindow):
         LOG.debug("Usb redirection error")
         raise NotImplementedError("Usb redirection error")
 
-    def main_loop(self, host, port, password=None):
-        host = '192.168.20.120'
-        port = '5900'
-        password = 'a'
-        self.settings(host, port)
-        if password:
-            print("host: {}".format(host))
-            print("port: {}".format(port))
-            print("password: {}".format(password))
-            self.session.set_property("password", password)
+    def main_loop(self):
+        if self.vm_widget:
+            self.set_title(self.title + self.vm_widget.vm_data['name'])
+        else:
+            self.set_title('{title} - {host}:{port}'.format(title=self.title,
+                                                            host=self.kwargs['host'],
+                                                            port=self.kwargs['port']))
+        self.settings(self.kwargs['host'], self.kwargs['port'])
+        if self.kwargs['password']:
+            self.session.set_property("password", self.kwargs['password'])
             self.session.connect()
-            self.connect("destroy", self.terminate)
+            # self.connect("destroy", self.terminate)
             self.show_all()
             # self.toggle_fullscreen()
             Gtk.main()
@@ -329,9 +365,8 @@ class Viewer(Gtk.ApplicationWindow):
             self.display.destroy()
         self.display = None
         self.display_channel = None
-        self.app.state.viewer_process.pop(self.vm_widget.dp_id)
-        self.vm_widget.disconnected_state()
-        Gtk.main_quit()
+        self.app.do_quit()
+        # Gtk.main_quit()
 
 
 class _TimedRevealer(GObject.GObject):
@@ -373,8 +408,7 @@ class _TimedRevealer(GObject.GObject):
     def _enter_notify(self, ignore1, ignore2):
         x, y = self._ebox.get_pointer()
         alloc = self._ebox.get_allocation()
-        entered = bool(x >= 0 and y >= 0 and
-                       x < alloc.width and y < alloc.height)
+        entered = bool(x >= 0 and y >= 0 and x < alloc.width and y < alloc.height)
 
         if not self._in_fullscreen:
             return
@@ -430,7 +464,8 @@ class _TimedRevealer(GObject.GObject):
 
 
 class OverlayToolbar:
-    def __init__(self):
+    def __init__(self, app):
+        self.app = app
         self.send_key_button = None
         self.vm_button = None
         self.timed_revealer = None
@@ -447,7 +482,7 @@ class OverlayToolbar:
                on_close_fn, close_tooltip):
         self.keycombo_menu = build_keycombo_menu(on_send_key_fn)
         self.keycombo_menu.loc = 2
-        self.vm_menu = build_reset_menu(on_vm_manage_fn)
+        self.vm_menu = build_reset_menu(on_vm_manage_fn, bool(self.app.mode != 'fast_mode'))
         self.vm_menu.loc = 3
 
         self.overlay_toolbar = Gtk.Toolbar()

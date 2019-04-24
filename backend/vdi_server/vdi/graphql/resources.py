@@ -2,14 +2,21 @@
 
 
 import graphene
+from graphql import GraphQLError
 
 from asyncpg.connection import Connection
 
 from ..db import db
-from ..tasks import resources
+from ..tasks import resources, FetchException
 
 from .util import get_selections
 from vdi.context_utils import enter_context
+
+
+class ControllerType(graphene.ObjectType):
+    ip = graphene.String()
+    description = graphene.String()
+
 
 class DatacenterType(graphene.ObjectType):
     id = graphene.String()
@@ -71,6 +78,8 @@ class Resources:
                           controller_ip=graphene.String(),
                           cluster_id=graphene.String(required=False))
 
+    controllers = graphene.List(ControllerType)
+
     @classmethod
     def _make_type(cls, type, item, selections):
         dic = {
@@ -118,3 +127,38 @@ class Resources:
             Resources._make_type(NodeType, item, fields)
             for item in resp['results']
         ]
+
+    @enter_context(lambda: db.connect())
+    async def resolve_controllers(conn: Connection, self, info):
+        query = "SELECT ip, description from controller"
+        items = await conn.fetch(query)
+        return [
+            ControllerType(**dict(d.items()))
+            for d in items
+        ]
+
+
+
+class AddController(graphene.Mutation):
+    class Arguments:
+        ip = graphene.String(required=True)
+        description = graphene.String(required=False)
+
+    ok = graphene.Boolean()
+
+    @enter_context(lambda: db.connect())
+    async def mutate(conn: Connection, self, info, ip, description=None):
+        try:
+            resp = await resources.ListClusters(controller_ip=ip)
+        except FetchException:
+            return AddController(ok=False)
+
+        query = '''
+        INSERT INTO controller (ip, description) VALUES ($1, $2)
+        ON CONFLICT DO NOTHING
+        ''', ip, description
+
+        await conn.fetch(*query)
+
+        return AddController(ok=True)
+
