@@ -533,7 +533,7 @@ class OverlayToolbar:
         if self.app.mode != 'fast_mode':
             self.vm_button = Gtk.ToolButton()
             control_pixbuf = GdkPixbuf.Pixbuf.new_from_file_at_scale(
-                filename="content/img/control2.png",
+                filename="content/img/control.png",
                 width=48,
                 height=48,
                 preserve_aspect_ratio=True)
