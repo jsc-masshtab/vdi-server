@@ -1,34 +1,40 @@
 import { Component, OnInit } from '@angular/core';
-import { ClustersService } from './clusters.service';
+import { NodesService } from './nodes.service';
 import { map } from 'rxjs/operators';
 
 @Component({
-  selector: 'vdi-clusters',
-  templateUrl: './clusters.component.html',
-  styleUrls: ['./clusters.component.scss']
+  selector: 'vdi-nodes',
+  templateUrl: './nodes.component.html',
+  styleUrls: ['./nodes.component.scss']
 })
 
 
-export class ClustersComponent implements OnInit {
+export class NodesComponent implements OnInit {
 
   public infoTemplates: [];
   public collection: object[] = [];
+  //private nodeId: string;
   public crumbs: object[] = [
     {
-      title: 'Серверы',
-      icon: 'server',
-      route: 'page/nodes'
+      title: 'Ресурсы',
+      icon: 'server'
     },
     {
       title: 'Кластеры',
       icon: 'server',
-      route: 'nodes/:id/clusters'
+      route: 'resourses/clusters'
+    },
+    {
+      title: 'Серверы',
+      icon: 'server',
+      route: 'resourses/clusters/:id/servers'
     }
   ];
 
   public spinner:boolean = true;
 
-  constructor(private service: ClustersService){}
+
+  constructor(private service: NodesService){}
 
   ngOnInit() {
     this.collectionAction();
@@ -49,7 +55,7 @@ export class ClustersComponent implements OnInit {
   public collectionAction(): void {
     this.collection = [
       {
-        title: 'Название кластера',
+        title: 'Название',
         property: 'verbose_name'
       },
       {
@@ -78,6 +84,11 @@ export class ClustersComponent implements OnInit {
       }
     ];
   }
+
+  // public clickNode(event): void {
+  //   this.nodeId = event.id;
+  //   this.router.navigate([`page/nodes/${this.nodeId}/clusters`]);
+  // }
 
 
 

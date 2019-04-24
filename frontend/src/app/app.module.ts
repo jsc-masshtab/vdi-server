@@ -1,8 +1,8 @@
 import { ServersService } from './settings/servers/servers.service';
 import { ServersComponent } from './settings/servers/servers.component';
-import { VdiClusterComponent } from './main-vdi-cluster/vdi-cluster';
-import { ClustersService } from './main-vdi-cluster/clusters/clusters.service';
-import { ClustersComponent } from './main-vdi-cluster/clusters/clusters.component';
+
+import { ClustersService } from './resourses/clusters/clusters.service';
+import { ClustersComponent } from './resourses/clusters/clusters.component';
 import { PoolService } from './pool/pool.service';
 import { PoolComponent } from './pool/pool.component';
 
@@ -37,15 +37,14 @@ import { PoolAddComponent } from './polls/pool-add/pool-add.component';
 import { PoolsService } from './polls/polls.service';
 import { FocusMeDirective } from './common/directives/focusMe.directive';
 import { TableIntoComponent } from './common/table-into-component/table-into';
-import { NodesComponent } from './/main-vdi-cluster/nodes/nodes.component';
-import { NodesService } from './main-vdi-cluster/nodes/nodes.service';
+import { NodesComponent } from './resourses/nodes/nodes.component';
+import { NodesService } from './resourses/nodes/nodes.service';
 
 
 
 /*  -----------------------------------   material   --------------------------------------*/
 import { MAT_DIALOG_DEFAULT_OPTIONS } from '@angular/material';
 import { MatDialogModule } from '@angular/material/dialog';
-
 /*  -----------------------------------   material   --------------------------------------*/
 
 
@@ -65,7 +64,6 @@ import { MatDialogModule } from '@angular/material/dialog';
     PoolComponent,
     NodesComponent,
     ClustersComponent,
-    VdiClusterComponent,
     ServersComponent
   ],
   imports: [

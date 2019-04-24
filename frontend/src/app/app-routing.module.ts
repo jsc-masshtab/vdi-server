@@ -1,14 +1,15 @@
-import { ClustersComponent } from './main-vdi-cluster/clusters/clusters.component';
+import { ClustersComponent } from './resourses/clusters/clusters.component';
 import { NgModule } from '@angular/core';
 import { Routes, RouterModule } from '@angular/router';
 import { TemplatesComponent } from './templates/templates.component';
 import { PollsComponent } from './polls/polls.component';
 import { ServersComponent } from './settings/servers/servers.component';
+import { NodesComponent } from './resourses/nodes/nodes.component';
 
 const routes: Routes = [
   {
     path:'',
-    redirectTo: 'resourses',
+    redirectTo: 'resourses/clusters',
     pathMatch: 'full'
   },
   {
@@ -16,20 +17,24 @@ const routes: Routes = [
     component: ServersComponent
   },
   {
-    path: 'nodes/:id/clusters',
+    path: 'resourses/clusters',
     component: ClustersComponent
   },
   {
-    path: 'resourses',
-    component: TemplatesComponent
+    path: 'resourses/clusters/nodes',
+    component: NodesComponent
   },
+  // {
+  //   path: 'resourses',
+  //   component: TemplatesComponent
+  // },
   {
     path: 'pools',
     component: PollsComponent
   },
   {
     path: '**',
-    redirectTo: 'resourses'
+    redirectTo: 'resourses/clusters'
   }
 ];
 
