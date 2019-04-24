@@ -4,7 +4,6 @@
 import sys
 from .app import Application
 
-
 app = Application()
 app.run(sys.argv)
 
