@@ -15,6 +15,11 @@ from vdi_thin.commands.login import LoginCommand
 from vdi_thin.services.api_session import ApiSession
 
 
+def ip_entry_filter(entry, *args):
+    text = entry.get_text().strip()
+    entry.set_text(''.join([i for i in text if i in '0123456789.']))
+
+
 class Login(Gtk.ApplicationWindow):
     def __init__(self, app):
         super(Login, self).__init__()
@@ -44,6 +49,7 @@ class Login(Gtk.ApplicationWindow):
                               tooltip="IP-address",
                               action=self.on_ip_field_changed,
                               text=form_data.get('ip'))
+        self.ip_field.connect('changed', ip_entry_filter)
         self.port_field = Spin(value=form_data.get('port'),
                                tooltip="Port",
                                action=self.on_port_field_changed)

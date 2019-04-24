@@ -3,7 +3,7 @@ import gi
 gi.require_version('Gtk', '3.0')
 gi.require_version('SpiceClientGtk', '3.0')
 gi.require_version('WebKit2', '4.0')
-from gi.repository import Gtk, SpiceClientGtk, SpiceClientGLib, GObject, Gdk, GLib, WebKit2
+from gi.repository import Gtk, SpiceClientGtk, SpiceClientGLib, GObject, Gdk, GLib, WebKit2, GdkPixbuf
 
 import logging
 LOG = logging.getLogger()
@@ -467,6 +467,7 @@ class OverlayToolbar:
         self.vm_menu.loc = 3
 
         self.overlay_toolbar = Gtk.Toolbar()
+        self.overlay_toolbar.set_icon_size(Gtk.IconSize.DIALOG)
         self.overlay_toolbar.set_show_arrow(False)
         self.overlay_toolbar.set_style(Gtk.ToolbarStyle.BOTH_HORIZ)
         self.overlay_toolbar.get_accessible().set_name(name)
@@ -479,7 +480,14 @@ class OverlayToolbar:
         button.connect("clicked", on_leave_fn)
 
         usb_button = Gtk.ToolButton()
-        usb_button.set_icon_name("media-flash")
+        usb_pixbuf = GdkPixbuf.Pixbuf.new_from_file_at_scale(
+                    filename="content/img/usb.png",
+                    width=48,
+                    height=48,
+                    preserve_aspect_ratio=True)
+        usb_icon = Gtk.Image.new_from_pixbuf(usb_pixbuf)
+        usb_button.set_icon_widget(usb_icon)
+        # usb_button.set_icon_name("media-flash")
         usb_button.set_tooltip_text(usb_tooltip)
         usb_button.show()
         self.overlay_toolbar.add(usb_button)
@@ -493,6 +501,9 @@ class OverlayToolbar:
                 # Signature changed at some point.
                 #  f23+    : args = menu, x, y, toolbar
                 #  rhel7.3 : args = menu, toolbar
+                button_quantity = 5
+                if self.app.mode == 'fast_mode':
+                    button_quantity -= 1
                 _menu = args[0]
                 if len(args) == 4:
                     _toolbar = args[3]
@@ -502,7 +513,7 @@ class OverlayToolbar:
                 ignore, x, y = _toolbar.get_window().get_origin()
                 height = _toolbar.get_window().get_height()
                 width = _toolbar.get_window().get_width()
-                shift = (width/5)/2 + width/5 * _menu.loc
+                shift = (width/button_quantity)/2 + width/button_quantity * _menu.loc
                 return x + shift, y + height, True
 
             menu.popup(None, None, menu_location,
@@ -521,7 +532,14 @@ class OverlayToolbar:
 
         if self.app.mode != 'fast_mode':
             self.vm_button = Gtk.ToolButton()
-            self.vm_button.set_icon_name("preferences-desktop")
+            control_pixbuf = GdkPixbuf.Pixbuf.new_from_file_at_scale(
+                filename="content/img/control2.png",
+                width=48,
+                height=48,
+                preserve_aspect_ratio=True)
+            control_icon = Gtk.Image.new_from_pixbuf(control_pixbuf)
+            self.vm_button.set_icon_widget(control_icon)
+            # self.vm_button.set_icon_name("preferences-desktop")
             self.vm_button.set_tooltip_text("Control")
             self.vm_button.show_all()
             self.vm_button.connect("clicked", lambda *args: keycombo_menu_clicked(args, self.vm_menu))
