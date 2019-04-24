@@ -7,10 +7,12 @@ from graphql import GraphQLError
 from asyncpg.connection import Connection
 
 from ..db import db
-from ..tasks import resources, FetchException
+from ..tasks import resources, FetchException, vm
 
 from .util import get_selections
 from vdi.context_utils import enter_context
+
+from .pool import PoolSettings
 
 
 class ControllerType(graphene.ObjectType):
@@ -64,6 +66,10 @@ class DatapoolType(graphene.ObjectType):
 
 
 
+
+
+
+
 class Resources:
     datapools = graphene.List(DatapoolType,
                               node_id=graphene.String(required=False),
@@ -79,6 +85,8 @@ class Resources:
                           cluster_id=graphene.String(required=False))
 
     controllers = graphene.List(ControllerType)
+
+    poolwizard = graphene.Field(PoolSettings)
 
     @classmethod
     def _make_type(cls, type, item, selections):
@@ -136,6 +144,39 @@ class Resources:
             ControllerType(**dict(d.items()))
             for d in items
         ]
+
+    @enter_context(lambda: db.connect())
+    async def resolve_poolwizard(conn: Connection, self, info):
+        import string, random
+        uid = ''.join(
+            random.choice(string.ascii_letters) for _ in range(3)
+        )
+        name = f"wizard-{uid}"
+        controller_ip = '192.168.20.120'
+        resp = await resources.ListClusters(controller_ip=controller_ip)
+        [cluster] = resp['results']
+        resp = await resources.ListNodes(controller_ip=controller_ip, cluster_id=cluster['id'])
+        [node] = resp['results']
+        [datapool] = await resources.ListDatapools(controller_ip=controller_ip, node_id=node['id'])
+        # results = conn.fetch("SELECT id FROM template_vm")
+        # ids = [r['id'] for r in results]
+        #
+        # for template in vm.ListVms(controller_ip):
+        #     if template['id'] in ids:
+        #         break
+        # else:
+        #     assert False
+
+        params = {
+            'initial_size': 1,
+            'reserve_size': 1,
+            'controller_ip': controller_ip,
+            'cluster_id': cluster['id'],
+            'datapool_id': datapool['id'],
+            # 'name': name,
+        }
+        return PoolSettings(**params)
+
 
 
 

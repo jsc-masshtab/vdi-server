@@ -12,6 +12,9 @@ from .base import CONTROLLER_IP, Token
 from .client import HttpClient
 from .ws import WsConnection
 
+from vdi.settings import settings
+from vdi.tasks import resources
+
 from classy_async import wait
 
 
@@ -30,16 +33,20 @@ class Node(Task):
 class CreateDomain(Task):
 
     vm_name: str
+    controller_ip: str
+    node_id: str
 
-    url = f'http://{CONTROLLER_IP}/api/domains/'
+    @cached
+    def url(self):
+        return f'http://{self.controller_ip}/api/domains/'
 
-    async def params(self):
-        node_id = await Node()
+    @cached
+    def params(self):
         return {
             'cpu_count': 1,
             'cpu_priority': "10",
             'memory_count': 1024,
-            'node': node_id,
+            'node': self.node_id,
             'os_type': "Other",
             'sound': {'model': "ich6", 'codec': "micro"},
             'verbose_name': self.vm_name,
@@ -62,8 +69,7 @@ class CreateDomain(Task):
         ws = await WsConnection()
         await ws.send('add /tasks/')
         http_client = HttpClient()
-        params = await self.params()
-        body = urllib.parse.urlencode(params)
+        body = urllib.parse.urlencode(self.params)
         self.domain = await http_client.fetch(self.url, method='POST', headers=headers, body=body)
         await ws.wait_message(self.is_done)
         return self.domain
@@ -71,13 +77,13 @@ class CreateDomain(Task):
 
 @dataclass()
 class AttachVdisk(Task):
-
     controller_ip: str
     datapool_id: str
     domain_id: str
     vdisk: str
 
     method = 'POST'
+
 
     async def url(self):
         return f"http://{self.controller_ip}/api/domains/{self.domain_id}/attach-vdisk/"
@@ -116,31 +122,51 @@ class AttachVdisk(Task):
         await ws.wait_message(self.is_done)
         return True
 
-#
-# @dataclass()
-# class SetupDomain(Task):
-#
-#     image_name: str
-#     vm_name: str = None
-#
-#     async def run(self):
-#         if self.vm_name is None:
-#             uid = str(uuid.uuid1()).split('-')[0]
-#             self.vm_name = f'{self.image_name}-{uid}'
-#         vdisk = await disk.ImportDisk(image_name=self.image_name, vm_name=self.vm_name)
-#         domain = await CreateDomain(vm_name=self.vm_name)
-#         await AttachVdisk(vdisk=vdisk, domain_id=domain['id'])
-#         return domain
+
+@dataclass()
+class SetupDomain(Task):
+
+    image_name: str
+
+    @cached
+    def vm_name(self):
+        uid = str(uuid.uuid1()).split('-')[0]
+        return f'{self.image_name}-{uid}'
+
+    async def params(self):
+        controller_ip = settings['controller_ip']
+        resp = await resources.ListClusters(controller_ip=controller_ip)
+        [cluster] = resp['results']
+        resp = await resources.ListNodes(controller_ip=controller_ip, cluster_id=cluster['id'])
+        [node] = resp['results']
+        [datapool] = await resources.ListDatapools(controller_ip=controller_ip, node_id=node['id'])
+        return {
+            'node': node, 'cluster': cluster, 'datapool': datapool, 'controller_ip': controller_ip,
+        }
+
+    async def run(self):
+        params = await self.params()
+        vdisk = await disk.ImportDisk(image_name=self.image_name, vm_name=self.vm_name,
+                                      controller_ip=params['controller_ip'], datapool_id=params['datapool']['id'])
+        domain = await CreateDomain(vm_name=self.vm_name,
+                                    controller_ip=params['controller_ip'], node_id=params['node']['id'])
+        await AttachVdisk(vdisk=vdisk, domain_id=domain['id'],
+                          datapool_id=params['datapool']['id'], controller_ip=params['controller_ip'])
+        return domain
 
 
 @dataclass()
 class CopyDomain(Task):
 
+    pool_name: str
     controller_ip: str
     datapool_id: str
     domain_id: str
-    vm_name: str
 
+    @cached
+    def vm_name(self):
+        uid = uuid.uuid4()
+        return f"{self.pool_name}-{uid}"
 
     async def list_vdisks(self):
         url = f'http://{self.controller_ip}/api/vdisks/?domain={self.domain_id}'
@@ -161,8 +187,10 @@ class CopyDomain(Task):
         domain = await CreateDomain(vm_name=self.vm_name)
 
         async def task(vdisk):
-            new_vdisk = await disk.CopyDisk(vdisk=vdisk, verbose_name=domain['verbose_name'])
-            await AttachVdisk(domain_id=domain['id'], vdisk=new_vdisk, datapool_id=self.datapool_id)
+            new_vdisk = await disk.CopyDisk(controller_ip=self.controller_ip, datapool_id=self.datapool_id,
+                                            vdisk=vdisk, verbose_name=domain['verbose_name'])
+            await AttachVdisk(domain_id=domain['id'], vdisk=new_vdisk,
+                              datapool_id=self.datapool_id, controller_ip=self.controller_ip)
 
         tasks = [
             task(vdisk) for vdisk in vdisks
@@ -190,9 +218,13 @@ class DropDomain(Task):
         await http_client.fetch(self.url, method='POST', headers=headers, body=b'')
 
 
+@dataclass()
 class ListVms(Task):
+    controller_ip: str
 
-    url = f"http://{CONTROLLER_IP}/api/domains/"
+    @cached
+    def url(self):
+        return f"http://{self.controller_ip}/api/domains/"
 
     async def run(self):
         token = await Token()
