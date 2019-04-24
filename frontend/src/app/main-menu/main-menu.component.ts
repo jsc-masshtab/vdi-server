@@ -10,8 +10,10 @@ import { Component, OnInit } from '@angular/core';
 
 export class MainMenuComponent implements OnInit {
 
-  public listMenu: object[] = [ { name: 'Серверы', icon:'server', route:'page/nodes' },
+  public listMenu: object[] = [ { name: 'Настройки', icon:'cog', route:'settings/servers',  nested: [{ name: 'Серверы', icon:'server' }] },
+
                                 { name: 'Ресурсы', icon:'database', route:'resourses', nested: [{ name:'Шаблоны ВМ', icon:'layer-group' }]},
+
                                 { name: 'Пулы', icon:'desktop', route:'pools' }
                               ];
 

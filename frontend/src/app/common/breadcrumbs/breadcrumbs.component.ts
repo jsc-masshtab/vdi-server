@@ -1,4 +1,4 @@
-import { Component, OnInit, Input } from '@angular/core';
+import { Component, Input } from '@angular/core';
 import { Router } from '@angular/router';
 
 @Component({
@@ -6,18 +6,14 @@ import { Router } from '@angular/router';
   templateUrl: './breadcrumbs.component.html',
   styleUrls: ['./breadcrumbs.component.scss']
 })
-export class BreadcrumbsComponent implements OnInit {
+export class BreadcrumbsComponent  {
 
   @Input() data: object[];
 
   constructor(private router: Router) {}
 
-  ngOnInit() {
-    console.log(this.data);
-  }
 
-  la(crumb) {
-    console.log(crumb);
+  public routeTo(crumb) {
     this.router.navigate([crumb.route]);
   }
 

@@ -1,3 +1,5 @@
+import { ServersService } from './settings/servers/servers.service';
+import { ServersComponent } from './settings/servers/servers.component';
 import { VdiClusterComponent } from './main-vdi-cluster/vdi-cluster';
 import { ClustersService } from './main-vdi-cluster/clusters/clusters.service';
 import { ClustersComponent } from './main-vdi-cluster/clusters/clusters.component';
@@ -19,7 +21,7 @@ import { HttpClientModule } from '@angular/common/http';
 /*  -----------------------------------   icons   --------------------------------------*/
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { library } from '@fortawesome/fontawesome-svg-core'
-import { faDesktop,faDatabase, faLayerGroup,faPlusCircle,faSpinner,faServer } from '@fortawesome/free-solid-svg-icons';
+import { faDesktop,faDatabase, faLayerGroup,faPlusCircle,faSpinner,faServer,faCog } from '@fortawesome/free-solid-svg-icons';
 /*  -----------------------------------   icons   --------------------------------------*/
 
 
@@ -33,16 +35,16 @@ import { TableComponentComponent } from './common/table-component/table-componen
 import { BreadcrumbsComponent } from './common/breadcrumbs/breadcrumbs.component';
 import { PoolAddComponent } from './polls/pool-add/pool-add.component';
 import { PoolsService } from './polls/polls.service';
+import { FocusMeDirective } from './common/directives/focusMe.directive';
+import { TableIntoComponent } from './common/table-into-component/table-into';
+import { NodesComponent } from './/main-vdi-cluster/nodes/nodes.component';
+import { NodesService } from './main-vdi-cluster/nodes/nodes.service';
+
 
 
 /*  -----------------------------------   material   --------------------------------------*/
 import { MAT_DIALOG_DEFAULT_OPTIONS } from '@angular/material';
 import { MatDialogModule } from '@angular/material/dialog';
-import { FocusMeDirective } from './common/directives/focusMe.directive';
-import { TableIntoComponent } from './common/table-into-component/table-into';
-import { NodesComponent } from './/main-vdi-cluster/nodes/nodes.component';
-import { NodesService } from './/main-vdi-cluster/nodes/nodes.service';
-
 
 /*  -----------------------------------   material   --------------------------------------*/
 
@@ -63,7 +65,8 @@ import { NodesService } from './/main-vdi-cluster/nodes/nodes.service';
     PoolComponent,
     NodesComponent,
     ClustersComponent,
-    VdiClusterComponent
+    VdiClusterComponent,
+    ServersComponent
   ],
   imports: [
     BrowserModule,
@@ -86,7 +89,8 @@ import { NodesService } from './/main-vdi-cluster/nodes/nodes.service';
               { provide: MAT_DIALOG_DEFAULT_OPTIONS, useValue: { hasBackdrop: true, restoreFocus: true } },
               PoolService,
               NodesService,
-              ClustersService
+              ClustersService,
+              ServersService
             ],
   bootstrap: [AppComponent]
 })
@@ -94,7 +98,7 @@ import { NodesService } from './/main-vdi-cluster/nodes/nodes.service';
 
 export class AppModule {
   constructor() { 
-    library.add(faDesktop,faDatabase,faLayerGroup,faPlusCircle,faSpinner,faServer); // Неиспользуемые иконки при финальной сборке удаляются
+    library.add(faDesktop,faDatabase,faLayerGroup,faPlusCircle,faSpinner,faServer,faCog); // Неиспользуемые иконки при финальной сборке удаляются
   }
 
 
