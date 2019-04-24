@@ -32,7 +32,7 @@ class AsyncCallPromise:
         return not self.control_thread.is_alive()
 
     def _terminate_worker_process(self):
-        self.worker_process.terminate()
+        # self.worker_process.terminate()
         self.control_thread.join()
 
     def cancel(self):

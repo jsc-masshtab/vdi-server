@@ -136,8 +136,7 @@ class Application(Gtk.Application):
             missed_keys = list(set(allowed_keys) - set(values.keys()))
             if not missed_keys:
                 self.mode = 'fast_mode'
-                self.viewer_input = dict(host=values['-ip'], port=values['-p'], password=values['-pw'])
-                self.do_viewer()
+                self.do_viewer(host=values['-ip'], port=values['-p'], password=values['-pw'])
             else:
                 help('Error:\n    Missed key(s) or its value(s): {}'.format(', '.join(missed_keys)))
 
@@ -149,7 +148,7 @@ class Application(Gtk.Application):
     def do_viewer(self, *args, **kwargs):
         LOG.debug('viewer')
         self.destroy_active_window()
-        self.window = Viewer(self, False, **self.viewer_input)
+        self.window = Viewer(self, False, **kwargs)
         self.window.present()
 
     def do_main(self):
@@ -197,7 +196,6 @@ class Application(Gtk.Application):
         LOG.debug('quit')
         self.force_stop_workers()
         self.quit()
-        Gtk.main_quit()
 
     def do_logout(self):
         LOG.debug("logout")

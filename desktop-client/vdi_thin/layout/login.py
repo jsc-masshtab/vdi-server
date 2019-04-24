@@ -95,7 +95,11 @@ class Login(Gtk.ApplicationWindow):
     def on_login_dialog_destroy(self, *args):
         LOG.debug("login destroy")
         if not self.app.state.logged_in:
-            self.app.do_quit()
+            if self.app.mode == 'manual_mode':
+                self.app.do_quit()
+                Gtk.main_quit()
+            else:
+                self.app.do_quit()
 
     def on_login_button_clicked(self, event):
         self.submit_data()
@@ -131,8 +135,7 @@ class Login(Gtk.ApplicationWindow):
                                login_handler=self)
             self.wait_state(cmd(retry_count=2))
         elif self.app.mode == 'manual_mode':
-            self.app.viewer_input = dict(host=ip, port=str(port), password=password)
-            self.app.do_viewer()
+            self.app.do_viewer(host=ip, port=str(port), password=password)
 
     def save_form(self, ip, port, username, password=''):
         f = open('user_input.json', 'r')
