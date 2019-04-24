@@ -21,7 +21,6 @@ class Login(Gtk.ApplicationWindow):
         LOG.debug("init_login")
         self.app = app
         self.set_application(app)
-        # self.set_destroy_with_parent(True)
         self.set_can_focus(False)
         self.set_title(app.NAME)
         self.set_resizable(False)
@@ -29,7 +28,7 @@ class Login(Gtk.ApplicationWindow):
         self.set_destroy_with_parent(True)
         self.set_icon(app.LOGO)
         self.set_type_hint(Gdk.WindowTypeHint(1))
-        self.connect("destroy", self.on_login_dialog_destroy)
+        self.connect("delete_event", self.on_login_dialog_destroy)
         self.connect("show", self.on_login_dialog_show)
 
         self.wait_spinner = Spinner()
@@ -94,12 +93,9 @@ class Login(Gtk.ApplicationWindow):
 
     def on_login_dialog_destroy(self, *args):
         LOG.debug("login destroy")
-        if not self.app.state.logged_in:
-            if self.app.mode == 'manual_mode':
-                self.app.do_quit()
-                Gtk.main_quit()
-            else:
-                self.app.do_quit()
+        self.app.do_quit()
+        # if not self.app.state.logged_in:
+        #     self.app.do_quit()
 
     def on_login_button_clicked(self, event):
         self.submit_data()
@@ -136,6 +132,8 @@ class Login(Gtk.ApplicationWindow):
             self.wait_state(cmd(retry_count=2))
         elif self.app.mode == 'manual_mode':
             self.app.do_viewer(host=ip, port=str(port), password=password)
+        else:
+            print 'wat!? ^_^'
 
     def save_form(self, ip, port, username, password=''):
         f = open('user_input.json', 'r')

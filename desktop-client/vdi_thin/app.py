@@ -42,7 +42,6 @@ ECP Veil VDI client has tree modes:
 class AppState:
     def __init__(self, app):
         self.app = app
-        # self.viewer_process = {}
 
     @property
     def logged_in(self):
@@ -200,7 +199,6 @@ class Application(Gtk.Application):
     def do_logout(self):
         LOG.debug("logout")
         self.api_session = None
-        # self.window.hide()
         self.do_login()
 
     def register_worker_promise(self, promise):

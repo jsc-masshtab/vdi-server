@@ -158,11 +158,7 @@ class Viewer(Gtk.ApplicationWindow):
                 self.display.destroy()
             self.display = None
             self.display_channel = None
-            if self.app.mode == 'manual_mode':
-                self.app.do_quit()
-                Gtk.main_quit()
-            else:
-                self.app.do_quit()
+            self.app.do_quit()
         else:
             return True
 
@@ -345,28 +341,13 @@ class Viewer(Gtk.ApplicationWindow):
         if self.kwargs['password']:
             self.session.set_property("password", self.kwargs['password'])
             self.session.connect()
-            # self.connect("destroy", self.terminate)
             self.show_all()
             # self.toggle_fullscreen()
-            if self.app.mode == 'manual_mode':
-                Gtk.main()
 
     def _has_agent(self):
         if not self._channel:
             return False
         return self._channel.get_property("agent-connected")
-
-    # def terminate(self, *args):
-    #     if self.session is not None:
-    #         self.session.disconnect()
-    #     self.session = None
-    #     self.audio = None
-    #     if self.display:
-    #         self.display.destroy()
-    #     self.display = None
-    #     self.display_channel = None
-    #     self.app.do_quit()
-    #     # Gtk.main_quit()
 
 
 class _TimedRevealer(GObject.GObject):
@@ -538,12 +519,13 @@ class OverlayToolbar:
             send_key_accessible_name)
         self.overlay_toolbar.add(self.send_key_button)
 
-        self.vm_button = Gtk.ToolButton()
-        self.vm_button.set_icon_name("preferences-desktop")
-        self.vm_button.set_tooltip_text("Virtual Machine control")
-        self.vm_button.show_all()
-        self.vm_button.connect("clicked", lambda *args: keycombo_menu_clicked(args, self.vm_menu))
-        self.overlay_toolbar.add(self.vm_button)
+        if self.app.mode != 'fast_mode':
+            self.vm_button = Gtk.ToolButton()
+            self.vm_button.set_icon_name("preferences-desktop")
+            self.vm_button.set_tooltip_text("Control")
+            self.vm_button.show_all()
+            self.vm_button.connect("clicked", lambda *args: keycombo_menu_clicked(args, self.vm_menu))
+            self.overlay_toolbar.add(self.vm_button)
 
         close_button = Gtk.ToolButton.new_from_stock(Gtk.STOCK_CLOSE)
         close_button.set_tooltip_text(close_tooltip)
