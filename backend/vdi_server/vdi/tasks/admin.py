@@ -46,14 +46,13 @@ class AddNode(Task):
         res = await client.fetch(url, headers=headers)
         for node in res['results']:
             if node['management_ip'] == self.body['management_ip']:
-                return True
-        return False
+                return node
 
 
     async def run(self):
-        present = await self.check_present()
-        if present:
-            return
+        node = await self.check_present()
+        if node:
+            return node['id']
         ws = await WsConnection()
         await ws.send('add /tasks/')
         token = await Token()
@@ -64,6 +63,8 @@ class AddNode(Task):
         response = await HttpClient().fetch_using(self, headers=headers, body=json.dumps(self.body))
         self.task_id = response['_task']['id']
         await ws.wait_message(self.is_done)
+        [node_id] = response['_task']['nodes_list']
+        return node_id
 
     def is_done(self, msg):
         obj = msg['object']
