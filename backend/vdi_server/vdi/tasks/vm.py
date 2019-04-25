@@ -127,6 +127,9 @@ class AttachVdisk(Task):
 class SetupDomain(Task):
 
     image_name: str
+    controller_ip: str
+    node_id: str
+    datapool_id: str
 
     @cached
     def vm_name(self):
@@ -134,14 +137,12 @@ class SetupDomain(Task):
         return f'{self.image_name}-{uid}'
 
     async def run(self):
-        from vdi.tasks.admin import discover_resources
-        params = await discover_resources()
         vdisk = await disk.ImportDisk(image_name=self.image_name, vm_name=self.vm_name,
-                                      controller_ip=params['controller_ip'], datapool_id=params['datapool']['id'])
+                                      controller_ip=self.controller_ip, datapool_id=self.datapool_id)
         domain = await CreateDomain(vm_name=self.vm_name,
-                                    controller_ip=params['controller_ip'], node_id=params['node']['id'])
+                                    controller_ip=self.controller_ip, node_id=self.node_id)
         await AttachVdisk(vdisk=vdisk, domain_id=domain['id'],
-                          datapool_id=params['datapool']['id'], controller_ip=params['controller_ip'])
+                          datapool_id=self.datapool_id, controller_ip=self.controller_ip)
         return domain
 
 

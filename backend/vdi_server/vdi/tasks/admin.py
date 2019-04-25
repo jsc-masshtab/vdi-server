@@ -19,7 +19,7 @@ from pathlib import Path
 class AddNode(Task):
 
     controller_ip: str
-    management_ip: str = '192.168.20.121'
+    management_ip: str
     method = 'POST'
 
     @cached

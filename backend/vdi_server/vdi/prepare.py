@@ -7,6 +7,9 @@ from classy_async import Wait
 import asyncio
 
 
+async def add_controller():
+    'TODO'
+
 async def main():
     if not settings['debug']:
         return
