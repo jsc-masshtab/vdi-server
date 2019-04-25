@@ -17,17 +17,17 @@ export class NodesComponent implements OnInit {
   public crumbs: object[] = [
     {
       title: 'Ресурсы',
-      icon: 'server'
+      icon: 'database'
     },
     {
       title: 'Кластеры',
-      icon: 'server',
+      icon: 'building',
       route: 'resourses/clusters'
     },
     {
       title: 'Серверы',
       icon: 'server',
-      route: 'resourses/clusters/:id/servers'
+      route: `resourses/clusters/:id/servers`
     }
   ];
 

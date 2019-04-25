@@ -17,11 +17,11 @@ export class ClustersComponent implements OnInit {
   public crumbs: object[] = [
     {
       title: 'Ресурсы',
-      icon: 'server'
+      icon: 'database'
     },
     {
       title: 'Кластеры',
-      icon: 'server',
+      icon: 'building',
       route: 'resourses/clusters'
     }
   ];

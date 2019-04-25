@@ -14,8 +14,8 @@ export class MainMenuComponent implements OnInit {
                                         nested: [{ name: 'Серверы', icon:'server',route:'settings/servers' }] },
 
                                 { name: 'Ресурсы', icon: 'database', route:'resourses/clusters',
-                                        nested: [{ name: 'Кластеры', icon:'layer-group', route:'resourses/clusters',
-                                                          nested: [{ name: 'Серверы', icon:'layer-group', route:'resourses/clusters/nodes' }] 
+                                        nested: [{ name: 'Кластеры', icon:'building', route:'resourses/clusters',
+                                                          nested: [{ name: 'Серверы', icon:'server', route:'resourses/clusters/nodes' }] 
                                                 }]               
                                 },
 
