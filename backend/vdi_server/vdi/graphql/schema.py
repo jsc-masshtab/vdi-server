@@ -20,7 +20,6 @@ class PoolMutations(graphene.ObjectType):
 
     addController = AddController.Field()
 
-
 class PoolQuery(ListUsers, Resources, PoolMixin, TemplateMixin, graphene.ObjectType):
     pass
 

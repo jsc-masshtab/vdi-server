@@ -3,7 +3,7 @@ import gi
 gi.require_version('Gtk', '3.0')
 gi.require_version('SpiceClientGtk', '3.0')
 gi.require_version('WebKit2', '4.0')
-from gi.repository import Gtk, SpiceClientGtk, SpiceClientGLib, GObject, Gdk, GLib, WebKit2
+from gi.repository import Gtk, SpiceClientGtk, SpiceClientGLib, GObject, Gdk, GLib, WebKit2, GdkPixbuf
 
 import logging
 LOG = logging.getLogger()
@@ -36,7 +36,7 @@ def build_keycombo_menu(on_send_key_fn):
     return menu
 
 
-def build_reset_menu(on_vm_manage_fn, no_fast_mode=True):
+def build_reset_menu(on_vm_manage_fn, default_mode=False):
     menu = Gtk.Menu()
 
     def make_item(name, combo=None):
@@ -45,17 +45,17 @@ def build_reset_menu(on_vm_manage_fn, no_fast_mode=True):
         item.connect("activate", on_vm_manage_fn, combo)
         menu.add(item)
 
-    make_item("Run")
-    make_item("Pause")
-    menu.add(Gtk.SeparatorMenuItem())
-    make_item("Reboot")
-    make_item("Power off")
-    menu.add(Gtk.SeparatorMenuItem())
-    make_item("Force reset")
-    make_item("Force off")
-    if no_fast_mode:
+    make_item("Disconnect")
+    if default_mode:
         menu.add(Gtk.SeparatorMenuItem())
-        make_item("Disconnect")
+        make_item("Run")
+        make_item("Pause")
+        menu.add(Gtk.SeparatorMenuItem())
+        make_item("Reboot")
+        make_item("Power off")
+        menu.add(Gtk.SeparatorMenuItem())
+        make_item("Reset")
+        make_item("Force power off")
 
     menu.show_all()
     return menu
@@ -100,18 +100,12 @@ class Viewer(Gtk.ApplicationWindow):
             on_vm_manage_fn=self._vm_control,
             on_usb_fn=self.control_vm_usb_redirection,
             usb_tooltip="Redirection USB devices",
-            on_close_fn=self.destroy,
+            on_close_fn=self.on_viewer_delete_event,
             close_tooltip="Close")
         self.overlay = Gtk.Overlay()
         self.overlay.add_overlay(self._overlay)
 
         self.mb = Gtk.MenuBar()
-
-        # disconnectmenu = Gtk.Menu()
-        # disconnectm = Gtk.MenuItem("Disconnect")
-        # disconnectm.set_submenu(disconnectmenu)
-        # self.mb.append(disconnectm)
-        # self.add_menu_item(disconnectmenu, self.disconnect, "Disconnect")
 
         viewmenu = Gtk.Menu()
         viewm = Gtk.MenuItem("View")
@@ -133,10 +127,11 @@ class Viewer(Gtk.ApplicationWindow):
         keycombom.set_submenu(keys_menu)
         self.mb.append(keycombom)
 
-        vm_menu = build_reset_menu(self._vm_control, bool(self.app.mode != 'fast_mode'))
-        vmm = Gtk.MenuItem("Virtual Machine")
-        vmm.set_submenu(vm_menu)
-        self.mb.append(vmm)
+        if self.app.mode != 'fast_mode':
+            vm_menu = build_reset_menu(self._vm_control, bool(self.app.mode == 'default_mode'))
+            vmm = Gtk.MenuItem("Control")
+            vmm.set_submenu(vm_menu)
+            self.mb.append(vmm)
 
         helpmenu = Gtk.Menu()
         helpm = Gtk.MenuItem("Help")
@@ -346,27 +341,13 @@ class Viewer(Gtk.ApplicationWindow):
         if self.kwargs['password']:
             self.session.set_property("password", self.kwargs['password'])
             self.session.connect()
-            # self.connect("destroy", self.terminate)
             self.show_all()
             # self.toggle_fullscreen()
-            Gtk.main()
 
     def _has_agent(self):
         if not self._channel:
             return False
         return self._channel.get_property("agent-connected")
-
-    def terminate(self, *args):
-        if self.session is not None:
-            self.session.disconnect()
-        self.session = None
-        self.audio = None
-        if self.display:
-            self.display.destroy()
-        self.display = None
-        self.display_channel = None
-        self.app.do_quit()
-        # Gtk.main_quit()
 
 
 class _TimedRevealer(GObject.GObject):
@@ -482,10 +463,11 @@ class OverlayToolbar:
                on_close_fn, close_tooltip):
         self.keycombo_menu = build_keycombo_menu(on_send_key_fn)
         self.keycombo_menu.loc = 2
-        self.vm_menu = build_reset_menu(on_vm_manage_fn, bool(self.app.mode != 'fast_mode'))
+        self.vm_menu = build_reset_menu(on_vm_manage_fn, bool(self.app.mode == 'default_mode'))
         self.vm_menu.loc = 3
 
         self.overlay_toolbar = Gtk.Toolbar()
+        self.overlay_toolbar.set_icon_size(Gtk.IconSize.DIALOG)
         self.overlay_toolbar.set_show_arrow(False)
         self.overlay_toolbar.set_style(Gtk.ToolbarStyle.BOTH_HORIZ)
         self.overlay_toolbar.get_accessible().set_name(name)
@@ -498,7 +480,14 @@ class OverlayToolbar:
         button.connect("clicked", on_leave_fn)
 
         usb_button = Gtk.ToolButton()
-        usb_button.set_icon_name("media-flash")
+        usb_pixbuf = GdkPixbuf.Pixbuf.new_from_file_at_scale(
+                    filename="content/img/usb.png",
+                    width=48,
+                    height=48,
+                    preserve_aspect_ratio=True)
+        usb_icon = Gtk.Image.new_from_pixbuf(usb_pixbuf)
+        usb_button.set_icon_widget(usb_icon)
+        # usb_button.set_icon_name("media-flash")
         usb_button.set_tooltip_text(usb_tooltip)
         usb_button.show()
         self.overlay_toolbar.add(usb_button)
@@ -512,6 +501,9 @@ class OverlayToolbar:
                 # Signature changed at some point.
                 #  f23+    : args = menu, x, y, toolbar
                 #  rhel7.3 : args = menu, toolbar
+                button_quantity = 5
+                if self.app.mode == 'fast_mode':
+                    button_quantity -= 1
                 _menu = args[0]
                 if len(args) == 4:
                     _toolbar = args[3]
@@ -521,7 +513,7 @@ class OverlayToolbar:
                 ignore, x, y = _toolbar.get_window().get_origin()
                 height = _toolbar.get_window().get_height()
                 width = _toolbar.get_window().get_width()
-                shift = (width/5)/2 + width/5 * _menu.loc
+                shift = (width/button_quantity)/2 + width/button_quantity * _menu.loc
                 return x + shift, y + height, True
 
             menu.popup(None, None, menu_location,
@@ -538,12 +530,20 @@ class OverlayToolbar:
             send_key_accessible_name)
         self.overlay_toolbar.add(self.send_key_button)
 
-        self.vm_button = Gtk.ToolButton()
-        self.vm_button.set_icon_name("preferences-desktop")
-        self.vm_button.set_tooltip_text("Virtual Machine control")
-        self.vm_button.show_all()
-        self.vm_button.connect("clicked", lambda *args: keycombo_menu_clicked(args, self.vm_menu))
-        self.overlay_toolbar.add(self.vm_button)
+        if self.app.mode != 'fast_mode':
+            self.vm_button = Gtk.ToolButton()
+            control_pixbuf = GdkPixbuf.Pixbuf.new_from_file_at_scale(
+                filename="content/img/control.png",
+                width=48,
+                height=48,
+                preserve_aspect_ratio=True)
+            control_icon = Gtk.Image.new_from_pixbuf(control_pixbuf)
+            self.vm_button.set_icon_widget(control_icon)
+            # self.vm_button.set_icon_name("preferences-desktop")
+            self.vm_button.set_tooltip_text("Control")
+            self.vm_button.show_all()
+            self.vm_button.connect("clicked", lambda *args: keycombo_menu_clicked(args, self.vm_menu))
+            self.overlay_toolbar.add(self.vm_button)
 
         close_button = Gtk.ToolButton.new_from_stock(Gtk.STOCK_CLOSE)
         close_button.set_tooltip_text(close_tooltip)
@@ -564,5 +564,4 @@ class OverlayToolbar:
 
     def set_sensitive(self, can_sendkey):
         self.send_key_button.set_sensitive(can_sendkey)
-
 

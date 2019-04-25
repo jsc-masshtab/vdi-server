@@ -10,17 +10,18 @@ import asyncio
 async def main():
     if not settings['debug']:
         return
-    node = '192.168.20.121'
+    params = await admin.discover_resources()
     tasks = [
-        admin.AddNode(management_ip=node),
+        admin.AddNode(management_ip=params['node']['management_ip'], controller_ip=params['controller_ip']),
         admin.DownloadImage(target='image.qcow2'),
     ]
     async for cls, _ in Wait(*tasks).items():
         if cls is admin.AddNode:
-            print(f'Node {node} is added.')
+            print(f'Node is added.')
         elif cls is admin.DownloadImage:
             print('.qcow2 image is downloaded.')
-    await admin.UploadImage(filename='image.qcow2')
+    await admin.UploadImage(filename='image.qcow2', controller_ip=params['controller_ip'],
+                            datapool_id=params['datapool']['id'])
     print('File upload finished.')
 
 

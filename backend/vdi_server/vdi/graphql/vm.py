@@ -20,7 +20,6 @@ class CreateTemplate(graphene.Mutation):
     Awaits the result. Mostly for development use
     '''
     class Arguments:
-        name = graphene.String()
         image_name = graphene.String()
 
     template = graphene.Field(TemplateType)

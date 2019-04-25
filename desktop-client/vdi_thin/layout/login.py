@@ -15,13 +15,17 @@ from vdi_thin.commands.login import LoginCommand
 from vdi_thin.services.api_session import ApiSession
 
 
+def ip_entry_filter(entry, *args):
+    text = entry.get_text().strip()
+    entry.set_text(''.join([i for i in text if i in '0123456789.']))
+
+
 class Login(Gtk.ApplicationWindow):
     def __init__(self, app):
         super(Login, self).__init__()
         LOG.debug("init_login")
         self.app = app
         self.set_application(app)
-        # self.set_destroy_with_parent(True)
         self.set_can_focus(False)
         self.set_title(app.NAME)
         self.set_resizable(False)
@@ -29,7 +33,7 @@ class Login(Gtk.ApplicationWindow):
         self.set_destroy_with_parent(True)
         self.set_icon(app.LOGO)
         self.set_type_hint(Gdk.WindowTypeHint(1))
-        self.connect("destroy", self.on_login_dialog_destroy)
+        self.connect("delete_event", self.on_login_dialog_destroy)
         self.connect("show", self.on_login_dialog_show)
 
         self.wait_spinner = Spinner()
@@ -45,6 +49,7 @@ class Login(Gtk.ApplicationWindow):
                               tooltip="IP-address",
                               action=self.on_ip_field_changed,
                               text=form_data.get('ip'))
+        self.ip_field.connect('changed', ip_entry_filter)
         self.port_field = Spin(value=form_data.get('port'),
                                tooltip="Port",
                                action=self.on_port_field_changed)
@@ -94,8 +99,9 @@ class Login(Gtk.ApplicationWindow):
 
     def on_login_dialog_destroy(self, *args):
         LOG.debug("login destroy")
-        if not self.app.state.logged_in:
-            self.app.do_quit()
+        self.app.do_quit()
+        # if not self.app.state.logged_in:
+        #     self.app.do_quit()
 
     def on_login_button_clicked(self, event):
         self.submit_data()
@@ -131,8 +137,9 @@ class Login(Gtk.ApplicationWindow):
                                login_handler=self)
             self.wait_state(cmd(retry_count=2))
         elif self.app.mode == 'manual_mode':
-            self.app.viewer_input = dict(host=ip, port=str(port), password=password)
-            self.app.do_viewer()
+            self.app.do_viewer(host=ip, port=str(port), password=password)
+        else:
+            print 'wat!? ^_^'
 
     def save_form(self, ip, port, username, password=''):
         f = open('user_input.json', 'r')

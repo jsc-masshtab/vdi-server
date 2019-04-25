@@ -14,6 +14,7 @@ from .users import UserType
 # TODO TemplateType == VmType
 
 from vdi.tasks import vm
+
 from classy_async import wait
 from vdi.context_utils import enter_context
 
@@ -52,6 +53,11 @@ class VmType(graphene.ObjectType):
 
 
 class PoolSettingsFields(graphene.AbstractType):
+    controller_ip = graphene.String()
+    cluster_id = graphene.String()
+    datapool_id = graphene.String()
+    template_id = graphene.String()
+    node_id = graphene.String()
     initial_size = graphene.Int()
     reserve_size = graphene.Int()
 
@@ -92,11 +98,21 @@ class PoolState(graphene.ObjectType):
 
 class AddPool(graphene.Mutation):
     class Arguments:
-        template_id = graphene.String(required=True)
         name = graphene.String(required=True)
-        settings = PoolSettingsInput(required=False)
-        block = graphene.Boolean(required=False)
+
+        template_id = graphene.String()
+        controller_ip = graphene.String()
+        cluster_id = graphene.String()
+        datapool_id = graphene.String()
+        node_id = graphene.String()
+        settings = PoolSettingsInput()
+        initial_size = graphene.Int()
+        reserve_size = graphene.Int()
+
+        block = graphene.Boolean()
         autostart = graphene.Boolean(default_value=True)
+
+
 
     id = graphene.Int()
     name = graphene.String()
@@ -104,29 +120,31 @@ class AddPool(graphene.Mutation):
     settings = graphene.Field(PoolSettings)
 
     @enter_context(lambda: db.connect())
-    async def mutate(conn: Connection, self, info, template_id, name, autostart, settings=(),
-                     block=False):
+    async def mutate(conn: Connection, self, info,
+                     name,
+                     template_id=None, controller_ip=None, cluster_id=None, datapool_id=None, node_id=None,
+                     settings=(), initial_size=None, reserve_size=None, autostart=True, block=False):
         def get_setting(name):
             if name in settings:
                 return settings[name]
             return settings_file['pool'][name]
 
-        pool_query = '''
-        INSERT INTO pool (template_id, name, initial_size, reserve_size)
-        VALUES ($1, $2, $3, $4) RETURNING id
-        ''', template_id, name, get_setting('initial_size'), get_setting('reserve_size')
-
-
+        pool = {
+            'initial_size': initial_size or get_setting('initial_size'),
+            'reserve_size': reserve_size or get_setting('reserve_size'),
+            'controller_ip': controller_ip or settings['controller_ip'],
+            'cluster_id': cluster_id or settings['cluster_id'],
+            'node_id': cluster_id or settings['node_id'],
+            'datapool_id': datapool_id or settings['datapool_id'],
+            'template_id': template_id or settings['template_id'],
+            'name': name,
+        }
+        fields = ', '.join(pool.keys())
+        values = ', '.join(f'${i+1}' for i in range(len(pool)))
+        pool_query = f"INSERT INTO pool ({fields}) VALUES ({values}) RETURNING id", *pool.values()
 
         [res] = await conn.fetch(*pool_query)
-
-        pool = {
-            'id': res['id'],
-            'name': name,
-            'template_id': template_id,
-            'initial_size': get_setting('initial_size'),
-            'reserve_size': get_setting('reserve_size'),
-        }
+        pool['id'] = res['id']
         running = False
         if autostart:
             ins = Pool(params=pool)
@@ -143,8 +161,8 @@ class AddPool(graphene.Mutation):
                 available = []
             running = True
         settings = PoolSettings(**{
-            'initial_size': get_setting('initial_size'),
-            'reserve_size': get_setting('reserve_size'),
+            'initial_size': pool['initial_size'],
+            'reserve_size': pool['reserve_size'],
         })
         state = PoolState(pending=0, available=available, running=running)
         return AddPool(id=pool['id'], state=state, settings=settings, name=name)
@@ -207,6 +225,7 @@ class RemovePool(graphene.Mutation):
 class PoolMixin:
     pools = graphene.List(PoolType)
     pool = graphene.Field(PoolType, id=graphene.Int(required=False), name=graphene.String(required=False))
+
 
     async def _select_pool(self, info, id, name, conn: Connection):
         selections = get_selections(info)
