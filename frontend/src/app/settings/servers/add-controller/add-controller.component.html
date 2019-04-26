@@ -1,0 +1,23 @@
+<div class="form">
+
+  <div class="form-header">
+    <h1>Добавление контроллера Veil</h1>
+  </div>
+
+  <div class="form-fields">
+    <label class="field">
+      <p class="field-name">IP-адрес</p>
+      <input type="text" [(ngModel)]="controller" [focusMe]="true">
+    </label>
+    <label class="field">
+      <p class="field-name">Описание</p>
+      <textarea [(ngModel)]="description"></textarea>
+    </label>
+  </div>
+
+  <div class="form-actions">
+    <button class="form-btn" [mat-dialog-close]="true">Закрыть</button>
+    <button (click)="send()" class="form-btn">Добавить</button>
+  </div>
+
+</div>

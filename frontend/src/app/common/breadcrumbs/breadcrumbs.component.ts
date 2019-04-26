@@ -1,17 +1,20 @@
-import { Component, OnInit, Input } from '@angular/core';
+import { Component, Input } from '@angular/core';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'vdi-breadcrumbs',
   templateUrl: './breadcrumbs.component.html',
   styleUrls: ['./breadcrumbs.component.scss']
 })
-export class BreadcrumbsComponent implements OnInit {
+export class BreadcrumbsComponent  {
 
   @Input() data: object[];
 
-  constructor() {}
+  constructor(private router: Router) {}
 
-  ngOnInit() {
+
+  public routeTo(crumb) {
+    this.router.navigate([crumb.route]);
   }
 
 }
