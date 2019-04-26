@@ -1,4 +1,4 @@
-import { ServersService } from './settings/servers/servers.service';
+
 import { ServersComponent } from './settings/servers/servers.component';
 
 import { ClustersService } from './resourses/clusters/clusters.service';
@@ -21,7 +21,7 @@ import { HttpClientModule } from '@angular/common/http';
 /*  -----------------------------------   icons   --------------------------------------*/
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { library } from '@fortawesome/fontawesome-svg-core'
-import { faDesktop,faDatabase, faLayerGroup,faPlusCircle,faSpinner,faServer,faCog,faBuilding } from '@fortawesome/free-solid-svg-icons';
+import { faDesktop,faDatabase, faLayerGroup,faPlusCircle,faSpinner,faServer,faCog,faBuilding,faChevronUp } from '@fortawesome/free-solid-svg-icons';
 /*  -----------------------------------   icons   --------------------------------------*/
 
 
@@ -45,6 +45,8 @@ import { NodesService } from './resourses/nodes/nodes.service';
 /*  -----------------------------------   material   --------------------------------------*/
 import { MAT_DIALOG_DEFAULT_OPTIONS } from '@angular/material';
 import { MatDialogModule } from '@angular/material/dialog';
+import { AddControllerComponent } from './settings/servers/add-controller/add-controller.component';
+import { ServersService } from './settings/servers/servers.service';
 /*  -----------------------------------   material   --------------------------------------*/
 
 
@@ -64,7 +66,8 @@ import { MatDialogModule } from '@angular/material/dialog';
     PoolComponent,
     NodesComponent,
     ClustersComponent,
-    ServersComponent
+    ServersComponent,
+    AddControllerComponent
   ],
   imports: [
     BrowserModule,
@@ -78,7 +81,8 @@ import { MatDialogModule } from '@angular/material/dialog';
     MatDialogModule
   ],
   entryComponents: [
-    PoolAddComponent
+    PoolAddComponent,
+    AddControllerComponent
   ],
   providers: 
             [
@@ -96,7 +100,7 @@ import { MatDialogModule } from '@angular/material/dialog';
 
 export class AppModule {
   constructor() { 
-    library.add(faDesktop,faDatabase,faLayerGroup,faPlusCircle,faSpinner,faServer,faCog,faBuilding); // Неиспользуемые иконки при финальной сборке удаляются
+    library.add(faDesktop,faDatabase,faLayerGroup,faPlusCircle,faSpinner,faServer,faCog,faBuilding,faChevronUp); // Неиспользуемые иконки при финальной сборке удаляются
   }
 
 

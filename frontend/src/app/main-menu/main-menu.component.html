@@ -1,21 +1,23 @@
 <nav>
   <ul>
-    <li *ngFor="let item of listMenu" class="menu-item" routerLinkActive="activeNav">
-      <div [routerLink]="[item.route]" class="menu-item-wrap">
+    <li *ngFor="let item of listMenu;let i = index" class="menu-item" routerLinkActive="activeNav">
+      <div [routerLink]="[item.route]" class="menu-item-wrap" (click)="clickItem(i,listMenu)">
         <fa-icon [icon]="['fas',item.icon]"></fa-icon>
-        <span>{{item.name}}</span>
+        <span class="menu-name">{{item.name}}</span>
+        <fa-icon [icon]="['fas','chevron-up']" rotate="180" size="xs" class="icon-arrow" *ngIf="item.nested && !item.open"></fa-icon>
+        <fa-icon [icon]="['fas','chevron-up']" rotate="360" size="xs" class="icon-arrow" *ngIf="item.nested && item.open"></fa-icon>
       </div>
-      <ul *ngIf="item.nested" class="menu-nested">
+      <ul *ngIf="item.nested && listMenu[i].open" class="menu-nested">
         <li *ngFor="let itemNested of item.nested">
             <div [routerLink]="[itemNested.route]" class="menu-item-wrap menu-item-wrap__nested" routerLinkActive="activeNavNested">
-              <fa-icon [icon]="['fas',itemNested.icon]"></fa-icon>
-              <span>{{itemNested.name}}</span>
+                <fa-icon [icon]="['fas',itemNested.icon]"></fa-icon>
+                <span class="menu-name">{{itemNested.name}}</span>
             </div>
           <ul *ngIf="itemNested.nested" class="menu-nested">
             <li *ngFor="let itemNestedNested of itemNested.nested">
                 <div [routerLink]="[itemNestedNested.route]" class="menu-item-wrap menu-item-wrap__nested" routerLinkActive="activeNavNested">
                   <fa-icon [icon]="['fas',itemNestedNested.icon]"></fa-icon>
-                  <span>{{itemNestedNested.name}}</span>
+                  <span class="menu-name">{{itemNestedNested.name}}</span>
                 </div>
             </li>
           </ul>

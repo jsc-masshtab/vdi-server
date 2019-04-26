@@ -1,4 +1,9 @@
 <div class="breadcrumbs-wrap">
     <vdi-breadcrumbs [data]="crumbs"></vdi-breadcrumbs>
 </div>
-<vdi-table-component [data]="infoTemplates" [collection]="collection" [spinner]="spinner" (clickRowData)="clickNode($event)"></vdi-table-component>
+
+<div class="btn">
+    <button (click)="addController()"><fa-icon [icon]="['fas','plus-circle']" size="xs"></fa-icon><span>Добавить сервер Veil</span></button>
+</div>
+
+<vdi-table-component [data]="controllers" [collection]="collection" [spinner]="spinner"></vdi-table-component>

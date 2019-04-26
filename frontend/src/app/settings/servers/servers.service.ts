@@ -1,4 +1,4 @@
-import {Injectable} from '@angular/core';
+import { Injectable } from '@angular/core';
 import { Apollo, QueryRef } from 'apollo-angular';
 import gql from 'graphql-tag';
 
@@ -9,12 +9,12 @@ export class ServersService  {
 
     constructor(private service: Apollo) {}
 
-    public getAllTeplates(): QueryRef<any,any> {
+    public getAllControllers(): QueryRef<any,any> {
        return  this.service.watchQuery({
-            query:  gql` query allTemplates {
-                            templates {
-                                id
-                                info
+            query:  gql` query allControllers {
+                            controllers {
+                                ip
+                                description
                             }
                         }
             
@@ -25,4 +25,20 @@ export class ServersService  {
         }) 
     }
 
+    public addController(ip:string, description:string) {
+        return this.service.mutate<any>({
+            mutation: gql`  
+                            mutation AddController($ip: String!,$description: String!) {
+                                addController(ip: $ip, description: $description) {
+                                    ok
+                                }
+                            }
+            `,
+            variables: {
+                method: 'POST',
+                ip: ip,
+                description: description
+            }
+        })
+    }
 }

@@ -5,16 +5,15 @@ nav {
     height: 100%;
     display: flex;
     flex-direction: column;
-    padding-top: 26px;
+    padding-top: 27px;
 }
 
 .menu-item {
     color: #FFF;
     font-size: 20px;
-    margin-bottom: 5px;
+    margin-bottom: 8px;
     cursor: default;
-    padding-left: 10px;
-    padding-top: 5px;
+    padding-left: 5px;
 
     &:last-child {
        margin-bottom: 0px;
@@ -24,7 +23,16 @@ nav {
         background: #323232;
         border-left: 5px solid #c9d1d8;
         transition: all .1s ease;
+        padding-left: 0px;
     }
+
+    &.activeNav {
+        padding-left: 0px;
+    }
+}
+
+.menu-name {
+    margin-right: 5px;
 }
 
 .menu-nested {
@@ -33,20 +41,37 @@ nav {
 }
 
 .menu-item-wrap {
-    padding: 5px;
     cursor: pointer;
+    display: flex;
+    align-items: center;
     border-bottom: 3px solid transparent;
+    padding: 5px;
+    padding-left: 10px;
+
+    &:hover {
+        & .icon-arrow {
+            display: block;
+        }
+    }
 }
 
 .menu-item-wrap__nested {
-    &:hover {
+    width: -webkit-fit-content;
+    width: fit-content;
+  &:not(.activeNavNested) {
+      &:hover {
         border-bottom: 3px solid #c9d1d8;
-        transition: all .1s ease;
-    }
+      }
+  }
 }
 
 fa-icon {
     margin-right: 5px;
+}
+
+.icon-arrow {
+    display: none;
+    margin-left: auto;
 }
 
 .activeNav {
@@ -56,5 +81,5 @@ fa-icon {
 
 .activeNavNested {
     border-bottom: 3px solid #c9d1d8;
-    padding-bottom: 5px;
+    width: fit-content;
 }

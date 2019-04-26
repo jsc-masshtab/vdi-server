@@ -41,21 +41,6 @@ export class PoolsService  {
         }) 
     }
 
-    public getAllPoolsCache() {
-        return  this.service.getClient().readQuery({
-            query:  gql` query allPools {
-                                pools {
-                                    id
-                                    template_id
-                                }  
-                            }
-                    `,
-            variables: {
-                method: 'GET'
-            }
-        })
-    }
-
     public getAllTemplates(): QueryRef<any,any> {
         return  this.service.watchQuery({
             query:  gql` query allTemplates {
