@@ -12,7 +12,7 @@ import { Router } from '@angular/router';
 
 export class ClustersComponent implements OnInit {
 
-  public infoTemplates: [];
+  public clusters: [];
   public collection: object[] = [];
   public crumbs: object[] = [
     {
@@ -32,13 +32,15 @@ export class ClustersComponent implements OnInit {
 
   ngOnInit() {
     this.collectionAction();
-    this.getAllTeplates();
+    this.getAllClusters();
   }
 
-  private getAllTeplates() {
-    this.service.getAllTeplates().valueChanges.pipe(map(data => data.data.templates))
+  private getAllClusters() {
+    
+    this.service.getAllClusters().valueChanges.pipe(map(data => data.data.clusters))
       .subscribe( (data) => {
-        this.infoTemplates = data.map((item) => JSON.parse(item.info));
+        this.clusters = data;
+        console.log(data);
         this.spinner = false;
       },
       (error)=> {
@@ -49,32 +51,25 @@ export class ClustersComponent implements OnInit {
   public collectionAction(): void {
     this.collection = [
       {
-        title: 'Название кластера',
+        title: 'Название',
         property: 'verbose_name'
       },
       {
-        title: 'IP-адрес',
-        property: "node",
-        property_lv2: 'verbose_name'
+        title: 'Серверы',
+        property: "nodes_count"
+       
       },
       {
         title: 'CPU',
-        property: 'os_type'
+        property: 'cpu_count'
       },
       {
         title: 'RAM',
         property: 'memory_count'
       },
       {
-        title: 'ВМ',
-        property: 'video',
-        property_lv2: 'type'
-      },
-      {
         title: 'Статус',
-        property: 'sound',
-        property_lv2: 'model',
-        property_lv2_prop2: 'codec'
+        property: 'status'
       }
     ];
   }

@@ -9,18 +9,26 @@ export class ClustersService  {
 
     constructor(private service: Apollo) {}
 
-    public getAllTeplates(): QueryRef<any,any> {
-       return  this.service.watchQuery({
-            query:  gql` query allTemplates {
-                            templates {
+    public getAllClusters(): QueryRef<any,any> {
+        let controller_ip = localStorage.getItem('controller');
+        console.log(controller_ip);
+        return  this.service.watchQuery({
+            query:  gql` query allClusters($controller_ip: String) {
+                            clusters(controller_ip: $controller_ip) {
                                 id
-                                info
+                                verbose_name
+                                nodes_count
+                                status
+                                cpu_count
+                                memory_count
+                                tags
                             }
                         }
             
                     `,
             variables: {
-                method: 'GET'
+                method: 'GET',
+                controller_ip: controller_ip
             }
         }) 
     }

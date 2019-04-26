@@ -41,6 +41,7 @@ export class ServersComponent implements OnInit {
     this.service.getAllControllers().valueChanges.pipe(map(data => data.data.controllers))
       .subscribe((data) => {
         this.controllers = data;
+        localStorage.setItem('controller',data[0].ip);
         this.spinner = false;
       },
       (error) => {
