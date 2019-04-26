@@ -7,7 +7,7 @@
         <fa-icon [icon]="['fas','chevron-up']" rotate="180" size="xs" class="icon-arrow" *ngIf="item.nested && !item.open"></fa-icon>
         <fa-icon [icon]="['fas','chevron-up']" rotate="360" size="xs" class="icon-arrow" *ngIf="item.nested && item.open"></fa-icon>
       </div>
-      <ul *ngIf="item.nested && listMenu[i].open" class="menu-nested">
+      <ul *ngIf="item.nested && listMenu[i].open" class="menu-nested" [@fadeInOut]>
         <li *ngFor="let itemNested of item.nested">
             <div [routerLink]="[itemNested.route]" class="menu-item-wrap menu-item-wrap__nested" routerLinkActive="activeNavNested">
                 <fa-icon [icon]="['fas',itemNested.icon]"></fa-icon>
