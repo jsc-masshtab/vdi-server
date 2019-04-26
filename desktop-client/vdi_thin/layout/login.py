@@ -3,6 +3,7 @@
 
 
 import json
+import re
 import gi
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk, Gdk
@@ -16,8 +17,37 @@ from vdi_thin.services.api_session import ApiSession
 
 
 def ip_entry_filter(entry, *args):
-    text = entry.get_text().strip()
-    entry.set_text(''.join([i for i in text if i in '0123456789.']))
+
+    def valid(letter):
+        login_window_entity = entry.get_parent().get_parent().get_parent()
+        if letter in '0123456789.':
+            login_window_entity.set_msg()
+            return True
+        else:
+            login_window_entity.set_msg('Only numbers and dots are allowed')
+            return False
+
+    ip = entry.get_text().strip()
+    entry.handler_block_by_func(ip_entry_filter)
+    entry.set_text(''.join([i for i in ip if valid(i)]))
+    entry.handler_unblock_by_func(ip_entry_filter)
+
+
+def username_entry_filter(entry, *args):
+
+    def valid(letter):
+        login_window_entity = entry.get_parent().get_parent()
+        if re.match("^[a-zA-Z0-9_.-]+$", letter):
+            login_window_entity.set_msg()
+            return True
+        else:
+            login_window_entity.set_msg('Only latin letters, numbers, "_", "." and "-" are allowed')
+            return False
+
+    username = entry.get_text().strip()
+    entry.handler_block_by_func(ip_entry_filter)
+    entry.set_text(''.join([i for i in username if valid(i)]))
+    entry.handler_unblock_by_func(ip_entry_filter)
 
 
 class Login(Gtk.ApplicationWindow):
@@ -33,12 +63,14 @@ class Login(Gtk.ApplicationWindow):
         self.set_destroy_with_parent(True)
         self.set_icon(app.LOGO)
         self.set_type_hint(Gdk.WindowTypeHint(1))
+        self.connect("key-press-event", self.on_key_press_event)
         self.connect("delete_event", self.on_login_dialog_destroy)
         self.connect("show", self.on_login_dialog_show)
 
         self.wait_spinner = Spinner()
         self.msg_buffer = Gtk.TextBuffer()
         self.msg_field = Msg(self.msg_buffer)
+        self.msg_field.set_wrap_mode(Gtk.WrapMode.WORD)
 
         form_data = self.load_form()
 
@@ -60,6 +92,7 @@ class Login(Gtk.ApplicationWindow):
                                     tooltip="User name",
                                     action=self.on_username_field_changed,
                                     text=form_data.get('username'))
+        self.username_field.connect('changed', username_entry_filter)
         self.password_field = Entry(placeholder="password",
                                     tooltip="Password",
                                     action=self.on_password_field_changed,
@@ -93,6 +126,11 @@ class Login(Gtk.ApplicationWindow):
         self.show_all()
         self.msg_field.set_visible(False)
 
+    def on_key_press_event(self, widget, event):
+        if event.keyval == Gdk.KEY_Return:
+            if self.check_all_fields_filled():
+                self.submit_data()
+
     def on_login_dialog_show(self, *args):
         LOG.debug("login show")
         self.normal_state()
@@ -100,8 +138,6 @@ class Login(Gtk.ApplicationWindow):
     def on_login_dialog_destroy(self, *args):
         LOG.debug("login destroy")
         self.app.do_quit()
-        # if not self.app.state.logged_in:
-        #     self.app.do_quit()
 
     def on_login_button_clicked(self, event):
         self.submit_data()
@@ -123,6 +159,8 @@ class Login(Gtk.ApplicationWindow):
         self.handle_login_button_state()
 
     def submit_data(self):
+        if not self.ip_validation():
+            return
         username = self.username_field.get_text()
         password = self.password_field.get_text()
         ip = self.ip_field.get_text()
@@ -206,6 +244,18 @@ class Login(Gtk.ApplicationWindow):
             return (self.password_field.get_text() and
                     self.ip_field.get_text() and
                     self.port_field.get_value)
+
+    def ip_validation(self):
+        ip = self.ip_field.get_text()
+        ipv4_with_netmask_regex = re.compile(r'^(25[0-5]|2[0-4]\d|[0-1]?\d?\d)'
+                                             r'(\.(25[0-5]|2[0-4]\d|[0-1]?\d?\d)){3}'
+                                             r'(?:/(0?[0-9]|[1-2]\d|3[0-2]))?$')
+        valid = bool(re.match(ipv4_with_netmask_regex, ip))
+        if valid:
+            return True
+        else:
+            self.set_msg('Invalid ip-address')
+            return False
 
 
 # class Button(Gtk.Button):

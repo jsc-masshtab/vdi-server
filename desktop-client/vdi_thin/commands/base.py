@@ -75,7 +75,7 @@ class AsyncCallCmd:
         raise NotImplementedError
 
     def on_exception(self, context, e):
-        raise NotImplementedError# from e
+        raise NotImplementedError
 
     def get_context_data(self):
         return self.kwargs

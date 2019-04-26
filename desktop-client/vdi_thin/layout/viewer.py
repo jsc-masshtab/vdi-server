@@ -46,6 +46,7 @@ def build_reset_menu(on_vm_manage_fn, default_mode=False):
         menu.add(item)
 
     make_item("Disconnect")
+    # make_item("+Monitor")
     if default_mode:
         menu.add(Gtk.SeparatorMenuItem())
         make_item("Run")
@@ -193,6 +194,26 @@ class Viewer(Gtk.ApplicationWindow):
     def _vm_control(self, *args):
         if args[0].item_name == 'Disconnect':
             self.disconnect()
+        # - Testing code -
+        # elif args[0].item_name == '+Monitor':
+        #
+        #     new_display = Gtk.ApplicationWindow()
+        #     new_display.set_application(self.app)
+        #     new_display.frame = Gtk.Frame()
+        #     box = Gtk.VBox(False, 2)
+        #     box.pack_end(new_display.frame, True, True, 0)
+        #     new_display.add(box)
+        #     new_display.display = SpiceClientGtk.Display.new_with_monitor(self.session,
+        #                                                                   self.display.get_property("channel_id"),
+        #                                                                   1)
+        #     new_display.frame.add(new_display.display)
+        #     new_display.display.realize()
+        #     new_display.display.show_all()
+        #
+        #     new_display.show_all()
+        #
+        #     self.app.window = new_display
+        #     self.app.window.present()
         else:
             print('Not implemented on server side yet')
 
@@ -227,11 +248,7 @@ class Viewer(Gtk.ApplicationWindow):
 
     def resize_to_vm(self, *args):
         width, height = self.display_channel.get_properties("width", "height")
-        if self.mb.is_visible():
-            menubar_height = 26
-        else:
-            menubar_height = 0
-        self.resize(width, height+menubar_height)
+        self.resize(width, height)
 
     def toggle_fullscreen(self, *args):
         if self.fs:
@@ -293,10 +310,15 @@ class Viewer(Gtk.ApplicationWindow):
             channel_id = channel.get_property("channel-id")
             self.display_channel = channel
             self.display = SpiceClientGtk.Display.new(self.session, channel_id)
+            # self.display = SpiceClientGtk.Display.new_with_monitor(self.session, channel_id, self.monitor_id)
             self.frame.add(self.display)
             self.display.realize()
             self.display.set_property("resize-guest", True)
             self.display.set_property("scaling", False)
+            # cant read monitor cfg
+            # print SpiceClientGLib.DisplayMonitorConfig().id
+            # print SpiceClientGLib.DisplayChannel.props.monitors
+            # arr = channel.get_property('monitors')
             self.display.show_all()
             return
 
