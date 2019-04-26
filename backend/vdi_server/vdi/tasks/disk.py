@@ -13,6 +13,7 @@ from dataclasses import dataclass
 
 
 class DefaultDatapool(Task):
+    "Only for debug"
 
     url = '/api/data-pools/'
 
@@ -38,12 +39,13 @@ class ImageNotFound(Exception):
 @dataclass()
 class Image(Task):
 
+    controller_ip: str
     image_name: str
+    datapool_id: str
 
     async def run(self):
         token = await Token()
-        datapool = await DefaultDatapool()
-        url = f"http://{CONTROLLER_IP}/api/library/?datapool_id={datapool['id']}"
+        url = f"http://{self.controller_ip}/api/library/?datapool_id={self.datapool_id}"
         http_client = HttpClient()
         headers = {
             'Authorization': f'jwt {token}'
@@ -64,18 +66,20 @@ class ImportDisk(Task):
 
     image_name: str
     vm_name: str
+    controller_ip: str #FIXME global
+    datapool_id: str
 
     def is_done(self, msg):
         return msg['object']['status'] == 'SUCCESS' and msg['id'] == self.task_obj['id']
 
     async def run(self):
-        image_id = await Image(image_name=self.image_name)
+        image_id = await Image(image_name=self.image_name, datapool_id=self.datapool_id, controller_ip=self.controller_ip)
         token = await Token()
         ws = await WsConnection()
         await ws.send('add /tasks/')
 
         http_client = HttpClient()
-        url = f'http://{CONTROLLER_IP}/api/library/{image_id}/import/?async=1'
+        url = f'http://{self.controller_ip}/api/library/{image_id}/import/?async=1'
         headers = {
             'Authorization': f'jwt {token}',
             'Content-Type': 'application/json',
@@ -96,13 +100,15 @@ class ImportDisk(Task):
 @dataclass()
 class CopyDisk(Task):
 
+    controller_ip: str
+    datapool_id: str
     vdisk: object
     verbose_name: str
 
     method = 'POST'
 
     def url(self):
-        return f'http://{CONTROLLER_IP}/api/vdisks/{self.vdisk}/copy/?async=1'
+        return f'http://{self.controller_ip}/api/vdisks/{self.vdisk}/copy/?async=1'
 
     async def headers(self):
         token = await Token()
@@ -111,11 +117,10 @@ class CopyDisk(Task):
             'Content-Type': 'application/json',
         }
 
-    async def body(self):
-        datapool = await DefaultDatapool()
+    def body(self):
         dic = {
             'verbose_name': self.verbose_name,
-            'datapool': datapool['id'],
+            'datapool': self.datapool_id,
         }
         return json.dumps(dic)
 

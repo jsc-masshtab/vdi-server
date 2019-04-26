@@ -34,3 +34,4 @@ class UrlFetcher(Task):
     async def run(self):
         client = HttpClient()
         return await client.fetch_using(self)
+

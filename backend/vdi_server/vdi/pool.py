@@ -52,16 +52,17 @@ class Pool:
         if initial_size > len(self.queue._queue):
             self.add_domain()
 
-    def generate_name(self):
-        uid = uuid.uuid4()
-        return f"{self.params['name']}-{uid}"
-
     def add_domain(self):
         from vdi.tasks import vm
         g.init()
-        template_id = self.params['template_id']
-        vm_name = self.generate_name()
-        task = vm.CopyDomain(domain_id=template_id, vm_name=vm_name).task
+        params = {
+            'pool_name': self.params['name'],
+            'domain_id': self.params['template_id'],
+            'datapool_id': self.params['datapool_id'],
+            'controller_ip': self.params['controller_ip'],
+            'node_id': self.params['node_id'],
+        }
+        task = vm.CopyDomain(**params).task
         task.add_done_callback(self.on_vm_created)
         self.pending += 1
         return task

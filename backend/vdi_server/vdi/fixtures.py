@@ -18,6 +18,7 @@ async def image_name():
     print('image destroy')
 
 
+
 @pytest.fixture
 async def template_vm(db, image_name):
     qu = '''
@@ -26,6 +27,7 @@ async def template_vm(db, image_name):
         template {
             id
         }
+        
       }
     }
     ''' % locals()
