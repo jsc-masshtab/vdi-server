@@ -9,7 +9,7 @@
     </header>
 
     <div class="table-area" *ngIf="data && data.length">
-      <div *ngFor="let item of data;let i = index" class="table-area-object" (click)="clickRow(item)" tabindex="-1">   <!--строка-->
+      <div *ngFor="let item of data;let i = index" class="table-area-object" [class.cursorTrue]="cursor" (click)="clickRow(item)" tabindex="-1">   <!--строка-->
         <div class="table-area-property" *ngFor="let obj of collection" [class.index-column]="obj.property == 'index'"> <!--столбец-->
           <span *ngIf="obj.property == 'index'">{{ i+1 }}</span>
           <span *ngIf="obj.property_boolean_true">
@@ -27,7 +27,7 @@
 
 
 <div *ngIf="spinner" class="cdk-overlay-container">
-  <div class="cdk-overlay-backdrop cdk-overlay-dark-backdrop cdk-overlay-backdrop-showing"></div>
+  <div class="cdk-overlay-backdrop cdk-overlay-backdrop-showing"></div>
   <fa-icon [icon]="['fas', 'spinner']" [spin]="true" size="2x"></fa-icon>
 </div>
 

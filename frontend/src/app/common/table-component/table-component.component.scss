@@ -23,10 +23,6 @@
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
-
-        &:last-child {
-            padding-right: 15px;
-        }
     }
 
     .table-area {
@@ -40,15 +36,14 @@
         display: flex;
         border-bottom: 1px solid #DCDCDC;
         color: #44505a;
+        cursor: default;
 
         &:hover {
             background: rgba(220, 220, 220, 0.3);
-            cursor: pointer;
         }
 
         &:focus {
             background: rgba(220, 220, 220, 0.3);
-            cursor: pointer;
         }
     }
 

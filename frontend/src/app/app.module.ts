@@ -1,3 +1,8 @@
+
+import { ServersComponent } from './settings/servers/servers.component';
+
+import { ClustersService } from './resourses/clusters/clusters.service';
+import { ClustersComponent } from './resourses/clusters/clusters.component';
 import { PoolService } from './pool/pool.service';
 import { PoolComponent } from './pool/pool.component';
 
@@ -16,7 +21,7 @@ import { HttpClientModule } from '@angular/common/http';
 /*  -----------------------------------   icons   --------------------------------------*/
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { library } from '@fortawesome/fontawesome-svg-core'
-import { faDesktop,faDatabase, faLayerGroup,faPlusCircle,faSpinner } from '@fortawesome/free-solid-svg-icons';
+import { faDesktop,faDatabase, faLayerGroup,faPlusCircle,faSpinner,faServer,faCog,faBuilding,faChevronUp } from '@fortawesome/free-solid-svg-icons';
 /*  -----------------------------------   icons   --------------------------------------*/
 
 
@@ -30,15 +35,18 @@ import { TableComponentComponent } from './common/table-component/table-componen
 import { BreadcrumbsComponent } from './common/breadcrumbs/breadcrumbs.component';
 import { PoolAddComponent } from './polls/pool-add/pool-add.component';
 import { PoolsService } from './polls/polls.service';
+import { FocusMeDirective } from './common/directives/focusMe.directive';
+import { TableIntoComponent } from './common/table-into-component/table-into';
+import { NodesComponent } from './resourses/nodes/nodes.component';
+import { NodesService } from './resourses/nodes/nodes.service';
+
 
 
 /*  -----------------------------------   material   --------------------------------------*/
 import { MAT_DIALOG_DEFAULT_OPTIONS } from '@angular/material';
 import { MatDialogModule } from '@angular/material/dialog';
-import { FocusMeDirective } from './common/directives/focusMe.directive';
-import { TableIntoComponent } from './common/table-into-component/table-into';
-
-
+import { AddControllerComponent } from './settings/servers/add-controller/add-controller.component';
+import { ServersService } from './settings/servers/servers.service';
 /*  -----------------------------------   material   --------------------------------------*/
 
 
@@ -55,7 +63,11 @@ import { TableIntoComponent } from './common/table-into-component/table-into';
     BaSelect,
     FocusMeDirective,
     TableIntoComponent,
-    PoolComponent
+    PoolComponent,
+    NodesComponent,
+    ClustersComponent,
+    ServersComponent,
+    AddControllerComponent
   ],
   imports: [
     BrowserModule,
@@ -69,14 +81,18 @@ import { TableIntoComponent } from './common/table-into-component/table-into';
     MatDialogModule
   ],
   entryComponents: [
-    PoolAddComponent
+    PoolAddComponent,
+    AddControllerComponent
   ],
   providers: 
             [
               TeplatesService,
               PoolsService,
               { provide: MAT_DIALOG_DEFAULT_OPTIONS, useValue: { hasBackdrop: true, restoreFocus: true } },
-              PoolService
+              PoolService,
+              NodesService,
+              ClustersService,
+              ServersService
             ],
   bootstrap: [AppComponent]
 })
@@ -84,7 +100,7 @@ import { TableIntoComponent } from './common/table-into-component/table-into';
 
 export class AppModule {
   constructor() { 
-    library.add(faDesktop,faDatabase,faLayerGroup,faPlusCircle,faSpinner); // Неиспользуемые иконки при финальной сборке удаляются
+    library.add(faDesktop,faDatabase,faLayerGroup,faPlusCircle,faSpinner,faServer,faCog,faBuilding,faChevronUp); // Неиспользуемые иконки при финальной сборке удаляются
   }
 
 

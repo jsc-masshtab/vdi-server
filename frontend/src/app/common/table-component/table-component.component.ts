@@ -12,13 +12,11 @@ export class TableComponentComponent  {
   @Input() data: object[] = [];
   @Input() spinner:boolean = false;
   @Input() collection: object[] = [];
+  @Input() cursor: boolean = false;
   @Output() clickRowData:EventEmitter<any> = new EventEmitter();
 
   constructor() {}
 
-  ngOnChanges() {
-    console.log(this.data);
-  }
 
 
   public clickRow(item) {
