@@ -134,7 +134,7 @@ class AddPool(graphene.Mutation):
             'reserve_size': reserve_size or get_setting('reserve_size'),
             'controller_ip': controller_ip or settings['controller_ip'],
             'cluster_id': cluster_id or settings['cluster_id'],
-            'node_id': cluster_id or settings['node_id'],
+            'node_id': node_id or settings['node_id'],
             'datapool_id': datapool_id or settings['datapool_id'],
             'template_id': template_id or settings['template_id'],
             'name': name,
