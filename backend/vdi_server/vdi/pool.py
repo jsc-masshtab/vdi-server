@@ -12,6 +12,7 @@ from dataclasses import dataclass
 from cached_property import cached_property as cached
 
 from vdi.db import db
+from vdi.tasks import vm
 from asyncpg.connection import Connection
 
 @dataclass()
@@ -80,6 +81,48 @@ class Pool:
             domains.append(d)
 
         return domains
+
+    @classmethod
+    @enter_context(lambda: db.connect())
+    async def load_vms(conn, cls, pool):
+        vms = await vm.ListVms(controller_ip=pool['controller_ip'])
+        valid_ids = {v['id'] for v in vms}
+        qu = f"SELECT * FROM vm WHERE pool_id = $1", pool['id']
+        vms = await conn.fetch(*qu)
+        return [
+            dict(v.items()) for v in vms if v['id'] in valid_ids
+        ]
+
+    @classmethod
+    def get_pool(cls, pool_id):
+        if pool_id in cls.instances:
+            return cls.instances[pool_id]
+        with db.connect() as conn:
+            qu = f"SELECT * from pool where id = $1", id
+            [params] = await conn.fetch(*qu)
+            return cls(params=params)
+
+
+    @classmethod
+    @enter_context(lambda: db.connect())
+    async def init(conn, cls, id, block=False):
+        """
+        Init the pool (possibly, after service restart)
+        """
+        qu = f"SELECT * from pool where id = $1", id
+        [params] = await conn.fetch(*qu)
+        ins = cls(params=params)
+        Pool.instances[params['id']] = ins
+        # locate vms
+        qu = f"SELECT * from vm where vm.pool_id = $1", id
+        vms = await conn.fetch(*qu)
+
+
+        add_domains = ins.add_domains()
+        if block:
+            await add_domains
+
+        return ins
 
 
     instances = {}

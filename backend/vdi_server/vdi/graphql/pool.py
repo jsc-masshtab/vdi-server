@@ -180,18 +180,7 @@ class RemovePool(graphene.Mutation):
 
     @enter_context(lambda: db.connect())
     async def mutate(conn: Connection, self, info, id):
-        qu = f"SELECT controller_ip FROM pool WHERE pool.id = $1", id
-        [(controller_ip,)] = await conn.fetch(*qu)
-        vms = await vm.ListVms(controller_ip=controller_ip)
-        vms = {v['id'] for v in vms}
 
-        qu = f'''
-        SELECT vm.id FROM vm JOIN pool ON vm.pool_id = pool.id WHERE pool.id = $1
-        ''', id
-        ids = await conn.fetch(*qu)
-        ids = [
-            id for (id,) in ids
-        ]
 
         async def drop_vm(id):
             if id in vms:
