@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 from os import path
 import gi
 gi.require_version('Gtk', '3.0')
@@ -9,8 +11,8 @@ import logging
 LOG = logging.getLogger()
 
 VERSION = "1.0"
-AUTHORS = ['"SRI "MASSHTAB"']
-COMMENTS = "no comments"
+AUTHORS = [u'АО "НИИ "МАСШТАБ"']
+COMMENTS = ""
 WEBSITE = "http://mashtab.org/"
 
 

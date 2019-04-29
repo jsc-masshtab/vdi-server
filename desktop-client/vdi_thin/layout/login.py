@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 
 
-import json
 import re
 import gi
 gi.require_version('Gtk', '3.0')
@@ -37,17 +36,17 @@ def username_entry_filter(entry, *args):
 
     def valid(letter):
         login_window_entity = entry.get_parent().get_parent()
-        if re.match("^[a-zA-Z0-9_.-]+$", letter):
+        if re.match("^[a-zA-Z0-9_.@-]+$", letter):
             login_window_entity.set_msg()
             return True
         else:
-            login_window_entity.set_msg('Only latin letters, numbers, "_", "." and "-" are allowed')
+            login_window_entity.set_msg('Only latin letters, numbers, "_", ".", "@", and "-" are allowed')
             return False
 
     username = entry.get_text().strip()
-    entry.handler_block_by_func(ip_entry_filter)
+    entry.handler_block_by_func(username_entry_filter)
     entry.set_text(''.join([i for i in username if valid(i)]))
-    entry.handler_unblock_by_func(ip_entry_filter)
+    entry.handler_unblock_by_func(username_entry_filter)
 
 
 class Login(Gtk.ApplicationWindow):
@@ -72,7 +71,7 @@ class Login(Gtk.ApplicationWindow):
         self.msg_field = Msg(self.msg_buffer)
         self.msg_field.set_wrap_mode(Gtk.WrapMode.WORD)
 
-        form_data = self.load_form()
+        form_data = self.app.load_form().get(self.app.mode, {})
 
         self.vbox = Gtk.VBox()
 
@@ -166,9 +165,9 @@ class Login(Gtk.ApplicationWindow):
         ip = self.ip_field.get_text()
         port = self.port_field.get_value_as_int()
         if self.remember_user.get_active():
-            self.save_form(ip, port, username, password)
+            self.app.save_form(ip, port, username, password)
         else:
-            self.save_form(ip, port, username)
+            self.app.save_form(ip, port, username)
         if self.app.mode == 'default_mode':
             server = "http://{ip}:{port}".format(ip=ip, port=port)
             cmd = LoginCommand(self.app, api_session=ApiSession(username, password, server),
@@ -178,28 +177,6 @@ class Login(Gtk.ApplicationWindow):
             self.app.do_viewer(host=ip, port=str(port), password=password)
         else:
             print 'wat!? ^_^'
-
-    def save_form(self, ip, port, username, password=''):
-        f = open('user_input.json', 'r')
-        f_data = json.load(f)
-        f_data[self.app.mode] = dict(ip=ip, port=port, username=username, password=password)
-        f.close()
-        f = open('user_input.json', 'w')
-        json.dump(f_data, f)
-        f.close()
-
-    def load_form(self):
-        try:
-            with open('user_input.json', 'r') as f:
-                return json.load(f).get(self.app.mode, {})
-        except IOError, ioe:
-            print str(ioe)
-            logging.debug(str(ioe))
-            return {}
-        except Exception, e:
-            with open('user_input.json', 'w') as f:
-                f.write(json.dumps({self.app.mode: {}}))
-            return {}
 
     def set_msg(self, msg=None):
         if msg:
