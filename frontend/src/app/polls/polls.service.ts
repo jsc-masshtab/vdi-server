@@ -17,8 +17,10 @@ export class PoolsService  {
                                     id
                                     template_id
                                     name
-                                    initial_size
-                                    reserve_size
+                                    settings {
+                                        initial_size
+                                        reserve_size
+                                    }
                                     state {
                                         running
                                         pending
@@ -37,21 +39,6 @@ export class PoolsService  {
                 method: 'GET'
             }
         }) 
-    }
-
-    public getAllPoolsCache() {
-        return  this.service.getClient().readQuery({
-            query:  gql` query allPools {
-                                pools {
-                                    id
-                                    template_id
-                                }  
-                            }
-                    `,
-            variables: {
-                method: 'GET'
-            }
-        })
     }
 
     public getAllTemplates(): QueryRef<any,any> {

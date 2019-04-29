@@ -130,7 +130,7 @@ class ApiSession:
 
         except requests.exceptions.RequestException as e:
             raise ApiConnectionError
-        except (json.JSONDecodeError, KeyError, TypeError, ValueError) as e:
+        except (KeyError, TypeError, ValueError) as e:
             LOG.exception("unknown error")
             raise ApiUnknownError
 

@@ -5,8 +5,7 @@ import { map } from 'rxjs/operators';
 
 @Component({
   selector: 'vdi-pool-add',
-  templateUrl: './pool-add.component.html',
-  styleUrls: ['./pool-add.component.scss']
+  templateUrl: './pool-add.component.html'
 })
 
 export class PoolAddComponent implements OnInit {

@@ -1,47 +1,16 @@
 
-import { Component } from '@angular/core';
+import { Component, ViewEncapsulation } from '@angular/core';
 
 
 @Component({
   selector: 'app-root',
   templateUrl: './app.component.html',
-  styleUrls: ['./app.component.scss']
+  styleUrls: ['./app.component.scss'],
+  encapsulation: ViewEncapsulation.None
 })
 
 export class AppComponent  {
 
-
-  constructor(){
-
-  }
-
-  ngOnInit() {
-
-    
-  }
-
-
-
-  // private createTeplate() {
-  //   this.service.mutate<any>({
-  //     mutation: gql`  
-  //                   mutation {
-  //                     createTemplate(image_name: "image") {
-  //                       template {
-  //                         id
-  //                       }
-  //                     }
-  //                   }
-                  
-      
-  //   `,
-  //   variables: {
-  //     method: 'POST'
-  //   }
-  // }).subscribe(({ data, loading }) => {
-  //     console.log(data,loading);
-      
-  //   });
-  // }
+  constructor(){}
 
 }

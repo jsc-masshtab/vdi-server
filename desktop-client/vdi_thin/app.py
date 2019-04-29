@@ -1,9 +1,9 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 
 import os
 import logging
+import json
 
 
 import gi
@@ -173,6 +173,26 @@ class Application(Gtk.Application):
         else:
             self._login()
 
+    def save_form(self, ip, port, username, password=''):
+        f_data = self.load_form()
+        f_data[self.mode] = dict(ip=ip, port=port, username=username, password=password)
+        with open('user_input.json', 'w') as f:
+            json.dump(f_data, f)
+
+    def load_form(self):
+        try:
+            with open('user_input.json', 'r') as f:
+                return json.load(f)
+        except IOError, ioe:
+            print str(ioe)
+            logging.debug(str(ioe))
+            return {}
+        except Exception, e:
+            with open('user_input.json', 'w') as f:
+                json.dump({self.mode: {}}, f)
+            logging.debug("user_input file created")
+            return {}
+
     def do_command_line(self, command_line):
         LOG.debug('command_line')
         options = command_line.get_options_dict()
@@ -199,6 +219,9 @@ class Application(Gtk.Application):
     def do_logout(self):
         LOG.debug("logout")
         self.api_session = None
+        form_data = self.load_form()
+        if form_data:
+            self.save_form(form_data[self.mode]['ip'], form_data[self.mode]['port'], form_data[self.mode]['username'])
         self.do_login()
 
     def register_worker_promise(self, promise):

@@ -18,3 +18,124 @@ html,body {
 .breadcrumbs-wrap {
     margin-bottom: 28px;
 }
+
+.form {
+    display: flex;
+    flex-direction: column;
+    background: #ebebeb;
+    padding-bottom: 20px;
+    border-radius: 10px;
+
+    .form-header {
+        padding: 8px;
+        padding-left: 20px;
+        background: #44505a;
+        color: #FFF;
+        border-top-left-radius: 10px;
+        border-top-right-radius: 10px;
+
+        + h1 {
+            font-size: 18px;
+            margin-bottom: 20px;
+            font-size: 16px;
+        }
+    }
+
+    .form-fields {
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .field {
+        margin-bottom: 15px;
+
+        &:last-child {
+            margin-bottom: 0px;
+        }
+
+        input,ba-select,textarea {
+            width: 100%;
+            border: none;
+
+            &:focus {
+                border: 1px solid rgba(17, 17, 17, 0.3);
+            }
+        }
+
+        textarea {
+            height: 80px;
+        }
+
+        input {
+            padding: 5px;
+            font-size: 14px;
+            color: #111;
+            height: 30px;
+        }
+    }
+
+    .field-name {
+        font-size: 15px;
+        margin-bottom: 5px;
+    }
+
+    .form-actions {
+        display: flex;
+        justify-content: flex-end;
+        padding-left: 20px;
+        padding-right: 20px;
+    }
+
+    .form-btn {
+        padding: 5px;
+        padding-left: 10px;
+        padding-right: 10px;
+        background: #FFF;
+        transition: background 0.2s ease;
+        border-radius: 5px;
+        color: #111;
+        border: none;
+        margin-top: auto;
+        width: max-content;
+        margin-right: 10px;
+        font-size: 15px;
+
+        &:hover {
+            background: #44505a;
+            color: #FFF;
+        }
+
+        &:last-child {
+            margin-right: 0px;
+        }
+    }
+}
+
+.btn {
+    padding: 6px;
+    padding-left: 7px;
+    padding-right: 15px;
+    background:#c9d1d8;
+
+    > button {
+        background: #FFF;
+        border: none;
+        padding: 6px 12px 7px;
+        font-size: 14px;
+        color: #000;
+        border-radius: 100px;
+        -webkit-box-shadow: 0 0 0 1px rgba(0,0,0,.12);
+        box-shadow: 0 0 0 1px rgba(0,0,0,.12);
+        transition: .2s box-shadow ease-in-out;
+
+        > span {
+            font-size: 14px;
+            margin-left: 5px;
+        }
+
+        &:hover {
+            box-shadow: 0 2px 8px 0 rgba(0,0,0,.12), 0 0 0 1px rgba(0,0,0,.16);
+        }
+    }
+}
