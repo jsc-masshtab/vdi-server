@@ -14,35 +14,47 @@ async def db():
 async def image_name():
     from vdi import prepare
     await prepare.main()
-    yield 'image.qcow2'
+    yield 'image'
     print('image destroy')
 
 
-
 @pytest.fixture
-async def template_vm(db, image_name):
+async def create_template(db, image_name):
     qu = '''
     mutation {
       createTemplate(image_name: "%(image_name)s") {
-        template {
-            id
+        poolwizard {
+          reserve_size
+          initial_size
+          datapool_id
+          node_id
+          cluster_id
+          controller_ip
+          template_id
         }
-        
       }
     }
     ''' % locals()
     r = await schema.exec(qu)
-    id = r['createTemplate']['template']['id']
-    yield id
+    poolwizard = r['createTemplate']['poolwizard']
+    yield poolwizard
     print('destroy vm')
     qu = '''
     mutation {
-      dropTemplate(id: "%(id)s") {
+      dropTemplate(id: "%(template_id)s") {
         ok
       }
     }
-    ''' % locals()
+    ''' % poolwizard
     await schema.exec(qu)
+
+
+@pytest.fixture
+async def pool_settings(create_template):
+    return {
+        'settings': create_template,
+    }
+
 
 
 @pytest.fixture
@@ -53,20 +65,17 @@ def pool_name():
     )
     return f"pool-{uid}"
 
-@pytest.fixture
-def query_addPool(pool_name):
-    return '''
-    mutation {
-      addPool(name: "%(pool_name)s", template_id: %(template_vm)s, block: true) {
-        id
-      }
-    }
-    '''
 
 
 @pytest.fixture
-async def pool(template_vm, query_addPool):
-    r = await schema.exec(query_addPool)
+async def create_pool(create_template, pool_name, pool_settings):
+    r = await schema.exec('''
+        mutation($settings: PoolSettingsInput) {
+          addPool(name: "%(pool_name)s", settings: $settings, block: true) {
+            id
+          }
+        }
+        ''' % locals(), pool_settings)
     id = r['addPool']['id']
     yield {
         'id': id,

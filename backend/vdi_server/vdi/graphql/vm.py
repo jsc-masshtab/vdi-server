@@ -31,6 +31,7 @@ class CreateTemplate(graphene.Mutation):
     async def mutate(conn: Connection, self, info, image_name):
         from vdi.tasks import admin
         res = await admin.discover_resources()
+        #FIXME image_name
         domain = await vm.SetupDomain(image_name=image_name, controller_ip=res['controller_ip'],
                                       node_id=res['node']['id'], datapool_id=res['datapool']['id'])
         veil_info = json.dumps(domain)

@@ -6,7 +6,6 @@ from classy_async import Wait
 
 import asyncio
 
-from vdi.context_utils import enter_context
 from vdi.db import db
 
 
@@ -30,13 +29,13 @@ async def main():
     ]
     node_id = None
     async for cls, result in Wait(*tasks).items():
-        print(cls.__name__)
+        print(f"{cls.__name__} done")
         if cls is admin.AddNode:
             node_id = result
     [datapool] = await resources.ListDatapools(controller_ip=settings['controller_ip'], node_id=node_id)
     await admin.UploadImage(filename='image.qcow2', controller_ip=settings['controller_ip'],
                             datapool_id=datapool['id'])
-    print('UploadImage')
+    print('UploadImage done')
 
 
 
