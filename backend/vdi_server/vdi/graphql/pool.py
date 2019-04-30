@@ -180,22 +180,22 @@ class RemovePool(graphene.Mutation):
 
     @enter_context(lambda: db.connect())
     async def mutate(conn: Connection, self, info, id):
+        pool = await Pool.get_pool(id)
+        vms = await pool.load_vms(conn)
+        vm_ids = [v['id'] for v in vms]
 
+        #FIXME rename: vm -> domain
 
-        async def drop_vm(id):
-            if id in vms:
-                await vm.DropDomain(id=id)
-            await conn.fetch("DELETE FROM vm WHERE id = $1", id)
+        async def drop_vm(vm_id):
+            await vm.DropDomain(id=vm_id)
+            await conn.fetch("DELETE FROM vm WHERE id = $1", vm_id)
 
-        tasks = [
-            drop_vm(id) for id in ids
-        ]
+        tasks = [drop_vm(vm_id) for vm_id in vm_ids]
         async for _ in wait(*tasks):
             pass
 
         await conn.fetch("DELETE FROM pool WHERE id = $1", id)
-
-        return RemovePool(ok=True, ids=ids)
+        return RemovePool(ok=True, ids=vm_ids)
 
 
 

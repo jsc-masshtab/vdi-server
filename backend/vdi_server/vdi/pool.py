@@ -82,48 +82,47 @@ class Pool:
 
         return domains
 
-    @classmethod
-    @enter_context(lambda: db.connect())
-    async def load_vms(conn, cls, pool):
-        vms = await vm.ListVms(controller_ip=pool['controller_ip'])
+    async def load_vms(self, conn):
+        vms = await vm.ListVms(controller_ip=self.params['controller_ip'])
         valid_ids = {v['id'] for v in vms}
-        qu = f"SELECT * FROM vm WHERE pool_id = $1", pool['id']
+        qu = f"SELECT * FROM vm WHERE pool_id = $1", self.params['id']
         vms = await conn.fetch(*qu)
         return [
             dict(v.items()) for v in vms if v['id'] in valid_ids
         ]
 
     @classmethod
-    def get_pool(cls, pool_id):
+    async def get_pool(cls, pool_id):
         if pool_id in cls.instances:
             return cls.instances[pool_id]
-        with db.connect() as conn:
-            qu = f"SELECT * from pool where id = $1", id
+        async with db.connect() as conn:
+            qu = f"SELECT * from pool where id = $1", pool_id
             [params] = await conn.fetch(*qu)
             return cls(params=params)
 
 
-    @classmethod
     @enter_context(lambda: db.connect())
-    async def init(conn, cls, id, block=False):
+    async def init(conn, self, id, block=False):
         """
         Init the pool (possibly, after service restart)
         """
-        qu = f"SELECT * from pool where id = $1", id
-        [params] = await conn.fetch(*qu)
-        ins = cls(params=params)
-        Pool.instances[params['id']] = ins
-        # locate vms
-        qu = f"SELECT * from vm where vm.pool_id = $1", id
-        vms = await conn.fetch(*qu)
+        assert not len(self.queue._queue)
+        vms = await self.load_vms(conn)
 
+        for vm in vms:
+            await self.queue.put(vm)
 
-        add_domains = ins.add_domains()
+        self.queue.task_done()
+
+        add_domains = self.add_domains()
         if block:
             await add_domains
 
+    @classmethod
+    async def wake_pool(cls, pool_id, block=False):
+        ins = await cls.get_pool(pool_id)
+        await ins.init(pool_id, block)
         return ins
-
 
     instances = {}
 

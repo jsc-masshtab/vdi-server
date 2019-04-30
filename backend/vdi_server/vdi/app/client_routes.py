@@ -40,6 +40,4 @@ async def get_vm(request):
 @requires(['authenticated'])
 def check(request):
     username = request.user.username
-    return JSONResponse({
-        'user': username
-    })
+    return JSONResponse({'user': username})

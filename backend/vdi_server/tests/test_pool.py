@@ -1,6 +1,11 @@
 
-from vdi.fixtures import db, image_name, create_template, create_pool, pool_name, pool_settings as fixture_pool_settings
+from vdi.fixtures import (
+    db, image_name, create_template, create_pool, pool_name, pool_settings as fixture_pool_settings,
+    conn,
+)
 from vdi.graphql import schema
+from vdi.pool import Pool
+
 import pytest
 
 import asyncio
@@ -14,7 +19,7 @@ def pool_settings(fixture_pool_settings):
 
 
 @pytest.mark.asyncio
-async def test_create_pool(create_pool, pool_settings):
+async def test_create_pool(create_pool, pool_settings):```
     id = create_pool['id']
 
     qu = """{
@@ -56,3 +61,14 @@ async def test_pools_list(create_pool, pool_settings):
     for p in r['pools']:
         assert p['settings']['initial_size']
         assert p['settings']['reserve_size']
+
+
+@pytest.mark.asyncio
+async def test_wake_pool(create_pool, pool_settings, conn):
+    pool_id = create_pool['id']
+    ins = await Pool.get_pool(pool_id)
+    vms = await ins.load_vms(conn)
+    Pool.instances.pop(pool_id)
+    ins = await Pool.wake_pool(pool_id)
+    new_vms = await ins.load_vms(conn)
+    assert new_vms == vms

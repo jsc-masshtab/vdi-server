@@ -90,3 +90,8 @@ async def create_pool(create_template, pool_name, pool_settings):
     ''' % locals()
     await schema.exec(qu)
 
+@pytest.fixture
+async def conn():
+    from vdi.db import db
+    async with db.connect() as c:
+        yield c
