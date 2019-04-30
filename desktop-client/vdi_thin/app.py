@@ -244,8 +244,9 @@ class Application(Gtk.Application):
                              ))
 
         dialog.set_default_size(150, 100)
+        dialog.set_resizable(False)
         label = Gtk.Label.new(question)
-        label.set_margin_top(15)
+        label.set_margin_top(20)
         box = dialog.get_content_area()
         box.add(label)
         dialog.show_all()
@@ -257,7 +258,7 @@ class Application(Gtk.Application):
             return False
 
     def confirm_quit(self):
-        return self.simple_confirm("quit confirm", "Quit?")
+        return self.simple_confirm("Confirm action", "Quit?")
 
     def confirm_logout(self):
-        return self.simple_confirm("logout confirm", "Logout?")
+        return self.simple_confirm("Confirm action", "Logout?")

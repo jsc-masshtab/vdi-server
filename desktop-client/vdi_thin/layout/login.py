@@ -3,6 +3,7 @@
 
 
 import re
+import ipaddress
 import gi
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk, Gdk
@@ -30,6 +31,23 @@ def ip_entry_filter(entry, *args):
     entry.handler_block_by_func(ip_entry_filter)
     entry.set_text(''.join([i for i in ip if valid(i)]))
     entry.handler_unblock_by_func(ip_entry_filter)
+
+
+def port_entry_filter(entry, *args):
+
+    def valid(letter):
+        login_window_entity = entry.get_parent().get_parent().get_parent()
+        if letter in '0123456789':
+            login_window_entity.set_msg()
+            return True
+        else:
+            login_window_entity.set_msg('Only numbers are allowed')
+            return False
+
+    ip = entry.get_text().strip()
+    entry.handler_block_by_func(port_entry_filter)
+    entry.set_text(''.join([i for i in ip if valid(i)]))
+    entry.handler_unblock_by_func(port_entry_filter)
 
 
 def username_entry_filter(entry, *args):
@@ -76,28 +94,39 @@ class Login(Gtk.ApplicationWindow):
         self.vbox = Gtk.VBox()
 
         hbox = Gtk.HBox(False, 0)
-        self.ip_field = Entry(placeholder="IP-address",
-                              tooltip="IP-address",
+        self.ip_field = Entry(placeholder="hostname",
+                              tooltip="Hostname",
                               action=self.on_ip_field_changed,
-                              text=form_data.get('ip'))
-        self.ip_field.connect('changed', ip_entry_filter)
-        self.port_field = Spin(value=form_data.get('port'),
-                               tooltip="Port",
-                               action=self.on_port_field_changed)
+                              text=form_data.get('ip'),
+                              margin={'top': 5, 'bottom': 5, 'left': 10})
+        # self.ip_field.connect('changed', ip_entry_filter)
+        # self.port_field = Spin(value=form_data.get('port'),
+        #                        tooltip="Port",
+        #                        action=self.on_port_field_changed)
+        self.port_field = Entry(placeholder="port",
+                                tooltip="Port",
+                                action=self.on_port_field_changed,
+                                text=form_data.get('port'),
+                                len=5,
+                                margin={'top': 5, 'bottom': 5, 'right': 10, 'left': 5})
+        self.port_field.connect('changed', port_entry_filter)
         hbox.pack_start(self.ip_field, True, True, 0)
-        hbox.pack_start(self.port_field, False, False, 1)
+        hbox.pack_start(self.port_field, False, False, 0)
 
         self.username_field = Entry(placeholder="username",
                                     tooltip="User name",
                                     action=self.on_username_field_changed,
-                                    text=form_data.get('username'))
+                                    text=form_data.get('username'),
+                                    margin={'top': 5, 'bottom': 5, 'right': 10, 'left': 10})
         self.username_field.connect('changed', username_entry_filter)
         self.password_field = Entry(placeholder="password",
                                     tooltip="Password",
                                     action=self.on_password_field_changed,
                                     text=form_data.get('password'),
-                                    visibility=False)
-        self.login_button = Gtk.Button(None, image=Gtk.Image(stock=Gtk.STOCK_CONNECT))
+                                    visibility=False,
+                                    margin={'top': 5, 'bottom': 5, 'right': 10, 'left': 10})
+        #self.login_button = Gtk.Button(None, image=Gtk.Image(stock=Gtk.STOCK_CONNECT))
+        self.login_button = Gtk.Button()
         self.login_button.set_always_show_image(True)
         self.login_button.set_label("Login")
         self.login_button.set_margin_bottom(10)
@@ -158,12 +187,14 @@ class Login(Gtk.ApplicationWindow):
         self.handle_login_button_state()
 
     def submit_data(self):
-        if not self.ip_validation():
+        if not self.hostname_valid():
+            # self.set_msg("Invalid hostname")
             return
         username = self.username_field.get_text()
         password = self.password_field.get_text()
         ip = self.ip_field.get_text()
-        port = self.port_field.get_value_as_int()
+        # port = self.port_field.get_value_as_int()
+        port = self.port_field.get_text()
         if self.remember_user.get_active():
             self.app.save_form(ip, port, username, password)
         else:
@@ -216,48 +247,60 @@ class Login(Gtk.ApplicationWindow):
             return (self.username_field.get_text() and
                     self.password_field.get_text() and
                     self.ip_field.get_text() and
-                    self.port_field.get_value)
+                    # self.port_field.get_value)
+                    self.port_field.get_text())
         else:
             return (self.password_field.get_text() and
                     self.ip_field.get_text() and
-                    self.port_field.get_value)
+                    # self.port_field.get_value)
+                    self.port_field.get_text())
 
-    def ip_validation(self):
-        ip = self.ip_field.get_text()
-        ipv4_with_netmask_regex = re.compile(r'^(25[0-5]|2[0-4]\d|[0-1]?\d?\d)'
-                                             r'(\.(25[0-5]|2[0-4]\d|[0-1]?\d?\d)){3}'
-                                             r'(?:/(0?[0-9]|[1-2]\d|3[0-2]))?$')
-        valid = bool(re.match(ipv4_with_netmask_regex, ip))
-        if valid:
-            return True
-        else:
-            self.set_msg('Invalid ip-address')
+    def hostname_valid(self):
+        hostname = unicode(self.ip_field.get_text())
+        try:
+            if len(hostname) > 255:
+                self.set_msg("Invalid hostname")
+                return False
+            labels = hostname.split('.')
+            if all([re.match(r'^[0-9]+$', label) for label in labels]):
+                ipaddress.IPv4Address(hostname)
+                return True
+            else:
+                if not all([re.match(r'^(?!-)[a-z0-9-]{1,63}(?<!-)$', label, re.IGNORECASE) for label in labels]):
+                    raise ValueError
+                return True
+        except ValueError, e:
+            logging.debug(str(e))
+            self.set_msg("Invalid hostname")
+            return False
+        except Exception, e:
+            logging.debug(str(e))
+            self.set_msg("Invalid hostname")
             return False
 
 
-# class Button(Gtk.Button):
-#     def __init__(self, label, action, tooltip):
-#         super(Button, self).__init__()
-#         self.set_sensitive(False)
-#         self.set_can_focus(False)
-#         self.set_visible(True)
-#         self.set_has_tooltip(True)
-#         self.set_tooltip_text(tooltip)
-#         self.set_label(label)
-#         self.connect("clicked", action)
-#
-
 class Entry(Gtk.Entry):
-    def __init__(self, placeholder, tooltip, action, text=None, visibility=True):
+    def __init__(self, placeholder, tooltip, action, text=None, visibility=True, len=None, margin={}):
         super(Entry, self).__init__()
         self.set_placeholder_text(placeholder)
         self.set_has_tooltip(True)
         self.set_tooltip_text(tooltip)
-        self.set_margin_left(20)
-        self.set_margin_right(20)
-        self.set_margin_top(5)
-        self.set_margin_bottom(5)
+        if margin:
+            if margin.get('left'):
+                self.set_margin_left(margin['left'])
+            if margin.get('right'):
+                self.set_margin_right(margin['right'])
+            if margin.get('top'):
+                self.set_margin_top(margin['top'])
+            if margin.get('bottom'):
+                self.set_margin_bottom(margin['bottom'])
+        # self.set_margin_right(5)
+        # self.set_margin_top(5)
+        # self.set_margin_bottom(5)
         self.set_visibility(visibility)
+        if len:
+            self.set_max_length(len)
+            self.set_width_chars(len)
         if text:
             self.set_text(text)
         self.connect("changed", action)
