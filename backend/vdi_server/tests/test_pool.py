@@ -19,7 +19,7 @@ def pool_settings(fixture_pool_settings):
 
 
 @pytest.mark.asyncio
-async def test_create_pool(create_pool, pool_settings):```
+async def test_create_pool(create_pool, pool_settings):
     id = create_pool['id']
 
     qu = """{

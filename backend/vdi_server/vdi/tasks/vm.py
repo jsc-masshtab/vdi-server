@@ -5,10 +5,10 @@ from dataclasses import dataclass
 
 from cached_property import cached_property as cached
 
-from classy_async import Task
+from classy_async import Task, Awaitable
 
 from . import disk
-from .base import CONTROLLER_IP, Token
+from .base import CONTROLLER_IP, Token, UrlFetcher
 from .client import HttpClient
 from .ws import WsConnection
 
@@ -147,50 +147,86 @@ class SetupDomain(Task):
 
 
 @dataclass()
-class CopyDomain(Task):
+class CopyDomainDebug(Awaitable):
 
-    pool_name: str
     controller_ip: str
-    datapool_id: str
     domain_id: str
-    node_id: str
 
-    @cached
-    def vm_name(self):
-        uid = uuid.uuid4()
-        return f"{self.pool_name}-{uid}"
-
-    async def list_vdisks(self):
-        url = f'http://{self.controller_ip}/api/vdisks/?domain={self.domain_id}'
-        token = await Token()
+    async def get_params(self):
+        url = f"http://{self.controller_ip}/api/domains/{self.domain_id}/"
         headers = {
-            'Authorization': f'jwt {token}'
+            'Authorization': f'jwt {await Token()}',
         }
-        response = await HttpClient().fetch_using(headers=headers, url=url)
-        vdisks = []
-        for d in response['results']:
-            if d['status'] != 'ACTIVE':
-                continue
-            vdisks.append(d['id'])
-        return vdisks
+        client = HttpClient()
+        r = await client.fetch(url, headers=headers)
+        node_id = r['node']['id']
+        verbose_name = r['verbose_name']
+
+        url = f"http://{self.controller_ip}/api/vdisks/?domain={self.domain_id}"
+        r = await client.fetch(url, headers=headers)
+        datapool_id = []
+        for r in r['results']:
+            if r['domain']['id'] == self.domain_id:
+                datapool_id.append(r['datapool']['id'])
+        try:
+            [datapool_id] = datapool_id
+        except ValueError:
+            datapool_id = tuple(datapool_id)
+
+        return {
+            'node_id': node_id,
+            'verbose_name': verbose_name,
+            'datapool_id': datapool_id,
+        }
 
     async def run(self):
-        vdisks = await self.list_vdisks()
-        domain = await CreateDomain(controller_ip=self.controller_ip, node_id=self.node_id, vm_name=self.vm_name)
+        params = await self.get_params()
+        uid = str(uuid.uuid4())[:3]
+        verbose_name = f"{params.pop('verbose_name')}-{uid}"
+        await CopyDomain(controller_ip=self.controller_ip, domain_id=self.domain_id, verbose_name=verbose_name,
+                         **params)
 
-        async def task(vdisk):
-            new_vdisk = await disk.CopyDisk(controller_ip=self.controller_ip, datapool_id=self.datapool_id,
-                                            vdisk=vdisk, verbose_name=domain['verbose_name'])
-            await AttachVdisk(domain_id=domain['id'], vdisk=new_vdisk,
-                              datapool_id=self.datapool_id, controller_ip=self.controller_ip)
 
-        tasks = [
-            task(vdisk) for vdisk in vdisks
-        ]
-        async for _ in wait(*tasks):
-            pass
+@dataclass()
+class CopyDomain(UrlFetcher):
 
-        return domain
+    verbose_name: str
+    controller_ip: str
+    domain_id: str
+    node_id: str
+    datapool_id: str
+
+    method = 'POST'
+
+    async def url(self):
+        return f"http://{self.controller_ip}/api/domains/{self.domain_id}/clone/?async=1"
+
+    def is_done(self, msg):
+        if msg['id'] == self.task_id:
+            obj = msg['object']
+            if obj['status'] == 'SUCCESS':
+                entities = {v: k for k, v in obj['entities'].items()}
+                self.domain_id = entities['domain']
+                return True
+
+    async def run(self):
+        ws = await WsConnection()
+        await ws.send('add /tasks/')
+        resp = await super().run()
+        self.task_id = resp['_task']['id']
+        await ws.wait_message(self.is_done)
+        return {
+            'domain_id': self.domain_id,
+        }
+
+    async def body(self):
+        params = {
+            "verbose_name": self.verbose_name,
+            "node": self.node_id,
+            "datapool": self.datapool_id,
+        }
+        return json.dumps(params)
+
 
 
 @dataclass()

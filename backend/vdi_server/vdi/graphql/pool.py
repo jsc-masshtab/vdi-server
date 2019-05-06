@@ -149,6 +149,7 @@ class AddPool(graphene.Mutation):
         if autostart:
             ins = Pool(params=pool)
             Pool.instances[pool['id']] = ins
+
             add_domains = ins.add_domains()
             if block:
                 domains = await add_domains
