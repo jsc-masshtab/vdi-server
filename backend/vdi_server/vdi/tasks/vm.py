@@ -211,6 +211,24 @@ class CopyDomain(UrlFetcher):
     def url(self):
         return f"http://{self.controller_ip}/api/domains/{self.domain_id}/clone/?async=1"
 
+    async def body(self):
+        params = {
+            "verbose_name": self.verbose_name,
+            "node": self.node_id,
+            "datapool": self.datapool_id,
+        }
+        return json.dumps(params)
+
+    async def run(self):
+        ws = await WsConnection()
+        await ws.send('add /tasks/')
+        resp = await super().run()
+        self.task_id = resp['_task']['id']
+        await ws.wait_message(self.is_done)
+        return {
+            'new_domain_id': self.new_domain_id,
+        }
+
     def check_created(self, msg):
         obj = msg['object']
         if obj['parent'] == self.task_id:
@@ -227,25 +245,6 @@ class CopyDomain(UrlFetcher):
             obj = msg['object']
             if obj['status'] == 'SUCCESS':
                 return True
-
-    async def run(self):
-        ws = await WsConnection()
-        await ws.send('add /tasks/')
-        resp = await super().run()
-        self.task_id = resp['_task']['id']
-        await ws.wait_message(self.is_done)
-        return {
-            'new_domain_id': self.new_domain_id,
-        }
-
-    async def body(self):
-        params = {
-            "verbose_name": self.verbose_name,
-            "node": self.node_id,
-            "datapool": self.datapool_id,
-        }
-        return json.dumps(params)
-
 
 
 @dataclass()
