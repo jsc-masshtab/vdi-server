@@ -88,11 +88,7 @@ class PoolState(graphene.ObjectType):
         if self.pool is None:
             return []
         qu = self.pool.queue._queue
-        ret = []
-        for vm in qu:
-            info = json.dumps(vm)
-            ret.append(VmType(id=vm['id'], info=info, name=vm['verbose_name']))
-        return ret
+        return [VmType(id=vm_id) for vm_id in qu]
 
 # TODO dict of pending tasks
 
@@ -154,8 +150,7 @@ class AddPool(graphene.Mutation):
             if block:
                 domains = await add_domains
                 available = [
-                    VmType(id=infa['id'], info=infa, name=infa['verbose_name'])
-                    for infa in domains
+                    VmType(id=domain_id) for domain_id in domains
                 ]
             else:
                 asyncio.create_task(add_domains)
@@ -218,6 +213,8 @@ class PoolMixin:
     pools = graphene.List(PoolType)
     pool = graphene.Field(PoolType, id=graphene.Int(required=False), name=graphene.String(required=False))
 
+
+    #TODO wake pools
 
     async def _select_pool(self, info, id, name, conn: Connection):
         selections = get_selections(info)

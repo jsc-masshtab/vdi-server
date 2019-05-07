@@ -189,20 +189,29 @@ class CopyDomainDebug(Awaitable):
 
     async def run(self):
         params = await self.get_params()
-        uid = str(uuid.uuid4())[:3]
-        verbose_name = f"{params.pop('verbose_name')}-{uid}"
-        await CopyDomain(controller_ip=self.controller_ip, domain_id=self.domain_id, verbose_name=verbose_name,
+        name_template = params.pop('verbose_name')
+        await CopyDomain(controller_ip=self.controller_ip, domain_id=self.domain_id, name_template=name_template,
                          **params)
 
+# TODO API error
 
 @dataclass()
 class CopyDomain(UrlFetcher):
 
-    verbose_name: str
     controller_ip: str
     domain_id: str
     node_id: str
     datapool_id: str
+    verbose_name: str = None
+    name_template: str = None
+
+    @cached
+    def domain_name(self):
+        if self.verbose_name:
+            return self.verbose_name
+        uid = str(uuid.uuid4())[:7]
+        return f"{self.name_template}-{uid}"
+
 
     method = 'POST'
 
@@ -213,7 +222,7 @@ class CopyDomain(UrlFetcher):
 
     async def body(self):
         params = {
-            "verbose_name": self.verbose_name,
+            "verbose_name": self.domain_name,
             "node": self.node_id,
             "datapool": self.datapool_id,
         }
