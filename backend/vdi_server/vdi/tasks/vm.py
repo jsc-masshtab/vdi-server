@@ -152,27 +152,35 @@ class CopyDomainDebug(Awaitable):
     controller_ip: str
     domain_id: str
 
-    async def get_params(self):
-        url = f"http://{self.controller_ip}/api/domains/{self.domain_id}/"
-        headers = {
+    @cached
+    def client(self):
+        return HttpClient()
+
+    async def headers(self):
+        return {
             'Authorization': f'jwt {await Token()}',
         }
-        client = HttpClient()
-        r = await client.fetch(url, headers=headers)
-        node_id = r['node']['id']
-        verbose_name = r['verbose_name']
 
+    async def get_datapool_id(self):
         url = f"http://{self.controller_ip}/api/vdisks/?domain={self.domain_id}"
-        r = await client.fetch(url, headers=headers)
+        r = await self.client.fetch_using(self, url=url)
         datapool_id = []
         for r in r['results']:
             if r['domain']['id'] == self.domain_id:
                 datapool_id.append(r['datapool']['id'])
+        assert datapool_id
         try:
             [datapool_id] = datapool_id
+            return datapool_id
         except ValueError:
-            datapool_id = tuple(datapool_id)
+            return tuple(datapool_id)
 
+    async def get_params(self):
+        url = f"http://{self.controller_ip}/api/domains/{self.domain_id}/"
+        r = await self.client.fetch_using(self, url=url)
+        node_id = r['node']['id']
+        verbose_name = r['verbose_name']
+        datapool_id = await self.get_datapool_id()
         return {
             'node_id': node_id,
             'verbose_name': verbose_name,
@@ -198,15 +206,25 @@ class CopyDomain(UrlFetcher):
 
     method = 'POST'
 
-    async def url(self):
+    new_domain_id = None
+
+    def url(self):
         return f"http://{self.controller_ip}/api/domains/{self.domain_id}/clone/?async=1"
 
+    def check_created(self, msg):
+        obj = msg['object']
+        if obj['parent'] == self.task_id:
+            if obj['status'] == 'SUCCESS' and obj['name'].startswith('Создание виртуальной машины'):
+                entities = {v: k for k, v in obj['entities'].items()}
+                self.new_domain_id = entities['domain']
+
     def is_done(self, msg):
+        if self.new_domain_id is None:
+            self.check_created(msg)
+
         if msg['id'] == self.task_id:
             obj = msg['object']
             if obj['status'] == 'SUCCESS':
-                entities = {v: k for k, v in obj['entities'].items()}
-                self.domain_id = entities['domain']
                 return True
 
     async def run(self):
@@ -216,7 +234,7 @@ class CopyDomain(UrlFetcher):
         self.task_id = resp['_task']['id']
         await ws.wait_message(self.is_done)
         return {
-            'domain_id': self.domain_id,
+            'new_domain_id': self.new_domain_id,
         }
 
     async def body(self):

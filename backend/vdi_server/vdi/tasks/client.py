@@ -67,9 +67,12 @@ class HttpClient:
             else:
                 # is actually an attribute
                 dic[name] = method
+        self._repr_obj = dict(dic)
         url = dic.pop('url')
         return await self.fetch(url, **dic)
 
+    def __repr__(self):
+        return repr(self._repr_obj)
 
     async def fetch(self, *args, **kwargs):
         if not 'request_timeout' in kwargs:

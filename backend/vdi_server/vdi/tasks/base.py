@@ -31,7 +31,13 @@ class UrlFetcher(Task):
             'Content-Type': 'application/json',
         }
 
+    @cached
+    def client(self):
+        return HttpClient()
+
+    def __repr__(self):
+        return repr(self.client)
+
     async def run(self):
-        client = HttpClient()
-        return await client.fetch_using(self)
+        return await self.client.fetch_using(self)
 
