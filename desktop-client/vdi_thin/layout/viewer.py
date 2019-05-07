@@ -297,8 +297,8 @@ class Viewer(Gtk.ApplicationWindow):
 
         try:
             self._usbdev_manager = SpiceClientGLib.UsbDeviceManager.get(self.session)
-            # self._usbdev_manager.connect("auto-connect-failed", self._usbdev_redirect_error)
-            # self._usbdev_manager.connect("device-error", self._usbdev_redirect_error)
+            self._usbdev_manager.connect("auto-connect-failed", self._usbdev_redirect_error)
+            self._usbdev_manager.connect("device-error", self._usbdev_redirect_error)
             gtk_session.set_property("auto-usbredir", True)
         except Exception:
             self._usbdev_manager = None
