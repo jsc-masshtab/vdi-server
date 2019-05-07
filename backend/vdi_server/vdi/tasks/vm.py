@@ -221,6 +221,7 @@ class CopyDomain(UrlFetcher):
     def is_done(self, msg):
         if self.new_domain_id is None:
             self.check_created(msg)
+            return
 
         if msg['id'] == self.task_id:
             obj = msg['object']
