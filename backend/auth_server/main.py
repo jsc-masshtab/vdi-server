@@ -84,6 +84,7 @@ app.config.SANIC_JWT_REFRESH_TOKEN_ENABLED = False
 app.config.SANIC_JWT_CLAIM_IAT = True
 app.config.SANIC_JWT_CLAIM_NBF = True
 app.config.SANIC_JWT_USER_ID = "username"
+app.config.SANIC_JWT_AUTHORIZATION_HEADER_PREFIX = "jwt"
 
 
 initialize(

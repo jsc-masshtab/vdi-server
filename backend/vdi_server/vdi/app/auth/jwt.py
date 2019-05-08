@@ -27,7 +27,7 @@ class JWTUser(BaseUser):
 
 class JWTAuthenticationBackend(AuthenticationBackend):
 
-    def __init__(self, prefix: str = 'Bearer', username_field: str = 'username'):
+    def __init__(self, prefix: str = 'jwt', username_field: str = 'username'):
         self.prefix = prefix
         self.username_field = username_field
 

@@ -7,13 +7,6 @@ from asyncpg.connection import Connection
 
 from contextlib import asynccontextmanager
 
-# from abc import ABC
-#
-# class Connection(ABC):
-#     pass
-#
-# Connection.register()
-
 class DbApp:
 
     async def init(self):
