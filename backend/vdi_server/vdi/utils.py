@@ -14,3 +14,10 @@ def callback(async_fun):
 
     return wrapper
 
+
+def import_path(name, path):
+    import importlib.util
+    spec = importlib.util.spec_from_file_location(name, path)
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod

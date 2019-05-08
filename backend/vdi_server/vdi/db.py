@@ -17,6 +17,8 @@ from contextlib import asynccontextmanager
 class DbApp:
 
     async def init(self):
+        if hasattr(self, 'pool'):
+            return
         self.pool = await asyncpg.create_pool(database='vdi',
                                       user='postgres')
 
