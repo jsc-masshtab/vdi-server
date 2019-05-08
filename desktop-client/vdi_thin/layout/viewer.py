@@ -87,6 +87,7 @@ class Viewer(Gtk.ApplicationWindow):
         self.session = None
         self.display = None
         self.display_channel = None
+        self._audio = None
         self.frame = Gtk.Frame()
         self.frame.set_shadow_type(Gtk.ShadowType.NONE)
         self._usbdev_manager = None
@@ -295,20 +296,20 @@ class Viewer(Gtk.ApplicationWindow):
 
         GObject.GObject.connect(self.session, "channel-new", self._channel_new)
 
-        try:
-            self._usbdev_manager = SpiceClientGLib.UsbDeviceManager.get(self.session)
-            self._usbdev_manager.connect("auto-connect-failed", self._usbdev_redirect_error)
-            self._usbdev_manager.connect("device-error", self._usbdev_redirect_error)
-            gtk_session.set_property("auto-usbredir", True)
-        except Exception:
-            self._usbdev_manager = None
-            logging.debug("Error initializing spice usb device manager", exc_info=True)
+        # try:
+        #     self._usbdev_manager = SpiceClientGLib.UsbDeviceManager.get(self.session)
+        #     self._usbdev_manager.connect("auto-connect-failed", self._usbdev_redirect_error)
+        #     self._usbdev_manager.connect("device-error", self._usbdev_redirect_error)
+        #     gtk_session.set_property("auto-usbredir", True)
+        # except Exception:
+        #     self._usbdev_manager = None
+        #     logging.debug("Error initializing spice usb device manager", exc_info=True)
 
     def _channel_new(self, session, channel):
         self._channel = channel
         if type(channel) == SpiceClientGLib.MainChannel:
             return
-        if type(channel) == SpiceClientGLib.DisplayChannel:
+        elif type(channel) == SpiceClientGLib.DisplayChannel:
             channel_id = channel.get_property("channel-id")
             self.display_channel = channel
             self.display = SpiceClientGtk.Display.new(self.session, channel_id)
@@ -322,7 +323,11 @@ class Viewer(Gtk.ApplicationWindow):
             # print SpiceClientGLib.DisplayChannel.props.monitors
             # arr = channel.get_property('monitors')
             self.display.show_all()
-            return
+        elif (type(channel) in [SpiceClientGLib.PlaybackChannel,
+                                SpiceClientGLib.RecordChannel] and
+              not self._audio):
+            self._audio = SpiceClientGLib.Audio.get(self.session, None)
+            print self._audio
 
     def control_vm_usb_redirection(self, action):
         ignore = action

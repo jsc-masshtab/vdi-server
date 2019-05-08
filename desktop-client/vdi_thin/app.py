@@ -4,6 +4,8 @@
 import os
 import logging
 import json
+import re
+from ipaddress import IPv4Address
 
 
 import gi
@@ -72,8 +74,7 @@ class Application(Gtk.Application):
         self.workers_promises = {}
 
     def run(self, args):
-        self._args = args
-        self._args.pop(0)
+        self._args = args[1:]
         Gtk.Application.run(self)
 
     def init_menu(self):
@@ -134,10 +135,35 @@ class Application(Gtk.Application):
                         values[key] = value
             missed_keys = list(set(allowed_keys) - set(values.keys()))
             if not missed_keys:
-                self.mode = 'fast_mode'
-                self.do_viewer(host=values['-ip'], port=values['-p'], password=values['-pw'])
+                if self.hostname_valid(unicode(values['-ip']), help):
+                    self.mode = 'fast_mode'
+                    self.do_viewer(host=values['-ip'], port=values['-p'], password=values['-pw'])
+                else:
+                    return
             else:
                 help('Error:\n    Missed key(s) or its value(s): {}'.format(', '.join(missed_keys)))
+
+    def hostname_valid(self, hostname, msg_func):
+        try:
+            if len(hostname) > 255:
+                msg_func("Invalid hostname")
+                return False
+            labels = hostname.split('.')
+            if all([re.match(r'^[0-9]+$', label) for label in labels]):
+                IPv4Address(hostname)
+                return True
+            else:
+                if not all([re.match(r'^(?!-)[a-z0-9-]{1,63}(?<!-)$', label, re.IGNORECASE) for label in labels]):
+                    raise ValueError
+                return True
+        except ValueError, e:
+            logging.debug(str(e))
+            msg_func("Invalid hostname")
+            return False
+        except Exception, e:
+            logging.debug(str(e))
+            msg_func("Invalid hostname")
+            return False
 
     def destroy_active_window(self):
         if self.window:
