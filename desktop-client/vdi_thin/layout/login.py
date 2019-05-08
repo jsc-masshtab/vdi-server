@@ -187,7 +187,7 @@ class Login(Gtk.ApplicationWindow):
         self.handle_login_button_state()
 
     def submit_data(self):
-        if not self.hostname_valid():
+        if not self.app.hostname_valid(unicode(self.ip_field.get_text()), self.set_msg):
             # self.set_msg("Invalid hostname")
             return
         username = self.username_field.get_text()
@@ -254,29 +254,6 @@ class Login(Gtk.ApplicationWindow):
                     self.ip_field.get_text() and
                     # self.port_field.get_value)
                     self.port_field.get_text())
-
-    def hostname_valid(self):
-        hostname = unicode(self.ip_field.get_text())
-        try:
-            if len(hostname) > 255:
-                self.set_msg("Invalid hostname")
-                return False
-            labels = hostname.split('.')
-            if all([re.match(r'^[0-9]+$', label) for label in labels]):
-                ipaddress.IPv4Address(hostname)
-                return True
-            else:
-                if not all([re.match(r'^(?!-)[a-z0-9-]{1,63}(?<!-)$', label, re.IGNORECASE) for label in labels]):
-                    raise ValueError
-                return True
-        except ValueError, e:
-            logging.debug(str(e))
-            self.set_msg("Invalid hostname")
-            return False
-        except Exception, e:
-            logging.debug(str(e))
-            self.set_msg("Invalid hostname")
-            return False
 
 
 class Entry(Gtk.Entry):
