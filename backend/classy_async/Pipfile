@@ -12,7 +12,7 @@ pytest-asyncio = "*"
 
 [packages]
 cached-property = "*"
-classy_async = {editable = true,path = "."}
+classy_async = {editable = false,path = "."}
 
 [requires]
 python_version = "3.7"
