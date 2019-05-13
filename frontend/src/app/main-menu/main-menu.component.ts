@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { trigger, state, style, animate, transition } from "@angular/animations";
+import { Router, NavigationStart} from '@angular/router';
 
 
 @Component({
@@ -33,13 +34,28 @@ export class MainMenuComponent implements OnInit {
                                         nested: [{ name: 'Серверы', icon:'server',route:'settings/servers' }] }
                               ];
 
-  constructor() {}
+  constructor(private router: Router) {}
 
   ngOnInit() {
+    this.openRoute(); 
   }
 
   public clickItem(index,listMenu) {
     listMenu[index].open = !listMenu[index].open;
+  }
+
+  private openRoute() {
+    this.router.events.subscribe((event) => {
+			if(event instanceof NavigationStart) {
+        let urlBegin = event.url.split('/',2);
+        this.listMenu.forEach((element,index) => {
+          var routeBegin = element['route'].split('/',1);
+          if(routeBegin.join() === urlBegin[1]) {
+            this.listMenu[index]['open'] = true;
+          }
+        });
+			}
+    });
   }
   
 

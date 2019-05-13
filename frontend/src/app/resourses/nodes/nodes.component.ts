@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { NodesService } from './nodes.service';
 import { map } from 'rxjs/operators';
+import { ActivatedRoute, Data, ParamMap, Params } from '@angular/router';
 
 @Component({
   selector: 'vdi-nodes',
@@ -13,7 +14,9 @@ export class NodesComponent implements OnInit {
 
   public infoTemplates: [];
   public collection: object[] = [];
-  //private nodeId: string;
+  public nodes: {};
+  private id_cluster:string;
+
   public crumbs: object[] = [
     {
       title: 'Ресурсы',
@@ -23,28 +26,37 @@ export class NodesComponent implements OnInit {
       title: 'Кластеры',
       icon: 'building',
       route: 'resourses/clusters'
-    },
-    {
-      title: 'Серверы',
-      icon: 'server',
-      route: `resourses/clusters/:id/servers`
     }
   ];
 
   public spinner:boolean = true;
 
 
-  constructor(private service: NodesService){}
+  constructor(private service: NodesService,private activatedRoute: ActivatedRoute){}
 
   ngOnInit() {
     this.collectionAction();
-    this.getAllTeplates();
+
+    this.activatedRoute.paramMap.subscribe((param: ParamMap) => {
+      this.id_cluster = param.get('id') as string;
+      console.log(param);
+      this.getNodes(this.id_cluster);
+
+      this.crumbs.push(
+        {
+          title: 'Серверы',
+          icon: 'server',
+          route: `resourses/clusters/${this.id_cluster}/nodes`
+        }
+      );
+
+    });
   }
 
-  private getAllTeplates() {
-    this.service.getAllTeplates().valueChanges.pipe(map(data => data.data.templates))
+  private getNodes(id_cluster) {
+    this.service.getAllNodes(id_cluster).valueChanges.pipe(map(data => data.data.nodes))
       .subscribe( (data) => {
-        this.infoTemplates = data.map((item) => JSON.parse(item.info));
+        this.nodes = data;
         this.spinner = false;
       },
       (error)=> {
@@ -59,28 +71,24 @@ export class NodesComponent implements OnInit {
         property: 'verbose_name'
       },
       {
+        title: 'Локация',
+        property: "datacenter_name"
+      },
+      {
         title: 'IP-адрес',
-        property: "node",
-        property_lv2: 'verbose_name'
+        property: 'management_ip'
       },
       {
         title: 'CPU',
-        property: 'os_type'
+        property: 'cpu_count'
       },
       {
         title: 'RAM',
         property: 'memory_count'
       },
       {
-        title: 'ВМ',
-        property: 'video',
-        property_lv2: 'type'
-      },
-      {
         title: 'Статус',
-        property: 'sound',
-        property_lv2: 'model',
-        property_lv2_prop2: 'codec'
+        property: 'status'
       }
     ];
   }

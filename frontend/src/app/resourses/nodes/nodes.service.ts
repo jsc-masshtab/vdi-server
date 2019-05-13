@@ -5,22 +5,33 @@ import gql from 'graphql-tag';
 
 
 @Injectable()
-export class NodesService  {
+export class NodesService {
 
     constructor(private service: Apollo) {}
 
-    public getAllTeplates(): QueryRef<any,any> {
-       return  this.service.watchQuery({
-            query:  gql` query allTemplates {
-                            templates {
-                                id
-                                info
+    public getAllNodes(cluster_id:string): QueryRef<any,any> {
+        let controller_ip = JSON.parse(localStorage.getItem('controller'));
+        return  this.service.watchQuery({
+            query:  gql` query allNodes($controller_ip: String,$cluster_id: String) {
+                            nodes(controller_ip: $controller_ip,cluster_id: $cluster_id) {
+                                verbose_name
+                                status
+                                datacenter_id
+                                datacenter_name
+                                cpu_count
+                                memory_count
+                                management_ip
+                                cluster {
+                                    verbose_name
+                                }
                             }
                         }
             
                     `,
             variables: {
-                method: 'GET'
+                method: 'GET',
+                controller_ip: controller_ip,
+                cluster_id: cluster_id
             }
         }) 
     }
