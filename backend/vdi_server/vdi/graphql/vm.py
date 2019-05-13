@@ -7,15 +7,9 @@ from ..db import db
 from ..tasks import vm, admin
 
 from .util import get_selections
-from .pool import PoolSettings
+from .pool import PoolSettings, TemplateType
 
 from vdi.context_utils import enter_context
-
-class TemplateType(graphene.ObjectType):
-    id = graphene.String()
-    name = graphene.String()
-    info = graphene.String()
-
 
 class CreateTemplate(graphene.Mutation):
     '''

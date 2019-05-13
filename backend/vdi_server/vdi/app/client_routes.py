@@ -30,9 +30,9 @@ async def get_pools(request):
 async def get_vm(request):
     pool_id = int(request.path_params['pool_id'])
     pool = Pool.instances[pool_id]
-    domain_id = await pool.queue.get()
+    domain = await pool.queue.get()
     pool.on_vm_taken()
-    addr = await thin_client.PrepareVm(domain_id=domain_id)
+    addr = await thin_client.PrepareVm(domain_id=domain['id'])
     return JSONResponse(addr)
 
 

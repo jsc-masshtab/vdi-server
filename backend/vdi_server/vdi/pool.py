@@ -38,14 +38,16 @@ class Pool:
             # FIXME
             print(fut.exception())
             return
-        domain_id = fut.result()['new_domain_id']
-        await self.queue.put(domain_id)
+        result = fut.result()
+        domain_id = result['id']
+        template = result['template']
+        await self.queue.put(result)
         self.queue.task_done()
         self.pending -= 1
         # insert into db
         qu = f"""
-        insert into vm (id, pool_id, state) values ($1, $2, $3)
-        """, domain_id, self.params['id'], 'queued'
+        insert into vm (id, pool_id, template_id, state) values ($1, $2, $3, $4)
+        """, domain_id, self.params['id'], template['id'], 'queued'
         await conn.execute(*qu)
 
     def on_vm_taken(self):

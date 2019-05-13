@@ -3,9 +3,11 @@ import urllib
 import uuid
 from dataclasses import dataclass
 
+import asyncio
+
 from cached_property import cached_property as cached
 
-from classy_async import Task, Awaitable
+from classy_async import Task, Awaitable, task
 
 from . import disk
 from .base import CONTROLLER_IP, Token, UrlFetcher
@@ -229,13 +231,16 @@ class CopyDomain(UrlFetcher):
         return json.dumps(params)
 
     async def run(self):
+        info_task = asyncio.create_task(self.fetch_template_info())
         ws = await WsConnection()
         await ws.send('add /tasks/')
         resp = await super().run()
         self.task_id = resp['_task']['id']
         await ws.wait_message(self.is_done)
+        info = await info_task
         return {
-            'new_domain_id': self.new_domain_id,
+            'id': self.new_domain_id,
+            'template': info,
         }
 
     def check_created(self, msg):
@@ -254,6 +259,12 @@ class CopyDomain(UrlFetcher):
             obj = msg['object']
             if obj['status'] == 'SUCCESS':
                 return True
+
+    async def fetch_template_info(self):
+        url = f"http://{self.controller_ip}/api/domains/{self.domain_id}"
+        headers = await self.headers()
+        return await HttpClient().fetch(url, headers=headers)
+
 
 
 @dataclass()

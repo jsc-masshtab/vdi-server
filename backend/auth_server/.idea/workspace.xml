@@ -2,13 +2,14 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="ee823ba7-64f1-406e-87b7-ba3fc9bf04c1" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/../../docs/client.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../../notes.txt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../vdi_server/vdi/app/auth/jwt.py" beforeDir="false" afterPath="$PROJECT_DIR$/../vdi_server/vdi/app/auth/jwt.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../vdi_server/dev/copy_domain.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/../vdi_server/dev/copy_domain.ipynb" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../vdi_server/vdi/app/client_routes.py" beforeDir="false" afterPath="$PROJECT_DIR$/../vdi_server/vdi/app/client_routes.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../vdi_server/vdi/db.py" beforeDir="false" afterPath="$PROJECT_DIR$/../vdi_server/vdi/db.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../vdi_server/vdi/graphql/pool.py" beforeDir="false" afterPath="$PROJECT_DIR$/../vdi_server/vdi/graphql/pool.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../vdi_server/vdi/pool.py" beforeDir="false" afterPath="$PROJECT_DIR$/../vdi_server/vdi/pool.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../vdi_server/vdi/settings.py" beforeDir="false" afterPath="$PROJECT_DIR$/../vdi_server/vdi/settings.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../vdi_server/vdi/tasks/vm.py" beforeDir="false" afterPath="$PROJECT_DIR$/../vdi_server/vdi/tasks/vm.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../vdi_server/vdi/tasks/ws.py" beforeDir="false" afterPath="$PROJECT_DIR$/../vdi_server/vdi/tasks/ws.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -21,8 +22,8 @@
       <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/main.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="629">
-              <caret line="85" column="41" lean-forward="true" selection-start-line="85" selection-start-column="41" selection-end-line="85" selection-end-column="41" />
+            <state relative-caret-position="1122">
+              <caret line="96" selection-start-line="96" selection-end-line="96" />
               <folding>
                 <element signature="e#0#9#0" expanded="true" />
               </folding>
@@ -67,7 +68,7 @@
       </list>
     </option>
   </component>
-  <component name="ProjectFrameBounds" extendedState="4">
+  <component name="ProjectFrameBounds" extendedState="6">
     <option name="x" value="54" />
     <option name="y" value="30" />
     <option name="width" value="2022" />
@@ -124,9 +125,10 @@
     <servers />
   </component>
   <component name="ToolWindowManager">
-    <frame x="54" y="30" width="2022" height="1410" extended-state="4" />
+    <frame x="54" y="30" width="2506" height="1410" extended-state="6" />
+    <editor active="true" />
     <layout>
-      <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.07110666" />
+      <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.057234988" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
       <window_info id="Favorites" order="2" side_tool="true" />
       <window_info anchor="bottom" id="Message" order="0" />
@@ -146,6 +148,16 @@
     </layout>
   </component>
   <component name="editorHistoryManager">
+    <entry file="file://$PROJECT_DIR$/main.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="1122">
+          <caret line="96" selection-start-line="96" selection-end-line="96" />
+          <folding>
+            <element signature="e#0#9#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/Pipfile">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="357">
@@ -157,16 +169,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="374">
           <caret line="22" selection-start-line="22" selection-end-line="22" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/main.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="629">
-          <caret line="85" column="41" lean-forward="true" selection-start-line="85" selection-start-column="41" selection-end-line="85" selection-end-column="41" />
-          <folding>
-            <element signature="e#0#9#0" expanded="true" />
-          </folding>
         </state>
       </provider>
     </entry>

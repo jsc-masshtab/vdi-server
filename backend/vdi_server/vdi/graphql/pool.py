@@ -11,6 +11,13 @@ from ..pool import Pool
 from .util import get_selections
 from .users import UserType
 
+
+class TemplateType(graphene.ObjectType):
+    id = graphene.String()
+    name = graphene.String()
+    info = graphene.String()
+
+
 # TODO TemplateType == VmType
 
 from vdi.tasks import vm
@@ -41,8 +48,9 @@ class PoolType(graphene.ObjectType):
     def resolve_state(self, info):
         if self.pool_id not in Pool.instances:
             return PoolState(running=RunningState.STOPPED)
-        state = PoolState(running=RunningState.RUNNING)
-        state.pool = Pool.instances[self.pool_id]
+        pool = Pool.instances[self.pool_id]
+        available = PoolState.get_available(pool)
+        state = PoolState(running=RunningState.RUNNING, available=available)
         return state
 
 
@@ -50,6 +58,7 @@ class VmType(graphene.ObjectType):
     name = graphene.String()
     id = graphene.String()
     info = graphene.String()
+    template = graphene.Field(TemplateType)
 
 
 class PoolSettingsFields(graphene.AbstractType):
@@ -76,19 +85,24 @@ class PoolState(graphene.ObjectType):
     pending = graphene.Int() # will change
                              # will be the ids of vms
 
-    pool = None
-
-
     async def resolve_pending(self, info):
         if self.pool is None:
             return None
         return self.pool.pending
 
-    async def resolve_available(self, info):
-        if self.pool is None:
+    @classmethod
+    def get_available(cls, pool):
+        from vdi.graphql.vm import TemplateType
+        if pool is None:
             return []
-        qu = self.pool.queue._queue
-        return [VmType(id=vm_id) for vm_id in qu]
+        qu = pool.queue._queue
+        li = []
+        for item in qu:
+            template = item['template']
+            template = TemplateType(id=template['id'], info=template, name=template['verbose_name'])
+            obj = VmType(id=item['id'], template=template)
+            li.append(obj)
+        return li
 
 # TODO dict of pending tasks
 
@@ -149,9 +163,13 @@ class AddPool(graphene.Mutation):
             add_domains = ins.add_domains()
             if block:
                 domains = await add_domains
-                available = [
-                    VmType(id=domain_id) for domain_id in domains
-                ]
+                from vdi.graphql.vm import TemplateType
+                available = []
+                for domain in domains:
+                    template = domain['template']
+                    template = TemplateType(id=template['id'], info=template, name=template['verbose_name'])
+                    item = VmType(id=domain['id'], template=template)
+                    available.append(item)
             else:
                 asyncio.create_task(add_domains)
                 available = []
