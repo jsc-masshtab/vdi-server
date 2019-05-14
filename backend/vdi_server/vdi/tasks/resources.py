@@ -36,6 +36,15 @@ class ListNodes(UrlFetcher):
 
 
 @dataclass()
+class FetchNode(UrlFetcher):
+    node_id: str
+    controller_ip: str
+
+    def url(self):
+        return f'http://{self.controller_ip}/api/nodes/{self.node_id}/'
+
+
+@dataclass()
 class ListDatapools(UrlFetcher):
     controller_ip: str
     node_id: str = None

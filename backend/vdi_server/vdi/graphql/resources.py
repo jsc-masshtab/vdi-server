@@ -35,6 +35,10 @@ class ClusterType(graphene.ObjectType):
     tags = graphene.List(graphene.String)
 
 
+class ShortNodeType(graphene.ObjectType):
+    id = graphene.String()
+    verbose_name = graphene.String()
+
 
 class NodeType(graphene.ObjectType):
     id = graphene.String()
@@ -61,7 +65,7 @@ class DatapoolType(graphene.ObjectType):
     hints = graphene.List(graphene.String)
     file_count = graphene.Int()
     iso_count = graphene.Int()
-    nodes_connected = graphene.List(lambda: NodeType)
+    nodes_connected = graphene.List(lambda: ShortNodeType)
     verbose_name = graphene.String()
 
 
@@ -110,11 +114,21 @@ class Resources:
             node_id = await Resources._get_node_id(controller_ip)
         resp = await resources.ListDatapools(controller_ip=controller_ip, node_id=node_id)
         fields = get_selections(info)
-        return {
-            Resources._make_type(DatapoolType, item, fields)
-            for item in resp
-        }
 
+        li = []
+        for item in resp:
+            obj = Resources._make_type(DatapoolType, item, fields)
+            if 'nodes_connected' in fields:
+                base_fields = {'id', 'verbose_name'}
+                nodes = []
+                for node in obj.nodes_connected:
+                    node = {k: v for k, v in node.items() if k in base_fields}
+                    node = NodeType(**node)
+                    nodes.append(node)
+                obj.nodes_connected = nodes
+            li.append(obj)
+
+        return li
 
     async def resolve_clusters(self, info, controller_ip):
         resp = await resources.ListClusters(controller_ip)
