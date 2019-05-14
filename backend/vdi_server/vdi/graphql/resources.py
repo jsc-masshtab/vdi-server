@@ -119,22 +119,28 @@ class Resources:
     async def resolve_clusters(self, info, controller_ip):
         resp = await resources.ListClusters(controller_ip)
         fields = get_selections(info)
+        li = []
         return [
             Resources._make_type(ClusterType, item, fields)
             for item in resp['results']
         ]
 
     async def resolve_nodes(self, info, controller_ip, cluster_id=None):
+
         if cluster_id is None:
             resp = await resources.ListClusters(controller_ip=controller_ip)
             [cluster] = resp['results']
             cluster_id = cluster['id']
         resp = await resources.ListNodes(controller_ip=controller_ip, cluster_id=cluster_id)
         fields = get_selections(info)
-        return [
-            Resources._make_type(NodeType, item, fields)
-            for item in resp['results']
-        ]
+
+        li = []
+        for item in resp['results']:
+            obj = Resources._make_type(NodeType, item, fields)
+            if 'cluster' in fields:
+                obj.cluster = ClusterType(**obj.cluster)
+            li.append(obj)
+        return li
 
     @enter_context(lambda: db.connect())
     async def resolve_controllers(conn: Connection, self, info):
