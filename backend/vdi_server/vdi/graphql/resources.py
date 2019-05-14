@@ -5,6 +5,7 @@ import graphene
 from graphql import GraphQLError
 
 from asyncpg.connection import Connection
+from classy_async import wait
 
 from ..db import db
 from ..tasks import resources, FetchException, vm
@@ -34,22 +35,19 @@ class ClusterType(graphene.ObjectType):
     memory_count = graphene.Int()
     tags = graphene.List(graphene.String)
 
-
-class ShortNodeType(graphene.ObjectType):
-    id = graphene.String()
-    verbose_name = graphene.String()
-
+#FIXME tests
 
 class NodeType(graphene.ObjectType):
     id = graphene.String()
     verbose_name = graphene.String()
     status = graphene.String()
-    datacenter_id = graphene.String()
-    datacenter_name = graphene.String()
+    #FIXME
+    datacenter_id = graphene.String(deprecation_reason="Use `datacenter` field")
+    datacenter_name = graphene.String(deprecation_reason="Use `datacenter` field")
+    datacenter = graphene.Field(DatacenterType)
     cpu_count = graphene.String()
     memory_count = graphene.String()
     management_ip = graphene.String()
-
     cluster = graphene.Field(lambda: ClusterType)
 
 
@@ -65,7 +63,7 @@ class DatapoolType(graphene.ObjectType):
     hints = graphene.List(graphene.String)
     file_count = graphene.Int()
     iso_count = graphene.Int()
-    nodes_connected = graphene.List(lambda: ShortNodeType)
+    nodes_connected = graphene.List(lambda: NodeType)
     verbose_name = graphene.String()
 
 
@@ -78,18 +76,14 @@ class Resources:
     datapools = graphene.List(DatapoolType,
                               node_id=graphene.String(required=False),
                               controller_ip=graphene.String(),
-                              # controller_id=graphene.String(required=False),
                               )
-
     clusters = graphene.List(ClusterType,
                              controller_ip=graphene.String())
-
     nodes = graphene.List(NodeType,
                           controller_ip=graphene.String(),
                           cluster_id=graphene.String(required=False))
-
+    node = graphene.Field(NodeType, id=graphene.String(), controller_ip=graphene.String())
     controllers = graphene.List(ControllerType)
-
     poolwizard = graphene.Field(PoolSettings)
 
     @classmethod
@@ -120,11 +114,21 @@ class Resources:
             obj = Resources._make_type(DatapoolType, item, fields)
             if 'nodes_connected' in fields:
                 base_fields = {'id', 'verbose_name'}
-                nodes = []
-                for node in obj.nodes_connected:
-                    node = {k: v for k, v in node.items() if k in base_fields}
-                    node = NodeType(**node)
-                    nodes.append(node)
+                node_fields = set(get_selections(info, 'nodes_connected'))
+                if not node_fields <= base_fields:
+                    tasks = [
+                        resources.FetchNode(controller_ip=controller_ip, node_id=node['id'])
+                        for node in obj.nodes_connected
+                    ]
+                    nodes = []
+                    async for n in wait(*tasks):
+                        n = Resources._make_node(n, node_fields)
+                        nodes.append(n)
+                else:
+                    nodes = [
+                        Resources._make_node(node, node_fields)
+                        for node in obj.nodes_connected
+                    ]
                 obj.nodes_connected = nodes
             li.append(obj)
 
@@ -139,6 +143,15 @@ class Resources:
             for item in resp['results']
         ]
 
+    @classmethod
+    def _make_node(cls, item, fields):
+        obj = Resources._make_type(NodeType, item, fields)
+        if 'datacenter' in fields:
+            obj.datacenter = DatacenterType(id=item['datacenter_id'], verbose_name=item['datacenter_name'])
+        if 'cluster' in fields:
+            obj.cluster = ClusterType(**obj.cluster)
+        return obj
+
     async def resolve_nodes(self, info, controller_ip, cluster_id=None):
 
         if cluster_id is None:
@@ -150,9 +163,7 @@ class Resources:
 
         li = []
         for item in resp['results']:
-            obj = Resources._make_type(NodeType, item, fields)
-            if 'cluster' in fields:
-                obj.cluster = ClusterType(**obj.cluster)
+            obj = Resources._make_node(item, fields)
             li.append(obj)
         return li
 
@@ -189,7 +200,10 @@ class Resources:
         }
         return PoolSettings(**params)
 
-
+    async def resolve_node(self, info, controller_ip, id):
+        fields = get_selections(info)
+        node = await resources.FetchNode(controller_ip=controller_ip, node_id=id)
+        return Resources._make_node(node, fields)
 
 
 class AddController(graphene.Mutation):
