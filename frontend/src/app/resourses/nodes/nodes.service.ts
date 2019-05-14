@@ -14,6 +14,7 @@ export class NodesService {
         return  this.service.watchQuery({
             query:  gql` query allNodes($controller_ip: String,$cluster_id: String) {
                             nodes(controller_ip: $controller_ip,cluster_id: $cluster_id) {
+                                id
                                 verbose_name
                                 status
                                 datacenter_id
@@ -23,6 +24,7 @@ export class NodesService {
                                 management_ip
                                 cluster {
                                     verbose_name
+                                    id
                                 }
                             }
                         }

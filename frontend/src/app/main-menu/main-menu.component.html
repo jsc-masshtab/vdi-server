@@ -13,7 +13,7 @@
                 <fa-icon [icon]="['fas',itemNested.icon]"></fa-icon>
                 <span class="menu-name">{{itemNested.name}}</span>
             </div>
-          <ul *ngIf="itemNested.nested" class="menu-nested">
+          <ul *ngIf="itemNested.nested && listMenu[i].open" class="menu-nested">
             <li *ngFor="let itemNestedNested of itemNested.nested">
                 <div [routerLink]="[itemNestedNested.route]" class="menu-item-wrap menu-item-wrap__nested" routerLinkActive="activeNavNested">
                   <fa-icon [icon]="['fas',itemNestedNested.icon]"></fa-icon>

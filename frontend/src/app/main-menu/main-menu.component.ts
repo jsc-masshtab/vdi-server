@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { trigger, state, style, animate, transition } from "@angular/animations";
 import { Router, NavigationStart} from '@angular/router';
+import { Subscription } from 'rxjs';
 
 
 @Component({
@@ -22,6 +23,8 @@ import { Router, NavigationStart} from '@angular/router';
 
 export class MainMenuComponent implements OnInit {
 
+  private routerSub: Subscription;
+
   public listMenu: object[] = [
                                 { name: 'Пулы', icon:'desktop', route:'pools' },
 
@@ -41,17 +44,22 @@ export class MainMenuComponent implements OnInit {
   }
 
   public clickItem(index,listMenu) {
+    this.routerSub.unsubscribe();
     listMenu[index].open = !listMenu[index].open;
   }
 
   private openRoute() {
-    this.router.events.subscribe((event) => {
+    this.routerSub = this.router.events.subscribe((event) => {
 			if(event instanceof NavigationStart) {
-        let urlBegin = event.url.split('/',2);
+        let url = event.url.split('/',2)[1]; // url в строке браузера 1 крошка после домена
         this.listMenu.forEach((element,index) => {
-          var routeBegin = element['route'].split('/',1);
-          if(routeBegin.join() === urlBegin[1]) {
-            this.listMenu[index]['open'] = true;
+          let route = element['route'].split('/',1).join();
+          if(route === url && element['nested']) {
+            if(!this.listMenu[index]['open']) {
+              this.listMenu[index]['open'] = true;
+            }
+          } else {
+            this.routerSub.unsubscribe();
           }
         });
 			}

@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { NodesService } from './nodes.service';
 import { map } from 'rxjs/operators';
-import { ActivatedRoute, Data, ParamMap, Params } from '@angular/router';
+import { ActivatedRoute, ParamMap, Router } from '@angular/router';
 
 @Component({
   selector: 'vdi-nodes',
@@ -32,7 +32,7 @@ export class NodesComponent implements OnInit {
   public spinner:boolean = true;
 
 
-  constructor(private service: NodesService,private activatedRoute: ActivatedRoute){}
+  constructor(private service: NodesService,private activatedRoute: ActivatedRoute,private router: Router){}
 
   ngOnInit() {
     this.collectionAction();
@@ -93,12 +93,8 @@ export class NodesComponent implements OnInit {
     ];
   }
 
-  // public clickNode(event): void {
-  //   this.nodeId = event.id;
-  //   this.router.navigate([`page/nodes/${this.nodeId}/clusters`]);
-  // }
-
-
-
-
+  public routeTo(event): void {
+    console.log(event);
+    this.router.navigate([`resourses/clusters/${event.cluster.id}/nodes/${event.id}`]);
+  }
 }

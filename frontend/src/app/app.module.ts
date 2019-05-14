@@ -1,3 +1,5 @@
+import { DatapoolsService } from './resourses/datapools/datapools.service';
+import { DatapoolsComponent } from './resourses/datapools/datapools.component';
 
 import { ServersComponent } from './settings/servers/servers.component';
 
@@ -67,7 +69,8 @@ import { ServersService } from './settings/servers/servers.service';
     NodesComponent,
     ClustersComponent,
     ServersComponent,
-    AddControllerComponent
+    AddControllerComponent,
+    DatapoolsComponent
   ],
   imports: [
     BrowserModule,
@@ -92,7 +95,8 @@ import { ServersService } from './settings/servers/servers.service';
               PoolService,
               NodesService,
               ClustersService,
-              ServersService
+              ServersService,
+              DatapoolsService
             ],
   bootstrap: [AppComponent]
 })

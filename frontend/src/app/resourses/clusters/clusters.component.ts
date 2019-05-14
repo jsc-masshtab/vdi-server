@@ -36,11 +36,9 @@ export class ClustersComponent implements OnInit {
   }
 
   private getAllClusters() {
-    
     this.service.getAllClusters().valueChanges.pipe(map(data => data.data.clusters))
       .subscribe( (data) => {
         this.clusters = data;
-        console.log(data);
         this.spinner = false;
       },
       (error)=> {
