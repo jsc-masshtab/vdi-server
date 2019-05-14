@@ -15,6 +15,7 @@ export class DatapoolsComponent implements OnInit {
   public infoTemplates: [];
   public collection: object[] = [];
   public datapools: {};
+  private id_node:string;
   private id_cluster:string;
 
   public crumbs: object[] = [
@@ -35,33 +36,54 @@ export class DatapoolsComponent implements OnInit {
 
   ngOnInit() {
     this.collectionAction();
-
-    // this.activatedRoute.paramMap.subscribe((param: ParamMap) => {
-    //   this.id_cluster = param.get('id') as string;
-    //   console.log(param);
-    //   this.getDatapools(this.id_cluster);
-
-    //   this.crumbs.push(
-    //     {
-    //       title: 'Серверы',
-    //       icon: 'server',
-    //       route: `resourses/clusters/${this.id_cluster}/nodes`
-    //     }
-    //   );
-
-    // });
+    console.log(this.router);
+    this.activatedRoute.paramMap.subscribe((param: ParamMap) => {
+      this.id_node = param.get('id') as string;
+      this.getDatapools(this.id_node);
+    });
   }
 
-  // private getDatapools(id_cluster) {
-  //   this.service.getAllDatapools(id_cluster).valueChanges.pipe(map(data => data.data.datapools))
-  //     .subscribe( (data) => {
-  //       this.datapools = data;
-  //       this.spinner = false;
-  //     },
-  //     (error)=> {
-  //       this.spinner = false;
-  //     });
-  // }
+  private getDatapools(id_node) {
+    this.service.getAllDatapools(id_node).valueChanges.pipe(map(data => data.data.datapools))
+      .subscribe( (data) => {
+        this.datapools = data;
+
+        console.log(this.datapools,'datapools');
+
+        let cluster_name = localStorage.getItem('cluster_name');
+        let node_name = localStorage.getItem('node_name');
+        let node_id = localStorage.getItem('node_id');
+        let cluster_id = localStorage.getItem('cluster_id');
+
+        this.crumbs = [
+          {
+            title: 'Ресурсы',
+            icon: 'database'
+          },
+          {
+            title: `Кластер ${cluster_name}`,
+            icon: 'building',
+            route: `resourses/clusters/`
+          },
+          {
+            title: `Сервер ${node_name}`,
+            icon: 'building',
+            route: `resourses/clusters/${cluster_id}/nodes/`
+          },
+          {
+            title: `Пулы`,
+            icon: 'building',
+            route: `resourses/clusters/${cluster_id}/nodes/${node_id}/datapools`
+          }
+      ]
+
+
+        this.spinner = false;
+      },
+      (error)=> {
+        this.spinner = false;
+      });
+  }
 
   public collectionAction(): void {
     this.collection = [
@@ -70,20 +92,28 @@ export class DatapoolsComponent implements OnInit {
         property: 'verbose_name'
       },
       {
-        title: 'Локация',
-        property: "datacenter_name"
+        title: 'Тип',
+        property: "type"
       },
       {
-        title: 'IP-адрес',
-        property: 'management_ip'
+        title: 'Диски',
+        property: 'vdisk_count'
       },
       {
-        title: 'CPU',
-        property: 'cpu_count'
+        title: 'Образы',
+        property: 'iso_count'
       },
       {
-        title: 'RAM',
-        property: 'memory_count'
+        title: 'Файлы',
+        property: 'file_count'
+      },
+      {
+        title: 'Свободно (Мб)',
+        property: 'free_space'
+      },
+      {
+        title: 'Занято (Мб)',
+        property: 'used_space'
       },
       {
         title: 'Статус',

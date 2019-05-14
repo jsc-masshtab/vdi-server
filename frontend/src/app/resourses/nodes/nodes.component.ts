@@ -38,8 +38,9 @@ export class NodesComponent implements OnInit {
     this.collectionAction();
 
     this.activatedRoute.paramMap.subscribe((param: ParamMap) => {
-      this.id_cluster = param.get('id') as string;
       console.log(param);
+      this.id_cluster = param.get('id') as string;
+
       this.getNodes(this.id_cluster);
 
       this.crumbs.push(
@@ -57,6 +58,12 @@ export class NodesComponent implements OnInit {
     this.service.getAllNodes(id_cluster).valueChanges.pipe(map(data => data.data.nodes))
       .subscribe( (data) => {
         this.nodes = data;
+        this.crumbs[1] = { // можно хранить в глобальном стейте
+          title: `Кластер ${this.nodes[0]['verbose_name']}`,
+          icon: 'building',
+          route: `resourses/clusters/${this.nodes[0]['cluster']['id']}`
+        }
+          
         this.spinner = false;
       },
       (error)=> {
@@ -95,6 +102,10 @@ export class NodesComponent implements OnInit {
 
   public routeTo(event): void {
     console.log(event);
-    this.router.navigate([`resourses/clusters/${event.cluster.id}/nodes/${event.id}`]);
+    localStorage.setItem('node_name',event['verbose_name']);
+    localStorage.setItem('node_id',event['id']);
+    localStorage.setItem('cluster_name',event['cluster']['verbose_name']);
+    localStorage.setItem('cluster_id',event['cluster']['id']);
+    this.router.navigate([`resourses/clusters/${event.cluster.id}/nodes/${event.id}/datapools`]);
   }
 }

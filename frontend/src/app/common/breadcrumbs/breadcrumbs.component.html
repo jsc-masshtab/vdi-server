@@ -2,7 +2,7 @@
   <!-- <li><a><fa-icon [icon]="['fas','database']" size="xs"></fa-icon>Ресурсы</a></li>
   <li><a><fa-icon [icon]="['fas','desktop']" size="xs"></fa-icon>Шаблоны виртуальных машин</a></li> -->
 
-  <li *ngFor="let crumb of data;let index = i" (click)="routeTo(crumb,i)" [class.cursorTrue]="crumb.route">
+  <li *ngFor="let crumb of data;let i = index" (click)="routeTo(crumb,i)" [class.cursorTrue]="crumb.route">
     <div>
       <fa-icon [icon]="['fas',crumb.icon]" size="xs"></fa-icon>
       <span>{{ crumb.title }}</span>
