@@ -194,10 +194,17 @@ CREATE TABLE migrations (
         import sys
         sys.path.insert(0, str(self.dir.absolute()))
         m = __import__(name)
-        if inspect.iscoroutinefunction(m.run):
-            asyncio.run(m.run())
-        else:
-            m.run()
+
+        async def run():
+            from vdi.db import db
+            await db.init()
+            if inspect.iscoroutinefunction(m.run):
+                await m.run()
+            else:
+                m.run()
+
+        asyncio.run(run())
+
         del sys.path[0]
 
     def do_apply(self):

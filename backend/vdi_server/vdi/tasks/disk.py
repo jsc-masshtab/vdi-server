@@ -1,15 +1,12 @@
 
-from classy_async import Task, task
+import json
+from dataclasses import dataclass
+
+from classy_async import Task
 
 from .base import CONTROLLER_IP, Token
-from .ws import WsConnection
 from .client import HttpClient
-
-from ..pool import Pool
-
-import json
-
-from dataclasses import dataclass
+from .ws import WsConnection
 
 
 class DefaultDatapool(Task):

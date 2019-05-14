@@ -13,9 +13,9 @@ pytest-asyncio = "*"
 [packages]
 uvicorn = "*"
 tornado = "*"
-vdi = {editable = true,path = "."}
-classy_async = {editable = true,path = "./../classy_async"}
-mi = {editable = true,path = "./../mi-pkg"}
+vdi = {editable = false,path = "."}
+classy_async = {editable = false,path = "./../classy_async"}
+mi = {editable = false,path = "./../mi-pkg"}
 cached-property = "*"
 graphene = "*"
 starlette = "*"

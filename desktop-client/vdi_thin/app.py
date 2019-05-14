@@ -1,9 +1,11 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 
 import os
 import logging
+import json
+import re
+from ipaddress import IPv4Address
 
 
 import gi
@@ -72,8 +74,7 @@ class Application(Gtk.Application):
         self.workers_promises = {}
 
     def run(self, args):
-        self._args = args
-        self._args.pop(0)
+        self._args = args[1:]
         Gtk.Application.run(self)
 
     def init_menu(self):
@@ -134,10 +135,35 @@ class Application(Gtk.Application):
                         values[key] = value
             missed_keys = list(set(allowed_keys) - set(values.keys()))
             if not missed_keys:
-                self.mode = 'fast_mode'
-                self.do_viewer(host=values['-ip'], port=values['-p'], password=values['-pw'])
+                if self.hostname_valid(unicode(values['-ip']), help):
+                    self.mode = 'fast_mode'
+                    self.do_viewer(host=values['-ip'], port=values['-p'], password=values['-pw'])
+                else:
+                    return
             else:
                 help('Error:\n    Missed key(s) or its value(s): {}'.format(', '.join(missed_keys)))
+
+    def hostname_valid(self, hostname, msg_func):
+        try:
+            if len(hostname) > 255:
+                msg_func("Invalid hostname")
+                return False
+            labels = hostname.split('.')
+            if all([re.match(r'^[0-9]+$', label) for label in labels]):
+                IPv4Address(hostname)
+                return True
+            else:
+                if not all([re.match(r'^(?!-)[a-z0-9-]{1,63}(?<!-)$', label, re.IGNORECASE) for label in labels]):
+                    raise ValueError
+                return True
+        except ValueError, e:
+            logging.debug(str(e))
+            msg_func("Invalid hostname")
+            return False
+        except Exception, e:
+            logging.debug(str(e))
+            msg_func("Invalid hostname")
+            return False
 
     def destroy_active_window(self):
         if self.window:
@@ -173,6 +199,26 @@ class Application(Gtk.Application):
         else:
             self._login()
 
+    def save_form(self, ip, port, username, password=''):
+        f_data = self.load_form()
+        f_data[self.mode] = dict(ip=ip, port=port, username=username, password=password)
+        with open('user_input.json', 'w') as f:
+            json.dump(f_data, f)
+
+    def load_form(self):
+        try:
+            with open('user_input.json', 'r') as f:
+                return json.load(f)
+        except IOError, ioe:
+            print str(ioe)
+            logging.debug(str(ioe))
+            return {}
+        except Exception, e:
+            with open('user_input.json', 'w') as f:
+                json.dump({self.mode: {}}, f)
+            logging.debug("user_input file created")
+            return {}
+
     def do_command_line(self, command_line):
         LOG.debug('command_line')
         options = command_line.get_options_dict()
@@ -199,6 +245,9 @@ class Application(Gtk.Application):
     def do_logout(self):
         LOG.debug("logout")
         self.api_session = None
+        form_data = self.load_form()
+        if form_data:
+            self.save_form(form_data[self.mode]['ip'], form_data[self.mode]['port'], form_data[self.mode]['username'])
         self.do_login()
 
     def register_worker_promise(self, promise):
@@ -221,8 +270,9 @@ class Application(Gtk.Application):
                              ))
 
         dialog.set_default_size(150, 100)
+        dialog.set_resizable(False)
         label = Gtk.Label.new(question)
-        label.set_margin_top(15)
+        label.set_margin_top(20)
         box = dialog.get_content_area()
         box.add(label)
         dialog.show_all()
@@ -234,7 +284,7 @@ class Application(Gtk.Application):
             return False
 
     def confirm_quit(self):
-        return self.simple_confirm("quit confirm", "Quit?")
+        return self.simple_confirm("Confirm action", "Quit?")
 
     def confirm_logout(self):
-        return self.simple_confirm("logout confirm", "Logout?")
+        return self.simple_confirm("Confirm action", "Logout?")

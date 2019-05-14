@@ -2,7 +2,8 @@
 # -*- coding: utf-8 -*-
 
 
-import json
+import re
+import ipaddress
 import gi
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk, Gdk
@@ -16,8 +17,54 @@ from vdi_thin.services.api_session import ApiSession
 
 
 def ip_entry_filter(entry, *args):
-    text = entry.get_text().strip()
-    entry.set_text(''.join([i for i in text if i in '0123456789.']))
+
+    def valid(letter):
+        login_window_entity = entry.get_parent().get_parent().get_parent()
+        if letter in '0123456789.':
+            login_window_entity.set_msg()
+            return True
+        else:
+            login_window_entity.set_msg('Only numbers and dots are allowed')
+            return False
+
+    ip = entry.get_text().strip()
+    entry.handler_block_by_func(ip_entry_filter)
+    entry.set_text(''.join([i for i in ip if valid(i)]))
+    entry.handler_unblock_by_func(ip_entry_filter)
+
+
+def port_entry_filter(entry, *args):
+
+    def valid(letter):
+        login_window_entity = entry.get_parent().get_parent().get_parent()
+        if letter in '0123456789':
+            login_window_entity.set_msg()
+            return True
+        else:
+            login_window_entity.set_msg('Only numbers are allowed')
+            return False
+
+    ip = entry.get_text().strip()
+    entry.handler_block_by_func(port_entry_filter)
+    entry.set_text(''.join([i for i in ip if valid(i)]))
+    entry.handler_unblock_by_func(port_entry_filter)
+
+
+def username_entry_filter(entry, *args):
+
+    def valid(letter):
+        login_window_entity = entry.get_parent().get_parent()
+        if re.match("^[a-zA-Z0-9_.@-]+$", letter):
+            login_window_entity.set_msg()
+            return True
+        else:
+            login_window_entity.set_msg('Only latin letters, numbers, "_", ".", "@", and "-" are allowed')
+            return False
+
+    username = entry.get_text().strip()
+    entry.handler_block_by_func(username_entry_filter)
+    entry.set_text(''.join([i for i in username if valid(i)]))
+    entry.handler_unblock_by_func(username_entry_filter)
 
 
 class Login(Gtk.ApplicationWindow):
@@ -33,39 +80,53 @@ class Login(Gtk.ApplicationWindow):
         self.set_destroy_with_parent(True)
         self.set_icon(app.LOGO)
         self.set_type_hint(Gdk.WindowTypeHint(1))
+        self.connect("key-press-event", self.on_key_press_event)
         self.connect("delete_event", self.on_login_dialog_destroy)
         self.connect("show", self.on_login_dialog_show)
 
         self.wait_spinner = Spinner()
         self.msg_buffer = Gtk.TextBuffer()
         self.msg_field = Msg(self.msg_buffer)
+        self.msg_field.set_wrap_mode(Gtk.WrapMode.WORD)
 
-        form_data = self.load_form()
+        form_data = self.app.load_form().get(self.app.mode, {})
 
         self.vbox = Gtk.VBox()
 
         hbox = Gtk.HBox(False, 0)
-        self.ip_field = Entry(placeholder="IP-address",
-                              tooltip="IP-address",
+        self.ip_field = Entry(placeholder="hostname",
+                              tooltip="Hostname",
                               action=self.on_ip_field_changed,
-                              text=form_data.get('ip'))
-        self.ip_field.connect('changed', ip_entry_filter)
-        self.port_field = Spin(value=form_data.get('port'),
-                               tooltip="Port",
-                               action=self.on_port_field_changed)
+                              text=form_data.get('ip'),
+                              margin={'top': 5, 'bottom': 5, 'left': 10})
+        # self.ip_field.connect('changed', ip_entry_filter)
+        # self.port_field = Spin(value=form_data.get('port'),
+        #                        tooltip="Port",
+        #                        action=self.on_port_field_changed)
+        self.port_field = Entry(placeholder="port",
+                                tooltip="Port",
+                                action=self.on_port_field_changed,
+                                text=form_data.get('port'),
+                                len=5,
+                                margin={'top': 5, 'bottom': 5, 'right': 10, 'left': 5})
+        self.port_field.connect('changed', port_entry_filter)
         hbox.pack_start(self.ip_field, True, True, 0)
-        hbox.pack_start(self.port_field, False, False, 1)
+        hbox.pack_start(self.port_field, False, False, 0)
 
         self.username_field = Entry(placeholder="username",
                                     tooltip="User name",
                                     action=self.on_username_field_changed,
-                                    text=form_data.get('username'))
+                                    text=form_data.get('username'),
+                                    margin={'top': 5, 'bottom': 5, 'right': 10, 'left': 10})
+        self.username_field.connect('changed', username_entry_filter)
         self.password_field = Entry(placeholder="password",
                                     tooltip="Password",
                                     action=self.on_password_field_changed,
                                     text=form_data.get('password'),
-                                    visibility=False)
-        self.login_button = Gtk.Button(None, image=Gtk.Image(stock=Gtk.STOCK_CONNECT))
+                                    visibility=False,
+                                    margin={'top': 5, 'bottom': 5, 'right': 10, 'left': 10})
+        #self.login_button = Gtk.Button(None, image=Gtk.Image(stock=Gtk.STOCK_CONNECT))
+        self.login_button = Gtk.Button()
         self.login_button.set_always_show_image(True)
         self.login_button.set_label("Login")
         self.login_button.set_margin_bottom(10)
@@ -93,6 +154,11 @@ class Login(Gtk.ApplicationWindow):
         self.show_all()
         self.msg_field.set_visible(False)
 
+    def on_key_press_event(self, widget, event):
+        if event.keyval == Gdk.KEY_Return:
+            if self.check_all_fields_filled():
+                self.submit_data()
+
     def on_login_dialog_show(self, *args):
         LOG.debug("login show")
         self.normal_state()
@@ -100,8 +166,6 @@ class Login(Gtk.ApplicationWindow):
     def on_login_dialog_destroy(self, *args):
         LOG.debug("login destroy")
         self.app.do_quit()
-        # if not self.app.state.logged_in:
-        #     self.app.do_quit()
 
     def on_login_button_clicked(self, event):
         self.submit_data()
@@ -123,14 +187,18 @@ class Login(Gtk.ApplicationWindow):
         self.handle_login_button_state()
 
     def submit_data(self):
+        if not self.app.hostname_valid(unicode(self.ip_field.get_text()), self.set_msg):
+            # self.set_msg("Invalid hostname")
+            return
         username = self.username_field.get_text()
         password = self.password_field.get_text()
         ip = self.ip_field.get_text()
-        port = self.port_field.get_value_as_int()
+        # port = self.port_field.get_value_as_int()
+        port = self.port_field.get_text()
         if self.remember_user.get_active():
-            self.save_form(ip, port, username, password)
+            self.app.save_form(ip, port, username, password)
         else:
-            self.save_form(ip, port, username)
+            self.app.save_form(ip, port, username)
         if self.app.mode == 'default_mode':
             server = "http://{ip}:{port}".format(ip=ip, port=port)
             cmd = LoginCommand(self.app, api_session=ApiSession(username, password, server),
@@ -140,28 +208,6 @@ class Login(Gtk.ApplicationWindow):
             self.app.do_viewer(host=ip, port=str(port), password=password)
         else:
             print 'wat!? ^_^'
-
-    def save_form(self, ip, port, username, password=''):
-        f = open('user_input.json', 'r')
-        f_data = json.load(f)
-        f_data[self.app.mode] = dict(ip=ip, port=port, username=username, password=password)
-        f.close()
-        f = open('user_input.json', 'w')
-        json.dump(f_data, f)
-        f.close()
-
-    def load_form(self):
-        try:
-            with open('user_input.json', 'r') as f:
-                return json.load(f).get(self.app.mode, {})
-        except IOError, ioe:
-            print str(ioe)
-            logging.debug(str(ioe))
-            return {}
-        except Exception, e:
-            with open('user_input.json', 'w') as f:
-                f.write(json.dumps({self.app.mode: {}}))
-            return {}
 
     def set_msg(self, msg=None):
         if msg:
@@ -201,36 +247,37 @@ class Login(Gtk.ApplicationWindow):
             return (self.username_field.get_text() and
                     self.password_field.get_text() and
                     self.ip_field.get_text() and
-                    self.port_field.get_value)
+                    # self.port_field.get_value)
+                    self.port_field.get_text())
         else:
             return (self.password_field.get_text() and
                     self.ip_field.get_text() and
-                    self.port_field.get_value)
+                    # self.port_field.get_value)
+                    self.port_field.get_text())
 
-
-# class Button(Gtk.Button):
-#     def __init__(self, label, action, tooltip):
-#         super(Button, self).__init__()
-#         self.set_sensitive(False)
-#         self.set_can_focus(False)
-#         self.set_visible(True)
-#         self.set_has_tooltip(True)
-#         self.set_tooltip_text(tooltip)
-#         self.set_label(label)
-#         self.connect("clicked", action)
-#
 
 class Entry(Gtk.Entry):
-    def __init__(self, placeholder, tooltip, action, text=None, visibility=True):
+    def __init__(self, placeholder, tooltip, action, text=None, visibility=True, len=None, margin={}):
         super(Entry, self).__init__()
         self.set_placeholder_text(placeholder)
         self.set_has_tooltip(True)
         self.set_tooltip_text(tooltip)
-        self.set_margin_left(20)
-        self.set_margin_right(20)
-        self.set_margin_top(5)
-        self.set_margin_bottom(5)
+        if margin:
+            if margin.get('left'):
+                self.set_margin_left(margin['left'])
+            if margin.get('right'):
+                self.set_margin_right(margin['right'])
+            if margin.get('top'):
+                self.set_margin_top(margin['top'])
+            if margin.get('bottom'):
+                self.set_margin_bottom(margin['bottom'])
+        # self.set_margin_right(5)
+        # self.set_margin_top(5)
+        # self.set_margin_bottom(5)
         self.set_visibility(visibility)
+        if len:
+            self.set_max_length(len)
+            self.set_width_chars(len)
         if text:
             self.set_text(text)
         self.connect("changed", action)

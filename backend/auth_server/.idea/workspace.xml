@@ -2,17 +2,14 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="ee823ba7-64f1-406e-87b7-ba3fc9bf04c1" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/../.gitignore" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/auth_server.iml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/modules.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/vcs.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../vdi_server/.idea/misc.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../vdi_server/.idea/modules.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../vdi_server/.idea/vcs.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../vdi_server/.idea/vdi_server.iml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../vdi_server/.idea/workspace.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../vdi_server/dev/copy_domain.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/../vdi_server/dev/copy_domain.ipynb" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../vdi_server/vdi/app/client_routes.py" beforeDir="false" afterPath="$PROJECT_DIR$/../vdi_server/vdi/app/client_routes.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../vdi_server/vdi/graphql/pool.py" beforeDir="false" afterPath="$PROJECT_DIR$/../vdi_server/vdi/graphql/pool.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../vdi_server/vdi/pool.py" beforeDir="false" afterPath="$PROJECT_DIR$/../vdi_server/vdi/pool.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../vdi_server/vdi/settings.py" beforeDir="false" afterPath="$PROJECT_DIR$/../vdi_server/vdi/settings.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../vdi_server/vdi/tasks/vm.py" beforeDir="false" afterPath="$PROJECT_DIR$/../vdi_server/vdi/tasks/vm.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../vdi_server/vdi/tasks/ws.py" beforeDir="false" afterPath="$PROJECT_DIR$/../vdi_server/vdi/tasks/ws.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -25,8 +22,8 @@
       <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/main.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="169">
-              <caret line="70" column="50" selection-start-line="70" selection-start-column="50" selection-end-line="70" selection-end-column="50" />
+            <state relative-caret-position="1122">
+              <caret line="96" selection-start-line="96" selection-end-line="96" />
               <folding>
                 <element signature="e#0#9#0" expanded="true" />
               </folding>
@@ -43,15 +40,25 @@
           </provider>
         </entry>
       </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/../vdi_server/vdi/settings.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="374">
+              <caret line="22" selection-start-line="22" selection-end-line="22" />
+            </state>
+          </provider>
+        </entry>
+      </file>
     </leaf>
   </component>
   <component name="FindInProjectRecents">
     <findStrings>
       <find>userid_table</find>
+      <find>bearer</find>
     </findStrings>
   </component>
   <component name="Git.Settings">
-    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/.." />
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/../.." />
   </component>
   <component name="IdeDocumentHistory">
     <option name="CHANGED_PATHS">
@@ -61,11 +68,11 @@
       </list>
     </option>
   </component>
-  <component name="ProjectFrameBounds">
-    <option name="x" value="1347" />
-    <option name="y" value="223" />
-    <option name="width" value="1213" />
-    <option name="height" value="1066" />
+  <component name="ProjectFrameBounds" extendedState="6">
+    <option name="x" value="54" />
+    <option name="y" value="30" />
+    <option name="width" value="2022" />
+    <option name="height" value="1410" />
   </component>
   <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
   <component name="ProjectView">
@@ -74,7 +81,17 @@
     </navigator>
     <panes>
       <pane id="Scope" />
-      <pane id="ProjectPane" />
+      <pane id="ProjectPane">
+        <subPane>
+          <expand>
+            <path>
+              <item name="auth_server" type="b2602c69:ProjectViewProjectNode" />
+              <item name="auth_server" type="462c0819:PsiDirectoryNode" />
+            </path>
+          </expand>
+          <select />
+        </subPane>
+      </pane>
     </panes>
   </component>
   <component name="PropertiesComponent">
@@ -108,10 +125,10 @@
     <servers />
   </component>
   <component name="ToolWindowManager">
-    <frame x="1347" y="223" width="1213" height="1066" extended-state="0" />
+    <frame x="54" y="30" width="2506" height="1410" extended-state="6" />
     <editor active="true" />
     <layout>
-      <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.11952862" />
+      <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.057234988" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
       <window_info id="Favorites" order="2" side_tool="true" />
       <window_info anchor="bottom" id="Message" order="0" />
@@ -122,7 +139,7 @@
       <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
       <window_info anchor="bottom" id="TODO" order="6" />
       <window_info anchor="bottom" id="Version Control" order="7" />
-      <window_info anchor="bottom" id="Terminal" order="8" visible="true" weight="0.24108107" />
+      <window_info anchor="bottom" id="Terminal" order="8" visible="true" weight="0.17651694" />
       <window_info anchor="bottom" id="Event Log" order="9" side_tool="true" />
       <window_info anchor="bottom" id="Python Console" order="10" />
       <window_info anchor="right" id="Commander" internal_type="SLIDING" order="0" type="SLIDING" weight="0.4" />
@@ -133,8 +150,8 @@
   <component name="editorHistoryManager">
     <entry file="file://$PROJECT_DIR$/main.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="169">
-          <caret line="70" column="50" selection-start-line="70" selection-start-column="50" selection-end-line="70" selection-end-column="50" />
+        <state relative-caret-position="1122">
+          <caret line="96" selection-start-line="96" selection-end-line="96" />
           <folding>
             <element signature="e#0#9#0" expanded="true" />
           </folding>
@@ -145,6 +162,13 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="357">
           <caret line="21" selection-start-line="21" selection-end-line="21" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../vdi_server/vdi/settings.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="374">
+          <caret line="22" selection-start-line="22" selection-end-line="22" />
         </state>
       </provider>
     </entry>

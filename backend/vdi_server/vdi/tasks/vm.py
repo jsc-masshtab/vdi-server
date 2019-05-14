@@ -3,12 +3,14 @@ import urllib
 import uuid
 from dataclasses import dataclass
 
+import asyncio
+
 from cached_property import cached_property as cached
 
-from classy_async import Task
+from classy_async import Task, Awaitable, task
 
 from . import disk
-from .base import CONTROLLER_IP, Token
+from .base import CONTROLLER_IP, Token, UrlFetcher
 from .client import HttpClient
 from .ws import WsConnection
 
@@ -127,6 +129,9 @@ class AttachVdisk(Task):
 class SetupDomain(Task):
 
     image_name: str
+    controller_ip: str
+    node_id: str
+    datapool_id: str
 
     @cached
     def vm_name(self):
@@ -134,62 +139,132 @@ class SetupDomain(Task):
         return f'{self.image_name}-{uid}'
 
     async def run(self):
-        from vdi.tasks.admin import discover_resources
-        params = await discover_resources()
         vdisk = await disk.ImportDisk(image_name=self.image_name, vm_name=self.vm_name,
-                                      controller_ip=params['controller_ip'], datapool_id=params['datapool']['id'])
+                                      controller_ip=self.controller_ip, datapool_id=self.datapool_id)
         domain = await CreateDomain(vm_name=self.vm_name,
-                                    controller_ip=params['controller_ip'], node_id=params['node']['id'])
+                                    controller_ip=self.controller_ip, node_id=self.node_id)
         await AttachVdisk(vdisk=vdisk, domain_id=domain['id'],
-                          datapool_id=params['datapool']['id'], controller_ip=params['controller_ip'])
+                          datapool_id=self.datapool_id, controller_ip=self.controller_ip)
         return domain
 
 
 @dataclass()
-class CopyDomain(Task):
+class CopyDomainDebug(Awaitable):
 
-    pool_name: str
     controller_ip: str
-    datapool_id: str
     domain_id: str
-    node_id: str
 
     @cached
-    def vm_name(self):
-        uid = uuid.uuid4()
-        return f"{self.pool_name}-{uid}"
+    def client(self):
+        return HttpClient()
 
-    async def list_vdisks(self):
-        url = f'http://{self.controller_ip}/api/vdisks/?domain={self.domain_id}'
-        token = await Token()
-        headers = {
-            'Authorization': f'jwt {token}'
+    async def headers(self):
+        return {
+            'Authorization': f'jwt {await Token()}',
         }
-        response = await HttpClient().fetch_using(headers=headers, url=url)
-        vdisks = []
-        for d in response['results']:
-            if d['status'] != 'ACTIVE':
-                continue
-            vdisks.append(d['id'])
-        return vdisks
+
+    async def get_datapool_id(self):
+        url = f"http://{self.controller_ip}/api/vdisks/?domain={self.domain_id}"
+        r = await self.client.fetch_using(self, url=url)
+        datapool_id = []
+        for r in r['results']:
+            if r['domain']['id'] == self.domain_id:
+                datapool_id.append(r['datapool']['id'])
+        assert datapool_id
+        try:
+            [datapool_id] = datapool_id
+            return datapool_id
+        except ValueError:
+            return tuple(datapool_id)
+
+    async def get_params(self):
+        url = f"http://{self.controller_ip}/api/domains/{self.domain_id}/"
+        r = await self.client.fetch_using(self, url=url)
+        node_id = r['node']['id']
+        verbose_name = r['verbose_name']
+        datapool_id = await self.get_datapool_id()
+        return {
+            'node_id': node_id,
+            'verbose_name': verbose_name,
+            'datapool_id': datapool_id,
+        }
 
     async def run(self):
-        vdisks = await self.list_vdisks()
-        domain = await CreateDomain(controller_ip=self.controller_ip, node_id=self.node_id, vm_name=self.vm_name)
+        params = await self.get_params()
+        name_template = params.pop('verbose_name')
+        await CopyDomain(controller_ip=self.controller_ip, domain_id=self.domain_id, name_template=name_template,
+                         **params)
 
-        async def task(vdisk):
-            new_vdisk = await disk.CopyDisk(controller_ip=self.controller_ip, datapool_id=self.datapool_id,
-                                            vdisk=vdisk, verbose_name=domain['verbose_name'])
-            await AttachVdisk(domain_id=domain['id'], vdisk=new_vdisk,
-                              datapool_id=self.datapool_id, controller_ip=self.controller_ip)
+# TODO API error
 
-        tasks = [
-            task(vdisk) for vdisk in vdisks
-        ]
-        async for _ in wait(*tasks):
-            pass
+@dataclass()
+class CopyDomain(UrlFetcher):
 
-        return domain
+    controller_ip: str
+    domain_id: str
+    node_id: str
+    datapool_id: str
+    verbose_name: str = None
+    name_template: str = None
+
+    @cached
+    def domain_name(self):
+        if self.verbose_name:
+            return self.verbose_name
+        uid = str(uuid.uuid4())[:7]
+        return f"{self.name_template}-{uid}"
+
+
+    method = 'POST'
+
+    new_domain_id = None
+
+    def url(self):
+        return f"http://{self.controller_ip}/api/domains/{self.domain_id}/clone/?async=1"
+
+    async def body(self):
+        params = {
+            "verbose_name": self.domain_name,
+            "node": self.node_id,
+            "datapool": self.datapool_id,
+        }
+        return json.dumps(params)
+
+    async def run(self):
+        info_task = asyncio.create_task(self.fetch_template_info())
+        ws = await WsConnection()
+        await ws.send('add /tasks/')
+        resp = await super().run()
+        self.task_id = resp['_task']['id']
+        await ws.wait_message(self.is_done)
+        info = await info_task
+        return {
+            'id': self.new_domain_id,
+            'template': info,
+        }
+
+    def check_created(self, msg):
+        obj = msg['object']
+        if obj['parent'] == self.task_id:
+            if obj['status'] == 'SUCCESS' and obj['name'].startswith('Создание виртуальной машины'):
+                entities = {v: k for k, v in obj['entities'].items()}
+                self.new_domain_id = entities['domain']
+
+    def is_done(self, msg):
+        if self.new_domain_id is None:
+            self.check_created(msg)
+            return
+
+        if msg['id'] == self.task_id:
+            obj = msg['object']
+            if obj['status'] == 'SUCCESS':
+                return True
+
+    async def fetch_template_info(self):
+        url = f"http://{self.controller_ip}/api/domains/{self.domain_id}"
+        headers = await self.headers()
+        return await HttpClient().fetch(url, headers=headers)
+
 
 
 @dataclass()

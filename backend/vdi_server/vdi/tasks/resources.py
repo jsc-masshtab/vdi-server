@@ -47,11 +47,11 @@ class ListDatapools(UrlFetcher):
     async def run(self):
         resp = await super().run()
         if self.node_id is None:
-            return resp
+            return resp['results']
         pools = []
         for pool in tuple(resp['results']):
             for node in pool['nodes_connected']:
-                if node['id'] == self.node_id and node['connection_status'].upper() == 'SUCCESS':
+                if self.node_id and node['id'] == self.node_id and node['connection_status'].upper() == 'SUCCESS':
                     break
             else:
                 # pool doesn't include our node

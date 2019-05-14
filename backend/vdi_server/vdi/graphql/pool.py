@@ -11,6 +11,13 @@ from ..pool import Pool
 from .util import get_selections
 from .users import UserType
 
+
+class TemplateType(graphene.ObjectType):
+    id = graphene.String()
+    name = graphene.String()
+    info = graphene.String()
+
+
 # TODO TemplateType == VmType
 
 from vdi.tasks import vm
@@ -41,8 +48,9 @@ class PoolType(graphene.ObjectType):
     def resolve_state(self, info):
         if self.pool_id not in Pool.instances:
             return PoolState(running=RunningState.STOPPED)
-        state = PoolState(running=RunningState.RUNNING)
-        state.pool = Pool.instances[self.pool_id]
+        pool = Pool.instances[self.pool_id]
+        available = PoolState.get_available(pool)
+        state = PoolState(running=RunningState.RUNNING, available=available)
         return state
 
 
@@ -50,6 +58,7 @@ class VmType(graphene.ObjectType):
     name = graphene.String()
     id = graphene.String()
     info = graphene.String()
+    template = graphene.Field(TemplateType)
 
 
 class PoolSettingsFields(graphene.AbstractType):
@@ -76,23 +85,24 @@ class PoolState(graphene.ObjectType):
     pending = graphene.Int() # will change
                              # will be the ids of vms
 
-    pool = None
-
-
     async def resolve_pending(self, info):
         if self.pool is None:
             return None
         return self.pool.pending
 
-    async def resolve_available(self, info):
-        if self.pool is None:
+    @classmethod
+    def get_available(cls, pool):
+        from vdi.graphql.vm import TemplateType
+        if pool is None:
             return []
-        qu = self.pool.queue._queue
-        ret = []
-        for vm in qu:
-            info = json.dumps(vm)
-            ret.append(VmType(id=vm['id'], info=info, name=vm['verbose_name']))
-        return ret
+        qu = pool.queue._queue
+        li = []
+        for item in qu:
+            template = item['template']
+            template = TemplateType(id=template['id'], info=template, name=template['verbose_name'])
+            obj = VmType(id=item['id'], template=template)
+            li.append(obj)
+        return li
 
 # TODO dict of pending tasks
 
@@ -134,7 +144,7 @@ class AddPool(graphene.Mutation):
             'reserve_size': reserve_size or get_setting('reserve_size'),
             'controller_ip': controller_ip or settings['controller_ip'],
             'cluster_id': cluster_id or settings['cluster_id'],
-            'node_id': cluster_id or settings['node_id'],
+            'node_id': node_id or settings['node_id'],
             'datapool_id': datapool_id or settings['datapool_id'],
             'template_id': template_id or settings['template_id'],
             'name': name,
@@ -149,13 +159,17 @@ class AddPool(graphene.Mutation):
         if autostart:
             ins = Pool(params=pool)
             Pool.instances[pool['id']] = ins
+
             add_domains = ins.add_domains()
             if block:
                 domains = await add_domains
-                available = [
-                    VmType(id=infa['id'], info=infa, name=infa['verbose_name'])
-                    for infa in domains
-                ]
+                from vdi.graphql.vm import TemplateType
+                available = []
+                for domain in domains:
+                    template = domain['template']
+                    template = TemplateType(id=template['id'], info=template, name=template['verbose_name'])
+                    item = VmType(id=domain['id'], template=template)
+                    available.append(item)
             else:
                 asyncio.create_task(add_domains)
                 available = []
@@ -180,31 +194,22 @@ class RemovePool(graphene.Mutation):
 
     @enter_context(lambda: db.connect())
     async def mutate(conn: Connection, self, info, id):
-        vms = await vm.ListVms()
-        vms = {v['id'] for v in vms}
+        pool = await Pool.get_pool(id)
+        vms = await pool.load_vms(conn)
+        vm_ids = [v['id'] for v in vms]
 
-        qu = f'''
-        SELECT vm.id FROM vm JOIN pool ON vm.pool_id = pool.id WHERE pool.id = $1
-        ''', id
-        ids = await conn.fetch(*qu)
-        ids = [
-            id for (id,) in ids
-        ]
+        #FIXME rename: vm -> domain
 
-        async def drop_vm(id):
-            if id in vms:
-                await vm.DropDomain(id=id)
-            await conn.fetch("DELETE FROM vm WHERE id = $1", id)
+        async def drop_vm(vm_id):
+            await vm.DropDomain(id=vm_id)
+            await conn.fetch("DELETE FROM vm WHERE id = $1", vm_id)
 
-        tasks = [
-            drop_vm(id) for id in ids
-        ]
+        tasks = [drop_vm(vm_id) for vm_id in vm_ids]
         async for _ in wait(*tasks):
             pass
 
         await conn.fetch("DELETE FROM pool WHERE id = $1", id)
-
-        return RemovePool(ok=True, ids=ids)
+        return RemovePool(ok=True, ids=vm_ids)
 
 
 
@@ -226,6 +231,8 @@ class PoolMixin:
     pools = graphene.List(PoolType)
     pool = graphene.Field(PoolType, id=graphene.Int(required=False), name=graphene.String(required=False))
 
+
+    #TODO wake pools
 
     async def _select_pool(self, info, id, name, conn: Connection):
         selections = get_selections(info)

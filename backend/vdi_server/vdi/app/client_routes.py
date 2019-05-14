@@ -12,8 +12,8 @@ from vdi.tasks import thin_client
 from . import app
 
 @app.route('/client/pools')
-# @requires('authenticated')
-async def get_vm(request):
+@requires('authenticated')
+async def get_pools(request):
     #FIXME filter by user
     li = [
         {
@@ -25,14 +25,14 @@ async def get_vm(request):
     return JSONResponse(li)
 
 
-@app.route('/client/pools/{pool_id}')
-# @requires('authenticated')
+@app.route('/client/pools/{pool_id}', methods=['POST'])
+@requires('authenticated')
 async def get_vm(request):
     pool_id = int(request.path_params['pool_id'])
     pool = Pool.instances[pool_id]
-    vm = await pool.queue.get()
+    domain = await pool.queue.get()
     pool.on_vm_taken()
-    addr = await thin_client.PrepareVm(domain_id=vm['id'])
+    addr = await thin_client.PrepareVm(domain_id=domain['id'])
     return JSONResponse(addr)
 
 
@@ -40,6 +40,4 @@ async def get_vm(request):
 @requires(['authenticated'])
 def check(request):
     username = request.user.username
-    return JSONResponse({
-        'user': username
-    })
+    return JSONResponse({'user': username})

@@ -21,3 +21,8 @@ class Settings(SettingsDict):
 
 
 settings = Settings()
+
+try:
+    from .local_settings import *
+except ImportError:
+    pass

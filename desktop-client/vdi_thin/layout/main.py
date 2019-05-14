@@ -30,12 +30,16 @@ class Main(Gtk.ApplicationWindow):
 
         logout_button = Gtk.Button(None, image=Gtk.Image(stock=Gtk.STOCK_DISCONNECT))
         logout_button.set_always_show_image(True)
+        logout_button.set_margin_top(10)
+        logout_button.set_margin_right(10)
         logout_button.set_label("Logout")
         logout_button.connect("clicked", self.on_logout_button_clicked)
         hbox.pack_end(logout_button, False, False, 0)
 
         refresh_button = Gtk.Button(None, image=Gtk.Image(stock=Gtk.STOCK_REFRESH))
         refresh_button.set_always_show_image(True)
+        refresh_button.set_margin_top(10)
+        refresh_button.set_margin_left(10)
         refresh_button.set_label("Refresh")
         refresh_button.connect("clicked", self.on_refresh_button_clicked)
         hbox.pack_start(refresh_button, False, False, 0)

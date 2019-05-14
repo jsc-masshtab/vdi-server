@@ -7,13 +7,9 @@ from ..db import db
 from ..tasks import vm, admin
 
 from .util import get_selections
+from .pool import PoolSettings, TemplateType
+
 from vdi.context_utils import enter_context
-
-class TemplateType(graphene.ObjectType):
-    id = graphene.String()
-    name = graphene.String()
-    info = graphene.String()
-
 
 class CreateTemplate(graphene.Mutation):
     '''
@@ -23,17 +19,30 @@ class CreateTemplate(graphene.Mutation):
         image_name = graphene.String()
 
     template = graphene.Field(TemplateType)
+    poolwizard = graphene.Field(PoolSettings)
 
     @enter_context(lambda: db.connect())
     async def mutate(conn: Connection, self, info, image_name):
-        domain = await vm.SetupDomain(image_name=image_name)
+        from vdi.tasks import admin
+        res = await admin.discover_resources()
+        #FIXME image_name
+        domain = await vm.SetupDomain(image_name=image_name, controller_ip=res['controller_ip'],
+                                      node_id=res['node']['id'], datapool_id=res['datapool']['id'])
         veil_info = json.dumps(domain)
-        qu = '''
-            INSERT INTO template_vm (id, veil_info) VALUES ($1, $2)
-            ''', domain['id'], veil_info
+        qu = "INSERT INTO template_vm (id, veil_info) VALUES ($1, $2)", domain['id'], veil_info
         await conn.fetch(*qu)
         t = TemplateType(id=domain['id'], info=veil_info, name=domain['verbose_name'])
-        return CreateTemplate(template=t)
+        from vdi.settings import settings
+        resources = PoolSettings(**{
+            'controller_ip': settings['controller_ip'],
+            'cluster_id': res['cluster']['id'],
+            'datapool_id': res['datapool']['id'],
+            'template_id': domain['id'],
+            'node_id': res['node']['id'],
+            'initial_size': settings['pool']['initial_size'],
+            'reserve_size': settings['pool']['reserve_size'],
+        })
+        return CreateTemplate(template=t, poolwizard=resources)
 
 
 class DropTemplate(graphene.Mutation):
@@ -59,9 +68,7 @@ class AddTemplate(graphene.Mutation):
 
     @enter_context(lambda: db.connect())
     async def mutate(conn: Connection, self, info, id):
-        qu = '''
-            INSERT INTO template_vm (id) VALUES ($1)
-            ''', id
+        qu = "INSERT INTO template_vm (id) VALUES ($1)", id
         await conn.fetch(*qu)
         return AddTemplate(ok=True)
 

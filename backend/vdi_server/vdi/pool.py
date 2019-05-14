@@ -12,6 +12,7 @@ from dataclasses import dataclass
 from cached_property import cached_property as cached
 
 from vdi.db import db
+from vdi.tasks import vm
 from asyncpg.connection import Connection
 
 @dataclass()
@@ -37,14 +38,16 @@ class Pool:
             # FIXME
             print(fut.exception())
             return
-        domain = fut.result()
-        await self.queue.put(domain)
+        result = fut.result()
+        domain_id = result['id']
+        template = result['template']
+        await self.queue.put(result)
         self.queue.task_done()
         self.pending -= 1
         # insert into db
         qu = f"""
-        insert into vm (id, pool_id, state) values ($1, $2, $3)
-        """, domain['id'], self.params['id'], 'queued'
+        insert into vm (id, pool_id, template_id, state) values ($1, $2, $3, $4)
+        """, domain_id, self.params['id'], template['id'], 'queued'
         await conn.execute(*qu)
 
     def on_vm_taken(self):
@@ -56,7 +59,7 @@ class Pool:
         from vdi.tasks import vm
         g.init()
         params = {
-            'pool_name': self.params['name'],
+            'name_template': self.params['name'],
             'domain_id': self.params['template_id'],
             'datapool_id': self.params['datapool_id'],
             'controller_ip': self.params['controller_ip'],
@@ -81,6 +84,47 @@ class Pool:
 
         return domains
 
+    async def load_vms(self, conn):
+        vms = await vm.ListVms(controller_ip=self.params['controller_ip'])
+        valid_ids = {v['id'] for v in vms}
+        qu = f"SELECT * FROM vm WHERE pool_id = $1", self.params['id']
+        vms = await conn.fetch(*qu)
+        return [
+            dict(v.items()) for v in vms if v['id'] in valid_ids
+        ]
+
+    @classmethod
+    async def get_pool(cls, pool_id):
+        if pool_id in cls.instances:
+            return cls.instances[pool_id]
+        async with db.connect() as conn:
+            qu = f"SELECT * from pool where id = $1", pool_id
+            [params] = await conn.fetch(*qu)
+            return cls(params=params)
+
+
+    @enter_context(lambda: db.connect())
+    async def init(conn, self, id, block=False):
+        """
+        Init the pool (possibly, after service restart)
+        """
+        assert not len(self.queue._queue)
+        vms = await self.load_vms(conn)
+
+        for vm in vms:
+            await self.queue.put(vm)
+
+        self.queue.task_done()
+
+        add_domains = self.add_domains()
+        if block:
+            await add_domains
+
+    @classmethod
+    async def wake_pool(cls, pool_id, block=False):
+        ins = await cls.get_pool(pool_id)
+        await ins.init(pool_id, block)
+        return ins
 
     instances = {}
 
