@@ -43,13 +43,27 @@ export class NodesComponent implements OnInit {
 
       this.getNodes(this.id_cluster);
 
-      this.crumbs.push(
-        {
-          title: 'Серверы',
-          icon: 'server',
-          route: `resourses/clusters/${this.id_cluster}/nodes`
-        }
-      );
+      if(this.id_cluster) {
+        this.crumbs.push(
+          {
+            title: 'Серверы',
+            icon: 'server',
+            route: `resourses/clusters/${this.id_cluster}/nodes`
+          }
+        );
+      } else {
+        this.crumbs = [
+          {
+            title: 'Ресурсы',
+            icon: 'database'
+          },
+          {
+            title: 'Серверы',
+            icon: 'server',
+            route: `resourses/nodes`
+          }
+        ]
+      }
 
     });
   }
@@ -58,10 +72,12 @@ export class NodesComponent implements OnInit {
     this.service.getAllNodes(id_cluster).valueChanges.pipe(map(data => data.data.nodes))
       .subscribe( (data) => {
         this.nodes = data;
-        this.crumbs[1] = { // можно хранить в глобальном стейте
-          title: `Кластер ${this.nodes[0]['verbose_name']}`,
-          icon: 'building',
-          route: `resourses/clusters/${this.nodes[0]['cluster']['id']}`
+        if(this.id_cluster) {
+          this.crumbs[1] = { // можно хранить в глобальном стейте
+            title: `Кластер ${this.nodes[0]['verbose_name']}`,
+            icon: 'building',
+            route: `resourses/clusters/${this.nodes[0]['cluster']['id']}`
+          }
         }
           
         this.spinner = false;

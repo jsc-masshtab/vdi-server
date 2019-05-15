@@ -36,7 +36,7 @@ export class DatapoolsComponent implements OnInit {
 
   ngOnInit() {
     this.collectionAction();
-    console.log(this.router);
+ 
     this.activatedRoute.paramMap.subscribe((param: ParamMap) => {
       this.id_node = param.get('id') as string;
       this.getDatapools(this.id_node);
@@ -67,12 +67,12 @@ export class DatapoolsComponent implements OnInit {
           },
           {
             title: `Сервер ${node_name}`,
-            icon: 'building',
+            icon: 'server',
             route: `resourses/clusters/${cluster_id}/nodes/`
           },
           {
             title: `Пулы`,
-            icon: 'building',
+            icon: 'folder-open',
             route: `resourses/clusters/${cluster_id}/nodes/${node_id}/datapools`
           }
       ]

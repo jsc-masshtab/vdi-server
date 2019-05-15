@@ -22,6 +22,14 @@ const routes: Routes = [
     component: ClustersComponent
   },
   {
+    path: 'resourses/nodes',
+    component: NodesComponent
+  },
+  {
+    path: 'resourses/datapools',
+    component: DatapoolsComponent
+  },
+  {
     path: 'resourses/clusters/:id/nodes',
     component: NodesComponent
   },
