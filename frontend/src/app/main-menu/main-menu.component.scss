@@ -46,14 +46,26 @@ nav {
     display: flex;
     align-items: center;
     border-bottom: 3px solid transparent;
-    padding: 5px;
+    padding: 4px;
     padding-left: 10px;
+    height: 40px;
+
+    fa-icon {
+        margin-right: 5px;
+    }
 
     &:hover {
-        & .icon-arrow {
+        .icon-arrow {
             display: block;
         }
     }
+
+    & .icon-arrow {
+        display: none;
+        margin-left: auto;
+        padding: 5px;
+    }
+    
 }
 
 .menu-item-wrap__nested {
@@ -64,15 +76,6 @@ nav {
         border-bottom: 3px solid #c9d1d8;
       }
   }
-}
-
-fa-icon {
-    margin-right: 5px;
-}
-
-.icon-arrow {
-    display: none;
-    margin-left: auto;
 }
 
 .activeNav {
