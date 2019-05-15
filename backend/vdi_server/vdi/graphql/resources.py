@@ -69,7 +69,8 @@ class DatapoolType(graphene.ObjectType):
 
 
 
-
+def get_controller_ip(conn: Connection):
+    1
 
 
 class Resources:
@@ -142,10 +143,9 @@ class Resources:
     async def resolve_clusters(self, info, controller_ip):
         resp = await resources.ListClusters(controller_ip)
         fields = get_selections(info)
-        li = []
         return [
             Resources._make_type(ClusterType, item, fields)
-            for item in resp['results']
+            for item in resp
         ]
 
     @classmethod
@@ -223,22 +223,30 @@ class AddController(graphene.Mutation):
     class Arguments:
         ip = graphene.String(required=True)
         description = graphene.String(required=False)
+        set_default = graphene.Boolean()
 
     ok = graphene.Boolean()
 
+    @classmethod
     @enter_context(lambda: db.connect())
-    async def mutate(conn: Connection, self, info, ip, description=None):
+    async def _add_controller(conn: Connection, cls, ip, set_default=False, description=None):
         try:
             resp = await resources.ListClusters(controller_ip=ip)
         except FetchException:
             return AddController(ok=False)
 
-        query = '''
+        query = f'''
         INSERT INTO controller (ip, description) VALUES ($1, $2)
         ON CONFLICT DO NOTHING
         ''', ip, description
 
-        await conn.fetch(*query)
+        await conn.execute(*query)
 
+        if set_default:
+            query = "INSERT INTO default_controller (ip, unique_label) VALUES ($1, 'unique');", ip
+            await conn.execute(*query)
+
+    async def mutate(self, info, ip, set_default=False, description=None):
+        AddController._add_controller(info, ip=ip, set_default=set_default, description=description)
         return AddController(ok=True)
 
