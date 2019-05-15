@@ -94,18 +94,23 @@ class Resources:
         }
         return type(**dic)
 
-    @classmethod
-    async def _get_node_id(cls, controller_ip):
-        #TODO warning
-        resp = await resources.ListClusters(controller_ip=controller_ip)
-        [cluster] = resp['results']
-        resp = await resources.ListNodes(controller_ip=controller_ip, cluster_id=cluster['id'])
-        [node] = resp['results']
-        return node['id']
+    async def resolve_datapools(self, info, controller_ip, node_id=None):
+        if node_id is not None:
+            return Resources._get_datapools(info, controller_ip=controller_ip, node_id=node_id)
+        datapools = {}
+        clusters = await resources.ListClusters(controller_ip=controller_ip)
+        for cluster in clusters:
+            nodes = await resources.ListNodes(controller_ip=controller_ip, cluster_id=cluster['id'])
+            for node in nodes:
+                objects = await Resources._get_datapools(info, controller_ip=controller_ip, node_id=node['id'])
+                datapools.update(
+                    (obj.id, obj) for obj in objects
+                )
+        datapools = list(datapools.values())
+        return datapools
 
-    async def resolve_datapools(self, info, controller_ip, node_id=None): #, controller_id=None):
-        if node_id is None:
-            node_id = await Resources._get_node_id(controller_ip)
+    @classmethod
+    async def _get_datapools(cls, info, controller_ip, node_id):
         resp = await resources.ListDatapools(controller_ip=controller_ip, node_id=node_id)
         fields = get_selections(info)
 
@@ -152,20 +157,28 @@ class Resources:
             obj.cluster = ClusterType(**obj.cluster)
         return obj
 
-    async def resolve_nodes(self, info, controller_ip, cluster_id=None):
-
-        if cluster_id is None:
-            resp = await resources.ListClusters(controller_ip=controller_ip)
-            [cluster] = resp['results']
-            cluster_id = cluster['id']
-        resp = await resources.ListNodes(controller_ip=controller_ip, cluster_id=cluster_id)
+    @classmethod
+    async def _get_nodes(cls, info, controller_ip, cluster_id):
+        nodes = await resources.ListNodes(controller_ip=controller_ip, cluster_id=cluster_id)
         fields = get_selections(info)
 
         li = []
-        for item in resp['results']:
-            obj = Resources._make_node(item, fields)
+        for node in nodes:
+            obj = Resources._make_node(node, fields)
             li.append(obj)
         return li
+
+    async def resolve_nodes(self, info, controller_ip, cluster_id=None):
+        if cluster_id is not None:
+            return await Resources._get_nodes(info, controller_ip, cluster_id)
+        result = {}
+        clusters = await resources.ListClusters(controller_ip=controller_ip)
+        for cluster in clusters:
+            nodes = await Resources._get_nodes(info, controller_ip, cluster['id'])
+            result.update(
+                (obj.id, obj) for obj in nodes
+            )
+        return list(result.values())
 
     @enter_context(lambda: db.connect())
     async def resolve_controllers(conn: Connection, self, info):

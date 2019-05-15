@@ -63,12 +63,12 @@ async def test_pools_list(create_pool, pool_settings):
         assert p['settings']['reserve_size']
 
 
-@pytest.mark.asyncio
-async def test_wake_pool(create_pool, pool_settings, conn):
-    pool_id = create_pool['id']
-    ins = await Pool.get_pool(pool_id)
-    vms = await ins.load_vms(conn)
-    Pool.instances.pop(pool_id)
-    ins = await Pool.wake_pool(pool_id)
-    new_vms = await ins.load_vms(conn)
-    assert new_vms == vms
+# @pytest.mark.asyncio
+# async def test_wake_pool(create_pool, pool_settings, conn):
+#     pool_id = create_pool['id']
+#     ins = await Pool.get_pool(pool_id)
+#     vms = await ins.load_vms(conn)
+#     Pool.instances.pop(pool_id)
+#     ins = await Pool.wake_pool(pool_id)
+#     new_vms = await ins.load_vms(conn)
+#     assert new_vms == vms
