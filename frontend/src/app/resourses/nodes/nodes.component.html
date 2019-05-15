@@ -1,4 +1,4 @@
 <div class="breadcrumbs-wrap">
     <vdi-breadcrumbs [data]="crumbs"></vdi-breadcrumbs>
 </div>
-<vdi-table-component [data]="infoTemplates" [collection]="collection" [spinner]="spinner" (clickRowData)="clickNode($event)"></vdi-table-component>
+<vdi-table-component [data]="nodes" [collection]="collection" [spinner]="spinner" [cursor]="true" (clickRowData)="routeTo($event)"></vdi-table-component>

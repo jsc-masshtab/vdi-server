@@ -1,3 +1,5 @@
+import { DatapoolsService } from './resourses/datapools/datapools.service';
+import { DatapoolsComponent } from './resourses/datapools/datapools.component';
 
 import { ServersComponent } from './settings/servers/servers.component';
 
@@ -21,7 +23,7 @@ import { HttpClientModule } from '@angular/common/http';
 /*  -----------------------------------   icons   --------------------------------------*/
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { library } from '@fortawesome/fontawesome-svg-core'
-import { faDesktop,faDatabase, faLayerGroup,faPlusCircle,faSpinner,faServer,faCog,faBuilding,faChevronUp } from '@fortawesome/free-solid-svg-icons';
+import { faDesktop,faDatabase, faLayerGroup,faPlusCircle,faSpinner,faServer,faCog,faBuilding,faChevronUp,faTimesCircle } from '@fortawesome/free-solid-svg-icons';
 /*  -----------------------------------   icons   --------------------------------------*/
 
 
@@ -67,7 +69,8 @@ import { ServersService } from './settings/servers/servers.service';
     NodesComponent,
     ClustersComponent,
     ServersComponent,
-    AddControllerComponent
+    AddControllerComponent,
+    DatapoolsComponent
   ],
   imports: [
     BrowserModule,
@@ -92,7 +95,8 @@ import { ServersService } from './settings/servers/servers.service';
               PoolService,
               NodesService,
               ClustersService,
-              ServersService
+              ServersService,
+              DatapoolsService
             ],
   bootstrap: [AppComponent]
 })
@@ -100,7 +104,8 @@ import { ServersService } from './settings/servers/servers.service';
 
 export class AppModule {
   constructor() { 
-    library.add(faDesktop,faDatabase,faLayerGroup,faPlusCircle,faSpinner,faServer,faCog,faBuilding,faChevronUp); // Неиспользуемые иконки при финальной сборке удаляются
+    library.add(faDesktop,faDatabase,faLayerGroup,faPlusCircle,faSpinner,faServer,faCog,faBuilding,faChevronUp,faTimesCircle
+      ); // Неиспользуемые иконки при финальной сборке удаляются
   }
 
 

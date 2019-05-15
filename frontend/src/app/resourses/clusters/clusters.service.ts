@@ -10,8 +10,7 @@ export class ClustersService  {
     constructor(private service: Apollo) {}
 
     public getAllClusters(): QueryRef<any,any> {
-        let controller_ip = localStorage.getItem('controller');
-        console.log(controller_ip);
+        let controller_ip = JSON.parse(localStorage.getItem('controller'));
         return  this.service.watchQuery({
             query:  gql` query allClusters($controller_ip: String) {
                             clusters(controller_ip: $controller_ip) {

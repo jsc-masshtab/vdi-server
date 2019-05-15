@@ -55,10 +55,9 @@
         padding-top: 3px;
         padding-bottom: 3px;
         justify-content: center;
+        align-items: center;
         min-width: 50px;
         overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
 
         &:last-child {
             border-right: none;
@@ -69,6 +68,10 @@
     .index-column { 
         width: 50px;
         flex: inherit;
+    }
+
+    .name_width {
+        min-width: 30%;
     }
 }
 

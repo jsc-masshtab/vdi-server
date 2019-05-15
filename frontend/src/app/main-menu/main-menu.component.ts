@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { trigger, state, style, animate, transition } from "@angular/animations";
+import { Router, NavigationStart} from '@angular/router';
 
 
 @Component({
@@ -25,21 +26,39 @@ export class MainMenuComponent implements OnInit {
                                 { name: 'Пулы', icon:'desktop', route:'pools' },
 
                                 { name: 'Ресурсы', icon: 'database', route:'resourses/clusters',open: false,
-                                        nested: [{ name: 'Кластеры', icon:'building', route:'resourses/clusters',
-                                                          nested: [{ name: 'Серверы', icon:'server', route:'resourses/clusters/nodes' }] 
-                                                }]               
+                                        nested: [ { name: 'Кластеры', icon:'building', route:'resourses/clusters'},
+                                                  { name: 'Серверы', icon:'server', route:'resourses/clusters/nodes' }]               
                                 },
                                 { name: 'Настройки', icon:'cog', route:'settings/servers', open: false,
-                                        nested: [{ name: 'Серверы', icon:'server',route:'settings/servers' }] }
+                                        nested: [{ name: 'Серверы', icon:'server',route:'settings/servers' }] 
+                                }
                               ];
 
-  constructor() {}
+  constructor(private router: Router) {}
 
   ngOnInit() {
+    this.openRoute(); 
   }
 
-  public clickItem(index,listMenu) {
+  public clickItem(index,listMenu,event) {
+    event.stopPropagation();
     listMenu[index].open = !listMenu[index].open;
+  }
+
+  private openRoute() {
+   this.router.events.subscribe((event) => {
+			if(event instanceof NavigationStart) {
+        let url = event.url.split('/',2)[1]; // url в строке браузера 1 крошка после домена
+        this.listMenu.forEach((element,index) => {
+          let route = element['route'].split('/',1).join();
+          if(route === url && element['nested']) {
+            if(!this.listMenu[index]['open']) {
+              this.listMenu[index]['open'] = true;
+            }
+          }
+        });
+			}
+    });
   }
   
 

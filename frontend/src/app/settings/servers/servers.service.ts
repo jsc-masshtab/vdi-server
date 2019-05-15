@@ -28,16 +28,16 @@ export class ServersService  {
     public addController(ip:string, description:string) {
         return this.service.mutate<any>({
             mutation: gql`  
-                            mutation AddController($ip: String!,$description: String!) {
-                                addController(ip: $ip, description: $description) {
+                            mutation AddController($description: String!,$ip: String!) {
+                                addController(description: $description,ip: $ip) {
                                     ok
                                 }
                             }
             `,
             variables: {
                 method: 'POST',
-                ip: ip,
-                description: description
+                description: description,
+                ip: ip
             }
         })
     }
