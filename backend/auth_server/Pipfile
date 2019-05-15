@@ -16,6 +16,7 @@ vdi = {editable = false,path = "./../vdi_server"}
 asyncpg = "*"
 classy-async = {editable = false,path = "./../classy_async"}
 cached-property = "*"
+sanic-server = {path = "."}
 
 [requires]
 python_version = "3.7"

@@ -111,3 +111,7 @@ async def test(request):
 async def protected(request):
     return json({"protected": True})
 
+
+def entry_point():
+    import runpy
+    runpy.run_module('sanic', run_name='__main__')
