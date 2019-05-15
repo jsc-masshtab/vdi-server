@@ -23,6 +23,10 @@ class ListClusters(UrlFetcher):
     def url(self):
         return f'http://{self.controller_ip}/api/clusters/'
 
+    async def run(self):
+        resp = await super().run()
+        return resp['results']
+
 
 @dataclass()
 class ListNodes(UrlFetcher):
@@ -33,6 +37,19 @@ class ListNodes(UrlFetcher):
     @cached
     def url(self):
         return f'http://{self.controller_ip}/api/nodes/?cluster={self.cluster_id}'
+
+    async def run(self):
+        resp = await super().run()
+        return resp['results']
+
+
+@dataclass()
+class FetchNode(UrlFetcher):
+    node_id: str
+    controller_ip: str
+
+    def url(self):
+        return f'http://{self.controller_ip}/api/nodes/{self.node_id}/'
 
 
 @dataclass()

@@ -5,6 +5,7 @@ import graphene
 from graphql import GraphQLError
 
 from asyncpg.connection import Connection
+from classy_async import wait
 
 from ..db import db
 from ..tasks import resources, FetchException, vm
@@ -34,18 +35,19 @@ class ClusterType(graphene.ObjectType):
     memory_count = graphene.Int()
     tags = graphene.List(graphene.String)
 
-
+#FIXME tests
 
 class NodeType(graphene.ObjectType):
     id = graphene.String()
     verbose_name = graphene.String()
     status = graphene.String()
-    datacenter_id = graphene.String()
-    datacenter_name = graphene.String()
+    #FIXME
+    datacenter_id = graphene.String(deprecation_reason="Use `datacenter` field")
+    datacenter_name = graphene.String(deprecation_reason="Use `datacenter` field")
+    datacenter = graphene.Field(DatacenterType)
     cpu_count = graphene.String()
     memory_count = graphene.String()
     management_ip = graphene.String()
-
     cluster = graphene.Field(lambda: ClusterType)
 
 
@@ -74,18 +76,14 @@ class Resources:
     datapools = graphene.List(DatapoolType,
                               node_id=graphene.String(required=False),
                               controller_ip=graphene.String(),
-                              # controller_id=graphene.String(required=False),
                               )
-
     clusters = graphene.List(ClusterType,
                              controller_ip=graphene.String())
-
     nodes = graphene.List(NodeType,
                           controller_ip=graphene.String(),
                           cluster_id=graphene.String(required=False))
-
+    node = graphene.Field(NodeType, id=graphene.String(), controller_ip=graphene.String())
     controllers = graphene.List(ControllerType)
-
     poolwizard = graphene.Field(PoolSettings)
 
     @classmethod
@@ -96,25 +94,50 @@ class Resources:
         }
         return type(**dic)
 
-    @classmethod
-    async def _get_node_id(cls, controller_ip):
-        #TODO warning
-        resp = await resources.ListClusters(controller_ip=controller_ip)
-        [cluster] = resp['results']
-        resp = await resources.ListNodes(controller_ip=controller_ip, cluster_id=cluster['id'])
-        [node] = resp['results']
-        return node['id']
+    async def resolve_datapools(self, info, controller_ip, node_id=None):
+        if node_id is not None:
+            return Resources._get_datapools(info, controller_ip=controller_ip, node_id=node_id)
+        datapools = {}
+        clusters = await resources.ListClusters(controller_ip=controller_ip)
+        for cluster in clusters:
+            nodes = await resources.ListNodes(controller_ip=controller_ip, cluster_id=cluster['id'])
+            for node in nodes:
+                objects = await Resources._get_datapools(info, controller_ip=controller_ip, node_id=node['id'])
+                datapools.update(
+                    (obj.id, obj) for obj in objects
+                )
+        datapools = list(datapools.values())
+        return datapools
 
-    async def resolve_datapools(self, info, controller_ip, node_id=None): #, controller_id=None):
-        if node_id is None:
-            node_id = await Resources._get_node_id(controller_ip)
+    @classmethod
+    async def _get_datapools(cls, info, controller_ip, node_id):
         resp = await resources.ListDatapools(controller_ip=controller_ip, node_id=node_id)
         fields = get_selections(info)
-        return {
-            Resources._make_type(DatapoolType, item, fields)
-            for item in resp
-        }
 
+        li = []
+        for item in resp:
+            obj = Resources._make_type(DatapoolType, item, fields)
+            if 'nodes_connected' in fields:
+                base_fields = {'id', 'verbose_name'}
+                node_fields = set(get_selections(info, 'nodes_connected'))
+                if not node_fields <= base_fields:
+                    tasks = [
+                        resources.FetchNode(controller_ip=controller_ip, node_id=node['id'])
+                        for node in obj.nodes_connected
+                    ]
+                    nodes = []
+                    async for n in wait(*tasks):
+                        n = Resources._make_node(n, node_fields)
+                        nodes.append(n)
+                else:
+                    nodes = [
+                        Resources._make_node(node, node_fields)
+                        for node in obj.nodes_connected
+                    ]
+                obj.nodes_connected = nodes
+            li.append(obj)
+
+        return li
 
     async def resolve_clusters(self, info, controller_ip):
         resp = await resources.ListClusters(controller_ip)
@@ -125,22 +148,37 @@ class Resources:
             for item in resp['results']
         ]
 
-    async def resolve_nodes(self, info, controller_ip, cluster_id=None):
+    @classmethod
+    def _make_node(cls, item, fields):
+        obj = Resources._make_type(NodeType, item, fields)
+        if 'datacenter' in fields:
+            obj.datacenter = DatacenterType(id=item['datacenter_id'], verbose_name=item['datacenter_name'])
+        if 'cluster' in fields:
+            obj.cluster = ClusterType(**obj.cluster)
+        return obj
 
-        if cluster_id is None:
-            resp = await resources.ListClusters(controller_ip=controller_ip)
-            [cluster] = resp['results']
-            cluster_id = cluster['id']
-        resp = await resources.ListNodes(controller_ip=controller_ip, cluster_id=cluster_id)
+    @classmethod
+    async def _get_nodes(cls, info, controller_ip, cluster_id):
+        nodes = await resources.ListNodes(controller_ip=controller_ip, cluster_id=cluster_id)
         fields = get_selections(info)
 
         li = []
-        for item in resp['results']:
-            obj = Resources._make_type(NodeType, item, fields)
-            if 'cluster' in fields:
-                obj.cluster = ClusterType(**obj.cluster)
+        for node in nodes:
+            obj = Resources._make_node(node, fields)
             li.append(obj)
         return li
+
+    async def resolve_nodes(self, info, controller_ip, cluster_id=None):
+        if cluster_id is not None:
+            return await Resources._get_nodes(info, controller_ip, cluster_id)
+        result = {}
+        clusters = await resources.ListClusters(controller_ip=controller_ip)
+        for cluster in clusters:
+            nodes = await Resources._get_nodes(info, controller_ip, cluster['id'])
+            result.update(
+                (obj.id, obj) for obj in nodes
+            )
+        return list(result.values())
 
     @enter_context(lambda: db.connect())
     async def resolve_controllers(conn: Connection, self, info):
@@ -175,7 +213,10 @@ class Resources:
         }
         return PoolSettings(**params)
 
-
+    async def resolve_node(self, info, controller_ip, id):
+        fields = get_selections(info)
+        node = await resources.FetchNode(controller_ip=controller_ip, node_id=id)
+        return Resources._make_node(node, fields)
 
 
 class AddController(graphene.Mutation):
