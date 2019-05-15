@@ -10,13 +10,9 @@ from vdi.db import db
 
 
 async def add_controller(ip):
+    from vdi.graphql.resources import AddController
     await db.init()
-    async with db.connect() as conn:
-        await conn.fetch("""
-            INSERT INTO controller(ip) VALUES ('192.168.20.120')
-            ON CONFLICT DO NOTHING
-            """)
-
+    await AddController._add_controller(ip='192.168.20.120', set_default=True)
 
 
 async def main():
