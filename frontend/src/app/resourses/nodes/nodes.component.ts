@@ -21,11 +21,6 @@ export class NodesComponent implements OnInit {
     {
       title: 'Ресурсы',
       icon: 'database'
-    },
-    {
-      title: 'Кластеры',
-      icon: 'building',
-      route: 'resourses/clusters'
     }
   ];
 
@@ -38,33 +33,9 @@ export class NodesComponent implements OnInit {
     this.collectionAction();
 
     this.activatedRoute.paramMap.subscribe((param: ParamMap) => {
-      console.log(param);
       this.id_cluster = param.get('id') as string;
 
       this.getNodes(this.id_cluster);
-
-      if(this.id_cluster) {
-        this.crumbs.push(
-          {
-            title: 'Серверы',
-            icon: 'server',
-            route: `resourses/clusters/${this.id_cluster}/nodes`
-          }
-        );
-      } else {
-        this.crumbs = [
-          {
-            title: 'Ресурсы',
-            icon: 'database'
-          },
-          {
-            title: 'Серверы',
-            icon: 'server',
-            route: `resourses/nodes`
-          }
-        ]
-      }
-
     });
   }
 
@@ -73,13 +44,24 @@ export class NodesComponent implements OnInit {
       .subscribe( (data) => {
         this.nodes = data;
         if(this.id_cluster) {
-          this.crumbs[1] = { // можно хранить в глобальном стейте
-            title: `Кластер ${this.nodes[0]['verbose_name']}`,
+          this.crumbs.push( {                                                // переход в имя кластера - серверы     // можно хранить в глобальном стейте ?
+            title: `Кластер ${this.nodes[0]['cluster']['verbose_name']}`,
             icon: 'building',
             route: `resourses/clusters/${this.nodes[0]['cluster']['id']}`
-          }
+          },
+          {
+            title: 'Серверы',
+            icon: 'server',
+           // route: `resourses/clusters/${this.id_cluster}/nodes`
+          })
+        } else {                                                                         // переход из общего меню серверы
+          this.crumbs.push({
+            title: 'Серверы',
+            icon: 'server',
+           // route: `resourses/nodes`
+          })
         }
-          
+   
         this.spinner = false;
       },
       (error)=> {
@@ -117,11 +99,15 @@ export class NodesComponent implements OnInit {
   }
 
   public routeTo(event): void {
-    console.log(event);
     localStorage.setItem('node_name',event['verbose_name']);
     localStorage.setItem('node_id',event['id']);
     localStorage.setItem('cluster_name',event['cluster']['verbose_name']);
     localStorage.setItem('cluster_id',event['cluster']['id']);
-    this.router.navigate([`resourses/clusters/${event.cluster.id}/nodes/${event.id}/datapools`]);
+
+    if(this.id_cluster) { // переход в имя кластера - серверы 
+      this.router.navigate([`resourses/clusters/${event.cluster.id}/nodes/${event.id}/datapools`]);
+    } else {             // переход из общего меню серверы
+      this.router.navigate([`resourses/nodes/${event.id}/datapools`]);
+    }
   }
 }
