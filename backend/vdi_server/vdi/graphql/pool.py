@@ -149,6 +149,10 @@ class AddPool(graphene.Mutation):
             'template_id': template_id or settings['template_id'],
             'name': name,
         }
+        if pool['controller_ip'] is None:
+            from vdi.graphql.resources import get_controller_ip
+            pool['controller_ip'] = await get_controller_ip()
+
         fields = ', '.join(pool.keys())
         values = ', '.join(f'${i+1}' for i in range(len(pool)))
         pool_query = f"INSERT INTO pool ({fields}) VALUES ({values}) RETURNING id", *pool.values()
