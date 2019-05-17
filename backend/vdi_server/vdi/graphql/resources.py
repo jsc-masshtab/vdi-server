@@ -254,10 +254,15 @@ class AddController(graphene.Mutation):
         await conn.execute(*query)
 
         if set_default:
-            query = "INSERT INTO default_controller (ip, unique_label) VALUES ($1, 'unique');", ip
-            await conn.execute(*query)
+            [(exists,)] = await conn.fetch("SELECT COUNT(*) FROM default_controller")
+            if not exists:
+                query = "INSERT INTO default_controller (ip) VALUES ($1)", ip
+                await conn.fetch(*query)
+            else:
+                query = "UPDATE default_controller SET ip = $1", ip
+                await conn.fetch(*query)
 
     async def mutate(self, info, ip, set_default=False, description=None):
-        AddController._add_controller(info, ip=ip, set_default=set_default, description=description)
+        await AddController._add_controller(ip=ip, set_default=set_default, description=description)
         return AddController(ok=True)
 
