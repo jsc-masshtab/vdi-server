@@ -13,7 +13,12 @@ export class BreadcrumbsComponent  {
   constructor(private router: Router) {}
 
 
-  public routeTo(crumb) {
+  public routeTo(crumb,index) {
+    console.log(crumb,index);
+    if(index === 0) {
+      return;
+    }
+    console.log(crumb.route);
     this.router.navigate([crumb.route]);
   }
 

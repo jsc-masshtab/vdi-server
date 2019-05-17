@@ -5,6 +5,7 @@ import { TemplatesComponent } from './templates/templates.component';
 import { PollsComponent } from './polls/polls.component';
 import { ServersComponent } from './settings/servers/servers.component';
 import { NodesComponent } from './resourses/nodes/nodes.component';
+import { DatapoolsComponent } from './resourses/datapools/datapools.component';
 
 const routes: Routes = [
   {
@@ -21,9 +22,14 @@ const routes: Routes = [
     component: ClustersComponent
   },
   {
-    path: 'resourses/clusters/nodes',
+    path: 'resourses/clusters/:id/nodes',
     component: NodesComponent
   },
+  {
+    path: 'resourses/clusters/:id/nodes/:id/datapools',
+    component: DatapoolsComponent
+  },
+
   // {
   //   path: 'resourses',
   //   component: TemplatesComponent
