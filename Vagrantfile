@@ -11,7 +11,7 @@ RAM = "2048"
 
 Vagrant.configure(VAGRANTFILE_API_VERSION) do | config |
  config.vm.provider "libvirt"
- config.vm.synced_folder '.', '/vagrant', type: "nfs"
+ config.vm.synced_folder '.', '/vagrant', type: "nfs", mount_options: ["vers=3,tcp"]
  config.vm.network "private_network", ip: "192.168.20.110"
  config.vm.provision :shell, path: "vagrant/init.sh"
  config.vm.provision :shell, path: "vagrant/vdi_server.sh"
