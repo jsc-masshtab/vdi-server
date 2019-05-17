@@ -37,7 +37,7 @@ export class DatapoolsComponent implements OnInit {
       this.getDatapools(this.id_node);
     });
 
-    this.activatedRoute.data.subscribe((data: string) => {
+    this.activatedRoute.data.subscribe((data: Object) => {
       this.route_info = data['route_info'];
     });
   }
