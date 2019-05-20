@@ -7,27 +7,68 @@ import json
 
 from .client import HttpClient
 from . import CONTROLLER_IP, Token
+from .base import UrlFetcher
 
 @dataclass()
-class PrepareVm(Task):
+class EnableRemoteAccess(UrlFetcher):
+    controller_ip: str
+    domain_id: str
+
+    method = 'POST'
+
+    def url(self):
+        return f"http://{self.controller_ip}/api/domains/{self.domain_id}/remote-access/"
+
+    async def body(self):
+        return json.dumps({
+            'remote_access': True
+        })
+
+POWER_STATES = ['unknown', 'power off', 'power on and suspended', 'power on']
+
+
+@dataclass()
+class PrepareVm(UrlFetcher):
     """
-    Prepare for use by the client: turn on & enable remote access
+    Prepare for the first use: enable remote access & power on
+    """
+    controller_ip: str
+    domain_id: str
+
+    def url(self):
+        return f"http://{self.controller_ip}/api/domains/{self.domain_id}/"
+
+    async def run(self):
+        resp = await super().run()
+        assert resp['user_power_state'] == POWER_STATES.index('power off')
+        await PowerOn(controller_ip=self.controller_ip, domain_id=self.domain_id)
+        assert not resp['remote_access']
+        info = await EnableRemoteAccess(controller_ip=self.controller_ip, domain_id=self.domain_id)
+        return info
+
+
+
+@dataclass()
+class PowerOn(UrlFetcher):
+    controller_ip: str
+    domain_id: str
+
+    method = 'POST'
+    body = ''
+
+    def url(self):
+        return f"http://{self.controller_ip}/api/domains/{self.domain_id}/start/"
+
+
+@dataclass()
+class GetDomainInfo(UrlFetcher):
+    """
+    Tmp task
+    Ensure vm is on a
     """
 
     domain_id: str
+    controller_ip: str
 
-    async def run(self):
-        client = HttpClient()
-        token = await Token()
-        headers = {
-            'Authorization': f'jwt {token}'
-        }
-        body = urllib.parse.urlencode({
-            'remote_access': True
-        })
-        url = f"http://{CONTROLLER_IP}/api/domains/{self.domain_id}/remote-access/"
-        r = await client.fetch(url, method='POST', headers=headers, body=body)
-        return {
-            'host': CONTROLLER_IP,
-            'port': r['remote_access_port'],
-        }
+    def url(self):
+        return f"http://{self.controller_ip}/api/domains/{self.domain_id}/"

@@ -178,9 +178,9 @@ class UploadImage(Task):
 async def discover_resources():
     controller_ip = settings['controller_ip']
     resp = await resources.ListClusters(controller_ip=controller_ip)
-    [cluster] = resp['results']
+    [cluster] = resp
     resp = await resources.ListNodes(controller_ip=controller_ip, cluster_id=cluster['id'])
-    [node] = resp['results']
+    [node] = resp
     [datapool] = await resources.ListDatapools(controller_ip=controller_ip, node_id=node['id'])
     return {
         'node': node, 'cluster': cluster, 'datapool': datapool, 'controller_ip': controller_ip,
