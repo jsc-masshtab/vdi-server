@@ -76,12 +76,15 @@ class AddTemplate(graphene.Mutation):
 
 class TemplateMixin:
 
-    templates = graphene.List(TemplateType)
-    vms = graphene.List(TemplateType)
+    templates = graphene.List(TemplateType, controller_ip=graphene.String())
+    vms = graphene.List(TemplateType, controller_ip=graphene.String())
 
     @enter_context(lambda: db.connect())
-    async def resolve_templates(conn: Connection, self, info):
-        vms = await vm.ListVms()
+    async def resolve_templates(conn: Connection, self, info, controller_ip=None):
+        if controller_ip is None:
+            from vdi.graphql.resources import get_controller_ip
+            controller_ip = await get_controller_ip()
+        vms = await vm.ListVms(controller_ip=controller_ip)
         vms = {vm['id'] for vm in vms}
         selections = get_selections(info)
 
@@ -125,8 +128,11 @@ class TemplateMixin:
 
 
     @enter_context(lambda: db.connect())
-    async def resolve_vms(conn: Connection, self, info):
-        vms = await vm.ListVms()
+    async def resolve_vms(conn: Connection, self, info, controller_ip=None):
+        if controller_ip is None:
+            from vdi.graphql.resources import get_controller_ip
+            controller_ip = await get_controller_ip()
+        vms = await vm.ListVms(controller_ip=controller_ip)
         return [
             TemplateType(name=vm['verbose_name'], id=vm['id'], info=json.dumps(vm))
             for vm in vms
