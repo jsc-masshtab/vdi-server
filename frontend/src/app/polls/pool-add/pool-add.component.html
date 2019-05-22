@@ -5,18 +5,56 @@
     <button [mat-dialog-close]="true" class="form-close"><fa-icon [icon]="['fas','times-circle']"></fa-icon></button>
   </div>
 
-  <div class="form-fields">
+  <div class="form-fields" [formGroup]="createPoolForm">
     <label class="field">
-      <p class="field-name">Введите имя пула</p>
-      <input type="text" [(ngModel)]="poolName" [focusMe]="true">
+      <p class="field-name">Имя пула</p>
+      <input type="text" [focusMe]="true" formControlName="name">
     </label>
+
     <label class="field">
       <p class="field-name">Выберите шаблон ВМ</p>
       <ba-select
-          [inputData]= "dataSelect || []"
-          (outputData)="selectValue($event)"
-          defaultData="- нет доступных шаблонов -">
+          [inputData]= "templates || []"
+          (outputData)="selectValue($event,'template')"
+          [defaultData]="defaultDataTemplates">
       </ba-select>
+    </label>
+
+    <label class="field">
+      <p class="field-name">Выберите кластер</p>
+      <ba-select
+          [inputData]= "clusters || []"
+          (outputData)="selectValue($event,'cluster')"
+          [defaultData]="defaultDataClusters">
+      </ba-select>
+    </label>
+
+    <label class="field" *ngIf="id_cluster">
+      <p class="field-name">Выберите сервер</p>
+      <ba-select
+          [inputData]= "nodes || []"
+          (outputData)="selectValue($event,'node')"
+          [defaultData]="defaultDataNodes">
+      </ba-select>
+    </label>
+
+    <label class="field" *ngIf="id_node">
+      <p class="field-name">Выберите пул данных</p>
+      <ba-select
+          [inputData]= "datapools || []"
+          (outputData)="selectValue($event,'datapool')"
+          [defaultData]="defaultDataDatapools">
+      </ba-select>
+    </label>
+
+    <label class="field">
+      <p class="field-name">Начальный размер пула</p>
+      <input type="number" formControlName="initial_size">
+    </label>
+
+    <label class="field">
+      <p class="field-name">Размер пула</p>
+      <input type="number" formControlName="reserve_size">
     </label>
   </div>
 
