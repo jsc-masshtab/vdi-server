@@ -33,6 +33,8 @@ pacman -S mingw32/mingw-w64-i686-spice-gtk mingw32/mingw-w64-i686-spice-protocol
 sudo apt install libgirepository1.0-dev gcc libcairo2-dev pkg-config python3-dev gir1.2-gtk-3.0
 pip install pipenv
 cd <desktop-client>
+pipenv shell
+>>PIP_NO_BINARY=ALL pipenv install pygobject
 pipenv install
 ```
 
