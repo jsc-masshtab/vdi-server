@@ -70,18 +70,17 @@ nav {
         display: none;
         margin-left: auto;
         padding: 5px;
-    }
-    
+    }  
 }
 
 .menu-item-wrap_nested {
     width: -webkit-fit-content;
     width: fit-content;
-  &:not(.activeNavNested) {
+    &:not(.activeNavNested) {
       &:hover {
         border-bottom: 3px solid #c9d1d8;
       }
-  }
+    }
 }
 
 .icons_nested {

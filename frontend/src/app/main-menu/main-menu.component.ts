@@ -1,4 +1,4 @@
-import { Component, OnInit,  ChangeDetectionStrategy,ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { trigger, style, animate, transition } from "@angular/animations";
 import { Router, NavigationStart} from '@angular/router';
 
@@ -6,7 +6,6 @@ import { Router, NavigationStart} from '@angular/router';
   selector: 'vdi-main-menu',
   templateUrl: './main-menu.component.html',
   styleUrls: ['./main-menu.component.scss'],
-  //changeDetection: ChangeDetectionStrategy.OnPush,
   animations: [
     trigger('fadeInOut', [
       transition(':enter', [   // :enter is alias to 'void => *'
