@@ -316,7 +316,7 @@ class Viewer(Gtk.ApplicationWindow):
         if type(channel) == SpiceClientGLib.MainChannel:
             self.main_channel = channel
             channel_id = channel.get_property("channel-id")
-            print channel.props.agent_connected
+            #print channel.props.agent_connected
             if self._has_agent():
                 print "has agent"
         elif type(channel) == SpiceClientGLib.DisplayChannel:

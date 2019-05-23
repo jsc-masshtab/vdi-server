@@ -80,7 +80,7 @@ class ApiSession:
             session = self.init_session()
             func = getattr(session, method)
             r = func(*args, **kwargs)
-            print method, r.status_code
+            # print method, r.status_code
             if self._bad_token(r):
                 self.refresh_session_token()
                 r = func(*args, **kwargs)

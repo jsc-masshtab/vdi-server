@@ -212,8 +212,8 @@ class Login(Gtk.ApplicationWindow):
         else:
             print 'wat!? ^_^'
 
-    @staticmethod
-    def ping(ip, port, send_end):
+    # @staticmethod
+    def ping(self, ip, port, send_end):
         alive = False
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         try:
