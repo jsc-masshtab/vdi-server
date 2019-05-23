@@ -22,7 +22,8 @@ export class PoolsService  {
                                     }
                                     state { 
                                         available {
-                                            name
+                                            info
+                                            id
                                         }
                                     }
                                 }  

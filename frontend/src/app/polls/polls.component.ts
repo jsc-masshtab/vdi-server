@@ -36,9 +36,10 @@ export class PollsComponent implements OnInit {
       property_lv2: 'reserve_size'
     },
     {
-      title: 'Состояние',
+      title: 'Доступные ВМ',
       property: 'state',
-      property_lv2: 'running'
+      property_lv2_array: 'available',
+      type: 'array'
     }
   ];
 
@@ -65,6 +66,7 @@ export class PollsComponent implements OnInit {
     this.service.getAllPools().valueChanges.pipe(map(data => data.data.pools))
       .subscribe( (data) => {
         this.pools = data;
+        console.log(this.pools);
         this.spinner = false;
       },
       (error)=> {
