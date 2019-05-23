@@ -62,13 +62,23 @@ class DropTemplate(graphene.Mutation):
 
 class AddTemplate(graphene.Mutation):
     class Arguments:
+        controller_ip = graphene.String()
         id = graphene.String()
 
     ok = graphene.Boolean()
 
     @enter_context(lambda: db.connect())
-    async def mutate(conn: Connection, self, info, id):
-        qu = "INSERT INTO template_vm (id) VALUES ($1)", id
+    async def mutate(conn: Connection, self, info, id, controller_ip=None):
+        if controller_ip is None:
+            from vdi.graphql.resources import get_controller_ip
+            controller_ip = await get_controller_ip()
+        from vdi.tasks import Token, HttpClient
+        url = f"http://{controller_ip}/api/domains/{id}"
+        headers = {
+            'Authorization': f'jwt {await Token()}',
+        }
+        info = await HttpClient().fetch(url, headers=headers)
+        qu = "INSERT INTO template_vm (id, veil_info) VALUES ($1, $2)", id, json.dumps(info)
         await conn.fetch(*qu)
         return AddTemplate(ok=True)
 
