@@ -3,15 +3,16 @@
 
 
 import re
-import ipaddress
 import gi
+import socket
+import multiprocessing
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk, Gdk
 
 import logging
 LOG = logging.getLogger()
 
-from vdi_thin.layout.splash import Image, Spinner
+from vdi_thin.layouts.splash import Image, Spinner
 from vdi_thin.commands.login import LoginCommand
 from vdi_thin.services.api_session import ApiSession
 
@@ -128,7 +129,7 @@ class Login(Gtk.ApplicationWindow):
         #self.login_button = Gtk.Button(None, image=Gtk.Image(stock=Gtk.STOCK_CONNECT))
         self.login_button = Gtk.Button()
         self.login_button.set_always_show_image(True)
-        self.login_button.set_label("Login")
+        self.login_button.set_label(_("Login"))
         self.login_button.set_margin_bottom(10)
         self.login_button.connect("clicked", self.on_login_button_clicked)
 
@@ -195,19 +196,46 @@ class Login(Gtk.ApplicationWindow):
         ip = self.ip_field.get_text()
         # port = self.port_field.get_value_as_int()
         port = self.port_field.get_text()
+        if not self.check_host(ip, int(port)):
+            self.set_msg("Hostname is not accessible")
+            return
         if self.remember_user.get_active():
             self.app.save_form(ip, port, username, password)
         else:
             self.app.save_form(ip, port, username)
         if self.app.mode == 'default_mode':
             server = "http://{ip}:{port}".format(ip=ip, port=port)
-            cmd = LoginCommand(self.app, api_session=ApiSession(username, password, server),
-                               login_handler=self)
+            # cmd = LoginCommand(self.app, api_session=ApiSession(username, password, server), login_handler=self)
+            cmd = LoginCommand(self.app, api_session=ApiSession(username, password, ip, port), login_handler=self)
             self.wait_state(cmd(retry_count=2))
         elif self.app.mode == 'manual_mode':
-            self.app.do_viewer(host=ip, port=str(port), password=password)
+            self.app.do_viewer(host=ip, port=port, password=password)
         else:
             print 'wat!? ^_^'
+
+    @staticmethod
+    def ping(ip, port, send_end):
+        alive = False
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        try:
+            ret = s.connect_ex((ip, port))
+            alive = (ret != 113)
+        except Exception, e:
+            print e
+        finally:
+            s.close()
+        send_end.send(alive)
+
+    def check_host(self, ip, port):
+        recv_end, send_end = multiprocessing.Pipe(False)
+        p = multiprocessing.Process(target=self.ping, args=(ip, port, send_end))
+        p.start()
+        p.join(2)
+        if p.is_alive():
+            p.terminate()
+            p.join()
+            return False
+        return recv_end.recv()
 
     def set_msg(self, msg=None):
         if msg:
