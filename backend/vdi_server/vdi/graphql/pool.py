@@ -82,13 +82,6 @@ class PoolSettingsInput(graphene.InputObjectType, PoolSettingsFields):
 class PoolState(graphene.ObjectType):
     running = graphene.Field(RunningState)
     available = graphene.List(VmType)
-    pending = graphene.Int() # will change
-                             # will be the ids of vms
-
-    async def resolve_pending(self, info):
-        if self.pool is None:
-            return None
-        return self.pool.pending
 
     @classmethod
     def get_available(cls, pool):
@@ -178,7 +171,7 @@ class AddPool(graphene.Mutation):
             'initial_size': pool['initial_size'],
             'reserve_size': pool['reserve_size'],
         })
-        state = PoolState(pending=0, available=available, running=True)
+        state = PoolState(available=available, running=True)
         return AddPool(id=pool['id'], state=state, settings=settings, name=name)
 
 
@@ -338,6 +331,6 @@ class PoolMixin:
             if u_fields:
                 p['users'] = pools_users[id]
             pt = PoolType(**p)
-            pt.pool_id = id
+            pt.pool_id = pool['id']
             items.append(pt)
         return items
