@@ -120,7 +120,6 @@ class AddPool(graphene.Mutation):
         reserve_size = graphene.Int()
 
         block = graphene.Boolean()
-        autostart = graphene.Boolean(default_value=True)
 
 
 
@@ -133,11 +132,15 @@ class AddPool(graphene.Mutation):
     async def mutate(conn: Connection, self, info,
                      name,
                      template_id=None, controller_ip=None, cluster_id=None, datapool_id=None, node_id=None,
-                     settings=(), initial_size=None, reserve_size=None, autostart=True, block=False):
+                     settings=(), initial_size=None, reserve_size=None, block=False):
         def get_setting(name):
             if name in settings:
                 return settings[name]
             return settings_file['pool'][name]
+
+        if controller_ip is None and 'controller_ip' not in settings:
+            from vdi.graphql.resources import get_controller_ip
+            controller_ip = await get_controller_ip()
 
         pool = {
             'initial_size': initial_size or get_setting('initial_size'),
@@ -149,40 +152,33 @@ class AddPool(graphene.Mutation):
             'template_id': template_id or settings['template_id'],
             'name': name,
         }
-        if pool['controller_ip'] is None:
-            from vdi.graphql.resources import get_controller_ip
-            pool['controller_ip'] = await get_controller_ip()
-
         fields = ', '.join(pool.keys())
         values = ', '.join(f'${i+1}' for i in range(len(pool)))
         pool_query = f"INSERT INTO pool ({fields}) VALUES ({values}) RETURNING id", *pool.values()
 
         [res] = await conn.fetch(*pool_query)
         pool['id'] = res['id']
-        running = False
-        if autostart:
-            ins = Pool(params=pool)
-            Pool.instances[pool['id']] = ins
+        ins = Pool(params=pool)
+        Pool.instances[pool['id']] = ins
 
-            add_domains = ins.add_domains()
-            if block:
-                domains = await add_domains
-                from vdi.graphql.vm import TemplateType
-                available = []
-                for domain in domains:
-                    template = domain['template']
-                    template = TemplateType(id=template['id'], info=template, name=template['verbose_name'])
-                    item = VmType(id=domain['id'], template=template)
-                    available.append(item)
-            else:
-                asyncio.create_task(add_domains)
-                available = []
-            running = True
+        add_domains = ins.add_domains()
+        if block:
+            domains = await add_domains
+            from vdi.graphql.vm import TemplateType
+            available = []
+            for domain in domains:
+                template = domain['template']
+                template = TemplateType(id=template['id'], info=template, name=template['verbose_name'])
+                item = VmType(id=domain['id'], template=template)
+                available.append(item)
+        else:
+            asyncio.create_task(add_domains)
+            available = []
         settings = PoolSettings(**{
             'initial_size': pool['initial_size'],
             'reserve_size': pool['reserve_size'],
         })
-        state = PoolState(pending=0, available=available, running=running)
+        state = PoolState(pending=0, available=available, running=True)
         return AddPool(id=pool['id'], state=state, settings=settings, name=name)
 
 
