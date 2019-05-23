@@ -12,7 +12,7 @@ msgstr "ECP Veil VDI менеджер"
 msgid "Login"
 msgstr "Войти"
 
-msgid "{}"
+msgid "{}\n\n"
 "ECP Veil VDI thin client has tree modes:\n\n"
 "    1) Default mode. NO keys. Starts VDI server login dialog.\n\n"
 "    2) Manual mode. Only one key '-m'. Starts dialog for enter ip, port and\n"
@@ -22,7 +22,7 @@ msgid "{}"
 "        -ip <ip-address>\n"
 "        -p  <port>\n"
 "        -pw <password>"
-msgstr "{}"
+msgstr "{}\n\n"
 "ECP Veil VDI тонкий клиент может работать в трех режимах:\n\n"
 "    1) Режим по умолчанию. Без ключей. Открывает диалоговое окно аутентификации на серевере Veil VDI.\n\n"
 "    2) Ручной режим. Один ключ '-m'. Позволяет подключиться непосредственно к ВМ\n"
@@ -32,4 +32,133 @@ msgstr "{}"
 "        -ip <ip-адрес>\n"
 "        -p  <порт>\n"
 "        -pw <пароль>"
+
+msgid "Only numbers and dots are allowed"
+msgstr "Разрешены только цифры и точки"
+
+msgid "Only numbers are allowed"
+msgstr "Разрешены только цифры"
+
+msgid "Only latin letters, numbers, '_', '.', '@', and '-' are allowed"
+msgstr "Разрешены латинские буквы, цифры, '_', '.', '@', и '-'"
+
+msgid "hostname"
+msgstr "имя хоста"
+
+msgid "Hostname"
+msgstr "Имя хоста"
+
+msgid "port"
+msgstr "порт"
+
+msgid "Port"
+msgstr "Порт"
+
+msgid "username"
+msgstr "имя пользователя"
+
+msgid "User name"
+msgstr "Имя пользователя"
+
+msgid "password"
+msgstr "пароль"
+
+msgid "Password"
+msgstr "Пароль"
+
+msgid "- remember"
+msgstr "- запомнить"
+
+msgid "Hostname is not accessible"
+msgstr "Хост не доступен"
+
+msgid "Invalid hostname"
+msgstr "Неверный формат имени хоста"
+
+msgid "Error:\n    Missed key(s) or its value(s): {}"
+msgstr "Ошибка:\n    Не хватает ключей или их значений: {}"
+
+msgid "Confirm action"
+msgstr "Подтвердите действие"
+
+msgid "Close?"
+msgstr "Закрыть?"
+
+msgid "Close"
+msgstr "Закрыть"
+
+msgid "Logout?"
+msgstr "Выйти?"
+
+msgid "Logout"
+msgstr "Выйти"
+
+msgid "Refresh"
+msgstr "Обновить"
+
+msgid "Can't login with provided username and password."
+msgstr "Невозможно подключиться с введенными именем пользователя и паролем."
+
+msgid "Server unreachable."
+msgstr "Сервер не доступен."
+
+msgid "Invalid server URL"
+msgstr "Неверный адрес сервера"
+
+msgid "Disconnect"
+msgstr "Отключиться"
+
+msgid "Run"
+msgstr "Включить"
+
+msgid "Pause"
+msgstr "Пауза"
+
+msgid "Reboot"
+msgstr "Перезагрузить"
+
+msgid "Power off"
+msgstr "Выключить"
+
+msgid "Reset"
+msgstr "Перезагрузить принудительно"
+
+msgid "Force power off"
+msgstr "Выключить принудительно"
+
+msgid "View"
+msgstr "Вид"
+
+msgid "Fullscreen"
+msgstr "Полноэкранный режим"
+
+msgid "Windowed mode"
+msgstr "Оконный режим"
+
+msgid "Resize to VM"
+msgstr "Размер окна под ВМ"
+
+msgid "Redirection USB devices"
+msgstr "Проброс USB устройств"
+
+msgid "Send keys"
+msgstr "Послать сочетания клавиш"
+
+msgid "Send key combination"
+msgstr "Послать сочетания клавиш"
+
+msgid "Control"
+msgstr "Управление"
+
+msgid "Help"
+msgstr "Помощь"
+
+msgid "About"
+msgstr "О программе"
+
+msgid "Official ECP Veil page"
+msgstr "Официальная страница ECP Veil"
+
+msgid "Leave fullscreen"
+msgstr "Оконный режим"
 

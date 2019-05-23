@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-
 import re
 import gi
 import socket
@@ -25,7 +24,7 @@ def ip_entry_filter(entry, *args):
             login_window_entity.set_msg()
             return True
         else:
-            login_window_entity.set_msg('Only numbers and dots are allowed')
+            login_window_entity.set_msg(_('Only numbers and dots are allowed'))
             return False
 
     ip = entry.get_text().strip()
@@ -42,7 +41,7 @@ def port_entry_filter(entry, *args):
             login_window_entity.set_msg()
             return True
         else:
-            login_window_entity.set_msg('Only numbers are allowed')
+            login_window_entity.set_msg(_('Only numbers are allowed'))
             return False
 
     ip = entry.get_text().strip()
@@ -59,7 +58,7 @@ def username_entry_filter(entry, *args):
             login_window_entity.set_msg()
             return True
         else:
-            login_window_entity.set_msg('Only latin letters, numbers, "_", ".", "@", and "-" are allowed')
+            login_window_entity.set_msg(_("Only latin letters, numbers, '_', '.', '@', and '-' are allowed"))
             return False
 
     username = entry.get_text().strip()
@@ -95,8 +94,8 @@ class Login(Gtk.ApplicationWindow):
         self.vbox = Gtk.VBox()
 
         hbox = Gtk.HBox(False, 0)
-        self.ip_field = Entry(placeholder="hostname",
-                              tooltip="Hostname",
+        self.ip_field = Entry(placeholder=_("hostname"),
+                              tooltip=_("Hostname"),
                               action=self.on_ip_field_changed,
                               text=form_data.get('ip'),
                               margin={'top': 5, 'bottom': 5, 'left': 10})
@@ -104,8 +103,8 @@ class Login(Gtk.ApplicationWindow):
         # self.port_field = Spin(value=form_data.get('port'),
         #                        tooltip="Port",
         #                        action=self.on_port_field_changed)
-        self.port_field = Entry(placeholder="port",
-                                tooltip="Port",
+        self.port_field = Entry(placeholder=_("port"),
+                                tooltip=_("Port"),
                                 action=self.on_port_field_changed,
                                 text=form_data.get('port'),
                                 len=5,
@@ -114,14 +113,14 @@ class Login(Gtk.ApplicationWindow):
         hbox.pack_start(self.ip_field, True, True, 0)
         hbox.pack_start(self.port_field, False, False, 0)
 
-        self.username_field = Entry(placeholder="username",
-                                    tooltip="User name",
+        self.username_field = Entry(placeholder=_("username"),
+                                    tooltip=_("User name"),
                                     action=self.on_username_field_changed,
                                     text=form_data.get('username'),
                                     margin={'top': 5, 'bottom': 5, 'right': 10, 'left': 10})
         self.username_field.connect('changed', username_entry_filter)
-        self.password_field = Entry(placeholder="password",
-                                    tooltip="Password",
+        self.password_field = Entry(placeholder=_("password"),
+                                    tooltip=_("Password"),
                                     action=self.on_password_field_changed,
                                     text=form_data.get('password'),
                                     visibility=False,
@@ -138,7 +137,7 @@ class Login(Gtk.ApplicationWindow):
 
         logo = Image(self.app.LOGO)
 
-        self.remember_user = Gtk.CheckButton("- remember")
+        self.remember_user = Gtk.CheckButton(_("- remember"))
         self.remember_user.set_margin_left(20)
 
         self.vbox.pack_end(buttonbox1, True, True, 0)
@@ -197,7 +196,7 @@ class Login(Gtk.ApplicationWindow):
         # port = self.port_field.get_value_as_int()
         port = self.port_field.get_text()
         if not self.check_host(ip, int(port)):
-            self.set_msg("Hostname is not accessible")
+            self.set_msg(_("Hostname is not accessible"))
             return
         if self.remember_user.get_active():
             self.app.save_form(ip, port, username, password)
@@ -241,7 +240,7 @@ class Login(Gtk.ApplicationWindow):
         if msg:
             self.msg_buffer.set_text("")
             self.msg_field.set_visible(True)
-            msg = '<span color="red">{:s}</span>\n'.format(msg)
+            msg = '<span color="red">%s</span>\n' % (msg)
             self.msg_buffer.insert_markup(self.msg_buffer.get_end_iter(), msg, -1)
             # self.msg_buffer.set_text(msg)
         else:

@@ -34,7 +34,7 @@ from .commands.splashcommand import SplashCommand
 
 
 def help(msg='Help page'):
-    print _("{}"
+    print _("{}\n\n"
             "ECP Veil VDI thin client has tree modes:\n\n"
             "    1) Default mode. NO keys. Starts VDI server login dialog.\n\n"
             "    2) Manual mode. Only one key '-m'. Starts dialog for enter ip, port and\n"
@@ -146,12 +146,12 @@ class Application(Gtk.Application):
                 else:
                     return
             else:
-                help('Error:\n    Missed key(s) or its value(s): {}'.format(', '.join(missed_keys)))
+                help(_('Error:\n    Missed key(s) or its value(s): {}').format(', '.join(missed_keys)))
 
     def hostname_valid(self, hostname, msg_func):
         try:
             if len(hostname) > 255:
-                msg_func("Invalid hostname")
+                msg_func(_("Invalid hostname"))
                 return False
             labels = hostname.split('.')
             if all([re.match(r'^[0-9]+$', label) for label in labels]):
@@ -163,11 +163,11 @@ class Application(Gtk.Application):
                 return True
         except ValueError, e:
             logging.debug(str(e))
-            msg_func("Invalid hostname")
+            msg_func(_("Invalid hostname"))
             return False
         except Exception, e:
             logging.debug(str(e))
-            msg_func("Invalid hostname")
+            msg_func(_("Invalid hostname"))
             return False
 
     def destroy_active_window(self):
@@ -289,7 +289,7 @@ class Application(Gtk.Application):
             return False
 
     def confirm_quit(self):
-        return self.simple_confirm("Confirm action", "Quit?")
+        return self.simple_confirm(_("Confirm action"), _("Close?"))
 
     def confirm_logout(self):
-        return self.simple_confirm("Confirm action", "Logout?")
+        return self.simple_confirm(_("Confirm action"), _("Logout?"))

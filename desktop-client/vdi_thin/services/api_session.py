@@ -19,7 +19,7 @@ class ApiError(Exception):
 
 class ApiAuthError(ApiError):
     def __str__(self):
-        return "Can't login with provided username and password."
+        return _("Can't login with provided username and password.")
 
 
 class ApiUnknownError(ApiError):
@@ -28,12 +28,12 @@ class ApiUnknownError(ApiError):
 
 class ApiConnectionError(ApiError):
     def __str__(self):
-        return "Server unreachable."
+        return _("Server unreachable.")
 
 
 class ApiInvalidServerUrl(ApiConnectionError):
     def __str__(self):
-        return "Invalid server URL"
+        return _("Invalid server URL")
 
 
 class ApiSession:
