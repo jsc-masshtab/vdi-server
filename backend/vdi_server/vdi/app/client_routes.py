@@ -30,7 +30,7 @@ async def get_pools(request):
     return JSONResponse(li)
 
 
-@app.route('/client/pools/{pool_id}', methods=['POST'])
+@app.route('/client/pools/{pool_id}', methods=['GET', 'POST'])
 @requires('authenticated')
 async def get_vm(request):
     async with db.connect() as conn:

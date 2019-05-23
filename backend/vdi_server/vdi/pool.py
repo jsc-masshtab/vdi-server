@@ -18,14 +18,11 @@ from asyncpg.connection import Connection
 @dataclass()
 class Pool:
     params: dict
-    pending: int = 0
 
 
     @cached
     def queue(self):
         return asyncio.Queue()
-
-    # TODO make vm info optional?
 
     @cached
     def tasks(self):
@@ -43,7 +40,6 @@ class Pool:
         template = result['template']
         await self.queue.put(result)
         self.queue.task_done()
-        self.pending -= 1
         # insert into db
         qu = f"""
         insert into vm (id, pool_id, template_id, state) values ($1, $2, $3, $4)
@@ -67,7 +63,6 @@ class Pool:
         }
         task = vm.CopyDomain(**params).task
         task.add_done_callback(self.on_vm_created)
-        self.pending += 1
         return task
 
     async def add_domains(self):
