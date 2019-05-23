@@ -13,11 +13,15 @@ APP = 'ecp_veil_vdi_thin_client'
 WHERE_AM_I = os.path.abspath(os.path.dirname(__file__))
 LOCALE_DIR = os.path.join(WHERE_AM_I, 'locale')
 
-locale.setlocale(locale.LC_ALL, '')
-locale.bindtextdomain(APP, LOCALE_DIR)
-gettext.bindtextdomain(APP, LOCALE_DIR)
-gettext.textdomain(APP)
-gettext.install(APP, LOCALE_DIR, unicode=True)
+try:
+    locale.setlocale(locale.LC_ALL, '')
+    locale.bindtextdomain(APP, LOCALE_DIR)
+    gettext.bindtextdomain(APP, LOCALE_DIR)
+    gettext.textdomain(APP)
+except:
+    pass
+finally:
+    gettext.install(APP, LOCALE_DIR, unicode=True)
 
 
 import gi
