@@ -57,6 +57,16 @@ nav {
     &:hover {
         .icon-arrow {
             display: block;
+
+            > fa-icon {
+                opacity: 0.5;
+            } 
+            
+            &:hover {
+                > fa-icon {
+                    opacity: 1;
+                } 
+            }
         }
     }
 
