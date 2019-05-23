@@ -20,7 +20,6 @@ export class ClustersService  {
                                 status
                                 cpu_count
                                 memory_count
-                                tags
                             }
                         }
             

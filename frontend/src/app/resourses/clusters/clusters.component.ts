@@ -22,7 +22,7 @@ export class ClustersComponent implements OnInit {
     {
       title: 'Кластеры',
       icon: 'building',
-      route: 'resourses/clusters'
+     // route: 'resourses/clusters'
     }
   ];
 

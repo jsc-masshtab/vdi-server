@@ -26,17 +26,20 @@ export class PollsComponent implements OnInit {
       property: 'name'
     },
     {
-      title: 'Начальный размер пула',
-      property: 'initial_size'
+      title: 'Начальный размер пула',    // всего вм
+      property: 'settings',
+      property_lv2: 'initial_size'
     },
     {
-      title: 'Размер пула',
-      property: 'reserve_size'
+      title: 'Размер пула',      // сколько свободных осталось
+      property: 'settings',
+      property_lv2: 'reserve_size'
     },
     {
-      title: 'Состояние',
+      title: 'Доступные ВМ',
       property: 'state',
-      property_lv2: 'running'
+      property_lv2_array: 'available',
+      type: 'array'
     }
   ];
 
@@ -63,6 +66,7 @@ export class PollsComponent implements OnInit {
     this.service.getAllPools().valueChanges.pipe(map(data => data.data.pools))
       .subscribe( (data) => {
         this.pools = data;
+        console.log(this.pools);
         this.spinner = false;
       },
       (error)=> {

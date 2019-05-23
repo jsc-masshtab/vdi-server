@@ -23,7 +23,7 @@ import { HttpClientModule } from '@angular/common/http';
 /*  -----------------------------------   icons   --------------------------------------*/
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { library } from '@fortawesome/fontawesome-svg-core'
-import { faDesktop,faDatabase, faLayerGroup,faPlusCircle,faSpinner,faServer,faCog,faBuilding,faChevronUp,faTimesCircle } from '@fortawesome/free-solid-svg-icons';
+import { faDesktop,faDatabase, faLayerGroup,faPlusCircle,faSpinner,faServer,faCog,faBuilding,faChevronUp,faTimesCircle,faFolderOpen,faStar } from '@fortawesome/free-solid-svg-icons';
 /*  -----------------------------------   icons   --------------------------------------*/
 
 
@@ -104,7 +104,7 @@ import { ServersService } from './settings/servers/servers.service';
 
 export class AppModule {
   constructor() { 
-    library.add(faDesktop,faDatabase,faLayerGroup,faPlusCircle,faSpinner,faServer,faCog,faBuilding,faChevronUp,faTimesCircle
+    library.add(faDesktop,faDatabase,faLayerGroup,faPlusCircle,faSpinner,faServer,faCog,faBuilding,faChevronUp,faTimesCircle,faFolderOpen,faStar
       ); // Неиспользуемые иконки при финальной сборке удаляются
   }
 

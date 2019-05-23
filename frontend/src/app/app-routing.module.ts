@@ -14,12 +14,20 @@ const routes: Routes = [
     pathMatch: 'full'
   },
   {
-    path: 'settings/servers',
+    path: 'settings/controllers',
     component: ServersComponent
   },
   {
     path: 'resourses/clusters',
     component: ClustersComponent
+  },
+  {
+    path: 'resourses/nodes',
+    component: NodesComponent
+  },
+  {
+    path: 'resourses/datapools',
+    component: DatapoolsComponent
   },
   {
     path: 'resourses/clusters/:id/nodes',
@@ -29,11 +37,11 @@ const routes: Routes = [
     path: 'resourses/clusters/:id/nodes/:id/datapools',
     component: DatapoolsComponent
   },
-
-  // {
-  //   path: 'resourses',
-  //   component: TemplatesComponent
-  // },
+  {
+    path: 'resourses/nodes/:id/datapools',
+    component: DatapoolsComponent,
+    data: { route_info: 'nodes-datapools'}
+  },
   {
     path: 'pools',
     component: PollsComponent
@@ -50,4 +58,4 @@ const routes: Routes = [
 })
 
 
-export class AppRoutingModule { }
+export class AppRoutingModule {}

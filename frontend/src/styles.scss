@@ -3,6 +3,7 @@
 html,body {
     width: 100%;
     height: 100%;
+    font-family: 'Times New Roman', Times, serif;
 }
 
 * {
@@ -150,7 +151,8 @@ html,body {
         }
 
         &:hover {
-            box-shadow: 0 2px 8px 0 rgba(0,0,0,.12), 0 0 0 1px rgba(0,0,0,.16);
+            -webkit-box-shadow: 0 2px 8px rgba(0,0,0,.2);
+            box-shadow: 0 2px 8px rgba(0,0,0,.2);
         }
     }
 }

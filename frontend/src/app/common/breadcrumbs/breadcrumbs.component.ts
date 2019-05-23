@@ -14,8 +14,7 @@ export class BreadcrumbsComponent  {
 
 
   public routeTo(crumb,index) {
-    console.log(crumb,index);
-    if(index === 0) {
+    if(index === 0 || !crumb.route) {
       return;
     }
     console.log(crumb.route);
