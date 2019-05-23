@@ -4,8 +4,14 @@ from os import path
 import gi
 gi.require_version('Gtk', '3.0')
 gi.require_version('SpiceClientGtk', '3.0')
-gi.require_version('WebKit2', '4.0')
-from gi.repository import Gtk, SpiceClientGtk, SpiceClientGLib, GObject, Gdk, GLib, WebKit2, GdkPixbuf
+from gi.repository import Gtk, SpiceClientGtk, SpiceClientGLib, GObject, Gdk, GLib, GdkPixbuf
+
+try:
+    gi.require_version('WebKit2', '4.0')
+    from gi.repository import WebKit2
+    webkit = True
+except:
+    webkit = False
 
 import logging
 LOG = logging.getLogger()
@@ -87,7 +93,6 @@ class Viewer(Gtk.ApplicationWindow):
         self.session = None
         self.display = None
         self.display_channel = None
-        self._audio = None
         self.frame = Gtk.Frame()
         self.frame.set_shadow_type(Gtk.ShadowType.NONE)
         self._usbdev_manager = None
@@ -178,21 +183,22 @@ class Viewer(Gtk.ApplicationWindow):
         self.main_loop()
 
     def show_help(self, *args):
-        mydir = path.abspath(path.dirname(__file__))
-        ctx = WebKit2.WebContext.get_default()
-        ctx.set_web_extensions_directory(mydir)
-        ctx.set_web_extensions_initialization_user_data(GLib.Variant.new_string("test string"))
+        if webkit:
+            mydir = path.abspath(path.dirname(__file__))
+            ctx = WebKit2.WebContext.get_default()
+            ctx.set_web_extensions_directory(mydir)
+            ctx.set_web_extensions_initialization_user_data(GLib.Variant.new_string("test string"))
 
-        help_window = Gtk.Window()
-        help_window.set_title("Official ECP Veil page")
-        webview = WebKit2.WebView.new_with_context(ctx)
-        help_window.add(webview)
-        help_window.set_transient_for(self)
-        help_window.set_icon(self.app.LOGO)
-        help_window.set_default_size(640, 480)
-        help_window.show_all()
+            help_window = Gtk.Window()
+            help_window.set_title("Official ECP Veil page")
+            webview = WebKit2.WebView.new_with_context(ctx)
+            help_window.add(webview)
+            help_window.set_transient_for(self)
+            help_window.set_icon(self.app.LOGO)
+            help_window.set_default_size(640, 480)
+            help_window.show_all()
 
-        webview.load_uri("http://mashtab.org/files/veil/index.html")
+            webview.load_uri("http://mashtab.org/files/veil/index.html")
 
     def _vm_control(self, *args):
         if args[0].item_name == 'Disconnect':
@@ -308,7 +314,11 @@ class Viewer(Gtk.ApplicationWindow):
     def _channel_new(self, session, channel):
         self._channel = channel
         if type(channel) == SpiceClientGLib.MainChannel:
-            return
+            self.main_channel = channel
+            channel_id = channel.get_property("channel-id")
+            print channel.props.agent_connected
+            if self._has_agent():
+                print "has agent"
         elif type(channel) == SpiceClientGLib.DisplayChannel:
             channel_id = channel.get_property("channel-id")
             self.display_channel = channel
@@ -323,11 +333,25 @@ class Viewer(Gtk.ApplicationWindow):
             # print SpiceClientGLib.DisplayChannel.props.monitors
             # arr = channel.get_property('monitors')
             self.display.show_all()
-        elif (type(channel) in [SpiceClientGLib.PlaybackChannel,
-                                SpiceClientGLib.RecordChannel] and
-              not self._audio):
-            self._audio = SpiceClientGLib.Audio.get(self.session, None)
-            print self._audio
+        # elif (type(channel) in [SpiceClientGLib.PlaybackChannel,
+        #                         SpiceClientGLib.RecordChannel] and
+        #       not self._audio):
+        #     self.audio_channel = channel
+        #     print self.audio_channel.get_property("volume")
+        #     self.audio_channel.props.volume = 30
+        #     self._audio = SpiceClientGLib.Audio.get(self.session, None)
+        elif type(channel) == SpiceClientGLib.PlaybackChannel:
+            self.playback_channel = channel
+            channel_id = channel.get_property("channel-id")
+            self._audio = SpiceClientGLib.Audio.new(self.session, None)
+        elif type(channel) == SpiceClientGLib.RecordChannel:
+            self.record_channel = channel
+        elif type(channel) == SpiceClientGLib.CursorChannel:
+            self.cursor_channel = channel
+        elif type(channel) == SpiceClientGLib.InputsChannel:
+            self.inputs_channel = channel
+        else:
+            print type(channel)
 
     def control_vm_usb_redirection(self, action):
         ignore = action
@@ -374,9 +398,9 @@ class Viewer(Gtk.ApplicationWindow):
             # self.toggle_fullscreen()
 
     def _has_agent(self):
-        if not self._channel:
+        if not self.main_channel:
             return False
-        return self._channel.get_property("agent-connected")
+        return self.main_channel.get_property("agent-connected")
 
 
 class _TimedRevealer(GObject.GObject):

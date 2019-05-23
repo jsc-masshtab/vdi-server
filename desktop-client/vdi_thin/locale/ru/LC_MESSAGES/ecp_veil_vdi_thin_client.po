@@ -1,0 +1,35 @@
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+
+
+msgid "ECP Veil VDI thin client"
+msgstr "ECP Veil VDI тонкий клиент"
+
+msgid "ECP Veil VDI manager"
+msgstr "ECP Veil VDI менеджер"
+
+msgid "Login"
+msgstr "Войти"
+
+msgid "{}"
+"ECP Veil VDI thin client has tree modes:\n\n"
+"    1) Default mode. NO keys. Starts VDI server login dialog.\n\n"
+"    2) Manual mode. Only one key '-m'. Starts dialog for enter ip, port and\n"
+"       password for connect VM. VDI server is not needed.\n"
+"        -m  - manual mode\n\n"
+"    3) Fast mode for open VM viewer right away. VDI server is not needed.\n"
+"        -ip <ip-address>\n"
+"        -p  <port>\n"
+"        -pw <password>"
+msgstr "{}"
+"ECP Veil VDI тонкий клиент может работать в трех режимах:\n\n"
+"    1) Режим по умолчанию. Без ключей. Открывает диалоговое окно аутентификации на серевере Veil VDI.\n\n"
+"    2) Ручной режим. Один ключ '-m'. Позволяет подключиться непосредственно к ВМ\n"
+"       без Veil VDI сервера. Открывает диалоговое окно аутентификации подключения к ВМ\n"
+"        -m  - ручной режим\n\n"
+"    3) Быстрый режим для подключения к ВМ без диалогового окна аутентификации. VDI сервер так же не используется.\n"
+"        -ip <ip-адрес>\n"
+"        -p  <порт>\n"
+"        -pw <пароль>"
+

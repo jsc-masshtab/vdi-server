@@ -7,38 +7,43 @@ import json
 import re
 from ipaddress import IPv4Address
 
+import locale
+import gettext
+APP = 'ecp_veil_vdi_thin_client'
+WHERE_AM_I = os.path.abspath(os.path.dirname(__file__))
+LOCALE_DIR = os.path.join(WHERE_AM_I, 'locale')
+
+locale.setlocale(locale.LC_ALL, '')
+locale.bindtextdomain(APP, LOCALE_DIR)
+gettext.bindtextdomain(APP, LOCALE_DIR)
+gettext.textdomain(APP)
+gettext.install(APP, LOCALE_DIR, unicode=True)
+
 
 import gi
-
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gio, Gtk, GdkPixbuf
 
 LOG = logging.getLogger()
 
-from .layout.splash import Splash
-from .layout.login import Login
-from .layout.main import Main
-from .layout.viewer import Viewer
+from .layouts.splash import Splash
+from .layouts.login import Login
+from .layouts.main import Main
+from .layouts.viewer import Viewer
 from .commands.splashcommand import SplashCommand
 
 
 def help(msg='Help page'):
-    print '''
-{}
-            
-ECP Veil VDI client has tree modes:
-
-    1) Default mode. NO keys. Starts VDI server login dialog.
-
-    2) Manual mode. Only one key "-m". Start GUI dialog for enter ip, port and
-       password for connect VM. VDI server is not needed.
-        -m  - manual mode
-
-    3) Fast mode for open VM viewer right away. VDI server is not needed.
-        -ip <ip-address>
-        -p  <port>
-        -pw <password>
-        '''.format(msg)
+    print _("{}"
+            "ECP Veil VDI thin client has tree modes:\n\n"
+            "    1) Default mode. NO keys. Starts VDI server login dialog.\n\n"
+            "    2) Manual mode. Only one key '-m'. Starts dialog for enter ip, port and\n"
+            "       password for connect VM. VDI server is not needed.\n"
+            "        -m  - manual mode\n\n"
+            "    3) Fast mode for open VM viewer right away. VDI server is not needed.\n"
+            "        -ip <ip-address>\n"
+            "        -p  <port>\n"
+            "        -pw <password>").format(msg)
 
 
 class AppState:
@@ -54,8 +59,8 @@ class Application(Gtk.Application):
 
     LOGO = GdkPixbuf.Pixbuf.new_from_file(os.path.abspath("content/img/veil-32x32.png"))
     NAME = "ECP Veil VDI"
-    NAME_THIN = "ECP Veil VDI thin client"
-    NAME_MANAGER = "ECP Veil VDI manager"
+    NAME_THIN = _("ECP Veil VDI thin client")
+    NAME_MANAGER = _("ECP Veil VDI manager")
 
     def __init__(self, *args, **kwargs):
         super(Application, self).__init__(*args,

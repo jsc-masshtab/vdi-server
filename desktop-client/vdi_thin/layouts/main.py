@@ -28,8 +28,9 @@ class Main(Gtk.ApplicationWindow):
 
         hbox = Gtk.HBox(False, 0)
 
-        logout_button = Gtk.Button(None, image=Gtk.Image(stock=Gtk.STOCK_DISCONNECT))
-        logout_button.set_always_show_image(True)
+        # logout_button = Gtk.Button(None, image=Gtk.Image(stock=Gtk.STOCK_DISCONNECT))
+        # logout_button.set_always_show_image(True)
+        logout_button = Gtk.Button()
         logout_button.set_margin_top(10)
         logout_button.set_margin_right(10)
         logout_button.set_label("Logout")
@@ -127,6 +128,7 @@ class Main(Gtk.ApplicationWindow):
         cmd(vm_widget.dp_id)
 
     def on_vm_connect(self, context, result):
+        result['password'] = 'WRZoCAA0jXgjnxxo'
         self.app.do_viewer(host=result['host'], port=result['port'], password=result['password'])
 
 
@@ -197,8 +199,8 @@ class VmWidget(Gtk.Frame):
         vm_repr = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
         vm_name = Gtk.Label.new(str(self.vm_data["name"]))
         vm_name.set_margin_top(10)
-        if not self.vm_data["can_start_vm"]:
-            self.connect_btn.set_sensitive(False)
+        #if not self.vm_data["can_start_vm"]:
+        #    self.connect_btn.set_sensitive(False)
         vm_repr.pack_start(vm_name, True, True, 0)
         vm_repr.pack_start(self.icon, True, True, 0)
         vm_repr.pack_start(self.connect_btn, True, True, 0)
