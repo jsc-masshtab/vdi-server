@@ -21,7 +21,6 @@ export class PoolAddComponent implements OnInit {
   public clusters: object[];
   public nodes: object[];
   public datapools: object[];
-  private tmId: string;
   public poolName:string;
   public id_cluster:string;
   public id_node:string;
@@ -62,9 +61,10 @@ export class PoolAddComponent implements OnInit {
     this.poolsService.getAllTemplates().valueChanges.pipe(map(data => data.data.templates)).subscribe((res)=> {
       this.defaultDataTemplates = "- нет доступных шаблонов -";
       this.templates = res.map((item) => {
+        let parse = JSON.parse(item.info);
         return {
-          'output': item.id,
-          'input': item.name
+          'output': parse.id,
+          'input': parse.verbose_name
         }
       })
     },(error) => {

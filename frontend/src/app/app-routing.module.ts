@@ -14,7 +14,7 @@ const routes: Routes = [
     pathMatch: 'full'
   },
   {
-    path: 'settings/servers',
+    path: 'settings/controllers',
     component: ServersComponent
   },
   {

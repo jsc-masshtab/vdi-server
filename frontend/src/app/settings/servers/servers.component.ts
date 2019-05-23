@@ -21,9 +21,8 @@ export class ServersComponent implements OnInit {
       icon: 'cog'
     },
     {
-      title: 'Серверы',
-      icon: 'server',
-      route: 'settings/servers'
+      title: 'Контроллеры',
+      icon: 'server'
     }
   ];
 

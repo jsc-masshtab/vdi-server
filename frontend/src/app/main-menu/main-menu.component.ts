@@ -30,8 +30,8 @@ export class MainMenuComponent implements OnInit {
                                                   { name: 'Серверы', icon:'server', route:'resourses/nodes' },
                                                   { name: 'Пулы данных', icon:'folder-open', route:'resourses/datapools' }]               
                                 },
-                                { name: 'Настройки', icon:'cog', route:'settings/servers', open: false,
-                                        nested: [{ name: 'Серверы', icon:'server',route:'settings/servers' }] 
+                                { name: 'Настройки', icon:'cog', route:'settings/controllers', open: false,
+                                        nested: [{ name: 'Контроллеры', icon:'server',icon_dependent:'certificate',route:'settings/controllers' }] 
                                 }
                               ];
 

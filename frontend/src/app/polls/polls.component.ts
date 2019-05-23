@@ -26,12 +26,14 @@ export class PollsComponent implements OnInit {
       property: 'name'
     },
     {
-      title: 'Начальный размер пула',
-      property: 'initial_size'
+      title: 'Начальный размер пула',    // всего вм
+      property: 'settings',
+      property_lv2: 'initial_size'
     },
     {
-      title: 'Размер пула',
-      property: 'reserve_size'
+      title: 'Размер пула',      // сколько свободных осталось
+      property: 'settings',
+      property_lv2: 'reserve_size'
     },
     {
       title: 'Состояние',

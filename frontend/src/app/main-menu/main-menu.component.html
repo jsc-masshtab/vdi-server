@@ -11,9 +11,15 @@
       </div>
       <ul *ngIf="item.nested && listMenu[i].open" class="menu-nested" [@fadeInOut]>
         <li *ngFor="let itemNested of item.nested">
-            <div [routerLink]="[itemNested.route]" class="menu-item-wrap menu-item-wrap__nested" [routerLinkActive]="['activeNavNested']" >
-              <fa-icon [icon]="['fas',itemNested.icon]"></fa-icon>
-              <span class="menu-name">{{itemNested.name}}</span>
+            <div [routerLink]="[itemNested.route]" class="menu-item-wrap menu-item-wrap_nested" [routerLinkActive]="['activeNavNested']">
+              <span [class.icons_nested]="itemNested.icon_dependent">
+                  <fa-icon [icon]="['fas',itemNested.icon]"></fa-icon>
+                  <span *ngIf="itemNested.icon_dependent" class="icon_dependent">
+                    <fa-icon [icon]="['fas',itemNested.icon_dependent]" size="xs"></fa-icon>
+                  </span>
+              </span>
+  
+              <span [class.menu-name_icon_dependent]="itemNested.icon_dependent">{{itemNested.name}}</span>
             </div>
         </li>
       </ul>

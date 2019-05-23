@@ -20,15 +20,11 @@ export class PoolsService  {
                                         initial_size
                                         reserve_size
                                     }
-                                    state {
-                                        running
-                                        pending
+                                    state { 
                                         available {
                                             name
-                                            id
-                                            info
                                         }
-                                      }
+                                    }
                                 }  
                             }
                         
