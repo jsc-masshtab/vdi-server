@@ -1,9 +1,9 @@
 import { Component, OnInit } from '@angular/core';
-import { map } from 'rxjs/operators';
 import { PoolsService } from './polls.service';
 import { PoolAddComponent } from './pool-add/pool-add.component';
 
 import { MatDialog } from '@angular/material';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'vdi-polls',
@@ -15,6 +15,7 @@ export class PollsComponent implements OnInit {
 
   public pools: [];
   public spinner:boolean = true;
+  private getPoolsSub: Subscription;
 
   public collection: object[] = [
     {
@@ -63,15 +64,18 @@ export class PollsComponent implements OnInit {
   }
 
   private getAllPools() {
-    this.service.getAllPools().valueChanges.pipe(map(data => data.data.pools))
+    this.getPoolsSub = this.service.getAllPools()
       .subscribe( (data) => {
         this.pools = data;
-        console.log(this.pools);
         this.spinner = false;
       },
       (error)=> {
         this.spinner = false;
       });
+  }
+
+  ngOnDestroy() {
+    this.getPoolsSub.unsubscribe();
   }
 
 }

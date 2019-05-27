@@ -1,6 +1,9 @@
 import {Injectable} from '@angular/core';
 import { Apollo, QueryRef } from 'apollo-angular';
 import gql from 'graphql-tag';
+import { timer,Observable } from 'rxjs';
+import { switchMap ,map} from 'rxjs/operators';
+
 
 
 
@@ -9,32 +12,33 @@ export class PoolsService  {
 
     constructor(private service: Apollo) {}
 
-    public getAllPools(): QueryRef<any,any> {
-       return  this.service.watchQuery({
-            query:  gql` query allPools {
-                                pools {
-                                    id
-                                    template_id
-                                    name
-                                    settings {
-                                        initial_size
-                                        reserve_size
-                                    }
-                                    state { 
-                                        available {
-                                            info
-                                            id
+    public getAllPools(): Observable<any> {
+        const obs$ = timer(0,60000);
+
+        return  obs$.pipe(switchMap(()=> { return this.service.watchQuery({
+                query:  gql` query allPools {
+                                    pools {
+                                        id
+                                        template_id
+                                        name
+                                        settings {
+                                            initial_size
+                                            reserve_size
                                         }
-                                    }
-                                }  
-                            }
-                        
-            
-                    `,
-            variables: {
-                method: 'GET'
-            }
-        }) 
+                                        state { 
+                                            available {
+                                                info
+                                            }
+                                        }
+                                    }  
+                                }
+                            
+                
+                        `,
+                variables: {
+                    method: 'GET'
+                }
+            }).valueChanges.pipe(map(data => data.data['pools'])); } ));
     }
 
     public getAllTemplates(): QueryRef<any,any> {
