@@ -1,14 +1,10 @@
 #breadcrumbs-one {
-    background: rgba(220, 220, 220, 0.5);
-    border-width: 1px;
-    border-style: solid;
-    border-color: #f5f5f5 #e5e5e5 #ccc;
-    border-radius: 5px;
-    box-shadow: 0 0 2px rgba(0,0,0,.2);
     overflow: hidden;
     width: 100%;
     position: fixed;
-    top: 0px;
+    top: 40px;
+    border-top: 3px solid #c9d1d8;
+    border-bottom: 1px solid #c9d1d8;
   }
 
   fa-icon {
@@ -29,11 +25,12 @@
     text-shadow: 0 1px 0 rgba(255,255,255,.5);
     background-color: #ddd;
     background-image: linear-gradient(to right, #f5f5f5, #ddd);
+    background: #fff;
   }
   
   #breadcrumbs-one li:first-child div {
     padding-left: 1em;
-    border-radius: 5px 0 0 5px;
+   // border-radius: 5px 0 0 5px;
   }
   
   #breadcrumbs-one div:hover{
@@ -55,10 +52,12 @@
   #breadcrumbs-one div::after{
     z-index: 2;
     border-left-color: #ddd;
+
+    border-left-color: #fff;
   }
   
   #breadcrumbs-one div::before{
-    border-left-color: #ccc;
+    border-left-color: #c9d1d8;
     right: -1.1em;
     z-index: 1;
   }

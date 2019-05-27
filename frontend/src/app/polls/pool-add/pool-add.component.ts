@@ -154,8 +154,6 @@ export class PoolAddComponent implements OnInit {
   public send() {
     let createPoolForm_value = this.createPoolForm.value;
 
-    console.log(typeof(createPoolForm_value.reserve_size));
-
     this.poolsService.createPoll(createPoolForm_value.name,
                                 createPoolForm_value.template_id,
                                 createPoolForm_value.cluster_id,
@@ -165,7 +163,7 @@ export class PoolAddComponent implements OnInit {
                                 createPoolForm_value.reserve_size)
       .subscribe((res) => {
         if(res) {
-          this.poolsService.getAllPools().valueChanges.subscribe();
+          this.poolsService.getAllPools().subscribe();
           this.dialogRef.close();
         }
     });
