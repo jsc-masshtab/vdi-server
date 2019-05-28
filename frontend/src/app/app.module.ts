@@ -49,6 +49,7 @@ import { MAT_DIALOG_DEFAULT_OPTIONS } from '@angular/material';
 import { MatDialogModule } from '@angular/material/dialog';
 import { AddControllerComponent } from './settings/servers/add-controller/add-controller.component';
 import { ServersService } from './settings/servers/servers.service';
+import { FooterComponent } from './footer/footer.component';
 /*  -----------------------------------   material   --------------------------------------*/
 
 
@@ -70,7 +71,8 @@ import { ServersService } from './settings/servers/servers.service';
     ClustersComponent,
     ServersComponent,
     AddControllerComponent,
-    DatapoolsComponent
+    DatapoolsComponent,
+    FooterComponent
   ],
   imports: [
     BrowserModule,

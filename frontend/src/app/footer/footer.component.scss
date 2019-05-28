@@ -1,0 +1,20 @@
+footer {  
+    height: 28px;
+    background: #FFF;
+    color: #232121;
+    display: flex;
+    align-items: center;
+    border-top: 1px solid #44505a;
+
+    .copyright {
+        margin-left: auto;
+        margin-right: 15px;
+        font-size: 13px;
+
+        a {
+            color: #232121;
+            text-decoration: none;
+            letter-spacing: 1px;
+        }
+    }
+}
