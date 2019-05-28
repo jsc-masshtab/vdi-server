@@ -350,6 +350,8 @@ class Viewer(Gtk.ApplicationWindow):
             self.cursor_channel = channel
         elif type(channel) == SpiceClientGLib.InputsChannel:
             self.inputs_channel = channel
+        elif type(channel) == SpiceClientGLib.UsbredirChannel:
+            self.usbredir_channel = channel
         else:
             print type(channel)
 
