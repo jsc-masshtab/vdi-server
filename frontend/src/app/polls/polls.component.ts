@@ -1,9 +1,9 @@
 import { Component, OnInit } from '@angular/core';
-import { map } from 'rxjs/operators';
 import { PoolsService } from './polls.service';
 import { PoolAddComponent } from './pool-add/pool-add.component';
 
 import { MatDialog } from '@angular/material';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'vdi-polls',
@@ -15,6 +15,7 @@ export class PollsComponent implements OnInit {
 
   public pools: [];
   public spinner:boolean = true;
+  private getPoolsSub: Subscription;
 
   public collection: object[] = [
     {
@@ -26,17 +27,20 @@ export class PollsComponent implements OnInit {
       property: 'name'
     },
     {
-      title: 'Начальный размер пула',
-      property: 'initial_size'
+      title: 'Начальный размер пула',    // всего вм
+      property: 'settings',
+      property_lv2: 'initial_size'
     },
     {
-      title: 'Размер пула',
-      property: 'reserve_size'
+      title: 'Размер пула',      // сколько свободных осталось
+      property: 'settings',
+      property_lv2: 'reserve_size'
     },
     {
-      title: 'Состояние',
+      title: 'Доступные ВМ',
       property: 'state',
-      property_lv2: 'running'
+      property_lv2_array: 'available',
+      type: 'array'
     }
   ];
 
@@ -60,7 +64,7 @@ export class PollsComponent implements OnInit {
   }
 
   private getAllPools() {
-    this.service.getAllPools().valueChanges.pipe(map(data => data.data.pools))
+    this.getPoolsSub = this.service.getAllPools()
       .subscribe( (data) => {
         this.pools = data;
         this.spinner = false;
@@ -68,6 +72,10 @@ export class PollsComponent implements OnInit {
       (error)=> {
         this.spinner = false;
       });
+  }
+
+  ngOnDestroy() {
+    this.getPoolsSub.unsubscribe();
   }
 
 }

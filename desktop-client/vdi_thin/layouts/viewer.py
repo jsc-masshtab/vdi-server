@@ -53,25 +53,25 @@ def build_reset_menu(on_vm_manage_fn, default_mode=False):
         item.connect("activate", on_vm_manage_fn, combo)
         menu.add(item)
 
-    make_item("Disconnect")
+    make_item(_("Disconnect"), 'Disconnect')
     # make_item("+Monitor")
     if default_mode:
         menu.add(Gtk.SeparatorMenuItem())
-        make_item("Run")
-        make_item("Pause")
+        make_item(_("Run"), 'Run')
+        make_item(_("Pause"), 'Pause')
         menu.add(Gtk.SeparatorMenuItem())
-        make_item("Reboot")
-        make_item("Power off")
+        make_item(_("Reboot"), 'Reboot')
+        make_item(_("Power off"), 'Power off')
         menu.add(Gtk.SeparatorMenuItem())
-        make_item("Reset")
-        make_item("Force power off")
+        make_item(_("Reset"), 'Reset')
+        make_item(_("Force power off"), 'Force power off')
 
     menu.show_all()
     return menu
 
 
 class Viewer(Gtk.ApplicationWindow):
-    title = 'ECP Veil VDI Client'
+    title = _('ECP Veil VDI thin client')
 
     def __init__(self, app, vm_widget, **kwargs):
         super(Viewer, self).__init__()
@@ -101,53 +101,53 @@ class Viewer(Gtk.ApplicationWindow):
         self._overlay_toolbar_fullscreen = OverlayToolbar(self.app)
         self._overlay = self._overlay_toolbar_fullscreen.create(
             name="Fullscreen Toolbar",
-            tooltip_text="Leave fullscreen",
+            tooltip_text=_("Leave fullscreen"),
             accessible_name="Fullscreen Exit",
             send_key_accessible_name="Fullscreen Send Key",
             on_leave_fn=self.toggle_fullscreen,
             on_send_key_fn=self._do_send_key,
             on_vm_manage_fn=self._vm_control,
             on_usb_fn=self.control_vm_usb_redirection,
-            usb_tooltip="Redirection USB devices",
+            usb_tooltip=_("Redirection USB devices"),
             on_close_fn=self.on_viewer_delete_event,
-            close_tooltip="Close")
+            close_tooltip=_("Close"))
         self.overlay = Gtk.Overlay()
         self.overlay.add_overlay(self._overlay)
 
         self.mb = Gtk.MenuBar()
 
         viewmenu = Gtk.Menu()
-        viewm = Gtk.MenuItem("View")
+        viewm = Gtk.MenuItem(_("View"))
         viewm.set_submenu(viewmenu)
         self.mb.append(viewm)
         self.screen_mode_toggle = self.add_menu_item(viewmenu,
                                                      self.toggle_fullscreen,
-                                                     "Fullscreen")
-        self.add_menu_item(viewmenu, self.resize_to_vm, "Resize to VM")
+                                                     _("Fullscreen"))
+        self.add_menu_item(viewmenu, self.resize_to_vm, _("Resize to VM"))
 
         usbmenu = Gtk.Menu()
-        usbm = Gtk.MenuItem("Usb")
+        usbm = Gtk.MenuItem("USB")
         usbm.set_submenu(usbmenu)
         self.mb.append(usbm)
-        self.add_menu_item(usbmenu, self.control_vm_usb_redirection, "Redirection USB devices")
+        self.add_menu_item(usbmenu, self.control_vm_usb_redirection, _("Redirection USB devices"))
 
         keys_menu = build_keycombo_menu(self._do_send_key)
-        keycombom = Gtk.MenuItem("Send keys")
+        keycombom = Gtk.MenuItem(_("Send keys"))
         keycombom.set_submenu(keys_menu)
         self.mb.append(keycombom)
 
         if self.app.mode != 'fast_mode':
             vm_menu = build_reset_menu(self._vm_control, bool(self.app.mode == 'default_mode'))
-            vmm = Gtk.MenuItem("Control")
+            vmm = Gtk.MenuItem(_("Control"))
             vmm.set_submenu(vm_menu)
             self.mb.append(vmm)
 
         helpmenu = Gtk.Menu()
-        helpm = Gtk.MenuItem("Help")
+        helpm = Gtk.MenuItem(_("Help"))
         helpm.set_submenu(helpmenu)
         self.mb.append(helpm)
-        self.add_menu_item(helpmenu, self.show_help, "Help")
-        self.add_menu_item(helpmenu, self.about, "About")
+        self.add_menu_item(helpmenu, self.show_help, _("Help"))
+        self.add_menu_item(helpmenu, self.about, _("About"))
 
         vbox = Gtk.VBox(False, 2)
         vbox.pack_start(self.mb, False, False, 0)
@@ -190,7 +190,7 @@ class Viewer(Gtk.ApplicationWindow):
             ctx.set_web_extensions_initialization_user_data(GLib.Variant.new_string("test string"))
 
             help_window = Gtk.Window()
-            help_window.set_title("Official ECP Veil page")
+            help_window.set_title(_("Official ECP Veil page"))
             webview = WebKit2.WebView.new_with_context(ctx)
             help_window.add(webview)
             help_window.set_transient_for(self)
@@ -201,7 +201,7 @@ class Viewer(Gtk.ApplicationWindow):
             webview.load_uri("http://mashtab.org/files/veil/index.html")
 
     def _vm_control(self, *args):
-        if args[0].item_name == 'Disconnect':
+        if args[1] == 'Disconnect':
             self.disconnect()
         # - Testing code -
         # elif args[0].item_name == '+Monitor':
@@ -264,13 +264,13 @@ class Viewer(Gtk.ApplicationWindow):
             self.mb.show()
             self.unfullscreen()
             self.fs = False
-            self.screen_mode_toggle.set_label("Fullscreen")
+            self.screen_mode_toggle.set_label(_("Fullscreen"))
             self._overlay_toolbar_fullscreen.timed_revealer.force_reveal(False)
         else:
             self.mb.hide()
             self.fullscreen()
             self.fs = True
-            self.screen_mode_toggle.set_label("Windowed mode")
+            self.screen_mode_toggle.set_label(_("Windowed mode"))
             self._overlay_toolbar_fullscreen.timed_revealer.force_reveal(True)
 
     def add_menu_item(self, menu, command, title):
@@ -316,7 +316,7 @@ class Viewer(Gtk.ApplicationWindow):
         if type(channel) == SpiceClientGLib.MainChannel:
             self.main_channel = channel
             channel_id = channel.get_property("channel-id")
-            print channel.props.agent_connected
+            #print channel.props.agent_connected
             if self._has_agent():
                 print "has agent"
         elif type(channel) == SpiceClientGLib.DisplayChannel:
@@ -350,6 +350,8 @@ class Viewer(Gtk.ApplicationWindow):
             self.cursor_channel = channel
         elif type(channel) == SpiceClientGLib.InputsChannel:
             self.inputs_channel = channel
+        elif type(channel) == SpiceClientGLib.UsbredirChannel:
+            self.usbredir_channel = channel
         else:
             print type(channel)
 
@@ -361,7 +363,7 @@ class Viewer(Gtk.ApplicationWindow):
         if not spice_usbdev_widget:
             return
         spice_usbdev_dialog = Gtk.MessageDialog(self,
-                                                title="Redirection USB devices",
+                                                title=_("Redirection USB devices"),
                                                 flags=Gtk.DialogFlags.DESTROY_WITH_PARENT,
                                                 # message_type=Gtk.MessageType.INFO,
                                                 buttons=Gtk.ButtonsType.CLOSE)
@@ -387,9 +389,7 @@ class Viewer(Gtk.ApplicationWindow):
         if self.vm_widget:
             self.set_title(self.title + self.vm_widget.vm_data['name'])
         else:
-            self.set_title('{title} - {host}:{port}'.format(title=self.title,
-                                                            host=self.kwargs['host'],
-                                                            port=self.kwargs['port']))
+            self.set_title('%s - %s:%s' % (self.title, self.kwargs['host'], self.kwargs['port']))
         self.settings(self.kwargs['host'], self.kwargs['port'])
         if self.kwargs['password']:
             self.session.set_property("password", self.kwargs['password'])
@@ -576,7 +576,7 @@ class OverlayToolbar:
         self.send_key_button = Gtk.ToolButton()
         self.send_key_button.set_icon_name(
             "preferences-desktop-keyboard-shortcuts")
-        self.send_key_button.set_tooltip_text("Send key combination")
+        self.send_key_button.set_tooltip_text(_("Send key combination"))
         self.send_key_button.show_all()
         self.send_key_button.connect("clicked", lambda *args: keycombo_menu_clicked(args, self.keycombo_menu))
         self.send_key_button.get_accessible().set_name(
@@ -593,7 +593,7 @@ class OverlayToolbar:
             control_icon = Gtk.Image.new_from_pixbuf(control_pixbuf)
             self.vm_button.set_icon_widget(control_icon)
             # self.vm_button.set_icon_name("preferences-desktop")
-            self.vm_button.set_tooltip_text("Control")
+            self.vm_button.set_tooltip_text(_("Control"))
             self.vm_button.show_all()
             self.vm_button.connect("clicked", lambda *args: keycombo_menu_clicked(args, self.vm_menu))
             self.overlay_toolbar.add(self.vm_button)

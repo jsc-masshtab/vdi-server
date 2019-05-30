@@ -16,17 +16,12 @@ export class DatapoolsComponent implements OnInit {
   public collection: object[] = [];
   public datapools: {};
   private id_node:string;
-  private id_cluster:string;
+  private route_info: string;
 
   public crumbs: object[] = [
     {
       title: 'Ресурсы',
       icon: 'database'
-    },
-    {
-      title: 'Кластеры',
-      icon: 'building',
-      route: 'resourses/clusters'
     }
   ];
 
@@ -36,10 +31,14 @@ export class DatapoolsComponent implements OnInit {
 
   ngOnInit() {
     this.collectionAction();
-    console.log(this.router);
-    this.activatedRoute.paramMap.subscribe((param: ParamMap) => {
+ 
+    this.activatedRoute.paramMap.subscribe((param: ParamMap) => {              // объединить потоки
       this.id_node = param.get('id') as string;
       this.getDatapools(this.id_node);
+    });
+
+    this.activatedRoute.data.subscribe((data: Object) => {
+      this.route_info = data['route_info'];
     });
   }
 
@@ -48,36 +47,50 @@ export class DatapoolsComponent implements OnInit {
       .subscribe( (data) => {
         this.datapools = data;
 
-        console.log(this.datapools,'datapools');
-
         let cluster_name = localStorage.getItem('cluster_name');
         let node_name = localStorage.getItem('node_name');
         let node_id = localStorage.getItem('node_id');
         let cluster_id = localStorage.getItem('cluster_id');
 
-        this.crumbs = [
-          {
-            title: 'Ресурсы',
-            icon: 'database'
-          },
-          {
-            title: `Кластер ${cluster_name}`,
-            icon: 'building',
-            route: `resourses/clusters/`
-          },
-          {
-            title: `Сервер ${node_name}`,
-            icon: 'building',
-            route: `resourses/clusters/${cluster_id}/nodes/`
-          },
-          {
-            title: `Пулы`,
-            icon: 'building',
-            route: `resourses/clusters/${cluster_id}/nodes/${node_id}/datapools`
-          }
-      ]
-
-
+        if(this.id_node) {    
+          if(this.route_info === 'nodes-datapools')   {
+            this.crumbs.push(  // переход из общей вкладки серверы
+              {
+                title: `Сервер ${node_name}`,
+                icon: 'server',
+                route: `resourses/nodes/`
+              },
+              {
+                title: `Пулы`,
+                icon: 'folder-open'
+              }
+            )
+          } else {
+            this.crumbs.push(  // переход из рес-сы - имя класт - имя серв - пул
+              {
+                title: `Кластер ${cluster_name}`,
+                icon: 'building',
+                route: `resourses/clusters/`
+              },
+              {
+                title: `Сервер ${node_name}`,
+                icon: 'server',
+                route: `resourses/clusters/${cluster_id}/nodes/`
+              },
+              {
+                title: `Пулы`,
+                icon: 'folder-open'
+              }
+            )
+          }    
+        } else {        // из общей пулы
+          this.crumbs.push(
+            {
+              title: `Пулы`,
+              icon: 'folder-open'
+            }
+          );
+        }
         this.spinner = false;
       },
       (error)=> {
