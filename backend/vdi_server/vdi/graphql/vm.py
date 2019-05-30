@@ -4,10 +4,11 @@ import json
 from asyncpg.connection import Connection
 
 from ..db import db
-from ..tasks import vm, admin
+from ..tasks import vm, admin, resources
 
 from .util import get_selections
 from .pool import PoolSettings, TemplateType
+
 
 from vdi.context_utils import enter_context
 
@@ -86,16 +87,24 @@ class AddTemplate(graphene.Mutation):
 
 class TemplateMixin:
 
-    templates = graphene.List(TemplateType, controller_ip=graphene.String())
+    templates = graphene.List(TemplateType, controller_ip=graphene.String(), cluster_id=graphene.String())
     vms = graphene.List(TemplateType, controller_ip=graphene.String())
 
     @enter_context(lambda: db.connect())
-    async def resolve_templates(conn: Connection, self, info, controller_ip=None):
+    async def resolve_templates(conn: Connection, self, info, controller_ip=None, cluster_id=None):
         if controller_ip is None:
             from vdi.graphql.resources import get_controller_ip
             controller_ip = await get_controller_ip()
+        if cluster_id is not None:
+            nodes = await resources.ListNodes(controller_ip=controller_ip, cluster_id=cluster_id)
+            nodes = {node['id'] for node in nodes}
         vms = await vm.ListVms(controller_ip=controller_ip)
-        vms = {vm['id'] for vm in vms}
+        if cluster_id is not None:
+            vms = [
+                vm for vm in vms
+                if vm['node']['id'] in nodes
+            ]
+        vms = [vm['id'] for vm in vms]
         selections = get_selections(info)
 
         fields = []
