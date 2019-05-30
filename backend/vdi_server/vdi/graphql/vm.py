@@ -7,7 +7,7 @@ from ..db import db
 from ..tasks import vm, admin, resources
 
 from .util import get_selections
-from .pool import PoolSettings, TemplateType
+from .pool import PoolSettings, TemplateType, VmType
 
 
 from vdi.context_utils import enter_context
@@ -88,7 +88,7 @@ class AddTemplate(graphene.Mutation):
 class TemplateMixin:
 
     templates = graphene.List(TemplateType, controller_ip=graphene.String(), cluster_id=graphene.String())
-    vms = graphene.List(TemplateType, controller_ip=graphene.String())
+    vms = graphene.List(TemplateType, controller_ip=graphene.String(), cluster_id=graphene.String())
 
     @enter_context(lambda: db.connect())
     async def resolve_templates(conn: Connection, self, info, controller_ip=None, cluster_id=None):
@@ -147,13 +147,29 @@ class TemplateMixin:
 
 
     @enter_context(lambda: db.connect())
-    async def resolve_vms(conn: Connection, self, info, controller_ip=None):
+    async def resolve_vms(conn: Connection, self, info, controller_ip=None, cluster_id=None):
         if controller_ip is None:
             from vdi.graphql.resources import get_controller_ip
             controller_ip = await get_controller_ip()
+
         vms = await vm.ListVms(controller_ip=controller_ip)
+        if cluster_id is not None:
+            nodes = await resources.ListNodes(controller_ip=controller_ip, cluster_id=cluster_id)
+            nodes = {node['id'] for node in nodes}
+            vms = [
+                vm for vm in vms
+                if vm['node']['id'] in nodes
+            ]
+
+        # Filter out templates
+        # temporary measure, since veil should know itself, whether a vm is a template
+        qu = f"SELECT id FROM template_vm"
+        data = await conn.fetch(qu)
+        templates_id = {t['id'] for t in data}
+
         return [
-            TemplateType(name=vm['verbose_name'], id=vm['id'], info=json.dumps(vm))
+            VmType(name=vm['verbose_name'], id=vm['id'])
             for vm in vms
+            if vm['id'] not in templates_id
         ]
 
