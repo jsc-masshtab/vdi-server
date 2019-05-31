@@ -29,6 +29,16 @@ class ListClusters(UrlFetcher):
 
 
 @dataclass()
+class FetchCluster(UrlFetcher):
+    controller_ip: str
+    cluster_id: str
+
+    def url(self):
+        return f'http://{self.controller_ip}/api/clusters/{self.cluster_id}/'
+
+
+
+@dataclass()
 class ListNodes(UrlFetcher):
 
     cluster_id: str
