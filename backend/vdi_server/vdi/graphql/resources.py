@@ -169,7 +169,7 @@ class Resources:
                               )
     clusters = graphene.List(ClusterType,
                              controller_ip=graphene.String())
-    cluster = graphene.Field(ClusterType, cluster_id=graphene.String(), controller_ip=graphene.String())
+    cluster = graphene.Field(ClusterType, id=graphene.String(), controller_ip=graphene.String())
     nodes = graphene.List(NodeType,
                           controller_ip=graphene.String(),
                           cluster_id=graphene.String())
@@ -237,6 +237,14 @@ class Resources:
             obj.nodes = []
             li.append(obj)
         return li
+
+    async def resolve_cluster(self, info, id, controller_ip=None):
+        if controller_ip is None:
+            controller_ip = await get_controller_ip()
+        resp = await resources.FetchCluster(controller_ip=controller_ip, cluster_id=id)
+        obj = Resources._make_type(ClusterType, resp)
+        obj.controller_ip = controller_ip
+        return obj
 
     @classmethod
     def _make_node(cls, item, fields):
