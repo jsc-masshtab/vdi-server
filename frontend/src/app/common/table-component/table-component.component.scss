@@ -15,6 +15,10 @@
         width: calc(100% - 200px);
         font-weight: bold;
         font-family: Arial;
+
+        &.into-table {
+            background: whitesmoke;
+        }
     }
 
     .table-header-part {
@@ -30,7 +34,7 @@
         display: flex;
         flex-direction: column;
         font-size: 15px;
-        margin-top: 25px;
+        margin-top: 23px;
     }
 
     .table-area-object {

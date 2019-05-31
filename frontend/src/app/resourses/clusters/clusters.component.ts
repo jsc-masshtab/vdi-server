@@ -14,6 +14,8 @@ export class ClustersComponent implements OnInit {
 
   public clusters: [];
   public collection: object[] = [];
+  public cluster_id:string;
+  public cluster_name:string;
   public crumbs: object[] = [
     {
       title: 'Ресурсы',
@@ -72,8 +74,11 @@ export class ClustersComponent implements OnInit {
     ];
   }
 
-  public routeTo(event): void {
-    this.router.navigate([`resourses/clusters/${event.id}/nodes`]);
+  public getInfoCluster(event): void {
+    this.cluster_id = event.id;
+    this.cluster_name = event.verbose_name;
+    console.log(event.verbose_name);
+   // this.router.navigate([`resourses/clusters/${event.id}/nodes`]);
   }
 
 
