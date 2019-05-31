@@ -66,8 +66,13 @@ class PoolType(graphene.ObjectType):
 class VmType(graphene.ObjectType):
     name = graphene.String()
     id = graphene.String()
-    info = graphene.String()
+    info = graphene.String(deprecation_reason="Use `template {info}`")
     template = graphene.Field(TemplateType)
+
+    @graphene.Field
+    def node():
+        from vdi.graphql.resources import NodeType
+        return NodeType
 
 
 class PoolSettingsFields(graphene.AbstractType):
