@@ -13,7 +13,7 @@ from ..tasks import resources, FetchException, vm
 from .util import get_selections
 from vdi.context_utils import enter_context
 
-from .pool import PoolSettings
+from .pool import PoolSettings, TemplateType
 
 
 class ControllerType(graphene.ObjectType):
@@ -34,6 +34,10 @@ class ClusterType(graphene.ObjectType):
     cpu_count = graphene.Int()
     memory_count = graphene.Int()
     tags = graphene.List(graphene.String)
+    # nodes = graphene.List(lambda: NodeType)
+    # templates = graphene.List(lambda: TemplateType)
+    # datapools = graphene.List(lambda: DatapoolType)
+
 
 #FIXME tests
 
@@ -80,9 +84,11 @@ class Resources:
     datapools = graphene.List(DatapoolType,
                               node_id=graphene.String(),
                               controller_ip=graphene.String(),
+                              cluster_id=graphene.String()
                               )
     clusters = graphene.List(ClusterType,
                              controller_ip=graphene.String())
+    # cluster = graphene.Field(ClusterType, cluster_id=graphene.String(), controller_ip=graphene.String())
     nodes = graphene.List(NodeType,
                           controller_ip=graphene.String(),
                           cluster_id=graphene.String())
@@ -98,15 +104,20 @@ class Resources:
         }
         return type(**dic)
 
-    async def resolve_datapools(self, info, controller_ip=None, node_id=None):
+    async def resolve_datapools(self, info, controller_ip=None, node_id=None, cluster_id=None):
         if controller_ip is None:
             controller_ip = await get_controller_ip()
         if node_id is not None:
             return Resources._get_datapools(info, controller_ip=controller_ip, node_id=node_id)
+        if cluster_id is not None:
+            cluster_ids = [cluster_id]
+        else:
+            clusters = await resources.ListClusters(controller_ip=controller_ip)
+            cluster_ids = [c['id'] for c in clusters]
         datapools = {}
-        clusters = await resources.ListClusters(controller_ip=controller_ip)
-        for cluster in clusters:
-            nodes = await resources.ListNodes(controller_ip=controller_ip, cluster_id=cluster['id'])
+
+        for cluster_id in cluster_ids:
+            nodes = await resources.ListNodes(controller_ip=controller_ip, cluster_id=cluster_id)
             for node in nodes:
                 objects = await Resources._get_datapools(info, controller_ip=controller_ip, node_id=node['id'])
                 datapools.update(
