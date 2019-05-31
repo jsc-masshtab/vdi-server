@@ -3,7 +3,3 @@
 </div>
 
 <vdi-table-component [data]="clusters" [collection]="collection" [spinner]="spinner" [cursor]="true" (clickRowData)="getInfoCluster($event)"></vdi-table-component>
-
-<div class="resourse-into" *ngIf="cluster_id">
-    <vdi-resourse-into [clusterId]="cluster_id" [clusterName]="cluster_name" what="Кластер"></vdi-resourse-into>
-</div>

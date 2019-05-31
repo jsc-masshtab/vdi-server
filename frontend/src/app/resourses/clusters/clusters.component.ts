@@ -24,7 +24,7 @@ export class ClustersComponent implements OnInit {
     {
       title: 'Кластеры',
       icon: 'building',
-     // route: 'resourses/clusters'
+      //route: 'resourses/clusters'
     }
   ];
 
@@ -78,7 +78,7 @@ export class ClustersComponent implements OnInit {
     this.cluster_id = event.id;
     this.cluster_name = event.verbose_name;
     console.log(event.verbose_name);
-   // this.router.navigate([`resourses/clusters/${event.id}/nodes`]);
+    this.router.navigate([`resourses/clusters/${event.id}`]);
   }
 
 

@@ -51,6 +51,7 @@ import { AddControllerComponent } from './settings/servers/add-controller/add-co
 import { ServersService } from './settings/servers/servers.service';
 import { FooterComponent } from './footer/footer.component';
 import { ResourseIntoComponent } from './resourse-into/resourse-into.component';
+import { ClusterDetailsComponent } from './resourses/clusters/cluster-details/cluster-details.component';
 /*  -----------------------------------   material   --------------------------------------*/
 
 
@@ -70,6 +71,7 @@ import { ResourseIntoComponent } from './resourse-into/resourse-into.component';
     PoolComponent,
     NodesComponent,
     ClustersComponent,
+    ClusterDetailsComponent,
     ServersComponent,
     AddControllerComponent,
     DatapoolsComponent,
