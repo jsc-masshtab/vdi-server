@@ -12,10 +12,7 @@ from .util import get_selections
 from .users import UserType
 
 
-class TemplateType(graphene.ObjectType):
-    id = graphene.String()
-    name = graphene.String()
-    info = graphene.String()
+
 
 
 # TODO TemplateType == VmType
@@ -26,6 +23,18 @@ from classy_async import wait
 from vdi.context_utils import enter_context
 
 from vdi.settings import settings as settings_file
+
+
+class TemplateType(graphene.ObjectType):
+    id = graphene.String()
+    name = graphene.String()
+    info = graphene.String()
+
+    @graphene.Field
+    def node():
+        from vdi.graphql.resources import NodeType
+        return NodeType
+
 
 class RunningState(graphene.Enum):
     RUNNING = 1
