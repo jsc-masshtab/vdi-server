@@ -17,10 +17,20 @@
             <ng-container *ngIf="!obj.property_boolean">{{ obj.property_boolean_false }}</ng-container>
           </span>
           <span *ngIf="obj.property_lv2">{{ item[obj.property][obj.property_lv2]}}</span>
-          <span *ngIf="!obj.property_lv2 && !obj.property_lv2_array && !obj.property_lv2_wrap">{{ item[obj.property] }}</span>
-          <span *ngIf="obj.property_lv2_wrap"><span>/</span>{{ item[obj.property][obj.property_lv2_prop2]}}</span>
-          <span *ngIf="obj.property_lv2_array">{{ item[obj.property][obj.property_lv2_array].length }}</span>
+          <span *ngIf="!obj.property_lv2 && !obj.property_lv2_array && !obj.property_lv2_wrap">{{ item[obj.property] || '--' }}</span>
+          <span *ngIf="obj.property_lv2_wrap"><span>/</span>{{ item[obj.property][obj.property_lv2_prop2] || '--' }}</span>
+          <span *ngIf="obj.property_lv2_array">{{ item[obj.property][obj.property_lv2_array].length || '--' }}</span>
         </div> 
+      </div>
+    </div>
+  </div>
+</ng-container>
+
+<ng-container *ngIf="data && !data.length && !spinner">
+  <div class="table-component">
+    <div class="table-area-object">
+      <div class="table-area-property">
+        <span>нет данных</span>
       </div>
     </div>
   </div>

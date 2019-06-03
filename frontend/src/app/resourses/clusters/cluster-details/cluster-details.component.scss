@@ -1,7 +1,37 @@
 .resourse-into {
-    position: absolute;
-    width: 100%;
-    bottom: 0px;
-    height: 400px;
-    background: #FFF;
+   
+   
+}
+
+
+.menu {
+    display: flex;
+    padding: 10px;
+    background: rgba(201, 209, 216, 0.3);
+
+    > li {
+        border: none;
+        padding: 5px 15px 5px;
+        font-size: 15px;
+        color: #000;
+        border-radius: 100px;
+        box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.12);
+        transition: .2s box-shadow ease-in-out;
+        margin-right: 16px;
+        cursor: pointer;
+        background: #FFF;
+
+        &:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        &:last-child {
+            margin-right: 0px;
+        }
+
+        &.active {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2) !important;
+            font-weight: bold;
+        }
+    }
 }
