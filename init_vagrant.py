@@ -30,7 +30,7 @@ def main():
             content = f.read()
         if args['-i'] or args['--interactive']:
             line = dedent(f"""\
-            $boxname = {boxname}
+            $boxname = "{boxname}"
             $script = <<-SCRIPT SCRIPT
             """)
         else:
