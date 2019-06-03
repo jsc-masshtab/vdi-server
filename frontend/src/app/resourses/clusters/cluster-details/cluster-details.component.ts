@@ -13,6 +13,7 @@ import { ActivatedRoute, ParamMap, Router } from '@angular/router';
 export class ClusterDetailsComponent implements OnInit {
 
   public cluster: {} = {};
+  public templates: [] = [];
   public collection = [
     {
       title: 'Название',
@@ -96,6 +97,58 @@ export class ClusterDetailsComponent implements OnInit {
       property: 'status'
     }
   ];
+  public collection_templates = [
+    {
+      title: 'Название',
+      property: 'verbose_name'
+    },
+    {
+      title: 'Cервер',
+      property: "node",
+      property_lv2: 'verbose_name'
+    },
+    {
+      title: 'Операционная система',
+      property: 'os_type'
+    },
+    {
+      title: 'Оперативная память (MБ)',
+      property: 'memory_count'
+    },
+    {
+      title: 'Графический адаптер',
+      property: 'video',
+      property_lv2: 'type'
+    },
+    {
+      title: 'Звуковой адаптер',
+      property: 'sound',
+      property_lv2: 'model',
+      property_lv2_prop2: 'codec'
+    },
+    {
+      title: 'Высокая доступность',
+      property_boolean: 'ha_enabled',
+      property_boolean_true: 'Включена',
+      property_boolean_false: 'Выключена'
+    }
+  ];
+  public collection_vms = [
+    {
+      title: 'Название',
+      property: 'name'
+    },
+    {
+      title: 'Сервер',
+      property: "node",
+      property_lv2: 'verbose_name'
+    },
+    {
+      title: 'Шаблон',
+      property: "template",
+      property_lv2: 'name'
+    }
+  ];
   public cluster_id:string;
   public menuActive:string = 'info';
   public crumbs: object[] = [
@@ -110,7 +163,7 @@ export class ClusterDetailsComponent implements OnInit {
     }
   ];
 
-  public spinner:boolean = true;
+  public spinner:boolean  = false;
 
   constructor(private activatedRoute: ActivatedRoute,
               private router: Router,
@@ -124,9 +177,12 @@ export class ClusterDetailsComponent implements OnInit {
   }
 
   private getCluster(id:string) {
+    this.spinner = true;
     this.service.getCluster(id).valueChanges.pipe(map(data => data.data.cluster))
       .subscribe( (data) => {
         this.cluster = data;
+        console.log(data);
+        this.templates = data.templates.map((item) => JSON.parse(item.info));
         this.crumbs.push({
             title: `Кластер ${this.cluster['verbose_name']}`,
             icon: 'building'
@@ -151,6 +207,14 @@ export class ClusterDetailsComponent implements OnInit {
 
     if(route === 'datapools') {
       this.menuActive = 'datapools';
+    }
+
+    if(route === 'templates') {
+      this.menuActive = 'templates';
+    }
+
+    if(route === 'vms') {
+      this.menuActive = 'vms';
     }
   }
 

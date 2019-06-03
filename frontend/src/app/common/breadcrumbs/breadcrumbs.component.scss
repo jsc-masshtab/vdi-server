@@ -76,3 +76,21 @@
   #breadcrumbs-one .current::before{
     content: normal;
   }
+
+  .breadcrumbs-active {
+    cursor: pointer !important;
+    >  div {
+      &::after {
+        border-left-color: rgba(201, 209, 216, 0.3) !important;
+      }
+
+      &:hover {
+        background: rgba(201, 209, 216, 0.3) !important;
+
+        &::after {
+          border-left-color: rgba(201, 209, 216, 0.3) !important;
+        }
+      }
+    
+    }
+  }

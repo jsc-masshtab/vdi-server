@@ -59,6 +59,18 @@ export class ClustersService  {
                                     iso_count
                                     verbose_name
                                 }
+                                templates {
+                                    info
+                                }
+                                vms {
+                                    name
+                                    template {
+                                        name 
+                                    }
+                                    node { 
+                                        verbose_name
+                                    }
+                                }
                             }
                         }
                     `,
