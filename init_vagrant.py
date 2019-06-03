@@ -31,7 +31,8 @@ def main():
         if args['-i'] or args['--interactive']:
             line = dedent(f"""\
             $boxname = "{boxname}"
-            $script = <<-SCRIPT SCRIPT
+            $script = <<-SCRIPT
+            SCRIPT
             """)
         else:
             line = dedent(f"""\
