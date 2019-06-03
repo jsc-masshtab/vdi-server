@@ -1,0 +1,21 @@
+<ng-container *ngIf="cluster_id">
+    <div class="breadcrumbs-wrap">
+        <vdi-breadcrumbs [data]="crumbs"></vdi-breadcrumbs>
+    </div>
+           
+    <div class="resourse-into">
+        <ul class="menu">
+            <li (click)="routeTo('info')" [class.active]="menuActive === 'info'">Информация</li>
+            <li (click)="routeTo('servers')" [class.active]="menuActive === 'servers'">Серверы</li>
+            <li (click)="routeTo('datapools')" [class.active]="menuActive === 'datapools'">Пулы данных</li>
+            <li (click)="routeTo('templates')" [class.active]="menuActive === 'templates'">Шаблоны ВМ</li>
+            <li (click)="routeTo('vms')" [class.active]="menuActive === 'vms'">ВМ</li>
+        </ul>
+        <vdi-table-into [data]="cluster" [collection]="collection" *ngIf="menuActive === 'info'"></vdi-table-into>
+        <vdi-table-component [data]="cluster.nodes" [collection]="collection_nodes" [spinner]="spinner" *ngIf="menuActive === 'servers'" empty=" - нет серверов - "></vdi-table-component>
+        <vdi-table-component [data]="cluster.datapools" [collection]="collection_datapools" [spinner]="spinner" *ngIf="menuActive === 'datapools'" empty=" - нет пулов - "></vdi-table-component>
+        <vdi-table-component [data]="templates" [collection]="collection_templates" [spinner]="spinner" *ngIf="menuActive === 'templates'" empty=" - нет шаблонов - "></vdi-table-component>
+        <vdi-table-component [data]="cluster.vms" [collection]="collection_vms" [spinner]="spinner" *ngIf="menuActive === 'vms'" empty=" - нет виртуальных машин - "></vdi-table-component>
+    </div>
+</ng-container>
+

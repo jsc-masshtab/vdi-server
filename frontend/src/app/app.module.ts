@@ -50,6 +50,8 @@ import { MatDialogModule } from '@angular/material/dialog';
 import { AddControllerComponent } from './settings/servers/add-controller/add-controller.component';
 import { ServersService } from './settings/servers/servers.service';
 import { FooterComponent } from './footer/footer.component';
+import { ResourseIntoComponent } from './resourse-into/resourse-into.component';
+import { ClusterDetailsComponent } from './resourses/clusters/cluster-details/cluster-details.component';
 /*  -----------------------------------   material   --------------------------------------*/
 
 
@@ -69,10 +71,12 @@ import { FooterComponent } from './footer/footer.component';
     PoolComponent,
     NodesComponent,
     ClustersComponent,
+    ClusterDetailsComponent,
     ServersComponent,
     AddControllerComponent,
     DatapoolsComponent,
-    FooterComponent
+    FooterComponent,
+    ResourseIntoComponent
   ],
   imports: [
     BrowserModule,

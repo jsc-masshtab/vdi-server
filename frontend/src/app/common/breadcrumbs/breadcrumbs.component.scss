@@ -3,7 +3,7 @@
     width: 100%;
     position: fixed;
     top: 40px;
-    border-top: 3px solid rgb(217, 236, 244);
+   // border-top: 3px solid rgb(217, 236, 244);
     border-bottom: 1px solid #c9d1d8;
   }
 
@@ -75,4 +75,22 @@
   #breadcrumbs-one .current::after,
   #breadcrumbs-one .current::before{
     content: normal;
+  }
+
+  .breadcrumbs-active {
+    cursor: pointer !important;
+    >  div {
+      &::after {
+        border-left-color: rgba(201, 209, 216, 0.3) !important;
+      }
+
+      &:hover {
+        background: rgba(201, 209, 216, 0.3) !important;
+
+        &::after {
+          border-left-color: rgba(201, 209, 216, 0.3) !important;
+        }
+      }
+    
+    }
   }

@@ -6,6 +6,7 @@ import { PollsComponent } from './polls/polls.component';
 import { ServersComponent } from './settings/servers/servers.component';
 import { NodesComponent } from './resourses/nodes/nodes.component';
 import { DatapoolsComponent } from './resourses/datapools/datapools.component';
+import { ClusterDetailsComponent } from './resourses/clusters/cluster-details/cluster-details.component';
 
 const routes: Routes = [
   {
@@ -22,16 +23,16 @@ const routes: Routes = [
     component: ClustersComponent
   },
   {
+    path: 'resourses/clusters/:id',
+    component: ClusterDetailsComponent
+  },
+  {
     path: 'resourses/nodes',
     component: NodesComponent
   },
   {
     path: 'resourses/datapools',
     component: DatapoolsComponent
-  },
-  {
-    path: 'resourses/clusters/:id/nodes',
-    component: NodesComponent
   },
   {
     path: 'resourses/clusters/:id/nodes/:id/datapools',
@@ -53,7 +54,7 @@ const routes: Routes = [
 ];
 
 @NgModule({
-  imports: [RouterModule.forRoot(routes)],
+  imports: [RouterModule.forRoot(routes)], // <-- debugging purposes only { enableTracing: true }
   exports: [RouterModule]
 })
 
