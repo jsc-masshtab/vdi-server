@@ -49,6 +49,7 @@ async def get_vm(request):
             return JSONResponse({
                 'host': controller_ip,
                 'port': info['remote_access_port'],
+                'password': info['graphics_password'],
             })
         pool = Pool.instances[pool_id]
         domain = await pool.queue.get()
@@ -59,6 +60,7 @@ async def get_vm(request):
         return JSONResponse({
             'host': controller_ip,
             'port': info['remote_access_port'],
+            'password': info['graphics_password'],
         })
 
 
