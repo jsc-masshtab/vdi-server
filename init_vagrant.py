@@ -1,3 +1,4 @@
+#! env python
 """
 Usage:
   init [-i | --interactive] [--bare] [<boxname>]
