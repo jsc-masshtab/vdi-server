@@ -7,7 +7,6 @@ Usage:
 #TODO clear <boxname>
 
 import docopt
-args = docopt.docopt(__doc__)
 
 import subprocess
 import sys
@@ -15,6 +14,7 @@ import os
 from textwrap import dedent
 
 def main():
+    args = docopt.docopt(__doc__)
     if not args['<boxname>']:
         boxname = 'generic/ubuntu1904'
     else:
