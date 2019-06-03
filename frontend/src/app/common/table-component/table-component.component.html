@@ -2,7 +2,7 @@
 
 <ng-container *ngIf="data && data.length && !spinner">
   <div class="table-component" *ngIf="!spinner">
-    <header [class.into-table]="into">
+    <header>
       <div *ngFor="let obj of collection" class="table-header-part" [class.index-column]="obj.property == 'index'" [class.name_width]="obj.property == 'verbose_name'">
         {{obj.title}}
       </div>
@@ -30,7 +30,7 @@
   <div class="table-component">
     <div class="table-area-object">
       <div class="table-area-property">
-        <span>нет данных</span>
+        <span>{{ empty }}</span>
       </div>
     </div>
   </div>
