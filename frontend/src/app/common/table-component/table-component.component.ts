@@ -13,6 +13,7 @@ export class TableComponentComponent  {
   @Input() spinner:boolean = false;
   @Input() collection: object[] = [];
   @Input() cursor: boolean = false;
+  @Input() empty: string = "- нет данных -";
   @Output() clickRowData:EventEmitter<any> = new EventEmitter();
 
   constructor() {}

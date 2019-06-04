@@ -1,16 +1,21 @@
 import { Component,  Input, } from '@angular/core';
 
 @Component({
-  selector: 'vdi-table-into-component',
+  selector: 'vdi-table-into',
   templateUrl: './table-into.html',
   styleUrls: ['./table-into.scss']
 })
 export class TableIntoComponent  {
 
-  //@Input() data: object[] = [];
-	//@Input() collection: object[] = [];
+  @Input() data: {} = {};
+  @Input() collection: object[] = [];
+  @Input() spinner:boolean = false;
 
   constructor() {}
+
+  ngOnInit() {
+ 
+  }
 
 
 
