@@ -14,8 +14,6 @@ export class ClustersComponent implements OnInit {
 
   public clusters: [];
   public collection: object[] = [];
-  public cluster_id:string;
-  public cluster_name:string;
   public crumbs: object[] = [
     {
       title: 'Ресурсы',
@@ -23,12 +21,11 @@ export class ClustersComponent implements OnInit {
     },
     {
       title: 'Кластеры',
-      icon: 'building',
-      //route: 'resourses/clusters'
+      icon: 'building'
     }
   ];
 
-  public spinner:boolean = true;
+  public spinner:boolean = false;
 
   constructor(private service: ClustersService,private router: Router){}
 
@@ -38,6 +35,7 @@ export class ClustersComponent implements OnInit {
   }
 
   private getAllClusters() {
+    this.spinner = true;
     this.service.getAllClusters().valueChanges.pipe(map(data => data.data.clusters))
       .subscribe( (data) => {
         this.clusters = data;
@@ -57,7 +55,6 @@ export class ClustersComponent implements OnInit {
       {
         title: 'Серверы',
         property: "nodes_count"
-       
       },
       {
         title: 'CPU',
@@ -75,9 +72,6 @@ export class ClustersComponent implements OnInit {
   }
 
   public getInfoCluster(event): void {
-    this.cluster_id = event.id;
-    this.cluster_name = event.verbose_name;
-    console.log(event.verbose_name);
     this.router.navigate([`resourses/clusters/${event.id}`]);
   }
 

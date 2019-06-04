@@ -1,3 +1,4 @@
+import { NodeDetailsComponent } from './resourses/nodes/node-details/node-details.component';
 import { DatapoolsService } from './resourses/datapools/datapools.service';
 import { DatapoolsComponent } from './resourses/datapools/datapools.component';
 
@@ -50,7 +51,6 @@ import { MatDialogModule } from '@angular/material/dialog';
 import { AddControllerComponent } from './settings/servers/add-controller/add-controller.component';
 import { ServersService } from './settings/servers/servers.service';
 import { FooterComponent } from './footer/footer.component';
-import { ResourseIntoComponent } from './resourse-into/resourse-into.component';
 import { ClusterDetailsComponent } from './resourses/clusters/cluster-details/cluster-details.component';
 /*  -----------------------------------   material   --------------------------------------*/
 
@@ -76,7 +76,7 @@ import { ClusterDetailsComponent } from './resourses/clusters/cluster-details/cl
     AddControllerComponent,
     DatapoolsComponent,
     FooterComponent,
-    ResourseIntoComponent
+    NodeDetailsComponent
   ],
   imports: [
     BrowserModule,
