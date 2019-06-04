@@ -128,7 +128,6 @@ class Main(Gtk.ApplicationWindow):
         cmd(vm_widget.dp_id)
 
     def on_vm_connect(self, context, result):
-        result['password'] = 'WRZoCAA0jXgjnxxo'
         self.app.do_viewer(host=result['host'], port=result['port'], password=result['password'])
 
 

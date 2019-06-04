@@ -102,6 +102,12 @@ class NodeType(graphene.ObjectType):
         obj.controller_ip = self.controller_ip
         return obj
 
+    def resolve_datacenter(self, info):
+        if self.datacenter:
+            return self.datacenter
+        return DatacenterType(id=self.info['datacenter_id'], verbose_name=self.info['datacenter_name'])
+
+
     controller_ip = None
     info = None
 
@@ -135,12 +141,12 @@ class DatapoolType(graphene.ObjectType):
                 for node in self.nodes
             ]
             async for node in wait(*tasks):
-                obj = Resources._make_node(node, fields)
+                obj = Resources._make_type(NodeType, node)
                 obj.controller_ip = self.controller_ip
                 nodes.append(obj)
         else:
             for node in self.nodes:
-                obj = Resources._make_node(node, fields)
+                obj = Resources._make_type(NodeType, node)
                 obj.controller_ip = self.controller_ip
                 nodes.append(obj)
 
@@ -247,26 +253,13 @@ class Resources:
         return obj
 
     @classmethod
-    def _make_node(cls, item, fields):
-        obj = Resources._make_type(NodeType, item)
-
-        #FIXME  use resolve_datacenter
-
-
-        if 'datacenter' in fields:
-            obj.datacenter = DatacenterType(id=item['datacenter_id'], verbose_name=item['datacenter_name'])
-        if 'cluster' in fields:
-            obj.cluster = ClusterType(**obj.cluster)
-        return obj
-
-    @classmethod
     async def _get_nodes(cls, info, controller_ip, cluster_id):
         nodes = await resources.ListNodes(controller_ip=controller_ip, cluster_id=cluster_id)
         fields = get_selections(info)
 
         li = []
         for node in nodes:
-            obj = Resources._make_node(node, fields)
+            obj = Resources._make_type(NodeType, node)
             obj.controller_ip = controller_ip
             li.append(obj)
         return li
@@ -321,9 +314,11 @@ class Resources:
     async def resolve_node(self, info, id, controller_ip=None):
         if controller_ip is None:
             controller_ip = await get_controller_ip()
-        fields = get_selections(info)
         node = await resources.FetchNode(controller_ip=controller_ip, node_id=id)
-        obj = Resources._make_node(node, fields)
+        node['cluster'] = {
+            'id': node['cluster'],
+        }
+        obj = Resources._make_type(NodeType, node)
         obj.controller_ip = controller_ip
         return obj
 
