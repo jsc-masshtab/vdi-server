@@ -1,5 +1,3 @@
-$boxname = "generic/ubuntu1904"
-
 # -*- mode: ruby -*-
 # vi: set ft=ruby :
 

@@ -2,9 +2,7 @@
 """
 Usage:
   init [-i | --interactive] [--bare] [<boxname>]
-
 """
-#TODO clear <boxname>
 
 import docopt
 
@@ -35,13 +33,9 @@ def main():
             SCRIPT
             """)
         else:
-            line = dedent(f"""\
-            $boxname = "{boxname}"
-            $script = <<-SCRIPT
-                apt update
-                apt upgrade -y
-            SCRIPT
-            """)
+            with open('vagrant/apt.sh') as f:
+                apt_sh = f.read()
+            line = dedent(f"""$boxname = "{boxname}"\n$script = <<- SCRIPT\n{apt_sh}\nSCRIPT""")
         vagrantfile = '\n'.join((line, content))
         with open('Vagrantfile', 'w') as f:
             f.write(vagrantfile)
@@ -51,7 +45,10 @@ def main():
         if args['-i'] or args['--interactive']:
             completed = subprocess.run("vagrant ssh", shell=True)
         completed = subprocess.run("vagrant commit", shell=True)
-
+        # Set not provisioned
+        from pathlib import Path
+        path = Path('.') / '.vagrant' / 'machines' / 'vdihost' / 'libvirt' / 'action_provision'
+        os.remove(path.absolute())
     with open('vagrant/real.Vagrantfile') as f:
         content = f.read()
     line = f'$boxname = "{boxname}"'
