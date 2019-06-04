@@ -1,22 +1,12 @@
-echo "Upgrade arch..."
-pacman --noconfirm -Syu
+/vagrant/vagrant/apt.sh
 
-echo "Installing packages..."
-pacman --noconfirm -S --needed base-devel
-pacman --noconfirm -S python-pip postgresql git nodejs npm
+sed -i 's/peer/trust/g' /etc/postgresql/11/main/pg_hba.conf
+systemctl restart postgresql
 
-python -m pip install pipenv
+echo 'postgres:postgres' | chpasswd
+su postgres -c "psql -c \"ALTER ROLE postgres PASSWORD 'postgres';\" "
+su postgres -c "psql -c \"drop database vdi;\" "
+su postgres -c "psql -c \"create database vdi;\" "
 
-echo "Init database"
-systemctl stop postgresql
-echo "Setting postgresql..."
-su postgres -c "initdb -D /var/lib/postgres/data"
-systemctl enable postgresql
-systemctl start postgresql
+python3 -m pip install pipenv
 
-sudo su postgres -c "psql -c \"drop database vdi;\" "
-sudo su postgres -c "psql -c \"create database vdi;\" "
-
-
-# Remove *.pyc files
-find /vagrant -name "*.pyc" -delete

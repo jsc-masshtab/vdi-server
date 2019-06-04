@@ -261,7 +261,7 @@ class CopyDomain(UrlFetcher):
                 return True
 
     async def fetch_template_info(self):
-        url = f"http://{self.controller_ip}/api/domains/{self.domain_id}"
+        url = f"http://{self.controller_ip}/api/domains/{self.domain_id}/"
         headers = await self.headers()
         return await HttpClient().fetch(url, headers=headers)
 

@@ -74,7 +74,7 @@ class AddTemplate(graphene.Mutation):
             from vdi.graphql.resources import get_controller_ip
             controller_ip = await get_controller_ip()
         from vdi.tasks import Token, HttpClient
-        url = f"http://{controller_ip}/api/domains/{id}"
+        url = f"http://{controller_ip}/api/domains/{id}/"
         headers = {
             'Authorization': f'jwt {await Token()}',
         }

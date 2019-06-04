@@ -1,4 +1,5 @@
 cd /vagrant/backend/vdi_server
+
 echo "vdi_server: setting env..."
 echo "export PIPENV_SKIP_LOCK=1" >> /home/vagrant/.bashrc
 export PIPENV_SKIP_LOCK=1

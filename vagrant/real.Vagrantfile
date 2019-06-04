@@ -1,5 +1,3 @@
-$boxname = "generic/ubuntu1904"
-
 # -*- mode: ruby -*-
 # vi: set ft=ruby :
 
@@ -15,12 +13,13 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do | config |
  config.vm.provider "libvirt"
  config.vm.synced_folder '.', '/vagrant', type: "rsync",
    owner: "vagrant", group: "vagrant"
-   config.vm.network "private_network", ip: "192.168.20.110"
 
-   config.vm.provision :shell, path: "vagrant/init.sh"
-   config.vm.provision :shell, path: "vagrant/vdi_server.sh"
-   config.vm.provision :shell, path: "vagrant/auth_server.sh", privileged: false
-   config.vm.provision :shell, path: "vagrant/frontend.sh", privileged: false
+ config.vm.network "private_network", ip: "192.168.20.110"
+
+ config.vm.provision :shell, path: "vagrant/init.sh"
+ config.vm.provision :shell, path: "vagrant/vdi_server.sh"
+ config.vm.provision :shell, path: "vagrant/auth_server.sh", privileged: false
+ config.vm.provision :shell, path: "vagrant/frontend.sh", privileged: false
 
  config.ssh.password = "vagrant"
 
