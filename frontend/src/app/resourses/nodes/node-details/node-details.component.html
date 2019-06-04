@@ -3,7 +3,7 @@
     <vdi-breadcrumbs [data]="crumbs"></vdi-breadcrumbs>
 </div>
         
-<div class="resourse-into">
+<div class="resourse-into" *ngIf="!spinner">
     <ul class="menu">
         <li (click)="routeTo('info')" [class.active]="menuActive === 'info'">Информация</li>
         <li (click)="routeTo('datapools')" [class.active]="menuActive === 'datapools'">Пулы данных</li>

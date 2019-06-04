@@ -41,8 +41,8 @@ export class NodesService {
     public getNode(node_id:string): QueryRef<any,any> {
         let controller_ip = JSON.parse(localStorage.getItem('controller'));
         return  this.service.watchQuery({
-            query:  gql` query node($node_id: String,$controller_ip: String) {
-                            node(node_id: $node_id,controller_ip: $controller_ip) {
+            query:  gql` query node($id: String,$controller_ip: String) {
+                            node(id: $id,controller_ip: $controller_ip) {
                                 verbose_name
                                 status
                                 cpu_count
@@ -81,7 +81,7 @@ export class NodesService {
             variables: {
                 method: 'GET',
                 controller_ip: controller_ip,
-                node_id: node_id
+                id: node_id
             }
         }) 
     }

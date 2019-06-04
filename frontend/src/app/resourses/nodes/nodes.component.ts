@@ -23,7 +23,7 @@ export class NodesComponent implements OnInit {
     },
     {
       title: 'Серверы',
-      icon: 'database'
+      icon: 'server'
     }
   ];
 

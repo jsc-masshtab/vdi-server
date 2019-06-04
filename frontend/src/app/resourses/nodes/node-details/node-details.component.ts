@@ -135,7 +135,7 @@ export class NodeDetailsComponent implements OnInit {
     },
     {
       title: 'Cерверы',
-      icon: 'building',
+      icon: 'server',
       route: 'resourses/nodes'
     }
   ];
@@ -163,7 +163,7 @@ export class NodeDetailsComponent implements OnInit {
         this.templates = data.templates.map((item) => JSON.parse(item.info));
         this.crumbs.push({
             title: `Сервер ${this.node['verbose_name']}`,
-            icon: 'building'
+            icon: 'server'
           }
         );
       
