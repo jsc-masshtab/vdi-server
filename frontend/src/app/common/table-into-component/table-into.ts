@@ -8,7 +8,8 @@ import { Component,  Input, } from '@angular/core';
 export class TableIntoComponent  {
 
   @Input() data: {} = {};
-	@Input() collection: object[] = [];
+  @Input() collection: object[] = [];
+  @Input() spinner:boolean = false;
 
   constructor() {}
 
