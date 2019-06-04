@@ -163,7 +163,7 @@ export class ClusterDetailsComponent implements OnInit {
     }
   ];
 
-  public spinner:boolean  = false;
+  public spinner:boolean = false;
 
   constructor(private activatedRoute: ActivatedRoute,
               private router: Router,
@@ -181,14 +181,14 @@ export class ClusterDetailsComponent implements OnInit {
     this.service.getCluster(id).valueChanges.pipe(map(data => data.data.cluster))
       .subscribe( (data) => {
         this.cluster = data;
-        console.log(data);
+     
         this.templates = data.templates.map((item) => JSON.parse(item.info));
         this.crumbs.push({
             title: `Кластер ${this.cluster['verbose_name']}`,
             icon: 'building'
           }
         );
-        console.log(data);
+      
         this.spinner = false;
       },
       (error)=> {
