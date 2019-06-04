@@ -1,7 +1,7 @@
 #! env python
 """
 Usage:
-  init [-i | --interactive] [--bare] [<boxname>]
+  init [-i | --interactive] [-y] [--bare] [<boxname>]
 """
 
 import docopt
@@ -26,20 +26,17 @@ def main():
         # Create a box, update it and commit
         with open('vagrant/temp.Vagrantfile') as f:
             content = f.read()
+
         if args['-i'] or args['--interactive']:
-            line = dedent(f"""\
-            $boxname = "{boxname}"
-            $script = <<-SCRIPT
-            SCRIPT
-            """)
+            apt_sh = ''
         else:
             with open('vagrant/apt.sh') as f:
                 apt_sh = f.read()
-            line = dedent(f"""$boxname = "{boxname}"\n$script = <<-SCRIPT\n{apt_sh}\nSCRIPT""")
+        line = dedent(f"""$boxname = "{boxname}"\n$script = <<-SCRIPT\n{apt_sh}\nSCRIPT""")
         vagrantfile = '\n'.join((line, content))
         with open('Vagrantfile', 'w') as f:
             f.write(vagrantfile)
-        completed = subprocess.run("vagrant up", shell=True)
+        completed = subprocess.run("vagrant up --provision", shell=True)
         if completed.returncode:
             sys.exit(completed.returncode)
         if args['-i'] or args['--interactive']:
