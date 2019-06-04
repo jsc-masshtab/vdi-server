@@ -5,13 +5,16 @@ Usage:
 """
 
 import docopt
+import json
 
 import subprocess
 import sys
 import os
 from textwrap import dedent
+from pathlib import Path
 
 def main():
+    repo_dir = Path(__file__).parent
     args = docopt.docopt(__doc__)
     if not args['<boxname>']:
         boxname = 'generic/ubuntu1904'
@@ -24,13 +27,13 @@ def main():
         os.remove('Vagrantfile')
     if not args['--bare']:
         # Create a box, update it and commit
-        with open('vagrant/temp.Vagrantfile') as f:
+        with (repo_dir / 'vagrant' / 'temp.Vagrantfile').open() as f:
             content = f.read()
 
         if args['-i'] or args['--interactive']:
             apt_sh = ''
         else:
-            with open('vagrant/apt.sh') as f:
+            with (repo_dir / 'vagrant' / 'apt.sh').open() as f:
                 apt_sh = f.read()
         line = dedent(f"""$boxname = "{boxname}"\n$script = <<-SCRIPT\n{apt_sh}\nSCRIPT""")
         vagrantfile = '\n'.join((line, content))
@@ -43,10 +46,11 @@ def main():
             completed = subprocess.run("vagrant ssh", shell=True)
         completed = subprocess.run("vagrant commit", shell=True)
         # Set not provisioned
-        from pathlib import Path
-        path = Path('.') / '.vagrant' / 'machines' / 'vdihost' / 'libvirt' / 'action_provision'
+        completed = subprocess.run("vagrant showinfo", shell=True, capture_output=True)
+        machine_info = json.loads(completed.stdout)
+        path = Path(machine_info['data_dir']) / 'action_provision'
         os.remove(path.absolute())
-    with open('vagrant/real.Vagrantfile') as f:
+    with (repo_dir / 'vagrant' / 'real.Vagrantfile').open() as f:
         content = f.read()
     line = f'$boxname = "{boxname}"'
     vagrantfile = '\n'.join((line, '', content))
