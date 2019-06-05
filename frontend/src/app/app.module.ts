@@ -2,7 +2,7 @@ import { NodeDetailsComponent } from './resourses/nodes/node-details/node-detail
 import { DatapoolsService } from './resourses/datapools/datapools.service';
 import { DatapoolsComponent } from './resourses/datapools/datapools.component';
 
-import { ServersComponent } from './settings/servers/servers.component';
+import { ControllersComponent } from './settings/controllers/controllers.component';
 
 import { ClustersService } from './resourses/clusters/clusters.service';
 import { ClustersComponent } from './resourses/clusters/clusters.component';
@@ -48,8 +48,8 @@ import { NodesService } from './resourses/nodes/nodes.service';
 /*  -----------------------------------   material   --------------------------------------*/
 import { MAT_DIALOG_DEFAULT_OPTIONS } from '@angular/material';
 import { MatDialogModule } from '@angular/material/dialog';
-import { AddControllerComponent } from './settings/servers/add-controller/add-controller.component';
-import { ServersService } from './settings/servers/servers.service';
+import { AddControllerComponent } from './settings/controllers/add-controller/add-controller.component';
+import { ControllersService } from './settings/controllers/controllers.service';
 import { FooterComponent } from './footer/footer.component';
 import { ClusterDetailsComponent } from './resourses/clusters/cluster-details/cluster-details.component';
 /*  -----------------------------------   material   --------------------------------------*/
@@ -72,7 +72,7 @@ import { ClusterDetailsComponent } from './resourses/clusters/cluster-details/cl
     NodesComponent,
     ClustersComponent,
     ClusterDetailsComponent,
-    ServersComponent,
+    ControllersComponent,
     AddControllerComponent,
     DatapoolsComponent,
     FooterComponent,
@@ -101,7 +101,7 @@ import { ClusterDetailsComponent } from './resourses/clusters/cluster-details/cl
               PoolService,
               NodesService,
               ClustersService,
-              ServersService,
+              ControllersService,
               DatapoolsService
             ],
   bootstrap: [AppComponent]

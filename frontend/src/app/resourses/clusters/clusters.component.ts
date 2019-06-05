@@ -12,16 +12,33 @@ import { Router } from '@angular/router';
 
 export class ClustersComponent implements OnInit {
 
-  public clusters: [];
-  public collection: object[] = [];
+  public clusters: object[] = [];
+  public collection: object[] = [
+    {
+      title: 'Название',
+      property: 'verbose_name'
+    },
+    {
+      title: 'Серверы',
+      property: "nodes_count"
+    },
+    {
+      title: 'CPU',
+      property: 'cpu_count'
+    },
+    {
+      title: 'RAM',
+      property: 'memory_count'
+    },
+    {
+      title: 'Статус',
+      property: 'status'
+    }
+  ];
   public crumbs: object[] = [
     {
       title: 'Ресурсы',
       icon: 'database'
-    },
-    {
-      title: 'Кластеры',
-      icon: 'building'
     }
   ];
 
@@ -30,7 +47,6 @@ export class ClustersComponent implements OnInit {
   constructor(private service: ClustersService,private router: Router){}
 
   ngOnInit() {
-    this.collectionAction();
     this.getAllClusters();
   }
 
@@ -39,6 +55,10 @@ export class ClustersComponent implements OnInit {
     this.service.getAllClusters().valueChanges.pipe(map(data => data.data.clusters))
       .subscribe( (data) => {
         this.clusters = data;
+        this.crumbs.push({
+            title: 'Кластеры',
+            icon: 'building'
+        });
         this.spinner = false;
       },
       (error)=> {
@@ -46,32 +66,7 @@ export class ClustersComponent implements OnInit {
       });
   }
 
-  public collectionAction(): void {
-    this.collection = [
-      {
-        title: 'Название',
-        property: 'verbose_name'
-      },
-      {
-        title: 'Серверы',
-        property: "nodes_count"
-      },
-      {
-        title: 'CPU',
-        property: 'cpu_count'
-      },
-      {
-        title: 'RAM',
-        property: 'memory_count'
-      },
-      {
-        title: 'Статус',
-        property: 'status'
-      }
-    ];
-  }
-
-  public getInfoCluster(event): void {
+  public routeTo(event): void {
     this.router.navigate([`resourses/clusters/${event.id}`]);
   }
 

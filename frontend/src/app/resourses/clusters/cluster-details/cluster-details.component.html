@@ -1,8 +1,7 @@
 
-<div class="breadcrumbs-wrap">
-    <vdi-breadcrumbs [data]="crumbs"></vdi-breadcrumbs>
-</div>
-        
+
+<vdi-breadcrumbs [data]="crumbs"></vdi-breadcrumbs>
+      
 <div class="resourse-into" *ngIf="!spinner">
     <ul class="menu">
         <li (click)="routeTo('info')" [class.active]="menuActive === 'info'">Информация</li>

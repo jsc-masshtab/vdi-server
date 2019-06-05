@@ -1,7 +1,7 @@
 import { NodesService } from './../nodes.service';
 import { Component, OnInit } from '@angular/core';
 import { map } from 'rxjs/operators';
-import { ActivatedRoute, ParamMap, Router } from '@angular/router';
+import { ActivatedRoute, ParamMap } from '@angular/router';
 
 @Component({
   selector: 'vdi-node-details',
@@ -20,8 +20,9 @@ export class NodeDetailsComponent implements OnInit {
       property: 'verbose_name'
     },
     {
-      title: 'Локация',
-      property: "datacenter_name"
+      title: 'Кластер',
+      property: "cluster",
+      property_lv2: "verbose_name"
     },
     {
       title: 'IP-адрес',
@@ -135,15 +136,13 @@ export class NodeDetailsComponent implements OnInit {
     },
     {
       title: 'Cерверы',
-      icon: 'server',
-      route: 'resourses/nodes'
+      icon: 'server'
     }
   ];
 
   public spinner:boolean = false;
 
   constructor(private activatedRoute: ActivatedRoute,
-              private router: Router,
               private service: NodesService){}
 
   ngOnInit() {
@@ -155,12 +154,17 @@ export class NodeDetailsComponent implements OnInit {
 
   private getNode(id:string) {
     this.spinner = true;
-    this.service.getNode(id).valueChanges.pipe(map(data => data.data.cluster))
+    this.service.getNode(id).valueChanges.pipe(map(data => data.data.node))
       .subscribe( (data) => {
         this.node = data;
-        console.log(data);
-     
         this.templates = data.templates.map((item) => JSON.parse(item.info));
+
+        this.crumbs[1] = {
+          title: 'Cерверы',
+          icon: 'server',
+          route: 'resourses/nodes'
+        }
+
         this.crumbs.push({
             title: `Сервер ${this.node['verbose_name']}`,
             icon: 'server'

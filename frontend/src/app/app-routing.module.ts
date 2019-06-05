@@ -3,7 +3,7 @@ import { ClustersComponent } from './resourses/clusters/clusters.component';
 import { NgModule } from '@angular/core';
 import { Routes, RouterModule } from '@angular/router';
 import { PollsComponent } from './polls/polls.component';
-import { ServersComponent } from './settings/servers/servers.component';
+import { ControllersComponent } from './settings/controllers/controllers.component';
 import { NodesComponent } from './resourses/nodes/nodes.component';
 import { DatapoolsComponent } from './resourses/datapools/datapools.component';
 import { ClusterDetailsComponent } from './resourses/clusters/cluster-details/cluster-details.component';
@@ -16,7 +16,7 @@ const routes: Routes = [
   },
   {
     path: 'settings/controllers',
-    component: ServersComponent
+    component: ControllersComponent
   },
   {
     path: 'resourses/clusters',

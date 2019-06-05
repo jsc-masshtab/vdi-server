@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { ClustersService } from '../clusters.service';
 import { map } from 'rxjs/operators';
-import { ActivatedRoute, ParamMap, Router } from '@angular/router';
+import { ActivatedRoute, ParamMap } from '@angular/router';
 
 @Component({
   selector: 'vdi-cluster-details',
@@ -158,15 +158,13 @@ export class ClusterDetailsComponent implements OnInit {
     },
     {
       title: 'Кластеры',
-      icon: 'building',
-      route: 'resourses/clusters'
+      icon: 'building'
     }
   ];
 
   public spinner:boolean = false;
 
   constructor(private activatedRoute: ActivatedRoute,
-              private router: Router,
               private service: ClustersService){}
 
   ngOnInit() {
@@ -181,6 +179,12 @@ export class ClusterDetailsComponent implements OnInit {
     this.service.getCluster(id).valueChanges.pipe(map(data => data.data.cluster))
       .subscribe( (data) => {
         this.cluster = data;
+
+        this.crumbs[1] = {
+          title: 'Кластеры',
+          icon: 'building',
+          route: 'resourses/clusters'
+        }
      
         this.templates = data.templates.map((item) => JSON.parse(item.info));
         this.crumbs.push({

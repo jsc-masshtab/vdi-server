@@ -1,5 +1,3 @@
-<div class="breadcrumbs-wrap">
-    <vdi-breadcrumbs [data]="crumbs"></vdi-breadcrumbs>
-</div>
 
-<vdi-table-component [data]="clusters" [collection]="collection" [spinner]="spinner" [cursor]="true" (clickRowData)="getInfoCluster($event)"></vdi-table-component>
+<vdi-breadcrumbs [data]="crumbs"></vdi-breadcrumbs>
+<vdi-table-component [data]="clusters" [collection]="collection" [spinner]="spinner" [cursor]="true" (clickRowData)="routeTo($event)"></vdi-table-component>

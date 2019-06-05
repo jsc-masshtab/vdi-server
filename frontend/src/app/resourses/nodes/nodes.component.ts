@@ -13,17 +13,38 @@ import { Router } from '@angular/router';
 export class NodesComponent implements OnInit {
 
   public infoTemplates: [];
-  public collection: object[] = [];
-  public nodes: {};
+  public collection: object[] = [
+    {
+      title: 'Название',
+      property: 'verbose_name'
+    },
+    {
+      title: 'Локация',
+      property: "datacenter_name"
+    },
+    {
+      title: 'IP-адрес',
+      property: 'management_ip'
+    },
+    {
+      title: 'CPU',
+      property: 'cpu_count'
+    },
+    {
+      title: 'RAM',
+      property: 'memory_count'
+    },
+    {
+      title: 'Статус',
+      property: 'status'
+    }
+  ];
 
+  public nodes: {};
   public crumbs: object[] = [
     {
       title: 'Ресурсы',
       icon: 'database'
-    },
-    {
-      title: 'Серверы',
-      icon: 'server'
     }
   ];
 
@@ -32,7 +53,6 @@ export class NodesComponent implements OnInit {
   constructor(private service: NodesService,private router: Router){}
 
   ngOnInit() {
-    this.collectionAction();
     this.getNodes();
   }
 
@@ -41,40 +61,15 @@ export class NodesComponent implements OnInit {
     this.service.getAllNodes().valueChanges.pipe(map(data => data.data.nodes))
       .subscribe( (data) => {
         this.nodes = data;
+        this.crumbs.push({
+          title: 'Серверы',
+          icon: 'server'
+        });
         this.spinner = false;
       },
       (error)=> {
         this.spinner = false;
       });
-  }
-
-  public collectionAction(): void {
-    this.collection = [
-      {
-        title: 'Название',
-        property: 'verbose_name'
-      },
-      {
-        title: 'Локация',
-        property: "datacenter_name"
-      },
-      {
-        title: 'IP-адрес',
-        property: 'management_ip'
-      },
-      {
-        title: 'CPU',
-        property: 'cpu_count'
-      },
-      {
-        title: 'RAM',
-        property: 'memory_count'
-      },
-      {
-        title: 'Статус',
-        property: 'status'
-      }
-    ];
   }
 
   public routeTo(event): void {
