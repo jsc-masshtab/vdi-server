@@ -12,35 +12,53 @@ import { Router } from '@angular/router';
 
 export class ClustersComponent implements OnInit {
 
-  public clusters: [];
-  public collection: object[] = [];
-  public cluster_id:string;
-  public cluster_name:string;
+  public clusters: object[] = [];
+  public collection: object[] = [
+    {
+      title: 'Название',
+      property: 'verbose_name'
+    },
+    {
+      title: 'Серверы',
+      property: "nodes_count"
+    },
+    {
+      title: 'CPU',
+      property: 'cpu_count'
+    },
+    {
+      title: 'RAM',
+      property: 'memory_count'
+    },
+    {
+      title: 'Статус',
+      property: 'status'
+    }
+  ];
   public crumbs: object[] = [
     {
       title: 'Ресурсы',
       icon: 'database'
-    },
-    {
-      title: 'Кластеры',
-      icon: 'building',
-      //route: 'resourses/clusters'
     }
   ];
 
-  public spinner:boolean = true;
+  public spinner:boolean = false;
 
   constructor(private service: ClustersService,private router: Router){}
 
   ngOnInit() {
-    this.collectionAction();
     this.getAllClusters();
   }
 
   private getAllClusters() {
+    this.spinner = true;
     this.service.getAllClusters().valueChanges.pipe(map(data => data.data.clusters))
       .subscribe( (data) => {
         this.clusters = data;
+        this.crumbs.push({
+            title: 'Кластеры',
+            icon: 'building'
+        });
         this.spinner = false;
       },
       (error)=> {
@@ -48,36 +66,7 @@ export class ClustersComponent implements OnInit {
       });
   }
 
-  public collectionAction(): void {
-    this.collection = [
-      {
-        title: 'Название',
-        property: 'verbose_name'
-      },
-      {
-        title: 'Серверы',
-        property: "nodes_count"
-       
-      },
-      {
-        title: 'CPU',
-        property: 'cpu_count'
-      },
-      {
-        title: 'RAM',
-        property: 'memory_count'
-      },
-      {
-        title: 'Статус',
-        property: 'status'
-      }
-    ];
-  }
-
-  public getInfoCluster(event): void {
-    this.cluster_id = event.id;
-    this.cluster_name = event.verbose_name;
-    console.log(event.verbose_name);
+  public routeTo(event): void {
     this.router.navigate([`resourses/clusters/${event.id}`]);
   }
 

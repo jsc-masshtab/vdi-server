@@ -9,7 +9,7 @@ export class DatapoolsService {
 
     constructor(private service: Apollo) {}
 
-    public getAllDatapools(node_id:string): QueryRef<any,any> {
+    public getAllDatapools(node_id?:string): QueryRef<any,any> {
         let controller_ip = JSON.parse(localStorage.getItem('controller'));
         if(node_id) {
             return  this.service.watchQuery({

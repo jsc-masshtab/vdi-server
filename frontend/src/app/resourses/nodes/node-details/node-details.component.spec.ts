@@ -1,20 +1,20 @@
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { ResourseIntoComponent } from './resourse-into.component';
+import { NodeDetailsComponent } from './node-details.component';
 
-describe('ResourseIntoComponent', () => {
-  let component: ResourseIntoComponent;
-  let fixture: ComponentFixture<ResourseIntoComponent>;
+describe('NodeDetailsComponent', () => {
+  let component: NodeDetailsComponent;
+  let fixture: ComponentFixture<NodeDetailsComponent>;
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [ ResourseIntoComponent ]
+      declarations: [ NodeDetailsComponent ]
     })
     .compileComponents();
   }));
 
   beforeEach(() => {
-    fixture = TestBed.createComponent(ResourseIntoComponent);
+    fixture = TestBed.createComponent(NodeDetailsComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

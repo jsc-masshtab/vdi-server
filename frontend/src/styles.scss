@@ -3,7 +3,11 @@
 html,body {
     width: 100%;
     height: 100%;
-    font-family: 'Times New Roman', Times, serif;
+    font-family: 'Times New Roman', Times, serif !important;
+}
+
+body {
+    overflow-y: hidden;
 }
 
 * {
@@ -14,10 +18,6 @@ html,body {
     padding: 0px !important;
     overflow: inherit !important;
     background: transparent;
-}
-
-.breadcrumbs-wrap {
-    margin-bottom: 28px;
 }
 
 .form {
@@ -130,6 +130,7 @@ html,body {
     padding: 6px;
     padding-left: 7px;
     padding-right: 15px;
+    background: rgba(201, 209, 216, 0.3);
     
     > button {
         background: #FFF;

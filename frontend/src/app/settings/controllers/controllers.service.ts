@@ -5,7 +5,7 @@ import gql from 'graphql-tag';
 
 
 @Injectable()
-export class ServersService  {
+export class ControllersService  {
 
     constructor(private service: Apollo) {}
 
