@@ -1,17 +1,18 @@
 import { Component, OnInit } from '@angular/core';
-import { PoolsService } from './polls.service';
+import { PoolsService } from './pools.service';
 import { PoolAddComponent } from './pool-add/pool-add.component';
+import { Router } from '@angular/router';
 
 import { MatDialog } from '@angular/material';
 import { Subscription } from 'rxjs';
 
 @Component({
-  selector: 'vdi-polls',
-  templateUrl: './polls.component.html',
-  styleUrls: ['./polls.component.scss']
+  selector: 'vdi-pools',
+  templateUrl: './pools.component.html',
+  styleUrls: ['./pools.component.scss']
 })
 
-export class PollsComponent implements OnInit {
+export class PoolsComponent implements OnInit {
 
   public pools: [];
   public spinner:boolean = true;
@@ -51,7 +52,7 @@ export class PollsComponent implements OnInit {
     }
   ];
 
-  constructor(private service: PoolsService,public dialog: MatDialog){}
+  constructor(private service: PoolsService,public dialog: MatDialog,private router: Router){}
 
   ngOnInit() {
     this.getAllPools();
@@ -72,6 +73,10 @@ export class PollsComponent implements OnInit {
       (error)=> {
         this.spinner = false;
       });
+  }
+
+  public routeTo(event): void {
+    this.router.navigate([`pools/${event.id}`]);
   }
 
   ngOnDestroy() {

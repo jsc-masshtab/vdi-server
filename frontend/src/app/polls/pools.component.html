@@ -3,4 +3,4 @@
 <div class="btn">
     <button (click)="openCreatePool()"><fa-icon [icon]="['fas','plus-circle']" size="xs"></fa-icon><span>Создать пул</span></button>
 </div>
-<vdi-table-component [data]="pools" [collection]="collection" empty="- нет пулов - "></vdi-table-component>
+<vdi-table-component [data]="pools" [collection]="collection" empty="- нет пулов - " [cursor]="true" (clickRowData)="routeTo($event)"></vdi-table-component>

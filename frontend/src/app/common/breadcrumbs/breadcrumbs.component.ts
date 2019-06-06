@@ -12,8 +12,8 @@ export class BreadcrumbsComponent  {
 
   constructor(private router: Router) {}
 
-  public routeTo(crumb,index) {
-    if(index === 0 || !crumb.route) {
+  public routeTo(crumb) {
+    if(!crumb.route) {
       return;
     }
     this.router.navigate([crumb.route]);

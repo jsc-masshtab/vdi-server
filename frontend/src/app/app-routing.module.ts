@@ -1,8 +1,9 @@
+import { PoolDetailsComponent } from './polls/pool-details/pool-details.component';
+import { PoolsComponent } from './polls/pools.component';
 import { NodeDetailsComponent } from './resourses/nodes/node-details/node-details.component';
 import { ClustersComponent } from './resourses/clusters/clusters.component';
 import { NgModule } from '@angular/core';
 import { Routes, RouterModule } from '@angular/router';
-import { PollsComponent } from './polls/polls.component';
 import { ControllersComponent } from './settings/controllers/controllers.component';
 import { NodesComponent } from './resourses/nodes/nodes.component';
 import { DatapoolsComponent } from './resourses/datapools/datapools.component';
@@ -40,7 +41,11 @@ const routes: Routes = [
   },
   {
     path: 'pools',
-    component: PollsComponent
+    component: PoolsComponent
+  },
+  {
+    path: 'pools/:id',
+    component: PoolDetailsComponent
   },
   {
     path: '**',

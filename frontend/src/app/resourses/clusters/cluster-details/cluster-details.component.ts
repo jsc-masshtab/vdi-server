@@ -178,20 +178,18 @@ export class ClusterDetailsComponent implements OnInit {
     this.spinner = true;
     this.service.getCluster(id).valueChanges.pipe(map(data => data.data.cluster))
       .subscribe( (data) => {
+        
         this.cluster = data;
 
-        this.crumbs[1] = {
-          title: 'Кластеры',
-          icon: 'building',
-          route: 'resourses/clusters'
-        }
-     
-        this.templates = data.templates.map((item) => JSON.parse(item.info));
+        this.crumbs[1]['route'] = 'resourses/clusters';
+    
         this.crumbs.push({
             title: `Кластер ${this.cluster['verbose_name']}`,
             icon: 'building'
           }
         );
+
+        this.templates = data.templates.map((item) => JSON.parse(item.info));
       
         this.spinner = false;
       },

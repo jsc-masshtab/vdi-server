@@ -3,7 +3,7 @@ import { NodesService } from './../../resourses/nodes/nodes.service';
 import { ClustersService } from './../../resourses/clusters/clusters.service';
 import { MatDialogRef } from '@angular/material';
 import { Component, OnInit } from '@angular/core';
-import { PoolsService } from './../polls.service';
+import { PoolsService } from '../pools.service';
 import { map } from 'rxjs/operators';
 import { 
 	FormBuilder, 
@@ -36,8 +36,7 @@ export class PoolAddComponent implements OnInit {
               private nodesService: NodesService,
               private datapoolsService: DatapoolsService,
               private dialogRef: MatDialogRef<PoolAddComponent>,
-              private fb: FormBuilder,) {
-  }
+              private fb: FormBuilder) {}
 
   ngOnInit() {
     this.initForm();

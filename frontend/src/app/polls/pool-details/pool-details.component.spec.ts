@@ -1,20 +1,20 @@
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { PoolComponent } from './pool.component';
+import { PoolDetailsComponent } from './pool-details.component';
 
-describe('PoolComponent', () => {
-  let component: PoolComponent;
-  let fixture: ComponentFixture<PoolComponent>;
+describe('TemplatesComponent', () => {
+  let component: PoolDetailsComponent;
+  let fixture: ComponentFixture<PoolDetailsComponent>;
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [ PoolComponent ]
+      declarations: [ PoolDetailsComponent ]
     })
     .compileComponents();
   }));
 
   beforeEach(() => {
-    fixture = TestBed.createComponent(PoolComponent);
+    fixture = TestBed.createComponent(PoolDetailsComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

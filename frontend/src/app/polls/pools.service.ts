@@ -41,7 +41,38 @@ export class PoolsService  {
             }).valueChanges.pipe(map(data => data.data['pools'])); } ));
     }
 
-    public getAllTemplates(): QueryRef<any,any> {
+    public getPool(id:number): QueryRef<any,any> {
+        return this.service.watchQuery<any>({
+            query: gql`  
+                        query getPool($id: Int) {
+                            pool(id: $id) {
+                                name
+                                state {
+                                    available {
+                                        name
+                                        template {
+                                            name
+                                        }
+                                        node {
+                                            verbose_name
+                                        }
+                                    }
+                                }
+                                settings {
+                                    initial_size
+                                    reserve_size
+                                }
+                            }
+                        }
+            `,
+            variables: {
+                method: 'GET',
+                id: id
+            }
+        })
+    }
+
+    public getAllTemplates(id?:string): QueryRef<any,any> {
         return  this.service.watchQuery({
             query:  gql` query allTemplates {
                                 templates {

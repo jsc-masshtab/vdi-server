@@ -156,15 +156,13 @@ export class NodeDetailsComponent implements OnInit {
     this.spinner = true;
     this.service.getNode(id).valueChanges.pipe(map(data => data.data.node))
       .subscribe( (data) => {
+
         this.node = data;
+
         this.templates = data.templates.map((item) => JSON.parse(item.info));
 
-        this.crumbs[1] = {
-          title: 'Cерверы',
-          icon: 'server',
-          route: 'resourses/nodes'
-        }
-
+        this.crumbs[1]['route'] = 'resourses/nodes';
+        
         this.crumbs.push({
             title: `Сервер ${this.node['verbose_name']}`,
             icon: 'server'
@@ -173,7 +171,7 @@ export class NodeDetailsComponent implements OnInit {
       
         this.spinner = false;
       },
-      (error)=> {
+      (error) => {
         this.spinner = false;
       });
   }
