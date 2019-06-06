@@ -31,8 +31,6 @@ export class PoolAddComponent implements OnInit {
   private createPoolForm: FormGroup;
 
 
-  public a;
-
   constructor(private poolsService: PoolsService,
               private clustersService: ClustersService,
               private nodesService: NodesService,
@@ -49,7 +47,7 @@ export class PoolAddComponent implements OnInit {
 
   private initForm(): void {
 		this.createPoolForm = this.fb.group({
-			"name": [this.a],
+			"name": "",
       "template_id": "",
       "cluster_id": "",
       "node_id": "",

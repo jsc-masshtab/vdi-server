@@ -1,6 +1,6 @@
 import { MatDialogRef } from '@angular/material';
-import { Component, OnInit } from '@angular/core';
-import { ServersService } from './../servers.service';
+import { Component } from '@angular/core';
+import { ControllersService } from '../controllers.service';
 
 
 @Component({
@@ -14,7 +14,7 @@ export class AddControllerComponent {
   public description: string;
 
 
-  constructor(private service: ServersService,
+  constructor(private service: ControllersService,
               private dialogRef: MatDialogRef<AddControllerComponent>) {}
 
 
