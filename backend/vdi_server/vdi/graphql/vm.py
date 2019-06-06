@@ -1,6 +1,8 @@
 import graphene
 import json
 
+import random
+
 from asyncpg.connection import Connection
 
 from ..db import db
@@ -12,6 +14,7 @@ from .pool import PoolSettings, TemplateType, VmType
 
 from vdi.context_utils import enter_context
 
+
 class CreateTemplate(graphene.Mutation):
     '''
     Awaits the result. Mostly for development use
@@ -20,30 +23,39 @@ class CreateTemplate(graphene.Mutation):
         image_name = graphene.String()
 
     template = graphene.Field(TemplateType)
-    poolwizard = graphene.Field(PoolSettings)
+    poolwizard = settings = graphene.Field(PoolSettings, format=graphene.String())
+    resources = 1
+
+    # Output = CreateTemplateOutput
+
+    async def resolve_resources(self, info):
+        raise NotImplementedError
+        breakpoint()
 
     @enter_context(lambda: db.connect())
-    async def mutate(conn: Connection, self, info, image_name):
+    async def mutate(conn: Connection, self, info, image_name, format='one'):
         from vdi.tasks import admin
-        res = await admin.discover_resources()
+        res = await admin.discover_resources(combine=True)
+        resource = random.choice(res)
         #FIXME image_name
-        domain = await vm.SetupDomain(image_name=image_name, controller_ip=res['controller_ip'],
-                                      node_id=res['node']['id'], datapool_id=res['datapool']['id'])
+        domain = await vm.SetupDomain(image_name=image_name, controller_ip=resource['controller_ip'],
+                                      node_id=resource['node'], datapool_id=resource['datapool'])
         veil_info = json.dumps(domain)
         qu = "INSERT INTO template_vm (id, veil_info) VALUES ($1, $2)", domain['id'], veil_info
         await conn.fetch(*qu)
         t = TemplateType(id=domain['id'], info=veil_info, name=domain['verbose_name'])
         from vdi.settings import settings
         resources = PoolSettings(**{
-            'controller_ip': settings['controller_ip'],
-            'cluster_id': res['cluster']['id'],
-            'datapool_id': res['datapool']['id'],
+            'controller_ip': resource['controller_ip'],
+            'cluster_id': resource['cluster'],
+            'datapool_id': resource['datapool'],
             'template_id': domain['id'],
-            'node_id': res['node']['id'],
+            'node_id': resource['node'],
             'initial_size': settings['pool']['initial_size'],
             'reserve_size': settings['pool']['reserve_size'],
         })
         return CreateTemplate(template=t, poolwizard=resources)
+        # return CreateTemplate(template=t)
 
 
 class DropTemplate(graphene.Mutation):

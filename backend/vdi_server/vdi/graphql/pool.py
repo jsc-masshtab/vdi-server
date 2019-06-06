@@ -62,6 +62,9 @@ class PoolType(graphene.ObjectType):
         state = PoolState(running=RunningState.RUNNING, available=available)
         return state
 
+    def resolve_users(self, info):
+        1
+
 
 class VmType(graphene.ObjectType):
     name = graphene.String()
@@ -73,6 +76,25 @@ class VmType(graphene.ObjectType):
     def node():
         from vdi.graphql.resources import NodeType
         return NodeType
+
+    async def resolve_node(self, info):
+        selected = get_selections(info)
+        for key in selected:
+            if not hasattr(self, key):
+                break
+        else:
+            return self
+        from vdi.tasks.resources import FetchNode
+        from vdi.graphql.resources import NodeType, Resources
+        #FIXME!!
+        from vdi.graphql.resources import get_controller_ip
+        controller_ip = await get_controller_ip()
+        node = await FetchNode(controller_ip=controller_ip, node_id=self.node.id)
+        obj = Resources._make_type(NodeType, node)
+        obj.controller_ip = controller_ip
+        return obj
+
+    info = None
 
 
 class PoolSettingsFields(graphene.AbstractType):
@@ -97,17 +119,22 @@ class PoolState(graphene.ObjectType):
     running = graphene.Field(RunningState)
     available = graphene.List(VmType)
 
+    controller_ip = None
+
+    #FIXME !!!!!!
     @classmethod
     def get_available(cls, pool):
         from vdi.graphql.vm import TemplateType
+        from vdi.graphql.resources import NodeType
         if pool is None:
             return []
         qu = pool.queue._queue
         li = []
-        for item in qu:
-            template = item['template']
+        for domain in qu:
+            template = domain['template']
+            node = NodeType(id=template['node']['id'], verbose_name=template['node']['verbose_name'])
             template = TemplateType(id=template['id'], info=template, name=template['verbose_name'])
-            obj = VmType(id=item['id'], template=template)
+            obj = VmType(id=domain['id'], template=template, name=domain['verbose_name'], node=node)
             li.append(obj)
         return li
 
@@ -172,11 +199,14 @@ class AddPool(graphene.Mutation):
         if block:
             domains = await add_domains
             from vdi.graphql.vm import TemplateType
+            from vdi.graphql.resources import NodeType
             available = []
             for domain in domains:
                 template = domain['template']
+                node = NodeType(id=template['node']['id'], verbose_name=template['node']['verbose_name'])
                 template = TemplateType(id=template['id'], info=template, name=template['verbose_name'])
-                item = VmType(id=domain['id'], template=template)
+                item = VmType(id=domain['id'], template=template, name=domain['verbose_name'], node=node)
+                item.info = domain
                 available.append(item)
         else:
             asyncio.create_task(add_domains)
@@ -220,23 +250,9 @@ class RemovePool(graphene.Mutation):
 
 
 
-# class AlterPool(graphene.Mutation):
-#
-#     def mutate(self, id, name, newName):
-#         # TODO
-#         pass
-#
-#     class Arguments:
-#         id = graphene.String(required=False)
-#         name = graphene.String(required=False)
-#         newName = graphene.String(required=False)
-#         settings = PoolSettingsInput(required=False)
-#         block = graphene.Boolean(required=False)
-
-
 class PoolMixin:
     pools = graphene.List(PoolType)
-    pool = graphene.Field(PoolType, id=graphene.Int(required=False), name=graphene.String(required=False))
+    pool = graphene.Field(PoolType, id=graphene.Int(), name=graphene.String())
 
 
     #TODO wake pools
@@ -270,14 +286,6 @@ class PoolMixin:
         dic['settings'] = PoolSettings(**settings)
         return dic
 
-    async def _select_pool_users(self, selections, id, conn: Connection):
-        selections = ', '.join(f'u.{s}' for s in selections)
-        qu = f"""
-        SELECT {selections}
-        FROM pools_users JOIN public.user as u ON pools_users.username = u.username
-        WHERE pool_id = $1
-        """, id
-
     @enter_context(lambda: db.connect())
     async def resolve_pool(conn: Connection, self, info, id=None, name=None):
         dic = await PoolMixin._select_pool(self, info, id, name, conn=conn)
@@ -301,7 +309,8 @@ class PoolMixin:
 
         return ret
 
-
+    #TODO fix users
+    #TODO remove this
     async def get_pools_users_map(self, u_fields, conn: Connection):
         u_fields_prefixed = [f'u.{f}' for f in u_fields]
         fields = ['pool_id'] + u_fields_prefixed

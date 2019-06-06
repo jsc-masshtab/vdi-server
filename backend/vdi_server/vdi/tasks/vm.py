@@ -241,6 +241,7 @@ class CopyDomain(UrlFetcher):
         return {
             'id': self.new_domain_id,
             'template': info,
+            'verbose_name': self.domain_name,
         }
 
     def check_created(self, msg):

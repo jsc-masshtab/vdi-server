@@ -61,6 +61,13 @@ class FetchNode(UrlFetcher):
     def url(self):
         return f'http://{self.controller_ip}/api/nodes/{self.node_id}/'
 
+    async def run(self):
+        resp = await super().run()
+        resp['cluster'] = {
+            'id': resp['cluster'],
+        }
+        return resp
+
 
 @dataclass()
 class ListDatapools(UrlFetcher):
