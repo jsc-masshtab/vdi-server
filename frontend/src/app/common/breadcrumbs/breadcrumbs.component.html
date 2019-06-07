@@ -1,5 +1,5 @@
 <ul id="breadcrumbs-one">
-  <li *ngFor="let crumb of data;let i = index" (click)="routeTo(crumb,i)" [class.breadcrumbs-active]="crumb.route">
+  <li *ngFor="let crumb of data" (click)="routeTo(crumb)" [class.breadcrumbs-active]="crumb.route">
     <div>
       <fa-icon [icon]="['fas',crumb.icon]" size="xs"></fa-icon>
       <span>{{ crumb.title }}</span>
