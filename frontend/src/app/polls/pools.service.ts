@@ -27,7 +27,9 @@ export class PoolsService  {
                                         }
                                         state { 
                                             available {
-                                                info
+                                                template {
+                                                    info
+                                                }
                                             }
                                         }
                                     }  
