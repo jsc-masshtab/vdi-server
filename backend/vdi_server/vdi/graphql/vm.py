@@ -107,7 +107,6 @@ class TemplateMixin:
                         controller_ip=graphene.String(), cluster_id=graphene.String(), node_id=graphene.String())
 
 
-    #FIXME!!!!
     @enter_context(lambda: db.connect())
     async def resolve_templates(conn: Connection, self, info, controller_ip=None, cluster_id=None, node_id=None):
         if controller_ip is None:
@@ -126,46 +125,20 @@ class TemplateMixin:
                 vm for vm in vms
                 if vm['node']['id'] in nodes
             ]
-        vms = [vm['id'] for vm in vms]
-        selections = get_selections(info)
 
-        fields = []
-        for s in selections:
-            if s == 'info':
-                fields.append('veil_info')
-            elif s == 'name' and 'veil_info' not in fields:
-                fields.append('veil_info')
-            else:
-                fields.append(s)
-
-        if 'id' not in fields:
-            fields.append('id')
-
-        qu = f"SELECT {', '.join(fields)} FROM template_vm"
+        qu = f"SELECT id FROM template_vm"
         data = await conn.fetch(qu)
-
-        templates = [
-            dict(zip(fields, t)) for t in data
-        ]
-
-        templates = [t for t in templates if t['id'] in vms]
-
-        def make_template(t):
-            if 'id' not in selections:
-                t.pop('id', None)
-            if 'veil_info' in t:
-                t['info'] = t.pop('veil_info')
-
-            if 'name' in selections:
-                info = json.loads(t['info'])
-                t['name'] = info['verbose_name']
-            if 'info' not in selections:
-                t.pop('info', None)
-            return TemplateType(**t)
-
-        return [
-            make_template(t) for t in templates
-        ]
+        vm_ids = {row['id'] for row in data}
+        objects = []
+        for vm in vms:
+            if vm['id'] not in vm_ids:
+                continue
+            node = NodeType(id=vm['node']['id'], verbose_name=vm['node']['verbose_name'])
+            node.controller_ip = controller_ip
+            obj = TemplateType(name=vm['verbose_name'], info=vm, id=vm['id'], node=node)
+            obj.controller_ip = controller_ip
+            objects.append(obj)
+        return objects
 
     @enter_context(lambda: db.connect())
     async def resolve_vms(conn: Connection, self, info, controller_ip=None, cluster_id=None, node_id=None):
