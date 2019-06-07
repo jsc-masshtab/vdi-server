@@ -96,6 +96,8 @@ class NodeType(graphene.ObjectType):
         return await Resources.resolve_datapools(None, info, controller_ip=self.controller_ip, node_id=self.id)
 
     async def resolve_cluster(self, info):
+        if self.info is None:
+            self.info = await resources.FetchNode(controller_ip=self.controller_ip, node_id=self.id)
         cluster_id = self.info['cluster']['id']
         resp = await resources.FetchCluster(controller_ip=self.controller_ip, cluster_id=cluster_id)
         obj = Resources._make_type(ClusterType, resp)
