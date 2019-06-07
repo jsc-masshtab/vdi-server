@@ -1,4 +1,3 @@
-/vagrant/vagrant/apt.sh
 
 sed -i 's/peer/trust/g' /etc/postgresql/11/main/pg_hba.conf
 systemctl restart postgresql

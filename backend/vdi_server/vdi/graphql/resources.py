@@ -96,6 +96,8 @@ class NodeType(graphene.ObjectType):
         return await Resources.resolve_datapools(None, info, controller_ip=self.controller_ip, node_id=self.id)
 
     async def resolve_cluster(self, info):
+        if self.info is None:
+            self.info = await resources.FetchNode(controller_ip=self.controller_ip, node_id=self.id)
         cluster_id = self.info['cluster']['id']
         resp = await resources.FetchCluster(controller_ip=self.controller_ip, cluster_id=cluster_id)
         obj = Resources._make_type(ClusterType, resp)
@@ -167,6 +169,16 @@ async def get_controller_ip(conn: Connection):
     return ip
 
 
+class PoolWizardType(graphene.ObjectType):
+    node_ids = graphene.List(graphene.String)
+    cluster_ids = graphene.List(graphene.String)
+    datapool_ids = graphene.List(graphene.String)
+    controller_ip = graphene.String()
+    template_id = graphene.String()
+    initial_size = graphene.Int()
+    reserve_size = graphene.Int()
+
+
 class Resources:
     datapools = graphene.List(DatapoolType,
                               node_id=graphene.String(),
@@ -181,7 +193,7 @@ class Resources:
                           cluster_id=graphene.String())
     node = graphene.Field(NodeType, id=graphene.String(), controller_ip=graphene.String())
     controllers = graphene.List(ControllerType)
-    poolwizard = graphene.Field(PoolSettings)
+    poolwizard = graphene.Field(PoolWizardType)
 
     @classmethod
     def _make_type(cls, type, data, fields_map=None):
@@ -255,8 +267,6 @@ class Resources:
     @classmethod
     async def _get_nodes(cls, info, controller_ip, cluster_id):
         nodes = await resources.ListNodes(controller_ip=controller_ip, cluster_id=cluster_id)
-        fields = get_selections(info)
-
         li = []
         for node in nodes:
             obj = Resources._make_type(NodeType, node)
@@ -289,35 +299,30 @@ class Resources:
 
     @enter_context(lambda: db.connect())
     async def resolve_poolwizard(conn: Connection, self, info):
-        import string, random
-        uid = ''.join(
-            random.choice(string.ascii_letters) for _ in range(3)
-        )
-        name = f"wizard-{uid}"
         controller_ip = await get_controller_ip()
+        cluster_ids, node_ids, datapool_ids = [], [], []
         resp = await resources.ListClusters(controller_ip=controller_ip)
-        [cluster] = resp
-        resp = await resources.ListNodes(controller_ip=controller_ip, cluster_id=cluster['id'])
-        [node] = resp
-        [datapool] = await resources.ListDatapools(controller_ip=controller_ip, node_id=node['id'])
-
-        params = {
+        for cluster in resp:
+            cluster_ids.append(cluster['id'])
+            resp = await resources.ListNodes(controller_ip=controller_ip, cluster_id=cluster['id'])
+            for node in resp:
+                node_ids.append(node['id'])
+                datapools = await resources.ListDatapools(controller_ip=controller_ip, node_id=node['id'])
+                datapool_ids.extend(d['id'] for d in datapools)
+        wizard = {
             'initial_size': 1,
             'reserve_size': 1,
             'controller_ip': controller_ip,
-            'cluster_id': cluster['id'],
-            'datapool_id': datapool['id'],
-            'node_id': node['id'],
+            'cluster_id': cluster_ids,
+            'datapool_id': datapool_ids,
+            'node_id': node_ids,
         }
-        return PoolSettings(**params)
+        return PoolWizardType(**wizard)
 
     async def resolve_node(self, info, id, controller_ip=None):
         if controller_ip is None:
             controller_ip = await get_controller_ip()
         node = await resources.FetchNode(controller_ip=controller_ip, node_id=id)
-        node['cluster'] = {
-            'id': node['cluster'],
-        }
         obj = Resources._make_type(NodeType, node)
         obj.controller_ip = controller_ip
         return obj

@@ -175,13 +175,45 @@ class UploadImage(Task):
                                  request_timeout=24 * 3600)
 
 
-async def discover_resources():
-    controller_ip = settings['controller_ip']
+
+
+async def discover_resources(controller_ip=None, *, objects=False, combine=False):
+    if controller_ip is None:
+        from vdi.graphql.resources import get_controller_ip
+        controller_ip = await get_controller_ip()
+    clusters, nodes, datapools = [], [], []
+    combined = []
     resp = await resources.ListClusters(controller_ip=controller_ip)
-    [cluster] = resp
-    resp = await resources.ListNodes(controller_ip=controller_ip, cluster_id=cluster['id'])
-    [node] = resp
-    [datapool] = await resources.ListDatapools(controller_ip=controller_ip, node_id=node['id'])
+    for cluster in resp:
+        clusters.append(cluster if objects else cluster['id'])
+        resp = await resources.ListNodes(controller_ip=controller_ip, cluster_id=cluster['id'])
+        for node in resp:
+            nodes.append(node if objects else node['id'])
+            items = await resources.ListDatapools(controller_ip=controller_ip, node_id=node['id'])
+            if objects:
+                datapools.extend(items)
+            else:
+                datapools.extend(d['id'] for d in items)
+
+            if combine:
+                for d in datapools:
+                    if objects:
+                        obj = {
+                            'datapool': d,
+                            'node': node,
+                            'cluster': cluster,
+                            'controller_ip': controller_ip,
+                        }
+                    else:
+                        obj = {
+                            'datapool': d,
+                            'node': node['id'],
+                            'cluster': cluster['id'],
+                            'controller_ip': controller_ip,
+                        }
+                    combined.append(obj)
+    if combine:
+        return combined
     return {
-        'node': node, 'cluster': cluster, 'datapool': datapool, 'controller_ip': controller_ip,
+        'clusters': clusters, 'nodes': nodes, 'datapools': datapools, 'controller_ip': controller_ip,
     }

@@ -18,11 +18,11 @@
           </span>
 
           <span *ngIf="obj.property_lv2 && item[obj.property]">{{ item[obj.property][obj.property_lv2] || '--' }}</span>
-          <span *ngIf="obj.property_lv2 && !item[obj.property]"> -- </span>
+          <span *ngIf="(obj.property_lv2 && !item[obj.property]) || (obj.property_lv2_array && !item[obj.property][obj.property_lv2_array])"> -- </span>
 
           <span *ngIf="!obj.property_lv2 && !obj.property_lv2_array && !obj.property_lv2_wrap && !obj.property_boolean_true && obj.property != 'index'">{{ item[obj.property] || '--' }}</span>
           <span *ngIf="obj.property_lv2_wrap"><span>/</span>{{ item[obj.property][obj.property_lv2_prop2] || '--' }}</span>
-          <span *ngIf="obj.property_lv2_array">{{ item[obj.property][obj.property_lv2_array].length || '--' }}</span>
+          <span *ngIf="obj.property_lv2_array && item[obj.property][obj.property_lv2_array]">{{ item[obj.property][obj.property_lv2_array].length || '--' }}</span>
         </div> 
       </div>
     </div>
