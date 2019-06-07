@@ -7,7 +7,7 @@ from asyncpg.connection import Connection
 
 from ..db import db
 from ..tasks import admin, resources
-from ..tasks.vm import SetupDomain, DropDomain, ListVms
+from ..tasks.vm import SetupDomain, DropDomain, ListVms, GetDomainInfo
 
 from .util import get_selections
 from .pool import PoolSettings, TemplateType, VmType
@@ -26,13 +26,6 @@ class CreateTemplate(graphene.Mutation):
 
     template = graphene.Field(TemplateType)
     poolwizard = settings = graphene.Field(PoolSettings, format=graphene.String())
-    resources = 1
-
-    # Output = CreateTemplateOutput
-
-    async def resolve_resources(self, info):
-        raise NotImplementedError
-        breakpoint()
 
     @enter_context(lambda: db.connect())
     async def mutate(conn: Connection, self, info, image_name, format='one'):
@@ -81,6 +74,23 @@ class AddTemplate(graphene.Mutation):
         id = graphene.String()
 
     ok = graphene.Boolean()
+    poolwizard = graphene.Field(PoolSettings, format=graphene.String())
+
+    async def resolve_poolwizard(self, info):
+        res = await admin.discover_resources(combine=True)
+        resource = random.choice(res)
+        from vdi.settings import settings
+        return PoolSettings(**{
+            'controller_ip': self.controller_ip,
+            'cluster_id': resource['cluster'],
+            'datapool_id': resource['datapool'],
+            'template_id': self.id,
+            'node_id': resource['node'],
+            'initial_size': settings['pool']['initial_size'],
+            'reserve_size': settings['pool']['reserve_size'],
+        })
+
+
 
     @enter_context(lambda: db.connect())
     async def mutate(conn: Connection, self, info, id, controller_ip=None):
@@ -93,9 +103,12 @@ class AddTemplate(graphene.Mutation):
             'Authorization': f'jwt {await Token()}',
         }
         info = await HttpClient().fetch(url, headers=headers)
-        qu = "INSERT INTO template_vm (id, veil_info) VALUES ($1, $2)", id, json.dumps(info)
+        qu = "INSERT INTO template_vm (id, veil_info) VALUES ($1, $2) ON CONFLICT DO NOTHING", id, json.dumps(info)
         await conn.fetch(*qu)
-        return AddTemplate(ok=True)
+        ret = AddTemplate(ok=True)
+        ret.id = id
+        ret.controller_ip = controller_ip
+        return ret
 
 
 

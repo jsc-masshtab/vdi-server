@@ -1,13 +1,12 @@
-
-
-from classy_async import Task
 from dataclasses import dataclass
-import urllib
 import json
 
-from .client import HttpClient
-from . import CONTROLLER_IP, Token
 from .base import UrlFetcher
+import json
+from dataclasses import dataclass
+
+from .base import UrlFetcher
+
 
 @dataclass()
 class EnableRemoteAccess(UrlFetcher):
@@ -59,16 +58,3 @@ class PowerOn(UrlFetcher):
     def url(self):
         return f"http://{self.controller_ip}/api/domains/{self.domain_id}/start/"
 
-
-@dataclass()
-class GetDomainInfo(UrlFetcher):
-    """
-    Tmp task
-    Ensure vm is on a
-    """
-
-    domain_id: str
-    controller_ip: str
-
-    def url(self):
-        return f"http://{self.controller_ip}/api/domains/{self.domain_id}/"

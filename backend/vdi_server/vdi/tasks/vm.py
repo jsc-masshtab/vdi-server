@@ -1,23 +1,16 @@
+import asyncio
 import json
 import urllib
 import uuid
 from dataclasses import dataclass
 
-import asyncio
-
 from cached_property import cached_property as cached
-
-from classy_async import Task, Awaitable, task
+from classy_async import Task, Awaitable
 
 from . import disk
 from .base import CONTROLLER_IP, Token, UrlFetcher
 from .client import HttpClient
 from .ws import WsConnection
-
-from vdi.settings import settings
-from vdi.tasks import resources
-
-from classy_async import wait
 
 
 class Node(Task):
@@ -315,3 +308,17 @@ class DropAllDomains(Task):
         #     pass
         for t in tasks:
             await t
+
+
+@dataclass()
+class GetDomainInfo(UrlFetcher):
+    """
+    Tmp task
+    Ensure vm is on a
+    """
+
+    domain_id: str
+    controller_ip: str
+
+    def url(self):
+        return f"http://{self.controller_ip}/api/domains/{self.domain_id}/"

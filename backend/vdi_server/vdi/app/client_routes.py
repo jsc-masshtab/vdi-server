@@ -1,15 +1,8 @@
-
-import json
-
 from starlette.authentication import requires
-from starlette.responses import JSONResponse, PlainTextResponse
-
-
+from starlette.responses import JSONResponse
+from vdi.db import db
 from vdi.pool import Pool
 from vdi.tasks import thin_client
-
-from vdi.context_utils import enter_context
-from vdi.db import db
 
 from . import app
 
@@ -45,7 +38,8 @@ async def get_vm(request):
         vms = await conn.fetch(*qu)
         if vms:
             [(id,)] = vms
-            info = await thin_client.GetDomainInfo(controller_ip=controller_ip, domain_id=id)
+            from vdi.tasks.vm import GetDomainInfo
+            info = await GetDomainInfo(controller_ip=controller_ip, domain_id=id)
             return JSONResponse({
                 'host': controller_ip,
                 'port': info['remote_access_port'],
