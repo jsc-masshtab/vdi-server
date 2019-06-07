@@ -1,3 +1,4 @@
+import { PoolDetailsComponent } from './polls/pool-details/pool-details.component';
 import { NodeDetailsComponent } from './resourses/nodes/node-details/node-details.component';
 import { DatapoolsService } from './resourses/datapools/datapools.service';
 import { DatapoolsComponent } from './resourses/datapools/datapools.component';
@@ -6,8 +7,6 @@ import { ControllersComponent } from './settings/controllers/controllers.compone
 
 import { ClustersService } from './resourses/clusters/clusters.service';
 import { ClustersComponent } from './resourses/clusters/clusters.component';
-import { PoolService } from './pool/pool.service';
-import { PoolComponent } from './pool/pool.component';
 
 import { BrowserModule } from '@angular/platform-browser';
 import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
@@ -33,11 +32,11 @@ import { TeplatesService } from './templates/templates.service';
 import { TemplatesComponent } from './templates/templates.component';
 import { BaSelect } from './common/baSelect';
 
-import { PollsComponent } from './polls/polls.component';
+
 import { TableComponentComponent } from './common/table-component/table-component.component';
 import { BreadcrumbsComponent } from './common/breadcrumbs/breadcrumbs.component';
 import { PoolAddComponent } from './polls/pool-add/pool-add.component';
-import { PoolsService } from './polls/polls.service';
+import { PoolsService } from './polls/pools.service';
 import { FocusMeDirective } from './common/directives/focusMe.directive';
 import { TableIntoComponent } from './common/table-into-component/table-into';
 import { NodesComponent } from './resourses/nodes/nodes.component';
@@ -52,6 +51,7 @@ import { AddControllerComponent } from './settings/controllers/add-controller/ad
 import { ControllersService } from './settings/controllers/controllers.service';
 import { FooterComponent } from './footer/footer.component';
 import { ClusterDetailsComponent } from './resourses/clusters/cluster-details/cluster-details.component';
+import { PoolsComponent } from './polls/pools.component';
 /*  -----------------------------------   material   --------------------------------------*/
 
 
@@ -62,13 +62,11 @@ import { ClusterDetailsComponent } from './resourses/clusters/cluster-details/cl
     MainMenuComponent,
     TemplatesComponent,
     TableComponentComponent,
-    PollsComponent,
     BreadcrumbsComponent,
     PoolAddComponent,
     BaSelect,
     FocusMeDirective,
     TableIntoComponent,
-    PoolComponent,
     NodesComponent,
     ClustersComponent,
     ClusterDetailsComponent,
@@ -76,7 +74,9 @@ import { ClusterDetailsComponent } from './resourses/clusters/cluster-details/cl
     AddControllerComponent,
     DatapoolsComponent,
     FooterComponent,
-    NodeDetailsComponent
+    NodeDetailsComponent,
+    PoolDetailsComponent,
+    PoolsComponent
   ],
   imports: [
     BrowserModule,
@@ -98,7 +98,6 @@ import { ClusterDetailsComponent } from './resourses/clusters/cluster-details/cl
               TeplatesService,
               PoolsService,
               { provide: MAT_DIALOG_DEFAULT_OPTIONS, useValue: { hasBackdrop: true, restoreFocus: true } },
-              PoolService,
               NodesService,
               ClustersService,
               ControllersService,
