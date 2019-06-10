@@ -7,7 +7,7 @@ from asyncpg.connection import Connection
 
 from ..db import db
 from ..tasks import admin, resources
-from ..tasks.vm import SetupDomain, DropDomain, ListVms
+from ..tasks.vm import SetupDomain, DropDomain, ListVms, GetDomainInfo
 
 from .util import get_selections
 from .pool import PoolSettings, TemplateType, VmType
@@ -26,13 +26,6 @@ class CreateTemplate(graphene.Mutation):
 
     template = graphene.Field(TemplateType)
     poolwizard = settings = graphene.Field(PoolSettings, format=graphene.String())
-    resources = 1
-
-    # Output = CreateTemplateOutput
-
-    async def resolve_resources(self, info):
-        raise NotImplementedError
-        breakpoint()
 
     @enter_context(lambda: db.connect())
     async def mutate(conn: Connection, self, info, image_name, format='one'):
@@ -81,6 +74,23 @@ class AddTemplate(graphene.Mutation):
         id = graphene.String()
 
     ok = graphene.Boolean()
+    poolwizard = graphene.Field(PoolSettings, format=graphene.String())
+
+    async def resolve_poolwizard(self, info):
+        res = await admin.discover_resources(combine=True)
+        resource = random.choice(res)
+        from vdi.settings import settings
+        return PoolSettings(**{
+            'controller_ip': self.controller_ip,
+            'cluster_id': resource['cluster'],
+            'datapool_id': resource['datapool'],
+            'template_id': self.id,
+            'node_id': resource['node'],
+            'initial_size': settings['pool']['initial_size'],
+            'reserve_size': settings['pool']['reserve_size'],
+        })
+
+
 
     @enter_context(lambda: db.connect())
     async def mutate(conn: Connection, self, info, id, controller_ip=None):
@@ -93,9 +103,12 @@ class AddTemplate(graphene.Mutation):
             'Authorization': f'jwt {await Token()}',
         }
         info = await HttpClient().fetch(url, headers=headers)
-        qu = "INSERT INTO template_vm (id, veil_info) VALUES ($1, $2)", id, json.dumps(info)
+        qu = "INSERT INTO template_vm (id, veil_info) VALUES ($1, $2) ON CONFLICT DO NOTHING", id, json.dumps(info)
         await conn.fetch(*qu)
-        return AddTemplate(ok=True)
+        ret = AddTemplate(ok=True)
+        ret.id = id
+        ret.controller_ip = controller_ip
+        return ret
 
 
 
@@ -107,7 +120,6 @@ class TemplateMixin:
                         controller_ip=graphene.String(), cluster_id=graphene.String(), node_id=graphene.String())
 
 
-    #FIXME!!!!
     @enter_context(lambda: db.connect())
     async def resolve_templates(conn: Connection, self, info, controller_ip=None, cluster_id=None, node_id=None):
         if controller_ip is None:
@@ -126,46 +138,20 @@ class TemplateMixin:
                 vm for vm in vms
                 if vm['node']['id'] in nodes
             ]
-        vms = [vm['id'] for vm in vms]
-        selections = get_selections(info)
 
-        fields = []
-        for s in selections:
-            if s == 'info':
-                fields.append('veil_info')
-            elif s == 'name' and 'veil_info' not in fields:
-                fields.append('veil_info')
-            else:
-                fields.append(s)
-
-        if 'id' not in fields:
-            fields.append('id')
-
-        qu = f"SELECT {', '.join(fields)} FROM template_vm"
+        qu = f"SELECT id FROM template_vm"
         data = await conn.fetch(qu)
-
-        templates = [
-            dict(zip(fields, t)) for t in data
-        ]
-
-        templates = [t for t in templates if t['id'] in vms]
-
-        def make_template(t):
-            if 'id' not in selections:
-                t.pop('id', None)
-            if 'veil_info' in t:
-                t['info'] = t.pop('veil_info')
-
-            if 'name' in selections:
-                info = json.loads(t['info'])
-                t['name'] = info['verbose_name']
-            if 'info' not in selections:
-                t.pop('info', None)
-            return TemplateType(**t)
-
-        return [
-            make_template(t) for t in templates
-        ]
+        vm_ids = {row['id'] for row in data}
+        objects = []
+        for vm in vms:
+            if vm['id'] not in vm_ids:
+                continue
+            node = NodeType(id=vm['node']['id'], verbose_name=vm['node']['verbose_name'])
+            node.controller_ip = controller_ip
+            obj = TemplateType(name=vm['verbose_name'], info=vm, id=vm['id'], node=node)
+            obj.controller_ip = controller_ip
+            objects.append(obj)
+        return objects
 
     @enter_context(lambda: db.connect())
     async def resolve_vms(conn: Connection, self, info, controller_ip=None, cluster_id=None, node_id=None):

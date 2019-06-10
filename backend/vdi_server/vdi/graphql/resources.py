@@ -169,15 +169,6 @@ async def get_controller_ip(conn: Connection):
     return ip
 
 
-class PoolWizardType(graphene.ObjectType):
-    node_ids = graphene.List(graphene.String)
-    cluster_ids = graphene.List(graphene.String)
-    datapool_ids = graphene.List(graphene.String)
-    controller_ip = graphene.String()
-    template_id = graphene.String()
-    initial_size = graphene.Int()
-    reserve_size = graphene.Int()
-
 
 class Resources:
     datapools = graphene.List(DatapoolType,
@@ -193,7 +184,6 @@ class Resources:
                           cluster_id=graphene.String())
     node = graphene.Field(NodeType, id=graphene.String(), controller_ip=graphene.String())
     controllers = graphene.List(ControllerType)
-    poolwizard = graphene.Field(PoolWizardType)
 
     @classmethod
     def _make_type(cls, type, data, fields_map=None):
@@ -297,28 +287,6 @@ class Resources:
             for d in items
         ]
 
-    @enter_context(lambda: db.connect())
-    async def resolve_poolwizard(conn: Connection, self, info):
-        controller_ip = await get_controller_ip()
-        cluster_ids, node_ids, datapool_ids = [], [], []
-        resp = await resources.ListClusters(controller_ip=controller_ip)
-        for cluster in resp:
-            cluster_ids.append(cluster['id'])
-            resp = await resources.ListNodes(controller_ip=controller_ip, cluster_id=cluster['id'])
-            for node in resp:
-                node_ids.append(node['id'])
-                datapools = await resources.ListDatapools(controller_ip=controller_ip, node_id=node['id'])
-                datapool_ids.extend(d['id'] for d in datapools)
-        wizard = {
-            'initial_size': 1,
-            'reserve_size': 1,
-            'controller_ip': controller_ip,
-            'cluster_id': cluster_ids,
-            'datapool_id': datapool_ids,
-            'node_id': node_ids,
-        }
-        return PoolWizardType(**wizard)
-
     async def resolve_node(self, info, id, controller_ip=None):
         if controller_ip is None:
             controller_ip = await get_controller_ip()
@@ -326,6 +294,7 @@ class Resources:
         obj = Resources._make_type(NodeType, node)
         obj.controller_ip = controller_ip
         return obj
+
 
 
 class AddController(graphene.Mutation):
@@ -363,4 +332,41 @@ class AddController(graphene.Mutation):
     async def mutate(self, info, ip, set_default=False, description=None):
         await AddController._add_controller(ip=ip, set_default=set_default, description=description)
         return AddController(ok=True)
+
+
+class RemoveController(graphene.Mutation):
+    class Arguments:
+        controller_ip = graphene.String()
+
+    ok = graphene.Boolean()
+
+    @classmethod
+    async def remove_pools(cls, *, controller_ip, conn: Connection):
+        qu = "SELECT id FROM pool WHERE controller_ip = $1", controller_ip
+        pools = await conn.fetch(*qu)
+
+        from vdi.graphql.pool import RemovePool
+        tasks = [
+            RemovePool.do_remove(pool['id'], conn=conn)
+            for pool in pools
+        ]
+        # FIXME!!!
+        for t in tasks:
+            await t
+        # async for _ in wait(*tasks):
+        #     pass
+
+
+    @enter_context(lambda: db.connect())
+    async def mutate(conn: Connection, self, info, controller_ip=None):
+        if controller_ip is None:
+            controller_ip = await get_controller_ip()
+        await RemoveController.remove_pools(controller_ip=controller_ip, conn=conn)
+        query = "DELETE FROM default_controller WHERE ip = $1", controller_ip
+        await conn.fetch(*query)
+        query = f"DELETE FROM controller WHERE ip=$1", controller_ip
+        await conn.execute(*query)
+
+        return RemoveController(ok=True)
+
 
