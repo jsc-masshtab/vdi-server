@@ -26,7 +26,9 @@
 #include <glib/gi18n.h>
 #include <gdk/gdkkeysyms.h>
 
+extern gchar *m_username;
 extern gchar *m_password;
+extern gboolean opt_manual_mode;
 
 typedef struct
 {
@@ -179,7 +181,7 @@ make_label_small(GtkLabel* label)
 gboolean
 remote_viewer_connect_dialog(GtkWindow *main_window, gchar **uri)
 {
-    GtkWidget *window, /* *label,*/ *entry, *port_entry, *password_entry, /**recent,*/
+    GtkWidget *window, /* *label,*/ *entry, *port_entry, *login_entry, *password_entry, /**recent,*/
         *connect_button/*, *cancel_button*/, *veil_image;
     GtkRecentFilter *rfilter;
     GtkBuilder *builder;
@@ -228,7 +230,11 @@ remote_viewer_connect_dialog(GtkWindow *main_window, gchar **uri)
 
     // password entry
     password_entry = GTK_WIDGET(gtk_builder_get_object(builder, "password-entry"));
-    gtk_entry_set_placeholder_text(password_entry, "Пароль");
+    //gtk_entry_set_placeholder_text(password_entry, "Пароль");
+
+    // login entry
+    login_entry = GTK_WIDGET(gtk_builder_get_object(builder, "login-entry"));
+    gtk_widget_set_sensitive(GTK_ENTRY(login_entry), !opt_manual_mode);
 
     // Signal - callbacks connections
     g_signal_connect(window, "key-press-event",
@@ -268,9 +274,14 @@ remote_viewer_connect_dialog(GtkWindow *main_window, gchar **uri)
                 gtk_entry_get_text(GTK_ENTRY(port_entry)), NULL);
         g_strstrip(*uri);
         // credentials
+        if(m_username)
+            g_free(m_username);
+        m_username = g_strdup(gtk_entry_get_text(GTK_ENTRY(login_entry)));
+        g_strstrip(m_username);
+
         if(m_password)
             g_free(m_password);
-        m_password = g_strdup(gtk_entry_get_text(GTK_ENTRY(password_entry))); // needs to be deleted
+        m_password = g_strdup(gtk_entry_get_text(GTK_ENTRY(password_entry)));
         g_strstrip(m_password);
 
     } else {

@@ -36,7 +36,9 @@
 #include "virt-viewer-display-spice.h"
 #include "virt-viewer-auth.h"
 
+gchar *m_username = NULL;
 gchar *m_password = NULL;
+
 
 G_DEFINE_TYPE (VirtViewerSessionSpice, virt_viewer_session_spice, VIRT_VIEWER_TYPE_SESSION)
 
@@ -358,11 +360,11 @@ uuid_changed(GObject *gobject G_GNUC_UNUSED,
             }
         }
 
-        if (!uuid_empty) {
+        /*if (!uuid_empty) {
             gchar *uuid_str = spice_uuid_to_string(uuid);
             g_object_set(app, "uuid", uuid_str, NULL);
             g_free(uuid_str);
-        }
+        }*/
     }
 
     virt_viewer_session_spice_fullscreen_auto_conf(self);
@@ -378,7 +380,7 @@ name_changed(GObject *gobject G_GNUC_UNUSED,
 
     g_object_get(self->priv->session, "name", &name, NULL);
 
-    g_object_set(app, "guest-name", name, NULL);
+    //g_object_set(app, "guest-name", name, NULL);
     g_free(name);
 }
 
@@ -712,19 +714,22 @@ virt_viewer_session_spice_main_channel_event(SpiceChannel *channel,
          * invalid username and invalid password. So, in both cases the username
          * entry will be pre-filled with the username used in the previous attempt. */
         if (username_required) {
-            g_object_get(self->priv->session, "username", &user, NULL);
-            if (user == NULL || *user == '\0')
-                user = g_strdup(g_get_user_name());
+            // set username from remote-viewer-connect form
+            if(m_username){
+                user = g_strdup(m_username);
+            }
+            else {
+                g_object_get(self->priv->session, "username", &user, NULL);
+                if (user == NULL || *user == '\0')
+                    user = g_strdup(g_get_user_name());
+            }
         }
 
         g_object_get(self->priv->session, "host", &host, NULL);
 
         // set password
-        // Берем пароль с формы m_password_connect
+        // set password from remote-viewer-connect form
         if (m_password) {
-            printf("m_password\n");
-            printf(m_password);
-            printf("\n");
             password = g_strdup(m_password);
             ret = GTK_RESPONSE_OK;
         }
@@ -797,6 +802,10 @@ virt_viewer_session_spice_main_channel_event(SpiceChannel *channel,
     if(m_password) {
         g_free(m_password);
         m_password = NULL;
+    }
+    if(m_username) {
+        g_free(m_username);
+        m_username = NULL;
     }
     g_free(password);
     g_free(user);
