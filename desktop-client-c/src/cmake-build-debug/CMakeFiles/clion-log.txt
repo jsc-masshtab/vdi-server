@@ -1,4 +1,4 @@
-/home/ubuntu/CLion-2019.1.4/clion-2019.1.4/bin/cmake/linux/bin/cmake -DCMAKE_BUILD_TYPE=Debug -G "CodeBlocks - Unix Makefiles" /home/ubuntu/job/virt-viewer-veil/src
+/home/ubuntu/CLion-2019.1.4/clion-2019.1.4/bin/cmake/linux/bin/cmake -DCMAKE_BUILD_TYPE=Debug -G "CodeBlocks - Unix Makefiles" /home/ubuntu/job/vdiserver/desktop-client-c/src
 -- The C compiler identification is GNU 7.4.0
 -- Check for working C compiler: /usr/bin/cc
 -- Check for working C compiler: /usr/bin/cc -- works
@@ -12,4 +12,4 @@
 --   Found gtk+-3.0, version 3.22.30
 -- Configuring done
 -- Generating done
--- Build files have been written to: /home/ubuntu/job/virt-viewer-veil/src/cmake-build-debug
+-- Build files have been written to: /home/ubuntu/job/vdiserver/desktop-client-c/src/cmake-build-debug

@@ -20,10 +20,13 @@
 
 #include <config.h>
 
+#include "virt-viewer-session-spice.h"
 #include "remote-viewer-connect.h"
 #include "virt-viewer-util.h"
 #include <glib/gi18n.h>
 #include <gdk/gdkkeysyms.h>
+
+extern gchar *m_password;
 
 typedef struct
 {
@@ -264,6 +267,14 @@ remote_viewer_connect_dialog(GtkWindow *main_window, gchar **uri)
         *uri = g_strconcat("spice://", gtk_entry_get_text(GTK_ENTRY(entry)), ":",
                 gtk_entry_get_text(GTK_ENTRY(port_entry)), NULL);
         g_strstrip(*uri);
+        // credentials
+
+        m_password = g_strdup(gtk_entry_get_text(GTK_ENTRY(password_entry))); // needs to be deleted
+        g_strstrip(&m_password);
+        //printf("1m_password\n");
+        //printf(m_password);
+        //printf("\n");
+
     } else {
         *uri = NULL;
     }

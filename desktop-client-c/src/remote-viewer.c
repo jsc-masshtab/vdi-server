@@ -1163,7 +1163,7 @@ retry_dialog:
         }
 #ifdef HAVE_OVIRT
         if (g_strcmp0(type, "ovirt") == 0) {// сюда не заходит?
-            if (!create_ovirt_session(app, guri, &error)) { // - здесь ввод логина и пароля?
+            if (!create_ovirt_session(app, guri, &error)) {
                 g_prefix_error(&error, _("Couldn't open oVirt session: "));
                 goto cleanup;
             }
@@ -1188,7 +1188,7 @@ retry_dialog:
         }
 #endif
 
-        if (!virt_viewer_app_initial_connect(app, &error)) {
+        if (!virt_viewer_app_initial_connect(app, &error)) { // !!! вызов формы ввода пароля и логина
             if (error == NULL) {
                 g_set_error_literal(&error,
                                     VIRT_VIEWER_ERROR, VIRT_VIEWER_ERROR_FAILED,

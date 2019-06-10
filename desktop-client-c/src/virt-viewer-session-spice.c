@@ -36,6 +36,8 @@
 #include "virt-viewer-display-spice.h"
 #include "virt-viewer-auth.h"
 
+gchar *m_password;
+
 G_DEFINE_TYPE (VirtViewerSessionSpice, virt_viewer_session_spice, VIRT_VIEWER_TYPE_SESSION)
 
 
@@ -717,11 +719,21 @@ virt_viewer_session_spice_main_channel_event(SpiceChannel *channel,
         }
 
         g_object_get(self->priv->session, "host", &host, NULL);
-        ret = virt_viewer_auth_collect_credentials(self->priv->main_window,
+        // Здесь забираются логин и пароль при после подключения к машинке
+        printf("m_password\n");
+        printf(m_password);
+        printf("\n");
+
+        ret = GTK_RESPONSE_OK;
+        // set password
+        password = g_strdup(m_password);
+        /*ret = virt_viewer_auth_collect_credentials(self->priv->main_window,
                                                    "SPICE",
                                                    host,
                                                    username_required ? &user : NULL,
-                                                   &password);
+                                                   &password);*/
+
+
         g_free(host);
         if (!ret) {
             /* ret is false when dialog did not return GTK_RESPONSE_OK. We
