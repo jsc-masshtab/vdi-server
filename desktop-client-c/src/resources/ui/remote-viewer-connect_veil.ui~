@@ -18,7 +18,6 @@
           <object class="GtkImage" id="veil-image">
             <property name="visible">True</property>
             <property name="can_focus">False</property>
-            <property name="pixbuf">icons/48x48/virt-viewer.png</property>
             <property name="icon_size">6</property>
           </object>
           <packing>

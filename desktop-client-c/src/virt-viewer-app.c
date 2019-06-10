@@ -1731,9 +1731,13 @@ static void
 virt_viewer_app_init(VirtViewerApp *self)
 {
     GError *error = NULL;
+    GError    **error2  = NULL;
     self->priv = GET_PRIVATE(self);
 
-    gtk_window_set_default_icon_name("virt-viewer");
+    GdkPixbuf *gdkPixbuf =
+            gdk_pixbuf_new_from_resource(VIRT_VIEWER_RESOURCE_PREFIX"/icons/content/img/veil-32x32.png", error2);
+    gtk_window_set_default_icon(gdkPixbuf);
+   // gtk_window_set_default_icon_name("virt-viewer_veil");
 
     self->priv->displays = g_hash_table_new_full(g_direct_hash, g_direct_equal, NULL, g_object_unref);
     self->priv->config = g_key_file_new();

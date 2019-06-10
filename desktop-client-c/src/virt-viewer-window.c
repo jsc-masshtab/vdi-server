@@ -311,7 +311,7 @@ virt_viewer_window_init (VirtViewerWindow *self)
     priv->notebook = virt_viewer_notebook_new();
     gtk_widget_show(GTK_WIDGET(priv->notebook));
 
-    priv->builder = virt_viewer_util_load_ui("virt-viewer.ui");
+    priv->builder = virt_viewer_util_load_ui("virt-viewer_veil.ui");
 
     gtk_widget_set_sensitive(GTK_WIDGET(gtk_builder_get_object(self->priv->builder, "menu-send")), FALSE);
     gtk_widget_set_sensitive(GTK_WIDGET(gtk_builder_get_object(self->priv->builder, "menu-view-zoom")), FALSE);
@@ -1100,7 +1100,7 @@ virt_viewer_window_menu_help_about(GtkWidget *menu G_GNUC_UNUSED,
 
     gtk_about_dialog_set_version(GTK_ABOUT_DIALOG(dialog), VERSION BUILDID);
 
-    icon = gdk_pixbuf_new_from_resource(VIRT_VIEWER_RESOURCE_PREFIX"/icons/48x48/virt-viewer.png", NULL);
+    icon = gdk_pixbuf_new_from_resource(VIRT_VIEWER_RESOURCE_PREFIX"/icons/content/img/veil-32x32.png", NULL);
     if (icon != NULL) {
         gtk_about_dialog_set_logo(GTK_ABOUT_DIALOG(dialog), icon);
         g_object_unref(icon);

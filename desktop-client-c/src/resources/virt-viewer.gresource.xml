@@ -4,20 +4,15 @@
     <file>ui/remote-viewer-connect.ui</file>
     <file>ui/remote-viewer-connect_veil.ui</file>
     <file>ui/remote-viewer-iso-list.ui</file>
+    <file>ui/virt-viewer.ui</file>
+    <file>ui/virt-viewer_veil.ui</file>
     <file>ui/virt-viewer-about.ui</file>
     <file>ui/virt-viewer-auth.ui</file>
     <file>ui/virt-viewer-guest-details.ui</file>
     <file>ui/virt-viewer-preferences.ui</file>
     <file>ui/virt-viewer-vm-connection.ui</file>
-    <file>ui/virt-viewer.ui</file>
     <file>ui/virt-viewer-file-transfer-dialog.ui</file>
-    <file alias="icons/16x16/virt-viewer.png">../../icons/16x16/virt-viewer.png</file>
-    <file alias="icons/22x22/virt-viewer.png">../../icons/22x22/virt-viewer.png</file>
-    <file alias="icons/24x24/virt-viewer.png">../../icons/24x24/virt-viewer.png</file>
     <file alias="icons/24x24/virt-viewer-usb.png">../../icons/24x24/virt-viewer-usb.png</file>
-    <file alias="icons/32x32/virt-viewer.png">../../icons/32x32/virt-viewer.png</file>
-    <file alias="icons/48x48/virt-viewer.png">../../icons/48x48/virt-viewer.png</file>
-    <file alias="icons/256x256/virt-viewer.png">../../icons/256x256/virt-viewer.png</file>
     <file alias="icons/content/img/veil-32x32.png">../../icons/content/img/veil-32x32.png</file>
 
   </gresource>

@@ -34,12 +34,13 @@
 int
 main(int argc, char **argv)
 {
+    //g_get_real_time();
     installHandler("backtrace.txt");
 
     int ret = 1;
     GApplication *app = NULL;
 
-    virt_viewer_util_init(_("Veil VDI Тонкий клиент"));
+    virt_viewer_util_init("Veil VDI Тонкий клиент");
     app = G_APPLICATION(remote_viewer_new());
 
     ret = g_application_run(app, argc, argv);
