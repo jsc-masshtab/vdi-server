@@ -28,8 +28,8 @@ export class ControllersService  {
     public addController(ip:string, description:string) {
         return this.service.mutate<any>({
             mutation: gql`  
-                            mutation AddController($description: String!,$ip: String!) {
-                                addController(description: $description,ip: $ip) {
+                            mutation AddController($description: String,$ip: String!,$set_default:Boolean) {
+                                addController(description: $description,ip: $ip,set_default:$set_default) {
                                     ok
                                 }
                             }
@@ -37,7 +37,8 @@ export class ControllersService  {
             variables: {
                 method: 'POST',
                 description: description,
-                ip: ip
+                ip: ip,
+                set_default: true // временно,пока 1
             }
         })
     }

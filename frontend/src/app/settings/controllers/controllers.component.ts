@@ -29,10 +29,14 @@ export class ControllersComponent implements OnInit {
     {
       title: 'Настройки',
       icon: 'cog'
+    },
+    {
+      title: 'Контроллеры',
+      icon: 'server'
     }
   ];
 
-  public spinner:boolean = true;
+  public spinner:boolean = false;
 
   constructor(private service: ControllersService,public dialog: MatDialog){}
 
@@ -41,6 +45,7 @@ export class ControllersComponent implements OnInit {
   }
 
   private getAllControllers() {
+    this.spinner = true;
     this.service.getAllControllers().valueChanges.pipe(map(data => data.data.controllers))
       .subscribe((data) => {
         this.controllers = data;
@@ -48,10 +53,6 @@ export class ControllersComponent implements OnInit {
         if(this.controllers.length) {
           localStorage.setItem('controller',JSON.stringify(data[0].ip));
         }
-        this.crumbs.push({
-          title: 'Контроллеры',
-          icon: 'server'
-        });
         this.spinner = false;
       },
       (error) => {

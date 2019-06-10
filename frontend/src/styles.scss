@@ -14,10 +14,20 @@ body {
     box-sizing: border-box;
 }
 
+.cdk-overlay-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
 .mat-dialog-container {
     padding: 0px !important;
     overflow: inherit !important;
     background: transparent;
+}
+
+.cdk-overlay-pane {
+    overflow-y: auto !important;
 }
 
 .form {
