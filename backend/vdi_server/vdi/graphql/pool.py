@@ -94,6 +94,24 @@ class VmType(graphene.ObjectType):
         obj.controller_ip = controller_ip
         return obj
 
+    async def resolve_template(self, info):
+        if self.template:
+            # TODO make sure all fields are available
+            return self.template
+        async with db.connect() as conn:
+            data = await conn.fetch("select template_id from vm where id = $1", self.id)
+            if not data:
+                return None
+            [(template_id,)] = data
+            if get_selections(info) == ['id']:
+                return TemplateType(id=template_id)
+            if self.controller_ip is None:
+                from vdi.graphql.resources import get_controller_ip
+                self.controller_ip = await get_controller_ip()
+            from vdi.tasks.vm import GetDomainInfo
+            template = await GetDomainInfo(controller_ip=self.controller_ip, domain_id=template_id)
+            return TemplateType(id=template_id, info=template, name=template['verbose_name'])
+
     info = None
 
 
