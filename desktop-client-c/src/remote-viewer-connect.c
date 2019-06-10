@@ -271,7 +271,7 @@ remote_viewer_connect_dialog(GtkWindow *main_window, gchar **uri)
         if(m_password)
             g_free(m_password);
         m_password = g_strdup(gtk_entry_get_text(GTK_ENTRY(password_entry))); // needs to be deleted
-        g_strstrip(&m_password);
+        g_strstrip(m_password);
 
     } else {
         *uri = NULL;

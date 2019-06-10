@@ -718,14 +718,13 @@ virt_viewer_session_spice_main_channel_event(SpiceChannel *channel,
         }
 
         g_object_get(self->priv->session, "host", &host, NULL);
-        // Здесь забираются логин и пароль при после подключения к машинке
-        printf("m_password\n");
-        printf(m_password);
-        printf("\n");
 
         // set password
         // Берем пароль с формы m_password_connect
         if (m_password) {
+            printf("m_password\n");
+            printf(m_password);
+            printf("\n");
             password = g_strdup(m_password);
             ret = GTK_RESPONSE_OK;
         }
