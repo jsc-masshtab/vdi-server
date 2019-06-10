@@ -62,9 +62,7 @@ export class PoolAddComponent implements OnInit {
       this.defaultDataTemplates = "- нет доступных шаблонов -";
       console.log(res);
       this.templates = res.map((item) => {
-        console.log(JSON.parse(item['info']));
         let parse = JSON.parse(item['info']);
-        console.log(JSON.parse(item['info']));
         return {
           'output': parse.id,
           'input': parse.verbose_name
