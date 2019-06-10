@@ -1,0 +1,92 @@
+ Virt Viewer Authors
+ ===================
+
+The Virt Viewer application is maintained by
+
+    Daniel P. Berrange <berrange@redhat.com> (Original author)
+    Christophe Fergeau <cfergeau@redhat.com>
+    Marc-André Lureau <marcandre.lureau@redhat.com>
+    Hans de Goede <hdegoede@redhat.com>
+    Michal Privoznik <mprivozn@redhat.com>
+
+With additional patches & translations from:
+
+Charles Arnold <carnold@suse.com>
+Christophe Fergeau <cfergeau@redhat.com>
+Christophe de Dinechin <cdupontd@redhat.com>
+Daniel P. Berrange <berrange@redhat.com>
+Dave Allan <dallan@redhat.com>
+Doug Goldstein <cardoe@cardoe.com>
+Eduardo Lima (Etrunko) <etrunko@redhat.com>
+Fabiano Fidêncio <fidencio@redhat.com>
+Frediano Ziglio <fziglio@redhat.com>
+Guannan Ren <gren@redhat.com>
+Guido Günther <agx@sigxcpu.org>
+Hans de Goede <hdegoede@redhat.com>
+Jiri Denemark <Jiri.Denemark@gmail.com>
+Jonathon Jongsma <jjongsma@redhat.com>
+Ján Tomko <jtomko@redhat.com>
+Lukas Venhoda <lvenhoda@redhat.com>
+Lukáš Venhoda <lvenhoda@redhat.com>
+Marc-André Lureau <marcandre.lureau@redhat.com>
+Martin Kletzander <mkletzan@redhat.com>
+Michal Privoznik <mprivozn@redhat.com>
+Pavel Grunt <pgrunt@redhat.com>
+Pavel Hrdina <phrdina@redhat.com>
+Pavel Raiskup <praiskup@redhat.com>
+Rex Dieter <rdieter@math.unl.edu>
+Richard W.M. Jones <rjones@redhat.com>
+Ronnie Sahlberg <ronniesahlberg@gmail.com>
+Sandy Stutsman <sstutsma@redhat.com>
+Snir Sheriber <ssheribe@redhat.com>
+Uri Lublin <uril@redhat.com>
+Victor Toso <me@victortoso.com>
+Victor Toso <victortoso@redhat.com>
+Yann E. MORIN" <yann.morin.1998@anciens.enib.fr>
+Yonit Halperin <yhalperi@redhat.com>
+Zeeshan Ali (Khattak) <zeeshanak@gnome.org>
+amitakhya <amitakhya@fedoraproject.org>
+andreyjktl <andreyjktl@fedoraproject.org>
+anipeter <anipeter@fedoraproject.org>
+ankit <ankit@fedoraproject.org>
+aron <aron@fedoraproject.org>
+bozzo <bozzo@fedoraproject.org>
+elsupergomez <elsupergomez@fedoraproject.org>
+enshahar <enshahar@fedoraproject.org>
+fdaluisio <fdaluisio@fedoraproject.org>
+gcintra <gcintra@fedoraproject.org>
+giallu <giallu@fedoraproject.org>
+hedda <hedda@fedoraproject.org>
+htaira <htaira@fedoraproject.org>
+ifelix <ifelix@fedoraproject.org>
+jassy <jassy@fedoraproject.org>
+khasida <khasida@fedoraproject.org>
+kkrothap <kkrothap@fedoraproject.org>
+leahliu <leahliu@fedoraproject.org>
+mgiri <mgiri@fedoraproject.org>
+mospina <mospina@fedoraproject.org>
+mvdz <mvdz@fedoraproject.org>
+rajesh <rajesh@fedoraproject.org>
+raven <raven@fedoraproject.org>
+renault <renault@fedoraproject.org>
+runab <runab@fedoraproject.org>
+samfreemanz <samfreemanz@fedoraproject.org>
+sandeeps <sandeeps@fedoraproject.org>
+shanky <shanky@fedoraproject.org>
+snicore <snicore@fedoraproject.org>
+swkothar <swkothar@fedoraproject.org>
+tchuang <tchuang@fedoraproject.org>
+tombo <tombo@fedoraproject.org>
+tomspur <tomspur@fedoraproject.org>
+warrink <warrink@fedoraproject.org>
+webappz <webappz@fedoraproject.org>
+ypoyarko <ypoyarko@fedoraproject.org>
+yurchor <yurchor@fedoraproject.org>
+zoltanh721 <zoltanh721@fedoraproject.org>
+
+   ...send patches to get your name here...
+
+For full translation credits see the header of the individual
+files in the po/ directory.
+
+-- End

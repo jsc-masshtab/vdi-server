@@ -1,0 +1,26 @@
+	../data/remote-viewer.appdata.xml.in \
+	../data/remote-viewer.desktop.in \
+	../data/virt-viewer-mime.xml.in \
+	../src/remote-viewer-iso-list-dialog.c \
+	../src/remote-viewer-main.c \
+	../src/remote-viewer.c \
+	../src/resources/ui/remote-viewer-connect.ui \
+	../src/resources/ui/remote-viewer-iso-list.ui \
+	../src/resources/ui/virt-viewer-about.ui \
+	../src/virt-viewer-app.c \
+	../src/virt-viewer-auth.c \
+	../src/resources/ui/virt-viewer-auth.ui \
+	../src/virt-viewer-display-vnc.c \
+	../src/virt-viewer-file-transfer-dialog.c \
+	../src/virt-viewer-main.c \
+	../src/virt-viewer-session-spice.c \
+	../src/virt-viewer-session-vnc.c \
+	../src/virt-viewer-vm-connection.c \
+	../src/virt-viewer-window.c \
+	../src/virt-viewer-file.c \
+	../src/virt-viewer.c \
+	../src/resources/ui/virt-viewer.ui \
+	../src/resources/ui/virt-viewer-guest-details.ui \
+	../src/resources/ui/virt-viewer-vm-connection.ui \
+	../src/resources/ui/virt-viewer-preferences.ui \
+	../src/resources/ui/virt-viewer-file-transfer-dialog.ui

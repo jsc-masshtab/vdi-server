@@ -1,0 +1,854 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+#
+# Translators:
+# Robert Antoni Buj i Gelonch, 2014
+# Robert Antoni Buj Gelonch <rbuj@fedoraproject.org>, 2015. #zanata
+# Robert Antoni Buj Gelonch <rbuj@fedoraproject.org>, 2016. #zanata
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2016-11-24 13:55+0000\n"
+"PO-Revision-Date: 2016-07-04 05:31-0400\n"
+"Last-Translator: Robert Antoni Buj Gelonch <rbuj@fedoraproject.org>\n"
+"Language-Team: Catalan (http://www.transifex.com/projects/p/virt-viewer/"
+"language/ca/)\n"
+"Language: ca\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Generator: Zanata 3.9.6\n"
+
+#: ../data/remote-viewer.appdata.xml.in.h:1
+#: ../data/remote-viewer.desktop.in.h:1 ../src/remote-viewer-main.c:39
+msgid "Remote Viewer"
+msgstr "Visualitzador remot"
+
+#: ../data/remote-viewer.appdata.xml.in.h:2
+msgid "Remotely access virtual machines"
+msgstr "Accedeix de manera remota a màquines virtuals"
+
+#: ../data/remote-viewer.appdata.xml.in.h:3
+msgid ""
+"Remote Viewer provides a graphical viewer for the guest OS display. At this "
+"time it supports guest OS using the VNC or SPICE protocols. Further "
+"protocols may be supported in the future as user demand dictates. The viewer "
+"can connect directly to both local and remotely hosted guest OS, optionally "
+"using SSL/TLS encryption."
+msgstr ""
+"El visualitzador remot proporciona una aplicació gràfica per a la "
+"visualització del monitor del SO del convidat. En aquest moment és "
+"compatible amb el SO convidat utilitzant els protocols VNC o SPICE. Altres "
+"protocols podrien estar suportats en el futur en funció de la demanda dels "
+"usuaris. El visualitzador pot connectar directament al SO del convidat local "
+"o amb allotjament remot, de manera opcional mitjançant el xifrat SSL/TLS."
+
+#: ../data/remote-viewer.desktop.in.h:2
+msgid "Access remote desktops"
+msgstr "Accediu a escriptoris remots"
+
+#: ../data/virt-viewer-mime.xml.in.h:1
+msgid "Virt-Viewer connection file"
+msgstr "Fitxer de connexió Virt-Viewer"
+
+#: ../src/remote-viewer.c:139
+msgid "Set window title"
+msgstr "Estableix el títol de la finestra"
+
+#: ../src/remote-viewer.c:142
+msgid "Open connection using Spice controller communication"
+msgstr "Obre la connexió mitjançant la comunicació del controlador Spice"
+
+#: ../src/remote-viewer.c:150
+msgid "Remote viewer client"
+msgstr "Client del visualitzador remot"
+
+#: ../src/remote-viewer.c:175
+#, c-format
+msgid ""
+"\n"
+"Error: can't handle multiple URIs\n"
+"\n"
+msgstr ""
+"\n"
+"Error: no es poden gestionar múltiples URI\n"
+
+#: ../src/remote-viewer.c:187
+#, c-format
+msgid ""
+"\n"
+"Error: extra arguments given while using Spice controller\n"
+"\n"
+msgstr ""
+"\n"
+"Error: s'han proporcionat arguments extres mentre s'estava utilitzant el "
+"controlador Spice\n"
+
+#: ../src/remote-viewer.c:209 ../src/virt-viewer.c:152
+#, c-format
+msgid "Run '%s --help' to see a full list of available command line options\n"
+msgstr ""
+"Executeu '%s --help' per visualitzar el llistat complet d'opcions "
+"disponibles per a la línia d'ordres\n"
+
+#: ../src/remote-viewer.c:282 ../src/remote-viewer.c:1183
+msgid "Failed to initiate connection"
+msgstr "Ha fallat la inicialització de la connexió"
+
+#: ../src/remote-viewer.c:297
+msgid "Display disabled by controller"
+msgstr "La pantalla està desactivada pel controlador"
+
+#: ../src/remote-viewer.c:593
+#, c-format
+msgid "Controller connection failed: %s"
+msgstr "La connexió amb el controlador ha fallat: %s"
+
+#: ../src/remote-viewer.c:848
+msgid "failed to parse ovirt uri"
+msgstr "Ha fallat l'anàlisi de la uri d'ovirt"
+
+#: ../src/remote-viewer.c:868 ../src/virt-viewer.c:1014
+msgid "Authentication was cancelled"
+msgstr "S'ha cancel·lat l'autenticació"
+
+#: ../src/remote-viewer.c:893
+#, c-format
+msgid "oVirt VM %s is not running"
+msgstr "La MV oVirt %s no s'està executant"
+
+#: ../src/remote-viewer.c:907
+#, c-format
+msgid "oVirt VM %s has no display"
+msgstr "La MV oVirt %s no té cap pantalla"
+
+#: ../src/remote-viewer.c:933
+#, c-format
+msgid "oVirt VM %s has no host information"
+msgstr "La MV d'oVirt %s no té cap informació de l'amfitrió"
+
+#: ../src/remote-viewer.c:944
+#, c-format
+msgid "oVirt VM %s has unknown display type: %d"
+msgstr "La MV oVirt %s té un tipus desconegut de pantalla: %d"
+
+#: ../src/remote-viewer.c:1115
+msgid "Setting up Spice session..."
+msgstr "S'està preparant la sessió Spice..."
+
+#: ../src/remote-viewer.c:1123
+msgid "No connection was chosen"
+msgstr "No s'ha seleccionat cap connexió"
+
+#: ../src/remote-viewer.c:1141
+#, c-format
+msgid "Invalid file %s: "
+msgstr "Fitxer no vàlid %s:"
+
+#: ../src/remote-viewer.c:1149
+msgid "Cannot determine the connection type from URI"
+msgstr "No s'ha pogut determinar el tipus de connexió des de la URI"
+
+#: ../src/remote-viewer.c:1155
+msgid "Couldn't open oVirt session: "
+msgstr "No s'ha pogut obrir la sessió d'oVirt:"
+
+#.
+#. * Local variables:
+#. *  c-indent-level: 4
+#. *  c-basic-offset: 4
+#. *  indent-tabs-mode: nil
+#. * End:
+#.
+#: ../src/resources/ui/remote-viewer-connect.ui.h:1
+msgid "Connection details"
+msgstr "Detalls de la connexió"
+
+#: ../src/resources/ui/remote-viewer-connect.ui.h:2
+msgid "Connection _Address"
+msgstr "_Adreça de la connexió"
+
+#: ../src/resources/ui/remote-viewer-connect.ui.h:3
+msgid "For example, spice://foo.example.org:5900"
+msgstr "Per exemple, spice://foo.exemple.cat:5900"
+
+#: ../src/resources/ui/remote-viewer-connect.ui.h:4
+msgid "Recent connections"
+msgstr "Connexions recents"
+
+#: ../src/resources/ui/remote-viewer-connect.ui.h:5
+#: ../src/resources/ui/virt-viewer-auth.ui.h:2 ../src/virt-viewer-window.c:922
+#: ../src/resources/ui/virt-viewer-vm-connection.ui.h:2
+msgid "_Cancel"
+msgstr "_Cancel·la"
+
+#: ../src/resources/ui/remote-viewer-connect.ui.h:6
+#: ../src/resources/ui/virt-viewer-vm-connection.ui.h:3
+msgid "C_onnect"
+msgstr "C_onnecta"
+
+#: ../src/resources/ui/virt-viewer-about.ui.h:1
+msgid "About Virt-Viewer"
+msgstr "Quant a Virt-Viewer"
+
+#: ../src/resources/ui/virt-viewer-about.ui.h:2
+msgid ""
+"Copyright (C) 2007-2012 Daniel P. Berrange\n"
+"Copyright (C) 2007-2014 Red Hat, Inc."
+msgstr ""
+"Copyright (C) 2007-2012 Daniel P. Berrange\n"
+"Copyright (C) 2007-2014 Red Hat, Inc."
+
+#: ../src/resources/ui/virt-viewer-about.ui.h:4
+msgid "A remote desktop client built with GTK-VNC, SPICE-GTK and libvirt"
+msgstr ""
+"Un client d'escriptori remot que estigui construït amb GTK-VNC, SPICE-GTK i "
+"libvirt"
+
+#: ../src/resources/ui/virt-viewer-about.ui.h:5
+msgid "virt-manager.org"
+msgstr "virt-manager.org"
+
+#: ../src/resources/ui/virt-viewer-about.ui.h:6
+msgid ""
+"This program is free software; you can redistribute it and/or modify\n"
+"it under the terms of the GNU General Public License as published by\n"
+"the Free Software Foundation; either version 2 of the License, or\n"
+"(at your option) any later version.\n"
+"\n"
+"This program is distributed in the hope that it will be useful,\n"
+"but WITHOUT ANY WARRANTY; without even the implied warranty of\n"
+"MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the\n"
+"GNU General Public License for more details.\n"
+"\n"
+"You should have received a copy of the GNU General Public License\n"
+"along with this program; if not, write to the Free Software\n"
+"Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA\n"
+msgstr ""
+"Aquest programa és programari lliure; el podeu redistribuir i/o modificar\n"
+"d'acord amb els termes de la Llicència pública general de GNU tal com\n"
+"la publica la Free Software Foundation; amb la versió 2 de la Llicència,  o\n"
+"(si ho preferiu) amb qualsevol versió posterior.\n"
+"\n"
+"Aquest programa es distribueix amb l'esperança que us sigui útil, però\n"
+"SENSE CAP GARANTIA; ni tan sols amb la garantia de COMERCIALITZACIÓ\n"
+"o APTITUD PER A PROPÒSITS DETERMINATS.  Vegeu la Llicència pública\n"
+"general de GNU per a més detalls.\n"
+"\n"
+"Hauríeu d'haver rebut una còpia de la llicència pública general de GNU\n"
+"amb aquest programa; si no fos així, escriviu a la Free Software\n"
+"Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.\n"
+
+#: ../src/resources/ui/virt-viewer-about.ui.h:20
+msgid "The Fedora Translation Team"
+msgstr "Robert Antoni Buj i Gelonch <rbuj@fedoraproject.org>"
+
+#: ../src/virt-viewer-app.c:459
+msgid "Do you want to close the session?"
+msgstr "Voleu tancar la sessió?"
+
+#: ../src/virt-viewer-app.c:461
+msgid "Do not ask me again"
+msgstr "No m'ho tornis a preguntar"
+
+#: ../src/virt-viewer-app.c:655
+#, c-format
+msgid "Address is too long for unix socket_path: %s"
+msgstr ""
+
+#: ../src/virt-viewer-app.c:665
+#, c-format
+msgid "Creating unix socket failed: %s"
+msgstr ""
+
+#: ../src/virt-viewer-app.c:671
+#, c-format
+msgid "Connecting to unix socket failed: %s"
+msgstr ""
+
+#: ../src/virt-viewer-app.c:955
+#, c-format
+msgid "Waiting for display %d..."
+msgstr "A l'espera de la pantalla %d..."
+
+#: ../src/virt-viewer-app.c:1062
+#, c-format
+msgid "Unsupported graphic type '%s'"
+msgstr "Tipus no admès de gràfics «%s»"
+
+#: ../src/virt-viewer-app.c:1145
+msgid "Connect to ssh failed."
+msgstr "La connexió per ssh ha fallat."
+
+#: ../src/virt-viewer-app.c:1147
+msgid "Can't connect to channel, SSH only supported."
+msgstr "No s'ha pogut connectar al canal, únicament és compatible amb SSH."
+
+#: ../src/virt-viewer-app.c:1159
+msgid "Connect to channel unsupported."
+msgstr "La connexió al canal no és compatible."
+
+#: ../src/virt-viewer-app.c:1221
+msgid "Display can only be attached through libvirt with --attach"
+msgstr "La pantalla únicament pot adjuntar-se a través de libvirt amb --attach"
+
+#: ../src/virt-viewer-app.c:1244
+msgid "Connecting to graphic server"
+msgstr "S'està connectant al servidor gràfic"
+
+#: ../src/virt-viewer-app.c:1343
+msgid "Guest domain has shutdown"
+msgstr "S'ha apagat el domini del convidat"
+
+#: ../src/virt-viewer-app.c:1404
+msgid "Connected to graphic server"
+msgstr "S'ha connectat al servidor gràfic"
+
+#: ../src/virt-viewer-app.c:1431
+#, c-format
+msgid "Unable to connect to the graphic server %s"
+msgstr "No s'ha pogut connectar amb el servidor gràfic %s"
+
+#: ../src/virt-viewer-app.c:1457
+#, c-format
+msgid "Unable to authenticate with remote desktop server at %s: %s\n"
+msgstr "No s'ha pogut autenticar amb el servidor d'escriptori remot a %s: %s\n"
+
+#: ../src/virt-viewer-app.c:1471
+#, c-format
+msgid "Unable to authenticate with remote desktop server: %s"
+msgstr "No s'ha pogut autentificar amb el servidor d'escriptori remot: %s"
+
+#: ../src/virt-viewer-app.c:1479
+#, c-format
+msgid "USB redirection error: %s"
+msgstr "S'ha produït un error en la redirecció USB: %s"
+
+#: ../src/virt-viewer-app.c:1813
+#, c-format
+msgid "Zoom level must be within %d-%d\n"
+msgstr "El nivell del zoom ha d'estar dins de l'interval %d-%d\n"
+
+#: ../src/virt-viewer-app.c:1866
+#, c-format
+msgid "%s\n"
+msgstr "%s\n"
+
+#: ../src/virt-viewer-app.c:1876
+#, c-format
+msgid "%s version %s"
+msgstr "%s versió %s"
+
+#: ../src/virt-viewer-app.c:2300
+#, c-format
+msgid "Display _%d"
+msgstr "Monitor _%d"
+
+#: ../src/virt-viewer-app.c:2556
+#, c-format
+msgid "Invalid kiosk-quit argument: %s"
+msgstr "Argument no vàlid de kiosk-quit: %s"
+
+#: ../src/virt-viewer-app.c:2567
+msgid "Display version information"
+msgstr "Mostra informació de la versió"
+
+#: ../src/virt-viewer-app.c:2569
+msgid "Zoom level of window, in percentage"
+msgstr "Nivell de zoom de la finestra, en percentatge"
+
+#: ../src/virt-viewer-app.c:2571
+msgid "Open in full screen mode (adjusts guest resolution to fit the client)"
+msgstr ""
+"Obre en mode de pantalla completa (ajusta la resolució del convidat per "
+"adaptar-se al client)"
+
+#: ../src/virt-viewer-app.c:2573
+msgid "Customise hotkeys"
+msgstr "Personalitza les dreceres de teclat"
+
+#: ../src/virt-viewer-app.c:2575
+msgid "Enable kiosk mode"
+msgstr "Activa el mode quiosc"
+
+#: ../src/virt-viewer-app.c:2577
+msgid "Quit on given condition in kiosk mode"
+msgstr "Surt del mode quiosc en una condició donada"
+
+#: ../src/virt-viewer-app.c:2577
+msgid "<never|on-disconnect>"
+msgstr "<never|on-disconnect>"
+
+#: ../src/virt-viewer-app.c:2579
+msgid "Display verbose information"
+msgstr "Mostra informació detallada"
+
+#: ../src/virt-viewer-app.c:2581
+msgid "Display debugging information"
+msgstr "Mostra informació de depuració"
+
+#: ../src/virt-viewer-auth.c:89
+#, c-format
+msgid ""
+"Authentication is required for the %s connection to:\n"
+"\n"
+"<b>%s</b>\n"
+"\n"
+msgstr ""
+"Es requereix autentificació per a la connexió %s a:\n"
+"\n"
+"<b>%s</b>\n"
+"\n"
+
+#: ../src/virt-viewer-auth.c:93
+#, c-format
+msgid "Authentication is required for the %s connection:\n"
+msgstr "Es requereix autentificació per a la connexió %s:\n"
+
+#.
+#. * Local variables:
+#. *  c-indent-level: 4
+#. *  c-basic-offset: 4
+#. *  indent-tabs-mode: nil
+#. * End:
+#.
+#: ../src/resources/ui/virt-viewer-auth.ui.h:1
+msgid "Authentication required"
+msgstr "Es requereix autenticació"
+
+#: ../src/resources/ui/virt-viewer-auth.ui.h:3
+msgid "_OK"
+msgstr "D'ac_ord"
+
+#: ../src/resources/ui/virt-viewer-auth.ui.h:4
+#: ../src/resources/ui/virt-viewer-guest-details.ui.h:5
+#: ../src/resources/ui/virt-viewer-file-transfer-dialog.ui.h:1
+msgid "label"
+msgstr "etiqueta"
+
+#: ../src/resources/ui/virt-viewer-auth.ui.h:5
+msgid "Password:"
+msgstr "Contrasenya:"
+
+#: ../src/resources/ui/virt-viewer-auth.ui.h:6
+msgid "Username:"
+msgstr "Nom d'usuari:"
+
+#: ../src/resources/ui/virt-viewer-auth.ui.h:7
+msgid "Show password"
+msgstr "Mostra la contrasenya"
+
+#: ../src/virt-viewer-display-vnc.c:134
+msgid "VNC does not provide GUID"
+msgstr "VNC no proporciona GUID"
+
+#: ../src/virt-viewer-file-transfer-dialog.c:122
+msgid "File Transfers"
+msgstr "Transferències de fitxers"
+
+#: ../src/virt-viewer-file-transfer-dialog.c:145
+#, c-format
+msgid "Transferring %d file..."
+msgid_plural "Transferring %d files..."
+msgstr[0] ""
+
+#: ../src/virt-viewer-file-transfer-dialog.c:203
+#, c-format
+msgid "An error caused the following file transfers to fail:%s"
+msgstr ""
+
+#: ../src/virt-viewer-main.c:38
+msgid "Virt Viewer"
+msgstr "Virt Viewer"
+
+#: ../src/virt-viewer-session-spice.c:705
+msgid "Invalid password"
+msgstr "La contrasenya no és vàlida"
+
+#. Create the widgets
+#: ../src/virt-viewer-session-spice.c:797
+msgid "Select USB devices for redirection"
+msgstr "Seleccioneu els dispositius USB per a la redirecció"
+
+#: ../src/virt-viewer-session-spice.c:799
+#: ../src/resources/ui/virt-viewer-guest-details.ui.h:2
+msgid "_Close"
+msgstr "Tan_ca"
+
+#: ../src/virt-viewer-session-vnc.c:156
+#, c-format
+msgid "Unsupported authentication type %d"
+msgstr "El tipus d'autenticació no és compatible %d"
+
+#: ../src/virt-viewer-vm-connection.c:64
+msgid "No virtual machine found"
+msgstr "No s'han trobat màquines virtuals"
+
+#: ../src/virt-viewer-vm-connection.c:93
+msgid "No virtual machine was chosen"
+msgstr "No s'ha triat cap màquina virtual"
+
+#: ../src/virt-viewer-window.c:538
+msgid "Ctrl+Alt+_Del"
+msgstr "Ctrl+Alt+_ Supr"
+
+#: ../src/virt-viewer-window.c:539
+msgid "Ctrl+Alt+_Backspace"
+msgstr "Ctrl+Alt+_Retrocés"
+
+#: ../src/virt-viewer-window.c:541
+msgid "Ctrl+Alt+F_1"
+msgstr "Ctrl+Alt+F_1"
+
+#: ../src/virt-viewer-window.c:542
+msgid "Ctrl+Alt+F_2"
+msgstr "Ctrl+Alt+F_2"
+
+#: ../src/virt-viewer-window.c:543
+msgid "Ctrl+Alt+F_3"
+msgstr "Ctrl+Alt+F_3"
+
+#: ../src/virt-viewer-window.c:544
+msgid "Ctrl+Alt+F_4"
+msgstr "Ctrl+Alt+F_4"
+
+#: ../src/virt-viewer-window.c:545
+msgid "Ctrl+Alt+F_5"
+msgstr "Ctrl+Alt+F_5"
+
+#: ../src/virt-viewer-window.c:546
+msgid "Ctrl+Alt+F_6"
+msgstr "Ctrl+Alt+F_6"
+
+#: ../src/virt-viewer-window.c:547
+msgid "Ctrl+Alt+F_7"
+msgstr "Ctrl+Alt+F_7"
+
+#: ../src/virt-viewer-window.c:548
+msgid "Ctrl+Alt+F_8"
+msgstr "Ctrl+Alt+F_8"
+
+#: ../src/virt-viewer-window.c:549
+msgid "Ctrl+Alt+F_9"
+msgstr "Ctrl+Alt+F_9"
+
+#: ../src/virt-viewer-window.c:550
+msgid "Ctrl+Alt+F1_0"
+msgstr "Ctrl+Alt+F1_0"
+
+#: ../src/virt-viewer-window.c:551
+msgid "Ctrl+Alt+F11"
+msgstr "Ctrl+Alt+F11"
+
+#: ../src/virt-viewer-window.c:552
+msgid "Ctrl+Alt+F12"
+msgstr "Ctrl+Alt+F12"
+
+#: ../src/virt-viewer-window.c:923
+msgid "_Save"
+msgstr "De_sa"
+
+#: ../src/virt-viewer-window.c:931
+msgid "Screenshot"
+msgstr "Captura de pantalla"
+
+#: ../src/virt-viewer-window.c:1000 ../src/virt-viewer-window.c:1002
+msgid "Unknown"
+msgstr "Desconegut"
+
+#: ../src/virt-viewer-window.c:1075
+msgid "Disconnect"
+msgstr "Desconnecta"
+
+#: ../src/virt-viewer-window.c:1083 ../src/virt-viewer-window.c:1084
+msgid "USB device selection"
+msgstr "Selecció del dispositiu USB"
+
+#: ../src/virt-viewer-window.c:1093
+msgid "Send key combination"
+msgstr "Envia una combinació de tecles"
+
+#: ../src/virt-viewer-window.c:1103 ../src/virt-viewer-window.c:1104
+msgid "Leave fullscreen"
+msgstr "Deixa la pantalla completa"
+
+#: ../src/virt-viewer-window.c:1179
+msgid "Ctrl+Alt"
+msgstr "Ctrl+Alt"
+
+#: ../src/virt-viewer-window.c:1182
+#, c-format
+msgid "(Press %s to release pointer)"
+msgstr "(Premeu %s per alliberar el punter)"
+
+#. translators:
+#. * This is "<ungrab (or empty)><space (or empty)><subtitle (or empty)> - <appname>"
+#. * Such as: "(Press Ctrl+Alt to release pointer) BigCorpTycoon MOTD - Virt Viewer"
+#.
+#: ../src/virt-viewer-window.c:1193
+#, c-format
+msgid "%s%s%s - %s"
+msgstr "%s%s%s - %s"
+
+#. translators: <space>
+#: ../src/virt-viewer-window.c:1197
+msgid " "
+msgstr " "
+
+#: ../src/virt-viewer-file.c:843
+#, c-format
+msgid ""
+"At least %s version %s is required to setup this connection, see %s for "
+"details"
+msgstr ""
+"Com a mínim %s versió %s es requereix per a configurar aquesta connexió, "
+"vegeu %s per a més detalls"
+
+#: ../src/virt-viewer-file.c:851
+#, c-format
+msgid "At least %s version %s is required to setup this connection"
+msgstr "Com a mínim es necessita %s versió %s per preparar aquesta connexió"
+
+#: ../src/virt-viewer.c:90
+msgid "Direct connection with no automatic tunnels"
+msgstr "Connexió directa sense túnels automàtics"
+
+#: ../src/virt-viewer.c:92
+msgid "Attach to the local display using libvirt"
+msgstr "Adjunta a la pantalla local mitjançant libvirt"
+
+#: ../src/virt-viewer.c:94
+msgid "Connect to hypervisor"
+msgstr "Connecta a l'hipervisor"
+
+#: ../src/virt-viewer.c:96
+msgid "Wait for domain to start"
+msgstr "Espera el domini per iniciar"
+
+#: ../src/virt-viewer.c:98
+msgid "Reconnect to domain upon restart"
+msgstr "Torna a connectar al domini en reiniciar"
+
+#: ../src/virt-viewer.c:105
+msgid "Virtual machine graphical console"
+msgstr "Consola gràfica de la màquina virtual"
+
+#: ../src/virt-viewer.c:124
+#, c-format
+msgid ""
+"\n"
+"Usage: %s [OPTIONS] [DOMAIN-NAME|ID|UUID]\n"
+"\n"
+msgstr ""
+"\n"
+"Ús: %s [OPCIONS] [NOM-DOMINI|ID|UUID]\n"
+
+#: ../src/virt-viewer.c:136
+#, c-format
+msgid ""
+"\n"
+"No DOMAIN-NAME|ID|UUID was specified for '--wait'\n"
+"\n"
+msgstr ""
+"\n"
+"Cap NOM-DOMINI|ID|UUID es va especificar per a '--wait'\n"
+"\n"
+
+#: ../src/virt-viewer.c:250
+msgid "Waiting for guest domain to re-start"
+msgstr "A l'espera del domini del convidat per tornar a iniciar"
+
+#: ../src/virt-viewer.c:496
+#, c-format
+msgid "Cannot determine the graphic type for the guest %s"
+msgstr "No es pot determinar el tipus de gràfics per al convidat %s"
+
+#: ../src/virt-viewer.c:535
+#, c-format
+msgid "Cannot determine the host for the guest %s"
+msgstr "No s'ha pogut determinar l'amfitrió per al convidat %s"
+
+#: ../src/virt-viewer.c:563
+#, c-format
+msgid "Guest '%s' is not reachable"
+msgstr "El convidat «%s» no és accessible"
+
+#: ../src/virt-viewer.c:787
+#, c-format
+msgid "Virtual machine %s is not running"
+msgstr "La màquina virtual %s no s'està executant"
+
+#: ../src/virt-viewer.c:810
+msgid "Waiting for libvirt to start"
+msgstr "A l'espera de libvirt per iniciar"
+
+#: ../src/virt-viewer.c:814
+msgid "Finding guest domain"
+msgstr "S'està cercant el domini del convidat"
+
+#: ../src/virt-viewer.c:818
+msgid "Waiting for guest domain to be created"
+msgstr "A l'espera de la creació del domini del convidat"
+
+#: ../src/virt-viewer.c:840
+msgid "Checking guest domain status"
+msgstr "S'està comprovant l'estat del domini del convidat"
+
+#: ../src/virt-viewer.c:843
+msgid "Cannot get guest state"
+msgstr "No es pot obtenir l'estat del convidat"
+
+#: ../src/virt-viewer.c:849
+msgid "Waiting for guest domain to start"
+msgstr "A l'espera del domini del convidat a iniciar"
+
+#: ../src/virt-viewer.c:953
+#, c-format
+msgid "Unable to connect to libvirt with URI: %s."
+msgstr "No s'ha pogut connectar a libvirt amb l'URI: %s."
+
+#: ../src/virt-viewer.c:954
+msgid "[none]"
+msgstr "[cap]"
+
+#: ../src/virt-viewer.c:961
+msgid "Authentication failed."
+msgstr "L'autentificació ha fallat."
+
+#: ../src/virt-viewer.c:1021
+msgid "Failed to connect: "
+msgstr "Ha fallat la connexió: "
+
+#.
+#. * Local variables:
+#. *  c-indent-level: 4
+#. *  c-basic-offset: 4
+#. *  indent-tabs-mode: nil
+#. * End:
+#.
+#: ../src/resources/ui/virt-viewer.ui.h:1
+msgid "_File"
+msgstr "_Fitxer"
+
+#: ../src/resources/ui/virt-viewer.ui.h:2
+msgid "_Screenshot"
+msgstr "Captura _de pantalla"
+
+#: ../src/resources/ui/virt-viewer.ui.h:3
+msgid "_USB device selection"
+msgstr "Selecció del dispositiu _USB"
+
+#: ../src/resources/ui/virt-viewer.ui.h:4
+msgid "Smartcard insertion"
+msgstr "Inserció d'una targeta intel·ligent"
+
+#: ../src/resources/ui/virt-viewer.ui.h:5
+msgid "Smartcard removal"
+msgstr "Extracció d'una targeta intel·ligent"
+
+#: ../src/resources/ui/virt-viewer.ui.h:6
+msgid "_Preferences"
+msgstr "_Preferències"
+
+#: ../src/resources/ui/virt-viewer.ui.h:7
+msgid "_Quit"
+msgstr "_Surt"
+
+#: ../src/resources/ui/virt-viewer.ui.h:8
+msgid "_View"
+msgstr "_Visualitza"
+
+#: ../src/resources/ui/virt-viewer.ui.h:9
+msgid "_Full screen"
+msgstr "Panta_lla completa"
+
+#: ../src/resources/ui/virt-viewer.ui.h:10
+msgid "_Zoom"
+msgstr "_Zoom"
+
+#: ../src/resources/ui/virt-viewer.ui.h:11
+msgid "Zoom _In"
+msgstr "_Augmenta el zoom"
+
+#: ../src/resources/ui/virt-viewer.ui.h:12
+msgid "Zoom _Out"
+msgstr "_Disminueix el zoom"
+
+#: ../src/resources/ui/virt-viewer.ui.h:13
+msgid "_Normal Size"
+msgstr "_Mida normal"
+
+#: ../src/resources/ui/virt-viewer.ui.h:14
+msgid "_Displays"
+msgstr "_Monitors"
+
+#: ../src/resources/ui/virt-viewer.ui.h:15
+msgid "Release cursor"
+msgstr "Allibera el cursor"
+
+#: ../src/resources/ui/virt-viewer.ui.h:16
+msgid "_Send key"
+msgstr "Envia _tecles"
+
+#: ../src/resources/ui/virt-viewer.ui.h:17
+msgid "_Help"
+msgstr "A_juda"
+
+#: ../src/resources/ui/virt-viewer.ui.h:18
+msgid "_Guest Details"
+msgstr "_Detalls del convidat"
+
+#: ../src/resources/ui/virt-viewer.ui.h:19
+msgid "_About"
+msgstr "_Quant a"
+
+#: ../src/resources/ui/virt-viewer.ui.h:20
+msgid "_Change CD"
+msgstr "_Canvia CD"
+
+#: ../src/resources/ui/virt-viewer-guest-details.ui.h:1
+msgid "Guest Details"
+msgstr "Detalls del convidat"
+
+#: ../src/resources/ui/virt-viewer-guest-details.ui.h:3
+msgid "Name:"
+msgstr "Nom:"
+
+#: ../src/resources/ui/virt-viewer-guest-details.ui.h:4
+msgid "GUID:"
+msgstr "GUID:"
+
+#: ../src/resources/ui/virt-viewer-vm-connection.ui.h:1
+msgid "Choose a virtual machine"
+msgstr "Trieu una màquina virtual"
+
+#: ../src/resources/ui/virt-viewer-vm-connection.ui.h:4
+msgid "Name"
+msgstr "Nom"
+
+#: ../src/resources/ui/virt-viewer-vm-connection.ui.h:5
+msgid "Available virtual machines"
+msgstr "Màquines virtuals disponibles"
+
+#: ../src/resources/ui/virt-viewer-preferences.ui.h:1
+msgid "Preferences"
+msgstr "Preferències"
+
+#: ../src/resources/ui/virt-viewer-preferences.ui.h:2
+msgid "Folder sharing"
+msgstr "Compartició de carpetes"
+
+#: ../src/resources/ui/virt-viewer-preferences.ui.h:3
+msgid "Share folder"
+msgstr "Comparteix la carpeta"
+
+#: ../src/resources/ui/virt-viewer-preferences.ui.h:4
+msgid "Read-only"
+msgstr "Només lectura"
+
+#: ../src/resources/ui/virt-viewer-preferences.ui.h:5
+msgid "Spice"
+msgstr "Spice"

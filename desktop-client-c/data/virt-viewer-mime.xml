@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mime-info xmlns="http://www.freedesktop.org/standards/shared-mime-info">
+  <mime-type type="application/x-virt-viewer">
+    <sub-class-of type="text/plain"/>
+    <comment>Virt-Viewer connection file</comment>
+    <comment xml:lang="as">Virt-Viewer সংযোগ ফাইল</comment>
+    <comment xml:lang="bg">Virt-Viewer файл за връзка</comment>
+    <comment xml:lang="bn_IN">Virt-Viewer সংযোগ ফাইল</comment>
+    <comment xml:lang="ca">Fitxer de connexió Virt-Viewer</comment>
+    <comment xml:lang="de">Virt-Viewer Verbindungsdatei</comment>
+    <comment xml:lang="es">Fichero de conexión Virt-Viewer</comment>
+    <comment xml:lang="fr">Fichier de connexion Virt-Viewer</comment>
+    <comment xml:lang="gu">Virt-Viewer જોડાણ ફાઇલ</comment>
+    <comment xml:lang="hi">Virt-Viewer कनेक्शन फ़ाइल</comment>
+    <comment xml:lang="hu">Virt-Viewer kapcsolódási fájl</comment>
+    <comment xml:lang="it">File di connessione Virt-Viewer</comment>
+    <comment xml:lang="ja">Virt-Viewer 接続ファイル</comment>
+    <comment xml:lang="kn">Virt-Viewer ಸಂಪರ್ಕ ಕಡತ</comment>
+    <comment xml:lang="ko">Virt-Viewer 연결 파일 </comment>
+    <comment xml:lang="ml">Virt-Viewer കണക്ഷന്‍ ഫയല്‍</comment>
+    <comment xml:lang="mr">वर्ट-व्युअर जोडणी फाइल</comment>
+    <comment xml:lang="nl">Virt-Viewer verbindingsbestand</comment>
+    <comment xml:lang="or">Virt-Viewer ସଂଯୋଗ ଫାଇଲ</comment>
+    <comment xml:lang="pa">Virt-Viewer ਸੰਪਰਕ ਫਾਈਲ</comment>
+    <comment xml:lang="pl">Plik połączenia programu Virt-Viewer</comment>
+    <comment xml:lang="pt_BR">Virt-Viewer arquivo conexão</comment>
+    <comment xml:lang="ru">Файл соединения virt-viewer</comment>
+    <comment xml:lang="sv">Virt-viewers anslutningsfil</comment>
+    <comment xml:lang="ta">Virt-Viewer இணைப்புக் கோப்பு</comment>
+    <comment xml:lang="te">Virt-Viewer నియంత్రిక ఫైల్</comment>
+    <comment xml:lang="uk">Файл з’єднань Virt-Viewer</comment>
+    <comment xml:lang="zh_CN">Virt-Viewer 连接文件</comment>
+    <comment xml:lang="zh_TW">Virt-Viewer 連線檔案</comment>
+    <magic priority="50">
+      <match value="[virt-viewer]" type="string" offset="0"/>
+    </magic>
+    <glob pattern="*.vv"/>
+  </mime-type>
+</mime-info>
