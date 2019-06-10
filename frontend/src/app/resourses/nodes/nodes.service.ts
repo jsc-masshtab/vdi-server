@@ -10,7 +10,7 @@ export class NodesService {
     constructor(private service: Apollo) {}
 
     public getAllNodes(cluster_id?:string): QueryRef<any,any> {
-        let controller_ip = JSON.parse(localStorage.getItem('controller'));
+       let controller_ip = JSON.parse(localStorage.getItem('controller'));
         return  this.service.watchQuery({
             query:  gql` query allNodes($controller_ip: String,$cluster_id: String) {
                             nodes(controller_ip: $controller_ip,cluster_id: $cluster_id) {

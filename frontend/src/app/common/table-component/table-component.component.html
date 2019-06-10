@@ -29,7 +29,7 @@
   </div>
 </ng-container>
 
-<ng-container *ngIf="data && !data.length && !spinner">
+<ng-container *ngIf="data && !data.length && !spinner || !data">
   <div class="table-component">
     <div class="table-area-object">
       <div class="table-area-property">

@@ -55,6 +55,7 @@ export class ClustersComponent implements OnInit {
     this.service.getAllClusters().valueChanges.pipe(map(data => data.data.clusters))
       .subscribe( (data) => {
         this.clusters = data;
+        console.log(this.clusters,'dkdkdk');
         this.crumbs.push({
             title: 'Кластеры',
             icon: 'building'

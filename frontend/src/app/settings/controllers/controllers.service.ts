@@ -41,4 +41,20 @@ export class ControllersService  {
             }
         })
     }
+
+    public removeController(controller_ip:string) {
+        return this.service.mutate<any>({
+            mutation: gql`  
+                            mutation RemoveController($controller_ip: String) {
+                                removeController(controller_ip: $controller_ip) {
+                                    ok
+                                }
+                            }
+            `,
+            variables: {
+                method: 'POST',
+                controller_ip: controller_ip
+            }
+        })
+    }
 }
