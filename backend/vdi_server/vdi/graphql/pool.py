@@ -35,6 +35,11 @@ class TemplateType(graphene.ObjectType):
         from vdi.graphql.resources import NodeType
         return NodeType
 
+    def resolve_info(self, info):
+        if isinstance(self.info, dict):
+            return json.dumps(self.info)
+        return self.info
+
 
 class RunningState(graphene.Enum):
     RUNNING = 1
