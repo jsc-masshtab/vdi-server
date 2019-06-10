@@ -55,13 +55,9 @@ vdi-footer {
     width: 100%;
 }
 
-::-webkit-scrollbar-track {
-    background-color:#ecedee
-}
-
 ::-webkit-scrollbar-thumb {
-    -webkit-border-radius: 0px;
-    border-radius: 0px;
+    -webkit-border-radius: 5px;
+    border-radius: 5px;
     background-color:#d9ecf4;
 }
 
@@ -109,11 +105,4 @@ vdi-footer {
             }
         }
     }
-}
-
-
-.cdk-overlay-container {
-    display: flex;
-    justify-content: center;
-    align-items: center;
 }

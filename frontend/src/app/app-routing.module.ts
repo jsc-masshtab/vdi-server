@@ -12,7 +12,7 @@ import { ClusterDetailsComponent } from './resourses/clusters/cluster-details/cl
 const routes: Routes = [
   {
     path:'',
-    redirectTo: 'resourses/clusters',
+    redirectTo: 'pools',
     pathMatch: 'full'
   },
   {
@@ -49,7 +49,7 @@ const routes: Routes = [
   },
   {
     path: '**',
-    redirectTo: 'resourses/clusters'
+    redirectTo: 'pools'
   }
 ];
 
