@@ -333,3 +333,40 @@ class AddController(graphene.Mutation):
         await AddController._add_controller(ip=ip, set_default=set_default, description=description)
         return AddController(ok=True)
 
+
+class RemoveController(graphene.Mutation):
+    class Arguments:
+        controller_ip = graphene.String()
+
+    ok = graphene.Boolean()
+
+    @classmethod
+    async def remove_pools(cls, *, controller_ip, conn: Connection):
+        qu = "SELECT id FROM pool WHERE controller_ip = $1", controller_ip
+        pools = await conn.fetch(*qu)
+
+        from vdi.graphql.pool import RemovePool
+        tasks = [
+            RemovePool.do_remove(pool['id'], conn=conn)
+            for pool in pools
+        ]
+        # FIXME!!!
+        for t in tasks:
+            await t
+        # async for _ in wait(*tasks):
+        #     pass
+
+
+    @enter_context(lambda: db.connect())
+    async def mutate(conn: Connection, self, info, controller_ip=None):
+        if controller_ip is None:
+            controller_ip = await get_controller_ip()
+        await RemoveController.remove_pools(controller_ip=controller_ip, conn=conn)
+        query = "DELETE FROM default_controller WHERE ip = $1", controller_ip
+        await conn.fetch(*query)
+        query = f"DELETE FROM controller WHERE ip=$1", controller_ip
+        await conn.execute(*query)
+
+        return RemoveController(ok=True)
+
+

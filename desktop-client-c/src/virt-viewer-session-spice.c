@@ -36,7 +36,7 @@
 #include "virt-viewer-display-spice.h"
 #include "virt-viewer-auth.h"
 
-gchar *m_password;
+gchar *m_password = NULL;
 
 G_DEFINE_TYPE (VirtViewerSessionSpice, virt_viewer_session_spice, VIRT_VIEWER_TYPE_SESSION)
 
@@ -690,8 +690,7 @@ virt_viewer_session_spice_main_channel_event(SpiceChannel *channel,
     case SPICE_CHANNEL_SWITCHING:
         g_debug("main channel: switching host");
         break;
-    case SPICE_CHANNEL_ERROR_AUTH:
-    {
+    case SPICE_CHANNEL_ERROR_AUTH: {
         const GError *error = NULL;
         gchar *host = NULL;
         g_debug("main channel: auth failure (wrong username/password?)");
@@ -724,15 +723,20 @@ virt_viewer_session_spice_main_channel_event(SpiceChannel *channel,
         printf(m_password);
         printf("\n");
 
-        ret = GTK_RESPONSE_OK;
         // set password
-        password = g_strdup(m_password);
-        /*ret = virt_viewer_auth_collect_credentials(self->priv->main_window,
-                                                   "SPICE",
-                                                   host,
-                                                   username_required ? &user : NULL,
-                                                   &password);*/
-
+        // Берем пароль с формы m_password_connect
+        if (m_password) {
+            password = g_strdup(m_password);
+            ret = GTK_RESPONSE_OK;
+        }
+        // Если с формы получили неправильный пароль , то вызываем форму авторизации
+        else{
+            ret = virt_viewer_auth_collect_credentials(self->priv->main_window,
+                                                       "SPICE",
+                                                       host,
+                                                       username_required ? &user : NULL,
+                                                       &password);
+        }
 
         g_free(host);
         if (!ret) {
@@ -791,6 +795,10 @@ virt_viewer_session_spice_main_channel_event(SpiceChannel *channel,
         break;
     }
 
+    if(m_password) {
+        g_free(m_password);
+        m_password = NULL;
+    }
     g_free(password);
     g_free(user);
 }
