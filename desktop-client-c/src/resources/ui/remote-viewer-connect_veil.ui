@@ -47,7 +47,7 @@
               <object class="GtkEntry" id="connection-port-entry">
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
-                <property name="text" translatable="yes">5904</property>
+                <property name="text" translatable="yes">5908</property>
               </object>
               <packing>
                 <property name="left_attach">1</property>

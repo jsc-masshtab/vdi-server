@@ -15,7 +15,7 @@
     <property name="program_name">ECP Veil VDI тонкий клиент</property>
     <property name="website">http://mashtab.org/</property>
     <property name="website_label" translatable="yes">mashtab.org</property>
-    <property name="authors">АО  "НИИ Масштаб"
+    <property name="authors">Автор  АО  "НИИ Масштаб"
 </property>
     <property name="logo_icon_name">image-missing</property>
     <property name="license_type">custom</property>

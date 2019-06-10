@@ -220,7 +220,7 @@
                     <property name="use_action_appearance">False</property>
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
-                    <property name="label" translatable="yes">_Send key</property>
+                    <property name="label" translatable="yes">_Послать сочетания клавиш</property>
                     <property name="use_underline">True</property>
                   </object>
                 </child>
