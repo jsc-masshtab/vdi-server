@@ -1044,6 +1044,7 @@ G_MODULE_EXPORT void
 virt_viewer_window_menu_help_guest_details(GtkWidget *menu G_GNUC_UNUSED,
                                            VirtViewerWindow *self)
 {
+    /*
     GtkBuilder *ui = virt_viewer_util_load_ui("virt-viewer-guest-details.ui");
     char *name = NULL;
     char *uuid = NULL;
@@ -1075,6 +1076,7 @@ virt_viewer_window_menu_help_guest_details(GtkWidget *menu G_GNUC_UNUSED,
     gtk_widget_show_all(dialog);
 
     g_object_unref(G_OBJECT(ui));
+    */
 }
 
 G_MODULE_EXPORT void
