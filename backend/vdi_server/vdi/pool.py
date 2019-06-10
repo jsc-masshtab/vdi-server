@@ -5,7 +5,7 @@ import asyncio
 from .utils import callback
 from .context_utils import enter_context
 
-from classy_async import g
+from classy_async import g, wait
 
 from dataclasses import dataclass
 

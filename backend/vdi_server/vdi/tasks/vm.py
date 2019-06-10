@@ -264,6 +264,7 @@ class CopyDomain(UrlFetcher):
 @dataclass()
 class DropDomain(Task):
     id: str
+    full: bool = True
 
     @cached
     def url(self):
@@ -275,7 +276,9 @@ class DropDomain(Task):
             'Authorization': f'jwt {token}',
         }
         http_client = HttpClient()
-        await http_client.fetch(self.url, method='POST', headers=headers, body=b'')
+        body = urllib.parse.urlencode({'full': self.full})
+
+        await http_client.fetch(self.url, method='POST', headers=headers, body=body)
 
 
 @dataclass()
