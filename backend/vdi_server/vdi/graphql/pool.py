@@ -35,6 +35,11 @@ class TemplateType(graphene.ObjectType):
         from vdi.graphql.resources import NodeType
         return NodeType
 
+    def resolve_info(self, info):
+        if isinstance(self.info, dict):
+            return json.dumps(self.info)
+        return self.info
+
 
 class RunningState(graphene.Enum):
     RUNNING = 1
@@ -93,6 +98,24 @@ class VmType(graphene.ObjectType):
         obj = Resources._make_type(NodeType, node)
         obj.controller_ip = controller_ip
         return obj
+
+    async def resolve_template(self, info):
+        if self.template:
+            # TODO make sure all fields are available
+            return self.template
+        async with db.connect() as conn:
+            data = await conn.fetch("select template_id from vm where id = $1", self.id)
+            if not data:
+                return None
+            [(template_id,)] = data
+            if get_selections(info) == ['id']:
+                return TemplateType(id=template_id)
+            if self.controller_ip is None:
+                from vdi.graphql.resources import get_controller_ip
+                self.controller_ip = await get_controller_ip()
+            from vdi.tasks.vm import GetDomainInfo
+            template = await GetDomainInfo(controller_ip=self.controller_ip, domain_id=template_id)
+            return TemplateType(id=template_id, info=template, name=template['verbose_name'])
 
     info = None
 
@@ -231,31 +254,22 @@ class RemovePool(graphene.Mutation):
     #TODO VmType
 
     @classmethod
-    async def do_remove(cls, pool_id, *, conn: Connection):
+    @enter_context(lambda: db.connect())
+    async def do_remove(conn: Connection, cls, pool_id):
         pool = await Pool.get_pool(pool_id)
         vms = await pool.load_vms(conn)
         vm_ids = [v['id'] for v in vms]
 
-        # FIXME rename: vm -> domain
+        tasks = [vm.DropDomain(id=vm_id) for vm_id in vm_ids]
 
-        async def drop_vm(vm_id):
-            await vm.DropDomain(id=vm_id)
-            await conn.fetch("DELETE FROM vm WHERE id = $1", vm_id)
+        async for _ in wait(*tasks):
+            pass
 
-        tasks = [drop_vm(vm_id) for vm_id in vm_ids]
-        #FIXME
-        for t in tasks:
-            await t
-
-        # async for _ in wait(*tasks):
-        #     pass
-
-
+        await conn.fetch("DELETE FROM vm WHERE id = ANY($1)", vm_ids)
         await conn.fetch("DELETE FROM pool WHERE id = $1", pool_id)
         return vm_ids
 
-    @enter_context(lambda: db.connect())
-    async def mutate(conn: Connection, self, info, id):
+    async def mutate(self, info, id):
         vm_ids = await RemovePool.do_remove(id)
         return RemovePool(ok=True, ids=vm_ids)
 

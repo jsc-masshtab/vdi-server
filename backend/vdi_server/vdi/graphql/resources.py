@@ -19,6 +19,7 @@ from .pool import PoolSettings, TemplateType, VmType
 class ControllerType(graphene.ObjectType):
     ip = graphene.String()
     description = graphene.String()
+    default = graphene.Boolean()
 
 
 class DatacenterType(graphene.ObjectType):
@@ -165,6 +166,8 @@ class DatapoolType(graphene.ObjectType):
 @enter_context(lambda: db.connect())
 async def get_controller_ip(conn: Connection):
     res = await conn.fetch("SELECT ip FROM default_controller LIMIT 1")
+    if not res:
+        return None
     [(ip,)] = res
     return ip
 
@@ -246,9 +249,13 @@ class Resources:
             li.append(obj)
         return li
 
-    async def resolve_cluster(self, info, id, controller_ip=None):
+    async def resolve_cluster(self, info, id=None, controller_ip=None):
         if controller_ip is None:
             controller_ip = await get_controller_ip()
+        if id is None:
+            from vdi.tasks.admin import discover_resources
+            discovered = await discover_resources()
+            [id] = discovered['clusters']
         resp = await resources.FetchCluster(controller_ip=controller_ip, cluster_id=id)
         obj = Resources._make_type(ClusterType, resp)
         obj.controller_ip = controller_ip
@@ -280,6 +287,11 @@ class Resources:
 
     @enter_context(lambda: db.connect())
     async def resolve_controllers(conn: Connection, self, info):
+        default = await conn.fetch("SELECT ip FROM default_controller")
+        if default:
+            [(default,)] = default
+        else:
+            default = None
         query = "SELECT ip, description from controller"
         items = await conn.fetch(query)
         return [
@@ -342,22 +354,20 @@ class RemoveController(graphene.Mutation):
 
     @classmethod
     async def remove_pools(cls, *, controller_ip, conn: Connection):
-        qu = "SELECT id FROM pool WHERE controller_ip = $1", controller_ip
-        pools = await conn.fetch(*qu)
+        async with db.connect() as c:
+            qu = "SELECT id FROM pool WHERE controller_ip = $1", controller_ip
+            pools = await c.fetch(*qu)
 
         from vdi.graphql.pool import RemovePool
         tasks = [
-            RemovePool.do_remove(pool['id'], conn=conn)
+            RemovePool.do_remove(pool['id'])
             for pool in pools
         ]
-        # FIXME!!!
-        for t in tasks:
-            await t
-        # async for _ in wait(*tasks):
-        #     pass
+        async for _ in wait(*tasks):
+            pass
 
 
-    @enter_context(lambda: db.connect())
+    @enter_context(lambda: db.transaction())
     async def mutate(conn: Connection, self, info, controller_ip=None):
         if controller_ip is None:
             controller_ip = await get_controller_ip()

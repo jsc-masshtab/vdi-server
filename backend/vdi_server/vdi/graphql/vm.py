@@ -116,7 +116,7 @@ class TemplateMixin:
 
     templates = graphene.List(TemplateType,
                               controller_ip=graphene.String(), cluster_id=graphene.String(), node_id=graphene.String())
-    vms = graphene.List(TemplateType,
+    vms = graphene.List(VmType,
                         controller_ip=graphene.String(), cluster_id=graphene.String(), node_id=graphene.String())
 
 
