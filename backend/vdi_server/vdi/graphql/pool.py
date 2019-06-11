@@ -14,7 +14,6 @@ from .users import UserType
 
 
 
-
 # TODO TemplateType == VmType
 
 from vdi.tasks import vm
@@ -248,29 +247,36 @@ class AddPool(graphene.Mutation):
 class RemovePool(graphene.Mutation):
     class Arguments:
         id = graphene.Int()
+        controller_ip = graphene.String()
 
     ok = graphene.Boolean()
     ids = graphene.List(graphene.String)
     #TODO VmType
 
     @classmethod
-    @enter_context(lambda: db.connect())
-    async def do_remove(conn: Connection, cls, pool_id):
+    async def do_remove(cls, pool_id, *, controller_ip):
         pool = await Pool.get_pool(pool_id)
-        vms = await pool.load_vms(conn)
+        async with db.connect() as conn:
+            vms = await pool.load_vms(conn)
         vm_ids = [v['id'] for v in vms]
 
-        tasks = [vm.DropDomain(id=vm_id) for vm_id in vm_ids]
+        tasks = [
+            vm.DropDomain(id=vm_id, controller_ip=controller_ip)
+            for vm_id in vm_ids
+        ]
 
         async for _ in wait(*tasks):
             pass
-
-        await conn.fetch("DELETE FROM vm WHERE id = ANY($1)", vm_ids)
-        await conn.fetch("DELETE FROM pool WHERE id = $1", pool_id)
+        async with db.connect() as conn:
+            await conn.fetch("DELETE FROM vm WHERE id = ANY($1)", vm_ids)
+            await conn.fetch("DELETE FROM pool WHERE id = $1", pool_id)
         return vm_ids
 
-    async def mutate(self, info, id):
-        vm_ids = await RemovePool.do_remove(id)
+    async def mutate(self, info, id, controller_ip=None):
+        if controller_ip is None:
+            from vdi.graphql.resources import get_controller_ip
+            controller_ip = await get_controller_ip()
+        vm_ids = await RemovePool.do_remove(id, controller_ip=controller_ip)
         return RemovePool(ok=True, ids=vm_ids)
 
 

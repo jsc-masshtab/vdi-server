@@ -3,6 +3,7 @@ from starlette.responses import JSONResponse
 from vdi.db import db
 from vdi.pool import Pool
 from vdi.tasks import thin_client
+from vdi.settings import settings
 
 from . import app
 
@@ -28,7 +29,7 @@ async def get_pools(request):
 async def get_vm(request):
     async with db.connect() as conn:
         # FIXME
-        controller_ip = '192.168.20.120'
+        controller_ip = settings['controller_ip']
 
         user = request.user.username
         pool_id = int(request.path_params['pool_id'])

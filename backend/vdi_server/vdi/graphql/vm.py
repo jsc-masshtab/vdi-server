@@ -11,7 +11,7 @@ from ..tasks.vm import SetupDomain, DropDomain, ListVms, GetDomainInfo
 
 from .util import get_selections
 from .pool import PoolSettings, TemplateType, VmType
-from .resources import NodeType
+from .resources import NodeType, get_controller_ip
 
 
 from vdi.context_utils import enter_context
@@ -56,12 +56,15 @@ class CreateTemplate(graphene.Mutation):
 class DropTemplate(graphene.Mutation):
     class Arguments:
         id = graphene.String()
+        controller_ip = graphene.String()
 
     ok = graphene.Boolean()
 
     @enter_context(lambda: db.connect())
-    async def mutate(conn: Connection, self, info, id):
-        await DropDomain(id=id)
+    async def mutate(conn: Connection, self, info, id, controller_ip=None):
+        if controller_ip is None:
+            controller_ip = await get_controller_ip()
+        await DropDomain(id=id, controller_ip=controller_ip)
         qu = "DELETE from template_vm WHERE id = $1", id
         await conn.fetch(*qu)
         return DropTemplate(ok=True)
@@ -99,8 +102,9 @@ class AddTemplate(graphene.Mutation):
             controller_ip = await get_controller_ip()
         from vdi.tasks import Token, HttpClient
         url = f"http://{controller_ip}/api/domains/{id}/"
+        token = await Token(controller_ip=self.controller_ip)
         headers = {
-            'Authorization': f'jwt {await Token()}',
+            'Authorization': f'jwt {token}',
         }
         info = await HttpClient().fetch(url, headers=headers)
         qu = "INSERT INTO template_vm (id, veil_info) VALUES ($1, $2) ON CONFLICT DO NOTHING", id, json.dumps(info)

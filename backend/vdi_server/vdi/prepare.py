@@ -12,13 +12,13 @@ from vdi.db import db
 async def add_controller(ip):
     from vdi.graphql.resources import AddController
     await db.init()
-    await AddController._add_controller(ip='192.168.20.120', set_default=True)
+    await AddController._add_controller(ip=ip, set_default=True)
 
 
 async def main():
     if not settings['debug']:
         return
-    await add_controller('192.168.20.120')
+    await add_controller(settings['controller_ip'])
     tasks = [
         admin.AddNode(management_ip='192.168.20.121', controller_ip=settings['controller_ip']),
         admin.DownloadImage(target='image.qcow2'),
