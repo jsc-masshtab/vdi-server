@@ -112,19 +112,19 @@
 #define PACKAGE_BUGREPORT ""
 
 /* Define to the full name of this package. */
-#define PACKAGE_NAME "virt-viewer"
+#define PACKAGE_NAME "ECP-Veil-VDI-Thin-client"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "virt-viewer 6.0"
+#define PACKAGE_STRING "ECP-Veil-VDI-Thin-client"
 
 /* Define to the one symbol short name of this package. */
-#define PACKAGE_TARNAME "virt-viewer"
+#define PACKAGE_TARNAME "ECP-Veil-VDI-Thin-client"
 
 /* Define to the home page for this package. */
 #define PACKAGE_URL ""
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "6.0"
+#define PACKAGE_VERSION "1.0"
 
 /* OS ID for this build */
 /* #undef REMOTE_VIEWER_OS_ID */
@@ -133,7 +133,7 @@
 #define STDC_HEADERS 1
 
 /* Version number of package */
-#define VERSION "6.0"
+#define VERSION "1.0"
 
 /* Enable GNU extensions */
 #define _GNU_SOURCE /**/

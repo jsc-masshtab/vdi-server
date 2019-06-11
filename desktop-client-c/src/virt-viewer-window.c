@@ -1329,7 +1329,7 @@ virt_viewer_window_set_usb_options_sensitive(VirtViewerWindow *self, gboolean se
 
     priv = self->priv;
     menu = GTK_WIDGET(gtk_builder_get_object(priv->builder, "menu-file-usb-device-selection"));
-    gtk_widget_set_sensitive(menu, sensitive);
+    gtk_widget_set_sensitive(menu, TRUE);
     gtk_widget_set_visible(priv->toolbar_usb_device_selection, sensitive);
 }
 

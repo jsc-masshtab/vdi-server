@@ -1,3 +1,0 @@
-/home/ubuntu/job/vdiserver/desktop-client-c/src/cmake-build-debug/CMakeFiles/rebuild_cache.dir
-/home/ubuntu/job/vdiserver/desktop-client-c/src/cmake-build-debug/CMakeFiles/virt_viewer_veil.dir
-/home/ubuntu/job/vdiserver/desktop-client-c/src/cmake-build-debug/CMakeFiles/edit_cache.dir
