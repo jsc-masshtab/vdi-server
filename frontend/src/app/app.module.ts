@@ -29,8 +29,6 @@ import { faDesktop,faDatabase, faLayerGroup,faPlusCircle,faSpinner,faServer,faCo
 
 
 import { MainMenuComponent } from './main-menu/main-menu.component';
-import { TeplatesService } from './templates/templates.service';
-import { TemplatesComponent } from './templates/templates.component';
 import { BaSelect } from './common/baSelect';
 
 
@@ -61,7 +59,6 @@ import { PoolsComponent } from './polls/pools.component';
   declarations: [
     AppComponent,
     MainMenuComponent,
-    TemplatesComponent,
     TableComponentComponent,
     BreadcrumbsComponent,
     PoolAddComponent,
@@ -98,7 +95,6 @@ import { PoolsComponent } from './polls/pools.component';
   ],
   providers: 
             [
-              TeplatesService,
               PoolsService,
               { provide: MAT_DIALOG_DEFAULT_OPTIONS, useValue: { hasBackdrop: true, restoreFocus: true } },
               NodesService,

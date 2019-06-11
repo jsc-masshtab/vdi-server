@@ -43,36 +43,37 @@ export class PoolsService  {
             }).valueChanges.pipe(map(data => data.data['pools'])); } ));
     }
 
-    public getPool(id:number): QueryRef<any,any> {
-        return this.service.watchQuery<any>({
-            query: gql`  
-                        query getPool($id: Int) {
-                            pool(id: $id) {
-                                name
-                                state {
-                                    available {
+    public getPool(id:number): Observable<any> {
+        const obs$ = timer(0,60000);
+
+        return  obs$.pipe(switchMap(()=> { return this.service.watchQuery({
+            query:  gql`  query getPool($id: Int) {
+                        pool(id: $id) {
+                            name
+                            state {
+                                available {
+                                    name
+                                    template {
                                         name
-                                        template {
-                                            name
-                                        }
-                                        node {
-                                            verbose_name
-                                        }
+                                    }
+                                    node {
+                                        verbose_name
                                     }
                                 }
-                                settings {
-                                    initial_size
-                                    reserve_size
-                                }
+                            }
+                            settings {
+                                initial_size
+                                reserve_size
                             }
                         }
-            `,
+                    }`,
             variables: {
                 method: 'GET',
                 id: id
             }
-        })
+        }).valueChanges.pipe(map(data => data.data['pool'])); }));
     }
+    
 
     public getAllTemplates(id?:string): QueryRef<any,any> {
         return  this.service.watchQuery({
