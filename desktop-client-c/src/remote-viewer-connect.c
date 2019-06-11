@@ -26,6 +26,8 @@
 #include <glib/gi18n.h>
 #include <gdk/gdkkeysyms.h>
 
+#include <ctype.h>
+
 extern gchar *m_username;
 extern gchar *m_password;
 extern gboolean opt_manual_mode;
@@ -41,7 +43,7 @@ typedef struct
     GtkWidget *entry;
 } ConnectionInfo;
 
-// read credentials_from_settings_file
+// read credentials_from_settings_file  todo: move to another file
 static gchar *
 read_from_settings_file(const gchar *group_name,  const gchar *key)
 {
@@ -90,10 +92,26 @@ write_to_settings_file(const gchar *group_name,  const gchar *key, const gchar *
 
     g_key_file_free(keyfile);
 }
+//--------------------
+
+// Перехватывается событие ввода текста. Игнорируется, если есть нецифры
+static void
+on_insert_text_event(GtkEditable *editable, const gchar *text, gint length,
+        gint *position G_GNUC_UNUSED, gpointer data G_GNUC_UNUSED)
+{
+    int i;
+
+    for (i = 0; i < length; ++i) {
+        if (!isdigit(text[i])) {
+            g_signal_stop_emission_by_name(G_OBJECT(editable), "insert-text");
+            return;
+        }
+    }
+}
 
 static void
-on_remember_checkbutton_clicked(GtkCheckButton *check_button G_GNUC_UNUSED,
-                                GtkEntry *entry)
+on_remember_checkbutton_clicked(GtkCheckButton *check_button,
+                                GtkEntry *entry G_GNUC_UNUSED)
 {
     printf("on_remember_checkbutton_clicked\n");
     b_save_credentials_to_file = gtk_toggle_button_get_active(check_button);
@@ -275,7 +293,6 @@ remote_viewer_connect_dialog(GtkWindow *main_window, gchar **uri) {
 
     // port entry
     port_entry = GTK_WIDGET(gtk_builder_get_object(builder, "connection-port-entry"));
-
     //recent = GTK_WIDGET(gtk_builder_get_object(builder, "recent-chooser"));
 
     rfilter = gtk_recent_filter_new();
@@ -331,6 +348,8 @@ remote_viewer_connect_dialog(GtkWindow *main_window, gchar **uri) {
 
     g_signal_connect(remember_checkbutton, "clicked",
             G_CALLBACK(on_remember_checkbutton_clicked), remember_checkbutton);
+
+    g_signal_connect(G_OBJECT(port_entry), "insert-text", G_CALLBACK(on_insert_text_event), NULL);
     /*
     g_signal_connect(recent, "selection-changed",
                      G_CALLBACK(recent_selection_changed_dialog_cb), entry);
