@@ -102,7 +102,7 @@ class AddTemplate(graphene.Mutation):
             controller_ip = await get_controller_ip()
         from vdi.tasks import Token, HttpClient
         url = f"http://{controller_ip}/api/domains/{id}/"
-        token = await Token(controller_ip=self.controller_ip)
+        token = await Token(controller_ip=controller_ip)
         headers = {
             'Authorization': f'jwt {token}',
         }
