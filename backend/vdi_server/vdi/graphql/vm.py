@@ -80,17 +80,26 @@ class AddTemplate(graphene.Mutation):
     poolwizard = graphene.Field(PoolSettings, format=graphene.String())
 
     async def resolve_poolwizard(self, info):
-        res = await admin.discover_resources(combine=True)
-        resource = random.choice(res)
-        from vdi.settings import settings
-        return PoolSettings(**{
+        from vdi.tasks.vm import GetDomainInfo
+        from vdi.tasks.resources import FetchNode
+        settings = {}
+        selections = get_selections(info)
+        if any(key in selections
+               for key in ['node_id', 'cluster_id', 'datapool_id']):
+            template = await GetDomainInfo(controller_ip=self.controller_ip, domain_id=self.id)
+            node_id = settings['node_id'] = template['node']['id']
+        if 'datapool_id' in selections:
+            datapools = await resources.ListDatapools(controller_ip=self.controller_ip, node_id=node_id)
+            settings['datapool_id'] = datapools[0]['id']
+        if 'cluster_id' in selections:
+            node = await FetchNode(controller_ip=self.controller_ip, node_id=node_id)
+            settings['cluster_id'] = node['cluster']['id']
+        from vdi.settings import settings as global_settings
+        return PoolSettings(**settings, **{
             'controller_ip': self.controller_ip,
-            'cluster_id': resource['cluster'],
-            'datapool_id': resource['datapool'],
             'template_id': self.id,
-            'node_id': resource['node'],
-            'initial_size': settings['pool']['initial_size'],
-            'reserve_size': settings['pool']['reserve_size'],
+            'initial_size': global_settings['pool']['initial_size'],
+            'reserve_size': global_settings['pool']['reserve_size'],
         })
 
 
