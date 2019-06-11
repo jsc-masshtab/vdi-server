@@ -27,7 +27,7 @@ body {
 }
 
 .cdk-overlay-pane {
-    overflow-y: auto !important;
+    //overflow-y: auto !important;  селект в форме уходит на слой ниже
 }
 
 .form {

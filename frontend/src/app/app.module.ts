@@ -51,6 +51,7 @@ import { ControllersService } from './settings/controllers/controllers.service';
 import { FooterComponent } from './footer/footer.component';
 import { ClusterDetailsComponent } from './resourses/clusters/cluster-details/cluster-details.component';
 import { PoolsComponent } from './polls/pools.component';
+import { RemovePoolComponent } from './polls/remove-pool/remove-pool.component';
 /*  -----------------------------------   material   --------------------------------------*/
 
 
@@ -75,7 +76,8 @@ import { PoolsComponent } from './polls/pools.component';
     NodeDetailsComponent,
     PoolDetailsComponent,
     PoolsComponent,
-    RemoveControllerComponent
+    RemoveControllerComponent,
+    RemovePoolComponent
   ],
   imports: [
     BrowserModule,
@@ -91,7 +93,8 @@ import { PoolsComponent } from './polls/pools.component';
   entryComponents: [
     PoolAddComponent,
     AddControllerComponent,
-    RemoveControllerComponent
+    RemoveControllerComponent,
+    RemovePoolComponent
   ],
   providers: 
             [

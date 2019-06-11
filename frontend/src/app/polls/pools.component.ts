@@ -5,6 +5,7 @@ import { Router } from '@angular/router';
 
 import { MatDialog } from '@angular/material';
 import { Subscription } from 'rxjs';
+import { RemovePoolComponent } from './remove-pool/remove-pool.component';
 
 @Component({
   selector: 'vdi-pools',
@@ -59,6 +60,12 @@ export class PoolsComponent implements OnInit {
 
   public openCreatePool() {
     this.dialog.open(PoolAddComponent, {
+      width: '500px'
+    });
+  }
+
+  public removePool() {
+    this.dialog.open(RemovePoolComponent, {
       width: '500px'
     });
   }

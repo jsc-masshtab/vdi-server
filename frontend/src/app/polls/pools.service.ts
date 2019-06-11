@@ -43,6 +43,22 @@ export class PoolsService  {
             }).valueChanges.pipe(map(data => data.data['pools'])); } ));
     }
 
+    public removePool(pool_id:number) {
+        return this.service.mutate<any>({
+            mutation: gql`  
+                            mutation RemovePool($id: Int) {
+                                removePool(id: $id) {
+                                    ok
+                                }
+                            }
+            `,
+            variables: {
+                method: 'POST',
+                id: pool_id
+            }
+        })
+    }
+
     public getPool(id:number): Observable<any> {
         const obs$ = timer(0,60000);
 
