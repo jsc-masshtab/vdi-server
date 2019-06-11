@@ -52,6 +52,10 @@ export class DatapoolsComponent implements OnInit {
     {
       title: 'Ресурсы',
       icon: 'database'
+    },
+    {
+      title: `Пулы данных`,
+      icon: 'folder-open'
     }
   ];
 
@@ -67,10 +71,6 @@ export class DatapoolsComponent implements OnInit {
     this.service.getAllDatapools().valueChanges.pipe(map(data => data.data.datapools))
       .subscribe( (data) => {
         this.datapools = data;
-        this.crumbs.push({
-          title: `Пулы данных`,
-          icon: 'folder-open'
-        });
         this.spinner = false;
       },
       (error)=> {

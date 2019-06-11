@@ -20,9 +20,8 @@ export class ClusterDetailsComponent implements OnInit {
       property: 'verbose_name'
     },
     {
-      title: 'Серверы',
-      property: "nodes_count"
-     
+      title: 'Статус',
+      property: 'status'
     },
     {
       title: 'CPU',
@@ -33,8 +32,20 @@ export class ClusterDetailsComponent implements OnInit {
       property: 'memory_count'
     },
     {
-      title: 'Статус',
-      property: 'status'
+      title: 'Серверы',
+      property_array: "nodes"
+    },
+    {
+      title: 'Пулы данных',
+      property_array: "datapools"
+    },
+    {
+      title: 'Шаблоны ВМ',
+      property_array: "templates"
+    },
+    {
+      title: 'ВМ',
+      property_array: "vms"
     }
   ];
   public collection_nodes = [

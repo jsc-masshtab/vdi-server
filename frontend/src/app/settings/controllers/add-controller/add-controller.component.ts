@@ -25,7 +25,6 @@ export class AddControllerComponent {
         this.dialogRef.close();
       }
     },(error)=> {
-
     });
   }
 

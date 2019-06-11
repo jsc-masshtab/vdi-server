@@ -14,10 +14,20 @@ body {
     box-sizing: border-box;
 }
 
+.cdk-overlay-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
 .mat-dialog-container {
     padding: 0px !important;
     overflow: inherit !important;
     background: transparent;
+}
+
+.cdk-overlay-pane {
+    overflow-y: auto !important;
 }
 
 .form {
@@ -142,6 +152,7 @@ body {
         -webkit-box-shadow: 0 0 0 1px rgba(0,0,0,.12);
         box-shadow: 0 0 0 1px rgba(0,0,0,.12);
         transition: .2s box-shadow ease-in-out;
+        margin-right: 10px;
 
         > span {
             font-size: 14px;
@@ -151,6 +162,10 @@ body {
         &:hover {
             -webkit-box-shadow: 0 2px 8px rgba(0,0,0,.2);
             box-shadow: 0 2px 8px rgba(0,0,0,.2);
+        }
+
+        &::last-child {
+            margin-right: 0px;
         }
     }
 }

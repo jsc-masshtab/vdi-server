@@ -18,8 +18,6 @@ export class TableComponentComponent  {
 
   constructor() {}
 
-
-
   public clickRow(item) {
     this.clickRowData.emit(item);
   }

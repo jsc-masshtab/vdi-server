@@ -1,3 +1,4 @@
+import { RemoveControllerComponent } from './settings/controllers/remove-controller/remove-controller.component';
 import { PoolDetailsComponent } from './polls/pool-details/pool-details.component';
 import { NodeDetailsComponent } from './resourses/nodes/node-details/node-details.component';
 import { DatapoolsService } from './resourses/datapools/datapools.service';
@@ -23,7 +24,7 @@ import { HttpClientModule } from '@angular/common/http';
 /*  -----------------------------------   icons   --------------------------------------*/
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { library } from '@fortawesome/fontawesome-svg-core'
-import { faDesktop,faDatabase, faLayerGroup,faPlusCircle,faSpinner,faServer,faCog,faBuilding,faChevronUp,faTimesCircle,faFolderOpen,faStar } from '@fortawesome/free-solid-svg-icons';
+import { faDesktop,faDatabase, faLayerGroup,faPlusCircle,faSpinner,faServer,faCog,faBuilding,faChevronUp,faTimesCircle,faFolderOpen,faStar,faMinusCircle } from '@fortawesome/free-solid-svg-icons';
 /*  -----------------------------------   icons   --------------------------------------*/
 
 
@@ -76,7 +77,8 @@ import { PoolsComponent } from './polls/pools.component';
     FooterComponent,
     NodeDetailsComponent,
     PoolDetailsComponent,
-    PoolsComponent
+    PoolsComponent,
+    RemoveControllerComponent
   ],
   imports: [
     BrowserModule,
@@ -91,7 +93,8 @@ import { PoolsComponent } from './polls/pools.component';
   ],
   entryComponents: [
     PoolAddComponent,
-    AddControllerComponent
+    AddControllerComponent,
+    RemoveControllerComponent
   ],
   providers: 
             [
@@ -109,7 +112,7 @@ import { PoolsComponent } from './polls/pools.component';
 
 export class AppModule {
   constructor() { 
-    library.add(faDesktop,faDatabase,faLayerGroup,faPlusCircle,faSpinner,faServer,faCog,faBuilding,faChevronUp,faTimesCircle,faFolderOpen,faStar
+    library.add(faDesktop,faDatabase,faLayerGroup,faPlusCircle,faMinusCircle,faSpinner,faServer,faCog,faBuilding,faChevronUp,faTimesCircle,faFolderOpen,faStar
       ); // Неиспользуемые иконки при финальной сборке удаляются
   }
 

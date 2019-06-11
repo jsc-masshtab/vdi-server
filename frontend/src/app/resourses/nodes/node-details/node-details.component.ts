@@ -39,6 +39,18 @@ export class NodeDetailsComponent implements OnInit {
     {
       title: 'Статус',
       property: 'status'
+    },
+    {
+      title: 'Пулы данных',
+      property_array: "datapools"
+    },
+    {
+      title: 'Шаблоны ВМ',
+      property_array: "templates"
+    },
+    {
+      title: 'ВМ',
+      property_array: "vms"
     }
   ];
   public collection_datapools = [
