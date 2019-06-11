@@ -7,10 +7,6 @@ INCLUDE_DIRECTORIES(
 ../
 )
 
-# defines
-# -DLOCALE_DIR=\""$(datadir)/locale"\" \
-#add_definitions( DLOCALE_DIR=\""$(datadir)/locale"\" \ )
-
 #############################APP FILES#################################
 FILE(GLOB SRC_CODE
 #BUILT_SOURCES
@@ -22,8 +18,6 @@ virt-viewer-enums.c
 virt-viewer-util.h
 virt-viewer-util.c
 #libvirt_viewer_la_SOURCES
-glib-compat.h
-glib-compat.c
 virt-viewer-auth.h
 virt-viewer-auth.c
 virt-viewer-app.h
@@ -96,8 +90,8 @@ SET(LIBS ${LIBS} ${GTK3_LIBRARIES})
 ADD_DEFINITIONS(${GTK3_CFLAGS_OTHER})
 
 # libvirt-glib sudo apt install libvirt-glib-1.0
-INCLUDE_DIRECTORIES(/usr/include/libvirt-glib-1.0)
-SET(LIBS ${LIBS} virt-glib-1.0 virt)
+#INCLUDE_DIRECTORIES(/usr/include/libvirt-glib-1.0)
+#SET(LIBS ${LIBS} virt-glib-1.0 virt)
 
 # libxml
 INCLUDE_DIRECTORIES(/usr/include/libxml2)
@@ -126,8 +120,8 @@ SET(LIBS ${LIBS} soup-2.4)
 # other libs
 SET(LIBS ${LIBS}
         m
-        gio-2.0
-        gobject-2.0
+        #gio-2.0
+        #gobject-2.0
         -rdynamic
 )
 

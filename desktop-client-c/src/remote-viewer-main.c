@@ -34,9 +34,19 @@
 int
 main(int argc, char **argv)
 {
-    //g_get_real_time();
-    installHandler("backtrace.txt");
+    // crash handler
+    // get ts
+    gint64 cur_ts = g_get_real_time();
+    gchar *ts_string = g_strdup_printf("%lld", cur_ts);
 
+    gchar *bt_file_name = g_strconcat(ts_string, "_backtrace.txt", NULL);
+    // crash handler
+    installHandler(bt_file_name);
+    // free memory
+    g_free(ts_string);
+    g_free(bt_file_name);
+
+    // app
     int ret = 1;
     GApplication *app = NULL;
 

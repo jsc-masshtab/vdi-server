@@ -1138,7 +1138,7 @@ retry_dialog:
 
         g_debug("Opening display to %s", guri);
 
-        // reading from a file?
+        // reading from ini file
         file = g_file_new_for_commandline_arg(guri);
         if (g_file_query_exists(file, NULL)) {
             gchar *path = g_file_get_path(file);

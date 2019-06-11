@@ -49,7 +49,7 @@
 #define HAVE_LC_MESSAGES 1
 
 /* Have libvirt? */
-#define HAVE_LIBVIRT 1
+#define HAVE_LIBVIRT 0
 
 /* Define to 1 if you have the <locale.h> header file. */
 #define HAVE_LOCALE_H 1

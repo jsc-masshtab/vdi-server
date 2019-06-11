@@ -30,12 +30,74 @@ extern gchar *m_username;
 extern gchar *m_password;
 extern gboolean opt_manual_mode;
 
+static gboolean b_save_credentials_to_file = FALSE;
+
+static const gchar *ini_file_path = "veil_client_settings.ini";
+
 typedef struct
 {
     gboolean response;
     GMainLoop *loop;
     GtkWidget *entry;
 } ConnectionInfo;
+
+// read credentials_from_settings_file
+static gchar *
+read_from_settings_file(const gchar *group_name,  const gchar *key)
+{
+    GError *error = NULL;
+    gchar *str_value = NULL;;
+
+    GKeyFile *keyfile = g_key_file_new ();
+
+    if(!g_key_file_load_from_file(keyfile, ini_file_path,
+                                  G_KEY_FILE_KEEP_COMMENTS |
+                                  G_KEY_FILE_KEEP_TRANSLATIONS,
+                                  &error))
+    {
+        g_debug("%s", error->message);
+    }
+    else {
+        str_value = g_key_file_get_string(keyfile, group_name, key, &error);
+    }
+
+    g_key_file_free(keyfile);
+
+    return str_value;
+}
+
+
+static void
+write_to_settings_file(const gchar *group_name,  const gchar *key, const gchar *str_value)
+{
+    if(str_value == NULL)
+        return;
+
+    GError *error = NULL;
+
+    GKeyFile *keyfile = g_key_file_new ();
+
+    if(!g_key_file_load_from_file(keyfile, ini_file_path,
+                                  G_KEY_FILE_KEEP_COMMENTS |
+                                  G_KEY_FILE_KEEP_TRANSLATIONS,
+                                  &error))
+    {
+        g_debug("%s", error->message);
+    }
+    else {
+        g_key_file_set_value(keyfile, group_name, key, str_value);
+    }
+
+    g_key_file_free(keyfile);
+}
+
+static void
+on_remember_checkbutton_clicked(GtkCheckButton *check_button G_GNUC_UNUSED,
+                                GtkEntry *entry)
+{
+    printf("on_remember_checkbutton_clicked\n");
+    b_save_credentials_to_file = gtk_toggle_button_get_active(check_button);
+}
 
 static void
 shutdown_loop(GMainLoop *loop)
@@ -179,18 +241,18 @@ make_label_small(GtkLabel* label)
 */
 
 gboolean
-remote_viewer_connect_dialog(GtkWindow *main_window, gchar **uri)
-{
+remote_viewer_connect_dialog(GtkWindow *main_window, gchar **uri) {
+
     GtkWidget *window, /* *label,*/ *entry, *port_entry, *login_entry, *password_entry, /**recent,*/
-        *connect_button/*, *cancel_button*/, *veil_image;
+            *connect_button/*, *cancel_button*/, *veil_image, *remember_checkbutton;
     GtkRecentFilter *rfilter;
     GtkBuilder *builder;
     gboolean active;
 
     ConnectionInfo ci = {
-        FALSE,
-        NULL,
-        NULL
+            FALSE,
+            NULL,
+            NULL
     };
 
     g_return_val_if_fail(uri && *uri == NULL, FALSE);
@@ -213,7 +275,6 @@ remote_viewer_connect_dialog(GtkWindow *main_window, gchar **uri)
 
     // port entry
     port_entry = GTK_WIDGET(gtk_builder_get_object(builder, "connection-port-entry"));
-    //*port = atoi(gtk_entry_get_text(GTK_ENTRY(port_entry)));
 
     //recent = GTK_WIDGET(gtk_builder_get_object(builder, "recent-chooser"));
 
@@ -230,11 +291,24 @@ remote_viewer_connect_dialog(GtkWindow *main_window, gchar **uri)
 
     // password entry
     password_entry = GTK_WIDGET(gtk_builder_get_object(builder, "password-entry"));
-    //gtk_entry_set_placeholder_text(password_entry, "Пароль");
+    gchar *password_from_settings_file = read_from_settings_file("RemoteViewerConnect", "password");
+    if(password_from_settings_file){
+        gtk_entry_set_text(GTK_ENTRY(password_entry), password_from_settings_file);
+    }
 
     // login entry
     login_entry = GTK_WIDGET(gtk_builder_get_object(builder, "login-entry"));
     gtk_widget_set_sensitive(GTK_ENTRY(login_entry), !opt_manual_mode);
+
+    if (!opt_manual_mode) {
+        gchar *user_from_settings_file = read_from_settings_file("RemoteViewerConnect", "username");
+        if(user_from_settings_file){
+            gtk_entry_set_text(GTK_ENTRY(login_entry), user_from_settings_file);
+        }
+    }
+
+    // Remember check button
+    remember_checkbutton = GTK_WIDGET(gtk_builder_get_object(builder, "remember-button"));
 
     // Signal - callbacks connections
     g_signal_connect(window, "key-press-event",
@@ -254,6 +328,9 @@ remote_viewer_connect_dialog(GtkWindow *main_window, gchar **uri)
                      G_CALLBACK(entry_changed_cb), connect_button);
     g_signal_connect(entry, "icon-release",
                      G_CALLBACK(entry_icon_release_cb), entry);
+
+    g_signal_connect(remember_checkbutton, "clicked",
+            G_CALLBACK(on_remember_checkbutton_clicked), remember_checkbutton);
     /*
     g_signal_connect(recent, "selection-changed",
                      G_CALLBACK(recent_selection_changed_dialog_cb), entry);
@@ -284,6 +361,12 @@ remote_viewer_connect_dialog(GtkWindow *main_window, gchar **uri)
         m_password = g_strdup(gtk_entry_get_text(GTK_ENTRY(password_entry)));
         g_strstrip(m_password);
 
+        // save credentials to ini file if required (m_username  m_password)
+        if(b_save_credentials_to_file){
+            write_to_settings_file("RemoteViewerConnect", "username", m_username);
+            write_to_settings_file("RemoteViewerConnect", "password", m_password);
+        }
+
     } else {
         *uri = NULL;
     }
@@ -293,6 +376,7 @@ remote_viewer_connect_dialog(GtkWindow *main_window, gchar **uri)
 
     return ci.response;
 }
+
 
 /*
  * Local variables:
