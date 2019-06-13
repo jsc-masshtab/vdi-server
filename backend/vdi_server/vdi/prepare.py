@@ -1,12 +1,20 @@
 #!/usr/bin/env python
+import json
 from vdi.tasks import admin, resources
 from vdi.settings import settings
 
 from classy_async import Wait
+from vdi.tasks import Token
 
 import asyncio
 
 from vdi.db import db
+
+class FirstTimeToken(Token):
+    creds = {
+        'username': 'admin',
+        'password': 'veil',
+    }
 
 
 async def add_controller(ip):
@@ -14,11 +22,36 @@ async def add_controller(ip):
     await db.init()
     await AddController._add_controller(ip=ip, set_default=True)
 
+async def add_user(controller_ip):
+    url = f"http://{controller_ip}/api/users/"
+
+    token = await FirstTimeToken(controller_ip=controller_ip)
+    headers = {
+        "Content-Type": 'application/json',
+        'Authorization': f'jwt {token}',
+    }
+    body = dict(settings.credentials)
+    body.update({
+        'groups': ['Administrator', 'Storage Administrator', 'Security Administrator',
+                   'VM Administrator', 'VM Operator',]
+    })
+    body = json.dumps(body)
+    from vdi.tasks.client import HttpClient, FetchException
+    client = HttpClient()
+    try:
+        await client.fetch(url, method='POST', body=body, headers=headers)
+    except FetchException as ex:
+        obj = json.loads(ex.object)
+        assert obj == {'errors': {'username': ['Пользователь с таким именем уже существует.']}}
+
 
 async def main():
     if not settings['debug']:
         return
-    await add_controller(settings['controller_ip'])
+    controller_ip = settings['controller_ip']
+
+    await add_user(controller_ip)
+    await add_controller(controller_ip)
     tasks = [
         admin.AddNode(management_ip='192.168.20.121', controller_ip=settings['controller_ip']),
         admin.DownloadImage(target='image.qcow2'),

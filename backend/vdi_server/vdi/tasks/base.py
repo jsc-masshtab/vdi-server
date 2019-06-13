@@ -10,14 +10,13 @@ from dataclasses import dataclass
 
 CONTROLLER_IP = settings['controller_ip']
 
+from vdi.settings import settings
+
 @dataclass()
 class Token(Task):
     controller_ip: str
 
-    creds = {
-        'username': 'admin',
-        'password': 'veil',
-    }
+    creds = settings.credentials
 
     @cached
     def url(self):

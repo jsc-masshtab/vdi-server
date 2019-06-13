@@ -19,6 +19,11 @@ class Settings(SettingsDict):
         'verify_exp': True,
     }
 
+    credentials = {
+        'username': 'vdi',
+        'password': '4ever',
+    }
+
 
 settings = Settings()
 
