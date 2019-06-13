@@ -46,17 +46,6 @@
                           </object>
                         </child>
                         <child>
-                          <object class="GtkMenuItem" id="menu-file-usb-device-selection">
-                            <property name="use_action_appearance">False</property>
-                            <property name="visible">True</property>
-                            <property name="sensitive">False</property>
-                            <property name="can_focus">False</property>
-                            <property name="label" translatable="yes">_USB устройства</property>
-                            <property name="use_underline">True</property>
-                            <signal name="activate" handler="virt_viewer_window_menu_file_usb_device_selection" swapped="no"/>
-                          </object>
-                        </child>
-                        <child>
                           <object class="GtkMenuItem" id="menu-file-smartcard-insert">
                             <property name="use_action_appearance">False</property>
                             <property name="can_focus">False</property>
@@ -209,6 +198,33 @@
                             <property name="label" translatable="yes">Release cursor</property>
                             <property name="use_underline">True</property>
                             <signal name="activate" handler="virt_viewer_window_menu_view_release_cursor" swapped="no"/>
+                          </object>
+                        </child>
+                      </object>
+                    </child>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkMenuItem" id="menu-file-usb">
+                    <property name="use_action_appearance">False</property>
+                    <property name="name">usb</property>
+                    <property name="visible">True</property>
+                    <property name="can_focus">False</property>
+                    <property name="label" translatable="yes">_USB устройства</property>
+                    <property name="use_underline">True</property>
+                    <child type="submenu">
+                      <object class="GtkMenu">
+                        <property name="name">menu-file-usb-device</property>
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                        <child>
+                          <object class="GtkCheckMenuItem" id="menu-file-usb-device-selection">
+                            <property name="name">menu-file-usb-device-selection</property>
+                            <property name="visible">True</property>
+                            <property name="can_focus">False</property>
+                            <property name="label" translatable="yes">_Проброс USB</property>
+                            <property name="use_underline">True</property>
+                            <signal name="activate" handler="virt_viewer_window_menu_file_usb_device_selection" swapped="no"/>
                           </object>
                         </child>
                       </object>

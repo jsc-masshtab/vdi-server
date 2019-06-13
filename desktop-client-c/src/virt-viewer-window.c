@@ -1286,7 +1286,7 @@ virt_viewer_window_set_menu_displays_sensitive(VirtViewerWindow *self, gboolean 
 
     priv = self->priv;
     menu = GTK_WIDGET(gtk_builder_get_object(priv->builder, "menu-displays"));
-    gtk_widget_set_sensitive(menu, sensitive);
+    gtk_widget_set_sensitive(menu, FALSE); // sensitive  // temp
 }
 
 void
