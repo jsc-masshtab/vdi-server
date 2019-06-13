@@ -19,7 +19,7 @@ from vdi.context_utils import enter_context
 
 class CreateTemplate(graphene.Mutation):
     '''
-    Awaits the result. Mostly for development use
+    DEPRECATED. Use addTemplate
     '''
     class Arguments:
         image_name = graphene.String()
@@ -28,7 +28,7 @@ class CreateTemplate(graphene.Mutation):
     poolwizard = settings = graphene.Field(PoolSettings, format=graphene.String())
 
     @enter_context(lambda: db.connect())
-    async def mutate(conn: Connection, self, info, image_name, format='one'):
+    async def mutate(conn: Connection, self, info, image_name):
         from vdi.tasks import admin
         res = await admin.discover_resources(combine=True)
         resource = random.choice(res)
