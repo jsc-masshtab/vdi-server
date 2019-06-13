@@ -90,6 +90,7 @@ write_to_settings_file(const gchar *group_name,  const gchar *key, const gchar *
         g_key_file_set_value(keyfile, group_name, key, str_value);
     }
 
+    g_key_file_save_to_file(keyfile, ini_file_path, &error);
     g_key_file_free(keyfile);
 }
 //--------------------

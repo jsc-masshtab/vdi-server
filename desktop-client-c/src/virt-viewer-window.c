@@ -1293,6 +1293,7 @@ void
 virt_viewer_window_set_usb_options_sensitive(VirtViewerWindow *self, gboolean sensitive)
 {
     VirtViewerWindowPrivate *priv;
+    //GtkWidget *main_menu;
     GtkWidget *menu;
 
     g_return_if_fail(VIRT_VIEWER_IS_WINDOW(self));
@@ -1301,6 +1302,16 @@ virt_viewer_window_set_usb_options_sensitive(VirtViewerWindow *self, gboolean se
     menu = GTK_WIDGET(gtk_builder_get_object(priv->builder, "menu-file-usb-device-selection"));
     gtk_widget_set_sensitive(menu, TRUE);
     gtk_widget_set_visible(priv->toolbar_usb_device_selection, sensitive);
+
+    // set icon for main usb menu
+    //main_menu = GTK_WIDGET(gtk_builder_get_object(priv->builder, "menu-file-usb"));
+
+    //GError *error2  = NULL;
+    //GdkPixbuf *gdkPixbuf =
+    //        gdk_pixbuf_new_from_resource(VIRT_VIEWER_RESOURCE_PREFIX"/icons/content/img/veil-32x32.png", &error2);
+    //GtkWidget *image =
+    //        gtk_image_new_from_resource(VIRT_VIEWER_RESOURCE_PREFIX"/icons/content/img/veil-32x32.png");
+    //gtk_tool_button_set_icon_widget(main_menu, image);
 }
 
 void

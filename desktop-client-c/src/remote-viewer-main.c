@@ -34,17 +34,23 @@
 int
 main(int argc, char **argv)
 {
-    // crash handler
     // get ts
     gint64 cur_ts = g_get_real_time();
     gchar *ts_string = g_strdup_printf("%lld", cur_ts);
+    const gchar *log_dir = "log/";
 
-    gchar *bt_file_name = g_strconcat(ts_string, "_backtrace.txt", NULL);
     // crash handler
+    gchar *bt_file_name = g_strconcat(log_dir, ts_string, "_backtrace.txt", NULL);
     installHandler(bt_file_name);
+
+    //error output
+    gchar *stderr_file_name = g_strconcat(log_dir, ts_string, "_stderr.txt", NULL);
+    freopen(stderr_file_name, "w", stderr);
+
     // free memory
     g_free(ts_string);
     g_free(bt_file_name);
+    g_free(stderr_file_name);
 
     // app
     int ret = 1;
