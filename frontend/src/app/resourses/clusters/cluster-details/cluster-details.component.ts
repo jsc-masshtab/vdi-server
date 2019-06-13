@@ -54,10 +54,6 @@ export class ClusterDetailsComponent implements OnInit {
       property: 'verbose_name'
     },
     {
-      title: 'Локация',
-      property: "datacenter_name"
-    },
-    {
       title: 'IP-адрес',
       property: 'management_ip'
     },

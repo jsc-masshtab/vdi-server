@@ -10,8 +10,9 @@ import { ControllersService } from '../controllers.service';
 
 export class AddControllerComponent {
 
-  public controller: string;
-  public description: string;
+  public controller: string = "";
+  public description: string = "";
+  public validate:boolean = false;
 
 
   constructor(private service: ControllersService,
@@ -19,6 +20,11 @@ export class AddControllerComponent {
 
 
   public send() {
+    if(!this.controller || !this.description) {
+      this.validate = true;
+      return;
+    }
+    this.validate = false;
     this.service.addController(this.controller,this.description).subscribe((res) => {
       if(res) {
         this.service.getAllControllers().valueChanges.subscribe();

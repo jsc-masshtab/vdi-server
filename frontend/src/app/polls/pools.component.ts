@@ -5,6 +5,7 @@ import { Router } from '@angular/router';
 
 import { MatDialog } from '@angular/material';
 import { Subscription } from 'rxjs';
+import { RemovePoolComponent } from './remove-pool/remove-pool.component';
 
 @Component({
   selector: 'vdi-pools',
@@ -46,7 +47,7 @@ export class PoolsComponent implements OnInit {
 
   public crumbs: object[] = [
     {
-      title: 'Пулы виртуальных машин',
+      title: 'Пулы рабочих столов',
       icon: 'desktop'
     }
   ];
@@ -63,8 +64,14 @@ export class PoolsComponent implements OnInit {
     });
   }
 
+  public removePool() {
+    this.dialog.open(RemovePoolComponent, {
+      width: '500px'
+    });
+  }
+
   private getAllPools() {
-    this.getPoolsSub = this.service.getAllPools()
+    this.getPoolsSub = this.service.getAllPools(true)
       .subscribe( (data) => {
         this.pools = data;
         this.spinner = false;

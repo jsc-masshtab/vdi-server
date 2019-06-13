@@ -29,8 +29,6 @@ import { faDesktop,faDatabase, faLayerGroup,faPlusCircle,faSpinner,faServer,faCo
 
 
 import { MainMenuComponent } from './main-menu/main-menu.component';
-import { TeplatesService } from './templates/templates.service';
-import { TemplatesComponent } from './templates/templates.component';
 import { BaSelect } from './common/baSelect';
 
 
@@ -53,6 +51,7 @@ import { ControllersService } from './settings/controllers/controllers.service';
 import { FooterComponent } from './footer/footer.component';
 import { ClusterDetailsComponent } from './resourses/clusters/cluster-details/cluster-details.component';
 import { PoolsComponent } from './polls/pools.component';
+import { RemovePoolComponent } from './polls/remove-pool/remove-pool.component';
 /*  -----------------------------------   material   --------------------------------------*/
 
 
@@ -61,7 +60,6 @@ import { PoolsComponent } from './polls/pools.component';
   declarations: [
     AppComponent,
     MainMenuComponent,
-    TemplatesComponent,
     TableComponentComponent,
     BreadcrumbsComponent,
     PoolAddComponent,
@@ -78,7 +76,8 @@ import { PoolsComponent } from './polls/pools.component';
     NodeDetailsComponent,
     PoolDetailsComponent,
     PoolsComponent,
-    RemoveControllerComponent
+    RemoveControllerComponent,
+    RemovePoolComponent
   ],
   imports: [
     BrowserModule,
@@ -94,11 +93,11 @@ import { PoolsComponent } from './polls/pools.component';
   entryComponents: [
     PoolAddComponent,
     AddControllerComponent,
-    RemoveControllerComponent
+    RemoveControllerComponent,
+    RemovePoolComponent
   ],
   providers: 
             [
-              TeplatesService,
               PoolsService,
               { provide: MAT_DIALOG_DEFAULT_OPTIONS, useValue: { hasBackdrop: true, restoreFocus: true } },
               NodesService,

@@ -60,7 +60,6 @@ export class PoolAddComponent implements OnInit {
     this.defaultDataTemplates = "Загрузка шаблонов...";
     this.poolsService.getAllTemplates().valueChanges.pipe(map(data => data.data.templates)).subscribe((res)=> {
       this.defaultDataTemplates = "- нет доступных шаблонов -";
-      console.log(res);
       this.templates = res.map((item) => {
         let parse = JSON.parse(item['info']);
         return {
