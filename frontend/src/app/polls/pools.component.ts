@@ -47,7 +47,7 @@ export class PoolsComponent implements OnInit {
 
   public crumbs: object[] = [
     {
-      title: 'Пулы виртуальных машин',
+      title: 'Пулы рабочих столов',
       icon: 'desktop'
     }
   ];

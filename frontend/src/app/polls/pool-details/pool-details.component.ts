@@ -52,7 +52,7 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
   public menuActive:string = 'info';
   public crumbs: object[] = [
     {
-      title: 'Пулы виртуальных машин',
+      title: 'Пулы рабочих столов',
       icon: 'desktop'  
     }
   ];
