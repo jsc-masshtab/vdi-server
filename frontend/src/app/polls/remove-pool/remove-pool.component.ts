@@ -39,7 +39,6 @@ export class RemovePoolComponent implements OnInit {
     this.defaultDataPools = "- Загрузка пулов виртуальных машин -";
     this.service.getAllPools()
       .subscribe((data) => {
-        console.log(data);
         this.pools = data.map((item) => {
           return {
             'output': item.id,

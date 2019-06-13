@@ -12,10 +12,11 @@ export class PoolsService  {
 
     constructor(private service: Apollo) {}
 
-    public getAllPools(): Observable<any> {
+    public getAllPools(obs?:boolean): Observable<any> {
         const obs$ = timer(0,60000);
 
-        return  obs$.pipe(switchMap(()=> { return this.service.watchQuery({
+        if(obs) {
+            return  obs$.pipe(switchMap(()=> { return this.service.watchQuery({
                 query:  gql` query allPools {
                                     pools {
                                         id
@@ -41,6 +42,33 @@ export class PoolsService  {
                     method: 'GET'
                 }
             }).valueChanges.pipe(map(data => data.data['pools'])); } ));
+        } else {
+            return this.service.watchQuery({
+                query:  gql` query allPools {
+                                    pools {
+                                        id
+                                        template_id
+                                        name
+                                        settings {
+                                            initial_size
+                                            reserve_size
+                                        }
+                                        state { 
+                                            available {
+                                                template {
+                                                    info
+                                                }
+                                            }
+                                        }
+                                    }  
+                                }
+                            
+                
+                        `,
+                variables: {
+                    method: 'GET'
+                }
+            }).valueChanges.pipe(map(data => data.data['pools'])); };
     }
 
     public removePool(pool_id:number) {
