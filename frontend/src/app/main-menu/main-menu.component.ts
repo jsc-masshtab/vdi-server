@@ -27,7 +27,9 @@ export class MainMenuComponent implements OnInit {
                                 { name: 'Ресурсы', icon: 'database', route:'resourses/clusters',open: false,
                                         nested: [ { name: 'Кластеры', icon:'building', route:'resourses/clusters'},
                                                   { name: 'Серверы', icon:'server', route:'resourses/nodes' },
-                                                  { name: 'Пулы данных', icon:'folder-open', route:'resourses/datapools' }]               
+                                                  { name: 'Пулы данных', icon:'folder-open', route:'resourses/datapools' },
+                                                  { name: 'Шаблоны', icon:'tv', route:'resourses/templates' },
+                                                  { name: 'ВМ', icon:'desktop', route:'resourses/vms' }]               
                                 },
                                 { name: 'Настройки', icon:'cog', route:'settings/controllers', open: false,
                                         nested: [{ name: 'Контроллеры', icon:'server',icon_dependent:'star',route:'settings/controllers' }] 

@@ -117,24 +117,6 @@ export class PoolsService  {
             }
         }).valueChanges.pipe(map(data => data.data['pool'])); }));
     }
-    
-
-    public getAllTemplates(id?:string): QueryRef<any,any> {
-        return  this.service.watchQuery({
-            query:  gql` query allTemplates {
-                                templates {
-                                    id
-                                    info
-                                }  
-                            }
-                         
-             
-                     `,
-            variables: {
-                method: 'GET'
-            }
-        }) 
-    }
 
     public createPoll(name: string,template_id: string,cluster_id: string,node_id: string,datapool_id: string,initial_size: number,reserve_size: number) {
         return this.service.mutate<any>({

@@ -1,3 +1,4 @@
+import { VmsComponent } from './resourses/vms/vms.component';
 import { PoolDetailsComponent } from './polls/pool-details/pool-details.component';
 import { PoolsComponent } from './polls/pools.component';
 import { NodeDetailsComponent } from './resourses/nodes/node-details/node-details.component';
@@ -8,6 +9,7 @@ import { ControllersComponent } from './settings/controllers/controllers.compone
 import { NodesComponent } from './resourses/nodes/nodes.component';
 import { DatapoolsComponent } from './resourses/datapools/datapools.component';
 import { ClusterDetailsComponent } from './resourses/clusters/cluster-details/cluster-details.component';
+import { TemplatesComponent } from './resourses/templates/templates.component';
 
 const routes: Routes = [
   {
@@ -38,6 +40,14 @@ const routes: Routes = [
   {
     path: 'resourses/datapools',
     component: DatapoolsComponent
+  },
+  {
+    path: 'resourses/templates',
+    component: TemplatesComponent
+  },
+  {
+    path: 'resourses/vms',
+    component: VmsComponent
   },
   {
     path: 'pools',

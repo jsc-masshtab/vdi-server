@@ -15,6 +15,10 @@ export class NodesComponent implements OnInit {
   public infoTemplates: [];
   public collection: object[] = [
     {
+      title: '№',
+      property: 'index'
+    },
+    {
       title: 'Название',
       property: 'verbose_name'
     },
