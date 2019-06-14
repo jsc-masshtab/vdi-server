@@ -16,7 +16,7 @@ from .users import UserType
 
 # TODO TemplateType == VmType
 
-from vdi.tasks import vm
+from vdi.tasks import vm, resources
 
 from classy_async import wait
 from vdi.context_utils import enter_context
@@ -61,17 +61,19 @@ class PoolType(graphene.ObjectType):
 
     def resolve_state(self, info):
         if self.pool_id not in Pool.instances:
-            return PoolState(running=RunningState.STOPPED)
+            state = PoolState(running=RunningState.STOPPED)
+            state.controller_ip = self.controller_ip
+            state.pool_id = self.pool_id
+            return state
         pool = Pool.instances[self.pool_id]
-        available = PoolState.get_available(pool)
-        state = PoolState(running=RunningState.RUNNING, available=available)
+        state = PoolState(running=RunningState.RUNNING)
+        state.pool_id = self.pool_id
+        state.controller_ip = self.controller_ip
         return state
 
     def resolve_vms(self, info):
         1
 
-    def resolve_users(self, info):
-        1
 
 
 class VmType(graphene.ObjectType):
@@ -93,9 +95,7 @@ class VmType(graphene.ObjectType):
         else:
             return self
         from vdi.tasks.resources import FetchNode
-        from vdi.graphql.resources import NodeType, Resources
-        #FIXME!!
-        from vdi.graphql.resources import get_controller_ip
+        from vdi.graphql.resources import NodeType, Resources, get_controller_ip
         controller_ip = await get_controller_ip()
         node = await FetchNode(controller_ip=controller_ip, node_id=self.node.id)
         obj = Resources._make_type(NodeType, node)
@@ -146,20 +146,29 @@ class PoolState(graphene.ObjectType):
     available = graphene.List(VmType)
 
     controller_ip = None
+    pool_id: int
 
-    #FIXME !!!!!!
-    @classmethod
-    def get_available(cls, pool):
+    async def resolve_available(self, info):
+        async with db.connect() as conn:
+            qu = 'select node_id from pool where id = $1', self.pool_id
+            data = await conn.fetch(*qu)
+            if not data:
+                return []
+            [(node_id,)] = await conn.fetch(*qu)
+            qu = 'select id, template_id from vm where pool_id = $1', self.pool_id
+            data = await conn.fetch(*qu)
+        vm_ids = dict(data)
+        vms = await vm.ListVms(controller_ip=self.controller_ip)
+        vms = [
+            vm for vm in vms if vm['id'] in vm_ids
+        ]
         from vdi.graphql.vm import TemplateType
         from vdi.graphql.resources import NodeType
-        if pool is None:
-            return []
-        qu = pool.queue._queue
         li = []
-        for domain in qu:
-            template = domain['template']
-            node = NodeType(id=template['node']['id'], verbose_name=template['node']['verbose_name'])
-            template = TemplateType(id=template['id'], info=template, name=template['verbose_name'])
+        for domain in vms:
+            template_id = vm_ids[domain['id']]
+            node = NodeType(id=node_id)
+            template = TemplateType(id=template_id)
             obj = VmType(id=domain['id'], template=template, name=domain['verbose_name'], node=node)
             li.append(obj)
         return li
@@ -276,6 +285,7 @@ class RemovePool(graphene.Mutation):
             #TODO what if there are extra vms in db?
             await conn.fetch("DELETE FROM vm WHERE pool_id = $1", pool_id)
             await conn.fetch("DELETE FROM pool WHERE id = $1", pool_id)
+        Pool.instances.pop(pool_id, None)
         return vm_ids
 
     async def mutate(self, info, id, controller_ip=None, block=False):
@@ -293,8 +303,9 @@ class RemovePool(graphene.Mutation):
 
 
 class PoolMixin:
-    pools = graphene.List(PoolType)
-    pool = graphene.Field(PoolType, id=graphene.Int(), name=graphene.String())
+    pools = graphene.List(PoolType, controller_ip=graphene.String())
+    pool = graphene.Field(PoolType, id=graphene.Int(), name=graphene.String(),
+                          controller_ip=graphene.String())
 
 
     #TODO wake pools
@@ -329,7 +340,10 @@ class PoolMixin:
         return dic
 
     @enter_context(lambda: db.connect())
-    async def resolve_pool(conn: Connection, self, info, id=None, name=None):
+    async def resolve_pool(conn: Connection, self, info, id=None, name=None, controller_ip=None):
+        if controller_ip is None:
+            from vdi.graphql.resources import get_controller_ip
+            controller_ip = await get_controller_ip()
         dic = await PoolMixin._select_pool(self, info, id, name, conn=conn)
         if not id:
             id = dic['id']
@@ -348,7 +362,7 @@ class PoolMixin:
             dic['users'] = users
         ret = PoolType(**dic)
         ret.pool_id = id
-
+        ret.controller_ip = controller_ip
         return ret
 
     #TODO fix users
@@ -368,7 +382,10 @@ class PoolMixin:
         return map
 
     @enter_context(lambda: db.connect())
-    async def resolve_pools(conn: Connection, self, info):
+    async def resolve_pools(conn: Connection, self, info, controller_ip=None):
+        if controller_ip is None:
+            from vdi.graphql.resources import get_controller_ip
+            controller_ip = await get_controller_ip()
         selections = get_selections(info)
         settings_selections = get_selections(info, 'settings') or []
         fields = [
@@ -397,5 +414,6 @@ class PoolMixin:
                 p['users'] = pools_users[id]
             pt = PoolType(**p)
             pt.pool_id = pool['id']
+            pt.controller_ip = controller_ip
             items.append(pt)
         return items
