@@ -40,7 +40,7 @@ export class VmsComponent implements OnInit {
       icon: 'database'
     },
     {
-      title: `Шаблоны ВМ`,
+      title: `Виртуальные машины`,
       icon: 'desktop'
     }
   ];
