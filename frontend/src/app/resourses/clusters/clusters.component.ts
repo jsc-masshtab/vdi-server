@@ -15,6 +15,10 @@ export class ClustersComponent implements OnInit {
   public clusters: object[] = [];
   public collection: object[] = [
     {
+      title: '№',
+      property: 'index'
+    },
+    {
       title: 'Название',
       property: 'verbose_name'
     },

@@ -34,6 +34,10 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
 
   public collection_vms = [
     {
+      title: '№',
+      property: 'index'
+    },
+    {
       title: 'Название',
       property: 'name'
     },
