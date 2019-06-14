@@ -224,6 +224,29 @@
                             <property name="can_focus">False</property>
                             <property name="label" translatable="yes">_Проброс USB</property>
                             <property name="use_underline">True</property>
+                            <signal name="activate" handler="virt_viewer_window_menu_file_usb_device_selection" swapped="no"/>
+                          </object>
+                        </child>
+                      </object>
+                    </child>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkMenuItem" id="menu-control">
+                    <property name="visible">True</property>
+                    <property name="can_focus">False</property>
+                    <property name="label" translatable="yes">_Управление</property>
+                    <property name="use_underline">True</property>
+                    <child type="submenu">
+                      <object class="GtkMenu">
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                        <child>
+                          <object class="GtkMenuItem" id="menu-switch-off">
+                            <property name="visible">True</property>
+                            <property name="can_focus">False</property>
+                            <property name="label" translatable="yes">_Отключиться</property>
+                            <property name="use_underline">True</property>
                           </object>
                         </child>
                       </object>

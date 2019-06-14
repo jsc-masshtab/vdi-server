@@ -59,7 +59,8 @@ read_from_settings_file(const gchar *group_name,  const gchar *key)
     {
         g_debug("%s", error->message);
     }
-    else {
+    else
+    {
         str_value = g_key_file_get_string(keyfile, group_name, key, &error);
     }
 
@@ -86,7 +87,8 @@ write_to_settings_file(const gchar *group_name,  const gchar *key, const gchar *
     {
         g_debug("%s", error->message);
     }
-    else {
+    else
+    {
         g_key_file_set_value(keyfile, group_name, key, str_value);
     }
 
@@ -286,6 +288,9 @@ remote_viewer_connect_dialog(GtkWindow *main_window, gchar **uri) {
     //cancel_button = GTK_WIDGET(gtk_builder_get_object(builder, "cancel-button"));
     //label = GTK_WIDGET(gtk_builder_get_object(builder, "example-label"));
     entry = ci.entry = GTK_WIDGET(gtk_builder_get_object(builder, "connection-address-entry"));
+    const gchar *ip_str_from_config_file = read_from_settings_file("RemoteViewerConnect", "ip");
+    if(ip_str_from_config_file)
+        gtk_entry_set_text(GTK_ENTRY(entry), ip_str_from_config_file);
 
     //make_label_small(GTK_LABEL(label));
 
@@ -294,6 +299,9 @@ remote_viewer_connect_dialog(GtkWindow *main_window, gchar **uri) {
 
     // port entry
     port_entry = GTK_WIDGET(gtk_builder_get_object(builder, "connection-port-entry"));
+    const gchar *port_str_from_config_file = read_from_settings_file("RemoteViewerConnect", "port");
+    if(port_str_from_config_file)
+        gtk_entry_set_text(GTK_ENTRY(port_entry), port_str_from_config_file);
     //recent = GTK_WIDGET(gtk_builder_get_object(builder, "recent-chooser"));
 
     rfilter = gtk_recent_filter_new();
@@ -364,28 +372,32 @@ remote_viewer_connect_dialog(GtkWindow *main_window, gchar **uri) {
     gtk_widget_show_all(window);
 
     connect_dialog_run(&ci);
+
+    // collect data from gui form
+    const gchar *ip_str = gtk_entry_get_text(GTK_ENTRY(entry));
+    const gchar *port_str = gtk_entry_get_text(GTK_ENTRY(port_entry));
+
+    if(m_username)
+        g_free(m_username);
+    m_username = g_strdup(gtk_entry_get_text(GTK_ENTRY(login_entry)));
+    g_strstrip(m_username);
+
+    if(m_password)
+        g_free(m_password);
+    m_password = g_strdup(gtk_entry_get_text(GTK_ENTRY(password_entry)));
+    g_strstrip(m_password);
+
+    // save data to ini file if required
+    if(b_save_credentials_to_file){
+        write_to_settings_file("RemoteViewerConnect", "ip", ip_str);
+        write_to_settings_file("RemoteViewerConnect", "port", port_str);
+        write_to_settings_file("RemoteViewerConnect", "username", m_username);
+        write_to_settings_file("RemoteViewerConnect", "password", m_password);
+    }
+
     if (ci.response == TRUE) {
-        //*uri = g_strdup(gtk_entry_get_text(GTK_ENTRY(entry)));
-        // example // spice://192.168.11.110:5904
-        *uri = g_strconcat("spice://", gtk_entry_get_text(GTK_ENTRY(entry)), ":",
-                gtk_entry_get_text(GTK_ENTRY(port_entry)), NULL);
+        *uri = g_strconcat("spice://", ip_str, ":", port_str, NULL);
         g_strstrip(*uri);
-        // credentials
-        if(m_username)
-            g_free(m_username);
-        m_username = g_strdup(gtk_entry_get_text(GTK_ENTRY(login_entry)));
-        g_strstrip(m_username);
-
-        if(m_password)
-            g_free(m_password);
-        m_password = g_strdup(gtk_entry_get_text(GTK_ENTRY(password_entry)));
-        g_strstrip(m_password);
-
-        // save credentials to ini file if required (m_username  m_password)
-        if(b_save_credentials_to_file){
-            write_to_settings_file("RemoteViewerConnect", "username", m_username);
-            write_to_settings_file("RemoteViewerConnect", "password", m_password);
-        }
 
     } else {
         *uri = NULL;

@@ -99,6 +99,14 @@ void virt_viewer_app_show_preferences(VirtViewerApp *app, GtkWidget *parent);
 void virt_viewer_app_set_menus_sensitive(VirtViewerApp *self, gboolean sensitive);
 gboolean virt_viewer_app_get_session_cancelled(VirtViewerApp *self);
 
+
+// Вынесено из внутренних
+void virt_viewer_app_deactivate(VirtViewerApp *self, gboolean connect_error);
+void virt_viewer_app_disconnected(VirtViewerSession *session,
+                                         const gchar *msg,
+                                         VirtViewerApp *self);
+void virt_viewer_app_hide_all_windows(VirtViewerApp *app);
+
 G_END_DECLS
 
 #endif /* VIRT_VIEWER_APP_H */

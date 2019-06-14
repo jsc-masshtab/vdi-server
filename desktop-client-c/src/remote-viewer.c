@@ -20,7 +20,11 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  * Author: Marc-André Lureau <marcandre.lureau@redhat.com>
+ *
+ * Modified by Solomin <a.solomin@mashtab.org>
  */
+
+
 
 #include <config.h>
 #include <gio/gio.h>
@@ -47,6 +51,7 @@
 #include "virt-viewer-util.h"
 #include "remote-viewer.h"
 #include "remote-viewer-connect.h"
+#include "vdi_manager.h"
 
 struct _RemoteViewerPrivate {
 #ifdef HAVE_SPICE_GTK
@@ -1138,7 +1143,7 @@ retry_dialog:
 
         g_debug("Opening display to %s", guri);
 
-        // reading from ini file
+        // reading from ini file (нам не нужно?)
         file = g_file_new_for_commandline_arg(guri);
         if (g_file_query_exists(file, NULL)) {
             gchar *path = g_file_get_path(file);
@@ -1150,27 +1155,23 @@ retry_dialog:
                 goto cleanup;
             }
             g_object_get(G_OBJECT(vvfile), "type", &type, NULL);
-            // reading from network
-            // Код использовался для определения протокола. Хардкодим spice
-        } /*else if (virt_viewer_util_extract_host(guri, &type, NULL, NULL, NULL, NULL) < 0 || type == NULL) {
-            g_set_error_literal(&error,
-                                VIRT_VIEWER_ERROR, VIRT_VIEWER_ERROR_FAILED,
-                                _("Cannot determine the connection type from URI"));
-            goto cleanup;
-        }*/
+        }
         else {
             type = g_strdup("spice");
         }
+
+        
+
 #ifdef HAVE_OVIRT
-        if (g_strcmp0(type, "ovirt") == 0) {// сюда не заходит?
+        if (g_strcmp0(type, "ovirt") == 0) {// сюда не заходит
             if (!create_ovirt_session(app, guri, &error)) {
                 g_prefix_error(&error, _("Couldn't open oVirt session: "));
                 goto cleanup;
             }
         } else
-#endif
+#endif   // Далее переход к удаленному раб. столу. Создание сессии
         {
-            if (!virt_viewer_app_create_session(app, type, &error)) // ?
+            if (!virt_viewer_app_create_session(app, type, &error))
                 goto cleanup;
         }
 
@@ -1187,8 +1188,8 @@ retry_dialog:
             }
         }
 #endif
-
-        if (!virt_viewer_app_initial_connect(app, &error)) { // !!! вызов формы ввода пароля и логина
+        // Коннект к машине
+        if (!virt_viewer_app_initial_connect(app, &error)) {
             if (error == NULL) {
                 g_set_error_literal(&error,
                                     VIRT_VIEWER_ERROR, VIRT_VIEWER_ERROR_FAILED,

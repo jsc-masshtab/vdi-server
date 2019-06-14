@@ -72,6 +72,8 @@ crashhandler.c
 
 ../config.h
 
+vdi_manager.h
+
 #windows-cmdline-wrapper.c
 
 )
@@ -126,7 +128,7 @@ SET(LIBS ${LIBS}
 )
 
 #############################LINKING###################################
-ADD_EXECUTABLE(virt_viewer_veil  ${SRC_CODE})
+ADD_EXECUTABLE(virt_viewer_veil  ${SRC_CODE} vdi_manager.c)
 target_link_libraries(
     virt_viewer_veil # exec
     ${LIBS} # libs

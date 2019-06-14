@@ -65,7 +65,7 @@ void virt_viewer_window_menu_file_smartcard_remove(GtkWidget *menu, VirtViewerWi
 void virt_viewer_window_menu_view_release_cursor(GtkWidget *menu, VirtViewerWindow *self);
 void virt_viewer_window_menu_preferences_cb(GtkWidget *menu, VirtViewerWindow *self);
 void virt_viewer_window_menu_change_cd_activate(GtkWidget *menu, VirtViewerWindow *self);
-
+void virt_viewer_window_menu_switch_off(GtkWidget *menu, VirtViewerWindow *self);
 
 /* Internal methods */
 static void virt_viewer_window_enable_modifiers(VirtViewerWindow *self);
@@ -834,6 +834,7 @@ virt_viewer_window_menu_file_quit(GtkWidget *src G_GNUC_UNUSED,
                                   VirtViewerWindow *self)
 {
     virt_viewer_app_maybe_quit(self->priv->app, self);
+    //virt_viewer_app_disconnected(virt_viewer_app_get_session(self->priv->app), NULL, self->priv->app);
 }
 
 
@@ -1129,6 +1130,19 @@ virt_viewer_window_menu_change_cd_activate(GtkWidget *menu G_GNUC_UNUSED,
 #endif
 }
 
+void
+virt_viewer_window_menu_switch_off(GtkWidget *menu, VirtViewerWindow *self)
+{
+    printf("virt_viewer_window_menu_switch_off\n");
+    //virt_viewer_session_close(virt_viewer_app_get_session(self->priv->app));
+    //virt_viewer_app_disconnected(virt_viewer_app_get_session(self->priv->app), NULL, self->priv->app);
+
+    virt_viewer_app_deactivate(self->priv->app, 0);
+    virt_viewer_app_hide_all_windows(self->priv->app);
+    GError *error = NULL;
+    virt_viewer_app_start(self->priv->app, &error);
+}
+
 static void
 virt_viewer_window_toolbar_setup(VirtViewerWindow *self)
 {
@@ -1151,7 +1165,8 @@ virt_viewer_window_toolbar_setup(VirtViewerWindow *self)
 
     /* USB Device selection */
     button = gtk_image_new_from_resource(VIRT_VIEWER_RESOURCE_PREFIX"/icons/24x24/virt-viewer-usb.png");
-    button = GTK_WIDGET(gtk_tool_button_new(button, NULL));
+    button = GTK_WIDGET(gtk_tool_button_new(NULL, NULL));
+    //gtk_tool_button_set_t(GTK_TOOL_BUTTON(button), "preferences-desktop-keyboard");
     gtk_tool_button_set_label(GTK_TOOL_BUTTON(button), _("USB device selection"));
     gtk_tool_item_set_tooltip_text(GTK_TOOL_ITEM(button), _("USB device selection"));
     gtk_toolbar_insert(GTK_TOOLBAR(priv->toolbar), GTK_TOOL_ITEM(button), 0);

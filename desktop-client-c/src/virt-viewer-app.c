@@ -74,9 +74,9 @@ static void virt_viewer_app_connected(VirtViewerSession *session,
                                       VirtViewerApp *self);
 static void virt_viewer_app_initialized(VirtViewerSession *session,
                                         VirtViewerApp *self);
-static void virt_viewer_app_disconnected(VirtViewerSession *session,
-                                         const gchar *msg,
-                                         VirtViewerApp *self);
+//static void virt_viewer_app_disconnected(VirtViewerSession *session,
+//                                         const gchar *msg,
+//                                         VirtViewerApp *self);
 static void virt_viewer_app_auth_refused(VirtViewerSession *session,
                                          const char *msg,
                                          VirtViewerApp *self);
@@ -481,7 +481,6 @@ virt_viewer_app_maybe_quit(VirtViewerApp *self, VirtViewerWindow *window)
     } else {
         virt_viewer_app_quit(self);
     }
-
 }
 
 static void count_window_visible(gpointer value,
@@ -536,7 +535,7 @@ static void hide_one_window(gpointer value,
         virt_viewer_window_hide(VIRT_VIEWER_WINDOW(value));
 }
 
-static void
+/*static*/ void
 virt_viewer_app_hide_all_windows(VirtViewerApp *app)
 {
     g_list_foreach(app->priv->windows, hide_one_window, app);
@@ -1364,8 +1363,8 @@ virt_viewer_app_default_deactivated(VirtViewerApp *self, gboolean connect_error)
                               priv->guest_name);
     }
 
-    if (self->priv->quit_on_disconnect)
-        g_application_quit(G_APPLICATION(self));
+    //if (self->priv->quit_on_disconnect) // maybe temp
+    //    g_application_quit(G_APPLICATION(self));
 }
 
 static void
@@ -1377,7 +1376,7 @@ virt_viewer_app_deactivated(VirtViewerApp *self, gboolean connect_error)
     klass->deactivated(self, connect_error);
 }
 
-static void
+/*static */void
 virt_viewer_app_deactivate(VirtViewerApp *self, gboolean connect_error)
 {
     VirtViewerAppPrivate *priv = self->priv;
@@ -1406,7 +1405,6 @@ virt_viewer_app_deactivate(VirtViewerApp *self, gboolean connect_error)
         g_clear_object(&priv->session);
         virt_viewer_app_deactivated(self, connect_error);
     }
-
 }
 
 static void
@@ -1432,10 +1430,11 @@ virt_viewer_app_initialized(VirtViewerSession *session G_GNUC_UNUSED,
     virt_viewer_app_update_title(self);
 }
 
-static void
+void
 virt_viewer_app_disconnected(VirtViewerSession *session G_GNUC_UNUSED, const gchar *msg,
                              VirtViewerApp *self)
 {
+    printf("virt_viewer_app_disconnected\n");
     VirtViewerAppPrivate *priv = self->priv;
     gboolean connect_error = !priv->connected && !priv->cancelled;
 
@@ -1456,7 +1455,7 @@ virt_viewer_app_disconnected(VirtViewerSession *session G_GNUC_UNUSED, const gch
         gtk_widget_destroy(dialog);
     }
     virt_viewer_app_set_usb_options_sensitive(self, FALSE);
-    virt_viewer_app_deactivate(self, connect_error);
+    virt_viewer_app_deactivate(self, connect_error); // Повторный вызов начальной формы
 }
 
 static void virt_viewer_app_cancelled(VirtViewerSession *session,
