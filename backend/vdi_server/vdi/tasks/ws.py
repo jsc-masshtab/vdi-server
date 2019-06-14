@@ -8,7 +8,9 @@ from classy_async import Awaitable, task
 import asyncio
 
 
+@dataclass()
 class WsConnection(Awaitable):
+    controller_ip: str
 
     timeout = 5 * 60
 
@@ -16,8 +18,8 @@ class WsConnection(Awaitable):
         return (await self._conn.write_message(msg))
 
     async def run(self):
-        token = await Token()
-        connect_url = f'ws://{CONTROLLER_IP}/ws/?token={token}'
+        token = await Token(controller_ip=self.controller_ip)
+        connect_url = f'ws://{self.controller_ip}/ws/?token={token}'
         self._conn = await websocket_connect(connect_url)
         return self
 

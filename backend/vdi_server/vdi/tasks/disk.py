@@ -41,7 +41,7 @@ class Image(Task):
     datapool_id: str
 
     async def run(self):
-        token = await Token()
+        token = await Token(controller_ip=self.controller_ip)
         url = f"http://{self.controller_ip}/api/library/?datapool_id={self.datapool_id}"
         http_client = HttpClient()
         headers = {
@@ -71,8 +71,8 @@ class ImportDisk(Task):
 
     async def run(self):
         image_id = await Image(image_name=self.image_name, datapool_id=self.datapool_id, controller_ip=self.controller_ip)
-        token = await Token()
-        ws = await WsConnection()
+        token = await Token(controller_ip=self.controller_ip)
+        ws = await WsConnection(controller_ip=self.controller_ip)
         await ws.send('add /tasks/')
 
         http_client = HttpClient()
@@ -108,7 +108,7 @@ class CopyDisk(Task):
         return f'http://{self.controller_ip}/api/vdisks/{self.vdisk}/copy/?async=1'
 
     async def headers(self):
-        token = await Token()
+        token = await Token(controller_ip=self.controller_ip)
         return {
             'Authorization': f'jwt {token}',
             'Content-Type': 'application/json',
@@ -135,7 +135,7 @@ class CopyDisk(Task):
                 return e_id
 
     async def run(self):
-        ws = await WsConnection()
+        ws = await WsConnection(controller_ip=self.controller_ip)
         await ws.send('add /tasks/')
         response = await HttpClient().fetch_using(self)
         self.task_obj = response['_task']

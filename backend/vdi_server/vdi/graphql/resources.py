@@ -294,10 +294,12 @@ class Resources:
             default = None
         query = "SELECT ip, description from controller"
         items = await conn.fetch(query)
-        return [
-            ControllerType(**dict(d.items()))
-            for d in items
-        ]
+        objects = []
+        for d in items:
+            d = dict(d.items())
+            d['default'] = d['ip'] == default
+            objects.append(ControllerType(**d))
+        return objects
 
     async def resolve_node(self, info, id, controller_ip=None):
         if controller_ip is None:
@@ -353,14 +355,14 @@ class RemoveController(graphene.Mutation):
     ok = graphene.Boolean()
 
     @classmethod
-    async def remove_pools(cls, *, controller_ip, conn: Connection):
+    async def _remove_pools(cls, *, controller_ip):
         async with db.connect() as c:
             qu = "SELECT id FROM pool WHERE controller_ip = $1", controller_ip
             pools = await c.fetch(*qu)
 
         from vdi.graphql.pool import RemovePool
         tasks = [
-            RemovePool.do_remove(pool['id'])
+            RemovePool.do_remove(pool['id'], controller_ip=controller_ip)
             for pool in pools
         ]
         async for _ in wait(*tasks):
@@ -371,7 +373,7 @@ class RemoveController(graphene.Mutation):
     async def mutate(conn: Connection, self, info, controller_ip=None):
         if controller_ip is None:
             controller_ip = await get_controller_ip()
-        await RemoveController.remove_pools(controller_ip=controller_ip, conn=conn)
+        await RemoveController._remove_pools(controller_ip=controller_ip)
         query = "DELETE FROM default_controller WHERE ip = $1", controller_ip
         await conn.fetch(*query)
         query = f"DELETE FROM controller WHERE ip=$1", controller_ip

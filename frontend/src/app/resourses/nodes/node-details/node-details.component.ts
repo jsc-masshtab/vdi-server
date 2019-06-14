@@ -55,6 +55,10 @@ export class NodeDetailsComponent implements OnInit {
   ];
   public collection_datapools = [
     {
+      title: '№',
+      property: 'index'
+    },
+    {
       title: 'Название',
       property: 'verbose_name'
     },
@@ -88,6 +92,10 @@ export class NodeDetailsComponent implements OnInit {
     }
   ];
   public collection_templates = [
+    {
+      title: '№',
+      property: 'index'
+    },
     {
       title: 'Название',
       property: 'verbose_name'
@@ -124,6 +132,10 @@ export class NodeDetailsComponent implements OnInit {
     }
   ];
   public collection_vms = [
+    {
+      title: '№',
+      property: 'index'
+    },
     {
       title: 'Название',
       property: 'name'

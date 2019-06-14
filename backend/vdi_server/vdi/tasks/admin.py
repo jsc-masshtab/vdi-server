@@ -38,7 +38,7 @@ class AddNode(Task):
     async def check_present(self):
         client = HttpClient()
         url = f"http://{self.controller_ip}/api/nodes/"
-        token = await Token()
+        token = await Token(controller_ip=self.controller_ip)
         headers = {
             'Authorization': f'jwt {token}',
             'Content-Type': 'application/json',
@@ -53,9 +53,9 @@ class AddNode(Task):
         node = await self.check_present()
         if node:
             return node['id']
-        ws = await WsConnection()
+        ws = await WsConnection(controller_ip=self.controller_ip)
         await ws.send('add /tasks/')
-        token = await Token()
+        token = await Token(controller_ip=self.controller_ip)
         headers = {
             'Authorization': f'jwt {token}',
             'Content-Type': 'application/json',
@@ -101,7 +101,7 @@ class UploadImage(Task):
     controller_ip: str
 
     async def check_present(self):
-        token = await Token()
+        token = await Token(controller_ip=self.controller_ip)
         url = f"http://{self.controller_ip}/api/library/?datapool_id={self.datapool_id}"
         http_client = HttpClient()
         headers = {
@@ -114,7 +114,7 @@ class UploadImage(Task):
 
     async def get_upload_url(self):
         client = HttpClient()
-        token = await Token()
+        token = await Token(controller_ip=self.controller_ip)
         headers = {
             'Authorization': f'jwt {token}',
             'Content-Type': 'application/json',
@@ -161,12 +161,12 @@ class UploadImage(Task):
         if present:
             return
         upload_url = await self.get_upload_url()
-        ws = await WsConnection()
+        ws = await WsConnection(controller_ip=self.controller_ip)
         await ws.send(f"add /tasks/")
         await ws.send(f"add /events/")
 
         client = HttpClient()
-        token = await Token()
+        token = await Token(controller_ip=self.controller_ip)
         headers = {
             "Content-Type": "multipart/form-data; boundary=%s" % self.boundary,
             'Authorization': f'jwt {token}',

@@ -15,6 +15,10 @@ export class DatapoolsComponent implements OnInit {
   public datapools: {};
   public collection: object[] = [
     {
+      title: '№',
+      property: 'index'
+    },
+    {
       title: 'Название',
       property: 'verbose_name'
     },
@@ -59,7 +63,7 @@ export class DatapoolsComponent implements OnInit {
     }
   ];
 
-  public spinner:boolean = true;
+  public spinner:boolean = false;
 
   constructor(private service: DatapoolsService){}
 
@@ -68,6 +72,7 @@ export class DatapoolsComponent implements OnInit {
   }
 
   private getDatapools() {
+    this.spinner = true;
     this.service.getAllDatapools().valueChanges.pipe(map(data => data.data.datapools))
       .subscribe( (data) => {
         this.datapools = data;
