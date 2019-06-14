@@ -281,18 +281,21 @@ class RemovePool(graphene.Mutation):
             for vm_id in vm_ids
         ]
 
+        async with db.connect() as conn:
+            qu = "update pool set deleted=TRUE where id = $1", pool_id
+            await conn.fetch(*qu)
+
         async for _ in wait(*tasks):
             pass
 
-        return vm_ids
-
-    @classmethod
-    async def remove_from_db(cls, pool_id):
+        # remove from db
         async with db.connect() as conn:
             # TODO what if there are extra vms in db?
             await conn.fetch("DELETE FROM vm WHERE pool_id = $1", pool_id)
             await conn.fetch("DELETE FROM pool WHERE id = $1", pool_id)
         Pool.instances.pop(pool_id, None)
+
+        return vm_ids
 
     async def mutate(self, info, id, controller_ip=None, block=False):
         if controller_ip is None:
@@ -300,7 +303,6 @@ class RemovePool(graphene.Mutation):
             controller_ip = await get_controller_ip()
         task = RemovePool.do_remove(id, controller_ip=controller_ip)
         task = asyncio.create_task(task)
-        await RemovePool.remove_from_db(id)
         selections = get_selections(info)
         if block or 'ids' in selections:
             vm_ids = await task
@@ -388,6 +390,8 @@ class PoolMixin:
             map.setdefault(pool_id, []).append(UserType(**u))
         return map
 
+
+    #FIXME use resolve
     @enter_context(lambda: db.connect())
     async def resolve_pools(conn: Connection, self, info, controller_ip=None):
         if controller_ip is None:
@@ -400,7 +404,7 @@ class PoolMixin:
             if f in PoolType.sql_fields and f != 'id'
         ]
         fields.insert(0, 'id')
-        qu = f"SELECT {', '.join(fields + settings_selections)} FROM pool"
+        qu = f"SELECT {', '.join(fields + settings_selections)} FROM pool WHERE deleted IS NOT TRUE"
 
         pools = await conn.fetch(qu)
 

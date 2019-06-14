@@ -357,7 +357,7 @@ class RemoveController(graphene.Mutation):
     @classmethod
     async def _remove_pools(cls, *, controller_ip):
         async with db.connect() as c:
-            qu = "SELECT id FROM pool WHERE controller_ip = $1", controller_ip
+            qu = "SELECT id FROM pool WHERE controller_ip = $1 AND deleted IS NOT TRUE", controller_ip
             pools = await c.fetch(*qu)
 
         from vdi.graphql.pool import RemovePool
