@@ -286,7 +286,8 @@ class RemovePool(graphene.Mutation):
 
         return vm_ids
 
-    async def remove_from_db(self, pool_id):
+    @classmethod
+    async def remove_from_db(cls, pool_id):
         async with db.connect() as conn:
             # TODO what if there are extra vms in db?
             await conn.fetch("DELETE FROM vm WHERE pool_id = $1", pool_id)
@@ -299,7 +300,7 @@ class RemovePool(graphene.Mutation):
             controller_ip = await get_controller_ip()
         task = RemovePool.do_remove(id, controller_ip=controller_ip)
         task = asyncio.create_task(task)
-        await self.remove_from_db(id)
+        await RemovePool.remove_from_db(id)
         selections = get_selections(info)
         if block or 'ids' in selections:
             vm_ids = await task
