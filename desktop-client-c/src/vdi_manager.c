@@ -3,10 +3,7 @@
 //
 
 #include <glib/gi18n.h>
-//#include <gtask.h>
 #include <gdk/gdkkeysyms.h>
-
-
 #include <libsoup/soup-session.h>
 
 #include "virt-viewer-util.h"
@@ -31,53 +28,57 @@ on_window_deleted_cb(ConnectionInfo *ci)
     return TRUE;
 }
 
-static on_vm_chosen(GtkButton *button G_GNUC_UNUSED, gpointer data){
+static void on_vm_chosen(GtkButton *button G_GNUC_UNUSED, gpointer data){
 
     ConnectionInfo *ci = data;
 };
-
-
-static gboolean
-onGetVdiVmDataFinished (GObject *source_object,
-           GAsyncResult *res,
-           gpointer user_data)
+/*
+static void
+onConfigureSessionFinished(GObject *source_object G_GNUC_UNUSED,
+                 GAsyncResult *res,
+                 gpointer user_data G_GNUC_UNUSED)
 {
-    printf("got_value\n");
-    printf("got_value thread %i \n", g_thread_self());
+    printf("onConfigureSessionFinished\n");
+    gboolean tokenReceived
+}
+*/
+static gboolean
+onGetVdiVmDataFinished (GObject *source_object G_GNUC_UNUSED,
+           GAsyncResult *res,
+           gpointer user_data G_GNUC_UNUSED)
+{
+    printf("onGetVdiVmDataFinished\n");
+    //printf("got_value thread %i \n", g_thread_self());
 
     GError *error;
+    //G_TASK (res)->result_set;
     gpointer  ptr_res =  g_task_propagate_pointer (G_TASK (res), &error); // take ownership
     if(ptr_res == NULL){
-        printf("onGetVdiVmDataFinished: fail");
+        printf("onGetVdiVmDataFinished: fail\n");
         return G_SOURCE_REMOVE;
     }
-    gchar *str = ptr_res;
+
+    gchar *responseBodyStr = ptr_res;
+    // parse vm data  json
+    JsonParser *parser = json_parser_new ();
+    JsonObject *object = getJsonObject(parser, responseBodyStr);
+
+    if(object){
+        GList *vmDataList = json_object_get_members(object);
+
+        // generate gui elements
+        GList *l;
+        for (l = vmDataList; l != NULL; l = l->next)
+        {
+            gint64 vmId = json_object_get_int_member(l->data, "id");
+            const gchar *vmName = json_object_get_string_member(l->data, "name");
+            printf("vmId %i", vmId);
+            printf("vmName %s", vmName);
+        }
+    }
+
     if(ptr_res)
         g_free(ptr_res);
-
-
-    /*
-    GArray *garray;
-    gint i;
-    const guint numberOfVm = 1;
-    
-    garray = g_array_sized_new  (FALSE, TRUE, sizeof (VdiVmData), numberOfVm);
-    for (i = 0; i < numberOfVm; i++) {
-        VdiVmData vdiVmData;
-        vdiVmData.osType = VDI_VM_LINUX;
-        vdiVmData.testData = i;
-        g_array_append_val (garray, vdiVmData);
-    }
-    
-    for (i = 0; i < numberOfVm; i++) {
-        VdiVmData vdiVmData = g_array_index (garray, VdiVmData, i);
-        printf("%i", vdiVmData.testData);
-        printf("\n");
-    }
-    
-    //g_array_free (garray, TRUE);
-    //return garray;
-     */
 
     return G_SOURCE_REMOVE;
 }
@@ -97,16 +98,6 @@ vdi_manager_dialog(GtkWindow *main_window, gchar **uri){
             NULL
     };
 
-    // Пытаемся соединиться с vdi и получить список машин. Получив список машин нужно сгенерить
-    // соответствующие кнопки  в скрол области. Показывать только первые скажем 200 машин?
-    // Start session here
-    startSession();
-
-    // get vm data
-    printf("main thread %i \n", g_thread_self());
-
-    executeAsyncTask(getVdiVmData, onGetVdiVmDataFinished, NULL);
-
     /* Create the widgets */
     builder = virt_viewer_util_load_ui("vdi_manager_form.ui"); // remote-viewer-connect_veil.ui
     g_return_val_if_fail(builder != NULL, GTK_RESPONSE_NONE);
@@ -123,6 +114,18 @@ vdi_manager_dialog(GtkWindow *main_window, gchar **uri){
     g_signal_connect_swapped(window, "delete-event", G_CALLBACK(on_window_deleted_cb), &ci);
 
     gtk_widget_show_all(window);
+
+
+    // Пытаемся соединиться с vdi и получить список машин. Получив список машин нужно сгенерить
+    // соответствующие кнопки  в скрол области. Показывать только первые скажем 200 машин?
+    // Start session here
+    startSession();
+
+
+    // get vm data
+    printf("main thread %i \n", g_thread_self());
+
+    executeAsyncTask(getVdiVmData, onGetVdiVmDataFinished, NULL);
 
     // event loop
     ci.loop = g_main_loop_new(NULL, FALSE);

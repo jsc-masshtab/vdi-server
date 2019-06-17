@@ -6,6 +6,7 @@
 #define VIRT_VIEWER_VEIL_VDI_API_SESSION_H
 
 #include <gtk/gtk.h>
+#include <json-glib/json-glib.h>
 
 typedef enum{
     VDI_VM_WIN,
@@ -26,16 +27,24 @@ typedef struct{
 void executeAsyncTask(GTaskThreadFunc  task_func, GAsyncReadyCallback  callback, gpointer callback_data);
 
 void startSession();
+void configureSession(GTask         *task,
+                      gpointer       source_object G_GNUC_UNUSED,
+                      gpointer       task_data G_GNUC_UNUSED,
+                      GCancellable  *cancellable G_GNUC_UNUSED);
 void stopSession();
 
-void configureSession();
+gboolean refreshVdiSessionToken();
 
-const gchar *getVdiSessionToken();
+void gInputStreamToBuffer(GInputStream *inputStream, gchar *responseBuffer);
+
+gchar * apiCall(const char *method, const char *uri_string);
 
 void getVdiVmData(GTask         *task,
                  gpointer       source_object,
                  gpointer       task_data,
                  GCancellable  *cancellable);
+
+JsonObject * getJsonObject(JsonParser *parser, const gchar *data);
 
 
 #endif //VIRT_VIEWER_VEIL_VDI_API_SESSION_H

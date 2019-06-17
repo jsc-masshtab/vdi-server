@@ -124,6 +124,10 @@ SET(LIBS ${LIBS} spice-client-gtk-3.0 spice-client-glib-2.0 spice-controller)
 INCLUDE_DIRECTORIES(/usr/include/libsoup-2.4)
 SET(LIBS ${LIBS} soup-2.4)
 
+# json glib
+INCLUDE_DIRECTORIES(/usr/include/json-glib-1.0)
+SET(LIBS ${LIBS} json-glib-1.0)
+
 # other libs
 SET(LIBS ${LIBS}
         m

@@ -9,16 +9,20 @@
 
 #include <libsoup/soup-session.h>
 #include "virt-viewer-util.h"
+#include <json-glib/json-glib.h>
 
 #include "vdi_api_session.h"
+
+#define RESPONSE_BUFFER_SIZE 200
 
 extern gchar *username_from_remote_dialog;
 extern gchar *password_from_remote_dialog;
 extern gchar *ip_from_remote_dialog;
 extern gchar *port_from_remote_dialog;
 
-gchar *api_url = NULL;
-gchar *auth_url = NULL;
+static gchar *api_url = NULL;
+static gchar *auth_url = NULL;
+static gchar *jwt = NULL;
 
 static SoupSession *soupSession = NULL; // thread safe
 
@@ -43,78 +47,142 @@ void startSession()
     free_memory_safely(&auth_url);
     api_url = g_strdup_printf("http://%s", ip_from_remote_dialog);
     auth_url = g_strdup_printf("%s:%s/auth/", api_url, port_from_remote_dialog);
-    printf("\n");
+}
+
+void configureSession(GTask         *task,
+                      gpointer       source_object G_GNUC_UNUSED,
+                      gpointer       task_data G_GNUC_UNUSED,
+                      GCancellable  *cancellable G_GNUC_UNUSED)
+{
+    gboolean tokenReceived = refreshVdiSessionToken();
+
+    g_task_return_boolean(task, tokenReceived);
 }
 
 void stopSession()
 {
     // todo: required to cancel all pending requests...
-
     g_object_unref(soupSession);
+    free_memory_safely(&api_url);
+    free_memory_safely(&auth_url);
+    free_memory_safely(&jwt);
 }
 
-void configureSession()
+gboolean refreshVdiSessionToken()
 {
-    const gchar *jwtToken = getVdiSessionToken();
-}
+    printf("refreshVdiSessionToken\n");
+    // clear token
+    free_memory_safely(&jwt);
 
-const gchar *getVdiSessionToken()
-{
-    printf("getVdiSessionToken\n");
-    //printf("getVdiSessionToken thread %i \n", g_thread_self());
-
+    // create request message
     SoupMessage *msg = soup_message_new ("POST", auth_url);
 
-    gchar *messageBody = g_strdup_printf("{\"username\": \"%s\", \"password\": \"%s\"}",
+    gchar *messageBodyStr = g_strdup_printf("{\"username\": \"%s\", \"password\": \"%s\"}",
             username_from_remote_dialog, password_from_remote_dialog);
-    // set data   // data = '{"username": "%s", "password": "%s"}' % (self.username, self.password)
+
     soup_message_set_request (msg, "application/x-www-form-urlencoded",
-                              SOUP_MEMORY_COPY, messageBody, strlen (messageBody));
-    g_free(messageBody);
+                              SOUP_MEMORY_COPY, messageBodyStr, strlen (messageBodyStr));
+    g_free(messageBodyStr);
 
+    // send message
     GError *error = NULL;
-    GInputStream *stream = soup_session_send (soupSession, msg, NULL, &error);
+    GInputStream *inputStream = soup_session_send (soupSession, msg, NULL, &error);
 
+    gchar responseBuffer[RESPONSE_BUFFER_SIZE];
+    gInputStreamToBuffer(inputStream, responseBuffer);
+    //memset(responseBuffer, 0, RESPONSE_BUFFER_SIZE);
+    //g_input_stream_read (inputStream, responseBuffer, RESPONSE_BUFFER_SIZE, NULL, &error);
+    //responseBuffer[RESPONSE_BUFFER_SIZE - 1] = '\0'; // limit string for safety reasons
+
+    // parse response
     printf("msg->status_code %i\n", msg->status_code);
     printf("reason_phrase %s\n", msg->reason_phrase);
-    //printf("response_body %s\n", msg->response_body->data);
+    printf("responseBuffer %s\n", responseBuffer);
+
+    if(msg->status_code != 200)
+        return FALSE;
+
+    JsonParser *parser = json_parser_new ();
+    JsonObject *object = getJsonObject(parser, responseBuffer);
+    if(object == NULL)
+        return FALSE;
+
+    jwt = g_strdup (json_object_get_string_member (object, "access_token"));
 
     g_object_unref(msg);
+    g_object_unref (parser);
 
-    const gchar *jwt = NULL;
-    return jwt;
+    printf("jwt: %s\n", jwt);
+    return TRUE;
 }
 
-void getVdiVmData(GTask         *task,
-                 gpointer       source_object,
-                 gpointer       task_data,
-                 GCancellable  *cancellable) {
+void gInputStreamToBuffer(GInputStream *inputStream, gchar *responseBuffer)
+{
+    memset(responseBuffer, 0, RESPONSE_BUFFER_SIZE);
+    GError *error = NULL;
+    g_input_stream_read (inputStream, responseBuffer, RESPONSE_BUFFER_SIZE, NULL, &error);
+    responseBuffer[RESPONSE_BUFFER_SIZE - 1] = '\0'; // limit string for safety reasons
+}
 
-    // get token
-    const gchar *jwtToken = getVdiSessionToken();
+gchar * apiCall(const char *method, const char *uri_string)
+{
+    if(jwt == NULL)
+        refreshVdiSessionToken();
 
-    // check if token received
-    //if (jwtToken == NULL) {
-    //    gchar *failStr = g_strdup("Fail");
-    //    g_task_return_pointer(task, failStr, NULL);
-    //}
+    SoupMessage *msg = soup_message_new (method, uri_string);
 
-    // construct msg
-    SoupMessage *msg = soup_message_new ("POST", "https://www.gismeteo.ru");
-    gchar *authHeader = g_strdup_printf("jwt %s", jwtToken); // "jwt {}".format(self._get_token
+    // header
+    gchar *authHeader = g_strdup_printf("jwt %s", jwt);
     soup_message_headers_append (msg->request_headers, "Authorization", authHeader);
     g_free(authHeader);
     soup_message_headers_append (msg->request_headers, "Content-Type", "application/json; charset=utf8");
 
-    // send post request to get Vdi Vm Data
-    GInputStream *stream;
+    // send request
     GError *error = NULL;
-    stream = soup_session_send (soupSession, msg, NULL, &error);
+    GInputStream *inputStream = soup_session_send (soupSession, msg, NULL, &error);
 
-    // parse json response
+    gchar *responseBodyStr = NULL;
+    // check if token is bad
+    if(msg->status_code == 401) {
+        refreshVdiSessionToken();
+        soup_session_send(soupSession, msg, NULL, &error);
+    }
+    else if(msg->status_code == 200) { // we are happy now
+        gchar responseBuffer[RESPONSE_BUFFER_SIZE];
+        gInputStreamToBuffer(inputStream, responseBuffer);
 
+        responseBodyStr = g_strdup(responseBuffer); // json_string_with_data
+    }
 
+    g_object_unref(msg);
 
-    gchar *testStr = g_strdup("fail"); // json_string_with_vm_data
-    g_task_return_pointer(task, testStr, NULL);
+    return responseBodyStr;
+}
+
+void getVdiVmData(GTask         *task,
+                 gpointer       source_object G_GNUC_UNUSED,
+                 gpointer       task_data G_GNUC_UNUSED,
+                 GCancellable  *cancellable G_GNUC_UNUSED) {
+
+    // construct msg
+    gchar *getVmUrl = g_strdup_printf("%s/client/pools", api_url);
+    gchar *responseBodyStr = apiCall("GET", getVmUrl);
+    g_free(getVmUrl);
+
+    g_task_return_pointer(task, responseBodyStr, NULL); // return pointer must be freed
+}
+
+JsonObject * getJsonObject(JsonParser *parser, const gchar *data){
+
+    gboolean result = json_parser_load_from_data (parser, data, -1, NULL);
+    if(!result)
+        return NULL;
+
+    JsonNode *root = json_parser_get_root (parser);
+    if(!JSON_NODE_HOLDS_OBJECT (root))
+        return NULL;
+
+    JsonObject *object = json_node_get_object (root);
+
+    return object;
 }
