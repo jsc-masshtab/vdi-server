@@ -40,7 +40,10 @@ class WsConnection(Awaitable):
 
     async def __anext__(self):
         msg = await self._conn.read_message()
-        return json.loads(msg)
+        try:
+            return json.loads(msg)
+        except:
+            breakpoint()
 
 
 
