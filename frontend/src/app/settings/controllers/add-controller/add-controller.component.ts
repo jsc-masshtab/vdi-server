@@ -20,10 +20,10 @@ export class AddControllerComponent {
 
 
   public send() {
-    if(!this.controller || !this.description) {
-      this.validate = true;
-      return;
-    }
+    // if(!this.controller || !this.description) {
+    //   this.validate = true;
+    //   return;
+    // }
     this.validate = false;
     this.service.addController(this.controller,this.description).subscribe((res) => {
       if(res) {
