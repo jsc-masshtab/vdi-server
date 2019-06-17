@@ -8,10 +8,19 @@
 //sprintf(hello_world, "%s %s!", "Hello" "world");
 
 #include <libsoup/soup-session.h>
+#include "virt-viewer-util.h"
 
 #include "vdi_api_session.h"
 
-static SoupSession *soupSession; // thread safe
+extern gchar *username_from_remote_dialog;
+extern gchar *password_from_remote_dialog;
+extern gchar *ip_from_remote_dialog;
+extern gchar *port_from_remote_dialog;
+
+gchar *api_url = NULL;
+gchar *auth_url = NULL;
+
+static SoupSession *soupSession = NULL; // thread safe
 
 // create session
 // get token  (make post request)
@@ -29,6 +38,12 @@ void executeAsyncTask(GTaskThreadFunc  task_func, GAsyncReadyCallback  callback,
 void startSession()
 {
     soupSession = soup_session_new();
+
+    free_memory_safely(&api_url);
+    free_memory_safely(&auth_url);
+    api_url = g_strdup_printf("http://%s", ip_from_remote_dialog);
+    auth_url = g_strdup_printf("%s:%s/auth/", api_url, port_from_remote_dialog);
+    printf("\n");
 }
 
 void stopSession()
@@ -48,31 +63,41 @@ const gchar *getVdiSessionToken()
     printf("getVdiSessionToken\n");
     //printf("getVdiSessionToken thread %i \n", g_thread_self());
 
-    SoupMessage *msg = soup_message_new ("POST", "https://www.gismeteo.ru");
+    SoupMessage *msg = soup_message_new ("POST", auth_url);
 
-    GInputStream *stream;
+    gchar *messageBody = g_strdup_printf("{\"username\": \"%s\", \"password\": \"%s\"}",
+            username_from_remote_dialog, password_from_remote_dialog);
+    // set data   // data = '{"username": "%s", "password": "%s"}' % (self.username, self.password)
+    soup_message_set_request (msg, "application/x-www-form-urlencoded",
+                              SOUP_MEMORY_COPY, messageBody, strlen (messageBody));
+    g_free(messageBody);
+
     GError *error = NULL;
+    GInputStream *stream = soup_session_send (soupSession, msg, NULL, &error);
 
-    stream = soup_session_send (soupSession, msg, NULL, &error);
-
-    printf("%i", msg->status_code); printf("\n");
-    printf(msg->reason_phrase); printf("\n");
-    printf(msg->response_body->data); printf("\n");
+    printf("msg->status_code %i\n", msg->status_code);
+    printf("reason_phrase %s\n", msg->reason_phrase);
+    //printf("response_body %s\n", msg->response_body->data);
 
     g_object_unref(msg);
 
-    const gchar *jwt = "";
+    const gchar *jwt = NULL;
     return jwt;
 }
 
 void getVdiVmData(GTask         *task,
                  gpointer       source_object,
                  gpointer       task_data,
-                 GCancellable  *cancellable)
-{
+                 GCancellable  *cancellable) {
 
     // get token
     const gchar *jwtToken = getVdiSessionToken();
+
+    // check if token received
+    //if (jwtToken == NULL) {
+    //    gchar *failStr = g_strdup("Fail");
+    //    g_task_return_pointer(task, failStr, NULL);
+    //}
 
     // construct msg
     SoupMessage *msg = soup_message_new ("POST", "https://www.gismeteo.ru");
@@ -88,31 +113,8 @@ void getVdiVmData(GTask         *task,
 
     // parse json response
 
-    //! move to callback
-    /*
-    GArray *garray;
-    gint i;
-    const guint numberOfVm = 1;
 
-    garray = g_array_sized_new  (FALSE, TRUE, sizeof (VdiVmData), numberOfVm);
-    for (i = 0; i < numberOfVm; i++) {
-        VdiVmData vdiVmData;
-        vdiVmData.osType = VDI_VM_LINUX;
-        vdiVmData.testData = i;
-        g_array_append_val (garray, vdiVmData);
-    }
 
-    for (i = 0; i < numberOfVm; i++) {
-        VdiVmData vdiVmData = g_array_index (garray, VdiVmData, i);
-        printf("%i", vdiVmData.testData);
-        printf("\n");
-    }
-
-    //g_array_free (garray, TRUE);
-    //return garray;
-     */
-
-    gchar *testStr = g_strdup("test_str");
-
+    gchar *testStr = g_strdup("fail"); // json_string_with_vm_data
     g_task_return_pointer(task, testStr, NULL);
 }

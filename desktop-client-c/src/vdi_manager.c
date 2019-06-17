@@ -13,9 +13,6 @@
 #include "vdi_manager.h"
 #include "vdi_api_session.h"
 
-extern gchar *ip_from_remote_dialog;
-extern gchar *port_from_remote_dialog;
-
 //static GMainLoop *mainLoop;
 
 
@@ -41,7 +38,7 @@ static on_vm_chosen(GtkButton *button G_GNUC_UNUSED, gpointer data){
 
 
 static gboolean
-got_value (GObject *source_object,
+onGetVdiVmDataFinished (GObject *source_object,
            GAsyncResult *res,
            gpointer user_data)
 {
@@ -50,9 +47,37 @@ got_value (GObject *source_object,
 
     GError *error;
     gpointer  ptr_res =  g_task_propagate_pointer (G_TASK (res), &error); // take ownership
+    if(ptr_res == NULL){
+        printf("onGetVdiVmDataFinished: fail");
+        return G_SOURCE_REMOVE;
+    }
     gchar *str = ptr_res;
     if(ptr_res)
         g_free(ptr_res);
+
+
+    /*
+    GArray *garray;
+    gint i;
+    const guint numberOfVm = 1;
+    
+    garray = g_array_sized_new  (FALSE, TRUE, sizeof (VdiVmData), numberOfVm);
+    for (i = 0; i < numberOfVm; i++) {
+        VdiVmData vdiVmData;
+        vdiVmData.osType = VDI_VM_LINUX;
+        vdiVmData.testData = i;
+        g_array_append_val (garray, vdiVmData);
+    }
+    
+    for (i = 0; i < numberOfVm; i++) {
+        VdiVmData vdiVmData = g_array_index (garray, VdiVmData, i);
+        printf("%i", vdiVmData.testData);
+        printf("\n");
+    }
+    
+    //g_array_free (garray, TRUE);
+    //return garray;
+     */
 
     return G_SOURCE_REMOVE;
 }
@@ -77,10 +102,10 @@ vdi_manager_dialog(GtkWindow *main_window, gchar **uri){
     // Start session here
     startSession();
 
-    // get token request
+    // get vm data
     printf("main thread %i \n", g_thread_self());
 
-    executeAsyncTask(getVdiVmData, got_value, NULL);
+    executeAsyncTask(getVdiVmData, onGetVdiVmDataFinished, NULL);
 
     /* Create the widgets */
     builder = virt_viewer_util_load_ui("vdi_manager_form.ui"); // remote-viewer-connect_veil.ui
