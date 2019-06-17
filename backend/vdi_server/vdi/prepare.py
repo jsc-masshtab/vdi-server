@@ -22,7 +22,7 @@ async def add_controller(ip):
     await db.init()
     await AddController._add_controller(ip=ip, set_default=True)
 
-async def add_user(controller_ip):
+async def add_user(controller_ip, **creds):
     url = f"http://{controller_ip}/api/users/"
 
     token = await FirstTimeToken(controller_ip=controller_ip)
