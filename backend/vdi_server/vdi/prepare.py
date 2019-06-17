@@ -30,7 +30,7 @@ async def add_user(controller_ip, **creds):
         "Content-Type": 'application/json',
         'Authorization': f'jwt {token}',
     }
-    body = dict(settings.credentials)
+    body = dict(creds or settings.credentials)
     body.update({
         'groups': ['Administrator', 'Storage Administrator', 'Security Administrator',
                    'VM Administrator', 'VM Operator',]
