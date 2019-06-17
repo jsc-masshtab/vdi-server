@@ -164,11 +164,27 @@ class PoolState(graphene.ObjectType):
         ]
         from vdi.graphql.vm import TemplateType
         from vdi.graphql.resources import NodeType
+
+        template_selections = get_selections(info, 'template')
+        if {'id', *template_selections} > {'id'}:
+            from vdi.tasks.vm import GetDomainInfo
+            template_ids = [
+                vm_ids[domain['id']] for domain in vms
+            ]
+            templates = {}
+            for template_id in template_ids:
+                template = await GetDomainInfo(controller_ip=self.controller_ip, domain_id=template_id)
+                templates[template_id] = TemplateType(id=template_id, info=template, name=template['verbose_name'])
+        else:
+            templates = None
         li = []
         for domain in vms:
             template_id = vm_ids[domain['id']]
             node = NodeType(id=node_id)
-            template = TemplateType(id=template_id)
+            if templates is None:
+                template = TemplateType(id=template_id)
+            else:
+                template = templates[template_id]
             obj = VmType(id=domain['id'], template=template, name=domain['verbose_name'], node=node)
             li.append(obj)
         return li
