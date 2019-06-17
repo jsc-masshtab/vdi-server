@@ -139,8 +139,8 @@ body {
 .btn {
     padding: 6px;
     padding-left: 7px;
-    padding-right: 15px;
     background: rgba(201, 209, 216, 0.3);
+    display: flex;
     
     > button {
         background: #FFF;
@@ -164,8 +164,13 @@ body {
             box-shadow: 0 2px 8px rgba(0,0,0,.2);
         }
 
-        &::last-child {
+        &:last-child {
             margin-right: 0px;
         }
     }
+
+    > button.refresh {
+        margin-left: auto;
+    }
+    
 }
