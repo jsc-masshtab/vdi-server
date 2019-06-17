@@ -3,9 +3,9 @@
 <vdi-breadcrumbs [data]="crumbs"></vdi-breadcrumbs>
       
 <div class="resourse-into" *ngIf="!spinner">
-    <div class="control-panel">
+    <!-- <div class="control-panel">
         <button class="control-btn">Удалить</button>
-    </div>
+    </div> -->
     <ul class="menu">
         <li (click)="routeTo('info')" [class.active]="menuActive === 'info'" title="Информация">Информация</li>
         <li (click)="routeTo('vms')" [class.active]="menuActive === 'vms'" title="Виртуальные машины">Виртуальные машины</li>
