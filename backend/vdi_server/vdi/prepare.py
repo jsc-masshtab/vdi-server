@@ -46,25 +46,25 @@ async def add_user(controller_ip):
 
 
 async def main():
-    if not settings['debug']:
+    if not settings['is_dev']:
         return
     controller_ip = settings['controller_ip']
 
     await add_user(controller_ip)
     await add_controller(controller_ip)
-    tasks = [
-        admin.AddNode(management_ip='192.168.20.121', controller_ip=settings['controller_ip']),
-        admin.DownloadImage(target='image.qcow2'),
-    ]
-    node_id = None
-    async for cls, result in Wait(*tasks).items():
-        print(f"{cls.__name__} done")
-        if cls is admin.AddNode:
-            node_id = result
-    [datapool] = await resources.ListDatapools(controller_ip=settings['controller_ip'], node_id=node_id)
-    await admin.UploadImage(filename='image.qcow2', controller_ip=settings['controller_ip'],
-                            datapool_id=datapool['id'])
-    print('UploadImage done')
+    # tasks = [
+    #     admin.AddNode(management_ip='192.168.20.121', controller_ip=settings['controller_ip']),
+    #     admin.DownloadImage(target='image.qcow2'),
+    # ]
+    # node_id = None
+    # async for cls, result in Wait(*tasks).items():
+    #     print(f"{cls.__name__} done")
+    #     if cls is admin.AddNode:
+    #         node_id = result
+    # [datapool] = await resources.ListDatapools(controller_ip=settings['controller_ip'], node_id=node_id)
+    # await admin.UploadImage(filename='image.qcow2', controller_ip=settings['controller_ip'],
+    #                         datapool_id=datapool['id'])
+    # print('UploadImage done')
 
 
 
