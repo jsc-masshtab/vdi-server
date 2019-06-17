@@ -6,9 +6,11 @@
           <span>{{ obj.title }}</span>
         </div>
         <div class="table-area-property">
-          <span *ngIf="obj.property_lv2">{{ data[obj.property][obj.property_lv2] || '--' }}</span>
+          <span *ngIf="obj.property_lv2 && data[obj.property]">{{ data[obj.property][obj.property_lv2] || '--' }}</span>
           <span *ngIf="!obj.property_lv2 && !obj.property_array">{{ data[obj.property] || '--' }}</span>
-          <span *ngIf="obj.property_array">{{ data[obj.property_array].length || '--' }}</span>
+          <span *ngIf="obj.property_array && data[obj.property_array]">{{ data[obj.property_array].length || '--' }}</span>
+
+          <span *ngIf="obj.property_lv2 && !data[obj.property] || obj.property_array && !data[obj.property_array]">--</span>
         </div>
       </div> 
     </div>

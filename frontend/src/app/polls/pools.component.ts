@@ -16,7 +16,7 @@ import { RemovePoolComponent } from './remove-pool/remove-pool.component';
 export class PoolsComponent implements OnInit {
 
   public pools: [];
-  public spinner:boolean = true;
+  public spinner:boolean = false;
   private getPoolsSub: Subscription;
 
   public collection: object[] = [
@@ -71,6 +71,7 @@ export class PoolsComponent implements OnInit {
   }
 
   private getAllPools() {
+    this.spinner = true;
     this.getPoolsSub = this.service.getAllPools(true)
       .subscribe( (data) => {
         this.pools = data;
