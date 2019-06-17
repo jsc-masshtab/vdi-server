@@ -157,7 +157,8 @@ class PoolState(graphene.ObjectType):
             [(node_id,)] = await conn.fetch(*qu)
             qu = 'select id, template_id from vm where pool_id = $1', self.pool_id
             data = await conn.fetch(*qu)
-        vm_ids = dict(data)
+        vm_ids, template_ids = zip(*data)
+        [template_id] = set(template_ids)
         vms = await vm.ListVms(controller_ip=self.controller_ip)
         vms = [
             vm for vm in vms if vm['id'] in vm_ids
@@ -168,23 +169,13 @@ class PoolState(graphene.ObjectType):
         template_selections = get_selections(info, 'template')
         if {'id', *template_selections} > {'id'}:
             from vdi.tasks.vm import GetDomainInfo
-            template_ids = [
-                vm_ids[domain['id']] for domain in vms
-            ]
-            templates = {}
-            for template_id in template_ids:
-                template = await GetDomainInfo(controller_ip=self.controller_ip, domain_id=template_id)
-                templates[template_id] = TemplateType(id=template_id, info=template, name=template['verbose_name'])
+            template = await GetDomainInfo(controller_ip=self.controller_ip, domain_id=template_id)
+            template = TemplateType(id=template_id, info=template, name=template['verbose_name'])
         else:
-            templates = None
+            template = TemplateType(id=template_id)
         li = []
         for domain in vms:
-            template_id = vm_ids[domain['id']]
             node = NodeType(id=node_id)
-            if templates is None:
-                template = TemplateType(id=template_id)
-            else:
-                template = templates[template_id]
             obj = VmType(id=domain['id'], template=template, name=domain['verbose_name'], node=node)
             li.append(obj)
         return li
