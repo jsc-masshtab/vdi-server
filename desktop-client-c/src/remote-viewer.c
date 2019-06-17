@@ -53,6 +53,8 @@
 #include "remote-viewer-connect.h"
 #include "vdi_manager.h"
 
+extern gboolean opt_manual_mode;
+
 struct _RemoteViewerPrivate {
 #ifdef HAVE_SPICE_GTK
     SpiceCtrlController *controller;
@@ -1144,6 +1146,7 @@ retry_dialog:
         g_debug("Opening display to %s", guri);
 
         // reading from ini file (нам не нужно?)
+        /*
         file = g_file_new_for_commandline_arg(guri);
         if (g_file_query_exists(file, NULL)) {
             gchar *path = g_file_get_path(file);
@@ -1158,18 +1161,28 @@ retry_dialog:
         }
         else {
             type = g_strdup("spice");
-        }
+        }*/
+        type = g_strdup("spice");
 
-        
-
-#ifdef HAVE_OVIRT
-        if (g_strcmp0(type, "ovirt") == 0) {// сюда не заходит
-            if (!create_ovirt_session(app, guri, &error)) {
-                g_prefix_error(&error, _("Couldn't open oVirt session: "));
+        // После такого как забрали адресс с логином и паролем действуем в зависимости от opt_manual_mode
+        // 1) в мануальном режиме сразу подключаемся к удаленноиу раб столу
+        // 2) В дефолтном режиме вызываем vdi manager. В нем пользователь выберет машину для поодключения
+        if(!opt_manual_mode){
+            VirtViewerWindow *main_window = virt_viewer_app_get_main_window(app);
+            if(!vdi_manager_dialog(virt_viewer_window_get_window(main_window), &guri)){
                 goto cleanup;
             }
-        } else
-#endif   // Далее переход к удаленному раб. столу. Создание сессии
+        }
+
+//#ifdef HAVE_OVIRT
+//        if (g_strcmp0(type, "ovirt") == 0) {// сюда не заходит
+//            if (!create_ovirt_session(app, guri, &error)) {
+//                g_prefix_error(&error, _("Couldn't open oVirt session: "));
+//                goto cleanup;
+//            }
+//        } else
+//#endif
+        // Далее переход к удаленному раб. столу. Создание сессии
         {
             if (!virt_viewer_app_create_session(app, type, &error))
                 goto cleanup;

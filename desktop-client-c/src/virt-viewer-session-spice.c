@@ -36,8 +36,9 @@
 #include "virt-viewer-display-spice.h"
 #include "virt-viewer-auth.h"
 
-gchar *m_username = NULL;
-gchar *m_password = NULL;
+extern gchar *username_from_remote_dialog;
+extern gchar *password_from_remote_dialog;
+gboolean  take_extern_credentials = FALSE;
 
 
 G_DEFINE_TYPE (VirtViewerSessionSpice, virt_viewer_session_spice, VIRT_VIEWER_TYPE_SESSION)
@@ -715,8 +716,8 @@ virt_viewer_session_spice_main_channel_event(SpiceChannel *channel,
          * entry will be pre-filled with the username used in the previous attempt. */
         if (username_required) {
             // set username from remote-viewer-connect form
-            if(m_username){
-                user = g_strdup(m_username);
+            if(take_extern_credentials){
+                user = g_strdup(username_from_remote_dialog);
             }
             else {
                 g_object_get(self->priv->session, "username", &user, NULL);
@@ -729,9 +730,10 @@ virt_viewer_session_spice_main_channel_event(SpiceChannel *channel,
 
         // set password
         // set password from remote-viewer-connect form
-        if (m_password) {
-            password = g_strdup(m_password);
+        if (take_extern_credentials) {
+            password = g_strdup(password_from_remote_dialog);
             ret = GTK_RESPONSE_OK;
+            take_extern_credentials = FALSE;
         }
         // Если с формы получили неправильный пароль , то вызываем форму авторизации
         else{
@@ -799,14 +801,6 @@ virt_viewer_session_spice_main_channel_event(SpiceChannel *channel,
         break;
     }
 
-    if(m_password) {
-        g_free(m_password);
-        m_password = NULL;
-    }
-    if(m_username) {
-        g_free(m_username);
-        m_username = NULL;
-    }
     g_free(password);
     g_free(user);
 }

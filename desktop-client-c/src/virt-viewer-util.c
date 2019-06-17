@@ -718,6 +718,14 @@ configerror:
     return NULL;
 }
 
+void free_memory_safely(gchar **string_ptr){
+
+    if(*string_ptr) {
+        g_free(*string_ptr);
+        *string_ptr = NULL;
+    }
+}
+
 /*
  * Local variables:
  *  c-indent-level: 4

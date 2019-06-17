@@ -67,7 +67,7 @@ class ApiSession:
             return self._api_session
         else:
             session = requests.Session()
-            self._configure_session(session)
+            self._configure_session(session)# api_session
             self._api_session = session
             return self._api_session
 

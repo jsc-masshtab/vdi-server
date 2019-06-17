@@ -72,7 +72,11 @@ crashhandler.c
 
 ../config.h
 
+# vdi related
 vdi_manager.h
+vdi_manager.c
+vdi_api_session.h
+vdi_api_session.c
 
 #windows-cmdline-wrapper.c
 
@@ -82,6 +86,7 @@ vdi_manager.h
 find_package(PkgConfig REQUIRED)
 pkg_search_module(GLIB REQUIRED glib-2.0)
 INCLUDE_DIRECTORIES(${GLIB_INCLUDE_DIRS})
+INCLUDE_DIRECTORIES(/usr/include/glib-2.0/gio)
 SET(LIBS ${LIBS} ${GLIB_LDFLAGS})
 
 # GTK
@@ -125,10 +130,11 @@ SET(LIBS ${LIBS}
         #gio-2.0
         #gobject-2.0
         -rdynamic
+        -pthread
 )
 
 #############################LINKING###################################
-ADD_EXECUTABLE(virt_viewer_veil  ${SRC_CODE} vdi_manager.c)
+ADD_EXECUTABLE(virt_viewer_veil  ${SRC_CODE})
 target_link_libraries(
     virt_viewer_veil # exec
     ${LIBS} # libs

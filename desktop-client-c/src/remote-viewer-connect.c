@@ -28,20 +28,17 @@
 
 #include <ctype.h>
 
-extern gchar *m_username;
-extern gchar *m_password;
+gchar *username_from_remote_dialog = NULL;
+gchar *password_from_remote_dialog = NULL;
+gchar *ip_from_remote_dialog = NULL;
+gchar *port_from_remote_dialog = NULL;
+
 extern gboolean opt_manual_mode;
+extern gboolean take_extern_credentials;
 
 static gboolean b_save_credentials_to_file = FALSE;
 
 static const gchar *ini_file_path = "veil_client_settings.ini";
-
-typedef struct
-{
-    gboolean response;
-    GMainLoop *loop;
-    GtkWidget *entry;
-} ConnectionInfo;
 
 // read credentials_from_settings_file  todo: move to another file
 static gchar *
@@ -276,6 +273,8 @@ remote_viewer_connect_dialog(GtkWindow *main_window, gchar **uri) {
             NULL
     };
 
+    take_extern_credentials = TRUE;
+
     g_return_val_if_fail(uri && *uri == NULL, FALSE);
 
     /* Create the widgets */
@@ -285,14 +284,13 @@ remote_viewer_connect_dialog(GtkWindow *main_window, gchar **uri) {
     window = GTK_WIDGET(gtk_builder_get_object(builder, "remote-viewer-connection-window"));
     gtk_window_set_transient_for(GTK_WINDOW(window), main_window);
     connect_button = GTK_WIDGET(gtk_builder_get_object(builder, "connect-button"));
-    //cancel_button = GTK_WIDGET(gtk_builder_get_object(builder, "cancel-button"));
-    //label = GTK_WIDGET(gtk_builder_get_object(builder, "example-label"));
+
     entry = ci.entry = GTK_WIDGET(gtk_builder_get_object(builder, "connection-address-entry"));
     const gchar *ip_str_from_config_file = read_from_settings_file("RemoteViewerConnect", "ip");
     if(ip_str_from_config_file)
         gtk_entry_set_text(GTK_ENTRY(entry), ip_str_from_config_file);
 
-    //make_label_small(GTK_LABEL(label));
+
 
     active = (gtk_entry_get_text_length(GTK_ENTRY(ci.entry)) > 0);
     gtk_widget_set_sensitive(GTK_WIDGET(connect_button), active);
@@ -302,14 +300,11 @@ remote_viewer_connect_dialog(GtkWindow *main_window, gchar **uri) {
     const gchar *port_str_from_config_file = read_from_settings_file("RemoteViewerConnect", "port");
     if(port_str_from_config_file)
         gtk_entry_set_text(GTK_ENTRY(port_entry), port_str_from_config_file);
-    //recent = GTK_WIDGET(gtk_builder_get_object(builder, "recent-chooser"));
 
     rfilter = gtk_recent_filter_new();
     gtk_recent_filter_add_mime_type(rfilter, "application/x-spice");
     gtk_recent_filter_add_mime_type(rfilter, "application/x-vnc");
     gtk_recent_filter_add_mime_type(rfilter, "application/x-virt-viewer");
-    //gtk_recent_chooser_set_filter(GTK_RECENT_CHOOSER(recent), rfilter);
-    //gtk_recent_chooser_set_local_only(GTK_RECENT_CHOOSER(recent), FALSE);
 
     // Set veil image
     veil_image = GTK_WIDGET(gtk_builder_get_object(builder, "veil-image"));
@@ -342,9 +337,7 @@ remote_viewer_connect_dialog(GtkWindow *main_window, gchar **uri) {
     g_signal_connect(connect_button, "clicked",
                      G_CALLBACK(connect_button_clicked_cb), &ci);
 
-    /* make sure that user_data is passed as first parameter */
-    //g_signal_connect_swapped(cancel_button, "clicked",
-    //                         G_CALLBACK(window_deleted_cb), &ci);
+
     g_signal_connect_swapped(window, "delete-event",
                              G_CALLBACK(window_deleted_cb), &ci);
 
@@ -374,29 +367,30 @@ remote_viewer_connect_dialog(GtkWindow *main_window, gchar **uri) {
     connect_dialog_run(&ci);
 
     // collect data from gui form
-    const gchar *ip_str = gtk_entry_get_text(GTK_ENTRY(entry));
-    const gchar *port_str = gtk_entry_get_text(GTK_ENTRY(port_entry));
+    free_memory_safely(&ip_from_remote_dialog);
+    ip_from_remote_dialog = g_strdup(gtk_entry_get_text(GTK_ENTRY(entry)));
+    g_strstrip(ip_from_remote_dialog);
+    free_memory_safely(&port_from_remote_dialog);
+    port_from_remote_dialog = g_strdup(gtk_entry_get_text(GTK_ENTRY(port_entry)));
 
-    if(m_username)
-        g_free(m_username);
-    m_username = g_strdup(gtk_entry_get_text(GTK_ENTRY(login_entry)));
-    g_strstrip(m_username);
+    free_memory_safely(&username_from_remote_dialog);
+    username_from_remote_dialog = g_strdup(gtk_entry_get_text(GTK_ENTRY(login_entry)));
+    g_strstrip(username_from_remote_dialog);
 
-    if(m_password)
-        g_free(m_password);
-    m_password = g_strdup(gtk_entry_get_text(GTK_ENTRY(password_entry)));
-    g_strstrip(m_password);
+    free_memory_safely(&password_from_remote_dialog);
+    password_from_remote_dialog = g_strdup(gtk_entry_get_text(GTK_ENTRY(password_entry)));
+    g_strstrip(password_from_remote_dialog);
 
     // save data to ini file if required
     if(b_save_credentials_to_file){
-        write_to_settings_file("RemoteViewerConnect", "ip", ip_str);
-        write_to_settings_file("RemoteViewerConnect", "port", port_str);
-        write_to_settings_file("RemoteViewerConnect", "username", m_username);
-        write_to_settings_file("RemoteViewerConnect", "password", m_password);
+        write_to_settings_file("RemoteViewerConnect", "ip", ip_from_remote_dialog);
+        write_to_settings_file("RemoteViewerConnect", "port", port_from_remote_dialog);
+        write_to_settings_file("RemoteViewerConnect", "username", username_from_remote_dialog);
+        write_to_settings_file("RemoteViewerConnect", "password", password_from_remote_dialog);
     }
 
     if (ci.response == TRUE) {
-        *uri = g_strconcat("spice://", ip_str, ":", port_str, NULL);
+        *uri = g_strconcat("spice://", ip_from_remote_dialog, ":", port_from_remote_dialog, NULL);
         g_strstrip(*uri);
 
     } else {

@@ -28,10 +28,26 @@
 
 extern gboolean doDebug;
 
+// Инфо для соеднинения сигнала и каллбэка
+typedef struct
+{
+    gboolean response;
+    GMainLoop *loop;
+    GtkWidget *entry;
+} ConnectionInfo;
+
+
 enum {
     VIRT_VIEWER_ERROR_FAILED,
     VIRT_VIEWER_ERROR_CANCELLED
 };
+
+typedef enum
+{
+    DIALOG_SUCCESS,
+    DIALOG_ERROR,
+    DIALOG_QUIT_APP
+} DialogWindowResponse;
 
 #define VIRT_VIEWER_ERROR virt_viewer_error_quark ()
 #define VIRT_VIEWER_RESOURCE_PREFIX  "/org/virt-manager/virt-viewer"
@@ -66,6 +82,11 @@ void virt_viewer_shift_monitors_to_origin(GHashTable *displays);
 GHashTable* virt_viewer_parse_monitor_mappings(gchar **mappings,
                                                const gsize nmappings,
                                                const gint nmonitors);
+
+// save memory free
+void
+free_memory_safely(gchar **string_ptr);
+
 #endif
 
 /*
