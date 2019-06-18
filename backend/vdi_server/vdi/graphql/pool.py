@@ -157,6 +157,8 @@ class PoolState(graphene.ObjectType):
             [(node_id,)] = await conn.fetch(*qu)
             qu = 'select id, template_id from vm where pool_id = $1', self.pool_id
             data = await conn.fetch(*qu)
+        if not data:
+            return []
         vm_ids, template_ids = zip(*data)
         [template_id] = set(template_ids)
         vms = await vm.ListVms(controller_ip=self.controller_ip)
