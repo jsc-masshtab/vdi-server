@@ -33,6 +33,8 @@ void configureSession(GTask         *task,
                       GCancellable  *cancellable G_GNUC_UNUSED);
 void stopSession();
 
+void setupHeader(SoupMessage *msg);
+
 gboolean refreshVdiSessionToken();
 
 void gInputStreamToBuffer(GInputStream *inputStream, gchar *responseBuffer);
@@ -44,7 +46,14 @@ void getVdiVmData(GTask         *task,
                  gpointer       task_data,
                  GCancellable  *cancellable);
 
+void getVmDFromPool(GTask         *task,
+                  gpointer       source_object,
+                  gpointer       task_data,
+                  GCancellable  *cancellable);
+
+// json
 JsonObject * getJsonObject(JsonParser *parser, const gchar *data);
+JsonArray * getJsonArray(JsonParser *parser, const gchar *data);
 
 
 #endif //VIRT_VIEWER_VEIL_VDI_API_SESSION_H

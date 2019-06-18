@@ -68,6 +68,15 @@ void stopSession()
     free_memory_safely(&jwt);
 }
 
+void setupHeader(SoupMessage *msg)
+{
+    soup_message_headers_clear (msg->request_headers);
+    gchar *authHeader = g_strdup_printf("jwt %s", jwt);
+    soup_message_headers_append (msg->request_headers, "Authorization", authHeader);
+    g_free(authHeader);
+    soup_message_headers_append (msg->request_headers, "Content-Type", "application/json; charset=utf8");
+}
+
 gboolean refreshVdiSessionToken()
 {
     printf("refreshVdiSessionToken\n");
@@ -90,9 +99,6 @@ gboolean refreshVdiSessionToken()
 
     gchar responseBuffer[RESPONSE_BUFFER_SIZE];
     gInputStreamToBuffer(inputStream, responseBuffer);
-    //memset(responseBuffer, 0, RESPONSE_BUFFER_SIZE);
-    //g_input_stream_read (inputStream, responseBuffer, RESPONSE_BUFFER_SIZE, NULL, &error);
-    //responseBuffer[RESPONSE_BUFFER_SIZE - 1] = '\0'; // limit string for safety reasons
 
     // parse response
     printf("msg->status_code %i\n", msg->status_code);
@@ -132,26 +138,28 @@ gchar * apiCall(const char *method, const char *uri_string)
     SoupMessage *msg = soup_message_new (method, uri_string);
 
     // header
-    gchar *authHeader = g_strdup_printf("jwt %s", jwt);
-    soup_message_headers_append (msg->request_headers, "Authorization", authHeader);
-    g_free(authHeader);
-    soup_message_headers_append (msg->request_headers, "Content-Type", "application/json; charset=utf8");
+    setupHeader(msg);
 
-    // send request
+    // send request. first attempt
     GError *error = NULL;
     GInputStream *inputStream = soup_session_send (soupSession, msg, NULL, &error);
 
+    printf("apiCall: msg->status_code %i\n", msg->status_code);
     gchar *responseBodyStr = NULL;
-    // check if token is bad
+
+    // check if token is bad and make the second attempt
     if(msg->status_code == 401) {
         refreshVdiSessionToken();
-        soup_session_send(soupSession, msg, NULL, &error);
+        setupHeader(msg);
+        inputStream = soup_session_send(soupSession, msg, NULL, &error);
     }
-    else if(msg->status_code == 200) { // we are happy now
+
+    // if response is ok then fill responseBodyStr
+    if(msg->status_code == 200) { // we are happy now
         gchar responseBuffer[RESPONSE_BUFFER_SIZE];
         gInputStreamToBuffer(inputStream, responseBuffer);
 
-        responseBodyStr = g_strdup(responseBuffer); // json_string_with_data
+        responseBodyStr = g_strdup(responseBuffer); // json_string_with_data. memory allocation!
     }
 
     g_object_unref(msg);
@@ -162,9 +170,9 @@ gchar * apiCall(const char *method, const char *uri_string)
 void getVdiVmData(GTask         *task,
                  gpointer       source_object G_GNUC_UNUSED,
                  gpointer       task_data G_GNUC_UNUSED,
-                 GCancellable  *cancellable G_GNUC_UNUSED) {
+                 GCancellable  *cancellable G_GNUC_UNUSED)
+{
 
-    // construct msg
     gchar *getVmUrl = g_strdup_printf("%s/client/pools", api_url);
     gchar *responseBodyStr = apiCall("GET", getVmUrl);
     g_free(getVmUrl);
@@ -172,7 +180,22 @@ void getVdiVmData(GTask         *task,
     g_task_return_pointer(task, responseBodyStr, NULL); // return pointer must be freed
 }
 
-JsonObject * getJsonObject(JsonParser *parser, const gchar *data){
+void getVmDFromPool(GTask         *task,
+                    gpointer       source_object G_GNUC_UNUSED,
+                    gpointer       task_data G_GNUC_UNUSED,
+                    GCancellable  *cancellable G_GNUC_UNUSED)
+{
+    gint64 vmId = 0; // get it through parameters
+    gchar *getVmUrl = g_strdup_printf("%s/client/pools/%i", api_url, vmId);
+    gchar *responseBodyStr = apiCall("POST", getVmUrl);
+    g_free(getVmUrl);
+
+    g_task_return_pointer(task, responseBodyStr, NULL); // return pointer must be freed
+}
+
+// json
+JsonObject * getJsonObject(JsonParser *parser, const gchar *data)
+{
 
     gboolean result = json_parser_load_from_data (parser, data, -1, NULL);
     if(!result)
@@ -183,6 +206,20 @@ JsonObject * getJsonObject(JsonParser *parser, const gchar *data){
         return NULL;
 
     JsonObject *object = json_node_get_object (root);
-
     return object;
+}
+
+JsonArray * getJsonArray(JsonParser *parser, const gchar *data)
+{
+    gboolean result = json_parser_load_from_data (parser, data, -1, NULL);
+    if(!result)
+        return NULL;
+
+    JsonNode *root = json_parser_get_root (parser);
+    if(!JSON_NODE_HOLDS_ARRAY (root))
+        return NULL;
+
+    JsonArray *array = json_node_get_array (root);
+
+    return array;
 }

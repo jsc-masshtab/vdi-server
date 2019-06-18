@@ -10,38 +10,33 @@
 #include "vdi_manager.h"
 #include "vdi_api_session.h"
 
+#define MAX_VM_NUMBER 150
 //static GMainLoop *mainLoop;
 
 
-static void
-shutdown_loop(GMainLoop *loop)
+static void shutdown_loop(GMainLoop *loop)
 {
     if (g_main_loop_is_running(loop))
         g_main_loop_quit(loop);
 }
 
-static gboolean
-on_window_deleted_cb(ConnectionInfo *ci)
+static gboolean on_window_deleted_cb(ConnectionInfo *ci)
 {
     ci->response = FALSE;
     shutdown_loop(ci->loop);
     return TRUE;
 }
 
+static registerVM(gint64 vmId, const gchar *vmName)
+{
+
+}
+
 static void on_vm_chosen(GtkButton *button G_GNUC_UNUSED, gpointer data){
 
     ConnectionInfo *ci = data;
 };
-/*
-static void
-onConfigureSessionFinished(GObject *source_object G_GNUC_UNUSED,
-                 GAsyncResult *res,
-                 gpointer user_data G_GNUC_UNUSED)
-{
-    printf("onConfigureSessionFinished\n");
-    gboolean tokenReceived
-}
-*/
+
 static gboolean
 onGetVdiVmDataFinished (GObject *source_object G_GNUC_UNUSED,
            GAsyncResult *res,
@@ -58,29 +53,42 @@ onGetVdiVmDataFinished (GObject *source_object G_GNUC_UNUSED,
         return G_SOURCE_REMOVE;
     }
 
-    gchar *responseBodyStr = ptr_res;
+    gchar *responseBodyStr = ptr_res; // example "[{\"id\":17,\"name\":\"sad\"}]"
     // parse vm data  json
     JsonParser *parser = json_parser_new ();
-    JsonObject *object = getJsonObject(parser, responseBodyStr);
+    JsonArray *jsonArray = getJsonArray(parser, responseBodyStr);
 
-    if(object){
-        GList *vmDataList = json_object_get_members(object);
+    if(jsonArray){
+        // parse and construct gui
+        guint jsonArrayLength = MIN( json_array_get_length(jsonArray), MAX_VM_NUMBER );
+        printf("Number of machines: %i\n", jsonArrayLength);
+        int i;
+        for(i = 0; i < jsonArrayLength; ++i){
 
-        // generate gui elements
-        GList *l;
-        for (l = vmDataList; l != NULL; l = l->next)
-        {
-            gint64 vmId = json_object_get_int_member(l->data, "id");
-            const gchar *vmName = json_object_get_string_member(l->data, "name");
-            printf("vmId %i", vmId);
-            printf("vmName %s", vmName);
+            JsonNode *jsonNode = json_array_get_element (jsonArray, i);
+            JsonObject *object = json_node_get_object (jsonNode);
+
+            gint64 vmId = json_object_get_int_member(object, "id");
+            const gchar *vmName = json_object_get_string_member(object, "name");
+            printf("vmId %i\n", vmId);
+            printf("vmName %s\n", vmName);
+
+            registerVM(vmId, vmName);
         }
     }
 
+    g_object_unref (parser);
     if(ptr_res)
         g_free(ptr_res);
 
     return G_SOURCE_REMOVE;
+}
+
+static gboolean onGetVmDFromPoolFinished(GObject *source_object G_GNUC_UNUSED,
+                                         GAsyncResult *res,
+                                         gpointer user_data G_GNUC_UNUSED)
+{
+
 }
 
 gboolean
@@ -120,11 +128,7 @@ vdi_manager_dialog(GtkWindow *main_window, gchar **uri){
     // соответствующие кнопки  в скрол области. Показывать только первые скажем 200 машин?
     // Start session here
     startSession();
-
-
     // get vm data
-    printf("main thread %i \n", g_thread_self());
-
     executeAsyncTask(getVdiVmData, onGetVdiVmDataFinished, NULL);
 
     // event loop
