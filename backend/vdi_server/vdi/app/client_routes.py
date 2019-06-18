@@ -11,15 +11,20 @@ from . import app
 @requires('authenticated')
 async def get_pools(request):
     #FIXME filter by user
-    user = request.user.username
-    # query = """
-    # """
+    # user = request.user.username
+    async with db.connect() as conn:
+        qu = f"SELECT * from pool"
+        data = await conn.fetch(qu)
+    pools = [
+        Pool(params=dict(item))
+        for item in data
+    ]
     li = [
         {
-            'id': id,
+            'id': pool.params['id'],
             'name': pool.params['name'],
         }
-        for id, pool in Pool.instances.items()
+        for pool in pools
     ]
     return JSONResponse(li)
 
@@ -30,7 +35,6 @@ async def get_vm(request):
     async with db.connect() as conn:
         # FIXME
         controller_ip = settings['controller_ip']
-
         user = request.user.username
         pool_id = int(request.path_params['pool_id'])
         qu = """
@@ -46,6 +50,10 @@ async def get_vm(request):
                 'port': info['remote_access_port'],
                 'password': info['graphics_password'],
             })
+
+        # try to wake pool if it's empty
+        if pool_id not in Pool.instances:
+            await Pool.wake_pool(pool_id)
         pool = Pool.instances[pool_id]
         domain = await pool.queue.get()
         qu = "update vm set username = $1 where id = $2", user, domain['id']
