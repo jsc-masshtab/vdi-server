@@ -56,6 +56,7 @@ import { ClusterDetailsComponent } from './resourses/clusters/cluster-details/cl
 import { PoolsComponent } from './polls/pools.component';
 import { RemovePoolComponent } from './polls/remove-pool/remove-pool.component';
 import { TemplatesService } from './resourses/templates/templates.service';
+import { TableService } from './common/table-component/table-component.service';
 /*  -----------------------------------   material   --------------------------------------*/
 
 
@@ -111,7 +112,8 @@ import { TemplatesService } from './resourses/templates/templates.service';
               ControllersService,
               DatapoolsService,
               TemplatesService,
-              VmsService
+              VmsService,
+              TableService
               
             ],
   bootstrap: [AppComponent]
