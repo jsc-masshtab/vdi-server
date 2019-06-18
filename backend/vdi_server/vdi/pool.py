@@ -39,7 +39,6 @@ class Pool:
         domain_id = result['id']
         template = result['template']
         await self.queue.put(result)
-        self.queue.task_done()
         # insert into db
         qu = f"""
         insert into vm (id, pool_id, template_id, state) values ($1, $2, $3, $4)
@@ -95,11 +94,13 @@ class Pool:
         async with db.connect() as conn:
             qu = f"SELECT * from pool where id = $1", pool_id
             [params] = await conn.fetch(*qu)
-            return cls(params=params)
+            ins = cls(params=params)
+            cls.instances[pool_id] = ins
+            return ins
 
 
     @enter_context(lambda: db.connect())
-    async def init(conn, self, id, block=False):
+    async def init(conn, self, id, add_missing=False):
         """
         Init the pool (possibly, after service restart)
         """
@@ -109,16 +110,14 @@ class Pool:
         for vm in vms:
             await self.queue.put(vm)
 
-        self.queue.task_done()
-
         add_domains = self.add_domains()
-        if block:
+        if add_missing:
             await add_domains
 
     @classmethod
-    async def wake_pool(cls, pool_id, block=False):
+    async def wake_pool(cls, pool_id):
         ins = await cls.get_pool(pool_id)
-        await ins.init(pool_id, block)
+        await ins.init(pool_id)
         return ins
 
     instances = {}

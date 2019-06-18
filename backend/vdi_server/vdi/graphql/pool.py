@@ -168,7 +168,7 @@ class PoolState(graphene.ObjectType):
         from vdi.graphql.vm import TemplateType
         from vdi.graphql.resources import NodeType
 
-        template_selections = get_selections(info, 'template')
+        template_selections = get_selections(info, 'template') or ()
         if {'id', *template_selections} > {'id'}:
             from vdi.tasks.vm import GetDomainInfo
             template = await GetDomainInfo(controller_ip=self.controller_ip, domain_id=template_id)
@@ -263,6 +263,18 @@ class AddPool(graphene.Mutation):
         state.pool_id = pool['id']
         state.controller_ip = controller_ip
         return AddPool(id=pool['id'], state=state, settings=settings, name=name)
+
+
+class WakePool(graphene.Mutation):
+    class Arguments:
+        id = graphene.Int()
+
+    ok = graphene.Boolean()
+
+    async def mutate(self, info, id):
+        from vdi.pool import Pool
+        await Pool.wake_pool(id)
+        return WakePool(ok=True)
 
 
 # TODO list of vms
