@@ -106,23 +106,8 @@ export class NodeDetailsComponent implements OnInit {
       property_lv2: 'verbose_name'
     },
     {
-      title: 'Операционная система',
-      property: 'os_type'
-    },
-    {
       title: 'Оперативная память (MБ)',
       property: 'memory_count'
-    },
-    {
-      title: 'Графический адаптер',
-      property: 'video',
-      property_lv2: 'type'
-    },
-    {
-      title: 'Звуковой адаптер',
-      property: 'sound',
-      property_lv2: 'model',
-      property_lv2_prop2: 'codec'
     },
     {
       title: 'Высокая доступность',
