@@ -24,36 +24,38 @@ typedef struct{
 } VdiVmData;
 
 // Functions
-void executeAsyncTask(GTaskThreadFunc  task_func, GAsyncReadyCallback  callback, gpointer callback_data);
 
 void startSession();
-void configureSession(GTask         *task,
-                      gpointer       source_object G_GNUC_UNUSED,
-                      gpointer       task_data G_GNUC_UNUSED,
-                      GCancellable  *cancellable G_GNUC_UNUSED);
 void stopSession();
 
-void setupHeader(SoupMessage *msg);
+void setupHeaderForApiCall(SoupMessage *msg);
 
+guint sendMessage(SoupMessage *msg);
+
+// Получаем токен
 gboolean refreshVdiSessionToken();
 
-void gInputStreamToBuffer(GInputStream *inputStream, gchar *responseBuffer);
+//void gInputStreamToBuffer(GInputStream *inputStream, gchar *responseBuffer);
 
 gchar * apiCall(const char *method, const char *uri_string);
 
+// Запрашиваем список пулов
 void getVdiVmData(GTask         *task,
                  gpointer       source_object,
                  gpointer       task_data,
                  GCancellable  *cancellable);
 
+// Получаем виртуалку из пула
 void getVmDFromPool(GTask         *task,
                   gpointer       source_object,
                   gpointer       task_data,
                   GCancellable  *cancellable);
 
-// json
+// json (maybe to another file)
 JsonObject * getJsonObject(JsonParser *parser, const gchar *data);
 JsonArray * getJsonArray(JsonParser *parser, const gchar *data);
+// threads
+void executeAsyncTask(GTaskThreadFunc  task_func, GAsyncReadyCallback  callback, gpointer callback_data);
 
 
 #endif //VIRT_VIEWER_VEIL_VDI_API_SESSION_H

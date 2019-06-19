@@ -1,11 +1,9 @@
 //
 // Created by solomin on 15.06.19.
 //
-// https://developer.gnome.org/json-glib/stable/JsonParser.html
-//// Allocates storage
-//char *hello_world = (char*)malloc(13 * sizeof(char));
-//// Prints "Hello world!" on hello_world
-//sprintf(hello_world, "%s %s!", "Hello" "world");
+// !!* -переменные с этой пометкой используются в разных потоках,
+// но одновременный доступ к ним не предполагается, так что защита не нужна
+
 
 #include <libsoup/soup-session.h>
 #include "virt-viewer-util.h"
@@ -13,10 +11,12 @@
 
 #include "vdi_api_session.h"
 
-#define RESPONSE_BUFFER_SIZE 200
+//#define RESPONSE_BUFFER_SIZE 200
+#define OK_RESPONSE 200
+#define AUTH_FAIL_RESPONSE 401
 
-extern gchar *username_from_remote_dialog;
-extern gchar *password_from_remote_dialog;
+extern gchar *username_from_remote_dialog; // !!*
+extern gchar *password_from_remote_dialog; // !!*
 extern gchar *ip_from_remote_dialog;
 extern gchar *port_from_remote_dialog;
 
@@ -24,20 +24,12 @@ static gchar *api_url = NULL;
 static gchar *auth_url = NULL;
 static gchar *jwt = NULL;
 
-static SoupSession *soupSession = NULL; // thread safe
+SoupSession *soupSession; // thread safe according to doc
+gint64 currentVmId = -1; // !!*
 
-// create session
 // get token  (make post request)
 // set session header
 // make api requests
-
-void executeAsyncTask(GTaskThreadFunc  task_func, GAsyncReadyCallback  callback, gpointer  callback_data)
-{
-
-    GTask *task = g_task_new (NULL, NULL, callback, callback_data);
-    g_task_run_in_thread(task, task_func);
-    g_object_unref (task);
-}
 
 void startSession()
 {
@@ -47,28 +39,21 @@ void startSession()
     free_memory_safely(&auth_url);
     api_url = g_strdup_printf("http://%s", ip_from_remote_dialog);
     auth_url = g_strdup_printf("%s:%s/auth/", api_url, port_from_remote_dialog);
-}
-
-void configureSession(GTask         *task,
-                      gpointer       source_object G_GNUC_UNUSED,
-                      gpointer       task_data G_GNUC_UNUSED,
-                      GCancellable  *cancellable G_GNUC_UNUSED)
-{
-    gboolean tokenReceived = refreshVdiSessionToken();
-
-    g_task_return_boolean(task, tokenReceived);
+    currentVmId = -1;
 }
 
 void stopSession()
 {
-    // todo: required to cancel all pending requests...
+    soup_session_abort (soupSession);
     g_object_unref(soupSession);
+
     free_memory_safely(&api_url);
     free_memory_safely(&auth_url);
     free_memory_safely(&jwt);
+    currentVmId = -1;
 }
 
-void setupHeader(SoupMessage *msg)
+void setupHeaderForApiCall(SoupMessage *msg)
 {
     soup_message_headers_clear (msg->request_headers);
     gchar *authHeader = g_strdup_printf("jwt %s", jwt);
@@ -76,6 +61,17 @@ void setupHeader(SoupMessage *msg)
     g_free(authHeader);
     soup_message_headers_append (msg->request_headers, "Content-Type", "application/json; charset=utf8");
 }
+
+guint sendMessage(SoupMessage *msg)
+{
+    static int count = 0;
+    printf("Send_count: %i\n", ++count);
+
+    guint status = soup_session_send_message (soupSession, msg);
+    printf("sendMessage: Success\n");
+    return status;
+}
+
 
 gboolean refreshVdiSessionToken()
 {
@@ -94,22 +90,20 @@ gboolean refreshVdiSessionToken()
     g_free(messageBodyStr);
 
     // send message
-    GError *error = NULL;
-    GInputStream *inputStream = soup_session_send (soupSession, msg, NULL, &error);
-
-    gchar responseBuffer[RESPONSE_BUFFER_SIZE];
-    gInputStreamToBuffer(inputStream, responseBuffer);
+    sendMessage(msg);
 
     // parse response
     printf("msg->status_code %i\n", msg->status_code);
-    printf("reason_phrase %s\n", msg->reason_phrase);
-    printf("responseBuffer %s\n", responseBuffer);
+    //printf("reason_phrase %s\n", msg->reason_phrase);
+    //printf("responseBuffer %s\n", responseBuffer);
 
-    if(msg->status_code != 200)
+    if(msg->status_code != OK_RESPONSE) {
+        printf("refreshVdiSessionToken: Unable to get token\n");
         return FALSE;
+    }
 
     JsonParser *parser = json_parser_new ();
-    JsonObject *object = getJsonObject(parser, responseBuffer);
+    JsonObject *object = getJsonObject(parser, msg->response_body->data);
     if(object == NULL)
         return FALSE;
 
@@ -118,17 +112,17 @@ gboolean refreshVdiSessionToken()
     g_object_unref(msg);
     g_object_unref (parser);
 
-    printf("jwt: %s\n", jwt);
     return TRUE;
 }
 
+/*
 void gInputStreamToBuffer(GInputStream *inputStream, gchar *responseBuffer)
 {
     memset(responseBuffer, 0, RESPONSE_BUFFER_SIZE);
     GError *error = NULL;
     g_input_stream_read (inputStream, responseBuffer, RESPONSE_BUFFER_SIZE, NULL, &error);
     responseBuffer[RESPONSE_BUFFER_SIZE - 1] = '\0'; // limit string for safety reasons
-}
+}*/
 
 gchar * apiCall(const char *method, const char *uri_string)
 {
@@ -138,28 +132,22 @@ gchar * apiCall(const char *method, const char *uri_string)
     SoupMessage *msg = soup_message_new (method, uri_string);
 
     // header
-    setupHeader(msg);
+    setupHeaderForApiCall(msg);
 
     // send request. first attempt
-    GError *error = NULL;
-    GInputStream *inputStream = soup_session_send (soupSession, msg, NULL, &error);
+    sendMessage(msg);
 
-    printf("apiCall: msg->status_code %i\n", msg->status_code);
     gchar *responseBodyStr = NULL;
-
     // check if token is bad and make the second attempt
-    if(msg->status_code == 401) {
+    if(msg->status_code == AUTH_FAIL_RESPONSE) {
         refreshVdiSessionToken();
-        setupHeader(msg);
-        inputStream = soup_session_send(soupSession, msg, NULL, &error);
+        setupHeaderForApiCall(msg);
+        sendMessage(msg);
     }
 
     // if response is ok then fill responseBodyStr
-    if(msg->status_code == 200) { // we are happy now
-        gchar responseBuffer[RESPONSE_BUFFER_SIZE];
-        gInputStreamToBuffer(inputStream, responseBuffer);
-
-        responseBodyStr = g_strdup(responseBuffer); // json_string_with_data. memory allocation!
+    if(msg->status_code == OK_RESPONSE ) { // we are happy now
+        responseBodyStr = g_strdup(msg->response_body->data); // json_string_with_data. memory allocation!
     }
 
     g_object_unref(msg);
@@ -185,8 +173,8 @@ void getVmDFromPool(GTask         *task,
                     gpointer       task_data G_GNUC_UNUSED,
                     GCancellable  *cancellable G_GNUC_UNUSED)
 {
-    gint64 vmId = 0; // get it through parameters
-    gchar *getVmUrl = g_strdup_printf("%s/client/pools/%i", api_url, vmId);
+    //gint64 vmId = 0; // get it through parameters
+    gchar *getVmUrl = g_strdup_printf("%s/client/pools/%i", api_url, currentVmId);
     gchar *responseBodyStr = apiCall("POST", getVmUrl);
     g_free(getVmUrl);
 
@@ -223,3 +211,13 @@ JsonArray * getJsonArray(JsonParser *parser, const gchar *data)
 
     return array;
 }
+
+void executeAsyncTask(GTaskThreadFunc  task_func, GAsyncReadyCallback  callback, gpointer  callback_data)
+{
+    //printf("executeAsyncTask callback_data\n");
+    //printf(callback_data); printf("\n");
+    GTask *task = g_task_new (NULL, NULL, callback, callback_data);
+    g_task_run_in_thread(task, task_func);
+    g_object_unref (task);
+}
+

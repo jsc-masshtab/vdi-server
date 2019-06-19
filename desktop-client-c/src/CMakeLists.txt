@@ -56,10 +56,7 @@ ovirt-foreign-menu.h
 ovirt-foreign-menu.c
 remote-viewer-iso-list-dialog.c
 remote-viewer-iso-list-dialog.h
-#HAVE_LIBVIRT
-#virt-viewer.h
-#virt-viewer.c
-#virt-viewer-main.c
+
 #remote_viewer_SOURCES
 remote-viewer.h
 remote-viewer.c
@@ -77,6 +74,8 @@ vdi_manager.h
 vdi_manager.c
 vdi_api_session.h
 vdi_api_session.c
+vdi_vm_widget.c
+vdi_vm_widget.h
 
 #windows-cmdline-wrapper.c
 
