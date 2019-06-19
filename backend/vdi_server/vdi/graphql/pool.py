@@ -51,7 +51,7 @@ class PoolType(graphene.ObjectType):
     settings = graphene.Field(lambda: PoolSettings)
     state = graphene.Field(lambda: PoolState)
     users = graphene.List(UserType)
-    vms = 'TODO'
+    vms = graphene.List(lambda: VmType)
 
     sql_fields = ['id', 'template_id', 'initial_size', 'reserve_size', 'name']
 
@@ -71,8 +71,9 @@ class PoolType(graphene.ObjectType):
         state.controller_ip = self.controller_ip
         return state
 
-    def resolve_vms(self, info):
-        1
+    async def resolve_vms(self, info):
+        state = self.resolve_state(None)
+        return await state.resolve_available(info)
 
 
 
