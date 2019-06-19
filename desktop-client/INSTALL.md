@@ -30,7 +30,7 @@ pacman -S mingw32/mingw-w64-i686-spice-gtk mingw32/mingw-w64-i686-spice-protocol
 `работает на Python 2.7`
 
 ```
-sudo apt install libgirepository1.0-dev gcc libcairo2-dev pkg-config python3-dev gir1.2-gtk-3.0
+sudo apt install libgirepository1.0-dev gcc libcairo2-dev pkg-config python-dev gir1.2-gtk-3.0 libspice-client-gtk-3.0-dev
 pip install pipenv
 cd <desktop-client>
 pipenv shell
