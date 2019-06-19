@@ -44,13 +44,18 @@ void startSession()
 
 void stopSession()
 {
-    soup_session_abort (soupSession);
+    cancellPendingRequests();
     g_object_unref(soupSession);
 
     free_memory_safely(&api_url);
     free_memory_safely(&auth_url);
     free_memory_safely(&jwt);
     currentVmId = -1;
+}
+
+void cancellPendingRequests()
+{
+    soup_session_abort (soupSession);
 }
 
 void setupHeaderForApiCall(SoupMessage *msg)
@@ -68,14 +73,14 @@ guint sendMessage(SoupMessage *msg)
     printf("Send_count: %i\n", ++count);
 
     guint status = soup_session_send_message (soupSession, msg);
-    printf("sendMessage: Success\n");
+    printf("%s: Successfully sent \n", (char *)__func__);
     return status;
 }
 
 
 gboolean refreshVdiSessionToken()
 {
-    printf("refreshVdiSessionToken\n");
+    printf("%s\n", (char *)__func__);
     // clear token
     free_memory_safely(&jwt);
 
@@ -98,7 +103,7 @@ gboolean refreshVdiSessionToken()
     //printf("responseBuffer %s\n", responseBuffer);
 
     if(msg->status_code != OK_RESPONSE) {
-        printf("refreshVdiSessionToken: Unable to get token\n");
+        printf("%s : Unable to get token\n", (char *)__func__);
         return FALSE;
     }
 
@@ -108,6 +113,7 @@ gboolean refreshVdiSessionToken()
         return FALSE;
 
     jwt = g_strdup (json_object_get_string_member (object, "access_token"));
+    printf("%s\n", jwt);
 
     g_object_unref(msg);
     g_object_unref (parser);
@@ -214,8 +220,6 @@ JsonArray * getJsonArray(JsonParser *parser, const gchar *data)
 
 void executeAsyncTask(GTaskThreadFunc  task_func, GAsyncReadyCallback  callback, gpointer  callback_data)
 {
-    //printf("executeAsyncTask callback_data\n");
-    //printf(callback_data); printf("\n");
     GTask *task = g_task_new (NULL, NULL, callback, callback_data);
     g_task_run_in_thread(task, task_func);
     g_object_unref (task);

@@ -6,16 +6,28 @@
 
 VdiVmWidget buildVmWidget(gint64 vmId, const gchar *vmName, GtkWidget *gtk_flow_box)
 {
-    VdiVmWidget vdiVmWidget;
+    VdiVmWidget vdiVmWidget  = {};
 
     if(gtk_flow_box == NULL)
         return vdiVmWidget;
 
     //GtkFrame
-    vdiVmWidget.mainWidget = gtk_frame_new ("вм");
+    gchar *vmIdStr = g_strdup_printf("id %i  ", vmId);
+    vdiVmWidget.mainWidget = gtk_frame_new (vmIdStr);
+    g_free(vmIdStr);
 
     vdiVmWidget.gtkBox = gtk_box_new (GTK_ORIENTATION_VERTICAL, 3);
-    gtk_container_add(vdiVmWidget.mainWidget, vdiVmWidget.gtkBox);
+    // overlay
+    vdiVmWidget.gtkOverlay = gtk_overlay_new();
+    gtk_container_add(vdiVmWidget.gtkOverlay, vdiVmWidget.gtkBox);
+
+    // spinner
+    vdiVmWidget.vmSpinner = gtk_spinner_new ();
+    gtk_overlay_add_overlay (vdiVmWidget.gtkOverlay, vdiVmWidget.vmSpinner);
+    gtk_overlay_set_overlay_pass_through(vdiVmWidget.gtkOverlay, vdiVmWidget.vmSpinner, TRUE);
+
+
+    gtk_container_add(vdiVmWidget.mainWidget, vdiVmWidget.gtkOverlay);
     // vm name
     vdiVmWidget.vmNameLabel = gtk_label_new (vmName);
     gtk_box_pack_start(vdiVmWidget.gtkBox, vdiVmWidget.vmNameLabel, TRUE, TRUE, 0);
@@ -36,11 +48,24 @@ VdiVmWidget buildVmWidget(gint64 vmId, const gchar *vmName, GtkWidget *gtk_flow_
     return vdiVmWidget;
 }
 
+void enableSpinnerVisible(VdiVmWidget *vdiVmWidget, gboolean enable)
+{
+    if(vdiVmWidget->vmSpinner == NULL)
+        return;
+
+    if(enable)
+        gtk_spinner_start(vdiVmWidget->vmSpinner);
+    else
+        gtk_spinner_stop(vdiVmWidget->vmSpinner);
+}
+
 void destroyVdiVmWidget(VdiVmWidget *vdiVmWidget)
 {
+    gtk_widget_destroy(vdiVmWidget->vmSpinner);
     gtk_widget_destroy(vdiVmWidget->vmNameLabel);
     gtk_widget_destroy(vdiVmWidget->imageWidget);
     gtk_widget_destroy(vdiVmWidget->vmStartButton);
     gtk_widget_destroy(vdiVmWidget->gtkBox);
+    gtk_widget_destroy(vdiVmWidget->gtkOverlay);
     gtk_widget_destroy(vdiVmWidget->mainWidget);
 }

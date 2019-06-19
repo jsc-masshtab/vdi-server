@@ -78,10 +78,6 @@ enum RemoteViewerProperties {
 };
 
 #ifdef HAVE_OVIRT
-static OvirtVm * choose_vm(GtkWindow *main_window,
-                           char **vm_name,
-                           OvirtCollection *vms,
-                           GError **error);
 #endif
 
 static gboolean remote_viewer_start(VirtViewerApp *self, GError **error);
@@ -826,236 +822,7 @@ virt_viewer_app_set_ovirt_foreign_menu(VirtViewerApp *app,
     ovirt_foreign_menu_updated(self);
 }
 
-static gboolean
-create_ovirt_session(VirtViewerApp *app, const char *uri, GError **err)
-{
-    OvirtProxy *proxy = NULL;
-    OvirtApi *api = NULL;
-    OvirtCollection *vms;
-    OvirtVm *vm = NULL;
-    OvirtVmDisplay *display = NULL;
-    OvirtVmState state;
-    GError *error = NULL;
-    char *rest_uri = NULL;
-    char *vm_name = NULL;
-    char *username = NULL;
-    gboolean success = FALSE;
-    guint port;
-    guint secure_port;
-    char *proxy_url = NULL;
-    OvirtVmDisplayType type;
-    const char *session_type;
 
-    gchar *gport = NULL;
-    gchar *gtlsport = NULL;
-    gchar *ghost = NULL;
-    gchar *ticket = NULL;
-    gchar *host_subject = NULL;
-    gchar *guid = NULL;
-
-    g_return_val_if_fail(VIRT_VIEWER_IS_APP(app), FALSE);
-
-    if (!parse_ovirt_uri(uri, &rest_uri, &vm_name, &username)) {
-        g_set_error_literal(&error, VIRT_VIEWER_ERROR, VIRT_VIEWER_ERROR_FAILED,
-                            _("failed to parse ovirt uri"));
-        goto error;
-    }
-
-    proxy = ovirt_proxy_new(rest_uri);
-    g_object_set(proxy,
-                 "username", username,
-                 NULL);
-    ovirt_set_proxy_options(proxy);
-    g_signal_connect(G_OBJECT(proxy), "authenticate",
-                     G_CALLBACK(authenticate_cb), app);
-
-    api = ovirt_proxy_fetch_api(proxy, &error);
-    if (error != NULL) {
-        g_debug("failed to get oVirt 'api' collection: %s", error->message);
-#ifdef HAVE_OVIRT_CANCEL
-        if (g_error_matches(error, OVIRT_REST_CALL_ERROR, OVIRT_REST_CALL_ERROR_CANCELLED)) {
-            g_clear_error(&error);
-            g_set_error_literal(&error,
-                                VIRT_VIEWER_ERROR, VIRT_VIEWER_ERROR_CANCELLED,
-                                _("Authentication was cancelled"));
-        }
-#endif
-        goto error;
-    }
-    vms = ovirt_api_get_vms(api);
-    ovirt_collection_fetch(vms, proxy, &error);
-    if (error != NULL) {
-        g_debug("failed to fetch oVirt 'vms' collection: %s", error->message);
-        goto error;
-    }
-    if (vm_name == NULL ||
-        (vm = OVIRT_VM(ovirt_collection_lookup_resource(vms, vm_name))) == NULL) {
-        VirtViewerWindow *main_window = virt_viewer_app_get_main_window(app);
-        vm = choose_vm(virt_viewer_window_get_window(main_window),
-                       &vm_name,
-                       vms,
-                       &error);
-        if (vm == NULL) {
-            goto error;
-        }
-    }
-    g_object_get(G_OBJECT(vm), "state", &state, NULL);
-    if (state != OVIRT_VM_STATE_UP) {
-        g_set_error(&error, VIRT_VIEWER_ERROR, VIRT_VIEWER_ERROR_FAILED,
-                    _("oVirt VM %s is not running"), vm_name);
-        g_debug("%s", error->message);
-        goto error;
-    }
-    g_object_set(app, "guest-name", vm_name, NULL);
-
-    if (!ovirt_vm_get_ticket(vm, proxy, &error)) {
-        g_debug("failed to get ticket for %s: %s", vm_name, error->message);
-        goto error;
-    }
-
-    g_object_get(G_OBJECT(vm), "display", &display, "guid", &guid, NULL);
-    if (display == NULL) {
-        g_set_error(&error, VIRT_VIEWER_ERROR, VIRT_VIEWER_ERROR_FAILED,
-                    _("oVirt VM %s has no display"), vm_name);
-        goto error;
-    }
-
-    if (guid != NULL) {
-        g_object_set(app, "uuid", guid, NULL);
-    }
-
-    g_object_get(G_OBJECT(display),
-                 "type", &type,
-                 "address", &ghost,
-                 "port", &port,
-                 "secure-port", &secure_port,
-                 "ticket", &ticket,
-                 "host-subject", &host_subject,
-                 "proxy-url", &proxy_url,
-                 NULL);
-    if (port != 0) {
-        gport = g_strdup_printf("%d", port);
-    }
-    if (secure_port != 0) {
-        gtlsport = g_strdup_printf("%d", secure_port);
-    }
-
-    if (ghost == NULL) {
-        g_set_error(&error, VIRT_VIEWER_ERROR, VIRT_VIEWER_ERROR_FAILED,
-                    _("oVirt VM %s has no host information"), vm_name);
-        g_debug("%s", error->message);
-        goto error;
-    }
-
-    if (type == OVIRT_VM_DISPLAY_SPICE) {
-        session_type = "spice";
-    } else if (type == OVIRT_VM_DISPLAY_VNC) {
-        session_type = "vnc";
-    } else {
-        g_set_error(&error, VIRT_VIEWER_ERROR, VIRT_VIEWER_ERROR_FAILED,
-                    _("oVirt VM %s has unknown display type: %d"), vm_name, type);
-        g_debug("%s", error->message);
-        goto error;
-    }
-
-    {
-        OvirtForeignMenu *ovirt_menu = ovirt_foreign_menu_new(proxy);
-        g_object_set(G_OBJECT(ovirt_menu), "api", api, "vm", vm, NULL);
-        virt_viewer_app_set_ovirt_foreign_menu(app, ovirt_menu);
-    }
-
-    virt_viewer_app_set_connect_info(app, NULL, ghost, gport, gtlsport,
-                                     session_type, NULL, NULL, 0, NULL);
-
-    if (!virt_viewer_app_create_session(app, session_type, &error))
-        goto error;
-
-#ifdef HAVE_SPICE_GTK
-    if (type == OVIRT_VM_DISPLAY_SPICE) {
-        SpiceSession *session;
-        GByteArray *ca_cert;
-
-        session = remote_viewer_get_spice_session(REMOTE_VIEWER(app));
-        g_object_set(G_OBJECT(session),
-                     "password", ticket,
-                     "cert-subject", host_subject,
-                     "proxy", proxy_url,
-                     NULL);
-        g_object_get(G_OBJECT(proxy), "ca-cert", &ca_cert, NULL);
-        if (ca_cert != NULL) {
-            g_object_set(G_OBJECT(session),
-                    "ca", ca_cert,
-                    NULL);
-            g_byte_array_unref(ca_cert);
-        }
-    }
-#endif
-
-    success = TRUE;
-
-error:
-    g_free(username);
-    g_free(rest_uri);
-    g_free(vm_name);
-    g_free(ticket);
-    g_free(gport);
-    g_free(gtlsport);
-    g_free(ghost);
-    g_free(host_subject);
-    g_free(guid);
-    g_free(proxy_url);
-
-    if (error != NULL)
-        g_propagate_error(err, error);
-    if (display != NULL)
-        g_object_unref(display);
-    if (vm != NULL)
-        g_object_unref(vm);
-    if (proxy != NULL)
-        g_object_unref(proxy);
-
-    return success;
-}
-
-static OvirtVm *
-choose_vm(GtkWindow *main_window,
-          char **vm_name,
-          OvirtCollection *vms_collection,
-          GError **error)
-{
-    GtkListStore *model;
-    GtkTreeIter iter;
-    GHashTable *vms;
-    GHashTableIter vms_iter;
-    OvirtVmState state;
-    OvirtVm *vm;
-
-    g_return_val_if_fail(vm_name != NULL, NULL);
-    free(*vm_name);
-
-    model = gtk_list_store_new(1, G_TYPE_STRING);
-
-    vms = ovirt_collection_get_resources(vms_collection);
-    g_hash_table_iter_init(&vms_iter, vms);
-    while (g_hash_table_iter_next(&vms_iter, (gpointer *) vm_name, (gpointer *) &vm)) {
-        g_object_get(G_OBJECT(vm), "state", &state, NULL);
-        if (state == OVIRT_VM_STATE_UP) {
-            gtk_list_store_append(model, &iter);
-            gtk_list_store_set(model, &iter, 0, *vm_name, -1);
-       }
-    }
-
-    *vm_name = virt_viewer_vm_connection_choose_name_dialog(main_window,
-                                                            GTK_TREE_MODEL(model),
-                                                            error);
-    g_object_unref(model);
-    if (*vm_name == NULL)
-        return NULL;
-
-    vm = OVIRT_VM(ovirt_collection_lookup_resource(vms_collection, *vm_name));
-
-    return vm;
-}
 #endif /* HAVE_OVIRT */
 
 static void
@@ -1097,7 +864,6 @@ remote_viewer_start(VirtViewerApp *app, GError **err)
     RemoteViewer *self = REMOTE_VIEWER(app);
     RemoteViewerPrivate *priv = self->priv;
     GFile *file = NULL;
-    VirtViewerFile *vvfile = NULL;
     gboolean ret = FALSE;
     gchar *guri = NULL;
     gchar *type = NULL;
@@ -1105,120 +871,60 @@ remote_viewer_start(VirtViewerApp *app, GError **err)
 
 #ifdef HAVE_SPICE_GTK
     g_signal_connect(app, "notify", G_CALLBACK(app_notified), self);
-
-    if (priv->controller) {
-        if (!virt_viewer_app_create_session(app, "spice", &error)) {
-            g_debug("Couldn't create a Spice session");
-            goto cleanup;
-        }
-
-        g_signal_connect(priv->controller, "notify", G_CALLBACK(spice_ctrl_notified), self);
-        g_signal_connect(priv->controller, "do_connect", G_CALLBACK(spice_ctrl_do_connect), self);
-        g_signal_connect(priv->controller, "show", G_CALLBACK(spice_ctrl_show), self);
-        g_signal_connect(priv->controller, "hide", G_CALLBACK(spice_ctrl_hide), self);
-
-        spice_ctrl_controller_listen(priv->controller, NULL, spice_ctrl_listen_async_cb, self);
-
-        g_signal_connect(priv->ctrl_foreign_menu, "notify", G_CALLBACK(spice_ctrl_foreign_menu_notified), self);
-        spice_ctrl_foreign_menu_listen(priv->ctrl_foreign_menu, NULL, spice_ctrl_listen_async_cb, self);
-
-        virt_viewer_app_show_status(VIRT_VIEWER_APP(self), _("Setting up Spice session..."));
-    } else {
 #endif
         // remote connect dialog
 retry_dialog:
-        if (priv->open_recent_dialog) {
-            VirtViewerWindow *main_window = virt_viewer_app_get_main_window(app);
-            // Забираем из ui адрес и порт
-            if (!remote_viewer_connect_dialog(virt_viewer_window_get_window(main_window), &guri)) {
-                g_set_error_literal(&error,
-                            VIRT_VIEWER_ERROR, VIRT_VIEWER_ERROR_CANCELLED,
-                            _("No connection was chosen"));
-                g_propagate_error(err, error);
-                return FALSE;
-            }
-            g_object_set(app, "guri", guri, NULL);
-        } else
-            g_object_get(app, "guri", &guri, NULL);
-
-        g_return_val_if_fail(guri != NULL, FALSE);
-
-        g_debug("Opening display to %s", guri);
-
-        // reading from ini file (нам не нужно?)
-        /*
-        file = g_file_new_for_commandline_arg(guri);
-        if (g_file_query_exists(file, NULL)) {
-            gchar *path = g_file_get_path(file);
-            vvfile = virt_viewer_file_new(path, &error);
-            g_free(path);
-            if (error) {
-                g_prefix_error(&error, _("Invalid file %s: "), guri);
-                g_warning("%s", error->message);
-                goto cleanup;
-            }
-            g_object_get(G_OBJECT(vvfile), "type", &type, NULL);
+    if (priv->open_recent_dialog) {
+        VirtViewerWindow *main_window = virt_viewer_app_get_main_window(app);
+        // Забираем из ui адрес и порт
+        if (!remote_viewer_connect_dialog(virt_viewer_window_get_window(main_window), &guri)) {
+            g_set_error_literal(&error,
+                        VIRT_VIEWER_ERROR, VIRT_VIEWER_ERROR_CANCELLED,
+                        _("No connection was chosen"));
+            g_propagate_error(err, error);
+            return FALSE;
         }
-        else {
-            type = g_strdup("spice");
-        }*/
-        type = g_strdup("spice");
+        g_object_set(app, "guri", guri, NULL);
+    } else
+        g_object_get(app, "guri", &guri, NULL);
 
-        // После такого как забрали адресс с логином и паролем действуем в зависимости от opt_manual_mode
-        // 1) в мануальном режиме сразу подключаемся к удаленноиу раб столу
-        // 2) В дефолтном режиме вызываем vdi manager. В нем пользователь выберет машину для поодключения
-        if(!opt_manual_mode){
-            VirtViewerWindow *main_window = virt_viewer_app_get_main_window(app);
-            if(!vdi_manager_dialog(virt_viewer_window_get_window(main_window), &guri)){
-                goto cleanup;
-            }
-        }
+    g_debug("Opening display to %s", guri);
+    type = g_strdup("spice");
 
-//#ifdef HAVE_OVIRT
-//        if (g_strcmp0(type, "ovirt") == 0) {// сюда не заходит
-//            if (!create_ovirt_session(app, guri, &error)) {
-//                g_prefix_error(&error, _("Couldn't open oVirt session: "));
-//                goto cleanup;
-//            }
-//        } else
-//#endif
-        // Далее переход к удаленному раб. столу. Создание сессии
-        {
-            if (!virt_viewer_app_create_session(app, type, &error))
-                goto cleanup;
-        }
-
-        g_signal_connect(virt_viewer_app_get_session(app), "session-connected",
-                         G_CALLBACK(remote_viewer_session_connected), app);
-
-        virt_viewer_session_set_file(virt_viewer_app_get_session(app), vvfile);
-#ifdef HAVE_OVIRT
-        if (vvfile != NULL) {
-            OvirtForeignMenu *ovirt_menu;
-            ovirt_menu = ovirt_foreign_menu_new_from_file(vvfile);
-            if (ovirt_menu != NULL) {
-                virt_viewer_app_set_ovirt_foreign_menu(app, ovirt_menu);
-            }
-        }
-#endif
-        // Коннект к машине
-        if (!virt_viewer_app_initial_connect(app, &error)) {
-            if (error == NULL) {
-                g_set_error_literal(&error,
-                                    VIRT_VIEWER_ERROR, VIRT_VIEWER_ERROR_FAILED,
-                                    _("Failed to initiate connection"));
-            }
+    // После такого как забрали адресс с логином и паролем действуем в зависимости от opt_manual_mode
+    // 1) в мануальном режиме сразу подключаемся к удаленноиу раб столу
+    // 2) В дефолтном режиме вызываем vdi manager. В нем пользователь выберет машину для поодключения
+    if(!opt_manual_mode){
+        VirtViewerWindow *main_window = virt_viewer_app_get_main_window(app);
+        if(!vdi_manager_dialog(virt_viewer_window_get_window(main_window), &guri)){
             goto cleanup;
         }
-#ifdef HAVE_SPICE_GTK
     }
+
+    // Далее переход к удаленному раб. столу. Создание сессии
+    if (!virt_viewer_app_create_session(app, type, &error))
+        goto cleanup;
+
+    g_signal_connect(virt_viewer_app_get_session(app), "session-connected",
+                     G_CALLBACK(remote_viewer_session_connected), app);
+
+    // Коннект к машине
+    if (!virt_viewer_app_initial_connect(app, &error)) {
+        if (error == NULL) {
+            g_set_error_literal(&error,
+                                VIRT_VIEWER_ERROR, VIRT_VIEWER_ERROR_FAILED,
+                                _("Failed to initiate connection"));
+        }
+        goto cleanup;
+    }
+#ifdef HAVE_SPICE_GTK
+
 #endif
     // Здесь начало подключения к машине. После удачного подключения нужна авторизация
     ret = VIRT_VIEWER_APP_CLASS(remote_viewer_parent_class)->start(app, &error); // -
 
 cleanup:
     g_clear_object(&file);
-    g_clear_object(&vvfile);
     g_free(guri);
     guri = NULL;
     if(type)
@@ -1238,10 +944,3 @@ cleanup:
     return ret;
 }
 
-/*
- * Local variables:
- *  c-indent-level: 4
- *  c-basic-offset: 4
- *  indent-tabs-mode: nil
- * End:
- */

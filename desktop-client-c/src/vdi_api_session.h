@@ -27,6 +27,7 @@ typedef struct{
 
 void startSession();
 void stopSession();
+void cancellPendingRequests();
 
 void setupHeaderForApiCall(SoupMessage *msg);
 
