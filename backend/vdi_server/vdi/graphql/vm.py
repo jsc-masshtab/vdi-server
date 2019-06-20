@@ -11,7 +11,7 @@ from ..tasks.vm import SetupDomain, DropDomain, ListVms, GetDomainInfo
 
 from .util import get_selections
 from .pool import PoolSettings, TemplateType, VmType
-from .resources import NodeType
+from .resources import NodeType, get_controller_ip
 
 
 from vdi.context_utils import enter_context
@@ -19,7 +19,7 @@ from vdi.context_utils import enter_context
 
 class CreateTemplate(graphene.Mutation):
     '''
-    Awaits the result. Mostly for development use
+    DEPRECATED. Use addTemplate
     '''
     class Arguments:
         image_name = graphene.String()
@@ -28,7 +28,7 @@ class CreateTemplate(graphene.Mutation):
     poolwizard = settings = graphene.Field(PoolSettings, format=graphene.String())
 
     @enter_context(lambda: db.connect())
-    async def mutate(conn: Connection, self, info, image_name, format='one'):
+    async def mutate(conn: Connection, self, info, image_name):
         from vdi.tasks import admin
         res = await admin.discover_resources(combine=True)
         resource = random.choice(res)
@@ -56,12 +56,15 @@ class CreateTemplate(graphene.Mutation):
 class DropTemplate(graphene.Mutation):
     class Arguments:
         id = graphene.String()
+        controller_ip = graphene.String()
 
     ok = graphene.Boolean()
 
     @enter_context(lambda: db.connect())
-    async def mutate(conn: Connection, self, info, id):
-        await DropDomain(id=id)
+    async def mutate(conn: Connection, self, info, id, controller_ip=None):
+        if controller_ip is None:
+            controller_ip = await get_controller_ip()
+        await DropDomain(id=id, controller_ip=controller_ip)
         qu = "DELETE from template_vm WHERE id = $1", id
         await conn.fetch(*qu)
         return DropTemplate(ok=True)
@@ -77,17 +80,26 @@ class AddTemplate(graphene.Mutation):
     poolwizard = graphene.Field(PoolSettings, format=graphene.String())
 
     async def resolve_poolwizard(self, info):
-        res = await admin.discover_resources(combine=True)
-        resource = random.choice(res)
-        from vdi.settings import settings
-        return PoolSettings(**{
+        from vdi.tasks.vm import GetDomainInfo
+        from vdi.tasks.resources import FetchNode
+        settings = {}
+        selections = get_selections(info)
+        if any(key in selections
+               for key in ['node_id', 'cluster_id', 'datapool_id']):
+            template = await GetDomainInfo(controller_ip=self.controller_ip, domain_id=self.id)
+            node_id = settings['node_id'] = template['node']['id']
+        if 'datapool_id' in selections:
+            datapools = await resources.ListDatapools(controller_ip=self.controller_ip, node_id=node_id)
+            settings['datapool_id'] = datapools[0]['id']
+        if 'cluster_id' in selections:
+            node = await FetchNode(controller_ip=self.controller_ip, node_id=node_id)
+            settings['cluster_id'] = node['cluster']['id']
+        from vdi.settings import settings as global_settings
+        return PoolSettings(**settings, **{
             'controller_ip': self.controller_ip,
-            'cluster_id': resource['cluster'],
-            'datapool_id': resource['datapool'],
             'template_id': self.id,
-            'node_id': resource['node'],
-            'initial_size': settings['pool']['initial_size'],
-            'reserve_size': settings['pool']['reserve_size'],
+            'initial_size': global_settings['pool']['initial_size'],
+            'reserve_size': global_settings['pool']['reserve_size'],
         })
 
 
@@ -99,8 +111,9 @@ class AddTemplate(graphene.Mutation):
             controller_ip = await get_controller_ip()
         from vdi.tasks import Token, HttpClient
         url = f"http://{controller_ip}/api/domains/{id}/"
+        token = await Token(controller_ip=controller_ip)
         headers = {
-            'Authorization': f'jwt {await Token()}',
+            'Authorization': f'jwt {token}',
         }
         info = await HttpClient().fetch(url, headers=headers)
         qu = "INSERT INTO template_vm (id, veil_info) VALUES ($1, $2) ON CONFLICT DO NOTHING", id, json.dumps(info)
@@ -116,7 +129,7 @@ class TemplateMixin:
 
     templates = graphene.List(TemplateType,
                               controller_ip=graphene.String(), cluster_id=graphene.String(), node_id=graphene.String())
-    vms = graphene.List(TemplateType,
+    vms = graphene.List(VmType,
                         controller_ip=graphene.String(), cluster_id=graphene.String(), node_id=graphene.String())
 
 

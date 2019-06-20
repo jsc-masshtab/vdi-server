@@ -1,7 +1,7 @@
 #! env python
 """
 Usage:
-  init [-i | --interactive] [-y] [--from=<boxname>] <name>
+  init [-i | --interactive] [-y] [--from=<boxname>] [<name>]
 """
 
 import docopt

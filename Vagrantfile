@@ -1,4 +1,4 @@
-$boxname = "generic/ubuntu1904"
+$boxname = "vdihost"
 
 # -*- mode: ruby -*-
 # vi: set ft=ruby :

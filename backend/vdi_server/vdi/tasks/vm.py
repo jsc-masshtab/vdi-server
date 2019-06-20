@@ -57,11 +57,11 @@ class CreateDomain(Task):
                 return id == self.domain['id']
 
     async def run(self):
-        token = await Token()
+        token = await Token(controller_ip=self.controller_ip)
         headers = {
             'Authorization': f'jwt {token}'
         }
-        ws = await WsConnection()
+        ws = await WsConnection(controller_ip=self.controller_ip)
         await ws.send('add /tasks/')
         http_client = HttpClient()
         body = urllib.parse.urlencode(self.params)
@@ -84,7 +84,7 @@ class AttachVdisk(Task):
         return f"http://{self.controller_ip}/api/domains/{self.domain_id}/attach-vdisk/"
 
     async def headers(self):
-        token = await Token()
+        token = await Token(controller_ip=self.controller_ip)
         return {
             'Authorization': f'jwt {token}'
         }
@@ -111,7 +111,7 @@ class AttachVdisk(Task):
         return True
 
     async def run(self):
-        ws = await WsConnection()
+        ws = await WsConnection(controller_ip=self.controller_ip)
         await ws.send('add /tasks/')
         self.response = await HttpClient().fetch_using(self)
         await ws.wait_message(self.is_done)
@@ -152,8 +152,9 @@ class CopyDomainDebug(Awaitable):
         return HttpClient()
 
     async def headers(self):
+        token = await Token(controller_ip=self.controller_ip)
         return {
-            'Authorization': f'jwt {await Token()}',
+            'Authorization': f'jwt {token}',
         }
 
     async def get_datapool_id(self):
@@ -225,7 +226,7 @@ class CopyDomain(UrlFetcher):
 
     async def run(self):
         info_task = asyncio.create_task(self.fetch_template_info())
-        ws = await WsConnection()
+        ws = await WsConnection(controller_ip=self.controller_ip)
         await ws.send('add /tasks/')
         resp = await super().run()
         self.task_id = resp['_task']['id']
@@ -264,18 +265,22 @@ class CopyDomain(UrlFetcher):
 @dataclass()
 class DropDomain(Task):
     id: str
+    controller_ip: str
+    full: bool = True
 
     @cached
     def url(self):
-        return f'http://{CONTROLLER_IP}/api/domains/{self.id}/remove/'
+        return f'http://{self.controller_ip}/api/domains/{self.id}/remove/'
 
     async def run(self):
-        token = await Token()
+        token = await Token(controller_ip=self.controller_ip)
         headers = {
             'Authorization': f'jwt {token}',
         }
         http_client = HttpClient()
-        await http_client.fetch(self.url, method='POST', headers=headers, body=b'')
+        body = urllib.parse.urlencode({'full': self.full})
+
+        await http_client.fetch(self.url, method='POST', headers=headers, body=body)
 
 
 @dataclass()
@@ -287,7 +292,7 @@ class ListVms(Task):
         return f"http://{self.controller_ip}/api/domains/"
 
     async def run(self):
-        token = await Token()
+        token = await Token(controller_ip=self.controller_ip)
         headers = {
             'Authorization': f'jwt {token}',
         }
@@ -296,18 +301,6 @@ class ListVms(Task):
         return res['results']
 
 
-class DropAllDomains(Task):
-
-    async def run(self):
-        vms = await ListVms()
-
-        tasks = [
-            DropDomain(id=vm['id']) for vm in vms
-        ]
-        # async for _ in wait(*tasks):
-        #     pass
-        for t in tasks:
-            await t
 
 
 @dataclass()
