@@ -284,7 +284,7 @@ class DropDomain(Task):
 
 
 @dataclass()
-class ListVms(Task):
+class ListAllVms(Task):
     controller_ip: str
 
     @cached
@@ -301,6 +301,21 @@ class ListVms(Task):
         return res['results']
 
 
+class ListVms(ListAllVms):
+
+    async def run(self):
+        vms = await super().run()
+        vms = [vm for vm in vms if not vm['template']]
+        return vms
+
+
+
+class ListTemplates(ListAllVms):
+
+    async def run(self):
+        vms = await super().run()
+        vms = [vm for vm in vms if vm['template']]
+        return vms
 
 
 @dataclass()
