@@ -26,10 +26,15 @@ static GtkWidget *main_vm_spinner = NULL;
 
 static GArray *vmWidgetArray = NULL;
 
+static gchar **userPtr = NULL;
+static gchar **passwordPtr = NULL;
+static ConnectionInfo *ciPtr = NULL;
+
 // extern
 extern gint64 currentVmId;
+extern gboolean take_extern_credentials;
 
-// declarations
+// functions declarations
 static void on_vm_start_button_clicked(GtkButton *button G_GNUC_UNUSED, gpointer data G_GNUC_UNUSED);
 
 /////////////////////////////////// work functions//////////////////////////////////////
@@ -259,9 +264,11 @@ static void on_vm_start_button_clicked(GtkButton *button, gpointer data G_GNUC_U
 }
 
 /////////////////////////////////// main function
-gboolean vdi_manager_dialog(GtkWindow *main_window, gchar **uri){
-
+gboolean vdi_manager_dialog(GtkWindow *main_window, gchar **uri, gchar **user, gchar **password)
+{
     printf("vdi_manager_dialog url %s \n", *uri);
+    userPtr = user;
+    passwordPtr = password;
 
     GtkWidget *window, *button_renew, *button_quit, *vm_main_box;
 
@@ -272,6 +279,9 @@ gboolean vdi_manager_dialog(GtkWindow *main_window, gchar **uri){
             NULL,
             NULL
     };
+    ciPtr = &ci;
+
+    take_extern_credentials = TRUE;
 
     /* Create the widgets */
     builder = virt_viewer_util_load_ui("vdi_manager_form.ui");

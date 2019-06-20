@@ -1,3 +1,4 @@
+import { TemplatesService } from './../../resourses/templates/templates.service';
 import { DatapoolsService } from './../../resourses/datapools/datapools.service';
 import { NodesService } from './../../resourses/nodes/nodes.service';
 import { ClustersService } from './../../resourses/clusters/clusters.service';
@@ -35,6 +36,7 @@ export class PoolAddComponent implements OnInit {
               private clustersService: ClustersService,
               private nodesService: NodesService,
               private datapoolsService: DatapoolsService,
+              private templatesService:TemplatesService,
               private dialogRef: MatDialogRef<PoolAddComponent>,
               private fb: FormBuilder) {}
 
@@ -58,10 +60,10 @@ export class PoolAddComponent implements OnInit {
 
   private getTemplate() {
     this.defaultDataTemplates = "Загрузка шаблонов...";
-    this.poolsService.getAllTemplates().valueChanges.pipe(map(data => data.data.templates)).subscribe((res)=> {
+    this.templatesService.getAllTemplates().valueChanges.pipe(map(data => data.data.templates)).subscribe((res)=> {
       this.defaultDataTemplates = "- нет доступных шаблонов -";
       this.templates = res.map((item) => {
-        let parse = JSON.parse(item.info);
+        let parse = JSON.parse(item['info']);
         return {
           'output': parse.id,
           'input': parse.verbose_name
@@ -73,10 +75,10 @@ export class PoolAddComponent implements OnInit {
   }
 
   private getClusters() {
-    this.defaultDataNodes = "Загрузка кластеров...";
+    this.defaultDataClusters = "Загрузка кластеров...";
     this.clustersService.getAllClusters().valueChanges.pipe(map(data => data.data.clusters))
       .subscribe( (res) => {
-        this.defaultDataNodes = "- нет доступных кластеров -";
+        this.defaultDataClusters = "- нет доступных кластеров -";
         this.clusters = res.map((item) => {
           return {
             'output': item.id,
@@ -85,7 +87,7 @@ export class PoolAddComponent implements OnInit {
         });
       },
       (error)=> {
-        this.defaultDataNodes = "- нет доступных кластеров -";
+        this.defaultDataClusters = "- нет доступных кластеров -";
       });
   }
 

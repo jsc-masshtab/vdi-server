@@ -1,5 +1,5 @@
 //
-// Created by ubuntu on 18.06.19.
+// Created by Solomin on 18.06.19.
 //
 
 #ifndef VIRT_VIEWER_VEIL_VDI_VM_WIDGET_H

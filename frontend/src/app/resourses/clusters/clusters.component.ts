@@ -15,6 +15,10 @@ export class ClustersComponent implements OnInit {
   public clusters: object[] = [];
   public collection: object[] = [
     {
+      title: '№',
+      property: 'index'
+    },
+    {
       title: 'Название',
       property: 'verbose_name'
     },
@@ -39,6 +43,10 @@ export class ClustersComponent implements OnInit {
     {
       title: 'Ресурсы',
       icon: 'database'
+    },
+    {
+      title: 'Кластеры',
+      icon: 'building'
     }
   ];
 
@@ -55,10 +63,6 @@ export class ClustersComponent implements OnInit {
     this.service.getAllClusters().valueChanges.pipe(map(data => data.data.clusters))
       .subscribe( (data) => {
         this.clusters = data;
-        this.crumbs.push({
-            title: 'Кластеры',
-            icon: 'building'
-        });
         this.spinner = false;
       },
       (error)=> {

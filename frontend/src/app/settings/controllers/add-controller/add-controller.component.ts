@@ -10,8 +10,8 @@ import { ControllersService } from '../controllers.service';
 
 export class AddControllerComponent {
 
-  public controller: string;
-  public description: string;
+  public controller: string = "";
+  public description: string = "";
 
 
   constructor(private service: ControllersService,
@@ -20,12 +20,9 @@ export class AddControllerComponent {
 
   public send() {
     this.service.addController(this.controller,this.description).subscribe((res) => {
-      if(res) {
-        this.service.getAllControllers().valueChanges.subscribe();
-        this.dialogRef.close();
-      }
+      this.service.getAllControllers().valueChanges.subscribe();
+      this.dialogRef.close();
     },(error)=> {
-
     });
   }
 

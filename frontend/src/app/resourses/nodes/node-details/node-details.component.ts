@@ -39,9 +39,25 @@ export class NodeDetailsComponent implements OnInit {
     {
       title: 'Статус',
       property: 'status'
+    },
+    {
+      title: 'Пулы данных',
+      property_array: "datapools"
+    },
+    {
+      title: 'Шаблоны ВМ',
+      property_array: "templates"
+    },
+    {
+      title: 'ВМ',
+      property_array: "vms"
     }
   ];
   public collection_datapools = [
+    {
+      title: '№',
+      property: 'index'
+    },
     {
       title: 'Название',
       property: 'verbose_name'
@@ -77,6 +93,10 @@ export class NodeDetailsComponent implements OnInit {
   ];
   public collection_templates = [
     {
+      title: '№',
+      property: 'index'
+    },
+    {
       title: 'Название',
       property: 'verbose_name'
     },
@@ -86,23 +106,8 @@ export class NodeDetailsComponent implements OnInit {
       property_lv2: 'verbose_name'
     },
     {
-      title: 'Операционная система',
-      property: 'os_type'
-    },
-    {
       title: 'Оперативная память (MБ)',
       property: 'memory_count'
-    },
-    {
-      title: 'Графический адаптер',
-      property: 'video',
-      property_lv2: 'type'
-    },
-    {
-      title: 'Звуковой адаптер',
-      property: 'sound',
-      property_lv2: 'model',
-      property_lv2_prop2: 'codec'
     },
     {
       title: 'Высокая доступность',
@@ -112,6 +117,10 @@ export class NodeDetailsComponent implements OnInit {
     }
   ];
   public collection_vms = [
+    {
+      title: '№',
+      property: 'index'
+    },
     {
       title: 'Название',
       property: 'name'

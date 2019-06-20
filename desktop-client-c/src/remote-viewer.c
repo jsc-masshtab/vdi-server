@@ -55,6 +55,9 @@
 
 extern gboolean opt_manual_mode;
 
+extern gchar *spice_session_username;
+extern gchar *spice_session_password;
+
 struct _RemoteViewerPrivate {
 #ifdef HAVE_SPICE_GTK
     SpiceCtrlController *controller;
@@ -866,6 +869,8 @@ remote_viewer_start(VirtViewerApp *app, GError **err)
     GFile *file = NULL;
     gboolean ret = FALSE;
     gchar *guri = NULL;
+    gchar *user = NULL;
+    gchar *password = NULL;
     gchar *type = NULL;
     GError *error = NULL;
 
@@ -874,10 +879,10 @@ remote_viewer_start(VirtViewerApp *app, GError **err)
 #endif
         // remote connect dialog
 retry_dialog:
-    if (priv->open_recent_dialog) {
+    {
         VirtViewerWindow *main_window = virt_viewer_app_get_main_window(app);
         // Забираем из ui адрес и порт
-        if (!remote_viewer_connect_dialog(virt_viewer_window_get_window(main_window), &guri)) {
+        if (!remote_viewer_connect_dialog(virt_viewer_window_get_window(main_window), &guri, &user, &password)) {
             g_set_error_literal(&error,
                         VIRT_VIEWER_ERROR, VIRT_VIEWER_ERROR_CANCELLED,
                         _("No connection was chosen"));
@@ -885,8 +890,7 @@ retry_dialog:
             return FALSE;
         }
         g_object_set(app, "guri", guri, NULL);
-    } else
-        g_object_get(app, "guri", &guri, NULL);
+    }
 
     g_debug("Opening display to %s", guri);
     type = g_strdup("spice");
@@ -896,7 +900,7 @@ retry_dialog:
     // 2) В дефолтном режиме вызываем vdi manager. В нем пользователь выберет машину для поодключения
     if(!opt_manual_mode){
         VirtViewerWindow *main_window = virt_viewer_app_get_main_window(app);
-        if(!vdi_manager_dialog(virt_viewer_window_get_window(main_window), &guri)){
+        if(!vdi_manager_dialog(virt_viewer_window_get_window(main_window), &guri, &user, &password)){
             goto cleanup;
         }
     }
@@ -907,6 +911,12 @@ retry_dialog:
 
     g_signal_connect(virt_viewer_app_get_session(app), "session-connected",
                      G_CALLBACK(remote_viewer_session_connected), app);
+
+    // set credentials from    remote connect dialog    OR     vdi_manager_dialog
+    free_memory_safely(&spice_session_username);
+    free_memory_safely(&spice_session_password);
+    spice_session_username = g_strdup(user);
+    spice_session_password = g_strdup(password);
 
     // Коннект к машине
     if (!virt_viewer_app_initial_connect(app, &error)) {
@@ -925,11 +935,10 @@ retry_dialog:
 
 cleanup:
     g_clear_object(&file);
-    g_free(guri);
-    guri = NULL;
-    if(type)
-        g_free(type);
-    type = NULL;
+    free_memory_safely(&guri);
+    free_memory_safely(&user);
+    free_memory_safely(&password);
+    free_memory_safely(&type);
 
     if (!ret && priv->open_recent_dialog) {
         if (error != NULL) {

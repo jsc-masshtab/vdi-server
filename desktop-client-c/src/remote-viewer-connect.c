@@ -259,7 +259,7 @@ make_label_small(GtkLabel* label)
 */
 
 gboolean
-remote_viewer_connect_dialog(GtkWindow *main_window, gchar **uri) {
+remote_viewer_connect_dialog(GtkWindow *main_window, gchar **uri, gchar **user, gchar **password) {
 
     GtkWidget *window, /* *label,*/ *entry, *port_entry, *login_entry, *password_entry, /**recent,*/
             *connect_button/*, *cancel_button*/, *veil_image, *remember_checkbutton;
@@ -392,9 +392,13 @@ remote_viewer_connect_dialog(GtkWindow *main_window, gchar **uri) {
     if (ci.response == TRUE) {
         *uri = g_strconcat("spice://", ip_from_remote_dialog, ":", port_from_remote_dialog, NULL);
         g_strstrip(*uri);
+        *user = g_strdup(username_from_remote_dialog);
+        *password = g_strdup(password_from_remote_dialog);
 
     } else {
         *uri = NULL;
+        *user = NULL;
+        *password = NULL;
     }
 
     g_object_unref(builder);

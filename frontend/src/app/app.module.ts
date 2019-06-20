@@ -1,3 +1,7 @@
+import { VmsComponent } from './resourses/vms/vms.component';
+import { VmsService } from './resourses/vms/vms.service';
+import { TemplatesComponent } from './resourses/templates/templates.component';
+import { RemoveControllerComponent } from './settings/controllers/remove-controller/remove-controller.component';
 import { PoolDetailsComponent } from './polls/pool-details/pool-details.component';
 import { NodeDetailsComponent } from './resourses/nodes/node-details/node-details.component';
 import { DatapoolsService } from './resourses/datapools/datapools.service';
@@ -23,13 +27,11 @@ import { HttpClientModule } from '@angular/common/http';
 /*  -----------------------------------   icons   --------------------------------------*/
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { library } from '@fortawesome/fontawesome-svg-core'
-import { faDesktop,faDatabase, faLayerGroup,faPlusCircle,faSpinner,faServer,faCog,faBuilding,faChevronUp,faTimesCircle,faFolderOpen,faStar } from '@fortawesome/free-solid-svg-icons';
+import { faDesktop,faDatabase, faLayerGroup,faPlusCircle,faSpinner,faServer,faCog,faBuilding,faChevronUp,faTimesCircle,faFolderOpen,faStar,faMinusCircle, faTv,faSyncAlt } from '@fortawesome/free-solid-svg-icons';
 /*  -----------------------------------   icons   --------------------------------------*/
 
 
 import { MainMenuComponent } from './main-menu/main-menu.component';
-import { TeplatesService } from './templates/templates.service';
-import { TemplatesComponent } from './templates/templates.component';
 import { BaSelect } from './common/baSelect';
 
 
@@ -52,6 +54,9 @@ import { ControllersService } from './settings/controllers/controllers.service';
 import { FooterComponent } from './footer/footer.component';
 import { ClusterDetailsComponent } from './resourses/clusters/cluster-details/cluster-details.component';
 import { PoolsComponent } from './polls/pools.component';
+import { RemovePoolComponent } from './polls/remove-pool/remove-pool.component';
+import { TemplatesService } from './resourses/templates/templates.service';
+import { TableService } from './common/table-component/table-component.service';
 /*  -----------------------------------   material   --------------------------------------*/
 
 
@@ -60,7 +65,6 @@ import { PoolsComponent } from './polls/pools.component';
   declarations: [
     AppComponent,
     MainMenuComponent,
-    TemplatesComponent,
     TableComponentComponent,
     BreadcrumbsComponent,
     PoolAddComponent,
@@ -76,7 +80,11 @@ import { PoolsComponent } from './polls/pools.component';
     FooterComponent,
     NodeDetailsComponent,
     PoolDetailsComponent,
-    PoolsComponent
+    PoolsComponent,
+    RemoveControllerComponent,
+    RemovePoolComponent,
+    TemplatesComponent,
+    VmsComponent
   ],
   imports: [
     BrowserModule,
@@ -91,17 +99,22 @@ import { PoolsComponent } from './polls/pools.component';
   ],
   entryComponents: [
     PoolAddComponent,
-    AddControllerComponent
+    AddControllerComponent,
+    RemoveControllerComponent,
+    RemovePoolComponent
   ],
   providers: 
             [
-              TeplatesService,
               PoolsService,
               { provide: MAT_DIALOG_DEFAULT_OPTIONS, useValue: { hasBackdrop: true, restoreFocus: true } },
               NodesService,
               ClustersService,
               ControllersService,
-              DatapoolsService
+              DatapoolsService,
+              TemplatesService,
+              VmsService,
+              TableService
+              
             ],
   bootstrap: [AppComponent]
 })
@@ -109,7 +122,7 @@ import { PoolsComponent } from './polls/pools.component';
 
 export class AppModule {
   constructor() { 
-    library.add(faDesktop,faDatabase,faLayerGroup,faPlusCircle,faSpinner,faServer,faCog,faBuilding,faChevronUp,faTimesCircle,faFolderOpen,faStar
+    library.add(faDesktop,faDatabase,faLayerGroup,faPlusCircle,faMinusCircle,faSpinner,faServer,faCog,faBuilding,faChevronUp,faTimesCircle,faFolderOpen,faStar,faTv,faSyncAlt
       ); // Неиспользуемые иконки при финальной сборке удаляются
   }
 

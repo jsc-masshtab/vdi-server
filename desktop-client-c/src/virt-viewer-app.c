@@ -1711,7 +1711,7 @@ gboolean virt_viewer_app_start(VirtViewerApp *self, GError **error)
     return self->priv->started;
 }
 
-gboolean opt_manual_mode = FALSE;
+gboolean opt_manual_mode = TRUE;//FALSE; TEMP
 
 static int opt_zoom = NORMAL_ZOOM_LEVEL;
 static gchar *opt_hotkeys = NULL;
@@ -2037,6 +2037,23 @@ virt_viewer_app_class_init (VirtViewerAppClass *klass)
                                                         NULL,
                                                         G_PARAM_READABLE |
                                                         G_PARAM_WRITABLE |
+                                                        G_PARAM_STATIC_STRINGS));
+    // Veil properties
+    g_object_class_install_property(object_class,
+                                    PROP_UUID + 1,
+                                    g_param_spec_string("username",
+                                                        "username",
+                                                        "username",
+                                                        "",
+                                                        G_PARAM_READWRITE |
+                                                        G_PARAM_STATIC_STRINGS));
+    g_object_class_install_property(object_class,
+                                    PROP_UUID + 2,
+                                    g_param_spec_string("password",
+                                                        "password",
+                                                        "password",
+                                                        "",
+                                                        G_PARAM_READWRITE |
                                                         G_PARAM_STATIC_STRINGS));
 }
 

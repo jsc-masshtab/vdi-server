@@ -1,4 +1,6 @@
-import { Component,Input, Output, EventEmitter} from '@angular/core';
+import { Subscription } from 'rxjs';
+import { Component,Input, Output, EventEmitter, OnDestroy, OnInit } from '@angular/core';
+import { TableService } from './table-component.service';
 
 
 @Component({
@@ -6,7 +8,7 @@ import { Component,Input, Output, EventEmitter} from '@angular/core';
   templateUrl: './table-component.component.html',
   styleUrls: ['./table-component.component.scss']
 })
-export class TableComponentComponent  {
+export class TableComponentComponent implements OnInit,OnDestroy {
 
 
   @Input() data: object[] = [];
@@ -15,13 +17,23 @@ export class TableComponentComponent  {
   @Input() cursor: boolean = false;
   @Input() empty: string = "- нет данных -";
   @Output() clickRowData:EventEmitter<any> = new EventEmitter();
+  private spinSub:Subscription;
 
-  constructor() {}
+  constructor(private service: TableService) {}
 
-
+  ngOnInit() {
+   this.spinSub =  this.service.getStateSpinner().subscribe((spin: boolean) => {
+     this.spinner = spin;
+      console.log(spin);
+    });
+  }
 
   public clickRow(item) {
     this.clickRowData.emit(item);
+  }
+
+  ngOnDestroy() {
+    this.spinSub.unsubscribe();
   }
 
   

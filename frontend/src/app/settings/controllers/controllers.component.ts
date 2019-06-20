@@ -3,6 +3,7 @@ import { ControllersService   } from './controllers.service';
 import { map } from 'rxjs/operators';
 import { MatDialog } from '@angular/material';
 import { AddControllerComponent } from './add-controller/add-controller.component';
+import { RemoveControllerComponent } from './remove-controller/remove-controller.component';
 
 @Component({
   selector: 'vdi-servers',
@@ -28,10 +29,14 @@ export class ControllersComponent implements OnInit {
     {
       title: 'Настройки',
       icon: 'cog'
+    },
+    {
+      title: 'Контроллеры',
+      icon: 'server'
     }
   ];
 
-  public spinner:boolean = true;
+  public spinner:boolean = false;
 
   constructor(private service: ControllersService,public dialog: MatDialog){}
 
@@ -40,6 +45,7 @@ export class ControllersComponent implements OnInit {
   }
 
   private getAllControllers() {
+    this.spinner = true;
     this.service.getAllControllers().valueChanges.pipe(map(data => data.data.controllers))
       .subscribe((data) => {
         this.controllers = data;
@@ -47,10 +53,6 @@ export class ControllersComponent implements OnInit {
         if(this.controllers.length) {
           localStorage.setItem('controller',JSON.stringify(data[0].ip));
         }
-        this.crumbs.push({
-          title: 'Контроллеры',
-          icon: 'server'
-        });
         this.spinner = false;
       },
       (error) => {
@@ -60,6 +62,12 @@ export class ControllersComponent implements OnInit {
 
   public addController() {
     this.dialog.open(AddControllerComponent, {
+      width: '500px'
+    });
+  }
+
+  public removeController() { // подумать об общей хранилке
+    this.dialog.open(RemoveControllerComponent, {
       width: '500px'
     });
   }

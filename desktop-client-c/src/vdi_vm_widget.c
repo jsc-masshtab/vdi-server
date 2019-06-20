@@ -1,5 +1,5 @@
 //
-// Created by ubuntu on 18.06.19.
+// Created by Solomin on 18.06.19.
 //
 
 #include "vdi_vm_widget.h"

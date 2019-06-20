@@ -3,9 +3,12 @@
 <vdi-breadcrumbs [data]="crumbs"></vdi-breadcrumbs>
       
 <div class="resourse-into" *ngIf="!spinner">
+    <!-- <div class="control-panel">
+        <button class="control-btn">Удалить</button>
+    </div> -->
     <ul class="menu">
         <li (click)="routeTo('info')" [class.active]="menuActive === 'info'" title="Информация">Информация</li>
-        <li (click)="routeTo('vms')" [class.active]="menuActive === 'vms'" title="Виртуальные машины">ВМ</li>
+        <li (click)="routeTo('vms')" [class.active]="menuActive === 'vms'" title="Виртуальные машины">Виртуальные машины</li>
     </ul>
     <vdi-table-into [data]="pool" [collection]="collection" *ngIf="menuActive === 'info'" [spinner]="spinner"></vdi-table-into>
     <vdi-table-component [data]="pool?.state?.available" [collection]="collection_vms" *ngIf="menuActive === 'vms'" empty=" - нет виртуальных машин - "></vdi-table-component> 

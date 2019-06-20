@@ -8,7 +8,7 @@
         <li (click)="routeTo('servers')" [class.active]="menuActive === 'servers'" title="Серверы">Серверы</li>
         <li (click)="routeTo('datapools')" [class.active]="menuActive === 'datapools'" title="Пулы данных">Пулы данных</li>
         <li (click)="routeTo('templates')" [class.active]="menuActive === 'templates'" title="Шаблоны виртуальных машин">Шаблоны ВМ</li>
-        <li (click)="routeTo('vms')" [class.active]="menuActive === 'vms'" title="Виртуальные машины">ВМ</li>
+        <li (click)="routeTo('vms')" [class.active]="menuActive === 'vms'" title="Виртуальные машины">Виртуальные машины</li>
     </ul>
     <vdi-table-into [data]="cluster" [collection]="collection" *ngIf="menuActive === 'info'" [spinner]="spinner"></vdi-table-into>
     <vdi-table-component [data]="cluster.nodes" [collection]="collection_nodes" *ngIf="menuActive === 'servers'" empty=" - нет серверов - "></vdi-table-component>

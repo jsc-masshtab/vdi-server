@@ -36,8 +36,10 @@
 #include "virt-viewer-display-spice.h"
 #include "virt-viewer-auth.h"
 
-extern gchar *username_from_remote_dialog;
-extern gchar *password_from_remote_dialog;
+gchar *spice_session_username = NULL;
+gchar *spice_session_password = NULL;
+
+
 gboolean  take_extern_credentials = FALSE;
 
 
@@ -715,9 +717,9 @@ virt_viewer_session_spice_main_channel_event(SpiceChannel *channel,
          * invalid username and invalid password. So, in both cases the username
          * entry will be pre-filled with the username used in the previous attempt. */
         if (username_required) {
-            // set username from remote-viewer-connect form
+            // set username
             if(take_extern_credentials){
-                user = g_strdup(username_from_remote_dialog);
+                user = g_strdup(spice_session_username);
             }
             else {
                 g_object_get(self->priv->session, "username", &user, NULL);
@@ -729,9 +731,8 @@ virt_viewer_session_spice_main_channel_event(SpiceChannel *channel,
         g_object_get(self->priv->session, "host", &host, NULL);
 
         // set password
-        // set password from remote-viewer-connect form
         if (take_extern_credentials) {
-            password = g_strdup(password_from_remote_dialog);
+            password = g_strdup(spice_session_password);
             ret = GTK_RESPONSE_OK;
             take_extern_credentials = FALSE;
         }
@@ -801,8 +802,8 @@ virt_viewer_session_spice_main_channel_event(SpiceChannel *channel,
         break;
     }
 
-    g_free(password);
-    g_free(user);
+    if(password) g_free(password);
+    if(user) g_free(user);
 }
 
 static void remove_cb(GtkContainer   *container G_GNUC_UNUSED,

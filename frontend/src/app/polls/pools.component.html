@@ -2,5 +2,7 @@
 <vdi-breadcrumbs [data]="crumbs"></vdi-breadcrumbs>
 <div class="btn">
     <button (click)="openCreatePool()"><fa-icon [icon]="['fas','plus-circle']" size="xs"></fa-icon><span>Создать пул</span></button>
+    <button *ngIf="pools && pools?.length" (click)="removePool()"><fa-icon [icon]="['fas','minus-circle']" size="xs"></fa-icon><span>Удалить</span></button>
+    <button class="refresh" title="Обновить" (click)="getAllPools()"><fa-icon [icon]="['fas','sync-alt']" size="s"></fa-icon></button>
 </div>
-<vdi-table-component [data]="pools" [collection]="collection" empty="- нет пулов - " [cursor]="true" (clickRowData)="routeTo($event)"></vdi-table-component>
+<vdi-table-component [data]="pools" [collection]="collection" empty="- нет пулов - " [spinner]="spinner" [cursor]="true" (clickRowData)="routeTo($event)"></vdi-table-component>

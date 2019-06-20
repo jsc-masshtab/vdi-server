@@ -15,6 +15,10 @@ export class NodesComponent implements OnInit {
   public infoTemplates: [];
   public collection: object[] = [
     {
+      title: '№',
+      property: 'index'
+    },
+    {
       title: 'Название',
       property: 'verbose_name'
     },
@@ -45,6 +49,10 @@ export class NodesComponent implements OnInit {
     {
       title: 'Ресурсы',
       icon: 'database'
+    },
+    {
+      title: 'Серверы',
+      icon: 'server'
     }
   ];
 
@@ -61,10 +69,6 @@ export class NodesComponent implements OnInit {
     this.service.getAllNodes().valueChanges.pipe(map(data => data.data.nodes))
       .subscribe( (data) => {
         this.nodes = data;
-        this.crumbs.push({
-          title: 'Серверы',
-          icon: 'server'
-        });
         this.spinner = false;
       },
       (error)=> {
