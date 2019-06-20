@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { trigger, style, animate, transition } from "@angular/animations";
-import { Router, NavigationStart} from '@angular/router';
+import { Router, NavigationEnd} from '@angular/router';
 
 @Component({
   selector: 'vdi-main-menu',
@@ -10,7 +10,7 @@ import { Router, NavigationStart} from '@angular/router';
     trigger('fadeInOut', [
       transition(':enter', [   // :enter is alias to 'void => *'
         style({opacity:0}),
-        animate(300, style({opacity:1})) 
+        animate(250, style({opacity:1})) 
       ]),
       transition(':leave', [   // :leave is alias to '* => void'
         animate(0, style({opacity:0})) 
@@ -21,66 +21,57 @@ import { Router, NavigationStart} from '@angular/router';
 
 export class MainMenuComponent implements OnInit {
 
-  public listMenu: object[] = [
-                                { name: 'Пулы', icon:'desktop', route:'pools'},
-
-                                { name: 'Ресурсы', icon: 'database', route:'resourses/clusters',open: false,
-                                        nested: [ { name: 'Кластеры', icon:'building', route:'resourses/clusters'},
-                                                  { name: 'Серверы', icon:'server', route:'resourses/nodes' },
-                                                  { name: 'Пулы данных', icon:'folder-open', route:'resourses/datapools' },
-                                                  { name: 'Шаблоны', icon:'tv', route:'resourses/templates' },
-                                                  { name: 'ВМ', icon:'desktop', route:'resourses/vms' }]               
-                                },
-                                { name: 'Настройки', icon:'cog', route:'settings/controllers', open: false,
-                                        nested: [{ name: 'Контроллеры', icon:'server',icon_dependent:'star',route:'settings/controllers' }] 
-                                }
-                              ];
+  public toggleResourse:boolean = false;
+  public toggleSetting:boolean = false;
+  public clickedManage: string = '';
 
   constructor(private router: Router) {}
 
   ngOnInit() {
-    this.openRouteInit();
+    this.beginRoute();
   }
 
-  public check(item): boolean {
-    let result: boolean;
-    let clickItemRoute: string;
-    let url: string;
+  private beginRoute() {
 
-    if(item.nested) {
-      clickItemRoute = item.nested[0].route.split('/')[0];
-      url = this.router.url.split('/')[1];
-      clickItemRoute === url ? result = true : result = false;
-    } else {
-      clickItemRoute = item.route.split('/')[0];
-      url = this.router.url.split('/')[1];
-      clickItemRoute === url ? result = true : result = false;
-    }
-    return result;
-  }
+		this.router.events.subscribe((event) => {
+			if(event instanceof NavigationEnd) {
 
+        let clickedManage1 = event.urlAfterRedirects.split('/')[1] || null;
+        let clickedManage2 = event.urlAfterRedirects.split('/')[2] || null;
 
-  public clickItem(index,listMenu,event) {
-    event.stopPropagation();
-    listMenu[index].open = !listMenu[index].open;
-  }
-
-
-  private openRouteInit() {
-   this.router.events.subscribe((event) => {
-      if(event instanceof NavigationStart) {
-        let url = event.url.split('/',2)[1]; // url в строке браузера 1 крошка после домена
-        this.listMenu.forEach((element,index) => {
-          let route = element['route'].split('/',1).join();
-          if(route === url && element['nested']) {
-            if(!this.listMenu[index]['open']) {
-              this.listMenu[index]['open'] = true;    
-            }
+        if(clickedManage1) {
+          if(clickedManage1 === 'resourses') {
+						this.toggleResourse = true;
+					}
+					if(clickedManage1 === 'settings') {
+						this.toggleSetting = true;
           }
-        });
+
+          if(clickedManage1 === 'pools') {
+            this.clickedManage = 'pools';
+          }
+        }
+       
+        if(clickedManage2) {
+          this.clickedManage = clickedManage2;
+        }
       }
     });
   }
+
+  public resourseToggle(): void {
+		this.toggleResourse = !this.toggleResourse;
+	}
+
+	public settingToggle(): void {
+		this.toggleSetting = !this.toggleSetting;
+  }
+  
+  public routeTo(route: string) {
+		setTimeout(() => {
+			this.router.navigate([route]);
+		}, 0);
+	}
   
 
 }
