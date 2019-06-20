@@ -261,6 +261,9 @@ make_label_small(GtkLabel* label)
 gboolean
 remote_viewer_connect_dialog(GtkWindow *main_window, gchar **uri, gchar **user, gchar **password) {
 
+    // set params save group
+    const gchar *paramToFileGrpoup = opt_manual_mode ? "RemoteViewerConnectManual" : "RemoteViewerConnect";
+
     GtkWidget *window, /* *label,*/ *entry, *port_entry, *login_entry, *password_entry, /**recent,*/
             *connect_button/*, *cancel_button*/, *veil_image, *remember_checkbutton;
     GtkRecentFilter *rfilter;
@@ -286,7 +289,7 @@ remote_viewer_connect_dialog(GtkWindow *main_window, gchar **uri, gchar **user, 
     connect_button = GTK_WIDGET(gtk_builder_get_object(builder, "connect-button"));
 
     entry = ci.entry = GTK_WIDGET(gtk_builder_get_object(builder, "connection-address-entry"));
-    const gchar *ip_str_from_config_file = read_from_settings_file("RemoteViewerConnect", "ip");
+    const gchar *ip_str_from_config_file = read_from_settings_file(paramToFileGrpoup, "ip");
     if(ip_str_from_config_file)
         gtk_entry_set_text(GTK_ENTRY(entry), ip_str_from_config_file);
 
@@ -297,7 +300,7 @@ remote_viewer_connect_dialog(GtkWindow *main_window, gchar **uri, gchar **user, 
 
     // port entry
     port_entry = GTK_WIDGET(gtk_builder_get_object(builder, "connection-port-entry"));
-    const gchar *port_str_from_config_file = read_from_settings_file("RemoteViewerConnect", "port");
+    const gchar *port_str_from_config_file = read_from_settings_file(paramToFileGrpoup, "port");
     if(port_str_from_config_file)
         gtk_entry_set_text(GTK_ENTRY(port_entry), port_str_from_config_file);
 
@@ -312,7 +315,7 @@ remote_viewer_connect_dialog(GtkWindow *main_window, gchar **uri, gchar **user, 
 
     // password entry
     password_entry = GTK_WIDGET(gtk_builder_get_object(builder, "password-entry"));
-    gchar *password_from_settings_file = read_from_settings_file("RemoteViewerConnect", "password");
+    gchar *password_from_settings_file = read_from_settings_file(paramToFileGrpoup, "password");
     if(password_from_settings_file){
         gtk_entry_set_text(GTK_ENTRY(password_entry), password_from_settings_file);
     }
@@ -322,7 +325,7 @@ remote_viewer_connect_dialog(GtkWindow *main_window, gchar **uri, gchar **user, 
     gtk_widget_set_sensitive(GTK_ENTRY(login_entry), !opt_manual_mode);
 
     if (!opt_manual_mode) {
-        gchar *user_from_settings_file = read_from_settings_file("RemoteViewerConnect", "username");
+        gchar *user_from_settings_file = read_from_settings_file(paramToFileGrpoup, "username");
         if(user_from_settings_file){
             gtk_entry_set_text(GTK_ENTRY(login_entry), user_from_settings_file);
         }
@@ -383,10 +386,10 @@ remote_viewer_connect_dialog(GtkWindow *main_window, gchar **uri, gchar **user, 
 
     // save data to ini file if required
     if(b_save_credentials_to_file){
-        write_to_settings_file("RemoteViewerConnect", "ip", ip_from_remote_dialog);
-        write_to_settings_file("RemoteViewerConnect", "port", port_from_remote_dialog);
-        write_to_settings_file("RemoteViewerConnect", "username", username_from_remote_dialog);
-        write_to_settings_file("RemoteViewerConnect", "password", password_from_remote_dialog);
+        write_to_settings_file(paramToFileGrpoup, "ip", ip_from_remote_dialog);
+        write_to_settings_file(paramToFileGrpoup, "port", port_from_remote_dialog);
+        write_to_settings_file(paramToFileGrpoup, "username", username_from_remote_dialog);
+        write_to_settings_file(paramToFileGrpoup, "password", password_from_remote_dialog);
     }
 
     if (ci.response == TRUE) {
