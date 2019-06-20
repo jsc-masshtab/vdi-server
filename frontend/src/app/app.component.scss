@@ -81,7 +81,7 @@ vdi-footer {
             padding: 5px 15px 5px;
             font-size: 15px;
             color: #000;
-            border-radius: 100px;
+            border-radius: 5px;
             box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.12);
             transition: .2s box-shadow ease-in-out;
             margin-right: 16px;
@@ -105,8 +105,4 @@ vdi-footer {
             }
         }
     }
-}
-
-.control-panel {
-
 }

@@ -27,7 +27,7 @@ import { HttpClientModule } from '@angular/common/http';
 /*  -----------------------------------   icons   --------------------------------------*/
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { library } from '@fortawesome/fontawesome-svg-core'
-import { faDesktop,faDatabase, faLayerGroup,faPlusCircle,faSpinner,faServer,faCog,faChevronUp,faTimesCircle,faFolderOpen,faStar,faMinusCircle, faTv } from '@fortawesome/free-solid-svg-icons';
+import { faDesktop,faDatabase, faLayerGroup,faPlusCircle,faSpinner,faServer,faCog,faChevronUp,faTimesCircle,faFolderOpen,faStar,faMinusCircle, faTv,faSyncAlt } from '@fortawesome/free-solid-svg-icons';
 import { faBuilding } from '@fortawesome/free-regular-svg-icons';
 /*  -----------------------------------   icons   --------------------------------------*/
 
@@ -57,6 +57,7 @@ import { ClusterDetailsComponent } from './resourses/clusters/cluster-details/cl
 import { PoolsComponent } from './polls/pools.component';
 import { RemovePoolComponent } from './polls/remove-pool/remove-pool.component';
 import { TemplatesService } from './resourses/templates/templates.service';
+import { TableService } from './common/table-component/table-component.service';
 /*  -----------------------------------   material   --------------------------------------*/
 
 
@@ -112,7 +113,8 @@ import { TemplatesService } from './resourses/templates/templates.service';
               ControllersService,
               DatapoolsService,
               TemplatesService,
-              VmsService
+              VmsService,
+              TableService
               
             ],
   bootstrap: [AppComponent]
@@ -121,7 +123,7 @@ import { TemplatesService } from './resourses/templates/templates.service';
 
 export class AppModule {
   constructor() { 
-    library.add(faDesktop,faDatabase,faLayerGroup,faPlusCircle,faMinusCircle,faSpinner,faServer,faCog,faBuilding,faChevronUp,faTimesCircle,faFolderOpen,faStar,faTv
+    library.add(faDesktop,faDatabase,faLayerGroup,faPlusCircle,faMinusCircle,faSpinner,faServer,faCog,faBuilding,faChevronUp,faTimesCircle,faFolderOpen,faStar,faTv,faSyncAlt
       ); // Неиспользуемые иконки при финальной сборке удаляются
   }
 

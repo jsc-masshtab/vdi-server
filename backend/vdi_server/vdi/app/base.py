@@ -43,7 +43,7 @@ async def startup():
 app.add_middleware(AuthenticationMiddleware, backend=JWTAuthenticationBackend())
 app.add_middleware(SessionMiddleware, secret_key='sphere')
 
-if settings.get('debug'):
+if settings.get('is_dev'):
     app.add_middleware(CORSMiddleware, allow_origins=['*'], allow_methods=['*'], allow_headers=['*'],
                        allow_credentials=True)
 
