@@ -13,6 +13,10 @@
 
 #define MAX_VM_NUMBER 150
 
+// extern
+extern gint64 currentVmId;
+extern gboolean take_extern_credentials;
+
 typedef enum
 {
     VDI_RECEIVED_RESPONSE,
@@ -26,13 +30,10 @@ static GtkWidget *main_vm_spinner = NULL;
 
 static GArray *vmWidgetArray = NULL;
 
-static gchar **userPtr = NULL;
+static gchar **urlPtr = NULL;
+//static gchar **userPtr = NULL;
 static gchar **passwordPtr = NULL;
 static ConnectionInfo *ciPtr = NULL;
-
-// extern
-extern gint64 currentVmId;
-extern gboolean take_extern_credentials;
 
 // functions declarations
 static void on_vm_start_button_clicked(GtkButton *button G_GNUC_UNUSED, gpointer data G_GNUC_UNUSED);
@@ -214,8 +215,19 @@ static gboolean onGetVmDFromPoolFinished(GObject *source_object G_GNUC_UNUSED,
     printf("vmHost %s \n", vmHost);
     printf("vmPort %i \n", vmPort);
     printf("vmPassword %s \n", vmPassword);
+
+    free_memory_safely(urlPtr);
+    *urlPtr = g_strdup_printf("spice://%s:%i", vmHost, vmPort);
+    g_strstrip(*urlPtr);
+    free_memory_safely(passwordPtr);
+    *passwordPtr = g_strdup_printf(vmPassword);
     //
     setVdiClientState(VDI_RECEIVED_RESPONSE, "Получена вм из пула", FALSE);
+
+    //stop event loop
+    ciPtr->response = TRUE;
+    shutdown_loop(ciPtr->loop);
+
     //
     g_object_unref (parser);
     if(ptr_res)
@@ -264,10 +276,11 @@ static void on_vm_start_button_clicked(GtkButton *button, gpointer data G_GNUC_U
 }
 
 /////////////////////////////////// main function
-gboolean vdi_manager_dialog(GtkWindow *main_window, gchar **uri, gchar **user, gchar **password)
+gboolean vdi_manager_dialog(GtkWindow *main_window, gchar **uri, gchar **user G_GNUC_UNUSED, gchar **password)
 {
     printf("vdi_manager_dialog url %s \n", *uri);
-    userPtr = user;
+    urlPtr = uri;
+    //userPtr = user;
     passwordPtr = password;
 
     GtkWidget *window, *button_renew, *button_quit, *vm_main_box;
@@ -325,12 +338,8 @@ gboolean vdi_manager_dialog(GtkWindow *main_window, gchar **uri, gchar **user, g
     const gchar *ip_str = NULL; // ip выбранной на gui машины получить с api
     const gchar *port_str = NULL; // порт  получить с api
 
-    // Сформировать url по которому подключемся
-    if(*uri)
-        g_free(*uri);
     if (ci.response == TRUE) {
-        *uri = g_strconcat("spice://", ip_str, ":", port_str, NULL);
-        g_strstrip(*uri);
+        // pass
 
     } else {
         *uri = NULL;

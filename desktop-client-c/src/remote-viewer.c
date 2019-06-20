@@ -903,6 +903,7 @@ retry_dialog:
         if(!vdi_manager_dialog(virt_viewer_window_get_window(main_window), &guri, &user, &password)){
             goto cleanup;
         }
+        g_object_set(app, "guri", guri, NULL);
     }
 
     // Далее переход к удаленному раб. столу. Создание сессии
