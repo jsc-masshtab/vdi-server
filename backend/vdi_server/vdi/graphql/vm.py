@@ -109,14 +109,7 @@ class AddTemplate(graphene.Mutation):
         if controller_ip is None:
             from vdi.graphql.resources import get_controller_ip
             controller_ip = await get_controller_ip()
-        from vdi.tasks import Token, HttpClient
-        url = f"http://{controller_ip}/api/domains/{id}/"
-        token = await Token(controller_ip=controller_ip)
-        headers = {
-            'Authorization': f'jwt {token}',
-        }
-        info = await HttpClient().fetch(url, headers=headers)
-        qu = "INSERT INTO template_vm (id, veil_info) VALUES ($1, $2) ON CONFLICT DO NOTHING", id, json.dumps(info)
+        qu = "INSERT INTO template_vm (id) VALUES ($1) ON CONFLICT DO NOTHING", id
         await conn.fetch(*qu)
         ret = AddTemplate(ok=True)
         ret.id = id
@@ -198,6 +191,7 @@ class TemplateMixin:
             node = NodeType(id=vm['node']['id'], verbose_name=vm['node']['verbose_name'])
             node.controller_ip = controller_ip
             obj = VmType(name=vm['verbose_name'], id=vm['id'], node=node)
+            obj.selections = get_selections(info)
             obj.info = vm
             obj.controller_ip = controller_ip
             objects.append(obj)

@@ -11,7 +11,7 @@ from ..pool import Pool
 from .util import get_selections
 from .users import UserType
 
-
+from typing import List
 
 
 # TODO TemplateType == VmType
@@ -82,11 +82,38 @@ class VmType(graphene.ObjectType):
     id = graphene.String()
     info = graphene.String(deprecation_reason="Use `template {info}`")
     template = graphene.Field(TemplateType)
+    user = graphene.Field(UserType)
+
+    #TODO cached info?
+
+    selections: List[str]
+    sql_data: dict = None
+
+
+    async def get_sql_data(self):
+        sql_fields = {'template', 'user'}
+        sql_fields = set(self.selections) & sql_fields
+        sql_selections = [
+            {'template': 'template_id', 'user': 'username'}.get(f, f)
+            for f in sql_fields
+        ]
+        async with db.connect() as conn:
+            data = await conn.fetch(f"select {', '.join(sql_selections)} from vm where id = $1", self.id)
+            if not data:
+                return None
+            [data] = data
+            return dict(data.items())
 
     @graphene.Field
     def node():
         from vdi.graphql.resources import NodeType
         return NodeType
+
+    async def resolve_user(self, info):
+        if self.sql_data is None:
+            self.sql_data = await self.get_sql_data()
+        username = self.sql_data['username']
+        return UserType(username=username)
 
     async def resolve_node(self, info):
         selected = get_selections(info)
@@ -107,21 +134,21 @@ class VmType(graphene.ObjectType):
         if self.template:
             # TODO make sure all fields are available
             return self.template
-        async with db.connect() as conn:
-            data = await conn.fetch("select template_id from vm where id = $1", self.id)
-            if not data:
-                return None
-            [(template_id,)] = data
-            if get_selections(info) == ['id']:
-                return TemplateType(id=template_id)
-            if self.controller_ip is None:
-                from vdi.graphql.resources import get_controller_ip
-                self.controller_ip = await get_controller_ip()
-            from vdi.tasks.vm import GetDomainInfo
-            template = await GetDomainInfo(controller_ip=self.controller_ip, domain_id=template_id)
-            return TemplateType(id=template_id, info=template, name=template['verbose_name'])
+        if self.sql_data is None:
+            self.sql_data = await self.get_sql_data()
+        template_id = self.sql_data['template_id']
+        if get_selections(info) == ['id']:
+            return TemplateType(id=template_id)
+        if self.controller_ip is None:
+            from vdi.graphql.resources import get_controller_ip
+            self.controller_ip = await get_controller_ip()
+        from vdi.tasks.vm import GetDomainInfo
+        template = await GetDomainInfo(controller_ip=self.controller_ip, domain_id=template_id)
+        return TemplateType(id=template_id, info=template, name=template['verbose_name'])
 
-    info = None
+    @cached
+    def info(self):
+        raise NotImplementedError
 
 
 class PoolSettingsFields(graphene.AbstractType):
@@ -180,6 +207,7 @@ class PoolState(graphene.ObjectType):
         for domain in vms:
             node = NodeType(id=node_id)
             obj = VmType(id=domain['id'], template=template, name=domain['verbose_name'], node=node)
+            obj.selections = get_selections(info)
             li.append(obj)
         return li
 
@@ -252,6 +280,7 @@ class AddPool(graphene.Mutation):
                 template = TemplateType(id=template['id'], info=template, name=template['verbose_name'])
                 item = VmType(id=domain['id'], template=template, name=domain['verbose_name'], node=node)
                 item.info = domain
+                item.selections = get_selections(info)
                 available.append(item)
         else:
             asyncio.create_task(add_domains)
