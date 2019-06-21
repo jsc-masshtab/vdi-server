@@ -106,3 +106,4 @@ nohup.out
 
 # C vdi client
 desktop-client-c/src/cmake-build-debug/
+desktop-client-c/src/cmake-build-release/

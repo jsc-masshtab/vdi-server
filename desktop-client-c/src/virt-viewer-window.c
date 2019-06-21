@@ -1465,6 +1465,7 @@ virt_viewer_window_show(VirtViewerWindow *self)
         self->priv->desktop_resize_pending = FALSE;
     }
 
+    gtk_window_set_position (GTK_WINDOW(self->priv->window), GTK_WIN_POS_CENTER);
     gtk_widget_show(self->priv->window);
 
     if (self->priv->kiosk)

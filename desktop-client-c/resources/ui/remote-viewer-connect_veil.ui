@@ -106,6 +106,8 @@
           <object class="GtkEntry" id="password-entry">
             <property name="visible">True</property>
             <property name="can_focus">True</property>
+            <property name="visibility">False</property>
+            <property name="invisible_char">*</property>
             <property name="placeholder_text" translatable="yes">Пароль</property>
           </object>
           <packing>

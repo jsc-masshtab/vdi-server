@@ -365,6 +365,7 @@ remote_viewer_connect_dialog(GtkWindow *main_window, gchar **uri, gchar **user, 
     */
 
     /* show and wait for response */
+    gtk_window_set_position (window, GTK_WIN_POS_CENTER);
     gtk_widget_show_all(window);
 
     connect_dialog_run(&ci);

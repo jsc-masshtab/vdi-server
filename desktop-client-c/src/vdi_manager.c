@@ -323,6 +323,7 @@ gboolean vdi_manager_dialog(GtkWindow *main_window, gchar **uri, gchar **user G_
     g_signal_connect(button_renew, "clicked", G_CALLBACK(on_button_renew_clicked), &ci);
     g_signal_connect(button_quit, "clicked", G_CALLBACK(on_button_quit_clicked), &ci);
 
+    gtk_window_set_position (window, GTK_WIN_POS_CENTER);
     gtk_widget_show_all(window);
     
     // Пытаемся соединиться с vdi и получить список машин. Получив список машин нужно сгенерить
