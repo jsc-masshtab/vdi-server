@@ -114,7 +114,7 @@ on_remember_checkbutton_clicked(GtkCheckButton *check_button,
                                 GtkEntry *entry G_GNUC_UNUSED)
 {
     printf("on_remember_checkbutton_clicked\n");
-    b_save_credentials_to_file = gtk_toggle_button_get_active(check_button);
+    b_save_credentials_to_file = gtk_toggle_button_get_active((GtkToggleButton *)check_button);
 }
 
 static void
@@ -311,7 +311,8 @@ remote_viewer_connect_dialog(GtkWindow *main_window, gchar **uri, gchar **user, 
 
     // Set veil image
     veil_image = GTK_WIDGET(gtk_builder_get_object(builder, "veil-image"));
-    gtk_image_set_from_resource(veil_image, VIRT_VIEWER_RESOURCE_PREFIX"/icons/content/img/veil-32x32.png");
+    gtk_image_set_from_resource((GtkImage *)veil_image,
+            VIRT_VIEWER_RESOURCE_PREFIX"/icons/content/img/veil-32x32.png");
 
     // password entry
     password_entry = GTK_WIDGET(gtk_builder_get_object(builder, "password-entry"));
@@ -365,7 +366,7 @@ remote_viewer_connect_dialog(GtkWindow *main_window, gchar **uri, gchar **user, 
     */
 
     /* show and wait for response */
-    gtk_window_set_position (window, GTK_WIN_POS_CENTER);
+    gtk_window_set_position ((GtkWindow *)window, GTK_WIN_POS_CENTER);
     gtk_widget_show_all(window);
 
     connect_dialog_run(&ci);

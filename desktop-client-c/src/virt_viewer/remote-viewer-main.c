@@ -66,7 +66,7 @@ main(int argc, char **argv)
     g_object_unref(app);
     return ret;
 }
-
+//
 /*
  * Local variables:
  *  c-indent-level: 4

@@ -38,7 +38,8 @@ void crush_handler(int sig){
     }
     else{
         const char *buf = "Backtrace\n";
-        write(pfd, buf, strlen(buf));
+        ssize_t sizeWritten = write(pfd, buf, strlen(buf));
+        (void)sizeWritten;
         backtrace_symbols_fd(array, size, pfd);
     }
 

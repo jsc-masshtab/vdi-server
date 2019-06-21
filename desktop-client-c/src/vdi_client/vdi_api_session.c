@@ -14,6 +14,7 @@
 //#define RESPONSE_BUFFER_SIZE 200
 #define OK_RESPONSE 200
 #define AUTH_FAIL_RESPONSE 401
+#define VM_ID_UNKNOWN -1
 
 extern gchar *username_from_remote_dialog; // !!*
 extern gchar *password_from_remote_dialog; // !!*
@@ -25,7 +26,7 @@ static gchar *auth_url = NULL;
 static gchar *jwt = NULL;
 
 SoupSession *soupSession; // thread safe according to doc
-gint64 currentVmId = -1; // !!*
+gint64 currentVmId = VM_ID_UNKNOWN; // !!*
 
 // get token  (make post request)
 // set session header
@@ -39,7 +40,7 @@ void startSession()
     free_memory_safely(&auth_url);
     api_url = g_strdup_printf("http://%s", ip_from_remote_dialog);
     auth_url = g_strdup_printf("%s:%s/auth/", api_url, port_from_remote_dialog);
-    currentVmId = -1;
+    currentVmId = VM_ID_UNKNOWN;
 }
 
 void stopSession()
@@ -50,7 +51,7 @@ void stopSession()
     free_memory_safely(&api_url);
     free_memory_safely(&auth_url);
     free_memory_safely(&jwt);
-    currentVmId = -1;
+    currentVmId = VM_ID_UNKNOWN;
 }
 
 void cancellPendingRequests()
@@ -180,7 +181,7 @@ void getVmDFromPool(GTask         *task,
                     GCancellable  *cancellable G_GNUC_UNUSED)
 {
     //gint64 vmId = 0; // get it through parameters
-    gchar *getVmUrl = g_strdup_printf("%s/client/pools/%i", api_url, currentVmId);
+    gchar *getVmUrl = g_strdup_printf("%s/client/pools/%ld", api_url, currentVmId);
     gchar *responseBodyStr = apiCall("POST", getVmUrl);
     g_free(getVmUrl);
 
