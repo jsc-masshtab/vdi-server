@@ -77,8 +77,11 @@ class HttpClient:
         val = e.response.buffer.read()
         val = val.decode('utf-8')
         obj = json.loads(val)
-        errors = obj['errors']['detail']
-        return '; '.join(errors)
+        try:
+            errors = obj['errors']['detail']
+            return '; '.join(errors)
+        except:
+            return repr(obj)
 
     async def fetch(self, *args, **kwargs):
         if not 'request_timeout' in kwargs:

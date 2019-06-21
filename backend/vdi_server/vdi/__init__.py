@@ -7,6 +7,9 @@ class SettingsDict(dict):
             k: v for k, v in cls.__dict__.items()
             if not k.startswith('__')
         })
+        self.__dict__ = self           # to allow dot access
+        self.__class__ = SettingsDict  # to remove class attributes
+
 
 from .settings import settings
 
