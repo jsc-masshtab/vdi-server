@@ -83,7 +83,7 @@ enum RemoteViewerProperties {
 #ifdef HAVE_OVIRT
 #endif
 
-static gboolean remote_viewer_start(VirtViewerApp *self, GError **error);
+static gboolean remote_viewer_start(VirtViewerApp *self, GError **error, RemoteViewerState remoteViewerState);
 #ifdef HAVE_SPICE_GTK
 static gboolean remote_viewer_activate(VirtViewerApp *self, GError **error);
 static void remote_viewer_window_added(GtkApplication *app, GtkWindow *w);
@@ -128,7 +128,8 @@ remote_viewer_deactivated(VirtViewerApp *app, gboolean connect_error)
     RemoteViewerPrivate *priv = self->priv;
 
     if (connect_error && priv->open_recent_dialog) {
-        if (virt_viewer_app_start(app, NULL)) {
+        RemoteViewerState remoteViewerState = opt_manual_mode ? AUTH_DIALOG : VDI_DIALOG;
+        if (virt_viewer_app_start(app, NULL, remoteViewerState)) {
             return;
         }
     }
@@ -859,7 +860,7 @@ remote_viewer_session_connected(VirtViewerSession *session,
 }
 
 static gboolean
-remote_viewer_start(VirtViewerApp *app, GError **err)
+remote_viewer_start(VirtViewerApp *app, GError **err, RemoteViewerState remoteViewerState)
 {
     printf("remote_viewer_start\n");
     g_return_val_if_fail(REMOTE_VIEWER_IS(app), FALSE);
@@ -871,53 +872,59 @@ remote_viewer_start(VirtViewerApp *app, GError **err)
     gchar *guri = NULL;
     gchar *user = NULL;
     gchar *password = NULL;
-    gchar *type = NULL;
     GError *error = NULL;
+    gchar *type = NULL;
 
 #ifdef HAVE_SPICE_GTK
     g_signal_connect(app, "notify", G_CALLBACK(app_notified), self);
 #endif
-        // remote connect dialog
+    switch (remoteViewerState) {
+        case  AUTH_DIALOG: goto retry_dialog;
+        case VDI_DIALOG: goto retry_vdi_dialog;
+    }
+
+    // remote connect dialog
 retry_dialog:
     {
         VirtViewerWindow *main_window = virt_viewer_app_get_main_window(app);
         // Забираем из ui адрес и порт
-        if (!remote_viewer_connect_dialog(virt_viewer_window_get_window(main_window), &guri, &user, &password)) {
-            g_set_error_literal(&error,
-                        VIRT_VIEWER_ERROR, VIRT_VIEWER_ERROR_CANCELLED,
-                        _("No connection was chosen"));
-            g_propagate_error(err, error);
+        GtkResponseType dialogWindowResponse =
+            remote_viewer_connect_dialog(virt_viewer_window_get_window(main_window), &guri, &user, &password);
+
+        if(dialogWindowResponse == GTK_RESPONSE_CANCEL) {
             return FALSE;
         }
+        else if(dialogWindowResponse == GTK_RESPONSE_CLOSE) {
+            g_application_quit(G_APPLICATION(app));
+            return FALSE;
+        }
+
         g_object_set(app, "guri", guri, NULL);
     }
 
     g_debug("Opening display to %s", guri);
-    type = g_strdup("spice");
-
     // После такого как забрали адресс с логином и паролем действуем в зависимости от opt_manual_mode
     // 1) в мануальном режиме сразу подключаемся к удаленноиу раб столу
     // 2) В дефолтном режиме вызываем vdi manager. В нем пользователь выберет машину для поодключения
+retry_vdi_dialog:
     if(!opt_manual_mode){
         VirtViewerWindow *main_window = virt_viewer_app_get_main_window(app);
-        DialogWindowResponse dialogWindowResponse =
+        GtkResponseType dialogWindowResponse =
                 vdi_manager_dialog(virt_viewer_window_get_window(main_window), &guri, &user, &password);
-        g_object_set(app, "guri", guri, NULL);
 
-        switch (dialogWindowResponse){
-            case DIALOG_SUCCESS:{
-                break;
-            }
-            case DIALOG_FAIL_OR_CANCEL:{
-                goto cleanup;
-            }
-            case DIALOG_QUIT_APP:{
-                return FALSE;
-            }
+        if(dialogWindowResponse == GTK_RESPONSE_CANCEL) {
+            goto cleanup;
         }
+        else if(dialogWindowResponse == GTK_RESPONSE_CLOSE) {
+            g_application_quit(G_APPLICATION(app));  
+            return FALSE;
+        }
+
+        g_object_set(app, "guri", guri, NULL);    
     }
 
     // Далее переход к удаленному раб. столу. Создание сессии
+    type = g_strdup("spice");
     if (!virt_viewer_app_create_session(app, type, &error))
         goto cleanup;
 
@@ -939,8 +946,8 @@ retry_dialog:
         }
         goto cleanup;
     }
-    // Здесь начало подключения к машине. После удачного подключения нужна авторизация
-    ret = VIRT_VIEWER_APP_CLASS(remote_viewer_parent_class)->start(app, &error); // -
+    // Показывается окно virt viewer // virt_viewer_app_default_start
+    ret = VIRT_VIEWER_APP_CLASS(remote_viewer_parent_class)->start(app, &error, AUTH_DIALOG);
 
 cleanup:
     //g_clear_object(&file);

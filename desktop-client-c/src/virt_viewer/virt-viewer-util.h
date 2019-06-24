@@ -35,10 +35,9 @@ enum {
 
 typedef enum
 {
-    DIALOG_SUCCESS,
-    DIALOG_FAIL_OR_CANCEL,
-    DIALOG_QUIT_APP
-} DialogWindowResponse;
+    AUTH_DIALOG,
+    VDI_DIALOG
+} RemoteViewerState;
 
 // Инфо для соеднинения сигнала и каллбэка
 typedef struct
@@ -46,7 +45,7 @@ typedef struct
     gboolean response;
     GMainLoop *loop;
     GtkWidget *entry;
-    DialogWindowResponse dialogWindowResponse;
+    GtkResponseType dialogWindowResponse;
 } ConnectionInfo;
 
 #define VIRT_VIEWER_ERROR virt_viewer_error_quark ()

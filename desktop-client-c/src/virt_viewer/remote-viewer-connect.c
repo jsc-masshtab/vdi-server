@@ -128,6 +128,7 @@ static gboolean
 window_deleted_cb(ConnectionInfo *ci)
 {
     ci->response = FALSE;
+    ci->dialogWindowResponse = GTK_RESPONSE_CLOSE;
     shutdown_loop(ci->loop);
     return TRUE;
 }
@@ -158,6 +159,7 @@ connect_button_clicked_cb(GtkButton *button G_GNUC_UNUSED, gpointer data)
     if (gtk_entry_get_text_length(GTK_ENTRY(ci->entry)) > 0)
     {
         ci->response = TRUE;
+        ci->dialogWindowResponse = GTK_RESPONSE_OK;
         shutdown_loop(ci->loop);
     }
 }
@@ -210,7 +212,7 @@ entry_activated_cb(GtkEntry *entry G_GNUC_UNUSED, gpointer data)
         shutdown_loop(ci->loop);
     }
 }
-
+/*
 static void
 recent_selection_changed_dialog_cb(GtkRecentChooser *chooser, gpointer data)
 {
@@ -228,8 +230,8 @@ recent_selection_changed_dialog_cb(GtkRecentChooser *chooser, gpointer data)
     gtk_entry_set_text(GTK_ENTRY(entry), uri);
 
     gtk_recent_info_unref(info);
-}
-
+}*/
+/*
 static void
 recent_item_activated_dialog_cb(GtkRecentChooser *chooser G_GNUC_UNUSED, gpointer data)
 {
@@ -237,7 +239,7 @@ recent_item_activated_dialog_cb(GtkRecentChooser *chooser G_GNUC_UNUSED, gpointe
     ci->response = TRUE;
     shutdown_loop(ci->loop);
 }
-
+*/
 static void
 make_label_small(GtkLabel* label)
 {
@@ -274,7 +276,7 @@ remote_viewer_connect_dialog(GtkWindow *main_window, gchar **uri, gchar **user, 
             FALSE,
             NULL,
             NULL,
-            DIALOG_SUCCESS
+            GTK_RESPONSE_CANCEL
     };
 
     take_extern_credentials = TRUE;
@@ -346,8 +348,8 @@ remote_viewer_connect_dialog(GtkWindow *main_window, gchar **uri, gchar **user, 
     g_signal_connect_swapped(window, "delete-event",
                              G_CALLBACK(window_deleted_cb), &ci);
 
-    g_signal_connect(entry, "activate",
-                     G_CALLBACK(entry_activated_cb), &ci);
+   // g_signal_connect(entry, "activate",
+     //                G_CALLBACK(entry_activated_cb), &ci);
     g_signal_connect(entry, "changed",
                      G_CALLBACK(entry_changed_cb), connect_button);
     g_signal_connect(entry, "icon-release",
@@ -410,7 +412,7 @@ remote_viewer_connect_dialog(GtkWindow *main_window, gchar **uri, gchar **user, 
     g_object_unref(builder);
     gtk_widget_destroy(window);
 
-    return ci.response;
+    return ci.dialogWindowResponse;
 }
 
 

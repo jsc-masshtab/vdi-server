@@ -47,6 +47,9 @@
 
 #define ZOOM_STEP 10
 
+// externs
+extern gboolean opt_manual_mode;
+
 /* Signal handlers for main window (move in a VirtViewerMainWindow?) */
 void virt_viewer_window_menu_view_zoom_out(GtkWidget *menu, VirtViewerWindow *self);
 void virt_viewer_window_menu_view_zoom_in(GtkWidget *menu, VirtViewerWindow *self);
@@ -834,7 +837,6 @@ virt_viewer_window_menu_file_quit(GtkWidget *src G_GNUC_UNUSED,
                                   VirtViewerWindow *self)
 {
     virt_viewer_app_maybe_quit(self->priv->app, self);
-    //virt_viewer_app_disconnected(virt_viewer_app_get_session(self->priv->app), NULL, self->priv->app);
 }
 
 
@@ -1139,7 +1141,8 @@ virt_viewer_window_menu_switch_off(GtkWidget *menu, VirtViewerWindow *self)
     virt_viewer_app_hide_all_windows(self->priv->app);
     GError *error = NULL;
 
-    if (!virt_viewer_app_start(self->priv->app, &error)) {
+    RemoteViewerState remoteViewerState = opt_manual_mode ? AUTH_DIALOG : VDI_DIALOG;
+    if (!virt_viewer_app_start(self->priv->app, &error, remoteViewerState)) {
         g_clear_error(&error);
         g_application_quit(G_APPLICATION(self->priv->app));
     }

@@ -74,9 +74,9 @@ static void virt_viewer_app_connected(VirtViewerSession *session,
                                       VirtViewerApp *self);
 static void virt_viewer_app_initialized(VirtViewerSession *session,
                                         VirtViewerApp *self);
-//static void virt_viewer_app_disconnected(VirtViewerSession *session,
-//                                         const gchar *msg,
-//                                         VirtViewerApp *self);
+static void virt_viewer_app_disconnected(VirtViewerSession *session,
+                                         const gchar *msg,
+                                         VirtViewerApp *self);
 static void virt_viewer_app_auth_refused(VirtViewerSession *session,
                                          const char *msg,
                                          VirtViewerApp *self);
@@ -1434,7 +1434,7 @@ void
 virt_viewer_app_disconnected(VirtViewerSession *session G_GNUC_UNUSED, const gchar *msg,
                              VirtViewerApp *self)
 {
-    printf("virt_viewer_app_disconnected\n");
+    printf("%s \n", (char *)__func__);
     VirtViewerAppPrivate *priv = self->priv;
     gboolean connect_error = !priv->connected && !priv->cancelled;
 
@@ -1698,7 +1698,7 @@ virt_viewer_app_default_start(VirtViewerApp *self, GError **error G_GNUC_UNUSED)
     return TRUE;
 }
 
-gboolean virt_viewer_app_start(VirtViewerApp *self, GError **error)
+gboolean virt_viewer_app_start(VirtViewerApp *self, GError **error, RemoteViewerState remoteViewerState)
 {
     VirtViewerAppClass *klass;
 
@@ -1707,7 +1707,7 @@ gboolean virt_viewer_app_start(VirtViewerApp *self, GError **error)
 
     g_return_val_if_fail(!self->priv->started, TRUE);
 
-    self->priv->started = klass->start(self, error);
+    self->priv->started = klass->start(self, error, remoteViewerState);
     return self->priv->started;
 }
 
@@ -1850,7 +1850,7 @@ virt_viewer_app_on_application_startup(GApplication *app)
     gtk_accel_map_add_entry("<virt-viewer>/view/zoom-in", GDK_KEY_plus, GDK_CONTROL_MASK);
     gtk_accel_map_add_entry("<virt-viewer>/send/secure-attention", GDK_KEY_End, GDK_CONTROL_MASK | GDK_MOD1_MASK);
 
-    if (!virt_viewer_app_start(self, &error)) {
+    if (!virt_viewer_app_start(self, &error, AUTH_DIALOG)) {
         if (error && !g_error_matches(error, VIRT_VIEWER_ERROR, VIRT_VIEWER_ERROR_CANCELLED))
             virt_viewer_app_simple_message_dialog(self, error->message);
 

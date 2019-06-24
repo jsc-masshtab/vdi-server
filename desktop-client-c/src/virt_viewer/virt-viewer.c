@@ -1149,7 +1149,7 @@ virt_viewer_start(VirtViewerApp *app, GError **error)
     if (virt_viewer_connect(app, error) < 0)
         return FALSE;
 
-    return VIRT_VIEWER_APP_CLASS(virt_viewer_parent_class)->start(app, error);
+    return VIRT_VIEWER_APP_CLASS(virt_viewer_parent_class)->start(app, error, AUTH_DIALOG);
 }
 
 VirtViewer *

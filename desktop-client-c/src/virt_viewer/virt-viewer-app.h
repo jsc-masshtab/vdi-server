@@ -26,6 +26,7 @@
 #include <glib-object.h>
 #include <gtk/gtk.h>
 #include "virt-viewer-window.h"
+#include "virt-viewer-util.h"
 
 G_BEGIN_DECLS
 
@@ -47,7 +48,7 @@ typedef struct {
     GtkApplicationClass parent_class;
 
     /*< private >*/
-    gboolean (*start) (VirtViewerApp *self, GError **error);
+    gboolean (*start) (VirtViewerApp *self, GError **error, RemoteViewerState remoteViewerState);
     gboolean (*initial_connect) (VirtViewerApp *self, GError **error);
     gboolean (*activate) (VirtViewerApp *self, GError **error);
     void (*deactivated) (VirtViewerApp *self, gboolean connect_error);
@@ -58,7 +59,7 @@ typedef struct {
 GType virt_viewer_app_get_type (void);
 
 void virt_viewer_app_set_debug(gboolean debug);
-gboolean virt_viewer_app_start(VirtViewerApp *app, GError **error);
+gboolean virt_viewer_app_start(VirtViewerApp *app, GError **error, RemoteViewerState remoteViewerState);
 void virt_viewer_app_maybe_quit(VirtViewerApp *self, VirtViewerWindow *window);
 VirtViewerWindow* virt_viewer_app_get_main_window(VirtViewerApp *self);
 void virt_viewer_app_trace(VirtViewerApp *self, const char *fmt, ...);
@@ -102,9 +103,6 @@ gboolean virt_viewer_app_get_session_cancelled(VirtViewerApp *self);
 
 // Вынесено из внутренних
 void virt_viewer_app_deactivate(VirtViewerApp *self, gboolean connect_error);
-void virt_viewer_app_disconnected(VirtViewerSession *session,
-                                         const gchar *msg,
-                                         VirtViewerApp *self);
 void virt_viewer_app_hide_all_windows(VirtViewerApp *app);
 
 G_END_DECLS

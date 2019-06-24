@@ -225,7 +225,7 @@ static void onGetVmDFromPoolFinished(GObject *source_object G_GNUC_UNUSED,
 
     //stop event loop
     ciPtr->response = TRUE;
-    ciPtr->dialogWindowResponse = DIALOG_SUCCESS;
+    ciPtr->dialogWindowResponse = GTK_RESPONSE_OK;
     shutdown_loop(ciPtr->loop);
 
     //
@@ -241,7 +241,7 @@ static gboolean on_window_deleted_cb(ConnectionInfo *ci)
 {
     printf("%s\n", (char *)__func__);
     ci->response = FALSE;
-    ci->dialogWindowResponse = DIALOG_QUIT_APP;
+    ci->dialogWindowResponse = GTK_RESPONSE_CLOSE;
     shutdown_loop(ci->loop);
     return TRUE;
 }
@@ -260,7 +260,7 @@ static void on_button_quit_clicked(GtkButton *button G_GNUC_UNUSED, gpointer dat
     printf("%s\n", (char *)__func__);
     ConnectionInfo *ci = data;
     ci->response = FALSE;
-    ci->dialogWindowResponse = DIALOG_FAIL_OR_CANCEL;
+    ci->dialogWindowResponse = GTK_RESPONSE_CANCEL;
     shutdown_loop(ci->loop);
 }
 
@@ -279,7 +279,7 @@ static void on_vm_start_button_clicked(GtkButton *button, gpointer data G_GNUC_U
 }
 
 /////////////////////////////////// main function
-DialogWindowResponse vdi_manager_dialog(GtkWindow *main_window, gchar **uri, gchar **user G_GNUC_UNUSED, gchar **password)
+GtkResponseType vdi_manager_dialog(GtkWindow *main_window, gchar **uri, gchar **user G_GNUC_UNUSED, gchar **password)
 {
     printf("vdi_manager_dialog url %s \n", *uri);
     urlPtr = uri;
@@ -294,7 +294,7 @@ DialogWindowResponse vdi_manager_dialog(GtkWindow *main_window, gchar **uri, gch
             FALSE,
             NULL,
             NULL,
-            DIALOG_FAIL_OR_CANCEL
+            GTK_RESPONSE_CANCEL
     };
     ciPtr = &ci;
 

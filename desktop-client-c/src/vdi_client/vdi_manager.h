@@ -8,6 +8,6 @@
 #include <gtk/gtk.h>
 
 
-DialogWindowResponse vdi_manager_dialog(GtkWindow *main_window, gchar **uri, gchar **user, gchar **password);
+GtkResponseType vdi_manager_dialog(GtkWindow *main_window, gchar **uri, gchar **user, gchar **password);
 
 #endif //VIRT_VIEWER_VEIL_VDI_MANAGER_H
