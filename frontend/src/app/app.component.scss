@@ -1,3 +1,6 @@
+@import "common/styles/form";
+
+
 .container {
     display: flex;
     flex-direction: column;
@@ -17,8 +20,7 @@ main {
     width: 100%;
     height: 100%;
     position: relative;
-    border: 3px solid #d9ecf4;
-    height: calc(100% - 28px);
+    height: calc(100% - 27px);
     overflow-y: auto;
 }
 
@@ -79,7 +81,7 @@ vdi-footer {
         > li {
             border: none;
             padding: 5px 15px 5px;
-            font-size: 15px;
+           
             color: #000;
             border-radius: 5px;
             box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.12);
