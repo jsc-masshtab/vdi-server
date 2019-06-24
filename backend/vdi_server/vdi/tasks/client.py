@@ -16,12 +16,9 @@ AsyncHTTPClient.configure("tornado.simple_httpclient.SimpleAsyncHTTPClient",
 class FetchException(Exception):
     object: dict
 
-    def __init__(self, obj, url=None):
-        self.object = obj
+    def __init__(self, msg, url=None):
         if url:
-            msg = f'{url} {repr(obj)}'
-        else:
-            msg = repr(obj)
+            msg = f'{url}: {msg}'
         super().__init__(msg)
 
 
@@ -76,19 +73,28 @@ class HttpClient:
     def __repr__(self):
         return repr(self._repr_obj)
 
+    def get_error_message(self, e: HTTPError):
+        val = e.response.buffer.read()
+        val = val.decode('utf-8')
+        obj = json.loads(val)
+        try:
+            errors = obj['errors']['detail']
+            return '; '.join(errors)
+        except:
+            return repr(obj)
+
     async def fetch(self, *args, **kwargs):
         if not 'request_timeout' in kwargs:
             kwargs['request_timeout'] = self.request_timeout
         try:
             response = await self._client.fetch(*args, **kwargs)
         except HTTPError as e:
-            val = e.response.buffer.read()
-            url = None
+            msg = self.get_error_message(e)
             if 'url' in kwargs:
                 url = kwargs['url']
             elif args:
                 url = args[0]
-            raise FetchException(val, url=url)
+            raise FetchException(msg, url=url)
         if self._json:
             response = json.loads(response.body)
         return response
