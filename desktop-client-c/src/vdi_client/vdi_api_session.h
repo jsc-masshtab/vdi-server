@@ -23,6 +23,17 @@ typedef struct{
 
 } VdiVmData;
 
+// vdi session
+typedef struct{
+
+    SoupSession *soupSession;
+
+    gchar *api_url;
+    gchar *auth_url;
+    gchar *jwt;
+
+} VdiSession;
+
 // Functions
 
 void startSession();

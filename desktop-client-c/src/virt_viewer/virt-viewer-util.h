@@ -28,15 +28,6 @@
 
 extern gboolean doDebug;
 
-// Инфо для соеднинения сигнала и каллбэка
-typedef struct
-{
-    gboolean response;
-    GMainLoop *loop;
-    GtkWidget *entry;
-} ConnectionInfo;
-
-
 enum {
     VIRT_VIEWER_ERROR_FAILED,
     VIRT_VIEWER_ERROR_CANCELLED
@@ -45,9 +36,18 @@ enum {
 typedef enum
 {
     DIALOG_SUCCESS,
-    DIALOG_ERROR,
+    DIALOG_FAIL_OR_CANCEL,
     DIALOG_QUIT_APP
 } DialogWindowResponse;
+
+// Инфо для соеднинения сигнала и каллбэка
+typedef struct
+{
+    gboolean response;
+    GMainLoop *loop;
+    GtkWidget *entry;
+    DialogWindowResponse dialogWindowResponse;
+} ConnectionInfo;
 
 #define VIRT_VIEWER_ERROR virt_viewer_error_quark ()
 #define VIRT_VIEWER_RESOURCE_PREFIX  "/org/virt-manager/virt-viewer"

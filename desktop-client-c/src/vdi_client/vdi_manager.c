@@ -31,7 +31,6 @@ static GtkWidget *main_vm_spinner = NULL;
 static GArray *vmWidgetArray = NULL;
 
 static gchar **urlPtr = NULL;
-//static gchar **userPtr = NULL;
 static gchar **passwordPtr = NULL;
 static ConnectionInfo *ciPtr = NULL;
 
@@ -226,6 +225,7 @@ static void onGetVmDFromPoolFinished(GObject *source_object G_GNUC_UNUSED,
 
     //stop event loop
     ciPtr->response = TRUE;
+    ciPtr->dialogWindowResponse = DIALOG_SUCCESS;
     shutdown_loop(ciPtr->loop);
 
     //
@@ -239,7 +239,9 @@ static void onGetVmDFromPoolFinished(GObject *source_object G_GNUC_UNUSED,
 /////////////////////////////////// gui elements callbacks//////////////////////////////////////
 static gboolean on_window_deleted_cb(ConnectionInfo *ci)
 {
+    printf("%s\n", (char *)__func__);
     ci->response = FALSE;
+    ci->dialogWindowResponse = DIALOG_QUIT_APP;
     shutdown_loop(ci->loop);
     return TRUE;
 }
@@ -258,6 +260,7 @@ static void on_button_quit_clicked(GtkButton *button G_GNUC_UNUSED, gpointer dat
     printf("%s\n", (char *)__func__);
     ConnectionInfo *ci = data;
     ci->response = FALSE;
+    ci->dialogWindowResponse = DIALOG_FAIL_OR_CANCEL;
     shutdown_loop(ci->loop);
 }
 
@@ -276,7 +279,7 @@ static void on_vm_start_button_clicked(GtkButton *button, gpointer data G_GNUC_U
 }
 
 /////////////////////////////////// main function
-gboolean vdi_manager_dialog(GtkWindow *main_window, gchar **uri, gchar **user G_GNUC_UNUSED, gchar **password)
+DialogWindowResponse vdi_manager_dialog(GtkWindow *main_window, gchar **uri, gchar **user G_GNUC_UNUSED, gchar **password)
 {
     printf("vdi_manager_dialog url %s \n", *uri);
     urlPtr = uri;
@@ -290,7 +293,8 @@ gboolean vdi_manager_dialog(GtkWindow *main_window, gchar **uri, gchar **user G_
     ConnectionInfo ci = {
             FALSE,
             NULL,
-            NULL
+            NULL,
+            DIALOG_FAIL_OR_CANCEL
     };
     ciPtr = &ci;
 
@@ -336,15 +340,8 @@ gboolean vdi_manager_dialog(GtkWindow *main_window, gchar **uri, gchar **user G_
     ci.loop = g_main_loop_new(NULL, FALSE);
     g_main_loop_run(ci.loop);
 
-    const gchar *ip_str = NULL; // ip выбранной на gui машины получить с api
-    const gchar *port_str = NULL; // порт  получить с api
-
-    if (ci.response == TRUE) {
-        // pass
-
-    } else {
+    if (ci.response == FALSE)
         *uri = NULL;
-    }
 
     // clear
     stopSession();
@@ -355,5 +352,5 @@ gboolean vdi_manager_dialog(GtkWindow *main_window, gchar **uri, gchar **user G_
     gtk_flow_box = NULL;
     main_vm_spinner = NULL;
 
-    return ci.response;
+    return ci.dialogWindowResponse;
 }

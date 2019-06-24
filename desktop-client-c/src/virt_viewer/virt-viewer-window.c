@@ -1138,7 +1138,7 @@ virt_viewer_window_menu_switch_off(GtkWidget *menu, VirtViewerWindow *self)
     virt_viewer_app_deactivate(self->priv->app, 0);
     virt_viewer_app_hide_all_windows(self->priv->app);
     GError *error = NULL;
-    //virt_viewer_app_start(self->priv->app, &error);
+
     if (!virt_viewer_app_start(self->priv->app, &error)) {
         g_clear_error(&error);
         g_application_quit(G_APPLICATION(self->priv->app));

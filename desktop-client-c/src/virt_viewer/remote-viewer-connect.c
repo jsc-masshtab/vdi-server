@@ -273,7 +273,8 @@ remote_viewer_connect_dialog(GtkWindow *main_window, gchar **uri, gchar **user, 
     ConnectionInfo ci = {
             FALSE,
             NULL,
-            NULL
+            NULL,
+            DIALOG_SUCCESS
     };
 
     take_extern_credentials = TRUE;

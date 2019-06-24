@@ -866,7 +866,7 @@ remote_viewer_start(VirtViewerApp *app, GError **err)
 
     RemoteViewer *self = REMOTE_VIEWER(app);
     RemoteViewerPrivate *priv = self->priv;
-    GFile *file = NULL;
+    //GFile *file = NULL;
     gboolean ret = FALSE;
     gchar *guri = NULL;
     gchar *user = NULL;
@@ -900,10 +900,21 @@ retry_dialog:
     // 2) В дефолтном режиме вызываем vdi manager. В нем пользователь выберет машину для поодключения
     if(!opt_manual_mode){
         VirtViewerWindow *main_window = virt_viewer_app_get_main_window(app);
-        if(!vdi_manager_dialog(virt_viewer_window_get_window(main_window), &guri, &user, &password)){
-            goto cleanup;
-        }
+        DialogWindowResponse dialogWindowResponse =
+                vdi_manager_dialog(virt_viewer_window_get_window(main_window), &guri, &user, &password);
         g_object_set(app, "guri", guri, NULL);
+
+        switch (dialogWindowResponse){
+            case DIALOG_SUCCESS:{
+                break;
+            }
+            case DIALOG_FAIL_OR_CANCEL:{
+                goto cleanup;
+            }
+            case DIALOG_QUIT_APP:{
+                return FALSE;
+            }
+        }
     }
 
     // Далее переход к удаленному раб. столу. Создание сессии
@@ -928,14 +939,11 @@ retry_dialog:
         }
         goto cleanup;
     }
-#ifdef HAVE_SPICE_GTK
-
-#endif
     // Здесь начало подключения к машине. После удачного подключения нужна авторизация
     ret = VIRT_VIEWER_APP_CLASS(remote_viewer_parent_class)->start(app, &error); // -
 
 cleanup:
-    g_clear_object(&file);
+    //g_clear_object(&file);
     free_memory_safely(&guri);
     free_memory_safely(&user);
     free_memory_safely(&password);
