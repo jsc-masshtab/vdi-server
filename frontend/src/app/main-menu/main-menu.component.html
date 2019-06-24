@@ -15,7 +15,7 @@
   </a>
 
   <a class="top-menu-item item-tree" [@fadeInOut] *ngIf="toggleResourse" [class.clicked-link]="clickedManage =='clusters'" (click)="routeTo('resourses/clusters')" (keydown.enter)="routeTo('resourses/clusters')" [class.clicked-link]="clickedManage == 'clusters'"  tabindex="0">
-    <fa-icon [icon]="['far','building']" size="s" [style.color]="'rgb(212, 165, 255)'"></fa-icon>
+    <fa-icon [icon]="['fas','building']" size="s" [style.color]="'rgb(212, 165, 255)'"></fa-icon>
     <span>Кластеры</span>
   </a>
 
@@ -49,7 +49,7 @@
   </a>
 
   <a class="top-menu-item item-tree" [@fadeInOut] *ngIf="toggleSetting" [class.clicked-link]="clickedManage =='controllers'" (click)="routeTo('settings/controllers')" (keydown.enter)="routeTo('settings/controllers')" [class.clicked-link]="clickedManage =='controllers'"  tabindex="0">
-    <fa-icon [icon]="['far','building']" size="s" [style.color]="'rgb(255, 235, 205)'"></fa-icon>
+    <fa-icon [icon]="['fas','building']" size="s" [style.color]="'rgb(255, 235, 205)'"></fa-icon>
     <span>Контроллеры</span>
   </a>
 </div>
