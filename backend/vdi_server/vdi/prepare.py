@@ -41,8 +41,7 @@ async def add_user(controller_ip, **creds):
     try:
         await client.fetch(url, method='POST', body=body, headers=headers)
     except FetchException as ex:
-        obj = json.loads(ex.object)
-        assert obj == {'errors': {'username': ['Пользователь с таким именем уже существует.']}}
+        assert 'Пользователь с таким именем уже существует.' in str(ex)
 
 
 async def main():

@@ -71,7 +71,9 @@ class HttpClient:
         return await self.fetch(url, **dic)
 
     def __repr__(self):
-        return repr(self._repr_obj)
+        if hasattr(self, '_repr_obj'):
+            return repr(self._repr_obj)
+        return super().__repr__()
 
     def get_error_message(self, e: HTTPError):
         val = e.response.buffer.read()
