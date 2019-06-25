@@ -61,7 +61,7 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
     }
   ];
 
-  public spinner:boolean = false;
+  public into_spinner:boolean = false;
 
   constructor(private activatedRoute: ActivatedRoute,
               private service: PoolsService){}
@@ -74,16 +74,15 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
   }
 
   private getPool(id:number) {
-    this.spinner = true;
+    this.into_spinner = true;
     this.poolSub = this.service.getPool(id)
       .subscribe( (data) => {
         this.pool = data;
         this.addCrumb(this.pool['name']);
-      
-        this.spinner = false;
+        this.into_spinner = false;
       },
       (error)=> {
-        this.spinner = false;
+        this.into_spinner = false;
       });
   }
 

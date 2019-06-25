@@ -182,6 +182,10 @@ export class ClusterDetailsComponent implements OnInit {
     });
   }
 
+  ngOnChanges() {
+    console.log(this.spinner);
+  }
+
   private getCluster(id:string) {
     this.spinner = true;
     this.service.getCluster(id).valueChanges.pipe(map(data => data.data.cluster))
@@ -199,10 +203,10 @@ export class ClusterDetailsComponent implements OnInit {
 
         this.templates = data.templates.map((item) => JSON.parse(item.info));
       
-        this.spinner = false;
+       this.spinner = false;
       },
       (error)=> {
-        this.spinner = false;
+     this.spinner = false;
       });
   }
 

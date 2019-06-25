@@ -49,6 +49,7 @@ export class MainMenuComponent implements OnInit {
 
           if(clickedManage1 === 'pools') {
             this.clickedManage = 'pools';
+            return;
           }
         }
        
