@@ -88,8 +88,7 @@ class TemplateMixin:
             objects.append(obj)
         return objects
 
-    @enter_context(lambda: db.connect())
-    async def resolve_vms(conn: Connection, self, info, controller_ip=None, cluster_id=None, node_id=None):
+    async def resolve_vms(self, info, controller_ip=None, cluster_id=None, node_id=None):
         if controller_ip is None:
             from vdi.graphql.resources import get_controller_ip
             controller_ip = await get_controller_ip()
@@ -106,9 +105,16 @@ class TemplateMixin:
                 vm for vm in vms
                 if vm['node']['id'] in nodes
             ]
+        vm_ids = [vm['id'] for vm in vms]
+        async with db.connect() as conn:
+            qu = "select id from vm where id = any($1::text[])", vm_ids
+            data = await conn.fetch(*qu)
+            vm_ids = {item['id'] for item in data}
 
         objects = []
         for vm in vms:
+            if vm['id'] not in vm_ids:
+                continue
             node = NodeType(id=vm['node']['id'], verbose_name=vm['node']['verbose_name'])
             node.controller_ip = controller_ip
             obj = VmType(name=vm['verbose_name'], id=vm['id'], node=node)

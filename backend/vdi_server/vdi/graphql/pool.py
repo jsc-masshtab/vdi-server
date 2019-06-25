@@ -191,7 +191,7 @@ class PoolState(graphene.ObjectType):
         [template_id] = set(template_ids)
         vms = await vm.ListVms(controller_ip=self.controller_ip)
         vms = [
-            vm for vm in vms if vm['id'] in vm_ids
+            vm for vm in vms if vm['id'] in set(vm_ids)
         ]
         from vdi.graphql.vm import TemplateType
         from vdi.graphql.resources import NodeType
