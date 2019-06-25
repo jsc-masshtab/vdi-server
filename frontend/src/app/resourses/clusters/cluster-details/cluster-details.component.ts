@@ -199,10 +199,11 @@ export class ClusterDetailsComponent implements OnInit {
 
         this.templates = data.templates.map((item) => JSON.parse(item.info));
       
-        this.spinner = false;
+       this.spinner = false;
       },
       (error)=> {
         this.spinner = false;
+        console.log('error',error);
       });
   }
 

@@ -9,15 +9,8 @@ export class TableIntoComponent  {
 
   @Input() data: {} = {};
   @Input() collection: object[] = [];
-  @Input() spinner:boolean = false;
 
   constructor() {}
-
-  ngOnInit() {
- 
-  }
-
-
 
   
 }

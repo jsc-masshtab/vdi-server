@@ -1,0 +1,109 @@
+.form {
+    display: flex;
+    flex-direction: column;
+    background: #FFF;
+    border-radius: 10px;
+    font-size: 13px;
+    color:rgba(0, 0, 0, 0.7);
+;
+
+    .form-header {
+        height: 30px;
+        background: #081c2d;
+        color: #FFF;
+        border-top-left-radius: 10px;
+        border-top-right-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding-left: 10px;
+        padding-right: 4px;
+
+        button.form-close {
+            cursor: pointer;
+            background: transparent;
+            border: none;
+            outline: none;
+
+            > fa-icon {
+                color: #FFF;
+
+                &:hover {
+                    color: rgba(255,255,255,0.5);
+                    transition: color 200ms;
+                }
+            }
+        }
+    }
+
+    .form-fields {
+        padding: 10px 7px;
+        display: flex;
+        flex-direction: column;
+        padding-bottom: 15px;
+    }
+
+    .field {
+        margin-bottom: 15px;
+
+        &:last-child {
+            margin-bottom: 0px;
+        }
+
+        input,textarea {
+            background-color: #f9f9f9;
+            border: 1px solid #e8e8e8;
+            width: 100%;
+            border: none;
+            border: 1px solid rgba(17, 17, 17, 0.3);
+            border-radius: 2px;
+            color: rgba(0,0,0,0.7);
+            padding-left: 12px;
+
+            &:focus {
+                outline: 0;
+                box-shadow: inset 0px 0px 2px 1px #e8e8e8;
+                border: 1px solid rgba(0,0,0,0.3);
+            }
+        }
+
+        textarea {
+            height: 80px;
+        }
+
+        input {
+            height: 30px;
+        }
+    }
+
+    .field-name {
+        margin-bottom: 9px;
+    }
+
+    .form-actions {
+        display: flex;
+        justify-content: center;
+    }
+
+    .form-btn {
+        background-color: #fff;
+        width: 100%;
+        height: 35px;
+        font-size: 13px;
+        border: 1px solid #e8e8e8;
+        border-radius: 2px;
+        color: black;
+        cursor: pointer;
+        transition: all 200ms;
+
+        .action-name {
+            margin-left: 3px;
+        }
+    
+        &:hover {
+            background-color: #759296;
+            color: white;
+            transition: all 200ms;
+        }
+    }
+}

@@ -1,3 +1,8 @@
+@import "common/styles/form";
+@import "common/styles/panel-buttons";
+@import "common/styles/menu-into";
+
+
 .container {
     display: flex;
     flex-direction: column;
@@ -8,8 +13,8 @@
 }
 
 .al-main {
-    width:100%;
-    height: calc(100% - 28px);
+    width: 100%;
+    height: 100%;
     display: flex;
 }
 
@@ -17,8 +22,7 @@ main {
     width: 100%;
     height: 100%;
     position: relative;
-    border: 3px solid #d9ecf4;
-    height: calc(100% - 28px);
+    height: calc(100% - 27px);
     overflow-y: auto;
 }
 
@@ -28,24 +32,24 @@ main {
 
 .main-header {
     width: 100%;
-    background: slategrey;
-    height: 34px;
-    //box-shadow: 0 5px 15px rgba(0,0,0,0.25), 0 10px 10px rgba(0,0,0,0.22);
+    background: #282828;
     display: flex;
     align-items: center;
-    justify-content: center;
+    height: 50px;
+    border-bottom: 1px solid rgba(255,255,255,0.2);
 }
 
 .logo {
-    font-size: 20px;
-    color: #FFF;
-    margin-left: 40px;
+    font-size: 16px;
+    color: #dfdfe0;
     display: flex;
     align-items: center;
-    letter-spacing: 3px;
+    margin-left: 45px;
+    cursor: pointer;
 
     > span {
         margin-left: 3px;
+        margin-left: 5px;
     }
 }
 
@@ -61,7 +65,7 @@ vdi-footer {
     background-color:#d9ecf4;
 }
 
-::-webkit-scrollbar-thumb:hover{
+::-webkit-scrollbar-thumb:hover {
     background-color:orange;
 }
     
@@ -70,39 +74,6 @@ vdi-footer {
     height: 8px;
 }
 
-.resourse-into {
-    .menu {
-        display: flex;
-        padding: 10px;
-        background: rgba(201, 209, 216, 0.3);
-    
-        > li {
-            border: none;
-            padding: 5px 15px 5px;
-            font-size: 15px;
-            color: #000;
-            border-radius: 5px;
-            box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.12);
-            transition: .2s box-shadow ease-in-out;
-            margin-right: 16px;
-            cursor: pointer;
-            background: #FFF;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-    
-            &:hover {
-                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-            }
-    
-            &:last-child {
-                margin-right: 0px;
-            }
-    
-            &.active {
-                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2) !important;
-                font-weight: bold;
-            }
-        }
-    }
+fa-icon {
+    display: inline-flex;
 }

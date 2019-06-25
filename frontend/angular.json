@@ -26,8 +26,8 @@
               "src/assets"
             ],
             "styles": [
-              "src/styles.scss",
-              "src/reset.scss"
+              "src/reset.scss",
+              "src/styles.scss"
             ],
             "scripts": [],
             "es5BrowserSupport": true
