@@ -4,7 +4,6 @@
 // !!* -переменные с этой пометкой используются в разных потоках,
 // но одновременный доступ к ним не предполагается, так что защита не нужна
 
-
 #include <libsoup/soup-session.h>
 #include "virt-viewer-util.h"
 #include <json-glib/json-glib.h>
@@ -16,10 +15,10 @@
 #define AUTH_FAIL_RESPONSE 401
 #define VM_ID_UNKNOWN -1
 
-extern gchar *username_from_remote_dialog; // !!*
-extern gchar *password_from_remote_dialog; // !!*
-extern gchar *ip_from_remote_dialog;
-extern gchar *port_from_remote_dialog;
+static gchar *vdi_username = NULL; // !!*
+static gchar *vdi_password = NULL; // !!*
+static gchar *vdi_ip = NULL;
+static gchar *vdi_port = NULL;
 
 //SoupSession *soupSession; // thread safe according to doc
 static VdiSession vdiSession;
@@ -30,12 +29,27 @@ gint64 currentVmId = VM_ID_UNKNOWN; // !!*
 // set session header
 // make api requests
 
+void setVdiCredentials(const gchar *username, const gchar *password, const gchar *ip, const gchar *port)
+{
+    free_memory_safely(&vdi_username);
+    vdi_username = g_strdup(username);
+
+    free_memory_safely(&vdi_password);
+    vdi_password = g_strdup(password);
+
+    free_memory_safely(&vdi_ip);
+    vdi_ip = g_strdup(ip);
+
+    free_memory_safely(&vdi_port);
+    vdi_port = g_strdup(port);
+}
+
 void startSession()
 {
     vdiSession.soupSession = soup_session_new();
 
-    vdiSession.api_url = g_strdup_printf("http://%s", ip_from_remote_dialog);
-    vdiSession.auth_url = g_strdup_printf("%s:%s/auth/", vdiSession.api_url, port_from_remote_dialog);
+    vdiSession.api_url = g_strdup_printf("http://%s", vdi_ip);
+    vdiSession.auth_url = g_strdup_printf("%s:%s/auth/", vdiSession.api_url, vdi_port);
     vdiSession.jwt = NULL;
     currentVmId = VM_ID_UNKNOWN;
 }
@@ -88,7 +102,7 @@ gboolean refreshVdiSessionToken()
         return FALSE;
 
     gchar *messageBodyStr = g_strdup_printf("{\"username\": \"%s\", \"password\": \"%s\"}",
-            username_from_remote_dialog, password_from_remote_dialog);
+            vdi_username, vdi_password);
 
     soup_message_set_request (msg, "application/x-www-form-urlencoded",
                               SOUP_MEMORY_COPY, messageBodyStr, strlen (messageBodyStr));

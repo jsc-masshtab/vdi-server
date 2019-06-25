@@ -163,7 +163,7 @@ static void onGetVdiVmDataFinished (GObject *source_object G_GNUC_UNUSED,
         printf("Number of machines: %i\n", jsonArrayLength);
 
         int i;
-        for(i = 0; i < jsonArrayLength; ++i){
+        for(i = jsonArrayLength - 1; i >= 0; --i){
 
             JsonNode *jsonNode = json_array_get_element (jsonArray, i);
             JsonObject *object = json_node_get_object (jsonNode);

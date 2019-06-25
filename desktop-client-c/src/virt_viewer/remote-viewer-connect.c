@@ -28,16 +28,15 @@
 
 #include <ctype.h>
 
-gchar *username_from_remote_dialog = NULL;
-gchar *password_from_remote_dialog = NULL;
-gchar *ip_from_remote_dialog = NULL;
-gchar *port_from_remote_dialog = NULL;
+//gchar *username_from_remote_dialog = NULL;
+//gchar *password_from_remote_dialog = NULL;
+//gchar *ip_from_remote_dialog = NULL;
+//gchar *port_from_remote_dialog = NULL;
 
 extern gboolean opt_manual_mode;
 extern gboolean take_extern_credentials;
 
 static gboolean b_save_credentials_to_file = FALSE;
-
 static const gchar *ini_file_path = "veil_client_settings.ini";
 
 // read credentials_from_settings_file  todo: move to another file
@@ -261,7 +260,8 @@ make_label_small(GtkLabel* label)
 */
 
 gboolean
-remote_viewer_connect_dialog(GtkWindow *main_window, gchar **uri, gchar **user, gchar **password) {
+remote_viewer_connect_dialog(GtkWindow *main_window, gchar **uri, gchar **user, gchar **password,
+                             gchar **ip, gchar **port) {
 
     // set params save group
     const gchar *paramToFileGrpoup = opt_manual_mode ? "RemoteViewerConnectManual" : "RemoteViewerConnect";
@@ -375,38 +375,28 @@ remote_viewer_connect_dialog(GtkWindow *main_window, gchar **uri, gchar **user, 
     connect_dialog_run(&ci);
 
     // collect data from gui form
-    free_memory_safely(&ip_from_remote_dialog);
-    ip_from_remote_dialog = g_strdup(gtk_entry_get_text(GTK_ENTRY(entry)));
-    g_strstrip(ip_from_remote_dialog);
-    free_memory_safely(&port_from_remote_dialog);
-    port_from_remote_dialog = g_strdup(gtk_entry_get_text(GTK_ENTRY(port_entry)));
-
-    free_memory_safely(&username_from_remote_dialog);
-    username_from_remote_dialog = g_strdup(gtk_entry_get_text(GTK_ENTRY(login_entry)));
-    g_strstrip(username_from_remote_dialog);
-
-    free_memory_safely(&password_from_remote_dialog);
-    password_from_remote_dialog = g_strdup(gtk_entry_get_text(GTK_ENTRY(password_entry)));
-    g_strstrip(password_from_remote_dialog);
-
-    // save data to ini file if required
-    if(b_save_credentials_to_file){
-        write_to_settings_file(paramToFileGrpoup, "ip", ip_from_remote_dialog);
-        write_to_settings_file(paramToFileGrpoup, "port", port_from_remote_dialog);
-        write_to_settings_file(paramToFileGrpoup, "username", username_from_remote_dialog);
-        write_to_settings_file(paramToFileGrpoup, "password", password_from_remote_dialog);
-    }
-
     if (ci.response == TRUE) {
-        *uri = g_strconcat("spice://", ip_from_remote_dialog, ":", port_from_remote_dialog, NULL);
+        *ip = g_strdup(gtk_entry_get_text(GTK_ENTRY(entry)));
+        *port = g_strdup(gtk_entry_get_text(GTK_ENTRY(port_entry)));
+        *uri = g_strconcat("spice://", *ip, ":", *port, NULL);
         g_strstrip(*uri);
-        *user = g_strdup(username_from_remote_dialog);
-        *password = g_strdup(password_from_remote_dialog);
+        *user = g_strdup(gtk_entry_get_text(GTK_ENTRY(login_entry)));
+        *password = g_strdup(gtk_entry_get_text(GTK_ENTRY(password_entry)));
+
+        // save data to ini file if required
+        if(b_save_credentials_to_file){
+            write_to_settings_file(paramToFileGrpoup, "ip", *ip);
+            write_to_settings_file(paramToFileGrpoup, "port", *port);
+            write_to_settings_file(paramToFileGrpoup, "username", *user);
+            write_to_settings_file(paramToFileGrpoup, "password", *password);
+        }
 
     } else {
         *uri = NULL;
         *user = NULL;
         *password = NULL;
+        *ip = NULL;
+        *port = NULL;
     }
 
     g_object_unref(builder);

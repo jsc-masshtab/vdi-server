@@ -36,8 +36,8 @@
 #include "virt-viewer-display-spice.h"
 #include "virt-viewer-auth.h"
 
-gchar *spice_session_username = NULL;
-gchar *spice_session_password = NULL;
+static gchar *spice_session_username = NULL;
+static gchar *spice_session_password = NULL;
 
 
 gboolean  take_extern_credentials = FALSE;
@@ -1177,6 +1177,15 @@ virt_viewer_session_spice_get_main_channel(VirtViewerSessionSpice *self)
     g_return_val_if_fail(VIRT_VIEWER_IS_SESSION_SPICE(self), NULL);
 
     return self->priv->main_channel;
+}
+
+void
+setSpiceSessionCredentials(gchar *username, gchar *password)
+{
+    free_memory_safely(&spice_session_username);
+    free_memory_safely(&spice_session_password);
+    spice_session_username = g_strdup(username);
+    spice_session_password = g_strdup(password);
 }
 
 static void

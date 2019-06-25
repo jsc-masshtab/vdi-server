@@ -68,6 +68,8 @@ GType virt_viewer_session_spice_get_type(void);
 VirtViewerSession* virt_viewer_session_spice_new(VirtViewerApp *app, GtkWindow *main_window);
 SpiceMainChannel* virt_viewer_session_spice_get_main_channel(VirtViewerSessionSpice *self);
 
+void setSpiceSessionCredentials(gchar *username, gchar *password);
+
 G_END_DECLS
 
 

@@ -36,6 +36,8 @@ typedef struct{
 
 // Functions
 
+void setVdiCredentials(const gchar *username, const gchar *password, const gchar *ip, const gchar *port);
+
 void startSession();
 void stopSession();
 void cancellPendingRequests();
