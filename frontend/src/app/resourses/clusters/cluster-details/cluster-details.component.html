@@ -17,9 +17,3 @@
     <vdi-table-component [data]="cluster.vms" [collection]="collection_vms" *ngIf="menuActive === 'vms'" empty=" - нет виртуальных машин - "></vdi-table-component>
 </div>
 
-
-<div *ngIf="spinner" class="cdk-overlay-container">
-    <div class="cdk-overlay-backdrop cdk-overlay-backdrop-showing"></div>
-    <fa-icon [icon]="['fas', 'spinner']" [spin]="true" size="2x"></fa-icon>
-</div>
-
