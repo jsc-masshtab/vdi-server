@@ -296,8 +296,6 @@ remote_viewer_connect_dialog(GtkWindow *main_window, gchar **uri, gchar **user, 
     if(ip_str_from_config_file)
         gtk_entry_set_text(GTK_ENTRY(entry), ip_str_from_config_file);
 
-
-
     active = (gtk_entry_get_text_length(GTK_ENTRY(ci.entry)) > 0);
     gtk_widget_set_sensitive(GTK_WIDGET(connect_button), active);
 

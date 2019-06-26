@@ -1072,6 +1072,8 @@ virt_viewer_window_menu_help_about(GtkWidget *menu G_GNUC_UNUSED,
     about = virt_viewer_util_load_ui("virt-viewer-about.ui");
 
     dialog = GTK_WIDGET(gtk_builder_get_object(about, "about"));
+    gtk_about_dialog_set_version (dialog, VERSION);
+    gtk_about_dialog_set_license (dialog, "");
 
     //gtk_about_dialog_set_version(GTK_ABOUT_DIALOG(dialog), VERSION BUILDID);
 
@@ -1169,15 +1171,14 @@ virt_viewer_window_toolbar_setup(VirtViewerWindow *self)
     g_signal_connect(button, "clicked", G_CALLBACK(virt_viewer_window_menu_file_quit), self);
 
     /* USB Device selection */
-    button = gtk_image_new_from_resource(VIRT_VIEWER_RESOURCE_PREFIX"/icons/24x24/virt-viewer-usb.png");
+    //button = gtk_image_new_from_resource(VIRT_VIEWER_RESOURCE_PREFIX"/icons/24x24/virt-viewer-usb.png");
     button = GTK_WIDGET(gtk_tool_button_new(NULL, NULL));
-    //gtk_tool_button_set_t(GTK_TOOL_BUTTON(button), "preferences-desktop-keyboard");
+
     gtk_tool_button_set_label(GTK_TOOL_BUTTON(button), _("USB device selection"));
     gtk_tool_item_set_tooltip_text(GTK_TOOL_ITEM(button), _("USB device selection"));
     gtk_toolbar_insert(GTK_TOOLBAR(priv->toolbar), GTK_TOOL_ITEM(button), 0);
     g_signal_connect(button, "clicked", G_CALLBACK(virt_viewer_window_menu_file_usb_device_selection), self);
     priv->toolbar_usb_device_selection = button;
-    gtk_widget_show_all(button);
 
     /* Send key */
     button = GTK_WIDGET(gtk_tool_button_new(NULL, NULL));
