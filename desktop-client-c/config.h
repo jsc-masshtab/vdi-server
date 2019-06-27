@@ -14,7 +14,7 @@
                 
 
 /* GETTEXT package name */
-#define GETTEXT_PACKAGE "virt-viewer"
+#define GETTEXT_PACKAGE "virt-viewer_veil"
 
 /* Define to 1 if you have the `bind_textdomain_codeset' function. */
 #define HAVE_BIND_TEXTDOMAIN_CODESET 1
@@ -58,13 +58,13 @@
 #define HAVE_MEMORY_H 1
 
 /* Have libgovirt? */
-#define HAVE_OVIRT 1
+//#define HAVE_OVIRT 1
 
 /* Have rest_proxy_auth_cancel and OVIRT_REST_CALL_ERROR_CANCELLED? */
 #define HAVE_OVIRT_CANCEL 1
 
 /* Define to 1 if you have the `socketpair' function. */
-#define HAVE_SOCKETPAIR 1
+//#define HAVE_SOCKETPAIR 1
 
 /* Have spice-gtk? */
 #define HAVE_SPICE_GTK 1
@@ -82,8 +82,9 @@
 #define HAVE_STRING_H 1
 
 /* Define to 1 if you have the <sys/socket.h> header file. */
+#ifdef __linux__
 #define HAVE_SYS_SOCKET_H 1
-
+#endif
 /* Define to 1 if you have the <sys/stat.h> header file. */
 #define HAVE_SYS_STAT_H 1
 
@@ -91,10 +92,12 @@
 #define HAVE_SYS_TYPES_H 1
 
 /* Define to 1 if you have the <sys/un.h> header file. */
-#define HAVE_SYS_UN_H 1
+//#define HAVE_SYS_UN_H 1
 
 /* Define to 1 if you have the <unistd.h> header file. */
+#ifdef __linux__
 #define HAVE_UNISTD_H 1
+#endif
 
 /* Have virDomainOpenGraphicsFD? */
 #define HAVE_VIR_DOMAIN_OPEN_GRAPHICS_FD 1
@@ -102,11 +105,14 @@
 /* Define to 1 if you have the <windows.h> header file. */
 /* #undef HAVE_WINDOWS_H */
 
+/*Spice controller*/
+//#define HAVE_SPICE_CONTROLLER
+
 /* Define to the sub-directory where libtool stores uninstalled libraries. */
 #define LT_OBJDIR ".libs/"
 
 /* Name of package */
-#define PACKAGE "virt-viewer"
+#define PACKAGE "virt-viewer_veil"
 
 /* Define to the address where bug reports for this package should be sent. */
 #define PACKAGE_BUGREPORT ""

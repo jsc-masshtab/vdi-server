@@ -243,6 +243,7 @@
                         <property name="can_focus">False</property>
                         <child>
                           <object class="GtkMenuItem" id="menu-switch-off">
+                            <property name="use_action_appearance">False</property>
                             <property name="visible">True</property>
                             <property name="can_focus">False</property>
                             <property name="label" translatable="yes">_Отключиться</property>

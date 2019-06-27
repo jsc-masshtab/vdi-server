@@ -40,8 +40,11 @@
 #endif
 
 #ifdef HAVE_SPICE_GTK
-#include <spice-controller.h>
 #include "virt-viewer-session-spice.h"
+#endif
+
+#ifdef HAVE_SPICE_CONTROLLER
+#include <spice-controller.h>
 #endif
 
 #include "virt-viewer-app.h"
@@ -57,7 +60,7 @@
 extern gboolean opt_manual_mode;
 
 struct _RemoteViewerPrivate {
-#ifdef HAVE_SPICE_GTK
+#ifdef HAVE_SPICE_CONTROLLER//HAVE_SPICE_GTK
     SpiceCtrlController *controller;
     SpiceCtrlForeignMenu *ctrl_foreign_menu;
 #endif
@@ -86,6 +89,9 @@ static gboolean remote_viewer_start(VirtViewerApp *self, GError **error, RemoteV
 static gboolean remote_viewer_activate(VirtViewerApp *self, GError **error);
 static void remote_viewer_window_added(GtkApplication *app, GtkWindow *w);
 static void spice_foreign_menu_updated(RemoteViewer *self);
+#endif
+
+#ifdef HAVE_SPICE_CONTROLLER
 static void foreign_menu_title_changed(SpiceCtrlForeignMenu *menu, GParamSpec *pspec, RemoteViewer *self);
 #endif
 
@@ -97,7 +103,7 @@ remote_viewer_dispose (GObject *object)
     RemoteViewerPrivate *priv = self->priv;
 #endif
 
-#ifdef HAVE_SPICE_GTK
+#ifdef HAVE_SPICE_CONTROLLER//#ifdef HAVE_SPICE_GTK
     if (priv->controller) {
         g_object_unref(priv->controller);
         priv->controller = NULL;
@@ -189,7 +195,7 @@ remote_viewer_local_command_line (GApplication   *gapp,
         g_object_set(app, "guri", opt_args[0], NULL);
     }
 
-#ifdef HAVE_SPICE_GTK
+#ifdef HAVE_SPICE_CONTROLLER
     if (opt_controller) {
         if (opt_args) {
             g_printerr(_("\nError: extra arguments given while using Spice controller\n\n"));
@@ -293,7 +299,7 @@ remote_viewer_new(void)
                         NULL);
 }
 
-#ifdef HAVE_SPICE_GTK
+#ifdef HAVE_SPICE_CONTROLLER
 static void
 foreign_menu_title_changed(SpiceCtrlForeignMenu *menu G_GNUC_UNUSED,
                            GParamSpec *pspec G_GNUC_UNUSED,
@@ -637,7 +643,7 @@ spice_ctrl_listen_async_cb(GObject *object,
         exit(EXIT_FAILURE); /* TODO: make start async? */
     }
 }
-
+#endif
 
 static gboolean
 remote_viewer_activate(VirtViewerApp *app, GError **error)
@@ -649,11 +655,14 @@ remote_viewer_activate(VirtViewerApp *app, GError **error)
 
     self = REMOTE_VIEWER(app);
 
+#ifdef HAVE_SPICE_CONTROLLER
     if (self->priv->controller) {
         SpiceSession *session = remote_viewer_get_spice_session(self);
         ret = spice_session_connect(session);
         g_object_unref(session);
-    } else {
+    } else
+#endif
+    {
         ret = VIRT_VIEWER_APP_CLASS(remote_viewer_parent_class)->activate(app, error);
     }
 
@@ -666,12 +675,13 @@ remote_viewer_window_added(GtkApplication *app,
 {
     VirtViewerWindow *win = VIRT_VIEWER_WINDOW(
                                 g_object_get_data(G_OBJECT(w), "virt-viewer-window"));
+#ifdef HAVE_SPICE_CONTROLLER
     spice_menu_update(REMOTE_VIEWER(app), win);
     spice_foreign_menu_update(REMOTE_VIEWER(app), win);
+#endif
 
     GTK_APPLICATION_CLASS(remote_viewer_parent_class)->window_added(app, w);
 }
-#endif
 
 #ifdef HAVE_OVIRT
 static gboolean
@@ -875,8 +885,8 @@ remote_viewer_start(VirtViewerApp *app, GError **err, RemoteViewerState remoteVi
     GError *error = NULL;
     gchar *type = NULL;
 
-#ifdef HAVE_SPICE_GTK
-    g_signal_connect(app, "notify", G_CALLBACK(app_notified), self);
+#ifdef HAVE_SPICE_CONTROLLER
+    //g_signal_connect(app, "notify", G_CALLBACK(app_notified), self);
 #endif
     switch (remoteViewerState) {
         case  AUTH_DIALOG: goto retry_dialog;

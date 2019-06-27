@@ -1,14 +1,20 @@
 #include <stdio.h>
-#include <execinfo.h>
 #include <signal.h>
 #include <stdlib.h>
 #include <unistd.h>
-
 #include <fcntl.h>
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 #include <errno.h>
+
+#ifdef __linux__
+#include <execinfo.h>
+#elif defined _WIN32
+#else
+#error "current OS is not supported"
+#endif
+
+
 
 #include "crashhandler.h"
 
@@ -19,6 +25,7 @@ static char fileName[nameSize];
 
 void crush_handler(int sig){
 
+#ifdef __linux__
     const int arraySize = 20;
     void *array[arraySize];
     int size;
@@ -42,6 +49,11 @@ void crush_handler(int sig){
         (void)sizeWritten;
         backtrace_symbols_fd(array, size, pfd);
     }
+#elif defined _WIN32
+    (void)sig;
+#else
+#error "current OS is not supported"
+#endif
 
     _Exit(0);
 }
@@ -53,7 +65,6 @@ void installHandler(const char *logFileName){
     signal(SIGSEGV, crush_handler);
     signal(SIGABRT, crush_handler);
     signal(SIGFPE, crush_handler);
-    signal(SIGPIPE, crush_handler);
 }
 
 

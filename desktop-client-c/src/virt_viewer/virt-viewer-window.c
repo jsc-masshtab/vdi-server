@@ -43,7 +43,7 @@
 #include "virt-viewer-util.h"
 #include "virt-viewer-timed-revealer.h"
 
-#include "remote-viewer-iso-list-dialog.h"
+//#include "remote-viewer-iso-list-dialog.h"
 
 #define ZOOM_STEP 10
 
@@ -1072,8 +1072,8 @@ virt_viewer_window_menu_help_about(GtkWidget *menu G_GNUC_UNUSED,
     about = virt_viewer_util_load_ui("virt-viewer-about.ui");
 
     dialog = GTK_WIDGET(gtk_builder_get_object(about, "about"));
-    gtk_about_dialog_set_version (dialog, VERSION);
-    gtk_about_dialog_set_license (dialog, "");
+    gtk_about_dialog_set_version ((GtkAboutDialog *)dialog, VERSION);
+    gtk_about_dialog_set_license ((GtkAboutDialog *)dialog, "");
 
     //gtk_about_dialog_set_version(GTK_ABOUT_DIALOG(dialog), VERSION BUILDID);
 
@@ -1108,7 +1108,7 @@ iso_dialog_response(GtkDialog *dialog,
 }
 #endif
 
-void
+G_MODULE_EXPORT void
 virt_viewer_window_menu_change_cd_activate(GtkWidget *menu G_GNUC_UNUSED,
                                            VirtViewerWindow *self G_GNUC_UNUSED)
 {
@@ -1134,7 +1134,7 @@ virt_viewer_window_menu_change_cd_activate(GtkWidget *menu G_GNUC_UNUSED,
 #endif
 }
 
-void
+G_MODULE_EXPORT void
 virt_viewer_window_menu_switch_off(GtkWidget *menu, VirtViewerWindow *self)
 {
     printf("virt_viewer_window_menu_switch_off\n");

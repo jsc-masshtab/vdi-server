@@ -20,7 +20,6 @@ static gchar *vdi_password = NULL; // !!*
 static gchar *vdi_ip = NULL;
 static gchar *vdi_port = NULL;
 
-//SoupSession *soupSession; // thread safe according to doc
 static VdiSession vdiSession;
 
 gint64 currentVmId = VM_ID_UNKNOWN; // !!*

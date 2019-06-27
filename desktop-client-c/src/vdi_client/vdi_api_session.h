@@ -7,6 +7,8 @@
 
 #include <gtk/gtk.h>
 #include <json-glib/json-glib.h>
+#include <libsoup/soup-session.h>
+#include <libsoup/soup-message.h>
 
 typedef enum{
     VDI_VM_WIN,
