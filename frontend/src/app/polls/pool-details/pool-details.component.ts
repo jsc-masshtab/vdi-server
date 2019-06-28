@@ -2,11 +2,12 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { PoolsService } from '../pools.service';
 import { ActivatedRoute, ParamMap } from '@angular/router';
 import { Subscription } from 'rxjs';
+import { MatDialog } from '@angular/material';
+import { RemovePoolComponent } from '../remove-pool/remove-pool.component';
 
 @Component({
   selector: 'vdi-pool-details',
-  templateUrl: './pool-details.component.html',
-  styleUrls: ['./pool-details.component.scss']
+  templateUrl: './pool-details.component.html'
 })
 
 
@@ -64,7 +65,8 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
   public into_spinner:boolean = false;
 
   constructor(private activatedRoute: ActivatedRoute,
-              private service: PoolsService){}
+              private service: PoolsService,
+              public dialog: MatDialog){}
 
   ngOnInit() {
     this.activatedRoute.paramMap.subscribe((param: ParamMap) => {
@@ -98,6 +100,12 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
     this.crumbs.push({
       title: `Пул ${ poolName }`,
       icon: 'desktop'
+    });
+  }
+
+  public removePool() {
+    this.dialog.open(RemovePoolComponent, {
+      width: '500px'
     });
   }
 

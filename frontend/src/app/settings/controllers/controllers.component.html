@@ -1,7 +1,7 @@
 <vdi-breadcrumbs [data]="crumbs"></vdi-breadcrumbs>
 <div class="panel-btn">
     <button (click)="addController()"><fa-icon [icon]="['fas','plus-circle']" size="xs"></fa-icon><span>Добавить</span></button>
-    <button *ngIf="controllers && controllers?.length" (click)="removeController()"><fa-icon [icon]="['fas','minus-circle']" size="xs"></fa-icon><span>Удалить</span></button>
+    <button *ngIf="controllers && controllers?.length" (click)="removeController()"><fa-icon [icon]="['fas','trash-alt']" size="xs"></fa-icon><span>Удалить</span></button>
 </div>
 
 <vdi-table-component [data]="controllers" [collection]="collection" [spinner]="spinner" empty="- нет контроллеров - "></vdi-table-component>

@@ -1,7 +1,7 @@
 import { PoolsService } from './../pools.service';
 import { MatDialogRef } from '@angular/material';
 import { Component, OnInit } from '@angular/core';
-
+import { Router } from '@angular/router';
 
 
 @Component({
@@ -17,7 +17,8 @@ export class RemovePoolComponent implements OnInit {
 
 
   constructor(private service: PoolsService,
-              private dialogRef: MatDialogRef<RemovePoolComponent>) {}
+              private dialogRef: MatDialogRef<RemovePoolComponent>,
+              private router: Router) {}
 
     
   ngOnInit() {
@@ -26,10 +27,11 @@ export class RemovePoolComponent implements OnInit {
 
   public send() {
     this.service.removePool(this.deletePool).subscribe((res) => {
-      if(res) {
-        this.service.getAllPools().subscribe();
-        this.dialogRef.close();
-      }
+      this.dialogRef.close();
+      setTimeout(()=> {
+        this.router.navigate([`pools`]);  
+      },1000); 
+    
     },(error) => {
       
     });
