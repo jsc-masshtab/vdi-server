@@ -3,9 +3,9 @@
 <vdi-breadcrumbs [data]="crumbs"></vdi-breadcrumbs>
       
 <div class="resourse-into" *ngIf="!into_spinner">
-    <!-- <div class="control-panel">
-        <button class="control-btn">Удалить</button>
-    </div> -->
+    <div class="panel-btn-into">
+        <button (click)="removePool()"><fa-icon [icon]="['fas','trash-alt']" size="xs"></fa-icon><span class="name">Удалить</span></button>
+    </div>
     <ul class="menu">
         <li (click)="routeTo('info')" [class.active]="menuActive === 'info'" title="Информация">Информация</li>
         <li (click)="routeTo('vms')" [class.active]="menuActive === 'vms'" title="Виртуальные машины">Виртуальные машины</li>
