@@ -11,8 +11,8 @@
     <ng-template #basicSelect>
         <div *ngIf="inputData.length || addedSelect" class="new-select-item" (click)="openList()" (keydown)="keydown($event)" [class.disabled-select]="disabled" [class.no-validate]="invalidData" [class.open-list]="listTrigger" tabindex="0">
             <span class="select-show" [class.block]="selectShowBlock" *ngFor="let show of selectedShow">{{show.title}} </span>
-            <i *ngIf="!listTrigger" class="fa fa-angle-down"></i>
-            <i *ngIf="listTrigger" class="fa fa-angle-up"></i>
+            <fa-icon [icon]="['fas','chevron-up']" size="xs"  *ngIf="listTrigger"></fa-icon>
+            <fa-icon [icon]="['fas','chevron-up']" size="xs" rotate="180" *ngIf="!listTrigger"></fa-icon>
         </div>
 
         <div *ngIf="inputData.length == 0 && !addedSelect" class="new-select-item center-flex" [class.disabled-select]="disabled" [class.no-validate]="invalidData">
