@@ -15,13 +15,13 @@ import os, sys
 
 repo_dir = Path(__file__).parent.absolute()
 base_env = {
-    'VAGRANT_CWD': repo_dir / 'vagrant' / 'base'
+    'VAGRANT_CWD': repo_dir / 'vagrant/base', **os.environ
 }
-config_path = repo_dir / 'vagrant' / 'config.json'
+config_path = repo_dir / 'vagrant/config.json'
 with config_path.open() as f:
     config = json.loads(f.read())
 
-volumes_path = repo_dir / 'vagrant' / 'base' / 'volumes.json'
+volumes_path = repo_dir / 'vagrant/base/volumes.json'
 
 
 def _commit():
@@ -57,48 +57,63 @@ def do_destroy(args):
         return
     _full_destroy()
 
+def get_image_name(name):
+    parts = name.split('/')
+    return '-VAGRANTSLASH-'.join(parts)
 
-def do_copyimage(args):
+
+def get_boxes_path():
     completed = subprocess.run("vagrant showinfo", shell=True, capture_output=True)
     info = json.loads(completed.stdout)
+    return Path(info['boxes_path'])
 
+def get_box_dir(boxes_path):
     image_name = get_image_name(config['image'])
-    box_dir = Path(info['boxes_path']) / image_name
+    boxname = get_image_name(config['boxname'])
+    return Path(boxes_path) / image_name / '0' / boxname
+
+
+def _copyimage(*, boxes_path):
+    image_name = get_image_name(config['image'])
+    box_dir = boxes_path / image_name
     dirs = [x for x in box_dir.iterdir() if x.is_dir()]
     last_version = sorted(dirs, key=lambda p: str(p))[-1]
-    image = last_version / 'libvirt' / 'box.img'
+    image = last_version / 'libvirt/box.img'
     boxname = get_image_name(config['boxname'])
-    target_dir = box_dir / '0' / boxname
+    target_dir = boxes_path / boxname / '0/libvirt'
     if target_dir.exists():
         ans = input(f"{target_dir} exists. Replace? [n] ")
         if not ans or ans.strip().lower() not in ('y', 'yes'):
             return
     target_dir.mkdir(parents=True, exist_ok=True)
-    cmd = f"cp {repo_dir / 'vagrant' / 'base' / 'box_template'}/* {target_dir}"
+    cmd = f"cp {repo_dir}/vagrant/base/box_template/* {target_dir}"
     result = subprocess.run(cmd, shell=True)
     cmd = f"cp {image} {target_dir}"
     result = subprocess.run(cmd, shell=True)
 
-def get_image_name(name):
-    parts = name.split('/')
-    return '-VAGRANTSLASH-'.join(parts)
+def do_copyimage(args):
+    boxes_path = get_boxes_path()
+    _copyimage(boxes_path=boxes_path)
+
 
 def do_init(args):
-    'TODO'
+    # TODO: --rm flag
+    boxes_path = get_boxes_path()
+    boxname = get_image_name(config['boxname'])
+    target_dir = boxes_path / boxname / '0/libvirt'
+    if not target_dir.exists():
+        do_copyimage(args)
+    do_update(args)
 
 
 def do_update(args):
-    env = {
-        'VAGRANT_CWD': (repo_dir / 'vagrant' / 'base').absolute(),
-        **os.environ
-    }
-    completed = subprocess.run("vagrant up --provision", shell=True, env=env)
+    completed = subprocess.run("vagrant up --provision", shell=True, env=base_env)
     if completed.returncode:
         sys.exit(completed.returncode)
     ans = input("Do you want to commit the image? [y] ")
     if ans and ans.strip().lower() not in ['y', 'yes']:
         return
-    completed = subprocess.run("vagrant commit", shell=True, env=env)
+    completed = subprocess.run("vagrant commit", shell=True, env=base_env)
     if completed.returncode:
         sys.exit(completed.returncode)
     set_not_provisioned()
@@ -122,6 +137,8 @@ def main():
         do_destroy(args)
     elif args['copyimage']:
         do_copyimage(args)
+    elif args['init']:
+        do_init(args)
 
 
 if __name__ == '__main__':

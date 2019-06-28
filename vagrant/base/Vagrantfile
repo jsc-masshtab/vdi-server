@@ -4,7 +4,11 @@ if ENV['VAGRANT_BOXNAME']
 end
 
 
-def get_config
+def read_config
+  require "json"
+  file = File.join(File.dirname(__FILE__), "../config.json")
+  file = File.open(file)
+  JSON.load(file)
 end
 
 # Vagrantfile API/syntax version. Don't touch unless you know what you're doing!
@@ -16,6 +20,8 @@ RAM = "2048"
 
 
 Vagrant.configure(VAGRANTFILE_API_VERSION) do | config |
+ opts = read_config()
+
  config.vm.provider "libvirt"
  config.vm.synced_folder '.', '/vagrant', type: "rsync",
    owner: "vagrant", group: "vagrant"
@@ -27,8 +33,8 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do | config |
  config.ssh.password = "vagrant"
 
  config.vm.define "vdihost" do | vdihost |
-   vdihost.vm.box = $boxname
-   vdihost.vm.hostname = "vdihost"
+   vdihost.vm.box = opts['boxname']
+   vdihost.vm.hostname = opts['hostname']
 
    vdihost.vm.provider "libvirt" do | libvirt |
      libvirt.memory = "2048"
