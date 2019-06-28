@@ -123,26 +123,28 @@ if (UNIX)
 endif (UNIX)
 
 if (WIN32)
+    SET(MSYS_PATH C:/msys64/mingw64/)
+
     # libxml
-    INCLUDE_DIRECTORIES(C:/msys64/mingw64/include/libxml2)
+    INCLUDE_DIRECTORIES(${MSYS_PATH}include/libxml2)
     SET(LIBS ${LIBS} xml2)
 
     # rest 0.7
-    INCLUDE_DIRECTORIES(C:/msys64/mingw64/include/rest-0.7)
+    INCLUDE_DIRECTORIES(${MSYS_PATH}include/rest-0.7)
     SET(LIBS ${LIBS} rest-0.7)
 
     # SPICE_GTK
-    INCLUDE_DIRECTORIES(C:/msys64/mingw64/include/spice-client-gtk-3.0)
-    INCLUDE_DIRECTORIES(C:/msys64/mingw64/include/spice-client-glib-2.0)
-    INCLUDE_DIRECTORIES(C:/msys64/mingw64/include/spice-1)
+    INCLUDE_DIRECTORIES(${MSYS_PATH}include/spice-client-gtk-3.0)
+    INCLUDE_DIRECTORIES(${MSYS_PATH}include/spice-client-glib-2.0)
+    INCLUDE_DIRECTORIES(${MSYS_PATH}include/spice-1)
     SET(LIBS ${LIBS} spice-client-gtk-3.0 spice-client-glib-2.0)
 
     # libsoup
-    INCLUDE_DIRECTORIES(C:/msys64/mingw64/include/libsoup-2.4)
+    INCLUDE_DIRECTORIES(${MSYS_PATH}include/libsoup-2.4)
     SET(LIBS ${LIBS} soup-2.4)
 
     # json glib
-    INCLUDE_DIRECTORIES(C:/msys64/mingw64/include/json-glib-1.0)
+    INCLUDE_DIRECTORIES(${MSYS_PATH}include/json-glib-1.0)
     SET(LIBS ${LIBS} json-glib-1.0)
 
     # other libs
@@ -157,9 +159,8 @@ if (WIN32)
 endif (WIN32)
 
 #############################LINKING###################################
-ADD_EXECUTABLE(virt_viewer_veil WIN32 ${SRC_CODE})
+ADD_EXECUTABLE(virt_viewer_veil ${GUI_TYPE} ${SRC_CODE})
 target_link_libraries(
     virt_viewer_veil # exec
     ${LIBS} # libs
 )
-
