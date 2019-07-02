@@ -1,7 +1,8 @@
 import { PoolsService } from './../pools.service';
 import { MatDialogRef } from '@angular/material';
-import { Component, OnInit } from '@angular/core';
+import { Component, Inject } from '@angular/core';
 import { Router } from '@angular/router';
+import {MAT_DIALOG_DATA} from '@angular/material';
 
 
 @Component({
@@ -9,24 +10,18 @@ import { Router } from '@angular/router';
   templateUrl: './remove-pool.component.html'
 })
 
-export class RemovePoolComponent implements OnInit {
-
-  public pools: [];
-  public defaultDataPools:string = "- Загрузка пулов виртуальных машин -";
-  private deletePool:number;
+export class RemovePoolComponent  {
 
 
   constructor(private service: PoolsService,
               private dialogRef: MatDialogRef<RemovePoolComponent>,
-              private router: Router) {}
+              private router: Router,
+              @Inject(MAT_DIALOG_DATA) public data: any) {}
 
     
-  ngOnInit() {
-    this.getAllControllers();
-  }
 
   public send() {
-    this.service.removePool(this.deletePool).subscribe((res) => {
+    this.service.removePool(this.data.pool_id).subscribe((res) => {
       this.dialogRef.close();
       setTimeout(()=> {
         this.router.navigate([`pools`]);  
@@ -35,28 +30,6 @@ export class RemovePoolComponent implements OnInit {
     },(error) => {
       
     });
-  }
-
-  private getAllControllers() {
-    this.defaultDataPools = "- Загрузка пулов виртуальных машин -";
-    this.service.getAllPools()
-      .subscribe((data) => {
-        this.pools = data.map((item) => {
-          return {
-            'output': item.id,
-            'input': item.name
-          }
-        });
-        this.defaultDataPools = "- нет доступных пулов виртуальных машин -";
-       
-      },
-      (error) => {
-        this.defaultDataPools = "- нет доступных пулов виртуальных машин -";
-      });
-  }
-
-  public selectValue(data) {
-    this.deletePool = +data[0];
   }
 
 }

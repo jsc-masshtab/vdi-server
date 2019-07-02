@@ -105,7 +105,11 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
 
   public removePool() {
     this.dialog.open(RemovePoolComponent, {
-      width: '500px'
+      width: '500px',
+      data: {
+        pool_id: this.pool_id,
+        pool_name: this.pool['name']
+      }
     });
   }
 
