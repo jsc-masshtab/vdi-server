@@ -1,10 +1,8 @@
 #! /usr/bin/env python
 """
 Usage:
-  vagrant.py init
-  vagrant.py update [-y | --yes]
+  vagrant.py setup [--rm]
   vagrant.py copyimage
-  vagrant.py destroy [-y | --yes]
 """
 import re
 
@@ -22,8 +20,6 @@ config_path = repo_dir / 'vagrant/config.json'
 with config_path.open() as f:
     config = json.loads(f.read())
 
-volumes_path = repo_dir / 'vagrant/base/volumes.json'
-
 
 def _commit():
     completed = subprocess.run("vagrant commit", shell=True, env=base_env, capture_output=True)
@@ -39,38 +35,7 @@ def _commit():
             continue
         volumes.append(volume)
         print(f"Updated: {volume}")
-    with volumes_path.open('w') as f:
-        f.write(json.dumps(volumes))
 
-
-def _full_destroy():
-    with volumes_path.open() as f:
-        volumes = json.loads(f.read())
-    destroy = False
-    for vol in volumes:
-        cmd = f"sudo -E qemu-img info {vol} --force | grep 'backing file:' | cut -d ':' -f2"
-        completed = subprocess.run(cmd, shell=True, capture_output=True)
-        backing = completed.stdout.decode().strip()
-        if not backing:
-            continue
-        destroy = True
-        cmd = f"sudo rm -f {backing}"
-        completed = subprocess.run(cmd, shell=True)
-        if not completed.returncode:
-            print(f"Deleted {backing}")
-    if destroy:
-        completed = subprocess.run("vagrant destroy -f", env=base_env, shell=True)
-
-
-def do_destroy(args):
-    if not volumes_path.exists():
-        print("No commit was made. You may run `copybox` to update it")
-        return
-    if not args['-y'] and not args['--yes']:
-        ans = input("This will destroy the base image. Continue? [n] ")
-        if not ans or ans.strip().lower() not in ('y', 'yes'):
-            return
-    _full_destroy()
 
 def get_image_name(name):
     parts = name.split('/')
@@ -116,7 +81,16 @@ def get_last_version(*, boxes_path):
     return last_version
 
 
-def do_init(args):
+def do_setup(args):
+    if args['--rm']:
+        #TODO check status
+        # init & update
+        result = subprocess.run("vagrant fulldestroy", shell=True)
+        if result.returncode:
+            sys.exit(result.returncode)
+        result = subprocess.run("sudo systemctl restart libvirtd", shell=True)
+        if result.returncode:
+            sys.exit(result.returncode)
     boxes_path = get_boxes_path()
     last_version = get_last_version(boxes_path=boxes_path)
     image = last_version / 'libvirt/box.img'
@@ -128,6 +102,9 @@ def do_init(args):
 
 
 def do_update(args):
+    completed = subprocess.run("vagrant destroy -f", shell=True, env=base_env)
+    if completed.returncode:
+        sys.exit(completed.returncode)
     completed = subprocess.run("vagrant up --provision", shell=True, env=base_env)
     if completed.returncode:
         sys.exit(completed.returncode)
@@ -150,14 +127,12 @@ def set_not_provisioned():
 
 def main():
     args = docopt(__doc__)
-    if args['update']:
-        do_update(args)
-    elif args['destroy']:
-        do_destroy(args)
-    elif args['copyimage']:
+    # if args['update']:
+    #     do_update(args)
+    if args['copyimage']:
         do_copyimage(args)
-    elif args['init']:
-        do_init(args)
+    elif args['setup']:
+        do_setup(args)
 
 
 if __name__ == '__main__':
