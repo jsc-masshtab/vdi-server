@@ -32,6 +32,7 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
       property_lv2: 'reserve_size'
     }
   ];
+  // Максимальное количество ВМ в пуле -  c тонкого клиента вм будут создаваться с каждым подключ. пользователем даже,если рес-сы закончатся
 
   public collection_vms = [
     {
