@@ -28,12 +28,12 @@ export class PoolsComponent implements OnInit {
       property: 'name'
     },
     {
-      title: 'Начальный размер пула',    // всего вм
+      title: 'Начальное количество ВМ',    // всего вм
       property: 'settings',
       property_lv2: 'initial_size'
     },
     {
-      title: 'Размер пула',      // сколько свободных осталось
+      title: 'Количество создаваемых ВМ',      // сколько свободных осталось
       property: 'settings',
       property_lv2: 'reserve_size'
     },
