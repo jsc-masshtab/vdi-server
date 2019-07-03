@@ -1,3 +1,4 @@
+import { AddUserComponent } from './settings/users/add-user/add-user.component';
 import { VmsComponent } from './resourses/vms/vms.component';
 import { VmsService } from './resourses/vms/vms.service';
 import { TemplatesComponent } from './resourses/templates/templates.component';
@@ -88,7 +89,8 @@ import { UsersService } from './settings/users/users.service';
     RemovePoolComponent,
     TemplatesComponent,
     VmsComponent,
-    UsersComponent
+    UsersComponent,
+    AddUserComponent
   ],
   imports: [
     BrowserModule,
@@ -105,7 +107,8 @@ import { UsersService } from './settings/users/users.service';
     PoolAddComponent,
     AddControllerComponent,
     RemoveControllerComponent,
-    RemovePoolComponent
+    RemovePoolComponent,
+    AddUserComponent
   ],
   providers: 
             [

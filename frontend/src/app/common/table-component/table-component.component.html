@@ -3,14 +3,14 @@
 <ng-container *ngIf="data && data.length && !spinner">
   <div class="table-component" *ngIf="!spinner">
     <header>
-      <div *ngFor="let obj of collection" class="table-header-part" [class.index-column]="obj.property == 'index'" [class.name_width]="obj.property == 'verbose_name'">
+      <div *ngFor="let obj of collection" class="table-header-part" [class.index-column]="obj.property == 'index'" [class.name-width]="obj.property == 'verbose_name'" [class.name-start-h]="obj.class == 'name-start'">
         {{obj.title}}
       </div>
     </header>
 
     <div class="table-area" *ngIf="data && data.length">
       <div *ngFor="let item of data;let i = index" class="table-area-object" [class.cursorTrue]="cursor" (click)="clickRow(item)" tabindex="-1">   <!--строка-->
-        <div class="table-area-property" *ngFor="let obj of collection" [class.index-column]="obj.property == 'index'" [class.name_width]="obj.property == 'verbose_name'"> <!--столбец-->
+        <div class="table-area-property" *ngFor="let obj of collection" [class.index-column]="obj.property == 'index'" [class.name-width]="obj.property == 'verbose_name'" [class.name-start]="obj.class == 'name-start'"> <!--столбец-->
           <span *ngIf="obj.property == 'index'">{{ i+1 }}</span>
           <span *ngIf="obj.property_boolean_true">
             <ng-container *ngIf="obj.property_boolean">{{ obj.property_boolean_true }}</ng-container>

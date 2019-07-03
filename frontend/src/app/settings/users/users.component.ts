@@ -1,6 +1,8 @@
+import { AddUserComponent } from './add-user/add-user.component';
 import { Component, OnInit } from '@angular/core';
 import { UsersService   } from './users.service';
 import { map } from 'rxjs/operators';
+import { MatDialog } from '@angular/material';
 
 
 @Component({
@@ -20,7 +22,8 @@ export class UsersComponent implements OnInit {
     },
     {
       title: 'Имя пользователя',
-      property: 'username'
+      property: 'username',
+      class: 'name-start'
     }
   ];
   public crumbs: object[] = [
@@ -36,10 +39,16 @@ export class UsersComponent implements OnInit {
 
   public spinner:boolean = false;
 
-  constructor(private service: UsersService){}
+  constructor(private service: UsersService,public dialog: MatDialog){}
 
   ngOnInit() {
     this.getAllUsers();
+  }
+
+  public addUser() {
+    this.dialog.open(AddUserComponent, {
+      width: '500px'
+    });
   }
 
   private getAllUsers() {
