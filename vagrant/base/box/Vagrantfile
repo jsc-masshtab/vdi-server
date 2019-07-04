@@ -1,0 +1,13 @@
+
+def read_config
+  require "json"
+  file = File.join(File.dirname(__FILE__), "../../config.json")
+  file = File.open(file)
+  JSON.load(file)
+end
+
+Vagrant.configure("2") do |config|
+  opts = read_config()
+  config.vm.box = opts['image']
+  config.vm.provider "libvirt"
+end
