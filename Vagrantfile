@@ -27,6 +27,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do | config |
  config.vm.provision :shell, path: "vagrant/frontend.sh", privileged: false
 
  config.ssh.password = "vagrant"
+ config.vm.box_check_update = false
 
  config.vm.define "vdihost" do | vdihost |
    vdihost.vm.box = opts['boxname']
