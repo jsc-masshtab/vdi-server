@@ -1,9 +1,10 @@
 #! /usr/bin/env python
 """
 Usage:
-  vagrant.py setup [--rm]
-  vagrant.py copyimage
+  vagrant.py setup [--purge] [--fetch]
+  vagrant.py copyimage [--fetch]
   vagrant.py purge
+
 """
 import re
 from contextlib import ExitStack, suppress
@@ -62,8 +63,8 @@ def get_boxes_path():
     info = json.loads(completed.stdout)
     return Path(info['boxes_path'])
 
-def _copyimage(*, boxes_path):
-    last_version = get_last_version(boxes_path=boxes_path)
+def _copyimage(args, *, boxes_path):
+    last_version = get_last_version(args, boxes_path=boxes_path)
     image = last_version / 'libvirt/box.img'
     boxname = get_image_name(config['boxname'])
     target_dir = boxes_path / boxname / last_version.name / 'libvirt'
@@ -78,15 +79,16 @@ def _copyimage(*, boxes_path):
 
 def do_copyimage(args):
     boxes_path = get_boxes_path()
-    _copyimage(boxes_path=boxes_path)
+    _copyimage(args, boxes_path=boxes_path)
 
 
-def get_last_version(*, boxes_path):
+def get_last_version(args, *, boxes_path):
     env = {
         'VAGRANT_CWD': repo_dir / 'vagrant/base/box',
         **os.environ
     }
-    run("vagrant box update", shell=True, env=env)
+    if args['--fetch']:
+        run("vagrant box update", shell=True, env=env)
     image_name = get_image_name(config['image'])
     box_dir = boxes_path / image_name
     version_regexp = re.compile(r'[\d\.]+')
@@ -96,6 +98,8 @@ def get_last_version(*, boxes_path):
 
 
 #TODO set provisioned on/off
+#TODO do not ask to commit
+#TODO auto-locate base image
 
 def _full_destroy(*, suppress_error=False):
     env = {
@@ -120,10 +124,10 @@ def init_config():
 
 
 def do_setup(args):
-    if args['--rm']:
+    if args['--purge']:
         _full_destroy()
     boxes_path = get_boxes_path()
-    last_version = get_last_version(boxes_path=boxes_path)
+    last_version = get_last_version(args, boxes_path=boxes_path)
     boxname = get_image_name(config['boxname'])
     target_dir = boxes_path / boxname / last_version.name / 'libvirt'
     if not target_dir.exists():
