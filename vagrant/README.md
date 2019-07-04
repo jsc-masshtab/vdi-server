@@ -53,7 +53,7 @@ cd vagrant/base/box
 vagrant box update
 ```
 
-3. Если на предыдущем шаге скачан новый бокс версии `<current version>`, сохраняем его под именем `vdihost`
+3. Если на предыдущем шаге был скачан новый бокс версии `<current version>`, сохраняем его под именем `vdihost`
 
 ```
 cp -r ~/.vagrant.d/boxes/generic-VAGRANTSLASH-ubuntu1904/<current version>/libvirt ~/.vagrant.d/boxes/vdihost/<current version>/libvirt
