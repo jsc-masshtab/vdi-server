@@ -52,4 +52,9 @@
     <fa-icon [icon]="['fas','building']" size="s" [style.color]="'rgb(255, 235, 205)'"></fa-icon>
     <span>Контроллеры</span>
   </a>
+
+  <a class="top-menu-item item-tree" [@fadeInOut] *ngIf="toggleSetting" [class.clicked-link]="clickedManage =='users'" (click)="routeTo('settings/users')" (keydown.enter)="routeTo('settings/users')" [class.clicked-link]="clickedManage =='users'"  tabindex="0">
+    <fa-icon [icon]="['fas','users']" size="s" [style.color]="'rgb(255, 235, 205)'"></fa-icon>
+    <span>Пользователи</span>
+  </a>
 </div>

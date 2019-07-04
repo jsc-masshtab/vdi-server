@@ -1,3 +1,4 @@
+import { AddUserComponent } from './settings/users/add-user/add-user.component';
 import { VmsComponent } from './resourses/vms/vms.component';
 import { VmsService } from './resourses/vms/vms.service';
 import { TemplatesComponent } from './resourses/templates/templates.component';
@@ -26,8 +27,8 @@ import { HttpClientModule } from '@angular/common/http';
 
 /*  -----------------------------------   icons   --------------------------------------*/
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
-import { library } from '@fortawesome/fontawesome-svg-core'
-import { faDesktop,faDatabase,faBuilding, faLayerGroup,faPlusCircle,faSpinner,faServer,faCog,faChevronUp,faTimesCircle,faFolderOpen,faStar,faMinusCircle, faTv,faSyncAlt,faTrashAlt } from '@fortawesome/free-solid-svg-icons';
+import { library } from '@fortawesome/fontawesome-svg-core';
+import { faDesktop,faDatabase,faBuilding, faLayerGroup,faPlusCircle,faSpinner,faServer,faCog,faChevronUp,faTimesCircle,faFolderOpen,faStar,faMinusCircle, faTv,faSyncAlt,faTrashAlt,faUsers } from '@fortawesome/free-solid-svg-icons';
 //import { faBuilding } from '@fortawesome/free-regular-svg-icons';
 /*  -----------------------------------   icons   --------------------------------------*/
 
@@ -58,6 +59,8 @@ import { PoolsComponent } from './polls/pools.component';
 import { RemovePoolComponent } from './polls/remove-pool/remove-pool.component';
 import { TemplatesService } from './resourses/templates/templates.service';
 import { TableService } from './common/table-component/table-component.service';
+import { UsersComponent } from './settings/users/users.component';
+import { UsersService } from './settings/users/users.service';
 /*  -----------------------------------   material   --------------------------------------*/
 
 
@@ -85,7 +88,9 @@ import { TableService } from './common/table-component/table-component.service';
     RemoveControllerComponent,
     RemovePoolComponent,
     TemplatesComponent,
-    VmsComponent
+    VmsComponent,
+    UsersComponent,
+    AddUserComponent
   ],
   imports: [
     BrowserModule,
@@ -102,7 +107,8 @@ import { TableService } from './common/table-component/table-component.service';
     PoolAddComponent,
     AddControllerComponent,
     RemoveControllerComponent,
-    RemovePoolComponent
+    RemovePoolComponent,
+    AddUserComponent
   ],
   providers: 
             [
@@ -114,7 +120,8 @@ import { TableService } from './common/table-component/table-component.service';
               DatapoolsService,
               TemplatesService,
               VmsService,
-              TableService
+              TableService,
+              UsersService
               
             ],
   bootstrap: [AppComponent]
@@ -123,7 +130,7 @@ import { TableService } from './common/table-component/table-component.service';
 
 export class AppModule {
   constructor() { 
-    library.add(faDesktop,faDatabase,faLayerGroup,faPlusCircle,faMinusCircle,faSpinner,faServer,faCog,faChevronUp,faTimesCircle,faFolderOpen,faStar,faTv,faSyncAlt,faBuilding,faTrashAlt
+    library.add(faDesktop,faDatabase,faLayerGroup,faPlusCircle,faMinusCircle,faSpinner,faServer,faCog,faChevronUp,faTimesCircle,faFolderOpen,faStar,faTv,faSyncAlt,faBuilding,faTrashAlt,faUsers
       ); // Неиспользуемые иконки при финальной сборке удаляются
   }
 

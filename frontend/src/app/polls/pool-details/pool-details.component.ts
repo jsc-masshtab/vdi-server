@@ -22,16 +22,17 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
       property: 'name'
     },
     {
-      title: 'Начальный размер пула',    // всего вм
+      title: 'Начальное количество ВМ',    // всего вм
       property: 'settings',
       property_lv2: 'initial_size'
     },
     {
-      title: 'Размер пула',      // сколько свободных осталось
+      title: 'Количество создаваемых ВМ',      // сколько свободных осталось
       property: 'settings',
       property_lv2: 'reserve_size'
     }
   ];
+  // Максимальное количество ВМ в пуле -  c тонкого клиента вм будут создаваться с каждым подключ. пользователем даже,если рес-сы закончатся
 
   public collection_vms = [
     {
@@ -105,7 +106,11 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
 
   public removePool() {
     this.dialog.open(RemovePoolComponent, {
-      width: '500px'
+      width: '500px',
+      data: {
+        pool_id: this.pool_id,
+        pool_name: this.pool['name']
+      }
     });
   }
 

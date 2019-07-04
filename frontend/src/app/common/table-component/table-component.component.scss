@@ -80,8 +80,18 @@
         flex: inherit;
     }
 
-    .name_width {
+    .name-width {
         min-width: 30%;
+    }
+
+    .name-start {
+        justify-content: flex-start;
+        margin-left: 5px;
+    }
+
+    .name-start-h {
+        text-align: left;
+        margin-left: 10px;
     }
 }
 
