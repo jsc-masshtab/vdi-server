@@ -64,6 +64,7 @@ cp -r ~/.vagrant.d/boxes/generic-VAGRANTSLASH-ubuntu1904/<current version>/libvi
 ```
 cd vagrant/base
 vagrant up
+vagrant commit
 vagrant destroy -f
 ```
 
