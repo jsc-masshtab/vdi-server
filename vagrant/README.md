@@ -13,7 +13,7 @@
 
 **Копирование бокса**
 
-(последней версии generic/ubuntu1904" в vdihost)
+(последней версии "generic/ubuntu1904" в vdihost)
 
 ```
 ./vagrant.py copyimage
