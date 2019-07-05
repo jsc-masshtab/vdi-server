@@ -1,128 +1,56 @@
 import graphene
-import json
-
-import random
-
 from asyncpg.connection import Connection
-
-from ..db import db
-from ..tasks import admin, resources
-from ..tasks.vm import SetupDomain, DropDomain, ListVms, GetDomainInfo
-
-from .util import get_selections
-from .pool import PoolSettings, TemplateType, VmType
-from .resources import NodeType, get_controller_ip
-
-
 from vdi.context_utils import enter_context
 
+from .pool import TemplateType, VmType
+from .resources import NodeType
+from .util import get_selections
+from ..db import db
+from ..tasks import resources
+from ..tasks.vm import ListVms, ListTemplates
 
-class CreateTemplate(graphene.Mutation):
-    '''
-    DEPRECATED. Use addTemplate
-    '''
+
+class PoolWizard(graphene.Mutation):
     class Arguments:
-        image_name = graphene.String()
-
-    template = graphene.Field(TemplateType)
-    poolwizard = settings = graphene.Field(PoolSettings, format=graphene.String())
-
-    @enter_context(lambda: db.connect())
-    async def mutate(conn: Connection, self, info, image_name):
-        from vdi.tasks import admin
-        res = await admin.discover_resources(combine=True)
-        resource = random.choice(res)
-        #FIXME image_name
-        domain = await SetupDomain(image_name=image_name, controller_ip=resource['controller_ip'],
-                                      node_id=resource['node'], datapool_id=resource['datapool'])
-        veil_info = json.dumps(domain)
-        qu = "INSERT INTO template_vm (id, veil_info) VALUES ($1, $2)", domain['id'], veil_info
-        await conn.fetch(*qu)
-        t = TemplateType(id=domain['id'], info=veil_info, name=domain['verbose_name'])
-        from vdi.settings import settings
-        resources = PoolSettings(**{
-            'controller_ip': resource['controller_ip'],
-            'cluster_id': resource['cluster'],
-            'datapool_id': resource['datapool'],
-            'template_id': domain['id'],
-            'node_id': resource['node'],
-            'initial_size': settings['pool']['initial_size'],
-            'reserve_size': settings['pool']['reserve_size'],
-        })
-        return CreateTemplate(template=t, poolwizard=resources)
-        # return CreateTemplate(template=t)
-
-
-class DropTemplate(graphene.Mutation):
-    class Arguments:
-        id = graphene.String()
         controller_ip = graphene.String()
+        template_id = graphene.String()
 
-    ok = graphene.Boolean()
+    controller_ip = graphene.String()
+    cluster_id = graphene.String()
+    datapool_id = graphene.String()
+    template_id = graphene.String()
+    node_id = graphene.String()
+    initial_size = graphene.Int()
+    reserve_size = graphene.Int()
 
-    @enter_context(lambda: db.connect())
-    async def mutate(conn: Connection, self, info, id, controller_ip=None):
+    async def mutate(self, info, controller_ip=None, template_id=None):
         if controller_ip is None:
+            from vdi.graphql.resources import get_controller_ip
             controller_ip = await get_controller_ip()
-        await DropDomain(id=id, controller_ip=controller_ip)
-        qu = "DELETE from template_vm WHERE id = $1", id
-        await conn.fetch(*qu)
-        return DropTemplate(ok=True)
-
-
-
-class AddTemplate(graphene.Mutation):
-    class Arguments:
-        controller_ip = graphene.String()
-        id = graphene.String()
-
-    ok = graphene.Boolean()
-    poolwizard = graphene.Field(PoolSettings, format=graphene.String())
-
-    async def resolve_poolwizard(self, info):
+        if template_id is None:
+            [template] = await ListTemplates(controller_ip=controller_ip)
+            template_id = template['id']
         from vdi.tasks.vm import GetDomainInfo
         from vdi.tasks.resources import FetchNode
         settings = {}
         selections = get_selections(info)
         if any(key in selections
                for key in ['node_id', 'cluster_id', 'datapool_id']):
-            template = await GetDomainInfo(controller_ip=self.controller_ip, domain_id=self.id)
+            template = await GetDomainInfo(controller_ip=controller_ip, domain_id=template_id)
             node_id = settings['node_id'] = template['node']['id']
         if 'datapool_id' in selections:
-            datapools = await resources.ListDatapools(controller_ip=self.controller_ip, node_id=node_id)
+            datapools = await resources.ListDatapools(controller_ip=controller_ip, node_id=node_id)
             settings['datapool_id'] = datapools[0]['id']
         if 'cluster_id' in selections:
-            node = await FetchNode(controller_ip=self.controller_ip, node_id=node_id)
+            node = await FetchNode(controller_ip=controller_ip, node_id=node_id)
             settings['cluster_id'] = node['cluster']['id']
         from vdi.settings import settings as global_settings
-        return PoolSettings(**settings, **{
-            'controller_ip': self.controller_ip,
-            'template_id': self.id,
+        return PoolWizard(**settings, **{
+            'controller_ip': controller_ip,
+            'template_id': template_id,
             'initial_size': global_settings['pool']['initial_size'],
             'reserve_size': global_settings['pool']['reserve_size'],
         })
-
-
-
-    @enter_context(lambda: db.connect())
-    async def mutate(conn: Connection, self, info, id, controller_ip=None):
-        if controller_ip is None:
-            from vdi.graphql.resources import get_controller_ip
-            controller_ip = await get_controller_ip()
-        from vdi.tasks import Token, HttpClient
-        url = f"http://{controller_ip}/api/domains/{id}/"
-        token = await Token(controller_ip=controller_ip)
-        headers = {
-            'Authorization': f'jwt {token}',
-        }
-        info = await HttpClient().fetch(url, headers=headers)
-        qu = "INSERT INTO template_vm (id, veil_info) VALUES ($1, $2) ON CONFLICT DO NOTHING", id, json.dumps(info)
-        await conn.fetch(*qu)
-        ret = AddTemplate(ok=True)
-        ret.id = id
-        ret.controller_ip = controller_ip
-        return ret
-
 
 
 class TemplateMixin:
@@ -145,20 +73,14 @@ class TemplateMixin:
             nodes = {node['id'] for node in nodes}
         else:
             nodes = None
-        vms = await ListVms(controller_ip=controller_ip)
+        vms = await ListTemplates(controller_ip=controller_ip)
         if nodes is not None:
             vms = [
                 vm for vm in vms
                 if vm['node']['id'] in nodes
             ]
-
-        qu = f"SELECT id FROM template_vm"
-        data = await conn.fetch(qu)
-        vm_ids = {row['id'] for row in data}
         objects = []
         for vm in vms:
-            if vm['id'] not in vm_ids:
-                continue
             node = NodeType(id=vm['node']['id'], verbose_name=vm['node']['verbose_name'])
             node.controller_ip = controller_ip
             obj = TemplateType(name=vm['verbose_name'], info=vm, id=vm['id'], node=node)
@@ -166,8 +88,7 @@ class TemplateMixin:
             objects.append(obj)
         return objects
 
-    @enter_context(lambda: db.connect())
-    async def resolve_vms(conn: Connection, self, info, controller_ip=None, cluster_id=None, node_id=None):
+    async def resolve_vms(self, info, controller_ip=None, cluster_id=None, node_id=None):
         if controller_ip is None:
             from vdi.graphql.resources import get_controller_ip
             controller_ip = await get_controller_ip()
@@ -184,20 +105,20 @@ class TemplateMixin:
                 vm for vm in vms
                 if vm['node']['id'] in nodes
             ]
-
-        # Filter out templates
-        # temporary measure, since veil should know itself, whether a vm is a template
-        qu = f"SELECT id FROM template_vm"
-        data = await conn.fetch(qu)
-        templates_id = {t['id'] for t in data}
+        vm_ids = [vm['id'] for vm in vms]
+        async with db.connect() as conn:
+            qu = "select id from vm where id = any($1::text[])", vm_ids
+            data = await conn.fetch(*qu)
+            vm_ids = {item['id'] for item in data}
 
         objects = []
         for vm in vms:
-            if vm['id'] in templates_id:
+            if vm['id'] not in vm_ids:
                 continue
             node = NodeType(id=vm['node']['id'], verbose_name=vm['node']['verbose_name'])
             node.controller_ip = controller_ip
             obj = VmType(name=vm['verbose_name'], id=vm['id'], node=node)
+            obj.selections = get_selections(info)
             obj.info = vm
             obj.controller_ip = controller_ip
             objects.append(obj)

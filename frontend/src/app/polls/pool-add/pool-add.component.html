@@ -1,8 +1,8 @@
 <div class="form">
 
   <div class="form-header">
-    <h1>Создание пула виртуальных машин</h1>
-    <button [mat-dialog-close]="true" class="form-close"><fa-icon [icon]="['fas','times-circle']"></fa-icon></button>
+    <p>Создание пула виртуальных машин</p>
+    <button [mat-dialog-close]="true" class="form-close"><fa-icon [icon]="['fas','times-circle']" size="s"></fa-icon></button>
   </div>
 
   <div class="form-fields" [formGroup]="createPoolForm">
@@ -48,18 +48,18 @@
     </label>
 
     <label class="field">
-      <p class="field-name">Начальный размер пула</p>
+      <p class="field-name">Начальное количество ВМ</p>
       <input type="number" formControlName="initial_size">
     </label>
 
     <label class="field">
-      <p class="field-name">Размер пула</p>
+      <p class="field-name">Количество создаваемых ВМ</p>
       <input type="number" formControlName="reserve_size">
     </label>
   </div>
 
   <div class="form-actions">
-    <button (click)="send()" class="form-btn"><fa-icon [icon]="['fas','plus-circle']" size="xs"></fa-icon><span>Создать</span></button>
+    <button (click)="send()" class="form-btn"><fa-icon [icon]="['fas','plus-circle']" size="xs"></fa-icon><span class="action-name">Создать</span></button>
   </div>
 
 </div>

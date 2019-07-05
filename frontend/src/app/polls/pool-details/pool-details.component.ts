@@ -2,11 +2,12 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { PoolsService } from '../pools.service';
 import { ActivatedRoute, ParamMap } from '@angular/router';
 import { Subscription } from 'rxjs';
+import { MatDialog } from '@angular/material';
+import { RemovePoolComponent } from '../remove-pool/remove-pool.component';
 
 @Component({
   selector: 'vdi-pool-details',
-  templateUrl: './pool-details.component.html',
-  styleUrls: ['./pool-details.component.scss']
+  templateUrl: './pool-details.component.html'
 })
 
 
@@ -21,16 +22,17 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
       property: 'name'
     },
     {
-      title: 'Начальный размер пула',    // всего вм
+      title: 'Начальное количество ВМ',    // всего вм
       property: 'settings',
       property_lv2: 'initial_size'
     },
     {
-      title: 'Размер пула',      // сколько свободных осталось
+      title: 'Количество создаваемых ВМ',      // сколько свободных осталось
       property: 'settings',
       property_lv2: 'reserve_size'
     }
   ];
+  // Максимальное количество ВМ в пуле -  c тонкого клиента вм будут создаваться с каждым подключ. пользователем даже,если рес-сы закончатся
 
   public collection_vms = [
     {
@@ -61,10 +63,11 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
     }
   ];
 
-  public spinner:boolean = false;
+  public into_spinner:boolean = false;
 
   constructor(private activatedRoute: ActivatedRoute,
-              private service: PoolsService){}
+              private service: PoolsService,
+              public dialog: MatDialog){}
 
   ngOnInit() {
     this.activatedRoute.paramMap.subscribe((param: ParamMap) => {
@@ -74,16 +77,15 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
   }
 
   private getPool(id:number) {
-    this.spinner = true;
+    this.into_spinner = true;
     this.poolSub = this.service.getPool(id)
       .subscribe( (data) => {
         this.pool = data;
         this.addCrumb(this.pool['name']);
-      
-        this.spinner = false;
+        this.into_spinner = false;
       },
       (error)=> {
-        this.spinner = false;
+        this.into_spinner = false;
       });
   }
 
@@ -99,6 +101,16 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
     this.crumbs.push({
       title: `Пул ${ poolName }`,
       icon: 'desktop'
+    });
+  }
+
+  public removePool() {
+    this.dialog.open(RemovePoolComponent, {
+      width: '500px',
+      data: {
+        pool_id: this.pool_id,
+        pool_name: this.pool['name']
+      }
     });
   }
 

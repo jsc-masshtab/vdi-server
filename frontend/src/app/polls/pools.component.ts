@@ -2,10 +2,9 @@ import { Component, OnInit } from '@angular/core';
 import { PoolsService } from './pools.service';
 import { PoolAddComponent } from './pool-add/pool-add.component';
 import { Router } from '@angular/router';
-
 import { MatDialog } from '@angular/material';
 import { Subscription } from 'rxjs';
-import { RemovePoolComponent } from './remove-pool/remove-pool.component';
+
 
 @Component({
   selector: 'vdi-pools',
@@ -29,12 +28,12 @@ export class PoolsComponent implements OnInit {
       property: 'name'
     },
     {
-      title: 'Начальный размер пула',    // всего вм
+      title: 'Начальное количество ВМ',    // всего вм
       property: 'settings',
       property_lv2: 'initial_size'
     },
     {
-      title: 'Размер пула',      // сколько свободных осталось
+      title: 'Количество создаваемых ВМ',      // сколько свободных осталось
       property: 'settings',
       property_lv2: 'reserve_size'
     },
@@ -60,12 +59,6 @@ export class PoolsComponent implements OnInit {
 
   public openCreatePool() {
     this.dialog.open(PoolAddComponent, {
-      width: '500px'
-    });
-  }
-
-  public removePool() {
-    this.dialog.open(RemovePoolComponent, {
       width: '500px'
     });
   }

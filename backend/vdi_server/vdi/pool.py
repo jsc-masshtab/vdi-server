@@ -41,8 +41,8 @@ class Pool:
         await self.queue.put(result)
         # insert into db
         qu = f"""
-        insert into vm (id, pool_id, template_id, state) values ($1, $2, $3, $4)
-        """, domain_id, self.params['id'], template['id'], 'queued'
+        insert into vm (id, pool_id, template_id) values ($1, $2, $3)
+        """, domain_id, self.params['id'], template['id']
         await conn.execute(*qu)
 
     def on_vm_taken(self):

@@ -10,6 +10,7 @@ import { NodesComponent } from './resourses/nodes/nodes.component';
 import { DatapoolsComponent } from './resourses/datapools/datapools.component';
 import { ClusterDetailsComponent } from './resourses/clusters/cluster-details/cluster-details.component';
 import { TemplatesComponent } from './resourses/templates/templates.component';
+import { UsersComponent } from './settings/users/users.component';
 
 const routes: Routes = [
   {
@@ -20,6 +21,10 @@ const routes: Routes = [
   {
     path: 'settings/controllers',
     component: ControllersComponent
+  },
+  {
+    path: 'settings/users',
+    component: UsersComponent
   },
   {
     path: 'resourses/clusters',

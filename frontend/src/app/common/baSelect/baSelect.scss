@@ -60,7 +60,7 @@
 .new-select {
     position: relative;
     width: 100%;
-    font-size: 15px;
+    font-size: 13px;
 
     &-item {
         position: relative;
@@ -69,7 +69,7 @@
         outline: 0;
         border: 0;
         border-radius: 3px;
-        background-color: #FFF;
+        background-color: #f9f9f9;
         padding: 2px;
         //padding-left: 3px;
         padding-right: 30px;
@@ -94,7 +94,7 @@
             border-radius: 4px;
         }
 
-        > i {
+        > fa-icon {
             position: absolute;
             display: block;
             top: calc(50% - 7px);
@@ -171,7 +171,7 @@
 
                 &:hover {
                     transition: all 200ms;
-                    background-color: #587096;
+                    background-color: #759296;
                     color: white;
                 }
             }
@@ -213,8 +213,8 @@
             }
 
             &:hover {
-                background-color: #44505a;
-                color: #FFF;
+                background-color: #759296;
+                color: white;
                 transition: all 150ms;
             }
 

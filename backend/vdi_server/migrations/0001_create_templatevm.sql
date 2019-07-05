@@ -12,10 +12,3 @@ CREATE TABLE vm (
 		primary key (id)
 
 ) inherits (veil_vm);
-
-CREATE TABLE template_vm (
-
-    constraint template_vm_pk
-		primary key (id)
-
-) inherits (veil_vm);

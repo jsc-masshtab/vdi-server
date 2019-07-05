@@ -2,21 +2,20 @@
 
 <vdi-breadcrumbs [data]="crumbs"></vdi-breadcrumbs>
       
-<div class="resourse-into" *ngIf="!spinner">
-    <!-- <div class="control-panel">
-        <button class="control-btn">Удалить</button>
-    </div> -->
+<div class="resourse-into" *ngIf="!into_spinner">
+    <div class="panel-btn-into">
+        <button (click)="removePool()"><fa-icon [icon]="['fas','trash-alt']" size="xs"></fa-icon><span class="name">Удалить</span></button>
+    </div>
     <ul class="menu">
         <li (click)="routeTo('info')" [class.active]="menuActive === 'info'" title="Информация">Информация</li>
         <li (click)="routeTo('vms')" [class.active]="menuActive === 'vms'" title="Виртуальные машины">Виртуальные машины</li>
     </ul>
-    <vdi-table-into [data]="pool" [collection]="collection" *ngIf="menuActive === 'info'" [spinner]="spinner"></vdi-table-into>
-    <vdi-table-component [data]="pool?.state?.available" [collection]="collection_vms" *ngIf="menuActive === 'vms'" empty=" - нет виртуальных машин - "></vdi-table-component> 
+    <vdi-table-into [data]="pool" [collection]="collection" *ngIf="menuActive === 'info'"></vdi-table-into>
+    <vdi-table-component [data]="pool?.state?.available" [collection]="collection_vms" *ngIf="menuActive === 'vms'" empty=" - нет виртуальных машин - " ></vdi-table-component> 
 </div>
 
-
-<div *ngIf="spinner" class="cdk-overlay-container">
+<div *ngIf="into_spinner" class="cdk-overlay-container">
     <div class="cdk-overlay-backdrop cdk-overlay-backdrop-showing"></div>
     <fa-icon [icon]="['fas', 'spinner']" [spin]="true" size="2x"></fa-icon>
 </div>
-
+  

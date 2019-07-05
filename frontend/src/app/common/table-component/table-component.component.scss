@@ -6,6 +6,7 @@
     overflow-x: hidden;
     max-height: 100%;
     box-shadow: 0 0 10px rgba(119, 136, 153, 0.2);
+    font-size: 13px;
 
     header {
         display: flex;
@@ -34,7 +35,7 @@
     .table-area {
         display: flex;
         flex-direction: column;
-        font-size: 15px;
+        font-size: 13px;
     }
 
     .table-area-object {
@@ -79,8 +80,18 @@
         flex: inherit;
     }
 
-    .name_width {
+    .name-width {
         min-width: 30%;
+    }
+
+    .name-start {
+        justify-content: flex-start;
+        margin-left: 5px;
+    }
+
+    .name-start-h {
+        text-align: left;
+        margin-left: 10px;
     }
 }
 

@@ -16,6 +16,14 @@ class UserType(graphene.ObjectType):
     password = graphene.String()
     email = graphene.String()
 
+    async def resolve_email(self, info):
+        if self.email:
+            return self.email
+        qu = 'select email from public.user where username = $1', self.username
+        async with db.connect() as conn:
+            [(email,)] = await conn.fetch(*qu)
+            return email
+
 
 class CreateUser(graphene.Mutation):
     '''
