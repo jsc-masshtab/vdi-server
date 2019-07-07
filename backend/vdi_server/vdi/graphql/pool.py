@@ -76,6 +76,12 @@ class PoolType(graphene.ObjectType):
         return await state.resolve_available(info)
 
 
+class VmState(graphene.Enum):
+    UNDEFINED = 0
+    OFF = 1
+    SUSPENDED = 2
+    ON = 3
+
 
 class VmType(graphene.ObjectType):
     name = graphene.String()
@@ -83,6 +89,7 @@ class VmType(graphene.ObjectType):
     info = graphene.String(deprecation_reason="Use `template {info}`")
     template = graphene.Field(TemplateType)
     user = graphene.Field(UserType)
+    state = graphene.Field(VmState)
 
     #TODO cached info?
 
@@ -146,9 +153,14 @@ class VmType(graphene.ObjectType):
         template = await GetDomainInfo(controller_ip=self.controller_ip, domain_id=template_id)
         return TemplateType(id=template_id, info=template, name=template['verbose_name'])
 
-    @cached
-    def info(self):
-        raise NotImplementedError
+    async def resolve_state(self, info):
+        if self.info is None:
+            from vdi.tasks.vm import GetDomainInfo
+            self.info = await GetDomainInfo(controller_ip=self.controller_ip, domain_id=self.id)
+        val = self.info['user_power_state']
+        return VmState.get(val)
+
+    info: dict = None
 
 
 class PoolSettingsFields(graphene.AbstractType):

@@ -58,7 +58,8 @@ class TemplateMixin:
     templates = graphene.List(TemplateType,
                               controller_ip=graphene.String(), cluster_id=graphene.String(), node_id=graphene.String())
     vms = graphene.List(VmType,
-                        controller_ip=graphene.String(), cluster_id=graphene.String(), node_id=graphene.String())
+                        controller_ip=graphene.String(), cluster_id=graphene.String(), node_id=graphene.String(),
+                        include_wild=graphene.Boolean())
 
 
     @enter_context(lambda: db.connect())
@@ -88,7 +89,8 @@ class TemplateMixin:
             objects.append(obj)
         return objects
 
-    async def resolve_vms(self, info, controller_ip=None, cluster_id=None, node_id=None):
+    async def resolve_vms(self, info, controller_ip=None, cluster_id=None, node_id=None,
+                          include_wild=False):
         if controller_ip is None:
             from vdi.graphql.resources import get_controller_ip
             controller_ip = await get_controller_ip()
@@ -106,10 +108,11 @@ class TemplateMixin:
                 if vm['node']['id'] in nodes
             ]
         vm_ids = [vm['id'] for vm in vms]
-        async with db.connect() as conn:
-            qu = "select id from vm where id = any($1::text[])", vm_ids
-            data = await conn.fetch(*qu)
-            vm_ids = {item['id'] for item in data}
+        if not include_wild:
+            async with db.connect() as conn:
+                qu = "select id from vm where id = any($1::text[])", vm_ids
+                data = await conn.fetch(*qu)
+                vm_ids = {item['id'] for item in data}
 
         objects = []
         for vm in vms:
