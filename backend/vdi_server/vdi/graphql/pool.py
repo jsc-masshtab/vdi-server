@@ -130,11 +130,12 @@ class VmType(graphene.ObjectType):
         else:
             return self
         from vdi.tasks.resources import FetchNode
-        from vdi.graphql.resources import NodeType, Resources, get_controller_ip
-        controller_ip = await get_controller_ip()
-        node = await FetchNode(controller_ip=controller_ip, node_id=self.node.id)
+        if self.controller_ip is None:
+            from vdi.graphql.resources import NodeType, Resources, get_controller_ip
+            self.controller_ip = await get_controller_ip()
+        node = await FetchNode(controller_ip=self.controller_ip, node_id=self.node.id)
         obj = Resources._make_type(NodeType, node)
-        obj.controller_ip = controller_ip
+        obj.controller_ip = self.controller_ip
         return obj
 
     async def resolve_template(self, info):
@@ -154,6 +155,9 @@ class VmType(graphene.ObjectType):
         return TemplateType(id=template_id, info=template, name=template['verbose_name'])
 
     async def resolve_state(self, info):
+        if self.controller_ip is None:
+            from vdi.graphql.resources import NodeType, Resources, get_controller_ip
+            self.controller_ip = await get_controller_ip()
         if self.info is None:
             from vdi.tasks.vm import GetDomainInfo
             self.info = await GetDomainInfo(controller_ip=self.controller_ip, domain_id=self.id)
@@ -161,6 +165,7 @@ class VmType(graphene.ObjectType):
         return VmState.get(val)
 
     info: dict = None
+    controller_ip: str = None
 
 
 class PoolSettingsFields(graphene.AbstractType):

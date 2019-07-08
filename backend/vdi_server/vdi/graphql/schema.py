@@ -5,7 +5,7 @@ from graphql.execution.executors.asyncio import AsyncioExecutor
 
 
 from .pool import PoolType, AddPool, PoolMixin, RemovePool, WakePool
-from .vm import TemplateMixin, PoolWizard
+from .vm import TemplateMixin, PoolWizardMixin
 from .users import CreateUser, ListUsers
 from .resources import Resources, AddController, RemoveController
 
@@ -14,14 +14,13 @@ class PoolMutations(graphene.ObjectType):
     removePool = RemovePool.Field()
     addPool = AddPool.Field()
     wakePool = WakePool.Field()
-    poolwizard = PoolWizard.Field()
     createUser = CreateUser.Field()
 
     addController = AddController.Field()
     removeController = RemoveController.Field()
 
 
-class PoolQuery(ListUsers, Resources, PoolMixin, TemplateMixin, graphene.ObjectType):
+class PoolQuery(ListUsers, Resources, PoolMixin, TemplateMixin, PoolWizardMixin, graphene.ObjectType):
     pass
 
 

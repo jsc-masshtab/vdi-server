@@ -10,20 +10,16 @@ from ..tasks import resources
 from ..tasks.vm import ListVms, ListTemplates
 
 
-class PoolWizard(graphene.Mutation):
-    class Arguments:
-        controller_ip = graphene.String()
-        template_id = graphene.String()
 
-    controller_ip = graphene.String()
-    cluster_id = graphene.String()
-    datapool_id = graphene.String()
-    template_id = graphene.String()
-    node_id = graphene.String()
-    initial_size = graphene.Int()
-    reserve_size = graphene.Int()
+class PoolWizardMixin:
 
-    async def mutate(self, info, controller_ip=None, template_id=None):
+    def poolwizard():
+        from vdi.graphql.pool import PoolSettings
+        return PoolSettings
+
+    poolwizard = graphene.Field(poolwizard, controller_ip=graphene.String(), template_id=graphene.String())
+
+    async def resolve_poolwizard(self, info, controller_ip=None, template_id=None):
         if controller_ip is None:
             from vdi.graphql.resources import get_controller_ip
             controller_ip = await get_controller_ip()
@@ -45,7 +41,8 @@ class PoolWizard(graphene.Mutation):
             node = await FetchNode(controller_ip=controller_ip, node_id=node_id)
             settings['cluster_id'] = node['cluster']['id']
         from vdi.settings import settings as global_settings
-        return PoolWizard(**settings, **{
+        from vdi.graphql.pool import PoolSettings
+        return PoolSettings(**settings, **{
             'controller_ip': controller_ip,
             'template_id': template_id,
             'initial_size': global_settings['pool']['initial_size'],
