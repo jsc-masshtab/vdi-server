@@ -49,8 +49,10 @@ class TemplateType(graphene.ObjectType):
                         info = info[part]
                     except:
                         return None
-
-        info = json.dumps(info)
+        if get and isinstance(info, str):
+            pass
+        else:
+            info = json.dumps(info)
         return info
 
 
