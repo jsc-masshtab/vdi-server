@@ -27,17 +27,31 @@ from vdi.settings import settings as settings_file
 class TemplateType(graphene.ObjectType):
     id = graphene.String()
     name = graphene.String()
-    info = graphene.String()
+    info = graphene.String(get=graphene.String())
 
     @graphene.Field
     def node():
         from vdi.graphql.resources import NodeType
         return NodeType
 
-    def resolve_info(self, info):
-        if isinstance(self.info, dict):
-            return json.dumps(self.info)
-        return self.info
+    def resolve_info(self, info, get=None):
+        info = self.info
+        if get:
+            for part in get.split('.'):
+                try:
+                    part = int(part)
+                except ValueError:
+                    info = info.get(part)
+                    if info is None:
+                        return None
+                else:
+                    try:
+                        info = info[part]
+                    except:
+                        return None
+
+        info = json.dumps(info)
+        return info
 
 
 class RunningState(graphene.Enum):
@@ -45,6 +59,8 @@ class RunningState(graphene.Enum):
     STOPPED = 0
 
 class PoolType(graphene.ObjectType):
+    #TODO rm settings, add controller, cluster, datapool, etc.
+
     id = graphene.Int()
     template_id = graphene.String(required=True)
     name = graphene.String()
