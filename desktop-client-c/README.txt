@@ -1,12 +1,13 @@
 Veil VDI Thin Cleint
 
-Build checked on Ubuntu 18.04, Windows 7.
+Build checked on Ubuntu 18.04, CentOS 7, Windows 7.
 
 ======================================================Building on Linux===================================================
 1)Install followwing packages:
 sudo apt install spice-client-gtk
 sudo apt install libspice-gtk-3.0-dev
 sudo apt install libjson-glib-dev
+sudo apt install libxml2-dev
 
 2)Open terminal in desktop-client-c directory and execute commands:
 mkdir build
@@ -60,7 +61,7 @@ pacman -S mingw-w64-x86_64-toolchain base-devel
 
 3) Install Clion
 
-4) In Clion open CmakeListx.txt and build thr project  
+4) In Clion open CmakeListx.txt and build the project  
 
 
 ======================================================INSTALL AND LAUNCH==========================================

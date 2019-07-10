@@ -117,8 +117,8 @@ endif (WIN32)
     SET(LIBS ${LIBS} xml2)
 
     # rest 0.7
-    INCLUDE_DIRECTORIES(${LIBS_INCLUDE_PATH}rest-0.7)
-    SET(LIBS ${LIBS} rest-0.7)
+    #INCLUDE_DIRECTORIES(${LIBS_INCLUDE_PATH}rest-0.7)
+    #SET(LIBS ${LIBS} rest-0.7)
 
     # SPICE_GTK
     INCLUDE_DIRECTORIES(${LIBS_INCLUDE_PATH}spice-client-gtk-3.0)

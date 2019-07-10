@@ -40,21 +40,33 @@ class PrepareVm(UrlFetcher):
     async def run(self):
         resp = await super().run()
         # assert resp['user_power_state'] == POWER_STATES.index('power off')
-        await PowerOn(controller_ip=self.controller_ip, domain_id=self.domain_id)
+        await DoActionOnVm(controller_ip=self.controller_ip, domain_id=self.domain_id, action='start')
         # assert not resp['remote_access']
         info = await EnableRemoteAccess(controller_ip=self.controller_ip, domain_id=self.domain_id)
         return info
 
 
+#@dataclass()
+#class PowerOn(UrlFetcher):
+#    controller_ip: str
+#    domain_id: str
+#
+#    method = 'POST'
+#    body = ''
+#
+#    def url(self):
+#        return f"http://{self.controller_ip}/api/domains/{self.domain_id}/start/"
+
 
 @dataclass()
-class PowerOn(UrlFetcher):
+class DoActionOnVm(UrlFetcher):
+
     controller_ip: str
     domain_id: str
+    action: str
 
     method = 'POST'
     body = ''
 
     def url(self):
-        return f"http://{self.controller_ip}/api/domains/{self.domain_id}/start/"
-
+        return f"http://{self.controller_ip}/api/domains/{self.domain_id}/{self.action}/"
