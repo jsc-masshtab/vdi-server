@@ -12,6 +12,7 @@
 
 //#define RESPONSE_BUFFER_SIZE 200
 #define OK_RESPONSE 200
+#define BAD_REQUEST 400
 #define AUTH_FAIL_RESPONSE 401
 #define VM_ID_UNKNOWN -1
 
@@ -158,7 +159,7 @@ gchar * apiCall(const char *method, const char *uri_string)
     sendMessage(msg);
 
     // check if token is bad and make the second attempt
-    if(msg->status_code == AUTH_FAIL_RESPONSE) {
+    if(msg->status_code == AUTH_FAIL_RESPONSE || msg->status_code == BAD_REQUEST) {
         refreshVdiSessionToken();
         setupHeaderForApiCall(msg);
         sendMessage(msg);

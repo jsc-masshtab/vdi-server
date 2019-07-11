@@ -16,7 +16,7 @@ async def get_pools(request):
     async with db.connect() as conn:
         qu = f"SELECT * from pool"
         data = await conn.fetch(qu)
-        print('get_pools: data', data)
+        #print('get_pools: data', data)
     pools = [
         Pool(params=dict(item))
         for item in data
@@ -103,11 +103,11 @@ async def do_action_on_vm(request):
 
     # in body info about whether action is forced
     try:
-        body = await request.body();
+        body = await request.body()
         text_body = body.decode("utf-8")
     except ValueError: # no response body
         text_body = ''
-    print('do_action_on_vm: json_body', text_body)
+    print('do_action_on_vm: text_body', text_body)
 
     # do action
     controller_ip = settings['controller_ip']
