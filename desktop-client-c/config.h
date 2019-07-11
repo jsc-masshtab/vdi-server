@@ -14,7 +14,7 @@
                 
 
 /* GETTEXT package name */
-#define GETTEXT_PACKAGE "virt-viewer_veil"
+#define GETTEXT_PACKAGE "thin_client_veil"
 
 /* Define to 1 if you have the `bind_textdomain_codeset' function. */
 #define HAVE_BIND_TEXTDOMAIN_CODESET 1
@@ -112,7 +112,7 @@
 #define LT_OBJDIR ".libs/"
 
 /* Name of package */
-#define PACKAGE "virt-viewer_veil"
+#define PACKAGE "thin_client_veil"
 
 /* Define to the address where bug reports for this package should be sent. */
 #define PACKAGE_BUGREPORT ""

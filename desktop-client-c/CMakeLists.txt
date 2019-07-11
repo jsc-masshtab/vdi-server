@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.14)
-project(virt_viewer_veil C)
+project(thin_client_veil C)
 
 set(CMAKE_C_STANDARD 99)
 
@@ -85,35 +85,11 @@ FILE(GLOB SRC_CODE
     ADD_DEFINITIONS(${GTK3_CFLAGS_OTHER})
 
 if (UNIX)
-    # libxml
-    INCLUDE_DIRECTORIES(/usr/include/libxml2)
-    SET(LIBS ${LIBS} xml2)
-    
-    # rest 0.7
-    INCLUDE_DIRECTORIES(/usr/include/rest-0.7)
-    SET(LIBS ${LIBS} rest-0.7)
-
-    # SPICE_GTK sudo apt install spice-client-gtk
-    # sudo apt install libspice-gtk-3.0-dev
-    INCLUDE_DIRECTORIES(/usr/include/spice-client-gtk-3.0)
-    INCLUDE_DIRECTORIES(/usr/include/spice-client-glib-2.0)
-    INCLUDE_DIRECTORIES(/usr/include/spice-1)
-    INCLUDE_DIRECTORIES(/usr/include/spice-controller)
-    SET(LIBS ${LIBS} spice-client-gtk-3.0 spice-client-glib-2.0 spice-controller)
-    
-    # libsoup
-    INCLUDE_DIRECTORIES(/usr/include/libsoup-2.4)
-    SET(LIBS ${LIBS} soup-2.4)
-    
-    # json glib
-    INCLUDE_DIRECTORIES(/usr/include/json-glib-1.0)
-    SET(LIBS ${LIBS} json-glib-1.0)
+    SET(LIBS_INCLUDE_PATH /usr/include/)
 
     # other libs
     SET(LIBS ${LIBS}
             m
-            #gio-2.0
-            #gobject-2.0
             -rdynamic
             -pthread
     )
@@ -123,29 +99,7 @@ if (UNIX)
 endif (UNIX)
 
 if (WIN32)
-    SET(MSYS_PATH C:/msys64/mingw64/)
-
-    # libxml
-    INCLUDE_DIRECTORIES(${MSYS_PATH}include/libxml2)
-    SET(LIBS ${LIBS} xml2)
-
-    # rest 0.7
-    INCLUDE_DIRECTORIES(${MSYS_PATH}include/rest-0.7)
-    SET(LIBS ${LIBS} rest-0.7)
-
-    # SPICE_GTK
-    INCLUDE_DIRECTORIES(${MSYS_PATH}include/spice-client-gtk-3.0)
-    INCLUDE_DIRECTORIES(${MSYS_PATH}include/spice-client-glib-2.0)
-    INCLUDE_DIRECTORIES(${MSYS_PATH}include/spice-1)
-    SET(LIBS ${LIBS} spice-client-gtk-3.0 spice-client-glib-2.0)
-
-    # libsoup
-    INCLUDE_DIRECTORIES(${MSYS_PATH}include/libsoup-2.4)
-    SET(LIBS ${LIBS} soup-2.4)
-
-    # json glib
-    INCLUDE_DIRECTORIES(${MSYS_PATH}include/json-glib-1.0)
-    SET(LIBS ${LIBS} json-glib-1.0)
+    SET(LIBS_INCLUDE_PATH C:/msys64/mingw64/include/)
 
     # other libs
     SET(LIBS ${LIBS}
@@ -158,9 +112,31 @@ if (WIN32)
 
 endif (WIN32)
 
+    # libxml
+    INCLUDE_DIRECTORIES(${LIBS_INCLUDE_PATH}/libxml2)
+    SET(LIBS ${LIBS} xml2)
+
+    # rest 0.7
+    #INCLUDE_DIRECTORIES(${LIBS_INCLUDE_PATH}rest-0.7)
+    #SET(LIBS ${LIBS} rest-0.7)
+
+    # SPICE_GTK
+    INCLUDE_DIRECTORIES(${LIBS_INCLUDE_PATH}spice-client-gtk-3.0)
+    INCLUDE_DIRECTORIES(${LIBS_INCLUDE_PATH}spice-client-glib-2.0)
+    INCLUDE_DIRECTORIES(${LIBS_INCLUDE_PATH}spice-1)
+    SET(LIBS ${LIBS} spice-client-gtk-3.0 spice-client-glib-2.0)
+
+    # libsoup
+    INCLUDE_DIRECTORIES(${LIBS_INCLUDE_PATH}libsoup-2.4)
+    SET(LIBS ${LIBS} soup-2.4)
+
+    # json glib
+    INCLUDE_DIRECTORIES(${LIBS_INCLUDE_PATH}json-glib-1.0)
+    SET(LIBS ${LIBS} json-glib-1.0)
+
 #############################LINKING###################################
-ADD_EXECUTABLE(virt_viewer_veil ${GUI_TYPE} ${SRC_CODE})
+ADD_EXECUTABLE(thin_client_veil ${GUI_TYPE} ${SRC_CODE})
 target_link_libraries(
-    virt_viewer_veil # exec
+    thin_client_veil # exec
     ${LIBS} # libs
 )

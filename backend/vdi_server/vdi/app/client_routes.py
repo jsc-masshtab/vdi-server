@@ -10,11 +10,13 @@ from . import app
 @app.route('/client/pools')
 @requires('authenticated')
 async def get_pools(request):
+    
     #FIXME filter by user
     # user = request.user.username
     async with db.connect() as conn:
         qu = f"SELECT * from pool"
         data = await conn.fetch(qu)
+        #print('get_pools: data', data)
     pools = [
         Pool(params=dict(item))
         for item in data
@@ -67,8 +69,56 @@ async def get_vm(request):
         })
 
 
+# get vm id from db
+# put in another file??
+async def get_vm_id_from_db(user, pool_id):
+
+    async with db.connect() as conn:
+        qu = """                                                                                        
+        select id from vm where username = $1 and pool_id = $2                                          
+        """, user, pool_id
+        vms = await conn.fetch(*qu)
+
+    print('get_vm_id_from_db: vms', vms)
+    if vms:
+        [(id,)] = vms
+        return id
+    else:
+        return None
+
+
+# suggest to rename url to /client/pools/actions/{action}/{pool_id}'
+@app.route('/client/pools/{action}/{pool_id}', methods=['POST'])
+@requires('authenticated')
+async def do_action_on_vm(request):
+
+    username = request.user.username
+    pool_id = int(request.path_params['pool_id'])
+    vm_action = request.path_params['action']
+
+    id = await get_vm_id_from_db(username, pool_id)
+    
+    if id is None:
+        return JSONResponse({'error': 'There is no vm with requested pool_id'})
+
+    # in body info about whether action is forced
+    try:
+        body = await request.body()
+        text_body = body.decode("utf-8")
+    except ValueError: # no response body
+        text_body = ''
+    print('do_action_on_vm: text_body', text_body)
+
+    # do action
+    controller_ip = settings['controller_ip']
+    await thin_client.DoActionOnVm(controller_ip=controller_ip, domain_id=id, action=vm_action, body=text_body)
+
+    return JSONResponse({'error': 'null'})
+
+
 @app.route('/check', methods=['GET', 'POST'])
 @requires(['authenticated'])
 def check(request):
     username = request.user.username
     return JSONResponse({'user': username})
+
