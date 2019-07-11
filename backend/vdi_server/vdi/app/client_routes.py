@@ -87,8 +87,7 @@ async def get_vm_id_from_db(user, pool_id):
         return None
 
 
-# suggest to rename url to /client/pools/actions/{action}/{pool_id}'
-@app.route('/client/pools/{action}/{pool_id}', methods=['POST'])
+@app.route('/client/pools/{pool_id}/{action}', methods=['POST'])
 @requires('authenticated')
 async def do_action_on_vm(request):
 
