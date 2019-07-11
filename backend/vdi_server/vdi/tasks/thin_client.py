@@ -64,9 +64,9 @@ class DoActionOnVm(UrlFetcher):
     controller_ip: str
     domain_id: str
     action: str
+    body: str = ''
 
     method = 'POST'
-    body = ''
 
     def url(self):
         return f"http://{self.controller_ip}/api/domains/{self.domain_id}/{self.action}/"

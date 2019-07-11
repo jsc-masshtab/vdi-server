@@ -10,7 +10,7 @@ from . import app
 @app.route('/client/pools')
 @requires('authenticated')
 async def get_pools(request):
-
+    
     #FIXME filter by user
     # user = request.user.username
     async with db.connect() as conn:
@@ -72,58 +72,48 @@ async def get_vm(request):
 # get vm id from db
 # put in another file??
 async def get_vm_id_from_db(user, pool_id):
-    async with db.connect() as conn:
 
+    async with db.connect() as conn:
         qu = """                                                                                        
         select id from vm where username = $1 and pool_id = $2                                          
         """, user, pool_id
         vms = await conn.fetch(*qu)
 
-        if vms:
-            [(id,)] = vms
-            return id
-        else:
-            return None
-
-#
-async def do_action_on_vm(request, action_str: str):
-    pool_id = int(request.path_params['pool_id'])
-    id = await get_vm_id_from_db(request.user.username, pool_id)
-
-    if id is not None:
-        controller_ip = settings['controller_ip']
-        await thin_client.DoActionOnVm(controller_ip=controller_ip, domain_id=id, action=action_str)
-        return JSONResponse({'error': 'null'})
+    print('get_vm_id_from_db: vms', vms)
+    if vms:
+        [(id,)] = vms
+        return id
     else:
+        return None
+
+
+# suggest to rename url to /client/pools/actions/{action}/{pool_id}'
+@app.route('/client/pools/{action}/{pool_id}', methods=['POST'])
+@requires('authenticated')
+async def do_action_on_vm(request):
+
+    username = request.user.username
+    pool_id = int(request.path_params['pool_id'])
+    vm_action = request.path_params['action']
+
+    id = await get_vm_id_from_db(username, pool_id)
+    
+    if id is None:
         return JSONResponse({'error': 'There is no vm with requested pool_id'})
 
+    # in body info about whether action is forced
+    try:
+        body = await request.body();
+        text_body = body.decode("utf-8")
+    except ValueError: # no response body
+        text_body = ''
+    print('do_action_on_vm: json_body', text_body)
 
-@app.route('/client/pools/start/{pool_id}', methods=['GET', 'POST'])
-@requires('authenticated')
-async def start_vm(request):
-    json_response = await do_action_on_vm(request, 'start')
-    return json_response
+    # do action
+    controller_ip = settings['controller_ip']
+    await thin_client.DoActionOnVm(controller_ip=controller_ip, domain_id=id, action=vm_action, body=text_body)
 
-
-@app.route('/client/pools/suspend/{pool_id}', methods=['GET', 'POST'])
-@requires('authenticated')
-async def suspend_vm(request):
-    json_response = await do_action_on_vm(request, 'suspend')
-    return json_response
-
-
-@app.route('/client/pools/resume/{pool_id}', methods=['GET', 'POST'])
-@requires('authenticated')
-async def resume_vm(request):
-    json_response = await do_action_on_vm(request, 'resume')
-    return json_response
-
-
-@app.route('/client/pools/reset/{pool_id}', methods=['GET', 'POST'])
-@requires('authenticated')
-async def reset_vm(request):
-    json_response = await do_action_on_vm(request, 'reset')
-    return json_response
+    return JSONResponse({'error': 'null'})
 
 
 @app.route('/check', methods=['GET', 'POST'])
@@ -132,7 +122,3 @@ def check(request):
     username = request.user.username
     return JSONResponse({'user': username})
 
-
-# qu = "delete from vm where i
-#await conn.fetch(*qu)
-#return JSONResponse({})
