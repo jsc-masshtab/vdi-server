@@ -36,6 +36,14 @@ typedef struct{
 
 } VdiSession;
 
+// Data which passed to apiCall
+typedef struct{
+    gint64 currentVmId;
+    gchar *actionOnVmStr;
+    gboolean isActionForced;
+
+} ActionOnVmData;
+
 // Functions
 
 void setVdiCredentials(const gchar *username, const gchar *password, const gchar *ip, const gchar *port);
@@ -52,8 +60,8 @@ guint sendMessage(SoupMessage *msg);
 gboolean refreshVdiSessionToken();
 
 //void gInputStreamToBuffer(GInputStream *inputStream, gchar *responseBuffer);
-
-gchar * apiCall(const char *method, const char *uri_string);
+// Do api call. Return response body
+gchar *apiCall(const char *method, const char *uri_string, const gchar *body_str);
 
 // Запрашиваем список пулов
 void getVdiVmData(GTask         *task,
@@ -67,9 +75,12 @@ void getVmDFromPool(GTask         *task,
                   gpointer       task_data,
                   GCancellable  *cancellable);
 
-// json (maybe to another file)
-JsonObject * getJsonObject(JsonParser *parser, const gchar *data);
-JsonArray * getJsonArray(JsonParser *parser, const gchar *data);
+// Do action on virtual machine
+void doActionOnVm(GTask         *task,
+                  gpointer       source_object,
+                  gpointer       task_data,
+                  GCancellable  *cancellable);
+
 // threads
 void executeAsyncTask(GTaskThreadFunc  task_func, GAsyncReadyCallback  callback, gpointer callback_data);
 

@@ -63,6 +63,8 @@ FILE(GLOB SRC_CODE
 #utility
         src/utility/crashhandler.h
         src/utility/crashhandler.c
+        src/utility/jsonhandler.h
+        src/utility/jsonhandler.c
         
 # vdi client
         src/vdi_client/vdi_manager.h

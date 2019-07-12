@@ -10,11 +10,11 @@
 #include "vdi_manager.h"
 #include "vdi_api_session.h"
 #include "vdi_vm_widget.h"
+#include "jsonhandler.h"
 
 #define MAX_VM_NUMBER 150
 
 // extern
-extern gint64 currentVmId;
 extern gboolean take_extern_credentials;
 
 typedef enum
@@ -34,6 +34,8 @@ static GArray *vmWidgetArray = NULL;
 static gchar **urlPtr = NULL;
 static gchar **passwordPtr = NULL;
 static ConnectionInfo *ciPtr = NULL;
+
+static gint64 currentVmId;
 
 // functions declarations
 static void on_vm_start_button_clicked(GtkButton *button G_GNUC_UNUSED, gpointer data G_GNUC_UNUSED);
@@ -87,7 +89,7 @@ static void setVdiClientState(VdiClientState vdiClientState, const gchar *messag
         }
     }
 }
-// start asynchromously task to get vm data from vdi
+// start asynchronous task to get vm data from vdi
 static void refreshVdiVmData()
 {
     setVdiClientState(VDI_WAITING_FOR_VM_DATA, "Отправлен запрос на список пулов", FALSE);
@@ -198,8 +200,6 @@ static void onGetVdiVmDataFinished (GObject *source_object G_GNUC_UNUSED,
     g_object_unref (parser);
     if(ptr_res)
         g_free(ptr_res);
-
-    return;
 }
 // callback which is invoked when vm start request finished
 static void onGetVmDFromPoolFinished(GObject *source_object G_GNUC_UNUSED,
@@ -249,8 +249,6 @@ static void onGetVmDFromPoolFinished(GObject *source_object G_GNUC_UNUSED,
     g_object_unref (parser);
     if(ptr_res)
         g_free(ptr_res);
-
-    return;
 }
 
 /////////////////////////////////// gui elements callbacks//////////////////////////////////////
@@ -264,12 +262,21 @@ static gboolean on_window_deleted_cb(ConnectionInfo *ci)
     return TRUE;
 }
 // refresh button pressed callback
-static void on_button_renew_clicked(GtkButton *button G_GNUC_UNUSED, gpointer data G_GNUC_UNUSED)
-{
-    printf("%s\n", (char *)__func__);
+static void on_button_renew_clicked(GtkButton *button G_GNUC_UNUSED, gpointer data G_GNUC_UNUSED) {
+
+    printf("%s\n", (char *) __func__);
     cancellPendingRequests();
     unregisterAllVm();
     refreshVdiVmData();
+
+    /*
+    ActionOnVmData *actionOnVmData = malloc(sizeof(ActionOnVmData));
+    actionOnVmData->currentVmId = currentVmId;
+    actionOnVmData->actionOnVmStr = g_strdup("suspend");
+    actionOnVmData->isActionForced = TRUE;
+
+    executeAsyncTask(doActionOnVm, NULL, actionOnVmData);
+    */
 }
 // quit button pressed callback
 static void on_button_quit_clicked(GtkButton *button G_GNUC_UNUSED, gpointer data)
@@ -291,8 +298,10 @@ static void on_vm_start_button_clicked(GtkButton *button, gpointer data G_GNUC_U
     // start spinner on vm widget
     VdiVmWidget vdiVmWidget = getVdiVmWidgetById(currentVmId);
     enableSpinnerVisible(&vdiVmWidget, TRUE);
-    // luanch thread
-    executeAsyncTask(getVmDFromPool, onGetVmDFromPoolFinished, NULL);
+    // execute task
+    gint64 *vmIdPtr = malloc(sizeof(gint64));
+    *vmIdPtr = currentVmId;
+    executeAsyncTask(getVmDFromPool, onGetVmDFromPoolFinished, vmIdPtr);
 }
 
 /////////////////////////////////// main function
@@ -327,9 +336,6 @@ GtkResponseType vdi_manager_dialog(GtkWindow *main_window, gchar **uri, gchar **
     gtk_window_set_default_size(GTK_WINDOW(window), 500, 500);
 
     button_renew = GTK_WIDGET(gtk_builder_get_object(builder, "button-renew"));
-    //gtk_button_set_label(button_renew, "Обновить");
-    //GtkWidget *button_image = gtk_image_new_from_file(VIRT_VIEWER_RESOURCE_PREFIX"/icons/content/img/veil-32x32.png");
-    //gtk_button_set_image(GTK_BUTTON(button_renew),button_image);
 
     button_quit = GTK_WIDGET(gtk_builder_get_object(builder, "button-quit"));
     vm_main_box = GTK_WIDGET(gtk_builder_get_object(builder, "vm_main_box"));
