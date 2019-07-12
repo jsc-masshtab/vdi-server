@@ -68,7 +68,14 @@ void virt_viewer_window_menu_file_smartcard_remove(GtkWidget *menu, VirtViewerWi
 void virt_viewer_window_menu_view_release_cursor(GtkWidget *menu, VirtViewerWindow *self);
 void virt_viewer_window_menu_preferences_cb(GtkWidget *menu, VirtViewerWindow *self);
 void virt_viewer_window_menu_change_cd_activate(GtkWidget *menu, VirtViewerWindow *self);
+// vm control
 void virt_viewer_window_menu_switch_off(GtkWidget *menu, VirtViewerWindow *self);
+void virt_viewer_window_menu_start_vm(GtkWidget *menu, VirtViewerWindow *self);
+void virt_viewer_window_menu_suspend_vm(GtkWidget *menu, VirtViewerWindow *self);
+void virt_viewer_window_menu_shutdown_vm(GtkWidget *menu, VirtViewerWindow *self);
+void virt_viewer_window_menu_shutdown_vm_force(GtkWidget *menu, VirtViewerWindow *self);
+void virt_viewer_window_menu_reboot_vm(GtkWidget *menu, VirtViewerWindow *self);
+void virt_viewer_window_menu_reboot_vm_force(GtkWidget *menu, VirtViewerWindow *self);
 
 /* Internal methods */
 static void virt_viewer_window_enable_modifiers(VirtViewerWindow *self);
@@ -1137,7 +1144,7 @@ virt_viewer_window_menu_change_cd_activate(GtkWidget *menu G_GNUC_UNUSED,
 G_MODULE_EXPORT void
 virt_viewer_window_menu_switch_off(GtkWidget *menu, VirtViewerWindow *self)
 {
-    printf("virt_viewer_window_menu_switch_off\n");
+    printf("%s\n", (char *)__func__);
 
     virt_viewer_app_deactivate(self->priv->app, 0);
     virt_viewer_app_hide_all_windows(self->priv->app);
@@ -1148,6 +1155,42 @@ virt_viewer_window_menu_switch_off(GtkWidget *menu, VirtViewerWindow *self)
         g_clear_error(&error);
         g_application_quit(G_APPLICATION(self->priv->app));
     }
+}
+
+G_MODULE_EXPORT void
+virt_viewer_window_menu_start_vm(GtkWidget *menu, VirtViewerWindow *self)
+{
+    printf("%s\n", (char *)__func__);
+}
+
+G_MODULE_EXPORT void
+virt_viewer_window_menu_suspend_vm(GtkWidget *menu, VirtViewerWindow *self)
+{
+    printf("%s\n", (char *)__func__);
+}
+
+G_MODULE_EXPORT void
+virt_viewer_window_menu_shutdown_vm(GtkWidget *menu, VirtViewerWindow *self)
+{
+    printf("%s\n", (char *)__func__);
+}
+
+G_MODULE_EXPORT void
+virt_viewer_window_menu_shutdown_vm_force(GtkWidget *menu, VirtViewerWindow *self)
+{
+    printf("%s\n", (char *)__func__);
+}
+
+G_MODULE_EXPORT void
+virt_viewer_window_menu_reboot_vm(GtkWidget *menu, VirtViewerWindow *self)
+{
+    printf("%s\n", (char *)__func__);
+}
+
+G_MODULE_EXPORT void
+virt_viewer_window_menu_reboot_vm_force(GtkWidget *menu, VirtViewerWindow *self)
+{
+    printf("%s\n", (char *)__func__);
 }
 
 static void

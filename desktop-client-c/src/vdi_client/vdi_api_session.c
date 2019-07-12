@@ -56,7 +56,9 @@ void startSession()
 void stopSession()
 {
     cancellPendingRequests();
-    usleep(20000); // sleep to give the async tasks time to stop.
+    // sleep to give the async tasks time to stop.
+    // They will stop almost immediately after cancellPendingRequests
+    g_usleep(20000);
     g_object_unref(vdiSession.soupSession);
 
     free_memory_safely(&vdiSession.api_url);
