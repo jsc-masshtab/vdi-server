@@ -10,6 +10,9 @@
 #include <libsoup/soup-session.h>
 #include <libsoup/soup-message.h>
 
+#define VM_ID_UNKNOWN -1
+
+// vm operational system
 typedef enum{
     VDI_VM_WIN,
     VDI_VM_LINUX,
@@ -30,9 +33,18 @@ typedef struct{
 
     SoupSession *soupSession;
 
+    gchar *vdi_username;
+    gchar *vdi_password;
+    gchar *vdi_ip;
+    gchar *vdi_port;
+
     gchar *api_url;
     gchar *auth_url;
     gchar *jwt;
+
+    gboolean isActive;
+
+    gint64 currentVmId;
 
 } VdiSession;
 
@@ -45,19 +57,18 @@ typedef struct{
 } ActionOnVmData;
 
 // Functions
-
-void setVdiCredentials(const gchar *username, const gchar *password, const gchar *ip, const gchar *port);
-
-void startSession();
-void stopSession();
+// init session
+void startVdiSession();
+// deinit session
+void stopVdiSession();
+// cancell pending requests
 void cancellPendingRequests();
-
-void setupHeaderForApiCall(SoupMessage *msg);
-
-guint sendMessage(SoupMessage *msg);
-
-// Получаем токен
-gboolean refreshVdiSessionToken();
+// set vdi session credentials
+void setVdiCredentials(const gchar *username, const gchar *password, const gchar *ip, const gchar *port);
+// set current vm id
+void setCurrentVmId(gint64 currentVmId);
+// get current vm id
+gint64 getCurrentVmId();
 
 //void gInputStreamToBuffer(GInputStream *inputStream, gchar *responseBuffer);
 // Do api call. Return response body
@@ -83,6 +94,6 @@ void doActionOnVm(GTask         *task,
 
 // threads
 void executeAsyncTask(GTaskThreadFunc  task_func, GAsyncReadyCallback  callback, gpointer callback_data);
-
+void doActionOnVmAsync(const gchar *actionStr, gboolean isForced);
 
 #endif //VIRT_VIEWER_VEIL_VDI_API_SESSION_H

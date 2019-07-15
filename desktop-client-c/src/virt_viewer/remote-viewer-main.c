@@ -30,11 +30,11 @@
 #include "remote-viewer.h"
 #include "virt-viewer-util.h"
 #include "crashhandler.h"
+#include "vdi_api_session.h"
 
-int
-main(int argc, char **argv)
-{
-#ifdef NDEBUG // logging errors and traceback in release mode
+void
+setupLogging(){
+
     // get ts
     gint64 cur_ts = g_get_real_time();
     gchar *ts_string = g_strdup_printf("%lld", cur_ts);
@@ -52,18 +52,32 @@ main(int argc, char **argv)
     g_free(ts_string);
     g_free(bt_file_name);
     g_free(stderr_file_name);
+}
+
+int
+main(int argc, char **argv)
+{
+#ifdef NDEBUG // logging errors and traceback in release mode
+    setupLogging();
 #else
 
 #endif
-    // app
+
+    // start session
+    startVdiSession();
+
+    // start app
     int ret = 1;
     GApplication *app = NULL;
-
     virt_viewer_util_init("Veil VDI Тонкий клиент");
     app = G_APPLICATION(remote_viewer_new());
 
     ret = g_application_run(app, argc, argv);
+
+    // free resources
+    stopVdiSession();
     g_object_unref(app);
+
     return ret;
 }
 //

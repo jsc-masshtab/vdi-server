@@ -35,7 +35,6 @@ static gchar **urlPtr = NULL;
 static gchar **passwordPtr = NULL;
 static ConnectionInfo *ciPtr = NULL;
 
-static gint64 currentVmId;
 
 // functions declarations
 static void on_vm_start_button_clicked(GtkButton *button G_GNUC_UNUSED, gpointer data G_GNUC_UNUSED);
@@ -90,7 +89,7 @@ static void setVdiClientState(VdiClientState vdiClientState, const gchar *messag
     }
 }
 // start asynchronous task to get vm data from vdi
-static void refreshVdiVmData()
+static void refreshVdiVmDataAsync()
 {
     setVdiClientState(VDI_WAITING_FOR_VM_DATA, "Отправлен запрос на список пулов", FALSE);
     executeAsyncTask(getVdiVmData, onGetVdiVmDataFinished, NULL);
@@ -208,7 +207,7 @@ static void onGetVmDFromPoolFinished(GObject *source_object G_GNUC_UNUSED,
 {
     printf("%s\n", (char *)__func__);
 
-    VdiVmWidget vdiVmWidget = getVdiVmWidgetById(currentVmId);
+    VdiVmWidget vdiVmWidget = getVdiVmWidgetById(getCurrentVmId());
     enableSpinnerVisible(&vdiVmWidget, FALSE);
 
     GError *error;
@@ -267,16 +266,7 @@ static void on_button_renew_clicked(GtkButton *button G_GNUC_UNUSED, gpointer da
     printf("%s\n", (char *) __func__);
     cancellPendingRequests();
     unregisterAllVm();
-    refreshVdiVmData();
-
-    /*
-    ActionOnVmData *actionOnVmData = malloc(sizeof(ActionOnVmData));
-    actionOnVmData->currentVmId = currentVmId;
-    actionOnVmData->actionOnVmStr = g_strdup("suspend");
-    actionOnVmData->isActionForced = TRUE;
-
-    executeAsyncTask(doActionOnVm, NULL, actionOnVmData);
-    */
+    refreshVdiVmDataAsync();
 }
 // quit button pressed callback
 static void on_button_quit_clicked(GtkButton *button G_GNUC_UNUSED, gpointer data)
@@ -291,17 +281,15 @@ static void on_button_quit_clicked(GtkButton *button G_GNUC_UNUSED, gpointer dat
 static void on_vm_start_button_clicked(GtkButton *button, gpointer data G_GNUC_UNUSED)
 {
     //ConnectionInfo *ci = data;
-    currentVmId = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(button), "vmId"));
-    printf("on_vm_start_button_clicked %ld \n", currentVmId);
+    setCurrentVmId( GPOINTER_TO_INT(g_object_get_data(G_OBJECT(button), "vmId")) );
+    printf("on_vm_start_button_clicked %ld \n", getCurrentVmId());
     // start machine
     setVdiClientState(VDI_WAITING_FOR_VM_FROM_POOL, "Отправлен запрос на получение вм из пула", FALSE);
     // start spinner on vm widget
-    VdiVmWidget vdiVmWidget = getVdiVmWidgetById(currentVmId);
+    VdiVmWidget vdiVmWidget = getVdiVmWidgetById(getCurrentVmId());
     enableSpinnerVisible(&vdiVmWidget, TRUE);
     // execute task
-    gint64 *vmIdPtr = malloc(sizeof(gint64));
-    *vmIdPtr = currentVmId;
-    executeAsyncTask(getVmDFromPool, onGetVmDFromPoolFinished, vmIdPtr);
+    executeAsyncTask(getVmDFromPool, onGetVmDFromPoolFinished, NULL);
 }
 
 /////////////////////////////////// main function
@@ -359,9 +347,8 @@ GtkResponseType vdi_manager_dialog(GtkWindow *main_window, gchar **uri, gchar **
     
     // Пытаемся соединиться с vdi и получить список машин. Получив список машин нужно сгенерить
     // соответствующие кнопки  в скрол области.
-    startSession();
     // get vm data
-    refreshVdiVmData();
+    refreshVdiVmDataAsync();
 
     // event loop
     ci.loop = g_main_loop_new(NULL, FALSE);
@@ -371,7 +358,7 @@ GtkResponseType vdi_manager_dialog(GtkWindow *main_window, gchar **uri, gchar **
         *uri = NULL;
 
     // clear
-    stopSession();
+    cancellPendingRequests();
     unregisterAllVm();
     g_object_unref(builder);
     gtk_widget_destroy(window);

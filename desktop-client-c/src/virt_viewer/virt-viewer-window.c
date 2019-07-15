@@ -43,6 +43,8 @@
 #include "virt-viewer-util.h"
 #include "virt-viewer-timed-revealer.h"
 
+#include "vdi_api_session.h"
+
 //#include "remote-viewer-iso-list-dialog.h"
 
 #define ZOOM_STEP 10
@@ -1158,39 +1160,45 @@ virt_viewer_window_menu_switch_off(GtkWidget *menu, VirtViewerWindow *self)
 }
 
 G_MODULE_EXPORT void
-virt_viewer_window_menu_start_vm(GtkWidget *menu, VirtViewerWindow *self)
+virt_viewer_window_menu_start_vm(GtkWidget *menu G_GNUC_UNUSED, VirtViewerWindow *self G_GNUC_UNUSED)
 {
     printf("%s\n", (char *)__func__);
+    doActionOnVmAsync("start", FALSE);
 }
 
 G_MODULE_EXPORT void
-virt_viewer_window_menu_suspend_vm(GtkWidget *menu, VirtViewerWindow *self)
+virt_viewer_window_menu_suspend_vm(GtkWidget *menu G_GNUC_UNUSED, VirtViewerWindow *self G_GNUC_UNUSED)
 {
     printf("%s\n", (char *)__func__);
+    doActionOnVmAsync("suspend", FALSE);
 }
 
 G_MODULE_EXPORT void
-virt_viewer_window_menu_shutdown_vm(GtkWidget *menu, VirtViewerWindow *self)
+virt_viewer_window_menu_shutdown_vm(GtkWidget *menu G_GNUC_UNUSED, VirtViewerWindow *self G_GNUC_UNUSED)
 {
     printf("%s\n", (char *)__func__);
+    doActionOnVmAsync("shutdown", FALSE);
 }
 
 G_MODULE_EXPORT void
-virt_viewer_window_menu_shutdown_vm_force(GtkWidget *menu, VirtViewerWindow *self)
+virt_viewer_window_menu_shutdown_vm_force(GtkWidget *menu G_GNUC_UNUSED, VirtViewerWindow *self G_GNUC_UNUSED)
 {
     printf("%s\n", (char *)__func__);
+    doActionOnVmAsync("shutdown", TRUE);
 }
 
 G_MODULE_EXPORT void
-virt_viewer_window_menu_reboot_vm(GtkWidget *menu, VirtViewerWindow *self)
+virt_viewer_window_menu_reboot_vm(GtkWidget *menu G_GNUC_UNUSED, VirtViewerWindow *self G_GNUC_UNUSED)
 {
     printf("%s\n", (char *)__func__);
+    doActionOnVmAsync("reboot", FALSE);
 }
 
 G_MODULE_EXPORT void
-virt_viewer_window_menu_reboot_vm_force(GtkWidget *menu, VirtViewerWindow *self)
+virt_viewer_window_menu_reboot_vm_force(GtkWidget *menu G_GNUC_UNUSED, VirtViewerWindow *self G_GNUC_UNUSED)
 {
     printf("%s\n", (char *)__func__);
+    doActionOnVmAsync("reboot", TRUE);
 }
 
 static void
