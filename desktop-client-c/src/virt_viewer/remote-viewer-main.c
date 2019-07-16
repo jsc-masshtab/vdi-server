@@ -33,7 +33,7 @@
 #include "vdi_api_session.h"
 
 void
-setupLogging(){
+setup_logging(){
 
     // get ts
     gint64 cur_ts = g_get_real_time();
@@ -42,7 +42,7 @@ setupLogging(){
 
     // crash handler
     gchar *bt_file_name = g_strconcat(log_dir, ts_string, "_backtrace.txt", NULL);
-    installHandler(bt_file_name);
+    install_crash_handler(bt_file_name);
 
     //error output
     gchar *stderr_file_name = g_strconcat(log_dir, ts_string, "_stderr.txt", NULL);
@@ -58,13 +58,13 @@ int
 main(int argc, char **argv)
 {
 #ifdef NDEBUG // logging errors and traceback in release mode
-    setupLogging();
+    setup_logging();
 #else
 
 #endif
 
     // start session
-    startVdiSession();
+    start_vdi_session();
 
     // start app
     int ret = 1;
@@ -75,7 +75,7 @@ main(int argc, char **argv)
     ret = g_application_run(app, argc, argv);
 
     // free resources
-    stopVdiSession();
+    stop_vdi_session();
     g_object_unref(app);
 
     return ret;

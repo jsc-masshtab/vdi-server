@@ -14,26 +14,26 @@
 
 typedef struct{
 
-    GtkWidget *mainWidget;
+    GtkWidget *main_widget;
 
-    GtkWidget *gtkBox;
-    GtkWidget *gtkOverlay;
+    GtkWidget *gtk_box;
+    GtkWidget *gtk_overlay;
 
-    GtkWidget *vmSpinner;
+    GtkWidget *vm_spinner;
 
-    GtkWidget *vmNameLabel;
-    GtkWidget *imageWidget;
-    GtkWidget *vmStartButton;
+    GtkWidget *vm_name_label;
+    GtkWidget *image_widget;
+    GtkWidget *vm_start_button;
 
 } VdiVmWidget;
 
 // build vm widget and insert it in gtk_flow_box
-VdiVmWidget buildVmWidget(gint64 vmId, const gchar *vmName, GtkWidget *gtk_flow_box);
+VdiVmWidget build_vm_widget(gint64 vmId, const gchar *vmName, GtkWidget *gtk_flow_box);
 
 // start / stop spinner
-void enableSpinnerVisible(VdiVmWidget *vdiVmWidget, gboolean enable);
+void enable_spinner_visible(VdiVmWidget *vdi_vm_widget, gboolean enable);
 
 // destroy widget
-void destroyVdiVmWidget(VdiVmWidget *vdiVmWidget);
+void destroy_vdi_vm_widget(VdiVmWidget *vdi_vm_widget);
 
 #endif //VIRT_VIEWER_VEIL_VDI_VM_WIDGET_H

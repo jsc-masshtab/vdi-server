@@ -4,68 +4,68 @@
 
 #include "vdi_vm_widget.h"
 
-VdiVmWidget buildVmWidget(gint64 vmId, const gchar *vmName, GtkWidget *gtk_flow_box)
+VdiVmWidget build_vm_widget(gint64 vmId, const gchar *vmName, GtkWidget *gtk_flow_box)
 {
-    VdiVmWidget vdiVmWidget  = {};
+    VdiVmWidget vdi_vm_widget  = {};
 
     if(gtk_flow_box == NULL)
-        return vdiVmWidget;
+        return vdi_vm_widget;
 
     //GtkFrame
     gchar *vmIdStr = g_strdup_printf("id %ld  ", vmId);
-    vdiVmWidget.mainWidget = gtk_frame_new (vmIdStr);
+    vdi_vm_widget.main_widget = gtk_frame_new (vmIdStr);
     g_free(vmIdStr);
 
-    vdiVmWidget.gtkBox = gtk_box_new (GTK_ORIENTATION_VERTICAL, 3);
+    vdi_vm_widget.gtk_box = gtk_box_new (GTK_ORIENTATION_VERTICAL, 3);
     // overlay
-    vdiVmWidget.gtkOverlay = gtk_overlay_new();
-    gtk_container_add((GtkContainer *)vdiVmWidget.gtkOverlay, vdiVmWidget.gtkBox);
+    vdi_vm_widget.gtk_overlay = gtk_overlay_new();
+    gtk_container_add((GtkContainer *)vdi_vm_widget.gtk_overlay, vdi_vm_widget.gtk_box);
 
     // spinner
-    vdiVmWidget.vmSpinner = gtk_spinner_new ();
-    gtk_overlay_add_overlay ((GtkOverlay *)vdiVmWidget.gtkOverlay, vdiVmWidget.vmSpinner);
-    gtk_overlay_set_overlay_pass_through((GtkOverlay *)vdiVmWidget.gtkOverlay, vdiVmWidget.vmSpinner, TRUE);
+    vdi_vm_widget.vm_spinner = gtk_spinner_new ();
+    gtk_overlay_add_overlay ((GtkOverlay *)vdi_vm_widget.gtk_overlay, vdi_vm_widget.vm_spinner);
+    gtk_overlay_set_overlay_pass_through((GtkOverlay *)vdi_vm_widget.gtk_overlay, vdi_vm_widget.vm_spinner, TRUE);
 
 
-    gtk_container_add((GtkContainer *)vdiVmWidget.mainWidget, vdiVmWidget.gtkOverlay);
+    gtk_container_add((GtkContainer *)vdi_vm_widget.main_widget, vdi_vm_widget.gtk_overlay);
     // vm name
-    vdiVmWidget.vmNameLabel = gtk_label_new (vmName);
-    gtk_box_pack_start((GtkBox *)vdiVmWidget.gtkBox, vdiVmWidget.vmNameLabel, TRUE, TRUE, 0);
+    vdi_vm_widget.vm_name_label = gtk_label_new (vmName);
+    gtk_box_pack_start((GtkBox *)vdi_vm_widget.gtk_box, vdi_vm_widget.vm_name_label, TRUE, TRUE, 0);
     // vm image
-    vdiVmWidget.imageWidget =
+    vdi_vm_widget.image_widget =
             gtk_image_new_from_resource(VIRT_VIEWER_RESOURCE_PREFIX"/icons/content/img/other_icon.png");
-    gtk_box_pack_start((GtkBox *)vdiVmWidget.gtkBox, vdiVmWidget.imageWidget, TRUE, TRUE, 0);
+    gtk_box_pack_start((GtkBox *)vdi_vm_widget.gtk_box, vdi_vm_widget.image_widget, TRUE, TRUE, 0);
     // vm start button
-    vdiVmWidget.vmStartButton = gtk_button_new_with_label ("Подключиться");
-    g_object_set_data((GObject *)vdiVmWidget.vmStartButton, "vmId", (gpointer)vmId);
-    gtk_box_pack_start((GtkBox *)vdiVmWidget.gtkBox, vdiVmWidget.vmStartButton, TRUE, TRUE, 0);
+    vdi_vm_widget.vm_start_button = gtk_button_new_with_label ("Подключиться");
+    g_object_set_data((GObject *)vdi_vm_widget.vm_start_button, "vmId", (gpointer)vmId);
+    gtk_box_pack_start((GtkBox *)vdi_vm_widget.gtk_box, vdi_vm_widget.vm_start_button, TRUE, TRUE, 0);
     //
-    gtk_widget_set_size_request(vdiVmWidget.mainWidget, 100, 120);
-    gtk_flow_box_insert((GtkFlowBox *)gtk_flow_box, vdiVmWidget.mainWidget, 0);
+    gtk_widget_set_size_request(vdi_vm_widget.main_widget, 100, 120);
+    gtk_flow_box_insert((GtkFlowBox *)gtk_flow_box, vdi_vm_widget.main_widget, 0);
 
-    gtk_widget_show_all(vdiVmWidget.mainWidget);
+    gtk_widget_show_all(vdi_vm_widget.main_widget);
 
-    return vdiVmWidget;
+    return vdi_vm_widget;
 }
 
-void enableSpinnerVisible(VdiVmWidget *vdiVmWidget, gboolean enable)
+void enable_spinner_visible(VdiVmWidget *vdi_vm_widget, gboolean enable)
 {
-    if(vdiVmWidget->vmSpinner == NULL)
+    if(vdi_vm_widget->vm_spinner == NULL)
         return;
 
     if(enable)
-        gtk_spinner_start((GtkSpinner *)vdiVmWidget->vmSpinner);
+        gtk_spinner_start((GtkSpinner *)vdi_vm_widget->vm_spinner);
     else
-        gtk_spinner_stop((GtkSpinner *)vdiVmWidget->vmSpinner);
+        gtk_spinner_stop((GtkSpinner *)vdi_vm_widget->vm_spinner);
 }
 
-void destroyVdiVmWidget(VdiVmWidget *vdiVmWidget)
+void destroy_vdi_vm_widget(VdiVmWidget *vdi_vm_widget)
 {
-    gtk_widget_destroy(vdiVmWidget->vmSpinner);
-    gtk_widget_destroy(vdiVmWidget->vmNameLabel);
-    gtk_widget_destroy(vdiVmWidget->imageWidget);
-    gtk_widget_destroy(vdiVmWidget->vmStartButton);
-    gtk_widget_destroy(vdiVmWidget->gtkBox);
-    gtk_widget_destroy(vdiVmWidget->gtkOverlay);
-    gtk_widget_destroy(vdiVmWidget->mainWidget);
+    gtk_widget_destroy(vdi_vm_widget->vm_spinner);
+    gtk_widget_destroy(vdi_vm_widget->vm_name_label);
+    gtk_widget_destroy(vdi_vm_widget->image_widget);
+    gtk_widget_destroy(vdi_vm_widget->vm_start_button);
+    gtk_widget_destroy(vdi_vm_widget->gtk_box);
+    gtk_widget_destroy(vdi_vm_widget->gtk_overlay);
+    gtk_widget_destroy(vdi_vm_widget->main_widget);
 }

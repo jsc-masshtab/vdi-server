@@ -4,7 +4,7 @@
 
 #include "jsonhandler.h"
 
-JsonObject *getJsonObject(JsonParser *parser, const gchar *data)
+JsonObject *get_json_object(JsonParser *parser, const gchar *data)
 {
 
     gboolean result = json_parser_load_from_data (parser, data, -1, NULL);
@@ -19,7 +19,7 @@ JsonObject *getJsonObject(JsonParser *parser, const gchar *data)
     return object;
 }
 
-JsonArray *getJsonArray(JsonParser *parser, const gchar *data)
+JsonArray *get_json_array(JsonParser *parser, const gchar *data)
 {
     gboolean result = json_parser_load_from_data (parser, data, -1, NULL);
     if(!result)

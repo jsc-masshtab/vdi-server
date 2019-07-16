@@ -58,7 +58,7 @@ void crush_handler(int sig){
     _Exit(0);
 }
 //========================================================================
-void installHandler(const char *logFileName){
+void install_crash_handler(const char *logFileName){
 
     memcpy(&fileName[0], logFileName, strlen(logFileName));
 

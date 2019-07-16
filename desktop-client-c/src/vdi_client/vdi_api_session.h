@@ -22,16 +22,16 @@ typedef enum{
 // Инфа о виртуальной машине полученная от vdi
 typedef struct{
 
-    int osType;
+    int os_type;
     gchar *ip;
-    gint testData;
+    gint test_data;
 
 } VdiVmData;
 
 // vdi session
 typedef struct{
 
-    SoupSession *soupSession;
+    SoupSession *soup_session;
 
     gchar *vdi_username;
     gchar *vdi_password;
@@ -42,58 +42,58 @@ typedef struct{
     gchar *auth_url;
     gchar *jwt;
 
-    gboolean isActive;
+    gboolean is_active;
 
-    gint64 currentVmId;
+    gint64 current_vm_id;
 
 } VdiSession;
 
-// Data which passed to apiCall
+// Data which passed to api_call
 typedef struct{
-    gint64 currentVmId;
-    gchar *actionOnVmStr;
-    gboolean isActionForced;
+    gint64 current_vm_id;
+    gchar *action_on_vm_str;
+    gboolean is_action_forced;
 
 } ActionOnVmData;
 
 // Functions
 // init session
-void startVdiSession();
+void start_vdi_session();
 // deinit session
-void stopVdiSession();
+void stop_vdi_session();
 // cancell pending requests
-void cancellPendingRequests();
+void cancell_pending_requests();
 // set vdi session credentials
-void setVdiCredentials(const gchar *username, const gchar *password, const gchar *ip, const gchar *port);
+void set_vdi_credentials(const gchar *username, const gchar *password, const gchar *ip, const gchar *port);
 // set current vm id
-void setCurrentVmId(gint64 currentVmId);
+void set_current_vm_id(gint64 current_vm_id);
 // get current vm id
-gint64 getCurrentVmId();
+gint64 get_current_vm_id();
 
 //void gInputStreamToBuffer(GInputStream *inputStream, gchar *responseBuffer);
 // Do api call. Return response body
-gchar *apiCall(const char *method, const char *uri_string, const gchar *body_str);
+gchar *api_call(const char *method, const char *uri_string, const gchar *body_str);
 
 // Запрашиваем список пулов
-void getVdiVmData(GTask         *task,
+void get_vdi_vm_data(GTask         *task,
                  gpointer       source_object,
                  gpointer       task_data,
                  GCancellable  *cancellable);
 
 // Получаем виртуалку из пула
-void getVmDFromPool(GTask         *task,
+void get_vm_from_pool(GTask         *task,
                   gpointer       source_object,
                   gpointer       task_data,
                   GCancellable  *cancellable);
 
 // Do action on virtual machine
-void doActionOnVm(GTask         *task,
+void do_action_on_vm(GTask         *task,
                   gpointer       source_object,
                   gpointer       task_data,
                   GCancellable  *cancellable);
 
 // threads
-void executeAsyncTask(GTaskThreadFunc  task_func, GAsyncReadyCallback  callback, gpointer callback_data);
-void doActionOnVmAsync(const gchar *actionStr, gboolean isForced);
+void execute_async_task(GTaskThreadFunc  task_func, GAsyncReadyCallback  callback, gpointer callback_data);
+void do_action_on_vm_async(const gchar *actionStr, gboolean isForced);
 
 #endif //VIRT_VIEWER_VEIL_VDI_API_SESSION_H

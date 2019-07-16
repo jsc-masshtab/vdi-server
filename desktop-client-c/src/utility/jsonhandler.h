@@ -7,7 +7,7 @@
 
 #include <json-glib/json-glib.h>
 
-JsonObject *getJsonObject(JsonParser *parser, const gchar *data);
-JsonArray *getJsonArray(JsonParser *parser, const gchar *data);
+JsonObject *get_json_object(JsonParser *parser, const gchar *data);
+JsonArray *get_json_array(JsonParser *parser, const gchar *data);
 
 #endif //THIN_CLIENT_VEIL_JSONHANDLER_H

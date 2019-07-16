@@ -911,7 +911,7 @@ retry_dialog:
         }
 
         if(!opt_manual_mode) {
-            setVdiCredentials(user, password, ip, port);
+            set_vdi_credentials(user, password, ip, port);
             free_memory_safely(&guri);
             free_memory_safely(&user);
             free_memory_safely(&password);
