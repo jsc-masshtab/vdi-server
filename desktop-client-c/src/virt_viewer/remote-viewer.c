@@ -951,7 +951,7 @@ retry_vdi_dialog:
     g_signal_connect(virt_viewer_app_get_session(app), "session-connected",
                      G_CALLBACK(remote_viewer_session_connected), app);
 
-    // Коннект к машине
+    // Коннект к машине/*
     if (!virt_viewer_app_initial_connect(app, &error)) {
         if (error == NULL) {
             g_set_error_literal(&error,

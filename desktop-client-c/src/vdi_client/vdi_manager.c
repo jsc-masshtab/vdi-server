@@ -38,7 +38,7 @@ static ConnectionInfo *ci_ptr = NULL;
 
 // functions declarations
 static void on_vm_start_button_clicked(GtkButton *button G_GNUC_UNUSED, gpointer data G_GNUC_UNUSED);
-static void  onGetVdiVmDataFinished(GObject *source_object G_GNUC_UNUSED, GAsyncResult *res,
+static void on_get_vdi_vm_data_finished(GObject *source_object G_GNUC_UNUSED, GAsyncResult *res,
         gpointer user_data G_GNUC_UNUSED);
 
 /////////////////////////////////// work functions//////////////////////////////////////
@@ -92,7 +92,7 @@ static void set_vdi_client_state(VdiClientState vdi_client_state, const gchar *m
 static void refreshVdiVmDataAsync()
 {
     set_vdi_client_state(VDI_WAITING_FOR_VM_DATA, "Отправлен запрос на список пулов", FALSE);
-    execute_async_task(get_vdi_vm_data, onGetVdiVmDataFinished, NULL);
+    execute_async_task(get_vdi_vm_data, on_get_vdi_vm_data_finished, NULL);
 }
 // clear array of virtual machine widgets
 static void unregisterAllVm()
@@ -152,7 +152,7 @@ static void shutdown_loop(GMainLoop *loop)
 
 //////////////////////////////// async task callbacks//////////////////////////////////////
 // callback which is invoked when a vm data request finished
-static void onGetVdiVmDataFinished (GObject *source_object G_GNUC_UNUSED,
+static void on_get_vdi_vm_data_finished (GObject *source_object G_GNUC_UNUSED,
                                         GAsyncResult *res,
                                         gpointer user_data G_GNUC_UNUSED)
 {

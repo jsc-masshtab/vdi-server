@@ -1148,15 +1148,8 @@ virt_viewer_window_menu_switch_off(GtkWidget *menu, VirtViewerWindow *self)
 {
     printf("%s\n", (char *)__func__);
 
-    virt_viewer_app_deactivate(self->priv->app, 0);
-    virt_viewer_app_hide_all_windows(self->priv->app);
-    GError *error = NULL;
-
-    RemoteViewerState remoteViewerState = opt_manual_mode ? AUTH_DIALOG : VDI_DIALOG;
-    if (!virt_viewer_app_start(self->priv->app, &error, remoteViewerState)) {
-        g_clear_error(&error);
-        g_application_quit(G_APPLICATION(self->priv->app));
-    }
+    virt_viewer_window_hide(self);
+    virt_viewer_app_deactivate(self->priv->app, TRUE);
 }
 
 G_MODULE_EXPORT void
@@ -1164,6 +1157,7 @@ virt_viewer_window_menu_start_vm(GtkWidget *menu G_GNUC_UNUSED, VirtViewerWindow
 {
     printf("%s\n", (char *)__func__);
     do_action_on_vm_async("start", FALSE);
+    //virt_viewer_app_initial_connect(self->priv->app, NULL); // temp
 }
 
 G_MODULE_EXPORT void
