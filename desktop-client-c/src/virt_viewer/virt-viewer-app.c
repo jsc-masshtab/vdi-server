@@ -63,8 +63,6 @@
 #include "virt-viewer-session-spice.h"
 #endif
 
-extern gboolean take_extern_credentials;
-
 gboolean doDebug = FALSE;
 
 /* Signal handlers for about dialog */
@@ -1384,31 +1382,29 @@ virt_viewer_app_deactivate(VirtViewerApp *self, gboolean connect_error)
 {
     VirtViewerAppPrivate *priv = self->priv;
 
-    if (!priv->active)
-        return;
+    if (priv->active) {
 
-    if (priv->session) {
-        virt_viewer_session_close(VIRT_VIEWER_SESSION(priv->session));
-    }
+        if (priv->session) {
+            virt_viewer_session_close(VIRT_VIEWER_SESSION(priv->session));
+        }
 
-    priv->connected = FALSE;
-    priv->active = FALSE;
-    priv->started = FALSE;
-#if 0
-    g_free(priv->pretty_address);
-    priv->pretty_address = NULL;
-#endif
-    priv->grabbed = FALSE;
-    virt_viewer_app_update_title(self);
+        priv->connected = FALSE;
+        priv->active = FALSE;
+        priv->started = FALSE;
+        priv->grabbed = FALSE;
+        virt_viewer_app_update_title(self);
 
-    if (priv->authretry) {
-        priv->authretry = FALSE;
-        g_idle_add(virt_viewer_app_retryauth, self);
-    } else {
-        g_clear_object(&priv->session);
-        // Go to begining if no polling
-        if (!self->is_polling)
-            virt_viewer_app_deactivated(self, connect_error); // Повторный вызов начальной формы
+        if (priv->authretry) {
+            priv->authretry = FALSE;
+            g_idle_add(virt_viewer_app_retryauth, self);
+        } else {
+            g_clear_object(&priv->session);
+            // Go to begining if no polling
+            if (!self->is_polling)
+                virt_viewer_app_deactivated(self, connect_error);
+        }
+    } else { // If app is not active then just go to preveous state
+        virt_viewer_app_deactivated(self, connect_error);
     }
 }
 

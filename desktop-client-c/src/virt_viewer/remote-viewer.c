@@ -97,6 +97,7 @@ static gboolean
 virt_viewer_connect_timer(RemoteViewer *self)
 {
     VirtViewerApp *app = VIRT_VIEWER_APP(self);
+    // stop polling if app->is_polling is false. it happens when spice session connected
     if (!app->is_polling){
         virt_viewer_stop_reconnect_poll(self);
         return FALSE;
@@ -115,7 +116,6 @@ virt_viewer_connect_timer(RemoteViewer *self)
 
     is_started = VIRT_VIEWER_APP_CLASS(remote_viewer_parent_class)->start(app, NULL, AUTH_DIALOG);
 
-    // if success then stop polling
     printf("%s active %i created %i is_connected %i is_started %i \n",
            (char *)__func__, virt_viewer_app_is_active(app), created, is_connected, is_started);
 
@@ -377,7 +377,6 @@ remote_viewer_start(VirtViewerApp *app, GError **err, RemoteViewerState remoteVi
 
     RemoteViewer *self = REMOTE_VIEWER(app);
     RemoteViewerPrivate *priv = self->priv;
-    //GFile *file = NULL;
     gboolean ret = FALSE;
     gchar *guri = NULL;
     gchar *user = NULL;

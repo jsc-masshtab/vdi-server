@@ -37,7 +37,7 @@ setup_logging(){
 
     // get ts
     gint64 cur_ts = g_get_real_time();
-    gchar *ts_string = g_strdup_printf("%lld", cur_ts);
+    gchar *ts_string = g_strdup_printf("%lld", (long long int)cur_ts);
     const gchar *log_dir = "log/";
 
     // crash handler

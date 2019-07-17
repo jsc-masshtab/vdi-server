@@ -52,7 +52,6 @@
 
 // externs
 extern gboolean opt_manual_mode;
-extern gboolean take_extern_credentials;
 
 /* Signal handlers for main window (move in a VirtViewerMainWindow?) */
 void virt_viewer_window_menu_view_zoom_out(GtkWidget *menu, VirtViewerWindow *self);
@@ -1149,6 +1148,8 @@ G_MODULE_EXPORT void
 virt_viewer_window_menu_switch_off(GtkWidget *menu, VirtViewerWindow *self)
 {
     printf("%s\n", (char *)__func__);
+    // turn off polling if its in process
+    self->priv->app->is_polling = FALSE;
 
     virt_viewer_window_hide(self);
     virt_viewer_app_deactivate(self->priv->app, TRUE);

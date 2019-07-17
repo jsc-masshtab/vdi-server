@@ -43,7 +43,7 @@ typedef struct {
     GtkApplication parent;
     VirtViewerAppPrivate *priv;
 
-    gboolean is_polling;
+    gboolean is_polling; // flag for session reconnect
 } VirtViewerApp;
 
 typedef struct {
