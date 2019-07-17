@@ -42,6 +42,7 @@
 #include "virt-viewer-app.h"
 #include "virt-viewer-util.h"
 #include "virt-viewer-timed-revealer.h"
+#include "remote-viewer.h"
 
 #include "vdi_api_session.h"
 
@@ -51,6 +52,7 @@
 
 // externs
 extern gboolean opt_manual_mode;
+extern gboolean take_extern_credentials;
 
 /* Signal handlers for main window (move in a VirtViewerMainWindow?) */
 void virt_viewer_window_menu_view_zoom_out(GtkWidget *menu, VirtViewerWindow *self);
@@ -1153,11 +1155,13 @@ virt_viewer_window_menu_switch_off(GtkWidget *menu, VirtViewerWindow *self)
 }
 
 G_MODULE_EXPORT void
-virt_viewer_window_menu_start_vm(GtkWidget *menu G_GNUC_UNUSED, VirtViewerWindow *self G_GNUC_UNUSED)
+virt_viewer_window_menu_start_vm(GtkWidget *menu G_GNUC_UNUSED, VirtViewerWindow *self)
 {
     printf("%s\n", (char *)__func__);
     do_action_on_vm_async("start", FALSE);
-    //virt_viewer_app_initial_connect(self->priv->app, NULL); // temp
+    // start connect atempts
+    RemoteViewer *remote_viewer = REMOTE_VIEWER(self->priv->app);
+    virt_viewer_start_reconnect_poll(remote_viewer);
 }
 
 G_MODULE_EXPORT void

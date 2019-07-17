@@ -55,12 +55,15 @@
 #include "virt-viewer-window.h"
 #include "virt-viewer-session.h"
 #include "virt-viewer-util.h"
+#include "remote-viewer.h"
 #ifdef HAVE_GTK_VNC
 #include "virt-viewer-session-vnc.h"
 #endif
 #ifdef HAVE_SPICE_GTK
 #include "virt-viewer-session-spice.h"
 #endif
+
+extern gboolean take_extern_credentials;
 
 gboolean doDebug = FALSE;
 
@@ -1403,7 +1406,9 @@ virt_viewer_app_deactivate(VirtViewerApp *self, gboolean connect_error)
         g_idle_add(virt_viewer_app_retryauth, self);
     } else {
         g_clear_object(&priv->session);
-        virt_viewer_app_deactivated(self, connect_error);
+        // Go to begining if no polling
+        if (!self->is_polling)
+            virt_viewer_app_deactivated(self, connect_error); // Повторный вызов начальной формы
     }
 }
 
@@ -1411,7 +1416,11 @@ static void
 virt_viewer_app_connected(VirtViewerSession *session G_GNUC_UNUSED,
                           VirtViewerApp *self)
 {
+    printf("%s \n", (char *)__func__);
     VirtViewerAppPrivate *priv = self->priv;
+
+    // lower flag to turn off polling
+    self->is_polling = FALSE;
 
     priv->connected = TRUE;
 
@@ -1420,8 +1429,6 @@ virt_viewer_app_connected(VirtViewerSession *session G_GNUC_UNUSED,
     else
         virt_viewer_app_show_status(self, _("Connected to graphic server"));
 }
-
-
 
 static void
 virt_viewer_app_initialized(VirtViewerSession *session G_GNUC_UNUSED,
@@ -1438,15 +1445,17 @@ virt_viewer_app_disconnected(VirtViewerSession *session G_GNUC_UNUSED, const gch
     VirtViewerAppPrivate *priv = self->priv;
     gboolean connect_error = !priv->connected && !priv->cancelled;
 
-    if (!priv->kiosk)
-        virt_viewer_app_hide_all_windows(self);
-    else if (priv->cancelled)
-        priv->authretry = TRUE;
+    if (!self->is_polling) {
+        if (!priv->kiosk)
+            virt_viewer_app_hide_all_windows(self);
+        else if (priv->cancelled)
+            priv->authretry = TRUE;
+    }
 
     if (priv->quitting)
         g_application_quit(G_APPLICATION(self));
 
-    if (connect_error) {
+    if (!self->is_polling && connect_error) {
         GtkWidget *dialog = virt_viewer_app_make_message_dialog(self,
             _("Unable to connect to the graphic server %s"), priv->pretty_address);
 
@@ -1454,8 +1463,9 @@ virt_viewer_app_disconnected(VirtViewerSession *session G_GNUC_UNUSED, const gch
         gtk_dialog_run(GTK_DIALOG(dialog));
         gtk_widget_destroy(dialog);
     }
+
     virt_viewer_app_set_usb_options_sensitive(self, FALSE);
-    virt_viewer_app_deactivate(self, connect_error); // Повторный вызов начальной формы
+    virt_viewer_app_deactivate(self, connect_error);
 }
 
 static void virt_viewer_app_cancelled(VirtViewerSession *session,
@@ -1692,7 +1702,8 @@ virt_viewer_app_dispose (GObject *object)
 }
 
 static gboolean
-virt_viewer_app_default_start(VirtViewerApp *self, GError **error G_GNUC_UNUSED)
+virt_viewer_app_default_start(VirtViewerApp *self, GError **error G_GNUC_UNUSED,
+        RemoteViewerState remoteViewerState G_GNUC_UNUSED)
 {
     virt_viewer_window_show(self->priv->main_window);
     return TRUE;

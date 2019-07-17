@@ -42,6 +42,8 @@ typedef struct _VirtViewerAppPrivate VirtViewerAppPrivate;
 typedef struct {
     GtkApplication parent;
     VirtViewerAppPrivate *priv;
+
+    gboolean is_polling;
 } VirtViewerApp;
 
 typedef struct {
