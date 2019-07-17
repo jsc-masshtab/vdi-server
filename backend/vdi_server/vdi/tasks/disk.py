@@ -4,7 +4,7 @@ from dataclasses import dataclass
 
 from classy_async import Task
 
-from .base import CONTROLLER_IP, Token
+from .base import Token
 from .client import HttpClient
 from .ws import WsConnection
 

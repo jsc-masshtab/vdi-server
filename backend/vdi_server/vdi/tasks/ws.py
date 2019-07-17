@@ -3,7 +3,7 @@ from dataclasses import dataclass
 
 from tornado.websocket import websocket_connect
 
-from . import CONTROLLER_IP, Token
+from . import Token
 from classy_async import Awaitable, task
 import asyncio
 

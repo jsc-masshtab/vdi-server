@@ -8,7 +8,7 @@ from cached_property import cached_property as cached
 from classy_async import Task, Awaitable
 
 from . import disk
-from .base import CONTROLLER_IP, Token, UrlFetcher
+from .base import Token, UrlFetcher
 from .client import HttpClient
 from .ws import WsConnection
 
