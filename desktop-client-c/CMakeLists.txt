@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.14)
+cmake_minimum_required(VERSION 3.10)
 project(thin_client_veil C)
 
 set(CMAKE_C_STANDARD 99)
@@ -65,6 +65,8 @@ FILE(GLOB SRC_CODE
         src/utility/crashhandler.c
         src/utility/jsonhandler.h
         src/utility/jsonhandler.c
+        src/utility/settingsfile.c
+        src/utility/settingsfile.h
         
 # vdi client
         src/vdi_client/vdi_manager.h

@@ -114,7 +114,7 @@ virt_viewer_connect_timer(RemoteViewer *self)
     take_extern_credentials = TRUE;
     is_connected = virt_viewer_app_initial_connect(app, NULL);
 
-    is_started = VIRT_VIEWER_APP_CLASS(remote_viewer_parent_class)->start(app, NULL, AUTH_DIALOG);
+   // is_started = VIRT_VIEWER_APP_CLASS(remote_viewer_parent_class)->start(app, NULL, AUTH_DIALOG);
 
     printf("%s active %i created %i is_connected %i is_started %i \n",
            (char *)__func__, virt_viewer_app_is_active(app), created, is_connected, is_started);

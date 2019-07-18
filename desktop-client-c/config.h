@@ -15,6 +15,7 @@
 
 /* GETTEXT package name */
 #define GETTEXT_PACKAGE "thin_client_veil"
+#define  LOCALE_DIR "locale" // folder that placed next to the binary
 
 /* Define to 1 if you have the `bind_textdomain_codeset' function. */
 #define HAVE_BIND_TEXTDOMAIN_CODESET 1
