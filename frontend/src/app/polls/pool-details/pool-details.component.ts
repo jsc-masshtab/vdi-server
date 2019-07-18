@@ -56,13 +56,6 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
   ];
   private pool_id:number;
   public menuActive:string = 'info';
-  public crumbs: object[] = [
-    {
-      title: 'Пулы рабочих столов',
-      icon: 'desktop'  
-    }
-  ];
-
   public into_spinner:boolean = false;
 
   constructor(private activatedRoute: ActivatedRoute,
@@ -81,27 +74,12 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
     this.poolSub = this.service.getPool(id)
       .subscribe( (data) => {
         this.pool = data;
-        this.addCrumb(this.pool['name']);
+
         this.into_spinner = false;
       },
       (error)=> {
         this.into_spinner = false;
       });
-  }
-
-  private addCrumb(poolName:string): boolean {
-
-    if(this.name_pool === poolName) {
-      return;
-    }
-
-    this.name_pool = poolName;
-    this.crumbs[0]['route'] = 'pools';
-        
-    this.crumbs.push({
-      title: `Пул ${ poolName }`,
-      icon: 'desktop'
-    });
   }
 
   public removePool() {

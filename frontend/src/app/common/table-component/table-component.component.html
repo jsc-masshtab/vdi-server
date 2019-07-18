@@ -30,12 +30,8 @@
 </ng-container>
 
 <ng-container *ngIf="data && !data.length && !spinner || !data && !spinner ">
-  <div class="table-component">
-    <div class="table-area-object">
-      <div class="table-area-property">
-        <span>{{ empty }}</span>
-      </div>
-    </div>
+  <div class="table-no-data">
+    <fa-icon [icon]="['fas', 'meh']"></fa-icon>
   </div>
 </ng-container>
 

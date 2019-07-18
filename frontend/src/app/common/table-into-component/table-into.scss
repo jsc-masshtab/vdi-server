@@ -1,54 +1,40 @@
-.table-component {
+
+.table-area {
+    display: flex;
+    flex-direction: column;
+    font-size: 13px;
     background: #FFF;
-    box-shadow: 0 0 10px rgba(119, 136, 153,0.2);
+    width: 100%;
+}
+
+.table-area-object {
+    display: flex;
+    align-items: center;
+    border-bottom: 1px solid rgba(0,0,0,0.1);
+    color: rgba(0, 0, 0, 0.6);
+    cursor: default;
+    min-height: 25px;
+    padding: 3px;
+}
+
+.table-area-property {
+    display: flex;
+    align-items: center;
     width: 100%;
 
-    .table-area {
-        display: flex;
-        flex-direction: column;
-        font-size: 13px;
+
+    .table-area-title {
+        padding-left: 15px;
+        width: 25%;
     }
 
-    .table-area-object {
-        display: flex;
-        flex-direction: column;
-        border-bottom: 1px solid #DCDCDC;
-        color: #44505a;
-        cursor: default;
-
-        &:hover {
-            background: rgba(201, 209, 216, 0.3);
-
-            .table-area-title {
-                color: rgba(0, 0, 0, 1);
-            }
-        }
-    }
-
-    .table-area-property {
-        display: flex;
-        align-items: center;
-
-        > div {
-            border-right: 1px solid #DCDCDC;
-            padding: 5px;
-
-            &:last-child {
-                border-right: none;
-            }
-        }
-
-        .table-area-title {
-            padding-left: 15px;
-            flex:1;
-        }
-
-        .table-area-property {
-            font-weight: bold;
-            flex:3;
-        }
+    .table-area-value {
+        font-weight: bold;
+        margin-left: 10px;
+        width: 75%;
     }
 }
+
 
 .cdk-overlay-container {
     display: flex;

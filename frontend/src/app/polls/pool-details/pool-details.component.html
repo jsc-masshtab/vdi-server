@@ -1,17 +1,29 @@
 
 
-<vdi-breadcrumbs [data]="crumbs"></vdi-breadcrumbs>
+
       
-<div class="resourse-into" *ngIf="!into_spinner">
-    <div class="panel-btn-into">
-        <button (click)="removePool()"><fa-icon [icon]="['fas','trash-alt']" size="xs"></fa-icon><span class="name">Удалить</span></button>
+<div class="details-wrap" *ngIf="!into_spinner">
+
+    <div class="details-control-panel">
+        <button (click)="getAllPools()" class="btn-refresh"><fa-icon [icon]="['fas','sync-alt']"></fa-icon></button>
+        <button (click)="removePool()" class="btn-control"><fa-icon [icon]="['fas','trash-alt']" size="xs"></fa-icon><span class="name">Удалить</span></button>
     </div>
-    <ul class="menu">
-        <li (click)="routeTo('info')" [class.active]="menuActive === 'info'" title="Информация">Информация</li>
-        <li (click)="routeTo('vms')" [class.active]="menuActive === 'vms'" title="Виртуальные машины">Виртуальные машины</li>
-    </ul>
-    <vdi-table-into [data]="pool" [collection]="collection" *ngIf="menuActive === 'info'"></vdi-table-into>
-    <vdi-table-component [data]="pool?.state?.available" [collection]="collection_vms" *ngIf="menuActive === 'vms'" empty=" - нет виртуальных машин - " ></vdi-table-component> 
+
+    <div class="details-row">
+        <ul class="details-menu">
+            <li (click)="routeTo('info')" [class.active]="menuActive === 'info'" title="Информация">Информация</li>
+            <li (click)="routeTo('vms')" [class.active]="menuActive === 'vms'" title="Виртуальные машины">Виртуальные машины</li>
+        </ul>
+        
+        <div class="details-slide">
+            <div class="details-header">Информация о пулах рабочих столов</div>
+            <div class="details-into">
+                <vdi-table-into [data]="pool" [collection]="collection" *ngIf="menuActive === 'info'"></vdi-table-into>
+                <vdi-table-component [data]="pool?.state?.available" [collection]="collection_vms" *ngIf="menuActive === 'vms'" empty=" - нет виртуальных машин - " ></vdi-table-component> 
+            </div>     
+        </div>
+    </div>
+
 </div>
 
 <div *ngIf="into_spinner" class="cdk-overlay-container">

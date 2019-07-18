@@ -1,18 +1,17 @@
-<div class="table-component">
-  <div class="table-area">
-    <div *ngFor="let obj of collection" class="table-area-object">   <!--строка-->
-      <div class="table-area-property" > <!--столбец-->
-        <div class="table-area-title">
-          <span>{{ obj.title }}</span>
-        </div>
-        <div class="table-area-property">
-          <span *ngIf="obj.property_lv2 && data[obj.property]">{{ data[obj.property][obj.property_lv2] || '--' }}</span>
-          <span *ngIf="!obj.property_lv2 && !obj.property_array">{{ data[obj.property] || '--' }}</span>
-          <span *ngIf="obj.property_array && data[obj.property_array]">{{ data[obj.property_array].length || '--' }}</span>
 
-          <span *ngIf="obj.property_lv2 && !data[obj.property] || obj.property_array && !data[obj.property_array]">--</span>
-        </div>
-      </div> 
-    </div>
+<div class="table-area">
+  <div *ngFor="let obj of collection" class="table-area-object">   <!--строка-->
+    <div class="table-area-property" > <!--столбец-->
+      <div class="table-area-title">
+        <span>{{ obj.title }}</span>
+      </div>
+      <div class="table-area-value">
+        <span *ngIf="obj.property_lv2 && data[obj.property]">{{ data[obj.property][obj.property_lv2] || '--' }}</span>
+        <span *ngIf="!obj.property_lv2 && !obj.property_array">{{ data[obj.property] || '--' }}</span>
+        <span *ngIf="obj.property_array && data[obj.property_array]">{{ data[obj.property_array].length || '--' }}</span>
+
+        <span *ngIf="obj.property_lv2 && !data[obj.property] || obj.property_array && !data[obj.property_array]">--</span>
+      </div>
+    </div> 
   </div>
 </div>

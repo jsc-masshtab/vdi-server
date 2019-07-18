@@ -49,12 +49,12 @@
 
     <label class="field">
       <p class="field-name">Начальное количество ВМ</p>
-      <input type="number" formControlName="initial_size">
+      <input type="number" formControlName="initial_size" min="0">
     </label>
 
     <label class="field">
       <p class="field-name">Количество создаваемых ВМ</p>
-      <input type="number" formControlName="reserve_size">
+      <input type="number" formControlName="reserve_size"  min="0">
     </label>
   </div>
 
