@@ -1415,8 +1415,9 @@ virt_viewer_app_connected(VirtViewerSession *session G_GNUC_UNUSED,
     printf("%s \n", (char *)__func__);
     VirtViewerAppPrivate *priv = self->priv;
 
-    // lower flag to turn off polling
-    self->is_polling = FALSE;
+    // turn off polling
+    RemoteViewer *remote_viewer = REMOTE_VIEWER(self);
+    virt_viewer_stop_reconnect_poll(remote_viewer);
 
     priv->connected = TRUE;
 

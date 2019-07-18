@@ -1145,11 +1145,12 @@ virt_viewer_window_menu_change_cd_activate(GtkWidget *menu G_GNUC_UNUSED,
 }
 
 G_MODULE_EXPORT void
-virt_viewer_window_menu_switch_off(GtkWidget *menu, VirtViewerWindow *self)
+virt_viewer_window_menu_switch_off(GtkWidget *menu G_GNUC_UNUSED, VirtViewerWindow *self)
 {
     printf("%s\n", (char *)__func__);
     // turn off polling if its in process
-    self->priv->app->is_polling = FALSE;
+    RemoteViewer *remote_viewer = REMOTE_VIEWER(self->priv->app);
+    virt_viewer_stop_reconnect_poll(remote_viewer);
 
     virt_viewer_window_hide(self);
     virt_viewer_app_deactivate(self->priv->app, TRUE);

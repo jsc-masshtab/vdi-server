@@ -24,67 +24,113 @@ typedef enum
     VDI_WAITING_FOR_VM_FROM_POOL
 } VdiClientState;
 
-static GtkWidget *button_renew = NULL;
-static GtkWidget *gtk_flow_box = NULL;
-static GtkWidget *status_label = NULL;
-static GtkWidget *main_vm_spinner = NULL;
+typedef struct{
 
-static GArray *vm_widget_array = NULL;
+    GtkBuilder *builder;
 
-static gchar **url_ptr = NULL;
-static gchar **password_ptr = NULL;
-static ConnectionInfo *ci_ptr = NULL;
+    GtkWidget *window;
+    GtkWidget *button_quit;
+    GtkWidget *vm_main_box;
+    GtkWidget *button_renew;
+    GtkWidget *gtk_flow_box;
+    GtkWidget *status_label;
+    GtkWidget *main_vm_spinner;
 
+    GArray *vm_widget_array;
+
+    gchar **url_ptr;
+    gchar **password_ptr;
+
+    ConnectionInfo ci;
+} VdiManager;
+
+static VdiManager vdi_manager;
 
 // functions declarations
-static void on_vm_start_button_clicked(GtkButton *button G_GNUC_UNUSED, gpointer data G_GNUC_UNUSED);
-static void on_get_vdi_vm_data_finished(GObject *source_object G_GNUC_UNUSED, GAsyncResult *res,
-        gpointer user_data G_GNUC_UNUSED);
+static set_init_values(VdiManager *vdi_manager_ptr);
+static void set_vdi_client_state(VdiClientState vdi_client_state, const gchar *message, gboolean error_message);
+static void refreshVdiVmDataAsync();
+static void unregisterAllVm();
+static void registerVm(gint64 vmId, const gchar *vmName);
+static VdiVmWidget getVdiVmWidgetById(gint64 searchedVmId);
+static void shutdown_loop(GMainLoop *loop);
+
+static void on_get_vdi_vm_data_finished(GObject *source_object, GAsyncResult *res, gpointer user_data);
+static void onGetVmDFromPoolFinished(GObject *source_object, GAsyncResult *res, gpointer user_data);
+
+static gboolean on_window_deleted_cb(ConnectionInfo *ci);
+static void on_button_renew_clicked(GtkButton *button, gpointer data);
+static void on_button_quit_clicked(GtkButton *button, gpointer data);
+static void on_vm_start_button_clicked(GtkButton *button , gpointer data);
+
 
 /////////////////////////////////// work functions//////////////////////////////////////
+//  set init values for  VdiManager structure
+static set_init_values(VdiManager *vdi_manager_ptr)
+{
+    vdi_manager_ptr->builder = NULL;
+
+    vdi_manager_ptr->window = NULL;  
+    vdi_manager_ptr->button_quit = NULL;
+    vdi_manager_ptr->vm_main_box = NULL;
+    vdi_manager_ptr->button_renew = NULL;
+    vdi_manager_ptr->gtk_flow_box = NULL;
+    vdi_manager_ptr->status_label = NULL;
+    vdi_manager_ptr->main_vm_spinner = NULL;
+
+    vdi_manager_ptr->vm_widget_array = NULL;
+
+    vdi_manager_ptr->url_ptr = NULL;
+    vdi_manager_ptr->password_ptr = NULL;
+
+    vdi_manager_ptr->ci.response = FALSE;
+    vdi_manager_ptr->ci.loop = NULL;
+    vdi_manager_ptr->ci.entry = NULL;
+    vdi_manager_ptr->ci.dialog_window_response = GTK_RESPONSE_CANCEL;
+}
 // Set GUI state
 static void set_vdi_client_state(VdiClientState vdi_client_state, const gchar *message, gboolean error_message)
 {
     switch (vdi_client_state) {
         case VDI_RECEIVED_RESPONSE: {
-            if(main_vm_spinner)
-                gtk_widget_hide (GTK_WIDGET(main_vm_spinner));
-            if(gtk_flow_box)
-                gtk_widget_set_sensitive (gtk_flow_box, TRUE);
-            if(button_renew)
-                gtk_widget_set_sensitive (button_renew, TRUE);
+            if (vdi_manager.main_vm_spinner)
+                gtk_widget_hide (GTK_WIDGET(vdi_manager.main_vm_spinner));
+            if (vdi_manager.gtk_flow_box)
+                gtk_widget_set_sensitive (vdi_manager.gtk_flow_box, TRUE);
+            if (vdi_manager.button_renew)
+                gtk_widget_set_sensitive (vdi_manager.button_renew, TRUE);
             break;
         }
 
         case VDI_WAITING_FOR_VM_DATA: {
-            if(main_vm_spinner)
-                gtk_widget_show (GTK_WIDGET(main_vm_spinner));
-            if(gtk_flow_box)
-                gtk_widget_set_sensitive (gtk_flow_box, FALSE);
-            if(button_renew)
-                gtk_widget_set_sensitive (button_renew, FALSE);
+            if (vdi_manager.main_vm_spinner)
+                gtk_widget_show (GTK_WIDGET(vdi_manager.main_vm_spinner));
+            if (vdi_manager.gtk_flow_box)
+                gtk_widget_set_sensitive(vdi_manager.gtk_flow_box, FALSE);
+            if (vdi_manager.button_renew)
+                gtk_widget_set_sensitive(vdi_manager.button_renew, FALSE);
             break;
         }
 
         case VDI_WAITING_FOR_VM_FROM_POOL: {
-            if(gtk_flow_box)
-                gtk_widget_set_sensitive (gtk_flow_box, FALSE);
-            if(button_renew)
-                gtk_widget_set_sensitive (button_renew, FALSE);
+            if (vdi_manager.gtk_flow_box)
+                gtk_widget_set_sensitive(vdi_manager.gtk_flow_box, FALSE);
+            if (vdi_manager.button_renew)
+                gtk_widget_set_sensitive(vdi_manager.button_renew, FALSE);
             break;
         }
     }
 
     // message
-    if(status_label) {
+    if (vdi_manager.status_label) {
 
-        if(error_message) {
+        if (error_message) {
             gchar *finalMessage = g_strdup_printf("<span color=\"red\">%s</span>", message);
-            gtk_label_set_markup(GTK_LABEL (status_label), finalMessage);
+            gtk_label_set_markup(GTK_LABEL (vdi_manager.status_label), finalMessage);
             g_free(finalMessage);
 
-        } else{
-            gtk_label_set_text(GTK_LABEL(status_label), message);
+        } else {
+            gtk_label_set_text(GTK_LABEL(vdi_manager.status_label), message);
         }
     }
 }
@@ -97,42 +143,42 @@ static void refreshVdiVmDataAsync()
 // clear array of virtual machine widgets
 static void unregisterAllVm()
 {
-    if(vm_widget_array){
+    if (vdi_manager.vm_widget_array) {
         int i;
-        for(i = 0; i < vm_widget_array->len; ++i){
-            VdiVmWidget vdi_vm_widget = g_array_index(vm_widget_array, VdiVmWidget, i);
+        for (i = 0; i < vdi_manager.vm_widget_array->len; ++i) {
+            VdiVmWidget vdi_vm_widget = g_array_index(vdi_manager.vm_widget_array, VdiVmWidget, i);
             destroy_vdi_vm_widget(&vdi_vm_widget);
         }
 
-        g_array_free (vm_widget_array, TRUE);
-        vm_widget_array = NULL;
+        g_array_free(vdi_manager.vm_widget_array, TRUE);
+        vdi_manager.vm_widget_array = NULL;
     }
 }
 // create virtual machine widget and add to GUI
 static void registerVm(gint64 vmId, const gchar *vmName)
 {
     // create array if required
-    if(vm_widget_array == NULL)
-        vm_widget_array = g_array_new (FALSE, FALSE, sizeof (VdiVmWidget));
+    if (vdi_manager.vm_widget_array == NULL)
+        vdi_manager.vm_widget_array = g_array_new (FALSE, FALSE, sizeof (VdiVmWidget));
 
     // add element
-    VdiVmWidget vdi_vm_widget = build_vm_widget(vmId, vmName, gtk_flow_box);
-    g_array_append_val (vm_widget_array, vdi_vm_widget);
+    VdiVmWidget vdi_vm_widget = build_vm_widget(vmId, vmName, vdi_manager.gtk_flow_box);
+    g_array_append_val (vdi_manager.vm_widget_array, vdi_vm_widget);
     // connect start button to callback
     g_signal_connect(vdi_vm_widget.vm_start_button, "clicked", G_CALLBACK(on_vm_start_button_clicked), NULL);
 }
 
 // find a virtual machine widget by id
-VdiVmWidget getVdiVmWidgetById(gint64 searchedVmId)
+static VdiVmWidget getVdiVmWidgetById(gint64 searchedVmId)
 {
     VdiVmWidget searchedVdiVmWidget = {};
     int i;
 
-    if(vm_widget_array == NULL)
+    if (vdi_manager.vm_widget_array == NULL)
         return searchedVdiVmWidget;
 
-    for(i = 0; i < vm_widget_array->len; ++i){
-        VdiVmWidget vdi_vm_widget = g_array_index(vm_widget_array, VdiVmWidget, i);
+    for (i = 0; i < vdi_manager.vm_widget_array->len; ++i) {
+        VdiVmWidget vdi_vm_widget = g_array_index(vdi_manager.vm_widget_array, VdiVmWidget, i);
 
         gint64 curId = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(vdi_vm_widget.vm_start_button), "vmId"));
         if(curId == searchedVmId){
@@ -231,18 +277,18 @@ static void onGetVmDFromPoolFinished(GObject *source_object G_GNUC_UNUSED,
     printf("vmPort %ld \n", vmPort);
     printf("vmPassword %s \n", vmPassword);
 
-    free_memory_safely(url_ptr);
-    *url_ptr = g_strdup_printf("spice://%s:%ld", vmHost, vmPort);
-    g_strstrip(*url_ptr);
-    free_memory_safely(password_ptr);
-    *password_ptr = g_strdup(vmPassword);
+    free_memory_safely(vdi_manager.url_ptr);
+    *vdi_manager.url_ptr = g_strdup_printf("spice://%s:%ld", vmHost, vmPort);
+    g_strstrip(*vdi_manager.url_ptr);
+    free_memory_safely(vdi_manager.password_ptr);
+    *vdi_manager.password_ptr = g_strdup(vmPassword);
     //
     set_vdi_client_state(VDI_RECEIVED_RESPONSE, "Получена вм из пула", FALSE);
 
     //stop event loop
-    ci_ptr->response = TRUE;
-    ci_ptr->dialogWindowResponse = GTK_RESPONSE_OK;
-    shutdown_loop(ci_ptr->loop);
+    vdi_manager.ci.response = TRUE;
+    vdi_manager.ci.dialog_window_response = GTK_RESPONSE_OK;
+    shutdown_loop(vdi_manager.ci.loop);
 
     //
     g_object_unref (parser);
@@ -256,7 +302,7 @@ static gboolean on_window_deleted_cb(ConnectionInfo *ci)
 {
     printf("%s\n", (char *)__func__);
     ci->response = FALSE;
-    ci->dialogWindowResponse = GTK_RESPONSE_CLOSE;
+    ci->dialog_window_response = GTK_RESPONSE_CLOSE;
     shutdown_loop(ci->loop);
     return TRUE;
 }
@@ -274,7 +320,7 @@ static void on_button_quit_clicked(GtkButton *button G_GNUC_UNUSED, gpointer dat
     printf("%s\n", (char *)__func__);
     ConnectionInfo *ci = data;
     ci->response = FALSE;
-    ci->dialogWindowResponse = GTK_RESPONSE_CANCEL;
+    ci->dialog_window_response = GTK_RESPONSE_CANCEL;
     shutdown_loop(ci->loop);
 }
 // vm start button pressed callback
@@ -296,54 +342,41 @@ static void on_vm_start_button_clicked(GtkButton *button, gpointer data G_GNUC_U
 GtkResponseType vdi_manager_dialog(GtkWindow *main_window, gchar **uri, gchar **user G_GNUC_UNUSED, gchar **password)
 {
     printf("vdi_manager_dialog url %s \n", *uri);
-    url_ptr = uri;
-    //userPtr = user;
-    password_ptr = password;
-
-    GtkWidget *window, *button_quit, *vm_main_box;
-
-    GtkBuilder *builder;
-
-    ConnectionInfo ci = {
-            FALSE,
-            NULL,
-            NULL,
-            GTK_RESPONSE_CANCEL
-    };
-    ci_ptr = &ci;
-
+    set_init_values(&vdi_manager);
+    vdi_manager.url_ptr = uri;
+    vdi_manager.password_ptr = password;
     take_extern_credentials = TRUE;
 
     /* Create the widgets */
-    builder = virt_viewer_util_load_ui("vdi_manager_form.ui");
-    g_return_val_if_fail(builder != NULL, GTK_RESPONSE_NONE);
+    vdi_manager.builder = virt_viewer_util_load_ui("vdi_manager_form.ui");
+    g_return_val_if_fail(vdi_manager.builder != NULL, GTK_RESPONSE_NONE);
 
-    window = GTK_WIDGET(gtk_builder_get_object(builder, "vdi-main-window"));
+    vdi_manager.window = GTK_WIDGET(gtk_builder_get_object(vdi_manager.builder, "vdi-main-window"));
 
-    gtk_window_set_transient_for(GTK_WINDOW(window), main_window);
-    gtk_window_set_default_size(GTK_WINDOW(window), 500, 500);
+    gtk_window_set_transient_for(GTK_WINDOW(vdi_manager.window), main_window);
+    gtk_window_set_default_size(GTK_WINDOW(vdi_manager.window), 500, 500);
 
-    button_renew = GTK_WIDGET(gtk_builder_get_object(builder, "button-renew"));
+    vdi_manager.button_renew = GTK_WIDGET(gtk_builder_get_object(vdi_manager.builder, "button-renew"));
 
-    button_quit = GTK_WIDGET(gtk_builder_get_object(builder, "button-quit"));
-    vm_main_box = GTK_WIDGET(gtk_builder_get_object(builder, "vm_main_box"));
-    status_label = GTK_WIDGET(gtk_builder_get_object(builder, "status_label"));
+    vdi_manager.button_quit = GTK_WIDGET(gtk_builder_get_object(vdi_manager.builder, "button-quit"));
+    vdi_manager.vm_main_box = GTK_WIDGET(gtk_builder_get_object(vdi_manager.builder, "vm_main_box"));
+    vdi_manager.status_label = GTK_WIDGET(gtk_builder_get_object(vdi_manager.builder, "status_label"));
 
-    gtk_flow_box = gtk_flow_box_new ();
-    gtk_flow_box_set_max_children_per_line(GTK_FLOW_BOX(gtk_flow_box), 10);
-    gtk_flow_box_set_selection_mode (GTK_FLOW_BOX(gtk_flow_box), GTK_SELECTION_NONE);
-    gtk_flow_box_set_column_spacing (GTK_FLOW_BOX(gtk_flow_box), 6);
-    gtk_box_pack_start(GTK_BOX(vm_main_box), gtk_flow_box, FALSE, TRUE, 0);
+    vdi_manager.gtk_flow_box = gtk_flow_box_new();
+    gtk_flow_box_set_max_children_per_line(GTK_FLOW_BOX(vdi_manager.gtk_flow_box), 10);
+    gtk_flow_box_set_selection_mode (GTK_FLOW_BOX(vdi_manager.gtk_flow_box), GTK_SELECTION_NONE);
+    gtk_flow_box_set_column_spacing (GTK_FLOW_BOX(vdi_manager.gtk_flow_box), 6);
+    gtk_box_pack_start(GTK_BOX(vdi_manager.vm_main_box), vdi_manager.gtk_flow_box, FALSE, TRUE, 0);
 
-    main_vm_spinner = GTK_WIDGET(gtk_builder_get_object(builder, "main_vm_spinner"));
+    vdi_manager.main_vm_spinner = GTK_WIDGET(gtk_builder_get_object(vdi_manager.builder, "main_vm_spinner"));
 
     // connects
-    g_signal_connect_swapped(window, "delete-event", G_CALLBACK(on_window_deleted_cb), &ci);
-    g_signal_connect(button_renew, "clicked", G_CALLBACK(on_button_renew_clicked), &ci);
-    g_signal_connect(button_quit, "clicked", G_CALLBACK(on_button_quit_clicked), &ci);
+    g_signal_connect_swapped(vdi_manager.window, "delete-event", G_CALLBACK(on_window_deleted_cb), &vdi_manager.ci);
+    g_signal_connect(vdi_manager.button_renew, "clicked", G_CALLBACK(on_button_renew_clicked), &vdi_manager.ci);
+    g_signal_connect(vdi_manager.button_quit, "clicked", G_CALLBACK(on_button_quit_clicked), &vdi_manager.ci);
 
-    gtk_window_set_position (GTK_WINDOW(window), GTK_WIN_POS_CENTER);
-    gtk_widget_show_all(window);
+    gtk_window_set_position (GTK_WINDOW(vdi_manager.window), GTK_WIN_POS_CENTER);
+    gtk_widget_show_all(vdi_manager.window);
     
     // Пытаемся соединиться с vdi и получить список машин. Получив список машин нужно сгенерить
     // соответствующие кнопки  в скрол области.
@@ -351,22 +384,22 @@ GtkResponseType vdi_manager_dialog(GtkWindow *main_window, gchar **uri, gchar **
     refreshVdiVmDataAsync();
 
     // event loop
-    ci.loop = g_main_loop_new(NULL, FALSE);
-    g_main_loop_run(ci.loop);
+    vdi_manager.ci.loop = g_main_loop_new(NULL, FALSE);
+    g_main_loop_run(vdi_manager.ci.loop);
 
-    if (ci.response == FALSE)
+    if (vdi_manager.ci.response == FALSE)
         *uri = NULL;
 
     // clear
     cancell_pending_requests();
     unregisterAllVm();
-    g_object_unref(builder);
-    gtk_widget_destroy(window);
+    g_object_unref(vdi_manager.builder);
+    gtk_widget_destroy(vdi_manager.window);
 
-    button_renew = NULL;
-    gtk_flow_box = NULL;
-    status_label = NULL;
-    main_vm_spinner = NULL;
+    vdi_manager.button_renew = NULL;
+    vdi_manager.gtk_flow_box = NULL;
+    vdi_manager.status_label = NULL;
+    vdi_manager.main_vm_spinner = NULL;
 
-    return ci.dialogWindowResponse;
+    return vdi_manager.ci.dialog_window_response;
 }

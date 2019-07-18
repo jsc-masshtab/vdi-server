@@ -47,6 +47,8 @@ async def get_vm(request):
             [(id,)] = vms
             from vdi.tasks.vm import GetDomainInfo
             info = await GetDomainInfo(controller_ip=controller_ip, domain_id=id)
+
+            await thin_client.PrepareVm(controller_ip=controller_ip, domain_id=id)
             return JSONResponse({
                 'host': controller_ip,
                 'port': info['remote_access_port'],
@@ -61,6 +63,7 @@ async def get_vm(request):
         qu = "update vm set username = $1 where id = $2", user, domain['id']
         await conn.fetch(*qu)
         pool.on_vm_taken()
+
         info = await thin_client.PrepareVm(controller_ip=controller_ip, domain_id=domain['id'])
         return JSONResponse({
             'host': controller_ip,

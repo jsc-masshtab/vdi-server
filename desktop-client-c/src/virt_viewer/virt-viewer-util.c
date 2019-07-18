@@ -720,7 +720,7 @@ configerror:
 
 void free_memory_safely(gchar **string_ptr){
 
-    if(*string_ptr) {
+    if(string_ptr && *string_ptr) {
         g_free(*string_ptr);
         *string_ptr = NULL;
     }

@@ -286,7 +286,7 @@ void execute_async_task(GTaskThreadFunc task_func, GAsyncReadyCallback callback,
     if(task_data)
         g_task_set_task_data(task, task_data, NULL);
     g_task_run_in_thread(task, task_func);
-    g_object_unref (task); // ?
+    g_object_unref (task);
 }
 
 void do_action_on_vm_async(const gchar *actionStr, gboolean isForced)

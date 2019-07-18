@@ -176,10 +176,6 @@ remote_viewer_deactivated(VirtViewerApp *app, gboolean connect_error)
         }
     }
 
-    // if reconnect required then start reconnect timer
-    //if(FALSE)
-    //    virt_viewer_start_reconnect_poll(self);
-    // else
     VIRT_VIEWER_APP_CLASS(remote_viewer_parent_class)->deactivated(app, connect_error);
 }
 
@@ -400,14 +396,14 @@ retry_dialog:
     {
         VirtViewerWindow *main_window = virt_viewer_app_get_main_window(app);
         // Забираем из ui адрес и порт
-        GtkResponseType dialogWindowResponse =
+        GtkResponseType dialog_window_response =
             remote_viewer_connect_dialog(virt_viewer_window_get_window(main_window), &guri, &user, &password,
                     &ip, &port);
 
-        if(dialogWindowResponse == GTK_RESPONSE_CANCEL) {
+        if(dialog_window_response == GTK_RESPONSE_CANCEL) {
             return FALSE;
         }
-        else if(dialogWindowResponse == GTK_RESPONSE_CLOSE) {
+        else if(dialog_window_response == GTK_RESPONSE_CLOSE) {
             g_application_quit(G_APPLICATION(app));
             return FALSE;
         }
@@ -430,13 +426,13 @@ retry_vdi_dialog:
     if(!opt_manual_mode){
 
         VirtViewerWindow *main_window = virt_viewer_app_get_main_window(app);
-        GtkResponseType dialogWindowResponse =
+        GtkResponseType dialog_window_response =
                 vdi_manager_dialog(virt_viewer_window_get_window(main_window), &guri, &user, &password);
 
-        if(dialogWindowResponse == GTK_RESPONSE_CANCEL) {
+        if(dialog_window_response == GTK_RESPONSE_CANCEL) {
             goto cleanup;
         }
-        else if(dialogWindowResponse == GTK_RESPONSE_CLOSE) {
+        else if(dialog_window_response == GTK_RESPONSE_CLOSE) {
             g_application_quit(G_APPLICATION(app));  
             return FALSE;
         }

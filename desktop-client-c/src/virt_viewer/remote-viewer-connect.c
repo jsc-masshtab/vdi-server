@@ -20,6 +20,7 @@
 
 #include <config.h>
 
+#include "settingsfile.h"
 #include "virt-viewer-session-spice.h"
 #include "remote-viewer-connect.h"
 #include "virt-viewer-util.h"
@@ -28,70 +29,11 @@
 
 #include <ctype.h>
 
-//gchar *username_from_remote_dialog = NULL;
-//gchar *password_from_remote_dialog = NULL;
-//gchar *ip_from_remote_dialog = NULL;
-//gchar *port_from_remote_dialog = NULL;
 
 extern gboolean opt_manual_mode;
 extern gboolean take_extern_credentials;
 
 static gboolean b_save_credentials_to_file = FALSE;
-static const gchar *ini_file_path = "veil_client_settings.ini";
-
-// read credentials_from_settings_file  todo: move to another file
-static gchar *
-read_from_settings_file(const gchar *group_name,  const gchar *key)
-{
-    GError *error = NULL;
-    gchar *str_value = NULL;;
-
-    GKeyFile *keyfile = g_key_file_new ();
-
-    if(!g_key_file_load_from_file(keyfile, ini_file_path,
-                                  G_KEY_FILE_KEEP_COMMENTS |
-                                  G_KEY_FILE_KEEP_TRANSLATIONS,
-                                  &error))
-    {
-        g_debug("%s", error->message);
-    }
-    else
-    {
-        str_value = g_key_file_get_string(keyfile, group_name, key, &error);
-    }
-
-    g_key_file_free(keyfile);
-
-    return str_value;
-}
-
-
-static void
-write_to_settings_file(const gchar *group_name,  const gchar *key, const gchar *str_value)
-{
-    if(str_value == NULL)
-        return;
-
-    GError *error = NULL;
-
-    GKeyFile *keyfile = g_key_file_new ();
-
-    if(!g_key_file_load_from_file(keyfile, ini_file_path,
-                                  G_KEY_FILE_KEEP_COMMENTS |
-                                  G_KEY_FILE_KEEP_TRANSLATIONS,
-                                  &error))
-    {
-        g_debug("%s", error->message);
-    }
-    else
-    {
-        g_key_file_set_value(keyfile, group_name, key, str_value);
-    }
-
-    g_key_file_save_to_file(keyfile, ini_file_path, &error);
-    g_key_file_free(keyfile);
-}
-//--------------------
 
 // Перехватывается событие ввода текста. Игнорируется, если есть нецифры
 static void
@@ -127,7 +69,7 @@ static gboolean
 window_deleted_cb(ConnectionInfo *ci)
 {
     ci->response = FALSE;
-    ci->dialogWindowResponse = GTK_RESPONSE_CLOSE;
+    ci->dialog_window_response = GTK_RESPONSE_CLOSE;
     shutdown_loop(ci->loop);
     return TRUE;
 }
@@ -158,7 +100,7 @@ connect_button_clicked_cb(GtkButton *button G_GNUC_UNUSED, gpointer data)
     if (gtk_entry_get_text_length(GTK_ENTRY(ci->entry)) > 0)
     {
         ci->response = TRUE;
-        ci->dialogWindowResponse = GTK_RESPONSE_OK;
+        ci->dialog_window_response = GTK_RESPONSE_OK;
         shutdown_loop(ci->loop);
     }
 }
@@ -401,7 +343,7 @@ remote_viewer_connect_dialog(GtkWindow *main_window, gchar **uri, gchar **user, 
     g_object_unref(builder);
     gtk_widget_destroy(window);
 
-    return ci.dialogWindowResponse;
+    return ci.dialog_window_response;
 }
 
 
