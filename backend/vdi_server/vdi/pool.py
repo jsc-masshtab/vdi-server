@@ -1,23 +1,18 @@
-import json
-import uuid
-
 import asyncio
-from .utils import callback
-from .context_utils import enter_context
-
-from classy_async import g, wait
-
 from dataclasses import dataclass
 
 from cached_property import cached_property as cached
-
 from vdi.db import db
 from vdi.tasks import vm
-from asyncpg.connection import Connection
+
+from .utils import callback
+
 
 @dataclass()
 class Pool:
     params: dict
+
+    #FIXME use queue only for client
 
 
     @cached
@@ -29,21 +24,16 @@ class Pool:
         'TODO'
 
     @callback
-    @enter_context(lambda: db.connect())
-    async def on_vm_created(conn: Connection, self, fut):
-        if fut.exception():
-            # FIXME
-            print(fut.exception())
-            return
-        result = fut.result()
+    async def on_vm_created(self, result):
         domain_id = result['id']
         template = result['template']
         await self.queue.put(result)
         # insert into db
-        qu = f"""
-        insert into vm (id, pool_id, template_id) values ($1, $2, $3)
-        """, domain_id, self.params['id'], template['id']
-        await conn.execute(*qu)
+        async with db.connect() as conn:
+            qu = f"""
+            insert into vm (id, pool_id, template_id) values ($1, $2, $3)
+            """, domain_id, self.params['id'], template['id']
+            await conn.execute(*qu)
 
     def on_vm_taken(self):
         initial_size = self.params['initial_size']
@@ -52,7 +42,6 @@ class Pool:
 
     def add_domain(self):
         from vdi.tasks import vm
-        g.init()
         params = {
             'name_template': self.params['name'],
             'domain_id': self.params['template_id'],
@@ -61,7 +50,6 @@ class Pool:
             'node_id': self.params['node_id'],
         }
         task = vm.CopyDomain(**params).task
-        task.add_done_callback(self.on_vm_created)
         return task
 
     async def add_domains(self):
@@ -74,15 +62,17 @@ class Pool:
 
         for i in range(delta):
             d = await self.add_domain()
+            await self.on_vm_created(d)
             domains.append(d)
 
         return domains
 
-    async def load_vms(self, conn):
+    async def load_vms(self):
         vms = await vm.ListVms(controller_ip=self.params['controller_ip'])
         valid_ids = {v['id'] for v in vms}
         qu = f"SELECT * FROM vm WHERE pool_id = $1", self.params['id']
-        vms = await conn.fetch(*qu)
+        async with db.connect() as conn:
+            vms = await conn.fetch(*qu)
         return [
             dict(v.items()) for v in vms if v['id'] in valid_ids
         ]
@@ -99,13 +89,12 @@ class Pool:
             return ins
 
 
-    @enter_context(lambda: db.connect())
-    async def init(conn, self, id, add_missing=False):
+    async def init(self, id, add_missing=False):
         """
         Init the pool (possibly, after service restart)
         """
         assert not len(self.queue._queue)
-        vms = await self.load_vms(conn)
+        vms = await self.load_vms()
 
         for vm in vms:
             await self.queue.put(vm)

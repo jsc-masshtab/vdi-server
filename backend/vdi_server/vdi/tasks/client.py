@@ -14,8 +14,6 @@ AsyncHTTPClient.configure("tornado.simple_httpclient.SimpleAsyncHTTPClient",
                           )
 
 class FetchException(Exception):
-    object: dict
-
     def __init__(self, msg, url=None):
         if url:
             msg = f'{url}: {msg}'

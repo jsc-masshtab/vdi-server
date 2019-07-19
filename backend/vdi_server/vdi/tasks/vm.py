@@ -8,7 +8,7 @@ from cached_property import cached_property as cached
 from classy_async import Task, Awaitable
 
 from . import disk
-from .base import CONTROLLER_IP, Token, UrlFetcher
+from .base import Token, UrlFetcher
 from .client import HttpClient
 from .ws import WsConnection
 
@@ -200,6 +200,8 @@ class CopyDomain(UrlFetcher):
     datapool_id: str
     verbose_name: str = None
     name_template: str = None
+
+    cache_result = False # make a new domain every time this is called
 
     @cached
     def domain_name(self):

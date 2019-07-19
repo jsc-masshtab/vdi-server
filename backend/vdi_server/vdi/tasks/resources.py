@@ -1,18 +1,14 @@
-import json
-import uuid
+import socket
 from dataclasses import dataclass
-from classy_async import Task
-
-from .base import CONTROLLER_IP, Token
-from .client import HttpClient
-from .ws import WsConnection
-
-from . import UrlFetcher
-
 
 from cached_property import cached_property as cached
+from classy_async import Task, wait
 
-from pathlib import Path
+from vdi.db import db
+
+from . import UrlFetcher, Token
+from .client import FetchException
+
 
 @dataclass()
 class ListClusters(UrlFetcher):
@@ -94,3 +90,75 @@ class ListDatapools(UrlFetcher):
 
         return pools
 
+
+class ValidationError(Exception):
+    pass
+
+
+@dataclass()
+class ValidateResources(Task):
+    cluster_id: str
+    node_id: str
+    controller_ip: str
+
+    async def run(self):
+        if self.cluster_id and not self.node_id:
+            try:
+                await FetchCluster(controller_ip=self.controller_ip, cluster_id=self.cluster_id)
+                return True
+            except (FetchException, socket.gaierror) as ex:
+                return False
+        try:
+            node = await FetchNode(controller_ip=self.controller_ip, node_id=self.node_id)
+        except (FetchException, socket.gaierror) as ex:
+            return False
+        if node['cluster']['id'] != self.cluster_id:
+            raise ValidationError
+        return True
+
+
+class NoControllers(Exception):
+    pass
+
+
+@dataclass()
+class DiscoverController(Task):
+    cluster_id: str = None
+    node_id: str = None
+
+    async def run(self):
+        controllers = await ListControllers()
+        if not self.cluster_id and not self.node_id:
+            [one] = controllers
+            return one['ip']
+        tasks = {
+            co['ip']: ValidateResources(controller_ip=co['ip'], node_id=self.node_id, cluster_id=self.cluster_id)
+            for co in controllers
+        }
+        async for controller_ip, ok in wait(**tasks).items():
+            if ok:
+                return controller_ip
+
+
+
+class ListControllers(Task):
+
+    async def run(self):
+        async with db.connect() as conn:
+            default = await conn.fetch("SELECT ip FROM default_controller")
+            if default:
+                [(default,)] = default
+            else:
+                default = None
+            query = "SELECT ip, description from controller"
+            items = await conn.fetch(query)
+        li = []
+        for d in items:
+            d = dict(d.items())
+            d['default'] = d['ip'] == default
+            try:
+                await Token(controller_ip=d['ip'])
+            except (FetchException, socket.gaierror) as ex:
+                continue
+            li.append(d)
+        return li

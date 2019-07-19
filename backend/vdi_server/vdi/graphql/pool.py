@@ -1,27 +1,19 @@
 import asyncio
-
-import graphene
 import json
-from asyncpg.connection import Connection
-from cached_property import cached_property as cached
-
-from ..db import db
-from ..pool import Pool
-
-from .util import get_selections
-from .users import UserType
-
 from typing import List
 
-
-# TODO TemplateType == VmType
-
-from vdi.tasks import vm, resources
-
+import graphene
+from cached_property import cached_property as cached
 from classy_async import wait
-from vdi.context_utils import enter_context
-
 from vdi.settings import settings as settings_file
+from vdi.tasks import vm
+from vdi.tasks.resources import DiscoverController, NoControllers
+
+
+from .users import UserType
+from .util import get_selections
+from ..db import db
+from ..pool import Pool
 
 
 class TemplateType(graphene.ObjectType):
@@ -71,28 +63,25 @@ class PoolType(graphene.ObjectType):
     users = graphene.List(UserType)
     vms = graphene.List(lambda: VmType)
 
-    sql_fields = ['id', 'template_id', 'initial_size', 'reserve_size', 'name']
+    @graphene.Field
+    def controller():
+        from vdi.graphql.resources import ControllerType
+        return ControllerType
 
-    @cached
-    def pool_id(self):
-        raise NotImplementedError
+    sql_fields = ['id', 'template_id', 'initial_size', 'reserve_size', 'name', 'controller_ip']
 
     def resolve_state(self, info):
-        if self.pool_id not in Pool.instances:
-            state = PoolState(running=RunningState.STOPPED)
-            state.controller_ip = self.controller_ip
-            state.pool_id = self.pool_id
+        if self.id not in Pool.instances:
+            state = PoolState(running=RunningState.STOPPED, pool=self)
             return state
-        pool = Pool.instances[self.pool_id]
-        state = PoolState(running=RunningState.RUNNING)
-        state.pool_id = self.pool_id
-        state.controller_ip = self.controller_ip
+        pool = Pool.instances[self.id]
+        state = PoolState(running=RunningState.RUNNING, pool=self)
         return state
 
     async def resolve_vms(self, info):
         state = self.resolve_state(None)
-        return await state.resolve_available(info)
-
+        vms = await state.resolve_available(info)
+        return vms
 
 class VmState(graphene.Enum):
     UNDEFINED = 0
@@ -108,12 +97,17 @@ class VmType(graphene.ObjectType):
     template = graphene.Field(TemplateType)
     user = graphene.Field(UserType)
     state = graphene.Field(VmState)
+    pool = graphene.Field(PoolType)
 
     #TODO cached info?
 
     selections: List[str]
     sql_data: dict = None
 
+
+    @cached
+    def controller_ip(self):
+        return self.pool.controller.ip
 
     async def get_sql_data(self):
         sql_fields = {'template', 'user'}
@@ -143,17 +137,17 @@ class VmType(graphene.ObjectType):
     async def resolve_node(self, info):
         selected = get_selections(info)
         for key in selected:
-            if not hasattr(self, key):
+            if not hasattr(self.node, key):
                 break
         else:
-            return self
+            return self.node
         from vdi.tasks.resources import FetchNode
-        if self.controller_ip is None:
-            from vdi.graphql.resources import NodeType, Resources, get_controller_ip
-            self.controller_ip = await get_controller_ip()
+        from vdi.graphql.resources import NodeType
         node = await FetchNode(controller_ip=self.controller_ip, node_id=self.node.id)
-        obj = Resources._make_type(NodeType, node)
-        obj.controller_ip = self.controller_ip
+        from vdi.graphql.resources import ControllerType
+        controller = ControllerType(ip=self.controller_ip)
+        obj = controller._make_type(NodeType, node)
+        obj.controller = controller
         return obj
 
     async def resolve_template(self, info):
@@ -165,17 +159,11 @@ class VmType(graphene.ObjectType):
         template_id = self.sql_data['template_id']
         if get_selections(info) == ['id']:
             return TemplateType(id=template_id)
-        if self.controller_ip is None:
-            from vdi.graphql.resources import get_controller_ip
-            self.controller_ip = await get_controller_ip()
         from vdi.tasks.vm import GetDomainInfo
         template = await GetDomainInfo(controller_ip=self.controller_ip, domain_id=template_id)
         return TemplateType(id=template_id, info=template, name=template['verbose_name'])
 
     async def resolve_state(self, info):
-        if self.controller_ip is None:
-            from vdi.graphql.resources import NodeType, Resources, get_controller_ip
-            self.controller_ip = await get_controller_ip()
         if self.info is None:
             from vdi.tasks.vm import GetDomainInfo
             self.info = await GetDomainInfo(controller_ip=self.controller_ip, domain_id=self.id)
@@ -183,7 +171,6 @@ class VmType(graphene.ObjectType):
         return VmState.get(val)
 
     info: dict = None
-    controller_ip: str = None
 
 
 class PoolSettingsFields(graphene.AbstractType):
@@ -207,18 +194,20 @@ class PoolSettingsInput(graphene.InputObjectType, PoolSettingsFields):
 class PoolState(graphene.ObjectType):
     running = graphene.Field(RunningState)
     available = graphene.List(VmType)
+    pool = graphene.Field(PoolType)
 
-    controller_ip = None
-    pool_id: int
+    @cached
+    def controller_ip(self):
+        return self.pool.controller.ip
 
     async def resolve_available(self, info):
         async with db.connect() as conn:
-            qu = 'select node_id from pool where id = $1', self.pool_id
+            qu = 'select node_id from pool where id = $1', self.pool.id
             data = await conn.fetch(*qu)
             if not data:
                 return []
             [(node_id,)] = await conn.fetch(*qu)
-            qu = 'select id, template_id from vm where pool_id = $1', self.pool_id
+            qu = 'select id, template_id from vm where pool_id = $1', self.pool.id
             data = await conn.fetch(*qu)
         if not data:
             return []
@@ -241,19 +230,19 @@ class PoolState(graphene.ObjectType):
         li = []
         for domain in vms:
             node = NodeType(id=node_id)
-            obj = VmType(id=domain['id'], template=template, name=domain['verbose_name'], node=node)
+            obj = VmType(id=domain['id'], template=template, name=domain['verbose_name'], node=node, pool=self.pool)
             obj.selections = get_selections(info)
             li.append(obj)
         return li
 
 # TODO dict of pending tasks
 
+
 class AddPool(graphene.Mutation):
     class Arguments:
         name = graphene.String(required=True)
 
         template_id = graphene.String()
-        controller_ip = graphene.String()
         cluster_id = graphene.String()
         datapool_id = graphene.String()
         node_id = graphene.String()
@@ -263,46 +252,47 @@ class AddPool(graphene.Mutation):
 
         block = graphene.Boolean()
 
+    Output = PoolType
 
 
-    id = graphene.Int()
-    name = graphene.String()
-    state = graphene.Field(PoolState)
-    settings = graphene.Field(PoolSettings)
 
-    @enter_context(lambda: db.connect())
-    async def mutate(conn: Connection, self, info,
+
+    async def mutate(self, info,
                      name,
-                     template_id=None, controller_ip=None, cluster_id=None, datapool_id=None, node_id=None,
+                     template_id=None, cluster_id=None, datapool_id=None, node_id=None,
                      settings=(), initial_size=None, reserve_size=None, block=False):
         def get_setting(name):
             if name in settings:
                 return settings[name]
             return settings_file['pool'][name]
 
-        if controller_ip is None and 'controller_ip' not in settings:
-            from vdi.graphql.resources import get_controller_ip
-            controller_ip = await get_controller_ip()
-
         pool = {
             'initial_size': initial_size or get_setting('initial_size'),
             'reserve_size': reserve_size or get_setting('reserve_size'),
-            'controller_ip': controller_ip or settings['controller_ip'],
             'cluster_id': cluster_id or settings['cluster_id'],
             'node_id': node_id or settings['node_id'],
             'datapool_id': datapool_id or settings['datapool_id'],
             'template_id': template_id or settings['template_id'],
             'name': name,
         }
+        controller_ip = await DiscoverController(cluster_id=pool['cluster_id'], node_id=pool['node_id'])
+        if controller_ip is None:
+            raise NoControllers
+        pool['controller_ip'] = controller_ip
+
         fields = ', '.join(pool.keys())
         values = ', '.join(f'${i+1}' for i in range(len(pool)))
         pool_query = f"INSERT INTO pool ({fields}) VALUES ({values}) RETURNING id", *pool.values()
-
-        [res] = await conn.fetch(*pool_query)
+        async with db.connect() as conn:
+            [res] = await conn.fetch(*pool_query)
         pool['id'] = res['id']
         ins = Pool(params=pool)
         Pool.instances[pool['id']] = ins
 
+        settings = PoolSettings(**{
+            'initial_size': pool['initial_size'],
+            'reserve_size': pool['reserve_size'],
+        })
         add_domains = ins.add_domains()
         if block:
             domains = await add_domains
@@ -320,14 +310,15 @@ class AddPool(graphene.Mutation):
         else:
             asyncio.create_task(add_domains)
             available = []
-        settings = PoolSettings(**{
-            'initial_size': pool['initial_size'],
-            'reserve_size': pool['reserve_size'],
-        })
         state = PoolState(available=available, running=True)
-        state.pool_id = pool['id']
-        state.controller_ip = controller_ip
-        return AddPool(id=pool['id'], state=state, settings=settings, name=name)
+        from vdi.graphql.resources import ControllerType
+        ret = PoolType(id=pool['id'], state=state, settings=settings, name=name, template_id=pool['template_id'],
+                       controller=ControllerType(ip=controller_ip))
+        state.pool = ret
+        for item in available:
+            item.pool = ret
+
+        return ret
 
 
 class WakePool(graphene.Mutation):
@@ -358,8 +349,7 @@ class RemovePool(graphene.Mutation):
     @classmethod
     async def do_remove(cls, pool_id, *, controller_ip):
         pool = await Pool.get_pool(pool_id)
-        async with db.connect() as conn:
-            vms = await pool.load_vms(conn)
+        vms = await pool.load_vms()
         vm_ids = [v['id'] for v in vms]
 
         tasks = [
@@ -383,10 +373,10 @@ class RemovePool(graphene.Mutation):
 
         return vm_ids
 
-    async def mutate(self, info, id, controller_ip=None, block=False):
-        if controller_ip is None:
-            from vdi.graphql.resources import get_controller_ip
-            controller_ip = await get_controller_ip()
+    async def mutate(self, info, id, block=False):
+        async with db.connect() as conn:
+            qu = 'select controller_ip from pool where id = $1', id
+            (controller_ip,) = await conn.fetch(*qu)
         task = RemovePool.do_remove(id, controller_ip=controller_ip)
         task = asyncio.create_task(task)
         selections = get_selections(info)
@@ -405,7 +395,7 @@ class PoolMixin:
 
     #TODO wake pools
 
-    async def _select_pool(self, info, id, name, conn: Connection):
+    async def _select_pool(self, info, id, name):
         selections = get_selections(info)
         settings_selections = get_selections(info, 'settings') or []
         if id:
@@ -424,7 +414,8 @@ class PoolMixin:
             return {}
 
         qu = f"SELECT {', '.join(fields + settings_selections)} FROM pool {where}", param
-        [pool] = await conn.fetch(*qu)
+        async with db.connect() as conn:
+            [pool] = await conn.fetch(*qu)
         dic = {
             f: pool[f] for f in fields
         }
@@ -434,35 +425,36 @@ class PoolMixin:
         dic['settings'] = PoolSettings(**settings)
         return dic
 
-    @enter_context(lambda: db.connect())
-    async def resolve_pool(conn: Connection, self, info, id=None, name=None, controller_ip=None):
-        if controller_ip is None:
-            from vdi.graphql.resources import get_controller_ip
-            controller_ip = await get_controller_ip()
-        dic = await PoolMixin._select_pool(self, info, id, name, conn=conn)
+    async def resolve_pool(self, info, id=None, name=None):
+        #TODO will be refactored
+
+        dic = await PoolMixin._select_pool(self, info, id, name)
         if not id:
             id = dic['id']
+        async with db.connect() as conn:
+            [(controller_ip,)] = await conn.fetch('select controller_ip from pool where id = $1', id)
         u_fields = get_selections(info, 'users') or ()
         u_fields_joined = ', '.join(f'u.{f}' for f in u_fields)
         if u_fields:
-            qu = f"""
-            SELECT {u_fields_joined}
-            FROM pools_users JOIN public.user as u ON  pools_users.username = u.username
-            WHERE pool_id = $1
-            """, id
+            async with db.connect() as conn:
+                qu = f"""
+                SELECT {u_fields_joined}
+                FROM pools_users JOIN public.user as u ON  pools_users.username = u.username
+                WHERE pool_id = $1
+                """, id
+                data = await conn.fetch(*qu)
             users = []
-            for u in await conn.fetch(*qu):
+            for u in data:
                 u = dict(zip(u_fields, u))
                 users.append(UserType(**u))
             dic['users'] = users
-        ret = PoolType(**dic)
-        ret.pool_id = id
-        ret.controller_ip = controller_ip
+        from vdi.graphql.resources import ControllerType
+        ret = PoolType(**dic, controller=ControllerType(ip=controller_ip))
         return ret
 
     #TODO fix users
     #TODO remove this
-    async def get_pools_users_map(self, u_fields, conn: Connection):
+    async def get_pools_users_map(self, u_fields):
         u_fields_prefixed = [f'u.{f}' for f in u_fields]
         fields = ['pool_id'] + u_fields_prefixed
         qu = f"""
@@ -470,7 +462,8 @@ class PoolMixin:
             FROM pools_users LEFT JOIN public.user as u ON pools_users.username =  u.username
             """
         map = {}
-        records = await conn.fetch(qu)
+        async with db.connect() as conn:
+            records = await conn.fetch(qu)
         for pool_id, *values in records:
             u = dict(zip(u_fields, values))
             map.setdefault(pool_id, []).append(UserType(**u))
@@ -478,25 +471,21 @@ class PoolMixin:
 
 
     #FIXME use resolve
-    @enter_context(lambda: db.connect())
-    async def resolve_pools(conn: Connection, self, info, controller_ip=None):
-        if controller_ip is None:
-            from vdi.graphql.resources import get_controller_ip
-            controller_ip = await get_controller_ip()
+    async def resolve_pools(self, info):
         selections = get_selections(info)
         settings_selections = get_selections(info, 'settings') or []
         fields = [
             f for f in selections
             if f in PoolType.sql_fields and f != 'id'
         ]
-        fields.insert(0, 'id')
+        fields = ['id', 'controller_ip'] + fields
         qu = f"SELECT {', '.join(fields + settings_selections)} FROM pool WHERE deleted IS NOT TRUE"
-
-        pools = await conn.fetch(qu)
+        async with db.connect() as conn:
+            pools = await conn.fetch(qu)
 
         u_fields = get_selections(info, 'users')
         if u_fields:
-            pools_users = await PoolMixin.get_pools_users_map(self, u_fields, conn=conn)
+            pools_users = await PoolMixin.get_pools_users_map(self, u_fields)
         items = []
         for pool in pools:
             p = {
@@ -509,8 +498,8 @@ class PoolMixin:
                 p['settings'] = PoolSettings(**settings)
             if u_fields:
                 p['users'] = pools_users[id]
-            pt = PoolType(**p)
-            pt.pool_id = pool['id']
-            pt.controller_ip = controller_ip
+            controller_ip = p.pop('controller_ip')
+            from vdi.graphql.resources import ControllerType
+            pt = PoolType(**p, controller=ControllerType(ip=controller_ip))
             items.append(pt)
         return items
