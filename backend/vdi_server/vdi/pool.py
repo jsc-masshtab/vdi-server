@@ -23,7 +23,6 @@ class Pool:
     def tasks(self):
         'TODO'
 
-    @callback
     async def on_vm_created(self, result):
         domain_id = result['id']
         template = result['template']
