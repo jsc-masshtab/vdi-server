@@ -137,16 +137,17 @@ class VmType(graphene.ObjectType):
     async def resolve_node(self, info):
         selected = get_selections(info)
         for key in selected:
-            if not hasattr(self, key):
+            if not hasattr(self.node, key):
                 break
         else:
-            return self
+            return self.node
         from vdi.tasks.resources import FetchNode
         from vdi.graphql.resources import NodeType
         node = await FetchNode(controller_ip=self.controller_ip, node_id=self.node.id)
-        co = self.pool.controller
-        obj = co._make_type(NodeType, node)
-        obj.controller = co
+        from vdi.graphql.resources import ControllerType
+        controller = ControllerType(ip=self.controller_ip)
+        obj = controller._make_type(NodeType, node)
+        obj.controller = controller
         return obj
 
     async def resolve_template(self, info):
@@ -310,6 +311,7 @@ class AddPool(graphene.Mutation):
             asyncio.create_task(add_domains)
             available = []
         state = PoolState(available=available, running=True)
+        from vdi.graphql.resources import ControllerType
         ret = PoolType(id=pool['id'], state=state, settings=settings, name=name, template_id=pool['template_id'],
                        controller=ControllerType(ip=controller_ip))
         state.pool = ret
@@ -446,6 +448,7 @@ class PoolMixin:
                 u = dict(zip(u_fields, u))
                 users.append(UserType(**u))
             dic['users'] = users
+        from vdi.graphql.resources import ControllerType
         ret = PoolType(**dic, controller=ControllerType(ip=controller_ip))
         return ret
 
@@ -496,6 +499,7 @@ class PoolMixin:
             if u_fields:
                 p['users'] = pools_users[id]
             controller_ip = p.pop('controller_ip')
+            from vdi.graphql.resources import ControllerType
             pt = PoolType(**p, controller=ControllerType(ip=controller_ip))
             items.append(pt)
         return items

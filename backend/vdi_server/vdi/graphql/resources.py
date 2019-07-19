@@ -10,7 +10,7 @@ from .util import get_selections
 from ..db import db
 from ..tasks import resources, FetchException, Token
 from ..tasks.vm import ListTemplates, ListVms
-from ..tasks.resources import ListControllers
+from ..tasks.resources import ListControllers, FetchNode, FetchCluster, DiscoverController
 
 
 
@@ -66,6 +66,7 @@ class NodeType(graphene.ObjectType):
     cluster = graphene.Field(lambda: ClusterType)
     datapools = graphene.List(lambda: DatapoolType)
     controller = graphene.Field(lambda: ControllerType)
+
 
 
     async def resolve_nodes(self, info):
@@ -148,8 +149,10 @@ class DatapoolType(graphene.ObjectType):
 
 
 
-class ListControllersMixin:
+class Resources:
     controllers = graphene.List(lambda: ControllerType)
+    node = graphene.Field(NodeType, id=graphene.String())
+    cluster = graphene.Field(ClusterType, id=graphene.String())
 
     async def resolve_controllers(self, info):
         objects = [
@@ -158,6 +161,23 @@ class ListControllersMixin:
         ]
         return objects
 
+    async def resolve_node(self, info, id):
+        controller_ip = await DiscoverController(node_id=id)
+        data = await FetchNode(controller_ip=controller_ip, node_id=id)
+        fields = {
+            k: v for k, v in data.items()
+            if k in NodeType._meta.fields
+        }
+        return NodeType(controller=ControllerType(ip=controller_ip), **fields)
+
+    async def resolve_cluster(self, info, id):
+        controller_ip = await DiscoverController(cluster_id=id)
+        data = await FetchCluster(controller_ip=controller_ip, cluster_id=id)
+        fields = {
+            k: v for k, v in data.items()
+            if k in ClusterType._meta.fields
+        }
+        return ClusterType(controller=ControllerType(ip=controller_ip), **fields)
 
 
 class AddController(graphene.Mutation):
@@ -218,16 +238,13 @@ class RemoveController(graphene.Mutation):
             pass
 
 
-    @enter_context(lambda: db.transaction())
-    async def mutate(conn: Connection, self, info, controller_ip=None):
-        if controller_ip is None:
-            #FIXME get default
-            controller_ip = await get_controller_ip()
-        await RemoveController._remove_pools(controller_ip=controller_ip)
-        query = "DELETE FROM default_controller WHERE ip = $1", controller_ip
-        await conn.fetch(*query)
-        query = f"DELETE FROM controller WHERE ip=$1", controller_ip
-        await conn.execute(*query)
+    async def mutate(self, info, controller_ip):
+        async with db.connect() as conn:
+            await RemoveController._remove_pools(controller_ip=controller_ip)
+            query = "DELETE FROM default_controller WHERE ip = $1", controller_ip
+            await conn.fetch(*query)
+            query = f"DELETE FROM controller WHERE ip=$1", controller_ip
+            await conn.execute(*query)
 
         return RemoveController(ok=True)
 
@@ -270,7 +287,7 @@ class ControllerType(graphene.ObjectType):
         objects = []
         for vm in vms:
             node = NodeType(id=vm['node']['id'], verbose_name=vm['node']['verbose_name'])
-            node.controller_ip = self.ip
+            node.controller = self
             obj = TemplateType(name=vm['verbose_name'], info=vm, id=vm['id'], node=node)
             obj.controller_ip = self.ip
             objects.append(obj)
@@ -302,9 +319,12 @@ class ControllerType(graphene.ObjectType):
             if vm['id'] not in vm_ids:
                 continue
             node = NodeType(id=vm['node']['id'], verbose_name=vm['node']['verbose_name'])
-            node.controller_ip = self.ip
+            node.controller = self
             pool_id = vm_ids[vm['id']]
-            pool_kwargs = PoolType(id=pool_id, controller=self) if pool_id else {}
+            if pool_id:
+                pool_kwargs = {'pool': PoolType(id=pool_id, controller=self)}
+            else:
+                pool_kwargs = {}
             obj = VmType(name=vm['verbose_name'], id=vm['id'], node=node, **pool_kwargs)
             obj.selections = get_selections(info)
             obj.info = vm

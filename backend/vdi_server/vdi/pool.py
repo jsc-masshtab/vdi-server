@@ -24,12 +24,7 @@ class Pool:
         'TODO'
 
     @callback
-    async def on_vm_created(self, fut):
-        if fut.exception():
-            # FIXME
-            print(fut.exception())
-            return
-        result = fut.result()
+    async def on_vm_created(self, result):
         domain_id = result['id']
         template = result['template']
         await self.queue.put(result)
@@ -55,7 +50,6 @@ class Pool:
             'node_id': self.params['node_id'],
         }
         task = vm.CopyDomain(**params).task
-        task.add_done_callback(self.on_vm_created)
         return task
 
     async def add_domains(self):
@@ -68,6 +62,7 @@ class Pool:
 
         for i in range(delta):
             d = await self.add_domain()
+            await self.on_vm_created(d)
             domains.append(d)
 
         return domains

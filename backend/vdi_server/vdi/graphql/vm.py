@@ -44,31 +44,3 @@ class PoolWizardMixin:
             'initial_size': global_settings['pool']['initial_size'],
             'reserve_size': global_settings['pool']['reserve_size'],
         })
-
-
-class TemplateMixin:
-    templates = graphene.List(TemplateType,
-                              cluster_id=graphene.String(), node_id=graphene.String())
-    vms = graphene.List(VmType,
-                        cluster_id=graphene.String(), node_id=graphene.String(),
-                        wild=graphene.Boolean())
-
-    async def resolve_templates(self, info, cluster_id=None, node_id=None):
-        controller_ip = await resources.DiscoverController(cluster_id=cluster_id, node_id=node_id)
-        if controller_ip is None:
-            raise resources.NoControllers
-        from .resources import ControllerType
-        co = ControllerType(ip=controller_ip)
-        return await co.resolve_templates(info, cluster_id=cluster_id, node_id=node_id)
-
-    async def resolve_vms(self, info, cluster_id=None, node_id=None, **kwargs):
-        # FIXME Token
-        controller_ip = await resources.DiscoverController(cluster_id=cluster_id, node_id=node_id)
-
-        if controller_ip is None:
-            raise resources.NoControllers
-        from .resources import ControllerType
-        co = ControllerType(ip=controller_ip)
-        return await co.resolve_vms(info, cluster_id=cluster_id, node_id=node_id, **kwargs)
-
-

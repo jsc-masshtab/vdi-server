@@ -201,6 +201,8 @@ class CopyDomain(UrlFetcher):
     verbose_name: str = None
     name_template: str = None
 
+    cache_result = False # make a new domain every time this is called
+
     @cached
     def domain_name(self):
         if self.verbose_name:

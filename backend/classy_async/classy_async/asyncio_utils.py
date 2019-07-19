@@ -174,12 +174,15 @@ class Task(Awaitable):
     @cached
     def task(self):
         tasks = g.tasks
-        if self.serialized in tasks:
+        if self.cache_result and self.serialized in tasks:
             return tasks[self.serialized]
         task = asyncio.create_task(self.co())
         task = asyncio.shield(task)
-        tasks[self.serialized] = task
+        if self.cache_result:
+            tasks[self.serialized] = task
         return task
+
+    cache_result = True
 
 
 def timeout(seconds):
