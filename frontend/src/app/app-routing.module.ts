@@ -56,11 +56,13 @@ const routes: Routes = [
   },
   {
     path: 'pools',
-    component: PoolsComponent
-  },
-  {
-    path: 'pools/:id',
-    component: PoolDetailsComponent
+    component: PoolsComponent,
+    children: [
+      {
+        path: ':id',
+        component: PoolDetailsComponent
+      }
+    ]
   },
   {
     path: '**',

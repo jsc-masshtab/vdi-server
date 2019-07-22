@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, HostListener,ViewChild,ElementRef} from '@angular/core';
 import { PoolsService } from './pools.service';
 import { PoolAddComponent } from './pool-add/pool-add.component';
 import { Router } from '@angular/router';
@@ -16,6 +16,11 @@ export class PoolsComponent implements OnInit {
 
   public pools: [];
   public spinner:boolean = false;
+  private pageHeightMinNumber: number = 315;
+	private pageHeightMin: string = '315px';
+	private pageHeightMax: string = '100%';
+  private pageHeight: string = '100%';
+  private pageRollup: boolean = false;
   private getPoolsSub: Subscription;
 
   public collection: object[] = [
@@ -44,14 +49,20 @@ export class PoolsComponent implements OnInit {
     }
   ];
 
-  public crumbs: object[] = [
-    {
-      title: 'Пулы рабочих столов',
-      icon: 'desktop'
-    }
-  ];
 
   constructor(private service: PoolsService,public dialog: MatDialog,private router: Router){}
+
+  @ViewChild('view') view:ElementRef;
+
+  @HostListener('window:resize', ['$event']) onResize(event) {
+		if(this.pageHeight == this.pageHeightMin) {
+			if((this.view.nativeElement.clientHeight - this.pageHeightMinNumber) < (this.pageHeightMinNumber + 250)) {
+				this.pageRollup = true;
+			} else {
+				this.pageRollup = false;
+			}
+		}
+	}
 
   ngOnInit() {
     this.getAllPools();
@@ -75,8 +86,31 @@ export class PoolsComponent implements OnInit {
       });
   }
 
+  private componentAdded(): void {
+		setTimeout(()=> {
+		//	this.routerActivated = true;
+			this.pageHeight = this.pageHeightMin;
+
+			if((this.view.nativeElement.clientHeight - this.pageHeightMinNumber) < (this.pageHeightMinNumber + 250)) {
+				this.pageRollup = true;
+			};
+		}, 0);
+	}
+
+	private componentRemoved(): void {
+		setTimeout(()=> {
+			//this.routerActivated = false;
+			this.pageHeight = this.pageHeightMax;
+			this.pageRollup = false;
+		}, 0);
+  }
+
   public routeTo(event): void {
     this.router.navigate([`pools/${event.id}`]);
+
+    setTimeout(()=>{
+      this.pageHeight = this.pageHeightMin;
+    }, 0);
   }
 
   ngOnDestroy() {
