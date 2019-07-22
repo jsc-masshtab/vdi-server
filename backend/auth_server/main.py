@@ -17,8 +17,6 @@ if settings['debug']:
     except:
         pass
 
-from vdi.context_utils import enter_context
-
 
 def store_refresh_token(*args, **kwargs):
     raise NotImplementedError
@@ -30,8 +28,7 @@ def store_refresh_token(*args, **kwargs):
     # save_users()
 
 
-@enter_context(lambda: db.connect())
-async def retrieve_user(conn, request, *args, **kwargs):
+async def retrieve_user(request, *args, **kwargs):
     user_id_key = 'username' # TODO imports
     if user_id_key in kwargs:
         user_id = kwargs.get(user_id_key)
@@ -42,9 +39,10 @@ async def retrieve_user(conn, request, *args, **kwargs):
             payload = request.app.auth.extract_payload(request)
         user_id = payload.get(user_id_key)
 
-    fields = ['username', 'email']
-    qu = f'''SELECT {' ,'.join(fields)} FROM public.user WHERE username = $1''', user_id
-    [usr] = await conn.fetch(*qu)
+    async with db.connect() as conn:
+        fields = ['username', 'email']
+        qu = f'''SELECT {' ,'.join(fields)} FROM public.user WHERE username = $1''', user_id
+        [usr] = await conn.fetch(*qu)
     return dict(usr.items())
 
 
@@ -53,17 +51,17 @@ def retrieve_refresh_token(request, *args, **kwargs):
     # user = request.app.auth.retrieve_user(request, **kwargs)
     # return user.refresh_token
 
-@enter_context(lambda: db.connect())
-async def authenticate(conn, request, *args, **kwargs):
+async def authenticate(request, *args, **kwargs):
     username = request.json.get("username", None)
     password = request.json.get("password", None)
 
     if not username or not password:
         raise exceptions.AuthenticationFailed("Missing username or password.")
 
-    fields = ['username', 'password', 'email']
-    qu = f"SELECT {', '.join(fields)} FROM public.user WHERE username = $1", username
-    users = await conn.fetch(*qu)
+    async with db.connect() as conn:
+        fields = ['username', 'password', 'email']
+        qu = f"SELECT {', '.join(fields)} FROM public.user WHERE username = $1", username
+        users = await conn.fetch(*qu)
 
     if not users:
         raise exceptions.AuthenticationFailed("User not found.")

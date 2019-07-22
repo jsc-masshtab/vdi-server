@@ -3,7 +3,6 @@ import socket
 import graphene
 from asyncpg.connection import Connection
 from classy_async import wait
-from vdi.context_utils import enter_context
 
 from .pool import PoolType, VmType, TemplateType
 from .util import get_selections
@@ -189,19 +188,19 @@ class AddController(graphene.Mutation):
     ok = graphene.Boolean()
 
     @classmethod
-    @enter_context(lambda: db.connect())
-    async def _add_controller(conn: Connection, cls, ip, set_default=False, description=None):
+    async def _add_controller(cls, ip, set_default=False, description=None):
+        await Token(controller_ip=ip)
         try:
             resp = await resources.ListClusters(controller_ip=ip)
         except FetchException:
             return AddController(ok=False)
 
-        query = f'''
-        INSERT INTO controller (ip, description) VALUES ($1, $2)
-        ON CONFLICT DO NOTHING
-        ''', ip, description
-
-        await conn.execute(*query)
+        async with db.connect() as conn:
+            query = f'''
+            INSERT INTO controller (ip, description) VALUES ($1, $2)
+            ON CONFLICT DO NOTHING
+            ''', ip, description
+            await conn.execute(*query)
 
         if set_default:
             [(exists,)] = await conn.fetch("SELECT COUNT(*) FROM default_controller")
