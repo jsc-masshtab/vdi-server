@@ -42,6 +42,9 @@
 #include "virt-viewer-app.h"
 #include "virt-viewer-util.h"
 #include "virt-viewer-timed-revealer.h"
+#include "remote-viewer.h"
+
+#include "vdi_api_session.h"
 
 //#include "remote-viewer-iso-list-dialog.h"
 
@@ -68,7 +71,14 @@ void virt_viewer_window_menu_file_smartcard_remove(GtkWidget *menu, VirtViewerWi
 void virt_viewer_window_menu_view_release_cursor(GtkWidget *menu, VirtViewerWindow *self);
 void virt_viewer_window_menu_preferences_cb(GtkWidget *menu, VirtViewerWindow *self);
 void virt_viewer_window_menu_change_cd_activate(GtkWidget *menu, VirtViewerWindow *self);
+// vm control
 void virt_viewer_window_menu_switch_off(GtkWidget *menu, VirtViewerWindow *self);
+void virt_viewer_window_menu_start_vm(GtkWidget *menu, VirtViewerWindow *self);
+void virt_viewer_window_menu_suspend_vm(GtkWidget *menu, VirtViewerWindow *self);
+void virt_viewer_window_menu_shutdown_vm(GtkWidget *menu, VirtViewerWindow *self);
+void virt_viewer_window_menu_shutdown_vm_force(GtkWidget *menu, VirtViewerWindow *self);
+void virt_viewer_window_menu_reboot_vm(GtkWidget *menu, VirtViewerWindow *self);
+void virt_viewer_window_menu_reboot_vm_force(GtkWidget *menu, VirtViewerWindow *self);
 
 /* Internal methods */
 static void virt_viewer_window_enable_modifiers(VirtViewerWindow *self);
@@ -1135,19 +1145,60 @@ virt_viewer_window_menu_change_cd_activate(GtkWidget *menu G_GNUC_UNUSED,
 }
 
 G_MODULE_EXPORT void
-virt_viewer_window_menu_switch_off(GtkWidget *menu, VirtViewerWindow *self)
+virt_viewer_window_menu_switch_off(GtkWidget *menu G_GNUC_UNUSED, VirtViewerWindow *self)
 {
-    printf("virt_viewer_window_menu_switch_off\n");
+    printf("%s\n", (char *)__func__);
+    // turn off polling if its in process
+    RemoteViewer *remote_viewer = REMOTE_VIEWER(self->priv->app);
+    virt_viewer_stop_reconnect_poll(remote_viewer);
 
-    virt_viewer_app_deactivate(self->priv->app, 0);
-    virt_viewer_app_hide_all_windows(self->priv->app);
-    GError *error = NULL;
+    virt_viewer_window_hide(self);
+    virt_viewer_app_deactivate(self->priv->app, TRUE);
+}
 
-    RemoteViewerState remoteViewerState = opt_manual_mode ? AUTH_DIALOG : VDI_DIALOG;
-    if (!virt_viewer_app_start(self->priv->app, &error, remoteViewerState)) {
-        g_clear_error(&error);
-        g_application_quit(G_APPLICATION(self->priv->app));
-    }
+G_MODULE_EXPORT void
+virt_viewer_window_menu_start_vm(GtkWidget *menu G_GNUC_UNUSED, VirtViewerWindow *self)
+{
+    printf("%s\n", (char *)__func__);
+    do_action_on_vm_async("start", FALSE);
+    // start connect atempts
+    RemoteViewer *remote_viewer = REMOTE_VIEWER(self->priv->app);
+    virt_viewer_start_reconnect_poll(remote_viewer);
+}
+
+G_MODULE_EXPORT void
+virt_viewer_window_menu_suspend_vm(GtkWidget *menu G_GNUC_UNUSED, VirtViewerWindow *self G_GNUC_UNUSED)
+{
+    printf("%s\n", (char *)__func__);
+    do_action_on_vm_async("suspend", FALSE);
+}
+
+G_MODULE_EXPORT void
+virt_viewer_window_menu_shutdown_vm(GtkWidget *menu G_GNUC_UNUSED, VirtViewerWindow *self G_GNUC_UNUSED)
+{
+    printf("%s\n", (char *)__func__);
+    do_action_on_vm_async("shutdown", FALSE);
+}
+
+G_MODULE_EXPORT void
+virt_viewer_window_menu_shutdown_vm_force(GtkWidget *menu G_GNUC_UNUSED, VirtViewerWindow *self G_GNUC_UNUSED)
+{
+    printf("%s\n", (char *)__func__);
+    do_action_on_vm_async("shutdown", TRUE);
+}
+
+G_MODULE_EXPORT void
+virt_viewer_window_menu_reboot_vm(GtkWidget *menu G_GNUC_UNUSED, VirtViewerWindow *self G_GNUC_UNUSED)
+{
+    printf("%s\n", (char *)__func__);
+    do_action_on_vm_async("reboot", FALSE);
+}
+
+G_MODULE_EXPORT void
+virt_viewer_window_menu_reboot_vm_force(GtkWidget *menu G_GNUC_UNUSED, VirtViewerWindow *self G_GNUC_UNUSED)
+{
+    printf("%s\n", (char *)__func__);
+    do_action_on_vm_async("reboot", TRUE);
 }
 
 static void

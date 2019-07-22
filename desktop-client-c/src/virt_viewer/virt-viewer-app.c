@@ -55,6 +55,7 @@
 #include "virt-viewer-window.h"
 #include "virt-viewer-session.h"
 #include "virt-viewer-util.h"
+#include "remote-viewer.h"
 #ifdef HAVE_GTK_VNC
 #include "virt-viewer-session-vnc.h"
 #endif
@@ -1381,28 +1382,28 @@ virt_viewer_app_deactivate(VirtViewerApp *self, gboolean connect_error)
 {
     VirtViewerAppPrivate *priv = self->priv;
 
-    if (!priv->active)
-        return;
+    if (priv->active) {
 
-    if (priv->session) {
-        virt_viewer_session_close(VIRT_VIEWER_SESSION(priv->session));
-    }
+        if (priv->session) {
+            virt_viewer_session_close(VIRT_VIEWER_SESSION(priv->session));
+        }
 
-    priv->connected = FALSE;
-    priv->active = FALSE;
-    priv->started = FALSE;
-#if 0
-    g_free(priv->pretty_address);
-    priv->pretty_address = NULL;
-#endif
-    priv->grabbed = FALSE;
-    virt_viewer_app_update_title(self);
+        priv->connected = FALSE;
+        priv->active = FALSE;
+        priv->started = FALSE;
+        priv->grabbed = FALSE;
+        virt_viewer_app_update_title(self);
 
-    if (priv->authretry) {
-        priv->authretry = FALSE;
-        g_idle_add(virt_viewer_app_retryauth, self);
-    } else {
-        g_clear_object(&priv->session);
+        if (priv->authretry) {
+            priv->authretry = FALSE;
+            g_idle_add(virt_viewer_app_retryauth, self);
+        } else {
+            g_clear_object(&priv->session);
+            // Go to begining if no polling
+            if (!self->is_polling)
+                virt_viewer_app_deactivated(self, connect_error);
+        }
+    } else { // If app is not active then just go to preveous state
         virt_viewer_app_deactivated(self, connect_error);
     }
 }
@@ -1411,7 +1412,12 @@ static void
 virt_viewer_app_connected(VirtViewerSession *session G_GNUC_UNUSED,
                           VirtViewerApp *self)
 {
+    printf("%s \n", (char *)__func__);
     VirtViewerAppPrivate *priv = self->priv;
+
+    // turn off polling
+    RemoteViewer *remote_viewer = REMOTE_VIEWER(self);
+    virt_viewer_stop_reconnect_poll(remote_viewer);
 
     priv->connected = TRUE;
 
@@ -1420,8 +1426,6 @@ virt_viewer_app_connected(VirtViewerSession *session G_GNUC_UNUSED,
     else
         virt_viewer_app_show_status(self, _("Connected to graphic server"));
 }
-
-
 
 static void
 virt_viewer_app_initialized(VirtViewerSession *session G_GNUC_UNUSED,
@@ -1438,15 +1442,17 @@ virt_viewer_app_disconnected(VirtViewerSession *session G_GNUC_UNUSED, const gch
     VirtViewerAppPrivate *priv = self->priv;
     gboolean connect_error = !priv->connected && !priv->cancelled;
 
-    if (!priv->kiosk)
-        virt_viewer_app_hide_all_windows(self);
-    else if (priv->cancelled)
-        priv->authretry = TRUE;
+    if (!self->is_polling) {
+        if (!priv->kiosk)
+            virt_viewer_app_hide_all_windows(self);
+        else if (priv->cancelled)
+            priv->authretry = TRUE;
+    }
 
     if (priv->quitting)
         g_application_quit(G_APPLICATION(self));
 
-    if (connect_error) {
+    if (!self->is_polling && connect_error) {
         GtkWidget *dialog = virt_viewer_app_make_message_dialog(self,
             _("Unable to connect to the graphic server %s"), priv->pretty_address);
 
@@ -1454,8 +1460,9 @@ virt_viewer_app_disconnected(VirtViewerSession *session G_GNUC_UNUSED, const gch
         gtk_dialog_run(GTK_DIALOG(dialog));
         gtk_widget_destroy(dialog);
     }
+
     virt_viewer_app_set_usb_options_sensitive(self, FALSE);
-    virt_viewer_app_deactivate(self, connect_error); // Повторный вызов начальной формы
+    virt_viewer_app_deactivate(self, connect_error);
 }
 
 static void virt_viewer_app_cancelled(VirtViewerSession *session,
@@ -1692,7 +1699,8 @@ virt_viewer_app_dispose (GObject *object)
 }
 
 static gboolean
-virt_viewer_app_default_start(VirtViewerApp *self, GError **error G_GNUC_UNUSED)
+virt_viewer_app_default_start(VirtViewerApp *self, GError **error G_GNUC_UNUSED,
+        RemoteViewerState remoteViewerState G_GNUC_UNUSED)
 {
     virt_viewer_window_show(self->priv->main_window);
     return TRUE;

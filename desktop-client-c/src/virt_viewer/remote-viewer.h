@@ -46,6 +46,9 @@ typedef struct {
     VirtViewerAppClass parent_class;
 } RemoteViewerClass;
 
+void virt_viewer_start_reconnect_poll(RemoteViewer *self);
+void virt_viewer_stop_reconnect_poll(RemoteViewer *self);
+
 GType remote_viewer_get_type (void);
 
 RemoteViewer *remote_viewer_new (void);

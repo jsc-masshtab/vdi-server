@@ -296,8 +296,9 @@ void virt_viewer_util_init(const char *appname)
     }
 #endif
 
-    setlocale(LC_ALL, "");
-    //bindtextdomain(GETTEXT_PACKAGE, LOCALE_DIR); solo fix
+    //setlocale(LC_ALL, "");
+    setlocale(LC_ALL, "Russian");
+    bindtextdomain(GETTEXT_PACKAGE, LOCALE_DIR);
     bind_textdomain_codeset(GETTEXT_PACKAGE, "UTF-8");
     textdomain(GETTEXT_PACKAGE);
 
@@ -720,7 +721,7 @@ configerror:
 
 void free_memory_safely(gchar **string_ptr){
 
-    if(*string_ptr) {
+    if(string_ptr && *string_ptr) {
         g_free(*string_ptr);
         *string_ptr = NULL;
     }

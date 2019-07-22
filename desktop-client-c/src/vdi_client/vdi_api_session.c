@@ -9,68 +9,33 @@
 #include <json-glib/json-glib.h>
 
 #include "vdi_api_session.h"
+#include "jsonhandler.h"
 
 //#define RESPONSE_BUFFER_SIZE 200
 #define OK_RESPONSE 200
 #define BAD_REQUEST 400
 #define AUTH_FAIL_RESPONSE 401
-#define VM_ID_UNKNOWN -1
-
-static gchar *vdi_username = NULL; // !!*
-static gchar *vdi_password = NULL; // !!*
-static gchar *vdi_ip = NULL;
-static gchar *vdi_port = NULL;
 
 static VdiSession vdiSession;
 
-gint64 currentVmId = VM_ID_UNKNOWN; // !!*
 
 // get token  (make post request)
 // set session header
 // make api requests
 
-void setVdiCredentials(const gchar *username, const gchar *password, const gchar *ip, const gchar *port)
-{
-    free_memory_safely(&vdi_username);
-    vdi_username = g_strdup(username);
+static void free_session_memory(){
 
-    free_memory_safely(&vdi_password);
-    vdi_password = g_strdup(password);
-
-    free_memory_safely(&vdi_ip);
-    vdi_ip = g_strdup(ip);
-
-    free_memory_safely(&vdi_port);
-    vdi_port = g_strdup(port);
-}
-
-void startSession()
-{
-    vdiSession.soupSession = soup_session_new();
-
-    vdiSession.api_url = g_strdup_printf("http://%s", vdi_ip);
-    vdiSession.auth_url = g_strdup_printf("%s:%s/auth/", vdiSession.api_url, vdi_port);
-    vdiSession.jwt = NULL;
-    currentVmId = VM_ID_UNKNOWN;
-}
-
-void stopSession()
-{
-    cancellPendingRequests();
-    g_object_unref(vdiSession.soupSession);
+    free_memory_safely(&vdiSession.vdi_username);
+    free_memory_safely(&vdiSession.vdi_password);
+    free_memory_safely(&vdiSession.vdi_ip);
+    free_memory_safely(&vdiSession.vdi_port);
 
     free_memory_safely(&vdiSession.api_url);
     free_memory_safely(&vdiSession.auth_url);
     free_memory_safely(&vdiSession.jwt);
-    currentVmId = VM_ID_UNKNOWN;
 }
 
-void cancellPendingRequests()
-{
-    soup_session_abort (vdiSession.soupSession);
-}
-
-void setupHeaderForApiCall(SoupMessage *msg)
+static void setup_header_for_api_call(SoupMessage *msg)
 {
     soup_message_headers_clear (msg->request_headers);
     gchar *authHeader = g_strdup_printf("jwt %s", vdiSession.jwt);
@@ -79,20 +44,24 @@ void setupHeaderForApiCall(SoupMessage *msg)
     soup_message_headers_append (msg->request_headers, "Content-Type", "application/json; charset=utf8");
 }
 
-guint sendMessage(SoupMessage *msg)
+static guint send_message(SoupMessage *msg)
 {
     static int count = 0;
     printf("Send_count: %i\n", ++count);
 
-    guint status = soup_session_send_message (vdiSession.soupSession, msg);
+    guint status = soup_session_send_message (vdiSession.soup_session, msg);
     printf("%s: Successfully sent \n", (char *)__func__);
     return status;
 }
 
-
-gboolean refreshVdiSessionToken()
+// Получаем токен
+static gboolean refresh_vdi_session_token()
 {
     printf("%s\n", (char *)__func__);
+
+    if(vdiSession.auth_url == NULL)
+        return FALSE;
+
     // clear token
     free_memory_safely(&vdiSession.jwt);
 
@@ -102,14 +71,14 @@ gboolean refreshVdiSessionToken()
         return FALSE;
 
     gchar *messageBodyStr = g_strdup_printf("{\"username\": \"%s\", \"password\": \"%s\"}",
-            vdi_username, vdi_password);
+                                            vdiSession.vdi_username, vdiSession.vdi_password);
 
     soup_message_set_request (msg, "application/x-www-form-urlencoded",
                               SOUP_MEMORY_COPY, messageBodyStr, strlen (messageBodyStr));
     g_free(messageBodyStr);
 
     // send message
-    sendMessage(msg);
+    send_message(msg);
 
     // parse response
     printf("msg->status_code %i\n", msg->status_code);
@@ -120,17 +89,88 @@ gboolean refreshVdiSessionToken()
     }
 
     JsonParser *parser = json_parser_new ();
-    JsonObject *object = getJsonObject(parser, msg->response_body->data);
+    JsonObject *object = get_json_object(parser, msg->response_body->data);
     if(object == NULL)
         return FALSE;
 
-    vdiSession.jwt = g_strdup (json_object_get_string_member (object, "access_token"));
+    free_memory_safely(&vdiSession.jwt);
+    vdiSession.jwt = g_strdup(json_object_get_string_member (object, "access_token"));
     printf("%s\n", vdiSession.jwt);
 
     g_object_unref(msg);
     g_object_unref (parser);
 
     return TRUE;
+}
+
+void start_vdi_session()
+{
+    if(vdiSession.is_active){
+        printf("%s: Session is already active\n", (char *)__func__);
+        return;
+    }
+
+    vdiSession.soup_session = soup_session_new();
+
+    vdiSession.vdi_username = NULL;
+    vdiSession.vdi_password = NULL;
+    vdiSession.vdi_ip = NULL;
+    vdiSession.vdi_port = NULL;
+
+    vdiSession.api_url = NULL;
+    vdiSession.auth_url = NULL;
+    vdiSession.jwt = NULL;
+
+    vdiSession.is_active = TRUE;
+    vdiSession.current_vm_id = VM_ID_UNKNOWN;
+}
+
+void stop_vdi_session()
+{
+    if(!vdiSession.is_active){
+        printf("%s: Session is not active\n", (char *)__func__);
+        return;
+    }
+
+    cancell_pending_requests();
+    g_object_unref(vdiSession.soup_session);
+
+    free_session_memory();
+
+    vdiSession.is_active = FALSE;
+    vdiSession.current_vm_id = VM_ID_UNKNOWN;
+}
+
+void cancell_pending_requests()
+{
+    soup_session_abort(vdiSession.soup_session);
+    // sleep to give the async tasks time to stop.
+    // They will stop almost immediately after cancell_pending_requests
+    g_usleep(20000);
+}
+
+void set_vdi_credentials(const gchar *username, const gchar *password, const gchar *ip, const gchar *port)
+{
+    free_session_memory();
+
+    vdiSession.vdi_username = g_strdup(username);
+    vdiSession.vdi_password = g_strdup(password);
+    vdiSession.vdi_ip = g_strdup(ip);
+    vdiSession.vdi_port = g_strdup(port);
+
+    vdiSession.api_url = g_strdup_printf("http://%s", vdiSession.vdi_ip);
+    vdiSession.auth_url = g_strdup_printf("%s:%s/auth/", vdiSession.api_url, vdiSession.vdi_port);
+    vdiSession.jwt = NULL;
+}
+
+void set_current_vm_id(gint64 current_vm_id)
+{
+    vdiSession.current_vm_id = current_vm_id;
+}
+
+gint64 get_current_vm_id()
+{
+    return vdiSession.current_vm_id;
 }
 
 /*
@@ -142,99 +182,119 @@ void gInputStreamToBuffer(GInputStream *inputStream, gchar *responseBuffer)
     responseBuffer[RESPONSE_BUFFER_SIZE - 1] = '\0'; // limit string for safety reasons
 }*/
 
-gchar * apiCall(const char *method, const char *uri_string)
+gchar *api_call(const char *method, const char *uri_string, const gchar *body_str)
 {
-    if(vdiSession.jwt == NULL)
-        refreshVdiSessionToken();
+    gchar *response_body_str = NULL;
 
-    gchar *responseBodyStr = NULL;
+    if(uri_string == NULL)
+        return response_body_str;
+
+    if(vdiSession.jwt == NULL) // get the token if we dont have it
+        refresh_vdi_session_token();
 
     SoupMessage *msg = soup_message_new (method, uri_string);
-    if(msg == NULL)
-        return responseBodyStr;
-    // header
-    setupHeaderForApiCall(msg);
+    if(msg == NULL) // this may happen according to doc
+        return response_body_str;
 
-    // send request. first attempt
-    sendMessage(msg);
+    // set header
+    setup_header_for_api_call(msg);
+    // set body
+    if(body_str)
+        soup_message_set_request (msg, "application/x-www-form-urlencoded",
+                                  SOUP_MEMORY_COPY, body_str, strlen (body_str));
 
-    // check if token is bad and make the second attempt
-    if(msg->status_code == AUTH_FAIL_RESPONSE || msg->status_code == BAD_REQUEST) {
-        refreshVdiSessionToken();
-        setupHeaderForApiCall(msg);
-        sendMessage(msg);
-    }
+    // start attempts
+    int attempt_count = 0;
+    const int max_attempt_count = 2;
+    do{
+        // if an attempt is not the first we refresh the token and hope it would help us!
+        if(attempt_count != 0)
+            refresh_vdi_session_token();
+        // send request.
+        send_message(msg);
+        printf("HERE msg->status_code: %i\n", msg->status_code);
+        attempt_count++;
 
-    // if response is ok then fill responseBodyStr
+    } while (msg->status_code != OK_RESPONSE && attempt_count < max_attempt_count);
+
+    // if response is ok then fill response_body_str
     if(msg->status_code == OK_RESPONSE ) { // we are happy now
-        responseBodyStr = g_strdup(msg->response_body->data); // json_string_with_data. memory allocation!
+        response_body_str = g_strdup(msg->response_body->data); // json_string_with_data. memory allocation!
     }
 
     g_object_unref(msg);
 
-    return responseBodyStr;
+    return response_body_str;
 }
 
-void getVdiVmData(GTask         *task,
+void get_vdi_vm_data(GTask         *task,
                  gpointer       source_object G_GNUC_UNUSED,
                  gpointer       task_data G_GNUC_UNUSED,
                  GCancellable  *cancellable G_GNUC_UNUSED)
 {
 
-    gchar *getVmUrl = g_strdup_printf("%s/client/pools", vdiSession.api_url);
-    gchar *responseBodyStr = apiCall("GET", getVmUrl);
-    g_free(getVmUrl);
+    gchar *urlStr = g_strdup_printf("%s/client/pools", vdiSession.api_url);
+    gchar *response_body_str = api_call("GET", urlStr, NULL);
+    g_free(urlStr);
 
-    g_task_return_pointer(task, responseBodyStr, NULL); // return pointer must be freed
+    g_task_return_pointer(task, response_body_str, NULL); // return pointer must be freed
 }
 
-void getVmDFromPool(GTask         *task,
+void get_vm_from_pool(GTask         *task,
                     gpointer       source_object G_GNUC_UNUSED,
                     gpointer       task_data G_GNUC_UNUSED,
                     GCancellable  *cancellable G_GNUC_UNUSED)
 {
-    gchar *getVmUrl = g_strdup_printf("%s/client/pools/%ld", vdiSession.api_url, currentVmId);
-    gchar *responseBodyStr = apiCall("POST", getVmUrl);
-    g_free(getVmUrl);
+    gchar *urlStr = g_strdup_printf("%s/client/pools/%ld", vdiSession.api_url, get_current_vm_id());
+    gchar *response_body_str = api_call("POST", urlStr, NULL);
+    g_free(urlStr);
 
-    g_task_return_pointer(task, responseBodyStr, NULL); // return pointer must be freed
+    g_task_return_pointer(task, response_body_str, NULL); // return pointer must be freed
 }
 
-// json
-JsonObject * getJsonObject(JsonParser *parser, const gchar *data)
+void do_action_on_vm(GTask         *task,
+                  gpointer       source_object G_GNUC_UNUSED,
+                  gpointer       task_data G_GNUC_UNUSED,
+                  GCancellable  *cancellable G_GNUC_UNUSED)
 {
+    ActionOnVmData *action_on_vm_data = g_task_get_task_data(task);
+    printf("%s: %s\n", (char *)__func__, action_on_vm_data->action_on_vm_str);
 
-    gboolean result = json_parser_load_from_data (parser, data, -1, NULL);
-    if(!result)
-        return NULL;
+    // url
+    gchar *urlStr = g_strdup_printf("%s/client/pools/%ld/%s", vdiSession.api_url,
+            action_on_vm_data->current_vm_id, action_on_vm_data->action_on_vm_str);
+    // body
+    gchar *bodyStr;
+    if(action_on_vm_data->is_action_forced)
+        bodyStr = g_strdup_printf("{\"force\":true}");
+    else
+        bodyStr = g_strdup_printf("{\"force\":false}");
 
-    JsonNode *root = json_parser_get_root (parser);
-    if(!JSON_NODE_HOLDS_OBJECT (root))
-        return NULL;
-
-    JsonObject *object = json_node_get_object (root);
-    return object;
+    gchar *response_body_str = api_call("POST", urlStr, bodyStr);
+    (void)response_body_str;
+    // free url and body
+    g_free(urlStr);
+    g_free(bodyStr);
+    // free ActionOnVmData
+    g_free(action_on_vm_data->action_on_vm_str);
+    free(action_on_vm_data);
 }
 
-JsonArray * getJsonArray(JsonParser *parser, const gchar *data)
+void execute_async_task(GTaskThreadFunc task_func, GAsyncReadyCallback callback, gpointer task_data)
 {
-    gboolean result = json_parser_load_from_data (parser, data, -1, NULL);
-    if(!result)
-        return NULL;
-
-    JsonNode *root = json_parser_get_root (parser);
-    if(!JSON_NODE_HOLDS_ARRAY (root))
-        return NULL;
-
-    JsonArray *array = json_node_get_array (root);
-
-    return array;
-}
-
-void executeAsyncTask(GTaskThreadFunc  task_func, GAsyncReadyCallback  callback, gpointer  callback_data)
-{
-    GTask *task = g_task_new (NULL, NULL, callback, callback_data);
+    GTask *task = g_task_new(NULL, NULL, callback, NULL);
+    if(task_data)
+        g_task_set_task_data(task, task_data, NULL);
     g_task_run_in_thread(task, task_func);
     g_object_unref (task);
 }
 
+void do_action_on_vm_async(const gchar *actionStr, gboolean isForced)
+{
+    ActionOnVmData *action_on_vm_data = malloc(sizeof(ActionOnVmData));
+    action_on_vm_data->current_vm_id = get_current_vm_id();
+    action_on_vm_data->action_on_vm_str = g_strdup(actionStr);
+    action_on_vm_data->is_action_forced = isForced;
+
+    execute_async_task(do_action_on_vm, NULL, action_on_vm_data);
+}
