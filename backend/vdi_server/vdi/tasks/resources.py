@@ -9,6 +9,8 @@ from vdi.db import db
 from . import UrlFetcher, Token
 from .client import FetchException
 
+from vdi.errors import SimpleError
+
 
 @dataclass()
 class ListClusters(UrlFetcher):
@@ -31,7 +33,6 @@ class FetchCluster(UrlFetcher):
 
     def url(self):
         return f'http://{self.controller_ip}/api/clusters/{self.cluster_id}/'
-
 
 
 @dataclass()
@@ -91,9 +92,6 @@ class ListDatapools(UrlFetcher):
         return pools
 
 
-class ValidationError(Exception):
-    pass
-
 
 @dataclass()
 class ValidateResources(Task):
@@ -112,13 +110,8 @@ class ValidateResources(Task):
             node = await FetchNode(controller_ip=self.controller_ip, node_id=self.node_id)
         except (FetchException, socket.gaierror) as ex:
             return False
-        if node['cluster']['id'] != self.cluster_id:
-            raise ValidationError
-        return True
-
-
-class NoControllers(Exception):
-    pass
+        if node['cluster']['id'] == self.cluster_id:
+            return True
 
 
 @dataclass()
@@ -127,13 +120,19 @@ class DiscoverController(Task):
     node_id: str = None
 
     async def run(self):
-        controllers = await ListControllers()
+        connected, broken = await DiscoverControllers(return_broken=True)
+        if not connected:
+            if broken:
+                raise SimpleError("Отсутствует подключение к контроллерам")
+            raise SimpleError("Нет добавленных контроллеров")
         if not self.cluster_id and not self.node_id:
-            [one] = controllers
+            if len(connected) > 1:
+                raise SimpleError("Multiple controllers")
+            [one] = connected
             return one['ip']
         tasks = {
             co['ip']: ValidateResources(controller_ip=co['ip'], node_id=self.node_id, cluster_id=self.cluster_id)
-            for co in controllers
+            for co in connected
         }
         async for controller_ip, ok in wait(**tasks).items():
             if ok:
@@ -141,7 +140,9 @@ class DiscoverController(Task):
 
 
 
-class ListControllers(Task):
+@dataclass()
+class DiscoverControllers(Task):
+    return_broken: bool = False
 
     async def run(self):
         async with db.connect() as conn:
@@ -152,13 +153,18 @@ class ListControllers(Task):
                 default = None
             query = "SELECT ip, description from controller"
             items = await conn.fetch(query)
-        li = []
+        connected = []
+        broken = []
         for d in items:
             d = dict(d.items())
             d['default'] = d['ip'] == default
             try:
                 await Token(controller_ip=d['ip'])
             except (FetchException, socket.gaierror) as ex:
-                continue
-            li.append(d)
-        return li
+                broken.append(d)
+            else:
+                connected.append(d)
+
+        if self.return_broken:
+            return connected, broken
+        return connected

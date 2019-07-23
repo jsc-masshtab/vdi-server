@@ -3,8 +3,8 @@ import urllib
 from cached_property import cached_property as cached
 from classy_async import Task
 
-from vdi.settings import settings
-from vdi.tasks.client import HttpClient
+from vdi.errors import NotFound
+from vdi.tasks.client import HttpClient, FetchException
 
 from dataclasses import dataclass
 
@@ -46,5 +46,14 @@ class UrlFetcher(Task):
         return repr(self.client)
 
     async def run(self):
-        return await self.client.fetch_using(self)
+        with self:
+            return await self.client.fetch_using(self)
 
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        if isinstance(exc_val, FetchException):
+            e = exc_val.http_error
+            if e.code == 404:
+                raise NotFound

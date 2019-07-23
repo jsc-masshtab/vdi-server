@@ -9,9 +9,9 @@ from .util import get_selections
 from ..db import db
 from ..tasks import resources, FetchException, Token
 from ..tasks.vm import ListTemplates, ListVms
-from ..tasks.resources import ListControllers, FetchNode, FetchCluster, DiscoverController
+from ..tasks.resources import DiscoverControllers, FetchNode, FetchCluster, DiscoverController
 
-
+from vdi.errors import FieldError, NotFound
 
 class DatacenterType(graphene.ObjectType):
     id = graphene.String()
@@ -156,12 +156,14 @@ class Resources:
     async def resolve_controllers(self, info):
         objects = [
             ControllerType(**item)
-            for item in await ListControllers()
+            for item in await DiscoverControllers()
         ]
         return objects
 
     async def resolve_node(self, info, id):
         controller_ip = await DiscoverController(node_id=id)
+        if not controller_ip:
+            raise FieldError(id=['Узел с данным id не найден'])
         data = await FetchNode(controller_ip=controller_ip, node_id=id)
         fields = {
             k: v for k, v in data.items()
@@ -171,6 +173,8 @@ class Resources:
 
     async def resolve_cluster(self, info, id):
         controller_ip = await DiscoverController(cluster_id=id)
+        if not controller_ip:
+            raise FieldError(cluster_id=['Кластер с данным id не найден'])
         data = await FetchCluster(controller_ip=controller_ip, cluster_id=id)
         fields = {
             k: v for k, v in data.items()
@@ -203,13 +207,14 @@ class AddController(graphene.Mutation):
             await conn.execute(*query)
 
         if set_default:
-            [(exists,)] = await conn.fetch("SELECT COUNT(*) FROM default_controller")
-            if not exists:
-                query = "INSERT INTO default_controller (ip) VALUES ($1)", ip
-                await conn.fetch(*query)
-            else:
-                query = "UPDATE default_controller SET ip = $1", ip
-                await conn.fetch(*query)
+            async with db.connect() as conn:
+                [(exists,)] = await conn.fetch("SELECT COUNT(*) FROM default_controller")
+                if not exists:
+                    query = "INSERT INTO default_controller (ip) VALUES ($1)", ip
+                    await conn.fetch(*query)
+                else:
+                    query = "UPDATE default_controller SET ip = $1", ip
+                    await conn.fetch(*query)
 
     async def mutate(self, info, ip, set_default=False, description=None):
         await AddController._add_controller(ip=ip, set_default=set_default, description=description)
@@ -392,7 +397,10 @@ class ControllerType(graphene.ObjectType):
 
     async def resolve_cluster(self, info, *, id):
         controller_ip = self.ip
-        resp = await resources.FetchCluster(controller_ip=controller_ip, cluster_id=id)
+        try:
+            resp = await resources.FetchCluster(controller_ip=controller_ip, cluster_id=id)
+        except NotFound:
+            raise FieldError(id=['Кластер не найден'])
         obj = self._make_type(ClusterType, resp)
         obj.controller = self
         return obj
