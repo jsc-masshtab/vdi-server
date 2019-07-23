@@ -25,12 +25,9 @@ export class PoolsComponent implements OnInit {
 
   public collection: object[] = [
     {
-      title: '№',
-      property: 'index'
-    },
-    {
       title: 'Название',
-      property: 'name'
+      property: 'name',
+      class: 'name-start'
     },
     {
       title: 'Начальное количество ВМ',    // всего вм

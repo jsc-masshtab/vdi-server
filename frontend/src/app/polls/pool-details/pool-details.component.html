@@ -5,7 +5,7 @@
 <div class="details-wrap">
 
     <div class="details-header">
-        <div class="title"><fa-icon [icon]="['fas','desktop']" size="s" ></fa-icon><span *ngIf="host" class="name">{{pool?.name}}</span></div>
+        <div class="title"><fa-icon [icon]="['fas','desktop']" size="s" ></fa-icon><span class="name">{{pool?.name}}</span></div>
         <div class="btns-part">
             <button class="btn-close" (click)="close()"><fa-icon [icon]="['fas','times-circle']"></fa-icon></button>
         </div>
@@ -25,7 +25,7 @@
             <div class="details-slide-header">Информация о пулах рабочих столов</div>
             <div class="details-slide-into">
                 <vdi-table-into [data]="pool" [collection]="collection" *ngIf="menuActive === 'info'"></vdi-table-into>
-                <vdi-table-component [data]="pool?.state?.available" [collection]="collection_vms" *ngIf="menuActive === 'vms'" empty=" - нет виртуальных машин - " ></vdi-table-component> 
+                <vdi-table-component [data]="pool?.state?.available" [collection]="collection_vms" *ngIf="menuActive === 'vms'"></vdi-table-component> 
             </div>     
         </div>
     </div>

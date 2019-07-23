@@ -20,7 +20,8 @@
     > li {
         display: flex;
         align-items: center;
-        padding: 6px;
+        flex-shrink: 0;
+        padding: 9px;
         padding-left: 8px;
         padding-right: 8px;
         border: 1px solid transparent;
@@ -146,6 +147,7 @@
 .details-control-panel {
     display: flex;
     align-items: center;
+    flex-shrink: 0;
     width: 100%;
     height: 45px;
     padding: 1px;
