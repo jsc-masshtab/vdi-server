@@ -211,7 +211,7 @@ virt_viewer_app_make_message_dialog(VirtViewerApp *self,
     dialog = gtk_message_dialog_new(window,
                                     GTK_DIALOG_MODAL |
                                     GTK_DIALOG_DESTROY_WITH_PARENT,
-                                    GTK_MESSAGE_ERROR,
+                                    GTK_MESSAGE_INFO,
                                     GTK_BUTTONS_OK,
                                     "%s",
                                     msg);

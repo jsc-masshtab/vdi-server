@@ -107,17 +107,14 @@ virt_viewer_connect_timer(RemoteViewer *self)
     // if app is not active then trying to connect
     gboolean created = FALSE;
     gboolean is_connected = FALSE;
-    gboolean is_started = FALSE;
 
     created = virt_viewer_app_create_session(app, "spice", NULL);
 
     take_extern_credentials = TRUE;
     is_connected = virt_viewer_app_initial_connect(app, NULL);
 
-   // is_started = VIRT_VIEWER_APP_CLASS(remote_viewer_parent_class)->start(app, NULL, AUTH_DIALOG);
-
-    printf("%s active %i created %i is_connected %i is_started %i \n",
-           (char *)__func__, virt_viewer_app_is_active(app), created, is_connected, is_started);
+    printf("%s active %i created %i is_connected %i \n",
+           (char *)__func__, virt_viewer_app_is_active(app), created, is_connected);
 
     return TRUE;
 }
@@ -400,15 +397,15 @@ retry_dialog:
             remote_viewer_connect_dialog(virt_viewer_window_get_window(main_window), &guri, &user, &password,
                     &ip, &port);
 
-        if(dialog_window_response == GTK_RESPONSE_CANCEL) {
+        if (dialog_window_response == GTK_RESPONSE_CANCEL) {
             return FALSE;
         }
-        else if(dialog_window_response == GTK_RESPONSE_CLOSE) {
+        else if (dialog_window_response == GTK_RESPONSE_CLOSE) {
             g_application_quit(G_APPLICATION(app));
             return FALSE;
         }
 
-        if(!opt_manual_mode) {
+        if (!opt_manual_mode) {
             set_vdi_credentials(user, password, ip, port);
             free_memory_safely(&guri);
             free_memory_safely(&user);
@@ -436,26 +433,31 @@ retry_vdi_dialog:
             g_application_quit(G_APPLICATION(app));  
             return FALSE;
         }
-
         g_object_set(app, "guri", guri, NULL);    
     }
 
     setSpiceSessionCredentials(user, password);
-    // Создание сессии
-    if (!virt_viewer_app_create_session(app, "spice", &error))
-        goto cleanup;
+    // instant connect attempt
+    if (opt_manual_mode) {
+        // Создание сессии
+        if (!virt_viewer_app_create_session(app, "spice", &error))
+            goto cleanup;
 
-    g_signal_connect(virt_viewer_app_get_session(app), "session-connected",
-                     G_CALLBACK(remote_viewer_session_connected), app);
+        g_signal_connect(virt_viewer_app_get_session(app), "session-connected",
+                         G_CALLBACK(remote_viewer_session_connected), app);
 
-    // Коннект к машине/*
-    if (!virt_viewer_app_initial_connect(app, &error)) {
-        if (error == NULL) {
-            g_set_error_literal(&error,
-                                VIRT_VIEWER_ERROR, VIRT_VIEWER_ERROR_FAILED,
-                                _("Failed to initiate connection"));
+        // Коннект к машине/*
+        if (!virt_viewer_app_initial_connect(app, &error)) {
+            if (error == NULL) {
+                g_set_error_literal(&error,
+                                    VIRT_VIEWER_ERROR, VIRT_VIEWER_ERROR_FAILED,
+                                    _("Failed to initiate connection"));
+            }
+            goto cleanup;
         }
-        goto cleanup;
+
+    } else { // start connect attempt timer
+        virt_viewer_start_reconnect_poll(self);
     }
     // Показывается окно virt viewer // virt_viewer_app_default_start
     ret = VIRT_VIEWER_APP_CLASS(remote_viewer_parent_class)->start(app, &error, AUTH_DIALOG);
