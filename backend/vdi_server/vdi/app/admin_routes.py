@@ -8,13 +8,29 @@ from starlette.graphql import (
 from vdi.graphql.schema import schema
 from graphql.execution.executors.asyncio import AsyncioExecutor
 
-from vdi.errors import ApiError
+from vdi.errors import BackendError
+
+def get_from_chain(ex, kind, limit=5):
+    """
+    Get exception of given lind (argument to isinstance) from the exception chain
+    """
+    for i in range(limit):
+        if not ex:
+            return None
+        if isinstance(ex, kind):
+            return ex
+        ex = ex.__context__
+
+    return None
+
 
 class GraphQLApp(_GraphQLApp):
 
     def format_graphql_error(self, err):
-        if isinstance(err.original_error, ApiError):
-            return err.original_error.format_error()
+        original_error = getattr(err, 'original_error', None)
+        backend_error = get_from_chain(original_error, BackendError)
+        if backend_error:
+            return backend_error.format_error()
         return format_graphql_error(err)
 
     # This is copied from its ancestor

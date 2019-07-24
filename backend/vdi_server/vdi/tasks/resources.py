@@ -7,9 +7,8 @@ from classy_async import Task, wait
 from vdi.db import db
 
 from . import UrlFetcher, Token
-from .client import FetchException
 
-from vdi.errors import SimpleError
+from vdi.errors import SimpleError, FetchException
 
 
 @dataclass()

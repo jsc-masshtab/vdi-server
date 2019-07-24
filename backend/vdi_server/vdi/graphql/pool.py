@@ -298,7 +298,6 @@ class AddPool(graphene.Mutation):
         add_domains = ins.add_domains()
         selections = get_selections(info)
         if 'vms' in selections:
-            breakpoint()
             domains = await add_domains
             from vdi.graphql.vm import TemplateType
             from vdi.graphql.resources import NodeType

@@ -7,18 +7,13 @@ import inspect
 from tornado.httpclient import HTTPRequest, HTTPError
 from tornado.httpclient import AsyncHTTPClient
 
+from vdi.errors import FetchException
+
 MAX_BODY_SIZE = 10 * 1024 * 1024 * 1024
 
 AsyncHTTPClient.configure("tornado.simple_httpclient.SimpleAsyncHTTPClient",
                           max_body_size=MAX_BODY_SIZE,
                           )
-
-class FetchException(Exception):
-    def __init__(self, msg, *, url, http_error):
-        msg = f'{url}: {msg}'
-        super().__init__(msg)
-        self.http_error = http_error
-
 
 class HttpClient:
 

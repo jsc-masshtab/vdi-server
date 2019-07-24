@@ -216,6 +216,7 @@ class CopyDomain(UrlFetcher):
     new_domain_id = None
 
     def url(self):
+        # return f"http://{self.controller_ip}/api/domains/{self.domain_id}/clone/?async=1&parent={self.domain_id}"
         return f"http://{self.controller_ip}/api/domains/{self.domain_id}/clone/?async=1"
 
     async def body(self):

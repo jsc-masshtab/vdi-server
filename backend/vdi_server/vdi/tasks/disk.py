@@ -9,26 +9,6 @@ from .client import HttpClient
 from .ws import WsConnection
 
 
-class DefaultDatapool(Task):
-    "Only for debug"
-
-    url = '/api/data-pools/'
-
-    async def run(self):
-        token = await Token()
-        url = f'http://{CONTROLLER_IP}{self.url}'
-        headers = {
-            'Authorization': f'jwt {token}'
-        }
-        http_client = HttpClient()
-        response = await http_client.fetch(url, headers=headers)
-        for rec in response['results']:
-            if 'default' in rec['verbose_name'].lower():
-                return rec
-            if 'базовый' in rec['verbose_name'].lower():
-                return rec
-
-
 class ImageNotFound(Exception):
     pass
 

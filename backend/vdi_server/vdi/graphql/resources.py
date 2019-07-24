@@ -7,11 +7,11 @@ from classy_async import wait
 from .pool import PoolType, VmType, TemplateType
 from .util import get_selections
 from ..db import db
-from ..tasks import resources, FetchException, Token
+from ..tasks import resources, Token
 from ..tasks.vm import ListTemplates, ListVms
 from ..tasks.resources import DiscoverControllers, FetchNode, FetchCluster, DiscoverController
 
-from vdi.errors import FieldError, NotFound
+from vdi.errors import FieldError, NotFound, FetchException
 
 class DatacenterType(graphene.ObjectType):
     id = graphene.String()

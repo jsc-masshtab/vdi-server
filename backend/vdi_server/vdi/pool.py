@@ -48,6 +48,7 @@ class Pool:
             'controller_ip': self.params['controller_ip'],
             'node_id': self.params['node_id'],
         }
+        #FIXME FIXME it makes a template
         task = vm.CopyDomain(**params).task
         return task
 
