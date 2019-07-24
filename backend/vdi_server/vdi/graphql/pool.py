@@ -255,8 +255,6 @@ class AddPool(graphene.Mutation):
     Output = PoolType
 
 
-
-
     async def mutate(self, info,
                      name,
                      template_id=None, cluster_id=None, datapool_id=None, node_id=None,
@@ -273,9 +271,9 @@ class AddPool(graphene.Mutation):
             'node_id': node_id or settings['node_id'],
             'datapool_id': datapool_id or settings['datapool_id'],
             'template_id': template_id or settings['template_id'],
-            'name': name,
+            'name': name
         }
-        controller_ip = await DiscoverController(cluster_id=pool['cluster_id'], node_id=pool['node_id'])
+        controller_ip =  await DiscoverController(cluster_id=pool['cluster_id'], node_id=pool['node_id'])
         if controller_ip is None:
             raise NoControllers
         pool['controller_ip'] = controller_ip
@@ -385,6 +383,27 @@ class RemovePool(graphene.Mutation):
             return RemovePool(ok=True, ids=vm_ids)
         return RemovePool(ok=True)
 
+
+#  users <-> pools  relations
+class EntitleUsersToPool(graphene.Mutation):
+
+    class Arguments:
+        pool_id = graphene.Int()
+        controller_ip = graphene.String()
+        entitled_users = graphene.List(graphene.String)
+
+    ok = graphene.Boolean()
+    # todo: dont add row duplicates
+    async def mutate(self, info, pool_id, entitled_users):
+
+        async with db.connect() as conn:
+            for user in entitled_users:
+                qu = "insert into pools_users (pool_id, username) VALUES ($1, $2)", pool_id, user
+                await conn.fetch(*qu)
+
+        return {
+            'ok': True
+        }
 
 
 class PoolMixin:
