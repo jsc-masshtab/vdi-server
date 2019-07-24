@@ -1,7 +1,7 @@
 
 
-<ng-container *ngIf="data && data.length && !spinner">
-  <div class="table-component" *ngIf="!spinner">
+<ng-container *ngIf="data && data.length">
+  <div class="table-component">
     <header>
       <div *ngFor="let obj of collection" class="table-header-part" [class.index-column]="obj.property == 'index'" [class.name-width]="obj.property == 'verbose_name'" [class.name-start-h]="obj.class == 'name-start'">
         {{obj.title}}

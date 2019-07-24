@@ -15,12 +15,9 @@ export class TemplatesComponent implements OnInit {
   public templates: object[] = [];
   public collection = [
     {
-      title: '№',
-      property: 'index'
-    },
-    {
       title: 'Название',
-      property: 'verbose_name'
+      property: 'verbose_name',
+      class: 'name-start'
     },
     {
       title: 'Cервер',
@@ -39,16 +36,6 @@ export class TemplatesComponent implements OnInit {
     }
   ];
 
-  public crumbs: object[] = [
-    {
-      title: 'Ресурсы',
-      icon: 'database'
-    },
-    {
-      title: `Шаблоны ВМ`,
-      icon: 'tv'
-    }
-  ];
 
   public spinner:boolean = false;
 

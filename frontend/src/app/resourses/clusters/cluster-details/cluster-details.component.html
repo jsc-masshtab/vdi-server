@@ -1,22 +1,4 @@
 
-
-
-<!--       
-<div class="resourse-into" *ngIf="!spinner">
-    <ul class="menu">
-        <li (click)="routeTo('info')" [class.active]="menuActive === 'info'" title="Информация">Информация</li>
-        <li (click)="routeTo('servers')" [class.active]="menuActive === 'servers'" title="Серверы">Серверы</li>
-        <li (click)="routeTo('datapools')" [class.active]="menuActive === 'datapools'" title="Пулы данных">Пулы данных</li>
-        <li (click)="routeTo('templates')" [class.active]="menuActive === 'templates'" title="Шаблоны виртуальных машин">Шаблоны ВМ</li>
-        <li (click)="routeTo('vms')" [class.active]="menuActive === 'vms'" title="Виртуальные машины">Виртуальные машины</li>
-    </ul>
-    <vdi-table-into [data]="cluster" [collection]="collection" *ngIf="menuActive === 'info'"></vdi-table-into>
-    <vdi-table-component [data]="cluster.nodes" [collection]="collection_nodes" *ngIf="menuActive === 'servers'" empty=" - нет серверов - "></vdi-table-component>
-    <vdi-table-component [data]="cluster.datapools" [collection]="collection_datapools"  *ngIf="menuActive === 'datapools'" empty=" - нет пулов - "></vdi-table-component>
-    <vdi-table-component [data]="templates" [collection]="collection_templates"  *ngIf="menuActive === 'templates'" empty=" - нет шаблонов - "></vdi-table-component>
-    <vdi-table-component [data]="cluster.vms" [collection]="collection_vms" *ngIf="menuActive === 'vms'" empty=" - нет виртуальных машин - "></vdi-table-component>
-</div> -->
-
 <div class="details-wrap">
 
     <div class="details-header">
@@ -39,7 +21,13 @@
         </ul>
         
         <div class="details-slide" *ngIf="host">
-            <div class="details-slide-header">Информация о кластере</div>
+            <div class="details-slide-header">
+                <ng-container *ngIf="menuActive === 'info'">Информация о кластере</ng-container>
+                <ng-container *ngIf="menuActive === 'servers'">Серверы кластера</ng-container>
+                <ng-container *ngIf="menuActive === 'datapools'">Пулы данных кластера</ng-container>
+                <ng-container *ngIf="menuActive === 'templates'">Шаблоны ВМ кластера</ng-container>
+                <ng-container *ngIf="menuActive === 'vms'">ВМ кластера</ng-container>  
+            </div>
             <div class="details-slide-into">
                 <vdi-table-into [data]="cluster" [collection]="collection" *ngIf="menuActive === 'info'"></vdi-table-into>
                 <vdi-table-component [data]="cluster.nodes" [collection]="collection_nodes" *ngIf="menuActive === 'servers'" ></vdi-table-component>

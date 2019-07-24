@@ -14,13 +14,11 @@ export class DatapoolsComponent implements OnInit {
 
   public datapools: {};
   public collection: object[] = [
-    {
-      title: '№',
-      property: 'index'
-    },
+
     {
       title: 'Название',
-      property: 'verbose_name'
+      property: 'verbose_name',
+      class: 'name-start'
     },
     {
       title: 'Тип',
@@ -49,17 +47,6 @@ export class DatapoolsComponent implements OnInit {
     {
       title: 'Статус',
       property: 'status'
-    }
-  ];
-
-  public crumbs: object[] = [
-    {
-      title: 'Ресурсы',
-      icon: 'database'
-    },
-    {
-      title: `Пулы данных`,
-      icon: 'folder-open'
     }
   ];
 

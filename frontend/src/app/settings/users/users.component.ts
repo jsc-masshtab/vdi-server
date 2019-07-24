@@ -16,26 +16,14 @@ export class UsersComponent implements OnInit {
 
   public users: [];
   public collection: object[] = [
-    {
-      title: '№',
-      property: 'index'
-    },
+   
     {
       title: 'Имя пользователя',
       property: 'username',
       class: 'name-start'
     }
   ];
-  public crumbs: object[] = [
-    {
-      title: 'Настройки',
-      icon: 'cog'
-    },
-    {
-      title: 'Пользователи',
-      icon: 'users'
-    }
-  ];
+
 
   public spinner:boolean = false;
 

@@ -15,12 +15,9 @@ export class VmsComponent implements OnInit {
   public vms: object[] = [];
   public collection = [
     {
-      title: '№',
-      property: 'index'
-    },
-    {
       title: 'Название',
-      property: 'name'
+      property: 'name',
+      class: 'name-start'
     },
     {
       title: 'Сервер',
@@ -34,16 +31,6 @@ export class VmsComponent implements OnInit {
     }
   ];
 
-  public crumbs: object[] = [
-    {
-      title: 'Ресурсы',
-      icon: 'database'
-    },
-    {
-      title: `Виртуальные машины`,
-      icon: 'desktop'
-    }
-  ];
 
   public spinner:boolean = false;
 

@@ -18,23 +18,15 @@ export class ControllersComponent implements OnInit {
   public collection: object[] = [
       {
         title: 'IP адрес',
-        property: 'ip'
+        property: 'ip',
+        class: 'name-start'
       },
       {
         title: 'Описание',
         property: "description"
       }
   ];
-  public crumbs: object[] = [
-    {
-      title: 'Настройки',
-      icon: 'cog'
-    },
-    {
-      title: 'Контроллеры',
-      icon: 'server'
-    }
-  ];
+
 
   public spinner:boolean = false;
 

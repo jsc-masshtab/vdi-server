@@ -18,7 +18,8 @@ export class ClusterDetailsComponent implements OnInit {
   public collection = [
     {
       title: 'Название',
-      property: 'verbose_name'
+      property: 'verbose_name',
+      class: 'name-start'
     },
     {
       title: 'Статус',
@@ -51,12 +52,9 @@ export class ClusterDetailsComponent implements OnInit {
   ];
   public collection_nodes = [
     {
-      title: '№',
-      property: 'index'
-    },
-    {
       title: 'Название',
-      property: 'verbose_name'
+      property: 'verbose_name',
+      class: 'name-start'
     },
     {
       title: 'IP-адрес',
@@ -77,12 +75,9 @@ export class ClusterDetailsComponent implements OnInit {
   ];
   public collection_datapools = [
     {
-      title: '№',
-      property: 'index'
-    },
-    {
       title: 'Название',
-      property: 'verbose_name'
+      property: 'verbose_name',
+      class: 'name-start'
     },
     {
       title: 'Тип',
@@ -115,12 +110,9 @@ export class ClusterDetailsComponent implements OnInit {
   ];
   public collection_templates = [
     {
-      title: '№',
-      property: 'index'
-    },
-    {
       title: 'Название',
-      property: 'verbose_name'
+      property: 'verbose_name',
+      class: 'name-start'
     },
     {
       title: 'Cервер',
@@ -140,12 +132,9 @@ export class ClusterDetailsComponent implements OnInit {
   ];
   public collection_vms = [
     {
-      title: '№',
-      property: 'index'
-    },
-    {
       title: 'Название',
-      property: 'name'
+      property: 'name',
+      class: 'name-start'
     },
     {
       title: 'Сервер',
