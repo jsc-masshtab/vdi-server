@@ -384,21 +384,38 @@ class RemovePool(graphene.Mutation):
         return RemovePool(ok=True)
 
 
-#  users <-> pools  relations
+#  users <-> pools relations
 class EntitleUsersToPool(graphene.Mutation):
 
     class Arguments:
         pool_id = graphene.Int()
-        controller_ip = graphene.String()
         entitled_users = graphene.List(graphene.String)
 
     ok = graphene.Boolean()
-    # todo: dont add row duplicates
-    async def mutate(self, info, pool_id, entitled_users):
 
+    async def mutate(self, _info, pool_id, entitled_users):
         async with db.connect() as conn:
             for user in entitled_users:
-                qu = "insert into pools_users (pool_id, username) VALUES ($1, $2)", pool_id, user
+                qu = "INSERT INTO pools_users (pool_id, username) VALUES ($1, $2)", pool_id, user
+                await conn.fetch(*qu)
+
+        return {
+            'ok': True
+        }
+
+
+class RemoveUserEntitlementsFromPool(graphene.Mutation):
+
+    class Arguments:
+        pool_id = graphene.Int()
+        entitled_users = graphene.List(graphene.String)
+
+    ok = graphene.Boolean()
+
+    async def mutate(self, _info, pool_id, entitled_users):
+        async with db.connect() as conn:
+            for user in entitled_users:
+                qu = "DELETE FROM pools_users WHERE pool_id = $1 AND username = $2", pool_id, user
                 await conn.fetch(*qu)
 
         return {

@@ -11,15 +11,20 @@ from . import app
 @app.route('/client/pools')
 @requires('authenticated')
 async def get_pools(request):
-
     user = request.user.username
 
-    async with db.connect() as conn:
-        qu = f"""
-        SELECT * from pool JOIN pools_users ON pool.id = pools_users.pool_id
-        WHERE pools_users.username = $1
-        """, user
-        data = await conn.fetch(*qu)
+    if user == 'admin':
+        async with db.connect() as conn:
+            qu = f"SELECT * from pool"
+            data = await conn.fetch(qu)
+    else: # any other user
+        async with db.connect() as conn:
+            qu = f"""
+            SELECT * from pool JOIN pools_users ON pool.id = pools_users.pool_id
+            WHERE pools_users.username = $1
+            """, user
+            data = await conn.fetch(*qu)
+
     print('data', data)
     pools = [
         Pool(params=dict(item))
