@@ -3,10 +3,15 @@ footer {
     background: #FFF;
     display: flex;
     align-items: center;
+    flex-shrink: 0;
     border-top: 1px solid rgba(102,132,142,0.7);
     font-size: 12px;
     color: rgba(255,255,255,0.9);
     overflow: hidden;
+    position: fixed;
+    bottom: 0px;
+    width: 100%;
+    z-index: 2;
 
     .copyright {
         display: flex;

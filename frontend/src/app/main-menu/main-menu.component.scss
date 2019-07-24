@@ -1,10 +1,10 @@
 .top-menu {
     display: flex;
     flex-direction: column;
-    height: calc(100% - 30px);
+    height: 100%;
+    overflow-x: hidden;
     border-right: 1px solid #c3c3c3;
     background-color: #282828;
-    overflow: hidden;
     overflow-y: auto;
     transition: width 100ms;
     min-width: 200px;
