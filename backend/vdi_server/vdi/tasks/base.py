@@ -1,15 +1,12 @@
 import urllib
+from dataclasses import dataclass
 
 from cached_property import cached_property as cached
 from classy_async import Task, TaskTimeout
-
-from vdi.tasks.client import HttpClient
-from vdi.errors import NotFound, FetchException, WsTimeout
-
-from dataclasses import dataclass
-
-
+from vdi.errors import WsTimeout
 from vdi.settings import settings
+from vdi.tasks.client import HttpClient
+
 
 @dataclass()
 class Token(Task):
@@ -46,6 +43,12 @@ class UrlFetcher(Task):
     def __repr__(self):
         return repr(self.client)
 
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        pass
+
     async def run(self):
         with self:
             return await self.client.fetch_using(self)
@@ -56,11 +59,3 @@ class UrlFetcher(Task):
         except TaskTimeout:
             raise WsTimeout(url=self.url, data="Таймаут ожидания завершения")
 
-    def __enter__(self):
-        return self
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        if isinstance(exc_val, FetchException):
-            e = exc_val.http_error
-            if e.code == 404:
-                raise NotFound from e

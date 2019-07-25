@@ -11,7 +11,7 @@ from ..tasks import resources, Token
 from ..tasks.vm import ListTemplates, ListVms
 from ..tasks.resources import DiscoverControllers, FetchNode, FetchCluster, DiscoverController
 
-from vdi.errors import FieldError, NotFound, FetchException
+from vdi.errors import FieldError, SimpleError, FetchException, HttpError
 
 class DatacenterType(graphene.ObjectType):
     id = graphene.String()
@@ -163,7 +163,8 @@ class Resources:
     async def resolve_node(self, info, id):
         controller_ip = await DiscoverController(node_id=id)
         if not controller_ip:
-            raise FieldError(id=['Узел с данным id не найден'])
+            raise SimpleError('Узел с данным id не найден')
+        # Node exists for sure
         data = await FetchNode(controller_ip=controller_ip, node_id=id)
         fields = {
             k: v for k, v in data.items()
@@ -174,7 +175,7 @@ class Resources:
     async def resolve_cluster(self, info, id):
         controller_ip = await DiscoverController(cluster_id=id)
         if not controller_ip:
-            raise FieldError(cluster_id=['Кластер с данным id не найден'])
+            raise SimpleError('Кластер не найден')
         data = await FetchCluster(controller_ip=controller_ip, cluster_id=id)
         fields = {
             k: v for k, v in data.items()
@@ -397,10 +398,7 @@ class ControllerType(graphene.ObjectType):
 
     async def resolve_cluster(self, info, *, id):
         controller_ip = self.ip
-        try:
-            resp = await resources.FetchCluster(controller_ip=controller_ip, cluster_id=id)
-        except NotFound:
-            raise FieldError(id=['Кластер не найден'])
+        resp = await resources.FetchCluster(controller_ip=controller_ip, cluster_id=id)
         obj = self._make_type(ClusterType, resp)
         obj.controller = self
         return obj

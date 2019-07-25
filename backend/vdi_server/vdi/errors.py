@@ -1,6 +1,4 @@
 
-from cached_property import cached_property as cached
-
 
 class BackendError(Exception):
     def __init__(self, **kwargs):
@@ -13,9 +11,10 @@ class BackendError(Exception):
         }
 
 
-class ApiError(BackendError):
-    def __init__(self, data):
-        self.data = data
+
+class FieldError(BackendError):
+    def __init__(self, **kwargs):
+        self.data = kwargs
 
     def format_error(self):
         return {
@@ -24,17 +23,13 @@ class ApiError(BackendError):
         }
 
 
-class FieldError(ApiError):
-    def __init__(self, **kwargs):
-        super().__init__(kwargs)
+class SimpleError(BackendError):
+    def __init__(self, message):
+        self.message = message
 
+    def format_error(self):
+        return self.message
 
-class SimpleError(ApiError):
-    pass
-
-
-class NotFound(Exception):
-    pass
 
 
 class FetchException(BackendError):
@@ -44,6 +39,19 @@ class FetchException(BackendError):
             'url': self.url,
             'message': self.message,
         }
+
+
+class HttpError(BackendError):
+    def __init__(self, code, message):
+        self.message = message
+        self.code = code
+
+    def format_error(self):
+        return {
+            'code': self.code,
+            'message': self.message,
+        }
+
 
 class WsTimeout(BackendError):
     pass
