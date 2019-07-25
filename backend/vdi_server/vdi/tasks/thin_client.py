@@ -5,7 +5,7 @@ from cached_property import cached_property as cached
 
 from .base import UrlFetcher
 
-from vdi.errors import FetchException, NotFound
+from vdi.errors import FetchException, NotFound, SimpleError
 
 
 @dataclass()
@@ -71,7 +71,6 @@ class PrepareVm(UrlFetcher):
 
 @dataclass()
 class DoActionOnVm(UrlFetcher):
-
     controller_ip: str
     domain_id: str
     action: str
@@ -79,8 +78,14 @@ class DoActionOnVm(UrlFetcher):
 
     method = 'POST'
 
+    ACTIONS = [
+        'start', 'suspend', 'reset', 'shutdown', 'resume'
+    ]
+
     @cached
     def url(self):
+        if self.action not in self.ACTIONS:
+            raise SimpleError(f"Неизвестное действие: {self.action}")
         return f"http://{self.controller_ip}/api/domains/{self.domain_id}/{self.action}/"
 
     def __exit__(self, exc_type, exc_val, exc_tb):

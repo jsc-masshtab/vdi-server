@@ -2,6 +2,8 @@
 from tornado.httpclient import HTTPClientError
 from cached_property import cached_property as cached
 
+from typing import List
+
 class BackendError(Exception):
     def __init__(self, **kwargs):
         self.__dict__.update(kwargs)
@@ -53,15 +55,18 @@ class NotFound(BackendError):
 
 
 class BadRequest(BackendError):
-    fetch_exc: FetchException
+    errors: List
 
-    def __init__(self, fetch_exc):
-        self.fetch_exc = fetch_exc
+    def __init__(self, errors):
+        self.errors = errors
+
+    @classmethod
+    def fetch_failed(cls, fetch_exc):
+        return cls(errors=fetch_exc.data['errors'])
 
     def format_error(self):
         return {
-            'code': 400, **self.type_info,
-            **self.fetch_exc.data['errors']
+            'code': 400, **self.type_info, **self.errors
         }
 
 
