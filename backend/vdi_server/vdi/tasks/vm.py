@@ -12,6 +12,8 @@ from .base import Token, UrlFetcher
 from .client import HttpClient
 from .ws import WsConnection
 
+from vdi.errors import HttpError, FetchException
+
 @dataclass()
 class CreateDomain(Task):
 
@@ -136,24 +138,25 @@ class CopyDomain(UrlFetcher):
 
 
 @dataclass()
-class DropDomain(Task):
+class DropDomain(UrlFetcher):
     id: str
     controller_ip: str
     full: bool = True
+
+    method = 'POST'
 
     @cached
     def url(self):
         return f'http://{self.controller_ip}/api/domains/{self.id}/remove/'
 
-    async def run(self):
-        token = await Token(controller_ip=self.controller_ip)
-        headers = {
-            'Authorization': f'jwt {token}',
-        }
-        http_client = HttpClient()
-        body = urllib.parse.urlencode({'full': self.full})
+    @cached
+    def body(self):
+        return json.dumps({'full': self.full})
 
-        await http_client.fetch(self.url, method='POST', headers=headers, body=body)
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        if isinstance(exc_val, FetchException) and exc_val.code == 404:
+            raise HttpError(404, "Виртуальная машина не найдена") from exc_val
+
 
 
 @dataclass()
