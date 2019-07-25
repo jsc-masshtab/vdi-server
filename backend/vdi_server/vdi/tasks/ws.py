@@ -7,12 +7,14 @@ from . import Token
 from classy_async import Awaitable, task
 import asyncio
 
+from vdi.settings import settings
+
 
 @dataclass()
 class WsConnection(Awaitable):
     controller_ip: str
 
-    timeout = 5 * 60
+    timeout = settings.ws['timeout']
 
     async def send(self, msg):
         return (await self._conn.write_message(msg))

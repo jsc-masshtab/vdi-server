@@ -7,13 +7,15 @@ from cached_property import cached_property as cached
 from classy_async import wait
 from vdi.settings import settings as settings_file
 from vdi.tasks import vm
-from vdi.tasks.resources import DiscoverController, NoControllers
+from vdi.tasks.resources import DiscoverController
 
 
 from .users import UserType
 from .util import get_selections
 from ..db import db
 from ..pool import Pool
+
+from vdi.errors import SimpleError, FieldError
 
 
 class TemplateType(graphene.ObjectType):
@@ -255,10 +257,10 @@ class AddPool(graphene.Mutation):
     Output = PoolType
 
 
-    async def mutate(self, info,
-                     name,
+
+    async def mutate(self, info, name,
                      template_id=None, cluster_id=None, datapool_id=None, node_id=None,
-                     settings=(), initial_size=None, reserve_size=None, block=False):
+                     settings=(), initial_size=None, reserve_size=None):
         def get_setting(name):
             if name in settings:
                 return settings[name]
@@ -273,11 +275,11 @@ class AddPool(graphene.Mutation):
             'template_id': template_id or settings['template_id'],
             'name': name
         }
-        controller_ip =  await DiscoverController(cluster_id=pool['cluster_id'], node_id=pool['node_id'])
-        if controller_ip is None:
-            raise NoControllers
+        controller_ip = await DiscoverController(cluster_id=pool['cluster_id'], node_id=pool['node_id'])
+        if not controller_ip:
+            raise FieldError(cluster_id=['Неверное значение или не соответствует node_id'],
+                             node_id=['Неверное значение или не соответствует cluster_id'])
         pool['controller_ip'] = controller_ip
-
         fields = ', '.join(pool.keys())
         values = ', '.join(f'${i+1}' for i in range(len(pool)))
         pool_query = f"INSERT INTO pool ({fields}) VALUES ({values}) RETURNING id", *pool.values()
@@ -292,7 +294,8 @@ class AddPool(graphene.Mutation):
             'reserve_size': pool['reserve_size'],
         })
         add_domains = ins.add_domains()
-        if block:
+        selections = get_selections(info)
+        if 'vms' in selections:
             domains = await add_domains
             from vdi.graphql.vm import TemplateType
             from vdi.graphql.resources import NodeType

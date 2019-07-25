@@ -9,6 +9,7 @@ from vdi.tasks import Token
 import asyncio
 
 from vdi.db import db
+from vdi.errors import FetchException
 
 class FirstTimeToken(Token):
     creds = {
@@ -36,7 +37,7 @@ async def add_user(controller_ip, **creds):
                    'VM Administrator', 'VM Operator',]
     })
     body = json.dumps(body)
-    from vdi.tasks.client import HttpClient, FetchException
+    from vdi.tasks.client import HttpClient
     client = HttpClient()
     try:
         await client.fetch(url, method='POST', body=body, headers=headers)
