@@ -7,8 +7,7 @@ import { RemoveControllerComponent } from './remove-controller/remove-controller
 
 @Component({
   selector: 'vdi-servers',
-  templateUrl: './controllers.component.html',
-  styleUrls: ['./controllers.component.scss']
+  templateUrl: './controllers.component.html'
 })
 
 
@@ -41,10 +40,6 @@ export class ControllersComponent implements OnInit {
     this.service.getAllControllers().valueChanges.pipe(map(data => data.data.controllers))
       .subscribe((data) => {
         this.controllers = data;
-        localStorage.removeItem('controller');
-        if(this.controllers.length) {
-          localStorage.setItem('controller',JSON.stringify(data[0].ip));
-        }
         this.spinner = false;
       },
       (error) => {

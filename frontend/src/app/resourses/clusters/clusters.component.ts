@@ -12,7 +12,7 @@ import { Router } from '@angular/router';
 
 export class ClustersComponent implements OnInit {
 
-  public clusters: object[] = [];
+  public clusters= [];
   public collection: object[] = [
     {
       title: 'Название',
@@ -30,6 +30,11 @@ export class ClustersComponent implements OnInit {
     {
       title: 'RAM',
       property: 'memory_count'
+    },
+    {
+      title: 'Контроллер',
+      property: 'controller',
+      property_lv2: 'ip'
     },
     {
       title: 'Статус',
@@ -66,9 +71,20 @@ export class ClustersComponent implements OnInit {
 
   private getAllClusters() {
     this.spinner = true;
-    this.service.getAllClusters().valueChanges.pipe(map(data => data.data.clusters))
+    this.service.getAllClusters().valueChanges.pipe(map(data => data.data.controllers))
       .subscribe( (data) => {
-        this.clusters = data;
+        let arrsClusters: [][] = [];
+        this.clusters = [];
+        arrsClusters = data.map(controller => controller.clusters);
+
+        arrsClusters.forEach((arr: []) => {
+            arr.forEach((obj: {}) => {
+              this.clusters.push(obj);
+            }); 
+        });
+
+        console.log(this.clusters);
+
         this.spinner = false;
       },
       (error)=> {

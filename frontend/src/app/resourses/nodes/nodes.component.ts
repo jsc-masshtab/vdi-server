@@ -41,7 +41,7 @@ export class NodesComponent implements OnInit {
     }
   ];
 
-  public nodes: {};
+  public nodes: object[] = [];
 
   public spinner:boolean = false;
 
@@ -71,9 +71,18 @@ export class NodesComponent implements OnInit {
 
   private getNodes() {
     this.spinner = true;
-    this.service.getAllNodes().valueChanges.pipe(map(data => data.data.nodes))
+    this.service.getAllNodes().valueChanges.pipe(map(data => data.data.controllers))
       .subscribe( (data) => {
         this.nodes = data;
+        let arrsNodes: [][] = [];
+        this.nodes = [];
+        arrsNodes = data.map(controller => controller.nodes);
+
+        arrsNodes.forEach((arr: []) => {
+            arr.forEach((obj: {}) => {
+              this.nodes.push(obj);
+            }); 
+        });
         this.spinner = false;
       },
       (error)=> {
