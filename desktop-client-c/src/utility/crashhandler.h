@@ -2,6 +2,6 @@
 #define CRASHHANDLER_H
 
 
-void installHandler(const char *logFileName);
+void install_crash_handler(const char *logFileName);
 
 #endif // CRASHHANDLER_H

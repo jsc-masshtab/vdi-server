@@ -7,16 +7,25 @@ from vdi.settings import settings
 
 from . import app
 
+
 @app.route('/client/pools')
 @requires('authenticated')
 async def get_pools(request):
-    
-    #FIXME filter by user
-    # user = request.user.username
-    async with db.connect() as conn:
-        qu = f"SELECT * from pool"
-        data = await conn.fetch(qu)
-        #print('get_pools: data', data)
+    user = request.user.username
+
+    if user == 'admin':
+        async with db.connect() as conn:
+            qu = f"SELECT * from pool"
+            data = await conn.fetch(qu)
+    else: # any other user
+        async with db.connect() as conn:
+            qu = f"""
+            SELECT * from pool JOIN pools_users ON pool.id = pools_users.pool_id
+            WHERE pools_users.username = $1
+            """, user
+            data = await conn.fetch(*qu)
+
+    print('data', data)
     pools = [
         Pool(params=dict(item))
         for item in data
@@ -47,6 +56,8 @@ async def get_vm(request):
             [(id,)] = vms
             from vdi.tasks.vm import GetDomainInfo
             info = await GetDomainInfo(controller_ip=controller_ip, domain_id=id)
+
+            await thin_client.PrepareVm(controller_ip=controller_ip, domain_id=id)
             return JSONResponse({
                 'host': controller_ip,
                 'port': info['remote_access_port'],
@@ -61,6 +72,7 @@ async def get_vm(request):
         qu = "update vm set username = $1 where id = $2", user, domain['id']
         await conn.fetch(*qu)
         pool.on_vm_taken()
+
         info = await thin_client.PrepareVm(controller_ip=controller_ip, domain_id=domain['id'])
         return JSONResponse({
             'host': controller_ip,

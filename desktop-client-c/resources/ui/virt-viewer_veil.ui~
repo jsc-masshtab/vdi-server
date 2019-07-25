@@ -243,12 +243,72 @@
                         <property name="can_focus">False</property>
                         <child>
                           <object class="GtkMenuItem" id="menu-switch-off">
-                            <property name="use_action_appearance">True</property>
+                            <property name="use_action_appearance">False</property>
                             <property name="visible">True</property>
                             <property name="can_focus">False</property>
                             <property name="label" translatable="yes">_Отключиться</property>
                             <property name="use_underline">True</property>
                             <signal name="activate" handler="virt_viewer_window_menu_switch_off" swapped="no"/>
+                          </object>
+                        </child>
+                        <child>
+                          <object class="GtkMenuItem" id="menu-start-vm">
+                            <property name="use_action_appearance">False</property>
+                            <property name="visible">True</property>
+                            <property name="can_focus">False</property>
+                            <property name="label" translatable="yes">_Включить</property>
+                            <property name="use_underline">True</property>
+                            <signal name="activate" handler="virt_viewer_window_menu_start_vm" swapped="no"/>
+                          </object>
+                        </child>
+                        <child>
+                          <object class="GtkMenuItem" id="menu-suspend-vm">
+                            <property name="use_action_appearance">False</property>
+                            <property name="visible">True</property>
+                            <property name="can_focus">False</property>
+                            <property name="label" translatable="yes">_Приостановить</property>
+                            <property name="use_underline">True</property>
+                            <signal name="activate" handler="virt_viewer_window_menu_suspend_vm" swapped="no"/>
+                          </object>
+                        </child>
+                        <child>
+                          <object class="GtkMenuItem" id="menu-shutdown-vm">
+                            <property name="use_action_appearance">False</property>
+                            <property name="visible">True</property>
+                            <property name="can_focus">False</property>
+                            <property name="label" translatable="yes">_Завершение работы</property>
+                            <property name="use_underline">True</property>
+                            <signal name="activate" handler="virt_viewer_window_menu_shutdown_vm" swapped="no"/>
+                          </object>
+                        </child>
+                        <child>
+                          <object class="GtkMenuItem" id="menu-shutdown-vm-force">
+                            <property name="use_action_appearance">False</property>
+                            <property name="visible">True</property>
+                            <property name="can_focus">False</property>
+                            <property name="label" translatable="yes">_Завершение работы форсировано</property>
+                            <property name="use_underline">True</property>
+                            <signal name="activate" handler="virt_viewer_window_menu_shutdown_vm_force" swapped="no"/>
+                          </object>
+                        </child>
+                        <child>
+                          <object class="GtkMenuItem" id="menu-reboot-vm">
+                            <property name="use_action_appearance">False</property>
+                            <property name="visible">True</property>
+                            <property name="can_focus">False</property>
+                            <property name="label" translatable="yes">_Перезагрузить</property>
+                            <property name="use_underline">True</property>
+                            <signal name="activate" handler="virt_viewer_window_menu_reboot_vm" swapped="no"/>
+                          </object>
+                        </child>
+                        <child>
+                          <object class="GtkMenuItem" id="menu-reboot-vm-force">
+                            <property name="use_action_appearance">False</property>
+                            <property name="visible">True</property>
+                            <property name="can_focus">False</property>
+                            <property name="label" translatable="yes">_Перезагрузить форсировано</property>
+                            <property name="use_underline">True</property>
+                            <signal name="activate" handler="virt_viewer_window_menu_reboot_vm_force" swapped="no"/>
                           </object>
                         </child>
                       </object>

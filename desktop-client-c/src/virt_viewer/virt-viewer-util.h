@@ -45,7 +45,7 @@ typedef struct
     gboolean response;
     GMainLoop *loop;
     GtkWidget *entry;
-    GtkResponseType dialogWindowResponse;
+    GtkResponseType dialog_window_response;
 } ConnectionInfo;
 
 #define VIRT_VIEWER_ERROR virt_viewer_error_quark ()

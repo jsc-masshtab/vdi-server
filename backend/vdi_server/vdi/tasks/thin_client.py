@@ -1,9 +1,7 @@
-from dataclasses import dataclass
 import json
+from dataclasses import dataclass
 
-from .base import UrlFetcher
-import json
-from dataclasses import dataclass
+from cached_property import cached_property as cached
 
 from .base import UrlFetcher
 
@@ -15,6 +13,7 @@ class EnableRemoteAccess(UrlFetcher):
 
     method = 'POST'
 
+    @cached
     def url(self):
         return f"http://{self.controller_ip}/api/domains/{self.domain_id}/remote-access/"
 
@@ -34,6 +33,7 @@ class PrepareVm(UrlFetcher):
     controller_ip: str
     domain_id: str
 
+    @cached
     def url(self):
         return f"http://{self.controller_ip}/api/domains/{self.domain_id}/"
 
@@ -68,5 +68,6 @@ class DoActionOnVm(UrlFetcher):
 
     method = 'POST'
 
+    @cached
     def url(self):
         return f"http://{self.controller_ip}/api/domains/{self.domain_id}/{self.action}/"

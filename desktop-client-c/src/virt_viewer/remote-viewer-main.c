@@ -30,19 +30,19 @@
 #include "remote-viewer.h"
 #include "virt-viewer-util.h"
 #include "crashhandler.h"
+#include "vdi_api_session.h"
 
-int
-main(int argc, char **argv)
-{
-#ifdef NDEBUG // logging errors and traceback in release mode
+void
+setup_logging(){
+
     // get ts
     gint64 cur_ts = g_get_real_time();
-    gchar *ts_string = g_strdup_printf("%lld", cur_ts);
+    gchar *ts_string = g_strdup_printf("%lld", (long long int)cur_ts);
     const gchar *log_dir = "log/";
 
     // crash handler
     gchar *bt_file_name = g_strconcat(log_dir, ts_string, "_backtrace.txt", NULL);
-    installHandler(bt_file_name);
+    install_crash_handler(bt_file_name);
 
     //error output
     gchar *stderr_file_name = g_strconcat(log_dir, ts_string, "_stderr.txt", NULL);
@@ -52,18 +52,32 @@ main(int argc, char **argv)
     g_free(ts_string);
     g_free(bt_file_name);
     g_free(stderr_file_name);
+}
+
+int
+main(int argc, char **argv)
+{
+#ifdef NDEBUG // logging errors and traceback in release mode
+    setup_logging();
 #else
 
 #endif
-    // app
+
+    // start session
+    start_vdi_session();
+
+    // start app
     int ret = 1;
     GApplication *app = NULL;
-
     virt_viewer_util_init("Veil VDI Тонкий клиент");
     app = G_APPLICATION(remote_viewer_new());
 
     ret = g_application_run(app, argc, argv);
+
+    // free resources
+    stop_vdi_session();
     g_object_unref(app);
+
     return ret;
 }
 //

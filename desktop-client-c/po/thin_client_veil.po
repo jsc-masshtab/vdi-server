@@ -294,7 +294,7 @@ msgstr ""
 msgid "The Fedora Translation Team"
 msgstr "Команда локализации Fedora"
 
-#: ../src/virt-viewer-app.c:459
+#: ../src/virt-viewer-app.c:460
 msgid "Do you want to close the session?"
 msgstr "Закрыть сеанс?"
 

@@ -49,7 +49,7 @@ void crush_handler(int sig){
         (void)sizeWritten;
         backtrace_symbols_fd(array, size, pfd);
     }
-#elif defined _WIN32
+#elif defined _WIN32 // todo: implement for windows (winapi)
     (void)sig;
 #else
 #error "current OS is not supported"
@@ -58,7 +58,7 @@ void crush_handler(int sig){
     _Exit(0);
 }
 //========================================================================
-void installHandler(const char *logFileName){
+void install_crash_handler(const char *logFileName){
 
     memcpy(&fileName[0], logFileName, strlen(logFileName));
 

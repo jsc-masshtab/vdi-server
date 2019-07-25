@@ -1,4 +1,3 @@
 
-from .base import Token, CONTROLLER_IP, UrlFetcher
-from .client import FetchException, HttpClient
+from .base import Token, UrlFetcher
 from . import disk, vm

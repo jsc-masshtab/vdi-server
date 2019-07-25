@@ -42,6 +42,8 @@ typedef struct _VirtViewerAppPrivate VirtViewerAppPrivate;
 typedef struct {
     GtkApplication parent;
     VirtViewerAppPrivate *priv;
+
+    gboolean is_polling; // flag for session reconnect
 } VirtViewerApp;
 
 typedef struct {
@@ -103,7 +105,7 @@ gboolean virt_viewer_app_get_session_cancelled(VirtViewerApp *self);
 
 // Вынесено из внутренних
 void virt_viewer_app_deactivate(VirtViewerApp *self, gboolean connect_error);
-void virt_viewer_app_hide_all_windows(VirtViewerApp *app);
+void virt_viewer_app_hide_all_windows(VirtViewerApp *app); // todo: return back
 
 G_END_DECLS
 

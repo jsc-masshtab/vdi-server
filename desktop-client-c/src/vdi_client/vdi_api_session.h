@@ -10,6 +10,9 @@
 #include <libsoup/soup-session.h>
 #include <libsoup/soup-message.h>
 
+#define VM_ID_UNKNOWN -1
+
+// vm operational system
 typedef enum{
     VDI_VM_WIN,
     VDI_VM_LINUX,
@@ -19,59 +22,78 @@ typedef enum{
 // Инфа о виртуальной машине полученная от vdi
 typedef struct{
 
-    int osType;
+    int os_type;
     gchar *ip;
-    gint testData;
+    gint test_data;
 
 } VdiVmData;
 
 // vdi session
 typedef struct{
 
-    SoupSession *soupSession;
+    SoupSession *soup_session;
+
+    gchar *vdi_username;
+    gchar *vdi_password;
+    gchar *vdi_ip;
+    gchar *vdi_port;
 
     gchar *api_url;
     gchar *auth_url;
     gchar *jwt;
 
+    gboolean is_active;
+
+    gint64 current_vm_id;
+
 } VdiSession;
 
+// Data which passed to api_call
+typedef struct{
+    gint64 current_vm_id;
+    gchar *action_on_vm_str;
+    gboolean is_action_forced;
+
+} ActionOnVmData;
+
 // Functions
-
-void setVdiCredentials(const gchar *username, const gchar *password, const gchar *ip, const gchar *port);
-
-void startSession();
-void stopSession();
-void cancellPendingRequests();
-
-void setupHeaderForApiCall(SoupMessage *msg);
-
-guint sendMessage(SoupMessage *msg);
-
-// Получаем токен
-gboolean refreshVdiSessionToken();
+// init session
+void start_vdi_session();
+// deinit session
+void stop_vdi_session();
+// cancell pending requests
+void cancell_pending_requests();
+// set vdi session credentials
+void set_vdi_credentials(const gchar *username, const gchar *password, const gchar *ip, const gchar *port);
+// set current vm id
+void set_current_vm_id(gint64 current_vm_id);
+// get current vm id
+gint64 get_current_vm_id();
 
 //void gInputStreamToBuffer(GInputStream *inputStream, gchar *responseBuffer);
-
-gchar * apiCall(const char *method, const char *uri_string);
+// Do api call. Return response body
+gchar *api_call(const char *method, const char *uri_string, const gchar *body_str);
 
 // Запрашиваем список пулов
-void getVdiVmData(GTask         *task,
+void get_vdi_vm_data(GTask         *task,
                  gpointer       source_object,
                  gpointer       task_data,
                  GCancellable  *cancellable);
 
 // Получаем виртуалку из пула
-void getVmDFromPool(GTask         *task,
+void get_vm_from_pool(GTask         *task,
                   gpointer       source_object,
                   gpointer       task_data,
                   GCancellable  *cancellable);
 
-// json (maybe to another file)
-JsonObject * getJsonObject(JsonParser *parser, const gchar *data);
-JsonArray * getJsonArray(JsonParser *parser, const gchar *data);
-// threads
-void executeAsyncTask(GTaskThreadFunc  task_func, GAsyncReadyCallback  callback, gpointer callback_data);
+// Do action on virtual machine
+void do_action_on_vm(GTask         *task,
+                  gpointer       source_object,
+                  gpointer       task_data,
+                  GCancellable  *cancellable);
 
+// threads
+void execute_async_task(GTaskThreadFunc  task_func, GAsyncReadyCallback  callback, gpointer callback_data);
+void do_action_on_vm_async(const gchar *actionStr, gboolean isForced);
 
 #endif //VIRT_VIEWER_VEIL_VDI_API_SESSION_H
