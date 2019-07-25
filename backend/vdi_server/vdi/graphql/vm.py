@@ -14,9 +14,9 @@ class AssignVmToUser(graphene.Mutation):
         username = graphene.String()
 
     ok = graphene.Boolean()
+    error = graphene.String()
 
     async def mutate(self, _info, vm_id, username):
-
         async with db.connect() as conn:
             # find pool the vm belongs to
             qu = f'SELECT vm.pool_id from vm WHERE vm.id = $1 ', vm_id
@@ -40,7 +40,7 @@ class AssignVmToUser(graphene.Mutation):
                     'error': 'Requested user is not entitled to the pool the requested vm belong to'
                 }
 
-            # another vm in the pool may have this user as owner. Reset ownership
+            # another vm in the pool may have this user as owner. Remove assignment
             qu = f'UPDATE vm SET username = NULL WHERE pool_id = $1 AND username = $2', pool_id, username
             await conn.fetch(*qu)
 
@@ -52,6 +52,25 @@ class AssignVmToUser(graphene.Mutation):
             'ok': True,
             'error': 'null'
         }
+
+
+class RemoveAssignedVmFromUser(graphene.Mutation):
+    class Arguments:
+        vm_id = graphene.String()
+        username = graphene.String()
+
+    ok = graphene.Boolean()
+
+    async def mutate(self, _info, vm_id, username):
+        async with db.connect() as conn:
+            qu = f'UPDATE vm SET username = NULL WHERE id = $1 AND username = $2', vm_id, username
+            await conn.fetch(*qu)
+
+        return {
+            'ok': True,
+            'error': 'null'
+        }
+
 
 class PoolWizardMixin:
 
