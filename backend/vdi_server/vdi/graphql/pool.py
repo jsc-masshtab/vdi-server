@@ -407,14 +407,20 @@ class RemoveUserEntitlementsFromPool(graphene.Mutation):
     class Arguments:
         pool_id = graphene.Int()
         entitled_users = graphene.List(graphene.String)
+        free_assigned_vm = graphene.Boolean()
 
     ok = graphene.Boolean()
 
-    async def mutate(self, _info, pool_id, entitled_users):
+    async def mutate(self, _info, pool_id, entitled_users, free_assigned_vm):
         async with db.connect() as conn:
             for user in entitled_users:
+                # remove entitlement
                 qu = "DELETE FROM pools_users WHERE pool_id = $1 AND username = $2", pool_id, user
                 await conn.fetch(*qu)
+                # free assigned vm
+                if free_assigned_vm:
+                    qu = "UPDATE vm SET username = NULL WHERE pool_id = $1 AND username = $2", pool_id, user
+                    await conn.fetch(*qu)
 
         return {
             'ok': True

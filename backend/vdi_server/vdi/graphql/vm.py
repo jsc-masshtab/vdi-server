@@ -10,6 +10,70 @@ from .pool import VmType, TemplateType
 from vdi.errors import SimpleError
 
 
+class AssignVmToUser(graphene.Mutation):
+    class Arguments:
+        vm_id = graphene.String()
+        username = graphene.String()
+
+    ok = graphene.Boolean()
+    error = graphene.String()
+
+    async def mutate(self, _info, vm_id, username):
+        async with db.connect() as conn:
+            # find pool the vm belongs to
+            qu = f'SELECT vm.pool_id from vm WHERE vm.id = $1 ', vm_id
+            pool_ids = await conn.fetch(*qu)
+
+            if not pool_ids:
+                return {
+                    'ok': False,
+                    'error': 'Requested vm doesnt belong to any pool'
+                }
+            else:
+                [(pool_id,)] = pool_ids
+                print('AssignVmToUser::mutate pool_id', pool_id)
+
+            # check if the user is entitled to pool(pool_id) the vm belongs to
+            qu = f'SELECT * from pools_users WHERE pool_id = $1 AND username = $2', pool_id, username
+            pools_users_data = await conn.fetch(*qu)
+            if not pools_users_data:
+                return {
+                    'ok': False,
+                    'error': 'Requested user is not entitled to the pool the requested vm belong to'
+                }
+
+            # another vm in the pool may have this user as owner. Remove assignment
+            qu = f'UPDATE vm SET username = NULL WHERE pool_id = $1 AND username = $2', pool_id, username
+            await conn.fetch(*qu)
+
+            # assign vm to the user(username)
+            qu = "update vm set username = $1 where id = $2", username, vm_id
+            await conn.fetch(*qu)
+
+        return {
+            'ok': True,
+            'error': 'null'
+        }
+
+
+class RemoveAssignedVmFromUser(graphene.Mutation):
+    class Arguments:
+        vm_id = graphene.String()
+        username = graphene.String()
+
+    ok = graphene.Boolean()
+
+    async def mutate(self, _info, vm_id, username):
+        async with db.connect() as conn:
+            qu = f'UPDATE vm SET username = NULL WHERE id = $1 AND username = $2', vm_id, username
+            await conn.fetch(*qu)
+
+        return {
+            'ok': True,
+            'error': 'null'
+        }
+
+
 class PoolWizardMixin:
 
     def poolwizard():
