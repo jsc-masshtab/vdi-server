@@ -56,11 +56,12 @@ export class PoolAddComponent implements OnInit {
       "initial_size": "",
       "reserve_size": ""
 		});
-	}
+  }
+  
 
   private getTemplate() {
     this.defaultDataTemplates = "Загрузка шаблонов...";
-    this.templatesService.getAllTemplates().valueChanges.pipe(map(data => data.data.templates)).subscribe((res)=> {
+    this.templatesService.getAllTemplates().valueChanges.pipe(map(data => data.data.controllers)).subscribe((res)=> {
       this.defaultDataTemplates = "- нет доступных шаблонов -";
       this.templates = res.map((item) => {
         let parse = JSON.parse(item['info']);
@@ -76,13 +77,22 @@ export class PoolAddComponent implements OnInit {
 
   private getClusters() {
     this.defaultDataClusters = "Загрузка кластеров...";
-    this.clustersService.getAllClusters().valueChanges.pipe(map(data => data.data.clusters))
-      .subscribe( (res) => {
+    this.clustersService.getAllClusters().valueChanges.pipe(map(data => data.data.controllers))
+      .subscribe( (data) => {
         this.defaultDataClusters = "- нет доступных кластеров -";
-        this.clusters = res.map((item) => {
+        let arrClusters: [][] = [];
+        this.clusters = [];
+        arrClusters = data.map(controller => controller.clusters);
+
+        arrClusters.forEach((arr: []) => {
+            arr.forEach((obj: {}) => {
+              this.clusters.push(obj);
+            }); 
+        });
+        this.clusters = this.clusters.map((item) => {
           return {
-            'output': item.id,
-            'input': item.verbose_name
+            'output': item['id'],
+            'input': item['verbose_name']
           }
         });
       },
@@ -93,7 +103,7 @@ export class PoolAddComponent implements OnInit {
 
   private getNodes(id_cluster) {
     this.defaultDataNodes = "Загрузка серверов...";
-    this.nodesService.getAllNodes(id_cluster).valueChanges.pipe(map(data => data.data.nodes))
+    this.nodesService.getAllNodes(id_cluster).valueChanges.pipe(map(data => data.data.controllers))
       .subscribe( (res) => {
         this.defaultDataNodes = "- нет доступных серверов -";
         this.nodes =  res.map((item) => {
@@ -110,7 +120,7 @@ export class PoolAddComponent implements OnInit {
 
   private getDatapools(id_node) {
     this.defaultDataPools = "Загрузка пулов...";
-    this.datapoolsService.getAllDatapools(id_node).valueChanges.pipe(map(data => data.data.datapools))
+    this.datapoolsService.getAllDatapools(id_node).valueChanges.pipe(map(data => data.data.controllers))
     .subscribe( (res) => {
       this.defaultDataPools = "- нет доступных пулов -";
       this.datapools =  res.map((item) => {

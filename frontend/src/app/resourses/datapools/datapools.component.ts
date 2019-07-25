@@ -12,7 +12,7 @@ import { map } from 'rxjs/operators';
 
 export class DatapoolsComponent implements OnInit {
 
-  public datapools: {};
+  public datapools: object[] = [];
   public collection: object[] = [
 
     {
@@ -60,9 +60,17 @@ export class DatapoolsComponent implements OnInit {
 
   private getDatapools() {
     this.spinner = true;
-    this.service.getAllDatapools().valueChanges.pipe(map(data => data.data.datapools))
+    this.service.getAllDatapools().valueChanges.pipe(map(data => data.data.controllers))
       .subscribe( (data) => {
-        this.datapools = data;
+        let arrDatapools: [][] = [];
+        this.datapools = [];
+        arrDatapools = data.map(controller => controller.datapools);
+
+        arrDatapools.forEach((arr: []) => {
+            arr.forEach((obj: {}) => {
+              this.datapools.push(obj);
+            }); 
+        });
         this.spinner = false;
       },
       (error)=> {

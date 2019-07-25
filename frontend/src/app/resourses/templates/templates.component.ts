@@ -47,14 +47,25 @@ export class TemplatesComponent implements OnInit {
 
   private getTemplates() {
     this.spinner = true;
-    this.service.getAllTemplates().valueChanges.pipe(map(data => data.data.templates)).subscribe((res)=> {
-      this.templates = res.map((item) => {
-        return JSON.parse(item['info']);  
-    });
+    this.service.getAllTemplates().valueChanges.pipe(map(data => data.data.controllers)).subscribe((data)=> {
+       let arrTemplates: [][] = [];
+        this.templates = [];
+        arrTemplates = data.map(controller => controller.templates);
+
+        arrTemplates.forEach((arr: []) => {
+            arr.forEach((obj: {}) => {
+              this.parseInfoTmp(obj);
+            }); 
+        });
+   
     this.spinner = false;
     },(error) => {
       this.spinner = false;
     });
+  }
+
+  private parseInfoTmp(info): void {
+    this.templates.push(JSON.parse(info['info']));
   }
 
 

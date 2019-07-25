@@ -74,11 +74,11 @@ export class NodesComponent implements OnInit {
     this.service.getAllNodes().valueChanges.pipe(map(data => data.data.controllers))
       .subscribe( (data) => {
         this.nodes = data;
-        let arrsNodes: [][] = [];
+        let arrNodes: [][] = [];
         this.nodes = [];
-        arrsNodes = data.map(controller => controller.nodes);
+        arrNodes = data.map(controller => controller.nodes);
 
-        arrsNodes.forEach((arr: []) => {
+        arrNodes.forEach((arr: []) => {
             arr.forEach((obj: {}) => {
               this.nodes.push(obj);
             }); 

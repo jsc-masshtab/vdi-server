@@ -12,13 +12,13 @@ export class TemplatesService {
     public getAllTemplates(id?:string): QueryRef<any,any> {
         return  this.service.watchQuery({
             query:  gql` query allTemplates {
-                                templates {
-                                    id
-                                    info
-                                }  
+                                controllers {
+                                    templates {
+                                        id
+                                        info
+                                    }  
+                                }
                             }
-                         
-             
                      `,
             variables: {
                 method: 'GET'

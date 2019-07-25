@@ -73,17 +73,15 @@ export class ClustersComponent implements OnInit {
     this.spinner = true;
     this.service.getAllClusters().valueChanges.pipe(map(data => data.data.controllers))
       .subscribe( (data) => {
-        let arrsClusters: [][] = [];
+        let arrClusters: [][] = [];
         this.clusters = [];
-        arrsClusters = data.map(controller => controller.clusters);
+        arrClusters = data.map(controller => controller.clusters);
 
-        arrsClusters.forEach((arr: []) => {
+        arrClusters.forEach((arr: []) => {
             arr.forEach((obj: {}) => {
               this.clusters.push(obj);
             }); 
         });
-
-        console.log(this.clusters);
 
         this.spinner = false;
       },

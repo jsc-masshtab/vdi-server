@@ -143,14 +143,14 @@ export class NodeDetailsComponent implements OnInit {
   ngOnInit() {
     this.activatedRoute.paramMap.subscribe((param: ParamMap) => {
       this.node_id = param.get('id') as string;
-      this.getNode(this.node_id);
+      this.getNode();
     });
   }
 
-  private getNode(id:string) {
+  private getNode() {
     this.spinner = true;
     this.host = false;
-    this.service.getNode(id).valueChanges.pipe(map(data => data.data.node))
+    this.service.getNode(this.node_id).valueChanges.pipe(map(data => data.data.node))
       .subscribe( (data) => {
         this.node = data;
         this.templates = data.templates.map((item) => JSON.parse(item.info));
