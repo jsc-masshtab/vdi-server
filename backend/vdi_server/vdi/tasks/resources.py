@@ -8,7 +8,7 @@ from vdi.db import db
 
 from . import UrlFetcher, Token
 
-from vdi.errors import SimpleError, FetchException, HttpError
+from vdi.errors import SimpleError, FetchException, NotFound
 
 
 @dataclass()
@@ -36,7 +36,7 @@ class FetchCluster(UrlFetcher):
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         if isinstance(exc_val, FetchException) and exc_val.code == 404:
-            raise HttpError(404, "Кластер не найден") from exc_val
+            raise NotFound("Кластер не найден") from exc_val
 
 
 @dataclass()
@@ -51,7 +51,7 @@ class ListNodes(UrlFetcher):
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         if isinstance(exc_val, FetchException) and exc_val.code == 404:
-            raise HttpError(404, "Кластер не найден") from exc_val
+            raise NotFound("Кластер не найден") from exc_val
 
     async def run(self):
         resp = await super().run()
@@ -69,7 +69,7 @@ class FetchNode(UrlFetcher):
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         if isinstance(exc_val, FetchException) and exc_val.code == 404:
-            raise HttpError(404, "Узел не найден") from exc_val
+            raise NotFound("Узел не найден") from exc_val
 
     async def run(self):
         resp = await super().run()

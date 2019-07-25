@@ -68,15 +68,11 @@ class HttpClient:
             return repr(self._repr_obj)
         return super().__repr__()
 
-    def get_error_message(self, e: HTTPError):
+    def get_error_data(self, e: HTTPError):
         val = e.response.buffer.read()
         val = val.decode('utf-8')
         obj = json.loads(val)
-        try:
-            errors = obj['errors']['detail']
-            return '; '.join(errors)
-        except:
-            return repr(obj)
+        return obj
 
     async def fetch(self, *args, **kwargs):
         if not 'request_timeout' in kwargs:
@@ -84,12 +80,14 @@ class HttpClient:
         try:
             response = await self._client.fetch(*args, **kwargs)
         except HTTPError as e:
-            msg = self.get_error_message(e)
+            data = self.get_error_data(e)
+            if not isinstance(data, dict):
+                data = {'detail': data}
             if 'url' in kwargs:
                 url = kwargs['url']
             elif args:
                 url = args[0]
-            raise FetchException(message=msg, url=url, http_error=e)
+            raise FetchException(url=url, http_error=e, data=data)
         if self._json:
             response = json.loads(response.body)
         return response

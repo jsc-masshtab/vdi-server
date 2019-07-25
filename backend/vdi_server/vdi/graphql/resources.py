@@ -11,7 +11,7 @@ from ..tasks import resources, Token
 from ..tasks.vm import ListTemplates, ListVms
 from ..tasks.resources import DiscoverControllers, FetchNode, FetchCluster, DiscoverController
 
-from vdi.errors import FieldError, SimpleError, FetchException, HttpError
+from vdi.errors import FieldError, SimpleError, FetchException
 
 class DatacenterType(graphene.ObjectType):
     id = graphene.String()
