@@ -7,6 +7,7 @@ from classy_async import Task
 from .base import Token
 from .client import HttpClient
 from .ws import WsConnection
+from cached_property import cached_property as cached
 
 
 class ImageNotFound(Exception):
@@ -70,7 +71,7 @@ class ImportDisk(Task):
             if v == 'vdisk':
                 disk_id = k
                 break
-        await ws.wait_message(self.is_done)
+        await self.wait_message(ws)
         return disk_id
 
 
@@ -84,6 +85,7 @@ class CopyDisk(Task):
 
     method = 'POST'
 
+    @cached
     def url(self):
         return f'http://{self.controller_ip}/api/vdisks/{self.vdisk}/copy/?async=1'
 
@@ -119,5 +121,5 @@ class CopyDisk(Task):
         await ws.send('add /tasks/')
         response = await HttpClient().fetch_using(self)
         self.task_obj = response['_task']
-        await ws.wait_message(self.is_done)
+        await self.wait_message(ws)
         return self.get_result()

@@ -25,6 +25,10 @@ class Settings(SettingsDict):
         'password': '4ever',
     }
 
+    ws = {
+        'timeout': 5 * 60
+    }
+
 
 settings = Settings()
 

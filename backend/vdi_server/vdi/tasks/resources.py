@@ -30,6 +30,7 @@ class FetchCluster(UrlFetcher):
     controller_ip: str
     cluster_id: str
 
+    @cached
     def url(self):
         return f'http://{self.controller_ip}/api/clusters/{self.cluster_id}/'
 
@@ -54,6 +55,7 @@ class FetchNode(UrlFetcher):
     node_id: str
     controller_ip: str
 
+    @cached
     def url(self):
         return f'http://{self.controller_ip}/api/nodes/{self.node_id}/'
 

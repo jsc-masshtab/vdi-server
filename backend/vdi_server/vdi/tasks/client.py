@@ -89,7 +89,7 @@ class HttpClient:
                 url = kwargs['url']
             elif args:
                 url = args[0]
-            raise FetchException(msg, url=url, http_error=e)
+            raise FetchException(message=msg, url=url, http_error=e)
         if self._json:
             response = json.loads(response.body)
         return response

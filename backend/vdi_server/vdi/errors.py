@@ -3,8 +3,12 @@ from cached_property import cached_property as cached
 
 
 class BackendError(Exception):
+    def __init__(self, **kwargs):
+        self.__dict__.update(kwargs)
+
     def format_error(self):
         return {
+            **self.__dict__,
             'type': self.__class__.__name__
         }
 
@@ -13,14 +17,10 @@ class ApiError(BackendError):
     def __init__(self, data):
         self.data = data
 
-    @cached
-    def type(self):
-        return self.__class__.__name__
-
     def format_error(self):
-        type_info = super().format_error()
         return {
-            **type_info, 'data': self.data
+            'type': self.__class__.__name__,
+            'data': self.data
         }
 
 
@@ -38,13 +38,12 @@ class NotFound(Exception):
 
 
 class FetchException(BackendError):
-    def __init__(self, msg, *, url, http_error):
-        self.http_error = http_error
-        self.url = url
-        super().__init__(msg)
-
     def format_error(self):
-        type_info = super().format_error()
         return {
-            **type_info, 'url': self.url, 'message': str(self),
+            'type': self.__class__.__name__,
+            'url': self.url,
+            'message': self.message,
         }
+
+class WsTimeout(BackendError):
+    pass

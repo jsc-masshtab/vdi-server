@@ -62,7 +62,7 @@ class AddNode(Task):
         }
         response = await HttpClient().fetch_using(self, headers=headers, body=json.dumps(self.body))
         self.task_id = response['_task']['id']
-        await ws.wait_message(self.is_done)
+        await self.wait_message(ws)
         [node_id] = response['_task']['nodes_list']
         return node_id
 

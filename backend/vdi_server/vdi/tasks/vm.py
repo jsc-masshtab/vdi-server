@@ -5,24 +5,12 @@ import uuid
 from dataclasses import dataclass
 
 from cached_property import cached_property as cached
-from classy_async import Task, Awaitable
+from classy_async import Task, Awaitable, TaskTimeout
 
 from . import disk
 from .base import Token, UrlFetcher
 from .client import HttpClient
 from .ws import WsConnection
-
-
-class Node(Task):
-
-    async def run(self):
-        datapool = await disk.DefaultDatapool()
-        nodes = datapool['nodes_connected']
-        if len(nodes) == 1:
-            [node] = nodes
-            if node['connection_status'] == 'SUCCESS':
-                return node['id']
-
 
 @dataclass()
 class CreateDomain(Task):
@@ -66,7 +54,7 @@ class CreateDomain(Task):
         http_client = HttpClient()
         body = urllib.parse.urlencode(self.params)
         self.domain = await http_client.fetch(self.url, method='POST', headers=headers, body=body)
-        await ws.wait_message(self.is_done)
+        await self.wait_message(ws)
         return self.domain
 
 
@@ -79,8 +67,8 @@ class AttachVdisk(Task):
 
     method = 'POST'
 
-
-    async def url(self):
+    @cached
+    def url(self):
         return f"http://{self.controller_ip}/api/domains/{self.domain_id}/attach-vdisk/"
 
     async def headers(self):
@@ -114,7 +102,7 @@ class AttachVdisk(Task):
         ws = await WsConnection(controller_ip=self.controller_ip)
         await ws.send('add /tasks/')
         self.response = await HttpClient().fetch_using(self)
-        await ws.wait_message(self.is_done)
+        await self.wait_message(ws)
         return True
 
 
@@ -215,15 +203,16 @@ class CopyDomain(UrlFetcher):
 
     new_domain_id = None
 
+    @cached
     def url(self):
-        # return f"http://{self.controller_ip}/api/domains/{self.domain_id}/clone/?async=1&parent={self.domain_id}"
-        return f"http://{self.controller_ip}/api/domains/{self.domain_id}/clone/?async=1"
+        return f"http://{self.controller_ip}/api/domains/multi-create-domain/?async=1"
 
     async def body(self):
         params = {
             "verbose_name": self.domain_name,
             "node": self.node_id,
             "datapool": self.datapool_id,
+            "parent": self.domain_id,
         }
         return json.dumps(params)
 
@@ -233,7 +222,7 @@ class CopyDomain(UrlFetcher):
         await ws.send('add /tasks/')
         resp = await super().run()
         self.task_id = resp['_task']['id']
-        await ws.wait_message(self.is_done)
+        await self.wait_message(ws)
         info = await info_task
         return {
             'id': self.new_domain_id,
@@ -331,5 +320,6 @@ class GetDomainInfo(UrlFetcher):
     domain_id: str
     controller_ip: str
 
+    @cached
     def url(self):
         return f"http://{self.controller_ip}/api/domains/{self.domain_id}/"

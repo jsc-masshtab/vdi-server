@@ -1,10 +1,10 @@
 import urllib
 
 from cached_property import cached_property as cached
-from classy_async import Task
+from classy_async import Task, TaskTimeout
 
 from vdi.tasks.client import HttpClient
-from vdi.errors import NotFound, FetchException
+from vdi.errors import NotFound, FetchException, WsTimeout
 
 from dataclasses import dataclass
 
@@ -49,6 +49,12 @@ class UrlFetcher(Task):
     async def run(self):
         with self:
             return await self.client.fetch_using(self)
+
+    async def wait_message(self, ws):
+        try:
+            return await ws.wait_message(self.is_done)
+        except TaskTimeout:
+            raise WsTimeout(url=self.url, data="Таймаут ожидания завершения")
 
     def __enter__(self):
         return self
