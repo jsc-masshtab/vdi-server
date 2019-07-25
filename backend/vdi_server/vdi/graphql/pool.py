@@ -340,16 +340,14 @@ class WakePool(graphene.Mutation):
 class RemovePool(graphene.Mutation):
     class Arguments:
         id = graphene.Int()
-        controller_ip = graphene.String()
-        block = graphene.Boolean()
 
     ok = graphene.Boolean()
     ids = graphene.List(graphene.String)
-    #TODO VmType
 
     @classmethod
-    async def do_remove(cls, pool_id, *, controller_ip):
+    async def do_remove(cls, pool_id):
         pool = await Pool.get_pool(pool_id)
+        controller_ip = pool.params['controller_ip']
         vms = await pool.load_vms()
         vm_ids = [v['id'] for v in vms]
 
@@ -374,14 +372,11 @@ class RemovePool(graphene.Mutation):
 
         return vm_ids
 
-    async def mutate(self, info, id, block=False):
-        async with db.connect() as conn:
-            qu = 'select controller_ip from pool where id = $1', id
-            (controller_ip,) = await conn.fetch(*qu)
-        task = RemovePool.do_remove(id, controller_ip=controller_ip)
+    async def mutate(self, info, id):
+        task = RemovePool.do_remove(id)
         task = asyncio.create_task(task)
         selections = get_selections(info)
-        if block or 'ids' in selections:
+        if 'ids' in selections:
             vm_ids = await task
             return RemovePool(ok=True, ids=vm_ids)
         return RemovePool(ok=True)
