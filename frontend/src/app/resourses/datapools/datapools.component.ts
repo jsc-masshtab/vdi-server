@@ -12,15 +12,13 @@ import { map } from 'rxjs/operators';
 
 export class DatapoolsComponent implements OnInit {
 
-  public datapools: {};
+  public datapools: object[] = [];
   public collection: object[] = [
-    {
-      title: '№',
-      property: 'index'
-    },
+
     {
       title: 'Название',
-      property: 'verbose_name'
+      property: 'verbose_name',
+      class: 'name-start'
     },
     {
       title: 'Тип',
@@ -52,17 +50,6 @@ export class DatapoolsComponent implements OnInit {
     }
   ];
 
-  public crumbs: object[] = [
-    {
-      title: 'Ресурсы',
-      icon: 'database'
-    },
-    {
-      title: `Пулы данных`,
-      icon: 'folder-open'
-    }
-  ];
-
   public spinner:boolean = false;
 
   constructor(private service: DatapoolsService){}
@@ -73,9 +60,17 @@ export class DatapoolsComponent implements OnInit {
 
   private getDatapools() {
     this.spinner = true;
-    this.service.getAllDatapools().valueChanges.pipe(map(data => data.data.datapools))
+    this.service.getAllDatapools().valueChanges.pipe(map(data => data.data.controllers))
       .subscribe( (data) => {
-        this.datapools = data;
+        let arrDatapools: [][] = [];
+        this.datapools = [];
+        arrDatapools = data.map(controller => controller.datapools);
+
+        arrDatapools.forEach((arr: []) => {
+            arr.forEach((obj: {}) => {
+              this.datapools.push(obj);
+            }); 
+        });
         this.spinner = false;
       },
       (error)=> {

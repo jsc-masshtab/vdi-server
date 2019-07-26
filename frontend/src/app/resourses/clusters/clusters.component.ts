@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit,HostListener,ViewChild,ElementRef } from '@angular/core';
 import { ClustersService } from './clusters.service';
 import { map } from 'rxjs/operators';
 import { Router } from '@angular/router';
@@ -12,15 +12,12 @@ import { Router } from '@angular/router';
 
 export class ClustersComponent implements OnInit {
 
-  public clusters: object[] = [];
+  public clusters= [];
   public collection: object[] = [
     {
-      title: '№',
-      property: 'index'
-    },
-    {
       title: 'Название',
-      property: 'verbose_name'
+      property: 'verbose_name',
+      class: 'name-start'
     },
     {
       title: 'Серверы',
@@ -35,24 +32,38 @@ export class ClustersComponent implements OnInit {
       property: 'memory_count'
     },
     {
-      title: 'Статус',
-      property: 'status'
-    }
-  ];
-  public crumbs: object[] = [
-    {
-      title: 'Ресурсы',
-      icon: 'database'
+      title: 'Контроллер',
+      property: 'controller',
+      property_lv2: 'ip'
     },
     {
-      title: 'Кластеры',
-      icon: 'building'
+      title: 'Статус',
+      property: 'status'
     }
   ];
 
   public spinner:boolean = false;
 
+  private pageHeightMinNumber: number = 315;
+	private pageHeightMin: string = '315px';
+	private pageHeightMax: string = '100%';
+  private pageHeight: string = '100%';
+  private pageRollup: boolean = false;
+
   constructor(private service: ClustersService,private router: Router){}
+
+
+  @ViewChild('view') view:ElementRef;
+
+  @HostListener('window:resize', ['$event']) onResize(event) {
+		if(this.pageHeight == this.pageHeightMin) {
+			if((this.view.nativeElement.clientHeight - this.pageHeightMinNumber) < (this.pageHeightMinNumber + 250)) {
+				this.pageRollup = true;
+			} else {
+				this.pageRollup = false;
+			}
+		}
+	}
 
   ngOnInit() {
     this.getAllClusters();
@@ -60,9 +71,18 @@ export class ClustersComponent implements OnInit {
 
   private getAllClusters() {
     this.spinner = true;
-    this.service.getAllClusters().valueChanges.pipe(map(data => data.data.clusters))
+    this.service.getAllClusters().valueChanges.pipe(map(data => data.data.controllers))
       .subscribe( (data) => {
-        this.clusters = data;
+        let arrClusters: [][] = [];
+        this.clusters = [];
+        arrClusters = data.map(controller => controller.clusters);
+
+        arrClusters.forEach((arr: []) => {
+            arr.forEach((obj: {}) => {
+              this.clusters.push(obj);
+            }); 
+        });
+
         this.spinner = false;
       },
       (error)=> {
@@ -70,8 +90,31 @@ export class ClustersComponent implements OnInit {
       });
   }
 
+  private componentAdded(): void {
+		setTimeout(()=> {
+		//	this.routerActivated = true;
+			this.pageHeight = this.pageHeightMin;
+
+			if((this.view.nativeElement.clientHeight - this.pageHeightMinNumber) < (this.pageHeightMinNumber + 250)) {
+				this.pageRollup = true;
+			};
+		}, 0);
+	}
+
+	private componentRemoved(): void {
+		setTimeout(()=> {
+			//this.routerActivated = false;
+			this.pageHeight = this.pageHeightMax;
+			this.pageRollup = false;
+		}, 0);
+  }
+
   public routeTo(event): void {
     this.router.navigate([`resourses/clusters/${event.id}`]);
+
+    setTimeout(()=> {
+      this.pageHeight = this.pageHeightMin;
+    }, 0);
   }
 
 

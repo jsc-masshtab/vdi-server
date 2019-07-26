@@ -88,9 +88,8 @@ export class PoolsService  {
     }
 
     public getPool(id:number): Observable<any> {
-        const obs$ = timer(0,60000);
 
-        return  obs$.pipe(switchMap(()=> { return this.service.watchQuery({
+        return  this.service.watchQuery({
             query:  gql`  query getPool($id: Int) {
                         pool(id: $id) {
                             name
@@ -115,8 +114,9 @@ export class PoolsService  {
                 method: 'GET',
                 id: id
             }
-        }).valueChanges.pipe(map(data => data.data['pool'])); }));
-    }
+        }).valueChanges.pipe(map(data => data.data['pool'])); 
+    };
+    
 
     public createPoll(name: string,template_id: string,cluster_id: string,node_id: string,datapool_id: string,initial_size: number,reserve_size: number) {
         return this.service.mutate<any>({

@@ -56,19 +56,23 @@ export class PoolAddComponent implements OnInit {
       "initial_size": "",
       "reserve_size": ""
 		});
-	}
+  }
+  
 
   private getTemplate() {
     this.defaultDataTemplates = "Загрузка шаблонов...";
-    this.templatesService.getAllTemplates().valueChanges.pipe(map(data => data.data.templates)).subscribe((res)=> {
+    this.templatesService.getAllTemplates().valueChanges.pipe(map(data => data.data.controllers)).subscribe((data) => {
       this.defaultDataTemplates = "- нет доступных шаблонов -";
-      this.templates = res.map((item) => {
+
+      let entity: object[] = this.parseEntity(data,'templates');
+
+      this.templates = entity.map((item) => {
         let parse = JSON.parse(item['info']);
         return {
           'output': parse.id,
           'input': parse.verbose_name
         }
-      })
+      });
     },(error) => {
       this.defaultDataTemplates = "- нет доступных шаблонов -";
     });
@@ -76,13 +80,16 @@ export class PoolAddComponent implements OnInit {
 
   private getClusters() {
     this.defaultDataClusters = "Загрузка кластеров...";
-    this.clustersService.getAllClusters().valueChanges.pipe(map(data => data.data.clusters))
-      .subscribe( (res) => {
+    this.clustersService.getAllClusters().valueChanges.pipe(map(data => data.data.controllers))
+      .subscribe( (data) => {
         this.defaultDataClusters = "- нет доступных кластеров -";
-        this.clusters = res.map((item) => {
+
+        let entity: object[] = this.parseEntity(data,'clusters');
+
+        this.clusters = entity.map((item) => {
           return {
-            'output': item.id,
-            'input': item.verbose_name
+            'output': item['id'],
+            'input': item['verbose_name']
           }
         });
       },
@@ -93,13 +100,16 @@ export class PoolAddComponent implements OnInit {
 
   private getNodes(id_cluster) {
     this.defaultDataNodes = "Загрузка серверов...";
-    this.nodesService.getAllNodes(id_cluster).valueChanges.pipe(map(data => data.data.nodes))
-      .subscribe( (res) => {
+    this.nodesService.getAllNodes(id_cluster).valueChanges.pipe(map(data => data.data.controllers))
+      .subscribe( (data) => {
         this.defaultDataNodes = "- нет доступных серверов -";
-        this.nodes =  res.map((item) => {
+
+        let entity: object[] = this.parseEntity(data,'nodes');
+
+        this.nodes =  entity.map((item) => {
           return {
-            'output': item.id,
-            'input': item.verbose_name
+            'output': item['id'],
+            'input': item['verbose_name']
           }
         });
       },
@@ -110,19 +120,36 @@ export class PoolAddComponent implements OnInit {
 
   private getDatapools(id_node) {
     this.defaultDataPools = "Загрузка пулов...";
-    this.datapoolsService.getAllDatapools(id_node).valueChanges.pipe(map(data => data.data.datapools))
-    .subscribe( (res) => {
+    this.datapoolsService.getAllDatapools(id_node).valueChanges.pipe(map(data => data.data.controllers))
+    .subscribe( (data) => {
       this.defaultDataPools = "- нет доступных пулов -";
-      this.datapools =  res.map((item) => {
+
+      let entity: object[] = this.parseEntity(data,'datapools');
+
+      this.datapools =  entity.map((item) => {
         return {
-          'output': item.id,
-          'input': item.verbose_name
+          'output': item['id'],
+          'input': item['verbose_name']
         }
       });
     },
     (error)=> {
       this.defaultDataPools = "- нет доступных пулов -";
     });
+  }
+
+  private parseEntity(data:[],prop): object[] {
+    let arr: [][] = [];
+        this[prop] = [];
+        arr = data.map(controller => controller[`${prop}`]);
+
+        arr.forEach((arr: []) => {
+            arr.forEach((obj: {}) => {
+              this[prop].push(obj);
+            }); 
+        });
+        console.log(this[prop]);
+        return this[prop];
   }
 
   private selectValue(data,type: string) {
@@ -143,7 +170,7 @@ export class PoolAddComponent implements OnInit {
       setTimeout(()=> {
         this.id_node = data[0];
         this.createPoolForm.get('node_id').setValue(this.id_node);
-        this.getDatapools(this.id_node);
+       this.getDatapools(this.id_node);
       },0)
     }
 

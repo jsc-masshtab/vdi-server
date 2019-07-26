@@ -1,7 +1,31 @@
 
-<vdi-breadcrumbs [data]="crumbs"></vdi-breadcrumbs>
-<div class="panel-btn">
-    <button (click)="openCreatePool()" title="Создать пул"><fa-icon [icon]="['fas','plus-circle']" size="xs"></fa-icon><span>Создать пул</span></button>
-    <button title="Обновить" (click)="getAllPools()"><fa-icon [icon]="['fas','sync-alt']" size="xs"></fa-icon><span>Обновить</span></button>
+<div class="control-panel">
+    
+    <div class="crumb">
+        <fa-icon [icon]="['fas','desktop']"></fa-icon>
+        <span class="crumb-name">Пулы рабочих столов</span>
+    </div>
+
+    <button (click)="getAllPools()" class="btn-refresh" title="Обновить">
+        <fa-icon [icon]="['fas','sync-alt']"></fa-icon>
+    </button>
+
+    <div class="control-btns">
+        <button type="button" (click)="openCreatePool()">
+            <fa-icon [icon]="['fas','plus-circle']"></fa-icon>
+            <span class="btn-name">Добавить пул</span>
+        </button>
+    </div>
 </div>
-<vdi-table-component [data]="pools" [collection]="collection" empty="- нет пулов - " [spinner]="spinner" [cursor]="true" (clickRowData)="routeTo($event)"></vdi-table-component>
+
+<div class="components-info" #view>
+    <div class="component-list" [class.page-wrap]="pageRollup" [class.page-rollup]="pageRollup" [style.height]="pageHeight">
+        <vdi-table-component [data]="pools" [collection]="collection" empty="- нет пулов - " [spinner]="spinner" [cursor]="true" (clickRowData)="routeTo($event)"></vdi-table-component>
+    </div>
+    <div class="component-details" [class.page-height-min]="pageHeight==pageHeightMin" [class.page-height-max]="pageRollup">
+        <router-outlet (activate)="componentAdded()" (deactivate)="componentRemoved()"></router-outlet>
+    </div>
+</div>
+
+
+

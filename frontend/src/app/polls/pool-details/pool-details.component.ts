@@ -1,9 +1,9 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { PoolsService } from '../pools.service';
-import { ActivatedRoute, ParamMap } from '@angular/router';
-import { Subscription } from 'rxjs';
+import { ActivatedRoute, ParamMap, Router } from '@angular/router';
 import { MatDialog } from '@angular/material';
 import { RemovePoolComponent } from '../remove-pool/remove-pool.component';
+
 
 @Component({
   selector: 'vdi-pool-details',
@@ -11,11 +11,11 @@ import { RemovePoolComponent } from '../remove-pool/remove-pool.component';
 })
 
 
-export class PoolDetailsComponent implements OnInit, OnDestroy {
+export class PoolDetailsComponent implements OnInit {
+
+  public host: boolean = false;
 
   public pool: {} = {};
-  private poolSub: Subscription;
-  private name_pool: string = "";
   public collection = [
     {
       title: 'Название',
@@ -56,52 +56,34 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
   ];
   private pool_id:number;
   public menuActive:string = 'info';
-  public crumbs: object[] = [
-    {
-      title: 'Пулы рабочих столов',
-      icon: 'desktop'  
-    }
-  ];
-
   public into_spinner:boolean = false;
 
   constructor(private activatedRoute: ActivatedRoute,
+              private router: Router,
               private service: PoolsService,
               public dialog: MatDialog){}
 
   ngOnInit() {
     this.activatedRoute.paramMap.subscribe((param: ParamMap) => {
       this.pool_id = +param.get('id');
-      this.getPool(this.pool_id);
+      this.getPool();
     });
   }
 
-  private getPool(id:number) {
+  private getPool() {
+    this.host = false;
     this.into_spinner = true;
-    this.poolSub = this.service.getPool(id)
+    this.service.getPool(this.pool_id)
       .subscribe( (data) => {
         this.pool = data;
-        this.addCrumb(this.pool['name']);
+
         this.into_spinner = false;
+        this.host = true;
       },
       (error)=> {
         this.into_spinner = false;
+        this.host = true;
       });
-  }
-
-  private addCrumb(poolName:string): boolean {
-
-    if(this.name_pool === poolName) {
-      return;
-    }
-
-    this.name_pool = poolName;
-    this.crumbs[0]['route'] = 'pools';
-        
-    this.crumbs.push({
-      title: `Пул ${ poolName }`,
-      icon: 'desktop'
-    });
   }
 
   public removePool() {
@@ -124,9 +106,7 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
     }
   }
 
-  ngOnDestroy() {
-    this.poolSub.unsubscribe();
+  public close() {
+    this.router.navigate(['pools']);
   }
-
-
 }

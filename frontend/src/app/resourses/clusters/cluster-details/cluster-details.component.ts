@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { ClustersService } from '../clusters.service';
 import { map } from 'rxjs/operators';
 import { ActivatedRoute, ParamMap } from '@angular/router';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'vdi-cluster-details',
@@ -17,7 +18,8 @@ export class ClusterDetailsComponent implements OnInit {
   public collection = [
     {
       title: 'Название',
-      property: 'verbose_name'
+      property: 'verbose_name',
+      class: 'name-start'
     },
     {
       title: 'Статус',
@@ -50,12 +52,9 @@ export class ClusterDetailsComponent implements OnInit {
   ];
   public collection_nodes = [
     {
-      title: '№',
-      property: 'index'
-    },
-    {
       title: 'Название',
-      property: 'verbose_name'
+      property: 'verbose_name',
+      class: 'name-start'
     },
     {
       title: 'IP-адрес',
@@ -76,12 +75,9 @@ export class ClusterDetailsComponent implements OnInit {
   ];
   public collection_datapools = [
     {
-      title: '№',
-      property: 'index'
-    },
-    {
       title: 'Название',
-      property: 'verbose_name'
+      property: 'verbose_name',
+      class: 'name-start'
     },
     {
       title: 'Тип',
@@ -114,12 +110,9 @@ export class ClusterDetailsComponent implements OnInit {
   ];
   public collection_templates = [
     {
-      title: '№',
-      property: 'index'
-    },
-    {
       title: 'Название',
-      property: 'verbose_name'
+      property: 'verbose_name',
+      class: 'name-start'
     },
     {
       title: 'Cервер',
@@ -139,12 +132,9 @@ export class ClusterDetailsComponent implements OnInit {
   ];
   public collection_vms = [
     {
-      title: '№',
-      property: 'index'
-    },
-    {
       title: 'Название',
-      property: 'name'
+      property: 'name',
+      class: 'name-start'
     },
     {
       title: 'Сервер',
@@ -159,52 +149,38 @@ export class ClusterDetailsComponent implements OnInit {
   ];
   public cluster_id:string;
   public menuActive:string = 'info';
-  public crumbs: object[] = [
-    {
-      title: 'Ресурсы',
-      icon: 'database'
-    },
-    {
-      title: 'Кластеры',
-      icon: 'building'
-    }
-  ];
-
+  public host: boolean = false;
   public spinner:boolean = false;
 
   constructor(private activatedRoute: ActivatedRoute,
-              private service: ClustersService){}
+              private service: ClustersService,
+              private router: Router){}
 
   ngOnInit() {
     this.activatedRoute.paramMap.subscribe((param: ParamMap) => {
       this.cluster_id = param.get('id') as string;
-      this.getCluster(this.cluster_id);
+      this.getCluster();
     });
   }
 
-  private getCluster(id:string) {
+  private getCluster() {
     this.spinner = true;
-    this.service.getCluster(id).valueChanges.pipe(map(data => data.data.cluster))
+    this.host = false;
+    this.service.getCluster(this.cluster_id).valueChanges.pipe(map(data => data.data.cluster))
       .subscribe( (data) => {
-        
         this.cluster = data;
-
-        this.crumbs[1]['route'] = 'resourses/clusters';
-    
-        this.crumbs.push({
-            title: `Кластер ${this.cluster['verbose_name']}`,
-            icon: 'building'
-          }
-        );
-
         this.templates = data.templates.map((item) => JSON.parse(item.info));
-      
-       this.spinner = false;
-      },
-      (error)=> {
         this.spinner = false;
-        console.log('error',error);
+        this.host = true;
+      },
+      (error) => {
+        this.spinner = false;
+        this.host = true;
       });
+  }
+
+  public close() {
+    this.router.navigate(['resourses/clusters']);
   }
 
   public routeTo(route:string): void {

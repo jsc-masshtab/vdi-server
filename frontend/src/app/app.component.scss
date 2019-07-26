@@ -1,7 +1,8 @@
 @import "common/styles/form";
 @import "common/styles/panel-buttons";
-@import "common/styles/menu-into";
+@import "common/styles/details-wrap";
 @import "common/styles/panel-btn-into";
+@import "common/styles/common";
 
 
 .container {
@@ -15,16 +16,19 @@
 
 .al-main {
     width: 100%;
-    height: 100%;
+    height: calc(100% - 80px);
     display: flex;
 }
 
 main {
     width: 100%;
-    height: 100%;
     position: relative;
-    height: calc(100% - 27px);
-    overflow-y: auto;
+    height: 100%;
+    background-color: #f5f5f5;
+    background-image: linear-gradient(to right bottom, rgba(255,255,255,0) 8px, #fff 9px, rgba(255,255,255,0) 10px),linear-gradient(to left bottom, rgba(255,255,255,0) 8px, #fff 9px, rgba(255,255,255,0) 10px);
+    background-repeat: repeat;
+    background-size: 12px 14px, 12px 14px, 12px 11px;
+    background-position: 0 0, 0 0, 0 20px;
 }
 
 .cursorTrue {
@@ -36,6 +40,7 @@ main {
     background: #282828;
     display: flex;
     align-items: center;
+    flex-shrink: 0;
     height: 50px;
     border-bottom: 1px solid rgba(255,255,255,0.2);
 }
@@ -54,25 +59,23 @@ main {
     }
 }
 
-vdi-footer {
-    position: fixed;
-    bottom: 0px;
-    width: 100%;
+::-webkit-scrollbar-track
+{
+	background-color: white;
+	border-left: 1px solid #e8e8e8;
+	border-right: 1px solid #e8e8e8;
 }
 
-::-webkit-scrollbar-thumb {
-    -webkit-border-radius: 5px;
-    border-radius: 5px;
-    background-color:#d9ecf4;
+::-webkit-scrollbar
+{
+	width: 10px;
+	height: 10px;
+	background-color: white;
 }
 
-::-webkit-scrollbar-thumb:hover {
-    background-color:orange;
-}
-    
-::-webkit-scrollbar{
-    width: 8px;
-    height: 8px;
+::-webkit-scrollbar-thumb
+{
+	background-color: #d6dcde;
 }
 
 fa-icon {

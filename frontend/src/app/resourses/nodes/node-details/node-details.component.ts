@@ -2,6 +2,7 @@ import { NodesService } from './../nodes.service';
 import { Component, OnInit } from '@angular/core';
 import { map } from 'rxjs/operators';
 import { ActivatedRoute, ParamMap } from '@angular/router';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'vdi-node-details',
@@ -17,7 +18,8 @@ export class NodeDetailsComponent implements OnInit {
   public collection = [
     {
       title: 'Название',
-      property: 'verbose_name'
+      property: 'verbose_name',
+      class: 'name-start'
     },
     {
       title: 'Кластер',
@@ -55,12 +57,9 @@ export class NodeDetailsComponent implements OnInit {
   ];
   public collection_datapools = [
     {
-      title: '№',
-      property: 'index'
-    },
-    {
       title: 'Название',
-      property: 'verbose_name'
+      property: 'verbose_name',
+      class: 'name-start'
     },
     {
       title: 'Тип',
@@ -93,12 +92,9 @@ export class NodeDetailsComponent implements OnInit {
   ];
   public collection_templates = [
     {
-      title: '№',
-      property: 'index'
-    },
-    {
       title: 'Название',
-      property: 'verbose_name'
+      property: 'verbose_name',
+      class: 'name-start'
     },
     {
       title: 'Cервер',
@@ -118,12 +114,9 @@ export class NodeDetailsComponent implements OnInit {
   ];
   public collection_vms = [
     {
-      title: '№',
-      property: 'index'
-    },
-    {
       title: 'Название',
-      property: 'name'
+      property: 'name',
+      class: 'name-start'
     },
     {
       title: 'Сервер',
@@ -138,50 +131,35 @@ export class NodeDetailsComponent implements OnInit {
   ];
   public node_id:string;
   public menuActive:string = 'info';
-  public crumbs: object[] = [
-    {
-      title: 'Ресурсы',
-      icon: 'database'
-    },
-    {
-      title: 'Cерверы',
-      icon: 'server'
-    }
-  ];
+
 
   public spinner:boolean = false;
+  public host: boolean = false;
 
   constructor(private activatedRoute: ActivatedRoute,
-              private service: NodesService){}
+              private service: NodesService,
+              private router: Router){}
 
   ngOnInit() {
     this.activatedRoute.paramMap.subscribe((param: ParamMap) => {
       this.node_id = param.get('id') as string;
-      this.getNode(this.node_id);
+      this.getNode();
     });
   }
 
-  private getNode(id:string) {
+  private getNode() {
     this.spinner = true;
-    this.service.getNode(id).valueChanges.pipe(map(data => data.data.node))
+    this.host = false;
+    this.service.getNode(this.node_id).valueChanges.pipe(map(data => data.data.node))
       .subscribe( (data) => {
-
         this.node = data;
-
         this.templates = data.templates.map((item) => JSON.parse(item.info));
-
-        this.crumbs[1]['route'] = 'resourses/nodes';
-        
-        this.crumbs.push({
-            title: `Сервер ${this.node['verbose_name']}`,
-            icon: 'server'
-          }
-        );
-      
         this.spinner = false;
+        this.host = true;
       },
       (error) => {
         this.spinner = false;
+        this.host = true;
       });
   }
 
@@ -202,6 +180,11 @@ export class NodeDetailsComponent implements OnInit {
       this.menuActive = 'vms';
     }
   }
+
+  public close() {
+    this.router.navigate(['resourses/nodes']);
+  }
+
 
 
 }

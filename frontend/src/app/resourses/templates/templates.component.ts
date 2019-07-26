@@ -15,12 +15,9 @@ export class TemplatesComponent implements OnInit {
   public templates: object[] = [];
   public collection = [
     {
-      title: '№',
-      property: 'index'
-    },
-    {
       title: 'Название',
-      property: 'verbose_name'
+      property: 'verbose_name',
+      class: 'name-start'
     },
     {
       title: 'Cервер',
@@ -39,16 +36,6 @@ export class TemplatesComponent implements OnInit {
     }
   ];
 
-  public crumbs: object[] = [
-    {
-      title: 'Ресурсы',
-      icon: 'database'
-    },
-    {
-      title: `Шаблоны ВМ`,
-      icon: 'tv'
-    }
-  ];
 
   public spinner:boolean = false;
 
@@ -60,14 +47,25 @@ export class TemplatesComponent implements OnInit {
 
   private getTemplates() {
     this.spinner = true;
-    this.service.getAllTemplates().valueChanges.pipe(map(data => data.data.templates)).subscribe((res)=> {
-      this.templates = res.map((item) => {
-        return JSON.parse(item['info']);  
-    });
+    this.service.getAllTemplates().valueChanges.pipe(map(data => data.data.controllers)).subscribe((data)=> {
+       let arrTemplates: [][] = [];
+        this.templates = [];
+        arrTemplates = data.map(controller => controller.templates);
+
+        arrTemplates.forEach((arr: []) => {
+            arr.forEach((obj: {}) => {
+              this.parseInfoTmp(obj);
+            }); 
+        });
+   
     this.spinner = false;
     },(error) => {
       this.spinner = false;
     });
+  }
+
+  private parseInfoTmp(info): void {
+    this.templates.push(JSON.parse(info['info']));
   }
 
 
