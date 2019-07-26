@@ -313,11 +313,15 @@ class ControllerType(graphene.ObjectType):
                 if vm['node']['id'] in nodes
             ]
         vm_ids = {vm['id']: None for vm in vms}
+        async with db.connect() as conn:
+            qu = "select id, pool_id from vm where id = any($1::text[])", list(vm_ids)
+            data = await conn.fetch(*qu)
+            for item in data:
+                id = item['id']
+                vm_ids[id] = item['pool_id']
+
         if not wild:
-            async with db.connect() as conn:
-                qu = "select id, pool_id from vm where id = any($1::text[])", list(vm_ids)
-                data = await conn.fetch(*qu)
-                vm_ids = {item['id']: item['pool_id'] for item in data}
+            vm_ids = {k: v for k, v in vm_ids.items() if v is not None}
 
         objects = []
         for vm in vms:
