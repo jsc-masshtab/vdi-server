@@ -17,6 +17,7 @@ export class VmsService {
                                             name
                                             node { verbose_name }
                                             template { name }
+                                            state
                                         }  
                                     }
                                 }

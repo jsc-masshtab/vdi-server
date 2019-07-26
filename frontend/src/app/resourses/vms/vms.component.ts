@@ -28,6 +28,10 @@ export class VmsComponent implements OnInit {
       title: 'Шаблон',
       property: "template",
       property_lv2: 'name'
+    },
+    {
+      title: 'Статус',
+      property: "state"
     }
   ];
 
