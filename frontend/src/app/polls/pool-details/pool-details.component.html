@@ -1,17 +1,38 @@
 
 
-<vdi-breadcrumbs [data]="crumbs"></vdi-breadcrumbs>
+
       
-<div class="resourse-into" *ngIf="!into_spinner">
-    <div class="panel-btn-into">
-        <button (click)="removePool()"><fa-icon [icon]="['fas','trash-alt']" size="xs"></fa-icon><span class="name">Удалить</span></button>
+<div class="details-wrap">
+
+    <div class="details-header">
+        <div class="title"><fa-icon [icon]="['fas','desktop']" size="s" ></fa-icon><span class="name">{{pool?.name}}</span></div>
+        <div class="btns-part">
+            <button class="btn-close" (click)="close()"><fa-icon [icon]="['fas','times-circle']"></fa-icon></button>
+        </div>
     </div>
-    <ul class="menu">
-        <li (click)="routeTo('info')" [class.active]="menuActive === 'info'" title="Информация">Информация</li>
-        <li (click)="routeTo('vms')" [class.active]="menuActive === 'vms'" title="Виртуальные машины">Виртуальные машины</li>
-    </ul>
-    <vdi-table-into [data]="pool" [collection]="collection" *ngIf="menuActive === 'info'"></vdi-table-into>
-    <vdi-table-component [data]="pool?.state?.available" [collection]="collection_vms" *ngIf="menuActive === 'vms'" empty=" - нет виртуальных машин - " ></vdi-table-component> 
+    <div class="details-control-panel">
+        <button (click)="getPool()" class="btn-refresh" title="Обновить"><fa-icon [icon]="['fas','sync-alt']"></fa-icon></button>
+        <button (click)="removePool()" class="btn-control"><fa-icon [icon]="['fas','trash-alt']" size="xs"></fa-icon><span class="name">Удалить</span></button>
+    </div>
+
+    <div class="details-row">
+        <ul class="details-menu">
+            <li (click)="routeTo('info')" [class.active]="menuActive === 'info'" title="Информация"> <fa-icon [icon]="['fas','chart-bar']"></fa-icon><span class="name">Информация</span></li>
+            <li (click)="routeTo('vms')" [class.active]="menuActive === 'vms'" title="Виртуальные машины"> <fa-icon [icon]="['fas','desktop']"></fa-icon><span class="name">Виртуальные машины</span></li>
+        </ul>
+        
+        <div class="details-slide" *ngIf="host">
+            <div class="details-slide-header">
+                <ng-container *ngIf="menuActive === 'info'">Информация о пулах рабочих столов</ng-container>
+                <ng-container *ngIf="menuActive === 'vms'">ВМ в пуле</ng-container> 
+            </div>
+            <div class="details-slide-into">
+                <vdi-table-into [data]="pool" [collection]="collection" *ngIf="menuActive === 'info'"></vdi-table-into>
+                <vdi-table-component [data]="pool?.state?.available" [collection]="collection_vms" *ngIf="menuActive === 'vms'"></vdi-table-component> 
+            </div>     
+        </div>
+    </div>
+
 </div>
 
 <div *ngIf="into_spinner" class="cdk-overlay-container">

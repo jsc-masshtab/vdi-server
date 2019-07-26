@@ -24,7 +24,8 @@ export class RemovePoolComponent  {
     this.service.removePool(this.data.pool_id).subscribe((res) => {
       this.dialogRef.close();
       setTimeout(()=> {
-        this.router.navigate([`pools`]);  
+        this.router.navigate([`pools`]);
+        this.service.getAllPools().subscribe();
       },1000); 
     
     },(error) => {

@@ -1,7 +1,33 @@
-<vdi-breadcrumbs [data]="crumbs"></vdi-breadcrumbs>
-<div class="panel-btn">
-    <button (click)="addController()"><fa-icon [icon]="['fas','plus-circle']" size="xs"></fa-icon><span>Добавить</span></button>
-    <button *ngIf="controllers && controllers?.length" (click)="removeController()"><fa-icon [icon]="['fas','trash-alt']" size="xs"></fa-icon><span>Удалить</span></button>
+<div class="control-panel">
+    
+    <div class="crumb">
+        <fa-icon [icon]="['fas','building']"></fa-icon>
+        <span class="crumb-name">Контроллеры</span>
+    </div>
+
+    <button (click)="getAllControllers()" class="btn-refresh" title="Обновить">
+        <fa-icon [icon]="['fas','sync-alt']"></fa-icon>
+    </button>
+
+    <div class="control-btns">
+        <button type="button" (click)="addController()">
+            <fa-icon [icon]="['fas','plus-circle']"></fa-icon>
+            <span class="btn-name">Добавить контроллер</span>
+        </button>
+        <button type="button" (click)="removeController()" >
+            <fa-icon [icon]="['fas','trash-alt']"></fa-icon>
+            <span class="btn-name">Удалить контроллер</span>
+        </button>
+    </div>
+
 </div>
 
-<vdi-table-component [data]="controllers" [collection]="collection" [spinner]="spinner" empty="- нет контроллеров - "></vdi-table-component>
+
+<div class="components-info">
+    <div class="component-list" [style.height]="'100%'">
+        <vdi-table-component [data]="controllers" [collection]="collection" [spinner]="spinner" empty="- нет контроллеров - "></vdi-table-component>
+    </div>
+    <!-- <div class="component-details" [class.page-height-min]="pageHeight==pageHeightMin" [class.page-height-max]="pageRollup">
+        <router-outlet (activate)="componentAdded()" (deactivate)="componentRemoved()"></router-outlet>
+    </div> -->
+</div>

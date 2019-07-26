@@ -28,8 +28,8 @@ import { HttpClientModule } from '@angular/common/http';
 /*  -----------------------------------   icons   --------------------------------------*/
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { library } from '@fortawesome/fontawesome-svg-core';
-import { faDesktop,faDatabase,faBuilding, faLayerGroup,faPlusCircle,faSpinner,faServer,faCog,faChevronUp,faTimesCircle,faFolderOpen,faStar,faMinusCircle, faTv,faSyncAlt,faTrashAlt,faUsers } from '@fortawesome/free-solid-svg-icons';
-//import { faBuilding } from '@fortawesome/free-regular-svg-icons';
+import { faDesktop,faDatabase,faBuilding, faLayerGroup,faPlusCircle,faSpinner,faServer,faCog,faChevronUp,faTimesCircle,faFolderOpen,faStar,faMinusCircle, faTv,faSyncAlt,faTrashAlt,faUsers,faMeh,faChartBar} from '@fortawesome/free-solid-svg-icons';
+//import { faMeh   } from '@fortawesome/free-regular-svg-icons';
 /*  -----------------------------------   icons   --------------------------------------*/
 
 
@@ -130,8 +130,9 @@ import { UsersService } from './settings/users/users.service';
 
 export class AppModule {
   constructor() { 
-    library.add(faDesktop,faDatabase,faLayerGroup,faPlusCircle,faMinusCircle,faSpinner,faServer,faCog,faChevronUp,faTimesCircle,faFolderOpen,faStar,faTv,faSyncAlt,faBuilding,faTrashAlt,faUsers
-      ); // Неиспользуемые иконки при финальной сборке удаляются
+    library.add(faDesktop,faDatabase,faLayerGroup,faPlusCircle,faMinusCircle,faSpinner,faServer,faCog,faChevronUp,faTimesCircle,faFolderOpen,faStar,faTv,faSyncAlt,faBuilding,faTrashAlt,faUsers,faMeh,faChartBar
+    
+    ); // Неиспользуемые иконки при финальной сборке удаляются
   }
 
 

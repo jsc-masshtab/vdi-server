@@ -12,11 +12,14 @@ export class VmsService {
     public getAllVms(id?:string): QueryRef<any,any> {
         return  this.service.watchQuery({
             query:  gql` query vms {
-                                    vms {
-                                       name
-                                       node { verbose_name }
-                                       template { name }
-                                    }  
+                                    controllers {
+                                        vms {
+                                            name
+                                            node { verbose_name }
+                                            template { name }
+                                            state
+                                        }  
+                                    }
                                 }
                     `,
             variables: {

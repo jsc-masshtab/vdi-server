@@ -15,12 +15,9 @@ export class VmsComponent implements OnInit {
   public vms: object[] = [];
   public collection = [
     {
-      title: '№',
-      property: 'index'
-    },
-    {
       title: 'Название',
-      property: 'name'
+      property: 'name',
+      class: 'name-start'
     },
     {
       title: 'Сервер',
@@ -31,19 +28,13 @@ export class VmsComponent implements OnInit {
       title: 'Шаблон',
       property: "template",
       property_lv2: 'name'
+    },
+    {
+      title: 'Статус',
+      property: "state"
     }
   ];
 
-  public crumbs: object[] = [
-    {
-      title: 'Ресурсы',
-      icon: 'database'
-    },
-    {
-      title: `Виртуальные машины`,
-      icon: 'desktop'
-    }
-  ];
 
   public spinner:boolean = false;
 
@@ -55,8 +46,17 @@ export class VmsComponent implements OnInit {
 
   private getAllVms() {
     this.spinner = true;
-    this.service.getAllVms().valueChanges.pipe(map(data => data.data.vms)).subscribe((res)=> {
-      this.vms = res;
+    this.service.getAllVms().valueChanges.pipe(map(data => data.data.controllers)).subscribe((data)=> {
+    
+      let arrVms: [][] = [];
+      this.vms = [];
+      arrVms = data.map(controller => controller.vms);
+
+      arrVms.forEach((arr: []) => {
+          arr.forEach((obj: {}) => {
+            this.vms.push(obj);
+          }); 
+      });
       this.spinner = false;
     },(error) => {
       this.spinner = false;

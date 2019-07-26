@@ -10,39 +10,41 @@ export class NodesService {
     constructor(private service: Apollo) {}
 
     public getAllNodes(cluster_id?:string): QueryRef<any,any> {
-       let controller_ip = JSON.parse(localStorage.getItem('controller'));
+
         return  this.service.watchQuery({
-            query:  gql` query allNodes($controller_ip: String,$cluster_id: String) {
-                            nodes(controller_ip: $controller_ip,cluster_id: $cluster_id) {
-                                id
-                                verbose_name
-                                status
-                                datacenter_id
-                                datacenter_name
-                                cpu_count
-                                memory_count
-                                management_ip
-                                cluster {
-                                    verbose_name
+            query:  gql` query allNodes($cluster_id: String) {
+                            controllers {
+                                nodes(cluster_id: $cluster_id) {
                                     id
+                                    verbose_name
+                                    status
+                                    datacenter_id
+                                    datacenter_name
+                                    cpu_count
+                                    memory_count
+                                    management_ip
+                                    cluster {
+                                        verbose_name
+                                        id
+                                    }
                                 }
                             }
+                           
                         }
             
                     `,
             variables: {
                 method: 'GET',
-                controller_ip: controller_ip,
                 cluster_id: cluster_id
             }
         }) 
     }
 
     public getNode(node_id:string): QueryRef<any,any> {
-        let controller_ip = JSON.parse(localStorage.getItem('controller'));
+        
         return  this.service.watchQuery({
-            query:  gql` query node($id: String,$controller_ip: String) {
-                            node(id: $id,controller_ip: $controller_ip) {
+            query:  gql` query node($id: String) {
+                            node(id: $id) {
                                 verbose_name
                                 status
                                 cpu_count
@@ -80,7 +82,6 @@ export class NodesService {
                     `,
             variables: {
                 method: 'GET',
-                controller_ip: controller_ip,
                 id: node_id
             }
         }) 
