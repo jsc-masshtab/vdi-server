@@ -41,7 +41,7 @@ class ClusterType(graphene.ObjectType):
     async def resolve_datapools(self, info):
         return await self.controller.resolve_datapools(info, cluster_id=self.id)
 
-    async def resolve_vms(self, info, wild=False):
+    async def resolve_vms(self, info, wild=True):
         return await self.controller.resolve_vms(info, cluster_id=self.id, wild=wild)
 
     info = None
@@ -77,7 +77,7 @@ class NodeType(graphene.ObjectType):
     async def resolve_datapools(self, info):
         return await self.controller.resolve_datapools(info, node_id=self.id)
 
-    async def resolve_vms(self, info, wild=False):
+    async def resolve_vms(self, info, wild=True):
         return await self.controller.resolve_vms(info, node_id=self.id, wild=wild)
 
 
@@ -298,7 +298,7 @@ class ControllerType(graphene.ObjectType):
             objects.append(obj)
         return objects
 
-    async def resolve_vms(self, info, cluster_id=None, node_id=None, wild=False):
+    async def resolve_vms(self, info, cluster_id=None, node_id=None, wild=True):
         if node_id is not None:
             nodes = {node_id}
         elif cluster_id is not None:

@@ -1,3 +1,4 @@
+import socket
 import sys
 
 #TODO rename: we have client.py for thin client API
@@ -7,7 +8,7 @@ import inspect
 from tornado.httpclient import HTTPRequest, HTTPError
 from tornado.httpclient import AsyncHTTPClient
 
-from vdi.errors import FetchException
+from vdi.errors import FetchException, NotFound
 
 MAX_BODY_SIZE = 10 * 1024 * 1024 * 1024
 
@@ -77,16 +78,18 @@ class HttpClient:
     async def fetch(self, *args, **kwargs):
         if not 'request_timeout' in kwargs:
             kwargs['request_timeout'] = self.request_timeout
+        if 'url' in kwargs:
+            url = kwargs['url']
+        elif args:
+            url = args[0]
         try:
             response = await self._client.fetch(*args, **kwargs)
+        except socket.gaierror as e:
+            raise NotFound(url=url)
         except HTTPError as e:
             data = self.get_error_data(e)
             if not isinstance(data, dict):
                 data = {'detail': data}
-            if 'url' in kwargs:
-                url = kwargs['url']
-            elif args:
-                url = args[0]
             raise FetchException(url=url, http_error=e, data=data)
         if self._json:
             response = json.loads(response.body)

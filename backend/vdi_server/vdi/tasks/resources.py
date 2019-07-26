@@ -8,7 +8,7 @@ from vdi.db import db
 
 from . import UrlFetcher, Token
 
-from vdi.errors import SimpleError, FetchException, NotFound
+from vdi.errors import SimpleError, FetchException, NotFound, ControllerNotAccessible
 
 
 @dataclass()
@@ -174,7 +174,7 @@ class DiscoverControllers(Task):
             d['default'] = d['ip'] == default
             try:
                 await Token(controller_ip=d['ip'])
-            except (FetchException, socket.gaierror) as ex:
+            except ControllerNotAccessible as ex:
                 broken.append(d)
             else:
                 connected.append(d)

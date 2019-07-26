@@ -5,8 +5,6 @@ from cached_property import cached_property as cached
 from vdi.db import db
 from vdi.tasks import vm
 
-from .utils import callback
-
 
 @dataclass()
 class Pool:

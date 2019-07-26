@@ -38,6 +38,10 @@ class SimpleError(BackendError):
 
 
 
+class WsTimeout(BackendError):
+    pass
+
+
 class FetchException(BackendError):
     http_error: HTTPClientError
     url: str
@@ -46,15 +50,49 @@ class FetchException(BackendError):
     def format_error(self):
         return {
             'code': self.http_error.code,
-            **self.data, **self.type_info
+            'url': self.url,
+            **self.data,
+            **self.type_info
         }
 
 
-class NotFound(BackendError):
-    pass
+class HttpError(BackendError):
+    """
+    Usually used to rethrow the FetchException to be consumed by the client
+    """
+
+    def __init__(self, message=None):
+        if message:
+            self.message = message
+
+    @cached
+    def code(self):
+        raise NotImplementedError
+
+    def format_error(self):
+        return {
+            'type': 'HttpError', 'code': self.code, 'message': self.message,
+        }
 
 
-class BadRequest(BackendError):
+class NotFound(HttpError):
+    code = 404
+    message = "Урл не найден"
+
+    def __init__(self, *, text=None, url=None):
+        if text:
+            self.message = text
+        if url:
+            self.url = url
+
+    def format_error(self):
+        return {
+            **super().format_error(), **self.__dict__
+        }
+
+
+class BadRequest(HttpError):
+    code = 400
     errors: List
 
     def __init__(self, errors):
@@ -66,20 +104,24 @@ class BadRequest(BackendError):
 
     def format_error(self):
         return {
-            'code': 400, **self.type_info, **self.errors
+            'type': 'HttpError', 'code': self.code, **self.errors
         }
 
 
-class NotFound(BackendError):
-    def __init__(self, message):
-        self.message = message
+class ControllerNotAccessible(HttpError):
+    code = 404
+    message = 'Контроллер недоступен'
+
+    def __init__(self, *, ip):
+        self.ip = ip
 
     def format_error(self):
         return {
-            'code': self.code,
-            'message': self.message,
+            'ip': self.ip, **super().format_error()
         }
 
 
-class WsTimeout(BackendError):
-    pass
+class AuthError(HttpError):
+    code = 403
+    message = "Не удалось войти в систему с предоставленными учетными данными."
+
