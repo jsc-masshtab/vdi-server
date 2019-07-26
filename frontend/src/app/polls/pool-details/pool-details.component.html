@@ -22,7 +22,10 @@
         </ul>
         
         <div class="details-slide" *ngIf="host">
-            <div class="details-slide-header">Информация о пулах рабочих столов</div>
+            <div class="details-slide-header">
+                <ng-container *ngIf="menuActive === 'info'">Информация о пулах рабочих столов</ng-container>
+                <ng-container *ngIf="menuActive === 'vms'">ВМ в пуле</ng-container> 
+            </div>
             <div class="details-slide-into">
                 <vdi-table-into [data]="pool" [collection]="collection" *ngIf="menuActive === 'info'"></vdi-table-into>
                 <vdi-table-component [data]="pool?.state?.available" [collection]="collection_vms" *ngIf="menuActive === 'vms'"></vdi-table-component> 
