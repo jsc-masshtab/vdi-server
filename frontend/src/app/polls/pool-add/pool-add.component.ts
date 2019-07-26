@@ -106,7 +106,7 @@ export class PoolAddComponent implements OnInit {
 
         let entity: object[] = this.parseEntity(data,'nodes');
 
-        this.nodes =  entity.map((item) => {
+        this.nodes = entity.map((item) => {
           return {
             'output': item['id'],
             'input': item['verbose_name']
@@ -140,16 +140,15 @@ export class PoolAddComponent implements OnInit {
 
   private parseEntity(data:[],prop): object[] {
     let arr: [][] = [];
-        this[prop] = [];
-        arr = data.map(controller => controller[`${prop}`]);
+    this[prop] = [];
+    arr = data.map(controller => controller[`${prop}`]);
 
-        arr.forEach((arr: []) => {
-            arr.forEach((obj: {}) => {
-              this[prop].push(obj);
-            }); 
-        });
-        console.log(this[prop]);
-        return this[prop];
+    arr.forEach((arr: []) => {
+        arr.forEach((obj: {}) => {
+          this[prop].push(obj);
+        }); 
+    });
+    return this[prop];
   }
 
   private selectValue(data,type: string) {
@@ -177,7 +176,6 @@ export class PoolAddComponent implements OnInit {
     if(type === 'datapool') {
       this.createPoolForm.get('datapool_id').setValue(data[0]);
     }
-    
   }
 
   public send() {

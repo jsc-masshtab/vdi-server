@@ -75,6 +75,7 @@ export class PoolsComponent implements OnInit {
     this.spinner = true;
     this.getPoolsSub = this.service.getAllPools(true)
       .subscribe( (data) => {
+        console.log('ss');
         this.pools = data;
         this.spinner = false;
       },
