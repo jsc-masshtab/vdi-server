@@ -1,3 +1,4 @@
+import asyncio
 import socket
 
 import graphene
@@ -12,6 +13,15 @@ from ..tasks.vm import ListTemplates, ListVms
 from ..tasks.resources import DiscoverControllers, FetchNode, FetchCluster, DiscoverController
 
 from vdi.errors import FieldError, SimpleError, FetchException
+from vdi.log import RequestsLog
+
+class RequestType(graphene.ObjectType):
+    url = graphene.String()
+    time = graphene.String()
+
+    def resolve_time(self, info):
+        return "{:.2f}".format(self.time)
+
 
 class DatacenterType(graphene.ObjectType):
     id = graphene.String()
@@ -46,8 +56,6 @@ class ClusterType(graphene.ObjectType):
 
     info = None
 
-
-#FIXME tests
 
 class NodeType(graphene.ObjectType):
     id = graphene.String()
@@ -153,6 +161,8 @@ class Resources:
     node = graphene.Field(NodeType, id=graphene.String())
     cluster = graphene.Field(ClusterType, id=graphene.String())
 
+    requests = graphene.List(RequestType, time=graphene.Float())
+
     async def resolve_controllers(self, info):
         objects = [
             ControllerType(**item)
@@ -182,6 +192,11 @@ class Resources:
             if k in ClusterType._meta.fields
         }
         return ClusterType(controller=ControllerType(ip=controller_ip), **fields)
+
+    async def resolve_requests(self, info, time):
+        await asyncio.sleep(time)
+        items = await RequestsLog()
+        return [RequestType(**item) for item in items]
 
 
 class AddController(graphene.Mutation):

@@ -9,6 +9,7 @@ from tornado.httpclient import HTTPRequest, HTTPError
 from tornado.httpclient import AsyncHTTPClient
 
 from vdi.errors import FetchException, NotFound
+from vdi.log import RequestsLog
 
 MAX_BODY_SIZE = 10 * 1024 * 1024 * 1024
 
@@ -83,7 +84,8 @@ class HttpClient:
         elif args:
             url = args[0]
         try:
-            response = await self._client.fetch(*args, **kwargs)
+            async with RequestsLog.log(url=url):
+                response = await self._client.fetch(*args, **kwargs)
         except socket.gaierror as e:
             raise NotFound(url=url)
         except HTTPError as e:

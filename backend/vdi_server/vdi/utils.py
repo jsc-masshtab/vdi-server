@@ -1,6 +1,7 @@
 import inspect
 from functools import wraps
 
+
 def with_self(f):
     if not inspect.iscoroutinefunction(f):
         @wraps(f)
