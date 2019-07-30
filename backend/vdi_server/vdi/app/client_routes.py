@@ -4,6 +4,9 @@ from vdi.db import db
 from vdi.pool import Pool
 from vdi.tasks import thin_client
 from vdi.settings import settings
+from vdi.errors import SimpleError
+from ..graphql.pool import DesktopPoolType
+
 
 from . import app
 
@@ -48,6 +51,13 @@ async def get_vm(request):
         controller_ip = settings['controller_ip']
         user = request.user.username
         pool_id = int(request.path_params['pool_id'])
+
+        # determine desktop pool type
+        qu = 'select desktop_pool_type from pool where id = $1', pool_id
+        pools = await conn.fetch(*qu)
+        [(desktop_pool_type,)] = pools
+        print('get_vm: desktop_pool_type', desktop_pool_type)
+
         qu = """
         select id from vm where username = $1 and pool_id = $2
         """, user, pool_id
@@ -68,12 +78,31 @@ async def get_vm(request):
         if pool_id not in Pool.instances:
             await Pool.wake_pool(pool_id)
         pool = Pool.instances[pool_id]
-        domain = await pool.queue.get()
-        qu = "update vm set username = $1 where id = $2", user, domain['id']
-        await conn.fetch(*qu)
-        pool.on_vm_taken()
+        # AUTOMATED
+        if desktop_pool_type == DesktopPoolType.get(DesktopPoolType.AUTOMATED).name:
+            domain = await pool.queue.get()
+            domain_id = domain['id']
+            qu = "update vm set username = $1 where id = $2", user, domain_id
+            await conn.fetch(*qu)
+            pool.on_vm_taken()
+        # STATIC
+        elif desktop_pool_type == DesktopPoolType.get(DesktopPoolType.STATIC).name:
+            # find a free vm
+            qu = f"select id from vm where pool_id = $1 and username is NULL limit 1", pool_id
+            free_vms = await conn.fetch(*qu)
+            print('get_vm: free_vm', free_vms)
+            # if there is no free vm then send empty fields??? Handle on thin client side
+            if not free_vms:
+                return JSONResponse({'host': "", 'port': "", 'password': ""})
 
-        info = await thin_client.PrepareVm(controller_ip=controller_ip, domain_id=domain['id'])
+            # assign vm to the user
+            [(domain_id,)] = free_vms
+            qu = f"update vm set username = $1 where id = $2", user, domain_id
+            await conn.fetch(*qu)
+        else:
+            raise RuntimeError("Wrong desktop pool type")
+
+        info = await thin_client.PrepareVm(controller_ip=controller_ip, domain_id=domain_id)
         return JSONResponse({
             'host': controller_ip,
             'port': info['remote_access_port'],

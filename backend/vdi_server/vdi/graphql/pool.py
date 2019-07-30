@@ -85,6 +85,12 @@ class PoolType(graphene.ObjectType):
         vms = await state.resolve_available(info)
         return vms
 
+
+class DesktopPoolType(graphene.Enum):
+    AUTOMATED = 0#'AUTOMATED'
+    STATIC = 1#'STATIC'
+
+
 class VmState(graphene.Enum):
     UNDEFINED = 0
     OFF = 1
@@ -251,21 +257,25 @@ class AddPool(graphene.Mutation):
         settings = PoolSettingsInput()
         initial_size = graphene.Int()
         reserve_size = graphene.Int()
+        desktop_pool_type = DesktopPoolType()
+        vm_ids_list = graphene.List(graphene.String)
 
         block = graphene.Boolean()
 
     Output = PoolType
 
 
-
     async def mutate(self, info, name,
                      template_id=None, cluster_id=None, datapool_id=None, node_id=None,
-                     settings=(), initial_size=None, reserve_size=None):
+                     settings=(), initial_size=None, reserve_size=None,
+                     desktop_pool_type=DesktopPoolType.AUTOMATED, vm_ids_list=[]):
+
         def get_setting(name):
             if name in settings:
                 return settings[name]
             return settings_file['pool'][name]
 
+        print('AddPool::mutate desktop_pool_type', desktop_pool_type)
         pool = {
             'initial_size': initial_size or get_setting('initial_size'),
             'reserve_size': reserve_size or get_setting('reserve_size'),
@@ -273,7 +283,8 @@ class AddPool(graphene.Mutation):
             'node_id': node_id or settings['node_id'],
             'datapool_id': datapool_id or settings['datapool_id'],
             'template_id': template_id or settings['template_id'],
-            'name': name
+            'name': name,
+            'desktop_pool_type': DesktopPoolType.get(desktop_pool_type).name # db wants a string
         }
         controller_ip = await DiscoverController(cluster_id=pool['cluster_id'], node_id=pool['node_id'])
         if not controller_ip:
@@ -293,24 +304,65 @@ class AddPool(graphene.Mutation):
             'initial_size': pool['initial_size'],
             'reserve_size': pool['reserve_size'],
         })
-        add_domains = ins.add_domains()
-        selections = get_selections(info)
-        if 'vms' in selections:
-            domains = await add_domains
-            from vdi.graphql.vm import TemplateType
-            from vdi.graphql.resources import NodeType
+
+        # Automated pool
+        if desktop_pool_type == DesktopPoolType.AUTOMATED:
+            add_domains = ins.add_domains()
+            selections = get_selections(info)
+            if 'vms' in selections:
+                domains = await add_domains
+                from vdi.graphql.vm import TemplateType
+                from vdi.graphql.resources import NodeType
+                available = []
+                for domain in domains:
+                    template = domain['template']
+                    node = NodeType(id=template['node']['id'], verbose_name=template['node']['verbose_name'])
+                    template = TemplateType(id=template['id'], info=template, name=template['verbose_name'])
+                    item = VmType(id=domain['id'], template=template, name=domain['verbose_name'], node=node)
+                    item.info = domain
+                    item.selections = get_selections(info)
+                    available.append(item)
+            else:
+                asyncio.create_task(add_domains)
+                available = []
+
+        # Static pool
+        else:  # add vms to static pool
+            # get list of all vms
+            all_vms_list = await vm.ListVms(controller_ip=controller_ip)
+            if not all_vms_list:
+                raise SimpleError("No vms on controller. Impossible to create static pool")
+            if not vm_ids_list:
+                raise SimpleError("No vms passed. Impossible to create static pool")
+
+            # check if all vms belong to the same  node_id
+            def find_node_id_for_passed_vm(passed_vm_id):
+                for vmachine in all_vms_list:
+                    if vmachine['id'] == passed_vm_id:
+                        return vmachine['node']['id']
+                raise SimpleError("List of all vms does not contain passed vm id")
+            # iterate and compare ids with the first. If at least one is not equal then error
+            first_vm_node_id = find_node_id_for_passed_vm(vm_ids_list[0])
+            for vm_id in vm_ids_list:
+                vm_node_id = find_node_id_for_passed_vm(vm_id)
+                if vm_node_id != first_vm_node_id:
+                    raise SimpleError("Passed vms do not belong to the same node")
+
+            print('AddPool::mutate vms', all_vms_list)
+
             available = []
-            for domain in domains:
-                template = domain['template']
-                node = NodeType(id=template['node']['id'], verbose_name=template['node']['verbose_name'])
-                template = TemplateType(id=template['id'], info=template, name=template['verbose_name'])
-                item = VmType(id=domain['id'], template=template, name=domain['verbose_name'], node=node)
-                item.info = domain
-                item.selections = get_selections(info)
-                available.append(item)
-        else:
-            asyncio.create_task(add_domains)
-            available = []
+            async with db.connect() as conn:
+                for vm_id in vm_ids_list:
+                    # check if vm is owned by other pools
+                    qu = f'SELECT vm.pool_id from vm WHERE vm.id = $1 ', vm_id
+                    pool_ids = await conn.fetch(*qu)
+                    if pool_ids:  # vm belongs to another pool so it can't be used
+                        continue
+                    # add vm
+                    qu = f"""
+                    INSERT INTO vm (id, pool_id, template_id) VALUES ($1, $2, $3)
+                    """, vm_id, pool['id'], ''
+                    await conn.fetch(*qu)
         state = PoolState(available=available, running=True)
         from vdi.graphql.resources import ControllerType
         ret = PoolType(id=pool['id'], state=state, settings=settings, name=name, template_id=pool['template_id'],
@@ -320,6 +372,21 @@ class AddPool(graphene.Mutation):
             item.pool = ret
 
         return ret
+
+
+#class AddStaticPool(graphene.Mutation):
+#    class Arguments:
+#        pool_id = graphene.Int(required=True)
+#        name = graphene.String(required=True)
+#        vm_ids_list = graphene.List(graphene.String)
+#
+#    ok = graphene.Boolean()
+#
+#    async def mutate(self, info, name, vm_ids_list=[]):
+#
+#        return {
+#            'ok': True
+#        }
 
 
 class WakePool(graphene.Mutation):
@@ -366,6 +433,7 @@ class RemovePool(graphene.Mutation):
         # remove from db
         async with db.connect() as conn:
             # TODO what if there are extra vms in db?
+            await conn.fetch("DELETE FROM pools_users WHERE pool_id = $1", pool_id)
             await conn.fetch("DELETE FROM vm WHERE pool_id = $1", pool_id)
             await conn.fetch("DELETE FROM pool WHERE id = $1", pool_id)
         Pool.instances.pop(pool_id, None)
@@ -407,18 +475,18 @@ class RemoveUserEntitlementsFromPool(graphene.Mutation):
     class Arguments:
         pool_id = graphene.Int()
         entitled_users = graphene.List(graphene.String)
-        free_assigned_vm = graphene.Boolean()
+        free_assigned_vms = graphene.Boolean()
 
     ok = graphene.Boolean()
 
-    async def mutate(self, _info, pool_id, entitled_users, free_assigned_vm):
+    async def mutate(self, _info, pool_id, entitled_users, free_assigned_vms):
         async with db.connect() as conn:
             for user in entitled_users:
                 # remove entitlement
                 qu = "DELETE FROM pools_users WHERE pool_id = $1 AND username = $2", pool_id, user
                 await conn.fetch(*qu)
                 # free assigned vm
-                if free_assigned_vm:
+                if free_assigned_vms:
                     qu = "UPDATE vm SET username = NULL WHERE pool_id = $1 AND username = $2", pool_id, user
                     await conn.fetch(*qu)
 
