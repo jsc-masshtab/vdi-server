@@ -101,7 +101,7 @@ async def get_vm(request):
             await conn.fetch(*qu)
         else:
             raise RuntimeError("Wrong desktop pool type")
-
+        # send data to thin client
         info = await thin_client.PrepareVm(controller_ip=controller_ip, domain_id=domain_id)
         return JSONResponse({
             'host': controller_ip,
@@ -112,7 +112,7 @@ async def get_vm(request):
 
 # get vm id from db
 # put in another file??
-async def get_vm_id_from_db(user, pool_id):
+async def get_vm_id_from_db(user, pool_id): # git commit -m"FEATURE TG-5128 working but not tested"
 
     async with db.connect() as conn:
         qu = """                                                                                        
