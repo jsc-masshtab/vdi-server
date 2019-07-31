@@ -335,19 +335,27 @@ class AddPool(graphene.Mutation):
             if not vm_ids_list:
                 raise SimpleError("No vm ids passed. Impossible to create static pool")
 
-            # get full info about passed vms
+            # get full info about passed vm
             def get_full_vm_info_by_id(passed_vm_id):
                 for vmachine in all_vms_list:
                     if vmachine['id'] == passed_vm_id:
                         return vmachine
                 raise SimpleError("Passed vm id does not exist on veil server")
-            passed_vms_with_full_info = [get_full_vm_info_by_id(vm_id) for vm_id in vm_ids_list]
 
-            # check if all vms belong to the same node
-            vms_belong_to_same_node = all(vm['node']['id'] == passed_vms_with_full_info[0]['node']['id']
-                                          for vm in passed_vms_with_full_info)
-            if not vms_belong_to_same_node:
-                raise SimpleError("Passed vms do not belong to the same node")
+            print('node_id', pool['node_id'])
+            for vm_id in vm_ids_list:
+                # check if all vms belong to the same node (node_id)
+                current_vm_node_id = get_full_vm_info_by_id(vm_id)['node']['id']
+                print('current_vm_node_id', current_vm_node_id)
+                if current_vm_node_id != pool['node_id']:
+                    raise SimpleError('Passed vms do not belong to correct node')
+
+                # check if vm is free (not in any pool)
+                async with db.connect() as conn:
+                    qu = f'SELECT vm.pool_id from vm WHERE vm.id = $1 ', vm_id
+                    pool_ids = await conn.fetch(*qu)
+                if pool_ids:
+                    raise SimpleError("One of vms belongs to another pool")
 
             # add pool
             async with db.connect() as conn:
@@ -355,17 +363,11 @@ class AddPool(graphene.Mutation):
             pool['id'] = res['id']
             ins = Pool(params=pool)
             Pool.instances[pool['id']] = ins
-
             available = []
+
             # add vm to pool
             async with db.connect() as conn:
                 for vm_id in vm_ids_list:
-                    # check if vm is free (not in any pool)
-                    qu = f'SELECT vm.pool_id from vm WHERE vm.id = $1 ', vm_id
-                    pool_ids = await conn.fetch(*qu)
-                    if pool_ids:  # vm belongs to another pool so it can't be used
-                        continue
-                    # add vm to static pool
                     qu = f'INSERT INTO vm (id, pool_id, template_id) VALUES ($1, $2, NULL)', vm_id, pool['id']
                     await conn.fetch(*qu)
         else:
