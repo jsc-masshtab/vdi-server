@@ -473,7 +473,7 @@ class RemoveUserEntitlementsFromPool(graphene.Mutation):
 
     ok = graphene.Boolean()
 
-    async def mutate(self, _info, pool_id, entitled_users, free_assigned_vms):
+    async def mutate(self, _info, pool_id, entitled_users, free_assigned_vms=True):
         async with db.connect() as conn:
             for user in entitled_users:
                 # remove entitlement

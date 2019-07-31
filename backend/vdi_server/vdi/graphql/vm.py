@@ -4,8 +4,11 @@ from .util import get_selections
 from ..db import db
 from ..tasks import resources
 from ..tasks.vm import ListTemplates
+from ..tasks.vm import ListVms
 from ..tasks.resources import DiscoverControllers
 from .pool import VmType, TemplateType
+from vdi.tasks.resources import DiscoverController
+from vdi.graphql.resources import NodeType
 
 from vdi.errors import SimpleError
 
@@ -116,3 +119,48 @@ class PoolWizardMixin:
             'initial_size': global_settings['pool']['initial_size'],
             'reserve_size': global_settings['pool']['reserve_size'],
         })
+
+
+# get list of vms from veil
+class ListOfVmsOnVeil:
+    vms_on_veil = graphene.List(VmType, cluster_id=graphene.String(),
+        node_id=graphene.String(), datapool_id=graphene.String(), get_vms_in_pools=graphene.Boolean())
+
+    async def resolve_vms_on_veil(self, _info, cluster_id, node_id, datapool_id, get_vms_in_pools=False):
+
+        print('ListOfVmsOnVeil::resolve_vms_on_veil: datapool_id', datapool_id)
+        # get all vm which are in pools
+        async with db.connect() as conn:
+            qu = f'select id from vm'
+            vm_ids_in_pools = await conn.fetch(qu)
+        print('ListOfVmsOnVeil::resolve_vms_on_veil: vm_ids_in_pool', vm_ids_in_pools)
+
+        # get all vms from veil
+        controller_ip = await DiscoverController(cluster_id=cluster_id, node_id=node_id)
+        print('ListOfVmsOnVeil::resolve_vms_on_veil: controller_ip', controller_ip)
+        all_vms = await ListVms(controller_ip=controller_ip)
+        print('ListOfVmsOnVeil::resolve_vms_on_veil: all_vms', all_vms)
+
+        # create list of filtered vm
+        def check_if_vm_in_pool(vm):
+            for vm_id in vm_ids_in_pools:
+                [(id_str)] = vm_id
+                if id_str == vm['id']:
+                    return True
+            else:
+                return False
+
+        if get_vms_in_pools:  # get all vms on node
+            filtered_vms = [vm for vm in all_vms if vm['node']['id'] == node_id]
+        else:  # get only free vms (not in pools)
+            filtered_vms = [vm for vm in all_vms
+                            if not check_if_vm_in_pool(vm) and vm['node']['id'] == node_id
+                            ]
+
+        vm_type_list = []
+        for vm in filtered_vms:
+            node = NodeType(id=node_id)
+            obj = VmType(id=vm['id'], name=vm['verbose_name'], node=node)
+            vm_type_list.append(obj)
+
+        return vm_type_list
