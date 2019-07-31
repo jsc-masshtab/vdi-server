@@ -9,6 +9,7 @@ from vdi.graphql.schema import schema
 from graphql.execution.executors.asyncio import AsyncioExecutor
 
 from vdi.errors import BackendError
+from vdi.log import RequestsLog
 
 def get_from_chain(ex, kind, limit=5):
     """
@@ -32,6 +33,17 @@ class GraphQLApp(_GraphQLApp):
         if backend_error:
             return backend_error.format_error()
         return format_graphql_error(err)
+
+    async def result_hook(self, result):
+        if 'requests' in result.data:
+            stub = result.data['requests'][0]
+            requests = await RequestsLog()
+            for req in requests:
+                req['time'] = "{:.2f}".format(req['time'])
+            result.data['requests'] = [
+                {k: v for k, v in req.items() if k in stub}
+                for req in requests
+            ]
 
     # This is copied from its ancestor
     async def handle_graphql(self, request: Request) -> Response:
@@ -83,6 +95,7 @@ class GraphQLApp(_GraphQLApp):
         result = await self.execute(
             query, variables=variables, context=context, operation_name=operation_name
         )
+        await self.result_hook(result)
         error_data = (
             [self.format_graphql_error(err) for err in result.errors]
             if result.errors

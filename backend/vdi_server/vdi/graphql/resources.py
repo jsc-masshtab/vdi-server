@@ -19,9 +19,6 @@ class RequestType(graphene.ObjectType):
     url = graphene.String()
     time = graphene.String()
 
-    def resolve_time(self, info):
-        return "{:.2f}".format(self.time)
-
 
 class DatacenterType(graphene.ObjectType):
     id = graphene.String()
@@ -193,10 +190,10 @@ class Resources:
         }
         return ClusterType(controller=ControllerType(ip=controller_ip), **fields)
 
-    async def resolve_requests(self, info, time):
-        await asyncio.sleep(time)
-        items = await RequestsLog()
-        return [RequestType(**item) for item in items]
+    async def resolve_requests(self, info):
+        return [
+            RequestType(url=None, time=None)
+        ]
 
 
 class AddController(graphene.Mutation):
