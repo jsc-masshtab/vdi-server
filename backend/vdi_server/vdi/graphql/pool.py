@@ -264,6 +264,7 @@ class AddPool(graphene.Mutation):
 
     Output = PoolType
 
+
     async def mutate(self, info, name,
                      template_id=None, cluster_id=None, datapool_id=None, node_id=None,
                      settings=(), initial_size=None, reserve_size=None,
@@ -274,7 +275,6 @@ class AddPool(graphene.Mutation):
                 return settings[name]
             return settings_file['pool'][name]
 
-        print('AddPool::mutate desktop_pool_type', desktop_pool_type)
         pool = {
             'initial_size': initial_size or get_setting('initial_size'),
             'reserve_size': reserve_size or get_setting('reserve_size'),
@@ -293,6 +293,11 @@ class AddPool(graphene.Mutation):
         fields = ', '.join(pool.keys())
         values = ', '.join(f'${i+1}' for i in range(len(pool)))
         pool_query = f"INSERT INTO pool ({fields}) VALUES ({values}) RETURNING id", *pool.values()
+
+        settings = PoolSettings(**{
+            'initial_size': pool['initial_size'],
+            'reserve_size': pool['reserve_size'],
+        })
 
         # AUTOMATED
         if desktop_pool_type == DesktopPoolType.AUTOMATED:
@@ -321,23 +326,22 @@ class AddPool(graphene.Mutation):
                 asyncio.create_task(add_domains)
                 available = []
         # STATIC
-        else:  # add vms to static pool
+        elif desktop_pool_type == DesktopPoolType.STATIC:
             # get list of all vms
             all_vms_list = await vm.ListVms(controller_ip=controller_ip)
             print('AddPool::mutate vms', all_vms_list)
             if not all_vms_list:
                 raise SimpleError("No vms on controller. Impossible to create static pool")
             if not vm_ids_list:
-                raise SimpleError("No vms passed. Impossible to create static pool")
+                raise SimpleError("No vm ids passed. Impossible to create static pool")
 
             # get full info about passed vms
-            def find_full_info_by_id(passed_vm_id):
+            def get_full_vm_info_by_id(passed_vm_id):
                 for vmachine in all_vms_list:
                     if vmachine['id'] == passed_vm_id:
                         return vmachine
-                raise SimpleError("List of all vms does not contain passed vm id")
-
-            passed_vms_with_full_info = [find_full_info_by_id(vm_id) for vm_id in vm_ids_list]
+                raise SimpleError("Passed vm id does not exist on veil server")
+            passed_vms_with_full_info = [get_full_vm_info_by_id(vm_id) for vm_id in vm_ids_list]
 
             # check if all vms belong to the same node
             vms_belong_to_same_node = all(vm['node']['id'] == passed_vms_with_full_info[0]['node']['id']
@@ -345,7 +349,7 @@ class AddPool(graphene.Mutation):
             if not vms_belong_to_same_node:
                 raise SimpleError("Passed vms do not belong to the same node")
 
-            # add pool to db
+            # add pool
             async with db.connect() as conn:
                 [res] = await conn.fetch(*pool_query)
             pool['id'] = res['id']
@@ -364,14 +368,12 @@ class AddPool(graphene.Mutation):
                     # add vm to static pool
                     qu = f'INSERT INTO vm (id, pool_id, template_id) VALUES ($1, $2, NULL)', vm_id, pool['id']
                     await conn.fetch(*qu)
+        else:
+            raise RuntimeError("Wrong desktop pool type")
 
         state = PoolState(available=available, running=True)
         from vdi.graphql.resources import ControllerType
 
-        settings = PoolSettings(**{
-            'initial_size': pool['initial_size'],
-            'reserve_size': pool['reserve_size'],
-        })
         ret = PoolType(id=pool['id'], state=state, settings=settings, name=name, template_id=pool['template_id'],
                        controller=ControllerType(ip=controller_ip))
         state.pool = ret
@@ -379,21 +381,6 @@ class AddPool(graphene.Mutation):
             item.pool = ret
 
         return ret
-
-
-#class AddStaticPool(graphene.Mutation):
-#    class Arguments:
-#        pool_id = graphene.Int(required=True)
-#        name = graphene.String(required=True)
-#        vm_ids_list = graphene.List(graphene.String)
-#
-#    ok = graphene.Boolean()
-#
-#    async def mutate(self, info, name, vm_ids_list=[]):
-#
-#        return {
-#            'ok': True
-#        }
 
 
 class WakePool(graphene.Mutation):

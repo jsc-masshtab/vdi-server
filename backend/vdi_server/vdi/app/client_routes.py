@@ -74,12 +74,12 @@ async def get_vm(request):
                 'password': info['graphics_password'],
             })
 
-        # try to wake pool if it's empty
-        if pool_id not in Pool.instances:
-            await Pool.wake_pool(pool_id)
-        pool = Pool.instances[pool_id]
         # AUTOMATED
         if desktop_pool_type == DesktopPoolType.get(DesktopPoolType.AUTOMATED).name:
+            # try to wake pool if it's empty
+            if pool_id not in Pool.instances:
+                await Pool.wake_pool(pool_id)
+            pool = Pool.instances[pool_id]
             domain = await pool.queue.get()
             domain_id = domain['id']
             qu = "update vm set username = $1 where id = $2", user, domain_id
@@ -87,14 +87,13 @@ async def get_vm(request):
             pool.on_vm_taken()
         # STATIC
         elif desktop_pool_type == DesktopPoolType.get(DesktopPoolType.STATIC).name:
-            # find a free vm
+            # find a free vm in static pool
             qu = f"select id from vm where pool_id = $1 and username is NULL limit 1", pool_id
             free_vms = await conn.fetch(*qu)
             print('get_vm: free_vm', free_vms)
             # if there is no free vm then send empty fields??? Handle on thin client side
             if not free_vms:
                 return JSONResponse({'host': "", 'port': "", 'password': ""})
-
             # assign vm to the user
             [(domain_id,)] = free_vms
             qu = f"update vm set username = $1 where id = $2", user, domain_id
@@ -112,7 +111,7 @@ async def get_vm(request):
 
 # get vm id from db
 # put in another file??
-async def get_vm_id_from_db(user, pool_id): # git commit -m"FEATURE TG-5128 working but not tested"
+async def get_vm_id_from_db(user, pool_id):
 
     async with db.connect() as conn:
         qu = """                                                                                        
