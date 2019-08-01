@@ -109,24 +109,6 @@ async def get_vm(request):
         })
 
 
-# get vm id from db
-# put in another file??
-async def get_vm_id_from_db(user, pool_id):
-
-    async with db.connect() as conn:
-        qu = """                                                                                        
-        select id from vm where username = $1 and pool_id = $2                                          
-        """, user, pool_id
-        vms = await conn.fetch(*qu)
-
-    print('get_vm_id_from_db: vms', vms)
-    if vms:
-        [(id,)] = vms
-        return id
-    else:
-        return None
-
-
 @app.route('/client/pools/{pool_id}/{action}', methods=['POST'])
 @requires('authenticated')
 async def do_action_on_vm(request):
@@ -135,9 +117,16 @@ async def do_action_on_vm(request):
     pool_id = int(request.path_params['pool_id'])
     vm_action = request.path_params['action']
 
-    id = await get_vm_id_from_db(username, pool_id)
-    
-    if id is None:
+    async with db.connect() as conn:
+        qu = """                                                                                        
+        select id from vm where username = $1 and pool_id = $2                                          
+        """, username, pool_id
+        vms = await conn.fetch(*qu)
+
+    print('do_action_on_vm: vms', vms)
+    if vms:
+        [(vm_id,)] = vms
+    else:
         return JSONResponse({'error': 'There is no vm with requested pool_id'})
 
     # in body info about whether action is forced
@@ -150,7 +139,7 @@ async def do_action_on_vm(request):
 
     # do action
     controller_ip = settings['controller_ip']
-    await thin_client.DoActionOnVm(controller_ip=controller_ip, domain_id=id, action=vm_action, body=text_body)
+    await thin_client.DoActionOnVm(controller_ip=controller_ip, domain_id=vm_id, action=vm_action, body=text_body)
 
     return JSONResponse({'error': 'null'})
 
