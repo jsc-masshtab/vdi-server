@@ -22,4 +22,4 @@ DIRECTORY=`dirname "$ABSOLUTE_FILENAME"`
 
 export LD_LIBRARY_PATH=$DIRECTORY/libs
 
-./virt_viewer_veil
+./thin_client_veil $1
