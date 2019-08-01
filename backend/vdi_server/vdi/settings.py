@@ -10,6 +10,7 @@ class Settings(SettingsDict):
     pool = {
         'initial_size': 2,
         'reserve_size': 2,
+        'total_size': 2,
     }
 
     jwt = {

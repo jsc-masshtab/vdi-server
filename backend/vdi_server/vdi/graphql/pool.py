@@ -1,5 +1,7 @@
 import asyncio
+import inspect
 import json
+from dataclasses import dataclass
 from typing import List
 
 import graphene
@@ -183,6 +185,8 @@ class PoolSettingsFields(graphene.AbstractType):
     node_id = graphene.String()
     initial_size = graphene.Int()
     reserve_size = graphene.Int()
+    total_size = graphene.Int()
+    vm_name_template = graphene.String()
 
 
 class PoolSettings(graphene.ObjectType, PoolSettingsFields):
@@ -239,6 +243,53 @@ class PoolState(graphene.ObjectType):
 
 # TODO dict of pending tasks
 
+class ValidationError(Exception):
+    pass
+
+
+class PoolValidator:
+    def __init__(self, pool):
+        self._pool = pool
+
+    def initial_size(self, name, val):
+        if val is None:
+            return settings_file['pool'][name]
+        try:
+            int(val)
+        except ValueError:
+            raise ValidationError("Должно быть целочисленным")
+
+    reserve_size = total_size = initial_size
+
+    async def controller_ip(self, name, val):
+        if val:
+            return val
+        controller_ip = await DiscoverController(cluster_id=self._pool['cluster_id'],
+                                                 node_id=self._pool['node_id'])
+        if not controller_ip:
+            raise FieldError(cluster_id=['Неверное значение или не соответствует node_id'],
+                             node_id=['Неверное значение или не соответствует cluster_id'])
+        return controller_ip
+
+    async def validate_async(self, name, val):
+        try:
+            method = getattr(self, name)
+            result = await method(name, val)
+        except ValidationError as ex:
+            raise FieldError(**{name: [str(ex)]})
+        if result is not None:
+            self._pool[name] = result
+
+    def validate_sync(self, name, val):
+        try:
+            method = getattr(self, name)
+            result = method(name, val)
+        except ValidationError as ex:
+            raise FieldError(**{name: [str(ex)]})
+        if result is not None:
+            self._pool[name] = result
+
+
 
 class AddPool(graphene.Mutation):
     class Arguments:
@@ -251,35 +302,45 @@ class AddPool(graphene.Mutation):
         settings = PoolSettingsInput()
         initial_size = graphene.Int()
         reserve_size = graphene.Int()
-
-        block = graphene.Boolean()
+        total_size = graphene.Int()
+        vm_name_template = graphene.String()
 
     Output = PoolType
 
-
-
-    async def mutate(self, info, name,
-                     template_id=None, cluster_id=None, datapool_id=None, node_id=None,
-                     settings=(), initial_size=None, reserve_size=None):
+    async def mutate(self, info, settings=(), **kwargs):
         def get_setting(name):
+            if name in kwargs:
+                return kwargs[name]
             if name in settings:
                 return settings[name]
-            return settings_file['pool'][name]
+            if name in settings_file['pool']:
+                return settings_file['pool'][name]
+            return None
 
         pool = {
-            'initial_size': initial_size or get_setting('initial_size'),
-            'reserve_size': reserve_size or get_setting('reserve_size'),
-            'cluster_id': cluster_id or settings['cluster_id'],
-            'node_id': node_id or settings['node_id'],
-            'datapool_id': datapool_id or settings['datapool_id'],
-            'template_id': template_id or settings['template_id'],
-            'name': name
+            k: get_setting(k)
+            for k in PoolSettings._meta.fields
         }
-        controller_ip = await DiscoverController(cluster_id=pool['cluster_id'], node_id=pool['node_id'])
-        if not controller_ip:
-            raise FieldError(cluster_id=['Неверное значение или не соответствует node_id'],
-                             node_id=['Неверное значение или не соответствует cluster_id'])
-        pool['controller_ip'] = controller_ip
+        pool = {
+            'name': kwargs['name'], **pool
+        }
+        checker = PoolValidator(pool)
+        data_sync = {}
+        data_async = {}
+        for k, v in pool.items():
+            if hasattr(checker, k):
+                if inspect.iscoroutinefunction(getattr(checker, k)):
+                    data_async[k] = v
+                else:
+                    data_sync[k] = v
+        for k, v in data_sync.items():
+            checker.validate_sync(k, v)
+        async_validators = {
+            k: checker.validate_async(k, v)
+            for k, v in data_async.items()
+        }
+        async for _ in wait(**async_validators):
+            pass
         fields = ', '.join(pool.keys())
         values = ', '.join(f'${i+1}' for i in range(len(pool)))
         pool_query = f"INSERT INTO pool ({fields}) VALUES ({values}) RETURNING id", *pool.values()
@@ -313,8 +374,9 @@ class AddPool(graphene.Mutation):
             available = []
         state = PoolState(available=available, running=True)
         from vdi.graphql.resources import ControllerType
-        ret = PoolType(id=pool['id'], state=state, settings=settings, name=name, template_id=pool['template_id'],
-                       controller=ControllerType(ip=controller_ip))
+        ret = PoolType(id=pool['id'], state=state, settings=settings,
+                       name=pool['name'], template_id=pool['template_id'],
+                       controller=ControllerType(ip=pool['controller_ip']))
         state.pool = ret
         for item in available:
             item.pool = ret

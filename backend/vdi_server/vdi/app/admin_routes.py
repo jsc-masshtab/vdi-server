@@ -35,6 +35,9 @@ class GraphQLApp(_GraphQLApp):
         return format_graphql_error(err)
 
     async def result_hook(self, result):
+        if not result.data:
+            #FIXME
+            return
         if 'requests' in result.data:
             stub = result.data['requests'][0]
             requests = await RequestsLog()
