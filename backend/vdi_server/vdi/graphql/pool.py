@@ -54,6 +54,12 @@ class RunningState(graphene.Enum):
     RUNNING = 1
     STOPPED = 0
 
+
+class DesktopPoolType(graphene.Enum):
+    AUTOMATED = 0
+    STATIC = 1
+
+
 class PoolType(graphene.ObjectType):
     #TODO rm settings, add controller, cluster, datapool, etc.
 
@@ -64,13 +70,14 @@ class PoolType(graphene.ObjectType):
     state = graphene.Field(lambda: PoolState)
     users = graphene.List(UserType)
     vms = graphene.List(lambda: VmType)
+    desktop_pool_type = graphene.String()
 
     @graphene.Field
     def controller():
         from vdi.graphql.resources import ControllerType
         return ControllerType
 
-    sql_fields = ['id', 'template_id', 'initial_size', 'reserve_size', 'name', 'controller_ip']
+    sql_fields = ['id', 'template_id', 'initial_size', 'reserve_size', 'name', 'controller_ip', 'desktop_pool_type']
 
     def resolve_state(self, info):
         if self.id not in Pool.instances:
@@ -84,11 +91,6 @@ class PoolType(graphene.ObjectType):
         state = self.resolve_state(None)
         vms = await state.resolve_available(info)
         return vms
-
-
-class DesktopPoolType(graphene.Enum):
-    AUTOMATED = 0#'AUTOMATED'
-    STATIC = 1#'STATIC'
 
 
 class VmState(graphene.Enum):

@@ -122,24 +122,24 @@ class PoolWizardMixin:
 
 
 # get list of vms from veil
-class ListOfVmsOnVeil:
-    vms_on_veil = graphene.List(VmType, cluster_id=graphene.String(),
+class ListOfVmsQuery:
+    list_of_vms = graphene.List(VmType, cluster_id=graphene.String(),
         node_id=graphene.String(), datapool_id=graphene.String(), get_vms_in_pools=graphene.Boolean())
 
-    async def resolve_vms_on_veil(self, _info, cluster_id, node_id, datapool_id, get_vms_in_pools=False):
+    async def resolve_list_of_vms(self, _info, cluster_id, node_id, datapool_id, get_vms_in_pools=False):
 
-        print('ListOfVmsOnVeil::resolve_vms_on_veil: datapool_id', datapool_id)
+        print('ListOfVmsQuery::resolve_vms_on_veil: datapool_id', datapool_id)
         # get all vm which are in pools
         async with db.connect() as conn:
             qu = f'select id from vm'
             vm_ids_in_pools = await conn.fetch(qu)
-        print('ListOfVmsOnVeil::resolve_vms_on_veil: vm_ids_in_pool', vm_ids_in_pools)
+        print('ListOfVmsQuery::resolve_vms_on_veil: vm_ids_in_pool', vm_ids_in_pools)
 
         # get all vms from veil
         controller_ip = await DiscoverController(cluster_id=cluster_id, node_id=node_id)
-        print('ListOfVmsOnVeil::resolve_vms_on_veil: controller_ip', controller_ip)
+        print('ListOfVmsQuery::resolve_vms_on_veil: controller_ip', controller_ip)
         all_vms = await ListVms(controller_ip=controller_ip)
-        print('ListOfVmsOnVeil::resolve_vms_on_veil: all_vms', all_vms)
+        print('ListOfVmsQuery::resolve_vms_on_veil: all_vms', all_vms)
 
         # create list of filtered vm
         def check_if_vm_in_pool(vm):
