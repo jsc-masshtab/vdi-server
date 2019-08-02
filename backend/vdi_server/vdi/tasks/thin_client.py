@@ -79,7 +79,7 @@ class DoActionOnVm(UrlFetcher):
     method = 'POST'
 
     ACTIONS = [
-        'start', 'suspend', 'reset', 'shutdown', 'resume'
+        'start', 'suspend', 'reset', 'shutdown', 'resume', 'reboot'
     ]
 
     @cached
