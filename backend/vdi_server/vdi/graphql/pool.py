@@ -10,7 +10,7 @@ from classy_async import wait
 from vdi.settings import settings as settings_file
 from vdi.tasks import vm
 from vdi.tasks.resources import DiscoverController
-
+from vdi.tasks.thin_client import EnableRemoteAccess
 
 from .users import UserType
 from .util import get_selections
@@ -411,7 +411,7 @@ class AddStaticPool(graphene.Mutation):
 
     async def mutate(self, _info, settings=(), **kwargs):
         vm_ids_list = kwargs.get('vm_ids_list', [])
-
+        # todo: eliminate code repeat
         def get_setting(name):
             if name in kwargs:
                 return kwargs[name]
@@ -483,20 +483,22 @@ class AddStaticPool(graphene.Mutation):
                 pool_ids = await conn.fetch(*qu)
             if pool_ids:
                 raise SimpleError("One of vms belongs to another pool")
+            # enable remote access
+            await EnableRemoteAccess(controller_ip=controller_ip, domain_id=vm_id)
 
-            # add pool
-            async with db.connect() as conn:
-                [res] = await conn.fetch(*pool_query)
-            pool['id'] = res['id']
-            ins = Pool(params=pool)
-            Pool.instances[pool['id']] = ins
-            available = []
+        # add pool
+        async with db.connect() as conn:
+            [res] = await conn.fetch(*pool_query)
+        pool['id'] = res['id']
+        ins = Pool(params=pool)
+        Pool.instances[pool['id']] = ins
+        available = []
 
-            # add vm to pool
-            async with db.connect() as conn:
-                for vm_id in vm_ids_list:
-                    qu = f'INSERT INTO vm (id, pool_id, template_id) VALUES ($1, $2, NULL)', vm_id, pool['id']
-                    await conn.fetch(*qu)
+        # add vm to pool
+        async with db.connect() as conn:
+            for vm_id in vm_ids_list:
+                qu = f'INSERT INTO vm (id, pool_id, template_id) VALUES ($1, $2, NULL)', vm_id, pool['id']
+                await conn.fetch(*qu)
 
         state = PoolState(available=available, running=True)
         from vdi.graphql.resources import ControllerType
