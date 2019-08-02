@@ -2,7 +2,8 @@ import graphene
 from graphql.execution.executors.asyncio import AsyncioExecutor
 from graphql.graphql import graphql
 
-from .pool import AddPool, PoolMixin, RemovePool, WakePool, EntitleUsersToPool, RemoveUserEntitlementsFromPool
+from .pool import AddPool, AddStaticPool, PoolMixin, RemovePool, WakePool, EntitleUsersToPool, \
+    RemoveUserEntitlementsFromPool
 from .resources import AddController, RemoveController, Resources
 from .users import CreateUser, ListUsers
 from .vm import PoolWizardMixin, AssignVmToUser, RemoveAssignedVmFromUser, ListOfVmsQuery
@@ -11,6 +12,7 @@ from .vm import PoolWizardMixin, AssignVmToUser, RemoveAssignedVmFromUser, ListO
 class PoolMutations(graphene.ObjectType):
     removePool = RemovePool.Field()
     addPool = AddPool.Field()
+    addStaticPool = AddStaticPool.Field()
     wakePool = WakePool.Field()
     createUser = CreateUser.Field()
 
