@@ -331,12 +331,12 @@ class AddPool(graphene.Mutation):
                 return settings_file['pool'][name]
             return None
 
-        pool = {
+        pool_settings = {
             k: get_setting(k)
             for k in PoolSettings._meta.fields
         }
         pool = {
-            'name': kwargs['name'], **pool
+            'name': kwargs['name'], **pool_settings
         }
         checker = PoolValidator(pool)
         data_sync = {}
@@ -355,14 +355,10 @@ class AddPool(graphene.Mutation):
         }
         async for _ in wait(**async_validators):
             pass
+
         fields = ', '.join(pool.keys())
         values = ', '.join(f'${i+1}' for i in range(len(pool)))
         pool_query = f"INSERT INTO pool ({fields}) VALUES ({values}) RETURNING id", *pool.values()
-
-        settings = PoolSettings(**{
-            'initial_size': pool['initial_size'],
-            'reserve_size': pool['reserve_size'],
-        })
 
         # AUTOMATED
         if desktop_pool_type == DesktopPoolType.AUTOMATED:
@@ -441,9 +437,10 @@ class AddPool(graphene.Mutation):
 
         state = PoolState(available=available, running=True)
         from vdi.graphql.resources import ControllerType
-        ret = PoolType(id=pool['id'], state=state, settings=settings,
+        ret = PoolType(id=pool['id'], state=state,
                        name=pool['name'], template_id=pool['template_id'],
-                       controller=ControllerType(ip=pool['controller_ip']))
+                       controller=ControllerType(ip=pool['controller_ip']),
+                       settings=PoolSettings(**pool_settings))
         state.pool = ret
         for item in available:
             item.pool = ret
