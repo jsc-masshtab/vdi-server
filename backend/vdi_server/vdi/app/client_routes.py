@@ -84,7 +84,7 @@ async def get_vm(request):
             domain_id = domain['id']
             qu = "update vm set username = $1 where id = $2", user, domain_id
             await conn.fetch(*qu)
-            pool.on_vm_taken()
+            await pool.on_vm_taken()
         # STATIC
         elif desktop_pool_type == DesktopPoolType.get(DesktopPoolType.STATIC).name:
             # find a free vm in static pool
