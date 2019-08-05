@@ -13,9 +13,11 @@ class Settings(SettingsDict):
         'total_size': 2,
     }
 
+    secret_key = 'this_is_secret'
+
     jwt = {
         'algorithm': 'HS256',
-        'secret': 'this_is_secret',
+        'secret': secret_key,
         'claims': ['exp'],
         'leeway': 180,
         'verify_exp': True,
