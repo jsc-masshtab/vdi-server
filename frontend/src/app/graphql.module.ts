@@ -11,13 +11,16 @@ export function createApollo(httpLink: HttpLink) {
     cache: new InMemoryCache({ addTypename: false, dataIdFromObject: object =>  object.id }),
     defaultOptions: {
       watchQuery: {
-          fetchPolicy: 'network-only' // обойдет кеш и напрямую отправит запрос на сервер.
+        fetchPolicy: 'network-only', // обойдет кеш и напрямую отправит запрос на сервер.
+        errorPolicy: 'all'
       },
       query: {
-          fetchPolicy: 'network-only'
+        fetchPolicy: 'network-only',
+        errorPolicy: 'all'
       },
       mutate: {
-          fetchPolicy: 'no-cache'
+        fetchPolicy: 'no-cache',
+        errorPolicy: 'all'
       }
     }
   };

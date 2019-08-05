@@ -20,9 +20,11 @@ export class AddControllerComponent {
 
   public send() {
     this.service.addController(this.controller,this.description).subscribe((res) => {
+      console.log(res);
       this.service.getAllControllers().valueChanges.subscribe();
       this.dialogRef.close();
     },(error)=> {
+      console.log(error);
     });
   }
 
