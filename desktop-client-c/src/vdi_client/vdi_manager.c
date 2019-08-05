@@ -9,7 +9,7 @@
 #include "virt-viewer-util.h"
 #include "vdi_manager.h"
 #include "vdi_api_session.h"
-#include "vdi_vm_widget.h"
+#include "vdi_pool_widget.h"
 #include "jsonhandler.h"
 
 #define MAX_VM_NUMBER 150
@@ -20,7 +20,7 @@ extern gboolean take_extern_credentials;
 typedef enum
 {
     VDI_RECEIVED_RESPONSE,
-    VDI_WAITING_FOR_VM_DATA,
+    VDI_WAITING_FOR_POOL_DATA,
     VDI_WAITING_FOR_VM_FROM_POOL
 } VdiClientState;
 
@@ -36,7 +36,7 @@ typedef struct{
     GtkWidget *status_label;
     GtkWidget *main_vm_spinner;
 
-    GArray *vm_widget_array;
+    GArray *pool_widgets_array;
 
     gchar **url_ptr;
     gchar **password_ptr;
@@ -49,14 +49,14 @@ static VdiManager vdi_manager;
 // functions declarations
 static set_init_values(VdiManager *vdi_manager_ptr);
 static void set_vdi_client_state(VdiClientState vdi_client_state, const gchar *message, gboolean error_message);
-static void refreshVdiVmDataAsync();
-static void unregisterAllVm();
-static void registerVm(gint64 vmId, const gchar *vmName);
-static VdiVmWidget getVdiVmWidgetById(gint64 searchedVmId);
+static void refresh_vdi_pool_data_async();
+static void unregister_all_pools();
+static void register_pool(gint64 pool_id, const gchar *pool_name);
+static VdiPoolWidget get_vdi_pool_widget_by_id(gint64 searched_id);
 static void shutdown_loop(GMainLoop *loop);
 
-static void on_get_vdi_vm_data_finished(GObject *source_object, GAsyncResult *res, gpointer user_data);
-static void onGetVmDFromPoolFinished(GObject *source_object, GAsyncResult *res, gpointer user_data);
+static void on_get_vdi_pool_data_finished(GObject *source_object, GAsyncResult *res, gpointer user_data);
+static void on_get_vm_from_pool_finished(GObject *source_object, GAsyncResult *res, gpointer user_data);
 
 static gboolean on_window_deleted_cb(ConnectionInfo *ci);
 static void on_button_renew_clicked(GtkButton *button, gpointer data);
@@ -78,7 +78,7 @@ static set_init_values(VdiManager *vdi_manager_ptr)
     vdi_manager_ptr->status_label = NULL;
     vdi_manager_ptr->main_vm_spinner = NULL;
 
-    vdi_manager_ptr->vm_widget_array = NULL;
+    vdi_manager_ptr->pool_widgets_array = NULL;
 
     vdi_manager_ptr->url_ptr = NULL;
     vdi_manager_ptr->password_ptr = NULL;
@@ -102,7 +102,7 @@ static void set_vdi_client_state(VdiClientState vdi_client_state, const gchar *m
             break;
         }
 
-        case VDI_WAITING_FOR_VM_DATA: {
+        case VDI_WAITING_FOR_POOL_DATA: {
             if (vdi_manager.main_vm_spinner)
                 gtk_widget_show (GTK_WIDGET(vdi_manager.main_vm_spinner));
             if (vdi_manager.gtk_flow_box)
@@ -135,59 +135,59 @@ static void set_vdi_client_state(VdiClientState vdi_client_state, const gchar *m
     }
 }
 // start asynchronous task to get vm data from vdi
-static void refreshVdiVmDataAsync()
+static void refresh_vdi_pool_data_async()
 {
-    set_vdi_client_state(VDI_WAITING_FOR_VM_DATA, "Отправлен запрос на список пулов", FALSE);
-    execute_async_task(get_vdi_vm_data, on_get_vdi_vm_data_finished, NULL);
+    set_vdi_client_state(VDI_WAITING_FOR_POOL_DATA, "Отправлен запрос на список пулов", FALSE);
+    execute_async_task(get_vdi_vm_data, on_get_vdi_pool_data_finished, NULL);
 }
 // clear array of virtual machine widgets
-static void unregisterAllVm()
+static void unregister_all_pools()
 {
-    if (vdi_manager.vm_widget_array) {
+    if (vdi_manager.pool_widgets_array) {
         int i;
-        for (i = 0; i < vdi_manager.vm_widget_array->len; ++i) {
-            VdiVmWidget vdi_vm_widget = g_array_index(vdi_manager.vm_widget_array, VdiVmWidget, i);
-            destroy_vdi_vm_widget(&vdi_vm_widget);
+        for (i = 0; i < vdi_manager.pool_widgets_array->len; ++i) {
+            VdiPoolWidget vdi_pool_widget = g_array_index(vdi_manager.pool_widgets_array, VdiPoolWidget, i);
+            destroy_vdi_pool_widget(&vdi_pool_widget);
         }
 
-        g_array_free(vdi_manager.vm_widget_array, TRUE);
-        vdi_manager.vm_widget_array = NULL;
+        g_array_free(vdi_manager.pool_widgets_array, TRUE);
+        vdi_manager.pool_widgets_array = NULL;
     }
 }
 // create virtual machine widget and add to GUI
-static void registerVm(gint64 vmId, const gchar *vmName)
+static void register_pool(gint64 pool_id, const gchar *pool_name)
 {
     // create array if required
-    if (vdi_manager.vm_widget_array == NULL)
-        vdi_manager.vm_widget_array = g_array_new (FALSE, FALSE, sizeof (VdiVmWidget));
+    if (vdi_manager.pool_widgets_array == NULL)
+        vdi_manager.pool_widgets_array = g_array_new (FALSE, FALSE, sizeof (VdiPoolWidget));
 
     // add element
-    VdiVmWidget vdi_vm_widget = build_vm_widget(vmId, vmName, vdi_manager.gtk_flow_box);
-    g_array_append_val (vdi_manager.vm_widget_array, vdi_vm_widget);
+    VdiPoolWidget vdi_pool_widget = build_pool_widget(pool_id, pool_name, vdi_manager.gtk_flow_box);
+    g_array_append_val (vdi_manager.pool_widgets_array, vdi_pool_widget);
     // connect start button to callback
-    g_signal_connect(vdi_vm_widget.vm_start_button, "clicked", G_CALLBACK(on_vm_start_button_clicked), NULL);
+    g_signal_connect(vdi_pool_widget.vm_start_button, "clicked", G_CALLBACK(on_vm_start_button_clicked), NULL);
 }
 
 // find a virtual machine widget by id
-static VdiVmWidget getVdiVmWidgetById(gint64 searchedVmId)
+static VdiPoolWidget get_vdi_pool_widget_by_id(gint64 searched_id)
 {
-    VdiVmWidget searchedVdiVmWidget = {};
+    VdiPoolWidget searchedVdiPoolWidget = {};
     int i;
 
-    if (vdi_manager.vm_widget_array == NULL)
-        return searchedVdiVmWidget;
+    if (vdi_manager.pool_widgets_array == NULL)
+        return searchedVdiPoolWidget;
 
-    for (i = 0; i < vdi_manager.vm_widget_array->len; ++i) {
-        VdiVmWidget vdi_vm_widget = g_array_index(vdi_manager.vm_widget_array, VdiVmWidget, i);
+    for (i = 0; i < vdi_manager.pool_widgets_array->len; ++i) {
+        VdiPoolWidget vdi_pool_widget = g_array_index(vdi_manager.pool_widgets_array, VdiPoolWidget, i);
 
-        gint64 curId = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(vdi_vm_widget.vm_start_button), "vmId"));
-        if(curId == searchedVmId){
-            searchedVdiVmWidget = vdi_vm_widget;
+        gint64 curId = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(vdi_pool_widget.vm_start_button), "pool_id"));
+        if(curId == searched_id){
+            searchedVdiPoolWidget = vdi_pool_widget;
             break;
         }
     }
 
-    return searchedVdiVmWidget;
+    return searchedVdiPoolWidget;
 }
 // stop GMainLoop
 static void shutdown_loop(GMainLoop *loop)
@@ -197,8 +197,8 @@ static void shutdown_loop(GMainLoop *loop)
 }
 
 //////////////////////////////// async task callbacks//////////////////////////////////////
-// callback which is invoked when a vm data request finished
-static void on_get_vdi_vm_data_finished (GObject *source_object G_GNUC_UNUSED,
+// callback which is invoked when pool data request finished
+static void on_get_vdi_pool_data_finished (GObject *source_object G_GNUC_UNUSED,
                                         GAsyncResult *res,
                                         gpointer user_data G_GNUC_UNUSED)
 {
@@ -217,14 +217,14 @@ static void on_get_vdi_vm_data_finished (GObject *source_object G_GNUC_UNUSED,
     JsonParser *parser = json_parser_new ();
     JsonArray *jsonArray = get_json_array(parser, response_body_str);
 
-    // prepare  vm_widget_array
-    unregisterAllVm();
+    // prepare  pool_widgets_array
+    unregister_all_pools();
 
-    // parse json data and fill vm_widget_array
+    // parse json data and fill pool_widgets_array
     if(jsonArray){
 
         guint jsonArrayLength = MIN( json_array_get_length(jsonArray), MAX_VM_NUMBER );
-        printf("Number of machines: %i\n", jsonArrayLength);
+        printf("Number of vm pools: %i\n", jsonArrayLength);
 
         int i;
         for(i = jsonArrayLength - 1; i >= 0; --i){
@@ -232,11 +232,11 @@ static void on_get_vdi_vm_data_finished (GObject *source_object G_GNUC_UNUSED,
             JsonNode *jsonNode = json_array_get_element (jsonArray, i);
             JsonObject *object = json_node_get_object (jsonNode);
 
-            gint64 vmId = json_object_get_int_member(object, "id");
-            const gchar *vmName = json_object_get_string_member(object, "name");
-            //printf("vmId %i\n", vmId);
-            //printf("vmName %s\n", vmName);
-            registerVm(vmId, vmName);
+            gint64 pool_id = json_object_get_int_member(object, "id");
+            const gchar *pool_name = json_object_get_string_member(object, "name");
+            //printf("pool_id %i\n", pool_id);
+            //printf("pool_name %s\n", pool_name);
+            register_pool(pool_id, pool_name);
         }
     }
     //
@@ -247,14 +247,14 @@ static void on_get_vdi_vm_data_finished (GObject *source_object G_GNUC_UNUSED,
         g_free(ptr_res);
 }
 // callback which is invoked when vm start request finished
-static void onGetVmDFromPoolFinished(GObject *source_object G_GNUC_UNUSED,
+static void on_get_vm_from_pool_finished(GObject *source_object G_GNUC_UNUSED,
                                          GAsyncResult *res,
                                          gpointer user_data G_GNUC_UNUSED)
 {
     printf("%s\n", (char *)__func__);
 
-    VdiVmWidget vdi_vm_widget = getVdiVmWidgetById(get_current_vm_id());
-    enable_spinner_visible(&vdi_vm_widget, FALSE);
+    VdiPoolWidget vdi_pool_widget = get_vdi_pool_widget_by_id(get_current_vm_id());
+    enable_spinner_visible(&vdi_pool_widget, FALSE);
 
     GError *error;
     gpointer  ptr_res =  g_task_propagate_pointer (G_TASK (res), &error); // take ownership
@@ -270,26 +270,32 @@ static void onGetVmDFromPoolFinished(GObject *source_object G_GNUC_UNUSED,
     JsonParser *parser = json_parser_new ();
     JsonObject *object = get_json_object(parser, response_body_str);
 
-    const gchar *vmHost = json_object_get_string_member(object, "host");
-    gint64 vmPort = json_object_get_int_member(object, "port");
-    const gchar *vmPassword = json_object_get_string_member(object, "password");
-    printf("vmHost %s \n", vmHost);
-    printf("vmPort %ld \n", vmPort);
-    printf("vmPassword %s \n", vmPassword);
+    const gchar *vm_host = json_object_get_string_member(object, "host");
+    gint64 vm_port = json_object_get_int_member(object, "port");
+    const gchar *vm_password = json_object_get_string_member(object, "password");
+    const gchar *message = json_object_get_string_member(object, "message");
+    printf("vm_host %s \n", vm_host);
+    printf("vm_port %ld \n", vm_port);
+    printf("vm_password %s \n", vm_password);
+    // if port == 0 it means VDI server can not provide a vm
+    if (vm_port == 0) {
+        const gchar *user_message = message ? message : "Не удалось получить вм из пула";
+        set_vdi_client_state(VDI_RECEIVED_RESPONSE, user_message, TRUE);
+    } else {
 
-    free_memory_safely(vdi_manager.url_ptr);
-    *vdi_manager.url_ptr = g_strdup_printf("spice://%s:%ld", vmHost, vmPort);
-    g_strstrip(*vdi_manager.url_ptr);
-    free_memory_safely(vdi_manager.password_ptr);
-    *vdi_manager.password_ptr = g_strdup(vmPassword);
-    //
-    set_vdi_client_state(VDI_RECEIVED_RESPONSE, "Получена вм из пула", FALSE);
+        free_memory_safely(vdi_manager.url_ptr);
+        *vdi_manager.url_ptr = g_strdup_printf("spice://%s:%ld", vm_host, vm_port);
+        g_strstrip(*vdi_manager.url_ptr);
+        free_memory_safely(vdi_manager.password_ptr);
+        *vdi_manager.password_ptr = g_strdup(vm_password);
+        //
+        set_vdi_client_state(VDI_RECEIVED_RESPONSE, "Получена вм из пула", FALSE);
 
-    //stop event loop
-    vdi_manager.ci.response = TRUE;
-    vdi_manager.ci.dialog_window_response = GTK_RESPONSE_OK;
-    shutdown_loop(vdi_manager.ci.loop);
-
+        //stop event loop
+        vdi_manager.ci.response = TRUE;
+        vdi_manager.ci.dialog_window_response = GTK_RESPONSE_OK;
+        shutdown_loop(vdi_manager.ci.loop);
+    }
     //
     g_object_unref (parser);
     if(ptr_res)
@@ -311,8 +317,8 @@ static void on_button_renew_clicked(GtkButton *button G_GNUC_UNUSED, gpointer da
 
     printf("%s\n", (char *) __func__);
     cancell_pending_requests();
-    unregisterAllVm();
-    refreshVdiVmDataAsync();
+    unregister_all_pools();
+    refresh_vdi_pool_data_async();
 }
 // quit button pressed callback
 static void on_button_quit_clicked(GtkButton *button G_GNUC_UNUSED, gpointer data)
@@ -327,15 +333,15 @@ static void on_button_quit_clicked(GtkButton *button G_GNUC_UNUSED, gpointer dat
 static void on_vm_start_button_clicked(GtkButton *button, gpointer data G_GNUC_UNUSED)
 {
     //ConnectionInfo *ci = data;
-    set_current_vm_id( GPOINTER_TO_INT(g_object_get_data(G_OBJECT(button), "vmId")) );
+    set_current_vm_id( GPOINTER_TO_INT(g_object_get_data(G_OBJECT(button), "pool_id")) );
     printf("%s  %ld\n", (char *) __func__, get_current_vm_id());
     // start machine
     set_vdi_client_state(VDI_WAITING_FOR_VM_FROM_POOL, "Отправлен запрос на получение вм из пула", FALSE);
     // start spinner on vm widget
-    VdiVmWidget vdi_vm_widget = getVdiVmWidgetById(get_current_vm_id());
-    enable_spinner_visible(&vdi_vm_widget, TRUE);
+    VdiPoolWidget vdi_pool_widget = get_vdi_pool_widget_by_id(get_current_vm_id());
+    enable_spinner_visible(&vdi_pool_widget, TRUE);
     // execute task
-    execute_async_task(get_vm_from_pool, onGetVmDFromPoolFinished, NULL);
+    execute_async_task(get_vm_from_pool, on_get_vm_from_pool_finished, NULL);
 }
 
 /////////////////////////////////// main function
@@ -378,10 +384,10 @@ GtkResponseType vdi_manager_dialog(GtkWindow *main_window, gchar **uri, gchar **
     gtk_window_set_position (GTK_WINDOW(vdi_manager.window), GTK_WIN_POS_CENTER);
     gtk_widget_show_all(vdi_manager.window);
     
-    // Пытаемся соединиться с vdi и получить список машин. Получив список машин нужно сгенерить
+    // Пытаемся соединиться с vdi и получить список пулов. Получив список пулов нужно сгенерить
     // соответствующие кнопки  в скрол области.
-    // get vm data
-    refreshVdiVmDataAsync();
+    // get pool data
+    refresh_vdi_pool_data_async();
 
     // event loop
     vdi_manager.ci.loop = g_main_loop_new(NULL, FALSE);
@@ -392,7 +398,7 @@ GtkResponseType vdi_manager_dialog(GtkWindow *main_window, gchar **uri, gchar **
 
     // clear
     cancell_pending_requests();
-    unregisterAllVm();
+    unregister_all_pools();
     g_object_unref(vdi_manager.builder);
     gtk_widget_destroy(vdi_manager.window);
 

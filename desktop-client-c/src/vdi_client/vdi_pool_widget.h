@@ -25,15 +25,15 @@ typedef struct{
     GtkWidget *image_widget;
     GtkWidget *vm_start_button;
 
-} VdiVmWidget;
+} VdiPoolWidget;
 
 // build vm widget and insert it in gtk_flow_box
-VdiVmWidget build_vm_widget(gint64 vmId, const gchar *vmName, GtkWidget *gtk_flow_box);
+VdiPoolWidget build_pool_widget(gint64 pool_id, const gchar *pool_name, GtkWidget *gtk_flow_box);
 
 // start / stop spinner
-void enable_spinner_visible(VdiVmWidget *vdi_vm_widget, gboolean enable);
+void enable_spinner_visible(VdiPoolWidget *vdi_pool_widget, gboolean enable);
 
 // destroy widget
-void destroy_vdi_vm_widget(VdiVmWidget *vdi_vm_widget);
+void destroy_vdi_pool_widget(VdiPoolWidget *vdi_pool_widget);
 
 #endif //VIRT_VIEWER_VEIL_VDI_VM_WIDGET_H
