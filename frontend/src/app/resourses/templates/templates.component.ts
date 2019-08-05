@@ -33,6 +33,10 @@ export class TemplatesComponent implements OnInit {
       property_boolean: 'ha_enabled',
       property_boolean_true: 'Включена',
       property_boolean_false: 'Выключена'
+    },
+    {
+      title: 'Статус',
+      property: "status"
     }
   ];
 

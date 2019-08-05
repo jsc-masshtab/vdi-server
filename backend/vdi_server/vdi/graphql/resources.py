@@ -1,3 +1,4 @@
+import asyncio
 import socket
 
 import graphene
@@ -11,7 +12,13 @@ from ..tasks import resources, Token
 from ..tasks.vm import ListTemplates, ListVms
 from ..tasks.resources import DiscoverControllers, FetchNode, FetchCluster, DiscoverController
 
-from vdi.errors import FieldError, SimpleError, FetchException, HttpError
+from vdi.errors import FieldError, SimpleError, FetchException
+from vdi.log import RequestsLog
+
+class RequestType(graphene.ObjectType):
+    url = graphene.String()
+    time = graphene.String()
+
 
 class DatacenterType(graphene.ObjectType):
     id = graphene.String()
@@ -41,13 +48,11 @@ class ClusterType(graphene.ObjectType):
     async def resolve_datapools(self, info):
         return await self.controller.resolve_datapools(info, cluster_id=self.id)
 
-    async def resolve_vms(self, info, wild=False):
+    async def resolve_vms(self, info, wild=True):
         return await self.controller.resolve_vms(info, cluster_id=self.id, wild=wild)
 
     info = None
 
-
-#FIXME tests
 
 class NodeType(graphene.ObjectType):
     id = graphene.String()
@@ -77,7 +82,7 @@ class NodeType(graphene.ObjectType):
     async def resolve_datapools(self, info):
         return await self.controller.resolve_datapools(info, node_id=self.id)
 
-    async def resolve_vms(self, info, wild=False):
+    async def resolve_vms(self, info, wild=True):
         return await self.controller.resolve_vms(info, node_id=self.id, wild=wild)
 
 
@@ -153,6 +158,8 @@ class Resources:
     node = graphene.Field(NodeType, id=graphene.String())
     cluster = graphene.Field(ClusterType, id=graphene.String())
 
+    requests = graphene.List(RequestType, time=graphene.Float())
+
     async def resolve_controllers(self, info):
         objects = [
             ControllerType(**item)
@@ -182,6 +189,11 @@ class Resources:
             if k in ClusterType._meta.fields
         }
         return ClusterType(controller=ControllerType(ip=controller_ip), **fields)
+
+    async def resolve_requests(self, info):
+        return [
+            RequestType(url=None, time=None)
+        ]
 
 
 class AddController(graphene.Mutation):
@@ -298,7 +310,7 @@ class ControllerType(graphene.ObjectType):
             objects.append(obj)
         return objects
 
-    async def resolve_vms(self, info, cluster_id=None, node_id=None, wild=False):
+    async def resolve_vms(self, info, cluster_id=None, node_id=None, wild=True):
         if node_id is not None:
             nodes = {node_id}
         elif cluster_id is not None:
@@ -313,11 +325,15 @@ class ControllerType(graphene.ObjectType):
                 if vm['node']['id'] in nodes
             ]
         vm_ids = {vm['id']: None for vm in vms}
+        async with db.connect() as conn:
+            qu = "select id, pool_id from vm where id = any($1::text[])", list(vm_ids)
+            data = await conn.fetch(*qu)
+            for item in data:
+                id = item['id']
+                vm_ids[id] = item['pool_id']
+
         if not wild:
-            async with db.connect() as conn:
-                qu = "select id, pool_id from vm where id = any($1::text[])", list(vm_ids)
-                data = await conn.fetch(*qu)
-                vm_ids = {item['id']: item['pool_id'] for item in data}
+            vm_ids = {k: v for k, v in vm_ids.items() if v is not None}
 
         objects = []
         for vm in vms:

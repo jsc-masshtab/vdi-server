@@ -5,6 +5,8 @@ from cached_property import cached_property as cached
 
 from .base import UrlFetcher
 
+from vdi.errors import FetchException, NotFound, SimpleError
+
 
 @dataclass()
 class EnableRemoteAccess(UrlFetcher):
@@ -21,6 +23,11 @@ class EnableRemoteAccess(UrlFetcher):
         return json.dumps({
             'remote_access': True
         })
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        if isinstance(exc_val, FetchException) and exc_val.code == 404:
+            raise NotFound("Виртуальная машина не найдена") from exc_val
+
 
 POWER_STATES = ['unknown', 'power off', 'power on and suspended', 'power on']
 
@@ -45,6 +52,10 @@ class PrepareVm(UrlFetcher):
         info = await EnableRemoteAccess(controller_ip=self.controller_ip, domain_id=self.domain_id)
         return info
 
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        if isinstance(exc_val, FetchException) and exc_val.code == 404:
+            raise NotFound("Виртуальная машина не найдена") from exc_val
+
 
 #@dataclass()
 #class PowerOn(UrlFetcher):
@@ -60,7 +71,6 @@ class PrepareVm(UrlFetcher):
 
 @dataclass()
 class DoActionOnVm(UrlFetcher):
-
     controller_ip: str
     domain_id: str
     action: str
@@ -68,6 +78,16 @@ class DoActionOnVm(UrlFetcher):
 
     method = 'POST'
 
+    ACTIONS = [
+        'start', 'suspend', 'reset', 'shutdown', 'resume', 'reboot'
+    ]
+
     @cached
     def url(self):
+        if self.action not in self.ACTIONS:
+            raise SimpleError(f"Неизвестное действие: {self.action}")
         return f"http://{self.controller_ip}/api/domains/{self.domain_id}/{self.action}/"
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        if isinstance(exc_val, FetchException) and exc_val.code == 404:
+            raise NotFound("Виртуальная машина не найдена") from exc_val

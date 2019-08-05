@@ -5,8 +5,6 @@ from cached_property import cached_property as cached
 from vdi.db import db
 from vdi.tasks import vm
 
-from .utils import callback
-
 
 @dataclass()
 class Pool:
@@ -34,9 +32,15 @@ class Pool:
             """, domain_id, self.params['id'], template['id']
             await conn.execute(*qu)
 
-    def on_vm_taken(self):
-        initial_size = self.params['initial_size']
-        if initial_size > len(self.queue._queue):
+    async def on_vm_taken(self):
+        reserve_size = self.params['reserve_size']
+        # Check that total_size is not reached
+        async with db.connect() as conn:
+            qu = f"select from count(vm.id) where pool_id = $1", self.params['id']
+            [(num,)] = await conn.fetch(*qu)
+            if num >= self.params['total_size']:
+                return
+        if reserve_size > len(self.queue._queue):
             self.add_domain()
 
     def add_domain(self):
@@ -48,7 +52,6 @@ class Pool:
             'controller_ip': self.params['controller_ip'],
             'node_id': self.params['node_id'],
         }
-        #FIXME FIXME it makes a template
         task = vm.CopyDomain(**params).task
         return task
 
