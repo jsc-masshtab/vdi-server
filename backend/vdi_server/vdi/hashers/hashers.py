@@ -99,8 +99,10 @@ def get_hashers_by_algorithm():
 #         get_hashers_by_algorithm.cache_clear()
 
 
-def get_hasher(algorithm='default'):
-    return PBKDF2PasswordHasher()
+def get_hasher(algorithm='default', _hashers=[]):
+    if not _hashers:
+        _hashers.append(PBKDF2PasswordHasher())
+    return _hashers[0]
 
 
     # """
