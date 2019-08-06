@@ -88,6 +88,17 @@ class CreateUser(graphene.Mutation):
         }
 
 
+class RestorePassword:
+    1
+
+
+class ChangePassword(graphene.Mutation):
+    class Arguments:
+        # old_password
+        new_password = graphene.String()
+
+
+
 class ListUsers:
     users = graphene.List(UserType)
     #TMP

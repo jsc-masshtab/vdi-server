@@ -73,58 +73,12 @@ class ImproperlyConfigured(Exception):
 
 
 
-@functools.lru_cache()
-def get_hashers():
-    raise NotImplementedError
-    # hashers = []
-    # for hasher_path in settings.PASSWORD_HASHERS:
-    #     hasher_cls = import_string(hasher_path)
-    #     hasher = hasher_cls()
-    #     if not getattr(hasher, 'algorithm'):
-    #         raise ImproperlyConfigured("hasher doesn't specify an "
-    #                                    "algorithm name: %s" % hasher_path)
-    #     hashers.append(hasher)
-    # return hashers
-
-
-@functools.lru_cache()
-def get_hashers_by_algorithm():
-    return {hasher.algorithm: hasher for hasher in get_hashers()}
-
-
-# @receiver(setting_changed)
-# def reset_hashers(**kwargs):
-#     if kwargs['setting'] == 'PASSWORD_HASHERS':
-#         get_hashers.cache_clear()
-#         get_hashers_by_algorithm.cache_clear()
 
 
 def get_hasher(algorithm='default', _hashers=[]):
     if not _hashers:
         _hashers.append(PBKDF2PasswordHasher())
     return _hashers[0]
-
-
-    # """
-    # Return an instance of a loaded password hasher.
-    #
-    # If algorithm is 'default', return the default hasher. Lazily import hashers
-    # specified in the project's settings file if needed.
-    # """
-    # if hasattr(algorithm, 'algorithm'):
-    #     return algorithm
-    #
-    # elif algorithm == 'default':
-    #     return get_hashers()[0]
-    #
-    # else:
-    #     hashers = get_hashers_by_algorithm()
-    #     try:
-    #         return hashers[algorithm]
-    #     except KeyError:
-    #         raise ValueError("Unknown password hashing algorithm '%s'. "
-    #                          "Did you specify it in the PASSWORD_HASHERS "
-    #                          "setting?" % algorithm)
 
 
 def identify_hasher(encoded):
