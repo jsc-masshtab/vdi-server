@@ -1,0 +1,50 @@
+.error {
+	position: fixed;
+	top: 50px;
+	right: 8px;
+	background-color: transparent;
+	z-index: 2000;
+	width: 350px;
+	max-width: 350px;
+
+	&-message {
+		position: relative;
+		font-size: 13px;
+		background-color: red;
+		padding: 15px;
+		margin-top: 3px;
+		margin-bottom: 3px;
+		text-align: center;
+		color: white;
+		word-wrap: break-word;
+		overflow: hidden;
+		border: 1px solid black;
+		border-radius: 4px;
+
+		> .message-close {
+			outline: none;
+			border: 0;
+			background: transparent;
+			position: absolute;
+			right: 4px;
+			top: 3px;
+			cursor: pointer;
+			font-size: 15px;
+			transition: color 200ms;
+			padding: 0;
+			margin: 0;
+
+			> .fa-times-circle {
+				cursor: pointer;
+				font-size: 15px;
+				transition: color 200ms;
+				color: rgba(white, 0.9);
+
+				&:hover {
+					color: rgba(white, 0.5);
+					transition: color 200ms;
+				}
+			}
+		}
+	}
+}

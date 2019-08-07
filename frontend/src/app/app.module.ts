@@ -1,3 +1,6 @@
+import { HttpLinkModule, HttpLink } from 'apollo-angular-link-http';
+import { ApolloModule, Apollo } from 'apollo-angular';
+import { ErrorsService } from './common/components/errors/errors.service';
 import { AddUserComponent } from './settings/users/add-user/add-user.component';
 import { VmsComponent } from './resourses/vms/vms.component';
 import { VmsService } from './resourses/vms/vms.service';
@@ -20,7 +23,6 @@ import { ReactiveFormsModule, FormsModule } from '@angular/forms';
 
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
-import { GraphQLModule } from './graphql.module';
 import { HttpClientModule } from '@angular/common/http';
 
 
@@ -29,20 +31,19 @@ import { HttpClientModule } from '@angular/common/http';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { library } from '@fortawesome/fontawesome-svg-core';
 import { faDesktop,faDatabase,faBuilding, faLayerGroup,faPlusCircle,faSpinner,faServer,faCog,faChevronUp,faTimesCircle,faFolderOpen,faStar,faMinusCircle, faTv,faSyncAlt,faTrashAlt,faUsers,faMeh,faChartBar} from '@fortawesome/free-solid-svg-icons';
-//import { faMeh   } from '@fortawesome/free-regular-svg-icons';
 /*  -----------------------------------   icons   --------------------------------------*/
 
 
 import { MainMenuComponent } from './main-menu/main-menu.component';
-import { BaSelect } from './common/baSelect';
+import { BaSelect } from './common/components/baSelect';
 
 
-import { TableComponentComponent } from './common/table-component/table-component.component';
-import { BreadcrumbsComponent } from './common/breadcrumbs/breadcrumbs.component';
+import { TableComponentComponent } from './common/components/table-component/table-component.component';
+import { ErrorsComponent } from './common/components/errors/errors.component';
 import { PoolAddComponent } from './polls/pool-add/pool-add.component';
 import { PoolsService } from './polls/pools.service';
-import { FocusMeDirective } from './common/directives/focusMe.directive';
-import { TableIntoComponent } from './common/table-into-component/table-into';
+import { FocusMeDirective } from './common/other/directives/focusMe.directive';
+import { TableIntoComponent } from './common/components/table-into-component/table-into';
 import { NodesComponent } from './resourses/nodes/nodes.component';
 import { NodesService } from './resourses/nodes/nodes.service';
 
@@ -58,19 +59,20 @@ import { ClusterDetailsComponent } from './resourses/clusters/cluster-details/cl
 import { PoolsComponent } from './polls/pools.component';
 import { RemovePoolComponent } from './polls/remove-pool/remove-pool.component';
 import { TemplatesService } from './resourses/templates/templates.service';
-import { TableService } from './common/table-component/table-component.service';
 import { UsersComponent } from './settings/users/users.component';
 import { UsersService } from './settings/users/users.service';
 /*  -----------------------------------   material   --------------------------------------*/
 
-
+import { onError } from 'apollo-link-error';
+import { InMemoryCache } from 'apollo-cache-inmemory';
+import { environment } from 'src/environments/environment';
 
 @NgModule({
   declarations: [
     AppComponent,
     MainMenuComponent,
     TableComponentComponent,
-    BreadcrumbsComponent,
+    ErrorsComponent,
     PoolAddComponent,
     BaSelect,
     FocusMeDirective,
@@ -96,8 +98,9 @@ import { UsersService } from './settings/users/users.service';
     BrowserModule,
     BrowserAnimationsModule,
     AppRoutingModule,
-    GraphQLModule,
     HttpClientModule,
+    ApolloModule,
+    HttpLinkModule,
     FontAwesomeModule,
     ReactiveFormsModule,
     FormsModule,
@@ -120,20 +123,53 @@ import { UsersService } from './settings/users/users.service';
               DatapoolsService,
               TemplatesService,
               VmsService,
-              TableService,
-              UsersService
-              
+              UsersService,
+              ErrorsService
             ],
   bootstrap: [AppComponent]
 })
 
 
 export class AppModule {
-  constructor() { 
-    library.add(faDesktop,faDatabase,faLayerGroup,faPlusCircle,faMinusCircle,faSpinner,faServer,faCog,faChevronUp,faTimesCircle,faFolderOpen,faStar,faTv,faSyncAlt,faBuilding,faTrashAlt,faUsers,faMeh,faChartBar
-    
-    ); // Неиспользуемые иконки при финальной сборке удаляются
+  
+
+  constructor( private apollo: Apollo,
+               private httpLink: HttpLink,
+               private errorService: ErrorsService) {
+
+    library.add(faDesktop,faDatabase,faLayerGroup,faPlusCircle,faMinusCircle,faSpinner,faServer,faCog,faChevronUp,faTimesCircle,faFolderOpen,faStar,faTv,faSyncAlt,faBuilding,faTrashAlt,faUsers,faMeh,faChartBar); // Неиспользуемые иконки при финальной сборке удаляются
+
+    const uri = environment.url;
+    const link = this.httpLink.create({ uri, includeQuery: true, includeExtensions: false });
+
+    const errorLink = onError(({ graphQLErrors, networkError }) => {
+      if (graphQLErrors) {
+        graphQLErrors.map(({ message, locations, path }) =>
+        console.log(`[GraphQL error]: Message: ${message}, Location: ${locations}, Path: ${path}`,));
+      }
+       
+      if (networkError) {
+        //this.errorService.setError(networkError['error']['errors']);
+       // this.errorService.setError(mock);
+      }
+    });
+
+    this.apollo.create({
+      link: errorLink.concat(link),
+      cache: new InMemoryCache({ addTypename: false, dataIdFromObject: object =>  object.id }),
+      defaultOptions: {
+        watchQuery: {
+          fetchPolicy: 'network-only', // обойдет кеш и напрямую отправит запрос на сервер.
+          errorPolicy: 'all'
+        },
+        query: {
+          fetchPolicy: 'network-only',
+          errorPolicy: 'all'
+        },
+        mutate: {
+          errorPolicy: 'all'
+        }
+      }
+    });
   }
-
-
 }

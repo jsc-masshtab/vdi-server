@@ -1,3 +1,4 @@
+import { ErrorsService } from './../../../common/components/errors/errors.service';
 import { MatDialogRef } from '@angular/material';
 import { Component } from '@angular/core';
 import { ControllersService } from '../controllers.service';
@@ -15,17 +16,29 @@ export class AddControllerComponent {
 
 
   constructor(private service: ControllersService,
-              private dialogRef: MatDialogRef<AddControllerComponent>) {}
+              private dialogRef: MatDialogRef<AddControllerComponent>,
+              private j: ErrorsService) {}
 
 
   public send() {
     this.service.addController(this.controller,this.description).subscribe((res) => {
-      console.log(res);
       this.service.getAllControllers().valueChanges.subscribe();
       this.dialogRef.close();
     },(error)=> {
-      console.log(error);
+      this.j.setError( [{
+        message: '1',
+      },{
+        message: '2',
+      }]);
     });
+
+    // setTimeout(() => {
+    //   this.j.setError( [{
+    //     message: '3',
+    //   },{
+    //     message: '4',
+    //   }]);
+    // },3000);
   }
 
 }
