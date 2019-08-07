@@ -22,9 +22,7 @@ def query():
     marks = ', '.join(marks)
     params = [(u['username'], u['password']) for u in users]
     params = reduce(op.add, params)
-    return (f"""
-    insert into public.user (username, password) values {marks}
-    """, *params)
+    return (f"insert into public.user (username, password) values {marks}", *params)
 
 
 async def run():

@@ -400,59 +400,62 @@ class AddPool(graphene.Mutation):
 class AddStaticPool(graphene.Mutation):
     class Arguments:
         name = graphene.String(required=True)
-
-        cluster_id = graphene.String()
-        datapool_id = graphene.String()
-        node_id = graphene.String()
-        settings = PoolSettingsInput()
-        vm_ids_list = graphene.List(graphene.String)
+        vm_ids_list = graphene.List(graphene.String, deprecation_reason="Use `vm_ids` instead")
+        vm_ids = graphene.List(graphene.ID)
 
     Output = PoolType
 
-    async def mutate(self, _info, settings=(), **kwargs):
-        vm_ids_list = kwargs.get('vm_ids_list', [])
-        # todo: eliminate code repeat
-        def get_setting(name):
-            if name in kwargs:
-                return kwargs[name]
-            if name in settings:
-                return settings[name]
-            if name in settings_file['pool']:
-                return settings_file['pool'][name]
-            return None
+    async def get_resources(cls, vm_ids):
+        vm_id = vm_ids[0]
 
-        pool_settings = {
-            k: get_setting(k)
-            for k in PoolSettings._meta.fields
-        }
-        pool_settings['desktop_pool_type'] = DesktopPoolType.get(DesktopPoolType.STATIC).name
-        pool = {
-            'name': kwargs['name'], **pool_settings
-        }
-        checker = PoolValidator(pool)
-        data_sync = {}
-        data_async = {}
-        for k, v in pool.items():
-            if hasattr(checker, k):
-                if inspect.iscoroutinefunction(getattr(checker, k)):
-                    data_async[k] = v
-                else:
-                    data_sync[k] = v
-        for k, v in data_sync.items():
-            checker.validate_sync(k, v)
-        async_validators = {
-            k: checker.validate_async(k, v)
-            for k, v in data_async.items()
-        }
-        async for _ in wait(**async_validators):
-            pass
 
+    async def mutate(self, _info, vm_ids=None, vm_ids_list=None):
+        vm_ids = vm_ids or vm_ids_list
+        if vm_ids is None:
+            raise FieldError(vm_ids=['Обязательное поле'])
+        # vm_ids_list = kwargs.get('vm_ids_list', [])
+        # # todo: eliminate code repeat
+        # def get_setting(name):
+        #     if name in kwargs:
+        #         return kwargs[name]
+        #     if name in settings:
+        #         return settings[name]
+        #     if name in settings_file['pool']:
+        #         return settings_file['pool'][name]
+        #     return None
+        #
+        # pool_settings = {
+        #     k: get_setting(k)
+        #     for k in PoolSettings._meta.fields
+        # }
+        # pool_settings['desktop_pool_type'] = DesktopPoolType.get(DesktopPoolType.STATIC).name
+        # pool = {
+        #     'name': kwargs['name'], **pool_settings
+        # }
+        # checker = PoolValidator(pool)
+        # data_sync = {}
+        # data_async = {}
+        # for k, v in pool.items():
+        #     if hasattr(checker, k):
+        #         if inspect.iscoroutinefunction(getattr(checker, k)):
+        #             data_async[k] = v
+        #         else:
+        #             data_sync[k] = v
+        # for k, v in data_sync.items():
+        #     checker.validate_sync(k, v)
+        # async_validators = {
+        #     k: checker.validate_async(k, v)
+        #     for k, v in data_async.items()
+        # }
+        # async for _ in wait(**async_validators):
+        #     pass
+        #
         fields = ', '.join(pool.keys())
         values = ', '.join(f'${i+1}' for i in range(len(pool)))
         print('test fields', fields)
         print('test values', values)
         pool_query = f"INSERT INTO pool ({fields}) VALUES ({values}) RETURNING id", *pool.values()
-        # creation
+        # # creation
         controller_ip = pool['controller_ip']
         # get list of all vms
         all_vms_list = await vm.ListVms(controller_ip=controller_ip)
