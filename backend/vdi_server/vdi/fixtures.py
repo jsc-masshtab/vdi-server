@@ -119,14 +119,8 @@ async def fixt_create_static_pool():
     print('list_of_nodes', list_of_nodes)
     node_id = list_of_nodes[0]['id']
 
-    list_of_datapools = await resources.ListDatapools(controller_ip=controller_ip, node_id=node_id)
-    print('list_of_datapools', list_of_datapools)
-    datapool_id = list_of_datapools[0]['id']
-
-    # create 2 vms for test
-    from vdi.tasks.vm import CreateDomain
-    domain_info_1 = await CreateDomain(verbose_name = 'test_vm_static_pool_1', controller_ip=controller_ip,
-                              node_id=node_id)
+    domain_info_1 = await CreateDomain(verbose_name='test_vm_static_pool_1', controller_ip=controller_ip,
+                                       node_id=node_id)
     domain_info_2 = await CreateDomain(verbose_name='test_vm_static_pool_2', controller_ip=controller_ip,
                                        node_id=node_id)
     print('domain_info_1 id', domain_info_1['id'])
@@ -135,12 +129,11 @@ async def fixt_create_static_pool():
     vm_ids_list = json.dumps([domain_info_1['id'], domain_info_2['id']])
     graphql_str = '''
         mutation {
-          addStaticPool(name: "test_pool_static", cluster_id: "%s",
-            node_id: "%s", datapool_id: "%s", vm_ids_list: %s) {
+          addStaticPool(name: "test_pool_static", node_id: "%s", vm_ids_list: %s) {
             id
           }
         }
-        ''' % (cluster_id, node_id, datapool_id, vm_ids_list)
+        ''' % (node_id, vm_ids_list)
 
     pool_create_res = await schema.exec(graphql_str)  # ([('addStaticPool', OrderedDict([('id', 88)]))])
     print('pool_create_res', pool_create_res)
@@ -166,6 +159,7 @@ async def fixt_create_static_pool():
     print('remove_pool_mutation', remove_pool_mutation)
     pool_removal_res = await schema.exec(remove_pool_mutation)
     print('pool_removal_res', pool_removal_res)
+
 
 @pytest.fixture
 async def fixt_create_user(db):

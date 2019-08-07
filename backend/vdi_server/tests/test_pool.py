@@ -81,13 +81,34 @@ async def test_pools_list(create_pool, pool_settings):
 
 @pytest.mark.asyncio
 async def test_create_static_pool(fixt_create_static_pool):
-    pass
+    #
+    pool_id = fixt_create_static_pool['id']
+
+    # get pool info
+    get_pol_info_query = """{
+      pool(id: %i) {
+        settings {
+          initial_size
+        }
+        state {
+          running
+          available {
+            id
+          }
+        }
+      }
+    }""" % pool_id
+    get_pol_info_res = await schema.exec(get_pol_info_query)
+
+    # checks
+    li = get_pol_info_res['pool']['state']['available']
+    assert len(li) == 1
 
 
 @pytest.mark.asyncio
 async def test_user_entitlement(fixt_create_static_pool):
-    # create pool
-    pool_id = create_pool['id']
+    #
+    pool_id = fixt_create_static_pool['id']
 
     # entitle user to pool
     user_name = "admin"
@@ -113,4 +134,38 @@ async def test_user_entitlement(fixt_create_static_pool):
     }
     ''' % (pool_id, user_name)
     remove_entitle_res = await schema.exec(remove_entitle_mutation)
+
+    # checks
     assert remove_entitle_res['ok']
+
+
+@pytest.mark.asyncio
+async def test_assign_vm_to_user(fixt_create_static_pool):
+    #
+    pool_id = fixt_create_static_pool['id']
+
+    # get pool data
+    pool_data_query = '''
+    pool(id: %i){
+      vms{
+        id
+      }
+    }
+    ''' % pool_id
+    remove_entitle_res = await schema.exec(pool_data_query)
+    print('remove_entitle_res', remove_entitle_res)
+
+    # assign vm to user
+    vm_id = remove_entitle_res['vms'][0]['id']
+    username = 'admin'
+    assign_vm_mutation = '''
+    assignVmToUser(vm_id: "%s", username: "%s") {
+      ok
+      error
+    }
+    ''' % (vm_id, username)
+    assign_vm_res = await schema.exec(assign_vm_mutation)
+
+    # checks
+    assert assign_vm_res['ok']
+    assert assign_vm_res['errors'] == 'null'
