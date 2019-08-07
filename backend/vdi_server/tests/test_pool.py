@@ -1,7 +1,7 @@
 
 from vdi.fixtures import (
     db, image_name, create_template, create_pool, pool_name, pool_settings as fixture_pool_settings,
-    conn,
+    conn, fixt_create_static_pool
 )
 
 from vdi.graphql import schema
@@ -80,64 +80,37 @@ async def test_pools_list(create_pool, pool_settings):
 
 
 @pytest.mark.asyncio
-async def test_create_static_pool():
+async def test_create_static_pool(fixt_create_static_pool):
+    pass
 
-    from vdi.db import db
-    await db.init()
 
-    print('create_static_pool')
-
-    from vdi.tasks.resources import DiscoverController
-    controller_ip = await DiscoverController()
-    #  choose resources to create vms
-    list_of_clusters = await resources.ListClusters(controller_ip=controller_ip)
-    print('list_of_clusters', list_of_clusters)
-    cluster_id = list_of_clusters[-1]['id']
-
-    list_of_nodes = await resources.ListNodes(controller_ip=controller_ip, cluster_id=cluster_id)
-    print('list_of_nodes', list_of_nodes)
-    node_id = list_of_nodes[-1]['id']
-
-    list_of_datapools = await resources.ListDatapools(controller_ip=controller_ip, node_id=node_id)
-    print('list_of_datapools', list_of_datapools)
-    datapool_id = list_of_datapools[0]['id']
-
-    # create 2 vms for test
-    from vdi.tasks.vm import CreateDomain
-    domain_info_1 = await CreateDomain(verbose_name = 'test_vm_static_pool_1', controller_ip=controller_ip,
-                              node_id=node_id)
-    domain_info_2 = await CreateDomain(verbose_name='test_vm_static_pool_2', controller_ip=controller_ip,
-                                       node_id=node_id)
-    print('domain_info_1 id', domain_info_1['id'])
-
+@pytest.mark.asyncio
+async def test_user_entitlement(fixt_create_static_pool):
     # create pool
-    vm_ids_list = json.dumps([domain_info_1['id'], domain_info_2['id']])
-    graphql_str = '''
-        mutation {
-          addStaticPool(name: "test_pool_static", cluster_id: "%s",
-            node_id: "%s", datapool_id: "%s", vm_ids_list: %s) {
-            id
-          }
-        }
-        ''' % (cluster_id, node_id, datapool_id, vm_ids_list)
+    pool_id = create_pool['id']
 
-    pool_create_res = await schema.exec(graphql_str)  # ([('addStaticPool', OrderedDict([('id', 88)]))])
-    print('pool_create_res', pool_create_res)
-
-    # checks
-    if hasattr(pool_create_res, 'errors'):
-        assert not pool_create_res.errors
-
-    # remove pool
-    pool_id = pool_create_res['addStaticPool']['id']
-    remove_pool_mutation = '''
-    mutation {
-      removePool(id: %i) {
-        ok
-      }
+    # entitle user to pool
+    user_name = "admin"
+    user_entitle_mutation = '''
+    entitleUsersToPool(
+      pool_id: %i
+      entitled_users: ["%s"]
+    ) {
+      ok
     }
-    ''' % pool_id
+    ''' % (pool_id, user_name)
+    user_entitle_res = await schema.exec(user_entitle_mutation)
+    assert user_entitle_res['ok']
 
-    print('remove_pool_mutation', remove_pool_mutation)
-    pool_removal_res = await schema.exec(remove_pool_mutation)
-    print('pool_removal_res', pool_removal_res)
+    # remove entitlement
+    remove_entitle_mutation = '''
+    removeUserEntitlementsFromPool(
+      pool_id: %i
+      entitled_users: ["%s"]
+      free_assigned_vms: true
+    ) {
+      ok
+    }
+    ''' % (pool_id, user_name)
+    remove_entitle_res = await schema.exec(remove_entitle_mutation)
+    assert remove_entitle_res['ok']
