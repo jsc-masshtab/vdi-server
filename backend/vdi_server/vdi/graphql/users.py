@@ -4,7 +4,7 @@ import graphene
 
 from vdi.hashers import make_password, check_password
 from vdi.db import db
-from vdi.errors import FieldError
+from vdi.errors import FieldError, SimpleError
 from vdi.constants import NotSet
 from .util import get_selections
 
@@ -20,7 +20,7 @@ async def check_username(username, raw_password):
     async def setter(raw_password):
         encoded = make_password(raw_password)
         async with db.connect() as conn:
-            qu = "update table public.user set password = $1 where username = $2", encoded, username
+            qu = "update public.user set password = $1 where username = $2", encoded, username
             await conn.execute(*qu)
 
     return await check_password(raw_password, password, setter)
@@ -88,14 +88,23 @@ class CreateUser(graphene.Mutation):
         }
 
 
-class RestorePassword:
-    1
-
-
 class ChangePassword(graphene.Mutation):
     class Arguments:
-        # old_password
+        username = graphene.String()
+        password = graphene.String()
         new_password = graphene.String()
+
+    ok = graphene.Boolean()
+
+    async def mutate(self, info, username, password, new_password):
+        valid = await check_username(username, password)
+        if not valid:
+            raise SimpleError("Неверные учётные данные")
+        async with db.connect() as conn:
+            encoded = make_password(new_password)
+            qu = "update public.user set password = $1 where username = $2", encoded, username
+            await conn.execute(*qu)
+        return ChangePassword(ok=True)
 
 
 
