@@ -110,7 +110,7 @@ async def fixt_create_static_pool():
     from vdi.tasks.resources import DiscoverController
     controller_ip = await DiscoverController()
 
-    #  choose resources to create vms
+    # choose resources to create vms
     list_of_clusters = await resources.ListClusters(controller_ip=controller_ip)
     print('list_of_clusters', list_of_clusters)
     cluster_id = list_of_clusters[-1]['id']
@@ -127,7 +127,7 @@ async def fixt_create_static_pool():
 
     # create pool
     vm_ids_list = json.dumps([domain_info_1['id'], domain_info_2['id']])
-    graphql_str = '''
+    qu = '''
         mutation {
           addStaticPool(name: "test_pool_static", node_id: "%s", vm_ids_list: %s) {
             id
@@ -135,7 +135,7 @@ async def fixt_create_static_pool():
         }
         ''' % (node_id, vm_ids_list)
 
-    pool_create_res = await schema.exec(graphql_str)  # ([('addStaticPool', OrderedDict([('id', 88)]))])
+    pool_create_res = await schema.exec(qu)  # ([('addStaticPool', OrderedDict([('id', 88)]))])
     print('pool_create_res', pool_create_res)
 
     pool_id = pool_create_res['addStaticPool']['id']

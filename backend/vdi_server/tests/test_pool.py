@@ -85,7 +85,7 @@ async def test_create_static_pool(fixt_create_static_pool):
     pool_id = fixt_create_static_pool['id']
 
     # get pool info
-    get_pol_info_query = """{
+    qu = """{
       pool(id: %i) {
         settings {
           initial_size
@@ -98,10 +98,9 @@ async def test_create_static_pool(fixt_create_static_pool):
         }
       }
     }""" % pool_id
-    get_pol_info_res = await schema.exec(get_pol_info_query)
+    res = await schema.exec(qu)
 
-    # checks
-    li = get_pol_info_res['pool']['state']['available']
+    li = res['pool']['state']['available']
     assert len(li) == 1
 
 
@@ -112,7 +111,7 @@ async def test_user_entitlement(fixt_create_static_pool):
 
     # entitle user to pool
     user_name = "admin"
-    user_entitle_mutation = '''
+    qu = '''
     entitleUsersToPool(
       pool_id: %i
       entitled_users: ["%s"]
@@ -120,11 +119,11 @@ async def test_user_entitlement(fixt_create_static_pool):
       ok
     }
     ''' % (pool_id, user_name)
-    user_entitle_res = await schema.exec(user_entitle_mutation)
-    assert user_entitle_res['ok']
+    res = await schema.exec(qu)
+    assert res['ok']
 
     # remove entitlement
-    remove_entitle_mutation = '''
+    qu = '''
     removeUserEntitlementsFromPool(
       pool_id: %i
       entitled_users: ["%s"]
@@ -133,10 +132,9 @@ async def test_user_entitlement(fixt_create_static_pool):
       ok
     }
     ''' % (pool_id, user_name)
-    remove_entitle_res = await schema.exec(remove_entitle_mutation)
+    res = await schema.exec(qu)
 
-    # checks
-    assert remove_entitle_res['ok']
+    assert res['ok']
 
 
 @pytest.mark.asyncio
@@ -145,27 +143,28 @@ async def test_assign_vm_to_user(fixt_create_static_pool):
     pool_id = fixt_create_static_pool['id']
 
     # get pool data
-    pool_data_query = '''
+    qu = '''
     pool(id: %i){
       vms{
         id
       }
     }
     ''' % pool_id
-    remove_entitle_res = await schema.exec(pool_data_query)
-    print('remove_entitle_res', remove_entitle_res)
+    res = await schema.exec(qu)
+    print('res', res)
+
+    assert len(res['vms'])
 
     # assign vm to user
-    vm_id = remove_entitle_res['vms'][0]['id']
+    vm_id = res['vms'][0]['id']
     username = 'admin'
-    assign_vm_mutation = '''
+    qu = '''
     assignVmToUser(vm_id: "%s", username: "%s") {
       ok
       error
     }
     ''' % (vm_id, username)
-    assign_vm_res = await schema.exec(assign_vm_mutation)
+    res = await schema.exec(qu)
 
-    # checks
-    assert assign_vm_res['ok']
-    assert assign_vm_res['errors'] == 'null'
+    assert res['ok']
+    assert res['errors'] == 'null'
