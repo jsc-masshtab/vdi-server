@@ -47,7 +47,7 @@ typedef struct{
 static VdiManager vdi_manager;
 
 // functions declarations
-static set_init_values(VdiManager *vdi_manager_ptr);
+static void set_init_values(VdiManager *vdi_manager_ptr);
 static void set_vdi_client_state(VdiClientState vdi_client_state, const gchar *message, gboolean error_message);
 static void refresh_vdi_pool_data_async();
 static void unregister_all_pools();
@@ -66,7 +66,7 @@ static void on_vm_start_button_clicked(GtkButton *button , gpointer data);
 
 /////////////////////////////////// work functions//////////////////////////////////////
 //  set init values for  VdiManager structure
-static set_init_values(VdiManager *vdi_manager_ptr)
+static void set_init_values(VdiManager *vdi_manager_ptr)
 {
     vdi_manager_ptr->builder = NULL;
 

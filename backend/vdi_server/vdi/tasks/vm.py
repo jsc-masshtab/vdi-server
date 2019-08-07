@@ -16,6 +16,34 @@ from vdi.errors import NotFound, FetchException, BadRequest
 
 
 @dataclass()
+class CreateDomain(UrlFetcher):
+
+    verbose_name: str
+    controller_ip: str
+    node_id: str
+
+    method = 'POST'
+
+    @cached
+    def url(self):
+        return f"http://{self.controller_ip}//api/domains/"
+
+    async def body(self):
+        params = {
+            "verbose_name": self.verbose_name,
+            "node": self.node_id,
+            "cpu_count": 1,
+            "cpu_priority": 10,
+            "memory_count": 128,
+            "os_type": "Other",
+            "boot_type": "LegacyMBR"
+   # "sound" : {"model": "ich6", "codec": "micro"},
+   # "video": {"heads": 1, "type": "cirrus", "vram": 16384}
+        }
+        return json.dumps(params)
+
+
+@dataclass()
 class CopyDomain(UrlFetcher):
 
     controller_ip: str
