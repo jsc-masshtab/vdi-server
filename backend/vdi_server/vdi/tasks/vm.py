@@ -8,7 +8,7 @@ from cached_property import cached_property as cached
 from classy_async import Task, Awaitable, TaskTimeout, wait
 
 from . import disk
-from .base import Token, UrlFetcher
+from .base import Token, UrlFetcher, DiscoverController
 from .client import HttpClient
 from .ws import WsConnection
 
@@ -119,10 +119,14 @@ class DropDomain(UrlFetcher):
 @dataclass()
 class ListAllVms(Task):
     controller_ip: str
+    node_id: str = None
 
     @cached
     def url(self):
-        return f"http://{self.controller_ip}/api/domains/"
+        url = f"http://{self.controller_ip}/api/domains/"
+        if self.node_id:
+            url = f'{url}?node={self.node_id}'
+        return url
 
     async def run(self):
         token = await Token(controller_ip=self.controller_ip)
@@ -152,30 +156,35 @@ class ListTemplates(ListAllVms):
 
 
 @dataclass()
-class GetDomainInfo(UrlFetcher):
+class GetDomainInfo(DiscoverController):
     """
     Tmp task
     Ensure vm is on a
     """
 
     domain_id: str
-    controller_ip: str = None
+    controller_ip = None
 
     @cached
     def url(self):
         return f"http://{self.controller_ip}/api/domains/{self.domain_id}/"
 
-    async def run(self):
-        from vdi.tasks.resources import DiscoverControllers
-        tasks = [
-            GetDomainInfo(controller_ip=co['ip'])
-            for co in await DiscoverControllers()
-        ]
-        async for result in wait(*tasks):
-            #FIXME if not exception
-            return result
-        raise SimpleError(f'ВМ не найдена: {self.domain_id}')
-
     def __exit__(self, exc_type, exc_val, exc_tb):
         if isinstance(exc_val, FetchException) and exc_val.code == 404:
             raise NotFound("Виртуальная машина не найдена") from exc_val
+
+
+@dataclass()
+class GetVdisks(DiscoverController):
+    domain_id: str
+    controller_ip: str = None
+
+    async def run(self):
+        resp = await super().run()
+        return resp['results']
+
+    @cached
+    def url(self):
+        return f'http://{self.controller_ip}/api/vdisks/?domain={self.domain_id}'
+
+

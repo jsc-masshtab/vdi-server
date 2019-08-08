@@ -7,7 +7,7 @@ from ..tasks.vm import ListTemplates
 from ..tasks.vm import ListVms
 from ..tasks.resources import DiscoverControllers
 from .pool import VmType, TemplateType
-from vdi.tasks.resources import DiscoverController
+from vdi.tasks.resources import DiscoverControllerIp
 from vdi.graphql.resources import NodeType
 
 from vdi.errors import SimpleError
@@ -136,7 +136,7 @@ class ListOfVmsQuery:
         print('ListOfVmsQuery::resolve_vms_on_veil: vm_ids_in_pool', vm_ids_in_pools)
 
         # get all vms from veil
-        controller_ip = await DiscoverController(cluster_id=cluster_id, node_id=node_id)
+        controller_ip = await DiscoverControllerIp(cluster_id=cluster_id, node_id=node_id)
         print('ListOfVmsQuery::resolve_vms_on_veil: controller_ip', controller_ip)
         all_vms = await ListVms(controller_ip=controller_ip)
         print('ListOfVmsQuery::resolve_vms_on_veil: all_vms', all_vms)

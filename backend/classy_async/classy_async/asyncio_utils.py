@@ -41,11 +41,11 @@ class wait:
         for key, src in self.awaitables:
             def cb(fut, key=key):
                 target = results.pop()
-                if not fut.cancelled() and not fut.exception():
-                    result = (key, fut.result())
-                    target.set_result(result)
-                else:
-                    self.copy_result(fut, target)
+                # if not fut.cancelled() and not fut.exception():
+                #     result = (key, fut.result())
+                #     target.set_result(result)
+                # else:
+                self.copy_result(fut, target, key)
 
             src = asyncio.ensure_future(src)
             src.add_done_callback(cb)
@@ -65,7 +65,7 @@ class wait:
         async for key, result in self.items():
             yield result
 
-    def copy_result(self, fut, target):
+    def copy_result(self, fut, target, key):
         # Copies the result of one future to another
         #
         if fut.cancelled():
@@ -77,9 +77,11 @@ class wait:
             if not self.suppress_exceptions:
                 target.set_exception(r)
             else:
+                r = (key, r)
                 target.set_result(r)
             return
         r = fut.result()
+        r = (key, r)
         target.set_result(r)
 
     def get_identity(self, awaitable):

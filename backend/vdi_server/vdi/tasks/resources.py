@@ -129,7 +129,7 @@ class ValidateResources(Task):
 
 
 @dataclass()
-class DiscoverController(Task):
+class DiscoverControllerIp(Task):
     cluster_id: str = None
     node_id: str = None
 

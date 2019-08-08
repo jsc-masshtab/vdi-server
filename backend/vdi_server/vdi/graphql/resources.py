@@ -10,7 +10,7 @@ from .util import get_selections
 from ..db import db
 from ..tasks import resources, Token
 from ..tasks.vm import ListTemplates, ListVms
-from ..tasks.resources import DiscoverControllers, FetchNode, FetchCluster, DiscoverController
+from ..tasks.resources import DiscoverControllers, FetchNode, FetchCluster, DiscoverControllerIp
 
 from vdi.errors import FieldError, SimpleError, FetchException
 from vdi.log import RequestsLog
@@ -168,7 +168,7 @@ class Resources:
         return objects
 
     async def resolve_node(self, info, id):
-        controller_ip = await DiscoverController(node_id=id)
+        controller_ip = await DiscoverControllerIp(node_id=id)
         if not controller_ip:
             raise SimpleError('Узел с данным id не найден')
         # Node exists for sure
@@ -180,7 +180,7 @@ class Resources:
         return NodeType(controller=ControllerType(ip=controller_ip), **fields)
 
     async def resolve_cluster(self, info, id):
-        controller_ip = await DiscoverController(cluster_id=id)
+        controller_ip = await DiscoverControllerIp(cluster_id=id)
         if not controller_ip:
             raise SimpleError('Кластер не найден')
         data = await FetchCluster(controller_ip=controller_ip, cluster_id=id)

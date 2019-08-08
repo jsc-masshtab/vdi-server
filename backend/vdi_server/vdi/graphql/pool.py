@@ -9,8 +9,9 @@ from cached_property import cached_property as cached
 from classy_async import wait
 from vdi.settings import settings as settings_file
 from vdi.tasks import vm
-from vdi.tasks.resources import DiscoverController
+from vdi.tasks.resources import DiscoverControllerIp
 from vdi.tasks.thin_client import EnableRemoteAccess
+from vdi.tasks.vm import GetDomainInfo, GetVdisks
 
 from .users import UserType
 from .util import get_selections
@@ -90,6 +91,9 @@ class PoolType(graphene.ObjectType):
         return state
 
     async def resolve_vms(self, info):
+        if self.vms:
+            # static pool
+            return self.vms
         state = self.resolve_state(None)
         vms = await state.resolve_available(info)
         return vms
@@ -273,8 +277,8 @@ class PoolValidator:
     async def controller_ip(self, name, val):
         if val:
             return val
-        controller_ip = await DiscoverController(cluster_id=self._pool['cluster_id'],
-                                                 node_id=self._pool['node_id'])
+        controller_ip = await DiscoverControllerIp(cluster_id=self._pool['cluster_id'],
+                                                   node_id=self._pool['node_id'])
         if not controller_ip:
             raise FieldError(cluster_id=['Неверное значение или не соответствует node_id'],
                              node_id=['Неверное значение или не соответствует cluster_id'])
@@ -400,118 +404,106 @@ class AddPool(graphene.Mutation):
 class AddStaticPool(graphene.Mutation):
     class Arguments:
         name = graphene.String(required=True)
-        vm_ids_list = graphene.List(graphene.String, deprecation_reason="Use `vm_ids` instead")
+        vm_ids_list = graphene.List(graphene.String)
         vm_ids = graphene.List(graphene.ID)
+
+        cluster_id = graphene.String()
+        datapool_id = graphene.String()
+        node_id = graphene.String()
 
     Output = PoolType
 
-    async def get_resources(cls, vm_ids):
+    @classmethod
+    async def get_node_and_cluster(cls, vm_ids, options):
+        options = dict(options)
         vm_id = vm_ids[0]
+        vm_info = await GetDomainInfo(domain_id=vm_id)
+        options.update({
+            'node_id': vm_info['node']['id'],
+            'datapool_id': 1
+        })
+
+    @classmethod
+    async def get_datapool(cls, vm_ids):
+        for vm_id in vm_ids:
+            vdisks = await GetVdisks(domain_id=vm_id)
+            if not vdisks:
+                continue
+            return vdisks[0]['datapool_id']
+        raise SimpleError(f'Невозможно определить datapool_id')
 
 
-    async def mutate(self, _info, vm_ids=None, vm_ids_list=None):
+
+    async def mutate(self, _info, vm_ids=None, vm_ids_list=None, **options):
         vm_ids = vm_ids or vm_ids_list
         if vm_ids is None:
             raise FieldError(vm_ids=['Обязательное поле'])
-        # vm_ids_list = kwargs.get('vm_ids_list', [])
-        # # todo: eliminate code repeat
-        # def get_setting(name):
-        #     if name in kwargs:
-        #         return kwargs[name]
-        #     if name in settings:
-        #         return settings[name]
-        #     if name in settings_file['pool']:
-        #         return settings_file['pool'][name]
-        #     return None
-        #
-        # pool_settings = {
-        #     k: get_setting(k)
-        #     for k in PoolSettings._meta.fields
-        # }
-        # pool_settings['desktop_pool_type'] = DesktopPoolType.get(DesktopPoolType.STATIC).name
-        # pool = {
-        #     'name': kwargs['name'], **pool_settings
-        # }
-        # checker = PoolValidator(pool)
-        # data_sync = {}
-        # data_async = {}
-        # for k, v in pool.items():
-        #     if hasattr(checker, k):
-        #         if inspect.iscoroutinefunction(getattr(checker, k)):
-        #             data_async[k] = v
-        #         else:
-        #             data_sync[k] = v
-        # for k, v in data_sync.items():
-        #     checker.validate_sync(k, v)
-        # async_validators = {
-        #     k: checker.validate_async(k, v)
-        #     for k, v in data_async.items()
-        # }
-        # async for _ in wait(**async_validators):
-        #     pass
-        #
-        fields = ', '.join(pool.keys())
-        values = ', '.join(f'${i+1}' for i in range(len(pool)))
-        print('test fields', fields)
-        print('test values', values)
-        pool_query = f"INSERT INTO pool ({fields}) VALUES ({values}) RETURNING id", *pool.values()
-        # # creation
-        controller_ip = pool['controller_ip']
+        controller_ip = None
+        if 'cluster_id' not in options or 'node_id' not in options:
+            dic, controller_ip = await AddStaticPool.get_node_and_cluster()
+            options.update(dic)
+        if 'datapool_id' not in options:
+            options['datapool_id'], controller_ip = await AddStaticPool.get_datapool()
+        if controller_ip is None:
+            controller_ip = await DiscoverControllerIp(cluster_id=options['cluster_id'],
+                                                       node_id=options['node_id'])
         # get list of all vms
-        all_vms_list = await vm.ListVms(controller_ip=controller_ip)
-        print('AddPool::mutate vms', all_vms_list)
-        if not all_vms_list:
+        all_vm_ids = [
+            vm['id'] for vm in await vm.ListVms(controller_ip=controller_ip, node_id=options['node_id'])
+        ]
+        if not all_vm_ids:
             raise SimpleError("No vms on controller. Impossible to create static pool")
         if not vm_ids_list:
             raise SimpleError("No vm ids passed. Impossible to create static pool")
 
-        # get full info about passed vm
-        def get_full_vm_info_by_id(passed_vm_id):
-            for vmachine in all_vms_list:
-                if vmachine['id'] == passed_vm_id:
-                    return vmachine
-            raise SimpleError("Passed vm id does not exist on veil server")
+        for vm_id in vm_ids:
+            if vm_id not in all_vm_ids:
+                raise FieldError(vm_ids=['Все ВМ должны принадлежать одному узлу'])
 
-        print('node_id', pool['node_id'])
-        for vm_id in vm_ids_list:
-            # check if all vms belong to the same node (node_id)
-            current_vm_node_id = get_full_vm_info_by_id(vm_id)['node']['id']
-            print('current_vm_node_id', current_vm_node_id)
-            if current_vm_node_id != pool['node_id']:
-                raise SimpleError('Passed vms do not belong to correct node')
-
-            # check if vm is free (not in any pool)
-            async with db.connect() as conn:
-                qu = f'SELECT vm.pool_id from vm WHERE vm.id = $1 ', vm_id
-                pool_ids = await conn.fetch(*qu)
-            if pool_ids:
-                raise SimpleError("One of vms belongs to another pool")
-            # enable remote access
-            await EnableRemoteAccess(controller_ip=controller_ip, domain_id=vm_id)
+        async with db.connect() as conn:
+            qu = (
+                "select vm.id from vm join pool on vm.pool_id = pool.id "
+                "where pool.desktop_pool_type = 'AUTOMATED' and vm.id = any($1::text[])", list(vm_ids)
+            )
+            data = await conn.fetch(*qu)
+            if data:
+                ids = [id for (id,) in data]
+                raise SimpleError("Некоторые ВМ принадлежат динамическим пулам")
+        tasks = [
+            EnableRemoteAccess(controller_ip=controller_ip, domain_id=vm_id)
+            for vm_id in vm_ids
+        ]
+        async for _ in wait(*tasks):
+            pass
 
         # add pool
+        pool = {
+            'name': options['name'],
+            'node_id': options['node_id'],
+            'cluster_id': options['cluster_id'],
+            'datapool_id': options['datapool_id'],
+            'controller_ip': controller_ip
+        }
+        fields = ', '.join(pool.keys())
+        values = ', '.join(f'${i + 1}' for i in range(len(pool)))
+        pool_query = f"INSERT INTO pool ({fields}) VALUES ({values}) RETURNING id", *pool.values()
         async with db.connect() as conn:
             [res] = await conn.fetch(*pool_query)
-        pool['id'] = res['id']
-        ins = Pool(params=pool)
-        Pool.instances[pool['id']] = ins
-        available = []
+            pool['id'] = res['id']
 
         # add vm to pool
         async with db.connect() as conn:
             for vm_id in vm_ids_list:
+                #FIXME
                 qu = f'INSERT INTO vm (id, pool_id, template_id) VALUES ($1, $2, NULL)', vm_id, pool['id']
                 await conn.fetch(*qu)
 
-        state = PoolState(available=available, running=True)
+        vms = [
+            VmType(id=id) for id in vm_ids
+        ]
         from vdi.graphql.resources import ControllerType
-        ret = PoolType(id=pool['id'], state=state, name=pool['name'],
-                       controller=ControllerType(ip=pool['controller_ip']), settings=PoolSettings(**pool_settings))
-        state.pool = ret
-        for item in available:
-            item.pool = ret
-
-        return ret
+        return PoolType(id=pool['id'], name=pool['name'], vms=vms,
+                        controller=ControllerType(ip=pool['controller_ip']))
 
 
 class WakePool(graphene.Mutation):

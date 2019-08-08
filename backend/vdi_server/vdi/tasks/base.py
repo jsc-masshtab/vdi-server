@@ -4,8 +4,8 @@ from contextlib import asynccontextmanager
 from dataclasses import dataclass
 
 from cached_property import cached_property as cached
-from classy_async import Task as _Task, TaskTimeout
-from vdi.errors import WsTimeout, FetchException, ControllerNotAccessible, AuthError
+from classy_async import Task as _Task, TaskTimeout, wait
+from vdi.errors import WsTimeout, FetchException, ControllerNotAccessible, AuthError, SimpleError
 from vdi.utils import with_self
 from vdi.settings import settings
 from vdi.tasks.client import HttpClient
@@ -58,9 +58,7 @@ class Token(Task):
         raise ex
 
 
-@dataclass()
 class UrlFetcher(Task):
-    controller_ip: str
 
     async def headers(self):
         token = await Token(controller_ip=self.controller_ip)
@@ -86,3 +84,27 @@ class UrlFetcher(Task):
         except TaskTimeout:
             raise WsTimeout(url=self.url, data="Таймаут ожидания завершения")
 
+
+class DiscoverController(UrlFetcher):
+
+    async def discover_and_run(self):
+        assert self.controller_ip is None
+        params = {
+            key: getattr(self, key)
+            for key in self.__dataclass_fields__.keys()
+        }
+        from vdi.tasks.resources import DiscoverControllers
+        tasks = {
+            co['ip']: self.__class__(**{**params, 'controller_ip': co['ip']})
+            for co in await DiscoverControllers()
+        }
+        async for controller_ip, result in wait(**tasks).items():
+            if not isinstance(result, Exception):
+                self.controller_ip = controller_ip
+                return result
+        raise SimpleError(f'Автоопределение контроллера не удалось: {self.__class__.__name__}')
+
+    async def run(self):
+        if self.controller_ip:
+            return await super().run()
+        return await self.discover_and_run()
