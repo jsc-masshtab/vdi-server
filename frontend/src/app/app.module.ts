@@ -149,8 +149,7 @@ export class AppModule {
       }
        
       if (networkError) {
-        //this.errorService.setError(networkError['error']['errors']);
-       // this.errorService.setError(mock);
+        this.errorService.setError(networkError['error']['errors']);
       }
     });
 

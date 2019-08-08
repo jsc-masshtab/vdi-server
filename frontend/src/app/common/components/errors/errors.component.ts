@@ -2,11 +2,30 @@ import { ErrorsService } from './errors.service';
 import { Component } from '@angular/core';
 import { Subscription } from 'rxjs';
 
+import {
+	trigger,
+	style,
+	transition,
+	animate
+} from '@angular/animations';
+
 
 @Component({
   selector: 'vdi-errors',
   templateUrl: './errors.component.html',
-  styleUrls: ['./errors.component.scss']
+  styleUrls: ['./errors.component.scss'],
+  animations: [
+    trigger("animForm", [
+      transition(":enter", [
+        style({ opacity: 0 }),
+        animate("150ms", style({ opacity: 1 }))
+      ]),
+      transition(":leave", [
+        style({ opacity: 1 }),
+        animate("150ms", style({ opacity: 0 }))
+      ])
+    ])
+  ]
 })
 export class ErrorsComponent  {
 
@@ -28,21 +47,11 @@ export class ErrorsComponent  {
   private hideMessage() {
     let timeFunc = setTimeout(() => {
       if(this.errors.length) {
-        //console.log(valueRemove,'remove');
         this.errors.splice(0,1);
-        //this.timers.splice(0,1);
-        // setTimeout(() => {
-        //   this.errors.splice(0,valueRemove);
-        //   console.log(valueRemove,'remove');
-        // },8000); 
-      } else {
-        console.log('return')
+        this.timers.splice(0,1);
       }
-      
-      return; 
     },8000);
     this.timers.push(timeFunc);
-    console.log(this.timers,'this.timers');
   }
 
   public closeMessage(id) {
