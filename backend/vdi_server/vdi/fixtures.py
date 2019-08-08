@@ -2,8 +2,10 @@
 import pytest
 import json
 
+from vdi.tasks.resources import DiscoverController
 from vdi.graphql import schema
 from vdi.tasks import resources
+from vdi.tasks import vm
 
 @pytest.fixture
 async def db():
@@ -107,7 +109,6 @@ async def fixt_create_static_pool():
 
     print('create_static_pool')
 
-    from vdi.tasks.resources import DiscoverController
     controller_ip = await DiscoverController()
 
     # choose resources to create vms
@@ -119,9 +120,9 @@ async def fixt_create_static_pool():
     print('list_of_nodes', list_of_nodes)
     node_id = list_of_nodes[0]['id']
 
-    domain_info_1 = await CreateDomain(verbose_name='test_vm_static_pool_1', controller_ip=controller_ip,
+    domain_info_1 = await vm.CreateDomain(verbose_name='test_vm_static_pool_1', controller_ip=controller_ip,
                                        node_id=node_id)
-    domain_info_2 = await CreateDomain(verbose_name='test_vm_static_pool_2', controller_ip=controller_ip,
+    domain_info_2 = await vm.CreateDomain(verbose_name='test_vm_static_pool_2', controller_ip=controller_ip,
                                        node_id=node_id)
     print('domain_info_1 id', domain_info_1['id'])
 
@@ -129,7 +130,7 @@ async def fixt_create_static_pool():
     vm_ids_list = json.dumps([domain_info_1['id'], domain_info_2['id']])
     qu = '''
         mutation {
-          addStaticPool(name: "test_pool_static", node_id: "%s", vm_ids_list: %s) {
+          addStaticPool(name: "test_pool_static", node_id: "%s", datapool_id: "", cluster_id: "", vm_ids_list: %s) {
             id
           }
         }
