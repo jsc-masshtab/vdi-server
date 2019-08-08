@@ -38,23 +38,23 @@ export class ErrorsComponent  {
   ngOnInit() {
     this.errorsSub = this.service.getErrors().subscribe((errors: object[]) => {
       errors.forEach((item: {}) => {
-        this.errors.push(item);
+        this.errors.unshift(item);
         this.hideMessage();
       });
     });
   }
 
-  private hideMessage() {
-    let timeFunc = setTimeout(() => {
-      if(this.errors.length) {
-        this.errors.splice(0,1);
-        this.timers.splice(0,1);
-      }
-    },8000);
-    this.timers.push(timeFunc);
+  private hideMessage(): void {
+    if(this.errors.length) {
+      let timeFunc = setTimeout(() => {
+        this.errors.pop();
+        this.timers.pop();
+      },8000);
+      this.timers.unshift(timeFunc);
+    }
   }
 
-  public closeMessage(id) {
+  public closeMessage(id): void {
     this.errors.splice(id, 1);
     clearTimeout(this.timers[id]);
     this.timers.splice(id,1);
