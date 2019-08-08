@@ -1,7 +1,11 @@
 
 import pytest
+import json
 
+from vdi.tasks.resources import DiscoverController
 from vdi.graphql import schema
+from vdi.tasks import resources
+from vdi.tasks import vm
 
 @pytest.fixture
 async def db():
@@ -95,3 +99,82 @@ async def conn():
     from vdi.db import db
     async with db.connect() as c:
         yield c
+
+
+@pytest.fixture
+async def fixt_create_static_pool():
+
+    from vdi.db import db
+    await db.init()
+
+    print('create_static_pool')
+
+    controller_ip = await DiscoverController()
+
+    # choose resources to create vms
+    list_of_clusters = await resources.ListClusters(controller_ip=controller_ip)
+    print('list_of_clusters', list_of_clusters)
+    cluster_id = list_of_clusters[-1]['id']
+
+    list_of_nodes = await resources.ListNodes(controller_ip=controller_ip, cluster_id=cluster_id)
+    print('list_of_nodes', list_of_nodes)
+    node_id = list_of_nodes[0]['id']
+
+    domain_info_1 = await vm.CreateDomain(verbose_name='test_vm_static_pool_1', controller_ip=controller_ip,
+                                       node_id=node_id)
+    domain_info_2 = await vm.CreateDomain(verbose_name='test_vm_static_pool_2', controller_ip=controller_ip,
+                                       node_id=node_id)
+    print('domain_info_1 id', domain_info_1['id'])
+
+    # create pool
+    vm_ids_list = json.dumps([domain_info_1['id'], domain_info_2['id']])
+    qu = '''
+        mutation {
+          addStaticPool(name: "test_pool_static", node_id: "%s", datapool_id: "", cluster_id: "", vm_ids_list: %s) {
+            id
+          }
+        }
+        ''' % (node_id, vm_ids_list)
+
+    pool_create_res = await schema.exec(qu)  # ([('addStaticPool', OrderedDict([('id', 88)]))])
+    print('pool_create_res', pool_create_res)
+
+    pool_id = pool_create_res['addStaticPool']['id']
+    yield {
+        'id': pool_id,
+    }
+
+    # checks
+    if hasattr(pool_create_res, 'errors'):
+        assert not pool_create_res.errors
+
+    # remove pool
+    remove_pool_mutation = '''
+    mutation {
+      removePool(id: %i) {
+        ok
+      }
+    }
+    ''' % pool_id
+
+    print('remove_pool_mutation', remove_pool_mutation)
+    pool_removal_res = await schema.exec(remove_pool_mutation)
+    print('pool_removal_res', pool_removal_res)
+
+
+@pytest.fixture
+async def fixt_create_user(db):
+
+    username = 'test_user_name'
+    password = 'test_user_password'
+    remove_pool_mutation = '''
+    createUser(username: "%s", password: "%s"){
+      ok
+    }
+    ''' % (username, password)
+    user_creation_res = await schema.exec(remove_pool_mutation)
+
+    yield username
+
+    # remove user...
+

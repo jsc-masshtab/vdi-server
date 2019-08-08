@@ -51,7 +51,7 @@ async def get_vm(request):
         controller_ip = settings['controller_ip']
         user = request.user.username
         pool_id = int(request.path_params['pool_id'])
-
+        print('controller_ip', controller_ip)
         # determine desktop pool type
         qu = 'select desktop_pool_type from pool where id = $1', pool_id
         pools = await conn.fetch(*qu)
@@ -93,7 +93,8 @@ async def get_vm(request):
             print('get_vm: free_vm', free_vms)
             # if there is no free vm then send empty fields??? Handle on thin client side
             if not free_vms:
-                return JSONResponse({'host': "", 'port': "", 'password': ""})
+                return JSONResponse({'host': '', 'port': 0, 'password': '',
+                                     'message': 'В статическом пуле нет свободных машин'})
             # assign vm to the user
             [(domain_id,)] = free_vms
             qu = f"update vm set username = $1 where id = $2", user, domain_id

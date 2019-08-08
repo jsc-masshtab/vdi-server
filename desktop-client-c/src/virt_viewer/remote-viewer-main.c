@@ -62,6 +62,8 @@ main(int argc, char **argv)
 #else
 
 #endif
+    // disable stdout buffering
+    setbuf(stdout, NULL);
 
     // start session
     start_vdi_session();
