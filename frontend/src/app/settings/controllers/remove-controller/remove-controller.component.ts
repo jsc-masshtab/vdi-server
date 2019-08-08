@@ -41,7 +41,6 @@ export class RemoveControllerComponent implements OnInit {
     this.defaultDataControllers = "- Загрузка контроллеров -";
     this.service.getAllControllers().valueChanges.pipe(map(data => data.data.controllers))
       .subscribe((data) => {
-        console.log(data);
         this.controllers = data.map((item) => {
           return {
             'output': item.ip,
