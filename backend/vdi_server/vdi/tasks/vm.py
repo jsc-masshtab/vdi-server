@@ -200,7 +200,7 @@ class GetDomainInfo(DiscoverController):
     """
 
     domain_id: str
-    controller_ip = None
+    controller_ip: str = None
 
     @cached
     def url(self):
@@ -218,7 +218,10 @@ class GetVdisks(DiscoverController):
 
     async def run(self):
         resp = await super().run()
+        if not self.controller_ip:
+            return resp
         return resp['results']
+
 
     @cached
     def url(self):

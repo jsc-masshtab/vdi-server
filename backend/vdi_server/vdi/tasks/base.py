@@ -100,8 +100,7 @@ class DiscoverController(UrlFetcher):
         }
         async for controller_ip, result in wait(**tasks).items():
             if not isinstance(result, Exception):
-                self.controller_ip = controller_ip
-                return result
+                return result, controller_ip
         raise SimpleError(f'Автоопределение контроллера не удалось: {self.__class__.__name__}')
 
     async def run(self):

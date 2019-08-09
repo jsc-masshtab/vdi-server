@@ -425,51 +425,43 @@ class AddStaticPool(graphene.Mutation):
     Output = PoolType
 
     @classmethod
-    async def get_node_and_cluster(cls, vm_ids, options):
-        options = dict(options)
+    async def get_node_and_cluster(cls, vm_ids):
         vm_id = vm_ids[0]
-        vm_info = await GetDomainInfo(domain_id=vm_id)
-        options.update({
+        vm_info, controller_ip = await GetDomainInfo(domain_id=vm_id)
+        return {
             'node_id': vm_info['node']['id'],
-            'datapool_id': 1
-        })
+            'cluster_id': vm_info['cluster']
+        }, controller_ip
 
     @classmethod
     async def get_datapool(cls, vm_ids):
         for vm_id in vm_ids:
-            vdisks = await GetVdisks(domain_id=vm_id)
+            vdisks, controller_ip = await GetVdisks(domain_id=vm_id)
             if not vdisks:
                 continue
-            return vdisks[0]['datapool_id']
+            return vdisks[0]['datapool_id'], controller_ip
         raise SimpleError(f'Невозможно определить datapool_id')
-
 
 
     async def mutate(self, _info, vm_ids=None, vm_ids_list=None, **options):
         vm_ids = vm_ids or vm_ids_list
-        if vm_ids is None:
+        if not vm_ids:
             raise FieldError(vm_ids=['Обязательное поле'])
         controller_ip = None
         if 'cluster_id' not in options or 'node_id' not in options:
-            dic, controller_ip = await AddStaticPool.get_node_and_cluster()
+            dic, controller_ip = await AddStaticPool.get_node_and_cluster(vm_ids)
             options.update(dic)
         if 'datapool_id' not in options:
-            options['datapool_id'], controller_ip = await AddStaticPool.get_datapool()
+            options['datapool_id'], controller_ip = await AddStaticPool.get_datapool(vm_ids)
         if controller_ip is None:
             controller_ip = await DiscoverControllerIp(cluster_id=options['cluster_id'],
                                                        node_id=options['node_id'])
-        # get list of all vms
         all_vm_ids = [
             vm['id'] for vm in await vm.ListVms(controller_ip=controller_ip, node_id=options['node_id'])
         ]
-        if not all_vm_ids:
-            raise SimpleError("No vms on controller. Impossible to create static pool")
-        if not vm_ids_list:
-            raise SimpleError("No vm ids passed. Impossible to create static pool")
-
         for vm_id in vm_ids:
             if vm_id not in all_vm_ids:
-                raise FieldError(vm_ids=['Все ВМ должны принадлежать одному узлу'])
+                raise FieldError(vm_ids=['ВМ принадлежит другому узлу'])
 
         async with db.connect() as conn:
             qu = (
@@ -502,12 +494,15 @@ class AddStaticPool(graphene.Mutation):
             [res] = await conn.fetch(*pool_query)
             pool['id'] = res['id']
 
-        # add vm to pool
+        # add vms to the database
+        placeholders = [f'(${i+1}, ${i + 2})' for i in range(0, len(vm_ids) *2, 2)]
+        placeholders = ', '.join(placeholders)
+        params = []
+        for vm_id in vm_ids:
+            params.extend([vm_id, pool['id']])
         async with db.connect() as conn:
-            for vm_id in vm_ids_list:
-                #FIXME
-                qu = f'INSERT INTO vm (id, pool_id, template_id) VALUES ($1, $2, NULL)', vm_id, pool['id']
-                await conn.fetch(*qu)
+            qu = f'INSERT INTO vm (id, pool_id) VALUES {placeholders}', *params
+            await conn.fetch(*qu)
 
         vms = [
             VmType(id=id) for id in vm_ids
