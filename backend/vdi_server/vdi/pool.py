@@ -1,5 +1,6 @@
 import asyncio
 from dataclasses import dataclass
+import uuid
 
 from cached_property import cached_property as cached
 from vdi.db import db
@@ -32,21 +33,28 @@ class Pool:
             """, domain_id, self.params['id'], template['id']
             await conn.execute(*qu)
 
-    def on_vm_taken(self):
-        initial_size = self.params['initial_size']
-        if initial_size > len(self.queue._queue):
-            self.add_domain()
+    async def on_vm_taken(self):
+        reserve_size = self.params['reserve_size']
+        # Check that total_size is not reached
+        num = await self.__get_vm_amount_in_pool()
+        if num >= self.params['total_size']:
+            return
+        if reserve_size > len(self.queue._queue):
+            self.add_domain(num + 1)
 
-    def add_domain(self):
+    def add_domain(self, domain_index):
         from vdi.tasks import vm
+        vm_name_template = (self.params['vm_name_template'] or self.params['name'])
+        uid = str(uuid.uuid4())[:7]
+
         params = {
-            'name_template': self.params['name'],
+            'verbose_name': f"{vm_name_template}-{domain_index}-{uid}",
+            'name_template': vm_name_template,
             'domain_id': self.params['template_id'],
             'datapool_id': self.params['datapool_id'],
             'controller_ip': self.params['controller_ip'],
             'node_id': self.params['node_id'],
         }
-        #FIXME FIXME it makes a template
         task = vm.CopyDomain(**params).task
         return task
 
@@ -58,8 +66,10 @@ class Pool:
         if delta < 0:
             delta = 0
 
+        vm_amount = await self.__get_vm_amount_in_pool()
         for i in range(delta):
-            d = await self.add_domain()
+            domain_index = vm_amount + 1 + i
+            d = await self.add_domain(domain_index)
             await self.on_vm_created(d)
             domains.append(d)
 
@@ -106,6 +116,12 @@ class Pool:
         ins = await cls.get_pool(pool_id)
         await ins.init(pool_id)
         return ins
+
+    async def __get_vm_amount_in_pool(self):
+        async with db.connect() as conn:
+            qu = f"select count(*) from vm where pool_id = $1", self.params['id']
+            [(num,)] = await conn.fetch(*qu)
+        return num
 
     instances = {}
 
