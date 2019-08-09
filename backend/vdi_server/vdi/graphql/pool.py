@@ -25,11 +25,15 @@ class TemplateType(graphene.ObjectType):
     id = graphene.String()
     name = graphene.String()
     veil_info = graphene.String(get=graphene.String())
+    info = graphene.String(get=graphene.String())
 
     @graphene.Field
     def node():
         from vdi.graphql.resources import NodeType
         return NodeType
+
+    def resolve_info(self, info, get=None):
+        return self.resolve_veil_info(info, get)
 
     def resolve_veil_info(self, info, get=None):
         veil_info = self.veil_info
