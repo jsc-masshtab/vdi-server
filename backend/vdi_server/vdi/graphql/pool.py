@@ -131,6 +131,8 @@ class VmType(graphene.ObjectType):
     def controller_ip(self):
         return self.pool.controller.ip
 
+    #TODO async_property
+
     async def get_sql_data(self):
         sql_fields = {'template', 'user'}
         sql_fields = set(self.selections) & sql_fields

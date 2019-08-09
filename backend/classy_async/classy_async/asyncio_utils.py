@@ -95,6 +95,12 @@ class wait:
         raise NotImplementedError
 
 
+async def wait_all(tasks):
+    return [
+        result async for result in wait(*tasks)
+    ]
+
+
 class Awaitable:
     """
     Class-based coroutine.
