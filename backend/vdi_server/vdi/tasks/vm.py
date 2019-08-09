@@ -108,6 +108,7 @@ class CopyDomain(UrlFetcher):
                 return True
             if all(word in name.lower() for word in ['creating', 'virtual', 'machine']):
                 return True
+            return False
 
         if obj['status'] == 'SUCCESS' and check_name(obj['name']):
             entities = {v: k for k, v in obj['entities'].items()}
