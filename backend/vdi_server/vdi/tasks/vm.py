@@ -100,10 +100,18 @@ class CopyDomain(UrlFetcher):
 
     def check_created(self, msg):
         obj = msg['object']
-        if obj['parent'] == self.task_id:
-            if obj['status'] == 'SUCCESS' and obj['name'].startswith('Создание виртуальной машины'):
-                entities = {v: k for k, v in obj['entities'].items()}
-                self.new_domain_id = entities['domain']
+        if obj['parent'] != self.task_id:
+            return
+
+        def check_name(name):
+            if name.startswith('Создание виртуальной машины'):
+                return True
+            if all(word in name.lower() for word in ['creating', 'virtual', 'machine']):
+                return True
+
+        if obj['status'] == 'SUCCESS' and check_name(obj['name']):
+            entities = {v: k for k, v in obj['entities'].items()}
+            self.new_domain_id = entities['domain']
 
     def is_done(self, msg):
         if self.new_domain_id is None:
