@@ -37,10 +37,12 @@ export class ErrorsComponent  {
 
   ngOnInit() {
     this.errorsSub = this.service.getErrors().subscribe((errors: object[]) => {
-      errors.forEach((item: {}) => {
-        this.errors.unshift(item);
-        this.hideMessage();
-      });
+      if(Array.isArray(errors)) {
+        errors.forEach((item: {}) => {
+          this.errors.unshift(item);
+          this.hideMessage();
+        });
+      }
     });
   }
 
