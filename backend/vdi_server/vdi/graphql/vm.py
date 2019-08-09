@@ -7,8 +7,9 @@ from ..tasks.vm import ListTemplates
 from ..tasks.vm import ListVms
 from ..tasks.resources import DiscoverControllers
 from .pool import VmType, TemplateType
+
 from vdi.tasks.resources import DiscoverControllerIp
-from vdi.graphql.resources import NodeType
+from vdi.graphql.resources import NodeType, ControllerType
 
 from vdi.errors import SimpleError
 
@@ -141,6 +142,7 @@ class ListOfVmsQuery:
         all_vms = await ListVms(controller_ip=controller_ip)
         print('ListOfVmsQuery::resolve_vms_on_veil: all_vms', all_vms)
 
+
         # create list of filtered vm
         def check_if_vm_in_pool(vm):
             for vm_id in vm_ids_in_pools:
@@ -157,9 +159,11 @@ class ListOfVmsQuery:
                             if not check_if_vm_in_pool(vm) and vm['node']['id'] == node_id
                             ]
 
+        controller = ControllerType(ip=controller_ip)
+
         vm_type_list = []
         for vm in filtered_vms:
-            node = NodeType(id=node_id)
+            node = NodeType(id=node_id, controller=controller)
             obj = VmType(id=vm['id'], name=vm['verbose_name'], node=node)
             vm_type_list.append(obj)
 

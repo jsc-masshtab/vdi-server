@@ -1,0 +1,6 @@
+<div class="errors" *ngIf="errors.length">
+	<div class="message" *ngFor="let error of errors; let i = index" [@animForm]>
+		<button class="message-close" type="button" (click)="closeMessage(i)"><fa-icon [icon]="['fas','times-circle']"></fa-icon></button>
+		<span>{{ error?.message || error?.errors?.detail || 'посмотри в консоль' }}</span>
+	</div>
+</div>

@@ -2,6 +2,10 @@ import inspect
 from functools import wraps
 
 
+class Unset:
+    pass
+
+
 def with_self(f):
     if not inspect.iscoroutinefunction(f):
         @wraps(f)

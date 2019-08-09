@@ -32,6 +32,7 @@ class WsConnection(Awaitable):
     async def wait_message(self, match_func):
         async for msg in self:
             try:
+                print(msg)
                 matched = match_func(msg)
             except:
                 matched = False

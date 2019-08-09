@@ -16,6 +16,34 @@ from vdi.errors import NotFound, FetchException, BadRequest, SimpleError
 
 
 @dataclass()
+class CreateDomain(UrlFetcher):
+
+    verbose_name: str
+    controller_ip: str
+    node_id: str
+
+    method = 'POST'
+
+    @cached
+    def url(self):
+        return f"http://{self.controller_ip}//api/domains/"
+
+    async def body(self):
+        params = {
+            "verbose_name": self.verbose_name,
+            "node": self.node_id,
+            "cpu_count": 1,
+            "cpu_priority": 10,
+            "memory_count": 128,
+            "os_type": "Other",
+            "boot_type": "LegacyMBR"
+   # "sound" : {"model": "ich6", "codec": "micro"},
+   # "video": {"heads": 1, "type": "cirrus", "vram": 16384}
+        }
+        return json.dumps(params)
+
+
+@dataclass()
 class CopyDomain(UrlFetcher):
 
     controller_ip: str
@@ -72,10 +100,19 @@ class CopyDomain(UrlFetcher):
 
     def check_created(self, msg):
         obj = msg['object']
-        if obj['parent'] == self.task_id:
-            if obj['status'] == 'SUCCESS' and obj['name'].startswith('Создание виртуальной машины'):
-                entities = {v: k for k, v in obj['entities'].items()}
-                self.new_domain_id = entities['domain']
+        if obj['parent'] != self.task_id:
+            return
+
+        def check_name(name):
+            if name.startswith('Создание виртуальной машины'):
+                return True
+            if all(word in name.lower() for word in ['creating', 'virtual', 'machine']):
+                return True
+            return False
+
+        if obj['status'] == 'SUCCESS' and check_name(obj['name']):
+            entities = {v: k for k, v in obj['entities'].items()}
+            self.new_domain_id = entities['domain']
 
     def is_done(self, msg):
         if self.new_domain_id is None:

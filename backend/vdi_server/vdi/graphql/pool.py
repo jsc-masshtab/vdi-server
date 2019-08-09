@@ -19,11 +19,13 @@ from ..db import db
 from ..pool import Pool
 
 from vdi.errors import SimpleError, FieldError
+from vdi.utils import Unset
 
 
 class TemplateType(graphene.ObjectType):
     id = graphene.String()
     name = graphene.String()
+    veil_info = graphene.String(get=graphene.String())
     info = graphene.String(get=graphene.String())
 
     @graphene.Field
@@ -32,25 +34,28 @@ class TemplateType(graphene.ObjectType):
         return NodeType
 
     def resolve_info(self, info, get=None):
-        info = self.info
+        return self.resolve_veil_info(info, get)
+
+    def resolve_veil_info(self, info, get=None):
+        veil_info = self.veil_info
         if get:
             for part in get.split('.'):
                 try:
                     part = int(part)
                 except ValueError:
-                    info = info.get(part)
-                    if info is None:
+                    veil_info = veil_info.get(part)
+                    if veil_info is None:
                         return None
                 else:
                     try:
-                        info = info[part]
+                        veil_info = veil_info[part]
                     except:
                         return None
-        if get and isinstance(info, str):
+        if get and isinstance(veil_info, str):
             pass
         else:
-            info = json.dumps(info)
-        return info
+            veil_info = json.dumps(veil_info)
+        return veil_info
 
 
 class RunningState(graphene.Enum):
@@ -109,7 +114,7 @@ class VmState(graphene.Enum):
 class VmType(graphene.ObjectType):
     name = graphene.String()
     id = graphene.String()
-    info = graphene.String(deprecation_reason="Use `template {info}`")
+    veil_info = graphene.String(deprecation_reason="Use `template {info}`")
     template = graphene.Field(TemplateType)
     user = graphene.Field(UserType)
     state = graphene.Field(VmState)
@@ -118,7 +123,8 @@ class VmType(graphene.ObjectType):
     #TODO cached info?
 
     selections: List[str]
-    sql_data: dict = None
+    sql_data: dict = Unset
+    veil_info: dict = Unset
 
 
     @cached
@@ -139,14 +145,20 @@ class VmType(graphene.ObjectType):
             [data] = data
             return dict(data.items())
 
+    async def get_veil_info(self):
+        from vdi.tasks.vm import GetDomainInfo
+        return await GetDomainInfo(controller_ip=self.controller_ip, domain_id=self.id)
+
     @graphene.Field
     def node():
         from vdi.graphql.resources import NodeType
         return NodeType
 
     async def resolve_user(self, info):
-        if self.sql_data is None:
+        if self.sql_data is Unset:
             self.sql_data = await self.get_sql_data()
+        if not self.sql_data:
+            return None
         username = self.sql_data['username']
         return UserType(username=username)
 
@@ -170,23 +182,22 @@ class VmType(graphene.ObjectType):
         if self.template:
             # TODO make sure all fields are available
             return self.template
-        if self.sql_data is None:
+        if self.sql_data is Unset:
             self.sql_data = await self.get_sql_data()
+        if not self.sql_data:
+            return None
         template_id = self.sql_data['template_id']
         if get_selections(info) == ['id']:
             return TemplateType(id=template_id)
         from vdi.tasks.vm import GetDomainInfo
         template = await GetDomainInfo(controller_ip=self.controller_ip, domain_id=template_id)
-        return TemplateType(id=template_id, info=template, name=template['verbose_name'])
+        return TemplateType(id=template_id, veil_info=template, name=template['verbose_name'])
 
     async def resolve_state(self, info):
-        if self.info is None:
-            from vdi.tasks.vm import GetDomainInfo
-            self.info = await GetDomainInfo(controller_ip=self.controller_ip, domain_id=self.id)
-        val = self.info['user_power_state']
+        if self.veil_info is None:
+            self.veil_info = await self.get_veil_info()
+        val = self.veil_info['user_power_state']
         return VmState.get(val)
-
-    info: dict = None
 
 
 class PoolSettingsFields(graphene.AbstractType):
@@ -237,18 +248,18 @@ class PoolState(graphene.ObjectType):
             vm for vm in vms if vm['id'] in set(vm_ids)
         ]
         from vdi.graphql.vm import TemplateType
-        from vdi.graphql.resources import NodeType
+        from vdi.graphql.resources import NodeType, ControllerType
 
         template_selections = get_selections(info, 'template') or ()
         if {'id', *template_selections} > {'id'}:
             from vdi.tasks.vm import GetDomainInfo
             template = await GetDomainInfo(controller_ip=self.controller_ip, domain_id=template_id)
-            template = TemplateType(id=template_id, info=template, name=template['verbose_name'])
+            template = TemplateType(id=template_id, veil_info=template, name=template['verbose_name'])
         else:
             template = TemplateType(id=template_id)
         li = []
         for domain in vms:
-            node = NodeType(id=node_id)
+            node = NodeType(id=node_id, controller=ControllerType(ip=self.controller_ip))
             obj = VmType(id=domain['id'], template=template, name=domain['verbose_name'], node=node, pool=self.pool)
             obj.selections = get_selections(info)
             li.append(obj)
@@ -318,8 +329,6 @@ class AddPool(graphene.Mutation):
         total_size = graphene.Int()
         vm_name_template = graphene.String()
 
-        block = graphene.Boolean()
-
     Output = PoolType
 
     async def mutate(self, info, settings=(), **kwargs):
@@ -359,6 +368,9 @@ class AddPool(graphene.Mutation):
         async for _ in wait(**async_validators):
             pass
 
+        from vdi.graphql.resources import NodeType, ControllerType
+        controller = ControllerType(ip=pool['controller_ip'])
+
         fields = ', '.join(pool.keys())
         values = ', '.join(f'${i+1}' for i in range(len(pool)))
         pool_query = f"INSERT INTO pool ({fields}) VALUES ({values}) RETURNING id", *pool.values()
@@ -374,14 +386,14 @@ class AddPool(graphene.Mutation):
         if 'vms' in selections:
             domains = await add_domains
             from vdi.graphql.vm import TemplateType
-            from vdi.graphql.resources import NodeType
             available = []
             for domain in domains:
                 template = domain['template']
                 node = NodeType(id=template['node']['id'], verbose_name=template['node']['verbose_name'])
-                template = TemplateType(id=template['id'], info=template, name=template['verbose_name'])
+                node.controller = controller
+                template = TemplateType(id=template['id'], veil_info=template, name=template['verbose_name'])
                 item = VmType(id=domain['id'], template=template, name=domain['verbose_name'], node=node)
-                item.info = domain
+                item.veil_info = domain
                 item.selections = get_selections(info)
                 available.append(item)
         else:
@@ -389,10 +401,9 @@ class AddPool(graphene.Mutation):
             available = []
 
         state = PoolState(available=available, running=True)
-        from vdi.graphql.resources import ControllerType
         ret = PoolType(id=pool['id'], state=state,
                        name=pool['name'], template_id=pool['template_id'],
-                       controller=ControllerType(ip=pool['controller_ip']),
+                       controller=controller,
                        settings=PoolSettings(**pool_settings))
         state.pool = ret
         for item in available:

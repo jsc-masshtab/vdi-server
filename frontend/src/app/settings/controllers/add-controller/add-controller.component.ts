@@ -23,7 +23,10 @@ export class AddControllerComponent {
       this.service.getAllControllers().valueChanges.subscribe();
       this.dialogRef.close();
     },(error)=> {
+    
     });
+
+  
   }
 
 }

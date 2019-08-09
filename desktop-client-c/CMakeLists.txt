@@ -73,8 +73,8 @@ FILE(GLOB SRC_CODE
         src/vdi_client/vdi_manager.c
         src/vdi_client/vdi_api_session.h
         src/vdi_client/vdi_api_session.c
-        src/vdi_client/vdi_vm_widget.c
-        src/vdi_client/vdi_vm_widget.h
+        src/vdi_client/vdi_pool_widget.c
+        src/vdi_client/vdi_pool_widget.h
 )
 ###############################LIBRARIES###############################
     # GLIB
