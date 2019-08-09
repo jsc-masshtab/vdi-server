@@ -1,5 +1,6 @@
 import asyncio
 from dataclasses import dataclass
+import uuid
 
 from cached_property import cached_property as cached
 from vdi.db import db
@@ -44,9 +45,10 @@ class Pool:
     def add_domain(self, domain_index):
         from vdi.tasks import vm
         vm_name_template = (self.params['vm_name_template'] or self.params['name'])
+        uid = str(uuid.uuid4())[:7]
 
         params = {
-            'verbose_name': f"{vm_name_template}-{domain_index}",
+            'verbose_name': f"{vm_name_template}-{domain_index}-{uid}",
             'name_template': vm_name_template,
             'domain_id': self.params['template_id'],
             'datapool_id': self.params['datapool_id'],
