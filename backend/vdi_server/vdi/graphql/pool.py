@@ -102,6 +102,10 @@ class VmState(graphene.Enum):
     ON = 3
 
 
+class Unset:
+    pass
+
+
 class VmType(graphene.ObjectType):
     name = graphene.String()
     id = graphene.String()
@@ -114,7 +118,7 @@ class VmType(graphene.ObjectType):
     #TODO cached info?
 
     selections: List[str]
-    sql_data: dict = None
+    sql_data: dict = Unset
 
 
     @cached
@@ -141,8 +145,10 @@ class VmType(graphene.ObjectType):
         return NodeType
 
     async def resolve_user(self, info):
-        if self.sql_data is None:
+        if self.sql_data is Unset:
             self.sql_data = await self.get_sql_data()
+        if not self.sql_data:
+            return None
         username = self.sql_data['username']
         return UserType(username=username)
 
@@ -166,8 +172,10 @@ class VmType(graphene.ObjectType):
         if self.template:
             # TODO make sure all fields are available
             return self.template
-        if self.sql_data is None:
+        if self.sql_data is Unset:
             self.sql_data = await self.get_sql_data()
+        if not self.sql_data:
+            return None
         template_id = self.sql_data['template_id']
         if get_selections(info) == ['id']:
             return TemplateType(id=template_id)
