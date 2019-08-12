@@ -65,6 +65,9 @@ main(int argc, char **argv)
     // disable stdout buffering
     setbuf(stdout, NULL);
 
+    // print version
+    printf("APP VERSION %s\n", VERSION);
+
     // start session
     start_vdi_session();
 

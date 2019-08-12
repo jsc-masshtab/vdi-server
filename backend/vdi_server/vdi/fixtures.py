@@ -1,14 +1,18 @@
 
 import pytest
 import json
+import itertools
 
-from vdi.tasks.resources import DiscoverController
+from vdi.tasks.resources import DiscoverControllerIp
+from vdi.tasks.base import DiscoverController
 from vdi.graphql import schema
 from vdi.tasks import resources
 from vdi.tasks import vm
+from vdi.graphql.pool import RemovePool
+from vdi.settings import settings
 
 @pytest.fixture
-async def db():
+async def fixt_db():
     from vdi.db import db
     await db.init()
     return db
@@ -23,7 +27,7 @@ async def image_name():
 
 
 @pytest.fixture
-async def create_template(db, image_name):
+async def create_template(fixt_db, image_name):
     qu = '''
     mutation {
       createTemplate(image_name: "%(image_name)s") {
@@ -102,28 +106,27 @@ async def conn():
 
 
 @pytest.fixture
-async def fixt_create_static_pool():
-
-    from vdi.db import db
-    await db.init()
+async def fixt_create_static_pool(fixt_db):
 
     print('create_static_pool')
 
-    controller_ip = await DiscoverController()
+    controller_ip = settings['controller_ip'] # await DiscoverController()
 
     # choose resources to create vms
     list_of_clusters = await resources.ListClusters(controller_ip=controller_ip)
     print('list_of_clusters', list_of_clusters)
-    cluster_id = list_of_clusters[-1]['id']
+
+    # find cluster with nodes
+    cluster_id = next(cluster['id'] for cluster in list_of_clusters if cluster['nodes_count'] != 0)
 
     list_of_nodes = await resources.ListNodes(controller_ip=controller_ip, cluster_id=cluster_id)
     print('list_of_nodes', list_of_nodes)
     node_id = list_of_nodes[0]['id']
 
     domain_info_1 = await vm.CreateDomain(verbose_name='test_vm_static_pool_1', controller_ip=controller_ip,
-                                       node_id=node_id)
+                                          node_id=node_id)
     domain_info_2 = await vm.CreateDomain(verbose_name='test_vm_static_pool_2', controller_ip=controller_ip,
-                                       node_id=node_id)
+                                          node_id=node_id)
     print('domain_info_1 id', domain_info_1['id'])
 
     # create pool
@@ -149,21 +152,11 @@ async def fixt_create_static_pool():
         assert not pool_create_res.errors
 
     # remove pool
-    remove_pool_mutation = '''
-    mutation {
-      removePool(id: %i) {
-        ok
-      }
-    }
-    ''' % pool_id
-
-    print('remove_pool_mutation', remove_pool_mutation)
-    pool_removal_res = await schema.exec(remove_pool_mutation)
-    print('pool_removal_res', pool_removal_res)
+    await RemovePool.do_remove(pool_id)
 
 
 @pytest.fixture
-async def fixt_create_user(db):
+async def fixt_create_user(fixt_db):
 
     username = 'test_user_name'
     password = 'test_user_password'
