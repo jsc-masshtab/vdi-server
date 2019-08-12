@@ -1,9 +1,10 @@
 
 from vdi.fixtures import (
-    db, image_name, create_template, create_pool, pool_name, pool_settings as fixture_pool_settings,
+    fixt_db, image_name, create_template, create_pool, pool_name, pool_settings as fixture_pool_settings,
     conn, fixt_create_static_pool
 )
 
+from vdi.graphql.pool import RemovePool
 from vdi.graphql import schema
 from graphql import GraphQLError
 from vdi.pool import Pool
@@ -157,7 +158,7 @@ async def test_assign_vm_to_user(fixt_create_static_pool):
     vm_id = res['pool']['vms'][0]['id']
     username = 'admin'
     qu = '''
-    mutation { 
+    mutation {
     assignVmToUser(vm_id: "%s", username: "%s") {
       ok
       error

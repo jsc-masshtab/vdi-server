@@ -131,7 +131,7 @@
 #define PACKAGE_URL ""
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "1.0"
+#define PACKAGE_VERSION "1.0.3"
 
 /* OS ID for this build */
 /* #undef REMOTE_VIEWER_OS_ID */
@@ -140,7 +140,7 @@
 #define STDC_HEADERS 1
 
 /* Version number of package */
-#define VERSION "1.0"
+#define VERSION "1.0.3"
 
 /* Enable GNU extensions */
 #define _GNU_SOURCE /**/
