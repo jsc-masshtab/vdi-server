@@ -121,7 +121,7 @@ class ValidateResources(Task):
                 return False
         try:
             node = await FetchNode(controller_ip=self.controller_ip, node_id=self.node_id)
-        except (FetchException, socket.gaierror) as ex:
+        except (NotFound, socket.gaierror) as ex:
             return False
         if self.cluster_id and node['cluster']['id'] != self.cluster_id:
             return False
