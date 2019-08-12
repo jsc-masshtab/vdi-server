@@ -47,9 +47,13 @@ class FetchException(BackendError):
     url: str
     data: dict
 
+    @cached
+    def code(self):
+        return self.http_error.code
+
     def format_error(self):
         return {
-            'code': self.http_error.code,
+            'code': self.code,
             'url': self.url,
             **self.data,
             **self.type_info
