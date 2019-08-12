@@ -356,7 +356,7 @@ class AddPool(graphene.Mutation):
             k: get_setting(k)
             for k in PoolSettings._meta.fields
         }
-        pool_settings['desktop_pool_type'] = DesktopPoolType.AUTOMATED
+        pool_settings['desktop_pool_type'] = DesktopPoolType.AUTOMATED.name
         pool = {
             'name': kwargs['name'], **pool_settings
         }
