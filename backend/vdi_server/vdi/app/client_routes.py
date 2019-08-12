@@ -75,7 +75,7 @@ async def get_vm(request):
             })
 
         # AUTOMATED
-        if desktop_pool_type == DesktopPoolType.get(DesktopPoolType.AUTOMATED).name:
+        if desktop_pool_type == DesktopPoolType.AUTOMATED.name:
             # try to wake pool if it's empty
             if pool_id not in Pool.instances:
                 await Pool.wake_pool(pool_id)
@@ -86,7 +86,7 @@ async def get_vm(request):
             await conn.fetch(*qu)
             await pool.on_vm_taken()
         # STATIC
-        elif desktop_pool_type == DesktopPoolType.get(DesktopPoolType.STATIC).name:
+        elif desktop_pool_type == DesktopPoolType.STATIC.name:
             # find a free vm in static pool
             qu = f"select id from vm where pool_id = $1 and username is NULL limit 1", pool_id
             free_vms = await conn.fetch(*qu)

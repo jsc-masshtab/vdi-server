@@ -6,7 +6,7 @@ from typing import List
 
 import graphene
 from cached_property import cached_property as cached
-from classy_async import wait
+from classy_async import wait, wait_all
 from vdi.settings import settings as settings_file
 from vdi.tasks import vm
 from vdi.tasks.resources import DiscoverControllerIp
@@ -73,12 +73,12 @@ class PoolType(graphene.ObjectType):
 
     id = graphene.Int()
     template_id = graphene.String(required=True)
+    desktop_pool_type = graphene.Field(DesktopPoolType)
     name = graphene.String()
     settings = graphene.Field(lambda: PoolSettings)
     state = graphene.Field(lambda: PoolState)
     users = graphene.List(UserType)
     vms = graphene.List(lambda: VmType)
-    desktop_pool_type = graphene.String()
 
     @graphene.Field
     def controller():
@@ -103,6 +103,10 @@ class PoolType(graphene.ObjectType):
         vms = await state.resolve_available(info)
         return vms
 
+    def resolve_desktop_pool_type(self, info):
+        if isinstance(self.desktop_pool_type, str):
+            return getattr(DesktopPoolType, self.desktop_pool_type)
+        return self.desktop_pool_type
 
 class VmState(graphene.Enum):
     UNDEFINED = 0
@@ -212,7 +216,7 @@ class PoolSettingsFields(graphene.AbstractType):
     reserve_size = graphene.Int()
     total_size = graphene.Int()
     vm_name_template = graphene.String()
-    desktop_pool_type = graphene.String() # db wants string
+    desktop_pool_type = graphene.Field(DesktopPoolType)
 
 
 class PoolSettings(graphene.ObjectType, PoolSettingsFields):
@@ -348,7 +352,7 @@ class AddPool(graphene.Mutation):
             k: get_setting(k)
             for k in PoolSettings._meta.fields
         }
-        pool_settings['desktop_pool_type'] = DesktopPoolType.get(DesktopPoolType.AUTOMATED).name
+        pool_settings['desktop_pool_type'] = DesktopPoolType.AUTOMATED
         pool = {
             'name': kwargs['name'], **pool_settings
         }
@@ -478,8 +482,7 @@ class AddStaticPool(graphene.Mutation):
             EnableRemoteAccess(controller_ip=controller_ip, domain_id=vm_id)
             for vm_id in vm_ids
         ]
-        async for _ in wait(*tasks):
-            pass
+        await wait_all(*tasks)
 
         # add pool
         pool = {
@@ -509,9 +512,16 @@ class AddStaticPool(graphene.Mutation):
         vms = [
             VmType(id=id) for id in vm_ids
         ]
+        pool_settings = {
+            'node_id': options['node_id'],
+            'cluster_id': options['cluster_id'],
+            'datapool_id': options['datapool_id'],
+            'desktop_pool_type': DesktopPoolType.STATIC,
+        }
         from vdi.graphql.resources import ControllerType
         return PoolType(id=pool['id'], name=pool['name'], vms=vms,
-                        controller=ControllerType(ip=pool['controller_ip']))
+                        controller=ControllerType(ip=pool['controller_ip']),
+                        settings=PoolSettings(**pool_settings))
 
 
 class WakePool(graphene.Mutation):

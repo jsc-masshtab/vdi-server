@@ -83,7 +83,7 @@ class NotFound(HttpError):
     code = 404
     message = "Урл не найден"
 
-    def __init__(self, *, text=None, url=None):
+    def __init__(self, text=None, url=None):
         if text:
             self.message = text
         if url:
