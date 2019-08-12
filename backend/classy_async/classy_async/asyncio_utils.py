@@ -95,9 +95,9 @@ class wait:
         raise NotImplementedError
 
 
-async def wait_all(tasks):
+async def wait_all(*args, **kwargs):
     return [
-        result async for result in wait(*tasks)
+        result async for result in wait(*args, **kwargs)
     ]
 
 

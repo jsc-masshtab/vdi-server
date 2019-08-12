@@ -29,6 +29,7 @@ async def insert(user):
 
 
 async def run():
-    await wait_all(
+    tasks = [
         insert(user) for user in users
-    )
+    ]
+    await wait_all(*tasks)

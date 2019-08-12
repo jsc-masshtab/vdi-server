@@ -220,7 +220,11 @@ class PoolSettingsFields(graphene.AbstractType):
 
 
 class PoolSettings(graphene.ObjectType, PoolSettingsFields):
-    pass
+
+    def resolve_desktop_pool_type(self, info):
+        if isinstance(self.desktop_pool_type, str):
+            return getattr(DesktopPoolType, self.desktop_pool_type)
+        return self.desktop_pool_type
 
 
 class PoolSettingsInput(graphene.InputObjectType, PoolSettingsFields):
@@ -490,7 +494,8 @@ class AddStaticPool(graphene.Mutation):
             'node_id': options['node_id'],
             'cluster_id': options['cluster_id'],
             'datapool_id': options['datapool_id'],
-            'controller_ip': controller_ip
+            'controller_ip': controller_ip,
+            'desktop_pool_type': DesktopPoolType.STATIC.name,
         }
         fields = ', '.join(pool.keys())
         values = ', '.join(f'${i + 1}' for i in range(len(pool)))
