@@ -8,16 +8,25 @@ class Unset:
 
 def with_self(f):
     if not inspect.iscoroutinefunction(f):
-        @wraps(f)
-        def wrapper(self, *args, **kwargs):
-            with self:
-                return f(self, *args, **kwargs)
+        raise NotImplementedError
+        # @wraps(f)
+        # def wrapper(self, *args, **kwargs):
+        #     with self:
+        #         return f(self, *args, **kwargs)
 
-        return wrapper
+        # return wrapper
 
     @wraps(f)
     async def wrapper(self, *args, **kwargs):
+        self.rerun_cause = None
         with self:
-            return await f(self, *args, **kwargs)
+            result = await f(self, *args, **kwargs)
+        while self.rerun_cause:
+            self.rerun_cause = None
+            with self:
+                result = await f(self, *args, **kwargs)
+
+        return result
+
 
     return wrapper
