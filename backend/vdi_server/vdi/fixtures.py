@@ -121,7 +121,7 @@ async def fixt_create_static_pool(fixt_db):
 
     list_of_nodes = await resources.ListNodes(controller_ip=controller_ip, cluster_id=cluster_id)
     print('list_of_nodes', list_of_nodes)
-    node_id = list_of_nodes[0]['id']
+    node_id = list_of_nodes[-1]['id']
 
     async def create_domain():
         uid = str(uuid.uuid4())[:7]
