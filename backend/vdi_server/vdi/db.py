@@ -8,6 +8,7 @@ from asyncpg.connection import Connection
 from contextlib import asynccontextmanager
 
 class DbApp:
+    cache = {}
 
     async def init(self):
         if hasattr(self, 'pool'):
@@ -25,6 +26,7 @@ class DbApp:
     async def connect(self) -> Connection:
         async with self.pool.acquire() as c:
             yield c
+
 
 
 

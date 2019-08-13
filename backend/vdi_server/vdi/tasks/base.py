@@ -1,3 +1,4 @@
+from __future__ import annotations
 import time
 import urllib
 from contextlib import asynccontextmanager
@@ -10,7 +11,9 @@ from vdi.utils import with_self
 from vdi.settings import settings
 from vdi.tasks.client import HttpClient
 
-from __future__ import annotations
+from vdi.db import db
+
+
 
 
 @dataclass()
@@ -74,10 +77,25 @@ class Token(Task):
         return f'http://{self.controller_ip}/auth/'
 
     async def run(self):
+        async with db.connect() as conn:
+            qu = 'select token from veil_creds where username = $1', self.creds['username']
+            data = await conn.fetch(*qu)
+            print('from db')
+            # TODO expiration
+            [[token]] = data
+            if token:
+                return token
+        if db.cache.get('token'):
+            return db.cache['token']
         http_client = HttpClient()
         params = urllib.parse.urlencode(self.creds)
         response = await http_client.fetch(self.url, method='POST', body=params)
-        return response['token']
+        token = response['token']
+        async with db.connect() as conn:
+            qu = 'update veil_creds set token=$1 where username = $2', token, self.creds['username']
+            await conn.execute(*qu)
+        db.cache['token'] = token
+        return token
 
     def on_fetch_failed(self, ex, code):
         if code == 404:
