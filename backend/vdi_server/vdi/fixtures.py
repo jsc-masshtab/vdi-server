@@ -1,7 +1,7 @@
 
 import pytest
 import json
-import itertools
+import uuid
 
 from vdi.tasks.resources import DiscoverControllerIp
 from vdi.tasks.base import DiscoverController
@@ -123,21 +123,25 @@ async def fixt_create_static_pool(fixt_db):
     print('list_of_nodes', list_of_nodes)
     node_id = list_of_nodes[0]['id']
 
-    domain_info_1 = await vm.CreateDomain(verbose_name='test_vm_static_pool_1', controller_ip=controller_ip,
-                                          node_id=node_id)
-    domain_info_2 = await vm.CreateDomain(verbose_name='test_vm_static_pool_2', controller_ip=controller_ip,
-                                          node_id=node_id)
+    async def create_domain():
+        uid = str(uuid.uuid4())[:7]
+        domain_info = await vm.CreateDomain(verbose_name=f"test_vm_static_pool-{uid}",
+                                            controller_ip=controller_ip, node_id=node_id)
+        return domain_info
+
+    domain_info_1 = await create_domain()
+    domain_info_2 = await create_domain()
     print('domain_info_1 id', domain_info_1['id'])
 
     # create pool
     vm_ids_list = json.dumps([domain_info_1['id'], domain_info_2['id']])
     qu = '''
         mutation {
-          addStaticPool(name: "test_pool_static", node_id: "%s", datapool_id: "", cluster_id: "", vm_ids_list: %s) {
+          addStaticPool(name: "test_pool_static", node_id: "", datapool_id: "", cluster_id: "", vm_ids_list: %s) {
             id
           }
         }
-        ''' % (node_id, vm_ids_list)
+        ''' % vm_ids_list
 
     pool_create_res = await schema.exec(qu)  # ([('addStaticPool', OrderedDict([('id', 88)]))])
     print('pool_create_res', pool_create_res)
@@ -146,10 +150,6 @@ async def fixt_create_static_pool(fixt_db):
     yield {
         'id': pool_id,
     }
-
-    # checks
-    if hasattr(pool_create_res, 'errors'):
-        assert not pool_create_res.errors
 
     # remove pool
     await RemovePool.do_remove(pool_id)

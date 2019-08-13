@@ -88,9 +88,7 @@ async def test_create_static_pool(fixt_create_static_pool):
     # get pool info
     qu = """{
       pool(id: %i) {
-        settings {
-          initial_size
-        }
+        desktop_pool_type
         state {
           running
           available {
@@ -103,6 +101,7 @@ async def test_create_static_pool(fixt_create_static_pool):
 
     li = res['pool']['state']['available']
     assert len(li) == 2
+    assert res['pool']['desktop_pool_type'] == 'STATIC'
 
 
 @pytest.mark.asyncio

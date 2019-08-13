@@ -529,6 +529,85 @@ class AddStaticPool(graphene.Mutation):
                         settings=PoolSettings(**pool_settings))
 
 
+async def add_vms_to_pool(vm_ids, pool_id):
+    placeholders = [f'(${i + 1}, ${i + 2})' for i in range(0, len(vm_ids) * 2, 2)]
+    placeholders = ', '.join(placeholders)
+    params = []
+    for vm_id in vm_ids:
+        params.extend([vm_id, pool_id])
+    async with db.connect() as conn:
+        qu = f'INSERT INTO vm (id, pool_id) VALUES {placeholders}', *params
+        await conn.fetch(*qu)
+
+
+async def get_list_of_used_vms():
+    '''
+    get id list of all vms in pools
+    '''
+    async with db.connect() as conn:
+        qu = 'SELECT vm.id from vm'
+        used_vms = await conn.fetch(qu)
+    used_vm_ids = [used_vm['id'] for used_vm in used_vms]
+    print('used_vm_ids', used_vm_ids)
+    return used_vm_ids
+
+
+class AddVmsToStaticPool(graphene.Mutation):
+    class Arguments:
+        pool_id = graphene.Int(required=True)
+        vm_ids = graphene.List(graphene.ID, required=True)
+
+    ok = graphene.Boolean()
+
+    async def mutate(self, _info, pool_id, vm_ids):
+        # check if vm is list empty
+        if not vm_ids:
+            raise FieldError(vm_ids=['Обязательное поле'])
+        
+        # pool checks
+        async with db.connect() as conn:
+            qu = f"SELECT * from pool where id = $1", pool_id
+            pool_params = await conn.fetch(*qu)
+        # check if pool exists
+        if not pool_params:
+            raise FieldError(pool_id=['Пул с заданным id не существует'])
+        # check if pool is static
+        [pool_params] = pool_params
+        print('pool_params_unpacked', pool_params)
+        print('desktop_pool_type', pool_params['desktop_pool_type'])
+        if pool_params['desktop_pool_type'] != DesktopPoolType.STATIC.name:
+            raise FieldError(pool_id=['Пул с заданным id не является статическим'])
+        
+        # vm checks
+        # get list of all vms on the node
+        all_vm_ids = [
+            vmachine['id'] for vmachine in await vm.ListVms(controller_ip=pool_params['controller_ip'],
+                                                            node_id=pool_params['node_id'])
+        ]
+        # get list of vms which are already in pools
+        used_vm_ids = await get_list_of_used_vms()
+
+        for vm_id in vm_ids:
+            # check if vm exists and it is on the correct node
+            if vm_id not in all_vm_ids:
+                raise FieldError(vm_ids=['ВМ принадлежит другому узлу'])
+            # check if vm is free (not in any pool)
+            if vm_id in used_vm_ids:
+                raise FieldError(vm_ids=['ВМ уже находится в одном из пулов'])
+        # add vms
+        await add_vms_to_pool(vm_ids, pool_id)
+        # remote access
+        tasks = [
+            EnableRemoteAccess(controller_ip=pool_params['controller_ip'], domain_id=vm_id)
+            for vm_id in vm_ids
+        ]
+        await wait_all(*tasks)
+
+        return {
+            'ok': True
+        }
+
+
 class WakePool(graphene.Mutation):
     class Arguments:
         id = graphene.Int()
