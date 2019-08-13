@@ -553,7 +553,7 @@ async def get_list_of_used_vms():
 
 
 async def check_static_pool_and_get_params(pool_id):
-    """check if given pool_id is valid static pool and return its parameters"""
+    """check if given pool_id corresponds to valid static pool and return its parameters"""
     async with db.connect() as conn:
         qu = f"SELECT * from pool where id = $1", pool_id
         pool_params = await conn.fetch(*qu)
@@ -580,6 +580,7 @@ class AddVmsToStaticPool(graphene.Mutation):
     async def mutate(self, _info, pool_id, vm_ids):
         # pool checks
         pool_params = await check_static_pool_and_get_params(pool_id)
+
         # vm checks
         # get list of all vms on the node
         all_vms = await vm.ListVms(controller_ip=pool_params['controller_ip'],
@@ -595,6 +596,7 @@ class AddVmsToStaticPool(graphene.Mutation):
             # check if vm is free (not in any pool)
             if vm_id in used_vm_ids:
                 raise FieldError(vm_ids=['ВМ уже находится в одном из пулов'])
+
         # add vms
         await add_vms_to_pool(vm_ids, pool_id)
         # remote access
@@ -637,6 +639,10 @@ class RemoveVmsFromStaticPool(graphene.Mutation):
 
         # remove vms
         await remove_vms_from_pool(vm_ids, pool_id)
+
+        return {
+            'ok': True
+        }
 
 
 class WakePool(graphene.Mutation):

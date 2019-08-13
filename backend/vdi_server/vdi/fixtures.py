@@ -121,7 +121,8 @@ async def fixt_create_static_pool(fixt_db):
 
     list_of_nodes = await resources.ListNodes(controller_ip=controller_ip, cluster_id=cluster_id)
     print('list_of_nodes', list_of_nodes)
-    node_id = list_of_nodes[-1]['id']
+    # find active node
+    node_id = next(node['id'] for node in list_of_nodes if node['status'] == 'ACTIVE')
 
     async def create_domain():
         uid = str(uuid.uuid4())[:7]
@@ -139,6 +140,9 @@ async def fixt_create_static_pool(fixt_db):
         mutation {
           addStaticPool(name: "test_pool_static", node_id: "", datapool_id: "", cluster_id: "", vm_ids_list: %s) {
             id
+            vms {
+              id
+            }
           }
         }
         ''' % vm_ids_list
@@ -147,8 +151,10 @@ async def fixt_create_static_pool(fixt_db):
     print('pool_create_res', pool_create_res)
 
     pool_id = pool_create_res['addStaticPool']['id']
+    vms = pool_create_res['addStaticPool']['vms']
     yield {
         'id': pool_id,
+        'vms': vms
     }
 
     # remove pool
