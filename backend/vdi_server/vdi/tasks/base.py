@@ -78,13 +78,16 @@ class Token(Task):
 
     async def run(self):
         async with db.connect() as conn:
-            qu = 'select token from veil_creds where username = $1', self.creds['username']
+            qu = (
+                'select token from veil_creds where username = $1 and controller_ip = $2',
+                self.creds['username'], self.controller_ip
+            )
             data = await conn.fetch(*qu)
-            print('from db')
             # TODO expiration
-            [[token]] = data
-            if token:
-                return token
+            if data:
+                [[token]] = data
+                if token:
+                    return token
         if db.cache.get('token'):
             return db.cache['token']
         http_client = HttpClient()
@@ -92,7 +95,11 @@ class Token(Task):
         response = await http_client.fetch(self.url, method='POST', body=params)
         token = response['token']
         async with db.connect() as conn:
-            qu = 'update veil_creds set token=$1 where username = $2', token, self.creds['username']
+            qu = (
+                'insert into veil_creds (username, controller_ip, token) values ($1, $2, $3) '
+                'on conflict do nothing',
+                self.creds['username'], self.controller_ip, token
+            )
             await conn.execute(*qu)
         db.cache['token'] = token
         return token
