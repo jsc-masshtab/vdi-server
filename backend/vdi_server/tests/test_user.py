@@ -19,11 +19,11 @@ async def test_assign_vm_to_user(fixt_entitle_user_to_pool):
     # get pool data
     qu = '''
     query{
-    pool(id: %i){
-      vms{
-        id
+      pool(id: %i){
+        vms{
+          id
+        }
       }
-    }
     }
     ''' % pool_id
     res = await schema.exec(qu)
@@ -35,10 +35,10 @@ async def test_assign_vm_to_user(fixt_entitle_user_to_pool):
     username = 'admin'
     qu = '''
     mutation {
-    assignVmToUser(vm_id: "%s", username: "%s") {
-      ok
-      error
-    }
+      assignVmToUser(vm_id: "%s", username: "%s") {
+        ok
+        error
+      }
     }
     ''' % (vm_id, username)
     res = await schema.exec(qu)
@@ -48,10 +48,10 @@ async def test_assign_vm_to_user(fixt_entitle_user_to_pool):
     # remove assignment
     qu = '''
     mutation {
-    removeAssignedVmFromUser(vm_id: "%s", username: "%s") {
-      ok
+      freeVmFromUser(vm_id: "%s") {
+        ok
+      }
     }
-    }
-    ''' % (vm_id, username)
+    ''' % vm_id
     res = await schema.exec(qu)
-    assert res['removeAssignedVmFromUser']['ok']
+    assert res['freeVmFromUser']['ok']
