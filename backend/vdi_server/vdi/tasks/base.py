@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from dateutil.parser import parse as parse_dt
+
 from datetime import datetime, timedelta, timezone
 import time
 import urllib
@@ -110,28 +112,32 @@ class Token(Task):
             data = await conn.fetch(*qu)
         if data:
             [[token, expires_on]] = data
-            if token and expires_on > datetime.now(timezone.utc):
-                return token
+            return token, expires_on
+        return None, None
 
     def get_expiration_time(self, expires_on: str):
-        #TODO timezone?
         # set it to be 2/3 of the original one
-        FORMAT = '%d.%m.%Y %H:%M:%S %Z'
-        end = datetime.strptime(expires_on, FORMAT)
-        now = datetime.now()
+        end = parse_dt(expires_on)
+        now = datetime.now(timezone.utc)
         delta = (end - now) * 2 / 3
         return now + delta
 
 
     async def run(self):
-        token = await self.get_from_db()
+        token, expires_on = await self.get_from_db()
         if token:
-            return token
-        async with lock.token:
-            token = await self.get_from_db()
-            if token:
+            expired = datetime.now(timezone.utc) > expires_on
+            if not expired:
                 return token
-            token, expires_on = await FetchToken(controller_ip=self.controller_ip)
+        async with lock.token:
+            token, expires_on = await self.get_from_db()
+            if token:
+                expired = datetime.now(timezone.utc) > expires_on
+                if not expired:
+                    return token
+                token, expires_on = await RefreshToken(controller_ip=self.controller_ip, token=token)
+            else:
+                token, expires_on = await FetchToken(controller_ip=self.controller_ip)
             expires_on = self.get_expiration_time(expires_on)
             async with db.connect() as conn:
                 qu = (
@@ -151,14 +157,14 @@ class Token(Task):
 @dataclass()
 class RefreshToken(Task):
     controller_ip: str
+    token: str
 
     async def run(self):
-        token = await Token(controller_ip=self.controller_ip)
         url = f'http://{self.controller_ip}/refresh-token/'
-        body = urllib.parse.urlencode({'token': token})
+        body = urllib.parse.urlencode({'token': self.token})
         http_client = HttpClient()
-        response = await http_client.fetch(url, method='POST', body=body)
-        return response['token']
+        data = await http_client.fetch(url, method='POST', body=body)
+        return data['token'], data['expires_on']
 
 
 class UrlFetcher(Task):
