@@ -1,1 +1,0 @@
-insert into veil_creds (username, token) values ('vdi', null);
