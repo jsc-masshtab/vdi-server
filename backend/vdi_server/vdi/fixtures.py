@@ -177,3 +177,37 @@ async def fixt_create_user(fixt_db):
 
     # remove user...
 
+
+@pytest.fixture
+async def fixt_entitle_user_to_pool(fixt_create_static_pool):
+
+    pool_id = fixt_create_static_pool['id']
+
+    # entitle user to pool
+    user_name = "admin"
+    qu = '''
+    mutation {
+      entitleUsersToPool(pool_id: %i, entitled_users: ["%s"]) {
+        ok
+      }
+    }
+    ''' % (pool_id, user_name)
+    res = await schema.exec(qu)
+    print('test_res', res)
+
+    yield {
+        'pool_id': pool_id,
+        'ok': res['entitleUsersToPool']['ok']
+    }
+
+    # remove entitlement
+    qu = '''
+    mutation {
+    removeUserEntitlementsFromPool(pool_id: %i, entitled_users: ["%s"]
+      free_assigned_vms: true
+    ) {
+      ok
+    }
+    }
+    ''' % (pool_id, user_name)
+    res = await schema.exec(qu)

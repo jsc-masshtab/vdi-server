@@ -5,11 +5,13 @@ from vdi.fixtures import (
 )
 
 from vdi.graphql.pool import RemovePool
+from vdi.graphql.pool import DesktopPoolType
 from vdi.graphql import schema
 from graphql import GraphQLError
 from vdi.pool import Pool
 from vdi.tasks import resources
 from vdi import db
+
 
 import pytest
 import json
@@ -101,7 +103,7 @@ async def test_create_static_pool(fixt_create_static_pool):
 
     li = res['pool']['state']['available']
     assert len(li) == 2
-    assert res['pool']['desktop_pool_type'] == 'STATIC'
+    assert res['pool']['desktop_pool_type'] == DesktopPoolType.STATIC.name
 
 
 @pytest.mark.asyncio
@@ -109,9 +111,6 @@ async def test_remove_and_add_vm_in_static_pool(fixt_create_static_pool):
 
     pool_id = fixt_create_static_pool['id']
     vms_in_pool_list = fixt_create_static_pool['vms']
-    #print('vms_in_pool_list', vms_in_pool_list)
-    #print('vms_in_pool_list_0', vms_in_pool_list[0]['id'])
-
     assert len(vms_in_pool_list) == 2
 
     # remove first vm from pool
@@ -136,67 +135,3 @@ async def test_remove_and_add_vm_in_static_pool(fixt_create_static_pool):
     assert res['addVmsToStaticPool']['ok']
 
 
-@pytest.mark.asyncio
-async def test_user_entitlement(fixt_create_static_pool):
-    #
-    pool_id = fixt_create_static_pool['id']
-
-    # entitle user to pool
-    user_name = "admin"
-    qu = '''
-    mutation {
-    entitleUsersToPool(pool_id: %i, entitled_users: ["%s"]) {
-      ok
-    }
-    }
-    ''' % (pool_id, user_name)
-    res = await schema.exec(qu)
-    print('test_res', res)
-
-    # remove entitlement
-    qu = '''
-    mutation {
-    removeUserEntitlementsFromPool(pool_id: %i, entitled_users: ["%s"]
-      free_assigned_vms: true
-    ) {
-      ok
-    }
-    }
-    ''' % (pool_id, user_name)
-    res = await schema.exec(qu)
-
-    assert res['removeUserEntitlementsFromPool']['ok']
-
-
-@pytest.mark.asyncio
-async def test_assign_vm_to_user(fixt_create_static_pool):
-    #
-    pool_id = fixt_create_static_pool['id']
-
-    # get pool data
-    qu = '''
-    query{
-    pool(id: %i){
-      vms{
-        id
-      }
-    }
-    }
-    ''' % pool_id
-    res = await schema.exec(qu)
-    print('res', res)
-
-    # assign vm to user
-    vm_id = res['pool']['vms'][0]['id']
-    username = 'admin'
-    qu = '''
-    mutation {
-    assignVmToUser(vm_id: "%s", username: "%s") {
-      ok
-      error
-    }
-    }
-    ''' % (vm_id, username)
-    res = await schema.exec(qu)
-    print('test_res', res)
-    assert res['assignVmToUser']['ok']

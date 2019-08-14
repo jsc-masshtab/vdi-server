@@ -435,6 +435,35 @@ class AddStaticPool(graphene.Mutation):
     Output = PoolType
 
     @classmethod
+    async def check_static_pool_and_get_params(cls, pool_id):
+        """check if given pool_id corresponds to valid static pool and return its parameters"""
+        async with db.connect() as conn:
+            qu = f"SELECT * from pool where id = $1", pool_id
+            pool_params = await conn.fetch(*qu)
+        # check if pool exists
+        if not pool_params:
+            raise FieldError(pool_id=['Пул с заданным id не существует'])
+        # check if pool is static
+        [pool_params] = pool_params
+        print('pool_params_unpacked', pool_params)
+        print('desktop_pool_type', pool_params['desktop_pool_type'])
+        if pool_params['desktop_pool_type'] != DesktopPoolType.STATIC.name:
+            raise FieldError(pool_id=['Пул с заданным id не является статическим'])
+
+        return pool_params
+
+    @classmethod
+    async def add_vms_to_pool(cls, vm_ids, pool_id):
+        placeholders = [f'(${i + 1}, ${i + 2})' for i in range(0, len(vm_ids) * 2, 2)]
+        placeholders = ', '.join(placeholders)
+        params = []
+        for vm_id in vm_ids:
+            params.extend([vm_id, pool_id])
+        async with db.connect() as conn:
+            qu = f'INSERT INTO vm (id, pool_id) VALUES {placeholders}', *params
+            await conn.fetch(*qu)
+
+    @classmethod
     async def get_node_and_cluster(cls, vm_ids):
         vm_id = vm_ids[0]
         vm_info, controller_ip = await GetDomainInfo(domain_id=vm_id)
@@ -504,8 +533,8 @@ class AddStaticPool(graphene.Mutation):
             [res] = await conn.fetch(*pool_query)
             pool['id'] = res['id']
 
-        # add vms to the database. Вынес в отдельную функцию так как юзаю и в других местах...
-        await add_vms_to_pool(vm_ids, pool['id'])
+        # add vms to the database.
+        await AddStaticPool.add_vms_to_pool(vm_ids, pool['id'])
 
         vms = [
             VmType(id=id) for id in vm_ids
@@ -522,54 +551,6 @@ class AddStaticPool(graphene.Mutation):
                         settings=PoolSettings(**pool_settings))
 
 
-async def add_vms_to_pool(vm_ids, pool_id):
-    placeholders = [f'(${i + 1}, ${i + 2})' for i in range(0, len(vm_ids) * 2, 2)]
-    placeholders = ', '.join(placeholders)
-    params = []
-    for vm_id in vm_ids:
-        params.extend([vm_id, pool_id])
-    async with db.connect() as conn:
-        qu = f'INSERT INTO vm (id, pool_id) VALUES {placeholders}', *params
-        await conn.fetch(*qu)
-
-
-async def remove_vms_from_pool(vm_ids, pool_id):
-    placeholders = [f'${i + 1}' for i in range(0, len(vm_ids))]
-    placeholders = ', '.join(placeholders)
-    print('placeholders', placeholders)
-    async with db.connect() as conn:
-        qu = f'DELETE FROM vm WHERE id IN ({placeholders}) AND pool_id = {pool_id}', *vm_ids
-        await conn.fetch(*qu)
-
-
-async def get_list_of_used_vms():
-    """get ids list of all vms in pools"""
-    async with db.connect() as conn:
-        qu = 'SELECT vm.id from vm'
-        used_vms = await conn.fetch(qu)
-    used_vm_ids = [used_vm['id'] for used_vm in used_vms]
-    print('used_vm_ids', used_vm_ids)
-    return used_vm_ids
-
-
-async def check_static_pool_and_get_params(pool_id):
-    """check if given pool_id corresponds to valid static pool and return its parameters"""
-    async with db.connect() as conn:
-        qu = f"SELECT * from pool where id = $1", pool_id
-        pool_params = await conn.fetch(*qu)
-    # check if pool exists
-    if not pool_params:
-        raise FieldError(pool_id=['Пул с заданным id не существует'])
-    # check if pool is static
-    [pool_params] = pool_params
-    print('pool_params_unpacked', pool_params)
-    print('desktop_pool_type', pool_params['desktop_pool_type'])
-    if pool_params['desktop_pool_type'] != DesktopPoolType.STATIC.name:
-        raise FieldError(pool_id=['Пул с заданным id не является статическим'])
-
-    return pool_params
-
-
 class AddVmsToStaticPool(graphene.Mutation):
     class Arguments:
         pool_id = graphene.Int(required=True)
@@ -577,9 +558,21 @@ class AddVmsToStaticPool(graphene.Mutation):
 
     ok = graphene.Boolean()
 
+    @classmethod
+    async def get_list_of_used_vms(cls):
+        """get ids list of all vms in pools"""
+        async with db.connect() as conn:
+            qu = 'SELECT vm.id from vm'
+            used_vms = await conn.fetch(qu)
+        used_vm_ids = [used_vm['id'] for used_vm in used_vms]
+        print('used_vm_ids', used_vm_ids)
+        return used_vm_ids
+
     async def mutate(self, _info, pool_id, vm_ids):
+        if not vm_ids:
+            raise FieldError(vm_ids=['Обязательное поле'])
         # pool checks
-        pool_params = await check_static_pool_and_get_params(pool_id)
+        pool_params = await AddStaticPool.check_static_pool_and_get_params(pool_id)
 
         # vm checks
         # get list of all vms on the node
@@ -587,7 +580,7 @@ class AddVmsToStaticPool(graphene.Mutation):
                                    node_id=pool_params['node_id'])
         all_vm_ids = [vmachine['id'] for vmachine in all_vms]
         # get list of vms which are already in pools
-        used_vm_ids = await get_list_of_used_vms()
+        used_vm_ids = await AddVmsToStaticPool.get_list_of_used_vms()
 
         for vm_id in vm_ids:
             # check if vm exists and it is on the correct node
@@ -598,7 +591,7 @@ class AddVmsToStaticPool(graphene.Mutation):
                 raise FieldError(vm_ids=['ВМ уже находится в одном из пулов'])
 
         # add vms
-        await add_vms_to_pool(vm_ids, pool_id)
+        await AddStaticPool.add_vms_to_pool(vm_ids, pool_id)
         # remote access
         tasks = [
             EnableRemoteAccess(controller_ip=pool_params['controller_ip'], domain_id=vm_id)
@@ -618,9 +611,21 @@ class RemoveVmsFromStaticPool(graphene.Mutation):
 
     ok = graphene.Boolean()
 
+    @classmethod
+    async def remove_vms_from_pool(cls, vm_ids, pool_id):
+        placeholders = [f'${i + 1}' for i in range(0, len(vm_ids))]
+        placeholders = ', '.join(placeholders)
+        print('placeholders', placeholders)
+        async with db.connect() as conn:
+            qu = f'DELETE FROM vm WHERE id IN ({placeholders}) AND pool_id = {pool_id}', *vm_ids
+            await conn.fetch(*qu)
+
+
     async def mutate(self, _info, pool_id, vm_ids):
+        if not vm_ids:
+            raise FieldError(vm_ids=['Обязательное поле'])
         # pool checks
-        pool_params = await check_static_pool_and_get_params(pool_id)
+        await AddStaticPool.check_static_pool_and_get_params(pool_id)
 
         # vms check
         # get list of vms ids which are in pool_id
@@ -638,7 +643,7 @@ class RemoveVmsFromStaticPool(graphene.Mutation):
                 raise FieldError(vm_ids=['Одна из ВМ не принадлежит заданному пулу'])
 
         # remove vms
-        await remove_vms_from_pool(vm_ids, pool_id)
+        await RemoveVmsFromStaticPool.remove_vms_from_pool(vm_ids, pool_id)
 
         return {
             'ok': True
