@@ -26,7 +26,9 @@ class TaskContextManager:
     def __exit__(self, exc_type, exc_val, exc_tb):
         if isinstance(exc_val, FetchException):
             self.task.on_fetch_failed(exc_val, exc_val.http_error.code)
-            return True
+        elif exc_val:
+            self.task.on_error(exc_val)
+        return True
 
 
 class ErrorHandler(_Task):
@@ -36,6 +38,9 @@ class ErrorHandler(_Task):
         self.rerun_cause = cause
 
     def on_fetch_failed(self, ex, code):
+        raise ex
+
+    def on_error(self, ex):
         raise ex
 
     def co(self):
@@ -63,7 +68,6 @@ class Task(ErrorHandler, _Task):
 
     async def rerun(self):
         raise NotImplementedError
-
 
 
 @dataclass()
@@ -106,10 +110,10 @@ class Token(Task):
 
     def on_fetch_failed(self, ex, code):
         if code == 404:
-            raise ControllerNotAccessible(ip=self.controller_ip)
+            raise ControllerNotAccessible(ip=self.controller_ip) from ex
         if code == 400:
             if ex.data['non_field_errors'] == [AuthError.message]:
-                raise AuthError()
+                raise AuthError() from ex
         raise ex
 
 
@@ -164,6 +168,19 @@ class UrlFetcher(Task):
             return await ws.wait_message(self.is_done)
         except TaskTimeout:
             raise WsTimeout(url=self.url, data="Таймаут ожидания завершения")
+
+
+@dataclass()
+class CheckConnection(UrlFetcher):
+    controller_ip: str
+
+    @cached
+    def url(self):
+        return f"http://{self.controller_ip}/api/controllers/system-time"
+
+    def on_fetch_failed(self, ex, code):
+        raise ControllerNotAccessible(ip=self.controller_ip) from ex
+
 
 
 class DiscoverController(UrlFetcher):

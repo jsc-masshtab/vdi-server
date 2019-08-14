@@ -6,7 +6,7 @@ from classy_async import Task, wait
 
 from vdi.db import db
 
-from . import UrlFetcher, Token
+from . import UrlFetcher, Token, CheckConnection
 
 from vdi.errors import SimpleError, FetchException, NotFound, ControllerNotAccessible
 
@@ -34,9 +34,9 @@ class FetchCluster(UrlFetcher):
     def url(self):
         return f'http://{self.controller_ip}/api/clusters/{self.cluster_id}/'
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        if isinstance(exc_val, FetchException) and exc_val.code == 404:
-            raise NotFound("Кластер не найден") from exc_val
+    def on_fetch_failed(self, ex, code):
+        if code == 404:
+            raise NotFound("Кластер не найден") from ex
 
 
 @dataclass()
@@ -49,9 +49,9 @@ class ListNodes(UrlFetcher):
     def url(self):
         return f'http://{self.controller_ip}/api/nodes/?cluster={self.cluster_id}'
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        if isinstance(exc_val, FetchException) and exc_val.code == 404:
-            raise NotFound("Кластер не найден") from exc_val
+    def on_fetch_failed(self, ex, code):
+        if code == 404:
+            raise NotFound("Кластер не найден") from ex
 
     async def run(self):
         resp = await super().run()
@@ -67,9 +67,9 @@ class FetchNode(UrlFetcher):
     def url(self):
         return f'http://{self.controller_ip}/api/nodes/{self.node_id}/'
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        if isinstance(exc_val, FetchException) and exc_val.code == 404:
-            raise NotFound("Узел не найден") from exc_val
+    def on_fetch_failed(self, ex, code):
+        if code == 404:
+            raise NotFound("Узел не найден") from ex
 
     async def run(self):
         resp = await super().run()
@@ -173,7 +173,7 @@ class DiscoverControllers(Task):
             d = dict(d.items())
             d['default'] = d['ip'] == default
             try:
-                await Token(controller_ip=d['ip'])
+                await CheckConnection(controller_ip=d['ip'])
             except ControllerNotAccessible as ex:
                 broken.append(d)
             else:
