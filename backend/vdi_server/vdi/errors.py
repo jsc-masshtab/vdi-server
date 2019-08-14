@@ -47,6 +47,11 @@ class FetchException(BackendError):
     url: str
     data: dict
 
+    # def __init__(self, *args, **kwargs):
+    #     super().__init__(*args, **kwargs)
+    #     if 'signature' in repr(self).lower():
+    #         breakpoint()
+
     @cached
     def code(self):
         return self.http_error.code
@@ -58,6 +63,9 @@ class FetchException(BackendError):
             **self.data,
             **self.type_info
         }
+
+    def __repr__(self):
+        return f'FetchException{repr(self.__dict__)}'
 
 
 class HttpError(BackendError):

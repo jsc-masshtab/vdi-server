@@ -1,5 +1,6 @@
 import asyncio
 from functools import wraps
+from typing import List
 
 from cached_property import cached_property as cached
 from dataclasses import dataclass

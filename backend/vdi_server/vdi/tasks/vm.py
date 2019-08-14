@@ -1,18 +1,14 @@
 import asyncio
 import json
-import urllib
 import uuid
 from dataclasses import dataclass
 
 from cached_property import cached_property as cached
-from classy_async import Task, Awaitable, TaskTimeout, wait
 
-from . import disk
-from .base import Token, UrlFetcher, DiscoverController
+from vdi.errors import NotFound, FetchException, BadRequest
+from .base import Token, UrlFetcher, DiscoverController, Task
 from .client import HttpClient
 from .ws import WsConnection
-
-from vdi.errors import NotFound, FetchException, BadRequest, SimpleError
 
 
 @dataclass()
@@ -88,11 +84,13 @@ class CopyDomain(UrlFetcher):
         self.task_id = resp['_task']['id']
         await self.wait_message(ws)
         info = await info_task
+
         return {
             'id': self.new_domain_id,
             'template': info,
             'verbose_name': self.domain_name,
         }
+
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         if isinstance(exc_val, FetchException) and exc_val.http_error.code == 400:
