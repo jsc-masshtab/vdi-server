@@ -109,8 +109,8 @@ async def test_remove_and_add_vm_in_static_pool(fixt_create_static_pool):
 
     pool_id = fixt_create_static_pool['id']
     vms_in_pool_list = fixt_create_static_pool['vms']
-    print('vms_in_pool_list', vms_in_pool_list)
-    print('vms_in_pool_list_0', vms_in_pool_list[0]['id'])
+    #print('vms_in_pool_list', vms_in_pool_list)
+    #print('vms_in_pool_list_0', vms_in_pool_list[0]['id'])
 
     assert len(vms_in_pool_list) == 2
 
@@ -164,7 +164,8 @@ async def test_user_entitlement(fixt_create_static_pool):
     }
     ''' % (pool_id, user_name)
     res = await schema.exec(qu)
-    print('res', res)
+
+    assert res['removeUserEntitlementsFromPool']['ok']
 
 
 @pytest.mark.asyncio
@@ -197,6 +198,5 @@ async def test_assign_vm_to_user(fixt_create_static_pool):
     }
     ''' % (vm_id, username)
     res = await schema.exec(qu)
-
-    #assert res['ok']
-    #assert res['errors'] == 'null'
+    print('test_res', res)
+    assert res['assignVmToUser']['ok']
