@@ -19,7 +19,7 @@ from ..db import db
 from ..pool import Pool
 
 from vdi.errors import SimpleError, FieldError
-from vdi.utils import Unset
+from vdi.utils import Unset, print
 
 
 class TemplateType(graphene.ObjectType):

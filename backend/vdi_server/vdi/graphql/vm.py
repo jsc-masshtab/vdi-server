@@ -12,6 +12,7 @@ from vdi.tasks.resources import DiscoverControllerIp
 from vdi.graphql.resources import NodeType, ControllerType
 
 from vdi.errors import SimpleError
+from vdi.utils import print
 
 
 class AssignVmToUser(graphene.Mutation):

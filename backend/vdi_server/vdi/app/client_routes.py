@@ -4,7 +4,7 @@ from vdi.db import db
 from vdi.pool import Pool
 from vdi.tasks import thin_client
 from vdi.settings import settings
-from vdi.errors import SimpleError
+from vdi.utils import print
 from ..graphql.pool import DesktopPoolType
 
 
@@ -28,7 +28,6 @@ async def get_pools(request):
             """, user
             data = await conn.fetch(*qu)
 
-    print('data', data)
     pools = [
         Pool(params=dict(item))
         for item in data

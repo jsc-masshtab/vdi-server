@@ -1,34 +1,20 @@
 from __future__ import annotations
+
+from datetime import datetime, timedelta, timezone
 import time
 import urllib
-from contextlib import asynccontextmanager
+from contextlib import asynccontextmanager, contextmanager
 from dataclasses import dataclass
 
 from cached_property import cached_property as cached
 from classy_async import Task as _Task, TaskTimeout, wait, g
 from vdi.errors import WsTimeout, FetchException, ControllerNotAccessible, AuthError, SimpleError
-from vdi.utils import with_self
 from vdi.settings import settings
 from vdi.tasks.client import HttpClient
 
 from vdi.db import db
+from vdi import lock
 
-
-
-
-@dataclass()
-class TaskContextManager:
-    task: Task
-
-    def __enter__(self):
-        return self
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        if isinstance(exc_val, FetchException):
-            self.task.on_fetch_failed(exc_val, exc_val.http_error.code)
-        elif exc_val:
-            self.task.on_error(exc_val)
-        return True
 
 
 class ErrorHandler(_Task):
@@ -43,21 +29,32 @@ class ErrorHandler(_Task):
     def on_error(self, ex):
         raise ex
 
-    def co(self):
-        return self.run_and_handle()
+    @contextmanager
+    def catch_errors(self):
+        try:
+            yield
+        except BaseException as ex:
+            if isinstance(ex, FetchException):
+                self.on_fetch_failed(ex, ex.http_error.code)
+            self.on_error(ex)
 
-    async def run_and_handle(self):
-        run = super().co()
-        ctx = TaskContextManager(self)
-        with ctx:
-            result = await run
-        while self.rerun_cause:
-            rerun_cause = self.rerun_cause
-            self.rerun_cause = None
-            with ctx:
-                result = await self.rerun(rerun_cause)
+    async def run(self):
+        with self.catch_errors():
+            return await super().co()
 
-        return result
+    # def co(self):
+    #     return self.run_and_handle()
+    #
+    # async def run_and_handle(self):
+    #     run = super().co()
+    #     with self.catch_errors():
+    #         result = await run
+    #     while self.rerun_cause:
+    #         rerun_cause = self.rerun_cause
+    #         self.rerun_cause = None
+    #         with self.catch_errors():
+    #             result = await self.rerun(rerun_cause)
+    #     return result
 
 
 class Task(ErrorHandler, _Task):
@@ -71,42 +68,20 @@ class Task(ErrorHandler, _Task):
 
 
 @dataclass()
-class Token(Task):
+class FetchToken(Task):
     controller_ip: str
 
     creds = settings.credentials
 
-    @cached
+    @property
     def url(self):
         return f'http://{self.controller_ip}/auth/'
 
     async def run(self):
-        async with db.connect() as conn:
-            qu = (
-                'select token from veil_creds where username = $1 and controller_ip = $2',
-                self.creds['username'], self.controller_ip
-            )
-            data = await conn.fetch(*qu)
-            # TODO expiration
-            if data:
-                [[token]] = data
-                if token:
-                    return token
-        if db.cache.get('token'):
-            return db.cache['token']
         http_client = HttpClient()
         params = urllib.parse.urlencode(self.creds)
-        response = await http_client.fetch(self.url, method='POST', body=params)
-        token = response['token']
-        async with db.connect() as conn:
-            qu = (
-                'insert into veil_creds (username, controller_ip, token) values ($1, $2, $3) '
-                'on conflict do nothing',
-                self.creds['username'], self.controller_ip, token
-            )
-            await conn.execute(*qu)
-        db.cache['token'] = token
-        return token
+        data = await http_client.fetch(self.url, method='POST', body=params)
+        return data['token'], data['expires_on']
 
     def on_fetch_failed(self, ex, code):
         if code == 404:
@@ -117,13 +92,68 @@ class Token(Task):
         raise ex
 
 
+
+@dataclass()
+class Token(Task):
+    controller_ip: str
+
+    @property
+    def username(self):
+        return settings.credentials['username']
+
+    async def get_from_db(self):
+        async with db.connect() as conn:
+            qu = (
+                'select token, expires_on from veil_creds where username = $1 and controller_ip = $2',
+                self.username, self.controller_ip
+            )
+            data = await conn.fetch(*qu)
+        if data:
+            [[token, expires_on]] = data
+            if token and expires_on > datetime.now(timezone.utc):
+                return token
+
+    def get_expiration_time(self, expires_on: str):
+        #TODO timezone?
+        # set it to be 2/3 of the original one
+        FORMAT = '%d.%m.%Y %H:%M:%S %Z'
+        end = datetime.strptime(expires_on, FORMAT)
+        now = datetime.now()
+        delta = (now - end) * 2 / 3
+        return now + delta
+
+
+    async def run(self):
+        token = await self.get_from_db()
+        if token:
+            return token
+        async with lock.token:
+            token = await self.get_from_db()
+            if token:
+                return token
+            token, expires_on = await FetchToken(controller_ip=self.controller_ip)
+            expires_on = self.get_expiration_time(expires_on)
+            async with db.connect() as conn:
+                qu = (
+                    'insert into veil_creds (username, controller_ip, token, expires_on) '
+                    'values ($1, $2, $3, $4) '
+                    'on conflict on constraint veil_creds_pk do update '
+                    'set token = excluded.token, expires_on = excluded.expires_on',
+                    self.username, self.controller_ip, token, expires_on
+                )
+                await conn.execute(*qu)
+        return token
+
+
+
+
 @dataclass()
 class RefreshToken(Task):
     controller_ip: str
 
     async def run(self):
         token = await Token(controller_ip=self.controller_ip)
-        url = f'http://{self.controller_ip}/auth/'
+        url = f'http://{self.controller_ip}/refresh-token/'
         body = urllib.parse.urlencode({'token': token})
         http_client = HttpClient()
         response = await http_client.fetch(url, method='POST', body=body)
