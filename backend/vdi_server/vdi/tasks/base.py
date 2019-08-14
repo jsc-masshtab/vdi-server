@@ -119,7 +119,7 @@ class Token(Task):
         FORMAT = '%d.%m.%Y %H:%M:%S %Z'
         end = datetime.strptime(expires_on, FORMAT)
         now = datetime.now()
-        delta = (now - end) * 2 / 3
+        delta = (end - now) * 2 / 3
         return now + delta
 
 
@@ -142,7 +142,8 @@ class Token(Task):
                     self.username, self.controller_ip, token, expires_on
                 )
                 await conn.execute(*qu)
-        return token
+
+            return token
 
 
 

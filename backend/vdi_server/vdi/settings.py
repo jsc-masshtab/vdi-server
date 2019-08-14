@@ -5,6 +5,7 @@ class Settings(SettingsDict):
     debug = True
     is_dev = True
     controller_ip = '192.168.20.120'
+    print = False
 
 
     pool = {
