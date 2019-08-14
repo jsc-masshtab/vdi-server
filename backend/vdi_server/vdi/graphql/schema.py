@@ -6,7 +6,7 @@ from .pool import AddPool, AddStaticPool, PoolMixin, RemovePool, WakePool, Entit
     RemoveUserEntitlementsFromPool, AddVmsToStaticPool, RemoveVmsFromStaticPool
 from .resources import AddController, RemoveController, Resources
 from .users import CreateUser, ListUsers, ChangePassword
-from .vm import PoolWizardMixin, AssignVmToUser, RemoveAssignedVmFromUser, ListOfVmsQuery
+from .vm import PoolWizardMixin, AssignVmToUser, FreeVmFromUser, ListOfVmsQuery
 
 
 class PoolMutations(graphene.ObjectType):
@@ -27,7 +27,7 @@ class PoolMutations(graphene.ObjectType):
     removeUserEntitlementsFromPool = RemoveUserEntitlementsFromPool.Field()
 
     assignVmToUser = AssignVmToUser.Field()
-    removeAssignedVmFromUser = RemoveAssignedVmFromUser.Field()
+    freeVmFromUser = FreeVmFromUser.Field()
 
 
 class PoolQuery(ListUsers, Resources, PoolMixin, PoolWizardMixin, graphene.ObjectType, ListOfVmsQuery):
