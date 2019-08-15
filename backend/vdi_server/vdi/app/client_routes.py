@@ -45,11 +45,7 @@ async def get_pools(request):
 
 
 @app.route('/client/pools/{pool_id}', methods=['GET', 'POST'])
-@requires('authenticated')
 async def get_vm(request):
-    # async with db.connect() as conn:
-    # # FIXME
-    # controller_ip = settings['controller_ip']
     user = request.user.username
     pool_id = int(request.path_params['pool_id'])
     async with db.connect() as conn:
