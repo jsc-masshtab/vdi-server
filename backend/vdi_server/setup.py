@@ -1,6 +1,6 @@
-from setuptools import setup
+from setuptools import setup, find_packages
 
 setup(
     name='vdi',
-    packages=['vdi'],
+    packages=find_packages(),
 )
