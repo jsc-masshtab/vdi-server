@@ -36,7 +36,7 @@ class Pool:
     async def on_vm_taken(self):
         reserve_size = self.params['reserve_size']
         # Check that total_size is not reached
-        num = await self.__get_vm_amount_in_pool()
+        num = await self._get_vm_amount_in_pool()
         if num >= self.params['total_size']:
             return
         if reserve_size > len(self.queue._queue):
@@ -66,7 +66,7 @@ class Pool:
         if delta < 0:
             delta = 0
 
-        vm_amount = await self.__get_vm_amount_in_pool()
+        vm_amount = await self._get_vm_amount_in_pool()
         for i in range(delta):
             domain_index = vm_amount + 1 + i
             d = await self.add_domain(domain_index)
@@ -117,7 +117,7 @@ class Pool:
         await ins.init(pool_id)
         return ins
 
-    async def __get_vm_amount_in_pool(self):
+    async def _get_vm_amount_in_pool(self):
         async with db.connect() as conn:
             qu = f"select count(*) from vm where pool_id = $1", self.params['id']
             [(num,)] = await conn.fetch(*qu)

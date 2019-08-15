@@ -51,7 +51,7 @@ async def get_vm(request):
     async with db.connect() as conn:
         qu = (
             'select controller_ip, desktop_pool_type, vm.id '
-            'from pool left join vm on vm.pool_id = pool.id and vm.username = $1'
+            'from pool left join vm on vm.pool_id = pool.id and vm.username = $1 '
             'where pool.id = $2', user, pool_id
         )
         data = await conn.fetch(*qu)
