@@ -2,31 +2,11 @@ from datetime import datetime
 
 import graphene
 
-from vdi.hashers import make_password, check_password
+from vdi.hashers import make_password, check_username
 from vdi.db import db
-from vdi.errors import FieldError, SimpleError
+from vdi.errors import SimpleError
 from vdi.constants import NotSet
 from .util import get_selections
-
-
-async def check_username(username, raw_password):
-    async with db.connect() as conn:
-        qu = "select password from public.user where username = $1", username
-        users = await conn.fetch(*qu)
-        if not users:
-            raise FieldError(username=['Пользователь не найден'])
-        [[password]] = users
-
-    async def setter(raw_password):
-        encoded = make_password(raw_password)
-        async with db.connect() as conn:
-            qu = "update public.user set password = $1 where username = $2", encoded, username
-            await conn.execute(*qu)
-
-    return await check_password(raw_password, password, setter)
-
-
-
 
 
 class UserType(graphene.ObjectType):
@@ -76,11 +56,10 @@ class CreateUser(graphene.Mutation):
 
     async def mutate(self, info, username, password, email=None):
         password = make_password(password)
-        date_joined = datetime.now()
         async with db.connect() as conn:
             qu = (
-                "INSERT INTO public.user (username, password, email, date_joined) VALUES ($1, $2, $3, $4)",
-                username, password, email, date_joined
+                "INSERT INTO public.user (username, password, email) VALUES ($1, $2, $3)",
+                username, password, email
             )
             await conn.execute(*qu)
         return {
