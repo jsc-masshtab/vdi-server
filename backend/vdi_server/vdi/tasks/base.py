@@ -130,6 +130,8 @@ class Token(Task):
             if not expired:
                 return token
         async with lock.token:
+            # have to check the db for the token again:
+            # maybe it has been fetched while we've been waiting to aquire the lock
             token, expires_on = await self.get_from_db()
             if token:
                 expired = datetime.now(timezone.utc) > expires_on

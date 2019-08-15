@@ -7,6 +7,8 @@ from vdi.settings import settings
 from vdi.utils import print
 from ..graphql.pool import DesktopPoolType
 
+from vdi.errors import NotFound
+
 
 from . import app
 
@@ -45,68 +47,71 @@ async def get_pools(request):
 @app.route('/client/pools/{pool_id}', methods=['GET', 'POST'])
 @requires('authenticated')
 async def get_vm(request):
+    # async with db.connect() as conn:
+    # # FIXME
+    # controller_ip = settings['controller_ip']
+    user = request.user.username
+    pool_id = int(request.path_params['pool_id'])
     async with db.connect() as conn:
-        # FIXME
-        controller_ip = settings['controller_ip']
-        user = request.user.username
-        pool_id = int(request.path_params['pool_id'])
-        print('controller_ip', controller_ip)
-        # determine desktop pool type
-        qu = 'select desktop_pool_type from pool where id = $1', pool_id
-        pools = await conn.fetch(*qu)
-        [(desktop_pool_type,)] = pools
-        print('get_vm: desktop_pool_type', desktop_pool_type)
+        qu = (
+            'select controller_ip, desktop_pool_type, vm.id '
+            'from pool left join vm on vm.pool_id = pool.id and vm.username = $1'
+            'where pool.id = $2', user, pool_id
+        )
+        data = await conn.fetch(*qu)
+    if not data:
+        raise NotFound("Пул не найден")
+    [[controller_ip, desktop_pool_type, vm_id]] = data
+    print('get_vm: desktop_pool_type', desktop_pool_type)
 
-        qu = """
-        select id from vm where username = $1 and pool_id = $2
-        """, user, pool_id
-        vms = await conn.fetch(*qu)
-        if vms:
-            [(id,)] = vms
-            from vdi.tasks.vm import GetDomainInfo
-            info = await GetDomainInfo(controller_ip=controller_ip, domain_id=id)
+    if vm_id:
+        from vdi.tasks.vm import GetDomainInfo
+        info = await GetDomainInfo(controller_ip=controller_ip, domain_id=vm_id)
 
-            await thin_client.PrepareVm(controller_ip=controller_ip, domain_id=id)
-            return JSONResponse({
-                'host': controller_ip,
-                'port': info['remote_access_port'],
-                'password': info['graphics_password'],
-            })
-
-        # AUTOMATED
-        if desktop_pool_type == DesktopPoolType.AUTOMATED.name:
-            # try to wake pool if it's empty
-            if pool_id not in Pool.instances:
-                await Pool.wake_pool(pool_id)
-            pool = Pool.instances[pool_id]
-            domain = await pool.queue.get()
-            domain_id = domain['id']
-            qu = "update vm set username = $1 where id = $2", user, domain_id
-            await conn.fetch(*qu)
-            await pool.on_vm_taken()
-        # STATIC
-        elif desktop_pool_type == DesktopPoolType.STATIC.name:
-            # find a free vm in static pool
-            qu = f"select id from vm where pool_id = $1 and username is NULL limit 1", pool_id
-            free_vms = await conn.fetch(*qu)
-            print('get_vm: free_vm', free_vms)
-            # if there is no free vm then send empty fields??? Handle on thin client side
-            if not free_vms:
-                return JSONResponse({'host': '', 'port': 0, 'password': '',
-                                     'message': 'В статическом пуле нет свободных машин'})
-            # assign vm to the user
-            [(domain_id,)] = free_vms
-            qu = f"update vm set username = $1 where id = $2", user, domain_id
-            await conn.fetch(*qu)
-        else:
-            raise RuntimeError("Wrong desktop pool type")
-        # send data to thin client
-        info = await thin_client.PrepareVm(controller_ip=controller_ip, domain_id=domain_id)
+        await thin_client.PrepareVm(controller_ip=controller_ip, domain_id=vm_id)
         return JSONResponse({
             'host': controller_ip,
             'port': info['remote_access_port'],
             'password': info['graphics_password'],
         })
+
+    # AUTOMATED
+    if desktop_pool_type == DesktopPoolType.AUTOMATED.name:
+        # try to wake pool if it's empty
+        if pool_id not in Pool.instances:
+            await Pool.wake_pool(pool_id)
+        pool = Pool.instances[pool_id]
+        domain = await pool.queue.get()
+        domain_id = domain['id']
+        async with db.connect() as conn:
+            qu = "update vm set username = $1 where id = $2", user, domain_id
+            await conn.fetch(*qu)
+        await pool.on_vm_taken()
+    # STATIC
+    elif desktop_pool_type == DesktopPoolType.STATIC.name:
+        # find a free vm in static pool
+        async with db.connect() as conn:
+            qu = f"select id from vm where pool_id = $1 and username is NULL limit 1", pool_id
+            free_vms = await conn.fetch(*qu)
+        print('get_vm: free_vm', free_vms)
+        # if there is no free vm then send empty fields??? Handle on thin client side
+        if not free_vms:
+            return JSONResponse({'host': '', 'port': 0, 'password': '',
+                                 'message': 'В статическом пуле нет свободных машин'})
+        # assign vm to the user
+        [(domain_id,)] = free_vms
+        async with db.connect() as conn:
+            qu = f"update vm set username = $1 where id = $2", user, domain_id
+            await conn.fetch(*qu)
+    else:
+        assert not "valid desktop pool type"
+    # send data to thin client
+    info = await thin_client.PrepareVm(controller_ip=controller_ip, domain_id=domain_id)
+    return JSONResponse({
+        'host': controller_ip,
+        'port': info['remote_access_port'],
+        'password': info['graphics_password'],
+    })
 
 
 @app.route('/client/pools/{pool_id}/{action}', methods=['POST'])
