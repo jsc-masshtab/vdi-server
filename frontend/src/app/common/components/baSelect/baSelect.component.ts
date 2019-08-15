@@ -150,6 +150,7 @@ export class BaSelect {
             }
 
             this.outputData.emit(this.selectedData);
+            console.log(this.selectedData);
         }
     }
 

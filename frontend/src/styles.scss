@@ -30,4 +30,14 @@ body {
 
 .cdk-overlay-pane {
     overflow-y: auto !important;
+    overflow-x: hidden;
 }
+
+.mat-form-field {
+    width: 100%;
+}
+
+.mat-select-panel {
+    min-width: 100% !important;
+}
+

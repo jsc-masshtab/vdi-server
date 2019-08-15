@@ -1,9 +1,10 @@
+import { VmsService } from './../../resourses/vms/vms.service';
 import { TemplatesService } from './../../resourses/templates/templates.service';
 import { DatapoolsService } from './../../resourses/datapools/datapools.service';
 import { NodesService } from './../../resourses/nodes/nodes.service';
 import { ClustersService } from './../../resourses/clusters/clusters.service';
 import { MatDialogRef } from '@angular/material';
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit,ViewChild,ViewContainerRef } from '@angular/core';
 import { PoolsService } from '../pools.service';
 import { map } from 'rxjs/operators';
 import { 
@@ -18,18 +19,37 @@ import {
 
 export class PoolAddComponent implements OnInit {
 
-  public templates: object[];
-  public clusters: object[];
-  public nodes: object[];
-  public datapools: object[];
+  public templates: object[] = [];
+  public clusters: object[] = [];
+  public nodes: object[] = [];
+  public datapools: object[] = [];
+  public vms: object[] = [];
+
   public poolName:string;
   public id_cluster:string;
   public id_node:string;
-  public defaultDataTemplates:string = "Загрузка шаблонов...";
-  public defaultDataClusters:string = "Загрузка кластеров...";
-  public defaultDataNodes:string = "Загрузка кластеров...";
-  public defaultDataPools:string = "Загрузка пулов...";
-  private createPoolForm: FormGroup;
+  public id_datapool:string;
+  public id_template:string;
+
+
+  public dinamicPoolForm: FormGroup;
+  public staticPoolForm: FormGroup;
+  public chooseTypeForm: FormGroup;
+  public step:string = "chooseType";
+
+  public pending:object = {
+    clusters: false,
+    nodes: false,
+    datapools: false,
+    vms: false,
+    templates: false
+  };
+
+  public la;
+
+  @ViewChild("selectNodeRef") selectNodeRef: ViewContainerRef;
+  @ViewChild("selectDatapoolRef") selectDatapoolRef: ViewContainerRef;
+  @ViewChild("selectVmRef") selectVmRef: ViewContainerRef;
 
 
   constructor(private poolsService: PoolsService,
@@ -37,104 +57,113 @@ export class PoolAddComponent implements OnInit {
               private nodesService: NodesService,
               private datapoolsService: DatapoolsService,
               private templatesService:TemplatesService,
+              private vmsService: VmsService,
               private dialogRef: MatDialogRef<PoolAddComponent>,
               private fb: FormBuilder) {}
 
   ngOnInit() {
-    this.initForm();
-    this.getTemplate();
-    this.getClusters();
+    this.createChooseTypeForm();
   }
 
-  private initForm(): void {
-		this.createPoolForm = this.fb.group({
-			"name": "",
+  private createChooseTypeForm(): void {
+		this.chooseTypeForm = this.fb.group({
+			type: ""
+    });   
+  }
+
+  private createDinamicPoolInit(): void {
+    this.dinamicPoolForm = this.fb.group({
+      "name": "",
       "template_id": "",
       "cluster_id": "",
       "node_id": "",
       "datapool_id": "",
       "initial_size": "",
       "reserve_size": ""
-		});
+    });
+    this.getTemplate();
+    this.getClusters();
+  }
+
+  private createStaticPoolInit(): void {
+    this.staticPoolForm = this.fb.group({
+      "name": "",
+      "cluster_id": "",
+      "node_id": "",
+      "datapool_id": "",
+      "vm_ids_list": [],
+    });
+    this.getClusters();
   }
   
 
   private getTemplate() {
-    this.defaultDataTemplates = "Загрузка шаблонов...";
+    this.pending['templates'] = true;
     this.templatesService.getAllTemplates().valueChanges.pipe(map(data => data.data.controllers)).subscribe((data) => {
-      this.defaultDataTemplates = "- нет доступных шаблонов -";
-
-      let entity: object[] = this.parseEntity(data,'templates');
+      let entity = this.parseEntity(data,'templates');
 
       this.templates = entity.map((item) => {
         let parse = JSON.parse(item['info']);
         return {
-          'output': parse.id,
-          'input': parse.verbose_name
+          'id': parse.id,
+          'verbose_name': parse.verbose_name
         }
       });
+      this.pending['templates'] = false;
     },(error) => {
-      this.defaultDataTemplates = "- нет доступных шаблонов -";
+      this.pending['templates'] = false;
     });
   }
 
   private getClusters() {
-    this.defaultDataClusters = "Загрузка кластеров...";
-    this.clustersService.getAllClusters().valueChanges.pipe(map(data => data.data.controllers))
+    this.pending['clusters'] = true;
+    this.clustersService.getAllClusters().valueChanges.pipe(map(data => data.data.controllers)) // подумать об выборе запрашиваемых полей
       .subscribe( (data) => {
-        this.defaultDataClusters = "- нет доступных кластеров -";
-
-        let entity: object[] = this.parseEntity(data,'clusters');
-
-        this.clusters = entity.map((item) => {
-          return {
-            'output': item['id'],
-            'input': item['verbose_name']
-          }
-        });
+        this.clusters = this.parseEntity(data,'clusters');
+        this.pending['clusters'] = false;
       },
       (error)=> {
-        this.defaultDataClusters = "- нет доступных кластеров -";
+        this.pending['clusters'] = false;
+        this.clusters = [];
       });
   }
 
   private getNodes(id_cluster) {
-    this.defaultDataNodes = "Загрузка серверов...";
+    this.pending['nodes'] = true;
     this.nodesService.getAllNodes(id_cluster).valueChanges.pipe(map(data => data.data.controllers))
       .subscribe( (data) => {
-        this.defaultDataNodes = "- нет доступных серверов -";
-
-        let entity: object[] = this.parseEntity(data,'nodes');
-
-        this.nodes = entity.map((item) => {
-          return {
-            'output': item['id'],
-            'input': item['verbose_name']
-          }
-        });
+        this.nodes = this.parseEntity(data,'nodes');
+        this.pending['nodes'] = false;
       },
       (error)=> {
-        this.defaultDataNodes = "- нет доступных серверов -";
+        this.nodes = [];
+        this.pending['nodes'] = false;
       });
   }
 
   private getDatapools(id_node) {
-    this.defaultDataPools = "Загрузка пулов...";
+    this.pending['datapools'] = true;
     this.datapoolsService.getAllDatapools(id_node).valueChanges.pipe(map(data => data.data.controllers))
     .subscribe( (data) => {
-      this.defaultDataPools = "- нет доступных пулов -";
+      this.datapools = this.parseEntity(data,'datapools');
+      this.pending['datapools'] = false;
+    },
+    (error) => {
+      this.pending['datapools'] = false;
+      this.datapools = [];
+    });
+  }
 
-      let entity: object[] = this.parseEntity(data,'datapools');
-
-      this.datapools =  entity.map((item) => {
-        return {
-          'output': item['id'],
-          'input': item['verbose_name']
-        }
-      });
+  private getVms() {
+    this.pending['vms'] = true;
+    this.vmsService.getAllVms(this.id_cluster,this.id_node,this.id_datapool).valueChanges.pipe(map(data => data.data.list_of_vms))
+    .subscribe( (data) => {
+      this.vms =  data;
+      this.pending['vms'] = false;
     },
     (error)=> {
-      this.defaultDataPools = "- нет доступных пулов -";
+      this.vms = [];
+      this.pending['vms'] = false;
     });
   }
 
@@ -151,49 +180,139 @@ export class PoolAddComponent implements OnInit {
     return this[prop];
   }
 
-  private selectValue(data,type: string) {
+  public selectTemplate(value:object) {
+    this.id_template = value['value'];
+    this.dinamicPoolForm.get('template_id').setValue(this.id_template);
+  }
 
-    if(type === 'template') {
-      this.createPoolForm.get('template_id').setValue(data[0]);
+  public selectCluster(value:object) {
+    console.log('select Cluster');
+    this.id_cluster = value['value'];
+    this.datapools = [];
+    this.vms = [];
+    this.id_node = "",
+    this.id_datapool = "";
+    if(this.dinamicPoolForm) {
+      this.dinamicPoolForm.get('cluster_id').setValue(this.id_cluster);
+    }
+    if(this.staticPoolForm) {
+      this.staticPoolForm.get('cluster_id').setValue(this.id_cluster);
     }
 
-    if(type === 'cluster') {
-      setTimeout(()=> {
-        this.id_cluster = data[0];
-        this.createPoolForm.get('cluster_id').setValue(this.id_cluster);
-        this.getNodes(this.id_cluster);
-      },0);
-    }
-
-    if(type === 'node') {
-      setTimeout(()=> {
-        this.id_node = data[0];
-        this.createPoolForm.get('node_id').setValue(this.id_node);
-       this.getDatapools(this.id_node);
-      },0)
-    }
-
-    if(type === 'datapool') {
-      this.createPoolForm.get('datapool_id').setValue(data[0]);
+    this.getNodes(this.id_cluster);
+    if(this.selectNodeRef) {
+      this.selectNodeRef['value'] = "";
     }
   }
 
-  public send() {
-    let createPoolForm_value = this.createPoolForm.value;
+  public selectNode(value:object) {
+    console.log('select Node');
+    this.id_node = value['value'];
+    this.id_datapool = "";
+    this.datapools = [];
+    this.vms = [];
+    if(this.dinamicPoolForm) {
+      this.dinamicPoolForm.get('node_id').setValue(this.id_node);
+    }
+    if(this.staticPoolForm) {
+      this.staticPoolForm.get('node_id').setValue(this.id_node);
+    }
+    if(this.selectDatapoolRef) {
+      this.selectDatapoolRef['value'] = "";
+    }
+    
+    this.getDatapools(this.id_node);
+  }
 
-    this.poolsService.createPoll(createPoolForm_value.name,
-                                createPoolForm_value.template_id,
-                                createPoolForm_value.cluster_id,
-                                createPoolForm_value.node_id,
-                                createPoolForm_value.datapool_id,
-                                createPoolForm_value.initial_size,
-                                createPoolForm_value.reserve_size)
-      .subscribe((res) => {
-        if(res) {
-          this.poolsService.getAllPools().subscribe();
-          this.dialogRef.close();
-        }
-    });
+  public selectDatapool(value:object) {
+    console.log('select Datapools');
+    this.id_datapool = value['value'];
+    this.vms = [];
+    if(this.dinamicPoolForm) {
+      this.dinamicPoolForm.get('datapool_id').setValue(this.id_datapool);
+    }
+    if(this.staticPoolForm) {
+      this.staticPoolForm.get('datapool_id').setValue(this.id_datapool);
+    }
+    if(this.selectVmRef) {
+      this.selectVmRef['value'] = "";
+    }
+    this.getVms();
+  }
+
+  public selectVm(value:object) {
+    if(this.staticPoolForm) {
+      this.staticPoolForm.get('vm_ids_list').setValue(value["value"]);
+    }
+    console.log('select vms',value); 
+  }
+
+  public send(step:string) {
+  
+    if(step === 'chooseType') {
+      this.step = 'chooseType';
+      this.id_cluster = "";
+      this.id_node = "",
+      this.id_datapool = "";
+      this.clusters = [];
+      this.nodes = [];
+      this.datapools = [];
+      this.vms = [];
+      
+      if(this.staticPoolForm) {
+        this.staticPoolForm.reset();
+      }
+      if(this.dinamicPoolForm) {
+        this.dinamicPoolForm.reset();
+      }
+    }
+
+    if(step === 'createPool') {
+      this.step = 'createPool';
+      if(this.chooseTypeForm.value.type === 'Динамический') {
+        console.log(this.step,this.chooseTypeForm.value.type);
+        this.createDinamicPoolInit();
+        this.la = 'Динамический';
+      }
+
+      if(this.chooseTypeForm.value.type === 'Статический') {
+        this.createStaticPoolInit();
+        this.la = 'Статический';
+      }
+    }
+
+    if(step === 'finish') {
+      if(this.chooseTypeForm.value.type === 'Динамический') {
+        console.log(this.dinamicPoolForm.value);
+      }  else {
+        console.log(this.staticPoolForm.value);
+      }
+      
+    }
+    // let createPoolForm_value = this.createPoolForm.value;
+
+    // this.poolsService.createPoll(createPoolForm_value.name,
+    //                             createPoolForm_value.template_id,
+    //                             createPoolForm_value.cluster_id,
+    //                             createPoolForm_value.node_id,
+    //                             createPoolForm_value.datapool_id,
+    //                             createPoolForm_value.initial_size,
+    //                             createPoolForm_value.reserve_size)
+    //   .subscribe((res) => {
+    //     if(res) {
+    //       this.poolsService.getAllPools().subscribe();
+    //       this.dialogRef.close();
+    //     }
+    // });
+  }
+
+  ngOnDestroy() {
+    if(this.staticPoolForm) {
+      this.staticPoolForm.reset();
+    }
+    if(this.dinamicPoolForm) {
+      this.dinamicPoolForm.reset();
+    }
   }
 
 }
