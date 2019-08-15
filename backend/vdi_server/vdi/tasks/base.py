@@ -20,10 +20,6 @@ from vdi import lock
 
 
 class ErrorHandler(_Task):
-    rerun_cause: str = None
-
-    def needs_rerun(self, cause: str):
-        self.rerun_cause = cause
 
     def on_fetch_failed(self, ex, code):
         raise ex
@@ -44,9 +40,14 @@ class ErrorHandler(_Task):
         with self.catch_errors():
             return await super().co()
 
+    # rerun_cause: str = None
+
     # def co(self):
     #     return self.run_and_handle()
-    #
+
+    # def needs_rerun(self, cause: str):
+    #     self.rerun_cause = cause
+
     # async def run_and_handle(self):
     #     run = super().co()
     #     with self.catch_errors():
@@ -63,9 +64,6 @@ class Task(ErrorHandler, _Task):
 
     async def run(self):
         # Implementation here
-        raise NotImplementedError
-
-    async def rerun(self):
         raise NotImplementedError
 
 
@@ -193,14 +191,6 @@ class UrlFetcher(Task):
 
     async def run(self):
         return await self.client.fetch_using(self)
-
-    # async def rerun(self, cause):
-    #     if cause == 'refresh_token':
-    #         await RefreshToken(self.controller_ip)
-    #         g.init()
-    #         return await self.run()
-    #     raise NotImplementedError
-
 
     async def wait_message(self, ws):
         try:
