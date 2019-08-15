@@ -56,11 +56,10 @@ class CreateUser(graphene.Mutation):
 
     async def mutate(self, info, username, password, email=None):
         password = make_password(password)
-        date_joined = datetime.now()
         async with db.connect() as conn:
             qu = (
-                "INSERT INTO public.user (username, password, email, date_joined) VALUES ($1, $2, $3, $4)",
-                username, password, email, date_joined
+                "INSERT INTO public.user (username, password, email) VALUES ($1, $2, $3)",
+                username, password, email
             )
             await conn.execute(*qu)
         return {

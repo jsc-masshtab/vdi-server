@@ -18,5 +18,7 @@ classy-async = {editable = false,path = "./../classy_async"}
 cached-property = "*"
 sanic-server = {path = "."}
 
+tornado = "*"
+
 [requires]
 python_version = "3.7"
