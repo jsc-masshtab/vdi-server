@@ -18,7 +18,6 @@ from vdi.db import db
 from vdi import lock
 
 
-
 class ErrorHandler(_Task):
 
     def on_fetch_failed(self, ex, code):

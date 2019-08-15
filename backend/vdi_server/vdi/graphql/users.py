@@ -8,6 +8,8 @@ from vdi.errors import SimpleError
 from vdi.constants import NotSet
 from .util import get_selections
 
+from vdi.vars import JWTUser
+
 
 class UserType(graphene.ObjectType):
     username = graphene.String()
@@ -70,15 +72,19 @@ class CreateUser(graphene.Mutation):
 class ChangePassword(graphene.Mutation):
     class Arguments:
         username = graphene.String()
-        password = graphene.String()
         new_password = graphene.String()
+        password = graphene.String()
 
     ok = graphene.Boolean()
 
-    async def mutate(self, info, username, password, new_password):
-        valid = await check_username(username, password)
-        if not valid:
-            raise SimpleError("Неверные учётные данные")
+    async def mutate(self, info, username, new_password, password=None):
+        user = await JWTUser()
+        if getattr(user, 'username', None) != 'admin':
+            if not password:
+                raise SimpleError('Пароль обязателен')
+            valid = await check_username(username, password)
+            if not valid:
+                raise SimpleError("Неверные учётные данные")
         async with db.connect() as conn:
             encoded = make_password(new_password)
             qu = "update public.user set password = $1 where username = $2", encoded, username
