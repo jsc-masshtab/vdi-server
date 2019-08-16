@@ -359,7 +359,7 @@ GtkResponseType vdi_manager_dialog(GtkWindow *main_window, gchar **uri, gchar **
 
     vdi_manager.window = GTK_WIDGET(gtk_builder_get_object(vdi_manager.builder, "vdi-main-window"));
 
-    gtk_window_set_transient_for(GTK_WINDOW(vdi_manager.window), main_window);
+    //gtk_window_set_transient_for(GTK_WINDOW(vdi_manager.window), main_window);
     gtk_window_set_default_size(GTK_WINDOW(vdi_manager.window), 500, 500);
 
     vdi_manager.button_renew = GTK_WIDGET(gtk_builder_get_object(vdi_manager.builder, "button-renew"));

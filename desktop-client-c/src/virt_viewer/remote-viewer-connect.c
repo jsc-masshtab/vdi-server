@@ -231,7 +231,7 @@ remote_viewer_connect_dialog(GtkWindow *main_window, gchar **uri, gchar **user, 
 
     window = GTK_WIDGET(gtk_builder_get_object(builder, "remote-viewer-connection-window"));
     gtk_window_set_resizable (GTK_WINDOW(window), FALSE);
-    gtk_window_set_transient_for(GTK_WINDOW(window), main_window);
+    //gtk_window_set_transient_for(GTK_WINDOW(window), main_window);
     connect_button = GTK_WIDGET(gtk_builder_get_object(builder, "connect-button"));
 
     entry = ci.entry = GTK_WIDGET(gtk_builder_get_object(builder, "connection-address-entry"));
