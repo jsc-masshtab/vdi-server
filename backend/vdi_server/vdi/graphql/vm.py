@@ -23,7 +23,6 @@ class AssignVmToUser(graphene.Mutation):
         username = graphene.String(required=True)
 
     ok = graphene.Boolean()
-    error = graphene.String()
 
     async def mutate(self, _info, vm_id, username):
         async with db.connect() as conn:
