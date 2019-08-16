@@ -7,16 +7,23 @@ from starlette.middleware.authentication import AuthenticationMiddleware
 from starlette.middleware.cors import CORSMiddleware
 from starlette.middleware.sessions import SessionMiddleware
 
-from vdi.app.auth.jwt import JWTAuthenticationBackend
+from vdi.auth.jwt import JWTAuthenticationBackend
 from vdi.db import db
 from vdi.settings import settings
 
 app = Starlette(debug=settings.get('debug'))
 
+from vdi.auth import VDIUser
+from vdi.app import Request
+
 @app.middleware("http")
-async def init_g_context(request, call_next):
+async def init_context(request, call_next):
     g.init()
-    g.set_attr('request', request)
+    await Request.set(request)
+    user = request.user
+    if not isinstance(user, VDIUser):
+        user = None
+    await VDIUser.set(user)
     response = await call_next(request)
     return response
 

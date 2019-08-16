@@ -5,12 +5,13 @@ from starlette.graphql import (
     GraphQLApp as _GraphQLApp,
     Request, Response, PlainTextResponse, status, BackgroundTasks, JSONResponse, format_graphql_error
 )
+from starlette.authentication import UnauthenticatedUser
 from vdi.graphql.schema import schema
 from graphql.execution.executors.asyncio import AsyncioExecutor
 
 from vdi.errors import BackendError
 from vdi.log import RequestsLog
-from vdi.vars import JWTUser
+from vdi.app import Request
 
 def get_from_chain(ex, kind, limit=5):
     """
@@ -51,8 +52,6 @@ class GraphQLApp(_GraphQLApp):
 
     # This is copied from its ancestor
     async def handle_graphql(self, request: Request) -> Response:
-        await JWTUser.set(request.user)
-
         if request.method in ("GET", "HEAD"):
             if "text/html" in request.headers.get("Accept", ""):
                 if not self.graphiql:

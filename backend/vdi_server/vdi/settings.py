@@ -22,6 +22,7 @@ class Settings(SettingsDict):
         'claims': ['exp'],
         'leeway': 180,
         'verify_exp': True,
+        'expiration_delta': 60 * 30,
     }
 
     credentials = {
@@ -33,10 +34,16 @@ class Settings(SettingsDict):
         'timeout': 5 * 60
     }
 
+    auth_server = {
+        'port': 5000
+    }
+
 
 settings = Settings()
 
 try:
-    from .local_settings import *
+    from .local_settings import settings as local_settings
 except ImportError:
     pass
+
+settings.update(local_settings)

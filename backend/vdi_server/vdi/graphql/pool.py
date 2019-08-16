@@ -371,12 +371,10 @@ class AddPool(graphene.Mutation):
                     data_sync[k] = v
         for k, v in data_sync.items():
             checker.validate_sync(k, v)
-        async_validators = {
-            k: checker.validate_async(k, v)
-            for k, v in data_async.items()
-        }
-        async for _ in wait(**async_validators):
-            pass
+        async_validators = [
+            checker.validate_async(k, v) for k, v in data_async.items()
+        ]
+        await wait_all(*async_validators)
 
         from vdi.graphql.resources import NodeType, ControllerType
         controller = ControllerType(ip=pool['controller_ip'])

@@ -1,5 +1,7 @@
 from starlette.authentication import requires
 from starlette.responses import JSONResponse
+
+from vdi.auth import fetch_token
 from vdi.db import db
 from vdi.pool import Pool
 from vdi.tasks import thin_client
@@ -145,9 +147,16 @@ async def do_action_on_vm(request):
     return JSONResponse({'error': 'null'})
 
 
-@app.route('/check', methods=['GET', 'POST'])
-@requires(['authenticated'])
-def check(request):
-    username = request.user.username
-    return JSONResponse({'user': username})
+@app.route('/client/auth', methods=['GET', 'POST'])
+async def auth(request):
+    if request.scope['method'] == 'GET':
+        params = request.query_params
+    elif request.scope['method'] == 'POST':
+        params = await request.json()
+    params = {
+        'username': params['username'],
+        'password': params['password'],
+    }
+    data = await fetch_token(**params)
+    return JSONResponse({'token': data['access_token']})
 

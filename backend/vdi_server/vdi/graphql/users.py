@@ -1,15 +1,18 @@
-from datetime import datetime
+import json
+import urllib
 
 import graphene
+from vdi.tasks.client import HttpClient
 
 from vdi.hashers import make_password, check_username
+from vdi.settings import settings
 from vdi.db import db
 from vdi.errors import SimpleError
 from vdi.constants import NotSet
 from .util import get_selections
 
-from vdi.vars import JWTUser
-
+from vdi.auth import VDIUser, fetch_token
+from vdi.app import Request
 
 class UserType(graphene.ObjectType):
     username = graphene.String()
@@ -69,6 +72,17 @@ class CreateUser(graphene.Mutation):
         }
 
 
+# class GetToken(graphene.Mutation):
+#
+#     class Arguments:
+#         username = graphene.String()
+#         password = graphene.String()
+#
+#     token = graphene.String()
+#
+#     async def mutate(self):
+
+
 class ChangePassword(graphene.Mutation):
     class Arguments:
         username = graphene.String()
@@ -78,8 +92,8 @@ class ChangePassword(graphene.Mutation):
     ok = graphene.Boolean()
 
     async def mutate(self, info, username, new_password, password=None):
-        user = await JWTUser()
-        if getattr(user, 'username', None) != 'admin':
+        user = await VDIUser.get()
+        if not user or 'admin' not in user.roles:
             if not password:
                 raise SimpleError('Пароль обязателен')
             valid = await check_username(username, password)
@@ -92,11 +106,20 @@ class ChangePassword(graphene.Mutation):
         return ChangePassword(ok=True)
 
 
+class AuthInfo(graphene.ObjectType):
+    token = graphene.String()
 
-class ListUsers:
+
+class UserQueries:
     users = graphene.List(UserType)
     #TMP
     check_user = graphene.Field(graphene.Boolean, username=graphene.String(), password=graphene.String())
+    auth = graphene.Field(AuthInfo, username=graphene.String(), password=graphene.String())
+
+    async def resolve_auth(self, info, **kwargs):
+        data = await fetch_token(**kwargs)
+        token = data['access_token']
+        return AuthInfo(token=token)
 
     async def resolve_check_user(self, info, username, password):
         return await check_username(username, password)

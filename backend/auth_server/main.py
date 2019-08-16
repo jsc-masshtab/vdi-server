@@ -67,11 +67,9 @@ async def authenticate(request, *args, **kwargs):
     if not password_valid:
         raise exceptions.AuthenticationFailed("Password is incorrect.")
 
-    async with db.connect() as conn:
-        qu = 'select username, email from public.user where username = $1', username
-        [usr] = await conn.fetch(*qu)
-
-    return dict(usr.items())
+    return {
+        'username': username,
+    }
 
 
 app = Sanic()
@@ -82,6 +80,7 @@ app.config.SANIC_JWT_CLAIM_IAT = True
 app.config.SANIC_JWT_CLAIM_NBF = True
 app.config.SANIC_JWT_USER_ID = "username"
 app.config.SANIC_JWT_AUTHORIZATION_HEADER_PREFIX = "jwt"
+app.config.SANIC_JWT_EXPIRATION_DELTA = settings.jwt['expiration_delta']
 
 
 initialize(

@@ -1,7 +1,14 @@
+from __future__ import annotations
+from dataclasses import dataclass
+from typing import List
+
+from classy_async import Task
+
 import jwt
 from starlette.authentication import (
     AuthenticationBackend, AuthenticationError, BaseUser, AuthCredentials
 )
+from vdi.db import db
 
 from vdi.settings import settings
 
@@ -10,19 +17,45 @@ config = settings['jwt']
 
 claim_label = {"iss": "issuer", "iat": "iat", "nbf": "nbf", "aud": "audience"}
 
-class JWTUser(BaseUser):
-    def __init__(self, username: str, token: str, payload: dict) -> None:
-        self.username = username
-        self.token = token
-        self.payload = payload
+# DEPRECATED
+# class JWTUser(BaseUser):
+#     def __init__(self, username: str, token: str, payload: dict) -> None:
+#         self.username = username
+#         self.token = token
+#         self.payload = payload
+#
+#     @property
+#     def is_authenticated(self) -> bool:
+#         return True
+#
+#     @property
+#     def display_name(self) -> str:
+#         return self.username
 
-    @property
-    def is_authenticated(self) -> bool:
-        return True
 
-    @property
-    def display_name(self) -> str:
-        return self.username
+@dataclass()
+class VDIUser:
+    username: str
+    email: str
+    roles: List[str] = ()
+    jwt_payload: dict = None
+
+    @classmethod
+    def set(cls, user: VDIUser):
+        task = GetVDIUser()
+        task.return_value = user
+        return task
+
+    @classmethod
+    def get(cls):
+        return GetVDIUser()
+
+
+class GetVDIUser(Task):
+    return_value: VDIUser
+
+    async def run(self):
+        return self.return_value
 
 
 class JWTAuthenticationBackend(AuthenticationBackend):
@@ -79,6 +112,17 @@ class JWTAuthenticationBackend(AuthenticationBackend):
         )
         return decoded
 
+    async def fetch_user(self, username):
+        async with db.connect() as conn:
+            qu = 'select email, m2m.role ' \
+                 'from public.user as u left join user_role_m2m as m2m on u.username = m2m.username ' \
+                 'where u.username = $1', username
+            data = await conn.fetch(*qu)
+        user = {'username': username}
+        for [email, role] in data:
+            user.setdefault('roles', []).append(role)
+            user['email'] = email
+        return user
 
     async def authenticate(self, request):
         if "Authorization" not in request.headers:
@@ -91,5 +135,8 @@ class JWTAuthenticationBackend(AuthenticationBackend):
         except jwt.InvalidTokenError as e:
             raise AuthenticationError(str(e))
 
-        return AuthCredentials(["authenticated"]), JWTUser(username=payload[self.username_field], token=token,
-                                                           payload=payload)
+        username = payload[self.username_field]
+        user = await self.fetch_user(username)
+        del payload[self.username_field]
+        user = VDIUser(**user, jwt_payload=payload)
+        return AuthCredentials(["authenticated"]), user

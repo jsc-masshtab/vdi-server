@@ -5,7 +5,7 @@ from graphql.graphql import graphql
 from .pool import AddPool, AddStaticPool, PoolMixin, RemovePool, WakePool, EntitleUsersToPool, \
     RemoveUserEntitlementsFromPool, AddVmsToStaticPool, RemoveVmsFromStaticPool
 from .resources import AddController, RemoveController, Resources
-from .users import CreateUser, ListUsers, ChangePassword
+from .users import CreateUser, UserQueries, ChangePassword
 from .vm import PoolWizardMixin, AssignVmToUser, FreeVmFromUser, ListOfVmsQuery
 
 
@@ -30,7 +30,7 @@ class PoolMutations(graphene.ObjectType):
     freeVmFromUser = FreeVmFromUser.Field()
 
 
-class PoolQuery(ListUsers, Resources, PoolMixin, PoolWizardMixin, graphene.ObjectType, ListOfVmsQuery):
+class PoolQuery(UserQueries, Resources, PoolMixin, PoolWizardMixin, graphene.ObjectType, ListOfVmsQuery):
     pass
 
 
