@@ -270,10 +270,10 @@ static void on_get_vm_from_pool_finished(GObject *source_object G_GNUC_UNUSED,
     JsonParser *parser = json_parser_new ();
     JsonObject *object = get_json_object(parser, response_body_str);
 
-    const gchar *vm_host = json_object_get_string_member(object, "host");
-    gint64 vm_port = json_object_get_int_member(object, "port");
-    const gchar *vm_password = json_object_get_string_member(object, "password");
-    const gchar *message = json_object_get_string_member(object, "message");
+    const gchar *vm_host = json_object_get_string_member_safely(object, "host");
+    gint64 vm_port = json_object_get_int_member_safely(object, "port");
+    const gchar *vm_password = json_object_get_string_member_safely(object, "password");
+    const gchar *message = json_object_get_string_member_safely(object, "message");
     printf("vm_host %s \n", vm_host);
     printf("vm_port %ld \n", vm_port);
     printf("vm_password %s \n", vm_password);
