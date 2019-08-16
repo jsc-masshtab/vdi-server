@@ -37,7 +37,6 @@ async def test_assign_vm_to_user(fixt_entitle_user_to_pool):
     mutation {
       assignVmToUser(vm_id: "%s", username: "%s") {
         ok
-        error
       }
     }
     ''' % (vm_id, username)
