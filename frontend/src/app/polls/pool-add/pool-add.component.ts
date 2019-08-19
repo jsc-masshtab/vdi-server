@@ -37,7 +37,6 @@ export class PoolAddComponent implements OnInit {
   public staticPoolForm: FormGroup;
   public chooseTypeForm: FormGroup;
   public createPoolForm:FormGroup;
-  public step:string = "chooseType";
 
   public pending:object = {
     clusters: false,
@@ -51,6 +50,27 @@ export class PoolAddComponent implements OnInit {
 
 
   public collection:{} = [];
+
+  public step:string = 'chooseType';
+
+  public steps = [
+    {
+      type: 'chooseType',
+      completed: true,
+      disabled: true
+    },
+    {
+      type: 'createPool',
+      completed: false,
+      disabled: true
+    },
+    {
+      type: 'finish-see',
+      completed: false,
+      disabled: true
+    }
+  ];
+
 
   @ViewChild("selectNodeRef") selectNodeRef: ViewContainerRef;
   @ViewChild("selectDatapoolRef") selectDatapoolRef: ViewContainerRef;
@@ -72,7 +92,7 @@ export class PoolAddComponent implements OnInit {
 
   private createChooseTypeForm(): void {
 		this.chooseTypeForm = this.fb.group({
-			type: ""
+			type: "Статический"
     });   
   }
 
@@ -310,9 +330,11 @@ export class PoolAddComponent implements OnInit {
   }
 
   public send(step:string) {
-  
+  console.log(step);
     if(step === 'chooseType') {
       this.step = 'chooseType';
+      this.steps[1].completed = false;
+      this.steps[2].completed = false;
       this.id_cluster = "";
       this.id_node = "",
       this.id_datapool = "";
@@ -329,6 +351,19 @@ export class PoolAddComponent implements OnInit {
 
     if(step === 'createPool') {
       this.step = 'createPool';
+
+      this.steps[1].completed = true;
+      this.steps[2].completed = false;
+
+      this.datapools = [];
+      this.vms = [];
+      this.nodes = [];
+      this.clusters = [];
+      this.id_node = "",
+      this.id_datapool = "";
+      this.id_cluster = "";
+
+
       if(this.chooseTypeForm.value.type === 'Динамический') {
         this.createDinamicPoolInit();
       }
@@ -338,33 +373,32 @@ export class PoolAddComponent implements OnInit {
       }
     }
 
-    if(step === 'createPool-no') {
-      let value = this.createPoolForm.value;
-     
-      this.step = 'createPool-no';
-   
-        console.log(value,this.selectNodeRef);
-      
-    }
 
     if(step === 'finish-see') {
       this.chooseCollection();
-      let value = this.createPoolForm.value;
+      if(this.createPoolForm) {
+        let value = this.createPoolForm.value;
 
-      if(this.chooseTypeForm.value.type === 'Динамический') {
-        this.finishPoll['name'] = value.name;
-        this.finishPoll['initial_size'] = value.initial_size;
-        this.finishPoll['reserve_size'] = value.reserve_size;
-        console.log(value,this.finishPoll);
+
+  
+        if(this.chooseTypeForm.value.type === 'Динамический') {
+          this.finishPoll['name'] = value.name;
+          this.finishPoll['initial_size'] = value.initial_size;
+          this.finishPoll['reserve_size'] = value.reserve_size;
+          console.log(value,this.finishPoll);
+        }
+  
+        if(this.chooseTypeForm.value.type === 'Статический') {
+          this.finishPoll['name'] = value.name;
+          console.log(value,this.finishPoll);
+        }
+
       }
-
-      if(this.chooseTypeForm.value.type === 'Статический') {
-        this.finishPoll['name'] = value.name;
-        console.log(value,this.finishPoll);
-      }
-
+      
 
       this.step = 'finish-see';
+      this.steps[1].completed = true;
+        this.steps[2].completed = true;
 
 
       
@@ -372,6 +406,7 @@ export class PoolAddComponent implements OnInit {
 
     if(step === 'finish-ok') {
       let value = this.createPoolForm.value;
+     
       if(this.chooseTypeForm.value.type === 'Динамический') {
         
         this.poolsService.createDinamicPool(

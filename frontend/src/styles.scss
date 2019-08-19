@@ -41,3 +41,7 @@ body {
     min-width: 100% !important;
 }
 
+.mat-primary .mat-pseudo-checkbox-checked, .mat-primary .mat-pseudo-checkbox-indeterminate {
+    background: #00abff;
+}
+

@@ -5,23 +5,32 @@
     <button [mat-dialog-close]="true" class="form-close"><fa-icon [icon]="['fas','times-circle']" size="s"></fa-icon></button>
   </div>
 
-  <div class="form-fields" [formGroup]="chooseTypeForm" *ngIf="step === 'chooseType'">
-    <label class="field">
-      <p class="field-name">Статический</p>
-      <input type="radio" formControlName="type" value="Статический">
-    </label>
-    <label class="field">
-      <p class="field-name">Динамический</p>
-      <input type="radio" formControlName="type" value="Динамический">
-    </label>
-    <div class="form-actions">
-      <button type="submit" (click)="send('createPool')" class="form-btn"><fa-icon [icon]="['fas','plus-circle']" size="xs"></fa-icon><span class="action-name">Далее</span></button>
+  <div  class="manager-progress">
+    <div class="manager-progress-step" *ngFor="let point of steps; let ind = index">
+      <button  [class.step-current]="point.type===step" [class.button-completed]="point.completed" (click)="send(point.type)">{{ind + 1}}</button>
+      <div class="manager-progress-step-line" [class.step-completed]="point.completed"></div>
     </div>
+  </div>
+
+  <div class="form-fields" [formGroup]="chooseTypeForm" *ngIf="step === 'chooseType'">
+    <label class="field-inline">
+      <fa-icon [icon]="['fas','desktop']" size="m" ></fa-icon>
+      <input type="radio" formControlName="type" value="Статический">
+      <p class="radio-text">Статический</p>
+    </label>
+    <label class="field-inline">
+      <fa-icon [icon]="['fas','tv']" size="m" ></fa-icon>
+      <input type="radio" formControlName="type" value="Динамический">
+      <p class="radio-text">Динамический</p>
+    </label>
+  </div>
+  <div class="form-actions"  *ngIf="step === 'chooseType'">
+     <button type="submit" (click)="send('createPool')" class="form-btn"><span class="action-name">Далее</span></button>
   </div>
 
 
 
-  <div class="form-fields" [formGroup]="createPoolForm" *ngIf="step === 'createPool' || step === 'createPool-no'">
+  <div class="form-fields" [formGroup]="createPoolForm" *ngIf="step === 'createPool'">
     <label class="field">
       <p class="field-name">Имя пула</p>
       <input type="text" [focusMe]="true" formControlName="name">
@@ -101,22 +110,21 @@
       <p class="field-name">Количество создаваемых ВМ</p>
       <input type="number" formControlName="reserve_size"  min="0">
     </label>
+  </div>
 
-    <div class="form-actions">
-      <button (click)="send('chooseType')" class="form-btn"><fa-icon [icon]="['fas','plus-circle']" size="xs"></fa-icon><span class="action-name">Назад</span></button>
-      <button  (click)="send('finish-see')" class="form-btn"><fa-icon [icon]="['fas','plus-circle']" size="xs"></fa-icon><span class="action-name">Далее</span></button>
-    </div>
+  <div class="form-actions" *ngIf="step === 'createPool'">
+    <button (click)="send('chooseType')" class="form-btn" [style.width]="'49.9%'"><span class="action-name">Назад</span></button>
+    <button  (click)="send('finish-see')" class="form-btn" [style.width]="'49.9%'"><span class="action-name">Далее</span></button>
   </div>
 
 
-  <div class="form-fields"  *ngIf="step === 'finish-see'">
-    <h1>Пул будет создан:</h1>
+  <div class="field-table" *ngIf="step === 'finish-see'">
+    <h1 class="title">Информация о создаваемом пуле</h1>
     <vdi-table-into [data]="finishPoll" [collection]="collection"></vdi-table-into>
-    <div class="form-actions">
-      <button (click)="send('createPool')" class="form-btn"><fa-icon [icon]="['fas','plus-circle']" size="xs"></fa-icon><span class="action-name">Назад</span></button>
-      <button type="submit" (click)="send('finish-ok')" class="form-btn"><fa-icon [icon]="['fas','plus-circle']" size="xs"></fa-icon><span class="action-name">Cоздать пул</span></button>
-    </div>
+  </div>
+  <div class="form-actions" *ngIf="step === 'finish-see'">
+    <button (click)="send('createPool')" class="form-btn" [style.width]="'49.9%'"><span class="action-name" >Назад</span></button>
+    <button (click)="send('finish-ok')" class="form-btn" [style.width]="'49.9%'"><span class="action-name">Cоздать пул</span></button>
   </div>
   
-
 </div>
