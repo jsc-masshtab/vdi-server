@@ -41,8 +41,7 @@ export class PoolsComponent implements OnInit {
     },
     {
       title: 'Доступные ВМ',
-      property: 'state',
-      property_lv2_array: 'available'
+      property_array: 'vms'
     }
   ];
 

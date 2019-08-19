@@ -20,18 +20,13 @@ export class PoolsService  {
                 query:  gql` query allPools {
                                     pools {
                                         id
-                                        template_id
                                         name
                                         settings {
                                             initial_size
                                             reserve_size
                                         }
-                                        state { 
-                                            available {
-                                                template {
-                                                    info
-                                                }
-                                            }
+                                        vms {
+                                            id
                                         }
                                     }  
                                 }
@@ -47,18 +42,13 @@ export class PoolsService  {
                 query:  gql` query allPools {
                                     pools {
                                         id
-                                        template_id
                                         name
                                         settings {
                                             initial_size
                                             reserve_size
                                         }
-                                        state { 
-                                            available {
-                                                template {
-                                                    info
-                                                }
-                                            }
+                                        vms {
+                                            id
                                         }
                                     }  
                                 }
@@ -118,7 +108,7 @@ export class PoolsService  {
     };
     
 
-    public createPoll(name: string,template_id: string,cluster_id: string,node_id: string,datapool_id: string,initial_size: number,reserve_size: number) {
+    public createDinamicPool(name: string,template_id: string,cluster_id: string,node_id: string,datapool_id: string,initial_size: number,reserve_size: number) {
         return this.service.mutate<any>({
             mutation: gql`  
                             mutation AddPool($name: String!,$template_id: String,$cluster_id: String,$node_id: String,$datapool_id: String,$initial_size: Int,$reserve_size: Int) {
@@ -136,6 +126,26 @@ export class PoolsService  {
                 datapool_id: datapool_id,
                 initial_size: initial_size,
                 reserve_size: reserve_size
+            }
+        })
+    }
+
+    public createStaticPool(name: string,cluster_id: string,node_id: string,datapool_id: string,vm_ids_list:string[]) {
+        return this.service.mutate<any>({
+            mutation: gql`  
+                            mutation AddPool($name: String!,$cluster_id: String,$node_id: String,$datapool_id: String,$vm_ids_list: [String]) {
+                                addStaticPool(name: $name,cluster_id: $cluster_id,node_id: $node_id,datapool_id: $datapool_id,vm_ids_list: $vm_ids_list) {
+                                    id
+                                }
+                            }
+            `,
+            variables: {
+                method: 'POST',
+                name: name,
+                cluster_id: cluster_id,
+                node_id: node_id,
+                datapool_id: datapool_id,
+                vm_ids_list: vm_ids_list
             }
         })
     }

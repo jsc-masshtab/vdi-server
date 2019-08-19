@@ -21,7 +21,7 @@
 
 
 
-  <div class="form-fields" [formGroup]="staticPoolForm || dinamicPoolForm" *ngIf="step === 'createPool'">
+  <div class="form-fields" [formGroup]="createPoolForm" *ngIf="step === 'createPool' || step === 'createPool-no'">
     <label class="field">
       <p class="field-name">Имя пула</p>
       <input type="text" [focusMe]="true" formControlName="name">
@@ -33,7 +33,7 @@
         <mat-label  *ngIf="templates.length && !pending.templates">Выберите шаблон ВМ</mat-label>
         <mat-label  *ngIf="!templates.length && !pending.templates">- нет шаблонов -</mat-label>
         <mat-select (selectionChange)="selectTemplate($event)">
-          <mat-option *ngFor="let template of templates" [value]="template.id">
+          <mat-option *ngFor="let template of templates" [value]="template">
             {{template.verbose_name}}
           </mat-option>
         </mat-select>
@@ -46,7 +46,7 @@
         <mat-label  *ngIf="clusters.length && !pending.clusters">Выберите кластер</mat-label>
         <mat-label  *ngIf="!clusters.length && !pending.clusters">- нет кластеров -</mat-label>
         <mat-select (selectionChange)="selectCluster($event)">
-          <mat-option *ngFor="let cluster of clusters" [value]="cluster.id">
+          <mat-option *ngFor="let cluster of clusters" [value]="cluster">
             {{cluster.verbose_name}}
           </mat-option>
         </mat-select>
@@ -59,7 +59,7 @@
         <mat-label  *ngIf="nodes.length && !pending.nodes">Выберите сервер</mat-label>
         <mat-label  *ngIf="!nodes.length && !pending.nodes">- нет серверов -</mat-label>
         <mat-select (selectionChange)="selectNode($event)" #selectNodeRef>
-          <mat-option *ngFor="let node of nodes" [value]="node.id">
+          <mat-option *ngFor="let node of nodes" [value]="node">
             {{node.verbose_name}}
           </mat-option>
         </mat-select>
@@ -72,7 +72,7 @@
         <mat-label *ngIf="datapools.length && !pending.datapools">Выберите пул данных</mat-label>
         <mat-label *ngIf="!datapools.length && !pending.datapools">- нет пулов данных -</mat-label>
         <mat-select (selectionChange)="selectDatapool($event)" #selectDatapoolRef>
-          <mat-option *ngFor="let datapool of datapools" [value]="datapool.id">
+          <mat-option *ngFor="let datapool of datapools" [value]="datapool">
             {{datapool.verbose_name}}
           </mat-option>
         </mat-select>
@@ -85,7 +85,7 @@
         <mat-label *ngIf="vms.length && !pending.vms">Выберите свободные ВМ</mat-label>
         <mat-label *ngIf="!vms.length && !pending.vms">- нет виртуальных машин -</mat-label>
         <mat-select (selectionChange)="selectVm($event)" multiple="true" #selectVmRef>
-          <mat-option *ngFor="let vm of vms" [value]="vm.id">
+          <mat-option *ngFor="let vm of vms" [value]="vm">
             {{vm.name}}
           </mat-option>
         </mat-select>
@@ -103,9 +103,20 @@
     </label>
 
     <div class="form-actions">
-      <button  (click)="send('finish')" class="form-btn"><fa-icon [icon]="['fas','plus-circle']" size="xs"></fa-icon><span class="action-name">Далее</span></button>
       <button (click)="send('chooseType')" class="form-btn"><fa-icon [icon]="['fas','plus-circle']" size="xs"></fa-icon><span class="action-name">Назад</span></button>
+      <button  (click)="send('finish-see')" class="form-btn"><fa-icon [icon]="['fas','plus-circle']" size="xs"></fa-icon><span class="action-name">Далее</span></button>
     </div>
   </div>
+
+
+  <div class="form-fields"  *ngIf="step === 'finish-see'">
+    <h1>Пул будет создан:</h1>
+    <vdi-table-into [data]="finishPoll" [collection]="collection"></vdi-table-into>
+    <div class="form-actions">
+      <button (click)="send('createPool')" class="form-btn"><fa-icon [icon]="['fas','plus-circle']" size="xs"></fa-icon><span class="action-name">Назад</span></button>
+      <button type="submit" (click)="send('finish-ok')" class="form-btn"><fa-icon [icon]="['fas','plus-circle']" size="xs"></fa-icon><span class="action-name">Cоздать пул</span></button>
+    </div>
+  </div>
+  
 
 </div>
