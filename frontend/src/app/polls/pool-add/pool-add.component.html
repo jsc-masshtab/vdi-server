@@ -7,12 +7,16 @@
 
   <div  class="manager-progress">
     <div class="manager-progress-step" *ngFor="let point of steps; let ind = index">
-      <button  [class.step-current]="point.type===step" [class.button-completed]="point.completed" (click)="send(point.type)">{{ind + 1}}</button>
+      <button  [class.step-current]="point.type===step" [class.button-completed]="point.completed" [disabled]="point.disabled" (click)="send(point.type)">{{ind + 1}}</button>
       <div class="manager-progress-step-line" [class.step-completed]="point.completed"></div>
     </div>
   </div>
 
-  <div class="form-fields" [formGroup]="chooseTypeForm" *ngIf="step === 'chooseType'">
+  <div class="form-error" *ngIf="step === 'createPool'">
+    <p *ngIf="error" [@animForm]="error">Все поля обязательны для заполнения!</p>
+  </div>
+
+  <div class="form-fields" [formGroup]="chooseTypeForm" *ngIf="step === 'chooseType'" [style.paddingBottom]="'20px'">
     <label class="field-inline">
       <fa-icon [icon]="['fas','desktop']" size="m" ></fa-icon>
       <input type="radio" formControlName="type" value="Статический">
@@ -30,7 +34,7 @@
 
 
 
-  <div class="form-fields" [formGroup]="createPoolForm" *ngIf="step === 'createPool'">
+  <div class="form-fields" [formGroup]="createPoolForm" *ngIf="step === 'createPool'" [style.paddingBottom]="'20px'">
     <label class="field">
       <p class="field-name">Имя пула</p>
       <input type="text" [focusMe]="true" formControlName="name">
@@ -118,7 +122,7 @@
   </div>
 
 
-  <div class="field-table" *ngIf="step === 'finish-see'">
+  <div class="field-table" *ngIf="step === 'finish-see'" [style.paddingBottom]="'20px'">
     <h1 class="title">Информация о создаваемом пуле</h1>
     <vdi-table-into [data]="finishPoll" [collection]="collection"></vdi-table-into>
   </div>

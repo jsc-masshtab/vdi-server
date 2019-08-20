@@ -94,7 +94,7 @@
         display: flex;
         align-items: center;
         font-size: 15px;
-        margin-bottom: 15px;
+        margin-bottom: 20px;
 
         &:last-child {
             margin-bottom: 0px;
@@ -249,3 +249,17 @@ label {
         color: rgba(#000000, 0.7);
     }
 }
+
+.form-error {
+    height: 21px;
+
+	p  {
+        color: #DD2C00;
+        background: rgba(255, 149, 149, 0.3);
+        border-top: 1px solid rgba(221, 44, 0, 0.3);
+        padding: 3px;
+        border-bottom: 1px solid rgba(221, 44, 0, 0.3);
+        text-align: center;
+    }
+}
+

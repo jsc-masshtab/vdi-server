@@ -5,8 +5,11 @@ import { NodesService } from './../../resourses/nodes/nodes.service';
 import { ClustersService } from './../../resourses/clusters/clusters.service';
 import { MatDialogRef } from '@angular/material';
 import { Component, OnInit,ViewChild,ViewContainerRef } from '@angular/core';
+import { Validators } from '@angular/forms';
 import { PoolsService } from '../pools.service';
 import { map } from 'rxjs/operators';
+import { Subscription } from 'rxjs';
+import { trigger, style, animate, transition } from "@angular/animations";
 import { 
 	FormBuilder, 
 	FormGroup
@@ -14,7 +17,20 @@ import {
 
 @Component({
   selector: 'vdi-pool-add',
-  templateUrl: './pool-add.component.html'
+  templateUrl: './pool-add.component.html',
+  animations: [
+    trigger(
+			'animForm', [
+				transition(':enter', [
+					style({ opacity: 0 }),
+					animate('150ms', style({ opacity: 1 }))
+				]),
+				transition(':leave', [
+					style({ opacity: 1 }),
+					animate('150ms', style({ opacity: 0 }))
+				])
+    ])
+	]
 })
 
 export class PoolAddComponent implements OnInit {
@@ -46,6 +62,8 @@ export class PoolAddComponent implements OnInit {
     templates: false
   };
 
+  public error:boolean = false;
+
   public data: {} = {};
 
 
@@ -57,7 +75,7 @@ export class PoolAddComponent implements OnInit {
     {
       type: 'chooseType',
       completed: true,
-      disabled: true
+      disabled: false
     },
     {
       type: 'createPool',
@@ -71,6 +89,8 @@ export class PoolAddComponent implements OnInit {
     }
   ];
 
+
+  private subForm:Subscription;
 
   @ViewChild("selectNodeRef") selectNodeRef: ViewContainerRef;
   @ViewChild("selectDatapoolRef") selectDatapoolRef: ViewContainerRef;
@@ -87,7 +107,7 @@ export class PoolAddComponent implements OnInit {
               private fb: FormBuilder) {}
 
   ngOnInit() {
-    this.createChooseTypeForm();
+    this.createChooseTypeForm(); 
   }
 
   private createChooseTypeForm(): void {
@@ -99,32 +119,45 @@ export class PoolAddComponent implements OnInit {
   private createDinamicPoolInit(): void {
     
     this.createPoolForm = this.fb.group({
-      "name": "",
-      "template_id": "",
-      "cluster_id": "",
-      "node_id": "",
-      "datapool_id": "",
-      "initial_size": "",
-      "reserve_size": ""
+      "name": ['', Validators.required],
+      "template_id": ['', Validators.required],
+      "cluster_id": ['', Validators.required],
+      "node_id":['', Validators.required],
+      "datapool_id": ['', Validators.required],
+      "initial_size": ['', Validators.required],
+      "reserve_size": ['', Validators.required]
     });
     this.finishPoll = {};
     this.getTemplate();
     this.getClusters();
+
+    this.subscriptionCreateForm();
   }
 
   private createStaticPoolInit(): void {
     this.createPoolForm = this.fb.group({
-      "name": "",
-      "cluster_id": "",
-      "node_id": "",
-      "datapool_id": "",
-      "vm_ids_list": []
+      "name": ['', Validators.required],
+      "cluster_id": ['', Validators.required],
+      "node_id": ['', Validators.required],
+      "datapool_id": ['', Validators.required],
+      "vm_ids_list": [[], Validators.required]
     });
     this.finishPoll = {};
     this.getClusters();
+
+    this.subscriptionCreateForm();
+  }
+
+  private subscriptionCreateForm() {
+   this.subForm =  this.createPoolForm.statusChanges.subscribe(status => {
+      if(status === 'INVALID') {
+        this.steps[1].disabled = true;
+      } else {
+        this.steps[1].disabled = false;
+      }
+    });
   }
   
-
   private getTemplate() {
     this.pending['templates'] = true;
     this.templatesService.getAllTemplates().valueChanges.pipe(map(data => data.data.controllers)).subscribe((data) => {
@@ -209,14 +242,12 @@ export class PoolAddComponent implements OnInit {
   }
 
   public selectTemplate(value:object) {
-    console.log('select template',value);
     this.template_select = value['value'].id;
     this.finishPoll['template_name'] = value['value']['verbose_name'];
     this.createPoolForm.get('template_id').setValue(this.template_select);
   }
 
   public selectCluster(value:object) {
-    console.log('select Cluster',value);
     this.id_cluster = value['value'].id;
     this.finishPoll['cluster_name'] = value['value']['verbose_name'];
     this.datapools = [];
@@ -233,7 +264,6 @@ export class PoolAddComponent implements OnInit {
   }
 
   public selectNode(value:object) {
-    console.log('select Node');
     this.id_node = value['value'].id;
     this.finishPoll['node_name'] = value['value']['verbose_name'];
     this.id_datapool = "";
@@ -250,7 +280,6 @@ export class PoolAddComponent implements OnInit {
   }
 
   public selectDatapool(value:object) {
-    console.log('select Datapools');
     this.id_datapool = value['value'].id;
     this.finishPoll['datapool_name'] = value['value']['verbose_name'];
     this.vms = [];
@@ -268,7 +297,6 @@ export class PoolAddComponent implements OnInit {
     id_vms = value['value'].map(vm => vm['id']);
     this.createPoolForm.get('vm_ids_list').setValue(id_vms);
     this.finishPoll['vm_name'] = value['value'].map(vm => vm['name']);
-    console.log('select vms',value); 
   }
 
   private chooseCollection(): void {
@@ -329,8 +357,24 @@ export class PoolAddComponent implements OnInit {
     }
   }
 
+  private handlingValidForm(): boolean {
+    console.log('fkfkk');
+    if(this.createPoolForm.status === "INVALID") {
+      let timer;
+      this.error = true;
+      if(!timer) {
+        timer = setTimeout(() => {
+          this.error = false;
+        },3000);
+      }
+      
+      return false;
+    }
+
+    return true;
+  }
+
   public send(step:string) {
-  console.log(step);
     if(step === 'chooseType') {
       this.step = 'chooseType';
       this.steps[1].completed = false;
@@ -375,22 +419,24 @@ export class PoolAddComponent implements OnInit {
 
 
     if(step === 'finish-see') {
+
+      let validPrev: boolean;
+      validPrev = this.handlingValidForm();
+
+      if(!validPrev) return;
+
       this.chooseCollection();
       if(this.createPoolForm) {
         let value = this.createPoolForm.value;
-
-
   
         if(this.chooseTypeForm.value.type === 'Динамический') {
           this.finishPoll['name'] = value.name;
           this.finishPoll['initial_size'] = value.initial_size;
           this.finishPoll['reserve_size'] = value.reserve_size;
-          console.log(value,this.finishPoll);
         }
   
         if(this.chooseTypeForm.value.type === 'Статический') {
           this.finishPoll['name'] = value.name;
-          console.log(value,this.finishPoll);
         }
 
       }
@@ -443,9 +489,16 @@ export class PoolAddComponent implements OnInit {
   }
 
   ngOnDestroy() {
+  
     if(this.createPoolForm) {
       this.createPoolForm.reset();
     }
+
+    if(this.subForm) {
+      this.subForm.unsubscribe();
+    }
+
+
   }
 
 }

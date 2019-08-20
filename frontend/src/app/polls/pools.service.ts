@@ -28,6 +28,7 @@ export class PoolsService  {
                                         vms {
                                             id
                                         }
+                                        desktop_pool_type
                                     }  
                                 }
                             
@@ -50,6 +51,7 @@ export class PoolsService  {
                                         vms {
                                             id
                                         }
+                                        desktop_pool_type
                                     }  
                                 }
                             
