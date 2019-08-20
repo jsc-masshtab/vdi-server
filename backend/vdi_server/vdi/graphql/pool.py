@@ -19,7 +19,7 @@ from ..db import db
 from ..pool import Pool
 
 from vdi.errors import SimpleError, FieldError
-from vdi.utils import Unset, print
+from vdi.utils import Unset, print, insert, bulk_insert
 
 
 class TemplateType(graphene.ObjectType):
@@ -160,6 +160,13 @@ class VmType(graphene.ObjectType):
         from vdi.graphql.resources import NodeType
         return NodeType
 
+    async def resolve_name(self, info):
+        if self.name:
+            return self.name
+        if self.veil_info is Unset:
+            self.veil_info = await self.get_veil_info()
+        return self.veil_info['verbose_name']
+
     async def resolve_user(self, info):
         if self.sql_data is Unset:
             self.sql_data = await self.get_sql_data()
@@ -200,7 +207,7 @@ class VmType(graphene.ObjectType):
         return TemplateType(id=template_id, veil_info=template, name=template['verbose_name'])
 
     async def resolve_state(self, info):
-        if self.veil_info is None:
+        if self.veil_info is Unset:
             self.veil_info = await self.get_veil_info()
         val = self.veil_info['user_power_state']
         return VmState.get(val)
@@ -709,49 +716,123 @@ class RemovePool(graphene.Mutation):
         return RemovePool(ok=True)
 
 
-#  users <-> pools relations
-class EntitleUsersToPool(graphene.Mutation):
+class AddPoolPermissions(graphene.Mutation):
 
     class Arguments:
-        pool_id = graphene.Int()
-        entitled_users = graphene.List(graphene.String)
+        pool_id = graphene.ID()
+        users = graphene.List(graphene.ID)
+        entitled_users = graphene.List(graphene.ID) # deprecated
+        roles = graphene.List(graphene.ID)
 
     ok = graphene.Boolean()
 
-    async def mutate(self, _info, pool_id, entitled_users):
-        async with db.connect() as conn:
-            for user in entitled_users:
-                qu = "INSERT INTO pools_users (pool_id, username) VALUES ($1, $2)", pool_id, user
-                await conn.fetch(*qu)
+    @classmethod
+    async def handle_users(cls, pool_id, users):
+        users = [{'pool_id': pool_id, 'username': user} for user in users]
+        await bulk_insert('pools_users', users)
 
-        return {
-            'ok': True
-        }
+    @classmethod
+    async def handle_roles(cls, pool_id, roles):
+        roles = [{'pool_id': pool_id, 'role': role} for role in roles]
+        await bulk_insert('pool_role_m2m', roles)
+
+    async def mutate(self, _info, pool_id, users=(), entitled_users=(), roles=()):
+        cls = AddPoolPermissions
+        users = users or entitled_users
+        if users:
+            await cls.handle_users(pool_id, users)
+        if roles:
+            await cls.handle_roles(pool_id, roles)
+        return {'ok': True}
 
 
-class RemoveUserEntitlementsFromPool(graphene.Mutation):
+class GroupsMixin:
+    addPoolPermission = 1
+
+
+# class AddPoolPermission(graphene.Mutation):
+#     class Arguments:
+#         pool_id = graphene.ID()
+#         users = graphene.List(graphene.ID)
+#         groups = graphene.List(graphene.ID)
+#
+#     async def mutate(self, info, users=(), groups=()):
+#         1
+
+
+class DropPoolPermissions(graphene.Mutation):
 
     class Arguments:
         pool_id = graphene.Int()
-        entitled_users = graphene.List(graphene.String)
+        users = graphene.List(graphene.ID)
+        entitled_users = graphene.List(graphene.ID) # deprecated
+        roles = graphene.List(graphene.ID)
         free_assigned_vms = graphene.Boolean()
 
-    ok = graphene.Boolean()
+    freed = graphene.List(VmType)
 
-    async def mutate(self, _info, pool_id, entitled_users, free_assigned_vms=True):
+    @classmethod
+    async def handle_users(cls, pool_id, users, *, free_assigned_vms):
         async with db.connect() as conn:
-            for user in entitled_users:
-                # remove entitlement
-                qu = "DELETE FROM pools_users WHERE pool_id = $1 AND username = $2", pool_id, user
-                await conn.fetch(*qu)
-                # free assigned vm
-                if free_assigned_vms:
-                    qu = "UPDATE vm SET username = NULL WHERE pool_id = $1 AND username = $2", pool_id, user
-                    await conn.fetch(*qu)
+            qu = "DELETE FROM pools_users " \
+                 "WHERE pool_id = $1 AND username = any($2::text[])", pool_id, users
+            await conn.fetch(*qu)
+        if not free_assigned_vms:
+            return []
+        # Find vms no longer permitted to own
+        # (owned by users not having the group permission)
+        async with db.connect() as conn:
+            qu = "select vm.id from vm " \
+                 "join user_role_m2m as u_r on vm.username = u_r.username and u_r.username = any($1::text[]) " \
+                 "left join pool_role_m2m as p_r on u_r.role = p_r.role and p_r.pool_id = $2 " \
+                 "where p_r.role is null", users, pool_id
+            data = await conn.fetch(*qu)
+            vm_ids = [vm_id for [vm_id] in data]
+            qu = "update vm set username = null " \
+                 "where id = any($1::text[])", vm_ids
+            await conn.fetch(*qu)
 
-        return {
-            'ok': True
-        }
+        return [VmType(id=vm_id) for vm_id in vm_ids]
+
+    @classmethod
+    async def handle_roles(cls, pool_id, roles, *, free_assigned_vms):
+        # Remove from permissions
+        async with db.connect() as conn:
+            qu = "delete from pool_role_m2m " \
+                 "where pool_id = $1 and role = any($2::text[])", \
+                 pool_id, roles
+            await conn.fetch(*qu)
+        if not free_assigned_vms:
+            return []
+        # Find vms no longer permitted to own
+        # (owned by users not listed in pools_users)
+        async with db.connect() as conn:
+            qu = "select vm.id from vm " \
+                 "join user_role_m2m as u_r on vm.username = u_r.username and u_r.role = any($1::text[]) " \
+                 "left join pools_users as p_u on vm.username = p_u.username and p_u.pool_id = $2 " \
+                 "where p_u.username is null", roles, pool_id
+            data = await conn.fetch(*qu)
+            vm_ids = [vm_id for [vm_id] in data]
+            qu = "update vm set username = null " \
+                 "where id = any($1::text[])", vm_ids
+            await conn.fetch(*qu)
+        return [VmType(id=vm_id) for vm_id in vm_ids]
+
+    async def mutate(self, _info, pool_id, entitled_users=(), users=(), roles=(), free_assigned_vms=True):
+        cls = DropPoolPermissions
+        async with db.connect() as conn:
+            qu = "select controller_ip from pool where id = $1", pool_id
+            [[controller_ip]] = await conn.fetch(*qu)
+        users = users or entitled_users
+        if users and not roles:
+            freed = await cls.handle_users(pool_id, users, free_assigned_vms=free_assigned_vms)
+        elif roles and not users:
+            freed = await cls.handle_roles(pool_id, roles, free_assigned_vms=free_assigned_vms)
+        else:
+            raise SimpleError("Можно указать только пользователей или роли")
+        for vm in freed:
+            vm.controller_ip = controller_ip
+        return cls(freed=freed)
 
 
 class PoolMixin:

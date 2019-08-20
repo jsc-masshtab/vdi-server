@@ -1,30 +1,59 @@
 from __future__ import annotations
 
+import inspect
+
 from dateutil.parser import parse as parse_dt
 
 from datetime import datetime, timedelta, timezone
 import time
 import urllib
-from contextlib import asynccontextmanager, contextmanager
+from contextlib import asynccontextmanager, contextmanager, AsyncExitStack, ExitStack
 from dataclasses import dataclass
 
 from cached_property import cached_property as cached
 from classy_async import Task as _Task, TaskTimeout, wait, g
-from vdi.errors import WsTimeout, FetchException, ControllerNotAccessible, AuthError, SimpleError
+from vdi.errors import WsTimeout, FetchException, ControllerNotAccessible, AuthError, SimpleError, SignatureExpired
 from vdi.settings import settings
 from vdi.tasks.client import HttpClient
 
 from vdi.db import db
 from vdi import lock
+from vdi.utils import Unset
 
 
 class ErrorHandler(_Task):
+    _result = Unset
 
     def on_fetch_failed(self, ex, code):
         raise ex
 
     def on_error(self, ex):
         raise ex
+
+    def set_result(self, value):
+        self._result = value
+
+    ERROR_HANDLERS = ['on_error', 'on_fetch_failed']
+
+    def get_error_handler_type(self):
+        is_sync = is_async = False
+        for name in self.ERROR_HANDLERS:
+            method = getattr(self, name, None)
+            if inspect.iscoroutinefunction(method):
+                is_async = True
+            else:
+                is_sync = True
+        if is_sync and not is_async:
+            return 'sync'
+        if is_async and not is_sync:
+            return 'async'
+        assert not 'allowed both sync and async handlers'
+
+
+
+    @asynccontextmanager
+    def async_catch_errors(self):
+        1
 
     @contextmanager
     def catch_errors(self):
@@ -38,6 +67,8 @@ class ErrorHandler(_Task):
     async def run(self):
         with self.catch_errors():
             return await super().co()
+        if self._result is not Unset:
+            return self._result
 
     # rerun_cause: str = None
 
@@ -165,6 +196,11 @@ class RefreshToken(Task):
         data = await http_client.fetch(url, method='POST', body=body)
         return data['token'], data['expires_on']
 
+    async def
+
+    def on_fetch_failed(self, ex, code):
+        if code == SignatureExpired.code and ex.data['non_field_errors'] == [SignatureExpired.message]:
+            await
 
 class UrlFetcher(Task):
 
