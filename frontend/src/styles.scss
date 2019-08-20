@@ -30,4 +30,18 @@ body {
 
 .cdk-overlay-pane {
     overflow-y: auto !important;
+    overflow-x: hidden;
 }
+
+.mat-form-field {
+    width: 100%;
+}
+
+.mat-select-panel {
+    min-width: 100% !important;
+}
+
+.mat-primary .mat-pseudo-checkbox-checked, .mat-primary .mat-pseudo-checkbox-indeterminate {
+    background: #00abff;
+}
+

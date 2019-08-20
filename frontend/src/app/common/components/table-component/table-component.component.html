@@ -12,6 +12,7 @@
       <div *ngFor="let item of data;let i = index" class="table-area-object" [class.cursorTrue]="cursor" (click)="clickRow(item)" tabindex="-1">   <!--строка-->
         <div class="table-area-property" *ngFor="let obj of collection" [class.index-column]="obj.property == 'index'" [class.name-width]="obj.property == 'verbose_name'" [class.name-start]="obj.class == 'name-start'"> <!--столбец-->
           <span *ngIf="obj.property == 'index'">{{ i+1 }}</span>
+          <span *ngIf="obj.property_array">{{ item[obj.property_array].length }}</span>
           <span *ngIf="obj.property_boolean_true">
             <ng-container *ngIf="obj.property_boolean">{{ obj.property_boolean_true }}</ng-container>
             <ng-container *ngIf="!obj.property_boolean">{{ obj.property_boolean_false }}</ng-container>
@@ -20,7 +21,7 @@
           <span *ngIf="obj.property_lv2 && item[obj.property]">{{ item[obj.property][obj.property_lv2] || '--' }}</span>
           <span *ngIf="(obj.property_lv2 && !item[obj.property]) || (obj.property_lv2_array && !item[obj.property][obj.property_lv2_array])"> -- </span>
 
-          <span *ngIf="!obj.property_lv2 && !obj.property_lv2_array && !obj.property_lv2_wrap && !obj.property_boolean_true && obj.property != 'index'">{{ item[obj.property] || '--' }}</span>
+          <span *ngIf="!obj.property_lv2 && !obj.property_lv2_array && !obj.property_lv2_wrap && !obj.property_boolean_true && obj.property != 'index' && !item[obj.property_array]">{{ item[obj.property] || '--' }}</span>
           <span *ngIf="obj.property_lv2_wrap"><span>/</span>{{ item[obj.property][obj.property_lv2_prop2] || '--' }}</span>
           <span *ngIf="obj.property_lv2_array && item[obj.property][obj.property_lv2_array]">{{ item[obj.property][obj.property_lv2_array].length || '--' }}</span>
         </div> 

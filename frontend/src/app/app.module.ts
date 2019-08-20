@@ -17,7 +17,7 @@ import { ClustersService } from './resourses/clusters/clusters.service';
 import { ClustersComponent } from './resourses/clusters/clusters.component';
 
 import { BrowserModule } from '@angular/platform-browser';
-import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
+import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { NgModule } from '@angular/core';
 import { ReactiveFormsModule, FormsModule } from '@angular/forms';
 
@@ -50,7 +50,8 @@ import { NodesService } from './resourses/nodes/nodes.service';
 
 
 /*  -----------------------------------   material   --------------------------------------*/
-import { MAT_DIALOG_DEFAULT_OPTIONS } from '@angular/material';
+import { MAT_DIALOG_DEFAULT_OPTIONS, ErrorStateMatcher, ShowOnDirtyErrorStateMatcher } from '@angular/material';
+import { MatSelectModule } from '@angular/material/select';
 import { MatDialogModule } from '@angular/material/dialog';
 import { AddControllerComponent } from './settings/controllers/add-controller/add-controller.component';
 import { ControllersService } from './settings/controllers/controllers.service';
@@ -104,7 +105,8 @@ import { environment } from 'src/environments/environment';
     FontAwesomeModule,
     ReactiveFormsModule,
     FormsModule,
-    MatDialogModule
+    MatDialogModule,
+    MatSelectModule
   ],
   entryComponents: [
     PoolAddComponent,
@@ -117,6 +119,7 @@ import { environment } from 'src/environments/environment';
             [
               PoolsService,
               { provide: MAT_DIALOG_DEFAULT_OPTIONS, useValue: { hasBackdrop: true, restoreFocus: true } },
+              {provide: ErrorStateMatcher, useClass:ShowOnDirtyErrorStateMatcher},
               NodesService,
               ClustersService,
               ControllersService,

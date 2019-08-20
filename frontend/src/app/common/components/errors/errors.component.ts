@@ -8,6 +8,8 @@ import {
 	transition,
 	animate
 } from '@angular/animations';
+import { filter } from 'rxjs/operators';
+
 
 
 @Component({
@@ -36,13 +38,11 @@ export class ErrorsComponent  {
   constructor(private service: ErrorsService) {}
 
   ngOnInit() {
-    this.errorsSub = this.service.getErrors().subscribe((errors: object[]) => {
-      if(Array.isArray(errors)) {
+    this.errorsSub = this.service.getErrors().pipe(filter(value => Array.isArray(value))).subscribe((errors: object[]) => {
         errors.forEach((item: {}) => {
           this.errors.unshift(item);
           this.hideMessage();
         });
-      }
     });
   }
 

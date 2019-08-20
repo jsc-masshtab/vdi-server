@@ -5,61 +5,130 @@
     <button [mat-dialog-close]="true" class="form-close"><fa-icon [icon]="['fas','times-circle']" size="s"></fa-icon></button>
   </div>
 
-  <div class="form-fields" [formGroup]="createPoolForm">
+  <div  class="manager-progress">
+    <div class="manager-progress-step" *ngFor="let point of steps; let ind = index">
+      <button  [class.step-current]="point.type===step" [class.button-completed]="point.completed" [disabled]="point.disabled" (click)="send(point.type)">{{ind + 1}}</button>
+      <div class="manager-progress-step-line" [class.step-completed]="point.completed"></div>
+    </div>
+  </div>
+
+  <div class="form-error" *ngIf="step === 'createPool'">
+    <p *ngIf="error" [@animForm]="error">Все поля обязательны для заполнения!</p>
+  </div>
+
+  <div class="form-fields" [formGroup]="chooseTypeForm" *ngIf="step === 'chooseType'" [style.paddingBottom]="'20px'">
+    <label class="field-inline">
+      <fa-icon [icon]="['fas','desktop']" size="m" ></fa-icon>
+      <input type="radio" formControlName="type" value="Статический">
+      <p class="radio-text">Статический</p>
+    </label>
+    <label class="field-inline">
+      <fa-icon [icon]="['fas','tv']" size="m" ></fa-icon>
+      <input type="radio" formControlName="type" value="Динамический">
+      <p class="radio-text">Динамический</p>
+    </label>
+  </div>
+  <div class="form-actions"  *ngIf="step === 'chooseType'">
+     <button type="submit" (click)="send('createPool')" class="form-btn"><span class="action-name">Далее</span></button>
+  </div>
+
+
+
+  <div class="form-fields" [formGroup]="createPoolForm" *ngIf="step === 'createPool'" [style.paddingBottom]="'20px'">
     <label class="field">
       <p class="field-name">Имя пула</p>
       <input type="text" [focusMe]="true" formControlName="name">
     </label>
 
-    <label class="field">
-      <p class="field-name">Выберите шаблон ВМ</p>
-      <ba-select
-          [inputData]= "templates || []"
-          (outputData)="selectValue($event,'template')"
-          [defaultData]="defaultDataTemplates">
-      </ba-select>
+    <label class="field" *ngIf="chooseTypeForm.value.type === 'Динамический'">
+      <mat-form-field>
+        <mat-label  *ngIf="pending.templates">Загрузка ...</mat-label>
+        <mat-label  *ngIf="templates.length && !pending.templates">Выберите шаблон ВМ</mat-label>
+        <mat-label  *ngIf="!templates.length && !pending.templates">- нет шаблонов -</mat-label>
+        <mat-select (selectionChange)="selectTemplate($event)">
+          <mat-option *ngFor="let template of templates" [value]="template">
+            {{template.verbose_name}}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
     </label>
 
     <label class="field">
-      <p class="field-name">Выберите кластер</p>
-      <ba-select
-          [inputData]= "clusters || []"
-          (outputData)="selectValue($event,'cluster')"
-          [defaultData]="defaultDataClusters">
-      </ba-select>
+      <mat-form-field>
+        <mat-label  *ngIf="pending.clusters">Загрузка ...</mat-label>
+        <mat-label  *ngIf="clusters.length && !pending.clusters">Выберите кластер</mat-label>
+        <mat-label  *ngIf="!clusters.length && !pending.clusters">- нет кластеров -</mat-label>
+        <mat-select (selectionChange)="selectCluster($event)">
+          <mat-option *ngFor="let cluster of clusters" [value]="cluster">
+            {{cluster.verbose_name}}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
     </label>
 
     <label class="field" *ngIf="id_cluster">
-      <p class="field-name">Выберите сервер</p>
-      <ba-select
-          [inputData]= "nodes || []"
-          (outputData)="selectValue($event,'node')"
-          [defaultData]="defaultDataNodes">
-      </ba-select>
+      <mat-form-field>
+        <mat-label  *ngIf="pending.nodes">Загрузка ...</mat-label>
+        <mat-label  *ngIf="nodes.length && !pending.nodes">Выберите сервер</mat-label>
+        <mat-label  *ngIf="!nodes.length && !pending.nodes">- нет серверов -</mat-label>
+        <mat-select (selectionChange)="selectNode($event)" #selectNodeRef>
+          <mat-option *ngFor="let node of nodes" [value]="node">
+            {{node.verbose_name}}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
     </label>
 
     <label class="field" *ngIf="id_node">
-      <p class="field-name">Выберите пул данных</p>
-      <ba-select
-          [inputData]= "datapools || []"
-          (outputData)="selectValue($event,'datapool')"
-          [defaultData]="defaultDataPools">
-      </ba-select>
+      <mat-form-field>
+        <mat-label *ngIf="pending.datapools">Загрузка ...</mat-label>
+        <mat-label *ngIf="datapools.length && !pending.datapools">Выберите пул данных</mat-label>
+        <mat-label *ngIf="!datapools.length && !pending.datapools">- нет пулов данных -</mat-label>
+        <mat-select (selectionChange)="selectDatapool($event)" #selectDatapoolRef>
+          <mat-option *ngFor="let datapool of datapools" [value]="datapool">
+            {{datapool.verbose_name}}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
     </label>
 
-    <label class="field">
+    <label class="field" *ngIf="id_datapool && chooseTypeForm.value.type === 'Статический'">
+      <mat-form-field>
+        <mat-label *ngIf="pending.vms">Загрузка ...</mat-label>
+        <mat-label *ngIf="vms.length && !pending.vms">Выберите свободные ВМ</mat-label>
+        <mat-label *ngIf="!vms.length && !pending.vms">- нет виртуальных машин -</mat-label>
+        <mat-select (selectionChange)="selectVm($event)" multiple="true" #selectVmRef>
+          <mat-option *ngFor="let vm of vms" [value]="vm">
+            {{vm.name}}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+    </label>
+
+    <label class="field" *ngIf="chooseTypeForm.value.type === 'Динамический'">
       <p class="field-name">Начальное количество ВМ</p>
       <input type="number" formControlName="initial_size" min="0">
     </label>
-
-    <label class="field">
+  
+    <label class="field" *ngIf="chooseTypeForm.value.type === 'Динамический'">
       <p class="field-name">Количество создаваемых ВМ</p>
       <input type="number" formControlName="reserve_size"  min="0">
     </label>
   </div>
 
-  <div class="form-actions">
-    <button (click)="send()" class="form-btn"><fa-icon [icon]="['fas','plus-circle']" size="xs"></fa-icon><span class="action-name">Создать</span></button>
+  <div class="form-actions" *ngIf="step === 'createPool'">
+    <button (click)="send('chooseType')" class="form-btn" [style.width]="'49.9%'"><span class="action-name">Назад</span></button>
+    <button  (click)="send('finish-see')" class="form-btn" [style.width]="'49.9%'"><span class="action-name">Далее</span></button>
   </div>
 
+
+  <div class="field-table" *ngIf="step === 'finish-see'" [style.paddingBottom]="'20px'">
+    <h1 class="title">Информация о создаваемом пуле</h1>
+    <vdi-table-into [data]="finishPoll" [collection]="collection"></vdi-table-into>
+  </div>
+  <div class="form-actions" *ngIf="step === 'finish-see'">
+    <button (click)="send('createPool')" class="form-btn" [style.width]="'49.9%'"><span class="action-name" >Назад</span></button>
+    <button (click)="send('finish-ok')" class="form-btn" [style.width]="'49.9%'"><span class="action-name">Cоздать пул</span></button>
+  </div>
+  
 </div>
