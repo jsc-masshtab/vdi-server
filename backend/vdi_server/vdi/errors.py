@@ -47,13 +47,26 @@ class FetchException(BackendError):
     url: str
     data: dict
 
+    # def __init__(self, *args, **kwargs):
+    #     super().__init__(*args, **kwargs)
+    #     breakpoint()
+    #     if 'signature' in repr(self).lower():
+    #         breakpoint()
+
+    @cached
+    def code(self):
+        return self.http_error.code
+
     def format_error(self):
         return {
-            'code': self.http_error.code,
+            'code': self.code,
             'url': self.url,
             **self.data,
             **self.type_info
         }
+
+    def __repr__(self):
+        return f'FetchException{repr(self.__dict__)}'
 
 
 class HttpError(BackendError):
@@ -79,7 +92,7 @@ class NotFound(HttpError):
     code = 404
     message = "Урл не найден"
 
-    def __init__(self, *, text=None, url=None):
+    def __init__(self, text=None, url=None):
         if text:
             self.message = text
         if url:

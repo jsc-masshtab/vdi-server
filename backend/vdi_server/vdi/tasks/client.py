@@ -89,6 +89,8 @@ class HttpClient:
         except socket.gaierror as e:
             raise NotFound(url=url)
         except HTTPError as e:
+            if e.code == 404:
+                raise NotFound(url=url)
             data = self.get_error_data(e)
             if not isinstance(data, dict):
                 data = {'detail': data}

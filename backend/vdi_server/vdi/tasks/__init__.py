@@ -1,3 +1,3 @@
 
-from .base import Token, UrlFetcher
-from . import disk, vm
+from .base import Token, UrlFetcher, DiscoverController, CheckConnection
+# from . import disk, vm

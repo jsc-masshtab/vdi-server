@@ -8,12 +8,17 @@ from classy_async import wait
 from .pool import PoolType, VmType, TemplateType
 from .util import get_selections
 from ..db import db
-from ..tasks import resources, Token
+from ..tasks import Token
 from ..tasks.vm import ListTemplates, ListVms
-from ..tasks.resources import DiscoverControllers, FetchNode, FetchCluster, DiscoverController
+
+from ..tasks.resources import (
+    DiscoverControllers, FetchNode, FetchCluster, DiscoverControllerIp, ListClusters,
+    ListDatapools, ListNodes
+)
+
 
 from vdi.errors import FieldError, SimpleError, FetchException
-from vdi.log import RequestsLog
+from vdi.utils import Unset
 
 class RequestType(graphene.ObjectType):
     url = graphene.String()
@@ -51,7 +56,6 @@ class ClusterType(graphene.ObjectType):
     async def resolve_vms(self, info, wild=True):
         return await self.controller.resolve_vms(info, cluster_id=self.id, wild=wild)
 
-    info = None
 
 
 class NodeType(graphene.ObjectType):
@@ -71,10 +75,17 @@ class NodeType(graphene.ObjectType):
     datapools = graphene.List(lambda: DatapoolType)
     controller = graphene.Field(lambda: ControllerType)
 
+    veil_info: dict = Unset
 
+    async def get_veil_info(self):
+        return await FetchNode(node_id=self.id, controller_ip=self.controller.ip)
 
-    async def resolve_nodes(self, info):
-        return await self.controller.resolve_nodes(info, node_id=self.id)
+    async def resolve_verbose_name(self, info):
+        if self.verbose_name:
+            return self.verbose_name
+        if self.veil_info is Unset:
+            veil_info = await self.get_veil_info()
+        return veil_info['verbose_name']
 
     async def resolve_templates(self, info):
         return await self.controller.resolve_templates(info, node_id=self.id)
@@ -88,11 +99,11 @@ class NodeType(graphene.ObjectType):
 
 
     async def resolve_cluster(self, info):
-        if self.info is None:
-            self.info = await resources.FetchNode(controller_ip=self.controller.ip, node_id=self.id)
-        cluster_id = self.info['cluster']['id']
+        if self.veil_info is Unset:
+            self.veil_info = await self.get_veil_info()
+        cluster_id = self.veil_info['cluster']['id']
         #TODO return immediately
-        resp = await resources.FetchCluster(controller_ip=self.controller.ip, cluster_id=cluster_id)
+        resp = await FetchCluster(controller_ip=self.controller.ip, cluster_id=cluster_id)
         obj = self.controller._make_type(ClusterType, resp)
         obj.controller = self.controller
         return obj
@@ -100,11 +111,11 @@ class NodeType(graphene.ObjectType):
     async def resolve_datacenter(self, info):
         if self.datacenter:
             return self.datacenter
-        if self.info is None:
-            self.info = await resources.FetchNode(controller_ip=self.controller.ip, node_id=self.id)
-        return DatacenterType(id=self.info['datacenter_id'], verbose_name=self.info['datacenter_name'])
+        if self.veil_info is Unset:
+            self.veil_info = await self.get_veil_info()
+        return DatacenterType(id=self.veil_info['datacenter_id'],
+                              verbose_name=self.veil_info['datacenter_name'])
 
-    info: dict = None
 
 
 class DatapoolType(graphene.ObjectType):
@@ -130,7 +141,7 @@ class DatapoolType(graphene.ObjectType):
         controller = ControllerType(ip=self.controller_ip)
         if not fields <= base_fields:
             tasks = [
-                resources.FetchNode(controller_ip=self.controller_ip, node_id=node['id'])
+                FetchNode(controller_ip=self.controller_ip, node_id=node['id'])
                 for node in self.nodes
             ]
             async for node in wait(*tasks):
@@ -149,7 +160,6 @@ class DatapoolType(graphene.ObjectType):
         return await self.resolve_nodes(info)
 
     controller_ip = None
-    info = None
 
 
 
@@ -168,7 +178,7 @@ class Resources:
         return objects
 
     async def resolve_node(self, info, id):
-        controller_ip = await DiscoverController(node_id=id)
+        controller_ip = await DiscoverControllerIp(node_id=id)
         if not controller_ip:
             raise SimpleError('Узел с данным id не найден')
         # Node exists for sure
@@ -180,7 +190,7 @@ class Resources:
         return NodeType(controller=ControllerType(ip=controller_ip), **fields)
 
     async def resolve_cluster(self, info, id):
-        controller_ip = await DiscoverController(cluster_id=id)
+        controller_ip = await DiscoverControllerIp(cluster_id=id)
         if not controller_ip:
             raise SimpleError('Кластер не найден')
         data = await FetchCluster(controller_ip=controller_ip, cluster_id=id)
@@ -208,7 +218,7 @@ class AddController(graphene.Mutation):
     async def _add_controller(cls, ip, set_default=False, description=None):
         await Token(controller_ip=ip)
         try:
-            resp = await resources.ListClusters(controller_ip=ip)
+            resp = await ListClusters(controller_ip=ip)
         except FetchException:
             return AddController(ok=False)
 
@@ -291,7 +301,7 @@ class ControllerType(graphene.ObjectType):
         if node_id is not None:
             nodes = {node_id}
         elif cluster_id is not None:
-            nodes = await resources.ListNodes(controller_ip=self.ip, cluster_id=cluster_id)
+            nodes = await ListNodes(controller_ip=self.ip, cluster_id=cluster_id)
             nodes = {node['id'] for node in nodes}
         else:
             nodes = None
@@ -305,7 +315,7 @@ class ControllerType(graphene.ObjectType):
         for vm in vms:
             node = NodeType(id=vm['node']['id'], verbose_name=vm['node']['verbose_name'])
             node.controller = self
-            obj = TemplateType(name=vm['verbose_name'], info=vm, id=vm['id'], node=node)
+            obj = TemplateType(name=vm['verbose_name'], veil_info=vm, id=vm['id'], node=node)
             obj.controller_ip = self.ip
             objects.append(obj)
         return objects
@@ -314,7 +324,7 @@ class ControllerType(graphene.ObjectType):
         if node_id is not None:
             nodes = {node_id}
         elif cluster_id is not None:
-            nodes = await resources.ListNodes(controller_ip=self.ip, cluster_id=cluster_id)
+            nodes = await ListNodes(controller_ip=self.ip, cluster_id=cluster_id)
             nodes = {node['id'] for node in nodes}
         else:
             nodes = None
@@ -348,7 +358,7 @@ class ControllerType(graphene.ObjectType):
                 pool_kwargs = {}
             obj = VmType(name=vm['verbose_name'], id=vm['id'], node=node, **pool_kwargs)
             obj.selections = get_selections(info)
-            obj.info = vm
+            obj.veil_info = vm
             if not pool_id:
                 obj.controller_ip = self.ip
 
@@ -363,7 +373,7 @@ class ControllerType(graphene.ObjectType):
             if k in type._meta.fields:
                 dic[k] = v
         obj = type(**dic)
-        obj.info = data
+        obj.veil_info = data
         return obj
 
     async def resolve_datapools(self, info, node_id=None, cluster_id=None):
@@ -373,12 +383,12 @@ class ControllerType(graphene.ObjectType):
         if cluster_id is not None:
             cluster_ids = [cluster_id]
         else:
-            clusters = await resources.ListClusters(controller_ip=controller_ip)
+            clusters = await ListClusters(controller_ip=controller_ip)
             cluster_ids = [c['id'] for c in clusters]
         datapools = {}
 
         for cluster_id in cluster_ids:
-            nodes = await resources.ListNodes(controller_ip=controller_ip, cluster_id=cluster_id)
+            nodes = await ListNodes(controller_ip=controller_ip, cluster_id=cluster_id)
             for node in nodes:
                 objects = await self._get_datapools(info, node_id=node['id'])
                 datapools.update(
@@ -390,7 +400,7 @@ class ControllerType(graphene.ObjectType):
     # TODO fields/info rework
 
     async def _get_datapools(self, info, node_id):
-        resp = await resources.ListDatapools(controller_ip=self.ip, node_id=node_id)
+        resp = await ListDatapools(controller_ip=self.ip, node_id=node_id)
         fields = get_selections(info)
 
         li = []
@@ -403,7 +413,7 @@ class ControllerType(graphene.ObjectType):
 
     async def resolve_clusters(self, info):
         controller_ip = self.ip
-        resp = await resources.ListClusters(controller_ip)
+        resp = await ListClusters(controller_ip)
         li = []
         for item in resp:
             obj = self._make_type(ClusterType, item)
@@ -414,13 +424,13 @@ class ControllerType(graphene.ObjectType):
 
     async def resolve_cluster(self, info, *, id):
         controller_ip = self.ip
-        resp = await resources.FetchCluster(controller_ip=controller_ip, cluster_id=id)
+        resp = await FetchCluster(controller_ip=controller_ip, cluster_id=id)
         obj = self._make_type(ClusterType, resp)
         obj.controller = self
         return obj
 
     async def _get_nodes(self, info, *, cluster_id):
-        nodes = await resources.ListNodes(controller_ip=self.ip, cluster_id=cluster_id)
+        nodes = await ListNodes(controller_ip=self.ip, cluster_id=cluster_id)
         li = []
         for node in nodes:
             obj = self._make_type(NodeType, node)
@@ -433,7 +443,7 @@ class ControllerType(graphene.ObjectType):
         if cluster_id is not None:
             return await self._get_nodes(info, cluster_id=cluster_id)
         result = {}
-        clusters = await resources.ListClusters(controller_ip=controller_ip)
+        clusters = await ListClusters(controller_ip=controller_ip)
         for cluster in clusters:
             nodes = await self._get_nodes(info, cluster_id=cluster['id'])
             result.update(
@@ -443,7 +453,7 @@ class ControllerType(graphene.ObjectType):
 
     async def resolve_node(self, info, id):
         controller_ip = self.ip
-        node = await resources.FetchNode(controller_ip=controller_ip, node_id=id)
+        node = await FetchNode(controller_ip=controller_ip, node_id=id)
         obj = self._make_type(NodeType, node)
         obj.controller = self
         return obj

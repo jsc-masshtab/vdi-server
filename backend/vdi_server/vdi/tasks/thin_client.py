@@ -24,9 +24,9 @@ class EnableRemoteAccess(UrlFetcher):
             'remote_access': True
         })
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        if isinstance(exc_val, FetchException) and exc_val.code == 404:
-            raise NotFound("Виртуальная машина не найдена") from exc_val
+    def on_fetch_failed(self, ex, code):
+        if code == 404:
+            raise NotFound("Виртуальная машина не найдена") from ex
 
 
 POWER_STATES = ['unknown', 'power off', 'power on and suspended', 'power on']
@@ -52,9 +52,9 @@ class PrepareVm(UrlFetcher):
         info = await EnableRemoteAccess(controller_ip=self.controller_ip, domain_id=self.domain_id)
         return info
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        if isinstance(exc_val, FetchException) and exc_val.code == 404:
-            raise NotFound("Виртуальная машина не найдена") from exc_val
+    def on_fetch_failed(self, ex, code):
+        if code == 404:
+            raise NotFound("Виртуальная машина не найдена") from ex
 
 
 #@dataclass()
@@ -88,6 +88,6 @@ class DoActionOnVm(UrlFetcher):
             raise SimpleError(f"Неизвестное действие: {self.action}")
         return f"http://{self.controller_ip}/api/domains/{self.domain_id}/{self.action}/"
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        if isinstance(exc_val, FetchException) and exc_val.code == 404:
-            raise NotFound("Виртуальная машина не найдена") from exc_val
+    def on_fetch_failed(self, ex, code):
+        if code == 404:
+            raise NotFound("Виртуальная машина не найдена") from ex

@@ -8,6 +8,8 @@ from sanic_jwt.decorators import protected
 
 from vdi.settings import settings
 from vdi.db import db
+from vdi.hashers import check_username
+from vdi.errors import NotFound
 
 if settings['debug']:
     try:
@@ -57,22 +59,17 @@ async def authenticate(request, *args, **kwargs):
 
     if not username or not password:
         raise exceptions.AuthenticationFailed("Missing username or password.")
-
-    async with db.connect() as conn:
-        fields = ['username', 'password', 'email']
-        qu = f"SELECT {', '.join(fields)} FROM public.user WHERE username = $1", username
-        users = await conn.fetch(*qu)
-
-    if not users:
+    try:
+        password_valid = await check_username(username, password)
+    except NotFound:
         raise exceptions.AuthenticationFailed("User not found.")
 
-    [usr] = users
-
-    if password != usr['password']:
+    if not password_valid:
         raise exceptions.AuthenticationFailed("Password is incorrect.")
 
-    usr = dict(usr.items())
-    return usr
+    return {
+        'username': username,
+    }
 
 
 app = Sanic()
@@ -83,6 +80,7 @@ app.config.SANIC_JWT_CLAIM_IAT = True
 app.config.SANIC_JWT_CLAIM_NBF = True
 app.config.SANIC_JWT_USER_ID = "username"
 app.config.SANIC_JWT_AUTHORIZATION_HEADER_PREFIX = "jwt"
+app.config.SANIC_JWT_EXPIRATION_DELTA = settings.jwt['expiration_delta']
 
 
 initialize(

@@ -1,7 +1,6 @@
-from cached_property import cached_property as cached
+import asyncio
 
 import asyncpg
-from functools import wraps
 
 from asyncpg.connection import Connection
 

@@ -3,18 +3,22 @@ from graphql.execution.executors.asyncio import AsyncioExecutor
 from graphql.graphql import graphql
 
 from .pool import AddPool, AddStaticPool, PoolMixin, RemovePool, WakePool, EntitleUsersToPool, \
-    RemoveUserEntitlementsFromPool
+    RemoveUserEntitlementsFromPool, AddVmsToStaticPool, RemoveVmsFromStaticPool
 from .resources import AddController, RemoveController, Resources
-from .users import CreateUser, ListUsers
-from .vm import PoolWizardMixin, AssignVmToUser, RemoveAssignedVmFromUser, ListOfVmsQuery
+from .users import CreateUser, UserQueries, ChangePassword
+from .vm import PoolWizardMixin, AssignVmToUser, FreeVmFromUser, ListOfVmsQuery
 
 
 class PoolMutations(graphene.ObjectType):
     removePool = RemovePool.Field()
     addPool = AddPool.Field()
     addStaticPool = AddStaticPool.Field()
+    addVmsToStaticPool = AddVmsToStaticPool.Field()
+    removeVmsFromStaticPool = RemoveVmsFromStaticPool.Field()
     wakePool = WakePool.Field()
+
     createUser = CreateUser.Field()
+    changePassword = ChangePassword.Field()
 
     addController = AddController.Field()
     removeController = RemoveController.Field()
@@ -23,10 +27,10 @@ class PoolMutations(graphene.ObjectType):
     removeUserEntitlementsFromPool = RemoveUserEntitlementsFromPool.Field()
 
     assignVmToUser = AssignVmToUser.Field()
-    removeAssignedVmFromUser = RemoveAssignedVmFromUser.Field()
+    freeVmFromUser = FreeVmFromUser.Field()
 
 
-class PoolQuery(ListUsers, Resources, PoolMixin, PoolWizardMixin, graphene.ObjectType, ListOfVmsQuery):
+class PoolQuery(UserQueries, Resources, PoolMixin, PoolWizardMixin, graphene.ObjectType, ListOfVmsQuery):
     pass
 
 

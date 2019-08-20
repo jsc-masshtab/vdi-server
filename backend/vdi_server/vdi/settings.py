@@ -5,6 +5,7 @@ class Settings(SettingsDict):
     debug = True
     is_dev = True
     controller_ip = '192.168.20.120'
+    print = False
 
 
     pool = {
@@ -13,12 +14,15 @@ class Settings(SettingsDict):
         'total_size': 2,
     }
 
+    secret_key = 'this_is_secret'
+
     jwt = {
         'algorithm': 'HS256',
-        'secret': 'this_is_secret',
+        'secret': secret_key,
         'claims': ['exp'],
         'leeway': 180,
         'verify_exp': True,
+        'expiration_delta': 60 * 30,
     }
 
     credentials = {
@@ -30,10 +34,16 @@ class Settings(SettingsDict):
         'timeout': 5 * 60
     }
 
+    auth_server = {
+        'port': 5000
+    }
+
 
 settings = Settings()
 
 try:
-    from .local_settings import *
+    from .local_settings import settings as local_settings
 except ImportError:
     pass
+
+settings.update(local_settings)

@@ -1,14 +1,17 @@
 
 from vdi.fixtures import (
-    db, image_name, create_template, create_pool, pool_name, pool_settings as fixture_pool_settings,
+    fixt_db, image_name, create_template, create_pool, pool_name, pool_settings as fixture_pool_settings,
     conn, fixt_create_static_pool
 )
 
+from vdi.graphql.pool import RemovePool
+from vdi.graphql.pool import DesktopPoolType
 from vdi.graphql import schema
 from graphql import GraphQLError
 from vdi.pool import Pool
 from vdi.tasks import resources
 from vdi import db
+
 
 import pytest
 import json
@@ -87,9 +90,7 @@ async def test_create_static_pool(fixt_create_static_pool):
     # get pool info
     qu = """{
       pool(id: %i) {
-        settings {
-          initial_size
-        }
+        desktop_pool_type
         state {
           running
           available {
@@ -102,69 +103,35 @@ async def test_create_static_pool(fixt_create_static_pool):
 
     li = res['pool']['state']['available']
     assert len(li) == 2
+    assert res['pool']['desktop_pool_type'] == DesktopPoolType.STATIC.name
 
 
 @pytest.mark.asyncio
-async def test_user_entitlement(fixt_create_static_pool):
-    #
+async def test_remove_and_add_vm_in_static_pool(fixt_create_static_pool):
+
     pool_id = fixt_create_static_pool['id']
+    vms_in_pool_list = fixt_create_static_pool['vms']
+    assert len(vms_in_pool_list) == 2
 
-    # entitle user to pool
-    user_name = "admin"
+    # remove first vm from pool
+    vm_id = vms_in_pool_list[0]['id']
     qu = '''
-    mutation {
-    entitleUsersToPool(pool_id: %i, entitled_users: ["%s"]) {
-      ok
-    }
-    }
-    ''' % (pool_id, user_name)
+      mutation {
+        removeVmsFromStaticPool(pool_id: %i, vm_ids: ["%s"]){
+          ok
+        }
+      }''' % (pool_id, vm_id)
     res = await schema.exec(qu)
-    print('test_res', res)
+    assert res['removeVmsFromStaticPool']['ok']
 
-    # remove entitlement
+    # add removed machine back to pool
     qu = '''
-    mutation {
-    removeUserEntitlementsFromPool(pool_id: %i, entitled_users: ["%s"]
-      free_assigned_vms: true
-    ) {
-      ok
-    }
-    }
-    ''' % (pool_id, user_name)
+      mutation {
+        addVmsToStaticPool(pool_id: %i, vm_ids: ["%s"]){
+          ok
+        }
+      }''' % (pool_id, vm_id)
     res = await schema.exec(qu)
-    print('res', res)
+    assert res['addVmsToStaticPool']['ok']
 
 
-@pytest.mark.asyncio
-async def test_assign_vm_to_user(fixt_create_static_pool):
-    #
-    pool_id = fixt_create_static_pool['id']
-
-    # get pool data
-    qu = '''
-    query{
-    pool(id: %i){
-      vms{
-        id
-      }
-    }
-    }
-    ''' % pool_id
-    res = await schema.exec(qu)
-    print('res', res)
-
-    # assign vm to user
-    vm_id = res['pool']['vms'][0]['id']
-    username = 'admin'
-    qu = '''
-    mutation { 
-    assignVmToUser(vm_id: "%s", username: "%s") {
-      ok
-      error
-    }
-    }
-    ''' % (vm_id, username)
-    res = await schema.exec(qu)
-
-    #assert res['ok']
-    #assert res['errors'] == 'null'

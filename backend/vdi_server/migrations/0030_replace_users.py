@@ -2,9 +2,6 @@
 from vdi.db import db
 from vdi.hashers import make_password
 
-import itertools
-from functools import reduce
-import operator as op
 
 from classy_async import wait_all
 
@@ -31,6 +28,8 @@ async def insert(user):
 
 
 async def run():
+    async with db.connect() as conn:
+        await conn.execute('delete from public.user')
     tasks = [
         insert(user) for user in users
     ]

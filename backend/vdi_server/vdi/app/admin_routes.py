@@ -5,11 +5,13 @@ from starlette.graphql import (
     GraphQLApp as _GraphQLApp,
     Request, Response, PlainTextResponse, status, BackgroundTasks, JSONResponse, format_graphql_error
 )
+from starlette.authentication import UnauthenticatedUser
 from vdi.graphql.schema import schema
 from graphql.execution.executors.asyncio import AsyncioExecutor
 
 from vdi.errors import BackendError
 from vdi.log import RequestsLog
+from vdi.app import Request
 
 def get_from_chain(ex, kind, limit=5):
     """

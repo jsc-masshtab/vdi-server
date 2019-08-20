@@ -1,18 +1,14 @@
 import asyncio
 import json
-import urllib
 import uuid
 from dataclasses import dataclass
 
 from cached_property import cached_property as cached
-from classy_async import Task, Awaitable, TaskTimeout
-
-from . import disk
-from .base import Token, UrlFetcher
-from .client import HttpClient
-from .ws import WsConnection
 
 from vdi.errors import NotFound, FetchException, BadRequest
+from .base import Token, UrlFetcher, DiscoverController, Task
+from .client import HttpClient
+from .ws import WsConnection
 
 
 @dataclass()
@@ -88,22 +84,33 @@ class CopyDomain(UrlFetcher):
         self.task_id = resp['_task']['id']
         await self.wait_message(ws)
         info = await info_task
+
         return {
             'id': self.new_domain_id,
             'template': info,
             'verbose_name': self.domain_name,
         }
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        if isinstance(exc_val, FetchException) and exc_val.http_error.code == 400:
-            raise BadRequest(exc_val) from exc_val
+
+    def on_fetch_failed(self, ex, code):
+        if code == 400:
+            raise BadRequest(ex) from ex
 
     def check_created(self, msg):
         obj = msg['object']
-        if obj['parent'] == self.task_id:
-            if obj['status'] == 'SUCCESS' and obj['name'].startswith('Создание виртуальной машины'):
-                entities = {v: k for k, v in obj['entities'].items()}
-                self.new_domain_id = entities['domain']
+        if obj['parent'] != self.task_id:
+            return
+
+        def check_name(name):
+            if name.startswith('Создание виртуальной машины'):
+                return True
+            if all(word in name.lower() for word in ['creating', 'virtual', 'machine']):
+                return True
+            return False
+
+        if obj['status'] == 'SUCCESS' and check_name(obj['name']):
+            entities = {v: k for k, v in obj['entities'].items()}
+            self.new_domain_id = entities['domain']
 
     def is_done(self, msg):
         if self.new_domain_id is None:
@@ -138,19 +145,23 @@ class DropDomain(UrlFetcher):
     def body(self):
         return json.dumps({'full': self.full})
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        if isinstance(exc_val, FetchException) and exc_val.code == 404:
-            raise NotFound("Виртуальная машина не найдена") from exc_val
+    def on_fetch_failed(self, ex, code):
+        if code == 404:
+            raise NotFound("Виртуальная машина не найдена") from ex
 
 
 
 @dataclass()
 class ListAllVms(Task):
     controller_ip: str
+    node_id: str = None
 
     @cached
     def url(self):
-        return f"http://{self.controller_ip}/api/domains/"
+        url = f"http://{self.controller_ip}/api/domains/"
+        if self.node_id:
+            url = f'{url}?node={self.node_id}'
+        return url
 
     async def run(self):
         token = await Token(controller_ip=self.controller_ip)
@@ -180,19 +191,38 @@ class ListTemplates(ListAllVms):
 
 
 @dataclass()
-class GetDomainInfo(UrlFetcher):
+class GetDomainInfo(DiscoverController):
     """
     Tmp task
     Ensure vm is on a
     """
 
     domain_id: str
-    controller_ip: str
+    controller_ip: str = None
 
     @cached
     def url(self):
         return f"http://{self.controller_ip}/api/domains/{self.domain_id}/"
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        if isinstance(exc_val, FetchException) and exc_val.code == 404:
-            raise NotFound("Виртуальная машина не найдена") from exc_val
+    def on_fetch_failed(self, ex, code):
+        if code == 404:
+            raise NotFound("Виртуальная машина не найдена") from ex
+
+
+@dataclass()
+class GetVdisks(DiscoverController):
+    domain_id: str
+    controller_ip: str = None
+
+    async def run(self):
+        resp = await super().run()
+        if not self.controller_ip:
+            return resp
+        return resp['results']
+
+
+    @cached
+    def url(self):
+        return f'http://{self.controller_ip}/api/vdisks/?domain={self.domain_id}'
+
+

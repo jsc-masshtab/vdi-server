@@ -7,19 +7,22 @@ from ..tasks.vm import ListTemplates
 from ..tasks.vm import ListVms
 from ..tasks.resources import DiscoverControllers
 from .pool import VmType, TemplateType
-from vdi.tasks.resources import DiscoverController
-from vdi.graphql.resources import NodeType
 
-from vdi.errors import SimpleError
+from vdi.tasks.resources import DiscoverControllerIp
+from vdi.graphql.resources import NodeType, ControllerType
+
+
+from vdi.utils import print
+from vdi.errors import SimpleError, FieldError
+
 
 
 class AssignVmToUser(graphene.Mutation):
     class Arguments:
-        vm_id = graphene.String()
-        username = graphene.String()
+        vm_id = graphene.ID(required=True)
+        username = graphene.String(required=True)
 
     ok = graphene.Boolean()
-    error = graphene.String()
 
     async def mutate(self, _info, vm_id, username):
         async with db.connect() as conn:
@@ -28,10 +31,8 @@ class AssignVmToUser(graphene.Mutation):
             pool_ids = await conn.fetch(*qu)
 
             if not pool_ids:
-                return {
-                    'ok': False,
-                    'error': 'Requested vm doesnt belong to any pool'
-                }
+                # Requested vm doesnt belong to any pool
+                raise FieldError(vm_id=['ВМ не находится ни в одном из пулов'])
             else:
                 [(pool_id,)] = pool_ids
                 print('AssignVmToUser::mutate pool_id', pool_id)
@@ -40,10 +41,8 @@ class AssignVmToUser(graphene.Mutation):
             qu = f'SELECT * from pools_users WHERE pool_id = $1 AND username = $2', pool_id, username
             pools_users_data = await conn.fetch(*qu)
             if not pools_users_data:
-                return {
-                    'ok': False,
-                    'error': 'Requested user is not entitled to the pool the requested vm belong to'
-                }
+                # Requested user is not entitled to the pool the requested vm belong to
+                raise FieldError(vm_id=['У пользователя нет прав на использование пула, которому принадлежит ВМ'])
 
             # another vm in the pool may have this user as owner. Remove assignment
             qu = f'UPDATE vm SET username = NULL WHERE pool_id = $1 AND username = $2', pool_id, username
@@ -54,26 +53,29 @@ class AssignVmToUser(graphene.Mutation):
             await conn.fetch(*qu)
 
         return {
-            'ok': True,
-            'error': 'null'
+            'ok': True
         }
 
 
-class RemoveAssignedVmFromUser(graphene.Mutation):
+class FreeVmFromUser(graphene.Mutation):
     class Arguments:
-        vm_id = graphene.String()
-        username = graphene.String()
+        vm_id = graphene.ID(required=True)
 
     ok = graphene.Boolean()
 
-    async def mutate(self, _info, vm_id, username):
+    async def mutate(self, _info, vm_id):
         async with db.connect() as conn:
-            qu = f'UPDATE vm SET username = NULL WHERE id = $1 AND username = $2', vm_id, username
+            # check if vm exists
+            qu = f'SELECT * from vm WHERE id = $1', vm_id
+            vm_data = await conn.fetch(*qu)
+            if not vm_data:
+                raise FieldError(vm_id=['ВМ с заданным id не существует'])
+            # free vm from user
+            qu = f'UPDATE vm SET username = NULL WHERE id = $1', vm_id
             await conn.fetch(*qu)
 
         return {
-            'ok': True,
-            'error': 'null'
+            'ok': True
         }
 
 
@@ -136,10 +138,11 @@ class ListOfVmsQuery:
         print('ListOfVmsQuery::resolve_vms_on_veil: vm_ids_in_pool', vm_ids_in_pools)
 
         # get all vms from veil
-        controller_ip = await DiscoverController(cluster_id=cluster_id, node_id=node_id)
+        controller_ip = await DiscoverControllerIp(cluster_id=cluster_id, node_id=node_id)
         print('ListOfVmsQuery::resolve_vms_on_veil: controller_ip', controller_ip)
         all_vms = await ListVms(controller_ip=controller_ip)
         print('ListOfVmsQuery::resolve_vms_on_veil: all_vms', all_vms)
+
 
         # create list of filtered vm
         def check_if_vm_in_pool(vm):
@@ -157,9 +160,11 @@ class ListOfVmsQuery:
                             if not check_if_vm_in_pool(vm) and vm['node']['id'] == node_id
                             ]
 
+        controller = ControllerType(ip=controller_ip)
+
         vm_type_list = []
         for vm in filtered_vms:
-            node = NodeType(id=node_id)
+            node = NodeType(id=node_id, controller=controller)
             obj = VmType(id=vm['id'], name=vm['verbose_name'], node=node)
             vm_type_list.append(obj)
 
