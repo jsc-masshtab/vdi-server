@@ -16,20 +16,20 @@
     <p *ngIf="error" [@animForm]="error">Все поля обязательны для заполнения!</p>
   </div>
 
-  <div class="form-fields" [formGroup]="chooseTypeForm" *ngIf="step === 'chooseType'" [style.paddingBottom]="'20px'">
+  <div class="form-fields" [formGroup]="chooseTypeForm" *ngIf="step === 'chooseType'" [style.paddingBottom]="'20px'" [style.paddingLeft]="'20px'">
     <label class="field-inline">
-      <fa-icon [icon]="['fas','desktop']" size="m" ></fa-icon>
+      <fa-icon [icon]="['fas','desktop']" size="m" class="icon-pool"></fa-icon>
       <input type="radio" formControlName="type" value="Статический">
       <p class="radio-text">Статический</p>
     </label>
     <label class="field-inline">
-      <fa-icon [icon]="['fas','tv']" size="m" ></fa-icon>
+      <fa-icon [icon]="['fas','tv']" size="m"  class="icon-pool"></fa-icon>
       <input type="radio" formControlName="type" value="Динамический">
       <p class="radio-text">Динамический</p>
     </label>
   </div>
   <div class="form-actions"  *ngIf="step === 'chooseType'">
-     <button type="submit" (click)="send('createPool')" class="form-btn"><span class="action-name">Далее</span></button>
+     <button type="button" (click)="send('createPool')" class="form-btn"><span class="action-name">Далее</span></button>
   </div>
 
 
@@ -117,8 +117,8 @@
   </div>
 
   <div class="form-actions" *ngIf="step === 'createPool'">
-    <button (click)="send('chooseType')" class="form-btn" [style.width]="'49.9%'"><span class="action-name">Назад</span></button>
-    <button  (click)="send('finish-see')" class="form-btn" [style.width]="'49.9%'"><span class="action-name">Далее</span></button>
+    <button (click)="send('chooseType')" class="form-btn width-between"><span class="action-name">Назад</span></button>
+    <button  (click)="send('finish-see')" class="form-btn width-between"><span class="action-name">Далее</span></button>
   </div>
 
 
@@ -127,8 +127,8 @@
     <vdi-table-into [data]="finishPoll" [collection]="collection"></vdi-table-into>
   </div>
   <div class="form-actions" *ngIf="step === 'finish-see'">
-    <button (click)="send('createPool')" class="form-btn" [style.width]="'49.9%'"><span class="action-name" >Назад</span></button>
-    <button (click)="send('finish-ok')" class="form-btn" [style.width]="'49.9%'"><span class="action-name">Cоздать пул</span></button>
+    <button (click)="send('createPool')" class="form-btn width-between" ><span class="action-name" >Назад</span></button>
+    <button (click)="send('finish-ok')" class="form-btn width-between" ><span class="action-name">Cоздать пул</span></button>
   </div>
   
 </div>
