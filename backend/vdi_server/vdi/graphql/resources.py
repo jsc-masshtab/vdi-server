@@ -13,7 +13,7 @@ from ..tasks.vm import ListTemplates, ListVms
 
 from ..tasks.resources import (
     DiscoverControllers, FetchNode, FetchCluster, DiscoverControllerIp, ListClusters,
-    ListDatapools, ListNodes, FetchResourcesUsage
+    ListDatapools, ListNodes, FetchResourcesUsage, CheckController
 )
 
 
@@ -308,6 +308,8 @@ class ControllerType(graphene.ObjectType):
     nodes = graphene.List(NodeType, cluster_id=graphene.String())
     node = graphene.Field(NodeType, id=graphene.String())
 
+    is_online = graphene.Boolean()
+
 
     async def resolve_templates(self, info, cluster_id=None, node_id=None):
         if node_id is not None:
@@ -469,6 +471,10 @@ class ControllerType(graphene.ObjectType):
         obj = self._make_type(NodeType, node)
         obj.controller = self
         return obj
+
+    async def resolve_is_online(self, _info):
+        await CheckController(controller_ip=self.ip)
+        return True
 
 
 class Subscription(graphene.ObjectType):

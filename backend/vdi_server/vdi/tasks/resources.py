@@ -199,3 +199,10 @@ class FetchResourcesUsage(UrlFetcher):
             raise NotFound("Ресурс не найден") from ex
 
 
+@dataclass()
+class CheckController(UrlFetcher):
+    controller_ip: str
+
+    @cached
+    def url(self):
+        return f'http://{self.controller_ip}/api/controllers/check/'
