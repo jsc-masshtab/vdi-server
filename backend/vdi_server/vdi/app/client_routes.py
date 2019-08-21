@@ -1,3 +1,6 @@
+import asyncio
+from websockets.exceptions import ConnectionClosed as WsConnectionClosed
+
 from starlette.authentication import requires
 from starlette.responses import JSONResponse
 from vdi.db import db
@@ -151,3 +154,15 @@ def check(request):
     username = request.user.username
     return JSONResponse({'user': username})
 
+
+@app.websocket_route('/ws/client/vdi_server_check')
+async def websocket_endpoint(websocket):
+
+    await websocket.accept()
+    try:
+        while True:
+            await websocket.send_text('Alive')
+            ws_timeout = 1
+            await asyncio.sleep(ws_timeout)
+    except WsConnectionClosed:
+        pass
