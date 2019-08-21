@@ -49,11 +49,14 @@ class ErrorHandler(_Task):
             return 'async'
         assert not 'allowed both sync and async handlers'
 
-
-
     @asynccontextmanager
-    def async_catch_errors(self):
-        1
+    async def async_catch_errors(self):
+        try:
+            yield
+        except BaseException as ex:
+            if isinstance(ex, FetchException):
+                await self.on_fetch_failed(ex, ex.http_error.code)
+            await self.on_error(ex)
 
     @contextmanager
     def catch_errors(self):
@@ -65,29 +68,15 @@ class ErrorHandler(_Task):
             self.on_error(ex)
 
     async def run(self):
-        with self.catch_errors():
-            return await super().co()
+        handler_type = self.get_error_handler_type()
+        if handler_type == 'sync':
+            with self.catch_errors():
+                return await super().co()
+        elif handler_type == 'async':
+            async with self.async_catch_errors():
+                return await super().co()
         if self._result is not Unset:
             return self._result
-
-    # rerun_cause: str = None
-
-    # def co(self):
-    #     return self.run_and_handle()
-
-    # def needs_rerun(self, cause: str):
-    #     self.rerun_cause = cause
-
-    # async def run_and_handle(self):
-    #     run = super().co()
-    #     with self.catch_errors():
-    #         result = await run
-    #     while self.rerun_cause:
-    #         rerun_cause = self.rerun_cause
-    #         self.rerun_cause = None
-    #         with self.catch_errors():
-    #             result = await self.rerun(rerun_cause)
-    #     return result
 
 
 class Task(ErrorHandler, _Task):
@@ -165,9 +154,7 @@ class Token(Task):
                 expired = datetime.now(timezone.utc) > expires_on
                 if not expired:
                     return token
-                token, expires_on = await RefreshToken(controller_ip=self.controller_ip, token=token)
-            else:
-                token, expires_on = await FetchToken(controller_ip=self.controller_ip)
+            token, expires_on = await FetchToken(controller_ip=self.controller_ip)
             expires_on = self.get_expiration_time(expires_on)
             async with db.connect() as conn:
                 qu = (
@@ -183,7 +170,7 @@ class Token(Task):
 
 
 
-
+# unused
 @dataclass()
 class RefreshToken(Task):
     controller_ip: str
@@ -196,11 +183,9 @@ class RefreshToken(Task):
         data = await http_client.fetch(url, method='POST', body=body)
         return data['token'], data['expires_on']
 
-    async def
-
-    def on_fetch_failed(self, ex, code):
-        if code == SignatureExpired.code and ex.data['non_field_errors'] == [SignatureExpired.message]:
-            await
+    # def on_fetch_failed(self, ex, code):
+    #     if code == SignatureExpired.code and ex.data['non_field_errors'] == [SignatureExpired.message]:
+    #         await
 
 class UrlFetcher(Task):
 

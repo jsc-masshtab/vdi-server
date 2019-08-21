@@ -738,6 +738,7 @@ class AddPoolPermissions(graphene.Mutation):
 
     async def mutate(self, _info, pool_id, users=(), entitled_users=(), roles=()):
         cls = AddPoolPermissions
+        pool_id = int(pool_id)
         users = users or entitled_users
         if users:
             await cls.handle_users(pool_id, users)
@@ -745,9 +746,6 @@ class AddPoolPermissions(graphene.Mutation):
             await cls.handle_roles(pool_id, roles)
         return {'ok': True}
 
-
-class GroupsMixin:
-    addPoolPermission = 1
 
 
 # class AddPoolPermission(graphene.Mutation):
@@ -763,7 +761,7 @@ class GroupsMixin:
 class DropPoolPermissions(graphene.Mutation):
 
     class Arguments:
-        pool_id = graphene.Int()
+        pool_id = graphene.ID()
         users = graphene.List(graphene.ID)
         entitled_users = graphene.List(graphene.ID) # deprecated
         roles = graphene.List(graphene.ID)
@@ -820,6 +818,7 @@ class DropPoolPermissions(graphene.Mutation):
 
     async def mutate(self, _info, pool_id, entitled_users=(), users=(), roles=(), free_assigned_vms=True):
         cls = DropPoolPermissions
+        pool_id = int(pool_id)
         async with db.connect() as conn:
             qu = "select controller_ip from pool where id = $1", pool_id
             [[controller_ip]] = await conn.fetch(*qu)
