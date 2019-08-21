@@ -72,13 +72,15 @@ class PoolType(graphene.ObjectType):
     #TODO rm settings, add controller, cluster, datapool, etc.
 
     id = graphene.Int()
-    template_id = graphene.String(required=True)
+    template_id = graphene.String()
     desktop_pool_type = graphene.Field(DesktopPoolType)
     name = graphene.String()
     settings = graphene.Field(lambda: PoolSettings)
     state = graphene.Field(lambda: PoolState)
     users = graphene.List(UserType)
     vms = graphene.List(lambda: VmType)
+
+
 
     @graphene.Field
     def controller():
@@ -99,6 +101,19 @@ class PoolType(graphene.ObjectType):
         if self.vms:
             # static pool
             return self.vms
+        if not self.settings:
+            await self.resolve_settings(None)
+        if self.settings.desktop_pool_type == DesktopPoolType.STATIC:
+            async with db.connect() as conn:
+                qu = "select id from vm where pool_id = $1", self.id
+                data = await conn.fetch(*qu)
+            vms = []
+            for [vm_id] in data:
+                vm = VmType(id=vm_id)
+                vm.controller_ip = self.controller.ip
+                vm.selections = get_selections(info)
+                vms.append(vm)
+            return vms
         state = self.resolve_state(None)
         vms = await state.resolve_available(info)
         return vms
@@ -107,6 +122,20 @@ class PoolType(graphene.ObjectType):
         if isinstance(self.desktop_pool_type, str):
             return getattr(DesktopPoolType, self.desktop_pool_type)
         return self.desktop_pool_type
+
+    async def resolve_settings(self, info):
+        if self.settings:
+            return self.settings
+        async with db.connect() as conn:
+            fields = "datapool_id, cluster_id, node_id, template_id, " \
+                 "initial_size, reserve_size, controller_ip, desktop_pool_type, " \
+                 "vm_name_template, total_size"
+            qu = f"select {fields} from pool where id = $1", self.id
+            [data] = await conn.fetch(*qu)
+        pool_type = getattr(DesktopPoolType, data['desktop_pool_type'])
+        data = dict(data, desktop_pool_type=pool_type)
+        self.settings = PoolSettings(**data)
+        return self.settings
 
 class VmState(graphene.Enum):
     UNDEFINED = 0
@@ -200,6 +229,11 @@ class VmType(graphene.ObjectType):
         if not self.sql_data:
             return None
         template_id = self.sql_data['template_id']
+        if template_id is None:
+            return None
+            # if self.veil_info is Unset:
+            #     self.veil_info = await self.get_veil_info()
+            #TODO
         if get_selections(info) == ['id']:
             return TemplateType(id=template_id)
         from vdi.tasks.vm import GetDomainInfo
@@ -879,14 +913,15 @@ class PoolMixin:
         if not id:
             id = dic['id']
         async with db.connect() as conn:
-            [(controller_ip,)] = await conn.fetch('select controller_ip from pool where id = $1', id)
+            qu = 'select controller_ip, desktop_pool_type from pool where id = $1', id
+            [[controller_ip, pool_type]] = await conn.fetch(*qu)
         u_fields = get_selections(info, 'users') or ()
         u_fields_joined = ', '.join(f'u.{f}' for f in u_fields)
         if u_fields:
             async with db.connect() as conn:
                 qu = f"""
                 SELECT {u_fields_joined}
-                FROM pools_users JOIN public.user as u ON  pools_users.username = u.username
+                FROM pools_users JOIN public.user as u ON pools_users.username = u.username
                 WHERE pool_id = $1
                 """, id
                 data = await conn.fetch(*qu)
@@ -896,7 +931,9 @@ class PoolMixin:
                 users.append(UserType(**u))
             dic['users'] = users
         from vdi.graphql.resources import ControllerType
-        return PoolType(id=id, **dic, controller=ControllerType(ip=controller_ip))
+        return PoolType(id=id, **dic,
+                        controller=ControllerType(ip=controller_ip),
+                        desktop_pool_type=getattr(DesktopPoolType, pool_type))
 
     #TODO fix users
     #TODO remove this

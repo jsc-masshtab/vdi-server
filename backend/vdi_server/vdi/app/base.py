@@ -15,6 +15,8 @@ app = Starlette(debug=settings.get('debug'))
 
 from vdi.auth import VDIUser
 from vdi.app import Request
+from . import client_routes
+from . import admin_routes
 
 @app.middleware("http")
 async def init_context(request, call_next):

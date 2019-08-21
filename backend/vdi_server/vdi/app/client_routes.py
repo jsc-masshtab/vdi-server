@@ -7,7 +7,6 @@ from vdi.pool import Pool
 from vdi.tasks import thin_client
 from vdi.settings import settings
 from vdi.utils import print
-from ..graphql.pool import DesktopPoolType
 
 from vdi.errors import NotFound
 
@@ -48,6 +47,7 @@ async def get_pools(request):
 
 @app.route('/client/pools/{pool_id}', methods=['GET', 'POST'])
 async def get_vm(request):
+    from vdi.graphql.pool import DesktopPoolType
     user = request.user.username
     pool_id = int(request.path_params['pool_id'])
     async with db.connect() as conn:

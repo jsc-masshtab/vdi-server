@@ -47,12 +47,6 @@ class FetchException(BackendError):
     url: str
     data: dict
 
-    # def __init__(self, *args, **kwargs):
-    #     super().__init__(*args, **kwargs)
-    #     breakpoint()
-    #     if 'signature' in repr(self).lower():
-    #         breakpoint()
-
     @cached
     def code(self):
         return self.http_error.code
