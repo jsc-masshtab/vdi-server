@@ -303,6 +303,10 @@ export class PoolAddComponent implements OnInit {
     if(this.chooseTypeForm.value.type === 'Динамический') {
      this.collection = [
         {
+          title: 'Тип',
+          property: 'type'
+        },
+        {
           title: 'Название',
           property: 'name'
         },
@@ -334,6 +338,10 @@ export class PoolAddComponent implements OnInit {
     } else {
       this.collection = [
         {
+          title: 'Тип',
+          property: 'type'
+        },
+        {
           title: 'Название',
           property: 'name'
         },
@@ -358,7 +366,6 @@ export class PoolAddComponent implements OnInit {
   }
 
   private handlingValidForm(): boolean {
-    console.log('fkfkk');
     if(this.createPoolForm.status === "INVALID") {
       let timer;
       this.error = true;
@@ -395,6 +402,7 @@ export class PoolAddComponent implements OnInit {
 
     if(step === 'createPool') {
       this.step = 'createPool';
+      this.error = false;
 
       this.steps[1].completed = true;
       this.steps[2].completed = false;
@@ -433,10 +441,12 @@ export class PoolAddComponent implements OnInit {
           this.finishPoll['name'] = value.name;
           this.finishPoll['initial_size'] = value.initial_size;
           this.finishPoll['reserve_size'] = value.reserve_size;
+          this.finishPoll['type'] = this.chooseTypeForm.value.type;
         }
   
         if(this.chooseTypeForm.value.type === 'Статический') {
           this.finishPoll['name'] = value.name;
+          this.finishPoll['type'] = this.chooseTypeForm.value.type;
         }
 
       }
