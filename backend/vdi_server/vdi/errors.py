@@ -138,3 +138,8 @@ class AuthError(HttpError):
     code = 403
     message = "Не удалось войти в систему с предоставленными учетными данными."
 
+
+class SignatureExpired(HttpError):
+    code = 400
+    message = "Signature has expired."
+
