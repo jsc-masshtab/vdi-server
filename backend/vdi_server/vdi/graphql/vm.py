@@ -143,7 +143,6 @@ class ListOfVmsQuery:
         all_vms = await ListVms(controller_ip=controller_ip)
         print('ListOfVmsQuery::resolve_vms_on_veil: all_vms', all_vms)
 
-
         # create list of filtered vm
         def check_if_vm_in_pool(vm):
             for vm_id in vm_ids_in_pools:
