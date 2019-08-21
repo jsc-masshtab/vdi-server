@@ -109,7 +109,7 @@ void start_vdi_session()
         printf("%s: Session is already active\n", (char *)__func__);
         return;
     }
-
+    // creae session
     vdiSession.soup_session = soup_session_new();
 
     vdiSession.vdi_username = NULL;
@@ -141,11 +141,21 @@ void stop_vdi_session()
     vdiSession.current_vm_id = VM_ID_UNKNOWN;
 }
 
+SoupSession *get_soup_session()
+{
+    return vdiSession.soup_session;
+}
+
+const gchar *get_vdi_ip()
+{
+    return vdiSession.vdi_ip;
+}
+
 void cancell_pending_requests()
 {
     soup_session_abort(vdiSession.soup_session);
     // sleep to give the async tasks time to stop.
-    // They will stop almost immediately after cancell_pending_requests
+    // They will stop almost immediately after soup_session_abort
     g_usleep(20000);
 }
 

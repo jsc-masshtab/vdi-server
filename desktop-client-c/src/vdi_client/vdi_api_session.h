@@ -61,6 +61,10 @@ typedef struct{
 void start_vdi_session();
 // deinit session
 void stop_vdi_session();
+// get session
+SoupSession *get_soup_session();
+// get vid server ip
+const gchar *get_vdi_ip();
 // cancell pending requests
 void cancell_pending_requests();
 // set vdi session credentials

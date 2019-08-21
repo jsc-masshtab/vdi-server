@@ -9,6 +9,7 @@
 #include "virt-viewer-util.h"
 #include "vdi_manager.h"
 #include "vdi_api_session.h"
+#include "vdi_ws_client.h"
 #include "vdi_pool_widget.h"
 #include "jsonhandler.h"
 
@@ -57,6 +58,7 @@ static void shutdown_loop(GMainLoop *loop);
 
 static void on_get_vdi_pool_data_finished(GObject *source_object, GAsyncResult *res, gpointer user_data);
 static void on_get_vm_from_pool_finished(GObject *source_object, GAsyncResult *res, gpointer user_data);
+static void on_ws_data_from_vdi_received(GBytes *message);
 
 static gboolean on_window_deleted_cb(ConnectionInfo *ci);
 static void on_button_renew_clicked(GtkButton *button, gpointer data);
@@ -302,6 +304,12 @@ static void on_get_vm_from_pool_finished(GObject *source_object G_GNUC_UNUSED,
         g_free(ptr_res);
 }
 
+// ws data callback
+static void on_ws_data_from_vdi_received(GBytes *message G_GNUC_UNUSED)
+{
+    printf("%s\n", (char *)__func__);
+}
+
 /////////////////////////////////// gui elements callbacks//////////////////////////////////////
 // window close callback
 static gboolean on_window_deleted_cb(ConnectionInfo *ci)
@@ -345,7 +353,8 @@ static void on_vm_start_button_clicked(GtkButton *button, gpointer data G_GNUC_U
 }
 
 /////////////////////////////////// main function
-GtkResponseType vdi_manager_dialog(GtkWindow *main_window, gchar **uri, gchar **user G_GNUC_UNUSED, gchar **password)
+GtkResponseType vdi_manager_dialog(GtkWindow *main_window G_GNUC_UNUSED, gchar **uri,
+                                   gchar **user G_GNUC_UNUSED, gchar **password)
 {
     printf("vdi_manager_dialog url %s \n", *uri);
     set_init_values(&vdi_manager);
@@ -388,6 +397,10 @@ GtkResponseType vdi_manager_dialog(GtkWindow *main_window, gchar **uri, gchar **
     // соответствующие кнопки  в скрол области.
     // get pool data
     refresh_vdi_pool_data_async();
+    // start polling if vdi is online
+    VdiWsClient vdi_ws_client;
+    vdi_ws_client.ws_data_received_callback = on_ws_data_from_vdi_received;
+    start_vdi_ws_polling(&vdi_ws_client, get_soup_session(), get_vdi_ip());
 
     // event loop
     vdi_manager.ci.loop = g_main_loop_new(NULL, FALSE);
@@ -397,6 +410,7 @@ GtkResponseType vdi_manager_dialog(GtkWindow *main_window, gchar **uri, gchar **
         *uri = NULL;
 
     // clear
+    stop_vdi_ws_polling(&vdi_ws_client);
     cancell_pending_requests();
     unregister_all_pools();
     g_object_unref(vdi_manager.builder);
