@@ -79,34 +79,70 @@ export class PoolsService  {
         })
     }
 
-    public getPool(id:number): Observable<any> {
+    public type: string;
 
-        return  this.service.watchQuery({
-            query:  gql`  query getPool($id: Int) {
-                        pool(id: $id) {
-                            name
-                            state {
-                                available {
+    public setTypePool(type:string): void {
+        this.type = type;
+    }
+
+    public getTypePool():string {
+        return this.type;
+    }
+
+    public getPool(id:number,type:string): Observable<any> {
+ 
+        if(type === 'AUTOMATED') {
+            return  this.service.watchQuery({
+                query:  gql`  query getPool($id: Int) {
+                                pool(id: $id) {
                                     name
-                                    template {
+                                    desktop_pool_type
+                                    vms {
                                         name
+                                        template {
+                                            name
+                                        }
+                                        state
+                                    }  
+                                    controller {
+                                        ip
                                     }
-                                    node {
-                                        verbose_name
+                                    settings {
+                                        initial_size
+                                        reserve_size 
+                                    } 
+                                }
+                            }`,
+                variables: {
+                    method: 'GET',
+                    id: id
+                }
+            }).valueChanges.pipe(map(data => data.data['pool'])); 
+        }
+
+        if(type === 'STATIC') {
+            return  this.service.watchQuery({
+                query:  gql`  query getPool($id: Int) {
+                                pool(id: $id) {
+                                    name
+                                    desktop_pool_type
+                                    vms {
+                                        name
+                                        state
+                                    }  
+                                    controller {
+                                        ip
                                     }
                                 }
-                            }
-                            settings {
-                                initial_size
-                                reserve_size
-                            }
-                        }
-                    }`,
-            variables: {
-                method: 'GET',
-                id: id
-            }
-        }).valueChanges.pipe(map(data => data.data['pool'])); 
+                            }`,
+                variables: {
+                    method: 'GET',
+                    id: id
+                }
+            }).valueChanges.pipe(map(data => data.data['pool'])); 
+        }
+
+    
     };
     
 

@@ -106,9 +106,10 @@ export class PoolsComponent implements OnInit {
   }
 
   public routeTo(event): void {
+    this.service.setTypePool(event.desktop_pool_type);
     this.router.navigate([`pools/${event.id}`]);
 
-    setTimeout(()=>{
+    setTimeout(() => {
       this.pageHeight = this.pageHeightMin;
     }, 0);
   }
