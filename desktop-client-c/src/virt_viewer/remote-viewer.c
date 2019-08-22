@@ -57,7 +57,7 @@
 #include "vdi_manager.h"
 #include "vdi_api_session.h"
 
-#define  RECONNECT_TIMEOUT 500
+#define RECONNECT_TIMEOUT 1000
 
 extern gboolean opt_manual_mode;
 extern gboolean take_extern_credentials;

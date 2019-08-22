@@ -12,13 +12,26 @@
 typedef void (*WsDataReceivedCallback) (GBytes *message);
 
 typedef struct{
-    SoupWebsocketConnection *soup_websocket_connection;
+    // kind of public
+    SoupSession *soup_session;
     WsDataReceivedCallback ws_data_received_callback;
+
+    // kind of private
+    SoupMessage *ws_msg;
+
+    SoupWebsocketConnection *soup_websocket_connection;
+
+    gboolean is_correctly_closed_flag;
+
+    guint reconnect_timer_descriptor;
+
+    int test_int;
 
 } VdiWsClient;
 
 // pool vdi server if it's online
-void start_vdi_ws_polling(VdiWsClient *ws_vdi_client, SoupSession *soup_session, const gchar *vdi_ip);
+void start_vdi_ws_polling(VdiWsClient *ws_vdi_client, const gchar *vdi_ip,
+                          WsDataReceivedCallback ws_data_received_callback);
 void stop_vdi_ws_polling(VdiWsClient *ws_vdi_client);
 
 #endif // WS_VDI_CLIENT_H

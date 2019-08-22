@@ -173,23 +173,23 @@ static void register_pool(gint64 pool_id, const gchar *pool_name)
 // find a virtual machine widget by id
 static VdiPoolWidget get_vdi_pool_widget_by_id(gint64 searched_id)
 {
-    VdiPoolWidget searchedVdiPoolWidget = {};
+    VdiPoolWidget searched_vdi_pool_widget = {};
     int i;
 
     if (vdi_manager.pool_widgets_array == NULL)
-        return searchedVdiPoolWidget;
+        return searched_vdi_pool_widget;
 
     for (i = 0; i < vdi_manager.pool_widgets_array->len; ++i) {
         VdiPoolWidget vdi_pool_widget = g_array_index(vdi_manager.pool_widgets_array, VdiPoolWidget, i);
 
         gint64 curId = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(vdi_pool_widget.vm_start_button), "pool_id"));
         if(curId == searched_id){
-            searchedVdiPoolWidget = vdi_pool_widget;
+            searched_vdi_pool_widget = vdi_pool_widget;
             break;
         }
     }
 
-    return searchedVdiPoolWidget;
+    return searched_vdi_pool_widget;
 }
 // stop GMainLoop
 static void shutdown_loop(GMainLoop *loop)
@@ -398,9 +398,7 @@ GtkResponseType vdi_manager_dialog(GtkWindow *main_window G_GNUC_UNUSED, gchar *
     // get pool data
     refresh_vdi_pool_data_async();
     // start polling if vdi is online
-    VdiWsClient vdi_ws_client;
-    vdi_ws_client.ws_data_received_callback = on_ws_data_from_vdi_received;
-    start_vdi_ws_polling(&vdi_ws_client, get_soup_session(), get_vdi_ip());
+    start_vdi_ws_polling(vdi_ws_client_ptr(), get_vdi_ip(), on_ws_data_from_vdi_received);
 
     // event loop
     vdi_manager.ci.loop = g_main_loop_new(NULL, FALSE);
@@ -410,7 +408,7 @@ GtkResponseType vdi_manager_dialog(GtkWindow *main_window G_GNUC_UNUSED, gchar *
         *uri = NULL;
 
     // clear
-    stop_vdi_ws_polling(&vdi_ws_client);
+    stop_vdi_ws_polling(vdi_ws_client_ptr());
     cancell_pending_requests();
     unregister_all_pools();
     g_object_unref(vdi_manager.builder);

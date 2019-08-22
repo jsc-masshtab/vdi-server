@@ -111,6 +111,7 @@ void start_vdi_session()
     }
     // creae session
     vdiSession.soup_session = soup_session_new();
+    vdiSession.vdi_ws_client.soup_session = vdiSession.soup_session;
 
     vdiSession.vdi_username = NULL;
     vdiSession.vdi_password = NULL;
@@ -149,6 +150,11 @@ SoupSession *get_soup_session()
 const gchar *get_vdi_ip()
 {
     return vdiSession.vdi_ip;
+}
+
+VdiWsClient *vdi_ws_client_ptr()
+{
+    return &vdiSession.vdi_ws_client;
 }
 
 void cancell_pending_requests()
