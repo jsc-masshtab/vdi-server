@@ -10,6 +10,9 @@
 #include <libsoup/soup-session.h>
 #include <libsoup/soup-message.h>
 
+#include "vdi_ws_client.h"
+
+
 #define VM_ID_UNKNOWN -1
 
 // vm operational system
@@ -46,6 +49,8 @@ typedef struct{
 
     gint64 current_vm_id;
 
+    VdiWsClient vdi_ws_client;
+
 } VdiSession;
 
 // Data which passed to api_call
@@ -61,6 +66,12 @@ typedef struct{
 void start_vdi_session();
 // deinit session
 void stop_vdi_session();
+// get session
+SoupSession *get_soup_session();
+// get vid server ip
+const gchar *get_vdi_ip();
+// get ws client
+VdiWsClient *vdi_ws_client_ptr();
 // cancell pending requests
 void cancell_pending_requests();
 // set vdi session credentials

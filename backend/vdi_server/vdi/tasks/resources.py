@@ -182,3 +182,27 @@ class DiscoverControllers(Task):
         if self.return_broken:
             return connected, broken
         return connected
+
+
+@dataclass()
+class FetchResourcesUsage(UrlFetcher):
+    controller_ip: str
+    resource_category_name: str  # clusters   nodes
+    resource_id: str
+
+    @cached
+    def url(self):
+        return f'http://{self.controller_ip}/api/{self.resource_category_name}/{self.resource_id}/usage/'
+
+    def on_fetch_failed(self, ex, code):
+        if code == 404:
+            raise NotFound("Ресурс не найден") from ex
+
+
+@dataclass()
+class CheckController(UrlFetcher):
+    controller_ip: str
+
+    @cached
+    def url(self):
+        return f'http://{self.controller_ip}/api/controllers/check/'

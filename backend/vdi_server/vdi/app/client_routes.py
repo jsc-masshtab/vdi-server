@@ -1,3 +1,6 @@
+import asyncio
+from websockets.exceptions import ConnectionClosed as WsConnectionClosed
+
 from starlette.authentication import requires
 from starlette.responses import JSONResponse
 
@@ -160,3 +163,15 @@ async def auth(request):
     data = await fetch_token(**params)
     return JSONResponse({'token': data['access_token']})
 
+
+@app.websocket_route('/ws/client/vdi_server_check')
+async def vdi_online_ws_endpoint(websocket):
+
+    await websocket.accept()
+    try:
+        while True:
+            await websocket.send_bytes(b"1")
+            ws_timeout = 1
+            await asyncio.sleep(ws_timeout)
+    except WsConnectionClosed:
+        pass
