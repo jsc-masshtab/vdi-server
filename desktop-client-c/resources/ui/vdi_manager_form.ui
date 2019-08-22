@@ -42,9 +42,10 @@
               </packing>
             </child>
             <child>
-              <object class="GtkSpinner" id="response_wait_spinner">
+              <object class="GtkLabel" id="label_vdi_online">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
+                <property name="label" translatable="yes">VDI сервер недоступен</property>
               </object>
               <packing>
                 <property name="expand">False</property>
@@ -63,7 +64,7 @@
               <packing>
                 <property name="expand">False</property>
                 <property name="fill">True</property>
-                <property name="position">2</property>
+                <property name="position">3</property>
               </packing>
             </child>
           </object>

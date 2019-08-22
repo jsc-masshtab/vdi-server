@@ -2,7 +2,7 @@
 
 #include "vdi_ws_client.h"
 
-#define RECONNECT_TIMEOUT 1500
+#define RECONNECT_TIMEOUT 2000
 
 // static functions declarations
 static void ws_message_received(SoupWebsocketConnection *self G_GNUC_UNUSED, gint type G_GNUC_UNUSED,
@@ -17,17 +17,18 @@ static void remove_recconect_timer(VdiWsClient *vdi_ws_client);
 // implementations
 
 static void ws_message_received(SoupWebsocketConnection *self G_GNUC_UNUSED, gint type G_GNUC_UNUSED,
-                                GBytes *message,  gpointer user_data)
+                                GBytes *message G_GNUC_UNUSED,  gpointer user_data)
 {
     VdiWsClient *vdi_ws_client = user_data;
-    printf("%s %i\n", (char *)__func__, vdi_ws_client->test_int);
-    vdi_ws_client->ws_data_received_callback(message);
+    //printf("%s %i\n", (char *)__func__, vdi_ws_client->test_int);
+    vdi_ws_client->ws_data_received_callback(TRUE);
 }
 
 static void ws_closed(SoupWebsocketConnection *self G_GNUC_UNUSED, gpointer user_data)
 {
     VdiWsClient *vdi_ws_client = user_data;
-    printf("%s %i\n", (char *)__func__, vdi_ws_client->test_int);
+    //printf("%s %i\n", (char *)__func__, vdi_ws_client->test_int);
+    vdi_ws_client->ws_data_received_callback(FALSE);
 
     // if web socket is not closed correctly then try to reconnect
     if(!vdi_ws_client->is_correctly_closed_flag) {
@@ -38,13 +39,15 @@ static void ws_closed(SoupWebsocketConnection *self G_GNUC_UNUSED, gpointer user
 static void connection_attempt_resault(GObject *object, GAsyncResult *result, gpointer user_data)
 {
     VdiWsClient *vdi_ws_client = user_data;
-    printf("%s %i\n", (char *)__func__, vdi_ws_client->test_int);
+    //printf("%s %i\n", (char *)__func__, vdi_ws_client->test_int);
     GError *error = NULL;
     vdi_ws_client->soup_websocket_connection =
             soup_session_websocket_connect_finish(SOUP_SESSION (object), result, &error);
 
+    // failed
     if (vdi_ws_client->soup_websocket_connection == NULL) {
         printf("%s websocket error: %s\n", (char *)__func__, error->message);
+        vdi_ws_client->ws_data_received_callback(FALSE);
 
         // try to reconnect
         try_to_connect_deffered(vdi_ws_client);
@@ -63,13 +66,17 @@ static gboolean try_to_connect(VdiWsClient *vdi_ws_client)
     remove_recconect_timer(vdi_ws_client);
 
     printf("%s\n", (char *)__func__);
-    if (vdi_ws_client->ws_msg == NULL)
-        return FALSE;
 
     vdi_ws_client->is_correctly_closed_flag = FALSE;
     vdi_ws_client->soup_websocket_connection = NULL;
-    soup_session_websocket_connect_async(vdi_ws_client->soup_session, vdi_ws_client->ws_msg,
+    SoupMessage *ws_msg = soup_message_new("GET", vdi_ws_client->vdi_url);
+    if (ws_msg == NULL)
+        return FALSE;
+
+    soup_session_websocket_connect_async(vdi_ws_client->soup_session, ws_msg,
                              NULL, NULL, NULL, connection_attempt_resault, vdi_ws_client);
+
+    g_object_unref(ws_msg);
 
     return FALSE;
 }
@@ -88,18 +95,22 @@ static void remove_recconect_timer(VdiWsClient *vdi_ws_client)
     vdi_ws_client->reconnect_timer_descriptor = 0;
 }
 
+void init_vdi_ws_client(VdiWsClient *ws_vdi_client)
+{
+
+}
+void deinit_vdi_ws_client(VdiWsClient *ws_vdi_client)
+{
+
+}
+
 void start_vdi_ws_polling(VdiWsClient *vdi_ws_client, const gchar *vdi_ip,
                           WsDataReceivedCallback ws_data_received_callback)
 {
     vdi_ws_client->ws_data_received_callback = ws_data_received_callback;
     vdi_ws_client->reconnect_timer_descriptor = 0;
-    vdi_ws_client->test_int = 666;// temp trash test
-
-    gchar *url = g_strdup_printf ("ws://%s/ws/client/vdi_server_check", vdi_ip);
-    vdi_ws_client->ws_msg = soup_message_new("GET", url);
-    g_free (url);
-    if (vdi_ws_client->ws_msg == NULL)
-        return;
+    //vdi_ws_client->test_int = 666;// temp trash test
+    vdi_ws_client->vdi_url = g_strdup_printf ("ws://%s/ws/client/vdi_server_check", vdi_ip);
 
     // start reconnect oneshot timer
     try_to_connect(vdi_ws_client);
@@ -114,6 +125,5 @@ void stop_vdi_ws_polling(VdiWsClient *vdi_ws_client)
     if(vdi_ws_client->soup_websocket_connection)
         soup_websocket_connection_close(vdi_ws_client->soup_websocket_connection, 0, NULL);
 
-    if(vdi_ws_client->ws_msg)
-        g_object_unref(vdi_ws_client->ws_msg);
+    g_free(vdi_ws_client->vdi_url);
 }

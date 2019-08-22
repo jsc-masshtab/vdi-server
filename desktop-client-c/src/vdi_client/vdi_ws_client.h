@@ -9,7 +9,7 @@
 #include <libsoup/soup-session.h>
 #include <libsoup/soup-message.h>
 
-typedef void (*WsDataReceivedCallback) (GBytes *message);
+typedef void (*WsDataReceivedCallback) (gboolean is_vdi_online);
 
 typedef struct{
     // kind of public
@@ -17,7 +17,8 @@ typedef struct{
     WsDataReceivedCallback ws_data_received_callback;
 
     // kind of private
-    SoupMessage *ws_msg;
+    //SoupMessage *ws_msg;
+    gchar *vdi_url;
 
     SoupWebsocketConnection *soup_websocket_connection;
 
@@ -30,6 +31,8 @@ typedef struct{
 } VdiWsClient;
 
 // pool vdi server if it's online
+void init_vdi_ws_client(VdiWsClient *ws_vdi_client);
+void deinit_vdi_ws_client(VdiWsClient *ws_vdi_client);
 void start_vdi_ws_polling(VdiWsClient *ws_vdi_client, const gchar *vdi_ip,
                           WsDataReceivedCallback ws_data_received_callback);
 void stop_vdi_ws_polling(VdiWsClient *ws_vdi_client);

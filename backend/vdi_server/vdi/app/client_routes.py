@@ -156,12 +156,12 @@ def check(request):
 
 
 @app.websocket_route('/ws/client/vdi_server_check')
-async def websocket_endpoint(websocket):
+async def vdi_online_ws_endpoint(websocket):
 
     await websocket.accept()
     try:
         while True:
-            await websocket.send_text('Alive')
+            await websocket.send_bytes(b"1")
             ws_timeout = 1
             await asyncio.sleep(ws_timeout)
     except WsConnectionClosed:

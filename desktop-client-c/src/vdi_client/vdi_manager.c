@@ -36,6 +36,7 @@ typedef struct{
     GtkWidget *gtk_flow_box;
     GtkWidget *status_label;
     GtkWidget *main_vm_spinner;
+    GtkWidget *label_vdi_online;
 
     GArray *pool_widgets_array;
 
@@ -48,7 +49,7 @@ typedef struct{
 static VdiManager vdi_manager;
 
 // functions declarations
-static void set_init_values(VdiManager *vdi_manager_ptr);
+static void set_init_values();
 static void set_vdi_client_state(VdiClientState vdi_client_state, const gchar *message, gboolean error_message);
 static void refresh_vdi_pool_data_async();
 static void unregister_all_pools();
@@ -58,7 +59,7 @@ static void shutdown_loop(GMainLoop *loop);
 
 static void on_get_vdi_pool_data_finished(GObject *source_object, GAsyncResult *res, gpointer user_data);
 static void on_get_vm_from_pool_finished(GObject *source_object, GAsyncResult *res, gpointer user_data);
-static void on_ws_data_from_vdi_received(GBytes *message);
+static void on_ws_data_from_vdi_received(gboolean is_vdi_online);
 
 static gboolean on_window_deleted_cb(ConnectionInfo *ci);
 static void on_button_renew_clicked(GtkButton *button, gpointer data);
@@ -68,27 +69,23 @@ static void on_vm_start_button_clicked(GtkButton *button , gpointer data);
 
 /////////////////////////////////// work functions//////////////////////////////////////
 //  set init values for  VdiManager structure
-static void set_init_values(VdiManager *vdi_manager_ptr)
+static void set_init_values()
 {
-    vdi_manager_ptr->builder = NULL;
+    vdi_manager.builder = NULL;
 
-    vdi_manager_ptr->window = NULL;  
-    vdi_manager_ptr->button_quit = NULL;
-    vdi_manager_ptr->vm_main_box = NULL;
-    vdi_manager_ptr->button_renew = NULL;
-    vdi_manager_ptr->gtk_flow_box = NULL;
-    vdi_manager_ptr->status_label = NULL;
-    vdi_manager_ptr->main_vm_spinner = NULL;
+    vdi_manager.window = NULL;
+    vdi_manager.button_quit = NULL;
+    vdi_manager.vm_main_box = NULL;
+    vdi_manager.button_renew = NULL;
+    vdi_manager.gtk_flow_box = NULL;
+    vdi_manager.status_label = NULL;
+    vdi_manager.main_vm_spinner = NULL;
+    vdi_manager.label_vdi_online = NULL;
 
-    vdi_manager_ptr->pool_widgets_array = NULL;
+    vdi_manager.pool_widgets_array = NULL;
 
-    vdi_manager_ptr->url_ptr = NULL;
-    vdi_manager_ptr->password_ptr = NULL;
-
-    vdi_manager_ptr->ci.response = FALSE;
-    vdi_manager_ptr->ci.loop = NULL;
-    vdi_manager_ptr->ci.entry = NULL;
-    vdi_manager_ptr->ci.dialog_window_response = GTK_RESPONSE_CANCEL;
+    vdi_manager.url_ptr = NULL;
+    vdi_manager.password_ptr = NULL;
 }
 // Set GUI state
 static void set_vdi_client_state(VdiClientState vdi_client_state, const gchar *message, gboolean error_message)
@@ -304,10 +301,22 @@ static void on_get_vm_from_pool_finished(GObject *source_object G_GNUC_UNUSED,
         g_free(ptr_res);
 }
 
-// ws data callback
-static void on_ws_data_from_vdi_received(GBytes *message G_GNUC_UNUSED)
+// ws data callback    "<span color=\"red\">%s</span>"
+static void on_ws_data_from_vdi_received(gboolean is_vdi_online)
 {
-    printf("%s\n", (char *)__func__);
+    //printf("%s\n", (char *)__func__);
+    gchar *message;
+    if (vdi_manager.label_vdi_online){
+        if (is_vdi_online){
+            message = g_strdup("<span background=\"green\" color=\"white\">VDI сервер доступен</span>");
+        }
+        else{
+            message = g_strdup("<span background=\"red\" color=\"white\">VDI сервер недоступен</span>");
+        }
+
+        gtk_label_set_markup(GTK_LABEL (vdi_manager.label_vdi_online), message);
+        g_free(message);
+    }
 }
 
 /////////////////////////////////// gui elements callbacks//////////////////////////////////////
@@ -357,7 +366,11 @@ GtkResponseType vdi_manager_dialog(GtkWindow *main_window G_GNUC_UNUSED, gchar *
                                    gchar **user G_GNUC_UNUSED, gchar **password)
 {
     printf("vdi_manager_dialog url %s \n", *uri);
-    set_init_values(&vdi_manager);
+    set_init_values();
+    vdi_manager.ci.response = FALSE;
+    vdi_manager.ci.loop = NULL;
+    vdi_manager.ci.entry = NULL;
+    vdi_manager.ci.dialog_window_response = GTK_RESPONSE_CANCEL;
     vdi_manager.url_ptr = uri;
     vdi_manager.password_ptr = password;
     take_extern_credentials = TRUE;
@@ -369,7 +382,7 @@ GtkResponseType vdi_manager_dialog(GtkWindow *main_window G_GNUC_UNUSED, gchar *
     vdi_manager.window = GTK_WIDGET(gtk_builder_get_object(vdi_manager.builder, "vdi-main-window"));
 
     //gtk_window_set_transient_for(GTK_WINDOW(vdi_manager.window), main_window);
-    gtk_window_set_default_size(GTK_WINDOW(vdi_manager.window), 500, 500);
+    gtk_window_set_default_size(GTK_WINDOW(vdi_manager.window), 650, 500);
 
     vdi_manager.button_renew = GTK_WIDGET(gtk_builder_get_object(vdi_manager.builder, "button-renew"));
 
@@ -384,6 +397,7 @@ GtkResponseType vdi_manager_dialog(GtkWindow *main_window G_GNUC_UNUSED, gchar *
     gtk_box_pack_start(GTK_BOX(vdi_manager.vm_main_box), vdi_manager.gtk_flow_box, FALSE, TRUE, 0);
 
     vdi_manager.main_vm_spinner = GTK_WIDGET(gtk_builder_get_object(vdi_manager.builder, "main_vm_spinner"));
+    vdi_manager.label_vdi_online = GTK_WIDGET(gtk_builder_get_object(vdi_manager.builder, "label_vdi_online"));
 
     // connects
     g_signal_connect_swapped(vdi_manager.window, "delete-event", G_CALLBACK(on_window_deleted_cb), &vdi_manager.ci);
@@ -408,16 +422,12 @@ GtkResponseType vdi_manager_dialog(GtkWindow *main_window G_GNUC_UNUSED, gchar *
         *uri = NULL;
 
     // clear
-    stop_vdi_ws_polling(vdi_ws_client_ptr());
     cancell_pending_requests();
+    stop_vdi_ws_polling(vdi_ws_client_ptr());
     unregister_all_pools();
     g_object_unref(vdi_manager.builder);
     gtk_widget_destroy(vdi_manager.window);
-
-    vdi_manager.button_renew = NULL;
-    vdi_manager.gtk_flow_box = NULL;
-    vdi_manager.status_label = NULL;
-    vdi_manager.main_vm_spinner = NULL;
+    set_init_values();
 
     return vdi_manager.ci.dialog_window_response;
 }
