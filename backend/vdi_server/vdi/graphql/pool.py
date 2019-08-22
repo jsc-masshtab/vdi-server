@@ -932,8 +932,7 @@ class PoolMixin:
             dic['users'] = users
         from vdi.graphql.resources import ControllerType
         return PoolType(id=id, **dic,
-                        controller=ControllerType(ip=controller_ip),
-                        desktop_pool_type=getattr(DesktopPoolType, pool_type))
+                        controller=ControllerType(ip=controller_ip))
 
     #TODO fix users
     #TODO remove this
