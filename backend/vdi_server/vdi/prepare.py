@@ -20,7 +20,6 @@ class FirstTimeToken(Token):
 
 async def add_controller(ip):
     from vdi.graphql.resources import AddController
-    await db.init()
     await AddController._add_controller(ip=ip, set_default=True)
 
 async def add_user(controller_ip, **creds):

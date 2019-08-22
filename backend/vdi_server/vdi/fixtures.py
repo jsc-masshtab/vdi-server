@@ -14,7 +14,7 @@ from vdi.settings import settings
 @pytest.fixture
 async def fixt_db():
     from vdi.db import db
-    await db.init()
+    await db.get_pool()
     return db
 
 
