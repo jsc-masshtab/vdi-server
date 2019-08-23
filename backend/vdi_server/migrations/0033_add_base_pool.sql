@@ -8,4 +8,3 @@ create table base_pool (
         primary key (id)
 );
 
-alter table pool inherit base_pool;

@@ -15,7 +15,7 @@ from vdi.tasks.vm import GetDomainInfo, GetVdisks
 
 from .users import UserType
 from .util import get_selections
-from ..db import db
+from ..db import db, fetch
 from ..pool import Pool
 
 from vdi.errors import SimpleError, FieldError
@@ -87,7 +87,7 @@ class PoolType(graphene.ObjectType):
         from vdi.graphql.resources import ControllerType
         return ControllerType
 
-    sql_fields = ['id', 'template_id', 'initial_size', 'reserve_size', 'name', 'controller_ip', 'desktop_pool_type']
+    sql_fields = ['id', 'template_id', 'name', 'controller_ip', 'desktop_pool_type']
 
     def resolve_state(self, info):
         if self.id not in Pool.instances:
@@ -251,7 +251,6 @@ class VmType(graphene.ObjectType):
 
 
 class PoolSettingsFields(graphene.AbstractType):
-    controller_ip = graphene.String()
     cluster_id = graphene.String()
     datapool_id = graphene.String()
     template_id = graphene.String()
@@ -286,7 +285,9 @@ class PoolState(graphene.ObjectType):
 
     async def resolve_available(self, info):
         async with db.connect() as conn:
-            qu = 'select node_id from dynamic_pool where id = $1', self.pool.id
+            qu = 'select t.node_id ' \
+                 'from dynamic_traits as t join pool as p on t.dynamic_traits_id = p.dynamic_traits ' \
+                 'where p.id = $1', self.pool.id
             data = await conn.fetch(*qu)
             if not data:
                 return []
@@ -425,12 +426,17 @@ class AddPool(graphene.Mutation):
 
         fields = ', '.join(pool.keys())
         values = ', '.join(f'${i+1}' for i in range(len(pool)))
-        #FIXME
-        pool_query = f"INSERT INTO dynamic_pool ({fields}) VALUES ({values}) RETURNING id", *pool.values()
-
-        async with db.connect() as conn:
-            [res] = await conn.fetch(*pool_query)
-        pool['id'] = res['id']
+        #
+        dyn_traits = {
+            k: v for k, v in pool.items() if k in Pool.traits_keys
+        }
+        [[id]] = await insert('dynamic_traits', dyn_traits, returning='id')
+        pool_data = {
+            'dynamic_traits': id,
+            **{k: v for k, v in pool.items() if k in Pool.pool_keys}
+        }
+        [[pool_id]] = await insert('pool', pool_data, returning='id')
+        pool['id'] = pool_id
         ins = Pool(params=pool)
         Pool.instances[pool['id']] = ins
 
@@ -489,6 +495,11 @@ class AddStaticPool(graphene.Mutation):
         vm_ids_list = graphene.List(graphene.String)
         vm_ids = graphene.List(graphene.ID)
 
+        #deprecated
+        datapool_id = graphene.String()
+        cluster_id = graphene.String()
+        node_id = graphene.String()
+
     Output = PoolType
 
     @classmethod
@@ -537,7 +548,7 @@ class AddStaticPool(graphene.Mutation):
             'controller_ip': controller_ip,
             'desktop_pool_type': DesktopPoolType.STATIC.name,
         }
-        [[pool_id]] = await insert('static_pool', pool, returning='id')
+        [[pool_id]] = await insert('pool', pool, returning='id')
         pool['id'] = pool_id
 
         # add vms to the database.
@@ -831,20 +842,13 @@ class DropPoolPermissions(graphene.Mutation):
 
 class PoolMixin:
     pools = graphene.List(PoolType, controller_ip=graphene.String())
-    pool = graphene.Field(PoolType, id=graphene.Int(), name=graphene.String(),
+    pool = graphene.Field(PoolType, id=graphene.Int(),
                           controller_ip=graphene.String())
 
 
-    #TODO wake pools
-
-    async def _select_pool(self, info, id, name):
+    async def _select_pool(self, info, id):
         selections = get_selections(info)
         settings_selections = get_selections(info, 'settings') or []
-        if id:
-            where, param = "WHERE id = $1", id
-        else:
-            assert name
-            where, param = "WHERE name = $1", name
         fields = [
             f for f in selections
             if f in PoolType.sql_fields
@@ -855,27 +859,23 @@ class PoolMixin:
         if not fields and not settings_selections:
             return {}
 
-        qu = f"SELECT {', '.join(fields + settings_selections)} FROM pool {where}", param
+        qu = "select * from pool left join dynamic_traits as t " \
+             "on pool.dynamic_traits = t.dynamic_traits_id " \
+             "where id = $1", id
         async with db.connect() as conn:
             [pool] = await conn.fetch(*qu)
-        dic = {
-            f: pool[f] for f in fields
-        }
+        dic = dict(pool.items())
         settings = {}
         for sel in settings_selections:
             settings[sel] = pool[sel]
         dic['settings'] = PoolSettings(**settings)
         return dic
 
-    async def resolve_pool(self, info, id=None, name=None):
+    async def resolve_pool(self, info, id):
         #TODO will be refactored
 
-        dic = await PoolMixin._select_pool(self, info, id, name)
-        if not id:
-            id = dic['id']
-        async with db.connect() as conn:
-            qu = 'select controller_ip, desktop_pool_type from pool where id = $1', id
-            [[controller_ip, pool_type]] = await conn.fetch(*qu)
+        pool_data = await PoolMixin._select_pool(self, info, id)
+        controller_ip = pool_data['controller_ip']
         u_fields = get_selections(info, 'users') or ()
         u_fields_joined = ', '.join(f'u.{f}' for f in u_fields)
         if u_fields:
@@ -890,11 +890,14 @@ class PoolMixin:
             for u in data:
                 u = dict(zip(u_fields, u))
                 users.append(UserType(**u))
-            dic['users'] = users
+            pool_data['users'] = users
         from vdi.graphql.resources import ControllerType
-        return PoolType(id=id, **dic,
-                        controller=ControllerType(ip=controller_ip),
-                        desktop_pool_type=getattr(DesktopPoolType, pool_type))
+        pool_data['id'] = id
+        pool_data = {
+            k: v for k, v in pool_data.items() if k in PoolType._meta.fields
+        }
+        return PoolType(**pool_data,
+                        controller=ControllerType(ip=controller_ip))
 
     #TODO fix users
     #TODO remove this
@@ -914,7 +917,6 @@ class PoolMixin:
         return map
 
 
-    #FIXME use resolve
     async def resolve_pools(self, info):
         selections = get_selections(info)
         settings_selections = get_selections(info, 'settings') or []
@@ -923,8 +925,9 @@ class PoolMixin:
             if f in PoolType.sql_fields and f != 'id'
         ]
         fields = ['id', 'controller_ip'] + fields
-        #FIXME
-        qu = f"SELECT {', '.join(fields + settings_selections)} FROM dynamic_pool WHERE deleted IS NOT TRUE"
+        qu = "select * " \
+             "from pool left join dynamic_traits as t on pool.dynamic_traits = t.dynamic_traits_id " \
+             "where deleted is not true"
         async with db.connect() as conn:
             pools = await conn.fetch(qu)
 
