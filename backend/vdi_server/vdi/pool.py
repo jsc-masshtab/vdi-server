@@ -5,11 +5,16 @@ import uuid
 from cached_property import cached_property as cached
 from vdi.db import db
 from vdi.tasks import vm
+from vdi.utils import into_words
 
 
 @dataclass()
 class Pool:
     params: dict
+
+    traits_keys = into_words('initial_size reserve_size total_size '
+                             'datapool_id cluster_id node_id vm_name_template')
+    pool_keys = into_words("id name controller_ip desktop_pool_type deleted")
 
     #FIXME use queue only for client
 
@@ -91,10 +96,14 @@ class Pool:
             return cls.instances[pool_id]
         async with db.connect() as conn:
             qu = f"SELECT * from pool where id = $1", pool_id
-            [params] = await conn.fetch(*qu)
-            ins = cls(params=params)
-            cls.instances[pool_id] = ins
-            return ins
+            data = await conn.fetch(*qu)
+        if not data:
+            breakpoint()
+            return None
+        [params] = data
+        ins = cls(params=params)
+        cls.instances[pool_id] = ins
+        return ins
 
 
     async def init(self, id, add_missing=False):

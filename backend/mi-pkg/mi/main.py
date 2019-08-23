@@ -193,19 +193,22 @@ CREATE TABLE migrations (
     def apply_module(self, name):
         import sys
         sys.path.insert(0, str(self.dir.absolute()))
-        m = __import__(name)
+        try:
+            __import__(name)
+        finally:
+            del sys.path[0]
 
-        async def run():
-            from vdi.db import db
-            await db.init()
-            if inspect.iscoroutinefunction(m.run):
-                await m.run()
-            else:
-                m.run()
+        # async def run():
+        #     from vdi.db import db
+        #     await db.init()
+        #     if inspect.iscoroutinefunction(m.run):
+        #         await m.run()
+        #     else:
+        #         m.run()
+        #
+        # asyncio.run(run())
 
-        asyncio.run(run())
 
-        del sys.path[0]
 
     def do_apply(self):
         unapplied = self.get_unapplied_migrations()

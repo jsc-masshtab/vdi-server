@@ -11,7 +11,9 @@ class Unset:
 
 def prepare_insert(item: dict):
     placeholders = ', '.join(f'${i + 1}' for i, _ in enumerate(item))
+    placeholders = f'({placeholders})'
     keys = ', '.join(item.keys())
+    keys = f'({keys})'
     values = list(item.values())
     return keys, placeholders, values
 
@@ -32,20 +34,32 @@ def prepare_bulk_insert(items: List[dict]):
     return keys, placeholders, values
 
 
-async def insert(table: str, item: dict):
+async def insert(table: str, item: dict, returning=None):
     async with db.connect() as conn:
         keys, placeholders, values = prepare_insert(item)
-        qu = f"INSERT INTO {table} {keys} VALUES {placeholders}", *values
-        await conn.execute(*qu)
+        if returning:
+            returning = f' returning {returning}'
+        else:
+            returning = ''
+        qu = f"INSERT INTO {table} {keys} VALUES {placeholders}{returning}", *values
+        return await conn.fetch(*qu)
 
 
-async def bulk_insert(table, items: List[dict]):
+async def bulk_insert(table, items: List[dict], returning: str = None):
+    if returning:
+        returning = f' returning {returning}'
+    else:
+        returning = ''
     async with db.connect() as conn:
         keys, placeholders, values = prepare_bulk_insert(items)
-        qu = f"INSERT INTO {table} {keys} VALUES {placeholders}", *values
-        await conn.execute(*qu)
+        qu = f"INSERT INTO {table} {keys} VALUES {placeholders}{returning}", *values
+        return await conn.fetch(*qu)
 
 
 def print(msg, _print=print):
     if getattr(settings, 'print', False):
         _print(msg)
+
+
+def into_words(s):
+    return [w for w in s.split() if w]

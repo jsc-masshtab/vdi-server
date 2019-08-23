@@ -1,3 +1,4 @@
+import asyncio
 
 from vdi.db import db
 from vdi.hashers import make_password
@@ -34,3 +35,6 @@ async def run():
         insert(user) for user in users
     ]
     await wait_all(*tasks)
+
+
+asyncio.run(run())

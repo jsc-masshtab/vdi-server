@@ -46,7 +46,7 @@ async def debug(request, call_next):
 @app.on_event('startup')
 async def startup():
     g.use_threadlocal(False)
-    await db.init()
+    await db.get_pool()
 
 
 app.add_middleware(AuthenticationMiddleware, backend=JWTAuthenticationBackend())
