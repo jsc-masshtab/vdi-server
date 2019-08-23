@@ -383,6 +383,8 @@ class AddPool(graphene.Mutation):
         reserve_size = graphene.Int()
         total_size = graphene.Int()
         vm_name_template = graphene.String()
+        controller_ip = graphene.String()
+
 
     Output = PoolType
 
@@ -403,7 +405,9 @@ class AddPool(graphene.Mutation):
         }
         pool_settings['desktop_pool_type'] = DesktopPoolType.AUTOMATED.name
         pool = {
-            'name': kwargs['name'], **pool_settings
+            'name': kwargs['name'],
+            'controller_ip': kwargs.get('controller_ip'),
+            **pool_settings
         }
         checker = PoolValidator(pool)
         data_sync = {}
@@ -430,7 +434,7 @@ class AddPool(graphene.Mutation):
         dyn_traits = {
             k: v for k, v in pool.items() if k in Pool.traits_keys
         }
-        [[id]] = await insert('dynamic_traits', dyn_traits, returning='id')
+        [[id]] = await insert('dynamic_traits', dyn_traits, returning='dynamic_traits_id')
         pool_data = {
             'dynamic_traits': id,
             **{k: v for k, v in pool.items() if k in Pool.pool_keys}

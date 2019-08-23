@@ -8,7 +8,7 @@ async def main():
     qu = 'select * from dynamic_pool',
     data = await fetch(*qu)
     traits_keys = into_words('initial_size reserve_size total_size '
-                           'datapool_id cluster_id node_id vm_name_template')
+                             'datapool_id cluster_id node_id vm_name_template')
     traits = [
         {k: pool[k] for k in traits_keys}
         for pool in data
