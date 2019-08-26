@@ -690,6 +690,8 @@ class RemovePool(graphene.Mutation):
         vms = await pool.load_vms()
         vm_ids = [v['id'] for v in vms]
 
+        #FIXME!!!
+
         tasks = [
             vm.DropDomain(id=vm_id, controller_ip=controller_ip)
             for vm_id in vm_ids
