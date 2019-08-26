@@ -141,8 +141,8 @@ class Token(Task):
 
 
     async def run(self):
-        token, expires_on = await self.get_from_db()
         breakpoint()
+        token, expires_on = await self.get_from_db()
         if token:
             expired = datetime.now(timezone.utc) > expires_on
             if not expired:
