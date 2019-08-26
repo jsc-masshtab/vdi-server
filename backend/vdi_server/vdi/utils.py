@@ -46,6 +46,8 @@ async def insert(table: str, item: dict, returning=None):
 
 
 async def bulk_insert(table, items: List[dict], returning: str = None):
+    if not items:
+        return []
     if returning:
         returning = f' returning {returning}'
     else:
