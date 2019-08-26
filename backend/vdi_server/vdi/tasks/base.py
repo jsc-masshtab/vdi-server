@@ -64,7 +64,6 @@ class ErrorHandler(_Task):
         try:
             yield
         except BaseException as ex:
-            breakpoint()
             if isinstance(ex, FetchException):
                 on_fetch_failed = getattr(self, 'on_fetch_failed', None)
                 if on_fetch_failed:
@@ -76,7 +75,10 @@ class ErrorHandler(_Task):
                 return
             raise ex
 
-    async def run(self):
+    def co(self):
+        return self.run_and_catch_errors()
+
+    async def run_and_catch_errors(self):
         handler_type = self.get_error_handler_type()
         if handler_type == 'sync':
             with self.catch_errors():
