@@ -938,6 +938,7 @@ class PoolMixin:
             pools_users = await PoolMixin.get_pools_users_map(self, u_fields)
         items = []
         for pool in pools:
+            pool = dict(pool.items())
             controller_ip = pool['controller_ip']
             pool_type = pool['desktop_pool_type']
             p = {
