@@ -103,7 +103,8 @@ class PoolType(graphene.ObjectType):
             return self.vms
         # if not self.settings:
         #     await self.resolve_settings(None)
-        if self.desktop_pool_type == DesktopPoolType.STATIC:
+        desktop_pool_type = self.resolve_desktop_pool_type(None)
+        if desktop_pool_type == DesktopPoolType.STATIC:
             async with db.connect() as conn:
                 qu = "select id from vm where pool_id = $1", self.id
                 data = await conn.fetch(*qu)
@@ -920,13 +921,6 @@ class PoolMixin:
 
 
     async def resolve_pools(self, info):
-        selections = get_selections(info)
-        # settings_selections = get_selections(info, 'settings') or []
-        # fields = [
-        #     f for f in selections
-        #     if f in PoolType.sql_fields and f != 'id'
-        # ]
-        # fields = ['id', 'controller_ip'] + fields
         qu = "select * " \
              "from pool left join dynamic_traits as t on pool.dynamic_traits = t.dynamic_traits_id " \
              "where deleted is not true"
@@ -948,10 +942,6 @@ class PoolMixin:
                 f: pool[f] for f in pool
                 if f in PoolSettings._meta.fields
             }
-            # for sel in settings_selections:
-            #     settings[sel] = pool[sel]
-            # if settings:
-            #     p['settings'] = PoolSettings(**settings)
             if u_fields:
                 p['users'] = pools_users[id]
             from vdi.graphql.resources import ControllerType
