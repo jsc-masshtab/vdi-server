@@ -673,7 +673,6 @@ class WakePool(graphene.Mutation):
         return WakePool(ok=True)
 
 
-# TODO list of vms
 # TODO delete, drop, remove: use a single word
 
 class RemovePool(graphene.Mutation):
