@@ -108,6 +108,7 @@ class PoolType(graphene.ObjectType):
                 qu = "select id from vm where pool_id = $1", self.id
                 data = await conn.fetch(*qu)
             vms = []
+            breakpoint()
             for [vm_id] in data:
                 vm = VmType(id=vm_id)
                 vm.controller_ip = self.controller.ip
