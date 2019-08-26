@@ -26,6 +26,7 @@ async def run():
         keys, marks, values = prepare_insert(groups.admin)
         qu = f'insert into role ({keys}) values ({marks})', *values
         await conn.execute(*qu)
+    async with db.connect() as conn:
         keys, marks, values = prepare_insert(user_role_m2m.admin)
         qu = f'insert into user_role_m2m ({keys}) values ({marks})', *values
         await conn.execute(*qu)
