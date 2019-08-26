@@ -137,7 +137,7 @@ class Token(Task):
             return True
         except SignatureExpired:
             return False
-        except BaseException:
+        except BaseException as ex:
             breakpoint()
 
     async def run(self):
