@@ -68,7 +68,7 @@ export class BaSelect {
     private isSelect: any[] = [];
 
     private init: boolean = false;
-    private listTrigger: boolean = false;
+    public listTrigger: boolean = false;
 
     private openList(): void {
         if(!this.disabled) {

@@ -45,11 +45,11 @@ export class NodesComponent implements OnInit {
 
   public spinner:boolean = false;
 
-  private pageHeightMinNumber: number = 315;
-	private pageHeightMin: string = '315px';
-	private pageHeightMax: string = '100%';
-  private pageHeight: string = '100%';
-  private pageRollup: boolean = false;
+  public pageHeightMinNumber: number = 315;
+  public pageHeightMin: string = '315px';
+  public pageHeightMax: string = '100%';
+  public pageHeight: string = '100%';
+  public pageRollup: boolean = false;
 
   constructor(private service: NodesService,private router: Router){}
 
@@ -69,7 +69,7 @@ export class NodesComponent implements OnInit {
     this.getNodes();
   }
 
-  private getNodes() {
+  public getNodes() {
     this.spinner = true;
     this.service.getAllNodes().valueChanges.pipe(map(data => data.data.controllers))
       .subscribe( (data) => {
@@ -98,7 +98,7 @@ export class NodesComponent implements OnInit {
     }, 0);
   }
 
-  private componentAdded(): void {
+  public componentAdded(): void {
 		setTimeout(()=> {
 		//	this.routerActivated = true;
 			this.pageHeight = this.pageHeightMin;
@@ -109,7 +109,7 @@ export class NodesComponent implements OnInit {
 		}, 0);
 	}
 
-	private componentRemoved(): void {
+  public componentRemoved(): void {
 		setTimeout(()=> {
 			//this.routerActivated = false;
 			this.pageHeight = this.pageHeightMax;

@@ -1,6 +1,5 @@
 
 <div class="control-panel">
-    
     <div class="crumb">
         <fa-icon [icon]="['fas','building']"></fa-icon>
         <span class="crumb-name">Кластеры</span>
@@ -9,9 +8,7 @@
     <button (click)="getAllClusters()" class="btn-refresh" title="Обновить">
         <fa-icon [icon]="['fas','sync-alt']"></fa-icon>
     </button>
-
 </div>
-
 
 <div class="components-info" #view>
     <div class="component-list" [class.page-wrap]="pageRollup" [class.page-rollup]="pageRollup" [style.height]="pageHeight">

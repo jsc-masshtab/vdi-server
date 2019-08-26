@@ -58,7 +58,7 @@ export class DatapoolsComponent implements OnInit {
     this.getDatapools();
   }
 
-  private getDatapools() {
+  public getDatapools() {
     this.spinner = true;
     this.service.getAllDatapools().valueChanges.pipe(map(data => data.data.controllers))
       .subscribe( (data) => {

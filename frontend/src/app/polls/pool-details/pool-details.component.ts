@@ -4,6 +4,9 @@ import { ActivatedRoute, ParamMap, Router } from '@angular/router';
 import { MatDialog } from '@angular/material';
 import { RemovePoolComponent } from '../remove-pool/remove-pool.component';
 
+interface type_pool {
+  [key: string] : any
+}
 
 @Component({
   selector: 'vdi-pool-details',
@@ -15,7 +18,7 @@ export class PoolDetailsComponent implements OnInit {
 
   public host: boolean = false;
 
-  public pool: {} = {};
+  public pool: type_pool = {};
   public collection_static:any[] = [
     {
       title: 'Название',
@@ -118,7 +121,7 @@ export class PoolDetailsComponent implements OnInit {
   }
 
 
-  private getPool() {
+  public getPool() {
     this.host = false;
     this.into_spinner = true;
     this.service.getPool(this.pool_id,this.pool_type)
