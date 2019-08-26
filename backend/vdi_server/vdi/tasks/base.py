@@ -13,7 +13,7 @@ from dataclasses import dataclass
 from cached_property import cached_property as cached
 from classy_async import Task as _Task, TaskTimeout, wait, g
 from vdi.errors import WsTimeout, FetchException, ControllerNotAccessible, Forbidden, \
-    SimpleError, SignatureExpired, Unauthorized
+    SimpleError, Unauthorized
 from vdi.settings import settings
 from vdi.tasks.client import HttpClient
 
@@ -188,9 +188,6 @@ class RefreshToken(Task):
         data = await http_client.fetch(url, method='POST', body=body)
         return data['token'], data['expires_on']
 
-    # def on_fetch_failed(self, ex, code):
-    #     if code == SignatureExpired.code and ex.data['non_field_errors'] == [SignatureExpired.message]:
-    #         await
 
 class UrlFetcher(Task):
 
