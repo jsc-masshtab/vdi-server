@@ -56,7 +56,8 @@ class ErrorHandler(_Task):
         except BaseException as ex:
             if isinstance(ex, FetchException):
                 await self.on_fetch_failed(ex, ex.http_error.code)
-            await self.on_error(ex)
+            else:
+                await self.on_error(ex)
 
     @contextmanager
     def catch_errors(self):
@@ -65,7 +66,8 @@ class ErrorHandler(_Task):
         except BaseException as ex:
             if isinstance(ex, FetchException):
                 self.on_fetch_failed(ex, ex.http_error.code)
-            self.on_error(ex)
+            else:
+                self.on_error(ex)
 
     async def run(self):
         handler_type = self.get_error_handler_type()
@@ -135,6 +137,8 @@ class Token(Task):
             return True
         except SignatureExpired:
             return False
+        except BaseException:
+            breakpoint()
 
     async def run(self):
         token = await self.fetch_token_from_db()
