@@ -98,7 +98,6 @@ class Pool:
             qu = f"SELECT * from pool where id = $1", pool_id
             data = await conn.fetch(*qu)
         if not data:
-            breakpoint()
             return None
         [params] = data
         ins = cls(params=params)
