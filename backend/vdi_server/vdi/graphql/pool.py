@@ -955,6 +955,7 @@ class PoolMixin:
             if u_fields:
                 p['users'] = pools_users[id]
             from vdi.graphql.resources import ControllerType
+            breakpoint()
             pt = PoolType(**p,
                           settings=PoolSettings(**settings),
                           controller=ControllerType(ip=controller_ip),
