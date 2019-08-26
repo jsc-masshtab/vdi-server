@@ -8,8 +8,8 @@ pipenv install
 echo "vdi_server: applying migrations..."
 pipenv run mi apply
 
-echo "vdi_server: prepare qcow image"
-pipenv run python -m vdi.prepare
+# echo "vdi_server: prepare qcow image"
+# pipenv run python -m vdi.prepare
 
 echo "vdi_server: starting server..."
 pkill uvicorn
