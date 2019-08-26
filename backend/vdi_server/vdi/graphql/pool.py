@@ -921,12 +921,12 @@ class PoolMixin:
 
     async def resolve_pools(self, info):
         selections = get_selections(info)
-        settings_selections = get_selections(info, 'settings') or []
-        fields = [
-            f for f in selections
-            if f in PoolType.sql_fields and f != 'id'
-        ]
-        fields = ['id', 'controller_ip'] + fields
+        # settings_selections = get_selections(info, 'settings') or []
+        # fields = [
+        #     f for f in selections
+        #     if f in PoolType.sql_fields and f != 'id'
+        # ]
+        # fields = ['id', 'controller_ip'] + fields
         qu = "select * " \
              "from pool left join dynamic_traits as t on pool.dynamic_traits = t.dynamic_traits_id " \
              "where deleted is not true"
@@ -938,18 +938,24 @@ class PoolMixin:
             pools_users = await PoolMixin.get_pools_users_map(self, u_fields)
         items = []
         for pool in pools:
+            controller_ip = pool['controller_ip']
+            pool_type = pool['desktop_pool_type']
             p = {
-                f: pool[f] for f in fields
+                f: pool[f] for f in PoolType._meta.fields
             }
-            settings = {}
-            for sel in settings_selections:
-                settings[sel] = pool[sel]
-            if settings:
-                p['settings'] = PoolSettings(**settings)
+            settings = {
+                f: pool[f] for f in PoolSettings._meta.fields
+            }
+            # for sel in settings_selections:
+            #     settings[sel] = pool[sel]
+            # if settings:
+            #     p['settings'] = PoolSettings(**settings)
             if u_fields:
                 p['users'] = pools_users[id]
-            controller_ip = p.pop('controller_ip')
             from vdi.graphql.resources import ControllerType
-            pt = PoolType(**p, controller=ControllerType(ip=controller_ip))
+            pt = PoolType(**p,
+                          settings=PoolSettings(**settings),
+                          controller=ControllerType(ip=controller_ip),
+                          desktop_pool_type=pool_type)
             items.append(pt)
         return items
