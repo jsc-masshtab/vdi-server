@@ -691,6 +691,7 @@ class RemovePool(graphene.Mutation):
         vm_ids = [v['id'] for v in vms]
 
         #FIXME!!!
+        breakpoint()
 
         tasks = [
             vm.DropDomain(id=vm_id, controller_ip=controller_ip)
