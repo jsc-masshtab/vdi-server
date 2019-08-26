@@ -99,10 +99,7 @@ class PoolType(graphene.ObjectType):
 
     async def resolve_vms(self, info):
         if self.vms:
-            # static pool
             return self.vms
-        # if not self.settings:
-        #     await self.resolve_settings(None)
         desktop_pool_type = self.resolve_desktop_pool_type(None)
         if desktop_pool_type == DesktopPoolType.STATIC:
             async with db.connect() as conn:
