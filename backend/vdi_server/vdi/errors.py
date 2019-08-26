@@ -47,6 +47,9 @@ class FetchException(BackendError):
     url: str
     data: dict
 
+    def __init__(self, *args, **kw):
+        breakpoint()
+
     @cached
     def code(self):
         return self.http_error.code
