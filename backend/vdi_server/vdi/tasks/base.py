@@ -145,7 +145,7 @@ class Token(Task):
         try:
             await CheckConnection(controller_ip=self.controller_ip, token=token)
             return True
-        except SignatureExpired:
+        except Unauthorized:
             return False
 
     async def run(self):
@@ -244,10 +244,9 @@ class CheckConnection(UrlFetcher):
         return f"http://{self.controller_ip}/api/controllers/system-time"
 
     def on_fetch_failed(self, ex, code):
-        if code == SignatureExpired.code and ex.data['non_field_errors'] == [SignatureExpired.message]:
-            raise SignatureExpired()
         if code == Unauthorized.code:
-            breakpoint()
+            [message] =  ex.data['non_field_errors']
+            raise Unauthorized(message=message)
         raise ControllerNotAccessible(ip=self.controller_ip) from ex
 
 
