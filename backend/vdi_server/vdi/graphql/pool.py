@@ -690,20 +690,17 @@ class RemovePool(graphene.Mutation):
         vms = await pool.load_vms()
         vm_ids = [v['id'] for v in vms]
 
-        #FIXME!!!
-        breakpoint()
-
-        tasks = [
-            vm.DropDomain(id=vm_id, controller_ip=controller_ip)
-            for vm_id in vm_ids
-        ]
-
         async with db.connect() as conn:
             qu = "update pool set deleted=TRUE where id = $1", pool_id
             await conn.fetch(*qu)
 
-        async for _ in wait(*tasks):
-            pass
+        if pool.params['desktop_pool_type'] == DesktopPoolType.AUTOMATED.name:
+            tasks = [
+                vm.DropDomain(id=vm_id, controller_ip=controller_ip)
+                for vm_id in vm_ids
+            ]
+            async for _ in wait(*tasks):
+                pass
 
         # remove from db
         async with db.connect() as conn:
