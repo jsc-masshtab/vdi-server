@@ -4,6 +4,11 @@ import { map } from 'rxjs/operators';
 import { ActivatedRoute, ParamMap } from '@angular/router';
 import { Router } from '@angular/router';
 
+interface type_node {
+  [key: string] : any
+}
+
+
 @Component({
   selector: 'vdi-node-details',
   templateUrl: './node-details.component.html',
@@ -13,7 +18,7 @@ import { Router } from '@angular/router';
 
 export class NodeDetailsComponent implements OnInit {
 
-  public node: {} = {};
+  public node: type_node = {};
   public templates: [] = [];
   public collection = [
     {
@@ -147,7 +152,7 @@ export class NodeDetailsComponent implements OnInit {
     });
   }
 
-  private getNode() {
+  public getNode() {
     this.spinner = true;
     this.host = false;
     this.service.getNode(this.node_id).valueChanges.pipe(map(data => data.data.node))

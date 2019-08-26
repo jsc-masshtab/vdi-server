@@ -13,12 +13,13 @@ from ..tasks.vm import ListTemplates, ListVms
 
 from ..tasks.resources import (
     DiscoverControllers, FetchNode, FetchCluster, DiscoverControllerIp, ListClusters,
-    ListDatapools, ListNodes
+    ListDatapools, ListNodes, FetchResourcesUsage, CheckController
 )
 
 
 from vdi.errors import FieldError, SimpleError, FetchException
 from vdi.utils import Unset
+
 
 class RequestType(graphene.ObjectType):
     url = graphene.String()
@@ -28,6 +29,11 @@ class RequestType(graphene.ObjectType):
 class DatacenterType(graphene.ObjectType):
     id = graphene.String()
     verbose_name = graphene.String()
+
+
+class ResourcesUsageType(graphene.ObjectType):
+    cpu_used_percent = graphene.Float()
+    mem_used_percent = graphene.Float()
 
 
 class ClusterType(graphene.ObjectType):
@@ -43,6 +49,7 @@ class ClusterType(graphene.ObjectType):
     nodes = graphene.List(lambda: NodeType)
     datapools = graphene.List(lambda: DatapoolType)
     controller = graphene.Field(lambda: ControllerType)
+    resources_usage = graphene.Field(ResourcesUsageType)
 
     async def resolve_nodes(self, info):
         return await self.controller.resolve_nodes(info, cluster_id=self.id)
@@ -56,6 +63,9 @@ class ClusterType(graphene.ObjectType):
     async def resolve_vms(self, info, wild=True):
         return await self.controller.resolve_vms(info, cluster_id=self.id, wild=wild)
 
+    async def resolve_resources_usage(self, _info):
+        return await FetchResourcesUsage(controller_ip=self.controller.ip,
+                                         resource_category_name='clusters', resource_id=self.id)
 
 
 class NodeType(graphene.ObjectType):
@@ -74,6 +84,7 @@ class NodeType(graphene.ObjectType):
     cluster = graphene.Field(lambda: ClusterType)
     datapools = graphene.List(lambda: DatapoolType)
     controller = graphene.Field(lambda: ControllerType)
+    resources_usage = graphene.Field(ResourcesUsageType)
 
     veil_info: dict = Unset
 
@@ -96,8 +107,6 @@ class NodeType(graphene.ObjectType):
     async def resolve_vms(self, info, wild=True):
         return await self.controller.resolve_vms(info, node_id=self.id, wild=wild)
 
-
-
     async def resolve_cluster(self, info):
         if self.veil_info is Unset:
             self.veil_info = await self.get_veil_info()
@@ -116,6 +125,9 @@ class NodeType(graphene.ObjectType):
         return DatacenterType(id=self.veil_info['datacenter_id'],
                               verbose_name=self.veil_info['datacenter_name'])
 
+    async def resolve_resources_usage(self, _info):
+        return await FetchResourcesUsage(controller_ip=self.controller.ip,
+                                         resource_category_name='nodes', resource_id=self.id)
 
 
 class DatapoolType(graphene.ObjectType):
@@ -296,6 +308,8 @@ class ControllerType(graphene.ObjectType):
     nodes = graphene.List(NodeType, cluster_id=graphene.String())
     node = graphene.Field(NodeType, id=graphene.String())
 
+    is_online = graphene.Boolean()
+
 
     async def resolve_templates(self, info, cluster_id=None, node_id=None):
         if node_id is not None:
@@ -457,3 +471,22 @@ class ControllerType(graphene.ObjectType):
         obj = self._make_type(NodeType, node)
         obj.controller = self
         return obj
+
+    async def resolve_is_online(self, _info):
+        await CheckController(controller_ip=self.ip)
+        return True
+
+
+class Subscription(graphene.ObjectType):
+    count_seconds = graphene.Float(up_to=graphene.Int())
+
+    async def resolve_count_seconds(root, info, up_to):
+        print('resolve_count_seconds_start')
+        yield 1.1
+        for i in range(up_to):
+            print('resolve_count_seconds', i)
+            yield i
+            await asyncio.sleep(1.)
+        yield up_to
+
+

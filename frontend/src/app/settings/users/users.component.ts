@@ -39,7 +39,7 @@ export class UsersComponent implements OnInit {
     });
   }
 
-  private getAllUsers() {
+  public getAllUsers() {
     this.spinner = true;
     this.service.getAllUsers().valueChanges.pipe(map(data => data.data.users))
       .subscribe((data) => {

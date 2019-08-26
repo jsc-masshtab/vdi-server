@@ -43,7 +43,8 @@ settings = Settings()
 
 try:
     from .local_settings import settings as local_settings
+    settings.update(local_settings)
 except ImportError:
     pass
 
-settings.update(local_settings)
+

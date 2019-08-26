@@ -27,8 +27,15 @@
                 <ng-container *ngIf="menuActive === 'vms'">ВМ в пуле</ng-container> 
             </div>
             <div class="details-slide-into">
-                <vdi-table-into [data]="pool" [collection]="collection" *ngIf="menuActive === 'info'"></vdi-table-into>
-                <vdi-table-component [data]="pool?.state?.available" [collection]="collection_vms" *ngIf="menuActive === 'vms'"></vdi-table-component> 
+                <ng-container *ngIf="pool_type === 'AUTOMATED'">
+                    <vdi-table-into [data]="pool" [collection]="collection_automated" *ngIf="menuActive === 'info'"></vdi-table-into>
+                    <vdi-table-component [data]="pool?.vms" [collection]="collection_vms_automated" *ngIf="menuActive === 'vms'"></vdi-table-component> 
+                </ng-container>
+
+                <ng-container *ngIf="pool_type === 'STATIC'">
+                    <vdi-table-into [data]="pool" [collection]="collection_static" *ngIf="menuActive === 'info'"></vdi-table-into>
+                    <vdi-table-component [data]="pool?.vms" [collection]="collection_vms_static" *ngIf="menuActive === 'vms'"></vdi-table-component> 
+                </ng-container>
             </div>     
         </div>
     </div>

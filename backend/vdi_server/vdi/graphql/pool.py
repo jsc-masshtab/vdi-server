@@ -15,11 +15,11 @@ from vdi.tasks.vm import GetDomainInfo, GetVdisks
 
 from .users import UserType
 from .util import get_selections
-from ..db import db
+from ..db import db, fetch
 from ..pool import Pool
 
 from vdi.errors import SimpleError, FieldError
-from vdi.utils import Unset, print
+from vdi.utils import Unset, print, insert, bulk_insert
 
 
 class TemplateType(graphene.ObjectType):
@@ -72,7 +72,7 @@ class PoolType(graphene.ObjectType):
     #TODO rm settings, add controller, cluster, datapool, etc.
 
     id = graphene.Int()
-    template_id = graphene.String(required=True)
+    template_id = graphene.String()
     desktop_pool_type = graphene.Field(DesktopPoolType)
     name = graphene.String()
     settings = graphene.Field(lambda: PoolSettings)
@@ -80,12 +80,14 @@ class PoolType(graphene.ObjectType):
     users = graphene.List(UserType)
     vms = graphene.List(lambda: VmType)
 
+
+
     @graphene.Field
     def controller():
         from vdi.graphql.resources import ControllerType
         return ControllerType
 
-    sql_fields = ['id', 'template_id', 'initial_size', 'reserve_size', 'name', 'controller_ip', 'desktop_pool_type']
+    sql_fields = ['id', 'template_id', 'name', 'controller_ip', 'desktop_pool_type']
 
     def resolve_state(self, info):
         if self.id not in Pool.instances:
@@ -97,8 +99,19 @@ class PoolType(graphene.ObjectType):
 
     async def resolve_vms(self, info):
         if self.vms:
-            # static pool
             return self.vms
+        desktop_pool_type = self.resolve_desktop_pool_type(None)
+        if desktop_pool_type == DesktopPoolType.STATIC:
+            async with db.connect() as conn:
+                qu = "select id from vm where pool_id = $1", self.id
+                data = await conn.fetch(*qu)
+            vms = []
+            for [vm_id] in data:
+                vm = VmType(id=vm_id)
+                vm.controller_ip = self.controller.ip
+                vm.selections = get_selections(info)
+                vms.append(vm)
+            return vms
         state = self.resolve_state(None)
         vms = await state.resolve_available(info)
         return vms
@@ -107,6 +120,23 @@ class PoolType(graphene.ObjectType):
         if isinstance(self.desktop_pool_type, str):
             return getattr(DesktopPoolType, self.desktop_pool_type)
         return self.desktop_pool_type
+
+    async def resolve_settings(self, info):
+        pool_type = self.resolve_desktop_pool_type(None)
+        if pool_type == DesktopPoolType.STATIC:
+            return None
+        if self.settings:
+            return self.settings
+        async with db.connect() as conn:
+            fields = "datapool_id, cluster_id, node_id, template_id, " \
+                 "initial_size, reserve_size, controller_ip, desktop_pool_type, " \
+                 "vm_name_template, total_size"
+            qu = f"select {fields} from pool where id = $1", self.id
+            [data] = await conn.fetch(*qu)
+        pool_type = getattr(DesktopPoolType, data['desktop_pool_type'])
+        data = dict(data, desktop_pool_type=pool_type)
+        self.settings = PoolSettings(**data)
+        return self.settings
 
 class VmState(graphene.Enum):
     UNDEFINED = 0
@@ -160,6 +190,13 @@ class VmType(graphene.ObjectType):
         from vdi.graphql.resources import NodeType
         return NodeType
 
+    async def resolve_name(self, info):
+        if self.name:
+            return self.name
+        if self.veil_info is Unset:
+            self.veil_info = await self.get_veil_info()
+        return self.veil_info['verbose_name']
+
     async def resolve_user(self, info):
         if self.sql_data is Unset:
             self.sql_data = await self.get_sql_data()
@@ -193,6 +230,11 @@ class VmType(graphene.ObjectType):
         if not self.sql_data:
             return None
         template_id = self.sql_data['template_id']
+        if template_id is None:
+            return None
+            # if self.veil_info is Unset:
+            #     self.veil_info = await self.get_veil_info()
+            #TODO
         if get_selections(info) == ['id']:
             return TemplateType(id=template_id)
         from vdi.tasks.vm import GetDomainInfo
@@ -200,14 +242,13 @@ class VmType(graphene.ObjectType):
         return TemplateType(id=template_id, veil_info=template, name=template['verbose_name'])
 
     async def resolve_state(self, info):
-        if self.veil_info is None:
+        if self.veil_info is Unset:
             self.veil_info = await self.get_veil_info()
         val = self.veil_info['user_power_state']
         return VmState.get(val)
 
 
 class PoolSettingsFields(graphene.AbstractType):
-    controller_ip = graphene.String()
     cluster_id = graphene.String()
     datapool_id = graphene.String()
     template_id = graphene.String()
@@ -242,7 +283,9 @@ class PoolState(graphene.ObjectType):
 
     async def resolve_available(self, info):
         async with db.connect() as conn:
-            qu = 'select node_id from pool where id = $1', self.pool.id
+            qu = 'select t.node_id ' \
+                 'from dynamic_traits as t join pool as p on t.dynamic_traits_id = p.dynamic_traits ' \
+                 'where p.id = $1', self.pool.id
             data = await conn.fetch(*qu)
             if not data:
                 return []
@@ -338,6 +381,8 @@ class AddPool(graphene.Mutation):
         reserve_size = graphene.Int()
         total_size = graphene.Int()
         vm_name_template = graphene.String()
+        controller_ip = graphene.String()
+
 
     Output = PoolType
 
@@ -358,7 +403,9 @@ class AddPool(graphene.Mutation):
         }
         pool_settings['desktop_pool_type'] = DesktopPoolType.AUTOMATED.name
         pool = {
-            'name': kwargs['name'], **pool_settings
+            'name': kwargs['name'],
+            'controller_ip': kwargs.get('controller_ip'),
+            **pool_settings
         }
         checker = PoolValidator(pool)
         data_sync = {}
@@ -379,13 +426,16 @@ class AddPool(graphene.Mutation):
         from vdi.graphql.resources import NodeType, ControllerType
         controller = ControllerType(ip=pool['controller_ip'])
 
-        fields = ', '.join(pool.keys())
-        values = ', '.join(f'${i+1}' for i in range(len(pool)))
-        pool_query = f"INSERT INTO pool ({fields}) VALUES ({values}) RETURNING id", *pool.values()
-
-        async with db.connect() as conn:
-            [res] = await conn.fetch(*pool_query)
-        pool['id'] = res['id']
+        dyn_traits = {
+            k: v for k, v in pool.items() if k in Pool.traits_keys
+        }
+        [[id]] = await insert('dynamic_traits', dyn_traits, returning='dynamic_traits_id')
+        pool_data = {
+            'dynamic_traits': id,
+            **{k: v for k, v in pool.items() if k in Pool.pool_keys}
+        }
+        [[pool_id]] = await insert('pool', pool_data, returning='id')
+        pool['id'] = pool_id
         ins = Pool(params=pool)
         Pool.instances[pool['id']] = ins
 
@@ -412,12 +462,31 @@ class AddPool(graphene.Mutation):
         ret = PoolType(id=pool['id'], state=state,
                        name=pool['name'], template_id=pool['template_id'],
                        controller=controller,
-                       settings=PoolSettings(**pool_settings))
+                       settings=PoolSettings(**pool_settings),
+                       desktop_pool_type=DesktopPoolType.AUTOMATED)
         state.pool = ret
         for item in available:
             item.pool = ret
 
         return ret
+
+
+async def check_static_pool_and_get_params(cls, pool_id):
+    """check if given pool_id corresponds to valid static pool and return its parameters"""
+    async with db.connect() as conn:
+        qu = f"SELECT * from pool where id = $1", pool_id
+        pool_params = await conn.fetch(*qu)
+    # check if pool exists
+    if not pool_params:
+        raise FieldError(pool_id=['Пул с заданным id не существует'])
+    # check if pool is static
+    [pool_params] = pool_params
+    print('pool_params_unpacked', pool_params)
+    print('desktop_pool_type', pool_params['desktop_pool_type'])
+    if pool_params['desktop_pool_type'] != DesktopPoolType.STATIC.name:
+        raise FieldError(pool_id=['Пул с заданным id не является статическим'])
+
+    return pool_params
 
 
 class AddStaticPool(graphene.Mutation):
@@ -426,79 +495,37 @@ class AddStaticPool(graphene.Mutation):
         vm_ids_list = graphene.List(graphene.String)
         vm_ids = graphene.List(graphene.ID)
 
-        cluster_id = graphene.String()
+        #deprecated
         datapool_id = graphene.String()
+        cluster_id = graphene.String()
         node_id = graphene.String()
 
     Output = PoolType
 
     @classmethod
-    async def check_static_pool_and_get_params(cls, pool_id):
-        """check if given pool_id corresponds to valid static pool and return its parameters"""
-        async with db.connect() as conn:
-            qu = f"SELECT * from pool where id = $1", pool_id
-            pool_params = await conn.fetch(*qu)
-        # check if pool exists
-        if not pool_params:
-            raise FieldError(pool_id=['Пул с заданным id не существует'])
-        # check if pool is static
-        [pool_params] = pool_params
-        print('pool_params_unpacked', pool_params)
-        print('desktop_pool_type', pool_params['desktop_pool_type'])
-        if pool_params['desktop_pool_type'] != DesktopPoolType.STATIC.name:
-            raise FieldError(pool_id=['Пул с заданным id не является статическим'])
-
-        return pool_params
-
-    @classmethod
     async def add_vms_to_pool(cls, vm_ids, pool_id):
-        placeholders = [f'(${i + 1}, ${i + 2})' for i in range(0, len(vm_ids) * 2, 2)]
-        placeholders = ', '.join(placeholders)
-        params = []
-        for vm_id in vm_ids:
-            params.extend([vm_id, pool_id])
-        async with db.connect() as conn:
-            qu = f'INSERT INTO vm (id, pool_id) VALUES {placeholders}', *params
-            await conn.fetch(*qu)
+        rows = [{'id': vm_id, 'pool_id': pool_id}
+                for vm_id in vm_ids]
+        await bulk_insert('vm', rows)
 
     @classmethod
-    async def get_node_and_cluster(cls, vm_ids):
-        vm_id = vm_ids[0]
-        vm_info, controller_ip = await GetDomainInfo(domain_id=vm_id)
-        return {
-            'node_id': vm_info['node']['id'],
-            'cluster_id': vm_info['cluster']
-        }, controller_ip
-
-    @classmethod
-    async def get_datapool(cls, vm_ids):
-        for vm_id in vm_ids:
-            vdisks, controller_ip = await GetVdisks(domain_id=vm_id)
-            if not vdisks:
-                continue
-            return vdisks[0]['datapool_id'], controller_ip
-        raise SimpleError(f'Невозможно определить datapool_id')
-
+    async def get_controller_ip(cls, vm_ids):
+        ips = []
+        for vm_id in vm_ids[:2]:
+            vm_info, controller_ip = await GetDomainInfo(domain_id=vm_id)
+            ips.append(controller_ip)
+        assert all(ip == ips[0] for ip in ips[1:])
+        return ips[0]
 
     async def mutate(self, _info, vm_ids=None, vm_ids_list=None, **options):
+        cls = AddStaticPool
         vm_ids = vm_ids or vm_ids_list
         if not vm_ids:
             raise FieldError(vm_ids=['Обязательное поле'])
         controller_ip = None
-        if 'cluster_id' not in options or 'node_id' not in options:
-            dic, controller_ip = await AddStaticPool.get_node_and_cluster(vm_ids)
-            options.update(dic)
-        if 'datapool_id' not in options:
-            options['datapool_id'], controller_ip = await AddStaticPool.get_datapool(vm_ids)
+
         if controller_ip is None:
-            controller_ip = await DiscoverControllerIp(cluster_id=options['cluster_id'],
-                                                       node_id=options['node_id'])
-        all_vm_ids = [
-            vm['id'] for vm in await vm.ListVms(controller_ip=controller_ip, node_id=options['node_id'])
-        ]
-        for vm_id in vm_ids:
-            if vm_id not in all_vm_ids:
-                raise FieldError(vm_ids=['ВМ принадлежит другому узлу'])
+            controller_ip = await cls.get_controller_ip(vm_ids)
 
         async with db.connect() as conn:
             qu = (
@@ -518,35 +545,21 @@ class AddStaticPool(graphene.Mutation):
         # add pool
         pool = {
             'name': options['name'],
-            'node_id': options['node_id'],
-            'cluster_id': options['cluster_id'],
-            'datapool_id': options['datapool_id'],
             'controller_ip': controller_ip,
             'desktop_pool_type': DesktopPoolType.STATIC.name,
         }
-        fields = ', '.join(pool.keys())
-        values = ', '.join(f'${i + 1}' for i in range(len(pool)))
-        pool_query = f"INSERT INTO pool ({fields}) VALUES ({values}) RETURNING id", *pool.values()
-        async with db.connect() as conn:
-            [res] = await conn.fetch(*pool_query)
-            pool['id'] = res['id']
+        [[pool_id]] = await insert('pool', pool, returning='id')
+        pool['id'] = pool_id
 
         # add vms to the database.
-        await AddStaticPool.add_vms_to_pool(vm_ids, pool['id'])
-
+        await cls.add_vms_to_pool(vm_ids, pool['id'])
         vms = [
             VmType(id=id) for id in vm_ids
         ]
-        pool_settings = {
-            'node_id': options['node_id'],
-            'cluster_id': options['cluster_id'],
-            'datapool_id': options['datapool_id'],
-            'desktop_pool_type': DesktopPoolType.STATIC,
-        }
         from vdi.graphql.resources import ControllerType
         return PoolType(id=pool['id'], name=pool['name'], vms=vms,
                         controller=ControllerType(ip=pool['controller_ip']),
-                        settings=PoolSettings(**pool_settings))
+                        desktop_pool_type=DesktopPoolType.STATIC)
 
 
 class AddVmsToStaticPool(graphene.Mutation):
@@ -570,7 +583,7 @@ class AddVmsToStaticPool(graphene.Mutation):
         if not vm_ids:
             raise FieldError(vm_ids=['Обязательное поле'])
         # pool checks
-        pool_params = await AddStaticPool.check_static_pool_and_get_params(pool_id)
+        pool_params = await check_static_pool_and_get_params(pool_id)
 
         # vm checks
         # get list of all vms on the node
@@ -623,7 +636,7 @@ class RemoveVmsFromStaticPool(graphene.Mutation):
         if not vm_ids:
             raise FieldError(vm_ids=['Обязательное поле'])
         # pool checks
-        await AddStaticPool.check_static_pool_and_get_params(pool_id)
+        await check_static_pool_and_get_params(pool_id)
 
         # vms check
         # get list of vms ids which are in pool_id
@@ -677,17 +690,17 @@ class RemovePool(graphene.Mutation):
         vms = await pool.load_vms()
         vm_ids = [v['id'] for v in vms]
 
-        tasks = [
-            vm.DropDomain(id=vm_id, controller_ip=controller_ip)
-            for vm_id in vm_ids
-        ]
-
         async with db.connect() as conn:
             qu = "update pool set deleted=TRUE where id = $1", pool_id
             await conn.fetch(*qu)
 
-        async for _ in wait(*tasks):
-            pass
+        if pool.params['desktop_pool_type'] == DesktopPoolType.AUTOMATED.name:
+            tasks = [
+                vm.DropDomain(id=vm_id, controller_ip=controller_ip)
+                for vm_id in vm_ids
+            ]
+            async for _ in wait(*tasks):
+                pass
 
         # remove from db
         async with db.connect() as conn:
@@ -709,67 +722,133 @@ class RemovePool(graphene.Mutation):
         return RemovePool(ok=True)
 
 
-#  users <-> pools relations
-class EntitleUsersToPool(graphene.Mutation):
+class AddPoolPermissions(graphene.Mutation):
 
     class Arguments:
-        pool_id = graphene.Int()
-        entitled_users = graphene.List(graphene.String)
+        pool_id = graphene.ID()
+        users = graphene.List(graphene.ID)
+        entitled_users = graphene.List(graphene.ID) # deprecated
+        roles = graphene.List(graphene.ID)
 
     ok = graphene.Boolean()
 
-    async def mutate(self, _info, pool_id, entitled_users):
-        async with db.connect() as conn:
-            for user in entitled_users:
-                qu = "INSERT INTO pools_users (pool_id, username) VALUES ($1, $2)", pool_id, user
-                await conn.fetch(*qu)
+    @classmethod
+    async def handle_users(cls, pool_id, users):
+        users = [{'pool_id': pool_id, 'username': user} for user in users]
+        await bulk_insert('pools_users', users)
 
-        return {
-            'ok': True
-        }
+    @classmethod
+    async def handle_roles(cls, pool_id, roles):
+        roles = [{'pool_id': pool_id, 'role': role} for role in roles]
+        await bulk_insert('pool_role_m2m', roles)
+
+    async def mutate(self, _info, pool_id, users=(), entitled_users=(), roles=()):
+        cls = AddPoolPermissions
+        pool_id = int(pool_id)
+        users = users or entitled_users
+        if users:
+            await cls.handle_users(pool_id, users)
+        if roles:
+            await cls.handle_roles(pool_id, roles)
+        return {'ok': True}
 
 
-class RemoveUserEntitlementsFromPool(graphene.Mutation):
+
+# class AddPoolPermission(graphene.Mutation):
+#     class Arguments:
+#         pool_id = graphene.ID()
+#         users = graphene.List(graphene.ID)
+#         groups = graphene.List(graphene.ID)
+#
+#     async def mutate(self, info, users=(), groups=()):
+#         1
+
+
+class DropPoolPermissions(graphene.Mutation):
 
     class Arguments:
-        pool_id = graphene.Int()
-        entitled_users = graphene.List(graphene.String)
+        pool_id = graphene.ID()
+        users = graphene.List(graphene.ID)
+        entitled_users = graphene.List(graphene.ID) # deprecated
+        roles = graphene.List(graphene.ID)
         free_assigned_vms = graphene.Boolean()
 
-    ok = graphene.Boolean()
+    freed = graphene.List(VmType)
 
-    async def mutate(self, _info, pool_id, entitled_users, free_assigned_vms=True):
+    @classmethod
+    async def handle_users(cls, pool_id, users, *, free_assigned_vms):
         async with db.connect() as conn:
-            for user in entitled_users:
-                # remove entitlement
-                qu = "DELETE FROM pools_users WHERE pool_id = $1 AND username = $2", pool_id, user
-                await conn.fetch(*qu)
-                # free assigned vm
-                if free_assigned_vms:
-                    qu = "UPDATE vm SET username = NULL WHERE pool_id = $1 AND username = $2", pool_id, user
-                    await conn.fetch(*qu)
+            qu = "DELETE FROM pools_users " \
+                 "WHERE pool_id = $1 AND username = any($2::text[])", pool_id, users
+            await conn.fetch(*qu)
+        if not free_assigned_vms:
+            return []
+        # Find vms no longer permitted to own
+        # (owned by users not having the group permission)
+        async with db.connect() as conn:
+            qu = "select vm.id from vm " \
+                 "join user_role_m2m as u_r on vm.username = u_r.username and u_r.username = any($1::text[]) " \
+                 "left join pool_role_m2m as p_r on u_r.role = p_r.role and p_r.pool_id = $2 " \
+                 "where p_r.role is null", users, pool_id
+            data = await conn.fetch(*qu)
+            vm_ids = [vm_id for [vm_id] in data]
+            qu = "update vm set username = null " \
+                 "where id = any($1::text[])", vm_ids
+            await conn.fetch(*qu)
 
-        return {
-            'ok': True
-        }
+        return [VmType(id=vm_id) for vm_id in vm_ids]
+
+    @classmethod
+    async def handle_roles(cls, pool_id, roles, *, free_assigned_vms):
+        # Remove from permissions
+        async with db.connect() as conn:
+            qu = "delete from pool_role_m2m " \
+                 "where pool_id = $1 and role = any($2::text[])", \
+                 pool_id, roles
+            await conn.fetch(*qu)
+        if not free_assigned_vms:
+            return []
+        # Find vms no longer permitted to own
+        # (owned by users not listed in pools_users)
+        async with db.connect() as conn:
+            qu = "select vm.id from vm " \
+                 "join user_role_m2m as u_r on vm.username = u_r.username and u_r.role = any($1::text[]) " \
+                 "left join pools_users as p_u on vm.username = p_u.username and p_u.pool_id = $2 " \
+                 "where p_u.username is null", roles, pool_id
+            data = await conn.fetch(*qu)
+            vm_ids = [vm_id for [vm_id] in data]
+            qu = "update vm set username = null " \
+                 "where id = any($1::text[])", vm_ids
+            await conn.fetch(*qu)
+        return [VmType(id=vm_id) for vm_id in vm_ids]
+
+    async def mutate(self, _info, pool_id, entitled_users=(), users=(), roles=(), free_assigned_vms=True):
+        cls = DropPoolPermissions
+        pool_id = int(pool_id)
+        async with db.connect() as conn:
+            qu = "select controller_ip from pool where id = $1", pool_id
+            [[controller_ip]] = await conn.fetch(*qu)
+        users = users or entitled_users
+        if users and not roles:
+            freed = await cls.handle_users(pool_id, users, free_assigned_vms=free_assigned_vms)
+        elif roles and not users:
+            freed = await cls.handle_roles(pool_id, roles, free_assigned_vms=free_assigned_vms)
+        else:
+            raise SimpleError("Можно указать только пользователей или роли")
+        for vm in freed:
+            vm.controller_ip = controller_ip
+        return cls(freed=freed)
 
 
 class PoolMixin:
     pools = graphene.List(PoolType, controller_ip=graphene.String())
-    pool = graphene.Field(PoolType, id=graphene.Int(), name=graphene.String(),
+    pool = graphene.Field(PoolType, id=graphene.Int(),
                           controller_ip=graphene.String())
 
 
-    #TODO wake pools
-
-    async def _select_pool(self, info, id, name):
+    async def _select_pool(self, info, id):
         selections = get_selections(info)
         settings_selections = get_selections(info, 'settings') or []
-        if id:
-            where, param = "WHERE id = $1", id
-        else:
-            assert name
-            where, param = "WHERE name = $1", name
         fields = [
             f for f in selections
             if f in PoolType.sql_fields
@@ -780,33 +859,30 @@ class PoolMixin:
         if not fields and not settings_selections:
             return {}
 
-        qu = f"SELECT {', '.join(fields + settings_selections)} FROM pool {where}", param
+        qu = "select * from pool left join dynamic_traits as t " \
+             "on pool.dynamic_traits = t.dynamic_traits_id " \
+             "where id = $1", id
         async with db.connect() as conn:
             [pool] = await conn.fetch(*qu)
-        dic = {
-            f: pool[f] for f in fields
-        }
+        dic = dict(pool.items())
         settings = {}
         for sel in settings_selections:
             settings[sel] = pool[sel]
         dic['settings'] = PoolSettings(**settings)
         return dic
 
-    async def resolve_pool(self, info, id=None, name=None):
+    async def resolve_pool(self, info, id):
         #TODO will be refactored
 
-        dic = await PoolMixin._select_pool(self, info, id, name)
-        if not id:
-            id = dic['id']
-        async with db.connect() as conn:
-            [(controller_ip,)] = await conn.fetch('select controller_ip from pool where id = $1', id)
+        pool_data = await PoolMixin._select_pool(self, info, id)
+        controller_ip = pool_data['controller_ip']
         u_fields = get_selections(info, 'users') or ()
         u_fields_joined = ', '.join(f'u.{f}' for f in u_fields)
         if u_fields:
             async with db.connect() as conn:
                 qu = f"""
                 SELECT {u_fields_joined}
-                FROM pools_users JOIN public.user as u ON  pools_users.username = u.username
+                FROM pools_users JOIN public.user as u ON pools_users.username = u.username
                 WHERE pool_id = $1
                 """, id
                 data = await conn.fetch(*qu)
@@ -814,9 +890,14 @@ class PoolMixin:
             for u in data:
                 u = dict(zip(u_fields, u))
                 users.append(UserType(**u))
-            dic['users'] = users
+            pool_data['users'] = users
         from vdi.graphql.resources import ControllerType
-        return PoolType(id=id, **dic, controller=ControllerType(ip=controller_ip))
+        pool_data['id'] = id
+        pool_data = {
+            k: v for k, v in pool_data.items() if k in PoolType._meta.fields
+        }
+        return PoolType(**pool_data,
+                        controller=ControllerType(ip=controller_ip))
 
     #TODO fix users
     #TODO remove this
@@ -836,16 +917,10 @@ class PoolMixin:
         return map
 
 
-    #FIXME use resolve
     async def resolve_pools(self, info):
-        selections = get_selections(info)
-        settings_selections = get_selections(info, 'settings') or []
-        fields = [
-            f for f in selections
-            if f in PoolType.sql_fields and f != 'id'
-        ]
-        fields = ['id', 'controller_ip'] + fields
-        qu = f"SELECT {', '.join(fields + settings_selections)} FROM pool WHERE deleted IS NOT TRUE"
+        qu = "select * " \
+             "from pool left join dynamic_traits as t on pool.dynamic_traits = t.dynamic_traits_id " \
+             "where deleted is not true"
         async with db.connect() as conn:
             pools = await conn.fetch(qu)
 
@@ -854,18 +929,21 @@ class PoolMixin:
             pools_users = await PoolMixin.get_pools_users_map(self, u_fields)
         items = []
         for pool in pools:
+            pool = dict(pool.items())
+            controller_ip = pool['controller_ip']
             p = {
-                f: pool[f] for f in fields
+                f: pool[f] for f in pool
+                if f in PoolType._meta.fields
             }
-            settings = {}
-            for sel in settings_selections:
-                settings[sel] = pool[sel]
-            if settings:
-                p['settings'] = PoolSettings(**settings)
+            settings = {
+                f: pool[f] for f in pool
+                if f in PoolSettings._meta.fields
+            }
             if u_fields:
                 p['users'] = pools_users[id]
-            controller_ip = p.pop('controller_ip')
             from vdi.graphql.resources import ControllerType
-            pt = PoolType(**p, controller=ControllerType(ip=controller_ip))
+            pt = PoolType(**p,
+                          settings=PoolSettings(**settings),
+                          controller=ControllerType(ip=controller_ip))
             items.append(pt)
         return items

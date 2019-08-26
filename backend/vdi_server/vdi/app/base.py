@@ -15,6 +15,8 @@ app = Starlette(debug=settings.get('debug'))
 
 from vdi.auth import VDIUser
 from vdi.app import Request
+from . import client_routes
+from . import admin_routes
 
 @app.middleware("http")
 async def init_context(request, call_next):
@@ -44,7 +46,7 @@ async def debug(request, call_next):
 @app.on_event('startup')
 async def startup():
     g.use_threadlocal(False)
-    await db.init()
+    await db.get_pool()
 
 
 app.add_middleware(AuthenticationMiddleware, backend=JWTAuthenticationBackend())

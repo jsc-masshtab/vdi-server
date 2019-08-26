@@ -42,15 +42,11 @@ export class PoolAddComponent implements OnInit {
   public vms: object[] = [];
   private finishPoll:{} = {};
 
-  public poolName:string;
   public id_cluster:string;
   public id_node:string;
   public id_datapool:string;
-  public template_select:{};
+  public id_template:string;
 
-
-  public dinamicPoolForm: FormGroup;
-  public staticPoolForm: FormGroup;
   public chooseTypeForm: FormGroup;
   public createPoolForm:FormGroup;
 
@@ -65,10 +61,7 @@ export class PoolAddComponent implements OnInit {
   public error:boolean = false;
 
   public data: {} = {};
-
-
-  public collection:{} = [];
-
+  public table_field:{} = [];
   public step:string = 'chooseType';
 
   public steps = [
@@ -80,7 +73,7 @@ export class PoolAddComponent implements OnInit {
     {
       type: 'createPool',
       completed: false,
-      disabled: true
+      disabled: false
     },
     {
       type: 'finish-see',
@@ -88,7 +81,6 @@ export class PoolAddComponent implements OnInit {
       disabled: true
     }
   ];
-
 
   private subForm:Subscription;
 
@@ -117,7 +109,6 @@ export class PoolAddComponent implements OnInit {
   }
 
   private createDinamicPoolInit(): void {
-    
     this.createPoolForm = this.fb.group({
       "name": ['', Validators.required],
       "template_id": ['', Validators.required],
@@ -131,7 +122,7 @@ export class PoolAddComponent implements OnInit {
     this.getTemplate();
     this.getClusters();
 
-    this.subscriptionCreateForm();
+    //this.subscriptionCreatePoolForm();
   }
 
   private createStaticPoolInit(): void {
@@ -145,10 +136,10 @@ export class PoolAddComponent implements OnInit {
     this.finishPoll = {};
     this.getClusters();
 
-    this.subscriptionCreateForm();
+    //this.subscriptionCreatePoolForm();
   }
 
-  private subscriptionCreateForm() {
+  private subscriptionCreatePoolForm() {
    this.subForm =  this.createPoolForm.statusChanges.subscribe(status => {
       if(status === 'INVALID') {
         this.steps[1].disabled = true;
@@ -186,7 +177,7 @@ export class PoolAddComponent implements OnInit {
       (error)=> {
         this.pending['clusters'] = false;
         this.clusters = [];
-      });
+    });
   }
 
   private getNodes(id_cluster) {
@@ -242,9 +233,9 @@ export class PoolAddComponent implements OnInit {
   }
 
   public selectTemplate(value:object) {
-    this.template_select = value['value'].id;
+    this.id_template = value['value'].id;
     this.finishPoll['template_name'] = value['value']['verbose_name'];
-    this.createPoolForm.get('template_id').setValue(this.template_select);
+    this.createPoolForm.get('template_id').setValue(this.id_template);
   }
 
   public selectCluster(value:object) {
@@ -284,7 +275,7 @@ export class PoolAddComponent implements OnInit {
     this.finishPoll['datapool_name'] = value['value']['verbose_name'];
     this.vms = [];
 
-      this.createPoolForm.get('datapool_id').setValue(this.id_datapool);
+    this.createPoolForm.get('datapool_id').setValue(this.id_datapool);
 
     if(this.selectVmRef) {
       this.selectVmRef['value'] = "";
@@ -301,7 +292,11 @@ export class PoolAddComponent implements OnInit {
 
   private chooseCollection(): void {
     if(this.chooseTypeForm.value.type === 'Динамический') {
-     this.collection = [
+     this.table_field = [
+        {
+          title: 'Тип',
+          property: 'type'
+        },
         {
           title: 'Название',
           property: 'name'
@@ -332,7 +327,11 @@ export class PoolAddComponent implements OnInit {
         }
       ];
     } else {
-      this.collection = [
+      this.table_field = [
+        {
+          title: 'Тип',
+          property: 'type'
+        },
         {
           title: 'Название',
           property: 'name'
@@ -358,7 +357,6 @@ export class PoolAddComponent implements OnInit {
   }
 
   private handlingValidForm(): boolean {
-    console.log('fkfkk');
     if(this.createPoolForm.status === "INVALID") {
       let timer;
       this.error = true;
@@ -367,46 +365,43 @@ export class PoolAddComponent implements OnInit {
           this.error = false;
         },3000);
       }
-      
       return false;
     }
-
     return true;
+  }
+
+  private resetLocalData():void {
+    this.clusters = [];
+    this.nodes = [];
+    this.datapools = [];
+    this.vms = [];
+    this.id_cluster = "";
+    this.id_node = "",
+    this.id_datapool = "";
   }
 
   public send(step:string) {
     if(step === 'chooseType') {
       this.step = 'chooseType';
+
       this.steps[1].completed = false;
       this.steps[2].completed = false;
-      this.id_cluster = "";
-      this.id_node = "",
-      this.id_datapool = "";
-      this.clusters = [];
-      this.nodes = [];
-      this.datapools = [];
-      this.vms = [];
+
+      this.resetLocalData();
       
       if(this.createPoolForm) {
         this.createPoolForm.reset();
       }
-     
     }
 
     if(step === 'createPool') {
       this.step = 'createPool';
+      this.error = false;
 
       this.steps[1].completed = true;
       this.steps[2].completed = false;
-
-      this.datapools = [];
-      this.vms = [];
-      this.nodes = [];
-      this.clusters = [];
-      this.id_node = "",
-      this.id_datapool = "";
-      this.id_cluster = "";
-
+   
+      this.resetLocalData();
 
       if(this.chooseTypeForm.value.type === 'Динамический') {
         this.createDinamicPoolInit();
@@ -417,37 +412,34 @@ export class PoolAddComponent implements OnInit {
       }
     }
 
-
     if(step === 'finish-see') {
 
-      let validPrev: boolean;
-      validPrev = this.handlingValidForm();
-
-      if(!validPrev) return;
-
-      this.chooseCollection();
       if(this.createPoolForm) {
+        let validPrev: boolean = this.handlingValidForm();
+  
+        if(!validPrev) return;
+  
+        this.chooseCollection();
+
         let value = this.createPoolForm.value;
   
         if(this.chooseTypeForm.value.type === 'Динамический') {
           this.finishPoll['name'] = value.name;
           this.finishPoll['initial_size'] = value.initial_size;
           this.finishPoll['reserve_size'] = value.reserve_size;
+          this.finishPoll['type'] = this.chooseTypeForm.value.type;
         }
   
         if(this.chooseTypeForm.value.type === 'Статический') {
           this.finishPoll['name'] = value.name;
+          this.finishPoll['type'] = this.chooseTypeForm.value.type;
         }
 
+        this.step = 'finish-see';
+        this.steps[1].completed = true;
+        this.steps[2].completed = true; 
       }
-      
-
-      this.step = 'finish-see';
-      this.steps[1].completed = true;
-        this.steps[2].completed = true;
-
-
-      
+       
     }
 
     if(step === 'finish-ok') {
@@ -466,7 +458,7 @@ export class PoolAddComponent implements OnInit {
             .subscribe((res) => { 
               this.poolsService.getAllPools().subscribe();
               this.dialogRef.close(); 
-        });
+            });
       } 
 
       if(this.chooseTypeForm.value.type === 'Статический') {
@@ -480,25 +472,17 @@ export class PoolAddComponent implements OnInit {
             .subscribe((res) => { 
               this.poolsService.getAllPools().subscribe();
               this.dialogRef.close(); 
-        });
+            });
       } 
-    }
-    
-
-    
+    } 
   }
 
   ngOnDestroy() {
-  
     if(this.createPoolForm) {
       this.createPoolForm.reset();
     }
-
     if(this.subForm) {
       this.subForm.unsubscribe();
     }
-
-
   }
-
 }

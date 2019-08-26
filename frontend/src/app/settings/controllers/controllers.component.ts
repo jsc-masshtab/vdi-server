@@ -35,7 +35,7 @@ export class ControllersComponent implements OnInit {
     this.getAllControllers();
   }
 
-  private getAllControllers() {
+  public getAllControllers() {
     this.spinner = true;
     this.service.getAllControllers().valueChanges.pipe(map(data => data.data.controllers))
       .subscribe((data) => {

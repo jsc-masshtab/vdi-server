@@ -18,7 +18,7 @@ classy_async = {editable = false,path = "./../classy_async"}
 mi = {editable = false,path = "./../mi-pkg"}
 cached-property = "*"
 graphene = "*"
-starlette = "*"
+starlette = ">=0.12.8"
 psycopg2 = "*"
 asyncpg = "*"
 requests = "*"

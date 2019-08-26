@@ -2,6 +2,8 @@
 // Created by Solomin on 11.07.19.
 //
 
+#include <stdio.h>
+
 #include "jsonhandler.h"
 
 JsonObject *get_json_object(JsonParser *parser, const gchar *data)

@@ -49,7 +49,7 @@ export class TemplatesComponent implements OnInit {
     this.getTemplates();
   }
 
-  private getTemplates() {
+  public getTemplates() {
     this.spinner = true;
     this.service.getAllTemplates().valueChanges.pipe(map(data => data.data.controllers)).subscribe((data)=> {
        let arrTemplates: [][] = [];

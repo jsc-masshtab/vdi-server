@@ -2,10 +2,8 @@ import json
 from vdi.tasks.client import HttpClient
 from vdi.settings import settings
 
-from vdi.app import Request
-
-
 async def fetch_token(username, password):
+    from vdi.app import Request
     request = await Request.get()
     host, _ = request.scope['server']
     port = settings.auth_server['port']

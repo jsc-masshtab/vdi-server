@@ -1,3 +1,6 @@
+import asyncio
+from websockets.exceptions import ConnectionClosed as WsConnectionClosed
+
 from starlette.authentication import requires
 from starlette.responses import JSONResponse
 
@@ -7,7 +10,6 @@ from vdi.pool import Pool
 from vdi.tasks import thin_client
 from vdi.settings import settings
 from vdi.utils import print
-from ..graphql.pool import DesktopPoolType
 
 from vdi.errors import NotFound
 
@@ -48,6 +50,7 @@ async def get_pools(request):
 
 @app.route('/client/pools/{pool_id}', methods=['GET', 'POST'])
 async def get_vm(request):
+    from vdi.graphql.pool import DesktopPoolType
     user = request.user.username
     pool_id = int(request.path_params['pool_id'])
     async with db.connect() as conn:
@@ -160,3 +163,15 @@ async def auth(request):
     data = await fetch_token(**params)
     return JSONResponse({'token': data['access_token']})
 
+
+@app.websocket_route('/ws/client/vdi_server_check')
+async def vdi_online_ws_endpoint(websocket):
+
+    await websocket.accept()
+    try:
+        while True:
+            await websocket.send_bytes(b"1")
+            ws_timeout = 1
+            await asyncio.sleep(ws_timeout)
+    except WsConnectionClosed:
+        pass

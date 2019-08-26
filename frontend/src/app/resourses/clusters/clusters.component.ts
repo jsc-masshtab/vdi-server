@@ -44,11 +44,11 @@ export class ClustersComponent implements OnInit {
 
   public spinner:boolean = false;
 
-  private pageHeightMinNumber: number = 315;
-	private pageHeightMin: string = '315px';
-	private pageHeightMax: string = '100%';
-  private pageHeight: string = '100%';
-  private pageRollup: boolean = false;
+  public pageHeightMinNumber: number = 315;
+	public pageHeightMin: string = '315px';
+  public pageHeightMax: string = '100%';
+  public pageHeight: string = '100%';
+  public pageRollup: boolean = false;
 
   constructor(private service: ClustersService,private router: Router){}
 
@@ -69,7 +69,7 @@ export class ClustersComponent implements OnInit {
     this.getAllClusters();
   }
 
-  private getAllClusters() {
+  public getAllClusters() {
     this.spinner = true;
     this.service.getAllClusters().valueChanges.pipe(map(data => data.data.controllers))
       .subscribe( (data) => {
@@ -90,7 +90,7 @@ export class ClustersComponent implements OnInit {
       });
   }
 
-  private componentAdded(): void {
+  public componentAdded(): void {
 		setTimeout(()=> {
 		//	this.routerActivated = true;
 			this.pageHeight = this.pageHeightMin;
@@ -101,7 +101,7 @@ export class ClustersComponent implements OnInit {
 		}, 0);
 	}
 
-	private componentRemoved(): void {
+  public componentRemoved(): void {
 		setTimeout(()=> {
 			//this.routerActivated = false;
 			this.pageHeight = this.pageHeightMax;
