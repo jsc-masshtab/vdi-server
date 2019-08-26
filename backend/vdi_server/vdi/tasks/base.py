@@ -242,6 +242,7 @@ class CheckConnection(UrlFetcher):
 
     def on_fetch_failed(self, ex, code):
         if code == Unauthorized.code:
+            breakpoint()
             [message] =  ex.data['non_field_errors']
             raise Unauthorized(message=message)
         raise ControllerNotAccessible(ip=self.controller_ip) from ex
