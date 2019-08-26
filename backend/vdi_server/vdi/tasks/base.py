@@ -24,12 +24,6 @@ from vdi.utils import Unset
 class ErrorHandler(_Task):
     _result = Unset
 
-    def on_fetch_failed(self, ex, code):
-        raise ex
-
-    def on_error(self, ex):
-        raise ex
-
     def set_result(self, value):
         self._result = value
 
@@ -55,19 +49,32 @@ class ErrorHandler(_Task):
             yield
         except BaseException as ex:
             if isinstance(ex, FetchException):
-                await self.on_fetch_failed(ex, ex.http_error.code)
-            else:
+                on_fetch_failed = getattr(self, 'on_fetch_failed', None)
+                if on_fetch_failed:
+                    await self.on_fetch_failed(ex, ex.http_error.code)
+                    return
+            on_error = getattr(self, 'on_error', None)
+            if on_error:
                 await self.on_error(ex)
+                return
+            raise ex
 
     @contextmanager
     def catch_errors(self):
         try:
             yield
         except BaseException as ex:
+            breakpoint()
             if isinstance(ex, FetchException):
-                self.on_fetch_failed(ex, ex.http_error.code)
-            else:
+                on_fetch_failed = getattr(self, 'on_fetch_failed', None)
+                if on_fetch_failed:
+                    self.on_fetch_failed(ex, ex.http_error.code)
+                    return
+            on_error = getattr(self, 'on_error', None)
+            if on_error:
                 self.on_error(ex)
+                return
+            raise ex
 
     async def run(self):
         handler_type = self.get_error_handler_type()
@@ -137,9 +144,9 @@ class Token(Task):
             return True
         except SignatureExpired:
             return False
-        except BaseException as ex:
-            ex = ex
-            breakpoint()
+        # except BaseException as ex:
+        #     ex = ex
+        #     breakpoint()
 
     async def run(self):
         token = await self.fetch_token_from_db()
@@ -237,7 +244,6 @@ class CheckConnection(UrlFetcher):
         return f"http://{self.controller_ip}/api/controllers/system-time"
 
     def on_fetch_failed(self, ex, code):
-        breakpoint()
         if code == SignatureExpired.code and ex.data['non_field_errors'] == [SignatureExpired.message]:
             raise SignatureExpired()
         raise ControllerNotAccessible(ip=self.controller_ip) from ex
