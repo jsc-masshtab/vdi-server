@@ -941,10 +941,12 @@ class PoolMixin:
             controller_ip = pool['controller_ip']
             pool_type = pool['desktop_pool_type']
             p = {
-                f: pool[f] for f in PoolType._meta.fields
+                f: pool[f] for f in pool
+                if f in PoolType._meta.fields
             }
             settings = {
-                f: pool[f] for f in PoolSettings._meta.fields
+                f: pool[f] for f in pool
+                if f in PoolSettings._meta.fields
             }
             # for sel in settings_selections:
             #     settings[sel] = pool[sel]
