@@ -44,7 +44,7 @@ export class VmsComponent implements OnInit {
     this.getAllVms();
   }
 
-  private getAllVms() {
+  public getAllVms() {
     this.spinner = true;
     this.service.getAllVms().valueChanges.pipe(map(data => data.data.controllers)).subscribe((data)=> {
     

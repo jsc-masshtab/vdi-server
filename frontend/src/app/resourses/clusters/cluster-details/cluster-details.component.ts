@@ -4,6 +4,11 @@ import { map } from 'rxjs/operators';
 import { ActivatedRoute, ParamMap } from '@angular/router';
 import { Router } from '@angular/router';
 
+interface type_cluster {
+  [key: string] : any
+}
+
+
 @Component({
   selector: 'vdi-cluster-details',
   templateUrl: './cluster-details.component.html',
@@ -13,9 +18,9 @@ import { Router } from '@angular/router';
 
 export class ClusterDetailsComponent implements OnInit {
 
-  public cluster: {} = {};
+  public cluster: type_cluster = {};
   public templates: [] = [];
-  public collection = [
+  public collection:any[] = [
     {
       title: 'Название',
       property: 'verbose_name',
@@ -163,7 +168,7 @@ export class ClusterDetailsComponent implements OnInit {
     });
   }
 
-  private getCluster() {
+  public getCluster() {
     this.spinner = true;
     this.host = false;
     this.service.getCluster(this.cluster_id).valueChanges.pipe(map(data => data.data.cluster))

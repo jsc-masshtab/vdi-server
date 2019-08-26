@@ -16,11 +16,11 @@ export class PoolsComponent implements OnInit {
 
   public pools: [];
   public spinner:boolean = false;
-  private pageHeightMinNumber: number = 315;
-	private pageHeightMin: string = '315px';
-	private pageHeightMax: string = '100%';
-  private pageHeight: string = '100%';
-  private pageRollup: boolean = false;
+  public pageHeightMinNumber: number = 315;
+	public pageHeightMin: string = '315px';
+	public pageHeightMax: string = '100%';
+  public pageHeight: string = '100%';
+  public pageRollup: boolean = false;
   private getPoolsSub: Subscription;
 
   public collection: object[] = [
@@ -74,7 +74,7 @@ export class PoolsComponent implements OnInit {
     });
   }
 
-  private getAllPools() {
+  public getAllPools() {
     this.spinner = true;
     this.getPoolsSub = this.service.getAllPools(true)
       .subscribe( (data) => {
@@ -86,7 +86,7 @@ export class PoolsComponent implements OnInit {
       });
   }
 
-  private componentAdded(): void {
+  public componentAdded(): void {
 		setTimeout(()=> {
 		//	this.routerActivated = true;
 			this.pageHeight = this.pageHeightMin;
@@ -97,7 +97,7 @@ export class PoolsComponent implements OnInit {
 		}, 0);
 	}
 
-	private componentRemoved(): void {
+  public componentRemoved(): void {
 		setTimeout(()=> {
 			//this.routerActivated = false;
 			this.pageHeight = this.pageHeightMax;

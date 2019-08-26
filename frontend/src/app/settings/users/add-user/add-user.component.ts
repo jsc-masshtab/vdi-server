@@ -14,7 +14,7 @@ import {
 
 export class AddUserComponent {
 
-  private createUserForm: FormGroup;
+  public createUserForm: FormGroup;
 
 
   constructor(private service: UsersService,
