@@ -141,7 +141,6 @@ class ListOfVmsQuery:
         controller_ip = await DiscoverControllerIp(cluster_id=cluster_id, node_id=node_id)
         print('ListOfVmsQuery::resolve_vms_on_veil: controller_ip', controller_ip)
         all_vms = await ListVms(controller_ip=controller_ip)
-        breakpoint()
         print('ListOfVmsQuery::resolve_vms_on_veil: all_vms', all_vms)
 
         # create list of filtered vm
