@@ -232,7 +232,6 @@ class CheckConnection(UrlFetcher):
         return f"http://{self.controller_ip}/api/controllers/system-time"
 
     def on_fetch_failed(self, ex, code):
-        breakpoint()
         if code == SignatureExpired.code and ex.data['non_field_errors'] == [SignatureExpired.message]:
             raise SignatureExpired()
         raise ControllerNotAccessible(ip=self.controller_ip) from ex
