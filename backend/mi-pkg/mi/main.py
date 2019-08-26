@@ -6,6 +6,7 @@ import sys
 import re
 
 import json
+from runpy import run_path
 
 from sqlalchemy import create_engine
 from sqlalchemy.pool import QueuePool
@@ -114,7 +115,7 @@ CREATE TABLE migrations (
             matches = ', '.join(p.name for p in paths)
             raise ExitError(f'Multiple matches for {name}: {matches}')
         [p] = paths
-        return p.name
+        return p
 
     def get_unapplied_migrations(self):
         if self.args['<names>']:
@@ -123,10 +124,10 @@ CREATE TABLE migrations (
             ]
         applied = self.exec("SELECT name from migrations")
         applied = [name for (name,) in applied]
-        names = [p.name for p in self.files]
+        # names = [p.name for p in self.files]
         return [
-            m for m in names
-            if m not in applied
+            p for p in self.files
+            if p.name not in applied
         ]
 
     def get_db_url(self):
@@ -190,35 +191,15 @@ CREATE TABLE migrations (
         p.touch()
         print(f'{p.absolute()} is generated. Please fill it with meaning.')
 
-    def apply_module(self, name):
-        import sys
-        sys.path.insert(0, str(self.dir.absolute()))
-        try:
-            __import__(name)
-        finally:
-            del sys.path[0]
-
-        # async def run():
-        #     from vdi.db import db
-        #     await db.init()
-        #     if inspect.iscoroutinefunction(m.run):
-        #         await m.run()
-        #     else:
-        #         m.run()
-        #
-        # asyncio.run(run())
-
-
 
     def do_apply(self):
         unapplied = self.get_unapplied_migrations()
-        for name in unapplied:
-            if name.endswith('.py'):
-                self.apply_module(name[:-3])
-                self.exec(f"INSERT INTO migrations VALUES ('{name}');")
-                print(f"Applied: {name}")
+        for p in unapplied:
+            if p.name.endswith('.py'):
+                run_path(str(p))
+                self.exec(f"INSERT INTO migrations VALUES ('{p.name}');")
+                print(f"Applied: {p.name}")
                 continue
-            p = self.dir / name
             with p.open() as f:
                 sql = f.read()
             sql = sql.strip()
@@ -226,9 +207,9 @@ CREATE TABLE migrations (
                 sql = f"{sql};"
             sql = f'''{sql}\
 
-INSERT INTO migrations VALUES ('{name}');'''
+INSERT INTO migrations VALUES ('{p.name}');'''
             self.exec(sql)
-            print(f"Applied: {name}")
+            print(f"Applied: {p.name}")
 
     def run(self):
         with ExitStack() as stack:

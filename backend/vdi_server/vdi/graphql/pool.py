@@ -101,9 +101,9 @@ class PoolType(graphene.ObjectType):
         if self.vms:
             # static pool
             return self.vms
-        if not self.settings:
-            await self.resolve_settings(None)
-        if self.settings.desktop_pool_type == DesktopPoolType.STATIC:
+        # if not self.settings:
+        #     await self.resolve_settings(None)
+        if self.desktop_pool_type == DesktopPoolType.STATIC:
             async with db.connect() as conn:
                 qu = "select id from vm where pool_id = $1", self.id
                 data = await conn.fetch(*qu)
@@ -428,9 +428,6 @@ class AddPool(graphene.Mutation):
         from vdi.graphql.resources import NodeType, ControllerType
         controller = ControllerType(ip=pool['controller_ip'])
 
-        fields = ', '.join(pool.keys())
-        values = ', '.join(f'${i+1}' for i in range(len(pool)))
-        #
         dyn_traits = {
             k: v for k, v in pool.items() if k in Pool.traits_keys
         }
@@ -467,7 +464,8 @@ class AddPool(graphene.Mutation):
         ret = PoolType(id=pool['id'], state=state,
                        name=pool['name'], template_id=pool['template_id'],
                        controller=controller,
-                       settings=PoolSettings(**pool_settings))
+                       settings=PoolSettings(**pool_settings),
+                       desktop_pool_type=DesktopPoolType.AUTOMATED)
         state.pool = ret
         for item in available:
             item.pool = ret
