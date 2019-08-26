@@ -13,11 +13,12 @@ from graphql.error import format_error
 from collections import OrderedDict
 import json
 
+from vdi.utils import print
 
 class SubscriptionHandler:
 
     @classmethod
-    async def handle_subscription(cls, websocket, schema):
+    async def handle(cls, websocket, schema):
         await websocket.accept()
         message = await websocket.receive()
         graphql_string = message['text']
@@ -35,7 +36,6 @@ class SubscriptionHandler:
         try:
             async for single_result in iterator:
                 await cls._prepare_data_and_send(single_result, websocket)
-
             await websocket.close()
 
         except WsConnectionClosed:

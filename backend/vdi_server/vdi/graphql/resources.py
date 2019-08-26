@@ -16,10 +16,11 @@ from ..tasks.resources import (
     ListDatapools, ListNodes, FetchResourcesUsage, CheckController
 )
 
-
 from vdi.errors import FieldError, SimpleError, FetchException
 from vdi.utils import Unset
+from vdi.utils import clamp_value
 
+from classy_async import g
 
 class RequestType(graphene.ObjectType):
     url = graphene.String()
@@ -477,16 +478,83 @@ class ControllerType(graphene.ObjectType):
         return True
 
 
-class Subscription(graphene.ObjectType):
+class TestSubscription(graphene.ObjectType):
     count_seconds = graphene.Float(up_to=graphene.Int())
 
-    async def resolve_count_seconds(root, info, up_to):
-        print('resolve_count_seconds_start')
-        yield 1.1
+    async def resolve_count_seconds(root, _info, up_to):
         for i in range(up_to):
-            print('resolve_count_seconds', i)
             yield i
             await asyncio.sleep(1.)
         yield up_to
+
+
+class ResourcesUsage(graphene.ObjectType):
+
+    cluster_res_usage = graphene.Field(ResourcesUsageType, cluster_id=graphene.ID(), timeout=graphene.Int())
+    node_res_usage = graphene.Field(ResourcesUsageType, node_id=graphene.ID(), timeout=graphene.Int())
+
+    @staticmethod
+    async def _sleep(timeout):
+        adequate_timeout = clamp_value(timeout, 1, 1000)
+        await asyncio.sleep(adequate_timeout)
+
+    async def resolve_cluster_res_usage(self, _info, cluster_id, timeout=2):
+        g.use_threadlocal(True)
+
+        controller_ip = await DiscoverControllerIp(cluster_id=cluster_id)
+        while True:
+            res_usage = await FetchResourcesUsage(controller_ip=controller_ip,
+                                                  resource_category_name='clusters', resource_id=cluster_id)
+            yield res_usage
+            await ResourcesUsage._sleep(timeout)
+
+    async def resolve_node_res_usage(self, _info, node_id, timeout=2):
+        g.use_threadlocal(True)
+
+        controller_ip = await DiscoverControllerIp(node_id=node_id)
+        while True:
+            res_usage = await FetchResourcesUsage(controller_ip=controller_ip,
+                                                  resource_category_name='nodes', resource_id=node_id)
+            yield res_usage
+            await ResourcesUsage._sleep(timeout)
+
+
+
+
+
+
+
+
+
+#class ResourcesUsage(graphene.ObjectType):
+#
+#    cluster_res_usage = graphene.Field(ResourcesUsageType, cluster_id=graphene.ID(), timeout=graphene.Int())
+#    node_res_usage = graphene.Field(ResourcesUsageType, node_id=graphene.ID(), timeout=graphene.Int())
+#
+#    async def resolve_cluster_res_usage(self, _info, cluster_id, timeout=2):
+#        await self._handle(_info, 'clusters', cluster_id, timeout)
+#
+#    async def resolve_node_res_usage(self, _info, node_id, timeout=2):
+#        await self._handle(_info, 'nodes', node_id, timeout)
+#
+#    async def _handle(self, _info, resource_category_name, resource_id, timeout):
+#
+#        g.use_threadlocal(True)
+#
+#        if resource_category_name == 'clusters':
+#            controller_ip = await DiscoverControllerIp(cluster_id=resource_id)
+#        elif resource_category_name == 'node':
+#            controller_ip = await DiscoverControllerIp(node_id=resource_id)
+#        else:
+#            raise SimpleError('Неверная категория ресурсов')
+#
+#        while True:
+#            res_usage = await FetchResourcesUsage(controller_ip=controller_ip,
+#                                                  resource_category_name=resource_category_name,
+#                                                  resource_id=resource_id)
+#            yield res_usage
+#            # sleep
+#            adequate_timeout = clamp_value(timeout, 1, 1000)
+#            await asyncio.sleep(adequate_timeout)
 
 

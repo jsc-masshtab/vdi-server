@@ -4,7 +4,7 @@ from graphql.graphql import graphql
 
 from .pool import AddPool, AddStaticPool, PoolMixin, RemovePool, WakePool, AddPoolPermissions, \
     DropPoolPermissions, AddVmsToStaticPool, RemoveVmsFromStaticPool
-from .resources import AddController, RemoveController, Resources, Subscription
+from .resources import AddController, RemoveController, Resources, TestSubscription, ResourcesUsage
 from .users import CreateUser, UserQueries, ChangePassword
 from .vm import PoolWizardMixin, AssignVmToUser, FreeVmFromUser, ListOfVmsQuery
 
@@ -36,8 +36,12 @@ class PoolQuery(UserQueries, Resources, PoolMixin, PoolWizardMixin, graphene.Obj
     pass
 
 
+class AllSubscriptions(TestSubscription, ResourcesUsage):
+    pass
+
+
 schema = graphene.Schema(query=PoolQuery, mutation=PoolMutations,
-                         subscription=Subscription, auto_camelcase=False)
+                         subscription=AllSubscriptions, auto_camelcase=False)
 
 
 class ExecError(Exception):

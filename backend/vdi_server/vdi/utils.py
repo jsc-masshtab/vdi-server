@@ -49,3 +49,7 @@ async def bulk_insert(table, items: List[dict]):
 def print(msg, _print=print):
     if getattr(settings, 'print', False):
         _print(msg)
+
+
+def clamp_value(my_value, min_value, max_value):
+    return max(min(my_value, max_value), min_value)
