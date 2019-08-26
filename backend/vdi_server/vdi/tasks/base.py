@@ -12,7 +12,8 @@ from dataclasses import dataclass
 
 from cached_property import cached_property as cached
 from classy_async import Task as _Task, TaskTimeout, wait, g
-from vdi.errors import WsTimeout, FetchException, ControllerNotAccessible, AuthError, SimpleError, SignatureExpired
+from vdi.errors import WsTimeout, FetchException, ControllerNotAccessible, Forbidden, \
+    SimpleError, SignatureExpired, Unauthorized
 from vdi.settings import settings
 from vdi.tasks.client import HttpClient
 
@@ -118,8 +119,8 @@ class FetchToken(Task):
         if code == 404:
             raise ControllerNotAccessible(ip=self.controller_ip) from ex
         if code == 400:
-            if ex.data['non_field_errors'] == [AuthError.message]:
-                raise AuthError() from ex
+            if ex.data['non_field_errors'] == [Forbidden.message]:
+                raise Forbidden() from ex
         raise ex
 
 
@@ -146,9 +147,6 @@ class Token(Task):
             return True
         except SignatureExpired:
             return False
-        # except BaseException as ex:
-        #     ex = ex
-        #     breakpoint()
 
     async def run(self):
         token = await self.fetch_token_from_db()
@@ -248,6 +246,8 @@ class CheckConnection(UrlFetcher):
     def on_fetch_failed(self, ex, code):
         if code == SignatureExpired.code and ex.data['non_field_errors'] == [SignatureExpired.message]:
             raise SignatureExpired()
+        if code == Unauthorized.code:
+            breakpoint()
         raise ControllerNotAccessible(ip=self.controller_ip) from ex
 
 

@@ -129,11 +129,18 @@ class ControllerNotAccessible(HttpError):
 
 
 class AuthError(HttpError):
+    pass
+
+
+class Forbidden(AuthError):
     code = 403
     message = "Не удалось войти в систему с предоставленными учетными данными."
 
 
-class SignatureExpired(HttpError):
+class SignatureExpired(AuthError):
     code = 400
     message = "Signature has expired."
 
+
+class Unauthorized(AuthError):
+    code = 401
