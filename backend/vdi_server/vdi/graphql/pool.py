@@ -940,7 +940,6 @@ class PoolMixin:
         for pool in pools:
             pool = dict(pool.items())
             controller_ip = pool['controller_ip']
-            pool_type = pool['desktop_pool_type']
             p = {
                 f: pool[f] for f in pool
                 if f in PoolType._meta.fields
@@ -956,10 +955,8 @@ class PoolMixin:
             if u_fields:
                 p['users'] = pools_users[id]
             from vdi.graphql.resources import ControllerType
-            breakpoint()
             pt = PoolType(**p,
                           settings=PoolSettings(**settings),
-                          controller=ControllerType(ip=controller_ip),
-                          desktop_pool_type=pool_type)
+                          controller=ControllerType(ip=controller_ip))
             items.append(pt)
         return items
