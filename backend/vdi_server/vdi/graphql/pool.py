@@ -98,7 +98,6 @@ class PoolType(graphene.ObjectType):
         return state
 
     async def resolve_vms(self, info):
-        breakpoint()
         if self.vms:
             # static pool
             return self.vms
