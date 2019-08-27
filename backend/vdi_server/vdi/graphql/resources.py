@@ -16,9 +16,9 @@ from ..tasks.resources import (
     ListDatapools, ListNodes, FetchResourcesUsage, CheckController
 )
 
-
 from vdi.errors import FieldError, SimpleError, FetchException
 from vdi.utils import Unset
+from vdi.utils import clamp_value
 
 
 class RequestType(graphene.ObjectType):
@@ -476,17 +476,53 @@ class ControllerType(graphene.ObjectType):
         await CheckController(controller_ip=self.ip)
         return True
 
-
-class Subscription(graphene.ObjectType):
+# remove later
+class TestSubscription(graphene.ObjectType):
     count_seconds = graphene.Float(up_to=graphene.Int())
 
-    async def resolve_count_seconds(root, info, up_to):
-        print('resolve_count_seconds_start')
-        yield 1.1
+    async def resolve_count_seconds(root, _info, up_to):
         for i in range(up_to):
-            print('resolve_count_seconds', i)
             yield i
             await asyncio.sleep(1.)
         yield up_to
 
 
+class ResourceDataSubscription(graphene.ObjectType):
+
+    cluster_res_usage = graphene.Field(ResourcesUsageType, cluster_id=graphene.ID(), timeout=graphene.Int())
+    node_res_usage = graphene.Field(ResourcesUsageType, node_id=graphene.ID(), timeout=graphene.Int())
+    is_controller_online = graphene.Boolean(controller_ip=graphene.String(), timeout=graphene.Int())
+
+    @staticmethod
+    async def _sleep(timeout):
+        adequate_timeout = clamp_value(timeout, 1, 1000)
+        await asyncio.sleep(adequate_timeout)
+
+    async def resolve_cluster_res_usage(self, _info, cluster_id, timeout=2):
+
+        controller_ip = await DiscoverControllerIp(cluster_id=cluster_id)
+        while True:
+            res_usage = await FetchResourcesUsage(controller_ip=controller_ip,
+                                                  resource_category_name='clusters', resource_id=cluster_id)
+            yield res_usage
+            await ResourceDataSubscription._sleep(timeout)
+
+    async def resolve_node_res_usage(self, _info, node_id, timeout=2):
+
+        controller_ip = await DiscoverControllerIp(node_id=node_id)
+        while True:
+            res_usage = await FetchResourcesUsage(controller_ip=controller_ip,
+                                                  resource_category_name='nodes', resource_id=node_id)
+            yield res_usage
+            await ResourceDataSubscription._sleep(timeout)
+
+    async def resolve_is_controller_online(self, _info, controller_ip, timeout=2):
+        while True:
+            was_exception = False
+            try:
+                await CheckController(controller_ip=controller_ip)
+            except:  # wat excep type
+                was_exception = True
+
+            yield not was_exception
+            await ResourceDataSubscription._sleep(timeout)

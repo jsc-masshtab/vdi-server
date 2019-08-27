@@ -898,6 +898,7 @@ class PoolMixin:
         return PoolType(**pool_data,
                         controller=ControllerType(ip=controller_ip))
 
+
     #TODO fix users
     #TODO remove this
     async def get_pools_users_map(self, u_fields):

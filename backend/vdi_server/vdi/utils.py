@@ -62,6 +62,9 @@ def print(msg, _print=print):
     if getattr(settings, 'print', False):
         _print(msg)
 
-
 def into_words(s):
     return [w for w in s.split() if w]
+
+def clamp_value(my_value, min_value, max_value):
+    return max(min(my_value, max_value), min_value)
+
