@@ -673,7 +673,6 @@ class WakePool(graphene.Mutation):
         return WakePool(ok=True)
 
 
-# TODO list of vms
 # TODO delete, drop, remove: use a single word
 
 class RemovePool(graphene.Mutation):
@@ -898,6 +897,7 @@ class PoolMixin:
         }
         return PoolType(**pool_data,
                         controller=ControllerType(ip=controller_ip))
+
 
     #TODO fix users
     #TODO remove this

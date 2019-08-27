@@ -1,4 +1,5 @@
 import asyncio
+import subprocess
 from pathlib import Path
 
 import os
@@ -17,7 +18,6 @@ from docopt import docopt
 
 from contextlib import ExitStack
 
-import inspect
 
 
 
@@ -40,6 +40,10 @@ Subcommands:
   mi new           Create empty migration
   mi apply         Apply migration(s)
 """
+
+
+class ScriptError(Exception):
+    pass
 
 
 class Mi:
@@ -171,7 +175,7 @@ CREATE TABLE migrations (
         if not unapplied:
             print('All migrations are applied')
             return
-        s = ', '.join(m for m in unapplied)
+        s = ', '.join(p.name for p in unapplied)
         print(f"Unapplied: {s}")
 
     def do_new(self):
@@ -196,7 +200,9 @@ CREATE TABLE migrations (
         unapplied = self.get_unapplied_migrations()
         for p in unapplied:
             if p.name.endswith('.py'):
-                run_path(str(p))
+                result = subprocess.run([sys.executable, str(p)])
+                if result.returncode != 0:
+                    raise ScriptError
                 self.exec(f"INSERT INTO migrations VALUES ('{p.name}');")
                 print(f"Applied: {p.name}")
                 continue

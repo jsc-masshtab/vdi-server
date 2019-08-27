@@ -12,23 +12,18 @@ from dataclasses import dataclass
 
 from cached_property import cached_property as cached
 from classy_async import Task as _Task, TaskTimeout, wait, g
-from vdi.errors import WsTimeout, FetchException, ControllerNotAccessible, AuthError, SimpleError, SignatureExpired
+from vdi.errors import WsTimeout, FetchException, ControllerNotAccessible, Forbidden, \
+    SimpleError, Unauthorized
 from vdi.settings import settings
 from vdi.tasks.client import HttpClient
 
-from vdi.db import db
+from vdi.db import db, fetch
 from vdi import lock
 from vdi.utils import Unset
 
 
 class ErrorHandler(_Task):
     _result = Unset
-
-    def on_fetch_failed(self, ex, code):
-        raise ex
-
-    def on_error(self, ex):
-        raise ex
 
     def set_result(self, value):
         self._result = value
@@ -55,8 +50,15 @@ class ErrorHandler(_Task):
             yield
         except BaseException as ex:
             if isinstance(ex, FetchException):
-                await self.on_fetch_failed(ex, ex.http_error.code)
-            await self.on_error(ex)
+                on_fetch_failed = getattr(self, 'on_fetch_failed', None)
+                if on_fetch_failed:
+                    await self.on_fetch_failed(ex, ex.http_error.code)
+                    return
+            on_error = getattr(self, 'on_error', None)
+            if on_error:
+                await self.on_error(ex)
+                return
+            raise ex
 
     @contextmanager
     def catch_errors(self):
@@ -64,10 +66,20 @@ class ErrorHandler(_Task):
             yield
         except BaseException as ex:
             if isinstance(ex, FetchException):
-                self.on_fetch_failed(ex, ex.http_error.code)
-            self.on_error(ex)
+                on_fetch_failed = getattr(self, 'on_fetch_failed', None)
+                if on_fetch_failed:
+                    self.on_fetch_failed(ex, ex.http_error.code)
+                    return
+            on_error = getattr(self, 'on_error', None)
+            if on_error:
+                self.on_error(ex)
+                return
+            raise ex
 
-    async def run(self):
+    def co(self):
+        return self.run_and_catch_errors()
+
+    async def run_and_catch_errors(self):
         handler_type = self.get_error_handler_type()
         if handler_type == 'sync':
             with self.catch_errors():
@@ -100,14 +112,15 @@ class FetchToken(Task):
         http_client = HttpClient()
         params = urllib.parse.urlencode(self.creds)
         data = await http_client.fetch(self.url, method='POST', body=params)
-        return data['token'], data['expires_on']
+        expires_on = parse_dt(data['expires_on'])
+        return data['token'], expires_on
 
     def on_fetch_failed(self, ex, code):
         if code == 404:
             raise ControllerNotAccessible(ip=self.controller_ip) from ex
         if code == 400:
-            if ex.data['non_field_errors'] == [AuthError.message]:
-                raise AuthError() from ex
+            if ex.data['non_field_errors'] == [Forbidden.message]:
+                raise Forbidden() from ex
         raise ex
 
 
@@ -120,42 +133,34 @@ class Token(Task):
     def username(self):
         return settings.credentials['username']
 
-    async def get_from_db(self):
-        async with db.connect() as conn:
-            qu = (
-                'select token, expires_on from veil_creds where username = $1 and controller_ip = $2',
-                self.username, self.controller_ip
-            )
-            data = await conn.fetch(*qu)
-        if data:
-            [[token, expires_on]] = data
-            return token, expires_on
-        return None, None
+    async def fetch_token_from_db(self):
+        qu = 'select token from veil_creds where username = $1 and controller_ip = $2', \
+             self.username, self.controller_ip
+        token = await fetch(*qu)
+        if token:
+            [[token]] = token
+            return token
 
-    def get_expiration_time(self, expires_on: str):
-        # set it to be 2/3 of the original one
-        end = parse_dt(expires_on)
-        now = datetime.now(timezone.utc)
-        delta = (end - now) * 2 / 3
-        return now + delta
-
+    async def try_token(self, token):
+        try:
+            await CheckConnection(controller_ip=self.controller_ip, token=token)
+            return True
+        except Unauthorized:
+            return False
 
     async def run(self):
-        token, expires_on = await self.get_from_db()
+        token = await self.fetch_token_from_db()
         if token:
-            expired = datetime.now(timezone.utc) > expires_on
-            if not expired:
+            if await self.try_token(token):
                 return token
         async with lock.token:
             # have to check the db for the token again:
             # maybe it has been fetched while we've been waiting to aquire the lock
-            token, expires_on = await self.get_from_db()
-            if token:
-                expired = datetime.now(timezone.utc) > expires_on
-                if not expired:
-                    return token
+            old_token = token
+            token = await self.fetch_token_from_db()
+            if token != old_token:
+                return token
             token, expires_on = await FetchToken(controller_ip=self.controller_ip)
-            expires_on = self.get_expiration_time(expires_on)
             async with db.connect() as conn:
                 qu = (
                     'insert into veil_creds (username, controller_ip, token, expires_on) '
@@ -183,9 +188,6 @@ class RefreshToken(Task):
         data = await http_client.fetch(url, method='POST', body=body)
         return data['token'], data['expires_on']
 
-    # def on_fetch_failed(self, ex, code):
-    #     if code == SignatureExpired.code and ex.data['non_field_errors'] == [SignatureExpired.message]:
-    #         await
 
 class UrlFetcher(Task):
 
@@ -222,12 +224,29 @@ class UrlFetcher(Task):
 @dataclass()
 class CheckConnection(UrlFetcher):
     controller_ip: str
+    token: str = None
+
+    async def headers(self):
+        if self.token:
+            token = self.token
+        else:
+            token = await Token(controller_ip=self.controller_ip)
+        return {
+            'Authorization': f'jwt {token}',
+            'Content-Type': 'application/json',
+        }
 
     @cached
     def url(self):
         return f"http://{self.controller_ip}/api/controllers/system-time"
 
     def on_fetch_failed(self, ex, code):
+        if code == Unauthorized.code:
+            try:
+                [message] = ex.data['non_field_errors']
+            except:
+                [message] = ex.data['errors']['detail']
+            raise Unauthorized(message=message)
         raise ControllerNotAccessible(ip=self.controller_ip) from ex
 
 

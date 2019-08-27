@@ -33,7 +33,8 @@
 #include "vdi_api_session.h"
 
 void
-setup_logging(){
+setup_logging()
+{
 
     // get ts
     gint64 cur_ts = g_get_real_time();
@@ -52,6 +53,17 @@ setup_logging(){
     g_free(ts_string);
     g_free(bt_file_name);
     g_free(stderr_file_name);
+}
+
+void
+setup_css()
+{
+//    gtk_widget_set_name(vdi_manager.label_vdi_online, "label_vdi_online");
+//    GtkCssProvider *cssProvider = gtk_css_provider_new();
+//    gtk_css_provider_load_from_path(cssProvider, "css_style.css", NULL);
+//    gtk_style_context_add_provider(gtk_widget_get_style_context(vdi_manager.label_vdi_online),
+//                                       GTK_STYLE_PROVIDER(cssProvider),
+//                                       GTK_STYLE_PROVIDER_PRIORITY_USER);
 }
 
 int
@@ -76,6 +88,9 @@ main(int argc, char **argv)
     GApplication *app = NULL;
     virt_viewer_util_init("Veil VDI Тонкий клиент");
     app = G_APPLICATION(remote_viewer_new());
+
+    // css
+    setup_css(); // someday in future
 
     ret = g_application_run(app, argc, argv);
 
