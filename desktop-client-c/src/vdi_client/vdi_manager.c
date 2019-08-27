@@ -308,10 +308,10 @@ static void on_ws_data_from_vdi_received(gboolean is_vdi_online)
     gchar *message;
     if (vdi_manager.label_vdi_online){
         if (is_vdi_online){
-            message = g_strdup("<span background=\"green\" color=\"white\">VDI сервер доступен</span>");
+            message = g_strdup("<span background=\"green\" color=\"white\">  Сервер доступен  </span>");
         }
         else{
-            message = g_strdup("<span background=\"red\" color=\"white\">VDI сервер недоступен</span>");
+            message = g_strdup("<span background=\"red\" color=\"white\">  Сервер недоступен  </span>");
         }
 
         gtk_label_set_markup(GTK_LABEL (vdi_manager.label_vdi_online), message);

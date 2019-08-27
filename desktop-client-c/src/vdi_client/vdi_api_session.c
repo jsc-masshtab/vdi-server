@@ -94,7 +94,7 @@ static gboolean refresh_vdi_session_token()
         return FALSE;
 
     free_memory_safely(&vdiSession.jwt);
-    vdiSession.jwt = g_strdup(json_object_get_string_member (object, "access_token"));
+    vdiSession.jwt = g_strdup(json_object_get_string_member_safely (object, "access_token"));
     printf("%s\n", vdiSession.jwt);
 
     g_object_unref(msg);
@@ -173,9 +173,10 @@ void set_vdi_credentials(const gchar *username, const gchar *password, const gch
     vdiSession.vdi_password = g_strdup(password);
     vdiSession.vdi_ip = g_strdup(ip);
     vdiSession.vdi_port = g_strdup(port);
-
+    // /client/auth
     vdiSession.api_url = g_strdup_printf("http://%s", vdiSession.vdi_ip);
     vdiSession.auth_url = g_strdup_printf("%s:%s/auth/", vdiSession.api_url, vdiSession.vdi_port);
+    // vdiSession.auth_url = g_strdup_printf("%s/client/auth", vdiSession.api_url);
     vdiSession.jwt = NULL;
 }
 
