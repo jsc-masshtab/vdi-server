@@ -114,6 +114,11 @@
       <p class="field-name">Количество создаваемых ВМ</p>
       <input type="number" formControlName="reserve_size"  min="0">
     </label>
+
+    <label class="field" *ngIf="chooseTypeForm.value.type === 'Динамический'">
+      <p class="field-name">Максимальное количество создаваемых ВМ</p>
+      <input type="number" formControlName="total_size"  min="0">
+    </label>
   </div>
 
   <div class="form-actions" *ngIf="step === 'createPool'">

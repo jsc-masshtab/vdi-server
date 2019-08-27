@@ -114,7 +114,8 @@ export class PoolAddComponent implements OnInit {
       "node_id":['', Validators.required],
       "datapool_id": ['', Validators.required],
       "initial_size": ['', Validators.required],
-      "reserve_size": ['', Validators.required]
+      "reserve_size": ['', Validators.required],
+      "total_size": ['', Validators.required]
     });
     this.finishPoll = {};
     this.getTemplate();
@@ -321,6 +322,10 @@ export class PoolAddComponent implements OnInit {
         {
           title: 'Количество создаваемых ВМ',
           property: 'reserve_size'
+        },
+        {
+          title: 'Максимальное количество создаваемых ВМ',
+          property: 'total_size'
         }
       ];
     } else {
@@ -414,6 +419,7 @@ export class PoolAddComponent implements OnInit {
           this.finishPoll['name'] = value.name;
           this.finishPoll['initial_size'] = value.initial_size;
           this.finishPoll['reserve_size'] = value.reserve_size;
+          this.finishPoll['total_size'] = value.total_size;
           this.finishPoll['type'] = this.chooseTypeForm.value.type;
         }
   
@@ -426,7 +432,6 @@ export class PoolAddComponent implements OnInit {
         this.steps[1].completed = true;
         this.steps[2].completed = true; 
       }
-       
     }
 
     if(step === 'finish-ok') {
@@ -441,8 +446,9 @@ export class PoolAddComponent implements OnInit {
                                 value.node_id,
                                 value.datapool_id,
                                 value.initial_size,
-                                value.reserve_size)
-            .subscribe((res) => { 
+                                value.reserve_size,
+                                value.total_size)
+            .subscribe(() => { 
               this.poolsService.getAllPools().subscribe();
               this.dialogRef.close(); 
             });
@@ -456,7 +462,7 @@ export class PoolAddComponent implements OnInit {
                                 value.node_id,
                                 value.datapool_id,
                                 value.vm_ids_list)
-            .subscribe((res) => { 
+            .subscribe(() => { 
               this.poolsService.getAllPools().subscribe();
               this.dialogRef.close(); 
             });
