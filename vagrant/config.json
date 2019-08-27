@@ -1,5 +1,5 @@
 {
-  "boxname": "vdihost",
+  "boxname": "generic/ubuntu1904",
   "hostname": "vdihost",
   "image": "generic/ubuntu1904"
 }
