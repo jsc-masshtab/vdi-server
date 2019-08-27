@@ -105,5 +105,3 @@ nohup.out
 /backend/vdi_server/vdi/local_settings.py
 
 /vagrant/base/config.json
-
-/frontend/src/environments

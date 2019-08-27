@@ -30,16 +30,6 @@ export class PoolsComponent implements OnInit {
       class: 'name-start'
     },
     {
-      title: 'Начальное количество ВМ',    // всего вм
-      property: 'settings',
-      property_lv2: 'initial_size'
-    },
-    {
-      title: 'Количество создаваемых ВМ',      // сколько свободных осталось
-      property: 'settings',
-      property_lv2: 'reserve_size'
-    },
-    {
       title: 'Доступные ВМ',
       property_array: 'vms'
     },
