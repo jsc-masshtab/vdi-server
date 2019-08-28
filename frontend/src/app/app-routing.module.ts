@@ -61,9 +61,10 @@ const routes: Routes = [
     component: PoolsComponent,
     children: [
       {
-        path: ':id',
+        path: ':type/:id',
         component: PoolDetailsComponent
       }
+    
     ]
   },
   {

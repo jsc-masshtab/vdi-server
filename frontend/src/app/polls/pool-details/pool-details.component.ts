@@ -1,3 +1,4 @@
+import { AddVMStaticPoolComponent } from './../add-vms/add-vms.component';
 import { Component, OnInit } from '@angular/core';
 import { PoolsService } from '../pools.service';
 import { ActivatedRoute, ParamMap, Router } from '@angular/router';
@@ -108,8 +109,8 @@ export class PoolDetailsComponent implements OnInit {
   ];
   private pool_id:number;
   private pool_type:string;
-  public menuActive:string = 'info';
-  public into_spinner:boolean = false;
+  public  menuActive:string = 'info';
+  public  into_spinner:boolean = false;
 
   constructor(private activatedRoute: ActivatedRoute,
               private router: Router,
@@ -118,12 +119,11 @@ export class PoolDetailsComponent implements OnInit {
 
   ngOnInit() {
     this.activatedRoute.paramMap.subscribe((param: ParamMap) => {
-      this.pool_type = this.service.getTypePool();
+      this.pool_type = param.get('type');
       this.pool_id = +param.get('id');
       this.getPool();
     });
   }
-
 
   public getPool() {
     this.host = false;
@@ -146,6 +146,19 @@ export class PoolDetailsComponent implements OnInit {
       data: {
         pool_id: this.pool_id,
         pool_name: this.pool['name']
+      }
+    });
+  }
+
+  public addVM() {
+    this.dialog.open(AddVMStaticPoolComponent, {
+      width: '500px',
+      data: {
+        pool_id: this.pool_id,
+        pool_name: this.pool['name'],
+        id_cluster: this.pool['cluster_id'],
+        id_node: this.pool['node_id'],
+        id_datapool: this.pool['datapool_id']
       }
     });
   }

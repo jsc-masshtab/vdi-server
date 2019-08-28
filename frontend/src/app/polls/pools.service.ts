@@ -79,19 +79,9 @@ export class PoolsService  {
         })
     }
 
-    public type: string;
-
-    public setTypePool(type:string): void {
-        this.type = type;
-    }
-
-    public getTypePool():string {
-        return this.type;
-    }
-
     public getPool(id:number,type:string): Observable<any> {
  
-        if(type === 'AUTOMATED') {
+        if(type === 'automated') {
             return  this.service.watchQuery({
                 query:  gql`  query getPool($id: Int) {
                                 pool(id: $id) {
@@ -121,7 +111,7 @@ export class PoolsService  {
             }).valueChanges.pipe(map(data => data.data['pool'])); 
         }
 
-        if(type === 'STATIC') {
+        if(type === 'static') {
             return  this.service.watchQuery({
                 query:  gql`  query getPool($id: Int) {
                                 pool(id: $id) {
@@ -133,6 +123,11 @@ export class PoolsService  {
                                     }  
                                     controller {
                                         ip
+                                    }
+                                    settings {
+                                        cluster_id
+                                        node_id
+                                        datapool_id
                                     }
                                 }
                             }`,

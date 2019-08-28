@@ -1,3 +1,4 @@
+import { AddVMStaticPoolComponent } from './polls/add-vms/add-vms.component';
 import { HttpLinkModule, HttpLink } from 'apollo-angular-link-http';
 import { ApolloModule, Apollo } from 'apollo-angular';
 import { ErrorsService } from './common/components/errors/errors.service';
@@ -93,7 +94,8 @@ import { environment } from 'src/environments/environment';
     TemplatesComponent,
     VmsComponent,
     UsersComponent,
-    AddUserComponent
+    AddUserComponent,
+    AddVMStaticPoolComponent
   ],
   imports: [
     BrowserModule,
@@ -113,7 +115,8 @@ import { environment } from 'src/environments/environment';
     AddControllerComponent,
     RemoveControllerComponent,
     RemovePoolComponent,
-    AddUserComponent
+    AddUserComponent,
+    AddVMStaticPoolComponent
   ],
   providers: 
             [
