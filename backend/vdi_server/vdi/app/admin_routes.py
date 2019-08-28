@@ -7,7 +7,6 @@ from starlette.graphql import (
 )
 from starlette.authentication import UnauthenticatedUser
 from vdi.graphql.schema import schema
-from vdi.graphql.subscriptions_handler import SubscriptionHandler
 from graphql.execution.executors.asyncio import AsyncioExecutor
 
 from vdi.errors import BackendError
@@ -122,6 +121,6 @@ app.add_route('/admin', GraphQLApp(schema, executor_class=AsyncioExecutor))
 
 
 # subscriptions
-@app.websocket_route('/subscriptions')
-async def subscriptions_ws_endpoint(websocket):
-    await SubscriptionHandler.handle(websocket, schema)
+# @app.websocket_route('/subscriptions')
+# async def subscriptions_ws_endpoint(websocket):
+#     await SubscriptionHandler.handle(websocket, schema)
