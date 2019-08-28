@@ -10,8 +10,6 @@ dependencies:
   - tornado
 
   - pip:
-#    - starlette
-#    - tornado
     - graphene
     - asyncpg
     - aiofiles
@@ -20,5 +18,8 @@ dependencies:
     - python-dateutil
     - cached-property
 
-#    - sanic
     - sanic-jwt
+
+    - ./../classy_async
+    - ./../mi-pkg
+    - ./.
