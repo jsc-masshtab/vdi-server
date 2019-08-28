@@ -8,7 +8,6 @@ import { Component, OnInit,ViewChild,ViewContainerRef } from '@angular/core';
 import { Validators } from '@angular/forms';
 import { PoolsService } from '../pools.service';
 import { map } from 'rxjs/operators';
-import { Subscription } from 'rxjs';
 import { trigger, style, animate, transition } from "@angular/animations";
 import { 
 	FormBuilder, 
@@ -73,7 +72,7 @@ export class PoolAddComponent implements OnInit {
     {
       type: 'createPool',
       completed: false,
-      disabled: false
+      disabled: true
     },
     {
       type: 'finish-see',
@@ -82,7 +81,6 @@ export class PoolAddComponent implements OnInit {
     }
   ];
 
-  private subForm:Subscription;
 
   @ViewChild("selectNodeRef") selectNodeRef: ViewContainerRef;
   @ViewChild("selectDatapoolRef") selectDatapoolRef: ViewContainerRef;
@@ -116,13 +114,12 @@ export class PoolAddComponent implements OnInit {
       "node_id":['', Validators.required],
       "datapool_id": ['', Validators.required],
       "initial_size": ['', Validators.required],
-      "reserve_size": ['', Validators.required]
+      "reserve_size": ['', Validators.required],
+      "total_size": ['', Validators.required]
     });
     this.finishPoll = {};
     this.getTemplate();
     this.getClusters();
-
-    //this.subscriptionCreatePoolForm();
   }
 
   private createStaticPoolInit(): void {
@@ -135,19 +132,8 @@ export class PoolAddComponent implements OnInit {
     });
     this.finishPoll = {};
     this.getClusters();
-
-    //this.subscriptionCreatePoolForm();
   }
 
-  private subscriptionCreatePoolForm() {
-   this.subForm =  this.createPoolForm.statusChanges.subscribe(status => {
-      if(status === 'INVALID') {
-        this.steps[1].disabled = true;
-      } else {
-        this.steps[1].disabled = false;
-      }
-    });
-  }
   
   private getTemplate() {
     this.pending['templates'] = true;
@@ -241,23 +227,25 @@ export class PoolAddComponent implements OnInit {
   public selectCluster(value:object) {
     this.id_cluster = value['value'].id;
     this.finishPoll['cluster_name'] = value['value']['verbose_name'];
+    this.nodes = [];
     this.datapools = [];
     this.vms = [];
-    this.id_node = "",
-    this.id_datapool = "";
+    this.id_node = ""; // скрыть пулы
+    this.id_datapool = ""; // скрыть вм
    
     this.createPoolForm.get('cluster_id').setValue(this.id_cluster);
 
-    this.getNodes(this.id_cluster);
     if(this.selectNodeRef) {
       this.selectNodeRef['value'] = "";
     }
+
+    this.getNodes(this.id_cluster);
   }
 
   public selectNode(value:object) {
     this.id_node = value['value'].id;
     this.finishPoll['node_name'] = value['value']['verbose_name'];
-    this.id_datapool = "";
+    this.id_datapool = ""; // скрыть вм
     this.datapools = [];
     this.vms = [];
   
@@ -288,6 +276,16 @@ export class PoolAddComponent implements OnInit {
     id_vms = value['value'].map(vm => vm['id']);
     this.createPoolForm.get('vm_ids_list').setValue(id_vms);
     this.finishPoll['vm_name'] = value['value'].map(vm => vm['name']);
+  }
+
+  private resetLocalData():void {
+    this.clusters = [];
+    this.nodes = [];
+    this.datapools = [];
+    this.vms = [];
+    this.id_cluster = "";
+    this.id_node = "",
+    this.id_datapool = "";
   }
 
   private chooseCollection(): void {
@@ -324,6 +322,10 @@ export class PoolAddComponent implements OnInit {
         {
           title: 'Количество создаваемых ВМ',
           property: 'reserve_size'
+        },
+        {
+          title: 'Максимальное количество создаваемых ВМ',
+          property: 'total_size'
         }
       ];
     } else {
@@ -368,16 +370,6 @@ export class PoolAddComponent implements OnInit {
       return false;
     }
     return true;
-  }
-
-  private resetLocalData():void {
-    this.clusters = [];
-    this.nodes = [];
-    this.datapools = [];
-    this.vms = [];
-    this.id_cluster = "";
-    this.id_node = "",
-    this.id_datapool = "";
   }
 
   public send(step:string) {
@@ -427,6 +419,7 @@ export class PoolAddComponent implements OnInit {
           this.finishPoll['name'] = value.name;
           this.finishPoll['initial_size'] = value.initial_size;
           this.finishPoll['reserve_size'] = value.reserve_size;
+          this.finishPoll['total_size'] = value.total_size;
           this.finishPoll['type'] = this.chooseTypeForm.value.type;
         }
   
@@ -439,7 +432,6 @@ export class PoolAddComponent implements OnInit {
         this.steps[1].completed = true;
         this.steps[2].completed = true; 
       }
-       
     }
 
     if(step === 'finish-ok') {
@@ -454,8 +446,9 @@ export class PoolAddComponent implements OnInit {
                                 value.node_id,
                                 value.datapool_id,
                                 value.initial_size,
-                                value.reserve_size)
-            .subscribe((res) => { 
+                                value.reserve_size,
+                                value.total_size)
+            .subscribe(() => { 
               this.poolsService.getAllPools().subscribe();
               this.dialogRef.close(); 
             });
@@ -469,7 +462,7 @@ export class PoolAddComponent implements OnInit {
                                 value.node_id,
                                 value.datapool_id,
                                 value.vm_ids_list)
-            .subscribe((res) => { 
+            .subscribe(() => { 
               this.poolsService.getAllPools().subscribe();
               this.dialogRef.close(); 
             });
@@ -480,9 +473,6 @@ export class PoolAddComponent implements OnInit {
   ngOnDestroy() {
     if(this.createPoolForm) {
       this.createPoolForm.reset();
-    }
-    if(this.subForm) {
-      this.subForm.unsubscribe();
     }
   }
 }

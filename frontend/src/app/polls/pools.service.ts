@@ -109,7 +109,8 @@ export class PoolsService  {
                                     }
                                     settings {
                                         initial_size
-                                        reserve_size 
+                                        reserve_size
+                                        total_size
                                     } 
                                 }
                             }`,
@@ -146,11 +147,11 @@ export class PoolsService  {
     };
     
 
-    public createDinamicPool(name: string,template_id: string,cluster_id: string,node_id: string,datapool_id: string,initial_size: number,reserve_size: number) {
+    public createDinamicPool(name: string,template_id: string,cluster_id: string,node_id: string,datapool_id: string,initial_size: number,reserve_size: number,total_size:number) {
         return this.service.mutate<any>({
             mutation: gql`  
-                            mutation AddPool($name: String!,$template_id: String,$cluster_id: String,$node_id: String,$datapool_id: String,$initial_size: Int,$reserve_size: Int) {
-                                addPool(name: $name, template_id: $template_id,cluster_id: $cluster_id,node_id: $node_id,datapool_id: $datapool_id,initial_size: $initial_size,reserve_size: $reserve_size) {
+                            mutation AddPool($name: String!,$template_id: String,$cluster_id: String,$node_id: String,$datapool_id: String,$initial_size: Int,$reserve_size: Int,$total_size: Int) {
+                                addPool(name: $name, template_id: $template_id,cluster_id: $cluster_id,node_id: $node_id,datapool_id: $datapool_id,initial_size: $initial_size,reserve_size: $reserve_size,total_size:$total_size) {
                                     id
                                 }
                             }
@@ -163,7 +164,8 @@ export class PoolsService  {
                 node_id: node_id,
                 datapool_id: datapool_id,
                 initial_size: initial_size,
-                reserve_size: reserve_size
+                reserve_size: reserve_size,
+                total_size: total_size
             }
         })
     }
