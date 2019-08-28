@@ -17,9 +17,10 @@ dependencies:
     - pyjwt
     - python-dateutil
     - cached-property
+    - docopt
 
     - sanic-jwt
 
-    - ./../classy_async
-    - ./../mi-pkg
-    - ./.
+    - -e ./classy_async
+    - -e ./mi-pkg
+    - -e ./.
