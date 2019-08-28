@@ -63,12 +63,16 @@ export class PoolDetailsComponent implements OnInit {
       property_lv2: 'reserve_size'
     },
     {
+      title: 'Максимальное количество создаваемых ВМ',  // Максимальное количество ВМ в пуле -  c тонкого клиента вм будут создаваться с каждым подключ. пользователем даже,если рес-сы закончатся
+      property: 'settings',
+      property_lv2: 'total_size'
+    },
+    {
       title: 'Создано ВМ',
       property_array: 'vms'
     }
   ];
-  // Максимальное количество ВМ в пуле -  c тонкого клиента вм будут создаваться с каждым подключ. пользователем даже,если рес-сы закончатся
-
+  
   public collection_vms_automated:any[] = [
     {
       title: '№',

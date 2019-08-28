@@ -109,7 +109,8 @@ export class PoolsService  {
                                     }
                                     settings {
                                         initial_size
-                                        reserve_size 
+                                        reserve_size
+                                        total_size
                                     } 
                                 }
                             }`,
