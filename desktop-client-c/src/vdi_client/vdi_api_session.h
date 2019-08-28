@@ -11,7 +11,7 @@
 #include <libsoup/soup-message.h>
 
 #include "vdi_ws_client.h"
-
+#include "async.h"
 
 #define VM_ID_UNKNOWN -1
 
@@ -63,23 +63,23 @@ typedef struct{
 
 // Functions
 // init session
-void start_vdi_session();
+void start_vdi_session(void);
 // deinit session
-void stop_vdi_session();
+void stop_vdi_session(void);
 // get session
-SoupSession *get_soup_session();
+SoupSession *get_soup_session(void);
 // get vid server ip
-const gchar *get_vdi_ip();
+const gchar *get_vdi_ip(void);
 // get ws client
-VdiWsClient *vdi_ws_client_ptr();
+VdiWsClient *vdi_ws_client_ptr(void);
 // cancell pending requests
-void cancell_pending_requests();
+void cancell_pending_requests(void);
 // set vdi session credentials
 void set_vdi_credentials(const gchar *username, const gchar *password, const gchar *ip, const gchar *port);
 // set current vm id
 void set_current_vm_id(gint64 current_vm_id);
 // get current vm id
-gint64 get_current_vm_id();
+gint64 get_current_vm_id(void);
 
 //void gInputStreamToBuffer(GInputStream *inputStream, gchar *responseBuffer);
 // Do api call. Return response body
@@ -103,8 +103,6 @@ void do_action_on_vm(GTask         *task,
                   gpointer       task_data,
                   GCancellable  *cancellable);
 
-// threads
-void execute_async_task(GTaskThreadFunc  task_func, GAsyncReadyCallback  callback, gpointer callback_data);
 void do_action_on_vm_async(const gchar *actionStr, gboolean isForced);
 
 #endif //VIRT_VIEWER_VEIL_VDI_API_SESSION_H
