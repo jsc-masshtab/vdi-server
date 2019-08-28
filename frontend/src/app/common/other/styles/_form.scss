@@ -73,7 +73,7 @@
             margin-bottom: 0px;
         }
 
-        input[type="text"],input[type="number"],textarea {
+        input[type="text"],input[type="number"],input[type="password"],textarea {
             background-color: #f9f9f9;
             border: 1px solid #e8e8e8;
             width: 100%;
@@ -92,9 +92,10 @@
 
         textarea {
             height: 80px;
+            padding: 5px;
         }
 
-        input[type="text"],input[type="number"] {
+        input[type="text"],input[type="number"],input[type="password"] {
             height: 30px;
         }
     }
