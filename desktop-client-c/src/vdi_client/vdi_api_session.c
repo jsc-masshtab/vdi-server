@@ -57,7 +57,7 @@ static guint send_message(SoupMessage *msg)
 // Получаем токен
 static gboolean refresh_vdi_session_token()
 {
-    printf("%s\n", (char *)__func__);
+    printf("%s\n", (const char *)__func__);
 
     if(vdiSession.auth_url == NULL)
         return FALSE;
@@ -111,7 +111,6 @@ void start_vdi_session()
     }
     // creae session
     vdiSession.soup_session = soup_session_new();
-    vdiSession.vdi_ws_client.soup_session = vdiSession.soup_session;
 
     vdiSession.vdi_username = NULL;
     vdiSession.vdi_password = NULL;
@@ -124,6 +123,8 @@ void start_vdi_session()
 
     vdiSession.is_active = TRUE;
     vdiSession.current_vm_id = VM_ID_UNKNOWN;
+
+    vdiSession.vdi_ws_client.ws_soup_session = soup_session_new();
 }
 
 void stop_vdi_session()
@@ -140,6 +141,9 @@ void stop_vdi_session()
 
     vdiSession.is_active = FALSE;
     vdiSession.current_vm_id = VM_ID_UNKNOWN;
+
+    soup_session_abort(vdiSession.vdi_ws_client.ws_soup_session);
+    g_object_unref(vdiSession.vdi_ws_client.ws_soup_session);
 }
 
 SoupSession *get_soup_session()
@@ -295,15 +299,6 @@ void do_action_on_vm(GTask         *task,
     // free ActionOnVmData
     g_free(action_on_vm_data->action_on_vm_str);
     free(action_on_vm_data);
-}
-
-void execute_async_task(GTaskThreadFunc task_func, GAsyncReadyCallback callback, gpointer task_data)
-{
-    GTask *task = g_task_new(NULL, NULL, callback, NULL);
-    if(task_data)
-        g_task_set_task_data(task, task_data, NULL);
-    g_task_run_in_thread(task, task_func);
-    g_object_unref (task);
 }
 
 void do_action_on_vm_async(const gchar *actionStr, gboolean isForced)
