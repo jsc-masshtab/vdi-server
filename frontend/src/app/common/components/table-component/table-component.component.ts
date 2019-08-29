@@ -7,10 +7,7 @@ import { Component,Input, Output, EventEmitter } from '@angular/core';
   styleUrls: ['./table-component.component.scss']
 })
 export class TableComponentComponent {
-
-
   @Input() data: object[] = [];
-  @Input() spinner:boolean = false;
   @Input() collection: object[] = [];
   @Input() cursor: boolean = false;
   @Input() empty: string = "- нет данных -";
@@ -18,11 +15,8 @@ export class TableComponentComponent {
 
   constructor() {}
 
-
   public clickRow(item) {
     this.clickRowData.emit(item);
   }
 
-
-  
 }

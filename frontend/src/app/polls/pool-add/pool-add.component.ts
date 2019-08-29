@@ -1,3 +1,4 @@
+import { WaitService } from './../../common/components/wait/wait.service';
 import { VmsService } from './../../resourses/vms/vms.service';
 import { TemplatesService } from './../../resourses/templates/templates.service';
 import { DatapoolsService } from './../../resourses/datapools/datapools.service';
@@ -93,6 +94,7 @@ export class PoolAddComponent implements OnInit {
               private datapoolsService: DatapoolsService,
               private templatesService:TemplatesService,
               private vmsService: VmsService,
+              private waitService: WaitService,
               private dialogRef: MatDialogRef<PoolAddComponent>,
               private fb: FormBuilder) {}
 
@@ -436,6 +438,7 @@ export class PoolAddComponent implements OnInit {
 
     if(step === 'finish-ok') {
       let value = this.createPoolForm.value;
+      this.waitService.setWait(true);
      
       if(this.chooseTypeForm.value.type === 'Динамический') {
         
@@ -450,7 +453,8 @@ export class PoolAddComponent implements OnInit {
                                 value.total_size)
             .subscribe(() => { 
               this.poolsService.getAllPools().subscribe();
-              this.dialogRef.close(); 
+              this.dialogRef.close();
+              this.waitService.setWait(false);
             });
       } 
 
@@ -464,7 +468,8 @@ export class PoolAddComponent implements OnInit {
                                 value.vm_ids_list)
             .subscribe(() => { 
               this.poolsService.getAllPools().subscribe();
-              this.dialogRef.close(); 
+              this.dialogRef.close();
+              this.waitService.setWait(false);
             });
       } 
     } 

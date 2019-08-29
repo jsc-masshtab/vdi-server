@@ -1,3 +1,4 @@
+import { WaitService } from './../../common/components/wait/wait.service';
 import { Component, OnInit } from '@angular/core';
 import { ControllersService   } from './controllers.service';
 import { map } from 'rxjs/operators';
@@ -26,24 +27,18 @@ export class ControllersComponent implements OnInit {
       }
   ];
 
-
-  public spinner:boolean = false;
-
-  constructor(private service: ControllersService,public dialog: MatDialog){}
+  constructor(private service: ControllersService,public dialog: MatDialog,private waitService: WaitService){}
 
   ngOnInit() {
     this.getAllControllers();
   }
 
   public getAllControllers() {
-    this.spinner = true;
+    this.waitService.setWait(true);
     this.service.getAllControllers().valueChanges.pipe(map(data => data.data.controllers))
       .subscribe((data) => {
         this.controllers = data;
-        this.spinner = false;
-      },
-      (error) => {
-        this.spinner = false;
+        this.waitService.setWait(false);
       });
   }
 

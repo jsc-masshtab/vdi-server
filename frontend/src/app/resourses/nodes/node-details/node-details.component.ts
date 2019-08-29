@@ -137,8 +137,6 @@ export class NodeDetailsComponent implements OnInit {
   public node_id:string;
   public menuActive:string = 'info';
 
-
-  public spinner:boolean = false;
   public host: boolean = false;
 
   constructor(private activatedRoute: ActivatedRoute,
@@ -153,17 +151,14 @@ export class NodeDetailsComponent implements OnInit {
   }
 
   public getNode() {
-    this.spinner = true;
     this.host = false;
     this.service.getNode(this.node_id).valueChanges.pipe(map(data => data.data.node))
       .subscribe( (data) => {
         this.node = data;
         this.templates = data.templates.map((item) => JSON.parse(item.info));
-        this.spinner = false;
         this.host = true;
       },
       (error) => {
-        this.spinner = false;
         this.host = true;
       });
   }

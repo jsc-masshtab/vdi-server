@@ -1,3 +1,4 @@
+import { WaitService } from './../common/components/wait/wait.service';
 import { Component, OnInit, HostListener,ViewChild,ElementRef} from '@angular/core';
 import { PoolsService } from './pools.service';
 import { PoolAddComponent } from './pool-add/pool-add.component';
@@ -15,7 +16,6 @@ import { Subscription } from 'rxjs';
 export class PoolsComponent implements OnInit {
 
   public pools: [];
-  public spinner:boolean = false;
   public pageHeightMinNumber: number = 315;
 	public pageHeightMin: string = '315px';
 	public pageHeightMax: string = '100%';
@@ -39,8 +39,7 @@ export class PoolsComponent implements OnInit {
     }
   ];
 
-
-  constructor(private service: PoolsService,public dialog: MatDialog,private router: Router){}
+  constructor(private service: PoolsService,public dialog: MatDialog,private router: Router,private waitService: WaitService){}
 
   @ViewChild('view') view:ElementRef;
 
@@ -65,14 +64,11 @@ export class PoolsComponent implements OnInit {
   }
 
   public getAllPools() {
-    this.spinner = true;
+    this.waitService.setWait(true);
     this.getPoolsSub = this.service.getAllPools(true)
       .subscribe( (data) => {
         this.pools = data;
-        this.spinner = false;
-      },
-      (error) => {
-        this.spinner = false;
+        this.waitService.setWait(false);
       });
   }
 

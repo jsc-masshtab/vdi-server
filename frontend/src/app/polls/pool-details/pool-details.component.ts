@@ -110,7 +110,6 @@ export class PoolDetailsComponent implements OnInit {
   private pool_id:number;
   private pool_type:string;
   public  menuActive:string = 'info';
-  public  into_spinner:boolean = false;
 
   constructor(private activatedRoute: ActivatedRoute,
               private router: Router,
@@ -127,15 +126,12 @@ export class PoolDetailsComponent implements OnInit {
 
   public getPool() {
     this.host = false;
-    this.into_spinner = true;
     this.service.getPool(this.pool_id,this.pool_type)
       .subscribe( (data) => {
         this.pool = data;
-        this.into_spinner = false;
         this.host = true;
       },
       (error)=> {
-        this.into_spinner = false;
         this.host = true;
       });
   }

@@ -1,3 +1,4 @@
+import { WaitService } from './../../common/components/wait/wait.service';
 import { Component, OnInit } from '@angular/core';
 import { TemplatesService } from './templates.service';
 import { map } from 'rxjs/operators';
@@ -40,18 +41,15 @@ export class TemplatesComponent implements OnInit {
     }
   ];
 
-
-  public spinner:boolean = false;
-
-  constructor(private service: TemplatesService){}
+  constructor(private service: TemplatesService,private waitService: WaitService){}
 
   ngOnInit() {
     this.getTemplates();
   }
 
   public getTemplates() {
-    this.spinner = true;
-    this.service.getAllTemplates().valueChanges.pipe(map(data => data.data.controllers)).subscribe((data)=> {
+    this.waitService.setWait(true);
+    this.service.getAllTemplates().valueChanges.pipe(map(data => data.data.controllers)).subscribe((data) => {
        let arrTemplates: [][] = [];
         this.templates = [];
         arrTemplates = data.map(controller => controller.templates);
@@ -61,10 +59,7 @@ export class TemplatesComponent implements OnInit {
               this.parseInfoTmp(obj);
             }); 
         });
-   
-    this.spinner = false;
-    },(error) => {
-      this.spinner = false;
+      this.waitService.setWait(false);
     });
   }
 

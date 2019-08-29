@@ -155,7 +155,6 @@ export class ClusterDetailsComponent implements OnInit {
   public cluster_id:string;
   public menuActive:string = 'info';
   public host: boolean = false;
-  public spinner:boolean = false;
 
   constructor(private activatedRoute: ActivatedRoute,
               private service: ClustersService,
@@ -169,17 +168,14 @@ export class ClusterDetailsComponent implements OnInit {
   }
 
   public getCluster() {
-    this.spinner = true;
     this.host = false;
     this.service.getCluster(this.cluster_id).valueChanges.pipe(map(data => data.data.cluster))
       .subscribe( (data) => {
         this.cluster = data;
         this.templates = data.templates.map((item) => JSON.parse(item.info));
-        this.spinner = false;
         this.host = true;
       },
       (error) => {
-        this.spinner = false;
         this.host = true;
       });
   }
