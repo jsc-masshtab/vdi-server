@@ -90,7 +90,7 @@ ENV/
 
 
 .vscode/
-.idea/
+/.idea/
 .vagrant/
 *.qcow2
 
