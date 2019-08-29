@@ -19,7 +19,7 @@ from ..db import db, fetch
 from ..pool import Pool
 
 from vdi.errors import SimpleError, FieldError
-from vdi.utils import Unset, print, insert, bulk_insert
+from vdi.utils import Unset, insert, bulk_insert, print
 
 
 class TemplateType(graphene.ObjectType):
@@ -123,8 +123,8 @@ class PoolType(graphene.ObjectType):
 
     async def resolve_settings(self, info):
         pool_type = self.resolve_desktop_pool_type(None)
-        if pool_type == DesktopPoolType.STATIC:
-            return None
+        #if pool_type == DesktopPoolType.STATIC:
+        #    return None
         if self.settings:
             return self.settings
         async with db.connect() as conn:
@@ -530,23 +530,32 @@ class AddStaticPool(graphene.Mutation):
         async with db.connect() as conn:
             qu = (
                 "select vm.id from vm join pool on vm.pool_id = pool.id "
-                "where pool.desktop_pool_type = 'AUTOMATED' and vm.id = any($1::text[])", list(vm_ids)
+                "where vm.id = any($1::text[])", list(vm_ids)
             )
             data = await conn.fetch(*qu)
             if data:
                 ids = [id for (id,) in data]
-                raise SimpleError("Некоторые ВМ принадлежат динамическим пулам")
+                #raise SimpleError("Некоторые ВМ принадлежат другим пулам")
         tasks = [
             EnableRemoteAccess(controller_ip=controller_ip, domain_id=vm_id)
             for vm_id in vm_ids
         ]
         await wait_all(*tasks)
 
+        # domaign info
+        vm_info = await GetDomainInfo(domain_id=vm_ids[0])
+        vm_info_dict = vm_info[0]
+        cluster_id = vm_info_dict['cluster']
+        node_id = vm_info_dict['node']['id']
+        settings = PoolSettings(cluster_id=cluster_id, node_id=node_id)
+
         # add pool
         pool = {
             'name': options['name'],
             'controller_ip': controller_ip,
             'desktop_pool_type': DesktopPoolType.STATIC.name,
+            'cluster_id': cluster_id,
+            'node_id': node_id
         }
         [[pool_id]] = await insert('pool', pool, returning='id')
         pool['id'] = pool_id
@@ -559,7 +568,8 @@ class AddStaticPool(graphene.Mutation):
         from vdi.graphql.resources import ControllerType
         return PoolType(id=pool['id'], name=pool['name'], vms=vms,
                         controller=ControllerType(ip=pool['controller_ip']),
-                        desktop_pool_type=DesktopPoolType.STATIC)
+                        desktop_pool_type=DesktopPoolType.STATIC,
+                        settings=settings)
 
 
 class AddVmsToStaticPool(graphene.Mutation):
@@ -864,6 +874,14 @@ class PoolMixin:
         async with db.connect() as conn:
             [pool] = await conn.fetch(*qu)
         dic = dict(pool.items())
+
+        # for static pool take data only from pool table
+        if dic['desktop_pool_type'] == DesktopPoolType.STATIC.name:
+            qu = "select * from pool where id = $1", id
+            async with db.connect() as conn:
+                [pool] = await conn.fetch(*qu)
+            dic = dict(pool.items())
+
         settings = {}
         for sel in settings_selections:
             settings[sel] = pool[sel]

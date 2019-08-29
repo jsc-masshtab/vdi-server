@@ -22,7 +22,7 @@ class SubscriptionHandler:
     @classmethod
     async def handle(cls, websocket, schema):
 
-        g.use_threadlocal(True)
+        g.init()
 
         await websocket.accept()
         message = await websocket.receive()
