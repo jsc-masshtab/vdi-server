@@ -4,12 +4,13 @@ channels:
 dependencies:
   - python=3.7
   - postgresql=11
-  - starlette
+  - httptools
   - sanic
   - uvicorn
   - tornado
 
   - pip:
+    - starlette
     - graphene
     - asyncpg
     - aiofiles
