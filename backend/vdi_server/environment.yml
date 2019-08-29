@@ -24,3 +24,4 @@ dependencies:
     - -e ./classy_async
     - -e ./mi-pkg
     - -e ./.
+    - -e ./auth_server
