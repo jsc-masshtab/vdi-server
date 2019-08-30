@@ -1,3 +1,4 @@
+import { RemoveVMStaticPoolComponent } from './../remove-vms/remove-vms.component';
 import { AddVMStaticPoolComponent } from './../add-vms/add-vms.component';
 import { Component, OnInit } from '@angular/core';
 import { PoolsService } from '../pools.service';
@@ -153,7 +154,20 @@ export class PoolDetailsComponent implements OnInit {
         pool_id: this.pool_id,
         pool_name: this.pool['name'],
         id_cluster: this.pool['settings']['cluster_id'],
-        id_node: this.pool['settings']['node_id']
+        id_node: this.pool['settings']['node_id'],
+        pool_type: this.pool_type
+      }
+    });
+  }
+
+  public removeVM() {
+    this.dialog.open(RemoveVMStaticPoolComponent, {
+      width: '500px',
+      data: {
+        pool_id: this.pool_id,
+        pool_name: this.pool['name'],
+        vms: this.pool.vms,
+        pool_type: this.pool_type
       }
     });
   }

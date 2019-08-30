@@ -1,3 +1,4 @@
+import { RemoveVMStaticPoolComponent } from './polls/remove-vms/remove-vms.component';
 import { WaitService } from './common/components/wait/wait.service';
 import { WaitComponent } from './common/components/wait/wait.component';
 import { AddVMStaticPoolComponent } from './polls/add-vms/add-vms.component';
@@ -98,7 +99,8 @@ import { environment } from 'src/environments/environment';
     UsersComponent,
     AddUserComponent,
     AddVMStaticPoolComponent,
-    WaitComponent
+    WaitComponent,
+    RemoveVMStaticPoolComponent
   ],
   imports: [
     BrowserModule,
@@ -119,7 +121,8 @@ import { environment } from 'src/environments/environment';
     RemoveControllerComponent,
     RemovePoolComponent,
     AddUserComponent,
-    AddVMStaticPoolComponent
+    AddVMStaticPoolComponent,
+    RemoveVMStaticPoolComponent
   ],
   providers: 
             [

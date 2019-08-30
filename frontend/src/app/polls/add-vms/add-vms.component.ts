@@ -3,7 +3,6 @@ import { VmsService } from './../../resourses/vms/vms.service';
 import { PoolsService } from '../pools.service';
 import { MatDialogRef } from '@angular/material';
 import { Component, Inject } from '@angular/core';
-import { Router } from '@angular/router';
 import {MAT_DIALOG_DATA} from '@angular/material';
 import { map } from 'rxjs/operators';
 
@@ -33,7 +32,7 @@ export class AddVMStaticPoolComponent  {
     this.waitService.setWait(true);
     this.poolService.addVMStaticPool(this.data.pool_id,this.id_vms).subscribe(() => {
       this.dialogRef.close();
-      this.poolService.getAllPools().subscribe();
+      this.poolService.getPool(this.data.pool_id,this.data.pool_type).subscribe();
       this.waitService.setWait(false);
     });
   }

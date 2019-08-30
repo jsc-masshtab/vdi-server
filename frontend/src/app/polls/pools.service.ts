@@ -120,6 +120,7 @@ export class PoolsService  {
                                     vms {
                                         name
                                         state
+                                        id
                                     }  
                                     controller {
                                         ip
@@ -185,11 +186,27 @@ export class PoolsService  {
     }
 
     public addVMStaticPool(pool_id:number,vm_ids:[]) {
-        console.log(pool_id,vm_ids);
         return this.service.mutate<any>({
             mutation: gql`  
                             mutation AddVms($pool_id: Int!,$vm_ids: [ID]!) {
                                 addVmsToStaticPool(pool_id: $pool_id,vm_ids: $vm_ids) {
+                                    ok
+                                }
+                            }
+            `,
+            variables: {
+                method: 'POST',
+                pool_id: pool_id,
+                vm_ids: vm_ids
+            }
+        })
+    }
+
+    public removeVMStaticPool(pool_id:number,vm_ids:[]) {
+        return this.service.mutate<any>({
+            mutation: gql`  
+                            mutation RemoveVms($pool_id: Int!,$vm_ids: [ID]!) {
+                                removeVmsFromStaticPool(pool_id: $pool_id,vm_ids: $vm_ids) {
                                     ok
                                 }
                             }
