@@ -1,3 +1,4 @@
+import { WaitService } from './../../common/components/wait/wait.service';
 import { VmsService } from './../../resourses/vms/vms.service';
 import { PoolsService } from '../pools.service';
 import { MatDialogRef } from '@angular/material';
@@ -15,38 +16,33 @@ import { map } from 'rxjs/operators';
 export class AddVMStaticPoolComponent  {
 
   public pendingVms:boolean = false;
-  public vms = {};
+  public vms: [] = [];
+  private id_vms: [] = [];
 
-  constructor(private service: PoolsService,
+  constructor(private poolService: PoolsService,
               private vmsService: VmsService,
+              private waitService: WaitService,
               private dialogRef: MatDialogRef<AddVMStaticPoolComponent>,
-              private router: Router,
               @Inject(MAT_DIALOG_DATA) public data: any) {}
 
   ngOnInit() {
     this.getVms();
   }
  
-  // public send() {
-  //   this.service.removePool(this.data.pool_id).subscribe((res) => {
-  //     this.dialogRef.close();
-  //     setTimeout(()=> {
-  //       this.router.navigate([`pools`]);
-  //       this.service.getAllPools().subscribe();
-  //     },1000); 
-    
-  //   },(error) => {
-      
-  //   });
-  // }
+  public send() {
+    this.waitService.setWait(true);
+    this.poolService.addVMStaticPool(this.data.pool_id,this.id_vms).subscribe(() => {
+      this.dialogRef.close();
+      this.poolService.getAllPools().subscribe();
+      this.waitService.setWait(false);
+    });
+  }
 
   private getVms() {
     this.pendingVms = true;
-    console.log(this.data);
-    this.vmsService.getAllVms(this.data.id_cluster,this.data.id_node,this.data.id_datapool).valueChanges.pipe(map(data => data.data.list_of_vms))
+    this.vmsService.getAllVms(this.data.id_cluster,this.data.id_node).valueChanges.pipe(map(data => data.data.list_of_vms))
     .subscribe( (data) => {
       this.vms =  data;
-      console.log(data);
       this.pendingVms = false;
     },
     (error)=> {
@@ -56,10 +52,7 @@ export class AddVMStaticPoolComponent  {
   }
 
   public selectVm(value:[]) {
-    // let id_vms: [] = [];
-    // id_vms = value['value'].map(vm => vm['id']);
-    // this.createPoolForm.get('vm_ids_list').setValue(id_vms);
-    // this.finishPoll['vm_name'] = value['value'].map(vm => vm['name']);
+    this.id_vms = value['value'];
   }
 
 }

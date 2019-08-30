@@ -12,7 +12,7 @@
     </div>
     <div class="details-control-panel">
         <button (click)="getPool()" class="btn-refresh" title="Обновить"><fa-icon [icon]="['fas','sync-alt']"></fa-icon></button>
-        <button (click)="addVM()" class="btn-control"><fa-icon [icon]="['fas','trash-alt']" size="xs"></fa-icon><span class="name">Добавить ВМ</span></button>
+        <button (click)="addVM()" class="btn-control"><fa-icon [icon]="['fas','plus-circle']" size="xs"></fa-icon><span class="name">Добавить ВМ</span></button>
         <button (click)="removePool()" class="btn-control"><fa-icon [icon]="['fas','trash-alt']" size="xs"></fa-icon><span class="name">Удалить</span></button>
     </div>
 
@@ -42,9 +42,3 @@
     </div>
 
 </div>
-
-<!-- <div *ngIf="into_spinner" class="cdk-overlay-container">
-    <div class="cdk-overlay-backdrop cdk-overlay-backdrop-showing"></div>
-    <fa-icon [icon]="['fas', 'spinner']" [spin]="true" size="2x"></fa-icon>
-</div> -->
-  

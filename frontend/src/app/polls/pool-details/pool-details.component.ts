@@ -152,9 +152,8 @@ export class PoolDetailsComponent implements OnInit {
       data: {
         pool_id: this.pool_id,
         pool_name: this.pool['name'],
-        id_cluster: this.pool['cluster_id'],
-        id_node: this.pool['node_id'],
-        id_datapool: this.pool['datapool_id']
+        id_cluster: this.pool['settings']['cluster_id'],
+        id_node: this.pool['settings']['node_id']
       }
     });
   }

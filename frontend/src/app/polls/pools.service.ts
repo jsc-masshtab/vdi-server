@@ -127,7 +127,6 @@ export class PoolsService  {
                                     settings {
                                         cluster_id
                                         node_id
-                                        datapool_id
                                     }
                                 }
                             }`,
@@ -181,6 +180,24 @@ export class PoolsService  {
                 node_id: node_id,
                 datapool_id: datapool_id,
                 vm_ids_list: vm_ids_list
+            }
+        })
+    }
+
+    public addVMStaticPool(pool_id:number,vm_ids:[]) {
+        console.log(pool_id,vm_ids);
+        return this.service.mutate<any>({
+            mutation: gql`  
+                            mutation AddVms($pool_id: Int!,$vm_ids: [ID]!) {
+                                addVmsToStaticPool(pool_id: $pool_id,vm_ids: $vm_ids) {
+                                    ok
+                                }
+                            }
+            `,
+            variables: {
+                method: 'POST',
+                pool_id: pool_id,
+                vm_ids: vm_ids
             }
         })
     }
