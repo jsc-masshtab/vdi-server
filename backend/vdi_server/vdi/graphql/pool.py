@@ -471,7 +471,7 @@ class AddPool(graphene.Mutation):
         return ret
 
 
-async def check_static_pool_and_get_params(cls, pool_id):
+async def check_static_pool_and_get_params(pool_id):
     """check if given pool_id corresponds to valid static pool and return its parameters"""
     async with db.connect() as conn:
         qu = f"SELECT * from pool where id = $1", pool_id
