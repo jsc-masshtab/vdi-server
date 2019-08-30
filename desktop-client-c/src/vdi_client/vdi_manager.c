@@ -4,6 +4,7 @@
 
 #include <glib/gi18n.h>
 #include <gdk/gdkkeysyms.h>
+#include <cairo-features.h>
 #include <libsoup/soup-session.h>
 
 #include "virt-viewer-util.h"
@@ -49,10 +50,10 @@ typedef struct{
 static VdiManager vdi_manager;
 
 // functions declarations
-static void set_init_values();
+static void set_init_values(void);
 static void set_vdi_client_state(VdiClientState vdi_client_state, const gchar *message, gboolean error_message);
-static void refresh_vdi_pool_data_async();
-static void unregister_all_pools();
+static void refresh_vdi_pool_data_async(void);
+static void unregister_all_pools(void);
 static void register_pool(gint64 pool_id, const gchar *pool_name);
 static VdiPoolWidget get_vdi_pool_widget_by_id(gint64 searched_id);
 static void shutdown_loop(GMainLoop *loop);
@@ -143,7 +144,7 @@ static void refresh_vdi_pool_data_async()
 static void unregister_all_pools()
 {
     if (vdi_manager.pool_widgets_array) {
-        int i;
+        guint i;
         for (i = 0; i < vdi_manager.pool_widgets_array->len; ++i) {
             VdiPoolWidget vdi_pool_widget = g_array_index(vdi_manager.pool_widgets_array, VdiPoolWidget, i);
             destroy_vdi_pool_widget(&vdi_pool_widget);
@@ -171,7 +172,7 @@ static void register_pool(gint64 pool_id, const gchar *pool_name)
 static VdiPoolWidget get_vdi_pool_widget_by_id(gint64 searched_id)
 {
     VdiPoolWidget searched_vdi_pool_widget = {};
-    int i;
+    guint i;
 
     if (vdi_manager.pool_widgets_array == NULL)
         return searched_vdi_pool_widget;
@@ -201,12 +202,12 @@ static void on_get_vdi_pool_data_finished (GObject *source_object G_GNUC_UNUSED,
                                         GAsyncResult *res,
                                         gpointer user_data G_GNUC_UNUSED)
 {
-    printf("%s\n", (char *)__func__);
+    printf("%s\n", (const char *)__func__);
 
     GError *error;
     gpointer  ptr_res =  g_task_propagate_pointer (G_TASK (res), &error); // take ownership
     if(ptr_res == NULL){
-        printf("%s : FAIL \n", (char *)__func__);
+        printf("%s : FAIL \n", (const char *)__func__);
         set_vdi_client_state(VDI_RECEIVED_RESPONSE, "Не удалось получить список пулов", TRUE);
         return;
     }
@@ -244,13 +245,17 @@ static void on_get_vdi_pool_data_finished (GObject *source_object G_GNUC_UNUSED,
     g_object_unref (parser);
     if(ptr_res)
         g_free(ptr_res);
+
+    gboolean is_realized = g_main_loop_is_running(vdi_manager.ci.loop);
+    printf("%s %i \n", (const char *)__func__, is_realized);
+
 }
 // callback which is invoked when vm start request finished
 static void on_get_vm_from_pool_finished(GObject *source_object G_GNUC_UNUSED,
                                          GAsyncResult *res,
                                          gpointer user_data G_GNUC_UNUSED)
 {
-    printf("%s\n", (char *)__func__);
+    printf("%s\n", (const char *)__func__);
 
     VdiPoolWidget vdi_pool_widget = get_vdi_pool_widget_by_id(get_current_vm_id());
     enable_spinner_visible(&vdi_pool_widget, FALSE);
@@ -304,7 +309,7 @@ static void on_get_vm_from_pool_finished(GObject *source_object G_GNUC_UNUSED,
 // ws data callback    "<span color=\"red\">%s</span>"
 static void on_ws_data_from_vdi_received(gboolean is_vdi_online)
 {
-    //printf("%s\n", (char *)__func__);
+    //printf("%s\n", (const char *)__func__);
     gchar *message;
     if (vdi_manager.label_vdi_online){
         if (is_vdi_online){
@@ -320,10 +325,16 @@ static void on_ws_data_from_vdi_received(gboolean is_vdi_online)
 }
 
 /////////////////////////////////// gui elements callbacks//////////////////////////////////////
+//// windows show callback
+//static gboolean mapped_user_function(GtkWidget *widget,GdkEvent  *event, gpointer   user_data)
+//{
+//    printf("%s\n", (const char *)__func__);
+//    return TRUE;
+//}
 // window close callback
 static gboolean on_window_deleted_cb(ConnectionInfo *ci)
 {
-    printf("%s\n", (char *)__func__);
+    printf("%s\n", (const char *)__func__);
     ci->response = FALSE;
     ci->dialog_window_response = GTK_RESPONSE_CLOSE;
     shutdown_loop(ci->loop);
@@ -332,7 +343,7 @@ static gboolean on_window_deleted_cb(ConnectionInfo *ci)
 // refresh button pressed callback
 static void on_button_renew_clicked(GtkButton *button G_GNUC_UNUSED, gpointer data G_GNUC_UNUSED) {
 
-    printf("%s\n", (char *) __func__);
+    printf("%s\n", (const char *)__func__);
     cancell_pending_requests();
     unregister_all_pools();
     refresh_vdi_pool_data_async();
@@ -340,7 +351,7 @@ static void on_button_renew_clicked(GtkButton *button G_GNUC_UNUSED, gpointer da
 // quit button pressed callback
 static void on_button_quit_clicked(GtkButton *button G_GNUC_UNUSED, gpointer data)
 {
-    printf("%s\n", (char *)__func__);
+    printf("%s\n", (const char *)__func__);
     ConnectionInfo *ci = data;
     ci->response = FALSE;
     ci->dialog_window_response = GTK_RESPONSE_CANCEL;
@@ -351,7 +362,7 @@ static void on_vm_start_button_clicked(GtkButton *button, gpointer data G_GNUC_U
 {
     //ConnectionInfo *ci = data;
     set_current_vm_id( GPOINTER_TO_INT(g_object_get_data(G_OBJECT(button), "pool_id")) );
-    printf("%s  %ld\n", (char *) __func__, get_current_vm_id());
+    printf("%s  %ld\n", (const char *)__func__, get_current_vm_id());
     // start machine
     set_vdi_client_state(VDI_WAITING_FOR_VM_FROM_POOL, "Отправлен запрос на получение вм из пула", FALSE);
     // start spinner on vm widget
@@ -380,10 +391,6 @@ GtkResponseType vdi_manager_dialog(GtkWindow *main_window G_GNUC_UNUSED, gchar *
     g_return_val_if_fail(vdi_manager.builder != NULL, GTK_RESPONSE_NONE);
 
     vdi_manager.window = GTK_WIDGET(gtk_builder_get_object(vdi_manager.builder, "vdi-main-window"));
-
-    //gtk_window_set_transient_for(GTK_WINDOW(vdi_manager.window), main_window);
-    gtk_window_set_default_size(GTK_WINDOW(vdi_manager.window), 650, 500);
-
     vdi_manager.button_renew = GTK_WIDGET(gtk_builder_get_object(vdi_manager.builder, "button-renew"));
 
     vdi_manager.button_quit = GTK_WIDGET(gtk_builder_get_object(vdi_manager.builder, "button-quit"));
@@ -400,20 +407,22 @@ GtkResponseType vdi_manager_dialog(GtkWindow *main_window G_GNUC_UNUSED, gchar *
     vdi_manager.label_vdi_online = GTK_WIDGET(gtk_builder_get_object(vdi_manager.builder, "label_vdi_online"));
 
     // connects
+    //g_signal_connect_swapped(vdi_manager.window, "map-event", G_CALLBACK(mapped_user_function), &vdi_manager.ci);
     g_signal_connect_swapped(vdi_manager.window, "delete-event", G_CALLBACK(on_window_deleted_cb), &vdi_manager.ci);
     g_signal_connect(vdi_manager.button_renew, "clicked", G_CALLBACK(on_button_renew_clicked), &vdi_manager.ci);
     g_signal_connect(vdi_manager.button_quit, "clicked", G_CALLBACK(on_button_quit_clicked), &vdi_manager.ci);
 
+    // show window
     gtk_window_set_position (GTK_WINDOW(vdi_manager.window), GTK_WIN_POS_CENTER);
+    gtk_window_set_default_size(GTK_WINDOW(vdi_manager.window), 650, 500);
     gtk_widget_show_all(vdi_manager.window);
-    
+
+    // start polling if vdi is online
+    start_vdi_ws_polling(vdi_ws_client_ptr(), get_vdi_ip(), on_ws_data_from_vdi_received);
     // Пытаемся соединиться с vdi и получить список пулов. Получив список пулов нужно сгенерить
     // соответствующие кнопки  в скрол области.
     // get pool data
     refresh_vdi_pool_data_async();
-    // start polling if vdi is online
-    start_vdi_ws_polling(vdi_ws_client_ptr(), get_vdi_ip(), on_ws_data_from_vdi_received);
-
     // event loop
     vdi_manager.ci.loop = g_main_loop_new(NULL, FALSE);
     g_main_loop_run(vdi_manager.ci.loop);

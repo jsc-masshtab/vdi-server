@@ -11,14 +11,6 @@ from vdi.db import db
 from vdi.hashers import check_username
 from vdi.errors import NotFound
 
-if settings['debug']:
-    try:
-        from aoiklivereload import LiveReloader
-        reloader = LiveReloader()
-        reloader.start_watcher_thread()
-    except:
-        pass
-
 
 def store_refresh_token(*args, **kwargs):
     raise NotImplementedError
@@ -94,7 +86,7 @@ initialize(
 
 @app.listener('before_server_start')
 async def setup_db(app, loop):
-    await db.init()
+    await db.get_pool()
 
 
 @app.route("/hello")

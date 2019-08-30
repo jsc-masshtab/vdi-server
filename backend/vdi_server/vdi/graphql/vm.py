@@ -116,7 +116,7 @@ class PoolWizardMixin:
         from vdi.settings import settings as global_settings
         from vdi.graphql.pool import PoolSettings
         return PoolSettings(**settings, **{
-            'controller_ip': controller_ip,
+            #'controller_ip': controller_ip,
             'template_id': template_id,
             'initial_size': global_settings['pool']['initial_size'],
             'reserve_size': global_settings['pool']['reserve_size'],
@@ -128,7 +128,7 @@ class ListOfVmsQuery:
     list_of_vms = graphene.List(VmType, cluster_id=graphene.String(),
         node_id=graphene.String(), datapool_id=graphene.String(), get_vms_in_pools=graphene.Boolean())
 
-    async def resolve_list_of_vms(self, _info, cluster_id, node_id, datapool_id, get_vms_in_pools=False):
+    async def resolve_list_of_vms(self, _info, cluster_id, node_id, datapool_id='', get_vms_in_pools=False):
 
         print('ListOfVmsQuery::resolve_vms_on_veil: datapool_id', datapool_id)
         # get all vm which are in pools

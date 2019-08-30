@@ -13,7 +13,7 @@ typedef void (*WsDataReceivedCallback) (gboolean is_vdi_online);
 
 typedef struct{
     // kind of public
-    SoupSession *soup_session;
+    SoupSession *ws_soup_session;
     WsDataReceivedCallback ws_data_received_callback;
 
     // kind of private
@@ -31,10 +31,13 @@ typedef struct{
 } VdiWsClient;
 
 // pool vdi server if it's online
-void init_vdi_ws_client(VdiWsClient *ws_vdi_client);
-void deinit_vdi_ws_client(VdiWsClient *ws_vdi_client);
+//void init_vdi_ws_client(VdiWsClient *ws_vdi_client);
+//void deinit_vdi_ws_client(VdiWsClient *ws_vdi_client);
 void start_vdi_ws_polling(VdiWsClient *ws_vdi_client, const gchar *vdi_ip,
                           WsDataReceivedCallback ws_data_received_callback);
 void stop_vdi_ws_polling(VdiWsClient *ws_vdi_client);
+
+
+
 
 #endif // WS_VDI_CLIENT_H

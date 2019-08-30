@@ -67,6 +67,8 @@ FILE(GLOB SRC_CODE
         src/utility/jsonhandler.c
         src/utility/settingsfile.c
         src/utility/settingsfile.h
+        src/utility/async.h
+        src/utility/async.c
         
 # vdi client
         src/vdi_client/vdi_manager.h
