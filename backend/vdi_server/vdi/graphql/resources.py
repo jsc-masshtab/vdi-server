@@ -270,7 +270,7 @@ class RemoveController(graphene.Mutation):
 
         from vdi.graphql.pool import RemovePool
         tasks = [
-            RemovePool.do_remove(pool['id'], controller_ip=controller_ip)
+            RemovePool.do_remove(pool['id'])
             for pool in pools
         ]
         async for _ in wait(*tasks):
