@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { VmsService } from './vms.service';
 import { map } from 'rxjs/operators';
-
+import { WaitService } from './../../common/components/wait/wait.service';
 
 @Component({
   selector: 'vdi-vms',
@@ -36,16 +36,14 @@ export class VmsComponent implements OnInit {
   ];
 
 
-  public spinner:boolean = false;
-
-  constructor(private service: VmsService){}
+  constructor(private service: VmsService,private waitService: WaitService){}
 
   ngOnInit() {
     this.getAllVms();
   }
 
   public getAllVms() {
-    this.spinner = true;
+    this.waitService.setWait(true);
     this.service.getAllVms().valueChanges.pipe(map(data => data.data.controllers)).subscribe((data)=> {
     
       let arrVms: [][] = [];
@@ -57,9 +55,7 @@ export class VmsComponent implements OnInit {
             this.vms.push(obj);
           }); 
       });
-      this.spinner = false;
-    },(error) => {
-      this.spinner = false;
+      this.waitService.setWait(false);
     });
   }
 }

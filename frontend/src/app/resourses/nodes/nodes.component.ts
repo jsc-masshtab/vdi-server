@@ -1,3 +1,4 @@
+import { WaitService } from './../../common/components/wait/wait.service';
 import { Component, OnInit, HostListener,ViewChild,ElementRef } from '@angular/core';
 import { NodesService } from './nodes.service';
 import { map } from 'rxjs/operators';
@@ -43,15 +44,13 @@ export class NodesComponent implements OnInit {
 
   public nodes: object[] = [];
 
-  public spinner:boolean = false;
-
   public pageHeightMinNumber: number = 315;
   public pageHeightMin: string = '315px';
   public pageHeightMax: string = '100%';
   public pageHeight: string = '100%';
   public pageRollup: boolean = false;
 
-  constructor(private service: NodesService,private router: Router){}
+  constructor(private service: NodesService,private router: Router,private waitService: WaitService){}
 
   @ViewChild('view') view:ElementRef;
 
@@ -70,12 +69,12 @@ export class NodesComponent implements OnInit {
   }
 
   public getNodes() {
-    this.spinner = true;
+    this.waitService.setWait(true);
     this.service.getAllNodes().valueChanges.pipe(map(data => data.data.controllers))
       .subscribe( (data) => {
-        this.nodes = data;
+        this.nodes =[];
         let arrNodes: [][] = [];
-        this.nodes = [];
+   
         arrNodes = data.map(controller => controller.nodes);
 
         arrNodes.forEach((arr: []) => {
@@ -83,11 +82,8 @@ export class NodesComponent implements OnInit {
               this.nodes.push(obj);
             }); 
         });
-        this.spinner = false;
-      },
-      (error)=> {
-        this.spinner = false;
-      });
+        this.waitService.setWait(false);
+    });
   }
 
   public routeTo(event): void {

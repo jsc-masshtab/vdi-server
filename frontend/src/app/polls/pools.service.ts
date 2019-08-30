@@ -79,19 +79,9 @@ export class PoolsService  {
         })
     }
 
-    public type: string;
-
-    public setTypePool(type:string): void {
-        this.type = type;
-    }
-
-    public getTypePool():string {
-        return this.type;
-    }
-
     public getPool(id:number,type:string): Observable<any> {
  
-        if(type === 'AUTOMATED') {
+        if(type === 'automated') {
             return  this.service.watchQuery({
                 query:  gql`  query getPool($id: Int) {
                                 pool(id: $id) {
@@ -121,7 +111,7 @@ export class PoolsService  {
             }).valueChanges.pipe(map(data => data.data['pool'])); 
         }
 
-        if(type === 'STATIC') {
+        if(type === 'static') {
             return  this.service.watchQuery({
                 query:  gql`  query getPool($id: Int) {
                                 pool(id: $id) {
@@ -130,9 +120,14 @@ export class PoolsService  {
                                     vms {
                                         name
                                         state
+                                        id
                                     }  
                                     controller {
                                         ip
+                                    }
+                                    settings {
+                                        cluster_id
+                                        node_id
                                     }
                                 }
                             }`,
@@ -186,6 +181,40 @@ export class PoolsService  {
                 node_id: node_id,
                 datapool_id: datapool_id,
                 vm_ids_list: vm_ids_list
+            }
+        })
+    }
+
+    public addVMStaticPool(pool_id:number,vm_ids:[]) {
+        return this.service.mutate<any>({
+            mutation: gql`  
+                            mutation AddVms($pool_id: Int!,$vm_ids: [ID]!) {
+                                addVmsToStaticPool(pool_id: $pool_id,vm_ids: $vm_ids) {
+                                    ok
+                                }
+                            }
+            `,
+            variables: {
+                method: 'POST',
+                pool_id: pool_id,
+                vm_ids: vm_ids
+            }
+        })
+    }
+
+    public removeVMStaticPool(pool_id:number,vm_ids:[]) {
+        return this.service.mutate<any>({
+            mutation: gql`  
+                            mutation RemoveVms($pool_id: Int!,$vm_ids: [ID]!) {
+                                removeVmsFromStaticPool(pool_id: $pool_id,vm_ids: $vm_ids) {
+                                    ok
+                                }
+                            }
+            `,
+            variables: {
+                method: 'POST',
+                pool_id: pool_id,
+                vm_ids: vm_ids
             }
         })
     }

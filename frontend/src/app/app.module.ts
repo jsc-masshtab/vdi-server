@@ -1,3 +1,7 @@
+import { RemoveVMStaticPoolComponent } from './polls/remove-vms/remove-vms.component';
+import { WaitService } from './common/components/wait/wait.service';
+import { WaitComponent } from './common/components/wait/wait.component';
+import { AddVMStaticPoolComponent } from './polls/add-vms/add-vms.component';
 import { HttpLinkModule, HttpLink } from 'apollo-angular-link-http';
 import { ApolloModule, Apollo } from 'apollo-angular';
 import { ErrorsService } from './common/components/errors/errors.service';
@@ -93,7 +97,10 @@ import { environment } from 'src/environments/environment';
     TemplatesComponent,
     VmsComponent,
     UsersComponent,
-    AddUserComponent
+    AddUserComponent,
+    AddVMStaticPoolComponent,
+    WaitComponent,
+    RemoveVMStaticPoolComponent
   ],
   imports: [
     BrowserModule,
@@ -113,7 +120,9 @@ import { environment } from 'src/environments/environment';
     AddControllerComponent,
     RemoveControllerComponent,
     RemovePoolComponent,
-    AddUserComponent
+    AddUserComponent,
+    AddVMStaticPoolComponent,
+    RemoveVMStaticPoolComponent
   ],
   providers: 
             [
@@ -127,7 +136,8 @@ import { environment } from 'src/environments/environment';
               TemplatesService,
               VmsService,
               UsersService,
-              ErrorsService
+              ErrorsService,
+              WaitService
             ],
   bootstrap: [AppComponent]
 })
@@ -138,7 +148,8 @@ export class AppModule {
 
   constructor( private apollo: Apollo,
                private httpLink: HttpLink,
-               private errorService: ErrorsService) {
+               private errorService: ErrorsService,
+               private waitService: WaitService) {
 
     library.add(faDesktop,faDatabase,faLayerGroup,faPlusCircle,faMinusCircle,faSpinner,faServer,faCog,faChevronUp,faTimesCircle,faFolderOpen,faStar,faTv,faSyncAlt,faBuilding,faTrashAlt,faUsers,faMeh,faChartBar); // Неиспользуемые иконки при финальной сборке удаляются
 
@@ -153,6 +164,7 @@ export class AppModule {
        
       if (networkError) {
         this.errorService.setError(networkError['error']['errors']);
+        this.waitService.setWait(false);
       }
     });
 

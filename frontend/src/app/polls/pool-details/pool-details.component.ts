@@ -1,3 +1,5 @@
+import { RemoveVMStaticPoolComponent } from './../remove-vms/remove-vms.component';
+import { AddVMStaticPoolComponent } from './../add-vms/add-vms.component';
 import { Component, OnInit } from '@angular/core';
 import { PoolsService } from '../pools.service';
 import { ActivatedRoute, ParamMap, Router } from '@angular/router';
@@ -108,8 +110,7 @@ export class PoolDetailsComponent implements OnInit {
   ];
   private pool_id:number;
   private pool_type:string;
-  public menuActive:string = 'info';
-  public into_spinner:boolean = false;
+  public  menuActive:string = 'info';
 
   constructor(private activatedRoute: ActivatedRoute,
               private router: Router,
@@ -118,24 +119,20 @@ export class PoolDetailsComponent implements OnInit {
 
   ngOnInit() {
     this.activatedRoute.paramMap.subscribe((param: ParamMap) => {
-      this.pool_type = this.service.getTypePool();
+      this.pool_type = param.get('type');
       this.pool_id = +param.get('id');
       this.getPool();
     });
   }
 
-
   public getPool() {
     this.host = false;
-    this.into_spinner = true;
     this.service.getPool(this.pool_id,this.pool_type)
       .subscribe( (data) => {
         this.pool = data;
-        this.into_spinner = false;
         this.host = true;
       },
       (error)=> {
-        this.into_spinner = false;
         this.host = true;
       });
   }
@@ -146,6 +143,31 @@ export class PoolDetailsComponent implements OnInit {
       data: {
         pool_id: this.pool_id,
         pool_name: this.pool['name']
+      }
+    });
+  }
+
+  public addVM() {
+    this.dialog.open(AddVMStaticPoolComponent, {
+      width: '500px',
+      data: {
+        pool_id: this.pool_id,
+        pool_name: this.pool['name'],
+        id_cluster: this.pool['settings']['cluster_id'],
+        id_node: this.pool['settings']['node_id'],
+        pool_type: this.pool_type
+      }
+    });
+  }
+
+  public removeVM() {
+    this.dialog.open(RemoveVMStaticPoolComponent, {
+      width: '500px',
+      data: {
+        pool_id: this.pool_id,
+        pool_name: this.pool['name'],
+        vms: this.pool.vms,
+        pool_type: this.pool_type
       }
     });
   }

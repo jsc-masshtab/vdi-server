@@ -1,3 +1,4 @@
+import { WaitService } from './../../../common/components/wait/wait.service';
 import { MatDialogRef } from '@angular/material';
 import { Component, OnInit } from '@angular/core';
 import { ControllersService } from '../controllers.service';
@@ -19,19 +20,19 @@ export class RemoveControllerComponent implements OnInit {
 
 
   constructor(private service: ControllersService,
+              private waitService: WaitService,
               private dialogRef: MatDialogRef<RemoveControllerComponent>) {}
 
-    
   ngOnInit() {
     this.getAllControllers();
   }
 
   public send() {
+    this.waitService.setWait(true);
     this.service.removeController(this.deleteController).subscribe((res) => {
-      if(res) {
-        this.service.getAllControllers().valueChanges.subscribe();
-        this.dialogRef.close();
-      }
+      this.service.getAllControllers().valueChanges.subscribe();
+      this.dialogRef.close();
+      this.waitService.setWait(false);
     },(error) => {
       this.dialogRef.close();
     });
