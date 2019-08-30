@@ -10,19 +10,21 @@ dependencies:
   - tornado
 
   - pip:
-    - starlette
-    - graphene
-    - asyncpg
-    - aiofiles
-    - itsdangerous
-    - pyjwt
-    - python-dateutil
-    - cached-property
-    - docopt
+      - ariadne
+      - starlette
+      - graphene
+      - asyncpg
+      - aiofiles
+      - itsdangerous
+      - pyjwt
+      - python-dateutil
+      - cached-property
+      - docopt
+      - websockets
 
-    - sanic-jwt
+      - sanic-jwt
 
-    - -e ./classy_async
-    - -e ./mi-pkg
-    - -e ./.
-    - -e ./auth_server
+      - -e ./classy_async
+      - -e ./mi-pkg
+      - -e ./.
+      - -e ./auth_server
