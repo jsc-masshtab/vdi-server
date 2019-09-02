@@ -1,3 +1,4 @@
+import { WaitService } from './../../../common/components/wait/wait.service';
 import { MatDialogRef } from '@angular/material';
 import { Component } from '@angular/core';
 import { UsersService } from '../users.service';
@@ -16,17 +17,20 @@ export class AddUserComponent {
 
   public createUserForm: FormGroup;
 
-
   constructor(private service: UsersService,
               private dialogRef: MatDialogRef<AddUserComponent>,
-              private fb: FormBuilder) { this.initForm();}
+              private fb: FormBuilder,
+              private waitService: WaitService) {
+                this.initForm();
+              }
 
 
   public send() {
-    this.service.createUser(this.createUserForm.value.username,this.createUserForm.value.password).subscribe((res) => {
+    this.waitService.setWait(true);
+    this.service.createUser(this.createUserForm.value.username,this.createUserForm.value.password).subscribe(() => {
       this.service.getAllUsers().valueChanges.subscribe();
       this.dialogRef.close();
-    },(error)=> {
+      this.waitService.setWait(false);
     });
   }
 

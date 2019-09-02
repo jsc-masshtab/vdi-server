@@ -1,3 +1,4 @@
+import { WaitService } from './../../common/components/wait/wait.service';
 import { Component, OnInit,HostListener,ViewChild,ElementRef } from '@angular/core';
 import { ClustersService } from './clusters.service';
 import { map } from 'rxjs/operators';
@@ -42,16 +43,13 @@ export class ClustersComponent implements OnInit {
     }
   ];
 
-  public spinner:boolean = false;
-
   public pageHeightMinNumber: number = 315;
 	public pageHeightMin: string = '315px';
   public pageHeightMax: string = '100%';
   public pageHeight: string = '100%';
   public pageRollup: boolean = false;
 
-  constructor(private service: ClustersService,private router: Router){}
-
+  constructor(private service: ClustersService,private router: Router,private waitService: WaitService){}
 
   @ViewChild('view') view:ElementRef;
 
@@ -70,7 +68,7 @@ export class ClustersComponent implements OnInit {
   }
 
   public getAllClusters() {
-    this.spinner = true;
+    this.waitService.setWait(true);
     this.service.getAllClusters().valueChanges.pipe(map(data => data.data.controllers))
       .subscribe( (data) => {
         let arrClusters: [][] = [];
@@ -82,11 +80,7 @@ export class ClustersComponent implements OnInit {
               this.clusters.push(obj);
             }); 
         });
-
-        this.spinner = false;
-      },
-      (error)=> {
-        this.spinner = false;
+        this.waitService.setWait(false);
       });
   }
 

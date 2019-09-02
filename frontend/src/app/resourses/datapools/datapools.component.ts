@@ -1,3 +1,4 @@
+import { WaitService } from './../../common/components/wait/wait.service';
 import { Component, OnInit } from '@angular/core';
 import { DatapoolsService } from './datapools.service';
 import { map } from 'rxjs/operators';
@@ -50,16 +51,14 @@ export class DatapoolsComponent implements OnInit {
     }
   ];
 
-  public spinner:boolean = false;
-
-  constructor(private service: DatapoolsService){}
+  constructor(private service: DatapoolsService,private waitService: WaitService){}
 
   ngOnInit() {
     this.getDatapools();
   }
 
   public getDatapools() {
-    this.spinner = true;
+    this.waitService.setWait(true);
     this.service.getAllDatapools().valueChanges.pipe(map(data => data.data.controllers))
       .subscribe( (data) => {
         let arrDatapools: [][] = [];
@@ -71,10 +70,7 @@ export class DatapoolsComponent implements OnInit {
               this.datapools.push(obj);
             }); 
         });
-        this.spinner = false;
-      },
-      (error)=> {
-        this.spinner = false;
+        this.waitService.setWait(false);
       });
   }
 

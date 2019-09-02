@@ -1,3 +1,4 @@
+import { WaitService } from './../../common/components/wait/wait.service';
 import { AddUserComponent } from './add-user/add-user.component';
 import { Component, OnInit } from '@angular/core';
 import { UsersService   } from './users.service';
@@ -16,7 +17,6 @@ export class UsersComponent implements OnInit {
 
   public users: [];
   public collection: object[] = [
-   
     {
       title: 'Имя пользователя',
       property: 'username',
@@ -24,10 +24,7 @@ export class UsersComponent implements OnInit {
     }
   ];
 
-
-  public spinner:boolean = false;
-
-  constructor(private service: UsersService,public dialog: MatDialog){}
+  constructor(private service: UsersService,public dialog: MatDialog,private waitService: WaitService){}
 
   ngOnInit() {
     this.getAllUsers();
@@ -40,14 +37,11 @@ export class UsersComponent implements OnInit {
   }
 
   public getAllUsers() {
-    this.spinner = true;
+    this.waitService.setWait(true);
     this.service.getAllUsers().valueChanges.pipe(map(data => data.data.users))
       .subscribe((data) => {
         this.users = data;
-        this.spinner = false;
-      },
-      (error) => {
-        this.spinner = false;
+        this.waitService.setWait(false);
       });
   }
 }
