@@ -6,10 +6,24 @@
 conda_dir/bin/conda env update
 ```
 
-3. Запускаем сервис:
+3. Инициализируем базу
+
+```
+mkdir ~/pgdata
+conda_dir/bin/initdb --data ~/pgdata
+conda_dir/bin/pg_ctl -D ./pgdata -l logfile start
+conda_dir/bin/createuser --superuser postgres
+conda_dir/bin/psql -c "create database useless encoding 'utf8' lc_collate = 'en_US.UTF-8' lc_ctype = 'en_US.UTF-8' template template0;" -U postgres
+```
+
+Запускаем миграции
+
+```
+conda_dir/bin/mi apply
+```
+
+4. Запускаем сервис:
 
 ```
 conda_dir/bin/vdi
 ```
-
-4. Можем сделать из `conda_dir` архив и сказать, что это релиз.
