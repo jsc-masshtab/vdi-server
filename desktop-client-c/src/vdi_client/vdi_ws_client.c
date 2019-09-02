@@ -199,8 +199,9 @@ void start_vdi_ws_polling(VdiWsClient *vdi_ws_client, const gchar *vdi_ip,
     vdi_ws_client->vdi_url = g_strdup_printf ("ws://%s/ws/client/vdi_server_check", vdi_ip);
 
     // start reconnect oneshot timer
+    //g_usleep(50000); // remove later
     try_to_connect(vdi_ws_client);
-    g_usleep(100000); // remove later
+    //g_usleep(100000); // remove later
 }
 
 void stop_vdi_ws_polling(VdiWsClient *vdi_ws_client)

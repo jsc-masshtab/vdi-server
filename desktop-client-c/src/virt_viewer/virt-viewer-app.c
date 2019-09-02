@@ -233,9 +233,11 @@ virt_viewer_app_simple_message_dialog(VirtViewerApp *self,
     msg = g_strdup_vprintf(fmt, vargs);
     va_end(vargs);
 
-    dialog = virt_viewer_app_make_message_dialog(self, msg);
-    gtk_dialog_run(GTK_DIALOG(dialog));
-    gtk_widget_destroy(dialog);
+//    dialog = virt_viewer_app_make_message_dialog(self, msg);
+//    gtk_dialog_run(GTK_DIALOG(dialog));
+//    gtk_widget_destroy(dialog);
+
+    printf("%s \n", msg);
 
     g_free(msg);
 }
