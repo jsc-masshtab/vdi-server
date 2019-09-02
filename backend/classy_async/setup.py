@@ -1,5 +1,5 @@
 
-from setuptools import setup
+from setuptools import setup, find_packages
 
 classifiers = [
     "Programming Language :: Python :: 3",
@@ -16,7 +16,7 @@ setup(name="classy_async",
       version="0.1.0",
       author="Vitalii Abetkin",
       author_email="v.abetkin@mashtab.ru",
-      packages=['classy_async'],
+      packages=find_packages(),
       description="utils for async tasks",
       long_description=README,
       license="MIT",

@@ -1,6 +1,6 @@
 from vdi.graphql.subscriptions_handler import SubscriptionHandler
 
-from . import app
+from .app import app
 
 from starlette.graphql import (
     GraphQLApp as _GraphQLApp,
@@ -12,7 +12,7 @@ from graphql.execution.executors.asyncio import AsyncioExecutor
 
 from vdi.errors import BackendError
 from vdi.log import RequestsLog
-from vdi.app import Request
+from vdi.application import Request
 
 def get_from_chain(ex, kind, limit=5):
     """

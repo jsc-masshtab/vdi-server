@@ -12,7 +12,7 @@ from vdi.constants import NotSet
 from .util import get_selections
 
 from vdi.auth import VDIUser, fetch_token
-from vdi.app import Request
+from vdi.application import Request
 
 class UserType(graphene.ObjectType):
     username = graphene.String()

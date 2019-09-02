@@ -42,7 +42,7 @@ async def retrieve_user(request, *args, **kwargs):
 
 def retrieve_refresh_token(request, *args, **kwargs):
     raise NotImplementedError
-    # user = request.app.auth.retrieve_user(request, **kwargs)
+    # user = request.application.auth.retrieve_user(request, **kwargs)
     # return user.refresh_token
 
 async def authenticate(request, *args, **kwargs):

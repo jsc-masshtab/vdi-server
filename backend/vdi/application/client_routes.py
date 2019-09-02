@@ -14,7 +14,7 @@ from vdi.utils import print
 from vdi.errors import NotFound
 
 
-from . import app
+from .app import app
 
 
 @app.route('/client/pools')

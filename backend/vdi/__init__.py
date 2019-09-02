@@ -17,3 +17,5 @@ from .settings import settings
 
 from classy_async import g
 g.use_threadlocal(True) # Will be set to False when server starts
+
+from vdi.application.app import app
