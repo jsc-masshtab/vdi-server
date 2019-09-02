@@ -16,7 +16,6 @@ class Vdi:
             server = Server(config=config)
             return server.serve(shutdown_servers=False)
         # as gunicorn worker
-
         self.config.app = self.wsgi
         server = Server(config=self.config)
         return server.serve(sockets=self.sockets, shutdown_servers=False)
