@@ -12,7 +12,7 @@ class Vdi:
         if self.__class__ is Vdi:
             # standalone use
             from vdi.application.app import app
-            config = Config(app, "0.0.0.0", 8000, log_level="info")
+            config = Config(app, "0.0.0.0", 80, log_level="info")
             server = Server(config=config)
             return server.serve(shutdown_servers=False)
         # as gunicorn worker
