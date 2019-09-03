@@ -2,8 +2,9 @@
 import pytest
 import json
 import uuid
+import itertools
 
-from vdi.tasks.resources import DiscoverControllerIp
+from vdi.tasks.resources import DiscoverControllers
 from vdi.tasks.base import DiscoverController
 from vdi.graphql import schema
 from vdi.tasks import resources
@@ -109,8 +110,16 @@ async def conn():
 async def fixt_create_static_pool(fixt_db):
 
     print('create_static_pool')
+    # get default controller
+    connected = await DiscoverControllers(return_broken=False)
+    print('connected con', connected)
 
-    controller_ip = settings['controller_ip'] # await DiscoverController()
+    try:
+        controller_ip = next(controller_info['ip'] for controller_info in connected if controller_info['default'])
+    except StopIteration:
+        # if no default controller then take first available
+        controller_ip = connected[0]['ip']
+    print('fixt_create_static_pool: controller_ip', controller_ip)
 
     # choose resources to create vms
     list_of_clusters = await resources.ListClusters(controller_ip=controller_ip)
@@ -138,7 +147,7 @@ async def fixt_create_static_pool(fixt_db):
     vm_ids_list = json.dumps([domain_info_1['id'], domain_info_2['id']])
     qu = '''
         mutation {
-          addStaticPool(name: "test_pool_static", node_id: "", datapool_id: "", cluster_id: "", vm_ids_list: %s) {
+          addStaticPool(name: "test_pool_static", vm_ids_list: %s) {
             id
             vms {
               id
@@ -206,7 +215,9 @@ async def fixt_entitle_user_to_pool(fixt_create_static_pool):
     removeUserEntitlementsFromPool(pool_id: %i, entitled_users: ["%s"]
       free_assigned_vms: true
     ) {
-      ok
+      freed{
+        name
+      }
     }
     }
     ''' % (pool_id, user_name)

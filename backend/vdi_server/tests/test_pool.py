@@ -91,17 +91,14 @@ async def test_create_static_pool(fixt_create_static_pool):
     qu = """{
       pool(id: %i) {
         desktop_pool_type
-        state {
-          running
-          available {
-            id
-          }
-        }
+          vms{
+            name
+        }   
       }
     }""" % pool_id
     res = await schema.exec(qu)
 
-    li = res['pool']['state']['available']
+    li = res['pool']['vms']
     assert len(li) == 2
     assert res['pool']['desktop_pool_type'] == DesktopPoolType.STATIC.name
 
