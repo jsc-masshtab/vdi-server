@@ -27,3 +27,12 @@ conda_dir/bin/mi apply
 ```
 conda_dir/bin/vdi
 ```
+
+Порт vdi сервера:
+
+backend/vdi/settings.py
+```
+    vdi_server = {
+        'port': 80
+    }
+```
