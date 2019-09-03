@@ -52,8 +52,8 @@ class Mi:
     @cached
     def dir(self):
         current = os.path.dirname(__file__)
-        p =  Path(current) / '..' / '..' / 'migrations'
-        return p
+        p = Path(current) / '..' / '..' / 'migrations'
+        return p.absolute()
 
     @cached
     def files(self):
