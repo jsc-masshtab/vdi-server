@@ -19,7 +19,7 @@ from ..db import db, fetch
 from ..pool import Pool
 
 from vdi.errors import SimpleError, FieldError
-from vdi.utils import Unset, insert, bulk_insert, print, validate_name
+from vdi.utils import Unset, insert, bulk_insert, validate_name # print,
 
 
 class TemplateType(graphene.ObjectType):
@@ -499,8 +499,8 @@ async def check_static_pool_and_get_params(pool_id):
         raise FieldError(pool_id=['Пул с заданным id не существует'])
     # check if pool is static
     [pool_params] = pool_params
-    print('pool_params_unpacked', pool_params)
-    print('desktop_pool_type', pool_params['desktop_pool_type'])
+    #print('pool_params_unpacked', pool_params)
+    #print('desktop_pool_type', pool_params['desktop_pool_type'])
     if pool_params['desktop_pool_type'] != DesktopPoolType.STATIC.name:
         raise FieldError(pool_id=['Пул с заданным id не является статическим'])
 
@@ -526,48 +526,47 @@ class AddStaticPool(graphene.Mutation):
                 for vm_id in vm_ids]
         await bulk_insert('vm', rows)
 
-    @classmethod
-    async def get_controller_ip(cls, vm_ids):
-        ips = []
-        for vm_id in vm_ids[:2]:
-            vm_info, controller_ip = await GetDomainInfo(domain_id=vm_id)
-            ips.append(controller_ip)
-        assert all(ip == ips[0] for ip in ips[1:])
-        return ips[0]
+    @staticmethod
+    async def determine_controller_by_vm_id(vm_id):
+        async with db.connect() as conn:
+            query = "SELECT ip from controller"
+            controller_ips = await conn.fetch(query)
+
+        # find controller the vm_id belongs to. If not found then throw exceptetion
+        for controller_ip in controller_ips:
+            all_vms_on_controller = await vm.ListVms(controller_ip=controller_ip['ip'])
+            # create list of vm ids
+            all_vm_on_controller_ids = [vmachine['id'] for vmachine in all_vms_on_controller]
+            if vm_id in all_vm_on_controller_ids:
+                return controller_ip['ip']
+
+        raise SimpleError("Вм не находится ни на одном из известных контроллеров")
+
 
     async def mutate(self, _info, vm_ids=None, vm_ids_list=None, **options):
         cls = AddStaticPool
         vm_ids = vm_ids or vm_ids_list
         if not vm_ids:
             raise FieldError(vm_ids=['Обязательное поле'])
+
         # validate name
         PoolValidator.validate_pool_name(options['name'])
 
-        controller_ip = None
-        if controller_ip is None:
-            controller_ip = await cls.get_controller_ip(vm_ids)
+        # get vm info
+        controller_ip = await AddStaticPool.determine_controller_by_vm_id(vm_ids[0])
 
-        async with db.connect() as conn:
-            qu = (
-                "select vm.id from vm join pool on vm.pool_id = pool.id "
-                "where vm.id = any($1::text[])", list(vm_ids)
-            )
-            data = await conn.fetch(*qu)
-            if data:
-                ids = [id for (id,) in data]
-                #raise SimpleError("Некоторые ВМ принадлежат другим пулам")
+        #print('controller_ip', controller_ip)
+        vm_info = await GetDomainInfo(controller_ip=controller_ip, domain_id=vm_ids[0])
+        #print('vm_info', vm_info)
+        cluster_id = vm_info['cluster']
+        node_id = vm_info['node']['id']
+
+        #  remote access
         tasks = [
             EnableRemoteAccess(controller_ip=controller_ip, domain_id=vm_id)
             for vm_id in vm_ids
         ]
         await wait_all(*tasks)
-
-        # domaign info
-        vm_info = await GetDomainInfo(domain_id=vm_ids[0])
-        vm_info_dict = vm_info[0]
-        cluster_id = vm_info_dict['cluster']
-        node_id = vm_info_dict['node']['id']
-        settings = PoolSettings(cluster_id=cluster_id, node_id=node_id)
 
         # add pool
         pool = {
@@ -586,6 +585,7 @@ class AddStaticPool(graphene.Mutation):
             VmType(id=id) for id in vm_ids
         ]
         from vdi.graphql.resources import ControllerType
+        settings = PoolSettings(cluster_id=cluster_id, node_id=node_id)
         return PoolType(id=pool['id'], name=pool['name'], vms=vms,
                         controller=ControllerType(ip=pool['controller_ip']),
                         desktop_pool_type=DesktopPoolType.STATIC,
