@@ -14,9 +14,8 @@ from vdi.settings import settings
 app = Starlette(debug=settings.get('debug'))
 
 from vdi.auth import VDIUser
-from vdi.app import Request
-from . import client_routes
-from . import admin_routes
+from vdi.application import Request
+
 
 @app.middleware("http")
 async def init_context(request, call_next):
@@ -56,4 +55,4 @@ if settings.get('is_dev'):
     app.add_middleware(CORSMiddleware, allow_origins=['*'], allow_methods=['*'], allow_headers=['*'],
                        allow_credentials=True)
 
-
+from . import client_routes, admin_routes

@@ -1,16 +1,14 @@
-cd /vagrant/backend/vdi_server
+cd /vagrant/backend
 
-echo "vdi_server: setting env..."
-echo "export PIPENV_SKIP_LOCK=1" >> /home/vagrant/.bashrc
-export PIPENV_SKIP_LOCK=1
-pipenv install
+wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh
+bash miniconda.sh -b -p conda_dir
 
-echo "vdi_server: applying migrations..."
-pipenv run mi apply
+conda_dir/bin/conda env update
 
-# echo "vdi_server: prepare qcow image"
-# pipenv run python -m vdi.prepare
+mkdir ~/pgdata
+conda_dir/bin/initdb --data ~/pgdata
+conda_dir/bin/pg_ctl -D ~/pgdata -l logfile start
+conda_dir/bin/createuser --superuser postgres
+conda_dir/bin/psql -c "create database vdi encoding 'utf8' lc_collate = 'en_US.UTF-8' lc_ctype = 'en_US.UTF-8' template template0;" -U postgres
 
-echo "vdi_server: starting server..."
-pkill uvicorn
-nohup pipenv run uvicorn vdi.app:app --host 0.0.0.0 --port 80 &
+conda_dir/bin/mi apply

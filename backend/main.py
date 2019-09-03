@@ -1,5 +1,5 @@
 import uvicorn
-from vdi.app.base import app
+from vdi.application.app import app
 
 
 def main():

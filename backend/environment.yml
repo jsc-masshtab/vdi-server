@@ -1,0 +1,28 @@
+name: base
+channels:
+  - conda-forge
+dependencies:
+  - python=3.7
+  - postgresql=11
+  - sanic
+  - tornado
+  - httptools
+
+  - pip:
+      - starlette
+      - uvicorn
+      - itsdangerous
+      - graphene
+      - asyncpg
+      - pyjwt
+      - python-dateutil
+      - cached-property
+      - docopt
+      - websockets
+
+      - sanic-jwt
+
+      - -e ./classy_async
+      - -e ./mi-pkg
+      - -e ./.
+      - -e ./auth_server
