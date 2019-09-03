@@ -38,6 +38,10 @@ class Settings(SettingsDict):
         'port': 5000
     }
 
+    vdi_server = {
+        'port': 80
+    }
+
 
 settings = Settings()
 

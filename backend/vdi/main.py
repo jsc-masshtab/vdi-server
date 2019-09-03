@@ -1,18 +1,22 @@
 import asyncio
 from uvicorn import Server, Config
 
+from vdi.settings import settings
+
 class Vdi:
 
     def get_sanic_task(self):
         from auth_server.sanic_app import app
-        server = app.create_server(host="0.0.0.0", port=5000, return_asyncio_server=True)
+        port = settings.auth_server['port']
+        server = app.create_server(host="0.0.0.0", port=port, return_asyncio_server=True)
         return asyncio.ensure_future(server)
 
     def starlette_co(self):
         if self.__class__ is Vdi:
             # standalone use
             from vdi.application.app import app
-            config = Config(app, "0.0.0.0", 80, log_level="info")
+            port = settings.vdi_server['port']
+            config = Config(app, "0.0.0.0", port, log_level="info")
             server = Server(config=config)
             return server.serve(shutdown_servers=False)
         # as gunicorn worker
