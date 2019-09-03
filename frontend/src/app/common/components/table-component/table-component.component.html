@@ -13,6 +13,7 @@
         <div class="table-area-property" *ngFor="let obj of collection" [class.index-column]="obj.property == 'index'" [class.name-width]="obj.property == 'verbose_name'" [class.name-start]="obj.class == 'name-start'"> <!--столбец-->
           <span *ngIf="obj.property == 'index'">{{ i+1 }}</span>
           <span *ngIf="obj.property_array">{{ item[obj.property_array].length }}</span>
+
           <span *ngIf="obj.property_boolean_true">
             <ng-container *ngIf="obj.property_boolean">{{ obj.property_boolean_true }}</ng-container>
             <ng-container *ngIf="!obj.property_boolean">{{ obj.property_boolean_false }}</ng-container>

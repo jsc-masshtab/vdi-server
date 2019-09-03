@@ -101,7 +101,10 @@ export class PoolsService  {
                                         initial_size
                                         reserve_size
                                         total_size
-                                    } 
+                                    }
+                                    users {
+                                        username
+                                    }
                                 }
                             }`,
                 variables: {
@@ -129,6 +132,9 @@ export class PoolsService  {
                                         cluster_id
                                         node_id
                                     }
+                                    users {
+                                        username
+                                    }
                                 }
                             }`,
                 variables: {
@@ -137,8 +143,6 @@ export class PoolsService  {
                 }
             }).valueChanges.pipe(map(data => data.data['pool'])); 
         }
-
-    
     };
     
 
