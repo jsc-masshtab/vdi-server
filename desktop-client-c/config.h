@@ -140,7 +140,7 @@
 #define STDC_HEADERS 1
 
 /* Version number of package */
-#define VERSION "1.0.3"
+#define VERSION PACKAGE_VERSION
 
 /* Enable GNU extensions */
 #define _GNU_SOURCE /**/

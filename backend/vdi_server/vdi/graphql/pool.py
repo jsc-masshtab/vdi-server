@@ -19,7 +19,7 @@ from ..db import db, fetch
 from ..pool import Pool
 
 from vdi.errors import SimpleError, FieldError
-from vdi.utils import Unset, insert, bulk_insert, print
+from vdi.utils import Unset, insert, bulk_insert, print, validate_name
 
 
 class TemplateType(graphene.ObjectType):
@@ -366,6 +366,13 @@ class PoolValidator:
         if result is not None:
             self._pool[name] = result
 
+    @staticmethod
+    def validate_pool_name(pool_name):
+        if not pool_name:
+            raise FieldError(name=['Имя пула не должно быть пустым'])
+        if not validate_name(pool_name):
+            raise FieldError(name=['Имя пула должно содержать только буквы и цифры'])
+
 
 
 class AddPool(graphene.Mutation):
@@ -385,6 +392,14 @@ class AddPool(graphene.Mutation):
 
 
     Output = PoolType
+
+    @staticmethod
+    def validate_agruments(pool_args_dict):
+        PoolValidator.validate_pool_name(pool_args_dict['name'])
+        # Check vm_name_template if its not empty
+        vm_name_template = pool_args_dict['vm_name_template']
+        if vm_name_template and not validate_name(vm_name_template):
+            raise FieldError(vm_name_template=['Шаблонное имя вм должно содержать только буквы и цифры'])
 
     async def mutate(self, info, settings=(), **kwargs):
 
@@ -422,6 +437,9 @@ class AddPool(graphene.Mutation):
             checker.validate_async(k, v) for k, v in data_async.items()
         ]
         await wait_all(*async_validators)
+
+        # validate agruments
+        AddPool.validate_agruments(pool)
 
         from vdi.graphql.resources import NodeType, ControllerType
         controller = ControllerType(ip=pool['controller_ip'])
@@ -522,8 +540,10 @@ class AddStaticPool(graphene.Mutation):
         vm_ids = vm_ids or vm_ids_list
         if not vm_ids:
             raise FieldError(vm_ids=['Обязательное поле'])
-        controller_ip = None
+        # validate name
+        PoolValidator.validate_pool_name(options['name'])
 
+        controller_ip = None
         if controller_ip is None:
             controller_ip = await cls.get_controller_ip(vm_ids)
 
