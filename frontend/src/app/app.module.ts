@@ -71,6 +71,7 @@ import { UsersService } from './settings/users/users.service';
 import { onError } from 'apollo-link-error';
 import { InMemoryCache } from 'apollo-cache-inmemory';
 import { environment } from 'src/environments/environment';
+import { AddUsersPoolComponent } from './polls/add-users/add-users.component';
 
 @NgModule({
   declarations: [
@@ -100,7 +101,8 @@ import { environment } from 'src/environments/environment';
     AddUserComponent,
     AddVMStaticPoolComponent,
     WaitComponent,
-    RemoveVMStaticPoolComponent
+    RemoveVMStaticPoolComponent,
+    AddUsersPoolComponent
   ],
   imports: [
     BrowserModule,
@@ -122,7 +124,8 @@ import { environment } from 'src/environments/environment';
     RemovePoolComponent,
     AddUserComponent,
     AddVMStaticPoolComponent,
-    RemoveVMStaticPoolComponent
+    RemoveVMStaticPoolComponent,
+    AddUsersPoolComponent
   ],
   providers: 
             [

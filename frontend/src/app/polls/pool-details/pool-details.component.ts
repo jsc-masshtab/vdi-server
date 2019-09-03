@@ -1,3 +1,4 @@
+import { AddUsersPoolComponent } from './../add-users/add-users.component';
 import { RemoveVMStaticPoolComponent } from './../remove-vms/remove-vms.component';
 import { AddVMStaticPoolComponent } from './../add-vms/add-vms.component';
 import { Component, OnInit } from '@angular/core';
@@ -72,6 +73,11 @@ export class PoolDetailsComponent implements OnInit {
     {
       title: 'Создано ВМ',
       property_array: 'vms'
+    },
+    {
+      title: 'Пользователи',
+      property_array_prop: 'users',
+      property_array_prop_lv2: 'username'
     }
   ];
   
@@ -143,6 +149,17 @@ export class PoolDetailsComponent implements OnInit {
       data: {
         pool_id: this.pool_id,
         pool_name: this.pool['name']
+      }
+    });
+  }
+
+  public addUsers() {
+    this.dialog.open(AddUsersPoolComponent, {
+      width: '500px',
+      data: {
+        pool_id: this.pool_id,
+        pool_name: this.pool['name'],
+        pool_type: this.pool_type
       }
     });
   }

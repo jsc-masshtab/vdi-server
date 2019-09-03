@@ -5,16 +5,17 @@
 <div class="details-wrap">
 
     <div class="details-header">
-        <div class="title"><fa-icon [icon]="['fas','desktop']" size="s" ></fa-icon><span class="name">{{pool?.name}}</span></div>
+        <div class="title"><fa-icon [icon]="['fas','desktop']" size="s" ></fa-icon><span class="name">Пул {{pool?.name}}</span></div>
         <div class="btns-part">
             <button class="btn-close" (click)="close()"><fa-icon [icon]="['fas','times-circle']"></fa-icon></button>
         </div>
     </div>
     <div class="details-control-panel">
         <button (click)="getPool()" class="btn-refresh" title="Обновить"><fa-icon [icon]="['fas','sync-alt']"></fa-icon></button>
-        <button (click)="addVM()" class="btn-control"><fa-icon [icon]="['fas','plus-circle']" size="xs"></fa-icon><span class="name">Добавить ВМ</span></button>
-        <button (click)="removeVM()" class="btn-control"><fa-icon [icon]="['fas','trash-alt']" size="xs"></fa-icon><span class="name">Удалить ВМ</span></button>
-        <button (click)="removePool()" class="btn-control"><fa-icon [icon]="['fas','trash-alt']" size="xs"></fa-icon><span class="name">Удалить</span></button>
+        <button (click)="addVM()" title="Добавить ВМ в пул" class="btn-control" *ngIf="menuActive === 'vms' && pool_type === 'static'"><fa-icon [icon]="['fas','plus-circle']" size="xs"></fa-icon><span class="name">Добавить ВМ</span></button>
+        <button (click)="removeVM()" title="Удалить ВМ из пула" class="btn-control" *ngIf="menuActive === 'vms' && pool_type === 'static'"><fa-icon [icon]="['fas','trash-alt']" size="xs"></fa-icon><span class="name">Удалить ВМ</span></button>
+        <button (click)="removePool()" title="Удалить пул" class="btn-control" *ngIf="menuActive === 'info'"><fa-icon [icon]="['fas','trash-alt']" size="xs"></fa-icon><span class="name">Удалить</span></button>
+        <button (click)="addUsers()" title="Задать пользователей" class="btn-control" *ngIf="menuActive === 'info'"><fa-icon [icon]="['fas','users']" size="xs"></fa-icon><span class="name">Пользователи</span></button>
     </div>
 
     <div class="details-row">
