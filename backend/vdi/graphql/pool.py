@@ -843,7 +843,7 @@ class DropPoolPermissions(graphene.Mutation):
         elif roles and not users:
             freed = await cls.handle_roles(pool_id, roles, free_assigned_vms=free_assigned_vms)
         else:
-            raise SimpleError("Можно указать только пользователей или роли")
+            raise SimpleError("Можно указать только пользователей или только роли в одном запросе")
         for vm in freed:
             vm.controller_ip = controller_ip
         return cls(freed=freed)
