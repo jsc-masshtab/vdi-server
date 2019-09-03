@@ -1,2 +1,2 @@
 cd /vagrant/backend
-conda_dir/bin/vdi
+nohup conda_dir/bin/vdi &
