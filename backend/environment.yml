@@ -22,6 +22,8 @@ dependencies:
 
       - sanic-jwt
 
+# for fast edit use "-e"
+# for prod "-e" not need
       - -e ./classy_async
       - -e ./mi-pkg
       - -e ./.

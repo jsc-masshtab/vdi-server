@@ -39,7 +39,7 @@ class Settings(SettingsDict):
     }
 
     vdi_server = {
-        'port': 80
+        'port': 8080
     }
 
 
