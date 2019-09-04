@@ -1,20 +1,20 @@
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { ErrorsComponent } from './wait.component';
+import { RemoveControllerComponent } from './remove-controller.component';
 
-describe('BreadcrumbsComponent', () => {
-  let component: ErrorsComponent;
-  let fixture: ComponentFixture<ErrorsComponent>;
+describe('AddControllerComponent', () => {
+  let component: AddControllerComponent;
+  let fixture: ComponentFixture<AddControllerComponent>;
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [ ErrorsComponent ]
+      declarations: [ RemoveControllerComponent ]
     })
     .compileComponents();
   }));
 
   beforeEach(() => {
-    fixture = TestBed.createComponent(ErrorsComponent);
+    fixture = TestBed.createComponent(RemoveControllerComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

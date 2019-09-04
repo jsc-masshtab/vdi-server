@@ -64,7 +64,6 @@ const routes: Routes = [
         path: ':type/:id',
         component: PoolDetailsComponent
       }
-    
     ]
   },
   {
