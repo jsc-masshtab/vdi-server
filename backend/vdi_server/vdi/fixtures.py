@@ -113,7 +113,6 @@ async def fixt_create_static_pool(fixt_db):
     # get default controller
     connected = await DiscoverControllers(return_broken=False)
     print('connected con', connected)
-
     try:
         controller_ip = next(controller_info['ip'] for controller_info in connected if controller_info['default'])
     except StopIteration:

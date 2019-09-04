@@ -177,6 +177,7 @@ class DatapoolType(graphene.ObjectType):
 
 class Resources:
     controllers = graphene.List(lambda: ControllerType)
+    controller = graphene.Field(lambda: ControllerType, ip=graphene.String())
     node = graphene.Field(NodeType, id=graphene.String())
     cluster = graphene.Field(ClusterType, id=graphene.String())
 
@@ -188,6 +189,17 @@ class Resources:
             for item in await DiscoverControllers()
         ]
         return objects
+
+    async def resolve_controller(self, _info, ip):
+        # find controller info by ip
+        connected_controllers = await DiscoverControllers(return_broken=False)
+        try:
+            controller_info = next(controller_info
+                for controller_info in connected_controllers if controller_info['ip'] == ip)
+            return ControllerType(**controller_info)
+        except StopIteration:
+            raise FieldError(id=['Контроллер с заданным ip недоступен'])
+
 
     async def resolve_node(self, info, id):
         controller_ip = await DiscoverControllerIp(node_id=id)
@@ -216,6 +228,7 @@ class Resources:
         return [
             RequestType(url=None, time=None)
         ]
+
 
 
 class AddController(graphene.Mutation):
