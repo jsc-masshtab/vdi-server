@@ -13,9 +13,10 @@ pytest-asyncio = "*"
 [packages]
 uvicorn = "*"
 tornado = "*"
-vdi = {editable = false,path = "."}
-classy_async = {editable = false,path = "./../classy_async"}
-mi = {editable = false,path = "./../mi-pkg"}
+vdi = {editable = false,path = "./../../backend"}
+classy_async = {editable = false,path = "./../../backend/classy_async"}
+mi = {editable = false,path = "./../../backend/mi-pkg"}
+auth_server = {editable = false,path = "./../../backend/auth_server"}
 cached-property = "*"
 graphene = "*"
 starlette = ">=0.12.8"
@@ -26,6 +27,9 @@ aiofiles = "*"
 itsdangerous = "*"
 pyjwt = "*"
 python-dateutil = "*"
+
+sanic = "*"
+sanic-jwt = "*"
 
 [requires]
 python_version = "3.7"

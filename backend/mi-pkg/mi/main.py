@@ -51,8 +51,11 @@ class Mi:
 
     @cached
     def dir(self):
-        current = os.path.dirname(__file__)
-        p = Path(current) / '..' / '..' / 'migrations'
+        MIGRATIONS_DIR = os.environ.get('MIGRATIONS_DIR')
+        if MIGRATIONS_DIR:
+            p = Path(MIGRATIONS_DIR)
+        else:
+            p = Path(os.getcwd()) / 'migrations'
         return p.absolute()
 
     @cached
