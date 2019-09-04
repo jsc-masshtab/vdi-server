@@ -401,6 +401,28 @@ class AddPool(graphene.Mutation):
         if vm_name_template and not validate_name(vm_name_template):
             raise FieldError(vm_name_template=['Шаблонное имя вм должно содержать только буквы и цифры'])
 
+        # check sizes
+        MIX_SIZE = 1
+        MAX_SIZE = 200
+        MAX_VM_AMOUNT = 1000
+        initial_size = pool_args_dict['initial_size']
+        if initial_size < MIX_SIZE or initial_size > MAX_SIZE:
+            raise FieldError(initial_size=[f'Начальное количество ВМ должно быть в интервале [{MIX_SIZE} {MAX_SIZE}]'])
+
+        reserve_size = pool_args_dict['reserve_size']
+        if reserve_size < MIX_SIZE or reserve_size > MAX_SIZE:
+            raise FieldError(reserve_size=
+                             [f'Количество создаваемых ВМ должно быть в интервале [{MIX_SIZE} {MAX_SIZE}]'])
+
+        total_size = pool_args_dict['total_size']
+        if total_size < initial_size:
+            raise FieldError(total_size=['Максимальное количество создаваемых ВМ не может быть меньше '
+                                         'начального количества ВМ'])
+        if total_size < MIX_SIZE or total_size > MAX_VM_AMOUNT:
+            raise FieldError(total_size=[f'Максимальное количество создаваемых ВМ должно быть в интервале '
+                                         f'[{MIX_SIZE} {MAX_VM_AMOUNT}]'])
+
+
     async def mutate(self, info, settings=(), **kwargs):
 
         def get_setting(name):
