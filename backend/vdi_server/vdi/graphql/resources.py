@@ -314,7 +314,8 @@ class ControllerType(graphene.ObjectType):
 
     datapools = graphene.List(DatapoolType,
                               node_id=graphene.String(),
-                              cluster_id=graphene.String())
+                              cluster_id=graphene.String(),
+                              take_broken=graphene.Boolean())
     clusters = graphene.List(ClusterType)
     cluster = graphene.Field(ClusterType, id=graphene.String())
     nodes = graphene.List(NodeType, cluster_id=graphene.String())
@@ -402,10 +403,10 @@ class ControllerType(graphene.ObjectType):
         obj.veil_info = data
         return obj
 
-    async def resolve_datapools(self, info, node_id=None, cluster_id=None):
+    async def resolve_datapools(self, info, node_id=None, cluster_id=None, take_broken=False):
         controller_ip = self.ip
         if node_id is not None:
-            return self._get_datapools(info, node_id=node_id)
+            return self._get_datapools(info, node_id=node_id, take_broken=take_broken)
         if cluster_id is not None:
             cluster_ids = [cluster_id]
         else:
@@ -416,7 +417,7 @@ class ControllerType(graphene.ObjectType):
         for cluster_id in cluster_ids:
             nodes = await ListNodes(controller_ip=controller_ip, cluster_id=cluster_id)
             for node in nodes:
-                objects = await self._get_datapools(info, node_id=node['id'])
+                objects = await self._get_datapools(info, node_id=node['id'], take_broken=take_broken)
                 datapools.update(
                     (obj.id, obj) for obj in objects
                 )
@@ -425,8 +426,8 @@ class ControllerType(graphene.ObjectType):
 
     # TODO fields/info rework
 
-    async def _get_datapools(self, info, node_id):
-        resp = await ListDatapools(controller_ip=self.ip, node_id=node_id)
+    async def _get_datapools(self, info, node_id, take_broken=False):
+        resp = await ListDatapools(controller_ip=self.ip, node_id=node_id, take_broken=take_broken)
         fields = get_selections(info)
 
         li = []
