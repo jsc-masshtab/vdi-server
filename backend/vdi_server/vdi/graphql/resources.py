@@ -200,7 +200,6 @@ class Resources:
         except StopIteration:
             raise FieldError(id=['Контроллер с заданным ip недоступен'])
 
-
     async def resolve_node(self, info, id):
         controller_ip = await DiscoverControllerIp(node_id=id)
         if not controller_ip:

@@ -876,17 +876,17 @@ class PoolMixin:
 
 
     async def _select_pool(self, info, id):
-        selections = get_selections(info)
+        # selections = get_selections(info)
         settings_selections = get_selections(info, 'settings') or []
-        fields = [
-            f for f in selections
-            if f in PoolType.sql_fields
-        ]
-        if not id and 'id' not in fields:
-            fields.append('id')
-
-        if not fields and not settings_selections:
-            return {}
+        # fields = [
+        #     f for f in selections
+        #     if f in PoolType.sql_fields
+        # ]
+        # if 'id' not in fields:
+        #     fields.append('id')
+        #
+        # if not fields and not settings_selections:
+        #     return {}
 
         qu = "select * from pool left join dynamic_traits as t " \
              "on pool.dynamic_traits = t.dynamic_traits_id " \
@@ -912,6 +912,7 @@ class PoolMixin:
         #TODO will be refactored
 
         pool_data = await PoolMixin._select_pool(self, info, id)
+        print('pool_data', pool_data)
         controller_ip = pool_data['controller_ip']
         u_fields = get_selections(info, 'users') or ()
         u_fields_joined = ', '.join(f'u.{f}' for f in u_fields)

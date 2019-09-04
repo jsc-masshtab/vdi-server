@@ -1,5 +1,5 @@
 
-from vdi.fixtures import (
+from fixtures.fixtures import (
     fixt_db, image_name, create_template, create_pool, pool_name, pool_settings as fixture_pool_settings,
     conn, fixt_create_static_pool
 )
