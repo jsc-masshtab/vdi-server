@@ -109,6 +109,8 @@ class PoolWizardMixin:
             node_id = settings['node_id'] = template['node']['id']
         if 'datapool_id' in selections:
             datapools = await resources.ListDatapools(controller_ip=controller_ip, node_id=node_id)
+            if not datapools:
+                raise SimpleError("На сервере нет датапулов")
             settings['datapool_id'] = datapools[0]['id']
         if 'cluster_id' in selections:
             node = await FetchNode(controller_ip=controller_ip, node_id=node_id)

@@ -19,7 +19,7 @@ from ..db import db, fetch
 from ..pool import Pool
 
 from vdi.errors import SimpleError, FieldError
-from vdi.utils import Unset, insert, bulk_insert, print
+from vdi.utils import Unset, insert, bulk_insert, validate_name # print,
 
 
 class TemplateType(graphene.ObjectType):
@@ -366,6 +366,13 @@ class PoolValidator:
         if result is not None:
             self._pool[name] = result
 
+    @staticmethod
+    def validate_pool_name(pool_name):
+        if not pool_name:
+            raise FieldError(name=['Имя пула не должно быть пустым'])
+        if not validate_name(pool_name):
+            raise FieldError(name=['Имя пула должно содержать только буквы и цифры'])
+
 
 
 class AddPool(graphene.Mutation):
@@ -385,6 +392,36 @@ class AddPool(graphene.Mutation):
 
 
     Output = PoolType
+
+    @staticmethod
+    def validate_agruments(pool_args_dict):
+        PoolValidator.validate_pool_name(pool_args_dict['name'])
+        # Check vm_name_template if its not empty
+        vm_name_template = pool_args_dict['vm_name_template']
+        if vm_name_template and not validate_name(vm_name_template):
+            raise FieldError(vm_name_template=['Шаблонное имя вм должно содержать только буквы и цифры'])
+
+        # check sizes
+        MIX_SIZE = 1
+        MAX_SIZE = 200
+        MAX_VM_AMOUNT = 1000
+        initial_size = pool_args_dict['initial_size']
+        if initial_size < MIX_SIZE or initial_size > MAX_SIZE:
+            raise FieldError(initial_size=[f'Начальное количество ВМ должно быть в интервале [{MIX_SIZE} {MAX_SIZE}]'])
+
+        reserve_size = pool_args_dict['reserve_size']
+        if reserve_size < MIX_SIZE or reserve_size > MAX_SIZE:
+            raise FieldError(reserve_size=
+                             [f'Количество создаваемых ВМ должно быть в интервале [{MIX_SIZE} {MAX_SIZE}]'])
+
+        total_size = pool_args_dict['total_size']
+        if total_size < initial_size:
+            raise FieldError(total_size=['Максимальное количество создаваемых ВМ не может быть меньше '
+                                         'начального количества ВМ'])
+        if total_size < MIX_SIZE or total_size > MAX_VM_AMOUNT:
+            raise FieldError(total_size=[f'Максимальное количество создаваемых ВМ должно быть в интервале '
+                                         f'[{MIX_SIZE} {MAX_VM_AMOUNT}]'])
+
 
     async def mutate(self, info, settings=(), **kwargs):
 
@@ -422,6 +459,9 @@ class AddPool(graphene.Mutation):
             checker.validate_async(k, v) for k, v in data_async.items()
         ]
         await wait_all(*async_validators)
+
+        # validate agruments
+        AddPool.validate_agruments(pool)
 
         from vdi.graphql.resources import NodeType, ControllerType
         controller = ControllerType(ip=pool['controller_ip'])
@@ -481,8 +521,8 @@ async def check_static_pool_and_get_params(pool_id):
         raise FieldError(pool_id=['Пул с заданным id не существует'])
     # check if pool is static
     [pool_params] = pool_params
-    print('pool_params_unpacked', pool_params)
-    print('desktop_pool_type', pool_params['desktop_pool_type'])
+    #print('pool_params_unpacked', pool_params)
+    #print('desktop_pool_type', pool_params['desktop_pool_type'])
     if pool_params['desktop_pool_type'] != DesktopPoolType.STATIC.name:
         raise FieldError(pool_id=['Пул с заданным id не является статическим'])
 
@@ -508,46 +548,47 @@ class AddStaticPool(graphene.Mutation):
                 for vm_id in vm_ids]
         await bulk_insert('vm', rows)
 
-    @classmethod
-    async def get_controller_ip(cls, vm_ids):
-        ips = []
-        for vm_id in vm_ids[:2]:
-            vm_info, controller_ip = await GetDomainInfo(domain_id=vm_id)
-            ips.append(controller_ip)
-        assert all(ip == ips[0] for ip in ips[1:])
-        return ips[0]
+    @staticmethod
+    async def determine_controller_by_vm_id(vm_id):
+        async with db.connect() as conn:
+            query = "SELECT ip from controller"
+            controller_ips = await conn.fetch(query)
+
+        # find controller the vm_id belongs to. If not found then throw exceptetion
+        for controller_ip in controller_ips:
+            all_vms_on_controller = await vm.ListVms(controller_ip=controller_ip['ip'])
+            # create list of vm ids
+            all_vm_on_controller_ids = [vmachine['id'] for vmachine in all_vms_on_controller]
+            if vm_id in all_vm_on_controller_ids:
+                return controller_ip['ip']
+
+        raise SimpleError("Вм не находится ни на одном из известных контроллеров")
+
 
     async def mutate(self, _info, vm_ids=None, vm_ids_list=None, **options):
         cls = AddStaticPool
         vm_ids = vm_ids or vm_ids_list
         if not vm_ids:
             raise FieldError(vm_ids=['Обязательное поле'])
-        controller_ip = None
 
-        if controller_ip is None:
-            controller_ip = await cls.get_controller_ip(vm_ids)
+        # validate name
+        PoolValidator.validate_pool_name(options['name'])
 
-        async with db.connect() as conn:
-            qu = (
-                "select vm.id from vm join pool on vm.pool_id = pool.id "
-                "where vm.id = any($1::text[])", list(vm_ids)
-            )
-            data = await conn.fetch(*qu)
-            if data:
-                ids = [id for (id,) in data]
-                #raise SimpleError("Некоторые ВМ принадлежат другим пулам")
+        # get vm info
+        controller_ip = await AddStaticPool.determine_controller_by_vm_id(vm_ids[0])
+
+        #print('controller_ip', controller_ip)
+        vm_info = await GetDomainInfo(controller_ip=controller_ip, domain_id=vm_ids[0])
+        #print('vm_info', vm_info)
+        cluster_id = vm_info['cluster']
+        node_id = vm_info['node']['id']
+
+        #  remote access
         tasks = [
             EnableRemoteAccess(controller_ip=controller_ip, domain_id=vm_id)
             for vm_id in vm_ids
         ]
         await wait_all(*tasks)
-
-        # domaign info
-        vm_info = await GetDomainInfo(domain_id=vm_ids[0])
-        vm_info_dict = vm_info[0]
-        cluster_id = vm_info_dict['cluster']
-        node_id = vm_info_dict['node']['id']
-        settings = PoolSettings(cluster_id=cluster_id, node_id=node_id)
 
         # add pool
         pool = {
@@ -566,6 +607,7 @@ class AddStaticPool(graphene.Mutation):
             VmType(id=id) for id in vm_ids
         ]
         from vdi.graphql.resources import ControllerType
+        settings = PoolSettings(cluster_id=cluster_id, node_id=node_id)
         return PoolType(id=pool['id'], name=pool['name'], vms=vms,
                         controller=ControllerType(ip=pool['controller_ip']),
                         desktop_pool_type=DesktopPoolType.STATIC,
@@ -856,17 +898,17 @@ class PoolMixin:
 
 
     async def _select_pool(self, info, id):
-        selections = get_selections(info)
+        # selections = get_selections(info)
         settings_selections = get_selections(info, 'settings') or []
-        fields = [
-            f for f in selections
-            if f in PoolType.sql_fields
-        ]
-        if not id and 'id' not in fields:
-            fields.append('id')
-
-        if not fields and not settings_selections:
-            return {}
+        # fields = [
+        #     f for f in selections
+        #     if f in PoolType.sql_fields
+        # ]
+        # if 'id' not in fields:
+        #     fields.append('id')
+        #
+        # if not fields and not settings_selections:
+        #     return {}
 
         qu = "select * from pool left join dynamic_traits as t " \
              "on pool.dynamic_traits = t.dynamic_traits_id " \
@@ -892,6 +934,7 @@ class PoolMixin:
         #TODO will be refactored
 
         pool_data = await PoolMixin._select_pool(self, info, id)
+        print('pool_data', pool_data)
         controller_ip = pool_data['controller_ip']
         u_fields = get_selections(info, 'users') or ()
         u_fields_joined = ', '.join(f'u.{f}' for f in u_fields)

@@ -1,6 +1,7 @@
 import inspect
 from functools import wraps
 from typing import List
+import re
 
 from vdi.settings import settings
 from vdi.db import db
@@ -62,9 +63,15 @@ def print(msg, _print=print):
     if getattr(settings, 'print', False):
         _print(msg)
 
+
 def into_words(s):
     return [w for w in s.split() if w]
 
+
 def clamp_value(my_value, min_value, max_value):
     return max(min(my_value, max_value), min_value)
+
+
+def validate_name(name_string):
+    return re.match('^[а-яА-ЯёЁa-zA-Z0-9]+[а-яА-ЯёЁa-zA-Z0-9.-_+ ]*$', name_string)
 

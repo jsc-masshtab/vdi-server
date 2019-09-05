@@ -1,5 +1,5 @@
 from vdi.graphql import schema
-from vdi.fixtures import (
+from fixtures.fixtures import (
     fixt_db, conn, fixt_create_static_pool, fixt_entitle_user_to_pool
 )
 
@@ -35,9 +35,9 @@ async def test_assign_vm_to_user(fixt_entitle_user_to_pool):
     username = 'admin'
     qu = '''
     mutation {
-      assignVmToUser(vm_id: "%s", username: "%s") {
-        ok
-      }
+     assignVmToUser(vm_id: "%s", username: "%s") {
+       ok
+     }
     }
     ''' % (vm_id, username)
     res = await schema.exec(qu)
@@ -47,9 +47,9 @@ async def test_assign_vm_to_user(fixt_entitle_user_to_pool):
     # remove assignment
     qu = '''
     mutation {
-      freeVmFromUser(vm_id: "%s") {
-        ok
-      }
+     freeVmFromUser(vm_id: "%s") {
+       ok
+     }
     }
     ''' % vm_id
     res = await schema.exec(qu)

@@ -83,6 +83,7 @@ class FetchNode(UrlFetcher):
 class ListDatapools(UrlFetcher):
     controller_ip: str
     node_id: str = None
+    take_broken: bool = False  # property if datapool is fine
 
     @cached
     def url(self):
@@ -95,8 +96,12 @@ class ListDatapools(UrlFetcher):
         pools = []
         for pool in tuple(resp['results']):
             for node in pool['nodes_connected']:
-                if self.node_id and node['id'] == self.node_id and node['connection_status'].upper() == 'SUCCESS':
-                    break
+                if self.take_broken:  # doesnt check status and take broken datapools too
+                    if self.node_id and node['id'] == self.node_id:
+                        break
+                else:
+                    if self.node_id and node['id'] == self.node_id and node['connection_status'].upper() == 'SUCCESS':
+                        break
             else:
                 # pool doesn't include our node
                 continue
