@@ -1,3 +1,4 @@
+import { RemoveUsersPoolComponent } from './../remove-users/remove-users.component';
 import { AddUsersPoolComponent } from './../add-users/add-users.component';
 import { RemoveVMStaticPoolComponent } from './../remove-vms/remove-vms.component';
 import { AddVMStaticPoolComponent } from './../add-vms/add-vms.component';
@@ -114,6 +115,17 @@ export class PoolDetailsComponent implements OnInit {
       property: "state"
     }
   ];
+
+  public collection_users:any[] = [
+    {
+      title: '№',
+      property: 'index'
+    },
+    {
+      title: 'Имя пользователя',
+      property: 'username'
+    }
+  ];
   private pool_id:number;
   private pool_type:string;
   public  menuActive:string = 'info';
@@ -164,6 +176,16 @@ export class PoolDetailsComponent implements OnInit {
     });
   }
 
+  public removeUsers() {
+    this.dialog.open(RemoveUsersPoolComponent, {
+      width: '500px',
+      data: {
+        pool_id: this.pool_id,
+        pool_name: this.pool['name']
+      }
+    });
+  }
+
   public addVM() {
     this.dialog.open(AddVMStaticPoolComponent, {
       width: '500px',
@@ -196,6 +218,10 @@ export class PoolDetailsComponent implements OnInit {
 
     if(route === 'vms') {
       this.menuActive = 'vms';
+    }
+
+    if(route === 'users') {
+      this.menuActive = 'users';
     }
   }
 

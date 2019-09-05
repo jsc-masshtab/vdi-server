@@ -41,7 +41,6 @@ export class UsersService  {
     }
 
     public entitleUsersToPool(pool_id: number,entitled_users: []) {
-        console.log(pool_id,entitled_users);
         return this.service.mutate<any>({
             mutation: gql`  
                             mutation EntitleUsersToPool($pool_id: ID,$entitled_users: [ID]) {
@@ -54,6 +53,41 @@ export class UsersService  {
                 method: 'POST',
                 pool_id: pool_id,
                 entitled_users: entitled_users
+            }
+        })
+    }
+
+    public removeUserEntitlementsFromPool(pool_id: number,entitled_users: []) {
+        return this.service.mutate<any>({
+            mutation: gql`  
+                            mutation EntitleUsersToPool($pool_id: ID,$entitled_users: [ID]) {
+                                entitleUsersToPool(pool_id: $pool_id, entitled_users: $entitled_users) {
+                                    ok
+                                }
+                            }
+            `,
+            variables: {
+                method: 'POST',
+                pool_id: pool_id,
+                entitled_users: entitled_users
+            }
+        })
+    }
+
+    public assesUsersToPool(id: number): QueryRef<any,any> {
+        return this.service.watchQuery({
+                query: gql`  
+                            query  AssesUsersToPool($id: ID) {
+                                pool(id: $id) {
+                                    users {
+                                        username
+                                    }
+                                }
+                            }
+            `,
+            variables: {
+                method: 'POST',
+                id: id
             }
         })
     }

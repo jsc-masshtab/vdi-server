@@ -1,3 +1,4 @@
+import { RemoveUsersPoolComponent } from './polls/remove-users/remove-users.component';
 import { RemoveVMStaticPoolComponent } from './polls/remove-vms/remove-vms.component';
 import { WaitService } from './common/components/wait/wait.service';
 import { WaitComponent } from './common/components/wait/wait.component';
@@ -102,7 +103,8 @@ import { AddUsersPoolComponent } from './polls/add-users/add-users.component';
     AddVMStaticPoolComponent,
     WaitComponent,
     RemoveVMStaticPoolComponent,
-    AddUsersPoolComponent
+    AddUsersPoolComponent,
+    RemoveUsersPoolComponent
   ],
   imports: [
     BrowserModule,
@@ -125,7 +127,8 @@ import { AddUsersPoolComponent } from './polls/add-users/add-users.component';
     AddUserComponent,
     AddVMStaticPoolComponent,
     RemoveVMStaticPoolComponent,
-    AddUsersPoolComponent
+    AddUsersPoolComponent,
+    RemoveUsersPoolComponent
   ],
   providers: 
             [
