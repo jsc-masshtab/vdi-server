@@ -60,16 +60,19 @@ export class UsersService  {
     public removeUserEntitlementsFromPool(pool_id: number,entitled_users: []) {
         return this.service.mutate<any>({
             mutation: gql`  
-                            mutation EntitleUsersToPool($pool_id: ID,$entitled_users: [ID]) {
-                                entitleUsersToPool(pool_id: $pool_id, entitled_users: $entitled_users) {
-                                    ok
+                            mutation RemoveUserEntitlementsFromPool($pool_id: ID,$entitled_users: [ID]) {
+                                removeUserEntitlementsFromPool(pool_id: $pool_id, entitled_users: $entitled_users) {
+                                    freed {
+                                        name
+                                    }
                                 }
                             }
             `,
             variables: {
                 method: 'POST',
                 pool_id: pool_id,
-                entitled_users: entitled_users
+                entitled_users: entitled_users,
+                free_assigned_vms: true
             }
         })
     }
@@ -77,7 +80,7 @@ export class UsersService  {
     public assesUsersToPool(id: number): QueryRef<any,any> {
         return this.service.watchQuery({
                 query: gql`  
-                            query  AssesUsersToPool($id: ID) {
+                            query  AssesUsersToPool($id: Int) {
                                 pool(id: $id) {
                                     users {
                                         username

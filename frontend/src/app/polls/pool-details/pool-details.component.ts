@@ -181,7 +181,8 @@ export class PoolDetailsComponent implements OnInit {
       width: '500px',
       data: {
         pool_id: this.pool_id,
-        pool_name: this.pool['name']
+        pool_name: this.pool['name'],
+        pool_type: this.pool_type
       }
     });
   }

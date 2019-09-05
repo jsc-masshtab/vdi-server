@@ -40,7 +40,7 @@ export class RemoveUsersPoolComponent  {
 
   private getUsersToPool() {
     this.pendingUsers = true;
-    this.usersService.assesUsersToPool(this.data.pool_id).valueChanges.pipe(map(data => data.data.users))
+    this.usersService.assesUsersToPool(this.data.pool_id).valueChanges.pipe(map(data => data.data.pool.users))
     .subscribe( (data) => {
       this.users =  data;
       this.pendingUsers = false;
