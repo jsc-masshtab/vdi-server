@@ -13,7 +13,7 @@ from graphql.error import format_error
 from collections import OrderedDict
 import json
 
-from vdi.utils import print
+#from vdi.utils import print
 
 from classy_async import g
 
