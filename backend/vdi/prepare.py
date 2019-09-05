@@ -1,21 +1,41 @@
 #!/usr/bin/env python
 import json
 from vdi.tasks import admin, resources
+from vdi.tasks.resources import DiscoverControllers
 from vdi.settings import settings
 
 from classy_async import Wait
 from vdi.tasks import Token
+
+from vdi.errors import SimpleError
 
 import asyncio
 
 from vdi.db import db
 from vdi.errors import FetchException
 
+
 class FirstTimeToken(Token):
     creds = {
         'username': 'admin',
         'password': 'veil',
     }
+
+
+# Get controller ip when there is no data provided which one required...
+async def get_most_appropriate_controller():
+
+    connected = await DiscoverControllers(return_broken=False)
+    if not connected:
+        raise SimpleError('No controllers registered')
+    # print('connected con', connected)
+    # get default controller
+    try:
+        controller_ip = next(controller_info['ip'] for controller_info in connected if controller_info['default'])
+    except StopIteration:
+        # if no default controller then take first available
+        controller_ip = connected[0]['ip']
+    return controller_ip
 
 
 async def add_controller(ip):
@@ -48,7 +68,7 @@ async def add_user(controller_ip, **creds):
 async def main():
     if not settings['is_dev']:
         return
-    controller_ip = settings['controller_ip']
+    controller_ip = await get_most_appropriate_controller()
 
     await add_user(controller_ip)
     await add_controller(controller_ip)

@@ -3,13 +3,14 @@ import pytest
 import json
 import uuid
 
-from vdi.tasks.resources import DiscoverControllerIp
-from vdi.tasks.base import DiscoverController
-from vdi.graphql_api import schema
+from vdi.tasks.resources import DiscoverControllers
 from vdi.tasks import resources
 from vdi.tasks import vm
+
+from vdi.graphql_api import schema
 from vdi.graphql_api.pool import RemovePool
-from vdi.settings import settings
+
+from vdi.prepare import get_most_appropriate_controller
 
 @pytest.fixture
 async def fixt_db():
@@ -109,8 +110,8 @@ async def conn():
 async def fixt_create_static_pool(fixt_db):
 
     print('create_static_pool')
-
-    controller_ip = settings['controller_ip'] # await DiscoverController()
+    controller_ip = await get_most_appropriate_controller()
+    print('fixt_create_static_pool: controller_ip', controller_ip)
 
     # choose resources to create vms
     list_of_clusters = await resources.ListClusters(controller_ip=controller_ip)
@@ -138,7 +139,7 @@ async def fixt_create_static_pool(fixt_db):
     vm_ids_list = json.dumps([domain_info_1['id'], domain_info_2['id']])
     qu = '''
         mutation {
-          addStaticPool(name: "test_pool_static", node_id: "", datapool_id: "", cluster_id: "", vm_ids_list: %s) {
+          addStaticPool(name: "test_pool_static", vm_ids_list: %s) {
             id
             vms {
               id
@@ -159,6 +160,7 @@ async def fixt_create_static_pool(fixt_db):
 
     # remove pool
     await RemovePool.do_remove(pool_id)
+
 
 
 @pytest.fixture

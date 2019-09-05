@@ -4,8 +4,8 @@ from . import SettingsDict
 class Settings(SettingsDict):
     debug = True
     is_dev = True
-    controller_ip = '192.168.7.250'
-    print = False
+    #controller_ip = '192.168.7.257' 
+    print = True
 
 
     pool = {

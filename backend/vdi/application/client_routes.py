@@ -9,7 +9,7 @@ from vdi.db import db
 from vdi.pool import Pool
 from vdi.tasks import thin_client
 from vdi.settings import settings
-from vdi.utils import print
+#from vdi.utils import print
 
 from vdi.errors import NotFound
 
@@ -53,6 +53,8 @@ async def get_vm(request):
     from vdi.graphql_api.pool import DesktopPoolType
     user = request.user.username
     pool_id = int(request.path_params['pool_id'])
+    # Сочитание pool id и имя пользователя должно быть обязательо уникальным
+    # так как пользователь не может иметь больше одной машины в пуле
     async with db.connect() as conn:
         qu = (
             'select controller_ip, desktop_pool_type, vm.id '
@@ -118,18 +120,17 @@ async def get_vm(request):
 @app.route('/client/pools/{pool_id}/{action}', methods=['POST'])
 @requires('authenticated')
 async def do_action_on_vm(request):
-
+    print('do_action_on_vm')
     username = request.user.username
     pool_id = int(request.path_params['pool_id'])
     vm_action = request.path_params['action']
-
+    # in pool find machine which belongs to user
     async with db.connect() as conn:
         qu = """                                                                                        
         select id from vm where username = $1 and pool_id = $2                                          
         """, username, pool_id
         vms = await conn.fetch(*qu)
 
-    print('do_action_on_vm: vms', vms)
     if vms:
         [(vm_id,)] = vms
     else:
@@ -143,8 +144,12 @@ async def do_action_on_vm(request):
         text_body = ''
     print('do_action_on_vm: text_body', text_body)
 
+    # determine vm controller ip by pool id
+    async with db.connect() as conn:
+        qu = f"""SELECT controller_ip FROM pool WHERE pool.id =  $1""", pool_id
+        [(controller_ip,)] = await conn.fetch(*qu)
+        print('controller_ip_', controller_ip)
     # do action
-    controller_ip = settings['controller_ip']
     await thin_client.DoActionOnVm(controller_ip=controller_ip, domain_id=vm_id, action=vm_action, body=text_body)
 
     return JSONResponse({'error': 'null'})
