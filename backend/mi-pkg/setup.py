@@ -4,7 +4,7 @@ setup(
     name='mi',
     packages=['mi'],
     install_requires=[
-        'docopt', 'cached-property', 'sqlalchemy',
+        'docopt', 'cached-property'
     ],
     entry_points="""
     [console_scripts]

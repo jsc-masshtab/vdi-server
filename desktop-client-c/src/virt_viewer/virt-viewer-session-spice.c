@@ -717,33 +717,36 @@ virt_viewer_session_spice_main_channel_event(SpiceChannel *channel,
          * invalid username and invalid password. So, in both cases the username
          * entry will be pre-filled with the username used in the previous attempt. */
         if (username_required) {
-            // set username
-            if(take_extern_credentials){
-                user = g_strdup(spice_session_username);
-            }
-            else {
-                g_object_get(self->priv->session, "username", &user, NULL);
-                if (user == NULL || *user == '\0')
-                    user = g_strdup(g_get_user_name());
-            }
+//            // set username
+//            if(take_extern_credentials){
+//                user = g_strdup(spice_session_username);
+//            }
+//            else {
+//                g_object_get(self->priv->session, "username", &user, NULL);
+//                if (user == NULL || *user == '\0')
+//                    user = g_strdup(g_get_user_name());
+//            }
+            user = g_strdup(spice_session_username);
         }
 
         g_object_get(self->priv->session, "host", &host, NULL);
 
         // set password
-        if (take_extern_credentials) {
-            password = g_strdup(spice_session_password);
-            ret = GTK_RESPONSE_OK;
-            take_extern_credentials = FALSE;
-        }
-        // Если с формы получили неправильный пароль , то вызываем форму авторизации
-        else{
-            ret = virt_viewer_auth_collect_credentials(self->priv->main_window,
-                                                       "SPICE",
-                                                       host,
-                                                       username_required ? &user : NULL,
-                                                       &password);
-        }
+        password = g_strdup(spice_session_password);
+        ret = GTK_RESPONSE_OK;
+//        if (take_extern_credentials) {
+//            password = g_strdup(spice_session_password);
+//            ret = GTK_RESPONSE_OK;
+//            take_extern_credentials = FALSE;
+//        }
+//        // Если с формы получили неправильный пароль , то вызываем форму авторизации
+//        else{
+//            ret = virt_viewer_auth_collect_credentials(self->priv->main_window,
+//                                                       "SPICE",
+//                                                       host,
+//                                                       username_required ? &user : NULL,
+//                                                       &password);
+//        }
 
         g_free(host);
         if (!ret) {
