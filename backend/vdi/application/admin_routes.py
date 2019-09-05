@@ -1,4 +1,4 @@
-from vdi.graphql.subscriptions_handler import SubscriptionHandler
+from vdi.graphql_api.subscriptions_handler import SubscriptionHandler
 
 from .app import app
 
@@ -7,7 +7,7 @@ from starlette.graphql import (
     Request, Response, PlainTextResponse, status, BackgroundTasks, JSONResponse, format_graphql_error
 )
 from starlette.authentication import UnauthenticatedUser
-from vdi.graphql.schema import schema
+from vdi.graphql_api.schema import schema
 from graphql.execution.executors.asyncio import AsyncioExecutor
 
 from vdi.errors import BackendError

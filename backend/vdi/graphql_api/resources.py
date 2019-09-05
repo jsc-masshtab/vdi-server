@@ -280,7 +280,7 @@ class RemoveController(graphene.Mutation):
             qu = "SELECT id FROM pool WHERE controller_ip = $1 AND deleted IS NOT TRUE", controller_ip
             pools = await c.fetch(*qu)
 
-        from vdi.graphql.pool import RemovePool
+        from vdi.graphql_api.pool import RemovePool
         tasks = [
             RemovePool.do_remove(pool['id'])
             for pool in pools

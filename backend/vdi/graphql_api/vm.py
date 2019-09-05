@@ -9,7 +9,7 @@ from ..tasks.resources import DiscoverControllers
 from .pool import VmType, TemplateType
 
 from vdi.tasks.resources import DiscoverControllerIp
-from vdi.graphql.resources import NodeType, ControllerType
+from vdi.graphql_api.resources import NodeType, ControllerType
 
 
 from vdi.utils import print
@@ -82,7 +82,7 @@ class FreeVmFromUser(graphene.Mutation):
 class PoolWizardMixin:
 
     def poolwizard():
-        from vdi.graphql.pool import PoolSettings
+        from vdi.graphql_api.pool import PoolSettings
         return PoolSettings
 
     poolwizard = graphene.Field(poolwizard)
@@ -116,7 +116,7 @@ class PoolWizardMixin:
             node = await FetchNode(controller_ip=controller_ip, node_id=node_id)
             settings['cluster_id'] = node['cluster']['id']
         from vdi.settings import settings as global_settings
-        from vdi.graphql.pool import PoolSettings
+        from vdi.graphql_api.pool import PoolSettings
         return PoolSettings(**settings, **{
             #'controller_ip': controller_ip,
             'template_id': template_id,

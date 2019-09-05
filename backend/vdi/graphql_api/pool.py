@@ -30,7 +30,7 @@ class TemplateType(graphene.ObjectType):
 
     @graphene.Field
     def node():
-        from vdi.graphql.resources import NodeType
+        from vdi.graphql_api.resources import NodeType
         return NodeType
 
     def resolve_info(self, info, get=None):
@@ -84,7 +84,7 @@ class PoolType(graphene.ObjectType):
 
     @graphene.Field
     def controller():
-        from vdi.graphql.resources import ControllerType
+        from vdi.graphql_api.resources import ControllerType
         return ControllerType
 
     sql_fields = ['id', 'template_id', 'name', 'controller_ip', 'desktop_pool_type']
@@ -187,7 +187,7 @@ class VmType(graphene.ObjectType):
 
     @graphene.Field
     def node():
-        from vdi.graphql.resources import NodeType
+        from vdi.graphql_api.resources import NodeType
         return NodeType
 
     async def resolve_name(self, info):
@@ -213,9 +213,9 @@ class VmType(graphene.ObjectType):
         else:
             return self.node
         from vdi.tasks.resources import FetchNode
-        from vdi.graphql.resources import NodeType
+        from vdi.graphql_api.resources import NodeType
         node = await FetchNode(controller_ip=self.controller_ip, node_id=self.node.id)
-        from vdi.graphql.resources import ControllerType
+        from vdi.graphql_api.resources import ControllerType
         controller = ControllerType(ip=self.controller_ip)
         obj = controller._make_type(NodeType, node)
         obj.controller = controller
@@ -300,8 +300,8 @@ class PoolState(graphene.ObjectType):
         vms = [
             vm for vm in vms if vm['id'] in set(vm_ids)
         ]
-        from vdi.graphql.vm import TemplateType
-        from vdi.graphql.resources import NodeType, ControllerType
+        from vdi.graphql_api.vm import TemplateType
+        from vdi.graphql_api.resources import NodeType, ControllerType
 
         template_selections = get_selections(info, 'template') or ()
         if {'id', *template_selections} > {'id'}:
@@ -463,7 +463,7 @@ class AddPool(graphene.Mutation):
         # validate agruments
         AddPool.validate_agruments(pool)
 
-        from vdi.graphql.resources import NodeType, ControllerType
+        from vdi.graphql_api.resources import NodeType, ControllerType
         controller = ControllerType(ip=pool['controller_ip'])
 
         dyn_traits = {
@@ -483,7 +483,7 @@ class AddPool(graphene.Mutation):
         selections = get_selections(info)
         if 'vms' in selections:
             domains = await add_domains
-            from vdi.graphql.vm import TemplateType
+            from vdi.graphql_api.vm import TemplateType
             available = []
             for domain in domains:
                 template = domain['template']
@@ -606,7 +606,7 @@ class AddStaticPool(graphene.Mutation):
         vms = [
             VmType(id=id) for id in vm_ids
         ]
-        from vdi.graphql.resources import ControllerType
+        from vdi.graphql_api.resources import ControllerType
         settings = PoolSettings(cluster_id=cluster_id, node_id=node_id)
         return PoolType(id=pool['id'], name=pool['name'], vms=vms,
                         controller=ControllerType(ip=pool['controller_ip']),
@@ -951,7 +951,7 @@ class PoolMixin:
                 u = dict(zip(u_fields, u))
                 users.append(UserType(**u))
             pool_data['users'] = users
-        from vdi.graphql.resources import ControllerType
+        from vdi.graphql_api.resources import ControllerType
         pool_data['id'] = id
         pool_data = {
             k: v for k, v in pool_data.items() if k in PoolType._meta.fields
@@ -1002,7 +1002,7 @@ class PoolMixin:
             }
             if u_fields:
                 p['users'] = pools_users[id]
-            from vdi.graphql.resources import ControllerType
+            from vdi.graphql_api.resources import ControllerType
             pt = PoolType(**p,
                           settings=PoolSettings(**settings),
                           controller=ControllerType(ip=controller_ip))

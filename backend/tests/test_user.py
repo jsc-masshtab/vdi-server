@@ -1,4 +1,4 @@
-from vdi.graphql import schema
+from vdi.graphql_api import schema
 from fixtures.fixtures import (
     fixt_db, conn, fixt_create_static_pool, fixt_entitle_user_to_pool
 )

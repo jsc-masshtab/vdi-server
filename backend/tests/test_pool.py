@@ -4,9 +4,9 @@ from fixtures.fixtures import (
     conn, fixt_create_static_pool
 )
 
-from vdi.graphql.pool import RemovePool
-from vdi.graphql.pool import DesktopPoolType
-from vdi.graphql import schema
+from vdi.graphql_api.pool import RemovePool
+from vdi.graphql_api.pool import DesktopPoolType
+from vdi.graphql_api import schema
 from graphql import GraphQLError
 from vdi.pool import Pool
 from vdi.tasks import resources

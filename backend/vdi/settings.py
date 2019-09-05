@@ -4,7 +4,7 @@ from . import SettingsDict
 class Settings(SettingsDict):
     debug = True
     is_dev = True
-    controller_ip = '192.168.20.120'
+    controller_ip = '192.168.7.250'
     print = False
 
 
@@ -39,7 +39,7 @@ class Settings(SettingsDict):
     }
 
     vdi_server = {
-        'port': 8080
+        'port': 80
     }
 
 

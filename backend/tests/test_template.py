@@ -1,9 +1,9 @@
 import pytest
 
 
-from vdi.graphql.schema import exec
+from vdi.graphql_api.schema import exec
 
-from vdi.fixtures import db, image_name
+from vdi.fixtures import fixt_db, image_name
 
 @pytest.mark.asyncio
 async def test_create_drop_template(db, image_name):

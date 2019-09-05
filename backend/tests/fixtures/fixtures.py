@@ -5,10 +5,10 @@ import uuid
 
 from vdi.tasks.resources import DiscoverControllerIp
 from vdi.tasks.base import DiscoverController
-from vdi.graphql import schema
+from vdi.graphql_api import schema
 from vdi.tasks import resources
 from vdi.tasks import vm
-from vdi.graphql.pool import RemovePool
+from vdi.graphql_api.pool import RemovePool
 from vdi.settings import settings
 
 @pytest.fixture
