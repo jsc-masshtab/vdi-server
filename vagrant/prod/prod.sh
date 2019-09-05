@@ -1,6 +1,6 @@
 echo "Install apt packages"
 
-sed -i s/us\./ru\./g /etc/apt/sources.list
+sudo sed -i s/us\./ru\./g /etc/apt/sources.list
 sudo apt update -y
 sudo apt install --no-install-recommends -y postgresql-server-dev-11 python3-dev gcc python3-pip postgresql htop ncdu mc bmon
 
@@ -11,8 +11,8 @@ sudo sed -i 's/peer/trust/g' /etc/postgresql/11/main/pg_hba.conf
 sudo systemctl restart postgresql
 
 echo 'postgres:postgres' | sudo chpasswd
-su postgres -c "psql -c \"ALTER ROLE postgres PASSWORD 'postgres';\" "
-su postgres -c "psql -c \"create database vdi encoding 'utf8' lc_collate = 'en_US.UTF-8' lc_ctype = 'en_US.UTF-8' template template0;\" "
+sudo su postgres -c "psql -c \"ALTER ROLE postgres PASSWORD 'postgres';\" "
+sudo su postgres -c "psql -c \"create database vdi encoding 'utf8' lc_collate = 'en_US.UTF-8' lc_ctype = 'en_US.UTF-8' template template0;\" "
 
 sudo python3 -m pip install pipenv
 
@@ -43,4 +43,3 @@ rm -rf node_modules
 
 # Somehow doesn't work with nohup... Therefore, should be the last script to execute
 /snap/bin/npm run ng serve -- --host 0.0.0.0
-
