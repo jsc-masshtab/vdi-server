@@ -1,3 +1,8 @@
+# Adds higher directory to python modules path.
+import sys
+sys.path.append("..")
+sys.path.append("...")
+
 import asyncio
 import subprocess
 from pathlib import Path
@@ -9,7 +14,7 @@ import re
 import json
 from runpy import run_path
 
-from vdi.db import db
+import db
 
 from cached_property import cached_property as cached
 

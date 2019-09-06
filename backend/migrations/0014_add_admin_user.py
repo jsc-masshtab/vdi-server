@@ -1,6 +1,6 @@
 import asyncio
 
-from classy_async import wait_all
+from classy_async.classy_async import wait_all
 
 users = [
     {

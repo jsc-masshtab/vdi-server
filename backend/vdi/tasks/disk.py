@@ -2,7 +2,7 @@
 import json
 from dataclasses import dataclass
 
-from classy_async import Task
+from classy_async.classy_async import Task
 
 from .base import Token
 from .client import HttpClient
