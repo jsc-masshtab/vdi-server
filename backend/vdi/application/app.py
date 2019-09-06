@@ -1,6 +1,6 @@
 import sys
 
-from classy_async import g
+from classy_async.classy_async import g
 
 from starlette.applications import Starlette
 from starlette.middleware.authentication import AuthenticationMiddleware

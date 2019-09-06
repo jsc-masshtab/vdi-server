@@ -1,4 +1,4 @@
-from classy_async import Task
+from classy_async.classy_async import Task
 from contextlib import asynccontextmanager
 import time
 

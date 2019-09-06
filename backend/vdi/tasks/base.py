@@ -11,7 +11,7 @@ from contextlib import asynccontextmanager, contextmanager, AsyncExitStack, Exit
 from dataclasses import dataclass
 
 from cached_property import cached_property as cached
-from classy_async import Task as _Task, TaskTimeout, wait, g
+from classy_async.classy_async import Task as _Task, TaskTimeout, wait, g
 from vdi.errors import WsTimeout, FetchException, ControllerNotAccessible, Forbidden, \
     SimpleError, Unauthorized
 from vdi.settings import settings
