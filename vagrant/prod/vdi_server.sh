@@ -11,6 +11,6 @@ pipenv run python mi-pkg/mi/main.py
 
 echo "vdi_server: starting server..."
 pkill python
-nohup pipenv run python main.py &
+pipenv run python main.py &
 
 
