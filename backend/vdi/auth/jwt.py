@@ -2,7 +2,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import List
 
-from classy_async import Task
+from classy_async.classy_async import Task
 
 import jwt
 from starlette.authentication import (

@@ -3,7 +3,7 @@ import pytest
 import time
 import asyncio
 
-from classy_async import wait
+from classy_async.classy_async import wait
 
 li = []
 

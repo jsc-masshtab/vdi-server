@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from tornado.websocket import websocket_connect
 
 from . import Token
-from classy_async import Awaitable, task
+from classy_async.classy_async import Awaitable, task
 import asyncio
 
 from vdi.settings import settings

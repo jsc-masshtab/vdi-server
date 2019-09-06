@@ -2,7 +2,7 @@ import socket
 from dataclasses import dataclass
 
 from cached_property import cached_property as cached
-from classy_async import Task, wait
+from classy_async.classy_async import Task, wait
 
 from vdi.db import db
 
@@ -179,7 +179,9 @@ class DiscoverControllers(Task):
             d['default'] = d['ip'] == default
             try:
                 await CheckConnection(controller_ip=d['ip'])
-            except ControllerNotAccessible as ex:
+            except ControllerNotAccessible:
+                broken.append(d)
+            except OSError:
                 broken.append(d)
             else:
                 connected.append(d)

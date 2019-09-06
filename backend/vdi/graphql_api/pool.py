@@ -6,7 +6,7 @@ from typing import List
 
 import graphene
 from cached_property import cached_property as cached
-from classy_async import wait, wait_all
+from classy_async.classy_async import wait, wait_all
 from vdi.settings import settings as settings_file
 from vdi.tasks import vm
 from vdi.tasks.resources import DiscoverControllerIp

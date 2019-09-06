@@ -4,7 +4,7 @@ from vdi.tasks import admin, resources
 from vdi.tasks.resources import DiscoverControllers
 from vdi.settings import settings
 
-from classy_async import Wait
+from classy_async.classy_async import Wait
 from vdi.tasks import Token
 
 from vdi.errors import SimpleError
