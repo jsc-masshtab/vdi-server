@@ -9,30 +9,55 @@ export class ClustersService  {
 
     constructor(private service: Apollo) {}
 
-    public getAllClusters(): QueryRef<any,any> {
-       
-        return  this.service.watchQuery({
-            query:  gql` query allClusters {
-                        controllers {
-                            clusters {
-                                id
-                                verbose_name
-                                nodes_count
-                                status
-                                cpu_count
-                                memory_count
-                                controller {
-                                    ip
+    public getAllClusters(ip?:string): QueryRef<any,any> {
+
+        if(ip) {
+            return  this.service.watchQuery({
+                query:  gql` query allClusters($ip: String) {
+                                controller(ip: $ip) {
+                                    clusters {
+                                        id
+                                        verbose_name
+                                        nodes_count
+                                        status
+                                        cpu_count
+                                        memory_count
+                                        controller {
+                                            ip
+                                        }
+                                    }
+                                }
+                            }
+                        `,
+                variables: {
+                    method: 'GET',
+                    ip: ip
+                }
+            })
+        } else {
+            return  this.service.watchQuery({
+                query:  gql` query allClusters {
+                            controllers {
+                                clusters {
+                                    id
+                                    verbose_name
+                                    nodes_count
+                                    status
+                                    cpu_count
+                                    memory_count
+                                    controller {
+                                        ip
+                                    }
                                 }
                             }
                         }
-                    }
-            
-                    `,
-            variables: {
-                method: 'GET'
-            }
-        }) 
+                
+                        `,
+                variables: {
+                    method: 'GET'
+                }
+            }) 
+        }
     }
 
     public getCluster(id:string): QueryRef<any,any> {

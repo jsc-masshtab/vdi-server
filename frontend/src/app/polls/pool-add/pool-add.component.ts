@@ -1,3 +1,4 @@
+import { ControllersService } from './../../settings/controllers/controllers.service';
 import { WaitService } from './../../common/components/wait/wait.service';
 import { VmsService } from './../../resourses/vms/vms.service';
 import { TemplatesService } from './../../resourses/templates/templates.service';
@@ -40,12 +41,14 @@ export class PoolAddComponent implements OnInit {
   public nodes: object[] = [];
   public datapools: object[] = [];
   public vms: object[] = [];
+  public controllers: object[] = [];
   private finishPoll:{} = {};
 
   public id_cluster:string;
   public id_node:string;
   public id_datapool:string;
   public id_template:string;
+  public ip_controller:string;
 
   public chooseTypeForm: FormGroup;
   public createPoolForm:FormGroup;
@@ -55,7 +58,8 @@ export class PoolAddComponent implements OnInit {
     nodes: false,
     datapools: false,
     vms: false,
-    templates: false
+    templates: false,
+    controllers: false
   };
 
   public error:boolean = false;
@@ -94,6 +98,7 @@ export class PoolAddComponent implements OnInit {
               private datapoolsService: DatapoolsService,
               private templatesService:TemplatesService,
               private vmsService: VmsService,
+              private controllersService: ControllersService,
               private waitService: WaitService,
               private dialogRef: MatDialogRef<PoolAddComponent>,
               private fb: FormBuilder) {}
@@ -120,8 +125,7 @@ export class PoolAddComponent implements OnInit {
       "total_size": ['', Validators.required]
     });
     this.finishPoll = {};
-    this.getTemplate();
-    this.getClusters();
+    this.getControllers();
   }
 
   private createStaticPoolInit(): void {
@@ -136,13 +140,20 @@ export class PoolAddComponent implements OnInit {
     this.getClusters();
   }
 
-  
-  private getTemplate() {
-    this.pending['templates'] = true;
-    this.templatesService.getAllTemplates().valueChanges.pipe(map(data => data.data.controllers)).subscribe((data) => {
-      let entity = this.parseEntity(data,'templates');
+  private getControllers() {
+    this.pending['controllers'] = true;
+    this.controllersService.getAllControllers().valueChanges.pipe(map(data => data.data.controllers)).subscribe((data) => {
+      this.controllers = data;
+      this.pending['controllers'] = false;
+    },(error) => {
+      this.pending['controllers'] = false;
+    });
+  }
 
-      this.templates = entity.map((item) => {
+  private getTemplates(ip_controller:string) {
+    this.pending['templates'] = true;
+    this.templatesService.getAllTemplates(ip_controller).valueChanges.pipe(map(data => data.data.controller.templates)).subscribe((data) => {
+      this.templates = data.map((item) => {
         let parse = JSON.parse(item['info']);
         return {
           'id': parse.id,
@@ -155,14 +166,18 @@ export class PoolAddComponent implements OnInit {
     });
   }
 
-  private getClusters() {
+  private getClusters(ip_controller?:string) {
     this.pending['clusters'] = true;
-    this.clustersService.getAllClusters().valueChanges.pipe(map(data => data.data.controllers)) // подумать об выборе запрашиваемых полей
+    this.clustersService.getAllClusters(ip_controller).valueChanges.pipe(map(data => data.data)) // подумать об выборе запрашиваемых полей
       .subscribe( (data) => {
-        this.clusters = this.parseEntity(data,'clusters');
+        if(ip_controller) {
+          this.clusters = data.controller.clusters;
+        } else {
+          this.clusters = this.parseEntity(data.controllers,'clusters');
+        }
         this.pending['clusters'] = false;
       },
-      (error)=> {
+      (error) => {
         this.pending['clusters'] = false;
         this.clusters = [];
     });
@@ -175,7 +190,7 @@ export class PoolAddComponent implements OnInit {
         this.nodes = this.parseEntity(data,'nodes');
         this.pending['nodes'] = false;
       },
-      (error)=> {
+      (error) => {
         this.nodes = [];
         this.pending['nodes'] = false;
       });
@@ -207,7 +222,7 @@ export class PoolAddComponent implements OnInit {
     });
   }
 
-  private parseEntity(data:[],prop): object[] {
+  private parseEntity(data:[],prop:string): object[] {
     let arr: [][] = [];
     this[prop] = [];
     arr = data.map(controller => controller[`${prop}`]);
@@ -218,6 +233,12 @@ export class PoolAddComponent implements OnInit {
         }); 
     });
     return this[prop];
+  }
+
+  public selectController(value:object) {
+    this.ip_controller = value['value'];
+    this.getTemplates(this.ip_controller);
+    this.getClusters(this.ip_controller);
   }
 
   public selectTemplate(value:object) {
@@ -281,10 +302,12 @@ export class PoolAddComponent implements OnInit {
   }
 
   private resetLocalData():void {
+    this.controllers = [];
     this.clusters = [];
     this.nodes = [];
     this.datapools = [];
     this.vms = [];
+    this.ip_controller = "";
     this.id_cluster = "";
     this.id_node = "",
     this.id_datapool = "";
