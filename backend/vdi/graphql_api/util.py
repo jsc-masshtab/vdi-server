@@ -1,3 +1,6 @@
+from ..db import db
+from vdi.errors import FieldError
+
 
 def get_selections(info, path=''):
     if isinstance(info, Selections):
@@ -46,3 +49,11 @@ class Selections(list):
 
 def as_list(gen):
     return list(gen())
+
+
+async def check_if_pool_exists(pool_id):
+    async with db.connect() as conn:
+        qu = f'SELECT * FROM pool WHERE id = $1', pool_id
+        pool_data = await conn.fetch(*qu)
+        if not pool_data:
+            raise FieldError(pool_id=['Не найден пул с указанным id'])

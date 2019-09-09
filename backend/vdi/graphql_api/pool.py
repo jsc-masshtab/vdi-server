@@ -14,7 +14,7 @@ from vdi.tasks.thin_client import EnableRemoteAccess
 from vdi.tasks.vm import GetDomainInfo, GetVdisks
 
 from .users import UserType
-from .util import get_selections
+from .util import get_selections, check_if_pool_exists
 from ..db import db, fetch
 from ..pool import Pool
 
@@ -1027,3 +1027,22 @@ class PoolMixin:
                           controller=ControllerType(ip=controller_ip))
             items.append(pt)
         return items
+
+
+class ChangePoolNameMutation(graphene.Mutation):
+    class Arguments:
+        pool_id = graphene.Int()
+        new_name = graphene.String()
+
+    ok = graphene.Boolean()
+
+    async def mutate(self, _info, pool_id, new_name):
+        await check_if_pool_exists(pool_id)
+        # check if name is correct
+        PoolValidator.validate_pool_name(new_name)
+        # set name
+        async with db.connect() as conn:
+            qu = f'UPDATE pool SET name = $1 WHERE id = $2', new_name, pool_id
+            await conn.fetch(*qu)
+
+        return {'ok': True}
