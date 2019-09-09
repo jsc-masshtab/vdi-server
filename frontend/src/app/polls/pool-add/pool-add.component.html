@@ -42,6 +42,19 @@
 
     <label class="field" *ngIf="chooseTypeForm.value.type === 'Динамический'">
       <mat-form-field>
+        <mat-label  *ngIf="pending.controllers">Загрузка ...</mat-label>
+        <mat-label  *ngIf="controllers.length && !pending.controllers">Выберите контроллер</mat-label>
+        <mat-label  *ngIf="!controllers.length && !pending.controllers">- нет контроллера -</mat-label>
+        <mat-select (selectionChange)="selectController($event)">
+          <mat-option *ngFor="let controller of controllers" [value]="controller.ip">
+            {{controller.ip}}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+    </label>
+
+    <label class="field" *ngIf="chooseTypeForm.value.type === 'Динамический' && ip_controller">
+      <mat-form-field>
         <mat-label  *ngIf="pending.templates">Загрузка ...</mat-label>
         <mat-label  *ngIf="templates.length && !pending.templates">Выберите шаблон ВМ</mat-label>
         <mat-label  *ngIf="!templates.length && !pending.templates">- нет шаблонов -</mat-label>
@@ -53,7 +66,7 @@
       </mat-form-field>
     </label>
 
-    <label class="field">
+    <label class="field" *ngIf="chooseTypeForm.value.type === 'Динамический' && ip_controller || chooseTypeForm.value.type === 'Статический'">
       <mat-form-field>
         <mat-label  *ngIf="pending.clusters">Загрузка ...</mat-label>
         <mat-label  *ngIf="clusters.length && !pending.clusters">Выберите кластер</mat-label>
