@@ -3,7 +3,7 @@ import socket
 
 import graphene
 from asyncpg.connection import Connection
-from classy_async import wait
+from classy_async.classy_async import wait
 
 from .pool import PoolType, VmType, TemplateType
 from .util import get_selections

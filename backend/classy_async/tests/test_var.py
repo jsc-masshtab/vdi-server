@@ -1,6 +1,6 @@
 import pytest
 
-from classy_async import g_tasks, g
+from classy_async.classy_async import g_tasks, g
 
 from dataclasses import dataclass
 

@@ -5,7 +5,7 @@ import pytest
 
 from contextlib import suppress
 
-from classy_async import Awaitable
+from classy_async.classy_async import Awaitable
 
 
 

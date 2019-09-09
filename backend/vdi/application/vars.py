@@ -1,5 +1,5 @@
 
-from classy_async import Task
+from classy_async.classy_async import Task
 from starlette.requests import Request as _Request
 
 class RequestTask(Task):

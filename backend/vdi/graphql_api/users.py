@@ -32,6 +32,11 @@ class UserType(graphene.ObjectType):
             [data] = users
             return data
 
+    async  def resolve_username(self, info):
+        if not self.sql_data:
+            self.sql_data = await self.get_sql_data()
+        return self.sql_data['username']
+
     async def resolve_email(self, info):
         if self.email is not NotSet:
             return self.email
