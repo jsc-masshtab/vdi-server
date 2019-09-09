@@ -27,6 +27,7 @@ aiofiles = "*"
 itsdangerous = "*"
 pyjwt = "*"
 python-dateutil = "*"
+docopt = "*"
 
 sanic = "*"
 sanic-jwt = "*"

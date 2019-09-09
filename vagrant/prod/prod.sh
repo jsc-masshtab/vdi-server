@@ -28,10 +28,10 @@ export PIPENV_PIPFILE=/vagrant/vagrant/prod/Pipfile
 pipenv install
 
 echo "vdi_server: applying migrations..."
-pipenv run mi apply
+pipenv run python mi-pkg/mi/main.py apply #pipenv run mi apply
 
 echo "vdi_server: starting server..."
-nohup pipenv run vdi &
+nohup pipenv run python main.py & #nohup pipenv run vdi &
 
 #------------------------------
 echo "Setup frontend"

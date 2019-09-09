@@ -7,7 +7,7 @@ export PIPENV_SKIP_LOCK=1
 pipenv install
 
 echo "vdi_server: applying migrations..."
-pipenv run python mi-pkg/mi/main.py
+pipenv run python mi-pkg/mi/main.py apply
 
 echo "vdi_server: starting server..."
 pkill python
