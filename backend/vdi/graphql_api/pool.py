@@ -77,10 +77,8 @@ class PoolType(graphene.ObjectType):
     name = graphene.String()
     settings = graphene.Field(lambda: PoolSettings)
     state = graphene.Field(lambda: PoolState)
-    users = graphene.List(UserType)
+    users = graphene.List(UserType, entitled=graphene.Boolean())
     vms = graphene.List(lambda: VmType)
-
-
 
     @graphene.Field
     def controller():
@@ -96,6 +94,41 @@ class PoolType(graphene.ObjectType):
         pool = Pool.instances[self.id]
         state = PoolState(running=RunningState.RUNNING, pool=self)
         return state
+
+    async def resolve_users(self, _info, entitled=True):
+
+        u_fields = ('username', 'email', 'date_joined')
+        # users who are entitled to pool
+        if entitled:
+            u_fields_joined = ', '.join(f'u.{f}' for f in u_fields)
+            async with db.connect() as conn:
+                qu = f"""
+                SELECT {u_fields_joined} 
+                FROM pools_users JOIN public.user as u ON pools_users.username = u.username
+                WHERE pool_id = $1
+                """, self.id
+                data = await conn.fetch(*qu)
+        # users who are NOT entitled to pool
+        else:
+            u_fields_joined = ', '.join(f'{f}' for f in u_fields)
+            async with db.connect() as conn:
+                qu = f"""
+                SELECT {u_fields_joined} 
+                FROM public.user
+                WHERE public.user.username NOT IN
+                    (SELECT pools_users.username
+                     FROM pools_users
+                     WHERE pools_users.pool_id = $1
+                    )
+                """, self.id
+                data = await conn.fetch(*qu)
+
+        # form list and return
+        users = []
+        for u in data:
+            u = dict(zip(u_fields, u))
+            users.append(UserType(**u))
+        return users
 
     async def resolve_vms(self, info):
         if self.vms:
@@ -936,21 +969,7 @@ class PoolMixin:
         pool_data = await PoolMixin._select_pool(self, info, id)
         print('pool_data', pool_data)
         controller_ip = pool_data['controller_ip']
-        u_fields = get_selections(info, 'users') or ()
-        u_fields_joined = ', '.join(f'u.{f}' for f in u_fields)
-        if u_fields:
-            async with db.connect() as conn:
-                qu = f"""
-                SELECT {u_fields_joined}
-                FROM pools_users JOIN public.user as u ON pools_users.username = u.username
-                WHERE pool_id = $1
-                """, id
-                data = await conn.fetch(*qu)
-            users = []
-            for u in data:
-                u = dict(zip(u_fields, u))
-                users.append(UserType(**u))
-            pool_data['users'] = users
+
         from vdi.graphql_api.resources import ControllerType
         pool_data['id'] = id
         pool_data = {
