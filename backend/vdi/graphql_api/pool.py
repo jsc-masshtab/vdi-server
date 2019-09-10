@@ -14,7 +14,7 @@ from vdi.tasks.thin_client import EnableRemoteAccess
 from vdi.tasks.vm import GetDomainInfo, GetVdisks
 
 from .users import UserType
-from .util import get_selections
+from .util import get_selections, check_if_pool_exists
 from ..db import db, fetch
 from ..pool import Pool
 
@@ -1027,3 +1027,52 @@ class PoolMixin:
                           controller=ControllerType(ip=controller_ip))
             items.append(pt)
         return items
+
+
+class ChangePoolName(graphene.Mutation):
+    class Arguments:
+        pool_id = graphene.Int()
+        new_name = graphene.String()
+
+    ok = graphene.Boolean()
+
+    async def mutate(self, _info, pool_id, new_name):
+        await check_if_pool_exists(pool_id)
+        # check if name is correct
+        PoolValidator.validate_pool_name(new_name)
+        # set name
+        async with db.connect() as conn:
+            qu = f'UPDATE pool SET name = $1 WHERE id = $2', new_name, pool_id
+            await conn.fetch(*qu)
+
+        return {'ok': True}
+
+
+class ChangeVmNameTemplate(graphene.Mutation):
+    class Arguments:
+        pool_id = graphene.Int()
+        new_name_template = graphene.String()
+
+    ok = graphene.Boolean()
+
+    async def mutate(self, _info, pool_id, new_name_template):
+        pool_data_dict = await check_if_pool_exists(pool_id)
+        # check if pool is automated
+        if pool_data_dict['desktop_pool_type'] != DesktopPoolType.AUTOMATED.name:
+            raise FieldError(pool_id=['Не найден динамический пул с указанным id'])
+        # check if name is correct
+        PoolValidator.validate_pool_name(new_name_template)
+        # set name
+        async with db.connect() as conn:
+            qu = f'SELECT dynamic_traits FROM pool WHERE id = $1', pool_id
+            [(dynamic_traits_id,)] = await conn.fetch(*qu)
+
+            qu = f'UPDATE dynamic_traits SET vm_name_template = $1 WHERE dynamic_traits_id = $2', \
+                 new_name_template, dynamic_traits_id
+            await conn.fetch(*qu)
+
+        # change live data
+        if pool_id in Pool.instances and 'vm_name_template' in Pool.instances[pool_id].params:
+            Pool.instances[pool_id].params['vm_name_template'] = new_name_template
+
+        return {'ok': True}

@@ -100,10 +100,11 @@ class Pool:
         if not data:
             return None
         [params] = data
+
+        # dynamic traits!!
         ins = cls(params=params)
         cls.instances[pool_id] = ins
         return ins
-
 
     async def init(self, id, add_missing=False):
         """
