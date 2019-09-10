@@ -23,6 +23,24 @@ export class UsersService  {
         }) 
     }
 
+    public getAllUsersNoEntitleToPool(id:number): QueryRef<any,any> {
+        return  this.service.watchQuery({
+             query:  gql` query allUsers($id: Int,$entitled: Boolean) {
+                            pool(id: $id,entitled:$entitled) {
+                                users {
+                                    username
+                                }
+                            }
+                        }
+                     `,
+            variables: {
+                method: 'GET',
+                entitled: false,
+                id: id
+            }
+         }) 
+     }
+
     public createUser(username: string,password: string) {
         return this.service.mutate<any>({
             mutation: gql`  
