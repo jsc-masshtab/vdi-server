@@ -40,7 +40,7 @@ export class AddUsersPoolComponent  {
 
   private getUsers() {
     this.pendingUsers = true;
-    this.usersService.getAllUsers().valueChanges.pipe(map(data => data.data.users))
+    this.usersService.getAllUsersNoEntitleToPool(this.data.pool_id).valueChanges.pipe(map(data => data.data.pool.users))
     .subscribe( (data) => {
       this.users =  data;
       this.pendingUsers = false;

@@ -8,13 +8,13 @@
       <div class="table-area-value">
         <span *ngIf="obj.property_lv2 && data[obj.property]">{{ data[obj.property][obj.property_lv2] || '--' }}</span>
         <span *ngIf="!obj.property_lv2 && !obj.property_array && !obj.property_array_prop">{{ data[obj.property] || '--' }}</span>
-        <span *ngIf="obj.property_array && data[obj.property_array]">{{ data[obj.property_array].length || '--' }}</span>
+        <span *ngIf="obj.property_array && data[obj.property_array] && data[obj.property_array] && data[obj.property_array].length">{{ data[obj.property_array].length || '--' }}</span>
 
-        <span *ngIf="obj.property_lv2 && !data[obj.property] || obj.property_array && !data[obj.property_array] || obj.property_array_prop && !data[obj.property_array_prop].length">--</span>
+        <span *ngIf="obj.property_lv2 && !data[obj.property] || obj.property_array && !data[obj.property_array] || obj.property_array_prop && data[obj.property_array_prop] && !data[obj.property_array_prop].length || obj.property_array_prop && !data[obj.property_array_prop]">--</span>
 
-        <span *ngIf="obj.property_array_prop && data[obj.property_array_prop].length"> <!-- св-во length есть и у строки -->
+        <span *ngIf="obj.property_array_prop && data[obj.property_array_prop] && data[obj.property_array_prop].length"> <!-- св-во length есть и у строки -->
           <span *ngFor="let o of data[obj.property_array_prop]">
-            {{ o[obj.property_array_prop_lv2] }}
+            {{ o[obj.property_array_prop_lv2] || '--' }}
           </span>
         </span>
 
