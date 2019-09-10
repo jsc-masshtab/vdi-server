@@ -57,3 +57,5 @@ async def check_if_pool_exists(pool_id):
         pool_data = await conn.fetch(*qu)
         if not pool_data:
             raise FieldError(pool_id=['Не найден пул с указанным id'])
+        [pool_data] = pool_data
+        return dict(pool_data.items())
