@@ -1,5 +1,5 @@
 cd ../../frontend
-sudo snap install node --channel 11/stable --classic
+sudo snap install node --channel 8/stable --classic
 rm -rf node_modules
 /snap/bin/npm install
 
