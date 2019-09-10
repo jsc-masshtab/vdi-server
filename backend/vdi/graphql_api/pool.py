@@ -1071,4 +1071,8 @@ class ChangeVmNameTemplate(graphene.Mutation):
                  new_name_template, dynamic_traits_id
             await conn.fetch(*qu)
 
+        # change live data
+        if pool_id in Pool.instances and 'vm_name_template' in Pool.instances[pool_id].params:
+            Pool.instances[pool_id].params['vm_name_template'] = new_name_template
+
         return {'ok': True}
