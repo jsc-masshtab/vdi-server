@@ -14,7 +14,7 @@ import re
 import json
 from runpy import run_path
 
-import db
+from db import db
 
 from cached_property import cached_property as cached
 
@@ -216,3 +216,7 @@ def entry_point():
     except ExitError as ee:
         print(str(ee), file=sys.stderr)
         sys.exit(1)
+
+
+if __name__ == '__main__':
+    entry_point()
