@@ -2,8 +2,8 @@ import { PoolsService } from './../pools.service';
 import { UsersService } from './../../settings/users/users.service';
 import { WaitService } from '../../common/components/wait/wait.service';
 import { MatDialogRef } from '@angular/material';
-import { Component,Inject } from '@angular/core';
-import {MAT_DIALOG_DATA} from '@angular/material';
+import { Component, Inject, OnInit } from '@angular/core';
+import { MAT_DIALOG_DATA } from '@angular/material';
 import { map } from 'rxjs/operators';
 
 
@@ -12,9 +12,9 @@ import { map } from 'rxjs/operators';
   templateUrl: './add-users.component.html'
 })
 
-export class AddUsersPoolComponent  {
+export class AddUsersPoolComponent  implements OnInit {
 
-  public pendingUsers:boolean = false;
+  public pendingUsers: boolean = false;
   public users: [] = [];
   private id_users: [] = [];
 
@@ -28,13 +28,14 @@ export class AddUsersPoolComponent  {
   ngOnInit() {
     this.getUsers();
   }
- 
+
   public send() {
     this.waitService.setWait(true);
-    this.usersService.entitleUsersToPool(this.data.pool_id,this.id_users).subscribe(() => {
+    this.usersService.entitleUsersToPool(this.data.pool_id, this.id_users).subscribe(() => {
       this.dialogRef.close();
-      this.poolsService.getPool(this.data.pool_id,this.data.pool_type).subscribe();
-      this.waitService.setWait(false);
+      this.poolsService.getPool(this.data.pool_id, this.data.pool_type).subscribe((res) => {
+        this.waitService.setWait(false);
+      });
     });
   }
 

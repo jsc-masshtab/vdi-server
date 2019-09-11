@@ -12,10 +12,10 @@ import { MAT_DIALOG_DATA } from '@angular/material';
 
 export class RemoveVMStaticPoolComponent  {
 
-  public pendingVms:boolean = false;
+  public pendingVms: boolean = false;
   private id_vms: [] = [];
 
-  constructor(private poolService: PoolsService,
+  constructor(private poolsService: PoolsService,
               private waitService: WaitService,
               private dialogRef: MatDialogRef<RemoveVMStaticPoolComponent>,
               @Inject(MAT_DIALOG_DATA) public data: any) {}
@@ -24,10 +24,11 @@ export class RemoveVMStaticPoolComponent  {
  
   public send() {
     this.waitService.setWait(true);
-    this.poolService.removeVMStaticPool(this.data.pool_id,this.id_vms).subscribe(() => {
+    this.poolsService.removeVMStaticPool(this.data.pool_id, this.id_vms).subscribe(() => {
       this.dialogRef.close();
-      this.poolService.getPool(this.data.pool_id,this.data.pool_type).subscribe();
-      this.waitService.setWait(false);
+      this.poolsService.getPool(this.data.pool_id, this.data.pool_type).subscribe(() => {
+        this.waitService.setWait(false);
+      });
     });
   }
 

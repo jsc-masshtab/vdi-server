@@ -32,8 +32,9 @@ export class AddVMStaticPoolComponent  {
     this.waitService.setWait(true);
     this.poolService.addVMStaticPool(this.data.pool_id,this.id_vms).subscribe(() => {
       this.dialogRef.close();
-      this.poolService.getPool(this.data.pool_id,this.data.pool_type).subscribe();
-      this.waitService.setWait(false);
+      this.poolService.getPool(this.data.pool_id,this.data.pool_type).subscribe(res => {
+        this.waitService.setWait(false);
+      });
     });
   }
 

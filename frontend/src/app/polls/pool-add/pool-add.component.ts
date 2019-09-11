@@ -475,9 +475,10 @@ export class PoolAddComponent implements OnInit {
                                 value.reserve_size,
                                 value.total_size)
             .subscribe(() => { 
-              this.poolsService.getAllPools().subscribe();
+              this.poolsService.getAllPools().subscribe(res => {
+                this.waitService.setWait(false);
+              });
               this.dialogRef.close();
-              this.waitService.setWait(false);
             });
       } 
 
@@ -490,9 +491,10 @@ export class PoolAddComponent implements OnInit {
                                 value.datapool_id,
                                 value.vm_ids_list)
             .subscribe(() => { 
-              this.poolsService.getAllPools().subscribe();
+              this.poolsService.getAllPools().subscribe(res => {
+                this.waitService.setWait(false);
+              });
               this.dialogRef.close();
-              this.waitService.setWait(false);
             });
       } 
     } 

@@ -26,8 +26,8 @@ export class UsersService  {
     public getAllUsersNoEntitleToPool(id:number): QueryRef<any,any> {
         return  this.service.watchQuery({
              query:  gql` query allUsers($id: Int,$entitled: Boolean) {
-                            pool(id: $id,entitled:$entitled) {
-                                users {
+                            pool(id: $id) {
+                                users(entitled:$entitled) {
                                     username
                                 }
                             }
