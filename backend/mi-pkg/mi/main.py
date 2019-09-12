@@ -180,7 +180,7 @@ CREATE TABLE migrations (
             '''
             for cmd in commands.split():
                 if self.args[cmd]:
-                    method = getattr(self, 'do_{cmd}'.format(cmd))
+                    method = getattr(self, 'do_{}'.format(cmd))
                     return await method()
             if self.args['-h'] or self.args['--help']:
                 return self.do_help()
@@ -211,7 +211,10 @@ class drop_into_debugger:
 
 def entry_point():
     try:
-        asyncio.run(Mi().run())
+        loop = asyncio.get_event_loop()
+        # asyncio.run(Mi().run()) # 3.7
+        loop.run_until_complete(Mi().run())
+        loop.close()
     except ExitError as ee:
         print(str(ee), file=sys.stderr)
         sys.exit(1)

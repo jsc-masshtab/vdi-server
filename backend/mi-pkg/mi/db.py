@@ -4,7 +4,8 @@ import asyncpg
 
 from asyncpg.connection import Connection
 
-from contextlib import asynccontextmanager
+#from contextlib import asynccontextmanager # 3.7
+from async_generator import async_generator, yield_, asynccontextmanager
 
 class DbApp:
     pool = None
@@ -15,19 +16,21 @@ class DbApp:
         return await asyncpg.create_pool(database='vdi', user='postgres')
 
     @asynccontextmanager
+    @async_generator
     async def transaction(self) -> Connection:
         if self.pool is None:
             self.pool = await self.get_pool()
         async with self.pool.acquire() as c:
             async with c.transaction():
-                yield c
+                await yield_(c)
 
     @asynccontextmanager
+    @async_generator
     async def connect(self) -> Connection:
         if self.pool is None:
             self.pool = await self.get_pool()
         async with self.pool.acquire() as c:
-            yield c
+            await yield_(c)
 
 
 

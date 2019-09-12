@@ -11,7 +11,7 @@ jupyter = "*"
 pytest-asyncio = "*"
 
 [packages]
-uvicorn = "*"
+uvicorn = "==0.8.6"
 tornado = "*"
 #vdi = {editable = false,path = "./../../backend"}
 #classy_async = {editable = false,path = "./../../backend/classy_async"}
@@ -19,7 +19,7 @@ tornado = "*"
 #auth_server = {editable = false,path = "./../../backend/auth_server"}
 cached-property = "*"
 graphene = "*"
-starlette = ">=0.12.8"
+starlette = "" # >=0.12.8
 psycopg2 = "*"
 asyncpg = "*"
 requests = "*"
@@ -28,9 +28,10 @@ itsdangerous = "*"
 pyjwt = "*"
 python-dateutil = "*"
 docopt = "*"
-
-sanic = "*"
+#sanic = "*"
 sanic-jwt = "*"
+async-generator = "*"
+async_generator = "*"
 
 [requires]
-python_version = "3.7"
+python_version = "3.5"
