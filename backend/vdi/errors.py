@@ -43,9 +43,9 @@ class WsTimeout(BackendError):
 
 
 class FetchException(BackendError):
-    http_error: HTTPClientError
-    url: str
-    data: dict
+    http_error = None #HTTPClientError
+    url = ''
+    data = dict()
 
     @cached
     def code(self):
@@ -60,7 +60,7 @@ class FetchException(BackendError):
         }
 
     def __repr__(self):
-        return f'FetchException{repr(self.__dict__)}'
+        return 'FetchException{}'.format(repr(self.__dict__))
 
 
 class HttpError(BackendError):
@@ -100,7 +100,7 @@ class NotFound(HttpError):
 
 class BadRequest(HttpError):
     code = 400
-    errors: List
+    errors = None  # List
 
     def __init__(self, errors):
         self.errors = errors

@@ -5,7 +5,7 @@ from starlette.authentication import requires
 from starlette.responses import JSONResponse
 
 from vdi.auth import fetch_token
-from vdi.db import db
+from db.db import db
 from vdi.pool import Pool
 from vdi.tasks import thin_client
 from vdi.settings import settings
@@ -24,11 +24,11 @@ async def get_pools(request):
 
     if user == 'admin':
         async with db.connect() as conn:
-            qu = f"SELECT * from pool"
+            qu = "SELECT * from pool"
             data = await conn.fetch(qu)
     else: # any other user
         async with db.connect() as conn:
-            qu = f"""
+            qu = """
             SELECT * from pool JOIN pools_users ON pool.id = pools_users.pool_id
             WHERE pools_users.username = $1
             """, user
@@ -94,7 +94,7 @@ async def get_vm(request):
     elif desktop_pool_type == DesktopPoolType.STATIC.name:
         # find a free vm in static pool
         async with db.connect() as conn:
-            qu = f"select id from vm where pool_id = $1 and username is NULL limit 1", pool_id
+            qu = "select id from vm where pool_id = $1 and username is NULL limit 1", pool_id
             free_vms = await conn.fetch(*qu)
         print('get_vm: free_vm', free_vms)
         # if there is no free vm then send empty fields??? Handle on thin client side
@@ -104,7 +104,7 @@ async def get_vm(request):
         # assign vm to the user
         [(domain_id,)] = free_vms
         async with db.connect() as conn:
-            qu = f"update vm set username = $1 where id = $2", user, domain_id
+            qu = "update vm set username = $1 where id = $2", user, domain_id
             await conn.fetch(*qu)
     else:
         assert not "valid desktop pool type"
@@ -146,7 +146,7 @@ async def do_action_on_vm(request):
 
     # determine vm controller ip by pool id
     async with db.connect() as conn:
-        qu = f"""SELECT controller_ip FROM pool WHERE pool.id =  $1""", pool_id
+        qu = """SELECT controller_ip FROM pool WHERE pool.id =  $1""", pool_id
         [(controller_ip,)] = await conn.fetch(*qu)
         print('controller_ip_', controller_ip)
     # do action

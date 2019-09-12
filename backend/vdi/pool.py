@@ -1,16 +1,19 @@
 import asyncio
-from dataclasses import dataclass
+#from dataclasses import dataclass
 import uuid
 
 from cached_property import cached_property as cached
-from vdi.db import db
+from db.db import db
 from vdi.tasks import vm
 from vdi.utils import into_words
 
 
-@dataclass()
+#@dataclass()
 class Pool:
-    params: dict
+    params = dict()
+
+    def __init__(self, params: dict):
+        self.params = params
 
     traits_keys = into_words('initial_size reserve_size total_size '
                              'datapool_id cluster_id node_id vm_name_template')
@@ -33,7 +36,7 @@ class Pool:
         await self.queue.put(result)
         # insert into db
         async with db.connect() as conn:
-            qu = f"""
+            qu = """
             insert into vm (id, pool_id, template_id) values ($1, $2, $3)
             """, domain_id, self.params['id'], template['id']
             await conn.execute(*qu)
@@ -53,7 +56,7 @@ class Pool:
         uid = str(uuid.uuid4())[:7]
 
         params = {
-            'verbose_name': f"{vm_name_template}-{domain_index}-{uid}",
+            'verbose_name': "{}-{}-{}".format(vm_name_template, domain_index, uid),
             'name_template': vm_name_template,
             'domain_id': self.params['template_id'],
             'datapool_id': self.params['datapool_id'],
@@ -83,7 +86,7 @@ class Pool:
     async def load_vms(self):
         vms = await vm.ListVms(controller_ip=self.params['controller_ip'])
         valid_ids = {v['id'] for v in vms}
-        qu = f"SELECT * FROM vm WHERE pool_id = $1", self.params['id']
+        qu = "SELECT * FROM vm WHERE pool_id = $1", self.params['id']
         async with db.connect() as conn:
             vms = await conn.fetch(*qu)
         return [
@@ -95,7 +98,7 @@ class Pool:
         if pool_id in cls.instances:
             return cls.instances[pool_id]
         async with db.connect() as conn:
-            qu = f"SELECT * from pool where id = $1", pool_id
+            qu = "SELECT * from pool where id = $1", pool_id
             data = await conn.fetch(*qu)
         if not data:
             return None
@@ -128,7 +131,7 @@ class Pool:
 
     async def _get_vm_amount_in_pool(self):
         async with db.connect() as conn:
-            qu = f"select count(*) from vm where pool_id = $1", self.params['id']
+            qu = "select count(*) from vm where pool_id = $1", self.params['id']
             [(num,)] = await conn.fetch(*qu)
         return num
 

@@ -8,7 +8,7 @@ async def fetch_token(username, password):
     host, _ = request.scope['server']
     port = settings.auth_server['port']
     scheme = request.scope['scheme']
-    auth_url = f'{scheme}://{host}:{port}/auth'
+    auth_url = '{}://{}:{}/auth'.format(scheme, host, port)
     http_client = HttpClient()
     body = json.dumps({'username': username, 'password': password})
     return await http_client.fetch(auth_url, method='POST', body=body)

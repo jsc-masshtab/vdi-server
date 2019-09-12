@@ -1,5 +1,5 @@
 import json
-from dataclasses import dataclass
+#from dataclasses import dataclass
 
 from tornado.websocket import websocket_connect
 
@@ -10,18 +10,21 @@ import asyncio
 from vdi.settings import settings
 
 
-@dataclass()
+#@dataclass()
 class WsConnection(Awaitable):
-    controller_ip: str
-
+    controller_ip = ''
     timeout = settings.ws['timeout']
+
+    def __init__(self, controller_ip: str, timeout = settings.ws['timeout']):
+        self.controller_ip = controller_ip
+        self.timeout = timeout
 
     async def send(self, msg):
         return (await self._conn.write_message(msg))
 
     async def run(self):
         token = await Token(controller_ip=self.controller_ip)
-        connect_url = f'ws://{self.controller_ip}/ws/?token={token}'
+        connect_url = 'ws://{}/ws/?token={token}'.format(self.controller_ip, token)
         self._conn = await websocket_connect(connect_url)
         return self
 
