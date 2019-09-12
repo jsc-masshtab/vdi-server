@@ -77,7 +77,6 @@ export class PoolsComponent implements OnInit {
     this.waitService.setWait(true);
     this.getPoolsSub = this.service.getAllPools(true)
       .subscribe( (data) => {
-        console.log('ff');
         this.pools = data;
         this.waitService.setWait(false);
       });
