@@ -6,12 +6,18 @@
   </div>
 
   <div class="form-fields">
-    <p class="field-name">Выберите контроллер*</p>
-    <ba-select
-      [inputData]= "controllers || []"
-      (outputData)="selectValue($event)"
-      [defaultData]="defaultDataControllers">
-    </ba-select>
+    <label class="field">
+      <mat-form-field>
+        <mat-label  *ngIf="pendingControllers">Загрузка ...</mat-label>
+        <mat-label  *ngIf="controllers?.length && !pendingControllers">Выберите контроллер</mat-label>
+        <mat-label  *ngIf="!controllers?.length && !pendingControllers">- нет контроллера -</mat-label>
+        <mat-select (selectionChange)="selectController($event)">
+          <mat-option *ngFor="let controller of controllers" [value]="controller.ip">
+            {{controller.ip}}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+    </label>
   </div>
 
   <div class="form-actions">
@@ -19,3 +25,4 @@
   </div>
 
 </div>
+

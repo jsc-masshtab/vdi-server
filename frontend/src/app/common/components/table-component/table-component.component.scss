@@ -75,24 +75,20 @@
         }
     }
 
+    .icon-name-entity {
+        margin-right: 5px;
+    }
+
     // частные случаи столбца
     .index-column { 
         width: 50px;
         flex: inherit;
     }
 
-    .name-width {
-        min-width: 30%;
-    }
-
     .name-start {
         justify-content: flex-start;
         margin-left: 5px;
-    }
-
-    .name-start-h {
-        text-align: left;
-        margin-left: 10px;
+        min-width: 30%;
     }
 }
 

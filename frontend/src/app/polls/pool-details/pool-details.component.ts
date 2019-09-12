@@ -23,7 +23,7 @@ export class PoolDetailsComponent implements OnInit {
   public host: boolean = false;
 
   public pool: type_pool = {};
-  public collection_static:any[] = [
+  public collection_details_static:any[] = [
     {
       title: 'Название',
       property: 'name'
@@ -40,9 +40,14 @@ export class PoolDetailsComponent implements OnInit {
     {
       title: 'Всего ВМ',
       property_array: 'vms'
+    },
+    {
+      title: 'Пользователи',
+      property_array_prop: 'users',
+      property_array_prop_lv2: 'username'
     }
   ];
-  public collection_automated:any[] = [
+  public collection_details_automated:any[] = [
     {
       title: 'Название',
       property: 'name'
@@ -81,7 +86,7 @@ export class PoolDetailsComponent implements OnInit {
       property_array_prop_lv2: 'username'
     }
   ];
-  
+
   public collection_vms_automated:any[] = [
     {
       title: '№',
@@ -89,7 +94,9 @@ export class PoolDetailsComponent implements OnInit {
     },
     {
       title: 'Название',
-      property: 'name'
+      property: 'name',
+      class: 'name-start',
+      icon: 'desktop'
     },
     {
       title: 'Шаблон',
@@ -108,7 +115,9 @@ export class PoolDetailsComponent implements OnInit {
     },
     {
       title: 'Название',
-      property: 'name'
+      property: 'name',
+      class: 'name-start',
+      icon: 'desktop'
     },
     {
       title: 'Состояние',
@@ -123,7 +132,9 @@ export class PoolDetailsComponent implements OnInit {
     },
     {
       title: 'Имя пользователя',
-      property: 'username'
+      property: 'username',
+      class: 'name-start',
+      icon: 'user'
     }
   ];
   private pool_id:number;

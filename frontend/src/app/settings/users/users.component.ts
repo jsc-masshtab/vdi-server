@@ -20,7 +20,8 @@ export class UsersComponent implements OnInit {
     {
       title: 'Имя пользователя',
       property: 'username',
-      class: 'name-start'
+      class: 'name-start',
+      icon: 'user'
     }
   ];
 
@@ -42,6 +43,6 @@ export class UsersComponent implements OnInit {
       .subscribe((data) => {
         this.users = data;
         this.waitService.setWait(false);
-      });
+    });
   }
 }

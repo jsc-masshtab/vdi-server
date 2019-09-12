@@ -13,11 +13,11 @@
         <span *ngIf="obj.property_lv2 && !data[obj.property] || obj.property_array && !data[obj.property_array] || obj.property_array_prop && data[obj.property_array_prop] && !data[obj.property_array_prop].length || obj.property_array_prop && !data[obj.property_array_prop]">--</span>
 
         <span *ngIf="obj.property_array_prop && data[obj.property_array_prop] && data[obj.property_array_prop].length"> <!-- св-во length есть и у строки -->
-          <span *ngFor="let o of data[obj.property_array_prop]">
+          <span *ngFor="let o of data[obj.property_array_prop];let i = index">
             {{ o[obj.property_array_prop_lv2] || '--' }}
+            <ng-container *ngIf="data[obj.property_array_prop].length > 1 && i != data[obj.property_array_prop].length - 1">,</ng-container>
           </span>
         </span>
-
       </div>
     </div> 
   </div>

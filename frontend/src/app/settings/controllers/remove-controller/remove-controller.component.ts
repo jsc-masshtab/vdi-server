@@ -12,14 +12,11 @@ import { map } from 'rxjs/operators';
 
 export class RemoveControllerComponent implements OnInit {
 
-  public controller: string;
-  public description: string;
   public controllers: [];
-  public defaultDataControllers:string = "- Загрузка контроллеров -";
+  public pendingControllers: boolean = false;
   private deleteController:string;
 
-
-  constructor(private service: ControllersService,
+  constructor(private controllerService: ControllersService,
               private waitService: WaitService,
               private dialogRef: MatDialogRef<RemoveControllerComponent>) {}
 
@@ -29,35 +26,31 @@ export class RemoveControllerComponent implements OnInit {
 
   public send() {
     this.waitService.setWait(true);
-    this.service.removeController(this.deleteController).subscribe((res) => {
-      this.service.getAllControllers().valueChanges.subscribe();
+    this.controllerService.removeController(this.deleteController).subscribe(() => {
+      this.controllerService.getAllControllers().valueChanges.subscribe(() => {
+        this.waitService.setWait(false);
+      });
       this.dialogRef.close();
-      this.waitService.setWait(false);
     },(error) => {
       this.dialogRef.close();
     });
   }
 
   private getAllControllers() {
-    this.defaultDataControllers = "- Загрузка контроллеров -";
-    this.service.getAllControllers().valueChanges.pipe(map(data => data.data.controllers))
+    this.pendingControllers = true;
+    this.controllerService.getAllControllers().valueChanges.pipe(map(data => data.data.controllers))
       .subscribe((data) => {
-        this.controllers = data.map((item) => {
-          return {
-            'output': item.ip,
-            'input': item.ip
-          }
-        });
-        this.defaultDataControllers = "- нет доступных контроллеров -";
-       
+        this.controllers = data;
+        this.pendingControllers = false;
       },
       (error) => {
-        this.defaultDataControllers = "- нет доступных контроллеров -";
+        this.pendingControllers = false;
+        this.controllers = [];
       });
   }
 
-  public selectValue(data) {
-    this.deleteController = data[0];
+  public selectController(value: object) {
+    this.deleteController = value['value'];
   }
 
 }

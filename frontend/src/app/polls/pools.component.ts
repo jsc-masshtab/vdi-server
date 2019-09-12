@@ -25,9 +25,19 @@ export class PoolsComponent implements OnInit {
 
   public collection: object[] = [
     {
+      title: '№',
+      property: 'index'
+    },
+    {
       title: 'Название',
       property: 'name',
-      class: 'name-start'
+      class: 'name-start',
+      icon: 'desktop'
+    },
+    {
+      title: 'Контроллер',
+      property: 'controller',
+      property_lv2: 'ip'
     },
     {
       title: 'Доступные ВМ',
@@ -67,6 +77,7 @@ export class PoolsComponent implements OnInit {
     this.waitService.setWait(true);
     this.getPoolsSub = this.service.getAllPools(true)
       .subscribe( (data) => {
+        console.log('ff');
         this.pools = data;
         this.waitService.setWait(false);
       });
