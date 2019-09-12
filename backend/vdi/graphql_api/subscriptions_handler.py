@@ -15,15 +15,13 @@ import json
 
 #from vdi.utils import print
 
-from classy_async.classy_async import g
+#from classy_async.classy_async import g
 
 class SubscriptionHandler:
 
     @classmethod
     async def handle(cls, websocket, schema):
-
-        g.init()
-
+        #g.init()
         await websocket.accept()
         message = await websocket.receive()
         graphql_string = message['text']

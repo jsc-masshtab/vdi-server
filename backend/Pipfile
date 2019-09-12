@@ -19,7 +19,7 @@ tornado = "*"
 #auth_server = {editable = false,path = "./../../backend/auth_server"}
 cached-property = "*"
 graphene = "*"
-starlette = "" # >=0.12.8
+# >=0.12.8
 psycopg2 = "*"
 asyncpg = "*"
 requests = "*"
@@ -32,6 +32,10 @@ docopt = "*"
 sanic-jwt = "*"
 async-generator = "*"
 async_generator = "*"
+sanic = "*"
+contextvars = "*"
+aiocontextvars = "*"
+#sudo pipenv run  python -m pip install git+https://github.com/em92/starlette
 
 [requires]
 python_version = "3.5"

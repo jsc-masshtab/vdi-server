@@ -1,6 +1,8 @@
 # Adds higher directory to python modules path.
 import sys
+sys.path.append(".")
 sys.path.append("..")
+sys.path.append("...")
 
 import asyncio
 from uvicorn import Server, Config

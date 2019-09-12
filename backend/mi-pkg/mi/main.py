@@ -1,7 +1,11 @@
 # Adds higher directory to python modules path.
 import sys
+sys.path.append(".")
 sys.path.append("..")
 sys.path.append("...")
+
+
+from db.db import db
 
 import asyncio
 import subprocess
@@ -13,8 +17,6 @@ import re
 
 import json
 from runpy import run_path
-
-from db import db
 
 from cached_property import cached_property as cached
 

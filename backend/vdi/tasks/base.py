@@ -17,7 +17,7 @@ from vdi.errors import WsTimeout, FetchException, ControllerNotAccessible, Forbi
 from vdi.settings import settings
 from vdi.tasks.client import HttpClient
 
-from vdi.db import db, fetch
+from db.db import db, fetch
 from vdi import lock
 from vdi.utils import Unset
 
