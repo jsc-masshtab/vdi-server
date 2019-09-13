@@ -68,6 +68,7 @@ class wait:
     #     async for key, result in self.items():
     #         yield result
     # python 3.5
+    @async_generator
     async def items(self):
         """
         Include the identities for awaitables:

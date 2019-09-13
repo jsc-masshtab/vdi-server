@@ -21,7 +21,7 @@ class ListClusters(UrlFetcher):
 
     @cached
     def url(self):
-        return 'http://{self.controller_ip}/api/clusters/'.format(self.controller_ip)
+        return 'http://{}/api/clusters/'.format(self.controller_ip)
 
     async def run(self):
         resp = await super().run()
