@@ -11,7 +11,7 @@ from vdi.errors import SimpleError
 
 import asyncio
 
-from vdi.db import db
+from db.db import db
 from vdi.errors import FetchException
 
 
@@ -43,12 +43,12 @@ async def add_controller(ip):
     await AddController._add_controller(ip=ip, set_default=True)
 
 async def add_user(controller_ip, **creds):
-    url = f"http://{controller_ip}/api/users/"
+    url = "http://{}/api/users/".format(controller_ip)
 
     token = await FirstTimeToken(controller_ip=controller_ip)
     headers = {
         "Content-Type": 'application/json',
-        'Authorization': f'jwt {token}',
+        'Authorization': 'jwt {}'.format(token),
     }
     body = dict(creds or settings.credentials)
     body.update({

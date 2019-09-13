@@ -1,5 +1,6 @@
 import asyncio
 from async_generator import async_generator, yield_, asynccontextmanager
+from rx import Observable
 
 import graphene
 from classy_async.classy_async import wait
@@ -490,14 +491,20 @@ class ControllerType(graphene.ObjectType):
 
 # remove later
 class TestSubscription(graphene.ObjectType):
+    # count_seconds = graphene.Float(up_to=graphene.Int())
+    #
+    # @async_generator
+    # async def resolve_count_seconds(root, _info, up_to):
+    #     for i in range(up_to):
+    #         await yield_(i)
+    #         await asyncio.sleep(1.)
+    #     await yield_(up_to)
     count_seconds = graphene.Float(up_to=graphene.Int())
 
-    @async_generator
-    async def resolve_count_seconds(root, _info, up_to):
-        for i in range(up_to):
-            await yield_(i)
-            await asyncio.sleep(1.)
-        await yield_(up_to)
+    async def resolve_count_seconds(root, info, up_to=5):
+        return Observable.interval(1000) \
+            .map(lambda i: "{0}".format(i)) \
+            .take_while(lambda i: int(i) <= up_to)
 
 
 class ResourceDataSubscription(graphene.ObjectType):

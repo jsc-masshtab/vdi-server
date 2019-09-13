@@ -139,7 +139,7 @@ async def wait_all(*args, **kwargs):
 
     #3.5
     # async inside comprohension is not supported
-    result_list = list()
+    result_list = []
     async for result in wait(*args, **kwargs):
         result_list.append(result)
     return result_list

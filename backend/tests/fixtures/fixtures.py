@@ -2,6 +2,7 @@
 import pytest
 import json
 import uuid
+from async_generator import async_generator, yield_, asynccontextmanager
 
 from vdi.tasks.resources import DiscoverControllers
 from vdi.tasks import resources
@@ -11,23 +12,28 @@ from vdi.graphql_api import schema
 from vdi.graphql_api.pool import RemovePool
 
 from vdi.prepare import get_most_appropriate_controller
+from vdi import prepare
+
+from db.db import db
 
 @pytest.fixture
 async def fixt_db():
-    from vdi.db import db
+
     await db.get_pool()
     return db
 
 
 @pytest.fixture
+@async_generator
 async def image_name():
-    from vdi import prepare
+
     await prepare.main()
-    yield 'image'
+    await yield_('image')
     print('image destroy')
 
 
 @pytest.fixture
+@async_generator
 async def create_template(fixt_db, image_name):
     qu = '''
     mutation {
@@ -46,7 +52,7 @@ async def create_template(fixt_db, image_name):
     ''' % locals()
     r = await schema.exec(qu)
     poolwizard = r['createTemplate']['poolwizard']
-    yield poolwizard
+    await yield_(poolwizard)
     print('destroy vm')
     qu = '''
     mutation {
@@ -59,24 +65,26 @@ async def create_template(fixt_db, image_name):
 
 
 @pytest.fixture
+@async_generator
 async def pool_settings(create_template):
     return {
         'settings': create_template,
     }
 
 
-
 @pytest.fixture
+@async_generator
 def pool_name():
     import random, string
     uid = ''.join(
         random.choice(string.ascii_letters) for _ in range(3)
     )
-    return f"pool-{uid}"
+    return "pool-{}".format(uid)
 
 
 
 @pytest.fixture
+@async_generator
 async def create_pool(create_template, pool_name, pool_settings):
     r = await schema.exec('''
         mutation($settings: PoolSettingsInput) {
@@ -86,9 +94,9 @@ async def create_pool(create_template, pool_name, pool_settings):
         }
         ''' % locals(), pool_settings)
     id = r['addPool']['id']
-    yield {
+    await yield_( {
         'id': id,
-    }
+    } )
     print('destroy pool')
     qu = '''
     mutation {
@@ -99,14 +107,16 @@ async def create_pool(create_template, pool_name, pool_settings):
     ''' % locals()
     await schema.exec(qu)
 
+
 @pytest.fixture
+@async_generator
 async def conn():
-    from vdi.db import db
     async with db.connect() as c:
-        yield c
+        await yield_(c)
 
 
 @pytest.fixture
+@async_generator
 async def fixt_create_static_pool(fixt_db):
 
     print('create_static_pool')
@@ -127,7 +137,7 @@ async def fixt_create_static_pool(fixt_db):
 
     async def create_domain():
         uid = str(uuid.uuid4())[:7]
-        domain_info = await vm.CreateDomain(verbose_name=f"test_vm_static_pool-{uid}",
+        domain_info = await vm.CreateDomain(verbose_name="test_vm_static_pool-{}".format(uid),
                                             controller_ip=controller_ip, node_id=node_id)
         return domain_info
 
@@ -153,10 +163,10 @@ async def fixt_create_static_pool(fixt_db):
 
     pool_id = pool_create_res['addStaticPool']['id']
     vms = pool_create_res['addStaticPool']['vms']
-    yield {
+    await yield_({
         'id': pool_id,
         'vms': vms
-    }
+    })
 
     # remove pool
     await RemovePool.do_remove(pool_id)
@@ -164,6 +174,7 @@ async def fixt_create_static_pool(fixt_db):
 
 
 @pytest.fixture
+@async_generator
 async def fixt_create_user(fixt_db):
 
     username = 'test_user_name'
@@ -175,12 +186,13 @@ async def fixt_create_user(fixt_db):
     ''' % (username, password)
     user_creation_res = await schema.exec(remove_pool_mutation)
 
-    yield username
+    await yield_(username)
 
     # remove user...
 
 
 @pytest.fixture
+@async_generator
 async def fixt_entitle_user_to_pool(fixt_create_static_pool):
 
     pool_id = fixt_create_static_pool['id']
@@ -197,10 +209,10 @@ async def fixt_entitle_user_to_pool(fixt_create_static_pool):
     res = await schema.exec(qu)
     print('test_res', res)
 
-    yield {
+    await yield_({
         'pool_id': pool_id,
         'ok': res['entitleUsersToPool']['ok']
-    }
+    })
 
     # remove entitlement
     qu = '''

@@ -1,6 +1,6 @@
 import json
 import uuid
-from dataclasses import dataclass
+#from dataclasses import dataclass
 from classy_async.classy_async import Task
 
 from .base import Token
@@ -15,16 +15,20 @@ from cached_property import cached_property as cached
 
 from pathlib import Path
 
-@dataclass()
+#@dataclass()
 class AddNode(Task):
 
-    controller_ip: str
-    management_ip: str
+    controller_ip = ''
+    management_ip = ''
     method = 'POST'
+
+    def __ini__(self, controller_ip: str, management_ip: str):
+        self.controller_ip = controller_ip
+        self.management_ip = management_ip
 
     @cached
     def url(self):
-        return f'http://{self.controller_ip}/api/nodes/?async=1'
+        return 'http://{}/api/nodes/?async=1'.format(self.controller_ip)
 
     @cached
     def body(self):
@@ -37,10 +41,10 @@ class AddNode(Task):
 
     async def check_present(self):
         client = HttpClient()
-        url = f"http://{self.controller_ip}/api/nodes/"
+        url = "http://{}/api/nodes/".format(self.controller_ip)
         token = await Token(controller_ip=self.controller_ip)
         headers = {
-            'Authorization': f'jwt {token}',
+            'Authorization': 'jwt {}'.format(token),
             'Content-Type': 'application/json',
         }
         res = await client.fetch(url, headers=headers)
@@ -57,7 +61,7 @@ class AddNode(Task):
         await ws.send('add /tasks/')
         token = await Token(controller_ip=self.controller_ip)
         headers = {
-            'Authorization': f'jwt {token}',
+            'Authorization': 'jwt {}'.format(token),
             'Content-Type': 'application/json',
         }
         response = await HttpClient().fetch_using(self, headers=headers, body=json.dumps(self.body))
@@ -71,12 +75,17 @@ class AddNode(Task):
         return obj['status'] == 'SUCCESS' and obj['id'] == self.task_id
 
 
-@dataclass()
+#@dataclass()
 class DownloadImage(Task):
-    target: str
-    src: str = 'https://cloud-images.ubuntu.com/cosmic/current/cosmic-server-cloudimg-amd64.img'
+    target = ''
+    src = 'https://cloud-images.ubuntu.com/cosmic/current/cosmic-server-cloudimg-amd64.img'
 
     timeout = 5 * 60
+
+    def __init__(self, target: str,
+                 src: str = 'https://cloud-images.ubuntu.com/cosmic/current/cosmic-server-cloudimg-amd64.img'):
+        self.target = target
+        self.src = src
 
     async def run(self):
         target = Path(self.target)
@@ -94,18 +103,23 @@ class DownloadImage(Task):
                 'used_existing': False
             }
 
-@dataclass()
+#@dataclass()
 class UploadImage(Task):
-    filename: str
-    datapool_id: str
-    controller_ip: str
+    filename = ''
+    datapool_id = ''
+    controller_ip = ''
+
+    def __init__(self, filename: str, datapool_id: str, controller_ip: str):
+        self.filename = filename
+        self.datapool_id = datapool_id
+        self.controller_ip = controller_ip
 
     async def check_present(self):
         token = await Token(controller_ip=self.controller_ip)
-        url = f"http://{self.controller_ip}/api/library/?datapool_id={self.datapool_id}"
+        url = "http://{}/api/library/?datapool_id={}".format(self.controller_ip, self.datapool_id)
         http_client = HttpClient()
         headers = {
-            'Authorization': f'jwt {token}'
+            'Authorization': 'jwt {}'.format(token)
         }
         response = await http_client.fetch(url, headers=headers)
         for file in response["results"]:
@@ -116,16 +130,16 @@ class UploadImage(Task):
         client = HttpClient()
         token = await Token(controller_ip=self.controller_ip)
         headers = {
-            'Authorization': f'jwt {token}',
+            'Authorization': 'jwt {}'.format(token),
             'Content-Type': 'application/json',
         }
-        url = f'http://{self.controller_ip}/api/library/'
+        url = 'http://{}/api/library/'.format(self.controller_ip)
         body = json.dumps({
             'datapool': self.datapool_id,
             'filename': self.filename,
         })
         res = await client.fetch(url, method='PUT', body=body, headers=headers)
-        return f"http://{self.controller_ip}{res['upload_url']}"
+        return "http://{}{}".format(self.controller_ip, res['upload_url'])
 
     @cached
     def boundary(self):
@@ -162,14 +176,14 @@ class UploadImage(Task):
             return
         upload_url = await self.get_upload_url()
         ws = await WsConnection(controller_ip=self.controller_ip)
-        await ws.send(f"add /tasks/")
-        await ws.send(f"add /events/")
+        await ws.send("add /tasks/")
+        await ws.send("add /events/")
 
         client = HttpClient()
         token = await Token(controller_ip=self.controller_ip)
         headers = {
             "Content-Type": "multipart/form-data; boundary=%s" % self.boundary,
-            'Authorization': f'jwt {token}',
+            'Authorization': 'jwt {}'.format(token),
         }
         return await client.fetch(upload_url, method="POST", headers=headers, body_producer=self.body_producer,
                                  request_timeout=24 * 3600)
