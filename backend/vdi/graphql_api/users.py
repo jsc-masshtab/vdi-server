@@ -6,7 +6,7 @@ from vdi.tasks.client import HttpClient
 
 from vdi.hashers import make_password, check_username
 from vdi.settings import settings
-from vdi.db import db
+from db.db import db
 from vdi.errors import SimpleError
 from vdi.constants import NotSet
 from .util import get_selections
@@ -24,8 +24,8 @@ class UserType(graphene.ObjectType):
     async def get_sql_data(self):
         fields = [f for f in self._meta.fields]
         qu = (
-            f'select {", ".join(fields)} from public.user'
-            ' where username = $1', self.username
+            'select {} from public.user \
+            where username = {}'.format(", ".join(fields), self.username)
         )
         async with db.connect() as conn:
             users = await conn.fetch(*qu)
@@ -132,7 +132,7 @@ class UserQueries:
     async def resolve_users(self, info):
         fields = get_selections(info)
         async with db.connect() as conn:
-            qu = f"SELECT {', '.join(fields)} FROM public.user"
+            qu = "SELECT {} FROM public.user".format(', '.join(fields))
             users = await conn.fetch(qu)
         li = []
         for rec in users:

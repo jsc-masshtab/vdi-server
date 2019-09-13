@@ -1,7 +1,7 @@
 import graphene
 
 from .util import get_selections
-from ..db import db
+from db.db import db
 from ..tasks import resources
 from ..tasks.vm import ListTemplates
 from ..tasks.vm import ListVms
@@ -27,7 +27,7 @@ class AssignVmToUser(graphene.Mutation):
     async def mutate(self, _info, vm_id, username):
         async with db.connect() as conn:
             # find pool the vm belongs to
-            qu = f'SELECT vm.pool_id from vm WHERE vm.id = $1 ', vm_id
+            qu = 'SELECT vm.pool_id from vm WHERE vm.id = $1 ', vm_id
             pool_ids = await conn.fetch(*qu)
 
             if not pool_ids:
@@ -38,14 +38,14 @@ class AssignVmToUser(graphene.Mutation):
                 print('AssignVmToUser::mutate pool_id', pool_id)
 
             # check if the user is entitled to pool(pool_id) the vm belongs to
-            qu = f'SELECT * from pools_users WHERE pool_id = $1 AND username = $2', pool_id, username
+            qu = 'SELECT * from pools_users WHERE pool_id = $1 AND username = $2', pool_id, username
             pools_users_data = await conn.fetch(*qu)
             if not pools_users_data:
                 # Requested user is not entitled to the pool the requested vm belong to
                 raise FieldError(vm_id=['У пользователя нет прав на использование пула, которому принадлежит ВМ'])
 
             # another vm in the pool may have this user as owner. Remove assignment
-            qu = f'UPDATE vm SET username = NULL WHERE pool_id = $1 AND username = $2', pool_id, username
+            qu = 'UPDATE vm SET username = NULL WHERE pool_id = $1 AND username = $2', pool_id, username
             await conn.fetch(*qu)
 
             # assign vm to the user(username)
@@ -66,12 +66,12 @@ class FreeVmFromUser(graphene.Mutation):
     async def mutate(self, _info, vm_id):
         async with db.connect() as conn:
             # check if vm exists
-            qu = f'SELECT * from vm WHERE id = $1', vm_id
+            qu = 'SELECT * from vm WHERE id = $1', vm_id
             vm_data = await conn.fetch(*qu)
             if not vm_data:
                 raise FieldError(vm_id=['ВМ с заданным id не существует'])
             # free vm from user
-            qu = f'UPDATE vm SET username = NULL WHERE id = $1', vm_id
+            qu = 'UPDATE vm SET username = NULL WHERE id = $1', vm_id
             await conn.fetch(*qu)
 
         return {
@@ -135,7 +135,7 @@ class ListOfVmsQuery:
         print('ListOfVmsQuery::resolve_vms_on_veil: datapool_id', datapool_id)
         # get all vm which are in pools
         async with db.connect() as conn:
-            qu = f'select id from vm'
+            qu = 'SELECT id FROM vm'
             vm_ids_in_pools = await conn.fetch(qu)
         print('ListOfVmsQuery::resolve_vms_on_veil: vm_ids_in_pool', vm_ids_in_pools)
 

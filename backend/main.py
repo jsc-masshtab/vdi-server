@@ -46,8 +46,9 @@ class Vdi:
             pass
 
 def main():
-    asyncio.run(Vdi().co())
-
+    loop = asyncio.get_event_loop()
+    loop.run_until_complete(Vdi().co())
+    loop.close()
 
 if __name__ == '__main__':
     main()

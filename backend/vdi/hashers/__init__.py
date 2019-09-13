@@ -1,7 +1,7 @@
 
 from .hashers import make_password, check_password, get_hasher
 
-from vdi.db import db
+from db.db import db
 from vdi.errors import NotFound
 
 async def check_username(username, raw_password):
