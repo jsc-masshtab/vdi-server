@@ -11,7 +11,7 @@ jupyter = "*"
 pytest-asyncio = "*"
 
 [packages]
-uvicorn = "==0.8.6"
+uvicorn = "==0.8.6" # only this version
 tornado = "*"
 #vdi = {editable = false,path = "./../../backend"}
 #classy_async = {editable = false,path = "./../../backend/classy_async"}
@@ -36,7 +36,7 @@ contextvars = "*"
 aiocontextvars = "*"
 #sudo pipenv run  python -m pip install git+https://github.com/em92/starlette
 #secrets = "*"
-python2-secrets = "==1.0.5"  # works with python3.5 according to doc
+python2-secrets = "==1.0.5"  # works with python3.5 according to doc # sudo pip install python2-secrets
 
 [requires]
 python_version = "3.5"

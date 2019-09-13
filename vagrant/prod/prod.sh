@@ -2,7 +2,7 @@ echo "Install apt packages"
 
 sudo sed -i s/us\./ru\./g /etc/apt/sources.list
 sudo apt update -y
-sudo apt install --no-install-recommends -y postgresql-server-dev-11 python3-dev gcc python3-pip postgresql htop ncdu mc bmon
+sudo apt install --no-install-recommends -y postgresql-server-dev-9.6 python3-dev gcc python3-pip postgresql htop mc # Не нашел на астре пакеты ncdu и bmon
 
 #------------------------------
 echo "Setup database"
@@ -14,7 +14,7 @@ echo 'postgres:postgres' | sudo chpasswd
 sudo su postgres -c "psql -c \"ALTER ROLE postgres PASSWORD 'postgres';\" "
 sudo su postgres -c "psql -c \"create database vdi encoding 'utf8' lc_collate = 'en_US.UTF-8' lc_ctype = 'en_US.UTF-8' template template0;\" "
 
-sudo python3 -m pip install pipenv
+sudo python3.5 -m pip install pipenv
 
 #------------------------------
 echo "Setup vdi server"
@@ -24,8 +24,11 @@ cd /vagrant/backend
 echo "vdi_server: setting env..."
 echo "export PIPENV_SKIP_LOCK=1" >> /home/vagrant/.bashrc
 export PIPENV_SKIP_LOCK=1
-export PIPENV_PIPFILE=/vagrant/vagrant/prod/Pipfile
+export PIPENV_PIPFILE=Pipfile # file in /vagrant/backend directory
 pipenv install
+
+# install starlette  manuallly
+sudo pipenv run  python -m pip install git+https://github.com/em92/starlette
 
 echo "vdi_server: applying migrations..."
 pipenv run python mi-pkg/mi/main.py apply #pipenv run mi apply
