@@ -234,7 +234,7 @@ class CheckConnection(UrlFetcher):
     controller_ip = ''
     token = None
 
-    def __init__(self, controller_ip: str, token: str):
+    def __init__(self, controller_ip: str, token: str = None):
         self.controller_ip = controller_ip
         self.token = token
 

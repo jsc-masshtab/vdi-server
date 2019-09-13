@@ -62,7 +62,7 @@ class VDIUser:
 class GetVDIUser(Task):
     return_value = None
 
-    def __init__(self, return_value: VDIUser):
+    def __init__(self, return_value: VDIUser = None):
         self.return_value = return_value
 
     async def run(self):

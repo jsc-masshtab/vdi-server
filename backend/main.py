@@ -14,7 +14,7 @@ class Vdi:
     def get_sanic_task(self):
         from auth_server.sanic_app import app
         port = settings.auth_server['port']
-        server = app.create_server(host="0.0.0.0", port=port, return_asyncio_server=True)
+        server = app.create_server(host="0.0.0.0", port=port)  # return_asyncio_server=True
         return asyncio.ensure_future(server)
 
     def starlette_co(self):
@@ -32,7 +32,10 @@ class Vdi:
 
     async def co(self):
         sanic_task = self.get_sanic_task()
-        starlette_task = asyncio.create_task(self.starlette_co())
+
+        loop = asyncio.get_event_loop()
+        starlette_task = loop.create_task(self.starlette_co())
+        #starlette_task = asyncio.create_task(self.starlette_co())
         try:
             await starlette_task
         finally:

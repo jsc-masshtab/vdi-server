@@ -234,10 +234,13 @@ class Task(Awaitable):
         #tasks = g.tasks
         #if self.cache_result and self.serialized in tasks:
         #    return tasks[self.serialized]
-        task = asyncio.create_task(self.co())
-        task = asyncio.shield(task)
+        #task = asyncio.create_task(self.co())
+        # task = asyncio.shield(task)
         #if self.cache_result:
         #    tasks[self.serialized] = task
+        loop = asyncio.get_event_loop()
+        task = loop.create_task(self.co())
+        task = asyncio.shield(task)
         return task
 
     cache_result = True

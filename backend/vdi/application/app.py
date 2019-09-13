@@ -19,7 +19,7 @@ from vdi.application import Request
 
 @app.middleware("http")
 async def init_context(request, call_next):
-    g.init()
+    #g.init()
     await Request.set(request)
     user = request.user
     if not isinstance(user, VDIUser):
@@ -44,7 +44,7 @@ async def debug(request, call_next):
 
 @app.on_event('startup')
 async def startup():
-    g.use_threadlocal(False)
+    #g.use_threadlocal(False)
     await db.get_pool()
 
 
