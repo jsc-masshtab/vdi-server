@@ -25,10 +25,11 @@ export class RemoveVMStaticPoolComponent  {
   public send() {
     this.waitService.setWait(true);
     this.poolsService.removeVMStaticPool(this.data.pool_id, this.id_vms).subscribe(() => {
-      this.dialogRef.close();
       this.poolsService.getPool(this.data.pool_id, this.data.pool_type).subscribe(() => {
         this.waitService.setWait(false);
       });
+      this.dialogRef.close();
+      this.poolsService.getAllPools().subscribe();
     });
   }
 

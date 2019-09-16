@@ -18,7 +18,7 @@ export class AddVMStaticPoolComponent  {
   public vms: [] = [];
   private id_vms: [] = [];
 
-  constructor(private poolService: PoolsService,
+  constructor(private poolsService: PoolsService,
               private vmsService: VmsService,
               private waitService: WaitService,
               private dialogRef: MatDialogRef<AddVMStaticPoolComponent>,
@@ -30,11 +30,12 @@ export class AddVMStaticPoolComponent  {
  
   public send() {
     this.waitService.setWait(true);
-    this.poolService.addVMStaticPool(this.data.pool_id,this.id_vms).subscribe(() => {
-      this.dialogRef.close();
-      this.poolService.getPool(this.data.pool_id,this.data.pool_type).subscribe(res => {
+    this.poolsService.addVMStaticPool(this.data.pool_id,this.id_vms).subscribe(() => {
+      this.poolsService.getPool(this.data.pool_id,this.data.pool_type).subscribe(() => {
         this.waitService.setWait(false);
       });
+      this.dialogRef.close();
+      this.poolsService.getAllPools().subscribe();
     });
   }
 
