@@ -1,9 +1,9 @@
 import asyncio
 
-from vdi.db import db
+from db.db import db
 
 def prepare_insert(dic):
-    placeholders = ', '.join(f'${i + 1}' for i, _ in enumerate(dic))
+    placeholders = ', '.join('${}'.format(i + 1) for i, _ in enumerate(dic))
     keys = ', '.join(dic.keys())
     values = list(dic.values())
     return keys, placeholders, values
@@ -24,12 +24,15 @@ class user_role_m2m:
 async def run():
     async with db.connect() as conn:
         keys, marks, values = prepare_insert(groups.admin)
-        qu = f'insert into role ({keys}) values ({marks})', *values
+        qu = 'insert into role ({}) values ({})'.format(keys, marks), *values
         await conn.execute(*qu)
     async with db.connect() as conn:
         keys, marks, values = prepare_insert(user_role_m2m.admin)
-        qu = f'insert into user_role_m2m ({keys}) values ({marks})', *values
+        qu = 'insert into user_role_m2m ({}) values ({})'.format(keys, marks), *values
         await conn.execute(*qu)
 
 
-asyncio.run(run())
+#asyncio.run(run())
+loop = asyncio.get_event_loop()
+loop.run_until_complete(run())
+loop.close()

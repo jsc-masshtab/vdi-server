@@ -1,7 +1,7 @@
 import asyncio
 
 
-from vdi.db import fetch
+from db.db import fetch
 from vdi.utils import into_words, bulk_insert
 
 async def main():
@@ -24,4 +24,7 @@ async def main():
         })
     await bulk_insert('pool', items)
 
-asyncio.run(main())
+#asyncio.run(main())
+loop = asyncio.get_event_loop()
+loop.run_until_complete(main())
+loop.close()

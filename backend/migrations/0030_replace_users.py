@@ -1,6 +1,6 @@
 import asyncio
 
-from vdi.db import db
+from db.db import db
 from vdi.hashers import make_password
 
 
@@ -22,8 +22,8 @@ users = [
 async def insert(user):
     keys = ', '.join(user)
     user['password'] = make_password(user['password'])
-    marks = ', '.join(f'${i+1}' for i, _ in enumerate(user))
-    qu = f'insert into public.user ({keys}) values ({marks})', *user.values()
+    marks = ', '.join('${}'.format(i+1) for i, _ in enumerate(user))
+    qu = 'insert into public.user ({}) values ({})'.format(keys, marks), *user.values()
     async with db.connect() as conn:
         await conn.execute(*qu)
 
@@ -37,4 +37,7 @@ async def run():
     await wait_all(*tasks)
 
 
-asyncio.run(run())
+#asyncio.run(run())
+loop = asyncio.get_event_loop()
+loop.run_until_complete(run())
+loop.close()
