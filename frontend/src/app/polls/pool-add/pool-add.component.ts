@@ -314,7 +314,7 @@ export class PoolAddComponent implements OnInit {
   }
 
   private chooseCollection(): void {
-    if(this.chooseTypeForm.value.type === 'Динамический') {
+    if(this.chooseTypeForm.value.type === 'Автоматический') {
      this.table_field = [
         {
           title: 'Тип',
@@ -420,7 +420,7 @@ export class PoolAddComponent implements OnInit {
    
       this.resetLocalData();
 
-      if(this.chooseTypeForm.value.type === 'Динамический') {
+      if(this.chooseTypeForm.value.type === 'Автоматический') {
         this.createDinamicPoolInit();
       }
 
@@ -440,7 +440,7 @@ export class PoolAddComponent implements OnInit {
 
         let value = this.createPoolForm.value;
   
-        if(this.chooseTypeForm.value.type === 'Динамический') {
+        if(this.chooseTypeForm.value.type === 'Автоматический') {
           this.finishPoll['name'] = value.name;
           this.finishPoll['initial_size'] = value.initial_size;
           this.finishPoll['reserve_size'] = value.reserve_size;
@@ -463,7 +463,7 @@ export class PoolAddComponent implements OnInit {
       let value = this.createPoolForm.value;
       this.waitService.setWait(true);
      
-      if(this.chooseTypeForm.value.type === 'Динамический') {
+      if(this.chooseTypeForm.value.type === 'Автоматический') {
         
         this.poolsService.createDinamicPool(
                                 value.name,
@@ -475,9 +475,10 @@ export class PoolAddComponent implements OnInit {
                                 value.reserve_size,
                                 value.total_size)
             .subscribe(() => { 
-              this.poolsService.getAllPools().subscribe();
+              this.poolsService.getAllPools().subscribe(res => {
+                this.waitService.setWait(false);
+              });
               this.dialogRef.close();
-              this.waitService.setWait(false);
             });
       } 
 
@@ -490,9 +491,10 @@ export class PoolAddComponent implements OnInit {
                                 value.datapool_id,
                                 value.vm_ids_list)
             .subscribe(() => { 
-              this.poolsService.getAllPools().subscribe();
+              this.poolsService.getAllPools().subscribe(res => {
+                this.waitService.setWait(false);
+              });
               this.dialogRef.close();
-              this.waitService.setWait(false);
             });
       } 
     } 

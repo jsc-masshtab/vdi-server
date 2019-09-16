@@ -24,8 +24,8 @@
     </label>
     <label class="field-inline">
       <fa-icon [icon]="['fas','tv']" size="m"  class="icon-pool"></fa-icon>
-      <input type="radio" formControlName="type" value="Динамический">
-      <p class="radio-text">Динамический</p>
+      <input type="radio" formControlName="type" value="Автоматический">
+      <p class="radio-text">Автоматический</p>
     </label>
   </div>
   <div class="form-actions"  *ngIf="step === 'chooseType'">
@@ -40,7 +40,7 @@
       <input type="text" [focusMe]="true" formControlName="name">
     </label>
 
-    <label class="field" *ngIf="chooseTypeForm.value.type === 'Динамический'">
+    <label class="field" *ngIf="chooseTypeForm.value.type === 'Автоматический'">
       <mat-form-field>
         <mat-label  *ngIf="pending.controllers">Загрузка ...</mat-label>
         <mat-label  *ngIf="controllers.length && !pending.controllers">Выберите контроллер</mat-label>
@@ -53,7 +53,7 @@
       </mat-form-field>
     </label>
 
-    <label class="field" *ngIf="chooseTypeForm.value.type === 'Динамический' && ip_controller">
+    <label class="field" *ngIf="chooseTypeForm.value.type === 'Автоматический' && ip_controller">
       <mat-form-field>
         <mat-label  *ngIf="pending.templates">Загрузка ...</mat-label>
         <mat-label  *ngIf="templates.length && !pending.templates">Выберите шаблон ВМ</mat-label>
@@ -66,7 +66,7 @@
       </mat-form-field>
     </label>
 
-    <label class="field" *ngIf="chooseTypeForm.value.type === 'Динамический' && ip_controller || chooseTypeForm.value.type === 'Статический'">
+    <label class="field" *ngIf="chooseTypeForm.value.type === 'Автоматический' && ip_controller || chooseTypeForm.value.type === 'Статический'">
       <mat-form-field>
         <mat-label  *ngIf="pending.clusters">Загрузка ...</mat-label>
         <mat-label  *ngIf="clusters.length && !pending.clusters">Выберите кластер</mat-label>
@@ -118,17 +118,17 @@
       </mat-form-field>
     </label>
 
-    <label class="field" *ngIf="chooseTypeForm.value.type === 'Динамический'">
+    <label class="field" *ngIf="chooseTypeForm.value.type === 'Автоматический'">
       <p class="field-name">Начальное количество ВМ</p>
       <input type="number" formControlName="initial_size" min="0">
     </label>
   
-    <label class="field" *ngIf="chooseTypeForm.value.type === 'Динамический'">
+    <label class="field" *ngIf="chooseTypeForm.value.type === 'Автоматический'">
       <p class="field-name">Количество создаваемых ВМ</p>
       <input type="number" formControlName="reserve_size"  min="0">
     </label>
 
-    <label class="field" *ngIf="chooseTypeForm.value.type === 'Динамический'">
+    <label class="field" *ngIf="chooseTypeForm.value.type === 'Автоматический'">
       <p class="field-name">Максимальное количество создаваемых ВМ</p>
       <input type="number" formControlName="total_size"  min="0">
     </label>

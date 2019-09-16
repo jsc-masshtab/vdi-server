@@ -19,7 +19,8 @@ export class ControllersComponent implements OnInit {
       {
         title: 'IP адрес',
         property: 'ip',
-        class: 'name-start'
+        class: 'name-start',
+        icon: 'building'
       },
       {
         title: 'Описание',

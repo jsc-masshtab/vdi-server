@@ -21,18 +21,15 @@ export class PoolsService  {
                                     pools {
                                         id
                                         name
-                                        settings {
-                                            initial_size
-                                            reserve_size
-                                        }
                                         vms {
                                             id
                                         }
                                         desktop_pool_type
+                                        controller {
+                                            ip
+                                        }
                                     }  
                                 }
-                            
-                
                         `,
                 variables: {
                     method: 'GET'
@@ -44,18 +41,15 @@ export class PoolsService  {
                                     pools {
                                         id
                                         name
-                                        settings {
-                                            initial_size
-                                            reserve_size
-                                        }
                                         vms {
                                             id
                                         }
                                         desktop_pool_type
+                                        controller {
+                                            ip
+                                        }
                                     }  
                                 }
-                            
-                
                         `,
                 variables: {
                     method: 'GET'
@@ -101,6 +95,7 @@ export class PoolsService  {
                                         initial_size
                                         reserve_size
                                         total_size
+                                        vm_name_template
                                     }
                                     users {
                                         username

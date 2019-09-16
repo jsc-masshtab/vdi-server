@@ -36,16 +36,16 @@
             <div class="details-slide-header">
                 <ng-container *ngIf="menuActive === 'info'">Информация о пулах рабочих столов</ng-container>
                 <ng-container *ngIf="menuActive === 'vms'">ВМ в пуле</ng-container>
-                <ng-container *ngIf="menuActive === 'users'">Пользователи пула</ng-container>  
+                <ng-container *ngIf="menuActive === 'users'">Пользователи пула</ng-container>
             </div>
             <div class="details-slide-into">
                 <ng-container *ngIf="pool_type === 'automated'">
-                    <vdi-table-into *ngIf="menuActive === 'info'" [data]="pool" [collection]="collection_automated"></vdi-table-into>
+                    <vdi-table-into *ngIf="menuActive === 'info'" [data]="pool" [collection]="collection_details_automated"></vdi-table-into>
                     <vdi-table-component *ngIf="menuActive === 'vms'" [data]="pool?.vms" [collection]="collection_vms_automated"></vdi-table-component> 
                 </ng-container>
 
                 <ng-container *ngIf="pool_type === 'static'">
-                    <vdi-table-into *ngIf="menuActive === 'info'" [data]="pool" [collection]="collection_static"></vdi-table-into>
+                    <vdi-table-into *ngIf="menuActive === 'info'" [data]="pool" [collection]="collection_details_static"></vdi-table-into>
                     <vdi-table-component *ngIf="menuActive === 'vms'" [data]="pool?.vms" [collection]="collection_vms_static"></vdi-table-component> 
                 </ng-container>
 

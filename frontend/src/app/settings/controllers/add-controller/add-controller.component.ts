@@ -23,14 +23,10 @@ export class AddControllerComponent {
   public send() {
     this.waitService.setWait(true);
     this.service.addController(this.controller,this.description).subscribe((res) => {
-      this.service.getAllControllers().valueChanges.subscribe();
+      this.service.getAllControllers().valueChanges.subscribe(() => {
+        this.waitService.setWait(false);
+      });
       this.dialogRef.close();
-      this.waitService.setWait(false);
-    },(error)=> {
-    
     });
-
-  
   }
-
 }

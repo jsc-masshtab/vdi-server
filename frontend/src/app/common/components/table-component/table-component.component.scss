@@ -27,7 +27,7 @@
         flex-direction: column;
         font-size: 13px;
         background: #fff;
-        height: 100%;
+        height: calc(100% - 25px);
         overflow-y: auto;
         background-color: #f5f5f5;
         background-image: linear-gradient(to right bottom, rgba(255,255,255,0) 8px, #fff 9px, rgba(255,255,255,0) 10px),linear-gradient(to left bottom, rgba(255,255,255,0) 8px, #fff 9px, rgba(255,255,255,0) 10px);
@@ -75,24 +75,20 @@
         }
     }
 
+    .icon-name-entity {
+        margin-right: 5px;
+    }
+
     // частные случаи столбца
     .index-column { 
         width: 50px;
         flex: inherit;
     }
 
-    .name-width {
-        min-width: 30%;
-    }
-
     .name-start {
         justify-content: flex-start;
         margin-left: 5px;
-    }
-
-    .name-start-h {
-        text-align: left;
-        margin-left: 10px;
+        min-width: 30%;
     }
 }
 

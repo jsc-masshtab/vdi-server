@@ -33,8 +33,9 @@ export class RemoveUsersPoolComponent  {
     this.waitService.setWait(true);
     this.usersService.removeUserEntitlementsFromPool(this.data.pool_id,this.id_users).subscribe(() => {
       this.dialogRef.close();
-      this.poolsService.getPool(this.data.pool_id,this.data.pool_type).subscribe();
-      this.waitService.setWait(false);
+      this.poolsService.getPool(this.data.pool_id, this.data.pool_type).subscribe(() => {
+        this.waitService.setWait(false);
+      });
     });
   }
 
