@@ -12,10 +12,10 @@ export class PoolsService  {
 
     constructor(private service: Apollo) {}
 
-    public getAllPools(obs?:boolean): Observable<any> {
+    public getAllPools(obs?:{}): Observable<any> {
         const obs$ = timer(0,60000);
 
-        if(obs) {
+        if(obs && obs['obs']) {
             return  obs$.pipe(switchMap(()=> { return this.service.watchQuery({
                 query:  gql` query allPools {
                                     pools {

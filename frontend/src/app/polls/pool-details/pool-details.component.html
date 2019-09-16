@@ -5,7 +5,7 @@
 <div class="details-wrap">
 
     <div class="details-header">
-        <div class="title"><fa-icon [icon]="['fas','desktop']" size="s" ></fa-icon><span class="name">Пул {{pool?.name}}</span></div>
+        <div class="title"><fa-icon [icon]="['fas','desktop']" size="s" ></fa-icon><span class="name">Пул <span *ngIf="host">{{pool?.name}}</span></span></div>
         <div class="btns-part">
             <button class="btn-close" (click)="close()"><fa-icon [icon]="['fas','times-circle']"></fa-icon></button>
         </div>

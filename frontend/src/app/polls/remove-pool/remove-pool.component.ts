@@ -23,13 +23,13 @@ export class RemovePoolComponent  {
   public send() {
     this.waitService.setWait(true);
     this.poolsService.removePool(this.data.pool_id).subscribe((res) => {
-      this.dialogRef.close();
       setTimeout(() => {
         this.router.navigate([`pools`]);
         this.poolsService.getAllPools().subscribe(() => {
           this.waitService.setWait(false);
         });
       }, 1000);
+      this.dialogRef.close();
     });
   }
 
