@@ -159,7 +159,9 @@ CREATE TABLE migrations (
             if p.name.endswith('.py'):
                 result = subprocess.run([sys.executable, str(p)])
                 if result.returncode != 0:
-                    raise ScriptError
+                    # raise ScriptError
+                    print('SCRIPT ERROR IN {}'.format(p.name))
+                    continue
                 await self.exec("INSERT INTO migrations VALUES ('{}');".format(p.name))
                 print("Applied: {}".format(p.name))
                 continue
