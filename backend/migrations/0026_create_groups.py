@@ -1,5 +1,8 @@
 import asyncio
 
+import sys
+sys.path.append(".")
+
 from db.db import db
 
 def prepare_insert(dic):

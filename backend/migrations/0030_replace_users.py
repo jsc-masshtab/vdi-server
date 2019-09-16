@@ -1,8 +1,10 @@
 import asyncio
 
+import sys
+sys.path.append(".")
+
 from db.db import db
 from vdi.hashers import make_password
-
 
 from classy_async.classy_async import wait_all
 

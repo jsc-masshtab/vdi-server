@@ -1,5 +1,7 @@
 import asyncio
 
+import sys
+sys.path.append(".")
 
 from db.db import fetch
 from vdi.utils import into_words, bulk_insert
