@@ -91,7 +91,9 @@ class CopyDomain(UrlFetcher):
         return json.dumps(params)
 
     async def run(self):
-        info_task = asyncio.create_task(self.fetch_template_info())
+        loop = asyncio.get_event_loop()
+        info_task = loop.create_task(self.fetch_template_info())
+        #info_task = asyncio.create_task(self.fetch_template_info()) # python 3.7
         ws = await WsConnection(controller_ip=self.controller_ip)
         await ws.send('add /tasks/')
         resp = await super().run()

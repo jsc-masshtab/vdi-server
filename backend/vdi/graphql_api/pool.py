@@ -528,7 +528,9 @@ class AddPool(graphene.Mutation):
                 item.selections = get_selections(info)
                 available.append(item)
         else:
-            asyncio.create_task(add_domains)
+            loop = asyncio.get_event_loop()
+            loop.create_task(add_domains)
+            #asyncio.create_task(add_domains)
             available = []
 
         state = PoolState(available=available, running=True)
@@ -798,7 +800,11 @@ class RemovePool(graphene.Mutation):
 
     async def mutate(self, info, id):
         task = RemovePool.do_remove(id)
-        task = asyncio.create_task(task)
+
+        loop = asyncio.get_event_loop()
+        task = loop.create_task(task)
+        #task = asyncio.create_task(task) # python 3.7
+
         selections = get_selections(info)
         if 'ids' in selections:
             vm_ids = await task

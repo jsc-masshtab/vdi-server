@@ -24,7 +24,7 @@ class WsConnection(Awaitable):
 
     async def run(self):
         token = await Token(controller_ip=self.controller_ip)
-        connect_url = 'ws://{}/ws/?token={token}'.format(self.controller_ip, token)
+        connect_url = 'ws://{}/ws/?token={}'.format(self.controller_ip, token)
         self._conn = await websocket_connect(connect_url)
         return self
 

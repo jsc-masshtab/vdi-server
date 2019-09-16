@@ -174,7 +174,10 @@ class Awaitable:
 
     @cached
     def task(self):
-        return asyncio.create_task(self.co())
+        loop = asyncio.get_event_loop()
+        async_task = loop.create_task(self.co())
+        return async_task
+        #return asyncio.create_task(self.co()) # python 3.7
 
     def __await__(self):
         return self.task.__await__()
