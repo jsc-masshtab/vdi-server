@@ -122,6 +122,6 @@ app.add_route('/admin', GraphQLApp(schema, executor_class=AsyncioExecutor))
 
 
 # subscriptions
-@app.websocket_route('/subscriptions')
-async def subscriptions_ws_endpoint(websocket):
-    await SubscriptionHandler.handle(websocket, schema)
+# @app.websocket_route('/subscriptions')
+# async def subscriptions_ws_endpoint(websocket):
+#     await SubscriptionHandler.handle(websocket, schema)
