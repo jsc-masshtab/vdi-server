@@ -187,8 +187,6 @@ class VmType(graphene.ObjectType):
     state = graphene.Field(VmState)
     pool = graphene.Field(PoolType)
 
-    #TODO cached info?
-
     selections = None #List[str]
     sql_data = Unset
     veil_info = Unset
@@ -196,8 +194,6 @@ class VmType(graphene.ObjectType):
     @cached
     def controller_ip(self):
         return self.pool.controller.ip
-
-    #TODO async_property
 
     async def get_sql_data(self):
         sql_fields = {'template', 'user'}
@@ -207,7 +203,10 @@ class VmType(graphene.ObjectType):
             for f in sql_fields
         ]
         async with db.connect() as conn:
-            data = await conn.fetch("select {} from vm where id = {}".format(', '.join(sql_selections), self.id))
+            sql_request_fields = ', '.join(sql_selections)
+            sql_request = """SELECT $1 FROM vm WHERE id = $2""", sql_request_fields, self.id
+            print('sql_request', sql_request)
+            data = await conn.fetch(*sql_request)
             if not data:
                 return None
             [data] = data
@@ -230,11 +229,9 @@ class VmType(graphene.ObjectType):
         return self.veil_info['verbose_name']
 
     async def resolve_user(self, info):
-        if self.sql_data is Unset:
-            self.sql_data = await self.get_sql_data()
-        if not self.sql_data:
-            return None
-        username = self.sql_data['username']
+        async with db.connect() as conn:
+            sql_request = """SELECT username FROM vm WHERE id = $1""", self.id
+            [(username,)] = await conn.fetch(*sql_request)
         return UserType(username=username)
 
     async def resolve_node(self, info):

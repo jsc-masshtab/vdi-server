@@ -21,12 +21,11 @@ class UserType(graphene.ObjectType):
 
     sql_data = None
 
-    async def get_sql_data(self):
+    async def get_sql_data(self): # unused?
         fields = [f for f in self._meta.fields]
-        qu = (
-            'select {} from public.user \
-            where username = {}'.format(", ".join(fields), self.username)
-        )
+
+        sql_request_fields = ", ".join(fields)
+        qu = """select $1 from public.user where username = $2""", sql_request_fields, self.username
         async with db.connect() as conn:
             users = await conn.fetch(*qu)
             [data] = users
@@ -38,16 +37,20 @@ class UserType(graphene.ObjectType):
     async def resolve_email(self, info):
         if self.email is not NotSet:
             return self.email
-        if not self.sql_data:
-            self.sql_data = await self.get_sql_data()
-        return self.sql_data['email']
+
+        async with db.connect() as conn:
+            sql_request = """select email from public.user where username = $1""", self.username
+            [(email,)] = await conn.fetch(*sql_request)
+            return email
 
     async def resolve_date_joined(self, info):
         if self.date_joined is not NotSet:
             return self.date_joined
-        if not self.sql_data:
-            self.sql_data = await self.get_sql_data()
-        return self.sql_data['date_joined']
+
+        async with db.connect() as conn:
+            sql_request = """select date_joined from public.user where username = $1""", self.username
+            [(date_joined,)] = await conn.fetch(*sql_request)
+            return date_joined
 
 
 
