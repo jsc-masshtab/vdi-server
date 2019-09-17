@@ -7,7 +7,7 @@ from sanic_jwt import initialize
 from sanic_jwt.decorators import protected
 
 from vdi.settings import settings
-from vdi.db import db
+from db.db import db
 from vdi.hashers import check_username
 from vdi.errors import NotFound
 
@@ -35,7 +35,7 @@ async def retrieve_user(request, *args, **kwargs):
 
     async with db.connect() as conn:
         fields = ['username', 'email']
-        qu = f'''SELECT {' ,'.join(fields)} FROM public.user WHERE username = $1''', user_id
+        qu = '''SELECT {} FROM public.user WHERE username = {}'''.format(' ,'.join(fields), user_id)
         [usr] = await conn.fetch(*qu)
     return dict(usr.items())
 

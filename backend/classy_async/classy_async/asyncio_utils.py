@@ -3,9 +3,11 @@ from functools import wraps
 from typing import List
 
 from cached_property import cached_property as cached
-from dataclasses import dataclass
+#from dataclasses import dataclass # 3.7
+from async_generator import async_generator, yield_, asynccontextmanager
 
-from .g_tasks import g
+
+#from .g_tasks import g # python 3.7
 
 def list(gen_func):
     return list(gen_func())
@@ -51,7 +53,22 @@ class wait:
             src = asyncio.ensure_future(src)
             src.add_done_callback(cb)
 
-
+    # python 3.7
+    # async def items(self):
+    #     """
+    #     Include the identities for awaitables:
+    #     for iden, result in wait(*tasks):
+    #       ...
+    #     """
+    #     while self.results:
+    #         fut = self.results.pop()
+    #         yield await fut
+    #
+    # async def __aiter__(self):
+    #     async for key, result in self.items():
+    #         yield result
+    # python 3.5
+    @async_generator
     async def items(self):
         """
         Include the identities for awaitables:
@@ -60,11 +77,13 @@ class wait:
         """
         while self.results:
             fut = self.results.pop()
-            yield await fut
+            fut_result = await fut
+            await yield_(fut_result)
 
+    @async_generator
     async def __aiter__(self):
         async for key, result in self.items():
-            yield result
+            await yield_(result)
 
     def copy_result(self, fut, target, key):
         # Copies the result of one future to another
@@ -96,11 +115,39 @@ class wait:
         raise NotImplementedError
 
 
-async def wait_all(*args, **kwargs):
-    return [
-        result async for result in wait(*args, **kwargs)
-    ]
+    # result_list = list()
+    # iterator = (wait(*args, **kwargs))
+    # iterator = type(iterator).__aiter__(iterator)
+    # running = True
+    # while running:
+    #     try:
+    #         result = await type(iterator).__anext__(iterator)
+    #     except StopAsyncIteration:
+    #         running = False
+    #     else:
+    #         result_list.append(result)
+    #
+    # return result_list
 
+#@async_generator
+async def wait_all(*args, **kwargs):
+
+    #python 3.7
+    # return [
+    #    result async for result in wait(*args, **kwargs)
+    # ]
+
+    #3.5
+    # async inside comprohension is not supported
+    result_list = []
+    async for result in wait(*args, **kwargs):
+        result_list.append(result)
+    return result_list
+
+@async_generator
+async def load_json_lines(stream_reader):
+    async for line in stream_reader:
+        await yield_(line)
 
 class Awaitable:
     """
@@ -127,7 +174,10 @@ class Awaitable:
 
     @cached
     def task(self):
-        return asyncio.create_task(self.co())
+        loop = asyncio.get_event_loop()
+        async_task = loop.create_task(self.co())
+        return async_task
+        #return asyncio.create_task(self.co()) # python 3.7
 
     def __await__(self):
         return self.task.__await__()
@@ -150,9 +200,12 @@ class Awaitable:
 
 Wait = wait
 
-@dataclass()
+#@dataclass()
 class TaskTimeout(Exception):
-    task: type
+
+    def __init__(self, task: type):
+        self.task = task
+    #task: type # python 3.7
 
 
 class Task(Awaitable):
@@ -182,13 +235,16 @@ class Task(Awaitable):
 
     @cached
     def task(self):
-        tasks = g.tasks
-        if self.cache_result and self.serialized in tasks:
-            return tasks[self.serialized]
-        task = asyncio.create_task(self.co())
+        #tasks = g.tasks
+        #if self.cache_result and self.serialized in tasks:
+        #    return tasks[self.serialized]
+        #task = asyncio.create_task(self.co())
+        # task = asyncio.shield(task)
+        #if self.cache_result:
+        #    tasks[self.serialized] = task
+        loop = asyncio.get_event_loop()
+        task = loop.create_task(self.co())
         task = asyncio.shield(task)
-        if self.cache_result:
-            tasks[self.serialized] = task
         return task
 
     cache_result = True
@@ -196,6 +252,7 @@ class Task(Awaitable):
 
 def timeout(seconds):
     return task(timeout=seconds)
+
 
 def task(timeout=None):
     def decorate(f):

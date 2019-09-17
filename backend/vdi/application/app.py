@@ -1,6 +1,6 @@
 import sys
 
-from classy_async.classy_async import g
+#from classy_async.classy_async import g
 
 from starlette.applications import Starlette
 from starlette.middleware.authentication import AuthenticationMiddleware
@@ -8,7 +8,7 @@ from starlette.middleware.cors import CORSMiddleware
 from starlette.middleware.sessions import SessionMiddleware
 
 from vdi.auth.jwt import JWTAuthenticationBackend
-from vdi.db import db
+from db.db import db
 from vdi.settings import settings
 
 app = Starlette(debug=settings.get('debug'))
@@ -19,7 +19,7 @@ from vdi.application import Request
 
 @app.middleware("http")
 async def init_context(request, call_next):
-    g.init()
+    #g.init()
     await Request.set(request)
     user = request.user
     if not isinstance(user, VDIUser):
@@ -44,7 +44,7 @@ async def debug(request, call_next):
 
 @app.on_event('startup')
 async def startup():
-    g.use_threadlocal(False)
+    #g.use_threadlocal(False)
     await db.get_pool()
 
 

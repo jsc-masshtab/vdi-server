@@ -1,13 +1,13 @@
 import asyncio
-import socket
+from async_generator import async_generator, yield_, asynccontextmanager
+from rx import Observable
 
 import graphene
-from asyncpg.connection import Connection
 from classy_async.classy_async import wait
 
 from .pool import PoolType, VmType, TemplateType
 from .util import get_selections
-from ..db import db
+from db.db import db
 from ..tasks import Token
 from ..tasks.vm import ListTemplates, ListVms
 
@@ -86,7 +86,7 @@ class NodeType(graphene.ObjectType):
     controller = graphene.Field(lambda: ControllerType)
     resources_usage = graphene.Field(ResourcesUsageType)
 
-    veil_info: dict = Unset
+    veil_info = Unset  # dict
 
     async def get_veil_info(self):
         return await FetchNode(node_id=self.id, controller_ip=self.controller.ip)
@@ -247,7 +247,7 @@ class AddController(graphene.Mutation):
             return AddController(ok=False)
 
         async with db.connect() as conn:
-            query = f'''
+            query = '''
             INSERT INTO controller (ip, description) VALUES ($1, $2)
             ON CONFLICT DO NOTHING
             ''', ip, description
@@ -294,7 +294,7 @@ class RemoveController(graphene.Mutation):
             await RemoveController._remove_pools(controller_ip=controller_ip)
             query = "DELETE FROM default_controller WHERE ip = $1", controller_ip
             await conn.fetch(*query)
-            query = f"DELETE FROM controller WHERE ip=$1", controller_ip
+            query = "DELETE FROM controller WHERE ip=$1", controller_ip
             await conn.execute(*query)
 
         return RemoveController(ok=True)
@@ -491,13 +491,20 @@ class ControllerType(graphene.ObjectType):
 
 # remove later
 class TestSubscription(graphene.ObjectType):
+    # count_seconds = graphene.Float(up_to=graphene.Int())
+    #
+    # @async_generator
+    # async def resolve_count_seconds(root, _info, up_to):
+    #     for i in range(up_to):
+    #         await yield_(i)
+    #         await asyncio.sleep(1.)
+    #     await yield_(up_to)
     count_seconds = graphene.Float(up_to=graphene.Int())
 
-    async def resolve_count_seconds(root, _info, up_to):
-        for i in range(up_to):
-            yield i
-            await asyncio.sleep(1.)
-        yield up_to
+    async def resolve_count_seconds(root, info, up_to=5):
+        return Observable.interval(1000) \
+            .map(lambda i: "{0}".format(i)) \
+            .take_while(lambda i: int(i) <= up_to)
 
 
 class ResourceDataSubscription(graphene.ObjectType):
@@ -511,24 +518,27 @@ class ResourceDataSubscription(graphene.ObjectType):
         adequate_timeout = clamp_value(timeout, 1, 1000)
         await asyncio.sleep(adequate_timeout)
 
+    @async_generator
     async def resolve_cluster_res_usage(self, _info, cluster_id, timeout=2):
 
         controller_ip = await DiscoverControllerIp(cluster_id=cluster_id)
         while True:
             res_usage = await FetchResourcesUsage(controller_ip=controller_ip,
                                                   resource_category_name='clusters', resource_id=cluster_id)
-            yield res_usage
+            await yield_(res_usage)
             await ResourceDataSubscription._sleep(timeout)
 
+    @async_generator
     async def resolve_node_res_usage(self, _info, node_id, timeout=2):
 
         controller_ip = await DiscoverControllerIp(node_id=node_id)
         while True:
             res_usage = await FetchResourcesUsage(controller_ip=controller_ip,
                                                   resource_category_name='nodes', resource_id=node_id)
-            yield res_usage
+            await yield_(res_usage)
             await ResourceDataSubscription._sleep(timeout)
 
+    @async_generator
     async def resolve_is_controller_online(self, _info, controller_ip, timeout=2):
         while True:
             was_exception = False
@@ -537,5 +547,5 @@ class ResourceDataSubscription(graphene.ObjectType):
             except:  # wat excep type
                 was_exception = True
 
-            yield not was_exception
+            await yield_(not was_exception)
             await ResourceDataSubscription._sleep(timeout)

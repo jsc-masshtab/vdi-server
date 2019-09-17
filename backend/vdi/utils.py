@@ -4,17 +4,17 @@ from typing import List
 import re
 
 from vdi.settings import settings
-from vdi.db import db
+from db.db import db
 
 class Unset:
     pass
 
 
 def prepare_insert(item: dict):
-    placeholders = ', '.join(f'${i + 1}' for i, _ in enumerate(item))
-    placeholders = f'({placeholders})'
+    placeholders = ', '.join('${}'.format(i + 1) for i, _ in enumerate(item))
+    placeholders = '({})'.format(placeholders)
     keys = ', '.join(item.keys())
-    keys = f'({keys})'
+    keys = '({})'.format(keys)
     values = list(item.values())
     return keys, placeholders, values
 
@@ -24,13 +24,13 @@ def prepare_bulk_insert(items: List[dict]):
     values = []
     offset = 0
     for dic in items:
-        numbers = [f'${offset+i+1}' for i, _ in enumerate(dic)]
+        numbers = ['${}'.format(offset+i+1) for i, _ in enumerate(dic)]
         offset += len(dic)
         numbers = ', '.join(numbers)
-        placeholders.append(f'({numbers})')
+        placeholders.append('({})'.format(numbers))
         values.extend(dic.values())
     keys = ', '.join(items[0].keys())
-    keys = f'({keys})'
+    keys = '({})'.format(keys)
     placeholders = ', '.join(placeholders)
     return keys, placeholders, values
 
@@ -39,10 +39,10 @@ async def insert(table: str, item: dict, returning=None):
     async with db.connect() as conn:
         keys, placeholders, values = prepare_insert(item)
         if returning:
-            returning = f' returning {returning}'
+            returning = ' returning {}'.format(returning)
         else:
             returning = ''
-        qu = f"INSERT INTO {table} {keys} VALUES {placeholders}{returning}", *values
+        qu = "INSERT INTO {} {} VALUES {}{}".format(table, keys, placeholders, returning), *values
         return await conn.fetch(*qu)
 
 
@@ -50,12 +50,12 @@ async def bulk_insert(table, items: List[dict], returning: str = None):
     if not items:
         return []
     if returning:
-        returning = f' returning {returning}'
+        returning = ' returning {}'.format(returning)
     else:
         returning = ''
     async with db.connect() as conn:
         keys, placeholders, values = prepare_bulk_insert(items)
-        qu = f"INSERT INTO {table} {keys} VALUES {placeholders}{returning}", *values
+        qu = "INSERT INTO {} {} VALUES {}{}".format(table, keys, placeholders, returning), *values
         return await conn.fetch(*qu)
 
 

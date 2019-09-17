@@ -1,4 +1,4 @@
-from __future__ import annotations
+#from __future__ import annotations
 
 import inspect
 
@@ -7,20 +7,21 @@ from dateutil.parser import parse as parse_dt
 from datetime import datetime, timedelta, timezone
 import time
 import urllib
-from contextlib import asynccontextmanager, contextmanager, AsyncExitStack, ExitStack
-from dataclasses import dataclass
+from contextlib import contextmanager#, AsyncExitStack
+#from dataclasses import dataclass
 
 from cached_property import cached_property as cached
-from classy_async.classy_async import Task as _Task, TaskTimeout, wait, g
+from classy_async.classy_async import Task as _Task, TaskTimeout, wait
 from vdi.errors import WsTimeout, FetchException, ControllerNotAccessible, Forbidden, \
     SimpleError, Unauthorized
 from vdi.settings import settings
 from vdi.tasks.client import HttpClient
 
-from vdi.db import db, fetch
+from db.db import db, fetch
 from vdi import lock
 from vdi.utils import Unset
 
+from async_generator import async_generator, yield_, asynccontextmanager
 
 class ErrorHandler(_Task):
     _result = Unset
@@ -45,9 +46,10 @@ class ErrorHandler(_Task):
         assert not 'allowed both sync and async handlers'
 
     @asynccontextmanager
+    @async_generator
     async def async_catch_errors(self):
         try:
-            yield
+            await yield_()
         except BaseException as ex:
             if isinstance(ex, FetchException):
                 on_fetch_failed = getattr(self, 'on_fetch_failed', None)
@@ -98,15 +100,18 @@ class Task(ErrorHandler, _Task):
         raise NotImplementedError
 
 
-@dataclass()
+#@dataclass()
 class FetchToken(Task):
-    controller_ip: str
+    controller_ip = ""
+
+    def __init__(self, controller_ip: str):
+        self.controller_ip = controller_ip
 
     creds = settings.credentials
 
     @property
     def url(self):
-        return f'http://{self.controller_ip}/auth/'
+        return 'http://{}/auth/'.format(self.controller_ip)
 
     async def run(self):
         http_client = HttpClient()
@@ -125,9 +130,12 @@ class FetchToken(Task):
 
 
 
-@dataclass()
+#@dataclass()
 class Token(Task):
-    controller_ip: str
+    controller_ip = ""
+
+    def __init__(self, controller_ip: str):
+        self.controller_ip = controller_ip
 
     @property
     def username(self):
@@ -176,17 +184,17 @@ class Token(Task):
 
 
 # unused
-@dataclass()
-class RefreshToken(Task):
-    controller_ip: str
-    token: str
-
-    async def run(self):
-        url = f'http://{self.controller_ip}/refresh-token/'
-        body = urllib.parse.urlencode({'token': self.token})
-        http_client = HttpClient()
-        data = await http_client.fetch(url, method='POST', body=body)
-        return data['token'], data['expires_on']
+# @dataclass()
+# class RefreshToken(Task):
+#     controller_ip: str
+#     token: str
+#
+#     async def run(self):
+#         url = f'http://{self.controller_ip}/refresh-token/'
+#         body = urllib.parse.urlencode({'token': self.token})
+#         http_client = HttpClient()
+#         data = await http_client.fetch(url, method='POST', body=body)
+#         return data['token'], data['expires_on']
 
 
 class UrlFetcher(Task):
@@ -195,7 +203,7 @@ class UrlFetcher(Task):
     async def headers(self):
         token = await Token(controller_ip=self.controller_ip)
         return {
-            'Authorization': f'jwt {token}',
+            'Authorization': 'jwt {}'.format(token),
             'Content-Type': 'application/json',
         }
 
@@ -221,10 +229,14 @@ class UrlFetcher(Task):
             raise WsTimeout(url=self.url, data="Таймаут ожидания завершения")
 
 
-@dataclass()
+#@dataclass()
 class CheckConnection(UrlFetcher):
-    controller_ip: str
-    token: str = None
+    controller_ip = ''
+    token = None
+
+    def __init__(self, controller_ip: str, token: str = None):
+        self.controller_ip = controller_ip
+        self.token = token
 
     async def headers(self):
         if self.token:
@@ -232,13 +244,13 @@ class CheckConnection(UrlFetcher):
         else:
             token = await Token(controller_ip=self.controller_ip)
         return {
-            'Authorization': f'jwt {token}',
+            'Authorization': 'jwt {}'.format(token),
             'Content-Type': 'application/json',
         }
 
     @cached
     def url(self):
-        return f"http://{self.controller_ip}/api/controllers/system-time"
+        return "http://{}/api/controllers/system-time".format(self.controller_ip)
 
     def on_fetch_failed(self, ex, code):
         if code == Unauthorized.code:
@@ -267,7 +279,7 @@ class DiscoverController(UrlFetcher):
         async for controller_ip, result in wait(**tasks).items():
             if not isinstance(result, Exception):
                 return result, controller_ip
-        raise SimpleError(f'Автоопределение контроллера не удалось: {self.__class__.__name__}')
+        raise SimpleError('Автоопределение контроллера не удалось: {}'.format(self.__class__.__name__))
 
     async def run(self):
         if self.controller_ip:

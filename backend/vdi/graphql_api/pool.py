@@ -1,7 +1,7 @@
 import asyncio
 import inspect
 import json
-from dataclasses import dataclass
+#from dataclasses import dataclass
 from typing import List
 
 import graphene
@@ -15,7 +15,7 @@ from vdi.tasks.vm import GetDomainInfo, GetVdisks
 
 from .users import UserType
 from .util import get_selections, check_if_pool_exists
-from ..db import db, fetch
+from db.db import db, fetch
 from ..pool import Pool
 
 from vdi.errors import SimpleError, FieldError
@@ -100,28 +100,28 @@ class PoolType(graphene.ObjectType):
         u_fields = ('username', 'email', 'date_joined')
         # users who are entitled to pool
         if entitled:
-            u_fields_joined = ', '.join(f'u.{f}' for f in u_fields)
+            u_fields_joined = ', '.join('u.{}'.format(f) for f in u_fields)
             async with db.connect() as conn:
-                qu = f"""
-                SELECT {u_fields_joined} 
+                qu = """
+                SELECT {} 
                 FROM pools_users JOIN public.user as u ON pools_users.username = u.username
-                WHERE pool_id = $1
-                """, self.id
-                data = await conn.fetch(*qu)
+                WHERE pool_id = {}
+                """.format(u_fields_joined, self.id)
+                data = await conn.fetch(qu)
         # users who are NOT entitled to pool
         else:
-            u_fields_joined = ', '.join(f'{f}' for f in u_fields)
+            u_fields_joined = ', '.join('{}'.format(f) for f in u_fields)
             async with db.connect() as conn:
-                qu = f"""
-                SELECT {u_fields_joined} 
+                qu = """
+                SELECT {} 
                 FROM public.user
                 WHERE public.user.username NOT IN
                     (SELECT pools_users.username
                      FROM pools_users
-                     WHERE pools_users.pool_id = $1
+                     WHERE pools_users.pool_id = {}
                     )
-                """, self.id
-                data = await conn.fetch(*qu)
+                """.format(u_fields_joined, self.id)
+                data = await conn.fetch(qu)
 
         # form list and return
         users = []
@@ -164,7 +164,7 @@ class PoolType(graphene.ObjectType):
             fields = "datapool_id, cluster_id, node_id, template_id, " \
                  "initial_size, reserve_size, controller_ip, desktop_pool_type, " \
                  "vm_name_template, total_size"
-            qu = f"select {fields} from pool where id = $1", self.id
+            qu = "select {} from pool where id = {}".format(fields, self.id)
             [data] = await conn.fetch(*qu)
         pool_type = getattr(DesktopPoolType, data['desktop_pool_type'])
         data = dict(data, desktop_pool_type=pool_type)
@@ -189,10 +189,9 @@ class VmType(graphene.ObjectType):
 
     #TODO cached info?
 
-    selections: List[str]
-    sql_data: dict = Unset
-    veil_info: dict = Unset
-
+    selections = None #List[str]
+    sql_data = Unset
+    veil_info = Unset
 
     @cached
     def controller_ip(self):
@@ -208,7 +207,7 @@ class VmType(graphene.ObjectType):
             for f in sql_fields
         ]
         async with db.connect() as conn:
-            data = await conn.fetch(f"select {', '.join(sql_selections)} from vm where id = $1", self.id)
+            data = await conn.fetch("select {} from vm where id = {}".format(', '.join(sql_selections), self.id))
             if not data:
                 return None
             [data] = data
@@ -440,20 +439,21 @@ class AddPool(graphene.Mutation):
         MAX_VM_AMOUNT = 1000
         initial_size = pool_args_dict['initial_size']
         if initial_size < MIX_SIZE or initial_size > MAX_SIZE:
-            raise FieldError(initial_size=[f'Начальное количество ВМ должно быть в интервале [{MIX_SIZE} {MAX_SIZE}]'])
+            raise FieldError(initial_size=
+                             ['Начальное количество ВМ должно быть в интервале [{} {}]'.format(MIX_SIZE, MAX_SIZE)])
 
         reserve_size = pool_args_dict['reserve_size']
         if reserve_size < MIX_SIZE or reserve_size > MAX_SIZE:
             raise FieldError(reserve_size=
-                             [f'Количество создаваемых ВМ должно быть в интервале [{MIX_SIZE} {MAX_SIZE}]'])
+                             ['Количество создаваемых ВМ должно быть в интервале [{} {}]'.format(MIX_SIZE, MAX_SIZE)])
 
         total_size = pool_args_dict['total_size']
         if total_size < initial_size:
             raise FieldError(total_size=['Максимальное количество создаваемых ВМ не может быть меньше '
                                          'начального количества ВМ'])
         if total_size < MIX_SIZE or total_size > MAX_VM_AMOUNT:
-            raise FieldError(total_size=[f'Максимальное количество создаваемых ВМ должно быть в интервале '
-                                         f'[{MIX_SIZE} {MAX_VM_AMOUNT}]'])
+            raise FieldError(total_size=['Максимальное количество создаваемых ВМ должно быть в интервале \
+                                         [{} {}]'.format(MIX_SIZE, MAX_VM_AMOUNT)])
 
 
     async def mutate(self, info, settings=(), **kwargs):
@@ -528,7 +528,9 @@ class AddPool(graphene.Mutation):
                 item.selections = get_selections(info)
                 available.append(item)
         else:
-            asyncio.create_task(add_domains)
+            loop = asyncio.get_event_loop()
+            loop.create_task(add_domains)
+            #asyncio.create_task(add_domains)
             available = []
 
         state = PoolState(available=available, running=True)
@@ -547,7 +549,7 @@ class AddPool(graphene.Mutation):
 async def check_static_pool_and_get_params(pool_id):
     """check if given pool_id corresponds to valid static pool and return its parameters"""
     async with db.connect() as conn:
-        qu = f"SELECT * from pool where id = $1", pool_id
+        qu = "SELECT * from pool where id = $1", pool_id
         pool_params = await conn.fetch(*qu)
     # check if pool exists
     if not pool_params:
@@ -709,11 +711,11 @@ class RemoveVmsFromStaticPool(graphene.Mutation):
 
     @classmethod
     async def remove_vms_from_pool(cls, vm_ids, pool_id):
-        placeholders = [f'${i + 1}' for i in range(0, len(vm_ids))]
+        placeholders = ['${}'.format(i + 1) for i in range(0, len(vm_ids))]
         placeholders = ', '.join(placeholders)
         print('placeholders', placeholders)
         async with db.connect() as conn:
-            qu = f'DELETE FROM vm WHERE id IN ({placeholders}) AND pool_id = {pool_id}', *vm_ids
+            qu = 'DELETE FROM vm WHERE id IN ({}) AND pool_id = {}'.format(placeholders, pool_id), *vm_ids
             await conn.fetch(*qu)
 
 
@@ -726,7 +728,7 @@ class RemoveVmsFromStaticPool(graphene.Mutation):
         # vms check
         # get list of vms ids which are in pool_id
         async with db.connect() as conn:
-            qu = f"""
+            qu = """
               SELECT vm.id from vm JOIN pool ON vm.pool_id = pool.id
               WHERE pool.id = $1
               """, pool_id
@@ -798,7 +800,11 @@ class RemovePool(graphene.Mutation):
 
     async def mutate(self, info, id):
         task = RemovePool.do_remove(id)
-        task = asyncio.create_task(task)
+
+        loop = asyncio.get_event_loop()
+        task = loop.create_task(task)
+        #task = asyncio.create_task(task) # python 3.7
+
         selections = get_selections(info)
         if 'ids' in selections:
             vm_ids = await task
@@ -982,15 +988,16 @@ class PoolMixin:
     #TODO fix users
     #TODO remove this
     async def get_pools_users_map(self, u_fields):
-        u_fields_prefixed = [f'u.{f}' for f in u_fields]
+        u_fields_prefixed = ['u.{}'.format(f) for f in u_fields]
         fields = ['pool_id'] + u_fields_prefixed
-        qu = f"""
-            SELECT {', '.join(fields)}
+        qu = """
+            SELECT {}
             FROM pools_users LEFT JOIN public.user as u ON pools_users.username =  u.username
-            """
+            """, format(', '.join(fields))
         map = {}
         async with db.connect() as conn:
-            records = await conn.fetch(qu)
+            records = await conn.fetch(*qu)
+
         for pool_id, *values in records:
             u = dict(zip(u_fields, values))
             map.setdefault(pool_id, []).append(UserType(**u))
@@ -1005,8 +1012,8 @@ class PoolMixin:
             pools = await conn.fetch(qu)
 
         u_fields = get_selections(info, 'users')
-        if u_fields:
-            pools_users = await PoolMixin.get_pools_users_map(self, u_fields)
+        #if u_fields:
+        #    pools_users = await PoolMixin.get_pools_users_map(self, u_fields)
         items = []
         for pool in pools:
             pool = dict(pool.items())
@@ -1019,8 +1026,8 @@ class PoolMixin:
                 f: pool[f] for f in pool
                 if f in PoolSettings._meta.fields
             }
-            if u_fields:
-                p['users'] = pools_users[id]
+            #if u_fields:
+            #    p['users'] = pools_users[id]
             from vdi.graphql_api.resources import ControllerType
             pt = PoolType(**p,
                           settings=PoolSettings(**settings),
@@ -1042,7 +1049,7 @@ class ChangePoolName(graphene.Mutation):
         PoolValidator.validate_pool_name(new_name)
         # set name
         async with db.connect() as conn:
-            qu = f'UPDATE pool SET name = $1 WHERE id = $2', new_name, pool_id
+            qu = 'UPDATE pool SET name = $1 WHERE id = $2', new_name, pool_id
             await conn.fetch(*qu)
 
         return {'ok': True}
@@ -1064,10 +1071,10 @@ class ChangeVmNameTemplate(graphene.Mutation):
         PoolValidator.validate_pool_name(new_name_template)
         # set name
         async with db.connect() as conn:
-            qu = f'SELECT dynamic_traits FROM pool WHERE id = $1', pool_id
+            qu = 'SELECT dynamic_traits FROM pool WHERE id = $1', pool_id
             [(dynamic_traits_id,)] = await conn.fetch(*qu)
 
-            qu = f'UPDATE dynamic_traits SET vm_name_template = $1 WHERE dynamic_traits_id = $2', \
+            qu = 'UPDATE dynamic_traits SET vm_name_template = $1 WHERE dynamic_traits_id = $2', \
                  new_name_template, dynamic_traits_id
             await conn.fetch(*qu)
 
