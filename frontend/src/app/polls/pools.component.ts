@@ -64,7 +64,7 @@ export class PoolsComponent implements OnInit {
 	}
 
   ngOnInit() {
-    this.getAllPools({spin:true});
+    this.getAllPools({spin:true,obs:true});
   }
 
   public openCreatePool() {
@@ -73,16 +73,19 @@ export class PoolsComponent implements OnInit {
     });
   }
 
-  public getAllPools(spin?:{}) {
-    if(spin && spin['spin']) {
+  public getAllPools(param?:{}) {
+    if(param && param['spin']) {
       this.waitService.setWait(true);
     }
-    this.getPoolsSub = this.service.getAllPools({obs:true})
+    console.log(param);
+    this.getPoolsSub = this.service.getAllPools(param['obs'])
       .subscribe( (data) => {
         this.pools = data;
-        if(spin && spin['spin']) {
+        if(param && param['spin']) {
           this.waitService.setWait(false);
+          param = {};
         }
+        console.log(param);
       });
   }
 
