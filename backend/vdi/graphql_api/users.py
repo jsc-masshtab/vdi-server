@@ -14,45 +14,55 @@ from .util import get_selections
 from vdi.auth import VDIUser, fetch_token
 from vdi.application import Request
 
+from vdi.graphql_api.pool import PoolType
+
 class UserType(graphene.ObjectType):
     username = graphene.String()
     email = graphene.String(default_value=NotSet)
     date_joined = graphene.DateTime(default_value=NotSet)
+    pools = graphene.List(PoolType)
 
     sql_data = None
 
-    async def get_sql_data(self): # unused?
+    # unused? marked for removal
+    async def get_sql_data(self):
         fields = [f for f in self._meta.fields]
 
         sql_request_fields = ", ".join(fields)
-        qu = """select $1 from public.user where username = $2""", sql_request_fields, self.username
+        qu = """SELECT $1 from public.user where username = $2""", sql_request_fields, self.username
         async with db.connect() as conn:
             users = await conn.fetch(*qu)
             [data] = users
             return data
 
-    async  def resolve_username(self, info):
+    async  def resolve_username(self, _info):
         return self.username
 
-    async def resolve_email(self, info):
+    async def resolve_email(self, _info):
         if self.email is not NotSet:
             return self.email
 
         async with db.connect() as conn:
-            sql_request = """select email from public.user where username = $1""", self.username
+            sql_request = """SELECT email from public.user where username = $1""", self.username
             [(email,)] = await conn.fetch(*sql_request)
             return email
 
-    async def resolve_date_joined(self, info):
+    async def resolve_date_joined(self, _info):
         if self.date_joined is not NotSet:
             return self.date_joined
 
         async with db.connect() as conn:
-            sql_request = """select date_joined from public.user where username = $1""", self.username
+            sql_request = """SELECT date_joined from public.user where username = $1""", self.username
             [(date_joined,)] = await conn.fetch(*sql_request)
             return date_joined
 
-
+    # async def resolve_pools(self, _info):
+    #     async with db.connect() as conn:
+    #         sql_request = """SELECT pool_id FROM pools_users WHERE username = $1""", self.username
+    #         pool_data = await conn.fetch(*sql_request)
+    #
+    #         pools_list = []
+    #         return pools_list
 
 class CreateUser(graphene.Mutation):
     '''
