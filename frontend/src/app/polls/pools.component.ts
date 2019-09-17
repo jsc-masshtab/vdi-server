@@ -77,7 +77,6 @@ export class PoolsComponent implements OnInit {
     if(param && param['spin']) {
       this.waitService.setWait(true);
     }
-    console.log(param);
     this.getPoolsSub = this.service.getAllPools(param['obs'])
       .subscribe( (data) => {
         this.pools = data;
@@ -85,7 +84,6 @@ export class PoolsComponent implements OnInit {
           this.waitService.setWait(false);
           param = {};
         }
-        console.log(param);
       });
   }
 

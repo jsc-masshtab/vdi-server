@@ -41,12 +41,12 @@
             <div class="details-slide-into">
                 <ng-container *ngIf="pool_type === 'automated'">
                     <vdi-table-into *ngIf="menuActive === 'info'" [data]="pool" [collection]="collection_details_automated"></vdi-table-into>
-                    <vdi-table-component *ngIf="menuActive === 'vms'" [data]="pool?.vms" [collection]="collection_vms_automated"></vdi-table-component> 
+                    <vdi-table-component *ngIf="menuActive === 'vms'" [data]="pool?.vms" [collection]="collection_vms_automated" (clickRowData)="clickVm($event)" cursor="true"></vdi-table-component> 
                 </ng-container>
 
                 <ng-container *ngIf="pool_type === 'static'">
                     <vdi-table-into *ngIf="menuActive === 'info'" [data]="pool" [collection]="collection_details_static"></vdi-table-into>
-                    <vdi-table-component *ngIf="menuActive === 'vms'" [data]="pool?.vms" [collection]="collection_vms_static"></vdi-table-component> 
+                    <vdi-table-component *ngIf="menuActive === 'vms'" [data]="pool?.vms" [collection]="collection_vms_static" (clickRowData)="clickVm($event)" cursor="true"></vdi-table-component> 
                 </ng-container>
 
                 <vdi-table-component *ngIf="menuActive === 'users'" [data]="pool?.users" [collection]="collection_users"></vdi-table-component> 

@@ -87,6 +87,9 @@ export class PoolsService  {
                                             name
                                         }
                                         state
+                                        user {
+                                            username
+                                        }
                                     }  
                                     controller {
                                         ip
@@ -119,6 +122,9 @@ export class PoolsService  {
                                         name
                                         state
                                         id
+                                        user {
+                                            username
+                                        }
                                     }  
                                     controller {
                                         ip
@@ -214,6 +220,23 @@ export class PoolsService  {
                 method: 'POST',
                 pool_id: pool_id,
                 vm_ids: vm_ids
+            }
+        })
+    }
+
+    public assignVmToUser(vm_id: number,username: string) {
+        return this.service.mutate<any>({
+            mutation: gql`  
+                            mutation AssignVmToUser($vm_id: ID!,$username: String!) {
+                                assignVmToUser(vm_id: $vm_id,username: $username) {
+                                    ok
+                                }
+                            }
+            `,
+            variables: {
+                method: 'POST',
+                vm_id: vm_id,
+                username: username
             }
         })
     }

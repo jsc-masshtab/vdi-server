@@ -1,3 +1,4 @@
+import { VmDetalsPopupComponent } from './vm-details-popup/vm-details-popup.component';
 import { RemoveUsersPoolComponent } from './../remove-users/remove-users.component';
 import { AddUsersPoolComponent } from './../add-users/add-users.component';
 import { RemoveVMStaticPoolComponent } from './../remove-vms/remove-vms.component';
@@ -219,6 +220,18 @@ export class PoolDetailsComponent implements OnInit {
         pool_name: this.pool['name'],
         vms: this.pool.vms,
         pool_type: this.pool_type
+      }
+    });
+  }
+
+  public clickVm(vm) {
+    this.dialog.open(VmDetalsPopupComponent, {
+      width: '50%',
+      data: {
+        vm: vm,
+        pool_type: this.pool_type,
+        users: this.pool.users,
+        pool_id: this.pool_id
       }
     });
   }
