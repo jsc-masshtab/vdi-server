@@ -107,21 +107,21 @@ class PoolType(graphene.ObjectType):
                 FROM pools_users JOIN public.user as u ON pools_users.username = u.username
                 WHERE pool_id = {}
                 """.format(u_fields_joined, self.id)
-                data = await conn.fetch(*qu)
+                data = await conn.fetch(qu)
         # users who are NOT entitled to pool
         else:
             u_fields_joined = ', '.join('{}'.format(f) for f in u_fields)
             async with db.connect() as conn:
                 qu = """
-                SELECT {u_fields_joined} 
+                SELECT {} 
                 FROM public.user
                 WHERE public.user.username NOT IN
                     (SELECT pools_users.username
                      FROM pools_users
-                     WHERE pools_users.pool_id = $1
+                     WHERE pools_users.pool_id = {}
                     )
-                """, self.id
-                data = await conn.fetch(*qu)
+                """.format(u_fields_joined, self.id)
+                data = await conn.fetch(qu)
 
         # form list and return
         users = []
@@ -996,7 +996,8 @@ class PoolMixin:
             """, format(', '.join(fields))
         map = {}
         async with db.connect() as conn:
-            records = await conn.fetch(qu)
+            records = await conn.fetch(*qu)
+
         for pool_id, *values in records:
             u = dict(zip(u_fields, values))
             map.setdefault(pool_id, []).append(UserType(**u))
@@ -1011,8 +1012,8 @@ class PoolMixin:
             pools = await conn.fetch(qu)
 
         u_fields = get_selections(info, 'users')
-        if u_fields:
-            pools_users = await PoolMixin.get_pools_users_map(self, u_fields)
+        #if u_fields:
+        #    pools_users = await PoolMixin.get_pools_users_map(self, u_fields)
         items = []
         for pool in pools:
             pool = dict(pool.items())
@@ -1025,8 +1026,8 @@ class PoolMixin:
                 f: pool[f] for f in pool
                 if f in PoolSettings._meta.fields
             }
-            if u_fields:
-                p['users'] = pools_users[id]
+            #if u_fields:
+            #    p['users'] = pools_users[id]
             from vdi.graphql_api.resources import ControllerType
             pt = PoolType(**p,
                           settings=PoolSettings(**settings),

@@ -33,9 +33,7 @@ class UserType(graphene.ObjectType):
             return data
 
     async  def resolve_username(self, info):
-        if not self.sql_data:
-            self.sql_data = await self.get_sql_data()
-        return self.sql_data['username']
+        return self.username
 
     async def resolve_email(self, info):
         if self.email is not NotSet:
@@ -136,6 +134,8 @@ class UserQueries:
             users = await conn.fetch(qu)
         li = []
         for rec in users:
+            print('fields', fields)
+            print('rec', rec)
             user = dict(zip(fields, rec))
             li.append(UserType(**user))
         return li
