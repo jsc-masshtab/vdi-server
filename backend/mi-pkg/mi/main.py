@@ -24,7 +24,7 @@ from docopt import docopt
 
 from contextlib import ExitStack
 
-
+from asyncpg.exceptions import DuplicateTableError
 
 
 DOCOPT = """\
@@ -172,7 +172,11 @@ CREATE TABLE migrations (
                 sql = "{};".format(sql)
             sql = '''{}\
             INSERT INTO migrations VALUES ('{}');'''.format(sql, p.name)
-            await self.exec(sql)
+            try:
+                await self.exec(sql)
+            except DuplicateTableError:
+                print('DuplicateTable VIOLATION. Maybe migrations are already applied. Stop applying')
+                break
             print("Applied: {}".format(p.name))
 
     async def run(self):
