@@ -9,7 +9,7 @@ pipenv install
 
 # install special starlette
 pipenv run  python3.5 -m pip install git+https://github.com/em92/starlette
-pipenv graph
+#pipenv graph
 
 echo "vdi_server: applying migrations..."
 pipenv run python3.5 mi-pkg/mi/main.py apply
