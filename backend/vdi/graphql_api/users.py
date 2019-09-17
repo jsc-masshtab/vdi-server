@@ -14,13 +14,13 @@ from .util import get_selections
 from vdi.auth import VDIUser, fetch_token
 from vdi.application import Request
 
-from vdi.graphql_api.pool import PoolType
+#from vdi.graphql_api.pool import PoolType
 
 class UserType(graphene.ObjectType):
     username = graphene.String()
     email = graphene.String(default_value=NotSet)
     date_joined = graphene.DateTime(default_value=NotSet)
-    pools = graphene.List(PoolType)
+    #pools = graphene.List(PoolType)
 
     sql_data = None
 
