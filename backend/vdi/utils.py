@@ -72,6 +72,12 @@ def clamp_value(my_value, min_value, max_value):
     return max(min(my_value, max_value), min_value)
 
 
+# validate if name correct
 def validate_name(name_string):
     return re.match('^[а-яА-ЯёЁa-zA-Z0-9]+[а-яА-ЯёЁa-zA-Z0-9.-_+ ]*$', name_string)
 
+
+# get string of all atributes of an object split by comma
+def get_attributes_str(python_object):
+    attributes_str = ', '.join(i for i in dir(python_object) if not i.startswith('__'))
+    return attributes_str

@@ -19,8 +19,7 @@ from db.db import db, fetch
 from ..pool import Pool
 
 from vdi.errors import SimpleError, FieldError
-from vdi.utils import Unset, insert, bulk_insert, validate_name # print,
-
+from vdi.utils import Unset, insert, bulk_insert, validate_name, get_attributes_str # print,
 
 class TemplateType(graphene.ObjectType):
     id = graphene.String()
@@ -157,12 +156,12 @@ class PoolType(graphene.ObjectType):
     async def resolve_settings(self, info):
         if self.settings:
             return self.settings
+        # get settings from db
         async with db.connect() as conn:
-            fields = "datapool_id, cluster_id, node_id, template_id, " \
-                 "initial_size, reserve_size, controller_ip, desktop_pool_type, " \
-                 "vm_name_template, total_size"
+            fields = get_attributes_str(PoolSettingsFields)
             qu = "select {} from pool where id = {}".format(fields, self.id)
-            [data] = await conn.fetch(*qu)
+            [data] = await conn.fetch(qu)
+        # create and return object PoolSettings
         pool_type = getattr(DesktopPoolType, data['desktop_pool_type'])
         data = dict(data, desktop_pool_type=pool_type)
         self.settings = PoolSettings(**data)
@@ -491,9 +490,6 @@ class AddPool(graphene.Mutation):
         AddPool.validate_agruments(pool)
 
         # add to db
-        from vdi.graphql_api.resources import NodeType, ControllerType
-        controller = ControllerType(ip=pool['controller_ip'])
-
         pool_data = {
             **{k: v for k, v in pool.items() if k in Pool.pool_keys}
         }
@@ -503,6 +499,9 @@ class AddPool(graphene.Mutation):
         pool['id'] = pool_id
         ins = Pool(params=pool)
         Pool.instances[pool['id']] = ins
+
+        from vdi.graphql_api.resources import NodeType, ControllerType
+        controller = ControllerType(ip=pool['controller_ip'])
 
         add_domains = ins.add_domains()
         selections = get_selections(info)
@@ -935,11 +934,10 @@ class PoolMixin:
         async with db.connect() as conn:
             [pool] = await conn.fetch(*qu)
         dic = dict(pool.items())
-
-        settings = {}
-        for sel in settings_selections:
-            settings[sel] = pool[sel]
-        dic['settings'] = PoolSettings(**settings)
+        # settings = {}
+        # for sel in settings_selections:
+        #     settings[sel] = pool[sel]
+        # dic['settings'] = PoolSettings(**settings)
         return dic
 
     async def resolve_pool(self, info, id):
