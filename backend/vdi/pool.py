@@ -7,7 +7,6 @@ from db.db import db
 from vdi.tasks import vm
 from vdi.utils import into_words
 
-
 #@dataclass()
 class Pool:
     params = dict()
@@ -15,9 +14,9 @@ class Pool:
     def __init__(self, params: dict):
         self.params = params
 
-    traits_keys = into_words('initial_size reserve_size total_size '
-                             'datapool_id cluster_id node_id vm_name_template')
-    pool_keys = into_words("id name controller_ip desktop_pool_type deleted")
+    pool_keys = into_words('id name controller_ip desktop_pool_type '
+                           'deleted datapool_id cluster_id node_id vm_name_template '
+                           'initial_size reserve_size total_size')
 
     #FIXME use queue only for client
 

@@ -155,9 +155,6 @@ class PoolType(graphene.ObjectType):
         return self.desktop_pool_type
 
     async def resolve_settings(self, info):
-        pool_type = self.resolve_desktop_pool_type(None)
-        #if pool_type == DesktopPoolType.STATIC:
-        #    return None
         if self.settings:
             return self.settings
         async with db.connect() as conn:
@@ -312,9 +309,7 @@ class PoolState(graphene.ObjectType):
 
     async def resolve_available(self, info):
         async with db.connect() as conn:
-            qu = 'select t.node_id ' \
-                 'from dynamic_traits as t join pool as p on t.dynamic_traits_id = p.dynamic_traits ' \
-                 'where p.id = $1', self.pool.id
+            qu = 'select node_id from pool where id = $1', self.pool.id
             data = await conn.fetch(*qu)
             if not data:
                 return []
@@ -474,6 +469,8 @@ class AddPool(graphene.Mutation):
             'controller_ip': kwargs.get('controller_ip'),
             **pool_settings
         }
+
+        # magic checks from Vitalya. Nobody can understand this
         checker = PoolValidator(pool)
         data_sync = {}
         data_async = {}
@@ -493,18 +490,16 @@ class AddPool(graphene.Mutation):
         # validate agruments
         AddPool.validate_agruments(pool)
 
+        # add to db
         from vdi.graphql_api.resources import NodeType, ControllerType
         controller = ControllerType(ip=pool['controller_ip'])
 
-        dyn_traits = {
-            k: v for k, v in pool.items() if k in Pool.traits_keys
-        }
-        [[id]] = await insert('dynamic_traits', dyn_traits, returning='dynamic_traits_id')
         pool_data = {
-            'dynamic_traits': id,
             **{k: v for k, v in pool.items() if k in Pool.pool_keys}
         }
         [[pool_id]] = await insert('pool', pool_data, returning='id')
+
+        # add to Pool.instances
         pool['id'] = pool_id
         ins = Pool(params=pool)
         Pool.instances[pool['id']] = ins
@@ -934,31 +929,12 @@ class PoolMixin:
 
 
     async def _select_pool(self, info, id):
-        # selections = get_selections(info)
         settings_selections = get_selections(info, 'settings') or []
-        # fields = [
-        #     f for f in selections
-        #     if f in PoolType.sql_fields
-        # ]
-        # if 'id' not in fields:
-        #     fields.append('id')
-        #
-        # if not fields and not settings_selections:
-        #     return {}
 
-        qu = "select * from pool left join dynamic_traits as t " \
-             "on pool.dynamic_traits = t.dynamic_traits_id " \
-             "where id = $1", id
+        qu = "select * from pool where id = $1", id
         async with db.connect() as conn:
             [pool] = await conn.fetch(*qu)
         dic = dict(pool.items())
-
-        # for static pool take data only from pool table
-        if dic['desktop_pool_type'] == DesktopPoolType.STATIC.name:
-            qu = "select * from pool where id = $1", id
-            async with db.connect() as conn:
-                [pool] = await conn.fetch(*qu)
-            dic = dict(pool.items())
 
         settings = {}
         for sel in settings_selections:
@@ -1002,15 +978,10 @@ class PoolMixin:
 
 
     async def resolve_pools(self, info):
-        qu = "select * " \
-             "from pool left join dynamic_traits as t on pool.dynamic_traits = t.dynamic_traits_id " \
-             "where deleted is not true"
+        qu = "select * from pool where deleted is not true"
         async with db.connect() as conn:
             pools = await conn.fetch(qu)
 
-        u_fields = get_selections(info, 'users')
-        #if u_fields:
-        #    pools_users = await PoolMixin.get_pools_users_map(self, u_fields)
         items = []
         for pool in pools:
             pool = dict(pool.items())
@@ -1023,8 +994,7 @@ class PoolMixin:
                 f: pool[f] for f in pool
                 if f in PoolSettings._meta.fields
             }
-            #if u_fields:
-            #    p['users'] = pools_users[id]
+
             from vdi.graphql_api.resources import ControllerType
             pt = PoolType(**p,
                           settings=PoolSettings(**settings),
@@ -1068,11 +1038,7 @@ class ChangeVmNameTemplate(graphene.Mutation):
         PoolValidator.validate_pool_name(new_name_template)
         # set name
         async with db.connect() as conn:
-            qu = 'SELECT dynamic_traits FROM pool WHERE id = $1', pool_id
-            [(dynamic_traits_id,)] = await conn.fetch(*qu)
-
-            qu = 'UPDATE dynamic_traits SET vm_name_template = $1 WHERE dynamic_traits_id = $2', \
-                 new_name_template, dynamic_traits_id
+            qu = 'UPDATE pool SET vm_name_template = $1 WHERE id = $2', new_name_template, pool_id
             await conn.fetch(*qu)
 
         # change live data
