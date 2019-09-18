@@ -9,7 +9,7 @@ from cached_property import cached_property as cached
 from classy_async.classy_async import wait, wait_all
 from vdi.settings import settings as settings_file
 from vdi.tasks import vm
-from vdi.tasks.resources import DiscoverControllerIp
+from vdi.tasks.resources import DiscoverControllerIp, FetchCluster, FetchNode, FetchDatapool, FetchDomain
 from vdi.tasks.thin_client import EnableRemoteAccess
 from vdi.tasks.vm import GetDomainInfo, GetVdisks
 
@@ -18,7 +18,7 @@ from .util import get_selections, check_if_pool_exists
 from db.db import db, fetch
 from ..pool import Pool
 
-from vdi.errors import SimpleError, FieldError
+from vdi.errors import SimpleError, FieldError, NotFound
 from vdi.utils import Unset, insert, bulk_insert, validate_name, get_attributes_str # print,
 
 class TemplateType(graphene.ObjectType):
@@ -67,6 +67,13 @@ class DesktopPoolType(graphene.Enum):
     STATIC = 1
 
 
+class PoolResourcesNames(graphene.ObjectType):
+    cluster_name = graphene.String()
+    node_name = graphene.String()
+    datapool_name = graphene.String()
+    template_name = graphene.String()
+
+
 class PoolType(graphene.ObjectType):
     #TODO rm settings, add controller, cluster, datapool, etc.
 
@@ -78,6 +85,7 @@ class PoolType(graphene.ObjectType):
     state = graphene.Field(lambda: PoolState)
     users = graphene.List(UserType, entitled=graphene.Boolean())
     vms = graphene.List(lambda: VmType)
+    pool_resources_names = graphene.Field(PoolResourcesNames)
 
     @graphene.Field
     def controller():
@@ -148,12 +156,12 @@ class PoolType(graphene.ObjectType):
         vms = await state.resolve_available(info)
         return vms
 
-    def resolve_desktop_pool_type(self, info):
+    def resolve_desktop_pool_type(self, _info):
         if isinstance(self.desktop_pool_type, str):
             return getattr(DesktopPoolType, self.desktop_pool_type)
         return self.desktop_pool_type
 
-    async def resolve_settings(self, info):
+    async def resolve_settings(self, _info):
         if self.settings:
             return self.settings
         # get settings from db
@@ -166,6 +174,49 @@ class PoolType(graphene.ObjectType):
         data = dict(data, desktop_pool_type=pool_type)
         self.settings = PoolSettings(**data)
         return self.settings
+
+    async def resolve_pool_resources_names(self, _info):
+
+        list_of_requested_fields = get_selections(_info)
+        # get resources ids from db
+        async with db.connect() as conn:
+            qu = "SELECT controller_ip, cluster_id, node_id, datapool_id, template_id FROM pool WHERE id = {}".\
+                format(self.id)
+            [data] = await conn.fetch(qu)
+            print('res data', data)
+
+        # determine names  (looks like code repeat. maybe refactor)
+        if 'cluster_name' in list_of_requested_fields:
+            try:
+                resp = await FetchCluster(controller_ip=data['controller_ip'], cluster_id=data['cluster_id'])
+                cluster_name = resp['verbose_name']
+            except NotFound:
+                cluster_name = ''
+
+        if 'node_name' in list_of_requested_fields:
+            try:
+                resp = await FetchNode(controller_ip=data['controller_ip'], node_id=data['node_id'])
+                node_name = resp['verbose_name']
+            except NotFound:
+                node_name = ''
+
+        if 'datapool_name' in list_of_requested_fields:
+            try:
+                resp = await FetchDatapool(controller_ip=data['controller_ip'], datapool_id=data['datapool_id'])
+                datapool_name = resp['verbose_name']
+            except NotFound:
+                datapool_name = ''
+
+        if 'template_name' in list_of_requested_fields:
+            try:
+                resp = await FetchDomain(controller_ip=data['controller_ip'], domain_id=data['template_id'])
+                template_name = resp['verbose_name']
+            except NotFound:
+                template_name = ''
+
+        return PoolResourcesNames(cluster_name=cluster_name, node_name=node_name,
+                                  datapool_name=datapool_name, template_name=template_name)
+
 
 class VmState(graphene.Enum):
     UNDEFINED = 0
