@@ -2,6 +2,7 @@ from db.db import db
 from vdi.errors import FieldError
 
 
+# determine what fields are requested in graphql request
 def get_selections(info, path=''):
     if isinstance(info, Selections):
         return info.get_path(path)

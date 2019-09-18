@@ -46,6 +46,40 @@ class FetchCluster(UrlFetcher):
             raise NotFound("Кластер не найден") from ex
 
 
+class FetchDatapool(UrlFetcher):
+    controller_ip = ''
+    datapool_id = ''
+
+    def __init__(self, controller_ip: str, datapool_id: str):
+        self.controller_ip = controller_ip
+        self.datapool_id = datapool_id
+
+    @cached
+    def url(self):
+        return 'http://{}/api/data-pools/{}/'.format(self.controller_ip, self.datapool_id)
+
+    def on_fetch_failed(self, ex, code):
+        if code == 404:
+            raise NotFound("Датапул не найден") from ex
+
+
+class FetchDomain(UrlFetcher):
+    controller_ip = ''
+    domain_id = ''
+
+    def __init__(self, controller_ip: str, domain_id: str):
+        self.controller_ip = controller_ip
+        self.domain_id = domain_id
+
+    @cached
+    def url(self):
+        return 'http://{}/api/domains/{}/'.format(self.controller_ip, self.domain_id)
+
+    def on_fetch_failed(self, ex, code):
+        if code == 404:
+            raise NotFound("ВМ не найдена") from ex
+
+
 #@dataclass()
 class ListNodes(UrlFetcher):
 
@@ -129,7 +163,6 @@ class ListDatapools(UrlFetcher):
             pools.append(pool)
 
         return pools
-
 
 
 #@dataclass()

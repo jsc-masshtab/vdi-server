@@ -486,8 +486,12 @@ class ControllerType(graphene.ObjectType):
         return obj
 
     async def resolve_is_online(self, _info):
-        await CheckController(controller_ip=self.ip)
-        return True
+        try:
+            await CheckController(controller_ip=self.ip)
+        except:
+            return False
+        else:
+            return True
 
 # remove later
 class TestSubscription(graphene.ObjectType):

@@ -15,7 +15,7 @@ class Pool:
         self.params = params
 
     pool_keys = into_words('id name controller_ip desktop_pool_type '
-                           'deleted datapool_id cluster_id node_id vm_name_template '
+                           'deleted datapool_id cluster_id node_id template_id vm_name_template '
                            'initial_size reserve_size total_size')
 
     #FIXME use queue only for client
