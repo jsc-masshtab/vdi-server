@@ -240,4 +240,20 @@ export class PoolsService  {
             }
         })
     }
+
+    public freeVmFromUser(vm_id: number) {
+        return this.service.mutate<any>({
+            mutation: gql`  
+                            mutation FreeVmFromUser($vm_id: ID!) {
+                                freeVmFromUser(vm_id: $vm_id) {
+                                    ok
+                                }
+                            }
+            `,
+            variables: {
+                method: 'POST',
+                vm_id: vm_id
+            }
+        })
+    }
 }

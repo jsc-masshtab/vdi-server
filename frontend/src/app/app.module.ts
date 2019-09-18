@@ -1,3 +1,4 @@
+import { RemoveUserVmComponent } from './polls/pool-details/vm-details-popup/remove-user/remove-user.component';
 import { AddUserVmComponent } from './polls/pool-details/vm-details-popup/add-user/add-user.component';
 import { VmDetalsPopupComponent } from './polls/pool-details/vm-details-popup/vm-details-popup.component';
 import { RemoveUsersPoolComponent } from './polls/remove-users/remove-users.component';
@@ -108,7 +109,8 @@ import { AddUsersPoolComponent } from './polls/add-users/add-users.component';
     AddUsersPoolComponent,
     RemoveUsersPoolComponent,
     VmDetalsPopupComponent,
-    AddUserVmComponent
+    AddUserVmComponent,
+    RemoveUserVmComponent
   ],
   imports: [
     BrowserModule,
@@ -134,7 +136,8 @@ import { AddUsersPoolComponent } from './polls/add-users/add-users.component';
     AddUsersPoolComponent,
     RemoveUsersPoolComponent,
     VmDetalsPopupComponent,
-    AddUserVmComponent
+    AddUserVmComponent,
+    RemoveUserVmComponent
   ],
   providers: 
             [

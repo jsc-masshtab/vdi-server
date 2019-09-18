@@ -105,6 +105,11 @@ export class PoolDetailsComponent implements OnInit {
       property_lv2: 'name'
     },
     {
+      title: 'Пользователь',
+      property: "user",
+      property_lv2: 'username'
+    },
+    {
       title: 'Состояние',
       property: "state"
     }
@@ -119,6 +124,11 @@ export class PoolDetailsComponent implements OnInit {
       property: 'name',
       class: 'name-start',
       icon: 'desktop'
+    },
+    {
+      title: 'Пользователь',
+      property: "user",
+      property_lv2: 'username'
     },
     {
       title: 'Состояние',
@@ -145,7 +155,7 @@ export class PoolDetailsComponent implements OnInit {
   constructor(private activatedRoute: ActivatedRoute,
               private router: Router,
               private service: PoolsService,
-              public dialog: MatDialog){}
+              public dialog: MatDialog) {}
 
   ngOnInit() {
     this.activatedRoute.paramMap.subscribe((param: ParamMap) => {
@@ -230,13 +240,13 @@ export class PoolDetailsComponent implements OnInit {
       data: {
         vm: vm,
         pool_type: this.pool_type,
-        users: this.pool.users,
+        pool_users: this.pool.users,
         pool_id: this.pool_id
       }
     });
   }
 
-  public routeTo(route:string): void {
+  public routeTo(route: string): void {
     if(route === 'info') {
       this.menuActive = 'info';
     }

@@ -15,20 +15,20 @@
         <button (click)="removePool()" *ngIf="menuActive === 'info'" title="Удалить пул" class="btn-control"><fa-icon [icon]="['fas','trash-alt']" size="xs"></fa-icon><span class="name">Удалить</span></button>
 
         <ng-container *ngIf="menuActive === 'vms' && pool_type === 'static'">
-            <button (click)="addVM()" title="Добавить ВМ в пул" class="btn-control"><fa-icon [icon]="['fas','plus-circle']" size="xs"></fa-icon><span class="name">Добавить ВМ</span></button>
-            <button (click)="removeVM()" title="Удалить ВМ из пула" class="btn-control"><fa-icon [icon]="['fas','trash-alt']" size="xs"></fa-icon><span class="name">Удалить ВМ</span></button>
+            <button (click)="addVM()" title="Добавить ВМ в пул" class="btn-control"><fa-icon [icon]="['fas','plus-circle']" size="xs"></fa-icon><span class="name">Добавить</span></button>
+            <button (click)="removeVM()" title="Удалить ВМ из пула" class="btn-control"><fa-icon [icon]="['fas','trash-alt']" size="xs"></fa-icon><span class="name">Удалить</span></button>
         </ng-container>
 
         <ng-container *ngIf="menuActive === 'users'">
-            <button (click)="addUsers()" title="Добавить пользователей" class="btn-control"><fa-icon [icon]="['fas','users']" size="xs"></fa-icon><span class="name">Добавить</span></button>
+            <button (click)="addUsers()" title="Добавить пользователей" class="btn-control"><fa-icon [icon]="['fas','plus-circle']" size="xs"></fa-icon><span class="name">Добавить</span></button>
             <button (click)="removeUsers()" title="Удалить пользователей" class="btn-control"><fa-icon [icon]="['fas','trash-alt']" size="xs"></fa-icon><span class="name">Удалить</span></button>
         </ng-container>
     </div>
 
     <div class="details-row">
         <ul class="details-menu">
-            <li (click)="routeTo('info')" [class.active]="menuActive === 'info'" title="Информация"> <fa-icon [icon]="['fas','chart-bar']"></fa-icon><span class="name">Информация</span></li>
-            <li (click)="routeTo('vms')" [class.active]="menuActive === 'vms'" title="Виртуальные машины"> <fa-icon [icon]="['fas','desktop']"></fa-icon><span class="name">Виртуальные машины</span></li>
+            <li (click)="routeTo('info')" [class.active]="menuActive === 'info'" title="Информация о пуле"> <fa-icon [icon]="['fas','chart-bar']"></fa-icon><span class="name">Информация</span></li>
+            <li (click)="routeTo('vms')" [class.active]="menuActive === 'vms'" title="Виртуальные машины в пуле"> <fa-icon [icon]="['fas','desktop']"></fa-icon><span class="name">Виртуальные машины</span></li>
             <li (click)="routeTo('users')" [class.active]="menuActive === 'users'" title="Пользователи пула"> <fa-icon [icon]="['fas','users']"></fa-icon><span class="name">Пользователи</span></li>
         </ul>
         

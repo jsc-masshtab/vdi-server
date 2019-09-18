@@ -1,7 +1,7 @@
 import { PoolsService } from './../../../pools.service';
 import { WaitService } from './../../../../common/components/wait/wait.service';
 import { Component, Inject } from '@angular/core';
-import { MAT_DIALOG_DATA, MatDialog } from '@angular/material';
+import { MatDialog, MAT_DIALOG_DATA } from '@angular/material';
 
 interface IVmDetails  {
   vm: {
@@ -19,32 +19,26 @@ interface IPoolUser {
 }
 
 @Component({
-  selector: 'vdi-add-user-vm',
-  templateUrl: './add-user.component.html'
+  selector: 'vdi-remove-user-vm',
+  templateUrl: './remove-user.component.html'
 })
 
-export class AddUserVmComponent   {
-
-  private user: string = "";
+export class RemoveUserVmComponent {
 
   constructor(private waitService: WaitService,
               private poolsService: PoolsService,
+              public dialog: MatDialog,
               @Inject(MAT_DIALOG_DATA) public data: IVmDetails,
-              public dialog: MatDialog
             ) {}
 
   public send() {
     this.waitService.setWait(true);
-    this.poolsService.assignVmToUser(this.data.vm.id, this.user).subscribe(() => {
+    this.poolsService.freeVmFromUser(this.data.vm.id).subscribe(() => {
       this.poolsService.getPool(this.data.pool_id, this.data.pool_type).subscribe(() => {
         this.waitService.setWait(false);
       });
       this.dialog.closeAll();
     });
-  }
-
-  public selectUser(value: []) {
-    this.user = value['value'];
   }
 
 }
