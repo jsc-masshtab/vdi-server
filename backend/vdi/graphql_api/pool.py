@@ -94,6 +94,18 @@ class PoolType(graphene.ObjectType):
 
     sql_fields = ['id', 'template_id', 'name', 'controller_ip', 'desktop_pool_type']
 
+    async def resolve_name(self, info):
+        if self.name:
+            return self.name
+        # get from db if the name is unknown
+        async with db.connect() as conn:
+            qu = 'SELECT name FROM pool WHERE id = $1', self.id
+            pool_name_data = await conn.fetch(*qu)
+        if not pool_name_data:
+            return None
+        [(self.name,)] = pool_name_data
+        return self.name
+
     def resolve_state(self, info):
         if self.id not in Pool.instances:
             state = PoolState(running=RunningState.STOPPED, pool=self)
@@ -224,7 +236,7 @@ class VmState(graphene.Enum):
     SUSPENDED = 2
     ON = 3
 
-
+# WHY IS IT IN THIS FILE
 class VmType(graphene.ObjectType):
     name = graphene.String()
     id = graphene.String()
@@ -242,7 +254,7 @@ class VmType(graphene.ObjectType):
     def controller_ip(self):
         return self.pool.controller.ip
 
-    async def get_sql_data(self):
+    async def get_sql_data(self): # seems unused. marked for deletion
         sql_fields = {'template', 'user'}
         sql_fields = set(self.selections) & sql_fields
         sql_selections = [
@@ -299,29 +311,46 @@ class VmType(graphene.ObjectType):
 
     async def resolve_template(self, info):
         if self.template:
-            # TODO make sure all fields are available
             return self.template
-        if self.sql_data is Unset:
-            self.sql_data = await self.get_sql_data()
-        if not self.sql_data:
-            return None
-        template_id = self.sql_data['template_id']
-        if template_id is None:
-            return None
-            # if self.veil_info is Unset:
-            #     self.veil_info = await self.get_veil_info()
-            #TODO
-        if get_selections(info) == ['id']:
-            return TemplateType(id=template_id)
-        from vdi.tasks.vm import GetDomainInfo
-        template = await GetDomainInfo(controller_ip=self.controller_ip, domain_id=template_id)
-        return TemplateType(id=template_id, veil_info=template, name=template['verbose_name'])
 
-    async def resolve_state(self, info):
+        # det data from db
+        async with db.connect() as conn:
+            sql_request = """SELECT * FROM vm WHERE id = $1""", self.id
+            vm_data = await conn.fetch(*sql_request)
+        if not vm_data:
+            return None
+
+        [vm_data] = vm_data
+        template_id = vm_data['template_id']
+
+        # get data from veil
+        from vdi.tasks.vm import GetDomainInfo
+        try:
+            template_data = await GetDomainInfo(controller_ip=self.controller_ip, domain_id=template_id)
+            template_name = template_data['verbose_name']
+        except NotFound:
+            template_data = None
+            template_name = ''
+
+        return TemplateType(id=template_id, veil_info=template_data, name=template_name)
+
+    async def resolve_state(self, _info):
         if self.veil_info is Unset:
             self.veil_info = await self.get_veil_info()
         val = self.veil_info['user_power_state']
         return VmState.get(val)
+
+    async def resolve_pool(self, _info):
+        # get pool id from db
+        async with db.connect() as conn:
+            sql_request = """SELECT pool_id FROM vm WHERE id = $1""", self.id
+            pool_id_data = await conn.fetch(*sql_request)
+
+        if not pool_id_data:
+            return None
+        [(pool_id,)] = pool_id_data
+
+        return PoolType(id=pool_id)
 
 
 class PoolSettingsFields(graphene.AbstractType):
