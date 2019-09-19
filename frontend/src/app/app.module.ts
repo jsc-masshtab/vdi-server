@@ -1,3 +1,6 @@
+import { RemoveUserVmComponent } from './polls/pool-details/vm-details-popup/remove-user/remove-user.component';
+import { AddUserVmComponent } from './polls/pool-details/vm-details-popup/add-user/add-user.component';
+import { VmDetalsPopupComponent } from './polls/pool-details/vm-details-popup/vm-details-popup.component';
 import { RemoveUsersPoolComponent } from './polls/remove-users/remove-users.component';
 import { RemoveVMStaticPoolComponent } from './polls/remove-vms/remove-vms.component';
 import { WaitService } from './common/components/wait/wait.service';
@@ -104,7 +107,10 @@ import { AddUsersPoolComponent } from './polls/add-users/add-users.component';
     WaitComponent,
     RemoveVMStaticPoolComponent,
     AddUsersPoolComponent,
-    RemoveUsersPoolComponent
+    RemoveUsersPoolComponent,
+    VmDetalsPopupComponent,
+    AddUserVmComponent,
+    RemoveUserVmComponent
   ],
   imports: [
     BrowserModule,
@@ -128,7 +134,10 @@ import { AddUsersPoolComponent } from './polls/add-users/add-users.component';
     AddVMStaticPoolComponent,
     RemoveVMStaticPoolComponent,
     AddUsersPoolComponent,
-    RemoveUsersPoolComponent
+    RemoveUsersPoolComponent,
+    VmDetalsPopupComponent,
+    AddUserVmComponent,
+    RemoveUserVmComponent
   ],
   providers: 
             [

@@ -12,10 +12,10 @@ export class PoolsService  {
 
     constructor(private service: Apollo) {}
 
-    public getAllPools(obs?:{}): Observable<any> {
+    public getAllPools(obs?:boolean): Observable<any> {
         const obs$ = timer(0,60000);
 
-        if(obs && obs['obs']) {
+        if(obs) {
             return  obs$.pipe(switchMap(()=> { return this.service.watchQuery({
                 query:  gql` query allPools {
                                     pools {
@@ -27,6 +27,9 @@ export class PoolsService  {
                                         desktop_pool_type
                                         controller {
                                             ip
+                                        }
+                                        users {
+                                            username
                                         }
                                     }  
                                 }
@@ -47,6 +50,9 @@ export class PoolsService  {
                                         desktop_pool_type
                                         controller {
                                             ip
+                                        }
+                                        users {
+                                            username
                                         }
                                     }  
                                 }
@@ -82,11 +88,15 @@ export class PoolsService  {
                                     name
                                     desktop_pool_type
                                     vms {
+                                        id
                                         name
                                         template {
                                             name
                                         }
                                         state
+                                        user {
+                                            username
+                                        }
                                     }  
                                     controller {
                                         ip
@@ -95,10 +105,15 @@ export class PoolsService  {
                                         initial_size
                                         reserve_size
                                         total_size
-                                        vm_name_template
                                     }
                                     users {
                                         username
+                                    }
+                                    pool_resources_names {
+                                        cluster_name
+                                        node_name
+                                        datapool_name
+                                        template_name
                                     }
                                 }
                             }`,
@@ -119,6 +134,9 @@ export class PoolsService  {
                                         name
                                         state
                                         id
+                                        user {
+                                            username
+                                        }
                                     }  
                                     controller {
                                         ip
@@ -129,6 +147,11 @@ export class PoolsService  {
                                     }
                                     users {
                                         username
+                                    }
+                                    pool_resources_names {
+                                        cluster_name
+                                        node_name
+                                        datapool_name
                                     }
                                 }
                             }`,
@@ -214,6 +237,39 @@ export class PoolsService  {
                 method: 'POST',
                 pool_id: pool_id,
                 vm_ids: vm_ids
+            }
+        })
+    }
+
+    public assignVmToUser(vm_id: number,username: string) {
+        return this.service.mutate<any>({
+            mutation: gql`  
+                            mutation AssignVmToUser($vm_id: ID!,$username: String!) {
+                                assignVmToUser(vm_id: $vm_id,username: $username) {
+                                    ok
+                                }
+                            }
+            `,
+            variables: {
+                method: 'POST',
+                vm_id: vm_id,
+                username: username
+            }
+        })
+    }
+
+    public freeVmFromUser(vm_id: number) {
+        return this.service.mutate<any>({
+            mutation: gql`  
+                            mutation FreeVmFromUser($vm_id: ID!) {
+                                freeVmFromUser(vm_id: $vm_id) {
+                                    ok
+                                }
+                            }
+            `,
+            variables: {
+                method: 'POST',
+                vm_id: vm_id
             }
         })
     }
