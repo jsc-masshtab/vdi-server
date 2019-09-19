@@ -82,6 +82,7 @@ export class PoolsService  {
                                     name
                                     desktop_pool_type
                                     vms {
+                                        id
                                         name
                                         template {
                                             name

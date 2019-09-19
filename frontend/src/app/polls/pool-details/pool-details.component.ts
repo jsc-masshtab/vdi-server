@@ -235,6 +235,7 @@ export class PoolDetailsComponent implements OnInit {
   }
 
   public clickVm(vm) {
+    console.log(vm);
     this.dialog.open(VmDetalsPopupComponent, {
       width: '50%',
       data: {

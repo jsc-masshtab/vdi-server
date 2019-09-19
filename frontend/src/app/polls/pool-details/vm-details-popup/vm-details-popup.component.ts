@@ -5,9 +5,9 @@ import { RemoveUserVmComponent } from './remove-user/remove-user.component';
 
 interface IVmDetails  {
   vm: {
-    id: number
-    name: string
-    state: string
+    id: string;
+    name: string;
+    state: string;
   };
   pool_type: string;
   pool_users: [{[key: string]: IPoolUser }];

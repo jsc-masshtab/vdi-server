@@ -33,6 +33,10 @@ export class AddUserVmComponent   {
               public dialog: MatDialog
             ) {}
 
+  ngOnInit() {
+    console.log(this.data);
+  }
+
   public send() {
     this.waitService.setWait(true);
     this.poolsService.assignVmToUser(this.data.vm.id, this.user).subscribe(() => {
