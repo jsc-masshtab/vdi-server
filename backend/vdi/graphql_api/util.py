@@ -63,6 +63,7 @@ async def check_if_pool_exists(pool_id):
 
 
 # create resource object (NodeType, ClusterType...)
+# fields_map is used to match Vitalya names with veil names
 def make_resource_type(type, data, fields_map=None):
     dic = {}
     for k, v in data.items():

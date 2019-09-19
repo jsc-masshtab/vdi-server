@@ -182,6 +182,7 @@ class Resources:
     cluster = graphene.Field(ClusterType, id=graphene.String())
     datapool = graphene.Field(DatapoolType, id=graphene.String())
     template = graphene.Field(TemplateType, id=graphene.String())
+    vm = graphene.Field(VmType, id=graphene.String())
 
     requests = graphene.List(RequestType, time=graphene.Float())
 
@@ -191,6 +192,28 @@ class Resources:
             sql_query = "SELECT ip FROM controller"
             controllers_ips = await conn.fetch(sql_query)
         return controllers_ips
+
+    @staticmethod
+    async def get_resource(_info, id, resource_type, function_to_get_resource_list, fields_map={}):
+        # get all known controller ips
+        controllers_ips = await Resources.get_all_known_controller_ips()
+
+        # find out on which controller our resource is
+        for controllers_ip in controllers_ips:
+            # try to get list of resources
+            try:
+                resource_list = await function_to_get_resource_list(controller_ip=controllers_ip['ip'])
+            except Exception:
+                continue
+            # find resource data by id
+            try:
+                data = next(data for data in resource_list if data['id'] == id)
+                print('data', data)
+                return make_resource_type(resource_type, data, fields_map)
+            except StopIteration:
+                pass
+        # if we didnt find anything then return None
+        return None
 
     async def resolve_controllers(self, info):
         objects = [
@@ -233,52 +256,21 @@ class Resources:
         return ClusterType(controller=ControllerType(ip=controller_ip), **fields)
 
     async def resolve_datapool(self, _info, id):
-        # get all known controller ips
-        controllers_ips = await Resources.get_all_known_controller_ips()
-
-        # find out on which controller our datapool is
-        for controllers_ip in controllers_ips:
-            # try to get list of datapools
-            try:
-                datapools_list = await ListDatapools(controller_ip=controllers_ip['ip'])
-            except Exception:
-                continue
-            # find datapool by id
-            try:
-                data = next(data for data in datapools_list if data['id'] == id)
-                return make_resource_type(DatapoolType, data)
-            except StopIteration:
-                pass
-        # if we didnt find anything then return None
-        return None
+        datapool = await Resources.get_resource(_info, id, DatapoolType, ListDatapools)
+        return datapool
 
     async def resolve_template(self, _info, id):
-        # get all known controller ips
-        controllers_ips = await Resources.get_all_known_controller_ips()
+        template = await Resources.get_resource(_info, id, TemplateType, ListTemplates, {'verbose_name': 'name'})
+        return template
 
-        # find out on which controller our template is
-        for controllers_ip in controllers_ips:
-            # try to get list of templates
-            try:
-                templates_list = await ListTemplates(controller_ip=controllers_ip['ip'])
-                print('templates_list', templates_list)
-            except Exception:
-                continue
-            # find template by id
-            try:
-                data = next(data for data in templates_list if data['id'] == id)
-                print('data', data)
-                return make_resource_type(TemplateType, data, {'verbose_name': 'name'})
-            except StopIteration:
-                pass
-        # if we didnt find anything then return None
-        return None
+    async def resolve_vm(self, _info, id):
+        vm = await Resources.get_resource(_info, id, VmType, ListVms)
+        return vm
 
     async def resolve_requests(self, info):
         return [
             RequestType(url=None, time=None)
         ]
-
 
 
 class AddController(graphene.Mutation):
