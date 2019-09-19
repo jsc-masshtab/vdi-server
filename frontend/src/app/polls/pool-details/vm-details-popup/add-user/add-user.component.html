@@ -1,0 +1,25 @@
+<div class="form">
+  <div class="form-header">
+    <h1>Назначение пользователя для вм {{data?.vm?.name}}</h1>
+    <button [mat-dialog-close]="true" class="form-close"><fa-icon [icon]="['fas','times-circle']"></fa-icon></button>
+  </div>
+
+  <div class="form-fields">
+    <label class="field">
+      <mat-form-field>
+        <mat-label *ngIf="data?.pool_users?.length">Выберите пользователя</mat-label>
+        <mat-label *ngIf="!data?.pool_users?.length">- нет пользователей -</mat-label>
+        <mat-select (selectionChange)="selectUser($event)">
+          <mat-option *ngFor="let user of data?.pool_users" [value]="user.username">
+            {{user.username}}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+    </label>
+  </div>
+
+  <div class="form-actions">
+    <button (click)="send()" class="form-btn"><fa-icon [icon]="['fas','plus-circle']" size="xs"></fa-icon><span class="action-name">Назначить</span></button>
+  </div>
+
+</div>

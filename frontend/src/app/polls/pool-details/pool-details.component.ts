@@ -1,3 +1,4 @@
+import { VmDetalsPopupComponent } from './vm-details-popup/vm-details-popup.component';
 import { RemoveUsersPoolComponent } from './../remove-users/remove-users.component';
 import { AddUsersPoolComponent } from './../add-users/add-users.component';
 import { RemoveVMStaticPoolComponent } from './../remove-vms/remove-vms.component';
@@ -38,6 +39,21 @@ export class PoolDetailsComponent implements OnInit {
       property_lv2: 'ip'
     },
     {
+      title: 'Кластер',
+      property: 'pool_resources_names',
+      property_lv2: 'cluster_name'
+    },
+    {
+      title: 'Сервер',
+      property: 'pool_resources_names',
+      property_lv2: 'node_name'
+    },
+    {
+      title: 'Пул данных',
+      property: 'pool_resources_names',
+      property_lv2: 'datapool_name'
+    },
+    {
       title: 'Всего ВМ',
       property_array: 'vms'
     },
@@ -60,6 +76,21 @@ export class PoolDetailsComponent implements OnInit {
       title: 'Контроллер',
       property: 'controller',
       property_lv2: 'ip'
+    },
+    {
+      title: 'Кластер',
+      property: 'pool_resources_names',
+      property_lv2: 'cluster_name'
+    },
+    {
+      title: 'Сервер',
+      property: 'pool_resources_names',
+      property_lv2: 'node_name'
+    },
+    {
+      title: 'Пул данных',
+      property: 'pool_resources_names',
+      property_lv2: 'datapool_name'
     },
     {
       title: 'Начальное количество ВМ',    // всего вм
@@ -104,6 +135,11 @@ export class PoolDetailsComponent implements OnInit {
       property_lv2: 'name'
     },
     {
+      title: 'Пользователь',
+      property: "user",
+      property_lv2: 'username'
+    },
+    {
       title: 'Состояние',
       property: "state"
     }
@@ -118,6 +154,11 @@ export class PoolDetailsComponent implements OnInit {
       property: 'name',
       class: 'name-start',
       icon: 'desktop'
+    },
+    {
+      title: 'Пользователь',
+      property: "user",
+      property_lv2: 'username'
     },
     {
       title: 'Состояние',
@@ -144,7 +185,7 @@ export class PoolDetailsComponent implements OnInit {
   constructor(private activatedRoute: ActivatedRoute,
               private router: Router,
               private service: PoolsService,
-              public dialog: MatDialog){}
+              public dialog: MatDialog) {}
 
   ngOnInit() {
     this.activatedRoute.paramMap.subscribe((param: ParamMap) => {
@@ -223,7 +264,19 @@ export class PoolDetailsComponent implements OnInit {
     });
   }
 
-  public routeTo(route:string): void {
+  public clickVm(vm) {
+    this.dialog.open(VmDetalsPopupComponent, {
+      width: '50%',
+      data: {
+        vm: vm,
+        pool_type: this.pool_type,
+        pool_users: this.pool.users,
+        pool_id: this.pool_id
+      }
+    });
+  }
+
+  public routeTo(route: string): void {
     if(route === 'info') {
       this.menuActive = 'info';
     }

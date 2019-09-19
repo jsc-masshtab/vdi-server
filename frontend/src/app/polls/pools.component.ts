@@ -44,6 +44,11 @@ export class PoolsComponent implements OnInit {
       property_array: 'vms'
     },
     {
+      title: 'Пользователи',
+      property_array_prop: 'users',
+      property_array_prop_lv2: 'username'
+    },
+    {
       title: 'Тип',
       property: 'desktop_pool_type'
     }
@@ -64,7 +69,7 @@ export class PoolsComponent implements OnInit {
 	}
 
   ngOnInit() {
-    this.getAllPools({spin:true});
+    this.getAllPools({spin:true,obs:true});
   }
 
   public openCreatePool() {
@@ -73,15 +78,16 @@ export class PoolsComponent implements OnInit {
     });
   }
 
-  public getAllPools(spin?:{}) {
-    if(spin && spin['spin']) {
+  public getAllPools(param?:{}) {
+    if(param && param['spin']) {
       this.waitService.setWait(true);
     }
-    this.getPoolsSub = this.service.getAllPools({obs:true})
+    this.getPoolsSub = this.service.getAllPools(param['obs'])
       .subscribe( (data) => {
         this.pools = data;
-        if(spin && spin['spin']) {
+        if(param && param['spin']) {
           this.waitService.setWait(false);
+          param = {};
         }
       });
   }

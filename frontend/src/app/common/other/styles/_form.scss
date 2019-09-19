@@ -6,7 +6,6 @@
     font-size: 13px;
     color:rgba(0, 0, 0, 0.7);
 
-
     .form-header {
         height: 30px;
         background: #081c2d;
@@ -18,30 +17,30 @@
         justify-content: space-between;
         padding-left: 10px;
         padding-right: 4px;
+    }
 
-        button.form-close {
-            display: flex;
-            width: 25px;
-            height: 20px;
-            justify-content: center;
-            align-items: center;
-            cursor: pointer;
-            background: transparent;
-            border: none;
-            outline: none;
+    button.form-close {
+        display: flex;
+        width: 25px;
+        height: 20px;
+        justify-content: center;
+        align-items: center;
+        cursor: pointer;
+        background: transparent;
+        border: none;
+        outline: none;
 
-            > fa-icon {
-                color: #FFF;
+        > fa-icon {
+            color: #FFF;
 
-                &:hover {
-                    color: rgba(255,255,255,0.5);
-                    transition: color 200ms;
-                }
+            &:hover {
+                color: rgba(255,255,255,0.5);
+                transition: color 200ms;
             }
+        }
 
-            &:active {
-                padding: 0px; // против смещения текста в firefox
-            }
+        &:active {
+            padding: 0px; // против смещения текста в firefox
         }
     }
 
