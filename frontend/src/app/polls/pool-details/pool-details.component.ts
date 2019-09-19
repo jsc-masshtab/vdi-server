@@ -39,6 +39,21 @@ export class PoolDetailsComponent implements OnInit {
       property_lv2: 'ip'
     },
     {
+      title: 'Кластер',
+      property: 'pool_resources_names',
+      property_lv2: 'cluster_name'
+    },
+    {
+      title: 'Сервер',
+      property: 'pool_resources_names',
+      property_lv2: 'node_name'
+    },
+    {
+      title: 'Пул данных',
+      property: 'pool_resources_names',
+      property_lv2: 'datapool_name'
+    },
+    {
       title: 'Всего ВМ',
       property_array: 'vms'
     },
@@ -61,6 +76,21 @@ export class PoolDetailsComponent implements OnInit {
       title: 'Контроллер',
       property: 'controller',
       property_lv2: 'ip'
+    },
+    {
+      title: 'Кластер',
+      property: 'pool_resources_names',
+      property_lv2: 'cluster_name'
+    },
+    {
+      title: 'Сервер',
+      property: 'pool_resources_names',
+      property_lv2: 'node_name'
+    },
+    {
+      title: 'Пул данных',
+      property: 'pool_resources_names',
+      property_lv2: 'datapool_name'
     },
     {
       title: 'Начальное количество ВМ',    // всего вм
@@ -235,7 +265,6 @@ export class PoolDetailsComponent implements OnInit {
   }
 
   public clickVm(vm) {
-    console.log(vm);
     this.dialog.open(VmDetalsPopupComponent, {
       width: '50%',
       data: {

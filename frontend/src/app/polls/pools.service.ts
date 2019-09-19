@@ -28,6 +28,9 @@ export class PoolsService  {
                                         controller {
                                             ip
                                         }
+                                        users {
+                                            username
+                                        }
                                     }  
                                 }
                         `,
@@ -47,6 +50,9 @@ export class PoolsService  {
                                         desktop_pool_type
                                         controller {
                                             ip
+                                        }
+                                        users {
+                                            username
                                         }
                                     }  
                                 }
@@ -99,10 +105,15 @@ export class PoolsService  {
                                         initial_size
                                         reserve_size
                                         total_size
-                                        vm_name_template
                                     }
                                     users {
                                         username
+                                    }
+                                    pool_resources_names {
+                                        cluster_name
+                                        node_name
+                                        datapool_name
+                                        template_name
                                     }
                                 }
                             }`,
@@ -136,6 +147,11 @@ export class PoolsService  {
                                     }
                                     users {
                                         username
+                                    }
+                                    pool_resources_names {
+                                        cluster_name
+                                        node_name
+                                        datapool_name
                                     }
                                 }
                             }`,

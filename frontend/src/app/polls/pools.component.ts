@@ -44,6 +44,11 @@ export class PoolsComponent implements OnInit {
       property_array: 'vms'
     },
     {
+      title: 'Пользователи',
+      property_array_prop: 'users',
+      property_array_prop_lv2: 'username'
+    },
+    {
       title: 'Тип',
       property: 'desktop_pool_type'
     }
