@@ -47,7 +47,6 @@ class Selections(list):
         ]
 
 
-
 def as_list(gen):
     return list(gen())
 

@@ -198,33 +198,37 @@ class PoolType(graphene.ObjectType):
             print('res data', data)
 
         # determine names  (looks like code repeat. maybe refactor)
+        cluster_name = ''
         if 'cluster_name' in list_of_requested_fields:
             try:
                 resp = await FetchCluster(controller_ip=data['controller_ip'], cluster_id=data['cluster_id'])
                 cluster_name = resp['verbose_name']
             except NotFound:
-                cluster_name = ''
+                pass
 
+        node_name = ''
         if 'node_name' in list_of_requested_fields:
             try:
                 resp = await FetchNode(controller_ip=data['controller_ip'], node_id=data['node_id'])
                 node_name = resp['verbose_name']
             except NotFound:
-                node_name = ''
+                pass
 
+        datapool_name = ''
         if 'datapool_name' in list_of_requested_fields:
             try:
                 resp = await FetchDatapool(controller_ip=data['controller_ip'], datapool_id=data['datapool_id'])
                 datapool_name = resp['verbose_name']
             except NotFound:
-                datapool_name = ''
+                pass
 
+        template_name = ''
         if 'template_name' in list_of_requested_fields:
             try:
                 resp = await GetDomainInfo(controller_ip=data['controller_ip'], domain_id=data['template_id'])
                 template_name = resp['verbose_name']
             except NotFound:
-                template_name = ''
+                pass
 
         return PoolResourcesNames(cluster_name=cluster_name, node_name=node_name,
                                   datapool_name=datapool_name, template_name=template_name)
