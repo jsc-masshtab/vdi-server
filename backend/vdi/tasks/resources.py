@@ -63,23 +63,6 @@ class FetchDatapool(UrlFetcher):
             raise NotFound("Датапул не найден") from ex
 
 
-class FetchDomain(UrlFetcher):
-    controller_ip = ''
-    domain_id = ''
-
-    def __init__(self, controller_ip: str, domain_id: str):
-        self.controller_ip = controller_ip
-        self.domain_id = domain_id
-
-    @cached
-    def url(self):
-        return 'http://{}/api/domains/{}/'.format(self.controller_ip, self.domain_id)
-
-    def on_fetch_failed(self, ex, code):
-        if code == 404:
-            raise NotFound("ВМ не найдена") from ex
-
-
 #@dataclass()
 class ListNodes(UrlFetcher):
 
@@ -219,7 +202,6 @@ class DiscoverControllerIp(Task):
         async for controller_ip, ok in wait(**tasks).items():
             if ok:
                 return controller_ip
-
 
 
 #@dataclass()

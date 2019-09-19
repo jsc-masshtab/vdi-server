@@ -9,12 +9,12 @@ from cached_property import cached_property as cached
 from classy_async.classy_async import wait, wait_all
 from vdi.settings import settings as settings_file
 from vdi.tasks import vm
-from vdi.tasks.resources import DiscoverControllerIp, FetchCluster, FetchNode, FetchDatapool, FetchDomain
+from vdi.tasks.resources import DiscoverControllerIp, FetchCluster, FetchNode, FetchDatapool
 from vdi.tasks.thin_client import EnableRemoteAccess
 from vdi.tasks.vm import GetDomainInfo, GetVdisks
 
 from .users import UserType
-from .util import get_selections, check_if_pool_exists
+from .util import get_selections, check_if_pool_exists, make_resource_type
 from db.db import db, fetch
 from ..pool import Pool
 
@@ -221,7 +221,7 @@ class PoolType(graphene.ObjectType):
 
         if 'template_name' in list_of_requested_fields:
             try:
-                resp = await FetchDomain(controller_ip=data['controller_ip'], domain_id=data['template_id'])
+                resp = await GetDomainInfo(controller_ip=data['controller_ip'], domain_id=data['template_id'])
                 template_name = resp['verbose_name']
             except NotFound:
                 template_name = ''
@@ -305,7 +305,7 @@ class VmType(graphene.ObjectType):
         node = await FetchNode(controller_ip=self.controller_ip, node_id=self.node.id)
         from vdi.graphql_api.resources import ControllerType
         controller = ControllerType(ip=self.controller_ip)
-        obj = controller._make_type(NodeType, node)
+        obj = make_resource_type(NodeType, node)
         obj.controller = controller
         return obj
 

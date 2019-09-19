@@ -60,3 +60,16 @@ async def check_if_pool_exists(pool_id):
             raise FieldError(pool_id=['Не найден пул с указанным id'])
         [pool_data] = pool_data
         return dict(pool_data.items())
+
+
+# create resource object (NodeType, ClusterType...)
+def make_resource_type(type, data, fields_map=None):
+    dic = {}
+    for k, v in data.items():
+        if fields_map:
+            k = fields_map.get(k, k)
+        if k in type._meta.fields:
+            dic[k] = v
+    obj = type(**dic)
+    obj.veil_info = data
+    return obj
