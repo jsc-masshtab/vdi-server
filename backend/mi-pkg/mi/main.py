@@ -126,7 +126,6 @@ CREATE TABLE migrations (
             if p.name not in applied
         ]
 
-
     async def do_check(self):
         unapplied = await self.get_unapplied_migrations()
         if not unapplied:
