@@ -38,13 +38,14 @@ import { HttpClientModule } from '@angular/common/http';
 /*  -----------------------------------   icons   --------------------------------------*/
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { library } from '@fortawesome/fontawesome-svg-core';
-import { faDesktop,faDatabase,faBuilding, faLayerGroup,faPlusCircle,faSpinner,faServer,faCog,faChevronUp,faTimesCircle,faFolderOpen,faStar,faMinusCircle, faTv,faSyncAlt,faTrashAlt,faUsers,faMeh,faChartBar, faUser} from '@fortawesome/free-solid-svg-icons';
+import { faDesktop, faDatabase, faBuilding, faLayerGroup, faPlusCircle, faSpinner, faServer, faCog, faChevronUp, faTimesCircle,
+         faFolderOpen, faStar, faMinusCircle, faTv, faSyncAlt, faTrashAlt, faUsers, faMeh,
+         faChartBar, faUser
+        } from '@fortawesome/free-solid-svg-icons';
 /*  -----------------------------------   icons   --------------------------------------*/
 
 
 import { MainMenuComponent } from './main-menu/main-menu.component';
-import { BaSelect } from './common/components/baSelect';
-
 
 import { TableComponentComponent } from './common/components/table-component/table-component.component';
 import { ErrorsComponent } from './common/components/errors/errors.component';
@@ -84,7 +85,6 @@ import { AddUsersPoolComponent } from './polls/add-users/add-users.component';
     TableComponentComponent,
     ErrorsComponent,
     PoolAddComponent,
-    BaSelect,
     FocusMeDirective,
     TableIntoComponent,
     NodesComponent,
@@ -139,34 +139,35 @@ import { AddUsersPoolComponent } from './polls/add-users/add-users.component';
     AddUserVmComponent,
     RemoveUserVmComponent
   ],
-  providers: 
-            [
-              PoolsService,
-              { provide: MAT_DIALOG_DEFAULT_OPTIONS, useValue: { hasBackdrop: true, restoreFocus: true } },
-              {provide: ErrorStateMatcher, useClass:ShowOnDirtyErrorStateMatcher},
-              NodesService,
-              ClustersService,
-              ControllersService,
-              DatapoolsService,
-              TemplatesService,
-              VmsService,
-              UsersService,
-              ErrorsService,
-              WaitService
-            ],
+  providers:
+    [
+      PoolsService,
+      { provide: MAT_DIALOG_DEFAULT_OPTIONS, useValue: { hasBackdrop: true, restoreFocus: true } },
+      { provide: ErrorStateMatcher, useClass: ShowOnDirtyErrorStateMatcher },
+      NodesService,
+      ClustersService,
+      ControllersService,
+      DatapoolsService,
+      TemplatesService,
+      VmsService,
+      UsersService,
+      ErrorsService,
+      WaitService
+    ],
   bootstrap: [AppComponent]
 })
 
 
 export class AppModule {
-  
 
-  constructor( private apollo: Apollo,
-               private httpLink: HttpLink,
-               private errorService: ErrorsService,
-               private waitService: WaitService) {
 
-    library.add(faDesktop,faDatabase,faLayerGroup,faPlusCircle,faMinusCircle,faSpinner,faServer,faCog,faChevronUp,faTimesCircle,faFolderOpen,faStar,faTv,faSyncAlt,faBuilding,faTrashAlt,faUsers,faMeh,faChartBar,faUser); // Неиспользуемые иконки при финальной сборке удаляются
+  constructor(private apollo: Apollo,
+              private httpLink: HttpLink,
+              private errorService: ErrorsService,
+              private waitService: WaitService) {
+
+    library.add(faDesktop, faDatabase, faLayerGroup, faPlusCircle, faMinusCircle, faSpinner, faServer, faCog, faChevronUp, faTimesCircle,
+                faFolderOpen, faStar, faTv, faSyncAlt, faBuilding, faTrashAlt, faUsers, faMeh, faChartBar, faUser);
 
     const uri = environment.url;
     const link = this.httpLink.create({ uri, includeQuery: true, includeExtensions: false });
@@ -174,9 +175,9 @@ export class AppModule {
     const errorLink = onError(({ graphQLErrors, networkError }) => {
       if (graphQLErrors) {
         graphQLErrors.map(({ message, locations, path }) =>
-        console.log(`[GraphQL error]: Message: ${message}, Location: ${locations}, Path: ${path}`,));
+          console.log(`[GraphQL error]: Message: ${message}, Location: ${locations}, Path: ${path}`));
       }
-       
+
       if (networkError) {
         this.errorService.setError(networkError['error']['errors']);
         this.waitService.setWait(false);
@@ -185,7 +186,7 @@ export class AppModule {
 
     this.apollo.create({
       link: errorLink.concat(link),
-      cache: new InMemoryCache({ addTypename: false, dataIdFromObject: object =>  object.id }),
+      cache: new InMemoryCache({ addTypename: false, dataIdFromObject: object => object.id }),
       defaultOptions: {
         watchQuery: {
           fetchPolicy: 'network-only', // обойдет кеш и напрямую отправит запрос на сервер.

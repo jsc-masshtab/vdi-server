@@ -2,7 +2,7 @@ import { PoolsService } from '../pools.service';
 import { UsersService } from '../../settings/users/users.service';
 import { WaitService } from '../../common/components/wait/wait.service';
 import { MatDialogRef } from '@angular/material';
-import { Component,Inject } from '@angular/core';
+import { Component, Inject, OnInit } from '@angular/core';
 import {MAT_DIALOG_DATA} from '@angular/material';
 import { map } from 'rxjs/operators';
 
@@ -12,9 +12,9 @@ import { map } from 'rxjs/operators';
   templateUrl: './remove-users.component.html'
 })
 
-export class RemoveUsersPoolComponent  {
+export class RemoveUsersPoolComponent  implements OnInit {
 
-  public pendingUsers:boolean = false;
+  public pendingUsers: boolean = false;
   public users: [] = [];
   private id_users: [] = [];
 
@@ -28,7 +28,7 @@ export class RemoveUsersPoolComponent  {
   ngOnInit() {
     this.getUsersToPool();
   }
- 
+
   public send() {
     this.waitService.setWait(true);
     this.usersService.removeUserEntitlementsFromPool(this.data.pool_id,this.id_users).subscribe(() => {
@@ -46,13 +46,13 @@ export class RemoveUsersPoolComponent  {
       this.users =  data;
       this.pendingUsers = false;
     },
-    (error) => {
+    () => {
       this.users = [];
       this.pendingUsers = false;
     });
   }
 
-  public selectUser(value:[]) {
+  public selectUser(value: []) {
     this.id_users = value['value'];
   }
 

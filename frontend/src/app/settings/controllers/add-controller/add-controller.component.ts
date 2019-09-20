@@ -17,12 +17,12 @@ export class AddControllerComponent {
 
   constructor(private service: ControllersService,
               private waitService: WaitService,
-              private dialogRef: MatDialogRef<AddControllerComponent>) {}
+              private dialogRef: MatDialogRef<AddControllerComponent>) { }
 
 
   public send() {
     this.waitService.setWait(true);
-    this.service.addController(this.controller,this.description).subscribe((res) => {
+    this.service.addController(this.controller, this.description).subscribe(() => {
       this.service.getAllControllers().valueChanges.subscribe(() => {
         this.waitService.setWait(false);
       });

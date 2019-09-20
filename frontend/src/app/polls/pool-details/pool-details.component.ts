@@ -202,7 +202,7 @@ export class PoolDetailsComponent implements OnInit {
         this.pool = data;
         this.host = true;
       },
-      (error)=> {
+      ()=> {
         this.host = true;
       });
   }

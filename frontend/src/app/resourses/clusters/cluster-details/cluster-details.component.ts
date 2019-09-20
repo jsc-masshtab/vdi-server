@@ -5,7 +5,7 @@ import { ActivatedRoute, ParamMap } from '@angular/router';
 import { Router } from '@angular/router';
 
 interface type_cluster {
-  [key: string] : any
+  [key: string]: any
 }
 
 
@@ -20,7 +20,7 @@ export class ClusterDetailsComponent implements OnInit {
 
   public cluster: type_cluster = {};
   public templates: [] = [];
-  public collection:any[] = [
+  public collection: any[] = [
     {
       title: 'Название',
       property: 'verbose_name',
@@ -152,13 +152,13 @@ export class ClusterDetailsComponent implements OnInit {
       property_lv2: 'name'
     }
   ];
-  public cluster_id:string;
-  public menuActive:string = 'info';
+  public cluster_id: string;
+  public menuActive: string = 'info';
   public host: boolean = false;
 
   constructor(private activatedRoute: ActivatedRoute,
               private service: ClustersService,
-              private router: Router){}
+              private router: Router) { }
 
   ngOnInit() {
     this.activatedRoute.paramMap.subscribe((param: ParamMap) => {
@@ -170,38 +170,38 @@ export class ClusterDetailsComponent implements OnInit {
   public getCluster() {
     this.host = false;
     this.service.getCluster(this.cluster_id).valueChanges.pipe(map(data => data.data.cluster))
-      .subscribe( (data) => {
+      .subscribe((data) => {
         this.cluster = data;
         this.templates = data.templates.map((item) => JSON.parse(item.info));
         this.host = true;
       },
-      (error) => {
-        this.host = true;
-      });
+        () => {
+          this.host = true;
+        });
   }
 
   public close() {
     this.router.navigate(['resourses/clusters']);
   }
 
-  public routeTo(route:string): void {
-    if(route === 'info') {
+  public routeTo(route: string): void {
+    if (route === 'info') {
       this.menuActive = 'info';
     }
 
-    if(route === 'servers') {
+    if (route === 'servers') {
       this.menuActive = 'servers';
     }
 
-    if(route === 'datapools') {
+    if (route === 'datapools') {
       this.menuActive = 'datapools';
     }
 
-    if(route === 'templates') {
+    if (route === 'templates') {
       this.menuActive = 'templates';
     }
 
-    if(route === 'vms') {
+    if (route === 'vms') {
       this.menuActive = 'vms';
     }
   }

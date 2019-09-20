@@ -1,4 +1,4 @@
-/*{
+{
   "extends": "../tslint.json",
   "rules": {
     "directive-selector": [
@@ -10,7 +10,6 @@
       true,
       "element",
       "kebab-case"
-    ],
-    "interface-over-type-literal": true
+    ]
   }
-}*/
+}

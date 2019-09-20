@@ -19,6 +19,14 @@
       "es2017",
       "dom",
       "esnext.asynciterable"
-    ]
+    ],
+     /* Additional Checks */
+     "noUnusedLocals": true,
+     /* Report errors on unused locals. */
+     "noUnusedParameters": true,
+     /* Report errors on unused parameters. */
+     "noFallthroughCasesInSwitch": true
+     /* Report errors for fallthrough cases in switch statement. */,
+     "alwaysStrict": true
   }
 }

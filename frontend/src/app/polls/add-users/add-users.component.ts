@@ -12,18 +12,18 @@ import { map } from 'rxjs/operators';
   templateUrl: './add-users.component.html'
 })
 
-export class AddUsersPoolComponent  implements OnInit {
+export class AddUsersPoolComponent implements OnInit {
 
   public pendingUsers: boolean = false;
   public users: [] = [];
   private id_users: [] = [];
 
   constructor(private waitService: WaitService,
-              private usersService: UsersService,
-              private poolsService: PoolsService,
-              private dialogRef: MatDialogRef<AddUsersPoolComponent>,
-              @Inject(MAT_DIALOG_DATA) public data: any
-             ) {}
+    private usersService: UsersService,
+    private poolsService: PoolsService,
+    private dialogRef: MatDialogRef<AddUsersPoolComponent>,
+    @Inject(MAT_DIALOG_DATA) public data: any
+  ) { }
 
   ngOnInit() {
     this.getUsers();
@@ -42,17 +42,17 @@ export class AddUsersPoolComponent  implements OnInit {
   private getUsers() {
     this.pendingUsers = true;
     this.usersService.getAllUsersNoEntitleToPool(this.data.pool_id).valueChanges.pipe(map(data => data.data.pool.users))
-    .subscribe( (data) => {
-      this.users =  data;
-      this.pendingUsers = false;
-    },
-    (error) => {
-      this.users = [];
-      this.pendingUsers = false;
-    });
+      .subscribe((data) => {
+        this.users = data;
+        this.pendingUsers = false;
+      },
+        () => {
+          this.users = [];
+          this.pendingUsers = false;
+        });
   }
 
-  public selectUser(value:[]) {
+  public selectUser(value: []) {
     this.id_users = value['value'];
   }
 

@@ -14,7 +14,7 @@ export class RemoveControllerComponent implements OnInit {
 
   public controllers: [];
   public pendingControllers: boolean = false;
-  private deleteController:string;
+  private deleteController: string;
 
   constructor(private controllerService: ControllersService,
               private waitService: WaitService,
@@ -31,7 +31,7 @@ export class RemoveControllerComponent implements OnInit {
         this.waitService.setWait(false);
       });
       this.dialogRef.close();
-    },(error) => {
+    },() => {
       this.dialogRef.close();
     });
   }
@@ -43,7 +43,7 @@ export class RemoveControllerComponent implements OnInit {
         this.controllers = data;
         this.pendingControllers = false;
       },
-      (error) => {
+      () => {
         this.pendingControllers = false;
         this.controllers = [];
       });

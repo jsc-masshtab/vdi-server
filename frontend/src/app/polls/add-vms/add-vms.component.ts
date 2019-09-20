@@ -3,7 +3,7 @@ import { VmsService } from './../../resourses/vms/vms.service';
 import { PoolsService } from '../pools.service';
 import { MatDialogRef } from '@angular/material';
 import { Component, Inject } from '@angular/core';
-import {MAT_DIALOG_DATA} from '@angular/material';
+import { MAT_DIALOG_DATA } from '@angular/material';
 import { map } from 'rxjs/operators';
 
 
@@ -12,26 +12,26 @@ import { map } from 'rxjs/operators';
   templateUrl: './add-vms.component.html'
 })
 
-export class AddVMStaticPoolComponent  {
+export class AddVMStaticPoolComponent {
 
-  public pendingVms:boolean = false;
+  public pendingVms: boolean = false;
   public vms: [] = [];
   private id_vms: [] = [];
 
   constructor(private poolsService: PoolsService,
-              private vmsService: VmsService,
-              private waitService: WaitService,
-              private dialogRef: MatDialogRef<AddVMStaticPoolComponent>,
-              @Inject(MAT_DIALOG_DATA) public data: any) {}
+    private vmsService: VmsService,
+    private waitService: WaitService,
+    private dialogRef: MatDialogRef<AddVMStaticPoolComponent>,
+    @Inject(MAT_DIALOG_DATA) public data: any) { }
 
   ngOnInit() {
     this.getVms();
   }
- 
+
   public send() {
     this.waitService.setWait(true);
-    this.poolsService.addVMStaticPool(this.data.pool_id,this.id_vms).subscribe(() => {
-      this.poolsService.getPool(this.data.pool_id,this.data.pool_type).subscribe(() => {
+    this.poolsService.addVMStaticPool(this.data.pool_id, this.id_vms).subscribe(() => {
+      this.poolsService.getPool(this.data.pool_id, this.data.pool_type).subscribe(() => {
         this.waitService.setWait(false);
       });
       this.dialogRef.close();
@@ -41,18 +41,18 @@ export class AddVMStaticPoolComponent  {
 
   private getVms() {
     this.pendingVms = true;
-    this.vmsService.getAllVms(this.data.id_cluster,this.data.id_node).valueChanges.pipe(map(data => data.data.list_of_vms))
-    .subscribe( (data) => {
-      this.vms =  data;
-      this.pendingVms = false;
-    },
-    (error)=> {
-      this.vms = [];
-      this.pendingVms = false;
-    });
+    this.vmsService.getAllVms(this.data.id_cluster, this.data.id_node).valueChanges.pipe(map(data => data.data.list_of_vms))
+      .subscribe((data) => {
+        this.vms = data;
+        this.pendingVms = false;
+      },
+        () => {
+          this.vms = [];
+          this.pendingVms = false;
+        });
   }
 
-  public selectVm(value:[]) {
+  public selectVm(value: []) {
     this.id_vms = value['value'];
   }
 

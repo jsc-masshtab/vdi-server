@@ -13,7 +13,6 @@ import {MAT_DIALOG_DATA} from '@angular/material';
 
 export class RemovePoolComponent  {
 
-
   constructor(private poolsService: PoolsService,
               private waitService: WaitService,
               private dialogRef: MatDialogRef<RemovePoolComponent>,
@@ -22,7 +21,7 @@ export class RemovePoolComponent  {
 
   public send() {
     this.waitService.setWait(true);
-    this.poolsService.removePool(this.data.pool_id).subscribe((res) => {
+    this.poolsService.removePool(this.data.pool_id).subscribe(() => {
       setTimeout(() => {
         this.router.navigate([`pools`]);
         this.poolsService.getAllPools().subscribe(() => {

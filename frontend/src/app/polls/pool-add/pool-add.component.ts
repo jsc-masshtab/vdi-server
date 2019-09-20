@@ -145,7 +145,7 @@ export class PoolAddComponent implements OnInit {
     this.controllersService.getAllControllers().valueChanges.pipe(map(data => data.data.controllers)).subscribe((data) => {
       this.controllers = data;
       this.pending['controllers'] = false;
-    },(error) => {
+    },() => {
       this.pending['controllers'] = false;
     });
   }
@@ -161,7 +161,7 @@ export class PoolAddComponent implements OnInit {
         }
       });
       this.pending['templates'] = false;
-    },(error) => {
+    },() => {
       this.pending['templates'] = false;
     });
   }
@@ -177,7 +177,7 @@ export class PoolAddComponent implements OnInit {
         }
         this.pending['clusters'] = false;
       },
-      (error) => {
+      () => {
         this.pending['clusters'] = false;
         this.clusters = [];
     });
@@ -190,7 +190,7 @@ export class PoolAddComponent implements OnInit {
         this.nodes = this.parseEntity(data,'nodes');
         this.pending['nodes'] = false;
       },
-      (error) => {
+      () => {
         this.nodes = [];
         this.pending['nodes'] = false;
       });
@@ -203,7 +203,7 @@ export class PoolAddComponent implements OnInit {
       this.datapools = this.parseEntity(data,'datapools');
       this.pending['datapools'] = false;
     },
-    (error) => {
+    () => {
       this.pending['datapools'] = false;
       this.datapools = [];
     });
@@ -216,7 +216,7 @@ export class PoolAddComponent implements OnInit {
       this.vms =  data;
       this.pending['vms'] = false;
     },
-    (error)=> {
+    ()=> {
       this.vms = [];
       this.pending['vms'] = false;
     });
@@ -475,7 +475,7 @@ export class PoolAddComponent implements OnInit {
                                 value.reserve_size,
                                 value.total_size)
             .subscribe(() => { 
-              this.poolsService.getAllPools().subscribe(res => {
+              this.poolsService.getAllPools().subscribe(() => {
                 this.waitService.setWait(false);
               });
               this.dialogRef.close();
@@ -491,7 +491,7 @@ export class PoolAddComponent implements OnInit {
                                 value.datapool_id,
                                 value.vm_ids_list)
             .subscribe(() => { 
-              this.poolsService.getAllPools().subscribe(res => {
+              this.poolsService.getAllPools().subscribe(() => {
                 this.waitService.setWait(false);
               });
               this.dialogRef.close();

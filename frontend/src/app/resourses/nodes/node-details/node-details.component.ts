@@ -5,7 +5,7 @@ import { ActivatedRoute, ParamMap } from '@angular/router';
 import { Router } from '@angular/router';
 
 interface type_node {
-  [key: string] : any
+  [key: string]: any
 }
 
 
@@ -28,8 +28,8 @@ export class NodeDetailsComponent implements OnInit {
     },
     {
       title: 'Кластер',
-      property: "cluster",
-      property_lv2: "verbose_name"
+      property: 'cluster',
+      property_lv2: 'verbose_name'
     },
     {
       title: 'IP-адрес',
@@ -49,15 +49,15 @@ export class NodeDetailsComponent implements OnInit {
     },
     {
       title: 'Пулы данных',
-      property_array: "datapools"
+      property_array: 'datapools'
     },
     {
       title: 'Шаблоны ВМ',
-      property_array: "templates"
+      property_array: 'templates'
     },
     {
       title: 'ВМ',
-      property_array: "vms"
+      property_array: 'vms'
     }
   ];
   public collection_datapools = [
@@ -68,7 +68,7 @@ export class NodeDetailsComponent implements OnInit {
     },
     {
       title: 'Тип',
-      property: "type"
+      property: 'type'
     },
     {
       title: 'Диски',
@@ -134,14 +134,14 @@ export class NodeDetailsComponent implements OnInit {
       property_lv2: 'name'
     }
   ];
-  public node_id:string;
-  public menuActive:string = 'info';
+  public node_id: string;
+  public menuActive: string = 'info';
 
   public host: boolean = false;
 
   constructor(private activatedRoute: ActivatedRoute,
               private service: NodesService,
-              private router: Router){}
+              private router: Router) { }
 
   ngOnInit() {
     this.activatedRoute.paramMap.subscribe((param: ParamMap) => {
@@ -153,30 +153,30 @@ export class NodeDetailsComponent implements OnInit {
   public getNode() {
     this.host = false;
     this.service.getNode(this.node_id).valueChanges.pipe(map(data => data.data.node))
-      .subscribe( (data) => {
+      .subscribe((data) => {
         this.node = data;
         this.templates = data.templates.map((item) => JSON.parse(item.info));
         this.host = true;
       },
-      (error) => {
-        this.host = true;
-      });
+        () => {
+          this.host = true;
+        });
   }
 
-  public routeTo(route:string): void {
-    if(route === 'info') {
+  public routeTo(route: string): void {
+    if (route === 'info') {
       this.menuActive = 'info';
     }
 
-    if(route === 'datapools') {
+    if (route === 'datapools') {
       this.menuActive = 'datapools';
     }
 
-    if(route === 'templates') {
+    if (route === 'templates') {
       this.menuActive = 'templates';
     }
 
-    if(route === 'vms') {
+    if (route === 'vms') {
       this.menuActive = 'vms';
     }
   }
