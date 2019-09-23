@@ -9,7 +9,7 @@ from uvicorn import Server, Config
 
 from vdi.settings import settings
 
-from vdi.resources_observer.resources_observer import ResourcesObserver
+from vdi.resources_monitoring.resources_monitor import ResourcesMonitor
 
 
 class Vdi:
@@ -36,9 +36,9 @@ class Vdi:
     async def co(self):
         loop = asyncio.get_event_loop()
 
-        # start veil resources observer
-        resources_observer = ResourcesObserver()
-        resources_observer_task = loop.create_task(resources_observer.start('192.168.7.250'))
+        # start veil resources observer (Надо еще учесть что контроллеров ожет былть несколько!)
+        veil_resources_monitor = ResourcesMonitor()
+        veil_resources_monitor_task = loop.create_task(veil_resources_monitor.start('192.168.7.250'))
 
         # start authorization server
         sanic_task = self.get_sanic_task()
@@ -46,12 +46,12 @@ class Vdi:
         # start VDI server
         starlette_task = loop.create_task(self.starlette_co())
         try:
-            # Висим на таске стартела
+            # wait on starlette task (vdi server)
             await starlette_task
         finally:
-            # когда таск старлетта завершается завершаем таски сервера авторизации и мониторинга ресурсов
-            await resources_observer.stop()
-            await self.cancel_task(resources_observer_task)
+            # finish other tasks
+            await veil_resources_monitor.stop()
+            await self.cancel_task(veil_resources_monitor_task)
             await self.cancel_task(sanic_task)
 
     async def cancel_task(self, task):

@@ -172,11 +172,11 @@ async def auth(request):
 @app.websocket_route('/ws/client/vdi_server_check')
 async def vdi_online_ws_endpoint(websocket):
 
+    WS_TIMEOUT = 1
     await websocket.accept()
     try:
         while True:
             await websocket.send_bytes(b"1")
-            ws_timeout = 1
-            await asyncio.sleep(ws_timeout)
+            await asyncio.sleep(WS_TIMEOUT)
     except WsConnectionClosed:
         pass
