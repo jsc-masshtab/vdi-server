@@ -1,4 +1,4 @@
-from vdi.graphql_api.subscriptions_handler import SubscriptionHandler
+#from vdi.graphql_api.subscriptions_handler import SubscriptionHandler
 
 from .app import app
 
@@ -13,6 +13,9 @@ from graphql.execution.executors.asyncio import AsyncioExecutor
 from vdi.errors import BackendError
 from vdi.log import RequestsLog
 from vdi.application import Request
+
+from vdi.resources_monitoring.subscriptions_handler import SubscriptionHandler
+from vdi.resources_monitoring.resources_monitor import veil_resources_monitor
 
 def get_from_chain(ex, kind, limit=5):
     """
@@ -122,6 +125,17 @@ app.add_route('/admin', GraphQLApp(schema, executor_class=AsyncioExecutor))
 
 
 # subscriptions
-# @app.websocket_route('/subscriptions')
-# async def subscriptions_ws_endpoint(websocket):
-#     await SubscriptionHandler.handle(websocket, schema)
+@app.websocket_route('/subscriptions')
+async def subscriptions_ws_endpoint(websocket):
+    subscription_handler = SubscriptionHandler()
+    subscription_handler.start()
+
+    veil_resources_monitor.subscribe(subscription_handler)
+
+    try:
+        await subscription_handler.handle(websocket)
+    except:
+        pass
+
+    await subscription_handler.stop()
+    veil_resources_monitor.unsubscribe(subscription_handler)
