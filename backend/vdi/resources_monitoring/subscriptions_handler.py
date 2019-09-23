@@ -1,5 +1,6 @@
 from websockets.exceptions import ConnectionClosed as WsConnectionClosed
 import asyncio
+import json
 
 from .resources_monitoring_data import ALLOWED_SUBSCRIPTIONS_LIST, SubscriptionCmd
 
@@ -16,23 +17,48 @@ class SubscriptionHandler:
     _websocket = None
     _subscriptions = []
 
-    _message_queue = asyncio.Queue(100)
+    _message_queue = asyncio.Queue(100)  # 100 - max queue size
     _send_messages_flag = True
     _send_messages_task = None
 
     # PUBLIC METHODS
-    def start(self):
+    async def handle(self, websocket):
+
+        self._start_message_sending()
+        try:
+            await self._process_subscriptions(websocket)
+        except:
+            pass
+        await self._stop_message_sending()
+
+    def on_notified(self, json_message):
+        """
+        invoked by ResourcesMonitor when message received
+        :param json_message:
+        :return:
+        """
+        print('SubscriptionHandler: ', json_message)
+        try:
+            self._message_queue.put_nowait(json_message)
+        except asyncio.QueueFull:
+            pass
+
+    def get_subscriptions(self):
+        return self._subscriptions
+
+    # PRIVATE METHODS
+    def _start_message_sending(self):
         # start message sending task
         loop = asyncio.get_event_loop()
         self._send_messages_task = loop.create_task(self._send_messages())
 
-    async def stop(self):
+    async def _stop_message_sending(self):
         # stop message sending corutine
         self._send_messages_flag = False
         if self._send_messages_task:
             await self._send_messages_task
 
-    async def handle(self, websocket):
+    async def _process_subscriptions(self, websocket):
         self._websocket = websocket
         await self._websocket.accept()
 
@@ -50,37 +76,43 @@ class SubscriptionHandler:
             except KeyError:
                 continue
 
+            response_dict = {'msg_type': 'control', 'error': False}
             # determine if message contains subscription command ('delete /domains/' for example)
             try:
                 subscription_cmd, subscription_source = received_text.split(' ')
+                response_dict['msg'] = subscription_cmd
+                response_dict['resource'] = subscription_source
             except ValueError:
+                response_dict['error'] = True
+                await self._dump_dict_and_send(response_dict)
                 continue
             # check if allowed
             if subscription_source not in ALLOWED_SUBSCRIPTIONS_LIST:
-                print('SubscriptionHandler: Unknown subscription source')
+                print(__class__.__name__, ' Unknown subscription source')
+                response_dict['error'] = True
+                await self._dump_dict_and_send(response_dict)
                 continue
 
             # if 'add' cmd and not subscribed  then subscribe
-            if subscription_cmd == SubscriptionCmd.ADD.name and subscription_cmd not in self._subscriptions:
-                self._subscriptions.append(subscription_cmd)
+            if subscription_cmd == SubscriptionCmd.add and subscription_source not in self._subscriptions:
+                self._subscriptions.append(subscription_source)
+                response_dict['error'] = False
             # if 'add' cmd and subscribed then do nothing
-            elif subscription_cmd == SubscriptionCmd.ADD.name and subscription_cmd in self._subscriptions:
-                print('SubscriptionHandler: already subscribed')
+            elif subscription_cmd == SubscriptionCmd.add and subscription_source in self._subscriptions:
+                print(__class__.__name__, 'already subscribed')
+                response_dict['error'] = True
             # if 'delete' cmd and not subscribed  then do nothing
-            elif subscription_cmd == SubscriptionCmd.DELETE.name and subscription_cmd not in self._subscriptions:
-                print('SubscriptionHandler: not subscribed')
+            elif subscription_cmd == SubscriptionCmd.delete and subscription_source not in self._subscriptions:
+                print(__class__.__name__, 'not subscribed')
+                response_dict['error'] = True
             # if 'delete' cmd and subscribed then unsubscribe
-            elif subscription_cmd == SubscriptionCmd.DELETE.name and subscription_cmd in self._subscriptions:
-                self._subscriptions.remove(subscription_cmd)
+            elif subscription_cmd == SubscriptionCmd.delete and subscription_source in self._subscriptions:
+                self._subscriptions.remove(subscription_source)
+                response_dict['error'] = False
 
-    def on_notified(self, json_message):
-        print('SubscriptionHandler: ', json_message)
-        try:
-            self._message_queue.put_nowait(json_message)
-        except asyncio.QueueFull:
-            pass
+            # send response
+            await self._dump_dict_and_send(response_dict)
 
-    # PRIVATE METHODS
     async def _send_messages(self):
         # wait for message and send it to front client
         self._send_messages_flag = True
@@ -92,5 +124,9 @@ class SubscriptionHandler:
                 continue
             if self._websocket:
                 await self._websocket.send_json(json_message)
+
+    async def _dump_dict_and_send(self, dictionary):
+        resp_json = json.dumps(dictionary)
+        await self._websocket.send_json(resp_json)
 
 

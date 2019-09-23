@@ -128,14 +128,8 @@ app.add_route('/admin', GraphQLApp(schema, executor_class=AsyncioExecutor))
 @app.websocket_route('/subscriptions')
 async def subscriptions_ws_endpoint(websocket):
     subscription_handler = SubscriptionHandler()
-    subscription_handler.start()
-
+    print('before route(/subscriptions')
     veil_resources_monitor.subscribe(subscription_handler)
-
-    try:
-        await subscription_handler.handle(websocket)
-    except:
-        pass
-
-    await subscription_handler.stop()
+    await subscription_handler.handle(websocket)
     veil_resources_monitor.unsubscribe(subscription_handler)
+    print('after route(/subscriptions')

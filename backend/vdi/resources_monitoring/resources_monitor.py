@@ -62,12 +62,12 @@ class ResourcesMonitor:
             connect_url = 'ws://{}/ws/?token={}'.format(self._controller_ip, token)
             self._websocket = await websockets.connect(connect_url)
         except:
-            print('can not connect')
+            print(__class__.__name__, ' can not connect')
             return
 
         # subscribe to events on controller
         for subscription_name in ALLOWED_SUBSCRIPTIONS_LIST:
-            await self._websocket.send('add /{}/'.format(subscription_name))
+            await self._websocket.send('add {}'.format(subscription_name))
 
     def _stop_running(self):
         self._running_flag = False
@@ -78,9 +78,17 @@ class ResourcesMonitor:
             print('WS: ', json_data)
         except JSONDecodeError:
             return
-        #  notify subscribed observers
+
+        #  notify subscribed observers if message is desirable
+        try:
+            resource_str = json_data['resource']
+        except KeyError:
+            return
+        print('resource_str', resource_str)
+
         for observer in self._list_of_observers:
-            observer.on_notified(json_data)
+            if resource_str in observer.get_subscriptions():
+                observer.on_notified(json_data)
 
     async def _on_connection_closed(self):
         print('WS: cconnection closed')
