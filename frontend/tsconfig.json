@@ -27,6 +27,9 @@
      /* Report errors on unused parameters. */
      "noFallthroughCasesInSwitch": true
      /* Report errors for fallthrough cases in switch statement. */,
-     "alwaysStrict": true
+     "alwaysStrict": true,
+    "noEmitOnError": true,
+    "removeComments": true,
+    "allowUnreachableCode" : true
   }
 }

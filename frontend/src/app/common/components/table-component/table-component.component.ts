@@ -10,13 +10,16 @@ export class TableComponentComponent {
   @Input() data: object[] = [];
   @Input() collection: object[] = [];
   @Input() cursor: boolean = false;
-  @Input() empty: string = "- нет данных -";
-  @Output() clickRowData:EventEmitter<any> = new EventEmitter();
+  @Output() clickRowData: EventEmitter<any> = new EventEmitter();
 
   constructor() {}
 
   public clickRow(item) {
     this.clickRowData.emit(item);
+  }
+
+  private la() {
+    console.log('lalla');
   }
 
 }
