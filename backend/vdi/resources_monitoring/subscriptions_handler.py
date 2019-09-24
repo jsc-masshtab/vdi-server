@@ -23,7 +23,6 @@ class SubscriptionHandler:
 
     # PUBLIC METHODS
     async def handle(self, websocket):
-
         self._start_message_sending()
         try:
             await self._process_subscriptions(websocket)

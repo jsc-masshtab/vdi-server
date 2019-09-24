@@ -19,13 +19,18 @@ class ResourcesMonitor:
     _resources_monitor_task = None
 
     # PUBLIC METHODS
-    def start(self):
+    def __del__(self):
+        self.unsubscribe_all()
+
+    def start(self, controller_ip):
+        self._controller_ip = controller_ip
+        self._running_flag = True
         loop = asyncio.get_event_loop()
-        self._resources_monitor_task = loop.create_task(self._process_messages('192.168.7.250'))
+        self._resources_monitor_task = loop.create_task(self._process_messages())
 
     async def stop(self):
         # stop recv
-        self._stop_running()
+        self._running_flag = False
         # close connection
         if self._websocket:
             await self._websocket.close()
@@ -39,9 +44,11 @@ class ResourcesMonitor:
     def unsubscribe(self, observer):
         self._list_of_observers.remove(observer)
 
+    def unsubscribe_all(self):
+        self._list_of_observers.clear()
+
     # PRIVATE METHODS
-    async def _process_messages(self, controller_ip):
-        self._controller_ip = controller_ip
+    async def _process_messages(self):
         await self._connect()
 
         # receive messages
@@ -69,33 +76,29 @@ class ResourcesMonitor:
         for subscription_name in ALLOWED_SUBSCRIPTIONS_LIST:
             await self._websocket.send('add {}'.format(subscription_name))
 
-    def _stop_running(self):
-        self._running_flag = False
-
     async def _on_message_received(self, message):
         try:
             json_data = json.loads(message)
-            print('WS: ', json_data)
+            print(__class__.__name__, json_data)
         except JSONDecodeError:
             return
 
-        #  notify subscribed observers if message is desirable
+        #  notify subscribed observers
         try:
             resource_str = json_data['resource']
         except KeyError:
             return
-        print('resource_str', resource_str)
-
+        #  print('resource_str', resource_str)
         for observer in self._list_of_observers:
             if resource_str in observer.get_subscriptions():
                 observer.on_notified(json_data)
 
     async def _on_connection_closed(self):
-        print('WS: cconnection closed')
+        print(__class__.__name__, 'connection closed')
         await self._try_to_recconect()
 
     async def _on_error_occurred(self):
-        print('WS: An error occurred')
+        print(__class__.__name__, 'An error occurred')
         if self._websocket:
             await self._websocket.close()
         await self._try_to_recconect()
@@ -107,4 +110,4 @@ class ResourcesMonitor:
             await asyncio.sleep(1)
 
 
-veil_resources_monitor = ResourcesMonitor()
+resources_monitor = ResourcesMonitor()
