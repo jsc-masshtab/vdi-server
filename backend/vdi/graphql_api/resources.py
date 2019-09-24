@@ -20,6 +20,8 @@ from vdi.errors import FieldError, SimpleError, FetchException
 from vdi.utils import Unset
 from vdi.utils import clamp_value
 
+from vdi.resources_monitoring.resources_monitor_manager import resources_monitor_manager
+
 
 class RequestType(graphene.ObjectType):
     url = graphene.String()
@@ -308,6 +310,8 @@ class AddController(graphene.Mutation):
 
     async def mutate(self, info, ip, set_default=False, description=None):
         await AddController._add_controller(ip=ip, set_default=set_default, description=description)
+        # add controller to resources_monitor_manager
+        resources_monitor_manager.add_controller(ip)
         return AddController(ok=True)
 
 
@@ -340,6 +344,8 @@ class RemoveController(graphene.Mutation):
             query = "DELETE FROM controller WHERE ip=$1", controller_ip
             await conn.execute(*query)
 
+        # remove controller from resources_monitor_manager
+        resources_monitor_manager.remove_controller(controller_ip)
         return RemoveController(ok=True)
 
 

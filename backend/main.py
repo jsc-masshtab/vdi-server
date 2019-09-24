@@ -33,15 +33,16 @@ class Vdi:
         return server.serve(sockets=self.sockets, shutdown_servers=False)
 
     async def co(self):
-        # start veil resources observer (Надо еще учесть что контроллеров ожет былть несколько!)
-        await resources_monitor_manager.start()
-
         # start authorization server
         sanic_task = self.get_sanic_task()
 
         # start VDI server
         loop = asyncio.get_event_loop()
         starlette_task = loop.create_task(self.starlette_co())
+
+        # start veil resources observer
+        await resources_monitor_manager.start()
+
         try:
             # wait on starlette task (vdi server)
             await starlette_task

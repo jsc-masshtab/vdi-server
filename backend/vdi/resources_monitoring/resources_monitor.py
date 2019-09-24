@@ -44,6 +44,9 @@ class ResourcesMonitor:
     def unsubscribe_all(self):
         self._list_of_observers.clear()
 
+    def get_controller_ip(self):
+        return self._controller_ip
+
     # PRIVATE METHODS
     async def _process_messages(self):
         await self._connect()
