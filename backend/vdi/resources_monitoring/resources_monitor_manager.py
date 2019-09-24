@@ -1,11 +1,11 @@
 from vdi.resources_monitoring.resources_monitor import ResourcesMonitor
-from db.db import db
 from ..tasks.resources import DiscoverControllers
 
 
 class ResourcesMonitorManager:
-    # ATTRIBUTES
-    _resources_monitors_list = []
+
+    def __init__(self):
+        self._resources_monitors_list = []
 
     # PUBLIC METHODS
     async def start(self):
@@ -19,7 +19,6 @@ class ResourcesMonitorManager:
         print(__class__.__name__, 'connected_controllers', connected_controllers)
         if not connected_controllers:
             return
-
         # start resources monitors
         for controller in connected_controllers:
             self._add_monitor_for_controller(controller['ip'])
@@ -80,8 +79,6 @@ class ResourcesMonitorManager:
         resources_monitor = ResourcesMonitor()
         self._resources_monitors_list.append(resources_monitor)
         resources_monitor.start(controller_ip)
-
-
 
 
 resources_monitor_manager = ResourcesMonitorManager()

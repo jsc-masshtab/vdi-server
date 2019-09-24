@@ -78,7 +78,7 @@ def validate_name(name_string):
     return re.match('^[а-яА-ЯёЁa-zA-Z0-9]+[а-яА-ЯёЁa-zA-Z0-9.-_+ ]*$', name_string)
 
 
-# get string of all atributes of an object split by comma
+# get string of all attributes of an object split by comma
 def get_attributes_str(python_object):
     attributes_str = ', '.join(i for i in dir(python_object) if not i.startswith('__'))
     return attributes_str

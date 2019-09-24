@@ -7,21 +7,17 @@ from ..tasks.base import Token
 
 from .resources_monitoring_data import ALLOWED_SUBSCRIPTIONS_LIST
 
+
 class ResourcesMonitor:
 
-    # ATTRIBUTES
-    _websocket = None
-    _running_flag = True
-    _controller_ip = None
-
-    _list_of_observers = []
-
-    _resources_monitor_task = None
+    def __init__(self):
+        self._websocket = None
+        self._running_flag = True
+        self._controller_ip = None
+        self._list_of_observers = []
+        self._resources_monitor_task = None
 
     # PUBLIC METHODS
-    # def __del__(self):
-    #     self.unsubscribe_all()
-
     def start(self, controller_ip):
         self._controller_ip = controller_ip
         self._running_flag = True

@@ -4,22 +4,18 @@ import json
 
 from .resources_monitoring_data import ALLOWED_SUBSCRIPTIONS_LIST, SubscriptionCmd
 
-# {"event": "UPDATED", "msg_type": "data", "id": "da318378-2bf8-41de-8227-8392a9fdf42f",
-# "object": {"luns_count": 0, "vdisks_count": 0, "tags": [],
-# "id": "da318378-2bf8-41de-8227-8392a9fdf42f", "user_power_state": 1, "service_module": false,
-# "verbose_name": "test_vm_static_pool-e39bd85", "memory_count": 128, "status": "ACTIVE", "hints": 0,
-# "node": {"id": "6c63c7d3-e49c-406b-b2d3-7d8ffbba0941", "verbose_name": "VC-0"}, "vinterfaces_count": 0,
-# "cpu_count": 1, "template": false}, "resource": "/domains/"}
 
 class SubscriptionHandler:
 
-    # ATTRIBUTES
-    _websocket = None
-    _subscriptions = []
+    def __init__(self):
+        self._websocket = None
+        self._subscriptions = []
+        self._message_queue = asyncio.Queue(100)  # 100 - max queue size
+        self._send_messages_flag = True
+        self._send_messages_task = None
 
-    _message_queue = asyncio.Queue(100)  # 100 - max queue size
-    _send_messages_flag = True
-    _send_messages_task = None
+    def __del__(self):
+        print(__class__.__name__, ' In destructor')
 
     # PUBLIC METHODS
     async def handle(self, websocket):
@@ -36,7 +32,7 @@ class SubscriptionHandler:
         :param json_message:
         :return:
         """
-        print('SubscriptionHandler: ', json_message)
+        print(__class__.__name__, json_message)
         try:
             self._message_queue.put_nowait(json_message)
         except asyncio.QueueFull:
@@ -91,7 +87,7 @@ class SubscriptionHandler:
                 response_dict['error'] = True
                 await self._dump_dict_and_send(response_dict)
                 continue
-
+            print('Test Length', len(self._subscriptions))
             # if 'add' cmd and not subscribed  then subscribe
             if subscription_cmd == SubscriptionCmd.add and subscription_source not in self._subscriptions:
                 self._subscriptions.append(subscription_source)
