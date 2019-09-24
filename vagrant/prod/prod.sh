@@ -12,6 +12,7 @@ sudo systemctl restart postgresql
 
 echo 'postgres:postgres' | sudo chpasswd
 sudo su postgres -c "psql -c \"ALTER ROLE postgres PASSWORD 'postgres';\" "
+# На астре нету бездуховной кодировки en_US.UTF-8. Есть C.UTF-8
 sudo su postgres -c "psql -c \"create database vdi encoding 'utf8' lc_collate = 'en_US.UTF-8' lc_ctype = 'en_US.UTF-8' template template0;\" "
 
 sudo python3.5 -m pip install pipenv

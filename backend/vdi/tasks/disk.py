@@ -68,9 +68,9 @@ class ImportDisk(Task):
         await ws.send('add /tasks/')
 
         http_client = HttpClient()
-        url = f'http://{self.controller_ip}/api/library/{image_id}/import/?async=1'
+        url = 'http://{}/api/library/{}/import/?async=1'.format(self.controller_ip, image_id)
         headers = {
-            'Authorization': f'jwt {token}',
+            'Authorization': 'jwt {}'.format(token),
             'Content-Type': 'application/json',
         }
         body = json.dumps({'verbose_name': self.vm_name})

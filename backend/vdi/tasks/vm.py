@@ -107,7 +107,6 @@ class CopyDomain(UrlFetcher):
             'verbose_name': self.domain_name,
         }
 
-
     def on_fetch_failed(self, ex, code):
         if code == 400:
             raise BadRequest(ex) from ex
