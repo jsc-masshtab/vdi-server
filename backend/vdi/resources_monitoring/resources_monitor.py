@@ -19,8 +19,8 @@ class ResourcesMonitor:
     _resources_monitor_task = None
 
     # PUBLIC METHODS
-    def __del__(self):
-        self.unsubscribe_all()
+    # def __del__(self):
+    #     self.unsubscribe_all()
 
     def start(self, controller_ip):
         self._controller_ip = controller_ip
@@ -29,11 +29,8 @@ class ResourcesMonitor:
         self._resources_monitor_task = loop.create_task(self._process_messages())
 
     async def stop(self):
-        # stop recv
         self._running_flag = False
-        # close connection
-        if self._websocket:
-            await self._websocket.close()
+        await self._close_connection()
         # wait unlit task finished
         if self._resources_monitor_task:
             await self._resources_monitor_task
@@ -67,6 +64,7 @@ class ResourcesMonitor:
             # create ws connection
             token = await Token(controller_ip=self._controller_ip)
             connect_url = 'ws://{}/ws/?token={}'.format(self._controller_ip, token)
+            #connect_url = 'ws://127.0.0.1:8765'
             self._websocket = await websockets.connect(connect_url)
         except:
             print(__class__.__name__, ' can not connect')
@@ -99,15 +97,17 @@ class ResourcesMonitor:
 
     async def _on_error_occurred(self):
         print(__class__.__name__, 'An error occurred')
-        if self._websocket:
-            await self._websocket.close()
+        await self._close_connection()
         await self._try_to_recconect()
 
     async def _try_to_recconect(self):
         # if _running_flag is raised then try to reconnect
         if self._running_flag:
             await self._connect()
-            await asyncio.sleep(1)
+            await asyncio.sleep(2)
 
+    async def _close_connection(self):
+        if self._websocket:
+            await self._websocket.close()
+            await self._websocket.wait_closed()
 
-resources_monitor = ResourcesMonitor()

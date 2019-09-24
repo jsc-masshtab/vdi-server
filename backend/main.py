@@ -8,9 +8,7 @@ import asyncio
 from uvicorn import Server, Config
 
 from vdi.settings import settings
-
-from vdi.resources_monitoring.resources_monitor import resources_monitor
-
+from vdi.resources_monitoring.resources_monitor_manager import resources_monitor_manager
 
 
 class Vdi:
@@ -36,7 +34,7 @@ class Vdi:
 
     async def co(self):
         # start veil resources observer (Надо еще учесть что контроллеров ожет былть несколько!)
-        resources_monitor.start('192.168.7.250')
+        await resources_monitor_manager.start()
 
         # start authorization server
         sanic_task = self.get_sanic_task()
@@ -49,7 +47,7 @@ class Vdi:
             await starlette_task
         finally:
             # finish other tasks
-            await resources_monitor.stop()
+            await resources_monitor_manager.stop()
             await self.cancel_task(sanic_task)
 
     async def cancel_task(self, task):
