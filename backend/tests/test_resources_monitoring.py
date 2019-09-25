@@ -20,4 +20,3 @@ def test_resources_subscriptions():
         data = websocket.receive_json()
         print('data_from_server: ', data)
         assert not data['error']
-

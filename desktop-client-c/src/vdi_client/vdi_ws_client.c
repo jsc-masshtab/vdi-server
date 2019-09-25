@@ -16,7 +16,7 @@ static void ws_message_received(SoupWebsocketConnection *self G_GNUC_UNUSED, gin
 static void ws_closed(SoupWebsocketConnection *self G_GNUC_UNUSED, gpointer user_data);
 static void connection_attempt_resault(GObject *object, GAsyncResult *result, gpointer user_data);
 static gboolean try_to_connect(VdiWsClient *vdi_ws_client);
-static void try_to_connect_deffered(VdiWsClient *vdi_ws_client);
+static void try_to_connect_deferred(VdiWsClient *vdi_ws_client);
 static void remove_recconect_timer(VdiWsClient *vdi_ws_client);
 //void static async_create_ws_coonect(GTask         *task,
 //                                    gpointer       source_object G_GNUC_UNUSED,
@@ -41,7 +41,7 @@ static void ws_closed(SoupWebsocketConnection *self G_GNUC_UNUSED, gpointer user
 
     // if web socket is not closed correctly then try to reconnect
     if (!vdi_ws_client->is_correctly_closed_flag) {
-        try_to_connect_deffered(vdi_ws_client);
+        try_to_connect_deferred(vdi_ws_client);
     }
 }
 
@@ -64,7 +64,7 @@ static void connection_attempt_resault(GObject *object, GAsyncResult *result, gp
 //        vdi_ws_client->ws_data_received_callback(FALSE);
 
 //        // try to reconnect
-//        try_to_connect_deffered(vdi_ws_client);
+//        try_to_connect_deferred(vdi_ws_client);
 //        return;
 //    }
 //    // success connection
@@ -86,7 +86,7 @@ static void connection_attempt_resault(GObject *object, GAsyncResult *result, gp
          vdi_ws_client->ws_data_received_callback(FALSE);
 
          // try to reconnect
-         try_to_connect_deffered(vdi_ws_client);
+         try_to_connect_deferred(vdi_ws_client);
          return;
      }
      // success connection
@@ -116,7 +116,7 @@ static gboolean try_to_connect(VdiWsClient *vdi_ws_client)
 }
 
 // one shot timeout. trying to connect
-static void try_to_connect_deffered(VdiWsClient *vdi_ws_client)
+static void try_to_connect_deferred(VdiWsClient *vdi_ws_client)
 {
     vdi_ws_client->reconnect_timer_descriptor =
             g_timeout_add(RECONNECT_TIMEOUT, (GSourceFunc)try_to_connect, vdi_ws_client);
@@ -200,7 +200,8 @@ void start_vdi_ws_polling(VdiWsClient *vdi_ws_client, const gchar *vdi_ip,
 
     // start reconnect oneshot timer
     //g_usleep(50000); // remove later
-    try_to_connect(vdi_ws_client);
+    //try_to_connect(vdi_ws_client);
+    try_to_connect_deferred(vdi_ws_client);
     //g_usleep(100000); // remove later
 }
 
