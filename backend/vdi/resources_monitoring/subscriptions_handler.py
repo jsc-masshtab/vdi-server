@@ -121,7 +121,6 @@ class SubscriptionHandler:
                 await self._websocket.send_json(json_message)
 
     async def _dump_dict_and_send(self, dictionary):
-        resp_json = json.dumps(dictionary)
-        await self._websocket.send_json(resp_json)
+        await self._websocket.send_json(dictionary)
 
 

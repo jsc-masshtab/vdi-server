@@ -63,7 +63,6 @@ class ResourcesMonitor:
             # create ws connection
             token = await Token(controller_ip=self._controller_ip)
             connect_url = 'ws://{}/ws/?token={}'.format(self._controller_ip, token)
-            #connect_url = 'ws://127.0.0.1:8765'
             self._websocket = await websockets.connect(connect_url)
         except:
             print(__class__.__name__, ' can not connect')
@@ -108,5 +107,4 @@ class ResourcesMonitor:
     async def _close_connection(self):
         if self._websocket:
             await self._websocket.close()
-            await self._websocket.wait_closed()
 
