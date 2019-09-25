@@ -32,8 +32,6 @@
     <button type="button" (click)="send('createPool')" class="form-btn"><span class="action-name">Далее</span></button>
   </div>
 
-
-
   <div class="form-fields" [formGroup]="createPoolForm" *ngIf="step === 'createPool'" [style.paddingBottom]="'20px'">
     <label class="field">
       <p class="field-name">Имя пула</p>
@@ -46,14 +44,14 @@
         <mat-label  *ngIf="controllers.length && !pending.controllers">Выберите контроллер</mat-label>
         <mat-label  *ngIf="!controllers.length && !pending.controllers">- нет контроллера -</mat-label>
         <mat-select (selectionChange)="selectController($event)">
-          <mat-option *ngFor="let controller of controllers" [value]="controller.ip">
+          <mat-option *ngFor="let controller of controllers" [value]="controller">
             {{controller.ip}}
           </mat-option>
         </mat-select>
       </mat-form-field>
     </label>
 
-    <label class="field" *ngIf="chooseTypeForm.value.type === 'Автоматический' && ip_controller">
+    <label class="field" *ngIf="chooseTypeForm.value.type === 'Автоматический' && ipController">
       <mat-form-field>
         <mat-label  *ngIf="pending.templates">Загрузка ...</mat-label>
         <mat-label  *ngIf="templates.length && !pending.templates">Выберите шаблон ВМ</mat-label>
@@ -66,7 +64,7 @@
       </mat-form-field>
     </label>
 
-    <label class="field" *ngIf="chooseTypeForm.value.type === 'Автоматический' && ip_controller || chooseTypeForm.value.type === 'Статический'">
+    <label class="field" *ngIf="chooseTypeForm.value.type === 'Автоматический' && ipController || chooseTypeForm.value.type === 'Статический'">
       <mat-form-field>
         <mat-label  *ngIf="pending.clusters">Загрузка ...</mat-label>
         <mat-label  *ngIf="clusters.length && !pending.clusters">Выберите кластер</mat-label>
@@ -79,7 +77,7 @@
       </mat-form-field>
     </label>
 
-    <label class="field" *ngIf="id_cluster">
+    <label class="field" *ngIf="idCluster">
       <mat-form-field>
         <mat-label  *ngIf="pending.nodes">Загрузка ...</mat-label>
         <mat-label  *ngIf="nodes.length && !pending.nodes">Выберите сервер</mat-label>
@@ -92,7 +90,7 @@
       </mat-form-field>
     </label>
 
-    <label class="field" *ngIf="id_node">
+    <label class="field" *ngIf="idNode">
       <mat-form-field>
         <mat-label *ngIf="pending.datapools">Загрузка ...</mat-label>
         <mat-label *ngIf="datapools.length && !pending.datapools">Выберите пул данных</mat-label>
@@ -105,7 +103,7 @@
       </mat-form-field>
     </label>
 
-    <label class="field" *ngIf="id_datapool && chooseTypeForm.value.type === 'Статический'">
+    <label class="field" *ngIf="idDatapool && chooseTypeForm.value.type === 'Статический'">
       <mat-form-field>
         <mat-label *ngIf="pending.vms">Загрузка ...</mat-label>
         <mat-label *ngIf="vms.length && !pending.vms">Выберите свободные ВМ</mat-label>
@@ -142,7 +140,7 @@
 
   <div class="field-table" *ngIf="step === 'finish-see'" [style.paddingBottom]="'20px'">
     <h1 class="title">Информация о создаваемом пуле</h1>
-    <vdi-table-into [data]="finishPoll" [collection]="table_field"></vdi-table-into>
+    <vdi-table-into [data]="finishPoolView" [collection]="tableField"></vdi-table-into>
   </div>
   <div class="form-actions" *ngIf="step === 'finish-see'">
     <button (click)="send('createPool')" class="form-btn width-between" ><span class="action-name" >Назад</span></button>

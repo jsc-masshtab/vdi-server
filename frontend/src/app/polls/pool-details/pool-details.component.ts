@@ -10,7 +10,7 @@ import { MatDialog } from '@angular/material';
 import { RemovePoolComponent } from '../remove-pool/remove-pool.component';
 
 interface type_pool {
-  [key: string] : any
+  [key: string]: any
 }
 
 @Component({

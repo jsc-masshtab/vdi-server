@@ -86,7 +86,6 @@ export class ClustersComponent implements OnInit {
 
   public componentAdded(): void {
     setTimeout(() => {
-      //	this.routerActivated = true;
       this.pageHeight = this.pageHeightMin;
 
       if ((this.view.nativeElement.clientHeight - this.pageHeightMinNumber) < (this.pageHeightMinNumber + 250)) {
@@ -97,7 +96,6 @@ export class ClustersComponent implements OnInit {
 
   public componentRemoved(): void {
     setTimeout(() => {
-      //this.routerActivated = false;
       this.pageHeight = this.pageHeightMax;
       this.pageRollup = false;
     }, 0);

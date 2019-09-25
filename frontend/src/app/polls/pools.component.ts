@@ -1,7 +1,7 @@
 import { WaitService } from './../common/components/wait/wait.service';
 import { Component, OnInit, HostListener, ViewChild, ElementRef, OnDestroy } from '@angular/core';
 import { PoolsService } from './pools.service';
-import { PoolAddComponent } from './pool-add/pool-add.component';
+import { PoolAddComponent } from './add-pool/add-pool.component';
 import { Router } from '@angular/router';
 import { MatDialog } from '@angular/material';
 import { Subscription } from 'rxjs';

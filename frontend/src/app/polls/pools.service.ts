@@ -30,7 +30,7 @@ export class PoolsService {
                                         users {
                                             username
                                         }
-                                    }  
+                                    }
                                 }
                         `,
                     variables: {

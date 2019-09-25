@@ -3,13 +3,12 @@ import { Apollo, QueryRef } from 'apollo-angular';
 import gql from 'graphql-tag';
 
 
-
 @Injectable()
 export class ControllersService  {
 
     constructor(private service: Apollo) {}
 
-    public getAllControllers(): QueryRef<any,any> {
+    public getAllControllers(): QueryRef<any, any> {
        return  this.service.watchQuery({
             query:  gql` query allControllers {
                             controllers {
@@ -17,17 +16,18 @@ export class ControllersService  {
                                 description
                             }
                         }
-            
                     `,
             variables: {
                 method: 'GET'
             }
-        }) 
+        });
     }
 
-    public addController(ip:string, description:string) {
+    public addController(ip: string, description: string) {
+        const ipController = ip;
+        const descriptionController = description;
         return this.service.mutate<any>({
-            mutation: gql`  
+            mutation: gql`
                             mutation AddController($description: String,$ip: String!) {
                                 addController(description: $description,ip: $ip) {
                                     ok
@@ -36,15 +36,16 @@ export class ControllersService  {
             `,
             variables: {
                 method: 'POST',
-                description: description,
-                ip: ip
+                description: descriptionController,
+                ip: ipController
             }
-        })
+        });
     }
 
-    public removeController(controller_ip:string) {
+    public removeController(ip: string) {
+        const ipController = ip;
         return this.service.mutate<any>({
-            mutation: gql`  
+            mutation: gql`
                             mutation RemoveController($controller_ip: String) {
                                 removeController(controller_ip: $controller_ip) {
                                     ok
@@ -53,8 +54,8 @@ export class ControllersService  {
             `,
             variables: {
                 method: 'POST',
-                controller_ip: controller_ip
+                controller_ip: ipController
             }
-        })
+        });
     }
 }

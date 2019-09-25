@@ -18,8 +18,4 @@ export class TableComponentComponent {
     this.clickRowData.emit(item);
   }
 
-  private la() {
-    console.log('lalla');
-  }
-
 }

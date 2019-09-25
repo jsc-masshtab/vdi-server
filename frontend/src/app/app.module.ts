@@ -1,3 +1,4 @@
+import { AddPoolService } from './polls/add-pool/add-pool.service';
 import { RemoveUserVmComponent } from './polls/pool-details/vm-details-popup/remove-user/remove-user.component';
 import { AddUserVmComponent } from './polls/pool-details/vm-details-popup/add-user/add-user.component';
 import { VmDetalsPopupComponent } from './polls/pool-details/vm-details-popup/vm-details-popup.component';
@@ -49,7 +50,7 @@ import { MainMenuComponent } from './main-menu/main-menu.component';
 
 import { TableComponentComponent } from './common/components/table-component/table-component.component';
 import { ErrorsComponent } from './common/components/errors/errors.component';
-import { PoolAddComponent } from './polls/pool-add/pool-add.component';
+import { PoolAddComponent } from './polls/add-pool/add-pool.component';
 import { PoolsService } from './polls/pools.service';
 import { FocusMeDirective } from './common/other/directives/focusMe.directive';
 import { TableIntoComponent } from './common/components/table-into-component/table-into';
@@ -152,7 +153,8 @@ import { AddUsersPoolComponent } from './polls/add-users/add-users.component';
       VmsService,
       UsersService,
       ErrorsService,
-      WaitService
+      WaitService,
+      AddPoolService
     ],
   bootstrap: [AppComponent]
 })

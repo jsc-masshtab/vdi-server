@@ -15,7 +15,6 @@ export class DatapoolsComponent implements OnInit {
 
   public datapools: object[] = [];
   public collection: object[] = [
-
     {
       title: 'Название',
       property: 'verbose_name',
@@ -23,7 +22,7 @@ export class DatapoolsComponent implements OnInit {
     },
     {
       title: 'Тип',
-      property: "type"
+      property: 'type'
     },
     {
       title: 'Диски',
@@ -68,7 +67,7 @@ export class DatapoolsComponent implements OnInit {
         arrDatapools.forEach((arr: []) => {
             arr.forEach((obj: {}) => {
               this.datapools.push(obj);
-            }); 
+            });
         });
         this.waitService.setWait(false);
       });
