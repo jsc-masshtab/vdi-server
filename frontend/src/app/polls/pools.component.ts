@@ -57,7 +57,6 @@ export class PoolsComponent implements OnInit, OnDestroy {
   constructor(private service: PoolsService, public dialog: MatDialog, private router: Router, private waitService: WaitService) {}
 
   @ViewChild('view') view: ElementRef;
-  @ViewChild('viewTable') viewTable: ElementRef;
 
   @HostListener('window:resize', ['$event']) onResize() {
     if (this.pageHeight === this.pageHeightMin) {
@@ -71,8 +70,6 @@ export class PoolsComponent implements OnInit, OnDestroy {
 
   ngOnInit() {
     this.getAllPools({ spin: true, obs: true });
-
-    console.log(this.viewTable);
   }
 
   public openCreatePool(): void {

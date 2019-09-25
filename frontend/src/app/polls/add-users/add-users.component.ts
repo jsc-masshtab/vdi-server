@@ -19,10 +19,10 @@ export class AddUsersPoolComponent implements OnInit {
   private id_users: [] = [];
 
   constructor(private waitService: WaitService,
-    private usersService: UsersService,
-    private poolsService: PoolsService,
-    private dialogRef: MatDialogRef<AddUsersPoolComponent>,
-    @Inject(MAT_DIALOG_DATA) public data: any
+              private usersService: UsersService,
+              private poolsService: PoolsService,
+              private dialogRef: MatDialogRef<AddUsersPoolComponent>,
+              @Inject(MAT_DIALOG_DATA) public data: any
   ) { }
 
   ngOnInit() {
