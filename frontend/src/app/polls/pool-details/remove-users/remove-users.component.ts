@@ -1,11 +1,15 @@
-import { PoolsService } from '../pools.service';
-import { UsersService } from '../../settings/users/users.service';
-import { WaitService } from '../../common/components/wait/wait.service';
+import {  PoolDetailsService } from '../pool-details.service';
+import { WaitService } from '../../../common/components/wait/wait.service';
 import { MatDialogRef } from '@angular/material';
 import { Component, Inject, OnInit } from '@angular/core';
-import {MAT_DIALOG_DATA} from '@angular/material';
+import { MAT_DIALOG_DATA } from '@angular/material';
 import { map } from 'rxjs/operators';
 
+interface IData {
+  idPool: number;
+  namePool: string;
+  typePool: string;
+}
 
 @Component({
   selector: 'vdi-remove-users-pool',
@@ -16,13 +20,12 @@ export class RemoveUsersPoolComponent  implements OnInit {
 
   public pendingUsers: boolean = false;
   public users: [] = [];
-  private id_users: [] = [];
+  private idUsers: [] = [];
 
   constructor(private waitService: WaitService,
-              private usersService: UsersService,
-              private poolsService: PoolsService,
+              private poolService: PoolDetailsService,
               private dialogRef: MatDialogRef<RemoveUsersPoolComponent>,
-              @Inject(MAT_DIALOG_DATA) public data: any
+              @Inject(MAT_DIALOG_DATA) public data: IData
              ) {}
 
   ngOnInit() {
@@ -31,8 +34,8 @@ export class RemoveUsersPoolComponent  implements OnInit {
 
   public send() {
     this.waitService.setWait(true);
-    this.usersService.removeUserEntitlementsFromPool(this.data.pool_id,this.id_users).subscribe(() => {
-      this.poolsService.getPool(this.data.pool_id, this.data.pool_type).subscribe(() => {
+    this.poolService.removeUserEntitlementsFromPool(this.data.idPool, this.idUsers).subscribe(() => {
+      this.poolService.getPool(this.data.idPool, this.data.typePool).subscribe(() => {
         this.waitService.setWait(false);
       });
       this.dialogRef.close();
@@ -41,9 +44,9 @@ export class RemoveUsersPoolComponent  implements OnInit {
 
   private getUsersToPool() {
     this.pendingUsers = true;
-    this.usersService.assesUsersToPool(this.data.pool_id).valueChanges.pipe(map(data => data.data.pool.users))
+    this.poolService.assesUsersToPool(this.data.idPool).valueChanges.pipe(map((data: any) => data.data.pool.users))
     .subscribe( (data) => {
-      this.users =  data;
+      this.users = data;
       this.pendingUsers = false;
     },
     () => {
@@ -53,7 +56,6 @@ export class RemoveUsersPoolComponent  implements OnInit {
   }
 
   public selectUser(value: []) {
-    this.id_users = value['value'];
+    this.idUsers = value['value'];
   }
-
 }

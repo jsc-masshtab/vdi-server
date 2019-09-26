@@ -136,4 +136,75 @@ export class AddPoolService {
             }
         });
     }
+
+    public createDinamicPool(name: string, templateId: string, clusterId: string,
+                             nodeId: string, datapoolId: string, initialSize: number,
+                             reserveSize: number, totalSize: number) {
+
+        const idTemplate = templateId;
+        const namePool = name;
+        const idCluster = clusterId;
+        const idNode = nodeId;
+        const idDatapool = datapoolId;
+        const initialSizePool = initialSize;
+        const reserveSizePool = reserveSize;
+        const totalSizePool = totalSize;
+        return this.service.mutate<any>({
+            mutation: gql`
+                        mutation AddPool($name: String!,$template_id: String,
+                                        $cluster_id: String,$node_id: String,
+                                        $datapool_id: String,$initial_size: Int,
+                                        $reserve_size: Int,$total_size: Int)
+                                {
+                                addPool(name: $namePool, template_id: $idTemplate,
+                                        cluster_id: $idCluster,node_id: $idNode,
+                                        datapool_id: $idDatapool,initial_size: $initialSizePool,
+                                        reserve_size: $reserveSizePool,total_size:$totalSizePool)
+                                        {
+                                            id
+                                        }
+                            }
+            `,
+            variables: {
+                method: 'POST',
+                name: namePool,
+                template_id: idTemplate,
+                cluster_id: idCluster,
+                node_id: idNode,
+                datapool_id: idDatapool,
+                initial_size: initialSizePool,
+                reserve_size: reserveSizePool,
+                total_size: totalSizePool
+            }
+        });
+    }
+
+    public createStaticPool(name: string, clusterId: string, nodeId: string, datapoolId: string, vmsIdsList: string[]) {
+        const namePool = name;
+        const idCluster = clusterId;
+        const idNode = nodeId;
+        const idDatapool = datapoolId;
+        const idsVms = vmsIdsList;
+        return this.service.mutate<any>({
+            mutation: gql`
+                        mutation AddPool($name: String!,$cluster_id: String,$node_id: String,
+                                        $datapool_id: String,$vm_ids_list: [String]) {
+                            addStaticPool(name: $name,cluster_id: $idCluster,
+                                          node_id: idNode,datapool_id: $idDatapool,
+                                          vm_ids_list: $vmsIdsList)
+                                        {
+                                            id
+                                        }
+                        }
+            `,
+            variables: {
+                method: 'POST',
+                name: namePool,
+                cluster_id: idCluster,
+                node_id: idNode,
+                datapool_id: idDatapool,
+                vm_ids_list: idsVms
+            }
+        });
+    }
 }

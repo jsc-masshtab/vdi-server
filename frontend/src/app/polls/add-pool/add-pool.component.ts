@@ -8,7 +8,7 @@ import { map } from 'rxjs/operators';
 import { trigger, style, animate, transition } from '@angular/animations';
 import { FormBuilder, FormGroup } from '@angular/forms';
 
-import { IFinishPoolView, IFinishPoolForm, IPendingAdd, ISelectValue } from '../definitions/pools';
+import { IFinishPoolView, IFinishPoolForm, IPendingAdd, ISelectValue } from './definitions/add-pool';
 
 @Component({
   selector: 'vdi-add-pool',
@@ -270,7 +270,7 @@ export class PoolAddComponent implements OnInit, OnDestroy {
     this.finishPoolView.datapool_name = value.value.verbose_name;
     this.vms = [];
     this.createPoolForm.get('datapool_id').setValue(this.idDatapool);
-    if(this.selectVmRef) {
+    if (this.selectVmRef) {
       this.selectVmRef[this.key] = '';
     }
     this.getVms();
@@ -434,7 +434,7 @@ export class PoolAddComponent implements OnInit, OnDestroy {
     const formValue: Partial<IFinishPoolForm> = this.createPoolForm.value;
     this.waitService.setWait(true);
     if (this.chooseTypeForm.value.type === 'Автоматический') {
-      this.poolsService.createDinamicPool(
+      this.addPoolService.createDinamicPool(
                               formValue.name,
                               formValue.template_id,
                               formValue.cluster_id,
@@ -452,7 +452,7 @@ export class PoolAddComponent implements OnInit, OnDestroy {
     }
 
     if (this.chooseTypeForm.value.type === 'Статический') {
-      this.poolsService.createStaticPool(
+      this.addPoolService.createStaticPool(
                               formValue.name,
                               formValue.cluster_id,
                               formValue.node_id,

@@ -2,11 +2,11 @@ import { AddPoolService } from './polls/add-pool/add-pool.service';
 import { RemoveUserVmComponent } from './polls/pool-details/vm-details-popup/remove-user/remove-user.component';
 import { AddUserVmComponent } from './polls/pool-details/vm-details-popup/add-user/add-user.component';
 import { VmDetalsPopupComponent } from './polls/pool-details/vm-details-popup/vm-details-popup.component';
-import { RemoveUsersPoolComponent } from './polls/remove-users/remove-users.component';
-import { RemoveVMStaticPoolComponent } from './polls/remove-vms/remove-vms.component';
+import { RemoveUsersPoolComponent } from './polls/pool-details/remove-users/remove-users.component';
+import { RemoveVMStaticPoolComponent } from './polls/pool-details/remove-vms/remove-vms.component';
 import { WaitService } from './common/components/wait/wait.service';
 import { WaitComponent } from './common/components/wait/wait.component';
-import { AddVMStaticPoolComponent } from './polls/add-vms/add-vms.component';
+import { AddVMStaticPoolComponent } from './polls/pool-details/add-vms/add-vms.component';
 import { HttpLinkModule, HttpLink } from 'apollo-angular-link-http';
 import { ApolloModule, Apollo } from 'apollo-angular';
 import { ErrorsService } from './common/components/errors/errors.service';
@@ -68,7 +68,7 @@ import { ControllersService } from './settings/controllers/controllers.service';
 import { FooterComponent } from './footer/footer.component';
 import { ClusterDetailsComponent } from './resourses/clusters/cluster-details/cluster-details.component';
 import { PoolsComponent } from './polls/pools.component';
-import { RemovePoolComponent } from './polls/remove-pool/remove-pool.component';
+import { RemovePoolComponent } from './polls/pool-details/remove-pool/remove-pool.component';
 import { TemplatesService } from './resourses/templates/templates.service';
 import { UsersComponent } from './settings/users/users.component';
 import { UsersService } from './settings/users/users.service';
@@ -77,7 +77,8 @@ import { UsersService } from './settings/users/users.service';
 import { onError } from 'apollo-link-error';
 import { InMemoryCache } from 'apollo-cache-inmemory';
 import { environment } from 'src/environments/environment';
-import { AddUsersPoolComponent } from './polls/add-users/add-users.component';
+import { AddUsersPoolComponent } from './polls/pool-details/add-users/add-users.component';
+import { PoolDetailsService } from './polls/pool-details/pool-details.service';
 
 @NgModule({
   declarations: [
@@ -154,7 +155,8 @@ import { AddUsersPoolComponent } from './polls/add-users/add-users.component';
       UsersService,
       ErrorsService,
       WaitService,
-      AddPoolService
+      AddPoolService,
+      PoolDetailsService
     ],
   bootstrap: [AppComponent]
 })
