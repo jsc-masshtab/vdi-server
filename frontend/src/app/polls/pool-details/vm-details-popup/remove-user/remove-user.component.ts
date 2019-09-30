@@ -1,21 +1,23 @@
-import { PoolsService } from './../../../pools.service';
 import { WaitService } from './../../../../common/components/wait/wait.service';
 import { Component, Inject } from '@angular/core';
 import { MatDialog, MAT_DIALOG_DATA } from '@angular/material';
+import { PoolDetailsService } from '../../pool-details.service';
 
-interface IVmDetails  {
+interface IData  {
   vm: {
-    id: number
-    name: string
-    state: string
+    id: string;
+    name: string;
+    state: string;
+    user: {
+      username: string | null;
+    };
+    template?: {
+      name: string;
+    }
   };
-  pool_type: string;
-  pool_users: [{[key: string]: IPoolUser }];
-  pool_id: number;
-}
-
-interface IPoolUser {
-  username: string;
+  typePool: string;
+  usersPool: [{username: string }];
+  idPool: number;
 }
 
 @Component({
@@ -26,15 +28,15 @@ interface IPoolUser {
 export class RemoveUserVmComponent {
 
   constructor(private waitService: WaitService,
-              private poolsService: PoolsService,
+              private poolService: PoolDetailsService,
               public dialog: MatDialog,
-              @Inject(MAT_DIALOG_DATA) public data: IVmDetails,
+              @Inject(MAT_DIALOG_DATA) public data: IData,
             ) {}
 
   public send() {
     this.waitService.setWait(true);
-    this.poolsService.freeVmFromUser(this.data.vm.id).subscribe(() => {
-      this.poolsService.getPool(this.data.pool_id, this.data.pool_type).subscribe(() => {
+    this.poolService.freeVmFromUser(this.data.vm.id).subscribe(() => {
+      this.poolService.getPool(this.data.idPool, this.data.typePool).subscribe(() => {
         this.waitService.setWait(false);
       });
       this.dialog.closeAll();

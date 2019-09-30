@@ -7,10 +7,10 @@
   <div class="form-fields">
     <label class="field">
       <mat-form-field>
-        <mat-label *ngIf="data?.pool_users?.length">Выберите пользователя</mat-label>
-        <mat-label *ngIf="!data?.pool_users?.length">- нет пользователей -</mat-label>
+        <mat-label *ngIf="data?.usersPool?.length">Выберите пользователя</mat-label>
+        <mat-label *ngIf="!data?.usersPool?.length">- нет пользователей -</mat-label>
         <mat-select (selectionChange)="selectUser($event)">
-          <mat-option *ngFor="let user of data?.pool_users" [value]="user.username">
+          <mat-option *ngFor="let user of data?.usersPool" [value]="user.username">
             {{user.username}}
           </mat-option>
         </mat-select>

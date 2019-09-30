@@ -2,7 +2,7 @@ import { PoolsService } from './../../pools.service';
 import { WaitService } from './../../../common/components/wait/wait.service';
 import { PoolDetailsService } from '../pool-details.service';
 import { MatDialogRef } from '@angular/material';
-import { Component, Inject, OnChanges } from '@angular/core';
+import { Component, Inject } from '@angular/core';
 import { MAT_DIALOG_DATA } from '@angular/material';
 
 interface IData {
@@ -17,9 +17,8 @@ interface IData {
   templateUrl: './remove-vms.component.html'
 })
 
-export class RemoveVMStaticPoolComponent implements OnChanges {
+export class RemoveVMStaticPoolComponent {
 
-  public pendingVms: boolean = true;
   private idVms: [] = [];
 
   constructor(private poolService: PoolDetailsService,
@@ -27,10 +26,6 @@ export class RemoveVMStaticPoolComponent implements OnChanges {
               private waitService: WaitService,
               private dialogRef: MatDialogRef<RemoveVMStaticPoolComponent>,
               @Inject(MAT_DIALOG_DATA) public data: IData) {}
-
-  ngOnChanges() {
-    console.log(this.data);
-  }
 
   public send() {
     this.waitService.setWait(true);

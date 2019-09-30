@@ -8,9 +8,8 @@
   <div class="form-fields">
     <label class="field">
       <mat-form-field>
-        <mat-label *ngIf="pendingVms">Загрузка ...</mat-label>
-        <mat-label *ngIf="data?.vms?.length && !pendingVms">Выберите ВМ для удаления</mat-label>
-        <mat-label *ngIf="!data?.vms?.length && !pendingVms">- нет виртуальных машин -</mat-label>
+        <mat-label *ngIf="data?.vms?.length">Выберите ВМ для удаления</mat-label>
+        <mat-label *ngIf="!data?.vms?.length">- нет виртуальных машин -</mat-label>
         <mat-select (selectionChange)="selectVm($event)" multiple="true">
           <mat-option *ngFor="let vm of data?.vms" [value]="vm?.id">
             {{vm.name}}

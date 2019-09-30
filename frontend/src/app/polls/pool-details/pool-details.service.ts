@@ -150,7 +150,7 @@ export class PoolDetailsService {
         });
     }
 
-    public assignVmToUser(vmId: number, username: string) {
+    public assignVmToUser(vmId: string, username: string) {
         const idVm = vmId;
         const usernameToVM = username;
         return this.service.mutate<any>({
@@ -169,7 +169,7 @@ export class PoolDetailsService {
         });
     }
 
-    public freeVmFromUser(vmId: number) {
+    public freeVmFromUser(vmId: string) {
         const idVm = vmId;
         return this.service.mutate<any>({
             mutation: gql`

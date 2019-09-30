@@ -269,12 +269,12 @@ export class PoolDetailsComponent implements OnInit {
   public clickVm(vm) {
     const vmActive = vm;
     this.dialog.open(VmDetalsPopupComponent, {
-      width: '50%',
+      width: '1000px',
       data: {
         vm: vmActive,
         typePool: this.typePool,
-        pool_users: this.pool.users,
-        pool_id: this.idPool
+        usersPool: this.pool.users,
+        idPool: this.idPool
       }
     });
   }
