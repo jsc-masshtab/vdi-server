@@ -14,7 +14,7 @@
         <button (click)="getPool()" class="btn-refresh" title="Обновить"><fa-icon [icon]="['fas','sync-alt']"></fa-icon></button>
         <button (click)="removePool()" *ngIf="menuActive === 'info'" title="Удалить пул" class="btn-control"><fa-icon [icon]="['fas','trash-alt']" size="xs"></fa-icon><span class="name">Удалить</span></button>
 
-        <ng-container *ngIf="menuActive === 'vms' && pool_type === 'static'">
+        <ng-container *ngIf="menuActive === 'vms' && typePool === 'static'">
             <button (click)="addVM()" title="Добавить ВМ в пул" class="btn-control"><fa-icon [icon]="['fas','plus-circle']" size="xs"></fa-icon><span class="name">Добавить</span></button>
             <button (click)="removeVM()" title="Удалить ВМ из пула" class="btn-control"><fa-icon [icon]="['fas','trash-alt']" size="xs"></fa-icon><span class="name">Удалить</span></button>
         </ng-container>
@@ -39,17 +39,17 @@
                 <ng-container *ngIf="menuActive === 'users'">Пользователи пула</ng-container>
             </div>
             <div class="details-slide-into">
-                <ng-container *ngIf="pool_type === 'automated'">
-                    <vdi-table-into *ngIf="menuActive === 'info'" [data]="pool" [collection]="collection_details_automated"></vdi-table-into>
-                    <vdi-table-component *ngIf="menuActive === 'vms'" [data]="pool?.vms" [collection]="collection_vms_automated" (clickRowData)="clickVm($event)" cursor="true"></vdi-table-component> 
+                <ng-container *ngIf="typePool === 'automated'">
+                    <vdi-table-into *ngIf="menuActive === 'info'" [data]="pool" [collection]="collectionDetailsAutomated"></vdi-table-into>
+                    <vdi-table-component *ngIf="menuActive === 'vms'" [data]="pool?.vms" [collection]="collectionVmsAutomated" (clickRowData)="clickVm($event)" cursor="true"></vdi-table-component> 
                 </ng-container>
 
-                <ng-container *ngIf="pool_type === 'static'">
-                    <vdi-table-into *ngIf="menuActive === 'info'" [data]="pool" [collection]="collection_details_static"></vdi-table-into>
-                    <vdi-table-component *ngIf="menuActive === 'vms'" [data]="pool?.vms" [collection]="collection_vms_static" (clickRowData)="clickVm($event)" cursor="true"></vdi-table-component> 
+                <ng-container *ngIf="typePool === 'static'">
+                    <vdi-table-into *ngIf="menuActive === 'info'" [data]="pool" [collection]="collectionDetailsStatic"></vdi-table-into>
+                    <vdi-table-component *ngIf="menuActive === 'vms'" [data]="pool?.vms" [collection]="collectionVmsStatic" (clickRowData)="clickVm($event)" cursor="true"></vdi-table-component> 
                 </ng-container>
 
-                <vdi-table-component *ngIf="menuActive === 'users'" [data]="pool?.users" [collection]="collection_users"></vdi-table-component> 
+                <vdi-table-component *ngIf="menuActive === 'users'" [data]="pool?.users" [collection]="collectionUsers"></vdi-table-component> 
             </div>     
         </div>
     </div>

@@ -1,7 +1,7 @@
 import { WaitService } from './../common/components/wait/wait.service';
-import { Component, OnInit, HostListener,ViewChild,ElementRef} from '@angular/core';
+import { Component, OnInit, HostListener, ViewChild, ElementRef, OnDestroy } from '@angular/core';
 import { PoolsService } from './pools.service';
-import { PoolAddComponent } from './pool-add/pool-add.component';
+import { PoolAddComponent } from './add-pool/add-pool.component';
 import { Router } from '@angular/router';
 import { MatDialog } from '@angular/material';
 import { Subscription } from 'rxjs';
@@ -13,17 +13,17 @@ import { Subscription } from 'rxjs';
   styleUrls: ['./pools.component.scss']
 })
 
-export class PoolsComponent implements OnInit {
+export class PoolsComponent implements OnInit, OnDestroy {
 
   public pools: [];
   public pageHeightMinNumber: number = 315;
-	public pageHeightMin: string = '315px';
-	public pageHeightMax: string = '100%';
+  public pageHeightMin: string = '315px';
+  public pageHeightMax: string = '100%';
   public pageHeight: string = '100%';
   public pageRollup: boolean = false;
   private getPoolsSub: Subscription;
 
-  public collection: object[] = [
+  public collection: ReadonlyArray<object> = [
     {
       title: '№',
       property: 'index'
@@ -54,38 +54,38 @@ export class PoolsComponent implements OnInit {
     }
   ];
 
-  constructor(private service: PoolsService,public dialog: MatDialog,private router: Router,private waitService: WaitService){}
+  constructor(private service: PoolsService, public dialog: MatDialog, private router: Router, private waitService: WaitService) {}
 
-  @ViewChild('view') view:ElementRef;
+  @ViewChild('view') view: ElementRef;
 
-  @HostListener('window:resize', ['$event']) onResize(event) {
-		if(this.pageHeight == this.pageHeightMin) {
-			if((this.view.nativeElement.clientHeight - this.pageHeightMinNumber) < (this.pageHeightMinNumber + 250)) {
-				this.pageRollup = true;
-			} else {
-				this.pageRollup = false;
-			}
-		}
-	}
-
-  ngOnInit() {
-    this.getAllPools({spin:true,obs:true});
+  @HostListener('window:resize', ['$event']) onResize() {
+    if (this.pageHeight === this.pageHeightMin) {
+      if ((this.view.nativeElement.clientHeight - this.pageHeightMinNumber) < (this.pageHeightMinNumber + 250)) {
+        this.pageRollup = true;
+      } else {
+        this.pageRollup = false;
+      }
+    }
   }
 
-  public openCreatePool() {
+  ngOnInit() {
+    this.getAllPools({ spin: true, obs: true });
+  }
+
+  public openCreatePool(): void {
     this.dialog.open(PoolAddComponent, {
       width: '500px'
     });
   }
 
-  public getAllPools(param?:{}) {
-    if(param && param['spin']) {
+  public getAllPools(param?: { readonly spin?: boolean,  readonly obs?: boolean }): void {
+    if (param && param.spin) {
       this.waitService.setWait(true);
     }
-    this.getPoolsSub = this.service.getAllPools(param['obs'])
-      .subscribe( (data) => {
+    this.getPoolsSub = this.service.getAllPools(param.obs)
+      .subscribe((data) => {
         this.pools = data;
-        if(param && param['spin']) {
+        if (param && param.spin) {
           this.waitService.setWait(false);
           param = {};
         }
@@ -93,27 +93,25 @@ export class PoolsComponent implements OnInit {
   }
 
   public componentAdded(): void {
-		setTimeout(()=> {
-		//	this.routerActivated = true;
-			this.pageHeight = this.pageHeightMin;
+    setTimeout(() => {
+      this.pageHeight = this.pageHeightMin;
 
-			if((this.view.nativeElement.clientHeight - this.pageHeightMinNumber) < (this.pageHeightMinNumber + 250)) {
-				this.pageRollup = true;
-			};
-		}, 0);
-	}
+      if ((this.view.nativeElement.clientHeight - this.pageHeightMinNumber) < (this.pageHeightMinNumber + 250)) {
+        this.pageRollup = true;
+      }
+    }, 0);
+  }
 
   public componentRemoved(): void {
-		setTimeout(()=> {
-			//this.routerActivated = false;
-			this.pageHeight = this.pageHeightMax;
-			this.pageRollup = false;
-		}, 0);
+    setTimeout(() => {
+      this.pageHeight = this.pageHeightMax;
+      this.pageRollup = false;
+    }, 0);
   }
 
   public routeTo(event): void {
-    let desktop_pool_type:string = event.desktop_pool_type.toLowerCase();
-    this.router.navigate([`pools/${desktop_pool_type}/${event.id}`]);
+    const desktopPoolType: string = event.desktop_pool_type.toLowerCase();
+    this.router.navigate([`pools/${desktopPoolType}/${event.id}`]);
 
     setTimeout(() => {
       this.pageHeight = this.pageHeightMin;

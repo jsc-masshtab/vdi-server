@@ -9,12 +9,11 @@ export class NodesService {
 
     constructor(private service: Apollo) {}
 
-    public getAllNodes(cluster_id?:string): QueryRef<any,any> {
-
+    public getAllNodes(): QueryRef<any, any> {
         return  this.service.watchQuery({
-            query:  gql` query allNodes($cluster_id: String) {
+            query:  gql` query allNodes {
                             controllers {
-                                nodes(cluster_id: $cluster_id) {
+                                nodes {
                                     id
                                     verbose_name
                                     status
@@ -29,19 +28,16 @@ export class NodesService {
                                     }
                                 }
                             }
-                           
                         }
-            
                     `,
             variables: {
-                method: 'GET',
-                cluster_id: cluster_id
+                method: 'GET'
             }
-        }) 
+        });
     }
 
-    public getNode(node_id:string): QueryRef<any,any> {
-        
+    public getNode(nodeId: string): QueryRef<any, any> {
+        const idNode = nodeId;
         return  this.service.watchQuery({
             query:  gql` query node($id: String) {
                             node(id: $id) {
@@ -70,21 +66,20 @@ export class NodesService {
                                 vms {
                                     name
                                     template {
-                                        name 
+                                        name
                                     }
-                                    node { 
+                                    node {
                                         verbose_name
                                     }
                                 }
                             }
                         }
-            
                     `,
             variables: {
                 method: 'GET',
-                id: node_id
+                id: idNode
             }
-        }) 
+        });
     }
-
 }
+

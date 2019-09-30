@@ -36,7 +36,7 @@ export class VmsComponent implements OnInit {
   ];
 
 
-  constructor(private service: VmsService,private waitService: WaitService){}
+  constructor(private service: VmsService, private waitService: WaitService){}
 
   ngOnInit() {
     this.getAllVms();

@@ -1,17 +1,16 @@
+import { IPool } from './definitions/pool';
 import { VmDetalsPopupComponent } from './vm-details-popup/vm-details-popup.component';
-import { RemoveUsersPoolComponent } from './../remove-users/remove-users.component';
-import { AddUsersPoolComponent } from './../add-users/add-users.component';
-import { RemoveVMStaticPoolComponent } from './../remove-vms/remove-vms.component';
-import { AddVMStaticPoolComponent } from './../add-vms/add-vms.component';
+import { RemoveUsersPoolComponent } from './remove-users/remove-users.component';
+import { AddUsersPoolComponent } from './add-users/add-users.component';
+import { RemoveVMStaticPoolComponent } from './remove-vms/remove-vms.component';
+import { AddVMStaticPoolComponent } from './add-vms/add-vms.component';
 import { Component, OnInit } from '@angular/core';
-import { PoolsService } from '../pools.service';
 import { ActivatedRoute, ParamMap, Router } from '@angular/router';
 import { MatDialog } from '@angular/material';
-import { RemovePoolComponent } from '../remove-pool/remove-pool.component';
+import { RemovePoolComponent } from './remove-pool/remove-pool.component';
+import { PoolDetailsService } from './pool-details.service';
 
-interface type_pool {
-  [key: string] : any
-}
+
 
 @Component({
   selector: 'vdi-pool-details',
@@ -23,8 +22,9 @@ export class PoolDetailsComponent implements OnInit {
 
   public host: boolean = false;
 
-  public pool: type_pool = {};
-  public collection_details_static:any[] = [
+
+  public pool: IPool;
+  public collectionDetailsStatic: any[] = [
     {
       title: 'Название',
       property: 'name'
@@ -63,7 +63,7 @@ export class PoolDetailsComponent implements OnInit {
       property_array_prop_lv2: 'username'
     }
   ];
-  public collection_details_automated:any[] = [
+  public collectionDetailsAutomated: any[] = [
     {
       title: 'Название',
       property: 'name'
@@ -103,7 +103,9 @@ export class PoolDetailsComponent implements OnInit {
       property_lv2: 'reserve_size'
     },
     {
-      title: 'Максимальное количество создаваемых ВМ',  // Максимальное количество ВМ в пуле -  c тонкого клиента вм будут создаваться с каждым подключ. пользователем даже,если рес-сы закончатся
+      title: 'Максимальное количество создаваемых ВМ',
+      // Максимальное количество ВМ в пуле -  c тонкого клиента вм будут создаваться
+      // с каждым подключ. пользователем даже,если рес-сы закончатся
       property: 'settings',
       property_lv2: 'total_size'
     },
@@ -118,7 +120,7 @@ export class PoolDetailsComponent implements OnInit {
     }
   ];
 
-  public collection_vms_automated:any[] = [
+  public collectionVmsAutomated: any[] = [
     {
       title: '№',
       property: 'index'
@@ -131,20 +133,20 @@ export class PoolDetailsComponent implements OnInit {
     },
     {
       title: 'Шаблон',
-      property: "template",
+      property: 'template',
       property_lv2: 'name'
     },
     {
       title: 'Пользователь',
-      property: "user",
+      property: 'user',
       property_lv2: 'username'
     },
     {
       title: 'Состояние',
-      property: "state"
+      property: 'state'
     }
   ];
-  public collection_vms_static:any[] = [
+  public collectionVmsStatic: any[] = [
     {
       title: '№',
       property: 'index'
@@ -157,16 +159,16 @@ export class PoolDetailsComponent implements OnInit {
     },
     {
       title: 'Пользователь',
-      property: "user",
+      property: 'user',
       property_lv2: 'username'
     },
     {
       title: 'Состояние',
-      property: "state"
+      property: 'state'
     }
   ];
 
-  public collection_users:any[] = [
+  public collectionUsers: any[] = [
     {
       title: '№',
       property: 'index'
@@ -178,119 +180,120 @@ export class PoolDetailsComponent implements OnInit {
       icon: 'user'
     }
   ];
-  private pool_id:number;
-  private pool_type:string;
-  public  menuActive:string = 'info';
+  private idPool: number;
+  private typePool: string;
+  public  menuActive: string = 'info';
 
   constructor(private activatedRoute: ActivatedRoute,
               private router: Router,
-              private service: PoolsService,
-              public dialog: MatDialog) {}
+              private poolService: PoolDetailsService,
+              public  dialog: MatDialog) {}
 
   ngOnInit() {
     this.activatedRoute.paramMap.subscribe((param: ParamMap) => {
-      this.pool_type = param.get('type');
-      this.pool_id = +param.get('id');
+      this.typePool = param.get('type');
+      this.idPool = +param.get('id');
       this.getPool();
     });
   }
 
-  public getPool() {
+  public getPool(): void {
     this.host = false;
-    this.service.getPool(this.pool_id,this.pool_type)
+    this.poolService.getPool(this.idPool, this.typePool)
       .subscribe( (data) => {
         this.pool = data;
         this.host = true;
       },
-      (error)=> {
+      () => {
         this.host = true;
       });
   }
 
-  public removePool() {
+  public removePool(): void {
     this.dialog.open(RemovePoolComponent, {
       width: '500px',
       data: {
-        pool_id: this.pool_id,
-        pool_name: this.pool['name']
+        idPool: this.idPool,
+        namePool: this.pool.name
       }
     });
   }
 
-  public addUsers() {
+  public addUsers(): void {
     this.dialog.open(AddUsersPoolComponent, {
       width: '500px',
       data: {
-        pool_id: this.pool_id,
-        pool_name: this.pool['name'],
-        pool_type: this.pool_type
+        idPool: this.idPool,
+        namePool: this.pool.name,
+        typePool: this.typePool
       }
     });
   }
 
-  public removeUsers() {
+  public removeUsers(): void {
     this.dialog.open(RemoveUsersPoolComponent, {
       width: '500px',
       data: {
-        pool_id: this.pool_id,
-        pool_name: this.pool['name'],
-        pool_type: this.pool_type
+        idPool: this.idPool,
+        namePool: this.pool.name,
+        typePool: this.typePool
       }
     });
   }
 
-  public addVM() {
+  public addVM(): void {
     this.dialog.open(AddVMStaticPoolComponent, {
       width: '500px',
       data: {
-        pool_id: this.pool_id,
-        pool_name: this.pool['name'],
-        id_cluster: this.pool['settings']['cluster_id'],
-        id_node: this.pool['settings']['node_id'],
-        pool_type: this.pool_type
+        idPool: this.idPool,
+        namePool: this.pool.name,
+        idCluster: this.pool.settings.cluster_id,
+        idNode: this.pool.settings.node_id,
+        typePool: this.typePool
       }
     });
   }
 
-  public removeVM() {
+  public removeVM(): void {
     this.dialog.open(RemoveVMStaticPoolComponent, {
       width: '500px',
       data: {
-        pool_id: this.pool_id,
-        pool_name: this.pool['name'],
+        idPool: this.idPool,
+        namePool: this.pool.name,
         vms: this.pool.vms,
-        pool_type: this.pool_type
+        typePool: this.typePool
       }
     });
   }
 
   public clickVm(vm) {
+    const vmActive = vm;
     this.dialog.open(VmDetalsPopupComponent, {
-      width: '50%',
+      width: '1000px',
       data: {
-        vm: vm,
-        pool_type: this.pool_type,
-        pool_users: this.pool.users,
-        pool_id: this.pool_id
+        vm: vmActive,
+        typePool: this.typePool,
+        usersPool: this.pool.users,
+        idPool: this.idPool
       }
     });
   }
 
   public routeTo(route: string): void {
-    if(route === 'info') {
+    if (route === 'info') {
       this.menuActive = 'info';
     }
 
-    if(route === 'vms') {
+    if (route === 'vms') {
       this.menuActive = 'vms';
     }
 
-    if(route === 'users') {
+    if (route === 'users') {
       this.menuActive = 'users';
     }
   }
 
-  public close() {
+  public close(): void  {
     this.router.navigate(['pools']);
   }
 }

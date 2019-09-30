@@ -1,17 +1,23 @@
 import { AddUserVmComponent } from './add-user/add-user.component';
-import { Component, Inject, OnInit } from '@angular/core';
+import { Component, Inject } from '@angular/core';
 import { MAT_DIALOG_DATA, MatDialog } from '@angular/material';
 import { RemoveUserVmComponent } from './remove-user/remove-user.component';
 
-interface IVmDetails  {
+interface IData  {
   vm: {
     id: string;
     name: string;
     state: string;
+    user: {
+      username: string | null;
+    };
+    template?: {
+      name: string;
+    }
   };
-  pool_type: string;
-  pool_users: [{[key: string]: IPoolUser }];
-  pool_id: number;
+  typePool: string;
+  usersPool: [{[key: string]: IPoolUser }];
+  idPool: number;
 }
 
 interface IPoolUser {
@@ -23,52 +29,49 @@ interface IPoolUser {
   templateUrl: './vm-details-popup.component.html'
 })
 
-export class VmDetalsPopupComponent  implements OnInit {
+export class VmDetalsPopupComponent {
 
   public menuActive: string = 'info';
-  public collection_into_vm_automated: any[] = [
+  public collectionIntoVmAutomated: any[] = [
     {
       title: 'Название',
       property: 'name',
     },
     {
       title: 'Шаблон',
-      property: "template",
+      property: 'template',
       property_lv2: 'name'
     },
     {
       title: 'Пользователь',
-      property: "user",
+      property: 'user',
       property_lv2: 'username'
     },
     {
       title: 'Состояние',
-      property: "state"
+      property: 'state'
     }
   ];
-  public collection_into_vm_static: any[] = [
+  public collectionIntoVmStatic: any[] = [
     {
       title: 'Название',
       property: 'name'
     },
     {
       title: 'Пользователь',
-      property: "user",
+      property: 'user',
       property_lv2: 'username'
     },
     {
       title: 'Состояние',
-      property: "state"
+      property: 'state'
     }
   ];
 
   constructor(public dialog: MatDialog,
-             @Inject(MAT_DIALOG_DATA) public data: IVmDetails
+              @Inject(MAT_DIALOG_DATA) public data: IData
              ) {}
 
-  ngOnInit() {
-    console.log(this.data);
-  }
 
   public addUser() {
     this.dialog.open(AddUserVmComponent, {

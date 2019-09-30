@@ -1,5 +1,5 @@
 import { WaitService } from './../../common/components/wait/wait.service';
-import { Component, OnInit, HostListener,ViewChild,ElementRef } from '@angular/core';
+import { Component, OnInit, HostListener, ViewChild, ElementRef } from '@angular/core';
 import { NodesService } from './nodes.service';
 import { map } from 'rxjs/operators';
 import { Router } from '@angular/router';
@@ -22,7 +22,7 @@ export class NodesComponent implements OnInit {
     },
     {
       title: 'Локация',
-      property: "datacenter_name"
+      property: 'datacenter_name'
     },
     {
       title: 'IP-адрес',
@@ -50,19 +50,19 @@ export class NodesComponent implements OnInit {
   public pageHeight: string = '100%';
   public pageRollup: boolean = false;
 
-  constructor(private service: NodesService,private router: Router,private waitService: WaitService){}
+  constructor(private service: NodesService, private router: Router, private waitService: WaitService) { }
 
-  @ViewChild('view') view:ElementRef;
+  @ViewChild('view') view: ElementRef;
 
-  @HostListener('window:resize', ['$event']) onResize(event) {
-		if(this.pageHeight == this.pageHeightMin) {
-			if((this.view.nativeElement.clientHeight - this.pageHeightMinNumber) < (this.pageHeightMinNumber + 250)) {
-				this.pageRollup = true;
-			} else {
-				this.pageRollup = false;
-			}
-		}
-	}
+  @HostListener('window:resize', ['$event']) onResize() {
+    if (this.pageHeight == this.pageHeightMin) {
+      if ((this.view.nativeElement.clientHeight - this.pageHeightMinNumber) < (this.pageHeightMinNumber + 250)) {
+        this.pageRollup = true;
+      } else {
+        this.pageRollup = false;
+      }
+    }
+  }
 
   ngOnInit() {
     this.getNodes();
@@ -71,46 +71,44 @@ export class NodesComponent implements OnInit {
   public getNodes() {
     this.waitService.setWait(true);
     this.service.getAllNodes().valueChanges.pipe(map(data => data.data.controllers))
-      .subscribe( (data) => {
-        this.nodes =[];
+      .subscribe((data) => {
+        this.nodes = [];
         let arrNodes: [][] = [];
-   
+
         arrNodes = data.map(controller => controller.nodes);
 
         arrNodes.forEach((arr: []) => {
-            arr.forEach((obj: {}) => {
-              this.nodes.push(obj);
-            }); 
+          arr.forEach((obj: {}) => {
+            this.nodes.push(obj);
+          });
         });
         this.waitService.setWait(false);
-    });
+      });
   }
 
   public routeTo(event): void {
     this.router.navigate([`resourses/nodes/${event.id}`]);
 
-    setTimeout(()=> {
+    setTimeout(() => {
       this.pageHeight = this.pageHeightMin;
     }, 0);
   }
 
   public componentAdded(): void {
-		setTimeout(()=> {
-		//	this.routerActivated = true;
-			this.pageHeight = this.pageHeightMin;
+    setTimeout(() => {
+      this.pageHeight = this.pageHeightMin;
 
-			if((this.view.nativeElement.clientHeight - this.pageHeightMinNumber) < (this.pageHeightMinNumber + 250)) {
-				this.pageRollup = true;
-			};
-		}, 0);
-	}
+      if ((this.view.nativeElement.clientHeight - this.pageHeightMinNumber) < (this.pageHeightMinNumber + 250)) {
+        this.pageRollup = true;
+      };
+    }, 0);
+  }
 
   public componentRemoved(): void {
-		setTimeout(()=> {
-			//this.routerActivated = false;
-			this.pageHeight = this.pageHeightMax;
-			this.pageRollup = false;
-		}, 0);
+    setTimeout(() => {
+      this.pageHeight = this.pageHeightMax;
+      this.pageRollup = false;
+    }, 0);
   }
 
 }

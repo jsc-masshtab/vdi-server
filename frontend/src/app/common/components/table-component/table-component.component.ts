@@ -10,8 +10,7 @@ export class TableComponentComponent {
   @Input() data: object[] = [];
   @Input() collection: object[] = [];
   @Input() cursor: boolean = false;
-  @Input() empty: string = "- нет данных -";
-  @Output() clickRowData:EventEmitter<any> = new EventEmitter();
+  @Output() clickRowData: EventEmitter<any> = new EventEmitter();
 
   constructor() {}
 

@@ -1,20 +1,20 @@
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { RemoveControllerComponent } from './remove-controller.component';
+import { PoolAddComponent } from './add-pool.component';
 
-describe('AddControllerComponent', () => {
-  let component: AddControllerComponent;
-  let fixture: ComponentFixture<AddControllerComponent>;
+describe('PoolAddComponent', () => {
+  let component: PoolAddComponent;
+  let fixture: ComponentFixture<PoolAddComponent>;
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [ RemoveControllerComponent ]
+      declarations: [ PoolAddComponent ]
     })
     .compileComponents();
   }));
 
   beforeEach(() => {
-    fixture = TestBed.createComponent(RemoveControllerComponent);
+    fixture = TestBed.createComponent(PoolAddComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

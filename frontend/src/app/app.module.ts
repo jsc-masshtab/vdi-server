@@ -1,11 +1,12 @@
+import { AddPoolService } from './polls/add-pool/add-pool.service';
 import { RemoveUserVmComponent } from './polls/pool-details/vm-details-popup/remove-user/remove-user.component';
 import { AddUserVmComponent } from './polls/pool-details/vm-details-popup/add-user/add-user.component';
 import { VmDetalsPopupComponent } from './polls/pool-details/vm-details-popup/vm-details-popup.component';
-import { RemoveUsersPoolComponent } from './polls/remove-users/remove-users.component';
-import { RemoveVMStaticPoolComponent } from './polls/remove-vms/remove-vms.component';
+import { RemoveUsersPoolComponent } from './polls/pool-details/remove-users/remove-users.component';
+import { RemoveVMStaticPoolComponent } from './polls/pool-details/remove-vms/remove-vms.component';
 import { WaitService } from './common/components/wait/wait.service';
 import { WaitComponent } from './common/components/wait/wait.component';
-import { AddVMStaticPoolComponent } from './polls/add-vms/add-vms.component';
+import { AddVMStaticPoolComponent } from './polls/pool-details/add-vms/add-vms.component';
 import { HttpLinkModule, HttpLink } from 'apollo-angular-link-http';
 import { ApolloModule, Apollo } from 'apollo-angular';
 import { ErrorsService } from './common/components/errors/errors.service';
@@ -38,17 +39,18 @@ import { HttpClientModule } from '@angular/common/http';
 /*  -----------------------------------   icons   --------------------------------------*/
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { library } from '@fortawesome/fontawesome-svg-core';
-import { faDesktop,faDatabase,faBuilding, faLayerGroup,faPlusCircle,faSpinner,faServer,faCog,faChevronUp,faTimesCircle,faFolderOpen,faStar,faMinusCircle, faTv,faSyncAlt,faTrashAlt,faUsers,faMeh,faChartBar, faUser} from '@fortawesome/free-solid-svg-icons';
+import { faDesktop, faDatabase, faBuilding, faLayerGroup, faPlusCircle, faSpinner, faServer, faCog, faChevronUp, faTimesCircle,
+         faFolderOpen, faStar, faMinusCircle, faTv, faSyncAlt, faTrashAlt, faUsers, faMeh,
+         faChartBar, faUser
+        } from '@fortawesome/free-solid-svg-icons';
 /*  -----------------------------------   icons   --------------------------------------*/
 
 
 import { MainMenuComponent } from './main-menu/main-menu.component';
-import { BaSelect } from './common/components/baSelect';
-
 
 import { TableComponentComponent } from './common/components/table-component/table-component.component';
 import { ErrorsComponent } from './common/components/errors/errors.component';
-import { PoolAddComponent } from './polls/pool-add/pool-add.component';
+import { PoolAddComponent } from './polls/add-pool/add-pool.component';
 import { PoolsService } from './polls/pools.service';
 import { FocusMeDirective } from './common/other/directives/focusMe.directive';
 import { TableIntoComponent } from './common/components/table-into-component/table-into';
@@ -66,7 +68,7 @@ import { ControllersService } from './settings/controllers/controllers.service';
 import { FooterComponent } from './footer/footer.component';
 import { ClusterDetailsComponent } from './resourses/clusters/cluster-details/cluster-details.component';
 import { PoolsComponent } from './polls/pools.component';
-import { RemovePoolComponent } from './polls/remove-pool/remove-pool.component';
+import { RemovePoolComponent } from './polls/pool-details/remove-pool/remove-pool.component';
 import { TemplatesService } from './resourses/templates/templates.service';
 import { UsersComponent } from './settings/users/users.component';
 import { UsersService } from './settings/users/users.service';
@@ -75,7 +77,8 @@ import { UsersService } from './settings/users/users.service';
 import { onError } from 'apollo-link-error';
 import { InMemoryCache } from 'apollo-cache-inmemory';
 import { environment } from 'src/environments/environment';
-import { AddUsersPoolComponent } from './polls/add-users/add-users.component';
+import { AddUsersPoolComponent } from './polls/pool-details/add-users/add-users.component';
+import { PoolDetailsService } from './polls/pool-details/pool-details.service';
 
 @NgModule({
   declarations: [
@@ -84,7 +87,6 @@ import { AddUsersPoolComponent } from './polls/add-users/add-users.component';
     TableComponentComponent,
     ErrorsComponent,
     PoolAddComponent,
-    BaSelect,
     FocusMeDirective,
     TableIntoComponent,
     NodesComponent,
@@ -139,34 +141,37 @@ import { AddUsersPoolComponent } from './polls/add-users/add-users.component';
     AddUserVmComponent,
     RemoveUserVmComponent
   ],
-  providers: 
-            [
-              PoolsService,
-              { provide: MAT_DIALOG_DEFAULT_OPTIONS, useValue: { hasBackdrop: true, restoreFocus: true } },
-              {provide: ErrorStateMatcher, useClass:ShowOnDirtyErrorStateMatcher},
-              NodesService,
-              ClustersService,
-              ControllersService,
-              DatapoolsService,
-              TemplatesService,
-              VmsService,
-              UsersService,
-              ErrorsService,
-              WaitService
-            ],
+  providers:
+    [
+      PoolsService,
+      { provide: MAT_DIALOG_DEFAULT_OPTIONS, useValue: { hasBackdrop: true, restoreFocus: true } },
+      { provide: ErrorStateMatcher, useClass: ShowOnDirtyErrorStateMatcher },
+      NodesService,
+      ClustersService,
+      ControllersService,
+      DatapoolsService,
+      TemplatesService,
+      VmsService,
+      UsersService,
+      ErrorsService,
+      WaitService,
+      AddPoolService,
+      PoolDetailsService
+    ],
   bootstrap: [AppComponent]
 })
 
 
 export class AppModule {
-  
 
-  constructor( private apollo: Apollo,
-               private httpLink: HttpLink,
-               private errorService: ErrorsService,
-               private waitService: WaitService) {
 
-    library.add(faDesktop,faDatabase,faLayerGroup,faPlusCircle,faMinusCircle,faSpinner,faServer,faCog,faChevronUp,faTimesCircle,faFolderOpen,faStar,faTv,faSyncAlt,faBuilding,faTrashAlt,faUsers,faMeh,faChartBar,faUser); // Неиспользуемые иконки при финальной сборке удаляются
+  constructor(private apollo: Apollo,
+              private httpLink: HttpLink,
+              private errorService: ErrorsService,
+              private waitService: WaitService) {
+
+    library.add(faDesktop, faDatabase, faLayerGroup, faPlusCircle, faMinusCircle, faSpinner, faServer, faCog, faChevronUp, faTimesCircle,
+                faFolderOpen, faStar, faTv, faSyncAlt, faBuilding, faTrashAlt, faUsers, faMeh, faChartBar, faUser);
 
     const uri = environment.url;
     const link = this.httpLink.create({ uri, includeQuery: true, includeExtensions: false });
@@ -174,9 +179,9 @@ export class AppModule {
     const errorLink = onError(({ graphQLErrors, networkError }) => {
       if (graphQLErrors) {
         graphQLErrors.map(({ message, locations, path }) =>
-        console.log(`[GraphQL error]: Message: ${message}, Location: ${locations}, Path: ${path}`,));
+          console.log(`[GraphQL error]: Message: ${message}, Location: ${locations}, Path: ${path}`));
       }
-       
+
       if (networkError) {
         this.errorService.setError(networkError['error']['errors']);
         this.waitService.setWait(false);
@@ -185,7 +190,7 @@ export class AppModule {
 
     this.apollo.create({
       link: errorLink.concat(link),
-      cache: new InMemoryCache({ addTypename: false, dataIdFromObject: object =>  object.id }),
+      cache: new InMemoryCache({ addTypename: false, dataIdFromObject: object => object.id }),
       defaultOptions: {
         watchQuery: {
           fetchPolicy: 'network-only', // обойдет кеш и напрямую отправит запрос на сервер.

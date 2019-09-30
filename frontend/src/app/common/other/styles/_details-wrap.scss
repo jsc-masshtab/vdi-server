@@ -4,11 +4,20 @@
     flex-direction: column;
     height: 100%;
     width: 100%;
+
+    &.popup {
+        border: 1px solid#282828;
+        box-shadow: 2px 3px 75px 1px rgba(0,0,0,0.2);
+
+        > .details-header {
+            border: 1px solid #e8e8e8;
+            border-bottom: none;
+        }
+    }
 }
 
 .details-menu {
     min-width: 200px;
-    height: 100%;
     display: flex;
     flex-direction: column;
     background-color: white;
@@ -142,6 +151,24 @@
             transition: all 150ms;
         }
     }
+
+    .btn-close-popup {
+        outline: 0;
+        color: #FFF;
+        cursor: pointer;
+        transition: all 150ms;
+        background: transparent;
+        border: none;
+
+        fa-icon {
+            font-size: 13px;
+        }
+
+        &:hover {
+            color: rgba(255,255,255,0.5);
+        }
+    }
+    
 }
 
 .details-control-panel {
