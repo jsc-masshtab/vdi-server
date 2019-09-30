@@ -14,7 +14,8 @@ from vdi.tasks.thin_client import EnableRemoteAccess
 from vdi.tasks.vm import GetDomainInfo, GetVdisks
 
 from .users import UserType
-from .util import get_selections, check_if_pool_exists, make_resource_type
+from .util import get_selections, check_and_return_pool_data, check_pool_initial_size, check_reserve_size, \
+    check_total_size, make_resource_type
 from db.db import db, fetch
 from ..pool import Pool
 
@@ -497,7 +498,6 @@ class AddPool(graphene.Mutation):
         vm_name_template = graphene.String()
         controller_ip = graphene.String()
 
-
     Output = PoolType
 
     @staticmethod
@@ -509,27 +509,12 @@ class AddPool(graphene.Mutation):
             raise FieldError(vm_name_template=['Шаблонное имя вм должно содержать только буквы и цифры'])
 
         # check sizes
-        MIX_SIZE = 1
-        MAX_SIZE = 200
-        MAX_VM_AMOUNT = 1000
         initial_size = pool_args_dict['initial_size']
-        if initial_size < MIX_SIZE or initial_size > MAX_SIZE:
-            raise FieldError(initial_size=
-                             ['Начальное количество ВМ должно быть в интервале [{} {}]'.format(MIX_SIZE, MAX_SIZE)])
-
         reserve_size = pool_args_dict['reserve_size']
-        if reserve_size < MIX_SIZE or reserve_size > MAX_SIZE:
-            raise FieldError(reserve_size=
-                             ['Количество создаваемых ВМ должно быть в интервале [{} {}]'.format(MIX_SIZE, MAX_SIZE)])
-
         total_size = pool_args_dict['total_size']
-        if total_size < initial_size:
-            raise FieldError(total_size=['Максимальное количество создаваемых ВМ не может быть меньше '
-                                         'начального количества ВМ'])
-        if total_size < MIX_SIZE or total_size > MAX_VM_AMOUNT:
-            raise FieldError(total_size=['Максимальное количество создаваемых ВМ должно быть в интервале \
-                                         [{} {}]'.format(MIX_SIZE, MAX_VM_AMOUNT)])
-
+        check_pool_initial_size(initial_size)
+        check_reserve_size(reserve_size)
+        check_total_size(total_size, initial_size)
 
     async def mutate(self, info, settings=(), **kwargs):
 
@@ -823,16 +808,16 @@ class RemoveVmsFromStaticPool(graphene.Mutation):
         }
 
 
-class WakePool(graphene.Mutation):
-    class Arguments:
-        id = graphene.Int()
-
-    ok = graphene.Boolean()
-
-    async def mutate(self, info, id):
-        from vdi.pool import Pool
-        await Pool.wake_pool(id)
-        return WakePool(ok=True)
+# class WakePool(graphene.Mutation):
+#     class Arguments:
+#         id = graphene.Int()
+#
+#     ok = graphene.Boolean()
+#
+#     async def mutate(self, info, id):
+#         from vdi.pool import Pool
+#         await Pool.wake_pool(id)
+#         return WakePool(ok=True)
 
 
 # TODO delete, drop, remove: use a single word
@@ -1087,13 +1072,13 @@ class PoolMixin:
 
 class ChangePoolName(graphene.Mutation):
     class Arguments:
-        pool_id = graphene.Int()
-        new_name = graphene.String()
+        pool_id = graphene.Int(required=True)
+        new_name = graphene.String(required=True)
 
     ok = graphene.Boolean()
 
     async def mutate(self, _info, pool_id, new_name):
-        await check_if_pool_exists(pool_id)
+        await check_and_return_pool_data(pool_id)
         # check if name is correct
         PoolValidator.validate_pool_name(new_name)
         # set name
@@ -1106,16 +1091,13 @@ class ChangePoolName(graphene.Mutation):
 
 class ChangeVmNameTemplate(graphene.Mutation):
     class Arguments:
-        pool_id = graphene.Int()
-        new_name_template = graphene.String()
+        pool_id = graphene.Int(required=True)
+        new_name_template = graphene.String(required=True)
 
     ok = graphene.Boolean()
 
     async def mutate(self, _info, pool_id, new_name_template):
-        pool_data_dict = await check_if_pool_exists(pool_id)
-        # check if pool is automated
-        if pool_data_dict['desktop_pool_type'] != DesktopPoolType.AUTOMATED.name:
-            raise FieldError(pool_id=['Не найден динамический пул с указанным id'])
+        await check_and_return_pool_data(pool_id, DesktopPoolType.AUTOMATED.name)
         # check if name is correct
         PoolValidator.validate_pool_name(new_name_template)
         # set name
@@ -1126,5 +1108,47 @@ class ChangeVmNameTemplate(graphene.Mutation):
         # change live data
         if pool_id in Pool.instances and 'vm_name_template' in Pool.instances[pool_id].params:
             Pool.instances[pool_id].params['vm_name_template'] = new_name_template
+
+        return {'ok': True}
+
+
+class ChangeAutomatedPoolTotalSize(graphene.Mutation):
+    class Arguments:
+        pool_id = graphene.Int(required=True)
+        new_total_size = graphene.Int(required=True)
+
+    async def mutate(self, _info, pool_id, new_total_size):
+        pool_data_dict = await check_and_return_pool_data(pool_id, DesktopPoolType.AUTOMATED.name)
+        check_total_size(new_total_size, pool_data_dict['initial_size'])
+        #  do nothing?
+        if pool_data_dict['total_size'] == new_total_size:
+            return {'ok': True}
+
+        # set total size in db
+        async with db.connect() as conn:
+            qu = 'UPDATE pool SET total_size = $1 WHERE id = $2', new_total_size, pool_id
+            await conn.fetch(*qu)
+
+        # live data
+        if pool_id in Pool.instances:
+            Pool.instances[pool_id].params['total_size'] = new_total_size
+
+        # change amount of created vms
+        vm_amount_in_pool = await Pool.get_vm_amount_in_pool(pool_id)
+        # case 1: decreasing (in this case we need to remove machines if there are too many of them)
+        if new_total_size < vm_amount_in_pool:
+            amount_delta = vm_amount_in_pool - new_total_size
+            # delete from db
+            async with db.connect() as conn:
+                qu = 'DELETE TOP $1 FROM vm WHERE pool_id = $2',amount_delta, pool_id
+                await conn.fetch(*qu)
+            # update live data
+            if pool_id in Pool.instances:
+                for _ in range(amount_delta):
+                    # removing from queue
+                    await Pool.instances[pool_id].queue.get()
+
+
+
 
         return {'ok': True}
