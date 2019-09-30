@@ -51,7 +51,7 @@ static VdiManager vdi_manager;
 
 // functions declarations
 static void set_init_values(void);
-static void set_vdi_client_state(VdiClientState vdi_client_state, const gchar *message, gboolean error_message);
+static void set_vdi_client_state(VdiClientState vdi_client_state, const gchar *message, gboolean is_error_message);
 static void refresh_vdi_pool_data_async(void);
 static void unregister_all_pools(void);
 static void register_pool(gint64 pool_id, const gchar *pool_name);
@@ -89,7 +89,7 @@ static void set_init_values()
     vdi_manager.password_ptr = NULL;
 }
 // Set GUI state
-static void set_vdi_client_state(VdiClientState vdi_client_state, const gchar *message, gboolean error_message)
+static void set_vdi_client_state(VdiClientState vdi_client_state, const gchar *message, gboolean is_error_message)
 {
     switch (vdi_client_state) {
         case VDI_RECEIVED_RESPONSE: {
@@ -124,7 +124,7 @@ static void set_vdi_client_state(VdiClientState vdi_client_state, const gchar *m
     // message
     if (vdi_manager.status_label) {
 
-        if (error_message) {
+        if (is_error_message) {
             gchar *finalMessage = g_strdup_printf("<span color=\"red\">%s</span>", message);
             gtk_label_set_markup(GTK_LABEL (vdi_manager.status_label), finalMessage);
             g_free(finalMessage);
@@ -232,7 +232,7 @@ static void on_get_vdi_pool_data_finished (GObject *source_object G_GNUC_UNUSED,
             JsonNode *jsonNode = json_array_get_element (jsonArray, i);
             JsonObject *object = json_node_get_object (jsonNode);
 
-            gint64 pool_id = json_object_get_int_member(object, "id");
+            gint64 pool_id = json_object_get_int_member_safely(object, "id");
             const gchar *pool_name = json_object_get_string_member(object, "name");
             //printf("pool_id %i\n", pool_id);
             //printf("pool_name %s\n", pool_name);
@@ -273,6 +273,11 @@ static void on_get_vm_from_pool_finished(GObject *source_object G_GNUC_UNUSED,
     // parse  data  json
     JsonParser *parser = json_parser_new ();
     JsonObject *object = get_json_object(parser, response_body_str);
+    if (object == NULL) {
+        set_vdi_client_state(VDI_RECEIVED_RESPONSE,
+                             "Не удалось получить вм из пула. От сервера получен некорректный json ответ", TRUE);
+        return;
+    }
 
     const gchar *vm_host = json_object_get_string_member_safely(object, "host");
     gint64 vm_port = json_object_get_int_member_safely(object, "port");
