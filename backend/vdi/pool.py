@@ -95,7 +95,6 @@ class Pool:
             return None
         [params] = data
 
-        # dynamic traits!!
         ins = cls(params=params)
         cls.instances[pool_id] = ins
         return ins

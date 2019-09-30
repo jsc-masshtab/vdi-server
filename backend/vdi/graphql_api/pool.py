@@ -15,7 +15,7 @@ from vdi.tasks.vm import GetDomainInfo, GetVdisks
 
 from .users import UserType
 from .util import get_selections, check_and_return_pool_data, check_pool_initial_size, check_reserve_size, \
-    check_total_size, make_resource_type
+    check_total_size, make_resource_type, remove_vms_from_pool
 from db.db import db, fetch
 from ..pool import Pool
 
@@ -769,16 +769,6 @@ class RemoveVmsFromStaticPool(graphene.Mutation):
 
     ok = graphene.Boolean()
 
-    @classmethod
-    async def remove_vms_from_pool(cls, vm_ids, pool_id):
-        placeholders = ['${}'.format(i + 1) for i in range(0, len(vm_ids))]
-        placeholders = ', '.join(placeholders)
-        print('placeholders', placeholders)
-        async with db.connect() as conn:
-            qu = 'DELETE FROM vm WHERE id IN ({}) AND pool_id = {}'.format(placeholders, pool_id), *vm_ids
-            await conn.fetch(*qu)
-
-
     async def mutate(self, _info, pool_id, vm_ids):
         if not vm_ids:
             raise FieldError(vm_ids=['Обязательное поле'])
@@ -801,7 +791,7 @@ class RemoveVmsFromStaticPool(graphene.Mutation):
                 raise FieldError(vm_ids=['Одна из ВМ не принадлежит заданному пулу'])
 
         # remove vms
-        await RemoveVmsFromStaticPool.remove_vms_from_pool(vm_ids, pool_id)
+        await remove_vms_from_pool(vm_ids, pool_id)
 
         return {
             'ok': True
@@ -1117,10 +1107,12 @@ class ChangeAutomatedPoolTotalSize(graphene.Mutation):
         pool_id = graphene.Int(required=True)
         new_total_size = graphene.Int(required=True)
 
+    ok = graphene.Boolean()
+
     async def mutate(self, _info, pool_id, new_total_size):
         pool_data_dict = await check_and_return_pool_data(pool_id, DesktopPoolType.AUTOMATED.name)
         check_total_size(new_total_size, pool_data_dict['initial_size'])
-        #  do nothing?
+        #  do nothing
         if pool_data_dict['total_size'] == new_total_size:
             return {'ok': True}
 
@@ -1135,20 +1127,43 @@ class ChangeAutomatedPoolTotalSize(graphene.Mutation):
 
         # change amount of created vms
         vm_amount_in_pool = await Pool.get_vm_amount_in_pool(pool_id)
-        # case 1: decreasing (in this case we need to remove machines if there are too many of them)
+        #  decreasing (in this case we need to remove machines if there are too many of them)
         if new_total_size < vm_amount_in_pool:
-            amount_delta = vm_amount_in_pool - new_total_size
+            vm_amount_delta = vm_amount_in_pool - new_total_size
+
             # delete from db
             async with db.connect() as conn:
-                qu = 'DELETE TOP $1 FROM vm WHERE pool_id = $2',amount_delta, pool_id
+                qu = 'SELECT * FROM vm WHERE pool_id = $1 LIMIT $2', pool_id, vm_amount_delta
+                vm_data = await conn.fetch(*qu)
+                vm_ids = [single_vm['id'] for single_vm in vm_data]
+                # delete
+                await remove_vms_from_pool(vm_ids, pool_id)
                 await conn.fetch(*qu)
-            # update live data
-            if pool_id in Pool.instances:
-                for _ in range(amount_delta):
-                    # removing from queue
-                    await Pool.instances[pool_id].queue.get()
+
+            # delete on controller
+            controller_ip = pool_data_dict['controller_ip']
+            for vm_id in vm_ids:
+                await vm.DropDomain(id=vm_id, controller_ip=controller_ip)
+
+        return {'ok': True}
 
 
+class ChangeAutomatedPoolReserveSize(graphene.Mutation):
+    class Arguments:
+        pool_id = graphene.Int(required=True)
+        new_reserve_size = graphene.Int(required=True)
 
+    ok = graphene.Boolean()
+
+    async def mutate(self, _info, pool_id, new_reserve_size):
+        pool_data_dict = await check_and_return_pool_data(pool_id, DesktopPoolType.AUTOMATED.name)
+        check_reserve_size(pool_data_dict['reserve_size'])
+        #  do nothing
+        if pool_data_dict['reserve_size'] == new_reserve_size:
+            return {'ok': True}
+        # set reserve size in db
+        async with db.connect() as conn:
+            qu = 'UPDATE pool SET reserve_size = $1 WHERE id = $2', new_reserve_size, pool_id
+            await conn.fetch(*qu)
 
         return {'ok': True}

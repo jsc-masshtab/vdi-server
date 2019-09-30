@@ -29,6 +29,7 @@ class ResourcesMonitor:
         await self._close_connection()
         # wait unlit task finished
         if self._resources_monitor_task:
+            self._resources_monitor_task.cancel()
             await self._resources_monitor_task
 
     def subscribe(self, observer):
@@ -75,10 +76,9 @@ class ResourcesMonitor:
     async def _on_message_received(self, message):
         try:
             json_data = json.loads(message)
-            print(__class__.__name__, json_data)
+            #print(__class__.__name__, json_data)
         except JSONDecodeError:
             return
-
         #  notify subscribed observers
         try:
             resource_str = json_data['resource']
@@ -105,6 +105,10 @@ class ResourcesMonitor:
             await asyncio.sleep(2)
 
     async def _close_connection(self):
-        if self._websocket:
-            await self._websocket.close()
+        try:
+            if self._websocket:
+                await self._websocket.close()
+        except websockets.exceptions.ConnectionClosed:
+            pass
+
 

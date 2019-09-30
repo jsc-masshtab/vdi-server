@@ -101,3 +101,13 @@ def make_resource_type(type, data, fields_map=None):
     obj = type(**dic)
     obj.veil_info = data
     return obj
+
+
+# remove vms from db
+async def remove_vms_from_pool(vm_ids, pool_id):
+    placeholders = ['${}'.format(i + 1) for i in range(0, len(vm_ids))]
+    placeholders = ', '.join(placeholders)
+    print('placeholders', placeholders)
+    async with db.connect() as conn:
+        qu = 'DELETE FROM vm WHERE id IN ({}) AND pool_id = {}'.format(placeholders, pool_id), *vm_ids
+        await conn.fetch(*qu)
