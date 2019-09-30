@@ -16,7 +16,7 @@ export class PoolDetailsService {
         return this.service.mutate<any>({
             mutation: gql`
                             mutation RemovePool($id: Int) {
-                                removePool(id: $idPool) {
+                                removePool(id: $id) {
                                     ok
                                 }
                             }
@@ -33,7 +33,7 @@ export class PoolDetailsService {
         if (type === 'automated') {
             return this.service.watchQuery({
                 query: gql`  query getPool($id: Int) {
-                                pool(id: $idPool) {
+                                pool(id: $id) {
                                     name
                                     desktop_pool_type
                                     vms {
@@ -76,7 +76,7 @@ export class PoolDetailsService {
         if (type === 'static') {
             return this.service.watchQuery({
                 query: gql`  query getPool($id: Int) {
-                                pool(id: $idPool) {
+                                pool(id: $id) {
                                     name
                                     desktop_pool_type
                                     vms {
@@ -118,7 +118,7 @@ export class PoolDetailsService {
         return this.service.mutate<any>({
             mutation: gql`
                             mutation AddVms($pool_id: Int!,$vm_ids: [ID]!) {
-                                addVmsToStaticPool(pool_id: $idPool, vm_ids: $idsVms) {
+                                addVmsToStaticPool(pool_id: $pool_id, vm_ids: $vm_ids) {
                                     ok
                                 }
                             }
@@ -137,7 +137,7 @@ export class PoolDetailsService {
         return this.service.mutate<any>({
             mutation: gql`
                             mutation RemoveVms($pool_id: Int!,$vm_ids: [ID]!) {
-                                removeVmsFromStaticPool(pool_id: $idPool,vm_ids: $idsVms) {
+                                removeVmsFromStaticPool(pool_id: $pool_id,vm_ids: $vm_ids) {
                                     ok
                                 }
                             }
@@ -156,7 +156,7 @@ export class PoolDetailsService {
         return this.service.mutate<any>({
             mutation: gql`
                             mutation AssignVmToUser($vm_id: ID!,$username: String!) {
-                                assignVmToUser(vm_id: $idVm,username: $usernameToVM) {
+                                assignVmToUser(vm_id: $vm_id,username: $username) {
                                     ok
                                 }
                             }
@@ -174,7 +174,7 @@ export class PoolDetailsService {
         return this.service.mutate<any>({
             mutation: gql`
                             mutation FreeVmFromUser($vm_id: ID!) {
-                                freeVmFromUser(vm_id: $idVm) {
+                                freeVmFromUser(vm_id: $vm_id) {
                                     ok
                                 }
                             }
@@ -190,7 +190,7 @@ export class PoolDetailsService {
         const idPool = id;
         return  this.service.watchQuery({
              query:  gql` query allUsers($id: Int,$entitled: Boolean) {
-                            pool(id: $idPool) {
+                            pool(id: $id) {
                                 users(entitled:$entitled) {
                                     username
                                 }
@@ -210,7 +210,7 @@ export class PoolDetailsService {
         return this.service.watchQuery({
                 query: gql`
                             query  AssesUsersToPool($id: Int) {
-                                pool(id: $idPool) {
+                                pool(id: $id) {
                                     users {
                                         username
                                     }
@@ -229,7 +229,7 @@ export class PoolDetailsService {
         const idNode = nodeId;
         return  this.service.watchQuery({
             query:  gql` query list_free_vms($cluster_id: String,$node_id:String) {
-                                    list_of_vms(cluster_id: $cluster_id,node_id:$node_id) {
+                                    list_of_vms(cluster_id: $cluster_id,node_id: $node_id) {
                                         id
                                         name
                                     }
@@ -250,7 +250,7 @@ export class PoolDetailsService {
         return this.service.mutate<any>({
             mutation: gql`
                             mutation RemoveUserEntitlementsFromPool($pool_id: ID,$entitled_users: [ID]) {
-                                removeUserEntitlementsFromPool(pool_id: $idPool, entitled_users: $addedUsers) {
+                                removeUserEntitlementsFromPool(pool_id: $pool_id, entitled_users: $entitled_users) {
                                     freed {
                                         name
                                     }
@@ -272,7 +272,7 @@ export class PoolDetailsService {
         return this.service.mutate<any>({
             mutation: gql`
                             mutation EntitleUsersToPool($pool_id: ID,$entitled_users: [ID]) {
-                                entitleUsersToPool(pool_id: $idPool, entitled_users: $addedUsers) {
+                                entitleUsersToPool(pool_id: $pool_id, entitled_users: $entitled_users) {
                                     ok
                                 }
                             }

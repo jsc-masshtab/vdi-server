@@ -11,6 +11,7 @@ import { RemovePoolComponent } from './remove-pool/remove-pool.component';
 import { PoolDetailsService } from './pool-details.service';
 
 
+
 @Component({
   selector: 'vdi-pool-details',
   templateUrl: './pool-details.component.html'
@@ -20,6 +21,7 @@ import { PoolDetailsService } from './pool-details.service';
 export class PoolDetailsComponent implements OnInit {
 
   public host: boolean = false;
+
 
   public pool: IPool;
   public collectionDetailsStatic: any[] = [
@@ -195,7 +197,7 @@ export class PoolDetailsComponent implements OnInit {
     });
   }
 
-  public getPool() {
+  public getPool(): void {
     this.host = false;
     this.poolService.getPool(this.idPool, this.typePool)
       .subscribe( (data) => {
@@ -207,77 +209,75 @@ export class PoolDetailsComponent implements OnInit {
       });
   }
 
-  public removePool() {
-    const a = this.dialog.open(RemovePoolComponent, {
+  public removePool(): void {
+    this.dialog.open(RemovePoolComponent, {
       width: '500px',
       data: {
         idPool: this.idPool,
         namePool: this.pool.name
       }
     });
-
-    console.log(a);
   }
 
-  public addUsers() {
+  public addUsers(): void {
     this.dialog.open(AddUsersPoolComponent, {
       width: '500px',
       data: {
-        pool_id: this.idPool,
-        pool_name: this.pool.name,
+        idPool: this.idPool,
+        namePool: this.pool.name,
         typePool: this.typePool
       }
     });
   }
 
-  public removeUsers() {
+  public removeUsers(): void {
     this.dialog.open(RemoveUsersPoolComponent, {
       width: '500px',
       data: {
-        pool_id: this.idPool,
-        pool_name: this.pool.name,
+        idPool: this.idPool,
+        namePool: this.pool.name,
         typePool: this.typePool
       }
     });
   }
 
-  public addVM() {
+  public addVM(): void {
     this.dialog.open(AddVMStaticPoolComponent, {
       width: '500px',
       data: {
-        pool_id: this.idPool,
-        pool_name: this.pool.name,
-        id_cluster: this.pool.settings.cluster_id,
-        id_node: this.pool.settings.node_id,
+        idPool: this.idPool,
+        namePool: this.pool.name,
+        idCluster: this.pool.settings.cluster_id,
+        idNode: this.pool.settings.node_id,
         typePool: this.typePool
       }
     });
   }
 
-  public removeVM() {
+  public removeVM(): void {
     this.dialog.open(RemoveVMStaticPoolComponent, {
       width: '500px',
       data: {
-        pool_id: this.idPool,
-        pool_name: this.pool.name,
+        idPool: this.idPool,
+        namePool: this.pool.name,
         vms: this.pool.vms,
         typePool: this.typePool
       }
     });
   }
 
-  // public clickVm(vm) {
-  //   const vmActive = vm;
-  //   this.dialog.open(VmDetalsPopupComponent, {
-  //     width: '50%',
-  //     data: {
-  //       vm: vmActive,
-  //       typePool: this.typePool,
-  //       pool_users: this.pool.users,
-  //       pool_id: this.idPool
-  //     }
-  //   });
-  // }
+  public clickVm(vm) {
+    const vmActive = vm;
+    this.dialog.open(VmDetalsPopupComponent, {
+      width: '50%',
+      data: {
+        vm: vmActive,
+        typePool: this.typePool,
+        pool_users: this.pool.users,
+        pool_id: this.idPool
+      }
+    });
+  }
 
   public routeTo(route: string): void {
     if (route === 'info') {
