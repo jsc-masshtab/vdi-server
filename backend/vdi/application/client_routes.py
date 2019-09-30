@@ -66,19 +66,19 @@ async def get_vm(request):
         return JSONResponse({'host': '', 'port': 0, 'password': '',
                              'message': 'Пул не найден'})
     [[controller_ip, desktop_pool_type, vm_id]] = data
-    print('get_vm: vm_id', vm_id)
+    print('data', data)
 
     if vm_id:
         from vdi.tasks.vm import GetDomainInfo
         info = await GetDomainInfo(controller_ip=controller_ip, domain_id=vm_id)
-
         await thin_client.PrepareVm(controller_ip=controller_ip, domain_id=vm_id)
+        print('remote_access_port', info['remote_access_port'])
         return JSONResponse({
             'host': controller_ip,
             'port': info['remote_access_port'],
             'password': info['graphics_password'],
         })
-
+    # If the user does not have a vm in the pool then try to assign a free vm to him
     # find a free vm in pool
     async with db.connect() as conn:
         qu = "select id from vm where pool_id = $1 and username is NULL limit 1", pool_id

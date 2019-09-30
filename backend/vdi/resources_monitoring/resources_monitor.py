@@ -64,13 +64,13 @@ class ResourcesMonitor:
             token = await Token(controller_ip=self._controller_ip)
             connect_url = 'ws://{}/ws/?token={}'.format(self._controller_ip, token)
             self._websocket = await websockets.connect(connect_url)
+
+            # subscribe to events on controller
+            for subscription_name in ALLOWED_SUBSCRIPTIONS_LIST:
+                await self._websocket.send('add {}'.format(subscription_name))
         except:
             print(__class__.__name__, ' can not connect')
             return
-
-        # subscribe to events on controller
-        for subscription_name in ALLOWED_SUBSCRIPTIONS_LIST:
-            await self._websocket.send('add {}'.format(subscription_name))
 
     async def _on_message_received(self, message):
         try:
@@ -90,11 +90,11 @@ class ResourcesMonitor:
                 observer.on_notified(json_data)
 
     async def _on_connection_closed(self):
-        print(__class__.__name__, 'connection closed')
+        #print(__class__.__name__, 'connection closed')
         await self._try_to_recconect()
 
     async def _on_error_occurred(self):
-        print(__class__.__name__, 'An error occurred')
+        #print(__class__.__name__, 'An error occurred')
         await self._close_connection()
         await self._try_to_recconect()
 
