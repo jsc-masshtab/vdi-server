@@ -63,7 +63,7 @@ class ResourcesMonitor:
         Check if controller online
         :return:
         """
-        response_dict = {'msg_type': 'data', 'event': 'UPDATED',
+        response_dict = {'ip': self._controller_ip, 'msg_type': 'data', 'event': 'UPDATED',
                          'resource': CONTROLLERS_SUBSCRIPTION}
         while self._running_flag:
             await asyncio.sleep(2) # check every 2 seconds
