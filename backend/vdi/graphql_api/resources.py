@@ -13,7 +13,7 @@ from ..tasks.vm import ListTemplates, ListVms
 
 from ..tasks.resources import (
     DiscoverControllers, FetchNode, FetchCluster, DiscoverControllerIp, ListClusters,
-    ListDatapools, ListNodes, FetchResourcesUsage, CheckController,
+    ListDatapools, ListNodes, FetchResourcesUsage, CheckController, DiscoverControllerIpByCluster
 )
 
 from vdi.errors import FieldError, SimpleError, FetchException
@@ -246,16 +246,21 @@ class Resources:
         }
         return NodeType(controller=ControllerType(ip=controller_ip), **fields)
 
-    async def resolve_cluster(self, info, id):
-        controller_ip = await DiscoverControllerIp(cluster_id=id)
-        if not controller_ip:
-            raise SimpleError('Кластер не найден')
-        data = await FetchCluster(controller_ip=controller_ip, cluster_id=id)
-        fields = {
-            k: v for k, v in data.items()
-            if k in ClusterType._meta.fields
-        }
-        return ClusterType(controller=ControllerType(ip=controller_ip), **fields)
+    async def resolve_cluster(self, _info, id):
+        controllers_ips = await Resources.get_all_known_controller_ips()
+        for controller_ip in controllers_ips:
+            # try to get list of resources
+            try:
+                data = await FetchCluster(controller_ip=controller_ip['ip'], cluster_id=id)
+                fields = {
+                    k: v for k, v in data.items()
+                    if k in ClusterType._meta.fields
+                }
+                return ClusterType(controller=ControllerType(ip=controller_ip['ip']), **fields)
+            except:
+                continue
+
+        return None
 
     async def resolve_datapool(self, _info, id):
         datapool = await Resources.get_resource(_info, id, DatapoolType, ListDatapools)
