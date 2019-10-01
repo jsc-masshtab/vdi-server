@@ -47,17 +47,10 @@ class CreateDomain(UrlFetcher):
 #@dataclass()
 class CopyDomain(UrlFetcher):
 
-    controller_ip = ''
-    domain_id = ''
-    node_id = ''
-    datapool_id = ''
-    verbose_name = None
-    name_template = None
-
     cache_result = False # make a new domain every time this is called
 
     def __init__(self, controller_ip: str, domain_id: str, node_id: str, datapool_id:
-                 str, verbose_name: str = None, name_template: str = None):
+                 str, verbose_name: str = None, name_template: str = None, is_thin: bool = True):
         self.controller_ip = controller_ip
         self.domain_id = domain_id
         self.node_id = node_id
@@ -65,13 +58,14 @@ class CopyDomain(UrlFetcher):
         self.verbose_name = verbose_name
         self.name_template = name_template
 
+        self.is_thin = is_thin
+
     @cached
     def domain_name(self):
         if self.verbose_name:
             return self.verbose_name
         uid = str(uuid.uuid4())[:7]
         return "{}-{}".format(self.name_template, uid)
-
 
     method = 'POST'
 
@@ -87,6 +81,7 @@ class CopyDomain(UrlFetcher):
             "node": self.node_id,
             "datapool": self.datapool_id,
             "parent": self.domain_id,
+            "thin": self.is_thin
         }
         return json.dumps(params)
 

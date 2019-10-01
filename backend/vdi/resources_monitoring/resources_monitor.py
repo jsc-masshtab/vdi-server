@@ -160,9 +160,7 @@ class ResourcesMonitor:
             if self._websocket:
                 print(__class__.__name__, 'before close conn')
                 await self._websocket.close()
-                await self._websocket.wait_closed()
+                #await self._websocket.wait_closed()
                 print(__class__.__name__, 'after close conn')
         except websockets.exceptions.ConnectionClosed:
             pass
-
-
