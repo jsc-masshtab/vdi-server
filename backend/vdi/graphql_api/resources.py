@@ -13,7 +13,7 @@ from ..tasks.vm import ListTemplates, ListVms
 
 from ..tasks.resources import (
     DiscoverControllers, FetchNode, FetchCluster, DiscoverControllerIp, ListClusters,
-    ListDatapools, ListNodes, FetchResourcesUsage, CheckController, DiscoverControllerIpByCluster
+    ListDatapools, ListNodes, FetchResourcesUsage, CheckController
 )
 
 from vdi.errors import FieldError, SimpleError, FetchException
