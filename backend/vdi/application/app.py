@@ -29,17 +29,17 @@ async def init_context(request, call_next):
     return response
 
 
-@app.middleware("http")
-async def debug(request, call_next):
-    try:
-        return await call_next(request)
-    except:
-        if settings.get('debug'):
-            e, m, tb = sys.exc_info()
-            print(m.__repr__(), file=sys.stderr)
-            from ipdb import post_mortem
-            post_mortem(tb)
-        raise
+# @app.middleware("http")
+# async def debug(request, call_next):
+#     try:
+#         return await call_next(request)
+#     except:
+#         if settings.get('debug'):
+#             e, m, tb = sys.exc_info()
+#             print(m.__repr__(), file=sys.stderr)
+#             from ipdb import post_mortem
+#             post_mortem(tb)
+#         raise
 
 
 @app.on_event('startup')

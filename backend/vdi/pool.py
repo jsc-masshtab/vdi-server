@@ -7,7 +7,8 @@ from db.db import db
 from vdi.tasks import vm
 from vdi.utils import into_words
 
-#@dataclass()
+
+# Automated Pool Manager
 class Pool:
     params = dict()
 
@@ -18,13 +19,6 @@ class Pool:
                            'deleted datapool_id cluster_id node_id template_id vm_name_template '
                            'initial_size reserve_size total_size')
 
-    #FIXME use queue only for client
-
-
-    @cached
-    def queue(self):
-        return asyncio.Queue()
-
     @cached
     def tasks(self):
         'TODO'
@@ -32,7 +26,6 @@ class Pool:
     async def on_vm_created(self, result):
         domain_id = result['id']
         template = result['template']
-        await self.queue.put(result)
         # insert into db
         async with db.connect() as conn:
             qu = """
@@ -41,13 +34,12 @@ class Pool:
             await conn.execute(*qu)
 
     async def on_vm_taken(self):
-        reserve_size = self.params['reserve_size']
         # Check that total_size is not reached
-        num = await self._get_vm_amount_in_pool()
-        if num >= self.params['total_size']:
+        vm_amount = await Pool.get_vm_amount_in_pool(self.params['id'])
+        if vm_amount >= self.params['total_size']:
             return
-        if reserve_size > len(self.queue._queue):
-            self.add_domain(num + 1)
+        if self.params['reserve_size'] > vm_amount:
+            self.add_domain(vm_amount + 1)
 
     def add_domain(self, domain_index):
         from vdi.tasks import vm
@@ -69,11 +61,11 @@ class Pool:
         initial_size = self.params['initial_size']
         domains = []
 
-        delta = initial_size - len(self.queue._queue)
+        vm_amount = await Pool.get_vm_amount_in_pool(self.params['id'])
+        delta = initial_size - vm_amount
         if delta < 0:
             delta = 0
 
-        vm_amount = await self._get_vm_amount_in_pool()
         for i in range(delta):
             domain_index = vm_amount + 1 + i
             d = await self.add_domain(domain_index)
@@ -103,24 +95,12 @@ class Pool:
             return None
         [params] = data
 
-        # dynamic traits!!
         ins = cls(params=params)
         cls.instances[pool_id] = ins
         return ins
 
-    async def init(self, id, add_missing=False):
-        """
-        Init the pool (possibly, after service restart)
-        """
-        assert not len(self.queue._queue)
-        vms = await self.load_vms()
-
-        for vm in vms:
-            await self.queue.put(vm)
-
-        add_domains = self.add_domains()
-        if add_missing:
-            await add_domains
+    async def init(self, id, add_missing=False): # marked for removal
+        pass
 
     @classmethod
     async def wake_pool(cls, pool_id):
@@ -128,16 +108,11 @@ class Pool:
         await ins.init(pool_id)
         return ins
 
-    async def _get_vm_amount_in_pool(self):
+    @staticmethod
+    async def get_vm_amount_in_pool(pool_id):
         async with db.connect() as conn:
-            qu = "select count(*) from vm where pool_id = $1", self.params['id']
+            qu = "select count(*) from vm where pool_id = $1", pool_id
             [(num,)] = await conn.fetch(*qu)
         return num
 
     instances = {}
-
-    # TODO from_db
-    # TODO any created vm -> db
-
-# pool = Pool()
-

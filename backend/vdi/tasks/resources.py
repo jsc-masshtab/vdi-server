@@ -175,7 +175,7 @@ class ValidateResources(Task):
         return True
 
 
-#@dataclass()
+# ошибка: Не определяет контроллер по кластеру!
 class DiscoverControllerIp(Task):
     cluster_id = None
     node_id = None
@@ -203,6 +203,16 @@ class DiscoverControllerIp(Task):
             if ok:
                 return controller_ip
 
+
+# class DiscoverControllerIpByCluster(Task):
+#     cluster_id = None
+#
+#     def __init__(self, cluster_id: str = None):
+#         self.cluster_id = cluster_id
+#
+#     async def run(self):
+#         connected_controllers = await DiscoverControllers(return_broken=False)
+#         print('connected_controllers', connected_controllers)
 
 #@dataclass()
 class DiscoverControllers(Task):

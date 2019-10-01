@@ -73,7 +73,10 @@ class HttpClient:
     def get_error_data(self, e: HTTPError):
         val = e.response.buffer.read()
         val = val.decode('utf-8')
-        obj = json.loads(val)
+        try:
+            obj = json.loads(val)
+        except json.decoder.JSONDecodeError:
+            obj = 'json rapse error'
         return obj
 
     async def fetch(self, *args, **kwargs):
