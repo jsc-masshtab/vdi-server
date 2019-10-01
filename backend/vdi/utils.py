@@ -2,6 +2,7 @@ import inspect
 from functools import wraps
 from typing import List
 import re
+import asyncio
 
 from vdi.settings import settings
 from db.db import db
@@ -82,3 +83,12 @@ def validate_name(name_string):
 def get_attributes_str(python_object):
     attributes_str = ', '.join(i for i in dir(python_object) if not i.startswith('__'))
     return attributes_str
+
+
+async def cancel_async_task(async_task):
+    if async_task:
+        try:
+            async_task.cancel()
+            await async_task
+        except asyncio.CancelledError:
+            pass

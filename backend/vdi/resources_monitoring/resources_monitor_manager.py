@@ -22,6 +22,7 @@ class ResourcesMonitorManager:
         # start resources monitors
         for controller in connected_controllers:
             self._add_monitor_for_controller(controller['ip'])
+        #self._add_monitor_for_controller('192.168.20.120')
         print(__class__.__name__, ': Started')
 
     async def stop(self):

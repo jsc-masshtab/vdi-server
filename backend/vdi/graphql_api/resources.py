@@ -249,7 +249,6 @@ class Resources:
     async def resolve_cluster(self, _info, id):
         controllers_ips = await Resources.get_all_known_controller_ips()
         for controller_ip in controllers_ips:
-            # try to get list of resources
             try:
                 data = await FetchCluster(controller_ip=controller_ip['ip'], cluster_id=id)
                 fields = {
