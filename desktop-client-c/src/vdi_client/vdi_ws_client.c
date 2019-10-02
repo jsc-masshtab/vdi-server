@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <pthread.h>
 
 #include <libsoup/soup-session.h>
 #include <libsoup/soup-message.h>
@@ -8,218 +9,134 @@
 #include "async.h"
 #include "vdi_ws_client.h"
 
-#define RECONNECT_TIMEOUT 1500
+#define TIMEOUT 1000000 // 1 sec
 
 // static functions declarations
-static void ws_message_received(SoupWebsocketConnection *self G_GNUC_UNUSED, gint type G_GNUC_UNUSED,
-                                GBytes *message,  gpointer user_data);
-static void ws_closed(SoupWebsocketConnection *self G_GNUC_UNUSED, gpointer user_data);
-static void connection_attempt_resault(GObject *object, GAsyncResult *result, gpointer user_data);
-static gboolean try_to_connect(VdiWsClient *vdi_ws_client);
-static void try_to_connect_deferred(VdiWsClient *vdi_ws_client);
-static void remove_recconect_timer(VdiWsClient *vdi_ws_client);
-//void static async_create_ws_coonect(GTask         *task,
-//                                    gpointer       source_object G_GNUC_UNUSED,
-//                                    gpointer       task_data G_GNUC_UNUSED,
-//                                    GCancellable  *cancellable G_GNUC_UNUSED);
+void static async_create_ws_connect(GTask         *task,
+                                    gpointer       source_object G_GNUC_UNUSED,
+                                    gpointer       task_data G_GNUC_UNUSED,
+                                    GCancellable  *cancellable G_GNUC_UNUSED);
 
 // implementations
 
-static void ws_message_received(SoupWebsocketConnection *self G_GNUC_UNUSED, gint type G_GNUC_UNUSED,
-                                GBytes *message G_GNUC_UNUSED,  gpointer user_data)
+static void protocol_switching_callback(SoupMessage *ws_msg, gpointer user_data)
 {
+
+    printf("In %s :thread id = %lu\n", (const char *)__func__, pthread_self());
     VdiWsClient *vdi_ws_client = user_data;
-    //printf("%s %i\n", (char *)__func__, vdi_ws_client->test_int);
-    vdi_ws_client->ws_data_received_callback(TRUE);
+
+    printf("WS: %s %i\n", (const char *)__func__, vdi_ws_client->test_int);
+    vdi_ws_client->stream = soup_session_steal_connection(vdi_ws_client->ws_soup_session, ws_msg);
 }
 
-static void ws_closed(SoupWebsocketConnection *self G_GNUC_UNUSED, gpointer user_data)
+static void async_create_ws_connect(GTask         *task G_GNUC_UNUSED,
+                                    gpointer       source_object G_GNUC_UNUSED,
+                                    gpointer       task_data,
+                                    GCancellable  *cancellable G_GNUC_UNUSED)
 {
-    VdiWsClient *vdi_ws_client = user_data;
-    printf("%s %i\n", (char *)__func__, vdi_ws_client->test_int);
-    vdi_ws_client->ws_data_received_callback(FALSE);
+    VdiWsClient *vdi_ws_client = task_data;
+    g_mutex_lock(&vdi_ws_client->lock);
 
-    // if web socket is not closed correctly then try to reconnect
-    if (!vdi_ws_client->is_correctly_closed_flag) {
-        try_to_connect_deferred(vdi_ws_client);
-    }
-}
-
-static void connection_attempt_resault(GObject *object, GAsyncResult *result, gpointer user_data)
-{
-//    GError *error = NULL;
-//    VdiWsClient *vdi_ws_client = g_task_propagate_pointer(G_TASK(result), &error);
-//    //printf("%s %i\n", (char *)__func__, vdi_ws_client->test_int);
-
-//    printf("%s Before\n", (const char *)__func__);
-//    //GTask *task = G_TASK(result);
-//    //vdi_ws_client->soup_websocket_connection = g_task_propagate_pointer(G_TASK(result), &error);
-//            //soup_session_websocket_connect_finish(SOUP_SESSION(object), result, &error);
-//    printf("%s After\n", (const  char *)__func__);
-
-//    // failed
-//    if (vdi_ws_client->soup_websocket_connection == NULL) {
-//        if (error)
-//            printf("%s websocket error: %s\n", (char *)__func__, error->message);
-//        vdi_ws_client->ws_data_received_callback(FALSE);
-
-//        // try to reconnect
-//        try_to_connect_deferred(vdi_ws_client);
-//        return;
-//    }
-//    // success connection
-//    // connect signals
-//    g_signal_connect(vdi_ws_client->soup_websocket_connection, "message",
-//                     G_CALLBACK(ws_message_received), user_data);
-//    g_signal_connect(vdi_ws_client->soup_websocket_connection, "closed",
-//                     G_CALLBACK(ws_closed), user_data);
-
-    VdiWsClient *vdi_ws_client = user_data;
-     //printf("%s %i\n", (char *)__func__, vdi_ws_client->test_int);
-     GError *error = NULL;
-     vdi_ws_client->soup_websocket_connection =
-             soup_session_websocket_connect_finish(SOUP_SESSION (object), result, &error);
-
-     // failed
-     if (vdi_ws_client->soup_websocket_connection == NULL) {
-         printf("%s websocket error: %s\n", (const char *)__func__, error->message);
-         vdi_ws_client->ws_data_received_callback(FALSE);
-
-         // try to reconnect
-         try_to_connect_deferred(vdi_ws_client);
-         return;
-     }
-     // success connection
-     // connect signals
-     g_signal_connect(vdi_ws_client->soup_websocket_connection, "message",
-                      G_CALLBACK(ws_message_received), user_data);
-     g_signal_connect(vdi_ws_client->soup_websocket_connection, "closed",
-                      G_CALLBACK(ws_closed), user_data);
-}
-
-static gboolean try_to_connect(VdiWsClient *vdi_ws_client)
-{
-    remove_recconect_timer(vdi_ws_client);
-
-    vdi_ws_client->is_correctly_closed_flag = FALSE;
-    vdi_ws_client->soup_websocket_connection = NULL;
+    // hand shake preparation
     SoupMessage *ws_msg = soup_message_new("GET", vdi_ws_client->vdi_url);
-    if (ws_msg == NULL)
-        return FALSE;
+    if (ws_msg == NULL) {
+        printf("%s Cant parse message\n", (const char *)__func__);
+        g_mutex_unlock(&vdi_ws_client->lock);
+        return;
+    }
+    soup_websocket_client_prepare_handshake(ws_msg, NULL, NULL);
+    soup_message_headers_append(ws_msg->request_headers, "Accept", "*/*");
 
-    soup_session_websocket_connect_async(vdi_ws_client->ws_soup_session, ws_msg,
-                             NULL, NULL, NULL, connection_attempt_resault, vdi_ws_client);
-    g_object_unref(ws_msg);
-    //execute_async_task(async_create_ws_coonect, connection_attempt_resault, vdi_ws_client);
+    soup_message_add_status_code_handler(ws_msg, "got-informational",
+                          SOUP_STATUS_SWITCHING_PROTOCOLS,
+                          G_CALLBACK (protocol_switching_callback), vdi_ws_client);
 
-    return FALSE;
+    while (vdi_ws_client->is_running) {
+        vdi_ws_client->stream = NULL;
+
+        // make handshake
+        guint status = soup_session_send_message(vdi_ws_client->ws_soup_session, ws_msg);
+        printf("WS: %s: HANDSHAKE %i \n", (const char *)__func__, status);
+        if (vdi_ws_client->stream == NULL) {
+            // try to reconnect (go to another loop)
+            cancellable_sleep(TIMEOUT, !vdi_ws_client->is_running);
+            continue;
+        }
+
+        GInputStream *inputStream = g_io_stream_get_input_stream(vdi_ws_client->stream);
+
+        gsize buffer_size = 10;
+        vdi_ws_client->buffer = malloc(buffer_size * sizeof(gsize));
+        gsize bytes_read = 0;
+
+        // receiving messages
+        while (vdi_ws_client->is_running && !g_io_stream_is_closed(vdi_ws_client->stream)) {
+            GError *error = NULL;
+            gboolean res = g_input_stream_read_all(inputStream,
+                                                   vdi_ws_client->buffer,
+                                                   buffer_size, &bytes_read,
+                                                   vdi_ws_client->cancel_job, &error);
+//            if (error) {
+//                printf("WS: %i", error->code);
+//                printf("WS: %s ", error->message);
+//                break; // try to reconnect (another loop)
+//            }
+
+            printf("WS: %s 1res%i bytes_read: %lu\n", (const char *)__func__, res, bytes_read);
+            cancellable_sleep(TIMEOUT, !vdi_ws_client->is_running); // sec
+
+            if (bytes_read == 0) {
+                g_idle_add((GSourceFunc)vdi_ws_client->ws_data_received_callback, (gpointer)FALSE); // notify GUI
+                break; // try to reconnect (another loop)
+            } else {
+                g_idle_add((GSourceFunc)vdi_ws_client->ws_data_received_callback, (gpointer)TRUE); // notify GUI
+            }
+        }
+
+        free(vdi_ws_client->buffer);
+    }
+
+    // close stream
+    if (vdi_ws_client->stream)
+        g_io_stream_close(vdi_ws_client->stream, NULL, NULL);
+
+    g_mutex_unlock(&vdi_ws_client->lock);
 }
-
-// one shot timeout. trying to connect
-static void try_to_connect_deferred(VdiWsClient *vdi_ws_client)
-{
-    vdi_ws_client->reconnect_timer_descriptor =
-            g_timeout_add(RECONNECT_TIMEOUT, (GSourceFunc)try_to_connect, vdi_ws_client);
-}
-
-static void remove_recconect_timer(VdiWsClient *vdi_ws_client)
-{
-    if(vdi_ws_client->reconnect_timer_descriptor > 0)
-        g_source_remove(vdi_ws_client->reconnect_timer_descriptor);
-    vdi_ws_client->reconnect_timer_descriptor = 0;
-}
-
-//void init_vdi_ws_client(VdiWsClient *ws_vdi_client)
-//{
-
-//}
-
-//void deinit_vdi_ws_client(VdiWsClient *ws_vdi_client)
-//{
-
-//}
-
-//void static async_create_ws_coonect(GTask         *task,
-//                                    gpointer       source_object G_GNUC_UNUSED,
-//                                    gpointer       task_data G_GNUC_UNUSED,
-//                                    GCancellable  *cancellable G_GNUC_UNUSED)
-//{
-//    VdiWsClient *vdi_ws_client = g_task_get_task_data(task);
-
-//    SoupMessage *ws_msg = soup_message_new("GET", vdi_ws_client->vdi_url);
-//    printf("%s %s \n", (const char *)__func__, vdi_ws_client->vdi_url);
-
-//    //soup_websocket_client_prepare_handshake(ws_msg, NULL, NULL);
-
-//    //guint status = soup_session_send_message(vdi_ws_client->ws_soup_session, ws_msg);
-//    //printf("%s: ws sent %i \n", (const char *)__func__, status);
-
-////    GError *error = NULL;
-////    gboolean handshake_res = soup_websocket_client_verify_handshake(ws_msg, &error);
-////    printf("%s %i\n", (const char *)__func__, handshake_res);
-
-////    GIOStream *stream = soup_session_steal_connection(vdi_ws_client->ws_soup_session, ws_msg);
-////    g_socket_client_connect_to_host_finish
-////    SoupWebsocketConnection *ws_connection = soup_websocket_connection_new(stream,
-////                soup_message_get_uri(ws_msg), SOUP_WEBSOCKET_CONNECTION_CLIENT, NULL, NULL);
-
-////    g_object_unref(ws_msg);
-////    g_task_return_pointer(task, ws_connection, NULL);
-
-//    GSocketClient *client = g_socket_client_new();
-
-//    GSocketConnection *conn = g_socket_client_connect_to_host(client, "0.0.0.0", 80, NULL, NULL);
-//    if (conn == NULL) {
-//        printf("%s conn null \n", (const char *)__func__);
-//    }
-
-//    //uri = soup_uri_new ("http://127.0.0.1/");
-//    vdi_ws_client->soup_websocket_connection = soup_websocket_connection_new (G_IO_STREAM (conn),
-//                                                  soup_message_get_uri(ws_msg),
-//                                                  SOUP_WEBSOCKET_CONNECTION_CLIENT,
-//                                                  NULL, NULL);
-//    if (vdi_ws_client->soup_websocket_connection == NULL) {
-//        printf("%s ws conn null \n", (const char *)__func__);
-//    }
-//    //soup_uri_free (uri);
-//    //g_object_unref (conn);
-
-//    g_task_return_pointer(task, vdi_ws_client, NULL);
-//}
 
 void start_vdi_ws_polling(VdiWsClient *vdi_ws_client, const gchar *vdi_ip,
                           WsDataReceivedCallback ws_data_received_callback)
 {
     printf("%s\n", (const char *)__func__);
-    //vdi_ws_client->ws_soup_session = soup_session_new();
+    printf("In %s :thread id = %lu\n", (const char *)__func__, pthread_self());
+    vdi_ws_client->ws_soup_session = soup_session_new();
 
     vdi_ws_client->ws_data_received_callback = ws_data_received_callback;
-    vdi_ws_client->reconnect_timer_descriptor = 0;
-    //vdi_ws_client->test_int = 666;// temp trash test
-    vdi_ws_client->vdi_url = g_strdup_printf ("ws://%s/ws/client/vdi_server_check", vdi_ip);
+    vdi_ws_client->test_int = 666;// temp trash test
+    vdi_ws_client->vdi_url = g_strdup_printf("http://%s/ws/client/vdi_server_check", vdi_ip);
+    vdi_ws_client->is_running = TRUE;
+    vdi_ws_client->cancel_job = g_cancellable_new();
 
-    // start reconnect oneshot timer
-    //g_usleep(50000); // remove later
-    //try_to_connect(vdi_ws_client);
-    try_to_connect_deferred(vdi_ws_client);
-    //g_usleep(100000); // remove later
+    g_mutex_init(&vdi_ws_client->lock);
+
+    execute_async_task(async_create_ws_connect, NULL, vdi_ws_client);
 }
 
 void stop_vdi_ws_polling(VdiWsClient *vdi_ws_client)
 {
     printf("%s\n", (const char *)__func__);
-    remove_recconect_timer(vdi_ws_client);
-    vdi_ws_client->is_correctly_closed_flag = TRUE;
 
-    if (vdi_ws_client->soup_websocket_connection) {
-        SoupWebsocketState soup_websocket_state =
-                soup_websocket_connection_get_state(vdi_ws_client->soup_websocket_connection);
-        if (soup_websocket_state == SOUP_WEBSOCKET_STATE_OPEN)
-        soup_websocket_connection_close(vdi_ws_client->soup_websocket_connection, 0, NULL);
-    }
+    // cancell
+    vdi_ws_client->is_running = FALSE;
+    g_cancellable_cancel(vdi_ws_client->cancel_job);
+    soup_session_abort(vdi_ws_client->ws_soup_session);
 
+    // for syncronization. wait untill thread ws job finished. Is there a better solution? (like event primitive)
+    g_mutex_lock(&vdi_ws_client->lock);
+    g_mutex_unlock(&vdi_ws_client->lock);
+    g_mutex_clear(&vdi_ws_client->lock);
+
+    // free memory
+    g_object_unref(vdi_ws_client->ws_soup_session);
     g_free(vdi_ws_client->vdi_url);
-
-//    soup_session_abort(vdi_ws_client->ws_soup_session);
-//    g_object_unref(vdi_ws_client->ws_soup_session);
+    g_object_unref(vdi_ws_client->cancel_job);
 }

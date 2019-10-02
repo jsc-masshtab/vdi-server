@@ -37,11 +37,11 @@ static void free_session_memory(){
 
 static void setup_header_for_api_call(SoupMessage *msg)
 {
-    soup_message_headers_clear (msg->request_headers);
+    soup_message_headers_clear(msg->request_headers);
     gchar *authHeader = g_strdup_printf("jwt %s", vdiSession.jwt);
-    soup_message_headers_append (msg->request_headers, "Authorization", authHeader);
+    soup_message_headers_append(msg->request_headers, "Authorization", authHeader);
     g_free(authHeader);
-    soup_message_headers_append (msg->request_headers, "Content-Type", "application/json; charset=utf8");
+    soup_message_headers_append(msg->request_headers, "Content-Type", "application/json; charset=utf8");
 }
 
 static guint send_message(SoupMessage *msg)
@@ -49,8 +49,8 @@ static guint send_message(SoupMessage *msg)
     static int count = 0;
     printf("Send_count: %i\n", ++count);
 
-    guint status = soup_session_send_message (vdiSession.soup_session, msg);
-    printf("%s: Successfully sent \n", (char *)__func__);
+    guint status = soup_session_send_message(vdiSession.soup_session, msg);
+    printf("%s: Successfully sent \n", (const char *)__func__);
     return status;
 }
 
@@ -123,8 +123,6 @@ void start_vdi_session()
 
     vdiSession.is_active = TRUE;
     vdiSession.current_vm_id = VM_ID_UNKNOWN;
-
-    vdiSession.vdi_ws_client.ws_soup_session = soup_session_new();
 }
 
 void stop_vdi_session()
@@ -141,9 +139,6 @@ void stop_vdi_session()
 
     vdiSession.is_active = FALSE;
     vdiSession.current_vm_id = VM_ID_UNKNOWN;
-
-    soup_session_abort(vdiSession.vdi_ws_client.ws_soup_session);
-    g_object_unref(vdiSession.vdi_ws_client.ws_soup_session);
 }
 
 SoupSession *get_soup_session()
@@ -154,11 +149,6 @@ SoupSession *get_soup_session()
 const gchar *get_vdi_ip()
 {
     return vdiSession.vdi_ip;
-}
-
-VdiWsClient *vdi_ws_client_ptr()
-{
-    return &vdiSession.vdi_ws_client;
 }
 
 void cancell_pending_requests()
@@ -253,7 +243,7 @@ void get_vdi_vm_data(GTask         *task,
                  gpointer       task_data G_GNUC_UNUSED,
                  GCancellable  *cancellable G_GNUC_UNUSED)
 {
-
+    printf("In %s :thread id = %lu\n", (const char *)__func__, pthread_self());
     gchar *urlStr = g_strdup_printf("%s/client/pools", vdiSession.api_url);
     gchar *response_body_str = api_call("GET", urlStr, NULL);
     g_free(urlStr);
