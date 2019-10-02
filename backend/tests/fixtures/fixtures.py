@@ -220,7 +220,9 @@ async def fixt_entitle_user_to_pool(fixt_create_static_pool):
     removeUserEntitlementsFromPool(pool_id: %i, entitled_users: ["%s"]
       free_assigned_vms: true
     ) {
-      ok
+    freed {
+      id
+    }
     }
     }
     ''' % (pool_id, user_name)
