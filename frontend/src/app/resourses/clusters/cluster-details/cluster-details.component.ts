@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { ClustersService } from '../clusters.service';
+import { ClustersService } from '../all-clusters/clusters.service';
 import { map } from 'rxjs/operators';
 import { ActivatedRoute, ParamMap } from '@angular/router';
 import { Router } from '@angular/router';

@@ -1,8 +1,9 @@
-import { NodesService } from './../nodes.service';
+
 import { Component, OnInit } from '@angular/core';
 import { map } from 'rxjs/operators';
 import { ActivatedRoute, ParamMap } from '@angular/router';
 import { Router } from '@angular/router';
+import { NodesService } from '../all-nodes/nodes.service';
 
 interface type_node {
   [key: string]: any

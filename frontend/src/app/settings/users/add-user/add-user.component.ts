@@ -1,7 +1,7 @@
 import { WaitService } from './../../../common/components/wait/wait.service';
 import { MatDialogRef } from '@angular/material';
 import { Component } from '@angular/core';
-import { UsersService } from '../users.service';
+import { UsersService } from '../all-users/users.service';
 import { 
 	FormBuilder, 
 	FormGroup

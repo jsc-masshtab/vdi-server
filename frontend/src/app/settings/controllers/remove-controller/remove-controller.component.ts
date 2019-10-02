@@ -1,7 +1,7 @@
 import { WaitService } from './../../../common/components/wait/wait.service';
 import { MatDialogRef } from '@angular/material';
 import { Component, OnInit } from '@angular/core';
-import { ControllersService } from '../controllers.service';
+import { ControllersService } from '../all-controllers/controllers.service';
 import { map } from 'rxjs/operators';
 
 
