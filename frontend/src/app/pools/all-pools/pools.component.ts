@@ -1,5 +1,5 @@
 import { PoolAddComponent } from './../add-pool/add-pool.component';
-import { WaitService } from './../../common/components/wait/wait.service';
+import { WaitService } from './../../common/components/single/wait/wait.service';
 
 import { Component, OnInit, HostListener, ViewChild, ElementRef, OnDestroy } from '@angular/core';
 import { PoolsService } from './pools.service';

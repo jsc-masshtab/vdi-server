@@ -1,4 +1,4 @@
-import { WaitService } from './../../../common/components/wait/wait.service';
+import { WaitService } from './../../../common/components/single/wait/wait.service';
 import { MatDialogRef } from '@angular/material';
 import { Component } from '@angular/core';
 import { UsersService } from '../all-users/users.service';

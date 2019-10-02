@@ -1,4 +1,4 @@
-import { WaitService } from './../../../common/components/wait/wait.service';
+import { WaitService } from './../../../common/components/single/wait/wait.service';
 import { Component, OnInit } from '@angular/core';
 import { DatapoolsService } from './datapools.service';
 import { map } from 'rxjs/operators';

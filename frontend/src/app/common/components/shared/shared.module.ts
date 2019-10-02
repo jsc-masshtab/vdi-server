@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { FocusMeDirective } from './../other/directives/focusMe.directive';
+import { FocusMeDirective } from '../../other/directives/focusMe.directive';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { NgModule } from '@angular/core';
 import { TableIntoComponent } from './table-into-component/table-into';

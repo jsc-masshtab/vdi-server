@@ -1,4 +1,4 @@
-import { WaitService } from './../../../common/components/wait/wait.service';
+import { WaitService } from './../../../common/components/single/wait/wait.service';
 import { Component, OnInit, HostListener, ViewChild, ElementRef } from '@angular/core';
 import { NodesService } from './nodes.service';
 import { map } from 'rxjs/operators';

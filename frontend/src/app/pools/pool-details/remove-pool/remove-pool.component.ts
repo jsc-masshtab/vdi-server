@@ -1,4 +1,4 @@
-import { WaitService } from '../../../common/components/wait/wait.service';
+import { WaitService } from '../../../common/components/single/wait/wait.service';
 import { PoolsService } from '../../all-pools/pools.service';
 import { MatDialogRef } from '@angular/material';
 import { Component, Inject } from '@angular/core';

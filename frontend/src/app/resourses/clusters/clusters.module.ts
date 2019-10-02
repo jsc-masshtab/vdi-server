@@ -2,7 +2,7 @@ import { ClustersService } from './all-clusters/clusters.service';
 import { ClustersComponent } from './all-clusters/clusters.component';
 import { AppRoutingModule } from './../../app-routing.module';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
-import { SharedModule } from './../../common/components/shared.module';
+import { SharedModule } from '../../common/components/shared/shared.module';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';

@@ -1,5 +1,6 @@
+import { WaitService } from './../../common/components/single/wait/wait.service';
 import { AddPoolService } from './add-pool.service';
-import { WaitService } from '../../common/components/wait/wait.service';
+
 import { MatDialogRef } from '@angular/material';
 import { Component, OnInit, ViewChild, ViewContainerRef, OnDestroy } from '@angular/core';
 import { Validators } from '@angular/forms';

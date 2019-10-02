@@ -1,4 +1,4 @@
-import { WaitService } from '../../../common/components/wait/wait.service';
+import { WaitService } from '../../../common/components/single/wait/wait.service';
 import { AddUserComponent } from '../add-user/add-user.component';
 import { Component, OnInit } from '@angular/core';
 import { UsersService   } from './users.service';

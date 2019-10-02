@@ -1,3 +1,5 @@
+import { WaitComponent } from './common/components/single/wait/wait.component';
+import { WaitService } from './common/components/single/wait/wait.service';
 import { UsersModule } from './settings/users/users.module';
 import { ControllersModule } from './settings/controllers/controllers.module';
 import { TemplatesModule } from './resourses/templates/templates.module';
@@ -5,14 +7,13 @@ import { NodesModule } from './resourses/nodes/nodes.module';
 import { DatapoolsModule } from './resourses/datapools/datapools.module';
 import { ClustersModule } from './resourses/clusters/clusters.module';
 import { PoolsModule } from './pools/pools.module';
-import { SharedModule } from './common/components/shared.module';
-import { WaitService } from './common/components/wait/wait.service';
-import { WaitComponent } from './common/components/wait/wait.component';
+import { SharedModule } from './common/components/shared/shared.module';
+
 import { VmsModule } from './resourses/vms/vms.module';
 
 import { HttpLinkModule, HttpLink } from 'apollo-angular-link-http';
 import { ApolloModule, Apollo } from 'apollo-angular';
-import { ErrorsService } from './common/components/errors/errors.service';
+import { ErrorsService } from './common/components/single/errors/errors.service';
 import { BrowserModule } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { NgModule } from '@angular/core';
@@ -30,12 +31,12 @@ import { faDesktop, faDatabase, faBuilding, faLayerGroup, faPlusCircle, faSpinne
         } from '@fortawesome/free-solid-svg-icons';
 /*  -----------------------------------   icons   --------------------------------------*/
 
-import { MainMenuComponent } from './main-menu/main-menu.component';
-import { ErrorsComponent } from './common/components/errors/errors.component';
-import { FooterComponent } from './footer/footer.component';
+import { MainMenuComponent } from './common/components/single/main-menu/main-menu.component';
+import { ErrorsComponent } from './common/components/single/errors/errors.component';
+import { FooterComponent } from './common/components/single/footer/footer.component';
 
 /*  -----------------------------------   material   --------------------------------------*/
-import { MAT_DIALOG_DEFAULT_OPTIONS, ErrorStateMatcher, ShowOnDirtyErrorStateMatcher } from '@angular/material';
+import { MAT_DIALOG_DEFAULT_OPTIONS } from '@angular/material';
 
 /*  -----------------------------------   material   --------------------------------------*/
 
@@ -63,6 +64,7 @@ import { environment } from 'src/environments/environment';
     FontAwesomeModule,
 
     SharedModule,
+
     PoolsModule,
     ClustersModule,
     DatapoolsModule,
@@ -76,9 +78,8 @@ import { environment } from 'src/environments/environment';
   providers:
     [
       { provide: MAT_DIALOG_DEFAULT_OPTIONS, useValue: { hasBackdrop: true, restoreFocus: true } },
-      { provide: ErrorStateMatcher, useClass: ShowOnDirtyErrorStateMatcher },
-      ErrorsService,
-      WaitService
+     ErrorsService,
+     WaitService
     ],
   bootstrap: [AppComponent]
 })
