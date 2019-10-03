@@ -119,7 +119,7 @@ class ResourcesMonitor:
                 if not (subscription_name == CONTROLLERS_SUBSCRIPTION):
                     await self._websocket.send('add {}'.format(subscription_name))
         except:
-            print(__class__.__name__, ' can not connect')
+            print(__class__.__name__, ' can not connect to', self._controller_ip)
             return
 
     async def _on_message_received(self, message):
@@ -136,7 +136,7 @@ class ResourcesMonitor:
         self._notify_observers(resource_str, json_data)
 
     async def _on_connection_closed(self):
-        print(__class__.__name__, 'connection closed')
+        print(__class__.__name__, 'connection closed ', self._controller_ip)
         await self._try_to_recconect()
 
     def _notify_observers(self, sub_source, json_data):
