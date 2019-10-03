@@ -127,8 +127,8 @@ async def do_action_on_vm(request):
 
     if vms:
         [(vm_id,)] = vms
-    else:
-        return JSONResponse({'error': 'There is no vm with requested pool_id'})
+    else: # There is no vm with requested pool_id
+        return JSONResponse({'error': 'Нет вм с указанным pool_id'})
 
     # in body info about whether action is forced
     try:

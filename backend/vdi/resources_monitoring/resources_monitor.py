@@ -36,7 +36,7 @@ class ResourcesMonitor:
         # controller check
         self._controller_online_task = loop.create_task(self._controller_online_checking())
         # ws data
-        self._resources_monitor_task = loop.create_task(self._process_ws_messages())
+        self._resources_monitor_task = loop.create_task(self._processing_ws_messages())
 
     async def stop(self):
         self._running_flag = False
@@ -89,7 +89,7 @@ class ResourcesMonitor:
                     print('notify controller online')
                 self._is_online = True
 
-    async def _process_ws_messages(self):
+    async def _processing_ws_messages(self):
         """
         Listen for data from controller
         :return:
@@ -125,7 +125,7 @@ class ResourcesMonitor:
     async def _on_message_received(self, message):
         try:
             json_data = json.loads(message)
-            print(__class__.__name__, json_data)
+            #print(__class__.__name__, json_data)
         except JSONDecodeError:
             return
         #  notify subscribed observers

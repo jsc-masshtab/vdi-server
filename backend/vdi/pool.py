@@ -36,8 +36,11 @@ class Pool:
     async def on_vm_taken(self):
         # Check that total_size is not reached
         vm_amount = await Pool.get_vm_amount_in_pool(self.params['id'])
+        # If reached then do nothing
         if vm_amount >= self.params['total_size']:
             return
+
+        # Conditions from  Vitalya. marked for removal
         if self.params['reserve_size'] > vm_amount:
             self.add_domain(vm_amount + 1)
 
@@ -109,9 +112,12 @@ class Pool:
         return ins
 
     @staticmethod
-    async def get_vm_amount_in_pool(pool_id):
+    async def get_vm_amount_in_pool(pool_id, only_free=False):
         async with db.connect() as conn:
-            qu = "select count(*) from vm where pool_id = $1", pool_id
+            if only_free:
+                qu = "select count(*) from vm where pool_id = $1 AND username is NULL", pool_id
+            else:
+                qu = "select count(*) from vm where pool_id = $1", pool_id
             [(num,)] = await conn.fetch(*qu)
         return num
 

@@ -1,36 +1,21 @@
-from async_generator import async_generator, yield_, asynccontextmanager
-
 from fixtures.fixtures import (
-    fixt_db, image_name, create_template, create_pool, pool_name, pool_settings as fixture_pool_settings,
-    conn, fixt_create_static_pool
+    fixt_db, fixt_create_static_pool, fixt_create_automated_pool,
+    conn
 )
 
-from vdi.graphql_api.pool import RemovePool
 from vdi.graphql_api.pool import DesktopPoolType
 from vdi.graphql_api import schema
 
-from db.db import db
-
-
 import pytest
-import json
-
-import asyncio
-
-
-@pytest.fixture
-def pool_settings(fixture_pool_settings):
-    vars = dict(fixture_pool_settings)
-    vars['settings']['initial_size'] = 1
-    return vars
 
 
 @pytest.mark.asyncio
-async def test_create_pool(create_pool, pool_settings):
-    id = create_pool['id']
+async def test_create_automated_pool(fixt_create_automated_pool):
+    id = fixt_create_automated_pool['id']
 
     qu = """{
       pool(id: %(id)s) {
+        desktop_pool_type
         settings {
           initial_size
         }
@@ -42,43 +27,9 @@ async def test_create_pool(create_pool, pool_settings):
         }
       }
     }""" % locals()
-    r = await schema.exec(qu)
-    assert r['pool']['settings']['initial_size'] == 1
-    li = r['pool']['state']['available']
-    assert len(li) == 1
-
-
-@pytest.mark.asyncio
-async def test_remove_pool(create_pool, pool_settings):
-    pass
-
-
-@pytest.mark.asyncio
-async def test_pools_list(create_pool, pool_settings):
-    qu = """{
-      pools {
-        id
-        settings {
-          initial_size
-          reserve_size
-        }
-      }
-    }""" % locals()
-    r = await schema.exec(qu)
-    for p in r['pools']:
-        assert p['settings']['initial_size']
-        assert p['settings']['reserve_size']
-
-
-#@pytest.mark.asyncio
-#async def test_wake_pool(create_pool, pool_settings, conn):
-#    pool_id = create_pool['id']
-#    ins = await Pool.get_pool(pool_id)
-#    vms = await ins.load_vms(conn)
-#    Pool.instances.pop(pool_id)
-#    ins = await Pool.wake_pool(pool_id)
-#    new_vms = await ins.load_vms(conn)
-#    assert new_vms == vms
+    res = await schema.exec(qu)
+    assert res['pool']['settings']['initial_size'] == 2
+    assert res['pool']['desktop_pool_type'] == DesktopPoolType.AUTOMATED.name
 
 
 @pytest.mark.asyncio

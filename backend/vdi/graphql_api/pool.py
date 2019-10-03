@@ -1,8 +1,7 @@
 import asyncio
 import inspect
 import json
-#from dataclasses import dataclass
-from typing import List
+#import tornado
 
 import graphene
 from cached_property import cached_property as cached
@@ -19,7 +18,7 @@ from .util import get_selections, check_and_return_pool_data, check_pool_initial
 from db.db import db, fetch
 from ..pool import Pool
 
-from vdi.errors import SimpleError, FieldError, NotFound
+from vdi.errors import SimpleError, FieldError, NotFound, FetchException
 from vdi.utils import Unset, insert, bulk_insert, validate_name, get_attributes_str # print,
 
 class TemplateType(graphene.ObjectType):
@@ -823,7 +822,12 @@ class RemovePool(graphene.Mutation):
     async def do_remove(cls, pool_id):
         pool = await Pool.get_pool(pool_id)
         controller_ip = pool.params['controller_ip']
-        vms = await pool.load_vms()
+
+        try:
+            vms = await pool.load_vms()
+        except FetchException:
+            raise SimpleError('Не удалось получить данные с контроллера')
+
         vm_ids = [v['id'] for v in vms]
 
         async with db.connect() as conn:
