@@ -69,8 +69,6 @@ class CopyDomain(UrlFetcher):
 
     method = 'POST'
 
-    new_domain_id = None
-
     @cached
     def url(self):
         return "http://{}/api/domains/multi-create-domain/?async=1".format(self.controller_ip)
@@ -87,17 +85,15 @@ class CopyDomain(UrlFetcher):
 
     async def run(self):
         loop = asyncio.get_event_loop()
-        info_task = loop.create_task(self.fetch_template_info())
-        #info_task = asyncio.create_task(self.fetch_template_info()) # python 3.7
-        ws = await WsConnection(controller_ip=self.controller_ip)
-        await ws.send('add /tasks/')
+        info_task = loop.create_task(self.fetch_template_info()) # Это нужно? В 2 раза больше запросов при создании вм
+
         resp = await super().run()
-        self.task_id = resp['_task']['id']
-        await self.wait_message(ws)
+        #print('resp', resp)
         info = await info_task
+        #print('info', info)
 
         return {
-            'id': self.new_domain_id,
+            'id': resp['entity'],
             'template': info,
             'verbose_name': self.domain_name,
         }
@@ -105,32 +101,6 @@ class CopyDomain(UrlFetcher):
     def on_fetch_failed(self, ex, code):
         if code == 400:
             raise BadRequest(ex) from ex
-
-    def check_created(self, msg):
-        obj = msg['object']
-        if obj['parent'] != self.task_id:
-            return
-
-        def check_name(name):
-            if name.startswith('Создание виртуальной машины'):
-                return True
-            if all(word in name.lower() for word in ['creating', 'virtual', 'machine']):
-                return True
-            return False
-
-        if obj['status'] == 'SUCCESS' and check_name(obj['name']):
-            entities = {v: k for k, v in obj['entities'].items()}
-            self.new_domain_id = entities['domain']
-
-    def is_done(self, msg):
-        if self.new_domain_id is None:
-            self.check_created(msg)
-            return
-
-        if msg['id'] == self.task_id:
-            obj = msg['object']
-            if obj['status'] == 'SUCCESS':
-                return True
 
     async def fetch_template_info(self):
         url = "http://{}/api/domains/{}/".format(self.controller_ip, self.domain_id)

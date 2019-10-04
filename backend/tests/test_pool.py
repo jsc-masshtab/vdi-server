@@ -2,11 +2,13 @@ import pytest
 
 from fixtures.fixtures import (
     fixt_db, fixt_create_static_pool, fixt_create_automated_pool,
-    conn
+    conn, get_resources_for_automated_pool
 )
 
 from vdi.graphql_api.pool import DesktopPoolType
 from vdi.graphql_api import schema
+
+from vdi.tasks import vm
 
 
 @pytest.mark.asyncio
@@ -32,9 +34,25 @@ async def test_create_automated_pool(fixt_create_automated_pool):
     assert res['pool']['desktop_pool_type'] == DesktopPoolType.AUTOMATED.name
 
 
-#@pytest.mark.asyncio
-#async def test_change_total_size_of_autopool(fixt_create_automated_pool):
+@pytest.mark.asyncio
+async def test_change_total_size_of_autopool(fixt_create_automated_pool):
+    pool_id = fixt_create_automated_pool['id']
 
+
+@pytest.mark.asyncio
+async def test_copy_domain():
+    resources = await get_resources_for_automated_pool()
+    #print('resources', resources)
+    params = {
+        'verbose_name': "a_name_for_template",
+        'name_template': 'vm_name_template',
+        'domain_id': resources['template_id'],
+        'datapool_id': resources['datapool_id'],
+        'controller_ip': resources['controller_ip'],
+        'node_id': resources['node_id'],
+    }
+    vm_data = await vm.CopyDomain(**params).task
+    print('vm_data', vm_data)
 
 
 @pytest.mark.asyncio
