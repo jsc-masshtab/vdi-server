@@ -28,7 +28,7 @@ async def test_create_automated_pool(fixt_create_automated_pool):
       }
     }""" % locals()
     res = await schema.exec(qu)
-    assert res['pool']['settings']['initial_size'] == 2
+    assert res['pool']['settings']['initial_size'] == 1
     assert res['pool']['desktop_pool_type'] == DesktopPoolType.AUTOMATED.name
 
 
@@ -51,6 +51,20 @@ async def test_create_static_pool(fixt_create_static_pool):
     li = res['pool']['vms']
     assert len(li) == 2
     assert res['pool']['desktop_pool_type'] == DesktopPoolType.STATIC.name
+
+
+@pytest.mark.asyncio
+async def test_change_pool_name(fixt_create_static_pool):
+    pool_id = fixt_create_static_pool['id']
+
+    # change name
+    qu = """
+    mutation {
+      changePoolName(new_name: "New_pool_name", pool_id: %i){
+        ok
+      }
+    }""" % pool_id
+    await schema.exec(qu)
 
 
 @pytest.mark.asyncio

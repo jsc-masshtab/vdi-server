@@ -46,12 +46,19 @@ async def get_resources_for_automated_pool():
     controller_ip = await get_most_appropriate_controller()
 
     clusters = await resources.ListClusters(controller_ip=controller_ip)
+    if not clusters:
+        raise RuntimeError('На контроллере {} нет кластеров'.format(controller_ip))
     templates = await vm.ListTemplates(controller_ip=controller_ip)
+    if not templates:
+        raise RuntimeError('На контроллере {} нет шаблонов'.format(controller_ip))
 
     # select appropriate template_id and node_id
     # node must be active and has a template
     for cluster in clusters:
         nodes = await resources.ListNodes(controller_ip=controller_ip, cluster_id=cluster['id'])
+        if not nodes:
+            continue
+
         for node in nodes:
             if node['status'] == 'ACTIVE':
                 # check if node has template
@@ -91,7 +98,7 @@ async def fixt_create_automated_pool():
     res = await schema.exec('''
         mutation {
           addPool(name: "test_auto_pool", controller_ip: "%s", cluster_id: "%s", node_id: "%s",
-               datapool_id: "%s", template_id: "%s") {
+               datapool_id: "%s", template_id: "%s", initial_size: 1, reserve_size: 1, total_size: 3) {
             desktop_pool_type
             id
           }
