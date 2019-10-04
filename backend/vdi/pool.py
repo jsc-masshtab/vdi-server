@@ -35,14 +35,25 @@ class Pool:
 
     async def on_vm_taken(self):
         # Check that total_size is not reached
-        vm_amount = await Pool.get_vm_amount_in_pool(self.params['id'])
+        vm_amount_in_pool = await Pool.get_vm_amount_in_pool(self.params['id'])
         # If reached then do nothing
-        if vm_amount >= self.params['total_size']:
+        if vm_amount_in_pool >= self.params['total_size']:
             return
 
-        # Conditions from  Vitalya. marked for removal
-        if self.params['reserve_size'] > vm_amount:
-            self.add_domain(vm_amount + 1)
+        amount_of_added_vms = 5  # число машин добавляемых за раз, когда требуется расширение пула (если возможно)
+        # reserve_size - желаемое минимальное количество подогретых машин (добавленных в пул, но не имеющих пользоватля)
+        # Число машин в пуле, неимеющих пользователя
+        free_vm_amount = await Pool.get_vm_amount_in_pool(self.params['id'], True)
+        # Если подогретых машин слишком мало, то пробуем добавить еще
+        if free_vm_amount < self.params['reserve_size']:
+            # Max possible amount of VMs which we can add to the pool
+            max_possible_amount_to_add = self.params['total_size'] - vm_amount_in_pool
+            # Real amount that we can add to the pool
+            real_amount_to_add = min(max_possible_amount_to_add, amount_of_added_vms)
+            # add VMs
+            for i in range(real_amount_to_add):
+                domain_index = vm_amount_in_pool + 1 + i
+                self.add_domain(domain_index)
 
     def add_domain(self, domain_index):
         from vdi.tasks import vm

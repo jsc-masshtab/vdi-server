@@ -60,11 +60,15 @@ async def test_change_pool_name(fixt_create_static_pool):
     # change name
     qu = """
     mutation {
-      changePoolName(new_name: "New_pool_name", pool_id: %i){
+      changePoolName(new_name: "New_pool_name", pool_id: %i){вуа
         ok
       }
     }""" % pool_id
     await schema.exec(qu)
+
+
+#@pytest.mark.asyncio
+#async def test_change_vm_name_template_in_autopool():
 
 
 @pytest.mark.asyncio
