@@ -1,3 +1,4 @@
+import { StatusPipe } from './../../other/directives/statusEntity.directive';
 import { CommonModule } from '@angular/common';
 import { FocusMeDirective } from '../../other/directives/focusMe.directive';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
@@ -10,12 +11,14 @@ import { TableComponentComponent } from './table-component/table-component.compo
   declarations: [
    TableComponentComponent,
    TableIntoComponent,
-   FocusMeDirective
+   FocusMeDirective,
+   StatusPipe
   ],
   exports: [
     TableComponentComponent,
     TableIntoComponent,
-    FocusMeDirective
+    FocusMeDirective,
+    StatusPipe
   ],
   imports: [
     CommonModule,

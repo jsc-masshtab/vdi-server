@@ -17,24 +17,20 @@ export class VmsComponent implements OnInit {
     {
       title: 'Название',
       property: 'name',
-      class: 'name-start'
+      class: 'name-start',
+      icon: 'desktop'
     },
     {
       title: 'Сервер',
-      property: "node",
+      property: 'node',
       property_lv2: 'verbose_name'
     },
     {
       title: 'Шаблон',
-      property: "template",
+      property: 'template',
       property_lv2: 'name'
-    },
-    {
-      title: 'Статус',
-      property: "state"
     }
   ];
-
 
   constructor(private service: VmsService, private waitService: WaitService){}
 
@@ -44,8 +40,7 @@ export class VmsComponent implements OnInit {
 
   public getAllVms() {
     this.waitService.setWait(true);
-    this.service.getAllVms().valueChanges.pipe(map(data => data.data.controllers)).subscribe((data)=> {
-    
+    this.service.getAllVms().valueChanges.pipe(map(data => data.data.controllers)).subscribe((data) => {
       let arrVms: [][] = [];
       this.vms = [];
       arrVms = data.map(controller => controller.vms);
@@ -53,7 +48,7 @@ export class VmsComponent implements OnInit {
       arrVms.forEach((arr: []) => {
           arr.forEach((obj: {}) => {
             this.vms.push(obj);
-          }); 
+          });
       });
       this.waitService.setWait(false);
     });

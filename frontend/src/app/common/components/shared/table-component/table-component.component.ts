@@ -7,6 +7,7 @@ import { Component, Input, Output, EventEmitter } from '@angular/core';
   styleUrls: ['./table-component.component.scss']
 })
 export class TableComponentComponent {
+  @Input() entity: string | undefined;
   @Input() data: object[] = [];
   @Input() collection: object[] = [];
   @Input() cursor: boolean = false;

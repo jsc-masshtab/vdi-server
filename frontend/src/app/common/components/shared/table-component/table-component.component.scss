@@ -75,8 +75,30 @@
         }
     }
 
-    .icon-name-entity {
-        margin-right: 5px;
+    .icon-group {
+        position: relative;
+        width: 20px;
+    }
+
+    fa-icon.status {
+        position: absolute;
+        bottom: -4px;
+        left: 12px;
+
+        &.on {
+            color: #8bd22f;
+            font-size: 9px;
+        }
+
+        &.off {
+            color: #F4493C;
+            font-size: 9px;
+        }
+
+        &.suspended {
+            color: #d8a172;
+            font-size: 9px;
+        }
     }
 
     // частные случаи столбца
@@ -87,9 +109,13 @@
 
     .name-start {
         justify-content: flex-start;
-        margin-left: 5px;
         min-width: 30%;
     }
+
+    .name-entity {
+        margin-left: 5px;
+    }
+
 }
 
 .cdk-overlay-container {

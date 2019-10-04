@@ -140,10 +140,6 @@ export class PoolDetailsComponent implements OnInit {
       title: 'Пользователь',
       property: 'user',
       property_lv2: 'username'
-    },
-    {
-      title: 'Состояние',
-      property: 'state'
     }
   ];
   public collectionVmsStatic: any[] = [
@@ -161,10 +157,6 @@ export class PoolDetailsComponent implements OnInit {
       title: 'Пользователь',
       property: 'user',
       property_lv2: 'username'
-    },
-    {
-      title: 'Состояние',
-      property: 'state'
     }
   ];
 
@@ -181,7 +173,7 @@ export class PoolDetailsComponent implements OnInit {
     }
   ];
   private idPool: number;
-  private typePool: string;
+  public typePool: string;
   public  menuActive: string = 'info';
 
   constructor(private activatedRoute: ActivatedRoute,

@@ -1,5 +1,4 @@
-import { WaitComponent } from './common/components/single/wait/wait.component';
-import { WaitService } from './common/components/single/wait/wait.service';
+
 import { UsersModule } from './settings/users/users.module';
 import { ControllersModule } from './settings/controllers/controllers.module';
 import { TemplatesModule } from './resourses/templates/templates.module';
@@ -8,7 +7,6 @@ import { DatapoolsModule } from './resourses/datapools/datapools.module';
 import { ClustersModule } from './resourses/clusters/clusters.module';
 import { PoolsModule } from './pools/pools.module';
 import { SharedModule } from './common/components/shared/shared.module';
-
 import { VmsModule } from './resourses/vms/vms.module';
 
 import { HttpLinkModule, HttpLink } from 'apollo-angular-link-http';
@@ -27,13 +25,15 @@ import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { library } from '@fortawesome/fontawesome-svg-core';
 import { faDesktop, faDatabase, faBuilding, faLayerGroup, faPlusCircle, faSpinner, faServer, faCog, faChevronUp, faTimesCircle,
          faFolderOpen, faStar, faMinusCircle, faTv, faSyncAlt, faTrashAlt, faUsers, faMeh,
-         faChartBar, faUser
+         faChartBar, faUser, faStopCircle, faPlayCircle, faPauseCircle
         } from '@fortawesome/free-solid-svg-icons';
 /*  -----------------------------------   icons   --------------------------------------*/
 
 import { MainMenuComponent } from './common/components/single/main-menu/main-menu.component';
 import { ErrorsComponent } from './common/components/single/errors/errors.component';
 import { FooterComponent } from './common/components/single/footer/footer.component';
+import { WaitComponent } from './common/components/single/wait/wait.component';
+import { WaitService } from './common/components/single/wait/wait.service';
 
 /*  -----------------------------------   material   --------------------------------------*/
 import { MAT_DIALOG_DEFAULT_OPTIONS } from '@angular/material';
@@ -77,9 +77,9 @@ import { environment } from 'src/environments/environment';
   entryComponents: [],
   providers:
     [
-      { provide: MAT_DIALOG_DEFAULT_OPTIONS, useValue: { hasBackdrop: true, restoreFocus: true } },
-     ErrorsService,
-     WaitService
+     { provide: MAT_DIALOG_DEFAULT_OPTIONS, useValue: { hasBackdrop: true, restoreFocus: true } },
+      ErrorsService,
+      WaitService
     ],
   bootstrap: [AppComponent]
 })
@@ -94,7 +94,8 @@ export class AppModule {
               private waitService: WaitService) {
 
     library.add(faDesktop, faDatabase, faLayerGroup, faPlusCircle, faMinusCircle, faSpinner, faServer, faCog, faChevronUp, faTimesCircle,
-                faFolderOpen, faStar, faTv, faSyncAlt, faBuilding, faTrashAlt, faUsers, faMeh, faChartBar, faUser);
+                faFolderOpen, faStar, faTv, faSyncAlt, faBuilding, faTrashAlt, faUsers, faMeh, faChartBar, faUser,
+                faStopCircle, faPlayCircle, faPauseCircle);
 
     const uri = environment.url;
     const link = this.httpLink.create({ uri, includeQuery: true, includeExtensions: false });

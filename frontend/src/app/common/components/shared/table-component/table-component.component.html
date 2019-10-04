@@ -13,7 +13,18 @@
         <div class="table-area-property" *ngFor="let obj of collection" [class.index-column]="obj.property == 'index'"  [class.name-start]="obj.class == 'name-start'"> <!--столбец-->
           <span *ngIf="obj.property == 'index'">{{ i+1 }}</span>
 
-          <ng-container *ngIf="obj.icon"><fa-icon [icon]="['fas',obj.icon]" size="xs" class="icon-name-entity"></fa-icon></ng-container>
+<!-- icons -->
+          <span [class.icon-group]="entity === 'vm'">
+            <ng-container *ngIf="obj.icon">
+              <fa-icon [icon]="['fas',obj.icon]" size="xs"></fa-icon>
+            </ng-container>
+            <ng-container *ngIf="entity === 'vm' && item?.state && obj.property === 'name'"> <!-- статус вм -->
+              <fa-icon [icon]="['fas', 'play-circle']" *ngIf="item.state === 'ON'" class="status on"></fa-icon>
+              <fa-icon [icon]="['fas', 'stop-circle']" *ngIf="item.state === 'OFF'" class="status off"></fa-icon>
+              <fa-icon [icon]="['fas', 'pause-circle']" *ngIf="item.state === 'SUSPENDED'" class="status suspended"></fa-icon>
+            </ng-container>
+          </span>
+
 
           <span *ngIf="obj.property_array">{{ item[obj.property_array].length }}</span>
 
@@ -25,8 +36,21 @@
           <span *ngIf="obj.property_lv2 && item[obj.property]">{{ item[obj.property][obj.property_lv2] || '--' }}</span>
 
           <span *ngIf="(obj.property_lv2 && !item[obj.property]) || (obj.property_lv2_array && !item[obj.property][obj.property_lv2_array]) || (obj.property_array_prop && item[obj.property_array_prop] && !item[obj.property_array_prop].length)"> -- </span>
+        
+          <ng-container *ngIf="!obj.property_lv2
+                       && !obj.property_lv2_array
+                       && !obj.property_lv2_wrap
+                       && !obj.property_boolean_true
+                       && obj.property != 'index'
+                       && !item[obj.property_array]
+                       && !item[obj.property_array_prop]
+                       && obj.property !== 'status' ">
+              <span class="name-entity">{{ item[obj.property] || '--' }}</span>
+          </ng-container>
 
-          <span *ngIf="!obj.property_lv2 && !obj.property_lv2_array && !obj.property_lv2_wrap && !obj.property_boolean_true && obj.property != 'index' && !item[obj.property_array] && !item[obj.property_array_prop]">{{ item[obj.property] || '--' }}</span>
+          <ng-container *ngIf="obj.property === 'status'">
+            <span>{{ item[obj.property] | status }}</span>
+          </ng-container>
 
           <span *ngIf="obj.property_lv2_wrap"><span>/</span>{{ item[obj.property][obj.property_lv2_prop2] || '--' }}</span>
 
