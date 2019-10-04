@@ -60,7 +60,7 @@ async def test_change_pool_name(fixt_create_static_pool):
     # change name
     qu = """
     mutation {
-      changePoolName(new_name: "New_pool_name", pool_id: %i){вуа
+      changePoolName(new_name: "New_pool_name", pool_id: %i){
         ok
       }
     }""" % pool_id
