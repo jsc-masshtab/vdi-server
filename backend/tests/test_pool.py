@@ -1,3 +1,5 @@
+import pytest
+
 from fixtures.fixtures import (
     fixt_db, fixt_create_static_pool, fixt_create_automated_pool,
     conn
@@ -5,8 +7,6 @@ from fixtures.fixtures import (
 
 from vdi.graphql_api.pool import DesktopPoolType
 from vdi.graphql_api import schema
-
-import pytest
 
 
 @pytest.mark.asyncio
