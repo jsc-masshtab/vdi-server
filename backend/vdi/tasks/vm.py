@@ -138,12 +138,7 @@ class CopyDomain(UrlFetcher):
         return await HttpClient().fetch(url, headers=headers)
 
 
-
-#@dataclass()
 class DropDomain(UrlFetcher):
-    id = ''
-    controller_ip = ''
-    full = True
 
     method = 'POST'
 

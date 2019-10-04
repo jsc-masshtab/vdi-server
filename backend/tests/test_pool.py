@@ -11,10 +11,10 @@ from vdi.graphql_api import schema
 
 @pytest.mark.asyncio
 async def test_create_automated_pool(fixt_create_automated_pool):
-    id = fixt_create_automated_pool['id']
+    pool_id = fixt_create_automated_pool['id']
 
     qu = """{
-      pool(id: %(id)s) {
+      pool(id: %i) {
         desktop_pool_type
         settings {
           initial_size
@@ -26,10 +26,15 @@ async def test_create_automated_pool(fixt_create_automated_pool):
           }
         }
       }
-    }""" % locals()
+    }""" % pool_id
     res = await schema.exec(qu)
     assert res['pool']['settings']['initial_size'] == 1
     assert res['pool']['desktop_pool_type'] == DesktopPoolType.AUTOMATED.name
+
+
+#@pytest.mark.asyncio
+#async def test_change_total_size_of_autopool(fixt_create_automated_pool):
+
 
 
 @pytest.mark.asyncio
@@ -65,10 +70,6 @@ async def test_change_pool_name(fixt_create_static_pool):
       }
     }""" % pool_id
     await schema.exec(qu)
-
-
-#@pytest.mark.asyncio
-#async def test_change_vm_name_template_in_autopool():
 
 
 @pytest.mark.asyncio
