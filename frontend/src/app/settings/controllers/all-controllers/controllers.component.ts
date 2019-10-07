@@ -19,11 +19,13 @@ export class ControllersComponent implements OnInit {
       title: 'IP адрес',
       property: 'ip',
       class: 'name-start',
-      icon: 'building'
+      icon: 'building',
+      type: 'string'
     },
     {
       title: 'Описание',
-      property: 'description'
+      property: 'description',
+      type: 'string'
     }
   ];
 

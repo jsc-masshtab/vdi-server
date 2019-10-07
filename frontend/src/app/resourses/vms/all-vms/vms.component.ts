@@ -18,7 +18,8 @@ export class VmsComponent implements OnInit {
       title: 'Название',
       property: 'name',
       class: 'name-start',
-      icon: 'desktop'
+      icon: 'desktop',
+      type: 'string'
     },
     {
       title: 'Сервер',

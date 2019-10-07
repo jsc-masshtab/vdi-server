@@ -18,30 +18,27 @@ export class TemplatesComponent implements OnInit {
     {
       title: 'Название',
       property: 'verbose_name',
-      class: 'name-start'
+      class: 'name-start',
+      type: 'string',
+      icon: 'tv'
     },
     {
       title: 'Cервер',
-      property: "node",
+      property: 'node',
       property_lv2: 'verbose_name'
     },
     {
       title: 'Оперативная память (MБ)',
-      property: 'memory_count'
-    },
-    {
-      title: 'Высокая доступность',
-      property_boolean: 'ha_enabled',
-      property_boolean_true: 'Включена',
-      property_boolean_false: 'Выключена'
+      property: 'memory_count',
+      type: 'string'
     },
     {
       title: 'Статус',
-      property: "status"
+      property: 'status'
     }
   ];
 
-  constructor(private service: TemplatesService,private waitService: WaitService){}
+  constructor(private service: TemplatesService, private waitService: WaitService){}
 
   ngOnInit() {
     this.getTemplates();
@@ -50,15 +47,15 @@ export class TemplatesComponent implements OnInit {
   public getTemplates() {
     this.waitService.setWait(true);
     this.service.getAllTemplates().valueChanges.pipe(map(data => data.data.controllers)).subscribe((data) => {
-       let arrTemplates: [][] = [];
-        this.templates = [];
-        arrTemplates = data.map(controller => controller.templates);
+      let arrTemplates: [][] = [];
+      this.templates = [];
+      arrTemplates = data.map(controller => controller.templates);
 
-        arrTemplates.forEach((arr: []) => {
-            arr.forEach((obj: {}) => {
-              this.parseInfoTmp(obj);
-            }); 
-        });
+      arrTemplates.forEach((arr: []) => {
+          arr.forEach((obj: {}) => {
+            this.parseInfoTmp(obj);
+          });
+      });
       this.waitService.setWait(false);
     });
   }

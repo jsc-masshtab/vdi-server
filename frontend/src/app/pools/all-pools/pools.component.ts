@@ -34,7 +34,8 @@ export class PoolsComponent implements OnInit, OnDestroy {
       title: 'Название',
       property: 'name',
       class: 'name-start',
-      icon: 'desktop'
+      icon: 'desktop',
+      type: 'string'
     },
     {
       title: 'Контроллер',
@@ -43,16 +44,21 @@ export class PoolsComponent implements OnInit, OnDestroy {
     },
     {
       title: 'Доступные ВМ',
-      property_array: 'vms'
+      property: 'vms',
+      type: 'array-length'
     },
     {
       title: 'Пользователи',
-      property_array_prop: 'users',
-      property_array_prop_lv2: 'username'
+      property: 'users',
+      type: {
+        propertyDepend: 'username',
+        typeDepend: 'propertyInObjectsInArray'
+      }
     },
     {
       title: 'Тип',
-      property: 'desktop_pool_type'
+      property: 'desktop_pool_type',
+      type: 'string'
     }
   ];
 

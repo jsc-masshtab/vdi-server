@@ -1,6 +1,6 @@
 
 
-<ng-container *ngIf="data && data.length">
+<ng-container *ngIf="data && data?.length; else meh">
   <div class="table-component">
     <header>
       <div *ngFor="let obj of collection" class="table-header-part" [class.index-column]="obj.property == 'index'" [class.name-start]="obj.class == 'name-start'">
@@ -8,10 +8,9 @@
       </div>
     </header>
 
-    <div class="table-area" *ngIf="data && data.length">
+    <div class="table-area">
       <div *ngFor="let item of data;let i = index" class="table-area-object" [class.cursorTrue]="cursor" (click)="clickRow(item)" tabindex="-1">   <!--строка-->
         <div class="table-area-property" *ngFor="let obj of collection" [class.index-column]="obj.property == 'index'"  [class.name-start]="obj.class == 'name-start'"> <!--столбец-->
-          <span *ngIf="obj.property == 'index'">{{ i+1 }}</span>
 
 <!-- icons -->
           <span [class.icon-group]="entity === 'vm'">
@@ -24,44 +23,47 @@
               <fa-icon [icon]="['fas', 'pause-circle']" *ngIf="item.state === 'SUSPENDED'" class="status suspended"></fa-icon>
             </ng-container>
           </span>
-
-
-          <span *ngIf="obj.property_array">{{ item[obj.property_array].length }}</span>
-
-          <span *ngIf="obj.property_boolean_true">
-            <ng-container *ngIf="obj.property_boolean">{{ obj.property_boolean_true }}</ng-container>
-            <ng-container *ngIf="!obj.property_boolean">{{ obj.property_boolean_false }}</ng-container>
-          </span>
-
-          <span *ngIf="obj.property_lv2 && item[obj.property]">{{ item[obj.property][obj.property_lv2] || '--' }}</span>
-
-          <span *ngIf="(obj.property_lv2 && !item[obj.property]) || (obj.property_lv2_array && !item[obj.property][obj.property_lv2_array]) || (obj.property_array_prop && item[obj.property_array_prop] && !item[obj.property_array_prop].length)"> -- </span>
-        
-          <ng-container *ngIf="!obj.property_lv2
-                       && !obj.property_lv2_array
-                       && !obj.property_lv2_wrap
-                       && !obj.property_boolean_true
-                       && obj.property != 'index'
-                       && !item[obj.property_array]
-                       && !item[obj.property_array_prop]
-                       && obj.property !== 'status' ">
-              <span class="name-entity">{{ item[obj.property] || '--' }}</span>
+<!-- obj.property === 'index' -->
+          <ng-container *ngIf="obj.property === 'index'">
+            <span>{{ i+1 }}</span>
           </ng-container>
-
+<!-- obj.property === 'status' -->
           <ng-container *ngIf="obj.property === 'status'">
-            <span>{{ item[obj.property] | status }}</span>
+            <ng-container *ngIf="item[obj.property]; else nothing">
+              <span>{{ item[obj.property] | status }}</span>
+            </ng-container>
+          </ng-container>
+<!-- obj.property -> all-types-here-->
+          <ng-container *ngIf="obj.property && obj.property != 'status' && obj.property != 'index' && !obj.property_lv2">
+            <ng-container *ngIf="item[obj.property] && obj.type; else nothing">
+                <span *ngIf="obj.type === 'string'" [class.name-entity]="obj.class == 'name-start'">{{ item[obj.property] }}</span>
+
+                <span *ngIf="obj.type === 'array-length'">{{ item[obj.property]?.length }}</span>
+
+                <ng-container *ngIf="obj.type.typeDepend === 'propertyInObjectsInArray'">
+                  <ng-container *ngIf="item[obj.property]?.length; else nothing">
+                    <span *ngFor="let objInItem of item[obj.property];let i = index">
+                      {{ objInItem[obj.type.propertyDepend] }}
+                      <ng-container *ngIf="item[obj.property]?.length > 1 && i != item[obj.property]?.length - 1">,</ng-container>
+                    </span>
+                  </ng-container>
+                </ng-container>
+
+                <ng-container *ngIf="obj.type.typeDepend === 'boolean'">
+                  <ng-container *ngIf="obj.property">{{ obj.type.propertyDepend[0] }}</ng-container>
+                  <ng-container *ngIf="!obj.property">{{ obj.type.propertyDepend[1] }}</ng-container>
+                </ng-container>
+
+            </ng-container>
+          </ng-container>
+<!-- obj.property_lv2 -->
+          <ng-container *ngIf="obj.property_lv2">
+            <ng-container *ngIf="item[obj.property] && item[obj.property][obj.property_lv2]; else nothing">
+              <span>{{ item[obj.property][obj.property_lv2] }}</span>
+            </ng-container>
           </ng-container>
 
-          <span *ngIf="obj.property_lv2_wrap"><span>/</span>{{ item[obj.property][obj.property_lv2_prop2] || '--' }}</span>
-
-          <span *ngIf="obj.property_lv2_array && item[obj.property][obj.property_lv2_array]">{{ item[obj.property][obj.property_lv2_array].length || '--' }}</span>
-
-          <span *ngIf="obj.property_array_prop && item[obj.property_array_prop] && item[obj.property_array_prop].length"> <!-- св-во length есть и у строки -->
-            <span *ngFor="let o of item[obj.property_array_prop];let i = index">
-              {{ o[obj.property_array_prop_lv2] || '--' }}
-              <ng-container *ngIf="item[obj.property_array_prop].length > 1 && i != item[obj.property_array_prop].length - 1">,</ng-container>
-            </span>
-          </span>
+          <ng-template #nothing>--</ng-template>
 
         </div> 
       </div>
@@ -69,8 +71,8 @@
   </div>
 </ng-container>
 
-<ng-container *ngIf="data && !data.length|| !data">
+<ng-template #meh>
   <div class="table-no-data">
     <fa-icon [icon]="['fas', 'meh']"></fa-icon>
   </div>
-</ng-container>
+</ng-template>

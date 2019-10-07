@@ -18,23 +18,29 @@ export class NodesComponent implements OnInit {
     {
       title: 'Название',
       property: 'verbose_name',
-      class: 'name-start'
+      class: 'name-start',
+      type: 'string',
+      icon: 'server'
     },
     {
       title: 'Локация',
-      property: 'datacenter_name'
+      property: 'datacenter_name',
+      type: 'string'
     },
     {
       title: 'IP-адрес',
-      property: 'management_ip'
+      property: 'management_ip',
+      type: 'string'
     },
     {
       title: 'CPU',
-      property: 'cpu_count'
+      property: 'cpu_count',
+      type: 'string'
     },
     {
       title: 'RAM',
-      property: 'memory_count'
+      property: 'memory_count',
+      type: 'string'
     },
     {
       title: 'Статус',

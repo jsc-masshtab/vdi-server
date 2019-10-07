@@ -18,19 +18,24 @@ export class ClustersComponent implements OnInit {
     {
       title: 'Название',
       property: 'verbose_name',
-      class: 'name-start'
+      class: 'name-start',
+      type: 'string',
+      icon: 'building'
     },
     {
       title: 'Серверы',
-      property: 'nodes_count'
+      property: 'nodes_count',
+      type: 'string'
     },
     {
       title: 'CPU',
-      property: 'cpu_count'
+      property: 'cpu_count',
+      type: 'string'
     },
     {
       title: 'RAM',
-      property: 'memory_count'
+      property: 'memory_count',
+      type: 'string'
     },
     {
       title: 'Контроллер',

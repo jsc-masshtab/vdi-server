@@ -129,7 +129,8 @@ export class PoolDetailsComponent implements OnInit {
       title: 'Название',
       property: 'name',
       class: 'name-start',
-      icon: 'desktop'
+      icon: 'desktop',
+      type: 'string'
     },
     {
       title: 'Шаблон',
@@ -151,7 +152,8 @@ export class PoolDetailsComponent implements OnInit {
       title: 'Название',
       property: 'name',
       class: 'name-start',
-      icon: 'desktop'
+      icon: 'desktop',
+      type: 'string'
     },
     {
       title: 'Пользователь',
@@ -169,7 +171,8 @@ export class PoolDetailsComponent implements OnInit {
       title: 'Имя пользователя',
       property: 'username',
       class: 'name-start',
-      icon: 'user'
+      icon: 'user',
+      type: 'string'
     }
   ];
   private idPool: number;

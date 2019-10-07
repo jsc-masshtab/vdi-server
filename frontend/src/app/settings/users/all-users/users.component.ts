@@ -21,7 +21,8 @@ export class UsersComponent implements OnInit {
       title: 'Имя пользователя',
       property: 'username',
       class: 'name-start',
-      icon: 'user'
+      icon: 'user',
+      type: 'string'
     }
   ];
 

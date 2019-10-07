@@ -18,31 +18,39 @@ export class DatapoolsComponent implements OnInit {
     {
       title: 'Название',
       property: 'verbose_name',
-      class: 'name-start'
+      class: 'name-start',
+      type: 'string',
+      icon: 'folder-open'
     },
     {
       title: 'Тип',
-      property: 'type'
+      property: 'type',
+      type: 'string'
     },
     {
       title: 'Диски',
-      property: 'vdisk_count'
+      property: 'vdisk_count',
+      type: 'string'
     },
     {
       title: 'Образы',
-      property: 'iso_count'
+      property: 'iso_count',
+      type: 'string'
     },
     {
       title: 'Файлы',
-      property: 'file_count'
+      property: 'file_count',
+      type: 'string'
     },
     {
       title: 'Свободно (Мб)',
-      property: 'free_space'
+      property: 'free_space',
+      type: 'string'
     },
     {
       title: 'Занято (Мб)',
-      property: 'used_space'
+      property: 'used_space',
+      type: 'string'
     },
     {
       title: 'Статус',
