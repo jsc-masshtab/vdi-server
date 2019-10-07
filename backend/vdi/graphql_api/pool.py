@@ -350,8 +350,11 @@ class VmType(graphene.ObjectType):
     async def resolve_state(self, _info):
         if self.veil_info is Unset:
             self.veil_info = await self.get_veil_info()
-        val = self.veil_info['user_power_state']
-        return VmState.get(val)
+        if self.veil_info:
+            val = self.veil_info['user_power_state']
+            return VmState.get(val)
+        else:
+            return VmState.UNDEFINED
 
     async def resolve_pool(self, _info):
         # get pool id from db

@@ -98,7 +98,10 @@ class NodeType(graphene.ObjectType):
             return self.verbose_name
         if self.veil_info is Unset:
             veil_info = await self.get_veil_info()
-        return veil_info['verbose_name']
+        if veil_info:
+            return veil_info['verbose_name']
+        else:
+            return "Unknown"
 
     async def resolve_templates(self, info):
         return await self.controller.resolve_templates(info, node_id=self.id)
