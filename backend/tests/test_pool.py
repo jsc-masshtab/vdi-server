@@ -35,8 +35,66 @@ async def test_create_automated_pool(fixt_create_automated_pool):
 
 
 @pytest.mark.asyncio
-async def test_change_total_size_of_autopool(fixt_create_automated_pool):
+async def test_change_sizes_of_autopool(fixt_create_automated_pool):
     pool_id = fixt_create_automated_pool['id']
+
+    # total size
+    new_total_size = 4
+    qu = '''
+      mutation {
+      changeAutomatedPoolTotalSize(pool_id: %i, new_total_size: %i){
+        ok
+       }
+      }''' % (pool_id, new_total_size)
+    await schema.exec(qu)
+
+    # reserve size
+    new_reserve_size = 2
+    qu = '''
+      mutation {
+        changeAutomatedPoolReserveSize(pool_id: %i, new_reserve_size: %i){
+          ok
+        }
+      }''' % (pool_id, new_reserve_size)
+    await schema.exec(qu)
+
+    # get pool info
+    qu = """{
+      pool(id: %i) {
+        settings{
+          total_size
+          reserve_size
+        }
+      }
+    }""" % pool_id
+    res = await schema.exec(qu)
+    assert res['pool']['settings']['total_size'] == new_total_size
+    assert res['pool']['settings']['reserve_size'] == new_reserve_size
+
+
+@pytest.mark.asyncio
+async def test_vm_name_template_in_autopool(fixt_create_automated_pool):
+    pool_id = fixt_create_automated_pool['id']
+
+    new_template_name = 'new_template_name'
+    qu = '''
+      mutation {
+        changeVmNameTemplate(new_name_template: "%s", pool_id: %i){
+          ok
+        }
+       }''' % (new_template_name, pool_id)
+    await schema.exec(qu)
+
+    # get pool info
+    qu = """{
+         pool(id: %i) {
+           settings{
+             vm_name_template
+           }
+         }
+       }""" % pool_id
+    res = await schema.exec(qu)
+    assert res['pool']['settings']['vm_name_template'] == new_template_name
 
 
 @pytest.mark.asyncio

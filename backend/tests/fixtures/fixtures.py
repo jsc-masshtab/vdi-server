@@ -111,7 +111,7 @@ async def fixt_create_automated_pool():
     await yield_({
         'id': pool_id,
     })
-  
+
     print('destroy pool')
     # remove pool
     await RemovePool.do_remove(pool_id)
