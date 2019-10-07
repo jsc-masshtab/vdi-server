@@ -7,7 +7,7 @@ from db.db import db
 from vdi.tasks import vm
 from vdi.utils import into_words
 
-
+# todo: продумать защиту от параллельной модификации (lock = asyncio.Lock())
 # Automated Pool Manager
 class Pool:
     params = dict()
@@ -50,12 +50,12 @@ class Pool:
             max_possible_amount_to_add = self.params['total_size'] - vm_amount_in_pool
             # Real amount that we can add to the pool
             real_amount_to_add = min(max_possible_amount_to_add, amount_of_added_vms)
-            # add VMs
+            # add VMs.
             for i in range(real_amount_to_add):
                 domain_index = vm_amount_in_pool + 1 + i
-                self.add_domain(domain_index)
+                await self.add_domain(domain_index)
 
-    def add_domain(self, domain_index):
+    async def add_domain(self, domain_index):
         from vdi.tasks import vm
         vm_name_template = (self.params['vm_name_template'] or self.params['name'])
         uid = str(uuid.uuid4())[:7]
@@ -68,8 +68,9 @@ class Pool:
             'controller_ip': self.params['controller_ip'],
             'node_id': self.params['node_id'],
         }
-        task = vm.CopyDomain(**params).task
-        return task
+        info = await vm.CopyDomain(**params).task
+        await self.on_vm_created(info)
+        return info
 
     async def add_domains(self):
         initial_size = self.params['initial_size']
@@ -82,9 +83,8 @@ class Pool:
 
         for i in range(delta):
             domain_index = vm_amount + 1 + i
-            d = await self.add_domain(domain_index)
-            await self.on_vm_created(d)
-            domains.append(d)
+            domain = await self.add_domain(domain_index)
+            domains.append(domain)
 
         return domains
 
@@ -108,7 +108,7 @@ class Pool:
         if not data:
             return None
         [params] = data
-
+        #print('pool params', params)
         ins = cls(params=params)
         cls.instances[pool_id] = ins
         return ins

@@ -589,20 +589,20 @@ class AddPool(graphene.Mutation):
         else:
             loop = asyncio.get_event_loop()
             loop.create_task(add_domains)
-            #asyncio.create_task(add_domains)
+
             available = []
 
         state = PoolState(available=available, running=True)
-        ret = PoolType(id=pool['id'], state=state,
+        pool_type = PoolType(id=pool['id'], state=state,
                        name=pool['name'], template_id=pool['template_id'],
                        controller=controller,
                        settings=PoolSettings(**pool_settings),
                        desktop_pool_type=DesktopPoolType.AUTOMATED)
-        state.pool = ret
+        state.pool = pool_type
         for item in available:
-            item.pool = ret
+            item.pool = pool_type
 
-        return ret
+        return pool_type
 
 
 async def check_static_pool_and_get_params(pool_id):
@@ -1126,7 +1126,7 @@ class ChangeAutomatedPoolTotalSize(graphene.Mutation):
             await conn.fetch(*qu)
 
         # live data
-        if pool_id in Pool.instances:
+        if pool_id in Pool.instances and 'total_size' in Pool.instances[pool_id].params:
             Pool.instances[pool_id].params['total_size'] = new_total_size
 
         # change amount of created vms
