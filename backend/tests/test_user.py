@@ -54,3 +54,32 @@ async def test_assign_vm_to_user(fixt_entitle_user_to_pool):
     ''' % vm_id
     res = await schema.exec(qu)
     assert res['freeVmFromUser']['ok']
+
+
+@pytest.mark.asyncio
+async def test_change_password():
+
+    old_password = 'guesswho'
+    new_password = 'guesswho2'
+    # change password
+    qu = '''
+    mutation {
+      changePassword(username: "overlord", password: "%s", new_password: "%s"){
+        ok
+      }
+    }
+    ''' % (old_password, new_password)
+    res = await schema.exec(qu)
+    assert res['changePassword']['ok']
+
+    # set password back
+    qu = '''
+    mutation {
+      changePassword(username: "overlord", password: "%s", new_password: "%s"){
+        ok
+      }
+    }
+    ''' % (new_password, old_password)
+    res = await schema.exec(qu)
+    assert res['changePassword']['ok']
+

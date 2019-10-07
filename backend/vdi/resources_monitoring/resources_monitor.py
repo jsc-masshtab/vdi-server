@@ -104,6 +104,8 @@ class ResourcesMonitor:
                 await self._on_message_received(message)
             except websockets.ConnectionClosed:
                 await self._on_connection_closed()
+            except websockets.exceptions.ConnectionClosed:
+                await self._on_connection_closed()
             except Exception:
                 await self._on_error_occurred()
 

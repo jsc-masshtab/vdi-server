@@ -92,20 +92,20 @@ async def test_vm_name_template_in_autopool(fixt_create_automated_pool):
     assert res['pool']['settings']['vm_name_template'] == new_template_name
 
 
-@pytest.mark.asyncio
-async def test_copy_domain():
-    resources = await get_resources_for_automated_pool()
-    #print('resources', resources)
-    params = {
-        'verbose_name': "a_name_for_template",
-        'name_template': 'vm_name_template',
-        'domain_id': resources['template_id'],
-        'datapool_id': resources['datapool_id'],
-        'controller_ip': resources['controller_ip'],
-        'node_id': resources['node_id'],
-    }
-    vm_data = await vm.CopyDomain(**params).task
-    print('vm_data', vm_data)
+# @pytest.mark.asyncio
+# async def test_copy_domain():
+#     resources = await get_resources_for_automated_pool()
+#     #print('resources', resources)
+#     params = {
+#         'verbose_name': "a_name_for_template",
+#         'name_template': 'vm_name_template',
+#         'domain_id': resources['template_id'],
+#         'datapool_id': resources['datapool_id'],
+#         'controller_ip': resources['controller_ip'],
+#         'node_id': resources['node_id'],
+#     }
+#     vm_data = await vm.CopyDomain(**params).task
+#     print('vm_data', vm_data)
 
 
 @pytest.mark.asyncio
