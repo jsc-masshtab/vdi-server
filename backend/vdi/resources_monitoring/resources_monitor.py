@@ -104,8 +104,6 @@ class ResourcesMonitor:
                 await self._on_message_received(message)
             except websockets.ConnectionClosed:
                 await self._on_connection_closed()
-            except websockets.exceptions.ConnectionClosed:
-                await self._on_connection_closed()
             except Exception:
                 await self._on_error_occurred()
 
@@ -127,7 +125,7 @@ class ResourcesMonitor:
     async def _on_message_received(self, message):
         try:
             json_data = json.loads(message)
-            #print(__class__.__name__, json_data)
+            print(__class__.__name__, json_data)
         except JSONDecodeError:
             return
         #  notify subscribed observers

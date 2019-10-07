@@ -277,7 +277,12 @@ class VmType(graphene.ObjectType):
 
     async def get_veil_info(self):
         from vdi.tasks.vm import GetDomainInfo
-        return await GetDomainInfo(controller_ip=self.controller_ip, domain_id=self.id)
+        try:
+            domain_info = await GetDomainInfo(controller_ip=self.controller_ip, domain_id=self.id)
+        except NotFound:
+            return None
+        else:
+            return domain_info
 
     @graphene.Field
     def node():
@@ -289,7 +294,11 @@ class VmType(graphene.ObjectType):
             return self.name
         if self.veil_info is Unset:
             self.veil_info = await self.get_veil_info()
-        return self.veil_info['verbose_name']
+
+        if self.veil_info:
+            return self.veil_info['verbose_name']
+        else:
+            return 'Unknown'
 
     async def resolve_user(self, info):
         async with db.connect() as conn:

@@ -24,8 +24,6 @@ typedef struct{
 
     GIOStream *stream;
 
-    gchar *buffer;
-
     gboolean is_running;
 
     GMutex lock;

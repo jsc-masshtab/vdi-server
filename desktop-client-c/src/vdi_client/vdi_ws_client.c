@@ -10,6 +10,7 @@
 #include "vdi_ws_client.h"
 
 #define TIMEOUT 1000000 // 1 sec
+#define WS_READ_TIMEOUT 200000
 
 // static functions declarations
 void static async_create_ws_connect(GTask         *task,
@@ -66,40 +67,48 @@ static void async_create_ws_connect(GTask         *task G_GNUC_UNUSED,
 
         GInputStream *inputStream = g_io_stream_get_input_stream(vdi_ws_client->stream);
 
-        gsize buffer_size = 10;
-        vdi_ws_client->buffer = malloc(buffer_size * sizeof(gsize));
+        gsize buffer_size = 5;
+        gchar *buffer = malloc(buffer_size * sizeof(gsize));
         gsize bytes_read = 0;
+
+        const guint8 max_read_try = 3; // maximum amount of read tries
+        guint8 read_try_count = 0; // read try counter
 
         // receiving messages
         while (vdi_ws_client->is_running && !g_io_stream_is_closed(vdi_ws_client->stream)) {
             GError *error = NULL;
             gboolean res = g_input_stream_read_all(inputStream,
-                                                   vdi_ws_client->buffer,
+                                                   buffer,
                                                    buffer_size, &bytes_read,
                                                    vdi_ws_client->cancel_job, &error);
 //            if (error) {
 //                printf("WS: %i", error->code);
 //                printf("WS: %s ", error->message);
-//                break; // try to reconnect (another loop)
+//                //break; // try to reconnect (another loop)
 //            }
 
-            printf("WS: %s 1res%i bytes_read: %lu\n", (const char *)__func__, res, bytes_read);
-            cancellable_sleep(TIMEOUT, !vdi_ws_client->is_running); // sec
+            printf("WS: %s res: %i bytes_read: %lu\n", (const char *)__func__, res, bytes_read);
+            cancellable_sleep(WS_READ_TIMEOUT, !vdi_ws_client->is_running); // sec
 
             if (bytes_read == 0) {
-                g_idle_add((GSourceFunc)vdi_ws_client->ws_data_received_callback, (gpointer)FALSE); // notify GUI
-                break; // try to reconnect (another loop)
-            } else {
+                read_try_count ++;
+
+                if (read_try_count == max_read_try) {
+                    g_idle_add((GSourceFunc)vdi_ws_client->ws_data_received_callback, (gpointer)FALSE); // notify GUI
+                    break; // try to reconnect (another loop)
+                }
+            } else { // successfull read
+                read_try_count = 0;
                 g_idle_add((GSourceFunc)vdi_ws_client->ws_data_received_callback, (gpointer)TRUE); // notify GUI
             }
         }
 
-        free(vdi_ws_client->buffer);
-    }
+        free(buffer);
 
-    // close stream
-    if (vdi_ws_client->stream)
-        g_io_stream_close(vdi_ws_client->stream, NULL, NULL);
+        // close stream
+        if (vdi_ws_client->stream)
+            g_io_stream_close(vdi_ws_client->stream, NULL, NULL);
+    }
 
     g_mutex_unlock(&vdi_ws_client->lock);
 }

@@ -94,7 +94,7 @@ async def get_vm(request):
         qu = "update vm set username = $1 where id = $2", user, domain_id
         await conn.fetch(*qu)
 
-    # post actions for AUTOMATED pool
+    # post actions for AUTOMATED pool (todo: run in another courutine)
     if desktop_pool_type == DesktopPoolType.AUTOMATED.name:
         # try to wake pool if it's empty
         if pool_id not in Pool.instances:

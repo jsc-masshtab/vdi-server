@@ -44,8 +44,12 @@ class UserType(graphene.ObjectType):
 
         async with db.connect() as conn:
             sql_request = """SELECT email from public.user where username = $1""", self.username
-            [(email,)] = await conn.fetch(*sql_request)
-            return email
+            email_data = await conn.fetch(*sql_request)
+            if email_data:
+                [(email,)] = email_data
+                return email
+            else:
+                return None
 
     async def resolve_date_joined(self, _info):
         if self.date_joined is not NotSet:
@@ -53,8 +57,12 @@ class UserType(graphene.ObjectType):
 
         async with db.connect() as conn:
             sql_request = """SELECT date_joined from public.user where username = $1""", self.username
-            [(date_joined,)] = await conn.fetch(*sql_request)
-            return date_joined
+            date_joined_data = await conn.fetch(*sql_request)
+            if date_joined_data:
+                [(date_joined,)] = date_joined_data
+                return date_joined
+            else:
+                return None
 
     # async def resolve_pools(self, _info):
     #     async with db.connect() as conn:
