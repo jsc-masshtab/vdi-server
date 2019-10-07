@@ -114,6 +114,7 @@ async def fixt_create_automated_pool():
 
     print('destroy pool')
     # remove pool
+    await asyncio.sleep(3) # Даем вейлу время на создание машин
     await RemovePool.do_remove(pool_id)
     # qu = '''
     # mutation {

@@ -1,3 +1,4 @@
+import asyncio
 import pytest
 
 from fixtures.fixtures import (
@@ -14,18 +15,12 @@ from vdi.tasks import vm
 @pytest.mark.asyncio
 async def test_create_automated_pool(fixt_create_automated_pool):
     pool_id = fixt_create_automated_pool['id']
-
+    #await asyncio.sleep(1)
     qu = """{
       pool(id: %i) {
         desktop_pool_type
         settings {
           initial_size
-        }
-        state {
-          running
-          available {
-            id
-          }
         }
       }
     }""" % pool_id
