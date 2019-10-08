@@ -9,7 +9,7 @@
 #include "async.h"
 #include "vdi_ws_client.h"
 
-#define TIMEOUT 1000000 // 1 sec
+#define TIMEOUT 500000 // 1 sec
 #define WS_READ_TIMEOUT 200000
 
 // static functions declarations
@@ -46,7 +46,7 @@ static void async_create_ws_connect(GTask         *task G_GNUC_UNUSED,
         return;
     }
     soup_websocket_client_prepare_handshake(ws_msg, NULL, NULL);
-    soup_message_headers_append(ws_msg->request_headers, "Accept", "*/*");
+    soup_message_headers_replace(ws_msg->request_headers, "Connection", "keep-alive, Upgrade");
 
     soup_message_add_status_code_handler(ws_msg, "got-informational",
                           SOUP_STATUS_SWITCHING_PROTOCOLS,
@@ -88,7 +88,6 @@ static void async_create_ws_connect(GTask         *task G_GNUC_UNUSED,
 //            }
 
             printf("WS: %s res: %i bytes_read: %lu\n", (const char *)__func__, res, bytes_read);
-            cancellable_sleep(WS_READ_TIMEOUT, !vdi_ws_client->is_running); // sec
 
             if (bytes_read == 0) {
                 read_try_count ++;
@@ -101,6 +100,7 @@ static void async_create_ws_connect(GTask         *task G_GNUC_UNUSED,
                 read_try_count = 0;
                 g_idle_add((GSourceFunc)vdi_ws_client->ws_data_received_callback, (gpointer)TRUE); // notify GUI
             }
+            cancellable_sleep(WS_READ_TIMEOUT, !vdi_ws_client->is_running); // sec
         }
 
         free(buffer);
@@ -118,7 +118,7 @@ void start_vdi_ws_polling(VdiWsClient *vdi_ws_client, const gchar *vdi_ip,
 {
     printf("%s\n", (const char *)__func__);
     printf("In %s :thread id = %lu\n", (const char *)__func__, pthread_self());
-    vdi_ws_client->ws_soup_session = soup_session_new();
+    vdi_ws_client->ws_soup_session = soup_session_new_with_options("idle-timeout", 0, "timeout", 0, NULL);
 
     vdi_ws_client->ws_data_received_callback = ws_data_received_callback;
     vdi_ws_client->test_int = 666;// temp trash test

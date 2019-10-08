@@ -78,7 +78,7 @@ class ResourcesMonitor:
                     response_dict['status'] = 'OFFLINE'
                     json_data = json.dumps(response_dict)
                     self._notify_observers(CONTROLLERS_SUBSCRIPTION, json_data)
-                    print('notify controller offline')
+                    print('notify controller offline ', self._controller_ip)
                 self._is_online = False
             else:
                 # notify only if controller was offline before (data changed)
@@ -86,7 +86,7 @@ class ResourcesMonitor:
                     response_dict['status'] = 'ONLINE'
                     json_data = json.dumps(response_dict)
                     self._notify_observers(CONTROLLERS_SUBSCRIPTION, json_data)
-                    print('notify controller online')
+                    print('notify controller online ', self._controller_ip)
                 self._is_online = True
 
     async def _processing_ws_messages(self):
@@ -136,7 +136,7 @@ class ResourcesMonitor:
         self._notify_observers(resource_str, json_data)
 
     async def _on_connection_closed(self):
-        print(__class__.__name__, 'connection closed ', self._controller_ip)
+        print(__class__.__name__, 'connection closed ', self._controller_ip, self._websocket.open)
         await self._try_to_recconect()
 
     def _notify_observers(self, sub_source, json_data):
@@ -145,7 +145,7 @@ class ResourcesMonitor:
                 observer.on_notified(json_data)
 
     async def _on_error_occurred(self):
-        #print(__class__.__name__, 'An error occurred')
+        print(__class__.__name__, 'An error occurred')
         await self._close_connection()
         await self._try_to_recconect()
 
@@ -158,9 +158,8 @@ class ResourcesMonitor:
     async def _close_connection(self):
         try:
             if self._websocket:
-                print(__class__.__name__, 'before close conn')
+                print(__class__.__name__, 'before close conn ', self._websocket.open)
                 await self._websocket.close()
-                #await self._websocket.wait_closed()
-                print(__class__.__name__, 'after close conn')
+                print(__class__.__name__, 'after close conn ', self._websocket.open)
         except websockets.exceptions.ConnectionClosed:
             pass

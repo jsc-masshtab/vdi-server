@@ -67,6 +67,19 @@ class DesktopPoolType(graphene.Enum):
     STATIC = 1
 
 
+class DesktopPoolType(graphene.Enum):
+    AUTOMATED = 0
+    STATIC = 1
+
+
+class PoolOrderingArg(graphene.Enum):
+    POOL_NAME = 0
+    CONTROLLER = 1
+    VMS_AMOUNT = 2
+    USERS_AMOUNT = 3
+    POOL_TYPE = 4
+
+
 class PoolResourcesNames(graphene.ObjectType):
     cluster_name = graphene.String()
     node_name = graphene.String()
@@ -998,7 +1011,7 @@ class DropPoolPermissions(graphene.Mutation):
 
 
 class PoolMixin:
-    pools = graphene.List(PoolType, controller_ip=graphene.String())
+    pools = graphene.List(PoolType, ordering=PoolOrderingArg(), reversed_order=graphene.Boolean())
     pool = graphene.Field(PoolType, id=graphene.Int(),
                           controller_ip=graphene.String())
 
@@ -1050,12 +1063,12 @@ class PoolMixin:
             map.setdefault(pool_id, []).append(UserType(**u))
         return map
 
-
-    async def resolve_pools(self, info):
+    async def resolve_pools(self, _info, ordering=None, reversed_order=None):
         qu = "select * from pool where deleted is not true"
         async with db.connect() as conn:
             pools = await conn.fetch(qu)
 
+        # create list of items
         items = []
         for pool in pools:
             pool = dict(pool.items())
@@ -1070,10 +1083,40 @@ class PoolMixin:
             }
 
             from vdi.graphql_api.resources import ControllerType
-            pt = PoolType(**p,
+            pool_type = PoolType(**p,
                           settings=PoolSettings(**settings),
                           controller=ControllerType(ip=controller_ip))
-            items.append(pt)
+            #print('pool_type.vms', pool_type.vms)
+            items.append(pool_type)
+
+        # sort items if required
+        if ordering is not None:
+            # predicate
+            if ordering == PoolOrderingArg.POOL_NAME:
+                def sort_predicate(item): return item.name
+            elif ordering == PoolOrderingArg.CONTROLLER:
+                def sort_predicate(item): return item.controller.ip
+            elif ordering == PoolOrderingArg.VMS_AMOUNT:
+                def sort_predicate(item):
+                    if item.vms:
+                        return len(item.vms)
+                    else:
+                        return 0
+            elif ordering == PoolOrderingArg.USERS_AMOUNT:
+                def sort_predicate(item):
+                    if item.users:
+                        return len(item.users)
+                    else:
+                        return 0
+            elif ordering == PoolOrderingArg.POOL_TYPE:
+                def sort_predicate(item): return item.desktop_pool_type
+            else:
+                raise FieldError(ordering=['Неверный параметр сортировки'])
+            # reverse
+            reverse = reversed_order if reversed_order is not None else False
+            # sort
+            items = sorted(items, key=sort_predicate, reverse=reverse)
+
         return items
 
 
