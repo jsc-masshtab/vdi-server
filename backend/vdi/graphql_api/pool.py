@@ -165,20 +165,16 @@ class PoolType(graphene.ObjectType):
     async def resolve_vms(self, info):
         if self.vms:
             return self.vms
-        desktop_pool_type = self.resolve_desktop_pool_type(None)
-        if desktop_pool_type == DesktopPoolType.STATIC:
-            async with db.connect() as conn:
-                qu = "select id from vm where pool_id = $1", self.id
-                data = await conn.fetch(*qu)
-            vms = []
-            for [vm_id] in data:
-                vm = VmType(id=vm_id)
-                vm.controller_ip = self.controller.ip
-                vm.selections = get_selections(info)
-                vms.append(vm)
-            return vms
-        state = self.resolve_state(None)
-        vms = await state.resolve_available(info)
+
+        async with db.connect() as conn:
+            qu = "select id from vm where pool_id = $1", self.id
+            data = await conn.fetch(*qu)
+        vms = []
+        for [vm_id] in data:
+            vm = VmType(id=vm_id)
+            vm.controller_ip = self.controller.ip
+            vm.selections = get_selections(info)
+            vms.append(vm)
         return vms
 
     def resolve_desktop_pool_type(self, _info):
@@ -1045,24 +1041,6 @@ class PoolMixin:
                         controller=ControllerType(ip=controller_ip))
 
 
-    #TODO fix users
-    #TODO remove this
-    async def get_pools_users_map(self, u_fields):
-        u_fields_prefixed = ['u.{}'.format(f) for f in u_fields]
-        fields = ['pool_id'] + u_fields_prefixed
-        qu = """
-            SELECT {}
-            FROM pools_users LEFT JOIN public.user as u ON pools_users.username =  u.username
-            """, format(', '.join(fields))
-        map = {}
-        async with db.connect() as conn:
-            records = await conn.fetch(*qu)
-
-        for pool_id, *values in records:
-            u = dict(zip(u_fields, values))
-            map.setdefault(pool_id, []).append(UserType(**u))
-        return map
-
     async def resolve_pools(self, _info, ordering=None, reversed_order=None):
         qu = "select * from pool where deleted is not true"
         async with db.connect() as conn:
@@ -1086,35 +1064,34 @@ class PoolMixin:
             pool_type = PoolType(**p,
                           settings=PoolSettings(**settings),
                           controller=ControllerType(ip=controller_ip))
-            #print('pool_type.vms', pool_type.vms)
             items.append(pool_type)
 
         # sort items if required
         if ordering is not None:
-            # predicate
+            # determine predicate (sort_predicate) to use in "sorted" builtin algorithm
             if ordering == PoolOrderingArg.POOL_NAME:
-                def sort_predicate(item): return item.name
+                def sort_predicate(it): return it.name
             elif ordering == PoolOrderingArg.CONTROLLER:
-                def sort_predicate(item): return item.controller.ip
+                def sort_predicate(it): return it.controller.ip
             elif ordering == PoolOrderingArg.VMS_AMOUNT:
-                def sort_predicate(item):
-                    if item.vms:
-                        return len(item.vms)
-                    else:
-                        return 0
+                vm_amount_dict = dict()
+                for item in items:
+                    vm_amount_dict[item.id] = await Pool.get_vm_amount_in_pool(item.id)
+
+                def sort_predicate(it): return vm_amount_dict[it.id]
             elif ordering == PoolOrderingArg.USERS_AMOUNT:
-                def sort_predicate(item):
-                    if item.users:
-                        return len(item.users)
-                    else:
-                        return 0
+                user_amount_dict = dict()
+                for item in items:
+                    user_amount_dict[item.id] = await Pool.get_user_amount_in_pool(item.id)
+
+                def sort_predicate(it): return user_amount_dict[it.id]
             elif ordering == PoolOrderingArg.POOL_TYPE:
-                def sort_predicate(item): return item.desktop_pool_type
+                def sort_predicate(it): return it.desktop_pool_type
             else:
                 raise FieldError(ordering=['Неверный параметр сортировки'])
-            # reverse
+            # if reverse sorting defined
             reverse = reversed_order if reversed_order is not None else False
-            # sort
+            # sort list
             items = sorted(items, key=sort_predicate, reverse=reverse)
 
         return items

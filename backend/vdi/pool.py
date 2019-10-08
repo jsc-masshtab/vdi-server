@@ -132,4 +132,15 @@ class Pool:
             [(num,)] = await conn.fetch(*qu)
         return num
 
+    @staticmethod
+    async def get_user_amount_in_pool(pool_id):
+        async with db.connect() as conn:
+            qu = """
+            SELECT count(*) 
+            FROM pools_users JOIN public.user as u ON pools_users.username = u.username
+            WHERE pool_id = {}
+            """.format(pool_id)
+            [(num,)] = await conn.fetch(qu)
+        return num
+
     instances = {}
