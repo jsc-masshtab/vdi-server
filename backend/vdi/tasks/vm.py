@@ -6,7 +6,7 @@ import uuid
 from cached_property import cached_property as cached
 
 from vdi.errors import NotFound, FetchException, BadRequest
-from .base import Token, UrlFetcher, DiscoverController, Task
+from .base import Token, UrlFetcher, DiscoverController, Task, apply_ordering_to_url
 from .client import HttpClient
 from .ws import WsConnection
 
@@ -144,13 +144,7 @@ class ListAllVms(Task):
         url = "http://{}/api/domains/".format(self.controller_ip)
         if self.node_id:
             url = '{}?node={}&'.format(url, self.node_id)
-        if self.ordering:
-            if self.reversed_order is not None:
-                order_sign = '-' if self.reversed_order else ''
-            else:
-                order_sign = ''
-
-            url = '{}?ordering={}{}&'.format(url, order_sign, self.ordering)
+        url = apply_ordering_to_url(url, self.ordering, self.reversed_order)
         return url
 
     async def run(self):

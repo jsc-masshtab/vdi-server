@@ -9,17 +9,22 @@ from db.db import db
 from . import UrlFetcher, Token, CheckConnection
 
 from vdi.errors import SimpleError, FetchException, NotFound, ControllerNotAccessible
+from .base import apply_ordering_to_url
 
 
 #@dataclass()
 class ListClusters(UrlFetcher):
 
-    def __init__(self, controller_ip: str):
+    def __init__(self, controller_ip: str, ordering: str = None, reversed_order: bool = None):
         self.controller_ip = controller_ip
+        self.ordering = ordering
+        self.reversed_order = reversed_order
 
     @cached
     def url(self):
-        return 'http://{}/api/clusters/'.format(self.controller_ip)
+        url = 'http://{}/api/clusters/'.format(self.controller_ip)
+        url = apply_ordering_to_url(url, self.ordering, self.reversed_order)
+        return url
 
     async def run(self):
         resp = await super().run()
@@ -28,12 +33,12 @@ class ListClusters(UrlFetcher):
 
 #@dataclass()
 class FetchCluster(UrlFetcher):
-    controller_ip = ''
-    cluster_id = ''
 
-    def __init__(self, controller_ip: str, cluster_id: str):
+    def __init__(self, controller_ip: str, cluster_id: str, ordering: str = None, reversed_order: bool = None):
         self.controller_ip = controller_ip
         self.cluster_id = cluster_id
+        self.ordering = ordering
+        self.reversed_order = reversed_order
 
     @cached
     def url(self):
@@ -64,16 +69,19 @@ class FetchDatapool(UrlFetcher):
 #@dataclass()
 class ListNodes(UrlFetcher):
 
-    cluster_id = ''
-    controller_ip = ''
-
-    def __init__(self, cluster_id: str, controller_ip: str):
-        self.cluster_id = cluster_id
+    def __init__(self, controller_ip: str, cluster_id: str = None, ordering: str = None, reversed_order: bool = None):
         self.controller_ip = controller_ip
+        self.cluster_id = cluster_id
+        self.ordering = ordering
+        self.reversed_order = reversed_order
 
     @cached
     def url(self):
-        return 'http://{}/api/nodes/?cluster={}'.format(self.controller_ip, self.cluster_id)
+        url = 'http://{}/api/nodes/'.format(self.controller_ip)
+        if self.cluster_id:
+            url = 'http://{}/api/nodes/?cluster={}&'.format(self.controller_ip, self.cluster_id)
+        url = apply_ordering_to_url(url, self.ordering, self.reversed_order)
+        return url
 
     def on_fetch_failed(self, ex, code):
         if code == 404:

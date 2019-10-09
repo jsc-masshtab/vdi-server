@@ -384,9 +384,10 @@ class ControllerType(graphene.ObjectType):
                               node_id=graphene.String(),
                               cluster_id=graphene.String(),
                               take_broken=graphene.Boolean())
-    clusters = graphene.List(ClusterType)
+    clusters = graphene.List(ClusterType, ordering=graphene.String(), reversed_order=graphene.Boolean())
     cluster = graphene.Field(ClusterType, id=graphene.String())
-    nodes = graphene.List(NodeType, cluster_id=graphene.String())
+    nodes = graphene.List(NodeType, cluster_id=graphene.String(), ordering=graphene.String(),
+                          reversed_order=graphene.Boolean())
     node = graphene.Field(NodeType, id=graphene.String())
 
     is_online = graphene.Boolean()
@@ -440,7 +441,7 @@ class ControllerType(graphene.ObjectType):
         if not wild:
             vm_ids = {k: v for k, v in vm_ids.items() if v is not None}
 
-        objects = []
+        vm_type_list = []
         for vm in vms:
             if vm['id'] not in vm_ids:
                 continue
@@ -451,14 +452,14 @@ class ControllerType(graphene.ObjectType):
                 pool_kwargs = {'pool': PoolType(id=pool_id, controller=self)}
             else:
                 pool_kwargs = {}
-            obj = VmType(name=vm['verbose_name'], id=vm['id'], node=node, **pool_kwargs)
-            obj.selections = get_selections(info)
-            obj.veil_info = vm
+            vm_type = VmType(name=vm['verbose_name'], id=vm['id'], node=node, **pool_kwargs)
+            vm_type.selections = get_selections(info)
+            vm_type.veil_info = vm
             if not pool_id:
-                obj.controller_ip = self.ip
+                vm_type.controller_ip = self.ip
 
-            objects.append(obj)
-        return objects
+            vm_type_list.append(vm_type)
+        return vm_type_list
 
 
     async def resolve_datapools(self, info, node_id=None, cluster_id=None, take_broken=False):
@@ -496,9 +497,9 @@ class ControllerType(graphene.ObjectType):
 
         return li
 
-    async def resolve_clusters(self, info):
+    async def resolve_clusters(self, _info, ordering=None, reversed_order=None):
         controller_ip = self.ip
-        resp = await ListClusters(controller_ip)
+        resp = await ListClusters(controller_ip, ordering, reversed_order)
         li = []
         for item in resp:
             obj = make_resource_type(ClusterType, item)
@@ -514,8 +515,9 @@ class ControllerType(graphene.ObjectType):
         obj.controller = self
         return obj
 
-    async def _get_nodes(self, info, *, cluster_id):
-        nodes = await ListNodes(controller_ip=self.ip, cluster_id=cluster_id)
+    async def resolve_nodes(self, _info, cluster_id=None, ordering=None, reversed_order=None):
+        nodes = await ListNodes(controller_ip=self.ip, cluster_id=cluster_id,
+                                ordering=ordering, reversed_order=reversed_order)
         li = []
         for node in nodes:
             obj = make_resource_type(NodeType, node)
@@ -523,20 +525,7 @@ class ControllerType(graphene.ObjectType):
             li.append(obj)
         return li
 
-    async def resolve_nodes(self, info, cluster_id=None):
-        controller_ip = self.ip
-        if cluster_id is not None:
-            return await self._get_nodes(info, cluster_id=cluster_id)
-        result = {}
-        clusters = await ListClusters(controller_ip=controller_ip)
-        for cluster in clusters:
-            nodes = await self._get_nodes(info, cluster_id=cluster['id'])
-            result.update(
-                (obj.id, obj) for obj in nodes
-            )
-        return list(result.values())
-
-    async def resolve_node(self, info, id):
+    async def resolve_node(self, _info, id):
         controller_ip = self.ip
         node = await FetchNode(controller_ip=controller_ip, node_id=id)
         obj = make_resource_type(NodeType, node)

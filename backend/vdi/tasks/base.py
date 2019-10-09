@@ -23,6 +23,19 @@ from vdi.utils import Unset
 
 from async_generator import async_generator, yield_, asynccontextmanager
 
+
+# apply ordering parameter to url
+def apply_ordering_to_url(url, ordering, reversed_order):
+    if ordering:
+        if reversed_order is not None:
+            order_sign = '-' if reversed_order else ''
+        else:
+            order_sign = ''
+        return '{}?ordering={}{}&'.format(url, order_sign, ordering)
+
+    return url
+
+
 class ErrorHandler(_Task):
     _result = Unset
 
