@@ -21,11 +21,11 @@
       </div>
       <div class="details-slide-into">
         <ng-container *ngIf="data?.typePool === 'automated'">
-          <vdi-table-into *ngIf="menuActive === 'info'" [data]="data?.vm" [collection]="collectionIntoVmAutomated"></vdi-table-into>
+          <vdi-table-into *ngIf="menuActive === 'info'" [item]="data?.vm" [collection]="collectionIntoVmAutomated"></vdi-table-into>
         </ng-container>
 
         <ng-container *ngIf="data?.typePool === 'static'">
-          <vdi-table-into *ngIf="menuActive === 'info'" [data]="data?.vm" [collection]="collectionIntoVmStatic"></vdi-table-into>
+          <vdi-table-into *ngIf="menuActive === 'info'" [item]="data?.vm" [collection]="collectionIntoVmStatic"></vdi-table-into>
         </ng-container>
       </div>     
     </div>

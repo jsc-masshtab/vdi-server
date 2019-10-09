@@ -26,7 +26,7 @@ export class UsersComponent implements OnInit {
     }
   ];
 
-  constructor(private service: UsersService,public dialog: MatDialog,private waitService: WaitService){}
+  constructor(private service: UsersService, public dialog: MatDialog, private waitService: WaitService){}
 
   ngOnInit() {
     this.getAllUsers();

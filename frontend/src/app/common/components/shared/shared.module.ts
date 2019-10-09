@@ -1,3 +1,4 @@
+import { MatDialogModule } from '@angular/material/dialog';
 import { StatusPipe } from './../../other/directives/statusEntity.directive';
 import { CommonModule } from '@angular/common';
 import { FocusMeDirective } from '../../other/directives/focusMe.directive';
@@ -5,6 +6,8 @@ import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { NgModule } from '@angular/core';
 import { TableIntoComponent } from './table-into-component/table-into';
 import { TableComponentComponent } from './table-component/table-component.component';
+import { FormForEditComponent } from './change-form/form-edit.component';
+import { FormsModule } from '@angular/forms';
 
 
 @NgModule({
@@ -12,17 +15,24 @@ import { TableComponentComponent } from './table-component/table-component.compo
    TableComponentComponent,
    TableIntoComponent,
    FocusMeDirective,
-   StatusPipe
+   StatusPipe,
+   FormForEditComponent
   ],
   exports: [
     TableComponentComponent,
     TableIntoComponent,
     FocusMeDirective,
-    StatusPipe
+    StatusPipe,
+    FormForEditComponent
   ],
   imports: [
     CommonModule,
-    FontAwesomeModule
+    FontAwesomeModule,
+    MatDialogModule,
+    FormsModule
+  ],
+  entryComponents: [
+    FormForEditComponent
   ]
 })
 

@@ -1,26 +1,54 @@
-
 <div class="table-area">
   <div *ngFor="let obj of collection" class="table-area-object">   <!--строка-->
     <div class="table-area-property" > <!--столбец-->
       <div class="table-area-title">
         <span>{{ obj.title }}</span>
       </div>
-      <div class="table-area-value">
-        <ng-container *ngIf="data;else nothing">
-          <span *ngIf="obj.property_lv2 && data[obj.property]">{{ data[obj.property][obj.property_lv2] || '--' }}</span>
-          <span *ngIf="!obj.property_lv2 && !obj.property_array && !obj.property_array_prop">{{ data[obj.property] || '--' }}</span>
-          <span *ngIf="obj.property_array && data[obj.property_array] && data[obj.property_array] && data[obj.property_array].length">{{ data[obj.property_array].length || '--' }}</span>
+      <div class="table-area-value" *ngIf="item">
 
-          <span *ngIf="data && obj.property_lv2 && !data[obj.property] || obj.property_array && !data[obj.property_array] || obj.property_array_prop && data[obj.property_array_prop] && !data[obj.property_array_prop].length || obj.property_array_prop && !data[obj.property_array_prop]">--</span>
-
-          <span *ngIf="obj.property_array_prop && data[obj.property_array_prop] && data[obj.property_array_prop].length"> <!-- св-во length есть и у строки -->
-            <span *ngFor="let o of data[obj.property_array_prop];let i = index">
-              {{ o[obj.property_array_prop_lv2] || '--' }}
-              <ng-container *ngIf="data[obj.property_array_prop].length > 1 && i != data[obj.property_array_prop].length - 1">,</ng-container>
-            </span>
-          </span>
+        <ng-container *ngIf="obj.property_lv2">
+          <ng-container *ngIf="item[obj.property] && item[obj.property][obj.property_lv2]; else nothing">
+            <span>{{ item[obj.property][obj.property_lv2] }}</span>
+          </ng-container>
         </ng-container>
+
+<!-- obj.property === 'status' -->
+        <ng-container *ngIf="obj.property === 'status'">
+          <ng-container *ngIf="item[obj.property]; else nothing">
+            <span>{{ item[obj.property] | status }}</span>
+          </ng-container>
+        </ng-container>
+
+<!-- obj.property -> all-types-here-->
+        <ng-container *ngIf="obj.property && obj.property != 'status' && !obj.property_lv2">
+          <ng-container *ngIf="item[obj.property] && obj.type; else nothing">
+            <span *ngIf="obj.type === 'string'">{{ item[obj.property] }}</span>
+
+            <span *ngIf="obj.type === 'array-length'">{{ item[obj.property]?.length }}</span>
+
+            <ng-container *ngIf="obj.type.typeDepend === 'propertyInObjectsInArray'">
+              <ng-container *ngIf="item[obj.property]?.length; else nothing">
+                <span *ngFor="let objInItem of item[obj.property];let i = index">
+                  {{ objInItem[obj.type.propertyDepend] }}
+                  <ng-container *ngIf="item[obj.property]?.length > 1 && i != item[obj.property]?.length - 1">,</ng-container>
+                </span>
+              </ng-container>
+            </ng-container>
+
+            <ng-container *ngIf="obj.type.typeDepend === 'boolean'">
+              <ng-container *ngIf="obj.property">{{ obj.type.propertyDepend[0] }}</ng-container>
+              <ng-container *ngIf="!obj.property">{{ obj.type.propertyDepend[1] }}</ng-container>
+            </ng-container>
+
+          </ng-container>
+        </ng-container>
+
+        <button *ngIf="obj.edit" (click)="actionEditField(obj.edit)">
+          <fa-icon [icon]="['fas','edit']" size="xs"></fa-icon>
+        </button>
+
         <ng-template  #nothing>--</ng-template>
+
       </div>
     </div> 
   </div>

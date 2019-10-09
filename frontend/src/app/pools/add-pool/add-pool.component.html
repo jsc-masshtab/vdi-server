@@ -140,7 +140,7 @@
 
   <div class="field-table" *ngIf="step === 'finish-see'" [style.paddingBottom]="'20px'">
     <h1 class="title">Информация о создаваемом пуле</h1>
-    <vdi-table-into [data]="finishPoolView" [collection]="tableField"></vdi-table-into>
+    <vdi-table-into [item]="finishPoolView" [collection]="tableField"></vdi-table-into>
   </div>
   <div class="form-actions" *ngIf="step === 'finish-see'">
     <button (click)="send('createPool')" class="form-btn width-between" ><span class="action-name" >Назад</span></button>

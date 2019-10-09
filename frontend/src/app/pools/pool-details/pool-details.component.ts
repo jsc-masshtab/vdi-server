@@ -9,6 +9,7 @@ import { ActivatedRoute, ParamMap, Router } from '@angular/router';
 import { MatDialog } from '@angular/material';
 import { RemovePoolComponent } from './remove-pool/remove-pool.component';
 import { PoolDetailsService } from './pool-details.service';
+import { FormForEditComponent } from 'src/app/common/components/shared/change-form/form-edit.component';
 
 
 
@@ -22,16 +23,18 @@ export class PoolDetailsComponent implements OnInit {
 
   public host: boolean = false;
 
-
   public pool: IPool;
   public collectionDetailsStatic: any[] = [
     {
       title: 'Название',
-      property: 'name'
+      property: 'name',
+      type: 'string',
+      edit: 'changeName'
     },
     {
       title: 'Тип',
-      property: 'desktop_pool_type'
+      property: 'desktop_pool_type',
+      type: 'string'
     },
     {
       title: 'Контроллер',
@@ -55,22 +58,28 @@ export class PoolDetailsComponent implements OnInit {
     },
     {
       title: 'Всего ВМ',
-      property_array: 'vms'
+      property: 'vms',
+      type: 'array-length'
     },
     {
       title: 'Пользователи',
-      property_array_prop: 'users',
-      property_array_prop_lv2: 'username'
+      property: 'users',
+      type: {
+        propertyDepend: 'username',
+        typeDepend: 'propertyInObjectsInArray'
+      }
     }
   ];
   public collectionDetailsAutomated: any[] = [
     {
       title: 'Название',
-      property: 'name'
+      property: 'name',
+      type: 'string'
     },
     {
       title: 'Тип',
-      property: 'desktop_pool_type'
+      property: 'desktop_pool_type',
+      type: 'string'
     },
     {
       title: 'Контроллер',
@@ -111,12 +120,16 @@ export class PoolDetailsComponent implements OnInit {
     },
     {
       title: 'Создано ВМ',
-      property_array: 'vms'
+      property: 'vms',
+      type: 'array-length'
     },
     {
       title: 'Пользователи',
-      property_array_prop: 'users',
-      property_array_prop_lv2: 'username'
+      property: 'users',
+      type: {
+        propertyDepend: 'username',
+        typeDepend: 'propertyInObjectsInArray'
+      }
     }
   ];
 
@@ -176,7 +189,7 @@ export class PoolDetailsComponent implements OnInit {
     }
   ];
   private idPool: number;
-  public typePool: string;
+  public  typePool: string;
   public  menuActive: string = 'info';
 
   constructor(private activatedRoute: ActivatedRoute,
@@ -270,6 +283,32 @@ export class PoolDetailsComponent implements OnInit {
         typePool: this.typePool,
         usersPool: this.pool.users,
         idPool: this.idPool
+      }
+    });
+  }
+
+  public actionEdit(method) {
+    this[method]();
+  }
+
+// @ts-ignore: Unreachable code error
+  private changeName() {
+    this.dialog.open(FormForEditComponent, {
+      width: '500px',
+      data: {
+        entity: {
+          entity: 'pool',
+          name: this.pool.name,
+          service: this.poolService,
+          method: 'editNamePool',
+          params: {
+            id: this.idPool
+          }
+        },
+        settings: {
+          header: 'Редактирование имени пула',
+          buttonAction: 'Редактировать'
+        }
       }
     });
   }

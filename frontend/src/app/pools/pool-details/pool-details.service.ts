@@ -284,4 +284,24 @@ export class PoolDetailsService {
             }
         });
     }
+
+    public editNamePool(...params: [number, string]) {
+        console.log(params);
+        const idPool = params[0];
+        const newNamePool = params[1];
+        return this.service.mutate<any>({
+            mutation: gql`
+                            mutation ChangePoolName($pool_id: Int!,$new_name: String!) {
+                                changePoolName(pool_id: $pool_id, new_name: $new_name) {
+                                    ok
+                                }
+                            }
+            `,
+            variables: {
+                method: 'POST',
+                pool_id: idPool,
+                new_name: newNamePool
+            }
+        });
+    }
 }

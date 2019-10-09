@@ -1,4 +1,4 @@
-import { Component,  Input, } from '@angular/core';
+import { Component,  Input, EventEmitter, Output } from '@angular/core';
 
 @Component({
   selector: 'vdi-table-into',
@@ -7,9 +7,14 @@ import { Component,  Input, } from '@angular/core';
 })
 export class TableIntoComponent  {
 
-  @Input() data: {};
+  @Input() item: {};
   @Input() collection: object[] = [];
+  @Output() action: EventEmitter<object> = new EventEmitter<object>();
 
   constructor() {}
+
+  public actionEditField(method) {
+    this.action.emit(method);
+  }
 
 }
