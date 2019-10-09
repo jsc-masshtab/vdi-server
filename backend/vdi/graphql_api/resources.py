@@ -380,7 +380,8 @@ class ControllerType(graphene.ObjectType):
     default = graphene.Boolean()
 
     templates = graphene.List(TemplateType,
-                              cluster_id=graphene.String(), node_id=graphene.String())
+                              cluster_id=graphene.String(), node_id=graphene.String(),
+                              ordering=graphene.String(), reversed_order=graphene.Boolean())
     vms = graphene.List(VmType,
                         cluster_id=graphene.String(), node_id=graphene.String(),
                         wild=graphene.Boolean(), ordering=graphene.String(), reversed_order=graphene.Boolean())
@@ -398,8 +399,7 @@ class ControllerType(graphene.ObjectType):
 
     is_online = graphene.Boolean()
 
-
-    async def resolve_templates(self, info, cluster_id=None, node_id=None):
+    async def resolve_templates(self, _info, cluster_id=None, node_id=None, ordering=None, reversed_order=None):
         if node_id is not None:
             nodes = {node_id}
         elif cluster_id is not None:
@@ -407,7 +407,7 @@ class ControllerType(graphene.ObjectType):
             nodes = {node['id'] for node in nodes}
         else:
             nodes = None
-        vms = await ListTemplates(controller_ip=self.ip)
+        vms = await ListTemplates(controller_ip=self.ip, ordering=ordering, reversed_order=reversed_order)
         if nodes is not None:
             vms = [
                 vm for vm in vms
