@@ -135,7 +135,7 @@ class AuthInfo(graphene.ObjectType):
 
 
 class UserQueries:
-    users = graphene.List(UserType)
+    users = graphene.List(UserType, ordering=graphene.String(), reversed_order=graphene.Boolean())
     #TMP
     check_user = graphene.Field(graphene.Boolean, username=graphene.String(), password=graphene.String())
     auth = graphene.Field(AuthInfo, username=graphene.String(), password=graphene.String())
@@ -148,10 +148,21 @@ class UserQueries:
     async def resolve_check_user(self, info, username, password):
         return await check_username(username, password)
 
-    async def resolve_users(self, info):
+    async def resolve_users(self, info, ordering=None, reversed_order=None):
         fields = get_selections(info)
-        async with db.connect() as conn:
+
+        if ordering:
+            # is reversed
+            if reversed_order is not None:
+                sort_order = 'DESC' if reversed_order else 'ASC'
+            else:
+                sort_order = 'ASC'
+            # ordering
+            qu = "SELECT {} FROM public.user ORDER BY {} {}".format(', '.join(fields), ordering, sort_order)
+        else:
             qu = "SELECT {} FROM public.user".format(', '.join(fields))
+
+        async with db.connect() as conn:
             users = await conn.fetch(qu)
         li = []
         for rec in users:

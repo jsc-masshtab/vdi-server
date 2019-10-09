@@ -1043,9 +1043,8 @@ class PoolMixin:
     async def resolve_pools(self, _info, ordering=None, reversed_order=None):
 
         # sort items if required
-        if ordering is not None:
+        if ordering:
             # is reversed
-            reverse = reversed_order if reversed_order is not None else False
             if reversed_order is not None:
                 sort_order = 'DESC' if reversed_order else 'ASC'
             else:
