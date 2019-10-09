@@ -1040,9 +1040,37 @@ class PoolMixin:
         return PoolType(**pool_data,
                         controller=ControllerType(ip=controller_ip))
 
-
     async def resolve_pools(self, _info, ordering=None, reversed_order=None):
-        qu = "select * from pool where deleted is not true"
+
+        # sort items if required
+        if ordering is not None:
+            # is reversed
+            reverse = reversed_order if reversed_order is not None else False
+            if reversed_order is not None:
+                sort_order = 'DESC' if reversed_order else 'ASC'
+            else:
+                sort_order = 'ASC'
+
+            # determine sql query
+            if ordering == PoolOrderingArg.POOL_NAME:
+                qu = "SELECT * FROM pool WHERE deleted IS NOT true ORDER BY name {}".format(sort_order)
+            elif ordering == PoolOrderingArg.CONTROLLER:
+                qu = "SELECT * FROM pool WHERE deleted IS NOT true ORDER BY controller_ip {}".format(sort_order)
+            elif ordering == PoolOrderingArg.VMS_AMOUNT:
+                qu = "SELECT pool.* FROM pool LEFT JOIN vm " \
+                     "ON pool.id = vm.pool_id GROUP BY pool.id ORDER BY COUNT(vm.id) {}".format(sort_order)
+            elif ordering == PoolOrderingArg.USERS_AMOUNT:
+                qu = "SELECT pool.* FROM pool LEFT JOIN pools_users " \
+                     "ON pool.id = pools_users.pool_id GROUP BY pool.id ORDER BY COUNT(pools_users.username)" \
+                     " {}".format(sort_order)
+            elif ordering == PoolOrderingArg.POOL_TYPE:
+                qu = "SELECT * FROM pool WHERE deleted IS NOT true ORDER BY desktop_pool_type {}".format(sort_order)
+            else:
+                raise FieldError(ordering=['Неверный параметр сортировки'])
+        else:
+            qu = "SELECT * FROM pool WHERE deleted IS NOT true"
+
+        # get from db
         async with db.connect() as conn:
             pools = await conn.fetch(qu)
 
@@ -1065,34 +1093,6 @@ class PoolMixin:
                           settings=PoolSettings(**settings),
                           controller=ControllerType(ip=controller_ip))
             items.append(pool_type)
-
-        # sort items if required
-        if ordering is not None:
-            # determine predicate (sort_predicate) to use in "sorted" builtin algorithm
-            if ordering == PoolOrderingArg.POOL_NAME:
-                def sort_predicate(it): return it.name
-            elif ordering == PoolOrderingArg.CONTROLLER:
-                def sort_predicate(it): return it.controller.ip
-            elif ordering == PoolOrderingArg.VMS_AMOUNT:
-                vm_amount_dict = dict()
-                for item in items:
-                    vm_amount_dict[item.id] = await Pool.get_vm_amount_in_pool(item.id)
-
-                def sort_predicate(it): return vm_amount_dict[it.id]
-            elif ordering == PoolOrderingArg.USERS_AMOUNT:
-                user_amount_dict = dict()
-                for item in items:
-                    user_amount_dict[item.id] = await Pool.get_user_amount_in_pool(item.id)
-
-                def sort_predicate(it): return user_amount_dict[it.id]
-            elif ordering == PoolOrderingArg.POOL_TYPE:
-                def sort_predicate(it): return it.desktop_pool_type
-            else:
-                raise FieldError(ordering=['Неверный параметр сортировки'])
-            # if reverse sorting defined
-            reverse = reversed_order if reversed_order is not None else False
-            # sort list
-            items = sorted(items, key=sort_predicate, reverse=reverse)
 
         return items
 
