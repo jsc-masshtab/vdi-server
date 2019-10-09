@@ -120,18 +120,19 @@ class FetchNode(UrlFetcher):
 #@dataclass()
 class ListDatapools(UrlFetcher):
 
-    controller_ip = ''
-    node_id = None
-    take_broken = False  # property if datapool is fine
-
-    def __init__(self, controller_ip: str, node_id: str = None, take_broken: bool = False):
+    def __init__(self, controller_ip: str, node_id: str = None, take_broken: bool = False,
+                 ordering: str = None, reversed_order: bool = None):
         self.controller_ip = controller_ip
         self.node_id = node_id
         self.take_broken = take_broken
+        self.ordering = ordering
+        self.reversed_order = reversed_order
 
     @cached
     def url(self):
-        return 'http://{}/api/data-pools/'.format(self.controller_ip)
+        url = 'http://{}/api/data-pools/'.format(self.controller_ip)
+        url = apply_ordering_to_url(url, self.ordering, self.reversed_order)
+        return url
 
     async def run(self):
         resp = await super().run()

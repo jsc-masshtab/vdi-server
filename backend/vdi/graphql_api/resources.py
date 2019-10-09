@@ -370,7 +370,7 @@ class RemoveController(graphene.Mutation):
             await conn.execute(*query)
 
         # remove controller from resources_monitor_manager
-        resources_monitor_manager.remove_controller(controller_ip)
+        await resources_monitor_manager.remove_controller(controller_ip)
         return RemoveController(ok=True)
 
 
@@ -388,7 +388,8 @@ class ControllerType(graphene.ObjectType):
     datapools = graphene.List(DatapoolType,
                               node_id=graphene.String(),
                               cluster_id=graphene.String(),
-                              take_broken=graphene.Boolean())
+                              take_broken=graphene.Boolean(),
+                              ordering=graphene.String(), reversed_order=graphene.Boolean())
     clusters = graphene.List(ClusterType, ordering=graphene.String(), reversed_order=graphene.Boolean())
     cluster = graphene.Field(ClusterType, id=graphene.String())
     nodes = graphene.List(NodeType, cluster_id=graphene.String(), ordering=graphene.String(),
@@ -466,9 +467,12 @@ class ControllerType(graphene.ObjectType):
             vm_type_list.append(vm_type)
         return vm_type_list
 
-
-    async def resolve_datapools(self, info, node_id=None, cluster_id=None, take_broken=False):
+    async def resolve_datapools(self, info, node_id=None, cluster_id=None, take_broken=False,
+                                ordering=None, reversed_order=None):
         controller_ip = self.ip
+        if node_id is None and cluster_id is None:
+            return self._get_datapools(info, None, take_broken, ordering, reversed_order)
+
         if node_id is not None:
             return self._get_datapools(info, node_id=node_id, take_broken=take_broken)
         if cluster_id is not None:
@@ -488,12 +492,9 @@ class ControllerType(graphene.ObjectType):
         datapools = list(datapools.values())
         return datapools
 
-    # TODO fields/info rework
-
-    async def _get_datapools(self, info, node_id, take_broken=False):
-        resp = await ListDatapools(controller_ip=self.ip, node_id=node_id, take_broken=take_broken)
-        fields = get_selections(info)
-
+    async def _get_datapools(self, _info, node_id, take_broken=False, ordering=None, reversed_order=None):
+        resp = await ListDatapools(controller_ip=self.ip, node_id=node_id, take_broken=take_broken,
+                                   ordering=ordering, reversed_order=reversed_order)
         li = []
         for item in resp:
             obj = make_resource_type(DatapoolType, item, {'nodes_connected': 'nodes'})
