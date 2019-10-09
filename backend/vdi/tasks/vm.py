@@ -132,18 +132,25 @@ class DropDomain(UrlFetcher):
 
 #@dataclass()
 class ListAllVms(Task):
-    controller_ip = ''
-    node_id = None
 
-    def __init__(self, controller_ip: str, node_id: str = None):
+    def __init__(self, controller_ip: str, node_id: str = None, ordering: str = None, reversed_order: bool = None):
         self.controller_ip = controller_ip
         self.node_id = node_id
+        self.ordering = ordering
+        self.reversed_order = reversed_order
 
     @cached
     def url(self):
         url = "http://{}/api/domains/".format(self.controller_ip)
         if self.node_id:
-            url = '{}?node={}'.format(url, self.node_id)
+            url = '{}?node={}&'.format(url, self.node_id)
+        if self.ordering:
+            if self.reversed_order is not None:
+                order_sign = '-' if self.reversed_order else ''
+            else:
+                order_sign = ''
+
+            url = '{}?ordering={}{}&'.format(url, order_sign, self.ordering)
         return url
 
     async def run(self):

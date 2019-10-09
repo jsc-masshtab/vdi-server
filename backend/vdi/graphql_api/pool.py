@@ -72,12 +72,12 @@ class DesktopPoolType(graphene.Enum):
     STATIC = 1
 
 
-class PoolOrderingArg(graphene.Enum):
-    POOL_NAME = 0
-    CONTROLLER = 1
-    VMS_AMOUNT = 2
-    USERS_AMOUNT = 3
-    POOL_TYPE = 4
+# class PoolOrderingArg(graphene.Enum):
+#     POOL_NAME = 0
+#     CONTROLLER = 1
+#     VMS_AMOUNT = 2
+#     USERS_AMOUNT = 3
+#     POOL_TYPE = 4
 
 
 class PoolResourcesNames(graphene.ObjectType):
@@ -1007,7 +1007,7 @@ class DropPoolPermissions(graphene.Mutation):
 
 
 class PoolMixin:
-    pools = graphene.List(PoolType, ordering=PoolOrderingArg(), reversed_order=graphene.Boolean())
+    pools = graphene.List(PoolType, ordering=graphene.String(), reversed_order=graphene.Boolean())
     pool = graphene.Field(PoolType, id=graphene.Int(),
                           controller_ip=graphene.String())
 
@@ -1052,18 +1052,18 @@ class PoolMixin:
                 sort_order = 'ASC'
 
             # determine sql query
-            if ordering == PoolOrderingArg.POOL_NAME:
+            if ordering == 'pool_name':
                 qu = "SELECT * FROM pool WHERE deleted IS NOT true ORDER BY name {}".format(sort_order)
-            elif ordering == PoolOrderingArg.CONTROLLER:
+            elif ordering == 'controller':
                 qu = "SELECT * FROM pool WHERE deleted IS NOT true ORDER BY controller_ip {}".format(sort_order)
-            elif ordering == PoolOrderingArg.VMS_AMOUNT:
+            elif ordering == 'vms_amount':
                 qu = "SELECT pool.* FROM pool LEFT JOIN vm " \
                      "ON pool.id = vm.pool_id GROUP BY pool.id ORDER BY COUNT(vm.id) {}".format(sort_order)
-            elif ordering == PoolOrderingArg.USERS_AMOUNT:
+            elif ordering == 'users_amount':
                 qu = "SELECT pool.* FROM pool LEFT JOIN pools_users " \
                      "ON pool.id = pools_users.pool_id GROUP BY pool.id ORDER BY COUNT(pools_users.username)" \
                      " {}".format(sort_order)
-            elif ordering == PoolOrderingArg.POOL_TYPE:
+            elif ordering == 'pool_type':
                 qu = "SELECT * FROM pool WHERE deleted IS NOT true ORDER BY desktop_pool_type {}".format(sort_order)
             else:
                 raise FieldError(ordering=['Неверный параметр сортировки'])

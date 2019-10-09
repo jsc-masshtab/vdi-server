@@ -14,8 +14,6 @@ from vdi.errors import SimpleError, FetchException, NotFound, ControllerNotAcces
 #@dataclass()
 class ListClusters(UrlFetcher):
 
-    controller_ip = ''
-
     def __init__(self, controller_ip: str):
         self.controller_ip = controller_ip
 

@@ -23,6 +23,18 @@ from vdi.utils import clamp_value
 from vdi.resources_monitoring.resources_monitor_manager import resources_monitor_manager
 
 
+# class ResourcesOrderingArg(graphene.Enum):
+#     VERBOSE_NAME = 1
+#     CPU_COUNT = 2
+#     MEMORY_COUNT = 3
+#     NODES_COUNT = 4
+#     STATUS = 5
+#     MANAGEMENT_IP = 6
+#     DOMAINS_COUNT = 7
+#     VDISCKS_COUNT = 8
+#     VMACHINE_INFS_COUNT = 9
+
+
 class RequestType(graphene.ObjectType):
     url = graphene.String()
     time = graphene.String()
@@ -366,7 +378,7 @@ class ControllerType(graphene.ObjectType):
                               cluster_id=graphene.String(), node_id=graphene.String())
     vms = graphene.List(VmType,
                         cluster_id=graphene.String(), node_id=graphene.String(),
-                        wild=graphene.Boolean())
+                        wild=graphene.Boolean(), ordering=graphene.String(), reversed_order=graphene.Boolean())
 
     datapools = graphene.List(DatapoolType,
                               node_id=graphene.String(),
@@ -403,7 +415,7 @@ class ControllerType(graphene.ObjectType):
             objects.append(obj)
         return objects
 
-    async def resolve_vms(self, info, cluster_id=None, node_id=None, wild=True):
+    async def resolve_vms(self, info, cluster_id=None, node_id=None, wild=True, ordering=None, reversed_order=None):
         if node_id is not None:
             nodes = {node_id}
         elif cluster_id is not None:
@@ -411,7 +423,7 @@ class ControllerType(graphene.ObjectType):
             nodes = {node['id'] for node in nodes}
         else:
             nodes = None
-        vms = await ListVms(controller_ip=self.ip)
+        vms = await ListVms(controller_ip=self.ip, ordering=ordering, reversed_order=reversed_order)
         if nodes is not None:
             vms = [
                 vm for vm in vms
