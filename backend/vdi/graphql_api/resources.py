@@ -193,7 +193,7 @@ class DatapoolType(graphene.ObjectType):
 
 
 class Resources:
-    controllers = graphene.List(lambda: ControllerType)
+    controllers = graphene.List(lambda: ControllerType, ordering=graphene.String(), reversed_order=graphene.Boolean())
     controller = graphene.Field(lambda: ControllerType, ip=graphene.String())
     node = graphene.Field(NodeType, id=graphene.String())
     cluster = graphene.Field(ClusterType, id=graphene.String())
@@ -232,12 +232,18 @@ class Resources:
         # if we didnt find anything then return None
         return None
 
-    async def resolve_controllers(self, info):
-        objects = [
+    async def resolve_controllers(self, _info, ordering=None, reversed_order=None):
+        controllers = [
             ControllerType(**item)
             for item in await DiscoverControllers()
         ]
-        return objects
+        # sorting
+        if ordering:
+            reverse = reversed_order if reversed_order is not None else False
+            if ordering == 'controller_ip':
+                controllers = sorted(controllers, key=lambda controller: controller.ip, reverse=reverse)
+
+        return controllers
 
     async def resolve_controller(self, _info, ip):
         # find controller info by ip
@@ -372,7 +378,6 @@ class ControllerType(graphene.ObjectType):
     ip = graphene.String()
     description = graphene.String()
     default = graphene.Boolean()
-
 
     templates = graphene.List(TemplateType,
                               cluster_id=graphene.String(), node_id=graphene.String())
