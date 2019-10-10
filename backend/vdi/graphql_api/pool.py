@@ -258,6 +258,7 @@ class VmType(graphene.ObjectType):
     user = graphene.Field(UserType)
     state = graphene.Field(VmState)
     pool = graphene.Field(PoolType)
+    status = graphene.String()
 
     selections = None #List[str]
     sql_data = Unset
@@ -303,7 +304,7 @@ class VmType(graphene.ObjectType):
             return self.name
         if self.veil_info is Unset:
             self.veil_info = await self.get_veil_info()
-
+        print('self.veil_info', self.veil_info)
         if self.veil_info:
             return self.veil_info['verbose_name']
         else:
@@ -376,6 +377,14 @@ class VmType(graphene.ObjectType):
         [(pool_id,)] = pool_id_data
 
         return PoolType(id=pool_id)
+
+    async def resolve_status(self, _info):
+        if self.veil_info is Unset:
+            self.veil_info = await self.get_veil_info()
+        if self.veil_info:
+            return self.veil_info['status']
+        else:
+            return 'Unknown'
 
 
 class PoolSettingsFields(graphene.AbstractType):
