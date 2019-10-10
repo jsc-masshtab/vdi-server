@@ -29,7 +29,7 @@
                 <ng-container *ngIf="menuActive === 'vms'">ВМ кластера</ng-container>  
             </div>
             <div class="details-slide-into">
-                <vdi-table-into [data]="cluster" [collection]="collection" *ngIf="menuActive === 'info'"></vdi-table-into>
+                <vdi-table-into [item]="cluster" [collection]="collection" *ngIf="menuActive === 'info'"></vdi-table-into>
                 <vdi-table-component [data]="cluster.nodes" [collection]="collection_nodes" *ngIf="menuActive === 'servers'" ></vdi-table-component>
                 <vdi-table-component [data]="cluster.datapools" [collection]="collection_datapools"  *ngIf="menuActive === 'datapools'" ></vdi-table-component>
                 <vdi-table-component [data]="templates" [collection]="collection_templates"  *ngIf="menuActive === 'templates'"></vdi-table-component>

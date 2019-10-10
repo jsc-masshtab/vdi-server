@@ -1,0 +1,33 @@
+<div class="details-wrap popup">
+  <div class="details-header">
+    <div class="title"><fa-icon [icon]="['fas','desktop']" size="s" ></fa-icon><span class="name">Виртуальная машина <span>{{data?.vm?.name}}</span></span></div>
+      <div class="btns-part">
+        <button [mat-dialog-close]="true" class="btn-close-popup"><fa-icon [icon]="['fas','times-circle']"></fa-icon></button>
+      </div>
+  </div>
+  <div class="details-control-panel"> 
+    <button (click)="addUser()" title="Назначить пользователя" class="btn-control"><fa-icon [icon]="['fas','plus-circle']" size="xs"></fa-icon><span class="name">Назначить пользователя</span></button>
+    <button (click)="removeUser()" title="Убрать пользователя" class="btn-control"><fa-icon [icon]="['fas','trash-alt']" size="xs"></fa-icon><span class="name">Отлучить пользователя</span></button>
+  </div>
+
+  <div class="details-row">
+    <ul class="details-menu">
+      <li (click)="routeTo('info')" [class.active]="menuActive === 'info'" title="Информация"> <fa-icon [icon]="['fas','chart-bar']"></fa-icon><span class="name">Информация</span></li>
+    </ul>
+    
+    <div class="details-slide">
+      <div class="details-slide-header">
+        <ng-container *ngIf="menuActive === 'info'">Информация о вм</ng-container>
+      </div>
+      <div class="details-slide-into">
+        <ng-container *ngIf="data?.typePool === 'automated'">
+          <vdi-table-into *ngIf="menuActive === 'info'" [item]="data?.vm" [collection]="collectionIntoVmAutomated"></vdi-table-into>
+        </ng-container>
+
+        <ng-container *ngIf="data?.typePool === 'static'">
+          <vdi-table-into *ngIf="menuActive === 'info'" [item]="data?.vm" [collection]="collectionIntoVmStatic"></vdi-table-into>
+        </ng-container>
+      </div>     
+    </div>
+  </div>
+</div>

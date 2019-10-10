@@ -1,118 +1,58 @@
-import { AddPoolService } from './polls/add-pool/add-pool.service';
-import { RemoveUserVmComponent } from './polls/pool-details/vm-details-popup/remove-user/remove-user.component';
-import { AddUserVmComponent } from './polls/pool-details/vm-details-popup/add-user/add-user.component';
-import { VmDetalsPopupComponent } from './polls/pool-details/vm-details-popup/vm-details-popup.component';
-import { RemoveUsersPoolComponent } from './polls/pool-details/remove-users/remove-users.component';
-import { RemoveVMStaticPoolComponent } from './polls/pool-details/remove-vms/remove-vms.component';
-import { WaitService } from './common/components/wait/wait.service';
-import { WaitComponent } from './common/components/wait/wait.component';
-import { AddVMStaticPoolComponent } from './polls/pool-details/add-vms/add-vms.component';
+
+import { UsersModule } from './settings/users/users.module';
+import { ControllersModule } from './settings/controllers/controllers.module';
+import { TemplatesModule } from './resourses/templates/templates.module';
+import { NodesModule } from './resourses/nodes/nodes.module';
+import { DatapoolsModule } from './resourses/datapools/datapools.module';
+import { ClustersModule } from './resourses/clusters/clusters.module';
+import { PoolsModule } from './pools/pools.module';
+import { SharedModule } from './common/components/shared/shared.module';
+import { VmsModule } from './resourses/vms/vms.module';
+
 import { HttpLinkModule, HttpLink } from 'apollo-angular-link-http';
 import { ApolloModule, Apollo } from 'apollo-angular';
-import { ErrorsService } from './common/components/errors/errors.service';
-import { AddUserComponent } from './settings/users/add-user/add-user.component';
-import { VmsComponent } from './resourses/vms/vms.component';
-import { VmsService } from './resourses/vms/vms.service';
-import { TemplatesComponent } from './resourses/templates/templates.component';
-import { RemoveControllerComponent } from './settings/controllers/remove-controller/remove-controller.component';
-import { PoolDetailsComponent } from './polls/pool-details/pool-details.component';
-import { NodeDetailsComponent } from './resourses/nodes/node-details/node-details.component';
-import { DatapoolsService } from './resourses/datapools/datapools.service';
-import { DatapoolsComponent } from './resourses/datapools/datapools.component';
-
-import { ControllersComponent } from './settings/controllers/controllers.component';
-
-import { ClustersService } from './resourses/clusters/clusters.service';
-import { ClustersComponent } from './resourses/clusters/clusters.component';
-
+import { ErrorsService } from './common/components/single/errors/errors.service';
 import { BrowserModule } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { NgModule } from '@angular/core';
-import { ReactiveFormsModule, FormsModule } from '@angular/forms';
 
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 import { HttpClientModule } from '@angular/common/http';
-
-
 
 /*  -----------------------------------   icons   --------------------------------------*/
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { library } from '@fortawesome/fontawesome-svg-core';
 import { faDesktop, faDatabase, faBuilding, faLayerGroup, faPlusCircle, faSpinner, faServer, faCog, faChevronUp, faTimesCircle,
          faFolderOpen, faStar, faMinusCircle, faTv, faSyncAlt, faTrashAlt, faUsers, faMeh,
-         faChartBar, faUser
+         faChartBar, faUser, faStopCircle, faPlayCircle, faPauseCircle, faEdit, faQuestionCircle
         } from '@fortawesome/free-solid-svg-icons';
 /*  -----------------------------------   icons   --------------------------------------*/
 
-
-import { MainMenuComponent } from './main-menu/main-menu.component';
-
-import { TableComponentComponent } from './common/components/table-component/table-component.component';
-import { ErrorsComponent } from './common/components/errors/errors.component';
-import { PoolAddComponent } from './polls/add-pool/add-pool.component';
-import { PoolsService } from './polls/pools.service';
-import { FocusMeDirective } from './common/other/directives/focusMe.directive';
-import { TableIntoComponent } from './common/components/table-into-component/table-into';
-import { NodesComponent } from './resourses/nodes/nodes.component';
-import { NodesService } from './resourses/nodes/nodes.service';
-
-
+import { MainMenuComponent } from './common/components/single/main-menu/main-menu.component';
+import { ErrorsComponent } from './common/components/single/errors/errors.component';
+import { FooterComponent } from './common/components/single/footer/footer.component';
+import { WaitComponent } from './common/components/single/wait/wait.component';
+import { WaitService } from './common/components/single/wait/wait.service';
 
 /*  -----------------------------------   material   --------------------------------------*/
-import { MAT_DIALOG_DEFAULT_OPTIONS, ErrorStateMatcher, ShowOnDirtyErrorStateMatcher } from '@angular/material';
-import { MatSelectModule } from '@angular/material/select';
-import { MatDialogModule } from '@angular/material/dialog';
-import { AddControllerComponent } from './settings/controllers/add-controller/add-controller.component';
-import { ControllersService } from './settings/controllers/controllers.service';
-import { FooterComponent } from './footer/footer.component';
-import { ClusterDetailsComponent } from './resourses/clusters/cluster-details/cluster-details.component';
-import { PoolsComponent } from './polls/pools.component';
-import { RemovePoolComponent } from './polls/pool-details/remove-pool/remove-pool.component';
-import { TemplatesService } from './resourses/templates/templates.service';
-import { UsersComponent } from './settings/users/users.component';
-import { UsersService } from './settings/users/users.service';
+import { MAT_DIALOG_DEFAULT_OPTIONS } from '@angular/material';
+
 /*  -----------------------------------   material   --------------------------------------*/
 
 import { onError } from 'apollo-link-error';
 import { InMemoryCache } from 'apollo-cache-inmemory';
 import { environment } from 'src/environments/environment';
-import { AddUsersPoolComponent } from './polls/pool-details/add-users/add-users.component';
-import { PoolDetailsService } from './polls/pool-details/pool-details.service';
+
+
 
 @NgModule({
   declarations: [
     AppComponent,
     MainMenuComponent,
-    TableComponentComponent,
     ErrorsComponent,
-    PoolAddComponent,
-    FocusMeDirective,
-    TableIntoComponent,
-    NodesComponent,
-    ClustersComponent,
-    ClusterDetailsComponent,
-    ControllersComponent,
-    AddControllerComponent,
-    DatapoolsComponent,
     FooterComponent,
-    NodeDetailsComponent,
-    PoolDetailsComponent,
-    PoolsComponent,
-    RemoveControllerComponent,
-    RemovePoolComponent,
-    TemplatesComponent,
-    VmsComponent,
-    UsersComponent,
-    AddUserComponent,
-    AddVMStaticPoolComponent,
-    WaitComponent,
-    RemoveVMStaticPoolComponent,
-    AddUsersPoolComponent,
-    RemoveUsersPoolComponent,
-    VmDetalsPopupComponent,
-    AddUserVmComponent,
-    RemoveUserVmComponent
+    WaitComponent
   ],
   imports: [
     BrowserModule,
@@ -122,41 +62,24 @@ import { PoolDetailsService } from './polls/pool-details/pool-details.service';
     ApolloModule,
     HttpLinkModule,
     FontAwesomeModule,
-    ReactiveFormsModule,
-    FormsModule,
-    MatDialogModule,
-    MatSelectModule
+
+    SharedModule,
+
+    PoolsModule,
+    ClustersModule,
+    DatapoolsModule,
+    NodesModule,
+    TemplatesModule,
+    VmsModule,
+    ControllersModule,
+    UsersModule
   ],
-  entryComponents: [
-    PoolAddComponent,
-    AddControllerComponent,
-    RemoveControllerComponent,
-    RemovePoolComponent,
-    AddUserComponent,
-    AddVMStaticPoolComponent,
-    RemoveVMStaticPoolComponent,
-    AddUsersPoolComponent,
-    RemoveUsersPoolComponent,
-    VmDetalsPopupComponent,
-    AddUserVmComponent,
-    RemoveUserVmComponent
-  ],
+  entryComponents: [],
   providers:
     [
-      PoolsService,
-      { provide: MAT_DIALOG_DEFAULT_OPTIONS, useValue: { hasBackdrop: true, restoreFocus: true } },
-      { provide: ErrorStateMatcher, useClass: ShowOnDirtyErrorStateMatcher },
-      NodesService,
-      ClustersService,
-      ControllersService,
-      DatapoolsService,
-      TemplatesService,
-      VmsService,
-      UsersService,
+     { provide: MAT_DIALOG_DEFAULT_OPTIONS, useValue: { hasBackdrop: true, restoreFocus: true } },
       ErrorsService,
-      WaitService,
-      AddPoolService,
-      PoolDetailsService
+      WaitService
     ],
   bootstrap: [AppComponent]
 })
@@ -171,7 +94,8 @@ export class AppModule {
               private waitService: WaitService) {
 
     library.add(faDesktop, faDatabase, faLayerGroup, faPlusCircle, faMinusCircle, faSpinner, faServer, faCog, faChevronUp, faTimesCircle,
-                faFolderOpen, faStar, faTv, faSyncAlt, faBuilding, faTrashAlt, faUsers, faMeh, faChartBar, faUser);
+                faFolderOpen, faStar, faTv, faSyncAlt, faBuilding, faTrashAlt, faUsers, faMeh, faChartBar, faUser,
+                faStopCircle, faPlayCircle, faPauseCircle, faEdit, faQuestionCircle);
 
     const uri = environment.url;
     const link = this.httpLink.create({ uri, includeQuery: true, includeExtensions: false });

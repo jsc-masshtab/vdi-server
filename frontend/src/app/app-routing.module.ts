@@ -1,22 +1,33 @@
-import { VmsComponent } from './resourses/vms/vms.component';
-import { PoolDetailsComponent } from './polls/pool-details/pool-details.component';
-import { PoolsComponent } from './polls/pools.component';
+import { PoolDetailsComponent } from './pools/pool-details/pool-details.component';
+import { PoolsComponent } from './pools/all-pools/pools.component';
+import { VmsComponent } from './resourses/vms/all-vms/vms.component';
+
 import { NodeDetailsComponent } from './resourses/nodes/node-details/node-details.component';
-import { ClustersComponent } from './resourses/clusters/clusters.component';
+import { ClustersComponent } from './resourses/clusters/all-clusters/clusters.component';
 import { NgModule } from '@angular/core';
 import { Routes, RouterModule } from '@angular/router';
-import { ControllersComponent } from './settings/controllers/controllers.component';
-import { NodesComponent } from './resourses/nodes/nodes.component';
-import { DatapoolsComponent } from './resourses/datapools/datapools.component';
+import { ControllersComponent } from './settings/controllers/all-controllers/controllers.component';
+import { NodesComponent } from './resourses/nodes/all-nodes/nodes.component';
+import { DatapoolsComponent } from './resourses/datapools/all-datapools/datapools.component';
 import { ClusterDetailsComponent } from './resourses/clusters/cluster-details/cluster-details.component';
-import { TemplatesComponent } from './resourses/templates/templates.component';
-import { UsersComponent } from './settings/users/users.component';
+import { TemplatesComponent } from './resourses/templates/all-templates/templates.component';
+import { UsersComponent } from './settings/users/all-users/users.component';
 
 const routes: Routes = [
   {
-    path:'',
+    path: '',
     redirectTo: 'pools',
     pathMatch: 'full'
+  },
+  {
+    path: 'pools',
+    component: PoolsComponent,
+    children: [
+      {
+        path: ':type/:id',
+        component: PoolDetailsComponent
+      }
+    ]
   },
   {
     path: 'settings/controllers',
@@ -55,16 +66,6 @@ const routes: Routes = [
   {
     path: 'resourses/vms',
     component: VmsComponent
-  },
-  {
-    path: 'pools',
-    component: PoolsComponent,
-    children: [
-      {
-        path: ':type/:id',
-        component: PoolDetailsComponent
-      }
-    ]
   },
   {
     path: '**',
