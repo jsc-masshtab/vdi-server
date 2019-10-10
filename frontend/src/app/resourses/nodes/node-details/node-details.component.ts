@@ -1,8 +1,9 @@
-import { NodesService } from './../nodes.service';
+
 import { Component, OnInit } from '@angular/core';
 import { map } from 'rxjs/operators';
 import { ActivatedRoute, ParamMap } from '@angular/router';
 import { Router } from '@angular/router';
+import { NodesService } from '../all-nodes/nodes.service';
 
 interface type_node {
   [key: string]: any
@@ -24,7 +25,7 @@ export class NodeDetailsComponent implements OnInit {
     {
       title: 'Название',
       property: 'verbose_name',
-      class: 'name-start'
+      type: 'string'
     },
     {
       title: 'Кластер',
@@ -33,15 +34,18 @@ export class NodeDetailsComponent implements OnInit {
     },
     {
       title: 'IP-адрес',
-      property: 'management_ip'
+      property: 'management_ip',
+      type: 'string'
     },
     {
       title: 'CPU',
-      property: 'cpu_count'
+      property: 'cpu_count',
+      type: 'string'
     },
     {
       title: 'RAM',
-      property: 'memory_count'
+      property: 'memory_count',
+      type: 'string'
     },
     {
       title: 'Статус',
@@ -49,46 +53,57 @@ export class NodeDetailsComponent implements OnInit {
     },
     {
       title: 'Пулы данных',
-      property_array: 'datapools'
+      property: 'datapools',
+      type: 'array-length'
     },
     {
       title: 'Шаблоны ВМ',
-      property_array: 'templates'
+      property: 'templates',
+      type: 'array-length'
     },
     {
       title: 'ВМ',
-      property_array: 'vms'
+      property: 'vms',
+      type: 'array-length'
     }
   ];
   public collection_datapools = [
     {
       title: 'Название',
       property: 'verbose_name',
-      class: 'name-start'
+      class: 'name-start',
+      type: 'string',
+      icon: 'folder-open'
     },
     {
       title: 'Тип',
-      property: 'type'
+      property: 'type',
+      type: 'string'
     },
     {
       title: 'Диски',
-      property: 'vdisk_count'
+      property: 'vdisk_count',
+      type: 'string'
     },
     {
       title: 'Образы',
-      property: 'iso_count'
+      property: 'iso_count',
+      type: 'string'
     },
     {
       title: 'Файлы',
-      property: 'file_count'
+      property: 'file_count',
+      type: 'string'
     },
     {
       title: 'Свободно (Мб)',
-      property: 'free_space'
+      property: 'free_space',
+      type: 'string',
     },
     {
       title: 'Занято (Мб)',
-      property: 'used_space'
+      property: 'used_space',
+      type: 'string'
     },
     {
       title: 'Статус',
@@ -99,38 +114,37 @@ export class NodeDetailsComponent implements OnInit {
     {
       title: 'Название',
       property: 'verbose_name',
-      class: 'name-start'
+      class: 'name-start',
+      type: 'string',
+      icon: 'tv'
     },
     {
       title: 'Cервер',
-      property: "node",
+      property: 'node',
       property_lv2: 'verbose_name'
     },
     {
       title: 'Оперативная память (MБ)',
-      property: 'memory_count'
-    },
-    {
-      title: 'Высокая доступность',
-      property_boolean: 'ha_enabled',
-      property_boolean_true: 'Включена',
-      property_boolean_false: 'Выключена'
+      property: 'memory_count',
+      type: 'string'
     }
   ];
   public collection_vms = [
     {
       title: 'Название',
       property: 'name',
-      class: 'name-start'
+      class: 'name-start',
+      type: 'string',
+      icon: 'desktop'
     },
     {
       title: 'Сервер',
-      property: "node",
+      property: 'node',
       property_lv2: 'verbose_name'
     },
     {
       title: 'Шаблон',
-      property: "template",
+      property: 'template',
       property_lv2: 'name'
     }
   ];
