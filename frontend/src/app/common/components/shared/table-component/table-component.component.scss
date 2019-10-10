@@ -84,20 +84,21 @@
         position: absolute;
         bottom: -4px;
         left: 12px;
-
+        font-size: 9px;
         &.on {
             color: #8bd22f;
-            font-size: 9px;
         }
 
         &.off {
             color: #F4493C;
-            font-size: 9px;
         }
 
         &.suspended {
             color: #d8a172;
-            font-size: 9px;
+        }
+
+        &.undefined {
+            color: sienna;
         }
     }
 

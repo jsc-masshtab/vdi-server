@@ -40,6 +40,8 @@ export class StatusPipe implements PipeTransform {
             translateStatus = 'вышло время';
         } else if (status === 'SERVICE') {
             translateStatus = 'сервисный режим';
+        } else if (status === 'UNDEFINED') {
+            translateStatus = 'не найдено';
         } else {
             translateStatus = status;
         }
