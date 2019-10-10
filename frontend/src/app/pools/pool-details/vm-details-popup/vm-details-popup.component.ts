@@ -36,6 +36,7 @@ export class VmDetalsPopupComponent {
     {
       title: 'Название',
       property: 'name',
+      type: 'string'
     },
     {
       title: 'Шаблон',
@@ -46,25 +47,18 @@ export class VmDetalsPopupComponent {
       title: 'Пользователь',
       property: 'user',
       property_lv2: 'username'
-    },
-    {
-      title: 'Состояние',
-      property: 'state'
     }
   ];
   public collectionIntoVmStatic: any[] = [
     {
       title: 'Название',
-      property: 'name'
+      property: 'name',
+      type: 'string'
     },
     {
       title: 'Пользователь',
       property: 'user',
       property_lv2: 'username'
-    },
-    {
-      title: 'Состояние',
-      property: 'state'
     }
   ];
 
