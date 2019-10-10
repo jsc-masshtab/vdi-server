@@ -303,66 +303,81 @@ export class PoolAddComponent implements OnInit, OnDestroy {
      this.tableField = [
         {
           title: 'Тип',
-          property: 'type'
+          property: 'type',
+          type: 'string'
         },
         {
           title: 'Название',
-          property: 'name'
+          property: 'name',
+          type: 'string'
         },
         {
           title: 'Шаблон',
-          property: 'template_name'
+          property: 'template_name',
+          type: 'string'
         },
         {
           title: 'Кластер',
-          property: 'cluster_name'
+          property: 'cluster_name',
+          type: 'string'
         },
         {
           title: 'Сервер',
-          property: 'node_name'
+          property: 'node_name',
+          type: 'string'
         },
         {
           title: 'Пул данных',
-          property: 'datapool_name'
+          property: 'datapool_name',
+          type: 'string'
         },
         {
           title: 'Начальное количество ВМ',
-          property: 'initial_size'
+          property: 'initial_size',
+          type: 'string'
         },
         {
           title: 'Количество создаваемых ВМ',
-          property: 'reserve_size'
+          property: 'reserve_size',
+          type: 'string'
         },
         {
           title: 'Максимальное количество создаваемых ВМ',
-          property: 'total_size'
+          property: 'total_size',
+          type: 'string'
         }
       ];
     } else {
       this.tableField = [
         {
           title: 'Тип',
-          property: 'type'
+          property: 'type',
+          type: 'string'
         },
         {
           title: 'Название',
-          property: 'name'
+          property: 'name',
+          type: 'string'
         },
         {
           title: 'Кластер',
-          property: 'cluster_name'
+          property: 'cluster_name',
+          type: 'string'
         },
         {
           title: 'Сервер',
-          property: 'node_name'
+          property: 'node_name',
+          type: 'string'
         },
         {
           title: 'Пул данных',
-          property: 'datapool_name'
+          property: 'datapool_name',
+          type: 'string'
         },
         {
           title: 'Виртуальные машины',
-          property: 'vm_name'
+          property: 'vm_name',
+          type: 'string'
         }
       ];
     }
