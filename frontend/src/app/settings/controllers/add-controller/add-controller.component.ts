@@ -1,7 +1,7 @@
-import { WaitService } from './../../../common/components/wait/wait.service';
+import { WaitService } from './../../../common/components/single/wait/wait.service';
 import { MatDialogRef } from '@angular/material';
 import { Component } from '@angular/core';
-import { ControllersService } from '../controllers.service';
+import { ControllersService } from '../all-controllers/controllers.service';
 
 
 @Component({
@@ -11,8 +11,8 @@ import { ControllersService } from '../controllers.service';
 
 export class AddControllerComponent {
 
-  public controller: string = "";
-  public description: string = "";
+  public controller: string = '';
+  public description: string = '';
 
 
   constructor(private service: ControllersService,

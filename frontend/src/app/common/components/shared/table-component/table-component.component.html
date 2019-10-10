@@ -1,0 +1,79 @@
+
+
+<ng-container *ngIf="data && data?.length; else meh">
+  <div class="table-component">
+    <header>
+      <div *ngFor="let obj of collection" class="table-header-part" [class.index-column]="obj.property == 'index'" [class.name-start]="obj.class == 'name-start'">
+        {{obj.title}}
+      </div>
+    </header>
+
+    <div class="table-area">
+      <div *ngFor="let item of data;let i = index" class="table-area-object" [class.cursorTrue]="cursor" (click)="clickRow(item)" tabindex="-1">   <!--строка-->
+        <div class="table-area-property" *ngFor="let obj of collection" [class.index-column]="obj.property == 'index'"  [class.name-start]="obj.class == 'name-start'"> <!--столбец-->
+
+<!-- icons -->
+          <span [class.icon-group]="entity === 'vm'">
+            <ng-container *ngIf="obj.icon">
+              <fa-icon [icon]="['fas',obj.icon]" size="xs"></fa-icon>
+            </ng-container>
+            <ng-container *ngIf="entity === 'vm' && item?.state && obj.property === 'name'"> <!-- статус вм -->
+              <fa-icon [icon]="['fas', 'play-circle']" *ngIf="item.state === 'ON'" class="status on" title="Включена"></fa-icon>
+              <fa-icon [icon]="['fas', 'stop-circle']" *ngIf="item.state === 'OFF'" class="status off" title="Выключена"></fa-icon>
+              <fa-icon [icon]="['fas', 'pause-circle']" *ngIf="item.state === 'SUSPENDED'" class="status suspended" title="Приостановлена"></fa-icon>
+              <fa-icon [icon]="['fas', 'question-circle']" *ngIf="item.state === 'UNDEFINED'" class="status undefined" title="Не найдено"></fa-icon>
+            </ng-container>
+          </span>
+<!-- obj.property === 'index' -->
+          <ng-container *ngIf="obj.property === 'index'">
+            <span>{{ i+1 }}</span>
+          </ng-container>
+<!-- obj.property === 'status' -->
+          <ng-container *ngIf="obj.property === 'status'">
+            <ng-container *ngIf="item[obj.property]; else nothing">
+              <span>{{ item[obj.property] | status }}</span>
+            </ng-container>
+          </ng-container>
+<!-- obj.property -> all-types-here-->
+          <ng-container *ngIf="obj.property && obj.property != 'status' && obj.property != 'index' && !obj.property_lv2">
+            <ng-container *ngIf="item[obj.property] && obj.type; else nothing">
+                <span *ngIf="obj.type === 'string'" [class.name-entity]="obj.class == 'name-start'">{{ item[obj.property] }}</span>
+
+                <span *ngIf="obj.type === 'array-length'">{{ item[obj.property]?.length }}</span>
+
+                <ng-container *ngIf="obj.type.typeDepend === 'propertyInObjectsInArray'">
+                  <ng-container *ngIf="item[obj.property]?.length; else nothing">
+                    <span *ngFor="let objInItem of item[obj.property];let i = index">
+                      {{ objInItem[obj.type.propertyDepend] }}
+                      <ng-container *ngIf="item[obj.property]?.length > 1 && i != item[obj.property]?.length - 1">,</ng-container>
+                    </span>
+                  </ng-container>
+                </ng-container>
+
+                <ng-container *ngIf="obj.type.typeDepend === 'boolean'">
+                  <ng-container *ngIf="obj.property">{{ obj.type.propertyDepend[0] }}</ng-container>
+                  <ng-container *ngIf="!obj.property">{{ obj.type.propertyDepend[1] }}</ng-container>
+                </ng-container>
+
+            </ng-container>
+          </ng-container>
+<!-- obj.property_lv2 -->
+          <ng-container *ngIf="obj.property_lv2">
+            <ng-container *ngIf="item[obj.property] && item[obj.property][obj.property_lv2]; else nothing">
+              <span>{{ item[obj.property][obj.property_lv2] }}</span>
+            </ng-container>
+          </ng-container>
+
+          <ng-template #nothing>--</ng-template>
+
+        </div> 
+      </div>
+    </div>
+  </div>
+</ng-container>
+
+<ng-template #meh>
+  <div class="table-no-data">
+    <fa-icon [icon]="['fas', 'meh']"></fa-icon>
+  </div>
+</ng-template>
