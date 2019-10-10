@@ -74,7 +74,8 @@ export class PoolDetailsComponent implements OnInit {
     {
       title: 'Название',
       property: 'name',
-      type: 'string'
+      type: 'string',
+      edit: 'changeName'
     },
     {
       title: 'Тип',
@@ -109,14 +110,16 @@ export class PoolDetailsComponent implements OnInit {
     {
       title: 'Количество создаваемых ВМ',      // сколько свободных осталось
       property: 'settings',
-      property_lv2: 'reserve_size'
+      property_lv2: 'reserve_size',
+      edit: 'changeAutomatedPoolReserveSize'
     },
     {
       title: 'Максимальное количество создаваемых ВМ',
       // Максимальное количество ВМ в пуле -  c тонкого клиента вм будут создаваться
       // с каждым подключ. пользователем даже,если рес-сы закончатся
       property: 'settings',
-      property_lv2: 'total_size'
+      property_lv2: 'total_size',
+      edit: 'changeMaxDinamicPool'
     },
     {
       title: 'Создано ВМ',
@@ -292,7 +295,7 @@ export class PoolDetailsComponent implements OnInit {
   }
 
 // @ts-ignore: Unreachable code error
-  private changeName() {
+  private changeName(): void {
     this.dialog.open(FormForEditComponent, {
       width: '500px',
       data: {
@@ -306,8 +309,8 @@ export class PoolDetailsComponent implements OnInit {
         settings: {
           entity: 'pool-details',
           name: this.pool.name,
-          header: 'Редактирование имени пула',
-          buttonAction: 'Редактировать'
+          header: 'Изменение имени пула',
+          buttonAction: 'Изменить'
         },
         update: {
           method: 'getPool',
@@ -315,6 +318,64 @@ export class PoolDetailsComponent implements OnInit {
             id: this.idPool,
             type: this.typePool
           },
+        }
+      }
+    });
+  }
+
+  // @ts-ignore: Unreachable code error
+  private changeMaxDinamicPool(): void {
+    this.dialog.open(FormForEditComponent, {
+      width: '500px',
+      data: {
+        post: {
+          service: this.poolService,
+          method: 'changeAutomatedPoolTotalSize',
+          params: {
+            id: this.idPool
+          }
+        },
+        settings: {
+          entity: 'pool-details',
+          name: this.pool.settings.total_size,
+          header: 'Изменение максимального количества создаваемых ВМ',
+          buttonAction: 'Изменить'
+        },
+        update: {
+          method: 'getPool',
+          params: {
+            id: this.idPool,
+            type: this.typePool
+          }
+        }
+      }
+    });
+  }
+
+  // @ts-ignore: Unreachable code error
+  private changeAutomatedPoolReserveSize(): void {
+    this.dialog.open(FormForEditComponent, {
+      width: '500px',
+      data: {
+        post: {
+          service: this.poolService,
+          method: 'changeAutomatedPoolReserveSize',
+          params: {
+            id: this.idPool
+          }
+        },
+        settings: {
+          entity: 'pool-details',
+          name: this.pool.settings.reserve_size,
+          header: 'Изменение количества создаваемых ВМ',
+          buttonAction: 'Изменить'
+        },
+        update: {
+          method: 'getPool',
+          params: {
+            id: this.idPool,
+            type: this.typePool
+          }
         }
       }
     });

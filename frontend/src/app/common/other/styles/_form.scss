@@ -2,21 +2,22 @@
     display: flex;
     flex-direction: column;
     background: #FFF;
-    border-radius: 10px;
     font-size: 13px;
     color:rgba(0, 0, 0, 0.7);
+    border: 1px solid #282828;
+    box-shadow: 2px 3px 75px 1px rgba(0, 0, 0, 0.2);
 
     .form-header {
         height: 30px;
         background: #081c2d;
         color: #FFF;
-        border-top-left-radius: 10px;
-        border-top-right-radius: 10px;
         display: flex;
         align-items: center;
         justify-content: space-between;
         padding-left: 10px;
         padding-right: 4px;
+        border: 1px solid #e8e8e8;
+        border-bottom: none;
     }
 
     button.form-close {

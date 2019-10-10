@@ -304,4 +304,42 @@ export class PoolDetailsService {
             }
         });
     }
+
+    public changeAutomatedPoolTotalSize(...params: [{id: number}, {newName: number}]) {
+        const idPool = params[0].id;
+        const newTotalSize = +params[1].newName;
+        return this.service.mutate<any>({
+            mutation: gql`
+                        mutation ChangeAutomatedPoolTotalSize($pool_id: Int!,$new_total_size: Int!) {
+                            changeAutomatedPoolTotalSize(pool_id: $pool_id, new_total_size: $new_total_size) {
+                                ok
+                            }
+                        }
+            `,
+            variables: {
+                method: 'POST',
+                pool_id: idPool,
+                new_total_size: newTotalSize
+            }
+        });
+    }
+
+    public changeAutomatedPoolReserveSize(...params: [{id: number}, {newName: number}]) {
+        const idPool = params[0].id;
+        const newReserveSize = +params[1].newName;
+        return this.service.mutate<any>({
+            mutation: gql`
+                            mutation ChangeAutomatedPoolReserveSize($pool_id: Int!,$new_reserve_size: Int!) {
+                                changeAutomatedPoolReserveSize(pool_id: $pool_id, new_reserve_size: $new_reserve_size) {
+                                    ok
+                                }
+                            }
+            `,
+            variables: {
+                method: 'POST',
+                pool_id: idPool,
+                new_reserve_size: newReserveSize
+            }
+        });
+    }
 }

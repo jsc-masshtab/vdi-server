@@ -40,7 +40,7 @@
             </div>
             <div class="details-slide-into">
                 <ng-container *ngIf="typePool === 'automated'">
-                    <vdi-table-into *ngIf="menuActive === 'info'" [item]="pool" [collection]="collectionDetailsAutomated"></vdi-table-into>
+                    <vdi-table-into *ngIf="menuActive === 'info'" [item]="pool" [collection]="collectionDetailsAutomated" (action)="actionEdit($event)"></vdi-table-into>
                     <vdi-table-component *ngIf="menuActive === 'vms'" [data]="pool?.vms" [collection]="collectionVmsAutomated" entity="vm" (clickRowData)="clickVm($event)" cursor="true"></vdi-table-component> 
                 </ng-container>
 
