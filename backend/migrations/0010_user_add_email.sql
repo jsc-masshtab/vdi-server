@@ -1,1 +1,0 @@
-alter table public.user add column email varchar(200);
