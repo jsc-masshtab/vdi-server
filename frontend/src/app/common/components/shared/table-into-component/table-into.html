@@ -3,6 +3,9 @@
     <div class="table-area-property" > <!--столбец-->
       <div class="table-area-title">
         <span>{{ obj.title }}</span>
+        <button *ngIf="obj.edit" (click)="actionEditField(obj.edit)" class="edit-button">
+          <fa-icon [icon]="['fas','edit']" size="xs"></fa-icon>
+        </button>
       </div>
       <div class="table-area-value" *ngIf="item">
 
@@ -42,10 +45,6 @@
 
           </ng-container>
         </ng-container>
-
-        <button *ngIf="obj.edit" (click)="actionEditField(obj.edit)">
-          <fa-icon [icon]="['fas','edit']" size="xs"></fa-icon>
-        </button>
 
         <ng-template  #nothing>--</ng-template>
 

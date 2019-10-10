@@ -28,6 +28,9 @@
     .table-area-title {
         padding-left: 15px;
         width: 25%;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
     }
 
     .table-area-value {
@@ -37,6 +40,24 @@
     }
 }
 
+.edit-button {
+    border: none;
+    outline: none;
+    color: white;
+    background-color: #95b8b9;
+    border: 1px solid rgba(0,0,0,0.1);
+    border-radius: 3px;
+    transition: all 200ms;
+    cursor: pointer;
+    box-shadow: 0px 0px 0px 3px white;
+    height: 23px;
+    margin-right: 10px;
+
+    &:hover {
+        background-color: #c9d9e6;
+        color: rgba(0,0,0,0.7);
+    }
+}
 
 .cdk-overlay-container {
     display: flex;

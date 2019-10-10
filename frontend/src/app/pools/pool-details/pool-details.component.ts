@@ -207,7 +207,7 @@ export class PoolDetailsComponent implements OnInit {
 
   public getPool(): void {
     this.host = false;
-    this.poolService.getPool(this.idPool, this.typePool)
+    this.poolService.getPool({id: this.idPool, type: this.typePool})
       .subscribe( (data) => {
         this.pool = data;
         this.host = true;
@@ -296,9 +296,7 @@ export class PoolDetailsComponent implements OnInit {
     this.dialog.open(FormForEditComponent, {
       width: '500px',
       data: {
-        entity: {
-          entity: 'pool',
-          name: this.pool.name,
+        post: {
           service: this.poolService,
           method: 'editNamePool',
           params: {
@@ -306,8 +304,17 @@ export class PoolDetailsComponent implements OnInit {
           }
         },
         settings: {
+          entity: 'pool-details',
+          name: this.pool.name,
           header: 'Редактирование имени пула',
           buttonAction: 'Редактировать'
+        },
+        update: {
+          method: 'getPool',
+          params: {
+            id: this.idPool,
+            type: this.typePool
+          },
         }
       }
     });

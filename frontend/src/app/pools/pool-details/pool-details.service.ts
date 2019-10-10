@@ -28,9 +28,9 @@ export class PoolDetailsService {
         });
     }
 
-    public getPool(id: number, type: string): Observable<any> {
-        const idPool = id;
-        if (type === 'automated') {
+    public getPool(param: {id: number, type: string}): Observable<any> {
+        const idPool = param.id;
+        if (param.type === 'automated') {
             return this.service.watchQuery({
                 query: gql`  query getPool($id: Int) {
                                 pool(id: $id) {
@@ -54,6 +54,7 @@ export class PoolDetailsService {
                                         initial_size
                                         reserve_size
                                         total_size
+                                        vm_name_template
                                     }
                                     users {
                                         username
@@ -73,7 +74,7 @@ export class PoolDetailsService {
             }).valueChanges.pipe(map(data => data.data['pool']));
         }
 
-        if (type === 'static') {
+        if (param.type === 'static') {
             return this.service.watchQuery({
                 query: gql`  query getPool($id: Int) {
                                 pool(id: $id) {
@@ -285,10 +286,9 @@ export class PoolDetailsService {
         });
     }
 
-    public editNamePool(...params: [number, string]) {
-        console.log(params);
-        const idPool = params[0];
-        const newNamePool = params[1];
+    public editNamePool(...params: [{id: number}, {newName: string}]) {
+        const idPool = params[0].id;
+        const newNamePool = params[1].newName;
         return this.service.mutate<any>({
             mutation: gql`
                             mutation ChangePoolName($pool_id: Int!,$new_name: String!) {
