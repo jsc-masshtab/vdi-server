@@ -1,5 +1,5 @@
 import json
-from dataclasses import dataclass
+#from dataclasses import dataclass
 
 from cached_property import cached_property as cached
 
@@ -8,16 +8,20 @@ from .base import UrlFetcher
 from vdi.errors import FetchException, NotFound, SimpleError
 
 
-@dataclass()
+#@dataclass()
 class EnableRemoteAccess(UrlFetcher):
-    controller_ip: str
-    domain_id: str
+    controller_ip = ''
+    domain_id = ''
 
     method = 'POST'
 
+    def __init__(self, controller_ip: str, domain_id: str):
+        self.controller_ip = controller_ip
+        self.domain_id = domain_id
+
     @cached
     def url(self):
-        return f"http://{self.controller_ip}/api/domains/{self.domain_id}/remote-access/"
+        return "http://{}/api/domains/{}/remote-access/".format(self.controller_ip, self.domain_id)
 
     async def body(self):
         return json.dumps({
@@ -32,17 +36,21 @@ class EnableRemoteAccess(UrlFetcher):
 POWER_STATES = ['unknown', 'power off', 'power on and suspended', 'power on']
 
 
-@dataclass()
+#@dataclass()
 class PrepareVm(UrlFetcher):
     """
     Prepare for the first use: enable remote access & power on
     """
-    controller_ip: str
-    domain_id: str
+    controller_ip = ''
+    domain_id = ''
+
+    def __init__(self, controller_ip: str, domain_id: str):
+        self.controller_ip = controller_ip
+        self.domain_id = domain_id
 
     @cached
     def url(self):
-        return f"http://{self.controller_ip}/api/domains/{self.domain_id}/"
+        return "http://{}/api/domains/{}/".format(self.controller_ip, self.domain_id)
 
     async def run(self):
         resp = await super().run()
@@ -69,12 +77,12 @@ class PrepareVm(UrlFetcher):
 #        return f"http://{self.controller_ip}/api/domains/{self.domain_id}/start/"
 
 
-@dataclass()
+#@dataclass()
 class DoActionOnVm(UrlFetcher):
-    controller_ip: str
-    domain_id: str
-    action: str
-    body: str = ''
+    controller_ip = ''
+    domain_id = ''
+    action = ''
+    body = ''
 
     method = 'POST'
 
@@ -82,11 +90,17 @@ class DoActionOnVm(UrlFetcher):
         'start', 'suspend', 'reset', 'shutdown', 'resume', 'reboot'
     ]
 
+    def __init__(self, controller_ip: str, domain_id: str, action: str, body: str = ''):
+        self.controller_ip = controller_ip
+        self.domain_id = domain_id
+        self.action = action
+        self.body = body
+
     @cached
     def url(self):
         if self.action not in self.ACTIONS:
-            raise SimpleError(f"Неизвестное действие: {self.action}")
-        return f"http://{self.controller_ip}/api/domains/{self.domain_id}/{self.action}/"
+            raise SimpleError("Неизвестное действие: {}".format(self.action))
+        return "http://{}/api/domains/{}/{}/".format(self.controller_ip, self.domain_id, self.action)
 
     def on_fetch_failed(self, ex, code):
         if code == 404:

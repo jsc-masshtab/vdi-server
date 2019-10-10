@@ -48,6 +48,7 @@ typedef struct{
 } VdiManager;
 
 static VdiManager vdi_manager;
+static VdiWsClient vdi_ws_client;
 
 // functions declarations
 static void set_init_values(void);
@@ -60,7 +61,7 @@ static void shutdown_loop(GMainLoop *loop);
 
 static void on_get_vdi_pool_data_finished(GObject *source_object, GAsyncResult *res, gpointer user_data);
 static void on_get_vm_from_pool_finished(GObject *source_object, GAsyncResult *res, gpointer user_data);
-static void on_ws_data_from_vdi_received(gboolean is_vdi_online);
+static gboolean on_ws_data_from_vdi_received(gboolean is_vdi_online);
 
 static gboolean on_window_deleted_cb(ConnectionInfo *ci);
 static void on_button_renew_clicked(GtkButton *button, gpointer data);
@@ -205,7 +206,7 @@ static void on_get_vdi_pool_data_finished (GObject *source_object G_GNUC_UNUSED,
     printf("%s\n", (const char *)__func__);
 
     GError *error;
-    gpointer  ptr_res =  g_task_propagate_pointer (G_TASK (res), &error); // take ownership
+    gpointer  ptr_res =  g_task_propagate_pointer(G_TASK (res), &error); // take ownership
     if(ptr_res == NULL){
         printf("%s : FAIL \n", (const char *)__func__);
         set_vdi_client_state(VDI_RECEIVED_RESPONSE, "Не удалось получить список пулов", TRUE);
@@ -307,9 +308,9 @@ static void on_get_vm_from_pool_finished(GObject *source_object G_GNUC_UNUSED,
 }
 
 // ws data callback    "<span color=\"red\">%s</span>"
-static void on_ws_data_from_vdi_received(gboolean is_vdi_online)
+static gboolean on_ws_data_from_vdi_received(gboolean is_vdi_online)
 {
-    //printf("%s\n", (const char *)__func__);
+    printf("In %s :thread id = %lu\n", (const char *)__func__, pthread_self());
     gchar *message;
     if (vdi_manager.label_vdi_online){
         if (is_vdi_online){
@@ -322,6 +323,8 @@ static void on_ws_data_from_vdi_received(gboolean is_vdi_online)
         gtk_label_set_markup(GTK_LABEL (vdi_manager.label_vdi_online), message);
         g_free(message);
     }
+
+    return FALSE;
 }
 
 /////////////////////////////////// gui elements callbacks//////////////////////////////////////
@@ -418,7 +421,7 @@ GtkResponseType vdi_manager_dialog(GtkWindow *main_window G_GNUC_UNUSED, gchar *
     gtk_widget_show_all(vdi_manager.window);
 
     // start polling if vdi is online
-    start_vdi_ws_polling(vdi_ws_client_ptr(), get_vdi_ip(), on_ws_data_from_vdi_received);
+    start_vdi_ws_polling(&vdi_ws_client, get_vdi_ip(), on_ws_data_from_vdi_received);
     // Пытаемся соединиться с vdi и получить список пулов. Получив список пулов нужно сгенерить
     // соответствующие кнопки  в скрол области.
     // get pool data
@@ -427,12 +430,12 @@ GtkResponseType vdi_manager_dialog(GtkWindow *main_window G_GNUC_UNUSED, gchar *
     vdi_manager.ci.loop = g_main_loop_new(NULL, FALSE);
     g_main_loop_run(vdi_manager.ci.loop);
 
-    if (vdi_manager.ci.response == FALSE)
+    if (!vdi_manager.ci.response)
         *uri = NULL;
 
     // clear
     cancell_pending_requests();
-    stop_vdi_ws_polling(vdi_ws_client_ptr());
+    stop_vdi_ws_polling(&vdi_ws_client);
     unregister_all_pools();
     g_object_unref(vdi_manager.builder);
     gtk_widget_destroy(vdi_manager.window);

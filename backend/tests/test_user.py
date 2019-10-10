@@ -1,6 +1,6 @@
 from vdi.graphql_api import schema
 from fixtures.fixtures import (
-    fixt_db, conn, fixt_create_static_pool, fixt_entitle_user_to_pool
+    fixt_db, conn, fixt_create_static_pool, fixt_entitle_user_to_pool, fixt_create_user
 )
 
 import pytest
@@ -54,3 +54,32 @@ async def test_assign_vm_to_user(fixt_entitle_user_to_pool):
     ''' % vm_id
     res = await schema.exec(qu)
     assert res['freeVmFromUser']['ok']
+
+
+@pytest.mark.asyncio
+async def test_change_password(fixt_create_user):
+
+    username = fixt_create_user['username']
+    old_password = fixt_create_user['password']
+    new_password = 'test_user_password2'
+    # change password
+    qu = '''
+    mutation {
+      changePassword(username: "%s", password: "%s", new_password: "%s"){
+        ok
+      }
+    }
+    ''' % (username, old_password, new_password)
+    res = await schema.exec(qu)
+    assert res['changePassword']['ok']
+
+    # set password back
+    qu = '''
+    mutation {
+      changePassword(username: "%s", password: "%s", new_password: "%s"){
+        ok
+      }
+    }
+    ''' % (username, new_password, old_password)
+    res = await schema.exec(qu)
+    assert res['changePassword']['ok']

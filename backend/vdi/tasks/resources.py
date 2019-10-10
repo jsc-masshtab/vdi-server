@@ -1,53 +1,87 @@
 import socket
-from dataclasses import dataclass
+#from dataclasses import dataclass
 
 from cached_property import cached_property as cached
 from classy_async.classy_async import Task, wait
 
-from vdi.db import db
+from db.db import db
 
 from . import UrlFetcher, Token, CheckConnection
 
 from vdi.errors import SimpleError, FetchException, NotFound, ControllerNotAccessible
+from .base import apply_ordering_to_url
 
 
-@dataclass()
+#@dataclass()
 class ListClusters(UrlFetcher):
 
-    controller_ip: str
+    def __init__(self, controller_ip: str, ordering: str = None, reversed_order: bool = None):
+        self.controller_ip = controller_ip
+        self.ordering = ordering
+        self.reversed_order = reversed_order
 
     @cached
     def url(self):
-        return f'http://{self.controller_ip}/api/clusters/'
+        url = 'http://{}/api/clusters/'.format(self.controller_ip)
+        url = apply_ordering_to_url(url, self.ordering, self.reversed_order)
+        return url
 
     async def run(self):
         resp = await super().run()
         return resp['results']
 
 
-@dataclass()
+#@dataclass()
 class FetchCluster(UrlFetcher):
-    controller_ip: str
-    cluster_id: str
+
+    def __init__(self, controller_ip: str, cluster_id: str, ordering: str = None, reversed_order: bool = None):
+        self.controller_ip = controller_ip
+        self.cluster_id = cluster_id
+        self.ordering = ordering
+        self.reversed_order = reversed_order
 
     @cached
     def url(self):
-        return f'http://{self.controller_ip}/api/clusters/{self.cluster_id}/'
+        return 'http://{}/api/clusters/{}/'.format(self.controller_ip, self.cluster_id)
 
     def on_fetch_failed(self, ex, code):
         if code == 404:
             raise NotFound("Кластер не найден") from ex
 
 
-@dataclass()
+class FetchDatapool(UrlFetcher):
+    controller_ip = ''
+    datapool_id = ''
+
+    def __init__(self, controller_ip: str, datapool_id: str):
+        self.controller_ip = controller_ip
+        self.datapool_id = datapool_id
+
+    @cached
+    def url(self):
+        return 'http://{}/api/data-pools/{}/'.format(self.controller_ip, self.datapool_id)
+
+    def on_fetch_failed(self, ex, code):
+        if code == 404:
+            raise NotFound("Датапул не найден") from ex
+
+
+#@dataclass()
 class ListNodes(UrlFetcher):
 
-    cluster_id: str
-    controller_ip: str
+    def __init__(self, controller_ip: str, cluster_id: str = None, ordering: str = None, reversed_order: bool = None):
+        self.controller_ip = controller_ip
+        self.cluster_id = cluster_id
+        self.ordering = ordering
+        self.reversed_order = reversed_order
 
     @cached
     def url(self):
-        return f'http://{self.controller_ip}/api/nodes/?cluster={self.cluster_id}'
+        url = 'http://{}/api/nodes/'.format(self.controller_ip)
+        if self.cluster_id:
+            url = 'http://{}/api/nodes/?cluster={}&'.format(self.controller_ip, self.cluster_id)
+        url = apply_ordering_to_url(url, self.ordering, self.reversed_order)
+        return url
 
     def on_fetch_failed(self, ex, code):
         if code == 404:
@@ -58,14 +92,18 @@ class ListNodes(UrlFetcher):
         return resp['results']
 
 
-@dataclass()
+#@dataclass()
 class FetchNode(UrlFetcher):
-    node_id: str
-    controller_ip: str
+    node_id = ''
+    controller_ip = ''
+
+    def __init__(self, node_id: str, controller_ip: str):
+        self.node_id = node_id
+        self.controller_ip = controller_ip
 
     @cached
     def url(self):
-        return f'http://{self.controller_ip}/api/nodes/{self.node_id}/'
+        return 'http://{}/api/nodes/{}/'.format(self.controller_ip, self.node_id)
 
     def on_fetch_failed(self, ex, code):
         if code == 404:
@@ -79,15 +117,22 @@ class FetchNode(UrlFetcher):
         return resp
 
 
-@dataclass()
+#@dataclass()
 class ListDatapools(UrlFetcher):
-    controller_ip: str
-    node_id: str = None
-    take_broken: bool = False  # property if datapool is fine
+
+    def __init__(self, controller_ip: str, node_id: str = None, take_broken: bool = False,
+                 ordering: str = None, reversed_order: bool = None):
+        self.controller_ip = controller_ip
+        self.node_id = node_id
+        self.take_broken = take_broken
+        self.ordering = ordering
+        self.reversed_order = reversed_order
 
     @cached
     def url(self):
-        return f'http://{self.controller_ip}/api/data-pools/'
+        url = 'http://{}/api/data-pools/'.format(self.controller_ip)
+        url = apply_ordering_to_url(url, self.ordering, self.reversed_order)
+        return url
 
     async def run(self):
         resp = await super().run()
@@ -110,12 +155,16 @@ class ListDatapools(UrlFetcher):
         return pools
 
 
-
-@dataclass()
+#@dataclass()
 class ValidateResources(Task):
-    cluster_id: str
-    node_id: str
-    controller_ip: str
+    cluster_id = ''
+    node_id = ''
+    controller_ip = ''
+
+    def __init__(self, cluster_id: str, node_id: str, controller_ip: str):
+        self.cluster_id = cluster_id
+        self.node_id = node_id
+        self.controller_ip = controller_ip
 
     async def run(self):
         if self.cluster_id and not self.node_id:
@@ -133,10 +182,14 @@ class ValidateResources(Task):
         return True
 
 
-@dataclass()
+# ошибка: Не определяет контроллер по кластеру!
 class DiscoverControllerIp(Task):
-    cluster_id: str = None
-    node_id: str = None
+    cluster_id = None
+    node_id = None
+
+    def __init__(self, cluster_id: str = None, node_id: str = None):
+        self.cluster_id = cluster_id
+        self.node_id = node_id
 
     async def run(self):
         connected, broken = await DiscoverControllers(return_broken=True)
@@ -158,10 +211,22 @@ class DiscoverControllerIp(Task):
                 return controller_ip
 
 
+# class DiscoverControllerIpByCluster(Task):
+#     cluster_id = None
+#
+#     def __init__(self, cluster_id: str = None):
+#         self.cluster_id = cluster_id
+#
+#     async def run(self):
+#         connected_controllers = await DiscoverControllers(return_broken=False)
+#         print('connected_controllers', connected_controllers)
 
-@dataclass()
+#@dataclass()
 class DiscoverControllers(Task):
-    return_broken: bool = False
+    return_broken = False
+
+    def __init__(self, return_broken: bool = False):
+        self.return_broken = return_broken
 
     async def run(self):
         async with db.connect() as conn:
@@ -191,25 +256,33 @@ class DiscoverControllers(Task):
         return connected
 
 
-@dataclass()
+#@dataclass()
 class FetchResourcesUsage(UrlFetcher):
-    controller_ip: str
-    resource_category_name: str  # clusters   nodes
-    resource_id: str
+    controller_ip = ''
+    resource_category_name = ''  # clusters   nodes
+    resource_id = ''
+
+    def __init__(self, controller_ip: str, resource_category_name: str, resource_id: str):
+        self.controller_ip = controller_ip
+        self.resource_category_name = resource_category_name
+        self.resource_id = resource_id
 
     @cached
     def url(self):
-        return f'http://{self.controller_ip}/api/{self.resource_category_name}/{self.resource_id}/usage/'
+        return 'http://{}/api/{}/{}/usage/'.format(self.controller_ip, self.resource_category_name, self.resource_id)
 
     def on_fetch_failed(self, ex, code):
         if code == 404:
             raise NotFound("Ресурс не найден") from ex
 
 
-@dataclass()
+#@dataclass()
 class CheckController(UrlFetcher):
-    controller_ip: str
+    controller_ip = ''
+
+    def __init__(self, controller_ip: str):
+        self.controller_ip = controller_ip
 
     @cached
     def url(self):
-        return f'http://{self.controller_ip}/api/controllers/check/'
+        return 'http://{}/api/controllers/check/'.format(self.controller_ip)

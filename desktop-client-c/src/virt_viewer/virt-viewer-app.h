@@ -103,9 +103,9 @@ void virt_viewer_app_set_menus_sensitive(VirtViewerApp *self, gboolean sensitive
 gboolean virt_viewer_app_get_session_cancelled(VirtViewerApp *self);
 
 
+void virt_viewer_app_hide_all_windows_forced(VirtViewerApp *app);
 // Вынесено из внутренних
 void virt_viewer_app_deactivate(VirtViewerApp *self, gboolean connect_error);
-void virt_viewer_app_hide_all_windows(VirtViewerApp *app); // todo: return back
 
 G_END_DECLS
 

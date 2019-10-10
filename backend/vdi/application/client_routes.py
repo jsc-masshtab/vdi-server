@@ -5,7 +5,7 @@ from starlette.authentication import requires
 from starlette.responses import JSONResponse
 
 from vdi.auth import fetch_token
-from vdi.db import db
+from db.db import db
 from vdi.pool import Pool
 from vdi.tasks import thin_client
 from vdi.settings import settings
@@ -24,11 +24,11 @@ async def get_pools(request):
 
     if user == 'admin':
         async with db.connect() as conn:
-            qu = f"SELECT * from pool"
+            qu = "SELECT * from pool"
             data = await conn.fetch(qu)
     else: # any other user
         async with db.connect() as conn:
-            qu = f"""
+            qu = """
             SELECT * from pool JOIN pools_users ON pool.id = pools_users.pool_id
             WHERE pools_users.username = $1
             """, user
@@ -63,51 +63,45 @@ async def get_vm(request):
         )
         data = await conn.fetch(*qu)
     if not data:
-        raise NotFound("Пул не найден")
+        return JSONResponse({'host': '', 'port': 0, 'password': '',
+                             'message': 'Пул не найден'})
     [[controller_ip, desktop_pool_type, vm_id]] = data
-    print('get_vm: desktop_pool_type', desktop_pool_type)
+    print('data', data)
 
     if vm_id:
         from vdi.tasks.vm import GetDomainInfo
         info = await GetDomainInfo(controller_ip=controller_ip, domain_id=vm_id)
-
         await thin_client.PrepareVm(controller_ip=controller_ip, domain_id=vm_id)
+        print('remote_access_port', info['remote_access_port'])
         return JSONResponse({
             'host': controller_ip,
             'port': info['remote_access_port'],
             'password': info['graphics_password'],
         })
+    # If the user does not have a vm in the pool then try to assign a free vm to him
+    # find a free vm in pool
+    async with db.connect() as conn:
+        qu = "select id from vm where pool_id = $1 and username is NULL limit 1", pool_id
+        free_vm = await conn.fetch(*qu)
+        print('get_vm: free_vm', free_vm)
+        # if there is no free vm then send empty fields??? Handle on thin client side
+        if not free_vm:
+            return JSONResponse({'host': '', 'port': 0, 'password': '',
+                             'message': 'В пуле нет свободных машин'})
+        # assign vm to the user
+        [(domain_id,)] = free_vm
 
-    # AUTOMATED
+        qu = "update vm set username = $1 where id = $2", user, domain_id
+        await conn.fetch(*qu)
+
+    # post actions for AUTOMATED pool (todo: run in another courutine)
     if desktop_pool_type == DesktopPoolType.AUTOMATED.name:
         # try to wake pool if it's empty
         if pool_id not in Pool.instances:
             await Pool.wake_pool(pool_id)
         pool = Pool.instances[pool_id]
-        domain = await pool.queue.get()
-        domain_id = domain['id']
-        async with db.connect() as conn:
-            qu = "update vm set username = $1 where id = $2", user, domain_id
-            await conn.fetch(*qu)
         await pool.on_vm_taken()
-    # STATIC
-    elif desktop_pool_type == DesktopPoolType.STATIC.name:
-        # find a free vm in static pool
-        async with db.connect() as conn:
-            qu = f"select id from vm where pool_id = $1 and username is NULL limit 1", pool_id
-            free_vms = await conn.fetch(*qu)
-        print('get_vm: free_vm', free_vms)
-        # if there is no free vm then send empty fields??? Handle on thin client side
-        if not free_vms:
-            return JSONResponse({'host': '', 'port': 0, 'password': '',
-                                 'message': 'В статическом пуле нет свободных машин'})
-        # assign vm to the user
-        [(domain_id,)] = free_vms
-        async with db.connect() as conn:
-            qu = f"update vm set username = $1 where id = $2", user, domain_id
-            await conn.fetch(*qu)
-    else:
-        assert not "valid desktop pool type"
+
     # send data to thin client
     info = await thin_client.PrepareVm(controller_ip=controller_ip, domain_id=domain_id)
     return JSONResponse({
@@ -133,8 +127,8 @@ async def do_action_on_vm(request):
 
     if vms:
         [(vm_id,)] = vms
-    else:
-        return JSONResponse({'error': 'There is no vm with requested pool_id'})
+    else: # There is no vm with requested pool_id
+        return JSONResponse({'error': 'Нет вм с указанным pool_id'})
 
     # in body info about whether action is forced
     try:
@@ -146,7 +140,7 @@ async def do_action_on_vm(request):
 
     # determine vm controller ip by pool id
     async with db.connect() as conn:
-        qu = f"""SELECT controller_ip FROM pool WHERE pool.id =  $1""", pool_id
+        qu = """SELECT controller_ip FROM pool WHERE pool.id =  $1""", pool_id
         [(controller_ip,)] = await conn.fetch(*qu)
         print('controller_ip_', controller_ip)
     # do action
@@ -172,11 +166,11 @@ async def auth(request):
 @app.websocket_route('/ws/client/vdi_server_check')
 async def vdi_online_ws_endpoint(websocket):
 
+    WS_TIMEOUT = 1
     await websocket.accept()
     try:
         while True:
             await websocket.send_bytes(b"1")
-            ws_timeout = 1
-            await asyncio.sleep(ws_timeout)
+            await asyncio.sleep(WS_TIMEOUT)
     except WsConnectionClosed:
         pass

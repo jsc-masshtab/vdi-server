@@ -1,13 +1,13 @@
 import asyncio
-import socket
+from async_generator import async_generator, yield_, asynccontextmanager
+from rx import Observable
 
 import graphene
-from asyncpg.connection import Connection
 from classy_async.classy_async import wait
 
 from .pool import PoolType, VmType, TemplateType
-from .util import get_selections
-from ..db import db
+from .util import get_selections, make_resource_type
+from db.db import db
 from ..tasks import Token
 from ..tasks.vm import ListTemplates, ListVms
 
@@ -19,6 +19,20 @@ from ..tasks.resources import (
 from vdi.errors import FieldError, SimpleError, FetchException
 from vdi.utils import Unset
 from vdi.utils import clamp_value
+
+from vdi.resources_monitoring.resources_monitor_manager import resources_monitor_manager
+
+
+# class ResourcesOrderingArg(graphene.Enum):
+#     VERBOSE_NAME = 1
+#     CPU_COUNT = 2
+#     MEMORY_COUNT = 3
+#     NODES_COUNT = 4
+#     STATUS = 5
+#     MANAGEMENT_IP = 6
+#     DOMAINS_COUNT = 7
+#     VDISCKS_COUNT = 8
+#     VMACHINE_INFS_COUNT = 9
 
 
 class RequestType(graphene.ObjectType):
@@ -86,7 +100,7 @@ class NodeType(graphene.ObjectType):
     controller = graphene.Field(lambda: ControllerType)
     resources_usage = graphene.Field(ResourcesUsageType)
 
-    veil_info: dict = Unset
+    veil_info = Unset  # dict
 
     async def get_veil_info(self):
         return await FetchNode(node_id=self.id, controller_ip=self.controller.ip)
@@ -96,7 +110,10 @@ class NodeType(graphene.ObjectType):
             return self.verbose_name
         if self.veil_info is Unset:
             veil_info = await self.get_veil_info()
-        return veil_info['verbose_name']
+        if veil_info:
+            return veil_info['verbose_name']
+        else:
+            return "Unknown"
 
     async def resolve_templates(self, info):
         return await self.controller.resolve_templates(info, node_id=self.id)
@@ -113,7 +130,7 @@ class NodeType(graphene.ObjectType):
         cluster_id = self.veil_info['cluster']['id']
         #TODO return immediately
         resp = await FetchCluster(controller_ip=self.controller.ip, cluster_id=cluster_id)
-        obj = self.controller._make_type(ClusterType, resp)
+        obj = make_resource_type(ClusterType, resp)
         obj.controller = self.controller
         return obj
 
@@ -157,12 +174,12 @@ class DatapoolType(graphene.ObjectType):
                 for node in self.nodes
             ]
             async for node in wait(*tasks):
-                obj = controller._make_type(NodeType, node)
+                obj = make_resource_type(NodeType, node)
                 obj.controller = ControllerType(ip=self.controller_ip)
                 nodes.append(obj)
         else:
             for node in self.nodes:
-                obj = controller._make_type(NodeType, node)
+                obj = make_resource_type(NodeType, node)
                 obj.controller = ControllerType(ip=self.controller_ip)
                 nodes.append(obj)
 
@@ -176,19 +193,57 @@ class DatapoolType(graphene.ObjectType):
 
 
 class Resources:
-    controllers = graphene.List(lambda: ControllerType)
+    controllers = graphene.List(lambda: ControllerType, ordering=graphene.String(), reversed_order=graphene.Boolean())
     controller = graphene.Field(lambda: ControllerType, ip=graphene.String())
     node = graphene.Field(NodeType, id=graphene.String())
     cluster = graphene.Field(ClusterType, id=graphene.String())
+    datapool = graphene.Field(DatapoolType, id=graphene.String())
+    template = graphene.Field(TemplateType, id=graphene.String())
+    vm = graphene.Field(VmType, id=graphene.String())
 
     requests = graphene.List(RequestType, time=graphene.Float())
 
-    async def resolve_controllers(self, info):
-        objects = [
+    @staticmethod
+    async def get_all_known_controller_ips():
+        async with db.connect() as conn:
+            sql_query = "SELECT ip FROM controller"
+            controllers_ips = await conn.fetch(sql_query)
+        return controllers_ips
+
+    @staticmethod
+    async def get_resource(_info, id, resource_type, function_to_get_resource_list, fields_map={}):
+        # get all known controller ips
+        controllers_ips = await Resources.get_all_known_controller_ips()
+
+        # find out on which controller our resource is
+        for controllers_ip in controllers_ips:
+            # try to get list of resources
+            try:
+                resource_list = await function_to_get_resource_list(controller_ip=controllers_ip['ip'])
+            except Exception:
+                continue
+            # find resource data by id
+            try:
+                data = next(data for data in resource_list if data['id'] == id)
+                print('data', data)
+                return make_resource_type(resource_type, data, fields_map)
+            except StopIteration:
+                pass
+        # if we didnt find anything then return None
+        return None
+
+    async def resolve_controllers(self, _info, ordering=None, reversed_order=None):
+        controllers = [
             ControllerType(**item)
             for item in await DiscoverControllers()
         ]
-        return objects
+        # sorting
+        if ordering:
+            reverse = reversed_order if reversed_order is not None else False
+            if ordering == 'controller_ip':
+                controllers = sorted(controllers, key=lambda controller: controller.ip, reverse=reverse)
+
+        return controllers
 
     async def resolve_controller(self, _info, ip):
         # find controller info by ip
@@ -212,22 +267,37 @@ class Resources:
         }
         return NodeType(controller=ControllerType(ip=controller_ip), **fields)
 
-    async def resolve_cluster(self, info, id):
-        controller_ip = await DiscoverControllerIp(cluster_id=id)
-        if not controller_ip:
-            raise SimpleError('Кластер не найден')
-        data = await FetchCluster(controller_ip=controller_ip, cluster_id=id)
-        fields = {
-            k: v for k, v in data.items()
-            if k in ClusterType._meta.fields
-        }
-        return ClusterType(controller=ControllerType(ip=controller_ip), **fields)
+    async def resolve_cluster(self, _info, id):
+        controllers_ips = await Resources.get_all_known_controller_ips()
+        for controller_ip in controllers_ips:
+            try:
+                data = await FetchCluster(controller_ip=controller_ip['ip'], cluster_id=id)
+                fields = {
+                    k: v for k, v in data.items()
+                    if k in ClusterType._meta.fields
+                }
+                return ClusterType(controller=ControllerType(ip=controller_ip['ip']), **fields)
+            except:
+                continue
+
+        return None
+
+    async def resolve_datapool(self, _info, id):
+        datapool = await Resources.get_resource(_info, id, DatapoolType, ListDatapools)
+        return datapool
+
+    async def resolve_template(self, _info, id):
+        template = await Resources.get_resource(_info, id, TemplateType, ListTemplates, {'verbose_name': 'name'})
+        return template
+
+    async def resolve_vm(self, _info, id):
+        vm = await Resources.get_resource(_info, id, VmType, ListVms)
+        return vm
 
     async def resolve_requests(self, info):
         return [
             RequestType(url=None, time=None)
         ]
-
 
 
 class AddController(graphene.Mutation):
@@ -247,7 +317,7 @@ class AddController(graphene.Mutation):
             return AddController(ok=False)
 
         async with db.connect() as conn:
-            query = f'''
+            query = '''
             INSERT INTO controller (ip, description) VALUES ($1, $2)
             ON CONFLICT DO NOTHING
             ''', ip, description
@@ -265,6 +335,8 @@ class AddController(graphene.Mutation):
 
     async def mutate(self, info, ip, set_default=False, description=None):
         await AddController._add_controller(ip=ip, set_default=set_default, description=description)
+        # add controller to resources_monitor_manager
+        resources_monitor_manager.add_controller(ip)
         return AddController(ok=True)
 
 
@@ -294,9 +366,11 @@ class RemoveController(graphene.Mutation):
             await RemoveController._remove_pools(controller_ip=controller_ip)
             query = "DELETE FROM default_controller WHERE ip = $1", controller_ip
             await conn.fetch(*query)
-            query = f"DELETE FROM controller WHERE ip=$1", controller_ip
+            query = "DELETE FROM controller WHERE ip=$1", controller_ip
             await conn.execute(*query)
 
+        # remove controller from resources_monitor_manager
+        await resources_monitor_manager.remove_controller(controller_ip)
         return RemoveController(ok=True)
 
 
@@ -305,26 +379,27 @@ class ControllerType(graphene.ObjectType):
     description = graphene.String()
     default = graphene.Boolean()
 
-
     templates = graphene.List(TemplateType,
-                              cluster_id=graphene.String(), node_id=graphene.String())
+                              cluster_id=graphene.String(), node_id=graphene.String(),
+                              ordering=graphene.String(), reversed_order=graphene.Boolean())
     vms = graphene.List(VmType,
                         cluster_id=graphene.String(), node_id=graphene.String(),
-                        wild=graphene.Boolean())
+                        wild=graphene.Boolean(), ordering=graphene.String(), reversed_order=graphene.Boolean())
 
     datapools = graphene.List(DatapoolType,
                               node_id=graphene.String(),
                               cluster_id=graphene.String(),
-                              take_broken=graphene.Boolean())
-    clusters = graphene.List(ClusterType)
+                              take_broken=graphene.Boolean(),
+                              ordering=graphene.String(), reversed_order=graphene.Boolean())
+    clusters = graphene.List(ClusterType, ordering=graphene.String(), reversed_order=graphene.Boolean())
     cluster = graphene.Field(ClusterType, id=graphene.String())
-    nodes = graphene.List(NodeType, cluster_id=graphene.String())
+    nodes = graphene.List(NodeType, cluster_id=graphene.String(), ordering=graphene.String(),
+                          reversed_order=graphene.Boolean())
     node = graphene.Field(NodeType, id=graphene.String())
 
     is_online = graphene.Boolean()
 
-
-    async def resolve_templates(self, info, cluster_id=None, node_id=None):
+    async def resolve_templates(self, _info, cluster_id=None, node_id=None, ordering=None, reversed_order=None):
         if node_id is not None:
             nodes = {node_id}
         elif cluster_id is not None:
@@ -332,7 +407,7 @@ class ControllerType(graphene.ObjectType):
             nodes = {node['id'] for node in nodes}
         else:
             nodes = None
-        vms = await ListTemplates(controller_ip=self.ip)
+        vms = await ListTemplates(controller_ip=self.ip, ordering=ordering, reversed_order=reversed_order)
         if nodes is not None:
             vms = [
                 vm for vm in vms
@@ -347,7 +422,7 @@ class ControllerType(graphene.ObjectType):
             objects.append(obj)
         return objects
 
-    async def resolve_vms(self, info, cluster_id=None, node_id=None, wild=True):
+    async def resolve_vms(self, info, cluster_id=None, node_id=None, wild=True, ordering=None, reversed_order=None):
         if node_id is not None:
             nodes = {node_id}
         elif cluster_id is not None:
@@ -355,7 +430,7 @@ class ControllerType(graphene.ObjectType):
             nodes = {node['id'] for node in nodes}
         else:
             nodes = None
-        vms = await ListVms(controller_ip=self.ip)
+        vms = await ListVms(controller_ip=self.ip, ordering=ordering, reversed_order=reversed_order)
         if nodes is not None:
             vms = [
                 vm for vm in vms
@@ -372,7 +447,7 @@ class ControllerType(graphene.ObjectType):
         if not wild:
             vm_ids = {k: v for k, v in vm_ids.items() if v is not None}
 
-        objects = []
+        vm_type_list = []
         for vm in vms:
             if vm['id'] not in vm_ids:
                 continue
@@ -383,28 +458,21 @@ class ControllerType(graphene.ObjectType):
                 pool_kwargs = {'pool': PoolType(id=pool_id, controller=self)}
             else:
                 pool_kwargs = {}
-            obj = VmType(name=vm['verbose_name'], id=vm['id'], node=node, **pool_kwargs)
-            obj.selections = get_selections(info)
-            obj.veil_info = vm
+            vm_type = VmType(name=vm['verbose_name'], id=vm['id'], node=node, **pool_kwargs)
+            vm_type.selections = get_selections(info)
+            vm_type.veil_info = vm
             if not pool_id:
-                obj.controller_ip = self.ip
+                vm_type.controller_ip = self.ip
 
-            objects.append(obj)
-        return objects
+            vm_type_list.append(vm_type)
+        return vm_type_list
 
-    def _make_type(self, type, data, fields_map=None):
-        dic = {}
-        for k, v in data.items():
-            if fields_map:
-                k = fields_map.get(k, k)
-            if k in type._meta.fields:
-                dic[k] = v
-        obj = type(**dic)
-        obj.veil_info = data
-        return obj
-
-    async def resolve_datapools(self, info, node_id=None, cluster_id=None, take_broken=False):
+    async def resolve_datapools(self, info, node_id=None, cluster_id=None, take_broken=False,
+                                ordering=None, reversed_order=None):
         controller_ip = self.ip
+        if node_id is None and cluster_id is None:
+            return self._get_datapools(info, None, take_broken, ordering, reversed_order)
+
         if node_id is not None:
             return self._get_datapools(info, node_id=node_id, take_broken=take_broken)
         if cluster_id is not None:
@@ -424,26 +492,23 @@ class ControllerType(graphene.ObjectType):
         datapools = list(datapools.values())
         return datapools
 
-    # TODO fields/info rework
-
-    async def _get_datapools(self, info, node_id, take_broken=False):
-        resp = await ListDatapools(controller_ip=self.ip, node_id=node_id, take_broken=take_broken)
-        fields = get_selections(info)
-
+    async def _get_datapools(self, _info, node_id, take_broken=False, ordering=None, reversed_order=None):
+        resp = await ListDatapools(controller_ip=self.ip, node_id=node_id, take_broken=take_broken,
+                                   ordering=ordering, reversed_order=reversed_order)
         li = []
         for item in resp:
-            obj = self._make_type(DatapoolType, item, {'nodes_connected': 'nodes'})
+            obj = make_resource_type(DatapoolType, item, {'nodes_connected': 'nodes'})
             obj.controller_ip = self.ip
             li.append(obj)
 
         return li
 
-    async def resolve_clusters(self, info):
+    async def resolve_clusters(self, _info, ordering=None, reversed_order=None):
         controller_ip = self.ip
-        resp = await ListClusters(controller_ip)
+        resp = await ListClusters(controller_ip, ordering, reversed_order)
         li = []
         for item in resp:
-            obj = self._make_type(ClusterType, item)
+            obj = make_resource_type(ClusterType, item)
             obj.controller = self
             obj.nodes = []
             li.append(obj)
@@ -452,52 +517,51 @@ class ControllerType(graphene.ObjectType):
     async def resolve_cluster(self, info, *, id):
         controller_ip = self.ip
         resp = await FetchCluster(controller_ip=controller_ip, cluster_id=id)
-        obj = self._make_type(ClusterType, resp)
+        obj = make_resource_type(ClusterType, resp)
         obj.controller = self
         return obj
 
-    async def _get_nodes(self, info, *, cluster_id):
-        nodes = await ListNodes(controller_ip=self.ip, cluster_id=cluster_id)
+    async def resolve_nodes(self, _info, cluster_id=None, ordering=None, reversed_order=None):
+        nodes = await ListNodes(controller_ip=self.ip, cluster_id=cluster_id,
+                                ordering=ordering, reversed_order=reversed_order)
         li = []
         for node in nodes:
-            obj = self._make_type(NodeType, node)
+            obj = make_resource_type(NodeType, node)
             obj.controller = self
             li.append(obj)
         return li
 
-    async def resolve_nodes(self, info, cluster_id=None):
-        controller_ip = self.ip
-        if cluster_id is not None:
-            return await self._get_nodes(info, cluster_id=cluster_id)
-        result = {}
-        clusters = await ListClusters(controller_ip=controller_ip)
-        for cluster in clusters:
-            nodes = await self._get_nodes(info, cluster_id=cluster['id'])
-            result.update(
-                (obj.id, obj) for obj in nodes
-            )
-        return list(result.values())
-
-    async def resolve_node(self, info, id):
+    async def resolve_node(self, _info, id):
         controller_ip = self.ip
         node = await FetchNode(controller_ip=controller_ip, node_id=id)
-        obj = self._make_type(NodeType, node)
+        obj = make_resource_type(NodeType, node)
         obj.controller = self
         return obj
 
     async def resolve_is_online(self, _info):
-        await CheckController(controller_ip=self.ip)
-        return True
+        try:
+            await CheckController(controller_ip=self.ip)
+        except:
+            return False
+        else:
+            return True
 
 # remove later
 class TestSubscription(graphene.ObjectType):
+    # count_seconds = graphene.Float(up_to=graphene.Int())
+    #
+    # @async_generator
+    # async def resolve_count_seconds(root, _info, up_to):
+    #     for i in range(up_to):
+    #         await yield_(i)
+    #         await asyncio.sleep(1.)
+    #     await yield_(up_to)
     count_seconds = graphene.Float(up_to=graphene.Int())
 
-    async def resolve_count_seconds(root, _info, up_to):
-        for i in range(up_to):
-            yield i
-            await asyncio.sleep(1.)
-        yield up_to
+    async def resolve_count_seconds(root, info, up_to=5):
+        return Observable.interval(1000) \
+            .map(lambda i: "{0}".format(i)) \
+            .take_while(lambda i: int(i) <= up_to)
 
 
 class ResourceDataSubscription(graphene.ObjectType):
@@ -511,24 +575,27 @@ class ResourceDataSubscription(graphene.ObjectType):
         adequate_timeout = clamp_value(timeout, 1, 1000)
         await asyncio.sleep(adequate_timeout)
 
+    @async_generator
     async def resolve_cluster_res_usage(self, _info, cluster_id, timeout=2):
 
         controller_ip = await DiscoverControllerIp(cluster_id=cluster_id)
         while True:
             res_usage = await FetchResourcesUsage(controller_ip=controller_ip,
                                                   resource_category_name='clusters', resource_id=cluster_id)
-            yield res_usage
+            await yield_(res_usage)
             await ResourceDataSubscription._sleep(timeout)
 
+    @async_generator
     async def resolve_node_res_usage(self, _info, node_id, timeout=2):
 
         controller_ip = await DiscoverControllerIp(node_id=node_id)
         while True:
             res_usage = await FetchResourcesUsage(controller_ip=controller_ip,
                                                   resource_category_name='nodes', resource_id=node_id)
-            yield res_usage
+            await yield_(res_usage)
             await ResourceDataSubscription._sleep(timeout)
 
+    @async_generator
     async def resolve_is_controller_online(self, _info, controller_ip, timeout=2):
         while True:
             was_exception = False
@@ -537,5 +604,5 @@ class ResourceDataSubscription(graphene.ObjectType):
             except:  # wat excep type
                 was_exception = True
 
-            yield not was_exception
+            await yield_(not was_exception)
             await ResourceDataSubscription._sleep(timeout)

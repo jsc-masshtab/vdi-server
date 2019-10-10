@@ -1151,8 +1151,9 @@ virt_viewer_window_menu_switch_off(GtkWidget *menu G_GNUC_UNUSED, VirtViewerWind
     // turn off polling if its in process
     RemoteViewer *remote_viewer = REMOTE_VIEWER(self->priv->app);
     virt_viewer_stop_reconnect_poll(remote_viewer);
-
-    virt_viewer_window_hide(self);
+    // hide monitor windows
+    virt_viewer_app_hide_all_windows_forced(self->priv->app);
+    //deactivare app
     virt_viewer_app_deactivate(self->priv->app, TRUE);
 }
 

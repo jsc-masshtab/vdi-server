@@ -49,8 +49,6 @@ typedef struct{
 
     gint64 current_vm_id;
 
-    VdiWsClient vdi_ws_client;
-
 } VdiSession;
 
 // Data which passed to api_call
@@ -70,8 +68,6 @@ void stop_vdi_session(void);
 SoupSession *get_soup_session(void);
 // get vid server ip
 const gchar *get_vdi_ip(void);
-// get ws client
-VdiWsClient *vdi_ws_client_ptr(void);
 // cancell pending requests
 void cancell_pending_requests(void);
 // set vdi session credentials

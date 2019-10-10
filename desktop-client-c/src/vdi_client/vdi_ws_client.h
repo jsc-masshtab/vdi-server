@@ -8,8 +8,9 @@
 
 #include <libsoup/soup-session.h>
 #include <libsoup/soup-message.h>
+#include <glib.h>
 
-typedef void (*WsDataReceivedCallback) (gboolean is_vdi_online);
+typedef gboolean (*WsDataReceivedCallback) (gboolean is_vdi_online);
 
 typedef struct{
     // kind of public
@@ -17,16 +18,17 @@ typedef struct{
     WsDataReceivedCallback ws_data_received_callback;
 
     // kind of private
-    //SoupMessage *ws_msg;
-    gchar *vdi_url;
-
-    SoupWebsocketConnection *soup_websocket_connection;
-
-    gboolean is_correctly_closed_flag;
-
-    guint reconnect_timer_descriptor;
+    gchar* vdi_url;
 
     int test_int;
+
+    GIOStream *stream;
+
+    gboolean is_running;
+
+    GMutex lock;
+
+    GCancellable *cancel_job;
 
 } VdiWsClient;
 

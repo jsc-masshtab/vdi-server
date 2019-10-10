@@ -2,19 +2,20 @@ import inspect
 from functools import wraps
 from typing import List
 import re
+import asyncio
 
 from vdi.settings import settings
-from vdi.db import db
+from db.db import db
 
 class Unset:
     pass
 
 
 def prepare_insert(item: dict):
-    placeholders = ', '.join(f'${i + 1}' for i, _ in enumerate(item))
-    placeholders = f'({placeholders})'
+    placeholders = ', '.join('${}'.format(i + 1) for i, _ in enumerate(item))
+    placeholders = '({})'.format(placeholders)
     keys = ', '.join(item.keys())
-    keys = f'({keys})'
+    keys = '({})'.format(keys)
     values = list(item.values())
     return keys, placeholders, values
 
@@ -24,13 +25,13 @@ def prepare_bulk_insert(items: List[dict]):
     values = []
     offset = 0
     for dic in items:
-        numbers = [f'${offset+i+1}' for i, _ in enumerate(dic)]
+        numbers = ['${}'.format(offset+i+1) for i, _ in enumerate(dic)]
         offset += len(dic)
         numbers = ', '.join(numbers)
-        placeholders.append(f'({numbers})')
+        placeholders.append('({})'.format(numbers))
         values.extend(dic.values())
     keys = ', '.join(items[0].keys())
-    keys = f'({keys})'
+    keys = '({})'.format(keys)
     placeholders = ', '.join(placeholders)
     return keys, placeholders, values
 
@@ -39,10 +40,10 @@ async def insert(table: str, item: dict, returning=None):
     async with db.connect() as conn:
         keys, placeholders, values = prepare_insert(item)
         if returning:
-            returning = f' returning {returning}'
+            returning = ' returning {}'.format(returning)
         else:
             returning = ''
-        qu = f"INSERT INTO {table} {keys} VALUES {placeholders}{returning}", *values
+        qu = "INSERT INTO {} {} VALUES {}{}".format(table, keys, placeholders, returning), *values
         return await conn.fetch(*qu)
 
 
@@ -50,12 +51,12 @@ async def bulk_insert(table, items: List[dict], returning: str = None):
     if not items:
         return []
     if returning:
-        returning = f' returning {returning}'
+        returning = ' returning {}'.format(returning)
     else:
         returning = ''
     async with db.connect() as conn:
         keys, placeholders, values = prepare_bulk_insert(items)
-        qu = f"INSERT INTO {table} {keys} VALUES {placeholders}{returning}", *values
+        qu = "INSERT INTO {} {} VALUES {}{}".format(table, keys, placeholders, returning), *values
         return await conn.fetch(*qu)
 
 
@@ -68,10 +69,26 @@ def into_words(s):
     return [w for w in s.split() if w]
 
 
+# limit value by min_value and max_value
 def clamp_value(my_value, min_value, max_value):
     return max(min(my_value, max_value), min_value)
 
 
+# validate if name correct
 def validate_name(name_string):
     return re.match('^[а-яА-ЯёЁa-zA-Z0-9]+[а-яА-ЯёЁa-zA-Z0-9.-_+ ]*$', name_string)
 
+
+# get string of all attributes of an object split by comma
+def get_attributes_str(python_object):
+    attributes_str = ', '.join(i for i in dir(python_object) if not i.startswith('__'))
+    return attributes_str
+
+
+async def cancel_async_task(async_task):
+    if async_task:
+        try:
+            async_task.cancel()
+            await async_task
+        except asyncio.CancelledError:
+            pass

@@ -43,16 +43,8 @@ Devhelp is a help browser. It lets you easily navigate offline in the GTK, glib 
 
 To install Devhelp:
 pacman -S mingw-w64-x86_64-devhelp
-Step 4 (optional): Install the Python bindings
 
-If you want to develop a GTK3 application in Python, you need to install the Python bindings.
-
-If you develop in Python 3:
-pacman -S mingw-w64-x86_64-python3-gobject
-
-If you develop in Python 2:
-pacman -S mingw-w64-x86_64-python2-gobject
-Step 5 (optional): Install build tools
+Step 4 (optional): Install build tools
 
 pacman -S mingw-w64-x86_64-toolchain base-devel 
 

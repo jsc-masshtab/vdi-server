@@ -1,85 +1,122 @@
+import asyncio
+import pytest
 
 from fixtures.fixtures import (
-    fixt_db, image_name, create_template, create_pool, pool_name, pool_settings as fixture_pool_settings,
-    conn, fixt_create_static_pool
+    fixt_db, fixt_create_static_pool, fixt_create_automated_pool,
+    conn, get_resources_for_automated_pool
 )
 
-from vdi.graphql_api.pool import RemovePool
 from vdi.graphql_api.pool import DesktopPoolType
 from vdi.graphql_api import schema
-from graphql import GraphQLError
-from vdi.pool import Pool
-from vdi.tasks import resources
-from vdi import db
 
-
-import pytest
-import json
-
-import asyncio
-
-
-@pytest.fixture
-def pool_settings(fixture_pool_settings):
-    vars = dict(fixture_pool_settings)
-    vars['settings']['initial_size'] = 1
-    return vars
+from vdi.tasks import vm
 
 
 @pytest.mark.asyncio
-async def test_create_pool(create_pool, pool_settings):
-    id = create_pool['id']
-
+async def test_create_automated_pool(fixt_create_automated_pool):
+    pool_id = fixt_create_automated_pool['id']
+    #await asyncio.sleep(1)
     qu = """{
-      pool(id: %(id)s) {
+      pool(id: %i) {
+        desktop_pool_type
         settings {
           initial_size
-        }
-        state {
-          running
-          available {
-            id
-          }
         }
       }
-    }""" % locals()
-    r = await schema.exec(qu)
-    assert r['pool']['settings']['initial_size'] == 1
-    li = r['pool']['state']['available']
-    assert len(li) == 1
+    }""" % pool_id
+    res = await schema.exec(qu)
+    assert res['pool']['settings']['initial_size'] == 1
+    assert res['pool']['desktop_pool_type'] == DesktopPoolType.AUTOMATED.name
 
 
 @pytest.mark.asyncio
-async def test_remove_pool(create_pool, pool_settings):
-    pass
+async def test_change_sizes_of_autopool(fixt_create_automated_pool):
+    pool_id = fixt_create_automated_pool['id']
 
+    # total size
+    new_total_size = 4
+    qu = '''
+      mutation {
+      changeAutomatedPoolTotalSize(pool_id: %i, new_total_size: %i){
+        ok
+       }
+      }''' % (pool_id, new_total_size)
+    await schema.exec(qu)
 
-@pytest.mark.asyncio
-async def test_pools_list(create_pool, pool_settings):
+    # reserve size
+    new_reserve_size = 2
+    qu = '''
+      mutation {
+        changeAutomatedPoolReserveSize(pool_id: %i, new_reserve_size: %i){
+          ok
+        }
+      }''' % (pool_id, new_reserve_size)
+    await schema.exec(qu)
+
+    # get pool info
     qu = """{
-      pools {
-        id
-        settings {
-          initial_size
+      pool(id: %i) {
+        settings{
+          total_size
           reserve_size
         }
       }
-    }""" % locals()
-    r = await schema.exec(qu)
-    for p in r['pools']:
-        assert p['settings']['initial_size']
-        assert p['settings']['reserve_size']
+    }""" % pool_id
+    res = await schema.exec(qu)
+    assert res['pool']['settings']['total_size'] == new_total_size
+    assert res['pool']['settings']['reserve_size'] == new_reserve_size
 
 
-#@pytest.mark.asyncio
-#async def test_wake_pool(create_pool, pool_settings, conn):
-#    pool_id = create_pool['id']
-#    ins = await Pool.get_pool(pool_id)
-#    vms = await ins.load_vms(conn)
-#    Pool.instances.pop(pool_id)
-#    ins = await Pool.wake_pool(pool_id)
-#    new_vms = await ins.load_vms(conn)
-#    assert new_vms == vms
+@pytest.mark.asyncio
+async def test_vm_name_template_in_autopool(fixt_create_automated_pool):
+    pool_id = fixt_create_automated_pool['id']
+
+    new_template_name = 'new_template_name'
+    qu = '''
+      mutation {
+        changeVmNameTemplate(new_name_template: "%s", pool_id: %i){
+          ok
+        }
+       }''' % (new_template_name, pool_id)
+    await schema.exec(qu)
+
+    # get pool info
+    qu = """{
+         pool(id: %i) {
+           settings{
+             vm_name_template
+           }
+         }
+       }""" % pool_id
+    res = await schema.exec(qu)
+    assert res['pool']['settings']['vm_name_template'] == new_template_name
+
+
+# @pytest.mark.asyncio
+# async def test_copy_domain():
+#     resources = await get_resources_for_automated_pool()
+#     #print('resources', resources)
+#     params = {
+#         'verbose_name': "domain_created_by_test",
+#         'name_template': 'vm_name_template',
+#         'domain_id': resources['template_id'],
+#         'datapool_id': resources['datapool_id'],
+#         'controller_ip': resources['controller_ip'],
+#         'node_id': resources['node_id'],
+#     }
+#     vm_data = await vm.CopyDomain(**params).task
+#     print('vm_data', vm_data)
+#
+#     params = {
+#         'verbose_name': "domain_created_by_test_2",
+#         'name_template': 'vm_name_template',
+#         'domain_id': resources['template_id'],
+#         'datapool_id': resources['datapool_id'],
+#         'controller_ip': resources['controller_ip'],
+#         'node_id': resources['node_id'],
+#     }
+#     vm_data = await vm.CopyDomain(**params).task
+#     print('vm_data2', vm_data)
 
 
 @pytest.mark.asyncio
@@ -93,7 +130,7 @@ async def test_create_static_pool(fixt_create_static_pool):
         desktop_pool_type
           vms{
             name
-        }   
+        }
       }
     }""" % pool_id
     res = await schema.exec(qu)
@@ -101,6 +138,20 @@ async def test_create_static_pool(fixt_create_static_pool):
     li = res['pool']['vms']
     assert len(li) == 2
     assert res['pool']['desktop_pool_type'] == DesktopPoolType.STATIC.name
+
+
+@pytest.mark.asyncio
+async def test_change_pool_name(fixt_create_static_pool):
+    pool_id = fixt_create_static_pool['id']
+
+    # change name
+    qu = """
+    mutation {
+      changePoolName(new_name: "New_pool_name", pool_id: %i){
+        ok
+      }
+    }""" % pool_id
+    await schema.exec(qu)
 
 
 @pytest.mark.asyncio

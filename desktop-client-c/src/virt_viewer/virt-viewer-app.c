@@ -538,10 +538,21 @@ static void hide_one_window(gpointer value,
         virt_viewer_window_hide(VIRT_VIEWER_WINDOW(value));
 }
 
-/*static*/ void
+static void hide_one_window_forced(gpointer value,
+                            gpointer user_data G_GNUC_UNUSED)
+{
+    virt_viewer_window_hide(VIRT_VIEWER_WINDOW(value));
+}
+
+static void
 virt_viewer_app_hide_all_windows(VirtViewerApp *app)
 {
     g_list_foreach(app->priv->windows, hide_one_window, app);
+}
+
+void virt_viewer_app_hide_all_windows_forced(VirtViewerApp *app)
+{
+    g_list_foreach(app->priv->windows, hide_one_window_forced, app);
 }
 
 G_MODULE_EXPORT void

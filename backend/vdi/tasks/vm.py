@@ -1,28 +1,33 @@
 import asyncio
 import json
 import uuid
-from dataclasses import dataclass
+#from dataclasses import dataclass
 
 from cached_property import cached_property as cached
 
 from vdi.errors import NotFound, FetchException, BadRequest
-from .base import Token, UrlFetcher, DiscoverController, Task
+from .base import Token, UrlFetcher, DiscoverController, Task, apply_ordering_to_url
 from .client import HttpClient
 from .ws import WsConnection
 
 
-@dataclass()
+#@dataclass()
 class CreateDomain(UrlFetcher):
 
-    verbose_name: str
-    controller_ip: str
-    node_id: str
+    verbose_name = ''
+    controller_ip = ''
+    node_id = ''
 
     method = 'POST'
 
+    def __init__(self, verbose_name: str, controller_ip: str, node_id: str):
+        self.verbose_name = verbose_name
+        self.controller_ip = controller_ip
+        self.node_id = node_id
+
     @cached
     def url(self):
-        return f"http://{self.controller_ip}//api/domains/"
+        return "http://{}//api/domains/".format(self.controller_ip)
 
     async def body(self):
         params = {
@@ -39,15 +44,16 @@ class CreateDomain(UrlFetcher):
         return json.dumps(params)
 
 
-@dataclass()
 class CopyDomain(UrlFetcher):
 
-    controller_ip: str
-    domain_id: str
-    node_id: str
-    datapool_id: str
-    verbose_name: str = None
-    name_template: str = None
+    def __init__(self, controller_ip: str, domain_id: str, node_id: str, datapool_id:
+                 str, verbose_name: str = None, name_template: str = None):
+        self.controller_ip = controller_ip
+        self.domain_id = domain_id
+        self.node_id = node_id
+        self.datapool_id = datapool_id
+        self.verbose_name = verbose_name
+        self.name_template = name_template
 
     cache_result = False # make a new domain every time this is called
 
@@ -56,8 +62,7 @@ class CopyDomain(UrlFetcher):
         if self.verbose_name:
             return self.verbose_name
         uid = str(uuid.uuid4())[:7]
-        return f"{self.name_template}-{uid}"
-
+        return "{}-{}".format(self.name_template, uid)
 
     method = 'POST'
 
@@ -65,7 +70,7 @@ class CopyDomain(UrlFetcher):
 
     @cached
     def url(self):
-        return f"http://{self.controller_ip}/api/domains/multi-create-domain/?async=1"
+        return "http://{}/api/domains/multi-create-domain/?async=1".format(self.controller_ip)
 
     async def body(self):
         params = {
@@ -77,20 +82,18 @@ class CopyDomain(UrlFetcher):
         return json.dumps(params)
 
     async def run(self):
-        info_task = asyncio.create_task(self.fetch_template_info())
         ws = await WsConnection(controller_ip=self.controller_ip)
         await ws.send('add /tasks/')
         resp = await super().run()
         self.task_id = resp['_task']['id']
         await self.wait_message(ws)
-        info = await info_task
+        info = await self.fetch_template_info()
 
         return {
-            'id': self.new_domain_id,
+            'id': resp['entity'],
             'template': info,
             'verbose_name': self.domain_name,
         }
-
 
     def on_fetch_failed(self, ex, code):
         if code == 400:
@@ -113,6 +116,7 @@ class CopyDomain(UrlFetcher):
             self.new_domain_id = entities['domain']
 
     def is_done(self, msg):
+        print('task_message', msg)
         if self.new_domain_id is None:
             self.check_created(msg)
             return
@@ -123,23 +127,23 @@ class CopyDomain(UrlFetcher):
                 return True
 
     async def fetch_template_info(self):
-        url = f"http://{self.controller_ip}/api/domains/{self.domain_id}/"
+        url = "http://{}/api/domains/{}/".format(self.controller_ip, self.domain_id)
         headers = await self.headers()
         return await HttpClient().fetch(url, headers=headers)
 
 
-
-@dataclass()
 class DropDomain(UrlFetcher):
-    id: str
-    controller_ip: str
-    full: bool = True
 
     method = 'POST'
 
+    def __init__(self, id: str, controller_ip: str, full: bool = True):
+        self.id = id
+        self.controller_ip = controller_ip
+        self.full = full
+
     @cached
     def url(self):
-        return f'http://{self.controller_ip}/api/domains/{self.id}/remove/'
+        return 'http://{}/api/domains/{}/remove/'.format(self.controller_ip, self.id)
 
     @cached
     def body(self):
@@ -150,23 +154,27 @@ class DropDomain(UrlFetcher):
             raise NotFound("Виртуальная машина не найдена") from ex
 
 
-
-@dataclass()
+#@dataclass()
 class ListAllVms(Task):
-    controller_ip: str
-    node_id: str = None
+
+    def __init__(self, controller_ip: str, node_id: str = None, ordering: str = None, reversed_order: bool = None):
+        self.controller_ip = controller_ip
+        self.node_id = node_id
+        self.ordering = ordering
+        self.reversed_order = reversed_order
 
     @cached
     def url(self):
-        url = f"http://{self.controller_ip}/api/domains/"
+        url = "http://{}/api/domains/".format(self.controller_ip)
         if self.node_id:
-            url = f'{url}?node={self.node_id}'
+            url = '{}?node={}&'.format(url, self.node_id)
+        url = apply_ordering_to_url(url, self.ordering, self.reversed_order)
         return url
 
     async def run(self):
         token = await Token(controller_ip=self.controller_ip)
         headers = {
-            'Authorization': f'jwt {token}',
+            'Authorization': 'jwt {}'.format(token),
         }
         http_client = HttpClient()
         res = await http_client.fetch(self.url, headers=headers)
@@ -190,29 +198,36 @@ class ListTemplates(ListAllVms):
         return vms
 
 
-@dataclass()
+#@dataclass()
 class GetDomainInfo(DiscoverController):
     """
     Tmp task
     Ensure vm is on a
     """
+    domain_id = ''
+    controller_ip = None
 
-    domain_id: str
-    controller_ip: str = None
+    def __init__(self, domain_id: str, controller_ip: str = None):
+        self.domain_id = domain_id
+        self.controller_ip = controller_ip
 
     @cached
     def url(self):
-        return f"http://{self.controller_ip}/api/domains/{self.domain_id}/"
+        return "http://{}/api/domains/{}/".format(self.controller_ip, self.domain_id)
 
     def on_fetch_failed(self, ex, code):
         if code == 404:
             raise NotFound("Виртуальная машина не найдена") from ex
 
 
-@dataclass()
+#@dataclass()
 class GetVdisks(DiscoverController):
-    domain_id: str
-    controller_ip: str = None
+    domain_id = ''
+    controller_ip = None
+
+    def __init__(self, domain_id: str, controller_ip: str = None):
+        self.domain_id = domain_id
+        self.controller_ip = controller_ip
 
     async def run(self):
         resp = await super().run()
@@ -223,6 +238,6 @@ class GetVdisks(DiscoverController):
 
     @cached
     def url(self):
-        return f'http://{self.controller_ip}/api/vdisks/?domain={self.domain_id}'
+        return 'http://{}/api/vdisks/?domain={}'.format(self.controller_ip, self.domain_id)
 
 

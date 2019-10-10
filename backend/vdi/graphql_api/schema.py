@@ -2,9 +2,9 @@ import graphene
 from graphql.execution.executors.asyncio import AsyncioExecutor
 from graphql.graphql import graphql
 
-from .pool import AddPool, AddStaticPool, PoolMixin, RemovePool, WakePool, AddPoolPermissions, \
+from .pool import AddPool, AddStaticPool, PoolMixin, RemovePool, AddPoolPermissions, \
     DropPoolPermissions, AddVmsToStaticPool, RemoveVmsFromStaticPool, \
-    ChangePoolName, ChangeVmNameTemplate
+    ChangePoolName, ChangeVmNameTemplate, ChangeAutomatedPoolTotalSize, ChangeAutomatedPoolReserveSize
 from .resources import AddController, RemoveController, Resources, TestSubscription, ResourceDataSubscription
 from .users import CreateUser, UserQueries, ChangePassword
 from .vm import PoolWizardMixin, AssignVmToUser, FreeVmFromUser, ListOfVmsQuery
@@ -16,7 +16,7 @@ class PoolMutations(graphene.ObjectType):
     addStaticPool = AddStaticPool.Field()
     addVmsToStaticPool = AddVmsToStaticPool.Field()
     removeVmsFromStaticPool = RemoveVmsFromStaticPool.Field()
-    wakePool = WakePool.Field()
+    # wakePool = WakePool.Field()
 
     createUser = CreateUser.Field()
     changePassword = ChangePassword.Field()
@@ -32,8 +32,11 @@ class PoolMutations(graphene.ObjectType):
     assignVmToUser = AssignVmToUser.Field()
     freeVmFromUser = FreeVmFromUser.Field()
 
+    # params changing mutations
     changePoolName = ChangePoolName.Field()
     changeVmNameTemplate = ChangeVmNameTemplate.Field()
+    changeAutomatedPoolTotalSize = ChangeAutomatedPoolTotalSize.Field()
+    changeAutomatedPoolReserveSize = ChangeAutomatedPoolReserveSize.Field()
 
 
 class PoolQuery(UserQueries, Resources, PoolMixin, PoolWizardMixin, graphene.ObjectType, ListOfVmsQuery):

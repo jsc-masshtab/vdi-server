@@ -1,5 +1,5 @@
-from __future__ import annotations
-from dataclasses import dataclass
+#from __future__ import annotations
+#from dataclasses import dataclass
 from typing import List
 
 from classy_async.classy_async import Task
@@ -8,7 +8,7 @@ import jwt
 from starlette.authentication import (
     AuthenticationBackend, AuthenticationError, BaseUser, AuthCredentials
 )
-from vdi.db import db
+from db.db import db
 
 from vdi.settings import settings
 
@@ -33,15 +33,23 @@ claim_label = {"iss": "issuer", "iat": "iat", "nbf": "nbf", "aud": "audience"}
 #         return self.username
 
 
-@dataclass()
+#@dataclass()
 class VDIUser:
-    username: str
-    email: str
-    roles: List[str] = ()
-    jwt_payload: dict = None
+    username = ""
+    email = ""
+    roles = () # List[str] = ()
+    jwt_payload = None  # dict = None
+
+    def __init__(self, username: str, email: str, roles:List[str] = (), jwt_payload: dict() = None):
+        self.username = username
+        self.email = email
+        self.roles = roles
+        self.jwt_payload = jwt_payload
+        pass
+
 
     @classmethod
-    def set(cls, user: VDIUser):
+    def set(cls, user): # cls, user: VDIUser
         task = GetVDIUser()
         task.return_value = user
         return task
@@ -52,7 +60,10 @@ class VDIUser:
 
 
 class GetVDIUser(Task):
-    return_value: VDIUser
+    return_value = None
+
+    def __init__(self, return_value: VDIUser = None):
+        self.return_value = return_value
 
     async def run(self):
         return self.return_value
@@ -77,7 +88,7 @@ class JWTAuthenticationBackend(AuthenticationBackend):
         except ValueError:
             raise AuthenticationError('Could not separate Authorization scheme and token')
         if scheme.lower() != prefix.lower():
-            raise AuthenticationError(f'Authorization scheme {scheme} is not supported')
+            raise AuthenticationError('Authorization scheme {} is not supported'.format(scheme))
         return token
 
     def _decode(self, token, verify=True):
