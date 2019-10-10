@@ -188,16 +188,34 @@ async def fixt_create_user(fixt_db):
 
     username = 'test_user_name'
     password = 'test_user_password'
-    remove_pool_mutation = '''
-    createUser(username: "%s", password: "%s"){
-      ok
+
+    # as we cant remove users so check if the user already exists
+    qu = '''
+    {
+    users{    
+      username  
     }
-    ''' % (username, password)
-    user_creation_res = await schema.exec(remove_pool_mutation)
+    }
+    '''
+    res = await schema.exec(qu)
+    users = res['users']
 
-    await yield_(username)
+    # check if already exists and create user
+    user_names = [user['username'] for user in users]
+    if username not in user_names:
+        qu = '''
+        mutation {
+        createUser(username: "%s", password: "%s", email: "email"){
+          ok
+        }
+        }
+        ''' % (username, password)
+        await schema.exec(qu)
 
-    # remove user...
+    await yield_({
+        'username': username,
+        'password': password
+    })
 
 
 @pytest.fixture
