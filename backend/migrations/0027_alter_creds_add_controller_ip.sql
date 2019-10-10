@@ -1,1 +1,0 @@
-alter table veil_creds add column controller_ip varchar(100) not null;
