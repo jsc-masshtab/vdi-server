@@ -1,5 +1,5 @@
 import { MatDialogModule } from '@angular/material/dialog';
-import { StatusPipe } from './../../other/directives/statusEntity.directive';
+import { StatusPipe, StatusIconPipe } from './../../other/directives/statusEntity.directive';
 import { CommonModule } from '@angular/common';
 import { FocusMeDirective } from '../../other/directives/focusMe.directive';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
@@ -16,14 +16,16 @@ import { FormsModule } from '@angular/forms';
    TableIntoComponent,
    FocusMeDirective,
    StatusPipe,
-   FormForEditComponent
+   FormForEditComponent,
+   StatusIconPipe
   ],
   exports: [
     TableComponentComponent,
     TableIntoComponent,
     FocusMeDirective,
     StatusPipe,
-    FormForEditComponent
+    FormForEditComponent,
+    StatusIconPipe
   ],
   imports: [
     CommonModule,

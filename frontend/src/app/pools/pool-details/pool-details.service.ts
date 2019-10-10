@@ -46,6 +46,7 @@ export class PoolDetailsService {
                                         user {
                                             username
                                         }
+                                        status
                                     }
                                     controller {
                                         ip
@@ -87,6 +88,7 @@ export class PoolDetailsService {
                                         user {
                                             username
                                         }
+                                        status
                                     }
                                     controller {
                                         ip

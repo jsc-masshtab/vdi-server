@@ -48,3 +48,48 @@ export class StatusPipe implements PipeTransform {
         return translateStatus;
     }
 }
+
+@Pipe({ name: 'statusIcon' })
+export class StatusIconPipe implements PipeTransform {
+    constructor() {}
+        transform(status) {
+        let translateStatus = '';
+        if (status === 'CREATING') {
+            translateStatus = 'ion-load-c';
+        } else if (status === 'DELETING') {
+            translateStatus = 'ion-load-c';
+        } else if (status === 'ACTIVE') {
+            translateStatus = 'check-square';
+        } else if (status === 'FAILED') {
+            translateStatus = 'exclamation-triangle';
+        } else if (status === 'FAIL_CREATING') {
+            translateStatus = 'exclamation-triangle';
+        } else if (status === 'FAIL_DELETING') {
+            translateStatus = 'exclamation-triangle';
+        } else if (status === 'PENDING') {
+            translateStatus = 'ion-load-c';
+        } else if (status === 'HERMIT') {
+            translateStatus = 'ion-load-c';
+        } else if (status === 'ERROR') {
+            translateStatus = 'exclamation-triangle';
+        } else if (status === 'HALTING') {
+            translateStatus = 'fa-question-circle-o';
+        } else if (status === 'STARTING') {
+            translateStatus = 'ion-load-c';
+        } else if (status === 'REJECTED') {
+            translateStatus = 'fa-exclamation-triangle';
+        } else if (status === 'IN_PROGRESS') {
+            translateStatus = 'ion-load-c';
+        } else if (status === 'PARTIAL') {
+            translateStatus = 'exclamation-triangle';
+        } else if (status === 'TIMEOUT') {
+            translateStatus = 'exclamation-triangle';
+        } else if (status === 'SERVICE') {
+            translateStatus = 'heartbeat';
+        } else {
+            translateStatus = 'check-square';
+        }
+
+        return translateStatus;
+    }
+}

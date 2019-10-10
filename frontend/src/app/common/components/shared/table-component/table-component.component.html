@@ -31,6 +31,7 @@
 <!-- obj.property === 'status' -->
           <ng-container *ngIf="obj.property === 'status'">
             <ng-container *ngIf="item[obj.property]; else nothing">
+              <fa-icon [icon]="['fas',item[obj.property] | statusIcon]" [style.fontSize]="'12px'" [style.marginRight]="'5px'"></fa-icon>
               <span>{{ item[obj.property] | status }}</span>
             </ng-container>
           </ng-container>
