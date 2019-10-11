@@ -398,6 +398,7 @@ class ControllerType(graphene.ObjectType):
     node = graphene.Field(NodeType, id=graphene.String())
 
     is_online = graphene.Boolean()
+    status = graphene.String()
 
     async def resolve_templates(self, _info, cluster_id=None, node_id=None, ordering=None, reversed_order=None):
         if node_id is not None:
@@ -539,6 +540,15 @@ class ControllerType(graphene.ObjectType):
         return obj
 
     async def resolve_is_online(self, _info):
+        return self._check_is_online()
+
+    async def resolve_status(self, _info):
+        if self._check_is_online():
+            return 'ACTIVE'
+        else:
+            return 'FAILED'
+
+    async def _check_is_online(self):
         try:
             await CheckController(controller_ip=self.ip)
         except:
