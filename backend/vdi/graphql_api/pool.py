@@ -10,7 +10,7 @@ from vdi.settings import settings as settings_file
 from vdi.tasks import vm
 from vdi.tasks.resources import DiscoverControllerIp, FetchCluster, FetchNode, FetchDatapool
 from vdi.tasks.thin_client import EnableRemoteAccess
-from vdi.tasks.vm import GetDomainInfo, GetVdisks
+from vdi.tasks.vm import GetDomainInfo, ListVms
 
 from .users import UserType
 from .util import get_selections, check_and_return_pool_data, check_pool_initial_size, check_reserve_size, \
@@ -99,6 +99,7 @@ class PoolType(graphene.ObjectType):
     users = graphene.List(UserType, entitled=graphene.Boolean())
     vms = graphene.List(lambda: VmType)
     pool_resources_names = graphene.Field(PoolResourcesNames)
+    status = graphene.String()
 
     @graphene.Field
     def controller():
@@ -163,19 +164,8 @@ class PoolType(graphene.ObjectType):
         return users
 
     async def resolve_vms(self, info):
-        if self.vms:
-            return self.vms
-
-        async with db.connect() as conn:
-            qu = "select id from vm where pool_id = $1", self.id
-            data = await conn.fetch(*qu)
-        vms = []
-        for [vm_id] in data:
-            vm = VmType(id=vm_id)
-            vm.controller_ip = self.controller.ip
-            vm.selections = get_selections(info)
-            vms.append(vm)
-        return vms
+        vm_selections = get_selections(info)
+        return await self._form_vm_type_list(vm_selections)
 
     def resolve_desktop_pool_type(self, _info):
         if isinstance(self.desktop_pool_type, str):
@@ -200,11 +190,7 @@ class PoolType(graphene.ObjectType):
 
         list_of_requested_fields = get_selections(_info)
         # get resources ids from db
-        async with db.connect() as conn:
-            qu = "SELECT controller_ip, cluster_id, node_id, datapool_id, template_id FROM pool WHERE id = {}".\
-                format(self.id)
-            [data] = await conn.fetch(qu)
-            print('res data', data)
+        data = await check_and_return_pool_data(self.id)
 
         # determine names  (looks like code repeat. maybe refactor)
         cluster_name = ''
@@ -242,6 +228,39 @@ class PoolType(graphene.ObjectType):
         return PoolResourcesNames(cluster_name=cluster_name, node_name=node_name,
                                   datapool_name=datapool_name, template_name=template_name)
 
+    async def resolve_status(self, _info):
+        # determine pool status. If we cant get veil info about at least one vm
+        # we consider the pool as broken
+        vms = await self._form_vm_type_list(['state'])
+
+        vms_info_list = [single_vm.veil_info for single_vm in vms]
+        if Unset in vms_info_list:
+            return 'FAILED'
+        else:
+            return 'ACTIVE'
+
+    async def _form_vm_type_list(self, vm_selections):
+        pool_data = await check_and_return_pool_data(self.id)
+        all_vms = await ListVms(controller_ip=pool_data['controller_ip'], node_id=pool_data['node_id'])
+
+        async with db.connect() as conn:
+            qu = "select id from vm where pool_id = $1", self.id
+            data = await conn.fetch(*qu)
+        vms = []
+        for [vm_id] in data:
+            # find veil vm info by id
+            try:
+                veil_info = next(veil_info for veil_info in all_vms if veil_info['id'] == vm_id)
+            except StopIteration:
+                veil_info = Unset
+
+            vm_type = VmType(id=vm_id)
+            vm_type.veil_info = veil_info
+            vm_type.controller_ip = self.controller.ip
+            vm_type.selections = vm_selections
+            vms.append(vm_type)
+        return vms
+
 
 class VmState(graphene.Enum):
     UNDEFINED = 0
@@ -253,7 +272,7 @@ class VmState(graphene.Enum):
 class VmType(graphene.ObjectType):
     name = graphene.String()
     id = graphene.String()
-    veil_info = graphene.String(deprecation_reason="Use `template {info}`")
+    veil_info = graphene.String()
     template = graphene.Field(TemplateType)
     user = graphene.Field(UserType)
     state = graphene.Field(VmState)
