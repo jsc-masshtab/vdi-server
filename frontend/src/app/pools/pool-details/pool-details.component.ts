@@ -157,6 +157,10 @@ export class PoolDetailsComponent implements OnInit {
       title: 'Пользователь',
       property: 'user',
       property_lv2: 'username'
+    },
+    {
+      title: 'Статус',
+      property: 'status'
     }
   ];
   public collectionVmsStatic: any[] = [
@@ -175,6 +179,10 @@ export class PoolDetailsComponent implements OnInit {
       title: 'Пользователь',
       property: 'user',
       property_lv2: 'username'
+    },
+    {
+      title: 'Статус',
+      property: 'status'
     }
   ];
 
