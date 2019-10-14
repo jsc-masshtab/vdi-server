@@ -196,7 +196,10 @@ class Resources:
     controllers = graphene.List(lambda: ControllerType, ordering=graphene.String(), reversed_order=graphene.Boolean())
     controller = graphene.Field(lambda: ControllerType, ip=graphene.String())
     node = graphene.Field(NodeType, id=graphene.String())
+
     cluster = graphene.Field(ClusterType, id=graphene.String())
+    clusters = graphene.List(ClusterType, ordering=graphene.String(), reversed_order=graphene.Boolean())
+
     datapool = graphene.Field(DatapoolType, id=graphene.String())
     template = graphene.Field(TemplateType, id=graphene.String())
     vm = graphene.Field(VmType, id=graphene.String())
@@ -281,6 +284,45 @@ class Resources:
                 continue
 
         return None
+
+    async def resolve_clusters(self, _info, ordering=None, reversed_order=None):
+
+        controllers = await DiscoverControllers(return_broken=False)
+
+        # form list of clusters
+        list_of_all_cluster_types = []
+
+        for controller in controllers:
+            clusters = await ListClusters(controller['ip'], ordering, reversed_order)
+            cluster_type_list = []
+            for cluster in clusters:
+                obj = make_resource_type(ClusterType, cluster)
+                obj.controller = ControllerType(ip=controller['ip'])
+                cluster_type_list.append(obj)
+
+            list_of_all_cluster_types.extend(cluster_type_list)
+
+        # sort list of clusters
+        if ordering:
+            if ordering == 'verbose_name':
+                def sort_lam(cluster): return cluster.verbose_name if cluster.verbose_name else 'Unknown'
+                pass
+            elif ordering == 'cpu_count':
+                def sort_lam(cluster): return cluster.cpu_count if cluster.cpu_count else 0
+            elif ordering == 'memory_count':
+                def sort_lam(cluster): return cluster.memory_count if cluster.memory_count else 0
+            elif ordering == 'nodes_count':
+                def sort_lam(cluster): return cluster.nodes_count if cluster.nodes_count else 0
+            elif ordering == 'status':
+                def sort_lam(cluster): return cluster.status if cluster.status else 'Unknown'
+            elif ordering == 'controller_ip':
+                def sort_lam(cluster): return cluster.controller.ip if cluster.controller.ip else 'Unknown'
+            else:
+                raise FieldError(name=['Неверный параметр сортировки'])
+            reverse = reversed_order if reversed_order is not None else False
+            list_of_all_cluster_types = sorted(list_of_all_cluster_types, key=sort_lam, reverse=reverse)
+
+        return list_of_all_cluster_types
 
     async def resolve_datapool(self, _info, id):
         datapool = await Resources.get_resource(_info, id, DatapoolType, ListDatapools)
