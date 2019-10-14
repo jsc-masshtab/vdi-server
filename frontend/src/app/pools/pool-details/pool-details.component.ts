@@ -316,9 +316,14 @@ export class PoolDetailsComponent implements OnInit {
         },
         settings: {
           entity: 'pool-details',
-          name: this.pool.name,
           header: 'Изменение имени пула',
-          buttonAction: 'Изменить'
+          buttonAction: 'Изменить',
+          form: [{
+            tag: 'input',
+            type: 'text',
+            fieldName: 'name',
+            fieldValue: this.pool.name,
+          }]
         },
         update: {
           method: 'getPool',
@@ -345,9 +350,14 @@ export class PoolDetailsComponent implements OnInit {
         },
         settings: {
           entity: 'pool-details',
-          name: this.pool.settings.total_size,
           header: 'Изменение максимального количества создаваемых ВМ',
-          buttonAction: 'Изменить'
+          buttonAction: 'Изменить',
+          form: [{
+            tag: 'input',
+            type: 'number',
+            fieldName: 'new_total_size',
+            fieldValue: this.pool.settings.total_size,
+          }]
         },
         update: {
           method: 'getPool',
@@ -374,9 +384,14 @@ export class PoolDetailsComponent implements OnInit {
         },
         settings: {
           entity: 'pool-details',
-          name: this.pool.settings.reserve_size,
           header: 'Изменение количества создаваемых ВМ',
-          buttonAction: 'Изменить'
+          buttonAction: 'Изменить',
+          form: [{
+            tag: 'input',
+            type: 'number',
+            fieldName: 'reserve_size',
+            fieldValue: this.pool.settings.reserve_size,
+          }]
         },
         update: {
           method: 'getPool',

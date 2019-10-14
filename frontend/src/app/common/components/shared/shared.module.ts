@@ -7,7 +7,7 @@ import { NgModule } from '@angular/core';
 import { TableIntoComponent } from './table-into-component/table-into';
 import { TableComponentComponent } from './table-component/table-component.component';
 import { FormForEditComponent } from './change-form/form-edit.component';
-import { FormsModule } from '@angular/forms';
+import { ReactiveFormsModule } from '@angular/forms';
 
 
 @NgModule({
@@ -31,7 +31,7 @@ import { FormsModule } from '@angular/forms';
     CommonModule,
     FontAwesomeModule,
     MatDialogModule,
-    FormsModule
+    ReactiveFormsModule
   ],
   entryComponents: [
     FormForEditComponent

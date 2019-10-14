@@ -288,9 +288,9 @@ export class PoolDetailsService {
         });
     }
 
-    public editNamePool(...params: [{id: number}, {newName: string}]) {
+    public editNamePool(...params: [{id: number}, {name: string}]) {
         const idPool = params[0].id;
-        const newNamePool = params[1].newName;
+        const newNamePool = params[1].name;
         return this.service.mutate<any>({
             mutation: gql`
                             mutation ChangePoolName($pool_id: Int!,$new_name: String!) {
@@ -307,9 +307,9 @@ export class PoolDetailsService {
         });
     }
 
-    public changeAutomatedPoolTotalSize(...params: [{id: number}, {newName: number}]) {
+    public changeAutomatedPoolTotalSize(...params: [{id: number}, {new_total_size: number}]) {
         const idPool = params[0].id;
-        const newTotalSize = +params[1].newName;
+        const newTotalSize = params[1].new_total_size;
         return this.service.mutate<any>({
             mutation: gql`
                         mutation ChangeAutomatedPoolTotalSize($pool_id: Int!,$new_total_size: Int!) {
@@ -326,9 +326,9 @@ export class PoolDetailsService {
         });
     }
 
-    public changeAutomatedPoolReserveSize(...params: [{id: number}, {newName: number}]) {
+    public changeAutomatedPoolReserveSize(...params: [{id: number}, {reserve_size: number}]) {
         const idPool = params[0].id;
-        const newReserveSize = +params[1].newName;
+        const newReserveSize = params[1].reserve_size;
         return this.service.mutate<any>({
             mutation: gql`
                             mutation ChangeAutomatedPoolReserveSize($pool_id: Int!,$new_reserve_size: Int!) {

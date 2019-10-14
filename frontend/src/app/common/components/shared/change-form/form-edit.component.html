@@ -1,4 +1,4 @@
-<div class="form">
+<div class="form" *ngIf="init">
 
   <div class="form-header">
     <h1>{{ data?.settings?.header }}</h1>
@@ -7,9 +7,16 @@
     </button>
   </div>
 
-  <div class="form-fields">
-    <label class="field">
-      <input type="text" [(ngModel)]="name" [focusMe]="true">
+  <div class="form-fields" [formGroup]="formGroup">
+    <label class="field" *ngFor="let field of data?.settings?.form; let i = index">
+      <ng-container *ngIf="field.tag === 'input'">
+        <ng-container *ngIf="i === 0">
+          <input [type]="field.type"  [min]="0" [formControlName]="field.fieldName" [focusMe]="true">
+        </ng-container>
+        <ng-container *ngIf="i !== 0">
+          <input [type]="field.type"  [min]="0" [formControlName]="field.fieldName" [focusMe]="false">
+        </ng-container>
+      </ng-container>
     </label>
   </div>
 
