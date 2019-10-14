@@ -203,6 +203,8 @@ class Resources:
     clusters = graphene.List(ClusterType, ordering=graphene.String(), reversed_order=graphene.Boolean())
 
     datapool = graphene.Field(DatapoolType, id=graphene.String())
+    datapools = graphene.List(DatapoolType, ordering=graphene.String(), reversed_order=graphene.Boolean())
+
     template = graphene.Field(TemplateType, id=graphene.String())
     vm = graphene.Field(VmType, id=graphene.String())
 
@@ -279,7 +281,7 @@ class Resources:
         list_of_all_node_types = []
 
         for controller in controllers:
-            nodes = await ListNodes(controller_ip=controller['ip'], ordering=ordering, reversed_order=reversed_order)
+            nodes = await ListNodes(controller_ip=controller['ip'])
             node_type_list = []
             for node in nodes:
                 obj = make_resource_type(NodeType, node)
@@ -288,7 +290,7 @@ class Resources:
 
             list_of_all_node_types.extend(node_type_list)
 
-        # sort list of clusters
+        # sort list of nodes
         if ordering:
             if ordering == 'verbose_name':
                 def sort_lam(node): return node.verbose_name if node.verbose_name else 'Unknown'
@@ -334,7 +336,7 @@ class Resources:
         list_of_all_cluster_types = []
 
         for controller in controllers:
-            clusters = await ListClusters(controller['ip'], ordering, reversed_order)
+            clusters = await ListClusters(controller['ip'])
             cluster_type_list = []
             for cluster in clusters:
                 obj = make_resource_type(ClusterType, cluster)
@@ -368,6 +370,47 @@ class Resources:
     async def resolve_datapool(self, _info, id):
         datapool = await Resources.get_resource(_info, id, DatapoolType, ListDatapools)
         return datapool
+
+    async def resolve_datapools(self, _info, take_broken=False,
+                                ordering=None, reversed_order=None):
+        controllers = await DiscoverControllers(return_broken=False)
+
+        # form list of datapools
+        list_of_all_datapool_types = []
+
+        for controller in controllers:
+            datapools = await ListDatapools(controller_ip=controller['ip'], take_broken=take_broken)
+            datapool_type_list = []
+            for datapool in datapools:
+                obj = make_resource_type(DatapoolType, datapool)
+                datapool_type_list.append(obj)
+
+            list_of_all_datapool_types.extend(datapool_type_list)
+
+        # sort list of datapools
+        if ordering:
+            if ordering == 'verbose_name':
+                def sort_lam(datapool): return datapool.verbose_name if datapool.verbose_name else 'Unknown'
+                pass
+            elif ordering == 'type':
+                def sort_lam(datapool): return datapool.type if datapool.type else 'Unknown'
+            elif ordering == 'vdisk_count':
+                def sort_lam(datapool): return datapool.vdisk_count if datapool.vdisk_count else 0
+            elif ordering == 'iso_count':
+                def sort_lam(datapool): return datapool.iso_count if datapool.iso_count else 0
+            elif ordering == 'file_count':
+                def sort_lam(datapool): return datapool.file_count if datapool.file_count else 0
+            elif ordering == 'used_space':
+                def sort_lam(datapool): return datapool.used_space if datapool.used_space else 0
+            elif ordering == 'free_space':
+                def sort_lam(datapool):
+                    return datapool.free_space if datapool.free_space else 0
+            else:
+                raise FieldError(name=['Неверный параметр сортировки'])
+            reverse = reversed_order if reversed_order is not None else False
+            list_of_all_datapool_types = sorted(list_of_all_datapool_types, key=sort_lam, reverse=reverse)
+
+        return list_of_all_datapool_types
 
     async def resolve_template(self, _info, id):
         template = await Resources.get_resource(_info, id, TemplateType, ListTemplates, {'verbose_name': 'name'})
