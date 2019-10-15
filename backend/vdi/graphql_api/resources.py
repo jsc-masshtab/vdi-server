@@ -21,7 +21,7 @@ from vdi.utils import Unset
 from vdi.utils import clamp_value
 
 from vdi.resources_monitoring.resources_monitor_manager import resources_monitor_manager
-
+from vdi.constants import DEFAULT_NAME
 
 # class ResourcesOrderingArg(graphene.Enum):
 #     VERBOSE_NAME = 1
@@ -113,7 +113,7 @@ class NodeType(graphene.ObjectType):
         if veil_info:
             return veil_info['verbose_name']
         else:
-            return "Unknown"
+            return DEFAULT_NAME
 
     async def resolve_templates(self, info):
         return await self.controller.resolve_templates(info, node_id=self.id)
@@ -293,20 +293,21 @@ class Resources:
         # sort list of nodes
         if ordering:
             if ordering == 'verbose_name':
-                def sort_lam(node): return node.verbose_name if node.verbose_name else 'Unknown'
+                def sort_lam(node): return node.verbose_name if node.verbose_name else DEFAULT_NAME
                 pass
             elif ordering == 'cpu_count':
                 def sort_lam(node): return node.cpu_count if node.cpu_count else 0
             elif ordering == 'memory_count':
                 def sort_lam(node): return node.memory_count if node.memory_count else 0
             elif ordering == 'location':
-                def sort_lam(node): return node.cluster['verbose_name'] if node.cluster['verbose_name'] else 'Unknown'
+                def sort_lam(node):
+                    return node.cluster['verbose_name'] if node.cluster['verbose_name'] else DEFAULT_NAME
             elif ordering == 'status':
-                def sort_lam(node): return node.status if node.status else 'Unknown'
+                def sort_lam(node): return node.status if node.status else DEFAULT_NAME
             elif ordering == 'controller_ip':
-                def sort_lam(node): return node.controller.ip if node.controller.ip else 'Unknown'
+                def sort_lam(node): return node.controller.ip if node.controller.ip else DEFAULT_NAME
             elif ordering == 'management_ip':
-                def sort_lam(node): return node.controller.ip if node.controller.ip else 'Unknown'
+                def sort_lam(node): return node.controller.ip if node.controller.ip else DEFAULT_NAME
             else:
                 raise FieldError(name=['Неверный параметр сортировки'])
             reverse = reversed_order if reversed_order is not None else False
@@ -348,7 +349,7 @@ class Resources:
         # sort list of clusters
         if ordering:
             if ordering == 'verbose_name':
-                def sort_lam(cluster): return cluster.verbose_name if cluster.verbose_name else 'Unknown'
+                def sort_lam(cluster): return cluster.verbose_name if cluster.verbose_name else DEFAULT_NAME
                 pass
             elif ordering == 'cpu_count':
                 def sort_lam(cluster): return cluster.cpu_count if cluster.cpu_count else 0
@@ -357,9 +358,9 @@ class Resources:
             elif ordering == 'nodes_count':
                 def sort_lam(cluster): return cluster.nodes_count if cluster.nodes_count else 0
             elif ordering == 'status':
-                def sort_lam(cluster): return cluster.status if cluster.status else 'Unknown'
+                def sort_lam(cluster): return cluster.status if cluster.status else DEFAULT_NAME
             elif ordering == 'controller_ip':
-                def sort_lam(cluster): return cluster.controller.ip if cluster.controller.ip else 'Unknown'
+                def sort_lam(cluster): return cluster.controller.ip if cluster.controller.ip else DEFAULT_NAME
             else:
                 raise FieldError(name=['Неверный параметр сортировки'])
             reverse = reversed_order if reversed_order is not None else False
@@ -390,10 +391,10 @@ class Resources:
         # sort list of datapools
         if ordering:
             if ordering == 'verbose_name':
-                def sort_lam(datapool): return datapool.verbose_name if datapool.verbose_name else 'Unknown'
+                def sort_lam(datapool): return datapool.verbose_name if datapool.verbose_name else DEFAULT_NAME
                 pass
             elif ordering == 'type':
-                def sort_lam(datapool): return datapool.type if datapool.type else 'Unknown'
+                def sort_lam(datapool): return datapool.type if datapool.type else DEFAULT_NAME
             elif ordering == 'vdisk_count':
                 def sort_lam(datapool): return datapool.vdisk_count if datapool.vdisk_count else 0
             elif ordering == 'iso_count':
