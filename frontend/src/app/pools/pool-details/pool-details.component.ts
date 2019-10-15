@@ -1,3 +1,4 @@
+import { PoolsService } from './../all-pools/pools.service';
 import { IPool } from './definitions/pool';
 import { VmDetalsPopupComponent } from './vm-details-popup/vm-details-popup.component';
 import { RemoveUsersPoolComponent } from './remove-users/remove-users.component';
@@ -119,12 +120,18 @@ export class PoolDetailsComponent implements OnInit {
       // с каждым подключ. пользователем даже,если рес-сы закончатся
       property: 'settings',
       property_lv2: 'total_size',
-      edit: 'changeMaxDinamicPool'
+      edit: 'changeMaxAutomatedPool'
     },
     {
       title: 'Создано ВМ',
       property: 'vms',
       type: 'array-length'
+    },
+    {
+      title: 'Шаблон для ВМ',
+      property: 'settings',
+      property_lv2: 'vm_name_template',
+      edit: 'changeTemplateForVmAutomatedPool'
     },
     {
       title: 'Пользователи',
@@ -206,6 +213,7 @@ export class PoolDetailsComponent implements OnInit {
   constructor(private activatedRoute: ActivatedRoute,
               private router: Router,
               private poolService: PoolDetailsService,
+              private poolsService: PoolsService,
               public  dialog: MatDialog) {}
 
   ngOnInit() {
@@ -331,13 +339,17 @@ export class PoolDetailsComponent implements OnInit {
             id: this.idPool,
             type: this.typePool
           },
+        },
+        updateDepend: {
+          service: this.poolsService,
+          method: 'getAllPools'
         }
       }
     });
   }
 
   // @ts-ignore: Unreachable code error
-  private changeMaxDinamicPool(): void {
+  private changeMaxAutomatedPool(): void {
     this.dialog.open(FormForEditComponent, {
       width: '500px',
       data: {
@@ -391,6 +403,40 @@ export class PoolDetailsComponent implements OnInit {
             type: 'number',
             fieldName: 'reserve_size',
             fieldValue: this.pool.settings.reserve_size,
+          }]
+        },
+        update: {
+          method: 'getPool',
+          params: {
+            id: this.idPool,
+            type: this.typePool
+          }
+        }
+      }
+    });
+  }
+
+  // @ts-ignore: Unreachable code error
+  private changeTemplateForVmAutomatedPool(): void {
+    this.dialog.open(FormForEditComponent, {
+      width: '500px',
+      data: {
+        post: {
+          service: this.poolService,
+          method: 'changeTemplateForVmAutomatedPool',
+          params: {
+            id: this.idPool
+          }
+        },
+        settings: {
+          entity: 'pool-details',
+          header: 'Изменение шаблона для ВМ',
+          buttonAction: 'Изменить',
+          form: [{
+            tag: 'input',
+            type: 'text',
+            fieldName: 'vm_name_template',
+            fieldValue: this.pool.settings.vm_name_template,
           }]
         },
         update: {

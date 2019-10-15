@@ -344,4 +344,23 @@ export class PoolDetailsService {
             }
         });
     }
+
+    public changeTemplateForVmAutomatedPool(...params: [{id: number}, {vm_name_template: string}]) {
+        const idPool = params[0].id;
+        const newNameTemplate = params[1].vm_name_template;
+        return this.service.mutate<any>({
+            mutation: gql`
+                            mutation changeTemplateForVmAutomatedPool($pool_id: Int!,$new_name_template: String!) {
+                                changeVmNameTemplate(pool_id: $pool_id, new_name_template: $new_name_template) {
+                                    ok
+                                }
+                            }
+            `,
+            variables: {
+                method: 'POST',
+                pool_id: idPool,
+                new_name_template: newNameTemplate
+            }
+        });
+    }
 }
