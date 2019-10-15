@@ -5,7 +5,7 @@ from json import JSONDecodeError
 
 from ..tasks.base import Token
 
-from .resources_monitoring_data import ALLOWED_SUBSCRIPTIONS_LIST, CONTROLLERS_SUBSCRIPTION
+from .resources_monitoring_data import CONTROLLER_SUBSCRIPTIONS_LIST, CONTROLLERS_SUBSCRIPTION
 
 from vdi.utils import cancel_async_task
 
@@ -115,9 +115,8 @@ class ResourcesMonitor:
             self._websocket = await websockets.connect(connect_url) #
 
             # subscribe to events on controller
-            for subscription_name in ALLOWED_SUBSCRIPTIONS_LIST:
-                if not (subscription_name == CONTROLLERS_SUBSCRIPTION):
-                    await self._websocket.send('add {}'.format(subscription_name))
+            for subscription_name in CONTROLLER_SUBSCRIPTIONS_LIST:
+                await self._websocket.send('add {}'.format(subscription_name))
         except:
             print(__class__.__name__, ' can not connect to', self._controller_ip)
             return

@@ -2,7 +2,7 @@ from websockets.exceptions import ConnectionClosed as WsConnectionClosed
 import asyncio
 import json
 
-from .resources_monitoring_data import ALLOWED_SUBSCRIPTIONS_LIST, SubscriptionCmd
+from .resources_monitoring_data import VDI_FRONT_ALLOWED_SUBSCRIPTIONS_LIST, SubscriptionCmd
 
 
 class SubscriptionHandler:
@@ -82,7 +82,7 @@ class SubscriptionHandler:
                 await self._dump_dict_and_send(response_dict)
                 continue
             # check if allowed
-            if subscription_source not in ALLOWED_SUBSCRIPTIONS_LIST:
+            if subscription_source not in VDI_FRONT_ALLOWED_SUBSCRIPTIONS_LIST:
                 print(__class__.__name__, ' Unknown subscription source')
                 response_dict['error'] = True
                 await self._dump_dict_and_send(response_dict)
