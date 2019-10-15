@@ -1,5 +1,5 @@
 import { MatDialogModule } from '@angular/material/dialog';
-import { StatusPipe, StatusIconPipe } from './../../other/directives/statusEntity.directive';
+import { StatusPipe, StatusIconPipe } from '../../other/directives/statusEntity.pipes';
 import { CommonModule } from '@angular/common';
 import { FocusMeDirective } from '../../other/directives/focusMe.directive';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';

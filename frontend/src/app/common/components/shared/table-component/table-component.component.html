@@ -13,7 +13,7 @@
         <div class="table-area-property" *ngFor="let obj of collection" [class.index-column]="obj.property == 'index'"  [class.name-start]="obj.class == 'name-start'"> <!--столбец-->
 
 <!-- icons -->
-          <span [class.icon-group]="entity === 'vm'">
+          <span [class.icon-group]="entity === 'vm'" *ngIf="obj.icon">
             <ng-container *ngIf="obj.icon">
               <fa-icon [icon]="['fas',obj.icon]" size="xs"></fa-icon>
             </ng-container>
@@ -31,7 +31,14 @@
 <!-- obj.property === 'status' -->
           <ng-container *ngIf="obj.property === 'status'">
             <ng-container *ngIf="item[obj.property]; else nothing">
-              <fa-icon [icon]="['fas',item[obj.property] | statusIcon]" [style.fontSize]="'12px'" [style.marginRight]="'5px'"></fa-icon>
+            <ng-container [ngSwitch]="item[obj.property]">
+              <fa-icon [icon]="['fas',item[obj.property] | statusIcon]" [style.fontSize]="'12px'" [style.marginRight]="'5px'" [spin]="true"
+              *ngSwitchCase="'CREATING' || 'DELETING' || 'PENDING' || 'HERMIT' || 'IN_PROGRESS' || 'STARTING' "></fa-icon> <!-- протестить -->
+
+              <fa-icon [icon]="['fas',item[obj.property] | statusIcon]" [style.fontSize]="'12px'" [style.marginRight]="'5px'" [spin]="false"
+              *ngSwitchDefault></fa-icon>
+            </ng-container>
+              
               <span>{{ item[obj.property] | status }}</span>
             </ng-container>
           </ng-container>

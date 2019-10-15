@@ -40,7 +40,7 @@ export class StatusPipe implements PipeTransform {
             translateStatus = 'вышло время';
         } else if (status === 'SERVICE') {
             translateStatus = 'сервисный режим';
-        } else if (status === 'UNDEFINED') {
+        } else if (status === 'UNDEFINED' || status === 'Unknown') {
             translateStatus = 'не найдено';
         } else {
             translateStatus = status;
@@ -52,44 +52,47 @@ export class StatusPipe implements PipeTransform {
 @Pipe({ name: 'statusIcon' })
 export class StatusIconPipe implements PipeTransform {
     constructor() {}
-        transform(status) {
+
+    transform(status) {
         let translateStatus = '';
-        if (status === 'CREATING') {
-            translateStatus = 'ion-load-c';
-        } else if (status === 'DELETING') {
-            translateStatus = 'ion-load-c';
-        } else if (status === 'ACTIVE') {
+        switch (status) {
+            case 'FAILED':
+            case 'FAIL_CREATING':
+            case 'FAIL_DELETING':
+            case 'ERROR':
+            case 'REJECTED':
+            case 'PARTIAL':
+            case 'TIMEOUT':
+            translateStatus = 'exclamation-triangle';
+            break;
+
+            case 'CREATING':
+            case 'DELETING':
+            case 'PENDING':
+            case 'HERMIT':
+            case 'STARTING':
+            case 'IN_PROGRESS':
+            translateStatus = 'spinner';
+            break;
+
+            case 'ACTIVE':
             translateStatus = 'check-square';
-        } else if (status === 'FAILED') {
-            translateStatus = 'exclamation-triangle';
-        } else if (status === 'FAIL_CREATING') {
-            translateStatus = 'exclamation-triangle';
-        } else if (status === 'FAIL_DELETING') {
-            translateStatus = 'exclamation-triangle';
-        } else if (status === 'PENDING') {
-            translateStatus = 'ion-load-c';
-        } else if (status === 'HERMIT') {
-            translateStatus = 'ion-load-c';
-        } else if (status === 'ERROR') {
-            translateStatus = 'exclamation-triangle';
-        } else if (status === 'HALTING') {
-            translateStatus = 'fa-question-circle-o';
-        } else if (status === 'STARTING') {
-            translateStatus = 'ion-load-c';
-        } else if (status === 'REJECTED') {
-            translateStatus = 'fa-exclamation-triangle';
-        } else if (status === 'IN_PROGRESS') {
-            translateStatus = 'ion-load-c';
-        } else if (status === 'PARTIAL') {
-            translateStatus = 'exclamation-triangle';
-        } else if (status === 'TIMEOUT') {
-            translateStatus = 'exclamation-triangle';
-        } else if (status === 'SERVICE') {
+            break;
+
+            case 'HALTING':
+            case 'UNDEFINED':
+            case 'Unknown':
+            translateStatus = 'question-circle';
+            break;
+
+            case 'SERVICE':
             translateStatus = 'heartbeat';
-        } else {
+            break;
+
+            default:
             translateStatus = 'check-square';
         }
-
         return translateStatus;
     }
+
 }
