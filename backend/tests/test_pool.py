@@ -107,16 +107,7 @@ async def test_vm_name_template_in_autopool(fixt_create_automated_pool):
 #     vm_data = await vm.CopyDomain(**params).task
 #     print('vm_data', vm_data)
 #
-#     params = {
-#         'verbose_name': "domain_created_by_test_2",
-#         'name_template': 'vm_name_template',
-#         'domain_id': resources['template_id'],
-#         'datapool_id': resources['datapool_id'],
-#         'controller_ip': resources['controller_ip'],
-#         'node_id': resources['node_id'],
-#     }
-#     vm_data = await vm.CopyDomain(**params).task
-#     print('vm_data2', vm_data)
+#     await vm.DropDomain(id=vm_data['id'], controller_ip=resources['controller_ip'])
 
 
 @pytest.mark.asyncio

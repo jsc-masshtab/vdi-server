@@ -847,20 +847,6 @@ class RemoveVmsFromStaticPool(graphene.Mutation):
         }
 
 
-# class WakePool(graphene.Mutation):
-#     class Arguments:
-#         id = graphene.Int()
-#
-#     ok = graphene.Boolean()
-#
-#     async def mutate(self, info, id):
-#         from vdi.pool import AutomatedPoolManager
-#         await AutomatedPoolManager.wake_pool(id)
-#         return WakePool(ok=True)
-
-
-# TODO delete, drop, remove: use a single word
-
 class RemovePool(graphene.Mutation):
     class Arguments:
         id = graphene.Int()
@@ -878,26 +864,18 @@ class RemovePool(graphene.Mutation):
         except FetchException:
             raise SimpleError('Не удалось получить данные с контроллера')
 
-        vm_ids = [v['id'] for v in vms]
-
-        async with db.connect() as conn:
-            qu = "update pool set deleted=TRUE where id = $1", pool_id
-            await conn.fetch(*qu)
-
-        if pool.params['desktop_pool_type'] == DesktopPoolType.AUTOMATED.name:
-            tasks = [
-                vm.DropDomain(id=vm_id, controller_ip=controller_ip)
-                for vm_id in vm_ids
-            ]
-            async for _ in wait(*tasks):
-                pass
-
         # remove from db
         async with db.connect() as conn:
-            # TODO what if there are extra vms in db?
             await conn.fetch("DELETE FROM pools_users WHERE pool_id = $1", pool_id)
             await conn.fetch("DELETE FROM vm WHERE pool_id = $1", pool_id)
             await conn.fetch("DELETE FROM pool WHERE id = $1", pool_id)
+
+        vm_ids = [v['id'] for v in vms]
+
+        if pool.params['desktop_pool_type'] == DesktopPoolType.AUTOMATED.name:
+            for vm_id in vm_ids:
+                await vm.DropDomain(id=vm_id, controller_ip=controller_ip)
+
         AutomatedPoolManager.pool_instances.pop(pool_id, None)
 
         return vm_ids
@@ -1192,7 +1170,7 @@ class ChangeAutomatedPoolTotalSize(graphene.Mutation):
             AutomatedPoolManager.pool_instances[pool_id].params['total_size'] = new_total_size
 
         # change amount of created vms
-        vm_amount_in_pool = await AutomatedPoolManager.get_vm_amount_in_pool(pool_id)
+        vm_amount_in_pool = await PoolObject.get_vm_amount_in_pool(pool_id)
         #  decreasing (in this case we need to remove machines if there are too many of them)
         if new_total_size < vm_amount_in_pool:
             vm_amount_delta = vm_amount_in_pool - new_total_size

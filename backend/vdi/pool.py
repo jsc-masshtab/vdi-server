@@ -66,7 +66,7 @@ class PoolObject:
         initial_size = self.params['initial_size']
         domains = []
 
-        vm_amount = await AutomatedPoolManager.get_vm_amount_in_pool(self.params['id'])
+        vm_amount = await PoolObject.get_vm_amount_in_pool(self.params['id'])
         delta = initial_size - vm_amount
         if delta < 0:
             delta = 0

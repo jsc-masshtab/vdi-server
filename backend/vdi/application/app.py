@@ -16,6 +16,8 @@ app = Starlette(debug=settings.get('debug'))
 from vdi.auth import VDIUser
 from vdi.application import Request
 
+from ..pool import PoolObject, AutomatedPoolManager
+
 
 @app.middleware("http")
 async def init_context(request, call_next):
@@ -44,8 +46,16 @@ async def init_context(request, call_next):
 
 @app.on_event('startup')
 async def startup():
-    #g.use_threadlocal(False)
     await db.get_pool()
+
+    # init pools live data
+    async with db.connect() as conn:
+        qu = "SELECT * from pool WHERE deleted IS NOT true"
+        pools_data = await conn.fetch(qu)
+        for pool_data in pools_data:
+            pool_data_dict = dict(pool_data.items())
+            pool_object = PoolObject(params=pool_data_dict)
+            AutomatedPoolManager.pool_instances[pool_data_dict['id']] = pool_object
 
 
 app.add_middleware(AuthenticationMiddleware, backend=JWTAuthenticationBackend())
