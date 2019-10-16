@@ -172,5 +172,3 @@ async def test_remove_and_add_vm_in_static_pool(fixt_create_static_pool):
       }''' % (pool_id, vm_id)
     res = await schema.exec(qu)
     assert res['addVmsToStaticPool']['ok']
-
-
