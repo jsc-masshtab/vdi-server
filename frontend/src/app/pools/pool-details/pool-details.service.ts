@@ -11,8 +11,7 @@ export class PoolDetailsService {
     constructor(private service: Apollo) { }
 
 
-    public removePool(id: number) {
-        const idPool = id;
+    public removePool(idPool: number) {
         return this.service.mutate<any>({
             mutation: gql`
                             mutation RemovePool($id: Int) {
@@ -28,9 +27,9 @@ export class PoolDetailsService {
         });
     }
 
-    public getPool(param: {id: number, type: string}): Observable<any> {
-        const idPool = param.id;
-        if (param.type === 'automated') {
+    public getPool( {id, type }: {id: number, type: string}): Observable<any> {
+        const idPool = id;
+        if (type === 'automated') {
             return this.service.watchQuery({
                 query: gql`  query getPool($id: Int) {
                                 pool(id: $id) {
@@ -75,7 +74,7 @@ export class PoolDetailsService {
             }).valueChanges.pipe(map(data => data.data['pool']));
         }
 
-        if (param.type === 'static') {
+        if (type === 'static') {
             return this.service.watchQuery({
                 query: gql`  query getPool($id: Int) {
                                 pool(id: $id) {
@@ -116,8 +115,6 @@ export class PoolDetailsService {
     }
 
     public addVMStaticPool(poolId: number, vmIds: []) {
-        const idPool = poolId;
-        const idsVms = vmIds;
         return this.service.mutate<any>({
             mutation: gql`
                             mutation AddVms($pool_id: Int!,$vm_ids: [ID]!) {
@@ -128,15 +125,13 @@ export class PoolDetailsService {
             `,
             variables: {
                 method: 'POST',
-                pool_id: idPool,
-                vm_ids: idsVms
+                pool_id: poolId,
+                vm_ids: vmIds
             }
         });
     }
 
     public removeVMStaticPool(poolId: number, vmIds: []) {
-        const idPool = poolId;
-        const idsVms = vmIds;
         return this.service.mutate<any>({
             mutation: gql`
                             mutation RemoveVms($pool_id: Int!,$vm_ids: [ID]!) {
@@ -147,8 +142,8 @@ export class PoolDetailsService {
             `,
             variables: {
                 method: 'POST',
-                pool_id: idPool,
-                vm_ids: idsVms
+                pool_id: poolId,
+                vm_ids: vmIds
             }
         });
     }
@@ -288,9 +283,9 @@ export class PoolDetailsService {
         });
     }
 
-    public editNamePool(...params: [{id: number}, {name: string}]) {
-        const idPool = params[0].id;
-        const newNamePool = params[1].name;
+    public editNamePool({id}: {id: number}, {name}: {name: string}) {
+        const idPool = id;
+        const newNamePool = name;
         return this.service.mutate<any>({
             mutation: gql`
                             mutation ChangePoolName($pool_id: Int!,$new_name: String!) {
@@ -307,9 +302,9 @@ export class PoolDetailsService {
         });
     }
 
-    public changeAutomatedPoolTotalSize(...params: [{id: number}, {new_total_size: number}]) {
-        const idPool = params[0].id;
-        const newTotalSize = params[1].new_total_size;
+    public changeAutomatedPoolTotalSize({id}: {id: number}, {new_total_size}: {new_total_size: number}) {
+        const idPool = id;
+        const newTotalSize = new_total_size;
         return this.service.mutate<any>({
             mutation: gql`
                         mutation ChangeAutomatedPoolTotalSize($pool_id: Int!,$new_total_size: Int!) {
@@ -326,9 +321,9 @@ export class PoolDetailsService {
         });
     }
 
-    public changeAutomatedPoolReserveSize(...params: [{id: number}, {reserve_size: number}]) {
-        const idPool = params[0].id;
-        const newReserveSize = params[1].reserve_size;
+    public changeAutomatedPoolReserveSize({id}: {id: number}, {reserve_size}: {reserve_size: number}) {
+        const idPool = id;
+        const newReserveSize = reserve_size;
         return this.service.mutate<any>({
             mutation: gql`
                             mutation ChangeAutomatedPoolReserveSize($pool_id: Int!,$new_reserve_size: Int!) {
@@ -345,9 +340,9 @@ export class PoolDetailsService {
         });
     }
 
-    public changeTemplateForVmAutomatedPool(...params: [{id: number}, {vm_name_template: string}]) {
-        const idPool = params[0].id;
-        const newNameTemplate = params[1].vm_name_template;
+    public changeTemplateForVmAutomatedPool({id}: {id: number}, {vm_name_template}: {vm_name_template: string}) {
+        const idPool = id;
+        const newNameTemplate = vm_name_template;
         return this.service.mutate<any>({
             mutation: gql`
                             mutation changeTemplateForVmAutomatedPool($pool_id: Int!,$new_name_template: String!) {

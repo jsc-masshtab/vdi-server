@@ -10,22 +10,37 @@ import { FormForEditComponent } from './change-form/form-edit.component';
 import { ReactiveFormsModule } from '@angular/forms';
 
 
+const COMPONENTS = [
+  TableComponentComponent,
+  TableIntoComponent,
+];
+
+const DIRECTIVES = [
+  FocusMeDirective
+];
+
+const PIPES = [
+  StatusPipe,
+  StatusIconPipe
+];
+
+const FORMS_DINAMIC = [
+  FormForEditComponent
+];
+
+
 @NgModule({
   declarations: [
-   TableComponentComponent,
-   TableIntoComponent,
-   FocusMeDirective,
-   StatusPipe,
-   FormForEditComponent,
-   StatusIconPipe
+    ...COMPONENTS,
+    ...DIRECTIVES,
+    ...PIPES,
+    ...FORMS_DINAMIC
   ],
   exports: [
-    TableComponentComponent,
-    TableIntoComponent,
-    FocusMeDirective,
-    StatusPipe,
-    FormForEditComponent,
-    StatusIconPipe
+    ...COMPONENTS,
+    ...DIRECTIVES,
+    ...PIPES,
+    ...FORMS_DINAMIC
   ],
   imports: [
     CommonModule,
@@ -34,7 +49,7 @@ import { ReactiveFormsModule } from '@angular/forms';
     ReactiveFormsModule
   ],
   entryComponents: [
-    FormForEditComponent
+    ...FORMS_DINAMIC
   ]
 })
 
