@@ -16,7 +16,7 @@ from .users import UserType
 from .util import get_selections, check_and_return_pool_data, check_pool_initial_size, check_reserve_size, \
     check_total_size, make_resource_type, remove_vms_from_pool
 from db.db import db, fetch
-from ..pool import Pool
+from ..pool import PoolObject, AutomatedPoolManager
 
 from vdi.errors import SimpleError, FieldError, NotFound, FetchException
 from vdi.utils import Unset, insert, bulk_insert, validate_name, get_attributes_str # print,
@@ -121,10 +121,10 @@ class PoolType(graphene.ObjectType):
         return self.name
 
     def resolve_state(self, info):
-        if self.id not in Pool.instances:
+        if self.id not in AutomatedPoolManager.pool_instances:
             state = PoolState(running=RunningState.STOPPED, pool=self)
             return state
-        pool = Pool.instances[self.id]
+        pool = AutomatedPoolManager.pool_instances[self.id]
         state = PoolState(running=RunningState.RUNNING, pool=self)
         return state
 
@@ -608,14 +608,14 @@ class AddPool(graphene.Mutation):
 
         # add to db
         pool_data = {
-            **{k: v for k, v in pool.items() if k in Pool.pool_keys}
+            **{k: v for k, v in pool.items() if k in AutomatedPoolManager.pool_keys}
         }
         [[pool_id]] = await insert('pool', pool_data, returning='id')
 
-        # add to Pool.instances
+        # add to AutomatedPoolManager.pool_instances
         pool['id'] = pool_id
-        ins = Pool(params=pool)
-        Pool.instances[pool['id']] = ins
+        ins = PoolObject(params=pool)
+        AutomatedPoolManager.pool_instances[pool['id']] = ins
 
         from vdi.graphql_api.resources import NodeType, ControllerType
         controller = ControllerType(ip=pool['controller_ip'])
@@ -854,8 +854,8 @@ class RemoveVmsFromStaticPool(graphene.Mutation):
 #     ok = graphene.Boolean()
 #
 #     async def mutate(self, info, id):
-#         from vdi.pool import Pool
-#         await Pool.wake_pool(id)
+#         from vdi.pool import AutomatedPoolManager
+#         await AutomatedPoolManager.wake_pool(id)
 #         return WakePool(ok=True)
 
 
@@ -870,7 +870,7 @@ class RemovePool(graphene.Mutation):
 
     @classmethod
     async def do_remove(cls, pool_id):
-        pool = await Pool.get_pool(pool_id)
+        pool = await AutomatedPoolManager.get_pool(pool_id)
         controller_ip = pool.params['controller_ip']
 
         try:
@@ -898,7 +898,7 @@ class RemovePool(graphene.Mutation):
             await conn.fetch("DELETE FROM pools_users WHERE pool_id = $1", pool_id)
             await conn.fetch("DELETE FROM vm WHERE pool_id = $1", pool_id)
             await conn.fetch("DELETE FROM pool WHERE id = $1", pool_id)
-        Pool.instances.pop(pool_id, None)
+        AutomatedPoolManager.pool_instances.pop(pool_id, None)
 
         return vm_ids
 
@@ -1160,8 +1160,9 @@ class ChangeVmNameTemplate(graphene.Mutation):
             await conn.fetch(*qu)
 
         # change live data
-        if pool_id in Pool.instances and 'vm_name_template' in Pool.instances[pool_id].params:
-            Pool.instances[pool_id].params['vm_name_template'] = new_name_template
+        if pool_id in AutomatedPoolManager.pool_instances and \
+                'vm_name_template' in AutomatedPoolManager.pool_instances[pool_id].params:
+            AutomatedPoolManager.pool_instances[pool_id].params['vm_name_template'] = new_name_template
 
         return {'ok': True}
 
@@ -1186,11 +1187,12 @@ class ChangeAutomatedPoolTotalSize(graphene.Mutation):
             await conn.fetch(*qu)
 
         # live data
-        if pool_id in Pool.instances and 'total_size' in Pool.instances[pool_id].params:
-            Pool.instances[pool_id].params['total_size'] = new_total_size
+        if pool_id in AutomatedPoolManager.pool_instances and \
+                'total_size' in AutomatedPoolManager.pool_instances[pool_id].params:
+            AutomatedPoolManager.pool_instances[pool_id].params['total_size'] = new_total_size
 
         # change amount of created vms
-        vm_amount_in_pool = await Pool.get_vm_amount_in_pool(pool_id)
+        vm_amount_in_pool = await AutomatedPoolManager.get_vm_amount_in_pool(pool_id)
         #  decreasing (in this case we need to remove machines if there are too many of them)
         if new_total_size < vm_amount_in_pool:
             vm_amount_delta = vm_amount_in_pool - new_total_size

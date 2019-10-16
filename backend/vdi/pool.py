@@ -7,21 +7,11 @@ from db.db import db
 from vdi.tasks import vm
 from vdi.utils import into_words
 
-# todo: продумать защиту от параллельной модификации (lock = asyncio.Lock())
-# Automated Pool Manager
-class Pool:
-    params = dict()
 
+class PoolObject:
     def __init__(self, params: dict):
         self.params = params
-
-    pool_keys = into_words('id name controller_ip desktop_pool_type '
-                           'deleted datapool_id cluster_id node_id template_id vm_name_template '
-                           'initial_size reserve_size total_size')
-
-    @cached
-    def tasks(self):
-        'TODO'
+        self.write_lock = asyncio.Lock()  # for protection from simultaneous change
 
     async def on_vm_created(self, result):
         domain_id = result['id']
@@ -35,7 +25,7 @@ class Pool:
 
     async def on_vm_taken(self):
         # Check that total_size is not reached
-        vm_amount_in_pool = await Pool.get_vm_amount_in_pool(self.params['id'])
+        vm_amount_in_pool = await PoolObject.get_vm_amount_in_pool(self.params['id'])
         # If reached then do nothing
         if vm_amount_in_pool >= self.params['total_size']:
             return
@@ -43,7 +33,7 @@ class Pool:
         amount_of_added_vms = 5  # число машин добавляемых за раз, когда требуется расширение пула (если возможно)
         # reserve_size - желаемое минимальное количество подогретых машин (добавленных в пул, но не имеющих пользоватля)
         # Число машин в пуле, неимеющих пользователя
-        free_vm_amount = await Pool.get_vm_amount_in_pool(self.params['id'], True)
+        free_vm_amount = await PoolObject.get_vm_amount_in_pool(self.params['id'], True)
         # Если подогретых машин слишком мало, то пробуем добавить еще
         if free_vm_amount < self.params['reserve_size']:
             # Max possible amount of VMs which we can add to the pool
@@ -76,7 +66,7 @@ class Pool:
         initial_size = self.params['initial_size']
         domains = []
 
-        vm_amount = await Pool.get_vm_amount_in_pool(self.params['id'])
+        vm_amount = await AutomatedPoolManager.get_vm_amount_in_pool(self.params['id'])
         delta = initial_size - vm_amount
         if delta < 0:
             delta = 0
@@ -97,30 +87,6 @@ class Pool:
         return [
             dict(v.items()) for v in vms if v['id'] in valid_ids
         ]
-
-    @classmethod
-    async def get_pool(cls, pool_id):
-        if pool_id in cls.instances:
-            return cls.instances[pool_id]
-        async with db.connect() as conn:
-            qu = "SELECT * from pool where id = $1", pool_id
-            data = await conn.fetch(*qu)
-        if not data:
-            return None
-        [params] = data
-        #print('pool params', params)
-        ins = cls(params=params)
-        cls.instances[pool_id] = ins
-        return ins
-
-    async def init(self, id, add_missing=False): # marked for removal
-        pass
-
-    @classmethod
-    async def wake_pool(cls, pool_id):
-        ins = await cls.get_pool(pool_id)
-        await ins.init(pool_id)
-        return ins
 
     @staticmethod
     async def get_vm_amount_in_pool(pool_id, only_free=False):
@@ -143,4 +109,31 @@ class Pool:
             [(num,)] = await conn.fetch(qu)
         return num
 
-    instances = {}
+
+class AutomatedPoolManager:
+
+    pool_keys = into_words('id name controller_ip desktop_pool_type '
+                           'deleted datapool_id cluster_id node_id template_id vm_name_template '
+                           'initial_size reserve_size total_size')
+
+    pool_instances = {}
+
+    @classmethod
+    async def get_pool(cls, pool_id):
+        if pool_id in cls.pool_instances:
+            return cls.pool_instances[pool_id]
+        async with db.connect() as conn:
+            qu = "SELECT * from pool where id = $1", pool_id
+            data = await conn.fetch(*qu)
+        if not data:
+            return None
+        [params] = data
+
+        ins = PoolObject(params=params)
+        cls.pool_instances[pool_id] = ins
+        return ins
+
+    @classmethod
+    async def wake_pool(cls, pool_id):
+        ins = await cls.get_pool(pool_id)
+        return ins

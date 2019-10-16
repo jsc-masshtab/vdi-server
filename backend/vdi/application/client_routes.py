@@ -6,7 +6,7 @@ from starlette.responses import JSONResponse
 
 from vdi.auth import fetch_token
 from db.db import db
-from vdi.pool import Pool
+from vdi.pool import AutomatedPoolManager
 from vdi.tasks import thin_client
 from vdi.settings import settings
 #from vdi.utils import print
@@ -20,6 +20,7 @@ from .app import app
 @app.route('/client/pools')
 @requires('authenticated')
 async def get_pools(request):
+
     user = request.user.username
 
     if user == 'admin':
@@ -34,16 +35,17 @@ async def get_pools(request):
             """, user
             data = await conn.fetch(*qu)
 
-    pools = [
-        Pool(params=dict(item))
+    # list of dictionaries
+    pools_data = [
+        dict(item)
         for item in data
     ]
     li = [
         {
-            'id': pool.params['id'],
-            'name': pool.params['name'],
+            'id': pool['id'],
+            'name': pool['name'],
         }
-        for pool in pools
+        for pool in pools_data
     ]
     return JSONResponse(li)
 
@@ -97,9 +99,9 @@ async def get_vm(request):
     # post actions for AUTOMATED pool (todo: run in another courutine)
     if desktop_pool_type == DesktopPoolType.AUTOMATED.name:
         # try to wake pool if it's empty
-        if pool_id not in Pool.instances:
-            await Pool.wake_pool(pool_id)
-        pool = Pool.instances[pool_id]
+        if pool_id not in AutomatedPoolManager.pool_instances:
+            await AutomatedPoolManager.wake_pool(pool_id)
+        pool = AutomatedPoolManager.pool_instances[pool_id]
         await pool.on_vm_taken()
 
     # send data to thin client

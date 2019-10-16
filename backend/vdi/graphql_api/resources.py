@@ -294,7 +294,6 @@ class Resources:
         if ordering:
             if ordering == 'verbose_name':
                 def sort_lam(node): return node.verbose_name if node.verbose_name else DEFAULT_NAME
-                pass
             elif ordering == 'cpu_count':
                 def sort_lam(node): return node.cpu_count if node.cpu_count else 0
             elif ordering == 'memory_count':
