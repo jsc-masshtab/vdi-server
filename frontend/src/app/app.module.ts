@@ -6,7 +6,7 @@ import { NodesModule } from './resourses/nodes/nodes.module';
 import { DatapoolsModule } from './resourses/datapools/datapools.module';
 import { ClustersModule } from './resourses/clusters/clusters.module';
 import { PoolsModule } from './pools/pools.module';
-import { SharedModule } from './common/components/shared/shared.module';
+import { SharedModule } from './common/shared.module';
 import { VmsModule } from './resourses/vms/vms.module';
 
 import { HttpLinkModule, HttpLink } from 'apollo-angular-link-http';

@@ -10,7 +10,7 @@ import { ActivatedRoute, ParamMap, Router } from '@angular/router';
 import { MatDialog } from '@angular/material';
 import { RemovePoolComponent } from './remove-pool/remove-pool.component';
 import { PoolDetailsService } from './pool-details.service';
-import { FormForEditComponent } from 'src/app/common/components/shared/change-form/form-edit.component';
+import { FormForEditComponent } from 'src/app/common/forms-dinamic/change-form/form-edit.component';
 
 
 

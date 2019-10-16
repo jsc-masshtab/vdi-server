@@ -1,4 +1,4 @@
-import { WaitService } from '../../single/wait/wait.service';
+import { WaitService } from '../../components/single/wait/wait.service';
 import { MatDialogRef } from '@angular/material';
 import { Component, Inject, OnInit  } from '@angular/core';
 import { MAT_DIALOG_DATA } from '@angular/material';
