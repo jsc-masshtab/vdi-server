@@ -61,7 +61,7 @@ export class NodesComponent implements OnInit {
   @ViewChild('view') view: ElementRef;
 
   @HostListener('window:resize', ['$event']) onResize() {
-    if (this.pageHeight == this.pageHeightMin) {
+    if (this.pageHeight === this.pageHeightMin) {
       if ((this.view.nativeElement.clientHeight - this.pageHeightMinNumber) < (this.pageHeightMinNumber + 250)) {
         this.pageRollup = true;
       } else {

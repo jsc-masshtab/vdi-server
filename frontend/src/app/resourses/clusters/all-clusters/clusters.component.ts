@@ -58,7 +58,7 @@ export class ClustersComponent implements OnInit {
 
   @ViewChild('view') view: ElementRef;
 
-  @HostListener('window:resize', ['$event']) onResize() {
+  @HostListener('window:resize', ['$event']) onResize(e) {
     if (this.pageHeight === this.pageHeightMin) {
       if ((this.view.nativeElement.clientHeight - this.pageHeightMinNumber) < (this.pageHeightMinNumber + 250)) {
         this.pageRollup = true;
@@ -95,7 +95,7 @@ export class ClustersComponent implements OnInit {
 
       if ((this.view.nativeElement.clientHeight - this.pageHeightMinNumber) < (this.pageHeightMinNumber + 250)) {
         this.pageRollup = true;
-      };
+      }
     }, 0);
   }
 
