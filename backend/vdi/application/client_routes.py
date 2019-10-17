@@ -98,10 +98,7 @@ async def get_vm(request):
 
     # post actions for AUTOMATED pool (todo: run in another courutine)
     if desktop_pool_type == DesktopPoolType.AUTOMATED.name:
-        # try to wake pool if it's empty
-        if pool_id not in AutomatedPoolManager.pool_instances:
-            await AutomatedPoolManager.wake_pool(pool_id)
-        pool = AutomatedPoolManager.pool_instances[pool_id]
+        pool = AutomatedPoolManager.get_pool(pool_id)
         await pool.on_vm_taken()
 
     # send data to thin client

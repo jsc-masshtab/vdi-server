@@ -56,6 +56,7 @@ async def startup():
             pool_data_dict = dict(pool_data.items())
             pool_object = PoolObject(params=pool_data_dict)
             AutomatedPoolManager.pool_instances[pool_data_dict['id']] = pool_object
+    # Check pools health and update statuses
 
 
 app.add_middleware(AuthenticationMiddleware, backend=JWTAuthenticationBackend())

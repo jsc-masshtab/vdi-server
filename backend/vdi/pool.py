@@ -62,17 +62,12 @@ class PoolObject:
         await self.on_vm_created(info)
         return info
 
-    async def add_domains(self):
+    async def add_initial_vms(self):
         initial_size = self.params['initial_size']
         domains = []
 
-        vm_amount = await PoolObject.get_vm_amount_in_pool(self.params['id'])
-        delta = initial_size - vm_amount
-        if delta < 0:
-            delta = 0
-
-        for i in range(delta):
-            domain_index = vm_amount + 1 + i
+        for i in range(initial_size):
+            domain_index = 1 + i
             domain = await self.add_domain(domain_index)
             domains.append(domain)
 

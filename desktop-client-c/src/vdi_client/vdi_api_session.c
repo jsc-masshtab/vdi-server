@@ -39,6 +39,7 @@ static void setup_header_for_api_call(SoupMessage *msg)
 {
     soup_message_headers_clear(msg->request_headers);
     gchar *authHeader = g_strdup_printf("jwt %s", vdiSession.jwt);
+    //printf("%s %s\n", (const char *)__func__, authHeader);
     soup_message_headers_append(msg->request_headers, "Authorization", authHeader);
     g_free(authHeader);
     soup_message_headers_append(msg->request_headers, "Content-Type", "application/json; charset=utf8");
@@ -168,9 +169,13 @@ void set_vdi_credentials(const gchar *username, const gchar *password, const gch
     vdiSession.vdi_ip = g_strdup(ip);
     vdiSession.vdi_port = g_strdup(port);
     // /client/auth
+    // old
     vdiSession.api_url = g_strdup_printf("http://%s", vdiSession.vdi_ip);
     vdiSession.auth_url = g_strdup_printf("%s:%s/auth/", vdiSession.api_url, vdiSession.vdi_port);
-    // vdiSession.auth_url = g_strdup_printf("%s/client/auth", vdiSession.api_url);
+//    // new
+//    vdiSession.api_url = g_strdup_printf("http://%s:%s", vdiSession.vdi_ip, vdiSession.vdi_port);
+//    vdiSession.auth_url = g_strdup_printf("%s/auth/", vdiSession.api_url);
+
     vdiSession.jwt = NULL;
 }
 

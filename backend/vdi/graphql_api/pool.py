@@ -165,7 +165,10 @@ class PoolType(graphene.ObjectType):
 
     async def resolve_vms(self, info):
         vm_selections = get_selections(info)
-        return await self._form_vm_type_list(vm_selections)
+        try:
+            return await self._form_vm_type_list(vm_selections)
+        except SimpleError:
+            return []
 
     def resolve_desktop_pool_type(self, _info):
         if isinstance(self.desktop_pool_type, str):
@@ -500,8 +503,8 @@ class PoolValidator:
         controller_ip = await DiscoverControllerIp(cluster_id=self._pool['cluster_id'],
                                                    node_id=self._pool['node_id'])
         if not controller_ip:
-            raise FieldError(cluster_id=['Неверное значение или не соответствует node_id'],
-                             node_id=['Неверное значение или не соответствует cluster_id'])
+            raise SimpleError('Неверное значение или не соответствует node_id'
+                              'Неверное значение или не соответствует cluster_id')
         return controller_ip
 
     async def validate_async(self, name, val):
@@ -509,7 +512,7 @@ class PoolValidator:
             method = getattr(self, name)
             result = await method(name, val)
         except ValidationError as ex:
-            raise FieldError(**{name: [str(ex)]})
+            raise SimpleError('Ошибка валидации пула')
         if result is not None:
             self._pool[name] = result
 
@@ -518,17 +521,16 @@ class PoolValidator:
             method = getattr(self, name)
             result = method(name, val)
         except ValidationError as ex:
-            raise FieldError(**{name: [str(ex)]})
+            raise SimpleError('Ошибка валидации пула')
         if result is not None:
             self._pool[name] = result
 
     @staticmethod
     def validate_pool_name(pool_name):
         if not pool_name:
-            raise FieldError(name=['Имя пула не должно быть пустым'])
+            raise SimpleError('Имя пула не должно быть пустым')
         if not validate_name(pool_name):
-            raise FieldError(name=['Имя пула должно содержать только буквы и цифры'])
-
+            raise SimpleError('Имя пула должно содержать только буквы и цифры')
 
 
 class AddPool(graphene.Mutation):
@@ -547,45 +549,10 @@ class AddPool(graphene.Mutation):
         controller_ip = graphene.String()
 
     Output = PoolType
+    # ok = graphene.Boolean() # todo: how must be
 
     @staticmethod
-    def validate_agruments(pool_args_dict):
-        PoolValidator.validate_pool_name(pool_args_dict['name'])
-        # Check vm_name_template if its not empty
-        vm_name_template = pool_args_dict['vm_name_template']
-        if vm_name_template and not validate_name(vm_name_template):
-            raise FieldError(vm_name_template=['Шаблонное имя вм должно содержать только буквы и цифры'])
-
-        # check sizes
-        initial_size = pool_args_dict['initial_size']
-        reserve_size = pool_args_dict['reserve_size']
-        total_size = pool_args_dict['total_size']
-        check_pool_initial_size(initial_size)
-        check_reserve_size(reserve_size)
-        check_total_size(total_size, initial_size)
-
-    async def mutate(self, info, settings=(), **kwargs):
-
-        def get_setting(name):
-            if name in kwargs:
-                return kwargs[name]
-            if name in settings:
-                return settings[name]
-            if name in settings_file['pool']:
-                return settings_file['pool'][name]
-            return None
-
-        pool_settings = {
-            k: get_setting(k)
-            for k in PoolSettings._meta.fields
-        }
-        pool_settings['desktop_pool_type'] = DesktopPoolType.AUTOMATED.name
-        pool = {
-            'name': kwargs['name'],
-            'controller_ip': kwargs.get('controller_ip'),
-            **pool_settings
-        }
-
+    async def magic_checks(pool):
         # magic checks from Vitalya. Nobody can understand this
         checker = PoolValidator(pool)
         data_sync = {}
@@ -603,56 +570,131 @@ class AddPool(graphene.Mutation):
         ]
         await wait_all(*async_validators)
 
-        # validate agruments
-        AddPool.validate_agruments(pool)
+    @staticmethod
+    def validate_agruments(pool_args_dict):
+        PoolValidator.validate_pool_name(pool_args_dict['name'])
+        # Check vm_name_template if its not empty
+        vm_name_template = pool_args_dict['vm_name_template']
+        if vm_name_template and not validate_name(vm_name_template):
+            raise SimpleError('Шаблонное имя вм должно содержать только буквы и цифры')
 
+        # check sizes
+        initial_size = pool_args_dict['initial_size']
+        reserve_size = pool_args_dict['reserve_size']
+        total_size = pool_args_dict['total_size']
+        check_pool_initial_size(initial_size)
+        check_reserve_size(reserve_size)
+        check_total_size(total_size, initial_size)
+
+    @staticmethod
+    def get_setting(name, settings, kwargs):
+        if name in kwargs:
+            return kwargs[name]
+        if name in settings:
+            return settings[name]
+        if name in settings_file['pool']:
+            return settings_file['pool'][name]
+        return None
+
+    @staticmethod
+    async def create_pool_co(pool_args_dict):
+
+        pool_object = PoolObject(pool_args_dict)
+
+        # fetch_template_info
+        template_info = await GetDomainInfo(controller_ip=pool_args_dict['controller_ip'],
+                                            domain_id=pool_args_dict['template_id'])
+
+        # trying to create the initial number of vms
+        try:
+            vms = await pool_object.add_initial_vms()
+        except SimpleError:
+            print("Failed to create required number of vms")
+
+        # even if we cant create all required vms we still consider the pool created and just mark it broken
         # add to db
         pool_data = {
-            **{k: v for k, v in pool.items() if k in AutomatedPoolManager.pool_keys}
+            **{k: v for k, v in pool_args_dict.items() if k in AutomatedPoolManager.pool_keys}
         }
         [[pool_id]] = await insert('pool', pool_data, returning='id')
 
         # add to AutomatedPoolManager.pool_instances
-        pool['id'] = pool_id
-        ins = PoolObject(params=pool)
-        AutomatedPoolManager.pool_instances[pool['id']] = ins
+        pool_object.params['id'] = pool_id
+        AutomatedPoolManager.pool_instances[pool_id] = pool_object
 
+        # notify VDI front about pool creation result (WS)
+
+    async def mutate(self, _info, settings=(), **kwargs):
+
+        # form pool arguments dictionary
+        pool_settings = {
+            k: AddPool.get_setting(k, settings, kwargs)
+            for k in PoolSettings._meta.fields
+        }
+        pool_settings['desktop_pool_type'] = DesktopPoolType.AUTOMATED.name
+        pool_args_dict = {
+            'name': kwargs['name'],
+            'controller_ip': kwargs.get('controller_ip'),
+            **pool_settings
+        }
+
+        # validate arguments
+        #AddPool.magic_checks(pool)
+        AddPool.validate_agruments(pool_args_dict)
+
+        # start pool-creating coroutine
+
+        # send positive response (pool creating started)
+        #return {'ok': True} # todo: how must be
+        # left for VDi front old style compatibility
         from vdi.graphql_api.resources import NodeType, ControllerType
-        controller = ControllerType(ip=pool['controller_ip'])
+        controller = ControllerType(ip=pool_args_dict['controller_ip'])
 
-        add_domains = ins.add_domains()
-        selections = get_selections(info)
-        if 'vms' in selections:
-            domains = await add_domains
-
-            from vdi.graphql_api.vm import TemplateType
-            available = []
-            for domain in domains:
-                template = domain['template']
-                node = NodeType(id=template['node']['id'], verbose_name=template['node']['verbose_name'])
-                node.controller = controller
-                template = TemplateType(id=template['id'], veil_info=template, name=template['verbose_name'])
-                item = VmType(id=domain['id'], template=template, name=domain['verbose_name'], node=node)
-                item.veil_info = domain
-                item.selections = get_selections(info)
-                available.append(item)
-        else:
-            loop = asyncio.get_event_loop()
-            loop.create_task(add_domains)
-
-            available = []
-
-        state = PoolState(available=available, running=True)
-        pool_type = PoolType(id=pool['id'], state=state,
-                       name=pool['name'], template_id=pool['template_id'],
-                       controller=controller,
-                       settings=PoolSettings(**pool_settings),
-                       desktop_pool_type=DesktopPoolType.AUTOMATED)
+        state = PoolState(available=[], running=True)
+        pool_type = PoolType(id=-1, state=state,
+                             name=pool_args_dict['name'], template_id=pool_args_dict['template_id'],
+                             controller=controller,
+                             settings=PoolSettings(**pool_settings),
+                             desktop_pool_type=DesktopPoolType.AUTOMATED,
+                             vms=[])
         state.pool = pool_type
-        for item in available:
-            item.pool = pool_type
-
         return pool_type
+
+        # # add to db
+        # pool_data = {
+        #     **{k: v for k, v in pool.items() if k in AutomatedPoolManager.pool_keys}
+        # }
+        # [[pool_id]] = await insert('pool', pool_data, returning='id')
+        #
+        # # add to AutomatedPoolManager.pool_instances
+        # pool['id'] = pool_id
+        # ins = PoolObject(params=pool)
+        # AutomatedPoolManager.pool_instances[pool['id']] = ins
+
+        # add_domains = ins.add_domains()
+        # selections = get_selections(info)
+        # if 'vms' in selections:
+        #     domains = await add_domains
+        #
+        #     from vdi.graphql_api.vm import TemplateType
+        #     available = []
+        #     for domain in domains:
+        #         template = domain['template']
+        #         node = NodeType(id=template['node']['id'], verbose_name=template['node']['verbose_name'])
+        #         node.controller = controller
+        #         template = TemplateType(id=template['id'], veil_info=template, name=template['verbose_name'])
+        #         item = VmType(id=domain['id'], template=template, name=domain['verbose_name'], node=node)
+        #         item.veil_info = domain
+        #         item.selections = get_selections(info)
+        #         available.append(item)
+        # else:
+        #     loop = asyncio.get_event_loop()
+        #     loop.create_task(add_domains)
+        #
+        #     available = []
+
+
+
 
 
 class AddStaticPool(graphene.Mutation):
@@ -695,7 +737,7 @@ class AddStaticPool(graphene.Mutation):
         cls = AddStaticPool
         vm_ids = vm_ids or vm_ids_list
         if not vm_ids:
-            raise FieldError(vm_ids=['Обязательное поле'])
+            raise SimpleError('vm_ids - обязательное поле')
 
         # validate name
         PoolValidator.validate_pool_name(options['name'])
@@ -759,7 +801,7 @@ class AddVmsToStaticPool(graphene.Mutation):
 
     async def mutate(self, _info, pool_id, vm_ids):
         if not vm_ids:
-            raise FieldError(vm_ids=['Обязательное поле'])
+            raise SimpleError('vm_ids - обязательное поле')
         # pool checks
         pool_params = await check_and_return_pool_data(pool_id, DesktopPoolType.STATIC.name)
         # vm checks
@@ -773,10 +815,10 @@ class AddVmsToStaticPool(graphene.Mutation):
         for vm_id in vm_ids:
             # check if vm exists and it is on the correct node
             if vm_id not in all_vm_ids:
-                raise FieldError(vm_ids=['ВМ принадлежит другому узлу'])
+                raise SimpleError('ВМ принадлежит другому узлу')
             # check if vm is free (not in any pool)
             if vm_id in used_vm_ids:
-                raise FieldError(vm_ids=['ВМ уже находится в одном из пулов'])
+                raise SimpleError('ВМ уже находится в одном из пулов')
 
         # add vms
         await AddStaticPool.add_vms_to_pool(vm_ids, pool_id)
@@ -801,7 +843,7 @@ class RemoveVmsFromStaticPool(graphene.Mutation):
 
     async def mutate(self, _info, pool_id, vm_ids):
         if not vm_ids:
-            raise FieldError(vm_ids=['Обязательное поле'])
+            raise SimpleError('vm_ids - обязательное поле')
         # pool checks
         await check_and_return_pool_data(pool_id, DesktopPoolType.STATIC.name)
 
@@ -818,7 +860,7 @@ class RemoveVmsFromStaticPool(graphene.Mutation):
         # check if given vm_ids in vms_ids_in_pool
         for vm_id in vm_ids:
             if vm_id not in vms_ids_in_pool:
-                raise FieldError(vm_ids=['Одна из ВМ не принадлежит заданному пулу'])
+                raise SimpleError('Одна из ВМ не принадлежит заданному пулу')
 
         # remove vms
         await remove_vms_from_pool(vm_ids, pool_id)
@@ -1052,7 +1094,7 @@ class PoolMixin:
             elif ordering == 'pool_type':
                 qu = "SELECT * FROM pool WHERE deleted IS NOT true ORDER BY desktop_pool_type {}".format(sort_order)
             else:
-                raise FieldError(ordering=['Неверный параметр сортировки'])
+                raise SimpleError('Неверный параметр сортировки')
         else:
             qu = "SELECT * FROM pool WHERE deleted IS NOT true"
 

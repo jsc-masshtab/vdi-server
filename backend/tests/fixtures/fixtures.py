@@ -189,7 +189,7 @@ async def fixt_create_user(fixt_db):
     username = 'test_user_name'
     password = 'test_user_password'
 
-    # as we cant remove users so check if the user already exists
+    # since we cant remove users so check if the user already exists
     qu = '''
     {
     users{    
