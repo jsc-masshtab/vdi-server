@@ -1,3 +1,4 @@
+import { TemplateDetailsComponent } from './template-details/template-details.component';
 import { TemplatesService } from './all-templates/templates.service';
 import { TemplatesComponent } from './all-templates/templates.component';
 
@@ -11,7 +12,8 @@ import { CommonModule } from '@angular/common';
 
 @NgModule({
   declarations: [
-    TemplatesComponent
+    TemplatesComponent,
+    TemplateDetailsComponent
   ],
   imports: [
     SharedModule,
@@ -22,7 +24,8 @@ import { CommonModule } from '@angular/common';
   ],
   providers: [TemplatesService],
   exports: [
-    TemplatesComponent
+    TemplatesComponent,
+    TemplateDetailsComponent
   ]
 })
 export class TemplatesModule { }

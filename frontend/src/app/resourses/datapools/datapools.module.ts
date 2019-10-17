@@ -1,3 +1,4 @@
+import { DatapoolDetailsComponent } from './datapool-details/datapool-details.component';
 import { DatapoolsComponent } from './all-datapools/datapools.component';
 import { DatapoolsService } from './all-datapools/datapools.service';
 
@@ -12,7 +13,8 @@ import { CommonModule } from '@angular/common';
 
 @NgModule({
   declarations: [
-   DatapoolsComponent
+   DatapoolsComponent,
+   DatapoolDetailsComponent
   ],
   imports: [
     SharedModule,
@@ -23,7 +25,8 @@ import { CommonModule } from '@angular/common';
   ],
   providers: [DatapoolsService],
   exports: [
-    DatapoolsComponent
+    DatapoolsComponent,
+    DatapoolDetailsComponent
   ]
 })
 export class DatapoolsModule { }

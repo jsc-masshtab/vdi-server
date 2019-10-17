@@ -1,7 +1,8 @@
 import { WaitService } from './../../../common/components/single/wait/wait.service';
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, HostListener, ViewChild, ElementRef } from '@angular/core';
 import { TemplatesService } from './templates.service';
 import { map } from 'rxjs/operators';
+import { Router } from '@angular/router';
 
 
 @Component({
@@ -38,7 +39,25 @@ export class TemplatesComponent implements OnInit {
     }
   ];
 
-  constructor(private service: TemplatesService, private waitService: WaitService){}
+  public pageHeightMinNumber: number = 315;
+  public pageHeightMin: string = '315px';
+  public pageHeightMax: string = '100%';
+  public pageHeight: string = '100%';
+  public pageRollup: boolean = false;
+
+  constructor(private service: TemplatesService, private waitService: WaitService,  private router: Router) {}
+
+  @ViewChild('view') view: ElementRef;
+
+  @HostListener('window:resize', ['$event']) onResize() {
+    if (this.pageHeight === this.pageHeightMin) {
+      if ((this.view.nativeElement.clientHeight - this.pageHeightMinNumber) < (this.pageHeightMinNumber + 250)) {
+        this.pageRollup = true;
+      } else {
+        this.pageRollup = false;
+      }
+    }
+  }
 
   ngOnInit() {
     this.getTemplates();
@@ -64,5 +83,28 @@ export class TemplatesComponent implements OnInit {
     this.templates.push(JSON.parse(info['info']));
   }
 
+  public componentAdded(): void {
+    setTimeout(() => {
+      this.pageHeight = this.pageHeightMin;
 
+      if ((this.view.nativeElement.clientHeight - this.pageHeightMinNumber) < (this.pageHeightMinNumber + 250)) {
+        this.pageRollup = true;
+      }
+    }, 0);
+  }
+
+  public componentRemoved(): void {
+    setTimeout(() => {
+      this.pageHeight = this.pageHeightMax;
+      this.pageRollup = false;
+    }, 0);
+  }
+
+  public routeTo(event): void {
+    this.router.navigate([`resourses/templates/${event.id}`]);
+
+    setTimeout(() => {
+      this.pageHeight = this.pageHeightMin;
+    }, 0);
+  }
 }

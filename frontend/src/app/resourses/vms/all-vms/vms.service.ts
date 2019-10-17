@@ -48,4 +48,21 @@ export class VmsService {
             });
         }
     }
+
+    public getVm(idVm: string): QueryRef<any, any> {
+        return  this.service.watchQuery({
+            query:  gql` query Vm($id: String) {
+                            vm(id: $id) {
+                                name
+                                node { verbose_name }
+                                template { name }
+                            }
+                        }
+                    `,
+            variables: {
+                method: 'GET',
+                id: idVm
+            }
+        });
+    }
 }
