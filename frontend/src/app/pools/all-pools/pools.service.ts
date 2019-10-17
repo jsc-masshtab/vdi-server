@@ -30,6 +30,7 @@ export class PoolsService {
                                         users {
                                             username
                                         }
+                                        status
                                     }
                                 }
                         `,
@@ -54,6 +55,7 @@ export class PoolsService {
                                         users {
                                             username
                                         }
+                                        status
                                     }
                                 }
                         `,
