@@ -38,6 +38,7 @@ export class VmsService {
                                                 template { name }
                                                 state
                                                 status
+                                                id
                                             }
                                         }
                                     }
@@ -47,5 +48,21 @@ export class VmsService {
                 }
             });
         }
+    }
+
+    public getVm(idVm: string): QueryRef<any, any> {
+        return  this.service.watchQuery({
+            query:  gql` query Vm($id: String) {
+                            vm(id: $id) {
+                                name
+                               
+                            }
+                        }
+                    `,
+            variables: {
+                method: 'GET',
+                id: idVm
+            }
+        });
     }
 }

@@ -6,7 +6,7 @@ import { NodesModule } from './resourses/nodes/nodes.module';
 import { DatapoolsModule } from './resourses/datapools/datapools.module';
 import { ClustersModule } from './resourses/clusters/clusters.module';
 import { PoolsModule } from './pools/pools.module';
-import { SharedModule } from './common/components/shared/shared.module';
+import { SharedModule } from './common/shared.module';
 import { VmsModule } from './resourses/vms/vms.module';
 
 import { HttpLinkModule, HttpLink } from 'apollo-angular-link-http';
@@ -25,7 +25,8 @@ import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { library } from '@fortawesome/fontawesome-svg-core';
 import { faDesktop, faDatabase, faBuilding, faLayerGroup, faPlusCircle, faSpinner, faServer, faCog, faChevronUp, faTimesCircle,
          faFolderOpen, faStar, faMinusCircle, faTv, faSyncAlt, faTrashAlt, faUsers, faMeh,
-         faChartBar, faUser, faStopCircle, faPlayCircle, faPauseCircle, faEdit, faQuestionCircle,faCheckSquare
+         faChartBar, faUser, faStopCircle, faPlayCircle, faPauseCircle, faEdit, faQuestionCircle, faCheckSquare,
+          faExclamationTriangle, faHeartbeat
         } from '@fortawesome/free-solid-svg-icons';
 /*  -----------------------------------   icons   --------------------------------------*/
 
@@ -95,7 +96,7 @@ export class AppModule {
 
     library.add(faDesktop, faDatabase, faLayerGroup, faPlusCircle, faMinusCircle, faSpinner, faServer, faCog, faChevronUp, faTimesCircle,
                 faFolderOpen, faStar, faTv, faSyncAlt, faBuilding, faTrashAlt, faUsers, faMeh, faChartBar, faUser,
-                faStopCircle, faPlayCircle, faPauseCircle, faEdit, faQuestionCircle, faCheckSquare);
+                faStopCircle, faPlayCircle, faPauseCircle, faEdit, faQuestionCircle, faCheckSquare, faExclamationTriangle, faHeartbeat);
 
     const uri = environment.url;
     const link = this.httpLink.create({ uri, includeQuery: true, includeExtensions: false });

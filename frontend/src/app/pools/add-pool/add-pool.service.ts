@@ -139,7 +139,7 @@ export class AddPoolService {
 
     public createDinamicPool(name: string, templateId: string, clusterId: string,
                              nodeId: string, datapoolId: string, initialSize: number,
-                             reserveSize: number, totalSize: number) {
+                             reserveSize: number, totalSize: number, vmNameTemplate: string) {
 
         const idTemplate = templateId;
         const namePool = name;
@@ -149,17 +149,20 @@ export class AddPoolService {
         const initialSizePool = initialSize;
         const reserveSizePool = reserveSize;
         const totalSizePool = totalSize;
+        const templateForVM = vmNameTemplate;
         return this.service.mutate<any>({
             mutation: gql`
                         mutation AddPool($name: String!,$template_id: String,
                                         $cluster_id: String,$node_id: String,
                                         $datapool_id: String,$initial_size: Int,
-                                        $reserve_size: Int,$total_size: Int)
+                                        $reserve_size: Int,$total_size: Int,
+                                        $vm_name_template: String)
                                 {
                                 addPool(name: $name, template_id: $template_id,
                                         cluster_id: $cluster_id,node_id: $node_id,
                                         datapool_id: $datapool_id,initial_size: $initial_size,
-                                        reserve_size: $reserve_size,total_size:$total_size)
+                                        reserve_size: $reserve_size,total_size:$total_size,
+                                        vm_name_template: $vm_name_template)
                                         {
                                             id
                                         }
@@ -174,7 +177,8 @@ export class AddPoolService {
                 datapool_id: idDatapool,
                 initial_size: initialSizePool,
                 reserve_size: reserveSizePool,
-                total_size: totalSizePool
+                total_size: totalSizePool,
+                vm_name_template: templateForVM
             }
         });
     }

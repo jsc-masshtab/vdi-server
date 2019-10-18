@@ -25,4 +25,18 @@ export class TemplatesService {
         });
     }
 
+    public getTemplate(idTemplate: string): QueryRef<any, any> {
+        return  this.service.watchQuery({
+            query:  gql` query Template($id: String) {
+                            template(id: $id) {
+                               info
+                            }
+                        }
+                    `,
+            variables: {
+                method: 'GET',
+                id: idTemplate
+            }
+        });
+    }
 }

@@ -12,12 +12,11 @@
 
 </div>
 
-
-<div class="components-info">
-    <div class="component-list"  [style.height]="'100%'">
-        <vdi-table-component [data]="templates" [collection]="collection"></vdi-table-component>
+<div class="components-info" #view>
+    <div class="component-list"  [class.page-wrap]="pageRollup" [class.page-rollup]="pageRollup" [style.height]="pageHeight">
+        <vdi-table-component [data]="templates" [collection]="collection" (clickRowData)="routeTo($event)" cursor="true"></vdi-table-component>
     </div>
-    <!-- <div class="component-details" [class.page-height-min]="pageHeight==pageHeightMin" [class.page-height-max]="pageRollup">
+    <div class="component-details" [class.page-height-min]="pageHeight==pageHeightMin" [class.page-height-max]="pageRollup">
         <router-outlet (activate)="componentAdded()" (deactivate)="componentRemoved()"></router-outlet>
-    </div> -->
+    </div>
 </div>

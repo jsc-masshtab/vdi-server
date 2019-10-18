@@ -32,6 +32,29 @@ export class DatapoolsService {
             }
         });
     }
+
+    public getDatapool(idDatapool: string): QueryRef<any, any> {
+        return  this.service.watchQuery({
+            query:  gql` query Datapool($id: String) {
+                            datapool(id: $id) {
+                                used_space
+                                free_space
+                                size
+                                status
+                                type
+                                vdisk_count
+                                file_count
+                                iso_count
+                                verbose_name
+                            }
+                        }
+                    `,
+            variables: {
+                method: 'GET',
+                id: idDatapool
+            }
+        });
+    }
 }
 
 

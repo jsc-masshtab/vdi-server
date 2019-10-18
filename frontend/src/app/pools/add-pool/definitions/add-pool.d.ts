@@ -26,6 +26,7 @@ export interface IFinishPoolView {
     reserve_size: number;
     total_size: number;
     initial_size: number;
+    vm_name_template: string; // auto
 }
 
 export interface IFinishPoolForm {
@@ -38,4 +39,5 @@ export interface IFinishPoolForm {
     reserve_size: number;
     total_size: number;
     initial_size: number;
+    vm_name_template: string;// auto
 }
