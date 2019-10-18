@@ -679,9 +679,7 @@ class ControllerType(graphene.ObjectType):
         try:
             await CheckController(controller_ip=self.ip)
             return True
-        except NotFound:
-            return False
-        except OSError:
+        except (NotFound, OSError):
             return False
 
 

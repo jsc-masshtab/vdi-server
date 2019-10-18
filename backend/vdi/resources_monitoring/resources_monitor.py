@@ -3,6 +3,8 @@ import websockets
 import json
 from json import JSONDecodeError
 
+from tornado.httpclient import HTTPClientError
+
 from ..tasks.base import Token
 
 from .resources_monitoring_data import CONTROLLER_SUBSCRIPTIONS_LIST, CONTROLLERS_SUBSCRIPTION
@@ -72,7 +74,7 @@ class ResourcesMonitor:
                 #print('before check self._controller_ip', self._controller_ip)
                 await CheckController(controller_ip=self._controller_ip)
                 #print('after check self._controller_ip')
-            except:
+            except (HTTPClientError, OSError):
                 # notify only if controller was online before (data changed)
                 if self._is_online:
                     response_dict['status'] = 'OFFLINE'

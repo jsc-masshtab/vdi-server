@@ -139,3 +139,7 @@ class Forbidden(AuthError):
 
 class Unauthorized(AuthError):
     code = 401
+
+
+class VmCreationError(Exception):
+    pass

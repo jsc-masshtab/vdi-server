@@ -7,23 +7,22 @@ from db.db import db
 from vdi.tasks import vm
 from vdi.utils import into_words
 
+from vdi.errors import BadRequest, VmCreationError
+
+from vdi.resources_monitoring.subscriptions_observers import WaiterSubscriptionObserver
+from vdi.resources_monitoring.resources_monitor_manager import resources_monitor_manager
+
 
 class PoolObject:
     def __init__(self, params: dict):
         self.params = params
         self.write_lock = asyncio.Lock()  # for protection from simultaneous change
 
-    async def on_vm_created(self, result):
-        domain_id = result['id']
-        template = result['template']
-        # insert into db
-        async with db.connect() as conn:
-            qu = """
-            insert into vm (id, pool_id, template_id) values ($1, $2, $3)
-            """, domain_id, self.params['id'], template['id']
-            await conn.execute(*qu)
-
-    async def on_vm_taken(self):
+    async def expand_pool_if_requred(self):
+        """
+        Check and expand pool if required
+        :return:
+        """
         # Check that total_size is not reached
         vm_amount_in_pool = await PoolObject.get_vm_amount_in_pool(self.params['id'])
         # If reached then do nothing
@@ -41,11 +40,20 @@ class PoolObject:
             # Real amount that we can add to the pool
             real_amount_to_add = min(max_possible_amount_to_add, amount_of_added_vms)
             # add VMs.
-            for i in range(real_amount_to_add):
-                domain_index = vm_amount_in_pool + 1 + i
-                await self.add_domain(domain_index)
+            try:
+                for i in range(real_amount_to_add):
+                    domain_index = vm_amount_in_pool + 1 + i
+                    await self.add_domain(domain_index)
+            except VmCreationError:
+                # log that we cant expand the pool.  Mark pool as broken?
+                pass
 
     async def add_domain(self, domain_index):
+        """
+        Try to add VM to pool
+        :param domain_index:
+        :return:
+        """
         from vdi.tasks import vm
         vm_name_template = (self.params['vm_name_template'] or self.params['name'])
         uid = str(uuid.uuid4())[:7]
@@ -58,18 +66,50 @@ class PoolObject:
             'controller_ip': self.params['controller_ip'],
             'node_id': self.params['node_id'],
         }
-        info = await vm.CopyDomain(**params).task
-        await self.on_vm_created(info)
-        return info
+
+        MAX_ANOUNT_OF_CREATE_ATTEMPTS = 2
+
+        # try to create vm
+        for _ in range(MAX_ANOUNT_OF_CREATE_ATTEMPTS):
+            # send request to create vm
+            try:
+                vm_info = await vm.CopyDomain(**params).task
+            except BadRequest:  # network or controller problems
+                continue
+
+            # wait for result
+            response_waiter = WaiterSubscriptionObserver()
+            response_waiter.add_subscription_source('/tasks/')
+
+            resources_monitor_manager.subscribe(response_waiter)
+            MAX_TIME_TO_WAIT = 12
+            is_vm_successfully_created = await response_waiter.wait_for_message(
+                PoolObject._check_if_vm_created, MAX_TIME_TO_WAIT)
+            resources_monitor_manager.unsubscribe(response_waiter)
+
+            if is_vm_successfully_created:
+                await self._add_vm_to_db(vm_info, self.params['template_id'])
+                return vm_info
+            else:
+                continue  # go to try again
+
+        raise VmCreationError('Cant create VM')
 
     async def add_initial_vms(self):
+        """
+        Create required initial amount of VMs for auto pool
+        :return:
+        """
         initial_size = self.params['initial_size']
         domains = []
-
-        for i in range(initial_size):
-            domain_index = 1 + i
-            domain = await self.add_domain(domain_index)
-            domains.append(domain)
+        try:
+            for i in range(initial_size):
+                domain_index = 1 + i
+                domain = await self.add_domain(domain_index)
+                domains.append(domain)
+        except VmCreationError:
+            # log that we cant create required initial amount of VMs
+            pass
 
         return domains
 
@@ -103,6 +143,35 @@ class PoolObject:
             """.format(pool_id)
             [(num,)] = await conn.fetch(qu)
         return num
+
+    # PRIVATE METHODS
+    @staticmethod
+    def _is_vm_creation_task(name):
+        """
+        Determine domain creation task by name
+        """
+        if name.startswith('Создание виртуальной машины'):
+            return True
+        if all(word in name.lower() for word in ['creating', 'virtual', 'machine']):
+            return True
+        return False
+
+    @staticmethod
+    def _check_if_vm_created(json_message):
+        obj = json_message['object']
+        if PoolObject._is_vm_creation_task(obj['name']):
+            if obj['status'] == 'SUCCESS':
+                return True
+        return False
+
+    async def _add_vm_to_db(self, result, template_id):
+        domain_id = result['id']
+        # insert into db
+        async with db.connect() as conn:
+            qu = """
+            insert into vm (id, pool_id, template_id) values ($1, $2, $3)
+            """, domain_id, self.params['id'], template_id
+            await conn.execute(*qu)
 
 
 class AutomatedPoolManager:

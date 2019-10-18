@@ -91,8 +91,6 @@ async def fixt_db():
 @pytest.fixture
 @async_generator
 async def fixt_create_automated_pool():
-    print('create_static_pool')
-
     resources = await get_resources_for_automated_pool()
 
     res = await schema.exec('''
@@ -114,7 +112,7 @@ async def fixt_create_automated_pool():
 
     print('destroy pool')
     # remove pool
-    await asyncio.sleep(3) # Даем вейлу время на создание машин
+    await asyncio.sleep(5) # Даем вейлу время на создание машин
     await RemovePool.do_remove(pool_id)
     # qu = '''
     # mutation {

@@ -13,7 +13,6 @@ from vdi.settings import settings
 
 from vdi.errors import NotFound
 
-
 from .app import app
 
 
@@ -99,7 +98,7 @@ async def get_vm(request):
     # post actions for AUTOMATED pool (todo: run in another courutine)
     if desktop_pool_type == DesktopPoolType.AUTOMATED.name:
         pool = AutomatedPoolManager.get_pool(pool_id)
-        await pool.on_vm_taken()
+        await pool.expand_pool_if_requred()
 
     # send data to thin client
     info = await thin_client.PrepareVm(controller_ip=controller_ip, domain_id=domain_id)

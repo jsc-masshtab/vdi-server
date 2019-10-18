@@ -19,7 +19,7 @@ class AbstractSubscriptionObserver(ABC):
         :param json_message:
         :return:
         """
-        print(__class__.__name__, json_message)
+        # print(__class__.__name__, json_message)
         try:
             self._message_queue.put_nowait(json_message)
         except asyncio.QueueFull:
@@ -141,6 +141,10 @@ class WaiterSubscriptionObserver(AbstractSubscriptionObserver):
     def __init__(self):
         super().__init__()
 
+    def add_subscription_source(self, subscription_source):
+        if subscription_source not in self._subscriptions:
+            self._subscriptions.append(subscription_source)
+
     # PUBLIC METHODS
     async def wait_for_message(self, predicate, timeout):
         """
@@ -153,16 +157,20 @@ class WaiterSubscriptionObserver(AbstractSubscriptionObserver):
         """
         await_time = 0
         while True:
+            # stop if time expired
+            if await_time >= timeout:
+                return False
+            # count time
+            await_time += self._default_ms_process_timeout
+
             await asyncio.sleep(self._default_ms_process_timeout)
+            # try to receive message
             try:
                 json_message = self._message_queue.get_nowait()
             except asyncio.QueueEmpty:
                 continue
+            print(__class__.__name__, 'json_message', json_message)
             if predicate(json_message):
                 return True
-            # count time and check if its expired
-            await_time += self._default_ms_process_timeout
-            if await_time >= timeout:
-                return False
 
         return False

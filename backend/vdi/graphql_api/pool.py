@@ -597,32 +597,22 @@ class AddPool(graphene.Mutation):
         return None
 
     @staticmethod
-    async def create_pool_co(pool_args_dict):
-
-        pool_object = PoolObject(pool_args_dict)
-
-        # fetch_template_info
-        template_info = await GetDomainInfo(controller_ip=pool_args_dict['controller_ip'],
-                                            domain_id=pool_args_dict['template_id'])
+    async def create_initial_vms_co(pool_object):
+        # # fetch_template_info
+        # template_info = await GetDomainInfo(controller_ip=pool_args_dict['controller_ip'],
+        #                                     domain_id=pool_args_dict['template_id'])
 
         # trying to create the initial number of vms
-        try:
-            vms = await pool_object.add_initial_vms()
-        except SimpleError:
-            print("Failed to create required number of vms")
-
         # even if we cant create all required vms we still consider the pool created and just mark it broken
-        # add to db
-        pool_data = {
-            **{k: v for k, v in pool_args_dict.items() if k in AutomatedPoolManager.pool_keys}
-        }
-        [[pool_id]] = await insert('pool', pool_data, returning='id')
-
-        # add to AutomatedPoolManager.pool_instances
-        pool_object.params['id'] = pool_id
-        AutomatedPoolManager.pool_instances[pool_id] = pool_object
+        vms = await pool_object.add_initial_vms()
 
         # notify VDI front about pool creation result (WS)
+        if len(vms) == pool_object.params['initial-size']:
+            print('Auto pool successfully created')
+            pass
+        else:
+            print('Auto pool created with errors')
+            pass
 
     async def mutate(self, _info, settings=(), **kwargs):
 
@@ -642,7 +632,20 @@ class AddPool(graphene.Mutation):
         #AddPool.magic_checks(pool)
         AddPool.validate_agruments(pool_args_dict)
 
-        # start pool-creating coroutine
+        # add to db
+        pool_data = {
+            **{k: v for k, v in pool_args_dict.items() if k in AutomatedPoolManager.pool_keys}
+        }
+        [[pool_id]] = await insert('pool', pool_data, returning='id')
+
+        # add to AutomatedPoolManager.pool_instances
+        pool_object = PoolObject(pool_args_dict)
+        pool_object.params['id'] = pool_id
+        AutomatedPoolManager.pool_instances[pool_id] = pool_object
+
+        # start vm-creating coroutine
+        loop = asyncio.get_event_loop()
+        loop.create_task(AddPool.create_initial_vms_co(pool_object))
 
         # send positive response (pool creating started)
         #return {'ok': True} # todo: how must be
@@ -651,7 +654,7 @@ class AddPool(graphene.Mutation):
         controller = ControllerType(ip=pool_args_dict['controller_ip'])
 
         state = PoolState(available=[], running=True)
-        pool_type = PoolType(id=-1, state=state,
+        pool_type = PoolType(id=pool_id, state=state,
                              name=pool_args_dict['name'], template_id=pool_args_dict['template_id'],
                              controller=controller,
                              settings=PoolSettings(**pool_settings),
@@ -659,42 +662,6 @@ class AddPool(graphene.Mutation):
                              vms=[])
         state.pool = pool_type
         return pool_type
-
-        # # add to db
-        # pool_data = {
-        #     **{k: v for k, v in pool.items() if k in AutomatedPoolManager.pool_keys}
-        # }
-        # [[pool_id]] = await insert('pool', pool_data, returning='id')
-        #
-        # # add to AutomatedPoolManager.pool_instances
-        # pool['id'] = pool_id
-        # ins = PoolObject(params=pool)
-        # AutomatedPoolManager.pool_instances[pool['id']] = ins
-
-        # add_domains = ins.add_domains()
-        # selections = get_selections(info)
-        # if 'vms' in selections:
-        #     domains = await add_domains
-        #
-        #     from vdi.graphql_api.vm import TemplateType
-        #     available = []
-        #     for domain in domains:
-        #         template = domain['template']
-        #         node = NodeType(id=template['node']['id'], verbose_name=template['node']['verbose_name'])
-        #         node.controller = controller
-        #         template = TemplateType(id=template['id'], veil_info=template, name=template['verbose_name'])
-        #         item = VmType(id=domain['id'], template=template, name=domain['verbose_name'], node=node)
-        #         item.veil_info = domain
-        #         item.selections = get_selections(info)
-        #         available.append(item)
-        # else:
-        #     loop = asyncio.get_event_loop()
-        #     loop.create_task(add_domains)
-        #
-        #     available = []
-
-
-
 
 
 class AddStaticPool(graphene.Mutation):
