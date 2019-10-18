@@ -21,16 +21,6 @@ export class VmDetailsComponent implements OnInit {
       title: 'Название',
       property: 'name',
       type: 'string'
-    },
-    {
-      title: 'Сервер',
-      property: 'node',
-      property_lv2: 'verbose_name'
-    },
-    {
-      title: 'Шаблон',
-      property: 'template',
-      property_lv2: 'name'
     }
   ];
 

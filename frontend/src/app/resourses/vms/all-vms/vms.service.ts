@@ -38,6 +38,7 @@ export class VmsService {
                                                 template { name }
                                                 state
                                                 status
+                                                id
                                             }
                                         }
                                     }
@@ -54,8 +55,7 @@ export class VmsService {
             query:  gql` query Vm($id: String) {
                             vm(id: $id) {
                                 name
-                                node { verbose_name }
-                                template { name }
+                               
                             }
                         }
                     `,
