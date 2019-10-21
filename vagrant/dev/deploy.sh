@@ -2,12 +2,12 @@ echo "Install apt packages"
 
 sudo sed -i s/us\./ru\./g /etc/apt/sources.list
 sudo apt update -y
-sudo apt install --no-install-recommends -y postgresql-server-dev-9.6 python3-dev gcc python3-pip postgresql htop mc # Не нашел на астре пакеты ncdu и bmon
+sudo apt install --no-install-recommends -y postgresql-server-dev-9.6 python3-dev gcc python3-pip postgresql htop mc nginx # Не нашел на астре пакеты ncdu и bmon
 curl -sL https://deb.nodesource.com/setup_11.x | sudo bash -
 sudo apt install -y nodejs
 
 #------------------------------
-echo "Setup database"
+echo "Setting up database"
 
 sudo sed -i 's/peer/trust/g' /etc/postgresql/9.6/main/pg_hba.conf
 sudo systemctl restart postgresql
@@ -17,25 +17,34 @@ sudo su postgres -c "psql -c \"ALTER ROLE postgres PASSWORD 'postgres';\" "
 # На астре нету бездуховной кодировки en_US.UTF-8. Есть C.UTF-8
 sudo su postgres -c "psql -c \"create database vdi encoding 'utf8' lc_collate = 'en_US.UTF-8' lc_ctype = 'en_US.UTF-8' template template0;\" "
 
-sudo python3.5 -m pip install pipenv
-
 #------------------------------
-echo "Setup vdi server"
+echo "Setting up vdi folder"
 
 APP_DIR=/opt/veil-vdi
 cd $APP_DIR
 
-echo "vdi_server: setting env..."
+#------------------------------
+echo "Setting up nginx"
 
+sudo cp $APP_DIR/vagrant/dev/vdi_nginx.conf /etc/nginx/conf.d/vdi_nginx.conf
+sudo rm /etc/nginx/sites-enabled/*
+sudo systemctl restart nginx
+
+#------------------------------
+echo "Setting up env"
+
+sudo python3.5 -m pip install pipenv
 export PIPENV_PIPFILE=$APP_DIR/backend/Pipfile_future
 pipenv install
 
-echo "vdi_server: starting server..."
+#------------------------------
+echo "Setting up backend"
+
 nohup pipenv run python $APP_DIR/backend/vdi2/app.py & #nohup pipenv run vdi &
 
 #------------------------------
-echo "Setup frontend"
+echo "Setting up frontend"
 
 cd $APP_DIR/frontend/
 npm install
-nohup npm run ng serve -- --host 0.0.0.0
+npm run ng serve -- --host 0.0.0.0
