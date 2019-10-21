@@ -4,6 +4,9 @@ import { map } from 'rxjs/operators';
 import { ActivatedRoute, ParamMap } from '@angular/router';
 import { Router } from '@angular/router';
 
+interface ICollection {
+  [index: string]: string;
+}
 
 @Component({
   selector: 'vdi-vm-details',
@@ -14,7 +17,7 @@ import { Router } from '@angular/router';
 
 export class VmDetailsComponent implements OnInit {
 
-  public vm = {};
+  public vm: ICollection = {};
 
   public collectionDetails = [
     {
