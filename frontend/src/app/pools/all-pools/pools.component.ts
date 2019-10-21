@@ -1,12 +1,13 @@
 import { PoolAddComponent } from './../add-pool/add-pool.component';
 import { WaitService } from './../../common/components/single/wait/wait.service';
 
-import { Component, OnInit, HostListener, ViewChild, ElementRef, OnDestroy } from '@angular/core';
+import { Component, OnInit, ViewChild, ElementRef, OnDestroy } from '@angular/core';
 import { PoolsService } from './pools.service';
 
 import { Router } from '@angular/router';
 import { MatDialog } from '@angular/material';
 import { Subscription } from 'rxjs';
+import { DetailsMove } from 'src/app/common/classes/details-move';
 
 
 @Component({
@@ -15,14 +16,9 @@ import { Subscription } from 'rxjs';
   styleUrls: ['./pools.component.scss']
 })
 
-export class PoolsComponent implements OnInit, OnDestroy {
+export class PoolsComponent extends DetailsMove implements OnInit, OnDestroy {
 
   public pools: [];
-  public pageHeightMinNumber: number = 315;
-  public pageHeightMin: string = '315px';
-  public pageHeightMax: string = '100%';
-  public pageHeight: string = '100%';
-  public pageRollup: boolean = false;
   private getPoolsSub: Subscription;
 
   public collection: ReadonlyArray<object> = [
@@ -66,19 +62,11 @@ export class PoolsComponent implements OnInit, OnDestroy {
     }
   ];
 
-  constructor(private service: PoolsService, public dialog: MatDialog, private router: Router, private waitService: WaitService) {}
+  constructor(private service: PoolsService, public dialog: MatDialog, private router: Router, private waitService: WaitService) {
+    super();
+  }
 
   @ViewChild('view') view: ElementRef;
-
-  @HostListener('window:resize', ['$event']) onResize() {
-    if (this.pageHeight === this.pageHeightMin) {
-      if ((this.view.nativeElement.clientHeight - this.pageHeightMinNumber) < (this.pageHeightMinNumber + 250)) {
-        this.pageRollup = true;
-      } else {
-        this.pageRollup = false;
-      }
-    }
-  }
 
   ngOnInit() {
     this.getAllPools({ spin: true, obs: true });
@@ -104,30 +92,21 @@ export class PoolsComponent implements OnInit, OnDestroy {
       });
   }
 
-  public componentAdded(): void {
-    setTimeout(() => {
-      this.pageHeight = this.pageHeightMin;
-
-      if ((this.view.nativeElement.clientHeight - this.pageHeightMinNumber) < (this.pageHeightMinNumber + 250)) {
-        this.pageRollup = true;
-      }
-    }, 0);
-  }
-
-  public componentRemoved(): void {
-    setTimeout(() => {
-      this.pageHeight = this.pageHeightMax;
-      this.pageRollup = false;
-    }, 0);
-  }
-
   public routeTo(event): void {
     const desktopPoolType: string = event.desktop_pool_type.toLowerCase();
     this.router.navigate([`pools/${desktopPoolType}/${event.id}`]);
+  }
 
-    setTimeout(() => {
-      this.pageHeight = this.pageHeightMin;
-    }, 0);
+  public onResize(): void {
+    super.onResize(this.view);
+  }
+
+  public componentActivate(): void {
+    super.componentActivate(this.view);
+  }
+
+  public componentDeactivate(): void {
+    super.componentDeactivate();
   }
 
   ngOnDestroy() {

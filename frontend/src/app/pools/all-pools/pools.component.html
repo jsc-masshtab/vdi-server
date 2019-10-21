@@ -23,7 +23,7 @@
         <vdi-table-component #viewTable [data]="pools" [collection]="collection" empty="- нет пулов - "  [cursor]="true" (clickRowData)="routeTo($event)"></vdi-table-component>
     </div>
     <div class="component-details" [class.page-height-min]="pageHeight==pageHeightMin" [class.page-height-max]="pageRollup">
-        <router-outlet (activate)="componentAdded()" (deactivate)="componentRemoved()"></router-outlet>
+        <router-outlet (activate)="componentActivate()" (deactivate)="componentDeactivate()"></router-outlet>
     </div>
 </div>
 
