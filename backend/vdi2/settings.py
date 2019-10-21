@@ -26,4 +26,8 @@ JWT_OPTIONS = {
 }
 
 # Websocket settings
-PING_INTERVAL = 1
+WS_PING_INTERVAL = 1  # TODO: change to 6
+
+# ECP Veil settings
+# -----------------------------
+credentials = dict(username='vdi', password='4ever')

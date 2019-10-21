@@ -2,12 +2,12 @@ import tornado.ioloop
 import tornado.web
 
 from graphene_tornado.tornado_graphql_handler import TornadoGraphQLHandler
-from settings import DB_NAME, DB_PASS, DB_USER, DB_PORT, DB_HOST  # , SECRET_KEY, PING_INTERVAL
+from settings import DB_NAME, DB_PASS, DB_USER, DB_PORT, DB_HOST, WS_PING_INTERVAL
 from database import db
 from controller.schema import controller_schema
 
 from auth.urls import auth_urls
-# from pool.urls import pool_urls
+from pool.urls import pool_urls
 
 from auth.schema import user_schema
 
@@ -21,9 +21,9 @@ if __name__ == '__main__':
     ]
 
     handlers += auth_urls
-    # handlers += pool_urls
+    handlers += pool_urls
 
-    app = tornado.web.Application(handlers, debug=True)  # , websocket_ping_interval=PING_INTERVAL)  #, cookie_secret=SECRET_KEY)
+    app = tornado.web.Application(handlers, debug=True, websocket_ping_interval=WS_PING_INTERVAL)
     tornado.ioloop.IOLoop.current().run_sync(
         lambda: db.init_app(app,
                             host=DB_HOST,
