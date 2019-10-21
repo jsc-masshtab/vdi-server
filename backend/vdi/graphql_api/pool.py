@@ -546,7 +546,7 @@ class AddPool(graphene.Mutation):
         reserve_size = graphene.Int()
         total_size = graphene.Int()
         vm_name_template = graphene.String()
-        controller_ip = graphene.String()
+        controller_ip = graphene.String(required=True)
 
     Output = PoolType
     # ok = graphene.Boolean() # todo: how must be
@@ -585,6 +585,9 @@ class AddPool(graphene.Mutation):
         check_pool_initial_size(initial_size)
         check_reserve_size(reserve_size)
         check_total_size(total_size, initial_size)
+
+        if pool_args_dict['controller_ip'] is None:
+            raise SimpleError('Не указан ip контроллера')
 
     @staticmethod
     def get_setting(name, settings, kwargs):
