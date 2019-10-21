@@ -55,7 +55,7 @@ class CopyDomain(UrlFetcher):
         self.verbose_name = verbose_name
         self.name_template = name_template
 
-    cache_result = False # make a new domain every time this is called
+    cache_result = False  # make a new domain every time this is called
 
     @cached
     def domain_name(self):
@@ -82,54 +82,18 @@ class CopyDomain(UrlFetcher):
         return json.dumps(params)
 
     async def run(self):
-        ws = await WsConnection(controller_ip=self.controller_ip)
-        await ws.send('add /tasks/')
         resp = await super().run()
-        self.task_id = resp['_task']['id']
-        await self.wait_message(ws)
-        info = await self.fetch_template_info()
 
         return {
             'id': resp['entity'],
-            'template': info,
+            'task_id': resp['_task']['id'],
             'verbose_name': self.domain_name,
         }
 
     def on_fetch_failed(self, ex, code):
-        if code == 400:
-            raise BadRequest(ex) from ex
-
-    def check_created(self, msg):
-        obj = msg['object']
-        if obj['parent'] != self.task_id:
-            return
-
-        def check_name(name):
-            if name.startswith('Создание виртуальной машины'):
-                return True
-            if all(word in name.lower() for word in ['creating', 'virtual', 'machine']):
-                return True
-            return False
-
-        if obj['status'] == 'SUCCESS' and check_name(obj['name']):
-            entities = {v: k for k, v in obj['entities'].items()}
-            self.new_domain_id = entities['domain']
-
-    def is_done(self, msg):
-        print('task_message', msg)
-        if self.new_domain_id is None:
-            self.check_created(msg)
-            return
-
-        if msg['id'] == self.task_id:
-            obj = msg['object']
-            if obj['status'] == 'SUCCESS':
-                return True
-
-    async def fetch_template_info(self):
-        url = "http://{}/api/domains/{}/".format(self.controller_ip, self.domain_id)
-        headers = await self.headers()
-        return await HttpClient().fetch(url, headers=headers)
+        raise BadRequest(ex) from ex
+    # obj['parent']
+    # msg['id']
 
 
 class DropDomain(UrlFetcher):

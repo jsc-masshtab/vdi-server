@@ -3,11 +3,14 @@ import websockets
 import json
 from json import JSONDecodeError
 
+from tornado.httpclient import HTTPClientError
+
 from ..tasks.base import Token
 
 from .resources_monitoring_data import CONTROLLER_SUBSCRIPTIONS_LIST, CONTROLLERS_SUBSCRIPTION
 
 from vdi.utils import cancel_async_task
+from vdi.errors import NotFound
 
 from ..tasks.resources import (
   CheckController
@@ -72,7 +75,7 @@ class ResourcesMonitor:
                 #print('before check self._controller_ip', self._controller_ip)
                 await CheckController(controller_ip=self._controller_ip)
                 #print('after check self._controller_ip')
-            except:
+            except (HTTPClientError, OSError, NotFound):
                 # notify only if controller was online before (data changed)
                 if self._is_online:
                     response_dict['status'] = 'OFFLINE'
@@ -124,7 +127,7 @@ class ResourcesMonitor:
     async def _on_message_received(self, message):
         try:
             json_data = json.loads(message)
-            print(__class__.__name__, json_data)
+            #print(__class__.__name__, json_data)
         except JSONDecodeError:
             return
         #  notify subscribed observers

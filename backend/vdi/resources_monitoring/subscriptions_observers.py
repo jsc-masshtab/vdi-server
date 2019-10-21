@@ -1,16 +1,43 @@
 from websockets.exceptions import ConnectionClosed as WsConnectionClosed
 import asyncio
-import json
+from abc import ABC, abstractmethod
 
 from .resources_monitoring_data import VDI_FRONT_ALLOWED_SUBSCRIPTIONS_LIST, SubscriptionCmd
 
 
-class SubscriptionHandler:
+class AbstractSubscriptionObserver(ABC):
 
     def __init__(self):
-        self._websocket = None
         self._subscriptions = []
         self._message_queue = asyncio.Queue(100)  # 100 - max queue size
+        self._default_ms_process_timeout = 0.1
+
+    # PUBLIC METHODS
+    def on_notified(self, json_message):
+        """
+        invoked by ResourcesMonitor when message received
+        :param json_message:
+        :return:
+        """
+        # print(__class__.__name__, json_message)
+        try:
+            self._message_queue.put_nowait(json_message)
+        except asyncio.QueueFull:
+            pass
+
+    def get_subscriptions(self):
+        """
+        List of current subscriptions
+        :return:
+        """
+        return self._subscriptions
+
+
+class VdiFrontSubscriptionHandler(AbstractSubscriptionObserver):
+
+    def __init__(self):
+        super().__init__()
+        self._websocket = None
         self._send_messages_flag = True
         self._send_messages_task = None
 
@@ -25,21 +52,6 @@ class SubscriptionHandler:
         except:
             pass
         await self._stop_message_sending()
-
-    def on_notified(self, json_message):
-        """
-        invoked by ResourcesMonitor when message received
-        :param json_message:
-        :return:
-        """
-        print(__class__.__name__, json_message)
-        try:
-            self._message_queue.put_nowait(json_message)
-        except asyncio.QueueFull:
-            pass
-
-    def get_subscriptions(self):
-        return self._subscriptions
 
     # PRIVATE METHODS
     def _start_message_sending(self):
@@ -87,7 +99,7 @@ class SubscriptionHandler:
                 response_dict['error'] = True
                 await self._dump_dict_and_send(response_dict)
                 continue
-            print('Test Length', len(self._subscriptions))
+            # print('Test Length', len(self._subscriptions))
             # if 'add' cmd and not subscribed  then subscribe
             if subscription_cmd == SubscriptionCmd.add and subscription_source not in self._subscriptions:
                 self._subscriptions.append(subscription_source)
@@ -112,7 +124,7 @@ class SubscriptionHandler:
         # wait for message and send it to front client
         self._send_messages_flag = True
         while self._send_messages_flag:
-            await asyncio.sleep(0.1)
+            await asyncio.sleep(self._default_ms_process_timeout)
             try:
                 json_message = self._message_queue.get_nowait()
             except asyncio.QueueEmpty:
@@ -124,3 +136,41 @@ class SubscriptionHandler:
         await self._websocket.send_json(dictionary)
 
 
+class WaiterSubscriptionObserver(AbstractSubscriptionObserver):
+
+    def __init__(self):
+        super().__init__()
+
+    def add_subscription_source(self, subscription_source):
+        if subscription_source not in self._subscriptions:
+            self._subscriptions.append(subscription_source)
+
+    # PUBLIC METHODS
+    async def wait_for_message(self, predicate, timeout):
+        """
+        Wait for message until timeout reached.
+
+        :param predicate:  condition to find required message. Signature: def fun(json_message) -> bool
+        :param timeout: time to wait. seconds
+        :return bool: return true if awaited message received. Return false if timeuot expired and
+         awaited message is not received
+        """
+        await_time = 0
+        while True:
+            # stop if time expired
+            if await_time >= timeout:
+                return False
+            # count time
+            await_time += self._default_ms_process_timeout
+
+            await asyncio.sleep(self._default_ms_process_timeout)
+            # try to receive message
+            try:
+                json_message = self._message_queue.get_nowait()
+            except asyncio.QueueEmpty:
+                continue
+            print(__class__.__name__, 'json_message', json_message)
+            if predicate(json_message):
+                return True
+
+        return False

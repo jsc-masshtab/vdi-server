@@ -286,3 +286,6 @@ class CheckController(UrlFetcher):
     @cached
     def url(self):
         return 'http://{}/api/controllers/check/'.format(self.controller_ip)
+
+    def on_fetch_failed(self, ex, code):
+        raise NotFound("Контроллер недоступен") from ex

@@ -30,7 +30,7 @@ class AssignVmToUser(graphene.Mutation):
 
             if not pool_ids:
                 # Requested vm doesnt belong to any pool
-                raise FieldError(vm_id=['ВМ не находится ни в одном из пулов'])
+                raise SimpleError('ВМ не находится ни в одном из пулов')
             else:
                 [(pool_id,)] = pool_ids
                 print('AssignVmToUser::mutate pool_id', pool_id)
@@ -40,7 +40,7 @@ class AssignVmToUser(graphene.Mutation):
             pools_users_data = await conn.fetch(*qu)
             if not pools_users_data:
                 # Requested user is not entitled to the pool the requested vm belong to
-                raise FieldError(vm_id=['У пользователя нет прав на использование пула, которому принадлежит ВМ'])
+                raise SimpleError('У пользователя нет прав на использование пула, которому принадлежит ВМ')
 
             # another vm in the pool may have this user as owner. Remove assignment
             qu = 'UPDATE vm SET username = NULL WHERE pool_id = $1 AND username = $2', pool_id, username
@@ -67,7 +67,7 @@ class FreeVmFromUser(graphene.Mutation):
             qu = 'SELECT * from vm WHERE id = $1', vm_id
             vm_data = await conn.fetch(*qu)
             if not vm_data:
-                raise FieldError(vm_id=['ВМ с заданным id не существует'])
+                raise SimpleError('ВМ с заданным id не существует')
             # free vm from user
             qu = 'UPDATE vm SET username = NULL WHERE id = $1', vm_id
             await conn.fetch(*qu)
