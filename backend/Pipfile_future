@@ -1,0 +1,20 @@
+[[source]]
+name = "pypi"
+url = "https://pypi.org/simple"
+verify_ssl = true
+
+[dev-packages]
+pytest = "*"
+ipdb = "*"
+pytest-asyncio = "*"
+
+[packages]
+tornado = "*"
+graphene = ">=2.0"
+graphene_tornado = "*"
+gino = "*"
+alembic = "*"
+async_generator = "*" # for classy_async
+
+[requires]
+python_version = "3.5.3"
