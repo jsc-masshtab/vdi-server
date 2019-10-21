@@ -49,6 +49,6 @@ nohup pipenv run python $APP_DIR/backend/vdi2/app.py & #nohup pipenv run vdi &
 echo "Setting up frontend"
 
 cd $APP_DIR/frontend/
-rm -rf node_modules
+rm -rf node_modules  # audit fix not working without this.
 npm audit fix  # npm i has some broken dependencies. npm audit fix works fine for 9
 npm run ng serve -- --host 0.0.0.0
