@@ -26,6 +26,10 @@ export class ControllersComponent implements OnInit {
       title: 'Описание',
       property: 'description',
       type: 'string'
+    },
+    {
+      title: 'Статус',
+      property: 'status'
     }
   ];
 
@@ -50,7 +54,7 @@ export class ControllersComponent implements OnInit {
     });
   }
 
-  public removeController() { // подумать об общей хранилке
+  public removeController() {
     this.dialog.open(RemoveControllerComponent, {
       width: '500px'
     });

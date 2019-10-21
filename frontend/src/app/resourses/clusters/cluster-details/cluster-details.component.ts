@@ -4,10 +4,6 @@ import { map } from 'rxjs/operators';
 import { ActivatedRoute, ParamMap } from '@angular/router';
 import { Router } from '@angular/router';
 
-interface type_cluster {
-  [key: string]: any
-}
-
 
 @Component({
   selector: 'vdi-cluster-details',
@@ -18,9 +14,9 @@ interface type_cluster {
 
 export class ClusterDetailsComponent implements OnInit {
 
-  public cluster: type_cluster = {};
+  public cluster = {};
   public templates: [] = [];
-  public collection: any[] = [
+  public collectionDetails: any[] = [
     {
       title: 'Название',
       property: 'verbose_name',
@@ -61,7 +57,7 @@ export class ClusterDetailsComponent implements OnInit {
       type: 'array-length'
     }
   ];
-  public collection_nodes = [
+  public collectionNodes = [
     {
       title: 'Название',
       property: 'verbose_name',
@@ -89,7 +85,7 @@ export class ClusterDetailsComponent implements OnInit {
       property: 'status'
     }
   ];
-  public collection_datapools = [
+  public collectionDatapools = [
     {
       title: 'Название',
       property: 'verbose_name',
@@ -132,7 +128,7 @@ export class ClusterDetailsComponent implements OnInit {
       property: 'status'
     }
   ];
-  public collection_templates = [
+  public collectionTemplates = [
     {
       title: 'Название',
       property: 'verbose_name',
@@ -151,7 +147,7 @@ export class ClusterDetailsComponent implements OnInit {
       type: 'string'
     }
   ];
-  public collection_vms = [
+  public collectionVms = [
     {
       title: 'Название',
       property: 'name',
@@ -170,7 +166,7 @@ export class ClusterDetailsComponent implements OnInit {
       property_lv2: 'name'
     }
   ];
-  public cluster_id: string;
+  public idCluster: string;
   public menuActive: string = 'info';
   public host: boolean = false;
 
@@ -180,14 +176,14 @@ export class ClusterDetailsComponent implements OnInit {
 
   ngOnInit() {
     this.activatedRoute.paramMap.subscribe((param: ParamMap) => {
-      this.cluster_id = param.get('id') as string;
+      this.idCluster = param.get('id') as string;
       this.getCluster();
     });
   }
 
   public getCluster() {
     this.host = false;
-    this.service.getCluster(this.cluster_id).valueChanges.pipe(map(data => data.data.cluster))
+    this.service.getCluster(this.idCluster).valueChanges.pipe(map(data => data.data.cluster))
       .subscribe((data) => {
         this.cluster = data;
         this.templates = data.templates.map((item) => JSON.parse(item.info));

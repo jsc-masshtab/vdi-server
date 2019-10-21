@@ -95,7 +95,7 @@ export class ClustersComponent implements OnInit {
 
       if ((this.view.nativeElement.clientHeight - this.pageHeightMinNumber) < (this.pageHeightMinNumber + 250)) {
         this.pageRollup = true;
-      };
+      }
     }, 0);
   }
 

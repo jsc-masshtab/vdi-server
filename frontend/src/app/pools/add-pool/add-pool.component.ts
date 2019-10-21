@@ -110,7 +110,8 @@ export class PoolAddComponent implements OnInit, OnDestroy {
       datapool_id: ['', Validators.required],
       initial_size: ['', Validators.required],
       reserve_size: ['', Validators.required],
-      total_size: ['', Validators.required]
+      total_size: ['', Validators.required],
+      vm_name_template: ['', Validators.required]
     });
     this.finishPoolView = {};
     this.getControllers();
@@ -345,6 +346,11 @@ export class PoolAddComponent implements OnInit, OnDestroy {
           title: 'Максимальное количество создаваемых ВМ',
           property: 'total_size',
           type: 'string'
+        },
+        {
+          title: 'Имя шаблона для ВМ',
+          property: 'vm_name_template',
+          type: 'string'
         }
       ];
     } else {
@@ -437,6 +443,7 @@ export class PoolAddComponent implements OnInit, OnDestroy {
       this.finishPoolView.initial_size = formValue.initial_size;
       this.finishPoolView.reserve_size = formValue.reserve_size;
       this.finishPoolView.total_size = formValue.total_size;
+      this.finishPoolView.vm_name_template = formValue.vm_name_template;
     }
     this.finishPoolView.name = formValue.name;
     this.finishPoolView.type = this.chooseTypeForm.value.type;
@@ -458,7 +465,8 @@ export class PoolAddComponent implements OnInit, OnDestroy {
                               formValue.datapool_id,
                               formValue.initial_size,
                               formValue.reserve_size,
-                              formValue.total_size)
+                              formValue.total_size,
+                              formValue.vm_name_template)
         .subscribe(() => {
           this.poolsService.getAllPools().subscribe(() => {
             this.waitService.setWait(false);

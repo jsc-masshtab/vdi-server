@@ -53,6 +53,23 @@
             background-color: #f9f9f9;
             color:#698f96;
         }
+
+        &.status-fail {
+            background: #F08080;
+            color: #FFF;
+    
+            &:hover {
+                background-color: rgba(#F08080, 0.8);
+            }
+        }
+    
+        &.status-halt {
+            background-color: #fbe9c7;
+    
+            &:hover {
+                background-color: rgba(#fbe9c7, 0.8);
+            }
+        }
     }
 
     .table-area-property {

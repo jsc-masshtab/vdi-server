@@ -2,6 +2,8 @@ import asyncio
 from async_generator import async_generator, yield_, asynccontextmanager
 from rx import Observable
 
+from tornado.httpclient import HTTPClientError
+
 import graphene
 from classy_async.classy_async import wait
 
@@ -16,7 +18,7 @@ from ..tasks.resources import (
     ListDatapools, ListNodes, FetchResourcesUsage, CheckController
 )
 
-from vdi.errors import FieldError, SimpleError, FetchException
+from vdi.errors import FieldError, SimpleError, FetchException, NotFound
 from vdi.utils import Unset
 from vdi.utils import clamp_value
 
@@ -260,7 +262,7 @@ class Resources:
                 for controller_info in connected_controllers if controller_info['ip'] == ip)
             return ControllerType(**controller_info)
         except StopIteration:
-            raise FieldError(id=['Контроллер с заданным ip недоступен'])
+            raise SimpleError('Контроллер с заданным ip недоступен')
 
     async def resolve_node(self, info, id):
         controller_ip = await DiscoverControllerIp(node_id=id)
@@ -294,7 +296,6 @@ class Resources:
         if ordering:
             if ordering == 'verbose_name':
                 def sort_lam(node): return node.verbose_name if node.verbose_name else DEFAULT_NAME
-                pass
             elif ordering == 'cpu_count':
                 def sort_lam(node): return node.cpu_count if node.cpu_count else 0
             elif ordering == 'memory_count':
@@ -309,7 +310,7 @@ class Resources:
             elif ordering == 'management_ip':
                 def sort_lam(node): return node.controller.ip if node.controller.ip else DEFAULT_NAME
             else:
-                raise FieldError(name=['Неверный параметр сортировки'])
+                raise SimpleError('Неверный параметр сортировки')
             reverse = reversed_order if reversed_order is not None else False
             list_of_all_node_types = sorted(list_of_all_node_types, key=sort_lam, reverse=reverse)
 
@@ -362,7 +363,7 @@ class Resources:
             elif ordering == 'controller_ip':
                 def sort_lam(cluster): return cluster.controller.ip if cluster.controller.ip else DEFAULT_NAME
             else:
-                raise FieldError(name=['Неверный параметр сортировки'])
+                raise SimpleError('Неверный параметр сортировки')
             reverse = reversed_order if reversed_order is not None else False
             list_of_all_cluster_types = sorted(list_of_all_cluster_types, key=sort_lam, reverse=reverse)
 
@@ -407,7 +408,7 @@ class Resources:
                 def sort_lam(datapool):
                     return datapool.free_space if datapool.free_space else 0
             else:
-                raise FieldError(name=['Неверный параметр сортировки'])
+                raise SimpleError('Неверный параметр сортировки')
             reverse = reversed_order if reversed_order is not None else False
             list_of_all_datapool_types = sorted(list_of_all_datapool_types, key=sort_lam, reverse=reverse)
 
@@ -670,7 +671,8 @@ class ControllerType(graphene.ObjectType):
         return self._check_is_online()
 
     async def resolve_status(self, _info):
-        if self._check_is_online():
+        is_online = await self._check_is_online()
+        if is_online:
             return 'ACTIVE'
         else:
             return 'FAILED'
@@ -678,12 +680,12 @@ class ControllerType(graphene.ObjectType):
     async def _check_is_online(self):
         try:
             await CheckController(controller_ip=self.ip)
-        except:
-            return False
-        else:
             return True
+        except (HTTPClientError, NotFound, OSError):
+            return False
 
-# remove later
+
+    # remove later
 class TestSubscription(graphene.ObjectType):
     # count_seconds = graphene.Float(up_to=graphene.Int())
     #

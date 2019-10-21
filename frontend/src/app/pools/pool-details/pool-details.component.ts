@@ -1,3 +1,4 @@
+import { PoolsService } from './../all-pools/pools.service';
 import { IPool } from './definitions/pool';
 import { VmDetalsPopupComponent } from './vm-details-popup/vm-details-popup.component';
 import { RemoveUsersPoolComponent } from './remove-users/remove-users.component';
@@ -9,7 +10,7 @@ import { ActivatedRoute, ParamMap, Router } from '@angular/router';
 import { MatDialog } from '@angular/material';
 import { RemovePoolComponent } from './remove-pool/remove-pool.component';
 import { PoolDetailsService } from './pool-details.service';
-import { FormForEditComponent } from 'src/app/common/components/shared/change-form/form-edit.component';
+import { FormForEditComponent } from 'src/app/common/forms-dinamic/change-form/form-edit.component';
 
 
 
@@ -119,12 +120,18 @@ export class PoolDetailsComponent implements OnInit {
       // с каждым подключ. пользователем даже,если рес-сы закончатся
       property: 'settings',
       property_lv2: 'total_size',
-      edit: 'changeMaxDinamicPool'
+      edit: 'changeMaxAutomatedPool'
     },
     {
       title: 'Создано ВМ',
       property: 'vms',
       type: 'array-length'
+    },
+    {
+      title: 'Шаблон для ВМ',
+      property: 'settings',
+      property_lv2: 'vm_name_template',
+      edit: 'changeTemplateForVmAutomatedPool'
     },
     {
       title: 'Пользователи',
@@ -206,6 +213,7 @@ export class PoolDetailsComponent implements OnInit {
   constructor(private activatedRoute: ActivatedRoute,
               private router: Router,
               private poolService: PoolDetailsService,
+              private poolsService: PoolsService,
               public  dialog: MatDialog) {}
 
   ngOnInit() {
@@ -316,9 +324,14 @@ export class PoolDetailsComponent implements OnInit {
         },
         settings: {
           entity: 'pool-details',
-          name: this.pool.name,
           header: 'Изменение имени пула',
-          buttonAction: 'Изменить'
+          buttonAction: 'Изменить',
+          form: [{
+            tag: 'input',
+            type: 'text',
+            fieldName: 'name',
+            fieldValue: this.pool.name,
+          }]
         },
         update: {
           method: 'getPool',
@@ -326,13 +339,17 @@ export class PoolDetailsComponent implements OnInit {
             id: this.idPool,
             type: this.typePool
           },
+        },
+        updateDepend: {
+          service: this.poolsService,
+          method: 'getAllPools'
         }
       }
     });
   }
 
   // @ts-ignore: Unreachable code error
-  private changeMaxDinamicPool(): void {
+  private changeMaxAutomatedPool(): void {
     this.dialog.open(FormForEditComponent, {
       width: '500px',
       data: {
@@ -345,9 +362,14 @@ export class PoolDetailsComponent implements OnInit {
         },
         settings: {
           entity: 'pool-details',
-          name: this.pool.settings.total_size,
           header: 'Изменение максимального количества создаваемых ВМ',
-          buttonAction: 'Изменить'
+          buttonAction: 'Изменить',
+          form: [{
+            tag: 'input',
+            type: 'number',
+            fieldName: 'new_total_size',
+            fieldValue: this.pool.settings.total_size,
+          }]
         },
         update: {
           method: 'getPool',
@@ -374,9 +396,48 @@ export class PoolDetailsComponent implements OnInit {
         },
         settings: {
           entity: 'pool-details',
-          name: this.pool.settings.reserve_size,
           header: 'Изменение количества создаваемых ВМ',
-          buttonAction: 'Изменить'
+          buttonAction: 'Изменить',
+          form: [{
+            tag: 'input',
+            type: 'number',
+            fieldName: 'reserve_size',
+            fieldValue: this.pool.settings.reserve_size,
+          }]
+        },
+        update: {
+          method: 'getPool',
+          params: {
+            id: this.idPool,
+            type: this.typePool
+          }
+        }
+      }
+    });
+  }
+
+  // @ts-ignore: Unreachable code error
+  private changeTemplateForVmAutomatedPool(): void {
+    this.dialog.open(FormForEditComponent, {
+      width: '500px',
+      data: {
+        post: {
+          service: this.poolService,
+          method: 'changeTemplateForVmAutomatedPool',
+          params: {
+            id: this.idPool
+          }
+        },
+        settings: {
+          entity: 'pool-details',
+          header: 'Изменение шаблона для ВМ',
+          buttonAction: 'Изменить',
+          form: [{
+            tag: 'input',
+            type: 'text',
+            fieldName: 'vm_name_template',
+            fieldValue: this.pool.settings.vm_name_template,
+          }]
         },
         update: {
           method: 'getPool',

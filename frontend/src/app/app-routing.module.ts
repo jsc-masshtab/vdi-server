@@ -1,3 +1,5 @@
+import { TemplateDetailsComponent } from './resourses/templates/template-details/template-details.component';
+import { DatapoolDetailsComponent } from './resourses/datapools/datapool-details/datapool-details.component';
 import { PoolDetailsComponent } from './pools/pool-details/pool-details.component';
 import { PoolsComponent } from './pools/all-pools/pools.component';
 import { VmsComponent } from './resourses/vms/all-vms/vms.component';
@@ -12,6 +14,7 @@ import { DatapoolsComponent } from './resourses/datapools/all-datapools/datapool
 import { ClusterDetailsComponent } from './resourses/clusters/cluster-details/cluster-details.component';
 import { TemplatesComponent } from './resourses/templates/all-templates/templates.component';
 import { UsersComponent } from './settings/users/all-users/users.component';
+import { VmDetailsComponent } from './resourses/vms/vms-details/vm-details.component';
 
 const routes: Routes = [
   {
@@ -49,23 +52,43 @@ const routes: Routes = [
   },
   {
     path: 'resourses/nodes',
-    component: NodesComponent
-  },
-  {
-    path: 'resourses/nodes/:id',
-    component: NodeDetailsComponent
+    component: NodesComponent,
+    children: [
+      {
+        path: ':id',
+        component:  NodeDetailsComponent
+      }
+    ]
   },
   {
     path: 'resourses/datapools',
-    component: DatapoolsComponent
+    component: DatapoolsComponent,
+    children: [
+      {
+        path: ':id',
+        component: DatapoolDetailsComponent
+      }
+    ]
   },
   {
     path: 'resourses/templates',
-    component: TemplatesComponent
+    component: TemplatesComponent,
+    children: [
+      {
+        path: ':id',
+        component: TemplateDetailsComponent
+      }
+    ]
   },
   {
     path: 'resourses/vms',
-    component: VmsComponent
+    component: VmsComponent,
+    children: [
+      {
+        path: ':id',
+        component: VmDetailsComponent
+      }
+    ]
   },
   {
     path: '**',

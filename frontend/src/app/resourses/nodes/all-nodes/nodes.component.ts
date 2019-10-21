@@ -1,5 +1,5 @@
 import { WaitService } from './../../../common/components/single/wait/wait.service';
-import { Component, OnInit, HostListener, ViewChild, ElementRef } from '@angular/core';
+import { Component, OnInit, ViewChild, ElementRef, HostListener} from '@angular/core';
 import { NodesService } from './nodes.service';
 import { map } from 'rxjs/operators';
 import { Router } from '@angular/router';
@@ -61,6 +61,7 @@ export class NodesComponent implements OnInit {
   @ViewChild('view') view: ElementRef;
 
   @HostListener('window:resize', ['$event']) onResize() {
+    console.log('q',this.pageHeight == this.pageHeightMin);
     if (this.pageHeight == this.pageHeightMin) {
       if ((this.view.nativeElement.clientHeight - this.pageHeightMinNumber) < (this.pageHeightMinNumber + 250)) {
         this.pageRollup = true;
@@ -92,21 +93,13 @@ export class NodesComponent implements OnInit {
       });
   }
 
-  public routeTo(event): void {
-    this.router.navigate([`resourses/nodes/${event.id}`]);
-
-    setTimeout(() => {
-      this.pageHeight = this.pageHeightMin;
-    }, 0);
-  }
-
   public componentAdded(): void {
     setTimeout(() => {
       this.pageHeight = this.pageHeightMin;
 
       if ((this.view.nativeElement.clientHeight - this.pageHeightMinNumber) < (this.pageHeightMinNumber + 250)) {
         this.pageRollup = true;
-      };
+      }
     }, 0);
   }
 
@@ -114,6 +107,14 @@ export class NodesComponent implements OnInit {
     setTimeout(() => {
       this.pageHeight = this.pageHeightMax;
       this.pageRollup = false;
+    }, 0);
+  }
+
+  public routeTo(event): void {
+    this.router.navigate([`resourses/nodes/${event.id}`]);
+
+    setTimeout(() => {
+      this.pageHeight = this.pageHeightMin;
     }, 0);
   }
 

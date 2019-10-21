@@ -59,6 +59,10 @@ export class PoolsComponent implements OnInit, OnDestroy {
       title: 'Тип',
       property: 'desktop_pool_type',
       type: 'string'
+    },
+    {
+      title: 'Cтатус',
+      property: 'status'
     }
   ];
 

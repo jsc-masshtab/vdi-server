@@ -14,6 +14,7 @@ export class ControllersService  {
                             controllers {
                                 ip
                                 description
+                                status
                             }
                         }
                     `,
@@ -23,9 +24,7 @@ export class ControllersService  {
         });
     }
 
-    public addController(ip: string, description: string) {
-        const ipController = ip;
-        const descriptionController = description;
+    public addController(ipController: string, descriptionController: string) {
         return this.service.mutate<any>({
             mutation: gql`
                             mutation AddController($description: String,$ip: String!) {
@@ -43,7 +42,6 @@ export class ControllersService  {
     }
 
     public removeController(ip: string) {
-        const ipController = ip;
         return this.service.mutate<any>({
             mutation: gql`
                             mutation RemoveController($controller_ip: String) {
@@ -54,7 +52,7 @@ export class ControllersService  {
             `,
             variables: {
                 method: 'POST',
-                controller_ip: ipController
+                controller_ip: ip
             }
         });
     }
