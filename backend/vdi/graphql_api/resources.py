@@ -2,6 +2,8 @@ import asyncio
 from async_generator import async_generator, yield_, asynccontextmanager
 from rx import Observable
 
+from tornado.httpclient import HTTPClientError
+
 import graphene
 from classy_async.classy_async import wait
 
@@ -679,7 +681,7 @@ class ControllerType(graphene.ObjectType):
         try:
             await CheckController(controller_ip=self.ip)
             return True
-        except (NotFound, OSError):
+        except (HTTPClientError, NotFound, OSError):
             return False
 
 

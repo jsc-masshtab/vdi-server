@@ -16,6 +16,8 @@ from vdi import prepare
 
 from db.db import db
 
+from vdi.resources_monitoring.resources_monitor_manager import resources_monitor_manager
+
 
 async def get_resources_for_static_pool():
     # get the best controller
@@ -91,6 +93,10 @@ async def fixt_db():
 @pytest.fixture
 @async_generator
 async def fixt_create_automated_pool():
+
+    # start resources_monitor to receive info  from controller. autopool creation doesnt work without it
+    await resources_monitor_manager.start()
+
     resources = await get_resources_for_automated_pool()
 
     res = await schema.exec('''
@@ -112,7 +118,9 @@ async def fixt_create_automated_pool():
 
     print('destroy pool')
     # remove pool
-    await asyncio.sleep(5) # Даем вейлу время на создание машин
+    await asyncio.sleep(5)  # Даем вейлу время на создание машин  (ожидать ответ о завершении создания пула(WS),
+    # когда будет реализовано)
+
     await RemovePool.do_remove(pool_id)
     # qu = '''
     # mutation {
@@ -122,6 +130,9 @@ async def fixt_create_automated_pool():
     # }
     # ''' % locals()
     # await schema.exec(qu)
+
+    # stop monitor
+    await resources_monitor_manager.stop()
 
 
 @pytest.fixture

@@ -1,5 +1,4 @@
 import asyncio
-#from dataclasses import dataclass
 import uuid
 
 from cached_property import cached_property as cached
@@ -12,11 +11,15 @@ from vdi.errors import BadRequest, VmCreationError
 from vdi.resources_monitoring.subscriptions_observers import WaiterSubscriptionObserver
 from vdi.resources_monitoring.resources_monitor_manager import resources_monitor_manager
 
+from vdi.utils import cancel_async_task
+
 
 class PoolObject:
     def __init__(self, params: dict):
         self.params = params
         self.write_lock = asyncio.Lock()  # for protection from simultaneous change
+        self.add_initial_vms_task = None
+        self.current_vm_task_id = None
 
     async def expand_pool_if_requred(self):
         """
@@ -67,26 +70,31 @@ class PoolObject:
             'node_id': self.params['node_id'],
         }
 
-        MAX_ANOUNT_OF_CREATE_ATTEMPTS = 2
+        MAX_AMOUNT_OF_CREATE_ATTEMPTS = 2
 
         # try to create vm
-        for _ in range(MAX_ANOUNT_OF_CREATE_ATTEMPTS):
+        for i in range(MAX_AMOUNT_OF_CREATE_ATTEMPTS):
+            print('add_domain № {}, attempt № {}'.format(domain_index, i))
             # send request to create vm
             try:
                 vm_info = await vm.CopyDomain(**params).task
+                self.current_vm_task_id = vm_info['task_id']
             except BadRequest:  # network or controller problems
+                print('BadRequest')
                 continue
 
-            # wait for result
+            # subscribe to ws messages
             response_waiter = WaiterSubscriptionObserver()
             response_waiter.add_subscription_source('/tasks/')
 
             resources_monitor_manager.subscribe(response_waiter)
+            # wait for result
             MAX_TIME_TO_WAIT = 12
             is_vm_successfully_created = await response_waiter.wait_for_message(
-                PoolObject._check_if_vm_created, MAX_TIME_TO_WAIT)
+                self._check_if_vm_created, MAX_TIME_TO_WAIT)
             resources_monitor_manager.unsubscribe(response_waiter)
 
+            print('is_vm_successfully_created', is_vm_successfully_created)
             if is_vm_successfully_created:
                 await self._add_vm_to_db(vm_info, self.params['template_id'])
                 return vm_info
@@ -100,6 +108,11 @@ class PoolObject:
         Create required initial amount of VMs for auto pool
         :return:
         """
+
+        # # fetch_template_info
+        # template_info = await GetDomainInfo(controller_ip=pool_args_dict['controller_ip'],
+        #                                     domain_id=pool_args_dict['template_id'])
+
         initial_size = self.params['initial_size']
         domains = []
         try:
@@ -107,11 +120,20 @@ class PoolObject:
                 domain_index = 1 + i
                 domain = await self.add_domain(domain_index)
                 domains.append(domain)
+                # notify VDI front about progress(WS)
         except VmCreationError:
             # log that we cant create required initial amount of VMs
+            print('Cant create VM')
             pass
 
-        return domains
+        # notify VDI front about pool creation result (WS)
+        if len(domains) == self.params['initial_size']:
+            print('Auto pool successfully created')
+            pass
+        else:
+            print('Auto pool created with errors. VMs created: {}. Required: {}'.
+                  format(len(domains), self.params['initial_size']))
+            pass
 
     async def load_vms(self):
         vms = await vm.ListVms(controller_ip=self.params['controller_ip'])
@@ -156,10 +178,10 @@ class PoolObject:
             return True
         return False
 
-    @staticmethod
-    def _check_if_vm_created(json_message):
+    def _check_if_vm_created(self, json_message):
+        #print('json_message', json_message)
         obj = json_message['object']
-        if PoolObject._is_vm_creation_task(obj['name']):
+        if PoolObject._is_vm_creation_task(obj['name']) and self.current_vm_task_id == obj['parent']:
             if obj['status'] == 'SUCCESS':
                 return True
         return False

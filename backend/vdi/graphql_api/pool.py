@@ -596,24 +596,6 @@ class AddPool(graphene.Mutation):
             return settings_file['pool'][name]
         return None
 
-    @staticmethod
-    async def create_initial_vms_co(pool_object):
-        # # fetch_template_info
-        # template_info = await GetDomainInfo(controller_ip=pool_args_dict['controller_ip'],
-        #                                     domain_id=pool_args_dict['template_id'])
-
-        # trying to create the initial number of vms
-        # even if we cant create all required vms we still consider the pool created and just mark it broken
-        vms = await pool_object.add_initial_vms()
-
-        # notify VDI front about pool creation result (WS)
-        if len(vms) == pool_object.params['initial-size']:
-            print('Auto pool successfully created')
-            pass
-        else:
-            print('Auto pool created with errors')
-            pass
-
     async def mutate(self, _info, settings=(), **kwargs):
 
         # form pool arguments dictionary
@@ -645,7 +627,7 @@ class AddPool(graphene.Mutation):
 
         # start vm-creating coroutine
         loop = asyncio.get_event_loop()
-        loop.create_task(AddPool.create_initial_vms_co(pool_object))
+        loop.create_task(pool_object.add_initial_vms())  # todo: think about cancelation
 
         # send positive response (pool creating started)
         #return {'ok': True} # todo: how must be

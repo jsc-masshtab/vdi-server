@@ -37,7 +37,7 @@ async def test_create_automated_pool(fixt_create_automated_pool):
 @pytest.mark.asyncio
 async def test_change_sizes_of_autopool(fixt_create_automated_pool):
     pool_id = fixt_create_automated_pool['id']
-
+    print('pool_id', pool_id)
     # total size
     new_total_size = 4
     qu = '''
