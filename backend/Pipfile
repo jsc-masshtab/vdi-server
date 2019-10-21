@@ -11,27 +11,30 @@ jupyter = "*"
 pytest-asyncio = "*"
 
 [packages]
+websockets = "==7.*"
 uvicorn = "==0.8.6" # only this version
-tornado = "*"
+tornado = "==6.0.3"
 #vdi = {editable = false,path = "./../../backend"}
 #classy_async = {editable = false,path = "./../../backend/classy_async"}
 #mi = {editable = false,path = "./../../backend/mi-pkg"}
 #auth_server = {editable = false,path = "./../../backend/auth_server"}
 cached-property = "*"
 graphene = "*"
+graphene_tornado = "==2.5.1"
+gino = "==0.8.3"
 # >=0.12.8
 psycopg2 = "*"
 asyncpg = "*"
 requests = "*"
 aiofiles = "*"
 itsdangerous = "*"
-pyjwt = "*"
+pyjwt = "==1.7.1"
 python-dateutil = "*"
 docopt = "*"
-sanic-jwt = "*"
+#sanic-jwt = "*"
 async-generator = "*"
 async_generator = "*"
-sanic = "==18.12"
+#sanic = "==18.12"
 contextvars = "*"
 aiocontextvars = "*"
 #sudo pipenv run  python -m pip install git+https://github.com/em92/starlette

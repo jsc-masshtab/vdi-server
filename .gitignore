@@ -100,3 +100,6 @@ nohup.out
 
 pgdata/
 logfile
+
+# local docker
+docker/
