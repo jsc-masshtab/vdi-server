@@ -1,10 +1,10 @@
 import asyncio
-import websockets
 import json
 from json import JSONDecodeError
 from abc import ABC, abstractmethod
 
 from tornado.httpclient import HTTPClientError
+from tornado.websocket import websocket_connect
 
 from ..tasks.base import Token
 
@@ -47,7 +47,7 @@ class ResourcesMonitor(AbstractMonitor):
     """
     def __init__(self):
         super().__init__()
-        self._websocket = None
+        self._ws_connection = None
         self._running_flag = True
         self._controller_ip = None
 
@@ -117,33 +117,33 @@ class ResourcesMonitor(AbstractMonitor):
 
         # receive messages
         while self._running_flag:
-            await asyncio.sleep(0)
-            try:
-                message = await self._websocket.recv()
-                await self._on_message_received(message)
-            except websockets.ConnectionClosed:
+            msg = await self._ws_connection.read_message()
+            if msg is None:  # according to doc it means that connection closed
                 await self._on_connection_closed()
-            except Exception:
-                await self._on_error_occurred()
+            await self._on_message_received(msg)
 
     async def _connect(self):
+        # get token
         try:
-            # create ws connection
             token = await Token(controller_ip=self._controller_ip)
+        except Exception:
+            return
+        # create ws connection
+        try:
             connect_url = 'ws://{}/ws/?token={}'.format(self._controller_ip, token)
-            self._websocket = await websockets.connect(connect_url) #
+            self._ws_connection = await websocket_connect(connect_url)
 
             # subscribe to events on controller
             for subscription_name in CONTROLLER_SUBSCRIPTIONS_LIST:
-                await self._websocket.send('add {}'.format(subscription_name))
-        except:
+                await self._ws_connection.write_message('add {}'.format(subscription_name))
+        except ConnectionRefusedError:
             print(__class__.__name__, ' can not connect to', self._controller_ip)
             return
 
     async def _on_message_received(self, message):
         try:
             json_data = json.loads(message)
-            #  print(__class__.__name__, json_data)
+            print(__class__.__name__, json_data)
         except JSONDecodeError:
             return
         #  notify subscribed observers
@@ -154,28 +154,20 @@ class ResourcesMonitor(AbstractMonitor):
         self.notify_observers(resource_str, json_data)
 
     async def _on_connection_closed(self):
-        print(__class__.__name__, 'connection closed ', self._controller_ip, self._websocket.open)
-        await self._try_to_reconnect()
-
-    async def _on_error_occurred(self):
-        print(__class__.__name__, 'An error occurred')
-        await self._close_connection()
+        print(__class__.__name__, 'connection closed ', self._controller_ip, self._ws_connection.open)
         await self._try_to_reconnect()
 
     async def _try_to_reconnect(self):
         # if _running_flag is raised then try to reconnect
         if self._running_flag:
             await self._connect()
-            await asyncio.sleep(5)
+            RECONNECT_TIMEOUT = 5
+            await asyncio.sleep(RECONNECT_TIMEOUT)
 
     async def _close_connection(self):
-        try:
-            if self._websocket:
-                print(__class__.__name__, 'before close conn ', self._websocket.open)
-                await self._websocket.close()
-                print(__class__.__name__, 'after close conn ', self._websocket.open)
-        except websockets.exceptions.ConnectionClosed:
-            pass
+        if self._ws_connection:
+            print(__class__.__name__, 'Closing ws connection', self._controller_ip)
+            self._ws_connection.close()
 
 
 class InternalMonitor(AbstractMonitor):
