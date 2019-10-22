@@ -1140,9 +1140,8 @@ class ChangeAutomatedPoolTotalSize(graphene.Mutation):
             await conn.fetch(*qu)
 
         # live data
-        if pool_id in AutomatedPoolManager.pool_instances and \
-                'total_size' in AutomatedPoolManager.pool_instances[pool_id].params:
-            AutomatedPoolManager.pool_instances[pool_id].params['total_size'] = new_total_size
+        pool_object = AutomatedPoolManager.get_pool(pool_id)
+        pool_object.update_param('total_size', new_total_size)
 
         # change amount of created vms
         vm_amount_in_pool = await PoolObject.get_vm_amount_in_pool(pool_id)
@@ -1180,9 +1179,14 @@ class ChangeAutomatedPoolReserveSize(graphene.Mutation):
         #  do nothing
         if pool_data_dict['reserve_size'] == new_reserve_size:
             return {'ok': True}
+
         # set reserve size in db
         async with db.connect() as conn:
             qu = 'UPDATE pool SET reserve_size = $1 WHERE id = $2', new_reserve_size, pool_id
             await conn.fetch(*qu)
+
+        # live data
+        pool_object = AutomatedPoolManager.get_pool(pool_id)
+        pool_object.update_param('reserve_size', new_reserve_size)
 
         return {'ok': True}

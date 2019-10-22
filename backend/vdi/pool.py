@@ -22,6 +22,10 @@ class PoolObject:
         self.add_initial_vms_task = None
         self.current_vm_task_id = None
 
+    def update_param(self, key, value):
+        if key in self.params:
+            self.params[key] = value
+
     async def expand_pool_if_requred(self):
         """
         Check and expand pool if required
