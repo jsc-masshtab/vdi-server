@@ -232,6 +232,9 @@ class PoolType(graphene.ObjectType):
                                   datapool_name=datapool_name, template_name=template_name)
 
     async def resolve_status(self, _info):
+        return self.determine_pool_status()
+
+    async def determine_pool_status(self):
         # determine pool status. If we cant get veil info about at least one vm
         # we consider the pool as broken
         vms = await self._form_vm_type_list(['state'])
@@ -1006,20 +1009,6 @@ class PoolMixin:
         # dic['settings'] = PoolSettings(**settings)
         return dic
 
-    async def resolve_pool(self, info, id):
-        #TODO will be refactored
-
-        pool_data = await PoolMixin._select_pool(self, info, id)
-        print('pool_data', pool_data)
-        controller_ip = pool_data['controller_ip']
-
-        from vdi.graphql_api.resources import ControllerType
-        pool_data['id'] = id
-        pool_data = {
-            k: v for k, v in pool_data.items() if k in PoolType._meta.fields
-        }
-        return PoolType(**pool_data,
-                        controller=ControllerType(ip=controller_ip))
 
     async def resolve_pools(self, _info, ordering=None, reversed_order=None):
 
@@ -1046,9 +1035,9 @@ class PoolMixin:
             elif ordering == 'pool_type':
                 qu = "SELECT * FROM pool WHERE deleted IS NOT true ORDER BY desktop_pool_type {}".format(sort_order)
             else:
-                raise SimpleError('Неверный параметр сортировки')
+                qu = "SELECT * FROM pool"
         else:
-            qu = "SELECT * FROM pool WHERE deleted IS NOT true"
+            qu = "SELECT * FROM pool"
 
         # get from db
         async with db.connect() as conn:
@@ -1073,6 +1062,10 @@ class PoolMixin:
                           settings=PoolSettings(**settings),
                           controller=ControllerType(ip=controller_ip))
             items.append(pool_type)
+
+        if ordering == 'status':
+            reverse = reversed_order if reversed_order is not None else False
+            items = sorted(items, key=lambda item: item.determine_pool_status(), reverse=reverse)
 
         return items
 
