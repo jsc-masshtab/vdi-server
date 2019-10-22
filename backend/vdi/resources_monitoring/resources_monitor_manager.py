@@ -2,7 +2,6 @@ import json
 
 from vdi.resources_monitoring.resources_monitor import ResourcesMonitor, InternalMonitor
 from ..tasks.resources import DiscoverControllers
-from vdi.resources_monitoring.resources_monitoring_data import VDI_TASKS_SUBSCRIPTION
 
 
 class ResourcesMonitorManager:
@@ -79,14 +78,12 @@ class ResourcesMonitorManager:
         await resources_monitor.stop()
         self._resources_monitors_list.remove(resources_monitor)
 
-    def signal_internal_event(self, str_msg):
+    def signal_internal_event(self, msg_dict):
         """
         Notify observers about internal event
         """
-        print(str_msg)
-        response_dict = {'msg': str_msg, 'msg_type': 'data', 'event': 'UPDATED',
-                         'resource': VDI_TASKS_SUBSCRIPTION}
-        json_data = json.dumps(response_dict)
+        print(msg_dict)
+        json_data = json.dumps(msg_dict)
         self._internal_monitor.signal_event(json_data)
 
     # PRIVATE METHODS
