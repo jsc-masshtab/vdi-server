@@ -1,11 +1,15 @@
-from vdi.resources_monitoring.resources_monitor import ResourcesMonitor
+import json
+
+from vdi.resources_monitoring.resources_monitor import ResourcesMonitor, InternalMonitor
 from ..tasks.resources import DiscoverControllers
+from vdi.resources_monitoring.resources_monitoring_data import VDI_TASKS_SUBSCRIPTION
 
 
 class ResourcesMonitorManager:
 
     def __init__(self):
         self._resources_monitors_list = []
+        self._internal_monitor = InternalMonitor()
 
     # PUBLIC METHODS
     async def start(self):
@@ -42,6 +46,8 @@ class ResourcesMonitorManager:
         for resources_monitor in self._resources_monitors_list:
             resources_monitor.subscribe(observer)
 
+        self._internal_monitor.subscribe(observer)
+
     def unsubscribe(self, observer):
         """
         Unsubscribe observer from all available monitors
@@ -50,6 +56,8 @@ class ResourcesMonitorManager:
         """
         for resources_monitor in self._resources_monitors_list:
             resources_monitor.unsubscribe(observer)
+
+        self._internal_monitor.unsubscribe(observer)
 
     def add_controller(self, controller_ip):
         # check if controller is already being monitored
@@ -70,6 +78,16 @@ class ResourcesMonitorManager:
         # stop monitoring
         await resources_monitor.stop()
         self._resources_monitors_list.remove(resources_monitor)
+
+    def signal_internal_event(self, str_msg):
+        """
+        Notify observers about internal event
+        """
+        print(str_msg)
+        response_dict = {'msg': str_msg, 'msg_type': 'data', 'event': 'UPDATED',
+                         'resource': VDI_TASKS_SUBSCRIPTION}
+        json_data = json.dumps(response_dict)
+        self._internal_monitor.signal_event(json_data)
 
     # PRIVATE METHODS
     def _get_monitored_controllers_ips(self):

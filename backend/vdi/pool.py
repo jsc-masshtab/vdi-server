@@ -121,19 +121,19 @@ class PoolObject:
                 domain = await self.add_domain(domain_index)
                 domains.append(domain)
                 # notify VDI front about progress(WS)
+                msg = 'Automated pool creation. Created {} VMs from {}'.format(domain_index, initial_size)
+                resources_monitor_manager.signal_internal_event(msg)
         except VmCreationError:
             # log that we cant create required initial amount of VMs
             print('Cant create VM')
-            pass
 
         # notify VDI front about pool creation result (WS)
-        if len(domains) == self.params['initial_size']:
-            print('Auto pool successfully created')
-            pass
+        if len(domains) == initial_size:
+            msg = 'Automated pool successfully created. Initial VM amount {}'.format(len(domains))
         else:
-            print('Auto pool created with errors. VMs created: {}. Required: {}'.
-                  format(len(domains), self.params['initial_size']))
-            pass
+            msg = 'Automated pool created with errors. VMs created: {}. Required: {}'.\
+                format(len(domains), initial_size)
+        resources_monitor_manager.signal_internal_event(msg)
 
     async def load_vms(self):
         vms = await vm.ListVms(controller_ip=self.params['controller_ip'])
