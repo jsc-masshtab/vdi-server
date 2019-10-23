@@ -235,15 +235,18 @@ class PoolType(graphene.ObjectType):
         return self.determine_pool_status()
 
     async def determine_pool_status(self):
-        # determine pool status. If we cant get veil info about at least one vm
-        # we consider the pool as broken
-        vms = await self._form_vm_type_list(['state'])
 
-        vms_info_list = [single_vm.veil_info for single_vm in vms]
-        if Unset in vms_info_list:
-            return 'FAILED'
-        else:
-            return 'ACTIVE'
+        if not self.status:
+            # determine pool status. If we cant get veil info about at least one vm
+            # we consider the pool as broken
+            vms = await self._form_vm_type_list(['state'])
+
+            vms_info_list = [single_vm.veil_info for single_vm in vms]
+            if Unset in vms_info_list:
+                self.status = 'FAILED'
+            else:
+                self.status = 'ACTIVE'
+        return self.status
 
     async def _form_vm_type_list(self, vm_selections):
         pool_data = await check_and_return_pool_data(self.id)
@@ -995,7 +998,6 @@ class PoolMixin:
     pool = graphene.Field(PoolType, id=graphene.Int(),
                           controller_ip=graphene.String())
 
-
     async def _select_pool(self, info, id):
         settings_selections = get_selections(info, 'settings') or []
 
@@ -1009,42 +1011,9 @@ class PoolMixin:
         # dic['settings'] = PoolSettings(**settings)
         return dic
 
-
-    async def resolve_pools(self, _info, ordering=None, reversed_order=None):
-
-        # sort items if required
-        if ordering:
-            # is reversed
-            if reversed_order is not None:
-                sort_order = 'DESC' if reversed_order else 'ASC'
-            else:
-                sort_order = 'ASC'
-
-            # determine sql query
-            if ordering == 'pool_name':
-                qu = "SELECT * FROM pool WHERE deleted IS NOT true ORDER BY name {}".format(sort_order)
-            elif ordering == 'controller':
-                qu = "SELECT * FROM pool WHERE deleted IS NOT true ORDER BY controller_ip {}".format(sort_order)
-            elif ordering == 'vms_amount':
-                qu = "SELECT pool.* FROM pool LEFT JOIN vm " \
-                     "ON pool.id = vm.pool_id GROUP BY pool.id ORDER BY COUNT(vm.id) {}".format(sort_order)
-            elif ordering == 'users_amount':
-                qu = "SELECT pool.* FROM pool LEFT JOIN pools_users " \
-                     "ON pool.id = pools_users.pool_id GROUP BY pool.id ORDER BY COUNT(pools_users.username)" \
-                     " {}".format(sort_order)
-            elif ordering == 'pool_type':
-                qu = "SELECT * FROM pool WHERE deleted IS NOT true ORDER BY desktop_pool_type {}".format(sort_order)
-            else:
-                qu = "SELECT * FROM pool"
-        else:
-            qu = "SELECT * FROM pool"
-
-        # get from db
-        async with db.connect() as conn:
-            pools = await conn.fetch(qu)
-
-        # create list of items
-        items = []
+    @staticmethod
+    def _pool_db_data_to_pool_type_list(pools):
+        pool_type_list = []
         for pool in pools:
             pool = dict(pool.items())
             controller_ip = pool['controller_ip']
@@ -1061,13 +1030,61 @@ class PoolMixin:
             pool_type = PoolType(**p,
                           settings=PoolSettings(**settings),
                           controller=ControllerType(ip=controller_ip))
-            items.append(pool_type)
+            pool_type_list.append(pool_type)
 
-        if ordering == 'status':
-            reverse = reversed_order if reversed_order is not None else False
-            items = sorted(items, key=lambda item: item.determine_pool_status(), reverse=reverse)
+        return pool_type_list
 
-        return items
+    async def resolve_pools(self, _info, ordering=None, reversed_order=None):
+
+        async with db.connect() as conn:
+            # sort items if required
+            if ordering:
+                # is reversed
+                if reversed_order is not None:
+                    sort_order = 'DESC' if reversed_order else 'ASC'
+                else:
+                    sort_order = 'ASC'
+
+                # determine sql query
+                if ordering == 'name':
+                    qu = "SELECT * FROM pool ORDER BY name {}".format(sort_order)
+                    pools = await conn.fetch(qu)
+                    return PoolMixin._pool_db_data_to_pool_type_list(pools)
+                elif ordering == 'controller':
+                    qu = "SELECT * FROM pool ORDER BY controller_ip {}".format(sort_order)
+                    pools = await conn.fetch(qu)
+                    return PoolMixin._pool_db_data_to_pool_type_list(pools)
+                elif ordering == 'vms':
+                    qu = "SELECT pool.* FROM pool LEFT JOIN vm " \
+                         "ON pool.id = vm.pool_id GROUP BY pool.id ORDER BY COUNT(vm.id) {}".format(sort_order)
+                    pools = await conn.fetch(qu)
+                    return PoolMixin._pool_db_data_to_pool_type_list(pools)
+                elif ordering == 'users':
+                    qu = "SELECT pool.* FROM pool LEFT JOIN pools_users " \
+                         "ON pool.id = pools_users.pool_id GROUP BY pool.id ORDER BY COUNT(pools_users.username)" \
+                         " {}".format(sort_order)
+                    pools = await conn.fetch(qu)
+                    return PoolMixin._pool_db_data_to_pool_type_list(pools)
+                elif ordering == 'desktop_pool_type':
+                    qu = "SELECT * FROM pool ORDER BY desktop_pool_type {}".format(sort_order)
+                    pools = await conn.fetch(qu)
+                    return PoolMixin._pool_db_data_to_pool_type_list(pools)
+                elif ordering == 'status':
+                    qu = "SELECT * FROM pool"
+                    pools = await conn.fetch(qu)
+                    pool_type_list = PoolMixin._pool_db_data_to_pool_type_list(pools)
+
+                    for pool_type in pool_type_list:
+                        await pool_type.determine_pool_status()
+                    reverse = reversed_order if reversed_order is not None else False
+                    pool_type_list = sorted(pool_type_list, key=lambda item: item.status, reverse=reverse)
+                    return pool_type_list
+                else:
+                    raise SimpleError('Неверный параметр сортировки')
+            else:
+                qu = "SELECT * FROM pool"
+                pools = await conn.fetch(qu)
+                return PoolMixin._pool_db_data_to_pool_type_list(pools)
 
 
 class ChangePoolName(graphene.Mutation):
