@@ -11,7 +11,14 @@ from pool.urls import pool_urls
 
 from auth.schema import user_schema
 
+
+# async def create_tables():
+#     await db.set_bind('postgresql://localhost/{}'.format(DB_NAME))
+#     await db.gino.create_all()
+#     await db.pop_bind().close()
+
 if __name__ == '__main__':
+
     handlers = [
         (r'/controllers', TornadoGraphQLHandler, dict(graphiql=True, schema=controller_schema)),
         (r'/users', TornadoGraphQLHandler, dict(graphiql=True, schema=user_schema)),
@@ -24,6 +31,10 @@ if __name__ == '__main__':
     handlers += pool_urls
 
     app = tornado.web.Application(handlers, debug=True, websocket_ping_interval=WS_PING_INTERVAL)
+
+    # tornado.ioloop.IOLoop.current().run_sync(
+    #     lambda: create_tables())
+
     tornado.ioloop.IOLoop.current().run_sync(
         lambda: db.init_app(app,
                             host=DB_HOST,
@@ -32,4 +43,8 @@ if __name__ == '__main__':
                             password=DB_PASS,
                             database=DB_NAME))
     app.listen(8888)
-    tornado.ioloop.IOLoop.current().start()
+    try:
+        tornado.ioloop.IOLoop.current().start()
+    except KeyboardInterrupt:
+        print('Finish')
+        pass

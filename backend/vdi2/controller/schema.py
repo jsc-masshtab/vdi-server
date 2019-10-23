@@ -1,5 +1,6 @@
 import graphene
 from controller.models import Controller
+from controller.models import ControllerUserType
 
 
 class ControllerType(graphene.ObjectType):
@@ -12,24 +13,39 @@ class ControllerType(graphene.ObjectType):
     default = graphene.Boolean()
 
 
+ControllerUserTypeGr = graphene.Enum.from_enum(ControllerUserType)
+
+
 class AddController(graphene.Mutation):
     class Arguments:
         verbose_name = graphene.String(required=True)
         address = graphene.String(required=True)
+
+        controller_user_type = ControllerUserTypeGr(required=True)
+        user_login = graphene.String(required=True)
+        user_password = graphene.String(required=True)
+
         description = graphene.String()
         default = graphene.Boolean()
 
     ok = graphene.Boolean()
 
-    async def mutate(self, info, verbose_name, address, description=None, default=False):
+    async def mutate(self, _info, verbose_name, address, controller_user_type, user_login, user_password,
+                     description=None, default=False):
         # TODO: validation
+        # check that its possible to log in with given credentials (auth request to controller)
+
         # TODO: add token and credentials
         controller = await Controller.create(
             verbose_name=verbose_name,
             address=address,
             description=description,
-            default=default
+            default=default,
+            controller_user_type=ControllerUserType(controller_user_type).name,
+            user_login=user_login,
+            user_password=user_password
         )
+
         # add controller to resources_monitor_manager
         # resources_monitor_manager.add_controller(ip)
         return AddController(ok=True)
