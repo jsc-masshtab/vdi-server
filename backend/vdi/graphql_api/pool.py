@@ -67,11 +67,6 @@ class DesktopPoolType(graphene.Enum):
     STATIC = 1
 
 
-class DesktopPoolType(graphene.Enum):
-    AUTOMATED = 0
-    STATIC = 1
-
-
 # class PoolOrderingArg(graphene.Enum):
 #     POOL_NAME = 0
 #     CONTROLLER = 1
@@ -1085,6 +1080,21 @@ class PoolMixin:
                 qu = "SELECT * FROM pool"
                 pools = await conn.fetch(qu)
                 return PoolMixin._pool_db_data_to_pool_type_list(pools)
+
+    async def resolve_pool(self, info, id):
+        # TODO will be refactored
+
+        pool_data = await PoolMixin._select_pool(self, info, id)
+        print('pool_data', pool_data)
+        controller_ip = pool_data['controller_ip']
+
+        from vdi.graphql_api.resources import ControllerType
+        pool_data['id'] = id
+        pool_data = {
+            k: v for k, v in pool_data.items() if k in PoolType._meta.fields
+        }
+        return PoolType(**pool_data,
+                        controller=ControllerType(ip=controller_ip))
 
 
 class ChangePoolName(graphene.Mutation):
