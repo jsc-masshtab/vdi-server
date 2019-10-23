@@ -5,64 +5,53 @@ import { timer, Observable } from 'rxjs';
 import { switchMap, map } from 'rxjs/operators';
 
 
+interface IParams {
+    spin: boolean;
+    nameSort?: string | undefined;
+    reverse?: boolean | undefined;
+}
+
+
 @Injectable()
 export class PoolsService {
 
+    public paramsForGetPools: IParams = {
+        spin: true,
+        nameSort: undefined,
+        reverse: undefined
+    };
+
     constructor(private service: Apollo) { }
 
-    public getAllPools(obs?: boolean): Observable<any> {
-        const obs$ = timer(0, 60000);
+    public getAllPools(param: IParams): Observable<any> {
 
-        if (obs) {
-            return obs$.pipe(switchMap(() => {
-                return this.service.watchQuery({
-                    query: gql` query allPools {
-                                    pools {
-                                        id
-                                        name
-                                        vms {
-                                            id
-                                        }
-                                        desktop_pool_type
-                                        controller {
-                                            ip
-                                        }
-                                        users {
-                                            username
-                                        }
-                                        status
-                                    }
-                                }
-                        `,
-                    variables: {
-                        method: 'GET'
-                    }
-                }).valueChanges.pipe(map(data => data.data['pools']));
-            }));
-        } else {
+        let obs$ = timer(0, 60000);
+        return obs$.pipe(switchMap(() => {
             return this.service.watchQuery({
-                query: gql` query allPools {
-                                    pools {
+                query: gql` query allPools($ordering:String, $reversed_order: Boolean) {
+                                pools(ordering: $ordering, reversed_order: $reversed_order) {
+                                    id
+                                    name
+                                    vms {
                                         id
-                                        name
-                                        vms {
-                                            id
-                                        }
-                                        desktop_pool_type
-                                        controller {
-                                            ip
-                                        }
-                                        users {
-                                            username
-                                        }
-                                        status
                                     }
+                                    desktop_pool_type
+                                    controller {
+                                        ip
+                                    }
+                                    users {
+                                        username
+                                    }
+                                    status
                                 }
-                        `,
+                            }
+                    `,
                 variables: {
-                    method: 'GET'
+                    method: 'GET',
+                    ordering: param.nameSort,
+                    reversed_order: param.reverse
                 }
             }).valueChanges.pipe(map(data => data.data['pools']));
-        }
+        }));
     }
 }

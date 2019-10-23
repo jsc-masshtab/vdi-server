@@ -34,7 +34,7 @@ export class RemoveVMStaticPoolComponent {
         this.waitService.setWait(false);
       });
       this.dialogRef.close();
-      this.poolsService.getAllPools().subscribe();
+      this.poolsService.getAllPools({spin: false}).subscribe();
     });
   }
 
