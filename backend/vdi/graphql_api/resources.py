@@ -148,6 +148,11 @@ class NodeType(graphene.ObjectType):
         return await FetchResourcesUsage(controller_ip=self.controller.ip,
                                          resource_category_name='nodes', resource_id=self.id)
 
+    async def resolve_management_ip(self, _info):
+        if self.veil_info is Unset:
+            self.veil_info = await self.get_veil_info()
+        return self.veil_info['management_ip']
+
 
 class DatapoolType(graphene.ObjectType):
     id = graphene.String()
@@ -351,7 +356,6 @@ class Resources:
         if ordering:
             if ordering == 'verbose_name':
                 def sort_lam(cluster): return cluster.verbose_name if cluster.verbose_name else DEFAULT_NAME
-                pass
             elif ordering == 'cpu_count':
                 def sort_lam(cluster): return cluster.cpu_count if cluster.cpu_count else 0
             elif ordering == 'memory_count':
