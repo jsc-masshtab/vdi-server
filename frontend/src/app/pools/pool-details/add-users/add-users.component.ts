@@ -38,7 +38,8 @@ export class AddUsersPoolComponent implements OnInit {
     this.waitService.setWait(true);
     this.poolService.entitleUsersToPool(this.data.idPool, this.idUsers).subscribe(() => {
       this.poolService.getPool({id: this.data.idPool, type: this.data.typePool}).subscribe(() => {
-        this.poolsService.getAllPools({spin: false}).subscribe();
+        this.poolsService.paramsForGetPools.spin = false;
+        this.poolsService.getAllPools().subscribe();
         this.waitService.setWait(false);
       });
       this.dialogRef.close();

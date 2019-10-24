@@ -21,31 +21,43 @@ export class NodesComponent extends DetailsMove implements OnInit {
       property: 'verbose_name',
       class: 'name-start',
       type: 'string',
-      icon: 'server'
+      icon: 'server',
+      reverse_sort: true
     },
     {
       title: 'Локация',
       property: 'datacenter_name',
-      type: 'string'
+      type: 'string',
+      reverse_sort: true
     },
     {
       title: 'IP-адрес',
       property: 'management_ip',
-      type: 'string'
+      type: 'string',
+      reverse_sort: true
     },
     {
       title: 'CPU',
       property: 'cpu_count',
-      type: 'string'
+      type: 'string',
+      reverse_sort: true
     },
     {
       title: 'RAM',
       property: 'memory_count',
-      type: 'string'
+      type: 'string',
+      reverse_sort: true
+    },
+    {
+      title: 'Контроллер',
+      property: 'controller',
+      property_lv2: 'ip',
+      reverse_sort: true
     },
     {
       title: 'Статус',
-      property: 'status'
+      property: 'status',
+      reverse_sort: true
     }
   ];
 

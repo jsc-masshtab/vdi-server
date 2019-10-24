@@ -2,14 +2,17 @@
 
 <ng-container *ngIf="data && data?.length; else meh">
   <div class="table-component">
+
     <header>
-      <div *ngFor="let obj of collection" class="table-header-part"  [class.header-start]="obj.class == 'name-start'"  (click)="sortList(obj)" [title]="titleSort">
-        <span>{{obj.title}}</span>
-        <span class="icon-sort" *ngIf="ordering === obj.property">
-          <fa-icon [icon]="['fas','chevron-circle-up']" size="s" rotate="180" *ngIf="obj.sort"></fa-icon>
-          <fa-icon [icon]="['fas','chevron-circle-up']" size="s"  *ngIf="!obj.sort"></fa-icon>
-        </span>
-      </div>
+      <ng-container *ngFor="let obj of collection">
+        <div class="table-header-part"  [class.header-start]="obj.class === 'name-start'"  (click)="sortList(obj)" [title]="titleSort" (mouseenter)="setSortName(obj)" [class.cursorTrue]="obj.reverse_sort !== undefined">
+          <span>{{obj.title}}</span>
+          <span class="icon-sort" *ngIf="orderingSort === obj.property">
+            <fa-icon [icon]="['fas','chevron-circle-up']" size="s" rotate="180" *ngIf="!obj.reverse_sort"></fa-icon>
+            <fa-icon [icon]="['fas','chevron-circle-up']" size="s"  *ngIf="obj.reverse_sort"></fa-icon>
+          </span>
+        </div>
+      </ng-container>
     </header>
 
     <div class="table-area">

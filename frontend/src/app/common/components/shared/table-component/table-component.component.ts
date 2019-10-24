@@ -7,6 +7,7 @@ interface ICollection {
   type?: 'string' | 'array-length' | IPropertyInObjects | IPropertyBoolean;
   class?: 'name-start';
   icon?: string;
+  reverse_sort: boolean; // включить сортировку наличие поля
 }
 
 interface IPropertyInObjects {
@@ -33,8 +34,7 @@ export class TableComponentComponent {
   @Output() sortListNow: EventEmitter<object> = new EventEmitter<object>();
 
   public titleSort: string;
-  public sort: boolean = false;
-  public ordering: string;
+  public orderingSort: string;
 
   constructor() {}
 
@@ -42,22 +42,32 @@ export class TableComponentComponent {
     this.clickRowData.emit(item);
   }
 
-  public sortList(objFromCollection: {property: string, sort: boolean}) {
-    if (this.ordering !== objFromCollection.property) {
-      objFromCollection.sort = false;
+  public sortList(objFromCollection: ICollection) {
+    if (objFromCollection.reverse_sort === undefined) {
+      return;
     }
-    this.ordering = objFromCollection.property;
-    objFromCollection.sort = !objFromCollection.sort;
-    if (objFromCollection.sort) {
-      this.sortListNow.emit({nameSort: objFromCollection.property, reverse: false, spin: true });
-    } else {
+    if (this.orderingSort !== objFromCollection.property) {
+      objFromCollection.reverse_sort = true;
+    }
+    this.orderingSort = objFromCollection.property;
+
+    objFromCollection.reverse_sort = !objFromCollection.reverse_sort; // первый раз сделает false
+
+    if (objFromCollection.reverse_sort) {
       this.sortListNow.emit({nameSort: objFromCollection.property, reverse: true, spin: true });
+    } else {
+      this.sortListNow.emit({nameSort: objFromCollection.property, reverse: false, spin: true });
     }
   }
 
-  public setSortName(name) {
-    this.titleSort = `Нажмите для сортировки по полю ${name}`;
+  public setSortName(objFromCollection: ICollection) {
+    if (objFromCollection.reverse_sort === undefined) {
+      this.titleSort = '';
+      return;
+    }
+    this.titleSort = `Нажмите для сортировки по полю ${objFromCollection.title}`;
   }
+
 
   // set sortName(name) {
   //   this.sortName = `Сортировать по полю ${name}`;

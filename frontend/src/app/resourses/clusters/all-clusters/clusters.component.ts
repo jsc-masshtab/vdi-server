@@ -1,3 +1,4 @@
+import { IParams } from './../../../../../types/index.d';
 import { DetailsMove } from '../../../common/classes/details-move';
 import { WaitService } from '../../../common/components/single/wait/wait.service';
 import { Component, OnInit, ViewChild, ElementRef } from '@angular/core';
@@ -21,31 +22,37 @@ export class ClustersComponent extends DetailsMove implements OnInit {
       property: 'verbose_name',
       class: 'name-start',
       type: 'string',
-      icon: 'building'
+      icon: 'building',
+      reverse_sort: true
     },
     {
       title: 'Серверы',
       property: 'nodes_count',
-      type: 'string'
+      type: 'string',
+      reverse_sort: true
     },
     {
       title: 'CPU',
       property: 'cpu_count',
-      type: 'string'
+      type: 'string',
+      reverse_sort: true
     },
     {
       title: 'RAM',
       property: 'memory_count',
-      type: 'string'
+      type: 'string',
+      reverse_sort: true
     },
     {
       title: 'Контроллер',
       property: 'controller',
-      property_lv2: 'ip'
+      property_lv2: 'ip',
+      reverse_sort: true
     },
     {
       title: 'Статус',
-      property: 'status'
+      property: 'status',
+      reverse_sort: true
     }
   ];
 
@@ -62,21 +69,13 @@ export class ClustersComponent extends DetailsMove implements OnInit {
 
   public getAllClusters(): void {
     this.waitService.setWait(true);
-    this.service.getAllClusters().valueChanges.pipe(map(data => data.data.controllers))
+    this.service.getAllClusters().valueChanges.pipe(map(data => data.data.clusters))
       .subscribe((data) => {
-        let arrClusters: [][] = [];
-        this.clusters = [];
-        arrClusters = data.map(controller => controller.clusters);
-
-        arrClusters.forEach((arr: []) => {
-          arr.forEach((obj: {}) => {
-            this.clusters.push(obj);
-          });
-        });
+        this.clusters = data;
         this.waitService.setWait(false);
       });
   }
- 
+
   public onResize(): void {
     super.onResize(this.view);
   }
@@ -91,6 +90,13 @@ export class ClustersComponent extends DetailsMove implements OnInit {
 
   public routeTo(event): void {
     this.router.navigate([`resourses/clusters/${event.id}`]);
+  }
+
+  public sortList(param: IParams) {
+    this.service.paramsForGetClusters.spin = param.spin;
+    this.service.paramsForGetClusters.nameSort = param.nameSort;
+    this.service.paramsForGetClusters.reverse = param.reverse;
+    this.getAllClusters();
   }
 
 }

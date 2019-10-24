@@ -468,9 +468,9 @@ export class PoolAddComponent implements OnInit, OnDestroy {
                               formValue.total_size,
                               formValue.vm_name_template)
         .subscribe(() => {
-          this.waitService.setWait(false);
           this.dialogRef.close();
-          this.poolsService.getAllPools({spin: false}).subscribe();
+          this.poolsService.paramsForGetPools.spin = true;
+          this.poolsService.getAllPools().subscribe();
         });
     }
 
@@ -482,9 +482,9 @@ export class PoolAddComponent implements OnInit, OnDestroy {
                               formValue.datapool_id,
                               formValue.vm_ids_list)
         .subscribe(() => {
-          this.waitService.setWait(false);
           this.dialogRef.close();
-          this.poolsService.getAllPools({spin: false}).subscribe();
+          this.poolsService.paramsForGetPools.spin = true;
+          this.poolsService.getAllPools().subscribe();
         });
     }
   }

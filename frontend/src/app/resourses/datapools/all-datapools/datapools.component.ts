@@ -23,41 +23,49 @@ export class DatapoolsComponent extends DetailsMove implements OnInit {
       property: 'verbose_name',
       class: 'name-start',
       type: 'string',
-      icon: 'folder-open'
+      icon: 'folder-open',
+      reverse_sort: true
     },
     {
       title: 'Тип',
       property: 'type',
-      type: 'string'
+      type: 'string',
+      reverse_sort: true
     },
     {
       title: 'Диски',
       property: 'vdisk_count',
-      type: 'string'
+      type: 'string',
+      reverse_sort: true
     },
     {
       title: 'Образы',
       property: 'iso_count',
-      type: 'string'
+      type: 'string',
+      reverse_sort: true
     },
     {
       title: 'Файлы',
       property: 'file_count',
-      type: 'string'
+      type: 'string',
+      reverse_sort: true
     },
     {
       title: 'Свободно (Мб)',
       property: 'free_space',
-      type: 'string'
+      type: 'string',
+      reverse_sort: true
     },
     {
       title: 'Занято (Мб)',
       property: 'used_space',
-      type: 'string'
+      type: 'string',
+      reverse_sort: true
     },
     {
       title: 'Статус',
-      property: 'status'
+      property: 'status',
+      reverse_sort: true
     }
   ];
 

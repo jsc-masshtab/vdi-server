@@ -1,3 +1,4 @@
+import { IParams } from './../../../../types/index.d';
 import { PoolAddComponent } from './../add-pool/add-pool.component';
 import { WaitService } from './../../common/components/single/wait/wait.service';
 
@@ -28,19 +29,19 @@ export class PoolsComponent extends DetailsMove implements OnInit, OnDestroy {
       class: 'name-start',
       icon: 'desktop',
       type: 'string',
-      sort: false
+      reverse_sort: true
     },
     {
       title: 'Контроллер',
       property: 'controller',
       property_lv2: 'ip',
-      sort: false
+      reverse_sort: true
     },
     {
       title: 'Доступные ВМ',
       property: 'vms',
       type: 'array-length',
-      sort: false
+      reverse_sort: true
     },
     {
       title: 'Пользователи',
@@ -49,18 +50,18 @@ export class PoolsComponent extends DetailsMove implements OnInit, OnDestroy {
         propertyDepend: 'username',
         typeDepend: 'propertyInObjectsInArray'
       },
-      sort: false
+      reverse_sort: true
     },
     {
       title: 'Тип',
       property: 'desktop_pool_type',
       type: 'string',
-      sort: false
+      reverse_sort: true
     },
     {
       title: 'Cтатус',
       property: 'status',
-      sort: false
+      reverse_sort: true
     }
   ];
 
@@ -72,7 +73,7 @@ export class PoolsComponent extends DetailsMove implements OnInit, OnDestroy {
   @ViewChild('view') view: ElementRef;
 
   ngOnInit() {
-    this.getAllPools({ spin: true });
+    this.getAllPools();
   }
 
   public openCreatePool(): void {
@@ -81,24 +82,23 @@ export class PoolsComponent extends DetailsMove implements OnInit, OnDestroy {
     });
   }
 
-  public getAllPools(param: IParams): void {
-    if (param && param.spin) {
-      this.waitService.setWait(true);
-    }
-
+  public getAllPools(): void {
     if (this.getPoolsSub) {
       this.getPoolsSub.unsubscribe();
     }
 
-    console.log(param,'param');
-    this.getPoolsSub = this.service.getAllPools(param)
+    this.getPoolsSub = this.service.getAllPools()
       .subscribe((data) => {
         this.pools = data;
-        console.log('прилетели пулы',this.pools);
-        if (param && param.spin) {
+        if (this.service.paramsForGetPools.spin) {
           this.waitService.setWait(false);
         }
       });
+  }
+
+  public refresh(): void {
+    this.service.paramsForGetPools['spin'] = true;
+    this.getAllPools();
   }
 
   public routeTo(event): void {
@@ -118,12 +118,11 @@ export class PoolsComponent extends DetailsMove implements OnInit, OnDestroy {
     super.componentDeactivate();
   }
 
-  public sortList(param: {nameSort: string, reverse: boolean, spin: boolean }) {
-    console.log(param);
-    this.paramsForGetPools['spin'] = param.spin; // чтобы сохранить при refresh сортировку
-    this.paramsForGetPools['nameSort'] = param.nameSort;
-    this.paramsForGetPools['reverse'] = param.reverse;
-    this.getAllPools(this.paramsForGetPools);
+  public sortList(param: IParams) {
+    this.service.paramsForGetPools.spin = param.spin;
+    this.service.paramsForGetPools.nameSort = param.nameSort;
+    this.service.paramsForGetPools.reverse = param.reverse;
+    this.getAllPools();
   }
 
   ngOnDestroy() {

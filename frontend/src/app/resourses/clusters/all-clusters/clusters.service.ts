@@ -1,3 +1,4 @@
+import { IParams } from './../../../../../types/index.d';
 import { Injectable } from '@angular/core';
 import { Apollo, QueryRef } from 'apollo-angular';
 import gql from 'graphql-tag';
@@ -6,31 +7,37 @@ import gql from 'graphql-tag';
 @Injectable()
 export class ClustersService  {
 
+    public paramsForGetClusters: IParams = { // для несбрасывания параметров сортировки при всех обновлениях
+        spin: true,
+        nameSort: undefined,
+        reverse: undefined
+    };
+
     constructor(private service: Apollo) {}
 
     public getAllClusters(): QueryRef<any, any> {
 
-            return  this.service.watchQuery({
-                query:  gql` query allClusters {
-                            controllers {
-                                clusters {
-                                    id
-                                    verbose_name
-                                    nodes_count
-                                    status
-                                    cpu_count
-                                    memory_count
-                                    controller {
-                                        ip
-                                    }
+        return  this.service.watchQuery({
+            query:  gql` query allClusters($ordering:String, $reversed_order: Boolean) {
+                            clusters(ordering: $ordering, reversed_order: $reversed_order) {
+                                id
+                                verbose_name
+                                nodes_count
+                                status
+                                cpu_count
+                                memory_count
+                                controller {
+                                    ip
                                 }
                             }
                         }
-                        `,
-                variables: {
-                    method: 'GET'
-                }
-            });
+                    `,
+            variables: {
+                method: 'GET',
+                ordering: this.paramsForGetClusters.nameSort,
+                reversed_order: this.paramsForGetClusters.reverse
+            }
+        });
     }
 
     public getCluster(id: string): QueryRef<any, any> {
@@ -83,3 +90,4 @@ export class ClustersService  {
         });
     }
 }
+

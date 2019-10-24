@@ -4,8 +4,6 @@
 
     header {
         display: flex;
-        padding-top: 5px;
-        padding-bottom: 5px;
         font-size: 11px;
         color: rgba(0,0,0,0.6);
         background: rgb(217, 236, 244);
@@ -22,7 +20,8 @@
         text-overflow: ellipsis;
         white-space: nowrap;
         position: relative;
-        cursor: pointer;
+        padding-top: 5px;
+        padding-bottom: 5px;
     }
 
     .icon-sort {
