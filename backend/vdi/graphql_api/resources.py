@@ -314,7 +314,7 @@ class Resources:
                 def sort_lam(node): return node.cpu_count if node.cpu_count else 0
             elif ordering == 'memory_count':
                 def sort_lam(node): return node.memory_count if node.memory_count else 0
-            elif ordering == 'location':
+            elif ordering == 'datacenter_name':
                 def sort_lam(node):
                     return node.cluster['verbose_name'] if node.cluster['verbose_name'] else DEFAULT_NAME
             elif ordering == 'status':
