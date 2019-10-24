@@ -319,7 +319,7 @@ class Resources:
                     return node.cluster['verbose_name'] if node.cluster['verbose_name'] else DEFAULT_NAME
             elif ordering == 'status':
                 def sort_lam(node): return node.status if node.status else DEFAULT_NAME
-            elif ordering == 'controller_ip':
+            elif ordering == 'controller':
                 def sort_lam(node): return node.controller.ip if node.controller.ip else DEFAULT_NAME
             elif ordering == 'management_ip':
                 def sort_lam(node): return node.controller.ip if node.controller.ip else DEFAULT_NAME
@@ -373,7 +373,7 @@ class Resources:
                 def sort_lam(cluster): return cluster.nodes_count if cluster.nodes_count else 0
             elif ordering == 'status':
                 def sort_lam(cluster): return cluster.status if cluster.status else DEFAULT_NAME
-            elif ordering == 'controller_ip':
+            elif ordering == 'controller':
                 def sort_lam(cluster): return cluster.controller.ip if cluster.controller.ip else DEFAULT_NAME
             else:
                 raise SimpleError('Неверный параметр сортировки')

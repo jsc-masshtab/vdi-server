@@ -154,7 +154,7 @@ class ResourcesMonitor(AbstractMonitor):
         self.notify_observers(resource_str, json_data)
 
     async def _on_connection_closed(self):
-        print(__class__.__name__, 'connection closed ', self._controller_ip, self._ws_connection.open)
+        print(__class__.__name__, 'connection closed ', self._controller_ip)
         await self._try_to_reconnect()
 
     async def _try_to_reconnect(self):
