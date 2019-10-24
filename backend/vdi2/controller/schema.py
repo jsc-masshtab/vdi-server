@@ -3,6 +3,9 @@ from controller.models import Controller
 from controller.models import ControllerUserType
 
 
+ControllerUserTypeGr = graphene.Enum.from_enum(ControllerUserType)
+
+
 class ControllerType(graphene.ObjectType):
     id = graphene.String()
     verbose_name = graphene.String()
@@ -12,8 +15,21 @@ class ControllerType(graphene.ObjectType):
     version = graphene.String()
     default = graphene.Boolean()
 
+    controller_user_type = ControllerUserTypeGr()
+    user_login = graphene.String()
+    user_password = graphene.String()
 
-ControllerUserTypeGr = graphene.Enum.from_enum(ControllerUserType)
+    async def resolve_status(self, _info):
+        return self.get_status()
+
+    async def get_status(self):
+        # if not self.status:
+        #     try:
+        #         await CheckController(controller_ip=self.address)
+        #         self.status = 'ACTIVE'
+        #     except (HTTPClientError, NotFound, OSError):
+        #         self.status = 'FAILED'
+        return self.status
 
 
 class AddController(graphene.Mutation):
@@ -70,7 +86,7 @@ class ControllerQuery(graphene.ObjectType):
     controllers = graphene.List(lambda: ControllerType)
     controller = graphene.Field(lambda: ControllerType, id=graphene.String())
 
-    async def resolve_controllers(self, info):
+    async def resolve_controllers(self, _info):
         controllers = await Controller.query.gino.all()
         objects = [
             ControllerType(**controller.__values__)
@@ -78,7 +94,7 @@ class ControllerQuery(graphene.ObjectType):
         ]
         return objects
 
-    async def resolve_controller(self, info, id):
+    async def resolve_controller(self, _info, id):
         # TODO: validation
         controller = await Controller.query.where(Controller.id == id).gino.first()
         return ControllerType(**controller.__values__)

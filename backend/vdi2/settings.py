@@ -31,3 +31,13 @@ WS_PING_INTERVAL = 1  # TODO: change to 6
 # ECP Veil settings
 # -----------------------------
 credentials = dict(username='vdi', password='4ever')
+
+# Pool parameters
+# -----------------------------
+MIX_POOL_SIZE = 1
+MAX_POOL_SIZE = 200
+MAX_VM_AMOUNT_IN_POOL = 1000
+
+# Others
+# -----------------------------
+DEFAULT_NAME = 'Unknown'

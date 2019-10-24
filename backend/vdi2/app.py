@@ -3,8 +3,10 @@ import tornado.web
 
 from graphene_tornado.tornado_graphql_handler import TornadoGraphQLHandler
 from settings import DB_NAME, DB_PASS, DB_USER, DB_PORT, DB_HOST, WS_PING_INTERVAL
+
 from database import db
 from controller.schema import controller_schema
+from controller_resources.schema import resources_schema
 
 from auth.urls import auth_urls
 from pool.urls import pool_urls
@@ -21,6 +23,7 @@ if __name__ == '__main__':
 
     handlers = [
         (r'/controllers', TornadoGraphQLHandler, dict(graphiql=True, schema=controller_schema)),
+        (r'/resources', TornadoGraphQLHandler, dict(graphiql=True, schema=resources_schema)),
         (r'/users', TornadoGraphQLHandler, dict(graphiql=True, schema=user_schema)),
         # (r'/graphql', TornadoGraphQLHandler, dict(graphiql=True, schema=schema)),
         # (r'/graphql/batch', TornadoGraphQLHandler, dict(graphiql=True, schema=schema, batch=True)),
