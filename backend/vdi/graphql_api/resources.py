@@ -254,8 +254,17 @@ class Resources:
         # sorting
         if ordering:
             reverse = reversed_order if reversed_order is not None else False
-            if ordering == 'controller_ip':
+            if ordering == 'ip':
                 controllers = sorted(controllers, key=lambda controller: controller.ip, reverse=reverse)
+            elif ordering == 'description':
+                controllers = sorted(controllers,
+                                     key=lambda controller: controller.description if controller.description else '',
+                                     reverse=reverse)
+            elif ordering == 'status':
+                for controller in controllers:
+                    await controller.check_is_online()
+                controllers = sorted(controllers, key=lambda controller: controller.status, reverse=reverse)
+                pass
 
         return controllers
 
@@ -672,21 +681,22 @@ class ControllerType(graphene.ObjectType):
         return obj
 
     async def resolve_is_online(self, _info):
-        return self._check_is_online()
+        await self.check_is_online()
+        return self.is_online
 
     async def resolve_status(self, _info):
-        is_online = await self._check_is_online()
-        if is_online:
-            return 'ACTIVE'
-        else:
-            return 'FAILED'
+        await self.check_is_online()
+        return self.status
 
-    async def _check_is_online(self):
-        try:
-            await CheckController(controller_ip=self.ip)
-            return True
-        except (HTTPClientError, NotFound, OSError):
-            return False
+    async def check_is_online(self):
+        if self.is_online is None or self.status is None:
+            try:
+                await CheckController(controller_ip=self.ip)
+                self.is_online = True
+                self.status = 'ACTIVE'
+            except (HTTPClientError, NotFound, OSError):
+                self.is_online = False
+                self.status = 'FAILED'
 
 
     # remove later
