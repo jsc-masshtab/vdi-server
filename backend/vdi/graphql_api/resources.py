@@ -418,8 +418,9 @@ class Resources:
             elif ordering == 'used_space':
                 def sort_lam(datapool): return datapool.used_space if datapool.used_space else 0
             elif ordering == 'free_space':
-                def sort_lam(datapool):
-                    return datapool.free_space if datapool.free_space else 0
+                def sort_lam(datapool): return datapool.free_space if datapool.free_space else 0
+            elif ordering == 'status':
+                def sort_lam(datapool): return datapool.status if datapool.status else DEFAULT_NAME
             else:
                 raise SimpleError('Неверный параметр сортировки')
             reverse = reversed_order if reversed_order is not None else False
