@@ -1,6 +1,7 @@
+import { IParams } from './../../../../../types/index.d';
 
 import { WaitService } from './../../../common/components/single/wait/wait.service';
-import { Component, OnInit, ViewChild, ElementRef } from '@angular/core';
+import { Component, OnInit, ViewChild, ElementRef, OnDestroy } from '@angular/core';
 import { DatapoolsService } from './datapools.service';
 import { map } from 'rxjs/operators';
 import { Router } from '@angular/router';
@@ -14,7 +15,7 @@ import { DetailsMove } from 'src/app/common/classes/details-move';
 })
 
 
-export class DatapoolsComponent extends DetailsMove implements OnInit {
+export class DatapoolsComponent extends DetailsMove implements OnInit, OnDestroy {
 
   public datapools: object[] = [];
   public collection: object[] = [
@@ -82,17 +83,9 @@ export class DatapoolsComponent extends DetailsMove implements OnInit {
 
   public getDatapools() {
     this.waitService.setWait(true);
-    this.service.getAllDatapools().valueChanges.pipe(map(data => data.data.controllers))
+    this.service.getAllDatapools().valueChanges.pipe(map(data => data.data.datapools))
       .subscribe( (data) => {
-        let arrDatapools: [][] = [];
-        this.datapools = [];
-        arrDatapools = data.map(controller => controller.datapools);
-
-        arrDatapools.forEach((arr: []) => {
-            arr.forEach((obj: {}) => {
-              this.datapools.push(obj);
-            });
-        });
+        this.datapools = data;
         this.waitService.setWait(false);
       });
   }
@@ -111,6 +104,19 @@ export class DatapoolsComponent extends DetailsMove implements OnInit {
 
   public componentDeactivate(): void {
     super.componentDeactivate();
+  }
+
+  public sortList(param: IParams): void  {
+    this.service.paramsForGetDatapools.spin = param.spin;
+    this.service.paramsForGetDatapools.nameSort = param.nameSort;
+    this.service.paramsForGetDatapools.reverse = param.reverse;
+    this.getDatapools();
+  }
+
+  ngOnDestroy() {
+    this.service.paramsForGetDatapools.spin = true;
+    this.service.paramsForGetDatapools.nameSort = undefined;
+    this.service.paramsForGetDatapools.reverse = undefined;
   }
 
 }

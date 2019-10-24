@@ -1,7 +1,7 @@
 import { IParams } from './../../../../../types/index.d';
 import { DetailsMove } from '../../../common/classes/details-move';
 import { WaitService } from '../../../common/components/single/wait/wait.service';
-import { Component, OnInit, ViewChild, ElementRef } from '@angular/core';
+import { Component, OnInit, ViewChild, ElementRef, OnDestroy } from '@angular/core';
 import { ClustersService } from './clusters.service';
 import { map } from 'rxjs/operators';
 import { Router } from '@angular/router';
@@ -13,7 +13,7 @@ import { Router } from '@angular/router';
 })
 
 
-export class ClustersComponent extends DetailsMove implements OnInit {
+export class ClustersComponent extends DetailsMove implements OnInit, OnDestroy {
 
   public clusters = [];
   public collection: object[] = [
@@ -97,6 +97,12 @@ export class ClustersComponent extends DetailsMove implements OnInit {
     this.service.paramsForGetClusters.nameSort = param.nameSort;
     this.service.paramsForGetClusters.reverse = param.reverse;
     this.getAllClusters();
+  }
+
+  ngOnDestroy() {
+    this.service.paramsForGetClusters.spin = true;
+    this.service.paramsForGetClusters.nameSort = undefined;
+    this.service.paramsForGetClusters.reverse = undefined;
   }
 
 }

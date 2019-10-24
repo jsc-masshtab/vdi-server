@@ -1,5 +1,6 @@
+import { IParams } from './../../../../../types/index.d';
 import { WaitService } from './../../../common/components/single/wait/wait.service';
-import { Component, OnInit, ViewChild, ElementRef } from '@angular/core';
+import { Component, OnInit, ViewChild, ElementRef, OnDestroy } from '@angular/core';
 import { NodesService } from './nodes.service';
 import { map } from 'rxjs/operators';
 import { Router } from '@angular/router';
@@ -12,7 +13,7 @@ import { DetailsMove } from 'src/app/common/classes/details-move';
 })
 
 
-export class NodesComponent extends DetailsMove implements OnInit {
+export class NodesComponent extends DetailsMove implements OnInit, OnDestroy {
 
   public infoTemplates: [];
   public collection: object[] = [
@@ -75,18 +76,9 @@ export class NodesComponent extends DetailsMove implements OnInit {
 
   public getNodes() {
     this.waitService.setWait(true);
-    this.service.getAllNodes().valueChanges.pipe(map(data => data.data.controllers))
+    this.service.getAllNodes().valueChanges.pipe(map(data => data.data.nodes))
       .subscribe((data) => {
-        this.nodes = [];
-        let arrNodes: [][] = [];
-
-        arrNodes = data.map(controller => controller.nodes);
-
-        arrNodes.forEach((arr: []) => {
-          arr.forEach((obj: {}) => {
-            this.nodes.push(obj);
-          });
-        });
+        this.nodes = data;
         this.waitService.setWait(false);
       });
   }
@@ -105,6 +97,19 @@ export class NodesComponent extends DetailsMove implements OnInit {
 
   public componentDeactivate(): void {
     super.componentDeactivate();
+  }
+
+  public sortList(param: IParams): void  {
+    this.service.paramsForGetNodes.spin = param.spin;
+    this.service.paramsForGetNodes.nameSort = param.nameSort;
+    this.service.paramsForGetNodes.reverse = param.reverse;
+    this.getNodes();
+  }
+
+  ngOnDestroy() {
+    this.service.paramsForGetNodes.spin = true;
+    this.service.paramsForGetNodes.nameSort = undefined;
+    this.service.paramsForGetNodes.reverse = undefined;
   }
 
 }

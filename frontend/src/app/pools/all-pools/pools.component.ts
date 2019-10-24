@@ -127,6 +127,9 @@ export class PoolsComponent extends DetailsMove implements OnInit, OnDestroy {
 
   ngOnDestroy() {
     this.getPoolsSub.unsubscribe();
+    this.service.paramsForGetPools.spin = true;
+    this.service.paramsForGetPools.nameSort = undefined;
+    this.service.paramsForGetPools.reverse = undefined;
   }
 
 }
