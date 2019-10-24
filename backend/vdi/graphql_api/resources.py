@@ -316,13 +316,13 @@ class Resources:
                 def sort_lam(node): return node.memory_count if node.memory_count else 0
             elif ordering == 'datacenter_name':
                 def sort_lam(node):
-                    return node.cluster['verbose_name'] if node.cluster['verbose_name'] else DEFAULT_NAME
+                    return node.cluster['datacenter_name'] if node.cluster['datacenter_name'] else DEFAULT_NAME
             elif ordering == 'status':
                 def sort_lam(node): return node.status if node.status else DEFAULT_NAME
             elif ordering == 'controller':
                 def sort_lam(node): return node.controller.ip if node.controller.ip else DEFAULT_NAME
             elif ordering == 'management_ip':
-                def sort_lam(node): return node.controller.ip if node.controller.ip else DEFAULT_NAME
+                def sort_lam(node): return node.management_ip if node.management_ip else DEFAULT_NAME
             else:
                 raise SimpleError('Неверный параметр сортировки')
             reverse = reversed_order if reversed_order is not None else False
