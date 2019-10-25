@@ -1,6 +1,6 @@
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { ClusterDetailsComponent } from './vms-details.component';
+import { ClusterDetailsComponent } from './vm-details.component';
 
 describe('TemplatesComponent', () => {
   let component: ClusterDetailsComponent;

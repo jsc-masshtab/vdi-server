@@ -2,10 +2,17 @@
 
 <ng-container *ngIf="data && data?.length; else meh">
   <div class="table-component">
+
     <header>
-      <div *ngFor="let obj of collection" class="table-header-part" [class.index-column]="obj.property == 'index'" [class.name-start]="obj.class == 'name-start'">
-        {{obj.title}}
-      </div>
+      <ng-container *ngFor="let obj of collection">
+        <div class="table-header-part"  [class.header-start]="obj.class === 'name-start'"  (click)="sortList(obj)" [title]="titleSort" (mouseenter)="setSortName(obj)" [class.cursorTrue]="obj.reverse_sort !== undefined">
+          <span>{{obj.title}}</span>
+          <span class="icon-sort" *ngIf="orderingSort === obj.property">
+            <fa-icon [icon]="['fas','chevron-circle-up']" size="s" rotate="180" *ngIf="!obj.reverse_sort"></fa-icon>
+            <fa-icon [icon]="['fas','chevron-circle-up']" size="s"  *ngIf="obj.reverse_sort"></fa-icon>
+          </span>
+        </div>
+      </ng-container>
     </header>
 
     <div class="table-area">
@@ -13,7 +20,7 @@
         <div class="table-area-object" [class.cursorTrue]="cursor" (click)="clickRow(item)" tabindex="-1" 
           [class.status-fail]="item?.status === 'FAILED' || item?.status === 'FAIL_CREATING' || item?.status === 'FAIL_DELETING' || item?.status === 'ERROR'"
           [class.status-halt]="item?.status === 'HALTING' || item?.status === 'CREATING' || item?.status === 'DELETING' || item?.status === 'HERMIT' || item?.status === 'SERVICE' || item?.status === 'PARTIAL'">   <!--строка-->
-          <div class="table-area-property" *ngFor="let obj of collection" [class.index-column]="obj.property == 'index'"  [class.name-start]="obj.class == 'name-start'"> <!--столбец-->
+          <div class="table-area-property" *ngFor="let obj of collection" [class.name-start]="obj.class == 'name-start'"> <!--столбец-->
 
   <!-- icons -->
             <span [class.icon-group]="entity === 'vm'" *ngIf="obj.icon">
@@ -27,10 +34,7 @@
                 <fa-icon [icon]="['fas', 'question-circle']" *ngIf="item.state === 'UNDEFINED'" class="status undefined" title="Не найдено"></fa-icon>
               </ng-container>
             </span>
-  <!-- obj.property === 'index' -->
-            <ng-container *ngIf="obj.property === 'index'">
-              <span>{{ i+1 }}</span>
-            </ng-container>
+
   <!-- obj.property === 'status' -->
             <ng-container *ngIf="obj.property === 'status'">
               <ng-container *ngIf="item[obj.property]; else nothing">
@@ -46,7 +50,7 @@
               </ng-container>
             </ng-container>
   <!-- obj.property -> all-types-here-->
-            <ng-container *ngIf="obj.property && obj.property != 'status' && obj.property != 'index' && !obj.property_lv2">
+            <ng-container *ngIf="obj.property && obj.property != 'status' && !obj.property_lv2">
               <ng-container *ngIf="item[obj.property] && obj.type; else nothing">
                   <span *ngIf="obj.type === 'string'" [class.name-entity]="obj.class == 'name-start'">{{ item[obj.property] }}</span>
 
@@ -64,6 +68,10 @@
                   <ng-container *ngIf="obj.type.typeDepend === 'boolean'">
                     <ng-container *ngIf="obj.property">{{ obj.type.propertyDepend[0] }}</ng-container>
                     <ng-container *ngIf="!obj.property">{{ obj.type.propertyDepend[1] }}</ng-container>
+                  </ng-container>
+
+                  <ng-container *ngIf="obj.type === 'time'">
+                    <ng-container>{{ moment('obj.property').format('yyyy-MM-dd HH:mm:ss.SSS')  }}</ng-container>
                   </ng-container>
 
               </ng-container>

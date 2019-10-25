@@ -1,8 +1,11 @@
+import { IParams } from './../../../../../types/index.d';
+
 import { WaitService } from './../../../common/components/single/wait/wait.service';
-import { Component, OnInit, ViewChild, ElementRef, HostListener } from '@angular/core';
+import { Component, OnInit, ViewChild, ElementRef, OnDestroy } from '@angular/core';
 import { DatapoolsService } from './datapools.service';
 import { map } from 'rxjs/operators';
 import { Router } from '@angular/router';
+import { DetailsMove } from 'src/app/common/classes/details-move';
 
 
 @Component({
@@ -12,7 +15,7 @@ import { Router } from '@angular/router';
 })
 
 
-export class DatapoolsComponent implements OnInit {
+export class DatapoolsComponent extends DetailsMove implements OnInit, OnDestroy {
 
   public datapools: object[] = [];
   public collection: object[] = [
@@ -21,63 +24,58 @@ export class DatapoolsComponent implements OnInit {
       property: 'verbose_name',
       class: 'name-start',
       type: 'string',
-      icon: 'folder-open'
+      icon: 'folder-open',
+      reverse_sort: true
     },
     {
       title: 'Тип',
       property: 'type',
-      type: 'string'
+      type: 'string',
+      reverse_sort: true
     },
     {
       title: 'Диски',
       property: 'vdisk_count',
-      type: 'string'
+      type: 'string',
+      reverse_sort: true
     },
     {
       title: 'Образы',
       property: 'iso_count',
-      type: 'string'
+      type: 'string',
+      reverse_sort: true
     },
     {
       title: 'Файлы',
       property: 'file_count',
-      type: 'string'
+      type: 'string',
+      reverse_sort: true
     },
     {
       title: 'Свободно (Мб)',
       property: 'free_space',
-      type: 'string'
+      type: 'string',
+      reverse_sort: true
     },
     {
       title: 'Занято (Мб)',
       property: 'used_space',
-      type: 'string'
+      type: 'string',
+      reverse_sort: true
     },
     {
       title: 'Статус',
-      property: 'status'
+      property: 'status',
+      reverse_sort: true
     }
   ];
 
-  public pageHeightMinNumber: number = 315;
-  public pageHeightMin: string = '315px';
-  public pageHeightMax: string = '100%';
-  public pageHeight: string = '100%';
-  public pageRollup: boolean = false;
 
-  constructor(private service: DatapoolsService, private waitService: WaitService,  private router: Router) {}
+  constructor(private service: DatapoolsService, private waitService: WaitService,  private router: Router) {
+    super();
+  }
 
   @ViewChild('view') view: ElementRef;
-
-  @HostListener('window:resize', ['$event']) onResize() {
-    if (this.pageHeight === this.pageHeightMin) {
-      if ((this.view.nativeElement.clientHeight - this.pageHeightMinNumber) < (this.pageHeightMinNumber + 250)) {
-        this.pageRollup = true;
-      } else {
-        this.pageRollup = false;
-      }
-    }
-  }
 
   ngOnInit() {
     this.getDatapools();
@@ -85,44 +83,40 @@ export class DatapoolsComponent implements OnInit {
 
   public getDatapools() {
     this.waitService.setWait(true);
-    this.service.getAllDatapools().valueChanges.pipe(map(data => data.data.controllers))
+    this.service.getAllDatapools().valueChanges.pipe(map(data => data.data.datapools))
       .subscribe( (data) => {
-        let arrDatapools: [][] = [];
-        this.datapools = [];
-        arrDatapools = data.map(controller => controller.datapools);
-
-        arrDatapools.forEach((arr: []) => {
-            arr.forEach((obj: {}) => {
-              this.datapools.push(obj);
-            });
-        });
+        this.datapools = data;
         this.waitService.setWait(false);
       });
   }
 
-  public componentAdded(): void {
-    setTimeout(() => {
-      this.pageHeight = this.pageHeightMin;
-
-      if ((this.view.nativeElement.clientHeight - this.pageHeightMinNumber) < (this.pageHeightMinNumber + 250)) {
-        this.pageRollup = true;
-      }
-    }, 0);
-  }
-
-  public componentRemoved(): void {
-    setTimeout(() => {
-      this.pageHeight = this.pageHeightMax;
-      this.pageRollup = false;
-    }, 0);
-  }
-
   public routeTo(event): void {
     this.router.navigate([`resourses/datapools/${event.id}`]);
+  }
 
-    setTimeout(() => {
-      this.pageHeight = this.pageHeightMin;
-    }, 0);
+  public onResize(): void {
+    super.onResize(this.view);
+  }
+
+  public componentActivate(): void {
+    super.componentActivate(this.view);
+  }
+
+  public componentDeactivate(): void {
+    super.componentDeactivate();
+  }
+
+  public sortList(param: IParams): void  {
+    this.service.paramsForGetDatapools.spin = param.spin;
+    this.service.paramsForGetDatapools.nameSort = param.nameSort;
+    this.service.paramsForGetDatapools.reverse = param.reverse;
+    this.getDatapools();
+  }
+
+  ngOnDestroy() {
+    this.service.paramsForGetDatapools.spin = true;
+    this.service.paramsForGetDatapools.nameSort = undefined;
+    this.service.paramsForGetDatapools.reverse = undefined;
   }
 
 }
