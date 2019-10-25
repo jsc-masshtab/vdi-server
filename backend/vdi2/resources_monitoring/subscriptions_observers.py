@@ -91,13 +91,13 @@ class VdiFrontSubscriptionHandler(AbstractSubscriptionObserver):
                 response_dict['resource'] = subscription_source
             except ValueError:
                 response_dict['error'] = True
-                await self._dump_dict_and_send(response_dict)
+                await self._send_json(response_dict)
                 continue
             # check if allowed
             if subscription_source not in VDI_FRONT_ALLOWED_SUBSCRIPTIONS_LIST:
                 print(__class__.__name__, ' Unknown subscription source')
                 response_dict['error'] = True
-                await self._dump_dict_and_send(response_dict)
+                await self._send_json(response_dict)
                 continue
             # print('Test Length', len(self._subscriptions))
             # if 'add' cmd and not subscribed  then subscribe
@@ -118,7 +118,7 @@ class VdiFrontSubscriptionHandler(AbstractSubscriptionObserver):
                 response_dict['error'] = False
 
             # send response
-            await self._dump_dict_and_send(response_dict)
+            await self._send_json(response_dict)
 
     async def _send_messages(self):
         # wait for message and send it to front client
@@ -129,11 +129,11 @@ class VdiFrontSubscriptionHandler(AbstractSubscriptionObserver):
                 json_message = self._message_queue.get_nowait()
             except asyncio.QueueEmpty:
                 continue
-            if self._websocket:
-                await self._websocket.send_json(json_message)
+            await self._send_json(json_message)
 
-    async def _dump_dict_and_send(self, dictionary):
-        await self._websocket.send_json(dictionary)
+    async def _send_json(self, json_data):
+        if self._websocket:
+            await self._websocket.send_json(json_data)
 
 
 class WaiterSubscriptionObserver(AbstractSubscriptionObserver):
