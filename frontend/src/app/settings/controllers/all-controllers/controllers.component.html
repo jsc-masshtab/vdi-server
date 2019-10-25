@@ -25,7 +25,7 @@
 
 <div class="components-info">
     <div class="component-list" [style.height]="'100%'">
-        <vdi-table-component [data]="controllers" [collection]="collection" empty="- нет контроллеров - "></vdi-table-component>
+        <vdi-table-component [data]="controllers" [collection]="collection" (sortListNow)="sortList($event)"></vdi-table-component>
     </div>
     <!-- <div class="component-details" [class.page-height-min]="pageHeight==pageHeightMin" [class.page-height-max]="pageRollup">
         <router-outlet (activate)="componentAdded()" (deactivate)="componentRemoved()"></router-outlet>

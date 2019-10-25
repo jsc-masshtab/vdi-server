@@ -70,6 +70,10 @@
                     <ng-container *ngIf="!obj.property">{{ obj.type.propertyDepend[1] }}</ng-container>
                   </ng-container>
 
+                  <ng-container *ngIf="obj.type === 'time'">
+                    <ng-container>{{ moment('obj.property').format('yyyy-MM-dd HH:mm:ss.SSS')  }}</ng-container>
+                  </ng-container>
+
               </ng-container>
             </ng-container>
   <!-- obj.property_lv2 -->
