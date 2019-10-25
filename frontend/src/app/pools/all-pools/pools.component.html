@@ -1,12 +1,12 @@
 
 <div class="control-panel">
     
-    <div class="crumb" (click)="viewTable.la()">
+    <div class="crumb">
         <fa-icon [icon]="['fas','desktop']"></fa-icon>
         <span class="crumb-name">Пулы рабочих столов</span>
     </div>
 
-    <button (click)="getAllPools({spin:true})" class="btn-refresh" title="Обновить">
+    <button (click)="refresh()" class="btn-refresh" title="Обновить">
         <fa-icon [icon]="['fas','sync-alt']"></fa-icon>
     </button>
 
@@ -20,10 +20,10 @@
 
 <div class="components-info" #view>
     <div class="component-list" [class.page-wrap]="pageRollup" [class.page-rollup]="pageRollup" [style.height]="pageHeight">
-        <vdi-table-component #viewTable [data]="pools" [collection]="collection" empty="- нет пулов - "  [cursor]="true" (clickRowData)="routeTo($event)"></vdi-table-component>
+        <vdi-table-component  [data]="pools" [collection]="collection" cursor="true" (clickRowData)="routeTo($event)" (sortListNow)="sortList($event)"></vdi-table-component>
     </div>
     <div class="component-details" [class.page-height-min]="pageHeight==pageHeightMin" [class.page-height-max]="pageRollup">
-        <router-outlet (activate)="componentAdded()" (deactivate)="componentRemoved()"></router-outlet>
+        <router-outlet (activate)="componentActivate()" (deactivate)="componentDeactivate()"></router-outlet>
     </div>
 </div>
 

@@ -4,8 +4,6 @@
 
     header {
         display: flex;
-        padding-top: 5px;
-        padding-bottom: 5px;
         font-size: 11px;
         color: rgba(0,0,0,0.6);
         background: rgb(217, 236, 244);
@@ -15,11 +13,23 @@
 
     .table-header-part {
         flex: 1;
-        text-align: center;
+        display: flex;
+        justify-content: center;
         min-width: 50px;
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
+        position: relative;
+        padding-top: 5px;
+        padding-bottom: 5px;
+    }
+
+    .icon-sort {
+        position: absolute;
+        right: 0px;
+        width: 50px;
+        text-align: center;
+        color: #39769a;
     }
 
     .table-area {
@@ -119,14 +129,14 @@
         }
     }
 
-    // частные случаи столбца
-    .index-column { 
-        width: 50px;
-        flex: inherit;
-    }
+    // частные случаи столбцаtable-header-part
 
     .name-start {
         justify-content: flex-start;
+        min-width: 30%;
+    }
+
+    .header-start {
         min-width: 30%;
     }
 
