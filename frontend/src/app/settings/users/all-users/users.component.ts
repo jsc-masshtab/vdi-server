@@ -26,12 +26,12 @@ export class UsersComponent implements OnInit, OnDestroy {
       type: 'string',
       reverse_sort: true
     },
-    {
+    /*{
       title: 'Дата создания',
       property: 'date_joined',
       type: 'time',
       reverse_sort: true
-    }
+    }*/
   ];
 
   constructor(private service: UsersService, public dialog: MatDialog, private waitService: WaitService) {}
