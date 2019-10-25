@@ -5,15 +5,16 @@ import re
 import asyncio
 
 from vdi.settings import settings
-from db.db import db
 
 
 class Unset:
     pass
 
 
-# determine what fields are requested in graphql request
 def get_selections(info, path=''):
+    """
+    determine what fields are requested in graphql request
+    """
     if isinstance(info, Selections):
         return info.get_path(path)
 
@@ -61,9 +62,11 @@ def as_list(gen):
     return list(gen())
 
 
-# create resource object (NodeType, ClusterType...)
-# fields_map is used to match Vitalya names with veil names
 def make_resource_type(type, data, fields_map=None):
+    """
+    create resource object (NodeType, ClusterType...)
+    fields_map is used to match Vitalya names with veil names
+    """
     dic = {}
     for k, v in data.items():
         if fields_map:
@@ -84,18 +87,24 @@ def into_words(s):
     return [w for w in s.split() if w]
 
 
-# limit value by min_value and max_value
 def clamp_value(my_value, min_value, max_value):
+    """
+    limit value by min_value and max_value
+    """
     return max(min(my_value, max_value), min_value)
 
 
-# validate if name correct
 def validate_name(name_string):
+    """
+    validate if name correct
+    """
     return re.match('^[а-яА-ЯёЁa-zA-Z0-9]+[а-яА-ЯёЁa-zA-Z0-9.-_+ ]*$', name_string)
 
 
-# get string of all attributes of an object split by comma
 def get_attributes_str(python_object):
+    """
+    get string of all attributes of an object split by comma
+    """
     attributes_str = ', '.join(i for i in dir(python_object) if not i.startswith('__'))
     return attributes_str
 
