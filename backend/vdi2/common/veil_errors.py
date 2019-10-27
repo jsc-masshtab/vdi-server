@@ -1,13 +1,15 @@
 # -*- coding: utf-8 -*-
 """Old errors moved from Vdi v0"""
-from cached_property import cached_property as cached
+from abc import ABC
+
+from cached_property import cached_property
 
 
 class BackendError(Exception):
     def __init__(self, **kwargs):
         self.__dict__.update(kwargs)
 
-    @cached
+    @cached_property
     def type_info(self):
         return {'type': self.__class__.__name__}
 
@@ -35,16 +37,12 @@ class SimpleError(BackendError):
         return self.message
 
 
-class WsTimeout(BackendError):
-    pass
-
-
 class FetchException(BackendError):
-    http_error = None #HTTPClientError
+    http_error = None   # HTTPClientError
     url = ''
     data = dict()
 
-    @cached
+    @cached_property
     def code(self):
         return self.http_error.code
 
@@ -69,7 +67,7 @@ class HttpError(BackendError):
         if message:
             self.message = message
 
-    @cached
+    @cached_property
     def code(self):
         raise NotImplementedError
 
@@ -113,7 +111,7 @@ class BadRequest(HttpError):
 
 
 class ControllerNotAccessible(HttpError):
-    code = 404
+    code = 408
     message = 'Контроллер недоступен'
 
     def __init__(self, *, ip):
@@ -125,7 +123,7 @@ class ControllerNotAccessible(HttpError):
         }
 
 
-class AuthError(HttpError):
+class AuthError(HttpError, ABC):
     pass
 
 
@@ -136,3 +134,8 @@ class Forbidden(AuthError):
 
 class Unauthorized(AuthError):
     code = 401
+
+
+class ServerError(HttpError):
+    code = 500
+    message = "Критическая ошибка контроллера"
