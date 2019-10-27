@@ -11,13 +11,14 @@ pytest-asyncio = "*"
 [packages]
 pyjwt = "==1.7.1"
 tornado = "==6.0.3"
-graphene = ">=2.0"
+graphene = "==2.1.8"
 graphene_tornado = "==2.5.1"
 gino = "==0.8.3"
+cached-property = "==1.5.1"
+python2-secrets = "==1.0.5"
+# pycurl = "==7.43.0.3"  # TODO: measure effect. Maybe not need.
 alembic = "*"
-python2-secrets = "==1.0.5"  # For Django-secrets
-async_generator = "*" # Temprorary for classy_async
-cached-property = "*" # Temprorary for classy_async
+async_generator = "*"  # Temporary for classy_async
 
 [requires]
 python_version = "3.5.3"

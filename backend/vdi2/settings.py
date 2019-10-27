@@ -30,4 +30,9 @@ WS_PING_INTERVAL = 1  # TODO: change to 6
 
 # ECP Veil settings
 # -----------------------------
-credentials = dict(username='vdi', password='4ever')
+VEIL_CREDENTIALS = dict(username='vdi', password='veil')
+VEIL_REQUEST_TIMEOUT = 15
+VEIL_CONNECTION_TIMEOUT = 15
+VEIL_MAX_BODY_SIZE = 10 * 1024 ^ 3
+VEIL_MAX_CLIENTS = 10
+VEIL_SSL_ON = False
