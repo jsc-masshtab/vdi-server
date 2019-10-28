@@ -52,4 +52,3 @@ if __name__ == '__main__':
         tornado.ioloop.IOLoop.current().start()
     except KeyboardInterrupt:
         print('Finish')
-        pass

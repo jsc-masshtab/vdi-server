@@ -118,7 +118,8 @@ class ResourcesMonitor(AbstractMonitor):
             msg = await self._ws_connection.read_message()
             if msg is None:  # according to doc it means that connection closed
                 await self._on_connection_closed()
-            await self._on_message_received(msg)
+            else:
+                await self._on_message_received(msg)
 
     async def _connect(self):
         # get token
