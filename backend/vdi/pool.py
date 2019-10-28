@@ -10,6 +10,7 @@ from vdi.errors import BadRequest, VmCreationError
 
 from vdi.resources_monitoring.subscriptions_observers import WaiterSubscriptionObserver
 from vdi.resources_monitoring.resources_monitor_manager import resources_monitor_manager
+from vdi.resources_monitoring.resources_monitoring_data import VDI_TASKS_SUBSCRIPTION
 
 from vdi.utils import cancel_async_task
 
@@ -20,6 +21,10 @@ class PoolObject:
         self.write_lock = asyncio.Lock()  # for protection from simultaneous change
         self.add_initial_vms_task = None
         self.current_vm_task_id = None
+
+    def update_param(self, key, value):
+        if key in self.params:
+            self.params[key] = value
 
     async def expand_pool_if_requred(self):
         """
@@ -120,20 +125,28 @@ class PoolObject:
                 domain_index = 1 + i
                 domain = await self.add_domain(domain_index)
                 domains.append(domain)
+
                 # notify VDI front about progress(WS)
+                msg = 'Automated pool creation. Created {} VMs from {}'.format(domain_index, initial_size)
+                msg_dict = {'msg': msg, 'msg_type': 'data', 'event': 'pool_creation_progress',
+                            'pool_id': self.params['id'], 'domain_index': domain_index, 'initial_size': initial_size,
+                            'resource': VDI_TASKS_SUBSCRIPTION}
+                resources_monitor_manager.signal_internal_event(msg_dict)
         except VmCreationError:
             # log that we cant create required initial amount of VMs
             print('Cant create VM')
-            pass
 
         # notify VDI front about pool creation result (WS)
-        if len(domains) == self.params['initial_size']:
-            print('Auto pool successfully created')
-            pass
+        is_creation_successful = (len(domains) == initial_size)
+        if is_creation_successful:
+            msg = 'Automated pool successfully created. Initial VM amount {}'.format(len(domains))
         else:
-            print('Auto pool created with errors. VMs created: {}. Required: {}'.
-                  format(len(domains), self.params['initial_size']))
-            pass
+            msg = 'Automated pool created with errors. VMs created: {}. Required: {}'.\
+                format(len(domains), initial_size)
+        msg_dict = {'msg': msg, 'msg_type': 'data', 'event': 'pool_creation_completed',
+                    'pool_id': self.params['id'], 'amount_of_created_vms': len(domains), 'initial_size': initial_size,
+                    'is_successful': is_creation_successful, 'resource': VDI_TASKS_SUBSCRIPTION}
+        resources_monitor_manager.signal_internal_event(msg_dict)
 
     async def load_vms(self):
         vms = await vm.ListVms(controller_ip=self.params['controller_ip'])

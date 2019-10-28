@@ -1,5 +1,6 @@
+import { IParams } from './../../../../../types/index.d';
 import { WaitService } from '../../../common/components/single/wait/wait.service';
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { ControllersService } from './controllers.service';
 import { map } from 'rxjs/operators';
 import { MatDialog } from '@angular/material';
@@ -11,7 +12,7 @@ import { RemoveControllerComponent } from '../remove-controller/remove-controlle
   templateUrl: './controllers.component.html'
 })
 
-export class ControllersComponent implements OnInit {
+export class ControllersComponent implements OnInit, OnDestroy{
 
   public controllers: [];
   public collection: object[] = [
@@ -20,16 +21,19 @@ export class ControllersComponent implements OnInit {
       property: 'ip',
       class: 'name-start',
       icon: 'building',
-      type: 'string'
+      type: 'string',
+      reverse_sort: true
     },
     {
       title: 'Описание',
       property: 'description',
-      type: 'string'
+      type: 'string',
+      reverse_sort: true
     },
     {
       title: 'Статус',
-      property: 'status'
+      property: 'status',
+      reverse_sort: true
     }
   ];
 
@@ -58,6 +62,19 @@ export class ControllersComponent implements OnInit {
     this.dialog.open(RemoveControllerComponent, {
       width: '500px'
     });
+  }
+
+  public sortList(param: IParams): void  {
+    this.service.paramsForGetControllers.spin = param.spin;
+    this.service.paramsForGetControllers.nameSort = param.nameSort;
+    this.service.paramsForGetControllers.reverse = param.reverse;
+    this.getAllControllers();
+  }
+
+  ngOnDestroy() {
+    this.service.paramsForGetControllers.spin = true;
+    this.service.paramsForGetControllers.nameSort = undefined;
+    this.service.paramsForGetControllers.reverse = undefined;
   }
 
 }

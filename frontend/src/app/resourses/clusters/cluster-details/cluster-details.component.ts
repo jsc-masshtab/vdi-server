@@ -4,6 +4,10 @@ import { map } from 'rxjs/operators';
 import { ActivatedRoute, ParamMap } from '@angular/router';
 import { Router } from '@angular/router';
 
+interface ICollection {
+  [index: string]: string;
+}
+
 
 @Component({
   selector: 'vdi-cluster-details',
@@ -14,9 +18,9 @@ import { Router } from '@angular/router';
 
 export class ClusterDetailsComponent implements OnInit {
 
-  public cluster = {};
+  public cluster: ICollection = {};
   public templates: [] = [];
-  public collectionDetails: any[] = [
+  public collectionDetails: object[] = [
     {
       title: 'Название',
       property: 'verbose_name',

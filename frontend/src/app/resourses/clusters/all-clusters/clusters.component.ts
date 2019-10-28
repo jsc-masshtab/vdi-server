@@ -1,5 +1,7 @@
+import { IParams } from './../../../../../types/index.d';
+import { DetailsMove } from '../../../common/classes/details-move';
 import { WaitService } from '../../../common/components/single/wait/wait.service';
-import { Component, OnInit, HostListener, ViewChild, ElementRef } from '@angular/core';
+import { Component, OnInit, ViewChild, ElementRef, OnDestroy } from '@angular/core';
 import { ClustersService } from './clusters.service';
 import { map } from 'rxjs/operators';
 import { Router } from '@angular/router';
@@ -11,7 +13,7 @@ import { Router } from '@angular/router';
 })
 
 
-export class ClustersComponent implements OnInit {
+export class ClustersComponent extends DetailsMove implements OnInit, OnDestroy {
 
   public clusters = [];
   public collection: object[] = [
@@ -20,99 +22,87 @@ export class ClustersComponent implements OnInit {
       property: 'verbose_name',
       class: 'name-start',
       type: 'string',
-      icon: 'building'
+      icon: 'building',
+      reverse_sort: true
     },
     {
       title: 'Серверы',
       property: 'nodes_count',
-      type: 'string'
+      type: 'string',
+      reverse_sort: true
     },
     {
       title: 'CPU',
       property: 'cpu_count',
-      type: 'string'
+      type: 'string',
+      reverse_sort: true
     },
     {
       title: 'RAM',
       property: 'memory_count',
-      type: 'string'
+      type: 'string',
+      reverse_sort: true
     },
     {
       title: 'Контроллер',
       property: 'controller',
-      property_lv2: 'ip'
+      property_lv2: 'ip',
+      reverse_sort: true
     },
     {
       title: 'Статус',
-      property: 'status'
+      property: 'status',
+      reverse_sort: true
     }
   ];
 
-  public pageHeightMinNumber: number = 315;
-  public pageHeightMin: string = '315px';
-  public pageHeightMax: string = '100%';
-  public pageHeight: string = '100%';
-  public pageRollup: boolean = false;
 
-  constructor(private service: ClustersService, private router: Router, private waitService: WaitService) { }
+  constructor(private service: ClustersService, private router: Router, private waitService: WaitService) {
+    super();
+  }
 
   @ViewChild('view') view: ElementRef;
-
-  @HostListener('window:resize', ['$event']) onResize() {
-    if (this.pageHeight === this.pageHeightMin) {
-      if ((this.view.nativeElement.clientHeight - this.pageHeightMinNumber) < (this.pageHeightMinNumber + 250)) {
-        this.pageRollup = true;
-      } else {
-        this.pageRollup = false;
-      }
-    }
-  }
 
   ngOnInit() {
     this.getAllClusters();
   }
 
-  public getAllClusters() {
+  public getAllClusters(): void {
     this.waitService.setWait(true);
-    this.service.getAllClusters().valueChanges.pipe(map(data => data.data.controllers))
+    this.service.getAllClusters().valueChanges.pipe(map(data => data.data.clusters))
       .subscribe((data) => {
-        let arrClusters: [][] = [];
-        this.clusters = [];
-        arrClusters = data.map(controller => controller.clusters);
-
-        arrClusters.forEach((arr: []) => {
-          arr.forEach((obj: {}) => {
-            this.clusters.push(obj);
-          });
-        });
+        this.clusters = data;
         this.waitService.setWait(false);
       });
   }
 
-  public componentAdded(): void {
-    setTimeout(() => {
-      this.pageHeight = this.pageHeightMin;
-
-      if ((this.view.nativeElement.clientHeight - this.pageHeightMinNumber) < (this.pageHeightMinNumber + 250)) {
-        this.pageRollup = true;
-      }
-    }, 0);
+  public onResize(): void {
+    super.onResize(this.view);
   }
 
-  public componentRemoved(): void {
-    setTimeout(() => {
-      this.pageHeight = this.pageHeightMax;
-      this.pageRollup = false;
-    }, 0);
+  public componentActivate(): void {
+    super.componentActivate(this.view);
+  }
+
+  public componentDeactivate(): void {
+    super.componentDeactivate();
   }
 
   public routeTo(event): void {
     this.router.navigate([`resourses/clusters/${event.id}`]);
-
-    setTimeout(() => {
-      this.pageHeight = this.pageHeightMin;
-    }, 0);
   }
 
+  public sortList(param: IParams) {
+    this.service.paramsForGetClusters.spin = param.spin;
+    this.service.paramsForGetClusters.nameSort = param.nameSort;
+    this.service.paramsForGetClusters.reverse = param.reverse;
+    this.getAllClusters();
+  }
+
+  ngOnDestroy() {
+    this.service.paramsForGetClusters.spin = true;
+    this.service.paramsForGetClusters.nameSort = undefined;
+    this.service.paramsForGetClusters.reverse = undefined;
+  }
 
 }

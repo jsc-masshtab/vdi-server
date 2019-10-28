@@ -12,12 +12,12 @@ from vdi.resources_monitoring.resources_monitor_manager import resources_monitor
 
 
 class Vdi:
-
-    def get_sanic_task(self):
-        from auth_server.sanic_app import app
-        port = settings.auth_server['port']
-        server = app.create_server(host="0.0.0.0", port=port)  # return_asyncio_server=True
-        return asyncio.ensure_future(server)
+    #  get_sanic_task выпилен
+    # def get_sanic_task(self):
+    #     from auth_server.sanic_app import app
+    #     port = settings.auth_server['port']
+    #     server = app.create_server(host="0.0.0.0", port=port)  # return_asyncio_server=True
+    #     return asyncio.ensure_future(server)
 
     def starlette_co(self):
         if self.__class__ is Vdi:
@@ -33,8 +33,8 @@ class Vdi:
         return server.serve(sockets=self.sockets, shutdown_servers=False)
 
     async def co(self):
-        # start authorization server
-        sanic_task = self.get_sanic_task()
+        # # start authorization server
+        # sanic_task = self.get_sanic_task()
 
         # start VDI server
         loop = asyncio.get_event_loop()
@@ -49,7 +49,7 @@ class Vdi:
         finally:
             # finish other tasks
             await resources_monitor_manager.stop()
-            await self.cancel_task(sanic_task)
+            #await self.cancel_task(sanic_task)
 
     async def cancel_task(self, task):
         try:

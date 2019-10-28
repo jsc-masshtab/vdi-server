@@ -67,11 +67,6 @@ class DesktopPoolType(graphene.Enum):
     STATIC = 1
 
 
-class DesktopPoolType(graphene.Enum):
-    AUTOMATED = 0
-    STATIC = 1
-
-
 # class PoolOrderingArg(graphene.Enum):
 #     POOL_NAME = 0
 #     CONTROLLER = 1
@@ -232,15 +227,21 @@ class PoolType(graphene.ObjectType):
                                   datapool_name=datapool_name, template_name=template_name)
 
     async def resolve_status(self, _info):
-        # determine pool status. If we cant get veil info about at least one vm
-        # we consider the pool as broken
-        vms = await self._form_vm_type_list(['state'])
+        return self.determine_pool_status()
 
-        vms_info_list = [single_vm.veil_info for single_vm in vms]
-        if Unset in vms_info_list:
-            return 'FAILED'
-        else:
-            return 'ACTIVE'
+    async def determine_pool_status(self):
+
+        if not self.status:
+            # determine pool status. If we cant get veil info about at least one vm
+            # we consider the pool as broken
+            vms = await self._form_vm_type_list(['state'])
+
+            vms_info_list = [single_vm.veil_info for single_vm in vms]
+            if Unset in vms_info_list:
+                self.status = 'FAILED'
+            else:
+                self.status = 'ACTIVE'
+        return self.status
 
     async def _form_vm_type_list(self, vm_selections):
         pool_data = await check_and_return_pool_data(self.id)
@@ -992,7 +993,6 @@ class PoolMixin:
     pool = graphene.Field(PoolType, id=graphene.Int(),
                           controller_ip=graphene.String())
 
-
     async def _select_pool(self, info, id):
         settings_selections = get_selections(info, 'settings') or []
 
@@ -1006,56 +1006,9 @@ class PoolMixin:
         # dic['settings'] = PoolSettings(**settings)
         return dic
 
-    async def resolve_pool(self, info, id):
-        #TODO will be refactored
-
-        pool_data = await PoolMixin._select_pool(self, info, id)
-        print('pool_data', pool_data)
-        controller_ip = pool_data['controller_ip']
-
-        from vdi.graphql_api.resources import ControllerType
-        pool_data['id'] = id
-        pool_data = {
-            k: v for k, v in pool_data.items() if k in PoolType._meta.fields
-        }
-        return PoolType(**pool_data,
-                        controller=ControllerType(ip=controller_ip))
-
-    async def resolve_pools(self, _info, ordering=None, reversed_order=None):
-
-        # sort items if required
-        if ordering:
-            # is reversed
-            if reversed_order is not None:
-                sort_order = 'DESC' if reversed_order else 'ASC'
-            else:
-                sort_order = 'ASC'
-
-            # determine sql query
-            if ordering == 'pool_name':
-                qu = "SELECT * FROM pool WHERE deleted IS NOT true ORDER BY name {}".format(sort_order)
-            elif ordering == 'controller':
-                qu = "SELECT * FROM pool WHERE deleted IS NOT true ORDER BY controller_ip {}".format(sort_order)
-            elif ordering == 'vms_amount':
-                qu = "SELECT pool.* FROM pool LEFT JOIN vm " \
-                     "ON pool.id = vm.pool_id GROUP BY pool.id ORDER BY COUNT(vm.id) {}".format(sort_order)
-            elif ordering == 'users_amount':
-                qu = "SELECT pool.* FROM pool LEFT JOIN pools_users " \
-                     "ON pool.id = pools_users.pool_id GROUP BY pool.id ORDER BY COUNT(pools_users.username)" \
-                     " {}".format(sort_order)
-            elif ordering == 'pool_type':
-                qu = "SELECT * FROM pool WHERE deleted IS NOT true ORDER BY desktop_pool_type {}".format(sort_order)
-            else:
-                raise SimpleError('Неверный параметр сортировки')
-        else:
-            qu = "SELECT * FROM pool WHERE deleted IS NOT true"
-
-        # get from db
-        async with db.connect() as conn:
-            pools = await conn.fetch(qu)
-
-        # create list of items
-        items = []
+    @staticmethod
+    def _pool_db_data_to_pool_type_list(pools):
+        pool_type_list = []
         for pool in pools:
             pool = dict(pool.items())
             controller_ip = pool['controller_ip']
@@ -1072,9 +1025,76 @@ class PoolMixin:
             pool_type = PoolType(**p,
                           settings=PoolSettings(**settings),
                           controller=ControllerType(ip=controller_ip))
-            items.append(pool_type)
+            pool_type_list.append(pool_type)
 
-        return items
+        return pool_type_list
+
+    async def resolve_pools(self, _info, ordering=None, reversed_order=None):
+
+        async with db.connect() as conn:
+            # sort items if required
+            if ordering:
+                # is reversed
+                if reversed_order is not None:
+                    sort_order = 'DESC' if reversed_order else 'ASC'
+                else:
+                    sort_order = 'ASC'
+
+                # determine sql query
+                if ordering == 'name':
+                    qu = "SELECT * FROM pool ORDER BY name {}".format(sort_order)
+                    pools = await conn.fetch(qu)
+                    return PoolMixin._pool_db_data_to_pool_type_list(pools)
+                elif ordering == 'controller':
+                    qu = "SELECT * FROM pool ORDER BY controller_ip {}".format(sort_order)
+                    pools = await conn.fetch(qu)
+                    return PoolMixin._pool_db_data_to_pool_type_list(pools)
+                elif ordering == 'vms':
+                    qu = "SELECT pool.* FROM pool LEFT JOIN vm " \
+                         "ON pool.id = vm.pool_id GROUP BY pool.id ORDER BY COUNT(vm.id) {}".format(sort_order)
+                    pools = await conn.fetch(qu)
+                    return PoolMixin._pool_db_data_to_pool_type_list(pools)
+                elif ordering == 'users':
+                    qu = "SELECT pool.* FROM pool LEFT JOIN pools_users " \
+                         "ON pool.id = pools_users.pool_id GROUP BY pool.id ORDER BY COUNT(pools_users.username)" \
+                         " {}".format(sort_order)
+                    pools = await conn.fetch(qu)
+                    return PoolMixin._pool_db_data_to_pool_type_list(pools)
+                elif ordering == 'desktop_pool_type':
+                    qu = "SELECT * FROM pool ORDER BY desktop_pool_type {}".format(sort_order)
+                    pools = await conn.fetch(qu)
+                    return PoolMixin._pool_db_data_to_pool_type_list(pools)
+                elif ordering == 'status':
+                    qu = "SELECT * FROM pool"
+                    pools = await conn.fetch(qu)
+                    pool_type_list = PoolMixin._pool_db_data_to_pool_type_list(pools)
+
+                    for pool_type in pool_type_list:
+                        await pool_type.determine_pool_status()
+                    reverse = reversed_order if reversed_order is not None else False
+                    pool_type_list = sorted(pool_type_list, key=lambda item: item.status, reverse=reverse)
+                    return pool_type_list
+                else:
+                    raise SimpleError('Неверный параметр сортировки')
+            else:
+                qu = "SELECT * FROM pool"
+                pools = await conn.fetch(qu)
+                return PoolMixin._pool_db_data_to_pool_type_list(pools)
+
+    async def resolve_pool(self, info, id):
+        # TODO will be refactored
+
+        pool_data = await PoolMixin._select_pool(self, info, id)
+        print('pool_data', pool_data)
+        controller_ip = pool_data['controller_ip']
+
+        from vdi.graphql_api.resources import ControllerType
+        pool_data['id'] = id
+        pool_data = {
+            k: v for k, v in pool_data.items() if k in PoolType._meta.fields
+        }
+        return PoolType(**pool_data,
+                        controller=ControllerType(ip=controller_ip))
 
 
 class ChangePoolName(graphene.Mutation):
@@ -1140,9 +1160,8 @@ class ChangeAutomatedPoolTotalSize(graphene.Mutation):
             await conn.fetch(*qu)
 
         # live data
-        if pool_id in AutomatedPoolManager.pool_instances and \
-                'total_size' in AutomatedPoolManager.pool_instances[pool_id].params:
-            AutomatedPoolManager.pool_instances[pool_id].params['total_size'] = new_total_size
+        pool_object = AutomatedPoolManager.get_pool(pool_id)
+        pool_object.update_param('total_size', new_total_size)
 
         # change amount of created vms
         vm_amount_in_pool = await PoolObject.get_vm_amount_in_pool(pool_id)
@@ -1180,9 +1199,14 @@ class ChangeAutomatedPoolReserveSize(graphene.Mutation):
         #  do nothing
         if pool_data_dict['reserve_size'] == new_reserve_size:
             return {'ok': True}
+
         # set reserve size in db
         async with db.connect() as conn:
             qu = 'UPDATE pool SET reserve_size = $1 WHERE id = $2', new_reserve_size, pool_id
             await conn.fetch(*qu)
+
+        # live data
+        pool_object = AutomatedPoolManager.get_pool(pool_id)
+        pool_object.update_param('reserve_size', new_reserve_size)
 
         return {'ok': True}

@@ -148,6 +148,11 @@ class NodeType(graphene.ObjectType):
         return await FetchResourcesUsage(controller_ip=self.controller.ip,
                                          resource_category_name='nodes', resource_id=self.id)
 
+    async def resolve_management_ip(self, _info):
+        if self.veil_info is Unset:
+            self.veil_info = await self.get_veil_info()
+        return self.veil_info['management_ip']
+
 
 class DatapoolType(graphene.ObjectType):
     id = graphene.String()
@@ -249,8 +254,17 @@ class Resources:
         # sorting
         if ordering:
             reverse = reversed_order if reversed_order is not None else False
-            if ordering == 'controller_ip':
+            if ordering == 'ip':
                 controllers = sorted(controllers, key=lambda controller: controller.ip, reverse=reverse)
+            elif ordering == 'description':
+                controllers = sorted(controllers,
+                                     key=lambda controller: controller.description if controller.description else '',
+                                     reverse=reverse)
+            elif ordering == 'status':
+                for controller in controllers:
+                    await controller.check_is_online()
+                controllers = sorted(controllers, key=lambda controller: controller.status, reverse=reverse)
+                pass
 
         return controllers
 
@@ -300,15 +314,15 @@ class Resources:
                 def sort_lam(node): return node.cpu_count if node.cpu_count else 0
             elif ordering == 'memory_count':
                 def sort_lam(node): return node.memory_count if node.memory_count else 0
-            elif ordering == 'location':
+            elif ordering == 'datacenter_name':
                 def sort_lam(node):
-                    return node.cluster['verbose_name'] if node.cluster['verbose_name'] else DEFAULT_NAME
+                    return node.cluster['datacenter_name'] if node.cluster['datacenter_name'] else DEFAULT_NAME
             elif ordering == 'status':
                 def sort_lam(node): return node.status if node.status else DEFAULT_NAME
-            elif ordering == 'controller_ip':
+            elif ordering == 'controller':
                 def sort_lam(node): return node.controller.ip if node.controller.ip else DEFAULT_NAME
             elif ordering == 'management_ip':
-                def sort_lam(node): return node.controller.ip if node.controller.ip else DEFAULT_NAME
+                def sort_lam(node): return node.management_ip if node.management_ip else DEFAULT_NAME
             else:
                 raise SimpleError('Неверный параметр сортировки')
             reverse = reversed_order if reversed_order is not None else False
@@ -351,7 +365,6 @@ class Resources:
         if ordering:
             if ordering == 'verbose_name':
                 def sort_lam(cluster): return cluster.verbose_name if cluster.verbose_name else DEFAULT_NAME
-                pass
             elif ordering == 'cpu_count':
                 def sort_lam(cluster): return cluster.cpu_count if cluster.cpu_count else 0
             elif ordering == 'memory_count':
@@ -360,7 +373,7 @@ class Resources:
                 def sort_lam(cluster): return cluster.nodes_count if cluster.nodes_count else 0
             elif ordering == 'status':
                 def sort_lam(cluster): return cluster.status if cluster.status else DEFAULT_NAME
-            elif ordering == 'controller_ip':
+            elif ordering == 'controller':
                 def sort_lam(cluster): return cluster.controller.ip if cluster.controller.ip else DEFAULT_NAME
             else:
                 raise SimpleError('Неверный параметр сортировки')
@@ -405,8 +418,9 @@ class Resources:
             elif ordering == 'used_space':
                 def sort_lam(datapool): return datapool.used_space if datapool.used_space else 0
             elif ordering == 'free_space':
-                def sort_lam(datapool):
-                    return datapool.free_space if datapool.free_space else 0
+                def sort_lam(datapool): return datapool.free_space if datapool.free_space else 0
+            elif ordering == 'status':
+                def sort_lam(datapool): return datapool.status if datapool.status else DEFAULT_NAME
             else:
                 raise SimpleError('Неверный параметр сортировки')
             reverse = reversed_order if reversed_order is not None else False
@@ -668,21 +682,22 @@ class ControllerType(graphene.ObjectType):
         return obj
 
     async def resolve_is_online(self, _info):
-        return self._check_is_online()
+        await self.check_is_online()
+        return self.is_online
 
     async def resolve_status(self, _info):
-        is_online = await self._check_is_online()
-        if is_online:
-            return 'ACTIVE'
-        else:
-            return 'FAILED'
+        await self.check_is_online()
+        return self.status
 
-    async def _check_is_online(self):
-        try:
-            await CheckController(controller_ip=self.ip)
-            return True
-        except (HTTPClientError, NotFound, OSError):
-            return False
+    async def check_is_online(self):
+        if self.is_online is None or self.status is None:
+            try:
+                await CheckController(controller_ip=self.ip)
+                self.is_online = True
+                self.status = 'ACTIVE'
+            except (HTTPClientError, NotFound, OSError):
+                self.is_online = False
+                self.status = 'FAILED'
 
 
     # remove later

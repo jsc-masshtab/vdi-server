@@ -111,7 +111,8 @@ export class PoolAddComponent implements OnInit, OnDestroy {
       initial_size: ['', Validators.required],
       reserve_size: ['', Validators.required],
       total_size: ['', Validators.required],
-      vm_name_template: ['', Validators.required]
+      vm_name_template: ['', Validators.required],
+      controller_ip: ['', Validators.required]
     });
     this.finishPoolView = {};
     this.getControllers();
@@ -228,6 +229,7 @@ export class PoolAddComponent implements OnInit, OnDestroy {
     this.ipController = value.value.ip;
     this.getTemplates(this.ipController);
     this.getClusters(this.ipController);
+    this.createPoolForm.get('controller_ip').setValue(this.ipController);
   }
 
   public selectTemplate(value: ISelectValue): void  {
@@ -466,12 +468,12 @@ export class PoolAddComponent implements OnInit, OnDestroy {
                               formValue.initial_size,
                               formValue.reserve_size,
                               formValue.total_size,
-                              formValue.vm_name_template)
+                              formValue.vm_name_template,
+                              formValue.controller_ip)
         .subscribe(() => {
-          this.poolsService.getAllPools().subscribe(() => {
-            this.waitService.setWait(false);
-          });
           this.dialogRef.close();
+          this.poolsService.paramsForGetPools.spin = true;
+          this.poolsService.getAllPools().subscribe();
         });
     }
 
@@ -483,10 +485,9 @@ export class PoolAddComponent implements OnInit, OnDestroy {
                               formValue.datapool_id,
                               formValue.vm_ids_list)
         .subscribe(() => {
-          this.poolsService.getAllPools().subscribe(() => {
-            this.waitService.setWait(false);
-          });
           this.dialogRef.close();
+          this.poolsService.paramsForGetPools.spin = true;
+          this.poolsService.getAllPools().subscribe();
         });
     }
   }

@@ -145,10 +145,6 @@ export class PoolDetailsComponent implements OnInit {
 
   public collectionVmsAutomated: any[] = [
     {
-      title: '№',
-      property: 'index'
-    },
-    {
       title: 'Название',
       property: 'name',
       class: 'name-start',
@@ -172,10 +168,6 @@ export class PoolDetailsComponent implements OnInit {
   ];
   public collectionVmsStatic: any[] = [
     {
-      title: '№',
-      property: 'index'
-    },
-    {
       title: 'Название',
       property: 'name',
       class: 'name-start',
@@ -194,10 +186,6 @@ export class PoolDetailsComponent implements OnInit {
   ];
 
   public collectionUsers: any[] = [
-    {
-      title: '№',
-      property: 'index'
-    },
     {
       title: 'Имя пользователя',
       property: 'username',
@@ -293,8 +281,7 @@ export class PoolDetailsComponent implements OnInit {
     });
   }
 
-  public clickVm(vm) {
-    const vmActive = vm;
+  public clickVm(vmActive): void  {
     this.dialog.open(VmDetalsPopupComponent, {
       width: '1000px',
       data: {

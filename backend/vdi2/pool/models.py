@@ -9,8 +9,9 @@ class Pool(db.Model):
     name = db.Column(db.Unicode(length=255), nullable=False)
     controller_ip = db.Column(db.Unicode(length=255), nullable=False)
     desktop_pool_type = db.Column(db.Unicode(length=255), nullable=False)
+
     deleted = db.Column(db.Boolean())
-    dynamic_traits = db.Column(db.Integer(), nullable=True)
+    dynamic_traits = db.Column(db.Integer(), nullable=True)  # remove it
 
     datapool_id = db.Column(db.Unicode(length=100), nullable=True)
     cluster_id = db.Column(db.Unicode(length=100), nullable=True)

@@ -15,7 +15,7 @@ class AbstractSubscriptionObserver(ABC):
     # PUBLIC METHODS
     def on_notified(self, json_message):
         """
-        invoked by ResourcesMonitor when message received
+        invoked by monitor when message received
         :param json_message:
         :return:
         """

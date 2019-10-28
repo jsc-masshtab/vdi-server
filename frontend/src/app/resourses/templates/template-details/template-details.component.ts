@@ -4,6 +4,10 @@ import { map } from 'rxjs/operators';
 import { ActivatedRoute, ParamMap } from '@angular/router';
 import { Router } from '@angular/router';
 
+interface ICollection {
+  [index: string]: string;
+}
+
 
 @Component({
   selector: 'vdi-template-details',
@@ -14,7 +18,7 @@ import { Router } from '@angular/router';
 
 export class TemplateDetailsComponent implements OnInit {
 
-  public template = {};
+  public template: ICollection = {};
 
   public collectionDetails = [
     {
