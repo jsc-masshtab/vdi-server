@@ -10,6 +10,7 @@ from controller_resources.schema import resources_schema
 
 from auth.urls import auth_urls
 from pool.urls import pool_urls
+from resources_monitoring.urls import ws_event_monitoring_urls
 
 from auth.schema import user_schema
 
@@ -32,6 +33,7 @@ if __name__ == '__main__':
 
     handlers += auth_urls
     handlers += pool_urls
+    handlers += ws_event_monitoring_urls
 
     app = tornado.web.Application(handlers, debug=True, websocket_ping_interval=WS_PING_INTERVAL)
 
