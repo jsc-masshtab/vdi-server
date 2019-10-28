@@ -42,7 +42,7 @@ class VmHttpClient(VeilHttpClient):
     def enable_remote_access(self):
         """Enable remote access on remote VM"""
         url = self.url + 'remote-access/'
-        yield self.fetch(url=url, method='POST', body=self.prepare_body(dict(remote_access=True)))
+        yield self.fetch(url=url, method='POST', body=dict(remote_access=True))
 
     @gen.coroutine
     def info(self):

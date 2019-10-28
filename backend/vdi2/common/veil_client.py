@@ -1,13 +1,14 @@
 # -*- coding: utf-8 -*-
 from tornado.httpclient import AsyncHTTPClient, HTTPRequest, HTTPClientError
 from tornado import gen
-from tornado.escape import json_decode, json_encode
+from tornado.escape import json_decode
 
 from cached_property import cached_property
 
 from settings import VEIL_REQUEST_TIMEOUT, VEIL_CONNECTION_TIMEOUT, VEIL_MAX_BODY_SIZE, VEIL_MAX_CLIENTS
 from common.veil_errors import NotFound, Unauthorized, ServerError, Forbidden, ControllerNotAccessible, BadRequest
 from controller.models import VeilCredentials
+from common.veil_decorators import prepare_body
 
 # AsyncHTTPClient.configure("tornado.curl_httpclient.CurlAsyncHTTPClient")  # TODO: measure it
 
@@ -17,9 +18,8 @@ AsyncHTTPClient.configure("tornado.simple_httpclient.SimpleAsyncHTTPClient",
 
 
 class VeilHttpClient:
-    """Abstract class for Veil ECP connection. Simply non-blocking HTTP(s) fetcher from remote Controller."""
-
-    response_types = ['json']  # TODO: move to docstring
+    """Abstract class for Veil ECP connection. Simply non-blocking HTTP(s) fetcher from remote Controller.
+       response_types always json"""
 
     def __init__(self):
         self._client = AsyncHTTPClient()
@@ -35,17 +35,8 @@ class VeilHttpClient:
         }
         return headers
 
-    @staticmethod
-    def prepare_body(body_dict: dict = dict()):
-        """Convert dict to HTTPClient request.body"""
-        try:
-            body = json_encode(body_dict)
-        except ValueError:
-            body = ''
-        return body
-
+    @prepare_body
     @gen.coroutine
-    # def fetch(self, url: str, method: str, body: str = None):
     def fetch(self, url: str, method: str, body: str = ''):
         headers = yield self.headers
         try:
@@ -92,7 +83,6 @@ class VeilHttpClient:
             raise NotImplementedError
         try:
             response = json_decode(response.body)
-            # response = json.loads(response.body.decode('utf-8'))
         except ValueError:
             response = dict()
 

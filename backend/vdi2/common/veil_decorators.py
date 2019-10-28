@@ -1,4 +1,39 @@
 # -*- coding: utf-8 -*-
+from tornado.escape import json_encode
+
+
+def prepare_body(func):
+    """Convert dict to HTTPClient request.body"""
+    def wrapper(*args, **kwargs):
+        if len(args) >= 3 and kwargs.get('body'):
+            raise AssertionError(
+                'Expect that \'body\' is the 4 parameter in args. But in the same time \'body\' in kwargs. Check it.')
+        if len(args) >= 3:
+            input_body = args[3]
+        else:
+            input_body = kwargs.get('body')
+
+        if not input_body:
+            body = input_body
+        elif len(input_body) == 0:
+            body = ''
+        elif isinstance(input_body, str):
+            body = input_body
+        elif isinstance(input_body, dict):
+            try:
+                body = json_encode(input_body)
+            except ValueError:
+                body = ''
+        else:
+            body = ''
+        if len(args) >= 3:
+            args_list = list(args)
+            args_list[3] = body
+            args = tuple(args_list)
+        else:
+            kwargs['body'] = body
+        return func(*args, **kwargs)
+    return wrapper
 
 
 def check_params(*a_params, **k_params):
