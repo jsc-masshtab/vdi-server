@@ -130,6 +130,9 @@ export class PoolsComponent extends DetailsMove implements OnInit, OnDestroy {
     this.service.paramsForGetPools.spin = true;
     this.service.paramsForGetPools.nameSort = undefined;
     this.service.paramsForGetPools.reverse = undefined;
+
+ 
+    console.log('destroy', this.timeout); 
   }
 
 }
