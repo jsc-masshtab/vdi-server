@@ -4,6 +4,7 @@ from enum import Enum
 from sqlalchemy.dialects.postgresql import UUID
 
 from database import db
+from settings import VEIL_CREDENTIALS
 
 
 class ControllerUserType(Enum):

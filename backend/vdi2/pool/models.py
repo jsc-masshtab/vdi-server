@@ -1,13 +1,6 @@
 # -*- coding: utf-8 -*-
 from database import db
-
-
-class Vm(db.Model):
-    __tablename__ = 'vm'
-    id = db.Column(db.Unicode(length=100), nullable=False)
-    template_id = db.Column(db.Unicode(length=100), nullable=True)
-    pool_id = db.Column(db.Integer(), db.ForeignKey('pool.id'))
-    username = db.Column(db.Unicode(length=100), nullable=False)
+from vm.models import Vm
 
 
 class Pool(db.Model):
@@ -31,6 +24,10 @@ class Pool(db.Model):
     vm_name_template = db.Column(db.Unicode(length=100), nullable=True)
 
     @staticmethod
+    async def get_pool(pool_id):
+        return await Pool.where(id == pool_id).gino.all()
+
+    @staticmethod
     async def get_pools(user='admin'):
         # TODO: rewrite normally
         # pools = await Pool.query.gino.all()
@@ -40,22 +37,31 @@ class Pool(db.Model):
             ans_d = dict()
             ans_d['id'] = pool.id
             ans_d['name'] = pool.name
-            # print(ans_d)
             ans.append(ans_d)
         return ans
 
     @staticmethod
-    async def get_user_pools(username='admin', pool_id=28):
-        query = await db.select(
+    async def get_user_pool(pool_id, username=None):
+        """Return first hit"""
+        return await db.select(
             [
                 Pool.controller_ip,
                 Pool.desktop_pool_type,
                 Vm.id,
             ]
-            ).select_from(
-                Pool.join(Vm)
-                ).where((
-                    Pool.id == pool_id ) &
-                        (Vm.username == username
-                )).gino.all()
-        return query
+        ).select_from(
+            Pool.join(Vm, Vm.username == username, isouter=True)
+        ).where(
+            Pool.id == pool_id).gino.first()
+
+    @staticmethod
+    async def get_controller(pool_id):
+        """SELECT controller_ip FROM pool WHERE pool.id =  $1, pool_id"""
+        return await Pool.select('controller_ip').where(Pool.id == pool_id).gino.scalar()
+
+
+class PoolUsers(db.Model):
+    __tablename__ = 'pools_users'
+    pool_id = db.Column(db.Integer(), db.ForeignKey('pool.id'))
+    username = db.Column(db.Integer(), db.ForeignKey('user.username'))
+

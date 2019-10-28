@@ -24,8 +24,9 @@ class AuthHandler(BaseHandler, ABC):
         if not password_is_valid:
             # TODO: add proper exception
             print('invalid password')
+            yield User.set_password(self.args['username'], self.args['password'])
             return False
 
         token = get_jwt(self.args['username'])
-        self.write(token)
+        return self.finish(token)
 
