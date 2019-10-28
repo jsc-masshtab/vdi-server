@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from cached_property import cached_property
 
-from common.veil_decorators import check_params
+from common.veil_decorators import check_params, prepare_body
 from common.veil_client import VeilHttpClient
 
 
@@ -31,8 +31,8 @@ class VmHttpClient(VeilHttpClient):
         await self.enable_remote_access()
         return True
 
-    @check_params
-    async def send_action(self, action: str):
+    @check_params(action=VALID_ACTIONS)
+    async def send_action(self, action: str, body: str = ''):
         """Send remote action for domain on VEIL"""
         url = self.url + action + '/'
         await self.fetch(url=url, method='POST')

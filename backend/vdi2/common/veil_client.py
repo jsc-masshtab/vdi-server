@@ -35,6 +35,8 @@ class VeilHttpClient:
 
     @prepare_body
     async def fetch(self, url: str, method: str, body: str = ''):
+        if method == 'GET' and not body:
+            body = None
         headers = await self.headers
         try:
             request = HTTPRequest(url=url,
