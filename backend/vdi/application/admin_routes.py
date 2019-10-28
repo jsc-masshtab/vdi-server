@@ -1,4 +1,3 @@
-#from vdi.graphql_api.subscriptions_handler import SubscriptionHandler
 
 from .app import app
 
@@ -14,7 +13,7 @@ from vdi.errors import BackendError
 from vdi.log import RequestsLog
 from vdi.application import Request
 
-from vdi.resources_monitoring.subscriptions_handler import SubscriptionHandler
+from vdi.resources_monitoring.subscriptions_observers import VdiFrontSubscriptionHandler
 from vdi.resources_monitoring.resources_monitor_manager import resources_monitor_manager
 
 
@@ -127,8 +126,7 @@ app.add_route('/admin', GraphQLApp(schema, executor_class=AsyncioExecutor))
 # resources subscriptions endpoint
 @app.websocket_route('/subscriptions')
 async def subscriptions_ws_endpoint(websocket):
-    subscription_handler = SubscriptionHandler()
+    subscription_handler = VdiFrontSubscriptionHandler()
     resources_monitor_manager.subscribe(subscription_handler)
     await subscription_handler.handle(websocket)
     resources_monitor_manager.unsubscribe(subscription_handler)
-

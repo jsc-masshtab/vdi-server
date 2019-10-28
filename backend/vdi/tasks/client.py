@@ -99,6 +99,9 @@ class HttpClient:
                 data = {'detail': data}
             raise FetchException(url=url, http_error=e, data=data)
         if self._json:
-            response = json.loads(response.body.decode('utf-8'))
+            try:
+                response = json.loads(response.body.decode('utf-8'))
+            except ValueError:
+                response = ''
         return response
 

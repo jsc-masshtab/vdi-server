@@ -1,0 +1,24 @@
+[[source]]
+name = "pypi"
+url = "https://pypi.org/simple"
+verify_ssl = true
+
+[dev-packages]
+pytest = "*"
+ipdb = "*"
+pytest-asyncio = "*"
+
+[packages]
+pyjwt = "==1.7.1"
+tornado = "==6.0.3"
+graphene = ">=2.0"
+graphene_tornado = "==2.5.1"
+gino = "==0.8.3"
+alembic = "==1.2.1"
+psycopg2 = "*"
+python2-secrets = "==1.0.5"  # For Django-secrets
+async_generator = "*" # Temprorary for classy_async
+cached-property = "*" # Temprorary for classy_async
+
+[requires]
+python_version = "3.5.3"

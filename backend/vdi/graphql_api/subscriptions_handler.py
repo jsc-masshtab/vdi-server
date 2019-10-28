@@ -17,7 +17,7 @@ import json
 
 #from classy_async.classy_async import g
 
-class SubscriptionHandler:
+class VdiFrontSubscriptionHandler:
 
     @classmethod
     async def handle(cls, websocket, schema):

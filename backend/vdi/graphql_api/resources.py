@@ -2,6 +2,8 @@ import asyncio
 from async_generator import async_generator, yield_, asynccontextmanager
 from rx import Observable
 
+from tornado.httpclient import HTTPClientError
+
 import graphene
 from classy_async.classy_async import wait
 
@@ -16,12 +18,12 @@ from ..tasks.resources import (
     ListDatapools, ListNodes, FetchResourcesUsage, CheckController
 )
 
-from vdi.errors import FieldError, SimpleError, FetchException
+from vdi.errors import FieldError, SimpleError, FetchException, NotFound
 from vdi.utils import Unset
 from vdi.utils import clamp_value
 
 from vdi.resources_monitoring.resources_monitor_manager import resources_monitor_manager
-
+from vdi.constants import DEFAULT_NAME
 
 # class ResourcesOrderingArg(graphene.Enum):
 #     VERBOSE_NAME = 1
@@ -113,7 +115,7 @@ class NodeType(graphene.ObjectType):
         if veil_info:
             return veil_info['verbose_name']
         else:
-            return "Unknown"
+            return DEFAULT_NAME
 
     async def resolve_templates(self, info):
         return await self.controller.resolve_templates(info, node_id=self.id)
@@ -145,6 +147,11 @@ class NodeType(graphene.ObjectType):
     async def resolve_resources_usage(self, _info):
         return await FetchResourcesUsage(controller_ip=self.controller.ip,
                                          resource_category_name='nodes', resource_id=self.id)
+
+    async def resolve_management_ip(self, _info):
+        if self.veil_info is Unset:
+            self.veil_info = await self.get_veil_info()
+        return self.veil_info['management_ip']
 
 
 class DatapoolType(graphene.ObjectType):
@@ -195,9 +202,16 @@ class DatapoolType(graphene.ObjectType):
 class Resources:
     controllers = graphene.List(lambda: ControllerType, ordering=graphene.String(), reversed_order=graphene.Boolean())
     controller = graphene.Field(lambda: ControllerType, ip=graphene.String())
+
     node = graphene.Field(NodeType, id=graphene.String())
+    nodes = graphene.List(NodeType, ordering=graphene.String(), reversed_order=graphene.Boolean())
+
     cluster = graphene.Field(ClusterType, id=graphene.String())
+    clusters = graphene.List(ClusterType, ordering=graphene.String(), reversed_order=graphene.Boolean())
+
     datapool = graphene.Field(DatapoolType, id=graphene.String())
+    datapools = graphene.List(DatapoolType, ordering=graphene.String(), reversed_order=graphene.Boolean())
+
     template = graphene.Field(TemplateType, id=graphene.String())
     vm = graphene.Field(VmType, id=graphene.String())
 
@@ -240,8 +254,17 @@ class Resources:
         # sorting
         if ordering:
             reverse = reversed_order if reversed_order is not None else False
-            if ordering == 'controller_ip':
+            if ordering == 'ip':
                 controllers = sorted(controllers, key=lambda controller: controller.ip, reverse=reverse)
+            elif ordering == 'description':
+                controllers = sorted(controllers,
+                                     key=lambda controller: controller.description if controller.description else '',
+                                     reverse=reverse)
+            elif ordering == 'status':
+                for controller in controllers:
+                    await controller.check_is_online()
+                controllers = sorted(controllers, key=lambda controller: controller.status, reverse=reverse)
+                pass
 
         return controllers
 
@@ -253,7 +276,7 @@ class Resources:
                 for controller_info in connected_controllers if controller_info['ip'] == ip)
             return ControllerType(**controller_info)
         except StopIteration:
-            raise FieldError(id=['Контроллер с заданным ip недоступен'])
+            raise SimpleError('Контроллер с заданным ip недоступен')
 
     async def resolve_node(self, info, id):
         controller_ip = await DiscoverControllerIp(node_id=id)
@@ -266,6 +289,46 @@ class Resources:
             if k in NodeType._meta.fields
         }
         return NodeType(controller=ControllerType(ip=controller_ip), **fields)
+
+    async def resolve_nodes(self, _info, ordering=None, reversed_order=None):
+        controllers = await DiscoverControllers(return_broken=False)
+
+        # form list of nodes
+        list_of_all_node_types = []
+
+        for controller in controllers:
+            nodes = await ListNodes(controller_ip=controller['ip'])
+            node_type_list = []
+            for node in nodes:
+                obj = make_resource_type(NodeType, node)
+                obj.controller = ControllerType(ip=controller['ip'])
+                node_type_list.append(obj)
+
+            list_of_all_node_types.extend(node_type_list)
+
+        # sort list of nodes
+        if ordering:
+            if ordering == 'verbose_name':
+                def sort_lam(node): return node.verbose_name if node.verbose_name else DEFAULT_NAME
+            elif ordering == 'cpu_count':
+                def sort_lam(node): return node.cpu_count if node.cpu_count else 0
+            elif ordering == 'memory_count':
+                def sort_lam(node): return node.memory_count if node.memory_count else 0
+            elif ordering == 'datacenter_name':
+                def sort_lam(node):
+                    return node.cluster['datacenter_name'] if node.cluster['datacenter_name'] else DEFAULT_NAME
+            elif ordering == 'status':
+                def sort_lam(node): return node.status if node.status else DEFAULT_NAME
+            elif ordering == 'controller':
+                def sort_lam(node): return node.controller.ip if node.controller.ip else DEFAULT_NAME
+            elif ordering == 'management_ip':
+                def sort_lam(node): return node.management_ip if node.management_ip else DEFAULT_NAME
+            else:
+                raise SimpleError('Неверный параметр сортировки')
+            reverse = reversed_order if reversed_order is not None else False
+            list_of_all_node_types = sorted(list_of_all_node_types, key=sort_lam, reverse=reverse)
+
+        return list_of_all_node_types
 
     async def resolve_cluster(self, _info, id):
         controllers_ips = await Resources.get_all_known_controller_ips()
@@ -282,9 +345,88 @@ class Resources:
 
         return None
 
+    async def resolve_clusters(self, _info, ordering=None, reversed_order=None):
+        controllers = await DiscoverControllers(return_broken=False)
+
+        # form list of clusters
+        list_of_all_cluster_types = []
+
+        for controller in controllers:
+            clusters = await ListClusters(controller['ip'])
+            cluster_type_list = []
+            for cluster in clusters:
+                obj = make_resource_type(ClusterType, cluster)
+                obj.controller = ControllerType(ip=controller['ip'])
+                cluster_type_list.append(obj)
+
+            list_of_all_cluster_types.extend(cluster_type_list)
+
+        # sort list of clusters
+        if ordering:
+            if ordering == 'verbose_name':
+                def sort_lam(cluster): return cluster.verbose_name if cluster.verbose_name else DEFAULT_NAME
+            elif ordering == 'cpu_count':
+                def sort_lam(cluster): return cluster.cpu_count if cluster.cpu_count else 0
+            elif ordering == 'memory_count':
+                def sort_lam(cluster): return cluster.memory_count if cluster.memory_count else 0
+            elif ordering == 'nodes_count':
+                def sort_lam(cluster): return cluster.nodes_count if cluster.nodes_count else 0
+            elif ordering == 'status':
+                def sort_lam(cluster): return cluster.status if cluster.status else DEFAULT_NAME
+            elif ordering == 'controller':
+                def sort_lam(cluster): return cluster.controller.ip if cluster.controller.ip else DEFAULT_NAME
+            else:
+                raise SimpleError('Неверный параметр сортировки')
+            reverse = reversed_order if reversed_order is not None else False
+            list_of_all_cluster_types = sorted(list_of_all_cluster_types, key=sort_lam, reverse=reverse)
+
+        return list_of_all_cluster_types
+
     async def resolve_datapool(self, _info, id):
         datapool = await Resources.get_resource(_info, id, DatapoolType, ListDatapools)
         return datapool
+
+    async def resolve_datapools(self, _info, take_broken=False,
+                                ordering=None, reversed_order=None):
+        controllers = await DiscoverControllers(return_broken=False)
+
+        # form list of datapools
+        list_of_all_datapool_types = []
+
+        for controller in controllers:
+            datapools = await ListDatapools(controller_ip=controller['ip'], take_broken=take_broken)
+            datapool_type_list = []
+            for datapool in datapools:
+                obj = make_resource_type(DatapoolType, datapool)
+                datapool_type_list.append(obj)
+
+            list_of_all_datapool_types.extend(datapool_type_list)
+
+        # sort list of datapools
+        if ordering:
+            if ordering == 'verbose_name':
+                def sort_lam(datapool): return datapool.verbose_name if datapool.verbose_name else DEFAULT_NAME
+                pass
+            elif ordering == 'type':
+                def sort_lam(datapool): return datapool.type if datapool.type else DEFAULT_NAME
+            elif ordering == 'vdisk_count':
+                def sort_lam(datapool): return datapool.vdisk_count if datapool.vdisk_count else 0
+            elif ordering == 'iso_count':
+                def sort_lam(datapool): return datapool.iso_count if datapool.iso_count else 0
+            elif ordering == 'file_count':
+                def sort_lam(datapool): return datapool.file_count if datapool.file_count else 0
+            elif ordering == 'used_space':
+                def sort_lam(datapool): return datapool.used_space if datapool.used_space else 0
+            elif ordering == 'free_space':
+                def sort_lam(datapool): return datapool.free_space if datapool.free_space else 0
+            elif ordering == 'status':
+                def sort_lam(datapool): return datapool.status if datapool.status else DEFAULT_NAME
+            else:
+                raise SimpleError('Неверный параметр сортировки')
+            reverse = reversed_order if reversed_order is not None else False
+            list_of_all_datapool_types = sorted(list_of_all_datapool_types, key=sort_lam, reverse=reverse)
+
+        return list_of_all_datapool_types
 
     async def resolve_template(self, _info, id):
         template = await Resources.get_resource(_info, id, TemplateType, ListTemplates, {'verbose_name': 'name'})
@@ -398,6 +540,7 @@ class ControllerType(graphene.ObjectType):
     node = graphene.Field(NodeType, id=graphene.String())
 
     is_online = graphene.Boolean()
+    status = graphene.String()
 
     async def resolve_templates(self, _info, cluster_id=None, node_id=None, ordering=None, reversed_order=None):
         if node_id is not None:
@@ -539,14 +682,25 @@ class ControllerType(graphene.ObjectType):
         return obj
 
     async def resolve_is_online(self, _info):
-        try:
-            await CheckController(controller_ip=self.ip)
-        except:
-            return False
-        else:
-            return True
+        await self.check_is_online()
+        return self.is_online
 
-# remove later
+    async def resolve_status(self, _info):
+        await self.check_is_online()
+        return self.status
+
+    async def check_is_online(self):
+        if self.is_online is None or self.status is None:
+            try:
+                await CheckController(controller_ip=self.ip)
+                self.is_online = True
+                self.status = 'ACTIVE'
+            except (HTTPClientError, NotFound, OSError):
+                self.is_online = False
+                self.status = 'FAILED'
+
+
+    # remove later
 class TestSubscription(graphene.ObjectType):
     # count_seconds = graphene.Float(up_to=graphene.Int())
     #

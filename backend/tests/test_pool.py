@@ -10,6 +10,11 @@ from vdi.graphql_api.pool import DesktopPoolType
 from vdi.graphql_api import schema
 
 from vdi.tasks import vm
+from vdi.pool import PoolObject
+
+from vdi.errors import SimpleError
+
+from vdi.resources_monitoring.resources_monitor_manager import resources_monitor_manager
 
 
 @pytest.mark.asyncio
@@ -32,7 +37,7 @@ async def test_create_automated_pool(fixt_create_automated_pool):
 @pytest.mark.asyncio
 async def test_change_sizes_of_autopool(fixt_create_automated_pool):
     pool_id = fixt_create_automated_pool['id']
-
+    print('pool_id', pool_id)
     # total size
     new_total_size = 4
     qu = '''
@@ -92,31 +97,50 @@ async def test_vm_name_template_in_autopool(fixt_create_automated_pool):
     assert res['pool']['settings']['vm_name_template'] == new_template_name
 
 
+@pytest.mark.asyncio
+async def test_copy_domain():
+    resources = await get_resources_for_automated_pool()
+    #print('resources', resources)
+    params = {
+        'verbose_name': "domain_created_by_test",
+        'name_template': 'vm_name_template',
+        'domain_id': resources['template_id'],
+        'datapool_id': resources['datapool_id'],
+        'controller_ip': resources['controller_ip'],
+        'node_id': resources['node_id'],
+    }
+    vm_data = await vm.CopyDomain(**params).task
+    print('vm_data', vm_data)
+
+    await vm.DropDomain(id=vm_data['id'], controller_ip=resources['controller_ip'])
+
+
 # @pytest.mark.asyncio
-# async def test_copy_domain():
-#     resources = await get_resources_for_automated_pool()
-#     #print('resources', resources)
-#     params = {
-#         'verbose_name': "domain_created_by_test",
-#         'name_template': 'vm_name_template',
-#         'domain_id': resources['template_id'],
-#         'datapool_id': resources['datapool_id'],
-#         'controller_ip': resources['controller_ip'],
-#         'node_id': resources['node_id'],
-#     }
-#     vm_data = await vm.CopyDomain(**params).task
-#     print('vm_data', vm_data)
+# async def test_new_pool_creation_logic():
+#     await resources_monitor_manager.start()
 #
-#     params = {
-#         'verbose_name': "domain_created_by_test_2",
-#         'name_template': 'vm_name_template',
-#         'domain_id': resources['template_id'],
+#     resources = await get_resources_for_automated_pool()
+#
+#     pool_args_dict = {
+#         'verbose_name': "vm_created_by_test",
+#         'name_template': 'vm_created_by_test',
+#         'template_id': resources['template_id'],
 #         'datapool_id': resources['datapool_id'],
 #         'controller_ip': resources['controller_ip'],
 #         'node_id': resources['node_id'],
+#         'initial_size': 1,
+#         'vm_name_template': 'vm_created_by_test',
+#         'id': -1
 #     }
-#     vm_data = await vm.CopyDomain(**params).task
-#     print('vm_data2', vm_data)
+#
+#     pool_object = PoolObject(pool_args_dict)
+#
+#     try:
+#         vms = await pool_object.add_initial_vms()
+#     except SimpleError:
+#         print("Failed to create required number of vms")
+#
+#     await resources_monitor_manager.stop()
 
 
 @pytest.mark.asyncio
@@ -181,5 +205,3 @@ async def test_remove_and_add_vm_in_static_pool(fixt_create_static_pool):
       }''' % (pool_id, vm_id)
     res = await schema.exec(qu)
     assert res['addVmsToStaticPool']['ok']
-
-
