@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 from abc import ABC
-from tornado import gen
 
 from common.veil_handlers import BaseHandler
 from auth.utils.veil_jwt import get_jwt
@@ -9,23 +8,22 @@ from auth.models import User
 
 class AuthHandler(BaseHandler, ABC):
 
-    @gen.coroutine
-    def post(self):
+    async def post(self):
         if not self.args:
             # TODO: add proper exception
             print('Missing request body')
-            return False
+            return
         if 'username' and 'password' not in self.args:
             # TODO: add proper exception
             print('Missing username and password')
-            return False
-        password_is_valid = yield User.check_user(self.args['username'], self.args['password'])
+            return
+        password_is_valid = await User.check_user(self.args['username'], self.args['password'])
 
         if not password_is_valid:
             # TODO: add proper exception
             print('invalid password')
-            yield User.set_password(self.args['username'], self.args['password'])
-            return False
+            await User.set_password(self.args['username'], self.args['password'])
+            return
 
         token = get_jwt(self.args['username'])
         return self.finish(token)
