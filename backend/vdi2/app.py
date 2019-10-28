@@ -14,11 +14,8 @@ from resources_monitoring.urls import ws_event_monitoring_urls
 
 from auth.schema import user_schema
 
+from resources_monitoring.resources_monitor_manager import resources_monitor_manager
 
-# async def create_tables():
-#     await db.set_bind('postgresql://localhost/{}'.format(DB_NAME))
-#     await db.gino.create_all()
-#     await db.pop_bind().close()
 
 if __name__ == '__main__':
 
@@ -37,9 +34,6 @@ if __name__ == '__main__':
 
     app = tornado.web.Application(handlers, debug=True, websocket_ping_interval=WS_PING_INTERVAL)
 
-    # tornado.ioloop.IOLoop.current().run_sync(
-    #     lambda: create_tables())
-
     tornado.ioloop.IOLoop.current().run_sync(
         lambda: db.init_app(app,
                             host=DB_HOST,
@@ -48,7 +42,15 @@ if __name__ == '__main__':
                             password=DB_PASS,
                             database=DB_NAME))
     app.listen(8888)
+
     try:
+        tornado.ioloop.IOLoop.current().add_callback(resources_monitor_manager.start)
         tornado.ioloop.IOLoop.current().start()
+
     except KeyboardInterrupt:
         print('Finish')
+    finally:
+        tornado.ioloop.IOLoop.current().run_sync(
+            lambda: resources_monitor_manager.stop()
+        )
+

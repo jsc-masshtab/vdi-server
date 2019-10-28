@@ -5,6 +5,7 @@ from abc import ABC, abstractmethod
 
 from tornado.httpclient import HTTPClientError
 from tornado.websocket import websocket_connect
+from tornado import ioloop
 
 #from ..tasks.base import Token
 
@@ -60,11 +61,10 @@ class ResourcesMonitor(AbstractMonitor):
     def start(self, controller_ip):
         self._controller_ip = controller_ip
         self._running_flag = True
-        loop = asyncio.get_event_loop()
         # controller check
-        self._controller_online_task = loop.create_task(self._controller_online_checking())
+        self._controller_online_task = ioloop.IOLoop.current().add_callback(self._controller_online_checking)
         # ws data
-        self._resources_monitor_task = loop.create_task(self._processing_ws_messages())
+        self._resources_monitor_task = ioloop.IOLoop.current().add_callback(self._processing_ws_messages)
 
     async def stop(self):
         self._running_flag = False
@@ -82,6 +82,7 @@ class ResourcesMonitor(AbstractMonitor):
         Check if controller online
         :return:
         """
+        #print('_controller_online_checking')
         response_dict = {'ip': self._controller_ip, 'msg_type': 'data', 'event': 'UPDATED',
                          'resource': CONTROLLERS_SUBSCRIPTION}
         while self._running_flag:

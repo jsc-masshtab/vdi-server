@@ -6,7 +6,7 @@ from utils import into_words
 
 from common.veil_errors import BadRequest, VmCreationError
 
-from resources_monitoring.subscriptions_observers import WaiterSubscriptionObserver
+from resources_monitoring.handlers import WaiterSubscriptionObserver
 from resources_monitoring.resources_monitor_manager import resources_monitor_manager
 from resources_monitoring.resources_monitoring_data import VDI_TASKS_SUBSCRIPTION
 
@@ -36,7 +36,7 @@ class PoolObject:
             return
 
         amount_of_added_vms = 5  # число машин добавляемых за раз, когда требуется расширение пула (если возможно)
-        # reserve_size - желаемое мин. количествиюво подогретых машин (добавленных в пул, но не имеющих пользоватля)
+        # reserve_size - желаемое минимальное количествиюво подогретых машин (добавленных в пул, но не имеющих пользоватля)
         # Число машин в пуле, неимеющих пользователя
         free_vm_amount = await PoolObject.get_vm_amount_in_pool(self.params['id'], True)
         # Если подогретых машин слишком мало, то пробуем добавить еще
