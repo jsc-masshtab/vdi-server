@@ -4,7 +4,7 @@ from typing import List
 import re
 import asyncio
 
-from vdi.settings import settings
+# from vdi.settings import settings
 
 
 class Unset:
@@ -76,11 +76,11 @@ def make_resource_type(type, data, fields_map=None):
     obj = type(**dic)
     obj.veil_info = data
     return obj
-
-
-def print(msg, _print=print):
-    if getattr(settings, 'print', False):
-        _print(msg)
+#
+#
+# def print(msg, _print=print):
+#     if getattr(settings, 'print', False):
+#         _print(msg)
 
 
 def into_words(s):
