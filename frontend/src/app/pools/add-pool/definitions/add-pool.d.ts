@@ -40,4 +40,5 @@ export interface IFinishPoolForm {
     total_size: number;
     initial_size: number;
     vm_name_template: string;// auto
+    controller_ip: string; //auto
 }
