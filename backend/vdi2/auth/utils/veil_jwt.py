@@ -18,7 +18,7 @@ def jwtauth(handler_class):
             except AssertionError as e:
                 handler._transforms = []
                 handler.set_status(401)
-                handler.finish(e.message)
+                handler.finish(str(e))
             return True
 
         def _execute(self, transforms, *args, **kwargs):
@@ -28,7 +28,6 @@ def jwtauth(handler_class):
                 return False
             return handler_execute(self, transforms, *args, **kwargs)
         return _execute
-
     handler_class._execute = wrap_execute(handler_class._execute)  # noqa
     return handler_class
 
@@ -48,11 +47,14 @@ def get_jwt(username):
 
 def decode_jwt(token):
     """Decode JWT token"""
-    decoded_jwt = jwt.decode(
-        token,
-        SECRET_KEY,
-        options=JWT_OPTIONS
-    )
+    try:
+        decoded_jwt = jwt.decode(
+            token,
+            SECRET_KEY,
+            options=JWT_OPTIONS
+        )
+    except:  # noqa
+        raise AssertionError("Error with JWT decode")
     return decoded_jwt
 
 
