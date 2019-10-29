@@ -29,8 +29,8 @@ class PoolGetVm(BaseHandler, ABC):
         # user = request.user.username  # TODO: from where?
         # pool_id = int(request.path_params['pool_id'])
 
-        pool_id = 59
-        username = 'yo11a2b212'
+        pool_id = 71
+        username = '11yo11a122b212'
         # username = None
 
         # Древние говорили, что сочитание pool id и имя пользователя должно быть обязательно уникальным
@@ -52,6 +52,7 @@ class PoolGetVm(BaseHandler, ABC):
 
         # Древние говорили, что если свободная VM найдена, нужно закрепить ее за пользователем.
         if not vm_id and free_vm:
+            print('free VM')
             [controller_ip, desktop_pool_type, vm_id] = free_vm
             await Vm.attach_vm_to_user(vm_id, username)
 

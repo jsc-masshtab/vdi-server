@@ -3,7 +3,7 @@ from database import db
 from vm.models import Vm
 from common.veil_errors import VmCreationError, BadRequest
 
-from resources_monitoring.subscriptions_observers import WaiterSubscriptionObserver
+from resources_monitoring.handlers import WaiterSubscriptionObserver
 from resources_monitoring.resources_monitor_manager import resources_monitor_manager
 
 
