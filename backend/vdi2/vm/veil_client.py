@@ -27,7 +27,7 @@ class VmHttpClient(VeilHttpClient):
 
     async def prepare(self):
         """Prepare for the first use: enable remote access & power on"""
-        await self.send_action('start')
+        await self.send_action(action='start')
         await self.enable_remote_access()
         return True
 
@@ -35,7 +35,7 @@ class VmHttpClient(VeilHttpClient):
     async def send_action(self, action: str, body: str = ''):
         """Send remote action for domain on VEIL"""
         url = self.url + action + '/'
-        await self.fetch(url=url, method='POST')
+        await self.fetch(url=url, method='POST', body=body)
 
     async def enable_remote_access(self):
         """Enable remote access on remote VM"""

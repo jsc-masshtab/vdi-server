@@ -1,14 +1,14 @@
 # -*- coding: utf-8 -*-
-from thin_client_api.handlers import PoolHandler, EchoWebSocket, PoolGetVm, ActionOnVm
+from tornado.websocket import WebSocketHandler
+from thin_client_api.handlers import PoolHandler, PoolGetVm, ActionOnVm, AuthHandler
 
-# TODO: add routing
-pool_urls = [
-    (r'/client/pools/?', PoolHandler),  # client url
-    # TODO: fix handlers
-    (r'/client/pools/71/?', PoolGetVm),  # client url
-    # (r'/client/pools/{pool_id}/?', PoolGetVm),  # client url
-    (r'/client/pools/71/start/?', ActionOnVm),  # client url
-    (r'/client/pools/71/reboot/?', ActionOnVm),  # client url
-    (r'/ws/client/vdi_server_check/?', EchoWebSocket),  # client url
-    # TODO: websocket url
+# TODO: сейчас айдишники пулов это ИНТ, есть сомнения, что это хорошая идея.
+#  Возможно надо заменить на UUID, тогда потребуется обновить регулярку
+
+thin_client_api_urls = [
+    (r'/auth/?', AuthHandler),  # client url
+    (r'/client/pools/?', PoolHandler),
+    (r'/client/pools/(?P<pool_id>[0-9]+)/?', PoolGetVm),
+    (r'/client/pools/(?P<pool_id>[0-9]+)/(?P<action>[a-z]+)/?', ActionOnVm),  # action must be in lower case
+    (r'/ws/client/vdi_server_check/?', WebSocketHandler)
 ]

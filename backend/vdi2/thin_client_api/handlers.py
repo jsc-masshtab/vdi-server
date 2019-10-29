@@ -1,37 +1,50 @@
 # -*- coding: utf-8 -*-
 from abc import ABC
-from tornado import websocket
-import tornado
-from tornado.escape import json_decode
 import json
 
 from common.veil_handlers import BaseHandler
-from auth.utils.veil_jwt import jwtauth
-
+from auth.utils.veil_jwt import jwtauth, get_jwt
 from pool.models import Pool, Vm
-from vm.veil_client import VmHttpClient
+from auth.models import User
+from vm.veil_client import VmHttpClient  # TODO: move to VM?
+# TODO: обновление токена для клиента
+
+
+class AuthHandler(BaseHandler, ABC):
+    async def post(self):
+        if not self.args:
+            # TODO: add proper exception
+            return self.finish('Missing request body')
+        if 'username' and 'password' not in self.args:
+            # TODO: add proper exception
+            return self.finish('Missing username and password')
+        password_is_valid = await User.check_user(self.args['username'], self.args['password'])
+
+        if not password_is_valid:
+            # await User.set_password(self.args['username'], self.args['password'])
+            return self.finish('invalid password')
+        return self.finish(get_jwt(self.args['username']))
 
 
 @jwtauth
 class PoolHandler(BaseHandler, ABC):
+    # TODO: почему происходит 2 запроса, когда токен неправильный?
     async def get(self):
-        # TODO: add user in get_pools execute
+        print('Get pools List')
         pools = await Pool.get_pools()
+        # TODO: json dumps потому что список, а не словарь. Нужно поменять формат обмена с клиентом,
+        #  например на {'data' = pools} и заменить на tornado.escape.json_decode
         return self.finish(json.dumps(pools))
 
 
+@jwtauth
 class PoolGetVm(BaseHandler, ABC):
 
-    async def post(self):
+    async def post(self, pool_id):
         # TODO: есть подозрение, что иногда несмотря на отправленный запрос на просыпание VM - отправляется
         #  недостаточное количество данных для подключения тонкого клиента
-
-        # user = request.user.username  # TODO: from where?
-        # pool_id = int(request.path_params['pool_id'])
-
-        pool_id = 71
-        username = '11yo11a122b212'
-        # username = None
+        pool_id = int(pool_id)
+        username = self.get_current_user()
 
         # Древние говорили, что сочитание pool id и имя пользователя должно быть обязательно уникальным
         # так как пользователь не может иметь больше одной машины в пуле
@@ -52,7 +65,6 @@ class PoolGetVm(BaseHandler, ABC):
 
         # Древние говорили, что если свободная VM найдена, нужно закрепить ее за пользователем.
         if not vm_id and free_vm:
-            print('free VM')
             [controller_ip, desktop_pool_type, vm_id] = free_vm
             await Vm.attach_vm_to_user(vm_id, username)
 
@@ -74,32 +86,20 @@ class PoolGetVm(BaseHandler, ABC):
         return await self.finish(response)
 
 
-class EchoWebSocket(websocket.WebSocketHandler, ABC):
-    pass
-
-
+@jwtauth
 class ActionOnVm(BaseHandler, ABC):
 
-    async def post(self):
-        # username = request.user.username
-        # pool_id = int(request.path_params['pool_id'])
-        # vm_action = request.path_params['action']
-        # in pool find machine which belongs to user
-        vm_action = 'reboot'
-        username = 'yo11a2b212'
-        pool_id = 59
-        vms = await Vm.get_vm_id(pool_id=pool_id, username=username)
+    async def post(self, pool_id, action):
+        vm_action = action
+        pool_id = int(pool_id)
+        username = self.get_current_user()
 
+        vms = await Vm.get_vm_id(pool_id=pool_id, username=username)
         if not vms:
-            print('not vms?')
             return await self.finish({'error': 'Нет вм с указанным pool_id'})
 
-        # determine vm controller ip by pool id
         controller_ip = await Pool.get_controller(pool_id)
-        # print('controller_ip_', controller_ip)
-        # do action
-
         client = VmHttpClient(controller_ip=controller_ip, vm_id=vms)
-        await client.send_action(action=vm_action, body=self.request.body)
+        await client.send_action(action=vm_action, body=self.args)
         return await self.finish({'error': 'null'})
 
