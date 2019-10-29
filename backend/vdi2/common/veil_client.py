@@ -1,16 +1,15 @@
 # -*- coding: utf-8 -*-
+from cached_property import cached_property
 from tornado.httpclient import AsyncHTTPClient, HTTPRequest, HTTPClientError
 from tornado.escape import json_decode
 
-from cached_property import cached_property
-
 from settings import VEIL_REQUEST_TIMEOUT, VEIL_CONNECTION_TIMEOUT, VEIL_MAX_BODY_SIZE, VEIL_MAX_CLIENTS
 from common.veil_errors import NotFound, Unauthorized, ServerError, Forbidden, ControllerNotAccessible, BadRequest
-from controller.models import VeilCredentials
 from common.veil_decorators import prepare_body
+from controller.models import VeilCredentials
 
-# AsyncHTTPClient.configure("tornado.curl_httpclient.CurlAsyncHTTPClient")  # TODO: measure it
-
+# TODO: Используется не tornado.curl_httpclient.CurlAsyncHTTPClient, потому что не измерен реальный прирост.
+#  Есть подозрение, что ECP итак не справится.
 AsyncHTTPClient.configure("tornado.simple_httpclient.SimpleAsyncHTTPClient",
                           max_clients=VEIL_MAX_CLIENTS,
                           max_body_size=VEIL_MAX_BODY_SIZE)

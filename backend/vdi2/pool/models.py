@@ -1,4 +1,7 @@
 # -*- coding: utf-8 -*-
+import uuid
+
+from settings import VEIL_WS_MAX_TIME_TO_WAIT
 from database import db
 from vm.models import Vm
 from common.veil_errors import VmCreationError, BadRequest
@@ -54,7 +57,6 @@ class Pool(db.Model):
         :return:
         """
         # TODO: beautify
-        import uuid
         vm_name_template = self.vm_name_template or self.name
 
         uid = str(uuid.uuid4())[:7]
@@ -75,9 +77,7 @@ class Pool(db.Model):
             try:
                 vm_info = await Vm.copy(**params)
                 current_vm_task_id = vm_info['task_id']
-                print('current vm task id is {}'.format(current_vm_task_id))
             except BadRequest:
-                print('BadRequest')
                 continue
 
             # TODO: не переписывал. Уточнить у Александра какой план насчет подписки на WS
@@ -87,14 +87,11 @@ class Pool(db.Model):
 
             resources_monitor_manager.subscribe(response_waiter)
             # wait for result
-            MAX_TIME_TO_WAIT = 15
 
             def _is_vm_creation_task(name):
                 """
                 Determine domain creation task by name
                 """
-                print('is vm creation task')
-                print(name)
                 if name.startswith('Создание виртуальной машины'):
                     return True
                 if all(word in name.lower() for word in ['creating', 'virtual', 'machine']):
@@ -102,21 +99,16 @@ class Pool(db.Model):
                 return False
 
             def _check_if_vm_created(json_message):
-                print('check vm is created')
-                print(json_message)
                 obj = json_message['object']
 
                 if _is_vm_creation_task(obj['name']) and current_vm_task_id == obj['parent']:
                     if obj['status'] == 'SUCCESS':
                         return True
                 return False
-            print('here')
 
             is_vm_successfully_created = await response_waiter.wait_for_message(
-                _check_if_vm_created, MAX_TIME_TO_WAIT)
+                _check_if_vm_created, VEIL_WS_MAX_TIME_TO_WAIT)
             resources_monitor_manager.unsubscribe(response_waiter)
-
-            print('VM successfully created: {}'.format(is_vm_successfully_created))
 
             if is_vm_successfully_created:
                 await Vm.create(id=vm_info['id'], pool_id=self.id, template_id=self.template_id)
@@ -150,7 +142,8 @@ class Pool(db.Model):
             real_amount_to_add = min(max_possible_amount_to_add, self.VM_STEP)
             # add VMs.
             try:
-                for i in range(1, real_amount_to_add):  # TODO: ugly as fuck
+                # TODO: очень странная логика. Может есть смысл создавать как-то диапазоном на стороне ECP?
+                for i in range(1, real_amount_to_add):
                     domain_index = vm_amount_in_pool + i
                     await self.add_vm(domain_index)
             except VmCreationError:
@@ -160,7 +153,6 @@ class Pool(db.Model):
     @staticmethod
     async def get_pools(user='admin'):
         # TODO: rewrite normally
-        # pools = await Pool.query.gino.all()
         pools = await Pool.select('id', 'name').gino.all()
         ans = list()
         for pool in pools:
@@ -171,27 +163,19 @@ class Pool(db.Model):
         return ans
 
     @staticmethod
-    async def get_user_pool(pool_id, username=None):
+    async def get_user_pool(pool_id: int, username=None):
         """Return first hit"""
-        return await db.select(
+        query = db.select(
             [
                 Pool.controller_ip,
                 Pool.desktop_pool_type,
                 Vm.id,
             ]
         ).select_from(
-            Pool.join(Vm, Vm.username == username, isouter=True)
+            Pool.join(Vm, (Vm.username == username) & (Vm.pool_id == Pool.id), isouter=True)
         ).where(
-            Pool.id == pool_id).gino.first()
-
-    @staticmethod
-    async def get_user_pool2(pool_id, username):
-        return await db.select(Pool, Vm
-                               ).select_from(
-            Pool.join(Vm, Vm.username == username, isouter=True)
-        ).where(
-            Pool.id == pool_id).gino.first()
-        # return await Pool.query.where((id == pool_id) & (username == username)).gino.first()
+            (Pool.id == pool_id))
+        return await query.gino.first()
 
     @staticmethod
     async def get_controller(pool_id):
