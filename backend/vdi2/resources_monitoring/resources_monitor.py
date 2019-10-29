@@ -125,7 +125,8 @@ class ResourcesMonitor(AbstractMonitor):
     async def _connect(self):
         # get token
         try:
-            token = None#await Token(controller_ip=self._controller_ip)
+            # token = None#await Token(controller_ip=self._controller_ip)
+            token = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzc28iOmZhbHNlLCJ1c2VyX2lkIjoyLCJvcmlnX2lhdCI6MTU3MjMzMjU5NiwidXNlcm5hbWUiOiJ2ZGkiLCJleHAiOjE1NzI0MTg5OTZ9.3VDJuDozLyuR0E5eamFanbfjEm8u2tdSspohh3JaVXw'
         except Exception:
             return
         # create ws connection
