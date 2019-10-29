@@ -48,6 +48,7 @@ class VeilHttpClient:
                                   request_timeout=VEIL_REQUEST_TIMEOUT)
             response = yield self._client.fetch(request)
         except HTTPClientError as http_error:
+            print('http_error.code', http_error.code)
             if http_error.code == 400:
                 # TODO: add response body parsing
                 raise BadRequest()

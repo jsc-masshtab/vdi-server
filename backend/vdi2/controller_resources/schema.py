@@ -2,8 +2,6 @@ import graphene
 
 import asyncio
 
-#from tornado.httpclient import HTTPClientError
-
 from database import db
 
 import graphene
@@ -11,6 +9,9 @@ import graphene
 #from .pool import PoolType, VmType, TemplateType
 from utils import get_selections, make_resource_type
 from database import get_list_of_values_from_db
+
+from controller_resources.veil_client import ResourcesHttpClient
+
 #from ..tasks import Token
 #from ..tasks.vm import ListTemplates, ListVms
 
@@ -20,7 +21,6 @@ from database import get_list_of_values_from_db
 # )
 
 from common.veil_errors import FieldError, SimpleError, FetchException, NotFound
-#from vdi.utils import clamp_value
 
 #from vdi.resources_monitoring.resources_monitor_manager import resources_monitor_manager
 from settings import DEFAULT_NAME
@@ -72,9 +72,8 @@ class ClusterType(graphene.ObjectType):
     #     return await self.controller.resolve_templates(info, cluster_id=self.id)
 
     async def resolve_resources_usage(self, _info):
-        return None
-        # return await FetchResourcesUsage(controller_ip=self.controller.ip,
-        #                                  resource_category_name='clusters', resource_id=self.id)
+        resources_http_client = ResourcesHttpClient(self.controller.ip)
+        return await resources_http_client.fetch_resources_usage('clusters', self.id)
 
 
 class NodeType(graphene.ObjectType):
@@ -98,8 +97,8 @@ class NodeType(graphene.ObjectType):
     veil_info = None  # dict
 
     async def get_veil_info(self):
-        return None
-        #return await FetchNode(node_id=self.id, controller_ip=self.controller.ip)
+        resources_http_client = ResourcesHttpClient(self.controller.ip)
+        return await resources_http_client.fetch_node(self.id)
 
     async def resolve_verbose_name(self, info):
         if self.verbose_name:
@@ -121,11 +120,14 @@ class NodeType(graphene.ObjectType):
         return await self.controller.resolve_datapools(info, node_id=self.id)
 
     async def resolve_cluster(self, info):
+        resources_http_client = ResourcesHttpClient(self.controller.ip)
+
         if self.veil_info is None:
             self.veil_info = await self.get_veil_info()
         cluster_id = self.veil_info['cluster']['id']
 
-        resp = None#await FetchCluster(controller_ip=self.controller.ip, cluster_id=cluster_id)
+        resp = await resources_http_client.fetch_cluster(cluster_id)
+
         obj = make_resource_type(ClusterType, resp)
         obj.controller = self.controller
         return obj
@@ -139,9 +141,8 @@ class NodeType(graphene.ObjectType):
                               verbose_name=self.veil_info['datacenter_name'])
 
     async def resolve_resources_usage(self, _info):
-        return None
-        # return await FetchResourcesUsage(controller_ip=self.controller.ip,
-        #                                  resource_category_name='nodes', resource_id=self.id)
+        resources_http_client = ResourcesHttpClient(self.controller.address)
+        return await resources_http_client.fetch_resources_usage('nodes', self.id)
 
     async def resolve_management_ip(self, _info):
         if self.veil_info is None:
@@ -169,13 +170,10 @@ class DatapoolType(graphene.ObjectType):
         base_fields = {'id', 'verbose_name'}
         fields = set(get_selections(info))
         nodes = []
+        resources_http_client = ResourcesHttpClient(self.controller.address)
         if not fields <= base_fields:
-            tasks = [
-                None#FetchNode(controller_ip=self.controller_ip, node_id=node['id'])
-                for node in self.nodes
-            ]
-            async for task in tasks:
-                node_data = await task
+            for node in self.nodes:
+                node_data = await resources_http_client.fetch_node(node['id'])
                 obj = make_resource_type(NodeType, node_data)
                 obj.controller = ControllerType(ip=self.controller_ip)
                 nodes.append(obj)
@@ -231,30 +229,28 @@ class ResourcesQuery(graphene.ObjectType):
         # if we didnt find anything then return None
         return None
 
-    async def resolve_node(self, info, id):
-        controller_ip = None#await DiscoverControllerIp(node_id=id)
-        if not controller_ip:
-            raise SimpleError('Узел с данным id не найден')
-        # Node exists for sure
-        data = None#await FetchNode(controller_ip=controller_ip, node_id=id)
+    async def resolve_node(self, _info, id):
+        resources_http_client = ResourcesHttpClient()
+        node_data = resources_http_client.get_node_data(id)
         fields = {
-            k: v for k, v in data.items()
+            k: v for k, v in node_data['resource_data'].items()
             if k in NodeType._meta.fields
         }
-        return NodeType(controller=ControllerType(ip=controller_ip), **fields)
+        return NodeType(controller=ControllerType(address=node_data['controller_address']), **fields)
 
     async def resolve_nodes(self, _info, ordering=None, reversed_order=None):
-        controllers = None#await DiscoverControllers(return_broken=False)
+        resources_http_client = ResourcesHttpClient()
+        controllers = await resources_http_client.discover_controllers(return_broken=False)
 
         # form list of nodes
         list_of_all_node_types = []
 
         for controller in controllers:
-            nodes = None#await ListNodes(controller_ip=controller['ip'])
+            nodes = await resources_http_client.fetch_node_list(controller['address'])
             node_type_list = []
             for node in nodes:
                 obj = make_resource_type(NodeType, node)
-                obj.controller = ControllerType(address=controller['ip'])
+                obj.controller = ControllerType(address=controller['address'])
                 node_type_list.append(obj)
 
             list_of_all_node_types.extend(node_type_list)
@@ -284,28 +280,23 @@ class ResourcesQuery(graphene.ObjectType):
         return list_of_all_node_types
 
     async def resolve_cluster(self, _info, id):
-        controllers_ips = await get_list_of_values_from_db(Controller, Controller.address)
-        for controller_ip in controllers_ips:
-            try:
-                data = None#await FetchCluster(controller_ip=controller_ip, cluster_id=id)
-                fields = {
-                    k: v for k, v in data.items()
-                    if k in ClusterType._meta.fields
-                }
-                return ClusterType(controller=ControllerType(ip=controller_ip), **fields)
-            except:
-                continue
-
-        return None
+        resources_http_client = ResourcesHttpClient()
+        cluster_data = resources_http_client.fetch_cluster(id)
+        fields = {
+            k: v for k, v in cluster_data['resource_data'].items()
+            if k in ClusterType._meta.fields
+        }
+        return ClusterType(controller=ControllerType(address=cluster_data['controller_address']), **fields)
 
     async def resolve_clusters(self, _info, ordering=None, reversed_order=None):
-        controllers = None#await DiscoverControllers(return_broken=False)
-
+        resources_http_client = ResourcesHttpClient()
+        controllers = await resources_http_client.discover_controllers(return_broken=False)
+        print('test controllers', controllers)
         # form list of clusters
         list_of_all_cluster_types = []
 
         for controller in controllers:
-            clusters = None#await ListClusters(controller['ip'])
+            clusters = await resources_http_client.fetch_cluster_list(controller['address'])
             cluster_type_list = []
             for cluster in clusters:
                 obj = make_resource_type(ClusterType, cluster)
