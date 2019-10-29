@@ -105,17 +105,18 @@ class NodeType(graphene.ObjectType):
     veil_info = Unset  # dict
 
     async def get_veil_info(self):
-        return await FetchNode(node_id=self.id, controller_ip=self.controller.ip)
+        if self.veil_info is Unset:
+            self.veil_info = await FetchNode(node_id=self.id, controller_ip=self.controller.ip)
+
+    async def determine_management_ip(self):
+        await self.get_veil_info()
+        self.management_ip = self.veil_info['management_ip']
 
     async def resolve_verbose_name(self, info):
         if self.verbose_name:
             return self.verbose_name
-        if self.veil_info is Unset:
-            veil_info = await self.get_veil_info()
-        if veil_info:
-            return veil_info['verbose_name']
-        else:
-            return DEFAULT_NAME
+        await self.get_veil_info()
+        return self.veil_info['verbose_name']
 
     async def resolve_templates(self, info):
         return await self.controller.resolve_templates(info, node_id=self.id)
@@ -127,8 +128,7 @@ class NodeType(graphene.ObjectType):
         return await self.controller.resolve_vms(info, node_id=self.id, wild=wild)
 
     async def resolve_cluster(self, info):
-        if self.veil_info is Unset:
-            self.veil_info = await self.get_veil_info()
+        await self.get_veil_info()
         cluster_id = self.veil_info['cluster']['id']
         #TODO return immediately
         resp = await FetchCluster(controller_ip=self.controller.ip, cluster_id=cluster_id)
@@ -139,8 +139,7 @@ class NodeType(graphene.ObjectType):
     async def resolve_datacenter(self, info):
         if self.datacenter:
             return self.datacenter
-        if self.veil_info is Unset:
-            self.veil_info = await self.get_veil_info()
+        await self.get_veil_info()
         return DatacenterType(id=self.veil_info['datacenter_id'],
                               verbose_name=self.veil_info['datacenter_name'])
 
@@ -149,8 +148,7 @@ class NodeType(graphene.ObjectType):
                                          resource_category_name='nodes', resource_id=self.id)
 
     async def resolve_management_ip(self, _info):
-        if self.veil_info is Unset:
-            self.veil_info = await self.get_veil_info()
+        await self.get_veil_info()
         return self.veil_info['management_ip']
 
 

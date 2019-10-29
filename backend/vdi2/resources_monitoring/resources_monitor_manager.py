@@ -20,12 +20,12 @@ class ResourcesMonitorManager:
         # get all active controller ips
         connected_controllers = None#await DiscoverControllers(return_broken=False)
         print(__class__.__name__, 'connected_controllers', connected_controllers)
-        if not connected_controllers:
-            return
-        # start resources monitors
-        for controller in connected_controllers:
-            self._add_monitor_for_controller(controller['ip'])
-        #self._add_monitor_for_controller('192.168.20.120')
+        # if not connected_controllers:
+        #     return
+        # # start resources monitors
+        # for controller in connected_controllers:
+        #     self._add_monitor_for_controller(controller['ip'])
+        self._add_monitor_for_controller('192.168.6.122')
         print(__class__.__name__, ': Started')
 
     async def stop(self):
