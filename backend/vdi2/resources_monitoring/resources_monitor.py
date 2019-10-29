@@ -5,9 +5,10 @@ from abc import ABC, abstractmethod
 
 from tornado.httpclient import HTTPClientError
 from tornado.websocket import websocket_connect
+from tornado.websocket import WebSocketClosedError
 from tornado import ioloop
 
-#from ..tasks.base import Token
+from controller.models import VeilCredentials
 
 from .resources_monitoring_data import CONTROLLER_SUBSCRIPTIONS_LIST, CONTROLLERS_SUBSCRIPTION, VDI_TASKS_SUBSCRIPTION
 
@@ -112,38 +113,53 @@ class ResourcesMonitor(AbstractMonitor):
         Listen for data from controller
         :return:
         """
-        await self._connect()
-
-        # receive messages
+        RECONNECT_TIMEOUT = 5
         while self._running_flag:
-            msg = await self._ws_connection.read_message()
-            if msg is None:  # according to doc it means that connection closed
-                await self._on_connection_closed()
-            else:
-                await self._on_message_received(msg)
+            is_connected = await self._connect()
+            print(__class__.__name__, ' is_connected', is_connected)
+            # reconnect if not connected
+            if not is_connected:
+                await asyncio.sleep(RECONNECT_TIMEOUT)
+                continue
+
+            # receive messages
+            while self._running_flag:
+                msg = await self._ws_connection.read_message()
+                if msg is None:  # according to doc it means that connection closed
+                    break
+                else:
+                    await self._on_message_received(msg)
+
+            await asyncio.sleep(RECONNECT_TIMEOUT)
 
     async def _connect(self):
         # get token
         try:
-            token = None#await Token(controller_ip=self._controller_ip)
+            token = await VeilCredentials.get_token(self._controller_ip)
         except Exception:
-            return
+            return False
+
         # create ws connection
         try:
             connect_url = 'ws://{}/ws/?token={}'.format(self._controller_ip, token)
             self._ws_connection = await websocket_connect(connect_url)
-
-            # subscribe to events on controller
-            for subscription_name in CONTROLLER_SUBSCRIPTIONS_LIST:
-                await self._ws_connection.write_message('add {}'.format(subscription_name))
         except ConnectionRefusedError:
             print(__class__.__name__, ' can not connect to', self._controller_ip)
-            return
+            return False
+
+        # subscribe to events on controller
+        try:
+            for subscription_name in CONTROLLER_SUBSCRIPTIONS_LIST:
+                await self._ws_connection.write_message('add {}'.format(subscription_name))
+        except WebSocketClosedError:
+            return False
+
+        return True
 
     async def _on_message_received(self, message):
         try:
             json_data = json.loads(message)
-            print(__class__.__name__, json_data)
+            print(__class__.__name__, 'msg received', json_data)
         except JSONDecodeError:
             return
         #  notify subscribed observers
@@ -152,17 +168,6 @@ class ResourcesMonitor(AbstractMonitor):
         except KeyError:
             return
         self.notify_observers(resource_str, json_data)
-
-    async def _on_connection_closed(self):
-        print(__class__.__name__, 'connection closed ', self._controller_ip)
-        await self._try_to_reconnect()
-
-    async def _try_to_reconnect(self):
-        # if _running_flag is raised then try to reconnect
-        if self._running_flag:
-            await self._connect()
-            RECONNECT_TIMEOUT = 5
-            await asyncio.sleep(RECONNECT_TIMEOUT)
 
     async def _close_connection(self):
         if self._ws_connection:
