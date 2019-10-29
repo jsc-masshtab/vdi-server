@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 """Project settings."""
+# TODO: секретные штуки перенести в переменные окружения или более модные способы.
+
 
 # Database settings
 # -----------------------------
@@ -26,7 +28,7 @@ JWT_OPTIONS = {
 }
 
 # Websocket settings
-WS_PING_INTERVAL = 1  # TODO: change to 6
+WS_PING_INTERVAL = 1  # TODO: изменить на 6, после доработки на стороне тонкого клиента.
 
 # ECP Veil settings
 # -----------------------------
@@ -36,6 +38,7 @@ VEIL_CONNECTION_TIMEOUT = 15
 VEIL_MAX_BODY_SIZE = 10 * 1024 ^ 3
 VEIL_MAX_CLIENTS = 10
 VEIL_SSL_ON = False
+VEIL_WS_MAX_TIME_TO_WAIT = 15
 
 # Pool parameters
 # -----------------------------
