@@ -45,7 +45,7 @@ export class NodesService {
         });
     }
 
-    public getNode(idNode: string): QueryRef<any, any> {
+    public getNode(id: string): QueryRef<any, any> {
         return  this.service.watchQuery({
             query:  gql` query node($id: String) {
                             node(id: $id) {
@@ -85,7 +85,7 @@ export class NodesService {
                     `,
             variables: {
                 method: 'GET',
-                id: idNode
+                id
             }
         });
     }

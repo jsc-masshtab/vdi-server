@@ -41,7 +41,6 @@ export class ErrorsComponent  implements OnInit, OnDestroy {
     this.errorsSub = this.service.getErrors().pipe(filter(value => Array.isArray(value))).subscribe((errors: object[]) => {
       errors.forEach((item: {}) => {
         this.errors.unshift(item);
-        console.log(item);
         this.hideMessage();
       });
     });
