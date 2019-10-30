@@ -1,12 +1,15 @@
 # -*- coding: utf-8 -*-
+import uuid
+
+from sqlalchemy.dialects.postgresql import UUID
 from database import db
 
 
 class Vm(db.Model):
     __tablename__ = 'vm'
-    id = db.Column(db.Unicode(length=100), nullable=False)
+    id = db.Column(UUID(), primary_key=True, default=uuid.uuid4)
     template_id = db.Column(db.Unicode(length=100), nullable=True)
-    pool_id = db.Column(db.Integer(), db.ForeignKey('pool.id'))
+    pool_id = db.Column(UUID(), db.ForeignKey('pool.id'))
     username = db.Column(db.Unicode(length=100), nullable=False)
 
     ACTIONS = ('start', 'suspend', 'reset', 'shutdown', 'resume', 'reboot')

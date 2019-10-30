@@ -1,9 +1,7 @@
 import graphene
+from graphql import GraphQLError
+
 from controller.models import Controller
-from controller.models import ControllerUserType
-
-
-ControllerUserTypeGr = graphene.Enum.from_enum(ControllerUserType)
 
 
 class ControllerType(graphene.ObjectType):
@@ -15,9 +13,13 @@ class ControllerType(graphene.ObjectType):
     version = graphene.String()
     default = graphene.Boolean()
 
-    controller_user_type = ControllerUserTypeGr()
+    # controller_user_type = ControllerUserTypeGr()
     user_login = graphene.String()
     user_password = graphene.String()
+
+    async def resolve_version(self, _info):
+        # TODO: get soft version from controller
+        return self.version if self.version else '4.0.0'
 
     async def resolve_status(self, _info):
         return self.get_status()
@@ -37,7 +39,7 @@ class AddController(graphene.Mutation):
         verbose_name = graphene.String(required=True)
         address = graphene.String(required=True)
 
-        controller_user_type = ControllerUserTypeGr(required=True)
+        # controller_user_type = ControllerUserTypeGr(required=True)
         user_login = graphene.String(required=True)
         user_password = graphene.String(required=True)
 
@@ -45,6 +47,7 @@ class AddController(graphene.Mutation):
         default = graphene.Boolean()
 
     ok = graphene.Boolean()
+    controller = ControllerType()
 
     async def mutate(self, _info, verbose_name, address, controller_user_type, user_login, user_password,
                      description=None, default=False):
@@ -57,14 +60,42 @@ class AddController(graphene.Mutation):
             address=address,
             description=description,
             default=default,
-            controller_user_type=ControllerUserType(controller_user_type).name,
+            # controller_user_type=ControllerUserType(controller_user_type).name,
             user_login=user_login,
             user_password=user_password
         )
 
         # add controller to resources_monitor_manager
         # resources_monitor_manager.add_controller(ip)
-        return AddController(ok=True)
+        return AddController(ok=True, controller=ControllerType(**controller.__values__))
+
+
+class UpdateController(graphene.Mutation):
+    class Arguments:
+        id = graphene.String(required=True)
+        verbose_name = graphene.String(required=True)
+        address = graphene.String(required=True)
+
+        # controller_user_type = ControllerUserTypeGr(required=True)
+        user_login = graphene.String(required=True)
+        user_password = graphene.String(required=True)
+
+        description = graphene.String()
+        default = graphene.Boolean()
+
+    ok = graphene.Boolean()
+
+    async def mutate(self, info, id):
+        # TODO: validation
+        # check that its possible to log in with given credentials (auth request to controller)
+        controller = await Controller.query.where(Controller.id == id).gino.first()
+        if not controller:
+            raise GraphQLError('No such controller.')
+        # TODO: remove connected pools
+        status = await Controller.delete.where(Controller.id == id).gino.status()
+        # remove controller from resources_monitor_manager
+        # resources_monitor_manager.remove_controller(controller_ip)
+        return RemoveController(ok=True)
 
 
 class RemoveController(graphene.Mutation):
@@ -77,6 +108,7 @@ class RemoveController(graphene.Mutation):
         # TODO: validation (if exist)
         # TODO: remove connected pools
         status = await Controller.delete.where(Controller.id == id).gino.status()
+        print(status)
         # remove controller from resources_monitor_manager
         # resources_monitor_manager.remove_controller(controller_ip)
         return RemoveController(ok=True)
@@ -95,8 +127,9 @@ class ControllerQuery(graphene.ObjectType):
         return objects
 
     async def resolve_controller(self, _info, id):
-        # TODO: validation
         controller = await Controller.query.where(Controller.id == id).gino.first()
+        if not controller:
+            raise GraphQLError('No such controller.')
         return ControllerType(**controller.__values__)
 
 

@@ -1,13 +1,19 @@
 # -*- coding: utf-8 -*-
+import uuid
+
+from sqlalchemy.dialects.postgresql import UUID
+
 from database import db
 from vm.models import Vm
 
 
 class Pool(db.Model):
     __tablename__ = 'pool'
-    id = db.Column(db.Integer(), nullable=False, unique=True, autoincrement=True)
-    name = db.Column(db.Unicode(length=255), nullable=False)
-    controller_ip = db.Column(db.Unicode(length=255), nullable=False)
+    id = db.Column(UUID(), primary_key=True, default=uuid.uuid4)
+    verbose_name = db.Column(db.Unicode(length=128), nullable=False)
+    status = db.Column(db.Unicode(length=128), nullable=False)
+    controller = db.Column(UUID(as_uuid=True), db.ForeignKey('controllers.id'))
+
     desktop_pool_type = db.Column(db.Unicode(length=255), nullable=False)
 
     deleted = db.Column(db.Boolean())
@@ -62,6 +68,5 @@ class Pool(db.Model):
 
 class PoolUsers(db.Model):
     __tablename__ = 'pools_users'
-    pool_id = db.Column(db.Integer(), db.ForeignKey('pool.id'))
-    username = db.Column(db.Integer(), db.ForeignKey('user.username'))
-
+    pool_id = db.Column(UUID(), db.ForeignKey('pool.id'))
+    user_id = db.Column(UUID(), db.ForeignKey('user.id'))

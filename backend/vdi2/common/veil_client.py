@@ -7,7 +7,7 @@ from cached_property import cached_property
 
 from settings import VEIL_REQUEST_TIMEOUT, VEIL_CONNECTION_TIMEOUT, VEIL_MAX_BODY_SIZE, VEIL_MAX_CLIENTS
 from common.veil_errors import NotFound, Unauthorized, ServerError, Forbidden, ControllerNotAccessible, BadRequest
-from controller.models import VeilCredentials
+from controller.models import Controller
 from common.veil_decorators import prepare_body
 
 # AsyncHTTPClient.configure("tornado.curl_httpclient.CurlAsyncHTTPClient")  # TODO: measure it
@@ -28,7 +28,7 @@ class VeilHttpClient:
     @gen.coroutine
     def headers(self):
         """controller ip-address must be set in the descendant class."""
-        token = yield VeilCredentials.get_token(self.controller_ip)
+        token = yield Controller.get_token(self.controller_ip)
         headers = {
             'Authorization': 'jwt {}'.format(token),
             'Content-Type': 'application/json',
