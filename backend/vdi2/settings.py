@@ -18,7 +18,8 @@ SECRET_KEY = 'RSrf948GB2YXQKBjXhikwxDDJbfooHoBuewQYqO1A2MyBqK15G'
 
 # JWT Options
 # -----------------------------
-JWT_EXPIRATION_DELTA = 86400
+# JWT_EXPIRATION_DELTA = 86400
+JWT_EXPIRATION_DELTA = 60
 JWT_OPTIONS = {
     'verify_signature': True,
     'verify_exp': True,
@@ -26,8 +27,11 @@ JWT_OPTIONS = {
     'verify_iat': True,
     'verify_aud': False
 }
+JWT_AUTH_HEADER_PREFIX = 'JWT'
+JWT_ALGORITHM = 'HS256'
 
 # Websocket settings
+# -----------------------------
 WS_PING_INTERVAL = 1  # TODO: изменить на 6, после доработки на стороне тонкого клиента.
 
 # ECP Veil settings

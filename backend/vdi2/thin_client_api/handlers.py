@@ -3,11 +3,10 @@ from abc import ABC
 import json
 
 from common.veil_handlers import BaseHandler
-from auth.utils.veil_jwt import jwtauth, get_jwt
+from auth.utils.veil_jwt import jwtauth, encode_jwt, refresh_access_token_with_expire_check as refresh_access_token
 from pool.models import Pool, Vm
 from auth.models import User
 from vm.veil_client import VmHttpClient  # TODO: move to VM?
-# TODO: обновление токена для клиента
 
 
 class AuthHandler(BaseHandler, ABC):
@@ -23,7 +22,22 @@ class AuthHandler(BaseHandler, ABC):
         if not password_is_valid:
             # await User.set_password(self.args['username'], self.args['password'])
             return self.finish('invalid password')
-        return self.finish(get_jwt(self.args['username']))
+        access_token = encode_jwt(self.args['username'])
+        # TODO: если мы захотим хранить время, то придется делать запись в БД с обновлением
+        return self.finish(access_token)
+
+
+class RefreshAuthHandler(BaseHandler, ABC):
+    # TODO: не окончательная версия. Нужно решить, делаем как в ECP разрешая обновлять только
+    #  не истекшие времени или проверяем это по хранимому токену
+    def post(self):
+        try:
+            token_info = refresh_access_token(self.request.headers)
+        except:
+            self._transforms = []
+            self.set_status(401)
+            return self.finish('Token has expired.')
+        return self.finish(token_info)
 
 
 @jwtauth

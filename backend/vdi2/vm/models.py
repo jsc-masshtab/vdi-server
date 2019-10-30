@@ -2,11 +2,12 @@
 from database import db
 from vm.veil_client import VmHttpClient
 import uuid
+# TODO: сделать схему человеческой
 
 
 class Vm(db.Model):
     __tablename__ = 'vm'
-    id = db.Column(db.Unicode(length=100), nullable=False)
+    id = db.Column(db.Unicode(length=100), nullable=False, primary_key=True)
     template_id = db.Column(db.Unicode(length=100), nullable=True)
     pool_id = db.Column(db.Integer(), db.ForeignKey('pool.id'))
     username = db.Column(db.Unicode(length=100), nullable=False)

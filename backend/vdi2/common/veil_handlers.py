@@ -5,6 +5,8 @@ from tornado.escape import json_decode
 
 from auth.utils.veil_jwt import extract_user
 
+# TODO: унифицировать обработку Exception, чтобы не плодить try:ex
+
 
 class BaseHandler(RequestHandler, ABC):
     args = dict()
