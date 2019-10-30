@@ -11,6 +11,7 @@ import { FormBuilder, FormGroup } from '@angular/forms';
 
 import { IFinishPoolView, IFinishPoolForm, IPendingAdd, ISelectValue } from './definitions/add-pool';
 
+
 @Component({
   selector: 'vdi-add-pool',
   templateUrl: './add-pool.component.html',
@@ -81,6 +82,8 @@ export class PoolAddComponent implements OnInit, OnDestroy {
     }
   ];
 
+  public errorInitialSize: string = '';
+
   @ViewChild('selectNodeRef') selectNodeRef: ViewContainerRef;
   @ViewChild('selectDatapoolRef') selectDatapoolRef: ViewContainerRef;
   @ViewChild('selectVmRef') selectVmRef: ViewContainerRef;
@@ -108,14 +111,18 @@ export class PoolAddComponent implements OnInit, OnDestroy {
       cluster_id: ['', Validators.required],
       node_id: ['', Validators.required],
       datapool_id: ['', Validators.required],
-      initial_size: ['', Validators.required],
-      reserve_size: ['', Validators.required],
-      total_size: ['', Validators.required],
+      reserve_size: ['', [Validators.required, Validators.max(200), Validators.min(1)]],
       vm_name_template: ['', Validators.required],
-      controller_ip: ['', Validators.required]
+      controller_ip: ['', Validators.required],
+      size: this.fb.group({
+        initial_size: ['', [Validators.required, Validators.max(200), Validators.min(1)]],
+        total_size: ['', [Validators.required, Validators.max(1000), Validators.min(1)]],
+      }, {validators: this.totalSizeValidator()})
     });
     this.finishPoolView = {};
     this.getControllers();
+
+    this.checkValidForm();
   }
 
   private createStaticPoolInit(): void {
@@ -391,8 +398,44 @@ export class PoolAddComponent implements OnInit, OnDestroy {
     }
   }
 
-  private handlingValidForm(): boolean {
-    if (this.createPoolForm.status === 'INVALID') {
+  private checkValidForm() {
+    // this.createPoolForm.statusChanges.subscribe((res) => {
+    //   console.log(res);
+    // });
+
+    this.createPoolForm.valueChanges.subscribe(() => {
+      console.log(this.createPoolForm);
+
+
+
+    });
+  }
+
+  public get initial_size() {
+    return this.createPoolForm.get('size').get('initial_size');
+  }
+
+  public get total_size() {
+    return this.createPoolForm.get('size').get('total_size');
+  }
+
+  public get reserve_size() {
+    return this.createPoolForm.get('reserve_size');
+  }
+
+  public get size_group() {
+    return this.createPoolForm.get('size');
+  }
+
+  private totalSizeValidator() {
+    return (group: FormGroup) => {
+      if (group.controls['total_size'].value < group.controls['initial_size'].value) {
+        return {maxLessInitial: true};
+      }
+    };
+  }
+      /*if (this.createPoolForm.status === 'INVALID') {
+      console.log(this.createPoolForm);
       let timer;
       this.error = true;
       if (!timer) {
@@ -402,8 +445,7 @@ export class PoolAddComponent implements OnInit, OnDestroy {
       }
       return false;
     }
-    return true;
-  }
+    return true;*/
 
   private actionChooseType(): void {
     this.step = 'chooseType';
@@ -435,16 +477,16 @@ export class PoolAddComponent implements OnInit, OnDestroy {
   }
 
   private actionFinishSee(): void  {
-    const validPrev: boolean = this.handlingValidForm();
-    if (!validPrev) { return; }
+    // const validPrev: boolean = this.handlingValidForm();
+    // if (!validPrev) { return; }
     this.chooseCollection();
 
     const formValue: Partial<IFinishPoolForm> = this.createPoolForm.value;
 
     if (this.chooseTypeForm.value.type === 'Автоматический') {
-      this.finishPoolView.initial_size = formValue.initial_size;
+      this.finishPoolView.initial_size = formValue.size.initial_size;
       this.finishPoolView.reserve_size = formValue.reserve_size;
-      this.finishPoolView.total_size = formValue.total_size;
+      this.finishPoolView.total_size = formValue.size.total_size;
       this.finishPoolView.vm_name_template = formValue.vm_name_template;
     }
     this.finishPoolView.name = formValue.name;
@@ -465,9 +507,9 @@ export class PoolAddComponent implements OnInit, OnDestroy {
                               formValue.cluster_id,
                               formValue.node_id,
                               formValue.datapool_id,
-                              formValue.initial_size,
+                              formValue.size.initial_size,
                               formValue.reserve_size,
-                              formValue.total_size,
+                              formValue.size.total_size,
                               formValue.vm_name_template,
                               formValue.controller_ip)
         .subscribe(() => {

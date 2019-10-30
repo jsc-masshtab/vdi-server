@@ -121,20 +121,26 @@
         <p class="field-name">Имя шаблона для ВМ</p>
         <input type="text" formControlName="vm_name_template">
       </label>
-  
-      <label class="field">
-        <p class="field-name">Начальное количество ВМ</p>
-        <input type="number" formControlName="initial_size" min="0">
-      </label>
+
+      <div formGroupName="size"  class="field">
+        <label class="field">
+          <p class="field-name">Начальное количество ВМ</p>
+          <input type="number" formControlName="initial_size" min="0">
+          <div class="error" *ngIf="initial_size.invalid && initial_size.touched && initial_size.dirty">Начальное количество ВМ должно быть в интервале 1 - 200</div>
+        </label>
     
+        <label class="field">
+          <p class="field-name">Максимальное количество создаваемых ВМ</p>
+          <input type="number" formControlName="total_size"  min="0">
+          <div class="error" *ngIf="total_size.invalid && total_size.touched && total_size.dirty">Максимальное количество создаваемых ВМ должно быть в интервале 1-1000</div>
+          <div class="error" *ngIf="size_group.errors && size_group.errors.maxLessInitial && total_size.touched && total_size.dirty ">Максимальное количество ВМ не может быть меньше начального количества ВМ</div>
+        </label>
+      </div>
+  
       <label class="field">
         <p class="field-name">Количество создаваемых ВМ</p>
         <input type="number" formControlName="reserve_size"  min="0">
-      </label>
-  
-      <label class="field">
-        <p class="field-name">Максимальное количество создаваемых ВМ</p>
-        <input type="number" formControlName="total_size"  min="0">
+        <div class="error" *ngIf="reserve_size.invalid && reserve_size.touched && reserve_size.dirty">Количество создаваемых ВМ должно быть в интервале 1-200</div>
       </label>
     </ng-container>
 
