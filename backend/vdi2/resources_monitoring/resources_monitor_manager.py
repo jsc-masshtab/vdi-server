@@ -3,6 +3,8 @@ import json
 from resources_monitoring.resources_monitor import ResourcesMonitor, InternalMonitor
 #from ..tasks.resources import DiscoverControllers
 
+from controller_resources.veil_client import ResourcesHttpClient
+
 
 class ResourcesMonitorManager:
 
@@ -18,14 +20,14 @@ class ResourcesMonitorManager:
         """
         print(__class__.__name__, ': Startup...')
         # get all active controller ips
-        connected_controllers = None#await DiscoverControllers(return_broken=False)
+        resources_http_client = ResourcesHttpClient()
+        connected_controllers = await resources_http_client.discover_controllers(return_broken=False)
         print(__class__.__name__, 'connected_controllers', connected_controllers)
-        # if not connected_controllers:
-        #     return
-        # # start resources monitors
-        # for controller in connected_controllers:
-        #     self._add_monitor_for_controller(controller['ip'])
-        self._add_monitor_for_controller('192.168.6.122')
+        if not connected_controllers:
+            return
+        # start resources monitors
+        for controller in connected_controllers:
+            self._add_monitor_for_controller(controller['address'])
         print(__class__.__name__, ': Started')
 
     async def stop(self):

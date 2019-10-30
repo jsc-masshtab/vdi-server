@@ -51,18 +51,18 @@ class ResourcesHttpClient(VeilHttpClient):
             raise SimpleError('Не удалось определить ip контроллера по id ресурса')
 
     async def fetch_node(self, node_id: str, controller_ip: str = None):
-        return self.fetch_resource('nodes', node_id, controller_ip)
+        return await self.fetch_resource('nodes', node_id, controller_ip)
 
     async def fetch_cluster(self, cluster_id: str, controller_ip: str = None):
-        return self.fetch_resource('clusters', cluster_id, controller_ip)
+        return await self.fetch_resource('clusters', cluster_id, controller_ip)
 
     async def fetch_datapool(self, datapool_id: str, controller_ip: str = None):
-        return self.fetch_resource('data-pools', datapool_id, controller_ip)
+        return await self.fetch_resource('data-pools', datapool_id, controller_ip)
 
     async def check_controller(self, controller_ip: str):
         """check if controller accesseble"""
         url = 'http://{}/api/controllers/check/'.format(controller_ip)
-        await self.fetch_with_response(url=url, method='GET')
+        await self.fetch(url=url, method='GET')
 
     async def discover_controllers(self, return_broken: bool):
         """Get controllers data"""
@@ -84,18 +84,15 @@ class ResourcesHttpClient(VeilHttpClient):
 
     async def fetch_node_list(self, controller_ip: str, cluster_id: str = None,
                               ordering: str = None, reversed_order: bool = None):
-
         custom_url_vars = {'cluster': cluster_id}
         return await self.fetch_resources_list('nodes', controller_ip, ordering, reversed_order, custom_url_vars)
 
     async def fetch_cluster_list(self, controller_ip: str,
                                  ordering: str = None, reversed_order: bool = None):
-
         return await self.fetch_resources_list('clusters', controller_ip, ordering, reversed_order)
 
     async def fetch_datapool_list(self, controller_ip: str, node_id: str = None, take_broken: bool = False,
                                   ordering: str = None, reversed_order: bool = None):
-
         datapool_list = await self.fetch_resources_list('data-pools', controller_ip, ordering, reversed_order)
 
         # todo: looks like code repeat

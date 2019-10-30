@@ -15,11 +15,6 @@ from controller_resources.veil_client import ResourcesHttpClient
 #from ..tasks import Token
 #from ..tasks.vm import ListTemplates, ListVms
 
-# from tasks.resources import (
-#     DiscoverControllers, FetchNode, FetchCluster, DiscoverControllerIp, ListClusters,
-#     ListDatapools, ListNodes, FetchResourcesUsage, CheckController
-# )
-
 from common.veil_errors import FieldError, SimpleError, FetchException, NotFound
 
 #from vdi.resources_monitoring.resources_monitor_manager import resources_monitor_manager
@@ -231,7 +226,7 @@ class ResourcesQuery(graphene.ObjectType):
 
     async def resolve_node(self, _info, id):
         resources_http_client = ResourcesHttpClient()
-        node_data = resources_http_client.get_node_data(id)
+        node_data = await resources_http_client.fetch_node(id)
         node_type = make_graphene_type(NodeType, node_data['resource_data'])
         node_type.controller = ControllerType(address=node_data['controller_address'])
         return node_type
@@ -338,7 +333,7 @@ class ResourcesQuery(graphene.ObjectType):
         list_of_all_datapool_types = []
 
         for controller in controllers:
-            datapools = resources_http_client.fetch_datapool_list(controller['address'], take_broken=take_broken)
+            datapools = await resources_http_client.fetch_datapool_list(controller['address'], take_broken=take_broken)
             datapool_type_list = []
             for datapool in datapools:
                 datapool_type = make_graphene_type(DatapoolType, datapool)
@@ -350,7 +345,6 @@ class ResourcesQuery(graphene.ObjectType):
         if ordering:
             if ordering == 'verbose_name':
                 def sort_lam(datapool): return datapool.verbose_name if datapool.verbose_name else DEFAULT_NAME
-                pass
             elif ordering == 'type':
                 def sort_lam(datapool): return datapool.type if datapool.type else DEFAULT_NAME
             elif ordering == 'vdisk_count':
