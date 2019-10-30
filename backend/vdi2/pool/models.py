@@ -1,27 +1,20 @@
 # -*- coding: utf-8 -*-
 import uuid
 
+from sqlalchemy.dialects.postgresql import UUID
+
 from settings import VEIL_WS_MAX_TIME_TO_WAIT
 from database import db
 from vm.models import Vm
-from common.veil_errors import VmCreationError, BadRequest
-
-from resources_monitoring.handlers import WaiterSubscriptionObserver
-from resources_monitoring.resources_monitor_manager import resources_monitor_manager
-# TODO: сделать схему человеческой
 
 
 class Pool(db.Model):
-    MIX_POOL_SIZE = 1
-    MAX_POOL_SIZE = 200
-    MAX_VM_AMOUNT_IN_POOL = 1000
-    VM_STEP = 5
-    MAX_AMOUNT_OF_CREATE_ATTEMPTS = 2
-
     __tablename__ = 'pool'
-    id = db.Column(db.Integer(), nullable=False, autoincrement=True, primary_key=True)
-    name = db.Column(db.Unicode(length=255), nullable=False)
-    controller_ip = db.Column(db.Unicode(length=255), nullable=False)
+    id = db.Column(UUID(), primary_key=True, default=uuid.uuid4)
+    verbose_name = db.Column(db.Unicode(length=128), nullable=False)
+    status = db.Column(db.Unicode(length=128), nullable=False)
+    controller = db.Column(UUID(as_uuid=True), db.ForeignKey('controllers.id'))
+
     desktop_pool_type = db.Column(db.Unicode(length=255), nullable=False)
 
     deleted = db.Column(db.Boolean())
@@ -33,9 +26,8 @@ class Pool(db.Model):
     template_id = db.Column(db.Unicode(length=100), nullable=True)
 
     initial_size = db.Column(db.Integer(), nullable=True)
-    reserve_size = db.Column(db.Integer(), nullable=True)  # желаемое минимальное количествиюво подогретых машин
-                                                           # (добавленных в пул, но не имеющих пользоватля)
-    total_size = db.Column(db.Integer(), nullable=False, default=MIX_POOL_SIZE)
+    reserve_size = db.Column(db.Integer(), nullable=True)
+    total_size = db.Column(db.Integer(), nullable=True)
     vm_name_template = db.Column(db.Unicode(length=100), nullable=True)
 
     @staticmethod
@@ -154,6 +146,7 @@ class Pool(db.Model):
     @staticmethod
     async def get_pools(user='admin'):
         # TODO: rewrite normally
+        # pools = await Pool.query.gino.all()
         pools = await Pool.select('id', 'name').gino.all()
         ans = list()
         for pool in pools:
@@ -186,6 +179,5 @@ class Pool(db.Model):
 
 class PoolUsers(db.Model):
     __tablename__ = 'pools_users'
-    pool_id = db.Column(db.Integer(), db.ForeignKey('pool.id'))
-    username = db.Column(db.Integer(), db.ForeignKey('user.username'))
-
+    pool_id = db.Column(UUID(), db.ForeignKey('pool.id'))
+    user_id = db.Column(UUID(), db.ForeignKey('user.id'))

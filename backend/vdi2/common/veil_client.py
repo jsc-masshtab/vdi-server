@@ -5,6 +5,7 @@ from tornado.escape import json_decode
 
 from settings import VEIL_REQUEST_TIMEOUT, VEIL_CONNECTION_TIMEOUT, VEIL_MAX_BODY_SIZE, VEIL_MAX_CLIENTS
 from common.veil_errors import NotFound, Unauthorized, ServerError, Forbidden, ControllerNotAccessible, BadRequest
+from controller.models import Controller
 from common.veil_decorators import prepare_body
 from controller.models import VeilCredentials
 
@@ -25,7 +26,7 @@ class VeilHttpClient:
     @cached_property
     async def headers(self):
         """controller ip-address must be set in the descendant class."""
-        token = await VeilCredentials.get_token(self.controller_ip)
+        token = await Controller.get_token(self.controller_ip)
         headers = {
             'Authorization': 'jwt {}'.format(token),
             'Content-Type': 'application/json',
