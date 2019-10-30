@@ -410,15 +410,6 @@ export class PoolAddComponent implements OnInit, OnDestroy {
     });
   }
 
-
-  public get total_size() {
-    return this.createPoolForm.get('size').get('total_size');
-  }
-
-  public get size_group() {
-    return this.createPoolForm.get('size');
-  }
-
   private totalSizeValidator() {
     return (group: FormGroup) => {
       if (group.controls['total_size'].value < group.controls['initial_size'].value) {
