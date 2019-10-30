@@ -14,7 +14,7 @@ def prepare_body(func):
             input_body = kwargs.get('body')
 
         if not input_body:
-            body = input_body
+            body = ''
         elif len(input_body) == 0:
             body = ''
         elif isinstance(input_body, str):
@@ -43,7 +43,7 @@ def check_params(*a_params, **k_params):
             if len(a_params) > 0 and len(k_params) > 0:
                 raise NotImplementedError('Can check only kwargs or args. Not both at the same time.')
 
-            if len(a_params) > 0:
+            if len(a_params) > 1:
                 if len(kwargs) > 0:
                     raise AssertionError(
                         'The parameters to be checked are in an dict. Can\'t explicitly match values with tuple.')
@@ -58,7 +58,7 @@ def check_params(*a_params, **k_params):
                         raise AssertionError(
                             'Value {} is invalid. Valid values are: {}'.format(parameter_value, valid_values))
             elif len(k_params) > 0:
-                if len(args) > 0:
+                if len(args) > 1:
                     raise AssertionError(
                         'The parameters to be checked are in an dict. Can\'t explicitly match values with tuple.')
                 for parameter in k_params:
