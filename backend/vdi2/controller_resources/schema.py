@@ -7,7 +7,7 @@ from database import db
 import graphene
 
 #from .pool import PoolType, VmType, TemplateType
-from utils import get_selections, make_resource_type
+from utils import get_selections, make_graphene_type
 from database import get_list_of_values_from_db
 
 from controller_resources.veil_client import ResourcesHttpClient
@@ -128,7 +128,7 @@ class NodeType(graphene.ObjectType):
 
         resp = await resources_http_client.fetch_cluster(cluster_id)
 
-        obj = make_resource_type(ClusterType, resp)
+        obj = make_graphene_type(ClusterType, resp)
         obj.controller = self.controller
         return obj
 
@@ -174,12 +174,12 @@ class DatapoolType(graphene.ObjectType):
         if not fields <= base_fields:
             for node in self.nodes:
                 node_data = await resources_http_client.fetch_node(node['id'])
-                obj = make_resource_type(NodeType, node_data)
+                obj = make_graphene_type(NodeType, node_data)
                 obj.controller = ControllerType(ip=self.controller_ip)
                 nodes.append(obj)
         else:
             for node in self.nodes:
-                obj = make_resource_type(NodeType, node)
+                obj = make_graphene_type(NodeType, node)
                 obj.controller = ControllerType(ip=self.controller_ip)
                 nodes.append(obj)
 
@@ -223,7 +223,7 @@ class ResourcesQuery(graphene.ObjectType):
             try:
                 data = next(data for data in resource_list if data['id'] == id)
                 print('data', data)
-                return make_resource_type(resource_type, data, fields_map)
+                return make_graphene_type(resource_type, data, fields_map)
             except StopIteration:
                 pass
         # if we didnt find anything then return None
@@ -232,11 +232,9 @@ class ResourcesQuery(graphene.ObjectType):
     async def resolve_node(self, _info, id):
         resources_http_client = ResourcesHttpClient()
         node_data = resources_http_client.get_node_data(id)
-        fields = {
-            k: v for k, v in node_data['resource_data'].items()
-            if k in NodeType._meta.fields
-        }
-        return NodeType(controller=ControllerType(address=node_data['controller_address']), **fields)
+        node_type = make_graphene_type(NodeType, node_data['resource_data'])
+        node_type.controller = ControllerType(address=node_data['controller_address'])
+        return node_type
 
     async def resolve_nodes(self, _info, ordering=None, reversed_order=None):
         resources_http_client = ResourcesHttpClient()
@@ -249,7 +247,7 @@ class ResourcesQuery(graphene.ObjectType):
             nodes = await resources_http_client.fetch_node_list(controller['address'])
             node_type_list = []
             for node in nodes:
-                obj = make_resource_type(NodeType, node)
+                obj = make_graphene_type(NodeType, node)
                 obj.controller = ControllerType(address=controller['address'])
                 node_type_list.append(obj)
 
@@ -281,12 +279,10 @@ class ResourcesQuery(graphene.ObjectType):
 
     async def resolve_cluster(self, _info, id):
         resources_http_client = ResourcesHttpClient()
-        cluster_data = resources_http_client.fetch_cluster(id)
-        fields = {
-            k: v for k, v in cluster_data['resource_data'].items()
-            if k in ClusterType._meta.fields
-        }
-        return ClusterType(controller=ControllerType(address=cluster_data['controller_address']), **fields)
+        cluster_data = await resources_http_client.fetch_cluster(id)
+        cluster_type = make_graphene_type(ClusterType, cluster_data['resource_data'])
+        cluster_type.controller = ControllerType(address=cluster_data['controller_address'])
+        return cluster_type
 
     async def resolve_clusters(self, _info, ordering=None, reversed_order=None):
         resources_http_client = ResourcesHttpClient()
@@ -299,8 +295,8 @@ class ResourcesQuery(graphene.ObjectType):
             clusters = await resources_http_client.fetch_cluster_list(controller['address'])
             cluster_type_list = []
             for cluster in clusters:
-                obj = make_resource_type(ClusterType, cluster)
-                obj.controller = ControllerType(address=controller['ip'])
+                obj = make_graphene_type(ClusterType, cluster)
+                obj.controller = ControllerType(address=controller['address'])
                 cluster_type_list.append(obj)
 
             list_of_all_cluster_types.extend(cluster_type_list)
@@ -327,23 +323,26 @@ class ResourcesQuery(graphene.ObjectType):
         return list_of_all_cluster_types
 
     async def resolve_datapool(self, _info, id):
-        datapool = None
-        #datapool = await ResourcesQuery.get_resource(_info, id, DatapoolType, ListDatapools)
-        return datapool
+        resources_http_client = ResourcesHttpClient()
+        datapool_data = await resources_http_client.fetch_datapool(id)
+        datapool_type = make_graphene_type(ClusterType, datapool_data['resource_data'])
+        datapool_type.controller = ControllerType(address=datapool_data['controller_address'])
+        return datapool_type
 
     async def resolve_datapools(self, _info, take_broken=False,
                                 ordering=None, reversed_order=None):
-        controllers = None#await DiscoverControllers(return_broken=False)
+        resources_http_client = ResourcesHttpClient()
+        controllers = await resources_http_client.discover_controllers(return_broken=False)
 
         # form list of datapools
         list_of_all_datapool_types = []
 
         for controller in controllers:
-            datapools = None#await ListDatapools(controller_ip=controller['ip'], take_broken=take_broken)
+            datapools = resources_http_client.fetch_datapool_list(controller['address'], take_broken=take_broken)
             datapool_type_list = []
             for datapool in datapools:
-                obj = make_resource_type(DatapoolType, datapool)
-                datapool_type_list.append(obj)
+                datapool_type = make_graphene_type(DatapoolType, datapool)
+                datapool_type_list.append(datapool_type)
 
             list_of_all_datapool_types.extend(datapool_type_list)
 

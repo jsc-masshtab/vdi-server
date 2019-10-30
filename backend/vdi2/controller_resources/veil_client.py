@@ -26,18 +26,18 @@ class ResourcesHttpClient(VeilHttpClient):
 
     async def fetch_resources_usage(self, resource_category_name: str, resource_id: str):
         url = self.based_url + '{}/{}/usage/'.format(resource_category_name, resource_id)
-        return await self.fetch(url=url, method='GET')
+        return await self.fetch_with_response(url=url, method='GET')
 
     async def fetch_resource(self, resource_category: str, resource_id: str, controller_ip: str = None):
         """Get veil resource data"""
         # use provided controller
         if controller_ip:
             url = 'http://{}/api/{}/{}/'.format(controller_ip, resource_category, resource_id)
-            return await self.fetch(url=url, method='GET')
+            return await self.fetch_with_response(url=url, method='GET')
         # use self.controller_ip
         elif self.controller_ip:
             url = self.based_url + '{}/{}/'.format(resource_category, resource_id)
-            return await self.fetch(url=url, method='GET')
+            return await self.fetch_with_response(url=url, method='GET')
         # determine controller
         else:
             connected_controllers = await self.discover_controllers(return_broken=False)
@@ -56,10 +56,13 @@ class ResourcesHttpClient(VeilHttpClient):
     async def fetch_cluster(self, cluster_id: str, controller_ip: str = None):
         return self.fetch_resource('clusters', cluster_id, controller_ip)
 
+    async def fetch_datapool(self, datapool_id: str, controller_ip: str = None):
+        return self.fetch_resource('data-pools', datapool_id, controller_ip)
+
     async def check_controller(self, controller_ip: str):
         """check if controller accesseble"""
         url = 'http://{}/api/controllers/check/'.format(controller_ip)
-        await self.fetch(url=url, method='GET')
+        await self.fetch_with_response(url=url, method='GET')
 
     async def discover_controllers(self, return_broken: bool):
         """Get controllers data"""
@@ -82,12 +85,53 @@ class ResourcesHttpClient(VeilHttpClient):
     async def fetch_node_list(self, controller_ip: str, cluster_id: str = None,
                               ordering: str = None, reversed_order: bool = None):
 
-        url = 'http://{}/api/nodes/?'.format(controller_ip)
+        custom_url_vars = {'cluster': cluster_id}
+        return await self.fetch_resources_list('nodes', controller_ip, ordering, reversed_order, custom_url_vars)
+
+    async def fetch_cluster_list(self, controller_ip: str,
+                                 ordering: str = None, reversed_order: bool = None):
+
+        return await self.fetch_resources_list('clusters', controller_ip, ordering, reversed_order)
+
+    async def fetch_datapool_list(self, controller_ip: str, node_id: str = None, take_broken: bool = False,
+                                  ordering: str = None, reversed_order: bool = None):
+
+        datapool_list = await self.fetch_resources_list('data-pools', controller_ip, ordering, reversed_order)
+
+        # todo: looks like code repeat
+        # filter by node
+        if node_id:
+            filtered_datapool_list = []
+            for datapool in tuple(datapool_list):
+                for node in datapool['nodes_connected']:
+                    if node['id'] == node_id:
+                        filtered_datapool_list.append(datapool)
+                        break
+            datapool_list = filtered_datapool_list
+
+        # filter if we dont need broken datapools
+        if not take_broken:
+            filtered_datapool_list = []
+            for datapool in tuple(datapool_list):
+                for node in datapool['nodes_connected']:
+                    if node['connection_status'].upper() == 'SUCCESS':
+                        filtered_datapool_list.append(datapool)
+                        break
+            datapool_list = filtered_datapool_list
+
+        return datapool_list
+
+    async def fetch_resources_list(self, resource_category: str, controller_ip: str,
+                                   ordering: str = None, reversed_order: bool = None, custom_url_vars: dict = None):
+        """Get veil resources data list """
+        url = 'http://{}/api/{}/?'.format(controller_ip, resource_category)
 
         # apply url vars
         url_vars = {}
-        if self.cluster_id:
-            url_vars['cluster'] = cluster_id
+
+        if custom_url_vars:
+            url_vars.update(custom_url_vars)
+
         if ordering:
             order_sign = '-' if reversed_order else ''
             url_vars['ordering'] = order_sign + ordering
@@ -95,19 +139,7 @@ class ResourcesHttpClient(VeilHttpClient):
         if not url_vars:
             url = url + urllib.parse.urlencode(url_vars)
 
-        return self.fetch(url=url, method='GET')
+        resources_list_data = await self.fetch_with_response(url=url, method='GET')
+        return resources_list_data['results']
 
-    async def fetch_cluster_list(self, controller_ip: str,
-                                 ordering: str = None, reversed_order: bool = None):
 
-        url = 'http://{}/api/clusters/?'.format(controller_ip)
-
-        # apply url vars
-        if ordering:
-            url_vars = {}
-            order_sign = '-' if reversed_order else ''
-            url_vars['ordering'] = order_sign + ordering
-
-            url = url + urllib.parse.urlencode(url_vars)
-
-        return self.fetch(url=url, method='GET')
