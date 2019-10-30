@@ -12,9 +12,9 @@
     </div>
   </div>
 
-  <div class="form-error" *ngIf="step === 'createPool'">
-    <p *ngIf="error" [@animForm]="error">Все поля обязательны для заполнения!</p>
-  </div>
+  <ng-template #errorTemp>
+    <div class="error" [@animForm]="error">Поле обязательно для заполения</div>
+  </ng-template>
 
   <div class="form-fields" [formGroup]="chooseTypeForm" *ngIf="step === 'chooseType'" [style.paddingBottom]="'20px'" [style.paddingLeft]="'20px'">
     <label class="field-inline">
@@ -36,6 +36,7 @@
     <label class="field">
       <p class="field-name">Имя пула</p>
       <input type="text" [focusMe]="true" formControlName="name">
+      <ng-container *ngIf="createPoolForm.hasError('required', 'name') && checkValid"><ng-container *ngTemplateOutlet="errorTemp"></ng-container></ng-container>
     </label>
 
     <label class="field" *ngIf="chooseTypeForm.value.type === 'Автоматический'">
@@ -49,6 +50,7 @@
           </mat-option>
         </mat-select>
       </mat-form-field>
+      <ng-container *ngIf="createPoolForm.hasError('required', 'controller_ip') && checkValid"><ng-container *ngTemplateOutlet="errorTemp"></ng-container></ng-container>
     </label>
 
     <label class="field" *ngIf="chooseTypeForm.value.type === 'Автоматический' && ipController">
@@ -62,6 +64,7 @@
           </mat-option>
         </mat-select>
       </mat-form-field>
+      <ng-container *ngIf="createPoolForm.hasError('required', 'template_id') && checkValid"><ng-container *ngTemplateOutlet="errorTemp"></ng-container></ng-container>
     </label>
 
     <label class="field" *ngIf="chooseTypeForm.value.type === 'Автоматический' && ipController || chooseTypeForm.value.type === 'Статический'">
@@ -75,6 +78,7 @@
           </mat-option>
         </mat-select>
       </mat-form-field>
+      <ng-container *ngIf="createPoolForm.hasError('required', 'cluster_id') && checkValid"><ng-container *ngTemplateOutlet="errorTemp"></ng-container></ng-container>
     </label>
 
     <label class="field" *ngIf="idCluster">
@@ -88,6 +92,7 @@
           </mat-option>
         </mat-select>
       </mat-form-field>
+      <ng-container *ngIf="createPoolForm.hasError('required', 'node_id') && checkValid"><ng-container *ngTemplateOutlet="errorTemp"></ng-container></ng-container>
     </label>
 
     <label class="field" *ngIf="idNode">
@@ -101,6 +106,7 @@
           </mat-option>
         </mat-select>
       </mat-form-field>
+      <ng-container *ngIf="createPoolForm.hasError('required', 'datapool_id') && checkValid"><ng-container *ngTemplateOutlet="errorTemp"></ng-container></ng-container>
     </label>
 
     <label class="field" *ngIf="idDatapool && chooseTypeForm.value.type === 'Статический'">
@@ -114,24 +120,30 @@
           </mat-option>
         </mat-select>
       </mat-form-field>
+      <ng-container *ngIf="createPoolForm.hasError('required', 'vm_ids_list') && checkValid"><ng-container *ngTemplateOutlet="errorTemp"></ng-container></ng-container>
     </label>
 
     <ng-container *ngIf="chooseTypeForm.value.type === 'Автоматический'">
       <label class="field">
         <p class="field-name">Имя шаблона для ВМ</p>
         <input type="text" formControlName="vm_name_template">
+        <ng-container *ngIf="createPoolForm.hasError('required', 'vm_name_template') && checkValid"><ng-container *ngTemplateOutlet="errorTemp"></ng-container></ng-container>
       </label>
 
       <div formGroupName="size"  class="field">
         <label class="field">
           <p class="field-name">Начальное количество ВМ</p>
-          <input type="number" formControlName="initial_size" min="0">
-          <div class="error" *ngIf="initial_size.invalid && initial_size.touched && initial_size.dirty">Начальное количество ВМ должно быть в интервале 1 - 200</div>
+          <input type="number" formControlName="initial_size" min="0" max="200">
+          <ng-container *ngIf="size_group.hasError('required', 'initial_size') && checkValid"><ng-container *ngTemplateOutlet="errorTemp"></ng-container></ng-container>
+          <ng-container *ngIf="size_group.controls.initial_size.touched && size_group.controls.initial_size.dirty">
+            <div class="error" [@animForm]="error" *ngIf="size_group.hasError('max', 'initial_size') || size_group.hasError('min', 'initial_size')">Начальное количество ВМ должно быть в интервале 1 - 200</div>
+          </ng-container>
         </label>
     
         <label class="field">
           <p class="field-name">Максимальное количество создаваемых ВМ</p>
           <input type="number" formControlName="total_size"  min="0">
+          <ng-container *ngIf="size_group.hasError('required', 'total_size') && checkValid"><ng-container *ngTemplateOutlet="errorTemp"></ng-container></ng-container>
           <div class="error" *ngIf="total_size.invalid && total_size.touched && total_size.dirty">Максимальное количество создаваемых ВМ должно быть в интервале 1-1000</div>
           <div class="error" *ngIf="size_group.errors && size_group.errors.maxLessInitial && total_size.touched && total_size.dirty ">Максимальное количество ВМ не может быть меньше начального количества ВМ</div>
         </label>
@@ -140,7 +152,9 @@
       <label class="field">
         <p class="field-name">Количество создаваемых ВМ</p>
         <input type="number" formControlName="reserve_size"  min="0">
-        <div class="error" *ngIf="reserve_size.invalid && reserve_size.touched && reserve_size.dirty">Количество создаваемых ВМ должно быть в интервале 1-200</div>
+        <ng-container *ngIf="createPoolForm.hasError('required', 'reserve_size') && checkValid"><ng-container *ngTemplateOutlet="errorTemp"></ng-container></ng-container>
+        <div class="error" *ngIf="(createPoolForm.hasError('min', 'reserve_size') ||  createPoolForm.hasError('max', 'reserve_size')) && 
+          createPoolForm.controls.reserve_size.touched && createPoolForm.controls.reserve_size.dirty">Количество создаваемых ВМ должно быть в интервале 1-200</div>
       </label>
     </ng-container>
 

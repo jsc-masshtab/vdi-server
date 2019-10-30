@@ -11,7 +11,6 @@ import { FormBuilder, FormGroup } from '@angular/forms';
 
 import { IFinishPoolView, IFinishPoolForm, IPendingAdd, ISelectValue } from './definitions/add-pool';
 
-
 @Component({
   selector: 'vdi-add-pool',
   templateUrl: './add-pool.component.html',
@@ -82,7 +81,7 @@ export class PoolAddComponent implements OnInit, OnDestroy {
     }
   ];
 
-  public errorInitialSize: string = '';
+  public checkValid: boolean = false;
 
   @ViewChild('selectNodeRef') selectNodeRef: ViewContainerRef;
   @ViewChild('selectDatapoolRef') selectDatapoolRef: ViewContainerRef;
@@ -411,16 +410,9 @@ export class PoolAddComponent implements OnInit, OnDestroy {
     });
   }
 
-  public get initial_size() {
-    return this.createPoolForm.get('size').get('initial_size');
-  }
 
   public get total_size() {
     return this.createPoolForm.get('size').get('total_size');
-  }
-
-  public get reserve_size() {
-    return this.createPoolForm.get('reserve_size');
   }
 
   public get size_group() {
@@ -434,18 +426,15 @@ export class PoolAddComponent implements OnInit, OnDestroy {
       }
     };
   }
-      /*if (this.createPoolForm.status === 'INVALID') {
-      console.log(this.createPoolForm);
-      let timer;
-      this.error = true;
-      if (!timer) {
-        timer = setTimeout(() => {
-          this.error = false;
-        }, 3000);
-      }
+
+  private checkValidCreatePoolForm(): boolean {
+    if (this.createPoolForm.status === 'INVALID') {
+      this.checkValid = true;
       return false;
     }
-    return true;*/
+    this.checkValid = false;
+    return true;
+  }
 
   private actionChooseType(): void {
     this.step = 'chooseType';
@@ -477,8 +466,8 @@ export class PoolAddComponent implements OnInit, OnDestroy {
   }
 
   private actionFinishSee(): void  {
-    // const validPrev: boolean = this.handlingValidForm();
-    // if (!validPrev) { return; }
+    const validPrev: boolean = this.checkValidCreatePoolForm();
+    if (!validPrev) { return; }
     this.chooseCollection();
 
     const formValue: Partial<IFinishPoolForm> = this.createPoolForm.value;
@@ -536,10 +525,12 @@ export class PoolAddComponent implements OnInit, OnDestroy {
 
   public send(step: string) {
     if (step === 'chooseType') {
+      this.checkValid = false;
       this.actionChooseType();
     }
 
     if (step === 'createPool') {
+      this.checkValid = false;
       this.actionCreatePool();
     }
 
