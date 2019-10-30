@@ -63,7 +63,7 @@ def as_list(gen):
     return list(gen())
 
 
-def make_resource_type(type, data, fields_map=None):
+def make_graphene_type(type, data, fields_map=None):
     """
     create resource object (NodeType, ClusterType...)
     fields_map is used to match Vitalya names with veil names
