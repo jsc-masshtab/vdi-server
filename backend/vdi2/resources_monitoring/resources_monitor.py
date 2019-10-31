@@ -8,7 +8,7 @@ from tornado.websocket import websocket_connect
 from tornado.websocket import WebSocketClosedError
 from tornado import ioloop
 
-from controller.models import VeilCredentials
+# from controller.models import VeilCredentials
 
 from .resources_monitoring_data import CONTROLLER_SUBSCRIPTIONS_LIST, CONTROLLERS_SUBSCRIPTION, VDI_TASKS_SUBSCRIPTION
 
@@ -135,7 +135,8 @@ class ResourcesMonitor(AbstractMonitor):
     async def _connect(self):
         # get token
         try:
-            token = await VeilCredentials.get_token(self._controller_ip)
+            # token = await VeilCredentials.get_token(self._controller_ip)
+            token = ''
         except Exception:
             return False
 

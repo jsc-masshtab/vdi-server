@@ -7,3 +7,11 @@
     FEATURE TG-6022 Sanic -> Tornado migration -- HEAD
     
     Websockets configuration + base pool examples -- BODY
+    
+3. Alembic
+
+export PYTHONPATH=~/PycharmProjects/vdiserver/backend/vdi2/
+
+alembic revision --autogenerate -m "Controller credentials"
+
+alembic upgrade head

@@ -6,9 +6,11 @@ from tornado.escape import json_decode
 from settings import VEIL_REQUEST_TIMEOUT, VEIL_CONNECTION_TIMEOUT, VEIL_MAX_BODY_SIZE, VEIL_MAX_CLIENTS
 from common.veil_errors import NotFound, Unauthorized, ServerError, Forbidden, ControllerNotAccessible, BadRequest
 from common.veil_decorators import prepare_body
+from controller.models import Controller
 
-# TODO: Используется не tornado.curl_httpclient.CurlAsyncHTTPClient, потому что не измерен реальный прирост.
-#  Есть подозрение, что ECP итак не справится.
+
+# TODO: Не tornado.curl_httpclient.CurlAsyncHTTPClient, т.к. не измерен реальный прирост производительности.
+
 AsyncHTTPClient.configure("tornado.simple_httpclient.SimpleAsyncHTTPClient",
                           max_clients=VEIL_MAX_CLIENTS,
                           max_body_size=VEIL_MAX_BODY_SIZE)

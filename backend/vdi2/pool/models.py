@@ -22,7 +22,7 @@ class Pool(db.Model):
     id = db.Column(UUID(), primary_key=True, default=uuid.uuid4)
     verbose_name = db.Column(db.Unicode(length=128), nullable=False)
     status = db.Column(db.Unicode(length=128), nullable=False)
-    controller = db.Column(UUID(as_uuid=True), db.ForeignKey('controllers.id'))
+    controller = db.Column(UUID(as_uuid=True), db.ForeignKey('controller.id'))
     desktop_pool_type = db.Column(db.Unicode(length=255), nullable=False)
 
     deleted = db.Column(db.Boolean())
@@ -187,6 +187,6 @@ class Pool(db.Model):
 
 class PoolUsers(db.Model):
     __tablename__ = 'pools_users'
-    pool_id = db.Column(db.Integer(), db.ForeignKey('pool.id'))
-    username = db.Column(db.Integer(), db.ForeignKey('user.username'))
+    pool_id = db.Column(UUID(), db.ForeignKey('pool.id'))
+    username = db.Column(db.Unicode(length=128), db.ForeignKey('user.username'))
 
