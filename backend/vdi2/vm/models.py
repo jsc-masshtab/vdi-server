@@ -57,6 +57,10 @@ class Vm(db.Model):
         return await Vm.select('pool_id').where((Vm.id == vm_id)).gino.scalar()
 
     @staticmethod
+    async def get_username(vm_id):
+        return await Vm.select('username').where((Vm.id == vm_id)).gino.scalar()
+
+    @staticmethod
     def ready_to_connect(**info) -> bool:
         """Checks parameters indicating availability for connection."""
         power_state = info.get('user_power_state', 0)

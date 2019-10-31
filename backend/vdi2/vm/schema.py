@@ -11,15 +11,16 @@ from graphql import GraphQLError
 
 from common.utils import get_selections, make_graphene_type
 
-from vm.veil_client import VmHttpClient
-
 from vdi.constants import DEFAULT_NAME
+from vdi.errors import NotFound
 
-from vdi.errors import SimpleError, FieldError, NotFound
+from vm.veil_client import VmHttpClient
 from vm.veil_client import VmHttpClient
 from vm.models import Vm
 
 from pool.models import PoolUsers
+
+from auth.schema import UserType
 
 
 class VmState(graphene.Enum):
@@ -48,7 +49,7 @@ class VmType(graphene.ObjectType):
     id = graphene.String()
     veil_info = graphene.String()
     template = graphene.Field(TemplateType)
-    #user = graphene.Field(UserType)
+    user = graphene.Field(UserType)
     state = graphene.Field(VmState)
     status = graphene.String()
 
@@ -82,11 +83,9 @@ class VmType(graphene.ObjectType):
         else:
             return DEFAULT_NAME
 
-    # async def resolve_user(self, info):
-    #     async with db.connect() as conn:
-    #         sql_request = """SELECT username FROM vm WHERE id = $1""", self.id
-    #         [(username,)] = await conn.fetch(*sql_request)
-    #     return UserType(username=username)
+    async def resolve_user(self, _info):
+        username = await Vm.get_username(self.id)
+        return UserType(username=username)
 
     async def resolve_template(self, info):
         if self.template:
