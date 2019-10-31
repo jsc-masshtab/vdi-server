@@ -18,8 +18,8 @@ SECRET_KEY = 'RSrf948GB2YXQKBjXhikwxDDJbfooHoBuewQYqO1A2MyBqK15G'
 
 # JWT Options
 # -----------------------------
-# JWT_EXPIRATION_DELTA = 86400
-JWT_EXPIRATION_DELTA = 60
+JWT_EXPIRATION_DELTA = 86400
+# JWT_EXPIRATION_DELTA = 60
 JWT_OPTIONS = {
     'verify_signature': True,
     'verify_exp': True,
