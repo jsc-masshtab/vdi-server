@@ -7,7 +7,7 @@ from settings import VEIL_REQUEST_TIMEOUT, VEIL_CONNECTION_TIMEOUT, VEIL_MAX_BOD
 from common.veil_errors import NotFound, Unauthorized, ServerError, Forbidden, ControllerNotAccessible, BadRequest
 from controller.models import Controller
 from common.veil_decorators import prepare_body
-from controller.models import VeilCredentials
+
 
 # TODO: Используется не tornado.curl_httpclient.CurlAsyncHTTPClient, потому что не измерен реальный прирост.
 #  Есть подозрение, что ECP итак не справится.
