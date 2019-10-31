@@ -181,3 +181,9 @@ class PoolUsers(db.Model):
     __tablename__ = 'pools_users'
     pool_id = db.Column(UUID(), db.ForeignKey('pool.id'))
     user_id = db.Column(UUID(), db.ForeignKey('user.id'))
+
+    @staticmethod  # todo: not checked
+    async def check_row_exists(pool_id, username):
+        row = await PoolUsers.select().where((PoolUsers.username == username) and
+                                             (PoolUsers.pool_id == pool_id)).gino.all()
+        return row

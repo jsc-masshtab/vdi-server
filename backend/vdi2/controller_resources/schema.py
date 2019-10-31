@@ -1,6 +1,6 @@
 import graphene
 
-#from .pool import PoolType, VmType, TemplateType
+#from .pool import VmType, TemplateType
 from common.utils import get_selections, make_graphene_type
 from database import get_list_of_values_from_db
 
