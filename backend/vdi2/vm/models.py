@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 from database import db
 from vm.veil_client import VmHttpClient
-import uuid
 # TODO: сделать схему человеческой
 
 
