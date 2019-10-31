@@ -14,7 +14,6 @@ class Controller(db.Model):
     address = db.Column(db.Unicode(length=15), nullable=False)
     description = db.Column(db.Unicode(length=256))
     version = db.Column(db.Unicode(length=128))
-    default = db.Column(db.Boolean())
 
     username = db.Column(db.Unicode(length=128), nullable=False)
     password = db.Column(db.Unicode(length=128), nullable=False)
