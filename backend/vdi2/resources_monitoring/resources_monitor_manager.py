@@ -1,7 +1,6 @@
 import json
 
 from resources_monitoring.resources_monitor import ResourcesMonitor, InternalMonitor
-#from ..tasks.resources import DiscoverControllers
 
 from controller_resources.veil_client import ResourcesHttpClient
 

@@ -1,23 +1,13 @@
 import graphene
 
-import asyncio
-
-from database import db
-
-import graphene
-
 #from .pool import PoolType, VmType, TemplateType
-from utils import get_selections, make_graphene_type
+from common.utils import get_selections, make_graphene_type
 from database import get_list_of_values_from_db
 
 from controller_resources.veil_client import ResourcesHttpClient
 
-#from ..tasks import Token
-#from ..tasks.vm import ListTemplates, ListVms
-
 from common.veil_errors import FieldError, SimpleError, FetchException, NotFound
 
-#from vdi.resources_monitoring.resources_monitor_manager import resources_monitor_manager
 from settings import DEFAULT_NAME
 
 from controller.schema import ControllerType
@@ -57,8 +47,13 @@ class ClusterType(graphene.ObjectType):
     async def resolve_nodes(self, info):
         return await self.controller.resolve_nodes(info, cluster_id=self.id)
 
-    async def resolve_datapools(self, info):
-        return await self.controller.resolve_datapools(info, cluster_id=self.id)
+    async def resolve_datapools(self, _info):
+        resources_http_client = ResourcesHttpClient()
+        datapools = await resources_http_client.fetch_datapool_list(self.controller['address'])
+        datapool_type_list = []
+        for datapool in datapools:
+            datapool_type = make_graphene_type(DatapoolType, datapool)
+            datapool_type_list.append(datapool_type)
 
     # async def resolve_vms(self, info, wild=True):
     #     return await self.controller.resolve_vms(info, cluster_id=self.id, wild=wild)
@@ -202,27 +197,37 @@ class ResourcesQuery(graphene.ObjectType):
 
     requests = graphene.List(RequestType, time=graphene.Float())
 
-    @staticmethod
-    async def get_resource(_info, id, resource_type, function_to_get_resource_list, fields_map={}):
-        # get all known controller ips
-        controllers_ips = await get_list_of_values_from_db(Controller, Controller.address)
+    # @staticmethod
+    # async def get_resource(_info, id, resource_type, function_to_get_resource_list, fields_map={}):
+    #     # get all known controller ips
+    #     controllers_ips = await get_list_of_values_from_db(Controller, Controller.address)
+    #
+    #     # find out on which controller our resource is
+    #     for controllers_ip in controllers_ips:
+    #         # try to get list of resources
+    #         try:
+    #             resource_list = await function_to_get_resource_list(controller_ip=controllers_ip)
+    #         except Exception:
+    #             continue
+    #         # find resource data by id
+    #         try:
+    #             data = next(data for data in resource_list if data['id'] == id)
+    #             print('data', data)
+    #             return make_graphene_type(resource_type, data, fields_map)
+    #         except StopIteration:
+    #             pass
+    #     # if we didnt find anything then return None
+    #     return None
 
-        # find out on which controller our resource is
-        for controllers_ip in controllers_ips:
-            # try to get list of resources
-            try:
-                resource_list = await function_to_get_resource_list(controller_ip=controllers_ip)
-            except Exception:
-                continue
-            # find resource data by id
-            try:
-                data = next(data for data in resource_list if data['id'] == id)
-                print('data', data)
-                return make_graphene_type(resource_type, data, fields_map)
-            except StopIteration:
-                pass
-        # if we didnt find anything then return None
-        return None
+    @staticmethod
+    async def resource_veil_to_graphene_type_list(graphene_type, veil_resources_list, controller_address):
+        """Convert veil resource data list to graphene resource data list"""
+        graphene_type_type_list = []
+        for resource_data in veil_resources_list:
+            obj = make_graphene_type(graphene_type, resource_data)
+            obj.controller = ControllerType(address=controller_address)
+            graphene_type_type_list.append(obj)
+        return graphene_type_type_list
 
     async def resolve_node(self, _info, id):
         resources_http_client = ResourcesHttpClient()

@@ -188,5 +188,4 @@ class Pool(db.Model):
 class PoolUsers(db.Model):
     __tablename__ = 'pools_users'
     pool_id = db.Column(UUID(), db.ForeignKey('pool.id'))
-    username = db.Column(db.Unicode(length=128), db.ForeignKey('user.username'))
-
+    user_id = db.Column(UUID(), db.ForeignKey('user.id'))

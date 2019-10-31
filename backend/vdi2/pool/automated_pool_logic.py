@@ -2,7 +2,7 @@ import asyncio
 import uuid
 
 from cached_property import cached_property as cached
-from utils import into_words
+from common.utils import into_words
 
 from common.veil_errors import BadRequest, VmCreationError
 
