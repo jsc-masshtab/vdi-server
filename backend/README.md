@@ -15,3 +15,5 @@ export PYTHONPATH=~/PycharmProjects/vdiserver/backend/vdi2/
 alembic revision --autogenerate -m "Controller credentials"
 
 alembic upgrade head
+
+alembic revision -m "create account table"

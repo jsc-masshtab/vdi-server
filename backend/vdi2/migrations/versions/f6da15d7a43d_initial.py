@@ -1,8 +1,8 @@
 """initial
 
-Revision ID: 717f20b8b476
+Revision ID: f6da15d7a43d
 Revises: 
-Create Date: 2019-10-31 15:13:16.781763
+Create Date: 2019-10-31 16:01:37.233356
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
-revision = '717f20b8b476'
+revision = 'f6da15d7a43d'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -25,7 +25,11 @@ def upgrade():
     sa.Column('address', sa.Unicode(length=15), nullable=False),
     sa.Column('description', sa.Unicode(length=256), nullable=True),
     sa.Column('version', sa.Unicode(length=128), nullable=True),
-    sa.Column('default', sa.Boolean(), nullable=True),
+    sa.Column('username', sa.Unicode(length=128), nullable=False),
+    sa.Column('password', sa.Unicode(length=128), nullable=False),
+    sa.Column('ldap_connection', sa.Boolean(), nullable=False),
+    sa.Column('token', sa.Unicode(length=1024), nullable=True),
+    sa.Column('expires_on', sa.DateTime(timezone=True), nullable=True),
     sa.PrimaryKeyConstraint('id')
     )
     op.create_table('user',
@@ -43,18 +47,6 @@ def upgrade():
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('email'),
     sa.UniqueConstraint('username')
-    )
-    op.create_table('controller_credentials',
-    sa.Column('id', sa.Integer(), autoincrement=True, nullable=False),
-    sa.Column('controller', postgresql.UUID(as_uuid=True), nullable=False),
-    sa.Column('controller_user_type', sa.Enum('LDAP', 'LOCAL', name='controllerusertype'), nullable=False),
-    sa.Column('username', sa.Unicode(length=128), nullable=False),
-    sa.Column('password', sa.Unicode(length=128), nullable=False),
-    sa.Column('token', sa.Unicode(length=1024), nullable=True),
-    sa.Column('expires_on', sa.DateTime(), nullable=True),
-    sa.ForeignKeyConstraint(['controller'], ['controller.id'], ),
-    sa.PrimaryKeyConstraint('id'),
-    sa.UniqueConstraint('controller')
     )
     op.create_table('pool',
     sa.Column('id', postgresql.UUID(), nullable=False),
@@ -97,7 +89,6 @@ def downgrade():
     op.drop_table('vm')
     op.drop_table('pools_users')
     op.drop_table('pool')
-    op.drop_table('controller_credentials')
     op.drop_table('user')
     op.drop_table('controller')
     # ### end Alembic commands ###
