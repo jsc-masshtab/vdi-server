@@ -1206,7 +1206,7 @@ class ChangeAutomatedPoolReserveSize(graphene.Mutation):
             await conn.fetch(*qu)
 
         # live data
-        pool_object = AutomatedPoolManager.get_pool(pool_id)
+        pool_object = await AutomatedPoolManager.get_pool(pool_id)
         pool_object.update_param('reserve_size', new_reserve_size)
 
         return {'ok': True}
