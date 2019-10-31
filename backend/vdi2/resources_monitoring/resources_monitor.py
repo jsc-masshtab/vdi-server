@@ -12,7 +12,7 @@ from controller.models import VeilCredentials
 
 from .resources_monitoring_data import CONTROLLER_SUBSCRIPTIONS_LIST, CONTROLLERS_SUBSCRIPTION, VDI_TASKS_SUBSCRIPTION
 
-from utils import cancel_async_task
+from common.utils import cancel_async_task
 from common.veil_errors import NotFound
 
 # from ..tasks.resources import (
