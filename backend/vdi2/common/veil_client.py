@@ -1,17 +1,16 @@
 # -*- coding: utf-8 -*-
-from tornado.httpclient import AsyncHTTPClient, HTTPRequest, HTTPClientError
-from tornado import gen
-from tornado.escape import json_decode
-
 from cached_property import cached_property
+from tornado.httpclient import AsyncHTTPClient, HTTPRequest, HTTPClientError
+from tornado.escape import json_decode
 
 from settings import VEIL_REQUEST_TIMEOUT, VEIL_CONNECTION_TIMEOUT, VEIL_MAX_BODY_SIZE, VEIL_MAX_CLIENTS
 from common.veil_errors import NotFound, Unauthorized, ServerError, Forbidden, ControllerNotAccessible, BadRequest
-from controller.models import VeilCredentials
+from controller.models import Controller
 from common.veil_decorators import prepare_body
+from controller.models import VeilCredentials
 
-# AsyncHTTPClient.configure("tornado.curl_httpclient.CurlAsyncHTTPClient")  # TODO: measure it
-
+# TODO: Используется не tornado.curl_httpclient.CurlAsyncHTTPClient, потому что не измерен реальный прирост.
+#  Есть подозрение, что ECP итак не справится.
 AsyncHTTPClient.configure("tornado.simple_httpclient.SimpleAsyncHTTPClient",
                           max_clients=VEIL_MAX_CLIENTS,
                           max_body_size=VEIL_MAX_BODY_SIZE)
@@ -25,10 +24,9 @@ class VeilHttpClient:
         self._client = AsyncHTTPClient()
 
     @cached_property
-    @gen.coroutine
-    def headers(self):
+    async def headers(self):
         """controller ip-address must be set in the descendant class."""
-        token = yield VeilCredentials.get_token(self.controller_ip)
+        token = await Controller.get_token(self.controller_ip)
         headers = {
             'Authorization': 'jwt {}'.format(token),
             'Content-Type': 'application/json',
@@ -36,9 +34,10 @@ class VeilHttpClient:
         return headers
 
     @prepare_body
-    @gen.coroutine
-    def fetch(self, url: str, method: str, body: str = ''):
-        headers = yield self.headers
+    async def fetch(self, url: str, method: str, body: str = ''):
+        if method == 'GET' and not body:
+            body = None
+        headers = await self.headers
         try:
             request = HTTPRequest(url=url,
                                   method=method,
@@ -46,12 +45,12 @@ class VeilHttpClient:
                                   body=body,
                                   connect_timeout=VEIL_CONNECTION_TIMEOUT,
                                   request_timeout=VEIL_REQUEST_TIMEOUT)
-            response = yield self._client.fetch(request)
+            response = await self._client.fetch(request)
         except HTTPClientError as http_error:
             print('http_error.code', http_error.code)
             if http_error.code == 400:
                 # TODO: add response body parsing
-                raise BadRequest()
+                raise BadRequest(http_error.message)
             elif http_error.code == 401:
                 raise Unauthorized()
             elif http_error.code == 403:
@@ -66,11 +65,9 @@ class VeilHttpClient:
                 raise ServerError()
         return response
 
-    @gen.coroutine
-    def fetch_with_response(self, url: str, method: str, body: str = None):
+    async def fetch_with_response(self, url: str, method: str, body: str = None):
         """Check response headers. Search json in content-type value"""
-        response = yield self.fetch(url, method, body)
-
+        response = await self.fetch(url, method, body)
         response_headers = response.headers
         response_content_type = response_headers.get('Content-Type')
 

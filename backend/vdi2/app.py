@@ -8,8 +8,7 @@ from database import db
 from controller.schema import controller_schema
 from controller_resources.schema import resources_schema
 
-from auth.urls import auth_urls
-from pool.urls import pool_urls
+from thin_client_api.urls import thin_client_api_urls
 from resources_monitoring.urls import ws_event_monitoring_urls
 
 from auth.schema import user_schema
@@ -28,8 +27,7 @@ if __name__ == '__main__':
         # (r'/graphql/graphiql', TornadoGraphQLHandler, dict(graphiql=True, schema=schema))
     ]
 
-    handlers += auth_urls
-    handlers += pool_urls
+    handlers += thin_client_api_urls
     handlers += ws_event_monitoring_urls
 
     app = tornado.web.Application(handlers, debug=True, websocket_ping_interval=WS_PING_INTERVAL)
@@ -46,11 +44,9 @@ if __name__ == '__main__':
     try:
         tornado.ioloop.IOLoop.current().add_callback(resources_monitor_manager.start)
         tornado.ioloop.IOLoop.current().start()
-
     except KeyboardInterrupt:
         print('Finish')
     finally:
         tornado.ioloop.IOLoop.current().run_sync(
             lambda: resources_monitor_manager.stop()
         )
-
