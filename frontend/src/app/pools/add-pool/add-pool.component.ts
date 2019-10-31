@@ -105,13 +105,13 @@ export class PoolAddComponent implements OnInit, OnDestroy {
 
   private createDinamicPoolInit(): void {
     this.createPoolForm = this.fb.group({
-      name: ['', Validators.required],
+      name: ['', [Validators.required, Validators.pattern(/^[а-яА-ЯёЁa-zA-Z0-9]+[а-яА-ЯёЁa-zA-Z0-9.-_+ ]*$/)]],
       template_id: ['', Validators.required],
       cluster_id: ['', Validators.required],
       node_id: ['', Validators.required],
       datapool_id: ['', Validators.required],
       reserve_size: ['', [Validators.required, Validators.max(200), Validators.min(1)]],
-      vm_name_template: ['', Validators.required],
+      vm_name_template: ['', [Validators.required, Validators.pattern(/^[а-яА-ЯёЁa-zA-Z0-9]+[а-яА-ЯёЁa-zA-Z0-9.-_+ ]*$/)]],
       controller_ip: ['', Validators.required],
       size: this.fb.group({
         initial_size: ['', [Validators.required, Validators.max(200), Validators.min(1)]],
@@ -120,13 +120,11 @@ export class PoolAddComponent implements OnInit, OnDestroy {
     });
     this.finishPoolView = {};
     this.getControllers();
-
-    this.checkValidForm();
   }
 
   private createStaticPoolInit(): void {
     this.createPoolForm = this.fb.group({
-      name: ['', Validators.required],
+      name: ['', [Validators.required,  Validators.pattern(/^[а-яА-ЯёЁa-zA-Z0-9]+[а-яА-ЯёЁa-zA-Z0-9.-_+ ]*$/)]],
       cluster_id: ['', Validators.required],
       node_id: ['', Validators.required],
       datapool_id: ['', Validators.required],
@@ -395,19 +393,6 @@ export class PoolAddComponent implements OnInit, OnDestroy {
         }
       ];
     }
-  }
-
-  private checkValidForm() {
-    // this.createPoolForm.statusChanges.subscribe((res) => {
-    //   console.log(res);
-    // });
-
-    this.createPoolForm.valueChanges.subscribe(() => {
-      console.log(this.createPoolForm);
-
-
-
-    });
   }
 
   private totalSizeValidator() {

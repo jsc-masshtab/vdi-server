@@ -37,6 +37,7 @@
       <p class="field-name">Имя пула</p>
       <input type="text" [focusMe]="true" formControlName="name">
       <ng-container *ngIf="createPoolForm.hasError('required', 'name') && checkValid"><ng-container *ngTemplateOutlet="errorTemp"></ng-container></ng-container>
+      <div class="error" [@animForm]="error" *ngIf="createPoolForm.hasError('pattern', 'name')">Имя содержит недопустимые символы</div>
     </label>
 
     <label class="field" *ngIf="chooseTypeForm.value.type === 'Автоматический'">
@@ -128,6 +129,7 @@
         <p class="field-name">Имя шаблона для ВМ</p>
         <input type="text" formControlName="vm_name_template">
         <ng-container *ngIf="createPoolForm.hasError('required', 'vm_name_template') && checkValid"><ng-container *ngTemplateOutlet="errorTemp"></ng-container></ng-container>
+        <div class="error" [@animForm]="error" *ngIf="createPoolForm.hasError('pattern', 'vm_name_template')">Имя содержит недопустимые символы</div>
       </label>
 
       <div formGroupName="size"  class="field">
