@@ -1,5 +1,6 @@
 import uuid
 from sqlalchemy.dialects.postgresql import UUID
+from datetime import datetime
 
 from database import db
 
@@ -18,18 +19,13 @@ class Controller(db.Model):
     password = db.Column(db.Unicode(length=128), nullable=False)
     ldap_connection = db.Column(db.Boolean(), nullable=False, default=False)
     token = db.Column(db.Unicode(length=1024))
-    expires_on = db.Column(db.DateTime(timezone=True))
+    expires_on = db.Column(db.DateTime(timezone=True))  # Срок истечения токена.
 
+    @staticmethod
+    async def get_token(controller_ip):
+        if not controller_ip:
+            return
+        query = Controller.select('token').where(
+            (Controller.address == controller_ip) & (Controller.expires_on <= datetime.now()))
+        return await query.gino.scalar()
 
-# class VeilCredentials(db.Model):
-#     __tablename__ = 'veil_creds'
-#     username = db.Column(db.Unicode(length=128), nullable=False)
-#     token = db.Column(db.Unicode(length=1024), nullable=Екгу)
-#     controller_ip = db.Column(db.Unicode(length=100), nullable=False)
-#     expires_on = db.Column(db.DateTime(timezone=True), nullable=False)
-#
-#     @staticmethod
-#     async def get_token(controller_ip):
-#         return await VeilCredentials.select('token').where(
-#             (VeilCredentials.username == VEIL_CREDENTIALS['username']) & (
-#                     VeilCredentials.controller_ip == controller_ip)).gino.scalar()
