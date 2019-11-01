@@ -53,7 +53,7 @@ class VeilHttpClient:
 
     @prepare_body
     async def fetch(self, url: str, method: str, headers: dict = None, body: str = ''):
-        if method == 'GET' and not body:
+        if method == 'GET' and body == '':
             body = None
         if not headers:
             headers = await self.headers
@@ -66,42 +66,41 @@ class VeilHttpClient:
                                   request_timeout=VEIL_REQUEST_TIMEOUT)
             response = await self._client.fetch(request)
         except HTTPClientError as http_error:
-            print('http_error.code', http_error.code)
+            body = self.get_response_body(http_error.response)
             if http_error.code == 400:
-                # TODO: add response body parsing
-                raise BadRequest(http_error.message)
+                raise BadRequest(body)
             elif http_error.code == 401:
                 await Controller.invalidate_auth(self.controller_ip)
                 raise Unauthorized()
             elif http_error.code == 403:
-                raise Forbidden()
+                raise Forbidden(body)
             elif http_error.code == 404:
                 raise NotFound(url=url)
             elif http_error.code == 408:
-                # TODO: add response body parsing
-                raise ControllerNotAccessible()
+                raise ControllerNotAccessible(body)
             elif http_error.code == 500:
-                # TODO: add response body parsing?
-                raise ServerError()
+                raise ServerError(body)
+        return response
+
+    @staticmethod
+    def get_response_body(response):
+        response_headers = response.headers
+        response_content_type = response_headers.get('Content-Type')
+
+        if not isinstance(response_content_type, str):
+            return AssertionError('Can\'t process Content-Type.')
+
+        if response_content_type.lower().find('json') == -1:
+            raise NotImplementedError('Only \'json\' Content-Type.')
+        try:
+            response = json_decode(response.body)
+        except ValueError:
+            response = dict()
         return response
 
     async def fetch_with_response(self, url: str, method: str, headers: dict = None, body: str = None):
         """Check response headers. Search json in content-type value"""
         response = await self.fetch(url=url, method=method, headers=headers, body=body)
-        response_headers = response.headers
-        response_content_type = response_headers.get('Content-Type')
+        response_body = self.get_response_body(response)
+        return response_body
 
-        if not response_content_type:
-            return
-
-        if not isinstance(response_content_type, str):
-            return
-
-        if response_content_type.lower().find('json') == -1:
-            raise NotImplementedError
-        try:
-            response = json_decode(response.body)
-        except ValueError:
-            response = dict()
-
-        return response
