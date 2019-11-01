@@ -16,22 +16,23 @@ from auth.schema import user_schema
 from resources_monitoring.resources_monitor_manager import resources_monitor_manager
 
 
+# if __name__ == '__main__':
+
+handlers = [
+    (r'/controllers', TornadoGraphQLHandler, dict(graphiql=True, schema=controller_schema)),
+    (r'/resources', TornadoGraphQLHandler, dict(graphiql=True, schema=resources_schema)),
+    (r'/users', TornadoGraphQLHandler, dict(graphiql=True, schema=user_schema)),
+    # (r'/graphql', TornadoGraphQLHandler, dict(graphiql=True, schema=schema)),
+    # (r'/graphql/batch', TornadoGraphQLHandler, dict(graphiql=True, schema=schema, batch=True)),
+    # (r'/graphql/graphiql', TornadoGraphQLHandler, dict(graphiql=True, schema=schema))
+]
+
+handlers += thin_client_api_urls
+handlers += ws_event_monitoring_urls
+
+app = tornado.web.Application(handlers, debug=True, websocket_ping_interval=WS_PING_INTERVAL)
+
 if __name__ == '__main__':
-
-    handlers = [
-        (r'/controllers', TornadoGraphQLHandler, dict(graphiql=True, schema=controller_schema)),
-        (r'/resources', TornadoGraphQLHandler, dict(graphiql=True, schema=resources_schema)),
-        (r'/users', TornadoGraphQLHandler, dict(graphiql=True, schema=user_schema)),
-        # (r'/graphql', TornadoGraphQLHandler, dict(graphiql=True, schema=schema)),
-        # (r'/graphql/batch', TornadoGraphQLHandler, dict(graphiql=True, schema=schema, batch=True)),
-        # (r'/graphql/graphiql', TornadoGraphQLHandler, dict(graphiql=True, schema=schema))
-    ]
-
-    handlers += thin_client_api_urls
-    handlers += ws_event_monitoring_urls
-
-    app = tornado.web.Application(handlers, debug=True, websocket_ping_interval=WS_PING_INTERVAL)
-
     tornado.ioloop.IOLoop.current().run_sync(
         lambda: db.init_app(app,
                             host=DB_HOST,

@@ -9,11 +9,14 @@ from controller.models import Controller
 from common.veil_decorators import prepare_body
 
 
-# TODO: Используется не tornado.curl_httpclient.CurlAsyncHTTPClient, потому что не измерен реальный прирост.
-#  Есть подозрение, что ECP итак не справится.
+# TODO: Не tornado.curl_httpclient.CurlAsyncHTTPClient, т.к. не измерен реальный прирост производительности.
+
 AsyncHTTPClient.configure("tornado.simple_httpclient.SimpleAsyncHTTPClient",
                           max_clients=VEIL_MAX_CLIENTS,
                           max_body_size=VEIL_MAX_BODY_SIZE)
+# TODO: получение токена из БД
+# TODO: добавить подключение к ECP, проверку токена
+# TODO: добавить сохранение токена
 
 
 class VeilHttpClient:
@@ -26,7 +29,7 @@ class VeilHttpClient:
     @cached_property
     async def headers(self):
         """controller ip-address must be set in the descendant class."""
-        token = await Controller.get_token(self.controller_ip)
+        token = await VeilCredentials.get_token(self.controller_ip)
         headers = {
             'Authorization': 'jwt {}'.format(token),
             'Content-Type': 'application/json',

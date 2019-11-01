@@ -1,10 +1,9 @@
 # -*- coding: utf-8 -*-
 import uuid
-
 from sqlalchemy.dialects.postgresql import UUID
+
 from database import db
 from vm.veil_client import VmHttpClient
-import uuid
 # TODO: сделать схему человеческой
 
 
