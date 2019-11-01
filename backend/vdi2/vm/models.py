@@ -2,7 +2,7 @@
 import uuid
 from sqlalchemy.dialects.postgresql import UUID
 
-from database import db
+from database import db, get_list_of_values_from_db
 from vm.veil_client import VmHttpClient
 # TODO: сделать схему человеческой
 
@@ -58,6 +58,10 @@ class Vm(db.Model):
     @staticmethod
     async def get_username(vm_id):
         return await Vm.select('username').where((Vm.id == vm_id)).gino.scalar()
+
+    @staticmethod
+    async def get_all_vms_ids():
+        return await get_list_of_values_from_db(Vm, Vm.id)
 
     @staticmethod
     def ready_to_connect(**info) -> bool:

@@ -1,7 +1,7 @@
 import uuid
 from sqlalchemy.dialects.postgresql import UUID
 
-from database import db
+from database import db, get_list_of_values_from_db
 
 
 class Controller(db.Model):
@@ -20,6 +20,10 @@ class Controller(db.Model):
     token = db.Column(db.Unicode(length=1024))
     expires_on = db.Column(db.DateTime(timezone=True))
 
+    @staticmethod
+    async def get_controllers_addresses():
+        return await get_list_of_values_from_db(Controller, Controller.address)
+
 
 # class VeilCredentials(db.Model):
 #     __tablename__ = 'veil_creds'
@@ -33,3 +37,5 @@ class Controller(db.Model):
 #         return await VeilCredentials.select('token').where(
 #             (VeilCredentials.username == VEIL_CREDENTIALS['username']) & (
 #                     VeilCredentials.controller_ip == controller_ip)).gino.scalar()
+
+

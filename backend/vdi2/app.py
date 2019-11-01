@@ -13,6 +13,8 @@ from resources_monitoring.urls import ws_event_monitoring_urls
 
 from auth.schema import user_schema
 
+from vm.schema import vm_schema
+
 from resources_monitoring.resources_monitor_manager import resources_monitor_manager
 
 
@@ -22,6 +24,7 @@ handlers = [
     (r'/controllers', TornadoGraphQLHandler, dict(graphiql=True, schema=controller_schema)),
     (r'/resources', TornadoGraphQLHandler, dict(graphiql=True, schema=resources_schema)),
     (r'/users', TornadoGraphQLHandler, dict(graphiql=True, schema=user_schema)),
+    (r'/vms', TornadoGraphQLHandler, dict(graphiql=True, schema=vm_schema)),
     # (r'/graphql', TornadoGraphQLHandler, dict(graphiql=True, schema=schema)),
     # (r'/graphql/batch', TornadoGraphQLHandler, dict(graphiql=True, schema=schema, batch=True)),
     # (r'/graphql/graphiql', TornadoGraphQLHandler, dict(graphiql=True, schema=schema))
@@ -40,6 +43,7 @@ if __name__ == '__main__':
                             user=DB_USER,
                             password=DB_PASS,
                             database=DB_NAME))
+
     app.listen(8888)
 
     try:
