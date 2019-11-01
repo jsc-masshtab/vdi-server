@@ -3,6 +3,7 @@ from sqlalchemy.dialects.postgresql import UUID
 from datetime import datetime
 
 from database import db
+from auth.utils import crypto
 
 
 class Controller(db.Model):
@@ -21,11 +22,38 @@ class Controller(db.Model):
     token = db.Column(db.Unicode(length=1024))
     expires_on = db.Column(db.DateTime(timezone=True))  # Срок истечения токена.
 
+    # TODO: декоратор для проверки значения входного параметра? Например первый параметр не может быть None
     @staticmethod
-    async def get_token(controller_ip):
-        if not controller_ip:
-            return
+    async def get_token(ip_address: str):
+        if not ip_address:
+            raise AssertionError('Empty ip address.')
         query = Controller.select('token').where(
-            (Controller.address == controller_ip) & (Controller.expires_on <= datetime.now()))
+            (Controller.expires_on >= datetime.now()) & (Controller.address == ip_address))
         return await query.gino.scalar()
 
+    @staticmethod
+    async def get_auth_info(ip_address: str):
+        if not ip_address:
+            raise AssertionError('Empty ip address.')
+        query = Controller.select('username', 'password', 'ldap_connection').where(Controller.address == ip_address)
+        auth_info = await query.gino.first()
+        username, encrypted_password, ldap_connection = auth_info
+        password = crypto.decrypt(encrypted_password)
+        return dict(username=username, password=password, ldap=ldap_connection)
+
+    @staticmethod
+    async def set_auth_info(ip_address: str, token: str, expires_on: str):
+        """Сделано через staticmethod, чтобы не хранить инстанс.
+        Гипотетически запись может измениться, пока мы получаем ответ. А так данные будут записываться по ip."""
+        if not ip_address:
+            raise AssertionError('Empty ip address.')
+        expires_on = datetime.strptime(expires_on, '%d.%m.%Y %H:%M:%S %Z')
+        return await Controller.update.values(token=token, expires_on=expires_on).where(
+            Controller.address == ip_address).gino.status()
+
+    @staticmethod
+    async def invalidate_auth(ip_address: str):
+        if not ip_address:
+            raise AssertionError('Empty ip address.')
+        return await Controller.update.values(token=None, expires_on=datetime.utcfromtimestamp(0)).where(
+            Controller.address == ip_address).gino.status()

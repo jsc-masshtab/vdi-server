@@ -3,7 +3,9 @@ import datetime
 import graphene
 from graphql import GraphQLError
 
+from auth.utils import crypto
 from controller.models import Controller
+# TODO: добавить, чтобы пароль шифровался через crypto.encrypt
 
 
 class ControllerType(graphene.ObjectType):
