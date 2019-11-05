@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 from cached_property import cached_property
 
+import urllib.parse
+
 from common.veil_decorators import check_params, prepare_body
 from common.veil_client import VeilHttpClient
 
@@ -53,3 +55,44 @@ class VmHttpClient(VeilHttpClient):
                     datapool=datapool_id,
                     parent=self.vm_id)
         return await self.fetch_with_response(url=url, method='POST', body=body)
+
+    async def fetch_all_vms_list(self, node_id: str = None, cluster_id: str = None,
+                                 ordering: str = None, reversed_order: bool = None):
+
+        url = "http://{}/api/domains/?".format(self.controller_ip)
+
+        # apply url vars
+        url_vars = {}
+
+        if node_id:
+            url_vars['node'] = node_id
+
+        if ordering:
+            order_sign = '-' if reversed_order else ''
+            url_vars['ordering'] = order_sign + ordering
+
+        if not url_vars:
+            url = url + urllib.parse.urlencode(url_vars)
+
+        # request
+        resources_list_data = await self.fetch_with_response(url=url, method='GET')
+        all_vms_list = resources_list_data['results']
+
+        # filter bu cluster
+        all_vms_list = list(filter(lambda vm: vm['cluster'] == cluster_id, all_vms_list))
+
+        return all_vms_list
+
+    async def fetch_vms_list(self, node_id: str = None, cluster_id: str = None,
+                             ordering: str = None, reversed_order: bool = None):
+        """Fetch lists of vms"""
+        all_vms_list = await self.fetch_all_vms_list(node_id, cluster_id, ordering, reversed_order)
+        vms_list = [vm for vm in all_vms_list if not vm['template']]
+        return vms_list
+
+    async def fetch_templates_list(self, node_id: str = None, cluster_id: str = None,
+                                   ordering: str = None, reversed_order: bool = None):
+        """Fetch lists of templates"""
+        all_vms_list = await self.fetch_all_vms_list(node_id, cluster_id, ordering, reversed_order)
+        vms_list = [vm for vm in all_vms_list if vm['template']]
+        return vms_list

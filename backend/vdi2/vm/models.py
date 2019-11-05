@@ -2,7 +2,7 @@
 import uuid
 from sqlalchemy.dialects.postgresql import UUID
 
-from database import db
+from database import db, get_list_of_values_from_db
 from vm.veil_client import VmHttpClient
 # TODO: сделать схему человеческой
 
@@ -17,6 +17,10 @@ class Vm(db.Model):
     ACTIONS = ('start', 'suspend', 'reset', 'shutdown', 'resume', 'reboot')
     POWER_STATES = ('unknown', 'power off', 'power on and suspended', 'power on')
 
+    @staticmethod  # todo: not checked
+    async def check_vm_exists(vm_id):
+        return await Vm.select().where((Vm.id == vm_id)).gino.all()
+
     @staticmethod
     def domain_name(verbose_name: str, name_template: str):
         if verbose_name:
@@ -30,8 +34,34 @@ class Vm(db.Model):
             Vm.id == vm_id).gino.status()
 
     @staticmethod
+    async def free_vm(pool_id, username):
+        """free vm from user. combination pool_id<->username is unique"""
+        return await Vm.update.values(username=None).where(
+            Vm.pool_id == pool_id and Vm.username == username).gino.status()
+
+    @staticmethod
+    async def free_vm(vm_id):
+        return await Vm.update.values(username=None).where(Vm.vm_id == vm_id).gino.status()
+
+    @staticmethod
     async def get_vm_id(pool_id, username):
         return await Vm.select('id').where((Vm.username == username) & (Vm.pool_id == pool_id)).gino.scalar()
+
+    @staticmethod
+    async def get_template_id(vm_id):
+        return await Vm.select('template_id').where((Vm.id == vm_id)).gino.scalar()
+
+    @staticmethod
+    async def get_pool_id(vm_id):
+        return await Vm.select('pool_id').where((Vm.id == vm_id)).gino.scalar()
+
+    @staticmethod
+    async def get_username(vm_id):
+        return await Vm.select('username').where((Vm.id == vm_id)).gino.scalar()
+
+    @staticmethod
+    async def get_all_vms_ids():
+        return await get_list_of_values_from_db(Vm, Vm.id)
 
     @staticmethod
     def ready_to_connect(**info) -> bool:

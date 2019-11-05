@@ -2,7 +2,7 @@ import uuid
 from sqlalchemy.dialects.postgresql import UUID
 from datetime import datetime
 
-from database import db
+from database import db, get_list_of_values_from_db
 from auth.utils import crypto
 
 
@@ -21,6 +21,10 @@ class Controller(db.Model):
     ldap_connection = db.Column(db.Boolean(), nullable=False, default=False)
     token = db.Column(db.Unicode(length=1024))
     expires_on = db.Column(db.DateTime(timezone=True))  # Срок истечения токена.
+
+    @staticmethod
+    async def get_controllers_addresses():
+        return await get_list_of_values_from_db(Controller, Controller.address)
 
     # TODO: декоратор для проверки значения входного параметра? Например первый параметр не может быть None
     @staticmethod

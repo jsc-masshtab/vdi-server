@@ -4,6 +4,8 @@ from resources_monitoring.resources_monitor import ResourcesMonitor, InternalMon
 
 from controller_resources.veil_client import ResourcesHttpClient
 
+from controller.models import Controller
+
 
 class ResourcesMonitorManager:
 
@@ -19,14 +21,13 @@ class ResourcesMonitorManager:
         """
         print(__class__.__name__, ': Startup...')
         # get all active controller ips
-        resources_http_client = ResourcesHttpClient()
-        connected_controllers = await resources_http_client.discover_controllers(return_broken=False)
-        print(__class__.__name__, 'connected_controllers', connected_controllers)
-        if not connected_controllers:
+        controllers_addresses = await Controller.get_controllers_addresses()
+        print(__class__.__name__, 'connected_controllers', controllers_addresses)
+        if not controllers_addresses:
             return
         # start resources monitors
-        for controller in connected_controllers:
-            self._add_monitor_for_controller(controller['address'])
+        for controller_address in controllers_addresses:
+            self._add_monitor_for_controller(controller_address)
         print(__class__.__name__, ': Started')
 
     async def stop(self):
