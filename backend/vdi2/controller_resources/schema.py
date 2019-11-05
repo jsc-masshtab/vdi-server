@@ -41,7 +41,7 @@ class ClusterType(graphene.ObjectType):
     templates = graphene.List(TemplateType)
 
     nodes = graphene.List(lambda: NodeType)
-    #datapools = graphene.List(lambda: DatapoolType)
+    datapools = graphene.List(lambda: DatapoolType)
     controller = graphene.Field(lambda: ControllerType)
     resources_usage = graphene.Field(ResourcesUsageType)
 
@@ -52,12 +52,18 @@ class ClusterType(graphene.ObjectType):
             NodeType, nodes, self.controller.address)
         return node_type_list
 
-    # async def resolve_datapools(self, _info):
-    #     resources_http_client = ResourcesHttpClient(self.controller.address)
-    #     datapools = await resources_http_client.fetch_datapool_list()
-    #     datapool_type_list = await ResourcesQuery.resource_veil_to_graphene_type_list(
-    #         DatapoolType, datapools, self.controller.address)
-    #     return datapool_type_list
+    async def resolve_datapools(self, _info):
+        resources_http_client = ResourcesHttpClient(self.controller.address)
+
+        datapools = []
+        node_list = await resources_http_client.fetch_node_list(cluster_id=id)
+        for node in node_list:
+            datapool_list = await resources_http_client.fetch_datapool_list(node['id'])
+            datapools.append(datapool_list)
+
+        datapool_type_list = await ResourcesQuery.resource_veil_to_graphene_type_list(
+            DatapoolType, datapools, self.controller.address)
+        return datapool_type_list
 
     async def resolve_vms(self, _info):
         vm_http_client = VmHttpClient(self.controller.address, '')
@@ -130,6 +136,7 @@ class NodeType(graphene.ObjectType):
     async def resolve_datapools(self, _info):
         resources_http_client = ResourcesHttpClient(self.controller.address)
         datapools = await resources_http_client.fetch_datapool_list(node_id=self.id)
+
         datapool_type_list = await ResourcesQuery.resource_veil_to_graphene_type_list(
             DatapoolType, datapools, self.controller.address)
         return datapool_type_list
