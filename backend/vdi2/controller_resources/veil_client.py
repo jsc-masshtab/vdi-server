@@ -16,9 +16,8 @@ class ResourcesHttpClient(VeilHttpClient):
 
     methods = ['POST', 'GET']
 
-    def __init__(self, controller_ip: str = None):
-        super().__init__()
-        self.controller_ip = controller_ip
+    def __init__(self, controller_ip: str):
+        super().__init__(controller_ip)
 
     @cached_property
     def based_url(self):

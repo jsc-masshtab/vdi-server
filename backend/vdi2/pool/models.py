@@ -4,6 +4,7 @@ from sqlalchemy.dialects.postgresql import UUID
 
 from settings import VEIL_WS_MAX_TIME_TO_WAIT
 from database import db
+from controller.models import Controller
 from vm.models import Vm
 from common.veil_errors import VmCreationError, BadRequest
 
@@ -40,9 +41,9 @@ class Pool(db.Model):
     vm_name_template = db.Column(db.Unicode(length=100), nullable=True)
 
     @staticmethod
-    async def get_pool(pool_id):
+    async def get_pool(uid):
         """Return pool object if exist"""
-        return await Pool.get(pool_id)
+        return await Pool.get(uid)
 
     async def get_vm_amount(self, only_free=False):
         """ == None because alchemy can't work with is None"""
@@ -155,12 +156,15 @@ class Pool(db.Model):
     @staticmethod
     async def get_pools(user='admin'):
         # TODO: rewrite normally
-        pools = await Pool.select('id', 'name').gino.all()
+        # TODO: добавить вывод типа OS у VM
+        # TODO: добавить вывод состояния пула
+        # TODO: ограничение по списку пулов для пользователя
+        pools = await Pool.select('id', 'verbose_name').gino.all()
         ans = list()
         for pool in pools:
             ans_d = dict()
-            ans_d['id'] = pool.id
-            ans_d['name'] = pool.name
+            ans_d['id'] = str(pool.id)
+            ans_d['name'] = pool.verbose_name
             ans.append(ans_d)
         return ans
 
@@ -169,13 +173,12 @@ class Pool(db.Model):
         """Return first hit"""
         query = db.select(
             [
-                Pool.controller_ip,
+                Controller.address,
                 Pool.desktop_pool_type,
                 Vm.id,
             ]
-        ).select_from(
-            Pool.join(Vm, (Vm.username == username) & (Vm.pool_id == Pool.id), isouter=True)
-        ).where(
+        ).select_from(Pool.join(Controller).join(Vm, (Vm.username == username) & (Vm.pool_id == Pool.id), isouter=True)
+                      ).where(
             (Pool.id == pool_id))
         return await query.gino.first()
 
