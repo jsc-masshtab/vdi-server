@@ -14,6 +14,7 @@ from .resources_monitoring_data import CONTROLLER_SUBSCRIPTIONS_LIST, CONTROLLER
 
 from common.utils import cancel_async_task
 from common.veil_errors import HttpError
+from common.veil_client import VeilHttpClient
 
 from controller_resources.veil_client import ResourcesHttpClient
 
@@ -133,7 +134,12 @@ class ResourcesMonitor(AbstractMonitor):
         # get token
         try:
             token = await Controller.get_token(self._controller_ip)
-        except Exception:
+            if not token:
+                token = await VeilHttpClient(self._controller_ip).login()
+            if not token:
+                raise AssertionError('Empty token.')
+        except Exception as E:
+            print(E)
             return False
 
         # create ws connection

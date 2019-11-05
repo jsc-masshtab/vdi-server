@@ -17,8 +17,7 @@ class VmHttpClient(VeilHttpClient):
     ]
 
     def __init__(self, controller_ip: str, vm_id: str, verbose_name: str = None, template_name: str = None):
-        super().__init__()
-        self.controller_ip = controller_ip
+        super().__init__(controller_ip)
         self.vm_id = vm_id
         self.verbose_name = verbose_name
         self.template_name = template_name

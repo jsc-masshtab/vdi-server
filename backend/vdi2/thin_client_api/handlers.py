@@ -20,7 +20,7 @@ class AuthHandler(BaseHandler, ABC):
         password_is_valid = await User.check_user(self.args['username'], self.args['password'])
 
         if not password_is_valid:
-            # await User.set_password(self.args['username'], self.args['password'])
+            # await User.set_password(self.args['username'], self.args['password'])  # сброс пароля
             return self.finish('invalid password')
         access_token = encode_jwt(self.args['username'])
         # TODO: если мы захотим хранить время, то придется делать запись в БД с обновлением
@@ -44,7 +44,6 @@ class RefreshAuthHandler(BaseHandler, ABC):
 class PoolHandler(BaseHandler, ABC):
     # TODO: почему происходит 2 запроса, когда токен неправильный?
     async def get(self):
-        print('Get pools List')
         pools = await Pool.get_pools()
         # TODO: json dumps потому что список, а не словарь. Нужно поменять формат обмена с клиентом,
         #  например на {'data' = pools} и заменить на tornado.escape.json_decode
@@ -54,15 +53,14 @@ class PoolHandler(BaseHandler, ABC):
 @jwtauth
 class PoolGetVm(BaseHandler, ABC):
 
-    async def post(self, pool_id):
+    async def post(self, pool_uid):
         # TODO: есть подозрение, что иногда несмотря на отправленный запрос на просыпание VM - отправляется
         #  недостаточное количество данных для подключения тонкого клиента
-        pool_id = int(pool_id)
         username = self.get_current_user()
 
         # Древние говорили, что сочитание pool id и имя пользователя должно быть обязательно уникальным
         # так как пользователь не может иметь больше одной машины в пуле
-        user_vm = await Pool.get_user_pool(pool_id=pool_id, username=username)
+        user_vm = await Pool.get_user_pool(pool_id=pool_uid, username=username)
         if not user_vm:
             return await self.finish(dict(host='',
                                           port=0, password='', message='Пул не найден'))
@@ -70,7 +68,7 @@ class PoolGetVm(BaseHandler, ABC):
 
         # Древние говорили, что если у пользователя нет VM в пуле, то нужно попытаться назначить ему свободную VM.
         if not vm_id:
-            free_vm = await Pool.get_user_pool(pool_id=pool_id)
+            free_vm = await Pool.get_user_pool(pool_id=pool_uid)
             if not free_vm:
                 return await self.finish(dict(host='',
                                               port=0,
@@ -84,7 +82,7 @@ class PoolGetVm(BaseHandler, ABC):
 
             # Логика древних:
             if desktop_pool_type == 'AUTOMATED':
-                pool = await Pool.get_pool(pool_id)
+                pool = await Pool.get(pool_uid)
                 await pool.expand_pool_if_requred()
 
         vm_client = VmHttpClient(controller_ip=controller_ip, vm_id=vm_id)

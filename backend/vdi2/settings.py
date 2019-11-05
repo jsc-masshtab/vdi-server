@@ -15,11 +15,12 @@ DB_NAME = 'vdi'
 # Crypto settings
 # -----------------------------
 SECRET_KEY = 'RSrf948GB2YXQKBjXhikwxDDJbfooHoBuewQYqO1A2MyBqK15G'
+FERNET_KEY = b'LRzSxWyxqKD4p2BR11-nVmghV67AVmQ4CxYi__S_OH8='
 
 # JWT Options
 # -----------------------------
-# JWT_EXPIRATION_DELTA = 86400
-JWT_EXPIRATION_DELTA = 60
+JWT_EXPIRATION_DELTA = 86400
+# JWT_EXPIRATION_DELTA = 60
 JWT_OPTIONS = {
     'verify_signature': True,
     'verify_exp': True,

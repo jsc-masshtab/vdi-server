@@ -1,5 +1,6 @@
 import graphene
 from auth.models import User
+# TODO: после перебаотки модели пользователя Тимофеем - не работает по понятным причинам.
 
 
 class UserType(graphene.ObjectType):

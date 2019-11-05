@@ -5,11 +5,11 @@ from tornado.escape import json_encode
 def prepare_body(func):
     """Convert dict to HTTPClient request.body"""
     def wrapper(*args, **kwargs):
-        if len(args) >= 3 and kwargs.get('body'):
+        if len(args) >= 4 and kwargs.get('body'):
             raise AssertionError(
                 'Expect that \'body\' is the 4 parameter in args. But in the same time \'body\' in kwargs. Check it.')
-        if len(args) >= 3:
-            input_body = args[3]
+        if len(args) >= 4:
+            input_body = args[4]
         else:
             input_body = kwargs.get('body')
 
@@ -26,9 +26,9 @@ def prepare_body(func):
                 body = ''
         else:
             body = ''
-        if len(args) >= 3:
+        if len(args) >= 4:
             args_list = list(args)
-            args_list[3] = body
+            args_list[4] = body
             args = tuple(args_list)
         else:
             kwargs['body'] = body
