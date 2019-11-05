@@ -13,7 +13,9 @@ from controller.models import Controller
 from .resources_monitoring_data import CONTROLLER_SUBSCRIPTIONS_LIST, CONTROLLERS_SUBSCRIPTION, VDI_TASKS_SUBSCRIPTION
 
 from common.utils import cancel_async_task
-from common.veil_errors import NotFound
+from common.veil_errors import HttpError
+
+from controller_resources.veil_client import ResourcesHttpClient
 
 
 class AbstractMonitor(ABC):
@@ -79,6 +81,7 @@ class ResourcesMonitor(AbstractMonitor):
         Check if controller online
         :return:
         """
+        resources_http_client = ResourcesHttpClient(self._controller_ip)
         #print('_controller_online_checking')
         response_dict = {'ip': self._controller_ip, 'msg_type': 'data', 'event': 'UPDATED',
                          'resource': CONTROLLERS_SUBSCRIPTION}
@@ -86,14 +89,13 @@ class ResourcesMonitor(AbstractMonitor):
             await asyncio.sleep(2)  # check every 2 seconds
             try:
                 # if controller is online then there wil not be any exception
-                pass#await CheckController(controller_ip=self._controller_ip)
-            except (HTTPClientError, OSError, NotFound):
+                await resources_http_client.check_controller()
+            except (HTTPClientError, HttpError, OSError):
                 # notify only if controller was online before (data changed)
                 if self._is_online:
                     response_dict['status'] = 'OFFLINE'
                     json_data = json.dumps(response_dict)
                     self.notify_observers(CONTROLLERS_SUBSCRIPTION, json_data)
-                    print('notify controller offline ', self._controller_ip)
                 self._is_online = False
             else:
                 # notify only if controller was offline before (data changed)
@@ -101,7 +103,6 @@ class ResourcesMonitor(AbstractMonitor):
                     response_dict['status'] = 'ONLINE'
                     json_data = json.dumps(response_dict)
                     self.notify_observers(CONTROLLERS_SUBSCRIPTION, json_data)
-                    print('notify controller online ', self._controller_ip)
                 self._is_online = True
 
     async def _processing_ws_messages(self):
