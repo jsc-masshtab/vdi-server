@@ -164,7 +164,7 @@ class FreeVmFromUser(graphene.Mutation):
         }
 
 
-class VmQuery:
+class VmQuery(graphene.ObjectType):
     list_of_vms = graphene.List(VmType, controller_ip=graphene.String(), cluster_id=graphene.String(),
                                 node_id=graphene.String(), datapool_id=graphene.String(),
                                 get_vms_in_pools=graphene.Boolean(),
@@ -184,9 +184,8 @@ class VmQuery:
             controllers_addresses = await Controller.get_controllers_addresses()
 
             vm_type_list = []
-            vm_http_client = VmHttpClient('', '')
             for controller_address in controllers_addresses:
-                vm_http_client.controller_ip = controller_address
+                vm_http_client = VmHttpClient(controller_ip=controller_address)
                 try:
                     single_vm_veil_data_list = await vm_http_client.fetch_vms_list()
                     single_vm_type_list = VmQuery.veil_vm_data_to_graphene_type_list(single_vm_veil_data_list)
@@ -242,7 +241,6 @@ class VmQuery:
             vm_type = VmQuery.veil_vm_data_to_graphene_type(vm_veil_data, controller_address)
             vm_type_list.append(vm_type)
         return vm_type_list
-
 
 
 class VmMutations(graphene.ObjectType):

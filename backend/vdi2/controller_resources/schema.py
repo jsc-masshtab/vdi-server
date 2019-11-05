@@ -8,6 +8,7 @@ from common.veil_errors import FieldError, SimpleError, FetchException, NotFound
 
 from controller_resources.veil_client import ResourcesHttpClient
 from controller.schema import ControllerType
+from controller.models import Controller
 
 from settings import DEFAULT_NAME
 
@@ -40,23 +41,23 @@ class ClusterType(graphene.ObjectType):
     #templates = graphene.List(TemplateType)
 
     nodes = graphene.List(lambda: NodeType)
-    datapools = graphene.List(lambda: DatapoolType)
+    #datapools = graphene.List(lambda: DatapoolType)
     controller = graphene.Field(lambda: ControllerType)
     resources_usage = graphene.Field(ResourcesUsageType)
 
     async def resolve_nodes(self, _info):
-        resources_http_client = ResourcesHttpClient()
-        nodes = await resources_http_client.fetch_node_list(self.controller.address)
+        resources_http_client = ResourcesHttpClient(self.controller.address)
+        nodes = await resources_http_client.fetch_node_list(cluster_id=id)
         node_type_list = await ResourcesQuery.resource_veil_to_graphene_type_list(
             NodeType, nodes, self.controller.address)
         return node_type_list
 
-    async def resolve_datapools(self, _info):
-        resources_http_client = ResourcesHttpClient()
-        datapools = await resources_http_client.fetch_datapool_list(self.controller.address)
-        datapool_type_list = await ResourcesQuery.resource_veil_to_graphene_type_list(
-            DatapoolType, datapools, self.controller.address)
-        return datapool_type_list
+    # async def resolve_datapools(self, _info):
+    #     resources_http_client = ResourcesHttpClient(self.controller.address)
+    #     datapools = await resources_http_client.fetch_datapool_list()
+    #     datapool_type_list = await ResourcesQuery.resource_veil_to_graphene_type_list(
+    #         DatapoolType, datapools, self.controller.address)
+    #     return datapool_type_list
 
     async def resolve_vms(self, info):
         vm_http_client = VmHttpClient(self.controller.address, '')
@@ -126,14 +127,14 @@ class NodeType(graphene.ObjectType):
     # async def resolve_templates(self, info):
     #     return await self.controller.resolve_templates(info, node_id=self.id)
 
-    async def resolve_datapools(self, info):
-        resources_http_client = ResourcesHttpClient()
-        datapools = await resources_http_client.fetch_datapool_list(self.controller['address'], self.id)
+    async def resolve_datapools(self, _info):
+        resources_http_client = ResourcesHttpClient(self.controller.address)
+        datapools = await resources_http_client.fetch_datapool_list(node_id=self.id)
         datapool_type_list = await ResourcesQuery.resource_veil_to_graphene_type_list(
-            DatapoolType, datapools, self.controller['address'])
+            DatapoolType, datapools, self.controller.address)
         return datapool_type_list
 
-    async def resolve_cluster(self, info):
+    async def resolve_cluster(self, _info):
         resources_http_client = ResourcesHttpClient(self.controller.address)
 
         if self.veil_info is None:
@@ -237,6 +238,7 @@ class ResourcesQuery(graphene.ObjectType):
             graphene_type_type_list.append(obj)
         return graphene_type_type_list
 
+    # todo: невыполнимый запрос в текущей архитектуре. Передовать контроллер с фронта?
     async def resolve_node(self, _info, id):
         resources_http_client = ResourcesHttpClient()
         node_data = await resources_http_client.fetch_node(id)
@@ -245,16 +247,17 @@ class ResourcesQuery(graphene.ObjectType):
         return node_type
 
     async def resolve_nodes(self, _info, ordering=None, reversed_order=None):
-        resources_http_client = ResourcesHttpClient()
-        controllers = await resources_http_client.discover_controllers(return_broken=False)
+        controllers_addresses = await Controller.get_controllers_addresses()
 
         # form list of nodes
         list_of_all_node_types = []
 
-        for controller in controllers:
-            nodes = await resources_http_client.fetch_node_list(controller['address'])
+        for controllers_address in controllers_addresses:
+            resources_http_client = ResourcesHttpClient(controllers_address)
+            nodes = await resources_http_client.fetch_node_list()
+
             node_type_list = await ResourcesQuery.resource_veil_to_graphene_type_list(
-                NodeType, nodes, controller['address'])
+                NodeType, nodes, controllers_address)
             list_of_all_node_types.extend(node_type_list)
 
         # sort list of nodes
@@ -281,6 +284,7 @@ class ResourcesQuery(graphene.ObjectType):
 
         return list_of_all_node_types
 
+    # todo: невыполнимый запрос в текущей архитектуре. Передовать контроллер с фронта?
     async def resolve_cluster(self, _info, id):
         resources_http_client = ResourcesHttpClient()
         cluster_data = await resources_http_client.fetch_cluster(id)
@@ -289,16 +293,17 @@ class ResourcesQuery(graphene.ObjectType):
         return cluster_type
 
     async def resolve_clusters(self, _info, ordering=None, reversed_order=None):
-        resources_http_client = ResourcesHttpClient()
-        controllers = await resources_http_client.discover_controllers(return_broken=False)
-        print('test controllers', controllers)
+        controllers_addresses = await Controller.get_controllers_addresses()
+        print('test controllers', controllers_addresses)
         # form list of clusters
         list_of_all_cluster_types = []
 
-        for controller in controllers:
-            clusters = await resources_http_client.fetch_cluster_list(controller['address'])
+        for controllers_address in controllers_addresses:
+            resources_http_client = ResourcesHttpClient(controllers_address)
+            clusters = await resources_http_client.fetch_cluster_list()
+
             cluster_type_list = await ResourcesQuery.resource_veil_to_graphene_type_list(
-                ClusterType, clusters, controller['address'])
+                ClusterType, clusters, controllers_address)
             list_of_all_cluster_types.extend(cluster_type_list)
 
         # sort list of clusters
@@ -322,6 +327,7 @@ class ResourcesQuery(graphene.ObjectType):
 
         return list_of_all_cluster_types
 
+    # todo: невыполнимый запрос в текущей архитектуре. Передовать контроллер с фронта?
     async def resolve_datapool(self, _info, id):
         resources_http_client = ResourcesHttpClient()
         datapool_data = await resources_http_client.fetch_datapool(id)
@@ -329,18 +335,18 @@ class ResourcesQuery(graphene.ObjectType):
         datapool_type.controller = ControllerType(address=datapool_data['controller_address'])
         return datapool_type
 
-    async def resolve_datapools(self, _info, take_broken=False,
-                                ordering=None, reversed_order=None):
-        resources_http_client = ResourcesHttpClient()
-        controllers = await resources_http_client.discover_controllers(return_broken=False)
+    async def resolve_datapools(self, _info, take_broken=False, ordering=None, reversed_order=None):
 
         # form list of datapools
         list_of_all_datapool_types = []
 
-        for controller in controllers:
-            datapools = await resources_http_client.fetch_datapool_list(controller['address'], take_broken=take_broken)
+        controllers_addresses = await Controller.get_controllers_addresses()
+        for controllers_address in controllers_addresses:
+            resources_http_client = ResourcesHttpClient(controllers_address)
+            datapools = await resources_http_client.fetch_datapool_list(take_broken=take_broken)
+
             datapool_type_list = await ResourcesQuery.resource_veil_to_graphene_type_list(
-                DatapoolType, datapools, controller['address'])
+                DatapoolType, datapools, controllers_address)
             list_of_all_datapool_types.extend(datapool_type_list)
 
         # sort list of datapools
