@@ -181,9 +181,6 @@ class DatapoolType(graphene.ObjectType):
     nodes_connected = graphene.List(lambda: NodeType, deprecation_reason="Use `nodes`")
     verbose_name = graphene.String()
 
-    async def resolve_nodes(self, info):
-        resources_http_client = ResourcesHttpClient.create(self.controller.address)
-        nodes = await resources_http_client.fetch_node_list(self.controller.address)
     async def resolve_nodes(self, _info):
         resources_http_client = ResourcesHttpClient(self.controller.address)
         nodes = await resources_http_client.fetch_node_list()
@@ -225,9 +222,6 @@ class ResourcesQuery(graphene.ObjectType):
 
     datapool = graphene.Field(DatapoolType, id=graphene.String())
     datapools = graphene.List(DatapoolType, ordering=graphene.String(), reversed_order=graphene.Boolean())
-
-    #template = graphene.Field(TemplateType, id=graphene.String())
-    #vm = graphene.Field(VmType, id=graphene.String())
 
     requests = graphene.List(RequestType, time=graphene.Float())
 
@@ -374,14 +368,6 @@ class ResourcesQuery(graphene.ObjectType):
             list_of_all_datapool_types = sorted(list_of_all_datapool_types, key=sort_lam, reverse=reverse)
 
         return list_of_all_datapool_types
-
-    # async def resolve_template(self, _info, id):
-    #     template = await ResourcesQuery.get_resource(_info, id, TemplateType, ListTemplates, {'verbose_name': 'name'})
-    #     return template
-
-    # async def resolve_vm(self, _info, id):
-    #     vm = await ResourcesQuery.get_resource(_info, id, VmType, ListVms)
-    #     return vm
 
     async def resolve_requests(self, _info):
         return [
