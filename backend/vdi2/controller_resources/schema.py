@@ -59,7 +59,7 @@ class ClusterType(graphene.ObjectType):
         node_list = await resources_http_client.fetch_node_list(cluster_id=id)
         for node in node_list:
             datapool_list = await resources_http_client.fetch_datapool_list(node['id'])
-            datapools.append(datapool_list)
+            datapools.extend(datapool_list)
 
         datapool_type_list = await ResourcesQuery.resource_veil_to_graphene_type_list(
             DatapoolType, datapools, self.controller.address)
@@ -154,7 +154,7 @@ class NodeType(graphene.ObjectType):
         obj.controller = self.controller
         return obj
 
-    async def resolve_datacenter(self, info):
+    async def resolve_datacenter(self, _info):
         if self.datacenter:
             return self.datacenter
         if self.veil_info is None:
@@ -203,13 +203,13 @@ class DatapoolType(graphene.ObjectType):
 
 class ResourcesQuery(graphene.ObjectType):
 
-    node = graphene.Field(NodeType, id=graphene.String())
+    node = graphene.Field(NodeType, id=graphene.String(), controller_address=graphene.String())
     nodes = graphene.List(NodeType, ordering=graphene.String(), reversed_order=graphene.Boolean())
 
-    cluster = graphene.Field(ClusterType, id=graphene.String())
+    cluster = graphene.Field(ClusterType, id=graphene.String(), controller_address=graphene.String())
     clusters = graphene.List(ClusterType, ordering=graphene.String(), reversed_order=graphene.Boolean())
 
-    datapool = graphene.Field(DatapoolType, id=graphene.String())
+    datapool = graphene.Field(DatapoolType, id=graphene.String(), controller_address=graphene.String())
     datapools = graphene.List(DatapoolType, ordering=graphene.String(), reversed_order=graphene.Boolean())
 
     requests = graphene.List(RequestType, time=graphene.Float())
