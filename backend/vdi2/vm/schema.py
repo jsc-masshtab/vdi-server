@@ -35,14 +35,7 @@ class TemplateType(graphene.ObjectType):
     id = graphene.String()
     verbose_name = graphene.String()
     veil_info = graphene.String(get=graphene.String())
-    info = graphene.String(get=graphene.String())
-
-    def resolve_info(self, info, get=None):
-        return self.resolve_veil_info(info, get)
-
-    def resolve_veil_info(self, _info, get=None):
-        veil_info = self.veil_info
-        return veil_info
+    controller = ControllerType()
 
 
 class VmType(graphene.ObjectType):
@@ -55,27 +48,29 @@ class VmType(graphene.ObjectType):
     status = graphene.String()
     controller = ControllerType()
 
+    management_ip = graphene.String()
+
     selections = None #List[str]
     sql_data = None
 
-    @cached
-    async def cached_veil_info(self):
+    async def get_veil_info(self):
 
         if self.veil_info:
-            return self.veil_info
+            return
 
         try:
             vm_client = VmHttpClient(controller_ip=self.controller.address, vm_id=self.id)
-            vm_info = await vm_client.info()
-            return vm_info
+            self.veil_info = await vm_client.info()
         except HTTPClientError:
-            return None
+            return
 
     async def resolve_verbose_name(self, info):
         if self.verbose_name:
             return self.verbose_name
-        if self.cached_veil_info:
-            return self.cached_veil_info['verbose_name']
+
+        await self.get_veil_info()
+        if self.veil_info:
+            return self.veil_info['verbose_name']
         else:
             return DEFAULT_NAME
 
@@ -83,9 +78,43 @@ class VmType(graphene.ObjectType):
         username = await Vm.get_username(self.id)
         return UserType(username=username)
 
-    async def resolve_template(self, info):
+    async def resolve_template(self, _info):
+        await self.determine_template()
+        return self.template
+
+    async def resolve_state(self, _info):
+        await self.get_veil_info()
+        if self.veil_info:
+            val = self.veil_info['user_power_state']
+            return VmState.get(val)
+        else:
+            return VmState.UNDEFINED
+
+    async def resolve_status(self, _info):
+        await self.determine_status()
+        return self.status
+
+    async def resolve_management_ip(self, _info):
+        await self.determine_management_ip()
+        return self.management_ip
+
+    async def determine_status(self):
+        await self.get_veil_info()
+        if self.veil_info:
+            self.status = self.veil_info['status']
+        else:
+            self.status = DEFAULT_NAME
+
+    async def determine_management_ip(self):
+        await self.get_veil_info()
+        if self.veil_info:
+            self.management_ip = self.veil_info['node']['id']
+        else:
+            self.management_ip = DEFAULT_NAME
+
+    async def determine_template(self):
         if self.template:
-            return self.template
+            return
 
         template_id = Vm.get_template_id(self.id)
 
@@ -97,20 +126,7 @@ class VmType(graphene.ObjectType):
             template_info = None
 
         template_name = template_info['verbose_name'] if template_info else DEFAULT_NAME
-        return TemplateType(id=template_id, veil_info=template_info, verbose_name=template_name)
-
-    async def resolve_state(self, _info):
-        if self.cached_veil_info:
-            val = self.cached_veil_info['user_power_state']
-            return VmState.get(val)
-        else:
-            return VmState.UNDEFINED
-
-    async def resolve_status(self, _info):
-        if self.cached_veil_info:
-            return self.cached_veil_info['status']
-        else:
-            return DEFAULT_NAME
+        self.template = TemplateType(id=template_id, veil_info=template_info, verbose_name=template_name)
 
 
 class AssignVmToUser(graphene.Mutation):
@@ -165,13 +181,66 @@ class FreeVmFromUser(graphene.Mutation):
 
 
 class VmQuery(graphene.ObjectType):
-    list_of_vms = graphene.List(VmType, controller_ip=graphene.String(), cluster_id=graphene.String(),
+    template = graphene.Field(TemplateType, id=graphene.String(), controller_address=graphene.String())
+    vm = graphene.Field(VmType, id=graphene.String(), controller_address=graphene.String())
+
+    templates = graphene.List(TemplateType, cluster_id=graphene.String(), node_id=graphene.String(),
+                              ordering=graphene.String(), reversed_order=graphene.Boolean())
+
+    vms = graphene.List(VmType, controller_ip=graphene.String(), cluster_id=graphene.String(),
                                 node_id=graphene.String(), datapool_id=graphene.String(),
                                 get_vms_in_pools=graphene.Boolean(),
                                 ordering=graphene.String(), reversed_order=graphene.Boolean())
 
-    async def resolve_list_of_vms(self, _info, controller_ip=None, cluster_id=None, node_id=None,
-                                  get_vms_in_pools=False, ordering=None, reversed_order=None):
+    async def resolve_template(self, _info, id, controller_address):
+        vm_http_client = VmHttpClient(controller_address, id)
+        veil_info = await vm_http_client.info()
+        return VmQuery.veil_template_data_to_graphene_type(veil_info, controller_address)
+
+    async def resolve_vm(self, _info, id, controller_address):
+        vm_http_client = VmHttpClient(controller_address, id)
+        veil_info = await vm_http_client.info()
+        return VmQuery.veil_vm_data_to_graphene_type(veil_info, controller_address)
+
+    async def resolve_templates(self, _info, controller_ip=None, cluster_id=None, node_id=None,
+                                ordering=None, reversed_order=None):
+        if controller_ip:
+            vm_http_client = VmHttpClient(controller_ip, '')
+            template_veil_data_list = await vm_http_client.fetch_templates_list(cluster_id=cluster_id, node_id=node_id)
+
+            template_type_list = VmQuery.veil_template_data_to_graphene_type_list(
+                template_veil_data_list, controller_ip)
+        else:
+            controllers_addresses = await Controller.get_controllers_addresses()
+
+            template_type_list = []
+            for controller_address in controllers_addresses:
+                vm_http_client = VmHttpClient(controller_address, '')
+                try:
+                    single_template_veil_data_list = await vm_http_client.fetch_templates_list()
+                    single_template_type_list = VmQuery.veil_template_data_to_graphene_type_list(
+                        single_template_veil_data_list, controller_address)
+                    template_type_list.extend(single_template_type_list)
+                except (HttpError, OSError):
+                    pass
+
+        # sorting
+        if ordering:
+            if ordering == 'verbose_name':
+                def sort_lam(template_type):
+                    return template_type.verbose_name if template_type.verbose_name else DEFAULT_NAME
+            elif ordering == 'controller':
+                def sort_lam(template_type):
+                    return template_type.controller.address if template_type.controller.address else DEFAULT_NAME
+            else:
+                raise SimpleError('Неверный параметр сортировки')
+            reverse = reversed_order if reversed_order is not None else False
+            template_type_list = sorted(template_type_list, key=sort_lam, reverse=reverse)
+
+        return template_type_list
+
+    async def resolve_vms(self, _info, controller_ip=None, cluster_id=None, node_id=None,
+                          get_vms_in_pools=False, ordering=None, reversed_order=None):
 
         # get veil vm data list
         if controller_ip:
@@ -185,11 +254,12 @@ class VmQuery(graphene.ObjectType):
 
             vm_type_list = []
             for controller_address in controllers_addresses:
-                vm_http_client = VmHttpClient(controller_ip=controller_address)
+                vm_http_client = VmHttpClient(controller_address, '')
                 try:
                     single_vm_veil_data_list = await vm_http_client.fetch_vms_list()
-                    single_vm_type_list = VmQuery.veil_vm_data_to_graphene_type_list(single_vm_veil_data_list)
-                    vm_type_list.append(single_vm_type_list)
+                    single_vm_type_list = VmQuery.veil_vm_data_to_graphene_type_list(
+                        single_vm_veil_data_list, controller_address)
+                    vm_type_list.extend(single_vm_type_list)
                 except (HttpError, OSError):
                     pass
 
@@ -204,20 +274,25 @@ class VmQuery(graphene.ObjectType):
 
         # sorting
         if ordering:
-            if ordering == 'name':
+            if ordering == 'verbose_name':
                 def sort_lam(vm_type):
                     return vm_type.name if vm_type.name else DEFAULT_NAME
             elif ordering == 'node':
                 for vm_type in vm_type_list:
-                    await vm_type.node.determine_management_ip()
+                    await vm_type.determine_management_ip()
 
                 def sort_lam(vm_type):
                     return vm_type.node.management_ip if vm_type.node.management_ip else DEFAULT_NAME
             elif ordering == 'template':
+                for vm_type in vm_type_list:
+                    await vm_type.determine_template()
+
                 def sort_lam(vm_type):
-                    print('vm_type.template.name', vm_type.template.name)
                     return vm_type.template.name if vm_type.template else DEFAULT_NAME
             elif ordering == 'status':
+                for vm_type in vm_type_list:
+                    await vm_type.determine_status()
+
                 def sort_lam(vm_type):
                     return vm_type.status if vm_type and vm_type.status else DEFAULT_NAME
             else:
@@ -226,6 +301,21 @@ class VmQuery(graphene.ObjectType):
             vm_type_list = sorted(vm_type_list, key=sort_lam, reverse=reverse)
 
         return vm_type_list
+
+    @staticmethod
+    def veil_template_data_to_graphene_type(template_veil_data, controller_address):
+        template_type = TemplateType(id=template_veil_data['id'], verbose_name=template_veil_data['verbose_name'],
+                                     veil_info=template_veil_data)
+        template_type.controller = ControllerType(address=controller_address)
+        return template_type
+
+    @staticmethod
+    def veil_template_data_to_graphene_type_list(template_veil_data_list, controller_address):
+        template_veil_data_list_type_list = []
+        for template_veil_data in template_veil_data_list:
+            template_type = VmQuery.veil_template_data_to_graphene_type(template_veil_data, controller_address)
+            template_veil_data_list_type_list.append(template_type)
+        return template_veil_data_list_type_list
 
     @staticmethod
     def veil_vm_data_to_graphene_type(vm_veil_data, controller_address):

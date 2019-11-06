@@ -11,6 +11,13 @@ from common.veil_errors import VmCreationError, BadRequest
 from resources_monitoring.handlers import WaiterSubscriptionObserver
 from resources_monitoring.resources_monitor_manager import resources_monitor_manager
 
+from enum import Enum
+
+
+class DesktopPoolType(Enum):
+    AUTOMATED = 0
+    MANUAL = 1
+
 
 class Pool(db.Model):
     MIN_POOL_SIZE = 1  # TODO: move to fields
@@ -24,7 +31,8 @@ class Pool(db.Model):
     verbose_name = db.Column(db.Unicode(length=128), nullable=False)
     status = db.Column(db.Unicode(length=128), nullable=False)
     controller = db.Column(UUID(as_uuid=True), db.ForeignKey('controller.id'))
-    desktop_pool_type = db.Column(db.Unicode(length=255), nullable=False)
+    # desktop_pool_type = db.Column(db.Enum(ControllerUserType), nullable=False)
+    desktop_pool_type = db.Column(db.Enum(length=255), nullable=False)
 
     deleted = db.Column(db.Boolean())
     dynamic_traits = db.Column(db.Integer(), nullable=True)  # remove it
@@ -186,6 +194,10 @@ class Pool(db.Model):
     async def get_controller(pool_id):
         """SELECT controller_ip FROM pool WHERE pool.id =  $1, pool_id"""
         return await Pool.select('controller_ip').where(Pool.id == pool_id).gino.scalar()
+
+    @staticmethod
+    async def get_name(pool_id):
+        return await Pool.select('verbose_name').where(Pool.id == pool_id).gino.scalar()
 
 
 class PoolUsers(db.Model):
