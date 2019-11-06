@@ -49,15 +49,16 @@ class ResourcesMonitor(AbstractMonitor):
         self._ws_connection = None
         self._running_flag = True
         self._controller_ip = None
-
+        self._controller_uid = None
         self._is_online = False
 
         self._controller_online_task = None
         self._resources_monitor_task = None
 
     # PUBLIC METHODS
-    def start(self, controller_ip):
+    async def start(self, controller_ip):
         self._controller_ip = controller_ip
+        self._controller_uid = await Controller.get_controller_id_by_ip(controller_ip)
         self._running_flag = True
         # controller check
         self._controller_online_task = ioloop.IOLoop.current().add_callback(self._controller_online_checking)
@@ -132,9 +133,10 @@ class ResourcesMonitor(AbstractMonitor):
     async def _connect(self):
         # get token
         try:
-            token = await Controller.get_token(self._controller_ip)
+            token = await Controller.get_token(self._controller_uid)
             if not token:
-                token = await VeilHttpClient(self._controller_ip).login()
+                controller_client = await VeilHttpClient.create(self._controller_ip)
+                token = await controller_client.login()
             if not token:
                 raise AssertionError('Empty token.')
         except Exception as E:
