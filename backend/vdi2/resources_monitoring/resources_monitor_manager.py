@@ -27,7 +27,7 @@ class ResourcesMonitorManager:
             return
         # start resources monitors
         for controller_address in controllers_addresses:
-            await self._add_monitor_for_controller(controller_address)
+            self._add_monitor_for_controller(controller_address)
         print(__class__.__name__, ': Started')
 
     async def stop(self):
@@ -93,10 +93,10 @@ class ResourcesMonitorManager:
         monitored_controllers_ips = [monitor.get_controller_ip() for monitor in self._resources_monitors_list]
         return monitored_controllers_ips
 
-    async def _add_monitor_for_controller(self, controller_ip):
+    def _add_monitor_for_controller(self, controller_ip):
         resources_monitor = ResourcesMonitor()
         self._resources_monitors_list.append(resources_monitor)
-        await resources_monitor.start(controller_ip)
+        resources_monitor.start(controller_ip)
 
 
 resources_monitor_manager = ResourcesMonitorManager()

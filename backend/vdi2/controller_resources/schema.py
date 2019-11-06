@@ -1,7 +1,7 @@
 import graphene
 
 from vm.veil_client import VmHttpClient
-from vm.schema import VmType, TemplateType
+from vm.schema import VmType, TemplateType, VmQuery
 
 from common.utils import get_selections, make_graphene_type
 from common.veil_errors import FieldError, SimpleError, FetchException, NotFound
@@ -38,41 +38,40 @@ class ClusterType(graphene.ObjectType):
     tags = graphene.List(graphene.String)
 
     vms = graphene.List(VmType, wild=graphene.Boolean())
-    #templates = graphene.List(TemplateType)
+    templates = graphene.List(TemplateType)
 
     nodes = graphene.List(lambda: NodeType)
-    #datapools = graphene.List(lambda: DatapoolType)
+    datapools = graphene.List(lambda: DatapoolType)
     controller = graphene.Field(lambda: ControllerType)
     resources_usage = graphene.Field(ResourcesUsageType)
 
     async def resolve_nodes(self, _info):
-        resources_http_client = ResourcesHttpClient(self.controller.address)
+        resources_http_client = await ResourcesHttpClient.create(self.controller.address)
         nodes = await resources_http_client.fetch_node_list(cluster_id=id)
         node_type_list = await ResourcesQuery.resource_veil_to_graphene_type_list(
             NodeType, nodes, self.controller.address)
         return node_type_list
 
-    # async def resolve_datapools(self, _info):
-    #     resources_http_client = ResourcesHttpClient(self.controller.address)
-    #     datapools = await resources_http_client.fetch_datapool_list()
-    #     datapool_type_list = await ResourcesQuery.resource_veil_to_graphene_type_list(
-    #         DatapoolType, datapools, self.controller.address)
-    #     return datapool_type_list
+    async def resolve_datapools(self, _info):
+        resources_http_client = await ResourcesHttpClient.create(self.controller.address)
 
-    async def resolve_vms(self, info):
+        datapools = []
+        node_list = await resources_http_client.fetch_node_list(cluster_id=id)
+        for node in node_list:
+            datapool_list = await resources_http_client.fetch_datapool_list(node['id'])
+            datapools.extend(datapool_list)
+
+        datapool_type_list = await ResourcesQuery.resource_veil_to_graphene_type_list(
+            DatapoolType, datapools, self.controller.address)
+        return datapool_type_list
+
+    async def resolve_vms(self, _info):
         vm_http_client = VmHttpClient(self.controller.address, '')
         vms_list = await vm_http_client.fetch_vms_list(cluster_id=self.id)
-
-        vm_type_list = []
-        for vm in vms_list:
-            vm_type = VmType(verbose_name=vm['verbose_name'], id=vm['id'])
-            vm_type.selections = get_selections(info)
-            vm_type.veil_info = vm
-            vm_type.controller_ip = self.controller.address
-            vm_type_list.append(vm_type)
+        vm_type_list = VmQuery.veil_vm_data_to_graphene_type(vms_list, self.controller.address)
         return vm_type_list
 
-    async def resolve_templates(self, info):
+    async def resolve_templates(self, _info):
         vm_http_client = VmHttpClient(self.controller.address, '')
         template_list = await vm_http_client.fetch_templates_list(cluster_id=self.id)
 
@@ -82,8 +81,10 @@ class ClusterType(graphene.ObjectType):
             template_type.veil_info = template
             template_type_list.append(template_type)
 
+        return template_type_list
+
     async def resolve_resources_usage(self, _info):
-        resources_http_client = ResourcesHttpClient(self.controller.address)
+        resources_http_client = await ResourcesHttpClient.create(self.controller.address)
         return await resources_http_client.fetch_resources_usage('clusters', self.id)
 
 
@@ -98,44 +99,50 @@ class NodeType(graphene.ObjectType):
     memory_count = graphene.String()
     management_ip = graphene.String()
 
-    #vms = graphene.List(VmType, wild=graphene.Boolean())
-    #templates = graphene.List(TemplateType)
-    cluster = graphene.Field(lambda: ClusterType)
+    vms = graphene.List(VmType, wild=graphene.Boolean())
+    templates = graphene.List(TemplateType)
+    cluster = graphene.Field(ClusterType)
     datapools = graphene.List(lambda: DatapoolType)
-    controller = graphene.Field(lambda: ControllerType)
+    controller = graphene.Field(ControllerType)
     resources_usage = graphene.Field(ResourcesUsageType)
 
     veil_info = None  # dict
 
     async def get_veil_info(self):
-        resources_http_client = ResourcesHttpClient(self.controller.address)
+        resources_http_client = await ResourcesHttpClient.create(self.controller.address)
         return await resources_http_client.fetch_node(self.id)
 
-    async def resolve_verbose_name(self, info):
+    async def resolve_verbose_name(self, _info):
         if self.verbose_name:
             return self.verbose_name
         if self.veil_info is None:
-            veil_info = await self.get_veil_info()
-        if veil_info:
-            return veil_info['verbose_name']
+            self.veil_info = await self.get_veil_info()
+        if self.veil_info:
+            return self.veil_info['verbose_name']
         else:
             return DEFAULT_NAME
 
-    # async def resolve_vms(self, info, wild=True):
-    #     return await self.controller.resolve_vms(info, node_id=self.id, wild=wild)
+    async def resolve_vms(self, _info):
+        vm_http_client = VmHttpClient(self.controller.address, '')
+        cluster_id = self.cluster.id if self.cluster else None
+        vm_veil_data_list = await vm_http_client.fetch_vms_list(node_id=self.id)
+        return VmQuery.veil_vm_data_to_graphene_type_list(vm_veil_data_list)
 
-    # async def resolve_templates(self, info):
-    #     return await self.controller.resolve_templates(info, node_id=self.id)
+    async def resolve_templates(self, info):
+        vm_http_client = VmHttpClient(self.controller.address, '')
+        template_veil_data_list = await vm_http_client.fetch_templates_list(node_id=self.id)
+        return VmQuery.veil_template_data_to_graphene_type_list(template_veil_data_list, self.controller.address)
 
     async def resolve_datapools(self, _info):
-        resources_http_client = ResourcesHttpClient(self.controller.address)
+        resources_http_client = await ResourcesHttpClient.create(self.controller.address)
         datapools = await resources_http_client.fetch_datapool_list(node_id=self.id)
+
         datapool_type_list = await ResourcesQuery.resource_veil_to_graphene_type_list(
             DatapoolType, datapools, self.controller.address)
         return datapool_type_list
 
     async def resolve_cluster(self, _info):
-        resources_http_client = ResourcesHttpClient(self.controller.address)
+        resources_http_client = await ResourcesHttpClient.create(self.controller.address)
 
         if self.veil_info is None:
             self.veil_info = await self.get_veil_info()
@@ -147,7 +154,7 @@ class NodeType(graphene.ObjectType):
         obj.controller = self.controller
         return obj
 
-    async def resolve_datacenter(self, info):
+    async def resolve_datacenter(self, _info):
         if self.datacenter:
             return self.datacenter
         if self.veil_info is None:
@@ -156,7 +163,7 @@ class NodeType(graphene.ObjectType):
                               verbose_name=self.veil_info['datacenter_name'])
 
     async def resolve_resources_usage(self, _info):
-        resources_http_client = ResourcesHttpClient(self.controller.address)
+        resources_http_client = await ResourcesHttpClient.create(self.controller.address)
         return await resources_http_client.fetch_resources_usage('nodes', self.id)
 
     async def resolve_management_ip(self, _info):
@@ -182,29 +189,11 @@ class DatapoolType(graphene.ObjectType):
     verbose_name = graphene.String()
 
     async def resolve_nodes(self, _info):
-        resources_http_client = ResourcesHttpClient(self.controller.address)
+        resources_http_client = await ResourcesHttpClient.create(self.controller.address)
         nodes = await resources_http_client.fetch_node_list()
         node_type_list = await ResourcesQuery.resource_veil_to_graphene_type_list(
             NodeType, nodes, self.controller.address)
         return node_type_list
-        # todo: remove code below cause it seems to be useless
-        # base_fields = {'id', 'verbose_name'}
-        # fields = set(get_selections(info))
-        # nodes = []
-        # resources_http_client = ResourcesHttpClient(self.controller.address)
-        # if not fields <= base_fields:
-        #     for node in self.nodes:
-        #         node_data = await resources_http_client.fetch_node(node['id'])
-        #         obj = make_graphene_type(NodeType, node_data)
-        #         obj.controller = ControllerType(ip=self.controller_ip)
-        #         nodes.append(obj)
-        # else:
-        #     for node in self.nodes:
-        #         obj = make_graphene_type(NodeType, node)
-        #         obj.controller = ControllerType(ip=self.controller_ip)
-        #         nodes.append(obj)
-        #
-        # return nodes
 
     async def resolve_nodes_connected(self, info):
         return await self.resolve_nodes(info)
@@ -214,13 +203,13 @@ class DatapoolType(graphene.ObjectType):
 
 class ResourcesQuery(graphene.ObjectType):
 
-    node = graphene.Field(NodeType, id=graphene.String())
+    node = graphene.Field(NodeType, id=graphene.String(), controller_address=graphene.String())
     nodes = graphene.List(NodeType, ordering=graphene.String(), reversed_order=graphene.Boolean())
 
-    cluster = graphene.Field(ClusterType, id=graphene.String())
+    cluster = graphene.Field(ClusterType, id=graphene.String(), controller_address=graphene.String())
     clusters = graphene.List(ClusterType, ordering=graphene.String(), reversed_order=graphene.Boolean())
 
-    datapool = graphene.Field(DatapoolType, id=graphene.String())
+    datapool = graphene.Field(DatapoolType, id=graphene.String(), controller_address=graphene.String())
     datapools = graphene.List(DatapoolType, ordering=graphene.String(), reversed_order=graphene.Boolean())
 
     requests = graphene.List(RequestType, time=graphene.Float())
@@ -236,7 +225,7 @@ class ResourcesQuery(graphene.ObjectType):
         return graphene_type_type_list
 
     async def resolve_node(self, _info, id, controller_address):
-        resources_http_client = ResourcesHttpClient(controller_address)
+        resources_http_client = await ResourcesHttpClient.create(controller_address)
         node_data = await resources_http_client.fetch_node(id)
         node_type = make_graphene_type(NodeType, node_data['resource_data'])
         node_type.controller = ControllerType(address=node_data['controller_address'])
@@ -249,7 +238,7 @@ class ResourcesQuery(graphene.ObjectType):
         list_of_all_node_types = []
 
         for controllers_address in controllers_addresses:
-            resources_http_client = ResourcesHttpClient(controllers_address)
+            resources_http_client = await ResourcesHttpClient.create(controllers_address)
             nodes = await resources_http_client.fetch_node_list()
 
             node_type_list = await ResourcesQuery.resource_veil_to_graphene_type_list(
@@ -281,7 +270,7 @@ class ResourcesQuery(graphene.ObjectType):
         return list_of_all_node_types
 
     async def resolve_cluster(self, _info, id, controller_address):
-        resources_http_client = ResourcesHttpClient(controller_address)
+        resources_http_client = await ResourcesHttpClient.create(controller_address)
         cluster_data = await resources_http_client.fetch_cluster(id)
         cluster_type = make_graphene_type(ClusterType, cluster_data['resource_data'])
         cluster_type.controller = ControllerType(address=cluster_data['controller_address'])
@@ -294,7 +283,7 @@ class ResourcesQuery(graphene.ObjectType):
         list_of_all_cluster_types = []
 
         for controllers_address in controllers_addresses:
-            resources_http_client = ResourcesHttpClient(controllers_address)
+            resources_http_client = await ResourcesHttpClient.create(controllers_address)
             clusters = await resources_http_client.fetch_cluster_list()
 
             cluster_type_list = await ResourcesQuery.resource_veil_to_graphene_type_list(
@@ -322,9 +311,8 @@ class ResourcesQuery(graphene.ObjectType):
 
         return list_of_all_cluster_types
 
-    # todo: невыполнимый запрос в текущей архитектуре. Передовать контроллер с фронта?
-    async def resolve_datapool(self, _info, id):
-        resources_http_client = ResourcesHttpClient()
+    async def resolve_datapool(self, _info, id, controller_address):
+        resources_http_client = await ResourcesHttpClient.create(controller_address)
         datapool_data = await resources_http_client.fetch_datapool(id)
         datapool_type = make_graphene_type(ClusterType, datapool_data['resource_data'])
         datapool_type.controller = ControllerType(address=datapool_data['controller_address'])
@@ -337,7 +325,7 @@ class ResourcesQuery(graphene.ObjectType):
 
         controllers_addresses = await Controller.get_controllers_addresses()
         for controllers_address in controllers_addresses:
-            resources_http_client = ResourcesHttpClient(controllers_address)
+            resources_http_client = await ResourcesHttpClient.create(controllers_address)
             datapools = await resources_http_client.fetch_datapool_list(take_broken=take_broken)
 
             datapool_type_list = await ResourcesQuery.resource_veil_to_graphene_type_list(
