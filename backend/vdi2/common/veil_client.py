@@ -10,6 +10,9 @@ from common.veil_decorators import prepare_body
 
 # TODO: добавить обработку исключений
 # TODO: Не tornado.curl_httpclient.CurlAsyncHTTPClient, т.к. не измерен реальный прирост производительности.
+# TODO: нужно менять статус контроллера и прочих сущностей после нескольких неудачных попыток подключения
+# TODO: нужно возвращать контроллеры только в определенном статусе.
+# TODO: хорошо бы завершать выполнение сущностей клиента и т.п. при изменении статуса сущности (например отвалился контроллер).
 
 AsyncHTTPClient.configure("tornado.simple_httpclient.SimpleAsyncHTTPClient",
                           max_clients=VEIL_MAX_CLIENTS,
