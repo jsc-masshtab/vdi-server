@@ -79,7 +79,8 @@ class VmHttpClient(VeilHttpClient):
         all_vms_list = resources_list_data['results']
 
         # filter bu cluster
-        all_vms_list = list(filter(lambda vm: vm['cluster'] == cluster_id, all_vms_list))
+        if cluster_id:
+            all_vms_list = list(filter(lambda vm: vm['cluster'] == cluster_id, all_vms_list))
 
         return all_vms_list
 

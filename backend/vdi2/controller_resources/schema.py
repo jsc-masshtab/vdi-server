@@ -112,13 +112,13 @@ class NodeType(graphene.ObjectType):
         resources_http_client = ResourcesHttpClient(self.controller.address)
         return await resources_http_client.fetch_node(self.id)
 
-    async def resolve_verbose_name(self, info):
+    async def resolve_verbose_name(self, _info):
         if self.verbose_name:
             return self.verbose_name
         if self.veil_info is None:
-            veil_info = await self.get_veil_info()
-        if veil_info:
-            return veil_info['verbose_name']
+            self.veil_info = await self.get_veil_info()
+        if self.veil_info:
+            return self.veil_info['verbose_name']
         else:
             return DEFAULT_NAME
 
@@ -194,24 +194,6 @@ class DatapoolType(graphene.ObjectType):
         node_type_list = await ResourcesQuery.resource_veil_to_graphene_type_list(
             NodeType, nodes, self.controller.address)
         return node_type_list
-        # todo: remove code below cause it seems to be useless
-        # base_fields = {'id', 'verbose_name'}
-        # fields = set(get_selections(info))
-        # nodes = []
-        # resources_http_client = ResourcesHttpClient(self.controller.address)
-        # if not fields <= base_fields:
-        #     for node in self.nodes:
-        #         node_data = await resources_http_client.fetch_node(node['id'])
-        #         obj = make_graphene_type(NodeType, node_data)
-        #         obj.controller = ControllerType(ip=self.controller_ip)
-        #         nodes.append(obj)
-        # else:
-        #     for node in self.nodes:
-        #         obj = make_graphene_type(NodeType, node)
-        #         obj.controller = ControllerType(ip=self.controller_ip)
-        #         nodes.append(obj)
-        #
-        # return nodes
 
     async def resolve_nodes_connected(self, info):
         return await self.resolve_nodes(info)

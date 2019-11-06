@@ -181,8 +181,8 @@ class FreeVmFromUser(graphene.Mutation):
 
 
 class VmQuery(graphene.ObjectType):
-    template = graphene.Field(TemplateType, id=graphene.String())
-    vm = graphene.Field(VmType, id=graphene.String())
+    template = graphene.Field(TemplateType, id=graphene.String(), controller_address=graphene.String())
+    vm = graphene.Field(VmType, id=graphene.String(), controller_address=graphene.String())
 
     templates = graphene.List(TemplateType, cluster_id=graphene.String(), node_id=graphene.String(),
                               ordering=graphene.String(), reversed_order=graphene.Boolean())
@@ -195,12 +195,12 @@ class VmQuery(graphene.ObjectType):
     async def resolve_template(self, _info, id, controller_address):
         vm_http_client = VmHttpClient(controller_address, id)
         veil_info = await vm_http_client.info()
-        return self.veil_template_data_to_graphene_type(veil_info, controller_address)
+        return VmQuery.veil_template_data_to_graphene_type(veil_info, controller_address)
 
     async def resolve_vm(self, _info, id, controller_address):
         vm_http_client = VmHttpClient(controller_address, id)
         veil_info = await vm_http_client.info()
-        return self.veil_vm_data_to_graphene_type(veil_info, controller_address)
+        return VmQuery.veil_vm_data_to_graphene_type(veil_info, controller_address)
 
     async def resolve_templates(self, _info, controller_ip=None, cluster_id=None, node_id=None,
                                 ordering=None, reversed_order=None):
@@ -215,12 +215,12 @@ class VmQuery(graphene.ObjectType):
 
             template_type_list = []
             for controller_address in controllers_addresses:
-                vm_http_client = VmHttpClient(controller_ip=controller_address)
+                vm_http_client = VmHttpClient(controller_address, '')
                 try:
                     single_template_veil_data_list = await vm_http_client.fetch_templates_list()
                     single_template_type_list = VmQuery.veil_template_data_to_graphene_type_list(
                         single_template_veil_data_list, controller_address)
-                    template_type_list.append(single_template_type_list)
+                    template_type_list.extend(single_template_type_list)
                 except (HttpError, OSError):
                     pass
 
@@ -257,8 +257,9 @@ class VmQuery(graphene.ObjectType):
                 vm_http_client = VmHttpClient(controller_address, '')
                 try:
                     single_vm_veil_data_list = await vm_http_client.fetch_vms_list()
-                    single_vm_type_list = VmQuery.veil_vm_data_to_graphene_type_list(single_vm_veil_data_list)
-                    vm_type_list.append(single_vm_type_list)
+                    single_vm_type_list = VmQuery.veil_vm_data_to_graphene_type_list(
+                        single_vm_veil_data_list, controller_address)
+                    vm_type_list.extend(single_vm_type_list)
                 except (HttpError, OSError):
                     pass
 
