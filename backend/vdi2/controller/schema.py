@@ -23,10 +23,6 @@ class ControllerType(graphene.ObjectType):
     token = graphene.String()  # not displayed field
     expires_on = graphene.DateTime()  # not displayed field
 
-    async def resolve_version(self, _info):
-        # TODO: get soft version from controller
-        return self.version if self.version else '4.0.0'
-
     async def resolve_status(self, _info):
         # TODO: get status from veil
         return self.status if self.status else 'unknown'
@@ -59,10 +55,13 @@ class AddController(graphene.Mutation):
         auth_info = dict(username=username, password=password, ldap=ldap_connection)
         token, expires_on = await controller_client.auth(auth_info=auth_info)
 
+        version = controller_client.fetch_version()
+
         controller = await Controller.create(
             verbose_name=verbose_name,
             address=address,
             description=description,
+            version=version,
             username=username,
             password=crypto.encrypt(password),
             ldap_connection=ldap_connection,
@@ -99,10 +98,13 @@ class UpdateController(graphene.Mutation):
         auth_info = dict(username=username, password=password, ldap=ldap_connection)
         token, expires_on = await controller_client.auth(auth_info=auth_info)
 
+        version = controller_client.fetch_version()
+
         await controller.update(
             verbose_name=verbose_name,
             address=address,
             description=description,
+            version=version,
             username=username,
             password=crypto.encrypt(password),
             ldap_connection=ldap_connection,

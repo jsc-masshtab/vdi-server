@@ -28,6 +28,10 @@ class VeilHttpClient:
         self.controller_ip = controller_ip
         self.controller_uid = None
 
+    @cached_property
+    def based_url(self):
+        return 'http://{}/api/'.format(self.controller_ip)
+
     @classmethod
     async def create(cls, controller_ip: str):
         """Because of we need async execute db query"""
