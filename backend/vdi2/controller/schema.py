@@ -2,10 +2,10 @@ import datetime
 
 import graphene
 from graphql import GraphQLError
-
+from controller.client import ControllerClient
+from resources_monitoring.resources_monitor_manager import resources_monitor_manager
 from auth.utils import crypto
 from controller.models import Controller
-# TODO: добавить, чтобы пароль шифровался через crypto.encrypt
 
 
 class ControllerType(graphene.ObjectType):
@@ -51,22 +51,26 @@ class AddController(graphene.Mutation):
     ok = graphene.Boolean()
     controller = graphene.Field(lambda: ControllerType)
 
-    async def mutate(self, _info, verbose_name, address, username, password, ldap_connection,
-                     description=None):
-        # TODO: validation
-        # check that its possible to log in with given credentials (auth request to controller)
+    async def mutate(self, _info, verbose_name, address, username,
+                     password, ldap_connection, description=None):
 
-        # TODO: add token
+        # check credentials
+        controller_client = ControllerClient(address)
+        auth_info = dict(username=username, password=password, ldap=ldap_connection)
+        token, expires_on = await controller_client.auth(auth_info=auth_info)
+
         controller = await Controller.create(
             verbose_name=verbose_name,
             address=address,
             description=description,
             username=username,
-            password=password,
-            ldap_connection=ldap_connection
+            password=crypto.encrypt(password),
+            ldap_connection=ldap_connection,
+            token=token,
+            expires_on=expires_on
         )
 
-        # TODO: add controller to resources_monitor_manager
+        resources_monitor_manager.add_controller(address)
         return AddController(ok=True, controller=ControllerType(**controller.__values__))
 
 
@@ -89,20 +93,26 @@ class UpdateController(graphene.Mutation):
         controller = await Controller.query.where(Controller.id == id).gino.first()
         if not controller:
             raise GraphQLError('No such controller.')
-        else:
-            # TODO: validation
-            # check that its possible to log in with given credentials (auth request to controller)
-            status = await controller.update(
-                verbose_name=verbose_name,
-                address=address,
-                description=description,
-                username=username,
-                password=password,
-                ldap_connection=ldap_connection
-            ).apply()
-            print(status)
 
-        # TODO: restart monitors
+        # check credentials
+        controller_client = ControllerClient(address)
+        auth_info = dict(username=username, password=password, ldap=ldap_connection)
+        token, expires_on = await controller_client.auth(auth_info=auth_info)
+
+        await controller.update(
+            verbose_name=verbose_name,
+            address=address,
+            description=description,
+            username=username,
+            password=crypto.encrypt(password),
+            ldap_connection=ldap_connection,
+            token=token,
+            expires_on=expires_on
+        ).apply()
+
+        # TODO: change to update & restart
+        resources_monitor_manager.remove_controller(address)
+        resources_monitor_manager.add_controller(address)
         return UpdateController(ok=True, controller=ControllerType(**controller.__values__))
 
 
@@ -112,13 +122,16 @@ class RemoveController(graphene.Mutation):
 
     ok = graphene.Boolean()
 
-    async def mutate(self, info, id):
-        # TODO: validation (if exist)
+    async def mutate(self, _info, id):
+        controller = await Controller.query.where(Controller.id == id).gino.first()
+        if not controller:
+            raise GraphQLError('No such controller.')
+
         # TODO: remove connected pools
         status = await Controller.delete.where(Controller.id == id).gino.status()
         print(status)
-        # remove controller from resources_monitor_manager
-        # resources_monitor_manager.remove_controller(controller_ip)
+
+        resources_monitor_manager.remove_controller(controller.address)
         return RemoveController(ok=True)
 
 

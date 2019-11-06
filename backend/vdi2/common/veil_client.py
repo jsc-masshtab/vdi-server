@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+from datetime import datetime
+
 from cached_property import cached_property
 from tornado.httpclient import AsyncHTTPClient, HTTPRequest, HTTPClientError
 from tornado.escape import json_decode
@@ -47,18 +49,25 @@ class VeilHttpClient:
         return headers
 
     async def login(self):
+        """Авторизация c моделью."""
+
+        auth_info = await Controller.get_auth_info(self.controller_uid)
+        token, expires_on = await self.auth(auth_info)
+        await Controller.set_auth_info(self.controller_uid, token, expires_on)
+        return token
+
+    async def auth(self, auth_info):
         """Авторизация на контроллере и получение токена."""
+
         method = 'POST'
         headers = {'Content-Type': 'application/json'}
         url = 'http://{}/auth/'.format(self.controller_ip)
-        auth_info = await Controller.get_auth_info(self.controller_uid)
         response = await self.fetch_with_response(url=url, method=method, headers=headers, body=auth_info)
         token = response.get('token')
-        expires_on = response.get('expires_on')
+        expires_on = datetime.strptime(response.get('expires_on'), "%d.%m.%Y %H:%M:%S UTC")
         if not token or not expires_on:
             raise AssertionError('Auth failed.')
-        await Controller.set_auth_info(self.controller_uid, token, expires_on)
-        return token
+        return token, expires_on
 
     @prepare_body
     async def fetch(self, url: str, method: str, headers: dict = None, body: str = ''):
