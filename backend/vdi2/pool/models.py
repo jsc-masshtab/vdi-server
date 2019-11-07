@@ -199,6 +199,14 @@ class Pool(db.Model):
     async def get_name(pool_id):
         return await Pool.select('verbose_name').where(Pool.id == pool_id).gino.scalar()
 
+    @staticmethod
+    async def get_desktop_type(pool_id):
+        return await Pool.select('desktop_pool_type').where(Pool.id == pool_id).gino.scalar()
+
+    @staticmethod
+    async def get_pool_data(pool_id):
+        return await Pool.select().where(Pool.id == pool_id).gino.all()
+
 
 class PoolUsers(db.Model):
     __tablename__ = 'pools_users'

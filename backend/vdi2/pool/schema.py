@@ -2,18 +2,20 @@
 import graphene
 
 from common.veil_errors import SimpleError
+from common.utils import get_selections
 
 from settings import MIX_POOL_SIZE, MAX_POOL_SIZE, MAX_VM_AMOUNT_IN_POOL, DEFAULT_NAME
 
-from vdi.errors import SimpleError, FieldError, NotFound, FetchException
-
 from auth.schema import UserType
-from vm.schema import VmType
-from vdi.graphql_api.resources import ControllerType
+from auth.models import User
 
-from common.utils import get_selections
+from vm.schema import VmType, VmQuery
+from vm.models import Vm
+from vm.veil_client import VmHttpClient
 
-from pool.models import DesktopPoolType, Pool
+from controller.schema import ControllerType
+
+from pool.models import DesktopPoolType, Pool, PoolUsers
 
 
 DesktopPoolTypeGraphene = graphene.Enum.from_enum(DesktopPoolType)
@@ -83,7 +85,7 @@ class PoolSettings(graphene.ObjectType, PoolSettingsFields):
 
 class PoolType(graphene.ObjectType):
 
-    id = graphene.Int()
+    id = graphene.Int() # wrong type?
     template_id = graphene.String()
     desktop_pool_type = DesktopPoolTypeGraphene()
     name = graphene.String()
@@ -103,53 +105,44 @@ class PoolType(graphene.ObjectType):
         return self.name
 
     async def resolve_users(self, _info, entitled=True):
-        # todo: rewrite in ORM later
-        return []
-        # u_fields = ('username', 'email', 'date_joined')
-        # # users who are entitled to pool
-        # if entitled:
-        #     u_fields_joined = ', '.join('u.{}'.format(f) for f in u_fields)
-        #     async with db.connect() as conn:
-        #         qu = """
-        #         SELECT {}
-        #         FROM pools_users JOIN public.user as u ON pools_users.username = u.username
-        #         WHERE pool_id = {}
-        #         """.format(u_fields_joined, self.id)
-        #         data = await conn.fetch(qu)
-        # # users who are NOT entitled to pool
-        # else:
-        #     u_fields_joined = ', '.join('{}'.format(f) for f in u_fields)
-        #     async with db.connect() as conn:
-        #         qu = """
-        #         SELECT {}
-        #         FROM public.user
-        #         WHERE public.user.username NOT IN
-        #             (SELECT pools_users.username
-        #              FROM pools_users
-        #              WHERE pools_users.pool_id = {}
-        #             )
-        #         """.format(u_fields_joined, self.id)
-        #         data = await conn.fetch(qu)
-        #
-        # # form list and return
-        # users = []
-        # for u in data:
-        #     u = dict(zip(u_fields, u))
-        #     users.append(UserType(**u))
-        # return users
+        # users who are entitled to pool
+        if entitled:
+            users_data = await User.join(PoolUsers, User.id == PoolUsers.user_id).select().where(
+                PoolUsers.pool_id == self.id).gino.all()
+        # users who are NOT entitled to pool
+        else:
+            # todo: not sure...
+            users_data = await User.outerjoin(PoolUsers, User.id == PoolUsers.user_id).select().where(
+                 PoolUsers.pool_id != self.id).gino.all()
+        print('users_data', users_data)
+        # todo: it will not work until model and grapnene feilds are syncronized
+        uset_type_list = [
+            UserType(**user.__values__)
+            for user in users_data
+        ]
+        return uset_type_list
 
-    async def resolve_vms(self, info):
-        # todo: return list of vms in this pool
-        return []
+    async def resolve_vms(self, _info):
+        vm_type_list = []
 
-    def resolve_desktop_pool_type(self, _info):
+        vms_data = await Vm.select("id").where((Vm.pool_id == self.id)).gino.all()
+        for (vm_id,) in vms_data:
+            vm_http_client = await VmHttpClient.create(self.controller.address, vm_id)
+            veil_info = await vm_http_client.info()
+            # create graphene type
+            vm_type = VmQuery.veil_vm_data_to_graphene_type(veil_info, self.controller.address)
+            vm_type_list.append(vm_type)
+
+        return vm_type_list
+
+    async def resolve_desktop_pool_type(self, _info):
         if not self.desktop_pool_type:
-            # todo: orm query
-            pass
+            self.desktop_pool_type = await Pool.get_desktop_type(self.id)
         return self.desktop_pool_type
 
     async def resolve_settings(self, _info):
         if not self.settings:
+            pool_data = await Pool.get_pool_data(self.id)
             # todo: Get data from ORM and just fill PoolSettings
             # ...
             self.settings = PoolSettings()
@@ -187,3 +180,24 @@ class PoolType(graphene.ObjectType):
             # else:
             #     self.status = 'ACTIVE'
         return self.status
+
+
+class PoolQuery(graphene.ObjectType):
+    pools = graphene.List(PoolType, ordering=graphene.String(), reversed_order=graphene.Boolean())
+    pool = graphene.Field(PoolType, id=graphene.Int(), controller_ip=graphene.String())
+
+    async def resolve_pools(self, _info, ordering=None, reversed_order=None):
+        pass
+
+    async def resolve_pool(self, _info, id):
+
+        pass
+
+
+class PoolMutations(graphene.ObjectType):
+    pass
+
+
+pool_schema = graphene.Schema(query=PoolQuery,
+                              mutation=PoolMutations,
+                              auto_camelcase=False)

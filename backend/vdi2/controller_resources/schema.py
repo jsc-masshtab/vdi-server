@@ -314,7 +314,7 @@ class ResourcesQuery(graphene.ObjectType):
     async def resolve_datapool(self, _info, id, controller_address):
         resources_http_client = await ResourcesHttpClient.create(controller_address)
         datapool_data = await resources_http_client.fetch_datapool(id)
-        datapool_type = make_graphene_type(ClusterType, datapool_data['resource_data'])
+        datapool_type = make_graphene_type(DatapoolType, datapool_data['resource_data'])
         datapool_type.controller = ControllerType(address=datapool_data['controller_address'])
         return datapool_type
 
