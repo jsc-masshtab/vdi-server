@@ -66,13 +66,13 @@ class ClusterType(graphene.ObjectType):
         return datapool_type_list
 
     async def resolve_vms(self, _info):
-        vm_http_client = VmHttpClient(self.controller.address, '')
+        vm_http_client = await VmHttpClient.create(self.controller.address, '')
         vms_list = await vm_http_client.fetch_vms_list(cluster_id=self.id)
         vm_type_list = VmQuery.veil_vm_data_to_graphene_type(vms_list, self.controller.address)
         return vm_type_list
 
     async def resolve_templates(self, _info):
-        vm_http_client = VmHttpClient(self.controller.address, '')
+        vm_http_client = await VmHttpClient.create(self.controller.address, '')
         template_list = await vm_http_client.fetch_templates_list(cluster_id=self.id)
 
         template_type_list = []
@@ -123,13 +123,13 @@ class NodeType(graphene.ObjectType):
             return DEFAULT_NAME
 
     async def resolve_vms(self, _info):
-        vm_http_client = VmHttpClient(self.controller.address, '')
+        vm_http_client = await VmHttpClient.create(self.controller.address, '')
         cluster_id = self.cluster.id if self.cluster else None
         vm_veil_data_list = await vm_http_client.fetch_vms_list(node_id=self.id)
         return VmQuery.veil_vm_data_to_graphene_type_list(vm_veil_data_list)
 
     async def resolve_templates(self, info):
-        vm_http_client = VmHttpClient(self.controller.address, '')
+        vm_http_client = await VmHttpClient.create(self.controller.address, '')
         template_veil_data_list = await vm_http_client.fetch_templates_list(node_id=self.id)
         return VmQuery.veil_template_data_to_graphene_type_list(template_veil_data_list, self.controller.address)
 

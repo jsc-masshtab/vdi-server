@@ -59,7 +59,7 @@ class VmType(graphene.ObjectType):
             return
 
         try:
-            vm_client = VmHttpClient(controller_ip=self.controller.address, vm_id=self.id)
+            vm_client = await VmHttpClient.create(controller_ip=self.controller.address, vm_id=self.id)
             self.veil_info = await vm_client.info()
         except HTTPClientError:
             return
@@ -120,7 +120,7 @@ class VmType(graphene.ObjectType):
 
         # get data from veil
         try:
-            vm_client = VmHttpClient(controller_ip=self.controller.address, vm_id=template_id)
+            vm_client = await VmHttpClient.create(controller_ip=self.controller.address, vm_id=template_id)
             template_info = await vm_client.info()
         except NotFound:
             template_info = None
@@ -193,19 +193,19 @@ class VmQuery(graphene.ObjectType):
                                 ordering=graphene.String(), reversed_order=graphene.Boolean())
 
     async def resolve_template(self, _info, id, controller_address):
-        vm_http_client = VmHttpClient(controller_address, id)
+        vm_http_client = await VmHttpClient.create(controller_address, id)
         veil_info = await vm_http_client.info()
         return VmQuery.veil_template_data_to_graphene_type(veil_info, controller_address)
 
     async def resolve_vm(self, _info, id, controller_address):
-        vm_http_client = VmHttpClient(controller_address, id)
+        vm_http_client = await VmHttpClient.create(controller_address, id)
         veil_info = await vm_http_client.info()
         return VmQuery.veil_vm_data_to_graphene_type(veil_info, controller_address)
 
     async def resolve_templates(self, _info, controller_ip=None, cluster_id=None, node_id=None,
                                 ordering=None, reversed_order=None):
         if controller_ip:
-            vm_http_client = VmHttpClient(controller_ip, '')
+            vm_http_client = await VmHttpClient.create(controller_ip, '')
             template_veil_data_list = await vm_http_client.fetch_templates_list(cluster_id=cluster_id, node_id=node_id)
 
             template_type_list = VmQuery.veil_template_data_to_graphene_type_list(
@@ -215,7 +215,7 @@ class VmQuery(graphene.ObjectType):
 
             template_type_list = []
             for controller_address in controllers_addresses:
-                vm_http_client = VmHttpClient(controller_address, '')
+                vm_http_client = await VmHttpClient.create(controller_address, '')
                 try:
                     single_template_veil_data_list = await vm_http_client.fetch_templates_list()
                     single_template_type_list = VmQuery.veil_template_data_to_graphene_type_list(
@@ -244,9 +244,9 @@ class VmQuery(graphene.ObjectType):
 
         # get veil vm data list
         if controller_ip:
-            vm_http_client = VmHttpClient(controller_ip, '')
+            vm_http_client = await VmHttpClient.create(controller_ip, '')
             vm_veil_data_list = await vm_http_client.fetch_vms_list(cluster_id=cluster_id, node_id=node_id)
-            vm_type_list = VmQuery.veil_vm_data_to_graphene_type_list(vm_veil_data_list)
+            vm_type_list = VmQuery.veil_vm_data_to_graphene_type_list(vm_veil_data_list, controller_ip)
 
         # if controller address is not provided then take all vms from all controllers
         else:
@@ -254,7 +254,7 @@ class VmQuery(graphene.ObjectType):
 
             vm_type_list = []
             for controller_address in controllers_addresses:
-                vm_http_client = VmHttpClient(controller_address, '')
+                vm_http_client = await VmHttpClient.create(controller_address, '')
                 try:
                     single_vm_veil_data_list = await vm_http_client.fetch_vms_list()
                     single_vm_type_list = VmQuery.veil_vm_data_to_graphene_type_list(
