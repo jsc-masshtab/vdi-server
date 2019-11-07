@@ -37,6 +37,7 @@ class VeilHttpClient:
         self.controller_uid = await Controller.get_controller_id_by_ip(controller_ip)
         return self
 
+    # @cached_property
     @property
     async def token(self):
         token = await Controller.get_token(self.controller_uid)
@@ -44,11 +45,9 @@ class VeilHttpClient:
             token = await self.login()
         return token
 
-    # @cached_property
-    @property
-    async def headers(self):
+    async def get_headers(self, token: str = None):
         """controller ip-address must be set in the descendant class."""
-        token = await self.token
+        token = token if token else await self.token
         headers = {
             'Authorization': 'jwt {}'.format(token),
             'Content-Type': 'application/json',
@@ -74,7 +73,7 @@ class VeilHttpClient:
         if method == 'GET' and body == '':
             body = None
         if not headers:
-            headers = await self.headers
+            headers = await self.get_headers()
         try:
             request = HTTPRequest(url=url,
                                   method=method,
