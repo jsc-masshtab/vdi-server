@@ -73,6 +73,7 @@
     "prefer-for-of": false,
     "prefer-const": false,
     "no-var-keyword": false,
-    "no-string-literal": false
+    "no-string-literal": false,
+    "variable-name": [ false ]
   }
 }

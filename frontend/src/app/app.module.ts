@@ -1,3 +1,4 @@
+import { WebsocketService } from './common/classes/websock.service';
 
 import { UsersModule } from './settings/users/users.module';
 import { ControllersModule } from './settings/controllers/controllers.module';
@@ -80,7 +81,8 @@ import { environment } from 'src/environments/environment';
     [
      { provide: MAT_DIALOG_DEFAULT_OPTIONS, useValue: { hasBackdrop: true, restoreFocus: true } },
       ErrorsService,
-      WaitService
+      WaitService,
+      WebsocketService
     ],
   bootstrap: [AppComponent]
 })
@@ -92,7 +94,8 @@ export class AppModule {
   constructor(private apollo: Apollo,
               private httpLink: HttpLink,
               private errorService: ErrorsService,
-              private waitService: WaitService) {
+              private waitService: WaitService,
+              private ws: WebsocketService) {
 
     library.add(faDesktop, faDatabase, faLayerGroup, faPlusCircle, faMinusCircle, faSpinner, faServer, faCog, faChevronUp, faTimesCircle,
                 faFolderOpen, faStar, faTv, faSyncAlt, faBuilding, faTrashAlt, faUsers, faMeh, faChartBar, faUser,
@@ -131,5 +134,8 @@ export class AppModule {
         }
       }
     });
+
+    setTimeout(() => this.ws.init(), 1000);
+
   }
 }
