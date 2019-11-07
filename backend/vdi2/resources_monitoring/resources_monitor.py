@@ -13,8 +13,10 @@ from controller.models import Controller
 from .resources_monitoring_data import CONTROLLER_SUBSCRIPTIONS_LIST, CONTROLLERS_SUBSCRIPTION, VDI_TASKS_SUBSCRIPTION
 
 from common.utils import cancel_async_task
-from common.veil_errors import NotFound
+from common.veil_errors import HttpError
 from common.veil_client import VeilHttpClient
+
+from controller_resources.veil_client import ResourcesHttpClient
 
 
 class AbstractMonitor(ABC):
@@ -49,16 +51,14 @@ class ResourcesMonitor(AbstractMonitor):
         self._ws_connection = None
         self._running_flag = True
         self._controller_ip = None
-        self._controller_uid = None
         self._is_online = False
 
         self._controller_online_task = None
         self._resources_monitor_task = None
 
     # PUBLIC METHODS
-    async def start(self, controller_ip):
+    def start(self, controller_ip):
         self._controller_ip = controller_ip
-        self._controller_uid = await Controller.get_controller_id_by_ip(controller_ip)
         self._running_flag = True
         # controller check
         self._controller_online_task = ioloop.IOLoop.current().add_callback(self._controller_online_checking)
@@ -81,21 +81,21 @@ class ResourcesMonitor(AbstractMonitor):
         Check if controller online
         :return:
         """
-        #print('_controller_online_checking')
+        resources_http_client = await ResourcesHttpClient.create(self._controller_ip)
+
         response_dict = {'ip': self._controller_ip, 'msg_type': 'data', 'event': 'UPDATED',
                          'resource': CONTROLLERS_SUBSCRIPTION}
         while self._running_flag:
             await asyncio.sleep(2)  # check every 2 seconds
             try:
                 # if controller is online then there wil not be any exception
-                pass#await CheckController(controller_ip=self._controller_ip)
-            except (HTTPClientError, OSError, NotFound):
+                await resources_http_client.check_controller()
+            except (HTTPClientError, HttpError, OSError):
                 # notify only if controller was online before (data changed)
                 if self._is_online:
                     response_dict['status'] = 'OFFLINE'
                     json_data = json.dumps(response_dict)
                     self.notify_observers(CONTROLLERS_SUBSCRIPTION, json_data)
-                    print('notify controller offline ', self._controller_ip)
                 self._is_online = False
             else:
                 # notify only if controller was offline before (data changed)
@@ -103,7 +103,6 @@ class ResourcesMonitor(AbstractMonitor):
                     response_dict['status'] = 'ONLINE'
                     json_data = json.dumps(response_dict)
                     self.notify_observers(CONTROLLERS_SUBSCRIPTION, json_data)
-                    print('notify controller online ', self._controller_ip)
                 self._is_online = True
 
     async def _processing_ws_messages(self):
@@ -131,9 +130,10 @@ class ResourcesMonitor(AbstractMonitor):
             await asyncio.sleep(RECONNECT_TIMEOUT)
 
     async def _connect(self):
+        controller_uid = await Controller.get_controller_id_by_ip(self._controller_ip)
         # get token
         try:
-            token = await Controller.get_token(self._controller_uid)
+            token = await Controller.get_token(controller_uid)
             if not token:
                 controller_client = await VeilHttpClient.create(self._controller_ip)
                 token = await controller_client.login()

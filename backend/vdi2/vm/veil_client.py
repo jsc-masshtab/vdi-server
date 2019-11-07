@@ -5,6 +5,7 @@ import urllib.parse
 
 from common.veil_decorators import check_params, prepare_body
 from common.veil_client import VeilHttpClient
+from controller.models import Controller
 
 
 class VmHttpClient(VeilHttpClient):
@@ -17,10 +18,17 @@ class VmHttpClient(VeilHttpClient):
     ]
 
     def __init__(self, controller_ip: str, vm_id: str, verbose_name: str = None, template_name: str = None):
-        super().create(controller_ip)
+        super().__init__(controller_ip)
         self.vm_id = vm_id
         self.verbose_name = verbose_name
         self.template_name = template_name
+
+    @classmethod
+    async def create(cls, controller_ip: str, vm_id: str, verbose_name: str = None, template_name: str = None):
+        """Because of we need async execute db query"""
+        self = cls(controller_ip, vm_id, verbose_name, template_name)
+        self.controller_uid = await Controller.get_controller_id_by_ip(controller_ip)
+        return self
 
     @cached_property
     def url(self):
@@ -79,7 +87,8 @@ class VmHttpClient(VeilHttpClient):
         all_vms_list = resources_list_data['results']
 
         # filter bu cluster
-        all_vms_list = list(filter(lambda vm: vm['cluster'] == cluster_id, all_vms_list))
+        if cluster_id:
+            all_vms_list = list(filter(lambda vm: vm['cluster'] == cluster_id, all_vms_list))
 
         return all_vms_list
 

@@ -12,6 +12,10 @@ from common.veil_decorators import prepare_body
 
 # TODO: добавить обработку исключений
 # TODO: Не tornado.curl_httpclient.CurlAsyncHTTPClient, т.к. не измерен реальный прирост производительности.
+# TODO: нужно менять статус контроллера и прочих сущностей после нескольких неудачных попыток подключения
+# TODO: нужно возвращать контроллеры только в определенном статусе.
+# TODO: нужно завершать выполнение сущностей клиента и т.п. при изменении статуса сущности (отвалился контроллер).
+# TODO: после окончания переноса кода и написания базовых тестов - протестировать замену property на cached_property
 
 AsyncHTTPClient.configure("tornado.simple_httpclient.SimpleAsyncHTTPClient",
                           max_clients=VEIL_MAX_CLIENTS,
@@ -39,13 +43,18 @@ class VeilHttpClient:
         self.controller_uid = await Controller.get_controller_id_by_ip(controller_ip)
         return self
 
+    @property
+    async def token(self):
+        token = await Controller.get_token(self.controller_uid)
+        if not token:
+            token = await self.login()
+        return token
+
     # @cached_property
     @property
     async def headers(self):
         """controller ip-address must be set in the descendant class."""
-        token = await Controller.get_token(self.controller_uid)
-        if not token:
-            token = await self.login()
+        token = await self.token
         headers = {
             'Authorization': 'jwt {}'.format(token),
             'Content-Type': 'application/json',
