@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import uuid
 from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy import Enum as AlchemyEnum
 
 from settings import VEIL_WS_MAX_TIME_TO_WAIT
 from database import db
@@ -16,36 +17,43 @@ from enum import Enum
 
 class DesktopPoolType(Enum):
     AUTOMATED = 0
-    MANUAL = 1
+    STATIC = 1
 
 
 class Pool(db.Model):
-    MIN_POOL_SIZE = 1  # TODO: move to fields
-    MAX_POOL_SIZE = 200  # TODO: move to fields
-    MAX_VM_AMOUNT_IN_POOL = 1000  # TODO: move to fields
-    VM_STEP = 5   # TODO: move to fields
-    MAX_AMOUNT_OF_CREATE_ATTEMPTS = 2  # TODO: move to fields
+    # MIN_POOL_SIZE = 1
+    # MAX_POOL_SIZE = 200  # TODO: move to fields
+
+    # MAX_VM_AMOUNT_IN_POOL = 1000  # TODO: move to fields
+    # VM_STEP = 5   # TODO: move to fields
+    # MAX_AMOUNT_OF_CREATE_ATTEMPTS = 2  # TODO: move to fields
 
     __tablename__ = 'pool'
     id = db.Column(UUID(), primary_key=True, default=uuid.uuid4)
     verbose_name = db.Column(db.Unicode(length=128), nullable=False)
     status = db.Column(db.Unicode(length=128), nullable=False)
     controller = db.Column(UUID(as_uuid=True), db.ForeignKey('controller.id'))
-    # desktop_pool_type = db.Column(db.Enum(ControllerUserType), nullable=False)
-    desktop_pool_type = db.Column(db.Enum(length=255), nullable=False)
+    desktop_pool_type = db.Column(AlchemyEnum(DesktopPoolType), nullable=False)
 
     deleted = db.Column(db.Boolean())
     dynamic_traits = db.Column(db.Integer(), nullable=True)  # remove it
 
-    datapool_id = db.Column(db.Unicode(length=100), nullable=True)
-    cluster_id = db.Column(db.Unicode(length=100), nullable=True)
-    node_id = db.Column(db.Unicode(length=100), nullable=True)
-    template_id = db.Column(db.Unicode(length=100), nullable=True)
+    datapool_id = db.Column(UUID(), nullable=True)
+    cluster_id = db.Column(UUID(), nullable=True)
+    node_id = db.Column(UUID(), nullable=True)
+    template_id = db.Column(UUID(), nullable=True)
+
+    # Pool size settings
+    min_size = db.Column(db.Integer(), nullable=False, default=1)
+    max_size = db.Column(db.Integer(), nullable=False, default=200)
+    max_vm_amount = db.Column(db.Integer(), nullable=False, default=1000)
+    increase_step = db.Column(db.Integer(), nullable=False, default=3)
+    max_amount_of_create_attempts = db.Column(db.Integer(), nullable=False, default=2)
 
     initial_size = db.Column(db.Integer(), nullable=True)
     # желаемое минимальное количествиюво подогретых машин (добавленных в пул, но не имеющих пользоватля)
     reserve_size = db.Column(db.Integer(), nullable=True)
-    total_size = db.Column(db.Integer(), nullable=False, default=MIN_POOL_SIZE)
+    total_size = db.Column(db.Integer(), nullable=False, default=1)
     vm_name_template = db.Column(db.Unicode(length=100), nullable=True)
 
     @staticmethod
@@ -82,7 +90,7 @@ class Pool(db.Model):
         }
 
         # try to create vm
-        for i in range(self.MAX_AMOUNT_OF_CREATE_ATTEMPTS):
+        for i in range(self.max_amount_of_create_attempts):
             print('add_domain № {}, attempt № {}'.format(domain_index, i))
             # send request to create vm
             try:
@@ -150,7 +158,7 @@ class Pool(db.Model):
             # Max possible amount of VMs which we can add to the pool
             max_possible_amount_to_add = self.total_size - vm_amount_in_pool
             # Real amount that we can add to the pool
-            real_amount_to_add = min(max_possible_amount_to_add, self.VM_STEP)
+            real_amount_to_add = min(max_possible_amount_to_add, self.vm_step)
             # add VMs.
             try:
                 # TODO: очень странная логика. Может есть смысл создавать как-то диапазоном на стороне ECP?

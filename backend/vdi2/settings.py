@@ -47,9 +47,9 @@ VEIL_WS_MAX_TIME_TO_WAIT = 15
 
 # Pool parameters
 # -----------------------------
-MIX_POOL_SIZE = 1
-MAX_POOL_SIZE = 200
-MAX_VM_AMOUNT_IN_POOL = 1000
+# MIX_POOL_SIZE = 1
+# MAX_POOL_SIZE = 200
+# MAX_VM_AMOUNT_IN_POOL = 1000
 
 # Others
 # -----------------------------
