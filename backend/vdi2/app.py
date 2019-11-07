@@ -17,6 +17,8 @@ from vm.schema import vm_schema
 
 from resources_monitoring.resources_monitor_manager import resources_monitor_manager
 
+from pool.schema import pool_schema
+
 
 # if __name__ == '__main__':
 
@@ -25,6 +27,7 @@ handlers = [
     (r'/resources', TornadoGraphQLHandler, dict(graphiql=True, schema=resources_schema)),
     (r'/users', TornadoGraphQLHandler, dict(graphiql=True, schema=user_schema)),
     (r'/vms', TornadoGraphQLHandler, dict(graphiql=True, schema=vm_schema)),
+    (r'/pools', TornadoGraphQLHandler, dict(graphiql=True, schema=pool_schema)),
     # (r'/graphql', TornadoGraphQLHandler, dict(graphiql=True, schema=schema)),
     # (r'/graphql/batch', TornadoGraphQLHandler, dict(graphiql=True, schema=schema, batch=True)),
     # (r'/graphql/graphiql', TornadoGraphQLHandler, dict(graphiql=True, schema=schema))
