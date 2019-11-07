@@ -16,6 +16,16 @@ class ResourcesHttpClient(VeilHttpClient):
 
     methods = ['POST', 'GET']
 
+    def __init__(self, controller_ip: str):
+        super().__init__(controller_ip)
+
+    @classmethod
+    async def create(cls, controller_ip: str):
+        """Because of we need async execute db query"""
+        self = cls(controller_ip)
+        self.controller_uid = await Controller.get_controller_id_by_ip(controller_ip)
+        return self
+
     @cached_property
     def based_url(self):
         return 'http://{}/api/'.format(self.controller_ip)
@@ -26,25 +36,8 @@ class ResourcesHttpClient(VeilHttpClient):
 
     async def fetch_resource(self, resource_category: str, resource_id: str):
         """Get veil resource data"""
-        # use provided controller
-        # if controller_ip:
-        #     self.controller_ip = controller_ip
-        #     url = 'http://{}/api/{}/{}/'.format(controller_ip, resource_category, resource_id)
-        #     return await self.fetch_with_response(url=url, method='GET')
-        # elif self.controller_ip:
         url = self.based_url + '{}/{}/'.format(resource_category, resource_id)
         return await self.fetch_with_response(url=url, method='GET')
-        # # determine controller
-        # else:
-        #     connected_controllers = await self.discover_controllers(return_broken=False)
-        #     for controller in connected_controllers:
-        #         try:
-        #             resource_data = await self.fetch_resource(resource_category, resource_id, controller['address'])
-        #             return {'resource_data': resource_data,
-        #                     'controller_address': controller['address']}
-        #         except (HttpError, OSError):
-        #             continue
-        #     raise SimpleError('Не удалось определить ip контроллера по id ресурса')
 
     async def fetch_node(self, node_id: str):
         return await self.fetch_resource('nodes', node_id)

@@ -51,16 +51,14 @@ class ResourcesMonitor(AbstractMonitor):
         self._ws_connection = None
         self._running_flag = True
         self._controller_ip = None
-        self._controller_uid = None
         self._is_online = False
 
         self._controller_online_task = None
         self._resources_monitor_task = None
 
     # PUBLIC METHODS
-    async def start(self, controller_ip):
+    def start(self, controller_ip):
         self._controller_ip = controller_ip
-        self._controller_uid = await Controller.get_controller_id_by_ip(controller_ip)
         self._running_flag = True
         # controller check
         self._controller_online_task = ioloop.IOLoop.current().add_callback(self._controller_online_checking)
@@ -83,8 +81,8 @@ class ResourcesMonitor(AbstractMonitor):
         Check if controller online
         :return:
         """
-        resources_http_client = ResourcesHttpClient(self._controller_ip)
-        #print('_controller_online_checking')
+        resources_http_client = await ResourcesHttpClient.create(self._controller_ip)
+
         response_dict = {'ip': self._controller_ip, 'msg_type': 'data', 'event': 'UPDATED',
                          'resource': CONTROLLERS_SUBSCRIPTION}
         while self._running_flag:
@@ -132,9 +130,10 @@ class ResourcesMonitor(AbstractMonitor):
             await asyncio.sleep(RECONNECT_TIMEOUT)
 
     async def _connect(self):
+        controller_uid = await Controller.get_controller_id_by_ip(self._controller_ip)
         # get token
         try:
-            token = await Controller.get_token(self._controller_uid)
+            token = await Controller.get_token(controller_uid)
             if not token:
                 controller_client = await VeilHttpClient.create(self._controller_ip)
                 token = await controller_client.login()
