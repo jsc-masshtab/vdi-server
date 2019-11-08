@@ -2,9 +2,10 @@
 import uuid
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy import Enum as AlchemyEnum
+from sqlalchemy.orm import backref, relationship
 
 from settings import VEIL_WS_MAX_TIME_TO_WAIT
-from database import db
+from database import db, Status
 from controller.models import Controller
 from vm.models import Vm
 from common.veil_errors import VmCreationError, BadRequest
@@ -12,36 +13,17 @@ from common.veil_errors import VmCreationError, BadRequest
 from resources_monitoring.handlers import WaiterSubscriptionObserver
 from resources_monitoring.resources_monitor_manager import resources_monitor_manager
 
-from enum import Enum
-
-
-class DesktopPoolType(Enum):
-    AUTOMATED = 0
-    STATIC = 1
-
 
 class Pool(db.Model):
-    # MIN_POOL_SIZE = 1
-    # MAX_POOL_SIZE = 200  # TODO: move to fields
-
-    # MAX_VM_AMOUNT_IN_POOL = 1000  # TODO: move to fields
-    # VM_STEP = 5   # TODO: move to fields
-    # MAX_AMOUNT_OF_CREATE_ATTEMPTS = 2  # TODO: move to fields
-
     __tablename__ = 'pool'
+
     id = db.Column(UUID(), primary_key=True, default=uuid.uuid4)
     verbose_name = db.Column(db.Unicode(length=128), nullable=False)
-    status = db.Column(db.Unicode(length=128), nullable=False)
-    controller = db.Column(UUID(as_uuid=True), db.ForeignKey('controller.id'))
-    desktop_pool_type = db.Column(AlchemyEnum(DesktopPoolType), nullable=False)
+    cluster_uid = db.Column(UUID(), nullable=False)
+    node_uid = db.Column(UUID(), nullable=False)
+    status = db.Column(AlchemyEnum(Status), nullable=False)
+    controller = db.Column(UUID(), db.ForeignKey('controller.id'), nullable=False)
 
-    deleted = db.Column(db.Boolean())
-    dynamic_traits = db.Column(db.Integer(), nullable=True)  # remove it
-
-    datapool_id = db.Column(UUID(), nullable=True)
-    cluster_id = db.Column(UUID(), nullable=True)
-    node_id = db.Column(UUID(), nullable=True)
-    template_id = db.Column(UUID(), nullable=True)
 
     # Pool size settings
     min_size = db.Column(db.Integer(), nullable=False, default=1)
@@ -214,6 +196,42 @@ class Pool(db.Model):
     @staticmethod
     async def get_pool_data(pool_id):
         return await Pool.select().where(Pool.id == pool_id).gino.all()
+
+
+class StaticPool(db.Model):
+    __tablename__ = 'static_pool'
+    pool_id = db.Column(UUID(), db.ForeignKey('pool.id'))
+    pool = relationship("Pool", backref=backref("automated_pool", uselist=False))
+
+
+class AutomatedPool(db.Model):
+    __tablename__ = 'automated_pool'
+
+    pool_id = db.Column(UUID(), db.ForeignKey('pool.id'))
+    pool = relationship("Pool", backref=backref("automated_pool", uselist=False))
+
+    datapool_uid = db.Column(UUID(), nullable=False)
+    template_uid = db.Column(UUID(), nullable=False)
+
+    # Pool size settings
+    min_size = db.Column(db.Integer(), nullable=False, default=1)
+    max_size = db.Column(db.Integer(), nullable=False, default=200)
+    max_vm_amount = db.Column(db.Integer(), nullable=False, default=1000)
+    increase_step = db.Column(db.Integer(), nullable=False, default=3)
+    max_amount_of_create_attempts = db.Column(db.Integer(), nullable=False, default=2)
+
+    initial_size = db.Column(db.Integer(), nullable=False, default=1)
+    # желаемое минимальное количествиюво подогретых машин (добавленных в пул, но не имеющих пользоватля)
+    reserve_size = db.Column(db.Integer(), nullable=False, default=0)
+    total_size = db.Column(db.Integer(), nullable=False, default=1)
+    vm_name_template = db.Column(db.Unicode(length=100), nullable=True)
+#
+#     @classmethod
+#     async def create(cls, *args, **kwargs):
+#         pool = await Pool.create()
+#         obj = await super().create()
+#         print(obj)
+#         return obj
 
 
 class PoolUsers(db.Model):
