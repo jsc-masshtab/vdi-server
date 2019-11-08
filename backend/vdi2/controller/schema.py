@@ -9,7 +9,7 @@ from controller.models import Controller
 
 
 class ControllerType(graphene.ObjectType):
-    id = graphene.String()
+    id = graphene.UUID()
     verbose_name = graphene.String()
     address = graphene.String()
     description = graphene.String()
@@ -17,7 +17,7 @@ class ControllerType(graphene.ObjectType):
     version = graphene.String()
 
     username = graphene.String()
-    password = graphene.String()
+    password = graphene.String()  # not displayed field
     ldap_connection = graphene.Boolean()
 
     token = graphene.String()  # not displayed field
@@ -27,6 +27,9 @@ class ControllerType(graphene.ObjectType):
         # TODO: get status from veil
         return self.status if self.status else 'unknown'
 
+    async def resolve_password(self, _info):
+        return '*****'  # dummy value for not displayed field
+
     async def resolve_token(self, _info):
         return '*****'  # dummy value for not displayed field
 
@@ -34,7 +37,7 @@ class ControllerType(graphene.ObjectType):
         return datetime.datetime.now()  # dummy value for not displayed field
 
 
-class AddController(graphene.Mutation):
+class AddControllerMutation(graphene.Mutation):
     class Arguments:
         verbose_name = graphene.String(required=True)
         address = graphene.String(required=True)
@@ -54,8 +57,7 @@ class AddController(graphene.Mutation):
         controller_client = ControllerClient(address)
         auth_info = dict(username=username, password=password, ldap=ldap_connection)
         token, expires_on = await controller_client.auth(auth_info=auth_info)
-
-        version = controller_client.fetch_version()
+        version = await controller_client.fetch_version()
 
         controller = await Controller.create(
             verbose_name=verbose_name,
@@ -70,12 +72,12 @@ class AddController(graphene.Mutation):
         )
 
         resources_monitor_manager.add_controller(address)
-        return AddController(ok=True, controller=ControllerType(**controller.__values__))
+        return AddControllerMutation(ok=True, controller=ControllerType(**controller.__values__))
 
 
-class UpdateController(graphene.Mutation):
+class UpdateControllerMutation(graphene.Mutation):
     class Arguments:
-        id = graphene.String(required=True)
+        id = graphene.UUID(required=True)
         verbose_name = graphene.String(required=True)
         address = graphene.String(required=True)
         description = graphene.String()
@@ -87,8 +89,10 @@ class UpdateController(graphene.Mutation):
     ok = graphene.Boolean()
     controller = graphene.Field(lambda: ControllerType)
 
-    async def mutate(self, _info, id, verbose_name, address, username, password, ldap_connection,
-                     description=None):
+    async def mutate(self, _info, verbose_name, address, username,
+                     password, ldap_connection, description=None):
+        # TODO: update only mutated fields
+
         controller = await Controller.query.where(Controller.id == id).gino.first()
         if not controller:
             raise GraphQLError('No such controller.')
@@ -97,8 +101,7 @@ class UpdateController(graphene.Mutation):
         controller_client = ControllerClient(address)
         auth_info = dict(username=username, password=password, ldap=ldap_connection)
         token, expires_on = await controller_client.auth(auth_info=auth_info)
-
-        version = controller_client.fetch_version()
+        version = await controller_client.fetch_version()
 
         await controller.update(
             verbose_name=verbose_name,
@@ -113,14 +116,14 @@ class UpdateController(graphene.Mutation):
         ).apply()
 
         # TODO: change to update & restart
-        resources_monitor_manager.remove_controller(address)
-        resources_monitor_manager.add_controller(address)
-        return UpdateController(ok=True, controller=ControllerType(**controller.__values__))
+        await resources_monitor_manager.remove_controller(address)
+        await resources_monitor_manager.add_controller(address)
+        return UpdateControllerMutation(ok=True, controller=ControllerType(**controller.__values__))
 
 
-class RemoveController(graphene.Mutation):
+class RemoveControllerMutation(graphene.Mutation):
     class Arguments:
-        id = graphene.String()
+        id = graphene.UUID(required=True)
 
     ok = graphene.Boolean()
 
@@ -134,7 +137,27 @@ class RemoveController(graphene.Mutation):
         print(status)
 
         resources_monitor_manager.remove_controller(controller.address)
-        return RemoveController(ok=True)
+        return RemoveControllerMutation(ok=True)
+
+
+# Only for dev
+class RemoveAllControllersMutation(graphene.Mutation):
+    class Arguments:
+        ok = graphene.Boolean()
+
+    ok = graphene.Boolean()
+
+    async def mutate(self, _info):
+        controllers = await Controller.query.gino.all()
+        for controller in controllers:
+            await controller.delete()
+
+            # # TODO: remove connected pools
+            # status = await Controller.delete.where(Controller.id == id).gino.status()
+            # print(status)
+
+            resources_monitor_manager.remove_controller(controller.address)
+        return RemoveAllControllersMutation(ok=True)
 
 
 class ControllerQuery(graphene.ObjectType):
@@ -157,9 +180,10 @@ class ControllerQuery(graphene.ObjectType):
 
 
 class ControllerMutations(graphene.ObjectType):
-    addController = AddController.Field()
-    updateController = UpdateController.Field()
-    removeController = RemoveController.Field()
+    addController = AddControllerMutation.Field()
+    updateController = UpdateControllerMutation.Field()
+    removeController = RemoveControllerMutation.Field()
+    removeAllControllers = RemoveAllControllersMutation.Field()
 
 
 controller_schema = graphene.Schema(query=ControllerQuery,

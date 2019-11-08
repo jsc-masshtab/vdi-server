@@ -26,14 +26,16 @@ class VeilHttpClient:
     """Abstract class for Veil ECP connection. Simply non-blocking HTTP(s) fetcher from remote Controller.
        response_types always json"""
 
-    def __init__(self, controller_ip: str):
+    def __init__(self, controller_ip: str, token: str = None, expires_on: str = None):
         """Use create instead of init."""
         self._client = AsyncHTTPClient()
         self.controller_ip = controller_ip
+        self.token = token
+        self.expires_on = expires_on
         self.controller_uid = None
 
     @cached_property
-    def based_url(self):
+    def api_url(self):
         return 'http://{}/api/'.format(self.controller_ip)
 
     @classmethod
@@ -44,19 +46,10 @@ class VeilHttpClient:
         return self
 
     @property
-    async def token(self):
-        token = await Controller.get_token(self.controller_uid)
-        if not token:
-            token = await self.login()
-        return token
-
-    # @cached_property
-    @property
     async def headers(self):
         """controller ip-address must be set in the descendant class."""
-        token = await self.token
         headers = {
-            'Authorization': 'jwt {}'.format(token),
+            'Authorization': 'jwt {}'.format(self.token),
             'Content-Type': 'application/json',
         }
         return headers
@@ -76,11 +69,11 @@ class VeilHttpClient:
         headers = {'Content-Type': 'application/json'}
         url = 'http://{}/auth/'.format(self.controller_ip)
         response = await self.fetch_with_response(url=url, method=method, headers=headers, body=auth_info)
-        token = response.get('token')
-        expires_on = datetime.strptime(response.get('expires_on'), "%d.%m.%Y %H:%M:%S UTC")
-        if not token or not expires_on:
+        self.token = response.get('token')
+        self.expires_on = datetime.strptime(response.get('expires_on'), "%d.%m.%Y %H:%M:%S UTC")
+        if not self.token or not self.expires_on:
             raise AssertionError('Auth failed.')
-        return token, expires_on
+        return self.token, self.expires_on
 
     @prepare_body
     async def fetch(self, url: str, method: str, headers: dict = None, body: str = ''):
@@ -134,4 +127,3 @@ class VeilHttpClient:
         response = await self.fetch(url=url, method=method, headers=headers, body=body)
         response_body = self.get_response_body(response)
         return response_body
-
