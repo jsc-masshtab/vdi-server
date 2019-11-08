@@ -2,7 +2,6 @@
 import uuid
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy import Enum as AlchemyEnum
-from sqlalchemy.orm import backref, relationship
 
 from settings import VEIL_WS_MAX_TIME_TO_WAIT
 from database import db, Status
@@ -24,24 +23,22 @@ class Pool(db.Model):
     status = db.Column(AlchemyEnum(Status), nullable=False)
     controller = db.Column(UUID(), db.ForeignKey('controller.id'), nullable=False)
 
+    @classmethod
+    async def create(cls, verbose_name, cluster_uid, node_uid, controller_ip):
+        controller_uid = await Controller.get_controller_id_by_ip(controller_ip)
+        if not controller_uid:
+            raise AssertionError('Controller {} not found.'.format(controller_ip))
 
-    # Pool size settings
-    min_size = db.Column(db.Integer(), nullable=False, default=1)
-    max_size = db.Column(db.Integer(), nullable=False, default=200)
-    max_vm_amount = db.Column(db.Integer(), nullable=False, default=1000)
-    increase_step = db.Column(db.Integer(), nullable=False, default=3)
-    max_amount_of_create_attempts = db.Column(db.Integer(), nullable=False, default=2)
+        pool = await super().create(verbose_name=verbose_name, cluster_uid=cluster_uid, node_uid=node_uid,
+                                    controller=controller_uid,
+                                    status=Status.ACTIVE)
+        return pool
 
-    initial_size = db.Column(db.Integer(), nullable=True)
-    # желаемое минимальное количествиюво подогретых машин (добавленных в пул, но не имеющих пользоватля)
-    reserve_size = db.Column(db.Integer(), nullable=True)
-    total_size = db.Column(db.Integer(), nullable=False, default=1)
-    vm_name_template = db.Column(db.Unicode(length=100), nullable=True)
-
-    @staticmethod
-    async def get_pool(uid):
-        """Return pool object if exist"""
-        return await Pool.get(uid)
+    # @staticmethod
+    # async def get_pool(uid):
+    #     """Return pool object if exist"""
+    #     # TODO: useless
+    #     return await Pool.get(uid)
 
     async def get_vm_amount(self, only_free=False):
         """ == None because alchemy can't work with is None"""
@@ -200,16 +197,13 @@ class Pool(db.Model):
 
 class StaticPool(db.Model):
     __tablename__ = 'static_pool'
-    pool_id = db.Column(UUID(), db.ForeignKey('pool.id'))
-    pool = relationship("Pool", backref=backref("automated_pool", uselist=False))
+    pool_uid = db.Column(UUID(), db.ForeignKey('pool.id'), primary_key=True)
 
 
 class AutomatedPool(db.Model):
     __tablename__ = 'automated_pool'
 
-    pool_id = db.Column(UUID(), db.ForeignKey('pool.id'))
-    pool = relationship("Pool", backref=backref("automated_pool", uselist=False))
-
+    pool_uid = db.Column(UUID(), db.ForeignKey('pool.id'), primary_key=True)
     datapool_uid = db.Column(UUID(), nullable=False)
     template_uid = db.Column(UUID(), nullable=False)
 
@@ -225,13 +219,32 @@ class AutomatedPool(db.Model):
     reserve_size = db.Column(db.Integer(), nullable=False, default=0)
     total_size = db.Column(db.Integer(), nullable=False, default=1)
     vm_name_template = db.Column(db.Unicode(length=100), nullable=True)
-#
-#     @classmethod
-#     async def create(cls, *args, **kwargs):
-#         pool = await Pool.create()
-#         obj = await super().create()
-#         print(obj)
-#         return obj
+
+    @classmethod
+    async def create(cls, verbose_name, controller_ip, cluster_uid, node_uid,
+                     template_uid, datapool_uid, min_size, max_size, max_vm_amount, increase_step,
+                     max_amount_of_create_attempts, initial_size, reserve_size, total_size, vm_name_template):
+        """Nested transactions are atomic."""
+
+        async with db.transaction() as tx:
+            # Create pool first
+            pool = await Pool.create(verbose_name=verbose_name,
+                                     cluster_uid=cluster_uid,
+                                     node_uid=node_uid,
+                                     controller_ip=controller_ip)
+            # Create automated pool
+            return await super().create(pool_uid=pool.id,
+                                        template_uid=template_uid,
+                                        datapool_uid=datapool_uid,
+                                        min_size=min_size,
+                                        max_size=max_size,
+                                        max_vm_amount=max_vm_amount,
+                                        increase_step=increase_step,
+                                        max_amount_of_create_attempts=max_amount_of_create_attempts,
+                                        initial_size=initial_size,
+                                        reserve_size=reserve_size,
+                                        total_size=total_size,
+                                        vm_name_template=vm_name_template)
 
 
 class PoolUsers(db.Model):

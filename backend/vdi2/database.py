@@ -20,9 +20,9 @@ class Status(Enum):
     op.execute("CREATE TYPE status AS ENUM ('CREATING', 'ACTIVE', 'FAILED', 'DELETING', 'SERVICE', 'PARTIAL');")
     """
 
-    creating = 'CREATING'
-    active = 'ACTIVE'
-    failed = 'FAILED'
-    deleting = 'DELETING'
-    service = 'SERVICE'
-    partial = 'PARTIAL'
+    CREATING = 'CREATING'
+    ACTIVE = 'ACTIVE'
+    FAILED = 'FAILED'
+    DELETING = 'DELETING'
+    SERVICE = 'SERVICE'
+    PARTIAL = 'PARTIAL'
