@@ -18,6 +18,7 @@ from vm.veil_client import VmHttpClient
 
 from controller.schema import ControllerType
 from controller.models import Controller
+from controller_resources.veil_client import ResourcesHttpClient
 
 from pool.models import DesktopPoolType, Pool, PoolUsers
 
@@ -97,7 +98,7 @@ class PoolType(graphene.ObjectType):
 
     id = graphene.String()
     template_id = graphene.String()
-    desktop_pool_type = DesktopPoolTypeGraphene()
+    desktop_pool_type = graphene.Field(DesktopPoolTypeGraphene)
     name = graphene.String()
     settings = graphene.Field(PoolSettings)
     users = graphene.List(UserType, entitled=graphene.Boolean())
@@ -105,7 +106,7 @@ class PoolType(graphene.ObjectType):
     pool_resources_names = graphene.Field(PoolResourcesNames)
     status = graphene.String()
 
-    controller = ControllerType()
+    controller = graphene.Field(ControllerType)
 
     #sql_fields = ['id', 'template_id', 'name', 'controller_ip', 'desktop_pool_type']
 
@@ -118,12 +119,11 @@ class PoolType(graphene.ObjectType):
         # users who are entitled to pool
         if entitled:
             users_data = await User.join(PoolUsers, User.id == PoolUsers.user_id).select().where(
-                PoolUsers.pool_id == self.id).gino.all()
+                 PoolUsers.pool_id == self.id).gino.all()
         # users who are NOT entitled to pool
         else:
-            # todo: not sure...
-            users_data = await User.outerjoin(PoolUsers, User.id == PoolUsers.user_id).select().where(
-                 PoolUsers.pool_id != self.id).gino.all()
+            subquery = PoolUsers.query(PoolUsers.user_id).where(PoolUsers.pool_id == self.id)
+            users_data = User.filter(User.id.notin_(subquery)).gino.all()
         print('users_data', users_data)
         # todo: it will not work until model and grapnene feilds are syncronized
         uset_type_list = [
@@ -195,22 +195,10 @@ class PoolType(graphene.ObjectType):
 
 class AddStaticPool(graphene.Mutation):
     class Arguments:
-        name = graphene.String(required=True)
-        vm_ids_list = graphene.List(graphene.String)
-        vm_ids = graphene.List(graphene.ID)
-
-        #deprecated
-        datapool_id = graphene.String()
-        cluster_id = graphene.String()
-        node_id = graphene.String()
+        verbose_name = graphene.String(required=True)
+        vm_ids = graphene.List(graphene.ID, required=True)
 
     Output = PoolType
-
-    # @classmethod
-    # async def add_vms_to_pool(cls, vm_ids, pool_id):
-    #     rows = [{'id': vm_id, 'pool_id': pool_id}
-    #             for vm_id in vm_ids]
-    #     await bulk_insert('vm', rows)
 
     @staticmethod
     async def fetch_veil_vm_data_list(vm_ids):
@@ -224,7 +212,7 @@ class AddStaticPool(graphene.Mutation):
                 # add data about controller address
                 for vm_veil_data in single_vm_veil_data_list:
                     vm_veil_data['controller_address'] = controller_address
-                veil_vm_data_list.append(single_vm_veil_data_list)
+                veil_vm_data_list.extend(single_vm_veil_data_list)
             except (HttpError, OSError):
                 pass
 
@@ -250,51 +238,55 @@ class AddStaticPool(graphene.Mutation):
         # get vm info
         veil_vm_data_list = await AddStaticPool.fetch_veil_vm_data_list(vm_ids)
 
-        # Check that all vms are on the same node
+        # Check that all vms are on the same node (Условие поставленное начальством, насколько я помню)
         first_vm_data = veil_vm_data_list[0]
         if not all(x == first_vm_data for x in veil_vm_data_list):
             raise SimpleError("Все ВМ должны находится на одном сервере")
 
-        # All VMs are on the same node and cluster so we can take this date from the first item
+        # All VMs are on the same node and cluster so we can take this data from the first item
         controller_ip = first_vm_data['controller_address']
-        cluster_id = first_vm_data['cluster']
         node_id = first_vm_data['node']['id']
+        # determine cluster
+        resources_http_client = await ResourcesHttpClient.create(controller_ip)
+        node_data = await resources_http_client.fetch_node(node_id)
+        cluster_id = node_data['cluster']
 
         # remote access
-        async def enable_remote_access(controller_adress, vm_id):
-            vm_http_client = await VmHttpClient.create(controller_adress, vm_id)
+        async def enable_remote_access(controller_address, vm_id):
+            print('enable_remote_access')
+            vm_http_client = await VmHttpClient.create(controller_address, vm_id)
             await vm_http_client.enable_remote_access()
 
         async_tasks = [
-            enable_remote_access(controller_ip=controller_ip, domain_id=vm_id)
+            enable_remote_access(controller_address=controller_ip, vm_id=vm_id)
             for vm_id in vm_ids
         ]
-        await tornado.gen.multi(async_tasks) # todo: not tested yet
+        await tornado.gen.multi(async_tasks)  # todo: not tested yet
 
-        # todo: запись в таблицу пулов и вм должна быть одной транзакцией??
+        # todo: запись в таблицы пулов и вм должна быть одной транзакцией??
         # add pool to db
         controller_uid = await Controller.get_controller_id_by_ip(controller_ip)
 
-        pool_id = await Pool.create(
+        pool = await Pool.create(
             verbose_name=verbose_name,
-            controller_uid=controller_uid,
-            desktop_pool_type=DesktopPoolType.STATIC.name,
+            status='Ok',
+            controller=controller_uid,
+            desktop_pool_type=DesktopPoolTypeGraphene.MANUAL.name,
             cluster_id=cluster_id,
             node_id=node_id
-        ).returning(Pool.id)
+        )
 
         # add vms to the database.
         for vm_id in vm_ids:
-            await Vm.create(id=vm_id, pool_id=pool_id)
+            await Vm.create(id=vm_id, pool_id=pool.id)
 
         # response
         vms = [
-            VmType(id=id) for id in vm_ids
+            VmType(id=vm_id) for vm_id in vm_ids
         ]
-        return PoolType(id=pool_id, name=verbose_name, vms=vms,
-                        controller=ControllerType(adress=controller_ip),
-                        desktop_pool_type=DesktopPoolType.STATIC)
-
+        return PoolType(id=pool.id, name=verbose_name, vms=vms,
+                        controller=ControllerType(address=controller_ip),
+                        desktop_pool_type=DesktopPoolTypeGraphene.MANUAL)
 
 
 class PoolQuery(graphene.ObjectType):
@@ -306,12 +298,12 @@ class PoolQuery(graphene.ObjectType):
 
     async def resolve_pool(self, _info, id, controller_address):
         pool_type = PoolType(id=id)
-        pool_type.controller=ControllerType(address=controller_address)
+        pool_type.controller = ControllerType(address=controller_address)
         return pool_type
 
 
 class PoolMutations(graphene.ObjectType):
-    pass
+    addStaticPool = AddStaticPool.Field()
 
 
 pool_schema = graphene.Schema(query=PoolQuery,
