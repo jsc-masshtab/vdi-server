@@ -72,6 +72,19 @@ def validate_pool_name(pool_name):
         raise SimpleError('Имя пула должно содержать только буквы и цифры')
 
 
+async def enable_remote_access(controller_address, vm_id):
+    vm_http_client = await VmHttpClient.create(controller_address, vm_id)
+    await vm_http_client.enable_remote_access()
+
+
+async def enable_remote_accesses(controller_address, vm_ids):
+    async_tasks = [
+        enable_remote_access(controller_address=controller_address, vm_id=vm_id)
+        for vm_id in vm_ids
+    ]
+    await tornado.gen.multi(async_tasks)
+
+
 class PoolResourcesNames(graphene.ObjectType):
     cluster_name = graphene.String()
     node_name = graphene.String()
@@ -204,7 +217,7 @@ class AddStaticPool(graphene.Mutation):
     async def fetch_veil_vm_data_list(vm_ids):
         controller_adresses = await Controller.get_controllers_addresses()
         # create list of all vms on controllers
-        veil_vm_data_list = []
+        all_vm_veil_data_list = []
         for controller_address in controller_adresses:
             vm_http_client = await VmHttpClient.create(controller_address, '')
             try:
@@ -212,7 +225,7 @@ class AddStaticPool(graphene.Mutation):
                 # add data about controller address
                 for vm_veil_data in single_vm_veil_data_list:
                     vm_veil_data['controller_address'] = controller_address
-                veil_vm_data_list.extend(single_vm_veil_data_list)
+                all_vm_veil_data_list.extend(single_vm_veil_data_list)
             except (HttpError, OSError):
                 pass
 
@@ -220,7 +233,7 @@ class AddStaticPool(graphene.Mutation):
         vm_veil_data_list = []
         for vm_id in vm_ids:
             try:
-                data = next(veil_vm_data for veil_vm_data in veil_vm_data_list if veil_vm_data['id'] == vm_id)
+                data = next(veil_vm_data for veil_vm_data in all_vm_veil_data_list if veil_vm_data['id'] == vm_id)
                 vm_veil_data_list.append(data)
             except StopIteration:
                 raise SimpleError('ВМ с id {} не найдена ни на одном из известных контроллеров'.format(vm_id))
@@ -252,31 +265,22 @@ class AddStaticPool(graphene.Mutation):
         cluster_id = node_data['cluster']
 
         # remote access
-        async def enable_remote_access(controller_address, vm_id):
-            print('enable_remote_access')
-            vm_http_client = await VmHttpClient.create(controller_address, vm_id)
-            await vm_http_client.enable_remote_access()
-
-        async_tasks = [
-            enable_remote_access(controller_address=controller_ip, vm_id=vm_id)
-            for vm_id in vm_ids
-        ]
-        await tornado.gen.multi(async_tasks)  # todo: not tested yet
+        await enable_remote_accesses(controller_ip, vm_ids)
 
         # todo: запись в таблицы пулов и вм должна быть одной транзакцией??
         # add pool to db
         controller_uid = await Controller.get_controller_id_by_ip(controller_ip)
-
+        # todo: Запрос к модели статич. пула
         pool = await Pool.create(
             verbose_name=verbose_name,
-            status='Ok',
+            status='ACTIVE',
             controller=controller_uid,
             desktop_pool_type=DesktopPoolTypeGraphene.MANUAL.name,
             cluster_id=cluster_id,
             node_id=node_id
         )
 
-        # add vms to the database.
+        # add vms to db
         for vm_id in vm_ids:
             await Vm.create(id=vm_id, pool_id=pool.id)
 
@@ -287,6 +291,82 @@ class AddStaticPool(graphene.Mutation):
         return PoolType(id=pool.id, name=verbose_name, vms=vms,
                         controller=ControllerType(address=controller_ip),
                         desktop_pool_type=DesktopPoolTypeGraphene.MANUAL)
+
+
+class AddVmsToStaticPool(graphene.Mutation):
+    class Arguments:
+        pool_id = graphene.ID(required=True)
+        vm_ids = graphene.List(graphene.ID, required=True)
+
+    ok = graphene.Boolean()
+
+    async def mutate(self, _info, pool_id, vm_ids):
+        if not vm_ids:
+            raise SimpleError("Список ВМ не должен быть пустым")
+
+        # todo: Запрос к модели статич. пула
+        pool_data = await Pool.select('controller', 'node_id').where(Pool.id == pool_id).gino.all()
+        controller_uid, node_id = pool_data
+        controller_address = Controller.select('address').where(Controller.id == controller_uid).gino.scalar()
+
+        # vm checks
+        vm_http_client = await VmHttpClient.create(controller_address, '')
+        all_vms_on_node = await vm_http_client.fetch_vms_list(node_id=node_id)
+
+        all_vm_ids_on_node = [vmachine['id'] for vmachine in all_vms_on_node]
+        used_vm_ids = await Vm.get_all_vms_ids()  # get list of vms which are already in pools
+
+        for vm_id in vm_ids:
+            # check if vm exists and it is on the correct node
+            if vm_id not in all_vm_ids_on_node:
+                raise SimpleError('ВМ {} находится на сервере отличном от сервера пула'.format(vm_id))
+            # check if vm is free (not in any pool)
+            if vm_id in used_vm_ids:
+                raise SimpleError('ВМ {} уже находится в одном из пулов'.format(vm_id))
+
+        # remote access
+        await enable_remote_accesses(controller_address, vm_ids)
+
+        # add vms to db
+        for vm_id in vm_ids:
+            await Vm.create(id=vm_id, pool_id=pool_id)
+
+        return {
+            'ok': True
+        }
+
+
+class RemoveVmsFromStaticPool(graphene.Mutation):
+    class Arguments:
+        pool_id = graphene.ID(required=True)
+        vm_ids = graphene.List(graphene.ID, required=True)
+
+    ok = graphene.Boolean()
+
+    async def mutate(self, _info, pool_id, vm_ids):
+        if not vm_ids:
+            raise SimpleError("Список ВМ не должен быть пустым")
+        # pool checks todo: Запрос к модели статич. пула
+        pool_object = await Pool.get_pool(pool_id)
+        if not pool_object:
+            raise SimpleError('Пул {} не существует'.format(pool_id))
+
+        # vms check
+        # get list of vms ids which are in pool_id
+        vms_ids_in_pool = await Vm.get_vms_ids_in_pool(pool_id)
+        print('vms_ids_in_pool', vms_ids_in_pool)
+
+        # check if given vm_ids in vms_ids_in_pool
+        for vm_id in vm_ids:
+            if vm_id not in vms_ids_in_pool:
+                raise SimpleError('ВМ не принадлежит заданному пулу'.format(vm_id))
+
+        # remove vms
+        await Vm.remove_vms(vm_ids)
+
+        return {
+            'ok': True
+        }
 
 
 class PoolQuery(graphene.ObjectType):
@@ -304,6 +384,8 @@ class PoolQuery(graphene.ObjectType):
 
 class PoolMutations(graphene.ObjectType):
     addStaticPool = AddStaticPool.Field()
+    addVmsToStaticPool = AddVmsToStaticPool.Field()
+    removeVmsFromStaticPool = RemoveVmsFromStaticPool.Field()
 
 
 pool_schema = graphene.Schema(query=PoolQuery,
