@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
 import graphene
 
+from database import Status
 from common.veil_errors import SimpleError
 from common.utils import get_selections
 
-from settings import MIX_POOL_SIZE, MAX_POOL_SIZE, MAX_VM_AMOUNT_IN_POOL, DEFAULT_NAME
+# from settings import MIX_POOL_SIZE, MAX_POOL_SIZE, MAX_VM_AMOUNT_IN_POOL, DEFAULT_NAME
 
 from auth.schema import UserType
 from auth.models import User
@@ -14,12 +15,17 @@ from vm.models import Vm
 from vm.veil_client import VmHttpClient
 
 from controller.schema import ControllerType
+from controller.models import Controller
 
-from pool.models import DesktopPoolType, Pool, PoolUsers
+# from pool.models import DesktopPoolType, AutomatedPool, PoolUsers
+from pool.models import AutomatedPool
 
 
-DesktopPoolTypeGraphene = graphene.Enum.from_enum(DesktopPoolType)
+class DesktopPoolTypeGraphene(graphene.Enum):
+    AUTOMATED = 0
+    STATIC = 1
 
+StatusGraphene = graphene.Enum.from_enum(Status)
 
 # todo: remove raw sql
 async def check_and_return_pool_data(pool_id, pool_type=None):
@@ -76,7 +82,7 @@ class PoolSettingsFields(graphene.AbstractType):
     reserve_size = graphene.Int()
     total_size = graphene.Int()
     vm_name_template = graphene.String()
-    desktop_pool_type = DesktopPoolTypeGraphene()
+    # desktop_pool_type = DesktopPoolTypeGraphene()
 
 
 class PoolSettings(graphene.ObjectType, PoolSettingsFields):
@@ -85,17 +91,31 @@ class PoolSettings(graphene.ObjectType, PoolSettingsFields):
 
 class PoolType(graphene.ObjectType):
 
-    id = graphene.Int() # wrong type?
-    template_id = graphene.String()
+    id = graphene.UUID()
+    verbose_name = graphene.String()
+    status = StatusGraphene()
+
+    template_id = graphene.UUID()
+    cluster_id = graphene.UUID()
+    datapool_id = graphene.UUID()
+    node_id = graphene.UUID()
+
+    min_size = graphene.Int()
+    max_size = graphene.Int()
+    max_vm_amount = graphene.Int()
+    increase_step = graphene.Int()
+    max_amount_of_create_attempts = graphene.Int()
+
+    initial_size = graphene.Int()
+    reserve_size = graphene.Int()
+    total_size = graphene.Int()
+    vm_name_template = graphene.String()
     desktop_pool_type = DesktopPoolTypeGraphene()
-    name = graphene.String()
-    settings = graphene.Field(PoolSettings)
+
+    controller = ControllerType()
     users = graphene.List(UserType, entitled=graphene.Boolean())
     vms = graphene.List(VmType)
     pool_resources_names = graphene.Field(PoolResourcesNames)
-    status = graphene.String()
-
-    controller = ControllerType()
 
     #sql_fields = ['id', 'template_id', 'name', 'controller_ip', 'desktop_pool_type']
 
@@ -136,6 +156,7 @@ class PoolType(graphene.ObjectType):
         return vm_type_list
 
     async def resolve_desktop_pool_type(self, _info):
+        print('resolve')
         if not self.desktop_pool_type:
             self.desktop_pool_type = await Pool.get_desktop_type(self.id)
         return self.desktop_pool_type
@@ -194,8 +215,95 @@ class PoolQuery(graphene.ObjectType):
         pass
 
 
+class CreatePoolMutation(graphene.Mutation):
+    class Arguments:
+        verbose_name = graphene.String(required=True)
+        controller_ip = graphene.String(required=True)
+        cluster_uid = graphene.UUID(required=True)
+        template_uid = graphene.UUID(required=True)
+        datapool_uid = graphene.UUID(required=True)
+        node_uid = graphene.UUID(required=True)
+
+        min_size = graphene.Int()
+        max_size = graphene.Int()
+        max_vm_amount = graphene.Int()
+        increase_step = graphene.Int()
+        max_amount_of_create_attempts = graphene.Int()
+        initial_size = graphene.Int()
+        reserve_size = graphene.Int()
+        total_size = graphene.Int()
+        vm_name_template = graphene.String()
+
+    ok = graphene.Boolean()
+    pool = graphene.Field(lambda: PoolType)
+
+    #     @staticmethod
+    #     async def magic_checks(pool):
+    #         # magic checks from Vitalya. Nobody can understand this
+    #         checker = PoolValidator(pool)
+    #         data_sync = {}
+    #         data_async = {}
+    #         for k, v in pool.items():
+    #             if hasattr(checker, k):
+    #                 if inspect.iscoroutinefunction(getattr(checker, k)):
+    #                     data_async[k] = v
+    #                 else:
+    #                     data_sync[k] = v
+    #         for k, v in data_sync.items():
+    #             checker.validate_sync(k, v)
+    #         async_validators = [
+    #             checker.validate_async(k, v) for k, v in data_async.items()
+    #         ]
+    #         await wait_all(*async_validators)
+    #
+    #     @staticmethod
+    #     def validate_agruments(pool_args_dict):
+    #         PoolValidator.validate_pool_name(pool_args_dict['name'])
+    #         # Check vm_name_template if its not empty
+    #         vm_name_template = pool_args_dict['vm_name_template']
+    #         if vm_name_template and not validate_name(vm_name_template):
+    #             raise SimpleError('Шаблонное имя вм должно содержать только буквы и цифры')
+    #
+    #         # check sizes
+    #         initial_size = pool_args_dict['initial_size']
+    #         reserve_size = pool_args_dict['reserve_size']
+    #         total_size = pool_args_dict['total_size']
+    #         check_pool_initial_size(initial_size)
+    #         check_reserve_size(reserve_size)
+    #         check_total_size(total_size, initial_size)
+    #
+    #         if pool_args_dict['controller_ip'] is None:
+    #             raise SimpleError('Не указан ip контроллера')
+
+    async def mutate(self, _info, verbose_name, controller_ip, cluster_uid, template_uid, datapool_uid, node_uid,
+                     min_size=1, max_size=200, max_vm_amount=1000, increase_step=3, max_amount_of_create_attempts=2,
+                     initial_size=1, reserve_size=0, total_size=1, vm_name_template=None):
+        # TODO: add magic checks and validators
+        # TODO: в мониторе ресурсов нет происходит raise ошибки, если оно не создано
+        try:
+            pool = await AutomatedPool.create(verbose_name, controller_ip, cluster_uid, node_uid,
+                                              template_uid, datapool_uid,
+                                              min_size, max_size, max_vm_amount, increase_step,
+                                              max_amount_of_create_attempts, initial_size,
+                                              reserve_size, total_size, vm_name_template)
+
+            # validate arguments
+            await pool.add_initial_vms()  # TODO: cancelation?
+        except:
+            # TODO: set pool status to failed if not
+            pass
+        else:
+            await pool.activate()
+            ok = True
+
+        return CreatePoolMutation(pool=PoolType(desktop_pool_type=DesktopPoolTypeGraphene.AUTOMATED, id=pool.pool_uid),
+                                  ok=ok)
+
+
 class PoolMutations(graphene.ObjectType):
-    pass
+    addPool = CreatePoolMutation.Field()
+    # updateController = UpdateController.Field()
+    # removeController = RemoveController.Field()
 
 
 pool_schema = graphene.Schema(query=PoolQuery,

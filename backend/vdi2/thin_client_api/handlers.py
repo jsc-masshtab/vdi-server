@@ -110,7 +110,7 @@ class ActionOnVm(BaseHandler, ABC):
         if not vms:
             return await self.finish({'error': 'Нет вм с указанным pool_id'})
 
-        controller_ip = await Pool.get_controller(pool_id)
+        controller_ip = await Pool.get_controller_ip(pool_id)
         client = VmHttpClient(controller_ip=controller_ip, vm_id=vms)
         await client.send_action(action=vm_action, body=self.args)
         return await self.finish({'error': 'null'})

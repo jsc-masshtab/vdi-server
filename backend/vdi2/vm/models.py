@@ -11,7 +11,7 @@ class Vm(db.Model):
     __tablename__ = 'vm'
     id = db.Column(UUID(), primary_key=True, default=uuid.uuid4)
     template_id = db.Column(db.Unicode(length=100), nullable=True)
-    pool_id = db.Column(UUID(as_uuid=True), db.ForeignKey('pool.id'))
+    pool_id = db.Column(UUID(), db.ForeignKey('pool.id'))
     username = db.Column(db.Unicode(length=100), nullable=False)
 
     ACTIONS = ('start', 'suspend', 'reset', 'shutdown', 'resume', 'reboot')
@@ -74,8 +74,9 @@ class Vm(db.Model):
     async def copy(verbose_name: str, name_template: str, domain_id: str, datapool_id: str, controller_ip: str,
                    node_id: str):
         """Copy existing VM template for new VM create."""
+        # TODO: switch to controller uid?
         domain_name = Vm.domain_name(verbose_name=verbose_name, name_template=name_template)
-        client = VmHttpClient(controller_ip, domain_id, verbose_name, name_template)
+        client = await VmHttpClient.create(controller_ip, domain_id, verbose_name, name_template)
         response = await client.copy_vm(node_id=node_id, datapool_id=datapool_id, domain_name=domain_name)
         return dict(id=response['entity'],
                     task_id=response['_task']['id'],
