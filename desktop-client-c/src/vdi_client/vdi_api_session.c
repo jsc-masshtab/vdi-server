@@ -85,7 +85,7 @@ static gboolean refresh_vdi_session_token()
     printf("msg->status_code %i\n", msg->status_code);
 
     if(msg->status_code != OK_RESPONSE) {
-        printf("%s : Unable to get token\n", (char *)__func__);
+        printf("%s : Unable to get token\n", (const char *)__func__);
         return FALSE;
     }
 
@@ -106,8 +106,8 @@ static gboolean refresh_vdi_session_token()
 
 void start_vdi_session()
 {
-    if(vdiSession.is_active){
-        printf("%s: Session is already active\n", (char *)__func__);
+    if (vdiSession.is_active){
+        printf("%s: Session is already active\n", (const char *)__func__);
         return;
     }
     // creae session
@@ -128,8 +128,8 @@ void start_vdi_session()
 
 void stop_vdi_session()
 {
-    if(!vdiSession.is_active){
-        printf("%s: Session is not active\n", (char *)__func__);
+    if (!vdiSession.is_active){
+        printf("%s: Session is not active\n", (const char *)__func__);
         return;
     }
 
@@ -169,12 +169,12 @@ void set_vdi_credentials(const gchar *username, const gchar *password, const gch
     vdiSession.vdi_ip = g_strdup(ip);
     vdiSession.vdi_port = g_strdup(port);
     // /client/auth
-    // old
-    vdiSession.api_url = g_strdup_printf("http://%s", vdiSession.vdi_ip);
-    vdiSession.auth_url = g_strdup_printf("%s:%s/auth/", vdiSession.api_url, vdiSession.vdi_port);
-//    // new
-//    vdiSession.api_url = g_strdup_printf("http://%s:%s", vdiSession.vdi_ip, vdiSession.vdi_port);
-//    vdiSession.auth_url = g_strdup_printf("%s/auth/", vdiSession.api_url);
+//    // old
+//    vdiSession.api_url = g_strdup_printf("http://%s", vdiSession.vdi_ip);
+//    vdiSession.auth_url = g_strdup_printf("%s:%s/auth/", vdiSession.api_url, vdiSession.vdi_port);
+    // new
+    vdiSession.api_url = g_strdup_printf("http://%s:%s", vdiSession.vdi_ip, vdiSession.vdi_port);
+    vdiSession.auth_url = g_strdup_printf("%s/auth/", vdiSession.api_url);
 
     vdiSession.jwt = NULL;
 }
@@ -202,14 +202,14 @@ gchar *api_call(const char *method, const char *uri_string, const gchar *body_st
 {
     gchar *response_body_str = NULL;
 
-    if(uri_string == NULL)
+    if (uri_string == NULL)
         return response_body_str;
 
-    if(vdiSession.jwt == NULL) // get the token if we dont have it
+    if (vdiSession.jwt == NULL) // get the token if we dont have it
         refresh_vdi_session_token();
 
     SoupMessage *msg = soup_message_new (method, uri_string);
-    if(msg == NULL) // this may happen according to doc
+    if (msg == NULL) // this may happen according to doc
         return response_body_str;
 
     // set header
@@ -220,22 +220,20 @@ gchar *api_call(const char *method, const char *uri_string, const gchar *body_st
                                   SOUP_MEMORY_COPY, body_str, strlen (body_str));
 
     // start attempts
-    int attempt_count = 0;
     const int max_attempt_count = 2;
-    do{
-        // if an attempt is not the first we refresh the token and hope it would help us!
-        if(attempt_count != 0)
-            refresh_vdi_session_token();
+    for(int attempt_count = 0; attempt_count < max_attempt_count; attempt_count++) {
         // send request.
         send_message(msg);
         printf("HERE msg->status_code: %i\n", msg->status_code);
-        attempt_count++;
 
-    } while (msg->status_code != OK_RESPONSE && attempt_count < max_attempt_count);
+        // if response is ok then fill response_body_str
+        if (msg->status_code == OK_RESPONSE ) { // we are happy now
+            response_body_str = g_strdup(msg->response_body->data); // json_string_with_data. memory allocation!
+            break;
 
-    // if response is ok then fill response_body_str
-    if(msg->status_code == OK_RESPONSE ) { // we are happy now
-        response_body_str = g_strdup(msg->response_body->data); // json_string_with_data. memory allocation!
+        } else if (msg->status_code == AUTH_FAIL_RESPONSE) {
+            refresh_vdi_session_token();
+        }
     }
 
     g_object_unref(msg);
@@ -274,7 +272,7 @@ void do_action_on_vm(GTask         *task,
                   GCancellable  *cancellable G_GNUC_UNUSED)
 {
     ActionOnVmData *action_on_vm_data = g_task_get_task_data(task);
-    printf("%s: %s\n", (char *)__func__, action_on_vm_data->action_on_vm_str);
+    printf("%s: %s\n", (const char *)__func__, action_on_vm_data->action_on_vm_str);
 
     // url
     gchar *urlStr = g_strdup_printf("%s/client/pools/%ld/%s", vdiSession.api_url,
