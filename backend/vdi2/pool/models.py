@@ -14,11 +14,13 @@ from resources_monitoring.resources_monitor_manager import resources_monitor_man
 from resources_monitoring.resources_monitoring_data import VDI_TASKS_SUBSCRIPTION
 
 
+# TODO: update migrations
 class Pool(db.Model):
+    """На данный момент отсутствует смысловая валидация на уровне таблиц (она в схемах)."""
     __tablename__ = 'pool'
 
     id = db.Column(UUID(), primary_key=True, default=uuid.uuid4)
-    verbose_name = db.Column(db.Unicode(length=128), nullable=False)  # TODO: должен ли verbose_name быть уникальным? Очень похоже, что да.
+    verbose_name = db.Column(db.Unicode(length=128), nullable=False, unique=True)
     cluster_uid = db.Column(UUID(), nullable=False)
     node_uid = db.Column(UUID(), nullable=False)
     status = db.Column(AlchemyEnum(Status), nullable=False)
@@ -135,6 +137,7 @@ class Pool(db.Model):
 
 
 class StaticPool(db.Model):
+    """На данный момент отсутствует смысловая валидация на уровне таблиц (она в схемах)."""
     __tablename__ = 'static_pool'
     pool_uid = db.Column(UUID(), db.ForeignKey('pool.id'), primary_key=True)
 
@@ -149,6 +152,10 @@ class StaticPool(db.Model):
 
 
 class AutomatedPool(db.Model):
+    """
+    reserve_size - желаемое минимальное количество подогретых машин (добавленных в пул, но не имеющих пользователя)
+    На данный момент отсутствует смысловая валидация на уровне таблиц (она в схемах).
+    """
     __tablename__ = 'automated_pool'
 
     pool_uid = db.Column(UUID(), db.ForeignKey('pool.id'), primary_key=True)
@@ -163,10 +170,12 @@ class AutomatedPool(db.Model):
     max_amount_of_create_attempts = db.Column(db.Integer(), nullable=False, default=2)
 
     initial_size = db.Column(db.Integer(), nullable=False, default=1)
-    # желаемое минимальное количествиюво подогретых машин (добавленных в пул, но не имеющих пользоватля)
     reserve_size = db.Column(db.Integer(), nullable=False, default=0)
     total_size = db.Column(db.Integer(), nullable=False, default=1)
     vm_name_template = db.Column(db.Unicode(length=100), nullable=True)
+
+    # ----- ----- ----- ----- ----- ----- -----
+    # Properties and getters:
 
     @property
     async def node_uid(self):
@@ -179,6 +188,17 @@ class AutomatedPool(db.Model):
     @property
     async def controller_ip(self):
         return await Pool.get_controller_ip(self.pool_uid)
+
+    @classmethod
+    async def get_info(cls, pool_uid: str):
+        if not pool_uid:
+            raise AssertionError('Empty uid.')
+        pool_data = AutomatedPool.join(Pool).select().where(
+            Pool.id == pool_uid)
+        return await pool_data.gino.first()
+
+    # ----- ----- ----- ----- ----- ----- -----
+    # Setters & etc.
 
     @classmethod
     async def create(cls, verbose_name, controller_ip, cluster_uid, node_uid,
@@ -208,14 +228,6 @@ class AutomatedPool(db.Model):
 
     async def activate(self):
         return await Pool.activate(self.pool_uid)
-
-    @classmethod
-    async def get_info(cls, pool_uid: str):
-        if not pool_uid:
-            raise AssertionError('Empty uid.')
-        pool_data = AutomatedPool.join(Pool).select().where(
-            Pool.id == pool_uid)
-        return await pool_data.gino.first()
 
     async def add_vm(self, domain_index):
         """
