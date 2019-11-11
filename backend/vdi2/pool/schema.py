@@ -10,8 +10,6 @@ from tornado.httpclient import HTTPClientError
 from common.veil_errors import SimpleError, HttpError
 from common.utils import get_selections, validate_name
 
-# from settings import MIX_POOL_SIZE, MAX_POOL_SIZE, MAX_VM_AMOUNT_IN_POOL, DEFAULT_NAME
-
 from auth.schema import UserType
 from auth.models import User
 
@@ -31,7 +29,9 @@ class DesktopPoolTypeGraphene(graphene.Enum):
     AUTOMATED = 0
     STATIC = 1
 
+
 StatusGraphene = graphene.Enum.from_enum(Status)
+
 
 # todo: remove raw sql
 async def check_and_return_pool_data(pool_id, pool_type=None):
@@ -52,18 +52,21 @@ async def check_and_return_pool_data(pool_id, pool_type=None):
 
 
 def check_pool_initial_size(initial_size):
+    # TODO: move to model
     if initial_size < MIX_POOL_SIZE or initial_size > MAX_POOL_SIZE:
         raise SimpleError('Начальное количество ВМ должно быть в интервале [{} {}]'.
                           format(MIX_POOL_SIZE, MAX_POOL_SIZE))
 
 
 def check_reserve_size(reserve_size):
+    # TODO: move to model
     if reserve_size < MIX_POOL_SIZE or reserve_size > MAX_POOL_SIZE:
         raise SimpleError('Количество создаваемых ВМ должно быть в интервале [{} {}]'.
                           format(MIX_POOL_SIZE, MAX_POOL_SIZE))
 
 
 def check_total_size(total_size, initial_size):
+    # TODO: move to model
     if total_size < initial_size:
         raise SimpleError('Максимальное количество создаваемых ВМ не может быть меньше '
                           'начального количества ВМ')
@@ -73,6 +76,7 @@ def check_total_size(total_size, initial_size):
 
 
 def validate_pool_name(pool_name):
+    # move to model
     if not pool_name:
         raise SimpleError('Имя пула не должно быть пустым')
     if not validate_name(pool_name):
@@ -80,11 +84,13 @@ def validate_pool_name(pool_name):
 
 
 async def enable_remote_access(controller_address, vm_id):
+    # TODO: move to model
     vm_http_client = await VmHttpClient.create(controller_address, vm_id)
     await vm_http_client.enable_remote_access()
 
 
 async def enable_remote_accesses(controller_address, vm_ids):
+    # TODO: move to model
     async_tasks = [
         enable_remote_access(controller_address=controller_address, vm_id=vm_id)
         for vm_id in vm_ids
@@ -93,29 +99,15 @@ async def enable_remote_accesses(controller_address, vm_ids):
 
 
 class PoolResourcesNames(graphene.ObjectType):
+    # TODO: wtf?
     cluster_name = graphene.String()
     node_name = graphene.String()
     datapool_name = graphene.String()
     template_name = graphene.String()
 
 
-class PoolSettingsFields(graphene.AbstractType):
-    cluster_id = graphene.String()
-    datapool_id = graphene.String()
-    template_id = graphene.String()
-    node_id = graphene.String()
-    initial_size = graphene.Int()
-    reserve_size = graphene.Int()
-    total_size = graphene.Int()
-    vm_name_template = graphene.String()
-
-
-class PoolSettings(graphene.ObjectType, PoolSettingsFields):
-    pass
-
-
 class PoolType(graphene.ObjectType):
-
+    # TODO: rewrite
     id = graphene.UUID()
     verbose_name = graphene.String()
     status = StatusGraphene()
