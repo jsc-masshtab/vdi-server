@@ -496,30 +496,25 @@ class CreateDynamicPoolMutation(graphene.Mutation, MutationValidation):
     @classmethod
     async def mutate(cls, root, info, **kwargs):
         cls.validate_agruments(**kwargs)
-        # TODO: add magic checks and validators
+
         # TODO: в мониторе ресурсов нет происходит raise ошибки, если оно не создано
-        # try:
-        #     # TODO: extra validation
-        #     pool = await AutomatedPool.create(**kwargs)
-        #     print('there')
-        #     # validate arguments
-        #     # await pool.add_initial_vms()  # TODO: cancelation?
-        # except Exception as E:
-        #     # TODO: set pool status to failed if not
-        #     print('Exception is:')
-        #     print(E)
-        #     return CreateDynamicPoolMutation(
-        #         pool=None,
-        #         ok=False)
-        # else:
-        #     await pool.activate()
-        #     ok = True
-        #     return CreateDynamicPoolMutation(
-        #         pool=PoolType(desktop_pool_type=DesktopPoolTypeGraphene.AUTOMATED, id=pool.pool_uid),
-        #         ok=ok)
-        return CreateDynamicPoolMutation(
-            pool=None,
-            ok=False)
+        try:
+            # TODO: extra validation
+            pool = await AutomatedPool.create(**kwargs)
+            await pool.add_initial_vms()  # TODO: cancelation?
+        except Exception as E:
+            print(E)
+            if pool:
+                pool.deactivate()
+            return CreateDynamicPoolMutation(
+                pool=None,
+                ok=False)
+        else:
+            await pool.activate()
+            ok = True
+            return CreateDynamicPoolMutation(
+                pool=PoolType(desktop_pool_type=DesktopPoolTypeGraphene.AUTOMATED, id=pool.pool_uid),
+                ok=ok)
 
 
 class PoolMutations(graphene.ObjectType):

@@ -42,6 +42,11 @@ class Pool(db.Model):
         return await Pool.update.values(status=Status.ACTIVE).where(
             Pool.id == pool_uid).gino.status()
 
+    @classmethod
+    async def deactivate(cls, pool_uid):
+        return await Pool.update.values(status=Status.FAILED).where(
+            Pool.id == pool_uid).gino.status()
+
     async def get_vm_amount(self, only_free=False):
         """ == None because alchemy can't work with is None"""
         # TODO: rewrite
