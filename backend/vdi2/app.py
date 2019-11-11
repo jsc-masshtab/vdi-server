@@ -18,6 +18,8 @@ from vm.schema import vm_schema
 
 from resources_monitoring.resources_monitor_manager import resources_monitor_manager
 
+from pool.schema import pool_schema
+
 
 # if __name__ == '__main__':
 

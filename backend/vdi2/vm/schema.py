@@ -35,7 +35,7 @@ class TemplateType(graphene.ObjectType):
     id = graphene.String()
     verbose_name = graphene.String()
     veil_info = graphene.String(get=graphene.String())
-    controller = ControllerType()
+    controller = graphene.Field(ControllerType)
 
 
 class VmType(graphene.ObjectType):
@@ -46,7 +46,7 @@ class VmType(graphene.ObjectType):
     user = graphene.Field(UserType)
     state = graphene.Field(VmState)
     status = graphene.String()
-    controller = ControllerType()
+    controller = graphene.Field(ControllerType)
 
     management_ip = graphene.String()
 
