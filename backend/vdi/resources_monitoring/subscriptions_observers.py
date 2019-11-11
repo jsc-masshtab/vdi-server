@@ -130,7 +130,7 @@ class VdiFrontSubscriptionHandler(AbstractSubscriptionObserver):
             except asyncio.QueueEmpty:
                 continue
             if self._websocket:
-                await self._websocket.send_json(json_message)
+                await self._websocket.send_text(json_message)
 
     async def _dump_dict_and_send(self, dictionary):
         await self._websocket.send_json(dictionary)
