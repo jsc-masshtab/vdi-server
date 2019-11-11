@@ -2629,7 +2629,7 @@ virt_viewer_app_add_option_entries(G_GNUC_UNUSED VirtViewerApp *self,
         /*{ "version", 'V', 0, G_OPTION_ARG_NONE, &opt_version,
           N_("Display version information"), NULL },*/
         { "manual mode", 'm', 0, G_OPTION_ARG_NONE, &opt_manual_mode,
-          N_("Manual mode. Starts dialog for enter ip, port and password for connect VM."), NULL },
+          N_("Manual mode. Direct connection to VM"), NULL },
         { "zoom", 'z', 0, G_OPTION_ARG_INT, &opt_zoom,
           N_("Zoom level of window, in percentage"), "ZOOM" },
         { "full-screen", 'f', 0, G_OPTION_ARG_NONE, &opt_fullscreen,

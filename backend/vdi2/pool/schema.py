@@ -5,20 +5,22 @@ import tornado.gen
 from tornado.httpclient import HTTPClientError
 
 from common.veil_errors import SimpleError, HttpError
-from common.utils import get_selections, validate_name
+from common.utils import get_selections, validate_name, make_graphene_type
 
 from settings import MIX_POOL_SIZE, MAX_POOL_SIZE, MAX_VM_AMOUNT_IN_POOL, DEFAULT_NAME
 
 from auth.schema import UserType
 from auth.models import User
 
-from vm.schema import VmType, VmQuery
+from vm.schema import VmType, VmQuery, TemplateType
 from vm.models import Vm
 from vm.veil_client import VmHttpClient
 
 from controller.schema import ControllerType
 from controller.models import Controller
+
 from controller_resources.veil_client import ResourcesHttpClient
+from controller_resources.schema import ClusterType, NodeType, DatapoolType
 
 from pool.models import DesktopPoolType, Pool, PoolUsers
 
@@ -85,11 +87,11 @@ async def enable_remote_accesses(controller_address, vm_ids):
     await tornado.gen.multi(async_tasks)
 
 
-class PoolResourcesNames(graphene.ObjectType):
-    cluster_name = graphene.String()
-    node_name = graphene.String()
-    datapool_name = graphene.String()
-    template_name = graphene.String()
+# class PoolResourcesNames(graphene.ObjectType):
+#     cluster_name = graphene.String()
+#     node_name = graphene.String()
+#     datapool_name = graphene.String()
+#     template_name = graphene.String()
 
 
 class PoolSettingsFields(graphene.AbstractType):
@@ -116,12 +118,15 @@ class PoolType(graphene.ObjectType):
     settings = graphene.Field(PoolSettings)
     users = graphene.List(UserType, entitled=graphene.Boolean())
     vms = graphene.List(VmType)
-    pool_resources_names = graphene.Field(PoolResourcesNames)
+    #pool_resources_names = graphene.Field(PoolResourcesNames)
     status = graphene.String()
 
     controller = graphene.Field(ControllerType)
 
-    #sql_fields = ['id', 'template_id', 'name', 'controller_ip', 'desktop_pool_type']
+    node = graphene.Field(NodeType)
+    cluster = graphene.Field(ClusterType)
+    datapool = graphene.Field(DatapoolType)
+    template = graphene.Field(TemplateType)
 
     async def resolve_name(self, _info):
         if not self.name:
@@ -162,20 +167,40 @@ class PoolType(graphene.ObjectType):
             self.settings = PoolSettings()
         return self.settings
 
-    async def resolve_pool_resources_names(self, _info):
-
-        list_of_requested_fields = get_selections(_info)
-        # # get resources ids from db
-        # data = await check_and_return_pool_data(self.id)
-        #
-        # todo: determine names
-        cluster_name = ''
-        node_name = ''
-        datapool_name = ''
-        template_name = ''
-
-        return PoolResourcesNames(cluster_name=cluster_name, node_name=node_name,
-                                  datapool_name=datapool_name, template_name=template_name)
+    # async def resolve_pool_resources_names(self, _info):
+    #
+    #     list_of_requested_fields = get_selections(_info)
+    #     # get resources ids from db
+    #     pool_data_keys_list = ['controller', 'cluster_id', 'node_id', 'datapool_id', 'template_id']
+    #     pool_data_tuple = await Pool.select(pool_data_keys_list).where(Pool.id == self.id).gino.all()
+    #
+    #     pool_data = dict(zip(pool_data_keys_list, pool_data_tuple))
+    #
+    #     # requests to controller
+    #     resources_http_client = await ResourcesHttpClient.create(pool_data['controller_ip'])
+    #     try:
+    #         if 'cluster_name' in list_of_requested_fields:
+    #             veil_info = await resources_http_client.fetch_cluster(cluster_id=pool_data['cluster_id'])
+    #             cluster_name = veil_info['verbose_name']
+    #
+    #         if 'node_name' in list_of_requested_fields:
+    #             veil_info = await resources_http_client.fetch_node(['node_id'])
+    #             node_name = veil_info['verbose_name']
+    #
+    #         if 'datapool_name' in list_of_requested_fields:
+    #             veil_info = await resources_http_client.fetch_datapool(pool_data['datapool_id'])
+    #             datapool_name = veil_info['verbose_name']
+    #
+    #         if 'template_name' in list_of_requested_fields:
+    #             vm_http_client = await VmHttpClient.create(pool_data['controller_ip'], pool_data['template_id'])
+    #             veil_info = await vm_http_client.info()
+    #             template_name = veil_info['verbose_name']
+    #
+    #             return PoolResourcesNames(cluster_name=cluster_name, node_name=node_name,
+    #                                       datapool_name=datapool_name, template_name=template_name)
+    #     except HTTPClientError:
+    #         return PoolResourcesNames(cluster_name=DEFAULT_NAME, node_name=DEFAULT_NAME,
+    #                                   datapool_name=DEFAULT_NAME, template_name=DEFAULT_NAME)
 
     async def resolve_status(self, _info):
 
@@ -189,6 +214,39 @@ class PoolType(graphene.ObjectType):
                 self.status = 'ACTIVE'
 
         return self.status
+
+    async def resolve_node(self, _info):
+        resources_http_client = await ResourcesHttpClient.create(self.controller.address)
+
+        node_id = await Pool.select('node_id').where(Pool.id == self.id).gino.scalar()
+        node_data = await resources_http_client.fetch_node(node_id)
+        node_type = make_graphene_type(NodeType, node_data)
+        node_type.controller = ControllerType(address=self.controller.address)
+        return node_type
+
+    async def resolve_cluster(self, _info):
+        resources_http_client = await ResourcesHttpClient.create(self.controller.address)
+
+        cluster_id = await Pool.select('cluster_id').where(Pool.id == self.id).gino.scalar()
+        cluster_data = await resources_http_client.fetch_cluster(cluster_id)
+        cluster_type = make_graphene_type(ClusterType, cluster_data)
+        cluster_type.controller = ControllerType(address=self.controller.address)
+        return cluster_type
+
+    async def resolve_datapool(self, _info):
+        resources_http_client = await ResourcesHttpClient.create(self.controller.address)
+
+        datapool_id = await Pool.select('datapool_id').where(Pool.id == self.id).gino.scalar()
+        datapool_data = await resources_http_client.fetch_datapool(datapool_id)
+        datapool_type = make_graphene_type(DatapoolType, datapool_data)
+        datapool_type.controller = ControllerType(address=self.controller.address)
+        return datapool_type
+
+    async def resolve_template(self, _info):
+        template_id = await Pool.select('template_id').where(Pool.id == self.id).gino.scalar()
+        vm_http_client = await VmHttpClient.create(self.controller.address, template_id)
+        veil_info = await vm_http_client.info()
+        return VmQuery.veil_template_data_to_graphene_type(veil_info, self.controller.address)
 
     async def _build_vms_list(self):
         if not self.vms:
