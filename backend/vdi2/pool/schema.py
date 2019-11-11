@@ -1,13 +1,18 @@
 # -*- coding: utf-8 -*-
+import re
 import graphene
 import tornado.gen
+from tornado.httpclient import HTTPClientError
+import graphql
 
 from database import Status
 from common.veil_errors import SimpleError
-from common.utils import get_selections
-from tornado.httpclient import HTTPClientError
 
-from common.veil_errors import SimpleError, HttpError
+from common.utils import get_selections
+from common.veil_validators import MutationValidation
+
+
+from common.veil_errors import SimpleError, HttpError, ValidationError
 from common.utils import get_selections, validate_name, make_graphene_type
 
 from auth.schema import UserType
@@ -22,9 +27,9 @@ from controller.models import Controller
 from controller_resources.veil_client import ResourcesHttpClient
 from controller_resources.schema import ClusterType, NodeType, DatapoolType
 
-# from pool.models import DesktopPoolType, AutomatedPool, PoolUsers
 from pool.models import AutomatedPool
 
+# TODO: change simpleerror to fielderror
 
 class DesktopPoolTypeGraphene(graphene.Enum):
     AUTOMATED = 0
@@ -33,7 +38,7 @@ class DesktopPoolTypeGraphene(graphene.Enum):
 
 StatusGraphene = graphene.Enum.from_enum(Status)
 
-
+# TODO: PoolValidation class
 # todo: remove raw sql
 async def check_and_return_pool_data(pool_id, pool_type=None):
     # check if pool exists
@@ -52,38 +57,6 @@ async def check_and_return_pool_data(pool_id, pool_type=None):
     return pool_data_dict
 
 
-def check_pool_initial_size(initial_size):
-    # TODO: move to model
-    if initial_size < MIX_POOL_SIZE or initial_size > MAX_POOL_SIZE:
-        raise SimpleError('Начальное количество ВМ должно быть в интервале [{} {}]'.
-                          format(MIX_POOL_SIZE, MAX_POOL_SIZE))
-
-
-def check_reserve_size(reserve_size):
-    # TODO: move to model
-    if reserve_size < MIX_POOL_SIZE or reserve_size > MAX_POOL_SIZE:
-        raise SimpleError('Количество создаваемых ВМ должно быть в интервале [{} {}]'.
-                          format(MIX_POOL_SIZE, MAX_POOL_SIZE))
-
-
-def check_total_size(total_size, initial_size):
-    # TODO: move to model
-    if total_size < initial_size:
-        raise SimpleError('Максимальное количество создаваемых ВМ не может быть меньше '
-                          'начального количества ВМ')
-    if total_size < MIX_POOL_SIZE or total_size > MAX_VM_AMOUNT_IN_POOL:
-        raise SimpleError('Максимальное количество создаваемых ВМ должно быть в интервале [{} {}]'.
-                          format(MIX_POOL_SIZE, MAX_VM_AMOUNT_IN_POOL))
-
-
-def validate_pool_name(pool_name):
-    # move to model
-    if not pool_name:
-        raise SimpleError('Имя пула не должно быть пустым')
-    if not validate_name(pool_name):
-        raise SimpleError('Имя пула должно содержать только буквы и цифры')
-
-
 async def enable_remote_access(controller_address, vm_id):
     # TODO: move to model
     vm_http_client = await VmHttpClient.create(controller_address, vm_id)
@@ -97,13 +70,6 @@ async def enable_remote_accesses(controller_address, vm_ids):
         for vm_id in vm_ids
     ]
     await tornado.gen.multi(async_tasks)
-
-
-# class PoolResourcesNames(graphene.ObjectType):
-#     cluster_name = graphene.String()
-#     node_name = graphene.String()
-#     datapool_name = graphene.String()
-#     template_name = graphene.String()
 
 
 class PoolType(graphene.ObjectType):
@@ -452,7 +418,7 @@ class PoolQuery(graphene.ObjectType):
         return pool_type
 
 
-class CreatePoolMutation(graphene.Mutation):
+class CreateDynamicPoolMutation(graphene.Mutation, MutationValidation):
     class Arguments:
         verbose_name = graphene.String(required=True)
         controller_ip = graphene.String(required=True)
@@ -461,84 +427,103 @@ class CreatePoolMutation(graphene.Mutation):
         datapool_uid = graphene.UUID(required=True)
         node_uid = graphene.UUID(required=True)
 
-        min_size = graphene.Int()
-        max_size = graphene.Int()
-        max_vm_amount = graphene.Int()
-        increase_step = graphene.Int()
-        max_amount_of_create_attempts = graphene.Int()
-        initial_size = graphene.Int()
-        reserve_size = graphene.Int()
-        total_size = graphene.Int()
-        vm_name_template = graphene.String()
+        min_size = graphene.Int(default_value=1)
+        max_size = graphene.Int(default_value=200)
+        max_vm_amount = graphene.Int(default_value=1000)
+        increase_step = graphene.Int(default_value=3)
+        max_amount_of_create_attempts = graphene.Int(default_value=2)
+        initial_size = graphene.Int(default_value=1)
+        reserve_size = graphene.Int(default_value=0)
+        total_size = graphene.Int(default_value=1)
+        vm_name_template = graphene.String(default_value='')
 
     ok = graphene.Boolean()
     pool = graphene.Field(lambda: PoolType)
 
-    #     @staticmethod
-    #     async def magic_checks(pool):
-    #         # magic checks from Vitalya. Nobody can understand this
-    #         checker = PoolValidator(pool)
-    #         data_sync = {}
-    #         data_async = {}
-    #         for k, v in pool.items():
-    #             if hasattr(checker, k):
-    #                 if inspect.iscoroutinefunction(getattr(checker, k)):
-    #                     data_async[k] = v
-    #                 else:
-    #                     data_sync[k] = v
-    #         for k, v in data_sync.items():
-    #             checker.validate_sync(k, v)
-    #         async_validators = [
-    #             checker.validate_async(k, v) for k, v in data_async.items()
-    #         ]
-    #         await wait_all(*async_validators)
-    #
-    #     @staticmethod
-    #     def validate_agruments(pool_args_dict):
-    #         PoolValidator.validate_pool_name(pool_args_dict['name'])
-    #         # Check vm_name_template if its not empty
-    #         vm_name_template = pool_args_dict['vm_name_template']
-    #         if vm_name_template and not validate_name(vm_name_template):
-    #             raise SimpleError('Шаблонное имя вм должно содержать только буквы и цифры')
-    #
-    #         # check sizes
-    #         initial_size = pool_args_dict['initial_size']
-    #         reserve_size = pool_args_dict['reserve_size']
-    #         total_size = pool_args_dict['total_size']
-    #         check_pool_initial_size(initial_size)
-    #         check_reserve_size(reserve_size)
-    #         check_total_size(total_size, initial_size)
-    #
-    #         if pool_args_dict['controller_ip'] is None:
-    #             raise SimpleError('Не указан ip контроллера')
+    @staticmethod
+    def validate_controller_ip(obj_dict, value):
+        ip_re = re.compile(
+            r'^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$'
+        )
+        ip = re.fullmatch(ip_re, value)
+        if ip:
+            return value
+        raise ValidationError('ip-address probably invalid.')
 
-    async def mutate(self, _info, verbose_name, controller_ip, cluster_uid, template_uid, datapool_uid, node_uid,
-                     min_size=1, max_size=200, max_vm_amount=1000, increase_step=3, max_amount_of_create_attempts=2,
-                     initial_size=1, reserve_size=0, total_size=1, vm_name_template=None):
+    @staticmethod
+    def validate_verbose_name(obj_dict, value):
+        name_re = re.compile('^[а-яА-ЯёЁa-zA-Z0-9]+[а-яА-ЯёЁa-zA-Z0-9.-_+]*$')
+        template_name = re.match(name_re, value)
+        if template_name:
+            return value
+        raise ValidationError('Имя пула должно содержать только буквы, цифры, _, -')
+
+    @staticmethod
+    def validate_vm_name_template(obj_dict, value):
+        if not value:
+            return value
+        name_re = re.compile('^[а-яА-ЯёЁa-zA-Z0-9]+[а-яА-ЯёЁa-zA-Z0-9.-_+ ]*$')
+        template_name = re.match(name_re, value)
+        if template_name:
+            return value
+        raise ValidationError('Шаблонное имя вм должно содержать только буквы, цифры, _, -')
+
+    @staticmethod
+    def validate_initial_size(obj_dict, value):
+        if value < obj_dict['min_size'] or value > obj_dict['max_size']:
+            raise ValidationError(
+                'Начальное количество ВМ должно быть в интервале {}-{}'.format(obj_dict['min_size'],
+                                                                               obj_dict['max_size']))
+        return value
+
+    @staticmethod
+    def validate_reserve_size(obj_dict, value):
+        if value < obj_dict['min_size'] or value > obj_dict['max_size']:
+            raise ValidationError('Количество создаваемых ВМ должно быть в интервале {}-{}'.
+                                  format(obj_dict['min_size'], obj_dict['max_size']))
+        return value
+
+    @staticmethod
+    def validate_total_size(obj_dict, value):
+        if value < obj_dict['initial_size']:
+            raise ValidationError('Максимальное количество создаваемых ВМ не может быть меньше '
+                                  'начального количества ВМ')
+        if value < obj_dict['min_size'] or value > obj_dict['max_vm_amount']:
+            raise ValidationError('Максимальное количество создаваемых ВМ должно быть в интервале [{} {}]'.
+                                  format(obj_dict['min_size'], obj_dict['max_vm_amount']))
+        return value
+
+    @classmethod
+    async def mutate(cls, root, info, **kwargs):
+        cls.validate_agruments(**kwargs)
         # TODO: add magic checks and validators
         # TODO: в мониторе ресурсов нет происходит raise ошибки, если оно не создано
-        try:
-            pool = await AutomatedPool.create(verbose_name, controller_ip, cluster_uid, node_uid,
-                                              template_uid, datapool_uid,
-                                              min_size, max_size, max_vm_amount, increase_step,
-                                              max_amount_of_create_attempts, initial_size,
-                                              reserve_size, total_size, vm_name_template)
-
-            # validate arguments
-            await pool.add_initial_vms()  # TODO: cancelation?
-        except:
-            # TODO: set pool status to failed if not
-            pass
-        else:
-            await pool.activate()
-            ok = True
-
-        return CreatePoolMutation(pool=PoolType(desktop_pool_type=DesktopPoolTypeGraphene.AUTOMATED, id=pool.pool_uid),
-                                  ok=ok)
+        # try:
+        #     # TODO: extra validation
+        #     pool = await AutomatedPool.create(**kwargs)
+        #     print('there')
+        #     # validate arguments
+        #     # await pool.add_initial_vms()  # TODO: cancelation?
+        # except Exception as E:
+        #     # TODO: set pool status to failed if not
+        #     print('Exception is:')
+        #     print(E)
+        #     return CreateDynamicPoolMutation(
+        #         pool=None,
+        #         ok=False)
+        # else:
+        #     await pool.activate()
+        #     ok = True
+        #     return CreateDynamicPoolMutation(
+        #         pool=PoolType(desktop_pool_type=DesktopPoolTypeGraphene.AUTOMATED, id=pool.pool_uid),
+        #         ok=ok)
+        return CreateDynamicPoolMutation(
+            pool=None,
+            ok=False)
 
 
 class PoolMutations(graphene.ObjectType):
-    addPool = CreatePoolMutation.Field()
+    addDynamicPool = CreateDynamicPoolMutation.Field()
     addStaticPool = AddStaticPool.Field()
     addVmsToStaticPool = AddVmsToStaticPool.Field()
     removeVmsFromStaticPool = RemoveVmsFromStaticPool.Field()
