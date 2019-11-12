@@ -18,7 +18,7 @@
 
 static VdiSession vdiSession;
 
-
+// Не предполагается одновременное выполнение больше одного запроса, поэтому защита полей VdiSession не реализуется
 // get token  (make post request)
 // set session header
 // make api requests
@@ -34,7 +34,7 @@ static void free_session_memory(){
     free_memory_safely(&vdiSession.auth_url);
     free_memory_safely(&vdiSession.jwt);
 
-    //free_memory_safely(&vdiSession.current_vm_id);
+    free_memory_safely(&vdiSession.current_vm_id);
 }
 
 static void setup_header_for_api_call(SoupMessage *msg)
@@ -251,7 +251,18 @@ gchar *api_call(const char *method, const char *uri_string, const gchar *body_st
     return response_body_str;
 }
 
-void get_vdi_pool_data(GTask         *task,
+void get_vdi_token(GTask       *task,
+                 gpointer       source_object G_GNUC_UNUSED,
+                 gpointer       task_data G_GNUC_UNUSED,
+                 GCancellable  *cancellable G_GNUC_UNUSED)
+{
+    free_memory_safely(&vdiSession.jwt);
+    gboolean token_refreshed = refresh_vdi_session_token();
+
+    g_task_return_boolean(task, token_refreshed);
+}
+
+void get_vdi_pool_data(GTask   *task,
                  gpointer       source_object G_GNUC_UNUSED,
                  gpointer       task_data G_GNUC_UNUSED,
                  GCancellable  *cancellable G_GNUC_UNUSED)
@@ -264,7 +275,7 @@ void get_vdi_pool_data(GTask         *task,
     g_task_return_pointer(task, response_body_str, NULL); // return pointer must be freed
 }
 
-void get_vm_from_pool(GTask         *task,
+void get_vm_from_pool(GTask       *task,
                     gpointer       source_object G_GNUC_UNUSED,
                     gpointer       task_data G_GNUC_UNUSED,
                     GCancellable  *cancellable G_GNUC_UNUSED)
@@ -276,7 +287,7 @@ void get_vm_from_pool(GTask         *task,
     g_task_return_pointer(task, response_body_str, NULL); // return pointer must be freed
 }
 
-void do_action_on_vm(GTask         *task,
+void do_action_on_vm(GTask      *task,
                   gpointer       source_object G_GNUC_UNUSED,
                   gpointer       task_data G_GNUC_UNUSED,
                   GCancellable  *cancellable G_GNUC_UNUSED)

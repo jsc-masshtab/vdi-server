@@ -80,6 +80,12 @@ const gchar *get_current_vm_id(void);
 // Do api call. Return response body
 gchar *api_call(const char *method, const char *uri_string, const gchar *body_str);
 
+// Fetch token
+void get_vdi_token(GTask         *task,
+                 gpointer       source_object,
+                 gpointer       task_data,
+                 GCancellable  *cancellable);
+
 // Запрашиваем список пулов
 void get_vdi_pool_data(GTask         *task,
                  gpointer       source_object,

@@ -29,11 +29,24 @@
 
 #include <ctype.h>
 
+#include <async.h>
+#include <vdi_api_session.h>
+
 
 extern gboolean opt_manual_mode;
 extern gboolean take_extern_credentials;
 
 static gboolean b_save_credentials_to_file = FALSE;
+
+// tiken fetch callback
+static void on_get_vdi_token_finished(GObject *source_object G_GNUC_UNUSED,
+                                      GAsyncResult *res,
+                                      gpointer user_data G_GNUC_UNUSED)
+{
+    GError *error = NULL;
+    gboolean token_refreshed = g_task_propagate_boolean(G_TASK(res), &error);
+    printf("%s: is_token_refreshed %i\n", (const char *)__func__, token_refreshed);
+}
 
 // Перехватывается событие ввода текста. Игнорируется, если есть нецифры
 static void
@@ -103,6 +116,8 @@ connect_button_clicked_cb(GtkButton *button G_GNUC_UNUSED, gpointer data)
         ci->dialog_window_response = GTK_RESPONSE_OK;
         shutdown_loop(ci->loop);
     }
+
+//    execute_async_task(get_vdi_token, on_get_vdi_token_finished, NULL);
 }
 
 static void
@@ -202,8 +217,9 @@ make_label_small(GtkLabel* label)
 */
 
 gboolean
-remote_viewer_connect_dialog(GtkWindow *main_window, gchar **uri, gchar **user, gchar **password,
-                             gchar **ip, gchar **port) {
+remote_viewer_connect_dialog(GtkWindow *main_window G_GNUC_UNUSED, gchar **uri, gchar **user, gchar **password,
+                             gchar **ip, gchar **port)
+{
 
     // set params save group
     const gchar *paramToFileGrpoup = opt_manual_mode ? "RemoteViewerConnectManual" : "RemoteViewerConnect";

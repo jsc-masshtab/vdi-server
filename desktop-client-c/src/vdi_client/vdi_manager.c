@@ -270,7 +270,7 @@ static void on_get_vm_from_pool_finished(GObject *source_object G_GNUC_UNUSED,
     VdiPoolWidget vdi_pool_widget = get_vdi_pool_widget_by_id(get_current_vm_id());
     enable_spinner_visible(&vdi_pool_widget, FALSE);
 
-    GError *error;
+    GError *error = NULL;
     gpointer  ptr_res =  g_task_propagate_pointer (G_TASK (res), &error); // take ownership
     if(ptr_res == NULL){
         printf("%s : FAIL \n", (const char *)__func__);
