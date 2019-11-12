@@ -508,25 +508,24 @@ class CreateDynamicPoolMutation(graphene.Mutation, PoolValidator):
 
     pool = graphene.Field(lambda: PoolType)
     ok = graphene.Boolean()
-    # TODO: output?
 
     @classmethod
     async def mutate(cls, root, info, **kwargs):
         cls.validate_agruments(**kwargs)
         pool = None
         try:
-            pool = await AutomatedPool.create(**kwargs)
+            automated_pool = await AutomatedPool.create(**kwargs)
             # TODO: в мониторе ресурсов нет происходит raise ошибки, если оно не создано
-            await pool.add_initial_vms()
-            await pool.activate()
+            await automated_pool.add_initial_vms()
+            await automated_pool.activate()
+            pool = await Pool.get_pool(automated_pool.automated_pool_id)
         except Exception as E:
             # TODO: широкий exception потому, что пока нет ошибки от монитора ресурсов. эксепшены нужно ограничить.
             if pool:
                 await pool.deactivate()
-            return CreateDynamicPoolMutation(pool=None, ok=False)
+            raise SimpleError(E)
         return CreateDynamicPoolMutation(
-                pool=PoolType(  # TODO: развернуть значения для получения целикового PoolType
-                    ),
+                pool=PoolType(**pool),
                 ok=True)
 
 

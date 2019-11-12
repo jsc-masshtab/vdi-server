@@ -264,14 +264,12 @@ class AutomatedPool(db.Model):
                      template_id, datapool_id, min_size, max_size, max_vm_amount, increase_step,
                      max_amount_of_create_attempts, initial_size, reserve_size, total_size, vm_name_template):
         """Nested transactions are atomic."""
-        print('Create')
         async with db.transaction() as tx:
             # Create pool first
             pool = await Pool.create(verbose_name=verbose_name,
                                      cluster_id=cluster_id,
                                      node_id=node_id,
                                      controller_ip=controller_ip)
-            print(pool.id)
             # Create automated pool
             return await super().create(automated_pool_id=pool.id,
                                         template_id=template_id,
