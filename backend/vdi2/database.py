@@ -27,6 +27,7 @@ class Status(Enum):
     DELETING = 'DELETING'
     SERVICE = 'SERVICE'
     PARTIAL = 'PARTIAL'
+    BAD_AUTH = 'BAD_AUTH'
 
 
 StatusGraphene = GrapheneEnum.from_enum(Status)
