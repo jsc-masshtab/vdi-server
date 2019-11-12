@@ -234,6 +234,9 @@ class AutomatedPool(db.Model):
     async def activate(self):
         return await Pool.activate(self.pool_uid)
 
+    async def deactivate(self):
+        return await Pool.deactivate(self.pool_uid)
+
     async def add_vm(self, domain_index):
         """
         Try to add VM to pool

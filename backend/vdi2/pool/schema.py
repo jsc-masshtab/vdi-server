@@ -29,7 +29,6 @@ from controller_resources.schema import ClusterType, NodeType, DatapoolType
 
 from pool.models import AutomatedPool
 
-# TODO: change simpleerror to fielderror
 
 class DesktopPoolTypeGraphene(graphene.Enum):
     AUTOMATED = 0
@@ -37,6 +36,64 @@ class DesktopPoolTypeGraphene(graphene.Enum):
 
 
 StatusGraphene = graphene.Enum.from_enum(Status)
+
+
+class PoolValidator(MutationValidation):
+    """Валидатор для сущности Pool"""
+
+    @staticmethod
+    def validate_controller_ip(obj_dict, value):
+        ip_re = re.compile(
+            r'^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$'
+        )
+        ip = re.fullmatch(ip_re, value)
+        if ip:
+            return value
+        raise ValidationError('ip-address probably invalid.')
+
+    @staticmethod
+    def validate_verbose_name(obj_dict, value):
+        name_re = re.compile('^[а-яА-ЯёЁa-zA-Z0-9]+[а-яА-ЯёЁa-zA-Z0-9.-_+]*$')
+        template_name = re.match(name_re, value)
+        if template_name:
+            return value
+        raise ValidationError('Имя пула должно содержать только буквы, цифры, _, -')
+
+    @staticmethod
+    def validate_vm_name_template(obj_dict, value):
+        if not value:
+            return value
+        name_re = re.compile('^[а-яА-ЯёЁa-zA-Z0-9]+[а-яА-ЯёЁa-zA-Z0-9.-_+ ]*$')
+        template_name = re.match(name_re, value)
+        if template_name:
+            return value
+        raise ValidationError('Шаблонное имя вм должно содержать только буквы, цифры, _, -')
+
+    @staticmethod
+    def validate_initial_size(obj_dict, value):
+        if value < obj_dict['min_size'] or value > obj_dict['max_size']:
+            raise ValidationError(
+                'Начальное количество ВМ должно быть в интервале {}-{}'.format(obj_dict['min_size'],
+                                                                               obj_dict['max_size']))
+        return value
+
+    @staticmethod
+    def validate_reserve_size(obj_dict, value):
+        if value < obj_dict['min_size'] or value > obj_dict['max_size']:
+            raise ValidationError('Количество создаваемых ВМ должно быть в интервале {}-{}'.
+                                  format(obj_dict['min_size'], obj_dict['max_size']))
+        return value
+
+    @staticmethod
+    def validate_total_size(obj_dict, value):
+        if value < obj_dict['initial_size']:
+            raise ValidationError('Максимальное количество создаваемых ВМ не может быть меньше '
+                                  'начального количества ВМ')
+        if value < obj_dict['min_size'] or value > obj_dict['max_vm_amount']:
+            raise ValidationError('Максимальное количество создаваемых ВМ должно быть в интервале [{} {}]'.
+                                  format(obj_dict['min_size'], obj_dict['max_vm_amount']))
+        return value
+
 
 # TODO: PoolValidation class
 # todo: remove raw sql
@@ -418,7 +475,7 @@ class PoolQuery(graphene.ObjectType):
         return pool_type
 
 
-class CreateDynamicPoolMutation(graphene.Mutation, MutationValidation):
+class CreateDynamicPoolMutation(graphene.Mutation, PoolValidator):
     class Arguments:
         verbose_name = graphene.String(required=True)
         controller_ip = graphene.String(required=True)
@@ -440,58 +497,6 @@ class CreateDynamicPoolMutation(graphene.Mutation, MutationValidation):
     ok = graphene.Boolean()
     pool = graphene.Field(lambda: PoolType)
 
-    @staticmethod
-    def validate_controller_ip(obj_dict, value):
-        ip_re = re.compile(
-            r'^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$'
-        )
-        ip = re.fullmatch(ip_re, value)
-        if ip:
-            return value
-        raise ValidationError('ip-address probably invalid.')
-
-    @staticmethod
-    def validate_verbose_name(obj_dict, value):
-        name_re = re.compile('^[а-яА-ЯёЁa-zA-Z0-9]+[а-яА-ЯёЁa-zA-Z0-9.-_+]*$')
-        template_name = re.match(name_re, value)
-        if template_name:
-            return value
-        raise ValidationError('Имя пула должно содержать только буквы, цифры, _, -')
-
-    @staticmethod
-    def validate_vm_name_template(obj_dict, value):
-        if not value:
-            return value
-        name_re = re.compile('^[а-яА-ЯёЁa-zA-Z0-9]+[а-яА-ЯёЁa-zA-Z0-9.-_+ ]*$')
-        template_name = re.match(name_re, value)
-        if template_name:
-            return value
-        raise ValidationError('Шаблонное имя вм должно содержать только буквы, цифры, _, -')
-
-    @staticmethod
-    def validate_initial_size(obj_dict, value):
-        if value < obj_dict['min_size'] or value > obj_dict['max_size']:
-            raise ValidationError(
-                'Начальное количество ВМ должно быть в интервале {}-{}'.format(obj_dict['min_size'],
-                                                                               obj_dict['max_size']))
-        return value
-
-    @staticmethod
-    def validate_reserve_size(obj_dict, value):
-        if value < obj_dict['min_size'] or value > obj_dict['max_size']:
-            raise ValidationError('Количество создаваемых ВМ должно быть в интервале {}-{}'.
-                                  format(obj_dict['min_size'], obj_dict['max_size']))
-        return value
-
-    @staticmethod
-    def validate_total_size(obj_dict, value):
-        if value < obj_dict['initial_size']:
-            raise ValidationError('Максимальное количество создаваемых ВМ не может быть меньше '
-                                  'начального количества ВМ')
-        if value < obj_dict['min_size'] or value > obj_dict['max_vm_amount']:
-            raise ValidationError('Максимальное количество создаваемых ВМ должно быть в интервале [{} {}]'.
-                                  format(obj_dict['min_size'], obj_dict['max_vm_amount']))
-        return value
 
     @classmethod
     async def mutate(cls, root, info, **kwargs):
@@ -505,7 +510,7 @@ class CreateDynamicPoolMutation(graphene.Mutation, MutationValidation):
         except Exception as E:
             print(E)
             if pool:
-                pool.deactivate()
+                await pool.deactivate()
             return CreateDynamicPoolMutation(
                 pool=None,
                 ok=False)
