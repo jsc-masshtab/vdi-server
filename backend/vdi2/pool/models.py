@@ -146,7 +146,6 @@ class StaticPool(db.Model):
     __tablename__ = 'static_pool'
     pool_uid = db.Column(UUID(), db.ForeignKey('pool.id'), primary_key=True)
 
-    # TODO: add create method
     @classmethod
     async def get_info(cls, pool_uid: str):
         if not pool_uid:
@@ -154,6 +153,25 @@ class StaticPool(db.Model):
         pool_data = AutomatedPool.join(Pool).select().where(
             Pool.id == pool_uid)
         return await pool_data.gino.first()
+
+    @classmethod
+    async def create(cls, verbose_name, controller_ip, cluster_uid, node_uid):
+        """Nested transactions are atomic."""
+
+        async with db.transaction() as tx:
+            # Create pool first
+            pool = await Pool.create(verbose_name=verbose_name,
+                                     cluster_uid=cluster_uid,
+                                     node_uid=node_uid,
+                                     controller_ip=controller_ip)
+            # Create static pool
+            return await super().create(pool_uid=pool.id)
+
+    async def activate(self):
+        return await Pool.activate(self.pool_uid)
+
+    async def deactivate(self):
+        return await Pool.deactivate(self.pool_uid)
 
 
 class AutomatedPool(db.Model):

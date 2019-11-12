@@ -1,4 +1,4 @@
-# TODO: move to common
+# TODO: разобрать модуль. Это код с предыдущей версии Vdi, которая не нравится большей части бекендеров на проектею
 import inspect
 from functools import wraps
 from typing import List

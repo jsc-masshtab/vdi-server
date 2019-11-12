@@ -8,6 +8,7 @@ class MutationValidation:
 
     @classmethod
     def validate_agruments(cls, **kwargs):
+        # TODO: сделать аналогичный декоратор?
         for argument in cls.Arguments.__dict__:
             if argument.startswith('_'):
                 continue
