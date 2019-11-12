@@ -279,13 +279,17 @@ static void on_get_vm_from_pool_finished(GObject *source_object G_GNUC_UNUSED,
     gchar *response_body_str = ptr_res; // example "[{\"id\":17,\"name\":\"sad\"}]"
 
     // parse  data  json
-    JsonParser *parser = json_parser_new ();
-    JsonObject *object = get_root_json_object(parser, response_body_str);
+    JsonParser *parser = json_parser_new();
+    JsonObject *root_object = get_root_json_object(parser, response_body_str);
 
-    const gchar *vm_host = json_object_get_string_member_safely(object, "host");
-    gint64 vm_port = json_object_get_int_member_safely(object, "port");
-    const gchar *vm_password = json_object_get_string_member_safely(object, "password");
-    const gchar *message = json_object_get_string_member_safely(object, "message");
+    JsonObject *data_member_object = json_object_get_object_member(root_object, "data");
+    if (!data_member_object)
+        return;
+
+    const gchar *vm_host = json_object_get_string_member_safely(data_member_object, "host");
+    gint64 vm_port = json_object_get_int_member_safely(data_member_object, "port");
+    const gchar *vm_password = json_object_get_string_member_safely(data_member_object, "password");
+    const gchar *message = json_object_get_string_member_safely(data_member_object, "message");
     printf("vm_host %s \n", vm_host);
     printf("vm_port %ld \n", vm_port);
     printf("vm_password %s \n", vm_password);
@@ -309,7 +313,7 @@ static void on_get_vm_from_pool_finished(GObject *source_object G_GNUC_UNUSED,
         shutdown_loop(vdi_manager.ci.loop);
     }
     //
-    g_object_unref (parser);
+    g_object_unref(parser);
     if(ptr_res)
         g_free(ptr_res);
 }

@@ -109,12 +109,14 @@ virt_viewer_connect_timer(RemoteViewer *self)
     gboolean is_connected = FALSE;
 
     created = virt_viewer_app_create_session(app, "spice", NULL);
+    if (!created)
+        return TRUE;
 
     take_extern_credentials = TRUE;
     is_connected = virt_viewer_app_initial_connect(app, NULL);
 
     printf("%s active %i created %i is_connected %i \n",
-           (char *)__func__, virt_viewer_app_is_active(app), created, is_connected);
+           (const char *)__func__, virt_viewer_app_is_active(app), created, is_connected);
 
     return TRUE;
 }

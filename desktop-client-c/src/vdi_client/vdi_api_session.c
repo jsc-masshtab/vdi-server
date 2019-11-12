@@ -34,7 +34,7 @@ static void free_session_memory(){
     free_memory_safely(&vdiSession.auth_url);
     free_memory_safely(&vdiSession.jwt);
 
-    free_memory_safely(&vdiSession.current_vm_id);
+    //free_memory_safely(&vdiSession.current_vm_id);
 }
 
 static void setup_header_for_api_call(SoupMessage *msg)
@@ -190,7 +190,8 @@ void set_vdi_credentials(const gchar *username, const gchar *password, const gch
 
 void set_current_vm_id(const gchar *current_vm_id)
 {
-    vdiSession.current_vm_id = current_vm_id;
+    free_memory_safely(&vdiSession.current_vm_id);
+    vdiSession.current_vm_id = g_strdup(current_vm_id);
 }
 
 const gchar *get_current_vm_id()
@@ -255,7 +256,7 @@ void get_vdi_pool_data(GTask         *task,
                  gpointer       task_data G_GNUC_UNUSED,
                  GCancellable  *cancellable G_GNUC_UNUSED)
 {
-    printf("In %s :thread id = %lu\n", (const char *)__func__, pthread_self());
+    //printf("In %s :thread id = %lu\n", (const char *)__func__, pthread_self());
     gchar *urlStr = g_strdup_printf("%s/client/pools", vdiSession.api_url);
     gchar *response_body_str = api_call("GET", urlStr, NULL);
     g_free(urlStr);
@@ -284,7 +285,7 @@ void do_action_on_vm(GTask         *task,
     printf("%s: %s\n", (const char *)__func__, action_on_vm_data->action_on_vm_str);
 
     // url
-    gchar *urlStr = g_strdup_printf("%s/client/pools/%ld/%s", vdiSession.api_url,
+    gchar *urlStr = g_strdup_printf("%s/client/pools/%s/%s", vdiSession.api_url,
             action_on_vm_data->current_vm_id, action_on_vm_data->action_on_vm_str);
     // body
     gchar *bodyStr;
@@ -293,20 +294,21 @@ void do_action_on_vm(GTask         *task,
     else
         bodyStr = g_strdup_printf("{\"force\":false}");
 
-    gchar *response_body_str = api_call("POST", urlStr, bodyStr);
-    (void)response_body_str;
+    gchar *response_body_str G_GNUC_UNUSED = api_call("POST", urlStr, bodyStr);
+
     // free url and body
-    g_free(urlStr);
-    g_free(bodyStr);
+    free_memory_safely(&urlStr);
+    free_memory_safely(&bodyStr);
     // free ActionOnVmData
-    g_free(action_on_vm_data->action_on_vm_str);
+    free_memory_safely(&action_on_vm_data->current_vm_id);
+    free_memory_safely(&action_on_vm_data->action_on_vm_str);
     free(action_on_vm_data);
 }
 
 void do_action_on_vm_async(const gchar *actionStr, gboolean isForced)
 {
     ActionOnVmData *action_on_vm_data = malloc(sizeof(ActionOnVmData));
-    action_on_vm_data->current_vm_id = get_current_vm_id();
+    action_on_vm_data->current_vm_id = g_strdup(get_current_vm_id());
     action_on_vm_data->action_on_vm_str = g_strdup(actionStr);
     action_on_vm_data->is_action_forced = isForced;
 

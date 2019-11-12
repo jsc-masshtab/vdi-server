@@ -1050,6 +1050,9 @@ virt_viewer_app_create_session(VirtViewerApp *self, const gchar *type, GError **
 {
     g_return_val_if_fail(VIRT_VIEWER_IS_APP(self), FALSE);
     VirtViewerAppPrivate *priv = self->priv;
+
+    if (priv->session != NULL) // session already created
+        return FALSE;
     g_return_val_if_fail(priv->session == NULL, FALSE);
     g_return_val_if_fail(type != NULL, FALSE);
 
