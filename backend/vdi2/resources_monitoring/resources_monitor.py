@@ -130,10 +130,10 @@ class ResourcesMonitor(AbstractMonitor):
             await asyncio.sleep(RECONNECT_TIMEOUT)
 
     async def _connect(self):
-        controller_uid = await Controller.get_controller_id_by_ip(self._controller_ip)
+        controller_id = await Controller.get_controller_id_by_ip(self._controller_ip)
         # get token
         try:
-            token = await Controller.get_token(controller_uid)
+            token = await Controller.get_token(controller_id)
             if not token:
                 controller_client = await VeilHttpClient.create(self._controller_ip)
                 token = await controller_client.login()

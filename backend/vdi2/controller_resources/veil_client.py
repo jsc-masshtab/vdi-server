@@ -23,7 +23,7 @@ class ResourcesHttpClient(VeilHttpClient):
     async def create(cls, controller_ip: str):
         """Because of we need async execute db query"""
         self = cls(controller_ip)
-        self.controller_uid = await Controller.get_controller_id_by_ip(controller_ip)
+        self.controller_id = await Controller.get_controller_id_by_ip(controller_ip)
         return self
 
     @cached_property
@@ -50,7 +50,7 @@ class ResourcesHttpClient(VeilHttpClient):
 
     async def check_controller(self):
         """check if controller accesseble"""
-        url = self.based_url + '/controllers/check/'
+        url = self.based_url + 'controllers/check/'
         await self.fetch(url=url, method='GET')
 
     # async def discover_controllers(self, return_broken: bool):
