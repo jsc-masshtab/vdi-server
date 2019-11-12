@@ -29,6 +29,7 @@
         <ul class="details-menu">
             <li (click)="routeTo('info')" [class.active]="menuActive === 'info'" title="Информация о пуле"> <fa-icon [icon]="['fas','chart-bar']"></fa-icon><span class="name">Информация</span></li>
             <li (click)="routeTo('vms')" [class.active]="menuActive === 'vms'" title="Виртуальные машины в пуле"> <fa-icon [icon]="['fas','desktop']"></fa-icon><span class="name">Виртуальные машины</span></li>
+            <li (click)="routeTo('event-vm')" [class.active]="menuActive === 'event-vm'" title="События создания ВМ в пуле"> <fa-icon [icon]="['fas','comment']"></fa-icon><span class="name">События создания ВМ</span></li>
             <li (click)="routeTo('users')" [class.active]="menuActive === 'users'" title="Пользователи пула"> <fa-icon [icon]="['fas','users']"></fa-icon><span class="name">Пользователи</span></li>
         </ul>
         
@@ -37,11 +38,13 @@
                 <ng-container *ngIf="menuActive === 'info'">Информация о пулах рабочих столов</ng-container>
                 <ng-container *ngIf="menuActive === 'vms'">ВМ в пуле</ng-container>
                 <ng-container *ngIf="menuActive === 'users'">Пользователи пула</ng-container>
+                <ng-container *ngIf="menuActive === 'event-vm'">События создания ВМ</ng-container>
             </div>
             <div class="details-slide-into">
                 <ng-container *ngIf="typePool === 'automated'">
                     <vdi-table-into *ngIf="menuActive === 'info'" [item]="pool" [collection]="collectionDetailsAutomated" (action)="actionEdit($event)"></vdi-table-into>
-                    <vdi-table-component *ngIf="menuActive === 'vms'" [data]="pool?.vms" [collection]="collectionVmsAutomated" entity="vm" (clickRowData)="clickVm($event)" cursor="true"></vdi-table-component> 
+                    <vdi-table-component *ngIf="menuActive === 'vms'" [data]="pool?.vms" [collection]="collectionVmsAutomated" entity="vm" (clickRowData)="clickVm($event)" cursor="true"></vdi-table-component>
+                    <vdi-table-component *ngIf="menuActive === 'event-vm'" [data]="eventCreatedVm" [collection]="collectionEventVm"></vdi-table-component> 
                 </ng-container>
 
                 <ng-container *ngIf="typePool === 'static'">

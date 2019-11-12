@@ -1,3 +1,4 @@
+import { WebsocketPoolService } from './websockPool.service';
 import { environment } from 'src/environments/environment';
 import { Injectable } from '@angular/core';
 
@@ -7,32 +8,18 @@ export class WebsocketService  {
 
   private ws: WebSocket;
 
+  constructor(private ws_create_pool_service: WebsocketPoolService) {}
+
   public init(): void {
     let url = `ws://${environment.url_ws}/subscriptions`;
 
     this.ws = new WebSocket(url);
     if (this.ws) {
-      this.open();
-      this.streamMessage();
-      this.close();
-      this.error();
+      this.ws.addEventListener<'open'>('open', this.onListenOpen.bind(this));
+      this.ws.addEventListener<'message'>('message', this.onListenMessage.bind(this));
+      this.ws.addEventListener<'close'>('close', this.onListenClose.bind(this));
+      this.ws.addEventListener<'error'>('error', this.onListenError.bind(this));
     }
-  }
-
-  public open(): void {
-    this.ws.addEventListener<'open'>('open', this.onListenOpen.bind(this));
-  }
-
-  public streamMessage(): void {
-    this.ws.addEventListener<'message'>('message', this.onListenMessage.bind(this));
-  }
-
-  public close(): void {
-    this.ws.addEventListener<'close'>('close', this.onListenClose.bind(this));
-  }
-
-  public error(): void {
-    this.ws.addEventListener<'error'>('error', this.onListenError.bind(this));
   }
 
   private onListenOpen(event: Event): void {
@@ -41,14 +28,16 @@ export class WebsocketService  {
   }
 
   private onListenMessage(event: MessageEvent): void {
-    console.log(event.data, 'msg');
+    this.ws_create_pool_service.setMsg(event.data);
   }
 
   private onListenClose(event: CloseEvent): void {
+    this.ws_create_pool_service.setComplete();
     console.log(event, 'close');
   }
 
   private onListenError(event: Event): void {
+    this.ws_create_pool_service.setError(event);
     console.log(event, 'error');
   }
 }

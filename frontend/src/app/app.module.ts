@@ -1,3 +1,4 @@
+import { WebsocketPoolService } from './common/classes/websockPool.service';
 import { WebsocketService } from './common/classes/websock.service';
 
 import { UsersModule } from './settings/users/users.module';
@@ -27,7 +28,7 @@ import { library } from '@fortawesome/fontawesome-svg-core';
 import { faDesktop, faDatabase, faBuilding, faLayerGroup, faPlusCircle, faSpinner, faServer, faCog, faChevronUp, faTimesCircle,
          faFolderOpen, faStar, faMinusCircle, faTv, faSyncAlt, faTrashAlt, faUsers, faMeh,
          faChartBar, faUser, faStopCircle, faPlayCircle, faPauseCircle, faEdit, faQuestionCircle, faCheckSquare,
-          faExclamationTriangle, faHeartbeat, faChevronCircleUp
+          faExclamationTriangle, faHeartbeat, faChevronCircleUp, faComment
         } from '@fortawesome/free-solid-svg-icons';
 /*  -----------------------------------   icons   --------------------------------------*/
 
@@ -82,7 +83,8 @@ import { environment } from 'src/environments/environment';
      { provide: MAT_DIALOG_DEFAULT_OPTIONS, useValue: { hasBackdrop: true, restoreFocus: true } },
       ErrorsService,
       WaitService,
-      WebsocketService
+      WebsocketService,
+      WebsocketPoolService
     ],
   bootstrap: [AppComponent]
 })
@@ -100,7 +102,7 @@ export class AppModule {
     library.add(faDesktop, faDatabase, faLayerGroup, faPlusCircle, faMinusCircle, faSpinner, faServer, faCog, faChevronUp, faTimesCircle,
                 faFolderOpen, faStar, faTv, faSyncAlt, faBuilding, faTrashAlt, faUsers, faMeh, faChartBar, faUser,
                 faStopCircle, faPlayCircle, faPauseCircle, faEdit, faQuestionCircle, faCheckSquare, faExclamationTriangle, faHeartbeat,
-                faChevronCircleUp);
+                faChevronCircleUp, faComment);
 
     const uri = environment.url;
     const link = this.httpLink.create({ uri, includeQuery: true, includeExtensions: false });
