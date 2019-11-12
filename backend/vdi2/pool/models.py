@@ -22,8 +22,8 @@ class Pool(db.Model):
 
     id = db.Column(UUID(), primary_key=True, default=uuid.uuid4)
     verbose_name = db.Column(db.Unicode(length=128), nullable=False, unique=True)
-    cluster_uid = db.Column(UUID(), nullable=False)
-    node_uid = db.Column(UUID(), nullable=False)
+    cluster_id = db.Column(UUID(), nullable=False)
+    node_id = db.Column(UUID(), nullable=False)
     status = db.Column(AlchemyEnum(Status), nullable=False)
     controller = db.Column(UUID(), db.ForeignKey('controller.id'), nullable=False)
 
@@ -36,7 +36,7 @@ class Pool(db.Model):
            Обьединяет таблицы Статического и Динамического пула и проставляет им поле POOL_TYPE
         """
         # TODO: сортировка
-        xpr = case([(StaticPool.pool_id == None, literal_column("'AUTOMATED'"))],
+        xpr = case([(StaticPool.static_pool_id == None, literal_column("'AUTOMATED'"))],
                    else_=literal_column("'STATIC'")).label('POOL_TYPE')
 
         query = db.select([Pool,
@@ -61,14 +61,14 @@ class Pool(db.Model):
         return await query.gino.all()
 
     @staticmethod
-    async def get_desktop_type(pool_uid):
+    async def get_desktop_type(pool_id):
         # TODO: rewrite
-        return await Pool.select('desktop_pool_type').where(Pool.id == pool_uid).gino.scalar()
+        return await Pool.select('desktop_pool_type').where(Pool.id == pool_id).gino.scalar()
 
     @staticmethod
-    async def get_controller_ip(pool_uid):
+    async def get_controller_ip(pool_id):
         query = db.select([Controller.address]).select_from(Controller.join(Pool)).where(
-            Pool.id == pool_uid)
+            Pool.id == pool_id)
         return await query.gino.scalar()
 
     async def get_vm_amount(self, only_free=False):
@@ -112,36 +112,36 @@ class Pool(db.Model):
         return await query.gino.first()
 
     @staticmethod
-    async def get_node_uid(pool_uid):
-        return await Pool.select('node_uid').where(Pool.id == pool_uid).gino.scalar()
+    async def get_node_id(pool_id):
+        return await Pool.select('node_id').where(Pool.id == pool_id).gino.scalar()
 
     @staticmethod
-    async def get_name(pool_uid):
-        return await Pool.select('verbose_name').where(Pool.id == pool_uid).gino.scalar()
+    async def get_name(pool_id):
+        return await Pool.select('verbose_name').where(Pool.id == pool_id).gino.scalar()
 
     # ----- ----- ----- ----- ----- ----- -----
     # Setters & etc.
 
     @classmethod
-    async def create(cls, verbose_name, cluster_uid, node_uid, controller_ip):
-        controller_uid = await Controller.get_controller_id_by_ip(controller_ip)
-        if not controller_uid:
+    async def create(cls, verbose_name, cluster_id, node_id, controller_ip):
+        controller_id = await Controller.get_controller_id_by_ip(controller_ip)
+        if not controller_id:
             raise AssertionError('Controller {} not found.'.format(controller_ip))
 
-        pool = await super().create(verbose_name=verbose_name, cluster_uid=cluster_uid, node_uid=node_uid,
-                                    controller=controller_uid,
+        pool = await super().create(verbose_name=verbose_name, cluster_id=cluster_id, node_id=node_id,
+                                    controller=controller_id,
                                     status=Status.CREATING)
         return pool
 
     @classmethod
-    async def activate(cls, pool_uid):
+    async def activate(cls, pool_id):
         return await Pool.update.values(status=Status.ACTIVE).where(
-            Pool.id == pool_uid).gino.status()
+            Pool.id == pool_id).gino.status()
 
     @classmethod
-    async def deactivate(cls, pool_uid):
+    async def deactivate(cls, pool_id):
         return await Pool.update.values(status=Status.FAILED).where(
-            Pool.id == pool_uid).gino.status()
+            Pool.id == pool_id).gino.status()
 
     async def expand_pool_if_requred(self):
         """
@@ -180,34 +180,34 @@ class Pool(db.Model):
 class StaticPool(db.Model):
     """На данный момент отсутствует смысловая валидация на уровне таблиц (она в схемах)."""
     __tablename__ = 'static_pool'
-    pool_id = db.Column('static_pool_id', UUID(), db.ForeignKey('pool.id'), primary_key=True)
+    static_pool_id = db.Column(UUID(), db.ForeignKey('pool.id'), primary_key=True)
 
     @classmethod
-    async def get_info(cls, pool_uid: str):
-        if not pool_uid:
+    async def get_info(cls, pool_id: str):
+        if not pool_id:
             raise AssertionError('Empty uid.')
         pool_data = AutomatedPool.join(Pool).select().where(
-            Pool.id == pool_uid)
+            Pool.id == pool_id)
         return await pool_data.gino.first()
 
     @classmethod
-    async def create(cls, verbose_name, controller_ip, cluster_uid, node_uid):
+    async def create(cls, verbose_name, controller_ip, cluster_id, node_id):
         """Nested transactions are atomic."""
 
         async with db.transaction() as tx:
             # Create pool first
             pool = await Pool.create(verbose_name=verbose_name,
-                                     cluster_uid=cluster_uid,
-                                     node_uid=node_uid,
+                                     cluster_id=cluster_id,
+                                     node_id=node_id,
                                      controller_ip=controller_ip)
             # Create static pool
-            return await super().create(pool_uid=pool.id)
+            return await super().create(static_pool_id=pool.id)
 
     async def activate(self):
-        return await Pool.activate(self.pool_id)
+        return await Pool.activate(self.static_pool_id)
 
     async def deactivate(self):
-        return await Pool.deactivate(self.pool_id)
+        return await Pool.deactivate(self.static_pool_id)
 
 
 class AutomatedPool(db.Model):
@@ -217,9 +217,9 @@ class AutomatedPool(db.Model):
     """
     __tablename__ = 'automated_pool'
 
-    pool_id = db.Column('automated_pool_id', UUID(), db.ForeignKey('pool.id'), primary_key=True)
-    datapool_uid = db.Column(UUID(), nullable=False)
-    template_uid = db.Column(UUID(), nullable=False)
+    automated_pool_id = db.Column(UUID(), db.ForeignKey('pool.id'), primary_key=True)
+    datapool_id = db.Column(UUID(), nullable=False)
+    template_id = db.Column(UUID(), nullable=False)
 
     # Pool size settings
     min_size = db.Column(db.Integer(), nullable=False, default=1)
@@ -237,44 +237,45 @@ class AutomatedPool(db.Model):
     # Properties and getters:
 
     @property
-    async def node_uid(self):
-        return await Pool.get_node_uid(self.pool_id)
+    async def node_id(self):
+        return await Pool.get_node_id(self.automated_pool_id)
 
     @property
     async def verbose_name(self):
-        return await Pool.get_name(self.pool_id)
+        return await Pool.get_name(self.automated_pool_id)
 
     @property
     async def controller_ip(self):
-        return await Pool.get_controller_ip(self.pool_id)
+        return await Pool.get_controller_ip(self.automated_pool_id)
 
     @classmethod
-    async def get_info(cls, pool_uid: str):
-        if not pool_uid:
+    async def get_info(cls, pool_id: str):
+        if not pool_id:
             raise AssertionError('Empty uid.')
         pool_data = AutomatedPool.join(Pool).select().where(
-            Pool.id == pool_uid)
+            Pool.id == pool_id)
         return await pool_data.gino.first()
 
     # ----- ----- ----- ----- ----- ----- -----
     # Setters & etc.
 
     @classmethod
-    async def create(cls, verbose_name, controller_ip, cluster_uid, node_uid,
-                     template_uid, datapool_uid, min_size, max_size, max_vm_amount, increase_step,
+    async def create(cls, verbose_name, controller_ip, cluster_id, node_id,
+                     template_id, datapool_id, min_size, max_size, max_vm_amount, increase_step,
                      max_amount_of_create_attempts, initial_size, reserve_size, total_size, vm_name_template):
         """Nested transactions are atomic."""
-
+        print('Create')
         async with db.transaction() as tx:
             # Create pool first
             pool = await Pool.create(verbose_name=verbose_name,
-                                     cluster_uid=cluster_uid,
-                                     node_uid=node_uid,
+                                     cluster_id=cluster_id,
+                                     node_id=node_id,
                                      controller_ip=controller_ip)
+            print(pool.id)
             # Create automated pool
-            return await super().create(pool_uid=pool.id,
-                                        template_uid=template_uid,
-                                        datapool_uid=datapool_uid,
+            return await super().create(automated_pool_id=pool.id,
+                                        template_id=template_id,
+                                        datapool_id=datapool_id,
                                         min_size=min_size,
                                         max_size=max_size,
                                         max_vm_amount=max_vm_amount,
@@ -286,10 +287,10 @@ class AutomatedPool(db.Model):
                                         vm_name_template=vm_name_template)
 
     async def activate(self):
-        return await Pool.activate(self.pool_id)
+        return await Pool.activate(self.automated_pool_id)
 
     async def deactivate(self):
-        return await Pool.deactivate(self.pool_id)
+        return await Pool.deactivate(self.automated_pool_id)
 
     async def add_vm(self, domain_index):
         """
@@ -307,10 +308,10 @@ class AutomatedPool(db.Model):
         params = {
             'verbose_name': "{}-{}-{}".format(vm_name_template, domain_index, uid),
             'name_template': vm_name_template,
-            'domain_id': str(self.template_uid),
-            'datapool_id': str(self.datapool_uid),  # because of UUID
+            'domain_id': str(self.template_id),
+            'datapool_id': str(self.datapool_id),  # because of UUID
             'controller_ip': await self.controller_ip,
-            'node_id': str(await self.node_uid),
+            'node_id': str(await self.node_id),
         }
 
         print('Params is:')
@@ -358,7 +359,7 @@ class AutomatedPool(db.Model):
             resources_monitor_manager.unsubscribe(response_waiter)
 
             if is_vm_successfully_created:
-                await Vm.create(id=vm_info['id'], pool_id=str(self.pool_id), template_id=str(self.template_uid),
+                await Vm.create(id=vm_info['id'], pool_id=str(self.automated_pool_id), template_id=str(self.template_id),
                                 username='admin')
                 return vm_info
             else:
@@ -388,7 +389,7 @@ class AutomatedPool(db.Model):
                                                                                              self.initial_size),
                                 mgs_type='data',
                                 event='pool_creation_progress',
-                                pool_id=str(self.pool_id),
+                                pool_id=str(self.automated_pool_id),
                                 domain_index=vm_index,
                                 initial_size=self.initial_size,
                                 resource=VDI_TASKS_SUBSCRIPTION)
@@ -411,7 +412,7 @@ class AutomatedPool(db.Model):
         msg_dict = dict(msg=msg,
                         msg_type='data',
                         event='pool_creation_completed',
-                        pool_id=str(self.pool_id),
+                        pool_id=str(self.automated_pool_id),
                         amount_of_created_vms=len(vm_list),
                         initial_size=self.initial_size,
                         is_successful=is_creation_successful,

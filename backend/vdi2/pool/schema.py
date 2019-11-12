@@ -1,19 +1,12 @@
 # -*- coding: utf-8 -*-
 import re
 import graphene
-import tornado.gen
-from tornado.httpclient import HTTPClientError
-import graphql
+from tornado.httpclient import HTTPClientError  # TODO: точно это нужно тут?
 
-from database import Status
-from common.veil_errors import SimpleError
-
-from common.utils import get_selections
+from database import StatusGraphene
 from common.veil_validators import MutationValidation
-
-
 from common.veil_errors import SimpleError, HttpError, ValidationError
-from common.utils import get_selections, validate_name, make_graphene_type
+from common.utils import make_graphene_type
 
 from auth.schema import UserType
 from auth.models import User
@@ -24,18 +17,34 @@ from vm.veil_client import VmHttpClient
 
 from controller.schema import ControllerType
 from controller.models import Controller
+
 from controller_resources.veil_client import ResourcesHttpClient
 from controller_resources.schema import ClusterType, NodeType, DatapoolType
 
-from pool.models import AutomatedPool
+from pool.models import AutomatedPool, StaticPool, Pool
+# TODO: отсутствует валидация входящих ресурсов вроде node_uid, cluster_uid и т.п. Ранее шла речь,
+#  о том, что мы будем кешированно хранить какие-то ресурсы полученные от ECP Veil. Возможно стоит
+#  обращаться к этому хранилищу для проверки корректности присланных ресурсов. Аналогичный принцип
+#  стоит применить и к статическим пулам (вместо похода на вейл для проверки присланных параметров).
 
 
-class DesktopPoolTypeGraphene(graphene.Enum):
-    AUTOMATED = 0
-    STATIC = 1
+# TODO: возвращаемые значения для PoolType
+# TODO: remove raw sql, rewrite
+async def check_and_return_pool_data(pool_id, pool_type=None):
+    # check if pool exists
+    async with db.connect() as conn:
+        qu = 'SELECT * FROM pool WHERE id = $1', pool_id
+        pool_data = await conn.fetch(*qu)
+        if not pool_data:
+            raise SimpleError('Не найден пул с указанным id')
+        [pool_data] = pool_data
+        pool_data_dict = dict(pool_data.items())
 
+    # if pool_type provided then check if pool has required type
+    if pool_type and pool_data_dict['desktop_pool_type'] != pool_type:
+        raise SimpleError('Не найден пул с указанным id и типом {}'.format(pool_type))
 
-StatusGraphene = graphene.Enum.from_enum(Status)
+    return pool_data_dict
 
 
 class PoolValidator(MutationValidation):
@@ -95,112 +104,66 @@ class PoolValidator(MutationValidation):
         return value
 
 
-# TODO: PoolValidation class
-# todo: remove raw sql
-async def check_and_return_pool_data(pool_id, pool_type=None):
-    # check if pool exists
-    async with db.connect() as conn:
-        qu = 'SELECT * FROM pool WHERE id = $1', pool_id
-        pool_data = await conn.fetch(*qu)
-        if not pool_data:
-            raise SimpleError('Не найден пул с указанным id')
-        [pool_data] = pool_data
-        pool_data_dict = dict(pool_data.items())
-
-    # if pool_type provided then check if pool has required type
-    if pool_type and pool_data_dict['desktop_pool_type'] != pool_type:
-        raise SimpleError('Не найден пул с указанным id и типом {}'.format(pool_type))
-
-    return pool_data_dict
-
-
-async def enable_remote_access(controller_address, vm_id):
-    # TODO: move to model
-    vm_http_client = await VmHttpClient.create(controller_address, vm_id)
-    await vm_http_client.enable_remote_access()
-
-
-async def enable_remote_accesses(controller_address, vm_ids):
-    # TODO: move to model
-    async_tasks = [
-        enable_remote_access(controller_address=controller_address, vm_id=vm_id)
-        for vm_id in vm_ids
-    ]
-    await tornado.gen.multi(async_tasks)
-
-
 class PoolType(graphene.ObjectType):
-    # TODO: rewrite
+    # TODO: update
+    # Pool fields
     id = graphene.UUID()
     verbose_name = graphene.String()
     status = StatusGraphene()
-
-    template_id = graphene.UUID()
+    POOL_TYPE = graphene.String()
     cluster_id = graphene.UUID()
-    datapool_id = graphene.UUID()
     node_id = graphene.UUID()
+    # controller = graphene.UUID()
+    controller = graphene.Field(ControllerType)
 
+    # StaticPool fields
+    static_pool_id = graphene.UUID()
+
+    # AutomatedPool fields
+    automated_pool_id = graphene.UUID()
+    template_id = graphene.UUID()
+    datapool_id = graphene.UUID()
     min_size = graphene.Int()
     max_size = graphene.Int()
     max_vm_amount = graphene.Int()
     increase_step = graphene.Int()
     max_amount_of_create_attempts = graphene.Int()
-
     initial_size = graphene.Int()
     reserve_size = graphene.Int()
     total_size = graphene.Int()
     vm_name_template = graphene.String()
-    desktop_pool_type = DesktopPoolTypeGraphene()
 
-    controller = ControllerType()
-    users = graphene.List(UserType, entitled=graphene.Boolean())
-    vms = graphene.List(VmType)
+    # users = graphene.List(UserType, entitled=graphene.Boolean())
+    # vms = graphene.List(VmType)
+    # node = graphene.Field(NodeType)
+    # cluster = graphene.Field(ClusterType)
+    # datapool = graphene.Field(DatapoolType)
+    # template = graphene.Field(TemplateType)
 
-    controller = graphene.Field(ControllerType)
+    async def resolve_controller(self, info):
+        controller_obj = await Controller.get(self.controller)
+        return ControllerType(**controller_obj.__values__)
 
-    node = graphene.Field(NodeType)
-    cluster = graphene.Field(ClusterType)
-    datapool = graphene.Field(DatapoolType)
-    template = graphene.Field(TemplateType)
-
-    async def resolve_name(self, _info):
-        if not self.name:
-            self.name = await Pool.get_name(self.id)
-        return self.name
-
-    async def resolve_users(self, _info, entitled=True):
-        # users who are entitled to pool
-        if entitled:
-            users_data = await User.join(PoolUsers, User.id == PoolUsers.user_id).select().where(
-                 PoolUsers.pool_id == self.id).gino.all()
-        # users who are NOT entitled to pool
-        else:
-            subquery = PoolUsers.query(PoolUsers.user_id).where(PoolUsers.pool_id == self.id)
-            users_data = User.filter(User.id.notin_(subquery)).gino.all()
-        print('users_data', users_data)
-        # todo: it will not work until model and grapnene feilds are syncronized
-        uset_type_list = [
-            UserType(**user.__values__)
-            for user in users_data
-        ]
-        return uset_type_list
+    # async def resolve_users(self, _info, entitled=True):
+    #     # users who are entitled to pool
+    #     if entitled:
+    #         users_data = await User.join(PoolUsers, User.id == PoolUsers.user_id).select().where(
+    #              PoolUsers.pool_id == self.id).gino.all()
+    #     # users who are NOT entitled to pool
+    #     else:
+    #         subquery = PoolUsers.query(PoolUsers.user_id).where(PoolUsers.pool_id == self.id)
+    #         users_data = User.filter(User.id.notin_(subquery)).gino.all()
+    #     print('users_data', users_data)
+    #     # todo: it will not work until model and grapnene feilds are syncronized
+    #     uset_type_list = [
+    #         UserType(**user.__values__)
+    #         for user in users_data
+    #     ]
+    #     return uset_type_list
 
     async def resolve_vms(self, _info):
         await self._build_vms_list()
         return self.vms
-
-    async def resolve_desktop_pool_type(self, _info):
-        if not self.desktop_pool_type:
-            self.desktop_pool_type = await Pool.get_desktop_type(self.id)
-        return self.desktop_pool_type
-
-    async def resolve_settings(self, _info):
-        if not self.settings:
-            pool_data = await Pool.get_pool_data(self.id)
-            # todo: Get data from ORM and just fill PoolSettings
-            # ...
-            self.settings = PoolSettings()
-        return self.settings
 
     # async def resolve_pool_resources_names(self, _info):
     #
@@ -236,92 +199,163 @@ class PoolType(graphene.ObjectType):
     #     except HTTPClientError:
     #         return PoolResourcesNames(cluster_name=DEFAULT_NAME, node_name=DEFAULT_NAME,
     #                                   datapool_name=DEFAULT_NAME, template_name=DEFAULT_NAME)
-
-    async def resolve_status(self, _info):
-
-        if not self.status:
-            # If we cant receive veil_info about at least one vm then we mark pool as broken
-            await self._build_vms_list()
-            veil_info_list = [vm.veil_info for vm in self.vms]
-            if None in veil_info_list:
-                self.status = 'FAILED'
-            else:
-                self.status = 'ACTIVE'
-
-        return self.status
-
-    async def resolve_node(self, _info):
-        resources_http_client = await ResourcesHttpClient.create(self.controller.address)
-
-        node_id = await Pool.select('node_id').where(Pool.id == self.id).gino.scalar()
-        node_data = await resources_http_client.fetch_node(node_id)
-        node_type = make_graphene_type(NodeType, node_data)
-        node_type.controller = ControllerType(address=self.controller.address)
-        return node_type
-
-    async def resolve_cluster(self, _info):
-        resources_http_client = await ResourcesHttpClient.create(self.controller.address)
-
-        cluster_id = await Pool.select('cluster_id').where(Pool.id == self.id).gino.scalar()
-        cluster_data = await resources_http_client.fetch_cluster(cluster_id)
-        cluster_type = make_graphene_type(ClusterType, cluster_data)
-        cluster_type.controller = ControllerType(address=self.controller.address)
-        return cluster_type
-
-    async def resolve_datapool(self, _info):
-        resources_http_client = await ResourcesHttpClient.create(self.controller.address)
-
-        datapool_id = await Pool.select('datapool_id').where(Pool.id == self.id).gino.scalar()
-        datapool_data = await resources_http_client.fetch_datapool(datapool_id)
-        datapool_type = make_graphene_type(DatapoolType, datapool_data)
-        datapool_type.controller = ControllerType(address=self.controller.address)
-        return datapool_type
-
-    async def resolve_template(self, _info):
-        template_id = await Pool.select('template_id').where(Pool.id == self.id).gino.scalar()
-        vm_http_client = await VmHttpClient.create(self.controller.address, template_id)
-        veil_info = await vm_http_client.info()
-        return VmQuery.veil_template_data_to_graphene_type(veil_info, self.controller.address)
-
-    async def _build_vms_list(self):
-        if not self.vms:
-            self.vms = []
-            vms_data = await Vm.select("id").where((Vm.pool_id == self.id)).gino.all()
-            for (vm_id,) in vms_data:
-                vm_http_client = await VmHttpClient.create(self.controller.address, vm_id)
-                try:
-                    veil_info = await vm_http_client.info()
-                    # create graphene type
-                    vm_type = VmQuery.veil_vm_data_to_graphene_type(veil_info, self.controller.address)
-                except HTTPClientError:
-                    vm_type = VmType(id=vm_id, controller=ControllerType(address=self.controller.address))
-                    vm_type.veil_info = None
-                self.vms.append(vm_type)
+    #
+    # async def resolve_node(self, _info):
+    #     resources_http_client = await ResourcesHttpClient.create(self.controller.address)
+    #
+    #     node_id = await Pool.select('node_id').where(Pool.id == self.id).gino.scalar()
+    #     node_data = await resources_http_client.fetch_node(node_id)
+    #     node_type = make_graphene_type(NodeType, node_data)
+    #     node_type.controller = ControllerType(address=self.controller.address)
+    #     return node_type
+    #
+    # async def resolve_cluster(self, _info):
+    #     resources_http_client = await ResourcesHttpClient.create(self.controller.address)
+    #
+    #     cluster_id = await Pool.select('cluster_id').where(Pool.id == self.id).gino.scalar()
+    #     cluster_data = await resources_http_client.fetch_cluster(cluster_id)
+    #     cluster_type = make_graphene_type(ClusterType, cluster_data)
+    #     cluster_type.controller = ControllerType(address=self.controller.address)
+    #     return cluster_type
+    #
+    # async def resolve_datapool(self, _info):
+    #     resources_http_client = await ResourcesHttpClient.create(self.controller.address)
+    #
+    #     datapool_id = await Pool.select('datapool_id').where(Pool.id == self.id).gino.scalar()
+    #     datapool_data = await resources_http_client.fetch_datapool(datapool_id)
+    #     datapool_type = make_graphene_type(DatapoolType, datapool_data)
+    #     datapool_type.controller = ControllerType(address=self.controller.address)
+    #     return datapool_type
+    #
+    # async def resolve_template(self, _info):
+    #     template_id = await Pool.select('template_id').where(Pool.id == self.id).gino.scalar()
+    #     vm_http_client = await VmHttpClient.create(self.controller.address, template_id)
+    #     veil_info = await vm_http_client.info()
+    #     return VmQuery.veil_template_data_to_graphene_type(veil_info, self.controller.address)
+    #
+    # async def _build_vms_list(self):
+    #     if not self.vms:
+    #         self.vms = []
+    #         vms_data = await Vm.select("id").where((Vm.pool_id == self.id)).gino.all()
+    #         for (vm_id,) in vms_data:
+    #             vm_http_client = await VmHttpClient.create(self.controller.address, vm_id)
+    #             try:
+    #                 veil_info = await vm_http_client.info()
+    #                 # create graphene type
+    #                 vm_type = VmQuery.veil_vm_data_to_graphene_type(veil_info, self.controller.address)
+    #             except HTTPClientError:
+    #                 vm_type = VmType(id=vm_id, controller=ControllerType(address=self.controller.address))
+    #                 vm_type.veil_info = None
+    #             self.vms.append(vm_type)
 
 
-class AddStaticPool(graphene.Mutation):
+class PoolQuery(graphene.ObjectType):
+    # TODO: описать типы сортировок в Enum
+    pools = graphene.List(PoolType, ordering=graphene.String(), reversed_order=graphene.Boolean())
+    pool = graphene.Field(PoolType, id=graphene.String(), controller_address=graphene.String())
+
+    # async with db.connect() as conn:
+    #     # sort items if required
+    #     if ordering:
+    #         # is reversed
+    #         if reversed_order is not None:
+    #             sort_order = 'DESC' if reversed_order else 'ASC'
+    #         else:
+    #             sort_order = 'ASC'
+    #
+    #         # determine sql query
+    #         if ordering == 'name':
+    #             qu = "SELECT * FROM pool ORDER BY name {}".format(sort_order)
+    #             pools = await
+    #             conn.fetch(qu)
+    #             return PoolMixin._pool_db_data_to_pool_type_list(pools)
+    #         elif ordering == 'controller':
+    #             qu = "SELECT * FROM pool ORDER BY controller_ip {}".format(sort_order)
+    #             pools = await
+    #             conn.fetch(qu)
+    #             return PoolMixin._pool_db_data_to_pool_type_list(pools)
+    #         elif ordering == 'vms':
+    #             qu = "SELECT pool.* FROM pool LEFT JOIN vm " \
+    #                  "ON pool.id = vm.pool_id GROUP BY pool.id ORDER BY COUNT(vm.id) {}".format(sort_order)
+    #             pools = await
+    #             conn.fetch(qu)
+    #             return PoolMixin._pool_db_data_to_pool_type_list(pools)
+    #         elif ordering == 'users':
+    #             qu = "SELECT pool.* FROM pool LEFT JOIN pools_users " \
+    #                  "ON pool.id = pools_users.pool_id GROUP BY pool.id ORDER BY COUNT(pools_users.username)" \
+    #                  " {}".format(sort_order)
+    #             pools = await
+    #             conn.fetch(qu)
+    #             return PoolMixin._pool_db_data_to_pool_type_list(pools)
+    #         elif ordering == 'desktop_pool_type':
+    #             qu = "SELECT * FROM pool ORDER BY desktop_pool_type {}".format(sort_order)
+    #             pools = await
+    #             conn.fetch(qu)
+    #             return PoolMixin._pool_db_data_to_pool_type_list(pools)
+    #         elif ordering == 'status':
+    #             qu = "SELECT * FROM pool"
+    #             pools = await
+    #             conn.fetch(qu)
+    #             pool_type_list = PoolMixin._pool_db_data_to_pool_type_list(pools)
+    #
+    #             for pool_type in pool_type_list:
+    #                 await
+    #                 pool_type.determine_pool_status()
+    #             reverse = reversed_order if reversed_order is not None else False
+    #             pool_type_list = sorted(pool_type_list, key=lambda item: item.status, reverse=reverse)
+    #             return pool_type_list
+    #         else:
+    #             raise SimpleError('Неверный параметр сортировки')
+    #     else:
+    #         qu = "SELECT * FROM pool"
+    #         pools = await
+    #         conn.fetch(qu)
+    #         return PoolMixin._pool_db_data_to_pool_type_list(pools)
+
+    async def resolve_pools(self, info, ordering=None, reversed_order=None):
+        pools = await Pool.get_pools()
+        objects = [
+            PoolType(**pool)
+            for pool in pools
+        ]
+        return objects
+
+    async def resolve_pool(self, _info, id):
+        pool = await Pool.get_pool(id)
+        if not pool:
+            raise SimpleError('No such pool.')
+        return PoolType(**pool)
+
+
+# Static pool mutations
+class CreateStaticPoolMutation(graphene.Mutation, PoolValidator):
     class Arguments:
         verbose_name = graphene.String(required=True)
-        vm_ids = graphene.List(graphene.ID, required=True)
+        vm_ids = graphene.List(graphene.UUID, required=True)
 
     Output = PoolType
 
     @staticmethod
     async def fetch_veil_vm_data_list(vm_ids):
+        # TODO: не пересена в модель, потому что есть предложение вообще отказаться от такой проверки.
+        #  Более удобным вариантом кажется хранить ресурсы в кеше и валидировать их из него.
         controller_adresses = await Controller.get_controllers_addresses()
+        print('Controller addresses {}'.format(controller_adresses))
         # create list of all vms on controllers
         all_vm_veil_data_list = []
         for controller_address in controller_adresses:
             vm_http_client = await VmHttpClient.create(controller_address, '')
             try:
                 single_vm_veil_data_list = await vm_http_client.fetch_vms_list()
+                print('single vm veil data list: {}'.format(single_vm_veil_data_list))
                 # add data about controller address
                 for vm_veil_data in single_vm_veil_data_list:
                     vm_veil_data['controller_address'] = controller_address
                 all_vm_veil_data_list.extend(single_vm_veil_data_list)
             except (HttpError, OSError):
+                print('HttpError')
                 pass
-
+        print(all_vm_veil_data_list)
         # find vm veil data by id
         vm_veil_data_list = []
         for vm_id in vm_ids:
@@ -330,25 +364,21 @@ class AddStaticPool(graphene.Mutation):
                 vm_veil_data_list.append(data)
             except StopIteration:
                 raise SimpleError('ВМ с id {} не найдена ни на одном из известных контроллеров'.format(vm_id))
-
         return vm_veil_data_list
 
-    async def mutate(self, _info, verbose_name, vm_ids):
-
-        # validate name
-        validate_pool_name(verbose_name)
-
-        if not vm_ids:
-            raise SimpleError("Список ВМ не должен быть пустым")
-
+    @classmethod
+    async def mutate(cls, root, info, **kwargs):
+        cls.validate_agruments(**kwargs)
+        pool = None
+        vm_ids = kwargs['vm_ids']
+        verbose_name = kwargs['verbose_name']
         # get vm info
-        veil_vm_data_list = await AddStaticPool.fetch_veil_vm_data_list(vm_ids)
-
+        veil_vm_data_list = await CreateStaticPoolMutation.fetch_veil_vm_data_list(vm_ids)
         # Check that all vms are on the same node (Условие поставленное начальством, насколько я помню)
         first_vm_data = veil_vm_data_list[0]
+        # TODO: move to validator?
         if not all(x == first_vm_data for x in veil_vm_data_list):
             raise SimpleError("Все ВМ должны находится на одном сервере")
-
         # All VMs are on the same node and cluster so we can take this data from the first item
         controller_ip = first_vm_data['controller_address']
         node_id = first_vm_data['node']['id']
@@ -356,40 +386,34 @@ class AddStaticPool(graphene.Mutation):
         resources_http_client = await ResourcesHttpClient.create(controller_ip)
         node_data = await resources_http_client.fetch_node(node_id)
         cluster_id = node_data['cluster']
+        try:
+            await Vm.enable_remote_accesses(controller_ip, vm_ids)
+            pool = await StaticPool.create(verbose_name=verbose_name,
+                                           controller_ip=controller_ip,
+                                           cluster_id=cluster_id,
+                                           node_id=node_id)
+            # add vms to db
+            for vm_id in vm_ids:
+                await Vm.create(id=vm_id, pool_id=pool.uid)
 
-        # remote access
-        await enable_remote_accesses(controller_ip, vm_ids)
-
-        # todo: запись в таблицы пулов и вм должна быть одной транзакцией??
-        # add pool to db
-        controller_uid = await Controller.get_controller_id_by_ip(controller_ip)
-        # todo: Запрос к модели статич. пула
-        pool = await Pool.create(
-            verbose_name=verbose_name,
-            status='ACTIVE',
-            controller=controller_uid,
-            desktop_pool_type=DesktopPoolTypeGraphene.MANUAL.name,
-            cluster_id=cluster_id,
-            node_id=node_id
-        )
-
-        # add vms to db
-        for vm_id in vm_ids:
-            await Vm.create(id=vm_id, pool_id=pool.id)
-
-        # response
-        vms = [
-            VmType(id=vm_id) for vm_id in vm_ids
-        ]
-        return PoolType(id=pool.id, name=verbose_name, vms=vms,
-                        controller=ControllerType(address=controller_ip),
-                        desktop_pool_type=DesktopPoolTypeGraphene.MANUAL)
+            # response
+            vms = [VmType(id=vm_id) for vm_id in vm_ids]
+            await pool.activate()
+        except Exception as E:
+            # TODO: широкий exception потому, что пока нет ошибки от монитора ресурсов. эксепшены нужно ограничить.
+            print(E)
+            if pool:
+                await pool.deactivate()
+            return CreateStaticPoolMutation(
+                pool=None)
+        return PoolType(id=pool.uid, name=verbose_name, vms=vms,
+                        )
 
 
 class AddVmsToStaticPool(graphene.Mutation):
     class Arguments:
         pool_id = graphene.ID(required=True)
-        vm_ids = graphene.List(graphene.ID, required=True)
+        vm_ids = graphene.List(graphene.UUID, required=True)
 
     ok = graphene.Boolean()
 
@@ -399,8 +423,8 @@ class AddVmsToStaticPool(graphene.Mutation):
 
         # todo: Запрос к модели статич. пула
         pool_data = await Pool.select('controller', 'node_id').where(Pool.id == pool_id).gino.all()
-        controller_uid, node_id = pool_data
-        controller_address = Controller.select('address').where(Controller.id == controller_uid).gino.scalar()
+        controller_id, node_id = pool_data
+        controller_address = Controller.select('address').where(Controller.id == controller_id).gino.scalar()
 
         # vm checks
         vm_http_client = await VmHttpClient.create(controller_address, '')
@@ -462,27 +486,15 @@ class RemoveVmsFromStaticPool(graphene.Mutation):
         }
 
 
-class PoolQuery(graphene.ObjectType):
-    pools = graphene.List(PoolType, ordering=graphene.String(), reversed_order=graphene.Boolean())
-    pool = graphene.Field(PoolType, id=graphene.String(), controller_address=graphene.String())
-
-    async def resolve_pools(self, _info, ordering=None, reversed_order=None):
-        pass
-
-    async def resolve_pool(self, _info, id, controller_address):
-        pool_type = PoolType(id=id)
-        pool_type.controller = ControllerType(address=controller_address)
-        return pool_type
-
-
+# Dynamic (Automated) pool mutations
 class CreateDynamicPoolMutation(graphene.Mutation, PoolValidator):
     class Arguments:
         verbose_name = graphene.String(required=True)
         controller_ip = graphene.String(required=True)
-        cluster_uid = graphene.UUID(required=True)
-        template_uid = graphene.UUID(required=True)
-        datapool_uid = graphene.UUID(required=True)
-        node_uid = graphene.UUID(required=True)
+        cluster_id = graphene.UUID(required=True)
+        template_id = graphene.UUID(required=True)
+        datapool_id = graphene.UUID(required=True)
+        node_id = graphene.UUID(required=True)
 
         min_size = graphene.Int(default_value=1)
         max_size = graphene.Int(default_value=200)
@@ -494,37 +506,33 @@ class CreateDynamicPoolMutation(graphene.Mutation, PoolValidator):
         total_size = graphene.Int(default_value=1)
         vm_name_template = graphene.String(default_value='')
 
-    ok = graphene.Boolean()
     pool = graphene.Field(lambda: PoolType)
-
+    ok = graphene.Boolean()
+    # TODO: output?
 
     @classmethod
     async def mutate(cls, root, info, **kwargs):
         cls.validate_agruments(**kwargs)
-
-        # TODO: в мониторе ресурсов нет происходит raise ошибки, если оно не создано
+        pool = None
         try:
-            # TODO: extra validation
             pool = await AutomatedPool.create(**kwargs)
-            await pool.add_initial_vms()  # TODO: cancelation?
+            # TODO: в мониторе ресурсов нет происходит raise ошибки, если оно не создано
+            await pool.add_initial_vms()
+            await pool.activate()
         except Exception as E:
-            print(E)
+            # TODO: широкий exception потому, что пока нет ошибки от монитора ресурсов. эксепшены нужно ограничить.
             if pool:
                 await pool.deactivate()
-            return CreateDynamicPoolMutation(
-                pool=None,
-                ok=False)
-        else:
-            await pool.activate()
-            ok = True
-            return CreateDynamicPoolMutation(
-                pool=PoolType(desktop_pool_type=DesktopPoolTypeGraphene.AUTOMATED, id=pool.pool_uid),
-                ok=ok)
+            return CreateDynamicPoolMutation(pool=None, ok=False)
+        return CreateDynamicPoolMutation(
+                pool=PoolType(  # TODO: развернуть значения для получения целикового PoolType
+                    ),
+                ok=True)
 
 
 class PoolMutations(graphene.ObjectType):
     addDynamicPool = CreateDynamicPoolMutation.Field()
-    addStaticPool = AddStaticPool.Field()
+    addStaticPool = CreateStaticPoolMutation.Field()
     addVmsToStaticPool = AddVmsToStaticPool.Field()
     removeVmsFromStaticPool = RemoveVmsFromStaticPool.Field()
 
