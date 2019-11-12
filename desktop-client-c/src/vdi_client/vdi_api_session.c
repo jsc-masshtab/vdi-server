@@ -33,6 +33,8 @@ static void free_session_memory(){
     free_memory_safely(&vdiSession.api_url);
     free_memory_safely(&vdiSession.auth_url);
     free_memory_safely(&vdiSession.jwt);
+
+    free_memory_safely(&vdiSession.current_vm_id);
 }
 
 static void setup_header_for_api_call(SoupMessage *msg)
@@ -42,7 +44,7 @@ static void setup_header_for_api_call(SoupMessage *msg)
     //printf("%s %s\n", (const char *)__func__, authHeader);
     soup_message_headers_append(msg->request_headers, "Authorization", authHeader);
     g_free(authHeader);
-    soup_message_headers_append(msg->request_headers, "Content-Type", "application/json; charset=utf8");
+    soup_message_headers_append(msg->request_headers, "Content-Type", "application/json");
 }
 
 static guint send_message(SoupMessage *msg)
@@ -67,15 +69,18 @@ static gboolean refresh_vdi_session_token()
     free_memory_safely(&vdiSession.jwt);
 
     // create request message
-    SoupMessage *msg = soup_message_new ("POST", vdiSession.auth_url);
+    SoupMessage *msg = soup_message_new("POST", vdiSession.auth_url);
     if(msg == NULL)
         return FALSE;
 
+    // set header
+    soup_message_headers_append(msg->request_headers, "Content-Type", "application/json");
+
+    // set body
     gchar *messageBodyStr = g_strdup_printf("{\"username\": \"%s\", \"password\": \"%s\"}",
                                             vdiSession.vdi_username, vdiSession.vdi_password);
-
-    soup_message_set_request (msg, "application/x-www-form-urlencoded",
-                              SOUP_MEMORY_COPY, messageBodyStr, strlen (messageBodyStr));
+    soup_message_set_request(msg, "application/json",
+                             SOUP_MEMORY_COPY, messageBodyStr, strlen (messageBodyStr));
     g_free(messageBodyStr);
 
     // send message
@@ -83,20 +88,25 @@ static gboolean refresh_vdi_session_token()
 
     // parse response
     printf("msg->status_code %i\n", msg->status_code);
+    printf("msg->response_body->data %s\n", msg->response_body->data);
 
     if(msg->status_code != OK_RESPONSE) {
         printf("%s : Unable to get token\n", (const char *)__func__);
         return FALSE;
     }
 
-    JsonParser *parser = json_parser_new ();
-    JsonObject *object = get_json_object(parser, msg->response_body->data);
-    if(object == NULL)
+    JsonParser *parser = json_parser_new();
+    JsonObject *root_object = get_root_json_object(parser, msg->response_body->data);
+    if (!root_object)
+        return FALSE;
+
+    JsonObject *data_member_object = json_object_get_object_member(root_object, "data");
+    if (!data_member_object)
         return FALSE;
 
     free_memory_safely(&vdiSession.jwt);
-    vdiSession.jwt = g_strdup(json_object_get_string_member_safely (object, "access_token"));
-    printf("%s\n", vdiSession.jwt);
+    vdiSession.jwt = g_strdup(json_object_get_string_member_safely (data_member_object, "access_token"));
+    printf("new token: %s\n", vdiSession.jwt);
 
     g_object_unref(msg);
     g_object_unref (parser);
@@ -123,7 +133,7 @@ void start_vdi_session()
     vdiSession.jwt = NULL;
 
     vdiSession.is_active = TRUE;
-    vdiSession.current_vm_id = VM_ID_UNKNOWN;
+    vdiSession.current_vm_id = NULL;
 }
 
 void stop_vdi_session()
@@ -139,7 +149,6 @@ void stop_vdi_session()
     free_session_memory();
 
     vdiSession.is_active = FALSE;
-    vdiSession.current_vm_id = VM_ID_UNKNOWN;
 }
 
 SoupSession *get_soup_session()
@@ -179,12 +188,12 @@ void set_vdi_credentials(const gchar *username, const gchar *password, const gch
     vdiSession.jwt = NULL;
 }
 
-void set_current_vm_id(gint64 current_vm_id)
+void set_current_vm_id(const gchar *current_vm_id)
 {
     vdiSession.current_vm_id = current_vm_id;
 }
 
-gint64 get_current_vm_id()
+const gchar *get_current_vm_id()
 {
     return vdiSession.current_vm_id;
 }
@@ -216,7 +225,7 @@ gchar *api_call(const char *method, const char *uri_string, const gchar *body_st
     setup_header_for_api_call(msg);
     // set body
     if(body_str)
-        soup_message_set_request (msg, "application/x-www-form-urlencoded",
+        soup_message_set_request (msg, "application/json",
                                   SOUP_MEMORY_COPY, body_str, strlen (body_str));
 
     // start attempts
@@ -241,7 +250,7 @@ gchar *api_call(const char *method, const char *uri_string, const gchar *body_st
     return response_body_str;
 }
 
-void get_vdi_vm_data(GTask         *task,
+void get_vdi_pool_data(GTask         *task,
                  gpointer       source_object G_GNUC_UNUSED,
                  gpointer       task_data G_GNUC_UNUSED,
                  GCancellable  *cancellable G_GNUC_UNUSED)
@@ -259,7 +268,7 @@ void get_vm_from_pool(GTask         *task,
                     gpointer       task_data G_GNUC_UNUSED,
                     GCancellable  *cancellable G_GNUC_UNUSED)
 {
-    gchar *urlStr = g_strdup_printf("%s/client/pools/%ld", vdiSession.api_url, get_current_vm_id());
+    gchar *urlStr = g_strdup_printf("%s/client/pools/%s", vdiSession.api_url, get_current_vm_id());
     gchar *response_body_str = api_call("POST", urlStr, NULL);
     g_free(urlStr);
 

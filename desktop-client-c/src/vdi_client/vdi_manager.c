@@ -14,7 +14,7 @@
 #include "vdi_pool_widget.h"
 #include "jsonhandler.h"
 
-#define MAX_VM_NUMBER 150
+#define MAX_POOL_NUMBER 150
 
 // extern
 extern gboolean take_extern_credentials;
@@ -55,8 +55,8 @@ static void set_init_values(void);
 static void set_vdi_client_state(VdiClientState vdi_client_state, const gchar *message, gboolean error_message);
 static void refresh_vdi_pool_data_async(void);
 static void unregister_all_pools(void);
-static void register_pool(gint64 pool_id, const gchar *pool_name);
-static VdiPoolWidget get_vdi_pool_widget_by_id(gint64 searched_id);
+static void register_pool(const gchar *pool_id, const gchar *pool_name);
+static VdiPoolWidget get_vdi_pool_widget_by_id(const gchar *searched_id);
 static void shutdown_loop(GMainLoop *loop);
 
 static void on_get_vdi_pool_data_finished(GObject *source_object, GAsyncResult *res, gpointer user_data);
@@ -139,7 +139,7 @@ static void set_vdi_client_state(VdiClientState vdi_client_state, const gchar *m
 static void refresh_vdi_pool_data_async()
 {
     set_vdi_client_state(VDI_WAITING_FOR_POOL_DATA, "Отправлен запрос на список пулов", FALSE);
-    execute_async_task(get_vdi_vm_data, on_get_vdi_pool_data_finished, NULL);
+    execute_async_task(get_vdi_pool_data, on_get_vdi_pool_data_finished, NULL);
 }
 // clear array of virtual machine widgets
 static void unregister_all_pools()
@@ -156,7 +156,7 @@ static void unregister_all_pools()
     }
 }
 // create virtual machine widget and add to GUI
-static void register_pool(gint64 pool_id, const gchar *pool_name)
+static void register_pool(const gchar *pool_id, const gchar *pool_name)
 {
     // create array if required
     if (vdi_manager.pool_widgets_array == NULL)
@@ -170,7 +170,7 @@ static void register_pool(gint64 pool_id, const gchar *pool_name)
 }
 
 // find a virtual machine widget by id
-static VdiPoolWidget get_vdi_pool_widget_by_id(gint64 searched_id)
+static VdiPoolWidget get_vdi_pool_widget_by_id(const gchar *searched_id)
 {
     VdiPoolWidget searched_vdi_pool_widget = {};
     guint i;
@@ -181,8 +181,7 @@ static VdiPoolWidget get_vdi_pool_widget_by_id(gint64 searched_id)
     for (i = 0; i < vdi_manager.pool_widgets_array->len; ++i) {
         VdiPoolWidget vdi_pool_widget = g_array_index(vdi_manager.pool_widgets_array, VdiPoolWidget, i);
 
-        gint64 curId = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(vdi_pool_widget.vm_start_button), "pool_id"));
-        if(curId == searched_id){
+        if(g_strcmp0(searched_id, vdi_pool_widget.pool_id) == 0){
             searched_vdi_pool_widget = vdi_pool_widget;
             break;
         }
@@ -190,6 +189,7 @@ static VdiPoolWidget get_vdi_pool_widget_by_id(gint64 searched_id)
 
     return searched_vdi_pool_widget;
 }
+
 // stop GMainLoop
 static void shutdown_loop(GMainLoop *loop)
 {
@@ -208,33 +208,43 @@ static void on_get_vdi_pool_data_finished (GObject *source_object G_GNUC_UNUSED,
     GError *error;
     gpointer  ptr_res =  g_task_propagate_pointer(G_TASK (res), &error); // take ownership
     if(ptr_res == NULL){
-        printf("%s : FAIL \n", (const char *)__func__);
         set_vdi_client_state(VDI_RECEIVED_RESPONSE, "Не удалось получить список пулов", TRUE);
         return;
     }
 
     gchar *response_body_str = ptr_res; // example "[{\"id\":17,\"name\":\"sad\"}]"
+    printf("%s : %s\n", (const char *)__func__, response_body_str);
+
     // parse vm data  json
-    JsonParser *parser = json_parser_new ();
-    JsonArray *jsonArray = get_json_array(parser, response_body_str);
+    JsonParser *parser = json_parser_new();
+
+    JsonObject *root_object = get_root_json_object(parser, response_body_str);
+    if (!root_object)
+        return;
+
+    JsonNode *data_member = json_object_get_member(root_object, "data");
+    if (!data_member)
+        return;
+
+    JsonArray *jsonArray = json_node_get_array(data_member);
 
     // prepare  pool_widgets_array
     unregister_all_pools();
 
     // parse json data and fill pool_widgets_array
-    if(jsonArray){
+    if (jsonArray) {
 
-        guint jsonArrayLength = MIN( json_array_get_length(jsonArray), MAX_VM_NUMBER );
+        guint jsonArrayLength = MIN(json_array_get_length(jsonArray), MAX_POOL_NUMBER);
         printf("Number of vm pools: %i\n", jsonArrayLength);
 
         int i;
-        for(i = jsonArrayLength - 1; i >= 0; --i){
+        for(i = (int)jsonArrayLength - 1; i >= 0; --i){
 
-            JsonNode *jsonNode = json_array_get_element (jsonArray, i);
+            JsonNode *jsonNode = json_array_get_element (jsonArray, (guint)i);
             JsonObject *object = json_node_get_object (jsonNode);
 
-            gint64 pool_id = json_object_get_int_member(object, "id");
-            const gchar *pool_name = json_object_get_string_member(object, "name");
+            const gchar *pool_id = json_object_get_string_member_safely(object, "id");
+            const gchar *pool_name = json_object_get_string_member_safely(object, "name");
             //printf("pool_id %i\n", pool_id);
             //printf("pool_name %s\n", pool_name);
             register_pool(pool_id, pool_name);
@@ -243,14 +253,11 @@ static void on_get_vdi_pool_data_finished (GObject *source_object G_GNUC_UNUSED,
     //
     set_vdi_client_state(VDI_RECEIVED_RESPONSE, "Получен список пулов", FALSE);
     //
-    g_object_unref (parser);
+    g_object_unref(parser);
     if(ptr_res)
         g_free(ptr_res);
-
-    gboolean is_realized = g_main_loop_is_running(vdi_manager.ci.loop);
-    printf("%s %i \n", (const char *)__func__, is_realized);
-
 }
+
 // callback which is invoked when vm start request finished
 static void on_get_vm_from_pool_finished(GObject *source_object G_GNUC_UNUSED,
                                          GAsyncResult *res,
@@ -264,7 +271,7 @@ static void on_get_vm_from_pool_finished(GObject *source_object G_GNUC_UNUSED,
     GError *error;
     gpointer  ptr_res =  g_task_propagate_pointer (G_TASK (res), &error); // take ownership
     if(ptr_res == NULL){
-        printf("%s : FAIL \n", (char *)__func__);
+        printf("%s : FAIL \n", (const char *)__func__);
         set_vdi_client_state(VDI_RECEIVED_RESPONSE, "Не удалось получить вм из пула", TRUE);
         return;
     }
@@ -273,7 +280,7 @@ static void on_get_vm_from_pool_finished(GObject *source_object G_GNUC_UNUSED,
 
     // parse  data  json
     JsonParser *parser = json_parser_new ();
-    JsonObject *object = get_json_object(parser, response_body_str);
+    JsonObject *object = get_root_json_object(parser, response_body_str);
 
     const gchar *vm_host = json_object_get_string_member_safely(object, "host");
     gint64 vm_port = json_object_get_int_member_safely(object, "port");
@@ -310,7 +317,7 @@ static void on_get_vm_from_pool_finished(GObject *source_object G_GNUC_UNUSED,
 // ws data callback    "<span color=\"red\">%s</span>"
 static gboolean on_ws_data_from_vdi_received(gboolean is_vdi_online)
 {
-    printf("In %s :thread id = %lu\n", (const char *)__func__, pthread_self());
+    //printf("In %s :thread id = %lu\n", (const char *)__func__, pthread_self());
     gchar *message;
     if (vdi_manager.label_vdi_online){
         if (is_vdi_online){
@@ -364,12 +371,13 @@ static void on_button_quit_clicked(GtkButton *button G_GNUC_UNUSED, gpointer dat
 static void on_vm_start_button_clicked(GtkButton *button, gpointer data G_GNUC_UNUSED)
 {
     //ConnectionInfo *ci = data;
-    set_current_vm_id( GPOINTER_TO_INT(g_object_get_data(G_OBJECT(button), "pool_id")) );
-    printf("%s  %ld\n", (const char *)__func__, get_current_vm_id());
+    const gchar *pool_id = g_object_get_data(G_OBJECT(button), "pool_id");
+    set_current_vm_id(pool_id);
+    printf("%s  %s\n", (const char *)__func__, pool_id);
     // start machine
     set_vdi_client_state(VDI_WAITING_FOR_VM_FROM_POOL, "Отправлен запрос на получение вм из пула", FALSE);
     // start spinner on vm widget
-    VdiPoolWidget vdi_pool_widget = get_vdi_pool_widget_by_id(get_current_vm_id());
+    VdiPoolWidget vdi_pool_widget = get_vdi_pool_widget_by_id(pool_id);
     enable_spinner_visible(&vdi_pool_widget, TRUE);
     // execute task
     execute_async_task(get_vm_from_pool, on_get_vm_from_pool_finished, NULL);
