@@ -101,6 +101,9 @@ class VeilHttpClient:
 
     @staticmethod
     def get_response_body(response):
+        if not response:
+            return
+
         response_headers = response.headers
         response_content_type = response_headers.get('Content-Type')
 

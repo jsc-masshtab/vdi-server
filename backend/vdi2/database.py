@@ -1,5 +1,6 @@
 from gino.ext.tornado import Gino
 from enum import Enum
+from graphene import Enum as GrapheneEnum
 
 db = Gino()
 
@@ -26,3 +27,6 @@ class Status(Enum):
     DELETING = 'DELETING'
     SERVICE = 'SERVICE'
     PARTIAL = 'PARTIAL'
+
+
+StatusGraphene = GrapheneEnum.from_enum(Status)

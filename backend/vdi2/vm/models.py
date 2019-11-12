@@ -1,10 +1,13 @@
 # -*- coding: utf-8 -*-
 import uuid
 from sqlalchemy.dialects.postgresql import UUID
+import tornado.gen
 
 from database import db, get_list_of_values_from_db
 from vm.veil_client import VmHttpClient
-# TODO: сделать схему человеческой
+from controller.models import Controller
+
+# TODO: сделать схему и методы более осмысленными.
 
 
 class Vm(db.Model):
@@ -95,3 +98,16 @@ class Vm(db.Model):
         # todo: not tested
         Vm.query.filter(Vm.id.in_(vm_ids)).delete()
         db.session.commit()
+
+    @staticmethod
+    async def enable_remote_access(controller_address, vm_id):
+        vm_http_client = await VmHttpClient.create(controller_address, vm_id)
+        await vm_http_client.enable_remote_access()
+
+    @staticmethod
+    async def enable_remote_accesses(controller_address, vm_ids):
+        async_tasks = [
+            Vm.enable_remote_access(controller_address=controller_address, vm_id=vm_id)
+            for vm_id in vm_ids
+        ]
+        await tornado.gen.multi(async_tasks)
