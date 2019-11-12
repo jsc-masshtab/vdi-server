@@ -16,5 +16,7 @@
     <file alias="icons/24x24/virt-viewer-usb.png">icons/24x24/virt-viewer-usb.png</file>
     <file alias="icons/content/img/veil-32x32.png">icons/content/img/veil-32x32.png</file>
     <file alias="icons/content/img/other_icon.png">icons/content/img/other_icon.png</file>
+    <file alias="icons/content/img/linux_icon.png">icons/content/img/linux_icon.png</file>
+    <file alias="icons/content/img/windows_icon.png">icons/content/img/windows_icon.png</file>
   </gresource>
 </gresources>

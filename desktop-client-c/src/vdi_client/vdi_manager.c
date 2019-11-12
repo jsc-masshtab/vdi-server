@@ -55,7 +55,7 @@ static void set_init_values(void);
 static void set_vdi_client_state(VdiClientState vdi_client_state, const gchar *message, gboolean error_message);
 static void refresh_vdi_pool_data_async(void);
 static void unregister_all_pools(void);
-static void register_pool(const gchar *pool_id, const gchar *pool_name);
+static void register_pool(const gchar *pool_id, const gchar *pool_name, const gchar *os_type, const gchar *status);
 static VdiPoolWidget get_vdi_pool_widget_by_id(const gchar *searched_id);
 static void shutdown_loop(GMainLoop *loop);
 
@@ -156,14 +156,14 @@ static void unregister_all_pools()
     }
 }
 // create virtual machine widget and add to GUI
-static void register_pool(const gchar *pool_id, const gchar *pool_name)
+static void register_pool(const gchar *pool_id, const gchar *pool_name, const gchar *os_type, const gchar *status)
 {
     // create array if required
     if (vdi_manager.pool_widgets_array == NULL)
         vdi_manager.pool_widgets_array = g_array_new (FALSE, FALSE, sizeof (VdiPoolWidget));
 
     // add element
-    VdiPoolWidget vdi_pool_widget = build_pool_widget(pool_id, pool_name, vdi_manager.gtk_flow_box);
+    VdiPoolWidget vdi_pool_widget = build_pool_widget(pool_id, pool_name, os_type, status, vdi_manager.gtk_flow_box);
     g_array_append_val (vdi_manager.pool_widgets_array, vdi_pool_widget);
     // connect start button to callback
     g_signal_connect(vdi_pool_widget.vm_start_button, "clicked", G_CALLBACK(on_vm_start_button_clicked), NULL);
@@ -245,9 +245,11 @@ static void on_get_vdi_pool_data_finished (GObject *source_object G_GNUC_UNUSED,
 
             const gchar *pool_id = json_object_get_string_member_safely(object, "id");
             const gchar *pool_name = json_object_get_string_member_safely(object, "name");
-            //printf("pool_id %i\n", pool_id);
+            const gchar *os_type = json_object_get_string_member_safely(object, "os_type");
+            const gchar *status = json_object_get_string_member_safely(object, "status");
+            //printf("os_type %s\n", os_type);
             //printf("pool_name %s\n", pool_name);
-            register_pool(pool_id, pool_name);
+            register_pool(pool_id, pool_name, os_type, status);
         }
     }
     //
@@ -290,6 +292,7 @@ static void on_get_vm_from_pool_finished(GObject *source_object G_GNUC_UNUSED,
     gint64 vm_port = json_object_get_int_member_safely(data_member_object, "port");
     const gchar *vm_password = json_object_get_string_member_safely(data_member_object, "password");
     const gchar *message = json_object_get_string_member_safely(data_member_object, "message");
+
     printf("vm_host %s \n", vm_host);
     printf("vm_port %ld \n", vm_port);
     printf("vm_password %s \n", vm_password);
