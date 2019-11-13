@@ -64,6 +64,13 @@ class Vm(db.Model):
         return await get_list_of_values_from_db(Vm, Vm.id)
 
     @staticmethod
+    async def get_vms_ids_in_pool(pool_id):  # todo: not tested
+        """Get all vm_ids"""
+        vm_ids_data = await Vm.select('id').where((Vm.pool_id == pool_id)).gino.all()
+        vm_ids = [value for (value,) in vm_ids_data]
+        return vm_ids
+
+    @staticmethod
     def ready_to_connect(**info) -> bool:
         """Checks parameters indicating availability for connection."""
         power_state = info.get('user_power_state', 0)
@@ -80,3 +87,10 @@ class Vm(db.Model):
         return dict(id=response['entity'],
                     task_id=response['_task']['id'],
                     verbose_name=domain_name)
+
+    @staticmethod
+    async def remove_vms(vm_ids):
+        """Remove given vms"""
+        # todo: not tested
+        Vm.query.filter(Vm.id.in_(vm_ids)).delete()
+        db.session.commit()

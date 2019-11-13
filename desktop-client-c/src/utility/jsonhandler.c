@@ -6,7 +6,7 @@
 
 #include "jsonhandler.h"
 
-JsonObject *get_json_object(JsonParser *parser, const gchar *data)
+JsonObject *get_root_json_object(JsonParser *parser, const gchar *data)
 {
 
     gboolean result = json_parser_load_from_data (parser, data, -1, NULL);
@@ -19,21 +19,6 @@ JsonObject *get_json_object(JsonParser *parser, const gchar *data)
 
     JsonObject *object = json_node_get_object (root);
     return object;
-}
-
-JsonArray *get_json_array(JsonParser *parser, const gchar *data)
-{
-    gboolean result = json_parser_load_from_data (parser, data, -1, NULL);
-    if(!result)
-        return NULL;
-
-    JsonNode *root = json_parser_get_root (parser);
-    if(!JSON_NODE_HOLDS_ARRAY (root))
-        return NULL;
-
-    JsonArray *array = json_node_get_array (root);
-
-    return array;
 }
 
 gint64 json_object_get_int_member_safely(JsonObject  *object, const gchar *member_name)

@@ -153,10 +153,7 @@ class UserQueries:
 
         if ordering:
             # is reversed
-            if reversed_order is not None:
-                sort_order = 'DESC' if reversed_order else 'ASC'
-            else:
-                sort_order = 'ASC'
+            sort_order = 'DESC' if reversed_order else 'ASC'
             # ordering
             qu = "SELECT {} FROM public.user ORDER BY {} {}".format(', '.join(fields), ordering, sort_order)
         else:

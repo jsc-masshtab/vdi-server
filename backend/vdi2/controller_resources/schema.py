@@ -227,8 +227,8 @@ class ResourcesQuery(graphene.ObjectType):
     async def resolve_node(self, _info, id, controller_address):
         resources_http_client = await ResourcesHttpClient.create(controller_address)
         node_data = await resources_http_client.fetch_node(id)
-        node_type = make_graphene_type(NodeType, node_data['resource_data'])
-        node_type.controller = ControllerType(address=node_data['controller_address'])
+        node_type = make_graphene_type(NodeType, node_data)
+        node_type.controller = ControllerType(address=controller_address)
         return node_type
 
     async def resolve_nodes(self, _info, ordering=None, reversed_order=None):
@@ -272,8 +272,8 @@ class ResourcesQuery(graphene.ObjectType):
     async def resolve_cluster(self, _info, id, controller_address):
         resources_http_client = await ResourcesHttpClient.create(controller_address)
         cluster_data = await resources_http_client.fetch_cluster(id)
-        cluster_type = make_graphene_type(ClusterType, cluster_data['resource_data'])
-        cluster_type.controller = ControllerType(address=cluster_data['controller_address'])
+        cluster_type = make_graphene_type(ClusterType, cluster_data)
+        cluster_type.controller = ControllerType(address=controller_address)
         return cluster_type
 
     async def resolve_clusters(self, _info, ordering=None, reversed_order=None):
@@ -314,8 +314,8 @@ class ResourcesQuery(graphene.ObjectType):
     async def resolve_datapool(self, _info, id, controller_address):
         resources_http_client = await ResourcesHttpClient.create(controller_address)
         datapool_data = await resources_http_client.fetch_datapool(id)
-        datapool_type = make_graphene_type(ClusterType, datapool_data['resource_data'])
-        datapool_type.controller = ControllerType(address=datapool_data['controller_address'])
+        datapool_type = make_graphene_type(DatapoolType, datapool_data)
+        datapool_type.controller = ControllerType(address=controller_address)
         return datapool_type
 
     async def resolve_datapools(self, _info, take_broken=False, ordering=None, reversed_order=None):

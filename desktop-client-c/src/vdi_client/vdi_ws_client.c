@@ -57,7 +57,7 @@ static void async_create_ws_connect(GTask         *task G_GNUC_UNUSED,
 
         // make handshake
         guint status = soup_session_send_message(vdi_ws_client->ws_soup_session, ws_msg);
-        printf("WS: %s: HANDSHAKE %i \n", (const char *)__func__, status);
+        //printf("WS: %s: HANDSHAKE %i \n", (const char *)__func__, status);
         if (vdi_ws_client->stream == NULL) {
             g_idle_add((GSourceFunc)vdi_ws_client->ws_data_received_callback, (gpointer)FALSE); // notify GUI
             // try to reconnect (go to another loop)
@@ -128,7 +128,7 @@ void start_vdi_ws_polling(VdiWsClient *vdi_ws_client, const gchar *vdi_ip,
 
     g_mutex_init(&vdi_ws_client->lock);
 
-    execute_async_task(async_create_ws_connect, NULL, vdi_ws_client);
+    execute_async_task(async_create_ws_connect, NULL, vdi_ws_client, NULL);
 }
 
 void stop_vdi_ws_polling(VdiWsClient *vdi_ws_client)

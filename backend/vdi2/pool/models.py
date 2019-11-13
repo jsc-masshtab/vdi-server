@@ -31,8 +31,7 @@ class Pool(db.Model):
     verbose_name = db.Column(db.Unicode(length=128), nullable=False)
     status = db.Column(db.Unicode(length=128), nullable=False)
     controller = db.Column(UUID(as_uuid=True), db.ForeignKey('controller.id'))
-    # desktop_pool_type = db.Column(db.Enum(ControllerUserType), nullable=False)
-    desktop_pool_type = db.Column(db.Enum(length=255), nullable=False)
+    desktop_pool_type = db.Column(db.Enum(DesktopPoolType), nullable=False)
 
     deleted = db.Column(db.Boolean())
     dynamic_traits = db.Column(db.Integer(), nullable=True)  # remove it
@@ -198,6 +197,14 @@ class Pool(db.Model):
     @staticmethod
     async def get_name(pool_id):
         return await Pool.select('verbose_name').where(Pool.id == pool_id).gino.scalar()
+
+    @staticmethod
+    async def get_desktop_type(pool_id):
+        return await Pool.select('desktop_pool_type').where(Pool.id == pool_id).gino.scalar()
+
+    @staticmethod
+    async def get_pool_data(pool_id):
+        return await Pool.select().where(Pool.id == pool_id).gino.all()
 
 
 class PoolUsers(db.Model):
