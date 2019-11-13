@@ -518,7 +518,8 @@ class RemoveVmsFromStaticPool(graphene.Mutation):
     async def mutate(self, _info, pool_id, vm_ids):
         if not vm_ids:
             raise SimpleError("Список ВМ не должен быть пустым")
-        # pool checks todo: Запрос к модели статич. пула
+
+        # TODO: этот код можно заменить стандартным валидатором, если переименовать входящее значение с pool_id на id.
         pool_object = await Pool.get_pool(pool_id)
         if not pool_object:
             raise SimpleError('Пул {} не существует'.format(pool_id))
