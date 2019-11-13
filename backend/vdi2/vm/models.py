@@ -67,10 +67,10 @@ class Vm(db.Model):
         return await get_list_of_values_from_db(Vm, Vm.id)
 
     @staticmethod
-    async def get_vms_ids_in_pool(pool_id):  # todo: not tested
-        """Get all vm_ids"""
+    async def get_vms_ids_in_pool(pool_id):
+        """Get all vm_ids as list of strings"""
         vm_ids_data = await Vm.select('id').where((Vm.pool_id == pool_id)).gino.all()
-        vm_ids = [value for (value,) in vm_ids_data]
+        vm_ids = [str(vm_id) for (vm_id,) in vm_ids_data]
         return vm_ids
 
     @staticmethod
@@ -95,9 +95,7 @@ class Vm(db.Model):
     @staticmethod
     async def remove_vms(vm_ids):
         """Remove given vms"""
-        # todo: not tested
-        Vm.query.filter(Vm.id.in_(vm_ids)).delete()
-        db.session.commit()
+        return await Vm.delete.where(Vm.id.in_(vm_ids)).gino.status()
 
     @staticmethod
     async def enable_remote_access(controller_address, vm_id):
