@@ -479,9 +479,9 @@ class AddVmsToStaticPool(graphene.Mutation):
             raise SimpleError("Список ВМ не должен быть пустым")
 
         # todo: Запрос к модели статич. пула
-        pool_data = await Pool.select('controller', 'node_id').where(Pool.id == pool_id).gino.all()
-        controller_id, node_id = pool_data
-        controller_address = Controller.select('address').where(Controller.id == controller_id).gino.scalar()
+        pool_data = await Pool.select('controller', 'node_id').where(Pool.id == pool_id).gino.first()
+        (controller_id, node_id) = pool_data
+        controller_address = await Controller.select('address').where(Controller.id == controller_id).gino.scalar()
 
         # vm checks
         vm_http_client = await VmHttpClient.create(controller_address, '')
@@ -492,7 +492,7 @@ class AddVmsToStaticPool(graphene.Mutation):
 
         for vm_id in vm_ids:
             # check if vm exists and it is on the correct node
-            if vm_id not in all_vm_ids_on_node:
+            if str(vm_id) not in all_vm_ids_on_node:
                 raise SimpleError('ВМ {} находится на сервере отличном от сервера пула'.format(vm_id))
             # check if vm is free (not in any pool)
             if vm_id in used_vm_ids:
