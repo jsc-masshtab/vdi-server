@@ -177,11 +177,7 @@ void set_vdi_credentials(const gchar *username, const gchar *password, const gch
     vdiSession.vdi_password = g_strdup(password);
     vdiSession.vdi_ip = g_strdup(ip);
     vdiSession.vdi_port = g_strdup(port);
-    // /client/auth
-//    // old
-//    vdiSession.api_url = g_strdup_printf("http://%s", vdiSession.vdi_ip);
-//    vdiSession.auth_url = g_strdup_printf("%s:%s/auth/", vdiSession.api_url, vdiSession.vdi_port);
-    // new
+
     vdiSession.api_url = g_strdup_printf("http://%s:%s", vdiSession.vdi_ip, vdiSession.vdi_port);
     vdiSession.auth_url = g_strdup_printf("%s/auth/", vdiSession.api_url);
 
@@ -323,5 +319,5 @@ void do_action_on_vm_async(const gchar *actionStr, gboolean isForced)
     action_on_vm_data->action_on_vm_str = g_strdup(actionStr);
     action_on_vm_data->is_action_forced = isForced;
 
-    execute_async_task(do_action_on_vm, NULL, action_on_vm_data);
+    execute_async_task(do_action_on_vm, NULL, action_on_vm_data, NULL);
 }

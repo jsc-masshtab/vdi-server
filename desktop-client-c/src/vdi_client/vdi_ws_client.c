@@ -128,7 +128,7 @@ void start_vdi_ws_polling(VdiWsClient *vdi_ws_client, const gchar *vdi_ip,
 
     g_mutex_init(&vdi_ws_client->lock);
 
-    execute_async_task(async_create_ws_connect, NULL, vdi_ws_client);
+    execute_async_task(async_create_ws_connect, NULL, vdi_ws_client, NULL);
 }
 
 void stop_vdi_ws_polling(VdiWsClient *vdi_ws_client)

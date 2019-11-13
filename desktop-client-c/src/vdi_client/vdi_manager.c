@@ -139,7 +139,7 @@ static void set_vdi_client_state(VdiClientState vdi_client_state, const gchar *m
 static void refresh_vdi_pool_data_async()
 {
     set_vdi_client_state(VDI_WAITING_FOR_POOL_DATA, "Отправлен запрос на список пулов", FALSE);
-    execute_async_task(get_vdi_pool_data, on_get_vdi_pool_data_finished, NULL);
+    execute_async_task(get_vdi_pool_data, on_get_vdi_pool_data_finished, NULL, NULL);
 }
 // clear array of virtual machine widgets
 static void unregister_all_pools()
@@ -387,7 +387,7 @@ static void on_vm_start_button_clicked(GtkButton *button, gpointer data G_GNUC_U
     VdiPoolWidget vdi_pool_widget = get_vdi_pool_widget_by_id(pool_id);
     enable_spinner_visible(&vdi_pool_widget, TRUE);
     // execute task
-    execute_async_task(get_vm_from_pool, on_get_vm_from_pool_finished, NULL);
+    execute_async_task(get_vm_from_pool, on_get_vm_from_pool_finished, NULL, NULL);
 }
 
 /////////////////////////////////// main function
@@ -398,7 +398,6 @@ GtkResponseType vdi_manager_dialog(GtkWindow *main_window G_GNUC_UNUSED, gchar *
     set_init_values();
     vdi_manager.ci.response = FALSE;
     vdi_manager.ci.loop = NULL;
-    vdi_manager.ci.entry = NULL;
     vdi_manager.ci.dialog_window_response = GTK_RESPONSE_CANCEL;
     vdi_manager.url_ptr = uri;
     vdi_manager.password_ptr = password;

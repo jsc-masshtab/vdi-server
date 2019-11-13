@@ -82,27 +82,27 @@ gchar *api_call(const char *method, const char *uri_string, const gchar *body_st
 
 // Fetch token
 void get_vdi_token(GTask         *task,
-                 gpointer       source_object,
-                 gpointer       task_data,
-                 GCancellable  *cancellable);
+                   gpointer       source_object,
+                   gpointer       task_data,
+                   GCancellable  *cancellable);
 
 // Запрашиваем список пулов
 void get_vdi_pool_data(GTask         *task,
-                 gpointer       source_object,
-                 gpointer       task_data,
-                 GCancellable  *cancellable);
+                       gpointer       source_object,
+                       gpointer       task_data,
+                       GCancellable  *cancellable);
 
 // Получаем виртуалку из пула
 void get_vm_from_pool(GTask         *task,
-                  gpointer       source_object,
-                  gpointer       task_data,
-                  GCancellable  *cancellable);
+                      gpointer       source_object,
+                      gpointer       task_data,
+                      GCancellable  *cancellable);
 
 // Do action on virtual machine
 void do_action_on_vm(GTask         *task,
-                  gpointer       source_object,
-                  gpointer       task_data,
-                  GCancellable  *cancellable);
+                     gpointer       source_object,
+                     gpointer       task_data,
+                     GCancellable  *cancellable);
 
 void do_action_on_vm_async(const gchar *actionStr, gboolean isForced);
 
