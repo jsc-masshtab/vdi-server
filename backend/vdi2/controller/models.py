@@ -1,9 +1,15 @@
 import uuid
-from sqlalchemy.dialects.postgresql import UUID
 from datetime import datetime
 
-from database import db, get_list_of_values_from_db
+from sqlalchemy.dialects.postgresql import UUID
+
 from auth.utils import crypto
+from controller.client import ControllerClient
+from database import db, get_list_of_values_from_db
+
+
+# TODO: validate token by expires_on parameter
+# TODO: validate status
 
 
 class Controller(db.Model):
@@ -33,34 +39,46 @@ class Controller(db.Model):
 
     @staticmethod
     async def get_token(uid: str):
-        if not uid:
-            raise AssertionError('Empty uid.')
-        query = Controller.select('token').where(
-            (Controller.expires_on >= datetime.now()) & (Controller.id == uid))
-        return await query.gino.scalar()
-
-    @staticmethod
-    async def get_auth_info(uid: str):
-        if not uid:
-            raise AssertionError('Empty uid.')
-        query = Controller.select('username', 'password', 'ldap_connection').where(Controller.id == uid)
-        auth_info = await query.gino.first()
-        username, encrypted_password, ldap_connection = auth_info
-        password = crypto.decrypt(encrypted_password)
-        return dict(username=username, password=password, ldap=ldap_connection)
-
-    @staticmethod
-    async def set_auth_info(uid: str, token: str, expires_on: datetime):
-        """Сделано через staticmethod, чтобы не хранить инстанс.
-        Гипотетически запись может измениться, пока мы получаем ответ. А так данные будут записываться по ip."""
-        if not uid:
-            raise AssertionError('Empty uid.')
-        return await Controller.update.values(token=token, expires_on=expires_on).where(
-            Controller.id == uid).gino.status()
+        query = Controller.select('token', 'expires_on').where((Controller.id == uid))
+        token_info = await query.gino.scalar()
+        if token_info:
+            token, expires_on = token_info
+            if expires_on < datetime.now() or not token:
+                token = Controller.refresh_token(uid)
+            return token
+        else:
+            raise AssertionError('No such controller')
 
     @staticmethod
     async def invalidate_auth(uid: str):
-        if not uid:
-            raise AssertionError('Empty uid.')
-        return await Controller.update.values(token=None, expires_on=datetime.utcfromtimestamp(0)).where(
-            Controller.id == uid).gino.status()
+        return await Controller.update.values(
+            token=None,
+            expires_on=datetime.utcfromtimestamp(0)
+        ).where(Controller.id == uid).gino.status()
+
+    @staticmethod
+    async def refresh_token(uid: str):
+        # TODO: error handling
+        # TODO: set controller status to BAD_AUTH
+
+        query = Controller.select(
+            'address',
+            'username',
+            'password',
+            'ldap_connection'
+        ).where(Controller.id == uid)
+
+        controller = await query.gino.first()
+        if controller:
+            address, username, encrypted_password, ldap_connection = controller
+            password = crypto.decrypt(encrypted_password)
+            auth_info = dict(username=username, password=password, ldap=ldap_connection)
+            controller_client = ControllerClient(address)
+            token, expires_on = await controller_client.auth(auth_info=auth_info)
+            await Controller.update.values(
+                token=token,
+                expires_on=expires_on
+            ).where(Controller.id == uid).gino.status()
+            return token
+        else:
+            raise AssertionError('No such controller')

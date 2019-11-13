@@ -7,7 +7,6 @@ from tornado.escape import json_decode
 
 from settings import VEIL_REQUEST_TIMEOUT, VEIL_CONNECTION_TIMEOUT, VEIL_MAX_BODY_SIZE, VEIL_MAX_CLIENTS
 from common.veil_errors import NotFound, Unauthorized, ServerError, Forbidden, ControllerNotAccessible, BadRequest
-from controller.models import Controller
 from common.veil_decorators import prepare_body
 
 # TODO: добавить обработку исключений
@@ -32,18 +31,10 @@ class VeilHttpClient:
         self.controller_ip = controller_ip
         self.token = token
         self.expires_on = expires_on
-        self.controller_uid = None
 
     @cached_property
     def api_url(self):
         return 'http://{}/api/'.format(self.controller_ip)
-
-    @classmethod
-    async def create(cls, controller_ip: str):
-        """Because of we need async execute db query"""
-        self = cls(controller_ip)
-        self.controller_uid = await Controller.get_controller_id_by_ip(controller_ip)
-        return self
 
     @property
     async def headers(self):
@@ -53,27 +44,6 @@ class VeilHttpClient:
             'Content-Type': 'application/json',
         }
         return headers
-
-    async def login(self):
-        """Авторизация c моделью."""
-
-        auth_info = await Controller.get_auth_info(self.controller_uid)
-        token, expires_on = await self.auth(auth_info)
-        await Controller.set_auth_info(self.controller_uid, token, expires_on)
-        return token
-
-    async def auth(self, auth_info):
-        """Авторизация на контроллере и получение токена."""
-
-        method = 'POST'
-        headers = {'Content-Type': 'application/json'}
-        url = 'http://{}/auth/'.format(self.controller_ip)
-        response = await self.fetch_with_response(url=url, method=method, headers=headers, body=auth_info)
-        self.token = response.get('token')
-        self.expires_on = datetime.strptime(response.get('expires_on'), "%d.%m.%Y %H:%M:%S UTC")
-        if not self.token or not self.expires_on:
-            raise AssertionError('Auth failed.')
-        return self.token, self.expires_on
 
     @prepare_body
     async def fetch(self, url: str, method: str, headers: dict = None, body: str = ''):
@@ -94,7 +64,6 @@ class VeilHttpClient:
             if http_error.code == 400:
                 raise BadRequest(body)
             elif http_error.code == 401:
-                await Controller.invalidate_auth(self.controller_uid)
                 raise Unauthorized()
             elif http_error.code == 403:
                 raise Forbidden(body)
@@ -112,7 +81,7 @@ class VeilHttpClient:
         response_content_type = response_headers.get('Content-Type')
 
         if not isinstance(response_content_type, str):
-            return AssertionError('Can\'t process Content-Type.')
+            raise AssertionError('Can\'t process Content-Type.')
 
         if response_content_type.lower().find('json') == -1:
             raise NotImplementedError('Only \'json\' Content-Type.')

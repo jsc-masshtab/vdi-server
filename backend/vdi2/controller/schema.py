@@ -2,10 +2,11 @@ import datetime
 
 import graphene
 from graphql import GraphQLError
-from controller.client import ControllerClient
-from resources_monitoring.resources_monitor_manager import resources_monitor_manager
+
 from auth.utils import crypto
+from controller.client import ControllerClient
 from controller.models import Controller
+from resources_monitoring.resources_monitor_manager import resources_monitor_manager
 
 
 class ControllerType(graphene.ObjectType):
@@ -52,7 +53,6 @@ class AddControllerMutation(graphene.Mutation):
 
     async def mutate(self, _info, verbose_name, address, username,
                      password, ldap_connection, description=None):
-
         # check credentials
         controller_client = ControllerClient(address)
         auth_info = dict(username=username, password=password, ldap=ldap_connection)
@@ -64,6 +64,7 @@ class AddControllerMutation(graphene.Mutation):
             address=address,
             description=description,
             version=version,
+            status='ACTIVE',  # TODO: special class for all statuses
             username=username,
             password=crypto.encrypt(password),
             ldap_connection=ldap_connection,
