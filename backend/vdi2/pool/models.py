@@ -44,7 +44,8 @@ class Pool(db.Model):
                            StaticPool,
                            xpr]).select_from(Pool.join(AutomatedPool,
                                                        isouter=True).join(StaticPool,
-                                                                          isouter=True))
+                                                                          isouter=True)).where(
+            Pool.status != Status.DELETING)
         return query
 
     @staticmethod
@@ -175,6 +176,11 @@ class Pool(db.Model):
             except VmCreationError:
                 # TODO: log that we cant expand the pool.  Mark pool as broken?
                 pass
+
+    @classmethod
+    async def soft_delete(cls, pool_id):
+        return await Pool.update.values(status=Status.DELETING).where(
+            Pool.id == pool_id).gino.status()
 
 
 class StaticPool(db.Model):

@@ -329,6 +329,28 @@ class PoolQuery(graphene.ObjectType):
 
 
 # --- --- --- --- ---
+# Pool mutations
+class DeletePoolMutation(graphene.Mutation, PoolValidator):
+    class Arguments:
+        id = graphene.UUID()
+
+    ok = graphene.Boolean()
+
+    async def mutate(self, info, id):
+        # Смотрим не удален ли пул ранее.
+        pool = await Pool.get_pool(id)
+
+        if not pool:
+            return DeletePoolMutation(ok=False)
+
+        # Меняем статус пула. Не нравится идея удалять записи имеющие большое количество зависимостей,
+        # например запущенные виртуалки.
+
+        await Pool.soft_delete(pool.id)
+        return DeletePoolMutation(ok=True)
+
+
+# --- --- --- --- ---
 # Static pool mutations
 class CreateStaticPoolMutation(graphene.Mutation, PoolValidator):
     class Arguments:
@@ -485,7 +507,6 @@ class RemoveVmsFromStaticPool(graphene.Mutation):
         }
 
 
-# TODO: remove StaticPool
 # TODO: update StaticPool
 # --- --- --- --- ---
 # Dynamic (Automated) pool mutations
@@ -540,6 +561,7 @@ class PoolMutations(graphene.ObjectType):
     addStaticPool = CreateStaticPoolMutation.Field()
     addVmsToStaticPool = AddVmsToStaticPool.Field()  # TODO: а это точно должно быть тут, а не в Vm?
     removeVmsFromStaticPool = RemoveVmsFromStaticPool.Field()  # TODO: а это точно должно быть тут, а не в Vm?
+    removePool = DeletePoolMutation.Field()
 
 
 pool_schema = graphene.Schema(query=PoolQuery,
