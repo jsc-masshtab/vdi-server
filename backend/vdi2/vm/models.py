@@ -15,7 +15,7 @@ class Vm(db.Model):
     id = db.Column(UUID(), primary_key=True, default=uuid.uuid4)
     template_id = db.Column(db.Unicode(length=100), nullable=True)
     pool_id = db.Column(UUID(), db.ForeignKey('pool.id'))
-    username = db.Column(db.Unicode(length=100), nullable=False)
+    username = db.Column(db.Unicode(length=100))
 
     ACTIONS = ('start', 'suspend', 'reset', 'shutdown', 'resume', 'reboot')
     POWER_STATES = ('unknown', 'power off', 'power on and suspended', 'power on')

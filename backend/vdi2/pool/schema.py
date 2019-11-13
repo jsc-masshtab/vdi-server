@@ -127,6 +127,8 @@ class PoolType(graphene.ObjectType):
     node_id = graphene.UUID()
     controller = graphene.Field(ControllerType)
 
+    vms = graphene.List(VmType)
+
     # StaticPool fields
     static_pool_id = graphene.UUID()
 
@@ -245,20 +247,20 @@ class PoolType(graphene.ObjectType):
     #     veil_info = await vm_http_client.info()
     #     return VmQuery.veil_template_data_to_graphene_type(veil_info, self.controller.address)
     #
-    # async def _build_vms_list(self):
-    #     if not self.vms:
-    #         self.vms = []
-    #         vms_data = await Vm.select("id").where((Vm.pool_id == self.id)).gino.all()
-    #         for (vm_id,) in vms_data:
-    #             vm_http_client = await VmHttpClient.create(self.controller.address, vm_id)
-    #             try:
-    #                 veil_info = await vm_http_client.info()
-    #                 # create graphene type
-    #                 vm_type = VmQuery.veil_vm_data_to_graphene_type(veil_info, self.controller.address)
-    #             except HTTPClientError:
-    #                 vm_type = VmType(id=vm_id, controller=ControllerType(address=self.controller.address))
-    #                 vm_type.veil_info = None
-    #             self.vms.append(vm_type)
+    async def _build_vms_list(self):
+        if not self.vms:
+            self.vms = []
+            vms_data = await Vm.select("id").where((Vm.pool_id == self.id)).gino.all()
+            for (vm_id,) in vms_data:
+                vm_http_client = await VmHttpClient.create(self.controller.address, vm_id)
+                try:
+                    veil_info = await vm_http_client.info()
+                    # create graphene type
+                    vm_type = VmQuery.veil_vm_data_to_graphene_type(veil_info, self.controller.address)
+                except HTTPClientError:
+                    vm_type = VmType(id=vm_id, controller=ControllerType(address=self.controller.address))
+                    vm_type.veil_info = None
+                self.vms.append(vm_type)
 
 
 class PoolQuery(graphene.ObjectType):
@@ -393,7 +395,7 @@ class CreateStaticPoolMutation(graphene.Mutation, PoolValidator):
         vm_veil_data_list = []
         for vm_id in vm_ids:
             try:
-                data = next(veil_vm_data for veil_vm_data in all_vm_veil_data_list if veil_vm_data['id'] == vm_id)
+                data = next(veil_vm_data for veil_vm_data in all_vm_veil_data_list if veil_vm_data['id'] == str(vm_id))
                 vm_veil_data_list.append(data)
             except StopIteration:
                 raise SimpleError('ВМ с id {} не найдена ни на одном из известных контроллеров'.format(vm_id))
@@ -427,7 +429,7 @@ class CreateStaticPoolMutation(graphene.Mutation, PoolValidator):
                                            node_id=node_id)
             # add vms to db
             for vm_id in vm_ids:
-                await Vm.create(id=vm_id, pool_id=pool.uid)
+                await Vm.create(id=vm_id, pool_id=pool.static_pool_id)
 
             # response
             vms = [VmType(id=vm_id) for vm_id in vm_ids]
@@ -437,10 +439,10 @@ class CreateStaticPoolMutation(graphene.Mutation, PoolValidator):
             print(E)
             if pool:
                 await pool.deactivate()
-            return CreateStaticPoolMutation(
-                pool=None)
-        return PoolType(id=pool.uid, name=verbose_name, vms=vms,
-                        )
+            # return CreateStaticPoolMutation(
+            #     Output=None)
+            return None
+        return PoolType(id=pool.static_pool_id, verbose_name=verbose_name, vms=vms)
 
 
 class AddVmsToStaticPool(graphene.Mutation):
