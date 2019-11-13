@@ -16,6 +16,6 @@ class MutationValidation:
             validator = getattr(cls, field_validation_method_name, None)
             if callable(validator):
                 try:
-                    validator(kwargs, kwargs[argument])
+                    validator(kwargs, kwargs.get(argument))
                 except ValidationError as E:
                     raise SimpleError('Field \"{}\" {}'.format(argument, E))

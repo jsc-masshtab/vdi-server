@@ -52,6 +52,8 @@ class PoolValidator(MutationValidation):
 
     @staticmethod
     def validate_controller_ip(obj_dict, value):
+        if not value:
+            return
         ip_re = re.compile(
             r'^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$'
         )
@@ -62,7 +64,9 @@ class PoolValidator(MutationValidation):
 
     @staticmethod
     def validate_verbose_name(obj_dict, value):
-        name_re = re.compile('^[а-яА-ЯёЁa-zA-Z0-9]+[а-яА-ЯёЁa-zA-Z0-9.-_+]*$')
+        if not value:
+            return
+        name_re = re.compile('^[а-яА-ЯёЁa-zA-Z0-9]+[а-яА-ЯёЁa-zA-Z0-9.-_+ ]*$')
         template_name = re.match(name_re, value)
         if template_name:
             return value
@@ -70,6 +74,8 @@ class PoolValidator(MutationValidation):
 
     @staticmethod
     def validate_vm_name_template(obj_dict, value):
+        if not value:
+            return
         if not value:
             return value
         name_re = re.compile('^[а-яА-ЯёЁa-zA-Z0-9]+[а-яА-ЯёЁa-zA-Z0-9.-_+ ]*$')
@@ -80,6 +86,8 @@ class PoolValidator(MutationValidation):
 
     @staticmethod
     def validate_initial_size(obj_dict, value):
+        if not value:
+            return
         if value < obj_dict['min_size'] or value > obj_dict['max_size']:
             raise ValidationError(
                 'Начальное количество ВМ должно быть в интервале {}-{}'.format(obj_dict['min_size'],
@@ -88,6 +96,8 @@ class PoolValidator(MutationValidation):
 
     @staticmethod
     def validate_reserve_size(obj_dict, value):
+        if not value:
+            return
         if value < obj_dict['min_size'] or value > obj_dict['max_size']:
             raise ValidationError('Количество создаваемых ВМ должно быть в интервале {}-{}'.
                                   format(obj_dict['min_size'], obj_dict['max_size']))
@@ -95,6 +105,8 @@ class PoolValidator(MutationValidation):
 
     @staticmethod
     def validate_total_size(obj_dict, value):
+        if not value:
+            return
         if value < obj_dict['initial_size']:
             raise ValidationError('Максимальное количество создаваемых ВМ не может быть меньше '
                                   'начального количества ВМ')
@@ -509,8 +521,8 @@ class RemoveVmsFromStaticPool(graphene.Mutation):
 
 # TODO: update StaticPool
 # --- --- --- --- ---
-# Dynamic (Automated) pool mutations
-class CreateDynamicPoolMutation(graphene.Mutation, PoolValidator):
+# Automated (Dynamic) pool mutations
+class CreateAutomatedPoolMutation(graphene.Mutation, PoolValidator):
     class Arguments:
         verbose_name = graphene.String(required=True)
         controller_ip = graphene.String(required=True)
@@ -547,7 +559,7 @@ class CreateDynamicPoolMutation(graphene.Mutation, PoolValidator):
             if pool:
                 await pool.deactivate()
             raise SimpleError(E)
-        return CreateDynamicPoolMutation(
+        return CreateAutomatedPoolMutation(
                 pool=PoolType(**pool),
                 ok=True)
 # TODO: remove StaticPool
@@ -557,7 +569,7 @@ class CreateDynamicPoolMutation(graphene.Mutation, PoolValidator):
 # --- --- --- --- ---
 # Schema concatenation
 class PoolMutations(graphene.ObjectType):
-    addDynamicPool = CreateDynamicPoolMutation.Field()
+    addDynamicPool = CreateAutomatedPoolMutation.Field()
     addStaticPool = CreateStaticPoolMutation.Field()
     addVmsToStaticPool = AddVmsToStaticPool.Field()  # TODO: а это точно должно быть тут, а не в Vm?
     removeVmsFromStaticPool = RemoveVmsFromStaticPool.Field()  # TODO: а это точно должно быть тут, а не в Vm?
