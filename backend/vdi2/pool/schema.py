@@ -28,9 +28,9 @@ from pool.models import AutomatedPool, StaticPool, Pool
 #  стоит применить и к статическим пулам (вместо похода на вейл для проверки присланных параметров).
 
 
-# TODO: возвращаемые значения для PoolType
-# TODO: remove raw sql, rewrite
 async def check_and_return_pool_data(pool_id, pool_type=None):
+    # TODO: а это точно нужно?
+    # TODO: remove raw sql, rewrite
     # check if pool exists
     async with db.connect() as conn:
         qu = 'SELECT * FROM pool WHERE id = $1', pool_id
@@ -105,7 +105,7 @@ class PoolValidator(MutationValidation):
 
 
 class PoolType(graphene.ObjectType):
-    # TODO: update
+
     # Pool fields
     id = graphene.UUID()
     verbose_name = graphene.String()
@@ -113,7 +113,6 @@ class PoolType(graphene.ObjectType):
     POOL_TYPE = graphene.String()
     cluster_id = graphene.UUID()
     node_id = graphene.UUID()
-    # controller = graphene.UUID()
     controller = graphene.Field(ControllerType)
 
     # StaticPool fields
@@ -133,6 +132,7 @@ class PoolType(graphene.ObjectType):
     total_size = graphene.Int()
     vm_name_template = graphene.String()
 
+    # TODO: дополнить внешними сущностями
     # users = graphene.List(UserType, entitled=graphene.Boolean())
     # vms = graphene.List(VmType)
     # node = graphene.Field(NodeType)
@@ -250,7 +250,8 @@ class PoolType(graphene.ObjectType):
 
 
 class PoolQuery(graphene.ObjectType):
-    # TODO: описать типы сортировок в Enum
+    # TODO: описать возможные типы сортировок
+    # TODO: сортировка данных
     pools = graphene.List(PoolType, ordering=graphene.String(), reversed_order=graphene.Boolean())
     pool = graphene.Field(PoolType, id=graphene.String(), controller_address=graphene.String())
 
@@ -327,6 +328,7 @@ class PoolQuery(graphene.ObjectType):
         return PoolType(**pool)
 
 
+# --- --- --- --- ---
 # Static pool mutations
 class CreateStaticPoolMutation(graphene.Mutation, PoolValidator):
     class Arguments:
@@ -340,14 +342,12 @@ class CreateStaticPoolMutation(graphene.Mutation, PoolValidator):
         # TODO: не пересена в модель, потому что есть предложение вообще отказаться от такой проверки.
         #  Более удобным вариантом кажется хранить ресурсы в кеше и валидировать их из него.
         controller_adresses = await Controller.get_controllers_addresses()
-        print('Controller addresses {}'.format(controller_adresses))
         # create list of all vms on controllers
         all_vm_veil_data_list = []
         for controller_address in controller_adresses:
             vm_http_client = await VmHttpClient.create(controller_address, '')
             try:
                 single_vm_veil_data_list = await vm_http_client.fetch_vms_list()
-                print('single vm veil data list: {}'.format(single_vm_veil_data_list))
                 # add data about controller address
                 for vm_veil_data in single_vm_veil_data_list:
                     vm_veil_data['controller_address'] = controller_address
@@ -355,7 +355,6 @@ class CreateStaticPoolMutation(graphene.Mutation, PoolValidator):
             except (HttpError, OSError):
                 print('HttpError')
                 pass
-        print(all_vm_veil_data_list)
         # find vm veil data by id
         vm_veil_data_list = []
         for vm_id in vm_ids:
@@ -442,7 +441,7 @@ class AddVmsToStaticPool(graphene.Mutation):
                 raise SimpleError('ВМ {} уже находится в одном из пулов'.format(vm_id))
 
         # remote access
-        await enable_remote_accesses(controller_address, vm_ids)
+        await Vm.enable_remote_accesses(controller_address, vm_ids)
 
         # add vms to db
         for vm_id in vm_ids:
@@ -486,6 +485,9 @@ class RemoveVmsFromStaticPool(graphene.Mutation):
         }
 
 
+# TODO: remove StaticPool
+# TODO: update StaticPool
+# --- --- --- --- ---
 # Dynamic (Automated) pool mutations
 class CreateDynamicPoolMutation(graphene.Mutation, PoolValidator):
     class Arguments:
@@ -527,13 +529,17 @@ class CreateDynamicPoolMutation(graphene.Mutation, PoolValidator):
         return CreateDynamicPoolMutation(
                 pool=PoolType(**pool),
                 ok=True)
+# TODO: remove StaticPool
+# TODO: update StaticPool
 
 
+# --- --- --- --- ---
+# Schema concatenation
 class PoolMutations(graphene.ObjectType):
     addDynamicPool = CreateDynamicPoolMutation.Field()
     addStaticPool = CreateStaticPoolMutation.Field()
-    addVmsToStaticPool = AddVmsToStaticPool.Field()
-    removeVmsFromStaticPool = RemoveVmsFromStaticPool.Field()
+    addVmsToStaticPool = AddVmsToStaticPool.Field()  # TODO: а это точно должно быть тут, а не в Vm?
+    removeVmsFromStaticPool = RemoveVmsFromStaticPool.Field()  # TODO: а это точно должно быть тут, а не в Vm?
 
 
 pool_schema = graphene.Schema(query=PoolQuery,

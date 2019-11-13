@@ -301,19 +301,16 @@ class AutomatedPool(db.Model):
         # TODO: beautify
         vm_name_template = self.vm_name_template or await self.verbose_name
 
-        uid = str(uuid.uuid4())[:7]
+        # uid = str(uuid.uuid4())[:7]
 
         params = {
-            'verbose_name': "{}-{}-{}".format(vm_name_template, domain_index, uid),
+            'verbose_name': "{}-{}-{}".format(vm_name_template, domain_index, str(uuid.uuid4())[:7]),
             'name_template': vm_name_template,
             'domain_id': str(self.template_id),
             'datapool_id': str(self.datapool_id),  # because of UUID
             'controller_ip': await self.controller_ip,
             'node_id': str(await self.node_id),
         }
-
-        print('Params is:')
-        print(params)
 
         # try to create vm
         for i in range(self.max_amount_of_create_attempts):
@@ -357,7 +354,8 @@ class AutomatedPool(db.Model):
             resources_monitor_manager.unsubscribe(response_waiter)
 
             if is_vm_successfully_created:
-                await Vm.create(id=vm_info['id'], pool_id=str(self.automated_pool_id), template_id=str(self.template_id),
+                await Vm.create(id=vm_info['id'], pool_id=str(self.automated_pool_id),
+                                template_id=str(self.template_id),
                                 username='admin')
                 return vm_info
             else:
