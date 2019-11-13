@@ -15,7 +15,6 @@ from resources_monitoring.resources_monitor_manager import resources_monitor_man
 from resources_monitoring.resources_monitoring_data import VDI_TASKS_SUBSCRIPTION
 
 
-# TODO: update migrations
 class Pool(db.Model):
     """На данный момент отсутствует смысловая валидация на уровне таблиц (она в схемах)."""
     __tablename__ = 'pool'
@@ -24,7 +23,7 @@ class Pool(db.Model):
     verbose_name = db.Column(db.Unicode(length=128), nullable=False, unique=True)
     cluster_id = db.Column(UUID(), nullable=False)
     node_id = db.Column(UUID(), nullable=False)
-    status = db.Column(AlchemyEnum(Status), nullable=False)
+    status = db.Column(AlchemyEnum(Status), nullable=False, index=True)
     controller = db.Column(UUID(), db.ForeignKey('controller.id'), nullable=False)
 
     # ----- ----- ----- ----- ----- ----- -----
@@ -289,6 +288,24 @@ class AutomatedPool(db.Model):
                                         reserve_size=reserve_size,
                                         total_size=total_size,
                                         vm_name_template=vm_name_template)
+
+    @classmethod
+    async def soft_update(cls, id, verbose_name, reserve_size, total_size, vm_name_template):
+        async with db.transaction() as tx:
+            if verbose_name:
+                await Pool.update.values(verbose_name=verbose_name).where(
+                    Pool.id == id).gino.status()
+            auto_pool_kwargs = dict()
+            if reserve_size:
+                auto_pool_kwargs['reserve_size'] = reserve_size
+            if total_size:
+                auto_pool_kwargs['total_size'] = total_size
+            if vm_name_template:
+                auto_pool_kwargs['vm_name_template'] = vm_name_template
+            if auto_pool_kwargs:
+                await AutomatedPool.update.values(**auto_pool_kwargs).where(
+                    AutomatedPool.automated_pool_id == id).gino.status()
+        return True
 
     async def activate(self):
         return await Pool.activate(self.automated_pool_id)
