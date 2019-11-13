@@ -9,6 +9,7 @@
     overflow-y: auto;
 }
 
+
 .table-area-object {
     display: flex;
     align-items: center;
@@ -17,28 +18,25 @@
     cursor: default;
     min-height: 25px;
     padding: 3px;
+    flex-shrink: 0;
 }
 
-.table-area-property {
+.table-area-title {
+    padding-left: 15px;
+    width: 25%;
     display: flex;
+    justify-content: space-between;
     align-items: center;
-    width: 100%;
-
-
-    .table-area-title {
-        padding-left: 15px;
-        width: 25%;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-
-    .table-area-value {
-        font-weight: bold;
-        margin-left: 10px;
-        width: 75%;
-    }
+    flex-basis: 250px;
+    flex-grow: 1;
 }
+
+.table-area-value {
+    font-weight: bold;
+    margin-left: 10px;
+    width: 75%;
+}
+
 
 .edit-button {
     border: none;

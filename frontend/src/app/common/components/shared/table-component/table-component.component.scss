@@ -15,13 +15,10 @@
         flex: 1;
         display: flex;
         justify-content: center;
-        min-width: 50px;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
+        align-items: center;
+        text-align: center;
         position: relative;
-        padding-top: 5px;
-        padding-bottom: 5px;
+        padding: 5px;
     }
 
     .icon-sort {
@@ -51,8 +48,8 @@
         border-bottom: 1px solid #DCDCDC;
         background: #FFF;
         cursor: default;
-        min-height: 24px;
         color: rgba(0, 0, 0, 0.6);
+        flex-shrink: 0;
 
         &:hover {
             background-color: #f9f9f9;
@@ -83,15 +80,13 @@
     }
 
     .table-area-property {
-        min-height: 24px;
         display: flex;
         flex: 1;
         border-right: 1px solid #DCDCDC;
-        padding: 3px 6px;
+        padding: 6px;
         justify-content: center;
         align-items: center;
-        min-width: 50px;
-        overflow: hidden;
+        text-align: center;
 
         > span {
             word-break: break-word;
@@ -105,12 +100,13 @@
     .icon-group {
         position: relative;
         width: 20px;
+        margin-right: 5px;
     }
 
     fa-icon.status {
         position: absolute;
         bottom: -4px;
-        left: 12px;
+        left: 16px;
         font-size: 9px;
         &.on {
             color: #8bd22f;
