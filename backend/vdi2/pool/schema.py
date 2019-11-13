@@ -51,7 +51,16 @@ class PoolValidator(MutationValidation):
     """Валидатор для сущности Pool"""
 
     @staticmethod
-    def validate_controller_ip(obj_dict, value):
+    async def validate_id(obj_dict, value):
+        if not value:
+            return
+        pool = await Pool.get_pool(value)
+        if pool:
+            return value
+        raise ValidationError('No such pool.')
+
+    @staticmethod
+    async def validate_controller_ip(obj_dict, value):
         if not value:
             return
         ip_re = re.compile(
@@ -63,7 +72,7 @@ class PoolValidator(MutationValidation):
         raise ValidationError('ip-address probably invalid.')
 
     @staticmethod
-    def validate_verbose_name(obj_dict, value):
+    async def validate_verbose_name(obj_dict, value):
         if not value:
             return
         name_re = re.compile('^[а-яА-ЯёЁa-zA-Z0-9]+[а-яА-ЯёЁa-zA-Z0-9.-_+ ]*$')
@@ -73,11 +82,10 @@ class PoolValidator(MutationValidation):
         raise ValidationError('Имя пула должно содержать только буквы, цифры, _, -')
 
     @staticmethod
-    def validate_vm_name_template(obj_dict, value):
+    async def validate_vm_name_template(obj_dict, value):
         if not value:
             return
-        if not value:
-            return value
+
         name_re = re.compile('^[а-яА-ЯёЁa-zA-Z0-9]+[а-яА-ЯёЁa-zA-Z0-9.-_+ ]*$')
         template_name = re.match(name_re, value)
         if template_name:
@@ -85,7 +93,7 @@ class PoolValidator(MutationValidation):
         raise ValidationError('Шаблонное имя вм должно содержать только буквы, цифры, _, -')
 
     @staticmethod
-    def validate_initial_size(obj_dict, value):
+    async def validate_initial_size(obj_dict, value):
         if not value:
             return
         if value < obj_dict['min_size'] or value > obj_dict['max_size']:
@@ -95,24 +103,44 @@ class PoolValidator(MutationValidation):
         return value
 
     @staticmethod
-    def validate_reserve_size(obj_dict, value):
+    async def validate_reserve_size(obj_dict, value):
         if not value:
             return
-        if value < obj_dict['min_size'] or value > obj_dict['max_size']:
+        pool_id = obj_dict.get('id')
+        if pool_id:
+            pool_obj = await Pool.get_pool(pool_id)
+            min_size = obj_dict['min_size'] if obj_dict.get('min_size') else pool_obj.min_size
+            max_size = obj_dict['max_size'] if obj_dict.get('max_size') else pool_obj.max_size
+        else:
+            min_size = obj_dict['min_size']
+            max_size = obj_dict['max_size']
+        if value < min_size or value > max_size:
             raise ValidationError('Количество создаваемых ВМ должно быть в интервале {}-{}'.
-                                  format(obj_dict['min_size'], obj_dict['max_size']))
+                                  format(min_size, max_size))
         return value
 
     @staticmethod
-    def validate_total_size(obj_dict, value):
+    async def validate_total_size(obj_dict, value):
         if not value:
             return
-        if value < obj_dict['initial_size']:
+
+        pool_id = obj_dict.get('id')
+        if pool_id:
+            pool_obj = await Pool.get_pool(pool_id)
+            initial_size = obj_dict['initial_size'] if obj_dict.get('initial_size') else pool_obj.initial_size
+            min_size = obj_dict['min_size'] if obj_dict.get('min_size') else pool_obj.min_size
+            max_vm_amount = obj_dict['max_vm_amount'] if obj_dict.get('max_vm_amount') else pool_obj.max_vm_amount
+        else:
+            initial_size = obj_dict['initial_size']
+            min_size = obj_dict['min_size']
+            max_vm_amount = obj_dict['max_vm_amount']
+
+        if value < initial_size:
             raise ValidationError('Максимальное количество создаваемых ВМ не может быть меньше '
                                   'начального количества ВМ')
-        if value < obj_dict['min_size'] or value > obj_dict['max_vm_amount']:
+        if value < min_size or value > max_vm_amount:
             raise ValidationError('Максимальное количество создаваемых ВМ должно быть в интервале [{} {}]'.
-                                  format(obj_dict['min_size'], obj_dict['max_vm_amount']))
+                                  format(min_size, max_vm_amount))
         return value
 
 
@@ -349,16 +377,10 @@ class DeletePoolMutation(graphene.Mutation, PoolValidator):
     ok = graphene.Boolean()
 
     async def mutate(self, info, id):
-        # Смотрим не удален ли пул ранее.
-        pool = await Pool.get_pool(id)
-
-        if not pool:
-            return DeletePoolMutation(ok=False)
 
         # Меняем статус пула. Не нравится идея удалять записи имеющие большое количество зависимостей,
         # например запущенные виртуалки.
-
-        await Pool.soft_delete(pool.id)
+        await Pool.soft_delete(id)
         return DeletePoolMutation(ok=True)
 
 
@@ -401,7 +423,7 @@ class CreateStaticPoolMutation(graphene.Mutation, PoolValidator):
 
     @classmethod
     async def mutate(cls, root, info, **kwargs):
-        cls.validate_agruments(**kwargs)
+        await cls.validate_agruments(**kwargs)
         pool = None
         vm_ids = kwargs['vm_ids']
         verbose_name = kwargs['verbose_name']
@@ -546,7 +568,7 @@ class CreateAutomatedPoolMutation(graphene.Mutation, PoolValidator):
 
     @classmethod
     async def mutate(cls, root, info, **kwargs):
-        cls.validate_agruments(**kwargs)
+        await cls.validate_agruments(**kwargs)
         pool = None
         try:
             automated_pool = await AutomatedPool.create(**kwargs)
@@ -562,8 +584,28 @@ class CreateAutomatedPoolMutation(graphene.Mutation, PoolValidator):
         return CreateAutomatedPoolMutation(
                 pool=PoolType(**pool),
                 ok=True)
-# TODO: remove StaticPool
-# TODO: update StaticPool
+
+
+class UpdateAutomatedPoolMutation(graphene.Mutation, PoolValidator):
+    """Перечень полей доступных для редактирования отдельно не рассматривалась. Перенесена логика из Confluence."""
+    class Arguments:
+        id = graphene.UUID(required=True)
+        verbose_name = graphene.String()
+        reserve_size = graphene.Int()
+        total_size = graphene.Int()
+        vm_name_template = graphene.String()
+
+    pool = graphene.Field(lambda: PoolType)
+    ok = graphene.Boolean()
+
+
+
+    @classmethod
+    async def mutate(cls, root, info, **kwargs):
+        await cls.validate_agruments(**kwargs)
+        ok = await AutomatedPool.soft_update(kwargs['id'], kwargs.get('verbose_name'), kwargs.get('reserve_size'),
+                                             kwargs.get('total_size'), kwargs.get('vm_name_template'))
+        return UpdateAutomatedPoolMutation(ok=ok)
 
 
 # --- --- --- --- ---
@@ -574,6 +616,7 @@ class PoolMutations(graphene.ObjectType):
     addVmsToStaticPool = AddVmsToStaticPool.Field()  # TODO: а это точно должно быть тут, а не в Vm?
     removeVmsFromStaticPool = RemoveVmsFromStaticPool.Field()  # TODO: а это точно должно быть тут, а не в Vm?
     removePool = DeletePoolMutation.Field()
+    updateDynamicPool = UpdateAutomatedPoolMutation.Field()
 
 
 pool_schema = graphene.Schema(query=PoolQuery,

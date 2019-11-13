@@ -7,7 +7,7 @@ class MutationValidation:
        На вопрос почему так - не нашел какого-то готового решения для наших реалий."""
 
     @classmethod
-    def validate_agruments(cls, **kwargs):
+    async def validate_agruments(cls, **kwargs):
         # TODO: сделать аналогичный декоратор?
         for argument in cls.Arguments.__dict__:
             if argument.startswith('_'):
@@ -16,6 +16,6 @@ class MutationValidation:
             validator = getattr(cls, field_validation_method_name, None)
             if callable(validator):
                 try:
-                    validator(kwargs, kwargs.get(argument))
+                    await validator(kwargs, kwargs.get(argument))
                 except ValidationError as E:
                     raise SimpleError('Field \"{}\" {}'.format(argument, E))
