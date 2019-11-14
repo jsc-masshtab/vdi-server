@@ -87,15 +87,14 @@
         justify-content: center;
         align-items: center;
         text-align: center;
-
-        > span {
-            word-break: break-word;
-        }
+        overflow: auto;
+        flex-wrap: wrap;
 
         &:last-child {
             border-right: none;
         }
     }
+
 
     .icon-group {
         position: relative;
@@ -162,5 +161,11 @@
     fa-icon {
         font-size: 50px;
         color: rgb(216, 216, 216);
+    }
+}
+
+@media screen and (max-width: 800px) {
+    .table-component .table-area-property {
+        justify-content: flex-start;
     }
 }
