@@ -51,7 +51,7 @@ if __name__ == '__main__':
     app.listen(8888)
 
     try:
-        # tornado.ioloop.IOLoop.current().add_callback(resources_monitor_manager.start)
+        tornado.ioloop.IOLoop.current().add_callback(resources_monitor_manager.start)
         tornado.ioloop.IOLoop.current().start()
     except KeyboardInterrupt:
         print('Finish')

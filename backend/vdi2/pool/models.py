@@ -29,15 +29,13 @@ class Pool(db.Model):
     # ----- ----- ----- ----- ----- ----- -----
     # Constants:
     POOL_TYPE_LABEL = 'pool_type'
-    USERS_COUNT_LABEL = 'users_count'
-
+    EXTRA_ORDER_FIELDS = ['controller_address', 'users_count', 'vms_count']
     # ----- ----- ----- ----- ----- ----- -----
     # Properties and getters:
 
     @staticmethod
     def build_ordering(query, ordering=None):
         """Построение порядка сортировки"""
-        extra_order_fields = ['controller_address', 'users_count', 'vms_count']
 
         if not ordering or not isinstance(ordering, str):
             return query
@@ -51,7 +49,7 @@ class Pool(db.Model):
 
         # TODO: если сделать валидацию переданных полей на сортировку - try не нужен
         try:
-            if ordering in extra_order_fields:
+            if ordering in Pool.EXTRA_ORDER_FIELDS:
                 if ordering == 'controller_address':
                     query = query.order_by(desc(Controller.address)) if reversed_order else query.order_by(
                         Controller.address)
