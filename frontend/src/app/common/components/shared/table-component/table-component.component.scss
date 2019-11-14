@@ -87,16 +87,24 @@
         justify-content: center;
         align-items: center;
         text-align: center;
-        overflow: auto;
-        flex-wrap: wrap;
+        overflow: hidden; 
 
         &:last-child {
             border-right: none;
+        }
+
+        > span.for-wrap {
+            display: flex;
+            flex-wrap: wrap; // flex-wrap: wrap; // при пользователях пула,например, не переносит слова brake-word и не работает в edge
+            -ms-word-break: break-all;
+            /* This is the dangerous one in WebKit, as it breaks things wherever */
+            word-break: break-all;
         }
     }
 
 
     .icon-group {
+        display: flex;
         position: relative;
         width: 20px;
         margin-right: 5px;
@@ -161,11 +169,5 @@
     fa-icon {
         font-size: 50px;
         color: rgb(216, 216, 216);
-    }
-}
-
-@media screen and (max-width: 800px) {
-    .table-component .table-area-property {
-        justify-content: flex-start;
     }
 }
