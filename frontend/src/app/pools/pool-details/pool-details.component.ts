@@ -229,7 +229,8 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
       this.idPool = +param.get('id');
       if (this.sub_ws_create_pool) {
         this.sub_ws_create_pool.unsubscribe();
-        this.eventCreatedVm = [];
+        this.eventCreatedVm = []; // т.к. при переходе на другой из списка,компонент  doesn't destroy
+        this.menuActive = 'info'; // у стат. пула нет 'event-vm'
       }
       this.getPool();
       this.getMsgCreatePool();
