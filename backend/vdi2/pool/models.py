@@ -285,7 +285,7 @@ class StaticPool(db.Model):
     async def soft_update(cls, id, verbose_name):
         async with db.transaction() as tx:
             await Pool.update.values(verbose_name=verbose_name).where(
-                Pool.id == id).gino.status()
+                Pool.pool_id == id).gino.status()
         return True
 
 

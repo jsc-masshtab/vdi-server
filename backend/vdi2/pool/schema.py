@@ -205,6 +205,7 @@ class PoolType(graphene.ObjectType):
         controller_address = await Pool.get_controller_ip(self.pool_id)
         resources_http_client = await ResourcesHttpClient.create(controller_address)
         node_id = await Pool.select('node_id').where(Pool.id == self.id).gino.scalar()
+
         node_data = await resources_http_client.fetch_node(node_id)
         node_type = make_graphene_type(NodeType, node_data)
         node_type.controller = ControllerType(address=controller_address)
@@ -214,6 +215,7 @@ class PoolType(graphene.ObjectType):
         controller_address = await Pool.get_controller_ip(self.pool_id)
         resources_http_client = await ResourcesHttpClient.create(controller_address)
         cluster_id = await Pool.select('cluster_id').where(Pool.id == self.id).gino.scalar()
+
         cluster_data = await resources_http_client.fetch_cluster(cluster_id)
         cluster_type = make_graphene_type(ClusterType, cluster_data)
         cluster_type.controller = ControllerType(address=controller_address)
@@ -223,6 +225,7 @@ class PoolType(graphene.ObjectType):
         controller_address = await Pool.get_controller_ip(self.pool_id)
         resources_http_client = await ResourcesHttpClient.create(controller_address)
         datapool_id = await Pool.select('datapool_id').where(Pool.id == self.pool_id).gino.scalar()
+
         datapool_data = await resources_http_client.fetch_datapool(datapool_id)
         datapool_type = make_graphene_type(DatapoolType, datapool_data)
         datapool_type.controller = ControllerType(address=self.controller_address)
@@ -232,6 +235,7 @@ class PoolType(graphene.ObjectType):
         controller_address = await Pool.get_controller_ip(self.pool_id)
         template_id = await Pool.select('template_id').where(Pool.id == self.id).gino.scalar()
         vm_http_client = await VmHttpClient.create(controller_address, template_id)
+
         veil_info = await vm_http_client.info()
         return VmQuery.veil_template_data_to_graphene_type(veil_info, controller_address)
 
