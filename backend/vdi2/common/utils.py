@@ -120,7 +120,7 @@ async def cancel_async_task(async_task):
 
 
 def extract_ordering_data(ordering):
-    reverse = (ordering[0] == '-')
+    reverse = (ordering.find('-', 0, 1) == 0)
     if reverse:
         ordering = ordering[1:]
     return ordering, reverse

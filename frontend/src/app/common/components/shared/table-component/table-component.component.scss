@@ -95,7 +95,7 @@
 
         > span.for-wrap {
             display: flex;
-            flex-wrap: wrap; // flex-wrap: wrap; // при пользователях пула,например, не переносит слова brake-word и не работает в edge
+            flex-wrap: wrap; // flex-wrap: wrap; // при пользователях пула,например, не переносит слова break-word и не работает в edge
             -ms-word-break: break-all;
             /* This is the dangerous one in WebKit, as it breaks things wherever */
             word-break: break-all;

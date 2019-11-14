@@ -2,7 +2,7 @@
 import uuid
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy import Enum as AlchemyEnum
-from sqlalchemy import case, literal_column, desc
+from sqlalchemy import case, literal_column, desc, text
 
 from settings import VEIL_WS_MAX_TIME_TO_WAIT
 from database import db, Status
@@ -29,7 +29,7 @@ class Pool(db.Model):
     # ----- ----- ----- ----- ----- ----- -----
     # Constants:
     POOL_TYPE_LABEL = 'pool_type'
-    EXTRA_ORDER_FIELDS = ['controller_address', 'users_count', 'vms_count']
+    EXTRA_ORDER_FIELDS = ['controller_address', 'users_count', 'vms_count', 'pool_type']
     # ----- ----- ----- ----- ----- ----- -----
     # Properties and getters:
 
@@ -59,6 +59,8 @@ class Pool(db.Model):
                 elif ordering == 'vms_count':
                     vms_count = db.func.count(Vm.id)
                     query = query.order_by(desc(vms_count)) if reversed_order else query.order_by(vms_count)
+                elif ordering == 'pool_type':
+                    query.order_by(text(Pool.POOL_TYPE_LABEL))
             else:
                 # Соответствие переданного наименования поля полю модели, чтобы не использовать raw_sql в order
                 query = query.order_by(desc(getattr(Pool, ordering))) if reversed_order else query.order_by(
@@ -98,7 +100,7 @@ class Pool(db.Model):
                                                                                 isouter=True).join(Controller,
                                                                                                    isouter=True).join(
             PoolUsers, isouter=True).join(Vm, isouter=True)).group_by(Pool.pool_id, AutomatedPool.automated_pool_id,
-                                                                      StaticPool.static_pool_id)
+                                                                      StaticPool.static_pool_id, Controller.address)
         else:
             # Делаем пересечение только с основными таблицами
             query = query.select_from(Pool.join(AutomatedPool, isouter=True).join(StaticPool, isouter=True))
@@ -283,7 +285,7 @@ class StaticPool(db.Model):
     async def soft_update(cls, id, verbose_name):
         async with db.transaction() as tx:
             await Pool.update.values(verbose_name=verbose_name).where(
-                Pool.id == id).gino.status()
+                Pool.pool_id == id).gino.status()
         return True
 
 

@@ -124,11 +124,10 @@ class NodeType(graphene.ObjectType):
 
     async def resolve_vms(self, _info):
         vm_http_client = await VmHttpClient.create(self.controller.address, '')
-        cluster_id = self.cluster.id if self.cluster else None
         vm_veil_data_list = await vm_http_client.fetch_vms_list(node_id=self.id)
-        return VmQuery.veil_vm_data_to_graphene_type_list(vm_veil_data_list)
+        return VmQuery.veil_vm_data_to_graphene_type_list(vm_veil_data_list, self.controller.address)
 
-    async def resolve_templates(self, info):
+    async def resolve_templates(self, _info):
         vm_http_client = await VmHttpClient.create(self.controller.address, '')
         template_veil_data_list = await vm_http_client.fetch_templates_list(node_id=self.id)
         return VmQuery.veil_template_data_to_graphene_type_list(template_veil_data_list, self.controller.address)
@@ -148,19 +147,21 @@ class NodeType(graphene.ObjectType):
             self.veil_info = await self.get_veil_info()
         cluster_id = self.veil_info['cluster']['id']
 
-        resp = await resources_http_client.fetch_cluster(cluster_id)
-
-        obj = make_graphene_type(ClusterType, resp)
-        obj.controller = self.controller
-        return obj
+        veil_cluster_data = await resources_http_client.fetch_cluster(cluster_id)
+        cluster_type = make_graphene_type(ClusterType, veil_cluster_data)
+        cluster_type.controller = self.controller
+        return cluster_type
 
     async def resolve_datacenter(self, _info):
-        if self.datacenter:
-            return self.datacenter
-        if self.veil_info is None:
-            self.veil_info = await self.get_veil_info()
-        return DatacenterType(id=self.veil_info['datacenter_id'],
-                              verbose_name=self.veil_info['datacenter_name'])
+        await self.get_datacenter_data()
+        return self.datacenter
+
+    async def get_datacenter_data(self):
+        if not self.datacenter:
+            if self.veil_info is None:
+                self.veil_info = await self.get_veil_info()
+            self.datacenter = DatacenterType(id=self.veil_info['datacenter_id'],
+                                  verbose_name=self.veil_info['datacenter_name'])
 
     async def resolve_resources_usage(self, _info):
         resources_http_client = await ResourcesHttpClient.create(self.controller.address)
@@ -256,8 +257,11 @@ class ResourcesQuery(graphene.ObjectType):
             elif ordering == 'memory_count':
                 def sort_lam(node): return node.memory_count if node.memory_count else 0
             elif ordering == 'datacenter_name':
+                for node_type in list_of_all_node_types:
+                    await node_type.get_datacenter_data()
+
                 def sort_lam(node):
-                    return node.cluster['datacenter_name'] if node.cluster['datacenter_name'] else DEFAULT_NAME
+                    return node.datacenter.verbose_name if node.datacenter.verbose_name else DEFAULT_NAME
             elif ordering == 'status':
                 def sort_lam(node): return node.status if node.status else DEFAULT_NAME
             elif ordering == 'controller':

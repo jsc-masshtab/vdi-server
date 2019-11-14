@@ -21,7 +21,7 @@ from controller.models import Controller
 from controller_resources.veil_client import ResourcesHttpClient
 from controller_resources.schema import ClusterType, NodeType, DatapoolType
 
-from pool.models import AutomatedPool, StaticPool, Pool
+from pool.models import AutomatedPool, StaticPool, Pool, PoolUsers
 # TODO: отсутствует валидация входящих ресурсов вроде node_uid, cluster_uid и т.п. Ранее шла речь,
 #  о том, что мы будем кешированно хранить какие-то ресурсы полученные от ECP Veil. Возможно стоит
 #  обращаться к этому хранилищу для проверки корректности присланных ресурсов. Аналогичный принцип
@@ -154,7 +154,6 @@ class PoolType(graphene.ObjectType):
     cluster_id = graphene.UUID()
     node_id = graphene.UUID()
     controller = graphene.Field(ControllerType)
-
     vms = graphene.List(VmType)
 
     # StaticPool fields
@@ -174,9 +173,7 @@ class PoolType(graphene.ObjectType):
     total_size = graphene.Int()
     vm_name_template = graphene.String()
 
-    # TODO: дополнить внешними сущностями
-    # users = graphene.List(UserType, entitled=graphene.Boolean())
-    # vms = graphene.List(VmType)
+    users = graphene.List(UserType, entitled=graphene.Boolean())
 
     node = graphene.Field(NodeType)
     cluster = graphene.Field(ClusterType)
@@ -187,72 +184,74 @@ class PoolType(graphene.ObjectType):
         controller_obj = await Controller.get(self.controller)
         return ControllerType(**controller_obj.__values__)
 
-    # async def resolve_users(self, _info, entitled=True):
-    #     # users who are entitled to pool
-    #     if entitled:
-    #         users_data = await User.join(PoolUsers, User.id == PoolUsers.user_id).select().where(
-    #              PoolUsers.pool_id == self.id).gino.all()
-    #     # users who are NOT entitled to pool
-    #     else:
-    #         subquery = PoolUsers.query(PoolUsers.user_id).where(PoolUsers.pool_id == self.id)
-    #         users_data = User.filter(User.id.notin_(subquery)).gino.all()
-    #     print('users_data', users_data)
-    #     # todo: it will not work until model and grapnene feilds are syncronized
-    #     uset_type_list = [
-    #         UserType(**user.__values__)
-    #         for user in users_data
-    #     ]
-    #     return uset_type_list
+    async def resolve_users(self, _info, entitled=True):
+        if entitled:
+            users_data = await User.join(PoolUsers, User.id == PoolUsers.user_id).select().where(
+                 PoolUsers.pool_id == self.pool_id).gino.all()
+        else:
+            subquery = PoolUsers.query(PoolUsers.user_id).where(PoolUsers.pool_id == self.pool_id)
+            users_data = User.filter(User.id.notin_(subquery)).gino.all()
+        uset_type_list = [
+            UserType(user.username, user.email)
+            for user in users_data
+        ]
+        return uset_type_list
 
     async def resolve_vms(self, _info):
         await self._build_vms_list()
         return self.vms
 
     async def resolve_node(self, _info):
-        resources_http_client = await ResourcesHttpClient.create(self.controller.address)
-
+        controller_address = await Pool.get_controller_ip(self.pool_id)
+        resources_http_client = await ResourcesHttpClient.create(controller_address)
         node_id = await Pool.select('node_id').where(Pool.id == self.id).gino.scalar()
+
         node_data = await resources_http_client.fetch_node(node_id)
         node_type = make_graphene_type(NodeType, node_data)
-        node_type.controller = ControllerType(address=self.controller.address)
+        node_type.controller = ControllerType(address=controller_address)
         return node_type
 
     async def resolve_cluster(self, _info):
-        resources_http_client = await ResourcesHttpClient.create(self.controller.address)
-
+        controller_address = await Pool.get_controller_ip(self.pool_id)
+        resources_http_client = await ResourcesHttpClient.create(controller_address)
         cluster_id = await Pool.select('cluster_id').where(Pool.id == self.id).gino.scalar()
+
         cluster_data = await resources_http_client.fetch_cluster(cluster_id)
         cluster_type = make_graphene_type(ClusterType, cluster_data)
-        cluster_type.controller = ControllerType(address=self.controller.address)
+        cluster_type.controller = ControllerType(address=controller_address)
         return cluster_type
 
     async def resolve_datapool(self, _info):
-        resources_http_client = await ResourcesHttpClient.create(self.controller.address)
+        controller_address = await Pool.get_controller_ip(self.pool_id)
+        resources_http_client = await ResourcesHttpClient.create(controller_address)
+        datapool_id = await Pool.select('datapool_id').where(Pool.id == self.pool_id).gino.scalar()
 
-        datapool_id = await Pool.select('datapool_id').where(Pool.id == self.id).gino.scalar()
         datapool_data = await resources_http_client.fetch_datapool(datapool_id)
         datapool_type = make_graphene_type(DatapoolType, datapool_data)
-        datapool_type.controller = ControllerType(address=self.controller.address)
+        datapool_type.controller = ControllerType(address=self.controller_address)
         return datapool_type
 
     async def resolve_template(self, _info):
+        controller_address = await Pool.get_controller_ip(self.pool_id)
         template_id = await Pool.select('template_id').where(Pool.id == self.id).gino.scalar()
-        vm_http_client = await VmHttpClient.create(self.controller.address, template_id)
+        vm_http_client = await VmHttpClient.create(controller_address, template_id)
+
         veil_info = await vm_http_client.info()
-        return VmQuery.veil_template_data_to_graphene_type(veil_info, self.controller.address)
+        return VmQuery.veil_template_data_to_graphene_type(veil_info, controller_address)
 
     async def _build_vms_list(self):
         if not self.vms:
             self.vms = []
-            vms_data = await Vm.select("id").where((Vm.pool_id == self.id)).gino.all()
+            vms_data = await Vm.select("id").where((Vm.pool_id == self.pool_id)).gino.all()
+            controller_address = await Pool.get_controller_ip(self.pool_id)
             for (vm_id,) in vms_data:
-                vm_http_client = await VmHttpClient.create(self.controller.address, vm_id)
+                vm_http_client = await VmHttpClient.create(controller_address, vm_id)
                 try:
                     veil_info = await vm_http_client.info()
                     # create graphene type
-                    vm_type = VmQuery.veil_vm_data_to_graphene_type(veil_info, self.controller.address)
+                    vm_type = VmQuery.veil_vm_data_to_graphene_type(veil_info, controller_address)
                 except HTTPClientError:
-                    vm_type = VmType(id=vm_id, controller=ControllerType(address=self.controller.address))
+                    vm_type = VmType(id=vm_id, controller=ControllerType(address=controller_address))
                     vm_type.veil_info = None
                 self.vms.append(vm_type)
 
@@ -514,10 +513,7 @@ class UpdateAutomatedPoolMutation(graphene.Mutation, PoolValidator):
         total_size = graphene.Int()
         vm_name_template = graphene.String()
 
-    pool = graphene.Field(lambda: PoolType)
     ok = graphene.Boolean()
-
-
 
     @classmethod
     async def mutate(cls, root, info, **kwargs):
