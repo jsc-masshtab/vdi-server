@@ -509,10 +509,7 @@ class UpdateAutomatedPoolMutation(graphene.Mutation, PoolValidator):
         total_size = graphene.Int()
         vm_name_template = graphene.String()
 
-    pool = graphene.Field(lambda: PoolType)
     ok = graphene.Boolean()
-
-
 
     @classmethod
     async def mutate(cls, root, info, **kwargs):
