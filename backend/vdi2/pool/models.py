@@ -2,13 +2,13 @@
 import uuid
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy import Enum as AlchemyEnum
-from sqlalchemy import case, literal_column
+from sqlalchemy import case, literal_column, desc
 
 from settings import VEIL_WS_MAX_TIME_TO_WAIT
 from database import db, Status
 from controller.models import Controller
 from vm.models import Vm
-from common.veil_errors import VmCreationError, BadRequest
+from common.veil_errors import VmCreationError, BadRequest, SimpleError
 
 from resources_monitoring.handlers import WaiterSubscriptionObserver
 from resources_monitoring.resources_monitor_manager import resources_monitor_manager
@@ -19,7 +19,7 @@ class Pool(db.Model):
     """На данный момент отсутствует смысловая валидация на уровне таблиц (она в схемах)."""
     __tablename__ = 'pool'
 
-    id = db.Column(UUID(), primary_key=True, default=uuid.uuid4)
+    pool_id = db.Column(UUID(), primary_key=True, default=uuid.uuid4)
     verbose_name = db.Column(db.Unicode(length=128), nullable=False, unique=True)
     cluster_id = db.Column(UUID(), nullable=False)
     node_id = db.Column(UUID(), nullable=False)
@@ -27,48 +27,113 @@ class Pool(db.Model):
     controller = db.Column(UUID(), db.ForeignKey('controller.id'), nullable=False)
 
     # ----- ----- ----- ----- ----- ----- -----
+    # Constants:
+    POOL_TYPE_LABEL = 'pool_type'
+    EXTRA_ORDER_FIELDS = ['controller_address', 'users_count', 'vms_count']
+    # ----- ----- ----- ----- ----- ----- -----
     # Properties and getters:
 
     @staticmethod
-    def get_pools_query():
-        """Содержит только логику запроса
-           Обьединяет таблицы Статического и Динамического пула и проставляет им поле POOL_TYPE
-        """
-        # TODO: сортировка
-        xpr = case([(StaticPool.static_pool_id == None, literal_column("'AUTOMATED'"))],
-                   else_=literal_column("'STATIC'")).label('POOL_TYPE')
+    def build_ordering(query, ordering=None):
+        """Построение порядка сортировки"""
 
+        if not ordering or not isinstance(ordering, str):
+            return query
+
+        # Определяем порядок сортировки по наличию "-" вначале строки
+        if ordering.find('-', 0, 1) == 0:
+            reversed_order = True
+            ordering = ordering[1:]
+        else:
+            reversed_order = False
+
+        # TODO: если сделать валидацию переданных полей на сортировку - try не нужен
+        try:
+            if ordering in Pool.EXTRA_ORDER_FIELDS:
+                if ordering == 'controller_address':
+                    query = query.order_by(desc(Controller.address)) if reversed_order else query.order_by(
+                        Controller.address)
+                elif ordering == 'users_count':
+                    users_count = db.func.count(PoolUsers.user_id)
+                    query = query.order_by(desc(users_count)) if reversed_order else query.order_by(users_count)
+                elif ordering == 'vms_count':
+                    vms_count = db.func.count(Vm.id)
+                    query = query.order_by(desc(vms_count)) if reversed_order else query.order_by(vms_count)
+            else:
+                # Соответствие переданного наименования поля полю модели, чтобы не использовать raw_sql в order
+                query = query.order_by(desc(getattr(Pool, ordering))) if reversed_order else query.order_by(
+                    getattr(Pool, ordering))
+        except AttributeError:
+            raise SimpleError('Неверный параметр сортировки {}'.format(ordering))
+        return query
+
+    @staticmethod
+    def get_pools_query(ordering=None, include_deleted=False):
+        """Содержит только логику запроса
+           Обьединяет таблицы Статического и Динамического пула и проставляет им поле pool_type
+           SimpePoolsQuery:
+            db.select([Pool,
+                           AutomatedPool,
+                           StaticPool,
+                           pool_type]).select_from(Pool.join(AutomatedPool,
+                                                             isouter=True).join(StaticPool,
+                                                                          isouter=True)
+
+        """
+
+        # Добавление в итоговый НД данных о признаке пула
+        pool_type = case([(StaticPool.static_pool_id == None, literal_column("'AUTOMATED'"))],
+                         else_=literal_column("'STATIC'")).label(Pool.POOL_TYPE_LABEL)
+
+        # Формирование общего селекта из таблиц пулов с добавлением принадлежности пула.
         query = db.select([Pool,
                            AutomatedPool,
                            StaticPool,
-                           xpr]).select_from(Pool.join(AutomatedPool,
-                                                       isouter=True).join(StaticPool,
-                                                                          isouter=True)).where(
-            Pool.status != Status.DELETING)
+                           pool_type])
+
+        if ordering:
+            # Добавляем пересечение с дополнительными внешними таблицами для возможности сортировки
+            query = query.select_from(Pool.join(AutomatedPool,
+                                                             isouter=True).join(StaticPool,
+                                                                                isouter=True).join(Controller,
+                                                                                                   isouter=True).join(
+            PoolUsers, isouter=True).join(Vm, isouter=True)).group_by(Pool.pool_id, AutomatedPool.automated_pool_id,
+                                                                      StaticPool.static_pool_id)
+        else:
+            # Делаем пересечение только с основными таблицами
+            query = query.select_from(Pool.join(AutomatedPool, isouter=True).join(StaticPool, isouter=True))
+        # Исключение удаленных ранее пулов
+        if not include_deleted:
+            query = query.where(Pool.status != Status.DELETING)
+
+        # Сортировка
+        if ordering:
+            query = Pool.build_ordering(query, ordering)
+
         return query
 
     @staticmethod
     async def get_pool(pool_id):
         """Такое построение запроса вызвано желанием иметь только 1 запрос с изначальным построением."""
         query = Pool.get_pools_query()
-        query = query.where(Pool.id == pool_id)
+        query = query.where(Pool.pool_id == pool_id)
         return await query.gino.first()
 
     @staticmethod
-    async def get_pools():
+    async def get_pools(ordering=None):
         """Такое построение запроса вызвано желанием иметь только 1 запрос с изначальным построением."""
-        query = Pool.get_pools_query()
+        query = Pool.get_pools_query(ordering=ordering)
         return await query.gino.all()
 
     @staticmethod
     async def get_desktop_type(pool_id):
         # TODO: rewrite
-        return await Pool.select('desktop_pool_type').where(Pool.id == pool_id).gino.scalar()
+        return await Pool.select('desktop_pool_type').where(Pool.pool_id == pool_id).gino.scalar()
 
     @staticmethod
     async def get_controller_ip(pool_id):
         query = db.select([Controller.address]).select_from(Controller.join(Pool)).where(
-            Pool.id == pool_id)
+            Pool.pool_id == pool_id)
         return await query.gino.scalar()
 
     async def get_vm_amount(self, only_free=False):
@@ -76,9 +141,9 @@ class Pool(db.Model):
         # TODO: rewrite
         if only_free:
             return await db.select([db.func.count()]).where(
-                (Vm.pool_id == self.id) & (Vm.username == None)).gino.scalar()  # noqa
+                (Vm.pool_id == self.pool_id) & (Vm.username == None)).gino.scalar()  # noqa
         else:
-            return await db.select([db.func.count()]).where(Vm.pool_id == self.id).gino.scalar()
+            return await db.select([db.func.count()]).where(Vm.pool_id == self.pool_id).gino.scalar()
 
     @staticmethod
     async def get_user_pools(user='admin'):
@@ -87,11 +152,11 @@ class Pool(db.Model):
         # TODO: добавить вывод типа OS у VM
         # TODO: добавить вывод состояния пула
         # TODO: ограничение по списку пулов для пользователя
-        pools = await Pool.select('id', 'verbose_name').gino.all()
+        pools = await Pool.select('pool_id', 'verbose_name').gino.all()
         ans = list()
         for pool in pools:
             ans_d = dict()
-            ans_d['id'] = str(pool.id)
+            ans_d['id'] = str(pool.pool_id)
             ans_d['name'] = pool.verbose_name
             ans.append(ans_d)
         return ans
@@ -106,18 +171,18 @@ class Pool(db.Model):
                 Pool.desktop_pool_type,
                 Vm.id,
             ]
-        ).select_from(Pool.join(Controller).join(Vm, (Vm.username == username) & (Vm.pool_id == Pool.id), isouter=True)
+        ).select_from(Pool.join(Controller).join(Vm, (Vm.username == username) & (Vm.pool_id == Pool.pool_id), isouter=True)
                       ).where(
-            (Pool.id == pool_id))
+            (Pool.pool_id == pool_id))
         return await query.gino.first()
 
     @staticmethod
     async def get_node_id(pool_id):
-        return await Pool.select('node_id').where(Pool.id == pool_id).gino.scalar()
+        return await Pool.select('node_id').where(Pool.pool_id == pool_id).gino.scalar()
 
     @staticmethod
     async def get_name(pool_id):
-        return await Pool.select('verbose_name').where(Pool.id == pool_id).gino.scalar()
+        return await Pool.select('verbose_name').where(Pool.pool_id == pool_id).gino.scalar()
 
     # ----- ----- ----- ----- ----- ----- -----
     # Setters & etc.
@@ -136,12 +201,12 @@ class Pool(db.Model):
     @classmethod
     async def activate(cls, pool_id):
         return await Pool.update.values(status=Status.ACTIVE).where(
-            Pool.id == pool_id).gino.status()
+            Pool.pool_id == pool_id).gino.status()
 
     @classmethod
     async def deactivate(cls, pool_id):
         return await Pool.update.values(status=Status.FAILED).where(
-            Pool.id == pool_id).gino.status()
+            Pool.pool_id == pool_id).gino.status()
 
     async def expand_pool_if_requred(self):
         """
@@ -179,20 +244,20 @@ class Pool(db.Model):
     @classmethod
     async def soft_delete(cls, pool_id):
         return await Pool.update.values(status=Status.DELETING).where(
-            Pool.id == pool_id).gino.status()
+            Pool.pool_id == pool_id).gino.status()
 
 
 class StaticPool(db.Model):
     """На данный момент отсутствует смысловая валидация на уровне таблиц (она в схемах)."""
     __tablename__ = 'static_pool'
-    static_pool_id = db.Column(UUID(), db.ForeignKey('pool.id'), primary_key=True)
+    static_pool_id = db.Column(UUID(), db.ForeignKey('pool.pool_id'), primary_key=True)
 
     @classmethod
     async def get_info(cls, pool_id: str):
         if not pool_id:
             raise AssertionError('Empty uid.')
         pool_data = AutomatedPool.join(Pool).select().where(
-            Pool.id == pool_id)
+            Pool.pool_id == pool_id)
         return await pool_data.gino.first()
 
     @classmethod
@@ -206,7 +271,7 @@ class StaticPool(db.Model):
                                      node_id=node_id,
                                      controller_ip=controller_ip)
             # Create static pool
-            return await super().create(static_pool_id=pool.id)
+            return await super().create(static_pool_id=pool.pool_id)
 
     async def activate(self):
         return await Pool.activate(self.static_pool_id)
@@ -229,7 +294,7 @@ class AutomatedPool(db.Model):
     """
     __tablename__ = 'automated_pool'
 
-    automated_pool_id = db.Column(UUID(), db.ForeignKey('pool.id'), primary_key=True)
+    automated_pool_id = db.Column(UUID(), db.ForeignKey('pool.pool_id'), primary_key=True)
     datapool_id = db.Column(UUID(), nullable=False)
     template_id = db.Column(UUID(), nullable=False)
 
@@ -265,7 +330,7 @@ class AutomatedPool(db.Model):
         if not pool_id:
             raise AssertionError('Empty uid.')
         pool_data = AutomatedPool.join(Pool).select().where(
-            Pool.id == pool_id)
+            Pool.pool_id == pool_id)
         return await pool_data.gino.first()
 
     # ----- ----- ----- ----- ----- ----- -----
@@ -283,7 +348,7 @@ class AutomatedPool(db.Model):
                                      node_id=node_id,
                                      controller_ip=controller_ip)
             # Create automated pool
-            return await super().create(automated_pool_id=pool.id,
+            return await super().create(automated_pool_id=pool.pool_id,
                                         template_id=template_id,
                                         datapool_id=datapool_id,
                                         min_size=min_size,
@@ -297,11 +362,11 @@ class AutomatedPool(db.Model):
                                         vm_name_template=vm_name_template)
 
     @classmethod
-    async def soft_update(cls, id, verbose_name, reserve_size, total_size, vm_name_template):
+    async def soft_update(cls, pool_id, verbose_name, reserve_size, total_size, vm_name_template):
         async with db.transaction() as tx:
             if verbose_name:
                 await Pool.update.values(verbose_name=verbose_name).where(
-                    Pool.id == id).gino.status()
+                    Pool.pool_id == pool_id).gino.status()
             auto_pool_kwargs = dict()
             if reserve_size:
                 auto_pool_kwargs['reserve_size'] = reserve_size
@@ -311,7 +376,7 @@ class AutomatedPool(db.Model):
                 auto_pool_kwargs['vm_name_template'] = vm_name_template
             if auto_pool_kwargs:
                 await AutomatedPool.update.values(**auto_pool_kwargs).where(
-                    AutomatedPool.automated_pool_id == id).gino.status()
+                    AutomatedPool.automated_pool_id == pool_id).gino.status()
         return True
 
     async def activate(self):
@@ -448,7 +513,7 @@ class AutomatedPool(db.Model):
 
 class PoolUsers(db.Model):
     __tablename__ = 'pools_users'
-    pool_id = db.Column(UUID(), db.ForeignKey('pool.id'))
+    pool_id = db.Column(UUID(), db.ForeignKey('pool.pool_id'))
     user_id = db.Column(UUID(), db.ForeignKey('user.id'))
 
     # TODO: rewrite
