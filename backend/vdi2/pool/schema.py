@@ -51,7 +51,7 @@ class PoolValidator(MutationValidation):
     """Валидатор для сущности Pool"""
 
     @staticmethod
-    async def validate_id(obj_dict, value):
+    async def validate_pool_id(obj_dict, value):
         if not value:
             return
         pool = await Pool.get_pool(value)
@@ -106,7 +106,7 @@ class PoolValidator(MutationValidation):
     async def validate_reserve_size(obj_dict, value):
         if not value:
             return
-        pool_id = obj_dict.get('id')
+        pool_id = obj_dict.get('pool_id')
         if pool_id:
             pool_obj = await Pool.get_pool(pool_id)
             min_size = obj_dict['min_size'] if obj_dict.get('min_size') else pool_obj.min_size
@@ -124,7 +124,7 @@ class PoolValidator(MutationValidation):
         if not value:
             return
 
-        pool_id = obj_dict.get('id')
+        pool_id = obj_dict.get('pool_id')
         if pool_id:
             pool_obj = await Pool.get_pool(pool_id)
             initial_size = obj_dict['initial_size'] if obj_dict.get('initial_size') else pool_obj.initial_size
@@ -147,10 +147,10 @@ class PoolValidator(MutationValidation):
 class PoolType(graphene.ObjectType):
 
     # Pool fields
-    id = graphene.UUID()
+    pool_id = graphene.UUID()
     verbose_name = graphene.String()
     status = StatusGraphene()
-    POOL_TYPE = graphene.String()
+    pool_type = graphene.String()
     cluster_id = graphene.UUID()
     node_id = graphene.UUID()
     controller = graphene.Field(ControllerType)
@@ -259,78 +259,20 @@ class PoolType(graphene.ObjectType):
 
 class PoolQuery(graphene.ObjectType):
     # TODO: описать возможные типы сортировок
-    # TODO: сортировка данных
-    pools = graphene.List(PoolType, ordering=graphene.String(), reversed_order=graphene.Boolean())
-    pool = graphene.Field(PoolType, id=graphene.String(), controller_address=graphene.String())
 
-    # async with db.connect() as conn:
-    #     # sort items if required
-    #     if ordering:
-    #         # is reversed
-    #         if reversed_order is not None:
-    #             sort_order = 'DESC' if reversed_order else 'ASC'
-    #         else:
-    #             sort_order = 'ASC'
-    #
-    #         # determine sql query
-    #         if ordering == 'name':
-    #             qu = "SELECT * FROM pool ORDER BY name {}".format(sort_order)
-    #             pools = await
-    #             conn.fetch(qu)
-    #             return PoolMixin._pool_db_data_to_pool_type_list(pools)
-    #         elif ordering == 'controller':
-    #             qu = "SELECT * FROM pool ORDER BY controller_ip {}".format(sort_order)
-    #             pools = await
-    #             conn.fetch(qu)
-    #             return PoolMixin._pool_db_data_to_pool_type_list(pools)
-    #         elif ordering == 'vms':
-    #             qu = "SELECT pool.* FROM pool LEFT JOIN vm " \
-    #                  "ON pool.id = vm.pool_id GROUP BY pool.id ORDER BY COUNT(vm.id) {}".format(sort_order)
-    #             pools = await
-    #             conn.fetch(qu)
-    #             return PoolMixin._pool_db_data_to_pool_type_list(pools)
-    #         elif ordering == 'users':
-    #             qu = "SELECT pool.* FROM pool LEFT JOIN pools_users " \
-    #                  "ON pool.id = pools_users.pool_id GROUP BY pool.id ORDER BY COUNT(pools_users.username)" \
-    #                  " {}".format(sort_order)
-    #             pools = await
-    #             conn.fetch(qu)
-    #             return PoolMixin._pool_db_data_to_pool_type_list(pools)
-    #         elif ordering == 'desktop_pool_type':
-    #             qu = "SELECT * FROM pool ORDER BY desktop_pool_type {}".format(sort_order)
-    #             pools = await
-    #             conn.fetch(qu)
-    #             return PoolMixin._pool_db_data_to_pool_type_list(pools)
-    #         elif ordering == 'status':
-    #             qu = "SELECT * FROM pool"
-    #             pools = await
-    #             conn.fetch(qu)
-    #             pool_type_list = PoolMixin._pool_db_data_to_pool_type_list(pools)
-    #
-    #             for pool_type in pool_type_list:
-    #                 await
-    #                 pool_type.determine_pool_status()
-    #             reverse = reversed_order if reversed_order is not None else False
-    #             pool_type_list = sorted(pool_type_list, key=lambda item: item.status, reverse=reverse)
-    #             return pool_type_list
-    #         else:
-    #             raise SimpleError('Неверный параметр сортировки')
-    #     else:
-    #         qu = "SELECT * FROM pool"
-    #         pools = await
-    #         conn.fetch(qu)
-    #         return PoolMixin._pool_db_data_to_pool_type_list(pools)
+    pools = graphene.List(PoolType, ordering=graphene.String())
+    pool = graphene.Field(PoolType, pool_id=graphene.String(), controller_address=graphene.String())
 
-    async def resolve_pools(self, info, ordering=None, reversed_order=None):
-        pools = await Pool.get_pools()
+    async def resolve_pools(self, info, ordering=None):
+        pools = await Pool.get_pools(ordering=ordering)
         objects = [
             PoolType(**pool)
             for pool in pools
         ]
         return objects
 
-    async def resolve_pool(self, _info, id):
-        pool = await Pool.get_pool(id)
+    async def resolve_pool(self, _info, pool_id):
+        pool = await Pool.get_pool(pool_id)
         if not pool:
             raise SimpleError('No such pool.')
         return PoolType(**pool)
@@ -340,15 +282,15 @@ class PoolQuery(graphene.ObjectType):
 # Pool mutations
 class DeletePoolMutation(graphene.Mutation, PoolValidator):
     class Arguments:
-        id = graphene.UUID()
+        pool_id = graphene.UUID()
 
     ok = graphene.Boolean()
 
-    async def mutate(self, info, id):
+    async def mutate(self, info, pool_id):
 
-        # Меняем статус пула. Не нравится идея удалять записи имеющие большое количество зависимостей,
+        # Меняем статус пула. Не нравится идея удалять записи имеющие внешние зависимости, которые не удалить,
         # например запущенные виртуалки.
-        await Pool.soft_delete(id)
+        await Pool.soft_delete(pool_id)
         return DeletePoolMutation(ok=True)
 
 
@@ -445,7 +387,7 @@ class AddVmsToStaticPool(graphene.Mutation):
             raise SimpleError("Список ВМ не должен быть пустым")
 
         # todo: Запрос к модели статич. пула
-        pool_data = await Pool.select('controller', 'node_id').where(Pool.id == pool_id).gino.first()
+        pool_data = await Pool.select('controller', 'node_id').where(Pool.pool_id == pool_id).gino.first()
         (controller_id, node_id) = pool_data
         controller_address = await Controller.select('address').where(Controller.id == controller_id).gino.scalar()
 
@@ -487,11 +429,10 @@ class RemoveVmsFromStaticPool(graphene.Mutation):
         if not vm_ids:
             raise SimpleError("Список ВМ не должен быть пустым")
 
-        # TODO: этот код можно заменить стандартным валидатором, если переименовать входящее значение с pool_id на id.
-        # Хорошая идея
-        pool_object = await Pool.get_pool(pool_id)
-        if not pool_object:
-            raise SimpleError('Пул {} не существует'.format(pool_id))
+        # # TODO: этот код можно заменить стандартным валидатором, если переименовать входящее значение с pool_id на id.
+        # pool_object = await Pool.get_pool(pool_id)
+        # if not pool_object:
+        #     raise SimpleError('Пул {} не существует'.format(pool_id))
 
         # vms check
         # get list of vms ids which are in pool_id
@@ -559,7 +500,7 @@ class CreateAutomatedPoolMutation(graphene.Mutation, PoolValidator):
 class UpdateAutomatedPoolMutation(graphene.Mutation, PoolValidator):
     """Перечень полей доступных для редактирования отдельно не рассматривалась. Перенесена логика из Confluence."""
     class Arguments:
-        id = graphene.UUID(required=True)
+        pool_id = graphene.UUID(required=True)
         verbose_name = graphene.String()
         reserve_size = graphene.Int()
         total_size = graphene.Int()
@@ -573,7 +514,7 @@ class UpdateAutomatedPoolMutation(graphene.Mutation, PoolValidator):
     @classmethod
     async def mutate(cls, root, info, **kwargs):
         await cls.validate_agruments(**kwargs)
-        ok = await AutomatedPool.soft_update(kwargs['id'], kwargs.get('verbose_name'), kwargs.get('reserve_size'),
+        ok = await AutomatedPool.soft_update(kwargs['pool_id'], kwargs.get('verbose_name'), kwargs.get('reserve_size'),
                                              kwargs.get('total_size'), kwargs.get('vm_name_template'))
         return UpdateAutomatedPoolMutation(ok=ok)
 

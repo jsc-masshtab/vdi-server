@@ -8,7 +8,7 @@ from settings import VEIL_WS_MAX_TIME_TO_WAIT
 from database import db, Status
 from controller.models import Controller
 from vm.models import Vm
-from common.veil_errors import VmCreationError, BadRequest
+from common.veil_errors import VmCreationError, BadRequest, SimpleError
 
 from resources_monitoring.handlers import WaiterSubscriptionObserver
 from resources_monitoring.resources_monitor_manager import resources_monitor_manager
@@ -29,6 +29,7 @@ class Pool(db.Model):
     # ----- ----- ----- ----- ----- ----- -----
     # Constants:
     POOL_TYPE_LABEL = 'pool_type'
+    USERS_COUNT_LABEL = 'users_count'
 
     # ----- ----- ----- ----- ----- ----- -----
     # Properties and getters:
@@ -36,67 +37,81 @@ class Pool(db.Model):
     @staticmethod
     def build_ordering(query, ordering=None):
         """Построение порядка сортировки"""
-        extra_order_fields = ['controller', ]
+        extra_order_fields = ['controller_address', 'users_count', 'vms_count']
 
-        if isinstance(ordering, list):
-            # TODO: deal with extra order
-            for column_name in ordering:
-                # Определяем порядок сортировки по наличию "-" вначале строки
-                if column_name.find('-', 0, 1) == 0:
-                    reversed_order = True
-                    column_name = column_name[1:]
-                else:
-                    reversed_order = False
+        if not ordering or not isinstance(ordering, str):
+            return query
 
+        # Определяем порядок сортировки по наличию "-" вначале строки
+        if ordering.find('-', 0, 1) == 0:
+            reversed_order = True
+            ordering = ordering[1:]
+        else:
+            reversed_order = False
+
+        # TODO: если сделать валидацию переданных полей на сортировку - try не нужен
+        try:
+            if ordering in extra_order_fields:
+                if ordering == 'controller_address':
+                    query = query.order_by(desc(Controller.address)) if reversed_order else query.order_by(
+                        Controller.address)
+                elif ordering == 'users_count':
+                    users_count = db.func.count(PoolUsers.user_id)
+                    query = query.order_by(desc(users_count)) if reversed_order else query.order_by(users_count)
+                elif ordering == 'vms_count':
+                    vms_count = db.func.count(Vm.id)
+                    query = query.order_by(desc(vms_count)) if reversed_order else query.order_by(vms_count)
+            else:
                 # Соответствие переданного наименования поля полю модели, чтобы не использовать raw_sql в order
-                # TODO: если сделать валидацию переданных полей на сортировку - try не нужен
-                try:
-                    # Костыли с extra_fields из-за того, что сначала собирается НД с определенными фильтрами, а потом
-                    # дополняется внешними сортировками. Можно было бы сразу все возможные джоины сделать, но это дичь.
-                    if column_name in extra_order_fields:
-                        if column_name == 'controller':
-                            query = query.alias().join(Controller).select().order_by(Controller.address)
-                    else:
-                        query = query.order_by(desc(getattr(Pool, column_name))) if reversed_order else query.order_by(
-                            getattr(Pool, column_name))
-                except AttributeError:
-                    pass
+                query = query.order_by(desc(getattr(Pool, ordering))) if reversed_order else query.order_by(
+                    getattr(Pool, ordering))
+        except AttributeError:
+            raise SimpleError('Неверный параметр сортировки {}'.format(ordering))
         return query
 
     @staticmethod
     def get_pools_query(ordering=None, include_deleted=False):
         """Содержит только логику запроса
            Обьединяет таблицы Статического и Динамического пула и проставляет им поле pool_type
+           SimpePoolsQuery:
+            db.select([Pool,
+                           AutomatedPool,
+                           StaticPool,
+                           pool_type]).select_from(Pool.join(AutomatedPool,
+                                                             isouter=True).join(StaticPool,
+                                                                          isouter=True)
+
         """
 
         # Добавление в итоговый НД данных о признаке пула
-        xpr = case([(StaticPool.static_pool_id == None, literal_column("'AUTOMATED'"))],
-                   else_=literal_column("'STATIC'")).label(Pool.POOL_TYPE_LABEL)
+        pool_type = case([(StaticPool.static_pool_id == None, literal_column("'AUTOMATED'"))],
+                         else_=literal_column("'STATIC'")).label(Pool.POOL_TYPE_LABEL)
 
-        # Формирование общего селекта из таблиц пулов с добавлнием принадлежности пула
+        # Формирование общего селекта из таблиц пулов с добавлением принадлежности пула.
         query = db.select([Pool,
                            AutomatedPool,
                            StaticPool,
-                           xpr]).select_from(Pool.join(AutomatedPool,
-                                                       isouter=True).join(StaticPool,
-                                                                          isouter=True))
+                           pool_type])
 
+        if ordering:
+            # Добавляем пересечение с дополнительными внешними таблицами для возможности сортировки
+            query = query.select_from(Pool.join(AutomatedPool,
+                                                             isouter=True).join(StaticPool,
+                                                                                isouter=True).join(Controller,
+                                                                                                   isouter=True).join(
+            PoolUsers, isouter=True).join(Vm, isouter=True)).group_by(Pool.pool_id, AutomatedPool.automated_pool_id,
+                                                                      StaticPool.static_pool_id)
+        else:
+            # Делаем пересечение только с основными таблицами
+            query = query.select_from(Pool.join(AutomatedPool, isouter=True).join(StaticPool, isouter=True))
         # Исключение удаленных ранее пулов
         if not include_deleted:
             query = query.where(Pool.status != Status.DELETING)
 
-        # query = Pool.join(AutomatedPool,
-        #                   isouter=True).join(StaticPool,
-        #                                      isouter=True)
-
         # Сортировка
-        query = Pool.build_ordering(query, ordering)
+        if ordering:
+            query = Pool.build_ordering(query, ordering)
 
-        # Обрезаем лишние поля из внешних таблиц и добавляем case
-        # query = db.select([]).select_from(query)
-        # query = query
-
-        print(query)
         return query
 
     @staticmethod
