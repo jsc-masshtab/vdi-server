@@ -211,7 +211,7 @@ class PoolType(graphene.ObjectType):
     async def resolve_node(self, _info):
         resources_http_client = await ResourcesHttpClient.create(self.controller.address)
 
-        node_id = await Pool.select('node_id').where(Pool.id == self.id).gino.scalar()
+        node_id = await Pool.select('node_id').where(Pool.pool_id == self.id).gino.scalar()
         node_data = await resources_http_client.fetch_node(node_id)
         node_type = make_graphene_type(NodeType, node_data)
         node_type.controller = ControllerType(address=self.controller.address)
@@ -220,7 +220,7 @@ class PoolType(graphene.ObjectType):
     async def resolve_cluster(self, _info):
         resources_http_client = await ResourcesHttpClient.create(self.controller.address)
 
-        cluster_id = await Pool.select('cluster_id').where(Pool.id == self.id).gino.scalar()
+        cluster_id = await Pool.select('cluster_id').where(Pool.pool_id == self.id).gino.scalar()
         cluster_data = await resources_http_client.fetch_cluster(cluster_id)
         cluster_type = make_graphene_type(ClusterType, cluster_data)
         cluster_type.controller = ControllerType(address=self.controller.address)
@@ -229,14 +229,14 @@ class PoolType(graphene.ObjectType):
     async def resolve_datapool(self, _info):
         resources_http_client = await ResourcesHttpClient.create(self.controller.address)
 
-        datapool_id = await Pool.select('datapool_id').where(Pool.id == self.id).gino.scalar()
+        datapool_id = await Pool.select('datapool_id').where(Pool.pool_id == self.id).gino.scalar()
         datapool_data = await resources_http_client.fetch_datapool(datapool_id)
         datapool_type = make_graphene_type(DatapoolType, datapool_data)
         datapool_type.controller = ControllerType(address=self.controller.address)
         return datapool_type
 
     async def resolve_template(self, _info):
-        template_id = await Pool.select('template_id').where(Pool.id == self.id).gino.scalar()
+        template_id = await Pool.select('template_id').where(Pool.pool_id == self.id).gino.scalar()
         vm_http_client = await VmHttpClient.create(self.controller.address, template_id)
         veil_info = await vm_http_client.info()
         return VmQuery.veil_template_data_to_graphene_type(veil_info, self.controller.address)
