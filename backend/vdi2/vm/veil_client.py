@@ -30,7 +30,7 @@ class VmHttpClient(VeilHttpClient):
         self.controller_id = await Controller.get_controller_id_by_ip(controller_ip)
         return self
 
-    @cached_property
+    @property
     def url(self):
         return 'http://{}/api/domains/{}/'.format(self.controller_ip, self.vm_id)
 
