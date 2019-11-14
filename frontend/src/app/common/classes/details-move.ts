@@ -8,19 +8,23 @@ export class DetailsMove  {
     public pageHeightMax: string = '100%';
     public pageHeight: string = '100%';
     public pageRollup: boolean = false;
+    public timeout: any;
 
-  constructor() {
-
-  }
+  constructor() {}
 
   @HostListener('window:resize', ['$event']) onResize(view: ElementRef) {
-    if (this.pageHeight === this.pageHeightMin) {
-      if ((view.nativeElement.clientHeight - this.pageHeightMinNumber) < (this.pageHeightMinNumber + 250)) {
-        this.pageRollup = true;
-      } else {
-        this.pageRollup = false;
-      }
+    if (this.timeout) {
+      clearTimeout(this.timeout);
     }
+    this.timeout = setTimeout(() => {
+      if (this.pageHeight === this.pageHeightMin) {
+        if ((view.nativeElement.clientHeight - this.pageHeightMinNumber) < (this.pageHeightMinNumber + 250)) {
+          this.pageRollup = true;
+        } else {
+          this.pageRollup = false;
+        }
+      }
+    }, 500);
   }
 
   public componentActivate(view: ElementRef): void {

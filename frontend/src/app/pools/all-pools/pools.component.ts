@@ -66,7 +66,8 @@ export class PoolsComponent extends DetailsMove implements OnInit, OnDestroy {
   ];
 
 
-  constructor(private service: PoolsService, public dialog: MatDialog, private router: Router, private waitService: WaitService) {
+  constructor(private service: PoolsService, public dialog: MatDialog,
+              private router: Router, private waitService: WaitService) {
     super();
   }
 

@@ -85,7 +85,7 @@ export class ClustersService  {
                     `,
             variables: {
                 method: 'GET',
-                id: id
+                id
             }
         });
     }

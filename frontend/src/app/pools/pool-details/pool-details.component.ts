@@ -1,3 +1,5 @@
+import { Subscription } from 'rxjs';
+import { WebsocketPoolService } from './../../common/classes/websockPool.service';
 import { PoolsService } from './../all-pools/pools.service';
 import { IPool } from './definitions/pool';
 import { VmDetalsPopupComponent } from './vm-details-popup/vm-details-popup.component';
@@ -5,12 +7,14 @@ import { RemoveUsersPoolComponent } from './remove-users/remove-users.component'
 import { AddUsersPoolComponent } from './add-users/add-users.component';
 import { RemoveVMStaticPoolComponent } from './remove-vms/remove-vms.component';
 import { AddVMStaticPoolComponent } from './add-vms/add-vms.component';
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { ActivatedRoute, ParamMap, Router } from '@angular/router';
 import { MatDialog } from '@angular/material';
 import { RemovePoolComponent } from './remove-pool/remove-pool.component';
 import { PoolDetailsService } from './pool-details.service';
 import { FormForEditComponent } from 'src/app/common/forms-dinamic/change-form/form-edit.component';
+import { skip, map, filter, catchError } from 'rxjs/operators';
+import { of } from 'rxjs';
 
 
 
@@ -20,7 +24,7 @@ import { FormForEditComponent } from 'src/app/common/forms-dinamic/change-form/f
 })
 
 
-export class PoolDetailsComponent implements OnInit {
+export class PoolDetailsComponent implements OnInit, OnDestroy {
 
   public host: boolean = false;
 
@@ -194,23 +198,60 @@ export class PoolDetailsComponent implements OnInit {
       type: 'string'
     }
   ];
+
+  public collectionEventVm: any[] = [
+    {
+      title: 'Событие',
+      property: 'msg',
+      class: 'name-start',
+      icon: 'comment',
+      type: 'string'
+    }
+  ];
+
   private idPool: number;
   public  typePool: string;
   public  menuActive: string = 'info';
+  private sub_ws_create_pool: Subscription;
+
+  public eventCreatedVm: object[] = [];
 
   constructor(private activatedRoute: ActivatedRoute,
               private router: Router,
               private poolService: PoolDetailsService,
               private poolsService: PoolsService,
-              public  dialog: MatDialog) {}
+              public  dialog: MatDialog,
+              private ws_create_pool_service: WebsocketPoolService) {}
 
   ngOnInit() {
     this.activatedRoute.paramMap.subscribe((param: ParamMap) => {
       this.typePool = param.get('type');
       this.idPool = +param.get('id');
+      if (this.sub_ws_create_pool) {
+        this.sub_ws_create_pool.unsubscribe();
+        this.eventCreatedVm = [];
+      }
       this.getPool();
+      this.getMsgCreatePool();
     });
   }
+
+  private getMsgCreatePool(): void {
+    this.sub_ws_create_pool = this.ws_create_pool_service.getMsg().pipe(
+                                                                  skip(1),
+                                                                  map(msg => JSON.parse(msg)),
+                                                                  filter((msg: object) => msg['pool_id'] === this.idPool),
+                                                                  catchError(() => of('error')) // complete()
+                                                                  )
+    .subscribe((msg: object | 'error') => {
+      if (msg !== 'error') {
+        this.eventCreatedVm.push(msg);
+      }
+    },
+    (error) => console.log(error, 'error'),
+    () =>  console.log( 'complete'));
+  }
+
 
   public getPool(): void {
     this.host = false;
@@ -449,9 +490,19 @@ export class PoolDetailsComponent implements OnInit {
     if (route === 'users') {
       this.menuActive = 'users';
     }
+
+    if (route === 'event-vm') {
+      this.menuActive = 'event-vm';
+    }
   }
 
   public close(): void  {
-    this.router.navigate(['pools']);
+    this.router.navigateByUrl('/pools');
+  }
+
+  ngOnDestroy() {
+    if (this.sub_ws_create_pool) {
+      this.sub_ws_create_pool.unsubscribe();
+    }
   }
 }

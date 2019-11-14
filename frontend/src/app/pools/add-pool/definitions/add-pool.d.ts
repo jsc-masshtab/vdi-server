@@ -37,8 +37,10 @@ export interface IFinishPoolForm {
     vm_ids_list: string[]; //stat
     template_id: string; // auto
     reserve_size: number;
-    total_size: number;
-    initial_size: number;
     vm_name_template: string;// auto
     controller_ip: string; //auto
+    size: {
+        total_size: number;
+        initial_size: number;
+    }
 }

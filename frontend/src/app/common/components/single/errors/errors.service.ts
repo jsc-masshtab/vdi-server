@@ -1,4 +1,4 @@
-import { Observable, ReplaySubject } from 'rxjs';
+import { Observable, Subject } from 'rxjs';
 import { Injectable } from '@angular/core';
 
 @Injectable()
@@ -6,7 +6,7 @@ export class ErrorsService  {
 
     constructor() {}
 
-    public errors$: ReplaySubject<any> = new ReplaySubject<any>();
+    public errors$: Subject<any> = new Subject<any>();
 
     public getErrors(): Observable<any> {
       return this.errors$.asObservable();
