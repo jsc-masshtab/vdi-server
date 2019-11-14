@@ -510,7 +510,20 @@ class RemoveVmsFromStaticPool(graphene.Mutation):
         }
 
 
-# TODO: update StaticPool
+class UpdateStaticPoolMutation(graphene.Mutation, PoolValidator):
+    """ """
+    class Arguments:
+        id = graphene.UUID(required=True)
+        verbose_name = graphene.String()
+
+    ok = graphene.Boolean()
+
+    @classmethod
+    async def mutate(cls, _root, _info, **kwargs):
+        await cls.validate_agruments(**kwargs)
+        ok = await StaticPool.soft_update(kwargs['id'], kwargs.get('verbose_name'))
+        return UpdateStaticPoolMutation(ok=ok)
+
 # --- --- --- --- ---
 # Automated (Dynamic) pool mutations
 class CreateAutomatedPoolMutation(graphene.Mutation, PoolValidator):
@@ -582,10 +595,11 @@ class UpdateAutomatedPoolMutation(graphene.Mutation, PoolValidator):
 class PoolMutations(graphene.ObjectType):
     addDynamicPool = CreateAutomatedPoolMutation.Field()
     addStaticPool = CreateStaticPoolMutation.Field()
-    addVmsToStaticPool = AddVmsToStaticPool.Field()  # TODO: а это точно должно быть тут, а не в Vm?
-    removeVmsFromStaticPool = RemoveVmsFromStaticPool.Field()  # TODO: а это точно должно быть тут, а не в Vm?
+    addVmsToStaticPool = AddVmsToStaticPool.Field()
+    removeVmsFromStaticPool = RemoveVmsFromStaticPool.Field()
     removePool = DeletePoolMutation.Field()
     updateDynamicPool = UpdateAutomatedPoolMutation.Field()
+    updateStaticPool = UpdateStaticPoolMutation.Field()
 
 
 pool_schema = graphene.Schema(query=PoolQuery,

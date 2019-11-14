@@ -65,7 +65,7 @@ class VmType(graphene.ObjectType):
         except HTTPClientError:
             return
 
-    async def resolve_verbose_name(self, info):
+    async def resolve_verbose_name(self, _info):
         if self.verbose_name:
             return self.verbose_name
 
