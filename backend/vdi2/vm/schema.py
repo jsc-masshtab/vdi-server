@@ -18,6 +18,7 @@ from vm.veil_client import VmHttpClient
 
 from pool.models import PoolUsers
 
+from controller_resources.veil_client import ResourcesHttpClient
 from controller.models import Controller
 from controller.schema import ControllerType
 
@@ -94,6 +95,13 @@ class VmType(graphene.ObjectType):
         await self.determine_status()
         return self.status
 
+    async def determine_status(self):
+        await self.get_veil_info()
+        if self.veil_info:
+            self.status = self.veil_info['status']
+        else:
+            self.status = DEFAULT_NAME
+
     async def resolve_management_ip(self, _info):
         await self.determine_management_ip()
         return self.management_ip
@@ -106,17 +114,21 @@ class VmType(graphene.ObjectType):
             self.status = DEFAULT_NAME
 
     async def determine_management_ip(self):
+        if self.management_ip:
+            return
+
         await self.get_veil_info()
         if self.veil_info:
-            self.management_ip = self.veil_info['node']['id']
-        else:
-            self.management_ip = DEFAULT_NAME
+            node_id = self.veil_info['node']['id']
+            resources_http_client = await ResourcesHttpClient.create(self.controller.address)
+            node_data = await resources_http_client.fetch_node(node_id)
+            self.management_ip = node_data['management_ip']
 
     async def determine_template(self):
         if self.template:
             return
 
-        template_id = Vm.get_template_id(self.id)
+        template_id = await Vm.get_template_id(self.id)
 
         # get data from veil
         try:
@@ -269,6 +281,7 @@ class VmQuery(graphene.ObjectType):
         if not get_vms_in_pools:
             # get all vms ids which are in pools
             vm_ids_in_pools = await Vm.get_all_vms_ids()
+            vm_ids_in_pools = [str(vm_id) for vm_id in vm_ids_in_pools]
             # filter
             vm_type_list = list(filter(lambda vm_type: vm_type.id not in vm_ids_in_pools, vm_type_list))
 
@@ -276,19 +289,19 @@ class VmQuery(graphene.ObjectType):
         if ordering:
             if ordering == 'verbose_name':
                 def sort_lam(vm_type):
-                    return vm_type.name if vm_type.name else DEFAULT_NAME
+                    return vm_type.verbose_name if vm_type.verbose_name else DEFAULT_NAME
             elif ordering == 'node':
                 for vm_type in vm_type_list:
                     await vm_type.determine_management_ip()
 
                 def sort_lam(vm_type):
-                    return vm_type.node.management_ip if vm_type.node.management_ip else DEFAULT_NAME
+                    return vm_type.management_ip if vm_type.management_ip else DEFAULT_NAME
             elif ordering == 'template':
                 for vm_type in vm_type_list:
                     await vm_type.determine_template()
 
                 def sort_lam(vm_type):
-                    return vm_type.template.name if vm_type.template else DEFAULT_NAME
+                    return vm_type.template.verbose_name if vm_type.template else DEFAULT_NAME
             elif ordering == 'status':
                 for vm_type in vm_type_list:
                     await vm_type.determine_status()

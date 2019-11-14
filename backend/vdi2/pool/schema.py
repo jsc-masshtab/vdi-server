@@ -444,7 +444,6 @@ class AddVmsToStaticPool(graphene.Mutation):
         if not vm_ids:
             raise SimpleError("Список ВМ не должен быть пустым")
 
-        # todo: Запрос к модели статич. пула
         pool_data = await Pool.select('controller', 'node_id').where(Pool.id == pool_id).gino.first()
         (controller_id, node_id) = pool_data
         controller_address = await Controller.select('address').where(Controller.id == controller_id).gino.scalar()
