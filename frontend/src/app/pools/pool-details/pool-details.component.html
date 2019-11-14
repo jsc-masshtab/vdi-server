@@ -29,7 +29,7 @@
         <ul class="details-menu">
             <li (click)="routeTo('info')" [class.active]="menuActive === 'info'" title="Информация о пуле"> <fa-icon [icon]="['fas','chart-bar']"></fa-icon><span class="name">Информация</span></li>
             <li (click)="routeTo('vms')" [class.active]="menuActive === 'vms'" title="Виртуальные машины в пуле"> <fa-icon [icon]="['fas','desktop']"></fa-icon><span class="name">Виртуальные машины</span></li>
-            <li (click)="routeTo('event-vm')" [class.active]="menuActive === 'event-vm'" title="События создания ВМ в пуле"> <fa-icon [icon]="['fas','comment']"></fa-icon><span class="name">События создания ВМ</span></li>
+            <li (click)="routeTo('event-vm')" *ngIf="typePool === 'automated'" [class.active]="menuActive === 'event-vm'" title="События создания ВМ в пуле"> <fa-icon [icon]="['fas','comment']"></fa-icon><span class="name">События создания ВМ</span></li>
             <li (click)="routeTo('users')" [class.active]="menuActive === 'users'" title="Пользователи пула"> <fa-icon [icon]="['fas','users']"></fa-icon><span class="name">Пользователи</span></li>
         </ul>
         
