@@ -1,18 +1,21 @@
 # -*- coding: utf-8 -*-
 import uuid
 from sqlalchemy.dialects.postgresql import UUID
+import tornado.gen
 
 from database import db, get_list_of_values_from_db
 from vm.veil_client import VmHttpClient
-# TODO: сделать схему человеческой
+from controller.models import Controller
+
+# TODO: сделать схему и методы более осмысленными.
 
 
 class Vm(db.Model):
     __tablename__ = 'vm'
     id = db.Column(UUID(), primary_key=True, default=uuid.uuid4)
     template_id = db.Column(db.Unicode(length=100), nullable=True)
-    pool_id = db.Column(UUID(as_uuid=True), db.ForeignKey('pool.id'))
-    username = db.Column(db.Unicode(length=100), nullable=False)
+    pool_id = db.Column(UUID(), db.ForeignKey('pool.pool_id'))
+    username = db.Column(db.Unicode(length=100))
 
     ACTIONS = ('start', 'suspend', 'reset', 'shutdown', 'resume', 'reboot')
     POWER_STATES = ('unknown', 'power off', 'power on and suspended', 'power on')
@@ -64,10 +67,10 @@ class Vm(db.Model):
         return await get_list_of_values_from_db(Vm, Vm.id)
 
     @staticmethod
-    async def get_vms_ids_in_pool(pool_id):  # todo: not tested
-        """Get all vm_ids"""
+    async def get_vms_ids_in_pool(pool_id):
+        """Get all vm_ids as list of strings"""
         vm_ids_data = await Vm.select('id').where((Vm.pool_id == pool_id)).gino.all()
-        vm_ids = [value for (value,) in vm_ids_data]
+        vm_ids = [str(vm_id) for (vm_id,) in vm_ids_data]
         return vm_ids
 
     @staticmethod
@@ -81,8 +84,9 @@ class Vm(db.Model):
     async def copy(verbose_name: str, name_template: str, domain_id: str, datapool_id: str, controller_ip: str,
                    node_id: str):
         """Copy existing VM template for new VM create."""
+        # TODO: switch to controller uid?
         domain_name = Vm.domain_name(verbose_name=verbose_name, name_template=name_template)
-        client = VmHttpClient(controller_ip, domain_id, verbose_name, name_template)
+        client = await VmHttpClient.create(controller_ip, domain_id, verbose_name, name_template)
         response = await client.copy_vm(node_id=node_id, datapool_id=datapool_id, domain_name=domain_name)
         return dict(id=response['entity'],
                     task_id=response['_task']['id'],
@@ -91,6 +95,17 @@ class Vm(db.Model):
     @staticmethod
     async def remove_vms(vm_ids):
         """Remove given vms"""
-        # todo: not tested
-        Vm.query.filter(Vm.id.in_(vm_ids)).delete()
-        db.session.commit()
+        return await Vm.delete.where(Vm.id.in_(vm_ids)).gino.status()
+
+    @staticmethod
+    async def enable_remote_access(controller_address, vm_id):
+        vm_http_client = await VmHttpClient.create(controller_address, vm_id)
+        await vm_http_client.enable_remote_access()
+
+    @staticmethod
+    async def enable_remote_accesses(controller_address, vm_ids):
+        async_tasks = [
+            Vm.enable_remote_access(controller_address=controller_address, vm_id=vm_id)
+            for vm_id in vm_ids
+        ]
+        await tornado.gen.multi(async_tasks)

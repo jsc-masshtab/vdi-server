@@ -28,19 +28,19 @@ class VeilHttpClient:
         """Use create instead of init."""
         self._client = AsyncHTTPClient()
         self.controller_ip = controller_ip
-        self.controller_uid = None
+        self.controller_id = None
 
     @classmethod
     async def create(cls, controller_ip: str):
         """Because of we need async execute db query"""
         self = cls(controller_ip)
-        self.controller_uid = await Controller.get_controller_id_by_ip(controller_ip)
+        self.controller_id = await Controller.get_controller_id_by_ip(controller_ip)
         return self
 
     # @cached_property
     @property
     async def token(self):
-        token = await Controller.get_token(self.controller_uid)
+        token = await Controller.get_token(self.controller_id)
         if not token:
             token = await self.login()
         return token
@@ -59,13 +59,13 @@ class VeilHttpClient:
         method = 'POST'
         headers = {'Content-Type': 'application/json'}
         url = 'http://{}/auth/'.format(self.controller_ip)
-        auth_info = await Controller.get_auth_info(self.controller_uid)
+        auth_info = await Controller.get_auth_info(self.controller_id)
         response = await self.fetch_with_response(url=url, method=method, headers=headers, body=auth_info)
         token = response.get('token')
         expires_on = response.get('expires_on')
         if not token or not expires_on:
             raise AssertionError('Auth failed.')
-        await Controller.set_auth_info(self.controller_uid, token, expires_on)
+        await Controller.set_auth_info(self.controller_id, token, expires_on)
         return token
 
     @prepare_body
@@ -87,7 +87,7 @@ class VeilHttpClient:
             if http_error.code == 400:
                 raise BadRequest(body)
             elif http_error.code == 401:
-                await Controller.invalidate_auth(self.controller_uid)
+                await Controller.invalidate_auth(self.controller_id)
                 raise Unauthorized()
             elif http_error.code == 403:
                 raise Forbidden(body)
@@ -97,10 +97,15 @@ class VeilHttpClient:
                 raise ControllerNotAccessible(body)
             elif http_error.code == 500:
                 raise ServerError(body)
+            elif http_error.code == 599:
+                raise ServerError(http_error.message)
         return response
 
     @staticmethod
     def get_response_body(response):
+        if not response:
+            return
+
         response_headers = response.headers
         response_content_type = response_headers.get('Content-Type')
 

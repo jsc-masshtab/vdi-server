@@ -13,6 +13,7 @@ from resources_monitoring.urls import ws_event_monitoring_urls
 
 from auth.schema import user_schema
 
+from pool.schema import pool_schema
 from vm.schema import vm_schema
 
 from resources_monitoring.resources_monitor_manager import resources_monitor_manager
