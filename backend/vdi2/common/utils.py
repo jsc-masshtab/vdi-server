@@ -117,3 +117,10 @@ async def cancel_async_task(async_task):
             await async_task
         except asyncio.CancelledError:
             pass
+
+
+def extract_ordering_data(ordering):
+    reverse = (ordering[0] == '-')
+    if reverse:
+        ordering = ordering[1:]
+    return ordering, reverse

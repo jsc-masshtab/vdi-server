@@ -3,7 +3,7 @@ import graphene
 from vm.veil_client import VmHttpClient
 from vm.schema import VmType, TemplateType, VmQuery
 
-from common.utils import get_selections, make_graphene_type
+from common.utils import get_selections, make_graphene_type, extract_ordering_data
 from common.veil_errors import FieldError, SimpleError, FetchException, NotFound
 
 from controller_resources.veil_client import ResourcesHttpClient
@@ -204,13 +204,13 @@ class DatapoolType(graphene.ObjectType):
 class ResourcesQuery(graphene.ObjectType):
 
     node = graphene.Field(NodeType, id=graphene.String(), controller_address=graphene.String())
-    nodes = graphene.List(NodeType, ordering=graphene.String(), reversed_order=graphene.Boolean())
+    nodes = graphene.List(NodeType, ordering=graphene.String())
 
     cluster = graphene.Field(ClusterType, id=graphene.String(), controller_address=graphene.String())
-    clusters = graphene.List(ClusterType, ordering=graphene.String(), reversed_order=graphene.Boolean())
+    clusters = graphene.List(ClusterType, ordering=graphene.String())
 
     datapool = graphene.Field(DatapoolType, id=graphene.String(), controller_address=graphene.String())
-    datapools = graphene.List(DatapoolType, ordering=graphene.String(), reversed_order=graphene.Boolean())
+    datapools = graphene.List(DatapoolType, ordering=graphene.String())
 
     requests = graphene.List(RequestType, time=graphene.Float())
 
@@ -231,7 +231,7 @@ class ResourcesQuery(graphene.ObjectType):
         node_type.controller = ControllerType(address=controller_address)
         return node_type
 
-    async def resolve_nodes(self, _info, ordering=None, reversed_order=None):
+    async def resolve_nodes(self, _info, ordering=None):
         controllers_addresses = await Controller.get_controllers_addresses()
 
         # form list of nodes
@@ -247,6 +247,8 @@ class ResourcesQuery(graphene.ObjectType):
 
         # sort list of nodes
         if ordering:
+            (ordering, reverse) = extract_ordering_data(ordering)
+
             if ordering == 'verbose_name':
                 def sort_lam(node): return node.verbose_name if node.verbose_name else DEFAULT_NAME
             elif ordering == 'cpu_count':
@@ -264,7 +266,7 @@ class ResourcesQuery(graphene.ObjectType):
                 def sort_lam(node): return node.management_ip if node.management_ip else DEFAULT_NAME
             else:
                 raise SimpleError('Неверный параметр сортировки')
-            reverse = reversed_order if reversed_order is not None else False
+
             list_of_all_node_types = sorted(list_of_all_node_types, key=sort_lam, reverse=reverse)
 
         return list_of_all_node_types
@@ -276,7 +278,7 @@ class ResourcesQuery(graphene.ObjectType):
         cluster_type.controller = ControllerType(address=controller_address)
         return cluster_type
 
-    async def resolve_clusters(self, _info, ordering=None, reversed_order=None):
+    async def resolve_clusters(self, _info, ordering=None):
         controllers_addresses = await Controller.get_controllers_addresses()
         print('test controllers', controllers_addresses)
         # form list of clusters
@@ -292,6 +294,8 @@ class ResourcesQuery(graphene.ObjectType):
 
         # sort list of clusters
         if ordering:
+            (ordering, reverse) = extract_ordering_data(ordering)
+
             if ordering == 'verbose_name':
                 def sort_lam(cluster): return cluster.verbose_name if cluster.verbose_name else DEFAULT_NAME
             elif ordering == 'cpu_count':
@@ -306,7 +310,6 @@ class ResourcesQuery(graphene.ObjectType):
                 def sort_lam(cluster): return cluster.controller.address if cluster.controller.address else DEFAULT_NAME
             else:
                 raise SimpleError('Неверный параметр сортировки')
-            reverse = reversed_order if reversed_order is not None else False
             list_of_all_cluster_types = sorted(list_of_all_cluster_types, key=sort_lam, reverse=reverse)
 
         return list_of_all_cluster_types
@@ -318,7 +321,7 @@ class ResourcesQuery(graphene.ObjectType):
         datapool_type.controller = ControllerType(address=controller_address)
         return datapool_type
 
-    async def resolve_datapools(self, _info, take_broken=False, ordering=None, reversed_order=None):
+    async def resolve_datapools(self, _info, take_broken=False, ordering=None):
 
         # form list of datapools
         list_of_all_datapool_types = []
@@ -334,6 +337,8 @@ class ResourcesQuery(graphene.ObjectType):
 
         # sort list of datapools
         if ordering:
+            (ordering, reverse) = extract_ordering_data(ordering)
+
             if ordering == 'verbose_name':
                 def sort_lam(datapool): return datapool.verbose_name if datapool.verbose_name else DEFAULT_NAME
             elif ordering == 'type':
@@ -352,7 +357,6 @@ class ResourcesQuery(graphene.ObjectType):
                 def sort_lam(datapool): return datapool.status if datapool.status else DEFAULT_NAME
             else:
                 raise SimpleError('Неверный параметр сортировки')
-            reverse = reversed_order if reversed_order is not None else False
             list_of_all_datapool_types = sorted(list_of_all_datapool_types, key=sort_lam, reverse=reverse)
 
         return list_of_all_datapool_types
