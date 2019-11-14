@@ -10,7 +10,7 @@ from cached_property import cached_property as cached
 from graphql import GraphQLError
 
 from settings import DEFAULT_NAME
-from common.utils import get_selections, make_graphene_type
+from common.utils import get_selections, make_graphene_type, extract_ordering_data
 from common.veil_errors import HttpError, SimpleError, NotFound
 
 from vm.models import Vm
@@ -197,12 +197,12 @@ class VmQuery(graphene.ObjectType):
     vm = graphene.Field(VmType, id=graphene.String(), controller_address=graphene.String())
 
     templates = graphene.List(TemplateType, cluster_id=graphene.String(), node_id=graphene.String(),
-                              ordering=graphene.String(), reversed_order=graphene.Boolean())
+                              ordering=graphene.String())
 
     vms = graphene.List(VmType, controller_ip=graphene.String(), cluster_id=graphene.String(),
                                 node_id=graphene.String(), datapool_id=graphene.String(),
                                 get_vms_in_pools=graphene.Boolean(),
-                                ordering=graphene.String(), reversed_order=graphene.Boolean())
+                                ordering=graphene.String())
 
     async def resolve_template(self, _info, id, controller_address):
         vm_http_client = await VmHttpClient.create(controller_address, id)
@@ -214,8 +214,7 @@ class VmQuery(graphene.ObjectType):
         veil_info = await vm_http_client.info()
         return VmQuery.veil_vm_data_to_graphene_type(veil_info, controller_address)
 
-    async def resolve_templates(self, _info, controller_ip=None, cluster_id=None, node_id=None,
-                                ordering=None, reversed_order=None):
+    async def resolve_templates(self, _info, controller_ip=None, cluster_id=None, node_id=None, ordering=None):
         if controller_ip:
             vm_http_client = await VmHttpClient.create(controller_ip, '')
             template_veil_data_list = await vm_http_client.fetch_templates_list(cluster_id=cluster_id, node_id=node_id)
@@ -238,6 +237,8 @@ class VmQuery(graphene.ObjectType):
 
         # sorting
         if ordering:
+            (ordering, reverse) = extract_ordering_data(ordering)
+
             if ordering == 'verbose_name':
                 def sort_lam(template_type):
                     return template_type.verbose_name if template_type.verbose_name else DEFAULT_NAME
@@ -246,13 +247,12 @@ class VmQuery(graphene.ObjectType):
                     return template_type.controller.address if template_type.controller.address else DEFAULT_NAME
             else:
                 raise SimpleError('Неверный параметр сортировки')
-            reverse = reversed_order if reversed_order is not None else False
             template_type_list = sorted(template_type_list, key=sort_lam, reverse=reverse)
 
         return template_type_list
 
     async def resolve_vms(self, _info, controller_ip=None, cluster_id=None, node_id=None,
-                          get_vms_in_pools=False, ordering=None, reversed_order=None):
+                          get_vms_in_pools=False, ordering=None):
 
         # get veil vm data list
         if controller_ip:
@@ -287,6 +287,8 @@ class VmQuery(graphene.ObjectType):
 
         # sorting
         if ordering:
+            (ordering, reverse) = extract_ordering_data(ordering)
+
             if ordering == 'verbose_name':
                 def sort_lam(vm_type):
                     return vm_type.verbose_name if vm_type.verbose_name else DEFAULT_NAME
@@ -310,7 +312,6 @@ class VmQuery(graphene.ObjectType):
                     return vm_type.status if vm_type and vm_type.status else DEFAULT_NAME
             else:
                 raise SimpleError('Неверный параметр сортировки')
-            reverse = reversed_order if reversed_order is not None else False
             vm_type_list = sorted(vm_type_list, key=sort_lam, reverse=reverse)
 
         return vm_type_list
