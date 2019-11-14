@@ -1,13 +1,36 @@
 # -*- coding: utf-8 -*-
+import re
 import graphene
+from tornado.httpclient import HTTPClientError  # TODO: точно это нужно тут?
 
-from common.veil_errors import SimpleError
+from database import StatusGraphene
+from common.veil_validators import MutationValidation
+from common.veil_errors import SimpleError, HttpError, ValidationError
+from common.utils import make_graphene_type
 
-from settings import MIX_POOL_SIZE, MAX_POOL_SIZE, MAX_VM_AMOUNT_IN_POOL, DEFAULT_NAME
+from auth.schema import UserType
+from auth.models import User
+
+from vm.schema import VmType, VmQuery, TemplateType
+from vm.models import Vm
+from vm.veil_client import VmHttpClient
+
+from controller.schema import ControllerType
+from controller.models import Controller
+
+from controller_resources.veil_client import ResourcesHttpClient
+from controller_resources.schema import ClusterType, NodeType, DatapoolType
+
+from pool.models import AutomatedPool, StaticPool, Pool
+# TODO: отсутствует валидация входящих ресурсов вроде node_uid, cluster_uid и т.п. Ранее шла речь,
+#  о том, что мы будем кешированно хранить какие-то ресурсы полученные от ECP Veil. Возможно стоит
+#  обращаться к этому хранилищу для проверки корректности присланных ресурсов. Аналогичный принцип
+#  стоит применить и к статическим пулам (вместо похода на вейл для проверки присланных параметров).
 
 
-# todo: remove raw sql
 async def check_and_return_pool_data(pool_id, pool_type=None):
+    # TODO: а это точно нужно?
+    # TODO: remove raw sql, rewrite
     # check if pool exists
     async with db.connect() as conn:
         qu = 'SELECT * FROM pool WHERE id = $1', pool_id
@@ -24,27 +47,498 @@ async def check_and_return_pool_data(pool_id, pool_type=None):
     return pool_data_dict
 
 
-def check_pool_initial_size(initial_size):
-    if initial_size < MIX_POOL_SIZE or initial_size > MAX_POOL_SIZE:
-        raise SimpleError('Начальное количество ВМ должно быть в интервале [{} {}]'.
-                          format(MIX_POOL_SIZE, MAX_POOL_SIZE))
+class PoolValidator(MutationValidation):
+    """Валидатор для сущности Pool"""
+
+    @staticmethod
+    async def validate_pool_id(obj_dict, value):
+        if not value:
+            return
+        pool = await Pool.get_pool(value)
+        if pool:
+            return value
+        raise ValidationError('No such pool.')
+
+    @staticmethod
+    async def validate_controller_ip(obj_dict, value):
+        if not value:
+            return
+        ip_re = re.compile(
+            r'^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$'
+        )
+        ip = re.fullmatch(ip_re, value)
+        if ip:
+            return value
+        raise ValidationError('ip-address probably invalid.')
+
+    @staticmethod
+    async def validate_verbose_name(obj_dict, value):
+        if not value:
+            return
+        name_re = re.compile('^[а-яА-ЯёЁa-zA-Z0-9]+[а-яА-ЯёЁa-zA-Z0-9.-_+ ]*$')
+        template_name = re.match(name_re, value)
+        if template_name:
+            return value
+        raise ValidationError('Имя пула должно содержать только буквы, цифры, _, -')
+
+    @staticmethod
+    async def validate_vm_name_template(obj_dict, value):
+        if not value:
+            return
+
+        name_re = re.compile('^[а-яА-ЯёЁa-zA-Z0-9]+[а-яА-ЯёЁa-zA-Z0-9.-_+ ]*$')
+        template_name = re.match(name_re, value)
+        if template_name:
+            return value
+        raise ValidationError('Шаблонное имя вм должно содержать только буквы, цифры, _, -')
+
+    @staticmethod
+    async def validate_initial_size(obj_dict, value):
+        if not value:
+            return
+        if value < obj_dict['min_size'] or value > obj_dict['max_size']:
+            raise ValidationError(
+                'Начальное количество ВМ должно быть в интервале {}-{}'.format(obj_dict['min_size'],
+                                                                               obj_dict['max_size']))
+        return value
+
+    @staticmethod
+    async def validate_reserve_size(obj_dict, value):
+        if not value:
+            return
+        pool_id = obj_dict.get('pool_id')
+        if pool_id:
+            pool_obj = await Pool.get_pool(pool_id)
+            min_size = obj_dict['min_size'] if obj_dict.get('min_size') else pool_obj.min_size
+            max_size = obj_dict['max_size'] if obj_dict.get('max_size') else pool_obj.max_size
+        else:
+            min_size = obj_dict['min_size']
+            max_size = obj_dict['max_size']
+        if value < min_size or value > max_size:
+            raise ValidationError('Количество создаваемых ВМ должно быть в интервале {}-{}'.
+                                  format(min_size, max_size))
+        return value
+
+    @staticmethod
+    async def validate_total_size(obj_dict, value):
+        if not value:
+            return
+
+        pool_id = obj_dict.get('pool_id')
+        if pool_id:
+            pool_obj = await Pool.get_pool(pool_id)
+            initial_size = obj_dict['initial_size'] if obj_dict.get('initial_size') else pool_obj.initial_size
+            min_size = obj_dict['min_size'] if obj_dict.get('min_size') else pool_obj.min_size
+            max_vm_amount = obj_dict['max_vm_amount'] if obj_dict.get('max_vm_amount') else pool_obj.max_vm_amount
+        else:
+            initial_size = obj_dict['initial_size']
+            min_size = obj_dict['min_size']
+            max_vm_amount = obj_dict['max_vm_amount']
+
+        if value < initial_size:
+            raise ValidationError('Максимальное количество создаваемых ВМ не может быть меньше '
+                                  'начального количества ВМ')
+        if value < min_size or value > max_vm_amount:
+            raise ValidationError('Максимальное количество создаваемых ВМ должно быть в интервале [{} {}]'.
+                                  format(min_size, max_vm_amount))
+        return value
 
 
-def check_reserve_size(reserve_size):
-    if reserve_size < MIX_POOL_SIZE or reserve_size > MAX_POOL_SIZE:
-        raise SimpleError('Количество создаваемых ВМ должно быть в интервале [{} {}]'.
-                          format(MIX_POOL_SIZE, MAX_POOL_SIZE))
+class PoolType(graphene.ObjectType):
+
+    # Pool fields
+    pool_id = graphene.UUID()
+    verbose_name = graphene.String()
+    status = StatusGraphene()
+    pool_type = graphene.String()
+    cluster_id = graphene.UUID()
+    node_id = graphene.UUID()
+    controller = graphene.Field(ControllerType)
+
+    vms = graphene.List(VmType)
+
+    # StaticPool fields
+    static_pool_id = graphene.UUID()
+
+    # AutomatedPool fields
+    automated_pool_id = graphene.UUID()
+    template_id = graphene.UUID()
+    datapool_id = graphene.UUID()
+    min_size = graphene.Int()
+    max_size = graphene.Int()
+    max_vm_amount = graphene.Int()
+    increase_step = graphene.Int()
+    max_amount_of_create_attempts = graphene.Int()
+    initial_size = graphene.Int()
+    reserve_size = graphene.Int()
+    total_size = graphene.Int()
+    vm_name_template = graphene.String()
+
+    # TODO: дополнить внешними сущностями
+    # users = graphene.List(UserType, entitled=graphene.Boolean())
+    # vms = graphene.List(VmType)
+
+    node = graphene.Field(NodeType)
+    cluster = graphene.Field(ClusterType)
+    datapool = graphene.Field(DatapoolType)
+    template = graphene.Field(TemplateType)
+
+    async def resolve_controller(self, info):
+        controller_obj = await Controller.get(self.controller)
+        return ControllerType(**controller_obj.__values__)
+
+    # async def resolve_users(self, _info, entitled=True):
+    #     # users who are entitled to pool
+    #     if entitled:
+    #         users_data = await User.join(PoolUsers, User.id == PoolUsers.user_id).select().where(
+    #              PoolUsers.pool_id == self.id).gino.all()
+    #     # users who are NOT entitled to pool
+    #     else:
+    #         subquery = PoolUsers.query(PoolUsers.user_id).where(PoolUsers.pool_id == self.id)
+    #         users_data = User.filter(User.id.notin_(subquery)).gino.all()
+    #     print('users_data', users_data)
+    #     # todo: it will not work until model and grapnene feilds are syncronized
+    #     uset_type_list = [
+    #         UserType(**user.__values__)
+    #         for user in users_data
+    #     ]
+    #     return uset_type_list
+
+    async def resolve_vms(self, _info):
+        await self._build_vms_list()
+        return self.vms
+
+    async def resolve_node(self, _info):
+        resources_http_client = await ResourcesHttpClient.create(self.controller.address)
+
+        node_id = await Pool.select('node_id').where(Pool.id == self.id).gino.scalar()
+        node_data = await resources_http_client.fetch_node(node_id)
+        node_type = make_graphene_type(NodeType, node_data)
+        node_type.controller = ControllerType(address=self.controller.address)
+        return node_type
+
+    async def resolve_cluster(self, _info):
+        resources_http_client = await ResourcesHttpClient.create(self.controller.address)
+
+        cluster_id = await Pool.select('cluster_id').where(Pool.id == self.id).gino.scalar()
+        cluster_data = await resources_http_client.fetch_cluster(cluster_id)
+        cluster_type = make_graphene_type(ClusterType, cluster_data)
+        cluster_type.controller = ControllerType(address=self.controller.address)
+        return cluster_type
+
+    async def resolve_datapool(self, _info):
+        resources_http_client = await ResourcesHttpClient.create(self.controller.address)
+
+        datapool_id = await Pool.select('datapool_id').where(Pool.id == self.id).gino.scalar()
+        datapool_data = await resources_http_client.fetch_datapool(datapool_id)
+        datapool_type = make_graphene_type(DatapoolType, datapool_data)
+        datapool_type.controller = ControllerType(address=self.controller.address)
+        return datapool_type
+
+    async def resolve_template(self, _info):
+        template_id = await Pool.select('template_id').where(Pool.id == self.id).gino.scalar()
+        vm_http_client = await VmHttpClient.create(self.controller.address, template_id)
+        veil_info = await vm_http_client.info()
+        return VmQuery.veil_template_data_to_graphene_type(veil_info, self.controller.address)
+
+    async def _build_vms_list(self):
+        if not self.vms:
+            self.vms = []
+            vms_data = await Vm.select("id").where((Vm.pool_id == self.id)).gino.all()
+            for (vm_id,) in vms_data:
+                vm_http_client = await VmHttpClient.create(self.controller.address, vm_id)
+                try:
+                    veil_info = await vm_http_client.info()
+                    # create graphene type
+                    vm_type = VmQuery.veil_vm_data_to_graphene_type(veil_info, self.controller.address)
+                except HTTPClientError:
+                    vm_type = VmType(id=vm_id, controller=ControllerType(address=self.controller.address))
+                    vm_type.veil_info = None
+                self.vms.append(vm_type)
 
 
-def check_total_size(total_size, initial_size):
-    if total_size < initial_size:
-        raise SimpleError('Максимальное количество создаваемых ВМ не может быть меньше '
-                          'начального количества ВМ')
-    if total_size < MIX_POOL_SIZE or total_size > MAX_VM_AMOUNT_IN_POOL:
-        raise SimpleError('Максимальное количество создаваемых ВМ должно быть в интервале [{} {}]'.
-                          format(MIX_POOL_SIZE, MAX_VM_AMOUNT_IN_POOL))
+class PoolQuery(graphene.ObjectType):
+
+    pools = graphene.List(PoolType, ordering=graphene.String())
+    pool = graphene.Field(PoolType, pool_id=graphene.String(), controller_address=graphene.String())
+
+    async def resolve_pools(self, info, ordering=None):
+        # Сортировка может быть по полю модели Pool, либо по Pool.EXTRA_ORDER_FIELDS
+        pools = await Pool.get_pools(ordering=ordering)
+        objects = [
+            PoolType(**pool)
+            for pool in pools
+        ]
+        return objects
+
+    async def resolve_pool(self, _info, pool_id):
+        pool = await Pool.get_pool(pool_id)
+        if not pool:
+            raise SimpleError('No such pool.')
+        return PoolType(**pool)
 
 
-class DesktopPoolType(graphene.Enum):
-    AUTOMATED = 0
-    MANUAL = 1
+# --- --- --- --- ---
+# Pool mutations
+class DeletePoolMutation(graphene.Mutation, PoolValidator):
+    class Arguments:
+        pool_id = graphene.UUID()
+
+    ok = graphene.Boolean()
+
+    async def mutate(self, info, pool_id):
+
+        # Меняем статус пула. Не нравится идея удалять записи имеющие внешние зависимости, которые не удалить,
+        # например запущенные виртуалки.
+        await Pool.soft_delete(pool_id)
+        return DeletePoolMutation(ok=True)
+
+
+# --- --- --- --- ---
+# Static pool mutations
+class CreateStaticPoolMutation(graphene.Mutation, PoolValidator):
+    class Arguments:
+        verbose_name = graphene.String(required=True)
+        vm_ids = graphene.List(graphene.UUID, required=True)
+
+    Output = PoolType
+
+    @staticmethod
+    async def fetch_veil_vm_data_list(vm_ids):
+        # TODO: не пересена в модель, потому что есть предложение вообще отказаться от такой проверки.
+        #  Более удобным вариантом кажется хранить ресурсы в кеше и валидировать их из него.
+        controller_adresses = await Controller.get_controllers_addresses()
+        # create list of all vms on controllers
+        all_vm_veil_data_list = []
+        for controller_address in controller_adresses:
+            vm_http_client = await VmHttpClient.create(controller_address, '')
+            try:
+                single_vm_veil_data_list = await vm_http_client.fetch_vms_list()
+                # add data about controller address
+                for vm_veil_data in single_vm_veil_data_list:
+                    vm_veil_data['controller_address'] = controller_address
+                all_vm_veil_data_list.extend(single_vm_veil_data_list)
+            except (HttpError, OSError):
+                print('HttpError')
+                pass
+        # find vm veil data by id
+        vm_veil_data_list = []
+        for vm_id in vm_ids:
+            try:
+                data = next(veil_vm_data for veil_vm_data in all_vm_veil_data_list if veil_vm_data['id'] == str(vm_id))
+                vm_veil_data_list.append(data)
+            except StopIteration:
+                raise SimpleError('ВМ с id {} не найдена ни на одном из известных контроллеров'.format(vm_id))
+        return vm_veil_data_list
+
+    @classmethod
+    async def mutate(cls, root, info, **kwargs):
+        await cls.validate_agruments(**kwargs)
+        pool = None
+        vm_ids = kwargs['vm_ids']
+        verbose_name = kwargs['verbose_name']
+        # get vm info
+        veil_vm_data_list = await CreateStaticPoolMutation.fetch_veil_vm_data_list(vm_ids)
+        # Check that all vms are on the same node (Условие поставленное начальством, насколько я помню)
+        first_vm_data = veil_vm_data_list[0]
+        # TODO: move to validator?
+        if not all(x == first_vm_data for x in veil_vm_data_list):
+            raise SimpleError("Все ВМ должны находится на одном сервере")
+        # All VMs are on the same node and cluster so we can take this data from the first item
+        controller_ip = first_vm_data['controller_address']
+        node_id = first_vm_data['node']['id']
+        # determine cluster
+        resources_http_client = await ResourcesHttpClient.create(controller_ip)
+        node_data = await resources_http_client.fetch_node(node_id)
+        cluster_id = node_data['cluster']
+        try:
+            await Vm.enable_remote_accesses(controller_ip, vm_ids)
+            pool = await StaticPool.create(verbose_name=verbose_name,
+                                           controller_ip=controller_ip,
+                                           cluster_id=cluster_id,
+                                           node_id=node_id)
+            # add vms to db
+            for vm_id in vm_ids:
+                await Vm.create(id=vm_id, pool_id=pool.static_pool_id)
+
+            # response
+            vms = [VmType(id=vm_id) for vm_id in vm_ids]
+            await pool.activate()
+        except Exception as E:
+            # TODO: широкий exception потому, что пока нет ошибки от монитора ресурсов. эксепшены нужно ограничить.
+            print(E)
+            if pool:
+                await pool.deactivate()
+            # return CreateStaticPoolMutation(
+            #     Output=None)
+            return None
+        return PoolType(id=pool.static_pool_id, verbose_name=verbose_name, vms=vms)
+
+
+class AddVmsToStaticPool(graphene.Mutation):
+    class Arguments:
+        pool_id = graphene.ID(required=True)
+        vm_ids = graphene.List(graphene.UUID, required=True)
+
+    ok = graphene.Boolean()
+
+    async def mutate(self, _info, pool_id, vm_ids):
+        if not vm_ids:
+            raise SimpleError("Список ВМ не должен быть пустым")
+
+        pool_data = await Pool.select('controller', 'node_id').where(Pool.pool_id == pool_id).gino.first()
+        (controller_id, node_id) = pool_data
+        controller_address = await Controller.select('address').where(Controller.id == controller_id).gino.scalar()
+
+        # vm checks
+        vm_http_client = await VmHttpClient.create(controller_address, '')
+        all_vms_on_node = await vm_http_client.fetch_vms_list(node_id=node_id)
+
+        all_vm_ids_on_node = [vmachine['id'] for vmachine in all_vms_on_node]
+        used_vm_ids = await Vm.get_all_vms_ids()  # get list of vms which are already in pools
+
+        for vm_id in vm_ids:
+            # check if vm exists and it is on the correct node
+            if str(vm_id) not in all_vm_ids_on_node:
+                raise SimpleError('ВМ {} находится на сервере отличном от сервера пула'.format(vm_id))
+            # check if vm is free (not in any pool)
+            if vm_id in used_vm_ids:
+                raise SimpleError('ВМ {} уже находится в одном из пулов'.format(vm_id))
+
+        # remote access
+        await Vm.enable_remote_accesses(controller_address, vm_ids)
+
+        # add vms to db
+        for vm_id in vm_ids:
+            await Vm.create(id=vm_id, pool_id=pool_id)
+
+        return {
+            'ok': True
+        }
+
+
+class RemoveVmsFromStaticPool(graphene.Mutation):
+    class Arguments:
+        pool_id = graphene.ID(required=True)
+        vm_ids = graphene.List(graphene.ID, required=True)
+
+    ok = graphene.Boolean()
+
+    async def mutate(self, _info, pool_id, vm_ids):
+        if not vm_ids:
+            raise SimpleError("Список ВМ не должен быть пустым")
+
+        # vms check
+        # get list of vms ids which are in pool_id
+        vms_ids_in_pool = await Vm.get_vms_ids_in_pool(pool_id)
+        print('vms_ids_in_pool', vms_ids_in_pool)
+
+        # check if given vm_ids in vms_ids_in_pool
+        for vm_id in vm_ids:
+            if vm_id not in vms_ids_in_pool:
+                raise SimpleError('ВМ не принадлежит заданному пулу'.format(vm_id))
+
+        # remove vms from db
+        await Vm.remove_vms(vm_ids)
+
+        return {
+            'ok': True
+        }
+
+
+class UpdateStaticPoolMutation(graphene.Mutation, PoolValidator):
+    """ """
+    class Arguments:
+        id = graphene.UUID(required=True)
+        verbose_name = graphene.String()
+
+    ok = graphene.Boolean()
+
+    @classmethod
+    async def mutate(cls, _root, _info, **kwargs):
+        await cls.validate_agruments(**kwargs)
+        ok = await StaticPool.soft_update(kwargs['id'], kwargs.get('verbose_name'))
+        return UpdateStaticPoolMutation(ok=ok)
+
+
+# --- --- --- --- ---
+# Automated (Dynamic) pool mutations
+class CreateAutomatedPoolMutation(graphene.Mutation, PoolValidator):
+    class Arguments:
+        verbose_name = graphene.String(required=True)
+        controller_ip = graphene.String(required=True)
+        cluster_id = graphene.UUID(required=True)
+        template_id = graphene.UUID(required=True)
+        datapool_id = graphene.UUID(required=True)
+        node_id = graphene.UUID(required=True)
+
+        min_size = graphene.Int(default_value=1)
+        max_size = graphene.Int(default_value=200)
+        max_vm_amount = graphene.Int(default_value=1000)
+        increase_step = graphene.Int(default_value=3)
+        max_amount_of_create_attempts = graphene.Int(default_value=2)
+        initial_size = graphene.Int(default_value=1)
+        reserve_size = graphene.Int(default_value=0)
+        total_size = graphene.Int(default_value=1)
+        vm_name_template = graphene.String(default_value='')
+
+    pool = graphene.Field(lambda: PoolType)
+    ok = graphene.Boolean()
+
+    @classmethod
+    async def mutate(cls, root, info, **kwargs):
+        await cls.validate_agruments(**kwargs)
+        pool = None
+        try:
+            automated_pool = await AutomatedPool.create(**kwargs)
+            # TODO: в мониторе ресурсов нет происходит raise ошибки, если оно не создано
+            await automated_pool.add_initial_vms()
+            await automated_pool.activate()
+            pool = await Pool.get_pool(automated_pool.automated_pool_id)
+        except Exception as E:
+            # TODO: широкий exception потому, что пока нет ошибки от монитора ресурсов. эксепшены нужно ограничить.
+            if pool:
+                await pool.deactivate()
+            raise SimpleError(E)
+        return CreateAutomatedPoolMutation(
+                pool=PoolType(**pool),
+                ok=True)
+
+
+class UpdateAutomatedPoolMutation(graphene.Mutation, PoolValidator):
+    """Перечень полей доступных для редактирования отдельно не рассматривалась. Перенесена логика из Confluence."""
+    class Arguments:
+        pool_id = graphene.UUID(required=True)
+        verbose_name = graphene.String()
+        reserve_size = graphene.Int()
+        total_size = graphene.Int()
+        vm_name_template = graphene.String()
+
+    pool = graphene.Field(lambda: PoolType)
+    ok = graphene.Boolean()
+
+
+
+    @classmethod
+    async def mutate(cls, root, info, **kwargs):
+        await cls.validate_agruments(**kwargs)
+        ok = await AutomatedPool.soft_update(kwargs['pool_id'], kwargs.get('verbose_name'), kwargs.get('reserve_size'),
+                                             kwargs.get('total_size'), kwargs.get('vm_name_template'))
+        return UpdateAutomatedPoolMutation(ok=ok)
+
+
+# --- --- --- --- ---
+# Schema concatenation
+class PoolMutations(graphene.ObjectType):
+    addDynamicPool = CreateAutomatedPoolMutation.Field()
+    addStaticPool = CreateStaticPoolMutation.Field()
+    addVmsToStaticPool = AddVmsToStaticPool.Field()
+    removeVmsFromStaticPool = RemoveVmsFromStaticPool.Field()
+    removePool = DeletePoolMutation.Field()
+    updateDynamicPool = UpdateAutomatedPoolMutation.Field()
+    updateStaticPool = UpdateStaticPoolMutation.Field()
+
+
+pool_schema = graphene.Schema(query=PoolQuery,
+                              mutation=PoolMutations,
+                              auto_camelcase=False)

@@ -2,11 +2,11 @@ import asyncio
 import uuid
 
 from cached_property import cached_property as cached
-from utils import into_words
+from common.utils import into_words
 
 from common.veil_errors import BadRequest, VmCreationError
 
-from resources_monitoring.subscriptions_observers import WaiterSubscriptionObserver
+from resources_monitoring.handlers import WaiterSubscriptionObserver
 from resources_monitoring.resources_monitor_manager import resources_monitor_manager
 from resources_monitoring.resources_monitoring_data import VDI_TASKS_SUBSCRIPTION
 

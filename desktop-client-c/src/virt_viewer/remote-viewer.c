@@ -109,12 +109,14 @@ virt_viewer_connect_timer(RemoteViewer *self)
     gboolean is_connected = FALSE;
 
     created = virt_viewer_app_create_session(app, "spice", NULL);
+    if (!created)
+        return TRUE;
 
     take_extern_credentials = TRUE;
     is_connected = virt_viewer_app_initial_connect(app, NULL);
 
     printf("%s active %i created %i is_connected %i \n",
-           (char *)__func__, virt_viewer_app_is_active(app), created, is_connected);
+           (const char *)__func__, virt_viewer_app_is_active(app), created, is_connected);
 
     return TRUE;
 }
@@ -404,41 +406,19 @@ retry_dialog:
             g_application_quit(G_APPLICATION(app));
             return FALSE;
         }
-
-        if (!opt_manual_mode) {
-            set_vdi_credentials(user, password, ip, port);
-            free_memory_safely(&guri);
-            free_memory_safely(&user);
-            free_memory_safely(&password);
-        } else{
-            g_object_set(app, "guri", guri, NULL);
-        }
     }
 
     g_debug("Opening display to %s", guri);
     // После такого как забрали адресс с логином и паролем действуем в зависимости от opt_manual_mode
     // 1) в мануальном режиме сразу подключаемся к удаленноиу раб столу
-    // 2) В дефолтном режиме вызываем vdi manager. В нем пользователь выберет машину для поодключения
+    // 2) В дефолтном режиме вызываем vdi manager. В нем пользователь выберет машину для подключения
 retry_vdi_dialog:
-    if(!opt_manual_mode){
-
-        VirtViewerWindow *main_window = virt_viewer_app_get_main_window(app);
-        GtkResponseType dialog_window_response =
-                vdi_manager_dialog(virt_viewer_window_get_window(main_window), &guri, &user, &password);
-
-        if(dialog_window_response == GTK_RESPONSE_CANCEL) {
-            goto cleanup;
-        }
-        else if(dialog_window_response == GTK_RESPONSE_CLOSE) {
-            g_application_quit(G_APPLICATION(app));  
-            return FALSE;
-        }
-        g_object_set(app, "guri", guri, NULL);    
-    }
-
-    setSpiceSessionCredentials(user, password);
     // instant connect attempt
     if (opt_manual_mode) {
+        // credentials
+        g_object_set(app, "guri", guri, NULL);
+
+        setSpiceSessionCredentials(user, password);
         // Создание сессии
         if (!virt_viewer_app_create_session(app, "spice", &error))
             goto cleanup;
@@ -456,7 +436,30 @@ retry_vdi_dialog:
             goto cleanup;
         }
 
-    } else { // start connect attempt timer
+    } else {
+//        // credentials
+//        set_vdi_credentials(user, password, ip, port);
+        free_memory_safely(&guri);
+        free_memory_safely(&user);
+        free_memory_safely(&password);
+
+        // show VDI manager window
+        VirtViewerWindow *main_window = virt_viewer_app_get_main_window(app);
+        GtkResponseType dialog_window_response =
+                vdi_manager_dialog(virt_viewer_window_get_window(main_window), &guri, &user, &password);
+
+        if(dialog_window_response == GTK_RESPONSE_CANCEL) {
+            goto cleanup;
+        }
+        else if(dialog_window_response == GTK_RESPONSE_CLOSE) {
+            g_application_quit(G_APPLICATION(app));
+            return FALSE;
+        }
+        g_object_set(app, "guri", guri, NULL);
+
+        setSpiceSessionCredentials(user, password);
+
+        // start connect attempt timer
         virt_viewer_start_reconnect_poll(self);
     }
     // Показывается окно virt viewer // virt_viewer_app_default_start

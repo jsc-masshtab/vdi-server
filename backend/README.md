@@ -1,38 +1,19 @@
+1. Шаблон для названий веток:
 
-1. [Скачиваем](https://docs.conda.io/en/latest/miniconda.html) миниконду. Пусть мы установили её в `conda_dir`.
-2. В директории `backend` (то есть, именно там, где лежит environment.yml) запускаем
+    **feature**/**fix** **tg** {task#/us#}  -- feature tg 5467
+    
+2. Шаблон для коммита в Git:
 
-```
-conda_dir/bin/conda env update
-```
+    FEATURE TG-6022 Sanic -> Tornado migration -- HEAD
+    
+    Websockets configuration + base pool examples -- BODY
+    
+3. Alembic
 
-3. Инициализируем базу
+export PYTHONPATH=~/PycharmProjects/vdiserver/backend/vdi2/
 
-```
-mkdir ~/pgdata
-conda_dir/bin/initdb --data ~/pgdata
-conda_dir/bin/pg_ctl -D ~/pgdata -l logfile start
-conda_dir/bin/createuser --superuser postgres
-conda_dir/bin/psql -c "create database vdi encoding 'utf8' lc_collate = 'en_US.UTF-8' lc_ctype = 'en_US.UTF-8' template template0;" -U postgres
-```
+alembic revision --autogenerate -m "Controller credentials"
 
-Запускаем миграции
+alembic upgrade head
 
-```
-conda_dir/bin/mi apply
-```
-
-4. Запускаем сервис:
-
-```
-conda_dir/bin/vdi
-```
-
-Порт vdi сервера:
-
-backend/vdi/settings.py
-```
-    vdi_server = {
-        'port': 80
-    }
-```
+alembic revision -m "create account table"

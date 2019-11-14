@@ -5,17 +5,18 @@ from abc import ABC, abstractmethod
 
 from tornado.httpclient import HTTPClientError
 from tornado.websocket import websocket_connect
+from tornado.websocket import WebSocketClosedError
+from tornado import ioloop
 
-#from ..tasks.base import Token
+from controller.models import Controller
 
 from .resources_monitoring_data import CONTROLLER_SUBSCRIPTIONS_LIST, CONTROLLERS_SUBSCRIPTION, VDI_TASKS_SUBSCRIPTION
 
-from utils import cancel_async_task
-from common.veil_errors import NotFound
+from common.utils import cancel_async_task
+from common.veil_errors import HttpError
+from common.veil_client import VeilHttpClient
 
-# from ..tasks.resources import (
-#   CheckController
-# )
+from controller_resources.veil_client import ResourcesHttpClient
 
 
 class AbstractMonitor(ABC):
@@ -50,7 +51,6 @@ class ResourcesMonitor(AbstractMonitor):
         self._ws_connection = None
         self._running_flag = True
         self._controller_ip = None
-
         self._is_online = False
 
         self._controller_online_task = None
@@ -60,11 +60,10 @@ class ResourcesMonitor(AbstractMonitor):
     def start(self, controller_ip):
         self._controller_ip = controller_ip
         self._running_flag = True
-        loop = asyncio.get_event_loop()
         # controller check
-        self._controller_online_task = loop.create_task(self._controller_online_checking())
+        self._controller_online_task = ioloop.IOLoop.current().add_callback(self._controller_online_checking)
         # ws data
-        self._resources_monitor_task = loop.create_task(self._processing_ws_messages())
+        self._resources_monitor_task = ioloop.IOLoop.current().add_callback(self._processing_ws_messages)
 
     async def stop(self):
         self._running_flag = False
@@ -82,20 +81,21 @@ class ResourcesMonitor(AbstractMonitor):
         Check if controller online
         :return:
         """
+        resources_http_client = await ResourcesHttpClient.create(self._controller_ip)
+
         response_dict = {'ip': self._controller_ip, 'msg_type': 'data', 'event': 'UPDATED',
                          'resource': CONTROLLERS_SUBSCRIPTION}
         while self._running_flag:
             await asyncio.sleep(2)  # check every 2 seconds
             try:
                 # if controller is online then there wil not be any exception
-                pass#await CheckController(controller_ip=self._controller_ip)
-            except (HTTPClientError, OSError, NotFound):
+                await resources_http_client.check_controller()
+            except (HTTPClientError, HttpError, OSError):
                 # notify only if controller was online before (data changed)
                 if self._is_online:
                     response_dict['status'] = 'OFFLINE'
                     json_data = json.dumps(response_dict)
                     self.notify_observers(CONTROLLERS_SUBSCRIPTION, json_data)
-                    print('notify controller offline ', self._controller_ip)
                 self._is_online = False
             else:
                 # notify only if controller was offline before (data changed)
@@ -103,7 +103,6 @@ class ResourcesMonitor(AbstractMonitor):
                     response_dict['status'] = 'ONLINE'
                     json_data = json.dumps(response_dict)
                     self.notify_observers(CONTROLLERS_SUBSCRIPTION, json_data)
-                    print('notify controller online ', self._controller_ip)
                 self._is_online = True
 
     async def _processing_ws_messages(self):
@@ -111,37 +110,60 @@ class ResourcesMonitor(AbstractMonitor):
         Listen for data from controller
         :return:
         """
-        await self._connect()
-
-        # receive messages
+        RECONNECT_TIMEOUT = 5
         while self._running_flag:
-            msg = await self._ws_connection.read_message()
-            if msg is None:  # according to doc it means that connection closed
-                await self._on_connection_closed()
-            await self._on_message_received(msg)
+            is_connected = await self._connect()
+            print(__class__.__name__, ' is_connected', is_connected)
+            # reconnect if not connected
+            if not is_connected:
+                await asyncio.sleep(RECONNECT_TIMEOUT)
+                continue
+
+            # receive messages
+            while self._running_flag:
+                msg = await self._ws_connection.read_message()
+                if msg is None:  # according to doc it means that connection closed
+                    break
+                else:
+                    await self._on_message_received(msg)
+
+            await asyncio.sleep(RECONNECT_TIMEOUT)
 
     async def _connect(self):
+        controller_id = await Controller.get_controller_id_by_ip(self._controller_ip)
         # get token
         try:
-            token = None#await Token(controller_ip=self._controller_ip)
-        except Exception:
-            return
+            token = await Controller.get_token(controller_id)
+            if not token:
+                controller_client = await VeilHttpClient.create(self._controller_ip)
+                token = await controller_client.login()
+            if not token:
+                raise AssertionError('Empty token.')
+        except Exception as E:
+            print(E)
+            return False
+
         # create ws connection
         try:
             connect_url = 'ws://{}/ws/?token={}'.format(self._controller_ip, token)
             self._ws_connection = await websocket_connect(connect_url)
-
-            # subscribe to events on controller
-            for subscription_name in CONTROLLER_SUBSCRIPTIONS_LIST:
-                await self._ws_connection.write_message('add {}'.format(subscription_name))
         except ConnectionRefusedError:
             print(__class__.__name__, ' can not connect to', self._controller_ip)
-            return
+            return False
+
+        # subscribe to events on controller
+        try:
+            for subscription_name in CONTROLLER_SUBSCRIPTIONS_LIST:
+                await self._ws_connection.write_message('add {}'.format(subscription_name))
+        except WebSocketClosedError:
+            return False
+
+        return True
 
     async def _on_message_received(self, message):
         try:
             json_data = json.loads(message)
-            print(__class__.__name__, json_data)
+            print(__class__.__name__, 'msg received', json_data)
         except JSONDecodeError:
             return
         #  notify subscribed observers
@@ -150,17 +172,6 @@ class ResourcesMonitor(AbstractMonitor):
         except KeyError:
             return
         self.notify_observers(resource_str, json_data)
-
-    async def _on_connection_closed(self):
-        print(__class__.__name__, 'connection closed ', self._controller_ip)
-        await self._try_to_reconnect()
-
-    async def _try_to_reconnect(self):
-        # if _running_flag is raised then try to reconnect
-        if self._running_flag:
-            await self._connect()
-            RECONNECT_TIMEOUT = 5
-            await asyncio.sleep(RECONNECT_TIMEOUT)
 
     async def _close_connection(self):
         if self._ws_connection:

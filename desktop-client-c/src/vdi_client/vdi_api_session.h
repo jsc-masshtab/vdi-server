@@ -13,7 +13,6 @@
 #include "vdi_ws_client.h"
 #include "async.h"
 
-#define VM_ID_UNKNOWN -1
 
 // vm operational system
 typedef enum{
@@ -47,13 +46,13 @@ typedef struct{
 
     gboolean is_active;
 
-    gint64 current_vm_id;
+    gchar *current_vm_id;
 
 } VdiSession;
 
 // Data which passed to api_call
 typedef struct{
-    gint64 current_vm_id;
+    gchar *current_vm_id;
     gchar *action_on_vm_str;
     gboolean is_action_forced;
 
@@ -73,31 +72,37 @@ void cancell_pending_requests(void);
 // set vdi session credentials
 void set_vdi_credentials(const gchar *username, const gchar *password, const gchar *ip, const gchar *port);
 // set current vm id
-void set_current_vm_id(gint64 current_vm_id);
+void set_current_vm_id(const gchar *current_vm_id);
 // get current vm id
-gint64 get_current_vm_id(void);
+const gchar *get_current_vm_id(void);
 
 //void gInputStreamToBuffer(GInputStream *inputStream, gchar *responseBuffer);
 // Do api call. Return response body
 gchar *api_call(const char *method, const char *uri_string, const gchar *body_str);
 
+// Fetch token
+void get_vdi_token(GTask         *task,
+                   gpointer       source_object,
+                   gpointer       task_data,
+                   GCancellable  *cancellable);
+
 // Запрашиваем список пулов
-void get_vdi_vm_data(GTask         *task,
-                 gpointer       source_object,
-                 gpointer       task_data,
-                 GCancellable  *cancellable);
+void get_vdi_pool_data(GTask         *task,
+                       gpointer       source_object,
+                       gpointer       task_data,
+                       GCancellable  *cancellable);
 
 // Получаем виртуалку из пула
 void get_vm_from_pool(GTask         *task,
-                  gpointer       source_object,
-                  gpointer       task_data,
-                  GCancellable  *cancellable);
+                      gpointer       source_object,
+                      gpointer       task_data,
+                      GCancellable  *cancellable);
 
 // Do action on virtual machine
 void do_action_on_vm(GTask         *task,
-                  gpointer       source_object,
-                  gpointer       task_data,
-                  GCancellable  *cancellable);
+                     gpointer       source_object,
+                     gpointer       task_data,
+                     GCancellable  *cancellable);
 
 void do_action_on_vm_async(const gchar *actionStr, gboolean isForced);
 

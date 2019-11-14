@@ -1,5 +1,6 @@
 import graphene
 from auth.models import User
+# TODO: после перебаотки модели пользователя Тимофеем - не работает по понятным причинам.
 
 
 class UserType(graphene.ObjectType):
@@ -35,7 +36,7 @@ class UserQuery(graphene.ObjectType):
 
     async def resolve_user(self, info, username):
         # TODO: validation
-        user = await User.query.where(User.username == username).gino.first()  # TODO: test with scalar
+        user = await User.query.where(User.username == username).gino.first()
         return UserType(**user.__values__)
 
 

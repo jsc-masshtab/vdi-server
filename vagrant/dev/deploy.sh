@@ -3,6 +3,8 @@ echo "Install apt packages"
 sudo sed -i s/us\./ru\./g /etc/apt/sources.list
 sudo apt update -y
 sudo apt install --no-install-recommends -y postgresql-server-dev-9.6 python3-dev gcc python3-pip postgresql htop mc nginx # Не нашел на астре пакеты ncdu и bmon
+#------------------------------
+#sudo apt install libcurl4-openssl-dev   # TODO: measure effect. Maybe not need.
 
 echo "Installing node v.10 && npm"
 #sudo apt -y install curl dirmngr apt-transport-https lsb-release ca-certificates
@@ -56,6 +58,6 @@ nohup pipenv run python $APP_DIR/backend/vdi2/app.py & #nohup pipenv run vdi &
 echo "Setting up frontend"
 
 cd $APP_DIR/frontend/
-rm -rf node_modules
+rm -rf node_modules  # audit fix not working without this.
 npm audit fix  # npm i has some broken dependencies. npm audit fix works fine for 9
 npm run ng serve -- --host 0.0.0.0

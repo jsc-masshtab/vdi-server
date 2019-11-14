@@ -1,10 +1,11 @@
+# TODO: разобрать модуль. Это код с предыдущей версии Vdi, которая не нравится большей части бекендеров на проектею
 import inspect
 from functools import wraps
 from typing import List
 import re
 import asyncio
 
-from vdi.settings import settings
+# from vdi.settings import settings
 
 
 class Unset:
@@ -62,7 +63,7 @@ def as_list(gen):
     return list(gen())
 
 
-def make_resource_type(type, data, fields_map=None):
+def make_graphene_type(type, data, fields_map=None):
     """
     create resource object (NodeType, ClusterType...)
     fields_map is used to match Vitalya names with veil names
@@ -76,11 +77,11 @@ def make_resource_type(type, data, fields_map=None):
     obj = type(**dic)
     obj.veil_info = data
     return obj
-
-
-def print(msg, _print=print):
-    if getattr(settings, 'print', False):
-        _print(msg)
+#
+#
+# def print(msg, _print=print):
+#     if getattr(settings, 'print', False):
+#         _print(msg)
 
 
 def into_words(s):
@@ -116,3 +117,10 @@ async def cancel_async_task(async_task):
             await async_task
         except asyncio.CancelledError:
             pass
+
+
+def extract_ordering_data(ordering):
+    reverse = (ordering[0] == '-')
+    if reverse:
+        ordering = ordering[1:]
+    return ordering, reverse

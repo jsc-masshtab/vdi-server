@@ -168,33 +168,37 @@ class ListOfVmsQuery:
                 controller_type = ControllerType(ip=controller['ip'])
 
                 vms_veil_data = await ListVms(controller_ip=controller['ip'])
-                print('vms_veil_data', vms_veil_data)
+                #print('vms_veil_data', vms_veil_data)
                 for vm_veil_data in vms_veil_data:
                     node = NodeType(id=vm_veil_data['node']['id'], controller=controller_type)
                     vm_type = VmType(id=vm_veil_data['id'], name=vm_veil_data['verbose_name'], node=node)
                     vm_type_list.append(vm_type)
-                    print('vm_type.veil_info', vm_type.veil_info)
+                    #print('vm_type.veil_info', vm_type.veil_info)
         else:
             raise SimpleError('cluster_id и node_id должны быть либо оба одновременно указаны, либо оба не указаны')
 
-        # # sorting
-        # if ordering:
-        #     if ordering == 'name':
-        #         def sort_lam(vm_type):
-        #             return vm_type.name if vm_type.name else DEFAULT_NAME
-        #     elif ordering == 'node':
-        #         def sort_lam(vm_type):
-        #             return vm_type.node.management_ip if vm_type.node.management_ip else DEFAULT_NAME
-        #     elif ordering == 'template':
-        #         def sort_lam(vm_type):
-        #             return vm_type.template.name if vm_type.template else DEFAULT_NAME
-        #     elif ordering == 'status':
-        #         def sort_lam(vm_type):
-        #             return vm_type.status if vm_type and vm_type.status else DEFAULT_NAME
-        #     else:
-        #         raise SimpleError('Неверный параметр сортировки')
-        #     reverse = reversed_order if reversed_order is not None else False
-        #     vm_type_list = sorted(vm_type_list, key=sort_lam, reverse=reverse)
+        # sorting
+        if ordering:
+            if ordering == 'name':
+                def sort_lam(vm_type):
+                    return vm_type.name if vm_type.name else DEFAULT_NAME
+            elif ordering == 'node':
+                for vm_type in vm_type_list:
+                    await vm_type.node.determine_management_ip()
+                def sort_lam(vm_type):
+                    #print('vm_type.node.management_ip', vm_type.node.management_ip)
+                    return vm_type.node.management_ip if vm_type.node.management_ip else DEFAULT_NAME
+            elif ordering == 'template':
+                def sort_lam(vm_type):
+                    print('vm_type.template.name', vm_type.template.name)
+                    return vm_type.template.name if vm_type.template else DEFAULT_NAME
+            elif ordering == 'status':
+                def sort_lam(vm_type):
+                    return vm_type.status if vm_type and vm_type.status else DEFAULT_NAME
+            else:
+                raise SimpleError('Неверный параметр сортировки')
+            reverse = reversed_order if reversed_order is not None else False
+            vm_type_list = sorted(vm_type_list, key=sort_lam, reverse=reverse)
 
         return vm_type_list
 

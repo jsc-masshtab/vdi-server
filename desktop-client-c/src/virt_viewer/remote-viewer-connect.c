@@ -29,11 +29,53 @@
 
 #include <ctype.h>
 
+#include <async.h>
+#include <vdi_api_session.h>
+
 
 extern gboolean opt_manual_mode;
 extern gboolean take_extern_credentials;
 
 static gboolean b_save_credentials_to_file = FALSE;
+
+typedef struct
+{
+    GMainLoop *loop;
+
+    GtkWidget *address_entry;
+    GtkWidget *port_entry;
+    GtkWidget *login_entry;
+    GtkWidget *password_entry;
+
+    GtkResponseType dialog_window_response;
+
+    gboolean response;
+} RemoteViewerData;
+
+static void
+shutdown_loop(GMainLoop *loop)
+{
+    if (g_main_loop_is_running(loop))
+        g_main_loop_quit(loop);
+}
+
+// token fetch callback
+static void on_get_vdi_token_finished(GObject *source_object G_GNUC_UNUSED,
+                                      GAsyncResult *res,
+                                      gpointer user_data)
+{
+    RemoteViewerData *ci = user_data;
+
+    GError *error = NULL;
+    gboolean token_refreshed = g_task_propagate_boolean(G_TASK(res), &error);
+    printf("%s: is_token_refreshed %i\n", (const char *)__func__, token_refreshed);
+
+    if (token_refreshed) {
+        ci->response = TRUE;
+        ci->dialog_window_response = GTK_RESPONSE_OK;
+        shutdown_loop(ci->loop);
+    }
+}
 
 // Перехватывается событие ввода текста. Игнорируется, если есть нецифры
 static void
@@ -58,15 +100,8 @@ on_remember_checkbutton_clicked(GtkCheckButton *check_button,
     b_save_credentials_to_file = gtk_toggle_button_get_active((GtkToggleButton *)check_button);
 }
 
-static void
-shutdown_loop(GMainLoop *loop)
-{
-    if (g_main_loop_is_running(loop))
-        g_main_loop_quit(loop);
-}
-
 static gboolean
-window_deleted_cb(ConnectionInfo *ci)
+window_deleted_cb(RemoteViewerData *ci)
 {
     ci->response = FALSE;
     ci->dialog_window_response = GTK_RESPONSE_CLOSE;
@@ -95,18 +130,30 @@ key_pressed_cb(GtkWidget *widget G_GNUC_UNUSED, GdkEvent *event, gpointer data)
 static void
 connect_button_clicked_cb(GtkButton *button G_GNUC_UNUSED, gpointer data)
 {
-    printf("connect_button_clicked_cb\n");
-    ConnectionInfo *ci = data;
-    if (gtk_entry_get_text_length(GTK_ENTRY(ci->entry)) > 0)
-    {
-        ci->response = TRUE;
-        ci->dialog_window_response = GTK_RESPONSE_OK;
-        shutdown_loop(ci->loop);
+    RemoteViewerData *ci = data;
+
+    if (gtk_entry_get_text_length(GTK_ENTRY(ci->address_entry)) > 0) {
+        // In manual mode we shudown the loop.
+        if (opt_manual_mode) {
+            ci->response = TRUE;
+            ci->dialog_window_response = GTK_RESPONSE_OK;
+            shutdown_loop(ci->loop);
+        } else {
+            // set credential for connection to VDI server
+            const gchar *ip = gtk_entry_get_text(GTK_ENTRY(ci->address_entry));
+            const gchar *port = gtk_entry_get_text(GTK_ENTRY(ci->port_entry));
+            const gchar *user = gtk_entry_get_text(GTK_ENTRY(ci->login_entry));
+            const gchar *password = gtk_entry_get_text(GTK_ENTRY(ci->password_entry));
+
+            set_vdi_credentials(user, password, ip, port);
+            // fetch token task starting
+            execute_async_task(get_vdi_token, on_get_vdi_token_finished, NULL, data);
+        }
     }
 }
 
 static void
-connect_dialog_run(ConnectionInfo *ci)
+connect_dialog_run(RemoteViewerData *ci)
 {
     ci->loop = g_main_loop_new(NULL, FALSE);
     g_main_loop_run(ci->loop);
@@ -146,8 +193,8 @@ entry_focus_in_cb(GtkWidget *widget G_GNUC_UNUSED, GdkEvent *event G_GNUC_UNUSED
 static void
 entry_activated_cb(GtkEntry *entry G_GNUC_UNUSED, gpointer data)
 {
-    ConnectionInfo *ci = data;
-    if (gtk_entry_get_text_length(GTK_ENTRY(ci->entry)) > 0)
+    RemoteViewerData *ci = data;
+    if (gtk_entry_get_text_length(GTK_ENTRY(ci->address_entry)) > 0)
     {
         ci->response = TRUE;
         shutdown_loop(ci->loop);
@@ -176,7 +223,7 @@ recent_selection_changed_dialog_cb(GtkRecentChooser *chooser, gpointer data)
 static void
 recent_item_activated_dialog_cb(GtkRecentChooser *chooser G_GNUC_UNUSED, gpointer data)
 {
-    ConnectionInfo *ci = data;
+    RemoteViewerData *ci = data;
     ci->response = TRUE;
     shutdown_loop(ci->loop);
 }
@@ -201,25 +248,36 @@ make_label_small(GtkLabel* label)
 * @return FALSE if Cancel is pressed or dialog is closed
 */
 
+//typedef struct
+//{
+//    GMainLoop *loop;
+
+//    GtkWidget *address_entry;
+//    GtkWidget *port_entry;
+//    GtkWidget *login_entry;
+//    GtkWidget *password_entry;
+
+//    GtkResponseType dialog_window_response;
+
+//    gboolean response;
+//} RemoteViewerData;
 gboolean
-remote_viewer_connect_dialog(GtkWindow *main_window, gchar **uri, gchar **user, gchar **password,
-                             gchar **ip, gchar **port) {
+remote_viewer_connect_dialog(GtkWindow *main_window G_GNUC_UNUSED, gchar **uri, gchar **user, gchar **password,
+                             gchar **ip, gchar **port)
+{
 
     // set params save group
     const gchar *paramToFileGrpoup = opt_manual_mode ? "RemoteViewerConnectManual" : "RemoteViewerConnect";
 
-    GtkWidget *window, /* *label,*/ *entry, *port_entry, *login_entry, *password_entry, /**recent,*/
+    GtkWidget *window, *address_entry, *port_entry, *login_entry, *password_entry,
             *connect_button/*, *cancel_button*/, *veil_image, *remember_checkbutton;
     GtkRecentFilter *rfilter;
     GtkBuilder *builder;
     gboolean active;
 
-    ConnectionInfo ci = {
-            FALSE,
-            NULL,
-            NULL,
-            GTK_RESPONSE_CANCEL
-    };
+    RemoteViewerData ci;
+    ci.response = FALSE;
+    ci.dialog_window_response = GTK_RESPONSE_CANCEL;
 
     take_extern_credentials = TRUE;
 
@@ -234,16 +292,16 @@ remote_viewer_connect_dialog(GtkWindow *main_window, gchar **uri, gchar **user, 
     //gtk_window_set_transient_for(GTK_WINDOW(window), main_window);
     connect_button = GTK_WIDGET(gtk_builder_get_object(builder, "connect-button"));
 
-    entry = ci.entry = GTK_WIDGET(gtk_builder_get_object(builder, "connection-address-entry"));
+    address_entry = ci.address_entry = GTK_WIDGET(gtk_builder_get_object(builder, "connection-address-entry"));
     const gchar *ip_str_from_config_file = read_from_settings_file(paramToFileGrpoup, "ip");
     if(ip_str_from_config_file)
-        gtk_entry_set_text(GTK_ENTRY(entry), ip_str_from_config_file);
+        gtk_entry_set_text(GTK_ENTRY(address_entry), ip_str_from_config_file);
 
-    active = (gtk_entry_get_text_length(GTK_ENTRY(ci.entry)) > 0);
+    active = (gtk_entry_get_text_length(GTK_ENTRY(address_entry)) > 0);
     gtk_widget_set_sensitive(GTK_WIDGET(connect_button), active);
 
     // port entry
-    port_entry = GTK_WIDGET(gtk_builder_get_object(builder, "connection-port-entry"));
+    port_entry = ci.port_entry = GTK_WIDGET(gtk_builder_get_object(builder, "connection-port-entry"));
     const gchar *port_str_from_config_file = read_from_settings_file(paramToFileGrpoup, "port");
     if(port_str_from_config_file)
         gtk_entry_set_text(GTK_ENTRY(port_entry), port_str_from_config_file);
@@ -259,15 +317,15 @@ remote_viewer_connect_dialog(GtkWindow *main_window, gchar **uri, gchar **user, 
             VIRT_VIEWER_RESOURCE_PREFIX"/icons/content/img/veil-32x32.png");
 
     // password entry
-    password_entry = GTK_WIDGET(gtk_builder_get_object(builder, "password-entry"));
+    password_entry = ci.password_entry = GTK_WIDGET(gtk_builder_get_object(builder, "password-entry"));
     gchar *password_from_settings_file = read_from_settings_file(paramToFileGrpoup, "password");
     if(password_from_settings_file){
         gtk_entry_set_text(GTK_ENTRY(password_entry), password_from_settings_file);
     }
 
     // login entry
-    login_entry = GTK_WIDGET(gtk_builder_get_object(builder, "login-entry"));
-    gtk_widget_set_sensitive(GTK_ENTRY(login_entry), !opt_manual_mode);
+    login_entry = ci.login_entry = GTK_WIDGET(gtk_builder_get_object(builder, "login-entry"));
+    gtk_widget_set_sensitive(login_entry, !opt_manual_mode);
 
     if (!opt_manual_mode) {
         gchar *user_from_settings_file = read_from_settings_file(paramToFileGrpoup, "username");
@@ -291,10 +349,8 @@ remote_viewer_connect_dialog(GtkWindow *main_window, gchar **uri, gchar **user, 
 
    // g_signal_connect(entry, "activate",
      //                G_CALLBACK(entry_activated_cb), &ci);
-    g_signal_connect(entry, "changed",
-                     G_CALLBACK(entry_changed_cb), connect_button);
-    g_signal_connect(entry, "icon-release",
-                     G_CALLBACK(entry_icon_release_cb), entry);
+    g_signal_connect(address_entry, "changed", G_CALLBACK(entry_changed_cb), connect_button);
+    g_signal_connect(address_entry, "icon-release", G_CALLBACK(entry_icon_release_cb), address_entry);
 
     g_signal_connect(remember_checkbutton, "clicked",
             G_CALLBACK(on_remember_checkbutton_clicked), remember_checkbutton);
@@ -317,7 +373,7 @@ remote_viewer_connect_dialog(GtkWindow *main_window, gchar **uri, gchar **user, 
 
     // collect data from gui form
     if (ci.response == TRUE) {
-        *ip = g_strdup(gtk_entry_get_text(GTK_ENTRY(entry)));
+        *ip = g_strdup(gtk_entry_get_text(GTK_ENTRY(address_entry)));
         *port = g_strdup(gtk_entry_get_text(GTK_ENTRY(port_entry)));
         *uri = g_strconcat("spice://", *ip, ":", *port, NULL);
         g_strstrip(*uri);

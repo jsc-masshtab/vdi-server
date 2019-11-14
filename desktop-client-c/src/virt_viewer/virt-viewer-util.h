@@ -44,7 +44,6 @@ typedef struct
 {
     gboolean response;
     GMainLoop *loop;
-    GtkWidget *entry;
     GtkResponseType dialog_window_response;
 } ConnectionInfo;
 
