@@ -386,7 +386,6 @@ class AddVmsToStaticPool(graphene.Mutation):
         if not vm_ids:
             raise SimpleError("Список ВМ не должен быть пустым")
 
-        # todo: Запрос к модели статич. пула
         pool_data = await Pool.select('controller', 'node_id').where(Pool.pool_id == pool_id).gino.first()
         (controller_id, node_id) = pool_data
         controller_address = await Controller.select('address').where(Controller.id == controller_id).gino.scalar()
@@ -429,11 +428,6 @@ class RemoveVmsFromStaticPool(graphene.Mutation):
         if not vm_ids:
             raise SimpleError("Список ВМ не должен быть пустым")
 
-        # # TODO: этот код можно заменить стандартным валидатором, если переименовать входящее значение с pool_id на id.
-        # pool_object = await Pool.get_pool(pool_id)
-        # if not pool_object:
-        #     raise SimpleError('Пул {} не существует'.format(pool_id))
-
         # vms check
         # get list of vms ids which are in pool_id
         vms_ids_in_pool = await Vm.get_vms_ids_in_pool(pool_id)
@@ -452,7 +446,21 @@ class RemoveVmsFromStaticPool(graphene.Mutation):
         }
 
 
-# TODO: update StaticPool
+class UpdateStaticPoolMutation(graphene.Mutation, PoolValidator):
+    """ """
+    class Arguments:
+        id = graphene.UUID(required=True)
+        verbose_name = graphene.String()
+
+    ok = graphene.Boolean()
+
+    @classmethod
+    async def mutate(cls, _root, _info, **kwargs):
+        await cls.validate_agruments(**kwargs)
+        ok = await StaticPool.soft_update(kwargs['id'], kwargs.get('verbose_name'))
+        return UpdateStaticPoolMutation(ok=ok)
+
+
 # --- --- --- --- ---
 # Automated (Dynamic) pool mutations
 class CreateAutomatedPoolMutation(graphene.Mutation, PoolValidator):
@@ -524,10 +532,11 @@ class UpdateAutomatedPoolMutation(graphene.Mutation, PoolValidator):
 class PoolMutations(graphene.ObjectType):
     addDynamicPool = CreateAutomatedPoolMutation.Field()
     addStaticPool = CreateStaticPoolMutation.Field()
-    addVmsToStaticPool = AddVmsToStaticPool.Field()  # TODO: а это точно должно быть тут, а не в Vm?
-    removeVmsFromStaticPool = RemoveVmsFromStaticPool.Field()  # TODO: а это точно должно быть тут, а не в Vm?
+    addVmsToStaticPool = AddVmsToStaticPool.Field()
+    removeVmsFromStaticPool = RemoveVmsFromStaticPool.Field()
     removePool = DeletePoolMutation.Field()
     updateDynamicPool = UpdateAutomatedPoolMutation.Field()
+    updateStaticPool = UpdateStaticPoolMutation.Field()
 
 
 pool_schema = graphene.Schema(query=PoolQuery,

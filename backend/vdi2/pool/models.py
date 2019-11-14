@@ -281,6 +281,13 @@ class StaticPool(db.Model):
     async def deactivate(self):
         return await Pool.deactivate(self.static_pool_id)
 
+    @classmethod
+    async def soft_update(cls, id, verbose_name):
+        async with db.transaction() as tx:
+            await Pool.update.values(verbose_name=verbose_name).where(
+                Pool.id == id).gino.status()
+        return True
+
 
 class AutomatedPool(db.Model):
     """
