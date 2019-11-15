@@ -85,9 +85,9 @@ class VmHttpClient(VeilHttpClient):
         resources_list_data = await self.fetch_with_response(url=url, method='GET')
         all_vms_list = resources_list_data['results']
 
-        # filter bu cluster
-        if cluster_id:
-            all_vms_list = list(filter(lambda vm: vm['cluster'] == cluster_id, all_vms_list))
+        # # filter bu cluster
+        # if cluster_id:
+        #     all_vms_list = list(filter(lambda vm: vm['cluster'] == cluster_id, all_vms_list))
         return all_vms_list
 
     async def fetch_vms_list(self, node_id: str = None, cluster_id: str = None,
