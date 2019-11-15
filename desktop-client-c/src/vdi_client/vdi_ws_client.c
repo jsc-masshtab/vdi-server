@@ -57,12 +57,15 @@ static void async_create_ws_connect(GTask         *task G_GNUC_UNUSED,
 
         // make handshake
         guint status = soup_session_send_message(vdi_ws_client->ws_soup_session, ws_msg);
-        //printf("WS: %s: HANDSHAKE %i \n", (const char *)__func__, status);
+
         if (vdi_ws_client->stream == NULL) {
             g_idle_add((GSourceFunc)vdi_ws_client->ws_data_received_callback, (gpointer)FALSE); // notify GUI
             // try to reconnect (go to another loop)
             cancellable_sleep(TIMEOUT, !vdi_ws_client->is_running);
             continue;
+        } else {
+            printf("WS: %s: SUCCESSFUL HANDSHAKE %i \n", (const char *)__func__, status);
+            g_idle_add((GSourceFunc)vdi_ws_client->ws_data_received_callback, (gpointer)TRUE);
         }
 
         GInputStream *inputStream = g_io_stream_get_input_stream(vdi_ws_client->stream);

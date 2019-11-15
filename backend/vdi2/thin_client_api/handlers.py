@@ -123,9 +123,9 @@ class ActionOnVm(BaseHandler, ABC):
 
 class ThinClientWsHandler(websocket.WebSocketHandler):
 
-    def __init__(self, application: Application, request: httputil.HTTPServerRequest, **kwargs: Any):
-        websocket.WebSocketHandler.__init__(self, application, request, **kwargs)
-        print('init')
+    # def __init__(self, application: Application, request: httputil.HTTPServerRequest, **kwargs: Any):
+    #     websocket.WebSocketHandler.__init__(self, application, request, **kwargs)
+    #     print('init')
 
     # todo: security problems. implement proper origin checking
     def check_origin(self, origin):
