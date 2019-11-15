@@ -161,6 +161,11 @@ const gchar *get_vdi_ip()
     return vdiSession.vdi_ip;
 }
 
+const gchar *get_vdi_port(void)
+{
+    return vdiSession.vdi_port;
+}
+
 void cancell_pending_requests()
 {
     soup_session_abort(vdiSession.soup_session);
