@@ -153,7 +153,7 @@ class Pool(db.Model):
         # TODO: добавить вывод типа OS у VM
         # TODO: добавить вывод состояния пула
         # TODO: ограничение по списку пулов для пользователя
-        pools = await Pool.select('pool_id', 'verbose_name').gino.all()
+        pools = await Pool.select('pool_id', 'verbose_name').where(Pool.status != Status.DELETING).gino.all()
         ans = list()
         for pool in pools:
             ans_d = dict()
