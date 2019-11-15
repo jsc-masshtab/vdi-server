@@ -12,9 +12,7 @@ class BaseHandler(RequestHandler, ABC):
     args = dict()
 
     def prepare(self):
-        # TODO: нужно добавить заголовок на тонком клиенте, чтобы явно обрабатывать запросы.
-        # if self.request.headers.get('Content-Type') == 'application/json' and self.request.body:
-        if self.request.body:
+        if self.request.headers.get('Content-Type') == 'application/json' and self.request.body:
             self.args = json_decode(self.request.body)
 
     def get_current_user(self):
