@@ -2,6 +2,12 @@
 from abc import ABC
 import json
 
+from tornado import websocket
+from  tornado.web import Application
+from tornado import gen, httpclient, httputil
+
+from typing import Any
+
 from common.veil_handlers import BaseHandler
 from auth.utils.veil_jwt import jwtauth, encode_jwt, refresh_access_token_with_expire_check as refresh_access_token
 from pool.models import Pool, Vm, AutomatedPool
@@ -114,3 +120,13 @@ class ActionOnVm(BaseHandler, ABC):
         await client.send_action(action=vm_action, body=self.args)
         return await self.finish({'error': 'null'})
 
+
+class ThinClientWsHandler(websocket.WebSocketHandler):
+
+    def __init__(self, application: Application, request: httputil.HTTPServerRequest, **kwargs: Any):
+        websocket.WebSocketHandler.__init__(self, application, request, **kwargs)
+        print('init')
+
+    # todo: security problems. implement proper origin checking
+    def check_origin(self, origin):
+        return True
