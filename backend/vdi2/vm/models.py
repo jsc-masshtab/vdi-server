@@ -44,7 +44,7 @@ class Vm(db.Model):
 
     @staticmethod
     async def free_vm(vm_id):
-        return await Vm.update.values(username=None).where(Vm.vm_id == vm_id).gino.status()
+        return await Vm.update.values(username=None).where(Vm.id == vm_id).gino.status()
 
     @staticmethod
     async def get_vm_id(pool_id, username):

@@ -163,7 +163,7 @@ class ResourcesMonitor(AbstractMonitor):
     async def _on_message_received(self, message):
         try:
             json_data = json.loads(message)
-            print(__class__.__name__, 'msg received', json_data)
+            print(__class__.__name__, 'msg received from {}:'.format(self._controller_ip), json_data)
         except JSONDecodeError:
             return
         #  notify subscribed observers

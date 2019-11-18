@@ -519,9 +519,8 @@ class PoolUsers(db.Model):
     pool_id = db.Column(UUID(), db.ForeignKey('pool.pool_id'))
     user_id = db.Column(UUID(), db.ForeignKey('user.id'))
 
-    # TODO: rewrite
-    @staticmethod  # todo: not checked
-    async def check_row_exists(pool_id, username):
-        row = await PoolUsers.select().where((PoolUsers.username == username) and
+    @staticmethod
+    async def check_row_exists(pool_id, user_id):
+        row = await PoolUsers.select().where((PoolUsers.user_id == user_id) and
                                              (PoolUsers.pool_id == pool_id)).gino.all()
         return row
