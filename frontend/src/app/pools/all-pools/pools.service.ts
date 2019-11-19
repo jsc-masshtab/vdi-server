@@ -36,7 +36,7 @@ export class PoolsService {
         let obs$ = timer(0, 60000);
         return obs$.pipe(switchMap(() => {
             return this.service.watchQuery({
-                query: gql` query allPools($ordering:String, $reversed_order: Boolean) {
+                query: gql` query pools($ordering:String, $reversed_order: Boolean) {
                                 pools(ordering: $ordering, reversed_order: $reversed_order) {
                                     id
                                     name

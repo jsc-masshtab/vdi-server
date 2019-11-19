@@ -97,15 +97,31 @@ export class AppModule {
               private httpLink: HttpLink,
               private errorService: ErrorsService,
               private waitService: WaitService,
-              private ws: WebsocketService) {
+              private ws: WebsocketService
+              ) {
 
     library.add(faDesktop, faDatabase, faLayerGroup, faPlusCircle, faMinusCircle, faSpinner, faServer, faCog, faChevronUp, faTimesCircle,
                 faFolderOpen, faStar, faTv, faSyncAlt, faBuilding, faTrashAlt, faUsers, faMeh, faChartBar, faUser,
                 faStopCircle, faPlayCircle, faPauseCircle, faEdit, faQuestionCircle, faCheckSquare, faExclamationTriangle, faHeartbeat,
                 faChevronCircleUp, faComment);
 
-    const uri = environment.url;
-    const link = this.httpLink.create({ uri, includeQuery: true, includeExtensions: false });
+    const url = environment.url;
+
+    const link = this.httpLink.create( { uri(operation) {
+      let urlKnock: string = '';
+      console.log(operation);
+      switch (operation.operationName) {
+        case 'controllers':
+          urlKnock = `${url + 'controllers'}`;
+          break;
+        case 'pools':
+          urlKnock = `${url + 'pools'}`;
+          break;
+        default:
+          urlKnock = `${url}`;
+      }
+      return urlKnock;
+    }, includeQuery: true, includeExtensions: false} );
 
     const errorLink = onError(({ graphQLErrors, networkError }) => {
       if (graphQLErrors) {

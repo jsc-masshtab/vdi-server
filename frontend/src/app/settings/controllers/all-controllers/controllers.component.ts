@@ -18,7 +18,7 @@ export class ControllersComponent implements OnInit, OnDestroy{
   public collection: object[] = [
     {
       title: 'IP адрес',
-      property: 'ip',
+      property: 'address',
       class: 'name-start',
       icon: 'building',
       type: 'string',
