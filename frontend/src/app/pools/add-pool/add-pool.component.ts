@@ -147,13 +147,7 @@ export class PoolAddComponent implements OnInit, OnDestroy {
   private getTemplates(ipController: string): void  {
     this.pending.templates = true;
     this.addPoolService.getAllTemplates(ipController).valueChanges.pipe(map(data => data.data.controller.templates)).subscribe((data) => {
-      this.templates = data.map((item) => {
-        const parse = JSON.parse(item.info);
-        return {
-          id: parse.id,
-          verbose_name: parse.verbose_name
-        };
-      });
+      this.templates = data;
       this.pending.templates = false;
     }, () => {
       this.pending.templates = false;
@@ -230,7 +224,7 @@ export class PoolAddComponent implements OnInit, OnDestroy {
   }
 
   public selectController(value: ISelectValue): void  {
-    this.ipController = value.value.ip;
+    this.ipController = value.value.address;
     this.getTemplates(this.ipController);
     this.getClusters(this.ipController);
     this.createPoolForm.get('controller_ip').setValue(this.ipController);

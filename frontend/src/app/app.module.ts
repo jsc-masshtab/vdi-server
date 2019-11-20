@@ -117,6 +117,12 @@ export class AppModule {
         case 'pools':
           urlKnock = `${url + 'pools'}`;
           break;
+        case 'resources':
+          urlKnock = `${url + 'resources'}`;
+          break;
+        case 'vms':
+          urlKnock = `${url + 'vms'}`;
+          break;
         default:
           urlKnock = `${url}`;
       }

@@ -47,7 +47,7 @@
         <mat-label  *ngIf="!controllers.length && !pending.controllers">- нет контроллера -</mat-label>
         <mat-select (selectionChange)="selectController($event)">
           <mat-option *ngFor="let controller of controllers" [value]="controller">
-            {{controller.ip}}
+            {{controller.address}}
           </mat-option>
         </mat-select>
       </mat-form-field>

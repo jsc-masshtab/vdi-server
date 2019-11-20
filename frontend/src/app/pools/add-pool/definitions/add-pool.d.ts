@@ -11,7 +11,7 @@ export interface ISelectValue {
     value: {
         id?: string;
         verbose_name?: string;
-        ip?: string;
+        address?: string;
     }
 }
 

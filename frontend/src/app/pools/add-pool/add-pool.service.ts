@@ -104,30 +104,27 @@ export class AddPoolService {
         });
     }
 
-    public getAllTemplates(ip: string): QueryRef<any, any> {
-        const ipController = ip;
+    public getAllTemplates(controller_ip: string): QueryRef<any, any> {
         return  this.service.watchQuery({
-            query:  gql` query allTemplates($ip: String) {
-                                controller(ip: $ip) {
-                                    templates {
-                                        info
-                                    }
+            query:  gql` query vms($controller_ip: String) {
+                                templates(controller_ip: $controller_ip) {
+                                    id
+                                    verbose_name
                                 }
                             }
                         `,
             variables: {
                 method: 'GET',
-                ip: ipController
+                controller_ip
             }
         });
     }
 
-    public getAllControllers(): QueryRef<any, any> {
+    public getAllControllers(): QueryRef<any, any> { // +
         return  this.service.watchQuery({
-            query:  gql` query allControllers {
+            query:  gql` query controllers {
                             controllers {
-                                ip
-                                description
+                                address
                             }
                         }
                     `,
