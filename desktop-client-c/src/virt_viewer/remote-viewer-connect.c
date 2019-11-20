@@ -48,6 +48,8 @@ typedef struct
     GtkWidget *password_entry;
 
     GtkWidget *connect_button;
+    GtkWidget *connect_spinner;
+    GtkWidget *message_display_label;
 
     GtkResponseType dialog_window_response;
 
@@ -72,6 +74,9 @@ static void on_get_vdi_token_finished(GObject *source_object G_GNUC_UNUSED,
     gboolean token_refreshed = g_task_propagate_boolean(G_TASK(res), &error);
     printf("%s: is_token_refreshed %i\n", (const char *)__func__, token_refreshed);
 
+    // stop connect spinner
+    gtk_spinner_stop((GtkSpinner *)ci->connect_spinner);
+
     // enable connect button if address_entry is not empty
     if (gtk_entry_get_text_length(GTK_ENTRY(ci->address_entry)) > 0)
         gtk_widget_set_sensitive(GTK_WIDGET(ci->connect_button), TRUE);
@@ -80,6 +85,10 @@ static void on_get_vdi_token_finished(GObject *source_object G_GNUC_UNUSED,
         ci->response = TRUE;
         ci->dialog_window_response = GTK_RESPONSE_OK;
         shutdown_loop(ci->loop);
+    } else {
+        gchar *message_str = g_strdup("<span color=\"red\"> Не удалось авторизоваться</span>");
+        gtk_label_set_markup(GTK_LABEL(ci->message_display_label), message_str);
+        g_free(message_str);
     }
 }
 
@@ -152,9 +161,14 @@ connect_button_clicked_cb(GtkButton *button G_GNUC_UNUSED, gpointer data)
             const gchar *password = gtk_entry_get_text(GTK_ENTRY(ci->password_entry));
             set_vdi_credentials(user, password, ip, port);
 
+            // clear message display
+            gtk_label_set_text(GTK_LABEL(ci->message_display_label), " ");
+
             // disable connect button
             gtk_widget_set_sensitive(GTK_WIDGET(ci->connect_button), FALSE);
 
+            // start connect spinner
+            gtk_spinner_start((GtkSpinner *)ci->connect_spinner);
 
             // fetch token task starting
             execute_async_task(get_vdi_token, on_get_vdi_token_finished, NULL, data);
@@ -287,6 +301,10 @@ remote_viewer_connect_dialog(GtkWindow *main_window G_GNUC_UNUSED, gchar **uri, 
     gtk_window_set_resizable (GTK_WINDOW(window), FALSE);
     //gtk_window_set_transient_for(GTK_WINDOW(window), main_window);
     connect_button = ci.connect_button = GTK_WIDGET(gtk_builder_get_object(builder, "connect-button"));
+
+    ci.connect_spinner = GTK_WIDGET(gtk_builder_get_object(builder, "connect-spinner"));
+
+    ci.message_display_label = GTK_WIDGET(gtk_builder_get_object(builder, "message-display-label"));
 
     address_entry = ci.address_entry = GTK_WIDGET(gtk_builder_get_object(builder, "connection-address-entry"));
     const gchar *ip_str_from_config_file = read_from_settings_file(paramToFileGrpoup, "ip");
