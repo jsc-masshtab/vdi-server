@@ -64,7 +64,6 @@ class VeilHttpClient:
             if http_error.code == 400:
                 raise BadRequest(body)
             elif http_error.code == 401:
-                await Controller.invalidate_auth(self.controller_id)
                 raise Unauthorized()
             elif http_error.code == 403:
                 raise Forbidden(body)

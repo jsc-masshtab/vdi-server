@@ -40,12 +40,14 @@ class Controller(db.Model):
 
     @staticmethod
     async def get_token(ip_address: str):
-        query = Controller.select('token', 'expires_on').where((Controller.address == ip_address))
-        token_info = await query.gino.scalar()
+        query = Controller.select('token', 'expires_on').where(Controller.address == ip_address)
+        token_info = await query.gino.first()
         if token_info:
             token, expires_on = token_info
-            if expires_on < datetime.now() or not token:
-                token = Controller.refresh_token(ip_address)
+            if not token or not expires_on:
+                token = await Controller.refresh_token(ip_address)
+            elif expires_on < datetime.now(expires_on.tzinfo):
+                token = await Controller.refresh_token(ip_address)
             return token
         else:
             raise AssertionError('No such controller')
@@ -61,7 +63,6 @@ class Controller(db.Model):
     async def refresh_token(ip_address: str):
         # TODO: error handling
         # TODO: set controller status to BAD_AUTH
-        # TODO: check if token already refreshed?
 
         query = Controller.select(
             'address',
