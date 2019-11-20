@@ -129,6 +129,8 @@ class RemoveControllerMutation(graphene.Mutation):
     ok = graphene.Boolean()
 
     async def mutate(self, _info, id):
+        # TODO: validate active connected resources
+
         controller = await Controller.query.where(Controller.id == id).gino.first()
         if not controller:
             raise GraphQLError('No such controller.')

@@ -37,36 +37,38 @@ class Controller(db.Model):
         # controller = await Controller.query.where(Controller.address == ip_address).gino.first()
         return await Controller.select('id').where(Controller.address == ip_address).gino.scalar()
 
+
     @staticmethod
-    async def get_token(uid: str):
-        query = Controller.select('token', 'expires_on').where((Controller.id == uid))
+    async def get_token(ip_address: str):
+        query = Controller.select('token', 'expires_on').where((Controller.address == ip_address))
         token_info = await query.gino.scalar()
         if token_info:
             token, expires_on = token_info
             if expires_on < datetime.now() or not token:
-                token = Controller.refresh_token(uid)
+                token = Controller.refresh_token(ip_address)
             return token
         else:
             raise AssertionError('No such controller')
 
     @staticmethod
-    async def invalidate_auth(uid: str):
+    async def invalidate_auth(ip_address: str):
         return await Controller.update.values(
             token=None,
             expires_on=datetime.utcfromtimestamp(0)
-        ).where(Controller.id == uid).gino.status()
+        ).where(Controller.address == ip_address).gino.status()
 
     @staticmethod
-    async def refresh_token(uid: str):
+    async def refresh_token(ip_address: str):
         # TODO: error handling
         # TODO: set controller status to BAD_AUTH
+        # TODO: check if token already refreshed?
 
         query = Controller.select(
             'address',
             'username',
             'password',
             'ldap_connection'
-        ).where(Controller.id == uid)
+        ).where(Controller.address == ip_address)
 
         controller = await query.gino.first()
         if controller:
@@ -78,7 +80,7 @@ class Controller(db.Model):
             await Controller.update.values(
                 token=token,
                 expires_on=expires_on
-            ).where(Controller.id == uid).gino.status()
+            ).where(Controller.address == ip_address).gino.status()
             return token
         else:
             raise AssertionError('No such controller')

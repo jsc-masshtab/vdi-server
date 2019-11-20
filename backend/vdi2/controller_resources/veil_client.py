@@ -27,16 +27,16 @@ class ResourcesHttpClient(VeilHttpClient):
         return self
 
     @cached_property
-    def based_url(self):
+    def api_url(self):
         return 'http://{}/api/'.format(self.controller_ip)
 
     async def fetch_resources_usage(self, resource_category_name: str, resource_id: str):
-        url = self.based_url + '{}/{}/usage/'.format(resource_category_name, resource_id)
+        url = self.api_url + '{}/{}/usage/'.format(resource_category_name, resource_id)
         return await self.fetch_with_response(url=url, method='GET')
 
     async def fetch_resource(self, resource_category: str, resource_id: str):
         """Get veil resource data"""
-        url = self.based_url + '{}/{}/'.format(resource_category, resource_id)
+        url = self.api_url + '{}/{}/'.format(resource_category, resource_id)
         return await self.fetch_with_response(url=url, method='GET')
 
     async def fetch_node(self, node_id: str):
@@ -50,7 +50,7 @@ class ResourcesHttpClient(VeilHttpClient):
 
     async def check_controller(self):
         """check if controller accesseble"""
-        url = self.based_url + '/controllers/check/'
+        url = self.api_url + '/controllers/check/'
         await self.fetch(url=url, method='GET')
 
     # async def discover_controllers(self, return_broken: bool):
@@ -108,7 +108,7 @@ class ResourcesHttpClient(VeilHttpClient):
     async def fetch_resources_list(self, resource_category: str,
                                    ordering: str = None, reversed_order: bool = None, custom_url_vars: dict = None):
         """Get veil resources data list """
-        url = self.based_url + '{}/?'.format(resource_category)
+        url = self.api_url + '{}/?'.format(resource_category)
 
         # apply url vars
         url_vars = {}

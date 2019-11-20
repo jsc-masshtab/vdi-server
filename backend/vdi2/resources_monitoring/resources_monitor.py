@@ -134,11 +134,6 @@ class ResourcesMonitor(AbstractMonitor):
         # get token
         try:
             token = await Controller.get_token(controller_uid)
-            if not token:
-                controller_client = await VeilHttpClient.create(self._controller_ip)
-                token = await controller_client.login()
-            if not token:
-                raise AssertionError('Empty token.')
         except Exception as E:
             print(E)
             return False
