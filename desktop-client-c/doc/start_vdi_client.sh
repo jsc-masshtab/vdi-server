@@ -5,21 +5,19 @@ ABSOLUTE_FILENAME=`readlink -e "$0"`
 
 DIRECTORY=`dirname "$ABSOLUTE_FILENAME"`
 
-#killall virt_viewer_veil
+#killall thin_client_veil
 
 
 #CURDATE=`date +%Y.%m.%d`
 #CURDATETIME=`date +%Y.%m.%d_%H.%M.%S`
-
-
 #LOGDIRWITHDATE="/logs/${CURDATE}/${CURDATETIME}"
 #LOGDIR="$DIRECTORY/logs"
 
-#mkdir -p "$LOGDIRWITHDATE"
-#rm -rf "$LOGDIR"
-#ln -s "$LOGDIRWITHDATE" "$LOGDIR"
+mkdir -p "$DIRECTORY/log"
 
 
 export LD_LIBRARY_PATH=$DIRECTORY/libs
+export GDK_PIXBUF_MODULEDIR=$DIRECTORY/pixbuf_loaders
 
+cd $DIRECTORY
 ./thin_client_veil $1
