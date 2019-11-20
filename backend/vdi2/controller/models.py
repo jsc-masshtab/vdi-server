@@ -1,16 +1,22 @@
 import uuid
-from sqlalchemy.dialects.postgresql import UUID
 from datetime import datetime
 
-from database import db, get_list_of_values_from_db
+from sqlalchemy.dialects.postgresql import UUID
+
 from auth.utils import crypto
+from controller.client import ControllerClient
+from database import db, get_list_of_values_from_db
+
+
+# TODO: validate token by expires_on parameter
+# TODO: validate status
 
 
 class Controller(db.Model):
     # TODO: indexes
     __tablename__ = 'controller'
     id = db.Column(UUID(), primary_key=True, default=uuid.uuid4)
-    verbose_name = db.Column(db.Unicode(length=128), nullable=False)
+    verbose_name = db.Column(db.Unicode(length=128), nullable=False, unique=True)
     status = db.Column(db.Unicode(length=128))
     address = db.Column(db.Unicode(length=15), nullable=False, unique=True)
     description = db.Column(db.Unicode(length=256))
@@ -31,37 +37,51 @@ class Controller(db.Model):
         # controller = await Controller.query.where(Controller.address == ip_address).gino.first()
         return await Controller.select('id').where(Controller.address == ip_address).gino.scalar()
 
-    @staticmethod
-    async def get_token(uid: str):
-        if not uid:
-            raise AssertionError('Empty uid.')
-        query = Controller.select('token').where(
-            (Controller.expires_on >= datetime.now()) & (Controller.id == uid))
-        return await query.gino.scalar()
 
     @staticmethod
-    async def get_auth_info(uid: str):
-        if not uid:
-            raise AssertionError('Empty uid.')
-        query = Controller.select('username', 'password', 'ldap_connection').where(Controller.id == uid)
-        auth_info = await query.gino.first()
-        username, encrypted_password, ldap_connection = auth_info
-        password = crypto.decrypt(encrypted_password)
-        return dict(username=username, password=password, ldap=ldap_connection)
+    async def get_token(ip_address: str):
+        query = Controller.select('token', 'expires_on').where(Controller.address == ip_address)
+        token_info = await query.gino.first()
+        if token_info:
+            token, expires_on = token_info
+            if not token or not expires_on:
+                token = await Controller.refresh_token(ip_address)
+            elif expires_on < datetime.now(expires_on.tzinfo):
+                token = await Controller.refresh_token(ip_address)
+            return token
+        else:
+            raise AssertionError('No such controller')
 
     @staticmethod
-    async def set_auth_info(uid: str, token: str, expires_on: str):
-        """Сделано через staticmethod, чтобы не хранить инстанс.
-        Гипотетически запись может измениться, пока мы получаем ответ. А так данные будут записываться по ip."""
-        if not uid:
-            raise AssertionError('Empty uid.')
-        expires_on = datetime.strptime(expires_on, '%d.%m.%Y %H:%M:%S %Z')
-        return await Controller.update.values(token=token, expires_on=expires_on).where(
-            Controller.id == uid).gino.status()
+    async def invalidate_auth(ip_address: str):
+        return await Controller.update.values(
+            token=None,
+            expires_on=datetime.utcfromtimestamp(0)
+        ).where(Controller.address == ip_address).gino.status()
 
     @staticmethod
-    async def invalidate_auth(uid: str):
-        if not uid:
-            raise AssertionError('Empty uid.')
-        return await Controller.update.values(token=None, expires_on=datetime.utcfromtimestamp(0)).where(
-            Controller.id == uid).gino.status()
+    async def refresh_token(ip_address: str):
+        # TODO: error handling
+        # TODO: set controller status to BAD_AUTH
+
+        query = Controller.select(
+            'address',
+            'username',
+            'password',
+            'ldap_connection'
+        ).where(Controller.address == ip_address)
+
+        controller = await query.gino.first()
+        if controller:
+            address, username, encrypted_password, ldap_connection = controller
+            password = crypto.decrypt(encrypted_password)
+            auth_info = dict(username=username, password=password, ldap=ldap_connection)
+            controller_client = ControllerClient(address)
+            token, expires_on = await controller_client.auth(auth_info=auth_info)
+            await Controller.update.values(
+                token=token,
+                expires_on=expires_on
+            ).where(Controller.address == ip_address).gino.status()
+            return token
+        else:
+            raise AssertionError('No such controller')

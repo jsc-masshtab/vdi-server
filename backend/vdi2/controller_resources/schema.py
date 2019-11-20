@@ -67,8 +67,8 @@ class ClusterType(graphene.ObjectType):
 
     async def resolve_vms(self, _info):
         vm_http_client = await VmHttpClient.create(self.controller.address, '')
-        vms_list = await vm_http_client.fetch_vms_list(cluster_id=self.id)
-        vm_type_list = VmQuery.veil_vm_data_to_graphene_type(vms_list, self.controller.address)
+        vm_veil_data_list = await vm_http_client.fetch_vms_list(cluster_id=self.id)
+        vm_type_list = VmQuery.veil_vm_data_to_graphene_type_list(vm_veil_data_list, self.controller.address)
         return vm_type_list
 
     async def resolve_templates(self, _info):

@@ -57,18 +57,21 @@ static void async_create_ws_connect(GTask         *task G_GNUC_UNUSED,
 
         // make handshake
         guint status = soup_session_send_message(vdi_ws_client->ws_soup_session, ws_msg);
-        //printf("WS: %s: HANDSHAKE %i \n", (const char *)__func__, status);
+
         if (vdi_ws_client->stream == NULL) {
             g_idle_add((GSourceFunc)vdi_ws_client->ws_data_received_callback, (gpointer)FALSE); // notify GUI
             // try to reconnect (go to another loop)
             cancellable_sleep(TIMEOUT, !vdi_ws_client->is_running);
             continue;
+        } else {
+            printf("WS: %s: SUCCESSFUL HANDSHAKE %i \n", (const char *)__func__, status);
+            g_idle_add((GSourceFunc)vdi_ws_client->ws_data_received_callback, (gpointer)TRUE);
         }
 
         GInputStream *inputStream = g_io_stream_get_input_stream(vdi_ws_client->stream);
 
-        gsize buffer_size = 5;
-        gchar *buffer = malloc(buffer_size * sizeof(gsize));
+        enum { buf_length = 2 };
+        gchar buffer[buf_length];
         gsize bytes_read = 0;
 
         const guint8 max_read_try = 3; // maximum amount of read tries
@@ -78,8 +81,8 @@ static void async_create_ws_connect(GTask         *task G_GNUC_UNUSED,
         while (vdi_ws_client->is_running && !g_io_stream_is_closed(vdi_ws_client->stream)) {
             GError *error = NULL;
             gboolean res = g_input_stream_read_all(inputStream,
-                                                   buffer,
-                                                   buffer_size, &bytes_read,
+                                                   &buffer,
+                                                   buf_length, &bytes_read,
                                                    vdi_ws_client->cancel_job, &error);
 //            if (error) {
 //                printf("WS: %i", error->code);
@@ -103,7 +106,7 @@ static void async_create_ws_connect(GTask         *task G_GNUC_UNUSED,
             cancellable_sleep(WS_READ_TIMEOUT, !vdi_ws_client->is_running); // sec
         }
 
-        free(buffer);
+        //free(buffer);
 
         // close stream
         if (vdi_ws_client->stream)
@@ -113,7 +116,7 @@ static void async_create_ws_connect(GTask         *task G_GNUC_UNUSED,
     g_mutex_unlock(&vdi_ws_client->lock);
 }
 
-void start_vdi_ws_polling(VdiWsClient *vdi_ws_client, const gchar *vdi_ip,
+void start_vdi_ws_polling(VdiWsClient *vdi_ws_client, const gchar *vdi_ip, const gchar *vdi_port,
                           WsDataReceivedCallback ws_data_received_callback)
 {
     printf("%s\n", (const char *)__func__);
@@ -122,7 +125,7 @@ void start_vdi_ws_polling(VdiWsClient *vdi_ws_client, const gchar *vdi_ip,
 
     vdi_ws_client->ws_data_received_callback = ws_data_received_callback;
     vdi_ws_client->test_int = 666;// temp trash test
-    vdi_ws_client->vdi_url = g_strdup_printf("http://%s/ws/client/vdi_server_check", vdi_ip);
+    vdi_ws_client->vdi_url = g_strdup_printf("http://%s:%s/ws/client/vdi_server_check", vdi_ip, vdi_port);
     vdi_ws_client->is_running = TRUE;
     vdi_ws_client->cancel_job = g_cancellable_new();
 

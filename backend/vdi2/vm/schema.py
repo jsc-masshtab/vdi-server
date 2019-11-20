@@ -23,6 +23,7 @@ from controller.models import Controller
 from controller.schema import ControllerType
 
 from auth.schema import UserType
+from auth.models import User
 
 
 class VmState(graphene.Enum):
@@ -156,9 +157,10 @@ class AssignVmToUser(graphene.Mutation):
             raise GraphQLError('ВМ не находится ни в одном из пулов')
 
         # check if the user is entitled to pool(pool_id) the vm belongs to
-        row_exists = await PoolUsers.check_row_exists(pool_id, username)
+        user_id = await User.get_id(username)
+        row_exists = await PoolUsers.check_row_exists(pool_id, user_id)
         if not row_exists:
-            # Requested user is not entitled to the pool the requested vm belong to
+            # Requested user is not entitled to the pool the requested vm belongs to
             raise GraphQLError('У пользователя нет прав на использование пула, которому принадлежит ВМ')
 
         # another vm in the pool may have this user as owner. Remove assignment
@@ -196,7 +198,7 @@ class VmQuery(graphene.ObjectType):
     template = graphene.Field(TemplateType, id=graphene.String(), controller_address=graphene.String())
     vm = graphene.Field(VmType, id=graphene.String(), controller_address=graphene.String())
 
-    templates = graphene.List(TemplateType, cluster_id=graphene.String(), node_id=graphene.String(),
+    templates = graphene.List(TemplateType, controller_ip=graphene.String(), cluster_id=graphene.String(), node_id=graphene.String(),
                               ordering=graphene.String())
 
     vms = graphene.List(VmType, controller_ip=graphene.String(), cluster_id=graphene.String(),

@@ -33,11 +33,11 @@ JWT_ALGORITHM = 'HS256'
 
 # Websocket settings
 # -----------------------------
-WS_PING_INTERVAL = 1  # TODO: изменить на 6, после доработки на стороне тонкого клиента.
+WS_PING_INTERVAL = 6
+WS_PING_TIMEOUT = 300
 
 # ECP Veil settings
 # -----------------------------
-VEIL_CREDENTIALS = dict(username='vdi', password='veil')  # TODO: remove
 VEIL_REQUEST_TIMEOUT = 15
 VEIL_CONNECTION_TIMEOUT = 15
 VEIL_MAX_BODY_SIZE = 1000 * 1024 ^ 3

@@ -371,7 +371,7 @@ class CreateStaticPoolMutation(graphene.Mutation, PoolValidator):
             # return CreateStaticPoolMutation(
             #     Output=None)
             return None
-        return PoolType(id=pool.static_pool_id, verbose_name=verbose_name, vms=vms)
+        return PoolType(pool_id=pool.static_pool_id, verbose_name=verbose_name, vms=vms)
 
 
 class AddVmsToStaticPool(graphene.Mutation):

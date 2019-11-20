@@ -30,7 +30,7 @@ class VmHttpClient(VeilHttpClient):
         self.controller_id = await Controller.get_controller_id_by_ip(controller_ip)
         return self
 
-    @cached_property
+    @property
     def url(self):
         return 'http://{}/api/domains/{}/'.format(self.controller_ip, self.vm_id)
 
@@ -85,9 +85,9 @@ class VmHttpClient(VeilHttpClient):
         resources_list_data = await self.fetch_with_response(url=url, method='GET')
         all_vms_list = resources_list_data['results']
 
-        # filter bu cluster
-        if cluster_id:
-            all_vms_list = list(filter(lambda vm: vm['cluster'] == cluster_id, all_vms_list))
+        # # filter bu cluster
+        # if cluster_id:
+        #     all_vms_list = list(filter(lambda vm: vm['cluster'] == cluster_id, all_vms_list))
         return all_vms_list
 
     async def fetch_vms_list(self, node_id: str = None, cluster_id: str = None,

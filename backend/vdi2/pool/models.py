@@ -140,7 +140,6 @@ class Pool(db.Model):
 
     async def get_vm_amount(self, only_free=False):
         """ == None because alchemy can't work with is None"""
-        # TODO: rewrite
         if only_free:
             return await db.select([db.func.count()]).where(
                 (Vm.pool_id == self.pool_id) & (Vm.username == None)).gino.scalar()  # noqa
@@ -154,7 +153,7 @@ class Pool(db.Model):
         # TODO: добавить вывод типа OS у VM
         # TODO: добавить вывод состояния пула
         # TODO: ограничение по списку пулов для пользователя
-        pools = await Pool.select('pool_id', 'verbose_name').gino.all()
+        pools = await Pool.select('pool_id', 'verbose_name').where(Pool.status != Status.DELETING).gino.all()
         ans = list()
         for pool in pools:
             ans_d = dict()
@@ -164,18 +163,18 @@ class Pool(db.Model):
         return ans
 
     @staticmethod
-    async def get_user_pool(pool_id: int, username=None):
+    async def get_user_pool(pool_id: str, username=None):
         """Return first hit"""
-        # TODO: rewrite?
-        query = db.select(
-            [
-                Controller.address,
-                Pool.desktop_pool_type,
-                Vm.id,
-            ]
-        ).select_from(Pool.join(Controller).join(Vm, (Vm.username == username) & (Vm.pool_id == Pool.pool_id), isouter=True)
-                      ).where(
-            (Pool.pool_id == pool_id))
+        # TODO: заменить хардкод поля на нормальное обращение к подзапросу
+        query = Pool.get_pools_query()
+        query = db.select([
+            Controller.address,
+            text('anon_1.pool_type'),  # не нашел пока как обратиться корректно к полю из подзапроса
+            Vm.id,
+        ]).select_from(query.alias().join(Vm, (Vm.username == username) & (Vm.pool_id == text('anon_1.pool_id')),
+                                          isouter=True)).where(
+            Pool.pool_id == pool_id).order_by(Vm.id)
+
         return await query.gino.first()
 
     @staticmethod
@@ -209,39 +208,6 @@ class Pool(db.Model):
     async def deactivate(cls, pool_id):
         return await Pool.update.values(status=Status.FAILED).where(
             Pool.pool_id == pool_id).gino.status()
-
-    async def expand_pool_if_requred(self):
-        """
-        Check and expand pool if required
-        :return:
-        """
-        # TODO: rewrite
-        # TODO: код перенесен, чтобы работал. Принципиально не перерабатывался.
-        # Check that total_size is not reached
-        vm_amount_in_pool = await self.get_vm_amount()
-
-        # If reached then do nothing
-        if vm_amount_in_pool >= self.total_size:
-            return
-
-        # Число машин в пуле, неимеющих пользователя
-        free_vm_amount = await self.get_vm_amount(only_free=True)
-
-        # Если подогретых машин слишком мало, то пробуем добавить еще
-        if self.reserve_size > free_vm_amount:
-            # Max possible amount of VMs which we can add to the pool
-            max_possible_amount_to_add = self.total_size - vm_amount_in_pool
-            # Real amount that we can add to the pool
-            real_amount_to_add = min(max_possible_amount_to_add, self.vm_step)
-            # add VMs.
-            try:
-                # TODO: очень странная логика. Может есть смысл создавать как-то диапазоном на стороне ECP?
-                for i in range(1, real_amount_to_add):
-                    domain_index = vm_amount_in_pool + i
-                    await self.add_vm(domain_index)
-            except VmCreationError:
-                # TODO: log that we cant expand the pool.  Mark pool as broken?
-                pass
 
     @classmethod
     async def soft_delete(cls, pool_id):
@@ -512,15 +478,49 @@ class AutomatedPool(db.Model):
                         resource=VDI_TASKS_SUBSCRIPTION)
         resources_monitor_manager.signal_internal_event(msg_dict)
 
+    async def expand_pool_if_requred(self):
+        """
+        Check and expand pool if required
+        :return:
+        """
+        # TODO: rewrite
+        # TODO: код перенесен, чтобы работал. Принципиально не перерабатывался.
+        # Check that total_size is not reached
+        pool = await Pool.get(self.automated_pool_id)
+        vm_amount_in_pool = await pool.get_vm_amount()
+
+        # If reached then do nothing
+        if vm_amount_in_pool >= self.total_size:
+            return
+
+        # Число машин в пуле, неимеющих пользователя
+        free_vm_amount = await pool.get_vm_amount(only_free=True)
+
+        # Если подогретых машин слишком мало, то пробуем добавить еще
+        if self.reserve_size > free_vm_amount:
+            # Max possible amount of VMs which we can add to the pool
+            max_possible_amount_to_add = self.total_size - vm_amount_in_pool
+            # Real amount that we can add to the pool
+            real_amount_to_add = min(max_possible_amount_to_add, self.vm_step)
+            # add VMs.
+            try:
+                # TODO: очень странная логика. Может есть смысл создавать как-то диапазоном на стороне ECP?
+                for i in range(1, real_amount_to_add):
+                    domain_index = vm_amount_in_pool + i
+                    await self.add_vm(domain_index)
+            except VmCreationError:
+                print('Vm creating error')
+                # TODO: log that we cant expand the pool.  Mark pool as broken?
+                pass
+
 
 class PoolUsers(db.Model):
     __tablename__ = 'pools_users'
     pool_id = db.Column(UUID(), db.ForeignKey('pool.pool_id'))
     user_id = db.Column(UUID(), db.ForeignKey('user.id'))
 
-    # TODO: rewrite
-    @staticmethod  # todo: not checked
-    async def check_row_exists(pool_id, username):
-        row = await PoolUsers.select().where((PoolUsers.username == username) and
+    @staticmethod
+    async def check_row_exists(pool_id, user_id):
+        row = await PoolUsers.select().where((PoolUsers.user_id == user_id) and
                                              (PoolUsers.pool_id == pool_id)).gino.all()
         return row

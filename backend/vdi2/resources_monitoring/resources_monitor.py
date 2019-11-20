@@ -124,21 +124,17 @@ class ResourcesMonitor(AbstractMonitor):
                 msg = await self._ws_connection.read_message()
                 if msg is None:  # according to doc it means that connection closed
                     break
+                elif 'token error' in msg:
+                    await Controller.invalidate_auth(self._controller_ip)
                 else:
                     await self._on_message_received(msg)
 
             await asyncio.sleep(RECONNECT_TIMEOUT)
 
     async def _connect(self):
-        controller_id = await Controller.get_controller_id_by_ip(self._controller_ip)
         # get token
         try:
-            token = await Controller.get_token(controller_id)
-            if not token:
-                controller_client = await VeilHttpClient.create(self._controller_ip)
-                token = await controller_client.login()
-            if not token:
-                raise AssertionError('Empty token.')
+            token = await Controller.get_token(self._controller_ip)
         except Exception as E:
             print(E)
             return False
@@ -163,7 +159,7 @@ class ResourcesMonitor(AbstractMonitor):
     async def _on_message_received(self, message):
         try:
             json_data = json.loads(message)
-            print(__class__.__name__, 'msg received', json_data)
+            print(__class__.__name__, 'msg received from {}:'.format(self._controller_ip), json_data)
         except JSONDecodeError:
             return
         #  notify subscribed observers

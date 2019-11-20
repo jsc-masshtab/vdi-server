@@ -65,9 +65,6 @@ static gboolean refresh_vdi_session_token()
     if(vdiSession.auth_url == NULL)
         return FALSE;
 
-    // clear token
-    free_memory_safely(&vdiSession.jwt);
-
     // create request message
     SoupMessage *msg = soup_message_new("POST", vdiSession.auth_url);
     if(msg == NULL)
@@ -121,7 +118,8 @@ void start_vdi_session()
         return;
     }
     // creae session
-    vdiSession.soup_session = soup_session_new();
+    //vdiSession.soup_session = soup_session_new();
+    vdiSession.soup_session = soup_session_new_with_options("timeout", 4, NULL);
 
     vdiSession.vdi_username = NULL;
     vdiSession.vdi_password = NULL;
@@ -159,6 +157,11 @@ SoupSession *get_soup_session()
 const gchar *get_vdi_ip()
 {
     return vdiSession.vdi_ip;
+}
+
+const gchar *get_vdi_port(void)
+{
+    return vdiSession.vdi_port;
 }
 
 void cancell_pending_requests()
