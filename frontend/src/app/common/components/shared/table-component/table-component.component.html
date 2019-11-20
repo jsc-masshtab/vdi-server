@@ -46,21 +46,23 @@
                 *ngSwitchDefault></fa-icon>
               </ng-container>
                 
-                <span>{{ item[obj.property] | status }}</span>
+                <span  class="for-wrap">{{ item[obj.property] | status }}</span>
               </ng-container>
             </ng-container>
   <!-- obj.property -> all-types-here-->
             <ng-container *ngIf="obj.property && obj.property != 'status' && !obj.property_lv2">
               <ng-container *ngIf="item[obj.property] && obj.type; else nothing">
-                  <span *ngIf="obj.type === 'string'" [class.name-entity]="obj.class == 'name-start'">{{ item[obj.property] }}</span>
+                  <span *ngIf="obj.type === 'string'" [class.name-entity]="obj.class == 'name-start'"  class="for-wrap">{{ item[obj.property] }}</span>
 
                   <span *ngIf="obj.type === 'array-length'">{{ item[obj.property]?.length }}</span>
 
                   <ng-container *ngIf="obj.type.typeDepend === 'propertyInObjectsInArray'">
                     <ng-container *ngIf="item[obj.property]?.length; else nothing">
-                      <span *ngFor="let objInItem of item[obj.property];let i = index">
-                        {{ objInItem[obj.type.propertyDepend] }}
-                        <ng-container *ngIf="item[obj.property]?.length > 1 && i != item[obj.property]?.length - 1">,</ng-container>
+                      <span class="for-wrap">
+                          <span *ngFor="let objInItem of item[obj.property];let i = index">
+                            {{ objInItem[obj.type.propertyDepend] }}
+                            <ng-container *ngIf="item[obj.property]?.length > 1 && i != item[obj.property]?.length - 1">,</ng-container>
+                          </span>
                       </span>
                     </ng-container>
                   </ng-container>
@@ -79,7 +81,7 @@
   <!-- obj.property_lv2 -->
             <ng-container *ngIf="obj.property_lv2">
               <ng-container *ngIf="item[obj.property] && item[obj.property][obj.property_lv2]; else nothing">
-                <span>{{ item[obj.property][obj.property_lv2] }}</span>
+                <span  class="for-wrap">{{ item[obj.property][obj.property_lv2] }}</span>
               </ng-container>
             </ng-container>
 

@@ -39,7 +39,7 @@ export class DatapoolsService {
         });
     }
 
-    public getDatapool(idDatapool: string): QueryRef<any, any> {
+    public getDatapool(id: string): QueryRef<any, any> {
         return  this.service.watchQuery({
             query:  gql` query Datapool($id: String) {
                             datapool(id: $id) {
@@ -57,7 +57,7 @@ export class DatapoolsService {
                     `,
             variables: {
                 method: 'GET',
-                id: idDatapool
+                id
             }
         });
     }

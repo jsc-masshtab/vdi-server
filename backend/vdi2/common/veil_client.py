@@ -64,6 +64,7 @@ class VeilHttpClient:
             if http_error.code == 400:
                 raise BadRequest(body)
             elif http_error.code == 401:
+                await Controller.invalidate_auth(self.controller_id)
                 raise Unauthorized()
             elif http_error.code == 403:
                 raise Forbidden(body)
@@ -73,10 +74,15 @@ class VeilHttpClient:
                 raise ControllerNotAccessible(body)
             elif http_error.code == 500:
                 raise ServerError(body)
+            elif http_error.code == 599:
+                raise ServerError(http_error.message)
         return response
 
     @staticmethod
     def get_response_body(response):
+        if not response:
+            return
+
         response_headers = response.headers
         response_content_type = response_headers.get('Content-Type')
 

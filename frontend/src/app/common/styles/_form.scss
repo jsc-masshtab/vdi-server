@@ -68,6 +68,7 @@
 
     .field {
         margin-bottom: 15px;
+        display: block;
 
         &:last-child {
             margin-bottom: 0px;
@@ -284,5 +285,10 @@ label {
         border-bottom: 1px solid rgba(221, 44, 0, 0.3);
         text-align: center;
     }
+}
+
+.error {
+    margin-top: 5px;
+    color: #DD2C00;
 }
 

@@ -47,6 +47,8 @@ typedef struct
     GtkWidget *login_entry;
     GtkWidget *password_entry;
 
+    GtkWidget *connect_button;
+
     GtkResponseType dialog_window_response;
 
     gboolean response;
@@ -69,6 +71,10 @@ static void on_get_vdi_token_finished(GObject *source_object G_GNUC_UNUSED,
     GError *error = NULL;
     gboolean token_refreshed = g_task_propagate_boolean(G_TASK(res), &error);
     printf("%s: is_token_refreshed %i\n", (const char *)__func__, token_refreshed);
+
+    // enable connect button if address_entry is not empty
+    if (gtk_entry_get_text_length(GTK_ENTRY(ci->address_entry)) > 0)
+        gtk_widget_set_sensitive(GTK_WIDGET(ci->connect_button), TRUE);
 
     if (token_refreshed) {
         ci->response = TRUE;
@@ -144,8 +150,12 @@ connect_button_clicked_cb(GtkButton *button G_GNUC_UNUSED, gpointer data)
             const gchar *port = gtk_entry_get_text(GTK_ENTRY(ci->port_entry));
             const gchar *user = gtk_entry_get_text(GTK_ENTRY(ci->login_entry));
             const gchar *password = gtk_entry_get_text(GTK_ENTRY(ci->password_entry));
-
             set_vdi_credentials(user, password, ip, port);
+
+            // disable connect button
+            gtk_widget_set_sensitive(GTK_WIDGET(ci->connect_button), FALSE);
+
+
             // fetch token task starting
             execute_async_task(get_vdi_token, on_get_vdi_token_finished, NULL, data);
         }
@@ -247,20 +257,6 @@ make_label_small(GtkLabel* label)
 * @return TRUE if Connect or ENTER is pressed
 * @return FALSE if Cancel is pressed or dialog is closed
 */
-
-//typedef struct
-//{
-//    GMainLoop *loop;
-
-//    GtkWidget *address_entry;
-//    GtkWidget *port_entry;
-//    GtkWidget *login_entry;
-//    GtkWidget *password_entry;
-
-//    GtkResponseType dialog_window_response;
-
-//    gboolean response;
-//} RemoteViewerData;
 gboolean
 remote_viewer_connect_dialog(GtkWindow *main_window G_GNUC_UNUSED, gchar **uri, gchar **user, gchar **password,
                              gchar **ip, gchar **port)
@@ -290,7 +286,7 @@ remote_viewer_connect_dialog(GtkWindow *main_window G_GNUC_UNUSED, gchar **uri, 
     window = GTK_WIDGET(gtk_builder_get_object(builder, "remote-viewer-connection-window"));
     gtk_window_set_resizable (GTK_WINDOW(window), FALSE);
     //gtk_window_set_transient_for(GTK_WINDOW(window), main_window);
-    connect_button = GTK_WIDGET(gtk_builder_get_object(builder, "connect-button"));
+    connect_button = ci.connect_button = GTK_WIDGET(gtk_builder_get_object(builder, "connect-button"));
 
     address_entry = ci.address_entry = GTK_WIDGET(gtk_builder_get_object(builder, "connection-address-entry"));
     const gchar *ip_str_from_config_file = read_from_settings_file(paramToFileGrpoup, "ip");

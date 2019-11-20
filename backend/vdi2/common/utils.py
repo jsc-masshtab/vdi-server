@@ -1,4 +1,4 @@
-# TODO: move to common
+# TODO: разобрать модуль. Это код с предыдущей версии Vdi, которая не нравится большей части бекендеров на проектею
 import inspect
 from functools import wraps
 from typing import List
@@ -117,3 +117,10 @@ async def cancel_async_task(async_task):
             await async_task
         except asyncio.CancelledError:
             pass
+
+
+def extract_ordering_data(ordering):
+    reverse = (ordering.find('-', 0, 1) == 0)
+    if reverse:
+        ordering = ordering[1:]
+    return ordering, reverse

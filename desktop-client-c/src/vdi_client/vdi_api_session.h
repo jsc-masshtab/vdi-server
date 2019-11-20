@@ -67,6 +67,8 @@ void stop_vdi_session(void);
 SoupSession *get_soup_session(void);
 // get vid server ip
 const gchar *get_vdi_ip(void);
+// get port
+const gchar *get_vdi_port(void);
 // cancell pending requests
 void cancell_pending_requests(void);
 // set vdi session credentials

@@ -435,7 +435,7 @@ GtkResponseType vdi_manager_dialog(GtkWindow *main_window G_GNUC_UNUSED, gchar *
     gtk_widget_show_all(vdi_manager.window);
 
     // start polling if vdi is online
-    start_vdi_ws_polling(&vdi_ws_client, get_vdi_ip(), on_ws_data_from_vdi_received);
+    start_vdi_ws_polling(&vdi_ws_client, get_vdi_ip(), get_vdi_port(), on_ws_data_from_vdi_received);
     // Пытаемся соединиться с vdi и получить список пулов. Получив список пулов нужно сгенерить
     // соответствующие кнопки  в скрол области.
     // get pool data

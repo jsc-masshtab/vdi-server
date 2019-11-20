@@ -27,10 +27,10 @@ class VmHttpClient(VeilHttpClient):
     async def create(cls, controller_ip: str, vm_id: str, verbose_name: str = None, template_name: str = None):
         """Because of we need async execute db query"""
         self = cls(controller_ip, vm_id, verbose_name, template_name)
-        self.controller_uid = await Controller.get_controller_id_by_ip(controller_ip)
+        self.controller_id = await Controller.get_controller_id_by_ip(controller_ip)
         return self
 
-    @cached_property
+    @property
     def url(self):
         return 'http://{}/api/domains/{}/'.format(self.controller_ip, self.vm_id)
 
@@ -81,15 +81,13 @@ class VmHttpClient(VeilHttpClient):
 
         if not url_vars:
             url = url + urllib.parse.urlencode(url_vars)
-
         # request
         resources_list_data = await self.fetch_with_response(url=url, method='GET')
         all_vms_list = resources_list_data['results']
 
-        # filter bu cluster
-        if cluster_id:
-            all_vms_list = list(filter(lambda vm: vm['cluster'] == cluster_id, all_vms_list))
-
+        # # filter bu cluster
+        # if cluster_id:
+        #     all_vms_list = list(filter(lambda vm: vm['cluster'] == cluster_id, all_vms_list))
         return all_vms_list
 
     async def fetch_vms_list(self, node_id: str = None, cluster_id: str = None,

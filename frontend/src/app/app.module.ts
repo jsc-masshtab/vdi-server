@@ -1,3 +1,5 @@
+import { WebsocketPoolService } from './common/classes/websockPool.service';
+import { WebsocketService } from './common/classes/websock.service';
 
 import { UsersModule } from './settings/users/users.module';
 import { ControllersModule } from './settings/controllers/controllers.module';
@@ -26,7 +28,7 @@ import { library } from '@fortawesome/fontawesome-svg-core';
 import { faDesktop, faDatabase, faBuilding, faLayerGroup, faPlusCircle, faSpinner, faServer, faCog, faChevronUp, faTimesCircle,
          faFolderOpen, faStar, faMinusCircle, faTv, faSyncAlt, faTrashAlt, faUsers, faMeh,
          faChartBar, faUser, faStopCircle, faPlayCircle, faPauseCircle, faEdit, faQuestionCircle, faCheckSquare,
-          faExclamationTriangle, faHeartbeat, faChevronCircleUp
+          faExclamationTriangle, faHeartbeat, faChevronCircleUp, faComment
         } from '@fortawesome/free-solid-svg-icons';
 /*  -----------------------------------   icons   --------------------------------------*/
 
@@ -80,7 +82,9 @@ import { environment } from 'src/environments/environment';
     [
      { provide: MAT_DIALOG_DEFAULT_OPTIONS, useValue: { hasBackdrop: true, restoreFocus: true } },
       ErrorsService,
-      WaitService
+      WaitService,
+      WebsocketService,
+      WebsocketPoolService
     ],
   bootstrap: [AppComponent]
 })
@@ -92,12 +96,13 @@ export class AppModule {
   constructor(private apollo: Apollo,
               private httpLink: HttpLink,
               private errorService: ErrorsService,
-              private waitService: WaitService) {
+              private waitService: WaitService,
+              private ws: WebsocketService) {
 
     library.add(faDesktop, faDatabase, faLayerGroup, faPlusCircle, faMinusCircle, faSpinner, faServer, faCog, faChevronUp, faTimesCircle,
                 faFolderOpen, faStar, faTv, faSyncAlt, faBuilding, faTrashAlt, faUsers, faMeh, faChartBar, faUser,
                 faStopCircle, faPlayCircle, faPauseCircle, faEdit, faQuestionCircle, faCheckSquare, faExclamationTriangle, faHeartbeat,
-                faChevronCircleUp);
+                faChevronCircleUp, faComment);
 
     const uri = environment.url;
     const link = this.httpLink.create({ uri, includeQuery: true, includeExtensions: false });
@@ -131,5 +136,8 @@ export class AppModule {
         }
       }
     });
+
+    setTimeout(() => this.ws.init(), 1000);
+
   }
 }

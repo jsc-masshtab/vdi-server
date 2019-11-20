@@ -46,6 +46,10 @@ class User(db.Model):
         encoded_password = hashers.make_password(raw_password)
         return await User.create(username=username, password=encoded_password, email=email)
 
+    @staticmethod
+    async def get_id(username):
+        return await User.select('id').where(User.username == username).gino.scalar()
+
 
 # class UserJwtInfo(db.Model):
 #     """

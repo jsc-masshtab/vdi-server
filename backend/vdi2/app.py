@@ -2,7 +2,7 @@ import tornado.ioloop
 import tornado.web
 
 from graphene_tornado.tornado_graphql_handler import TornadoGraphQLHandler
-from settings import DB_NAME, DB_PASS, DB_USER, DB_PORT, DB_HOST, WS_PING_INTERVAL
+from settings import DB_NAME, DB_PASS, DB_USER, DB_PORT, DB_HOST, WS_PING_INTERVAL, WS_PING_TIMEOUT
 
 from database import db
 from controller.schema import controller_schema
@@ -13,6 +13,7 @@ from resources_monitoring.urls import ws_event_monitoring_urls
 
 from auth.schema import user_schema
 
+from pool.schema import pool_schema
 from vm.schema import vm_schema
 
 from resources_monitoring.resources_monitor_manager import resources_monitor_manager
@@ -36,7 +37,8 @@ handlers = [
 handlers += thin_client_api_urls
 handlers += ws_event_monitoring_urls
 
-app = tornado.web.Application(handlers, debug=True, websocket_ping_interval=WS_PING_INTERVAL)
+app = tornado.web.Application(handlers, debug=True, websocket_ping_interval=WS_PING_INTERVAL,
+                              websocket_ping_timeout=WS_PING_TIMEOUT)
 
 if __name__ == '__main__':
     tornado.ioloop.IOLoop.current().run_sync(

@@ -14,10 +14,11 @@
     background: #FFF;
 }
 
-.al-main {
+.all-main {
     width: 100%;
     height: calc(100% - 80px);
     display: flex;
+    border-right: 5px solid #3f606b;
 }
 
 main {

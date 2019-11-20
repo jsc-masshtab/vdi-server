@@ -81,6 +81,8 @@ export class PoolAddComponent implements OnInit, OnDestroy {
     }
   ];
 
+  public checkValid: boolean = false;
+
   @ViewChild('selectNodeRef') selectNodeRef: ViewContainerRef;
   @ViewChild('selectDatapoolRef') selectDatapoolRef: ViewContainerRef;
   @ViewChild('selectVmRef') selectVmRef: ViewContainerRef;
@@ -103,16 +105,18 @@ export class PoolAddComponent implements OnInit, OnDestroy {
 
   private createDinamicPoolInit(): void {
     this.createPoolForm = this.fb.group({
-      name: ['', Validators.required],
+      name: ['', [Validators.required, Validators.pattern(/^[а-яА-ЯёЁa-zA-Z0-9]+[а-яА-ЯёЁa-zA-Z0-9.-_+ ]*$/)]],
       template_id: ['', Validators.required],
       cluster_id: ['', Validators.required],
       node_id: ['', Validators.required],
       datapool_id: ['', Validators.required],
-      initial_size: ['', Validators.required],
-      reserve_size: ['', Validators.required],
-      total_size: ['', Validators.required],
-      vm_name_template: ['', Validators.required],
-      controller_ip: ['', Validators.required]
+      reserve_size: ['', [Validators.required, Validators.max(200), Validators.min(1)]],
+      vm_name_template: ['', [Validators.required, Validators.pattern(/^[а-яА-ЯёЁa-zA-Z0-9]+[а-яА-ЯёЁa-zA-Z0-9.-_+ ]*$/)]],
+      controller_ip: ['', Validators.required],
+      size: this.fb.group({
+        initial_size: ['', [Validators.required, Validators.max(200), Validators.min(1)]],
+        total_size: ['', [Validators.required, Validators.max(1000), Validators.min(1)]],
+      }, {validators: this.totalSizeValidator()})
     });
     this.finishPoolView = {};
     this.getControllers();
@@ -120,7 +124,7 @@ export class PoolAddComponent implements OnInit, OnDestroy {
 
   private createStaticPoolInit(): void {
     this.createPoolForm = this.fb.group({
-      name: ['', Validators.required],
+      name: ['', [Validators.required,  Validators.pattern(/^[а-яА-ЯёЁa-zA-Z0-9]+[а-яА-ЯёЁa-zA-Z0-9.-_+ ]*$/)]],
       cluster_id: ['', Validators.required],
       node_id: ['', Validators.required],
       datapool_id: ['', Validators.required],
@@ -391,17 +395,20 @@ export class PoolAddComponent implements OnInit, OnDestroy {
     }
   }
 
-  private handlingValidForm(): boolean {
-    if (this.createPoolForm.status === 'INVALID') {
-      let timer;
-      this.error = true;
-      if (!timer) {
-        timer = setTimeout(() => {
-          this.error = false;
-        }, 3000);
+  private totalSizeValidator() {
+    return (group: FormGroup) => {
+      if (group.controls['total_size'].value < group.controls['initial_size'].value) {
+        return {maxLessInitial: true};
       }
+    };
+  }
+
+  private checkValidCreatePoolForm(): boolean {
+    if (this.createPoolForm.status === 'INVALID') {
+      this.checkValid = true;
       return false;
     }
+    this.checkValid = false;
     return true;
   }
 
@@ -435,16 +442,16 @@ export class PoolAddComponent implements OnInit, OnDestroy {
   }
 
   private actionFinishSee(): void  {
-    const validPrev: boolean = this.handlingValidForm();
+    const validPrev: boolean = this.checkValidCreatePoolForm();
     if (!validPrev) { return; }
     this.chooseCollection();
 
     const formValue: Partial<IFinishPoolForm> = this.createPoolForm.value;
 
     if (this.chooseTypeForm.value.type === 'Автоматический') {
-      this.finishPoolView.initial_size = formValue.initial_size;
+      this.finishPoolView.initial_size = formValue.size.initial_size;
       this.finishPoolView.reserve_size = formValue.reserve_size;
-      this.finishPoolView.total_size = formValue.total_size;
+      this.finishPoolView.total_size = formValue.size.total_size;
       this.finishPoolView.vm_name_template = formValue.vm_name_template;
     }
     this.finishPoolView.name = formValue.name;
@@ -465,9 +472,9 @@ export class PoolAddComponent implements OnInit, OnDestroy {
                               formValue.cluster_id,
                               formValue.node_id,
                               formValue.datapool_id,
-                              formValue.initial_size,
+                              formValue.size.initial_size,
                               formValue.reserve_size,
-                              formValue.total_size,
+                              formValue.size.total_size,
                               formValue.vm_name_template,
                               formValue.controller_ip)
         .subscribe(() => {
@@ -494,10 +501,12 @@ export class PoolAddComponent implements OnInit, OnDestroy {
 
   public send(step: string) {
     if (step === 'chooseType') {
+      this.checkValid = false;
       this.actionChooseType();
     }
 
     if (step === 'createPool') {
+      this.checkValid = false;
       this.actionCreatePool();
     }
 

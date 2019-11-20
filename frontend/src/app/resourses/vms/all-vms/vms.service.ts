@@ -50,18 +50,17 @@ export class VmsService {
         }
     }
 
-    public getVm(idVm: string): QueryRef<any, any> {
+    public getVm(id: string): QueryRef<any, any> {
         return  this.service.watchQuery({
             query:  gql` query Vm($id: String) {
                             vm(id: $id) {
                                 name
-                               
                             }
                         }
                     `,
             variables: {
                 method: 'GET',
-                id: idVm
+                id
             }
         });
     }
