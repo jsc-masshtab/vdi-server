@@ -15,6 +15,7 @@ from auth.schema import user_schema
 
 from pool.schema import pool_schema
 from vm.schema import vm_schema
+from vm.vm_manager import VmManager
 
 from resources_monitoring.resources_monitor_manager import resources_monitor_manager
 
@@ -40,6 +41,7 @@ handlers += ws_event_monitoring_urls
 app = tornado.web.Application(handlers, debug=True, websocket_ping_interval=WS_PING_INTERVAL,
                               websocket_ping_timeout=WS_PING_TIMEOUT)
 
+
 if __name__ == '__main__':
     tornado.ioloop.IOLoop.current().run_sync(
         lambda: db.init_app(app,
@@ -50,6 +52,11 @@ if __name__ == '__main__':
                             database=DB_NAME))
 
     app.listen(8888)
+
+    # vm_manager = VmManager()
+    # tornado.ioloop.IOLoop.current().run_sync(
+    #     lambda: vm_manager.start()
+    # )
 
     try:
         tornado.ioloop.IOLoop.current().add_callback(resources_monitor_manager.start)

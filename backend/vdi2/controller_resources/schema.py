@@ -208,7 +208,7 @@ class ResourcesQuery(graphene.ObjectType):
     nodes = graphene.List(NodeType, ordering=graphene.String())
 
     cluster = graphene.Field(ClusterType, id=graphene.String(), controller_address=graphene.String())
-    clusters = graphene.List(ClusterType, ordering=graphene.String())
+    clusters = graphene.List(ClusterType, controller_ip=graphene.String(), ordering=graphene.String())
 
     datapool = graphene.Field(DatapoolType, id=graphene.String(), controller_address=graphene.String())
     datapools = graphene.List(DatapoolType, ordering=graphene.String())
@@ -282,19 +282,26 @@ class ResourcesQuery(graphene.ObjectType):
         cluster_type.controller = ControllerType(address=controller_address)
         return cluster_type
 
-    async def resolve_clusters(self, _info, ordering=None):
-        controllers_addresses = await Controller.get_controllers_addresses()
-        print('test controllers', controllers_addresses)
-        # form list of clusters
-        list_of_all_cluster_types = []
+    async def resolve_clusters(self, _info, controller_ip=None, ordering=None):
 
-        for controllers_address in controllers_addresses:
-            resources_http_client = await ResourcesHttpClient.create(controllers_address)
+        if controller_ip:
+            resources_http_client = await ResourcesHttpClient.create(controller_ip)
             clusters = await resources_http_client.fetch_cluster_list()
+            list_of_all_cluster_types = await ResourcesQuery.resource_veil_to_graphene_type_list(
+                ClusterType, clusters, controller_ip)
+        else:
+            controllers_addresses = await Controller.get_controllers_addresses()
+            print('test controllers', controllers_addresses)
+            # form list of clusters
+            list_of_all_cluster_types = []
 
-            cluster_type_list = await ResourcesQuery.resource_veil_to_graphene_type_list(
-                ClusterType, clusters, controllers_address)
-            list_of_all_cluster_types.extend(cluster_type_list)
+            for controllers_address in controllers_addresses:
+                resources_http_client = await ResourcesHttpClient.create(controllers_address)
+                clusters = await resources_http_client.fetch_cluster_list()
+
+                cluster_type_list = await ResourcesQuery.resource_veil_to_graphene_type_list(
+                    ClusterType, clusters, controllers_address)
+                list_of_all_cluster_types.extend(cluster_type_list)
 
         # sort list of clusters
         if ordering:
