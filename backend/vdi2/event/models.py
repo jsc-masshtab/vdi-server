@@ -19,7 +19,9 @@ class Event(db.Model):
     created = db.Column(db.DateTime(timezone=True), server_default=func.now())
     user = db.Column(db.Unicode(length=128), default='system')
 
-    async def create_event(self, msg, event_type=TYPE_INFO, user='system'):
+    @classmethod
+    async def create_event(cls, msg, event_type=TYPE_INFO, user='system'):
+        # TODO: connect with task and user entity
         await Event.create(
             event_type=event_type,
             message=msg,
