@@ -8,41 +8,37 @@ export class AddPoolService {
 
     constructor(private service: Apollo) { }
 
-    public getAllClusters(ip?: string): QueryRef<any, any> {
-        const ipController = ip;
-        if (ipController) {
-            return this.service.watchQuery({
-                query: gql` query allClusters($ip: String) {
-                                controller(ip: $ip) {
-                                    clusters {
-                                        id
-                                        verbose_name
-                                    }
-                                }
-                            }
-                        `,
-                variables: {
-                    method: 'GET',
-                    ip: ipController
-                }
-            });
-        } else {
-            return this.service.watchQuery({
-                query: gql` query allClusters {
-                            controllers {
-                                clusters {
-                                    id
-                                    verbose_name
-                                }
-                            }
-                        }
-                        `,
-                variables: {
-                    method: 'GET'
-                }
-            });
-        }
-    }
+    // public getAllClusters(controller_ip?: string): QueryRef<any, any> {
+    //     if (controller_ip) {
+    //         return this.service.watchQuery({
+    //             query: gql` query resources($controller_ip: String) {
+    //                                 clusters(controller_ip: $controller_ip) {
+    //                                     id
+    //                                     verbose_name
+    //                                 }
+    //                             }
+    //                         }
+    //                     `,
+    //             variables: {
+    //                 method: 'GET',
+    //                 controller_ip
+    //             }
+    //         });
+    //     } else {
+    //         return this.service.watchQuery({
+    //             query: gql` query resources {
+    //                             clusters {
+    //                                 id
+    //                                 verbose_name
+    //                             }
+    //                         }
+    //                     `,
+    //             variables: {
+    //                 method: 'GET'
+    //             }
+    //         });
+    //     }
+    // }
 
     public getAllNodes(clusterId?: string): QueryRef<any, any> {
         const idCluster = clusterId;
@@ -106,19 +102,26 @@ export class AddPoolService {
 
     public getAllTemplates(controller_ip: string): QueryRef<any, any> {
         return  this.service.watchQuery({
-            query:  gql` query vms($controller_ip: String) {
-                                templates(controller_ip: $controller_ip) {
-                                    id
-                                    verbose_name
-                                }
+            query:  gql`query vms($controller_ip: String) {
+                            templates(controller_ip: $controller_ip) {
+                                id
+                                verbose_name
                             }
-                        `,
+                        }
+                    `,
             variables: {
                 method: 'GET',
                 controller_ip
             }
         });
     }
+
+    // l` query vms($controller_ip: String) {
+    //     templates(controller_ip: $controller_ip) {
+    //         id
+    //         verbose_name
+    //     }
+    // }
 
     public getAllControllers(): QueryRef<any, any> { // +
         return  this.service.watchQuery({
