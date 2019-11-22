@@ -16,14 +16,14 @@ class ResourcesHttpClient(VeilHttpClient):
 
     methods = ['POST', 'GET']
 
-    def __init__(self, controller_ip: str):
-        super().__init__(controller_ip)
+    def __init__(self, controller_ip: str, token: str):
+        super().__init__(controller_ip, token)
 
     @classmethod
     async def create(cls, controller_ip: str):
         """Because of we need async execute db query"""
-        self = cls(controller_ip)
-        self.controller_id = await Controller.get_controller_id_by_ip(controller_ip)
+        token = await Controller.get_token(controller_ip)
+        self = cls(controller_ip, token)
         return self
 
     @cached_property
