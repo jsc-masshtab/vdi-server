@@ -431,7 +431,7 @@ class RemoveVmsFromStaticPool(graphene.Mutation):
 class UpdateStaticPoolMutation(graphene.Mutation, PoolValidator):
     """ """
     class Arguments:
-        id = graphene.UUID(required=True)
+        pool_id = graphene.UUID(required=True)
         verbose_name = graphene.String()
         keep_vms_on = graphene.Boolean()
 
@@ -440,7 +440,7 @@ class UpdateStaticPoolMutation(graphene.Mutation, PoolValidator):
     @classmethod
     async def mutate(cls, _root, _info, **kwargs):
         await cls.validate_agruments(**kwargs)
-        ok = await StaticPool.soft_update(kwargs['id'], kwargs.get('verbose_name'), kwargs.get('keep_vms_on'))
+        ok = await StaticPool.soft_update(kwargs['pool_id'], kwargs.get('verbose_name'), kwargs.get('keep_vms_on'))
         return UpdateStaticPoolMutation(ok=ok)
 
 
@@ -496,6 +496,7 @@ class UpdateAutomatedPoolMutation(graphene.Mutation, PoolValidator):
         reserve_size = graphene.Int()
         total_size = graphene.Int()
         vm_name_template = graphene.String()
+        keep_vms_on = graphene.Boolean()
 
     ok = graphene.Boolean()
 
@@ -503,7 +504,8 @@ class UpdateAutomatedPoolMutation(graphene.Mutation, PoolValidator):
     async def mutate(cls, root, info, **kwargs):
         await cls.validate_agruments(**kwargs)
         ok = await AutomatedPool.soft_update(kwargs['pool_id'], kwargs.get('verbose_name'), kwargs.get('reserve_size'),
-                                             kwargs.get('total_size'), kwargs.get('vm_name_template'))
+                                             kwargs.get('total_size'), kwargs.get('vm_name_template'),
+                                             kwargs.get('keep_vms_on'))
         return UpdateAutomatedPoolMutation(ok=ok)
 
 
