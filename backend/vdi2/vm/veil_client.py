@@ -17,8 +17,8 @@ class VmHttpClient(VeilHttpClient):
         'start', 'suspend', 'reset', 'shutdown', 'resume', 'reboot'
     ]
 
-    def __init__(self, controller_ip: str, vm_id: str, verbose_name: str = None, template_name: str = None):
-        super().__init__(controller_ip)
+    def __init__(self, controller_ip: str, token: str, vm_id: str, verbose_name: str = None, template_name: str = None):
+        super().__init__(controller_ip, token)
         self.vm_id = vm_id
         self.verbose_name = verbose_name
         self.template_name = template_name
@@ -26,8 +26,8 @@ class VmHttpClient(VeilHttpClient):
     @classmethod
     async def create(cls, controller_ip: str, vm_id: str, verbose_name: str = None, template_name: str = None):
         """Because of we need async execute db query"""
-        self = cls(controller_ip, vm_id, verbose_name, template_name)
-        self.controller_id = await Controller.get_controller_id_by_ip(controller_ip)
+        token = await Controller.get_token(controller_ip)
+        self = cls(controller_ip, token, vm_id, verbose_name, template_name)
         return self
 
     @property
