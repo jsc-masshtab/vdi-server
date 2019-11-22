@@ -253,7 +253,7 @@ class VmQuery(graphene.ObjectType):
 
         return template_type_list
 
-    async def resolve_vms(self, _info, controller_ip=None, cluster_id=None, node_id=None,
+    async def resolve_vms(self, _info, controller_ip=None, cluster_id=None, node_id=None, datapool_id=None,
                           get_vms_in_pools=False, ordering=None):
 
         # get veil vm data list

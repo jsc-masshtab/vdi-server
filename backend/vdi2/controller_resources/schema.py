@@ -205,13 +205,13 @@ class DatapoolType(graphene.ObjectType):
 class ResourcesQuery(graphene.ObjectType):
 
     node = graphene.Field(NodeType, id=graphene.String(), controller_address=graphene.String())
-    nodes = graphene.List(NodeType, ordering=graphene.String())
+    nodes = graphene.List(NodeType, cluster_id=graphene.String(), ordering=graphene.String())
 
     cluster = graphene.Field(ClusterType, id=graphene.String(), controller_address=graphene.String())
     clusters = graphene.List(ClusterType, ordering=graphene.String())
 
     datapool = graphene.Field(DatapoolType, id=graphene.String(), controller_address=graphene.String())
-    datapools = graphene.List(DatapoolType, ordering=graphene.String())
+    datapools = graphene.List(DatapoolType, node_id=graphene.String(), ordering=graphene.String())
 
     requests = graphene.List(RequestType, time=graphene.Float())
 
@@ -232,7 +232,7 @@ class ResourcesQuery(graphene.ObjectType):
         node_type.controller = ControllerType(address=controller_address)
         return node_type
 
-    async def resolve_nodes(self, _info, ordering=None):
+    async def resolve_nodes(self, _info, cluster_id=None, ordering=None):
         controllers_addresses = await Controller.get_controllers_addresses()
 
         # form list of nodes
@@ -240,7 +240,7 @@ class ResourcesQuery(graphene.ObjectType):
 
         for controllers_address in controllers_addresses:
             resources_http_client = await ResourcesHttpClient.create(controllers_address)
-            nodes = await resources_http_client.fetch_node_list()
+            nodes = await resources_http_client.fetch_node_list(cluster_id)
 
             node_type_list = await ResourcesQuery.resource_veil_to_graphene_type_list(
                 NodeType, nodes, controllers_address)
@@ -325,7 +325,7 @@ class ResourcesQuery(graphene.ObjectType):
         datapool_type.controller = ControllerType(address=controller_address)
         return datapool_type
 
-    async def resolve_datapools(self, _info, take_broken=False, ordering=None):
+    async def resolve_datapools(self, _info, node_id=None, take_broken=False, ordering=None):
 
         # form list of datapools
         list_of_all_datapool_types = []
@@ -333,7 +333,7 @@ class ResourcesQuery(graphene.ObjectType):
         controllers_addresses = await Controller.get_controllers_addresses()
         for controllers_address in controllers_addresses:
             resources_http_client = await ResourcesHttpClient.create(controllers_address)
-            datapools = await resources_http_client.fetch_datapool_list(take_broken=take_broken)
+            datapools = await resources_http_client.fetch_datapool_list(node_id=node_id, take_broken=take_broken)
 
             datapool_type_list = await ResourcesQuery.resource_veil_to_graphene_type_list(
                 DatapoolType, datapools, controllers_address)
