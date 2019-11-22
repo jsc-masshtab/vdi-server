@@ -180,6 +180,9 @@ class PoolType(graphene.ObjectType):
     datapool = graphene.Field(DatapoolType)
     template = graphene.Field(TemplateType)
 
+    keep_vms_on = graphene.Boolean()
+
+
     async def resolve_controller(self, info):
         controller_obj = await Controller.get(self.controller)
         return ControllerType(**controller_obj.__values__)

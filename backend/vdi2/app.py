@@ -21,6 +21,8 @@ from resources_monitoring.resources_monitor_manager import resources_monitor_man
 
 from pool.schema import pool_schema
 
+from common.utils import cancel_async_task
+
 
 # if __name__ == '__main__':
 
@@ -53,17 +55,20 @@ if __name__ == '__main__':
 
     app.listen(8888)
 
-    # vm_manager = VmManager()
-    # tornado.ioloop.IOLoop.current().run_sync(
-    #     lambda: vm_manager.start()
-    # )
-
     try:
+        vm_manager = VmManager()
+        vm_manager_task = tornado.ioloop.IOLoop.current().add_callback(vm_manager.start)
+
         tornado.ioloop.IOLoop.current().add_callback(resources_monitor_manager.start)
+
         tornado.ioloop.IOLoop.current().start()
     except KeyboardInterrupt:
         print('Finish')
     finally:
         tornado.ioloop.IOLoop.current().run_sync(
             lambda: resources_monitor_manager.stop()
+        )
+
+        tornado.ioloop.IOLoop.current().run_sync(
+            lambda: cancel_async_task(vm_manager_task)
         )
