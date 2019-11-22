@@ -29,7 +29,6 @@ class VmManager:
             # get vms which have users
             local_vm_data_list = await db.select([Vm.id, Pool.keep_vms_on]).select_from(Vm.join(Pool)).where(
                 Vm.username != '').gino.all()
-            print("local_vm_data_list", local_vm_data_list)
 
             # get vm info from controllers
             controllers_addresses = await Controller.get_controllers_addresses()
@@ -42,7 +41,6 @@ class VmManager:
                     remote_vm_data_list.extend(single_vm_veil_data_list)
                 except (HttpError, OSError):
                     pass
-                print('remote_vm_data_list', remote_vm_data_list)
 
             # traverse local_vm_data_list and turn on vms if it's required
             for local_vm_data in local_vm_data_list:
@@ -65,7 +63,6 @@ class VmManager:
                         await vm_http_client.send_action(action='start')
                     except (HttpError, OSError):
                         pass
-                    print('start VM')
 
             QUERY_INTERVAL = 5
             await asyncio.sleep(QUERY_INTERVAL)
