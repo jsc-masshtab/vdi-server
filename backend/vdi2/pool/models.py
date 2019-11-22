@@ -250,10 +250,12 @@ class StaticPool(db.Model):
         return await Pool.deactivate(self.static_pool_id)
 
     @classmethod
-    async def soft_update(cls, id, verbose_name):
+    async def soft_update(cls, id, verbose_name, keep_vms_on):
         async with db.transaction() as tx:
-            await Pool.update.values(verbose_name=verbose_name).where(
-                Pool.pool_id == id).gino.status()
+            if verbose_name:
+                await Pool.update.values(verbose_name=verbose_name).where(Pool.pool_id == id).gino.status()
+            if keep_vms_on:
+
         return True
 
 
