@@ -198,8 +198,8 @@ class VmQuery(graphene.ObjectType):
     template = graphene.Field(TemplateType, id=graphene.String(), controller_address=graphene.String())
     vm = graphene.Field(VmType, id=graphene.String(), controller_address=graphene.String())
 
-    templates = graphene.List(TemplateType, controller_ip=graphene.String(), cluster_id=graphene.String(), node_id=graphene.String(),
-                              ordering=graphene.String())
+    templates = graphene.List(TemplateType, controller_ip=graphene.String(), cluster_id=graphene.String(),
+                              node_id=graphene.String(), ordering=graphene.String())
 
     vms = graphene.List(VmType, controller_ip=graphene.String(), cluster_id=graphene.String(),
                                 node_id=graphene.String(), datapool_id=graphene.String(),

@@ -26,6 +26,8 @@ class Pool(db.Model):
     status = db.Column(AlchemyEnum(Status), nullable=False, index=True)
     controller = db.Column(UUID(), db.ForeignKey('controller.id'), nullable=False)
 
+    keep_vms_on = db.Column(db.Boolean(), nullable=False, default=False)
+
     # ----- ----- ----- ----- ----- ----- -----
     # Constants:
     POOL_TYPE_LABEL = 'pool_type'
