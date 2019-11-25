@@ -26,6 +26,8 @@ class Pool(db.Model):
     status = db.Column(AlchemyEnum(Status), nullable=False, index=True)
     controller = db.Column(UUID(), db.ForeignKey('controller.id'), nullable=False)
 
+    keep_vms_on = db.Column(db.Boolean(), nullable=False, default=False)
+
     # ----- ----- ----- ----- ----- ----- -----
     # Constants:
     POOL_TYPE_LABEL = 'pool_type'
@@ -248,10 +250,12 @@ class StaticPool(db.Model):
         return await Pool.deactivate(self.static_pool_id)
 
     @classmethod
-    async def soft_update(cls, id, verbose_name):
+    async def soft_update(cls, pool_id, verbose_name, keep_vms_on):
         async with db.transaction() as tx:
-            await Pool.update.values(verbose_name=verbose_name).where(
-                Pool.pool_id == id).gino.status()
+            if verbose_name:
+                await Pool.update.values(verbose_name=verbose_name).where(Pool.pool_id == pool_id).gino.status()
+            if keep_vms_on is not None:
+                await Pool.update.values(keep_vms_on=keep_vms_on).where(Pool.pool_id == pool_id).gino.status()
         return True
 
 
@@ -330,7 +334,7 @@ class AutomatedPool(db.Model):
                                         vm_name_template=vm_name_template)
 
     @classmethod
-    async def soft_update(cls, pool_id, verbose_name, reserve_size, total_size, vm_name_template):
+    async def soft_update(cls, pool_id, verbose_name, reserve_size, total_size, vm_name_template, keep_vms_on):
         async with db.transaction() as tx:
             if verbose_name:
                 await Pool.update.values(verbose_name=verbose_name).where(
@@ -345,6 +349,8 @@ class AutomatedPool(db.Model):
             if auto_pool_kwargs:
                 await AutomatedPool.update.values(**auto_pool_kwargs).where(
                     AutomatedPool.automated_pool_id == pool_id).gino.status()
+            if keep_vms_on is not None:
+                await Pool.update.values(keep_vms_on=keep_vms_on).where(Pool.pool_id == pool_id).gino.status()
         return True
 
     async def activate(self):

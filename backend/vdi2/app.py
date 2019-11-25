@@ -15,10 +15,13 @@ from auth.schema import user_schema
 
 from pool.schema import pool_schema
 from vm.schema import vm_schema
+from vm.vm_manager import VmManager
 
 from resources_monitoring.resources_monitor_manager import resources_monitor_manager
 
 from pool.schema import pool_schema
+
+from common.utils import cancel_async_task
 
 
 # if __name__ == '__main__':
@@ -40,6 +43,7 @@ handlers += ws_event_monitoring_urls
 app = tornado.web.Application(handlers, debug=True, websocket_ping_interval=WS_PING_INTERVAL,
                               websocket_ping_timeout=WS_PING_TIMEOUT)
 
+
 if __name__ == '__main__':
     tornado.ioloop.IOLoop.current().run_sync(
         lambda: db.init_app(app,
@@ -52,11 +56,19 @@ if __name__ == '__main__':
     app.listen(8888)
 
     try:
+        vm_manager = VmManager()
+        vm_manager_task = tornado.ioloop.IOLoop.current().add_callback(vm_manager.start)
+
         tornado.ioloop.IOLoop.current().add_callback(resources_monitor_manager.start)
+
         tornado.ioloop.IOLoop.current().start()
     except KeyboardInterrupt:
         print('Finish')
     finally:
         tornado.ioloop.IOLoop.current().run_sync(
             lambda: resources_monitor_manager.stop()
+        )
+
+        tornado.ioloop.IOLoop.current().run_sync(
+            lambda: cancel_async_task(vm_manager_task)
         )

@@ -16,14 +16,14 @@ class ResourcesHttpClient(VeilHttpClient):
 
     methods = ['POST', 'GET']
 
-    def __init__(self, controller_ip: str):
-        super().__init__(controller_ip)
+    def __init__(self, controller_ip: str, token: str):
+        super().__init__(controller_ip, token)
 
     @classmethod
     async def create(cls, controller_ip: str):
         """Because of we need async execute db query"""
-        self = cls(controller_ip)
-        self.controller_id = await Controller.get_controller_id_by_ip(controller_ip)
+        token = await Controller.get_token(controller_ip)
+        self = cls(controller_ip, token)
         return self
 
     @cached_property
@@ -53,26 +53,8 @@ class ResourcesHttpClient(VeilHttpClient):
         url = self.api_url + 'controllers/check/'
         await self.fetch(url=url, method='GET')
 
-    # async def discover_controllers(self, return_broken: bool):
-    #     """Get controllers data"""
-    #     controllers_data = await Controller.query.gino.all()
-    #     connected = []
-    #     broken = []
-    #     for controller_data in controllers_data:
-    #         controller_dict = controller_data.__values__
-    #         try:
-    #             await self.check_controller(controller_ip=controller_dict['address'])
-    #         except (HttpError, OSError):
-    #             broken.append(controller_dict)
-    #         else:
-    #             connected.append(controller_dict)
-    #
-    #     if return_broken:
-    #         return connected, broken
-    #     return connected
-
     async def fetch_node_list(self, cluster_id: str = None, ordering: str = None, reversed_order: bool = None):
-        custom_url_vars = {'cluster': cluster_id}
+        custom_url_vars = {'cluster': cluster_id} if cluster_id else None
         return await self.fetch_resources_list('nodes', ordering, reversed_order, custom_url_vars)
 
     async def fetch_cluster_list(self, ordering: str = None, reversed_order: bool = None):
@@ -120,7 +102,7 @@ class ResourcesHttpClient(VeilHttpClient):
             order_sign = '-' if reversed_order else ''
             url_vars['ordering'] = order_sign + ordering
 
-        if not url_vars:
+        if url_vars:
             url = url + urllib.parse.urlencode(url_vars)
 
         resources_list_data = await self.fetch_with_response(url=url, method='GET')

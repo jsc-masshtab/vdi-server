@@ -28,25 +28,6 @@ from pool.models import AutomatedPool, StaticPool, Pool, PoolUsers
 #  стоит применить и к статическим пулам (вместо похода на вейл для проверки присланных параметров).
 
 
-async def check_and_return_pool_data(pool_id, pool_type=None):
-    # TODO: а это точно нужно?
-    # TODO: remove raw sql, rewrite
-    # check if pool exists
-    async with db.connect() as conn:
-        qu = 'SELECT * FROM pool WHERE id = $1', pool_id
-        pool_data = await conn.fetch(*qu)
-        if not pool_data:
-            raise SimpleError('Не найден пул с указанным id')
-        [pool_data] = pool_data
-        pool_data_dict = dict(pool_data.items())
-
-    # if pool_type provided then check if pool has required type
-    if pool_type and pool_data_dict['desktop_pool_type'] != pool_type:
-        raise SimpleError('Не найден пул с указанным id и типом {}'.format(pool_type))
-
-    return pool_data_dict
-
-
 class PoolValidator(MutationValidation):
     """Валидатор для сущности Pool"""
 
@@ -179,6 +160,8 @@ class PoolType(graphene.ObjectType):
     cluster = graphene.Field(ClusterType)
     datapool = graphene.Field(DatapoolType)
     template = graphene.Field(TemplateType)
+
+    keep_vms_on = graphene.Boolean()
 
     async def resolve_controller(self, info):
         controller_obj = await Controller.get(self.controller)
@@ -448,15 +431,16 @@ class RemoveVmsFromStaticPool(graphene.Mutation):
 class UpdateStaticPoolMutation(graphene.Mutation, PoolValidator):
     """ """
     class Arguments:
-        id = graphene.UUID(required=True)
+        pool_id = graphene.UUID(required=True)
         verbose_name = graphene.String()
+        keep_vms_on = graphene.Boolean()
 
     ok = graphene.Boolean()
 
     @classmethod
     async def mutate(cls, _root, _info, **kwargs):
         await cls.validate_agruments(**kwargs)
-        ok = await StaticPool.soft_update(kwargs['id'], kwargs.get('verbose_name'))
+        ok = await StaticPool.soft_update(kwargs['pool_id'], kwargs.get('verbose_name'), kwargs.get('keep_vms_on'))
         return UpdateStaticPoolMutation(ok=ok)
 
 
@@ -512,6 +496,7 @@ class UpdateAutomatedPoolMutation(graphene.Mutation, PoolValidator):
         reserve_size = graphene.Int()
         total_size = graphene.Int()
         vm_name_template = graphene.String()
+        keep_vms_on = graphene.Boolean()
 
     ok = graphene.Boolean()
 
@@ -519,7 +504,8 @@ class UpdateAutomatedPoolMutation(graphene.Mutation, PoolValidator):
     async def mutate(cls, root, info, **kwargs):
         await cls.validate_agruments(**kwargs)
         ok = await AutomatedPool.soft_update(kwargs['pool_id'], kwargs.get('verbose_name'), kwargs.get('reserve_size'),
-                                             kwargs.get('total_size'), kwargs.get('vm_name_template'))
+                                             kwargs.get('total_size'), kwargs.get('vm_name_template'),
+                                             kwargs.get('keep_vms_on'))
         return UpdateAutomatedPoolMutation(ok=ok)
 
 

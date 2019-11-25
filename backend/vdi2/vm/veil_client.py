@@ -17,8 +17,8 @@ class VmHttpClient(VeilHttpClient):
         'start', 'suspend', 'reset', 'shutdown', 'resume', 'reboot'
     ]
 
-    def __init__(self, controller_ip: str, vm_id: str, verbose_name: str = None, template_name: str = None):
-        super().__init__(controller_ip)
+    def __init__(self, controller_ip: str, token: str, vm_id: str, verbose_name: str = None, template_name: str = None):
+        super().__init__(controller_ip, token)
         self.vm_id = vm_id
         self.verbose_name = verbose_name
         self.template_name = template_name
@@ -26,8 +26,8 @@ class VmHttpClient(VeilHttpClient):
     @classmethod
     async def create(cls, controller_ip: str, vm_id: str, verbose_name: str = None, template_name: str = None):
         """Because of we need async execute db query"""
-        self = cls(controller_ip, vm_id, verbose_name, template_name)
-        self.controller_id = await Controller.get_controller_id_by_ip(controller_ip)
+        token = await Controller.get_token(controller_ip)
+        self = cls(controller_ip, token, vm_id, verbose_name, template_name)
         return self
 
     @property
@@ -64,8 +64,7 @@ class VmHttpClient(VeilHttpClient):
                     parent=self.vm_id)
         return await self.fetch_with_response(url=url, method='POST', body=body)
 
-    async def fetch_all_vms_list(self, node_id: str = None, cluster_id: str = None,
-                                 ordering: str = None, reversed_order: bool = None):
+    async def fetch_all_vms_list(self, node_id: str = None, ordering: str = None, reversed_order: bool = None):
 
         url = "http://{}/api/domains/?".format(self.controller_ip)
 
@@ -79,7 +78,7 @@ class VmHttpClient(VeilHttpClient):
             order_sign = '-' if reversed_order else ''
             url_vars['ordering'] = order_sign + ordering
 
-        if not url_vars:
+        if url_vars:
             url = url + urllib.parse.urlencode(url_vars)
         # request
         resources_list_data = await self.fetch_with_response(url=url, method='GET')
@@ -90,16 +89,14 @@ class VmHttpClient(VeilHttpClient):
         #     all_vms_list = list(filter(lambda vm: vm['cluster'] == cluster_id, all_vms_list))
         return all_vms_list
 
-    async def fetch_vms_list(self, node_id: str = None, cluster_id: str = None,
-                             ordering: str = None, reversed_order: bool = None):
+    async def fetch_vms_list(self, node_id: str = None, ordering: str = None, reversed_order: bool = None):
         """Fetch lists of vms"""
-        all_vms_list = await self.fetch_all_vms_list(node_id, cluster_id, ordering, reversed_order)
+        all_vms_list = await self.fetch_all_vms_list(node_id, ordering, reversed_order)
         vms_list = [vm for vm in all_vms_list if not vm['template']]
         return vms_list
 
-    async def fetch_templates_list(self, node_id: str = None, cluster_id: str = None,
-                                   ordering: str = None, reversed_order: bool = None):
+    async def fetch_templates_list(self, node_id: str = None, ordering: str = None, reversed_order: bool = None):
         """Fetch lists of templates"""
-        all_vms_list = await self.fetch_all_vms_list(node_id, cluster_id, ordering, reversed_order)
+        all_vms_list = await self.fetch_all_vms_list(node_id, ordering, reversed_order)
         vms_list = [vm for vm in all_vms_list if vm['template']]
         return vms_list
