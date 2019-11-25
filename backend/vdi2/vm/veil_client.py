@@ -79,7 +79,7 @@ class VmHttpClient(VeilHttpClient):
             order_sign = '-' if reversed_order else ''
             url_vars['ordering'] = order_sign + ordering
 
-        if not url_vars:
+        if url_vars:
             url = url + urllib.parse.urlencode(url_vars)
         # request
         resources_list_data = await self.fetch_with_response(url=url, method='GET')

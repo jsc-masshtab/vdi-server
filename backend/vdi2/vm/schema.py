@@ -230,7 +230,8 @@ class VmQuery(graphene.ObjectType):
             for controller_address in controllers_addresses:
                 vm_http_client = await VmHttpClient.create(controller_address, '')
                 try:
-                    single_template_veil_data_list = await vm_http_client.fetch_templates_list()
+                    single_template_veil_data_list = await vm_http_client.fetch_templates_list(
+                        cluster_id=cluster_id, node_id=node_id)
                     single_template_type_list = VmQuery.veil_template_data_to_graphene_type_list(
                         single_template_veil_data_list, controller_address)
                     template_type_list.extend(single_template_type_list)
@@ -270,7 +271,8 @@ class VmQuery(graphene.ObjectType):
             for controller_address in controllers_addresses:
                 vm_http_client = await VmHttpClient.create(controller_address, '')
                 try:
-                    single_vm_veil_data_list = await vm_http_client.fetch_vms_list()
+                    single_vm_veil_data_list = await vm_http_client.fetch_vms_list(
+                        cluster_id=cluster_id, node_id=node_id)
                     single_vm_type_list = VmQuery.veil_vm_data_to_graphene_type_list(
                         single_vm_veil_data_list, controller_address)
                     vm_type_list.extend(single_vm_type_list)

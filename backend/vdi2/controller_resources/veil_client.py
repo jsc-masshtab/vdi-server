@@ -72,7 +72,7 @@ class ResourcesHttpClient(VeilHttpClient):
     #     return connected
 
     async def fetch_node_list(self, cluster_id: str = None, ordering: str = None, reversed_order: bool = None):
-        custom_url_vars = {'cluster': cluster_id}
+        custom_url_vars = {'cluster': cluster_id} if cluster_id else None
         return await self.fetch_resources_list('nodes', ordering, reversed_order, custom_url_vars)
 
     async def fetch_cluster_list(self, ordering: str = None, reversed_order: bool = None):
@@ -120,7 +120,7 @@ class ResourcesHttpClient(VeilHttpClient):
             order_sign = '-' if reversed_order else ''
             url_vars['ordering'] = order_sign + ordering
 
-        if not url_vars:
+        if url_vars:
             url = url + urllib.parse.urlencode(url_vars)
 
         resources_list_data = await self.fetch_with_response(url=url, method='GET')

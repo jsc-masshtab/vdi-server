@@ -64,5 +64,5 @@ class VmManager:
                     except (HttpError, OSError):
                         pass
 
-            QUERY_INTERVAL = 5
+            QUERY_INTERVAL = 10
             await asyncio.sleep(QUERY_INTERVAL)
