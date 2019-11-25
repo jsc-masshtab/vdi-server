@@ -322,10 +322,10 @@ class CreateStaticPoolMutation(graphene.Mutation, PoolValidator):
         verbose_name = kwargs['verbose_name']
         # get vm info
         veil_vm_data_list = await CreateStaticPoolMutation.fetch_veil_vm_data_list(vm_ids)
-        # Check that all vms are on the same node (Условие поставленное начальством, насколько я помню)
+        # Check that all vms are on the same node
         first_vm_data = veil_vm_data_list[0]
         # TODO: move to validator?
-        if not all(x == first_vm_data for x in veil_vm_data_list):
+        if not all(vm_data['node']['id'] == first_vm_data['node']['id'] for vm_data in veil_vm_data_list):
             raise SimpleError("Все ВМ должны находится на одном сервере")
         # All VMs are on the same node and cluster so we can take this data from the first item
         controller_ip = first_vm_data['controller_address']
