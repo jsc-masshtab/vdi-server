@@ -1,58 +1,50 @@
 import pytest
 
-from vdi.graphql_api import schema
+from graphene.test import Client
+
+from controller.schema import controller_schema
 
 
-@pytest.mark.asyncio
-async def test_add_remove_controller_old():
+def test_add_remove_controller():
     controller_ip = '192.168.6.122'
+    client = Client(controller_schema)
+
     # add controller
     qu = """
     mutation {
-      addController(ip: "%s", description: "added during test", set_default: false){
-        ok
-      }
+        addController(
+            verbose_name: "controller_added_during_test",
+            address: "%s",
+            description: "controller_added_during_test",
+            username: "test_vdi_user",
+            password: "test_vdi_user",
+            ldap_connection: false) {
+                ok
+                controller
+                {
+                    id
+                    verbose_name
+                    description
+                    address
+                    status
+                }
+            }
     }
     """ % controller_ip
-    res = await schema.exec(qu)
-    assert res['addController']['ok']
+
+    executed = client.execute(qu)
+    assert executed['addController']['ok']
+
+    controller_id = executed['addController']['controller']['id']
 
     # remove controller
     qu = """
     mutation {
-      removeController(controller_ip: "%s"){
-        ok
-      }
+        removeController(id: "%s") {
+            ok
+        }
     }
-    """ % controller_ip
-    res = await schema.exec(qu)
-    assert res['removeController']['ok']
+    """ % controller_id
 
-
-@pytest.mark.asyncio
-async def test_add_remove_controller_new():
-    controller_ip = '192.168.6.122'
-    # add controller
-    qu = """
-    mutation {
-      addController(verbose_name: "controller_added_by_test",
-                  address: "%s",
-                  description: "added during test",
-                  default: false){
-        ok
-      }
-    }
-    """ % controller_ip
-    res = await schema.exec(qu)
-    assert res['addController']['ok']
-
-    # remove controller
-    qu = """
-    mutation {
-      removeController(controller_ip: "%s"){
-        ok
-      }
-    }
-    """ % controller_ip
-    res = await schema.exec(qu)
-    assert res['removeController']['ok']
+    executed = client.execute(qu)
+    assert executed['removeController']['ok']
