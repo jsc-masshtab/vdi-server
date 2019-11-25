@@ -53,24 +53,6 @@ class ResourcesHttpClient(VeilHttpClient):
         url = self.api_url + 'controllers/check/'
         await self.fetch(url=url, method='GET')
 
-    # async def discover_controllers(self, return_broken: bool):
-    #     """Get controllers data"""
-    #     controllers_data = await Controller.query.gino.all()
-    #     connected = []
-    #     broken = []
-    #     for controller_data in controllers_data:
-    #         controller_dict = controller_data.__values__
-    #         try:
-    #             await self.check_controller(controller_ip=controller_dict['address'])
-    #         except (HttpError, OSError):
-    #             broken.append(controller_dict)
-    #         else:
-    #             connected.append(controller_dict)
-    #
-    #     if return_broken:
-    #         return connected, broken
-    #     return connected
-
     async def fetch_node_list(self, cluster_id: str = None, ordering: str = None, reversed_order: bool = None):
         custom_url_vars = {'cluster': cluster_id} if cluster_id else None
         return await self.fetch_resources_list('nodes', ordering, reversed_order, custom_url_vars)

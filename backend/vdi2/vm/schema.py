@@ -219,7 +219,10 @@ class VmQuery(graphene.ObjectType):
     async def resolve_templates(self, _info, controller_ip=None, cluster_id=None, node_id=None, ordering=None):
         if controller_ip:
             vm_http_client = await VmHttpClient.create(controller_ip, '')
-            template_veil_data_list = await vm_http_client.fetch_templates_list(cluster_id=cluster_id, node_id=node_id)
+            template_veil_data_list = await vm_http_client.fetch_templates_list(node_id=node_id)
+
+            template_veil_data_list = await VmQuery.filter_domains_by_cluster(
+                template_veil_data_list, controller_ip, cluster_id)
 
             template_type_list = VmQuery.veil_template_data_to_graphene_type_list(
                 template_veil_data_list, controller_ip)
@@ -230,8 +233,11 @@ class VmQuery(graphene.ObjectType):
             for controller_address in controllers_addresses:
                 vm_http_client = await VmHttpClient.create(controller_address, '')
                 try:
-                    single_template_veil_data_list = await vm_http_client.fetch_templates_list(
-                        cluster_id=cluster_id, node_id=node_id)
+                    single_template_veil_data_list = await vm_http_client.fetch_templates_list(node_id=node_id)
+
+                    single_template_veil_data_list = await VmQuery.filter_domains_by_cluster(
+                        single_template_veil_data_list, controller_address, cluster_id)
+
                     single_template_type_list = VmQuery.veil_template_data_to_graphene_type_list(
                         single_template_veil_data_list, controller_address)
                     template_type_list.extend(single_template_type_list)
@@ -260,7 +266,10 @@ class VmQuery(graphene.ObjectType):
         # get veil vm data list
         if controller_ip:
             vm_http_client = await VmHttpClient.create(controller_ip, '')
-            vm_veil_data_list = await vm_http_client.fetch_vms_list(cluster_id=cluster_id, node_id=node_id)
+            vm_veil_data_list = await vm_http_client.fetch_vms_list(node_id=node_id)
+
+            vm_veil_data_list = await VmQuery.filter_domains_by_cluster(vm_veil_data_list, controller_ip, cluster_id)
+
             vm_type_list = VmQuery.veil_vm_data_to_graphene_type_list(vm_veil_data_list, controller_ip)
 
         # if controller address is not provided then take all vms from all controllers
@@ -271,8 +280,11 @@ class VmQuery(graphene.ObjectType):
             for controller_address in controllers_addresses:
                 vm_http_client = await VmHttpClient.create(controller_address, '')
                 try:
-                    single_vm_veil_data_list = await vm_http_client.fetch_vms_list(
-                        cluster_id=cluster_id, node_id=node_id)
+                    single_vm_veil_data_list = await vm_http_client.fetch_vms_list(node_id=node_id)
+
+                    single_vm_veil_data_list = await VmQuery.filter_domains_by_cluster(
+                        single_vm_veil_data_list, controller_address, cluster_id)
+
                     single_vm_type_list = VmQuery.veil_vm_data_to_graphene_type_list(
                         single_vm_veil_data_list, controller_address)
                     vm_type_list.extend(single_vm_type_list)
@@ -349,6 +361,20 @@ class VmQuery(graphene.ObjectType):
             vm_type = VmQuery.veil_vm_data_to_graphene_type(vm_veil_data, controller_address)
             vm_type_list.append(vm_type)
         return vm_type_list
+
+    @staticmethod
+    async def filter_domains_by_cluster(domains_veil_data_list, controller_ip, cluster_id):
+        """filter templates and vms list by cluster"""
+        if cluster_id:
+            resources_http_client = await ResourcesHttpClient.create(controller_ip)
+            node_veil_data_list = await resources_http_client.fetch_node_list(cluster_id=cluster_id)
+            nodes_ids = {node['id'] for node in node_veil_data_list}
+
+            domains_veil_data_list = list(filter(lambda domain_data: domain_data['node']['id'] in nodes_ids,
+                                                 domains_veil_data_list))
+
+        return domains_veil_data_list
+
 
 
 class VmMutations(graphene.ObjectType):
