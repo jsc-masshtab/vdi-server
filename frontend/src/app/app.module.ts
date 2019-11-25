@@ -109,7 +109,6 @@ export class AppModule {
 
     const link = this.httpLink.create( { uri(operation) {
       let urlKnock: string = '';
-      console.log(operation);
       switch (operation.operationName) {
         case 'controllers':
           urlKnock = `${url + 'controllers'}`;
@@ -136,6 +135,7 @@ export class AppModule {
       }
 
       if (networkError) {
+        console.log(networkError);
         this.errorService.setError(networkError['error']['errors']);
         this.waitService.setWait(false);
       }
@@ -160,6 +160,5 @@ export class AppModule {
     });
 
     setTimeout(() => this.ws.init(), 1000);
-
   }
 }

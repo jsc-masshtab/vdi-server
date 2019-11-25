@@ -187,7 +187,7 @@ export class ClusterDetailsComponent implements OnInit {
 
   public getCluster() {
     this.host = false;
-    this.service.getCluster(this.idCluster).valueChanges.pipe(map(data => data.data.cluster))
+    this.service.getCluster(this.idCluster, '1').valueChanges.pipe(map(data => data.data.cluster))
       .subscribe((data) => {
         this.cluster = data;
         this.templates = data.templates.map((item) => JSON.parse(item.info));

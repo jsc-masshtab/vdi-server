@@ -138,7 +138,6 @@ export class PoolAddComponent implements OnInit, OnDestroy {
     this.pending.controllers = true;
     this.addPoolService.getAllControllers().valueChanges.pipe(map(data => data.data.controllers)).subscribe((data) => {
       this.controllers = data;
-      console.log(this.controllers, 'controllers');
       this.pending.controllers = false;
     }, () => {
       this.pending.controllers = false;
@@ -156,26 +155,25 @@ export class PoolAddComponent implements OnInit, OnDestroy {
   }
 
   private getClusters(ipController?: string): void  {
-    console.log(ipController);
     this.pending.clusters = true;
-    // this.addPoolService.getAllClusters(ipController).valueChanges.pipe(map(data => data.data))
-    //   .subscribe( (data) => {
-    //     if (ipController) {
-    //       this.clusters = data.controller.clusters;
-    //     } else {
-    //       this.clusters = this.parseEntity(data.controllers, 'clusters');
-    //     }
-    //     this.pending.clusters = false;
-    //   },
-    //   () => {
-    //     this.pending.clusters = false;
-    //     this.clusters = [];
-    // });
+    this.addPoolService.getAllClusters(ipController).valueChanges.pipe(map(data => data.data.clusters))
+      .subscribe( (data) => {
+        if (ipController) {
+          this.clusters = data;
+        } else {
+          this.clusters = this.parseEntity(data.controllers, 'clusters');
+        }
+        this.pending.clusters = false;
+      },
+      () => {
+        this.pending.clusters = false;
+        this.clusters = [];
+    });
   }
 
   private getNodes(idCluster): void  {
     this.pending.nodes = true;
-    this.addPoolService.getAllNodes(idCluster).valueChanges.pipe(map(data => data.data.controllers))
+    this.addPoolService.getAllNodes(idCluster).valueChanges.pipe(map(data => data.data.nodes))
       .subscribe( (data) => {
         this.nodes = this.parseEntity(data, 'nodes');
         this.pending.nodes = false;
@@ -227,14 +225,12 @@ export class PoolAddComponent implements OnInit, OnDestroy {
 
   public selectController(value: ISelectValue): void  {
     this.ipController = value.value.address;
-    console.log(this.ipController);
     this.getTemplates(this.ipController);
     this.getClusters(this.ipController);
     this.createPoolForm.get('controller_ip').setValue(this.ipController);
   }
 
   public selectTemplate(value: ISelectValue): void  {
-    console.log(value,'temp');
     this.idTemplate = value.value.id;
     this.finishPoolView.template_name = value.value.verbose_name;
     this.createPoolForm.get('template_id').setValue(this.idTemplate);

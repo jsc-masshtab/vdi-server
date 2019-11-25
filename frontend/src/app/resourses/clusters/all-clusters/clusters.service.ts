@@ -9,8 +9,7 @@ export class ClustersService  {
 
     public paramsForGetClusters: IParams = { // для несбрасывания параметров сортировки при всех обновлениях
         spin: true,
-        nameSort: undefined,
-        reverse: undefined
+        nameSort: undefined
     };
 
     constructor(private service: Apollo) {}
@@ -18,8 +17,8 @@ export class ClustersService  {
     public getAllClusters(): QueryRef<any, any> {
 
         return  this.service.watchQuery({
-            query:  gql` query allClusters($ordering:String, $reversed_order: Boolean) {
-                            clusters(ordering: $ordering, reversed_order: $reversed_order) {
+            query:  gql` query resources($ordering:String) {
+                            clusters(ordering: $ordering) {
                                 id
                                 verbose_name
                                 nodes_count
@@ -27,23 +26,22 @@ export class ClustersService  {
                                 cpu_count
                                 memory_count
                                 controller {
-                                    ip
+                                    address
                                 }
                             }
                         }
                     `,
             variables: {
                 method: 'GET',
-                ordering: this.paramsForGetClusters.nameSort,
-                reversed_order: this.paramsForGetClusters.reverse
+                ordering: this.paramsForGetClusters.nameSort
             }
         });
     }
 
-    public getCluster(id: string): QueryRef<any, any> {
+    public getCluster(id: string, controller_address: string): QueryRef<any, any> {
         return  this.service.watchQuery({
-            query:  gql` query cluster($id: String) {
-                            cluster(id: $id) {
+            query:  gql` query resources($id: String, $controller_address: String) {
+                            cluster(id: $id, controller_address: $controller_address) {
                                 id
                                 verbose_name
                                 nodes_count
@@ -85,6 +83,7 @@ export class ClustersService  {
                     `,
             variables: {
                 method: 'GET',
+                controller_address,
                 id
             }
         });

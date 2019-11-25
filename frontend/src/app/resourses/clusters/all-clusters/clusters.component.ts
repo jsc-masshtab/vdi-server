@@ -46,7 +46,7 @@ export class ClustersComponent extends DetailsMove implements OnInit, OnDestroy 
     {
       title: 'Контроллер',
       property: 'controller',
-      property_lv2: 'ip',
+      property_lv2: 'address',
       reverse_sort: true
     },
     {
