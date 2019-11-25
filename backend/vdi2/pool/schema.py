@@ -187,7 +187,7 @@ class PoolType(graphene.ObjectType):
     async def resolve_node(self, _info):
         controller_address = await Pool.get_controller_ip(self.pool_id)
         resources_http_client = await ResourcesHttpClient.create(controller_address)
-        node_id = await Pool.select('node_id').where(Pool.id == self.id).gino.scalar()
+        node_id = await Pool.select('node_id').where(Pool.pool_id == self.pool_id).gino.scalar()
 
         node_data = await resources_http_client.fetch_node(node_id)
         node_type = make_graphene_type(NodeType, node_data)
@@ -197,7 +197,7 @@ class PoolType(graphene.ObjectType):
     async def resolve_cluster(self, _info):
         controller_address = await Pool.get_controller_ip(self.pool_id)
         resources_http_client = await ResourcesHttpClient.create(controller_address)
-        cluster_id = await Pool.select('cluster_id').where(Pool.id == self.id).gino.scalar()
+        cluster_id = await Pool.select('cluster_id').where(Pool.id == self.pool_id).gino.scalar()
 
         cluster_data = await resources_http_client.fetch_cluster(cluster_id)
         cluster_type = make_graphene_type(ClusterType, cluster_data)
@@ -216,7 +216,7 @@ class PoolType(graphene.ObjectType):
 
     async def resolve_template(self, _info):
         controller_address = await Pool.get_controller_ip(self.pool_id)
-        template_id = await Pool.select('template_id').where(Pool.id == self.id).gino.scalar()
+        template_id = await Pool.select('template_id').where(Pool.id == self.pool_id).gino.scalar()
         vm_http_client = await VmHttpClient.create(controller_address, template_id)
 
         veil_info = await vm_http_client.info()
@@ -283,7 +283,8 @@ class CreateStaticPoolMutation(graphene.Mutation, PoolValidator):
         verbose_name = graphene.String(required=True)
         vm_ids = graphene.List(graphene.UUID, required=True)
 
-    Output = PoolType
+    pool = graphene.Field(lambda: PoolType)
+    ok = graphene.Boolean()
 
     @staticmethod
     async def fetch_veil_vm_data_list(vm_ids):
@@ -353,8 +354,15 @@ class CreateStaticPoolMutation(graphene.Mutation, PoolValidator):
                 await pool.deactivate()
             # return CreateStaticPoolMutation(
             #     Output=None)
-            return None
-        return PoolType(pool_id=pool.static_pool_id, verbose_name=verbose_name, vms=vms)
+            return E
+        #return PoolType(pool_id=pool.static_pool_id, verbose_name=verbose_name, vms=vms)
+        # return CreateStaticPoolMutation(
+        #         pool=PoolType(pool_id=pool.static_pool_id, verbose_name=verbose_name, vms=vms),
+        #         ok=True)
+        return {
+            'pool': PoolType(pool_id=pool.static_pool_id, verbose_name=verbose_name, vms=vms),
+            'ok': True
+        }
 
 
 class AddVmsToStaticPool(graphene.Mutation):

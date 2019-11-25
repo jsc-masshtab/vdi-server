@@ -53,6 +53,7 @@ class AddControllerMutation(graphene.Mutation):
 
     async def mutate(self, _info, verbose_name, address, username,
                      password, ldap_connection, description=None):
+        print('AddControllerMutation::mutate')
         # check credentials
         controller_client = ControllerClient(address)
         auth_info = dict(username=username, password=password, ldap=ldap_connection)

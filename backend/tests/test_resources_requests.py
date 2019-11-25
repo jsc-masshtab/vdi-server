@@ -1,25 +1,29 @@
 import pytest
 
-from vdi.graphql_api import schema
+from graphene.test import Client
+
+from controller_resources.schema import resources_schema
 
 
-@pytest.mark.asyncio
-async def test_request_controllers_info():
-    qu = """{
-      controllers{
-        ip
-        clusters{
-          verbose_name
-          nodes{
+def test_request_clusters():
+    client = Client(resources_schema)
+
+    # add controller
+    qu = """
+    {
+        clusters(ordering: "verbose_name"){
             verbose_name
+            id
+            nodes_count
             datapools{
-              verbose_name
+                verbose_name
             }
-            templates{
-              name
+            nodes{
+                verbose_name
             }
-          }
         }
-      }
-    }"""
-    await schema.exec(qu)
+    }
+    """
+
+    executed = client.execute(qu)
+    assert executed['addController']['ok']
