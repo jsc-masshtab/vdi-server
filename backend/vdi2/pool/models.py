@@ -421,7 +421,7 @@ class AutomatedPool(db.Model):
             is_vm_successfully_created = await response_waiter.wait_for_message(
                 _check_if_vm_created, VEIL_WS_MAX_TIME_TO_WAIT)
             resources_monitor_manager.unsubscribe(response_waiter)
-
+            print('is_vm_successfully_created', is_vm_successfully_created)
             if is_vm_successfully_created:
                 await Vm.create(id=vm_info['id'], pool_id=str(self.automated_pool_id),
                                 template_id=str(self.template_id),
@@ -483,6 +483,10 @@ class AutomatedPool(db.Model):
                         is_successful=is_creation_successful,
                         resource=VDI_TASKS_SUBSCRIPTION)
         resources_monitor_manager.signal_internal_event(msg_dict)
+
+        # Пробросить исключение, если споткнулись на создании машин
+        if not is_creation_successful:
+            raise VmCreationError('Не удалось создать необходимое число машин.')
 
     async def expand_pool_if_requred(self):
         """

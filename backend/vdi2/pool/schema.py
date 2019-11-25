@@ -2,10 +2,11 @@
 import re
 import graphene
 from tornado.httpclient import HTTPClientError  # TODO: точно это нужно тут?
+from graphql.error.located_error import GraphQLLocatedError
 
 from database import StatusGraphene
 from common.veil_validators import MutationValidation
-from common.veil_errors import SimpleError, HttpError, ValidationError
+from common.veil_errors import SimpleError, HttpError, ValidationError, VmCreationError
 from common.utils import make_graphene_type
 
 from auth.schema import UserType
@@ -347,18 +348,11 @@ class CreateStaticPoolMutation(graphene.Mutation, PoolValidator):
             # response
             vms = [VmType(id=vm_id) for vm_id in vm_ids]
             await pool.activate()
-        except Exception as E:
-            # TODO: широкий exception потому, что пока нет ошибки от монитора ресурсов. эксепшены нужно ограничить.
+        except Exception as E:  # Возможные исключения: дубликат имени или вм id, сетевой фейл enable_remote_accesses
             print(E)
             if pool:
                 await pool.deactivate()
-            # return CreateStaticPoolMutation(
-            #     Output=None)
             return E
-        #return PoolType(pool_id=pool.static_pool_id, verbose_name=verbose_name, vms=vms)
-        # return CreateStaticPoolMutation(
-        #         pool=PoolType(pool_id=pool.static_pool_id, verbose_name=verbose_name, vms=vms),
-        #         ok=True)
         return {
             'pool': PoolType(pool_id=pool.static_pool_id, verbose_name=verbose_name, vms=vms),
             'ok': True
@@ -482,12 +476,11 @@ class CreateAutomatedPoolMutation(graphene.Mutation, PoolValidator):
         pool = None
         try:
             automated_pool = await AutomatedPool.create(**kwargs)
-            # TODO: в мониторе ресурсов нет происходит raise ошибки, если оно не создано
+
             await automated_pool.add_initial_vms()
             await automated_pool.activate()
             pool = await Pool.get_pool(automated_pool.automated_pool_id)
-        except Exception as E:
-            # TODO: широкий exception потому, что пока нет ошибки от монитора ресурсов. эксепшены нужно ограничить.
+        except (GraphQLLocatedError, VmCreationError) as E:  # Возможные исключения: дубликат имени пула,VmCreationError
             if pool:
                 await pool.deactivate()
             raise SimpleError(E)
