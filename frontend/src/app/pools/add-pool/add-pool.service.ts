@@ -55,50 +55,44 @@ export class AddPoolService {
         });
     }
 
-    public getAllDatapools(nodeId: string): QueryRef<any, any> {
-        const idNode = nodeId;
+    public getAllDatapools(node_id: string): QueryRef<any, any> {
         return  this.service.watchQuery({
-            query:  gql` query allDatapools($node_id: String) {
-                            controllers {
+            query:  gql` query resources($node_id: String) {
                                 datapools(node_id: $node_id) {
                                     id
                                     verbose_name
                                 }
                             }
-                        }
-                    `,
+                        `,
             variables: {
                 method: 'GET',
-                node_id: idNode
+                node_id
             }
         });
     }
 
-    public getAllVms(clusterId: string, nodeId: string, datapoolId: string): QueryRef<any, any> {
-        const idCluster = clusterId;
-        const idNode = nodeId;
-        const idDatapool =  datapoolId;
+    public getAllVms(cluster_id: string, node_id: string, datapool_id: string): QueryRef<any, any> {
         return  this.service.watchQuery({
-            query:  gql` query list_free_vms($cluster_id: String,$node_id:String,$datapool_id:String) {
-                                    list_of_vms(cluster_id: $cluster_id,node_id:$node_id,datapool_id:$datapool_id) {
-                                        id
-                                        name
-                                    }
-                                }
+            query:  gql` query vms($cluster_id: String, $node_id:String, $datapool_id:String)  {
+                            vms(cluster_id: $cluster_id, node_id: $node_id, datapool_id: $datapool_id)  {
+                                id
+                                verbose_name
+                            }
+                        }
                     `,
             variables: {
                 method: 'GET',
-                cluster_id: idCluster,
-                node_id: idNode,
-                datapool_id: idDatapool,
-                get_vms_in_pools: false
+                get_vms_in_pools: false,
+                cluster_id,
+                node_id,
+                datapool_id
             }
         });
     }
 
     public getAllTemplates(controller_ip: string): QueryRef<any, any> {
         return  this.service.watchQuery({
-            query:  gql`query vms($controller_ip: String) {
+            query:  gql` query vms($controller_ip: String) {
                             templates(controller_ip: $controller_ip) {
                                 id
                                 verbose_name
@@ -112,14 +106,7 @@ export class AddPoolService {
         });
     }
 
-    // l` query vms($controller_ip: String) {
-    //     templates(controller_ip: $controller_ip) {
-    //         id
-    //         verbose_name
-    //     }
-    // }
-
-    public getAllControllers(): QueryRef<any, any> { // +
+    public getAllControllers(): QueryRef<any, any> {
         return  this.service.watchQuery({
             query:  gql` query controllers {
                             controllers {
@@ -133,20 +120,20 @@ export class AddPoolService {
         });
     }
 
-    public createDinamicPool(namePool: string, idTemplate: string, idCluster: string,
-                             idNode: string, idDatapool: string, initialSizePool: number,
-                             reserveSizePool: number, totalSizePool: number, templateForVM: string, controllerIp: string) {
+    public createDinamicPool(verbose_name: string, template_id: string, cluster_id: string,
+                             node_id: string, datapool_id: string, initial_size: number,
+                             reserve_size: number, total_size: number, vm_name_template: string, controller_ip: string) {
 
         return this.service.mutate<any>({
             mutation: gql`
-                        mutation AddPool($name: String!,$template_id: String,
-                                        $cluster_id: String,$node_id: String,
-                                        $datapool_id: String,$initial_size: Int,
+                        mutation pools($verbose_name: String!,$template_id: UUID!,
+                                        $cluster_id: UUID!,$node_id: UUID!,
+                                        $datapool_id: UUID!,$initial_size: Int,
                                         $reserve_size: Int,$total_size: Int,
                                         $vm_name_template: String,
                                         $controller_ip: String!)
                                 {
-                                addPool(name: $name, template_id: $template_id,
+                                addDynamicPool(verbose_name: $verbose_name, template_id: $template_id,
                                         cluster_id: $cluster_id,node_id: $node_id,
                                         datapool_id: $datapool_id,initial_size: $initial_size,
                                         reserve_size: $reserve_size,total_size:$total_size,
@@ -154,46 +141,40 @@ export class AddPoolService {
                                         controller_ip: $controller_ip
                                         )
                                         {
-                                            id
+                                            ok
                                         }
                             }
             `,
             variables: {
                 method: 'POST',
-                name: namePool,
-                template_id: idTemplate,
-                cluster_id: idCluster,
-                node_id: idNode,
-                datapool_id: idDatapool,
-                initial_size: initialSizePool,
-                reserve_size: reserveSizePool,
-                total_size: totalSizePool,
-                vm_name_template: templateForVM,
-                controller_ip: controllerIp
+                verbose_name,
+                template_id,
+                cluster_id,
+                node_id,
+                datapool_id,
+                initial_size,
+                reserve_size,
+                total_size,
+                vm_name_template,
+                controller_ip
             }
         });
     }
 
-    public createStaticPool(namePool: string, idCluster: string, idNode: string, idDatapool: string, idsVms: string[]) {
+    public createStaticPool(verbose_name: string,  vm_ids: string[]) {
         return this.service.mutate<any>({
             mutation: gql`
-                        mutation AddPool($name: String!,$cluster_id: String,$node_id: String,
-                                        $datapool_id: String,$vm_ids_list: [String]) {
-                            addStaticPool(name: $name,cluster_id: $cluster_id,
-                                          node_id: $node_id,datapool_id: $datapool_id,
-                                          vm_ids_list: $vm_ids_list)
-                                        {
-                                            id
-                                        }
+                        mutation pools($verbose_name: String!,$vm_ids: [UUID]!) {
+                            addStaticPool(verbose_name: $verbose_name, vm_ids: $vm_ids)
+                                {
+                                    verbose_name
+                                }
                         }
             `,
             variables: {
                 method: 'POST',
-                name: namePool,
-                cluster_id: idCluster,
-                node_id: idNode,
-                datapool_id: idDatapool,
-                vm_ids_list: idsVms
+                verbose_name,
+                vm_ids
             }
         });
     }

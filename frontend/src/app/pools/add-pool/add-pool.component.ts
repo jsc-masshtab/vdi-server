@@ -58,7 +58,6 @@ export class PoolAddComponent implements OnInit, OnDestroy {
   };
 
   public error: boolean = false;
-  private key: string = 'value';
 
   public tableField: object[];
   public step: string = 'chooseType';
@@ -105,7 +104,7 @@ export class PoolAddComponent implements OnInit, OnDestroy {
 
   private createDinamicPoolInit(): void {
     this.createPoolForm = this.fb.group({
-      name: ['', [Validators.required, Validators.pattern(/^[а-яА-ЯёЁa-zA-Z0-9]+[а-яА-ЯёЁa-zA-Z0-9.-_+ ]*$/)]],
+      verbose_name: ['', [Validators.required, Validators.pattern(/^[а-яА-ЯёЁa-zA-Z0-9]+[а-яА-ЯёЁa-zA-Z0-9.-_+ ]*$/)]],
       template_id: ['', Validators.required],
       cluster_id: ['', Validators.required],
       node_id: ['', Validators.required],
@@ -124,10 +123,7 @@ export class PoolAddComponent implements OnInit, OnDestroy {
 
   private createStaticPoolInit(): void {
     this.createPoolForm = this.fb.group({
-      name: ['', [Validators.required,  Validators.pattern(/^[а-яА-ЯёЁa-zA-Z0-9]+[а-яА-ЯёЁa-zA-Z0-9.-_+ ]*$/)]],
-      cluster_id: ['', Validators.required],
-      node_id: ['', Validators.required],
-      datapool_id: ['', Validators.required],
+      verbose_name: ['', [Validators.required,  Validators.pattern(/^[а-яА-ЯёЁa-zA-Z0-9]+[а-яА-ЯёЁa-zA-Z0-9.-_+ ]*$/)]],
       vm_ids_list: [[], Validators.required]
     });
     this.finishPoolView = {};
@@ -158,11 +154,7 @@ export class PoolAddComponent implements OnInit, OnDestroy {
     this.pending.clusters = true;
     this.addPoolService.getAllClusters(ipController).valueChanges.pipe(map(data => data.data.clusters))
       .subscribe( (data) => {
-        if (ipController) {
-          this.clusters = data;
-        } else {
-          this.clusters = this.parseEntity(data.controllers, 'clusters');
-        }
+        this.clusters = data;
         this.pending.clusters = false;
       },
       () => {
@@ -175,7 +167,7 @@ export class PoolAddComponent implements OnInit, OnDestroy {
     this.pending.nodes = true;
     this.addPoolService.getAllNodes(idCluster).valueChanges.pipe(map(data => data.data.nodes))
       .subscribe( (data) => {
-        this.nodes = this.parseEntity(data, 'nodes');
+        this.nodes = data;
         this.pending.nodes = false;
       },
       () => {
@@ -186,9 +178,9 @@ export class PoolAddComponent implements OnInit, OnDestroy {
 
   private getDatapools(idNode): void  {
     this.pending.datapools = true;
-    this.addPoolService.getAllDatapools(idNode).valueChanges.pipe(map(data => data.data.controllers))
+    this.addPoolService.getAllDatapools(idNode).valueChanges.pipe(map(data => data.data.datapools))
     .subscribe( (data) => {
-      this.datapools = this.parseEntity(data, 'datapools');
+      this.datapools = data;
       this.pending.datapools = false;
     },
     () => {
@@ -199,7 +191,7 @@ export class PoolAddComponent implements OnInit, OnDestroy {
 
   private getVms(): void  {
     this.pending.vms = true;
-    this.addPoolService.getAllVms(this.idCluster, this.idNode, this.idDatapool).valueChanges.pipe(map(data => data.data.list_of_vms))
+    this.addPoolService.getAllVms(this.idCluster, this.idNode, this.idDatapool).valueChanges.pipe(map(data => data.data.vms))
     .subscribe( (data) => {
       this.vms =  data;
       this.pending.vms = false;
@@ -208,19 +200,6 @@ export class PoolAddComponent implements OnInit, OnDestroy {
       this.vms = [];
       this.pending.vms = false;
     });
-  }
-
-  private parseEntity(data: [], prop: string): object[] {
-    let arr: [][] = [];
-    this[prop] = [];
-    arr = data.map(controller => controller[`${prop}`]);
-
-    arr.forEach((arrInto: []) => {
-        arrInto.forEach((obj: {}) => {
-          this[prop].push(obj);
-        });
-    });
-    return this[prop];
   }
 
   public selectController(value: ISelectValue): void  {
@@ -245,10 +224,12 @@ export class PoolAddComponent implements OnInit, OnDestroy {
     this.idNode = ''; // скрыть пулы
     this.idDatapool = ''; // скрыть вм
 
-    this.createPoolForm.get('cluster_id').setValue(this.idCluster);
+    if (this.chooseTypeForm.value.type === 'Автоматический') {
+      this.createPoolForm.get('cluster_id').setValue(this.idCluster);
+    }
 
     if (this.selectNodeRef) {
-      this.selectNodeRef[this.key] = '';
+      this.selectNodeRef['value'] = '';
     }
 
     this.getNodes(this.idCluster);
@@ -260,9 +241,13 @@ export class PoolAddComponent implements OnInit, OnDestroy {
     this.idDatapool = ''; // скрыть вм
     this.datapools = [];
     this.vms = [];
-    this.createPoolForm.get('node_id').setValue(this.idNode);
+
+    if (this.chooseTypeForm.value.type === 'Автоматический') {
+      this.createPoolForm.get('node_id').setValue(this.idNode);
+    }
+
     if (this.selectDatapoolRef) {
-      this.selectDatapoolRef[this.key] = '';
+      this.selectDatapoolRef['value'] = '';
     }
     this.getDatapools(this.idNode);
   }
@@ -271,20 +256,25 @@ export class PoolAddComponent implements OnInit, OnDestroy {
     this.idDatapool = value.value.id;
     this.finishPoolView.datapool_name = value.value.verbose_name;
     this.vms = [];
-    this.createPoolForm.get('datapool_id').setValue(this.idDatapool);
-    if (this.selectVmRef) {
-      this.selectVmRef[this.key] = '';
+
+    if (this.chooseTypeForm.value.type === 'Автоматический') {
+      this.createPoolForm.get('datapool_id').setValue(this.idDatapool);
     }
-    this.getVms();
+
+    if (this.selectVmRef) {
+      this.selectVmRef['value'] = '';
+    }
+
+    if (this.chooseTypeForm.value.type === 'Статический') {
+      this.getVms();
+    }
   }
 
-  public selectVm(value: []): void  {
-    const keyId = 'id';
-    const keyName = 'name';
+  public selectVm(value: []): void {
     let idVms: [] = [];
-    idVms = value[this.key].map(vm => vm[keyId]);
+    idVms = value['value'].map(vm => vm['id']);
     this.createPoolForm.get('vm_ids_list').setValue(idVms);
-    this.finishPoolView.vm_name = value[this.key].map(vm => vm[keyName]);
+    this.finishPoolView.vm_name = value['value'].map(vm => vm['verbose_name']);
   }
 
   private resetLocalData(): void {
@@ -309,7 +299,7 @@ export class PoolAddComponent implements OnInit, OnDestroy {
         },
         {
           title: 'Название',
-          property: 'name',
+          property: 'verbose_name',
           type: 'string'
         },
         {
@@ -362,22 +352,7 @@ export class PoolAddComponent implements OnInit, OnDestroy {
         },
         {
           title: 'Название',
-          property: 'name',
-          type: 'string'
-        },
-        {
-          title: 'Кластер',
-          property: 'cluster_name',
-          type: 'string'
-        },
-        {
-          title: 'Сервер',
-          property: 'node_name',
-          type: 'string'
-        },
-        {
-          title: 'Пул данных',
-          property: 'datapool_name',
+          property: 'verbose_name',
           type: 'string'
         },
         {
@@ -448,7 +423,7 @@ export class PoolAddComponent implements OnInit, OnDestroy {
       this.finishPoolView.total_size = formValue.size.total_size;
       this.finishPoolView.vm_name_template = formValue.vm_name_template;
     }
-    this.finishPoolView.name = formValue.name;
+    this.finishPoolView.verbose_name = formValue.verbose_name;
     this.finishPoolView.type = this.chooseTypeForm.value.type;
 
     this.step = 'finish-see';
@@ -461,7 +436,7 @@ export class PoolAddComponent implements OnInit, OnDestroy {
     this.waitService.setWait(true);
     if (this.chooseTypeForm.value.type === 'Автоматический') {
       this.addPoolService.createDinamicPool(
-                              formValue.name,
+                              formValue.verbose_name,
                               formValue.template_id,
                               formValue.cluster_id,
                               formValue.node_id,
@@ -475,20 +450,23 @@ export class PoolAddComponent implements OnInit, OnDestroy {
           this.dialogRef.close();
           this.poolsService.paramsForGetPools.spin = true;
           this.poolsService.getAllPools().subscribe();
+        },
+        () => {
+          this.waitService.setWait(false);
         });
     }
 
     if (this.chooseTypeForm.value.type === 'Статический') {
       this.addPoolService.createStaticPool(
-                              formValue.name,
-                              formValue.cluster_id,
-                              formValue.node_id,
-                              formValue.datapool_id,
+                              formValue.verbose_name,
                               formValue.vm_ids_list)
         .subscribe(() => {
           this.dialogRef.close();
           this.poolsService.paramsForGetPools.spin = true;
           this.poolsService.getAllPools().subscribe();
+        },
+        () => {
+          this.waitService.setWait(false);
         });
     }
   }

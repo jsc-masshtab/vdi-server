@@ -16,7 +16,7 @@ export interface ISelectValue {
 }
 
 export interface IFinishPoolView {
-    name: string;
+    verbose_name: string;
     type: string;
     cluster_name: string;
     node_name: string;
@@ -30,7 +30,7 @@ export interface IFinishPoolView {
 }
 
 export interface IFinishPoolForm {
-    name: string;
+    verbose_name: string;
     cluster_id: string;
     node_id: string;
     datapool_id: string;

@@ -51,8 +51,8 @@ export class ControllersService {
                 method: 'POST',
                 description,
                 address,
-                username: 'lala',
-                verbose_name: 'fff',
+                username: 'vdi_nastya',
+                verbose_name: 'vdi_nastya',
                 ldap_connection: false,
                 password: '1234'
             }
@@ -62,7 +62,7 @@ export class ControllersService {
     public removeController(id: string) {
         return this.service.mutate<any>({
             mutation: gql`
-                            mutation controllers($id: String) {
+                            mutation controllers($id: UUID!) {
                                 removeController(id: $id) {
                                     ok
                                 }

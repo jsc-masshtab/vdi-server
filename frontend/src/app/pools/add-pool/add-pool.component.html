@@ -35,9 +35,9 @@
   <div class="form-fields" [formGroup]="createPoolForm" *ngIf="step === 'createPool'" [style.paddingBottom]="'20px'">
     <label class="field">
       <p class="field-name">Имя пула</p>
-      <input type="text" [focusMe]="true" formControlName="name">
-      <ng-container *ngIf="createPoolForm.hasError('required', 'name') && checkValid"><ng-container *ngTemplateOutlet="errorTemp"></ng-container></ng-container>
-      <div class="error" [@animForm]="error" *ngIf="createPoolForm.hasError('pattern', 'name')">Имя содержит недопустимые символы</div>
+      <input type="text" [focusMe]="true" formControlName="verbose_name">
+      <ng-container *ngIf="createPoolForm.hasError('required', 'verbose_name') && checkValid"><ng-container *ngTemplateOutlet="errorTemp"></ng-container></ng-container>
+      <div class="error" [@animForm]="error" *ngIf="createPoolForm.hasError('pattern', 'verbose_name')">Имя содержит недопустимые символы</div>
     </label>
 
     <label class="field" *ngIf="chooseTypeForm.value.type === 'Автоматический'">
@@ -117,7 +117,7 @@
         <mat-label *ngIf="!vms.length && !pending.vms">- нет виртуальных машин -</mat-label>
         <mat-select (selectionChange)="selectVm($event)" multiple="true" #selectVmRef>
           <mat-option *ngFor="let vm of vms" [value]="vm">
-            {{vm.name}}
+            {{vm.verbose_name}}
           </mat-option>
         </mat-select>
       </mat-form-field>
