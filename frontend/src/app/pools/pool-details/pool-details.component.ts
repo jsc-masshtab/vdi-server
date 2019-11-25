@@ -209,7 +209,8 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
     }
   ];
 
-  private idPool: number;
+  private idPool: string;
+  private address: string;
   public  typePool: string;
   public  menuActive: string = 'info';
   private sub_ws_create_pool: Subscription;
@@ -225,8 +226,10 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
 
   ngOnInit() {
     this.activatedRoute.paramMap.subscribe((param: ParamMap) => {
+      console.log(param);
       this.typePool = param.get('type');
-      this.idPool = +param.get('id');
+      this.idPool = param.get('id');
+      this.address = param.get('address');
       if (this.sub_ws_create_pool) {
         this.sub_ws_create_pool.unsubscribe();
         this.eventCreatedVm = []; // т.к. при переходе на другой из списка,компонент  doesn't destroy
@@ -256,7 +259,7 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
 
   public getPool(): void {
     this.host = false;
-    this.poolService.getPool({id: this.idPool, type: this.typePool})
+    this.poolService.getPool(this.idPool, this.typePool, this.address)
       .subscribe( (data) => {
         this.pool = data;
         this.host = true;
@@ -282,7 +285,8 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
       data: {
         idPool: this.idPool,
         namePool: this.pool.name,
-        typePool: this.typePool
+        typePool: this.typePool,
+        address: this.address
       }
     });
   }
@@ -293,7 +297,8 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
       data: {
         idPool: this.idPool,
         namePool: this.pool.name,
-        typePool: this.typePool
+        typePool: this.typePool,
+        address: this.address
       }
     });
   }
@@ -306,7 +311,8 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
         namePool: this.pool.name,
         idCluster: this.pool.settings.cluster_id,
         idNode: this.pool.settings.node_id,
-        typePool: this.typePool
+        typePool: this.typePool,
+        address: this.address
       }
     });
   }
@@ -318,7 +324,8 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
         idPool: this.idPool,
         namePool: this.pool.name,
         vms: this.pool.vms,
-        typePool: this.typePool
+        typePool: this.typePool,
+        address: this.address
       }
     });
   }

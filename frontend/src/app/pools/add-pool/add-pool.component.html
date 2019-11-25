@@ -43,8 +43,8 @@
     <label class="field" *ngIf="chooseTypeForm.value.type === 'Автоматический'">
       <mat-form-field>
         <mat-label  *ngIf="pending.controllers">Загрузка ...</mat-label>
-        <mat-label  *ngIf="controllers.length && !pending.controllers">Выберите контроллер</mat-label>
-        <mat-label  *ngIf="!controllers.length && !pending.controllers">- нет контроллера -</mat-label>
+        <mat-label  *ngIf="controllers?.length && !pending.controllers">Выберите контроллер</mat-label>
+        <mat-label  *ngIf="!controllers?.length && !pending.controllers">- нет контроллера -</mat-label>
         <mat-select (selectionChange)="selectController($event)">
           <mat-option *ngFor="let controller of controllers" [value]="controller">
             {{controller.address}}
@@ -57,8 +57,8 @@
     <label class="field" *ngIf="chooseTypeForm.value.type === 'Автоматический' && ipController">
       <mat-form-field>
         <mat-label  *ngIf="pending.templates">Загрузка ...</mat-label>
-        <mat-label  *ngIf="templates.length && !pending.templates">Выберите шаблон ВМ</mat-label>
-        <mat-label  *ngIf="!templates.length && !pending.templates">- нет шаблонов -</mat-label>
+        <mat-label  *ngIf="templates?.length && !pending.templates">Выберите шаблон ВМ</mat-label>
+        <mat-label  *ngIf="!templates?.length && !pending.templates">- нет шаблонов -</mat-label>
         <mat-select (selectionChange)="selectTemplate($event)">
           <mat-option *ngFor="let template of templates" [value]="template">
             {{template.verbose_name}}
@@ -71,8 +71,8 @@
     <label class="field" *ngIf="chooseTypeForm.value.type === 'Автоматический' && ipController || chooseTypeForm.value.type === 'Статический'">
       <mat-form-field>
         <mat-label  *ngIf="pending.clusters">Загрузка ...</mat-label>
-        <mat-label  *ngIf="clusters.length && !pending.clusters">Выберите кластер</mat-label>
-        <mat-label  *ngIf="!clusters.length && !pending.clusters">- нет кластеров -</mat-label>
+        <mat-label  *ngIf="clusters?.length && !pending.clusters">Выберите кластер</mat-label>
+        <mat-label  *ngIf="!clusters?.length && !pending.clusters">- нет кластеров -</mat-label>
         <mat-select (selectionChange)="selectCluster($event)">
           <mat-option *ngFor="let cluster of clusters" [value]="cluster">
             {{cluster.verbose_name}}
@@ -85,8 +85,8 @@
     <label class="field" *ngIf="idCluster">
       <mat-form-field>
         <mat-label  *ngIf="pending.nodes">Загрузка ...</mat-label>
-        <mat-label  *ngIf="nodes.length && !pending.nodes">Выберите сервер</mat-label>
-        <mat-label  *ngIf="!nodes.length && !pending.nodes">- нет серверов -</mat-label>
+        <mat-label  *ngIf="nodes?.length && !pending.nodes">Выберите сервер</mat-label>
+        <mat-label  *ngIf="!nodes?.length && !pending.nodes">- нет серверов -</mat-label>
         <mat-select (selectionChange)="selectNode($event)" #selectNodeRef>
           <mat-option *ngFor="let node of nodes" [value]="node">
             {{node.verbose_name}}
@@ -99,8 +99,8 @@
     <label class="field" *ngIf="idNode">
       <mat-form-field>
         <mat-label *ngIf="pending.datapools">Загрузка ...</mat-label>
-        <mat-label *ngIf="datapools.length && !pending.datapools">Выберите пул данных</mat-label>
-        <mat-label *ngIf="!datapools.length && !pending.datapools">- нет пулов данных -</mat-label>
+        <mat-label *ngIf="datapools?.length && !pending.datapools">Выберите пул данных</mat-label>
+        <mat-label *ngIf="!datapools?.length && !pending.datapools">- нет пулов данных -</mat-label>
         <mat-select (selectionChange)="selectDatapool($event)" #selectDatapoolRef>
           <mat-option *ngFor="let datapool of datapools" [value]="datapool">
             {{datapool.verbose_name}}
@@ -113,8 +113,8 @@
     <label class="field" *ngIf="idDatapool && chooseTypeForm.value.type === 'Статический'">
       <mat-form-field>
         <mat-label *ngIf="pending.vms">Загрузка ...</mat-label>
-        <mat-label *ngIf="vms.length && !pending.vms">Выберите свободные ВМ</mat-label>
-        <mat-label *ngIf="!vms.length && !pending.vms">- нет виртуальных машин -</mat-label>
+        <mat-label *ngIf="vms?.length && !pending.vms">Выберите свободные ВМ</mat-label>
+        <mat-label *ngIf="!vms?.length && !pending.vms">- нет виртуальных машин -</mat-label>
         <mat-select (selectionChange)="selectVm($event)" multiple="true" #selectVmRef>
           <mat-option *ngFor="let vm of vms" [value]="vm">
             {{vm.verbose_name}}

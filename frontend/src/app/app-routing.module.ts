@@ -27,7 +27,7 @@ const routes: Routes = [
     component: PoolsComponent,
     children: [
       {
-        path: ':type/:id',
+        path: ':address/:type/:id',
         component: PoolDetailsComponent
       }
     ]

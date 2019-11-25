@@ -27,57 +27,61 @@ export class PoolDetailsService {
         });
     }
 
-    public getPool( {id, type }: {id: number, type: string}): Observable<any> {
-        const idPool = id;
+    public getPool(pool_id: string | number, type: string, controller_address: string): Observable<any> {
         if (type === 'automated') {
             return this.service.watchQuery({
-                query: gql`  query getPool($id: Int) {
-                                pool(id: $id) {
-                                    name
-                                    desktop_pool_type
+                query: gql`  query pools($pool_id: String, $controller_address: String) {
+                                pool(pool_id: $pool_id, controller_address: $controller_address) {
+                                    pool_id
+                                    verbose_name
+                                    pool_type
                                     vms {
                                         id
-                                        name
+                                        verbose_name
                                         template {
-                                            name
+                                            verbose_name
                                         }
-                                        state
                                         user {
                                             username
                                         }
                                         status
                                     }
                                     controller {
-                                        ip
+                                        address
                                     }
-                                    settings {
-                                        initial_size
-                                        reserve_size
-                                        total_size
-                                        vm_name_template
-                                    }
+                                    initial_size
+                                    reserve_size
+                                    total_size
+                                    vm_name_template
                                     users {
                                         username
                                     }
-                                    pool_resources_names {
-                                        cluster_name
-                                        node_name
-                                        datapool_name
-                                        template_name
+                                    cluster {
+                                        verbose_name
+                                    }
+                                    node {
+                                        verbose_name
+                                    }
+                                    datapool {
+                                        verbose_name
+                                    }
+                                    template {
+                                        verbose_name
                                     }
                                 }
                             }`,
                 variables: {
                     method: 'GET',
-                    id: idPool
+                    pool_id,
+                    controller_address
                 }
             }).valueChanges.pipe(map(data => data.data['pool']));
         }
 
         if (type === 'static') {
             return this.service.watchQuery({
-                query: gql`  query getPool($id: Int) {
-                                pool(id: $id) {
+                query: gql`  query pools($pool_id: String, $controller_address: String) {
+                                pool(pool_id: $pool_id, controller_address: $controller_address) {
                                     name
                                     desktop_pool_type
                                     vms {
@@ -108,7 +112,8 @@ export class PoolDetailsService {
                             }`,
                 variables: {
                     method: 'GET',
-                    id: idPool
+                    pool_id,
+                    controller_address
                 }
             }).valueChanges.pipe(map(data => data.data['pool']));
         }

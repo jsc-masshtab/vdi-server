@@ -167,7 +167,7 @@ export class AddPoolService {
                         mutation pools($verbose_name: String!,$vm_ids: [UUID]!) {
                             addStaticPool(verbose_name: $verbose_name, vm_ids: $vm_ids)
                                 {
-                                    verbose_name
+                                    ok
                                 }
                         }
             `,

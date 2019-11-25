@@ -130,14 +130,16 @@ export class AppModule {
 
     const errorLink = onError(({ graphQLErrors, networkError }) => {
       if (graphQLErrors) {
-        graphQLErrors.map(({ message, locations, path }) =>
-        console.log(`[GraphQL error]: Message: ${message}, Location: ${locations}, Path: ${path}`, locations));
         this.waitService.setWait(false);
+        graphQLErrors.map(({ message, locations, path }) => {
+          this.errorService.setError(message);
+          console.log(`[GraphQL error]: Message: ${message}, Location: ${locations}, Path: ${path}`, locations);
+        });
       }
 
       if (networkError) {
-        console.log(networkError);
-        this.errorService.setError(networkError['error']['errors']);
+        console.log(networkError, 'networkError');
+        this.errorService.setError(networkError['message']);
         this.waitService.setWait(false);
       }
     });
