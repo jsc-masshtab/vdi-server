@@ -26,4 +26,4 @@ def test_request_clusters():
     """
 
     executed = client.execute(qu)
-    assert executed['addController']['ok']
+    assert executed['clusters']

@@ -140,7 +140,7 @@ class RemoveControllerMutation(graphene.Mutation):
         status = await Controller.delete.where(Controller.id == id).gino.status()
         print(status)
 
-        resources_monitor_manager.remove_controller(controller.address)
+        await resources_monitor_manager.remove_controller(controller.address)
         return RemoveControllerMutation(ok=True)
 
 
@@ -160,7 +160,7 @@ class RemoveAllControllersMutation(graphene.Mutation):
             # status = await Controller.delete.where(Controller.id == id).gino.status()
             # print(status)
 
-            resources_monitor_manager.remove_controller(controller.address)
+            await resources_monitor_manager.remove_controller(controller.address)
         return RemoveAllControllersMutation(ok=True)
 
 
