@@ -37,7 +37,6 @@ class Controller(db.Model):
         # controller = await Controller.query.where(Controller.address == ip_address).gino.first()
         return await Controller.select('id').where(Controller.address == ip_address).gino.scalar()
 
-
     @staticmethod
     async def get_token(ip_address: str):
         query = Controller.select('token', 'expires_on').where(Controller.address == ip_address)

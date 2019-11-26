@@ -25,7 +25,7 @@ class Pool(db.Model):
     cluster_id = db.Column(UUID(), nullable=False)
     node_id = db.Column(UUID(), nullable=False)
     status = db.Column(AlchemyEnum(Status), nullable=False, index=True)
-    controller = db.Column(UUID(), db.ForeignKey('controller.id'), nullable=False)
+    controller = db.Column(UUID(), db.ForeignKey('controller.id', ondelete="CASCADE"), nullable=False)
 
     keep_vms_on = db.Column(db.Boolean(), nullable=False, default=False)
 
@@ -233,7 +233,7 @@ class Pool(db.Model):
 class StaticPool(db.Model):
     """На данный момент отсутствует смысловая валидация на уровне таблиц (она в схемах)."""
     __tablename__ = 'static_pool'
-    static_pool_id = db.Column(UUID(), db.ForeignKey('pool.pool_id'), primary_key=True)  # TODO: try with id
+    static_pool_id = db.Column(UUID(), db.ForeignKey('pool.pool_id', ondelete="CASCADE"), primary_key=True)  # TODO: try with id
 
     @classmethod
     async def get_info(cls, pool_id: str):
@@ -279,7 +279,7 @@ class AutomatedPool(db.Model):
     """
     __tablename__ = 'automated_pool'
 
-    automated_pool_id = db.Column(UUID(), db.ForeignKey('pool.pool_id'), primary_key=True)  # TODO: try with id
+    automated_pool_id = db.Column(UUID(), db.ForeignKey('pool.pool_id', ondelete="CASCADE"), primary_key=True)  # TODO: try with id
     datapool_id = db.Column(UUID(), nullable=False)
     template_id = db.Column(UUID(), nullable=False)
 
@@ -539,8 +539,8 @@ class AutomatedPool(db.Model):
 
 class PoolUsers(db.Model):
     __tablename__ = 'pools_users'
-    pool_id = db.Column(UUID(), db.ForeignKey('pool.pool_id'))
-    user_id = db.Column(UUID(), db.ForeignKey('user.id'))
+    pool_id = db.Column(UUID(), db.ForeignKey('pool.pool_id', ondelete="CASCADE"))
+    user_id = db.Column(UUID(), db.ForeignKey('user.id', ondelete="CASCADE"))
 
     @staticmethod
     async def check_row_exists(pool_id, user_id):
