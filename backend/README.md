@@ -17,3 +17,5 @@ alembic revision --autogenerate -m "Controller credentials"
 alembic upgrade head
 
 alembic revision -m "create account table"
+
+alembic merge heads
