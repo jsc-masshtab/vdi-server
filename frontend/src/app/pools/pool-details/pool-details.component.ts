@@ -32,34 +32,34 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
   public collectionDetailsStatic: any[] = [
     {
       title: 'Название',
-      property: 'name',
+      property: 'verbose_name',
       type: 'string',
       edit: 'changeName'
     },
     {
       title: 'Тип',
-      property: 'desktop_pool_type',
+      property: 'pool_type',
       type: 'string'
     },
     {
       title: 'Контроллер',
       property: 'controller',
-      property_lv2: 'ip'
+      property_lv2: 'address'
     },
     {
       title: 'Кластер',
-      property: 'pool_resources_names',
-      property_lv2: 'cluster_name'
+      property: 'cluster',
+      type: 'string'
     },
     {
       title: 'Сервер',
-      property: 'pool_resources_names',
-      property_lv2: 'node_name'
+      property: 'node',
+      type: 'string'
     },
     {
       title: 'Пул данных',
-      property: 'pool_resources_names',
-      property_lv2: 'datapool_name'
+      property: 'datapool',
+      type: 'string'
     },
     {
       title: 'Всего ВМ',
@@ -78,52 +78,52 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
   public collectionDetailsAutomated: any[] = [
     {
       title: 'Название',
-      property: 'name',
+      property: 'verbose_name',
       type: 'string',
       edit: 'changeName'
     },
     {
       title: 'Тип',
-      property: 'desktop_pool_type',
+      property: 'pool_type',
       type: 'string'
     },
     {
       title: 'Контроллер',
       property: 'controller',
-      property_lv2: 'ip'
+      property_lv2: 'address'
     },
     {
       title: 'Кластер',
-      property: 'pool_resources_names',
-      property_lv2: 'cluster_name'
+      property: 'cluster',
+      type: 'string'
     },
     {
       title: 'Сервер',
-      property: 'pool_resources_names',
-      property_lv2: 'node_name'
+      property: 'node',
+      type: 'string'
     },
     {
       title: 'Пул данных',
-      property: 'pool_resources_names',
-      property_lv2: 'datapool_name'
+      property: 'datapool',
+      type: 'string'
     },
     {
       title: 'Начальное количество ВМ',    // всего вм
-      property: 'settings',
-      property_lv2: 'initial_size'
+      property: 'initial_size',
+      type: 'string'
     },
     {
       title: 'Количество создаваемых ВМ',      // сколько свободных осталось
-      property: 'settings',
-      property_lv2: 'reserve_size',
+      property: 'reserve_size',
+      type: 'string',
       edit: 'changeAutomatedPoolReserveSize'
     },
     {
       title: 'Максимальное количество создаваемых ВМ',
       // Максимальное количество ВМ в пуле -  c тонкого клиента вм будут создаваться
       // с каждым подключ. пользователем даже,если рес-сы закончатся
-      property: 'settings',
-      property_lv2: 'total_size',
+      property: 'total_size',
+      type: 'string',
       edit: 'changeMaxAutomatedPool'
     },
     {
@@ -133,8 +133,8 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
     },
     {
       title: 'Шаблон для ВМ',
-      property: 'settings',
-      property_lv2: 'vm_name_template',
+      property: 'vm_name_template',
+      type: 'string',
       edit: 'changeTemplateForVmAutomatedPool'
     },
     {
@@ -150,7 +150,7 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
   public collectionVmsAutomated: any[] = [
     {
       title: 'Название',
-      property: 'name',
+      property: 'verbose_name',
       class: 'name-start',
       icon: 'desktop',
       type: 'string'
@@ -158,7 +158,7 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
     {
       title: 'Шаблон',
       property: 'template',
-      property_lv2: 'name'
+      type: 'string'
     },
     {
       title: 'Пользователь',
@@ -173,7 +173,7 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
   public collectionVmsStatic: any[] = [
     {
       title: 'Название',
-      property: 'name',
+      property: 'verbose_name',
       class: 'name-start',
       icon: 'desktop',
       type: 'string'
@@ -210,7 +210,6 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
   ];
 
   private idPool: string;
-  private address: string;
   public  typePool: string;
   public  menuActive: string = 'info';
   private sub_ws_create_pool: Subscription;
@@ -226,10 +225,8 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
 
   ngOnInit() {
     this.activatedRoute.paramMap.subscribe((param: ParamMap) => {
-      console.log(param);
       this.typePool = param.get('type');
       this.idPool = param.get('id');
-      this.address = param.get('address');
       if (this.sub_ws_create_pool) {
         this.sub_ws_create_pool.unsubscribe();
         this.eventCreatedVm = []; // т.к. при переходе на другой из списка,компонент  doesn't destroy
@@ -259,7 +256,7 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
 
   public getPool(): void {
     this.host = false;
-    this.poolService.getPool(this.idPool, this.typePool, this.address)
+    this.poolService.getPool(this.idPool, this.typePool)
       .subscribe( (data) => {
         this.pool = data;
         this.host = true;
@@ -285,8 +282,7 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
       data: {
         idPool: this.idPool,
         namePool: this.pool.name,
-        typePool: this.typePool,
-        address: this.address
+        typePool: this.typePool
       }
     });
   }
@@ -297,8 +293,7 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
       data: {
         idPool: this.idPool,
         namePool: this.pool.name,
-        typePool: this.typePool,
-        address: this.address
+        typePool: this.typePool
       }
     });
   }
@@ -311,8 +306,7 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
         namePool: this.pool.name,
         idCluster: this.pool.settings.cluster_id,
         idNode: this.pool.settings.node_id,
-        typePool: this.typePool,
-        address: this.address
+        typePool: this.typePool
       }
     });
   }
@@ -324,8 +318,7 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
         idPool: this.idPool,
         namePool: this.pool.name,
         vms: this.pool.vms,
-        typePool: this.typePool,
-        address: this.address
+        typePool: this.typePool
       }
     });
   }

@@ -18,7 +18,6 @@ interface IData  {
   typePool: string;
   usersPool: [{username: string }];
   idPool: number;
-  address: string;
 }
 
 @Component({
@@ -39,7 +38,7 @@ export class AddUserVmComponent   {
   public send() {
     this.waitService.setWait(true);
     this.poolService.assignVmToUser(this.data.vm.id, this.user).subscribe(() => {
-      this.poolService.getPool(this.data.idPool, this.data.typePool, this.data.address).subscribe(() => {
+      this.poolService.getPool(this.data.idPool, this.data.typePool).subscribe(() => {
         this.waitService.setWait(false);
       });
       this.dialog.closeAll();

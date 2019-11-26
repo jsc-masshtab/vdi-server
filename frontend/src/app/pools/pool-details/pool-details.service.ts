@@ -27,11 +27,11 @@ export class PoolDetailsService {
         });
     }
 
-    public getPool(pool_id: string | number, type: string, controller_address: string): Observable<any> {
+    public getPool(pool_id: string | number, type: string): Observable<any> {
         if (type === 'automated') {
             return this.service.watchQuery({
-                query: gql`  query pools($pool_id: String, $controller_address: String) {
-                                pool(pool_id: $pool_id, controller_address: $controller_address) {
+                query: gql`  query pools($pool_id: String) {
+                                pool(pool_id: $pool_id) {
                                     pool_id
                                     verbose_name
                                     pool_type
@@ -72,16 +72,15 @@ export class PoolDetailsService {
                             }`,
                 variables: {
                     method: 'GET',
-                    pool_id,
-                    controller_address
+                    pool_id
                 }
             }).valueChanges.pipe(map(data => data.data['pool']));
         }
 
         if (type === 'static') {
             return this.service.watchQuery({
-                query: gql`  query pools($pool_id: String, $controller_address: String) {
-                                pool(pool_id: $pool_id, controller_address: $controller_address) {
+                query: gql`  query pools($pool_id: String) {
+                                pool(pool_id: $pool_id) {
                                     name
                                     desktop_pool_type
                                     vms {
@@ -112,8 +111,7 @@ export class PoolDetailsService {
                             }`,
                 variables: {
                     method: 'GET',
-                    pool_id,
-                    controller_address
+                    pool_id
                 }
             }).valueChanges.pipe(map(data => data.data['pool']));
         }

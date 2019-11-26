@@ -10,7 +10,6 @@ interface IData {
   idPool: number;
   namePool: string;
   typePool: string;
-  address: string;
 }
 
 @Component({
@@ -38,7 +37,7 @@ export class AddUsersPoolComponent implements OnInit {
   public send() {
     this.waitService.setWait(true);
     this.poolService.entitleUsersToPool(this.data.idPool, this.idUsers).subscribe(() => {
-      this.poolService.getPool(this.data.idPool, this.data.typePool, this.data.address).subscribe(() => {
+      this.poolService.getPool(this.data.idPool, this.data.typePool).subscribe(() => {
         this.poolsService.paramsForGetPools.spin = false;
         this.poolsService.getAllPools().subscribe();
         this.waitService.setWait(false);
