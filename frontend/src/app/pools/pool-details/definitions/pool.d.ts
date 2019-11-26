@@ -1,32 +1,41 @@
 
-export interface IPool {
-  name: string;
-  desktop_pool_type: string;
+export interface IPool extends ISettingsAutoPool, ISettingsStaticPool  {
+  verbose_name: string;
+  pool_type: string;
   vms: IPoolVms;
   controller: {
-    ip: string;
+    address: string;
   };
   users: {
     username: string;
   };
-  pool_resources_names: {
-    cluster_name: string;
-    node_name: string;
-    datapool_name: string;
-    template_name?: string; //auto
+
+  cluster: {
+    verbose_name
   };
-  settings: Partial<ISettingsAutoPool> & Partial<ISettingsStaticPool>;
+
+  node: {
+    verbose_name
+  };
+
+  datapool: {
+    verbose_name
+  };
+
+  template: {
+    verbose_name
+  };
 }
 
 interface IPoolVms  {
   id: string;
-  name: string;
-  state: string;
+  verbose_name: string;
+  status: string;
   user: {
     username: string;
   },
-  template?: { //auto
-    name: string;
+  template: {
+    verbose_name: string;
   }
 }
 

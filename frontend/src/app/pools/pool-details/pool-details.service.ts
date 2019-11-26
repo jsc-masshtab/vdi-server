@@ -11,18 +11,18 @@ export class PoolDetailsService {
     constructor(private service: Apollo) { }
 
 
-    public removePool(idPool: number) {
+    public removePool(pool_id: number) {
         return this.service.mutate<any>({
             mutation: gql`
-                            mutation RemovePool($id: Int) {
-                                removePool(id: $id) {
+                            mutation pools($pool_id: UUID) {
+                                removePool(pool_id: $pool_id) {
                                     ok
                                 }
                             }
             `,
             variables: {
                 method: 'POST',
-                id: idPool
+                pool_id
             }
         });
     }
@@ -81,11 +81,10 @@ export class PoolDetailsService {
             return this.service.watchQuery({
                 query: gql`  query pools($pool_id: String) {
                                 pool(pool_id: $pool_id) {
-                                    name
-                                    desktop_pool_type
+                                    verbose_name
+                                    pool_type
                                     vms {
-                                        name
-                                        state
+                                        verbose_name
                                         id
                                         user {
                                             username
@@ -93,19 +92,21 @@ export class PoolDetailsService {
                                         status
                                     }
                                     controller {
-                                        ip
+                                        address
                                     }
-                                    settings {
-                                        cluster_id
-                                        node_id
-                                    }
+                                    cluster_id
+                                    node_id
                                     users {
                                         username
                                     }
-                                    pool_resources_names {
-                                        cluster_name
-                                        node_name
-                                        datapool_name
+                                    cluster {
+                                        verbose_name
+                                    }
+                                    node {
+                                        verbose_name
+                                    }
+                                    datapool {
+                                        verbose_name
                                     }
                                 }
                             }`,

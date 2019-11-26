@@ -271,7 +271,7 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
       width: '500px',
       data: {
         idPool: this.idPool,
-        namePool: this.pool.name
+        namePool: this.pool.verbose_name
       }
     });
   }
@@ -281,7 +281,7 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
       width: '500px',
       data: {
         idPool: this.idPool,
-        namePool: this.pool.name,
+        namePool: this.pool.verbose_name,
         typePool: this.typePool
       }
     });
@@ -292,7 +292,7 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
       width: '500px',
       data: {
         idPool: this.idPool,
-        namePool: this.pool.name,
+        namePool: this.pool.verbose_name,
         typePool: this.typePool
       }
     });
@@ -303,9 +303,9 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
       width: '500px',
       data: {
         idPool: this.idPool,
-        namePool: this.pool.name,
-        idCluster: this.pool.settings.cluster_id,
-        idNode: this.pool.settings.node_id,
+        namePool: this.pool.verbose_name,
+        idCluster: this.pool.cluster_id,
+        idNode: this.pool.node_id,
         typePool: this.typePool
       }
     });
@@ -316,7 +316,7 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
       width: '500px',
       data: {
         idPool: this.idPool,
-        namePool: this.pool.name,
+        namePool: this.pool.verbose_name,
         vms: this.pool.vms,
         typePool: this.typePool
       }
@@ -359,7 +359,7 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
             tag: 'input',
             type: 'text',
             fieldName: 'name',
-            fieldValue: this.pool.name,
+            fieldValue: this.pool.verbose_name,
           }]
         },
         update: {
@@ -397,7 +397,7 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
             tag: 'input',
             type: 'number',
             fieldName: 'new_total_size',
-            fieldValue: this.pool.settings.total_size,
+            fieldValue: this.pool.total_size,
           }]
         },
         update: {
@@ -431,7 +431,7 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
             tag: 'input',
             type: 'number',
             fieldName: 'reserve_size',
-            fieldValue: this.pool.settings.reserve_size,
+            fieldValue: this.pool.reserve_size,
           }]
         },
         update: {
@@ -465,7 +465,7 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
             tag: 'input',
             type: 'text',
             fieldName: 'vm_name_template',
-            fieldValue: this.pool.settings.vm_name_template,
+            fieldValue: this.pool.vm_name_template,
           }]
         },
         update: {
