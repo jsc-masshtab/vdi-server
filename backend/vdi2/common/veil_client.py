@@ -25,12 +25,11 @@ class VeilHttpClient:
     """Abstract class for Veil ECP connection. Simply non-blocking HTTP(s) fetcher from remote Controller.
        response_types always json"""
 
-    def __init__(self, controller_ip: str, token: str = None, expires_on: str = None):
+    def __init__(self, controller_ip: str, token: str = None):
         """Use create instead of init."""
         self._client = AsyncHTTPClient()
         self.controller_ip = controller_ip
         self.token = token
-        self.expires_on = expires_on
 
     @cached_property
     def api_url(self):

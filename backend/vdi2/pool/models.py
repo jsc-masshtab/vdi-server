@@ -8,6 +8,7 @@ from settings import VEIL_WS_MAX_TIME_TO_WAIT
 from database import db, Status
 from controller.models import Controller
 from vm.models import Vm
+from auth.models import User
 from common.veil_errors import VmCreationError, BadRequest, SimpleError
 
 from resources_monitoring.handlers import WaiterSubscriptionObserver
@@ -19,17 +20,20 @@ class Pool(db.Model):
     """На данный момент отсутствует смысловая валидация на уровне таблиц (она в схемах)."""
     __tablename__ = 'pool'
 
-    pool_id = db.Column(UUID(), primary_key=True, default=uuid.uuid4)
+    pool_id = db.Column(UUID(), primary_key=True, default=uuid.uuid4)  # TODO: try with id
     verbose_name = db.Column(db.Unicode(length=128), nullable=False, unique=True)
     cluster_id = db.Column(UUID(), nullable=False)
     node_id = db.Column(UUID(), nullable=False)
     status = db.Column(AlchemyEnum(Status), nullable=False, index=True)
     controller = db.Column(UUID(), db.ForeignKey('controller.id'), nullable=False)
 
+    keep_vms_on = db.Column(db.Boolean(), nullable=False, default=False)
+
     # ----- ----- ----- ----- ----- ----- -----
     # Constants:
     POOL_TYPE_LABEL = 'pool_type'
     EXTRA_ORDER_FIELDS = ['controller_address', 'users_count', 'vms_count', 'pool_type']
+
     # ----- ----- ----- ----- ----- ----- -----
     # Properties and getters:
 
@@ -88,7 +92,9 @@ class Pool(db.Model):
                          else_=literal_column("'STATIC'")).label(Pool.POOL_TYPE_LABEL)
 
         # Формирование общего селекта из таблиц пулов с добавлением принадлежности пула.
-        query = db.select([Pool,
+        query = db.select([
+                           Pool.pool_id.label('master_id'),
+                           Pool,
                            AutomatedPool,
                            StaticPool,
                            pool_type])
@@ -147,18 +153,27 @@ class Pool(db.Model):
             return await db.select([db.func.count()]).where(Vm.pool_id == self.pool_id).gino.scalar()
 
     @staticmethod
-    async def get_user_pools(user='admin'):
-        # TODO: rewrite?
-        # TODO: rewrite normally
+    async def get_user_pools(username):
         # TODO: добавить вывод типа OS у VM
         # TODO: добавить вывод состояния пула
-        # TODO: ограничение по списку пулов для пользователя
-        pools = await Pool.select('pool_id', 'verbose_name').where(Pool.status != Status.DELETING).gino.all()
+
+        user = await User.get_active_user(username=username)
+        pools = Pool.get_pools_query()
+        if not user.is_superuser:
+            # Можно было бы сразу в Join сделать, но быстро не разобрался как.
+            pools = pools.alias().join(PoolUsers).select().where(PoolUsers.user_id == user.id)
+
+        pools_list = await pools.gino.all()
+
         ans = list()
-        for pool in pools:
+        for pool in pools_list:
             ans_d = dict()
-            ans_d['id'] = str(pool.pool_id)
+            ans_d['id'] = str(pool.master_id)
             ans_d['name'] = pool.verbose_name
+
+            # Hardcoded example. Change to model fields.
+            ans_d['os_type'] = 'Lin'
+            ans_d['status'] = pool.status.value
             ans.append(ans_d)
         return ans
 
@@ -218,7 +233,7 @@ class Pool(db.Model):
 class StaticPool(db.Model):
     """На данный момент отсутствует смысловая валидация на уровне таблиц (она в схемах)."""
     __tablename__ = 'static_pool'
-    static_pool_id = db.Column(UUID(), db.ForeignKey('pool.pool_id'), primary_key=True)
+    static_pool_id = db.Column(UUID(), db.ForeignKey('pool.pool_id'), primary_key=True)  # TODO: try with id
 
     @classmethod
     async def get_info(cls, pool_id: str):
@@ -248,10 +263,12 @@ class StaticPool(db.Model):
         return await Pool.deactivate(self.static_pool_id)
 
     @classmethod
-    async def soft_update(cls, id, verbose_name):
+    async def soft_update(cls, pool_id, verbose_name, keep_vms_on):
         async with db.transaction() as tx:
-            await Pool.update.values(verbose_name=verbose_name).where(
-                Pool.pool_id == id).gino.status()
+            if verbose_name:
+                await Pool.update.values(verbose_name=verbose_name).where(Pool.pool_id == pool_id).gino.status()
+            if keep_vms_on is not None:
+                await Pool.update.values(keep_vms_on=keep_vms_on).where(Pool.pool_id == pool_id).gino.status()
         return True
 
 
@@ -262,7 +279,7 @@ class AutomatedPool(db.Model):
     """
     __tablename__ = 'automated_pool'
 
-    automated_pool_id = db.Column(UUID(), db.ForeignKey('pool.pool_id'), primary_key=True)
+    automated_pool_id = db.Column(UUID(), db.ForeignKey('pool.pool_id'), primary_key=True)  # TODO: try with id
     datapool_id = db.Column(UUID(), nullable=False)
     template_id = db.Column(UUID(), nullable=False)
 
@@ -330,7 +347,7 @@ class AutomatedPool(db.Model):
                                         vm_name_template=vm_name_template)
 
     @classmethod
-    async def soft_update(cls, pool_id, verbose_name, reserve_size, total_size, vm_name_template):
+    async def soft_update(cls, pool_id, verbose_name, reserve_size, total_size, vm_name_template, keep_vms_on):
         async with db.transaction() as tx:
             if verbose_name:
                 await Pool.update.values(verbose_name=verbose_name).where(
@@ -345,6 +362,8 @@ class AutomatedPool(db.Model):
             if auto_pool_kwargs:
                 await AutomatedPool.update.values(**auto_pool_kwargs).where(
                     AutomatedPool.automated_pool_id == pool_id).gino.status()
+            if keep_vms_on is not None:
+                await Pool.update.values(keep_vms_on=keep_vms_on).where(Pool.pool_id == pool_id).gino.status()
         return True
 
     async def activate(self):
@@ -365,7 +384,7 @@ class AutomatedPool(db.Model):
         vm_name_template = self.vm_name_template or await self.verbose_name
 
         # uid = str(uuid.uuid4())[:7]
-
+        # TODO: отказатся от UUID
         params = {
             'verbose_name': "{}-{}-{}".format(vm_name_template, domain_index, str(uuid.uuid4())[:7]),
             'name_template': vm_name_template,
@@ -415,7 +434,7 @@ class AutomatedPool(db.Model):
             is_vm_successfully_created = await response_waiter.wait_for_message(
                 _check_if_vm_created, VEIL_WS_MAX_TIME_TO_WAIT)
             resources_monitor_manager.unsubscribe(response_waiter)
-
+            print('is_vm_successfully_created', is_vm_successfully_created)
             if is_vm_successfully_created:
                 await Vm.create(id=vm_info['id'], pool_id=str(self.automated_pool_id),
                                 template_id=str(self.template_id),
@@ -477,6 +496,10 @@ class AutomatedPool(db.Model):
                         is_successful=is_creation_successful,
                         resource=VDI_TASKS_SUBSCRIPTION)
         resources_monitor_manager.signal_internal_event(msg_dict)
+
+        # Пробросить исключение, если споткнулись на создании машин
+        if not is_creation_successful:
+            raise VmCreationError('Не удалось создать необходимое число машин.')
 
     async def expand_pool_if_requred(self):
         """

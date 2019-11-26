@@ -74,6 +74,13 @@ class Vm(db.Model):
         return vm_ids
 
     @staticmethod
+    async def get_all_occupied_vms_ids():
+        """Get all vms which have users"""
+        vm_ids_data = await Vm.select('id').where((Vm.username is not None)).gino.all()
+        vm_ids = [str(vm_id) for (vm_id,) in vm_ids_data]
+        return vm_ids
+
+    @staticmethod
     def ready_to_connect(**info) -> bool:
         """Checks parameters indicating availability for connection."""
         power_state = info.get('user_power_state', 0)

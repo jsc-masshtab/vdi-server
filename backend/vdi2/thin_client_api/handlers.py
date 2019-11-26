@@ -19,17 +19,21 @@ class AuthHandler(BaseHandler, ABC):
     async def post(self):
         if not self.args:
             # TODO: add proper exception
-            return self.finish('Missing request body')
+            response = {'errors': 'Missing request body'}
+            return self.finish(response)
         if 'username' and 'password' not in self.args:
             # TODO: add proper exception
-            return self.finish('Missing username and password')
+            response = {'errors': 'Missing username and password'}
+            return self.finish(response)
         password_is_valid = await User.check_user(self.args['username'], self.args['password'])
 
         if not password_is_valid:
-            # await User.set_password(self.args['username'], self.args['password'])  # сброс пароля
-            return self.finish('invalid password')
+            # TODO: add proper exception
+            response = {'errors': 'invalid password'}
+            return self.finish(response)
+
         access_token = encode_jwt(self.args['username'])
-        # TODO: если мы захотим хранить время, то придется делать запись в БД с обновлением
+        await User.login(username=self.args['username'], token=access_token.get('access_token'))
         response = {"data": access_token}
         return self.finish(response)
 
@@ -51,8 +55,8 @@ class AuthHandler(BaseHandler, ABC):
 @jwtauth
 class PoolHandler(BaseHandler, ABC):
     async def get(self):
-        # TODO: добавить передачу пользователя. Сейчас отключена, потому что нет нового пользователя полноценного
-        pools = await Pool.get_user_pools()
+        username = self.get_current_user()
+        pools = await Pool.get_user_pools(username)
         response = {"data": pools}
         return self.finish(response)
 

@@ -4,19 +4,8 @@ import json
 import uuid
 from async_generator import async_generator, yield_, asynccontextmanager
 
-from vdi.tasks.resources import DiscoverControllers
-from vdi.tasks import resources
-from vdi.tasks import vm
-
-from vdi.graphql_api import schema
-from vdi.graphql_api.pool import RemovePool
-
-from vdi.prepare import get_most_appropriate_controller
-from vdi import prepare
-
-from db.db import db
-
-from vdi.resources_monitoring.resources_monitor_manager import resources_monitor_manager
+from database import db
+from settings import DB_NAME, DB_PASS, DB_USER, DB_PORT, DB_HOST, WS_PING_INTERVAL, WS_PING_TIMEOUT
 
 
 async def get_resources_for_static_pool():

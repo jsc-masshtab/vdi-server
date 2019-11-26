@@ -6,16 +6,6 @@ from fixtures.fixtures import (
     conn, get_resources_for_automated_pool
 )
 
-from vdi.graphql_api.pool import DesktopPoolType
-from vdi.graphql_api import schema
-
-from vdi.tasks import vm
-from vdi.pool import PoolObject
-
-from vdi.errors import SimpleError
-
-from vdi.resources_monitoring.resources_monitor_manager import resources_monitor_manager
-
 
 @pytest.mark.asyncio
 async def test_create_automated_pool(fixt_create_automated_pool):
