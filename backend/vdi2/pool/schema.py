@@ -198,7 +198,7 @@ class PoolType(graphene.ObjectType):
     async def resolve_cluster(self, _info):
         controller_address = await Pool.get_controller_ip(self.pool_id)
         resources_http_client = await ResourcesHttpClient.create(controller_address)
-        cluster_id = await Pool.select('cluster_id').where(Pool.id == self.pool_id).gino.scalar()
+        cluster_id = await Pool.select('cluster_id').where(Pool.pool_id == self.pool_id).gino.scalar()
 
         cluster_data = await resources_http_client.fetch_cluster(cluster_id)
         cluster_type = make_graphene_type(ClusterType, cluster_data)
@@ -208,20 +208,30 @@ class PoolType(graphene.ObjectType):
     async def resolve_datapool(self, _info):
         controller_address = await Pool.get_controller_ip(self.pool_id)
         resources_http_client = await ResourcesHttpClient.create(controller_address)
-        datapool_id = await Pool.select('datapool_id').where(Pool.id == self.pool_id).gino.scalar()
+        datapool_id = await AutomatedPool.select('datapool_id').where(
+            AutomatedPool.automated_pool_id == self.pool_id).gino.scalar()
 
-        datapool_data = await resources_http_client.fetch_datapool(datapool_id)
-        datapool_type = make_graphene_type(DatapoolType, datapool_data)
-        datapool_type.controller = ControllerType(address=self.controller_address)
-        return datapool_type
+        try:
+            datapool_data = await resources_http_client.fetch_datapool(datapool_id)
+            datapool_type = make_graphene_type(DatapoolType, datapool_data)
+            datapool_type.controller = ControllerType(address=controller_address)
+            return datapool_type
+        except (HTTPClientError, HttpError):
+            # либо датапул изчес с контроллера, либо попытка получить датапул для статического пула
+            return None
 
     async def resolve_template(self, _info):
         controller_address = await Pool.get_controller_ip(self.pool_id)
-        template_id = await Pool.select('template_id').where(Pool.id == self.pool_id).gino.scalar()
+        template_id = await AutomatedPool.select('template_id').where(
+            AutomatedPool.automated_pool_id == self.pool_id).gino.scalar()
         vm_http_client = await VmHttpClient.create(controller_address, template_id)
 
-        veil_info = await vm_http_client.info()
-        return VmQuery.veil_template_data_to_graphene_type(veil_info, controller_address)
+        try:
+            veil_info = await vm_http_client.info()
+            return VmQuery.veil_template_data_to_graphene_type(veil_info, controller_address)
+        except (HTTPClientError, HttpError):
+            # либо шаблон изчес с контроллера, либо попытка получить шаблон для статического пула
+            return None
 
     async def _build_vms_list(self):
         if not self.vms:
@@ -234,7 +244,7 @@ class PoolType(graphene.ObjectType):
                     veil_info = await vm_http_client.info()
                     # create graphene type
                     vm_type = VmQuery.veil_vm_data_to_graphene_type(veil_info, controller_address)
-                except HTTPClientError:
+                except (HTTPClientError, HttpError):
                     vm_type = VmType(id=vm_id, controller=ControllerType(address=controller_address))
                     vm_type.veil_info = None
                 self.vms.append(vm_type)
