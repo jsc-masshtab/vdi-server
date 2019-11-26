@@ -16,6 +16,9 @@ class MutationValidation:
             validator = getattr(cls, field_validation_method_name, None)
             if callable(validator):
                 try:
-                    await validator(kwargs, kwargs.get(argument))
+                    value = kwargs.get(argument)
+                    # Запускаем валидацию только если пришло значение. Обязательность значений указывается в схеме
+                    if value:
+                        await validator(kwargs, value)
                 except ValidationError as E:
                     raise SimpleError('Field \"{}\" {}'.format(argument, E))

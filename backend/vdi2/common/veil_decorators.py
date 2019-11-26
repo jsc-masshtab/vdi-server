@@ -1,5 +1,10 @@
 # -*- coding: utf-8 -*-
+from functools import wraps
 from tornado.escape import json_encode
+from graphql.execution.base import ResolveInfo
+
+from auth.utils.veil_jwt import extraxt_user_object
+from common.veil_errors import Unauthorized
 
 
 def prepare_body(func):
@@ -73,3 +78,35 @@ def check_params(*a_params, **k_params):
             return func(*args, **kwargs)
         return wrapper
     return decorator
+
+
+def context(f):
+    def decorator(func):
+        def wrapper(*args, **kwargs):
+            info = next(arg for arg in args if isinstance(arg, ResolveInfo))
+            return func(info.context, *args, **kwargs)
+        return wrapper
+    return decorator
+
+
+def user_passes_test(test_func, exc=Unauthorized('User is invalid.')):
+    """exc в GraphQl вернется с 200тым кодом.
+       https://github.com/graphql-python/graphene/issues/946
+    """
+    def decorator(f):
+        @wraps(f)
+        @context(f)
+        async def wrapper(cntxt, *args, **kwargs):  # noqa
+            user = await extraxt_user_object(cntxt.headers)
+            if user and test_func(user):
+                return f(*args, **kwargs)
+            raise exc
+        return wrapper
+    return decorator
+
+
+def is_superuser(user_object) -> bool:
+    return user_object.is_superuser
+
+
+superuser_required = user_passes_test(lambda u: is_superuser(u))

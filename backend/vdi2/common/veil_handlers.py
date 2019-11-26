@@ -2,8 +2,9 @@
 from abc import ABC
 from tornado.web import RequestHandler
 from tornado.escape import json_decode
+from graphene_tornado.tornado_graphql_handler import TornadoGraphQLHandler
 
-from auth.utils.veil_jwt import extract_user
+from auth.utils.veil_jwt import extract_user, jwtauth
 
 # TODO: унифицировать обработку Exception, чтобы не плодить try:ex
 
@@ -18,3 +19,8 @@ class BaseHandler(RequestHandler, ABC):
     def get_current_user(self):
         """Overridden tornado method"""
         return extract_user(self.request.headers)
+
+
+@jwtauth
+class VdiTornadoGraphQLHandler(TornadoGraphQLHandler, ABC):
+    pass

@@ -2,17 +2,22 @@
 """JWT additions for Tornado"""
 import jwt
 import datetime
+
 from settings import JWT_OPTIONS, SECRET_KEY, JWT_EXPIRATION_DELTA, JWT_AUTH_HEADER_PREFIX, JWT_ALGORITHM
+from auth.models import User, UserJwtInfo
 
 
 def jwtauth(handler_class):
     """ Handle Tornado JWT Auth """
-
     def wrap_execute(handler_execute):
-        def require_auth(handler, kwargs):
+        async def require_auth(handler, kwargs):
             try:
                 token = extract_access_token(handler.request.headers)
-                decode_jwt(token)
+                payload = decode_jwt(token)
+                payload_user = payload.get('username')
+                is_valid = await UserJwtInfo.check_token(payload_user, token)
+                if not is_valid:
+                    raise AssertionError('Token invalid.')
             except jwt.ExpiredSignature:
                 handler._transforms = []
                 handler.set_status(401)
@@ -20,15 +25,16 @@ def jwtauth(handler_class):
             except AssertionError as e:
                 handler._transforms = []
                 handler.set_status(401)
-                handler.finish(str(e))
+                response = {'errors': str(e)}
+                handler.finish(response)
             return True
 
-        def _execute(self, transforms, *args, **kwargs):
+        async def _execute(self, transforms, *args, **kwargs):
             try:
-                require_auth(self, kwargs)
+                await require_auth(self, kwargs)
             except:  # noqa
                 return False
-            return handler_execute(self, transforms, *args, **kwargs)
+            return await handler_execute(self, transforms, *args, **kwargs)
         return _execute
     handler_class._execute = wrap_execute(handler_class._execute)  # noqa
     return handler_class
@@ -36,8 +42,10 @@ def jwtauth(handler_class):
 
 def encode_jwt(username):
     """Get JWT encoded token"""
+
     current_time = datetime.datetime.utcnow()
     expires_on = current_time + datetime.timedelta(seconds=JWT_EXPIRATION_DELTA)
+    # Идея хранить в payload user_id признана несостоятельной.
     access_token_payload = {'exp': expires_on,
                             'username': username,
                             'iat': current_time.timestamp(),
@@ -87,6 +95,12 @@ def extract_user(headers: dict) -> str:
     token = extract_access_token(headers)
     decoded = decode_jwt(token)
     return decoded.get('username')
+
+
+async def extraxt_user_object(headers: dict) -> User:
+    """Returns User object"""
+    username = extract_user(headers)
+    return await User.get_active_user(username=username)
 
 
 def refresh_access_token_with_no_expire_check(headers: dict):
