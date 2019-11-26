@@ -1,27 +1,25 @@
 import tornado.ioloop
 import tornado.web
-
 from graphene_tornado.tornado_graphql_handler import TornadoGraphQLHandler
-from settings import DB_NAME, DB_PASS, DB_USER, DB_PORT, DB_HOST, WS_PING_INTERVAL, WS_PING_TIMEOUT
 
+from settings import DB_NAME, DB_PASS, DB_USER, DB_PORT, DB_HOST, WS_PING_INTERVAL, WS_PING_TIMEOUT
 from database import db
-from controller.schema import controller_schema
-from controller_resources.schema import resources_schema
+from common.veil_handlers import VdiTornadoGraphQLHandler
+from common.utils import cancel_async_task
 
 from thin_client_api.urls import thin_client_api_urls
 from resources_monitoring.urls import ws_event_monitoring_urls
 
 from auth.schema import user_schema
-
 from pool.schema import pool_schema
 from vm.schema import vm_schema
-from vm.vm_manager import VmManager
+from controller.schema import controller_schema
+from controller_resources.schema import resources_schema
 
+from vm.vm_manager import VmManager
 from resources_monitoring.resources_monitor_manager import resources_monitor_manager
 
-from pool.schema import pool_schema
 
-from common.utils import cancel_async_task
 
 
 # if __name__ == '__main__':
@@ -29,7 +27,7 @@ from common.utils import cancel_async_task
 handlers = [
     (r'/controllers', TornadoGraphQLHandler, dict(graphiql=True, schema=controller_schema)),
     (r'/resources', TornadoGraphQLHandler, dict(graphiql=True, schema=resources_schema)),
-    (r'/users', TornadoGraphQLHandler, dict(graphiql=True, schema=user_schema)),
+    (r'/users', VdiTornadoGraphQLHandler, dict(graphiql=True, schema=user_schema)),
     (r'/vms', TornadoGraphQLHandler, dict(graphiql=True, schema=vm_schema)),
     (r'/pools', TornadoGraphQLHandler, dict(graphiql=True, schema=pool_schema)),
     # (r'/graphql', TornadoGraphQLHandler, dict(graphiql=True, schema=schema)),
@@ -42,7 +40,6 @@ handlers += ws_event_monitoring_urls
 
 app = tornado.web.Application(handlers, debug=True, websocket_ping_interval=WS_PING_INTERVAL,
                               websocket_ping_timeout=WS_PING_TIMEOUT)
-
 
 if __name__ == '__main__':
     tornado.ioloop.IOLoop.current().run_sync(
