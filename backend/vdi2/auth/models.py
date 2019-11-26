@@ -161,7 +161,6 @@ class User(db.Model):
         return True
 
 
-
 class UserJwtInfo(db.Model):
     """
     При авторизации пользователя выполняется запись.
