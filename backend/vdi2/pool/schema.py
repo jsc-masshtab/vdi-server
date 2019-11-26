@@ -243,7 +243,7 @@ class PoolType(graphene.ObjectType):
 class PoolQuery(graphene.ObjectType):
 
     pools = graphene.List(PoolType, ordering=graphene.String())
-    pool = graphene.Field(PoolType, pool_id=graphene.String(), controller_address=graphene.String())
+    pool = graphene.Field(PoolType, pool_id=graphene.String())
 
     async def resolve_pools(self, info, ordering=None):
         # Сортировка может быть по полю модели Pool, либо по Pool.EXTRA_ORDER_FIELDS
