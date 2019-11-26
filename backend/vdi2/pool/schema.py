@@ -129,6 +129,7 @@ class PoolValidator(MutationValidation):
 class PoolType(graphene.ObjectType):
 
     # Pool fields
+    master_id = graphene.UUID()
     pool_id = graphene.UUID()
     verbose_name = graphene.String()
     status = StatusGraphene()
