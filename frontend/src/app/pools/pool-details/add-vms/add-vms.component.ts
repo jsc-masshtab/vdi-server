@@ -51,7 +51,7 @@ export class AddVMStaticPoolComponent implements OnInit {
 
   private getVms() {
     this.pendingVms = true;
-    this.poolService.getAllVms(this.data.idCluster, this.data.idNode).valueChanges.pipe(map((data: any) => data.data.list_of_vms))
+    this.poolService.getAllVms(this.data.idCluster, this.data.idNode).valueChanges.pipe(map((data: any) => data.data.vms))
       .subscribe((data) => {
         this.vms = data;
         this.pendingVms = false;

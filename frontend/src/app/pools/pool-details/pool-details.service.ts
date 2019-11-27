@@ -14,11 +14,11 @@ export class PoolDetailsService {
     public removePool(pool_id: number) {
         return this.service.mutate<any>({
             mutation: gql`
-                            mutation pools($pool_id: UUID) {
-                                removePool(pool_id: $pool_id) {
-                                    ok
-                                }
+                        mutation pools($pool_id: UUID) {
+                            removePool(pool_id: $pool_id) {
+                                ok
                             }
+                        }
             `,
             variables: {
                 method: 'POST',
@@ -120,10 +120,10 @@ export class PoolDetailsService {
         }
     }
 
-    public addVMStaticPool(poolId: number, vmIds: []) {
+    public addVMStaticPool(pool_id: number, vm_ids: []) { // +
         return this.service.mutate<any>({
             mutation: gql`
-                            mutation AddVms($pool_id: Int!,$vm_ids: [ID]!) {
+                            mutation pools($pool_id: ID!,$vm_ids: [UUID]!) {
                                 addVmsToStaticPool(pool_id: $pool_id, vm_ids: $vm_ids) {
                                     ok
                                 }
@@ -131,13 +131,13 @@ export class PoolDetailsService {
             `,
             variables: {
                 method: 'POST',
-                pool_id: poolId,
-                vm_ids: vmIds
+                pool_id,
+                vm_ids
             }
         });
     }
 
-    public removeVMStaticPool(poolId: number, vmIds: []) {
+    public removeVMStaticPool(pool_id: number, vm_ids: []) { // +
         return this.service.mutate<any>({
             mutation: gql`
                             mutation RemoveVms($pool_id: Int!,$vm_ids: [ID]!) {
@@ -148,8 +148,8 @@ export class PoolDetailsService {
             `,
             variables: {
                 method: 'POST',
-                pool_id: poolId,
-                vm_ids: vmIds
+                pool_id,
+                vm_ids
             }
         });
     }
@@ -187,11 +187,11 @@ export class PoolDetailsService {
         });
     }
 
-    public getAllUsersNoEntitleToPool(idPool: number): QueryRef<any, any> {
+    public getAllUsersNoEntitleToPool(pool_id: number): QueryRef<any, any> {  // -
         return  this.service.watchQuery({
-             query:  gql` query allUsers($id: Int,$entitled: Boolean) {
-                            pool(id: $id) {
-                                users(entitled:$entitled) {
+             query:  gql` query pools($pool_id: String, $entitled: Boolean) {
+                            pool(pool_id: $pool_id) {
+                                users(entitled: $entitled) {
                                     username
                                 }
                             }
@@ -200,9 +200,46 @@ export class PoolDetailsService {
             variables: {
                 method: 'GET',
                 entitled: false,
-                id: idPool
+                pool_id
             }
          });
+    }
+
+    public removeUserEntitlementsFromPool(poolId: number, entitledUsers: []) { // -
+        return this.service.mutate<any>({
+            mutation: gql`
+                            mutation RemoveUserEntitlementsFromPool($pool_id: ID,$entitled_users: [ID]) {
+                                removeUserEntitlementsFromPool(pool_id: $pool_id, entitled_users: $entitled_users) {
+                                    freed {
+                                        name
+                                    }
+                                }
+                            }
+            `,
+            variables: {
+                method: 'POST',
+                pool_id: poolId,
+                entitled_users: entitledUsers,
+                free_assigned_vms: true
+            }
+        });
+    }
+
+    public entitleUsersToPool(poolId: number, entitledUsers: []) { // -
+        return this.service.mutate<any>({
+            mutation: gql`
+                            mutation EntitleUsersToPool($pool_id: ID,$entitled_users: [ID]) {
+                                entitleUsersToPool(pool_id: $pool_id, entitled_users: $entitled_users) {
+                                    ok
+                                }
+                            }
+            `,
+            variables: {
+                method: 'POST',
+                pool_id: poolId,
+                entitled_users: entitledUsers
+            }
+        });
     }
 
     public assesUsersToPool(idPool: number): QueryRef<any, any> {
@@ -223,60 +260,24 @@ export class PoolDetailsService {
         });
     }
 
-    public getAllVms(clusterId: string, nodeId: string): QueryRef<any, any> {
+    public getAllVms(cluster_id: string, node_id: string): QueryRef<any, any> { // +
         return  this.service.watchQuery({
-            query:  gql` query list_free_vms($cluster_id: String,$node_id:String) {
-                                    list_of_vms(cluster_id: $cluster_id,node_id: $node_id) {
+            query:  gql` query vms($cluster_id: String,$node_id:String) {
+                                    vms(cluster_id: $cluster_id,node_id: $node_id) {
                                         id
-                                        name
+                                        verbose_name
                                     }
                                 }
                     `,
             variables: {
                 method: 'GET',
-                cluster_id: clusterId,
-                node_id: nodeId,
+                cluster_id,
+                node_id,
                 get_vms_in_pools: false
             }
         });
     }
 
-    public removeUserEntitlementsFromPool(poolId: number, entitledUsers: []) {
-        return this.service.mutate<any>({
-            mutation: gql`
-                            mutation RemoveUserEntitlementsFromPool($pool_id: ID,$entitled_users: [ID]) {
-                                removeUserEntitlementsFromPool(pool_id: $pool_id, entitled_users: $entitled_users) {
-                                    freed {
-                                        name
-                                    }
-                                }
-                            }
-            `,
-            variables: {
-                method: 'POST',
-                pool_id: poolId,
-                entitled_users: entitledUsers,
-                free_assigned_vms: true
-            }
-        });
-    }
-
-    public entitleUsersToPool(poolId: number, entitledUsers: []) {
-        return this.service.mutate<any>({
-            mutation: gql`
-                            mutation EntitleUsersToPool($pool_id: ID,$entitled_users: [ID]) {
-                                entitleUsersToPool(pool_id: $pool_id, entitled_users: $entitled_users) {
-                                    ok
-                                }
-                            }
-            `,
-            variables: {
-                method: 'POST',
-                pool_id: poolId,
-                entitled_users: entitledUsers
-            }
-        });
-    }
 
     public editNamePool({id}: {id: number}, {name}: {name: string}) {
         const idPool = id;
