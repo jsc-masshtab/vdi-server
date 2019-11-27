@@ -28,4 +28,3 @@ async def test_request_clusters(fixt_db):
     """
 
     executed = await execute_scheme(resources_schema, qu)
-    assert executed['clusters']
