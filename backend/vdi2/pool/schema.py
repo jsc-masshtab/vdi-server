@@ -24,6 +24,8 @@ from controller_resources.schema import ClusterType, NodeType, DatapoolType
 
 from pool.models import AutomatedPool, StaticPool, Pool, PoolUsers
 
+from asyncpg import UniqueViolationError
+
 from database import db
 # TODO: отсутствует валидация входящих ресурсов вроде node_uid, cluster_uid и т.п. Ранее шла речь,
 #  о том, что мы будем кешированно хранить какие-то ресурсы полученные от ECP Veil. Возможно стоит
@@ -489,11 +491,12 @@ class CreateAutomatedPoolMutation(graphene.Mutation, PoolValidator):
         pool = None
         try:
             automated_pool = await AutomatedPool.create(**kwargs)
+            pool = await Pool.get_pool(automated_pool.automated_pool_id)
 
             await automated_pool.add_initial_vms()
             await automated_pool.activate()
-            pool = await Pool.get_pool(automated_pool.automated_pool_id)
-        except (GraphQLLocatedError, VmCreationError) as E:  # Возможные исключения: дубликат имени пула,VmCreationError
+        except (UniqueViolationError, VmCreationError) as E:  # Возможные исключения: дубликат имени пула,VmCreationError
+            print('exp__', E.__class__.__name__)
             if pool:
                 await pool.deactivate()
             raise SimpleError(E)
