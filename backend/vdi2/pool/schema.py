@@ -491,10 +491,11 @@ class CreateAutomatedPoolMutation(graphene.Mutation, PoolValidator):
         pool = None
         try:
             automated_pool = await AutomatedPool.create(**kwargs)
-            pool = await Pool.get_pool(automated_pool.automated_pool_id)
 
             await automated_pool.add_initial_vms()
             await automated_pool.activate()
+
+            pool = await Pool.get_pool(automated_pool.automated_pool_id)
         except (UniqueViolationError, VmCreationError) as E:  # Возможные исключения: дубликат имени пула,VmCreationError
             print('exp__', E.__class__.__name__)
             if pool:
