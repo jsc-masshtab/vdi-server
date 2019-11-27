@@ -77,14 +77,12 @@ class AddControllerMutation(graphene.Mutation):
             resources_monitor_manager.add_controller(address)
             msg = 'Successfully added new controller {id} with address {address}.'.format(
                 id=controller.id,
-                address=address
-            )
+                address=address)
             await Event.create_info(msg)
             return AddControllerMutation(ok=True, controller=ControllerType(**controller.__values__))
         except:
             msg = 'Add new controller with address {address}: operation failed.'.format(
-                address=address
-            )
+                address=address)
             await Event.create_error(msg)
 
 
@@ -135,14 +133,12 @@ class UpdateControllerMutation(graphene.Mutation):
 
             msg = 'Successfully update controller {id} with address {address}.'.format(
                 id=controller.id,
-                address=address
-            )
+                address=address)
             await Event.create_info(msg)
             return UpdateControllerMutation(ok=True, controller=ControllerType(**controller.__values__))
         except:
             msg = 'Update controller {id}: operation failed.'.format(
-                id=id
-            )
+                id=id)
             await Event.create_error(msg)
 
 
@@ -166,8 +162,7 @@ class RemoveControllerMutation(graphene.Mutation):
         resources_monitor_manager.remove_controller(controller.address)
 
         msg = 'Removed controller {id}.'.format(
-            id=id
-        )
+            id=id)
         await Event.create_error(msg)
         return RemoveControllerMutation(ok=True)
 

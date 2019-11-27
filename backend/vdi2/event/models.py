@@ -22,6 +22,8 @@ class Event(db.Model):
     @classmethod
     async def create_event(cls, msg, event_type=TYPE_INFO, user='system'):
         # TODO: connect with task and user entity
+        # TODO: log event
+        print(msg)
         await Event.create(
             event_type=event_type,
             message=msg,
