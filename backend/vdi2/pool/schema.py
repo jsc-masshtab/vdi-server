@@ -23,6 +23,10 @@ from controller_resources.veil_client import ResourcesHttpClient
 from controller_resources.schema import ClusterType, NodeType, DatapoolType
 
 from pool.models import AutomatedPool, StaticPool, Pool, PoolUsers
+
+from asyncpg import UniqueViolationError
+
+from database import db
 # TODO: отсутствует валидация входящих ресурсов вроде node_uid, cluster_uid и т.п. Ранее шла речь,
 #  о том, что мы будем кешированно хранить какие-то ресурсы полученные от ECP Veil. Возможно стоит
 #  обращаться к этому хранилищу для проверки корректности присланных ресурсов. Аналогичный принцип
@@ -174,8 +178,8 @@ class PoolType(graphene.ObjectType):
             users_data = await User.join(PoolUsers, User.id == PoolUsers.user_id).select().where(
                  PoolUsers.pool_id == self.pool_id).gino.all()
         else:
-            subquery = PoolUsers.query(PoolUsers.user_id).where(PoolUsers.pool_id == self.pool_id)
-            users_data = User.filter(User.id.notin_(subquery)).gino.all()
+            subquery = PoolUsers.select('user_id').where(PoolUsers.pool_id == self.pool_id)
+            users_data = await User.select('username', 'email').where(User.id.notin_(subquery)).gino.all()  # subquery
         uset_type_list = [
             UserType(user.username, user.email)
             for user in users_data
@@ -490,8 +494,10 @@ class CreateAutomatedPoolMutation(graphene.Mutation, PoolValidator):
 
             await automated_pool.add_initial_vms()
             await automated_pool.activate()
+
             pool = await Pool.get_pool(automated_pool.automated_pool_id)
-        except (GraphQLLocatedError, VmCreationError) as E:  # Возможные исключения: дубликат имени пула,VmCreationError
+        except (UniqueViolationError, VmCreationError) as E:  # Возможные исключения: дубликат имени пула,VmCreationError
+            print('exp__', E.__class__.__name__)
             if pool:
                 await pool.deactivate()
             raise SimpleError(E)
@@ -522,6 +528,52 @@ class UpdateAutomatedPoolMutation(graphene.Mutation, PoolValidator):
 
 
 # --- --- --- --- ---
+# pools <-> users relations
+class AddPoolPermissionsMutation(graphene.Mutation):
+
+    class Arguments:
+        pool_id = graphene.ID()
+        users = graphene.List(graphene.ID)
+
+    ok = graphene.Boolean()
+
+    async def mutate(self, _info, pool_id, users):
+        async with db.transaction():
+            if users:
+                for user in users:
+                    await PoolUsers.create(pool_id=pool_id, user_id=user)
+
+        return {'ok': True}
+
+
+class DropPoolPermissionsMutation(graphene.Mutation):
+
+    class Arguments:
+        pool_id = graphene.ID()
+        users = graphene.List(graphene.ID)
+        free_assigned_vms = graphene.Boolean()
+
+    ok = graphene.Boolean()
+
+    async def mutate(self, _info, pool_id, users, free_assigned_vms=True):
+        if users:
+            async with db.transaction():
+                # remove entitlements # PoolUsers.user_id.in_(users) and
+                await PoolUsers.delete.where(
+                    (PoolUsers.user_id.in_(users)) & (PoolUsers.pool_id == pool_id)).gino.status()
+
+                # free vms in pool from users
+                if free_assigned_vms:
+                    # todo: похоже у нас в БД изъян. Нужно чтоб в таблице Vm хранились id юзеров а не имена
+                    subquery = User.select('username').where(User.id.in_(users))
+
+                    await Vm.update.values(username=None).where(
+                        (Vm.username.in_(subquery)) & (Vm.pool_id == pool_id)).gino.status()
+
+        return {'ok': True}
+
+
+# --- --- --- --- ---
 # Schema concatenation
 class PoolMutations(graphene.ObjectType):
     addDynamicPool = CreateAutomatedPoolMutation.Field()
@@ -531,6 +583,9 @@ class PoolMutations(graphene.ObjectType):
     removePool = DeletePoolMutation.Field()
     updateDynamicPool = UpdateAutomatedPoolMutation.Field()
     updateStaticPool = UpdateStaticPoolMutation.Field()
+
+    entitleUsersToPool = AddPoolPermissionsMutation.Field()
+    removeUserEntitlementsFromPool = DropPoolPermissionsMutation.Field()
 
 
 pool_schema = graphene.Schema(query=PoolQuery,
