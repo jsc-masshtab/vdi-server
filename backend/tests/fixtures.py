@@ -74,9 +74,10 @@ async def get_resources_for_automated_pool():
 
 @pytest.fixture
 async def fixt_db():
-
-    await db.get_pool()
-    return db
+    await db.set_bind('postgresql://localhost/vdi', host=DB_HOST,
+                      port=DB_PORT,
+                      user=DB_USER,
+                      password=DB_PASS)
 
 
 @pytest.fixture
