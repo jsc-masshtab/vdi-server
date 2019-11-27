@@ -23,6 +23,8 @@ from controller_resources.veil_client import ResourcesHttpClient
 from controller_resources.schema import ClusterType, NodeType, DatapoolType
 
 from pool.models import AutomatedPool, StaticPool, Pool, PoolUsers
+
+from database import db
 # TODO: отсутствует валидация входящих ресурсов вроде node_uid, cluster_uid и т.п. Ранее шла речь,
 #  о том, что мы будем кешированно хранить какие-то ресурсы полученные от ECP Veil. Возможно стоит
 #  обращаться к этому хранилищу для проверки корректности присланных ресурсов. Аналогичный принцип
@@ -532,9 +534,11 @@ class AddPoolPermissionsMutation(graphene.Mutation):
     ok = graphene.Boolean()
 
     async def mutate(self, _info, pool_id, users):
-        if users:
-            for user in users:
-                await PoolUsers.create(pool_id=pool_id, user_id=user)
+        async with db.transaction():
+            if users:
+                for user in users:
+                    await PoolUsers.create(pool_id=pool_id, user_id=user)
+
         return {'ok': True}
 
 
@@ -549,16 +553,18 @@ class DropPoolPermissionsMutation(graphene.Mutation):
 
     async def mutate(self, _info, pool_id, users, free_assigned_vms=True):
         if users:
-            # remove entitlements # PoolUsers.user_id.in_(users) and
-            await PoolUsers.delete.where((PoolUsers.user_id.in_(users)) & (PoolUsers.pool_id == pool_id)).gino.status()
+            async with db.transaction():
+                # remove entitlements # PoolUsers.user_id.in_(users) and
+                await PoolUsers.delete.where(
+                    (PoolUsers.user_id.in_(users)) & (PoolUsers.pool_id == pool_id)).gino.status()
 
-            # free vms in pool from users
-            if free_assigned_vms:
-                # todo: похоже у нас в БД изъян. Нужно чтоб в таблице Vm хранились id юзеров а не имена
-                subquery = User.select('username').where(User.id.in_(users))
+                # free vms in pool from users
+                if free_assigned_vms:
+                    # todo: похоже у нас в БД изъян. Нужно чтоб в таблице Vm хранились id юзеров а не имена
+                    subquery = User.select('username').where(User.id.in_(users))
 
-                await Vm.update.values(username=None).where(
-                    (Vm.username.in_(subquery)) & (Vm.pool_id == pool_id)).gino.status()
+                    await Vm.update.values(username=None).where(
+                        (Vm.username.in_(subquery)) & (Vm.pool_id == pool_id)).gino.status()
 
         return {'ok': True}
 
