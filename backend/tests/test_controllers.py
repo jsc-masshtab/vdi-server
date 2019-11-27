@@ -4,10 +4,14 @@ from graphene.test import Client
 
 from controller.schema import controller_schema
 
+from utils import execute_scheme
+from fixtures import fixt_db
 
-def test_add_remove_controller():
+
+@pytest.mark.asyncio
+async def test_add_remove_controller(fixt_db):
+
     controller_ip = '192.168.6.122'
-    client = Client(controller_schema)
 
     # add controller
     qu = """
@@ -32,10 +36,35 @@ def test_add_remove_controller():
     }
     """ % controller_ip
 
-    executed = client.execute(qu)
+    executed = await execute_scheme(controller_schema, qu)
     assert executed['addController']['ok']
 
     controller_id = executed['addController']['controller']['id']
+
+    # update controller
+    qu = """
+    mutation {
+        updateController(
+            id: "%s",
+            verbose_name: "NEW_NAME",
+            address: "%s",
+            description: "controller for development and testing",
+            username: "test_vdi_user",
+            password: "test_vdi_user",
+            ldap_connection: false) {
+            ok
+            controller {
+                id
+                verbose_name
+                description
+                address
+                status
+            }
+  }
+}
+    """ % (controller_id, controller_ip)
+    executed = await execute_scheme(controller_schema, qu)
+    assert executed['updateController']['ok']
 
     # remove controller
     qu = """
@@ -46,5 +75,5 @@ def test_add_remove_controller():
     }
     """ % controller_id
 
-    executed = client.execute(qu)
+    executed = await execute_scheme(controller_schema, qu)
     assert executed['removeController']['ok']

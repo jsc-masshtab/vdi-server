@@ -91,7 +91,7 @@ class UpdateControllerMutation(graphene.Mutation):
     ok = graphene.Boolean()
     controller = graphene.Field(lambda: ControllerType)
 
-    async def mutate(self, _info, verbose_name, address, username,
+    async def mutate(self, _info, id, verbose_name, address, username,
                      password, ldap_connection, description=None):
         # TODO: update only mutated fields
 
@@ -119,7 +119,7 @@ class UpdateControllerMutation(graphene.Mutation):
 
         # TODO: change to update & restart
         await resources_monitor_manager.remove_controller(address)
-        await resources_monitor_manager.add_controller(address)
+        resources_monitor_manager.add_controller(address)
         return UpdateControllerMutation(ok=True, controller=ControllerType(**controller.__values__))
 
 
