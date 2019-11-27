@@ -27,7 +27,7 @@ export interface IPool extends ISettingsAutoPool, ISettingsStaticPool  {
   };
 }
 
-interface IPoolVms  {
+export interface IPoolVms  {
   id: string;
   verbose_name: string;
   status: string;

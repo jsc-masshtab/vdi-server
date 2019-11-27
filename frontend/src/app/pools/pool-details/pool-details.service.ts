@@ -45,6 +45,7 @@ export class PoolDetailsService {
                                             username
                                         }
                                         status
+                                        state
                                     }
                                     controller {
                                         address
@@ -90,6 +91,7 @@ export class PoolDetailsService {
                                             username
                                         }
                                         status
+                                        state
                                     }
                                     controller {
                                         address

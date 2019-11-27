@@ -24,16 +24,14 @@
 
   <!-- icons -->
             <span [class.icon-group]="entity === 'vm'" *ngIf="obj.icon">
-              <ng-container *ngIf="obj.icon">
-                <fa-icon [icon]="['fas',obj.icon]" size="xs"></fa-icon>
-              </ng-container>
-              <ng-container *ngIf="entity === 'vm' && item?.state && obj.property === 'name'"> <!-- статус вм -->
+              <fa-icon [icon]="['fas',obj.icon]" size="xs"></fa-icon>
+              <ng-container *ngIf="entity === 'vm' && item?.state && obj.property === 'verbose_name'"> <!-- статус вм -->
                 <fa-icon [icon]="['fas', 'play-circle']" *ngIf="item.state === 'ON'" class="status on" title="Включена"></fa-icon>
                 <fa-icon [icon]="['fas', 'stop-circle']" *ngIf="item.state === 'OFF'" class="status off" title="Выключена"></fa-icon>
                 <fa-icon [icon]="['fas', 'pause-circle']" *ngIf="item.state === 'SUSPENDED'" class="status suspended" title="Приостановлена"></fa-icon>
                 <fa-icon [icon]="['fas', 'question-circle']" *ngIf="item.state === 'UNDEFINED'" class="status undefined" title="Не найдено"></fa-icon>
               </ng-container>
-            </span>
+            </span>dd
 
   <!-- obj.property === 'status' -->
             <ng-container *ngIf="obj.property === 'status'">

@@ -1,7 +1,7 @@
 import { Subscription } from 'rxjs';
 import { WebsocketPoolService } from './../../common/classes/websockPool.service';
 import { PoolsService } from './../all-pools/pools.service';
-import { IPool } from './definitions/pool';
+import { IPool, IPoolVms } from './definitions/pool';
 import { VmDetalsPopupComponent } from './vm-details-popup/vm-details-popup.component';
 import { RemoveUsersPoolComponent } from './remove-users/remove-users.component';
 import { AddUsersPoolComponent } from './add-users/add-users.component';
@@ -49,17 +49,17 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
     {
       title: 'Кластер',
       property: 'cluster',
-      type: 'string'
+      property_lv2: 'verbose_name'
     },
     {
       title: 'Сервер',
       property: 'node',
-      type: 'string'
+      property_lv2: 'verbose_name'
     },
     {
       title: 'Пул данных',
       property: 'datapool',
-      type: 'string'
+      property_lv2: 'verbose_name'
     },
     {
       title: 'Всего ВМ',
@@ -95,17 +95,17 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
     {
       title: 'Кластер',
       property: 'cluster',
-      type: 'string'
+      property_lv2: 'verbose_name'
     },
     {
       title: 'Сервер',
       property: 'node',
-      type: 'string'
+      property_lv2: 'verbose_name'
     },
     {
       title: 'Пул данных',
       property: 'datapool',
-      type: 'string'
+      property_lv2: 'verbose_name'
     },
     {
       title: 'Начальное количество ВМ',    // всего вм
@@ -158,7 +158,7 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
     {
       title: 'Шаблон',
       property: 'template',
-      type: 'string'
+      property_lv2: 'verbose_name'
     },
     {
       title: 'Пользователь',
@@ -323,7 +323,7 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
     });
   }
 
-  public clickVm(vmActive): void  {
+  public clickVm(vmActive: IPoolVms): void  {
     this.dialog.open(VmDetalsPopupComponent, {
       width: '1000px',
       data: {
