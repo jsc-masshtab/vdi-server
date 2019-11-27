@@ -346,9 +346,9 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
       data: {
         post: {
           service: this.poolService,
-          method: 'editNamePool',
+          method: 'updateDynamicPool',
           params: {
-            id: this.idPool
+            pool_id: this.idPool
           }
         },
         settings: {
@@ -358,16 +358,16 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
           form: [{
             tag: 'input',
             type: 'text',
-            fieldName: 'name',
+            fieldName: 'verbose_name',
             fieldValue: this.pool.verbose_name,
           }]
         },
         update: {
           method: 'getPool',
-          params: {
-            id: this.idPool,
-            type: this.typePool
-          },
+          params: [
+            this.idPool,
+            this.typePool
+          ],
         },
         updateDepend: {
           service: this.poolsService,
@@ -384,9 +384,9 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
       data: {
         post: {
           service: this.poolService,
-          method: 'changeAutomatedPoolTotalSize',
+          method: 'updateDynamicPool',
           params: {
-            id: this.idPool
+            pool_id: this.idPool
           }
         },
         settings: {
@@ -402,10 +402,10 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
         },
         update: {
           method: 'getPool',
-          params: {
-            id: this.idPool,
-            type: this.typePool
-          }
+          params: [
+            this.idPool,
+            this.typePool
+          ]
         }
       }
     });
@@ -418,9 +418,9 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
       data: {
         post: {
           service: this.poolService,
-          method: 'changeAutomatedPoolReserveSize',
+          method: 'updateDynamicPool',
           params: {
-            id: this.idPool
+            pool_id: this.idPool
           }
         },
         settings: {
@@ -437,7 +437,7 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
         update: {
           method: 'getPool',
           params: {
-            id: this.idPool,
+            pool_id: this.idPool,
             type: this.typePool
           }
         }
@@ -452,9 +452,9 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
       data: {
         post: {
           service: this.poolService,
-          method: 'changeTemplateForVmAutomatedPool',
+          method: 'updateDynamicPool',
           params: {
-            id: this.idPool
+            pool_id: this.idPool
           }
         },
         settings: {
@@ -471,7 +471,7 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
         update: {
           method: 'getPool',
           params: {
-            id: this.idPool,
+            pool_id: this.idPool,
             type: this.typePool
           }
         }

@@ -10,7 +10,6 @@ export class PoolDetailsService {
 
     constructor(private service: Apollo) { }
 
-
     public removePool(pool_id: number) {
         return this.service.mutate<any>({
             mutation: gql`
@@ -27,7 +26,10 @@ export class PoolDetailsService {
         });
     }
 
-    public getPool(pool_id: string | number, type: string): Observable<any> {
+    // public getPool({pool_id}, { type }): Observable<any>; // in form-edit
+    public getPool(pool_id: string | number , type: string): Observable<any> {
+        console.log(pool_id, type);
+    
         if (type === 'automated') {
             return this.service.watchQuery({
                 query: gql`  query pools($pool_id: String) {
@@ -279,79 +281,32 @@ export class PoolDetailsService {
     }
 
 
-    public editNamePool({id}: {id: number}, {name}: {name: string}) {
-        const idPool = id;
-        const newNamePool = name;
+    public updateDynamicPool({pool_id}, {verbose_name, reserve_size, total_size, vm_name_template}) {
+        console.log({pool_id}, {verbose_name, reserve_size, total_size, vm_name_template});
         return this.service.mutate<any>({
             mutation: gql`
-                            mutation ChangePoolName($pool_id: Int!,$new_name: String!) {
-                                changePoolName(pool_id: $pool_id, new_name: $new_name) {
+                            mutation pools($pool_id: UUID!,$verbose_name: String!,
+                                $reserve_size: Int , $total_size: Int , $vm_name_template: String ,
+                                 $keep_vms_on: Boolean ) {
+                                updateDynamicPool(pool_id: $pool_id, verbose_name: $verbose_name,
+                                    reserve_size: $reserve_size, total_size: $total_size,
+                                    vm_name_template: $vm_name_template, keep_vms_on: $keep_vms_on ) {
                                     ok
                                 }
                             }
             `,
             variables: {
                 method: 'POST',
-                pool_id: idPool,
-                new_name: newNamePool
-            }
-        });
-    }
-
-    public changeAutomatedPoolTotalSize({id}: {id: number}, {new_total_size}: {new_total_size: number}) {
-        const idPool = id;
-        const newTotalSize = new_total_size;
-        return this.service.mutate<any>({
-            mutation: gql`
-                        mutation ChangeAutomatedPoolTotalSize($pool_id: Int!,$new_total_size: Int!) {
-                            changeAutomatedPoolTotalSize(pool_id: $pool_id, new_total_size: $new_total_size) {
-                                ok
-                            }
-                        }
-            `,
-            variables: {
-                method: 'POST',
-                pool_id: idPool,
-                new_total_size: newTotalSize
-            }
-        });
-    }
-
-    public changeAutomatedPoolReserveSize({id}: {id: number}, {reserve_size}: {reserve_size: number}) {
-        const idPool = id;
-        const newReserveSize = reserve_size;
-        return this.service.mutate<any>({
-            mutation: gql`
-                            mutation ChangeAutomatedPoolReserveSize($pool_id: Int!,$new_reserve_size: Int!) {
-                                changeAutomatedPoolReserveSize(pool_id: $pool_id, new_reserve_size: $new_reserve_size) {
-                                    ok
-                                }
-                            }
-            `,
-            variables: {
-                method: 'POST',
-                pool_id: idPool,
-                new_reserve_size: newReserveSize
-            }
-        });
-    }
-
-    public changeTemplateForVmAutomatedPool({id}: {id: number}, {vm_name_template}: {vm_name_template: string}) {
-        const idPool = id;
-        const newNameTemplate = vm_name_template;
-        return this.service.mutate<any>({
-            mutation: gql`
-                            mutation changeTemplateForVmAutomatedPool($pool_id: Int!,$new_name_template: String!) {
-                                changeVmNameTemplate(pool_id: $pool_id, new_name_template: $new_name_template) {
-                                    ok
-                                }
-                            }
-            `,
-            variables: {
-                method: 'POST',
-                pool_id: idPool,
-                new_name_template: newNameTemplate
+                pool_id,
+                verbose_name,
+                reserve_size,
+                total_size,
+                vm_name_template,
+                keep_vms_on: true
             }
         });
     }
 }
+
+// pool_id?: string, verbose_name?: string, reserve_size?: number,
+//                              total_size?: number, vm_name_template?: string
