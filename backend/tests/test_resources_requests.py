@@ -4,11 +4,13 @@ from graphene.test import Client
 
 from controller_resources.schema import resources_schema
 
+from utils import execute_scheme
+from fixtures import fixt_db
 
-def test_request_clusters():
-    client = Client(resources_schema)
 
-    # add controller
+@pytest.mark.asyncio
+async def test_request_clusters(fixt_db):
+
     qu = """
     {
         clusters(ordering: "verbose_name"){
@@ -25,5 +27,5 @@ def test_request_clusters():
     }
     """
 
-    executed = client.execute(qu)
+    executed = await execute_scheme(resources_schema, qu)
     assert executed['clusters']
