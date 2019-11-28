@@ -26,10 +26,7 @@ export class PoolDetailsService {
         });
     }
 
-    // public getPool({pool_id}, { type }): Observable<any>; // in form-edit
     public getPool(pool_id: string | number , type: string): Observable<any> {
-        console.log(pool_id, type);
-    
         if (type === 'automated') {
             return this.service.watchQuery({
                 query: gql`  query pools($pool_id: String) {
@@ -122,7 +119,9 @@ export class PoolDetailsService {
         }
     }
 
-    public addVMStaticPool(pool_id: number, vm_ids: []) { // +
+    // +,-,get вм в стат. пуле
+
+    public addVMStaticPool(pool_id: number, vm_ids: []) {
         return this.service.mutate<any>({
             mutation: gql`
                             mutation pools($pool_id: ID!,$vm_ids: [UUID]!) {
@@ -139,7 +138,7 @@ export class PoolDetailsService {
         });
     }
 
-    public removeVMStaticPool(pool_id: number, vm_ids: []) { // +
+    public removeVMStaticPool(pool_id: number, vm_ids: []) {
         return this.service.mutate<any>({
             mutation: gql`
                             mutation RemoveVms($pool_id: Int!,$vm_ids: [ID]!) {
@@ -156,113 +155,7 @@ export class PoolDetailsService {
         });
     }
 
-    public assignVmToUser(vmId: string, usernameVM: string) {
-        return this.service.mutate<any>({
-            mutation: gql`
-                            mutation AssignVmToUser($vm_id: ID!,$username: String!) {
-                                assignVmToUser(vm_id: $vm_id,username: $username) {
-                                    ok
-                                }
-                            }
-            `,
-            variables: {
-                method: 'POST',
-                vm_id: vmId,
-                username: usernameVM
-            }
-        });
-    }
-
-    public freeVmFromUser(vmId: string) {
-        return this.service.mutate<any>({
-            mutation: gql`
-                            mutation FreeVmFromUser($vm_id: ID!) {
-                                freeVmFromUser(vm_id: $vm_id) {
-                                    ok
-                                }
-                            }
-            `,
-            variables: {
-                method: 'POST',
-                vm_id: vmId
-            }
-        });
-    }
-
-    public getAllUsersNoEntitleToPool(pool_id: number): QueryRef<any, any> {  // -
-        return  this.service.watchQuery({
-             query:  gql` query pools($pool_id: String, $entitled: Boolean) {
-                            pool(pool_id: $pool_id) {
-                                users(entitled: $entitled) {
-                                    username
-                                }
-                            }
-                        }
-                     `,
-            variables: {
-                method: 'GET',
-                entitled: false,
-                pool_id
-            }
-         });
-    }
-
-    public removeUserEntitlementsFromPool(poolId: number, entitledUsers: []) { // -
-        return this.service.mutate<any>({
-            mutation: gql`
-                            mutation RemoveUserEntitlementsFromPool($pool_id: ID,$entitled_users: [ID]) {
-                                removeUserEntitlementsFromPool(pool_id: $pool_id, entitled_users: $entitled_users) {
-                                    freed {
-                                        name
-                                    }
-                                }
-                            }
-            `,
-            variables: {
-                method: 'POST',
-                pool_id: poolId,
-                entitled_users: entitledUsers,
-                free_assigned_vms: true
-            }
-        });
-    }
-
-    public entitleUsersToPool(poolId: number, entitledUsers: []) { // -
-        return this.service.mutate<any>({
-            mutation: gql`
-                            mutation EntitleUsersToPool($pool_id: ID,$entitled_users: [ID]) {
-                                entitleUsersToPool(pool_id: $pool_id, entitled_users: $entitled_users) {
-                                    ok
-                                }
-                            }
-            `,
-            variables: {
-                method: 'POST',
-                pool_id: poolId,
-                entitled_users: entitledUsers
-            }
-        });
-    }
-
-    public assesUsersToPool(idPool: number): QueryRef<any, any> {
-        return this.service.watchQuery({
-                query: gql`
-                            query  AssesUsersToPool($id: Int) {
-                                pool(id: $id) {
-                                    users {
-                                        username
-                                    }
-                                }
-                            }
-            `,
-            variables: {
-                method: 'POST',
-                id: idPool
-            }
-        });
-    }
-
-    public getAllVms(cluster_id: string, node_id: string): QueryRef<any, any> { // +
+    public getAllVms(cluster_id: string, node_id: string): QueryRef<any, any> {
         return  this.service.watchQuery({
             query:  gql` query vms($cluster_id: String,$node_id:String) {
                                     vms(cluster_id: $cluster_id,node_id: $node_id) {
@@ -281,16 +174,52 @@ export class PoolDetailsService {
     }
 
 
-    public updateDynamicPool({pool_id}, {verbose_name, reserve_size, total_size, vm_name_template}) {
-        console.log({pool_id}, {verbose_name, reserve_size, total_size, vm_name_template});
+    // users for pool
+
+    public getAllUsersNoEntitleToPool(pool_id: string): QueryRef<any, any> {
+        return  this.service.watchQuery({
+             query:  gql` query pools($pool_id: String, $entitled: Boolean) {
+                            pool(pool_id: $pool_id) {
+                                users(entitled: $entitled) {
+                                    username
+                                    id
+                                }
+                            }
+                        }
+                     `,
+            variables: {
+                method: 'GET',
+                entitled: false,
+                pool_id
+            }
+         });
+    }
+
+    public getAllUsersEntitleToPool(pool_id: string): QueryRef<any, any> {
+        return this.service.watchQuery({
+                query: gql`
+                            query  pools($pool_id: String) {
+                                pool(pool_id: $pool_id) {
+                                    users {
+                                        username
+                                        id
+                                    }
+                                }
+                            }
+            `,
+            variables: {
+                method: 'POST',
+                pool_id,
+                entitled: true
+            }
+        });
+    }
+
+    public removeUserEntitlementsFromPool(pool_id: string, users: []) {
         return this.service.mutate<any>({
             mutation: gql`
-                            mutation pools($pool_id: UUID!,$verbose_name: String!,
-                                $reserve_size: Int , $total_size: Int , $vm_name_template: String ,
-                                 $keep_vms_on: Boolean ) {
-                                updateDynamicPool(pool_id: $pool_id, verbose_name: $verbose_name,
-                                    reserve_size: $reserve_size, total_size: $total_size,
-                                    vm_name_template: $vm_name_template, keep_vms_on: $keep_vms_on ) {
+                            mutation pools($pool_id: ID,$users: [ID]) {
+                                removeUserEntitlementsFromPool(pool_id: $pool_id, users: $users) {
                                     ok
                                 }
                             }
@@ -298,15 +227,110 @@ export class PoolDetailsService {
             variables: {
                 method: 'POST',
                 pool_id,
-                verbose_name,
-                reserve_size,
-                total_size,
-                vm_name_template,
-                keep_vms_on: true
+                users,
+                free_assigned_vms: true
+            }
+        });
+    }
+
+    public entitleUsersToPool(pool_id: string, users: []) {
+        return this.service.mutate<any>({
+            mutation: gql`
+                            mutation pools($pool_id: ID,$users: [ID]) {
+                                entitleUsersToPool(pool_id: $pool_id, users: $users) {
+                                    ok
+                                }
+                            }
+            `,
+            variables: {
+                method: 'POST',
+                pool_id,
+                users
+            }
+        });
+    }
+
+    public updatePool({pool_id, pool_type }, {verbose_name, reserve_size, total_size, vm_name_template}) {
+        if (pool_type === 'static') {
+            return this.service.mutate<any>({
+                mutation: gql`
+                                mutation pools($pool_id: UUID!,$verbose_name: String
+                                     $keep_vms_on: Boolean ) {
+                                    updateStaticPool(pool_id: $pool_id, verbose_name: $verbose_name,
+                                     keep_vms_on: $keep_vms_on ) {
+                                        ok
+                                    }
+                                }
+                `,
+                variables: {
+                    method: 'POST',
+                    pool_id,
+                    verbose_name,
+                    keep_vms_on: false // сделать у вм
+                }
+            });
+        }
+
+        if (pool_type === 'automated') {
+            return this.service.mutate<any>({
+                mutation: gql`
+                                mutation pools($pool_id: UUID!,$verbose_name: String,
+                                    $reserve_size: Int , $total_size: Int , $vm_name_template: String ,
+                                     $keep_vms_on: Boolean ) {
+                                    updateDynamicPool(pool_id: $pool_id, verbose_name: $verbose_name,
+                                        reserve_size: $reserve_size, total_size: $total_size,
+                                        vm_name_template: $vm_name_template, keep_vms_on: $keep_vms_on ) {
+                                        ok
+                                    }
+                                }
+                `,
+                variables: {
+                    method: 'POST',
+                    pool_id,
+                    verbose_name,
+                    reserve_size,
+                    total_size,
+                    vm_name_template,
+                    keep_vms_on: false
+                }
+            });
+        }
+    }
+
+    // назначение пользователя вм
+
+    public assignVmToUser(vm_id: string, username: string) {
+        return this.service.mutate<any>({
+            mutation: gql`
+                            mutation vms($vm_id: ID!,$username: String!) {
+                                assignVmToUser(vm_id: $vm_id,username: $username) {
+                                    ok
+                                }
+                            }
+            `,
+            variables: {
+                method: 'POST',
+                vm_id,
+                username
+            }
+        });
+    }
+
+    // отлучить пользователя вм
+
+    public freeVmFromUser(vm_id: string) {
+        return this.service.mutate<any>({
+            mutation: gql`
+                            mutation vms($vm_id: ID!) {
+                                freeVmFromUser(vm_id: $vm_id) {
+                                    ok
+                                }
+                            }
+            `,
+            variables: {
+                method: 'POST',
+                vm_id
             }
         });
     }
 }
-
-// pool_id?: string, verbose_name?: string, reserve_size?: number,
-//                              total_size?: number, vm_name_template?: string

@@ -7,7 +7,7 @@ import { MAT_DIALOG_DATA } from '@angular/material';
 import { map } from 'rxjs/operators';
 
 interface IData {
-  idPool: number;
+  idPool: string;
   namePool: string;
   typePool: string;
 }
@@ -59,7 +59,8 @@ export class AddUsersPoolComponent implements OnInit {
       });
   }
 
-  public selectUser(value: []) {
+  public selectUser(value: string[]) {
+    console.log(value);
     this.idUsers = value['value'];
   }
 

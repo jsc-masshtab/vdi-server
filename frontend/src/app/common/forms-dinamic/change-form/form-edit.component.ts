@@ -10,7 +10,8 @@ interface IData {
     service: object,
     method: string,
     params: {
-      id: string | number
+      id: string | number,
+      type: string
     }
   };
   settings: {

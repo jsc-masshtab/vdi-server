@@ -133,6 +133,7 @@ export class AppModule {
         this.waitService.setWait(false);
         graphQLErrors.map(({ message, locations, path }) => {
           this.errorService.setError(message);
+          this.waitService.setWait(false);
           console.log(`[GraphQL error]: Message: ${message}, Location: ${locations}, Path: ${path}`, locations);
         });
       }

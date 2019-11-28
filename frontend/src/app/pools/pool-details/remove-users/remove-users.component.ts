@@ -7,7 +7,7 @@ import { MAT_DIALOG_DATA } from '@angular/material';
 import { map } from 'rxjs/operators';
 
 interface IData {
-  idPool: number;
+  idPool: string;
   namePool: string;
   typePool: string;
 }
@@ -37,7 +37,7 @@ export class RemoveUsersPoolComponent  implements OnInit {
   public send() {
     this.waitService.setWait(true);
     this.poolService.removeUserEntitlementsFromPool(this.data.idPool, this.idUsers).subscribe(() => {
-      this.poolService.getPool( this.data.idPool, this.data.typePool).subscribe(() => {
+      this.poolService.getPool(this.data.idPool, this.data.typePool).subscribe(() => {
         this.poolsService.paramsForGetPools.spin = false;
         this.poolsService.getAllPools().subscribe();
         this.waitService.setWait(false);
@@ -48,7 +48,7 @@ export class RemoveUsersPoolComponent  implements OnInit {
 
   private getUsersToPool() {
     this.pendingUsers = true;
-    this.poolService.assesUsersToPool(this.data.idPool).valueChanges.pipe(map((data: any) => data.data.pool.users))
+    this.poolService.getAllUsersEntitleToPool(this.data.idPool).valueChanges.pipe(map((data: any) => data.data.pool.users))
     .subscribe( (data) => {
       this.users = data;
       this.pendingUsers = false;

@@ -346,9 +346,10 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
       data: {
         post: {
           service: this.poolService,
-          method: 'updateDynamicPool',
+          method: 'updatePool',
           params: {
-            pool_id: this.idPool
+            pool_id: this.idPool,
+            pool_type: this.typePool
           }
         },
         settings: {
@@ -396,7 +397,7 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
           form: [{
             tag: 'input',
             type: 'number',
-            fieldName: 'new_total_size',
+            fieldName: 'total_size',
             fieldValue: this.pool.total_size,
           }]
         },
@@ -436,10 +437,10 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
         },
         update: {
           method: 'getPool',
-          params: {
-            pool_id: this.idPool,
-            type: this.typePool
-          }
+          params: [
+            this.idPool,
+            this.typePool
+          ]
         }
       }
     });
@@ -470,10 +471,10 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
         },
         update: {
           method: 'getPool',
-          params: {
-            pool_id: this.idPool,
-            type: this.typePool
-          }
+          params: [
+            this.idPool,
+            this.typePool
+          ]
         }
       }
     });
