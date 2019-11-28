@@ -4,6 +4,7 @@ from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy import Enum as AlchemyEnum
 from sqlalchemy import case, literal_column, desc, text
 
+from event.models import Event
 from settings import VEIL_WS_MAX_TIME_TO_WAIT
 from database import db, Status
 from controller.models import Controller
@@ -455,6 +456,8 @@ class AutomatedPool(db.Model):
         # template_info = await GetDomainInfo(controller_ip=pool_args_dict['controller_ip'],
         #                                     domain_id=pool_args_dict['template_id'])
 
+        await Event.create_info('Automated pool creation started')
+
         vm_list = list()
         try:
             for i in range(self.initial_size):
@@ -463,8 +466,10 @@ class AutomatedPool(db.Model):
                 vm_list.append(vm)
 
                 # notify VDI front about progress(WS)
-                msg_dict = dict(msg='Automated pool creation. Created {} VMs from {}'.format(vm_index,
-                                                                                             self.initial_size),
+                msg = 'Automated pool creation. Created {} VMs from {}'.format(vm_index, self.initial_size)
+                await Event.create_info(msg)
+
+                msg_dict = dict(msg=msg,
                                 mgs_type='data',
                                 event='pool_creation_progress',
                                 pool_id=str(self.automated_pool_id),
@@ -482,9 +487,11 @@ class AutomatedPool(db.Model):
         print('is creation successful: {}'.format(is_creation_successful))
         if is_creation_successful:
             msg = 'Automated pool successfully created. Initial VM amount {}'.format(len(vm_list))
+            await Event.create_info(msg)
         else:
             msg = 'Automated pool created with errors. VMs created: {}. Required: {}'.format(len(vm_list),
                                                                                              self.initial_size)
+            await Event.create_error(msg)
 
         # Prepare new msg to resource monitor
         msg_dict = dict(msg=msg,
@@ -496,7 +503,6 @@ class AutomatedPool(db.Model):
                         is_successful=is_creation_successful,
                         resource=VDI_TASKS_SUBSCRIPTION)
         resources_monitor_manager.signal_internal_event(msg_dict)
-
         # Пробросить исключение, если споткнулись на создании машин
         if not is_creation_successful:
             raise VmCreationError('Не удалось создать необходимое число машин.')

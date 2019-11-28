@@ -7,10 +7,25 @@ from async_generator import async_generator, yield_, asynccontextmanager
 from database import db
 from settings import DB_NAME, DB_PASS, DB_USER, DB_PORT, DB_HOST, WS_PING_INTERVAL, WS_PING_TIMEOUT
 
+from controller.models import Controller
+from controller_resources.veil_client import ResourcesHttpClient
+
+from vm.veil_client import VmHttpClient
+
+from pool.schema import pool_schema
+
+from utils import execute_scheme
+
+from resources_monitoring.resources_monitor_manager import resources_monitor_manager
+
 
 async def get_resources_for_static_pool():
     # get the best controller
-    controller_ip = await get_most_appropriate_controller()
+    controllers_addresses = await Controller.get_controllers_addresses()
+    if not controllers_addresses:
+        raise RuntimeError('Нет контроллеров')
+
+    controller_ip = controllers_addresses[0]
     print('controller_ip', controller_ip)
 
     # find cluster with nodes
@@ -34,19 +49,27 @@ async def get_resources_for_static_pool():
 
 async def get_resources_for_automated_pool():
     # controller
-    controller_ip = await get_most_appropriate_controller()
+    controllers_addresses = await Controller.get_controllers_addresses()
+    if not controllers_addresses:
+        raise RuntimeError('Нет контроллеров')
 
-    clusters = await resources.ListClusters(controller_ip=controller_ip)
+    controller_ip = controllers_addresses[0]
+    print('controller_ip', controller_ip)
+
+    resources_http_client = await ResourcesHttpClient.create(controller_ip)
+    clusters = await resources_http_client.fetch_cluster_list()
     if not clusters:
         raise RuntimeError('На контроллере {} нет кластеров'.format(controller_ip))
-    templates = await vm.ListTemplates(controller_ip=controller_ip)
+    vm_http_client = await VmHttpClient.create(controller_ip, '')
+    templates = await vm_http_client.fetch_templates_list()
     if not templates:
         raise RuntimeError('На контроллере {} нет шаблонов'.format(controller_ip))
 
     # select appropriate template_id and node_id
     # node must be active and has a template
     for cluster in clusters:
-        nodes = await resources.ListNodes(controller_ip=controller_ip, cluster_id=cluster['id'])
+        resources_http_client = await ResourcesHttpClient.create(controller_ip)
+        nodes = await resources_http_client.fetch_node_list(cluster['id'])
         if not nodes:
             continue
 
@@ -60,7 +83,8 @@ async def get_resources_for_automated_pool():
                     continue
                 else: # template found
                     # find active datapool
-                    datapools = await resources.ListDatapools(controller_ip=controller_ip, node_id=node['id'])
+                    resources_http_client = await ResourcesHttpClient.create(controller_ip)
+                    datapools = await resources_http_client.fetch_datapool_list(node_id=node['id'])
                     try:
                         datapool_id = next(datapool['id'] for datapool in datapools if datapool['status'] == 'ACTIVE')
                     except StopIteration: # No active datapools
@@ -89,37 +113,39 @@ async def fixt_create_automated_pool():
 
     resources = await get_resources_for_automated_pool()
 
-    res = await schema.exec('''
+    qu = '''
         mutation {
-          addPool(name: "test_auto_pool", controller_ip: "%s", cluster_id: "%s", node_id: "%s",
-               datapool_id: "%s", template_id: "%s", initial_size: 1, reserve_size: 1, total_size: 3) {
-            desktop_pool_type
-            id
-          }
+            addDynamicPool(verbose_name: "test_auto_pool_666", controller_ip: "%s", 
+                           cluster_id: "%s", node_id: "%s", datapool_id: "%s", template_id: "%s",
+                           initial_size: 1, total_size: 2, max_amount_of_create_attempts: 10){
+                    ok
+                    pool{
+                        pool_id
+                        pool_type
+                    }
+            }
         }
         ''' % (resources['controller_ip'], resources['cluster_id'], resources['node_id'],
                resources['datapool_id'], resources['template_id'])
-    )
 
-    pool_id = res['addPool']['id']
+    executed = await execute_scheme(pool_schema, qu)
+
+    pool_id = executed['addDynamicPool']['pool']['pool_id']
     await yield_({
         'id': pool_id,
     })
 
-    print('destroy pool')
-    # remove pool
-    await asyncio.sleep(5)  # Даем вейлу время на создание машин  (ожидать ответ о завершении создания пула(WS),
-    # когда будет реализовано)
-
-    await RemovePool.do_remove(pool_id)
-    # qu = '''
-    # mutation {
-    #   removePool(id: %(id)s) {
-    #     ok
-    #   }
-    # }
-    # ''' % locals()
-    # await schema.exec(qu)
+    # print('destroy pool')
+    # # remove pool
+    # await RemovePool.do_remove(pool_id)
+    # # qu = '''
+    # # mutation {
+    # #   removePool(id: %(id)s) {
+    # #     ok
+    # #   }
+    # # }
+    # # ''' % locals()
+    # # await schema.exec(qu)
 
     # stop monitor
     await resources_monitor_manager.stop()

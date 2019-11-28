@@ -1,5 +1,5 @@
 import pytest
-
+import asyncio
 from graphene.test import Client
 
 from controller.schema import controller_schema
@@ -77,3 +77,4 @@ async def test_add_remove_controller(fixt_db):
 
     executed = await execute_scheme(controller_schema, qu)
     assert executed['removeController']['ok']
+

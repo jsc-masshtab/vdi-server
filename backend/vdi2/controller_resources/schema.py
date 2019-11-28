@@ -67,13 +67,16 @@ class ClusterType(graphene.ObjectType):
 
     async def resolve_vms(self, _info):
         vm_http_client = await VmHttpClient.create(self.controller.address, '')
-        vm_veil_data_list = await vm_http_client.fetch_vms_list(cluster_id=self.id)
+        vm_veil_data_list = await vm_http_client.fetch_vms_list()
+        vm_veil_data_list = await VmQuery.filter_domains_by_cluster(vm_veil_data_list, self.controller.address, self.id)
+
         vm_type_list = VmQuery.veil_vm_data_to_graphene_type_list(vm_veil_data_list, self.controller.address)
         return vm_type_list
 
     async def resolve_templates(self, _info):
         vm_http_client = await VmHttpClient.create(self.controller.address, '')
-        template_list = await vm_http_client.fetch_templates_list(cluster_id=self.id)
+        template_list = await vm_http_client.fetch_templates_list()
+        template_list = await VmQuery.filter_domains_by_cluster(template_list, self.controller.address, self.id)
 
         template_type_list = []
         for template in template_list:
@@ -145,7 +148,7 @@ class NodeType(graphene.ObjectType):
 
         if self.veil_info is None:
             self.veil_info = await self.get_veil_info()
-        cluster_id = self.veil_info['cluster']['id']
+        cluster_id = self.veil_info['cluster']
 
         veil_cluster_data = await resources_http_client.fetch_cluster(cluster_id)
         cluster_type = make_graphene_type(ClusterType, veil_cluster_data)
