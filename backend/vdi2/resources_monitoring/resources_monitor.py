@@ -1,22 +1,19 @@
 import asyncio
 import json
+from abc import ABC
 from json import JSONDecodeError
-from abc import ABC, abstractmethod
 
-from tornado.httpclient import HTTPClientError
-from tornado.websocket import websocket_connect
-from tornado.websocket import WebSocketClosedError
 from tornado import ioloop
-
-from controller.models import Controller
-
-from .resources_monitoring_data import CONTROLLER_SUBSCRIPTIONS_LIST, CONTROLLERS_SUBSCRIPTION, VDI_TASKS_SUBSCRIPTION
+from tornado.httpclient import HTTPClientError
+from tornado.websocket import WebSocketClosedError
+from tornado.websocket import websocket_connect
 
 from common.utils import cancel_async_task
 from common.veil_errors import HttpError
-from common.veil_client import VeilHttpClient
-
+from controller.models import Controller
 from controller_resources.veil_client import ResourcesHttpClient
+from event.models import Event
+from .resources_monitoring_data import CONTROLLER_SUBSCRIPTIONS_LIST, CONTROLLERS_SUBSCRIPTION, VDI_TASKS_SUBSCRIPTION
 
 
 class AbstractMonitor(ABC):
@@ -46,6 +43,7 @@ class ResourcesMonitor(AbstractMonitor):
     """
     monitoring of controller events
     """
+
     def __init__(self):
         super().__init__()
         self._ws_connection = None
@@ -144,7 +142,10 @@ class ResourcesMonitor(AbstractMonitor):
             connect_url = 'ws://{}/ws/?token={}'.format(self._controller_ip, token)
             self._ws_connection = await websocket_connect(connect_url)
         except ConnectionRefusedError:
-            print(__class__.__name__, ' can not connect to', self._controller_ip)
+            msg = '{cls}: an not connect to {ip}'.format(
+                cls=__class__.__name__,
+                ip=self._controller_ip)
+            await Event.create_error(msg)
             return False
 
         # subscribe to events on controller
@@ -179,6 +180,7 @@ class InternalMonitor(AbstractMonitor):
     """
     monitoring of internal VDI events (pool progress creation, result of pool creation...)
     """
+
     def __init__(self):
         super().__init__()
 
