@@ -14,6 +14,11 @@ usage() {
 EOF
 }
 
+setup_env() {
+  echo "Setting up env"
+  export PYTHONPATH=$APP_DIR/backend/vdi2
+}
+
 current_commit() {
   echo "Current commit: "
   git rev-parse --short HEAD
@@ -33,7 +38,7 @@ while test $# -ne 0; do
   case $arg in
     -h|--help) usage; exit ;;
     curr|current) current_commit; exit ;;
-    update) update; exit ;;
+    update) setup_env; update; exit ;;
   esac
 done
 
