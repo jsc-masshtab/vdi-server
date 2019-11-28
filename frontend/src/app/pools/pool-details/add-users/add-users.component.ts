@@ -7,7 +7,7 @@ import { MAT_DIALOG_DATA } from '@angular/material';
 import { map } from 'rxjs/operators';
 
 interface IData {
-  idPool: number;
+  idPool: string;
   namePool: string;
   typePool: string;
 }
@@ -37,7 +37,7 @@ export class AddUsersPoolComponent implements OnInit {
   public send() {
     this.waitService.setWait(true);
     this.poolService.entitleUsersToPool(this.data.idPool, this.idUsers).subscribe(() => {
-      this.poolService.getPool({id: this.data.idPool, type: this.data.typePool}).subscribe(() => {
+      this.poolService.getPool(this.data.idPool, this.data.typePool).subscribe(() => {
         this.poolsService.paramsForGetPools.spin = false;
         this.poolsService.getAllPools().subscribe();
         this.waitService.setWait(false);
@@ -59,7 +59,8 @@ export class AddUsersPoolComponent implements OnInit {
       });
   }
 
-  public selectUser(value: []) {
+  public selectUser(value: string[]) {
+    console.log(value);
     this.idUsers = value['value'];
   }
 

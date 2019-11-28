@@ -12,7 +12,7 @@
         <mat-label *ngIf="!data?.vms?.length">- нет виртуальных машин -</mat-label>
         <mat-select (selectionChange)="selectVm($event)" multiple="true">
           <mat-option *ngFor="let vm of data?.vms" [value]="vm?.id">
-            {{vm.name}}
+            {{vm.verbose_name}}
           </mat-option>
         </mat-select>
       </mat-form-field>

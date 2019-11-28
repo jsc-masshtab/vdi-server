@@ -46,29 +46,18 @@ export class TemplatesComponent extends DetailsMove implements OnInit {
 
   @ViewChild('view') view: ElementRef;
 
-
   ngOnInit() {
     this.getTemplates();
   }
 
   public getTemplates() {
     this.waitService.setWait(true);
-    this.service.getAllTemplates().valueChanges.pipe(map(data => data.data.controllers)).subscribe((data) => {
-      let arrTemplates: [][] = [];
-      this.templates = [];
-      arrTemplates = data.map(controller => controller.templates);
-
-      arrTemplates.forEach((arr: []) => {
-          arr.forEach((obj: {}) => {
-            this.parseInfoTmp(obj);
-          });
-      });
+    this.service.getAllTemplates().valueChanges.pipe(map(data => data.data.templates)).subscribe((data) => {
+      console.log(data);
+      this.templates = data.map(tmp => JSON.parse(tmp.veil_info));
+      console.log(this.templates);
       this.waitService.setWait(false);
     });
-  }
-
-  private parseInfoTmp(info): void {
-    this.templates.push(JSON.parse(info['info']));
   }
 
   public routeTo(event): void {

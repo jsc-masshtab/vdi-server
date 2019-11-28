@@ -9,16 +9,15 @@ export class DatapoolsService {
 
     public paramsForGetDatapools: IParams = { // для несбрасывания параметров сортировки при всех обновлениях
         spin: true,
-        nameSort: undefined,
-        reverse: undefined
+        nameSort: undefined
     };
 
     constructor(private service: Apollo) {}
 
     public getAllDatapools(): QueryRef<any, any> {
         return  this.service.watchQuery({
-            query:  gql` query allDatapools($ordering:String, $reversed_order: Boolean) {
-                            datapools(ordering: $ordering, reversed_order: $reversed_order) {
+            query:  gql` query resources($ordering:String) {
+                            datapools(ordering: $ordering) {
                                 id
                                 used_space
                                 free_space
@@ -28,21 +27,23 @@ export class DatapoolsService {
                                 file_count
                                 iso_count
                                 verbose_name
+                                controller {
+                                    address
+                                }
                             }
                         }
                     `,
             variables: {
                 method: 'GET',
-                ordering: this.paramsForGetDatapools.nameSort,
-                reversed_order: this.paramsForGetDatapools.reverse
+                ordering: this.paramsForGetDatapools.nameSort
             }
         });
     }
 
-    public getDatapool(id: string): QueryRef<any, any> {
+    public getDatapool(id: string, controller_address: string): QueryRef<any, any> {
         return  this.service.watchQuery({
-            query:  gql` query Datapool($id: String) {
-                            datapool(id: $id) {
+            query:  gql` query resources($id: String, $controller_address: String) {
+                            datapool(id: $id, controller_address: $controller_address) {
                                 used_space
                                 free_space
                                 size
@@ -57,7 +58,8 @@ export class DatapoolsService {
                     `,
             variables: {
                 method: 'GET',
-                id
+                id,
+                controller_address
             }
         });
     }

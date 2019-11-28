@@ -12,7 +12,7 @@
         <mat-label *ngIf="users?.length && !pendingUsers">Выберите пользователей</mat-label>
         <mat-label *ngIf="!users?.length && !pendingUsers">- нет пользователей -</mat-label>
         <mat-select (selectionChange)="selectUser($event)" multiple="true">
-          <mat-option *ngFor="let user of users" [value]="user.username">
+          <mat-option *ngFor="let user of users" [value]="user.id">
             {{user.username}}
           </mat-option>
         </mat-select>

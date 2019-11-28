@@ -11,6 +11,9 @@ import {
 import { filter } from 'rxjs/operators';
 
 
+interface IError {
+  message: string;
+}
 
 @Component({
   selector: 'vdi-errors',
@@ -38,12 +41,23 @@ export class ErrorsComponent  implements OnInit, OnDestroy {
   constructor(private service: ErrorsService) {}
 
   ngOnInit() {
-    this.errorsSub = this.service.getErrors().pipe(filter(value => Array.isArray(value))).subscribe((errors: object[]) => {
-      errors.forEach((item: {}) => {
-        this.errors.unshift(item);
-        this.hideMessage();
-      });
+    this.errorsSub = this.service.getErrors().pipe(filter(value => Array.isArray(value) || typeof value === 'string'))
+    .subscribe((errors: IError[] | string) => {
+      if (Array.isArray(errors)) {
+        errors.forEach((item: {}) => {
+          this.addError(item);
+        });
+      } else {
+        this.addError(errors);
+      }
+
+      console.log(this.errors, 'err');
     });
+  }
+
+  private addError(item): void {
+    this.errors.unshift(item);
+    this.hideMessage();
   }
 
   private hideMessage(): void {

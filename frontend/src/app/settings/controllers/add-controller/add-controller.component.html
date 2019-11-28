@@ -5,14 +5,26 @@
     <button [mat-dialog-close]="true" class="form-close"><fa-icon [icon]="['fas','times-circle']"></fa-icon></button>
   </div>
 
-  <div class="form-fields">
+  <div class="form-fields" [formGroup]="createForm">
     <label class="field">
       <p class="field-name">IP-адрес</p>
-      <input type="text" [(ngModel)]="controller" [focusMe]="true">
+      <input type="text" formControlName="address" [focusMe]="true">
+    </label>
+    <label class="field">
+      <p class="field-name">Название</p>
+      <input type="text" formControlName="verbose_name">
+    </label>
+    <label class="field">
+      <p class="field-name">Имя пользователя</p>
+      <input type="text" formControlName="username">
+    </label>
+    <label class="field">
+      <p class="field-name">Пароль</p>
+      <input type="password" formControlName="password">
     </label>
     <label class="field">
       <p class="field-name">Описание</p>
-      <textarea [(ngModel)]="description"></textarea>
+      <textarea formControlName="description"></textarea>
     </label>
   </div>
 

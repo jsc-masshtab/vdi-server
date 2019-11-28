@@ -91,7 +91,7 @@ export class DatapoolsComponent extends DetailsMove implements OnInit, OnDestroy
   }
 
   public routeTo(event): void {
-    this.router.navigate([`resourses/datapools/${event.id}`]);
+    this.router.navigate([`resourses/datapools/${event.controller.address}/${event.id}`]);
   }
 
   public onResize(): void {

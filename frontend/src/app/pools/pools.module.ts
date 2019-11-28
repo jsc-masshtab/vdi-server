@@ -31,7 +31,7 @@ import { VmDetalsPopupComponent } from './pool-details/vm-details-popup/vm-detai
     AddUsersPoolComponent,
     RemoveUsersPoolComponent,
     AddVMStaticPoolComponent,
-    RemoveVMStaticPoolComponent,
+   RemoveVMStaticPoolComponent,
     RemovePoolComponent,
     VmDetalsPopupComponent,
     AddUserVmComponent,

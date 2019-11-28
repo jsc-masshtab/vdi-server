@@ -12,15 +12,14 @@ export class NodesService {
 
     public paramsForGetNodes: IParams = { // для несбрасывания параметров сортировки при всех обновлениях
         spin: true,
-        nameSort: undefined,
-        reverse: undefined
+        nameSort: undefined
     };
 
     public getAllNodes(): QueryRef<any, any> {
 
         return  this.service.watchQuery({
-            query:  gql` query allNodes($ordering:String, $reversed_order: Boolean) {
-                            nodes(ordering: $ordering, reversed_order: $reversed_order) {
+            query:  gql` query resources($ordering:String) {
+                            nodes(ordering: $ordering) {
                                 id
                                 verbose_name
                                 status
@@ -32,23 +31,22 @@ export class NodesService {
                                     verbose_name
                                 }
                                 controller {
-                                    ip
+                                    address
                                 }
                             }
                         }
                     `,
             variables: {
                 method: 'GET',
-                ordering: this.paramsForGetNodes.nameSort,
-                reversed_order: this.paramsForGetNodes.reverse
+                ordering: this.paramsForGetNodes.nameSort
             }
         });
     }
 
-    public getNode(id: string): QueryRef<any, any> {
+    public getNode(id: string, controller_address: string): QueryRef<any, any> {
         return  this.service.watchQuery({
-            query:  gql` query node($id: String) {
-                            node(id: $id) {
+            query:  gql` query resources($id: String, $controller_address: String) {
+                            node(id: $id, controller_address: $controller_address) {
                                 verbose_name
                                 status
                                 cpu_count
@@ -69,14 +67,11 @@ export class NodesService {
                                     verbose_name
                                 }
                                 templates {
-                                    info
+                                    verbose_name
                                 }
                                 vms {
-                                    name
+                                    verbose_name
                                     template {
-                                        name
-                                    }
-                                    node {
                                         verbose_name
                                     }
                                 }
@@ -85,7 +80,8 @@ export class NodesService {
                     `,
             variables: {
                 method: 'GET',
-                id
+                id,
+                controller_address
             }
         });
     }

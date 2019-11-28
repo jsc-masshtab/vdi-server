@@ -25,7 +25,7 @@ export class PoolsComponent extends DetailsMove implements OnInit, OnDestroy {
   public collection: ReadonlyArray<object> = [
     {
       title: 'Название',
-      property: 'name',
+      property: 'verbose_name',
       class: 'name-start',
       icon: 'desktop',
       type: 'string',
@@ -34,7 +34,7 @@ export class PoolsComponent extends DetailsMove implements OnInit, OnDestroy {
     {
       title: 'Контроллер',
       property: 'controller',
-      property_lv2: 'ip',
+      property_lv2: 'address',
       reverse_sort: true
     },
     {
@@ -54,7 +54,7 @@ export class PoolsComponent extends DetailsMove implements OnInit, OnDestroy {
     },
     {
       title: 'Тип',
-      property: 'desktop_pool_type',
+      property: 'pool_type',
       type: 'string',
       reverse_sort: true
     },
@@ -103,8 +103,9 @@ export class PoolsComponent extends DetailsMove implements OnInit, OnDestroy {
   }
 
   public routeTo(event): void {
-    const desktopPoolType: string = event.desktop_pool_type.toLowerCase();
-    this.router.navigate([`pools/${desktopPoolType}/${event.id}`]);
+    console.log(event);
+    const desktopPoolType: string = event.pool_type.toLowerCase();
+    this.router.navigate([`pools/${desktopPoolType}/${event.pool_id}`]);
   }
 
   public onResize(): void {

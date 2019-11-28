@@ -12,15 +12,27 @@ import { RemoveControllerComponent } from '../remove-controller/remove-controlle
   templateUrl: './controllers.component.html'
 })
 
-export class ControllersComponent implements OnInit, OnDestroy{
+export class ControllersComponent implements OnInit, OnDestroy {
 
   public controllers: [];
   public collection: object[] = [
     {
-      title: 'IP адрес',
-      property: 'ip',
+      title: 'Имя контроллера',
+      property: 'verbose_name',
       class: 'name-start',
       icon: 'building',
+      type: 'string',
+      reverse_sort: true
+    },
+    {
+      title: 'IP адрес',
+      property: 'address',
+      type: 'string',
+      reverse_sort: true
+    },
+    {
+      title: 'Пользователь',
+      property: 'username',
       type: 'string',
       reverse_sort: true
     },

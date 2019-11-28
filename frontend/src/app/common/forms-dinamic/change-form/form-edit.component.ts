@@ -10,7 +10,8 @@ interface IData {
     service: object,
     method: string,
     params: {
-      id: string | number
+      id: string | number,
+      type: string
     }
   };
   settings: {
@@ -28,10 +29,7 @@ interface IData {
   };
   update: {
     method: string;
-    params: {
-      id: string | number,
-      type?: string
-    },
+    params: [],
   };
   updateDepend?: {
     method: string;
@@ -80,7 +78,8 @@ export class FormForEditComponent implements OnInit {
     if (this.data.post && this.data.update) {
       this.waitService.setWait(true);
       this.data.post.service[this.data.post.method](this.data.post.params, this.formGroup.value).subscribe(() => {
-        this.data.post.service[this.data.update.method](this.data.update.params).subscribe(() => {
+        console.log(this.data.update.method, this.data.update.params);
+        this.data.post.service[this.data.update.method](...this.data.update.params).subscribe(() => {
           this.waitService.setWait(false);
           if (this.data.updateDepend) {
             this.data.updateDepend.service[this.data.updateDepend.method]().subscribe();

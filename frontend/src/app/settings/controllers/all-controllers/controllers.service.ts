@@ -5,7 +5,7 @@ import gql from 'graphql-tag';
 
 
 @Injectable()
-export class ControllersService  {
+export class ControllersService {
 
     public paramsForGetControllers: IParams = { // для несбрасывания параметров сортировки при всех обновлениях
         spin: true,
@@ -15,53 +15,64 @@ export class ControllersService  {
 
     constructor(private service: Apollo) {}
 
+
     public getAllControllers(): QueryRef<any, any> {
        return  this.service.watchQuery({
-            query:  gql` query allControllers($ordering:String, $reversed_order: Boolean) {
-                            controllers(ordering: $ordering, reversed_order: $reversed_order) {
-                                ip
+            query:  gql` query controllers {
+                            controllers {
+                                id
+                                verbose_name
                                 description
+                                address
+                                version
                                 status
+                                username
                             }
                         }
                     `,
             variables: {
-                method: 'GET',
-                ordering: this.paramsForGetControllers.nameSort,
-                reversed_order: this.paramsForGetControllers.reverse
+                method: 'GET'
             }
         });
     }
 
-    public addController(ipController: string, descriptionController: string) {
+    public addController({address, description, username, verbose_name, password }) {
         return this.service.mutate<any>({
             mutation: gql`
-                            mutation AddController($description: String,$ip: String!) {
-                                addController(description: $description,ip: $ip) {
+                            mutation controllers($description: String,$address: String!,
+                                $username: String!,$verbose_name: String!,
+                                $ldap_connection: Boolean!,$password: String!) {
+                                addController(description: $description,address: $address,
+                                                username: $username,verbose_name: $verbose_name,
+                                                ldap_connection: $ldap_connection,password: $password) {
                                     ok
                                 }
                             }
             `,
             variables: {
                 method: 'POST',
-                description: descriptionController,
-                ip: ipController
+                description,
+                address,
+                username,
+                verbose_name,
+                password,
+                ldap_connection: false
             }
         });
     }
 
-    public removeController(ip: string) {
+    public removeController(id: string) {
         return this.service.mutate<any>({
             mutation: gql`
-                            mutation RemoveController($controller_ip: String) {
-                                removeController(controller_ip: $controller_ip) {
+                            mutation controllers($id: UUID!) {
+                                removeController(id: $id) {
                                     ok
                                 }
                             }
             `,
             variables: {
                 method: 'POST',
-                controller_ip: ip
+                id
             }
         });
     }

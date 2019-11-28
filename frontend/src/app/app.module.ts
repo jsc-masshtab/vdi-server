@@ -97,24 +97,53 @@ export class AppModule {
               private httpLink: HttpLink,
               private errorService: ErrorsService,
               private waitService: WaitService,
-              private ws: WebsocketService) {
+              private ws: WebsocketService
+              ) {
 
     library.add(faDesktop, faDatabase, faLayerGroup, faPlusCircle, faMinusCircle, faSpinner, faServer, faCog, faChevronUp, faTimesCircle,
                 faFolderOpen, faStar, faTv, faSyncAlt, faBuilding, faTrashAlt, faUsers, faMeh, faChartBar, faUser,
                 faStopCircle, faPlayCircle, faPauseCircle, faEdit, faQuestionCircle, faCheckSquare, faExclamationTriangle, faHeartbeat,
                 faChevronCircleUp, faComment);
 
-    const uri = environment.url;
-    const link = this.httpLink.create({ uri, includeQuery: true, includeExtensions: false });
+    const url = environment.url;
+
+    const link = this.httpLink.create( { uri(operation) {
+      let urlKnock: string = '';
+      switch (operation.operationName) {
+        case 'controllers':
+          urlKnock = `${url + 'controllers'}`;
+          break;
+        case 'pools':
+          urlKnock = `${url + 'pools'}`;
+          break;
+        case 'resources':
+          urlKnock = `${url + 'resources'}`;
+          break;
+        case 'vms':
+          urlKnock = `${url + 'vms'}`;
+          break;
+        case 'users':
+          urlKnock = `${url + 'users'}`;
+          break;
+        default:
+          urlKnock = `${url}`;
+      }
+      return urlKnock;
+    }, includeQuery: true, includeExtensions: false} );
 
     const errorLink = onError(({ graphQLErrors, networkError }) => {
       if (graphQLErrors) {
-        graphQLErrors.map(({ message, locations, path }) =>
-          console.log(`[GraphQL error]: Message: ${message}, Location: ${locations}, Path: ${path}`));
+        this.waitService.setWait(false);
+        graphQLErrors.map(({ message, locations, path }) => {
+          this.errorService.setError(message);
+          this.waitService.setWait(false);
+          console.log(`[GraphQL error]: Message: ${message}, Location: ${locations}, Path: ${path}`, locations);
+        });
       }
 
       if (networkError) {
-        this.errorService.setError(networkError['error']['errors']);
+        console.log(networkError, 'networkError');
+        this.errorService.setError(networkError['message']);
         this.waitService.setWait(false);
       }
     });
@@ -138,6 +167,5 @@ export class AppModule {
     });
 
     setTimeout(() => this.ws.init(), 1000);
-
   }
 }

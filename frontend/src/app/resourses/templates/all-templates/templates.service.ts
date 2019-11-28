@@ -10,12 +10,9 @@ export class TemplatesService {
 
     public getAllTemplates(): QueryRef<any, any> {
         return  this.service.watchQuery({
-            query:  gql` query allTemplates {
-                                controllers {
-                                    templates {
-                                        id
-                                        info
-                                    }
+            query:  gql` query vms {
+                                templates {
+                                    veil_info
                                 }
                             }
                         `,

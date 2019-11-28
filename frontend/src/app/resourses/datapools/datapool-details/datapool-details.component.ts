@@ -62,6 +62,7 @@ export class DatapoolDetailsComponent implements OnInit {
   public idDatapool: string;
   public menuActive: string = 'info';
   public host: boolean = false;
+  private address: string;
 
   constructor(private activatedRoute: ActivatedRoute,
               private service: DatapoolsService,
@@ -70,13 +71,14 @@ export class DatapoolDetailsComponent implements OnInit {
   ngOnInit() {
     this.activatedRoute.paramMap.subscribe((param: ParamMap) => {
       this.idDatapool = param.get('id') as string;
+      this.address = param.get('address');
       this.getDatapool();
     });
   }
 
   public getDatapool() {
     this.host = false;
-    this.service.getDatapool(this.idDatapool).valueChanges.pipe(map(data => data.data.datapool))
+    this.service.getDatapool(this.idDatapool, this.address).valueChanges.pipe(map(data => data.data.datapool))
       .subscribe((data) => {
         this.datapool = data;
         this.host = true;

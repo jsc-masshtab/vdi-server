@@ -40,7 +40,7 @@ export class AddVMStaticPoolComponent implements OnInit {
   public send() {
     this.waitService.setWait(true);
     this.poolService.addVMStaticPool(this.data.idPool, this.idVms).subscribe(() => {
-      this.poolService.getPool({id: this.data.idPool, type: this.data.typePool}).subscribe(() => {
+      this.poolService.getPool(this.data.idPool, this.data.typePool).subscribe(() => {
         this.waitService.setWait(false);
       });
       this.dialogRef.close();
@@ -51,7 +51,7 @@ export class AddVMStaticPoolComponent implements OnInit {
 
   private getVms() {
     this.pendingVms = true;
-    this.poolService.getAllVms(this.data.idCluster, this.data.idNode).valueChanges.pipe(map((data: any) => data.data.list_of_vms))
+    this.poolService.getAllVms(this.data.idCluster, this.data.idNode).valueChanges.pipe(map((data: any) => data.data.vms))
       .subscribe((data) => {
         this.vms = data;
         this.pendingVms = false;

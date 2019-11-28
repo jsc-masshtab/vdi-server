@@ -46,7 +46,7 @@ export class ClustersComponent extends DetailsMove implements OnInit, OnDestroy 
     {
       title: 'Контроллер',
       property: 'controller',
-      property_lv2: 'ip',
+      property_lv2: 'address',
       reverse_sort: true
     },
     {
@@ -89,7 +89,7 @@ export class ClustersComponent extends DetailsMove implements OnInit, OnDestroy 
   }
 
   public routeTo(event): void {
-    this.router.navigate([`resourses/clusters/${event.id}`]);
+    this.router.navigate([`resourses/clusters/${event.controller.address}/${event.id}`]);
   }
 
   public sortList(param: IParams) {
