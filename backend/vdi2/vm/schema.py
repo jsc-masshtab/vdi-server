@@ -164,7 +164,8 @@ class AssignVmToUser(graphene.Mutation):
             raise GraphQLError('У пользователя нет прав на использование пула, которому принадлежит ВМ')
 
         # another vm in the pool may have this user as owner. Remove assignment
-        await Vm.free_vm(pool_id, username)
+        await Vm.update.values(username=None).where(
+            Vm.pool_id == pool_id and Vm.username == username).gino.status()
 
         # assign vm to the user(username)
         await Vm.attach_vm_to_user(vm_id, username)
