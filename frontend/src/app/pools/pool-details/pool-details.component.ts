@@ -57,11 +57,6 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
       property_lv2: 'verbose_name'
     },
     {
-      title: 'Пул данных',
-      property: 'datapool',
-      property_lv2: 'verbose_name'
-    },
-    {
       title: 'Всего ВМ',
       property: 'vms',
       type: 'array-length'

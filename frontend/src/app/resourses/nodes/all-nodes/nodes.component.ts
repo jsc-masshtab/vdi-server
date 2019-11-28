@@ -52,7 +52,7 @@ export class NodesComponent extends DetailsMove implements OnInit, OnDestroy {
     {
       title: 'Контроллер',
       property: 'controller',
-      property_lv2: 'ip',
+      property_lv2: 'address',
       reverse_sort: true
     },
     {
@@ -84,7 +84,7 @@ export class NodesComponent extends DetailsMove implements OnInit, OnDestroy {
   }
 
   public routeTo(event): void {
-    this.router.navigate([`resourses/nodes/${event.id}`]);
+    this.router.navigate([`resourses/nodes/${event.controller.address}/${event.id}`]);
   }
 
   public onResize(): void {

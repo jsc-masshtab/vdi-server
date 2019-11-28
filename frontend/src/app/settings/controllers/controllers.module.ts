@@ -11,7 +11,7 @@ import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { AddControllerComponent } from './add-controller/add-controller.component';
 import { RemoveControllerComponent } from './remove-controller/remove-controller.component';
-import { FormsModule } from '@angular/forms';
+import { ReactiveFormsModule } from '@angular/forms';
 
 
 
@@ -29,7 +29,7 @@ import { FormsModule } from '@angular/forms';
     AppRoutingModule,
     MatDialogModule,
     MatSelectModule,
-    FormsModule
+    ReactiveFormsModule
   ],
   providers: [ControllersService],
   exports: [

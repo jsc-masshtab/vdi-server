@@ -25,6 +25,8 @@ export class ControllersService {
                                 description
                                 address
                                 version
+                                status
+                                username
                             }
                         }
                     `,
@@ -34,7 +36,7 @@ export class ControllersService {
         });
     }
 
-    public addController(address: string, description: string) {
+    public addController({address, description, username, verbose_name, password }) {
         return this.service.mutate<any>({
             mutation: gql`
                             mutation controllers($description: String,$address: String!,
@@ -51,10 +53,10 @@ export class ControllersService {
                 method: 'POST',
                 description,
                 address,
-                username: 'vdi_nastya',
-                verbose_name: 'vdi_nastya',
-                ldap_connection: false,
-                password: '1234'
+                username,
+                verbose_name,
+                password,
+                ldap_connection: false
             }
         });
     }

@@ -122,6 +122,9 @@ export class AppModule {
         case 'vms':
           urlKnock = `${url + 'vms'}`;
           break;
+        case 'users':
+          urlKnock = `${url + 'users'}`;
+          break;
         default:
           urlKnock = `${url}`;
       }

@@ -106,9 +106,6 @@ export class PoolDetailsService {
                                     node {
                                         verbose_name
                                     }
-                                    datapool {
-                                        verbose_name
-                                    }
                                 }
                             }`,
                 variables: {

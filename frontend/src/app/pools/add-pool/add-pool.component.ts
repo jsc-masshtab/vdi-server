@@ -356,6 +356,16 @@ export class PoolAddComponent implements OnInit, OnDestroy {
           type: 'string'
         },
         {
+          title: 'Кластер',
+          property: 'cluster_name',
+          type: 'string'
+        },
+        {
+          title: 'Сервер',
+          property: 'node_name',
+          type: 'string'
+        },
+        {
           title: 'Виртуальные машины',
           property: 'vm_name',
           type: 'string'

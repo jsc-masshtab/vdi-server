@@ -18,10 +18,9 @@ export class UsersService  {
 
     public getAllUsers(): QueryRef<any, any> {
        return  this.service.watchQuery({
-            query:  gql` query allUsers($ordering:String, $reversed_order: Boolean) {
+            query:  gql` query users($ordering:String, $reversed_order: Boolean) {
                             users(ordering: $ordering, reversed_order: $reversed_order) {
                                 username
-                                date_joined
                             }
                         }
                     `,
@@ -36,7 +35,7 @@ export class UsersService  {
     public createUser(name: string, pass: string) {
         return this.service.mutate<any>({
             mutation: gql`
-                            mutation AddUser($username: String,$password: String) {
+                            mutation users($username: String,$password: String) {
                                 createUser(username: $username, password: $password) {
                                     ok
                                 }

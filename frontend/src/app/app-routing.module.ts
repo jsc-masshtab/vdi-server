@@ -45,7 +45,7 @@ const routes: Routes = [
     component: ClustersComponent,
     children: [
       {
-        path: ':id',
+        path: ':address/:id',
         component: ClusterDetailsComponent
       }
     ]
@@ -55,7 +55,7 @@ const routes: Routes = [
     component: NodesComponent,
     children: [
       {
-        path: ':id',
+        path: ':address/:id',
         component:  NodeDetailsComponent
       }
     ]
@@ -65,7 +65,7 @@ const routes: Routes = [
     component: DatapoolsComponent,
     children: [
       {
-        path: ':id',
+        path: ':address/:id',
         component: DatapoolDetailsComponent
       }
     ]
@@ -75,7 +75,7 @@ const routes: Routes = [
     component: TemplatesComponent,
     children: [
       {
-        path: ':id',
+        path: ':address/:id',
         component: TemplateDetailsComponent
       }
     ]
@@ -85,7 +85,7 @@ const routes: Routes = [
     component: VmsComponent,
     children: [
       {
-        path: ':id',
+        path: ':address/:id',
         component: VmDetailsComponent
       }
     ]

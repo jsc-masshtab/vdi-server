@@ -67,14 +67,11 @@ export class ClustersService  {
                                     verbose_name
                                 }
                                 templates {
-                                    info
+                                    verbose_name
                                 }
                                 vms {
-                                    name
+                                    verbose_name
                                     template {
-                                        name
-                                    }
-                                    node {
                                         verbose_name
                                     }
                                 }
@@ -83,8 +80,8 @@ export class ClustersService  {
                     `,
             variables: {
                 method: 'GET',
-                controller_address,
-                id
+                id,
+                controller_address
             }
         });
     }

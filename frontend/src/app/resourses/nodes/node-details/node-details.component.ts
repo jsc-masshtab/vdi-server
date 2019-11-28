@@ -150,6 +150,7 @@ export class NodeDetailsComponent implements OnInit {
   ];
   public node_id: string;
   public menuActive: string = 'info';
+  private address: string;
 
   public host: boolean = false;
 
@@ -159,14 +160,15 @@ export class NodeDetailsComponent implements OnInit {
 
   ngOnInit() {
     this.activatedRoute.paramMap.subscribe((param: ParamMap) => {
-      this.node_id = param.get('id') as string;
+      this.node_id = param.get('id');
+      this.address = param.get('address');
       this.getNode();
     });
   }
 
   public getNode() {
     this.host = false;
-    this.service.getNode(this.node_id).valueChanges.pipe(map(data => data.data.node))
+    this.service.getNode(this.node_id, this.address).valueChanges.pipe(map(data => data.data.node))
       .subscribe((data) => {
         this.node = data;
         this.templates = data.templates.map((item) => JSON.parse(item.info));
