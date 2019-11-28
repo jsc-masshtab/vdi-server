@@ -117,35 +117,20 @@ export class NodeDetailsComponent implements OnInit {
       class: 'name-start',
       type: 'string',
       icon: 'tv'
-    },
-    {
-      title: 'Cервер',
-      property: 'node',
-      property_lv2: 'verbose_name'
-    },
-    {
-      title: 'Оперативная память (MБ)',
-      property: 'memory_count',
-      type: 'string'
     }
   ];
   public collection_vms = [
     {
       title: 'Название',
-      property: 'name',
+      property: 'verbose_name',
       class: 'name-start',
       type: 'string',
       icon: 'desktop'
     },
     {
-      title: 'Сервер',
-      property: 'node',
-      property_lv2: 'verbose_name'
-    },
-    {
       title: 'Шаблон',
       property: 'template',
-      property_lv2: 'name'
+      property_lv2: 'verbose_name'
     }
   ];
   public node_id: string;
@@ -171,7 +156,6 @@ export class NodeDetailsComponent implements OnInit {
     this.service.getNode(this.node_id, this.address).valueChanges.pipe(map(data => data.data.node))
       .subscribe((data) => {
         this.node = data;
-        this.templates = data.templates.map((item) => JSON.parse(item.info));
         this.host = true;
       },
         () => {

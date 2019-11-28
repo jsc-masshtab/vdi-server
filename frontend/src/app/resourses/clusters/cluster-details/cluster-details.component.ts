@@ -139,35 +139,20 @@ export class ClusterDetailsComponent implements OnInit {
       class: 'name-start',
       type: 'string',
       icon: 'tv'
-    },
-    {
-      title: 'Cервер',
-      property: 'node',
-      property_lv2: 'verbose_name'
-    },
-    {
-      title: 'Оперативная память (MБ)',
-      property: 'memory_count',
-      type: 'string'
     }
   ];
   public collectionVms = [
     {
       title: 'Название',
-      property: 'name',
+      property: 'verbose_name',
       class: 'name-start',
       type: 'string',
       icon: 'desktop'
     },
     {
-      title: 'Сервер',
-      property: 'node',
-      property_lv2: 'verbose_name'
-    },
-    {
       title: 'Шаблон',
       property: 'template',
-      property_lv2: 'name'
+      property_lv2: 'verbose_name'
     }
   ];
   public idCluster: string;
@@ -192,7 +177,6 @@ export class ClusterDetailsComponent implements OnInit {
     this.service.getCluster(this.idCluster, this.address).valueChanges.pipe(map(data => data.data.cluster))
       .subscribe((data) => {
         this.cluster = data;
-        // this.templates = data.templates.map((item) => JSON.parse(item.info));
         this.host = true;
       },
         () => {
