@@ -11,7 +11,13 @@ usage() {
   Commands:
     update               update deploy to the latest release / apply db migrations
     curr[ent]            output current release commit
+    start                start front and back with hohup
 EOF
+}
+
+setup_env() {
+  echo "Setting up env"
+  export PYTHONPATH=$APP_DIR/backend/vdi2
 }
 
 current_commit() {
@@ -27,13 +33,26 @@ update() {
   pipenv run alembic upgrade head
 }
 
+start() {
+  # TODO: tmux start for monitoring
+  # TODO: supervisor start
+  echo "Starting..."
+  nohup pipenv run python $APP_DIR/backend/vdi2/app.py &\
+  cd $APP_DIR/frontend/
+  rm -rf node_modules  # audit fix not working without this.
+  npm audit fix  # npm i has some broken dependencies. npm audit fix works fine for 9
+  nohup npm run ng serve -- --host 0.0.0.0
+  echo "Done!"
+}
+
 # parse argv
 while test $# -ne 0; do
   arg=$1; shift
   case $arg in
     -h|--help) usage; exit ;;
     curr|current) current_commit; exit ;;
-    update) update; exit ;;
+    update) setup_env; update; exit ;;
+    start) setup_env; start; exit ;;
   esac
 done
 

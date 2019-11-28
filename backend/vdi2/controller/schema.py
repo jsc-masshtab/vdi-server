@@ -129,7 +129,7 @@ class UpdateControllerMutation(graphene.Mutation):
 
             # TODO: change to update & restart
             await resources_monitor_manager.remove_controller(address)
-            await resources_monitor_manager.add_controller(address)
+            resources_monitor_manager.add_controller(address)
 
             msg = 'Successfully update controller {id} with address {address}.'.format(
                 id=controller.id,

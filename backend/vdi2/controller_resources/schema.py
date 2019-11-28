@@ -47,7 +47,7 @@ class ClusterType(graphene.ObjectType):
 
     async def resolve_nodes(self, _info):
         resources_http_client = await ResourcesHttpClient.create(self.controller.address)
-        nodes = await resources_http_client.fetch_node_list(cluster_id=id)
+        nodes = await resources_http_client.fetch_node_list(cluster_id=self.id)
         node_type_list = await ResourcesQuery.resource_veil_to_graphene_type_list(
             NodeType, nodes, self.controller.address)
         return node_type_list
@@ -56,7 +56,7 @@ class ClusterType(graphene.ObjectType):
         resources_http_client = await ResourcesHttpClient.create(self.controller.address)
 
         datapools = []
-        node_list = await resources_http_client.fetch_node_list(cluster_id=id)
+        node_list = await resources_http_client.fetch_node_list(cluster_id=self.id)
         for node in node_list:
             datapool_list = await resources_http_client.fetch_datapool_list(node['id'])
             datapools.extend(datapool_list)
