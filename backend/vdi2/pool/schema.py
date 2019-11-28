@@ -11,6 +11,7 @@ from common.utils import make_graphene_type
 
 from auth.schema import UserType
 from auth.models import User
+from event.models import Event
 
 from vm.schema import VmType, VmQuery, TemplateType
 from vm.models import Vm
@@ -285,6 +286,8 @@ class DeletePoolMutation(graphene.Mutation, PoolValidator):
         # Меняем статус пула. Не нравится идея удалять записи имеющие внешние зависимости, которые не удалить,
         # например запущенные виртуалки.
         await Pool.soft_delete(pool_id)
+        msg = 'Pool {id} deactivated.'.format(id=pool_id)
+        await Event.create_info(msg)
         return DeletePoolMutation(ok=True)
 
 
@@ -359,7 +362,10 @@ class CreateStaticPoolMutation(graphene.Mutation, PoolValidator):
             # response
             vms = [VmType(id=vm_id) for vm_id in vm_ids]
             await pool.activate()
+            msg = 'Static pool {id} created.'.format(id=pool.pool_id)
+            await Event.create_info(msg)
         except Exception as E:  # Возможные исключения: дубликат имени или вм id, сетевой фейл enable_remote_accesses
+            await Event.create_error('Failed to create static pool.')
             print(E)
             if pool:
                 await pool.deactivate()
@@ -454,6 +460,8 @@ class UpdateStaticPoolMutation(graphene.Mutation, PoolValidator):
     async def mutate(cls, _root, _info, **kwargs):
         await cls.validate_agruments(**kwargs)
         ok = await StaticPool.soft_update(kwargs['pool_id'], kwargs.get('verbose_name'), kwargs.get('keep_vms_on'))
+        msg = 'Static pool {id} updated.'.format(id=kwargs['pool_id'])
+        await Event.create_info(msg)
         return UpdateStaticPoolMutation(ok=ok)
 
 
@@ -491,10 +499,14 @@ class CreateAutomatedPoolMutation(graphene.Mutation, PoolValidator):
             await automated_pool.add_initial_vms()
             await automated_pool.activate()
             pool = await Pool.get_pool(automated_pool.automated_pool_id)
+            msg = 'Dynamic pool {id} created.'.format(id=pool.pool_id)
+            await Event.create_info(msg)
         except (GraphQLLocatedError, VmCreationError) as E:  # Возможные исключения: дубликат имени пула,VmCreationError
+            await Event.create_error('Failed to create dynamic pool.')
             if pool:
                 await pool.deactivate()
             raise SimpleError(E)
+
         return CreateAutomatedPoolMutation(
                 pool=PoolType(**pool),
                 ok=True)
@@ -518,6 +530,8 @@ class UpdateAutomatedPoolMutation(graphene.Mutation, PoolValidator):
         ok = await AutomatedPool.soft_update(kwargs['pool_id'], kwargs.get('verbose_name'), kwargs.get('reserve_size'),
                                              kwargs.get('total_size'), kwargs.get('vm_name_template'),
                                              kwargs.get('keep_vms_on'))
+        msg = 'Dynamic pool {id} updated.'.format(id=kwargs['pool_id'])
+        await Event.create_info(msg)
         return UpdateAutomatedPoolMutation(ok=ok)
 
 
