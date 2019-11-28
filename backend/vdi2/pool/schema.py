@@ -506,11 +506,11 @@ class CreateAutomatedPoolMutation(graphene.Mutation, PoolValidator):
             await automated_pool.activate()
 
             pool = await Pool.get_pool(automated_pool.automated_pool_id)
-            msg = 'Dynamic pool {id} created.'.format(id=pool.pool_id)
+            msg = 'Automated pool {id} created.'.format(id=pool.pool_id)
             await Event.create_info(msg)
         except (UniqueViolationError, VmCreationError) as E:  # Возможные исключения: дубликат имени пула,VmCreationError
             print('exp__', E.__class__.__name__)
-            await Event.create_error('Failed to create dynamic pool.')
+            await Event.create_error('Failed to create automated pool.')
             if pool:
                 await pool.deactivate()
             raise SimpleError(E)
