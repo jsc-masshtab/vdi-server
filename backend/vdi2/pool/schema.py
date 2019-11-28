@@ -179,12 +179,14 @@ class PoolType(graphene.ObjectType):
                  PoolUsers.pool_id == self.pool_id).gino.all()
         else:
             subquery = PoolUsers.select('user_id').where(PoolUsers.pool_id == self.pool_id)
-            users_data = await User.select('username', 'email').where(User.id.notin_(subquery)).gino.all()  # subquery
-        uset_type_list = [
-            UserType(user.username, user.email)
+            users_data = await User.select('username', 'email', 'id').where(User.id.notin_(subquery)).gino.all()
+
+        user_type_list = [
+            UserType(id=user.id, username=user.username, email=user.email)
             for user in users_data
         ]
-        return uset_type_list
+        print('user_type_list', user_type_list)
+        return user_type_list
 
     async def resolve_vms(self, _info):
         await self._build_vms_list()
