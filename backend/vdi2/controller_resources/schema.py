@@ -191,6 +191,7 @@ class DatapoolType(graphene.ObjectType):
     nodes = graphene.List(lambda: NodeType)
     nodes_connected = graphene.List(lambda: NodeType, deprecation_reason="Use `nodes`")
     verbose_name = graphene.String()
+    controller = graphene.Field(ControllerType)
 
     async def resolve_nodes(self, _info):
         resources_http_client = await ResourcesHttpClient.create(self.controller.address)
