@@ -1,43 +1,31 @@
 import graphene
+from graphene import Enum as GrapheneEnum
 import re
 
-from auth.models import User
+from auth.models import AuthenticationDirectory
 from common.veil_validators import MutationValidation
 from common.veil_errors import SimpleError, ValidationError
 from common.veil_decorators import superuser_required
 
+from database import StatusGraphene
 
-# TODO: вынести схему в отдельный пакет auth?
-class UserValidator(MutationValidation):
-    """Валидатор для сущности Pool"""
+
+ConntectionTypesGraphene = GrapheneEnum.from_enum(AuthenticationDirectory.ConnectionTypes)
+DirectoryTypesGraphene = GrapheneEnum.from_enum(AuthenticationDirectory.DirectoryTypes)
+
+
+class AuthenticationDirectoryValidator(MutationValidation):
+    """Валидатор для сущности AuthenticationDirectory"""
 
     @staticmethod
     async def validate_id(obj_dict, value):
-        pool = await User.get_user(user_id=value)
+        pool = await AuthenticationDirectory.get_object(id=value, include_inactive=True)
         if pool:
             return value
-        raise ValidationError('No such user.')
+        raise ValidationError('No such Authentication Directory.')
 
     @staticmethod
-    async def validate_username(obj_dict, value):
-        usernamename_re = re.compile('^[a-zA-Z0-9.-_+ ]{3,128}$')
-        template_name = re.match(usernamename_re, value)
-        if template_name:
-            return value
-        raise ValidationError(
-            'Имя пользователя должно содержать буквы, цифры, _, -, + и быть не короче 3 символов.')
-
-    @staticmethod
-    async def validate_email(obj_dict, value):
-        email_re = re.compile('^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$')
-        template_name = re.match(email_re, value)
-        if template_name:
-            return value
-        raise ValidationError(
-            'Email должен быть содержать символы латинского алфавита и/или цифры, иметь @ и домен.')
-
-    @staticmethod
-    async def validate_password(obj_dict, value):
+    async def validate_service_password(obj_dict, value):
         pass_re = re.compile('^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[@$!%*?&])[A-Za-z0-9@$!%*?&]{8,}$')
         template_name = re.match(pass_re, value)
         if template_name:
@@ -45,162 +33,205 @@ class UserValidator(MutationValidation):
         raise ValidationError(
             'Пароль должен быть не меньше 8 символов, содержать буквы, цифры и спец.символы.')
 
+    @staticmethod
+    async def validate_directory_url(obj_dict, value):
+        if not re.match(r'^ldap[s]?://[\S]+$', value):
+            raise ValidationError(
+                'Authentication directory URL should start with ldap(s)://.')
+        return value
 
-class UserType(graphene.ObjectType):
+
+class AuthenticationDirectoryType(graphene.ObjectType):
+    """Описание полей:
+
+    - connection_type: тип подключения (поддерживается только LDAP)
+    - description: описание объекта
+    - directory_url: адрес службы каталогов
+    - directory_type: тип службы каталогов (поддерживается только MS Active Directory)
+    - domain_name: имя контроллера доменов
+    - verbose_name: имя объекта, назначенное пользователем
+    - service_username: username имеющий права для управления AD
+    - service_password: password
+    - admin_server: url сервера управления AD
+    - kdc_urls: список всех url'ов Key Distributed Centers
+    - sso: Технология Single Sign-on
+    """
+
     id = graphene.UUID()
-    username = graphene.String()
-    password = graphene.String()
-    email = graphene.String()
-    last_name = graphene.String()
-    first_name = graphene.String()
+    verbose_name = graphene.String()
+    directory_url = graphene.String()
+    connection_type = ConntectionTypesGraphene()
+    description = graphene.String()
+    directory_type = DirectoryTypesGraphene()
+    domain_name = graphene.String()
 
-    date_joined = graphene.DateTime()
-    date_updated = graphene.DateTime()
-    last_login = graphene.DateTime()
+    # SSO fields
+    subdomain_name = graphene.String()
+    service_username = graphene.String()
+    service_password = graphene.String()
+    admin_server = graphene.String()
+    kdc_urls = graphene.List(graphene.String)
+    status = StatusGraphene()
+    sso = graphene.Boolean(default_value=False)
 
-    is_superuser = graphene.Boolean()
-    is_active = graphene.Boolean()
-
-    async def resolve_password(self, _info):
+    async def resolve_service_password(self, _info):
         return '*' * 8  # dummy value for not displayed field
 
 
-class UserQuery(graphene.ObjectType):
-    users = graphene.List(UserType, ordering=graphene.String())
-    user = graphene.Field(UserType, id=graphene.UUID(), username=graphene.String())
+class AuthenticationDirectoryQuery(graphene.ObjectType):
+    auth_dirs = graphene.List(AuthenticationDirectoryType, ordering=graphene.String())
+    auth_dir = graphene.Field(AuthenticationDirectoryType, id=graphene.UUID())
 
     @staticmethod
     def instance_to_type(model_instance):
-        return UserType(id=model_instance.id,
-                        username=model_instance.username,
-                        email=model_instance.email,
-                        last_name=model_instance.last_name,
-                        first_name=model_instance.first_name,
-                        date_joined=model_instance.date_joined,
-                        date_updated=model_instance.date_updated,
-                        last_login=model_instance.last_login,
-                        is_superuser=model_instance.is_superuser,
-                        is_active=model_instance.is_active)
+        return AuthenticationDirectoryType(**model_instance.__values__)
 
-    async def resolve_user(self, info, id=None, username=None):
-        if not id and not username:
-            raise SimpleError('Scpecify id or username.')
+    async def resolve_auth_dir(self, info, id=None):
+        if not id:
+            raise SimpleError('Specify id.')
 
-        user = await User.get_user(id, username)
-        if not user:
-            raise SimpleError('No such user.')
-        return UserQuery.instance_to_type(user)
+        auth_dir = await AuthenticationDirectory.get_object(id)
+        if not auth_dir:
+            raise SimpleError('No such Authentication Directory.')
+        return AuthenticationDirectoryQuery.instance_to_type(auth_dir)
 
-    @superuser_required
-    async def resolve_users(self, info, ordering=None):
-        users = await User.get_users(ordering=ordering)
+    async def resolve_auth_dirs(self, info, ordering=None):
+        auth_dirs = await AuthenticationDirectory.get_objects(ordering=ordering)
         objects = [
-            UserQuery.instance_to_type(user)
-            for user in users
+            AuthenticationDirectoryQuery.instance_to_type(auth_dir)
+            for auth_dir in auth_dirs
         ]
         return objects
 
 
-# --- --- --- --- ---
-# User basic mutations
-class CreateUserMutation(graphene.Mutation, UserValidator):
+class CreateAuthenticationDirectoryMutation(graphene.Mutation, AuthenticationDirectoryValidator):
     class Arguments:
-        username = graphene.String(required=True)
-        password = graphene.String(required=True)
-        email = graphene.String(required=True)
-        last_name = graphene.String(required=True)
-        first_name = graphene.String(required=True)
-        is_superuser = graphene.Boolean(default_value=False)
+        verbose_name = graphene.String(required=True)
+        description = graphene.String()
+        directory_url = graphene.String(required=True)
+        connection_type = ConntectionTypesGraphene()
+        directory_type = DirectoryTypesGraphene()
+        domain_name = graphene.String(required=True)
 
-    user = graphene.Field(lambda: UserType)
+        # SSO:
+        service_username = graphene.String()
+        service_password = graphene.String()
+        admin_server = graphene.String()
+        subdomain_name = graphene.String()
+        kdc_urls = graphene.List(graphene.String)
+        sso = graphene.Boolean(default_value=False)
+
+    auth_dir = graphene.Field(lambda: AuthenticationDirectoryType)
     ok = graphene.Boolean(default_value=False)
 
     @classmethod
     async def mutate(cls, root, info, **kwargs):
         await cls.validate_agruments(**kwargs)
-        user = await User.create_user(**kwargs)
-        return CreateUserMutation(
-            user=UserType(**user.__values__),
+        auth_dir = await AuthenticationDirectory.soft_create(**kwargs)
+        return CreateAuthenticationDirectoryMutation(
+            auth_dir=AuthenticationDirectoryType(**auth_dir.__values__),
             ok=True)
 
 
-class UpdateUserMutation(graphene.Mutation, UserValidator):
+class ActivateAuthenticationDirectoryMutation(graphene.Mutation, AuthenticationDirectoryValidator):
     class Arguments:
         id = graphene.UUID(required=True)
-        username = graphene.String()
-        email = graphene.String()
-        last_name = graphene.String()
-        first_name = graphene.String()
-        is_superuser = graphene.Boolean()
 
-    user = graphene.Field(lambda: UserType)
+    ok = graphene.Boolean()
+
+    @classmethod
+    async def mutate(cls, root, info, **kwargs):
+        await cls.validate_agruments(**kwargs)
+        await AuthenticationDirectory.activate(kwargs['id'])
+        return ActivateAuthenticationDirectoryMutation(ok=True)
+
+
+class DeactivateAuthenticationDirectoryMutation(graphene.Mutation, AuthenticationDirectoryValidator):
+    class Arguments:
+        id = graphene.UUID(required=True)
+
+    ok = graphene.Boolean()
+
+    @classmethod
+    async def mutate(cls, root, info, **kwargs):
+        await cls.validate_agruments(**kwargs)
+        await AuthenticationDirectory.deactivate(kwargs['id'])
+        return DeactivateAuthenticationDirectoryMutation(ok=True)
+
+
+class DeleteAuthenticationDirectoryMutation(graphene.Mutation, AuthenticationDirectoryValidator):
+    class Arguments:
+        id = graphene.UUID(required=True)
+
+    ok = graphene.Boolean()
+
+    @classmethod
+    async def mutate(cls, root, info, **kwargs):
+        await cls.validate_agruments(**kwargs)
+        auth_dir = await AuthenticationDirectory.get_object(id=kwargs['id'], include_inactive=True)
+        await auth_dir.delete()
+        return DeactivateAuthenticationDirectoryMutation(ok=True)
+
+
+class TestAuthenticationDirectoryMutation(graphene.Mutation, AuthenticationDirectoryValidator):
+    class Arguments:
+        id = graphene.UUID(required=True)
+
+    ok = graphene.Boolean()
+
+    @classmethod
+    async def mutate(cls, root, info, **kwargs):
+        await cls.validate_agruments(**kwargs)
+        auth_dir = await AuthenticationDirectory.get_object(kwargs['id'])
+        conntection_ok = await auth_dir.test_connection()
+        return DeactivateAuthenticationDirectoryMutation(ok=conntection_ok)
+
+
+class UpdateAuthenticationDirectoryMutation(graphene.Mutation, AuthenticationDirectoryValidator):
+    class Arguments:
+        id = graphene.UUID(required=True)
+        verbose_name = graphene.String()
+        directory_url = graphene.String()
+        connection_type = ConntectionTypesGraphene()
+        description = graphene.String()
+        directory_type = DirectoryTypesGraphene()
+        domain_name = graphene.String()
+        subdomain_name = graphene.String()
+        service_username = graphene.String()
+        service_password = graphene.String()
+        admin_server = graphene.String()
+        kdc_urls = graphene.List(graphene.String)
+        sso = graphene.Boolean(default_value=False)
+
+    auth_dir = graphene.Field(lambda: AuthenticationDirectoryType)
     ok = graphene.Boolean(default_value=False)
 
     @classmethod
     async def mutate(cls, root, info, **kwargs):
         await cls.validate_agruments(**kwargs)
-        user = await User.soft_update(kwargs['id'],
-                                      kwargs.get('username'), kwargs.get('email'),
-                                      kwargs.get('last_name'), kwargs.get('first_name'),
-                                      kwargs.get('is_superuser'))
-        return CreateUserMutation(
-            user=UserType(**user.__values__),
+        auth_dir = await AuthenticationDirectory.soft_update(kwargs['id'],
+                                                             kwargs.get('verbose_name'), kwargs.get('directory_url'),
+                                                             kwargs.get('connection_type'), kwargs.get('description'),
+                                                             kwargs.get('directory_type'), kwargs.get('domain_name'),
+                                                             kwargs.get('subdomain_name'),
+                                                             kwargs.get('service_username'),
+                                                             kwargs.get('service_password'), kwargs.get('admin_server'),
+                                                             kwargs.get('kdc_urls'), kwargs.get('sso'),
+                                                             )
+        return UpdateAuthenticationDirectoryMutation(
+            auth_dir=AuthenticationDirectoryType(**auth_dir.__values__),
             ok=True)
 
 
-# --- --- --- --- ---
-# User utils mutation
-class ChangeUserPasswordMutation(graphene.Mutation, UserValidator):
-    class Arguments:
-        id = graphene.UUID(required=True)
-        password = graphene.String(required=True)
-
-    ok = graphene.Boolean()
-
-    @classmethod
-    async def mutate(cls, root, info, **kwargs):
-        await cls.validate_agruments(**kwargs)
-        # Назначаем новый пароль
-        await User.set_password(kwargs['id'], kwargs['password'])
-        return ActivateUserMutation(ok=True)
+class AuthenticationDirectoryMutations(graphene.ObjectType):
+    createAuthDir = CreateAuthenticationDirectoryMutation.Field()
+    activateAuthDir = ActivateAuthenticationDirectoryMutation.Field()
+    deactivateAuthDir = DeactivateAuthenticationDirectoryMutation.Field()
+    updateAuthDir = UpdateAuthenticationDirectoryMutation.Field()
+    testAuthDir = TestAuthenticationDirectoryMutation.Field()
+    deleteAuthDir = DeleteAuthenticationDirectoryMutation.Field()
 
 
-class ActivateUserMutation(graphene.Mutation, UserValidator):
-    class Arguments:
-        id = graphene.UUID(required=True)
-
-    ok = graphene.Boolean()
-
-    @classmethod
-    async def mutate(cls, root, info, **kwargs):
-        await cls.validate_agruments(**kwargs)
-        # Меняем статус пользователя
-        await User.activate(kwargs['id'])
-        return ActivateUserMutation(ok=True)
-
-
-class DeactivateUserMutation(graphene.Mutation, UserValidator):
-    class Arguments:
-        id = graphene.UUID(required=True)
-
-    ok = graphene.Boolean()
-
-    @classmethod
-    async def mutate(cls, root, info, **kwargs):
-        await cls.validate_agruments(**kwargs)
-        # Меняем статус пользователя
-        await User.deactivate(kwargs['id'])
-        return DeactivateUserMutation(ok=True)
-
-
-class UserMutations(graphene.ObjectType):
-    createUser = CreateUserMutation.Field()
-    activateUser = ActivateUserMutation.Field()
-    deactivateUser = DeactivateUserMutation.Field()
-    updateUser = UpdateUserMutation.Field()
-    changeUserPassword = ChangeUserPasswordMutation.Field()
-
-
-user_schema = graphene.Schema(mutation=UserMutations,
-                              query=UserQuery,
-                              auto_camelcase=False)
+auth_dir_schema = graphene.Schema(mutation=AuthenticationDirectoryMutations,
+                                  query=AuthenticationDirectoryQuery,
+                                  auto_camelcase=False)

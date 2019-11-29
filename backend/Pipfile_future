@@ -20,5 +20,8 @@ python2-secrets = "==1.0.5"  # Django-secrets
 cached-property = "==1.5.1"  # cached-property decorator
 async_generator = "==1.10"  # classy_async
 cryptography = "==2.8"  # controller password encryption
+python-ldap = "==3.2.0"  # ldap integration
+# libsasl2-dev python-dev libldap2-dev libssl-dev
+
 [requires]
 python_version = "3.5.3"

@@ -4,7 +4,7 @@ import jwt
 import datetime
 
 from settings import JWT_OPTIONS, SECRET_KEY, JWT_EXPIRATION_DELTA, JWT_AUTH_HEADER_PREFIX, JWT_ALGORITHM
-from auth.models import User, UserJwtInfo
+from user.models import User, UserJwtInfo
 
 
 def jwtauth(handler_class):
@@ -100,7 +100,7 @@ def extract_user(headers: dict) -> str:
 async def extraxt_user_object(headers: dict) -> User:
     """Returns User object"""
     username = extract_user(headers)
-    return await User.get_active_user(username=username)
+    return await User.get_object(extra_field_name='username', extra_field_value=username)
 
 
 def refresh_access_token_with_no_expire_check(headers: dict):
