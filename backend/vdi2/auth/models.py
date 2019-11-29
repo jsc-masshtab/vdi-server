@@ -1,200 +1,266 @@
 # -*- coding: utf-8 -*-
 import uuid
-from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy.sql import func, desc
+from typing import List
+from enum import Enum
 
-from auth.utils import hashers
-from database import db
-from common.veil_errors import SimpleError
+import ldap
+from sqlalchemy.dialects.postgresql import UUID, ARRAY
+from sqlalchemy import Enum as AlchemyEnum
 
+from database import db, Status, AbstractSortableStatusModel
+from user.models import User
 
-# TODO: вынести модели в отдельный пакет auth?
-class User(db.Model):
-    __tablename__ = 'user'
-    id = db.Column(UUID(), primary_key=True, default=uuid.uuid4)  # TODO: try with id
-    username = db.Column(db.Unicode(length=128), nullable=False, unique=True)
-    password = db.Column(db.Unicode(length=128), nullable=False)
-    email = db.Column(db.Unicode(length=256), unique=True, nullable=False)
-    last_name = db.Column(db.Unicode(length=128))
-    first_name = db.Column(db.Unicode(length=32))
-    date_joined = db.Column(db.DateTime(timezone=True), server_default=func.now())
-    date_updated = db.Column(db.DateTime(timezone=True), onupdate=func.now())
-    last_login = db.Column(db.DateTime(timezone=True), server_default=func.now())
-    is_superuser = db.Column(db.Boolean(), default=False)
-    is_active = db.Column(db.Boolean(), default=True)
-
-    # ----- ----- ----- ----- ----- ----- -----
-    # Properties and getters:
-
-    @staticmethod
-    def build_ordering(query, ordering=None):
-        """Построение порядка сортировки"""
-
-        if not ordering or not isinstance(ordering, str):
-            return query
-
-        # Определяем порядок сортировки по наличию "-" вначале строки
-        if ordering.find('-', 0, 1) == 0:
-            reversed_order = True
-            ordering = ordering[1:]
-        else:
-            reversed_order = False
-
-        # TODO: если сделать валидацию переданных полей на сортировку - try не нужен
-        try:
-            # Соответствие переданного наименования поля полю модели, чтобы не использовать raw_sql в order
-            query = query.order_by(desc(getattr(User, ordering))) if reversed_order else query.order_by(
-                getattr(User, ordering))
-        except AttributeError:
-            raise SimpleError('Неверный параметр сортировки {}'.format(ordering))
-        return query
-
-    @staticmethod
-    def get_users_query(ordering=None, include_active=True):
-        """Содержит только логику запроса без фетча"""
-
-        query = User.query
-
-        # Исключение удаленных ранее пулов
-        if not include_active:
-            query = query.where(User.is_active != True)
-
-        # Сортировка
-        if ordering:
-            query = User.build_ordering(query, ordering)
-
-        return query
-
-    @staticmethod
-    async def get_user(user_id=None, username=None):
-        query = User.get_users_query()
-        if user_id:
-            query = query.where(User.id == user_id)
-        elif username:
-            query = query.where(User.username == username)
-        return await query.gino.first()
-
-    @staticmethod
-    async def get_active_user(user_id=None, username=None):
-        query = User.get_users_query()
-        if user_id:
-            query = query.where(User.id == user_id)
-        elif username:
-            query = query.where(User.username == username)
-        query = query.where(User.is_active == True)
-        return await query.gino.first()
-
-    @staticmethod
-    async def get_users(ordering=None):
-        """Такое построение запроса вызвано желанием иметь только 1 запрос с изначальным построением."""
-        query = User.get_users_query(ordering=ordering)
-        return await query.gino.all()
-
-    @staticmethod
-    async def get_id(username):
-        return await User.select('id').where(User.username == username).gino.scalar()
-
-    # ----- ----- ----- ----- ----- ----- -----
-    # Setters & etc.
-
-    @classmethod
-    async def activate(cls, user_id):
-        return await User.update.values(is_active=True).where(
-            User.id == user_id).gino.status()
-
-    @classmethod
-    async def deactivate(cls, user_id):
-        return await User.update.values(is_active=False).where(
-            User.id == user_id).gino.status()
-
-    @staticmethod
-    async def check_password(username, raw_password):
-        password = await User.select('password').where(User.username == username).gino.scalar()
-        return await hashers.check_password(raw_password, password)
-
-    @staticmethod
-    async def check_user(username, raw_password):
-        count = await db.select([db.func.count()]).where(
-            (User.username == username) & (User.is_active == True)).gino.scalar()
-        if count == 0:
-            return False
-        return await User.check_password(username, raw_password)
-
-    @staticmethod
-    async def set_password(user_id, raw_password):
-        encoded_password = hashers.make_password(raw_password)
-        return await User.update.values(password=encoded_password).where(
-            User.id == user_id).gino.status()
-
-    @staticmethod
-    async def create_user(username, password, email, last_name, first_name, is_superuser=False):
-        encoded_password = hashers.make_password(password)
-        return await User.create(username=username, password=encoded_password, email=email, last_name=last_name,
-                                 first_name=first_name, is_superuser=is_superuser)
-
-    @classmethod
-    async def soft_update(cls, user_id, username, email, last_name, first_name, is_superuser):
-        user_kwargs = dict()
-        if username:
-            user_kwargs['username'] = username
-        if email:
-            user_kwargs['email'] = email
-        if last_name:
-            user_kwargs['last_name'] = last_name
-        if first_name:
-            user_kwargs['first_name'] = first_name
-        if is_superuser or is_superuser == False:
-            user_kwargs['is_superuser'] = is_superuser
-        if user_kwargs:
-            await User.update.values(**user_kwargs).where(
-                User.id == user_id).gino.status()
-        user = await User.get(user_id)
-        return user
-
-    @classmethod
-    async def login(cls, username, token):
-        """Записывает данные с которыми пользователь вошел в систему"""
-        user = await User.get_active_user(username=username)
-        if not user:
-            return False
-        await UserJwtInfo.soft_create(user_id=user.id, token=token)
-        return True
+# TODO: proper exceptions
+# TODO: events
 
 
-class UserJwtInfo(db.Model):
+class AuthenticationDirectory(db.Model, AbstractSortableStatusModel):
     """
-    При авторизации пользователя выполняется запись.
-    В поле last_changed хранится дата последнего изменения токена. При изменении пароля/логауте/перегенерации токена
-    значение поля меняется, вследствие чего токены, сгенерированные с помощью старых значений
-    становятся невалидными.
+    Модель служб каталогов для авторизации пользователей в системе.
+    Не может быть более 1го.
+    Описание полей:
+
+    - connection_type: тип подключения (поддерживается только LDAP)
+    - description: описание объекта
+    - directory_url: адрес службы каталогов
+    - directory_type: тип службы каталогов (поддерживается только MS Active Directory)
+    - domain_name: имя контроллера доменов
+    - verbose_name: имя объекта, назначенное пользователем
+    - service_username: username имеющий права для управления AD
+    - service_password: password
+    - admin_server: url сервера управления AD
+    - kdc_urls: список всех url'ов Key Distributed Centers
+    - sso: Технология Single Sign-on
     """
-    __tablename__ = 'user_jwtinfo'
-    user_id = db.Column(UUID(), db.ForeignKey(User.id), primary_key=True)
-    # не хранит в себе 'jwt ' максимальный размер намеренно не установлен, т.к. четкого ограничение в стандарте нет.
-    token = db.Column(db.Unicode(), nullable=False, index=True)
-    last_changed = db.Column(db.DateTime(timezone=True), server_default=func.now())
 
-    @classmethod
-    async def soft_create(cls, user_id, token):
-        # Не нашел в GINO create_or_update.
+    class ConnectionTypes(Enum):
+        """
+        Класс, описывающий доступные типы подключения служб каталогов.
+        """
 
-        count = await db.select([db.func.count()]).where(
-            UserJwtInfo.user_id == user_id).gino.scalar()
-        if count == 0:
-            # Если записи для пользователя нет - создаем новую.
-            await UserJwtInfo.create(user_id=user_id, token=token)
+        LDAP = 'LDAP'
+
+    class DirectoryTypes(Enum):
+        """
+        Класс, описывающий доступные типы служб каталогов.
+        """
+
+        ActiveDirectory = 'ActiveDirectory'
+
+    __tablename__ = 'authentication_directory'
+
+    id = db.Column(UUID(), primary_key=True, default=uuid.uuid4)
+    verbose_name = db.Column(db.Unicode(length=255), unique=True)
+    # connection_type = db.Column(db.Unicode(length=4), nullable=False, server_default=ConnectionTypes.LDAP)
+    connection_type = db.Column(AlchemyEnum(ConnectionTypes), nullable=False, server_default=ConnectionTypes.LDAP.value)
+    description = db.Column(db.Unicode(length=255), nullable=True)
+    directory_url = db.Column(db.Unicode(length=255))
+    # directory_type = db.Column(db.Unicode(length=16), nullable=False, server_default=DirectoryTypes.ActiveDirectory)
+    directory_type = db.Column(AlchemyEnum(DirectoryTypes), nullable=False,
+                               server_default=DirectoryTypes.ActiveDirectory.value)
+    domain_name = db.Column(db.Unicode(length=255), unique=True)
+    subdomain_name = db.Column(db.Unicode(length=255))
+    service_username = db.Column(db.Unicode(length=150), nullable=True)
+    service_password = db.Column(db.Unicode(length=128), nullable=True)
+    admin_server = db.Column(db.Unicode(length=255), nullable=True)
+    kdc_urls = db.Column(ARRAY(db.Unicode(length=255)), nullable=True)
+    sso = db.Column(db.Boolean(), default=False)
+    status = db.Column(AlchemyEnum(Status), nullable=False, index=True)
+
+    async def test_connection(self) -> bool:
+        """
+        Метод тестирования соединения с сервером службы каталогов.
+
+        :param directory_url: адрес службы каталогов
+        :param connection_type: тип подключения
+        :return: результат проверки соединения
+        """
+        if self.connection_type == self.ConnectionTypes.LDAP:
+            try:
+                ldap_server = ldap.initialize(self.directory_url)
+                ldap_server.simple_bind_s()
+            except ldap.INVALID_CREDENTIALS:
+                return True
+            except ldap.SERVER_DOWN:
+                return False
             return True
-        # Если запись уже существует - обновлям значение токена.
-        await UserJwtInfo.update.values(token=token, last_changed=func.now()).where(
-            UserJwtInfo.user_id == user_id).gino.status()
-        return True
+        return False
+
+    @staticmethod
+    def _extract_domain_from_username(username: str) -> List[str]:
+        """
+        Метод для разделения имени пользователя по символу @ на имя пользовательской учетной записи
+        и доменное имя контроллера доменов.
+
+        :param username: имя пользователя
+        :return: список, содержащий имя пользователской учетной записи (sAMAccountName)
+        и доменное имя контроллера доменов
+        """
+        splitted_list = username.split('@')
+        if len(splitted_list) > 1:
+            return splitted_list[:2]
+        return splitted_list[0], None
 
     @classmethod
-    async def check_token(cls, username, token):
-        """Проверяет соответствие выданного токена тому, что пришел в payload."""
-        user = await User.get_active_user(username=username)
+    async def soft_create(cls, verbose_name, directory_url, domain_name,
+                          service_username=None,
+                          service_password=None,
+                          description=None, connection_type=ConnectionTypes.LDAP,
+                          directory_type=DirectoryTypes.ActiveDirectory, admin_server=None,
+                          subdomain_name=None, kdc_urls=None, sso=False):
+        """Сначала создается контроллер домена в статусе Creating.
+           Затем проверяется доступность и происходит смена статуса на ACTIVE."""
+
+        count = await db.func.count(AuthenticationDirectory.id).gino.scalar()
+        if count > 0:
+            raise AssertionError('More than one authentication directory can not be created.')
+
+        # TODO: crypto password
+        auth_dir = await AuthenticationDirectory.create(verbose_name=verbose_name,
+                                                        description=description,
+                                                        directory_url=directory_url,
+                                                        connection_type=connection_type,
+                                                        directory_type=directory_type,
+                                                        domain_name=domain_name,
+                                                        service_username=service_username,
+                                                        service_password=service_password,
+                                                        admin_server=admin_server,
+                                                        subdomain_name=subdomain_name,
+                                                        kdc_urls=kdc_urls,
+                                                        sso=sso,
+                                                        status=Status.CREATING)
+        connection_ok = await auth_dir.test_connection()
+        if connection_ok:
+            await auth_dir.update(status=Status.ACTIVE).apply()
+        return auth_dir
+
+    # @property
+    # def keytab(self) -> Optional['Keytab']:
+    #     # TODO: adapt for vdi
+    #     return self.keytabs.first()
+    #
+    # @property
+    # def sso_domain(self) -> str:
+    #     # TODO: adapt for vdi
+    #     return '.'.join([self.subdomain_name, self.domain_name])
+    #
+    # @classmethod
+    # def has_upload_keytab_permission(cls, request):
+    #     # TODO: adapt for vdi
+    #     return cls.has_configure_sso_permission(request)
+    #
+    # @classmethod
+    # def has_configure_sso_permission(cls, request):
+    #     # TODO: adapt for vdi
+    #     return cls.check_permission(request.user, 'configure_sso')
+    #
+    # @classmethod
+    # def has_test_connection_permission(cls, request):
+    #     # TODO: adapt for vdi
+    #     return cls.check_permission(request.user, 'test_connection')
+
+    @classmethod
+    async def _get_user(cls, username: str):
+        """
+        Метод получения объекта пользователя из БД на основе его имени.
+        Если пользователь не существует, то будет создан с пустым паролем.
+        Авторизация этого пользователя возможна только по LDAP.
+
+        :param username: имя пользователя
+        :param kwargs: дополнительные именованные аргументы
+        :return: объект пользователя, флаг создания пользователя
+        """
+        if not isinstance(username, str):
+            raise AssertionError
+
+        username = username.lower()
+        user = await User.get_object(extra_field_name='username', extra_field_value=username, include_inactive=True)
         if not user:
-            return False
-        count = await db.select([db.func.count()]).where(
-            (UserJwtInfo.user_id == user.id) & (UserJwtInfo.token == token)).gino.scalar()
-        return count > 0
+            user = await User.create_user(username)
+            created = True
+        else:
+            await user.update(is_active=True).apply()
+            created = False
+        return user, created
+
+    @classmethod
+    async def authenticate(cls, username, password):
+        """
+        Метод аутентификации пользователя на основе данных из службы каталогов.
+        """
+        success = False
+        created = False
+
+        authentication_directory = await AuthenticationDirectory.get_objects(first=True)
+        if not authentication_directory:
+            # Если для доменного имени службы каталогов не создано записей в БД,
+            # то авторизоваться невозможно.
+            raise AssertionError('No active directory controllers.')
+
+        account_name, domain_name = cls._extract_domain_from_username(username)
+        user, created = await cls._get_user(account_name)
+
+        if not domain_name:
+            domain_name = authentication_directory.domain_name
+            username = '@'.join([username, domain_name])
+
+        try:
+            ldap.set_option(ldap.OPT_X_TLS_REQUIRE_CERT, ldap.OPT_X_TLS_NEVER)
+            ldap_server = ldap.initialize(authentication_directory.directory_url)
+            ldap_server.set_option(ldap.OPT_REFERRALS, 0)
+            ldap_server.set_option(ldap.OPT_NETWORK_TIMEOUT, 10)
+            ldap_server.simple_bind_s(username, password)
+        except ldap.INVALID_CREDENTIALS as E:
+            # Если пользователь не проходит аутентификацию в службе каталогов с предоставленными
+            # данными, то аутентификация в системе считается неуспешной и создается событие с
+            # сообщением о неуспешности.
+            # self._create_user_auth_failed_event(user)
+            success = False
+            raise AssertionError('Invalid credeintials')
+        except ldap.SERVER_DOWN:
+            # Если нет связи с сервером службы каталогов, то возвращаем ошибку о недоступности
+            # сервера, так как не можем сделать вывод о правильности предоставленных данных.
+            # self.server_down = True
+            success = False
+            raise AssertionError('Server down')
+        else:
+            success = True
+        finally:
+            if not success and created:
+                await user.delete()
+
+    @classmethod
+    async def soft_update(cls, id, verbose_name, directory_url, connection_type, description, directory_type,
+                          domain_name, subdomain_name, service_username, service_password, admin_server, kdc_urls,
+                          sso):
+        object_kwargs = dict()
+        if verbose_name:
+            object_kwargs['verbose_name'] = verbose_name
+        if directory_url:
+            object_kwargs['directory_url'] = directory_url
+        if connection_type:
+            object_kwargs['connection_type'] = connection_type
+        if description:
+            object_kwargs['description'] = description
+        if sso or sso is False:
+            object_kwargs['sso'] = sso
+        if directory_type:
+            object_kwargs['directory_type'] = directory_type
+        if domain_name:
+            object_kwargs['domain_name'] = domain_name
+        if subdomain_name:
+            object_kwargs['subdomain_name'] = subdomain_name
+        if service_username:
+            object_kwargs['service_username'] = service_username
+        if service_password:
+            # TODO: password encryption
+            object_kwargs['service_password'] = service_password
+        if admin_server:
+            object_kwargs['admin_server'] = admin_server
+        if kdc_urls:
+            object_kwargs['kdc_urls'] = kdc_urls
+
+        if object_kwargs:
+            await cls.update.values(**object_kwargs).where(
+                cls.id == id).gino.status()
+        return await cls.get(id)
