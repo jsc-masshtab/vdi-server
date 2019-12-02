@@ -9,7 +9,7 @@ from settings import VEIL_WS_MAX_TIME_TO_WAIT
 from database import db, Status
 from controller.models import Controller
 from vm.models import Vm
-from auth.models import User
+from user.models import User
 from common.veil_errors import VmCreationError, BadRequest, SimpleError
 
 from resources_monitoring.handlers import WaiterSubscriptionObserver

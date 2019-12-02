@@ -1,55 +1,12 @@
 # -*- coding: utf-8 -*-
 from abc import ABC
-import json
 
 from tornado import websocket
-from  tornado.web import Application
-from tornado import gen, httpclient, httputil
-
-from typing import Any
 
 from common.veil_handlers import BaseHandler
-from auth.utils.veil_jwt import jwtauth, encode_jwt, refresh_access_token_with_expire_check as refresh_access_token
+from auth.utils.veil_jwt import jwtauth
 from pool.models import Pool, Vm, AutomatedPool
-from auth.models import User
 from vm.veil_client import VmHttpClient  # TODO: move to VM?
-
-
-class AuthHandler(BaseHandler, ABC):
-    async def post(self):
-        if not self.args:
-            # TODO: add proper exception
-            response = {'errors': 'Missing request body'}
-            return self.finish(response)
-        if 'username' and 'password' not in self.args:
-            # TODO: add proper exception
-            response = {'errors': 'Missing username and password'}
-            return self.finish(response)
-        password_is_valid = await User.check_user(self.args['username'], self.args['password'])
-
-        if not password_is_valid:
-            # TODO: add proper exception
-            response = {'errors': 'invalid password'}
-            return self.finish(response)
-
-        access_token = encode_jwt(self.args['username'])
-        await User.login(username=self.args['username'], token=access_token.get('access_token'))
-        response = {"data": access_token}
-        return self.finish(response)
-
-
-# Сейчас функционал обновления токена не реализован на клиенте.
-# class RefreshAuthHandler(BaseHandler, ABC):
-#     # TODO: не окончательная версия. Нужно решить, делаем как в ECP разрешая обновлять только
-#     #  не истекшие времени или проверяем это по хранимому токену
-#     def post(self):
-#         try:
-#             token_info = refresh_access_token(self.request.headers)
-#         except:
-#             self._transforms = []
-#             self.set_status(401)
-#             return self.finish('Token has expired.')
-#         return self.finish(token_info)
 
 
 @jwtauth
@@ -63,7 +20,6 @@ class PoolHandler(BaseHandler, ABC):
 
 @jwtauth
 class PoolGetVm(BaseHandler, ABC):
-
     async def post(self, pool_id):
         # TODO: есть подозрение, что иногда несмотря на отправленный запрос на просыпание VM - отправляется
         #  недостаточное количество данных для подключения тонкого клиента
@@ -110,7 +66,6 @@ class PoolGetVm(BaseHandler, ABC):
 
 @jwtauth
 class ActionOnVm(BaseHandler, ABC):
-
     async def post(self, pool_id, action):
         vm_action = action
         username = self.get_current_user()
@@ -126,7 +81,6 @@ class ActionOnVm(BaseHandler, ABC):
 
 
 class ThinClientWsHandler(websocket.WebSocketHandler):
-
     # def __init__(self, application: Application, request: httputil.HTTPServerRequest, **kwargs: Any):
     #     websocket.WebSocketHandler.__init__(self, application, request, **kwargs)
     #     print('init')

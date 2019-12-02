@@ -9,8 +9,8 @@ from common.veil_validators import MutationValidation
 from common.veil_errors import SimpleError, HttpError, ValidationError, VmCreationError
 from common.utils import make_graphene_type
 
-from auth.schema import UserType
-from auth.models import User
+from user.schema import UserType
+from user.models import User
 from event.models import Event
 
 from vm.schema import VmType, VmQuery, TemplateType

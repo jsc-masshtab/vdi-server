@@ -3,21 +3,26 @@ import tornado.web
 
 from graphene_tornado.tornado_graphql_handler import TornadoGraphQLHandler
 
-from auth.schema import user_schema
+from settings import DB_NAME, DB_PASS, DB_USER, DB_PORT, DB_HOST, WS_PING_INTERVAL, WS_PING_TIMEOUT
+from database import db
 from common.veil_handlers import VdiTornadoGraphQLHandler
-from common.utils import cancel_async_task
+
+from vm.vm_manager import VmManager
+from resources_monitoring.resources_monitor_manager import resources_monitor_manager
+
+from auth.urls import auth_api_urls
+from thin_client_api.urls import thin_client_api_urls
+from resources_monitoring.urls import ws_event_monitoring_urls
+
 from event.schema import event_schema
+from user.schema import user_schema
+from auth.schema import auth_dir_schema
 from pool.schema import pool_schema
 from vm.schema import vm_schema
 from controller.schema import controller_schema
 from controller_resources.schema import resources_schema
 
-from vm.vm_manager import VmManager
-from resources_monitoring.resources_monitor_manager import resources_monitor_manager
-from resources_monitoring.urls import ws_event_monitoring_urls
-from thin_client_api.urls import thin_client_api_urls
-from settings import DB_NAME, DB_PASS, DB_USER, DB_PORT, DB_HOST, WS_PING_INTERVAL, WS_PING_TIMEOUT
-from database import db
+import time
 
 # if __name__ == '__main__':
 
@@ -25,6 +30,7 @@ handlers = [
     (r'/controllers', TornadoGraphQLHandler, dict(graphiql=True, schema=controller_schema)),
     (r'/resources', TornadoGraphQLHandler, dict(graphiql=True, schema=resources_schema)),
     (r'/users', VdiTornadoGraphQLHandler, dict(graphiql=True, schema=user_schema)),
+    (r'/auth_dirs', TornadoGraphQLHandler, dict(graphiql=True, schema=auth_dir_schema)),
     (r'/vms', TornadoGraphQLHandler, dict(graphiql=True, schema=vm_schema)),
     (r'/pools', TornadoGraphQLHandler, dict(graphiql=True, schema=pool_schema)),
     (r'/events', TornadoGraphQLHandler, dict(graphiql=True, schema=event_schema)),
@@ -33,6 +39,7 @@ handlers = [
     # (r'/graphql/graphiql', TornadoGraphQLHandler, dict(graphiql=True, schema=schema))
 ]
 
+handlers += auth_api_urls
 handlers += thin_client_api_urls
 handlers += ws_event_monitoring_urls
 
@@ -52,7 +59,7 @@ if __name__ == '__main__':
 
     try:
         vm_manager = VmManager()
-        vm_manager_task = tornado.ioloop.IOLoop.current().add_callback(vm_manager.start)
+        vm_manager_task = tornado.ioloop.IOLoop.instance().add_timeout(time.time(), vm_manager.start)
 
         tornado.ioloop.IOLoop.current().add_callback(resources_monitor_manager.start)
 
@@ -64,6 +71,4 @@ if __name__ == '__main__':
             lambda: resources_monitor_manager.stop()
         )
 
-        tornado.ioloop.IOLoop.current().run_sync(
-            lambda: cancel_async_task(vm_manager_task)
-        )
+        tornado.ioloop.IOLoop.instance().remove_timeout(vm_manager_task)

@@ -1,16 +1,11 @@
 import graphene
-import asyncio
-import inspect
-import json
 
 from tornado.httpclient import HTTPClientError
-
-from cached_property import cached_property as cached
 
 from graphql import GraphQLError
 
 from settings import DEFAULT_NAME
-from common.utils import get_selections, make_graphene_type, extract_ordering_data
+from common.utils import extract_ordering_data
 from common.veil_errors import HttpError, SimpleError, NotFound
 
 from vm.models import Vm
@@ -22,8 +17,8 @@ from controller_resources.veil_client import ResourcesHttpClient
 from controller.models import Controller
 from controller.schema import ControllerType
 
-from auth.schema import UserType
-from auth.models import User
+from user.schema import UserType
+from user.models import User
 
 
 class VmState(graphene.Enum):
