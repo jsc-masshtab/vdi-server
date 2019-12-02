@@ -1,4 +1,5 @@
 import graphene
+import json
 
 from vm.veil_client import VmHttpClient
 from vm.schema import VmType, TemplateType, VmQuery
@@ -44,6 +45,18 @@ class ClusterType(graphene.ObjectType):
     datapools = graphene.List(lambda: DatapoolType)
     controller = graphene.Field(lambda: ControllerType)
     resources_usage = graphene.Field(ResourcesUsageType)
+
+    veil_info = graphene.String()
+    veil_info_json = graphene.String()
+
+    async def get_veil_info(self):
+        resources_http_client = await ResourcesHttpClient.create(self.controller.address)
+        return await resources_http_client.fetch_cluster(self.id)
+
+    async def resolve_veil_info_json(self, _info):
+        if not self.veil_info:
+            self.veil_info = await self.get_veil_info()
+        return json.dumps(self.veil_info)
 
     async def resolve_nodes(self, _info):
         resources_http_client = await ResourcesHttpClient.create(self.controller.address)
@@ -109,16 +122,22 @@ class NodeType(graphene.ObjectType):
     controller = graphene.Field(ControllerType)
     resources_usage = graphene.Field(ResourcesUsageType)
 
-    veil_info = None  # dict
+    veil_info = graphene.String()
+    veil_info_json = graphene.String()
 
     async def get_veil_info(self):
         resources_http_client = await ResourcesHttpClient.create(self.controller.address)
         return await resources_http_client.fetch_node(self.id)
 
+    async def resolve_veil_info_json(self, _info):
+        if not self.veil_info:
+            self.veil_info = await self.get_veil_info()
+        return json.dumps(self.veil_info)
+
     async def resolve_verbose_name(self, _info):
         if self.verbose_name:
             return self.verbose_name
-        if self.veil_info is None:
+        if not self.veil_info:
             self.veil_info = await self.get_veil_info()
         if self.veil_info:
             return self.veil_info['verbose_name']
@@ -192,6 +211,18 @@ class DatapoolType(graphene.ObjectType):
     nodes_connected = graphene.List(lambda: NodeType, deprecation_reason="Use `nodes`")
     verbose_name = graphene.String()
     controller = graphene.Field(ControllerType)
+
+    veil_info = graphene.String()
+    veil_info_json = graphene.String()
+
+    async def get_veil_info(self):
+        resources_http_client = await ResourcesHttpClient.create(self.controller.address)
+        return await resources_http_client.fetch_datapool(self.id)
+
+    async def resolve_veil_info_json(self, _info):
+        if not self.veil_info:
+            self.veil_info = await self.get_veil_info()
+        return json.dumps(self.veil_info)
 
     async def resolve_nodes(self, _info):
         resources_http_client = await ResourcesHttpClient.create(self.controller.address)

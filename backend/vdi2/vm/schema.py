@@ -1,4 +1,5 @@
 import graphene
+import json
 
 from tornado.httpclient import HTTPClientError
 
@@ -31,14 +32,19 @@ class VmState(graphene.Enum):
 class TemplateType(graphene.ObjectType):
     id = graphene.String()
     verbose_name = graphene.String()
-    veil_info = graphene.String(get=graphene.String())
+    veil_info = graphene.String()
+    veil_info_json = graphene.String()
     controller = graphene.Field(ControllerType)
+
+    async def resolve_veil_info_json(self, _info):
+        return json.dumps(self.veil_info)
 
 
 class VmType(graphene.ObjectType):
     verbose_name = graphene.String()
     id = graphene.String()
     veil_info = graphene.String()
+    veil_info_json = graphene.String()
     template = graphene.Field(TemplateType)
     user = graphene.Field(UserType)
     state = graphene.Field(VmState)
@@ -60,6 +66,9 @@ class VmType(graphene.ObjectType):
             self.veil_info = await vm_client.info()
         except HTTPClientError:
             return
+
+    async def resolve_veil_info_json(self, _info):
+        return json.dumps(self.veil_info)
 
     async def resolve_verbose_name(self, _info):
         if self.verbose_name:
