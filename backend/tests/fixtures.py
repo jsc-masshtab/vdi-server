@@ -11,6 +11,7 @@ from controller.models import Controller
 from controller_resources.veil_client import ResourcesHttpClient
 
 from vm.veil_client import VmHttpClient
+from vm.models import Vm
 
 from pool.schema import pool_schema
 
@@ -29,7 +30,8 @@ async def get_resources_for_static_pool():
     print('controller_ip', controller_ip)
 
     # find cluster with nodes
-    list_of_clusters = await resources.ListClusters(controller_ip=controller_ip)
+    resources_http_client = await ResourcesHttpClient.create(controller_ip)
+    list_of_clusters = await resources_http_client.fetch_cluster_list()
     print('list_of_clusters', list_of_clusters)
     try:
         cluster_id = next(cluster['id'] for cluster in list_of_clusters if cluster['nodes_count'] != 0)
@@ -37,7 +39,8 @@ async def get_resources_for_static_pool():
         raise RuntimeError('Нет кластеров содержащих серверы')
 
     # find active node
-    list_of_nodes = await resources.ListNodes(controller_ip=controller_ip, cluster_id=cluster_id)
+    resources_http_client = await ResourcesHttpClient.create(controller_ip)
+    list_of_nodes = await resources_http_client.fetch_node_list(cluster_id)
     print('list_of_nodes', list_of_nodes)
     try:
         node_id = next(node['id'] for node in list_of_nodes if node['status'] == 'ACTIVE')
@@ -113,9 +116,10 @@ async def fixt_create_automated_pool():
 
     resources = await get_resources_for_automated_pool()
 
+    test_pool_name = 'test_pool_{}'.format(str(uuid.uuid4())[:7])
     qu = '''
         mutation {
-            addDynamicPool(verbose_name: "test_auto_pool_666", controller_ip: "%s", 
+            addDynamicPool(verbose_name: "%s", controller_ip: "%s", 
                            cluster_id: "%s", node_id: "%s", datapool_id: "%s", template_id: "%s",
                            initial_size: 1, total_size: 2, max_amount_of_create_attempts: 10){
                     ok
@@ -125,7 +129,7 @@ async def fixt_create_automated_pool():
                     }
             }
         }
-        ''' % (resources['controller_ip'], resources['cluster_id'], resources['node_id'],
+        ''' % (test_pool_name, resources['controller_ip'], resources['cluster_id'], resources['node_id'],
                resources['datapool_id'], resources['template_id'])
 
     executed = await execute_scheme(pool_schema, qu)
@@ -135,76 +139,76 @@ async def fixt_create_automated_pool():
         'id': pool_id,
     })
 
-    # print('destroy pool')
-    # # remove pool
-    # await RemovePool.do_remove(pool_id)
-    # # qu = '''
-    # # mutation {
-    # #   removePool(id: %(id)s) {
-    # #     ok
-    # #   }
-    # # }
-    # # ''' % locals()
-    # # await schema.exec(qu)
+    # remove pool
+    qu = '''
+    mutation {
+      removePool(pool_id: "%s") {
+        ok
+      }
+    }
+    ''' % pool_id
+    await execute_scheme(pool_schema, qu)
 
     # stop monitor
     await resources_monitor_manager.stop()
 
 
-@pytest.fixture
-@async_generator
-async def conn():
-    async with db.connect() as c:
-        await yield_(c)
-
-
-@pytest.fixture
-@async_generator
-async def fixt_create_static_pool(fixt_db):
-    print('create_static_pool')
-    pool_main_resources = await get_resources_for_static_pool()
-    controller_ip = pool_main_resources['controller_ip']
-    node_id = pool_main_resources['node_id']
-
-    async def create_domain():
-        uid = str(uuid.uuid4())[:7]
-        domain_info = await vm.CreateDomain(verbose_name="test_vm_static_pool-{}".format(uid),
-                                            controller_ip=controller_ip, node_id=node_id)
-        return domain_info
-
-    domain_info_1 = await create_domain()
-    domain_info_2 = await create_domain()
-    print('domain_info_1 id', domain_info_1['id'])
-
-    # create pool
-    vm_ids_list = json.dumps([domain_info_1['id'], domain_info_2['id']])
-    qu = '''
-        mutation {
-          addStaticPool(name: "test_pool_static", vm_ids_list: %s) {
-            id
-            vms {
-              id
-            }
-          }
-        }
-        ''' % vm_ids_list
-
-    pool_create_res = await schema.exec(qu)  # ([('addStaticPool', OrderedDict([('id', 88)]))])
-    print('pool_create_res', pool_create_res)
-
-    pool_id = pool_create_res['addStaticPool']['id']
-    vms = pool_create_res['addStaticPool']['vms']
-    await yield_({
-        'id': pool_id,
-        'vms': vms
-    })
-
-    # remove pool
-    await RemovePool.do_remove(pool_id)
-
-    # as in static pool VMs are not deleted automaticlly so we delete them manually
-    for single_vm in vms:
-        await vm.DropDomain(id=single_vm['id'], controller_ip=controller_ip)
+# @pytest.fixture
+# @async_generator
+# async def fixt_create_static_pool(fixt_db):
+#     print('create_static_pool')
+#     pool_main_resources = await get_resources_for_static_pool()
+#     controller_ip = pool_main_resources['controller_ip']
+#     node_id = pool_main_resources['node_id']
+#
+#     async def create_domain():
+#         test_domain_name = 'domain_name_{}'.format(str(uuid.uuid4())[:7])
+#         # domain_info = await vm.CreateDomain(verbose_name=test_domain_name,
+#         #                                     controller_ip=controller_ip, node_id=node_id)
+#         params = {
+#             'verbose_name': test_domain_name,
+#             'name_template': '',
+#             'domain_id': str(self.template_id),
+#             'datapool_id': str(self.datapool_id),  # because of UUID
+#             'controller_ip':controller_ip,
+#             'node_id': node_id,
+#         }
+#
+#         return domain_info
+#
+#     domain_info_1 = await create_domain()
+#     domain_info_2 = await create_domain()
+#     print('domain_info_1 id', domain_info_1['id'])
+#
+#     # create pool
+#     vm_ids_list = json.dumps([domain_info_1['id'], domain_info_2['id']])
+#     qu = '''
+#         mutation {
+#           addStaticPool(name: "test_pool_static", vm_ids_list: %s) {
+#             id
+#             vms {
+#               id
+#             }
+#           }
+#         }
+#         ''' % vm_ids_list
+#
+#     pool_create_res = await schema.exec(qu)  # ([('addStaticPool', OrderedDict([('id', 88)]))])
+#     print('pool_create_res', pool_create_res)
+#
+#     pool_id = pool_create_res['addStaticPool']['id']
+#     vms = pool_create_res['addStaticPool']['vms']
+#     await yield_({
+#         'id': pool_id,
+#         'vms': vms
+#     })
+#
+#     # remove pool
+#     await RemovePool.do_remove(pool_id)
+#
+#     # as in static pool VMs are not deleted automaticlly so we delete them manually
+#     for single_vm in vms:
+#         await vm.DropDomain(id=single_vm['id'], controller_ip=controller_ip)
 
 
 @pytest.fixture

@@ -19,6 +19,8 @@ from thin_client_api.urls import thin_client_api_urls
 from settings import DB_NAME, DB_PASS, DB_USER, DB_PORT, DB_HOST, WS_PING_INTERVAL, WS_PING_TIMEOUT
 from database import db
 
+import time
+
 # if __name__ == '__main__':
 
 handlers = [
@@ -52,7 +54,7 @@ if __name__ == '__main__':
 
     try:
         vm_manager = VmManager()
-        vm_manager_task = tornado.ioloop.IOLoop.current().add_callback(vm_manager.start)
+        vm_manager_task = tornado.ioloop.IOLoop.instance().add_timeout(time.time(), vm_manager.start)
 
         tornado.ioloop.IOLoop.current().add_callback(resources_monitor_manager.start)
 
@@ -64,6 +66,4 @@ if __name__ == '__main__':
             lambda: resources_monitor_manager.stop()
         )
 
-        tornado.ioloop.IOLoop.current().run_sync(
-            lambda: cancel_async_task(vm_manager_task)
-        )
+        tornado.ioloop.IOLoop.instance().remove_timeout(vm_manager_task)

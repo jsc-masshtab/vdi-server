@@ -6,7 +6,7 @@ from abc import ABC, abstractmethod
 from tornado.httpclient import HTTPClientError
 from tornado.websocket import websocket_connect
 from tornado.websocket import WebSocketClosedError
-from tornado import ioloop
+from tornado.ioloop import IOLoop
 
 from controller.models import Controller
 
@@ -17,6 +17,8 @@ from common.veil_errors import HttpError
 from common.veil_client import VeilHttpClient
 
 from controller_resources.veil_client import ResourcesHttpClient
+
+import time
 
 
 class AbstractMonitor(ABC):
@@ -61,16 +63,16 @@ class ResourcesMonitor(AbstractMonitor):
         self._controller_ip = controller_ip
         self._running_flag = True
         # controller check
-        self._controller_online_task = ioloop.IOLoop.current().add_callback(self._controller_online_checking)
+        self._controller_online_task = IOLoop.instance().add_timeout(time.time(), self._controller_online_checking)
         # ws data
-        self._resources_monitor_task = ioloop.IOLoop.current().add_callback(self._processing_ws_messages)
+        self._resources_monitor_task = IOLoop.instance().add_timeout(time.time(), self._processing_ws_messages)
 
     async def stop(self):
         self._running_flag = False
         await self._close_connection()
-        # wait unlit task finished
-        await cancel_async_task(self._resources_monitor_task)
-        await cancel_async_task(self._controller_online_task)
+        # cancel tasks
+        IOLoop.instance().remove_timeout(self._resources_monitor_task)
+        IOLoop.instance().remove_timeout(self._controller_online_task)
 
     def get_controller_ip(self):
         return self._controller_ip
