@@ -1,17 +1,14 @@
-import asyncio
 import pytest
-import json
 import uuid
-from async_generator import async_generator, yield_, asynccontextmanager
+from async_generator import async_generator, yield_
 
 from database import db
-from settings import DB_NAME, DB_PASS, DB_USER, DB_PORT, DB_HOST, WS_PING_INTERVAL, WS_PING_TIMEOUT
+from settings import DB_PASS, DB_USER, DB_PORT, DB_HOST
 
 from controller.models import Controller
 from controller_resources.veil_client import ResourcesHttpClient
 
 from vm.veil_client import VmHttpClient
-from vm.models import Vm
 
 from pool.schema import pool_schema
 
