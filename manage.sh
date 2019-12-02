@@ -17,7 +17,7 @@ EOF
 
 setup_env() {
   echo "Setting up env"
-  export PYTHONPATH=$APP_DIR/backend/vdi2
+  export PYTHONPATH=$APP_DIR/backend
 }
 
 current_commit() {
@@ -29,7 +29,7 @@ update() {
   echo "Update repository"
   git pull
   echo "Apply database migrations"
-  cd $APP_DIR/backend/vdi2
+  cd $APP_DIR/backend
   pipenv run alembic upgrade head
 }
 
@@ -37,7 +37,7 @@ start() {
   # TODO: tmux start for monitoring
   # TODO: supervisor start
   echo "Starting..."
-  nohup pipenv run python $APP_DIR/backend/vdi2/app.py &\
+  nohup pipenv run python $APP_DIR/backend/app.py &\
   cd $APP_DIR/frontend/
   rm -rf node_modules  # audit fix not working without this.
   npm audit fix  # npm i has some broken dependencies. npm audit fix works fine for 9
