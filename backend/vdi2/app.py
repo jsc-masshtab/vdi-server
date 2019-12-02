@@ -6,7 +6,6 @@ from graphene_tornado.tornado_graphql_handler import TornadoGraphQLHandler
 from settings import DB_NAME, DB_PASS, DB_USER, DB_PORT, DB_HOST, WS_PING_INTERVAL, WS_PING_TIMEOUT
 from database import db
 from common.veil_handlers import VdiTornadoGraphQLHandler
-from common.utils import cancel_async_task
 
 from vm.vm_manager import VmManager
 from resources_monitoring.resources_monitor_manager import resources_monitor_manager
@@ -22,6 +21,10 @@ from pool.schema import pool_schema
 from vm.schema import vm_schema
 from controller.schema import controller_schema
 from controller_resources.schema import resources_schema
+
+import time
+
+# if __name__ == '__main__':
 
 handlers = [
     (r'/controllers', TornadoGraphQLHandler, dict(graphiql=True, schema=controller_schema)),
@@ -56,7 +59,7 @@ if __name__ == '__main__':
 
     try:
         vm_manager = VmManager()
-        vm_manager_task = tornado.ioloop.IOLoop.current().add_callback(vm_manager.start)
+        vm_manager_task = tornado.ioloop.IOLoop.instance().add_timeout(time.time(), vm_manager.start)
 
         tornado.ioloop.IOLoop.current().add_callback(resources_monitor_manager.start)
 
@@ -68,6 +71,4 @@ if __name__ == '__main__':
             lambda: resources_monitor_manager.stop()
         )
 
-        tornado.ioloop.IOLoop.current().run_sync(
-            lambda: cancel_async_task(vm_manager_task)
-        )
+        tornado.ioloop.IOLoop.instance().remove_timeout(vm_manager_task)

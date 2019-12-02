@@ -1,133 +1,52 @@
 import asyncio
 import pytest
+import uuid
 
 from fixtures import fixt_db, fixt_create_automated_pool
 
+from pool.schema import pool_schema
+
+from utils import execute_scheme
+
+
+# ----------------------------------------------
+# Automated pool
 @pytest.mark.asyncio
 async def test_create_automated_pool(fixt_db, fixt_create_automated_pool):
     pool_id = fixt_create_automated_pool['id']
-    # qu = """{
-    #   pool(id: %i) {
-    #     desktop_pool_type
-    #     settings {
-    #       initial_size
-    #     }
-    #   }
-    # }""" % pool_id
-    # res = await schema.exec(qu)
-    # assert res['pool']['settings']['initial_size'] == 1
-    #assert res['pool']['desktop_pool_type'] == DesktopPoolType.AUTOMATED.name
-
-
-@pytest.mark.asyncio
-async def test_change_sizes_of_autopool(fixt_create_automated_pool):
-    pool_id = fixt_create_automated_pool['id']
-    print('pool_id', pool_id)
-    # total size
-    new_total_size = 4
-    qu = '''
-      mutation {
-      changeAutomatedPoolTotalSize(pool_id: %i, new_total_size: %i){
-        ok
-       }
-      }''' % (pool_id, new_total_size)
-    await schema.exec(qu)
-
-    # reserve size
-    new_reserve_size = 2
-    qu = '''
-      mutation {
-        changeAutomatedPoolReserveSize(pool_id: %i, new_reserve_size: %i){
-          ok
-        }
-      }''' % (pool_id, new_reserve_size)
-    await schema.exec(qu)
-
-    # get pool info
+    print('pool_id_', pool_id)
     qu = """{
-      pool(id: %i) {
-        settings{
-          total_size
-          reserve_size
-        }
+      pool(pool_id: "%s") {
+        pool_type,
+        initial_size
       }
     }""" % pool_id
-    res = await schema.exec(qu)
-    assert res['pool']['settings']['total_size'] == new_total_size
-    assert res['pool']['settings']['reserve_size'] == new_reserve_size
+    executed = await execute_scheme(pool_schema, qu)
+    assert executed['pool']['initial_size'] == 1
 
 
 @pytest.mark.asyncio
-async def test_vm_name_template_in_autopool(fixt_create_automated_pool):
+async def test_update_automated_pool(fixt_db, fixt_create_automated_pool):
     pool_id = fixt_create_automated_pool['id']
 
-    new_template_name = 'new_template_name'
-    qu = '''
-      mutation {
-        changeVmNameTemplate(new_name_template: "%s", pool_id: %i){
-          ok
+    new_pool_name = 'test_pool_{}'.format(str(uuid.uuid4())[:7])
+    qu = """
+    mutation {
+        updateDynamicPool(
+            pool_id: "%s"
+            verbose_name: "%s",
+            reserve_size: 1,
+            total_size: 5,
+            keep_vms_on: true){
+            ok
         }
-       }''' % (new_template_name, pool_id)
-    await schema.exec(qu)
-
-    # get pool info
-    qu = """{
-         pool(id: %i) {
-           settings{
-             vm_name_template
-           }
-         }
-       }""" % pool_id
-    res = await schema.exec(qu)
-    assert res['pool']['settings']['vm_name_template'] == new_template_name
+    }""" % (pool_id, new_pool_name)
+    executed = await execute_scheme(pool_schema, qu)
+    assert executed['updateDynamicPool']['ok']
 
 
-# @pytest.mark.asyncio
-# async def test_copy_domain():
-#     resources = await get_resources_for_automated_pool()
-#     #print('resources', resources)
-#     params = {
-#         'verbose_name': "domain_created_by_test",
-#         'name_template': 'vm_name_template',
-#         'domain_id': resources['template_id'],
-#         'datapool_id': resources['datapool_id'],
-#         'controller_ip': resources['controller_ip'],
-#         'node_id': resources['node_id'],
-#     }
-#     vm_data = await vm.CopyDomain(**params).task
-#     print('vm_data', vm_data)
-#
-#     await vm.DropDomain(id=vm_data['id'], controller_ip=resources['controller_ip'])
-
-
-# @pytest.mark.asyncio
-# async def test_new_pool_creation_logic():
-#     await resources_monitor_manager.start()
-#
-#     resources = await get_resources_for_automated_pool()
-#
-#     pool_args_dict = {
-#         'verbose_name': "vm_created_by_test",
-#         'name_template': 'vm_created_by_test',
-#         'template_id': resources['template_id'],
-#         'datapool_id': resources['datapool_id'],
-#         'controller_ip': resources['controller_ip'],
-#         'node_id': resources['node_id'],
-#         'initial_size': 1,
-#         'vm_name_template': 'vm_created_by_test',
-#         'id': -1
-#     }
-#
-#     pool_object = PoolObject(pool_args_dict)
-#
-#     try:
-#         vms = await pool_object.add_initial_vms()
-#     except SimpleError:
-#         print("Failed to create required number of vms")
-#
-#     await resources_monitor_manager.stop()
-
-
+# ----------------------------------------------
+# Static pool
 @pytest.mark.asyncio
 async def test_create_static_pool(fixt_create_static_pool):
     #
