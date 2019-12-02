@@ -296,6 +296,8 @@ class AutomatedPool(db.Model):
     total_size = db.Column(db.Integer(), nullable=False, default=1)
     vm_name_template = db.Column(db.Unicode(length=100), nullable=True)
 
+    create_thin_clones = db.Column(db.Boolean(), nullable=False, default=True)
+
     # ----- ----- ----- ----- ----- ----- -----
     # Properties and getters:
 
@@ -325,7 +327,8 @@ class AutomatedPool(db.Model):
     @classmethod
     async def create(cls, verbose_name, controller_ip, cluster_id, node_id,
                      template_id, datapool_id, min_size, max_size, max_vm_amount, increase_step,
-                     max_amount_of_create_attempts, initial_size, reserve_size, total_size, vm_name_template):
+                     max_amount_of_create_attempts, initial_size, reserve_size, total_size, vm_name_template,
+                     create_thin_clones):
         """Nested transactions are atomic."""
         async with db.transaction() as tx:
             # Create pool first
@@ -345,10 +348,12 @@ class AutomatedPool(db.Model):
                                         initial_size=initial_size,
                                         reserve_size=reserve_size,
                                         total_size=total_size,
-                                        vm_name_template=vm_name_template)
+                                        vm_name_template=vm_name_template,
+                                        create_thin_clones=create_thin_clones)
 
     @classmethod
-    async def soft_update(cls, pool_id, verbose_name, reserve_size, total_size, vm_name_template, keep_vms_on):
+    async def soft_update(cls, pool_id, verbose_name, reserve_size, total_size, vm_name_template, keep_vms_on,
+                          create_thin_clones):
         async with db.transaction() as tx:
             if verbose_name:
                 await Pool.update.values(verbose_name=verbose_name).where(
@@ -365,6 +370,9 @@ class AutomatedPool(db.Model):
                     AutomatedPool.automated_pool_id == pool_id).gino.status()
             if keep_vms_on is not None:
                 await Pool.update.values(keep_vms_on=keep_vms_on).where(Pool.pool_id == pool_id).gino.status()
+            if create_thin_clones is not None:
+                await AutomatedPool.update.values(create_thin_clones=create_thin_clones).where(
+                    AutomatedPool.automated_pool_id == pool_id).gino.status()
         return True
 
     async def activate(self):
@@ -393,6 +401,7 @@ class AutomatedPool(db.Model):
             'datapool_id': str(self.datapool_id),  # because of UUID
             'controller_ip': await self.controller_ip,
             'node_id': str(await self.node_id),
+            'create_thin_clones': self.create_thin_clones
         }
 
         # try to create vm

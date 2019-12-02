@@ -56,12 +56,13 @@ class VmHttpClient(VeilHttpClient):
         response_body = await self.fetch_with_response(url=self.url, method='GET')
         return response_body
 
-    async def copy_vm(self, node_id: str, datapool_id: str, domain_name: str):
+    async def copy_vm(self, node_id: str, datapool_id: str, domain_name: str, create_thin_clones: bool):
         url = 'http://{}/api/domains/multi-create-domain/?async=1'.format(self.controller_ip)
         body = dict(verbose_name=domain_name,
                     node=node_id,
                     datapool=datapool_id,
-                    parent=self.vm_id)
+                    parent=self.vm_id,
+                    thin=create_thin_clones)
         return await self.fetch_with_response(url=url, method='POST', body=body)
 
     async def fetch_all_vms_list(self, node_id: str = None, ordering: str = None, reversed_order: bool = None):

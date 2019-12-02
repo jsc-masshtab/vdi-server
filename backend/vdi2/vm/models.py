@@ -89,12 +89,13 @@ class Vm(db.Model):
 
     @staticmethod
     async def copy(verbose_name: str, name_template: str, domain_id: str, datapool_id: str, controller_ip: str,
-                   node_id: str):
+                   node_id: str, create_thin_clones: bool):
         """Copy existing VM template for new VM create."""
         # TODO: switch to controller uid?
         domain_name = Vm.domain_name(verbose_name=verbose_name, name_template=name_template)
         client = await VmHttpClient.create(controller_ip, domain_id, verbose_name, name_template)
-        response = await client.copy_vm(node_id=node_id, datapool_id=datapool_id, domain_name=domain_name)
+        response = await client.copy_vm(node_id=node_id, datapool_id=datapool_id, domain_name=domain_name,
+                                        create_thin_clones=create_thin_clones)
         return dict(id=response['entity'],
                     task_id=response['_task']['id'],
                     verbose_name=domain_name)

@@ -169,6 +169,7 @@ class PoolType(graphene.ObjectType):
     template = graphene.Field(TemplateType)
 
     keep_vms_on = graphene.Boolean()
+    create_thin_clones = graphene.Boolean()
 
     async def resolve_controller(self, info):
         controller_obj = await Controller.get(self.controller)
@@ -382,7 +383,7 @@ class CreateStaticPoolMutation(graphene.Mutation, PoolValidator):
         }
 
 
-class AddVmsToStaticPool(graphene.Mutation):
+class AddVmsToStaticPoolMutation(graphene.Mutation):
     class Arguments:
         pool_id = graphene.ID(required=True)
         vm_ids = graphene.List(graphene.UUID, required=True)
@@ -424,7 +425,7 @@ class AddVmsToStaticPool(graphene.Mutation):
         }
 
 
-class RemoveVmsFromStaticPool(graphene.Mutation):
+class RemoveVmsFromStaticPoolMutation(graphene.Mutation):
     class Arguments:
         pool_id = graphene.ID(required=True)
         vm_ids = graphene.List(graphene.ID, required=True)
@@ -492,6 +493,8 @@ class CreateAutomatedPoolMutation(graphene.Mutation, PoolValidator):
         total_size = graphene.Int(default_value=1)
         vm_name_template = graphene.String(default_value='')
 
+        create_thin_clones = graphene.Boolean(default_value=True)
+
     pool = graphene.Field(lambda: PoolType)
     ok = graphene.Boolean()
 
@@ -528,6 +531,7 @@ class UpdateAutomatedPoolMutation(graphene.Mutation, PoolValidator):
         total_size = graphene.Int()
         vm_name_template = graphene.String()
         keep_vms_on = graphene.Boolean()
+        create_thin_clones = graphene.Boolean()
 
     ok = graphene.Boolean()
 
@@ -536,7 +540,7 @@ class UpdateAutomatedPoolMutation(graphene.Mutation, PoolValidator):
         await cls.validate_agruments(**kwargs)
         ok = await AutomatedPool.soft_update(kwargs['pool_id'], kwargs.get('verbose_name'), kwargs.get('reserve_size'),
                                              kwargs.get('total_size'), kwargs.get('vm_name_template'),
-                                             kwargs.get('keep_vms_on'))
+                                             kwargs.get('keep_vms_on'), kwargs.get('create_thin_clones'))
         msg = 'Dynamic pool {id} updated.'.format(id=kwargs['pool_id'])
         await Event.create_info(msg)
         return UpdateAutomatedPoolMutation(ok=ok)
@@ -593,8 +597,8 @@ class DropPoolPermissionsMutation(graphene.Mutation):
 class PoolMutations(graphene.ObjectType):
     addDynamicPool = CreateAutomatedPoolMutation.Field()
     addStaticPool = CreateStaticPoolMutation.Field()
-    addVmsToStaticPool = AddVmsToStaticPool.Field()
-    removeVmsFromStaticPool = RemoveVmsFromStaticPool.Field()
+    addVmsToStaticPool = AddVmsToStaticPoolMutation.Field()
+    removeVmsFromStaticPool = RemoveVmsFromStaticPoolMutation.Field()
     removePool = DeletePoolMutation.Field()
     updateDynamicPool = UpdateAutomatedPoolMutation.Field()
     updateStaticPool = UpdateStaticPoolMutation.Field()
