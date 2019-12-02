@@ -381,7 +381,6 @@ class VmQuery(graphene.ObjectType):
         return domains_veil_data_list
 
 
-
 class VmMutations(graphene.ObjectType):
     assignVmToUser = AssignVmToUser.Field()
     freeVmFromUser = FreeVmFromUser.Field()
