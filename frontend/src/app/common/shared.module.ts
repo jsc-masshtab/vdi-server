@@ -1,3 +1,4 @@
+import { SortDirective } from './directives/sort.directive';
 import { MatDialogModule } from '@angular/material/dialog';
 import { StatusPipe, StatusIconPipe } from './pipes/statusEntity.pipes';
 import { CommonModule } from '@angular/common';
@@ -16,7 +17,8 @@ const COMPONENTS = [
 ];
 
 const DIRECTIVES = [
-  FocusMeDirective
+  FocusMeDirective,
+  SortDirective
 ];
 
 const PIPES = [
@@ -31,14 +33,14 @@ const FORMS_DINAMIC = [
 
 @NgModule({
   declarations: [
-    ...COMPONENTS,
     ...DIRECTIVES,
     ...PIPES,
-    ...FORMS_DINAMIC
+    ...FORMS_DINAMIC,
+    ...COMPONENTS
   ],
   exports: [
-    ...COMPONENTS,
     ...DIRECTIVES,
+    ...COMPONENTS,
     ...PIPES,
     ...FORMS_DINAMIC
   ],

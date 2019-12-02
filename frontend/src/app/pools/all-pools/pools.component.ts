@@ -29,19 +29,19 @@ export class PoolsComponent extends DetailsMove implements OnInit, OnDestroy {
       class: 'name-start',
       icon: 'desktop',
       type: 'string',
-      reverse_sort: true
+      sort: true
     },
     {
       title: 'Контроллер',
       property: 'controller',
       property_lv2: 'address',
-      reverse_sort: true
+      sort: true
     },
     {
       title: 'Доступные ВМ',
       property: 'vms',
       type: 'array-length',
-      reverse_sort: true
+      sort: true
     },
     {
       title: 'Пользователи',
@@ -50,18 +50,18 @@ export class PoolsComponent extends DetailsMove implements OnInit, OnDestroy {
         propertyDepend: 'username',
         typeDepend: 'propertyInObjectsInArray'
       },
-      reverse_sort: true
+      sort: true
     },
     {
       title: 'Тип',
       property: 'pool_type',
       type: 'string',
-      reverse_sort: true
+      sort: true
     },
     {
       title: 'Cтатус',
       property: 'status',
-      reverse_sort: true
+      sort: true
     }
   ];
 
@@ -121,6 +121,7 @@ export class PoolsComponent extends DetailsMove implements OnInit, OnDestroy {
   }
 
   public sortList(param: IParams) {
+    console.log(param, 'in pool');
     this.service.paramsForGetPools.spin = param.spin;
     this.service.paramsForGetPools.nameSort = param.nameSort;
     this.service.paramsForGetPools.reverse = param.reverse;

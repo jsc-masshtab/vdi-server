@@ -35,8 +35,8 @@ export class TableComponentComponent implements OnInit {
   @Output() clickRowData: EventEmitter<object> = new EventEmitter<object>();
   @Output() sortListNow: EventEmitter<object> = new EventEmitter<object>();
 
-  public titleSort: string;
-  public orderingSort: string;
+  // public titleSort: string;
+  // public orderingSort: string;
   public moment: any;
 
   constructor() {}
@@ -49,39 +49,8 @@ export class TableComponentComponent implements OnInit {
     this.clickRowData.emit(item);
   }
 
-  public sortList(objFromCollection: ICollection) {
-    if (objFromCollection.reverse_sort === undefined) {
-      return;
-    }
-    if (this.orderingSort !== objFromCollection.property) {
-      objFromCollection.reverse_sort = true;
-    }
-    this.orderingSort = objFromCollection.property;
-
-    objFromCollection.reverse_sort = !objFromCollection.reverse_sort; // первый раз сделает false
-
-    if (objFromCollection.reverse_sort) {
-      this.sortListNow.emit({nameSort: objFromCollection.property, reverse: true, spin: true });
-    } else {
-      this.sortListNow.emit({nameSort: objFromCollection.property, reverse: false, spin: true });
-    }
+  public sortList(sort) {
+    this.sortListNow.emit(sort);
   }
-
-  public setSortName(objFromCollection: ICollection) {
-    if (objFromCollection.reverse_sort === undefined) {
-      this.titleSort = '';
-      return;
-    }
-    this.titleSort = `Нажмите для сортировки по полю ${objFromCollection.title}`;
-  }
-
-
-  // set sortName(name) {
-  //   this.sortName = `Сортировать по полю ${name}`;
-  // }
-     // опровобовать при OnPush
-  // get sortName() {
-  //   return this.sortName;
-  // }
 
 }
