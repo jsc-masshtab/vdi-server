@@ -11,7 +11,7 @@ usage() {
   Commands:
     update               update deploy to the latest release / apply db migrations
     curr[ent]            output current release commit
-    start                start front and back with hohup
+    start                start front and back with nohup
 EOF
 }
 
@@ -41,7 +41,7 @@ start() {
   cd $APP_DIR/frontend/
   rm -rf node_modules  # audit fix not working without this.
   npm audit fix  # npm i has some broken dependencies. npm audit fix works fine for 9
-  nohup npm run ng serve -- --host 0.0.0.0
+  nohup npm run ng serve -- --configuration=demo --host 0.0.0.0
   echo "Done!"
 }
 
