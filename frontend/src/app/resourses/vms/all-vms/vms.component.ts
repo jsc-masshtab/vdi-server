@@ -18,20 +18,20 @@ export class VmsComponent extends DetailsMove  implements OnInit {
   public collection = [
     {
       title: 'Название',
-      property: 'name',
+      property: 'verbose_name',
       class: 'name-start',
       icon: 'desktop',
       type: 'string'
     },
     {
-      title: 'Сервер',
-      property: 'node',
+      title: 'Шаблон',
+      property: 'template',
       property_lv2: 'verbose_name'
     },
     {
-      title: 'Шаблон',
-      property: 'template',
-      property_lv2: 'name'
+      title: 'Контроллер',
+      property: 'controller',
+      property_lv2: 'address'
     },
     {
       title: 'Статус',
@@ -51,16 +51,8 @@ export class VmsComponent extends DetailsMove  implements OnInit {
 
   public getAllVms() {
     this.waitService.setWait(true);
-    this.service.getAllVms().valueChanges.pipe(map(data => data.data.controllers)).subscribe((data) => {
-      let arrVms: [][] = [];
-      this.vms = [];
-      arrVms = data.map(controller => controller.vms);
-
-      arrVms.forEach((arr: []) => {
-          arr.forEach((obj: {}) => {
-            this.vms.push(obj);
-          });
-      });
+    this.service.getAllVms().valueChanges.pipe(map(data => data.data.vms)).subscribe((data) => {
+      this.vms = data;
       this.waitService.setWait(false);
     });
   }
@@ -78,6 +70,6 @@ export class VmsComponent extends DetailsMove  implements OnInit {
   }
 
   public routeTo(event): void {
-    this.router.navigate([`resourses/vms/${event.id}`]);
+    this.router.navigate([`resourses/vms/${event.controller.address}/${event.id}`]);
   }
 }

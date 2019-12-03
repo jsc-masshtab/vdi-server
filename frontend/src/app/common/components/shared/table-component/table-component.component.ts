@@ -9,7 +9,7 @@ interface ICollection {
   type?: 'string' | 'array-length' | IPropertyInObjects | IPropertyBoolean | 'time';
   class?: 'name-start'; // flex-start
   icon?: string;
-  reverse_sort?: boolean; // наличие поля и (sortListNow)="sortList($event)" включит сортировку
+  sort?: boolean; // наличие поля и (sortListNow)="sortList($event)" включит сортировку
 }
 
 interface IPropertyInObjects {
@@ -37,6 +37,7 @@ export class TableComponentComponent implements OnInit {
 
   public titleSort: string;
   public orderingSort: string;
+
   public moment: any;
 
   constructor() {}
@@ -49,39 +50,32 @@ export class TableComponentComponent implements OnInit {
     this.clickRowData.emit(item);
   }
 
-  public sortList(objFromCollection: ICollection) {
-    if (objFromCollection.reverse_sort === undefined) {
+  public sortList(activeEl: ICollection) {
+    if (activeEl.sort === undefined) {
       return;
     }
-    if (this.orderingSort !== objFromCollection.property) {
-      objFromCollection.reverse_sort = true;
+    if (this.orderingSort !== activeEl.property) {
+      activeEl.sort = true;
     }
-    this.orderingSort = objFromCollection.property;
+    this.orderingSort = activeEl.property;
 
-    objFromCollection.reverse_sort = !objFromCollection.reverse_sort; // первый раз сделает false
+    activeEl.sort = !activeEl.sort; // первый раз сделает false
 
-    if (objFromCollection.reverse_sort) {
-      this.sortListNow.emit({nameSort: objFromCollection.property, reverse: true, spin: true });
+    if (activeEl.sort) {
+      this.sortListNow.emit({nameSort: `-${activeEl.property}`, spin: true });
     } else {
-      this.sortListNow.emit({nameSort: objFromCollection.property, reverse: false, spin: true });
+      this.sortListNow.emit({nameSort: activeEl.property, spin: true });
     }
+    console.log(activeEl.property);
   }
 
-  public setSortName(objFromCollection: ICollection) {
-    if (objFromCollection.reverse_sort === undefined) {
+  public setSortName(activeEl: ICollection) {
+    if (activeEl.sort === undefined) {
       this.titleSort = '';
       return;
     }
-    this.titleSort = `Нажмите для сортировки по полю ${objFromCollection.title}`;
+    this.titleSort = `Нажмите для сортировки по полю ${activeEl.title}`;
   }
 
-
-  // set sortName(name) {
-  //   this.sortName = `Сортировать по полю ${name}`;
-  // }
-     // опровобовать при OnPush
-  // get sortName() {
-  //   return this.sortName;
-  // }
 
 }

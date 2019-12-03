@@ -21,19 +21,20 @@ export class PoolsService {
 
     public paramsForGetPools: IParams = { // для несбрасывания параметров сортировки при всех обновлениях
         spin: true,
-        nameSort: undefined,
-        reverse: undefined
+        nameSort: undefined
     };
 
     constructor(private service: Apollo, private waitService: WaitService) { }
 
     public getAllPools(): Observable<any> {
+        var obs$;
 
         if (this.paramsForGetPools.spin) {
             this.waitService.setWait(true);
+            obs$ = null;
         }
 
-        let obs$ = timer(0, 60000);
+        obs$ = timer(0, 60000);
         return obs$.pipe(switchMap(() => {
             return this.service.watchQuery({
                 query: gql` query pools($ordering:String) {

@@ -22,30 +22,30 @@ export class ControllersComponent implements OnInit, OnDestroy {
       class: 'name-start',
       icon: 'building',
       type: 'string',
-      reverse_sort: true
+      sort: true
     },
     {
       title: 'IP адрес',
       property: 'address',
       type: 'string',
-      reverse_sort: true
+      sort: true
     },
     {
       title: 'Пользователь',
       property: 'username',
       type: 'string',
-      reverse_sort: true
+      sort: true
     },
     {
       title: 'Описание',
       property: 'description',
       type: 'string',
-      reverse_sort: true
+      sort: true
     },
     {
       title: 'Статус',
       property: 'status',
-      reverse_sort: true
+      sort: true
     }
   ];
 
@@ -79,14 +79,12 @@ export class ControllersComponent implements OnInit, OnDestroy {
   public sortList(param: IParams): void  {
     this.service.paramsForGetControllers.spin = param.spin;
     this.service.paramsForGetControllers.nameSort = param.nameSort;
-    this.service.paramsForGetControllers.reverse = param.reverse;
     this.getAllControllers();
   }
 
   ngOnDestroy() {
     this.service.paramsForGetControllers.spin = true;
     this.service.paramsForGetControllers.nameSort = undefined;
-    this.service.paramsForGetControllers.reverse = undefined;
   }
 
 }

@@ -5,17 +5,17 @@
 
     <header>
       <ng-container *ngFor="let obj of collection">
-        <div class="table-header-part"  [class.header-start]="obj.class === 'name-start'"  (click)="sortList(obj)" [title]="titleSort" (mouseenter)="setSortName(obj)" [class.cursorTrue]="obj.reverse_sort !== undefined">
+        <div class="table-header-part"  [class.header-start]="obj.class === 'name-start'"  (click)="sortList(obj)" [title]="titleSort" (mouseenter)="setSortName(obj)" [class.cursorTrue]="obj.sort !== undefined">
           <span>{{obj.title}}</span>
           <span class="icon-sort" *ngIf="orderingSort === obj.property">
-            <fa-icon [icon]="['fas','chevron-circle-up']" size="s" rotate="180" *ngIf="!obj.reverse_sort"></fa-icon>
-            <fa-icon [icon]="['fas','chevron-circle-up']" size="s"  *ngIf="obj.reverse_sort"></fa-icon>
+            <fa-icon [icon]="['fas','chevron-circle-up']" size="s" rotate="180" *ngIf="!obj.sort"></fa-icon>
+            <fa-icon [icon]="['fas','chevron-circle-up']" size="s"  *ngIf="obj.sort"></fa-icon>
           </span>
         </div>
       </ng-container>
     </header>
 
-    <div class="table-area">
+    <div class="table-area" >
       <ng-container *ngFor="let item of data;let i = index">
         <div class="table-area-object" [class.cursorTrue]="cursor" (click)="clickRow(item)" tabindex="-1" 
           [class.status-fail]="item?.status === 'FAILED' || item?.status === 'FAIL_CREATING' || item?.status === 'FAIL_DELETING' || item?.status === 'ERROR'"

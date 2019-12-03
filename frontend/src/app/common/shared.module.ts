@@ -12,7 +12,7 @@ import { ReactiveFormsModule } from '@angular/forms';
 
 const COMPONENTS = [
   TableComponentComponent,
-  TableIntoComponent,
+  TableIntoComponent
 ];
 
 const DIRECTIVES = [
@@ -31,14 +31,14 @@ const FORMS_DINAMIC = [
 
 @NgModule({
   declarations: [
-    ...COMPONENTS,
     ...DIRECTIVES,
     ...PIPES,
-    ...FORMS_DINAMIC
+    ...FORMS_DINAMIC,
+    ...COMPONENTS
   ],
   exports: [
-    ...COMPONENTS,
     ...DIRECTIVES,
+    ...COMPONENTS,
     ...PIPES,
     ...FORMS_DINAMIC
   ],

@@ -43,6 +43,7 @@ export class TemplateDetailsComponent implements OnInit {
   public idTemplate: string;
   public menuActive: string = 'info';
   public host: boolean = false;
+  private address: string;
 
   constructor(private activatedRoute: ActivatedRoute,
               private service: TemplatesService,
@@ -51,15 +52,16 @@ export class TemplateDetailsComponent implements OnInit {
   ngOnInit() {
     this.activatedRoute.paramMap.subscribe((param: ParamMap) => {
       this.idTemplate = param.get('id') as string;
+      this.address = param.get('address') as string;
       this.getTemplate();
     });
   }
 
   public getTemplate() {
     this.host = false;
-    this.service.getTemplate(this.idTemplate).valueChanges.pipe(map(data => data.data.template))
+    this.service.getTemplate(this.idTemplate, this.address).valueChanges.pipe(map(data => data.data.template))
       .subscribe((data) => {
-        this.template = JSON.parse(data['info']);
+        this.template = JSON.parse(data['veil_info_json']);
         this.host = true;
       },
       () => {
