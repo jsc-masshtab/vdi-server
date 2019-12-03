@@ -9,8 +9,7 @@ export class ControllersService {
 
     public paramsForGetControllers: IParams = { // для несбрасывания параметров сортировки при всех обновлениях
         spin: true,
-        nameSort: undefined,
-        reverse: undefined
+        nameSort: undefined
     };
 
     constructor(private service: Apollo) {}
@@ -31,7 +30,8 @@ export class ControllersService {
                         }
                     `,
             variables: {
-                method: 'GET'
+                method: 'GET',
+                ordering: this.paramsForGetControllers.nameSort
             }
         });
     }

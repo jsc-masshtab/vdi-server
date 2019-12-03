@@ -12,7 +12,10 @@ export class TemplatesService {
         return  this.service.watchQuery({
             query:  gql` query vms {
                                 templates {
-                                    veil_info
+                                    veil_info_json
+                                    controller {
+                                        address
+                                    }
                                 }
                             }
                         `,
@@ -22,17 +25,18 @@ export class TemplatesService {
         });
     }
 
-    public getTemplate(id: string): QueryRef<any, any> {
+    public getTemplate(id: string, controller_address: string): QueryRef<any, any> {
         return  this.service.watchQuery({
-            query:  gql` query Template($id: String) {
-                            template(id: $id) {
-                               info
+            query:  gql` query vms($id: String, $controller_address: String) {
+                            template(id: $id, controller_address: $controller_address) {
+                                veil_info_json
                             }
                         }
                     `,
             variables: {
                 method: 'GET',
-                id
+                id,
+                controller_address
             }
         });
     }

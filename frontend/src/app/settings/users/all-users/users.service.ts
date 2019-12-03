@@ -10,8 +10,7 @@ export class UsersService  {
 
     public paramsForGetUsers: IParams = { // для несбрасывания параметров сортировки при всех обновлениях
         spin: true,
-        nameSort: undefined,
-        reverse: undefined
+        nameSort: undefined
     };
 
     constructor(private service: Apollo) {}
@@ -26,8 +25,7 @@ export class UsersService  {
                     `,
             variables: {
                 method: 'GET',
-                ordering: this.paramsForGetUsers.nameSort,
-                reversed_order: this.paramsForGetUsers.reverse
+                ordering: this.paramsForGetUsers.nameSort
             }
         });
     }

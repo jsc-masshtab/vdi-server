@@ -25,48 +25,55 @@ export class DatapoolsComponent extends DetailsMove implements OnInit, OnDestroy
       class: 'name-start',
       type: 'string',
       icon: 'folder-open',
-      reverse_sort: true
+      sort: true
     },
     {
       title: 'Тип',
       property: 'type',
       type: 'string',
-      reverse_sort: true
+      sort: true
     },
     {
       title: 'Диски',
       property: 'vdisk_count',
       type: 'string',
-      reverse_sort: true
+      sort: true
     },
     {
       title: 'Образы',
       property: 'iso_count',
       type: 'string',
-      reverse_sort: true
+      sort: true
     },
     {
       title: 'Файлы',
       property: 'file_count',
       type: 'string',
-      reverse_sort: true
+      sort: true
     },
     {
       title: 'Свободно (Мб)',
       property: 'free_space',
       type: 'string',
-      reverse_sort: true
+      sort: true
     },
     {
       title: 'Занято (Мб)',
       property: 'used_space',
       type: 'string',
-      reverse_sort: true
+      sort: true
+    },
+    {
+      title: 'Контроллер',
+      property: 'controller',
+      property_lv2: 'address',
+      type: 'string',
+      sort: true
     },
     {
       title: 'Статус',
       property: 'status',
-      reverse_sort: true
+      sort: true
     }
   ];
 
@@ -109,14 +116,12 @@ export class DatapoolsComponent extends DetailsMove implements OnInit, OnDestroy
   public sortList(param: IParams): void  {
     this.service.paramsForGetDatapools.spin = param.spin;
     this.service.paramsForGetDatapools.nameSort = param.nameSort;
-    this.service.paramsForGetDatapools.reverse = param.reverse;
     this.getDatapools();
   }
 
   ngOnDestroy() {
     this.service.paramsForGetDatapools.spin = true;
     this.service.paramsForGetDatapools.nameSort = undefined;
-    this.service.paramsForGetDatapools.reverse = undefined;
   }
 
 }

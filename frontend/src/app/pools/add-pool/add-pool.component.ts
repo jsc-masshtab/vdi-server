@@ -1,4 +1,4 @@
-import { WaitService } from './../../common/components/single/wait/wait.service';
+
 import { AddPoolService } from './add-pool.service';
 
 import { MatDialogRef } from '@angular/material';
@@ -88,7 +88,6 @@ export class PoolAddComponent implements OnInit, OnDestroy {
 
   constructor(private poolsService: PoolsService,
               private addPoolService: AddPoolService,
-              private waitService: WaitService,
               private dialogRef: MatDialogRef<PoolAddComponent>,
               private fb: FormBuilder) {}
 
@@ -443,7 +442,6 @@ export class PoolAddComponent implements OnInit, OnDestroy {
 
   private actionFinishOk(): void  {
     const formValue: Partial<IFinishPoolForm> = this.createPoolForm.value;
-    this.waitService.setWait(true);
     if (this.chooseTypeForm.value.type === 'Автоматический') {
       this.addPoolService.createDinamicPool(
                               formValue.verbose_name,
@@ -460,9 +458,6 @@ export class PoolAddComponent implements OnInit, OnDestroy {
           this.dialogRef.close();
           this.poolsService.paramsForGetPools.spin = true;
           this.poolsService.getAllPools().subscribe();
-        },
-        () => {
-          this.waitService.setWait(false);
         });
     }
 
@@ -474,9 +469,6 @@ export class PoolAddComponent implements OnInit, OnDestroy {
           this.dialogRef.close();
           this.poolsService.paramsForGetPools.spin = true;
           this.poolsService.getAllPools().subscribe();
-        },
-        () => {
-          this.waitService.setWait(false);
         });
     }
   }

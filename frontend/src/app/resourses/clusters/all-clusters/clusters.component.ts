@@ -23,36 +23,36 @@ export class ClustersComponent extends DetailsMove implements OnInit, OnDestroy 
       class: 'name-start',
       type: 'string',
       icon: 'building',
-      reverse_sort: true
+      sort: true
     },
     {
       title: 'Серверы',
       property: 'nodes_count',
       type: 'string',
-      reverse_sort: true
+      sort: true
     },
     {
       title: 'CPU',
       property: 'cpu_count',
       type: 'string',
-      reverse_sort: true
+      sort: true
     },
     {
       title: 'RAM',
       property: 'memory_count',
       type: 'string',
-      reverse_sort: true
+      sort: true
     },
     {
       title: 'Контроллер',
       property: 'controller',
       property_lv2: 'address',
-      reverse_sort: true
+      sort: true
     },
     {
       title: 'Статус',
       property: 'status',
-      reverse_sort: true
+      sort: true
     }
   ];
 
@@ -95,14 +95,12 @@ export class ClustersComponent extends DetailsMove implements OnInit, OnDestroy 
   public sortList(param: IParams) {
     this.service.paramsForGetClusters.spin = param.spin;
     this.service.paramsForGetClusters.nameSort = param.nameSort;
-    this.service.paramsForGetClusters.reverse = param.reverse;
     this.getAllClusters();
   }
 
   ngOnDestroy() {
     this.service.paramsForGetClusters.spin = true;
     this.service.paramsForGetClusters.nameSort = undefined;
-    this.service.paramsForGetClusters.reverse = undefined;
   }
 
 }

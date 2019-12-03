@@ -136,15 +136,14 @@ export class AppModule {
         this.waitService.setWait(false);
         graphQLErrors.map(({ message, locations, path }) => {
           this.errorService.setError(message);
-          this.waitService.setWait(false);
           console.log(`[GraphQL error]: Message: ${message}, Location: ${locations}, Path: ${path}`, locations);
         });
       }
 
       if (networkError) {
         console.log(networkError, 'networkError');
-        this.errorService.setError(networkError['message']);
         this.waitService.setWait(false);
+        this.errorService.setError(networkError['message']);
       }
     });
 

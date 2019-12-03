@@ -91,9 +91,8 @@ export class PoolsComponent extends DetailsMove implements OnInit, OnDestroy {
     this.getPoolsSub = this.service.getAllPools()
       .subscribe((data) => {
         this.pools = data;
-        if (this.service.paramsForGetPools.spin) {
-          this.waitService.setWait(false);
-        }
+        console.log(this.service.paramsForGetPools.spin, 'data', data);
+        this.waitService.setWait(false);
       });
   }
 
@@ -120,7 +119,6 @@ export class PoolsComponent extends DetailsMove implements OnInit, OnDestroy {
   }
 
   public sortList(param: IParams) {
-    console.log(param, 'in pool');
     let output_param = param.nameSort;
     this.service.paramsForGetPools.spin = param.spin;
     switch (output_param) {
