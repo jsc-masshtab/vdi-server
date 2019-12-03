@@ -5,12 +5,12 @@
 
     <header>
       <ng-container *ngFor="let obj of collection">
-        <div class="table-header-part"  [class.header-start]="obj.class === 'name-start'" [sort]="obj"  #sortEl="sortEl" [title]="sortEl.titleSort" (sortListNow)="sortList($event)">
+        <div class="table-header-part"  [class.header-start]="obj.class === 'name-start'"  (click)="sortList(obj)" [title]="titleSort" (mouseenter)="setSortName(obj)" [class.cursorTrue]="obj.sort !== undefined">
           <span>{{obj.title}}</span>
-          <!-- <span class="icon-sort" *ngIf="orderingSort === obj.property">
-            <fa-icon [icon]="['fas','chevron-circle-up']" size="s" rotate="180" *ngIf="!obj.reverse_sort"></fa-icon>
-            <fa-icon [icon]="['fas','chevron-circle-up']" size="s"  *ngIf="obj.reverse_sort"></fa-icon>
-          </span> -->
+          <span class="icon-sort" *ngIf="orderingSort === obj.property">
+            <fa-icon [icon]="['fas','chevron-circle-up']" size="s" rotate="180" *ngIf="!obj.sort"></fa-icon>
+            <fa-icon [icon]="['fas','chevron-circle-up']" size="s"  *ngIf="obj.sort"></fa-icon>
+          </span>
         </div>
       </ng-container>
     </header>

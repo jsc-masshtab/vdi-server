@@ -1,4 +1,3 @@
-import { SortDirective } from './directives/sort.directive';
 import { MatDialogModule } from '@angular/material/dialog';
 import { StatusPipe, StatusIconPipe } from './pipes/statusEntity.pipes';
 import { CommonModule } from '@angular/common';
@@ -13,12 +12,11 @@ import { ReactiveFormsModule } from '@angular/forms';
 
 const COMPONENTS = [
   TableComponentComponent,
-  TableIntoComponent,
+  TableIntoComponent
 ];
 
 const DIRECTIVES = [
-  FocusMeDirective,
-  SortDirective
+  FocusMeDirective
 ];
 
 const PIPES = [

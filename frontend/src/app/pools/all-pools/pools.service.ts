@@ -21,8 +21,7 @@ export class PoolsService {
 
     public paramsForGetPools: IParams = { // для несбрасывания параметров сортировки при всех обновлениях
         spin: true,
-        nameSort: undefined,
-        reverse: undefined
+        nameSort: undefined
     };
 
     constructor(private service: Apollo, private waitService: WaitService) { }

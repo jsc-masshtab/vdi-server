@@ -9,7 +9,7 @@ interface ICollection {
   type?: 'string' | 'array-length' | IPropertyInObjects | IPropertyBoolean | 'time';
   class?: 'name-start'; // flex-start
   icon?: string;
-  reverse_sort?: boolean; // наличие поля и (sortListNow)="sortList($event)" включит сортировку
+  sort?: boolean; // наличие поля и (sortListNow)="sortList($event)" включит сортировку
 }
 
 interface IPropertyInObjects {
@@ -35,8 +35,9 @@ export class TableComponentComponent implements OnInit {
   @Output() clickRowData: EventEmitter<object> = new EventEmitter<object>();
   @Output() sortListNow: EventEmitter<object> = new EventEmitter<object>();
 
-  // public titleSort: string;
-  // public orderingSort: string;
+  public titleSort: string;
+  public orderingSort: string;
+
   public moment: any;
 
   constructor() {}
@@ -49,8 +50,31 @@ export class TableComponentComponent implements OnInit {
     this.clickRowData.emit(item);
   }
 
-  public sortList(sort) {
-    this.sortListNow.emit(sort);
+  public sortList(activeEl: ICollection) {
+    if (activeEl.sort === undefined) {
+      return;
+    }
+    if (this.orderingSort !== activeEl.property) {
+      activeEl.sort = true;
+    }
+    this.orderingSort = activeEl.property;
+
+    activeEl.sort = !activeEl.sort; // первый раз сделает false
+
+    if (activeEl.sort) {
+      this.sortListNow.emit({nameSort: `-${activeEl.property}`, spin: true });
+    } else {
+      this.sortListNow.emit({nameSort: activeEl.property, spin: true });
+    }
   }
+
+  public setSortName(activeEl: ICollection) {
+    if (activeEl.sort === undefined) {
+      this.titleSort = '';
+      return;
+    }
+    this.titleSort = `Нажмите для сортировки по полю ${activeEl.title}`;
+  }
+
 
 }

@@ -103,7 +103,6 @@ export class PoolsComponent extends DetailsMove implements OnInit, OnDestroy {
   }
 
   public routeTo(event): void {
-    console.log(event);
     const desktopPoolType: string = event.pool_type.toLowerCase();
     this.router.navigate([`pools/${desktopPoolType}/${event.pool_id}`]);
   }
@@ -122,9 +121,25 @@ export class PoolsComponent extends DetailsMove implements OnInit, OnDestroy {
 
   public sortList(param: IParams) {
     console.log(param, 'in pool');
+    let output_param = param.nameSort;
     this.service.paramsForGetPools.spin = param.spin;
-    this.service.paramsForGetPools.nameSort = param.nameSort;
-    this.service.paramsForGetPools.reverse = param.reverse;
+    switch (output_param) {
+      case 'vms':
+        output_param = 'vms_count';
+        break;
+      case '-vms':
+        output_param = '-vms_count';
+        break;
+      case 'users':
+        output_param = 'users_count';
+        break;
+      case '-users':
+        output_param = '-users_count';
+        break;
+      default:
+        output_param = param.nameSort;
+    }
+    this.service.paramsForGetPools.nameSort = output_param;
     this.getAllPools();
   }
 
@@ -132,7 +147,6 @@ export class PoolsComponent extends DetailsMove implements OnInit, OnDestroy {
     this.getPoolsSub.unsubscribe();
     this.service.paramsForGetPools.spin = true;
     this.service.paramsForGetPools.nameSort = undefined;
-    this.service.paramsForGetPools.reverse = undefined;
   }
 
 }
