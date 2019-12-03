@@ -8,6 +8,8 @@ from auth.utils.veil_jwt import jwtauth
 from pool.models import Pool, Vm, AutomatedPool
 from vm.veil_client import VmHttpClient  # TODO: move to VM?
 
+from pool.pool_task_manager import pool_task_manager
+
 
 @jwtauth
 class PoolHandler(BaseHandler, ABC):
@@ -49,6 +51,13 @@ class PoolGetVm(BaseHandler, ABC):
             # Логика древних:
             if desktop_pool_type == 'AUTOMATED':
                 pool = await AutomatedPool.get(pool_id)
+
+                # Проверяем залочен ли pool. Если залочен, то ничего не делаем, так как любые другие действия с
+                # пулом требующие блокировки - в приоретете.
+                pool_lock = pool_task_manager.get_pool_lock(pool_id)
+                #if not pool_lock.lock.locked():
+
+
                 await pool.expand_pool_if_requred()
         vm_client = await VmHttpClient.create(controller_ip=controller_ip, vm_id=vm_id)
         info = await vm_client.info()

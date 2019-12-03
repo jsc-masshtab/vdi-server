@@ -28,6 +28,10 @@ from pool.models import AutomatedPool, StaticPool, Pool, PoolUsers
 from asyncpg import UniqueViolationError
 
 from database import db
+
+from pool.pool_task_manager import pool_task_manager
+
+
 # TODO: отсутствует валидация входящих ресурсов вроде node_uid, cluster_uid и т.п. Ранее шла речь,
 #  о том, что мы будем кешированно хранить какие-то ресурсы полученные от ECP Veil. Возможно стоит
 #  обращаться к этому хранилищу для проверки корректности присланных ресурсов. Аналогичный принцип
@@ -290,9 +294,21 @@ class DeletePoolMutation(graphene.Mutation, PoolValidator):
 
     async def mutate(self, info, pool_id):
 
+        pool = await Pool.get_pool(pool_id)
+
+        if pool.pool_type == 'AUTOMATED':
+            pool_lock = pool_task_manager.get_pool_lock(pool.pool_id)
+            async with pool_lock:
+                # останавливаем таски связанные с пулом
+                await pool_task_manager.cancel_all_tasks_for_pool(pool_id)
+                # удаляем пул
+                await Pool.soft_delete(pool_id)
+                await pool_task_manager.remove_pool_data(pool.pool_id, pool.template_id)
+        else:
+            await Pool.soft_delete(pool_id)
+
         # Меняем статус пула. Не нравится идея удалять записи имеющие внешние зависимости, которые не удалить,
         # например запущенные виртуалки.
-        await Pool.soft_delete(pool_id)
         msg = 'Pool {id} deactivated.'.format(id=pool_id)
         await Event.create_info(msg)
         return DeletePoolMutation(ok=True)
@@ -369,7 +385,7 @@ class CreateStaticPoolMutation(graphene.Mutation, PoolValidator):
             # response
             vms = [VmType(id=vm_id) for vm_id in vm_ids]
             await pool.activate()
-            msg = 'Static pool {id} created.'.format(id=pool.pool_id)
+            msg = 'Static pool {id} created.'.format(id=pool.static_pool_id)
             await Event.create_info(msg)
         except Exception as E:  # Возможные исключения: дубликат имени или вм id, сетевой фейл enable_remote_accesses
             await Event.create_error('Failed to create static pool.')
@@ -504,14 +520,19 @@ class CreateAutomatedPoolMutation(graphene.Mutation, PoolValidator):
         pool = None
         try:
             automated_pool = await AutomatedPool.create(**kwargs)
+            # add data for protection
+            pool_task_manager.add_new_pool_data(automated_pool.automated_pool_id, automated_pool.template_id)
+            # lock pool
+            async with pool_task_manager.get_pool_lock(automated_pool.automated_pool_id):
+                # lock template
+                async with pool_task_manager.get_template_lock(automated_pool.template_id):
+                    await automated_pool.add_initial_vms()
+                    await automated_pool.activate()
 
-            await automated_pool.add_initial_vms()
-            await automated_pool.activate()
-
-            pool = await Pool.get_pool(automated_pool.automated_pool_id)
-            msg = 'Automated pool {id} created.'.format(id=pool.pool_id)
-            await Event.create_info(msg)
-        except (UniqueViolationError, VmCreationError) as E:  # Возможные исключения: дубликат имени пула,VmCreationError
+                    pool = await Pool.get_pool(automated_pool.automated_pool_id)
+                    msg = 'Automated pool {id} created.'.format(id=pool.pool_id)
+                    await Event.create_info(msg)
+        except (UniqueViolationError, VmCreationError) as E: # Возможные исключения: дубликат имени пула,VmCreationError
             print('exp__', E.__class__.__name__)
             await Event.create_error('Failed to create automated pool.')
             if pool:
