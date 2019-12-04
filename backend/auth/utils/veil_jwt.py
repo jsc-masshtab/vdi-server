@@ -58,12 +58,13 @@ def encode_jwt(username):
     return {'access_token': access_token, 'expires_on': expires_on.strftime("%d.%m.%Y %H:%M:%S UTC")}
 
 
-def decode_jwt(token, decode_options: dict = JWT_OPTIONS):
+def decode_jwt(token, decode_options: dict = JWT_OPTIONS, algorithms: list = [JWT_ALGORITHM]):
     """Decode JWT token"""
     try:
         decoded_jwt = jwt.decode(
             token,
             SECRET_KEY,
+            algorithms=algorithms,
             options=decode_options
         )
     except jwt.ExpiredSignatureError:

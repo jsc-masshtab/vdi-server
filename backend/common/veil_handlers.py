@@ -20,6 +20,13 @@ class BaseHandler(RequestHandler, ABC):
         """Overridden tornado method"""
         return extract_user(self.request.headers)
 
+    @property
+    def remote_ip(self):
+        remote_ip = self.request.headers.get("X-Real-IP") or \
+                    self.request.headers.get("X-Forwarded-For") or \
+                    self.request.remote_ip
+        return remote_ip
+
 
 @jwtauth
 class VdiTornadoGraphQLHandler(TornadoGraphQLHandler, ABC):

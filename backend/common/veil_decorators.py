@@ -5,6 +5,7 @@ from graphql.execution.base import ResolveInfo
 
 from auth.utils.veil_jwt import extraxt_user_object
 from common.veil_errors import Unauthorized
+from event.models import Event
 
 
 def prepare_body(func):
@@ -89,7 +90,7 @@ def context(f):
     return decorator
 
 
-def user_passes_test(test_func, exc=Unauthorized('User is invalid.')):
+def user_passes_test(test_func, exc=Unauthorized('Invalid permissions.')):
     """exc в GraphQl вернется с 200тым кодом.
        https://github.com/graphql-python/graphene/issues/946
     """
@@ -100,6 +101,8 @@ def user_passes_test(test_func, exc=Unauthorized('User is invalid.')):
             user = await extraxt_user_object(cntxt.headers)
             if user and test_func(user):
                 return f(*args, **kwargs)
+
+            await Event.create_warning('Auth: {} IP: {}. username: {}'.format(exc.message, cntxt.remote_ip, user.username))
             raise exc
         return wrapper
     return decorator
