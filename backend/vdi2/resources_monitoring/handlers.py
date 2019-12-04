@@ -16,6 +16,8 @@ from .resources_monitoring_data import VDI_FRONT_ALLOWED_SUBSCRIPTIONS_LIST, Sub
 
 from resources_monitoring.resources_monitor_manager import resources_monitor_manager
 
+import time
+
 
 class AbstractSubscriptionObserver(ABC):
 
@@ -107,11 +109,12 @@ class VdiFrontWsHandler(websocket.WebSocketHandler, AbstractSubscriptionObserver
     def on_close(self):
         print("WebSocket closed")
         resources_monitor_manager.unsubscribe(self)
-        #await self._stop_message_sending()
+        self._send_messages_flag = False
+        tornado.ioloop.IOLoop.instance().remove_timeout(self._send_messages_task)
 
     def _start_message_sending(self):
         """start message sending task"""
-        self._send_messages_task = tornado.ioloop.IOLoop.current().add_callback(self._send_messages_co)
+        self._send_messages_task = tornado.ioloop.IOLoop.instance().add_timeout(time.time(), self._send_messages_co)
 
     async def _stop_message_sending(self):
         """stop message sending corutine"""
