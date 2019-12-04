@@ -58,7 +58,7 @@ class PoolGetVm(BaseHandler, ABC):
                 template_lock = pool_task_manager.get_template_lock(pool_id)
                 # Проверяем залочены ли локи. Если залочены, то ничего не делаем, так как любые другие действия с
                 # пулом требующие блокировки - в приоретете.
-                if not pool_lock.lock.locked() and template_lock.lock.locked():
+                if not pool_lock.lock.locked() and not template_lock.lock.locked():
                     async with pool_lock.lock:
                         native_loop = asyncio.get_event_loop()
                         await cancel_async_task(pool_lock.expand_pool_task)
