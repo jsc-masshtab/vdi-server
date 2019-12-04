@@ -3,7 +3,7 @@ import uuid
 
 from pool.schema import pool_schema
 
-from utils import execute_scheme
+from tests.utils import execute_scheme
 
 
 # ----------------------------------------------

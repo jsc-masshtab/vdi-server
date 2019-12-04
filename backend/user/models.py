@@ -6,9 +6,7 @@ from sqlalchemy.sql import func
 
 from auth.utils import hashers
 from database import db, AbstractSortableStatusModel
-
-
-# TODO: events
+from event.models import Event
 
 
 class User(AbstractSortableStatusModel, db.Model):
@@ -37,6 +35,20 @@ class User(AbstractSortableStatusModel, db.Model):
     # ----- ----- ----- ----- ----- ----- -----
     # Setters & etc.
 
+    @classmethod
+    async def activate(cls, id):
+        query = cls.update.values(is_active=True).where(cls.id == id)
+        operation_status = await query.gino.status()
+        await Event.create_info('Auth: user {} has been activated.'.format(id))
+        return operation_status
+
+    @classmethod
+    async def deactivate(cls, id):
+        query = cls.update.values(is_active=False).where(cls.id == id)
+        operation_status = await query.gino.status()
+        await Event.create_info('Auth: user {} has been deactivated.'.format(id))
+        return operation_status
+
     @staticmethod
     async def check_password(username, raw_password):
         password = await User.select('password').where(User.username == username).gino.scalar()
@@ -53,15 +65,20 @@ class User(AbstractSortableStatusModel, db.Model):
     @staticmethod
     async def set_password(user_id, raw_password):
         encoded_password = hashers.make_password(raw_password)
-        return await User.update.values(password=encoded_password).where(
+        user_status = await User.update.values(password=encoded_password).where(
             User.id == user_id).gino.status()
+        await Event.create_info('Auth: user {} changed local password.'.format(user_id))
+        return user_status
 
     @staticmethod
-    async def create_user(username, password=None, email=None, last_name=None, first_name=None, is_superuser=False):
+    async def soft_create(username, password=None, email=None, last_name=None, first_name=None, is_superuser=False):
         """Если password будет None, то make_password вернет unusable password"""
         encoded_password = hashers.make_password(password)
-        return await User.create(username=username, password=encoded_password, email=email, last_name=last_name,
-                                 first_name=first_name, is_superuser=is_superuser)
+        user_obj = await User.create(username=username, password=encoded_password, email=email, last_name=last_name,
+                                     first_name=first_name, is_superuser=is_superuser)
+        user_message = 'Superuser' if is_superuser else 'User'
+        await Event.create_info('Auth: {} {} created.'.format(user_message, username))
+        return user_obj
 
     @classmethod
     async def soft_update(cls, user_id, username, email, last_name, first_name, is_superuser):
@@ -80,16 +97,24 @@ class User(AbstractSortableStatusModel, db.Model):
             await User.update.values(**user_kwargs).where(
                 User.id == user_id).gino.status()
         user = await User.get(user_id)
+        if user_kwargs.get('is_superuser'):
+            await Event.create_info('Auth: {} has become a superuser.'.format(user.username))
         return user
 
     @classmethod
-    async def login(cls, username, token):
+    async def login(cls, username, token, ip=None, ldap=False):
         """Записывает данные с которыми пользователь вошел в систему"""
         user = await User.get_object(extra_field_name='username', extra_field_value=username)
         if not user:
             return False
         await user.update(last_login=func.now()).apply()
         await UserJwtInfo.soft_create(user_id=user.id, token=token)
+
+        # Login event
+        login_message = 'User login (ldap)' if ldap else 'User login (local)'
+        info_message = 'Auth: {} IP: {}. username: {}'.format(login_message, ip,
+                                                              username)
+        await Event.create_info(info_message)
         return True
 
 

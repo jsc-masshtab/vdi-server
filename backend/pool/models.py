@@ -158,7 +158,7 @@ class Pool(db.Model):
         # TODO: добавить вывод типа OS у VM
         # TODO: добавить вывод состояния пула
 
-        user = await User.get_active_user(username=username)
+        user = await User.get_object(extra_field_name='username', extra_field_value=username)
         pools = Pool.get_pools_query()
         if not user.is_superuser:
             # Можно было бы сразу в Join сделать, но быстро не разобрался как.

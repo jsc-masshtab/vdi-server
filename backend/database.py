@@ -20,11 +20,6 @@ async def get_list_of_values_from_db(db_model, column):
 
 
 class Status(Enum):
-    """
-    При создании миграции Alembic не может корректно отработать создание типа в Pg.
-    Чтобы решить проблему:
-    op.execute("CREATE TYPE status AS ENUM ('CREATING', 'ACTIVE', 'FAILED', 'DELETING', 'SERVICE', 'PARTIAL');")
-    """
 
     CREATING = 'CREATING'
     ACTIVE = 'ACTIVE'

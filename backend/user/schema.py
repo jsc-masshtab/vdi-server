@@ -116,7 +116,7 @@ class CreateUserMutation(graphene.Mutation, UserValidator):
     @classmethod
     async def mutate(cls, root, info, **kwargs):
         await cls.validate_agruments(**kwargs)
-        user = await User.create_user(**kwargs)
+        user = await User.soft_create(**kwargs)
         return CreateUserMutation(
             user=UserType(**user.__values__),
             ok=True)
@@ -174,7 +174,6 @@ class ActivateUserMutation(graphene.Mutation, UserValidator):
     async def mutate(cls, root, info, **kwargs):
         await cls.validate_agruments(**kwargs)
         # Меняем статус пользователя
-        print('activate')
         await User.activate(kwargs['id'])
         return ActivateUserMutation(ok=True)
 

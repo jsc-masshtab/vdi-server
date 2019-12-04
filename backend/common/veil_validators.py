@@ -21,4 +21,4 @@ class MutationValidation:
                     if value:
                         await validator(kwargs, value)
                 except ValidationError as E:
-                    raise SimpleError('Field \"{}\" {}'.format(argument, E))
+                    raise SimpleError('Field \"{}\" - {}'.format(argument, E))

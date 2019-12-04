@@ -54,3 +54,13 @@ VEIL_WS_MAX_TIME_TO_WAIT = 15
 # Others
 # -----------------------------
 DEFAULT_NAME = 'Unknown'
+
+# Settings for tests
+# -----------------------------
+TESTS_ADMIN_USERNAME = 'admin'
+TESTS_ADMIN_PASSWORD = 'qwe'
+TESTS_LDAP_USERNAME = 'ad120'
+TESTS_LDAP_PASSWORD = 'Bazalt1!'
+TESTS_AD_DOMAIN_NAME = 'bazalt.team'
+TESTS_AD_VERBOSE_NAME = 'Bazalt'
+TESTS_AD_DIRECTORY_URL = 'ldap://192.168.11.180'
