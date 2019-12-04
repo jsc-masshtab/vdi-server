@@ -191,7 +191,7 @@ class PoolType(graphene.ObjectType):
             UserType(id=user.id, username=user.username, email=user.email)
             for user in users_data
         ]
-        print('user_type_list', user_type_list)
+        #print('user_type_list', user_type_list)
         return user_type_list
 
     async def resolve_vms(self, _info):
@@ -298,7 +298,7 @@ class DeletePoolMutation(graphene.Mutation, PoolValidator):
 
         if pool.pool_type == 'AUTOMATED':
             pool_lock = pool_task_manager.get_pool_lock(pool.pool_id)
-            async with pool_lock:
+            async with pool_lock.lock:
                 # останавливаем таски связанные с пулом
                 await pool_task_manager.cancel_all_tasks_for_pool(pool_id)
                 # удаляем пул
@@ -503,7 +503,7 @@ class CreateAutomatedPoolMutation(graphene.Mutation, PoolValidator):
         max_size = graphene.Int(default_value=200)
         max_vm_amount = graphene.Int(default_value=1000)
         increase_step = graphene.Int(default_value=3)
-        max_amount_of_create_attempts = graphene.Int(default_value=2)
+        max_amount_of_create_attempts = graphene.Int(default_value=10)
         initial_size = graphene.Int(default_value=1)
         reserve_size = graphene.Int(default_value=0)
         total_size = graphene.Int(default_value=1)
@@ -523,8 +523,8 @@ class CreateAutomatedPoolMutation(graphene.Mutation, PoolValidator):
             # add data for protection
             pool_task_manager.add_new_pool_data(automated_pool.automated_pool_id, automated_pool.template_id)
             # locks
-            async with pool_task_manager.get_pool_lock(automated_pool.automated_pool_id):
-                async with pool_task_manager.get_template_lock(automated_pool.template_id):
+            async with pool_task_manager.get_pool_lock(automated_pool.automated_pool_id).lock:
+                async with pool_task_manager.get_template_lock(automated_pool.template_id).lock:
                     await automated_pool.add_initial_vms()
                     await automated_pool.activate()
 
