@@ -522,9 +522,8 @@ class CreateAutomatedPoolMutation(graphene.Mutation, PoolValidator):
             automated_pool = await AutomatedPool.create(**kwargs)
             # add data for protection
             pool_task_manager.add_new_pool_data(automated_pool.automated_pool_id, automated_pool.template_id)
-            # lock pool
+            # locks
             async with pool_task_manager.get_pool_lock(automated_pool.automated_pool_id):
-                # lock template
                 async with pool_task_manager.get_template_lock(automated_pool.template_id):
                     await automated_pool.add_initial_vms()
                     await automated_pool.activate()

@@ -16,6 +16,8 @@ from resources_monitoring.handlers import WaiterSubscriptionObserver
 from resources_monitoring.resources_monitor_manager import resources_monitor_manager
 from resources_monitoring.resources_monitoring_data import VDI_TASKS_SUBSCRIPTION
 
+from pool.pool_task_manager import pool_task_manager
+
 
 class Pool(db.Model):
     """На данный момент отсутствует смысловая валидация на уровне таблиц (она в схемах)."""
@@ -521,35 +523,37 @@ class AutomatedPool(db.Model):
         Check and expand pool if required
         :return:
         """
-        # TODO: rewrite
-        # TODO: код перенесен, чтобы работал. Принципиально не перерабатывался.
-        # Check that total_size is not reached
-        pool = await Pool.get(self.automated_pool_id)
-        vm_amount_in_pool = await pool.get_vm_amount()
+        async with pool_task_manager.get_pool_lock(self.automated_pool_id):
+            async with pool_task_manager.get_template_lock(self.automated_pool_id):
+                # TODO: rewrite
+                # TODO: код перенесен, чтобы работал. Принципиально не перерабатывался.
+                # Check that total_size is not reached
+                pool = await Pool.get(self.automated_pool_id)
+                vm_amount_in_pool = await pool.get_vm_amount()
 
-        # If reached then do nothing
-        if vm_amount_in_pool >= self.total_size:
-            return
+                # If reached then do nothing
+                if vm_amount_in_pool >= self.total_size:
+                    return
 
-        # Число машин в пуле, неимеющих пользователя
-        free_vm_amount = await pool.get_vm_amount(only_free=True)
+                # Число машин в пуле, неимеющих пользователя
+                free_vm_amount = await pool.get_vm_amount(only_free=True)
 
-        # Если подогретых машин слишком мало, то пробуем добавить еще
-        if self.reserve_size > free_vm_amount:
-            # Max possible amount of VMs which we can add to the pool
-            max_possible_amount_to_add = self.total_size - vm_amount_in_pool
-            # Real amount that we can add to the pool
-            real_amount_to_add = min(max_possible_amount_to_add, self.vm_step)
-            # add VMs.
-            try:
-                # TODO: очень странная логика. Может есть смысл создавать как-то диапазоном на стороне ECP?
-                for i in range(1, real_amount_to_add):
-                    domain_index = vm_amount_in_pool + i
-                    await self.add_vm(domain_index)
-            except VmCreationError:
-                print('Vm creating error')
-                # TODO: log that we cant expand the pool.  Mark pool as broken?
-                pass
+                # Если подогретых машин слишком мало, то пробуем добавить еще
+                if self.reserve_size > free_vm_amount:
+                    # Max possible amount of VMs which we can add to the pool
+                    max_possible_amount_to_add = self.total_size - vm_amount_in_pool
+                    # Real amount that we can add to the pool
+                    real_amount_to_add = min(max_possible_amount_to_add, self.vm_step)
+                    # add VMs.
+                    try:
+                        # TODO: очень странная логика. Может есть смысл создавать как-то диапазоном на стороне ECP?
+                        for i in range(1, real_amount_to_add):
+                            domain_index = vm_amount_in_pool + i
+                            await self.add_vm(domain_index)
+                    except VmCreationError:
+                        print('Vm creating error')
+                        # TODO: log that we cant expand the pool.  Mark pool as broken?
+                        pass
 
 
 class PoolUsers(db.Model):

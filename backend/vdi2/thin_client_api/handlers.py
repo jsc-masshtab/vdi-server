@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
 from abc import ABC
+import asyncio
 
 from tornado import websocket
 
+from common.utils import cancel_async_task
 from common.veil_handlers import BaseHandler
 from auth.utils.veil_jwt import jwtauth
 from pool.models import Pool, Vm, AutomatedPool
@@ -51,14 +53,17 @@ class PoolGetVm(BaseHandler, ABC):
             # Логика древних:
             if desktop_pool_type == 'AUTOMATED':
                 pool = await AutomatedPool.get(pool_id)
-
-                # Проверяем залочен ли pool. Если залочен, то ничего не делаем, так как любые другие действия с
-                # пулом требующие блокировки - в приоретете.
+                #
                 pool_lock = pool_task_manager.get_pool_lock(pool_id)
-                #if not pool_lock.lock.locked():
+                template_lock = pool_task_manager.get_template_lock(pool_id)
+                # Проверяем залочены ли локи. Если залочены, то ничего не делаем, так как любые другие действия с
+                # пулом требующие блокировки - в приоретете.
+                if not pool_lock.lock.locked() and template_lock.lock.locked():
+                    async with pool_task_manager.get_pool_lock(self.automated_pool_id):
+                        native_loop = asyncio.get_event_loop()
+                        await cancel_async_task(pool_lock.expand_pool_task)
+                        pool_lock.expand_pool_task = native_loop.create_task(pool.expand_pool_if_requred())
 
-
-                await pool.expand_pool_if_requred()
         vm_client = await VmHttpClient.create(controller_ip=controller_ip, vm_id=vm_id)
         info = await vm_client.info()
         # Проверяем включена ВМ и доступна ли для подключения.

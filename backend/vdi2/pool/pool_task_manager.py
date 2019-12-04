@@ -2,9 +2,6 @@ import asyncio
 
 from database import db, Status
 
-from pool.models import AutomatedPool
-from pool.models import Pool
-
 from common.utils import cancel_async_task
 
 # При старте VDI заполняем pool_object_dict (создаем PoolObject для каждого пула), заполняем
@@ -106,6 +103,8 @@ class PoolTaskManager:
 
     # PRIVATE METHODS
     async def _get_pools_data_from_db(self):
+        from pool.models import AutomatedPool
+        from pool.models import Pool
         auto_pools_data = await db.select([AutomatedPool.automated_pool_id, AutomatedPool.template_id]).\
             select_from(AutomatedPool.join(Pool)).where(Pool.status != Status.DELETING).gino.all()
         return auto_pools_data
