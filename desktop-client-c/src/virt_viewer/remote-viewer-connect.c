@@ -51,6 +51,8 @@ typedef struct
     GtkWidget *connect_spinner;
     GtkWidget *message_display_label;
 
+    GtkWidget *ldap_checkbutton;
+
     GtkResponseType dialog_window_response;
 
     gboolean response;
@@ -159,7 +161,8 @@ connect_button_clicked_cb(GtkButton *button G_GNUC_UNUSED, gpointer data)
             const gchar *port = gtk_entry_get_text(GTK_ENTRY(ci->port_entry));
             const gchar *user = gtk_entry_get_text(GTK_ENTRY(ci->login_entry));
             const gchar *password = gtk_entry_get_text(GTK_ENTRY(ci->password_entry));
-            set_vdi_credentials(user, password, ip, port);
+            gboolean is_ldap = gtk_toggle_button_get_active((GtkToggleButton *)ci->ldap_checkbutton);
+            set_vdi_credentials(user, password, ip, port, is_ldap);
 
             // clear message display
             gtk_label_set_text(GTK_LABEL(ci->message_display_label), " ");
@@ -271,16 +274,17 @@ make_label_small(GtkLabel* label)
 * @return TRUE if Connect or ENTER is pressed
 * @return FALSE if Cancel is pressed or dialog is closed
 */
+// todo: порт передавать как число, а не строку
 gboolean
 remote_viewer_connect_dialog(GtkWindow *main_window G_GNUC_UNUSED, gchar **uri, gchar **user, gchar **password,
-                             gchar **ip, gchar **port)
+                             gchar **ip, gchar **port, gboolean *is_ldap)
 {
 
     // set params save group
     const gchar *paramToFileGrpoup = opt_manual_mode ? "RemoteViewerConnectManual" : "RemoteViewerConnect";
 
     GtkWidget *window, *address_entry, *port_entry, *login_entry, *password_entry,
-            *connect_button/*, *cancel_button*/, *veil_image, *remember_checkbutton;
+            *connect_button/*, *cancel_button*/, *veil_image, *ldap_checkbutton, *remember_checkbutton;
     GtkRecentFilter *rfilter;
     GtkBuilder *builder;
     gboolean active;
@@ -348,6 +352,9 @@ remote_viewer_connect_dialog(GtkWindow *main_window G_GNUC_UNUSED, gchar **uri, 
         }
     }
 
+    // LDAP check button
+    ci.ldap_checkbutton = ldap_checkbutton = GTK_WIDGET(gtk_builder_get_object(builder, "ldap-button"));
+
     // Remember check button
     remember_checkbutton = GTK_WIDGET(gtk_builder_get_object(builder, "remember-button"));
 
@@ -361,8 +368,6 @@ remote_viewer_connect_dialog(GtkWindow *main_window G_GNUC_UNUSED, gchar **uri, 
     g_signal_connect_swapped(window, "delete-event",
                              G_CALLBACK(window_deleted_cb), &ci);
 
-   // g_signal_connect(entry, "activate",
-     //                G_CALLBACK(entry_activated_cb), &ci);
     g_signal_connect(address_entry, "changed", G_CALLBACK(entry_changed_cb), connect_button);
     g_signal_connect(address_entry, "icon-release", G_CALLBACK(entry_icon_release_cb), address_entry);
 
@@ -370,14 +375,6 @@ remote_viewer_connect_dialog(GtkWindow *main_window G_GNUC_UNUSED, gchar **uri, 
             G_CALLBACK(on_remember_checkbutton_clicked), remember_checkbutton);
 
     g_signal_connect(G_OBJECT(port_entry), "insert-text", G_CALLBACK(on_insert_text_event), NULL);
-    /*
-    g_signal_connect(recent, "selection-changed",
-                     G_CALLBACK(recent_selection_changed_dialog_cb), entry);
-    g_signal_connect(recent, "item-activated",
-                     G_CALLBACK(recent_item_activated_dialog_cb), &ci);
-    g_signal_connect(entry, "focus-in-event",
-                     G_CALLBACK(entry_focus_in_cb), recent);
-    */
 
     /* show and wait for response */
     gtk_window_set_position ((GtkWindow *)window, GTK_WIN_POS_CENTER);
@@ -393,6 +390,7 @@ remote_viewer_connect_dialog(GtkWindow *main_window G_GNUC_UNUSED, gchar **uri, 
         g_strstrip(*uri);
         *user = g_strdup(gtk_entry_get_text(GTK_ENTRY(login_entry)));
         *password = g_strdup(gtk_entry_get_text(GTK_ENTRY(password_entry)));
+        *is_ldap = gtk_toggle_button_get_active((GtkToggleButton *)ldap_checkbutton);
 
         // save data to ini file if required
         if(b_save_credentials_to_file){
