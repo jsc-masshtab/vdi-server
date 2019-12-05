@@ -212,39 +212,35 @@ async def fixt_create_static_pool(fixt_db):
     await vm_http_client.remove_vm()
 
 
-# @pytest.fixture
-# @async_generator
-# async def fixt_entitle_user_to_pool(fixt_create_static_pool):
-#
-#     pool_id = fixt_create_static_pool['id']
-#
-#     # entitle user to pool
-#     user_name = "admin"
-#     qu = '''
-#     mutation {
-#       entitleUsersToPool(pool_id: %i, entitled_users: ["%s"]) {
-#         ok
-#       }
-#     }
-#     ''' % (pool_id, user_name)
-#     res = await schema.exec(qu)
-#     print('test_res', res)
-#
-#     await yield_({
-#         'pool_id': pool_id,
-#         'ok': res['entitleUsersToPool']['ok']
-#     })
-#
-#     # remove entitlement
-#     qu = '''
-#     mutation {
-#     removeUserEntitlementsFromPool(pool_id: %i, entitled_users: ["%s"]
-#       free_assigned_vms: true
-#     ) {
-#     freed {
-#       id
-#     }
-#     }
-#     }
-#     ''' % (pool_id, user_name)
-#     res = await schema.exec(qu)
+@pytest.fixture
+@async_generator
+async def fixt_entitle_user_to_pool(fixt_create_static_pool):
+
+    pool_id = fixt_create_static_pool['id']
+
+    # entitle user to pool
+    user_name = "admin"
+    qu = '''
+    mutation {
+      entitleUsersToPool(pool_id: "%s", users: ["%s"]) {
+        ok
+      }
+    }
+    ''' % (pool_id, user_name)
+    res = await execute_scheme(pool_schema, qu)
+    print('test_res', res)
+
+    await yield_({
+        'id': pool_id,
+        'ok': res['entitleUsersToPool']['ok']
+    })
+
+    # remove entitlement
+    qu = '''
+    mutation {
+    removeUserEntitlementsFromPool(pool_id: "%s", users: ["%s"]) {
+        ok
+    }
+    }
+    ''' % (pool_id, user_name)
+    res = await execute_scheme(pool_schema, qu)
