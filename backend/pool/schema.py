@@ -487,7 +487,7 @@ class CreateAutomatedPoolMutation(graphene.Mutation, PoolValidator):
         max_size = graphene.Int(default_value=200)
         max_vm_amount = graphene.Int(default_value=1000)
         increase_step = graphene.Int(default_value=3)
-        max_amount_of_create_attempts = graphene.Int(default_value=2)
+        max_amount_of_create_attempts = graphene.Int(default_value=10)
         initial_size = graphene.Int(default_value=1)
         reserve_size = graphene.Int(default_value=0)
         total_size = graphene.Int(default_value=1)
