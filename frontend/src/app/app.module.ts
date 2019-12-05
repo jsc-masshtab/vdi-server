@@ -28,7 +28,7 @@ import { library } from '@fortawesome/fontawesome-svg-core';
 import { faDesktop, faDatabase, faBuilding, faLayerGroup, faPlusCircle, faSpinner, faServer, faCog, faChevronUp, faTimesCircle,
          faFolderOpen, faStar, faMinusCircle, faTv, faSyncAlt, faTrashAlt, faUsers, faMeh,
          faChartBar, faUser, faStopCircle, faPlayCircle, faPauseCircle, faEdit, faQuestionCircle, faCheckSquare,
-          faExclamationTriangle, faHeartbeat, faChevronCircleUp, faComment
+          faExclamationTriangle, faHeartbeat, faChevronCircleUp, faComment, faClipboardList, faNewspaper
         } from '@fortawesome/free-solid-svg-icons';
 /*  -----------------------------------   icons   --------------------------------------*/
 
@@ -46,6 +46,7 @@ import { MAT_DIALOG_DEFAULT_OPTIONS } from '@angular/material';
 import { onError } from 'apollo-link-error';
 import { InMemoryCache } from 'apollo-cache-inmemory';
 import { environment } from 'src/environments/environment';
+import { EventsModule } from './log/events/events.module';
 
 
 
@@ -75,7 +76,8 @@ import { environment } from 'src/environments/environment';
     TemplatesModule,
     VmsModule,
     ControllersModule,
-    UsersModule
+    UsersModule,
+    EventsModule
   ],
   entryComponents: [],
   providers:
@@ -103,7 +105,7 @@ export class AppModule {
     library.add(faDesktop, faDatabase, faLayerGroup, faPlusCircle, faMinusCircle, faSpinner, faServer, faCog, faChevronUp, faTimesCircle,
                 faFolderOpen, faStar, faTv, faSyncAlt, faBuilding, faTrashAlt, faUsers, faMeh, faChartBar, faUser,
                 faStopCircle, faPlayCircle, faPauseCircle, faEdit, faQuestionCircle, faCheckSquare, faExclamationTriangle, faHeartbeat,
-                faChevronCircleUp, faComment);
+                faChevronCircleUp, faComment, faClipboardList, faNewspaper);
 
     const url = environment.url;
 
@@ -124,6 +126,9 @@ export class AppModule {
           break;
         case 'users':
           urlKnock = `${url + 'users'}`;
+          break;
+        case 'events':
+          urlKnock = `${url + 'events'}`;
           break;
         default:
           urlKnock = `${url}`;

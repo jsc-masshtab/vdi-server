@@ -91,7 +91,6 @@ export class PoolsComponent extends DetailsMove implements OnInit, OnDestroy {
     this.getPoolsSub = this.service.getAllPools()
       .subscribe((data) => {
         this.pools = data;
-        console.log(this.service.paramsForGetPools.spin, 'data', data);
         this.waitService.setWait(false);
       });
   }
