@@ -115,6 +115,20 @@
             width: 30px;
             font-size: 18px;
         }
+
+        &.offset {
+            margin-left: 31px;
+            cursor: pointer;
+        }
+
+        &.add-offset {
+            margin-bottom: 10px;
+        }
+    }
+
+    mat-checkbox {
+        margin-right: 8px;
+        cursor: pointer;
     }
 
     

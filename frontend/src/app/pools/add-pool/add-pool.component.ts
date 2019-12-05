@@ -81,6 +81,7 @@ export class PoolAddComponent implements OnInit, OnDestroy {
   ];
 
   public checkValid: boolean = false;
+  private create_thin_clones: boolean = false;
 
   @ViewChild('selectNodeRef') selectNodeRef: ViewContainerRef;
   @ViewChild('selectDatapoolRef') selectDatapoolRef: ViewContainerRef;
@@ -97,7 +98,7 @@ export class PoolAddComponent implements OnInit, OnDestroy {
 
   private createChooseTypeForm(): void {
     this.chooseTypeForm = this.fb.group({
-      type: 'Статический'
+      type: 'Автоматический'
     });
   }
 
@@ -123,7 +124,8 @@ export class PoolAddComponent implements OnInit, OnDestroy {
   private createStaticPoolInit(): void {
     this.createPoolForm = this.fb.group({
       verbose_name: ['', [Validators.required,  Validators.pattern(/^[а-яА-ЯёЁa-zA-Z0-9]+[а-яА-ЯёЁa-zA-Z0-9.-_+ ]*$/)]],
-      vm_ids_list: [[], Validators.required]
+      vm_ids_list: [[], Validators.required],
+      create_thin_clones: this.create_thin_clones
     });
     this.finishPoolView = {};
     this.getClusters();
@@ -355,6 +357,14 @@ export class PoolAddComponent implements OnInit, OnDestroy {
           type: 'string'
         },
         {
+          title: 'Толстые клоны',
+          property: 'create_thin_clones',
+          type: {
+            typeDepend: 'boolean',
+            propertyDepend: ['Да', 'Нет']
+          }
+        },
+        {
           title: 'Кластер',
           property: 'cluster_name',
           type: 'string'
@@ -371,6 +381,10 @@ export class PoolAddComponent implements OnInit, OnDestroy {
         }
       ];
     }
+  }
+
+  public changeCheck(e) {
+    this.create_thin_clones = e.checked;
   }
 
   private totalSizeValidator() {
@@ -417,6 +431,7 @@ export class PoolAddComponent implements OnInit, OnDestroy {
     if (this.chooseTypeForm.value.type === 'Статический') {
       this.createStaticPoolInit();
     }
+    console.log(this.createPoolForm);
   }
 
   private actionFinishSee(): void  {
@@ -431,6 +446,10 @@ export class PoolAddComponent implements OnInit, OnDestroy {
       this.finishPoolView.reserve_size = formValue.reserve_size;
       this.finishPoolView.total_size = formValue.size.total_size;
       this.finishPoolView.vm_name_template = formValue.vm_name_template;
+    }
+
+    if (this.chooseTypeForm.value.type === 'Статический') {
+      this.finishPoolView.create_thin_clones = formValue.create_thin_clones;
     }
     this.finishPoolView.verbose_name = formValue.verbose_name;
     this.finishPoolView.type = this.chooseTypeForm.value.type;
@@ -462,9 +481,11 @@ export class PoolAddComponent implements OnInit, OnDestroy {
     }
 
     if (this.chooseTypeForm.value.type === 'Статический') {
+      console.log(formValue, this.finishPoolView);
       this.addPoolService.createStaticPool(
                               formValue.verbose_name,
-                              formValue.vm_ids_list)
+                              formValue.vm_ids_list,
+                              formValue.create_thin_clones)
         .subscribe(() => {
           this.dialogRef.close();
           this.poolsService.paramsForGetPools.spin = true;

@@ -161,11 +161,11 @@ export class AddPoolService {
         });
     }
 
-    public createStaticPool(verbose_name: string,  vm_ids: string[]) {
+    public createStaticPool(verbose_name: string,  vm_ids: string[], create_thin_clones: boolean) {
         return this.service.mutate<any>({
             mutation: gql`
-                        mutation pools($verbose_name: String!,$vm_ids: [UUID]!) {
-                            addStaticPool(verbose_name: $verbose_name, vm_ids: $vm_ids)
+                        mutation pools($verbose_name: String!,$vm_ids: [UUID]!,$create_thin_clones: Boolean) {
+                            addStaticPool(verbose_name: $verbose_name, vm_ids: $vm_ids,create_thin_clones:$create_thin_clones)
                                 {
                                     ok
                                 }
@@ -174,7 +174,8 @@ export class AddPoolService {
             variables: {
                 method: 'POST',
                 verbose_name,
-                vm_ids
+                vm_ids,
+                create_thin_clones
             }
         });
     }

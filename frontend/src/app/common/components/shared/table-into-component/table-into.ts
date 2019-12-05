@@ -17,4 +17,8 @@ export class TableIntoComponent  {
     this.action.emit(method);
   }
 
+  ngOnInit() {
+    console.log(this.item, this.collection);
+  }
+
 }
