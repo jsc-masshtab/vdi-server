@@ -39,8 +39,8 @@
             </ng-container>
 
             <ng-container *ngIf="obj.type.typeDepend === 'boolean'">
-              <ng-container *ngIf="item[obj.property]"><span><{{ obj.type.propertyDepend[0] }}</span></ng-container>
-              <ng-container *ngIf="!item[obj.property]"><span>{{ obj.type.propertyDepend[1] }}</span></ng-container>
+              <ng-container *ngIf="item[obj.property]">{{ obj.type.propertyDepend[0] }}</ng-container>
+              <ng-container *ngIf="!item[obj.property]">{{ obj.type.propertyDepend[1] }}</ng-container>
             </ng-container>
 
           </ng-container>
