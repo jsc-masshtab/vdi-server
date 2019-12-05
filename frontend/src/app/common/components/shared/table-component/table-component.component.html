@@ -5,7 +5,7 @@
 
     <header>
       <ng-container *ngFor="let obj of collection">
-        <div class="table-header-part"  [class.header-start]="obj.class === 'name-start'"  (click)="sortList(obj)" [title]="titleSort" (mouseenter)="setSortName(obj)" [class.cursorTrue]="obj.sort !== undefined">
+        <div class="table-header-part"  [class.header-start]="obj.class === 'name-start'" [class.name-end]="obj.class == 'name-end'" (click)="sortList(obj)" [title]="titleSort" (mouseenter)="setSortName(obj)" [class.cursorTrue]="obj.sort !== undefined">
           <span>{{obj.title}}</span>
           <span class="icon-sort" *ngIf="orderingSort === obj.property">
             <fa-icon [icon]="['fas','chevron-circle-up']" size="s" rotate="180" *ngIf="!obj.sort"></fa-icon>
@@ -20,16 +20,22 @@
         <div class="table-area-object" [class.cursorTrue]="cursor" (click)="clickRow(item)" tabindex="-1" 
           [class.status-fail]="item?.status === 'FAILED' || item?.status === 'FAIL_CREATING' || item?.status === 'FAIL_DELETING' || item?.status === 'ERROR'"
           [class.status-halt]="item?.status === 'HALTING' || item?.status === 'CREATING' || item?.status === 'DELETING' || item?.status === 'HERMIT' || item?.status === 'SERVICE' || item?.status === 'PARTIAL'">   <!--строка-->
-          <div class="table-area-property" *ngFor="let obj of collection" [class.name-start]="obj.class == 'name-start'"> <!--столбец-->
+          <div class="table-area-property" *ngFor="let obj of collection" [class.name-start]="obj.class == 'name-start'" [class.name-end]="obj.class == 'name-end'"> <!--столбец-->
 
   <!-- icons -->
-            <span [class.icon-group]="entity === 'vm'" *ngIf="obj.icon">
+            <span [class.icon-group]="entity === 'vm' || entity === 'events'" *ngIf="obj.icon">
               <fa-icon [icon]="['fas',obj.icon]" size="xs"></fa-icon>
               <ng-container *ngIf="entity === 'vm' && item?.state && obj.property === 'verbose_name'"> <!-- статус вм -->
-                <fa-icon [icon]="['fas', 'play-circle']" *ngIf="item.state === 'ON'" class="status on" title="Включена"></fa-icon>
-                <fa-icon [icon]="['fas', 'stop-circle']" *ngIf="item.state === 'OFF'" class="status off" title="Выключена"></fa-icon>
-                <fa-icon [icon]="['fas', 'pause-circle']" *ngIf="item.state === 'SUSPENDED'" class="status suspended" title="Приостановлена"></fa-icon>
-                <fa-icon [icon]="['fas', 'question-circle']" *ngIf="item.state === 'UNDEFINED'" class="status undefined" title="Не найдено"></fa-icon>
+                <fa-icon [icon]="['fas', 'play-circle']" *ngIf="item.state === 'ON'" class="extra-icon on" title="Включена"></fa-icon>
+                <fa-icon [icon]="['fas', 'stop-circle']" *ngIf="item.state === 'OFF'" class="extra-icon off" title="Выключена"></fa-icon>
+                <fa-icon [icon]="['fas', 'pause-circle']" *ngIf="item.state === 'SUSPENDED'" class="extra-icon suspended" title="Приостановлена"></fa-icon>
+                <fa-icon [icon]="['fas', 'question-circle']" *ngIf="item.state === 'UNDEFINED'" class="extra-icon undefined" title="Не найдено"></fa-icon>
+              </ng-container>
+
+              <ng-container *ngIf="entity === 'events' && obj.property === 'message'"> <!-- события -->
+                <fa-icon [icon]="['fas', 'exclamation-triangle']" *ngIf="item.event_type === 1" class="extra-icon" [style.color]="'rgb(231, 186, 8)'" title="Предупреждение"></fa-icon>
+                <fa-icon [icon]="['fas', 'times-circle']" *ngIf="item.event_type === 2"  class="extra-icon" [style.color]="'rgb(208, 61, 61)'" title="Ошибка"></fa-icon>
+                <fa-icon [icon]="['fas', 'newspaper']" *ngIf="item.event_type === 0"  class="extra-icon" [style.color]="'write'" title="Инфо"></fa-icon>
               </ng-container>
             </span>
 
@@ -71,7 +77,7 @@
                   </ng-container>
 
                   <ng-container *ngIf="obj.type === 'time'">
-                    <ng-container>{{ moment('obj.property').format('yyyy-MM-dd HH:mm:ss.SSS')  }}</ng-container>
+                    <ng-container>{{ moment(item[obj.property]).format('DD.MM.YYYY HH:mm:ss')  }}</ng-container>
                   </ng-container>
 
               </ng-container>

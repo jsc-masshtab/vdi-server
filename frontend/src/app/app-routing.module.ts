@@ -15,6 +15,7 @@ import { ClusterDetailsComponent } from './resourses/clusters/cluster-details/cl
 import { TemplatesComponent } from './resourses/templates/all-templates/templates.component';
 import { UsersComponent } from './settings/users/all-users/users.component';
 import { VmDetailsComponent } from './resourses/vms/vms-details/vm-details.component';
+import { EventsComponent } from './log/events/all-events/events.component';
 
 const routes: Routes = [
   {
@@ -39,6 +40,10 @@ const routes: Routes = [
   {
     path: 'settings/users',
     component: UsersComponent
+  },
+  {
+    path: 'log/events',
+    component: EventsComponent
   },
   {
     path: 'resourses/clusters',

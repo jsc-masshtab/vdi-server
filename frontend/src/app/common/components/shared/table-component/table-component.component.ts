@@ -66,7 +66,6 @@ export class TableComponentComponent implements OnInit {
     } else {
       this.sortListNow.emit({nameSort: activeEl.property, spin: true });
     }
-    console.log(activeEl.property);
   }
 
   public setSortName(activeEl: ICollection) {

@@ -1,0 +1,21 @@
+
+
+<div class="control-panel">
+    
+    <div class="crumb">
+        <fa-icon [icon]="['fas','comment']"></fa-icon>
+        <span class="crumb-name">События</span>
+    </div>
+
+    <button (click)="getEvents()" class="btn-refresh" title="Обновить">
+        <fa-icon [icon]="['fas','sync-alt']"></fa-icon>
+    </button>
+
+</div>
+
+<div class="components-info">
+    <div class="component-list">
+        <vdi-table-component [data]="events" [collection]="collection" entity="events"></vdi-table-component>
+    </div>
+</div>
+
