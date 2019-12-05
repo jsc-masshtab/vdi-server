@@ -65,6 +65,10 @@ class VmHttpClient(VeilHttpClient):
                     thin=create_thin_clones)
         return await self.fetch_with_response(url=url, method='POST', body=body)
 
+    async def remove_vm(self):
+        url = self.url + 'remove/'
+        await self.fetch(url=url, method='POST', body=dict(full=True))
+
     async def fetch_all_vms_list(self, node_id: str = None, ordering: str = None, reversed_order: bool = None):
 
         url = "http://{}/api/domains/?".format(self.controller_ip)
@@ -99,5 +103,6 @@ class VmHttpClient(VeilHttpClient):
     async def fetch_templates_list(self, node_id: str = None, ordering: str = None, reversed_order: bool = None):
         """Fetch lists of templates"""
         all_vms_list = await self.fetch_all_vms_list(node_id, ordering, reversed_order)
+        print('all_vms_list', all_vms_list)
         vms_list = [vm for vm in all_vms_list if vm['template']]
         return vms_list

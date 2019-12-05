@@ -3,8 +3,8 @@ import asyncio
 
 from controller.schema import controller_schema
 
-from tests.utils import execute_scheme
-from tests.fixtures import fixt_db
+from utils import execute_scheme
+from fixtures import fixt_db
 
 
 @pytest.mark.asyncio
