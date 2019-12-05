@@ -9,9 +9,7 @@ from sqlalchemy import Enum as AlchemyEnum
 
 from database import db, Status, AbstractSortableStatusModel
 from user.models import User
-
-# TODO: proper exceptions
-# TODO: events
+from event.models import Event
 
 
 class AuthenticationDirectory(db.Model, AbstractSortableStatusModel):
@@ -82,6 +80,7 @@ class AuthenticationDirectory(db.Model, AbstractSortableStatusModel):
             except ldap.INVALID_CREDENTIALS:
                 return True
             except ldap.SERVER_DOWN:
+                await Event.create_warning('Auth: LDAP server {} is down.'.format(self.directory_url))
                 return False
             return True
         return False
@@ -171,12 +170,12 @@ class AuthenticationDirectory(db.Model, AbstractSortableStatusModel):
         :return: объект пользователя, флаг создания пользователя
         """
         if not isinstance(username, str):
-            raise AssertionError
+            raise AssertionError('Username must be a string.')
 
         username = username.lower()
         user = await User.get_object(extra_field_name='username', extra_field_value=username, include_inactive=True)
         if not user:
-            user = await User.create_user(username)
+            user = await User.soft_create(username)
             created = True
         else:
             await user.update(is_active=True).apply()
@@ -195,7 +194,7 @@ class AuthenticationDirectory(db.Model, AbstractSortableStatusModel):
         if not authentication_directory:
             # Если для доменного имени службы каталогов не создано записей в БД,
             # то авторизоваться невозможно.
-            raise AssertionError('No active directory controllers.')
+            raise AssertionError('No authentication directory controllers.')
 
         account_name, domain_name = cls._extract_domain_from_username(username)
         user, created = await cls._get_user(account_name)
@@ -210,19 +209,19 @@ class AuthenticationDirectory(db.Model, AbstractSortableStatusModel):
             ldap_server.set_option(ldap.OPT_REFERRALS, 0)
             ldap_server.set_option(ldap.OPT_NETWORK_TIMEOUT, 10)
             ldap_server.simple_bind_s(username, password)
-        except ldap.INVALID_CREDENTIALS as E:
+        except ldap.INVALID_CREDENTIALS:
             # Если пользователь не проходит аутентификацию в службе каталогов с предоставленными
             # данными, то аутентификация в системе считается неуспешной и создается событие с
             # сообщением о неуспешности.
             # self._create_user_auth_failed_event(user)
             success = False
-            raise AssertionError('Invalid credeintials')
+            raise AssertionError('Invalid credeintials (ldap).')
         except ldap.SERVER_DOWN:
             # Если нет связи с сервером службы каталогов, то возвращаем ошибку о недоступности
             # сервера, так как не можем сделать вывод о правильности предоставленных данных.
             # self.server_down = True
             success = False
-            raise AssertionError('Server down')
+            raise AssertionError('Server down (ldap).')
         else:
             success = True
         finally:
