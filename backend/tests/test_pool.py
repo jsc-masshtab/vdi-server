@@ -7,8 +7,8 @@ import uuid
 
 from pool.schema import pool_schema
 
-from utils import execute_scheme
-from fixtures import fixt_db, fixt_create_automated_pool, fixt_create_static_pool, fixt_entitle_user_to_pool
+from tests.utils import execute_scheme
+from tests.fixtures import fixt_db, fixt_create_automated_pool, fixt_create_static_pool, fixt_entitle_user_to_pool
 
 # ----------------------------------------------
 # Automated pool

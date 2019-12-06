@@ -31,7 +31,7 @@ async def test_request_clusters(fixt_db):
 
 
 @pytest.mark.asyncio
-async def test_request_node(fixt_db):
+async def test_request_nodes(fixt_db):
 
     qu = """
     {
@@ -73,3 +73,23 @@ async def test_request_node(fixt_db):
         executed = await execute_scheme(resources_schema, qu)
         print('___executed', executed)
         assert node['verbose_name'] == executed['node']['verbose_name']
+
+
+@pytest.mark.asyncio
+async def test_request_datapools(fixt_db):
+    qu = """
+    {
+        datapools {     
+            used_space      
+            free_space      
+            size      
+            status      
+            type      
+            vdisk_count      
+            file_count      
+            iso_count      
+            verbose_name    
+        }   
+    }
+    """
+    executed = await execute_scheme(resources_schema, qu)
