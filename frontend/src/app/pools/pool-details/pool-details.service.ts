@@ -68,6 +68,8 @@ export class PoolDetailsService {
                                     template {
                                         verbose_name
                                     }
+                                    create_thin_clones
+                                    keep_vms_on
                                 }
                             }`,
                 variables: {
@@ -138,7 +140,7 @@ export class PoolDetailsService {
     public removeVMStaticPool(pool_id: number, vm_ids: []) {
         return this.service.mutate<any>({
             mutation: gql`
-                            mutation RemoveVms($pool_id: Int!,$vm_ids: [ID]!) {
+                            mutation pools($pool_id: ID!,$vm_ids: [ID]!) {
                                 removeVmsFromStaticPool(pool_id: $pool_id,vm_ids: $vm_ids) {
                                     ok
                                 }
@@ -247,12 +249,12 @@ export class PoolDetailsService {
         });
     }
 
-    public updatePool({pool_id, pool_type }, {verbose_name, reserve_size, total_size, vm_name_template}) {
+    public updatePool({pool_id, pool_type }, {verbose_name, reserve_size, total_size, vm_name_template, create_thin_clones, keep_vms_on}) {
         if (pool_type === 'static') {
             return this.service.mutate<any>({
                 mutation: gql`
                                 mutation pools($pool_id: UUID!,$verbose_name: String
-                                     $keep_vms_on: Boolean ) {
+                                     $keep_vms_on: Boolean) {
                                     updateStaticPool(pool_id: $pool_id, verbose_name: $verbose_name,
                                      keep_vms_on: $keep_vms_on ) {
                                         ok
@@ -263,7 +265,7 @@ export class PoolDetailsService {
                     method: 'POST',
                     pool_id,
                     verbose_name,
-                    keep_vms_on: false // сделать у вм
+                    keep_vms_on
                 }
             });
         }
@@ -273,10 +275,11 @@ export class PoolDetailsService {
                 mutation: gql`
                                 mutation pools($pool_id: UUID!,$verbose_name: String,
                                     $reserve_size: Int , $total_size: Int , $vm_name_template: String ,
-                                     $keep_vms_on: Boolean ) {
+                                     $keep_vms_on: Boolean, $create_thin_clones: Boolean ) {
                                     updateDynamicPool(pool_id: $pool_id, verbose_name: $verbose_name,
                                         reserve_size: $reserve_size, total_size: $total_size,
-                                        vm_name_template: $vm_name_template, keep_vms_on: $keep_vms_on ) {
+                                        vm_name_template: $vm_name_template, keep_vms_on: $keep_vms_on,
+                                         create_thin_clones: $create_thin_clones ) {
                                         ok
                                     }
                                 }
@@ -288,7 +291,8 @@ export class PoolDetailsService {
                     reserve_size,
                     total_size,
                     vm_name_template,
-                    keep_vms_on: false
+                    keep_vms_on,
+                    create_thin_clones
                 }
             });
         }

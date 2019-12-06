@@ -110,7 +110,7 @@
         margin-right: 5px;
     }
 
-    fa-icon.status {
+    fa-icon.extra-icon {
         position: absolute;
         bottom: -4px;
         left: 16px;
@@ -132,11 +132,15 @@
         }
     }
 
-    // частные случаи столбцаtable-header-part
+    // частные случаи столбца
 
     .name-start {
         justify-content: flex-start;
         min-width: 30%;
+    }
+
+    .name-end {
+        max-width: 200px;
     }
 
     .header-start {

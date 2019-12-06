@@ -57,4 +57,18 @@
     <fa-icon [icon]="['fas','users']" size="s" [style.color]="'rgb(255, 235, 205)'"></fa-icon>
     <span>Пользователи</span>
   </a>
+
+  <a class="top-menu-item item-hat" (click)="logToggle()"  tabindex="0" (keydown.enter)="logToggle()" [@fadeInOut]>
+    <fa-icon [icon]="['fas','clipboard-list']" size="s" [style.color]="'rgb(94, 185, 161)'"></fa-icon>
+    <span>Журнал</span>
+    <span class="icon-arrow">
+      <fa-icon [icon]="['fas','chevron-up']" size="xs" *ngIf="toggleLog"></fa-icon>
+      <fa-icon [icon]="['fas','chevron-up']" size="xs" rotate="180" *ngIf="!toggleLog"></fa-icon>
+    </span>
+  </a>
+
+  <a class="top-menu-item item-tree" [@fadeInOut] *ngIf="toggleLog" [class.clicked-link]="clickedManage =='events'" (click)="routeTo('log/events')" (keydown.enter)="routeTo('log/events')" [class.clicked-link]="clickedManage =='events'"  tabindex="0">
+    <fa-icon [icon]="['fas','comment']" size="s" [style.color]="'rgb(94, 185, 161)'"></fa-icon>
+    <span>События</span>
+  </a>
 </div>

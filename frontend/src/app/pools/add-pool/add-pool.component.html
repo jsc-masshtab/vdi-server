@@ -17,15 +17,22 @@
   </ng-template>
 
   <div class="form-fields" [formGroup]="chooseTypeForm" *ngIf="step === 'chooseType'" [style.paddingBottom]="'20px'" [style.paddingLeft]="'20px'">
+
     <label class="field-inline">
       <fa-icon [icon]="['fas','desktop']" size="m" class="icon-pool"></fa-icon>
       <input type="radio" formControlName="type" value="Статический">
       <p class="radio-text">Статический</p>
     </label>
-    <label class="field-inline">
+
+    <label class="field-inline add-offset">
       <fa-icon [icon]="['fas','tv']" size="m"  class="icon-pool"></fa-icon>
       <input type="radio" formControlName="type" value="Автоматический">
       <p class="radio-text">Автоматический</p>
+    </label>
+
+    <label class="field-inline offset" *ngIf="chooseTypeForm.value.type === 'Автоматический'" [@animForm]>
+      <mat-checkbox [color]="'warn'" name="create_thin_clones" (change)="changeCheck($event)" [checked]="create_thin_clones"></mat-checkbox>
+      <p>Создать тонкие клоны</p>
     </label>
   </div>
   <div class="form-actions"  *ngIf="step === 'chooseType'">
@@ -54,7 +61,7 @@
       <ng-container *ngIf="createPoolForm.hasError('required', 'controller_ip') && checkValid"><ng-container *ngTemplateOutlet="errorTemp"></ng-container></ng-container>
     </label>
 
-    <label class="field" *ngIf="chooseTypeForm.value.type === 'Автоматический' && ipController">
+    <label class="field" *ngIf="chooseTypeForm.value.type === 'Автоматический' && ipController" [@animForm]>
       <mat-form-field>
         <mat-label  *ngIf="pending.templates">Загрузка ...</mat-label>
         <mat-label  *ngIf="templates?.length && !pending.templates">Выберите шаблон ВМ</mat-label>
@@ -68,7 +75,7 @@
       <ng-container *ngIf="createPoolForm.hasError('required', 'template_id') && checkValid"><ng-container *ngTemplateOutlet="errorTemp"></ng-container></ng-container>
     </label>
 
-    <label class="field" *ngIf="chooseTypeForm.value.type === 'Автоматический' && ipController || chooseTypeForm.value.type === 'Статический'">
+    <label class="field" *ngIf="chooseTypeForm.value.type === 'Автоматический' && ipController || chooseTypeForm.value.type === 'Статический'" [@animForm]>
       <mat-form-field>
         <mat-label  *ngIf="pending.clusters">Загрузка ...</mat-label>
         <mat-label  *ngIf="clusters?.length && !pending.clusters">Выберите кластер</mat-label>
@@ -82,7 +89,7 @@
       <ng-container *ngIf="createPoolForm.hasError('required', 'cluster_id') && checkValid"><ng-container *ngTemplateOutlet="errorTemp"></ng-container></ng-container>
     </label>
 
-    <label class="field" *ngIf="idCluster">
+    <label class="field" *ngIf="idCluster" [@animForm]>
       <mat-form-field>
         <mat-label  *ngIf="pending.nodes">Загрузка ...</mat-label>
         <mat-label  *ngIf="nodes?.length && !pending.nodes">Выберите сервер</mat-label>
@@ -96,7 +103,7 @@
       <ng-container *ngIf="createPoolForm.hasError('required', 'node_id') && checkValid"><ng-container *ngTemplateOutlet="errorTemp"></ng-container></ng-container>
     </label>
 
-    <label class="field" *ngIf="idNode">
+    <label class="field" *ngIf="idNode" [@animForm]>
       <mat-form-field>
         <mat-label *ngIf="pending.datapools">Загрузка ...</mat-label>
         <mat-label *ngIf="datapools?.length && !pending.datapools">Выберите пул данных</mat-label>
@@ -110,7 +117,7 @@
       <ng-container *ngIf="createPoolForm.hasError('required', 'datapool_id') && checkValid"><ng-container *ngTemplateOutlet="errorTemp"></ng-container></ng-container>
     </label>
 
-    <label class="field" *ngIf="idDatapool && chooseTypeForm.value.type === 'Статический'">
+    <label class="field" *ngIf="idDatapool && chooseTypeForm.value.type === 'Статический'" [@animForm]>
       <mat-form-field>
         <mat-label *ngIf="pending.vms">Загрузка ...</mat-label>
         <mat-label *ngIf="vms?.length && !pending.vms">Выберите свободные ВМ</mat-label>

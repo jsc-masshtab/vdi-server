@@ -1,3 +1,4 @@
+import { WaitService } from './../../common/components/single/wait/wait.service';
 
 import { AddPoolService } from './add-pool.service';
 
@@ -81,6 +82,7 @@ export class PoolAddComponent implements OnInit, OnDestroy {
   ];
 
   public checkValid: boolean = false;
+  private create_thin_clones: boolean = false;
 
   @ViewChild('selectNodeRef') selectNodeRef: ViewContainerRef;
   @ViewChild('selectDatapoolRef') selectDatapoolRef: ViewContainerRef;
@@ -89,7 +91,8 @@ export class PoolAddComponent implements OnInit, OnDestroy {
   constructor(private poolsService: PoolsService,
               private addPoolService: AddPoolService,
               private dialogRef: MatDialogRef<PoolAddComponent>,
-              private fb: FormBuilder) {}
+              private fb: FormBuilder,
+              private waitService: WaitService) {}
 
   ngOnInit() {
     this.createChooseTypeForm();
@@ -114,8 +117,8 @@ export class PoolAddComponent implements OnInit, OnDestroy {
       size: this.fb.group({
         initial_size: ['', [Validators.required, Validators.max(200), Validators.min(1)]],
         total_size: ['', [Validators.required, Validators.max(1000), Validators.min(1)]],
-      }, {validators: this.totalSizeValidator()})
-    });
+      }, {validators: this.totalSizeValidator()}),
+      create_thin_clones: this.create_thin_clones});
     this.finishPoolView = {};
     this.getControllers();
   }
@@ -302,6 +305,14 @@ export class PoolAddComponent implements OnInit, OnDestroy {
           type: 'string'
         },
         {
+          title: 'Тонкие клоны',
+          property: 'create_thin_clones',
+          type: {
+            typeDepend: 'boolean',
+            propertyDepend: ['Создаются', 'Не создаются']
+          }
+        },
+        {
           title: 'Шаблон',
           property: 'template_name',
           type: 'string'
@@ -373,6 +384,10 @@ export class PoolAddComponent implements OnInit, OnDestroy {
     }
   }
 
+  public changeCheck(e) {
+    this.create_thin_clones = e.checked;
+  }
+
   private totalSizeValidator() {
     return (group: FormGroup) => {
       if (group.controls['total_size'].value < group.controls['initial_size'].value) {
@@ -431,6 +446,7 @@ export class PoolAddComponent implements OnInit, OnDestroy {
       this.finishPoolView.reserve_size = formValue.reserve_size;
       this.finishPoolView.total_size = formValue.size.total_size;
       this.finishPoolView.vm_name_template = formValue.vm_name_template;
+      this.finishPoolView.create_thin_clones = formValue.create_thin_clones;
     }
     this.finishPoolView.verbose_name = formValue.verbose_name;
     this.finishPoolView.type = this.chooseTypeForm.value.type;
@@ -442,6 +458,7 @@ export class PoolAddComponent implements OnInit, OnDestroy {
 
   private actionFinishOk(): void  {
     const formValue: Partial<IFinishPoolForm> = this.createPoolForm.value;
+    this.waitService.setWait(true);
     if (this.chooseTypeForm.value.type === 'Автоматический') {
       this.addPoolService.createDinamicPool(
                               formValue.verbose_name,
@@ -453,7 +470,8 @@ export class PoolAddComponent implements OnInit, OnDestroy {
                               formValue.reserve_size,
                               formValue.size.total_size,
                               formValue.vm_name_template,
-                              formValue.controller_ip)
+                              formValue.controller_ip,
+                              formValue.create_thin_clones)
         .subscribe(() => {
           this.dialogRef.close();
           this.poolsService.paramsForGetPools.spin = true;
