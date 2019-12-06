@@ -2,13 +2,14 @@ import pytest
 
 from graphene.test import Client
 
-from utils import execute_scheme
-from fixtures import fixt_db
+from tests.utils import execute_scheme
+from tests.fixtures import fixt_db
 
 from controller_resources.schema import resources_schema
 
 
 @pytest.mark.asyncio
+@pytest.mark.resources_requests
 async def test_request_clusters(fixt_db):
 
     qu = """
@@ -31,6 +32,7 @@ async def test_request_clusters(fixt_db):
 
 
 @pytest.mark.asyncio
+@pytest.mark.resources_requests
 async def test_request_nodes(fixt_db):
 
     qu = """
@@ -76,6 +78,7 @@ async def test_request_nodes(fixt_db):
 
 
 @pytest.mark.asyncio
+@pytest.mark.resources_requests
 async def test_request_datapools(fixt_db):
     qu = """
     {

@@ -8,10 +8,10 @@ from tornado.testing import AsyncHTTPTestCase, gen_test
 from resources_monitoring.handlers import VdiFrontWsHandler
 
 
+@pytest.mark.websokets
 class TestWebSockets(AsyncHTTPTestCase):
     def get_app(self):
-        # Required override for AsyncHTTPTestCase, sets up a dummy
-        # webserver for this test.
+        # dummy application
         app = tornado.web.Application([
             (r'/subscriptions/?', VdiFrontWsHandler)
         ])

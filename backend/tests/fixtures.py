@@ -16,7 +16,7 @@ from vm.models import Vm
 
 from pool.schema import pool_schema
 
-from utils import execute_scheme
+from tests.utils import execute_scheme
 
 from resources_monitoring.resources_monitor_manager import resources_monitor_manager
 
@@ -49,6 +49,7 @@ async def get_resources_pool_test():
 
         for node in nodes:
             if node['status'] == 'ACTIVE':
+                print('active node found')
                 # check if node has template
                 try:
                     template_id = next(template['id'] for template in templates
