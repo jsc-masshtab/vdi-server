@@ -122,7 +122,8 @@ export class AddPoolService {
 
     public createDinamicPool(verbose_name: string, template_id: string, cluster_id: string,
                              node_id: string, datapool_id: string, initial_size: number,
-                             reserve_size: number, total_size: number, vm_name_template: string, controller_ip: string) {
+                             reserve_size: number, total_size: number, vm_name_template: string, controller_ip: string,
+                             create_thin_clones: boolean) {
 
         return this.service.mutate<any>({
             mutation: gql`
@@ -131,14 +132,14 @@ export class AddPoolService {
                                         $datapool_id: UUID!,$initial_size: Int,
                                         $reserve_size: Int,$total_size: Int,
                                         $vm_name_template: String,
-                                        $controller_ip: String!)
+                                        $controller_ip: String!,$create_thin_clones: Boolean)
                                 {
                                 addDynamicPool(verbose_name: $verbose_name, template_id: $template_id,
                                         cluster_id: $cluster_id,node_id: $node_id,
                                         datapool_id: $datapool_id,initial_size: $initial_size,
                                         reserve_size: $reserve_size,total_size:$total_size,
                                         vm_name_template: $vm_name_template,
-                                        controller_ip: $controller_ip
+                                        controller_ip: $controller_ip,create_thin_clones:$create_thin_clones
                                         )
                                         {
                                             ok
@@ -156,16 +157,17 @@ export class AddPoolService {
                 reserve_size,
                 total_size,
                 vm_name_template,
-                controller_ip
+                controller_ip,
+                create_thin_clones
             }
         });
     }
 
-    public createStaticPool(verbose_name: string,  vm_ids: string[], create_thin_clones: boolean) {
+    public createStaticPool(verbose_name: string,  vm_ids: string[]) {
         return this.service.mutate<any>({
             mutation: gql`
-                        mutation pools($verbose_name: String!,$vm_ids: [UUID]!,$create_thin_clones: Boolean) {
-                            addStaticPool(verbose_name: $verbose_name, vm_ids: $vm_ids,create_thin_clones:$create_thin_clones)
+                        mutation pools($verbose_name: String!,$vm_ids: [UUID]!) {
+                            addStaticPool(verbose_name: $verbose_name, vm_ids: $vm_ids)
                                 {
                                     ok
                                 }
@@ -174,8 +176,7 @@ export class AddPoolService {
             variables: {
                 method: 'POST',
                 verbose_name,
-                vm_ids,
-                create_thin_clones
+                vm_ids
             }
         });
     }

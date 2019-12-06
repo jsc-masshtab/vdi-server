@@ -118,11 +118,14 @@
 
         &.offset {
             margin-left: 31px;
-            cursor: pointer;
         }
 
         &.add-offset {
             margin-bottom: 10px;
+        }
+
+        p {
+            cursor: pointer;
         }
     }
 

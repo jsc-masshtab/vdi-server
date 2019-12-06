@@ -1,3 +1,4 @@
+import { WaitService } from './../../common/components/single/wait/wait.service';
 
 import { AddPoolService } from './add-pool.service';
 
@@ -90,7 +91,8 @@ export class PoolAddComponent implements OnInit, OnDestroy {
   constructor(private poolsService: PoolsService,
               private addPoolService: AddPoolService,
               private dialogRef: MatDialogRef<PoolAddComponent>,
-              private fb: FormBuilder) {}
+              private fb: FormBuilder,
+              private waitService: WaitService) {}
 
   ngOnInit() {
     this.createChooseTypeForm();
@@ -98,7 +100,7 @@ export class PoolAddComponent implements OnInit, OnDestroy {
 
   private createChooseTypeForm(): void {
     this.chooseTypeForm = this.fb.group({
-      type: 'Автоматический'
+      type: 'Статический'
     });
   }
 
@@ -115,8 +117,8 @@ export class PoolAddComponent implements OnInit, OnDestroy {
       size: this.fb.group({
         initial_size: ['', [Validators.required, Validators.max(200), Validators.min(1)]],
         total_size: ['', [Validators.required, Validators.max(1000), Validators.min(1)]],
-      }, {validators: this.totalSizeValidator()})
-    });
+      }, {validators: this.totalSizeValidator()}),
+      create_thin_clones: this.create_thin_clones});
     this.finishPoolView = {};
     this.getControllers();
   }
@@ -124,8 +126,7 @@ export class PoolAddComponent implements OnInit, OnDestroy {
   private createStaticPoolInit(): void {
     this.createPoolForm = this.fb.group({
       verbose_name: ['', [Validators.required,  Validators.pattern(/^[а-яА-ЯёЁa-zA-Z0-9]+[а-яА-ЯёЁa-zA-Z0-9.-_+ ]*$/)]],
-      vm_ids_list: [[], Validators.required],
-      create_thin_clones: this.create_thin_clones
+      vm_ids_list: [[], Validators.required]
     });
     this.finishPoolView = {};
     this.getClusters();
@@ -304,6 +305,14 @@ export class PoolAddComponent implements OnInit, OnDestroy {
           type: 'string'
         },
         {
+          title: 'Тонкие клоны',
+          property: 'create_thin_clones',
+          type: {
+            typeDepend: 'boolean',
+            propertyDepend: ['Создаются', 'Не создаются']
+          }
+        },
+        {
           title: 'Шаблон',
           property: 'template_name',
           type: 'string'
@@ -355,14 +364,6 @@ export class PoolAddComponent implements OnInit, OnDestroy {
           title: 'Название',
           property: 'verbose_name',
           type: 'string'
-        },
-        {
-          title: 'Толстые клоны',
-          property: 'create_thin_clones',
-          type: {
-            typeDepend: 'boolean',
-            propertyDepend: ['Да', 'Нет']
-          }
         },
         {
           title: 'Кластер',
@@ -431,7 +432,6 @@ export class PoolAddComponent implements OnInit, OnDestroy {
     if (this.chooseTypeForm.value.type === 'Статический') {
       this.createStaticPoolInit();
     }
-    console.log(this.createPoolForm);
   }
 
   private actionFinishSee(): void  {
@@ -446,9 +446,6 @@ export class PoolAddComponent implements OnInit, OnDestroy {
       this.finishPoolView.reserve_size = formValue.reserve_size;
       this.finishPoolView.total_size = formValue.size.total_size;
       this.finishPoolView.vm_name_template = formValue.vm_name_template;
-    }
-
-    if (this.chooseTypeForm.value.type === 'Статический') {
       this.finishPoolView.create_thin_clones = formValue.create_thin_clones;
     }
     this.finishPoolView.verbose_name = formValue.verbose_name;
@@ -461,6 +458,7 @@ export class PoolAddComponent implements OnInit, OnDestroy {
 
   private actionFinishOk(): void  {
     const formValue: Partial<IFinishPoolForm> = this.createPoolForm.value;
+    this.waitService.setWait(true);
     if (this.chooseTypeForm.value.type === 'Автоматический') {
       this.addPoolService.createDinamicPool(
                               formValue.verbose_name,
@@ -472,7 +470,8 @@ export class PoolAddComponent implements OnInit, OnDestroy {
                               formValue.reserve_size,
                               formValue.size.total_size,
                               formValue.vm_name_template,
-                              formValue.controller_ip)
+                              formValue.controller_ip,
+                              formValue.create_thin_clones)
         .subscribe(() => {
           this.dialogRef.close();
           this.poolsService.paramsForGetPools.spin = true;
@@ -481,11 +480,9 @@ export class PoolAddComponent implements OnInit, OnDestroy {
     }
 
     if (this.chooseTypeForm.value.type === 'Статический') {
-      console.log(formValue, this.finishPoolView);
       this.addPoolService.createStaticPool(
                               formValue.verbose_name,
-                              formValue.vm_ids_list,
-                              formValue.create_thin_clones)
+                              formValue.vm_ids_list)
         .subscribe(() => {
           this.dialogRef.close();
           this.poolsService.paramsForGetPools.spin = true;
