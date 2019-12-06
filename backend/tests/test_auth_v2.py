@@ -59,8 +59,8 @@ class AuthTestCase(AsyncHTTPTestCase):
         self.assertEqual(response.code, 200)
         response_dict = json_decode(response.body)
         self.assertIsInstance(response_dict, dict)
-        data = response_dict['errors']
-        self.assertIn('Invalid credentials', data[0])
+        data = response_dict['errors'][0]
+        self.assertIn('Invalid credentials', data.get('message'))
 
     @gen_test
     def test_ldap_auth_no_controller(self):
@@ -69,8 +69,8 @@ class AuthTestCase(AsyncHTTPTestCase):
         self.assertEqual(response.code, 200)
         response_dict = json_decode(response.body)
         self.assertIsInstance(response_dict, dict)
-        data = response_dict['errors']
-        self.assertIn('No authentication directory controllers', data[0])
+        data = response_dict['errors'][0]
+        self.assertIn('No authentication directory controllers', data.get('message'))
 
     @gen_test
     def test_ldap_auth_ok(self):
@@ -102,8 +102,8 @@ class AuthTestCase(AsyncHTTPTestCase):
         self.assertEqual(response.code, 200)
         response_dict = json_decode(response.body)
         self.assertIsInstance(response_dict, dict)
-        data = response_dict['errors']
-        self.assertIn('Invalid credeintials (ldap).', data[0])
+        data = response_dict['errors'][0]
+        self.assertIn('Invalid credeintials (ldap).', data.get('message'))
         auth_dir = yield AuthenticationDirectory.get_object(extra_field_name='verbose_name',
                                                             extra_field_value=TESTS_AD_VERBOSE_NAME)
         yield auth_dir.delete()
@@ -122,8 +122,8 @@ class AuthTestCase(AsyncHTTPTestCase):
         self.assertEqual(response.code, 200)
         response_dict = json_decode(response.body)
         self.assertIsInstance(response_dict, dict)
-        data = response_dict['errors']
-        self.assertIn('No authentication directory controllers.', data[0])
+        data = response_dict['errors'][0]
+        self.assertIn('No authentication directory controllers.', data.get('message'))
         auth_dir = yield AuthenticationDirectory.get_object(extra_field_name='verbose_name',
                                                             extra_field_value=TESTS_AD_VERBOSE_NAME,
                                                             include_inactive=True)
@@ -140,8 +140,8 @@ class AuthTestCase(AsyncHTTPTestCase):
         self.assertEqual(response.code, 200)
         response_dict = json_decode(response.body)
         self.assertIsInstance(response_dict, dict)
-        data = response_dict['errors']
-        self.assertIn('Invalid credentials', data[0])
+        data = response_dict['errors'][0]
+        self.assertIn('Invalid credentials', data.get('message'))
         yield user.delete()
         self.assertTrue(True)
 
@@ -154,8 +154,8 @@ class AuthTestCase(AsyncHTTPTestCase):
         self.assertEqual(response.code, 200)
         response_dict = json_decode(response.body)
         self.assertIsInstance(response_dict, dict)
-        data = response_dict['errors']
-        self.assertIn('Invalid credentials', data[0])
+        data = response_dict['errors'][0]
+        self.assertIn('Invalid credentials', data.get('message'))
         yield user.delete()
         self.assertTrue(True)
 

@@ -28,7 +28,7 @@ class AuthHandler(BaseHandler, ABC):
             response = {'data': access_token}
         except AssertionError as E:
             error_message = str(E)
-            response = {'errors': [error_message]}
+            response = {'errors': [{'message': error_message}]}
             error_message = 'Auth: {} IP: {}. username: {}'.format(E, self.remote_ip, self.args.get('username'))
             await Event.create_warning(error_message)
         return self.finish(response)
