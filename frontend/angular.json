@@ -33,6 +33,14 @@
             "es5BrowserSupport": true
           },
           "configurations": {
+            "demo": {
+              "fileReplacements": [
+                {
+                  "replace": "src/environments/environment.ts",
+                  "with": "src/environments/environment.demo.ts"
+                }
+              ]
+            },
             "production": {
               "fileReplacements": [
                 {
@@ -67,6 +75,9 @@
           "configurations": {
             "production": {
               "browserTarget": "frontend:build:production"
+            },
+            "demo": {
+              "browserTarget": "frontend:build:demo"
             }
           }
         },

@@ -1,12 +1,9 @@
-import asyncio
 import pytest
 import uuid
 
-from fixtures import fixt_db, fixt_create_automated_pool
-
 from pool.schema import pool_schema
 
-from utils import execute_scheme
+from tests.utils import execute_scheme
 
 
 # ----------------------------------------------

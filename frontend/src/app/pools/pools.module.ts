@@ -23,6 +23,8 @@ import { RemoveVMStaticPoolComponent } from './pool-details/remove-vms/remove-vm
 import { RemovePoolComponent } from './pool-details/remove-pool/remove-pool.component';
 import { VmDetalsPopupComponent } from './pool-details/vm-details-popup/vm-details-popup.component';
 
+import {MatCheckboxModule, MAT_CHECKBOX_CLICK_ACTION} from '@angular/material/checkbox';
+
 @NgModule({
   declarations: [
     PoolsComponent,
@@ -31,7 +33,7 @@ import { VmDetalsPopupComponent } from './pool-details/vm-details-popup/vm-detai
     AddUsersPoolComponent,
     RemoveUsersPoolComponent,
     AddVMStaticPoolComponent,
-   RemoveVMStaticPoolComponent,
+    RemoveVMStaticPoolComponent,
     RemovePoolComponent,
     VmDetalsPopupComponent,
     AddUserVmComponent,
@@ -45,12 +47,14 @@ import { VmDetalsPopupComponent } from './pool-details/vm-details-popup/vm-detai
     BrowserAnimationsModule,
     AppRoutingModule,
     MatDialogModule,
-    MatSelectModule
+    MatSelectModule,
+    MatCheckboxModule
   ],
   providers: [
     PoolsService,
     PoolDetailsService,
-    AddPoolService
+    AddPoolService,
+    {provide: MAT_CHECKBOX_CLICK_ACTION, useValue: 'check'}
   ],
   entryComponents: [
     PoolAddComponent,

@@ -8,11 +8,12 @@ import { TableIntoComponent } from './components/shared/table-into-component/tab
 import { TableComponentComponent } from './components/shared/table-component/table-component.component';
 import { FormForEditComponent } from './forms-dinamic/change-form/form-edit.component';
 import { ReactiveFormsModule } from '@angular/forms';
+import { MatCheckboxModule } from '@angular/material';
 
 
 const COMPONENTS = [
   TableComponentComponent,
-  TableIntoComponent,
+  TableIntoComponent
 ];
 
 const DIRECTIVES = [
@@ -31,14 +32,14 @@ const FORMS_DINAMIC = [
 
 @NgModule({
   declarations: [
-    ...COMPONENTS,
     ...DIRECTIVES,
     ...PIPES,
-    ...FORMS_DINAMIC
+    ...FORMS_DINAMIC,
+    ...COMPONENTS
   ],
   exports: [
-    ...COMPONENTS,
     ...DIRECTIVES,
+    ...COMPONENTS,
     ...PIPES,
     ...FORMS_DINAMIC
   ],
@@ -46,7 +47,8 @@ const FORMS_DINAMIC = [
     CommonModule,
     FontAwesomeModule,
     MatDialogModule,
-    ReactiveFormsModule
+    ReactiveFormsModule,
+    MatCheckboxModule
   ],
   entryComponents: [
     ...FORMS_DINAMIC

@@ -44,6 +44,7 @@ typedef struct{
     gchar *auth_url;
     gchar *jwt;
 
+    gboolean is_ldap;
     gboolean is_active;
 
     gchar *current_vm_id;
@@ -72,7 +73,8 @@ const gchar *get_vdi_port(void);
 // cancell pending requests
 void cancell_pending_requests(void);
 // set vdi session credentials
-void set_vdi_credentials(const gchar *username, const gchar *password, const gchar *ip, const gchar *port);
+void set_vdi_credentials(const gchar *username, const gchar *password, const gchar *ip,
+                         const gchar *port, gboolean is_ldap);
 // set current vm id
 void set_current_vm_id(const gchar *current_vm_id);
 // get current vm id

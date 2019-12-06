@@ -40,20 +40,20 @@ sudo systemctl restart nginx
 echo "Setting up env"
 
 sudo python3.5 -m pip install pipenv
-export PYTHONPATH=$APP_DIR/backend/vdi2
-export PIPENV_PIPFILE=$APP_DIR/backend/Pipfile_future
+export PYTHONPATH=$APP_DIR/backend
+export PIPENV_PIPFILE=$APP_DIR/backend/Pipfile
 pipenv install
 
 #------------------------------
 echo "Apply database migrations"
 
-cd $APP_DIR/backend/vdi2
+cd $APP_DIR/backend
 pipenv run alembic upgrade head
 
 #------------------------------
 echo "Setting up backend"
 
-nohup pipenv run python $APP_DIR/backend/vdi2/app.py & #nohup pipenv run vdi &
+nohup pipenv run python $APP_DIR/backend/app.py & #nohup pipenv run vdi &
 
 #------------------------------
 echo "Setting up frontend"

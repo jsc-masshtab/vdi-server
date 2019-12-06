@@ -24,7 +24,7 @@ export class UsersComponent implements OnInit, OnDestroy {
       class: 'name-start',
       icon: 'user',
       type: 'string',
-      reverse_sort: true
+      sort: true
     },
     /*{
       title: 'Дата создания',
@@ -58,13 +58,11 @@ export class UsersComponent implements OnInit, OnDestroy {
   public sortList(param: IParams): void  {
     this.service.paramsForGetUsers.spin = param.spin;
     this.service.paramsForGetUsers.nameSort = param.nameSort;
-    this.service.paramsForGetUsers.reverse = param.reverse;
     this.getAllUsers();
   }
 
   ngOnDestroy() {
     this.service.paramsForGetUsers.spin = true;
     this.service.paramsForGetUsers.nameSort = undefined;
-    this.service.paramsForGetUsers.reverse = undefined;
   }
 }

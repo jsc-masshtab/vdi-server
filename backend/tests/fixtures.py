@@ -1,21 +1,20 @@
-import asyncio
 import pytest
-import json
 import uuid
-from async_generator import async_generator, yield_, asynccontextmanager
+from async_generator import async_generator, yield_
+from graphene import Context
 
 from database import db
-from settings import DB_NAME, DB_PASS, DB_USER, DB_PORT, DB_HOST, WS_PING_INTERVAL, WS_PING_TIMEOUT
+from settings import DB_PASS, DB_USER, DB_PORT, DB_HOST, DB_NAME, TESTS_ADMIN_USERNAME
+from auth.utils.veil_jwt import encode_jwt
 
 from controller.models import Controller
 from controller_resources.veil_client import ResourcesHttpClient
 
 from vm.veil_client import VmHttpClient
-from vm.models import Vm
 
 from pool.schema import pool_schema
 
-from utils import execute_scheme
+from tests.utils import execute_scheme
 
 from resources_monitoring.resources_monitor_manager import resources_monitor_manager
 
@@ -101,10 +100,29 @@ async def get_resources_for_automated_pool():
 
 @pytest.fixture
 async def fixt_db():
-    await db.set_bind('postgresql://localhost/vdi', host=DB_HOST,
-                      port=DB_PORT,
-                      user=DB_USER,
-                      password=DB_PASS)
+    """Actual fixture for requests working with db."""
+    await db.set_bind(
+        'postgresql://{DB_USER}:{DB_PASS}@{DB_HOST}:{DB_PORT}/{DB_NAME}'.format(DB_USER=DB_USER, DB_PASS=DB_PASS,
+                                                                                DB_HOST=DB_HOST, DB_PORT=DB_PORT,
+                                                                                DB_NAME=DB_NAME))
+
+
+async def get_auth_token():
+    """Return JWT token for Admin user.
+    Грязный хак в том, что пользователь и пароль при авторизации проверяется раньше.
+    Тут напрямую вызывается уже генерация токена."""
+    access_token = 'jwt ' + encode_jwt(TESTS_ADMIN_USERNAME).get('access_token')
+    return access_token
+
+
+@pytest.fixture
+async def auth_context():
+    """Return auth headers in Context for Graphene query execution of protected methods."""
+    auth_token = await get_auth_token()
+    context = Context()
+    context.headers = {'Authorization': auth_token}
+    context.remote_ip = '127.0.0.1'
+    return context
 
 
 @pytest.fixture
@@ -211,75 +229,39 @@ async def fixt_create_automated_pool():
 #         await vm.DropDomain(id=single_vm['id'], controller_ip=controller_ip)
 
 
-@pytest.fixture
-@async_generator
-async def fixt_create_user(fixt_db):
-
-    username = 'test_user_name'
-    password = 'test_user_password'
-
-    # since we cant remove users so check if the user already exists
-    qu = '''
-    {
-    users{    
-      username  
-    }
-    }
-    '''
-    res = await schema.exec(qu)
-    users = res['users']
-
-    # check if already exists and create user
-    user_names = [user['username'] for user in users]
-    if username not in user_names:
-        qu = '''
-        mutation {
-        createUser(username: "%s", password: "%s", email: "email"){
-          ok
-        }
-        }
-        ''' % (username, password)
-        await schema.exec(qu)
-
-    await yield_({
-        'username': username,
-        'password': password
-    })
-
-
-@pytest.fixture
-@async_generator
-async def fixt_entitle_user_to_pool(fixt_create_static_pool):
-
-    pool_id = fixt_create_static_pool['id']
-
-    # entitle user to pool
-    user_name = "admin"
-    qu = '''
-    mutation {
-      entitleUsersToPool(pool_id: %i, entitled_users: ["%s"]) {
-        ok
-      }
-    }
-    ''' % (pool_id, user_name)
-    res = await schema.exec(qu)
-    print('test_res', res)
-
-    await yield_({
-        'pool_id': pool_id,
-        'ok': res['entitleUsersToPool']['ok']
-    })
-
-    # remove entitlement
-    qu = '''
-    mutation {
-    removeUserEntitlementsFromPool(pool_id: %i, entitled_users: ["%s"]
-      free_assigned_vms: true
-    ) {
-    freed {
-      id
-    }
-    }
-    }
-    ''' % (pool_id, user_name)
-    res = await schema.exec(qu)
+# @pytest.fixture
+# @async_generator
+# async def fixt_entitle_user_to_pool(fixt_create_static_pool):
+#
+#     pool_id = fixt_create_static_pool['id']
+#
+#     # entitle user to pool
+#     user_name = "admin"
+#     qu = '''
+#     mutation {
+#       entitleUsersToPool(pool_id: %i, entitled_users: ["%s"]) {
+#         ok
+#       }
+#     }
+#     ''' % (pool_id, user_name)
+#     res = await schema.exec(qu)
+#     print('test_res', res)
+#
+#     await yield_({
+#         'pool_id': pool_id,
+#         'ok': res['entitleUsersToPool']['ok']
+#     })
+#
+#     # remove entitlement
+#     qu = '''
+#     mutation {
+#     removeUserEntitlementsFromPool(pool_id: %i, entitled_users: ["%s"]
+#       free_assigned_vms: true
+#     ) {
+#     freed {
+#       id
+#     }
+#     }
+#     }
+#     ''' % (pool_id, user_name)
+#     res = await schema.exec(qu)

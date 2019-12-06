@@ -24,7 +24,7 @@
 #include <gtk/gtk.h>
 
 gboolean remote_viewer_connect_dialog(GtkWindow *main_window, gchar **uri, gchar **user, gchar **password,
-                                      gchar **ip, gchar **port);
+                                      gchar **ip, gchar **port, gboolean *is_ldap);
 
 #endif /* REMOTE_VIEWER_CONNECT_H */
 

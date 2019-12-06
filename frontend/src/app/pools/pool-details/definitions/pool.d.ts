@@ -11,20 +11,23 @@ export interface IPool extends ISettingsAutoPool, ISettingsStaticPool  {
   };
 
   cluster: {
-    verbose_name
+    verbose_name: string;
   };
 
   node: {
-    verbose_name
+    verbose_name: string;
   };
 
   datapool: {
-    verbose_name
+    verbose_name: string;
   };
 
   template: {
-    verbose_name
+    verbose_name: string;
   };
+
+  create_thin_clones: boolean;
+  keep_vms_on: boolean;
 }
 
 export interface IPoolVms  {
