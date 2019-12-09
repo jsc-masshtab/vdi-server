@@ -449,8 +449,7 @@ class AutomatedPool(db.Model):
             print('is_vm_successfully_created', is_vm_successfully_created)
             if is_vm_successfully_created:
                 await Vm.create(id=vm_info['id'], pool_id=str(self.automated_pool_id),
-                                template_id=str(self.template_id),
-                                username='admin')
+                                template_id=str(self.template_id))
                 return vm_info
             else:
                 continue  # go to try again
@@ -523,8 +522,8 @@ class AutomatedPool(db.Model):
         Check and expand pool if required
         :return:
         """
-        async with pool_task_manager.get_pool_lock(self.automated_pool_id):
-            async with pool_task_manager.get_template_lock(self.automated_pool_id):
+        async with pool_task_manager.get_pool_lock(str(self.automated_pool_id)).lock:
+            async with pool_task_manager.get_template_lock(str(self.template_id)).lock:
                 # TODO: rewrite
                 # TODO: код перенесен, чтобы работал. Принципиально не перерабатывался.
                 # Check that total_size is not reached
@@ -543,7 +542,7 @@ class AutomatedPool(db.Model):
                     # Max possible amount of VMs which we can add to the pool
                     max_possible_amount_to_add = self.total_size - vm_amount_in_pool
                     # Real amount that we can add to the pool
-                    real_amount_to_add = min(max_possible_amount_to_add, self.vm_step)
+                    real_amount_to_add = min(max_possible_amount_to_add, self.increase_step)
                     # add VMs.
                     try:
                         # TODO: очень странная логика. Может есть смысл создавать как-то диапазоном на стороне ECP?

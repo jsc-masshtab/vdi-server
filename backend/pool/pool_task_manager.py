@@ -47,6 +47,8 @@ class PoolTaskManager:
         self._template_lock_dict = dict()  # словарь шаблон id <-> TemplateLock
 
     def get_pool_lock(self, pool_id):
+        # print('pool_id', pool_id)
+        # print('self._pool_lock_dict', self._pool_lock_dict)
         return self._pool_lock_dict[pool_id]
 
     def get_template_lock(self, template_id):
@@ -61,7 +63,7 @@ class PoolTaskManager:
 
         # create locks
         for pool_id, template_id in auto_pools_data:
-            self._add_data(pool_id, template_id)
+            self._add_data(str(pool_id), str(template_id))
         print("self")
 
     async def stop_all_tasks(self):

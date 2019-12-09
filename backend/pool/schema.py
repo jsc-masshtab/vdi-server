@@ -297,13 +297,13 @@ class DeletePoolMutation(graphene.Mutation, PoolValidator):
         pool = await Pool.get_pool(pool_id)
 
         if pool.pool_type == 'AUTOMATED':
-            pool_lock = pool_task_manager.get_pool_lock(pool.pool_id)
+            pool_lock = pool_task_manager.get_pool_lock(str(pool_id))
             async with pool_lock.lock:
                 # останавливаем таски связанные с пулом
-                await pool_task_manager.cancel_all_tasks_for_pool(pool_id)
+                await pool_task_manager.cancel_all_tasks_for_pool(str(pool_id))
                 # удаляем пул
                 await Pool.soft_delete(pool_id)
-                await pool_task_manager.remove_pool_data(pool.pool_id, pool.template_id)
+                await pool_task_manager.remove_pool_data(str(pool_id), str(pool.template_id))
         else:
             await Pool.soft_delete(pool_id)
 
@@ -505,7 +505,7 @@ class CreateAutomatedPoolMutation(graphene.Mutation, PoolValidator):
         increase_step = graphene.Int(default_value=3)
         max_amount_of_create_attempts = graphene.Int(default_value=10)
         initial_size = graphene.Int(default_value=1)
-        reserve_size = graphene.Int(default_value=0)
+        reserve_size = graphene.Int(default_value=1)
         total_size = graphene.Int(default_value=1)
         vm_name_template = graphene.String(default_value='')
 
