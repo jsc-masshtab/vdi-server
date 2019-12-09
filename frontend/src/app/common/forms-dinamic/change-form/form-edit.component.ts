@@ -21,9 +21,10 @@ interface IData {
     form: [
       {
         tag: 'input',
-        type: 'number' | 'text',
+        type: 'number' | 'text' | 'checkbox',
         fieldName: string,
-        fieldValue: string | number
+        fieldValue: string | number,
+        description: string
       }
     ]
   };
@@ -74,11 +75,14 @@ export class FormForEditComponent implements OnInit {
     }
   }
 
+  public changeCheck(event, fieldName): void {
+    this.formGroup.value[fieldName] = event.checked;
+  }
+
   public send() {
     if (this.data.post && this.data.update) {
       this.waitService.setWait(true);
       this.data.post.service[this.data.post.method](this.data.post.params, this.formGroup.value).subscribe(() => {
-        console.log(this.data.update.method, this.data.update.params);
         this.data.post.service[this.data.update.method](...this.data.update.params).subscribe(() => {
           this.waitService.setWait(false);
           if (this.data.updateDepend) {

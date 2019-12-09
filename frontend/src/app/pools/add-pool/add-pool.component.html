@@ -17,19 +17,20 @@
   </ng-template>
 
   <div class="form-fields" [formGroup]="chooseTypeForm" *ngIf="step === 'chooseType'" [style.paddingBottom]="'20px'" [style.paddingLeft]="'20px'">
-    <label class="field-inline">
-      <fa-icon [icon]="['fas','tv']" size="m"  class="icon-pool"></fa-icon>
-      <input type="radio" formControlName="type" value="Автоматический">
-      <p class="radio-text">Автоматический</p>
-    </label>
 
-    <label class="field-inline add-offset">
+    <label class="field-inline">
       <fa-icon [icon]="['fas','desktop']" size="m" class="icon-pool"></fa-icon>
       <input type="radio" formControlName="type" value="Статический">
       <p class="radio-text">Статический</p>
     </label>
 
-    <label class="field-inline offset" *ngIf="chooseTypeForm.value.type === 'Статический'" [@animForm]>
+    <label class="field-inline add-offset">
+      <fa-icon [icon]="['fas','tv']" size="m"  class="icon-pool"></fa-icon>
+      <input type="radio" formControlName="type" value="Автоматический">
+      <p class="radio-text">Автоматический</p>
+    </label>
+
+    <label class="field-inline offset" *ngIf="chooseTypeForm.value.type === 'Автоматический'" [@animForm]>
       <mat-checkbox [color]="'warn'" name="create_thin_clones" (change)="changeCheck($event)" [checked]="create_thin_clones"></mat-checkbox>
       <p>Создать тонкие клоны</p>
     </label>
