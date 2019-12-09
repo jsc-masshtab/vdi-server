@@ -1,6 +1,7 @@
 import graphene
 
 from event.models import Event
+from sqlalchemy import desc
 
 
 class EventType(graphene.ObjectType):
@@ -19,7 +20,7 @@ class EventQuery(graphene.ObjectType):
     )
 
     async def resolve_events(self, _info, first=None, skip=None):
-        events = await Event.query.gino.all()
+        events = await Event.query.order_by(desc(Event.created)).gino.all()
 
         # skip first n items
         if skip:
