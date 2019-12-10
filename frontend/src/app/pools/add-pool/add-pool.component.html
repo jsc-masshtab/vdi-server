@@ -32,7 +32,7 @@
 
     <label class="field-inline offset" *ngIf="chooseTypeForm.value.type === 'Автоматический'" [@animForm]>
       <mat-checkbox [color]="'warn'" name="create_thin_clones" (change)="changeCheck($event)" [checked]="create_thin_clones"></mat-checkbox>
-      <p>Создать тонкие клоны</p>
+      <p class="description">Создать тонкие клоны</p>
     </label>
   </div>
   <div class="form-actions"  *ngIf="step === 'chooseType'">
