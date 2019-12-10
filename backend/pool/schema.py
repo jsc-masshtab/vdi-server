@@ -28,6 +28,10 @@ from pool.models import AutomatedPool, StaticPool, Pool, PoolUsers
 from asyncpg import UniqueViolationError
 
 from database import db
+
+from pool.pool_task_manager import pool_task_manager
+
+
 # TODO: отсутствует валидация входящих ресурсов вроде node_uid, cluster_uid и т.п. Ранее шла речь,
 #  о том, что мы будем кешированно хранить какие-то ресурсы полученные от ECP Veil. Возможно стоит
 #  обращаться к этому хранилищу для проверки корректности присланных ресурсов. Аналогичный принцип
@@ -188,7 +192,7 @@ class PoolType(graphene.ObjectType):
             UserType(id=user.id, username=user.username, email=user.email)
             for user in users_data
         ]
-        print('user_type_list', user_type_list)
+        #print('user_type_list', user_type_list)
         return user_type_list
 
     async def resolve_vms(self, _info):
@@ -298,9 +302,21 @@ class DeletePoolMutation(graphene.Mutation, PoolValidator):
 
     async def mutate(self, info, pool_id):
 
+        pool = await Pool.get_pool(pool_id)
+
+        if pool.pool_type == 'AUTOMATED':
+            pool_lock = pool_task_manager.get_pool_lock(str(pool_id))
+            async with pool_lock.lock:
+                # останавливаем таски связанные с пулом
+                await pool_task_manager.cancel_all_tasks_for_pool(str(pool_id))
+                # удаляем пул
+                await Pool.soft_delete(pool_id)
+                await pool_task_manager.remove_pool_data(str(pool_id), str(pool.template_id))
+        else:
+            await Pool.soft_delete(pool_id)
+
         # Меняем статус пула. Не нравится идея удалять записи имеющие внешние зависимости, которые не удалить,
         # например запущенные виртуалки.
-        await Pool.soft_delete(pool_id)
         msg = 'Pool {id} deactivated.'.format(id=pool_id)
         await Event.create_info(msg)
         return DeletePoolMutation(ok=True)
@@ -497,7 +513,7 @@ class CreateAutomatedPoolMutation(graphene.Mutation, PoolValidator):
         increase_step = graphene.Int(default_value=3)
         max_amount_of_create_attempts = graphene.Int(default_value=10)
         initial_size = graphene.Int(default_value=1)
-        reserve_size = graphene.Int(default_value=0)
+        reserve_size = graphene.Int(default_value=1)
         total_size = graphene.Int(default_value=1)
         vm_name_template = graphene.String(default_value='')
 
@@ -509,22 +525,27 @@ class CreateAutomatedPoolMutation(graphene.Mutation, PoolValidator):
     @classmethod
     async def mutate(cls, root, info, **kwargs):
         await cls.validate_agruments(**kwargs)
-        pool = None
+        automated_pool = None
         try:
             automated_pool = await AutomatedPool.create(**kwargs)
+            # add data for protection
+            pool_task_manager.add_new_pool_data(automated_pool.automated_pool_id, automated_pool.template_id)
+            # locks
+            async with pool_task_manager.get_pool_lock(str(automated_pool.automated_pool_id)).lock:
+                async with pool_task_manager.get_template_lock(str(automated_pool.template_id)).lock:
+                    await automated_pool.add_initial_vms()
+                    await automated_pool.activate()
 
-            await automated_pool.add_initial_vms()
-            await automated_pool.activate()
-
-            pool = await Pool.get_pool(automated_pool.automated_pool_id)
-            msg = 'Automated pool {id} created.'.format(id=pool.pool_id)
-            await Event.create_info(msg)
-        except (UniqueViolationError, VmCreationError) as E:  # Возможные исключения: дубликат имени пула,VmCreationError
+                    msg = 'Automated pool {id} created.'.format(id=automated_pool.automated_pool_id)
+                    await Event.create_info(msg)
+        except (UniqueViolationError, VmCreationError) as E: # Возможные исключения: дубликат имени пула,VmCreationError
             print('exp__', E.__class__.__name__)
             await Event.create_error('Failed to create automated pool.')
-            if pool:
-                await pool.deactivate()
+            if automated_pool:
+                await automated_pool.deactivate()
             raise SimpleError(E)
+
+        pool = await Pool.get_pool(automated_pool.automated_pool_id)
         return CreateAutomatedPoolMutation(
                 pool=PoolType(**pool),
                 ok=True)
