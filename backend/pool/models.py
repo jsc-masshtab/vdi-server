@@ -546,7 +546,7 @@ class AutomatedPool(db.Model):
                     # add VMs.
                     try:
                         # TODO: очень странная логика. Может есть смысл создавать как-то диапазоном на стороне ECP?
-                        for i in range(1, real_amount_to_add):
+                        for i in range(0, real_amount_to_add):
                             domain_index = vm_amount_in_pool + i
                             await self.add_vm(domain_index)
                     except VmCreationError:

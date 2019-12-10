@@ -239,6 +239,7 @@ gchar *api_call(const char *method, const char *uri_string, const gchar *body_st
         // send request.
         send_message(msg);
         printf("HERE msg->status_code: %i\n", msg->status_code);
+        printf("HERE msg->body->data: %s\n", msg->response_body->data);
 
         // if response is ok then fill response_body_str
         if (msg->status_code == OK_RESPONSE ) { // we are happy now

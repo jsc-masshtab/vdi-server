@@ -4,25 +4,6 @@ from database import db, Status
 
 from common.utils import cancel_async_task
 
-# При старте VDI заполняем pool_object_dict (создаем PoolObject для каждого пула), заполняем
-# template_object_dict (создаем TemplateObject для каждого использованного шаблона).
-#
-#
-# При добавлении нового пула добавляем его в pool_object_dict. Смотрим есть ли шаблон в template_object_dict.
-# Если нету, то добавляем его туда.
-#
-#
-# При удаление какого-либо пула отменяем корутины PoolObject.expand_pool_task и PoolObject.decrease_pool_task, лочим PoolObject.lock,
-# удаляем пул, убираем его из pool_object_dict. Смотрим используется ли шаблон удаляемого пула в других пулах.
-# Если не используется, то удаляем его из template_object_dict.
-#
-#
-# При расширении пула пытаемся залочить соотвествующий PoolObject.lock. Если получилось, то далее пытаемся залочить соответствующий
-# TemplateObject.lock. Смотрим требуется ли расширение, расширяем.
-#
-#
-# При уменьшении размера пула отменяем PoolObject.expand_pool_task, если она запущена; лочим PoolObject.lock; уменьшаем размер пула.
-
 
 class PoolLock:
 
@@ -39,8 +20,7 @@ class TemplateLock:
 
 
 class PoolTaskManager:
-    """Обязательно соблюдать один и тот же порядок лока, иначе дед лок.
-    В плюсах это решается с помощью std::lock_guard<std::mutex>. Мб есть аналог для асинхроного питона"""
+    """Обязательно соблюдать один и тот же порядок лока, иначе дед лок"""
 
     def __init__(self):
         self._pool_lock_dict = dict()  # словарь пул id <-> PoolLock
@@ -63,7 +43,7 @@ class PoolTaskManager:
 
         # create locks
         for pool_id, template_id in auto_pools_data:
-            self._add_data(str(pool_id), str(template_id))
+            self._add_data(pool_id, template_id)
         print("self")
 
     async def stop_all_tasks(self):
@@ -79,7 +59,7 @@ class PoolTaskManager:
         self._add_data(pool_id, template_id)
 
     async def cancel_all_tasks_for_pool(self, pool_id):
-        """Завешить все таски, связанные с пулом"""
+        """Завершить все таски, связанные с пулом"""
         if pool_id not in self._pool_lock_dict:
             print(__class__.__name__, 'Logic error: no such pool')
             return
@@ -112,9 +92,9 @@ class PoolTaskManager:
         return auto_pools_data
 
     def _add_data(self, pool_id, template_id):
-        self._pool_lock_dict[pool_id] = PoolLock()
-        if template_id not in self._template_lock_dict:
-            self._template_lock_dict[template_id] = TemplateLock()
+        self._pool_lock_dict[str(pool_id)] = PoolLock()
+        if str(template_id) not in self._template_lock_dict:
+            self._template_lock_dict[str(template_id)] = TemplateLock()
 
 
 pool_task_manager = PoolTaskManager()
