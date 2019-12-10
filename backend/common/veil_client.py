@@ -9,6 +9,7 @@ from settings import VEIL_REQUEST_TIMEOUT, VEIL_CONNECTION_TIMEOUT, VEIL_MAX_BOD
 from common.veil_errors import NotFound, Unauthorized, ServerError, Forbidden, ControllerNotAccessible, BadRequest
 from common.veil_decorators import prepare_body
 
+from event.models import Event  # TODO: remprorary variant
 # TODO: добавить обработку исключений
 # TODO: Не tornado.curl_httpclient.CurlAsyncHTTPClient, т.к. не измерен реальный прирост производительности.
 # TODO: нужно менять статус контроллера и прочих сущностей после нескольких неудачных попыток подключения
@@ -60,6 +61,13 @@ class VeilHttpClient:
             response = await self._client.fetch(request)
         except HTTPClientError as http_error:
             body = self.get_response_body(http_error.response)
+
+            # TODO: temprorary variant
+            error_msg = '{cls}: {msg_body}'.format(
+                cls=__class__.__name__,
+                msg_body=body)
+            await Event.create_error(error_msg)
+
             if http_error.code == 400:
                 raise BadRequest(body)
             elif http_error.code == 401:
