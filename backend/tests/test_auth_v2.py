@@ -16,7 +16,7 @@ from database import db
 from app import app
 
 from auth.models import AuthenticationDirectory
-from user.models import User
+from user.models import User, Event
 
 pytestmark = [pytest.mark.asyncio, pytest.mark.auth]
 
@@ -51,6 +51,10 @@ class AuthTestCase(AsyncHTTPTestCase):
         self.assertIsInstance(response_dict, dict)
         data = response_dict['data']
         self.assertTrue(data.get('access_token'))
+        mock_event = 'Auth: User login (local) IP: 127.0.0.1. username: {}'.format(TESTS_ADMIN_USERNAME)
+        count = yield db.select([db.func.count()]).where((Event.event_type == Event.TYPE_INFO)
+                                                         & (Event.message == mock_event)).gino.scalar()
+        self.assertTrue(count > 0)
 
     @gen_test
     def test_local_auth_bad(self):
