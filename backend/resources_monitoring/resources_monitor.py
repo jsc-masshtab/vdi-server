@@ -127,6 +127,7 @@ class ResourcesMonitor(AbstractMonitor):
                     break
                 elif 'token error' in msg:
                     await Controller.invalidate_auth(self._controller_ip)
+                    break
                 else:
                     await self._on_message_received(msg)
 
