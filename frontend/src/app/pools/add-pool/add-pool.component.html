@@ -16,7 +16,7 @@
     <div class="error" [@animForm]="error">Поле обязательно для заполения</div>
   </ng-template>
 
-  <div class="form-fields" [formGroup]="chooseTypeForm" *ngIf="step === 'chooseType'" [style.paddingBottom]="'20px'" [style.paddingLeft]="'20px'">
+  <div class="form-fields" [formGroup]="chooseTypeForm" *ngIf="step === 'chooseType'" [style.paddingLeft]="'20px'">
 
     <label class="field-inline">
       <fa-icon [icon]="['fas','desktop']" size="m" class="icon-pool"></fa-icon>
@@ -32,14 +32,14 @@
 
     <label class="field-inline offset" *ngIf="chooseTypeForm.value.type === 'Автоматический'" [@animForm]>
       <mat-checkbox [color]="'warn'" name="create_thin_clones" (change)="changeCheck($event)" [checked]="create_thin_clones"></mat-checkbox>
-      <p>Создать тонкие клоны</p>
+      <p class="description">Создать тонкие клоны</p>
     </label>
   </div>
   <div class="form-actions"  *ngIf="step === 'chooseType'">
     <button type="button" (click)="send('createPool')" class="form-btn"><span class="action-name">Далее</span></button>
   </div>
 
-  <div class="form-fields" [formGroup]="createPoolForm" *ngIf="step === 'createPool'" [style.paddingBottom]="'20px'">
+  <div class="form-fields" [formGroup]="createPoolForm" *ngIf="step === 'createPool'">
     <label class="field">
       <p class="field-name">Имя пула</p>
       <input type="text" [focusMe]="true" formControlName="verbose_name">

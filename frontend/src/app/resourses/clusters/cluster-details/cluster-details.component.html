@@ -30,10 +30,10 @@
             </div>
             <div class="details-slide-into">
                 <vdi-table-into [item]="cluster" [collection]="collectionDetails" *ngIf="menuActive === 'info'"></vdi-table-into>
-                <vdi-table-component [data]="cluster.nodes" [collection]="collectionNodes" *ngIf="menuActive === 'servers'" ></vdi-table-component>
-                <vdi-table-component [data]="cluster.datapools" [collection]="collectionDatapools"  *ngIf="menuActive === 'datapools'" ></vdi-table-component>
-                <vdi-table-component [data]="cluster.templates" [collection]="collectionTemplates"  *ngIf="menuActive === 'templates'"></vdi-table-component>
-                <vdi-table-component [data]="cluster.vms" [collection]="collectionVms" *ngIf="menuActive === 'vms'" ></vdi-table-component>
+                <vdi-table-component [data]="cluster?.nodes" [collection]="collectionNodes" *ngIf="menuActive === 'servers'" ></vdi-table-component>
+                <vdi-table-component [data]="cluster?.datapools" [collection]="collectionDatapools"  *ngIf="menuActive === 'datapools'" ></vdi-table-component>
+                <vdi-table-component [data]="cluster?.templates" [collection]="collectionTemplates"  *ngIf="menuActive === 'templates'"></vdi-table-component>
+                <vdi-table-component [data]="cluster?.vms" [collection]="collectionVms" *ngIf="menuActive === 'vms'" ></vdi-table-component>
             </div>     
         </div>
     </div>

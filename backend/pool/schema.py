@@ -147,6 +147,7 @@ class PoolType(graphene.ObjectType):
     node_id = graphene.UUID()
     controller = graphene.Field(ControllerType)
     vms = graphene.List(VmType)
+    vm_amount = graphene.Int()
 
     # StaticPool fields
     static_pool_id = graphene.UUID()
@@ -197,6 +198,9 @@ class PoolType(graphene.ObjectType):
     async def resolve_vms(self, _info):
         await self._build_vms_list()
         return self.vms
+
+    async def resolve_vm_amount(self, _info):
+        return await (db.select([db.func.count(Vm.id)]).where(Vm.pool_id == self.pool_id)).gino.scalar()
 
     async def resolve_node(self, _info):
         controller_address = await Pool.get_controller_ip(self.pool_id)
@@ -249,17 +253,21 @@ class PoolType(graphene.ObjectType):
     async def _build_vms_list(self):
         if not self.vms:
             self.vms = []
-            vms_data = await Vm.select("id").where((Vm.pool_id == self.pool_id)).gino.all()
+
             controller_address = await Pool.get_controller_ip(self.pool_id)
-            for (vm_id,) in vms_data:
-                vm_http_client = await VmHttpClient.create(controller_address, vm_id)
+            vm_http_client = await VmHttpClient.create(controller_address, '')
+            vm_veil_data_list = await vm_http_client.fetch_vms_list()
+
+            db_vms_data = await Vm.select("id").where((Vm.pool_id == self.pool_id)).gino.all()
+
+            for (vm_id,) in db_vms_data:
                 try:
-                    veil_info = await vm_http_client.info()
-                    # create graphene type
-                    vm_type = VmQuery.veil_vm_data_to_graphene_type(veil_info, controller_address)
-                except (HTTPClientError, HttpError):
+                    remote_vm_data = next(data for data in vm_veil_data_list if data['id'] == str(vm_id))
+                    vm_type = VmQuery.veil_vm_data_to_graphene_type(remote_vm_data, controller_address)
+                except StopIteration:
                     vm_type = VmType(id=vm_id, controller=ControllerType(address=controller_address))
                     vm_type.veil_info = None
+
                 self.vms.append(vm_type)
 
 
