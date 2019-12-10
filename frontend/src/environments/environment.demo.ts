@@ -5,7 +5,7 @@
 export const environment = {
   production: false,
   url: 'http://192.168.8.130/api/',
-  url_ws: '192.168.8.130'
+  url_ws: '192.168.8.130:8888'
 };
 
 /*
