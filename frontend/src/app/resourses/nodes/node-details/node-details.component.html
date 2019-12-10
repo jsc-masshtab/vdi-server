@@ -28,9 +28,9 @@
             </div>
             <div class="details-slide-into">
                 <vdi-table-into [item]="node" [collection]="collection" *ngIf="menuActive === 'info'"></vdi-table-into>
-                <vdi-table-component [data]="node.datapools" [collection]="collection_datapools"  *ngIf="menuActive === 'datapools'" ></vdi-table-component>
-                <vdi-table-component [data]="node.templates" [collection]="collection_templates"  *ngIf="menuActive === 'templates'" ></vdi-table-component>
-                <vdi-table-component [data]="node.vms" [collection]="collection_vms" *ngIf="menuActive === 'vms'" ></vdi-table-component>
+                <vdi-table-component [data]="node?.datapools" [collection]="collection_datapools"  *ngIf="menuActive === 'datapools'" ></vdi-table-component>
+                <vdi-table-component [data]="node?.templates" [collection]="collection_templates"  *ngIf="menuActive === 'templates'" ></vdi-table-component>
+                <vdi-table-component [data]="node?.vms" [collection]="collection_vms" *ngIf="menuActive === 'vms'" ></vdi-table-component>
             </div>     
         </div>
     </div>
