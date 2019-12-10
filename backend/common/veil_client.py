@@ -63,9 +63,10 @@ class VeilHttpClient:
             body = self.get_response_body(http_error.response)
 
             # TODO: temprorary variant
-            error_msg = '{cls}: {msg_body}'.format(
+            error_msg = '{cls}: {msg_body}. Url is {url}'.format(
                 cls=__class__.__name__,
-                msg_body=body)
+                msg_body=body,
+                url=url)
             await Event.create_error(error_msg)
 
             if http_error.code == 400:
