@@ -60,7 +60,6 @@
 #define RECONNECT_TIMEOUT 1000
 
 extern gboolean opt_manual_mode;
-extern gboolean take_extern_credentials;
 
 struct _RemoteViewerPrivate {
     gboolean open_recent_dialog;
@@ -112,7 +111,6 @@ virt_viewer_connect_timer(RemoteViewer *self)
     if (!created)
         return TRUE;
 
-    take_extern_credentials = TRUE;
     is_connected = virt_viewer_app_initial_connect(app, NULL);
 
     printf("%s active %i created %i is_connected %i \n",
@@ -378,7 +376,7 @@ remote_viewer_start(VirtViewerApp *app, GError **err, RemoteViewerState remoteVi
     gchar *password = NULL;
     gchar *ip = NULL;
     gchar *port = NULL;
-    gboolean is_ldap = FALSE;
+    gboolean is_connect_to_prev_pool = FALSE;
     GError *error = NULL;
 
 #ifdef HAVE_SPICE_CONTROLLER
@@ -394,12 +392,10 @@ remote_viewer_start(VirtViewerApp *app, GError **err, RemoteViewerState remoteVi
     // remote connect dialog
 retry_auth:
     {
-        VirtViewerWindow *main_window = virt_viewer_app_get_main_window(app);
         // Забираем из ui адрес и порт
         GtkResponseType dialog_window_response =
-            remote_viewer_connect_dialog(virt_viewer_window_get_window(main_window), &guri, &user, &password,
-                    &ip, &port, &is_ldap);
-        //printf("%s: is_ldap %i\n", (const char *)__func__, is_ldap);
+            remote_viewer_connect_dialog(&guri, &user, &password, &ip, &port, &is_connect_to_prev_pool);
+        //printf("%s: is_connect_to_prev_pool %i\n", (const char *)__func__, is_connect_to_prev_pool);
         if (dialog_window_response == GTK_RESPONSE_CANCEL) {
             return FALSE;
         }
@@ -438,25 +434,31 @@ retry_connnect_to_vm:
         }
 
     } else {
+        // Подключение к пред. запомненому пулу. Подключаемся к ВМ минуя vdi manager window
+        if (is_connect_to_prev_pool) {
 
-        free_memory_safely(&guri);
-        free_memory_safely(&user);
-        free_memory_safely(&password);
-
-        // show VDI manager window
-        VirtViewerWindow *main_window = virt_viewer_app_get_main_window(app);
-        GtkResponseType dialog_window_response =
-                vdi_manager_dialog(virt_viewer_window_get_window(main_window), &guri, &user, &password);
-
-        if(dialog_window_response == GTK_RESPONSE_CANCEL) {
-            goto cleanup;
         }
-        else if(dialog_window_response == GTK_RESPONSE_CLOSE) {
-            g_application_quit(G_APPLICATION(app));
-            return FALSE;
+        // show vdi manager window
+        else {
+            free_memory_safely(&guri);
+            free_memory_safely(&user);
+            free_memory_safely(&password);
+
+            // show VDI manager window
+            VirtViewerWindow *main_window = virt_viewer_app_get_main_window(app);
+            GtkResponseType vdi_dialog_window_response =
+                    vdi_manager_dialog(virt_viewer_window_get_window(main_window), &guri, &user, &password);
+
+            if(vdi_dialog_window_response == GTK_RESPONSE_CANCEL) {
+                goto cleanup;
+            }
+            else if(vdi_dialog_window_response == GTK_RESPONSE_CLOSE) {
+                g_application_quit(G_APPLICATION(app));
+                return FALSE;
+            }
         }
+
         g_object_set(app, "guri", guri, NULL);
-
         setSpiceSessionCredentials(user, password);
 
         // start connect attempt timer

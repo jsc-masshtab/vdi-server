@@ -31,12 +31,12 @@
 
 #include <ctype.h>
 
-#include <async.h>
-#include <vdi_api_session.h>
+#include "async.h"
+#include "vdi_api_session.h"
+#include "jsonhandler.h"
 
 
 extern gboolean opt_manual_mode;
-extern gboolean take_extern_credentials;
 
 static gboolean b_save_credentials_to_file = FALSE;
 
@@ -59,6 +59,17 @@ typedef struct
     GtkResponseType dialog_window_response;
 
     gboolean response;
+
+    gchar *current_pool_id;
+
+    gchar **uri;
+    gchar **user;
+    gchar **password;
+    gchar **ip;
+    gchar **port;
+
+    gboolean *is_connect_to_prev_pool_ptr;
+
 } RemoteViewerData;
 
 static void
@@ -68,8 +79,99 @@ shutdown_loop(GMainLoop *loop)
         g_main_loop_quit(loop);
 }
 
+// save data to ini file
+static void
+save_data_to_ini_file(RemoteViewerData *ci)
+{
+    if(b_save_credentials_to_file){
+        const gchar *paramToFileGrpoup = opt_manual_mode ? "RemoteViewerConnectManual" : "RemoteViewerConnect";
+        write_to_settings_file(paramToFileGrpoup, "ip", *ci->ip);
+        write_to_settings_file(paramToFileGrpoup, "port", *ci->port);
+        write_to_settings_file(paramToFileGrpoup, "username", *ci->user);
+        write_to_settings_file(paramToFileGrpoup, "password", *ci->password);
+    }
+}
+
+// set error message
+static void
+set_error_message_to_label(GtkLabel *label, const gchar *message)
+{
+    gchar *message_str = g_strdup_printf("<span color=\"red\">%s</span>", message);
+    gtk_label_set_markup(label, message_str);
+    g_free(message_str);
+}
+
+// get vm from pool callback
+static void
+on_get_vm_from_pool_finished(GObject *source_object G_GNUC_UNUSED,
+                                         GAsyncResult *res,
+                                         gpointer user_data G_GNUC_UNUSED)
+{
+    RemoteViewerData *ci = user_data;
+
+    // stop connect spinner   todo: code repeat. do something
+    gtk_spinner_stop((GtkSpinner *)ci->connect_spinner);
+
+    // enable connect button if address_entry is not empty      todo: code repeat. do something
+    if (gtk_entry_get_text_length(GTK_ENTRY(ci->address_entry)) > 0)
+        gtk_widget_set_sensitive(GTK_WIDGET(ci->connect_button), TRUE);
+
+    GError *error = NULL;
+    gpointer  ptr_res =  g_task_propagate_pointer (G_TASK (res), &error); // take ownership
+    if(ptr_res == NULL){
+        set_error_message_to_label(GTK_LABEL(ci->message_display_label), "Не удалось получить вм из пула");
+        return;
+    }
+
+    gchar *response_body_str = ptr_res;
+
+    // parse  data  json. todo: code repeat. do something
+    JsonParser *parser = json_parser_new();
+    JsonObject *root_object = get_root_json_object(parser, response_body_str);
+
+    JsonObject *data_member_object = json_object_get_object_member(root_object, "data");
+    if (!data_member_object) {
+        set_error_message_to_label(GTK_LABEL(ci->message_display_label), "Не удалось получить вм из пула");
+        g_free(ptr_res);
+        return;
+    }
+
+    const gchar *vm_host = json_object_get_string_member_safely(data_member_object, "host");
+    gint64 vm_port = json_object_get_int_member_safely(data_member_object, "port");
+    const gchar *vm_password = json_object_get_string_member_safely(data_member_object, "password");
+    const gchar *message = json_object_get_string_member_safely(data_member_object, "message");
+
+    printf("vm_host %s vm_port %ld vm_password %s\n", vm_host, vm_port, vm_password);
+    // if port == 0 it means VDI server can not provide a vm
+    if (vm_port == 0) {
+        const gchar *user_message = message ? message : "Не удалось получить вм из пула";
+        set_error_message_to_label(GTK_LABEL(ci->message_display_label), user_message);
+    } else {
+
+        ci->response = TRUE;
+        ci->dialog_window_response = GTK_RESPONSE_OK;
+
+        *ci->ip = g_strdup(vm_host);
+        *ci->port = g_strdup_printf("%ld", vm_port);
+        *ci->uri = g_strconcat("spice://", *ci->ip, ":", *ci->port, NULL);
+        g_strstrip(*ci->uri);
+        *ci->user = NULL;
+        *ci->password = g_strdup(vm_password);
+
+        // save data to ini file if required
+        save_data_to_ini_file(ci);
+
+        shutdown_loop(ci->loop);
+    }
+    //
+    g_object_unref(parser);
+    if(ptr_res)
+        g_free(ptr_res);
+}
+
 // token fetch callback
-static void on_get_vdi_token_finished(GObject *source_object G_GNUC_UNUSED,
+static void
+on_get_vdi_token_finished(GObject *source_object G_GNUC_UNUSED,
                                       GAsyncResult *res,
                                       gpointer user_data)
 {
@@ -89,11 +191,20 @@ static void on_get_vdi_token_finished(GObject *source_object G_GNUC_UNUSED,
     if (token_refreshed) {
         ci->response = TRUE;
         ci->dialog_window_response = GTK_RESPONSE_OK;
+
+        *ci->ip = g_strdup(gtk_entry_get_text(GTK_ENTRY(ci->address_entry)));
+        *ci->port = g_strdup(gtk_entry_get_text(GTK_ENTRY(ci->port_entry)));
+        *ci->uri = g_strconcat("spice://", *ci->ip, ":", *ci->port, NULL);
+        g_strstrip(*ci->uri);
+        *ci->user = g_strdup(gtk_entry_get_text(GTK_ENTRY(ci->login_entry)));
+        *ci->password = g_strdup(gtk_entry_get_text(GTK_ENTRY(ci->password_entry)));
+
+        // save data to ini file if required
+        save_data_to_ini_file(ci);
+
         shutdown_loop(ci->loop);
     } else {
-        gchar *message_str = g_strdup("<span color=\"red\"> Не удалось авторизоваться</span>");
-        gtk_label_set_markup(GTK_LABEL(ci->message_display_label), message_str);
-        g_free(message_str);
+        set_error_message_to_label(GTK_LABEL(ci->message_display_label), "Не удалось авторизоваться");
     }
 }
 
@@ -176,11 +287,17 @@ connect_button_clicked_cb(GtkButton *button G_GNUC_UNUSED, gpointer data)
             // start connect spinner
             gtk_spinner_start((GtkSpinner *)ci->connect_spinner);
 
-            gboolean is_conn_to_prev_pool =
+            *ci->is_connect_to_prev_pool_ptr  =
                     gtk_toggle_button_get_active((GtkToggleButton *)ci->conn_to_prev_pool_checkbutton);
-
-            // fetch token task starting
-            execute_async_task(get_vdi_token, on_get_vdi_token_finished, NULL, data);
+            if (*ci->is_connect_to_prev_pool_ptr) {
+                // get pool id from settings file
+                set_current_pool_id("8ecb8dce-af2d-41b8-a4c2-ed36a3b77578");
+                // start async task  get_vm_from_pool
+                execute_async_task(get_vm_from_pool, on_get_vm_from_pool_finished, NULL, data);
+            } else {
+                // fetch token task starting
+                execute_async_task(get_vdi_token, on_get_vdi_token_finished, NULL, data);
+            }
         }
     }
 }
@@ -255,34 +372,38 @@ make_label_small(GtkLabel* label)
 */
 // todo: порт передавать как число, а не строку
 gboolean
-remote_viewer_connect_dialog(GtkWindow *main_window G_GNUC_UNUSED, gchar **uri, gchar **user, gchar **password,
-                             gchar **ip, gchar **port, gboolean *is_ldap)
+remote_viewer_connect_dialog(gchar **uri, gchar **user, gchar **password,
+                             gchar **ip, gchar **port, gboolean *is_connect_to_prev_pool)
 {
 
     // set params save group
     const gchar *paramToFileGrpoup = opt_manual_mode ? "RemoteViewerConnectManual" : "RemoteViewerConnect";
 
     GtkWidget *window, *address_entry, *port_entry, *login_entry, *password_entry,
-            *connect_button/*, *cancel_button*/, *veil_image, *ldap_checkbutton, *remember_checkbutton;
-    GtkRecentFilter *rfilter;
+            *connect_button, *veil_image, *ldap_checkbutton, *remember_checkbutton;
+
     GtkBuilder *builder;
     gboolean active;
 
     RemoteViewerData ci;
+    memset(&ci, 0, sizeof(ci)); // in C++ I would do: RemoteViewerData ci = {};
     ci.response = FALSE;
     ci.dialog_window_response = GTK_RESPONSE_CANCEL;
-
-    take_extern_credentials = TRUE;
-
-    g_return_val_if_fail(uri && *uri == NULL, FALSE);
+    // save pointers
+    ci.uri = uri;
+    ci.user = user;
+    ci.password = password;
+    ci.ip = ip;
+    ci.port = port;
+    ci.is_connect_to_prev_pool_ptr = is_connect_to_prev_pool;
 
     /* Create the widgets */
-    builder = virt_viewer_util_load_ui("remote-viewer-connect_veil.ui"); // remote-viewer-connect_veil.ui
+    builder = virt_viewer_util_load_ui("remote-viewer-connect_veil.ui");
     g_return_val_if_fail(builder != NULL, GTK_RESPONSE_NONE);
 
     window = GTK_WIDGET(gtk_builder_get_object(builder, "remote-viewer-connection-window"));
     gtk_window_set_resizable (GTK_WINDOW(window), FALSE);
-    //gtk_window_set_transient_for(GTK_WINDOW(window), main_window);
+
     connect_button = ci.connect_button = GTK_WIDGET(gtk_builder_get_object(builder, "connect-button"));
 
     ci.connect_spinner = GTK_WIDGET(gtk_builder_get_object(builder, "connect-spinner"));
@@ -302,11 +423,6 @@ remote_viewer_connect_dialog(GtkWindow *main_window G_GNUC_UNUSED, gchar **uri, 
     const gchar *port_str_from_config_file = read_from_settings_file(paramToFileGrpoup, "port");
     if(port_str_from_config_file)
         gtk_entry_set_text(GTK_ENTRY(port_entry), port_str_from_config_file);
-
-    rfilter = gtk_recent_filter_new();
-    gtk_recent_filter_add_mime_type(rfilter, "application/x-spice");
-    gtk_recent_filter_add_mime_type(rfilter, "application/x-vnc");
-    gtk_recent_filter_add_mime_type(rfilter, "application/x-virt-viewer");
 
     // Set veil image
     veil_image = GTK_WIDGET(gtk_builder_get_object(builder, "veil-image"));
@@ -363,32 +479,6 @@ remote_viewer_connect_dialog(GtkWindow *main_window G_GNUC_UNUSED, gchar **uri, 
     gtk_widget_show_all(window);
 
     connect_dialog_run(&ci);
-
-    // collect data from gui form
-    if (ci.response == TRUE) {
-        *ip = g_strdup(gtk_entry_get_text(GTK_ENTRY(address_entry)));
-        *port = g_strdup(gtk_entry_get_text(GTK_ENTRY(port_entry)));
-        *uri = g_strconcat("spice://", *ip, ":", *port, NULL);
-        g_strstrip(*uri);
-        *user = g_strdup(gtk_entry_get_text(GTK_ENTRY(login_entry)));
-        *password = g_strdup(gtk_entry_get_text(GTK_ENTRY(password_entry)));
-        *is_ldap = gtk_toggle_button_get_active((GtkToggleButton *)ldap_checkbutton);
-
-        // save data to ini file if required
-        if(b_save_credentials_to_file){
-            write_to_settings_file(paramToFileGrpoup, "ip", *ip);
-            write_to_settings_file(paramToFileGrpoup, "port", *port);
-            write_to_settings_file(paramToFileGrpoup, "username", *user);
-            write_to_settings_file(paramToFileGrpoup, "password", *password);
-        }
-
-    } else {
-        *uri = NULL;
-        *user = NULL;
-        *password = NULL;
-        *ip = NULL;
-        *port = NULL;
-    }
 
     g_object_unref(builder);
     gtk_widget_destroy(window);

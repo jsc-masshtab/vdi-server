@@ -16,8 +16,6 @@
 
 #define MAX_POOL_NUMBER 150
 
-// extern
-extern gboolean take_extern_credentials;
 
 typedef enum
 {
@@ -287,6 +285,8 @@ static void on_get_vm_from_pool_finished(GObject *source_object G_GNUC_UNUSED,
     JsonObject *data_member_object = json_object_get_object_member(root_object, "data");
     if (!data_member_object) {
         set_vdi_client_state(VDI_RECEIVED_RESPONSE, "Не удалось получить вм из пула", TRUE);
+        g_object_unref(parser);
+        g_free(ptr_res);
         return;
     }
 
@@ -403,7 +403,6 @@ GtkResponseType vdi_manager_dialog(GtkWindow *main_window G_GNUC_UNUSED, gchar *
     vdi_manager.ci.dialog_window_response = GTK_RESPONSE_CANCEL;
     vdi_manager.url_ptr = uri;
     vdi_manager.password_ptr = password;
-    take_extern_credentials = TRUE;
 
     /* Create the widgets */
     vdi_manager.builder = virt_viewer_util_load_ui("vdi_manager_form.ui");
