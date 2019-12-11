@@ -1,3 +1,4 @@
+import { LoginComponent } from './login/login.component';
 import { TemplateDetailsComponent } from './resourses/templates/template-details/template-details.component';
 import { DatapoolDetailsComponent } from './resourses/datapools/datapool-details/datapool-details.component';
 import { PoolDetailsComponent } from './pools/pool-details/pool-details.component';
@@ -8,7 +9,7 @@ import { NodeDetailsComponent } from './resourses/nodes/node-details/node-detail
 import { ClustersComponent } from './resourses/clusters/all-clusters/clusters.component';
 import { NgModule } from '@angular/core';
 import { Routes, RouterModule } from '@angular/router';
-import { ControllersComponent } from './settings/controllers/all-controllers/controllers.component';
+// import { ControllersComponent } from './settings/controllers/all-controllers/controllers.component';
 import { NodesComponent } from './resourses/nodes/all-nodes/nodes.component';
 import { DatapoolsComponent } from './resourses/datapools/all-datapools/datapools.component';
 import { ClusterDetailsComponent } from './resourses/clusters/cluster-details/cluster-details.component';
@@ -16,6 +17,11 @@ import { TemplatesComponent } from './resourses/templates/all-templates/template
 import { UsersComponent } from './settings/users/all-users/users.component';
 import { VmDetailsComponent } from './resourses/vms/vms-details/vm-details.component';
 import { EventsComponent } from './log/events/all-events/events.component';
+
+// {
+//   path: 'settings/controllers',
+//   component: ControllersComponent
+// },
 
 const routes: Routes = [
   {
@@ -35,7 +41,7 @@ const routes: Routes = [
   },
   {
     path: 'settings/controllers',
-    component: ControllersComponent
+    component: LoginComponent
   },
   {
     path: 'settings/users',

@@ -1,3 +1,4 @@
+import { LoginModule } from './login/login.module';
 import { WebsocketPoolService } from './common/classes/websockPool.service';
 import { WebsocketService } from './common/classes/websock.service';
 
@@ -68,6 +69,7 @@ import { EventsModule } from './log/events/events.module';
     FontAwesomeModule,
 
     SharedModule,
+    LoginModule,
 
     PoolsModule,
     ClustersModule,
