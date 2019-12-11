@@ -74,7 +74,7 @@ class AddControllerMutation(graphene.Mutation):
                 expires_on=expires_on
             )
 
-            resources_monitor_manager.add_controller(address)
+            await resources_monitor_manager.add_controller(address)
             msg = 'Successfully added new controller {id} with address {address}.'.format(
                 id=controller.id,
                 address=address)
@@ -183,7 +183,7 @@ class RemoveAllControllersMutation(graphene.Mutation):
             # status = await Controller.delete.where(Controller.id == id).gino.status()
             # print(status)
 
-            resources_monitor_manager.remove_controller(controller.address)
+            await resources_monitor_manager.remove_controller(controller.address)
         return RemoveAllControllersMutation(ok=True)
 
 

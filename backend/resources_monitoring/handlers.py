@@ -1,20 +1,32 @@
 # -*- coding: utf-8 -*-
-import tornado.ioloop
-
-from tornado import websocket
-from tornado import gen
-from  tornado.web import Application
-from tornado import gen, httpclient, httputil
-import tornado.ioloop
-
-from typing import Any
-
 import asyncio
 from abc import ABC
+from typing import Any
+
+import tornado.ioloop
+import tornado.ioloop
+from tornado import httputil
+from tornado import websocket
+from tornado.web import Application
 
 from .resources_monitoring_data import VDI_FRONT_ALLOWED_SUBSCRIPTIONS_LIST, SubscriptionCmd
 
-from resources_monitoring.resources_monitor_manager import resources_monitor_manager
+
+class ClientManager:
+    clients = []
+
+    def __init__(self):
+        pass
+
+    async def send_message(self, msg):
+        for client in self.clients:
+            await client.write_msg(msg)
+
+    def add_client(self, client):
+        self.clients.append(client)
+
+    def remove_client(self, client):
+        self.clients.remove(client)
 
 
 class AbstractSubscriptionObserver(ABC):
@@ -62,7 +74,7 @@ class VdiFrontWsHandler(websocket.WebSocketHandler, AbstractSubscriptionObserver
     async def open(self):
         print("WebSocket opened")
         self._start_message_sending()
-        resources_monitor_manager.subscribe(self)
+        client_manager.add_client(self)
 
     async def on_message(self, message):
         print('message', message)
@@ -75,13 +87,13 @@ class VdiFrontWsHandler(websocket.WebSocketHandler, AbstractSubscriptionObserver
             response_dict['resource'] = subscription_source
         except ValueError:
             response_dict['error'] = True
-            await self._write_msg(response_dict)
+            await self.write_msg(response_dict)
             return
         # check if allowed
         if subscription_source not in VDI_FRONT_ALLOWED_SUBSCRIPTIONS_LIST:
             print(__class__.__name__, ' Unknown subscription source')
             response_dict['error'] = True
-            await self._write_msg(response_dict)
+            await self.write_msg(response_dict)
             return
         # print('Test Length', len(self._subscriptions))
         # if 'add' cmd and not subscribed  then subscribe
@@ -102,12 +114,11 @@ class VdiFrontWsHandler(websocket.WebSocketHandler, AbstractSubscriptionObserver
             response_dict['error'] = False
 
         # send response
-        await self._write_msg(response_dict)
+        await self.write_msg(response_dict)
 
     def on_close(self):
         print("WebSocket closed")
-        resources_monitor_manager.unsubscribe(self)
-        #await self._stop_message_sending()
+        # await self._stop_message_sending()
 
     def _start_message_sending(self):
         """start message sending task"""
@@ -128,9 +139,9 @@ class VdiFrontWsHandler(websocket.WebSocketHandler, AbstractSubscriptionObserver
                 json_message = self._message_queue.get_nowait()
             except asyncio.QueueEmpty:
                 continue
-            await self._write_msg(json_message)
+            await self.write_msg(json_message)
 
-    async def _write_msg(self, msg):
+    async def write_msg(self, msg):
         try:
             await self.write_message(msg)
         except tornado.websocket.WebSocketClosedError:
@@ -175,3 +186,6 @@ class WaiterSubscriptionObserver(AbstractSubscriptionObserver):
                 return True
 
         return False
+
+
+client_manager = ClientManager()

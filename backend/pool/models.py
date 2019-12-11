@@ -476,8 +476,6 @@ class AutomatedPool(db.Model):
 
                 # notify VDI front about progress(WS)
                 msg = 'Automated pool creation. Created {} VMs from {}'.format(vm_index, self.initial_size)
-                await Event.create_info(msg)
-
                 msg_dict = dict(msg=msg,
                                 mgs_type='data',
                                 event='pool_creation_progress',
@@ -485,7 +483,9 @@ class AutomatedPool(db.Model):
                                 domain_index=vm_index,
                                 initial_size=self.initial_size,
                                 resource=VDI_TASKS_SUBSCRIPTION)
-                resources_monitor_manager.signal_internal_event(msg_dict)
+                # TODO: make formated event
+                await Event.create_info(msg)
+
         except VmCreationError as E:
             # log that we cant create required initial amount of VMs
             print('Cant create VM')
@@ -496,22 +496,21 @@ class AutomatedPool(db.Model):
         print('is creation successful: {}'.format(is_creation_successful))
         if is_creation_successful:
             msg = 'Automated pool successfully created. Initial VM amount {}'.format(len(vm_list))
+            msg_dict = dict(msg=msg,
+                            msg_type='data',
+                            event='pool_creation_completed',
+                            pool_id=str(self.automated_pool_id),
+                            amount_of_created_vms=len(vm_list),
+                            initial_size=self.initial_size,
+                            is_successful=is_creation_successful,
+                            resource=VDI_TASKS_SUBSCRIPTION)
+            # TODO: make formated event
             await Event.create_info(msg)
         else:
             msg = 'Automated pool created with errors. VMs created: {}. Required: {}'.format(len(vm_list),
                                                                                              self.initial_size)
             await Event.create_error(msg)
 
-        # Prepare new msg to resource monitor
-        msg_dict = dict(msg=msg,
-                        msg_type='data',
-                        event='pool_creation_completed',
-                        pool_id=str(self.automated_pool_id),
-                        amount_of_created_vms=len(vm_list),
-                        initial_size=self.initial_size,
-                        is_successful=is_creation_successful,
-                        resource=VDI_TASKS_SUBSCRIPTION)
-        resources_monitor_manager.signal_internal_event(msg_dict)
         # Пробросить исключение, если споткнулись на создании машин
         if not is_creation_successful:
             raise VmCreationError('Не удалось создать необходимое число машин.')
