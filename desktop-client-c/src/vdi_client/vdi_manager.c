@@ -13,6 +13,7 @@
 #include "vdi_ws_client.h"
 #include "vdi_pool_widget.h"
 #include "jsonhandler.h"
+#include "settingsfile.h"
 
 #define MAX_POOL_NUMBER 150
 
@@ -303,6 +304,8 @@ static void on_get_vm_from_pool_finished(GObject *source_object G_GNUC_UNUSED,
         const gchar *user_message = message ? message : "Не удалось получить вм из пула";
         set_vdi_client_state(VDI_RECEIVED_RESPONSE, user_message, TRUE);
     } else {
+        // save to settings file the last pool we connected to
+        write_to_settings_file("RemoteViewerConnect", "last_pool_id", get_current_pool_id());
 
         free_memory_safely(vdi_manager.url_ptr);
         *vdi_manager.url_ptr = g_strdup_printf("spice://%s:%ld", vm_host, vm_port);

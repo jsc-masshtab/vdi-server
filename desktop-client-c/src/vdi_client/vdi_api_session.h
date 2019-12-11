@@ -25,7 +25,11 @@ typedef enum{
 typedef struct{
 
     int os_type;
-    gchar *ip;
+    gchar *vm_host;
+    gint64 vm_port;
+    gchar *vm_password;
+    gchar *message;
+
     gint test_data;
 
 } VdiVmData;

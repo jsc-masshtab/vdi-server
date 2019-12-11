@@ -40,6 +40,13 @@ extern gboolean opt_manual_mode;
 
 static gboolean b_save_credentials_to_file = FALSE;
 
+typedef enum
+{
+    AUTH_BEFORE_CONNECT
+    // more coming
+
+} AuthDialogState;
+
 typedef struct
 {
     GMainLoop *loop;
@@ -79,6 +86,24 @@ shutdown_loop(GMainLoop *loop)
         g_main_loop_quit(loop);
 }
 
+// set gui state
+static void
+set_auth_dialog_state(AuthDialogState auth_dialog_state, RemoteViewerData *ci)
+{
+    switch (auth_dialog_state) {
+    case AUTH_BEFORE_CONNECT: {
+        // stop connect spinner
+        gtk_spinner_stop((GtkSpinner *)ci->connect_spinner);
+
+        // enable connect button if address_entry is not empty
+        if (gtk_entry_get_text_length(GTK_ENTRY(ci->address_entry)) > 0)
+            gtk_widget_set_sensitive(GTK_WIDGET(ci->connect_button), TRUE);
+
+        break;
+    }
+    }
+}
+
 // save data to ini file
 static void
 save_data_to_ini_file(RemoteViewerData *ci)
@@ -109,12 +134,7 @@ on_get_vm_from_pool_finished(GObject *source_object G_GNUC_UNUSED,
 {
     RemoteViewerData *ci = user_data;
 
-    // stop connect spinner   todo: code repeat. do something
-    gtk_spinner_stop((GtkSpinner *)ci->connect_spinner);
-
-    // enable connect button if address_entry is not empty      todo: code repeat. do something
-    if (gtk_entry_get_text_length(GTK_ENTRY(ci->address_entry)) > 0)
-        gtk_widget_set_sensitive(GTK_WIDGET(ci->connect_button), TRUE);
+    set_auth_dialog_state(AUTH_BEFORE_CONNECT, ci);
 
     GError *error = NULL;
     gpointer  ptr_res =  g_task_propagate_pointer (G_TASK (res), &error); // take ownership
@@ -181,12 +201,7 @@ on_get_vdi_token_finished(GObject *source_object G_GNUC_UNUSED,
     gboolean token_refreshed = g_task_propagate_boolean(G_TASK(res), &error);
     printf("%s: is_token_refreshed %i\n", (const char *)__func__, token_refreshed);
 
-    // stop connect spinner
-    gtk_spinner_stop((GtkSpinner *)ci->connect_spinner);
-
-    // enable connect button if address_entry is not empty
-    if (gtk_entry_get_text_length(GTK_ENTRY(ci->address_entry)) > 0)
-        gtk_widget_set_sensitive(GTK_WIDGET(ci->connect_button), TRUE);
+    set_auth_dialog_state(AUTH_BEFORE_CONNECT, ci);
 
     if (token_refreshed) {
         ci->response = TRUE;
@@ -287,11 +302,20 @@ connect_button_clicked_cb(GtkButton *button G_GNUC_UNUSED, gpointer data)
             // start connect spinner
             gtk_spinner_start((GtkSpinner *)ci->connect_spinner);
 
+            // 2 варианта: подключиться к сразу к предыдущему пулу, либо перейти к vdi менеджеру для выбора пула
             *ci->is_connect_to_prev_pool_ptr  =
                     gtk_toggle_button_get_active((GtkToggleButton *)ci->conn_to_prev_pool_checkbutton);
             if (*ci->is_connect_to_prev_pool_ptr) {
+
                 // get pool id from settings file
+                const gchar *last_pool_id = read_from_settings_file("RemoteViewerConnect", "last_pool_id");
+                if (!last_pool_id) {
+                    set_error_message_to_label(GTK_LABEL(ci->message_display_label), "Нет информации о предыдущем пуле");
+                    set_auth_dialog_state(AUTH_BEFORE_CONNECT, ci);
+                    return;
+                }
                 set_current_pool_id("8ecb8dce-af2d-41b8-a4c2-ed36a3b77578");
+
                 // start async task  get_vm_from_pool
                 execute_async_task(get_vm_from_pool, on_get_vm_from_pool_finished, NULL, data);
             } else {
@@ -331,15 +355,7 @@ entry_changed_cb(GtkEditable* entry, gpointer data)
                  "secondary-icon-sensitive", active,
                  NULL);
 }
-/*
-static gboolean
-entry_focus_in_cb(GtkWidget *widget G_GNUC_UNUSED, GdkEvent *event G_GNUC_UNUSED, gpointer data)
-{
-    GtkRecentChooser *recent = data;
-    gtk_recent_chooser_unselect_all(recent);
-    return FALSE;
-}
-*/
+
 static void
 entry_activated_cb(GtkEntry *entry G_GNUC_UNUSED, gpointer data)
 {
@@ -457,21 +473,12 @@ remote_viewer_connect_dialog(gchar **uri, gchar **user, gchar **password,
     remember_checkbutton = GTK_WIDGET(gtk_builder_get_object(builder, "remember-button"));
 
     // Signal - callbacks connections
-    g_signal_connect(window, "key-press-event",
-                     G_CALLBACK(key_pressed_cb), window);
-    g_signal_connect(connect_button, "clicked",
-                     G_CALLBACK(connect_button_clicked_cb), &ci);
-
-
-    g_signal_connect_swapped(window, "delete-event",
-                             G_CALLBACK(window_deleted_cb), &ci);
-
+    g_signal_connect(window, "key-press-event", G_CALLBACK(key_pressed_cb), window);
+    g_signal_connect(connect_button, "clicked", G_CALLBACK(connect_button_clicked_cb), &ci);
+    g_signal_connect_swapped(window, "delete-event", G_CALLBACK(window_deleted_cb), &ci);
     g_signal_connect(address_entry, "changed", G_CALLBACK(entry_changed_cb), connect_button);
     g_signal_connect(address_entry, "icon-release", G_CALLBACK(entry_icon_release_cb), address_entry);
-
-    g_signal_connect(remember_checkbutton, "clicked",
-            G_CALLBACK(on_remember_checkbutton_clicked), remember_checkbutton);
-
+    g_signal_connect(remember_checkbutton, "clicked", G_CALLBACK(on_remember_checkbutton_clicked), remember_checkbutton);
     g_signal_connect(G_OBJECT(port_entry), "insert-text", G_CALLBACK(on_insert_text_event), NULL);
 
     /* show and wait for response */
@@ -487,10 +494,3 @@ remote_viewer_connect_dialog(gchar **uri, gchar **user, gchar **password,
 }
 
 
-/*
- * Local variables:
- *  c-indent-level: 4
- *  c-basic-offset: 4
- *  indent-tabs-mode: nil
- * End:
- */

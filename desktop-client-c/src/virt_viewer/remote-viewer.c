@@ -434,12 +434,9 @@ retry_connnect_to_vm:
         }
 
     } else {
-        // Подключение к пред. запомненому пулу. Подключаемся к ВМ минуя vdi manager window
-        if (is_connect_to_prev_pool) {
-
-        }
-        // show vdi manager window
-        else {
+        //Если is_connect_to_prev_pool true, то подключение к пред. запомненому пулу,
+        // минуя vdi manager window
+        if (!is_connect_to_prev_pool) {
             free_memory_safely(&guri);
             free_memory_safely(&user);
             free_memory_safely(&password);
