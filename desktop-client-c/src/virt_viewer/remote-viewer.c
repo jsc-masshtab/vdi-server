@@ -386,13 +386,13 @@ remote_viewer_start(VirtViewerApp *app, GError **err, RemoteViewerState remoteVi
 #endif
     switch (remoteViewerState) {
         case  AUTH_DIALOG:
-            goto retry_dialog;
+            goto retry_auth;
         case VDI_DIALOG:
-            goto retry_vdi_dialog;
+            goto retry_connnect_to_vm;
     }
 
     // remote connect dialog
-retry_dialog:
+retry_auth:
     {
         VirtViewerWindow *main_window = virt_viewer_app_get_main_window(app);
         // Забираем из ui адрес и порт
@@ -413,7 +413,7 @@ retry_dialog:
     // После такого как забрали адресс с логином и паролем действуем в зависимости от opt_manual_mode
     // 1) в мануальном режиме сразу подключаемся к удаленноиу раб столу
     // 2) В дефолтном режиме вызываем vdi manager. В нем пользователь выберет машину для подключения
-retry_vdi_dialog:
+retry_connnect_to_vm:
     // instant connect attempt
     if (opt_manual_mode) {
         // credentials
@@ -478,7 +478,7 @@ cleanup:
             virt_viewer_app_simple_message_dialog(app, _("Unable to connect: %s"), error->message); // -
         }
         g_clear_error(&error);
-        goto retry_dialog;
+        goto retry_auth;
     }
     if (error != NULL)
         g_propagate_error(err, error);

@@ -267,7 +267,7 @@ static void on_get_vm_from_pool_finished(GObject *source_object G_GNUC_UNUSED,
 {
     printf("%s\n", (const char *)__func__);
 
-    VdiPoolWidget vdi_pool_widget = get_vdi_pool_widget_by_id(get_current_vm_id());
+    VdiPoolWidget vdi_pool_widget = get_vdi_pool_widget_by_id(get_current_pool_id());
     enable_spinner_visible(&vdi_pool_widget, FALSE);
 
     GError *error = NULL;
@@ -381,7 +381,7 @@ static void on_vm_start_button_clicked(GtkButton *button, gpointer data G_GNUC_U
 {
     //ConnectionInfo *ci = data;
     const gchar *pool_id = g_object_get_data(G_OBJECT(button), "pool_id");
-    set_current_vm_id(pool_id);
+    set_current_pool_id(pool_id);
     printf("%s  %s\n", (const char *)__func__, pool_id);
     // start machine
     set_vdi_client_state(VDI_WAITING_FOR_VM_FROM_POOL, "Отправлен запрос на получение вм из пула", FALSE);

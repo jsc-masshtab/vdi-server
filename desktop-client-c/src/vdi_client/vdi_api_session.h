@@ -47,7 +47,7 @@ typedef struct{
     gboolean is_ldap;
     gboolean is_active;
 
-    gchar *current_vm_id;
+    gchar *current_pool_id;
 
 } VdiSession;
 
@@ -76,9 +76,9 @@ void cancell_pending_requests(void);
 void set_vdi_credentials(const gchar *username, const gchar *password, const gchar *ip,
                          const gchar *port, gboolean is_ldap);
 // set current vm id
-void set_current_vm_id(const gchar *current_vm_id);
+void set_current_pool_id(const gchar *current_pool_id);
 // get current vm id
-const gchar *get_current_vm_id(void);
+const gchar *get_current_pool_id(void);
 
 //void gInputStreamToBuffer(GInputStream *inputStream, gchar *responseBuffer);
 // Do api call. Return response body

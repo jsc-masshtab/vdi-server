@@ -16,6 +16,8 @@
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *
+ * Edited by A. Solomin a.solomin@mashtab.org  2019
  */
 
 #include <config.h>
@@ -52,6 +54,7 @@ typedef struct
     GtkWidget *message_display_label;
 
     GtkWidget *ldap_checkbutton;
+    GtkWidget *conn_to_prev_pool_checkbutton;
 
     GtkResponseType dialog_window_response;
 
@@ -173,6 +176,9 @@ connect_button_clicked_cb(GtkButton *button G_GNUC_UNUSED, gpointer data)
             // start connect spinner
             gtk_spinner_start((GtkSpinner *)ci->connect_spinner);
 
+            gboolean is_conn_to_prev_pool =
+                    gtk_toggle_button_get_active((GtkToggleButton *)ci->conn_to_prev_pool_checkbutton);
+
             // fetch token task starting
             execute_async_task(get_vdi_token, on_get_vdi_token_finished, NULL, data);
         }
@@ -227,34 +233,7 @@ entry_activated_cb(GtkEntry *entry G_GNUC_UNUSED, gpointer data)
         shutdown_loop(ci->loop);
     }
 }
-/*
-static void
-recent_selection_changed_dialog_cb(GtkRecentChooser *chooser, gpointer data)
-{
-    GtkRecentInfo *info;
-    GtkWidget *entry = data;
-    const gchar *uri;
 
-    info = gtk_recent_chooser_get_current_item(chooser);
-    if (info == NULL)
-        return;
-
-    uri = gtk_recent_info_get_uri(info);
-    g_return_if_fail(uri != NULL);
-
-    gtk_entry_set_text(GTK_ENTRY(entry), uri);
-
-    gtk_recent_info_unref(info);
-}*/
-/*
-static void
-recent_item_activated_dialog_cb(GtkRecentChooser *chooser G_GNUC_UNUSED, gpointer data)
-{
-    RemoteViewerData *ci = data;
-    ci->response = TRUE;
-    shutdown_loop(ci->loop);
-}
-*/
 static void
 make_label_small(GtkLabel* label)
 {
@@ -354,6 +333,9 @@ remote_viewer_connect_dialog(GtkWindow *main_window G_GNUC_UNUSED, gchar **uri, 
 
     // LDAP check button
     ci.ldap_checkbutton = ldap_checkbutton = GTK_WIDGET(gtk_builder_get_object(builder, "ldap-button"));
+
+    // Connect to prev pool check button
+    ci.conn_to_prev_pool_checkbutton = GTK_WIDGET(gtk_builder_get_object(builder, "connect-to-prev-button"));
 
     // Remember check button
     remember_checkbutton = GTK_WIDGET(gtk_builder_get_object(builder, "remember-button"));
