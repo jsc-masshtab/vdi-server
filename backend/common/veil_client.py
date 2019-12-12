@@ -63,7 +63,7 @@ class VeilHttpClient:
             body = self.get_response_body(http_error.response)
 
             # TODO: temprorary variant
-            error_msg = '{cls}: URL {url} {http_error}}'.format(
+            error_msg = '{cls}: URL {url} {http_error}'.format(
                 cls=__class__.__name__,
                 url=url,
                 http_error=str(http_error))
