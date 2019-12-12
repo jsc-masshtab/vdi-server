@@ -33,10 +33,8 @@ import { faDesktop, faDatabase, faBuilding, faLayerGroup, faPlusCircle, faSpinne
         } from '@fortawesome/free-solid-svg-icons';
 /*  -----------------------------------   icons   --------------------------------------*/
 
-import { MainMenuComponent } from './common/components/single/main-menu/main-menu.component';
 import { ErrorsComponent } from './common/components/single/errors/errors.component';
-import { FooterComponent } from './common/components/single/footer/footer.component';
-import { WaitComponent } from './common/components/single/wait/wait.component';
+
 import { WaitService } from './common/components/single/wait/wait.service';
 
 /*  -----------------------------------   material   --------------------------------------*/
@@ -48,16 +46,14 @@ import { onError } from 'apollo-link-error';
 import { InMemoryCache } from 'apollo-cache-inmemory';
 import { environment } from 'src/environments/environment';
 import { EventsModule } from './log/events/events.module';
+import { WaitComponent } from './common/components/single/wait/wait.component';
 
 
 
 @NgModule({
   declarations: [
     AppComponent,
-    MainMenuComponent,
-    ErrorsComponent,
-    FooterComponent,
-    WaitComponent
+    ErrorsComponent
   ],
   imports: [
     BrowserModule,
@@ -81,6 +77,7 @@ import { EventsModule } from './log/events/events.module';
     UsersModule,
     EventsModule
   ],
+  exports: [WaitComponent],
   entryComponents: [],
   providers:
     [

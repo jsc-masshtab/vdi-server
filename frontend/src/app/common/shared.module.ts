@@ -1,3 +1,9 @@
+import { AppRoutingModule } from './../app-routing.module';
+import { WaitService } from './components/single/wait/wait.service';
+
+import { MainMenuComponent } from './components/single/main-menu/main-menu.component';
+import { FooterComponent } from './components/single/footer/footer.component';
+import { ShellComponent } from './components/single/shell/shell.component';
 import { MatDialogModule } from '@angular/material/dialog';
 import { StatusPipe, StatusIconPipe } from './pipes/statusEntity.pipes';
 import { CommonModule } from '@angular/common';
@@ -9,11 +15,16 @@ import { TableComponentComponent } from './components/shared/table-component/tab
 import { FormForEditComponent } from './forms-dinamic/change-form/form-edit.component';
 import { ReactiveFormsModule } from '@angular/forms';
 import { MatCheckboxModule } from '@angular/material';
+import { WaitComponent } from './components/single/wait/wait.component';
 
 
 const COMPONENTS = [
   TableComponentComponent,
-  TableIntoComponent
+  TableIntoComponent,
+  ShellComponent,
+  FooterComponent,
+  MainMenuComponent,
+  WaitComponent
 ];
 
 const DIRECTIVES = [
@@ -48,12 +59,20 @@ const FORMS_DINAMIC = [
     FontAwesomeModule,
     MatDialogModule,
     ReactiveFormsModule,
-    MatCheckboxModule
+    MatCheckboxModule,
+    AppRoutingModule
   ],
+  providers: [WaitService],
   entryComponents: [
     ...FORMS_DINAMIC
   ]
 })
 
 
-export class SharedModule {}
+export class SharedModule {
+
+  constructor() {}
+
+
+
+}

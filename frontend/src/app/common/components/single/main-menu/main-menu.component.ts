@@ -79,7 +79,8 @@ export class MainMenuComponent implements OnInit {
 
   public routeTo(route: string) {
     setTimeout(() => {
-      this.router.navigate([route]);
+      this.router.navigate(['pages/' + route]);
     }, 0);
+    console.log(route, ['pages/' + route]);
   }
 }
