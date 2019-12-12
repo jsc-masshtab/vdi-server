@@ -9,7 +9,7 @@ import { Router, NavigationEnd} from '@angular/router';
   animations: [
     trigger('fadeInOut', [
       transition(':enter', [   // :enter is alias to 'void => *'
-        style({opacity:0}),
+        style({opacity: 0}),
         animate(250, style({opacity: 1}))
       ]),
       transition(':leave', [   // :leave is alias to '* => void'
@@ -35,10 +35,13 @@ export class MainMenuComponent implements OnInit {
   private beginRoute() {
 
     this.router.events.subscribe((event) => {
+      console.log(event);
       if (event instanceof NavigationEnd) {
 
         let clickedManage1 = event.urlAfterRedirects.split('/')[2] || null;
         let clickedManage2 = event.urlAfterRedirects.split('/')[3] || null;
+
+        console.log(clickedManage1,clickedManage2);
 
         if (clickedManage1) {
           if (clickedManage1 === 'resourses') {

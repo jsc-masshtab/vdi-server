@@ -31,6 +31,11 @@ const routes: Routes = [
     component: DashboardComponent,
     children: [
       {
+        path: '',
+        redirectTo: 'pools',
+        pathMatch: 'full'
+      },
+      {
         path: 'pools',
         component: PoolsComponent,
         children: [
