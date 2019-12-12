@@ -8,6 +8,7 @@ class EventType(graphene.ObjectType):
     id = graphene.String()
     event_type = graphene.Int()
     message = graphene.String()
+    description = graphene.String()
     created = graphene.DateTime()
     user = graphene.String()
 
