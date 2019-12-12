@@ -1,15 +1,15 @@
-@import "common/styles/form";
-@import "common/styles/panel-buttons";
-@import "common/styles/details-wrap";
-@import "common/styles/panel-btn-into";
-@import "common/styles/common";
+@import "dashboard/common/styles/form";
+@import "dashboard/common/styles/panel-buttons";
+@import "dashboard/common/styles/details-wrap";
+@import "dashboard/common/styles/panel-btn-into";
+@import "dashboard/common/styles/common";
 
 vdi-login {
     width: 100% !important;
     height: 100% !important;
 }
 
-vdi-shell {
+vdi-dashboard {
     width: 100% !important;
     height: 100% !important;
 }

@@ -1,23 +1,24 @@
-import { ShellComponent } from './common/components/single/shell/shell.component';
-import { LoginComponent } from './login/login.component';
-import { TemplateDetailsComponent } from './resourses/templates/template-details/template-details.component';
-import { DatapoolDetailsComponent } from './resourses/datapools/datapool-details/datapool-details.component';
-import { PoolDetailsComponent } from './pools/pool-details/pool-details.component';
-import { PoolsComponent } from './pools/all-pools/pools.component';
-import { VmsComponent } from './resourses/vms/all-vms/vms.component';
 
-import { NodeDetailsComponent } from './resourses/nodes/node-details/node-details.component';
-import { ClustersComponent } from './resourses/clusters/all-clusters/clusters.component';
+import { LoginComponent } from './login/login.component';
+import { TemplateDetailsComponent } from './dashboard/resourses/templates/template-details/template-details.component';
+import { DatapoolDetailsComponent } from './dashboard/resourses/datapools/datapool-details/datapool-details.component';
+import { PoolDetailsComponent } from './dashboard/pools/pool-details/pool-details.component';
+import { PoolsComponent } from './dashboard/pools/all-pools/pools.component';
+import { VmsComponent } from './dashboard/resourses/vms/all-vms/vms.component';
+
+import { NodeDetailsComponent } from './dashboard/resourses/nodes/node-details/node-details.component';
+import { ClustersComponent } from './dashboard/resourses/clusters/all-clusters/clusters.component';
 import { NgModule } from '@angular/core';
 import { Routes, RouterModule } from '@angular/router';
-import { ControllersComponent } from './settings/controllers/all-controllers/controllers.component';
-import { NodesComponent } from './resourses/nodes/all-nodes/nodes.component';
-import { DatapoolsComponent } from './resourses/datapools/all-datapools/datapools.component';
-import { ClusterDetailsComponent } from './resourses/clusters/cluster-details/cluster-details.component';
-import { TemplatesComponent } from './resourses/templates/all-templates/templates.component';
-import { UsersComponent } from './settings/users/all-users/users.component';
-import { VmDetailsComponent } from './resourses/vms/vms-details/vm-details.component';
-import { EventsComponent } from './log/events/all-events/events.component';
+import { ControllersComponent } from './dashboard/settings/controllers/all-controllers/controllers.component';
+import { NodesComponent } from './dashboard/resourses/nodes/all-nodes/nodes.component';
+import { DatapoolsComponent } from './dashboard/resourses/datapools/all-datapools/datapools.component';
+import { ClusterDetailsComponent } from './dashboard/resourses/clusters/cluster-details/cluster-details.component';
+import { TemplatesComponent } from './dashboard/resourses/templates/all-templates/templates.component';
+import { UsersComponent } from './dashboard/settings/users/all-users/users.component';
+import { VmDetailsComponent } from './dashboard/resourses/vms/vms-details/vm-details.component';
+import { EventsComponent } from './dashboard/log/events/all-events/events.component';
+import { DashboardComponent } from './dashboard/dashboard.component';
 
 
 const routes: Routes = [
@@ -27,7 +28,7 @@ const routes: Routes = [
   },
   {
     path: 'pages',
-    component: ShellComponent,
+    component: DashboardComponent,
     children: [
       {
         path: 'pools',
