@@ -134,13 +134,15 @@ class VmType(graphene.ObjectType):
             return
 
         template_id = await Vm.get_template_id(self.id)
-
-        # get data from veil
-        try:
-            vm_client = await VmHttpClient.create(controller_ip=self.controller.address, vm_id=template_id)
-            template_info = await vm_client.info()
-        except NotFound:
+        if not template_id:
             template_info = None
+        else:
+            # get data from veil
+            try:
+                vm_client = await VmHttpClient.create(controller_ip=self.controller.address, vm_id=template_id)
+                template_info = await vm_client.info()
+            except NotFound:
+                template_info = None
 
         template_name = template_info['verbose_name'] if template_info else DEFAULT_NAME
         self.template = TemplateType(id=template_id, veil_info=template_info, verbose_name=template_name)
