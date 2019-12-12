@@ -263,3 +263,16 @@ class AuthenticationDirectory(db.Model, AbstractSortableStatusModel):
             await cls.update.values(**object_kwargs).where(
                 cls.id == id).gino.status()
         return await cls.get(id)
+
+    @classmethod
+    async def soft_delete(cls, id):
+        """Все удаления объектов AD необходимо делать тут."""
+        # TODO: после ввода сущностей в Event, удалять зависимые записи журнала событий, возможно через ON_DELETE.
+        auth_dir = await AuthenticationDirectory.get_object(id=id, include_inactive=True)
+        if auth_dir:
+            msg = 'Authentication Directory {id} deleted.'.format(id=id)
+            await auth_dir.delete()
+            await Event.create_info(msg)
+            return True
+        return False
+

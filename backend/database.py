@@ -120,21 +120,5 @@ class AbstractSortableStatusModel:
             return await query.gino.first()
         return await query.gino.all()
 
-    @classmethod
-    async def activate(cls, id):
-        if cls().has_status_field:
-            query = cls.update.values(is_active=True)
-        else:
-            query = cls.update.values(status=Status.ACTIVE)
-        return await query.where(cls.id == id).gino.status()
-
-    @classmethod
-    async def deactivate(cls, id):
-        if cls().has_status_field:
-            query = cls.update.values(is_active=False)
-        else:
-            query = cls.update.values(status=Status.DELETING)
-        return await query.where(cls.id == id).gino.status()
-
 
 StatusGraphene = GrapheneEnum.from_enum(Status)

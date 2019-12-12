@@ -134,26 +134,6 @@ class TestAuthenticationDirectorySchema:
         executed = await execute_scheme(auth_dir_schema, query, context=auth_context)
         snapshot.assert_match(executed)
 
-    async def test_auth_dir_deactivate(self, snapshot, auth_context):
-        auth_dir = await AuthenticationDirectory.get_object(extra_field_name='verbose_name',
-                                                            extra_field_value='tst_verbose_name',
-                                                            include_inactive=True)
-        query = """mutation {deactivateAuthDir(id: "%s") {
-                      ok
-                    }}""" % auth_dir.id
-        executed = await execute_scheme(auth_dir_schema, query, context=auth_context)
-        snapshot.assert_match(executed)
-
-    async def test_auth_dir_activate(self, snapshot, auth_context):
-        auth_dir = await AuthenticationDirectory.get_object(extra_field_name='verbose_name',
-                                                            extra_field_value='tst_verbose_name',
-                                                            include_inactive=True)
-        query = """mutation {activateAuthDir(id: "%s") {
-                      ok
-                    }}""" % auth_dir.id
-        executed = await execute_scheme(auth_dir_schema, query, context=auth_context)
-        snapshot.assert_match(executed)
-
     async def test_drop_auth_dir(self, snapshot, auth_context):
         auth_dir = await AuthenticationDirectory.get_object(extra_field_name='verbose_name',
                                                             extra_field_value='tst_verbose_name',

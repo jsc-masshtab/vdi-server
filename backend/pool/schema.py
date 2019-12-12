@@ -297,29 +297,33 @@ class PoolQuery(graphene.ObjectType):
 class DeletePoolMutation(graphene.Mutation, PoolValidator):
     class Arguments:
         pool_id = graphene.UUID()
+        force = graphene.Boolean(required=False)
+        full = graphene.Boolean(required=False)
 
     ok = graphene.Boolean()
 
-    async def mutate(self, info, pool_id):
+    async def mutate(self, info, pool_id, force=False, full=False):
+        # Нет запуска валидации, т.к. нужна сущность пула далее - нет смысла запускать запрос 2жды.
+        pool = await Pool.get(pool_id)
+        if not pool:
+            raise SimpleError('No such pool.')
 
-        pool = await Pool.get_pool(pool_id)
-
-        if pool.pool_type == 'AUTOMATED':
+        pool_type = await pool.pool_type
+        if pool_type == Pool.PoolTypes.AUTOMATED:
+            template_id = await pool.template_id
             pool_lock = pool_task_manager.get_pool_lock(str(pool_id))
             async with pool_lock.lock:
                 # останавливаем таски связанные с пулом
                 await pool_task_manager.cancel_all_tasks_for_pool(str(pool_id))
                 # удаляем пул
-                await Pool.soft_delete(pool_id)
-                await pool_task_manager.remove_pool_data(str(pool_id), str(pool.template_id))
-        else:
-            await Pool.soft_delete(pool_id)
+                await pool_task_manager.remove_pool_data(str(pool_id), str(template_id))
 
-        # Меняем статус пула. Не нравится идея удалять записи имеющие внешние зависимости, которые не удалить,
-        # например запущенные виртуалки.
-        msg = 'Pool {id} deactivated.'.format(id=pool_id)
-        await Event.create_info(msg)
-        return DeletePoolMutation(ok=True)
+        if force:
+            return DeletePoolMutation(ok=await pool.force_delete())
+        elif full:
+            return DeletePoolMutation(ok=await pool.full_delete())
+
+        return DeletePoolMutation(ok=await pool.soft_delete())
 
 
 # --- --- --- --- ---
