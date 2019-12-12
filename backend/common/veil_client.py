@@ -68,7 +68,7 @@ class VeilHttpClient:
                 err_code=http_error.code,
                 msg_body=body,
                 url=url)
-            await Event.create_error(error_msg, description=http_error)
+            await Event.create_error(error_msg[:255], description=str(http_error))
 
             if http_error.code == 400:
                 raise BadRequest(body)
