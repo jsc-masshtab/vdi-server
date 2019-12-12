@@ -289,7 +289,33 @@ void get_vm_from_pool(GTask       *task,
     gchar *response_body_str = api_call("POST", urlStr, NULL);
     g_free(urlStr);
 
-    g_task_return_pointer(task, response_body_str, NULL); // return pointer must be freed
+    //response_body_str == NULL. didnt receive what we wanted
+    if (!response_body_str)
+        g_task_return_pointer(task, NULL, NULL);
+
+    // parse response
+    JsonParser *parser = json_parser_new();
+    JsonObject *root_object = get_root_json_object(parser, response_body_str);
+    JsonObject *data_member_object = json_object_get_object_member(root_object, "data");
+
+    // no point to parse if data is invalid
+    if (!data_member_object) {
+        g_object_unref(parser);
+        free_memory_safely(&response_body_str);
+        g_task_return_pointer(task, NULL, NULL);
+    }
+
+    VdiVmData *vdi_vm_data = calloc(1, sizeof(VdiVmData));
+    vdi_vm_data->vm_host = g_strdup(json_object_get_string_member_safely(data_member_object, "host"));
+    vdi_vm_data->vm_port = json_object_get_int_member_safely(data_member_object, "port");
+    vdi_vm_data->vm_password = g_strdup(json_object_get_string_member_safely(data_member_object, "password"));
+    vdi_vm_data->message = g_strdup(json_object_get_string_member_safely(data_member_object, "message"));
+    printf("vm_host %s \n", vdi_vm_data->vm_host);
+    printf("vm_port %ld \n", vdi_vm_data->vm_port);
+    printf("vm_password %s \n", vdi_vm_data->vm_password);
+
+    g_object_unref(parser);
+    g_task_return_pointer(task, vdi_vm_data, NULL); // return pointer must be freed
 }
 
 void do_action_on_vm(GTask      *task,
@@ -316,9 +342,7 @@ void do_action_on_vm(GTask      *task,
     free_memory_safely(&urlStr);
     free_memory_safely(&bodyStr);
     // free ActionOnVmData
-    free_memory_safely(&action_on_vm_data->current_vm_id);
-    free_memory_safely(&action_on_vm_data->action_on_vm_str);
-    free(action_on_vm_data);
+    free_action_on_vm_data(action_on_vm_data);
 }
 
 void do_action_on_vm_async(const gchar *actionStr, gboolean isForced)
@@ -329,4 +353,19 @@ void do_action_on_vm_async(const gchar *actionStr, gboolean isForced)
     action_on_vm_data->is_action_forced = isForced;
 
     execute_async_task(do_action_on_vm, NULL, action_on_vm_data, NULL);
+}
+
+void free_action_on_vm_data(ActionOnVmData *action_on_vm_data)
+{
+    free_memory_safely(&action_on_vm_data->current_vm_id);
+    free_memory_safely(&action_on_vm_data->action_on_vm_str);
+    free(action_on_vm_data);
+}
+
+void free_vdi_vm_data(VdiVmData *vdi_vm_data)
+{
+    free_memory_safely(&vdi_vm_data->vm_host);
+    free_memory_safely(&vdi_vm_data->vm_password);
+    free_memory_safely(&vdi_vm_data->message);
+    free(vdi_vm_data);
 }

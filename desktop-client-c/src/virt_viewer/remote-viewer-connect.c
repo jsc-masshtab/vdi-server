@@ -143,40 +143,22 @@ on_get_vm_from_pool_finished(GObject *source_object G_GNUC_UNUSED,
         return;
     }
 
-    gchar *response_body_str = ptr_res;
-
-    // parse  data  json. todo: code repeat. do something
-    JsonParser *parser = json_parser_new();
-    JsonObject *root_object = get_root_json_object(parser, response_body_str);
-
-    JsonObject *data_member_object = json_object_get_object_member(root_object, "data");
-    if (!data_member_object) {
-        set_error_message_to_label(GTK_LABEL(ci->message_display_label), "Не удалось получить вм из пула");
-        g_free(ptr_res);
-        return;
-    }
-
-    const gchar *vm_host = json_object_get_string_member_safely(data_member_object, "host");
-    gint64 vm_port = json_object_get_int_member_safely(data_member_object, "port");
-    const gchar *vm_password = json_object_get_string_member_safely(data_member_object, "password");
-    const gchar *message = json_object_get_string_member_safely(data_member_object, "message");
-
-    printf("vm_host %s vm_port %ld vm_password %s\n", vm_host, vm_port, vm_password);
+    VdiVmData *vdi_vm_data = ptr_res;
     // if port == 0 it means VDI server can not provide a vm
-    if (vm_port == 0) {
-        const gchar *user_message = message ? message : "Не удалось получить вм из пула";
+    if (vdi_vm_data->vm_port == 0) {
+        const gchar *user_message = vdi_vm_data->message ? vdi_vm_data->message : "Не удалось получить вм из пула";
         set_error_message_to_label(GTK_LABEL(ci->message_display_label), user_message);
     } else {
 
         ci->response = TRUE;
         ci->dialog_window_response = GTK_RESPONSE_OK;
 
-        *ci->ip = g_strdup(vm_host);
-        *ci->port = g_strdup_printf("%ld", vm_port);
+        *ci->ip = g_strdup(vdi_vm_data->vm_host);
+        *ci->port = g_strdup_printf("%ld", vdi_vm_data->vm_port);
         *ci->uri = g_strconcat("spice://", *ci->ip, ":", *ci->port, NULL);
         g_strstrip(*ci->uri);
         *ci->user = NULL;
-        *ci->password = g_strdup(vm_password);
+        *ci->password = g_strdup(vdi_vm_data->vm_password);
 
         // save data to ini file if required
         save_data_to_ini_file(ci);
@@ -184,9 +166,7 @@ on_get_vm_from_pool_finished(GObject *source_object G_GNUC_UNUSED,
         shutdown_loop(ci->loop);
     }
     //
-    g_object_unref(parser);
-    if(ptr_res)
-        g_free(ptr_res);
+    free_vdi_vm_data(vdi_vm_data);
 }
 
 // token fetch callback
@@ -402,7 +382,7 @@ remote_viewer_connect_dialog(gchar **uri, gchar **user, gchar **password,
     gboolean active;
 
     RemoteViewerData ci;
-    memset(&ci, 0, sizeof(ci)); // in C++ I would do: RemoteViewerData ci = {};
+    memset(&ci, 0, sizeof(RemoteViewerData)); // in C++ I would do: RemoteViewerData ci = {};
     ci.response = FALSE;
     ci.dialog_window_response = GTK_RESPONSE_CANCEL;
     // save pointers

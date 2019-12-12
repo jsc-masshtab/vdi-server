@@ -24,10 +24,12 @@ typedef enum{
 // Инфа о виртуальной машине полученная от vdi
 typedef struct{
 
-    int os_type;
+    VdiVmOs os_type;
+
     gchar *vm_host;
     gint64 vm_port;
     gchar *vm_password;
+
     gchar *message;
 
     gint test_data;
@@ -113,5 +115,8 @@ void do_action_on_vm(GTask         *task,
                      GCancellable  *cancellable);
 
 void do_action_on_vm_async(const gchar *actionStr, gboolean isForced);
+
+void free_action_on_vm_data(ActionOnVmData *action_on_vm_data);
+void free_vdi_vm_data(VdiVmData *vdi_vm_data);
 
 #endif //VIRT_VIEWER_VEIL_VDI_API_SESSION_H
