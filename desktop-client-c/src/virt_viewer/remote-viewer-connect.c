@@ -41,8 +41,8 @@ extern gboolean opt_manual_mode;
 
 typedef enum
 {
-    AUTH_BEFORE_CONNECT
-    // more coming
+    AUTH_GUI_BEFORE_CONNECT,
+    AUTH_GUI_CONNECT_TRY_STARTED
 
 } AuthDialogState;
 
@@ -91,7 +91,7 @@ static void
 set_auth_dialog_state(AuthDialogState auth_dialog_state, RemoteViewerData *ci)
 {
     switch (auth_dialog_state) {
-    case AUTH_BEFORE_CONNECT: {
+    case AUTH_GUI_BEFORE_CONNECT: {
         // stop connect spinner
         gtk_spinner_stop((GtkSpinner *)ci->connect_spinner);
 
@@ -99,6 +99,17 @@ set_auth_dialog_state(AuthDialogState auth_dialog_state, RemoteViewerData *ci)
         if (gtk_entry_get_text_length(GTK_ENTRY(ci->address_entry)) > 0)
             gtk_widget_set_sensitive(GTK_WIDGET(ci->connect_button), TRUE);
 
+        break;
+    }
+    case AUTH_GUI_CONNECT_TRY_STARTED: {
+        // clear message display
+        gtk_label_set_text(GTK_LABEL(ci->message_display_label), " ");
+
+        // disable connect button
+        gtk_widget_set_sensitive(GTK_WIDGET(ci->connect_button), FALSE);
+
+        // start connect spinner
+        gtk_spinner_start((GtkSpinner *)ci->connect_spinner);
         break;
     }
     }
@@ -142,7 +153,7 @@ on_get_vm_from_pool_finished(GObject *source_object G_GNUC_UNUSED,
 {
     RemoteViewerData *ci = user_data;
 
-    set_auth_dialog_state(AUTH_BEFORE_CONNECT, ci);
+    set_auth_dialog_state(AUTH_GUI_BEFORE_CONNECT, ci);
 
     GError *error = NULL;
     gpointer  ptr_res =  g_task_propagate_pointer (G_TASK (res), &error); // take ownership
@@ -186,7 +197,7 @@ on_get_vdi_token_finished(GObject *source_object G_GNUC_UNUSED,
     gboolean token_refreshed = g_task_propagate_boolean(G_TASK(res), &error);
     printf("%s: is_token_refreshed %i\n", (const char *)__func__, token_refreshed);
 
-    set_auth_dialog_state(AUTH_BEFORE_CONNECT, ci);
+    set_auth_dialog_state(AUTH_GUI_BEFORE_CONNECT, ci);
 
     if (token_refreshed) {
         ci->response = TRUE;
@@ -205,6 +216,42 @@ on_get_vdi_token_finished(GObject *source_object G_GNUC_UNUSED,
     }
 }
 
+// connect to VDI server
+void connect_to_vdi_server(RemoteViewerData *ci)
+{
+    // set credential for connection to VDI server
+    const gchar *ip = gtk_entry_get_text(GTK_ENTRY(ci->address_entry));
+    const gchar *port = gtk_entry_get_text(GTK_ENTRY(ci->port_entry));
+    const gchar *user = gtk_entry_get_text(GTK_ENTRY(ci->login_entry));
+    const gchar *password = gtk_entry_get_text(GTK_ENTRY(ci->password_entry));
+    gboolean is_ldap = gtk_toggle_button_get_active((GtkToggleButton *)ci->ldap_checkbutton);
+    set_vdi_credentials(user, password, ip, port, is_ldap);
+
+    set_auth_dialog_state(AUTH_GUI_CONNECT_TRY_STARTED, ci);
+
+    // 2 варианта: подключиться к сразу к предыдущему пулу, либо перейти к vdi менеджеру для выбора пула
+    *ci->is_connect_to_prev_pool_ptr  =
+            gtk_toggle_button_get_active((GtkToggleButton *)ci->conn_to_prev_pool_checkbutton);
+    if (*ci->is_connect_to_prev_pool_ptr) {
+
+        // get pool id from settings file
+        gchar *last_pool_id = read_str_from_ini_file("RemoteViewerConnect", "last_pool_id");
+        if (!last_pool_id) {
+            set_error_message_to_label(GTK_LABEL(ci->message_display_label), "Нет информации о предыдущем пуле");
+            set_auth_dialog_state(AUTH_GUI_BEFORE_CONNECT, ci);
+            return;
+        }
+        set_current_pool_id(last_pool_id);
+        free_memory_safely(&last_pool_id);
+
+        // start async task  get_vm_from_pool
+        execute_async_task(get_vm_from_pool, on_get_vm_from_pool_finished, NULL, ci);
+    } else {
+        // fetch token task starting
+        execute_async_task(get_vdi_token, on_get_vdi_token_finished, NULL, ci);
+    }
+}
+
 // Перехватывается событие ввода текста. Игнорируется, если есть нецифры
 static void
 on_insert_text_event(GtkEditable *editable, const gchar *text, gint length,
@@ -219,14 +266,6 @@ on_insert_text_event(GtkEditable *editable, const gchar *text, gint length,
         }
     }
 }
-
-//static void
-//on_remember_checkbutton_clicked(GtkCheckButton *check_button,
-//                                GtkEntry *entry G_GNUC_UNUSED)
-//{
-//    printf("on_remember_checkbutton_clicked\n");
-//    b_save_credentials_to_file = gtk_toggle_button_get_active((GtkToggleButton *)check_button);
-//}
 
 static gboolean
 window_deleted_cb(RemoteViewerData *ci)
@@ -267,44 +306,7 @@ connect_button_clicked_cb(GtkButton *button G_GNUC_UNUSED, gpointer data)
             ci->dialog_window_response = GTK_RESPONSE_OK;
             shutdown_loop(ci->loop);
         } else {
-            // set credential for connection to VDI server
-            const gchar *ip = gtk_entry_get_text(GTK_ENTRY(ci->address_entry));
-            const gchar *port = gtk_entry_get_text(GTK_ENTRY(ci->port_entry));
-            const gchar *user = gtk_entry_get_text(GTK_ENTRY(ci->login_entry));
-            const gchar *password = gtk_entry_get_text(GTK_ENTRY(ci->password_entry));
-            gboolean is_ldap = gtk_toggle_button_get_active((GtkToggleButton *)ci->ldap_checkbutton);
-            set_vdi_credentials(user, password, ip, port, is_ldap);
-
-            // clear message display
-            gtk_label_set_text(GTK_LABEL(ci->message_display_label), " ");
-
-            // disable connect button
-            gtk_widget_set_sensitive(GTK_WIDGET(ci->connect_button), FALSE);
-
-            // start connect spinner
-            gtk_spinner_start((GtkSpinner *)ci->connect_spinner);
-
-            // 2 варианта: подключиться к сразу к предыдущему пулу, либо перейти к vdi менеджеру для выбора пула
-            *ci->is_connect_to_prev_pool_ptr  =
-                    gtk_toggle_button_get_active((GtkToggleButton *)ci->conn_to_prev_pool_checkbutton);
-            if (*ci->is_connect_to_prev_pool_ptr) {
-
-                // get pool id from settings file
-                gchar *last_pool_id = read_str_from_ini_file("RemoteViewerConnect", "last_pool_id");
-                if (!last_pool_id) {
-                    set_error_message_to_label(GTK_LABEL(ci->message_display_label), "Нет информации о предыдущем пуле");
-                    set_auth_dialog_state(AUTH_BEFORE_CONNECT, ci);
-                    return;
-                }
-                set_current_pool_id(last_pool_id);
-                free_memory_safely(&last_pool_id);
-
-                // start async task  get_vm_from_pool
-                execute_async_task(get_vm_from_pool, on_get_vm_from_pool_finished, NULL, data);
-            } else {
-                // fetch token task starting
-                execute_async_task(get_vdi_token, on_get_vdi_token_finished, NULL, data);
-            }
+            connect_to_vdi_server(ci);
         }
     }
 }
@@ -357,6 +359,16 @@ make_label_small(GtkLabel* label)
     pango_attr_list_insert(attributes, pango_attr_scale_new(0.9));
     gtk_label_set_attributes(label, attributes);
     pango_attr_list_unref(attributes);
+}
+
+static void fast_forward_connect_to_prev_pool_if_enabled(RemoteViewerData *ci)
+{
+    gboolean is_fastforward_conn_to_prev_pool =
+            read_int_from_ini_file("RemoteViewerConnect", "is_fastforward_conn_to_prev_pool");
+    // В этом ёба режиме сразу автоматом пытаемся подрубиться к предыдущему пулу не дожидаясь действий пользователя.
+    if (is_fastforward_conn_to_prev_pool) {
+        connect_to_vdi_server(ci);
+    }
 }
 
 /**
@@ -475,8 +487,11 @@ remote_viewer_connect_dialog(gchar **uri, gchar **user, gchar **password,
     g_signal_connect(G_OBJECT(port_entry), "insert-text", G_CALLBACK(on_insert_text_event), NULL);
 
     /* show and wait for response */
-    gtk_window_set_position ((GtkWindow *)window, GTK_WIN_POS_CENTER);
+    gtk_window_set_position((GtkWindow *)window, GTK_WIN_POS_CENTER);
     gtk_widget_show_all(window);
+
+    if (is_conn_to_prev_pool_btn_checked)
+        fast_forward_connect_to_prev_pool_if_enabled(&ci);
 
     connect_dialog_run(&ci);
 
