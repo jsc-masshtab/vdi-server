@@ -5,7 +5,7 @@ import tornado.gen
 
 from database import db, get_list_of_values_from_db
 from vm.veil_client import VmHttpClient
-from controller.models import Controller
+from event.models import Event
 
 # TODO: сделать схему и методы более осмысленными.
 
@@ -107,6 +107,14 @@ class Vm(db.Model):
     async def remove_vms(vm_ids):
         """Remove given vms"""
         return await Vm.delete.where(Vm.id.in_(vm_ids)).gino.status()
+
+    @staticmethod
+    async def remove_vm(controller_ip, vm_id):
+        """Удаляет виртуалку на ECP, а потом из БД."""
+        vm_http_client = await VmHttpClient.create(controller_ip, vm_id)
+        await vm_http_client.remove_vm()
+        Event.create_info('Vm {} removed from ECP.'.format(vm_id))
+        return await Vm.delete.where(Vm.id == vm_id).gino.status()
 
     @staticmethod
     async def enable_remote_access(controller_address, vm_id):

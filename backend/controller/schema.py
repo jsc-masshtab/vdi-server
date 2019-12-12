@@ -145,45 +145,46 @@ class UpdateControllerMutation(graphene.Mutation):
 class RemoveControllerMutation(graphene.Mutation):
     class Arguments:
         id = graphene.UUID(required=True)
+        force = graphene.Boolean(required=False)
+        full = graphene.Boolean(required=False)
 
     ok = graphene.Boolean()
 
-    async def mutate(self, _info, id):
+    async def mutate(self, _info, id, force=False, full=False):
         # TODO: validate active connected resources
 
         controller = await Controller.query.where(Controller.id == id).gino.first()
         if not controller:
             raise GraphQLError('No such controller.')
 
-        # TODO: remove connected pools
-        status = await Controller.delete.where(Controller.id == id).gino.status()
-        print(status)
-
         await resources_monitor_manager.remove_controller(controller.address)
+        if force:
+            return RemoveControllerMutation(ok=await controller.force_delete())
+        elif full:
+            return RemoveControllerMutation(ok=await controller.full_delete())
 
-        msg = 'Removed controller {id}.'.format(
-            id=id)
-        await Event.create_error(msg)
-        return RemoveControllerMutation(ok=True)
+        return RemoveControllerMutation(ok=await controller.soft_delete())
 
 
 # Only for dev
 class RemoveAllControllersMutation(graphene.Mutation):
     class Arguments:
         ok = graphene.Boolean()
+        force = graphene.Boolean(required=False)
+        full = graphene.Boolean(required=False)
 
     ok = graphene.Boolean()
 
-    async def mutate(self, _info):
+    async def mutate(self, _info, force=False, full=False):
         controllers = await Controller.query.gino.all()
         for controller in controllers:
-            await controller.delete()
-
-            # # TODO: remove connected pools
-            # status = await Controller.delete.where(Controller.id == id).gino.status()
-            # print(status)
-
             await resources_monitor_manager.remove_controller(controller.address)
+            if force:
+                await controller.force_delete()
+            elif full:
+                await controller.full_delete()
+            else:
+                await controller.soft_delete()
         return RemoveAllControllersMutation(ok=True)
 
 
