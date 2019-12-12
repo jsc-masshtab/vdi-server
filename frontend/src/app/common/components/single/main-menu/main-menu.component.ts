@@ -37,8 +37,8 @@ export class MainMenuComponent implements OnInit {
     this.router.events.subscribe((event) => {
       if (event instanceof NavigationEnd) {
 
-        let clickedManage1 = event.urlAfterRedirects.split('/')[1] || null;
-        let clickedManage2 = event.urlAfterRedirects.split('/')[2] || null;
+        let clickedManage1 = event.urlAfterRedirects.split('/')[2] || null;
+        let clickedManage2 = event.urlAfterRedirects.split('/')[3] || null;
 
         if (clickedManage1) {
           if (clickedManage1 === 'resourses') {
@@ -81,6 +81,5 @@ export class MainMenuComponent implements OnInit {
     setTimeout(() => {
       this.router.navigate(['pages/' + route]);
     }, 0);
-    console.log(route, ['pages/' + route]);
   }
 }
