@@ -53,10 +53,9 @@
     }
     
     .form-fields {
-        padding: 10px 7px;
+        padding: 12px 7px;
         display: flex;
         flex-direction: column;
-        padding-bottom: 15px;
     }
 
     .form-message {
@@ -115,11 +114,32 @@
             width: 30px;
             font-size: 18px;
         }
+
+        &.offset {
+            margin-left: 31px;
+        }
+
+        &.add-offset {
+            margin-bottom: 10px;
+        }
+
+        p {
+            cursor: pointer;
+        }
+    }
+
+    mat-checkbox {
+        margin-right: 8px;
+        cursor: pointer;
     }
 
     
     .field-name {
         margin-bottom: 9px;
+    }
+
+    .description {
+        font-size: 13px;
     }
 
     .form-actions {

@@ -22,6 +22,8 @@ from vm.schema import vm_schema
 from controller.schema import controller_schema
 from controller_resources.schema import resources_schema
 
+from pool.pool_task_manager import pool_task_manager
+
 import time
 
 # if __name__ == '__main__':
@@ -43,6 +45,14 @@ handlers += auth_api_urls
 handlers += thin_client_api_urls
 handlers += ws_event_monitoring_urls
 
+# import asyncio
+# from common.utils import cancel_async_task
+# async def test_co():
+#
+#     while True:
+#         print('HELLOW')
+#         await asyncio.sleep(1)
+
 app = tornado.web.Application(handlers, debug=True, websocket_ping_interval=WS_PING_INTERVAL,
                               websocket_ping_timeout=WS_PING_TIMEOUT)
 
@@ -63,7 +73,10 @@ if __name__ == '__main__':
 
         tornado.ioloop.IOLoop.current().add_callback(resources_monitor_manager.start)
 
+        tornado.ioloop.IOLoop.current().add_callback(pool_task_manager.fill_start_data)
+
         tornado.ioloop.IOLoop.current().start()
+
     except KeyboardInterrupt:
         print('Finish')
     finally:

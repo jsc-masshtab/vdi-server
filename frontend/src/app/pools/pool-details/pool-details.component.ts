@@ -88,6 +88,24 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
       property_lv2: 'address'
     },
     {
+      title: 'Тонкие клоны',
+      property: 'create_thin_clones',
+      type: {
+        typeDepend: 'boolean',
+        propertyDepend: ['Создаются', 'Не создаются']
+      },
+      edit: 'changeAutomatedPoolCreate_thin_clones'
+    },
+    {
+      title: 'Держать ВМ с пользователями включенными',
+      property: 'keep_vms_on',
+      type: {
+        typeDepend: 'boolean',
+        propertyDepend: ['Да', 'Нет']
+      },
+      edit: 'changeAutomatedPoolKeep_vms_on'
+    },
+    {
       title: 'Кластер',
       property: 'cluster',
       property_lv2: 'verbose_name'
@@ -380,9 +398,10 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
       data: {
         post: {
           service: this.poolService,
-          method: 'updateDynamicPool',
+          method: 'updatePool',
           params: {
-            pool_id: this.idPool
+            pool_id: this.idPool,
+            pool_type: this.typePool
           }
         },
         settings: {
@@ -414,9 +433,10 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
       data: {
         post: {
           service: this.poolService,
-          method: 'updateDynamicPool',
+          method: 'updatePool',
           params: {
-            pool_id: this.idPool
+            pool_id: this.idPool,
+            pool_type: this.typePool
           }
         },
         settings: {
@@ -448,9 +468,10 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
       data: {
         post: {
           service: this.poolService,
-          method: 'updateDynamicPool',
+          method: 'updatePool',
           params: {
-            pool_id: this.idPool
+            pool_id: this.idPool,
+            pool_type: this.typePool
           }
         },
         settings: {
@@ -462,6 +483,78 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
             type: 'text',
             fieldName: 'vm_name_template',
             fieldValue: this.pool.vm_name_template,
+          }]
+        },
+        update: {
+          method: 'getPool',
+          params: [
+            this.idPool,
+            this.typePool
+          ]
+        }
+      }
+    });
+  }
+
+  // @ts-ignore: Unreachable code error
+  private changeAutomatedPoolCreate_thin_clones(): void {
+    this.dialog.open(FormForEditComponent, {
+      width: '500px',
+      data: {
+        post: {
+          service: this.poolService,
+          method: 'updatePool',
+          params: {
+            pool_id: this.idPool,
+            pool_type: this.typePool
+          }
+        },
+        settings: {
+          entity: 'pool-details',
+          header: 'Изменение настройки тонких клонов',
+          buttonAction: 'Изменить',
+          form: [{
+            tag: 'input',
+            type: 'checkbox',
+            fieldName: 'create_thin_clones',
+            fieldValue: this.pool.create_thin_clones,
+            description: 'Создавать тонкие клоны'
+          }]
+        },
+        update: {
+          method: 'getPool',
+          params: [
+            this.idPool,
+            this.typePool
+          ]
+        }
+      }
+    });
+  }
+
+  // @ts-ignore: Unreachable code error
+  private changeAutomatedPoolKeep_vms_on(): void {
+    this.dialog.open(FormForEditComponent, {
+      width: '500px',
+      data: {
+        post: {
+          service: this.poolService,
+          method: 'updatePool',
+          params: {
+            pool_id: this.idPool,
+            pool_type: this.typePool
+          }
+        },
+        settings: {
+          entity: 'pool-details',
+          header: 'Изменение состояния ВМ',
+          buttonAction: 'Изменить',
+          form: [{
+            tag: 'input',
+            type: 'checkbox',
+            fieldName: 'keep_vms_on',
+            fieldValue: this.pool.keep_vms_on,
+            description: 'Держать ВМ с пользователями включенными'
           }]
         },
         update: {

@@ -74,11 +74,14 @@ class Vm(db.Model):
         return vm_ids
 
     @staticmethod
-    async def get_all_occupied_vms_ids():
-        """Get all vms which have users"""
-        vm_ids_data = await Vm.select('id').where((Vm.username is not None)).gino.all()
-        vm_ids = [str(vm_id) for (vm_id,) in vm_ids_data]
-        return vm_ids
+    async def get_free_vm_id_from_pool(pool_id):
+        """Get fee vm"""
+        res = await Vm.select('id').where(((Vm.username == None) & (Vm.pool_id == pool_id))).gino.first()
+        if res:
+            (vm_id, ) = res
+            return vm_id
+        else:
+            return None
 
     @staticmethod
     def ready_to_connect(**info) -> bool:

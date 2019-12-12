@@ -129,7 +129,7 @@ class UpdateControllerMutation(graphene.Mutation):
 
             # TODO: change to update & restart
             await resources_monitor_manager.remove_controller(address)
-            resources_monitor_manager.add_controller(address)
+            await resources_monitor_manager.add_controller(address)
 
             msg = 'Successfully update controller {id} with address {address}.'.format(
                 id=controller.id,
@@ -159,7 +159,7 @@ class RemoveControllerMutation(graphene.Mutation):
         status = await Controller.delete.where(Controller.id == id).gino.status()
         print(status)
 
-        resources_monitor_manager.remove_controller(controller.address)
+        await resources_monitor_manager.remove_controller(controller.address)
 
         msg = 'Removed controller {id}.'.format(
             id=id)

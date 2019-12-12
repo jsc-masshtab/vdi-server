@@ -1,14 +1,14 @@
 import pytest
 import asyncio
-from graphene.test import Client
 
 from controller.schema import controller_schema
 
-from utils import execute_scheme
-from fixtures import fixt_db
+from tests.utils import execute_scheme
+from tests.fixtures import fixt_db
 
 
 @pytest.mark.asyncio
+@pytest.mark.controllers
 async def test_add_remove_controller(fixt_db):
 
     controller_ip = '192.168.6.122'

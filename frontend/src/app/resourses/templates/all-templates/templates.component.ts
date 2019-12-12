@@ -35,6 +35,11 @@ export class TemplatesComponent extends DetailsMove implements OnInit {
       type: 'string'
     },
     {
+      title: 'Контроллер',
+      property: 'address',
+      type: 'string'
+    },
+    {
       title: 'Статус',
       property: 'status'
     }
@@ -53,15 +58,13 @@ export class TemplatesComponent extends DetailsMove implements OnInit {
   public getTemplates() {
     this.waitService.setWait(true);
     this.service.getAllTemplates().valueChanges.pipe(map(data => data.data.templates)).subscribe((data) => {
-      console.log(data);
-      this.templates = data.map(tmp => JSON.parse(tmp.veil_info));
-      console.log(this.templates);
+      this.templates = data.map(tmp => Object.assign({}, JSON.parse(tmp.veil_info_json), tmp.controller));
       this.waitService.setWait(false);
     });
   }
 
   public routeTo(event): void {
-    this.router.navigate([`resourses/templates/${event.id}`]);
+    this.router.navigate([`resourses/templates/${event.address}/${event.id}`]);
   }
 
   public onResize(): void {

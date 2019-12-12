@@ -18,11 +18,12 @@ class Event(db.Model):
     id = db.Column(UUID(), primary_key=True, default=uuid.uuid4)
     event_type = db.Column(db.Integer(), nullable=False)
     message = db.Column(db.Unicode(length=256), nullable=False)
+    description = db.Column(db.Unicode())
     created = db.Column(db.DateTime(timezone=True), server_default=func.now())
     user = db.Column(db.Unicode(length=128), default='system')
 
     @classmethod
-    async def create_event(cls, msg, event_type=TYPE_INFO, user='system'):
+    async def create_event(cls, msg, event_type=TYPE_INFO, description=None, user='system'):
         # TODO: build msg dict in an unified special format
         # TODO: connect with task and user entity
         # TODO: log event
@@ -36,6 +37,7 @@ class Event(db.Model):
         await Event.create(
             event_type=event_type,
             message=msg,
+            description=description,
             user=user
         )
 

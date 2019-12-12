@@ -74,11 +74,14 @@ static gboolean refresh_vdi_session_token()
     soup_message_headers_append(msg->request_headers, "Content-Type", "application/json");
 
     // set body
-    gchar *messageBodyStr = g_strdup_printf("{\"username\": \"%s\", \"password\": \"%s\"}",
-                                            vdiSession.vdi_username, vdiSession.vdi_password);
+    gchar *ldap_str = vdiSession.is_ldap ? g_strdup("true") : g_strdup("false");
+    gchar *messageBodyStr = g_strdup_printf("{\"username\": \"%s\", \"password\": \"%s\", \"ldap\": %s}",
+                                   vdiSession.vdi_username, vdiSession.vdi_password, ldap_str);
+    printf("%s  messageBodyStr %s\n", (const char *)__func__, messageBodyStr);
     soup_message_set_request(msg, "application/json",
                              SOUP_MEMORY_COPY, messageBodyStr, strlen (messageBodyStr));
     g_free(messageBodyStr);
+    g_free(ldap_str);
 
     // send message
     send_message(msg);
@@ -172,7 +175,8 @@ void cancell_pending_requests()
     g_usleep(20000);
 }
 
-void set_vdi_credentials(const gchar *username, const gchar *password, const gchar *ip, const gchar *port)
+void set_vdi_credentials(const gchar *username, const gchar *password, const gchar *ip,
+                         const gchar *port, gboolean is_ldap)
 {
     free_session_memory();
 
@@ -184,6 +188,7 @@ void set_vdi_credentials(const gchar *username, const gchar *password, const gch
     vdiSession.api_url = g_strdup_printf("http://%s:%s", vdiSession.vdi_ip, vdiSession.vdi_port);
     vdiSession.auth_url = g_strdup_printf("%s/auth/", vdiSession.api_url);
 
+    vdiSession.is_ldap = is_ldap;
     vdiSession.jwt = NULL;
 }
 
@@ -234,6 +239,7 @@ gchar *api_call(const char *method, const char *uri_string, const gchar *body_st
         // send request.
         send_message(msg);
         printf("HERE msg->status_code: %i\n", msg->status_code);
+        printf("HERE msg->response_body: %s\n", msg->response_body->data);
 
         // if response is ok then fill response_body_str
         if (msg->status_code == OK_RESPONSE ) { // we are happy now

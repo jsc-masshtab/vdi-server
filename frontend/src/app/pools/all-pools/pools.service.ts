@@ -21,20 +21,48 @@ export class PoolsService {
 
     public paramsForGetPools: IParams = { // для несбрасывания параметров сортировки при всех обновлениях
         spin: true,
-        nameSort: undefined,
-        reverse: undefined
+        nameSort: undefined
     };
 
     constructor(private service: Apollo, private waitService: WaitService) { }
 
-    public getAllPools(): Observable<any> {
+    public getAllPools(obs?: {obs: boolean}): Observable<any> {
 
         if (this.paramsForGetPools.spin) {
             this.waitService.setWait(true);
         }
 
-        let obs$ = timer(0, 60000);
-        return obs$.pipe(switchMap(() => {
+        if (obs && obs.obs) {
+            var obs$ = timer(0, 60000);
+
+            obs$ = timer(0, 60000);
+            return obs$.pipe(switchMap(() => {
+                return this.service.watchQuery({
+                    query: gql` query pools($ordering:String) {
+                                    pools(ordering: $ordering) {
+                                        pool_id
+                                        verbose_name
+                                        vms {
+                                            id
+                                        }
+                                        pool_type
+                                        controller {
+                                            address
+                                        }
+                                        users {
+                                            username
+                                        }
+                                        status
+                                    }
+                                }
+                        `,
+                    variables: {
+                        method: 'GET',
+                        ordering: this.paramsForGetPools.nameSort
+                    }
+                }).valueChanges.pipe(map(data => data.data['pools']));
+            }));
+        } else {
             return this.service.watchQuery({
                 query: gql` query pools($ordering:String) {
                                 pools(ordering: $ordering) {
@@ -59,6 +87,6 @@ export class PoolsService {
                     ordering: this.paramsForGetPools.nameSort
                 }
             }).valueChanges.pipe(map(data => data.data['pools']));
-        }));
+        }
     }
 }

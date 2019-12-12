@@ -3,7 +3,7 @@
 
       <div class="table-area-title">
         <span>{{ obj.title }}</span>
-        <button *ngIf="obj.edit" (click)="actionEditField(obj.edit)" class="edit-button">
+        <button *ngIf="obj.edit && item" (click)="actionEditField(obj.edit)" class="edit-button">
           <fa-icon [icon]="['fas','edit']" size="xs"></fa-icon>
         </button>
       </div>
@@ -24,7 +24,7 @@
 
 <!-- obj.property -> all-types-here-->
         <ng-container *ngIf="obj.property && obj.property != 'status' && !obj.property_lv2">
-          <ng-container *ngIf="item[obj.property] && obj.type; else nothing">
+          <ng-container *ngIf="item[obj.property] || item[obj.property] === false && obj.type; else nothing">
             <span *ngIf="obj.type === 'string'">{{ item[obj.property] }}</span>
 
             <span *ngIf="obj.type === 'array-length'">{{ item[obj.property]?.length }}</span>
@@ -39,8 +39,8 @@
             </ng-container>
 
             <ng-container *ngIf="obj.type.typeDepend === 'boolean'">
-              <ng-container *ngIf="obj.property">{{ obj.type.propertyDepend[0] }}</ng-container>
-              <ng-container *ngIf="!obj.property">{{ obj.type.propertyDepend[1] }}</ng-container>
+              <ng-container *ngIf="item[obj.property]">{{ obj.type.propertyDepend[0] }}</ng-container>
+              <ng-container *ngIf="!item[obj.property]">{{ obj.type.propertyDepend[1] }}</ng-container>
             </ng-container>
 
           </ng-container>

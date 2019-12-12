@@ -11,7 +11,8 @@ from controller.models import Controller
 from controller_resources.veil_client import ResourcesHttpClient
 from event.models import Event
 from resources_monitoring.handlers import client_manager
-from .resources_monitoring_data import CONTROLLER_SUBSCRIPTIONS_LIST, CONTROLLERS_SUBSCRIPTION
+from .resources_monitoring_data import CONTROLLER_SUBSCRIPTIONS_LIST, CONTROLLERS_SUBSCRIPTION, VDI_TASKS_SUBSCRIPTION
+from common.utils import cancel_async_task
 
 
 class ResourcesMonitor:
@@ -34,17 +35,19 @@ class ResourcesMonitor:
     def start(self, controller_ip):
         self._controller_ip = controller_ip
         self._running_flag = True
+
+        native_loop = asyncio.get_event_loop()
         # controller check
-        self._controller_online_task = IOLoop.instance().add_timeout(time.time(), self._controller_online_checking)
+        self._controller_online_task = native_loop.create_task(self._controller_online_checking())
         # ws data
-        self._resources_monitor_task = IOLoop.instance().add_timeout(time.time(), self._processing_ws_messages)
+        self._resources_monitor_task = native_loop.create_task(self._processing_ws_messages())
 
     async def stop(self):
         self._running_flag = False
         await self._close_connection()
         # cancel tasks
-        IOLoop.instance().remove_timeout(self._resources_monitor_task)
-        IOLoop.instance().remove_timeout(self._controller_online_task)
+        await cancel_async_task(self._resources_monitor_task)
+        await cancel_async_task(self._controller_online_task)
 
     def get_controller_ip(self):
         return self._controller_ip
@@ -97,6 +100,7 @@ class ResourcesMonitor:
                     break
                 elif 'token error' in msg:
                     await Controller.invalidate_auth(self._controller_ip)
+                    break
                 else:
                     await self._on_message_received(msg)
 

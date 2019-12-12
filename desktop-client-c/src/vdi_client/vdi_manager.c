@@ -285,8 +285,10 @@ static void on_get_vm_from_pool_finished(GObject *source_object G_GNUC_UNUSED,
     JsonObject *root_object = get_root_json_object(parser, response_body_str);
 
     JsonObject *data_member_object = json_object_get_object_member(root_object, "data");
-    if (!data_member_object)
+    if (!data_member_object) {
+        set_vdi_client_state(VDI_RECEIVED_RESPONSE, "Не удалось получить вм из пула", TRUE);
         return;
+    }
 
     const gchar *vm_host = json_object_get_string_member_safely(data_member_object, "host");
     gint64 vm_port = json_object_get_int_member_safely(data_member_object, "port");

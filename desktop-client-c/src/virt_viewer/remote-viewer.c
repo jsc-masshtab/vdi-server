@@ -378,6 +378,7 @@ remote_viewer_start(VirtViewerApp *app, GError **err, RemoteViewerState remoteVi
     gchar *password = NULL;
     gchar *ip = NULL;
     gchar *port = NULL;
+    gboolean is_ldap = FALSE;
     GError *error = NULL;
 
 #ifdef HAVE_SPICE_CONTROLLER
@@ -397,8 +398,8 @@ retry_dialog:
         // Забираем из ui адрес и порт
         GtkResponseType dialog_window_response =
             remote_viewer_connect_dialog(virt_viewer_window_get_window(main_window), &guri, &user, &password,
-                    &ip, &port);
-
+                    &ip, &port, &is_ldap);
+        //printf("%s: is_ldap %i\n", (const char *)__func__, is_ldap);
         if (dialog_window_response == GTK_RESPONSE_CANCEL) {
             return FALSE;
         }
@@ -437,8 +438,7 @@ retry_vdi_dialog:
         }
 
     } else {
-//        // credentials
-//        set_vdi_credentials(user, password, ip, port);
+
         free_memory_safely(&guri);
         free_memory_safely(&user);
         free_memory_safely(&password);
