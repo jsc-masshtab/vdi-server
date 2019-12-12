@@ -38,7 +38,6 @@
 
 extern gboolean opt_manual_mode;
 
-static gboolean b_save_credentials_to_file = FALSE;
 
 typedef enum
 {
@@ -62,6 +61,7 @@ typedef struct
 
     GtkWidget *ldap_checkbutton;
     GtkWidget *conn_to_prev_pool_checkbutton;
+    GtkWidget *remember_checkbutton;
 
     GtkResponseType dialog_window_response;
 
@@ -108,12 +108,20 @@ set_auth_dialog_state(AuthDialogState auth_dialog_state, RemoteViewerData *ci)
 static void
 save_data_to_ini_file(RemoteViewerData *ci)
 {
-    if(b_save_credentials_to_file){
+    gboolean save_credentials_to_file = gtk_toggle_button_get_active((GtkToggleButton *)ci->remember_checkbutton);
+    if (save_credentials_to_file) {
+
         const gchar *paramToFileGrpoup = opt_manual_mode ? "RemoteViewerConnectManual" : "RemoteViewerConnect";
-        write_to_settings_file(paramToFileGrpoup, "ip", *ci->ip);
-        write_to_settings_file(paramToFileGrpoup, "port", *ci->port);
-        write_to_settings_file(paramToFileGrpoup, "username", *ci->user);
-        write_to_settings_file(paramToFileGrpoup, "password", *ci->password);
+        write_str_to_ini_file(paramToFileGrpoup, "ip", gtk_entry_get_text(GTK_ENTRY(ci->address_entry)));
+        write_str_to_ini_file(paramToFileGrpoup, "port", gtk_entry_get_text(GTK_ENTRY(ci->port_entry)));
+        write_str_to_ini_file(paramToFileGrpoup, "username", gtk_entry_get_text(GTK_ENTRY(ci->login_entry)));
+        write_str_to_ini_file(paramToFileGrpoup, "password", gtk_entry_get_text(GTK_ENTRY(ci->password_entry)));
+
+        gboolean is_ldap_btn_checked = gtk_toggle_button_get_active((GtkToggleButton *)ci->ldap_checkbutton);
+        write_int_to_ini_file(paramToFileGrpoup, "is_ldap_btn_checked", is_ldap_btn_checked);
+        gboolean is_conn_to_prev_pool_btn_checked =
+                gtk_toggle_button_get_active((GtkToggleButton *)ci->conn_to_prev_pool_checkbutton);
+        write_int_to_ini_file(paramToFileGrpoup, "is_conn_to_prev_pool_btn_checked", is_conn_to_prev_pool_btn_checked);
     }
 }
 
@@ -160,9 +168,6 @@ on_get_vm_from_pool_finished(GObject *source_object G_GNUC_UNUSED,
         *ci->user = NULL;
         *ci->password = g_strdup(vdi_vm_data->vm_password);
 
-        // save data to ini file if required
-        save_data_to_ini_file(ci);
-
         shutdown_loop(ci->loop);
     }
     //
@@ -194,9 +199,6 @@ on_get_vdi_token_finished(GObject *source_object G_GNUC_UNUSED,
         *ci->user = g_strdup(gtk_entry_get_text(GTK_ENTRY(ci->login_entry)));
         *ci->password = g_strdup(gtk_entry_get_text(GTK_ENTRY(ci->password_entry)));
 
-        // save data to ini file if required
-        save_data_to_ini_file(ci);
-
         shutdown_loop(ci->loop);
     } else {
         set_error_message_to_label(GTK_LABEL(ci->message_display_label), "Не удалось авторизоваться");
@@ -218,13 +220,13 @@ on_insert_text_event(GtkEditable *editable, const gchar *text, gint length,
     }
 }
 
-static void
-on_remember_checkbutton_clicked(GtkCheckButton *check_button,
-                                GtkEntry *entry G_GNUC_UNUSED)
-{
-    printf("on_remember_checkbutton_clicked\n");
-    b_save_credentials_to_file = gtk_toggle_button_get_active((GtkToggleButton *)check_button);
-}
+//static void
+//on_remember_checkbutton_clicked(GtkCheckButton *check_button,
+//                                GtkEntry *entry G_GNUC_UNUSED)
+//{
+//    printf("on_remember_checkbutton_clicked\n");
+//    b_save_credentials_to_file = gtk_toggle_button_get_active((GtkToggleButton *)check_button);
+//}
 
 static gboolean
 window_deleted_cb(RemoteViewerData *ci)
@@ -288,13 +290,14 @@ connect_button_clicked_cb(GtkButton *button G_GNUC_UNUSED, gpointer data)
             if (*ci->is_connect_to_prev_pool_ptr) {
 
                 // get pool id from settings file
-                const gchar *last_pool_id = read_from_settings_file("RemoteViewerConnect", "last_pool_id");
+                gchar *last_pool_id = read_str_from_ini_file("RemoteViewerConnect", "last_pool_id");
                 if (!last_pool_id) {
                     set_error_message_to_label(GTK_LABEL(ci->message_display_label), "Нет информации о предыдущем пуле");
                     set_auth_dialog_state(AUTH_BEFORE_CONNECT, ci);
                     return;
                 }
-                set_current_pool_id("8ecb8dce-af2d-41b8-a4c2-ed36a3b77578");
+                set_current_pool_id(last_pool_id);
+                free_memory_safely(&last_pool_id);
 
                 // start async task  get_vm_from_pool
                 execute_async_task(get_vm_from_pool, on_get_vm_from_pool_finished, NULL, data);
@@ -407,18 +410,22 @@ remote_viewer_connect_dialog(gchar **uri, gchar **user, gchar **password,
     ci.message_display_label = GTK_WIDGET(gtk_builder_get_object(builder, "message-display-label"));
 
     address_entry = ci.address_entry = GTK_WIDGET(gtk_builder_get_object(builder, "connection-address-entry"));
-    const gchar *ip_str_from_config_file = read_from_settings_file(paramToFileGrpoup, "ip");
-    if(ip_str_from_config_file)
+    gchar *ip_str_from_config_file = read_str_from_ini_file(paramToFileGrpoup, "ip");
+    if (ip_str_from_config_file) {
         gtk_entry_set_text(GTK_ENTRY(address_entry), ip_str_from_config_file);
+        free_memory_safely(&ip_str_from_config_file);
+    }
 
     active = (gtk_entry_get_text_length(GTK_ENTRY(address_entry)) > 0);
     gtk_widget_set_sensitive(GTK_WIDGET(connect_button), active);
 
     // port entry
     port_entry = ci.port_entry = GTK_WIDGET(gtk_builder_get_object(builder, "connection-port-entry"));
-    const gchar *port_str_from_config_file = read_from_settings_file(paramToFileGrpoup, "port");
-    if(port_str_from_config_file)
+    gchar *port_str_from_config_file = read_str_from_ini_file(paramToFileGrpoup, "port");
+    if (port_str_from_config_file) {
         gtk_entry_set_text(GTK_ENTRY(port_entry), port_str_from_config_file);
+        free_memory_safely(&port_str_from_config_file);
+    }
 
     // Set veil image
     veil_image = GTK_WIDGET(gtk_builder_get_object(builder, "veil-image"));
@@ -427,9 +434,10 @@ remote_viewer_connect_dialog(gchar **uri, gchar **user, gchar **password,
 
     // password entry
     password_entry = ci.password_entry = GTK_WIDGET(gtk_builder_get_object(builder, "password-entry"));
-    gchar *password_from_settings_file = read_from_settings_file(paramToFileGrpoup, "password");
-    if(password_from_settings_file){
+    gchar *password_from_settings_file = read_str_from_ini_file(paramToFileGrpoup, "password");
+    if (password_from_settings_file) {
         gtk_entry_set_text(GTK_ENTRY(password_entry), password_from_settings_file);
+        free_memory_safely(&password_from_settings_file);
     }
 
     // login entry
@@ -437,20 +445,26 @@ remote_viewer_connect_dialog(gchar **uri, gchar **user, gchar **password,
     gtk_widget_set_sensitive(login_entry, !opt_manual_mode);
 
     if (!opt_manual_mode) {
-        gchar *user_from_settings_file = read_from_settings_file(paramToFileGrpoup, "username");
-        if(user_from_settings_file){
+        gchar *user_from_settings_file = read_str_from_ini_file(paramToFileGrpoup, "username");
+        if (user_from_settings_file) {
             gtk_entry_set_text(GTK_ENTRY(login_entry), user_from_settings_file);
+            free_memory_safely(&password_from_settings_file);
         }
     }
 
     // LDAP check button
     ci.ldap_checkbutton = ldap_checkbutton = GTK_WIDGET(gtk_builder_get_object(builder, "ldap-button"));
+    gboolean is_ldap_btn_checked = read_int_from_ini_file("RemoteViewerConnect", "is_ldap_btn_checked");
+    gtk_toggle_button_set_active((GtkToggleButton *)ci.ldap_checkbutton, is_ldap_btn_checked);
 
     // Connect to prev pool check button
     ci.conn_to_prev_pool_checkbutton = GTK_WIDGET(gtk_builder_get_object(builder, "connect-to-prev-button"));
+    gboolean is_conn_to_prev_pool_btn_checked =
+            read_int_from_ini_file("RemoteViewerConnect", "is_conn_to_prev_pool_btn_checked");
+    gtk_toggle_button_set_active((GtkToggleButton *)ci.conn_to_prev_pool_checkbutton, is_conn_to_prev_pool_btn_checked);
 
     // Remember check button
-    remember_checkbutton = GTK_WIDGET(gtk_builder_get_object(builder, "remember-button"));
+    ci.remember_checkbutton = remember_checkbutton = GTK_WIDGET(gtk_builder_get_object(builder, "remember-button"));
 
     // Signal - callbacks connections
     g_signal_connect(window, "key-press-event", G_CALLBACK(key_pressed_cb), window);
@@ -458,7 +472,6 @@ remote_viewer_connect_dialog(gchar **uri, gchar **user, gchar **password,
     g_signal_connect_swapped(window, "delete-event", G_CALLBACK(window_deleted_cb), &ci);
     g_signal_connect(address_entry, "changed", G_CALLBACK(entry_changed_cb), connect_button);
     g_signal_connect(address_entry, "icon-release", G_CALLBACK(entry_icon_release_cb), address_entry);
-    g_signal_connect(remember_checkbutton, "clicked", G_CALLBACK(on_remember_checkbutton_clicked), remember_checkbutton);
     g_signal_connect(G_OBJECT(port_entry), "insert-text", G_CALLBACK(on_insert_text_event), NULL);
 
     /* show and wait for response */
@@ -466,6 +479,9 @@ remote_viewer_connect_dialog(gchar **uri, gchar **user, gchar **password,
     gtk_widget_show_all(window);
 
     connect_dialog_run(&ci);
+
+    // save data to ini file if required
+    save_data_to_ini_file(&ci);
 
     g_object_unref(builder);
     gtk_widget_destroy(window);

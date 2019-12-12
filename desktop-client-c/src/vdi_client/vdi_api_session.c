@@ -100,7 +100,7 @@ static gboolean refresh_vdi_session_token()
     if (!root_object)
         return FALSE;
 
-    JsonObject *data_member_object = json_object_get_object_member(root_object, "data");
+    JsonObject *data_member_object = json_object_get_object_member_safely(root_object, "data");
     if (!data_member_object)
         return FALSE;
 
@@ -290,19 +290,22 @@ void get_vm_from_pool(GTask       *task,
     g_free(urlStr);
 
     //response_body_str == NULL. didnt receive what we wanted
-    if (!response_body_str)
+    if (!response_body_str) {
         g_task_return_pointer(task, NULL, NULL);
+        return;
+    }
 
     // parse response
     JsonParser *parser = json_parser_new();
     JsonObject *root_object = get_root_json_object(parser, response_body_str);
-    JsonObject *data_member_object = json_object_get_object_member(root_object, "data");
+    JsonObject *data_member_object = json_object_get_object_member_safely(root_object, "data");
 
     // no point to parse if data is invalid
     if (!data_member_object) {
         g_object_unref(parser);
         free_memory_safely(&response_body_str);
         g_task_return_pointer(task, NULL, NULL);
+        return;
     }
 
     VdiVmData *vdi_vm_data = calloc(1, sizeof(VdiVmData));
