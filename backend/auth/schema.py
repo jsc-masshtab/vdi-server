@@ -133,32 +133,6 @@ class CreateAuthenticationDirectoryMutation(graphene.Mutation, AuthenticationDir
             ok=True)
 
 
-class ActivateAuthenticationDirectoryMutation(graphene.Mutation, AuthenticationDirectoryValidator):
-    class Arguments:
-        id = graphene.UUID(required=True)
-
-    ok = graphene.Boolean()
-
-    @classmethod
-    async def mutate(cls, root, info, **kwargs):
-        await cls.validate_agruments(**kwargs)
-        await AuthenticationDirectory.activate(kwargs['id'])
-        return ActivateAuthenticationDirectoryMutation(ok=True)
-
-
-class DeactivateAuthenticationDirectoryMutation(graphene.Mutation, AuthenticationDirectoryValidator):
-    class Arguments:
-        id = graphene.UUID(required=True)
-
-    ok = graphene.Boolean()
-
-    @classmethod
-    async def mutate(cls, root, info, **kwargs):
-        await cls.validate_agruments(**kwargs)
-        await AuthenticationDirectory.deactivate(kwargs['id'])
-        return DeactivateAuthenticationDirectoryMutation(ok=True)
-
-
 class DeleteAuthenticationDirectoryMutation(graphene.Mutation, AuthenticationDirectoryValidator):
     class Arguments:
         id = graphene.UUID(required=True)
@@ -168,9 +142,8 @@ class DeleteAuthenticationDirectoryMutation(graphene.Mutation, AuthenticationDir
     @classmethod
     async def mutate(cls, root, info, **kwargs):
         await cls.validate_agruments(**kwargs)
-        auth_dir = await AuthenticationDirectory.get_object(id=kwargs['id'], include_inactive=True)
-        await auth_dir.delete()
-        return DeactivateAuthenticationDirectoryMutation(ok=True)
+        await AuthenticationDirectory.soft_delete(id=kwargs['id'])
+        return DeleteAuthenticationDirectoryMutation(ok=True)
 
 
 class TestAuthenticationDirectoryMutation(graphene.Mutation, AuthenticationDirectoryValidator):
@@ -184,7 +157,7 @@ class TestAuthenticationDirectoryMutation(graphene.Mutation, AuthenticationDirec
         await cls.validate_agruments(**kwargs)
         auth_dir = await AuthenticationDirectory.get_object(kwargs['id'])
         conntection_ok = await auth_dir.test_connection()
-        return DeactivateAuthenticationDirectoryMutation(ok=conntection_ok)
+        return TestAuthenticationDirectoryMutation(ok=conntection_ok)
 
 
 class UpdateAuthenticationDirectoryMutation(graphene.Mutation, AuthenticationDirectoryValidator):
@@ -225,8 +198,6 @@ class UpdateAuthenticationDirectoryMutation(graphene.Mutation, AuthenticationDir
 
 class AuthenticationDirectoryMutations(graphene.ObjectType):
     createAuthDir = CreateAuthenticationDirectoryMutation.Field()
-    activateAuthDir = ActivateAuthenticationDirectoryMutation.Field()
-    deactivateAuthDir = DeactivateAuthenticationDirectoryMutation.Field()
     updateAuthDir = UpdateAuthenticationDirectoryMutation.Field()
     testAuthDir = TestAuthenticationDirectoryMutation.Field()
     deleteAuthDir = DeleteAuthenticationDirectoryMutation.Field()

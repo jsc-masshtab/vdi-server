@@ -167,7 +167,11 @@ class NodeType(graphene.ObjectType):
 
         if self.veil_info is None:
             self.veil_info = await self.get_veil_info()
-        cluster_id = self.veil_info['cluster']['id']
+
+        try:
+            cluster_id = self.veil_info['cluster']['id']
+        except TypeError:
+            return None
 
         veil_cluster_data = await resources_http_client.fetch_cluster(cluster_id)
         cluster_type = make_graphene_type(ClusterType, veil_cluster_data)
