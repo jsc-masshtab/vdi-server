@@ -80,17 +80,11 @@ static void async_create_ws_connect(GTask         *task G_GNUC_UNUSED,
         // receiving messages
         while (vdi_ws_client->is_running && !g_io_stream_is_closed(vdi_ws_client->stream)) {
             GError *error = NULL;
-            gboolean res = g_input_stream_read_all(inputStream,
+            /*gboolean res = */g_input_stream_read_all(inputStream,
                                                    &buffer,
                                                    buf_length, &bytes_read,
                                                    vdi_ws_client->cancel_job, &error);
-//            if (error) {
-//                printf("WS: %i", error->code);
-//                printf("WS: %s ", error->message);
-//                //break; // try to reconnect (another loop)
-//            }
-
-            printf("WS: %s res: %i bytes_read: %lu\n", (const char *)__func__, res, bytes_read);
+            //printf("WS: %s res: %i bytes_read: %lu\n", (const char *)__func__, res, bytes_read);
 
             if (bytes_read == 0) {
                 read_try_count ++;

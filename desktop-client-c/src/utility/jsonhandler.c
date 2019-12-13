@@ -21,20 +21,30 @@ JsonObject *get_root_json_object(JsonParser *parser, const gchar *data)
     return object;
 }
 
-gint64 json_object_get_int_member_safely(JsonObject  *object, const gchar *member_name)
+gint64 json_object_get_int_member_safely(JsonObject *object, const gchar *member_name)
 {
     if (json_object_has_member(object, member_name))
         return json_object_get_int_member(object, member_name);
 
-    printf("json member %s does not exist \n", member_name);
+    printf("json member '%s' does not exist \n", member_name);
     return 0;
 }
 
-const gchar *json_object_get_string_member_safely(JsonObject  *object,const gchar *member_name)
+const gchar *json_object_get_string_member_safely(JsonObject *object,const gchar *member_name)
 {
     if (json_object_has_member(object, member_name))
         return json_object_get_string_member(object, member_name);
 
-    printf("json member %s does not exist \n", member_name);
+    printf("json member '%s' does not exist \n", member_name);
     return "";
 }
+
+JsonObject *json_object_get_object_member_safely(JsonObject *object, const gchar *member_name)
+{
+    if (json_object_has_member(object, member_name))
+        return json_object_get_object_member(object, member_name);
+
+    printf("json member '%s' does not exist \n", member_name);
+    return NULL;
+}
+
