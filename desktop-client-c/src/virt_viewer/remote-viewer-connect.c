@@ -366,8 +366,12 @@ static void fast_forward_connect_to_prev_pool_if_enabled(RemoteViewerData *ci)
     gboolean is_fastforward_conn_to_prev_pool =
             read_int_from_ini_file("RemoteViewerConnect", "is_fastforward_conn_to_prev_pool");
     // В этом ёба режиме сразу автоматом пытаемся подрубиться к предыдущему пулу не дожидаясь действий пользователя.
-    if (is_fastforward_conn_to_prev_pool) {
+    // Поступаем так только один раз при старте приложения, чтоб у пользователя была возможносмть сменить
+    // логин пароль
+    static gboolean is_first_time = TRUE;
+    if (is_fastforward_conn_to_prev_pool && is_first_time) {
         connect_to_vdi_server(ci);
+        is_first_time = FALSE;
     }
 }
 
