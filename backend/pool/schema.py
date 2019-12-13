@@ -302,29 +302,44 @@ class DeletePoolMutation(graphene.Mutation, PoolValidator):
 
     ok = graphene.Boolean()
 
+    @staticmethod
+    async def delete_pool(pool, force=False, full=False):
+        if force:
+            is_deleted = await pool.force_delete()
+        elif full:
+            is_deleted = await pool.full_delete()
+        else:
+            is_deleted = await pool.soft_delete()
+
+        return is_deleted
+
     async def mutate(self, info, pool_id, force=False, full=False):
         # Нет запуска валидации, т.к. нужна сущность пула далее - нет смысла запускать запрос 2жды.
         pool = await Pool.get(pool_id)
         if not pool:
             raise SimpleError('No such pool.')
 
-        pool_type = await pool.pool_type
-        if pool_type == Pool.PoolTypes.AUTOMATED:
-            template_id = await pool.template_id
-            pool_lock = pool_task_manager.get_pool_lock(str(pool_id))
-            async with pool_lock.lock:
-                # останавливаем таски связанные с пулом
-                await pool_task_manager.cancel_all_tasks_for_pool(str(pool_id))
-                # удаляем пул
-                await pool_task_manager.remove_pool_data(str(pool_id), str(template_id))
+        try:
+            pool_type = await pool.pool_type
 
-        if force:
-            return DeletePoolMutation(ok=await pool.force_delete())
-        elif full:
-            return DeletePoolMutation(ok=await pool.full_delete())
+            # В случае автоматическогог пула получаем лок
+            if pool_type == Pool.PoolTypes.AUTOMATED:
+                template_id = await pool.template_id
+                pool_lock = pool_task_manager.get_pool_lock(str(pool_id))
+                async with pool_lock.lock:
+                    # останавливаем таски связанные с пулом
+                    await pool_task_manager.cancel_all_tasks_for_pool(str(pool_id))
+                    # удаляем пул
+                    is_deleted = await DeletePoolMutation.delete_pool(pool, force, full)
+                    # убираем из памяти локи
+                    await pool_task_manager.remove_pool_data(str(pool_id), str(template_id))
+            # В случае стат пула тупо удяляем
+            else:
+                is_deleted = await DeletePoolMutation.delete_pool(pool, force, full)
 
-        return DeletePoolMutation(ok=await pool.soft_delete())
-
+            return DeletePoolMutation(ok=is_deleted)
+        except Exception as e:
+            raise e
 
 # --- --- --- --- ---
 # Static pool mutations

@@ -86,9 +86,8 @@ class PoolTaskManager:
     # PRIVATE METHODS
     async def _get_pools_data_from_db(self):
         from pool.models import AutomatedPool
-        from pool.models import Pool
         auto_pools_data = await db.select([AutomatedPool.automated_pool_id, AutomatedPool.template_id]).\
-            select_from(AutomatedPool.join(Pool)).where(Pool.status != Status.DELETING).gino.all()
+            select_from(AutomatedPool).gino.all()
         return auto_pools_data
 
     def _add_data(self, pool_id, template_id):

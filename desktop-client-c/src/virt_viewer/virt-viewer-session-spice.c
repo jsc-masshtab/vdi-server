@@ -40,9 +40,6 @@ static gchar *spice_session_username = NULL;
 static gchar *spice_session_password = NULL;
 
 
-gboolean  take_extern_credentials = FALSE;
-
-
 G_DEFINE_TYPE (VirtViewerSessionSpice, virt_viewer_session_spice, VIRT_VIEWER_TYPE_SESSION)
 
 
