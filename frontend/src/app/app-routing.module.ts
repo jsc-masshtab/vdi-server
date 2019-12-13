@@ -23,6 +23,11 @@ import { DashboardComponent } from './dashboard/dashboard.component';
 
 const routes: Routes = [
   {
+    path: '',
+    redirectTo: 'pages/pools',
+    pathMatch: 'full'
+  },
+  {
     path: 'auth',
     component: LoginComponent
   },

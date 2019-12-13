@@ -33,7 +33,7 @@ export class MainMenuComponent implements OnInit {
   }
 
   private beginRoute() {
-
+console.log(this.router);
     this.router.events.subscribe((event) => {
       console.log(event);
       if (event instanceof NavigationEnd) {
