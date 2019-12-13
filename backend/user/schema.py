@@ -37,12 +37,13 @@ class UserValidator(MutationValidation):
 
     @staticmethod
     async def validate_password(obj_dict, value):
-        pass_re = re.compile('^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[@$!%*?&])[A-Za-z0-9@$!%*?&]{8,}$')
-        template_name = re.match(pass_re, value)
-        if template_name:
-            return value
-        raise ValidationError(
-            'Пароль должен быть не меньше 8 символов, содержать буквы, цифры и спец.символы.')
+        return value
+        # pass_re = re.compile('^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[@$!%*?&])[A-Za-z0-9@$!%*?&]{8,}$')
+        # template_name = re.match(pass_re, value)
+        # if template_name:
+        #     return value
+        # raise ValidationError(
+        #     'Пароль должен быть не меньше 8 символов, содержать буквы, цифры и спец.символы.')
 
 
 class UserType(graphene.ObjectType):
