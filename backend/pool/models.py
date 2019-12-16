@@ -567,6 +567,7 @@ class AutomatedPool(db.Model):
                                 event='pool_creation_progress',
                                 pool_id=str(self.automated_pool_id),
                                 domain_index=vm_index,
+                                domain_verbose_name=vm['verbose_name'],
                                 initial_size=self.initial_size,
                                 resource=VDI_TASKS_SUBSCRIPTION)
                 resources_monitor_manager.signal_internal_event(msg_dict)
