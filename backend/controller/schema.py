@@ -145,12 +145,11 @@ class UpdateControllerMutation(graphene.Mutation):
 class RemoveControllerMutation(graphene.Mutation):
     class Arguments:
         id = graphene.UUID(required=True)
-        force = graphene.Boolean(required=False)
         full = graphene.Boolean(required=False)
 
     ok = graphene.Boolean()
 
-    async def mutate(self, _info, id, force=False, full=False):
+    async def mutate(self, _info, id, full=False):
         # TODO: validate active connected resources
 
         controller = await Controller.query.where(Controller.id == id).gino.first()
@@ -158,9 +157,7 @@ class RemoveControllerMutation(graphene.Mutation):
             raise GraphQLError('No such controller.')
 
         await resources_monitor_manager.remove_controller(controller.address)
-        if force:
-            return RemoveControllerMutation(ok=await controller.force_delete())
-        elif full:
+        if full:
             return RemoveControllerMutation(ok=await controller.full_delete())
 
         return RemoveControllerMutation(ok=await controller.soft_delete())
@@ -170,18 +167,15 @@ class RemoveControllerMutation(graphene.Mutation):
 class RemoveAllControllersMutation(graphene.Mutation):
     class Arguments:
         ok = graphene.Boolean()
-        force = graphene.Boolean(required=False)
         full = graphene.Boolean(required=False)
 
     ok = graphene.Boolean()
 
-    async def mutate(self, _info, force=False, full=False):
+    async def mutate(self, _info, full=False):
         controllers = await Controller.query.gino.all()
         for controller in controllers:
             await resources_monitor_manager.remove_controller(controller.address)
-            if force:
-                await controller.force_delete()
-            elif full:
+            if full:
                 await controller.full_delete()
             else:
                 await controller.soft_delete()
