@@ -249,23 +249,6 @@ class Pool(db.Model):
         return pool
 
     async def soft_delete(self, commit=True):
-        """Удаление сущности в статусе ACTIVE у которой нет зависимых сущностей"""
-
-        if self.status != Status.ACTIVE:
-            error_msg = 'Удаление не может быть выполнено из-за блокирующего статуса. Выполните форсированное удаление.'
-            raise SimpleError(error_msg)
-
-        pool_has_vms = await self.has_vms
-        if pool_has_vms:
-            raise SimpleError('У пула виртуальных машин есть виртуальные машины. Выполните полное удаление.')
-
-        if commit:
-            msg = 'Выполнено удаление пула рабочих столов {id}.'.format(id=self.pool_id)
-            await self.delete()
-            await Event.create_info(msg)
-        return True
-
-    async def force_delete(self, commit=True):
         """Удаление сущности независимо от статуса у которой нет зависимых сущностей"""
 
         pool_has_vms = await self.has_vms

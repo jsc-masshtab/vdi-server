@@ -99,29 +99,13 @@ class Controller(db.Model):
             raise AssertionError('No such controller')
 
     async def soft_delete(self):
-        """Удаление сущности в статусе ACTIVE у которой нет зависимых сущностей"""
-
-        if self.status != Status.ACTIVE.value:  # Value потому что Controller.status это обычный Varchar, а не Enum
-            error_msg = 'Удаление не может быть выполнено из-за блокирующего статуса. Выполните форсированное удаление.'
-            raise SimpleError(error_msg)
-
-        controller_has_pools = await self.has_pools
-        if controller_has_pools:
-            raise SimpleError('У контроллера есть пулы виртуальных машин. Выполните полное удаление.')
-
-        msg = 'Выполнено удаление контроллера {id}.'.format(id=self.id)
-        await self.delete()
-        await Event.create_info(msg)
-        return True
-
-    async def force_delete(self):
         """Удаление сущности независимо от статуса у которой нет зависимых сущностей"""
 
         controller_has_pools = await self.has_pools
         if controller_has_pools:
             raise SimpleError('У контроллера есть пулы виртуальных машин. Выполните полное удаление.')
 
-        msg = 'Выполнено форсированное удаление контроллера {id}.'.format(id=self.id)
+        msg = 'Выполнено удаление контроллера {id}.'.format(id=self.id)
         await self.delete()
         await Event.create_info(msg)
         return True

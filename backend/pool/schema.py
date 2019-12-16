@@ -298,23 +298,20 @@ class PoolQuery(graphene.ObjectType):
 class DeletePoolMutation(graphene.Mutation, PoolValidator):
     class Arguments:
         pool_id = graphene.UUID()
-        force = graphene.Boolean(required=False)
         full = graphene.Boolean(required=False)
 
     ok = graphene.Boolean()
 
     @staticmethod
-    async def delete_pool(pool, force=False, full=False):
-        if force:
-            is_deleted = await pool.force_delete()
-        elif full:
+    async def delete_pool(pool, full=False):
+        if full:
             is_deleted = await pool.full_delete()
         else:
             is_deleted = await pool.soft_delete()
 
         return is_deleted
 
-    async def mutate(self, info, pool_id, force=False, full=False):
+    async def mutate(self, info, pool_id, full=False):
         # Нет запуска валидации, т.к. нужна сущность пула далее - нет смысла запускать запрос 2жды.
         pool = await Pool.get(pool_id)
         if not pool:
@@ -331,16 +328,17 @@ class DeletePoolMutation(graphene.Mutation, PoolValidator):
                     # останавливаем таски связанные с пулом
                     await pool_task_manager.cancel_all_tasks_for_pool(str(pool_id))
                     # удаляем пул
-                    is_deleted = await DeletePoolMutation.delete_pool(pool, force, full)
+                    is_deleted = await DeletePoolMutation.delete_pool(pool, full)
                     # убираем из памяти локи
                     await pool_task_manager.remove_pool_data(str(pool_id), str(template_id))
-            # В случае стат пула тупо удяляем
+            # В случае стат пула удаляем без локов.
             else:
-                is_deleted = await DeletePoolMutation.delete_pool(pool, force, full)
+                is_deleted = await DeletePoolMutation.delete_pool(pool, full)
 
             return DeletePoolMutation(ok=is_deleted)
         except Exception as e:
             raise e
+
 
 # --- --- --- --- ---
 # Static pool mutations
