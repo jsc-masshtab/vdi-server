@@ -1,7 +1,6 @@
 import { MatSelectModule } from '@angular/material/select';
 import { MatDialogModule } from '@angular/material/dialog';
 import { AppRoutingModule } from '../../app-routing.module';
-import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { ReactiveFormsModule } from '@angular/forms';
 import { SharedModule } from '../common/shared.module';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
@@ -44,7 +43,6 @@ import {MatCheckboxModule, MAT_CHECKBOX_CLICK_ACTION} from '@angular/material/ch
     CommonModule,
     FontAwesomeModule,
     ReactiveFormsModule,
-    BrowserAnimationsModule,
     AppRoutingModule,
     MatDialogModule,
     MatSelectModule,

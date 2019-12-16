@@ -64,7 +64,7 @@ export class TemplatesComponent extends DetailsMove implements OnInit {
   }
 
   public routeTo(event): void {
-    this.router.navigate([`resourses/templates/${event.address}/${event.id}`]);
+    this.router.navigate([`pages/resourses/templates/${event.address}/${event.id}`]);
   }
 
   public onResize(): void {

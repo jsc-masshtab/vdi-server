@@ -104,7 +104,7 @@ export class PoolsComponent extends DetailsMove implements OnInit, OnDestroy {
 
   public routeTo(event): void {
     const desktopPoolType: string = event.pool_type.toLowerCase();
-    this.router.navigate([`pools/${desktopPoolType}/${event.pool_id}`]);
+    this.router.navigate([`pages/pools/${desktopPoolType}/${event.pool_id}`]);
   }
 
   public onResize(): void {

@@ -70,6 +70,6 @@ export class VmsComponent extends DetailsMove  implements OnInit {
   }
 
   public routeTo(event): void {
-    this.router.navigate([`resourses/vms/${event.controller.address}/${event.id}`]);
+    this.router.navigate([`pages/resourses/vms/${event.controller.address}/${event.id}`]);
   }
 }

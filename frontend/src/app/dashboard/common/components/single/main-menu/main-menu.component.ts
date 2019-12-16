@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component } from '@angular/core';
 import { trigger, style, animate, transition } from '@angular/animations';
 import { Router, NavigationEnd} from '@angular/router';
 
@@ -19,22 +19,18 @@ import { Router, NavigationEnd} from '@angular/router';
 })
 
 
-export class MainMenuComponent implements OnInit {
+export class MainMenuComponent {
 
   public toggleResourse: boolean = false;
   public toggleSetting: boolean = false;
   public toggleLog: boolean = false;
   public clickedManage: string = '';
 
-  constructor(private router: Router) {}
+  constructor(private router: Router) {this.beginRoute(); }
 
-  ngOnInit() {
-    this.beginRoute();
-  }
 
   private beginRoute() {
     this.router.events.subscribe((event) => {
-        // console.log(event);
         if (event instanceof NavigationEnd) {
 
           let clickedManage1 = event.urlAfterRedirects.split('/')[2] || null;

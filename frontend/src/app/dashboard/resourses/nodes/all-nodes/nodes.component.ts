@@ -84,7 +84,7 @@ export class NodesComponent extends DetailsMove implements OnInit, OnDestroy {
   }
 
   public routeTo(event): void {
-    this.router.navigate([`resourses/nodes/${event.controller.address}/${event.id}`]);
+    this.router.navigate([`pages/resourses/nodes/${event.controller.address}/${event.id}`]);
   }
 
   public onResize(): void {

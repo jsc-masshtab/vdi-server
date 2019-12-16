@@ -106,7 +106,15 @@ const routes: Routes = [
           }
         ]
       },
+      {
+        path: '**',
+        redirectTo: 'pools'
+      }
     ]
+  },
+  {
+    path: '**',
+    redirectTo: 'pages'
   }
 ];
 

@@ -89,7 +89,7 @@ export class ClustersComponent extends DetailsMove implements OnInit, OnDestroy 
   }
 
   public routeTo(event): void {
-    this.router.navigate([`resourses/clusters/${event.controller.address}/${event.id}`]);
+    this.router.navigate([`pages/resourses/clusters/${event.controller.address}/${event.id}`]);
   }
 
   public sortList(param: IParams) {

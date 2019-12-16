@@ -61,7 +61,6 @@ import { EventsModule } from './log/events/events.module';
     UsersModule,
     EventsModule
   ],
-  entryComponents: [],
   providers:
     [
      { provide: MAT_DIALOG_DEFAULT_OPTIONS, useValue: { hasBackdrop: true, restoreFocus: true } },

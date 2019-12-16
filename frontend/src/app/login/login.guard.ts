@@ -35,11 +35,14 @@ export class LoginGuard implements CanActivate, CanActivateChild {
 
   checkLogin(url: string): boolean {
     console.log(this.authService.isLoggedIn,'this.authService.isLoggedIn',url);
-    if (this.authService.isLoggedIn) { return true; }
+    
 
-    setTimeout(() => {
-      this.authService.isLoggedIn = false;
-    }, 3000);
+    // setTimeout(() => {
+    //   this.authService.isLoggedIn = false;
+    //   console.log('this.authService.isLoggedIn = false', this.authService.isLoggedIn);
+    // }, 10000);
+
+    if (this.authService.isLoggedIn) { return true; }
 
     // Store the attempted URL for redirecting
     // this.authService.redirectUrl = url;
