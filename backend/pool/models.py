@@ -651,7 +651,6 @@ class AutomatedPool(db.Model):
                             await self.add_vm(domain_index)
                     except VmCreationError:
                         print('Vm creating error')
-                        # TODO: log that we cant expand the pool.  Mark pool as broken?
                         pass
 
     async def activate(self):

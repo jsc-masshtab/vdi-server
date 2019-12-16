@@ -553,7 +553,7 @@ class CreateAutomatedPoolMutation(graphene.Mutation, PoolValidator):
             raise SimpleError(E)
 
         # add data for protection
-        pool_task_manager.add_new_pool_data(automated_pool.automated_pool_id, automated_pool.template_id)
+        pool_task_manager.add_new_pool_data(str(automated_pool.automated_pool_id), str(automated_pool.template_id))
         # start task
         native_loop = asyncio.get_event_loop()
         pool_lock = pool_task_manager.get_pool_lock(str(automated_pool.automated_pool_id))
