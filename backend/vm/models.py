@@ -113,7 +113,7 @@ class Vm(db.Model):
         """Удаляет виртуалку на ECP, а потом из БД."""
         vm_http_client = await VmHttpClient.create(controller_ip, vm_id)
         await vm_http_client.remove_vm()
-        Event.create_info('Vm {} removed from ECP.'.format(vm_id))
+        await Event.create_info('Vm {} removed from ECP.'.format(vm_id))
         return await Vm.delete.where(Vm.id == vm_id).gino.status()
 
     @staticmethod

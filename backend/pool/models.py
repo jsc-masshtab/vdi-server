@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 import uuid
+import asyncio
+
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy import Enum as AlchemyEnum
 from sqlalchemy import case, literal_column, desc, text
@@ -10,7 +12,7 @@ from database import db, Status
 from controller.models import Controller
 from vm.models import Vm
 from user.models import User
-from common.veil_errors import VmCreationError, BadRequest, SimpleError
+from common.veil_errors import VmCreationError, HttpError, SimpleError
 
 from resources_monitoring.handlers import WaiterSubscriptionObserver
 from resources_monitoring.resources_monitor_manager import resources_monitor_manager
@@ -458,7 +460,7 @@ class AutomatedPool(db.Model):
         # TODO: beautify
         vm_name_template = self.vm_name_template or await self.verbose_name
 
-        # uid = str(uuid.uuid4())[:7]
+        # uid = str(uuid.uuid4())[:7]учзфтв
         # TODO: отказатся от UUID
         params = {
             'verbose_name': "{}-{}-{}".format(vm_name_template, domain_index, str(uuid.uuid4())[:7]),
@@ -477,7 +479,7 @@ class AutomatedPool(db.Model):
             try:
                 vm_info = await Vm.copy(**params)
                 current_vm_task_id = vm_info['task_id']
-            except BadRequest as E:
+            except HttpError as E:
                 print(E)
                 continue
 
@@ -516,6 +518,7 @@ class AutomatedPool(db.Model):
                                 template_id=str(self.template_id))
                 return vm_info
             else:
+                await asyncio.sleep(0.1)  # Пожалеем контроллер и подождем чуть-чуть
                 continue  # go to try again
 
         raise VmCreationError('Can\'t create VM')
@@ -564,6 +567,7 @@ class AutomatedPool(db.Model):
                                 event='pool_creation_progress',
                                 pool_id=str(self.automated_pool_id),
                                 domain_index=vm_index,
+                                domain_verbose_name=vm['verbose_name'],
                                 initial_size=self.initial_size,
                                 resource=VDI_TASKS_SUBSCRIPTION)
                 resources_monitor_manager.signal_internal_event(msg_dict)
@@ -597,8 +601,24 @@ class AutomatedPool(db.Model):
         if not is_creation_successful:
             raise VmCreationError('Не удалось создать необходимое число машин.')
 
+    async def create_pool(self):
+        """Корутина создания автом. пула"""
+        # locks
+        async with pool_task_manager.get_pool_lock(str(self.automated_pool_id)).lock:
+            async with pool_task_manager.get_template_lock(str(self.template_id)).lock:
+                try:
+                    await self.add_initial_vms()
+                    await self.activate()
+
+                    msg = 'Automated pool {id} created.'.format(id=self.automated_pool_id)
+                    await Event.create_info(msg)
+                except VmCreationError as E:
+                    print('exp__', E.__class__.__name__)
+                    await self.deactivate()
+
     async def expand_pool_if_requred(self):
         """
+        Корутина расширения автом. пула
         Check and expand pool if required
         :return:
         """
@@ -631,7 +651,6 @@ class AutomatedPool(db.Model):
                             await self.add_vm(domain_index)
                     except VmCreationError:
                         print('Vm creating error')
-                        # TODO: log that we cant expand the pool.  Mark pool as broken?
                         pass
 
     async def activate(self):

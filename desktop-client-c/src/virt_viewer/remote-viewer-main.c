@@ -49,10 +49,15 @@ setup_logging()
     gchar *stderr_file_name = g_strconcat(log_dir, ts_string, "_stderr.txt", NULL);
     freopen(stderr_file_name, "w", stderr);
 
+//    //stdout output
+//    gchar *stdout_file_name = g_strconcat(log_dir, ts_string, "_stdout.txt", NULL);
+//    freopen(stdout_file_name, "w", stdout);
+
     // free memory
     g_free(ts_string);
     g_free(bt_file_name);
     g_free(stderr_file_name);
+    //g_free(stdout_file_name);
 }
 
 void
