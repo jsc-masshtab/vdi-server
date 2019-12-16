@@ -3,6 +3,7 @@ import re
 import graphene
 from tornado.httpclient import HTTPClientError  # TODO: точно это нужно тут?
 from graphql.error.located_error import GraphQLLocatedError
+import asyncio
 
 from database import StatusGraphene
 from common.veil_validators import MutationValidation
@@ -24,12 +25,12 @@ from controller_resources.veil_client import ResourcesHttpClient
 from controller_resources.schema import ClusterType, NodeType, DatapoolType
 
 from pool.models import AutomatedPool, StaticPool, Pool, PoolUsers
+from pool.pool_task_manager import pool_task_manager
 
 from asyncpg import UniqueViolationError
+from asyncpg.exceptions._base import PostgresError
 
 from database import db
-
-from pool.pool_task_manager import pool_task_manager
 
 
 # TODO: отсутствует валидация входящих ресурсов вроде node_uid, cluster_uid и т.п. Ранее шла речь,
@@ -544,26 +545,21 @@ class CreateAutomatedPoolMutation(graphene.Mutation, PoolValidator):
     @classmethod
     async def mutate(cls, root, info, **kwargs):
         await cls.validate_agruments(**kwargs)
-        automated_pool = None
         try:
             automated_pool = await AutomatedPool.create(**kwargs)
-            # add data for protection
-            pool_task_manager.add_new_pool_data(automated_pool.automated_pool_id, automated_pool.template_id)
-            # locks
-            async with pool_task_manager.get_pool_lock(str(automated_pool.automated_pool_id)).lock:
-                async with pool_task_manager.get_template_lock(str(automated_pool.template_id)).lock:
-                    await automated_pool.add_initial_vms()
-                    await automated_pool.activate()
-
-                    msg = 'Automated pool {id} created.'.format(id=automated_pool.automated_pool_id)
-                    await Event.create_info(msg)
-        except (UniqueViolationError, VmCreationError) as E: # Возможные исключения: дубликат имени пула,VmCreationError
-            print('exp__', E.__class__.__name__)
+        except PostgresError as E:
             await Event.create_error('Failed to create automated pool.')
-            if automated_pool:
-                await automated_pool.deactivate()
+            print('exp__', E.__class__.__name__)
             raise SimpleError(E)
 
+        # add data for protection
+        pool_task_manager.add_new_pool_data(automated_pool.automated_pool_id, automated_pool.template_id)
+        # start task
+        native_loop = asyncio.get_event_loop()
+        pool_lock = pool_task_manager.get_pool_lock(str(automated_pool.automated_pool_id))
+        pool_lock.expand_pool_task = native_loop.create_task(automated_pool.create_pool())
+
+        # pool creation task successfully started
         pool = await Pool.get_pool(automated_pool.automated_pool_id)
         return CreateAutomatedPoolMutation(
                 pool=PoolType(**pool),

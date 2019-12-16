@@ -9,6 +9,8 @@ class PoolLock:
 
     def __init__(self):
         self.lock = asyncio.Lock()
+
+        self.create_pool_task = None  # корутина в которой пул создается
         self.expand_pool_task = None  # корутина в которой пул расширяется
         self.decrease_pool_task = None  # корутина в которой количество машин в пуле уменьшается
 
@@ -66,12 +68,12 @@ class PoolTaskManager:
 
         cur_pool_lock = self._pool_lock_dict[pool_id]
 
+        await cancel_async_task(cur_pool_lock.create_pool_task)
         await cancel_async_task(cur_pool_lock.expand_pool_task)
         await cancel_async_task(cur_pool_lock.decrease_pool_task)
 
     async def remove_pool_data(self, pool_id, template_id):
-        """При удаление какого-либо пула отменяем корутины PoolObject.expand_pool_task и
-           PoolObject.decrease_pool_task, лочим PoolObject.lock,
+        """При удаление какого-либо пула отменяем таски, лочим PoolObject.lock,
            удаляем пул, убираем его из pool_object_dict. Смотрим используется ли шаблон удаляемого пула в других пулах.
            Если не используется, то удаляем его из template_object_dict."""
         del self._pool_lock_dict[pool_id]
