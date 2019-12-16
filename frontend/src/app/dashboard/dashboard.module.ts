@@ -1,5 +1,5 @@
+import { DashboardRoutingModule } from './dashboard-routing.module';
 import { CommonModule } from '@angular/common';
-import { AppRoutingModule } from './../app-routing.module';
 import { ErrorsService } from './../errors/errors.service';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { DashboardComponent } from './dashboard.component';
@@ -17,7 +17,6 @@ import { NodesModule } from './resourses/nodes/nodes.module';
 import { DatapoolsModule } from './resourses/datapools/datapools.module';
 import { ClustersModule } from './resourses/clusters/clusters.module';
 import { PoolsModule } from './pools/pools.module';
-import { SharedModule } from './common/shared.module';
 import { VmsModule } from './resourses/vms/vms.module';
 
 import {  HttpLink } from 'apollo-angular-link-http';
@@ -49,8 +48,7 @@ import { EventsModule } from './log/events/events.module';
   ],
   imports: [
     CommonModule,
-    AppRoutingModule,
-    SharedModule,
+    DashboardRoutingModule,
     FontAwesomeModule,
 
     PoolsModule,
@@ -69,8 +67,7 @@ import { EventsModule } from './log/events/events.module';
      { provide: MAT_DIALOG_DEFAULT_OPTIONS, useValue: { hasBackdrop: true, restoreFocus: true } },
       WaitService,
       WebsocketService,
-      WebsocketPoolService,
-      WaitService
+      WebsocketPoolService
     ]
 })
 

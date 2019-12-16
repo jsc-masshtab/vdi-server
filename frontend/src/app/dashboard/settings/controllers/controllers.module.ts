@@ -4,7 +4,6 @@ import { ControllersService } from './all-controllers/controllers.service';
 import { ControllersComponent } from './all-controllers/controllers.component';
 
 import { AppRoutingModule } from '../../../app-routing.module';
-import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { SharedModule } from '../../common/shared.module';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { NgModule } from '@angular/core';
@@ -25,7 +24,6 @@ import { ReactiveFormsModule } from '@angular/forms';
     SharedModule,
     CommonModule,
     FontAwesomeModule,
-    BrowserAnimationsModule,
     AppRoutingModule,
     MatDialogModule,
     MatSelectModule,

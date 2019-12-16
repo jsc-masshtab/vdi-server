@@ -1,3 +1,4 @@
+import { AuthStorageService } from './authStorage.service';
 import {
   trigger,
   style,
@@ -34,7 +35,7 @@ export class LoginComponent implements OnInit {
   public loaded: boolean = false;
   public loginForm: FormGroup;
 
-  constructor(private fb: FormBuilder, private authService: LoginService) {
+  constructor(private fb: FormBuilder, private authService: AuthStorageService, private loginService: LoginService) {
     this.createForm();
   }
 
@@ -50,7 +51,7 @@ export class LoginComponent implements OnInit {
   }
 
   public send() {
-    console.log(this.loginForm.value);
-    this.authService.auth(this.loginForm.value).subscribe((res) => console.log(res));
+    console.log(this.loginForm.value, this.authService);
+    this.loginService.auth(this.loginForm.value).subscribe((res) => console.log(res));
   }
 }

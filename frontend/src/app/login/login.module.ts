@@ -1,3 +1,4 @@
+import { LoginRoutingModule } from './login-routing.module';
 
 import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
@@ -14,7 +15,8 @@ import { LoginService } from './login.service';
   providers: [LoginService],
   imports: [
     CommonModule,
-    ReactiveFormsModule
+    ReactiveFormsModule,
+    LoginRoutingModule
   ]
 })
 

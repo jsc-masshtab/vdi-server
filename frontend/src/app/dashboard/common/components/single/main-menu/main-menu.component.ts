@@ -33,39 +33,38 @@ export class MainMenuComponent implements OnInit {
   }
 
   private beginRoute() {
-console.log(this.router);
     this.router.events.subscribe((event) => {
-      console.log(event);
-      if (event instanceof NavigationEnd) {
+        // console.log(event);
+        if (event instanceof NavigationEnd) {
 
-        let clickedManage1 = event.urlAfterRedirects.split('/')[2] || null;
-        let clickedManage2 = event.urlAfterRedirects.split('/')[3] || null;
+          let clickedManage1 = event.urlAfterRedirects.split('/')[2] || null;
+          let clickedManage2 = event.urlAfterRedirects.split('/')[3] || null;
 
-        console.log(clickedManage1,clickedManage2);
+          console.log(clickedManage1, clickedManage2);
 
-        if (clickedManage1) {
-          if (clickedManage1 === 'resourses') {
-            this.toggleResourse = true;
+          if (clickedManage1) {
+            if (clickedManage1 === 'resourses') {
+              this.toggleResourse = true;
+            }
+            if (clickedManage1 === 'settings') {
+              this.toggleSetting = true;
+            }
+
+            if (clickedManage1 === 'log') {
+              this.toggleLog = true;
+            }
+
+            if (clickedManage1 === 'pools') {
+              this.clickedManage = 'pools';
+              return;
+            }
           }
-          if (clickedManage1 === 'settings') {
-            this.toggleSetting = true;
-          }
 
-          if (clickedManage1 === 'log') {
-            this.toggleLog = true;
-          }
-
-          if (clickedManage1 === 'pools') {
-            this.clickedManage = 'pools';
-            return;
+          if (clickedManage2) {
+            this.clickedManage = clickedManage2;
           }
         }
-
-        if (clickedManage2) {
-          this.clickedManage = clickedManage2;
-        }
-      }
-    });
+      });
   }
 
   public resourseToggle(): void {

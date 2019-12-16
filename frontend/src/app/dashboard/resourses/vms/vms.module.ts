@@ -1,7 +1,6 @@
 
 
 import { AppRoutingModule } from '../../../app-routing.module';
-import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { SharedModule } from '../../common/shared.module';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { NgModule } from '@angular/core';
@@ -20,7 +19,6 @@ import { VmDetailsComponent } from './vms-details/vm-details.component';
     SharedModule,
     CommonModule,
     FontAwesomeModule,
-    BrowserAnimationsModule,
     AppRoutingModule
   ],
   providers: [VmsService],
