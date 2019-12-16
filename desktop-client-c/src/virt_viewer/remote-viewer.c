@@ -377,13 +377,14 @@ remote_viewer_start(VirtViewerApp *app, GError **err, RemoteViewerState remoteVi
     gchar *ip = NULL;
     gchar *port = NULL;
     gboolean is_connect_to_prev_pool = FALSE;
+    gchar *vm_verbose_name = NULL;
     GError *error = NULL;
 
 #ifdef HAVE_SPICE_CONTROLLER
     //g_signal_connect(app, "notify", G_CALLBACK(app_notified), self);
 #endif
     switch (remoteViewerState) {
-        case  AUTH_DIALOG:
+        case AUTH_DIALOG:
             goto retry_auth;
         case VDI_DIALOG:
             goto retry_connnect_to_vm;
@@ -471,6 +472,7 @@ cleanup:
     free_memory_safely(&password);
     free_memory_safely(&ip);
     free_memory_safely(&port);
+    free_memory_safely(&vm_verbose_name);
 
     if (!ret && priv->open_recent_dialog) {
         if (error != NULL) {

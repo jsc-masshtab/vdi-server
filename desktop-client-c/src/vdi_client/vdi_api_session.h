@@ -32,6 +32,8 @@ typedef struct{
 
     gchar *message;
 
+    gchar *vm_verbose_name;
+
     gint test_data;
 
 } VdiVmData;

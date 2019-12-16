@@ -313,9 +313,11 @@ void get_vm_from_pool(GTask       *task,
     vdi_vm_data->vm_port = json_object_get_int_member_safely(data_member_object, "port");
     vdi_vm_data->vm_password = g_strdup(json_object_get_string_member_safely(data_member_object, "password"));
     vdi_vm_data->message = g_strdup(json_object_get_string_member_safely(data_member_object, "message"));
+    vdi_vm_data->vm_verbose_name = g_strdup(json_object_get_string_member_safely(data_member_object, "vm_verbose_name"));
     printf("vm_host %s \n", vdi_vm_data->vm_host);
     printf("vm_port %ld \n", vdi_vm_data->vm_port);
     printf("vm_password %s \n", vdi_vm_data->vm_password);
+    printf("vm_verbose_name %s \n", vdi_vm_data->vm_verbose_name);
 
     g_object_unref(parser);
     g_task_return_pointer(task, vdi_vm_data, NULL); // return pointer must be freed
@@ -370,5 +372,6 @@ void free_vdi_vm_data(VdiVmData *vdi_vm_data)
     free_memory_safely(&vdi_vm_data->vm_host);
     free_memory_safely(&vdi_vm_data->vm_password);
     free_memory_safely(&vdi_vm_data->message);
+    free_memory_safely(&vdi_vm_data->vm_verbose_name);
     free(vdi_vm_data);
 }
