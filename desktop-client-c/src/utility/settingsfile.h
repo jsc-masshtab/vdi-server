@@ -11,7 +11,10 @@
 #include <glib/gtypes.h>
 
 
-gchar *read_from_settings_file(const gchar *group_name,  const gchar *key);
-void write_to_settings_file(const gchar *group_name,  const gchar *key, const gchar *str_value);
+gchar *read_str_from_ini_file(const gchar *group_name,  const gchar *key);
+void write_str_to_ini_file(const gchar *group_name,  const gchar *key, const gchar *str_value);
+
+gint read_int_from_ini_file(const gchar *group_name,  const gchar *key);
+void write_int_to_ini_file(const gchar *group_name,  const gchar *key, gint value);
 
 #endif //THIN_CLIENT_VEIL_SETTINGSFILE_H

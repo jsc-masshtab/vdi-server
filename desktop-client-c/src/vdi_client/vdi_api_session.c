@@ -34,7 +34,7 @@ static void free_session_memory(){
     free_memory_safely(&vdiSession.auth_url);
     free_memory_safely(&vdiSession.jwt);
 
-    free_memory_safely(&vdiSession.current_vm_id);
+    free_memory_safely(&vdiSession.current_pool_id);
 }
 
 static void setup_header_for_api_call(SoupMessage *msg)
@@ -100,7 +100,7 @@ static gboolean refresh_vdi_session_token()
     if (!root_object)
         return FALSE;
 
-    JsonObject *data_member_object = json_object_get_object_member(root_object, "data");
+    JsonObject *data_member_object = json_object_get_object_member_safely(root_object, "data");
     if (!data_member_object)
         return FALSE;
 
@@ -122,7 +122,7 @@ void start_vdi_session()
     }
     // creae session
     //vdiSession.soup_session = soup_session_new();
-    vdiSession.soup_session = soup_session_new_with_options("timeout", 4, NULL);
+    vdiSession.soup_session = soup_session_new_with_options("timeout", 5, NULL);
 
     vdiSession.vdi_username = NULL;
     vdiSession.vdi_password = NULL;
@@ -134,7 +134,7 @@ void start_vdi_session()
     vdiSession.jwt = NULL;
 
     vdiSession.is_active = TRUE;
-    vdiSession.current_vm_id = NULL;
+    vdiSession.current_pool_id = NULL;
 }
 
 void stop_vdi_session()
@@ -192,15 +192,15 @@ void set_vdi_credentials(const gchar *username, const gchar *password, const gch
     vdiSession.jwt = NULL;
 }
 
-void set_current_vm_id(const gchar *current_vm_id)
+void set_current_pool_id(const gchar *current_pool_id)
 {
-    free_memory_safely(&vdiSession.current_vm_id);
-    vdiSession.current_vm_id = g_strdup(current_vm_id);
+    free_memory_safely(&vdiSession.current_pool_id);
+    vdiSession.current_pool_id = g_strdup(current_pool_id);
 }
 
-const gchar *get_current_vm_id()
+const gchar *get_current_pool_id()
 {
-    return vdiSession.current_vm_id;
+    return vdiSession.current_pool_id;
 }
 
 /*
@@ -285,11 +285,40 @@ void get_vm_from_pool(GTask       *task,
                     gpointer       task_data G_GNUC_UNUSED,
                     GCancellable  *cancellable G_GNUC_UNUSED)
 {
-    gchar *urlStr = g_strdup_printf("%s/client/pools/%s", vdiSession.api_url, get_current_vm_id());
+    gchar *urlStr = g_strdup_printf("%s/client/pools/%s", vdiSession.api_url, get_current_pool_id());
     gchar *response_body_str = api_call("POST", urlStr, NULL);
     g_free(urlStr);
 
-    g_task_return_pointer(task, response_body_str, NULL); // return pointer must be freed
+    //response_body_str == NULL. didnt receive what we wanted
+    if (!response_body_str) {
+        g_task_return_pointer(task, NULL, NULL);
+        return;
+    }
+
+    // parse response
+    JsonParser *parser = json_parser_new();
+    JsonObject *root_object = get_root_json_object(parser, response_body_str);
+    JsonObject *data_member_object = json_object_get_object_member_safely(root_object, "data");
+
+    // no point to parse if data is invalid
+    if (!data_member_object) {
+        g_object_unref(parser);
+        free_memory_safely(&response_body_str);
+        g_task_return_pointer(task, NULL, NULL);
+        return;
+    }
+
+    VdiVmData *vdi_vm_data = calloc(1, sizeof(VdiVmData));
+    vdi_vm_data->vm_host = g_strdup(json_object_get_string_member_safely(data_member_object, "host"));
+    vdi_vm_data->vm_port = json_object_get_int_member_safely(data_member_object, "port");
+    vdi_vm_data->vm_password = g_strdup(json_object_get_string_member_safely(data_member_object, "password"));
+    vdi_vm_data->message = g_strdup(json_object_get_string_member_safely(data_member_object, "message"));
+    printf("vm_host %s \n", vdi_vm_data->vm_host);
+    printf("vm_port %ld \n", vdi_vm_data->vm_port);
+    printf("vm_password %s \n", vdi_vm_data->vm_password);
+
+    g_object_unref(parser);
+    g_task_return_pointer(task, vdi_vm_data, NULL); // return pointer must be freed
 }
 
 void do_action_on_vm(GTask      *task,
@@ -316,17 +345,30 @@ void do_action_on_vm(GTask      *task,
     free_memory_safely(&urlStr);
     free_memory_safely(&bodyStr);
     // free ActionOnVmData
-    free_memory_safely(&action_on_vm_data->current_vm_id);
-    free_memory_safely(&action_on_vm_data->action_on_vm_str);
-    free(action_on_vm_data);
+    free_action_on_vm_data(action_on_vm_data);
 }
 
 void do_action_on_vm_async(const gchar *actionStr, gboolean isForced)
 {
     ActionOnVmData *action_on_vm_data = malloc(sizeof(ActionOnVmData));
-    action_on_vm_data->current_vm_id = g_strdup(get_current_vm_id());
+    action_on_vm_data->current_vm_id = g_strdup(get_current_pool_id());
     action_on_vm_data->action_on_vm_str = g_strdup(actionStr);
     action_on_vm_data->is_action_forced = isForced;
 
     execute_async_task(do_action_on_vm, NULL, action_on_vm_data, NULL);
+}
+
+void free_action_on_vm_data(ActionOnVmData *action_on_vm_data)
+{
+    free_memory_safely(&action_on_vm_data->current_vm_id);
+    free_memory_safely(&action_on_vm_data->action_on_vm_str);
+    free(action_on_vm_data);
+}
+
+void free_vdi_vm_data(VdiVmData *vdi_vm_data)
+{
+    free_memory_safely(&vdi_vm_data->vm_host);
+    free_memory_safely(&vdi_vm_data->vm_password);
+    free_memory_safely(&vdi_vm_data->message);
+    free(vdi_vm_data);
 }

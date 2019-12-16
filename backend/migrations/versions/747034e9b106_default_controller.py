@@ -19,7 +19,7 @@ depends_on = None
 def upgrade():
     insert_controller_query = """insert into controller("id", "verbose_name", "status", "address", "description", 
     "username", "password", "ldap_connection") values ('621a162e-0176-4e92-98fb-e552f6b9bc57', 'Remote controller', 
-    'ACTIVE', '192.168.7.250', 'Remote controller', 'admin', 
+    'ACTIVE', '192.168.11.102', 'Remote controller', 'vdi_devyatkin', 
     'gAAAAABdvCqNVz4ZhwNRVE9Xgh8iKYkfL4o2d7hlyW6ZdJbRa-Stwqp96p_5GEOlkpznHjeOxPhXt2RnvKItBWIXau3kbW2efQ==', false);"""
     op.execute(insert_controller_query)
     # TODO: change default admin username and password.

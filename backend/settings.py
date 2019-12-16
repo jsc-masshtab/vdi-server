@@ -53,7 +53,7 @@ VEIL_WS_MAX_TIME_TO_WAIT = 15
 
 # Others
 # -----------------------------
-DEFAULT_NAME = 'Unknown'
+DEFAULT_NAME = '-'
 
 # Settings for tests
 # -----------------------------

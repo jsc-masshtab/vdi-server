@@ -155,8 +155,8 @@
           </packing>
         </child>
         <child>
-          <object class="GtkCheckButton" id="remember-button">
-            <property name="label" translatable="yes">Запомнить</property>
+          <object class="GtkCheckButton" id="connect-to-prev-button">
+            <property name="label" translatable="yes">Подключиться к предыдущему пулу</property>
             <property name="visible">True</property>
             <property name="can_focus">True</property>
             <property name="receives_default">False</property>
@@ -169,6 +169,20 @@
           </packing>
         </child>
         <child>
+          <object class="GtkCheckButton" id="remember-button">
+            <property name="label" translatable="yes">Запомнить</property>
+            <property name="visible">True</property>
+            <property name="can_focus">True</property>
+            <property name="receives_default">False</property>
+            <property name="draw_indicator">True</property>
+          </object>
+          <packing>
+            <property name="expand">True</property>
+            <property name="fill">True</property>
+            <property name="position">7</property>
+          </packing>
+        </child>
+        <child>
           <object class="GtkLabel" id="message-display-label">
             <property name="visible">True</property>
             <property name="can_focus">False</property>
@@ -176,7 +190,7 @@
           <packing>
             <property name="expand">True</property>
             <property name="fill">True</property>
-            <property name="position">7</property>
+            <property name="position">8</property>
           </packing>
         </child>
       </object>

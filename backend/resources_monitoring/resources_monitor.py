@@ -14,7 +14,7 @@ from controller_resources.veil_client import ResourcesHttpClient
 from event.models import Event
 from .resources_monitoring_data import CONTROLLER_SUBSCRIPTIONS_LIST, CONTROLLERS_SUBSCRIPTION, VDI_TASKS_SUBSCRIPTION
 
-import time
+from common.utils import cancel_async_task
 
 
 class AbstractMonitor(ABC):
@@ -59,17 +59,19 @@ class ResourcesMonitor(AbstractMonitor):
     def start(self, controller_ip):
         self._controller_ip = controller_ip
         self._running_flag = True
+
+        native_loop = asyncio.get_event_loop()
         # controller check
-        self._controller_online_task = IOLoop.instance().add_timeout(time.time(), self._controller_online_checking)
+        self._controller_online_task = native_loop.create_task(self._controller_online_checking())
         # ws data
-        self._resources_monitor_task = IOLoop.instance().add_timeout(time.time(), self._processing_ws_messages)
+        self._resources_monitor_task = native_loop.create_task(self._processing_ws_messages())
 
     async def stop(self):
         self._running_flag = False
         await self._close_connection()
         # cancel tasks
-        IOLoop.instance().remove_timeout(self._resources_monitor_task)
-        IOLoop.instance().remove_timeout(self._controller_online_task)
+        await cancel_async_task(self._resources_monitor_task)
+        await cancel_async_task(self._controller_online_task)
 
     def get_controller_ip(self):
         return self._controller_ip
@@ -80,14 +82,13 @@ class ResourcesMonitor(AbstractMonitor):
         Check if controller online
         :return:
         """
-        resources_http_client = await ResourcesHttpClient.create(self._controller_ip)
-
         response_dict = {'ip': self._controller_ip, 'msg_type': 'data', 'event': 'UPDATED',
                          'resource': CONTROLLERS_SUBSCRIPTION}
         while self._running_flag:
             await asyncio.sleep(2)  # check every 2 seconds
             try:
                 # if controller is online then there wil not be any exception
+                resources_http_client = await ResourcesHttpClient.create(self._controller_ip)
                 await resources_http_client.check_controller()
             except (HTTPClientError, HttpError, OSError):
                 # notify only if controller was online before (data changed)
@@ -125,6 +126,7 @@ class ResourcesMonitor(AbstractMonitor):
                     break
                 elif 'token error' in msg:
                     await Controller.invalidate_auth(self._controller_ip)
+                    break
                 else:
                     await self._on_message_received(msg)
 

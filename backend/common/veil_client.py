@@ -63,11 +63,11 @@ class VeilHttpClient:
             body = self.get_response_body(http_error.response)
 
             # TODO: temprorary variant
-            error_msg = '{cls}: {msg_body}. Url is {url}'.format(
+            error_msg = '{cls}: URL {url} {http_error}'.format(
                 cls=__class__.__name__,
-                msg_body=body,
-                url=url)
-            await Event.create_error(error_msg)
+                url=url,
+                http_error=str(http_error))
+            await Event.create_error(error_msg[:255], description=str(http_error))
 
             if http_error.code == 400:
                 raise BadRequest(body)
