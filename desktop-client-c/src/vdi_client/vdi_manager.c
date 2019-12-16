@@ -42,10 +42,13 @@ typedef struct{
 
     gchar **url_ptr;
     gchar **password_ptr;
+    gchar **vm_verbose_name_ptr;
 
     ConnectionInfo ci;
 } VdiManager;
 
+// todo: Когда-нибудь в будущем избавлюсь от этих переменных уровня единицы трансляции.
+// Но пока это никак не мешает, а лишь облегчает работу. Иначе надо жонглировать указателем между потоками.
 static VdiManager vdi_manager;
 static VdiWsClient vdi_ws_client;
 
@@ -87,7 +90,9 @@ static void set_init_values()
 
     vdi_manager.url_ptr = NULL;
     vdi_manager.password_ptr = NULL;
+    vdi_manager.vm_verbose_name_ptr = NULL;
 }
+
 // Set GUI state
 static void set_vdi_client_state(VdiClientState vdi_client_state, const gchar *message, gboolean error_message)
 {
@@ -293,6 +298,8 @@ static void on_get_vm_from_pool_finished(GObject *source_object G_GNUC_UNUSED,
         g_strstrip(*vdi_manager.url_ptr);
         free_memory_safely(vdi_manager.password_ptr);
         *vdi_manager.password_ptr = g_strdup(vdi_vm_data->vm_password);
+        free_memory_safely(vdi_manager.vm_verbose_name_ptr);
+        *vdi_manager.vm_verbose_name_ptr = g_strdup(vdi_vm_data->vm_verbose_name);
         //
         set_vdi_client_state(VDI_RECEIVED_RESPONSE, "Получена вм из пула", FALSE);
 
@@ -376,7 +383,7 @@ static void on_vm_start_button_clicked(GtkButton *button, gpointer data G_GNUC_U
 
 /////////////////////////////////// main function
 GtkResponseType vdi_manager_dialog(GtkWindow *main_window G_GNUC_UNUSED, gchar **uri,
-                                   gchar **user G_GNUC_UNUSED, gchar **password)
+                                   gchar **password, gchar **vm_verbose_name)
 {
     printf("vdi_manager_dialog url %s \n", *uri);
     set_init_values();
@@ -385,6 +392,7 @@ GtkResponseType vdi_manager_dialog(GtkWindow *main_window G_GNUC_UNUSED, gchar *
     vdi_manager.ci.dialog_window_response = GTK_RESPONSE_CANCEL;
     vdi_manager.url_ptr = uri;
     vdi_manager.password_ptr = password;
+    vdi_manager.vm_verbose_name_ptr = vm_verbose_name;
 
     /* Create the widgets */
     vdi_manager.builder = virt_viewer_util_load_ui("vdi_manager_form.ui");

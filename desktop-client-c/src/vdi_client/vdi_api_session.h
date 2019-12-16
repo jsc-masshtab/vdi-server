@@ -29,10 +29,9 @@ typedef struct{
     gchar *vm_host;
     gint64 vm_port;
     gchar *vm_password;
+    gchar *vm_verbose_name;
 
     gchar *message;
-
-    gchar *vm_verbose_name;
 
     gint test_data;
 
