@@ -117,6 +117,16 @@ class User(AbstractSortableStatusModel, db.Model):
         await Event.create_info(info_message)
         return True
 
+    @classmethod
+    async def logout(cls, username, client_type, ip):
+        user = await User.get_object(extra_field_name='username', extra_field_value=username)
+        if not user:
+            return False
+        await UserJwtInfo.delete.where(UserJwtInfo.user_id == user.id).gino.status()
+        info_message = 'Auth by {}: User {} logged out: IP: {}.'.format(client_type, username, ip)
+        await Event.create_info(info_message)
+        return True
+
 
 class UserJwtInfo(db.Model):
     """
