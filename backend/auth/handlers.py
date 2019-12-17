@@ -24,12 +24,15 @@ class AuthHandler(BaseHandler, ABC):
 
             access_token = encode_jwt(self.args['username'])
             await User.login(username=self.args['username'], token=access_token.get('access_token'), ip=self.remote_ip,
-                             ldap=self.args.get('ldap'))
+                             ldap=self.args.get('ldap'), client_type=self.args.get('client-type'))
             response = {'data': access_token}
         except AssertionError as E:
             error_message = str(E)
             response = {'errors': [{'message': error_message}]}
-            error_message = 'Auth: {} IP: {}. username: {}'.format(E, self.remote_ip, self.args.get('username'))
+            error_message = 'Auth by {ct}: {err} IP: {ip}. username: {usr}'.format(ct=self.args.get('client-type'),
+                                                                                   err=error_message,
+                                                                                   ip=self.remote_ip,
+                                                                                   usr=self.args.get('username'))
             await Event.create_warning(error_message)
         return self.finish(response)
 

@@ -166,6 +166,7 @@ class PoolType(graphene.ObjectType):
     reserve_size = graphene.Int()
     total_size = graphene.Int()
     vm_name_template = graphene.String()
+    os_type = graphene.String()
 
     users = graphene.List(UserType, entitled=graphene.Boolean())
 

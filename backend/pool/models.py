@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import uuid
 import asyncio
+from enum import Enum
 
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy import Enum as AlchemyEnum
@@ -72,7 +73,6 @@ class Pool(db.Model):
         """Возвращает tenplate_id для автоматического пула, либо null"""
         template_id = await AutomatedPool.select('template_id').where(
             AutomatedPool.automated_pool_id == self.pool_id).gino.scalar()
-        print('template_id is {}'.format(template_id))
         return template_id
 
     @staticmethod
@@ -204,9 +204,7 @@ class Pool(db.Model):
             ans_d = dict()
             ans_d['id'] = str(pool.master_id)
             ans_d['name'] = pool.verbose_name
-
-            # Hardcoded example. Change to model fields.
-            ans_d['os_type'] = 'Lin'
+            ans_d['os_type'] = pool.os_type
             ans_d['status'] = pool.status.value
             ans.append(ans_d)
         return ans
@@ -335,6 +333,7 @@ class AutomatedPool(db.Model):
     reserve_size - желаемое минимальное количество подогретых машин (добавленных в пул, но не имеющих пользователя)
     На данный момент отсутствует смысловая валидация на уровне таблиц (она в схемах).
     """
+
     __tablename__ = 'automated_pool'
 
     automated_pool_id = db.Column(UUID(), db.ForeignKey('pool.pool_id', ondelete="CASCADE"), primary_key=True)  # TODO: try with id
@@ -352,6 +351,7 @@ class AutomatedPool(db.Model):
     reserve_size = db.Column(db.Integer(), nullable=False, default=0)
     total_size = db.Column(db.Integer(), nullable=False, default=1)
     vm_name_template = db.Column(db.Unicode(length=100), nullable=True)
+    os_type = db.Column(db.Unicode(length=100), nullable=True)
 
     create_thin_clones = db.Column(db.Boolean(), nullable=False, default=True)
 
@@ -443,10 +443,8 @@ class AutomatedPool(db.Model):
         # TODO: beautify
         vm_name_template = self.vm_name_template or await self.verbose_name
 
-        # uid = str(uuid.uuid4())[:7]учзфтв
-        # TODO: отказатся от UUID
         params = {
-            'verbose_name': "{}-{}-{}".format(vm_name_template, domain_index, str(uuid.uuid4())[:7]),
+            'verbose_name': "{}-{}".format(vm_name_template, domain_index),
             'name_template': vm_name_template,
             'domain_id': str(self.template_id),
             'datapool_id': str(self.datapool_id),  # because of UUID
@@ -495,7 +493,7 @@ class AutomatedPool(db.Model):
             is_vm_successfully_created = await response_waiter.wait_for_message(
                 _check_if_vm_created, VEIL_WS_MAX_TIME_TO_WAIT)
             resources_monitor_manager.unsubscribe(response_waiter)
-            print('is_vm_successfully_created', is_vm_successfully_created)
+
             if is_vm_successfully_created:
                 await Vm.create(id=vm_info['id'], pool_id=str(self.automated_pool_id),
                                 template_id=str(self.template_id))
@@ -528,9 +526,10 @@ class AutomatedPool(db.Model):
         # TODO: главное, что бы хотелось тут и в других местах создания виртуалок - отправлять диапазоны виртуалок
 
         print('Add initial vms:')
-        # # fetch_template_info was commented on previous version
-        # template_info = await GetDomainInfo(controller_ip=pool_args_dict['controller_ip'],
-        #                                     domain_id=pool_args_dict['template_id'])
+        # Fetching template info from controller.
+        controller_address = await self.controller_ip
+        pool_os_type = Vm.get_template_os_type(controller_address=controller_address, template_id=self.template_id)
+        await self.update(os_type=pool_os_type).apply()
 
         await Event.create_info('Automated pool creation started')
 
@@ -557,11 +556,10 @@ class AutomatedPool(db.Model):
         except VmCreationError as E:
             # log that we cant create required initial amount of VMs
             print('Cant create VM')
-            print(E)
 
         # notify VDI front about pool creation result (WS)
         is_creation_successful = (len(vm_list) == self.initial_size)
-        print('is creation successful: {}'.format(is_creation_successful))
+
         if is_creation_successful:
             msg = 'Automated pool successfully created. Initial VM amount {}'.format(len(vm_list))
             await Event.create_info(msg)
