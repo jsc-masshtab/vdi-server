@@ -3,6 +3,7 @@ import re
 import graphene
 from tornado.httpclient import HTTPClientError  # TODO: точно это нужно тут?
 from graphql.error.located_error import GraphQLLocatedError
+import asyncio
 
 from database import StatusGraphene
 from common.veil_validators import MutationValidation
@@ -24,12 +25,12 @@ from controller_resources.veil_client import ResourcesHttpClient
 from controller_resources.schema import ClusterType, NodeType, DatapoolType
 
 from pool.models import AutomatedPool, StaticPool, Pool, PoolUsers
+from pool.pool_task_manager import pool_task_manager
 
 from asyncpg import UniqueViolationError
+from asyncpg.exceptions._base import PostgresError
 
 from database import db
-
-from pool.pool_task_manager import pool_task_manager
 
 
 # TODO: отсутствует валидация входящих ресурсов вроде node_uid, cluster_uid и т.п. Ранее шла речь,
@@ -165,6 +166,7 @@ class PoolType(graphene.ObjectType):
     reserve_size = graphene.Int()
     total_size = graphene.Int()
     vm_name_template = graphene.String()
+    os_type = graphene.String()
 
     users = graphene.List(UserType, entitled=graphene.Boolean())
 
@@ -297,29 +299,46 @@ class PoolQuery(graphene.ObjectType):
 class DeletePoolMutation(graphene.Mutation, PoolValidator):
     class Arguments:
         pool_id = graphene.UUID()
+        full = graphene.Boolean(required=False)
 
     ok = graphene.Boolean()
 
-    async def mutate(self, info, pool_id):
-
-        pool = await Pool.get_pool(pool_id)
-
-        if pool.pool_type == 'AUTOMATED':
-            pool_lock = pool_task_manager.get_pool_lock(str(pool_id))
-            async with pool_lock.lock:
-                # останавливаем таски связанные с пулом
-                await pool_task_manager.cancel_all_tasks_for_pool(str(pool_id))
-                # удаляем пул
-                await Pool.soft_delete(pool_id)
-                await pool_task_manager.remove_pool_data(str(pool_id), str(pool.template_id))
+    @staticmethod
+    async def delete_pool(pool, full=False):
+        if full:
+            is_deleted = await pool.full_delete()
         else:
-            await Pool.soft_delete(pool_id)
+            is_deleted = await pool.soft_delete()
 
-        # Меняем статус пула. Не нравится идея удалять записи имеющие внешние зависимости, которые не удалить,
-        # например запущенные виртуалки.
-        msg = 'Pool {id} deactivated.'.format(id=pool_id)
-        await Event.create_info(msg)
-        return DeletePoolMutation(ok=True)
+        return is_deleted
+
+    async def mutate(self, info, pool_id, full=False):
+        # Нет запуска валидации, т.к. нужна сущность пула далее - нет смысла запускать запрос 2жды.
+        pool = await Pool.get(pool_id)
+        if not pool:
+            raise SimpleError('No such pool.')
+
+        try:
+            pool_type = await pool.pool_type
+
+            # В случае автоматическогог пула получаем лок
+            if pool_type == Pool.PoolTypes.AUTOMATED:
+                template_id = await pool.template_id
+                pool_lock = pool_task_manager.get_pool_lock(str(pool_id))
+                async with pool_lock.lock:
+                    # останавливаем таски связанные с пулом
+                    await pool_task_manager.cancel_all_tasks_for_pool(str(pool_id))
+                    # удаляем пул
+                    is_deleted = await DeletePoolMutation.delete_pool(pool, full)
+                    # убираем из памяти локи
+                    await pool_task_manager.remove_pool_data(str(pool_id), str(template_id))
+            # В случае стат пула удаляем без локов.
+            else:
+                is_deleted = await DeletePoolMutation.delete_pool(pool, full)
+
+            return DeletePoolMutation(ok=is_deleted)
+        except Exception as e:
+            raise e
 
 
 # --- --- --- --- ---
@@ -525,26 +544,21 @@ class CreateAutomatedPoolMutation(graphene.Mutation, PoolValidator):
     @classmethod
     async def mutate(cls, root, info, **kwargs):
         await cls.validate_agruments(**kwargs)
-        automated_pool = None
         try:
             automated_pool = await AutomatedPool.create(**kwargs)
-            # add data for protection
-            pool_task_manager.add_new_pool_data(automated_pool.automated_pool_id, automated_pool.template_id)
-            # locks
-            async with pool_task_manager.get_pool_lock(str(automated_pool.automated_pool_id)).lock:
-                async with pool_task_manager.get_template_lock(str(automated_pool.template_id)).lock:
-                    await automated_pool.add_initial_vms()
-                    await automated_pool.activate()
-
-                    msg = 'Automated pool {id} created.'.format(id=automated_pool.automated_pool_id)
-                    await Event.create_info(msg)
-        except (UniqueViolationError, VmCreationError) as E: # Возможные исключения: дубликат имени пула,VmCreationError
-            print('exp__', E.__class__.__name__)
+        except PostgresError as E:
             await Event.create_error('Failed to create automated pool.')
-            if automated_pool:
-                await automated_pool.deactivate()
+            print('exp__', E.__class__.__name__)
             raise SimpleError(E)
 
+        # add data for protection
+        pool_task_manager.add_new_pool_data(str(automated_pool.automated_pool_id), str(automated_pool.template_id))
+        # start task
+        native_loop = asyncio.get_event_loop()
+        pool_lock = pool_task_manager.get_pool_lock(str(automated_pool.automated_pool_id))
+        pool_lock.expand_pool_task = native_loop.create_task(automated_pool.create_pool())
+
+        # pool creation task successfully started
         pool = await Pool.get_pool(automated_pool.automated_pool_id)
         return CreateAutomatedPoolMutation(
                 pool=PoolType(**pool),

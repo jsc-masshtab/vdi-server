@@ -5,7 +5,7 @@ import tornado.gen
 
 from database import db, get_list_of_values_from_db
 from vm.veil_client import VmHttpClient
-from controller.models import Controller
+from event.models import Event
 
 # TODO: сделать схему и методы более осмысленными.
 
@@ -109,6 +109,14 @@ class Vm(db.Model):
         return await Vm.delete.where(Vm.id.in_(vm_ids)).gino.status()
 
     @staticmethod
+    async def remove_vm(controller_ip, vm_id):
+        """Удаляет виртуалку на ECP, а потом из БД."""
+        vm_http_client = await VmHttpClient.create(controller_ip, vm_id)
+        await vm_http_client.remove_vm()
+        await Event.create_info('Vm {} removed from ECP.'.format(vm_id))
+        return await Vm.delete.where(Vm.id == vm_id).gino.status()
+
+    @staticmethod
     async def enable_remote_access(controller_address, vm_id):
         vm_http_client = await VmHttpClient.create(controller_address, vm_id)
         await vm_http_client.enable_remote_access()
@@ -120,3 +128,10 @@ class Vm(db.Model):
             for vm_id in vm_ids
         ]
         await tornado.gen.multi(async_tasks)
+
+    @staticmethod
+    async def get_template_os_type(controller_address, template_id):
+        vm_http_client = await VmHttpClient.create(controller_address, template_id)
+        domain_info = await vm_http_client.info()
+        domain_os_type = domain_info['os_type'] if domain_info else None
+        return domain_os_type

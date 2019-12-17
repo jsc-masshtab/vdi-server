@@ -55,7 +55,8 @@ def encode_jwt(username):
         key=SECRET_KEY,
         algorithm=JWT_ALGORITHM
     ).decode('utf-8')
-    return {'access_token': access_token, 'expires_on': expires_on.strftime("%d.%m.%Y %H:%M:%S UTC")}
+    return {'access_token': access_token, 'expires_on': expires_on.strftime("%d.%m.%Y %H:%M:%S UTC"),
+            'username': username}
 
 
 def decode_jwt(token, decode_options: dict = JWT_OPTIONS, algorithms: list = [JWT_ALGORITHM]):

@@ -36,16 +36,16 @@ VdiPoolWidget build_pool_widget(const gchar *pool_id, const gchar *pool_name,
 
     // os image
     gchar *os_icon_path = NULL;
-    if (g_strcmp0(os_type, "Win") == 0) {
+    if (g_strcmp0(os_type, "Windows") == 0) {
         os_icon_path = g_strdup(VIRT_VIEWER_RESOURCE_PREFIX"/icons/content/img/windows_icon.png");
 
-    } else if (g_strcmp0(os_type, "Lin") == 0) {
+    } else if (g_strcmp0(os_type, "Linux") == 0) {
         os_icon_path = g_strdup(VIRT_VIEWER_RESOURCE_PREFIX"/icons/content/img/linux_icon.png");
 
     } else {
         os_icon_path = g_strdup(VIRT_VIEWER_RESOURCE_PREFIX"/icons/content/img/other_icon.png");
-
     }
+
     vdi_pool_widget.image_widget = gtk_image_new_from_resource(os_icon_path);
     free_memory_safely(&os_icon_path);
     gtk_box_pack_start((GtkBox *)vdi_pool_widget.gtk_box, vdi_pool_widget.image_widget, TRUE, TRUE, 0);

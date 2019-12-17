@@ -58,14 +58,13 @@ class ResourcesMonitor:
         Check if controller online
         :return:
         """
-        resources_http_client = await ResourcesHttpClient.create(self._controller_ip)
-
         response_dict = {'ip': self._controller_ip, 'msg_type': 'data', 'event': 'UPDATED',
                          'resource': CONTROLLERS_SUBSCRIPTION}
         while self._running_flag:
             await asyncio.sleep(2)  # check every 2 seconds
             try:
                 # if controller is online then there wil not be any exception
+                resources_http_client = await ResourcesHttpClient.create(self._controller_ip)
                 await resources_http_client.check_controller()
             except (HTTPClientError, HttpError, OSError):
                 # notify only if controller was online before (data changed)

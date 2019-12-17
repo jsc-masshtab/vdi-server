@@ -60,7 +60,6 @@
 #define RECONNECT_TIMEOUT 1000
 
 extern gboolean opt_manual_mode;
-extern gboolean take_extern_credentials;
 
 struct _RemoteViewerPrivate {
     gboolean open_recent_dialog;
@@ -112,7 +111,6 @@ virt_viewer_connect_timer(RemoteViewer *self)
     if (!created)
         return TRUE;
 
-    take_extern_credentials = TRUE;
     is_connected = virt_viewer_app_initial_connect(app, NULL);
 
     printf("%s active %i created %i is_connected %i \n",
@@ -378,28 +376,25 @@ remote_viewer_start(VirtViewerApp *app, GError **err, RemoteViewerState remoteVi
     gchar *password = NULL;
     gchar *ip = NULL;
     gchar *port = NULL;
-    gboolean is_ldap = FALSE;
+    gboolean is_connect_to_prev_pool = FALSE;
+    gchar *vm_verbose_name = NULL;
     GError *error = NULL;
 
-#ifdef HAVE_SPICE_CONTROLLER
-    //g_signal_connect(app, "notify", G_CALLBACK(app_notified), self);
-#endif
     switch (remoteViewerState) {
-        case  AUTH_DIALOG:
-            goto retry_dialog;
+        case AUTH_DIALOG:
+            goto retry_auth;
         case VDI_DIALOG:
-            goto retry_vdi_dialog;
+            goto retry_connnect_to_vm;
     }
 
     // remote connect dialog
-retry_dialog:
+retry_auth:
     {
-        VirtViewerWindow *main_window = virt_viewer_app_get_main_window(app);
         // Забираем из ui адрес и порт
         GtkResponseType dialog_window_response =
-            remote_viewer_connect_dialog(virt_viewer_window_get_window(main_window), &guri, &user, &password,
-                    &ip, &port, &is_ldap);
-        //printf("%s: is_ldap %i\n", (const char *)__func__, is_ldap);
+            remote_viewer_connect_dialog(&guri, &user, &password, &ip, &port,
+                                         &is_connect_to_prev_pool, &vm_verbose_name);
+
         if (dialog_window_response == GTK_RESPONSE_CANCEL) {
             return FALSE;
         }
@@ -413,7 +408,7 @@ retry_dialog:
     // После такого как забрали адресс с логином и паролем действуем в зависимости от opt_manual_mode
     // 1) в мануальном режиме сразу подключаемся к удаленноиу раб столу
     // 2) В дефолтном режиме вызываем vdi manager. В нем пользователь выберет машину для подключения
-retry_vdi_dialog:
+retry_connnect_to_vm:
     // instant connect attempt
     if (opt_manual_mode) {
         // credentials
@@ -438,25 +433,45 @@ retry_vdi_dialog:
         }
 
     } else {
-
-        free_memory_safely(&guri);
-        free_memory_safely(&user);
-        free_memory_safely(&password);
-
-        // show VDI manager window
         VirtViewerWindow *main_window = virt_viewer_app_get_main_window(app);
-        GtkResponseType dialog_window_response =
-                vdi_manager_dialog(virt_viewer_window_get_window(main_window), &guri, &user, &password);
 
-        if(dialog_window_response == GTK_RESPONSE_CANCEL) {
-            goto cleanup;
+        //Если is_connect_to_prev_pool true, то подключение к пред. запомненому пулу,
+        // минуя vdi manager window
+        if (!is_connect_to_prev_pool) {
+            free_memory_safely(&guri);
+            free_memory_safely(&password);
+            free_memory_safely(&vm_verbose_name);
+
+            // show VDI manager window
+            GtkResponseType vdi_dialog_window_response =
+                    vdi_manager_dialog(virt_viewer_window_get_window(main_window), &guri,
+                                       &password, &vm_verbose_name);
+
+            if (vdi_dialog_window_response == GTK_RESPONSE_CANCEL) {
+                goto cleanup;
+            }
+            else if (vdi_dialog_window_response == GTK_RESPONSE_CLOSE) {
+                g_application_quit(G_APPLICATION(app));
+                return FALSE;
+            }
         }
-        else if(dialog_window_response == GTK_RESPONSE_CLOSE) {
-            g_application_quit(G_APPLICATION(app));
-            return FALSE;
-        }
+//        // remember username
+        if (user)
+            g_object_set(app, "username", user, NULL);
+        printf("uuiduser: %s \n", user);
+
+        // get remembered user name
+        gchar *username = NULL;
+        g_object_get(app, "username", &username, NULL);
+        printf("remembered_user %s \n", username);
+
+        // virt viewer takes its name from guest-name so lets not overcomplicate
+        gchar *window_name = g_strconcat("ВМ: ", vm_verbose_name, "    Пользователь: ", username, NULL);
+        g_object_set(app, "guest-name", window_name, NULL);
+        g_free(window_name);
+
+        // set url and credentials
         g_object_set(app, "guri", guri, NULL);
-
         setSpiceSessionCredentials(user, password);
 
         // start connect attempt timer
@@ -472,13 +487,14 @@ cleanup:
     free_memory_safely(&password);
     free_memory_safely(&ip);
     free_memory_safely(&port);
+    free_memory_safely(&vm_verbose_name);
 
     if (!ret && priv->open_recent_dialog) {
         if (error != NULL) {
             virt_viewer_app_simple_message_dialog(app, _("Unable to connect: %s"), error->message); // -
         }
         g_clear_error(&error);
-        goto retry_dialog;
+        goto retry_auth;
     }
     if (error != NULL)
         g_propagate_error(err, error);

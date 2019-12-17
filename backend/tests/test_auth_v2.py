@@ -51,7 +51,7 @@ class AuthTestCase(AsyncHTTPTestCase):
         self.assertIsInstance(response_dict, dict)
         data = response_dict['data']
         self.assertTrue(data.get('access_token'))
-        mock_event = 'Auth: User login (local) IP: 127.0.0.1. username: {}'.format(TESTS_ADMIN_USERNAME)
+        mock_event = 'Auth by Unknown: User login (local): IP: 127.0.0.1. username: {}'.format(TESTS_ADMIN_USERNAME)
         count = yield db.select([db.func.count()]).where((Event.event_type == Event.TYPE_INFO)
                                                          & (Event.message == mock_event)).gino.scalar()
         self.assertTrue(count > 0)
@@ -110,27 +110,6 @@ class AuthTestCase(AsyncHTTPTestCase):
         self.assertIn('Invalid credeintials (ldap).', data.get('message'))
         auth_dir = yield AuthenticationDirectory.get_object(extra_field_name='verbose_name',
                                                             extra_field_value=TESTS_AD_VERBOSE_NAME)
-        yield auth_dir.delete()
-        self.assertTrue(True)
-
-    @gen_test
-    def test_ldap_auth_bad_with_disabled_ad(self):
-        # Не придуммал как это сделать через фикстуру, чтобы она удалилась. Надо поискать.
-        yield AuthenticationDirectory.soft_create(verbose_name=TESTS_AD_VERBOSE_NAME, domain_name=TESTS_AD_DOMAIN_NAME,
-                                                  directory_url=TESTS_AD_DIRECTORY_URL)
-        auth_dir = yield AuthenticationDirectory.get_object(extra_field_name='verbose_name',
-                                                            extra_field_value=TESTS_AD_VERBOSE_NAME)
-        yield auth_dir.deactivate(id=auth_dir.id)
-        body = '{"username": "%s","password": "%s", "ldap": true}' % (TESTS_LDAP_USERNAME, TESTS_LDAP_PASSWORD)
-        response = yield self.fetch_request(body=body)
-        self.assertEqual(response.code, 200)
-        response_dict = json_decode(response.body)
-        self.assertIsInstance(response_dict, dict)
-        data = response_dict['errors'][0]
-        self.assertIn('No authentication directory controllers.', data.get('message'))
-        auth_dir = yield AuthenticationDirectory.get_object(extra_field_name='verbose_name',
-                                                            extra_field_value=TESTS_AD_VERBOSE_NAME,
-                                                            include_inactive=True)
         yield auth_dir.delete()
         self.assertTrue(True)
 

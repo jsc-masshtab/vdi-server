@@ -24,8 +24,15 @@ typedef enum{
 // Инфа о виртуальной машине полученная от vdi
 typedef struct{
 
-    int os_type;
-    gchar *ip;
+    VdiVmOs os_type;
+
+    gchar *vm_host;
+    gint64 vm_port;
+    gchar *vm_password;
+    gchar *vm_verbose_name;
+
+    gchar *message;
+
     gint test_data;
 
 } VdiVmData;
@@ -47,7 +54,7 @@ typedef struct{
     gboolean is_ldap;
     gboolean is_active;
 
-    gchar *current_vm_id;
+    gchar *current_pool_id;
 
 } VdiSession;
 
@@ -76,9 +83,9 @@ void cancell_pending_requests(void);
 void set_vdi_credentials(const gchar *username, const gchar *password, const gchar *ip,
                          const gchar *port, gboolean is_ldap);
 // set current vm id
-void set_current_vm_id(const gchar *current_vm_id);
+void set_current_pool_id(const gchar *current_pool_id);
 // get current vm id
-const gchar *get_current_vm_id(void);
+const gchar *get_current_pool_id(void);
 
 //void gInputStreamToBuffer(GInputStream *inputStream, gchar *responseBuffer);
 // Do api call. Return response body
@@ -109,5 +116,8 @@ void do_action_on_vm(GTask         *task,
                      GCancellable  *cancellable);
 
 void do_action_on_vm_async(const gchar *actionStr, gboolean isForced);
+
+void free_action_on_vm_data(ActionOnVmData *action_on_vm_data);
+void free_vdi_vm_data(VdiVmData *vdi_vm_data);
 
 #endif //VIRT_VIEWER_VEIL_VDI_API_SESSION_H

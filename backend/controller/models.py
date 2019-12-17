@@ -5,9 +5,9 @@ from sqlalchemy.dialects.postgresql import UUID
 
 from auth.utils import crypto
 from controller.client import ControllerClient
-from database import db, get_list_of_values_from_db
-
-
+from database import db, get_list_of_values_from_db, Status
+from common.veil_errors import SimpleError
+from event.models import Event
 # TODO: validate token by expires_on parameter
 # TODO: validate status
 
@@ -27,6 +27,19 @@ class Controller(db.Model):
     ldap_connection = db.Column(db.Boolean(), nullable=False, default=False)
     token = db.Column(db.Unicode(length=1024))
     expires_on = db.Column(db.DateTime(timezone=True))  # Срок истечения токена.
+
+    @property
+    def pools_query(self):
+        from pool.models import Pool  # Такой импорт из-за импорта в Pool модели Controller.
+
+        pools_query = Controller.join(Pool).select().where(Controller.id == self.id)
+        return pools_query
+
+    @property
+    async def has_pools(self):
+        """Проверяем наличие пулов"""
+        pools = await self.pools_query.gino.all()
+        return True if pools else False
 
     @staticmethod
     async def get_controllers_addresses():
@@ -84,3 +97,33 @@ class Controller(db.Model):
             return token
         else:
             raise AssertionError('No such controller')
+
+    async def soft_delete(self):
+        """Удаление сущности независимо от статуса у которой нет зависимых сущностей"""
+
+        controller_has_pools = await self.has_pools
+        if controller_has_pools:
+            raise SimpleError('У контроллера есть пулы виртуальных машин. Выполните полное удаление.')
+
+        msg = 'Выполнено удаление контроллера {id}.'.format(id=self.id)
+        await self.delete()
+        await Event.create_info(msg)
+        return True
+
+    async def full_delete_pools(self):
+        """Полное удаление пулов контроллера"""
+        pools = await self.pools_query.gino.all()
+        for pool in pools:
+            await pool.full_delete(commit=False)
+
+    async def full_delete(self):
+        """Удаление сущности в статусе ACTIVE с удалением зависимых сущностей"""
+
+        if self.status != Status.ACTIVE.value:
+            error_msg = 'Удаление не может быть выполнено из-за блокирующего статуса. Выполните форсированное удаление.'
+            raise SimpleError(error_msg)
+
+        msg = 'Выполнено полное удаление контроллера {id}.'.format(id=self.id)
+        await self.delete()
+        await Event.create_info(msg)
+        return True

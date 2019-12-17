@@ -1350,7 +1350,7 @@ virt_viewer_window_update_title(VirtViewerWindow *self)
 }
 
 void
-virt_viewer_window_set_menu_displays_sensitive(VirtViewerWindow *self, gboolean sensitive)
+virt_viewer_window_set_menu_displays_sensitive(VirtViewerWindow *self, gboolean sensitive G_GNUC_UNUSED)
 {
     VirtViewerWindowPrivate *priv;
     GtkWidget *menu;

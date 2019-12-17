@@ -81,7 +81,8 @@ class PoolGetVm(BaseHandler, ABC):
 
             response = {'data': dict(host=str(controller_ip),
                                      port=info['remote_access_port'],
-                                     password=info['graphics_password'])
+                                     password=info['graphics_password'],
+                                     vm_verbose_name=info['verbose_name'])
                         }
 
             return await self.finish(response)

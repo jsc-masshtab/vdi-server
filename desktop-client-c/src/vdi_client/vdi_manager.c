@@ -13,11 +13,10 @@
 #include "vdi_ws_client.h"
 #include "vdi_pool_widget.h"
 #include "jsonhandler.h"
+#include "settingsfile.h"
 
 #define MAX_POOL_NUMBER 150
 
-// extern
-extern gboolean take_extern_credentials;
 
 typedef enum
 {
@@ -43,10 +42,13 @@ typedef struct{
 
     gchar **url_ptr;
     gchar **password_ptr;
+    gchar **vm_verbose_name_ptr;
 
     ConnectionInfo ci;
 } VdiManager;
 
+// todo: Когда-нибудь в будущем избавлюсь от этих переменных уровня единицы трансляции.
+// Но пока это никак не мешает, а лишь облегчает работу. Иначе надо жонглировать указателем между потоками.
 static VdiManager vdi_manager;
 static VdiWsClient vdi_ws_client;
 
@@ -88,7 +90,9 @@ static void set_init_values()
 
     vdi_manager.url_ptr = NULL;
     vdi_manager.password_ptr = NULL;
+    vdi_manager.vm_verbose_name_ptr = NULL;
 }
+
 // Set GUI state
 static void set_vdi_client_state(VdiClientState vdi_client_state, const gchar *message, gboolean error_message)
 {
@@ -172,7 +176,8 @@ static void register_pool(const gchar *pool_id, const gchar *pool_name, const gc
 // find a virtual machine widget by id
 static VdiPoolWidget get_vdi_pool_widget_by_id(const gchar *searched_id)
 {
-    VdiPoolWidget searched_vdi_pool_widget = {};
+    VdiPoolWidget searched_vdi_pool_widget;
+    memset(&searched_vdi_pool_widget, 0, sizeof(VdiPoolWidget));
     guint i;
 
     if (vdi_manager.pool_widgets_array == NULL)
@@ -267,7 +272,7 @@ static void on_get_vm_from_pool_finished(GObject *source_object G_GNUC_UNUSED,
 {
     printf("%s\n", (const char *)__func__);
 
-    VdiPoolWidget vdi_pool_widget = get_vdi_pool_widget_by_id(get_current_vm_id());
+    VdiPoolWidget vdi_pool_widget = get_vdi_pool_widget_by_id(get_current_pool_id());
     enable_spinner_visible(&vdi_pool_widget, FALSE);
 
     GError *error = NULL;
@@ -278,37 +283,23 @@ static void on_get_vm_from_pool_finished(GObject *source_object G_GNUC_UNUSED,
         return;
     }
 
-    gchar *response_body_str = ptr_res; // example "[{\"id\":17,\"name\":\"sad\"}]"
+    VdiVmData *vdi_vm_data = ptr_res;
 
-    // parse  data  json
-    JsonParser *parser = json_parser_new();
-    JsonObject *root_object = get_root_json_object(parser, response_body_str);
-
-    JsonObject *data_member_object = json_object_get_object_member(root_object, "data");
-    if (!data_member_object) {
-        set_vdi_client_state(VDI_RECEIVED_RESPONSE, "Не удалось получить вм из пула", TRUE);
-        return;
-    }
-
-    const gchar *vm_host = json_object_get_string_member_safely(data_member_object, "host");
-    gint64 vm_port = json_object_get_int_member_safely(data_member_object, "port");
-    const gchar *vm_password = json_object_get_string_member_safely(data_member_object, "password");
-    const gchar *message = json_object_get_string_member_safely(data_member_object, "message");
-
-    printf("vm_host %s \n", vm_host);
-    printf("vm_port %ld \n", vm_port);
-    printf("vm_password %s \n", vm_password);
     // if port == 0 it means VDI server can not provide a vm
-    if (vm_port == 0) {
-        const gchar *user_message = message ? message : "Не удалось получить вм из пула";
+    if (vdi_vm_data->vm_port == 0) {
+        const gchar *user_message = vdi_vm_data->message ? vdi_vm_data->message : "Не удалось получить вм из пула";
         set_vdi_client_state(VDI_RECEIVED_RESPONSE, user_message, TRUE);
     } else {
+        // save to settings file the last pool we connected to
+        write_str_to_ini_file("RemoteViewerConnect", "last_pool_id", get_current_pool_id());
 
         free_memory_safely(vdi_manager.url_ptr);
-        *vdi_manager.url_ptr = g_strdup_printf("spice://%s:%ld", vm_host, vm_port);
+        *vdi_manager.url_ptr = g_strdup_printf("spice://%s:%ld", vdi_vm_data->vm_host, vdi_vm_data->vm_port);
         g_strstrip(*vdi_manager.url_ptr);
         free_memory_safely(vdi_manager.password_ptr);
-        *vdi_manager.password_ptr = g_strdup(vm_password);
+        *vdi_manager.password_ptr = g_strdup(vdi_vm_data->vm_password);
+        free_memory_safely(vdi_manager.vm_verbose_name_ptr);
+        *vdi_manager.vm_verbose_name_ptr = g_strdup(vdi_vm_data->vm_verbose_name);
         //
         set_vdi_client_state(VDI_RECEIVED_RESPONSE, "Получена вм из пула", FALSE);
 
@@ -318,9 +309,7 @@ static void on_get_vm_from_pool_finished(GObject *source_object G_GNUC_UNUSED,
         shutdown_loop(vdi_manager.ci.loop);
     }
     //
-    g_object_unref(parser);
-    if(ptr_res)
-        g_free(ptr_res);
+    free_vdi_vm_data(vdi_vm_data);
 }
 
 // ws data callback    "<span color=\"red\">%s</span>"
@@ -381,7 +370,7 @@ static void on_vm_start_button_clicked(GtkButton *button, gpointer data G_GNUC_U
 {
     //ConnectionInfo *ci = data;
     const gchar *pool_id = g_object_get_data(G_OBJECT(button), "pool_id");
-    set_current_vm_id(pool_id);
+    set_current_pool_id(pool_id);
     printf("%s  %s\n", (const char *)__func__, pool_id);
     // start machine
     set_vdi_client_state(VDI_WAITING_FOR_VM_FROM_POOL, "Отправлен запрос на получение вм из пула", FALSE);
@@ -394,7 +383,7 @@ static void on_vm_start_button_clicked(GtkButton *button, gpointer data G_GNUC_U
 
 /////////////////////////////////// main function
 GtkResponseType vdi_manager_dialog(GtkWindow *main_window G_GNUC_UNUSED, gchar **uri,
-                                   gchar **user G_GNUC_UNUSED, gchar **password)
+                                   gchar **password, gchar **vm_verbose_name)
 {
     printf("vdi_manager_dialog url %s \n", *uri);
     set_init_values();
@@ -403,7 +392,7 @@ GtkResponseType vdi_manager_dialog(GtkWindow *main_window G_GNUC_UNUSED, gchar *
     vdi_manager.ci.dialog_window_response = GTK_RESPONSE_CANCEL;
     vdi_manager.url_ptr = uri;
     vdi_manager.password_ptr = password;
-    take_extern_credentials = TRUE;
+    vdi_manager.vm_verbose_name_ptr = vm_verbose_name;
 
     /* Create the widgets */
     vdi_manager.builder = virt_viewer_util_load_ui("vdi_manager_form.ui");

@@ -145,6 +145,7 @@ struct _VirtViewerAppPrivate {
     gboolean grabbed;
     char *title;
     char *uuid;
+    char *username; // login
 
     gint focused;
     GKeyFile *config;
@@ -175,6 +176,7 @@ enum {
     PROP_KIOSK,
     PROP_QUIT_ON_DISCONNECT,
     PROP_UUID,
+    PROP_USERNAME
 };
 
 void
@@ -1601,6 +1603,9 @@ virt_viewer_app_get_property (GObject *object, guint property_id,
     case PROP_UUID:
         g_value_set_string(value, priv->uuid);
         break;
+    case PROP_USERNAME:
+        g_value_set_string(value, priv->username);
+        break;
 
     default:
         G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -1654,6 +1659,10 @@ virt_viewer_app_set_property (GObject *object, guint property_id,
 
     case PROP_UUID:
         virt_viewer_app_set_uuid_string(self, g_value_get_string(value));
+        break;
+    case PROP_USERNAME:
+        g_free(priv->username);
+        priv->username = g_value_dup_string(value);
         break;
 
     default:
@@ -2062,22 +2071,15 @@ virt_viewer_app_class_init (VirtViewerAppClass *klass)
                                                         G_PARAM_READABLE |
                                                         G_PARAM_WRITABLE |
                                                         G_PARAM_STATIC_STRINGS));
-    // Veil properties
+
     g_object_class_install_property(object_class,
-                                    PROP_UUID + 1,
+                                    PROP_USERNAME,
                                     g_param_spec_string("username",
                                                         "username",
                                                         "username",
                                                         "",
-                                                        G_PARAM_READWRITE |
-                                                        G_PARAM_STATIC_STRINGS));
-    g_object_class_install_property(object_class,
-                                    PROP_UUID + 2,
-                                    g_param_spec_string("password",
-                                                        "password",
-                                                        "password",
-                                                        "",
-                                                        G_PARAM_READWRITE |
+                                                        G_PARAM_READABLE |
+                                                        G_PARAM_WRITABLE |
                                                         G_PARAM_STATIC_STRINGS));
 }
 
