@@ -128,3 +128,10 @@ class Vm(db.Model):
             for vm_id in vm_ids
         ]
         await tornado.gen.multi(async_tasks)
+
+    @staticmethod
+    async def get_template_os_type(controller_address, template_id):
+        vm_http_client = await VmHttpClient.create(controller_address, template_id)
+        domain_info = await vm_http_client.info()
+        domain_os_type = domain_info['os_type'] if domain_info else None
+        return domain_os_type

@@ -15,6 +15,10 @@ class BaseHandler(RequestHandler, ABC):
     def prepare(self):
         if self.request.headers.get('Content-Type') == 'application/json' and self.request.body:
             self.args = json_decode(self.request.body)
+        if self.request.headers.get('Client-Type'):
+            self.args['client-type'] = self.request.headers.get('Client-Type')
+        else:
+            self.args['client-type'] = 'Unknown'
 
     def get_current_user(self):
         """Overridden tornado method"""
