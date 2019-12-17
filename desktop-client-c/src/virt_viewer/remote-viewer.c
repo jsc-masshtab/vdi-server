@@ -455,10 +455,18 @@ retry_connnect_to_vm:
                 return FALSE;
             }
         }
-        // set viewer window name
-        printf("test_user %s \n", user);
-        gchar *window_name = g_strconcat("ВМ: ", vm_verbose_name, "    Пользователь: ", user, NULL);
-        // virt viewer takes its name from guest-name.
+//        // remember username
+        if (user)
+            g_object_set(app, "username", user, NULL);
+        printf("uuiduser: %s \n", user);
+
+        // get remembered user name
+        gchar *username = NULL;
+        g_object_get(app, "username", &username, NULL);
+        printf("remembered_user %s \n", username);
+
+        // virt viewer takes its name from guest-name so lets not overcomplicate
+        gchar *window_name = g_strconcat("ВМ: ", vm_verbose_name, "    Пользователь: ", username, NULL);
         g_object_set(app, "guest-name", window_name, NULL);
         g_free(window_name);
 
