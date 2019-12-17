@@ -1,9 +1,7 @@
 import { AuthStorageService } from './authStorage.service';
 import { Injectable } from '@angular/core';
 import {
-  CanActivate, Router,
-  ActivatedRouteSnapshot,
-  RouterStateSnapshot,
+  CanActivate,
   CanActivateChild
 } from '@angular/router';
 
@@ -13,44 +11,14 @@ import {
 })
 
 export class LoginGuard implements CanActivate, CanActivateChild {
-  constructor(private authService: AuthStorageService, private router: Router) {}
+  constructor(private authStorageService: AuthStorageService) {}
 
-  canActivate(route: ActivatedRouteSnapshot, state: RouterStateSnapshot): boolean {
-    let url: string = state.url;
-
-    console.log(url, route, 'canActivate');
-
-    return this.checkLogin(url);
+  public canActivate(): boolean {
+    return this.authStorageService.checkLogin();
   }
 
-  canActivateChild(route: ActivatedRouteSnapshot, state: RouterStateSnapshot): boolean {
-    return this.canActivate(route, state);
+  public canActivateChild(): boolean {
+    return this.authStorageService.checkLogin();
   }
 
-  // canLoad(route: Route): boolean {
-  //   let url = `/${route.path}`;
-
-  //   return this.checkLogin(url);
-  // }
-
-  checkLogin(url: string): boolean {
-    console.log(this.authService.isLoggedIn,'this.authService.isLoggedIn',url);
-    
-
-    // setTimeout(() => {
-    //   this.authService.isLoggedIn = false;
-    //   console.log('this.authService.isLoggedIn = false', this.authService.isLoggedIn);
-    // }, 10000);
-
-    if (this.authService.isLoggedIn) { return true; }
-
-    // Store the attempted URL for redirecting
-    // this.authService.redirectUrl = url;
-
-
-
-    // Navigate to the login page with extras
-    this.router.navigate(['/login']);
-    return false;
-  }
 }

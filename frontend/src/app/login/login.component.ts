@@ -1,3 +1,5 @@
+import { ErrorsService } from './../errors/errors.service';
+import { Router } from '@angular/router';
 import { AuthStorageService } from './authStorage.service';
 import {
   trigger,
@@ -9,8 +11,6 @@ import { FormBuilder, FormGroup } from '@angular/forms';
 
 import { Component, OnInit } from '@angular/core';
 import { LoginService } from './login.service';
-// import { Router } from '@angular/router';
-
 
 @Component({
   selector: 'vdi-login',
@@ -35,9 +35,11 @@ export class LoginComponent implements OnInit {
   public loaded: boolean = false;
   public loginForm: FormGroup;
 
-  constructor(private fb: FormBuilder, private authService: AuthStorageService, private loginService: LoginService) {
-    this.createForm();
-  }
+  constructor(private fb: FormBuilder,
+              private authStorageService: AuthStorageService,
+              private loginService: LoginService,
+              private route: Router,
+              private errorService: ErrorsService) { this.routePage(); }
 
   ngOnInit() {
     this.loaded = true;
@@ -50,8 +52,25 @@ export class LoginComponent implements OnInit {
     });
   }
 
+  private routePage(): void {
+    if (this.authStorageService.checkLogin()) {
+      this.route.navigate(['/pages']);
+    } else {
+      this.createForm();
+    }
+  }
+
   public send() {
-    console.log(this.loginForm.value, this.authService);
-    this.loginService.auth(this.loginForm.value).subscribe((res) => console.log(res));
+    this.loginService.auth(this.loginForm.value).subscribe((res: {data: {access_token: string, expires_on: string}} & {errors: []} ) => {
+      console.log(res);
+      if (res && res.data && res.data.access_token) {
+        this.authStorageService.saveToken(res.data);
+        this.routePage();
+      }
+
+      if (res.errors !== undefined) {
+        this.errorService.setError(res.errors);
+      }
+    });
   }
 }
