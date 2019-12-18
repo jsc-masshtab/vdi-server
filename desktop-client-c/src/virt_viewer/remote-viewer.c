@@ -377,13 +377,11 @@ remote_viewer_start(VirtViewerApp *app, GError **err, RemoteViewerState remoteVi
     gchar *ip = NULL;
     gchar *port = NULL;
     gboolean is_connect_to_prev_pool = FALSE;
+    gchar *vm_verbose_name = NULL;
     GError *error = NULL;
 
-#ifdef HAVE_SPICE_CONTROLLER
-    //g_signal_connect(app, "notify", G_CALLBACK(app_notified), self);
-#endif
     switch (remoteViewerState) {
-        case  AUTH_DIALOG:
+        case AUTH_DIALOG:
             goto retry_auth;
         case VDI_DIALOG:
             goto retry_connnect_to_vm;
@@ -394,8 +392,9 @@ retry_auth:
     {
         // Забираем из ui адрес и порт
         GtkResponseType dialog_window_response =
-            remote_viewer_connect_dialog(&guri, &user, &password, &ip, &port, &is_connect_to_prev_pool);
-        //printf("%s: is_connect_to_prev_pool %i\n", (const char *)__func__, is_connect_to_prev_pool);
+            remote_viewer_connect_dialog(&guri, &user, &password, &ip, &port,
+                                         &is_connect_to_prev_pool, &vm_verbose_name);
+
         if (dialog_window_response == GTK_RESPONSE_CANCEL) {
             return FALSE;
         }
@@ -434,27 +433,44 @@ retry_connnect_to_vm:
         }
 
     } else {
+        VirtViewerWindow *main_window = virt_viewer_app_get_main_window(app);
+
         //Если is_connect_to_prev_pool true, то подключение к пред. запомненому пулу,
         // минуя vdi manager window
         if (!is_connect_to_prev_pool) {
             free_memory_safely(&guri);
-            free_memory_safely(&user);
             free_memory_safely(&password);
+            free_memory_safely(&vm_verbose_name);
 
             // show VDI manager window
-            VirtViewerWindow *main_window = virt_viewer_app_get_main_window(app);
             GtkResponseType vdi_dialog_window_response =
-                    vdi_manager_dialog(virt_viewer_window_get_window(main_window), &guri, &user, &password);
+                    vdi_manager_dialog(virt_viewer_window_get_window(main_window), &guri,
+                                       &password, &vm_verbose_name);
 
-            if(vdi_dialog_window_response == GTK_RESPONSE_CANCEL) {
+            if (vdi_dialog_window_response == GTK_RESPONSE_CANCEL) {
                 goto cleanup;
             }
-            else if(vdi_dialog_window_response == GTK_RESPONSE_CLOSE) {
+            else if (vdi_dialog_window_response == GTK_RESPONSE_CLOSE) {
                 g_application_quit(G_APPLICATION(app));
                 return FALSE;
             }
         }
+//        // remember username
+        if (user)
+            g_object_set(app, "username", user, NULL);
+        printf("uuiduser: %s \n", user);
 
+        // get remembered user name
+        gchar *username = NULL;
+        g_object_get(app, "username", &username, NULL);
+        printf("remembered_user %s \n", username);
+
+        // virt viewer takes its name from guest-name so lets not overcomplicate
+        gchar *window_name = g_strconcat("ВМ: ", vm_verbose_name, "    Пользователь: ", username, NULL);
+        g_object_set(app, "guest-name", window_name, NULL);
+        g_free(window_name);
+
+        // set url and credentials
         g_object_set(app, "guri", guri, NULL);
         setSpiceSessionCredentials(user, password);
 
@@ -471,6 +487,7 @@ cleanup:
     free_memory_safely(&password);
     free_memory_safely(&ip);
     free_memory_safely(&port);
+    free_memory_safely(&vm_verbose_name);
 
     if (!ret && priv->open_recent_dialog) {
         if (error != NULL) {

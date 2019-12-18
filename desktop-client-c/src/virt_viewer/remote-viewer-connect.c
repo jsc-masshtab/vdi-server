@@ -77,6 +77,8 @@ typedef struct
 
     gboolean *is_connect_to_prev_pool_ptr;
 
+    gchar **vm_verbose_name;
+
 } RemoteViewerData;
 
 static void
@@ -167,8 +169,8 @@ on_get_vm_from_pool_finished(GObject *source_object G_GNUC_UNUSED,
     if (vdi_vm_data->vm_port == 0) {
         const gchar *user_message = vdi_vm_data->message ? vdi_vm_data->message : "Не удалось получить вм из пула";
         set_error_message_to_label(GTK_LABEL(ci->message_display_label), user_message);
-    } else {
 
+    } else {
         ci->response = TRUE;
         ci->dialog_window_response = GTK_RESPONSE_OK;
 
@@ -178,6 +180,7 @@ on_get_vm_from_pool_finished(GObject *source_object G_GNUC_UNUSED,
         g_strstrip(*ci->uri);
         *ci->user = NULL;
         *ci->password = g_strdup(vdi_vm_data->vm_password);
+        *ci->vm_verbose_name = g_strdup(vdi_vm_data->vm_verbose_name);
 
         shutdown_loop(ci->loop);
     }
@@ -388,7 +391,8 @@ static void fast_forward_connect_to_prev_pool_if_enabled(RemoteViewerData *ci)
 // todo: порт передавать как число, а не строку
 gboolean
 remote_viewer_connect_dialog(gchar **uri, gchar **user, gchar **password,
-                             gchar **ip, gchar **port, gboolean *is_connect_to_prev_pool)
+                             gchar **ip, gchar **port, gboolean *is_connect_to_prev_pool,
+                             gchar **vm_verbose_name)
 {
 
     // set params save group
@@ -411,6 +415,7 @@ remote_viewer_connect_dialog(gchar **uri, gchar **user, gchar **password,
     ci.ip = ip;
     ci.port = port;
     ci.is_connect_to_prev_pool_ptr = is_connect_to_prev_pool;
+    ci.vm_verbose_name = vm_verbose_name;
 
     /* Create the widgets */
     builder = virt_viewer_util_load_ui("remote-viewer-connect_veil.ui");

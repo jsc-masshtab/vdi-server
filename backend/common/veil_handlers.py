@@ -27,6 +27,11 @@ class BaseHandler(RequestHandler, ABC):
                     self.request.remote_ip
         return remote_ip
 
+    @property
+    def client_type(self):
+        client_type = self.request.headers.get('Client-Type')
+        return client_type if client_type else 'Unknown'
+
 
 @jwtauth
 class VdiTornadoGraphQLHandler(TornadoGraphQLHandler, ABC):

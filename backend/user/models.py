@@ -102,7 +102,7 @@ class User(AbstractSortableStatusModel, db.Model):
         return user
 
     @classmethod
-    async def login(cls, username, token, ip=None, ldap=False):
+    async def login(cls, username, token, client_type, ip=None, ldap=False):
         """Записывает данные с которыми пользователь вошел в систему"""
         user = await User.get_object(extra_field_name='username', extra_field_value=username)
         if not user:
@@ -112,8 +112,18 @@ class User(AbstractSortableStatusModel, db.Model):
 
         # Login event
         login_message = 'User login (ldap)' if ldap else 'User login (local)'
-        info_message = 'Auth: {} IP: {}. username: {}'.format(login_message, ip,
-                                                              username)
+        info_message = 'Auth by {}: {}: IP: {}. username: {}'.format(client_type, login_message, ip,
+                                                                    username)
+        await Event.create_info(info_message)
+        return True
+
+    @classmethod
+    async def logout(cls, username, client_type, ip):
+        user = await User.get_object(extra_field_name='username', extra_field_value=username)
+        if not user:
+            return False
+        await UserJwtInfo.delete.where(UserJwtInfo.user_id == user.id).gino.status()
+        info_message = 'Auth by {}: User {} logged out: IP: {}.'.format(client_type, username, ip)
         await Event.create_info(info_message)
         return True
 

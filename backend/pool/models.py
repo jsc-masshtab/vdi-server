@@ -1,22 +1,22 @@
 # -*- coding: utf-8 -*-
+import asyncio
 import uuid
-from sqlalchemy.dialects.postgresql import UUID
+
 from sqlalchemy import Enum as AlchemyEnum
 from sqlalchemy import case, literal_column, desc, text
+from sqlalchemy.dialects.postgresql import UUID
 
-from event.models import Event
-from settings import VEIL_WS_MAX_TIME_TO_WAIT
-from database import db, Status
+from common.veil_errors import VmCreationError, HttpError, SimpleError
 from controller.models import Controller
-from vm.models import Vm
-from user.models import User
-from common.veil_errors import VmCreationError, BadRequest, SimpleError
-
-from resources_monitoring.handlers import WaiterSubscriptionObserver
+from database import db, Status
+from event.models import Event
+from pool.pool_task_manager import pool_task_manager
+from resources_monitoring.handlers import WaiterSubscriptionObserver, client_manager
 from resources_monitoring.resources_monitor_manager import resources_monitor_manager
 from resources_monitoring.resources_monitoring_data import VDI_TASKS_SUBSCRIPTION
-
-from pool.pool_task_manager import pool_task_manager
+from settings import VEIL_WS_MAX_TIME_TO_WAIT
+from user.models import User
+from vm.models import Vm
 
 
 class Pool(db.Model):
@@ -70,7 +70,6 @@ class Pool(db.Model):
         """Возвращает tenplate_id для автоматического пула, либо null"""
         template_id = await AutomatedPool.select('template_id').where(
             AutomatedPool.automated_pool_id == self.pool_id).gino.scalar()
-        print('template_id is {}'.format(template_id))
         return template_id
 
     @staticmethod
@@ -202,9 +201,7 @@ class Pool(db.Model):
             ans_d = dict()
             ans_d['id'] = str(pool.master_id)
             ans_d['name'] = pool.verbose_name
-
-            # Hardcoded example. Change to model fields.
-            ans_d['os_type'] = 'Lin'
+            ans_d['os_type'] = pool.os_type
             ans_d['status'] = pool.status.value
             ans.append(ans_d)
         return ans
@@ -247,23 +244,6 @@ class Pool(db.Model):
         return pool
 
     async def soft_delete(self, commit=True):
-        """Удаление сущности в статусе ACTIVE у которой нет зависимых сущностей"""
-
-        if self.status != Status.ACTIVE:
-            error_msg = 'Удаление не может быть выполнено из-за блокирующего статуса. Выполните форсированное удаление.'
-            raise SimpleError(error_msg)
-
-        pool_has_vms = await self.has_vms
-        if pool_has_vms:
-            raise SimpleError('У пула виртуальных машин есть виртуальные машины. Выполните полное удаление.')
-
-        if commit:
-            msg = 'Выполнено удаление пула рабочих столов {id}.'.format(id=self.pool_id)
-            await self.delete()
-            await Event.create_info(msg)
-        return True
-
-    async def force_delete(self, commit=True):
         """Удаление сущности независимо от статуса у которой нет зависимых сущностей"""
 
         pool_has_vms = await self.has_vms
@@ -271,7 +251,8 @@ class Pool(db.Model):
             raise SimpleError('У пула виртуальных машин есть виртуальные машины. Выполните полное удаление.')
 
         if commit:
-            msg = 'Выполнено форсированное удаление пула рабочих столов {id}.'.format(id=self.pool_id)
+            msg = 'Выполнено форсированное удаление пула рабочих столов {verbose_name}.'
+            msg = msg.format(verbose_name=self.verbose_name)
             await self.delete()
             await Event.create_info(msg)
         return True
@@ -288,7 +269,7 @@ class Pool(db.Model):
             if pool_type == Pool.PoolTypes.AUTOMATED:
                 await AutomatedPool.remove_vms(self.pool_id)
             await self.delete()
-            msg = 'Выполнено полное удаление пула рабочих столов {id}.'.format(id=self.pool_id)
+            msg = 'Выполнено полное удаление пула рабочих столов {verbose_name}.'.format(verbose_name=self.verbose_name)
             await Event.create_info(msg)
         return True
 
@@ -350,6 +331,7 @@ class AutomatedPool(db.Model):
     reserve_size - желаемое минимальное количество подогретых машин (добавленных в пул, но не имеющих пользователя)
     На данный момент отсутствует смысловая валидация на уровне таблиц (она в схемах).
     """
+
     __tablename__ = 'automated_pool'
 
     automated_pool_id = db.Column(UUID(), db.ForeignKey('pool.pool_id', ondelete="CASCADE"), primary_key=True)  # TODO: try with id
@@ -367,6 +349,7 @@ class AutomatedPool(db.Model):
     reserve_size = db.Column(db.Integer(), nullable=False, default=0)
     total_size = db.Column(db.Integer(), nullable=False, default=1)
     vm_name_template = db.Column(db.Unicode(length=100), nullable=True)
+    os_type = db.Column(db.Unicode(length=100), nullable=True)
 
     create_thin_clones = db.Column(db.Boolean(), nullable=False, default=True)
 
@@ -458,10 +441,8 @@ class AutomatedPool(db.Model):
         # TODO: beautify
         vm_name_template = self.vm_name_template or await self.verbose_name
 
-        # uid = str(uuid.uuid4())[:7]
-        # TODO: отказатся от UUID
         params = {
-            'verbose_name': "{}-{}-{}".format(vm_name_template, domain_index, str(uuid.uuid4())[:7]),
+            'verbose_name': "{}-{}".format(vm_name_template, domain_index),
             'name_template': vm_name_template,
             'domain_id': str(self.template_id),
             'datapool_id': str(self.datapool_id),  # because of UUID
@@ -477,7 +458,7 @@ class AutomatedPool(db.Model):
             try:
                 vm_info = await Vm.copy(**params)
                 current_vm_task_id = vm_info['task_id']
-            except BadRequest as E:
+            except HttpError as E:
                 print(E)
                 continue
 
@@ -510,12 +491,13 @@ class AutomatedPool(db.Model):
             is_vm_successfully_created = await response_waiter.wait_for_message(
                 _check_if_vm_created, VEIL_WS_MAX_TIME_TO_WAIT)
             resources_monitor_manager.unsubscribe(response_waiter)
-            print('is_vm_successfully_created', is_vm_successfully_created)
+
             if is_vm_successfully_created:
                 await Vm.create(id=vm_info['id'], pool_id=str(self.automated_pool_id),
                                 template_id=str(self.template_id))
                 return vm_info
             else:
+                await asyncio.sleep(0.1)  # Пожалеем контроллер и подождем чуть-чуть
                 continue  # go to try again
 
         raise VmCreationError('Can\'t create VM')
@@ -530,6 +512,9 @@ class AutomatedPool(db.Model):
             Vm.pool_id == pool_id)
 
         vms_list = await query.gino.all()
+
+        # TODO: указать verbose_name, когда он появится в модели vm
+        # TODO: явно получать и парсить данные (row[0], row[1] плохо)
         for row in vms_list:
             await Vm.remove_vm(controller_ip=row[1], vm_id=row[0])
             msg = 'Запущено удаление виртуальной машины {id} на ECP.'.format(id=row[0])
@@ -542,9 +527,10 @@ class AutomatedPool(db.Model):
         # TODO: главное, что бы хотелось тут и в других местах создания виртуалок - отправлять диапазоны виртуалок
 
         print('Add initial vms:')
-        # # fetch_template_info was commented on previous version
-        # template_info = await GetDomainInfo(controller_ip=pool_args_dict['controller_ip'],
-        #                                     domain_id=pool_args_dict['template_id'])
+        # Fetching template info from controller.
+        controller_address = await self.controller_ip
+        pool_os_type = Vm.get_template_os_type(controller_address=controller_address, template_id=self.template_id)
+        await self.update(os_type=pool_os_type).apply()
 
         await Event.create_info('Automated pool creation started')
 
@@ -555,50 +541,69 @@ class AutomatedPool(db.Model):
                 vm = await self.add_vm(vm_index)
                 vm_list.append(vm)
 
-                # notify VDI front about progress(WS)
                 msg = 'Automated pool creation. Created {} VMs from {}'.format(vm_index, self.initial_size)
                 await Event.create_info(msg)
 
+                # notify VDI front about progress(WS)
                 msg_dict = dict(msg=msg,
                                 mgs_type='data',
                                 event='pool_creation_progress',
                                 pool_id=str(self.automated_pool_id),
                                 domain_index=vm_index,
+                                domain_verbose_name=vm['verbose_name'],
                                 initial_size=self.initial_size,
                                 resource=VDI_TASKS_SUBSCRIPTION)
-                resources_monitor_manager.signal_internal_event(msg_dict)
+                await client_manager.send_message(msg_dict)
+
         except VmCreationError as E:
             # log that we cant create required initial amount of VMs
             print('Cant create VM')
-            print(E)
 
         # notify VDI front about pool creation result (WS)
         is_creation_successful = (len(vm_list) == self.initial_size)
-        print('is creation successful: {}'.format(is_creation_successful))
+
         if is_creation_successful:
             msg = 'Automated pool successfully created. Initial VM amount {}'.format(len(vm_list))
             await Event.create_info(msg)
+
+            # notify VDI front about progress(WS)
+            msg_dict = dict(msg=msg,
+                            msg_type='data',
+                            event='pool_creation_completed',
+                            pool_id=str(self.automated_pool_id),
+                            amount_of_created_vms=len(vm_list),
+                            initial_size=self.initial_size,
+                            is_successful=is_creation_successful,
+                            resource=VDI_TASKS_SUBSCRIPTION)
+            await client_manager.send_message(msg_dict)
+
         else:
             msg = 'Automated pool created with errors. VMs created: {}. Required: {}'.format(len(vm_list),
                                                                                              self.initial_size)
             await Event.create_error(msg)
 
-        # Prepare new msg to resource monitor
-        msg_dict = dict(msg=msg,
-                        msg_type='data',
-                        event='pool_creation_completed',
-                        pool_id=str(self.automated_pool_id),
-                        amount_of_created_vms=len(vm_list),
-                        initial_size=self.initial_size,
-                        is_successful=is_creation_successful,
-                        resource=VDI_TASKS_SUBSCRIPTION)
-        resources_monitor_manager.signal_internal_event(msg_dict)
         # Пробросить исключение, если споткнулись на создании машин
         if not is_creation_successful:
             raise VmCreationError('Не удалось создать необходимое число машин.')
 
+    async def create_pool(self):
+        """Корутина создания автом. пула"""
+        # locks
+        async with pool_task_manager.get_pool_lock(str(self.automated_pool_id)).lock:
+            async with pool_task_manager.get_template_lock(str(self.template_id)).lock:
+                try:
+                    await self.add_initial_vms()
+                    await self.activate()
+
+                    msg = 'Automated pool {verbose_name} created.'.format(verbose_name=self.verbose_name)
+                    await Event.create_info(msg)
+                except VmCreationError as E:
+                    print('exp__', E.__class__.__name__)
+                    await self.deactivate()
+
     async def expand_pool_if_requred(self):
         """
+        Корутина расширения автом. пула
         Check and expand pool if required
         :return:
         """
@@ -631,7 +636,6 @@ class AutomatedPool(db.Model):
                             await self.add_vm(domain_index)
                     except VmCreationError:
                         print('Vm creating error')
-                        # TODO: log that we cant expand the pool.  Mark pool as broken?
                         pass
 
     async def activate(self):

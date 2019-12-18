@@ -5,6 +5,7 @@
 
 import pytest
 from tornado.testing import AsyncHTTPTestCase, gen_test
+from tornado.httpclient import HTTPClientError
 import tornado.ioloop
 from tornado.escape import json_decode
 
@@ -51,7 +52,7 @@ class AuthTestCase(AsyncHTTPTestCase):
         self.assertIsInstance(response_dict, dict)
         data = response_dict['data']
         self.assertTrue(data.get('access_token'))
-        mock_event = 'Auth: User login (local) IP: 127.0.0.1. username: {}'.format(TESTS_ADMIN_USERNAME)
+        mock_event = 'Auth by Unknown: User login (local): IP: 127.0.0.1. username: {}'.format(TESTS_ADMIN_USERNAME)
         count = yield db.select([db.func.count()]).where((Event.event_type == Event.TYPE_INFO)
                                                          & (Event.message == mock_event)).gino.scalar()
         self.assertTrue(count > 0)
@@ -186,3 +187,36 @@ class AuthTestCase(AsyncHTTPTestCase):
 
         yield user.delete()
         self.assertTrue(True)
+
+    @gen_test
+    def test_logout(self):
+        # Выполняем вход
+        body = '{"username": "%s","password": "%s"}' % (TESTS_ADMIN_USERNAME, TESTS_ADMIN_PASSWORD)
+        response = yield self.fetch_request(body=body)
+        self.assertEqual(response.code, 200)
+        response_dict = json_decode(response.body)
+        self.assertIsInstance(response_dict, dict)
+        data = response_dict['data']
+        access_token = data['access_token']
+        headers_auth = {'Content-Type': 'application/json', 'Authorization': 'jwt {}'.format(access_token)}
+
+        # Проверяем доступность закрытого раздела
+        response = yield self.fetch_request(url='/users',
+                                            body='{"query":"{users{id}}"}',
+                                            headers=headers_auth)
+        self.assertEqual(response.code, 200)
+
+        # Выполняем выход
+        response = yield self.fetch_request(url='/logout', headers=headers_auth, body='')
+        self.assertEqual(response.code, 200)
+
+        # Проверяем доступность закрытого раздела
+        try:
+            response = yield self.fetch_request(url='/users',
+                                                body='{"query":"{users{id}}"}',
+                                                headers=headers_auth)
+            self.assertEqual(response.code, 401)
+        except HTTPClientError as http_error:
+            self.assertEqual(http_error.code, 401)
+        else:
+            self.assertTrue(False)

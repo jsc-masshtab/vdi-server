@@ -55,7 +55,8 @@ def encode_jwt(username):
         key=SECRET_KEY,
         algorithm=JWT_ALGORITHM
     ).decode('utf-8')
-    return {'access_token': access_token, 'expires_on': expires_on.strftime("%d.%m.%Y %H:%M:%S UTC")}
+    return {'access_token': access_token, 'expires_on': expires_on.strftime("%d.%m.%Y %H:%M:%S UTC"),
+            'username': username}
 
 
 def decode_jwt(token, decode_options: dict = JWT_OPTIONS, algorithms: list = [JWT_ALGORITHM]):
@@ -96,6 +97,15 @@ def extract_user(headers: dict) -> str:
     token = extract_access_token(headers)
     decoded = decode_jwt(token)
     return decoded.get('username')
+
+
+def extract_user_with_no_expire_check(headers: dict) -> str:
+    """Exctract user from token if token is valid"""
+    access_token = extract_access_token(headers)
+    JWT_OPTIONS['verify_exp'] = False
+    payload = decode_jwt(access_token, JWT_OPTIONS)
+    username = payload['username']
+    return username
 
 
 async def extraxt_user_object(headers: dict) -> User:
