@@ -36,8 +36,6 @@ export class MainMenuComponent {
           let clickedManage1 = event.urlAfterRedirects.split('/')[2] || null;
           let clickedManage2 = event.urlAfterRedirects.split('/')[3] || null;
 
-          console.log(clickedManage1, clickedManage2);
-
           if (clickedManage1) {
             if (clickedManage1 === 'resourses') {
               this.toggleResourse = true;

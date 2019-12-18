@@ -1,5 +1,5 @@
 
-import { Component, ViewEncapsulation } from '@angular/core';
+import { Component, ViewEncapsulation, AfterViewInit } from '@angular/core';
 
 
 @Component({
@@ -9,8 +9,15 @@ import { Component, ViewEncapsulation } from '@angular/core';
   encapsulation: ViewEncapsulation.None
 })
 
-export class AppComponent  {
+export class AppComponent implements AfterViewInit {
+
+  private _element: HTMLElement;
 
   constructor() {}
+
+  public ngAfterViewInit(): void {
+    this._element = document.getElementById('preloader');
+    this._element.style['display'] = 'none';
+  }
 
 }

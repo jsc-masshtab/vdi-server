@@ -46,10 +46,15 @@ export class LoginComponent implements OnInit {
   }
 
   private createForm(): void {
-    this.loginForm = this.fb.group({
-      username: '' ,
-      password: ''
-    });
+    console.log(this.loginForm);
+    if (!this.loginForm) {
+      this.loginForm = this.fb.group({
+        username: '' ,
+        password: ''
+      });
+    } else {
+      return;
+    }
   }
 
   private routePage(): void {
