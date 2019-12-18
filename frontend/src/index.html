@@ -21,8 +21,7 @@
       left: 0;
       overflow: hidden;
     }
-
-    .title {
+    #preloader .title {
       padding: 5px; font-size: 13px;  margin: 0;
       position: absolute;
       left: 40px;
@@ -44,7 +43,7 @@
       100%{transform: rotate(360deg)}
     }
 
-    .spinner {
+    #preloader .spinner {
       position: absolute;
       left: 105px;
       top: 15px;
@@ -53,7 +52,7 @@
       transform: rotate(-65deg) skewY(45deg);
     }
 
-    .spinner .spin:first-child {
+    #preloader .spinner .spin:first-child {
       display:block;
       position:relative;
       left:50%;
@@ -67,30 +66,30 @@
       animation:spin 2s linear infinite;
     }
 
-      .spinner .spin:first-child:after,.spinner .spin:first-child:before {
-        content:'';
-        position:absolute;
-        border-radius:50%;
-      }
+    #preloader .spinner .spin:first-child:after,.spinner .spin:first-child:before {
+      content:'';
+      position:absolute;
+      border-radius: 50%;
+    }
 
-      .spinner .spin:first-child:before {
-        top:5px;
-        left:5px;
-        right:5px;
-        bottom:5px;
-        box-shadow:0 1px 0px 0 #3f606b;
-        -webkit-animation:spin 3s linear infinite;
-        animation:spin 3s linear infinite;
-      }
+    #preloader .spinner .spin:first-child:before {
+      top:5px;
+      left:5px;
+      right:5px;
+      bottom:5px;
+      box-shadow:0 1px 0px 0 #3f606b;
+      -webkit-animation:spin 3s linear infinite;
+      animation:spin 3s linear infinite;
+    }
 
-      .spinner .spin:first-child:after {
-        top:15px;
-        left:15px;
-        right:15px;
-        bottom:15px;
-        box-shadow:0 1px 0px 0 #3f606b;
-        animation:spin 1.5s linear infinite;
-      }
+    #preloader .spinner .spin:first-child:after {
+      top:15px;
+      left:15px;
+      right:15px;
+      bottom:15px;
+      box-shadow:0 1px 0px 0 #3f606b;
+      animation:spin 1.5s linear infinite;
+    }
   </style>
 </head>
 <body>
