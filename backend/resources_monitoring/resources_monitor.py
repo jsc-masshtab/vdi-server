@@ -82,6 +82,8 @@ class ResourcesMonitor(AbstractMonitor):
         Check if controller online
         :return:
         """
+        controller_id = await Controller.get_controller_id_by_ip(self._controller_ip)
+
         response_dict = {'ip': self._controller_ip, 'msg_type': 'data', 'event': 'UPDATED',
                          'resource': CONTROLLERS_SUBSCRIPTION}
         while self._running_flag:
@@ -96,6 +98,7 @@ class ResourcesMonitor(AbstractMonitor):
                     response_dict['status'] = 'OFFLINE'
                     json_data = json.dumps(response_dict)
                     self.notify_observers(CONTROLLERS_SUBSCRIPTION, json_data)
+                    await Controller.deactivate(controller_id)
                 self._is_online = False
             else:
                 # notify only if controller was offline before (data changed)
@@ -103,6 +106,7 @@ class ResourcesMonitor(AbstractMonitor):
                     response_dict['status'] = 'ONLINE'
                     json_data = json.dumps(response_dict)
                     self.notify_observers(CONTROLLERS_SUBSCRIPTION, json_data)
+                    await Controller.activate(controller_id)
                 self._is_online = True
 
     async def _processing_ws_messages(self):
