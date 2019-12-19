@@ -16,7 +16,7 @@ import { MatCheckboxModule } from '@angular/material';
 
 const COMPONENTS = [
   TableComponentComponent,
-  TableIntoComponent
+  TableIntoComponent,
 ];
 
 const DIRECTIVES = [

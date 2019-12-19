@@ -1,3 +1,4 @@
+import { HeaderUserComponent } from './common/components/single/header-user/header-user.component';
 import { AuthStorageService } from './../login/authStorage.service';
 import { DashboardRoutingModule } from './dashboard-routing.module';
 import { CommonModule } from '@angular/common';
@@ -28,7 +29,6 @@ import { WaitService } from './common/components/single/wait/wait.service';
 
 /*  -----------------------------------   material   --------------------------------------*/
 import { MAT_DIALOG_DEFAULT_OPTIONS } from '@angular/material';
-
 /*  -----------------------------------   material   --------------------------------------*/
 
 import { onError } from 'apollo-link-error';
@@ -43,7 +43,8 @@ import { EventsModule } from './log/events/events.module';
     DashboardComponent,
     WaitComponent,
     MainMenuComponent,
-    FooterComponent
+    FooterComponent,
+    HeaderUserComponent
   ],
   imports: [
     CommonModule,
@@ -127,7 +128,8 @@ export class DashboardModule {
 
     const authMiddleware = new ApolloLink((operation, forward) => {
       operation.setContext({
-        headers: new HttpHeaders().set('Authorization', `jwt ${this.authStorageService.getItemStorage('token')}` || null)
+        headers: new HttpHeaders().set('Authorization', `jwt ${this.authStorageService.getItemStorage('token')}`)
+                  .set('Client-Type', 'angular-web')
       });
       return forward(operation);
     });

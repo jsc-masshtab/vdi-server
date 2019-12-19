@@ -30,7 +30,7 @@ export class AuthStorageService {
             throw new Error('нет токена');
         }
         if (token.username) {
-            localStorage.setItem('user', token.username);
+            localStorage.setItem('username', token.username);
         } else {
             throw new Error('нет имени пользователя');
         }
@@ -41,7 +41,7 @@ export class AuthStorageService {
         this.router.navigate(['login']);
     }
 
-    public getItemStorage(item: string): string | null {
+    public getItemStorage(item: 'token' | 'username'): string | null {
         return localStorage.getItem(item) || null;
     }
 
