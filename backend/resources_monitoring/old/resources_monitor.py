@@ -1,20 +1,19 @@
 import asyncio
-import time
 import json
 from abc import ABC
 from json import JSONDecodeError
 
 from tornado.httpclient import HTTPClientError
-from tornado.ioloop import IOLoop
 from tornado.websocket import WebSocketClosedError
 from tornado.websocket import websocket_connect
+from tornado.ioloop import IOLoop
 
 from common.veil_errors import HttpError
 from controller.models import Controller
 from controller_resources.veil_client import ResourcesHttpClient
 from event.models import Event
-#from resources_monitoring.handlers import client_manager
 from .resources_monitoring_data import CONTROLLER_SUBSCRIPTIONS_LIST, CONTROLLERS_SUBSCRIPTION, VDI_TASKS_SUBSCRIPTION
+
 from common.utils import cancel_async_task
 
 
@@ -45,7 +44,6 @@ class ResourcesMonitor(AbstractMonitor):
     """
     monitoring of controller events
     """
-    RECONNECT_TIMEOUT = 5
 
     def __init__(self):
         super().__init__()
@@ -84,6 +82,8 @@ class ResourcesMonitor(AbstractMonitor):
         Check if controller online
         :return:
         """
+        controller_id = await Controller.get_controller_id_by_ip(self._controller_ip)
+
         response_dict = {'ip': self._controller_ip, 'msg_type': 'data', 'event': 'UPDATED',
                          'resource': CONTROLLERS_SUBSCRIPTION}
         while self._running_flag:
@@ -96,13 +96,17 @@ class ResourcesMonitor(AbstractMonitor):
                 # notify only if controller was online before (data changed)
                 if self._is_online:
                     response_dict['status'] = 'OFFLINE'
-                    #await client_manager.send_message(response_dict)
+                    json_data = json.dumps(response_dict)
+                    self.notify_observers(CONTROLLERS_SUBSCRIPTION, json_data)
+                    await Controller.deactivate(controller_id)
                 self._is_online = False
             else:
                 # notify only if controller was offline before (data changed)
                 if not self._is_online:
                     response_dict['status'] = 'ONLINE'
-                    #await client_manager.send_message(response_dict)
+                    json_data = json.dumps(response_dict)
+                    self.notify_observers(CONTROLLERS_SUBSCRIPTION, json_data)
+                    await Controller.activate(controller_id)
                 self._is_online = True
 
     async def _processing_ws_messages(self):
@@ -110,12 +114,13 @@ class ResourcesMonitor(AbstractMonitor):
         Listen for data from controller
         :return:
         """
+        RECONNECT_TIMEOUT = 5
         while self._running_flag:
             is_connected = await self._connect()
             print(__class__.__name__, ' is_connected', is_connected)
             # reconnect if not connected
             if not is_connected:
-                await asyncio.sleep(self.RECONNECT_TIMEOUT)
+                await asyncio.sleep(RECONNECT_TIMEOUT)
                 continue
 
             # receive messages
@@ -129,7 +134,7 @@ class ResourcesMonitor(AbstractMonitor):
                 else:
                     await self._on_message_received(msg)
 
-            await asyncio.sleep(self.RECONNECT_TIMEOUT)
+            await asyncio.sleep(RECONNECT_TIMEOUT)
 
     async def _connect(self):
         # get token
@@ -160,9 +165,9 @@ class ResourcesMonitor(AbstractMonitor):
         return True
 
     async def _on_message_received(self, message):
-        print(__class__.__name__, 'msg received from {}:'.format(self._controller_ip), message)
         try:
             json_data = json.loads(message)
+            print(__class__.__name__, 'msg received from {}:'.format(self._controller_ip), json_data)
         except JSONDecodeError:
             return
         #  notify subscribed observers
@@ -171,7 +176,6 @@ class ResourcesMonitor(AbstractMonitor):
         except KeyError:
             return
         self.notify_observers(resource_str, json_data)
-        #await client_manager.send_message(message)
 
     async def _close_connection(self):
         if self._ws_connection:

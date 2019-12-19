@@ -595,7 +595,8 @@ class AutomatedPool(db.Model):
                     await self.add_initial_vms()
                     await self.activate()
 
-                    msg = 'Automated pool {verbose_name} created.'.format(verbose_name=self.verbose_name)
+                    verbose_name = await self.verbose_name
+                    msg = 'Automated pool {verbose_name} created.'.format(verbose_name=verbose_name)
                     await Event.create_info(msg)
                 except VmCreationError as E:
                     print('exp__', E.__class__.__name__)

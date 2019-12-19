@@ -1,9 +1,10 @@
+import json
+
 from controller.models import Controller
 from event.models import Event
 from resources_monitoring.resources_monitor import ResourcesMonitor, InternalMonitor
 
 
-# TODO: выделить функционал подписок
 class ResourcesMonitorManager:
 
     def __init__(self):
@@ -93,6 +94,14 @@ class ResourcesMonitorManager:
             cls=__class__.__name__,
             ip=controller_ip)
         await Event.create_info(msg)
+
+    def signal_internal_event(self, msg_dict):
+        """
+        Notify observers about internal event
+        """
+        print(msg_dict)
+        json_data = json.dumps(msg_dict)
+        self._internal_monitor.signal_event(json_data)
 
     # PRIVATE METHODS
     def _get_monitored_controllers_ips(self):
