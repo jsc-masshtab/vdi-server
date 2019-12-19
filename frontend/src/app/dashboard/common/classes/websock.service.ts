@@ -3,7 +3,10 @@ import { environment } from 'src/environments/environment';
 import { Injectable } from '@angular/core';
 
 
-@Injectable()
+@Injectable({
+  providedIn: 'root',
+})
+
 export class WebsocketService  {
 
   private ws: WebSocket;

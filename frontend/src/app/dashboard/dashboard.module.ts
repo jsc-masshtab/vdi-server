@@ -6,10 +6,6 @@ import { DashboardComponent } from './dashboard.component';
 import { FooterComponent } from './common/components/single/footer/footer.component';
 import { MainMenuComponent } from './common/components/single/main-menu/main-menu.component';
 import { WaitComponent } from './common/components/single/wait/wait.component';
-
-import { WebsocketPoolService } from './common/classes/websockPool.service';
-import { WebsocketService } from './common/classes/websock.service';
-
 import { UsersModule } from './settings/users/users.module';
 import { ControllersModule } from './settings/controllers/controllers.module';
 import { TemplatesModule } from './resourses/templates/templates.module';
@@ -65,10 +61,7 @@ import { EventsModule } from './log/events/events.module';
   ],
   providers:
     [
-     { provide: MAT_DIALOG_DEFAULT_OPTIONS, useValue: { hasBackdrop: true, restoreFocus: true } },
-      WaitService,
-      WebsocketService,
-      WebsocketPoolService
+     { provide: MAT_DIALOG_DEFAULT_OPTIONS, useValue: { hasBackdrop: true, restoreFocus: true } }
     ]
 })
 
@@ -79,12 +72,10 @@ export class DashboardModule {
   constructor(private apollo: Apollo,
               private httpLink: HttpLink,
               private errorService: ErrorsService,
-               private waitService: WaitService
-              ) {
-
+              private waitService: WaitService
+            ) {
 
     const url = environment.url;
-    // const headers = new HttpHeaders().set('Authorization', localStorage.getItem('token') || null);
 
     const link = this.httpLink.create( { uri(operation) {
       let urlKnock: string = '';
@@ -130,11 +121,9 @@ export class DashboardModule {
     });
 
     const authMiddleware = new ApolloLink((operation, forward) => {
-      // add the authorization to the headers
       operation.setContext({
-        headers: new HttpHeaders().set('Authorization', localStorage.getItem('token') || null)
+        headers: new HttpHeaders().set('Authorization', `jwt ${localStorage.getItem('token')}` || null)
       });
-
       return forward(operation);
     });
 

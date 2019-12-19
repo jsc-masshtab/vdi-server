@@ -1,19 +1,21 @@
 import { Observable, ReplaySubject } from 'rxjs';
 import { Injectable } from '@angular/core';
 
-@Injectable()
+@Injectable({
+  providedIn: 'root'
+})
+
 export class WaitService  {
 
-    constructor() {}
+  constructor() {}
 
-    public wait$: ReplaySubject<any> = new ReplaySubject<any>();
+  public wait$: ReplaySubject<any> = new ReplaySubject<any>();
 
-    public getWait(): Observable<any> {
-      return this.wait$.asObservable();
-    }
-  
-    public setWait(item: boolean): void {
-      this.wait$.next(item);
-    }
- 
+  public getWait(): Observable<any> {
+    return this.wait$.asObservable();
+  }
+
+  public setWait(item: boolean): void {
+    this.wait$.next(item);
+  }
 }
