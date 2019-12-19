@@ -5,7 +5,7 @@
 export const environment = {
   production: false,
   url: 'api/',
-  url_ws: 'localhost:8888'
+  url_ws: '192.168.8.130'  // localhost and 127.0.0.1 не завелся
 };
 
 /*
