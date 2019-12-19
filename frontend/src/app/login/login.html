@@ -22,6 +22,10 @@
 				<p class="field-name">Пароль</p>
 				<input type="password" placeholder="Введите пароль" formControlName="password" (keydown.enter)="send()">
 			</label>
+			<label class="field-inline">
+				<mat-checkbox [color]="'warn'" formControlName="ldap"></mat-checkbox>
+				<p class="description">LDAP</p>
+			</label>
 		</div>
 		<div class="form-actions">
 			<button type="submit" (click)="send()" class="form-btn">Войти</button>

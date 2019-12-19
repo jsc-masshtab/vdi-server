@@ -46,11 +46,11 @@ export class LoginComponent implements OnInit {
   }
 
   private createForm(): void {
-    console.log(this.loginForm);
     if (!this.loginForm) {
       this.loginForm = this.fb.group({
         username: '' ,
-        password: ''
+        password: '',
+        ldap: false
       });
     } else {
       return;
@@ -66,10 +66,10 @@ export class LoginComponent implements OnInit {
   }
 
   public send() {
-    this.loginService.auth(this.loginForm.value).subscribe((res: {data: {access_token: string, expires_on: string}} & {errors: []} ) => {
-      console.log(res);
-      if (res && res.data && res.data.access_token) {
-        this.authStorageService.saveToken(res.data);
+    this.loginService.auth(this.loginForm.value).subscribe((res: {data: {access_token: string,
+                                                                  expires_on: string, username: string }} & {errors: []} ) => {
+      if (res && res.data) {
+        this.authStorageService.saveInStorage(res.data);
         this.routePage();
       }
 

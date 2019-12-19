@@ -11,10 +11,10 @@ export class AuthStorageService {
     private jwt: JwtHelperService;
 
     constructor(private router: Router) { this.jwt = new JwtHelperService(); }
-// isTokenExpired() === false - не истек
+    // isTokenExpired() === false - не истек
 
     public checkLogin(): boolean {
-        let token: string = this.getToken();
+        let token: string = this.getItemStorage('token');
         if (token && !this.jwt.isTokenExpired(token)) {
             return true;
         } else {
@@ -23,12 +23,21 @@ export class AuthStorageService {
         }
     }
 
-    public saveToken(token: {access_token: string, expires_on: string}): void {
-        localStorage.setItem('token', token.access_token);
+    public saveInStorage(token: {access_token: string, expires_on: string, username: string}): void {
+        if (token.access_token) {
+            localStorage.setItem('token', token.access_token);
+        } else {
+            throw new Error('нет токена');
+        }
+        if (token.username) {
+            localStorage.setItem('user', token.username);
+        } else {
+            throw new Error('нет имени пользователя');
+        }
     }
 
-    private getToken(): string | null {
-        return localStorage.getItem('token') || null;
+    private getItemStorage(item: string): string | null {
+        return localStorage.getItem(item) || null;
     }
 
 }

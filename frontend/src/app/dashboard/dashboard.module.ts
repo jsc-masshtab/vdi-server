@@ -20,7 +20,9 @@ import { PoolsModule } from './pools/pools.module';
 import { VmsModule } from './resourses/vms/vms.module';
 
 import {  HttpLink } from 'apollo-angular-link-http';
-import {  Apollo } from 'apollo-angular';
+import {  Apollo  } from 'apollo-angular';
+import { ApolloLink, from } from 'apollo-link';
+import { HttpHeaders } from '@angular/common/http';
 
 import { NgModule } from '@angular/core';
 
@@ -77,11 +79,12 @@ export class DashboardModule {
   constructor(private apollo: Apollo,
               private httpLink: HttpLink,
               private errorService: ErrorsService,
-              private waitService: WaitService
+               private waitService: WaitService
               ) {
 
 
     const url = environment.url;
+    // const headers = new HttpHeaders().set('Authorization', localStorage.getItem('token') || null);
 
     const link = this.httpLink.create( { uri(operation) {
       let urlKnock: string = '';
@@ -108,7 +111,7 @@ export class DashboardModule {
           urlKnock = `${url}`;
       }
       return urlKnock;
-    }, includeQuery: true, includeExtensions: false} );
+    }, includeQuery: true, includeExtensions: false } );
 
     const errorLink = onError(({ graphQLErrors, networkError }) => {
       if (graphQLErrors) {
@@ -126,8 +129,17 @@ export class DashboardModule {
       }
     });
 
+    const authMiddleware = new ApolloLink((operation, forward) => {
+      // add the authorization to the headers
+      operation.setContext({
+        headers: new HttpHeaders().set('Authorization', localStorage.getItem('token') || null)
+      });
+
+      return forward(operation);
+    });
+
     this.apollo.create({
-      link: errorLink.concat(link),
+      link: from([authMiddleware, errorLink, link]),
       cache: new InMemoryCache({ addTypename: false, dataIdFromObject: object => object.id }),
       defaultOptions: {
         watchQuery: {
@@ -145,3 +157,5 @@ export class DashboardModule {
     });
   }
 }
+
+// queryDeduplication
