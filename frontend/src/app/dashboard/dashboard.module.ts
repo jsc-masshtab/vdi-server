@@ -1,3 +1,4 @@
+import { AuthStorageService } from './../login/authStorage.service';
 import { DashboardRoutingModule } from './dashboard-routing.module';
 import { CommonModule } from '@angular/common';
 import { ErrorsService } from './../errors/errors.service';
@@ -72,7 +73,8 @@ export class DashboardModule {
   constructor(private apollo: Apollo,
               private httpLink: HttpLink,
               private errorService: ErrorsService,
-              private waitService: WaitService
+              private waitService: WaitService,
+              private authStorageService: AuthStorageService
             ) {
 
     const url = environment.url;
@@ -117,12 +119,15 @@ export class DashboardModule {
         console.log(networkError, 'networkError');
         this.waitService.setWait(false);
         this.errorService.setError(networkError['message']);
+        if (networkError['statusCode'] === 401) {
+          this.authStorageService.logout();
+        }
       }
     });
 
     const authMiddleware = new ApolloLink((operation, forward) => {
       operation.setContext({
-        headers: new HttpHeaders().set('Authorization', `jwt ${localStorage.getItem('token')}` || null)
+        headers: new HttpHeaders().set('Authorization', `jwt ${this.authStorageService.getItemStorage('token')}` || null)
       });
       return forward(operation);
     });

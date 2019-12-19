@@ -36,7 +36,12 @@ export class AuthStorageService {
         }
     }
 
-    private getItemStorage(item: string): string | null {
+    public logout(): void {
+        localStorage.clear();
+        this.router.navigate(['login']);
+    }
+
+    public getItemStorage(item: string): string | null {
         return localStorage.getItem(item) || null;
     }
 
