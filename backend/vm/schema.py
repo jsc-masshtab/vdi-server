@@ -171,7 +171,7 @@ class AssignVmToUser(graphene.Mutation):
 
         # another vm in the pool may have this user as owner. Remove assignment
         await Vm.update.values(username=None).where(
-            Vm.pool_id == pool_id and Vm.username == username).gino.status()
+            (Vm.pool_id == pool_id) & (Vm.username == username)).gino.status()
 
         # assign vm to the user(username)
         await Vm.attach_vm_to_user(vm_id, username)
