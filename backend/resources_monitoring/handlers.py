@@ -2,6 +2,7 @@
 import asyncio
 from abc import ABC
 from typing import Any
+import time
 
 import tornado.ioloop
 import tornado.ioloop
@@ -11,24 +12,26 @@ from tornado.web import Application
 
 from .resources_monitoring_data import VDI_FRONT_ALLOWED_SUBSCRIPTIONS_LIST, SubscriptionCmd
 from resources_monitoring.resources_monitor_manager import resources_monitor_manager
-import time
+from resources_monitoring.internal_event_monitor import internal_event_monitor
+
+#import time
 
 
-class ClientManager:
-    clients = []
-
-    def __init__(self):
-        pass
-
-    async def send_message(self, msg):
-        for client in self.clients:
-            await client.write_msg(msg)
-
-    def add_client(self, client):
-        self.clients.append(client)
-
-    def remove_client(self, client):
-        self.clients.remove(client)
+# class ClientManager:
+#     clients = []
+#
+#     def __init__(self):
+#         pass
+#
+#     async def send_message(self, msg):
+#         for client in self.clients:
+#             await client.write_msg(msg)
+#
+#     def add_client(self, client):
+#         self.clients.append(client)
+#
+#     def remove_client(self, client):
+#         self.clients.remove(client)
 
 
 class AbstractSubscriptionObserver(ABC):
@@ -79,7 +82,7 @@ class VdiFrontWsHandler(websocket.WebSocketHandler, AbstractSubscriptionObserver
         print("WebSocket opened")
         self._start_message_sending()
         resources_monitor_manager.subscribe(self)
-        client_manager.add_client(self)
+        internal_event_monitor.subscribe(self)
 
     async def on_message(self, message):
         print('message', message)
@@ -124,6 +127,8 @@ class VdiFrontWsHandler(websocket.WebSocketHandler, AbstractSubscriptionObserver
     def on_close(self):
         print("WebSocket closed")
         resources_monitor_manager.unsubscribe(self)
+        internal_event_monitor.unsubscribe(self)
+
         self._send_messages_flag = False
         tornado.ioloop.IOLoop.instance().remove_timeout(self._send_messages_task)
 
@@ -194,5 +199,3 @@ class WaiterSubscriptionObserver(AbstractSubscriptionObserver):
 
         return False
 
-
-client_manager = ClientManager()

@@ -13,32 +13,13 @@ from common.veil_errors import HttpError
 from controller.models import Controller
 from controller_resources.veil_client import ResourcesHttpClient
 from event.models import Event
-#from resources_monitoring.handlers import client_manager
-from .resources_monitoring_data import CONTROLLER_SUBSCRIPTIONS_LIST, CONTROLLERS_SUBSCRIPTION, VDI_TASKS_SUBSCRIPTION
+
+from .resources_monitoring_data import CONTROLLER_SUBSCRIPTIONS_LIST, CONTROLLERS_SUBSCRIPTION
+from .internal_event_monitor import internal_event_monitor
+from .abstract_event_monitor import AbstractMonitor
+
+
 from common.utils import cancel_async_task
-
-
-class AbstractMonitor(ABC):
-
-    def __init__(self):
-        self._list_of_observers = []
-
-    # PUBLIC METHODS
-    def subscribe(self, observer):
-        if observer not in self._list_of_observers:
-            self._list_of_observers.append(observer)
-
-    def unsubscribe(self, observer):
-        if observer in self._list_of_observers:
-            self._list_of_observers.remove(observer)
-
-    def unsubscribe_all(self):
-        self._list_of_observers.clear()
-
-    def notify_observers(self, sub_source, json_data):
-        for observer in self._list_of_observers:
-            if sub_source in observer.get_subscriptions():
-                observer.on_notified(json_data)
 
 
 class ResourcesMonitor(AbstractMonitor):
@@ -96,12 +77,14 @@ class ResourcesMonitor(AbstractMonitor):
                 # notify only if controller was online before (data changed)
                 if self._is_online:
                     response_dict['status'] = 'OFFLINE'
+                    internal_event_monitor.signal_event(response_dict)
                     #await client_manager.send_message(response_dict)
                 self._is_online = False
             else:
                 # notify only if controller was offline before (data changed)
                 if not self._is_online:
                     response_dict['status'] = 'ONLINE'
+                    internal_event_monitor.signal_event(response_dict)
                     #await client_manager.send_message(response_dict)
                 self._is_online = True
 
@@ -171,22 +154,9 @@ class ResourcesMonitor(AbstractMonitor):
         except KeyError:
             return
         self.notify_observers(resource_str, json_data)
-        #await client_manager.send_message(message)
 
     async def _close_connection(self):
         if self._ws_connection:
             print(__class__.__name__, 'Closing ws connection', self._controller_ip)
             self._ws_connection.close()
 
-
-class InternalMonitor(AbstractMonitor):
-    """
-    monitoring of internal VDI events (pool progress creation, result of pool creation...)
-    """
-
-    def __init__(self):
-        super().__init__()
-
-    # PUBLIC METHODS
-    def signal_event(self, json_data):
-        self.notify_observers(VDI_TASKS_SUBSCRIPTION, json_data)

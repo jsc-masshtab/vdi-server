@@ -11,9 +11,12 @@ from controller.models import Controller
 from database import db, Status
 from event.models import Event
 from pool.pool_task_manager import pool_task_manager
-from resources_monitoring.handlers import WaiterSubscriptionObserver, client_manager
+
+from resources_monitoring.handlers import WaiterSubscriptionObserver#, client_manager
 from resources_monitoring.resources_monitor_manager import resources_monitor_manager
 from resources_monitoring.resources_monitoring_data import VDI_TASKS_SUBSCRIPTION
+from resources_monitoring.internal_event_monitor import internal_event_monitor
+
 from settings import VEIL_WS_MAX_TIME_TO_WAIT
 from user.models import User
 from vm.models import Vm
@@ -553,7 +556,8 @@ class AutomatedPool(db.Model):
                                 domain_verbose_name=vm['verbose_name'],
                                 initial_size=self.initial_size,
                                 resource=VDI_TASKS_SUBSCRIPTION)
-                await client_manager.send_message(msg_dict)
+
+                internal_event_monitor.signal_event(msg_dict)
 
         except VmCreationError as E:
             # log that we cant create required initial amount of VMs
@@ -575,7 +579,8 @@ class AutomatedPool(db.Model):
                             initial_size=self.initial_size,
                             is_successful=is_creation_successful,
                             resource=VDI_TASKS_SUBSCRIPTION)
-            await client_manager.send_message(msg_dict)
+
+            internal_event_monitor.signal_event(msg_dict)
 
         else:
             msg = 'Automated pool created with errors. VMs created: {}. Required: {}'.format(len(vm_list),
