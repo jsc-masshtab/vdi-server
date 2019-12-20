@@ -2,6 +2,6 @@
     <fa-icon [icon]="['fas','user-circle']" size="s" [style.margin-right]="'5px'"></fa-icon>
     <span>{{user}}</span>
     <ul class="header-user-menu" *ngIf="openMenu">
-        <li><fa-icon [icon]="['fas','sign-out-alt']" size="s" [style.margin-right]="'10px'"></fa-icon>Выйти</li>
+        <li (click)="logout()"><fa-icon [icon]="['fas','sign-out-alt']" size="s" [style.margin-right]="'10px'"></fa-icon>Выйти</li>
     </ul>
 </div>

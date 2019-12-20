@@ -1,45 +1,32 @@
+import { LoginService } from './../../../../../login/login.service';
 import { AuthStorageService } from './../../../../../login/authStorage.service';
-
-import { Component, OnDestroy, OnInit } from '@angular/core';
-
-import {
-  trigger,
-  style,
-  transition,
-  animate
-} from '@angular/animations';
+import { Component, OnInit } from '@angular/core';
 
 
 @Component({
   selector: 'vdi-header-user',
   templateUrl: './header-user.component.html',
-  styleUrls: ['./header-user.scss'],
-  animations: [
-    trigger('animForm', [
-      transition(':enter', [
-        style({ opacity: 0 }),
-        animate('150ms', style({ opacity: 1 }))
-      ]),
-      transition(':leave', [
-        style({ opacity: 1 }),
-        animate('150ms', style({ opacity: 0 }))
-      ])
-    ])
-  ]
+  styleUrls: ['./header-user.scss']
 })
-export class HeaderUserComponent implements OnInit, OnDestroy {
+export class HeaderUserComponent implements OnInit {
 
   public user: string;
   public openMenu: boolean = false;
 
-  constructor(private authStorageService: AuthStorageService) {}
+  constructor(private authStorageService: AuthStorageService, private loginService: LoginService) {}
 
   ngOnInit() {
     this.user = this.authStorageService.getItemStorage('username');
   }
 
-  public open() {
+  public open(): void {
     this.openMenu = !this.openMenu;
+  }
+
+  public logout(): void {
+    this.loginService.logout().subscribe(() => {
+      this.authStorageService.logout();
+    });
   }
 
 }
