@@ -11,7 +11,7 @@ export class LoginService {
     constructor(private http: HttpClient, private authStorageService: AuthStorageService) {}
 
     public auth(authData: {username: string, password: string}): Observable<any> {
-        let url = `${environment.url}/auth`;
+        let url = `${environment.url}auth`;
 
         let headers = new HttpHeaders({
             'Content-Type': 'application/json'
@@ -21,7 +21,7 @@ export class LoginService {
     }
 
     public logout(): Observable<any> {
-        let url = `${environment.url}/logout`;
+        let url = `${environment.url}logout`;
         let headers = new HttpHeaders().set('Content-Type', 'application/json')
                                        .set('Authorization', `jwt ${this.authStorageService.getItemStorage('token')}`);
 
