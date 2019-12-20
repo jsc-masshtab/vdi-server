@@ -36,11 +36,11 @@ class Vm(db.Model):
         return await Vm.update.values(username=username).where(
             Vm.id == vm_id).gino.status()
 
-    @staticmethod
-    async def free_vm(pool_id, username):
-        """free vm from user. combination pool_id<->username is unique"""
-        return await Vm.update.values(username=None).where(
-            Vm.pool_id == pool_id and Vm.username == username).gino.status()
+    # @staticmethod
+    # async def free_vm(pool_id, username):
+    #     """free vm from user. combination pool_id<->username is unique"""
+    #     return await Vm.update.values(username=None).where(
+    #         Vm.pool_id == pool_id and Vm.username == username).gino.status()
 
     @staticmethod
     async def free_vm(vm_id):

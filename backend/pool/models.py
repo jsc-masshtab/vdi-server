@@ -658,6 +658,6 @@ class PoolUsers(db.Model):
 
     @staticmethod
     async def check_row_exists(pool_id, user_id):
-        row = await PoolUsers.select().where((PoolUsers.user_id == user_id) and
+        row = await PoolUsers.select().where((PoolUsers.user_id == user_id) &
                                              (PoolUsers.pool_id == pool_id)).gino.all()
         return row
