@@ -1,17 +1,4 @@
 <div class="container">
   <vdi-errors></vdi-errors>
-  <vdi-wait></vdi-wait>
-  <header class="main-header">
-    <div class="logo" routerLink="./pools">
-      <img src="../assets/favicon.png" width="20" height="20">
-      <span [style.fontSize]="'18px'">Veil VDI</span>
-    </div>
-  </header>
-  <section class="all-main">
-    <vdi-main-menu></vdi-main-menu>
-    <main>
-      <router-outlet></router-outlet>
-    </main>
-  </section>
-  <vdi-footer></vdi-footer>
+  <router-outlet></router-outlet>
 </div>
