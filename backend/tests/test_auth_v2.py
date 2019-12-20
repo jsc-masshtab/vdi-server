@@ -139,7 +139,7 @@ class AuthTestCase(AsyncHTTPTestCase):
         response_dict = json_decode(response.body)
         self.assertIsInstance(response_dict, dict)
         data = response_dict['errors'][0]
-        self.assertIn('Invalid credentials', data.get('message'))
+        self.assertIn('Missing password', data.get('message'))
         yield user.delete()
         self.assertTrue(True)
 
