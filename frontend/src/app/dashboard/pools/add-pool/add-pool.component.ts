@@ -1,3 +1,4 @@
+import { PoolsUpdateService } from './../all-pools/pools.update.service';
 import { WaitService } from '../../common/components/single/wait/wait.service';
 
 import { AddPoolService } from './add-pool.service';
@@ -88,7 +89,7 @@ export class PoolAddComponent implements OnInit, OnDestroy {
   @ViewChild('selectDatapoolRef') selectDatapoolRef: ViewContainerRef;
   @ViewChild('selectVmRef') selectVmRef: ViewContainerRef;
 
-  constructor(private poolsService: PoolsService,
+  constructor(private updatePools: PoolsUpdateService,
               private addPoolService: AddPoolService,
               private dialogRef: MatDialogRef<PoolAddComponent>,
               private fb: FormBuilder,
@@ -474,8 +475,7 @@ export class PoolAddComponent implements OnInit, OnDestroy {
                               formValue.create_thin_clones)
         .subscribe(() => {
           this.dialogRef.close();
-          this.poolsService.paramsForGetPools.spin = true;
-          this.poolsService.getAllPools().subscribe();
+          this.updatePools.setUpdate('update');
         });
     }
 
@@ -485,8 +485,7 @@ export class PoolAddComponent implements OnInit, OnDestroy {
                               formValue.vm_ids_list)
         .subscribe(() => {
           this.dialogRef.close();
-          this.poolsService.paramsForGetPools.spin = true;
-          this.poolsService.getAllPools().subscribe();
+          this.updatePools.setUpdate('update');
         });
     }
   }

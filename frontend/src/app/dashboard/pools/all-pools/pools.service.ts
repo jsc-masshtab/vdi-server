@@ -11,9 +11,9 @@ import { switchMap, map } from 'rxjs/operators';
 /**
  * вызов метода при: 1) onInit() spin:true по умолчанию
  *                   2) sort spin:true,nameSort:new,reverse:new
- *                   3) обновление при: создании/удаление пула, добавление/удаление юзера, добавление/удаление вм у стат.пула
- *                           spin:false,nameSort:old,reverse:old
- *                   4) при refresh spin:false,nameSort:old,reverse:old
+ *                   3) обновление при: создании/удаление пула, добавление/удаление юзера пула и вм, добавление/удаление вм у стат.пула
+ *                           spin:false,nameSort:old
+ *                   4) при refresh spin:false,nameSort:old
  */
 
 @Injectable()

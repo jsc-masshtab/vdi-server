@@ -71,6 +71,7 @@ export class ClustersComponent extends DetailsMove implements OnInit, OnDestroy 
     this.waitService.setWait(true);
     this.service.getAllClusters().valueChanges.pipe(map(data => data.data.clusters))
       .subscribe((data) => {
+        console.log('all cl');
         this.clusters = data;
         this.waitService.setWait(false);
       });
