@@ -19,6 +19,9 @@ from pool.schema import pool_schema
 from tests.utils import execute_scheme
 
 from resources_monitoring.resources_monitor_manager import resources_monitor_manager
+from resources_monitoring.internal_event_monitor import internal_event_monitor
+from resources_monitoring.handlers import WaiterSubscriptionObserver
+from resources_monitoring.resources_monitoring_data import VDI_TASKS_SUBSCRIPTION
 
 
 async def get_resources_pool_test():
@@ -75,6 +78,17 @@ def get_test_pool_name():
     return 'test_pool_{}'.format(str(uuid.uuid4())[:7])
 
 
+def check_if_pool_created(json_message):
+    #print('check_if_pool_created: json_message', json_message)
+    try:
+        if json_message['event'] == 'pool_creation_completed':
+            return True
+    except KeyError:
+        pass
+
+    return False
+
+
 @pytest.fixture
 async def fixt_db():
     """Actual fixture for requests working with db."""
@@ -129,6 +143,18 @@ async def fixt_create_automated_pool():
     executed = await execute_scheme(pool_schema, qu)
 
     pool_id = executed['addDynamicPool']['pool']['pool_id']
+
+    # Нужно дождаться внутреннего сообщения о создании пула.
+    pool_creation_waiter = WaiterSubscriptionObserver()
+    pool_creation_waiter.add_subscription_source(VDI_TASKS_SUBSCRIPTION)
+    internal_event_monitor.subscribe(pool_creation_waiter)
+
+    POOL_CREATION_TIMEOUT = 20
+    is_pool_successfully_created = await pool_creation_waiter.wait_for_message(
+        check_if_pool_created, POOL_CREATION_TIMEOUT)
+    internal_event_monitor.unsubscribe(pool_creation_waiter)
+    print('is_pool_successfully_created', is_pool_successfully_created)
+
     await yield_({
         'id': pool_id,
     })
@@ -136,7 +162,7 @@ async def fixt_create_automated_pool():
     # remove pool
     qu = '''
     mutation {
-      removePool(pool_id: "%s") {
+      removePool(pool_id: "%s", full: true) {
         ok
       }
     }

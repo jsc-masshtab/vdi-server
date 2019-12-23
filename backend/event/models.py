@@ -6,7 +6,8 @@ from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.sql import func
 
 from database import db
-from resources_monitoring.handlers import client_manager
+#from resources_monitoring.handlers import client_manager
+from resources_monitoring.internal_event_monitor import internal_event_monitor
 from resources_monitoring.resources_monitoring_data import EVENTS_SUBSCRIPTION
 
 
@@ -73,7 +74,7 @@ class Event(db.Model):
                         user=user,
                         event='event',
                         resource=EVENTS_SUBSCRIPTION)
-        await client_manager.send_message(msg_dict)
+        internal_event_monitor.signal_event_2(msg_dict)
         await Event.create(
             event_type=event_type,
             message=msg,

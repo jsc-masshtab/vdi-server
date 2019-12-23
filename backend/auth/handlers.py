@@ -15,6 +15,14 @@ class AuthHandler(BaseHandler, ABC):
                 raise AssertionError('Missing request body')
             if 'username' and 'password' not in self.args:
                 raise AssertionError('Missing username and password.')
+
+            username = self.args['username']
+            password = self.args['password']
+            if not username or len(username) < 2:
+                raise AssertionError('Missing username.')
+            if not password or len(password) < 2:
+                raise AssertionError('Missing password.')
+
             if self.args.get('ldap'):
                 await AuthenticationDirectory.authenticate(self.args['username'], self.args['password'])
             else:

@@ -46,7 +46,6 @@ class PoolTaskManager:
         # create locks
         for pool_id, template_id in auto_pools_data:
             self._add_data(str(pool_id), str(template_id))
-        print("self")
 
     async def stop_all_tasks(self):
         """Управляемо остановить все таски при завершении приложения"""

@@ -1,0 +1,34 @@
+<!-- 
+	(c) 2017 АО "НИИ "МАСШТАБ" 
+--> 
+
+<div class="linear-gradient">
+	<p class="login-title">
+		Enterprise Cloud Platform <b>VEIL</b>
+	</p>
+
+	<div *ngIf="loaded" [@animForm]="loaded" class="form">
+		<div class="form-message">
+			<p>Авторизация пользователя </p>
+			<p [style.font-size]="'10px'" [style.margin-top]="'10px'">(Заполните данные формы)</p>
+		</div>
+		<div class="form-fields" [formGroup]="loginForm">
+			<label class="field"> 
+				<p class="field-name">Логин</p>
+				<input type="text" placeholder="Введите имя пользователя" formControlName="username">
+			</label>
+
+			<label class="field"> 
+				<p class="field-name">Пароль</p>
+				<input type="password" placeholder="Введите пароль" formControlName="password" (keydown.enter)="send()">
+			</label>
+			<label class="field-inline">
+				<mat-checkbox [color]="'warn'" formControlName="ldap"></mat-checkbox>
+				<p class="description">LDAP</p>
+			</label>
+		</div>
+		<div class="form-actions">
+			<button type="submit" (click)="send()" class="form-btn">Войти</button>
+		</div>
+	</div>
+</div>

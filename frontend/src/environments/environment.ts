@@ -4,8 +4,8 @@
 
 export const environment = {
   production: false,
-  url: 'http://192.168.8.130/api/',
-  url_ws: '192.168.8.130:8888'
+  url: 'api/',
+  url_ws: '192.168.8.130:8888'  // TODO: localhost and 127.0.0.1 не завелся. Без работы напрямую с Tornado тоже не взлетело.
 };
 
 /*

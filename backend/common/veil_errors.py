@@ -147,3 +147,7 @@ class ServerError(HttpError):
 
 class VmCreationError(Exception):
     pass
+
+
+class PoolCreationError(Exception):
+    pass

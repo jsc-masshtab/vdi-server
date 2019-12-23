@@ -1,5 +1,8 @@
 import asyncio
 import time
+import json
+from abc import ABC
+from json import JSONDecodeError
 
 from tornado.httpclient import HTTPClientError
 from tornado.ioloop import IOLoop
@@ -10,12 +13,16 @@ from common.veil_errors import HttpError
 from controller.models import Controller
 from controller_resources.veil_client import ResourcesHttpClient
 from event.models import Event
-from resources_monitoring.handlers import client_manager
-from .resources_monitoring_data import CONTROLLER_SUBSCRIPTIONS_LIST, CONTROLLERS_SUBSCRIPTION, VDI_TASKS_SUBSCRIPTION
+
+from .resources_monitoring_data import CONTROLLER_SUBSCRIPTIONS_LIST, CONTROLLERS_SUBSCRIPTION
+from .internal_event_monitor import internal_event_monitor
+from .abstract_event_monitor import AbstractMonitor
+
+
 from common.utils import cancel_async_task
 
 
-class ResourcesMonitor:
+class ResourcesMonitor(AbstractMonitor):
     """
     monitoring of controller events
     """
@@ -70,13 +77,15 @@ class ResourcesMonitor:
                 # notify only if controller was online before (data changed)
                 if self._is_online:
                     response_dict['status'] = 'OFFLINE'
-                    await client_manager.send_message(response_dict)
+                    internal_event_monitor.signal_event(response_dict)
+                    #await client_manager.send_message(response_dict)
                 self._is_online = False
             else:
                 # notify only if controller was offline before (data changed)
                 if not self._is_online:
                     response_dict['status'] = 'ONLINE'
-                    await client_manager.send_message(response_dict)
+                    internal_event_monitor.signal_event(response_dict)
+                    #await client_manager.send_message(response_dict)
                 self._is_online = True
 
     async def _processing_ws_messages(self):
@@ -135,9 +144,19 @@ class ResourcesMonitor:
 
     async def _on_message_received(self, message):
         print(__class__.__name__, 'msg received from {}:'.format(self._controller_ip), message)
-        await client_manager.send_message(message)
+        try:
+            json_data = json.loads(message)
+        except JSONDecodeError:
+            return
+        #  notify subscribed observers
+        try:
+            resource_str = json_data['resource']
+        except KeyError:
+            return
+        self.notify_observers(resource_str, json_data)
 
     async def _close_connection(self):
         if self._ws_connection:
             print(__class__.__name__, 'Closing ws connection', self._controller_ip)
             self._ws_connection.close()
+
