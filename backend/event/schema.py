@@ -1,4 +1,5 @@
 import graphene
+from graphql import GraphQLError
 
 from event.models import Event, EventReadByUser
 from sqlalchemy import desc, and_
@@ -24,8 +25,11 @@ class EventQuery(graphene.ObjectType):
         start_date=graphene.DateTime(),
         end_date=graphene.DateTime(),
         user=graphene.String(),
-        read_by=graphene.UUID()
-    )
+        read_by=graphene.UUID())
+
+    event = graphene.Field(
+        lambda: EventType,
+        id=graphene.UUID())
 
     async def resolve_events(self, _info, limit=100, offset=0, event_type=None,
                              start_date=None, end_date=None, user=None, read_by=None):
@@ -48,13 +52,28 @@ class EventQuery(graphene.ObjectType):
             Event.distinct(Event.id).load(add_read_by=User.distinct(User.id))
         ).all()
 
-        objects = [
+        event_type_list = [
             EventType(
                 read_by=[UserType(**user.__values__) for user in event.read_by],
                 **event.__values__)
             for event in events
         ]
-        return objects
+        return event_type_list
+
+    async def resolve_event(self, _info, id):
+        query = Event.outerjoin(EventReadByUser).outerjoin(User).select()
+        event = await query.where(Event.id == id).gino.load(
+            Event.distinct(Event.id).load(add_read_by=User.distinct(User.id))
+        ).first()
+
+        if not event:
+            raise GraphQLError('No such event.')
+
+        event_type = EventType(
+            read_by=[UserType(**user.__values__) for user in event.read_by],
+            **event.__values__)
+
+        return event_type
 
 
 class MarkEventsReadByMutation(graphene.Mutation):
