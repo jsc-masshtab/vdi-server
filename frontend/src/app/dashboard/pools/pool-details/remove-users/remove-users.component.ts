@@ -41,6 +41,9 @@ export class RemoveUsersPoolComponent  implements OnInit {
         this.poolsService.paramsForGetPools.spin = false;
         this.poolsService.getAllPools().subscribe();
         this.waitService.setWait(false);
+
+
+        console.log('remove-user');
       });
       this.dialogRef.close();
     });

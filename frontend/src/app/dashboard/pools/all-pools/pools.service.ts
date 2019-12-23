@@ -24,7 +24,7 @@ export class PoolsService {
         nameSort: undefined
     };
 
-    constructor(private service: Apollo, private waitService: WaitService) { }
+    constructor(private service: Apollo, private waitService: WaitService) {}
 
     public getAllPools(obs?: {obs: boolean}): Observable<any> {
 

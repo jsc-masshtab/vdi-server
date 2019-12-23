@@ -41,6 +41,8 @@ export class AddUsersPoolComponent implements OnInit {
         this.poolsService.paramsForGetPools.spin = false;
         this.poolsService.getAllPools().subscribe();
         this.waitService.setWait(false);
+
+        console.log('add-user');
       });
       this.dialogRef.close();
     });
