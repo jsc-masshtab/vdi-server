@@ -6,14 +6,17 @@ from sqlalchemy import Enum as AlchemyEnum
 from sqlalchemy import case, literal_column, desc, text
 from sqlalchemy.dialects.postgresql import UUID
 
-from common.veil_errors import VmCreationError, HttpError, SimpleError
+from common.veil_errors import VmCreationError, PoolCreationError, HttpError, SimpleError
 from controller.models import Controller
 from database import db, Status
 from event.models import Event
 from pool.pool_task_manager import pool_task_manager
-from resources_monitoring.handlers import WaiterSubscriptionObserver, client_manager
+
+from resources_monitoring.handlers import WaiterSubscriptionObserver#, client_manager
 from resources_monitoring.resources_monitor_manager import resources_monitor_manager
 from resources_monitoring.resources_monitoring_data import VDI_TASKS_SUBSCRIPTION
+from resources_monitoring.internal_event_monitor import internal_event_monitor
+
 from settings import VEIL_WS_MAX_TIME_TO_WAIT
 from user.models import User
 from vm.models import Vm
@@ -481,11 +484,14 @@ class AutomatedPool(db.Model):
                 return False
 
             def _check_if_vm_created(json_message):
-                obj = json_message['object']
+                try:
+                    obj = json_message['object']
 
-                if _is_vm_creation_task(obj['name']) and current_vm_task_id == obj['parent']:
-                    if obj['status'] == 'SUCCESS':
-                        return True
+                    if _is_vm_creation_task(obj['name']) and current_vm_task_id == obj['parent']:
+                        if obj['status'] == 'SUCCESS':
+                            return True
+                except KeyError:
+                    pass
                 return False
 
             is_vm_successfully_created = await response_waiter.wait_for_message(
@@ -553,7 +559,8 @@ class AutomatedPool(db.Model):
                                 domain_verbose_name=vm['verbose_name'],
                                 initial_size=self.initial_size,
                                 resource=VDI_TASKS_SUBSCRIPTION)
-                await client_manager.send_message(msg_dict)
+
+                internal_event_monitor.signal_event(msg_dict)
 
         except VmCreationError as E:
             # log that we cant create required initial amount of VMs
@@ -565,26 +572,25 @@ class AutomatedPool(db.Model):
         if is_creation_successful:
             msg = 'Automated pool successfully created. Initial VM amount {}'.format(len(vm_list))
             await Event.create_info(msg)
-
-            # notify VDI front about progress(WS)
-            msg_dict = dict(msg=msg,
-                            msg_type='data',
-                            event='pool_creation_completed',
-                            pool_id=str(self.automated_pool_id),
-                            amount_of_created_vms=len(vm_list),
-                            initial_size=self.initial_size,
-                            is_successful=is_creation_successful,
-                            resource=VDI_TASKS_SUBSCRIPTION)
-            await client_manager.send_message(msg_dict)
-
         else:
             msg = 'Automated pool created with errors. VMs created: {}. Required: {}'.format(len(vm_list),
                                                                                              self.initial_size)
             await Event.create_error(msg)
 
+        msg_dict = dict(msg=msg,
+                        msg_type='data',
+                        event='pool_creation_completed',
+                        pool_id=str(self.automated_pool_id),
+                        amount_of_created_vms=len(vm_list),
+                        initial_size=self.initial_size,
+                        is_successful=is_creation_successful,
+                        resource=VDI_TASKS_SUBSCRIPTION)
+
+        internal_event_monitor.signal_event(msg_dict)
+
         # Пробросить исключение, если споткнулись на создании машин
         if not is_creation_successful:
-            raise VmCreationError('Не удалось создать необходимое число машин.')
+            raise PoolCreationError('Не удалось создать необходимое число машин.')
 
     async def create_pool(self):
         """Корутина создания автом. пула"""
@@ -595,9 +601,10 @@ class AutomatedPool(db.Model):
                     await self.add_initial_vms()
                     await self.activate()
 
-                    msg = 'Automated pool {verbose_name} created.'.format(verbose_name=self.verbose_name)
+                    verbose_name = await self.verbose_name
+                    msg = 'Automated pool {verbose_name} created.'.format(verbose_name=verbose_name)
                     await Event.create_info(msg)
-                except VmCreationError as E:
+                except PoolCreationError as E:
                     print('exp__', E.__class__.__name__)
                     await self.deactivate()
 
@@ -652,6 +659,6 @@ class PoolUsers(db.Model):
 
     @staticmethod
     async def check_row_exists(pool_id, user_id):
-        row = await PoolUsers.select().where((PoolUsers.user_id == user_id) and
+        row = await PoolUsers.select().where((PoolUsers.user_id == user_id) &
                                              (PoolUsers.pool_id == pool_id)).gino.all()
         return row

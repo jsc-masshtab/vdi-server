@@ -556,7 +556,7 @@ class CreateAutomatedPoolMutation(graphene.Mutation, PoolValidator):
         # start task
         native_loop = asyncio.get_event_loop()
         pool_lock = pool_task_manager.get_pool_lock(str(automated_pool.automated_pool_id))
-        pool_lock.expand_pool_task = native_loop.create_task(automated_pool.create_pool())
+        pool_lock.create_pool_task = native_loop.create_task(automated_pool.create_pool())
 
         # pool creation task successfully started
         pool = await Pool.get_pool(automated_pool.automated_pool_id)
