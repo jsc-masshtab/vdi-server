@@ -6,7 +6,6 @@ from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.sql import func
 
 from database import db
-#from resources_monitoring.handlers import client_manager
 from resources_monitoring.internal_event_monitor import internal_event_monitor
 from resources_monitoring.resources_monitoring_data import EVENTS_SUBSCRIPTION
 
@@ -42,14 +41,15 @@ class Event(db.Model):
             Если списка нет, то отмечаем ВСЁ
         """
         if not events_id_list:
-            events_id_list = await Event.select('id').gino.all()
+            results = await Event.select('id').gino.all()
+            events_id_list = [value for value, in results]
         async with db.transaction() as tx:
             for event_id in events_id_list:
                 # get_or_create
-                filters = [(EventReadByUser.event == event_id[0]), (EventReadByUser.user == user_id)]
+                filters = [(EventReadByUser.event == event_id), (EventReadByUser.user == user_id)]
                 relation = await EventReadByUser.query.where(and_(*filters)).gino.first()
                 if relation is None:
-                    await EventReadByUser.create(event=event_id[0], user=user_id)
+                    await EventReadByUser.create(event=event_id, user=user_id)
 
     @staticmethod
     async def unmark_read_by(user_id, events_id_list):

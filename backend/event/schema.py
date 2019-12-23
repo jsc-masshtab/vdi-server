@@ -108,6 +108,7 @@ class RemoveAllEventsMutation(graphene.Mutation):
 
     async def mutate(self, _info):
         await Event.delete.gino.status()
+        await Event.create_info("Журнал очищен")
         return RemoveAllEventsMutation(ok=True)
 
 
