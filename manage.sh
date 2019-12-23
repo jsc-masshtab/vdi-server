@@ -11,7 +11,8 @@ usage() {
   Commands:
     update               update deploy to the latest release / apply db migrations
     curr[ent]            output current release commit
-    start                start front and back with nohup
+    start                start front and back with supervisorctl
+    stop                stop front and back with supervisorctl
 EOF
 }
 
@@ -26,23 +27,39 @@ current_commit() {
 }
 
 update() {
-  echo "Update repository"
+  echo "Update from repository"
   git pull
   echo "Apply database migrations"
   cd $APP_DIR/backend
   pipenv run alembic upgrade head
+  echo "Restarting supervisor"
+  supervisorctl restart vdi-server-8888
+  supervisorctl restart vdi-angular-4200
+  echo "Done!"
 }
 
 start() {
-  # TODO: tmux start for monitoring
-  # TODO: supervisor start
-  echo "Starting..."
-  nohup pipenv run python $APP_DIR/backend/app.py &\
+  echo "Starting supervisor vdi-server-8888..."
+  supervisorctl start vdi-server-8888
+  echo "Preparing frontend..."
   cd $APP_DIR/frontend/
+  echo "Removing old node_modules/..."
   rm -rf node_modules  # audit fix not working without this.
-  npm audit fix  # npm i has some broken dependencies. npm audit fix works fine for 9
-  nohup npm run ng serve -- --configuration=demo --host 0.0.0.0
+  echo "Installing NODE dependencies..."
+  npm install --unsafe-perm
+  echo "Starting supervisor vdi-angular-4200..."
+  supervisorctl start vdi-angular-4200
+   /etc/init.d/nginx restart
+  echo "Restarting nginx..."
+  /etc/init.d/nginx restart
   echo "Done!"
+}
+
+stop() {
+  echo "Stopping angular"
+  supervisorctl stop vdi-angular-4200
+  echo "Stopping tornado"
+  supervisorctl stop vdi-server-8888
 }
 
 # parse argv
@@ -53,6 +70,7 @@ while test $# -ne 0; do
     curr|current) current_commit; exit ;;
     update) setup_env; update; exit ;;
     start) setup_env; start; exit ;;
+    stop) setup_env; stop; exit ;;
   esac
 done
 
