@@ -1,6 +1,7 @@
+import { Subscription } from 'rxjs';
 import { WaitService } from '../../components/single/wait/wait.service';
 import { MatDialogRef } from '@angular/material';
-import { Component, Inject, OnInit  } from '@angular/core';
+import { Component, Inject, OnInit, OnDestroy } from '@angular/core';
 import { MAT_DIALOG_DATA } from '@angular/material';
 import { FormBuilder, FormGroup } from '@angular/forms';
 
@@ -35,6 +36,7 @@ interface IData {
   updateDepend?: {
     method: string;
     service: object;
+    params: []
   };
 }
 
@@ -43,10 +45,11 @@ interface IData {
   templateUrl: './form-edit.component.html'
 })
 
-export class FormForEditComponent implements OnInit {
+export class FormForEditComponent implements OnInit, OnDestroy {
 
   private formGroup: FormGroup;
   public init = false;
+  private sub: Subscription;
 
   constructor(private waitService: WaitService,
               private dialogRef: MatDialogRef<FormForEditComponent>,
@@ -83,16 +86,22 @@ export class FormForEditComponent implements OnInit {
     if (this.data.post && this.data.update) {
       this.waitService.setWait(true);
       this.data.post.service[this.data.post.method](this.data.post.params, this.formGroup.value).subscribe(() => {
-        this.data.post.service[this.data.update.method](...this.data.update.params).subscribe(() => {
+        this.sub =  this.data.post.service[this.data.update.method](...this.data.update.params).subscribe(() => {
           this.waitService.setWait(false);
           if (this.data.updateDepend) {
-            this.data.updateDepend.service[this.data.updateDepend.method]().subscribe();
+            this.data.updateDepend.service[this.data.updateDepend.method](...this.data.updateDepend.params);
           }
+          this.dialogRef.close();
         });
-        this.dialogRef.close();
       });
     } else {
       throw new Error('post || update отсутствует');
+    }
+  }
+
+  ngOnDestroy() {
+    if (this.sub) {
+      this.sub.unsubscribe();
     }
   }
 }
