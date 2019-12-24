@@ -296,8 +296,8 @@ void virt_viewer_util_init(const char *appname)
     }
 #endif
 
-    //setlocale(LC_ALL, "");
-    setlocale(LC_ALL, "Russian");
+    setlocale(LC_ALL, "");
+    //setlocale(LC_ALL, "Russian");
     bindtextdomain(GETTEXT_PACKAGE, LOCALE_DIR);
     bind_textdomain_codeset(GETTEXT_PACKAGE, "UTF-8");
     textdomain(GETTEXT_PACKAGE);

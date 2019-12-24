@@ -96,41 +96,36 @@ static void set_init_values()
 // Set GUI state
 static void set_vdi_client_state(VdiClientState vdi_client_state, const gchar *message, gboolean error_message)
 {
+    gboolean controls_blocked = FALSE;
+
     switch (vdi_client_state) {
         case VDI_RECEIVED_RESPONSE: {
             if (vdi_manager.main_vm_spinner)
                 gtk_widget_hide (GTK_WIDGET(vdi_manager.main_vm_spinner));
-            if (vdi_manager.gtk_flow_box)
-                gtk_widget_set_sensitive(vdi_manager.gtk_flow_box, TRUE);
-            if (vdi_manager.button_renew)
-                gtk_widget_set_sensitive(vdi_manager.button_renew, TRUE);
-            if (vdi_manager.button_quit)
-                gtk_widget_set_sensitive(vdi_manager.button_quit, TRUE);
+            controls_blocked = TRUE;
             break;
         }
 
         case VDI_WAITING_FOR_POOL_DATA: {
             if (vdi_manager.main_vm_spinner)
                 gtk_widget_show (GTK_WIDGET(vdi_manager.main_vm_spinner));
-            if (vdi_manager.gtk_flow_box)
-                gtk_widget_set_sensitive(vdi_manager.gtk_flow_box, FALSE);
-            if (vdi_manager.button_renew)
-                gtk_widget_set_sensitive(vdi_manager.button_renew, FALSE);
-            if (vdi_manager.button_quit)
-                gtk_widget_set_sensitive(vdi_manager.button_quit, FALSE);
+            controls_blocked = FALSE;
             break;
         }
 
         case VDI_WAITING_FOR_VM_FROM_POOL: {
-            if (vdi_manager.gtk_flow_box)
-                gtk_widget_set_sensitive(vdi_manager.gtk_flow_box, FALSE);
-            if (vdi_manager.button_renew)
-                gtk_widget_set_sensitive(vdi_manager.button_renew, FALSE);
-            if (vdi_manager.button_quit)
-                gtk_widget_set_sensitive(vdi_manager.button_quit, FALSE);
+            controls_blocked = FALSE;
             break;
         }
     }
+
+    // control widgets state
+    if (vdi_manager.gtk_flow_box)
+        gtk_widget_set_sensitive(vdi_manager.gtk_flow_box, controls_blocked);
+    if (vdi_manager.button_renew)
+        gtk_widget_set_sensitive(vdi_manager.button_renew, controls_blocked);
+    if (vdi_manager.button_quit)
+        gtk_widget_set_sensitive(vdi_manager.button_quit, controls_blocked);
 
     // message
     if (vdi_manager.status_label) {
