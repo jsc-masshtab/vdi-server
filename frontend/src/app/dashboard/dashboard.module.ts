@@ -131,7 +131,7 @@ export class DashboardModule {
         headers: new HttpHeaders().set('Authorization', `jwt ${this.authStorageService.getItemStorage('token')}`)
                   .set('Client-Type', 'angular-web')
       });
-      return forward(operation);
+      return forward(operation).filter((res) => res['errors'] === undefined);
     });
 
     this.apollo.create({
