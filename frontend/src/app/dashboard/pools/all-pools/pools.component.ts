@@ -78,7 +78,7 @@ export class PoolsComponent extends DetailsMove implements OnInit, OnDestroy {
   @ViewChild('view') view: ElementRef;
 
   ngOnInit() {
-    this.getAllPools({obs: true});
+    this.getAllPools();
     this.updatePools();
     setTimeout(() => this.ws.init(), 1000);
   }
@@ -86,7 +86,6 @@ export class PoolsComponent extends DetailsMove implements OnInit, OnDestroy {
   private updatePools(): void {
     this.updateSub = this.update.getUpdate().subscribe((param: string) => {
       if (param === 'update') {
-        console.log('update!');
         this.service.paramsForGetPools.spin = false;
         this.getAllPools();
       }
@@ -99,14 +98,13 @@ export class PoolsComponent extends DetailsMove implements OnInit, OnDestroy {
     });
   }
 
-  public getAllPools(obs?: {obs: boolean}): void {
+  public getAllPools(): void {
     if (this.getPoolsSub) {
       this.getPoolsSub.unsubscribe();
     }
 
-    this.getPoolsSub = this.service.getAllPools(obs)
+    this.getPoolsSub = this.service.getAllPools()
       .subscribe((data) => {
-        console.log('ka');
         this.pools = data;
         this.waitService.setWait(false);
     });

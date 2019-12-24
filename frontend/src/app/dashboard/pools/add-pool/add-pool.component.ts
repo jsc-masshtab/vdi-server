@@ -6,7 +6,6 @@ import { AddPoolService } from './add-pool.service';
 import { MatDialogRef } from '@angular/material';
 import { Component, OnInit, ViewChild, ViewContainerRef, OnDestroy } from '@angular/core';
 import { Validators } from '@angular/forms';
-import { PoolsService } from '../all-pools/pools.service';
 import { map } from 'rxjs/operators';
 import { trigger, style, animate, transition } from '@angular/animations';
 import { FormBuilder, FormGroup } from '@angular/forms';

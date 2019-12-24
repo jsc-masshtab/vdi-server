@@ -26,43 +26,16 @@ export class PoolsService {
 
     constructor(private service: Apollo, private waitService: WaitService) {}
 
-    public getAllPools(obs?: {obs: boolean}): Observable<any> {
+    public getAllPools(): Observable<any> {
 
         if (this.paramsForGetPools.spin) {
             this.waitService.setWait(true);
         }
 
-        if (obs && obs.obs) {
-            var obs$ = timer(0, 60000);
+        var obs$ = timer(0, 60000);
 
-            obs$ = timer(0, 60000);
-            return obs$.pipe(switchMap(() => {
-                return this.service.watchQuery({
-                    query: gql` query pools($ordering:String) {
-                                    pools(ordering: $ordering) {
-                                        pool_id
-                                        verbose_name
-                                        vms {
-                                            id
-                                        }
-                                        pool_type
-                                        controller {
-                                            address
-                                        }
-                                        users {
-                                            username
-                                        }
-                                        status
-                                    }
-                                }
-                        `,
-                    variables: {
-                        method: 'GET',
-                        ordering: this.paramsForGetPools.nameSort
-                    }
-                }).valueChanges.pipe(map(data => data.data['pools']));
-            }));
-        } else {
+        obs$ = timer(0, 60000);
+        return obs$.pipe(switchMap(() => {
             return this.service.watchQuery({
                 query: gql` query pools($ordering:String) {
                                 pools(ordering: $ordering) {
@@ -87,6 +60,7 @@ export class PoolsService {
                     ordering: this.paramsForGetPools.nameSort
                 }
             }).valueChanges.pipe(map(data => data.data['pools']));
-        }
+        }));
     }
 }
+

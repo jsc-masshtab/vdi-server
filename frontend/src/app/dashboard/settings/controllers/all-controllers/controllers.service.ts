@@ -64,15 +64,16 @@ export class ControllersService {
     public removeController(id: string) {
         return this.service.mutate<any>({
             mutation: gql`
-                            mutation controllers($id: UUID!) {
-                                removeController(id: $id) {
+                            mutation controllers($id: UUID!, $full: Boolean) {
+                                removeController(id: $id,full: $full) {
                                     ok
                                 }
                             }
             `,
             variables: {
                 method: 'POST',
-                id
+                id,
+                full: true
             }
         });
     }
