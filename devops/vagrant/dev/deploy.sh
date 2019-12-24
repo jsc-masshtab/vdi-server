@@ -4,8 +4,6 @@ sudo sed -i s/us\./ru\./g /etc/apt/sources.list
 sudo apt update -y
 sudo apt install --no-install-recommends -y postgresql-server-dev-9.6 python3-dev gcc python3-pip postgresql htop mc nginx # Не нашел на астре пакеты ncdu и bmon
 sudo apt install -y libsasl2-dev python-dev libldap2-dev libssl-dev
-#------------------------------
-#sudo apt install libcurl4-openssl-dev   # TODO: measure effect. Maybe not need.
 
 echo "Installing node v.10 && npm"
 #sudo apt -y install curl dirmngr apt-transport-https lsb-release ca-certificates
@@ -32,7 +30,7 @@ cd $APP_DIR
 #------------------------------
 echo "Setting up nginx"
 
-sudo cp $APP_DIR/vagrant/dev/vdi_nginx.conf /etc/nginx/conf.d/vdi_nginx.conf
+sudo cp $APP_DIR/devops/conf/vdi_nginx.conf /etc/nginx/conf.d/vdi_nginx.conf
 sudo rm /etc/nginx/sites-enabled/*
 sudo systemctl restart nginx
 

@@ -14,8 +14,7 @@ from .resources_monitoring_data import VDI_FRONT_ALLOWED_SUBSCRIPTIONS_LIST, Sub
 from resources_monitoring.resources_monitor_manager import resources_monitor_manager
 from resources_monitoring.internal_event_monitor import internal_event_monitor
 
-#import time
-
+# TODO: auth check?
 
 # class ClientManager:
 #     clients = []
