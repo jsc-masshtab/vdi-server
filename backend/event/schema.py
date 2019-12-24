@@ -1,8 +1,10 @@
 import graphene
 from graphql import GraphQLError
+from sqlalchemy import desc, and_
+
+from common.veil_decorators import superuser_required
 
 from event.models import Event, EventReadByUser
-from sqlalchemy import desc, and_
 from user.schema import User, UserType
 
 
@@ -31,6 +33,7 @@ class EventQuery(graphene.ObjectType):
         lambda: EventType,
         id=graphene.UUID())
 
+    @superuser_required
     async def resolve_events(self, _info, limit=100, offset=0, event_type=None,
                              start_date=None, end_date=None, user=None, read_by=None):
         filters = []
@@ -60,6 +63,7 @@ class EventQuery(graphene.ObjectType):
         ]
         return event_type_list
 
+    @superuser_required
     async def resolve_event(self, _info, id):
         query = Event.outerjoin(EventReadByUser).outerjoin(User).select()
         event = await query.where(Event.id == id).gino.load(
@@ -83,6 +87,7 @@ class MarkEventsReadByMutation(graphene.Mutation):
 
     ok = graphene.Boolean()
 
+    @superuser_required
     async def mutate(self, _info, user, events=None):
         await Event.mark_read_by(user, events)
         return RemoveAllEventsMutation(ok=True)
@@ -95,6 +100,7 @@ class UnmarkEventsReadByMutation(graphene.Mutation):
 
     ok = graphene.Boolean()
 
+    @superuser_required
     async def mutate(self, _info, user, events=None):
         await Event.unmark_read_by(user, events)
         return UnmarkEventsReadByMutation(ok=True)
@@ -106,6 +112,7 @@ class RemoveAllEventsMutation(graphene.Mutation):
 
     ok = graphene.Boolean()
 
+    @superuser_required
     async def mutate(self, _info):
         await Event.delete.gino.status()
         await Event.create_info("Журнал очищен")

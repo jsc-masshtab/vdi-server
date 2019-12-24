@@ -106,14 +106,19 @@ async def get_auth_token():
     return access_token
 
 
-@pytest.fixture
-async def auth_context():
+async def get_auth_context():
     """Return auth headers in Context for Graphene query execution of protected methods."""
     auth_token = await get_auth_token()
     context = Context()
-    context.headers = {'Authorization': auth_token}
+    context.headers = {'Authorization': auth_token, 'Client-Type': 'PyTest', 'Content-Type': 'application/json'}
     context.remote_ip = '127.0.0.1'
     return context
+
+
+@pytest.fixture
+async def auth_context_fixture():
+    """Auth context fixture."""
+    return await get_auth_context()
 
 
 @pytest.fixture
@@ -139,8 +144,8 @@ async def fixt_create_automated_pool():
         }
         ''' % (get_test_pool_name(), resources['controller_ip'], resources['cluster_id'], resources['node_id'],
                resources['datapool_id'], resources['template_id'])
-
-    executed = await execute_scheme(pool_schema, qu)
+    context = await get_auth_context()
+    executed = await execute_scheme(pool_schema, qu, context=context)
 
     pool_id = executed['addDynamicPool']['pool']['pool_id']
 
@@ -167,7 +172,7 @@ async def fixt_create_automated_pool():
       }
     }
     ''' % pool_id
-    await execute_scheme(pool_schema, qu)
+    await execute_scheme(pool_schema, qu, context=context)
 
     # stop monitor
     await resources_monitor_manager.stop()
@@ -182,6 +187,7 @@ async def fixt_create_static_pool(fixt_db):
     node_id = pool_main_resources['node_id']
     datapool_id = pool_main_resources['datapool_id']
     template_id = pool_main_resources['template_id']
+    context = await get_auth_context()
 
     async def create_domain():
         test_domain_name = 'domain_name_{}'.format(str(uuid.uuid4())[:7])
@@ -196,7 +202,7 @@ async def fixt_create_static_pool(fixt_db):
             'create_thin_clones': True
         }
         vm_info = await Vm.copy(**params)
-        print('vm_info', vm_info)
+        # print('vm_info', vm_info)
         return vm_info
 
     domain_info = await create_domain()
@@ -215,8 +221,8 @@ async def fixt_create_static_pool(fixt_db):
         }
         ''' % (get_test_pool_name(), domain_info['id'])
 
-    pool_create_res = await execute_scheme(pool_schema, qu)
-    print('pool_create_res', pool_create_res)
+    pool_create_res = await execute_scheme(pool_schema, qu, context=context)
+    # print('pool_create_res', pool_create_res)
 
     pool_id = pool_create_res['addStaticPool']['pool']['pool_id']
     await yield_({
@@ -232,7 +238,7 @@ async def fixt_create_static_pool(fixt_db):
       }
     }
     ''' % pool_id
-    await execute_scheme(pool_schema, qu)
+    await execute_scheme(pool_schema, qu, context=context)
 
     # remove test VM
     vm_http_client = await VmHttpClient.create(controller_ip, domain_info['id'])
@@ -242,7 +248,7 @@ async def fixt_create_static_pool(fixt_db):
 @pytest.fixture
 @async_generator
 async def fixt_entitle_user_to_pool(fixt_create_static_pool):
-
+    context = await get_auth_context()
     pool_id = fixt_create_static_pool['id']
 
     # entitle user to pool
@@ -254,8 +260,8 @@ async def fixt_entitle_user_to_pool(fixt_create_static_pool):
       }
     }
     ''' % (pool_id, user_name)
-    res = await execute_scheme(pool_schema, qu)
-    print('test_res', res)
+    res = await execute_scheme(pool_schema, qu, context=context)
+    # print('test_res', res)
 
     await yield_({
         'id': pool_id,
@@ -270,4 +276,4 @@ async def fixt_entitle_user_to_pool(fixt_create_static_pool):
     }
     }
     ''' % (pool_id, user_name)
-    res = await execute_scheme(pool_schema, qu)
+    res = await execute_scheme(pool_schema, qu, context=context)

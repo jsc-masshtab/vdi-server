@@ -1,33 +1,33 @@
 import pytest
 import uuid
 
-# import sys, os
-# myPath = os.path.dirname(os.path.abspath(__file__))
-# sys.path.insert(0, myPath + '/../')
-
 from pool.schema import pool_schema
-
 from tests.utils import execute_scheme
-from tests.fixtures import fixt_db, fixt_create_automated_pool, fixt_create_static_pool, fixt_entitle_user_to_pool
+
+from tests.fixtures import (fixt_db,
+                            fixt_create_automated_pool,
+                            fixt_create_static_pool,
+                            fixt_entitle_user_to_pool,
+                            auth_context_fixture)
+
 
 # ----------------------------------------------
 # Automated pool
 @pytest.mark.asyncio
-async def test_create_automated_pool(fixt_db, fixt_create_automated_pool):
+async def test_create_automated_pool(fixt_db, fixt_create_automated_pool, auth_context_fixture):
     pool_id = fixt_create_automated_pool['id']
-    print('pool_id_', pool_id)
     qu = """{
       pool(pool_id: "%s") {
         pool_type,
         initial_size
       }
     }""" % pool_id
-    executed = await execute_scheme(pool_schema, qu)
+    executed = await execute_scheme(pool_schema, qu, context=auth_context_fixture)
     assert executed['pool']['initial_size'] == 1
 
 
 @pytest.mark.asyncio
-async def test_update_automated_pool(fixt_db, fixt_create_automated_pool):
+async def test_update_automated_pool(fixt_db, fixt_create_automated_pool, auth_context_fixture):
     pool_id = fixt_create_automated_pool['id']
 
     new_pool_name = 'test_pool_{}'.format(str(uuid.uuid4())[:7])
@@ -42,15 +42,14 @@ async def test_update_automated_pool(fixt_db, fixt_create_automated_pool):
             ok
         }
     }""" % (pool_id, new_pool_name)
-    executed = await execute_scheme(pool_schema, qu)
+    executed = await execute_scheme(pool_schema, qu, context=auth_context_fixture)
     assert executed['updateDynamicPool']['ok']
 
 
 # ----------------------------------------------
 # Static pool
 @pytest.mark.asyncio
-async def test_create_static_pool(fixt_create_static_pool):
-    #
+async def test_create_static_pool(fixt_create_static_pool, auth_context_fixture):
     pool_id = fixt_create_static_pool['id']
     assert fixt_create_static_pool['ok']
 
@@ -63,11 +62,11 @@ async def test_create_static_pool(fixt_create_static_pool):
         }
       }
     }""" % pool_id
-    executed = await execute_scheme(pool_schema, qu)
+    executed = await execute_scheme(pool_schema, qu, context=auth_context_fixture)
 
 
 @pytest.mark.asyncio
-async def test_update_static_pool(fixt_create_static_pool):
+async def test_update_static_pool(fixt_create_static_pool, auth_context_fixture):
     pool_id = fixt_create_static_pool['id']
 
     new_pool_name = 'test_pool_{}'.format(str(uuid.uuid4())[:7])
@@ -77,12 +76,12 @@ async def test_update_static_pool(fixt_create_static_pool):
          ok
     }
     }""" % (pool_id, new_pool_name)
-    executed = await execute_scheme(pool_schema, qu)
+    executed = await execute_scheme(pool_schema, qu, context=auth_context_fixture)
     assert executed['updateStaticPool']['ok']
 
 
 @pytest.mark.asyncio
-async def test_remove_and_add_vm_in_static_pool(fixt_create_static_pool):
+async def test_remove_and_add_vm_in_static_pool(fixt_create_static_pool, auth_context_fixture):
 
     pool_id = fixt_create_static_pool['id']
 
@@ -117,5 +116,5 @@ async def test_remove_and_add_vm_in_static_pool(fixt_create_static_pool):
           ok
         }
       }''' % (pool_id, vm_id)
-    executed = await execute_scheme(pool_schema, qu)
+    executed = await execute_scheme(pool_schema, qu, context=auth_context_fixture)
     assert executed['addVmsToStaticPool']['ok']

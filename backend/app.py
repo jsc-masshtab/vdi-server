@@ -5,6 +5,7 @@ import signal
 
 from tornado.ioloop import IOLoop
 import tornado.web
+
 import tornado.log
 import tornado.options
 
@@ -12,7 +13,6 @@ from settings import DB_NAME, DB_PASS, DB_USER, DB_PORT, DB_HOST, WS_PING_INTERV
 from database import db
 from common.veil_handlers import VdiTornadoGraphQLHandler
 
-from graphene_tornado.tornado_graphql_handler import TornadoGraphQLHandler  # will be removed after auth commit
 from event.schema import event_schema
 from user.schema import user_schema
 from auth.schema import auth_dir_schema
@@ -36,15 +36,14 @@ tornado.options.define("port", default=8888, help="port to listen on")
 tornado.options.define("autoreload", default=True, help="autoreload application")
 tornado.options.define("debug", default=True, help="debug mode")
 
-
 handlers = [
-    (r'/controllers', TornadoGraphQLHandler, dict(graphiql=True, schema=controller_schema)),
-    (r'/resources', TornadoGraphQLHandler, dict(graphiql=True, schema=resources_schema)),
+    (r'/controllers', VdiTornadoGraphQLHandler, dict(graphiql=True, schema=controller_schema)),
+    (r'/resources', VdiTornadoGraphQLHandler, dict(graphiql=True, schema=resources_schema)),
     (r'/users', VdiTornadoGraphQLHandler, dict(graphiql=True, schema=user_schema)),
-    (r'/auth_dirs', TornadoGraphQLHandler, dict(graphiql=True, schema=auth_dir_schema)),
-    (r'/vms', TornadoGraphQLHandler, dict(graphiql=True, schema=vm_schema)),
-    (r'/pools', TornadoGraphQLHandler, dict(graphiql=True, schema=pool_schema)),
-    (r'/events', TornadoGraphQLHandler, dict(graphiql=True, schema=event_schema)),
+    (r'/auth_dirs', VdiTornadoGraphQLHandler, dict(graphiql=True, schema=auth_dir_schema)),
+    (r'/vms', VdiTornadoGraphQLHandler, dict(graphiql=True, schema=vm_schema)),
+    (r'/pools', VdiTornadoGraphQLHandler, dict(graphiql=True, schema=pool_schema)),
+    (r'/events', VdiTornadoGraphQLHandler, dict(graphiql=True, schema=event_schema)),
 ]
 
 handlers += auth_api_urls
