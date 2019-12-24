@@ -101,9 +101,11 @@ static void set_vdi_client_state(VdiClientState vdi_client_state, const gchar *m
             if (vdi_manager.main_vm_spinner)
                 gtk_widget_hide (GTK_WIDGET(vdi_manager.main_vm_spinner));
             if (vdi_manager.gtk_flow_box)
-                gtk_widget_set_sensitive (vdi_manager.gtk_flow_box, TRUE);
+                gtk_widget_set_sensitive(vdi_manager.gtk_flow_box, TRUE);
             if (vdi_manager.button_renew)
-                gtk_widget_set_sensitive (vdi_manager.button_renew, TRUE);
+                gtk_widget_set_sensitive(vdi_manager.button_renew, TRUE);
+            if (vdi_manager.button_quit)
+                gtk_widget_set_sensitive(vdi_manager.button_quit, TRUE);
             break;
         }
 
@@ -114,6 +116,8 @@ static void set_vdi_client_state(VdiClientState vdi_client_state, const gchar *m
                 gtk_widget_set_sensitive(vdi_manager.gtk_flow_box, FALSE);
             if (vdi_manager.button_renew)
                 gtk_widget_set_sensitive(vdi_manager.button_renew, FALSE);
+            if (vdi_manager.button_quit)
+                gtk_widget_set_sensitive(vdi_manager.button_quit, FALSE);
             break;
         }
 
@@ -122,6 +126,8 @@ static void set_vdi_client_state(VdiClientState vdi_client_state, const gchar *m
                 gtk_widget_set_sensitive(vdi_manager.gtk_flow_box, FALSE);
             if (vdi_manager.button_renew)
                 gtk_widget_set_sensitive(vdi_manager.button_renew, FALSE);
+            if (vdi_manager.button_quit)
+                gtk_widget_set_sensitive(vdi_manager.button_quit, FALSE);
             break;
         }
     }
@@ -360,6 +366,10 @@ static void on_button_renew_clicked(GtkButton *button G_GNUC_UNUSED, gpointer da
 static void on_button_quit_clicked(GtkButton *button G_GNUC_UNUSED, gpointer data)
 {
     printf("%s\n", (const char *)__func__);
+
+    // logout
+    vdi_api_logout();
+
     ConnectionInfo *ci = data;
     ci->response = FALSE;
     ci->dialog_window_response = GTK_RESPONSE_CANCEL;
@@ -441,6 +451,7 @@ GtkResponseType vdi_manager_dialog(GtkWindow *main_window G_GNUC_UNUSED, gchar *
     // clear
     cancell_pending_requests();
     stop_vdi_ws_polling(&vdi_ws_client);
+
     unregister_all_pools();
     g_object_unref(vdi_manager.builder);
     gtk_widget_destroy(vdi_manager.window);
