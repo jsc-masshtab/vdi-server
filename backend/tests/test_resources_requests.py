@@ -8,10 +8,12 @@ from tests.fixtures import fixt_db, auth_context_fixture
 from controller_resources.schema import resources_schema
 
 
-@pytest.mark.asyncio
-@pytest.mark.resources_requests
-async def test_request_clusters(fixt_db, auth_context_fixture):
+pytestmark = [pytest.mark.resources]
 
+
+@pytest.mark.asyncio
+async def test_request_clusters(fixt_db, auth_context_fixture):
+    """Request clusters data"""
     qu = """
     {
         clusters(ordering: "verbose_name"){
@@ -32,9 +34,8 @@ async def test_request_clusters(fixt_db, auth_context_fixture):
 
 
 @pytest.mark.asyncio
-@pytest.mark.resources_requests
 async def test_request_nodes(fixt_db, auth_context_fixture):
-
+    """Request nodes data"""
     qu = """
     {
         nodes(ordering: "-verbose_name"){
@@ -78,8 +79,8 @@ async def test_request_nodes(fixt_db, auth_context_fixture):
 
 
 @pytest.mark.asyncio
-@pytest.mark.resources_requests
 async def test_request_datapools(fixt_db, auth_context_fixture):
+    """Request datapools data"""
     qu = """
     {
         datapools {     
