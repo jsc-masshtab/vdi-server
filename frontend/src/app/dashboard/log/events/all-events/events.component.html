@@ -7,15 +7,16 @@
         <span class="crumb-name">События</span>
     </div>
 
-    <button (click)="getEvents()" class="btn-refresh" title="Обновить">
+    <button (click)="refresh()" class="btn-refresh" title="Обновить">
         <fa-icon [icon]="['fas','sync-alt']"></fa-icon>
     </button>
 
 </div>
 
 <div class="components-info">
-    <div class="component-list" [style.height]="'100%'">
-        <vdi-table-component [data]="events" [collection]="collection" entity="events"></vdi-table-component>
+    <div class="component-list">
+        <vdi-table-component [data]="events" [collection]="collection" (clickRowData)="execute($event)" entity="events"></vdi-table-component>
+        <vdi-pagination [count]="count" [limit]="limit" [offset]="offset" ></vdi-pagination>
     </div>
 </div>
 

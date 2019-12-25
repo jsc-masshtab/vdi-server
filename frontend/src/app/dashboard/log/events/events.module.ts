@@ -5,12 +5,14 @@ import { SharedModule } from '../../common/shared.module';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { InfoEventComponent } from './info-event/info-event.component';
 
 
 
 @NgModule({
   declarations: [
-    EventsComponent
+    EventsComponent,
+    InfoEventComponent
   ],
   imports: [
     SharedModule,
@@ -19,6 +21,9 @@ import { CommonModule } from '@angular/common';
     AppRoutingModule
   ],
   providers: [EventsService],
+  entryComponents: [
+    InfoEventComponent
+  ],
   exports: [
     EventsComponent
   ]
