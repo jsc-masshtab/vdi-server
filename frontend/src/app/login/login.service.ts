@@ -1,4 +1,4 @@
-import { environment } from './../../environments/environment';
+import { environment } from './../../environments/environment.demo';
 import { AuthStorageService } from './authStorage.service';
 import { Observable } from 'rxjs';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
