@@ -94,7 +94,7 @@ async def test_remove_and_add_vm_in_static_pool(fixt_create_static_pool, auth_co
         }
       }
     }""" % pool_id
-    executed = await execute_scheme(pool_schema, qu)
+    executed = await execute_scheme(pool_schema, qu, context=auth_context_fixture)
     vms_in_pool_list = executed['pool']['vms']
     assert len(vms_in_pool_list) == 1
 
@@ -106,7 +106,7 @@ async def test_remove_and_add_vm_in_static_pool(fixt_create_static_pool, auth_co
           ok
         }
       }''' % (pool_id, vm_id)
-    executed = await execute_scheme(pool_schema, qu)
+    executed = await execute_scheme(pool_schema, qu, context=auth_context_fixture)
     assert executed['removeVmsFromStaticPool']['ok']
 
     # add removed machine back to pool
