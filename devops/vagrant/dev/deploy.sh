@@ -59,4 +59,4 @@ echo "Setting up frontend"
 cd $APP_DIR/frontend/
 rm -rf node_modules  # audit fix not working without this.
 npm i
-npm run ng serve -- --host 0.0.0.0
+npm run ng serve -- --configuration=vagrant --host 0.0.0.0
