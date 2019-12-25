@@ -186,6 +186,7 @@ async def fixt_create_automated_pool():
 @pytest.fixture
 @async_generator
 async def fixt_create_static_pool(fixt_db):
+    """Создается ВМ, создается пул с этой ВМ, пул удаляется, ВМ удаляется."""
     print('create_static_pool')
     pool_main_resources = await get_resources_pool_test()
     controller_ip = pool_main_resources['controller_ip']
@@ -194,7 +195,13 @@ async def fixt_create_static_pool(fixt_db):
     template_id = pool_main_resources['template_id']
     context = await get_auth_context()
 
-    async def create_domain():
+    # --- create VM ---
+    await resources_monitor_manager.start()
+    response_waiter = WaiterSubscriptionObserver()
+    response_waiter.add_subscription_source('/tasks/')
+    resources_monitor_manager.subscribe(response_waiter)
+
+    async def _create_domain():
         test_domain_name = 'domain_name_{}'.format(str(uuid.uuid4())[:7])
 
         params = {
@@ -207,13 +214,25 @@ async def fixt_create_static_pool(fixt_db):
             'create_thin_clones': False
         }
         vm_info = await Vm.copy(**params)
-        # print('vm_info', vm_info)
         return vm_info
 
-    domain_info = await create_domain()
-    await asyncio.sleep(2)  # time for controller to actually create vm. Вообще можно честно ждать события.
+    domain_info = await _create_domain()
+    current_vm_task_id = domain_info['task_id']
 
-    # create pool
+    def _check_if_vm_created(json_message):
+        try:
+            obj = json_message['object']
+            if current_vm_task_id == obj['parent'] and obj['status'] == 'SUCCESS':
+                return True
+        except KeyError:
+            pass
+        return False
+
+    await response_waiter.wait_for_message(_check_if_vm_created, 15)
+    resources_monitor_manager.unsubscribe(response_waiter)
+    await resources_monitor_manager.stop()
+
+    # --- create pool ---
     qu = '''
         mutation {
           addStaticPool(verbose_name: "%s", vm_ids: ["%s"]) {
@@ -235,7 +254,7 @@ async def fixt_create_static_pool(fixt_db):
         'id': pool_id
     })
 
-    # remove pool
+    # --- remove pool ---
     qu = '''
     mutation {
       removePool(pool_id: "%s", full: true) {
@@ -245,7 +264,7 @@ async def fixt_create_static_pool(fixt_db):
     ''' % pool_id
     await execute_scheme(pool_schema, qu, context=context)
 
-    # remove test VM
+    # --- remove test VM ---
     vm_http_client = await VmHttpClient.create(controller_ip, domain_info['id'])
     await vm_http_client.remove_vm()
 
