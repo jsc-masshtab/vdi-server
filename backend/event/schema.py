@@ -36,6 +36,7 @@ class EventQuery(graphene.ObjectType):
         lambda: EventType,
         id=graphene.UUID())
 
+    @superuser_required
     async def resolve_count(self, _info):
         event_count = db.func.count(Event.id).gino.scalar()
         return event_count
