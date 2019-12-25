@@ -90,12 +90,16 @@ def check_if_pool_created(json_message):
 
 
 @pytest.fixture
+@async_generator
 async def fixt_db():
     """Actual fixture for requests working with db."""
     await db.set_bind(
         'postgresql://{DB_USER}:{DB_PASS}@{DB_HOST}:{DB_PORT}/{DB_NAME}'.format(DB_USER=DB_USER, DB_PASS=DB_PASS,
                                                                                 DB_HOST=DB_HOST, DB_PORT=DB_PORT,
                                                                                 DB_NAME=DB_NAME))
+    await yield_()
+
+    await db.pop_bind().close()
 
 
 async def get_auth_token():
