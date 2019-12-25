@@ -7,7 +7,7 @@ RAM = "2048"
 
 Vagrant.configure(VAGRANTFILE_API_VERSION) do | config |
  config.vm.provider "libvirt"
- config.vm.synced_folder './../../', '/opt/veil-vdi', type: "rsync",
+ config.vm.synced_folder './../../../', '/opt/veil-vdi', type: "rsync",
    owner: "vagrant", group: "vagrant"
 
  config.vm.network "private_network", ip: "192.168.20.110"

@@ -13,6 +13,8 @@
 #include "vdi_ws_client.h"
 #include "async.h"
 
+#define HTTP_RESPONSE_TIOMEOUT 10
+
 
 // vm operational system
 typedef enum{
@@ -115,7 +117,11 @@ void do_action_on_vm(GTask         *task,
                      gpointer       task_data,
                      GCancellable  *cancellable);
 
+// Log out
+gboolean vdi_api_logout(void);
+
 void do_action_on_vm_async(const gchar *actionStr, gboolean isForced);
+
 
 void free_action_on_vm_data(ActionOnVmData *action_on_vm_data);
 void free_vdi_vm_data(VdiVmData *vdi_vm_data);

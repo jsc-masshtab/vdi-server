@@ -4,12 +4,12 @@ import asyncio
 from controller.schema import controller_schema
 
 from tests.utils import execute_scheme
-from tests.fixtures import fixt_db
+from tests.fixtures import fixt_db, auth_context_fixture
 
 
 @pytest.mark.asyncio
 @pytest.mark.controllers
-async def test_add_remove_controller(fixt_db):
+async def test_add_remove_controller(fixt_db, auth_context_fixture):
 
     controller_ip = '192.168.6.122'
 
@@ -36,7 +36,7 @@ async def test_add_remove_controller(fixt_db):
     }
     """ % controller_ip
 
-    executed = await execute_scheme(controller_schema, qu)
+    executed = await execute_scheme(controller_schema, qu, context=auth_context_fixture)
     assert executed['addController']['ok']
 
     controller_id = executed['addController']['controller']['id']
@@ -63,7 +63,7 @@ async def test_add_remove_controller(fixt_db):
   }
 }
     """ % (controller_id, controller_ip)
-    executed = await execute_scheme(controller_schema, qu)
+    executed = await execute_scheme(controller_schema, qu, context=auth_context_fixture)
     assert executed['updateController']['ok']
 
     # remove controller
@@ -75,6 +75,6 @@ async def test_add_remove_controller(fixt_db):
     }
     """ % controller_id
 
-    executed = await execute_scheme(controller_schema, qu)
+    executed = await execute_scheme(controller_schema, qu, context=auth_context_fixture)
     assert executed['removeController']['ok']
 
