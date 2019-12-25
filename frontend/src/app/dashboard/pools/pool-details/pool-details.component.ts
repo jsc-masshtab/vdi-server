@@ -248,6 +248,15 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
       this.getPool();
       this.getMsgCreatePool();
     });
+
+    setTimeout(() => {
+      this.poolService.getPool(this.idPool, this.typePool)
+      .subscribe( () => {
+        console.log('ddddd')
+      },
+      () => {
+      });
+    }, 10000);
   }
 
   private getMsgCreatePool(): void {
@@ -269,8 +278,10 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
 
   public getPool(): void {
     this.host = false;
+    let a = 1;
     this.poolService.getPool(this.idPool, this.typePool)
       .subscribe( (data) => {
+        console.log('getPool', a++);
         this.pool = data;
         this.host = true;
       },
@@ -280,6 +291,14 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
   }
 
   public removePool(): void {
+    this.poolService.getPool(this.idPool, this.typePool)
+    .subscribe( () => {
+      console.log('getPool2');
+
+    },
+    () => {
+
+    });
     this.dialog.open(RemovePoolComponent, {
       width: '500px',
       data: {
