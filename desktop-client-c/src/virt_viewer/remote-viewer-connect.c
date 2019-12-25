@@ -58,6 +58,7 @@ typedef struct
     GtkWidget *connect_button;
     GtkWidget *connect_spinner;
     GtkWidget *message_display_label;
+    GtkWidget *header_label;
 
     GtkWidget *ldap_checkbutton;
     GtkWidget *conn_to_prev_pool_checkbutton;
@@ -436,6 +437,9 @@ remote_viewer_connect_dialog(gchar **uri, gchar **user, gchar **password,
     ci.connect_spinner = GTK_WIDGET(gtk_builder_get_object(builder, "connect-spinner"));
 
     ci.message_display_label = GTK_WIDGET(gtk_builder_get_object(builder, "message-display-label"));
+
+    ci.header_label = GTK_WIDGET(gtk_builder_get_object(builder, "header-label"));
+    gtk_label_set_text(GTK_LABEL(ci.header_label), VERSION);
 
     address_entry = ci.address_entry = GTK_WIDGET(gtk_builder_get_object(builder, "connection-address-entry"));
     gchar *ip_str_from_config_file = read_str_from_ini_file(paramToFileGrpoup, "ip");
