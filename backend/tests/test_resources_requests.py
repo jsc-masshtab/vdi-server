@@ -3,14 +3,14 @@ import pytest
 from graphene.test import Client
 
 from tests.utils import execute_scheme
-from tests.fixtures import fixt_db
+from tests.fixtures import fixt_db, auth_context_fixture
 
 from controller_resources.schema import resources_schema
 
 
 @pytest.mark.asyncio
 @pytest.mark.resources_requests
-async def test_request_clusters(fixt_db):
+async def test_request_clusters(fixt_db, auth_context_fixture):
 
     qu = """
     {
@@ -28,12 +28,12 @@ async def test_request_clusters(fixt_db):
     }
     """
 
-    executed = await execute_scheme(resources_schema, qu)
+    executed = await execute_scheme(resources_schema, qu, context=auth_context_fixture)
 
 
 @pytest.mark.asyncio
 @pytest.mark.resources_requests
-async def test_request_nodes(fixt_db):
+async def test_request_nodes(fixt_db, auth_context_fixture):
 
     qu = """
     {
@@ -50,7 +50,7 @@ async def test_request_nodes(fixt_db):
     }
     }
     """
-    executed = await execute_scheme(resources_schema, qu)
+    executed = await execute_scheme(resources_schema, qu, context=auth_context_fixture)
 
     # Чекним запрос определенного сервера (первого в списке), если серверы есть
     if executed['nodes']:
@@ -72,14 +72,14 @@ async def test_request_nodes(fixt_db):
         }
         """ % (node['id'], node['controller']['address'])
 
-        executed = await execute_scheme(resources_schema, qu)
+        executed = await execute_scheme(resources_schema, qu, context=auth_context_fixture)
         print('___executed', executed)
         assert node['verbose_name'] == executed['node']['verbose_name']
 
 
 @pytest.mark.asyncio
 @pytest.mark.resources_requests
-async def test_request_datapools(fixt_db):
+async def test_request_datapools(fixt_db, auth_context_fixture):
     qu = """
     {
         datapools {     
@@ -95,4 +95,4 @@ async def test_request_datapools(fixt_db):
         }   
     }
     """
-    executed = await execute_scheme(resources_schema, qu)
+    executed = await execute_scheme(resources_schema, qu, context=auth_context_fixture)
