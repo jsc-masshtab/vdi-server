@@ -5,6 +5,9 @@ from sqlalchemy import desc, and_
 from common.veil_decorators import superuser_required
 
 from event.models import Event, EventReadByUser
+
+from database import db
+from event.models import Event, EventReadByUser
 from user.schema import User, UserType
 
 
@@ -19,6 +22,7 @@ class EventType(graphene.ObjectType):
 
 
 class EventQuery(graphene.ObjectType):
+    count = graphene.Int()
     events = graphene.List(
         lambda: EventType,
         limit=graphene.Int(),
@@ -28,10 +32,13 @@ class EventQuery(graphene.ObjectType):
         end_date=graphene.DateTime(),
         user=graphene.String(),
         read_by=graphene.UUID())
-
     event = graphene.Field(
         lambda: EventType,
         id=graphene.UUID())
+
+    async def resolve_count(self, _info):
+        event_count = db.func.count(Event.id).gino.scalar()
+        return event_count
 
     @superuser_required
     async def resolve_events(self, _info, limit=100, offset=0, event_type=None,
