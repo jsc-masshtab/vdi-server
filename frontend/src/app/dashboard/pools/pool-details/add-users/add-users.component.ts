@@ -38,12 +38,14 @@ export class AddUsersPoolComponent implements OnInit, OnDestroy {
 
   public send() {
     this.waitService.setWait(true);
-    this.poolService.entitleUsersToPool(this.data.idPool, this.idUsers).pipe(takeUntil(this.destroy)).subscribe(() => {
-      this.poolService.getPool(this.data.idPool, this.data.typePool).pipe(takeUntil(this.destroy)).subscribe(() => {
-        this.updatePools.setUpdate('update');
-        this.waitService.setWait(false);
-        this.dialogRef.close();
-      });
+    this.poolService.entitleUsersToPool(this.data.idPool, this.idUsers).pipe(takeUntil(this.destroy)).subscribe((res) => {
+      if (res) {
+        this.poolService.getPool(this.data.idPool, this.data.typePool).pipe(takeUntil(this.destroy)).subscribe(() => {
+          this.updatePools.setUpdate('update');
+          this.waitService.setWait(false);
+          this.dialogRef.close();
+        });
+      }
     });
   }
 

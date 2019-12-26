@@ -28,10 +28,8 @@ export class RemovePoolComponent  {
 
   public send() {
     this.waitService.setWait(true);
-    console.log('началось удаление');
     this.poolService.removePool(this.data.idPool).subscribe((res) => {
       if (res) {
-        console.log('удаление закончилось', res);
         setTimeout(() => {
           this.dialogRef.close();
           this.router.navigate([`pools`]);
@@ -41,5 +39,4 @@ export class RemovePoolComponent  {
       }
     });
   }
-
 }

@@ -472,9 +472,11 @@ export class PoolAddComponent implements OnInit, OnDestroy {
                               formValue.vm_name_template,
                               formValue.controller_ip,
                               formValue.create_thin_clones)
-        .subscribe(() => {
-          this.dialogRef.close();
-          this.updatePools.setUpdate('update');
+        .subscribe((res) => {
+          if (res) {
+            this.dialogRef.close();
+            this.updatePools.setUpdate('update');
+          }
         });
     }
 
@@ -482,9 +484,11 @@ export class PoolAddComponent implements OnInit, OnDestroy {
       this.addPoolService.createStaticPool(
                               formValue.verbose_name,
                               formValue.vm_ids_list)
-        .subscribe(() => {
-          this.dialogRef.close();
-          this.updatePools.setUpdate('update');
+        .subscribe((res) => {
+          if (res) {
+            this.dialogRef.close();
+            this.updatePools.setUpdate('update');
+          }
         });
     }
   }

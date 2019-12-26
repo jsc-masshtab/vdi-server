@@ -32,13 +32,14 @@ export class RemoveVMStaticPoolComponent implements OnDestroy {
 
   public send() {
     this.waitService.setWait(true);
-    this.poolService.removeVMStaticPool(this.data.idPool, this.idVms).pipe(takeUntil(this.destroy)).subscribe(() => {
-      this.poolService.getPool(this.data.idPool, this.data.typePool).pipe(takeUntil(this.destroy)).subscribe(() => {
-        this.waitService.setWait(false);
-        this.dialogRef.close();
-        this.updatePools.setUpdate('update');
-        console.log('remove vm');
-      });
+    this.poolService.removeVMStaticPool(this.data.idPool, this.idVms).pipe(takeUntil(this.destroy)).subscribe((res) => {
+      if (res) {
+        this.poolService.getPool(this.data.idPool, this.data.typePool).pipe(takeUntil(this.destroy)).subscribe(() => {
+          this.waitService.setWait(false);
+          this.dialogRef.close();
+          this.updatePools.setUpdate('update');
+        });
+      }
     });
   }
 

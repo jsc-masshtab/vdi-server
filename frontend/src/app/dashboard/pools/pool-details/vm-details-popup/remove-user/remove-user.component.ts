@@ -38,11 +38,13 @@ export class RemoveUserVmComponent implements OnDestroy {
 
   public send() {
     this.waitService.setWait(true);
-    this.poolService.freeVmFromUser(this.data.vm.id).subscribe(() => {
-      this.sub = this.poolService.getPool(this.data.idPool, this.data.typePool).subscribe(() => {
-        this.waitService.setWait(false);
-        this.dialog.closeAll();
-      });
+    this.poolService.freeVmFromUser(this.data.vm.id).subscribe((res) => {
+      if (res) {
+        this.sub = this.poolService.getPool(this.data.idPool, this.data.typePool).subscribe(() => {
+          this.waitService.setWait(false);
+          this.dialog.closeAll();
+        });
+      }
     });
   }
 

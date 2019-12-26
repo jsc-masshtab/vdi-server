@@ -108,27 +108,14 @@ export class DashboardModule {
     }, includeQuery: true, includeExtensions: false } );
 
     const authMiddleware = new ApolloLink((operation, forward) => {
-      console.log(operation, forward);
       operation.setContext({
         headers: new HttpHeaders().set('Authorization', `jwt ${this.authStorageService.getItemStorage('token')}`)
                   .set('Client-Type', 'angular-web')
       });
-
-      if (operation.variables.method === 'POST') {
-        console.log('post!', forward(operation));
-
-        forward(operation).subscribe((res) => {
-          console.log(res);
-        });
-       // .filter(res => res.errors === undefined);
-        return forward(operation);
-         // на мутации в subscribe() только без поля errors, туда придет undefined
-      } else {
-        return forward(operation);
-      }
+      return forward(operation);
     });
 
-    const errorLink = onError(({ graphQLErrors, networkError}) => {
+    const errorLink = onError(({ graphQLErrors, networkError, operation, forward}) => {
       if (graphQLErrors) {
         this.waitService.setWait(false);
         graphQLErrors.map(({ message, locations, path }) => {
@@ -144,6 +131,10 @@ export class DashboardModule {
         if (networkError['statusCode'] === 401) {
           this.authStorageService.logout();
         }
+      }
+
+      if (operation.variables.method === 'POST') {
+        return forward(operation).filter(item => item.errors === undefined);
       }
     });
 
