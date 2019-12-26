@@ -3,12 +3,23 @@ from graphql import GraphQLError
 from sqlalchemy import desc, and_
 
 from common.veil_decorators import superuser_required
-
-from event.models import Event, EventReadByUser
-
-from database import db
 from event.models import Event, EventReadByUser
 from user.schema import User, UserType
+
+
+def build_filters(event_type, start_date, end_date, user, read_by):
+    filters = []
+
+    if event_type is not None:
+        filters.append((Event.event_type == event_type))
+    if start_date:
+        filters.append((Event.created >= start_date))
+    if end_date:
+        filters.append((Event.created <= end_date))
+    if user:
+        filters.append((Event.user == user))
+
+    return filters
 
 
 class EventType(graphene.ObjectType):
@@ -22,7 +33,13 @@ class EventType(graphene.ObjectType):
 
 
 class EventQuery(graphene.ObjectType):
-    count = graphene.Int()
+    count = graphene.Int(
+        event_type=graphene.Int(),
+        start_date=graphene.DateTime(),
+        end_date=graphene.DateTime(),
+        user=graphene.String(),
+        read_by=graphene.UUID())
+
     events = graphene.List(
         lambda: EventType,
         limit=graphene.Int(),
@@ -32,27 +49,23 @@ class EventQuery(graphene.ObjectType):
         end_date=graphene.DateTime(),
         user=graphene.String(),
         read_by=graphene.UUID())
+
     event = graphene.Field(
         lambda: EventType,
         id=graphene.UUID())
 
-    async def resolve_count(self, _info):
-        event_count = db.func.count(Event.id).gino.scalar()
+    @superuser_required
+    async def resolve_count(self, _info, event_type=None, start_date=None,
+                            end_date=None, user=None, read_by=None):
+        filters = build_filters(event_type, start_date, end_date, user, read_by)
+
+        event_count = len(await Event.query.where(and_(*filters)).gino.all())
         return event_count
 
     @superuser_required
     async def resolve_events(self, _info, limit=100, offset=0, event_type=None,
                              start_date=None, end_date=None, user=None, read_by=None):
-        filters = []
-
-        if event_type:
-            filters.append((Event.event_type == event_type))
-        if start_date:
-            filters.append((Event.created >= start_date))
-        if end_date:
-            filters.append((Event.created <= end_date))
-        if user:
-            filters.append((Event.user == user))
+        filters = build_filters(event_type, start_date, end_date, user, read_by)
 
         query = Event.outerjoin(EventReadByUser).outerjoin(User).select()
 
