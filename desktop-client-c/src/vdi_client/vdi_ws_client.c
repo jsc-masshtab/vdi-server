@@ -61,7 +61,7 @@ static void async_create_ws_connect(GTask         *task G_GNUC_UNUSED,
         if (vdi_ws_client->stream == NULL) {
             g_idle_add((GSourceFunc)vdi_ws_client->ws_data_received_callback, (gpointer)FALSE); // notify GUI
             // try to reconnect (go to another loop)
-            cancellable_sleep(TIMEOUT, !vdi_ws_client->is_running);
+            cancellable_sleep(TIMEOUT, &vdi_ws_client->is_running);
             continue;
         } else {
             printf("WS: %s: SUCCESSFUL HANDSHAKE %i \n", (const char *)__func__, status);
@@ -97,7 +97,7 @@ static void async_create_ws_connect(GTask         *task G_GNUC_UNUSED,
                 read_try_count = 0;
                 g_idle_add((GSourceFunc)vdi_ws_client->ws_data_received_callback, (gpointer)TRUE); // notify GUI
             }
-            cancellable_sleep(WS_READ_TIMEOUT, !vdi_ws_client->is_running); // sec
+            cancellable_sleep(WS_READ_TIMEOUT, &vdi_ws_client->is_running); // sec
         }
 
         //free(buffer);

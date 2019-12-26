@@ -148,7 +148,7 @@ void stop_vdi_session()
     // logout
     vdi_api_logout();
 
-    cancell_pending_requests();
+    vdi_api_cancell_pending_requests();
     g_object_unref(vdiSession.soup_session);
 
     free_session_memory();
@@ -171,7 +171,7 @@ const gchar *get_vdi_port(void)
     return vdiSession.vdi_port;
 }
 
-void cancell_pending_requests()
+void vdi_api_cancell_pending_requests()
 {
     soup_session_abort(vdiSession.soup_session);
     // sleep to give the async tasks time to stop.

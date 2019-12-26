@@ -80,7 +80,7 @@ const gchar *get_vdi_ip(void);
 // get port
 const gchar *get_vdi_port(void);
 // cancell pending requests
-void cancell_pending_requests(void);
+void vdi_api_cancell_pending_requests(void);
 // set vdi session credentials
 void set_vdi_credentials(const gchar *username, const gchar *password, const gchar *ip,
                          const gchar *port, gboolean is_ldap);
