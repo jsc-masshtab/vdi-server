@@ -1,7 +1,7 @@
 """Controller status type
 
 Revision ID: f98afc49eec9
-Revises: bf78d2d3b5ef
+Revises: 20e197310113
 Create Date: 2019-12-17 17:40:26.943341
 
 """
@@ -11,7 +11,7 @@ from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
 revision = 'f98afc49eec9'
-down_revision = 'bf78d2d3b5ef'
+down_revision = '20e197310113'
 branch_labels = None
 depends_on = None
 
