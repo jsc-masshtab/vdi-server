@@ -4,7 +4,7 @@ import { BrowserModule } from '@angular/platform-browser';
 import { NgModule } from '@angular/core';
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
-import { HttpClientModule } from '@angular/common/http';
+import { HttpClientModule, HTTP_INTERCEPTORS } from '@angular/common/http';
 import { ErrorsModule } from './errors/errors.module';
 import { HttpLinkModule } from 'apollo-angular-link-http';
 import { ApolloModule  } from 'apollo-angular';
@@ -18,6 +18,7 @@ import { faDesktop, faDatabase, faBuilding, faLayerGroup, faPlusCircle, faSpinne
          faChartBar, faUser, faStopCircle, faPlayCircle, faPauseCircle, faEdit, faQuestionCircle, faCheckSquare,
           faExclamationTriangle, faHeartbeat, faChevronCircleUp, faComment, faClipboardList, faNewspaper, faUserCircle, faSignOutAlt
         } from '@fortawesome/free-solid-svg-icons';
+import { AuthInterceptor } from './dashboard/common/classes/auth.Interceptor.http';
 /*  -----------------------------------   icons   --------------------------------------*/
 
 
@@ -38,7 +39,14 @@ import { faDesktop, faDatabase, faBuilding, faLayerGroup, faPlusCircle, faSpinne
     DashboardModule,
     ErrorsModule,
   ],
-  bootstrap: [AppComponent]
+  bootstrap: [AppComponent],
+  providers: [
+    {
+      provide: HTTP_INTERCEPTORS,
+      useClass: AuthInterceptor,
+      multi: true
+    }
+  ]
 })
 
 
