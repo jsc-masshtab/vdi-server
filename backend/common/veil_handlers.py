@@ -15,10 +15,6 @@ class BaseHandler(RequestHandler, ABC):
     def prepare(self):
         if self.request.headers.get('Content-Type') == 'application/json' and self.request.body:
             self.args = json_decode(self.request.body)
-        if self.request.headers.get('Client-Type'):
-            self.args['client-type'] = self.request.headers.get('Client-Type')
-        else:
-            self.args['client-type'] = 'Unknown'
 
     def get_current_user(self):
         """Overridden tornado method"""
@@ -30,6 +26,11 @@ class BaseHandler(RequestHandler, ABC):
                     self.request.headers.get("X-Forwarded-For") or \
                     self.request.remote_ip
         return remote_ip
+
+    @property
+    def client_type(self):
+        client_type = self.request.headers.get('Client-Type')
+        return client_type if client_type else 'Unknown'
 
 
 @jwtauth

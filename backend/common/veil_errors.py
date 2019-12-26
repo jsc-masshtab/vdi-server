@@ -82,14 +82,12 @@ class HttpError(BackendError):
 
 
 class NotFound(HttpError):
-    code = 404
-    message = "Урл не найден"
+    def __init__(self, message, url):
+        self.message = message
+        self.url = url
 
-    def __init__(self, text=None, url=None):
-        if text:
-            self.message = text
-        if url:
-            self.url = url
+    def code(self):
+        return 404
 
     def format_error(self):
         return {
@@ -98,11 +96,12 @@ class NotFound(HttpError):
 
 
 class BadRequest(HttpError):
-    code = 400
-    errors = None  # List
 
     def __init__(self, errors):
         self.errors = errors
+
+    def code(self):
+        return 400
 
     @classmethod
     def fetch_failed(cls, fetch_exc):
@@ -146,4 +145,8 @@ class ServerError(HttpError):
 
 
 class VmCreationError(Exception):
+    pass
+
+
+class PoolCreationError(Exception):
     pass

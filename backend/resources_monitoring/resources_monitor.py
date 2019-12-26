@@ -1,49 +1,32 @@
 import asyncio
+import time
 import json
 from abc import ABC
 from json import JSONDecodeError
 
 from tornado.httpclient import HTTPClientError
+from tornado.ioloop import IOLoop
 from tornado.websocket import WebSocketClosedError
 from tornado.websocket import websocket_connect
-from tornado.ioloop import IOLoop
 
 from common.veil_errors import HttpError
 from controller.models import Controller
 from controller_resources.veil_client import ResourcesHttpClient
 from event.models import Event
-from .resources_monitoring_data import CONTROLLER_SUBSCRIPTIONS_LIST, CONTROLLERS_SUBSCRIPTION, VDI_TASKS_SUBSCRIPTION
+
+from .resources_monitoring_data import CONTROLLER_SUBSCRIPTIONS_LIST, CONTROLLERS_SUBSCRIPTION
+from .internal_event_monitor import internal_event_monitor
+from .abstract_event_monitor import AbstractMonitor
+
 
 from common.utils import cancel_async_task
-
-
-class AbstractMonitor(ABC):
-
-    def __init__(self):
-        self._list_of_observers = []
-
-    # PUBLIC METHODS
-    def subscribe(self, observer):
-        if observer not in self._list_of_observers:
-            self._list_of_observers.append(observer)
-
-    def unsubscribe(self, observer):
-        if observer in self._list_of_observers:
-            self._list_of_observers.remove(observer)
-
-    def unsubscribe_all(self):
-        self._list_of_observers.clear()
-
-    def notify_observers(self, sub_source, json_data):
-        for observer in self._list_of_observers:
-            if sub_source in observer.get_subscriptions():
-                observer.on_notified(json_data)
 
 
 class ResourcesMonitor(AbstractMonitor):
     """
     monitoring of controller events
     """
+    RECONNECT_TIMEOUT = 5
 
     def __init__(self):
         super().__init__()
@@ -87,7 +70,7 @@ class ResourcesMonitor(AbstractMonitor):
         response_dict = {'ip': self._controller_ip, 'msg_type': 'data', 'event': 'UPDATED',
                          'resource': CONTROLLERS_SUBSCRIPTION}
         while self._running_flag:
-            await asyncio.sleep(2)  # check every 2 seconds
+            await asyncio.sleep(4)
             try:
                 # if controller is online then there wil not be any exception
                 resources_http_client = await ResourcesHttpClient.create(self._controller_ip)
@@ -96,17 +79,17 @@ class ResourcesMonitor(AbstractMonitor):
                 # notify only if controller was online before (data changed)
                 if self._is_online:
                     response_dict['status'] = 'OFFLINE'
-                    json_data = json.dumps(response_dict)
-                    self.notify_observers(CONTROLLERS_SUBSCRIPTION, json_data)
                     await Controller.deactivate(controller_id)
+                    self.notify_observers(CONTROLLERS_SUBSCRIPTION, response_dict)
+
                 self._is_online = False
             else:
                 # notify only if controller was offline before (data changed)
                 if not self._is_online:
                     response_dict['status'] = 'ONLINE'
-                    json_data = json.dumps(response_dict)
-                    self.notify_observers(CONTROLLERS_SUBSCRIPTION, json_data)
                     await Controller.activate(controller_id)
+                    self.notify_observers(CONTROLLERS_SUBSCRIPTION, response_dict)
+
                 self._is_online = True
 
     async def _processing_ws_messages(self):
@@ -114,13 +97,12 @@ class ResourcesMonitor(AbstractMonitor):
         Listen for data from controller
         :return:
         """
-        RECONNECT_TIMEOUT = 5
         while self._running_flag:
             is_connected = await self._connect()
             print(__class__.__name__, ' is_connected', is_connected)
             # reconnect if not connected
             if not is_connected:
-                await asyncio.sleep(RECONNECT_TIMEOUT)
+                await asyncio.sleep(self.RECONNECT_TIMEOUT)
                 continue
 
             # receive messages
@@ -134,7 +116,7 @@ class ResourcesMonitor(AbstractMonitor):
                 else:
                     await self._on_message_received(msg)
 
-            await asyncio.sleep(RECONNECT_TIMEOUT)
+            await asyncio.sleep(self.RECONNECT_TIMEOUT)
 
     async def _connect(self):
         # get token
@@ -165,9 +147,9 @@ class ResourcesMonitor(AbstractMonitor):
         return True
 
     async def _on_message_received(self, message):
+        print(__class__.__name__, 'msg received from {}:'.format(self._controller_ip), message)
         try:
             json_data = json.loads(message)
-            print(__class__.__name__, 'msg received from {}:'.format(self._controller_ip), json_data)
         except JSONDecodeError:
             return
         #  notify subscribed observers
@@ -182,15 +164,3 @@ class ResourcesMonitor(AbstractMonitor):
             print(__class__.__name__, 'Closing ws connection', self._controller_ip)
             self._ws_connection.close()
 
-
-class InternalMonitor(AbstractMonitor):
-    """
-    monitoring of internal VDI events (pool progress creation, result of pool creation...)
-    """
-
-    def __init__(self):
-        super().__init__()
-
-    # PUBLIC METHODS
-    def signal_event(self, json_data):
-        self.notify_observers(VDI_TASKS_SUBSCRIPTION, json_data)

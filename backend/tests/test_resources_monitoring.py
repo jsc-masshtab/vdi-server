@@ -1,4 +1,4 @@
-# TODO: старая и не рабочая версия. Нужно переписать.
+# -*- coding: utf-8 -*-
 import pytest
 import json
 
@@ -8,8 +8,11 @@ from tornado.testing import AsyncHTTPTestCase, gen_test
 from resources_monitoring.handlers import VdiFrontWsHandler
 
 
-@pytest.mark.websokets
+pytestmark = [pytest.mark.ws_requests]
+
+
 class TestWebSockets(AsyncHTTPTestCase):
+    """Check ws subscription mechanism"""
     def get_app(self):
         # dummy application
         app = tornado.web.Application([

@@ -58,6 +58,7 @@ typedef struct
     GtkWidget *connect_button;
     GtkWidget *connect_spinner;
     GtkWidget *message_display_label;
+    GtkWidget *header_label;
 
     GtkWidget *ldap_checkbutton;
     GtkWidget *conn_to_prev_pool_checkbutton;
@@ -115,6 +116,17 @@ set_auth_dialog_state(AuthDialogState auth_dialog_state, RemoteViewerData *ci)
         break;
     }
     }
+}
+
+static void
+get_data_from_gui(RemoteViewerData *ci)
+{
+    *ci->ip = g_strdup(gtk_entry_get_text(GTK_ENTRY(ci->address_entry)));
+    *ci->port = g_strdup(gtk_entry_get_text(GTK_ENTRY(ci->port_entry)));
+    *ci->uri = g_strconcat("spice://", *ci->ip, ":", *ci->port, NULL);
+    g_strstrip(*ci->uri);
+    *ci->user = g_strdup(gtk_entry_get_text(GTK_ENTRY(ci->login_entry)));
+    *ci->password = g_strdup(gtk_entry_get_text(GTK_ENTRY(ci->password_entry)));
 }
 
 // save data to ini file
@@ -205,13 +217,7 @@ on_get_vdi_token_finished(GObject *source_object G_GNUC_UNUSED,
     if (token_refreshed) {
         ci->response = TRUE;
         ci->dialog_window_response = GTK_RESPONSE_OK;
-
-        *ci->ip = g_strdup(gtk_entry_get_text(GTK_ENTRY(ci->address_entry)));
-        *ci->port = g_strdup(gtk_entry_get_text(GTK_ENTRY(ci->port_entry)));
-        *ci->uri = g_strconcat("spice://", *ci->ip, ":", *ci->port, NULL);
-        g_strstrip(*ci->uri);
-        *ci->user = g_strdup(gtk_entry_get_text(GTK_ENTRY(ci->login_entry)));
-        *ci->password = g_strdup(gtk_entry_get_text(GTK_ENTRY(ci->password_entry)));
+        get_data_from_gui(ci);
 
         shutdown_loop(ci->loop);
     } else {
@@ -307,6 +313,8 @@ connect_button_clicked_cb(GtkButton *button G_GNUC_UNUSED, gpointer data)
         if (opt_manual_mode) {
             ci->response = TRUE;
             ci->dialog_window_response = GTK_RESPONSE_OK;
+            get_data_from_gui(ci);
+
             shutdown_loop(ci->loop);
         } else {
             connect_to_vdi_server(ci);
@@ -344,33 +352,34 @@ entry_changed_cb(GtkEditable* entry, gpointer data)
                  NULL);
 }
 
-static void
-entry_activated_cb(GtkEntry *entry G_GNUC_UNUSED, gpointer data)
-{
-    RemoteViewerData *ci = data;
-    if (gtk_entry_get_text_length(GTK_ENTRY(ci->address_entry)) > 0)
-    {
-        ci->response = TRUE;
-        shutdown_loop(ci->loop);
-    }
-}
+//static void
+//entry_activated_cb(GtkEntry *entry G_GNUC_UNUSED, gpointer data)
+//{
+//    RemoteViewerData *ci = data;
+//    if (gtk_entry_get_text_length(GTK_ENTRY(ci->address_entry)) > 0)
+//    {
+//        ci->response = TRUE;
+//        shutdown_loop(ci->loop);
+//    }
+//}
 
-static void
-make_label_small(GtkLabel* label)
-{
-    PangoAttrList* attributes = pango_attr_list_new();
-    pango_attr_list_insert(attributes, pango_attr_scale_new(0.9));
-    gtk_label_set_attributes(label, attributes);
-    pango_attr_list_unref(attributes);
-}
+//static void
+//make_label_small(GtkLabel* label)
+//{
+//    PangoAttrList* attributes = pango_attr_list_new();
+//    pango_attr_list_insert(attributes, pango_attr_scale_new(0.9));
+//    gtk_label_set_attributes(label, attributes);
+//    pango_attr_list_unref(attributes);
+//}
 
+// В этом ёба режиме сразу автоматом пытаемся подрубиться к предыдущему пулу не дожидаясь действий пользователя.
+// Поступаем так только один раз при старте приложения, чтоб у пользователя была возможносмть сменить
+// логин пароль
 static void fast_forward_connect_to_prev_pool_if_enabled(RemoteViewerData *ci)
 {
     gboolean is_fastforward_conn_to_prev_pool =
             read_int_from_ini_file("RemoteViewerConnect", "is_fastforward_conn_to_prev_pool");
-    // В этом ёба режиме сразу автоматом пытаемся подрубиться к предыдущему пулу не дожидаясь действий пользователя.
-    // Поступаем так только один раз при старте приложения, чтоб у пользователя была возможносмть сменить
-    // логин пароль
+
     static gboolean is_first_time = TRUE;
     if (is_fastforward_conn_to_prev_pool && is_first_time) {
         connect_to_vdi_server(ci);
@@ -394,7 +403,6 @@ remote_viewer_connect_dialog(gchar **uri, gchar **user, gchar **password,
                              gchar **ip, gchar **port, gboolean *is_connect_to_prev_pool,
                              gchar **vm_verbose_name)
 {
-
     // set params save group
     const gchar *paramToFileGrpoup = opt_manual_mode ? "RemoteViewerConnectManual" : "RemoteViewerConnect";
 
@@ -429,6 +437,9 @@ remote_viewer_connect_dialog(gchar **uri, gchar **user, gchar **password,
     ci.connect_spinner = GTK_WIDGET(gtk_builder_get_object(builder, "connect-spinner"));
 
     ci.message_display_label = GTK_WIDGET(gtk_builder_get_object(builder, "message-display-label"));
+
+    ci.header_label = GTK_WIDGET(gtk_builder_get_object(builder, "header-label"));
+    gtk_label_set_text(GTK_LABEL(ci.header_label), VERSION);
 
     address_entry = ci.address_entry = GTK_WIDGET(gtk_builder_get_object(builder, "connection-address-entry"));
     gchar *ip_str_from_config_file = read_str_from_ini_file(paramToFileGrpoup, "ip");

@@ -43,7 +43,7 @@ VEIL_CONNECTION_TIMEOUT = 15
 VEIL_MAX_BODY_SIZE = 1000 * 1024 ^ 3
 VEIL_MAX_CLIENTS = 10
 VEIL_SSL_ON = False
-VEIL_WS_MAX_TIME_TO_WAIT = 15
+VEIL_WS_MAX_TIME_TO_WAIT = 60
 
 # Pool parameters
 # -----------------------------

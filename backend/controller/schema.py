@@ -3,6 +3,8 @@ import datetime
 import graphene
 from graphql import GraphQLError
 
+from common.veil_decorators import superuser_required
+
 from auth.utils import crypto
 from controller.client import ControllerClient
 from controller.models import Controller
@@ -54,6 +56,7 @@ class AddControllerMutation(graphene.Mutation):
     ok = graphene.Boolean()
     controller = graphene.Field(lambda: ControllerType)
 
+    @superuser_required
     async def mutate(self, _info, verbose_name, address, username,
                      password, ldap_connection, description=None):
         try:
@@ -102,6 +105,7 @@ class UpdateControllerMutation(graphene.Mutation):
     ok = graphene.Boolean()
     controller = graphene.Field(lambda: ControllerType)
 
+    @superuser_required
     async def mutate(self, _info, id, verbose_name, address, username,
                      password, ldap_connection, description=None):
         try:
@@ -151,6 +155,7 @@ class RemoveControllerMutation(graphene.Mutation):
 
     ok = graphene.Boolean()
 
+    @superuser_required
     async def mutate(self, _info, id, full=False):
         # TODO: validate active connected resources
 
@@ -173,6 +178,7 @@ class RemoveAllControllersMutation(graphene.Mutation):
 
     ok = graphene.Boolean()
 
+    @superuser_required
     async def mutate(self, _info, full=False):
         controllers = await Controller.query.gino.all()
         for controller in controllers:
@@ -188,6 +194,7 @@ class ControllerQuery(graphene.ObjectType):
     controllers = graphene.List(lambda: ControllerType)
     controller = graphene.Field(lambda: ControllerType, id=graphene.String())
 
+    @superuser_required
     async def resolve_controllers(self, _info):
         controllers = await Controller.query.gino.all()
         objects = [
@@ -196,6 +203,7 @@ class ControllerQuery(graphene.ObjectType):
         ]
         return objects
 
+    @superuser_required
     async def resolve_controller(self, _info, id):
         controller = await Controller.query.where(Controller.id == id).gino.first()
         if not controller:
