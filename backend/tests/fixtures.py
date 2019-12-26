@@ -164,7 +164,7 @@ async def fixt_create_automated_pool():
 
         return False
 
-    POOL_CREATION_TIMEOUT = 20
+    POOL_CREATION_TIMEOUT = 80
     is_pool_successfully_created = await pool_creation_waiter.wait_for_message(
         _check_if_pool_created, POOL_CREATION_TIMEOUT)
     internal_event_monitor.unsubscribe(pool_creation_waiter)
@@ -233,7 +233,7 @@ async def fixt_create_static_pool(fixt_db):
             pass
         return False
 
-    await response_waiter.wait_for_message(_check_if_vm_created, 15)
+    await response_waiter.wait_for_message(_check_if_vm_created, 60)
     resources_monitor_manager.unsubscribe(response_waiter)
     await resources_monitor_manager.stop()
 
