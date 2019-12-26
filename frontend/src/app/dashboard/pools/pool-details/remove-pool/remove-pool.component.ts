@@ -28,13 +28,17 @@ export class RemovePoolComponent  {
 
   public send() {
     this.waitService.setWait(true);
-    this.poolService.removePool(this.data.idPool).subscribe(() => {
-      setTimeout(() => {
-        this.dialogRef.close();
-        this.router.navigate([`pools`]);
-        this.updatePools.setUpdate('update');
-        this.waitService.setWait(false);
-      }, 1000);
+    console.log('началось удаление');
+    this.poolService.removePool(this.data.idPool).subscribe((res) => {
+      if (res) {
+        console.log('удаление закончилось', res);
+        setTimeout(() => {
+          this.dialogRef.close();
+          this.router.navigate([`pools`]);
+          this.updatePools.setUpdate('update');
+          this.waitService.setWait(false);
+        }, 1000);
+      }
     });
   }
 

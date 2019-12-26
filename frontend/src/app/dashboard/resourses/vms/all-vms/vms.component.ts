@@ -1,9 +1,10 @@
-import { Component, OnInit, ViewChild, ElementRef } from '@angular/core';
+import { Component, OnInit, ViewChild, ElementRef, OnDestroy } from '@angular/core';
 import { VmsService } from './vms.service';
 import { map } from 'rxjs/operators';
 import { WaitService } from '../../../common/components/single/wait/wait.service';
 import { Router } from '@angular/router';
 import { DetailsMove } from 'src/app/dashboard/common/classes/details-move';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'vdi-vms',
@@ -12,7 +13,7 @@ import { DetailsMove } from 'src/app/dashboard/common/classes/details-move';
 })
 
 
-export class VmsComponent extends DetailsMove  implements OnInit {
+export class VmsComponent extends DetailsMove  implements OnInit, OnDestroy {
 
   public vms: object[] = [];
   public collection = [
@@ -39,6 +40,8 @@ export class VmsComponent extends DetailsMove  implements OnInit {
     }
   ];
 
+  private sub: Subscription;
+
   constructor(private service: VmsService, private waitService: WaitService, private router: Router) {
     super();
   }
@@ -50,8 +53,11 @@ export class VmsComponent extends DetailsMove  implements OnInit {
   }
 
   public getAllVms() {
+    if (this.sub) {
+      this.sub.unsubscribe();
+    }
     this.waitService.setWait(true);
-    this.service.getAllVms().valueChanges.pipe(map(data => data.data.vms)).subscribe((data) => {
+    this.sub = this.service.getAllVms().valueChanges.pipe(map(data => data.data.vms)).subscribe((data) => {
       this.vms = data;
       this.waitService.setWait(false);
     });
@@ -71,5 +77,11 @@ export class VmsComponent extends DetailsMove  implements OnInit {
 
   public routeTo(event): void {
     this.router.navigate([`pages/resourses/vms/${event.controller.address}/${event.id}`]);
+  }
+
+  ngOnDestroy() {
+    if (this.sub) {
+      this.sub.unsubscribe();
+    }
   }
 }

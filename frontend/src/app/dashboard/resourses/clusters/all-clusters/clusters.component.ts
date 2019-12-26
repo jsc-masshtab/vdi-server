@@ -5,6 +5,7 @@ import { Component, OnInit, ViewChild, ElementRef, OnDestroy } from '@angular/co
 import { ClustersService } from './clusters.service';
 import { map } from 'rxjs/operators';
 import { Router } from '@angular/router';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'vdi-clusters',
@@ -56,6 +57,8 @@ export class ClustersComponent extends DetailsMove implements OnInit, OnDestroy 
     }
   ];
 
+  private sub: Subscription;
+
 
   constructor(private service: ClustersService, private router: Router, private waitService: WaitService) {
     super();
@@ -68,10 +71,12 @@ export class ClustersComponent extends DetailsMove implements OnInit, OnDestroy 
   }
 
   public getAllClusters(): void {
+    if (this.sub) {
+      this.sub.unsubscribe();
+    }
     this.waitService.setWait(true);
-    this.service.getAllClusters().valueChanges.pipe(map(data => data.data.clusters))
+    this.sub = this.service.getAllClusters().valueChanges.pipe(map(data => data.data.clusters))
       .subscribe((data) => {
-        console.log('all cl');
         this.clusters = data;
         this.waitService.setWait(false);
       });
@@ -102,6 +107,9 @@ export class ClustersComponent extends DetailsMove implements OnInit, OnDestroy 
   ngOnDestroy() {
     this.service.paramsForGetClusters.spin = true;
     this.service.paramsForGetClusters.nameSort = undefined;
+    if (this.sub) {
+      this.sub.unsubscribe();
+    }
   }
 
 }

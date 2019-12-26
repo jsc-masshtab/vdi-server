@@ -5,6 +5,7 @@ import { NodesService } from './nodes.service';
 import { map } from 'rxjs/operators';
 import { Router } from '@angular/router';
 import { DetailsMove } from 'src/app/dashboard/common/classes/details-move';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'vdi-nodes',
@@ -63,6 +64,7 @@ export class NodesComponent extends DetailsMove implements OnInit, OnDestroy {
   ];
 
   public nodes: object[] = [];
+  private sub: Subscription;
 
   constructor(private service: NodesService, private router: Router, private waitService: WaitService) {
     super();
@@ -75,8 +77,11 @@ export class NodesComponent extends DetailsMove implements OnInit, OnDestroy {
   }
 
   public getNodes() {
+    if (this.sub) {
+      this.sub.unsubscribe();
+    }
     this.waitService.setWait(true);
-    this.service.getAllNodes().valueChanges.pipe(map(data => data.data.nodes))
+    this.sub = this.service.getAllNodes().valueChanges.pipe(map(data => data.data.nodes))
       .subscribe((data) => {
         this.nodes = data;
         this.waitService.setWait(false);
@@ -108,6 +113,9 @@ export class NodesComponent extends DetailsMove implements OnInit, OnDestroy {
   ngOnDestroy() {
     this.service.paramsForGetNodes.spin = true;
     this.service.paramsForGetNodes.nameSort = undefined;
+    if (this.sub) {
+      this.sub.unsubscribe();
+    }
   }
 
 }

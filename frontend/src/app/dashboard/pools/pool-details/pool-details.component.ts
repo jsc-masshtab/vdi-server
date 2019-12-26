@@ -228,6 +228,7 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
   private sub_ws_create_pool: Subscription;
 
   public eventCreatedVm: object[] = [];
+  private subPool: Subscription;
 
   constructor(private activatedRoute: ActivatedRoute,
               private router: Router,
@@ -248,15 +249,6 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
       this.getPool();
       this.getMsgCreatePool();
     });
-
-    setTimeout(() => {
-      this.poolService.getPool(this.idPool, this.typePool)
-      .subscribe( () => {
-        console.log('ddddd')
-      },
-      () => {
-      });
-    }, 10000);
   }
 
   private getMsgCreatePool(): void {
@@ -277,11 +269,12 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
 
 
   public getPool(): void {
+    if (this.subPool) {
+      this.subPool.unsubscribe();
+    }
     this.host = false;
-    let a = 1;
-    this.poolService.getPool(this.idPool, this.typePool)
+    this.subPool = this.poolService.getPool(this.idPool, this.typePool)
       .subscribe( (data) => {
-        console.log('getPool', a++);
         this.pool = data;
         this.host = true;
       },
@@ -291,14 +284,6 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
   }
 
   public removePool(): void {
-    this.poolService.getPool(this.idPool, this.typePool)
-    .subscribe( () => {
-      console.log('getPool2');
-
-    },
-    () => {
-
-    });
     this.dialog.open(RemovePoolComponent, {
       width: '500px',
       data: {
@@ -613,6 +598,10 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
   ngOnDestroy() {
     if (this.sub_ws_create_pool) {
       this.sub_ws_create_pool.unsubscribe();
+    }
+
+    if (this.subPool) {
+      this.subPool.unsubscribe();
     }
   }
 }
