@@ -25,6 +25,12 @@ from resources_monitoring.resources_monitoring_data import VDI_TASKS_SUBSCRIPTIO
 
 
 async def get_resources_pool_test():
+    """На контроллере ищутся оптимальные ресурсы для проведения теста
+    Альтернативы:
+    1)Держать приготовленный контроллер специально для тестов,
+    на котором уже гарантировано присутствуют нужные ресурсы
+    2)На контроллере при каждом тесте создавать/удалять требуемые ресурсы (это может увеличить время тестов)
+    """
     # controller
     controllers_addresses = await Controller.get_controllers_addresses()
     if not controllers_addresses:
@@ -75,18 +81,8 @@ async def get_resources_pool_test():
 
 
 def get_test_pool_name():
+    """Generate a test pool name"""
     return 'test_pool_{}'.format(str(uuid.uuid4())[:7])
-
-
-def check_if_pool_created(json_message):
-    #print('check_if_pool_created: json_message', json_message)
-    try:
-        if json_message['event'] == 'pool_creation_completed':
-            return True
-    except KeyError:
-        pass
-
-    return False
 
 
 @pytest.fixture
@@ -128,7 +124,7 @@ async def auth_context_fixture():
 @pytest.fixture
 @async_generator
 async def fixt_create_automated_pool():
-
+    """Create an automated pool, yield, remove this pool"""
     # start resources_monitor to receive info  from controller. autopool creation doesnt work without it
     await resources_monitor_manager.start()
 
@@ -159,9 +155,18 @@ async def fixt_create_automated_pool():
     pool_creation_waiter.add_subscription_source(VDI_TASKS_SUBSCRIPTION)
     internal_event_monitor.subscribe(pool_creation_waiter)
 
-    POOL_CREATION_TIMEOUT = 20
+    def _check_if_pool_created(json_message):
+        try:
+            if json_message['event'] == 'pool_creation_completed':
+                return True
+        except KeyError:
+            pass
+
+        return False
+
+    POOL_CREATION_TIMEOUT = 80
     is_pool_successfully_created = await pool_creation_waiter.wait_for_message(
-        check_if_pool_created, POOL_CREATION_TIMEOUT)
+        _check_if_pool_created, POOL_CREATION_TIMEOUT)
     internal_event_monitor.unsubscribe(pool_creation_waiter)
     print('is_pool_successfully_created', is_pool_successfully_created)
 
@@ -228,7 +233,7 @@ async def fixt_create_static_pool(fixt_db):
             pass
         return False
 
-    await response_waiter.wait_for_message(_check_if_vm_created, 15)
+    await response_waiter.wait_for_message(_check_if_vm_created, 60)
     resources_monitor_manager.unsubscribe(response_waiter)
     await resources_monitor_manager.stop()
 
@@ -272,6 +277,7 @@ async def fixt_create_static_pool(fixt_db):
 @pytest.fixture
 @async_generator
 async def fixt_entitle_user_to_pool(fixt_create_static_pool):
+    """Create a static pool. Give the user permissions to use this pool. Yield. Remove the pool."""
     context = await get_auth_context()
     pool_id = fixt_create_static_pool['id']
 
@@ -300,4 +306,4 @@ async def fixt_entitle_user_to_pool(fixt_create_static_pool):
     }
     }
     ''' % (pool_id, user_name)
-    res = await execute_scheme(pool_schema, qu, context=context)
+    await execute_scheme(pool_schema, qu, context=context)

@@ -6,6 +6,7 @@ import { DatapoolsService } from './datapools.service';
 import { map } from 'rxjs/operators';
 import { Router } from '@angular/router';
 import { DetailsMove } from 'src/app/dashboard/common/classes/details-move';
+import { Subscription } from 'rxjs';
 
 
 @Component({
@@ -77,6 +78,8 @@ export class DatapoolsComponent extends DetailsMove implements OnInit, OnDestroy
     }
   ];
 
+  private sub: Subscription;
+
 
   constructor(private service: DatapoolsService, private waitService: WaitService,  private router: Router) {
     super();
@@ -89,8 +92,11 @@ export class DatapoolsComponent extends DetailsMove implements OnInit, OnDestroy
   }
 
   public getDatapools() {
+    if (this.sub) {
+      this.sub.unsubscribe();
+    }
     this.waitService.setWait(true);
-    this.service.getAllDatapools().valueChanges.pipe(map(data => data.data.datapools))
+    this.sub = this.service.getAllDatapools().valueChanges.pipe(map(data => data.data.datapools))
       .subscribe( (data) => {
         this.datapools = data;
         this.waitService.setWait(false);
@@ -122,6 +128,9 @@ export class DatapoolsComponent extends DetailsMove implements OnInit, OnDestroy
   ngOnDestroy() {
     this.service.paramsForGetDatapools.spin = true;
     this.service.paramsForGetDatapools.nameSort = undefined;
+    if (this.sub) {
+      this.sub.unsubscribe();
+    }
   }
 
 }

@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import pytest
 import uuid
 
@@ -11,10 +12,14 @@ from tests.fixtures import (fixt_db,
                             auth_context_fixture)
 
 
+pytestmark = [pytest.mark.pools]
+
+
 # ----------------------------------------------
 # Automated pool
 @pytest.mark.asyncio
 async def test_create_automated_pool(fixt_db, fixt_create_automated_pool, auth_context_fixture):
+    """Create automated pool, make request to check data, remove this pool"""
     pool_id = fixt_create_automated_pool['id']
     qu = """{
       pool(pool_id: "%s") {
@@ -28,6 +33,7 @@ async def test_create_automated_pool(fixt_db, fixt_create_automated_pool, auth_c
 
 @pytest.mark.asyncio
 async def test_update_automated_pool(fixt_db, fixt_create_automated_pool, auth_context_fixture):
+    """Create automated pool, update this pool, remove this pool"""
     pool_id = fixt_create_automated_pool['id']
 
     new_pool_name = 'test_pool_{}'.format(str(uuid.uuid4())[:7])
@@ -50,6 +56,7 @@ async def test_update_automated_pool(fixt_db, fixt_create_automated_pool, auth_c
 # Static pool
 @pytest.mark.asyncio
 async def test_create_static_pool(fixt_create_static_pool, auth_context_fixture):
+    """Create static pool, make request to check data, remove this pool"""
     pool_id = fixt_create_static_pool['id']
     assert fixt_create_static_pool['ok']
 
@@ -67,6 +74,7 @@ async def test_create_static_pool(fixt_create_static_pool, auth_context_fixture)
 
 @pytest.mark.asyncio
 async def test_update_static_pool(fixt_create_static_pool, auth_context_fixture):
+    """Create static pool, update this pool, remove this pool"""
     pool_id = fixt_create_static_pool['id']
 
     new_pool_name = 'test_pool_{}'.format(str(uuid.uuid4())[:7])
@@ -82,7 +90,8 @@ async def test_update_static_pool(fixt_create_static_pool, auth_context_fixture)
 
 @pytest.mark.asyncio
 async def test_remove_and_add_vm_in_static_pool(fixt_create_static_pool, auth_context_fixture):
-
+    """Create automated pool, make request to check data,
+    remove a vm from this pool, add the removed vm back to this pool, remove this pool"""
     pool_id = fixt_create_static_pool['id']
 
     # get pool info

@@ -4,8 +4,7 @@
 
 export const environment = {
   production: false,
-  url: 'api/',
-  url_ws: '192.168.6.223:8888'  // TODO: localhost and 127.0.0.1 не завелся. Без работы напрямую с Tornado тоже не взлетело.
+  url: 'api/'
 };
 /*
  * For easier debugging in development mode, you can import the following file

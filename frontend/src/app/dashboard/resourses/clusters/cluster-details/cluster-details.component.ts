@@ -1,8 +1,9 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { ClustersService } from '../all-clusters/clusters.service';
 import { map } from 'rxjs/operators';
 import { ActivatedRoute, ParamMap } from '@angular/router';
 import { Router } from '@angular/router';
+import { Subscription } from 'rxjs';
 
 interface ICollection {
   [index: string]: string;
@@ -16,7 +17,7 @@ interface ICollection {
 })
 
 
-export class ClusterDetailsComponent implements OnInit {
+export class ClusterDetailsComponent implements OnInit, OnDestroy {
 
   public cluster: ICollection = {};
   public templates: [] = [];
@@ -160,6 +161,8 @@ export class ClusterDetailsComponent implements OnInit {
   public host: boolean = false;
   private address: string;
 
+  private sub: Subscription;
+
   constructor(private activatedRoute: ActivatedRoute,
               private service: ClustersService,
               private router: Router) { }
@@ -173,8 +176,11 @@ export class ClusterDetailsComponent implements OnInit {
   }
 
   public getCluster() {
+    if (this.sub) {
+      this.sub.unsubscribe();
+    }
     this.host = false;
-    this.service.getCluster(this.idCluster, this.address).valueChanges.pipe(map(data => data.data.cluster))
+    this.sub = this.service.getCluster(this.idCluster, this.address).valueChanges.pipe(map(data => data.data.cluster))
       .subscribe((data) => {
         this.cluster = data;
         this.host = true;
@@ -207,6 +213,12 @@ export class ClusterDetailsComponent implements OnInit {
 
     if (route === 'vms') {
       this.menuActive = 'vms';
+    }
+  }
+
+  ngOnDestroy() {
+    if (this.sub) {
+      this.sub.unsubscribe();
     }
   }
 

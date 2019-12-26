@@ -440,9 +440,6 @@ GtkResponseType vdi_manager_dialog(GtkWindow *main_window G_GNUC_UNUSED, gchar *
     vdi_manager.ci.loop = g_main_loop_new(NULL, FALSE);
     g_main_loop_run(vdi_manager.ci.loop);
 
-    if (!vdi_manager.ci.response)
-        *uri = NULL;
-
     // clear
     cancell_pending_requests();
     stop_vdi_ws_polling(&vdi_ws_client);

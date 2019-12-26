@@ -1,10 +1,11 @@
-import { PoolsService } from '../../all-pools/pools.service';
 import { PoolDetailsService } from '../pool-details.service';
 import { WaitService } from '../../../common/components/single/wait/wait.service';
 import { MatDialogRef } from '@angular/material';
-import { Component, Inject, OnInit } from '@angular/core';
+import { Component, Inject, OnInit, OnDestroy } from '@angular/core';
 import { MAT_DIALOG_DATA } from '@angular/material';
-import { map } from 'rxjs/operators';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
+import { PoolsUpdateService } from './../../all-pools/pools.update.service';
 
 interface IData {
   idPool: string;
@@ -17,17 +18,18 @@ interface IData {
   templateUrl: './remove-users.component.html'
 })
 
-export class RemoveUsersPoolComponent  implements OnInit {
+export class RemoveUsersPoolComponent  implements OnInit, OnDestroy {
 
   public pendingUsers: boolean = false;
   public users: [] = [];
   private idUsers: [] = [];
+  private destroy: Subject<any> = new Subject<any>();
 
   constructor(private waitService: WaitService,
               private poolService: PoolDetailsService,
-              private poolsService: PoolsService,
               private dialogRef: MatDialogRef<RemoveUsersPoolComponent>,
-              @Inject(MAT_DIALOG_DATA) public data: IData
+              @Inject(MAT_DIALOG_DATA) public data: IData,
+              private updatePools: PoolsUpdateService
              ) {}
 
   ngOnInit() {
@@ -36,19 +38,20 @@ export class RemoveUsersPoolComponent  implements OnInit {
 
   public send() {
     this.waitService.setWait(true);
-    this.poolService.removeUserEntitlementsFromPool(this.data.idPool, this.idUsers).subscribe(() => {
-      this.poolService.getPool(this.data.idPool, this.data.typePool).subscribe(() => {
-        this.poolsService.paramsForGetPools.spin = false;
-        this.poolsService.getAllPools().subscribe();
-        this.waitService.setWait(false);
-      });
-      this.dialogRef.close();
+    this.poolService.removeUserEntitlementsFromPool(this.data.idPool, this.idUsers).pipe(takeUntil(this.destroy)).subscribe((res) => {
+      if (res) {
+        this.poolService.getPool(this.data.idPool, this.data.typePool).pipe(takeUntil(this.destroy)).subscribe(() => {
+          this.updatePools.setUpdate('update');
+          this.waitService.setWait(false);
+          this.dialogRef.close();
+        });
+      }
     });
   }
 
   private getUsersToPool() {
     this.pendingUsers = true;
-    this.poolService.getAllUsersEntitleToPool(this.data.idPool).valueChanges.pipe(map((data: any) => data.data.pool.users))
+    this.poolService.getAllUsersEntitleToPool(this.data.idPool).pipe(takeUntil(this.destroy))
     .subscribe( (data) => {
       this.users = data;
       this.pendingUsers = false;
@@ -61,5 +64,9 @@ export class RemoveUsersPoolComponent  implements OnInit {
 
   public selectUser(value: []) {
     this.idUsers = value['value'];
+  }
+
+  ngOnDestroy() {
+    this.destroy.next(null);
   }
 }

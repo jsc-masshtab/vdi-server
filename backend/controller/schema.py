@@ -11,13 +11,15 @@ from controller.models import Controller
 from event.models import Event
 from resources_monitoring.resources_monitor_manager import resources_monitor_manager
 
+from database import StatusGraphene
+
 
 class ControllerType(graphene.ObjectType):
     id = graphene.UUID()
     verbose_name = graphene.String()
     address = graphene.String()
     description = graphene.String()
-    status = graphene.String()
+    status = StatusGraphene()
     version = graphene.String()
 
     username = graphene.String()

@@ -1,9 +1,10 @@
 import { WaitService } from '../../../common/components/single/wait/wait.service';
-import { Component, OnInit, ViewChild, ElementRef } from '@angular/core';
+import { Component, OnInit, ViewChild, ElementRef, OnDestroy } from '@angular/core';
 import { TemplatesService } from './templates.service';
 import { map } from 'rxjs/operators';
 import { Router } from '@angular/router';
 import { DetailsMove } from 'src/app/dashboard/common/classes/details-move';
+import { Subscription } from 'rxjs';
 
 
 @Component({
@@ -13,7 +14,7 @@ import { DetailsMove } from 'src/app/dashboard/common/classes/details-move';
 })
 
 
-export class TemplatesComponent extends DetailsMove implements OnInit {
+export class TemplatesComponent extends DetailsMove implements OnInit, OnDestroy {
 
   public templates: object[] = [];
   public collection = [
@@ -45,6 +46,8 @@ export class TemplatesComponent extends DetailsMove implements OnInit {
     }
   ];
 
+  private sub: Subscription;
+
   constructor(private service: TemplatesService, private waitService: WaitService,  private router: Router) {
     super();
   }
@@ -56,8 +59,11 @@ export class TemplatesComponent extends DetailsMove implements OnInit {
   }
 
   public getTemplates() {
+    if (this.sub) {
+      this.sub.unsubscribe();
+    }
     this.waitService.setWait(true);
-    this.service.getAllTemplates().valueChanges.pipe(map(data => data.data.templates)).subscribe((data) => {
+    this.sub = this.service.getAllTemplates().valueChanges.pipe(map(data => data.data.templates)).subscribe((data) => {
       this.templates = data.map(tmp => Object.assign({}, JSON.parse(tmp.veil_info_json), tmp.controller));
       this.waitService.setWait(false);
     });
@@ -78,4 +84,13 @@ export class TemplatesComponent extends DetailsMove implements OnInit {
   public componentDeactivate(): void {
     super.componentDeactivate();
   }
+
+  ngOnDestroy() {
+    if (this.sub) {
+      this.sub.unsubscribe();
+    }
+  }
+
 }
+
+

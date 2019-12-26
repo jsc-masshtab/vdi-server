@@ -1,4 +1,4 @@
-import { environment } from './../../environments/environment.demo';
+import { environment } from './../../environments/environment';
 import { AuthStorageService } from './authStorage.service';
 import { Observable } from 'rxjs';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
@@ -15,7 +15,7 @@ export class LoginService {
 
         let headers = new HttpHeaders({
             'Content-Type': 'application/json'
-        });
+        }).set('Client-Type', 'angular-web');
 
         return this.http.post(url, JSON.stringify(authData), { headers });
     }
@@ -23,7 +23,8 @@ export class LoginService {
     public logout(): Observable<any> {
         let url = `${environment.url}logout`;
         let headers = new HttpHeaders().set('Content-Type', 'application/json')
-                                       .set('Authorization', `jwt ${this.authStorageService.getItemStorage('token')}`);
+                                       .set('Authorization', `jwt ${this.authStorageService.getItemStorage('token')}`)
+                                       .set('Client-Type', 'angular-web');
 
         return this.http.post(url, {}, { headers });
     }

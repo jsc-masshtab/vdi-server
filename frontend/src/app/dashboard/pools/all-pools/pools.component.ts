@@ -1,3 +1,4 @@
+import { PoolsUpdateService } from './pools.update.service';
 import { WebsocketService } from './../../common/classes/websock.service';
 import { IParams } from '../../../../../types';
 import { PoolAddComponent } from '../add-pool/add-pool.component';
@@ -22,6 +23,7 @@ export class PoolsComponent extends DetailsMove implements OnInit, OnDestroy {
 
   public pools: [];
   private getPoolsSub: Subscription;
+  private updateSub: Subscription;
 
   public collection: ReadonlyArray<object> = [
     {
@@ -68,15 +70,26 @@ export class PoolsComponent extends DetailsMove implements OnInit, OnDestroy {
 
 
   constructor(private service: PoolsService, public dialog: MatDialog,
-              private router: Router, private waitService: WaitService, private ws: WebsocketService) {
+              private router: Router, private waitService: WaitService, private ws: WebsocketService,
+              private update: PoolsUpdateService) {
     super();
   }
 
   @ViewChild('view') view: ElementRef;
 
   ngOnInit() {
-    this.getAllPools({obs: true});
+    this.getAllPools();
+    this.updatePools();
     setTimeout(() => this.ws.init(), 1000);
+  }
+
+  private updatePools(): void {
+    this.updateSub = this.update.getUpdate().subscribe((param: string) => {
+      if (param === 'update') {
+        this.service.paramsForGetPools.spin = false;
+        this.getAllPools();
+      }
+    });
   }
 
   public openCreatePool(): void {
@@ -85,12 +98,12 @@ export class PoolsComponent extends DetailsMove implements OnInit, OnDestroy {
     });
   }
 
-  public getAllPools(obs?: {obs: boolean}): void {
+  public getAllPools(): void {
     if (this.getPoolsSub) {
       this.getPoolsSub.unsubscribe();
     }
 
-    this.getPoolsSub = this.service.getAllPools(obs)
+    this.getPoolsSub = this.service.getAllPools()
       .subscribe((data) => {
         this.pools = data;
         this.waitService.setWait(false);
@@ -98,7 +111,7 @@ export class PoolsComponent extends DetailsMove implements OnInit, OnDestroy {
   }
 
   public refresh(): void {
-    this.service.paramsForGetPools['spin'] = true;
+    this.service.paramsForGetPools.spin = true;
     this.getAllPools();
   }
 
@@ -144,6 +157,7 @@ export class PoolsComponent extends DetailsMove implements OnInit, OnDestroy {
 
   ngOnDestroy() {
     this.getPoolsSub.unsubscribe();
+    this.updateSub.unsubscribe();
     this.service.paramsForGetPools.spin = true;
     this.service.paramsForGetPools.nameSort = undefined;
   }

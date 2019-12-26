@@ -1,9 +1,10 @@
 
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { map } from 'rxjs/operators';
 import { ActivatedRoute, ParamMap } from '@angular/router';
 import { Router } from '@angular/router';
 import { NodesService } from '../all-nodes/nodes.service';
+import { Subscription } from 'rxjs';
 
 interface type_node {
   [key: string]: any
@@ -17,7 +18,7 @@ interface type_node {
 })
 
 
-export class NodeDetailsComponent implements OnInit {
+export class NodeDetailsComponent implements OnInit, OnDestroy {
 
   public node: type_node = {};
   public templates: [] = [];
@@ -138,6 +139,7 @@ export class NodeDetailsComponent implements OnInit {
   private address: string;
 
   public host: boolean = false;
+  private sub: Subscription;
 
   constructor(private activatedRoute: ActivatedRoute,
               private service: NodesService,
@@ -152,8 +154,11 @@ export class NodeDetailsComponent implements OnInit {
   }
 
   public getNode() {
+    if (this.sub) {
+      this.sub.unsubscribe();
+    }
     this.host = false;
-    this.service.getNode(this.node_id, this.address).valueChanges.pipe(map(data => data.data.node))
+    this.sub = this.service.getNode(this.node_id, this.address).valueChanges.pipe(map(data => data.data.node))
       .subscribe((data) => {
         this.node = data;
         this.host = true;
@@ -185,6 +190,10 @@ export class NodeDetailsComponent implements OnInit {
     this.router.navigate(['resourses/nodes']);
   }
 
-
+  ngOnDestroy() {
+    if (this.sub) {
+      this.sub.unsubscribe();
+    }
+  }
 
 }
