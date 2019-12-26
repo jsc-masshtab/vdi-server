@@ -13,9 +13,7 @@ export class AuthInterceptor implements HttpInterceptor {
 
     return next.handle(authReq).pipe(
         tap(event => {
-        if (event instanceof HttpResponse)  {
-            console.log('Server response');
-        }
+        if (event instanceof HttpResponse)  { return; }
         }, err => {
         if (err instanceof HttpErrorResponse) {
             if (err.status === 401) { this.authStorageService.logout(); }

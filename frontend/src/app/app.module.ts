@@ -1,3 +1,4 @@
+import { AuthStorageService } from './login/authStorage.service';
 import { DashboardModule } from './dashboard/dashboard.module';
 import { LoginModule } from './login/login.module';
 import { BrowserModule } from '@angular/platform-browser';
@@ -44,7 +45,8 @@ import { AuthInterceptor } from './dashboard/common/classes/auth.Interceptor.htt
     {
       provide: HTTP_INTERCEPTORS,
       useClass: AuthInterceptor,
-      multi: true
+      multi: true,
+      deps: [AuthStorageService]
     }
   ]
 })

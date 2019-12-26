@@ -128,9 +128,6 @@ export class DashboardModule {
         console.log(networkError, 'networkError');
         this.waitService.setWait(false);
         this.errorService.setError(networkError['message']);
-        if (networkError['statusCode'] === 401) {
-          this.authStorageService.logout();
-        }
       }
 
       if (operation.variables.method === 'POST') {
