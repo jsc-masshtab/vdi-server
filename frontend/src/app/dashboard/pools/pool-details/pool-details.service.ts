@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { Apollo, QueryRef } from 'apollo-angular';
+import { Apollo } from 'apollo-angular';
 import gql from 'graphql-tag';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
@@ -120,7 +120,7 @@ export class PoolDetailsService {
 
     // +,-,get вм в стат. пуле
 
-    public addVMStaticPool(pool_id: number, vm_ids: []) {
+    public addVMStaticPool(pool_id: number, vm_ids: []): Observable<any> {
         return this.service.mutate<any>({
             mutation: gql`
                             mutation pools($pool_id: ID!,$vm_ids: [UUID]!) {
@@ -154,7 +154,7 @@ export class PoolDetailsService {
         });
     }
 
-    public getAllVms(cluster_id: string, node_id: string): QueryRef<any, any> {
+    public getAllVms(cluster_id: string, node_id: string): Observable<any>  {
         return  this.service.watchQuery({
             query:  gql` query vms($cluster_id: String,$node_id:String) {
                                     vms(cluster_id: $cluster_id,node_id: $node_id) {
@@ -169,13 +169,13 @@ export class PoolDetailsService {
                 node_id,
                 get_vms_in_pools: false
             }
-        });
+        }).valueChanges.pipe(map(data => data.data['vms']));
     }
 
 
     // users for pool
 
-    public getAllUsersNoEntitleToPool(pool_id: string): QueryRef<any, any> {
+    public getAllUsersNoEntitleToPool(pool_id: string): Observable<any>  {
         return  this.service.watchQuery({
              query:  gql` query pools($pool_id: String, $entitled: Boolean) {
                             pool(pool_id: $pool_id) {
@@ -191,10 +191,10 @@ export class PoolDetailsService {
                 entitled: false,
                 pool_id
             }
-         });
+         }).valueChanges.pipe(map(data => data.data['pool']['users']));
     }
 
-    public getAllUsersEntitleToPool(pool_id: string): QueryRef<any, any> {
+    public getAllUsersEntitleToPool(pool_id: string): Observable<any> {
         return this.service.watchQuery({
                 query: gql`
                             query  pools($pool_id: String) {
@@ -211,7 +211,7 @@ export class PoolDetailsService {
                 pool_id,
                 entitled: true
             }
-        });
+        }).valueChanges.pipe(map(data  => data.data['pool']['users']));
     }
 
     public removeUserEntitlementsFromPool(pool_id: string, users: []) {

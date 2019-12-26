@@ -1,8 +1,9 @@
 import { TemplatesService } from '../all-templates/templates.service';
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { map } from 'rxjs/operators';
 import { ActivatedRoute, ParamMap } from '@angular/router';
 import { Router } from '@angular/router';
+import { Subscription } from 'rxjs';
 
 interface ICollection {
   [index: string]: string;
@@ -16,7 +17,7 @@ interface ICollection {
 })
 
 
-export class TemplateDetailsComponent implements OnInit {
+export class TemplateDetailsComponent implements OnInit, OnDestroy {
 
   public template: ICollection = {};
 
@@ -44,6 +45,7 @@ export class TemplateDetailsComponent implements OnInit {
   public menuActive: string = 'info';
   public host: boolean = false;
   private address: string;
+  private sub: Subscription;
 
   constructor(private activatedRoute: ActivatedRoute,
               private service: TemplatesService,
@@ -58,8 +60,11 @@ export class TemplateDetailsComponent implements OnInit {
   }
 
   public getTemplate() {
+    if (this.sub) {
+      this.sub.unsubscribe();
+    }
     this.host = false;
-    this.service.getTemplate(this.idTemplate, this.address).valueChanges.pipe(map(data => data.data.template))
+    this.sub = this.service.getTemplate(this.idTemplate, this.address).valueChanges.pipe(map(data => data.data.template))
       .subscribe((data) => {
         this.template = JSON.parse(data['veil_info_json']);
         this.host = true;
@@ -76,6 +81,12 @@ export class TemplateDetailsComponent implements OnInit {
   public routeTo(route: string): void {
     if (route === 'info') {
       this.menuActive = 'info';
+    }
+  }
+
+  ngOnDestroy() {
+    if (this.sub) {
+      this.sub.unsubscribe();
     }
   }
 }

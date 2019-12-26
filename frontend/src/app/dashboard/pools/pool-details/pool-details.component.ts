@@ -1,6 +1,5 @@
 import { Subscription } from 'rxjs';
 import { WebsocketPoolService } from '../../common/classes/websockPool.service';
-import { PoolsService } from '../all-pools/pools.service';
 import { IPool, IPoolVms } from './definitions/pool';
 import { VmDetalsPopupComponent } from './vm-details-popup/vm-details-popup.component';
 import { RemoveUsersPoolComponent } from './remove-users/remove-users.component';
@@ -15,6 +14,7 @@ import { PoolDetailsService } from './pool-details.service';
 import { FormForEditComponent } from 'src/app/dashboard/common/forms-dinamic/change-form/form-edit.component';
 import { skip, map, filter, catchError } from 'rxjs/operators';
 import { of } from 'rxjs';
+import { PoolsUpdateService } from '../all-pools/pools.update.service';
 
 
 
@@ -228,11 +228,12 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
   private sub_ws_create_pool: Subscription;
 
   public eventCreatedVm: object[] = [];
+  private subPool: Subscription;
 
   constructor(private activatedRoute: ActivatedRoute,
               private router: Router,
               private poolService: PoolDetailsService,
-              private poolsService: PoolsService,
+              private poolsService: PoolsUpdateService,
               public  dialog: MatDialog,
               private ws_create_pool_service: WebsocketPoolService) {}
 
@@ -268,8 +269,11 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
 
 
   public getPool(): void {
+    if (this.subPool) {
+      this.subPool.unsubscribe();
+    }
     this.host = false;
-    this.poolService.getPool(this.idPool, this.typePool)
+    this.subPool = this.poolService.getPool(this.idPool, this.typePool)
       .subscribe( (data) => {
         this.pool = data;
         this.host = true;
@@ -385,7 +389,8 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
         },
         updateDepend: {
           service: this.poolsService,
-          method: 'getAllPools'
+          method: 'setUpdate',
+          params: ['update']
         }
       }
     });
@@ -593,6 +598,10 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
   ngOnDestroy() {
     if (this.sub_ws_create_pool) {
       this.sub_ws_create_pool.unsubscribe();
+    }
+
+    if (this.subPool) {
+      this.subPool.unsubscribe();
     }
   }
 }

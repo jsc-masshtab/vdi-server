@@ -1,3 +1,4 @@
+import { PoolsUpdateService } from './../all-pools/pools.update.service';
 import { WaitService } from '../../common/components/single/wait/wait.service';
 
 import { AddPoolService } from './add-pool.service';
@@ -5,7 +6,6 @@ import { AddPoolService } from './add-pool.service';
 import { MatDialogRef } from '@angular/material';
 import { Component, OnInit, ViewChild, ViewContainerRef, OnDestroy } from '@angular/core';
 import { Validators } from '@angular/forms';
-import { PoolsService } from '../all-pools/pools.service';
 import { map } from 'rxjs/operators';
 import { trigger, style, animate, transition } from '@angular/animations';
 import { FormBuilder, FormGroup } from '@angular/forms';
@@ -88,7 +88,7 @@ export class PoolAddComponent implements OnInit, OnDestroy {
   @ViewChild('selectDatapoolRef') selectDatapoolRef: ViewContainerRef;
   @ViewChild('selectVmRef') selectVmRef: ViewContainerRef;
 
-  constructor(private poolsService: PoolsService,
+  constructor(private updatePools: PoolsUpdateService,
               private addPoolService: AddPoolService,
               private dialogRef: MatDialogRef<PoolAddComponent>,
               private fb: FormBuilder,
@@ -472,10 +472,11 @@ export class PoolAddComponent implements OnInit, OnDestroy {
                               formValue.vm_name_template,
                               formValue.controller_ip,
                               formValue.create_thin_clones)
-        .subscribe(() => {
-          this.dialogRef.close();
-          this.poolsService.paramsForGetPools.spin = true;
-          this.poolsService.getAllPools().subscribe();
+        .subscribe((res) => {
+          if (res) {
+            this.dialogRef.close();
+            this.updatePools.setUpdate('update');
+          }
         });
     }
 
@@ -483,10 +484,11 @@ export class PoolAddComponent implements OnInit, OnDestroy {
       this.addPoolService.createStaticPool(
                               formValue.verbose_name,
                               formValue.vm_ids_list)
-        .subscribe(() => {
-          this.dialogRef.close();
-          this.poolsService.paramsForGetPools.spin = true;
-          this.poolsService.getAllPools().subscribe();
+        .subscribe((res) => {
+          if (res) {
+            this.dialogRef.close();
+            this.updatePools.setUpdate('update');
+          }
         });
     }
   }

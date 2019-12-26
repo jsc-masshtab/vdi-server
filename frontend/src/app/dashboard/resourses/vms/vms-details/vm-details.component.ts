@@ -1,8 +1,9 @@
 import { VmsService } from '../all-vms/vms.service';
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { map } from 'rxjs/operators';
 import { ActivatedRoute, ParamMap } from '@angular/router';
 import { Router } from '@angular/router';
+import { Subscription } from 'rxjs';
 
 interface ICollection {
   [index: string]: string;
@@ -15,7 +16,7 @@ interface ICollection {
 })
 
 
-export class VmDetailsComponent implements OnInit {
+export class VmDetailsComponent implements OnInit, OnDestroy {
 
   public vm: ICollection = {};
 
@@ -48,6 +49,7 @@ export class VmDetailsComponent implements OnInit {
   public menuActive: string = 'info';
   public host: boolean = false;
   private address: string;
+  private sub: Subscription;
 
   constructor(private activatedRoute: ActivatedRoute,
               private service: VmsService,
@@ -62,8 +64,11 @@ export class VmDetailsComponent implements OnInit {
   }
 
   public getVM() {
+    if (this.sub) {
+      this.sub.unsubscribe();
+    }
     this.host = false;
-    this.service.getVm(this.idVm, this.address).valueChanges.pipe(map(data => data.data.vm))
+    this.sub = this.service.getVm(this.idVm, this.address).valueChanges.pipe(map(data => data.data.vm))
       .subscribe((data) => {
         this.vm = data;
         this.host = true;
@@ -80,6 +85,12 @@ export class VmDetailsComponent implements OnInit {
   public routeTo(route: string): void {
     if (route === 'info') {
       this.menuActive = 'info';
+    }
+  }
+
+  ngOnDestroy() {
+    if (this.sub) {
+      this.sub.unsubscribe();
     }
   }
 }

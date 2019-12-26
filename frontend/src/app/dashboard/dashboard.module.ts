@@ -107,7 +107,15 @@ export class DashboardModule {
       return urlKnock;
     }, includeQuery: true, includeExtensions: false } );
 
-    const errorLink = onError(({ graphQLErrors, networkError }) => {
+    const authMiddleware = new ApolloLink((operation, forward) => {
+      operation.setContext({
+        headers: new HttpHeaders().set('Authorization', `jwt ${this.authStorageService.getItemStorage('token')}`)
+                  .set('Client-Type', 'angular-web')
+      });
+      return forward(operation);
+    });
+
+    const errorLink = onError(({ graphQLErrors, networkError, operation, forward}) => {
       if (graphQLErrors) {
         this.waitService.setWait(false);
         graphQLErrors.map(({ message, locations, path }) => {
@@ -120,22 +128,16 @@ export class DashboardModule {
         console.log(networkError, 'networkError');
         this.waitService.setWait(false);
         this.errorService.setError(networkError['message']);
-        if (networkError['statusCode'] === 401) {
-          this.authStorageService.logout();
-        }
+      }
+
+      if (operation.variables.method === 'POST') {
+        return forward(operation).filter(item => item.errors === undefined);
       }
     });
 
-    const authMiddleware = new ApolloLink((operation, forward) => {
-      operation.setContext({
-        headers: new HttpHeaders().set('Authorization', `jwt ${this.authStorageService.getItemStorage('token')}`)
-                  .set('Client-Type', 'angular-web')
-      });
-      return forward(operation);
-    });
 
     this.apollo.create({
-      link: from([authMiddleware, errorLink, link]),
+      link: from([errorLink, authMiddleware, link]),
       cache: new InMemoryCache({ addTypename: false, dataIdFromObject: object => object.id }),
       defaultOptions: {
         watchQuery: {
