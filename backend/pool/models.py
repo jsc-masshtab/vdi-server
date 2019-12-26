@@ -350,7 +350,7 @@ class AutomatedPool(db.Model):
 
     initial_size = db.Column(db.Integer(), nullable=False, default=1)
     reserve_size = db.Column(db.Integer(), nullable=False, default=0)
-    total_size = db.Column(db.Integer(), nullable=False, default=1)
+    total_size = db.Column(db.Integer(), nullable=False, default=1)  # Размер пула
     vm_name_template = db.Column(db.Unicode(length=100), nullable=True)
     os_type = db.Column(db.Unicode(length=100), nullable=True)
 
