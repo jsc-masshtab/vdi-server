@@ -65,10 +65,12 @@ class ResourcesMonitor(AbstractMonitor):
         Check if controller online
         :return:
         """
+        controller_id = await Controller.get_controller_id_by_ip(self._controller_ip)
+
         response_dict = {'ip': self._controller_ip, 'msg_type': 'data', 'event': 'UPDATED',
                          'resource': CONTROLLERS_SUBSCRIPTION}
         while self._running_flag:
-            await asyncio.sleep(2)  # check every 2 seconds
+            await asyncio.sleep(4)
             try:
                 # if controller is online then there wil not be any exception
                 resources_http_client = await ResourcesHttpClient.create(self._controller_ip)
@@ -77,15 +79,17 @@ class ResourcesMonitor(AbstractMonitor):
                 # notify only if controller was online before (data changed)
                 if self._is_online:
                     response_dict['status'] = 'OFFLINE'
-                    internal_event_monitor.signal_event(response_dict)
-                    #await client_manager.send_message(response_dict)
+                    await Controller.deactivate(controller_id)
+                    self.notify_observers(CONTROLLERS_SUBSCRIPTION, response_dict)
+
                 self._is_online = False
             else:
                 # notify only if controller was offline before (data changed)
                 if not self._is_online:
                     response_dict['status'] = 'ONLINE'
-                    internal_event_monitor.signal_event(response_dict)
-                    #await client_manager.send_message(response_dict)
+                    await Controller.activate(controller_id)
+                    self.notify_observers(CONTROLLERS_SUBSCRIPTION, response_dict)
+
                 self._is_online = True
 
     async def _processing_ws_messages(self):

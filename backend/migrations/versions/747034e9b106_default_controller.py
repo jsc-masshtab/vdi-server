@@ -15,13 +15,14 @@ down_revision = 'f6da15d7a43d'
 branch_labels = None
 depends_on = None
 
-# TODO: эта миграция нужна только для совместимости существующего странного управления ресурсами. по идее ресурсы на старте должны быть пустыми.
+
 def upgrade():
-    insert_controller_query = """insert into controller("id", "verbose_name", "status", "address", "description", 
-    "username", "password", "ldap_connection") values ('621a162e-0176-4e92-98fb-e552f6b9bc57', 'Remote controller', 
-    'ACTIVE', '192.168.11.102', 'Remote controller', 'vdi_devyatkin', 
-    'gAAAAABdvCqNVz4ZhwNRVE9Xgh8iKYkfL4o2d7hlyW6ZdJbRa-Stwqp96p_5GEOlkpznHjeOxPhXt2RnvKItBWIXau3kbW2efQ==', false);"""
-    op.execute(insert_controller_query)
+    """Миграция нужна исключительно для заведения пользователя, пока мы не можем это сделать из скрипта установки"""
+    # insert_controller_query = """insert into controller("id", "verbose_name", "status", "address", "description",
+    # "username", "password", "ldap_connection") values ('621a162e-0176-4e92-98fb-e552f6b9bc57', 'Remote controller',
+    # 'ACTIVE', '192.168.11.102', 'Remote controller', 'vdi_devyatkin',
+    # 'gAAAAABdvCqNVz4ZhwNRVE9Xgh8iKYkfL4o2d7hlyW6ZdJbRa-Stwqp96p_5GEOlkpznHjeOxPhXt2RnvKItBWIXau3kbW2efQ==', false);"""
+    # op.execute(insert_controller_query)
     # TODO: change default admin username and password.
     # admin vdi
     insert_user_query = """insert into public."user" values ('f9599771-cc95-45e4-9ae5-c8177b796aff', 'admin', 

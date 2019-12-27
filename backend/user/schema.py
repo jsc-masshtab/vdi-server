@@ -115,6 +115,7 @@ class CreateUserMutation(graphene.Mutation, UserValidator):
     ok = graphene.Boolean(default_value=False)
 
     @classmethod
+    @superuser_required
     async def mutate(cls, root, info, **kwargs):
         await cls.validate_agruments(**kwargs)
         user = await User.soft_create(**kwargs)

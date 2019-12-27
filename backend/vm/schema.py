@@ -8,6 +8,7 @@ from graphql import GraphQLError
 from settings import DEFAULT_NAME
 from common.utils import extract_ordering_data
 from common.veil_errors import HttpError, SimpleError, NotFound
+from common.veil_decorators import superuser_required
 
 from vm.models import Vm
 from vm.veil_client import VmHttpClient
@@ -155,6 +156,7 @@ class AssignVmToUser(graphene.Mutation):
 
     ok = graphene.Boolean()
 
+    @superuser_required
     async def mutate(self, _info, vm_id, username):
         # find pool the vm belongs to
         pool_id = await Vm.get_pool_id(vm_id)
@@ -187,6 +189,7 @@ class FreeVmFromUser(graphene.Mutation):
 
     ok = graphene.Boolean()
 
+    @superuser_required
     async def mutate(self, _info, vm_id):
         # check if vm exists
         vm_exists = await Vm.check_vm_exists(vm_id)
@@ -213,20 +216,34 @@ class VmQuery(graphene.ObjectType):
                                 get_vms_in_pools=graphene.Boolean(),
                                 ordering=graphene.String())
 
+    @superuser_required
     async def resolve_template(self, _info, id, controller_address):
         vm_http_client = await VmHttpClient.create(controller_address, id)
-        veil_info = await vm_http_client.info()
+        try:
+            veil_info = await vm_http_client.info()
+        except HttpError as e:
+            raise SimpleError('Не удалось получить данные Шаблона: ' + e.message)
+
         return VmQuery.veil_template_data_to_graphene_type(veil_info, controller_address)
 
+    @superuser_required
     async def resolve_vm(self, _info, id, controller_address):
         vm_http_client = await VmHttpClient.create(controller_address, id)
-        veil_info = await vm_http_client.info()
+        try:
+            veil_info = await vm_http_client.info()
+        except HttpError as e:
+            raise SimpleError('Не удалось получить данные ВМ: ' + e.message)
+
         return VmQuery.veil_vm_data_to_graphene_type(veil_info, controller_address)
 
+    @superuser_required
     async def resolve_templates(self, _info, controller_ip=None, cluster_id=None, node_id=None, ordering=None):
         if controller_ip:
             vm_http_client = await VmHttpClient.create(controller_ip, '')
-            template_veil_data_list = await vm_http_client.fetch_templates_list(node_id=node_id)
+            try:
+                template_veil_data_list = await vm_http_client.fetch_templates_list(node_id=node_id)
+            except HttpError as e:
+                raise SimpleError('Не удалось получить список шаблонов: ' + e.message)
 
             template_veil_data_list = await VmQuery.filter_domains_by_cluster(
                 template_veil_data_list, controller_ip, cluster_id)
@@ -267,13 +284,17 @@ class VmQuery(graphene.ObjectType):
 
         return template_type_list
 
+    @superuser_required
     async def resolve_vms(self, _info, controller_ip=None, cluster_id=None, node_id=None, datapool_id=None,
                           get_vms_in_pools=False, ordering=None):
 
         # get veil vm data list
         if controller_ip:
             vm_http_client = await VmHttpClient.create(controller_ip, '')
-            vm_veil_data_list = await vm_http_client.fetch_vms_list(node_id=node_id)
+            try:
+                vm_veil_data_list = await vm_http_client.fetch_vms_list(node_id=node_id)
+            except HttpError as e:
+                raise SimpleError('Не удалось получить список ВМ: ' + e.message)
 
             vm_veil_data_list = await VmQuery.filter_domains_by_cluster(vm_veil_data_list, controller_ip, cluster_id)
 

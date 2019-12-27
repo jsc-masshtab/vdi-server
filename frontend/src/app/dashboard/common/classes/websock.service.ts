@@ -1,5 +1,5 @@
 import { WebsocketPoolService } from './websockPool.service';
-import { environment } from 'src/environments/environment';
+// import { environment } from 'src/environments/environment';
 import { Injectable } from '@angular/core';
 
 
@@ -14,7 +14,7 @@ export class WebsocketService  {
   constructor(private ws_create_pool_service: WebsocketPoolService) {}
 
   public init(): void {
-    let url = `ws://${environment.url_ws}/subscriptions`;
+    let url = `ws://${window.location.hostname}:8888/subscriptions`;
 
     this.ws = new WebSocket(url);
     if (this.ws) {

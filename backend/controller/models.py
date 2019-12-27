@@ -1,6 +1,8 @@
 import uuid
 from datetime import datetime
 
+from sqlalchemy import Enum as AlchemyEnum
+
 from sqlalchemy.dialects.postgresql import UUID
 
 from auth.utils import crypto
@@ -17,7 +19,7 @@ class Controller(db.Model):
     __tablename__ = 'controller'
     id = db.Column(UUID(), primary_key=True, default=uuid.uuid4)
     verbose_name = db.Column(db.Unicode(length=128), nullable=False, unique=True)
-    status = db.Column(db.Unicode(length=128))
+    status = db.Column(AlchemyEnum(Status), nullable=False, index=True)
     address = db.Column(db.Unicode(length=15), nullable=False, unique=True)
     description = db.Column(db.Unicode(length=256))
     version = db.Column(db.Unicode(length=128))
@@ -127,3 +129,13 @@ class Controller(db.Model):
         await self.delete()
         await Event.create_info(msg)
         return True
+
+    @classmethod
+    async def activate(cls, id):
+        return await Controller.update.values(status=Status.ACTIVE).where(
+            Controller.id == id).gino.status()
+
+    @classmethod
+    async def deactivate(cls, id):
+        return await Controller.update.values(status=Status.FAILED).where(
+            Controller.id == id).gino.status()

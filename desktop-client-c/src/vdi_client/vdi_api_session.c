@@ -123,8 +123,7 @@ void start_vdi_session()
         return;
     }
     // creae session
-    //vdiSession.soup_session = soup_session_new();
-    vdiSession.soup_session = soup_session_new_with_options("timeout", 5, NULL);
+    vdiSession.soup_session = soup_session_new_with_options("timeout", HTTP_RESPONSE_TIOMEOUT, NULL);
 
     vdiSession.vdi_username = NULL;
     vdiSession.vdi_password = NULL;
@@ -145,6 +144,9 @@ void stop_vdi_session()
         printf("%s: Session is not active\n", (const char *)__func__);
         return;
     }
+
+    // logout
+    vdi_api_logout();
 
     cancell_pending_requests();
     g_object_unref(vdiSession.soup_session);
@@ -174,7 +176,7 @@ void cancell_pending_requests()
     soup_session_abort(vdiSession.soup_session);
     // sleep to give the async tasks time to stop.
     // They will stop almost immediately after soup_session_abort
-    g_usleep(20000);
+    //g_usleep(20000);
 }
 
 void set_vdi_credentials(const gchar *username, const gchar *password, const gchar *ip,
@@ -224,7 +226,7 @@ gchar *api_call(const char *method, const char *uri_string, const gchar *body_st
     if (vdiSession.jwt == NULL) // get the token if we dont have it
         refresh_vdi_session_token();
 
-    SoupMessage *msg = soup_message_new (method, uri_string);
+    SoupMessage *msg = soup_message_new(method, uri_string);
     if (msg == NULL) // this may happen according to doc
         return response_body_str;
 
@@ -240,11 +242,11 @@ gchar *api_call(const char *method, const char *uri_string, const gchar *body_st
     for(int attempt_count = 0; attempt_count < max_attempt_count; attempt_count++) {
         // send request.
         send_message(msg);
-        printf("HERE msg->status_code: %i\n", msg->status_code);
-        printf("HERE msg->response_body: %s\n", msg->response_body->data);
+        printf("msg->status_code: %i\n", msg->status_code);
+        printf("msg->response_body: %s\n", msg->response_body->data);
 
         // if response is ok then fill response_body_str
-        if (msg->status_code == OK_RESPONSE ) { // we are happy now
+        if (msg->status_code == OK_RESPONSE) { // we are happy now
             response_body_str = g_strdup(msg->response_body->data); // json_string_with_data. memory allocation!
             break;
 
@@ -259,14 +261,53 @@ gchar *api_call(const char *method, const char *uri_string, const gchar *body_st
 }
 
 void get_vdi_token(GTask       *task,
-                 gpointer       source_object G_GNUC_UNUSED,
-                 gpointer       task_data G_GNUC_UNUSED,
-                 GCancellable  *cancellable G_GNUC_UNUSED)
+                   gpointer       source_object G_GNUC_UNUSED,
+                   gpointer       task_data G_GNUC_UNUSED,
+                   GCancellable  *cancellable G_GNUC_UNUSED)
 {
     free_memory_safely(&vdiSession.jwt);
     gboolean token_refreshed = refresh_vdi_session_token();
 
     g_task_return_boolean(task, token_refreshed);
+}
+
+gboolean vdi_api_logout(void)
+{
+    printf("%s \n", (const char *)__func__);
+    if (vdiSession.jwt) {
+        gchar *url_str = g_strdup_printf("%s/logout", vdiSession.api_url);
+
+        SoupMessage *msg = soup_message_new("POST", url_str);
+        g_free(url_str);
+
+        if (msg == NULL) {
+            printf("%s : Cant construct logout message\n", (const char *)__func__);
+            return FALSE;
+
+        } else {
+            // set header
+            setup_header_for_api_call(msg);
+            // send
+            g_object_set(vdiSession.soup_session, "timeout", 1, NULL);
+            send_message(msg);
+            g_object_set(vdiSession.soup_session, "timeout", HTTP_RESPONSE_TIOMEOUT, NULL);
+
+            guint res_code = msg->status_code;
+            g_object_unref(msg);
+
+            if (res_code == OK_RESPONSE) {
+                // logout was succesfull so we can foget the token
+                free_memory_safely(&vdiSession.jwt);
+                return TRUE;
+            }
+            else
+                return FALSE;
+        }
+
+    } else {
+        printf("%s : No token info\n", (const char *)__func__);
+        return FALSE;
+    }
 }
 
 void get_vdi_pool_data(GTask   *task,
@@ -275,9 +316,9 @@ void get_vdi_pool_data(GTask   *task,
                  GCancellable  *cancellable G_GNUC_UNUSED)
 {
     //printf("In %s :thread id = %lu\n", (const char *)__func__, pthread_self());
-    gchar *urlStr = g_strdup_printf("%s/client/pools", vdiSession.api_url);
-    gchar *response_body_str = api_call("GET", urlStr, NULL);
-    g_free(urlStr);
+    gchar *url_str = g_strdup_printf("%s/client/pools", vdiSession.api_url);
+    gchar *response_body_str = api_call("GET", url_str, NULL);
+    g_free(url_str);
 
     g_task_return_pointer(task, response_body_str, NULL); // return pointer must be freed
 }
@@ -287,9 +328,9 @@ void get_vm_from_pool(GTask       *task,
                     gpointer       task_data G_GNUC_UNUSED,
                     GCancellable  *cancellable G_GNUC_UNUSED)
 {
-    gchar *urlStr = g_strdup_printf("%s/client/pools/%s", vdiSession.api_url, get_current_pool_id());
-    gchar *response_body_str = api_call("POST", urlStr, NULL);
-    g_free(urlStr);
+    gchar *url_str = g_strdup_printf("%s/client/pools/%s", vdiSession.api_url, get_current_pool_id());
+    gchar *response_body_str = api_call("POST", url_str, NULL);
+    g_free(url_str);
 
     //response_body_str == NULL. didnt receive what we wanted
     if (!response_body_str) {
