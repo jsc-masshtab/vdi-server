@@ -34,7 +34,11 @@ export class EventsService {
                                         $event_type: Int,
                                         $user: String,
                                         $read_by: UUID) {
-                                count,
+                                count(  start_date: $start_date, 
+                                        end_date: $end_date, 
+                                        event_type: $event_type,
+                                        user: $user,
+                                        read_by: $read_by),
                                 events( limit: $limit,
                                         offset: $offset, 
                                         start_date: $start_date, 

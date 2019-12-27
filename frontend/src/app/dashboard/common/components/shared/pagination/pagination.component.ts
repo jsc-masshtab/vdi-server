@@ -24,6 +24,10 @@ export class PaginationComponent implements OnInit {
 
   ngOnChanges() {
     this.updatePage();
+
+    if (this.currentPage > this.pages) {
+      this.emitPrevPage(this.currentPage - this.pages)
+    }
   }
 
   private updatePage(): void {
@@ -48,10 +52,10 @@ export class PaginationComponent implements OnInit {
     }
   }
 
-  public emitPrevPage(): void {
+  public emitPrevPage(count = 1): void {
     if (this.currentPage > 1) {
       this.action.emit({
-        offset: (this.currentPage - 2) * this.limit
+        offset: (this.currentPage - (count + 1)) * this.limit
       });
     }
   }

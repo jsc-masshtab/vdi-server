@@ -39,15 +39,13 @@ export class EventsComponent implements OnInit {
       title: 'Cоздатель',
       property: 'user',
       type: 'string',
-      class: 'name-end',
-      sort: true
+      class: 'name-end'
     },
     {
       title: 'Дата создания',
       property: 'created',
       type: 'time',
-      class: 'name-end',
-      sort: true
+      class: 'name-end'
     }
   ];
 
@@ -62,15 +60,15 @@ export class EventsComponent implements OnInit {
     this.refresh();
 
     this.start_date.valueChanges.subscribe(() => {
-      this.refresh()
+      this.getEvents()
     })
 
     this.end_date.valueChanges.subscribe(() => {
-      this.refresh()
+      this.getEvents()
     })
 
     this.event_type.valueChanges.subscribe(() => {
-      this.refresh()
+      this.getEvents()
     })
 
     this.user.valueChanges.subscribe((user) => {
@@ -82,11 +80,11 @@ export class EventsComponent implements OnInit {
         this.selected_user = ''
       }
 
-      this.refresh()
+      this.getEvents()
     })
 
     this.readed.valueChanges.subscribe(() => {
-      this.refresh()
+      this.getEvents()
     })
   }
 
@@ -102,7 +100,7 @@ export class EventsComponent implements OnInit {
 
   public toPage(message: any): void {
     this.offset = message.offset;
-    this.refresh();
+    this.getEvents();
   }
 
   public getAllUsers() {
@@ -137,8 +135,6 @@ export class EventsComponent implements OnInit {
     if (this.event_type.value == 'all') {
       delete queryset['event_type']
     }
-
-    console.log(queryset)
 
     this.waitService.setWait(true);
     this.service.getAllEvents(queryset).valueChanges.pipe(map(data => data.data))
