@@ -2,7 +2,23 @@ import { AddUserVmComponent } from './add-user/add-user.component';
 import { Component, Inject } from '@angular/core';
 import { MAT_DIALOG_DATA, MatDialog } from '@angular/material';
 import { RemoveUserVmComponent } from './remove-user/remove-user.component';
-import { IPoolVms } from '../definitions/pool';
+
+interface IData  {
+  vm: {
+    id: string;
+    name: string;
+    state: string;
+    user: {
+      username: string | null;
+    };
+    template?: {
+      name: string;
+    }
+  };
+  typePool: string;
+  usersPool: [{username: string }];
+  idPool: number;
+}
 
 
 @Component({
@@ -44,7 +60,7 @@ export class VmDetalsPopupComponent {
   ];
 
   constructor(public dialog: MatDialog,
-              @Inject(MAT_DIALOG_DATA) public data: IPoolVms
+              @Inject(MAT_DIALOG_DATA) public data: IData
              ) {}
 
 
