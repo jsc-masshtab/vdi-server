@@ -14,6 +14,7 @@
     position: relative;
     cursor: pointer;
     background: linear-gradient(to right, #282828 0%, #3f606b 120%);
+    overflow: hidden;
 
     .header-user-menu {
         position: absolute;
