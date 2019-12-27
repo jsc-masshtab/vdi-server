@@ -94,7 +94,7 @@ export class DatapoolDetailsComponent implements OnInit, OnDestroy {
   }
 
   public close() {
-    this.router.navigate(['resourses/datapools']);
+    this.router.navigate(['pages/resourses/datapools']);
   }
 
   public routeTo(route: string): void {

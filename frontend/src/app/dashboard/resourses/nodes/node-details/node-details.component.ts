@@ -187,7 +187,7 @@ export class NodeDetailsComponent implements OnInit, OnDestroy {
   }
 
   public close() {
-    this.router.navigate(['resourses/nodes']);
+    this.router.navigate(['pages/resourses/nodes']);
   }
 
   ngOnDestroy() {

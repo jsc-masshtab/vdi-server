@@ -42,8 +42,8 @@ export class PoolsComponent extends DetailsMove implements OnInit, OnDestroy {
     },
     {
       title: 'Доступные ВМ',
-      property: 'vms',
-      type: 'array-length',
+      property: 'vm_amount',
+      type: 'string',
       sort: true
     },
     {

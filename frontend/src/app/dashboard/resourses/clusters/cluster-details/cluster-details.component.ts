@@ -191,7 +191,7 @@ export class ClusterDetailsComponent implements OnInit, OnDestroy {
   }
 
   public close() {
-    this.router.navigate(['resourses/clusters']);
+    this.router.navigate(['pages/resourses/clusters']);
   }
 
   public routeTo(route: string): void {

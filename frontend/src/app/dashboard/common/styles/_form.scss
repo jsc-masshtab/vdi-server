@@ -128,12 +128,7 @@
         }
     }
 
-    mat-checkbox {
-        margin-right: 8px;
-        cursor: pointer;
-    }
-
-    
+ 
     .field-name {
         margin-bottom: 9px;
     }
@@ -310,5 +305,14 @@ label {
 .error {
     margin-top: 5px;
     color: #DD2C00;
+}
+
+.cursorDefault {
+    cursor: default !important;
+}
+
+mat-checkbox {
+    margin-right: 8px;
+    cursor: pointer;
 }
 

@@ -79,7 +79,7 @@ export class VmDetailsComponent implements OnInit, OnDestroy {
   }
 
   public close() {
-    this.router.navigate(['resourses/vms']);
+    this.router.navigate(['pages/resourses/vms']);
   }
 
   public routeTo(route: string): void {
