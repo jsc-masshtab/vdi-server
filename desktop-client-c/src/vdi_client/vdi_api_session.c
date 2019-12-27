@@ -54,7 +54,7 @@ static guint send_message(SoupMessage *msg)
     printf("Send_count: %i\n", ++count);
 
     guint status = soup_session_send_message(vdiSession.soup_session, msg);
-    printf("%s: Successfully sent \n", (const char *)__func__);
+    printf("%s: Successfully sent. Response code: %i\n", (const char *)__func__, status);
     return status;
 }
 

@@ -93,6 +93,7 @@ const gchar *get_current_pool_id(void);
 // Do api call. Return response body
 gchar *api_call(const char *method, const char *uri_string, const gchar *body_str);
 
+/// Функции выполняемые в потоке
 // Fetch token
 void get_vdi_token(GTask         *task,
                    gpointer       source_object,

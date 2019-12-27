@@ -205,14 +205,14 @@ static void shutdown_loop(GMainLoop *loop)
 
 //////////////////////////////// async task callbacks//////////////////////////////////////
 // callback which is invoked when pool data request finished
-static void on_get_vdi_pool_data_finished (GObject *source_object G_GNUC_UNUSED,
+static void on_get_vdi_pool_data_finished(GObject *source_object G_GNUC_UNUSED,
                                         GAsyncResult *res,
                                         gpointer user_data G_GNUC_UNUSED)
 {
     printf("%s\n", (const char *)__func__);
 
     GError *error;
-    gpointer  ptr_res =  g_task_propagate_pointer(G_TASK (res), &error); // take ownership
+    gpointer  ptr_res = g_task_propagate_pointer(G_TASK (res), &error); // take ownership
     if(ptr_res == NULL){
         set_vdi_client_state(VDI_RECEIVED_RESPONSE, "Не удалось получить список пулов", TRUE);
         return;

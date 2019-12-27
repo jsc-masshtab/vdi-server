@@ -100,8 +100,6 @@ static void async_create_ws_connect(GTask         *task G_GNUC_UNUSED,
             cancellable_sleep(WS_READ_TIMEOUT, &vdi_ws_client->is_running); // sec
         }
 
-        //free(buffer);
-
         // close stream
         if (vdi_ws_client->stream)
             g_io_stream_close(vdi_ws_client->stream, NULL, NULL);
