@@ -51,12 +51,15 @@ pipenv run alembic upgrade head
 #------------------------------
 echo "Setting up backend"
 
-nohup pipenv run python $APP_DIR/backend/app.py & #nohup pipenv run vdi &
+nohup pipenv run python $APP_DIR/backend/app.py --access_to_stdout --logging=error --port=8888 &
 
 #------------------------------
 echo "Setting up frontend"
 
 cd $APP_DIR/frontend/
-rm -rf node_modules  # audit fix not working without this.
-npm i
-npm run ng serve -- --configuration=vagrant --host 0.0.0.0
+rm -rf node_modules/
+rm -rf dist/
+npm install --unsafe-perm
+ npm run build -- --prod
+#npm run build
+echo "Frontend compiled to /opt/veil-vdi/frontend/dist/frontend/"
