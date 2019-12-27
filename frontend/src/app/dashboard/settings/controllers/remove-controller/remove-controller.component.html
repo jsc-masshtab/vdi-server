@@ -5,18 +5,28 @@
     <button [mat-dialog-close]="true" class="form-close"><fa-icon [icon]="['fas','times-circle']"></fa-icon></button>
   </div>
 
-  <div class="form-fields">
+  <div class="form-fields" [formGroup]="formRemove">
     <label class="field">
       <mat-form-field>
         <mat-label  *ngIf="pendingControllers">Загрузка ...</mat-label>
         <mat-label  *ngIf="controllers?.length && !pendingControllers">Выберите контроллер</mat-label>
         <mat-label  *ngIf="!controllers?.length && !pendingControllers">- нет контроллера -</mat-label>
-        <mat-select (selectionChange)="selectController($event)">
+        <mat-select formControlName="id">
           <mat-option *ngFor="let controller of controllers" [value]="controller.id">
             {{controller.address}}
           </mat-option>
         </mat-select>
       </mat-form-field>
+    </label>
+
+    <label class="field-inline">
+      <mat-checkbox [color]="'warn'" formControlName="full" [disabled]="formRemove.value.soft"></mat-checkbox>
+      <p class="description" [class.cursorDefault]="formRemove.value.soft">FULL удаление (удаление сущности в статусе ACTIVE с удалением зависимых сущностей)</p>
+    </label>
+
+    <label class="field-inline">
+      <mat-checkbox [color]="'warn'" formControlName="soft" [disabled]="formRemove.value.full"></mat-checkbox>
+      <p class="description" [class.cursorDefault]="formRemove.value.full">SOFT удаление (удаление сущности независимо от статуса у которой нет зависимых сущностей)</p>
     </label>
   </div>
 

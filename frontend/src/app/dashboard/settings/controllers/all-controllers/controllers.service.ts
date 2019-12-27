@@ -61,20 +61,39 @@ export class ControllersService {
         });
     }
 
-    public removeController(id: string) {
-        return this.service.mutate<any>({
-            mutation: gql`
-                            mutation controllers($id: UUID!, $full: Boolean) {
-                                removeController(id: $id,full: $full) {
-                                    ok
+    public removeController({id, full, soft}) {
+        if (full) {
+            return this.service.mutate<any>({
+                mutation: gql`
+                                mutation controllers($id: UUID!, $full: Boolean) {
+                                    removeController(id: $id,full: $full) {
+                                        ok
+                                    }
                                 }
-                            }
-            `,
-            variables: {
-                method: 'POST',
-                id,
-                full: true
-            }
-        });
+                `,
+                variables: {
+                    method: 'POST',
+                    id,
+                    full
+                }
+            });
+        }
+
+        if (soft) {
+            return this.service.mutate<any>({
+                mutation: gql`
+                                mutation controllers($id: UUID!, $soft: Boolean) {
+                                    removeController(id: $id, soft: $soft) {
+                                        ok
+                                    }
+                                }
+                `,
+                variables: {
+                    method: 'POST',
+                    id,
+                    soft
+                }
+            });
+        }
     }
 }
