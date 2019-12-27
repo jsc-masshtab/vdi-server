@@ -23,6 +23,24 @@ export class InfoEventComponent implements OnInit {
 
   event: Event
 
+  public collection: any[] = [
+    {
+      title: 'Событие',
+      property: 'message',
+      type: 'string'
+    },
+    {
+      title: 'Пользователь',
+      property: 'user',
+      type: 'string'
+    },
+    {
+      title: 'Создан',
+      property: 'created',
+      type: 'string'
+    }
+  ];
+
   constructor(@Inject(MAT_DIALOG_DATA) public data: IData) {
     this.event = {...data.event}
   }
