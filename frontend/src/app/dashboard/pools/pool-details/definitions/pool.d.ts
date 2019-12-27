@@ -2,7 +2,7 @@
 export interface IPool extends ISettingsAutoPool, ISettingsStaticPool  {
   verbose_name: string;
   pool_type: string;
-  vms: IPoolVms;
+  vms: IPoolVms[];
   controller: {
     address: string;
   };
@@ -40,6 +40,12 @@ export interface IPoolVms  {
   template: {
     verbose_name: string;
   }
+}
+
+export interface IPoolsVm {
+  typePool: string;
+  usersPool: [{username: string }];
+  idPool: number;
 }
 
 interface ISettingsAutoPool {
