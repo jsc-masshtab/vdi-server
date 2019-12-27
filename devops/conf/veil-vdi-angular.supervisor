@@ -1,9 +1,0 @@
-# -*- conf -*-
-
-[program:vdi-angular-4200]
-directory = /opt/veil-vdi/frontend
-process_name = vdi-angular-4200
-command = /usr/bin/npm run ng serve -- --configuration=demo --host 0.0.0.0
-stderr_logfile = /var/log/veil-vdi/angular-stderr.log
-stdout_logfile = /var/log/veil-vdi/angular-stdout.log
-autorestart = true
