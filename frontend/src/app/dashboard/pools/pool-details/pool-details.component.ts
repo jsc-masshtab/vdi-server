@@ -592,7 +592,7 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
   }
 
   public close(): void  {
-    this.router.navigateByUrl('/pools');
+    this.router.navigateByUrl('pages/pools');
   }
 
   ngOnDestroy() {

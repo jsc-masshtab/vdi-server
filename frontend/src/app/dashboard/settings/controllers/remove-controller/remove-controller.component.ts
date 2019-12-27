@@ -1,3 +1,4 @@
+import { FormBuilder, FormGroup } from '@angular/forms';
 import { WaitService } from '../../../common/components/single/wait/wait.service';
 import { MatDialogRef } from '@angular/material';
 import { Component, OnInit, OnDestroy } from '@angular/core';
@@ -16,20 +17,30 @@ export class RemoveControllerComponent implements OnInit, OnDestroy {
 
   public controllers: [];
   public pendingControllers: boolean = false;
-  private deleteController: string;
   private destroy: Subject<any> = new Subject<any>();
+  public formRemove: FormGroup;
 
   constructor(private controllerService: ControllersService,
               private waitService: WaitService,
-              private dialogRef: MatDialogRef<RemoveControllerComponent>) {}
+              private dialogRef: MatDialogRef<RemoveControllerComponent>,
+              private fb: FormBuilder) {}
 
   ngOnInit() {
+    this.createFormRemove();
     this.getAllControllers();
+  }
+
+  private createFormRemove(): void {
+    this.formRemove = this.fb.group({
+      id: '',
+      full: false,
+      soft: false
+    });
   }
 
   public send() {
     this.waitService.setWait(true);
-    this.controllerService.removeController(this.deleteController).subscribe((res) => {
+    this.controllerService.removeController(this.formRemove.value).subscribe((res) => {
       if (res) {
         this.controllerService.getAllControllers().valueChanges.pipe(takeUntil(this.destroy)).subscribe(() => {
           this.waitService.setWait(false);
@@ -45,17 +56,8 @@ export class RemoveControllerComponent implements OnInit, OnDestroy {
       .subscribe((data) => {
         this.controllers = data;
         this.pendingControllers = false;
-      },
-      () => {
-        this.pendingControllers = false;
-        this.controllers = [];
       });
   }
-
-  public selectController(value: object) {
-    this.deleteController = value['value'];
-  }
-
 
   ngOnDestroy() {
     this.destroy.next(null);
