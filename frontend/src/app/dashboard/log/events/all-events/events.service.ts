@@ -7,14 +7,41 @@ import gql from 'graphql-tag';
 @Injectable()
 export class EventsService {
 
-    constructor(private service: Apollo) {}
+    constructor(private service: Apollo) { }
+    
+    public getAllUsers(): QueryRef<any, any> {
+        return this.service.watchQuery({
+            query: gql` query users {
+                            users {
+                                username
+                                id
+                            }
+                        }
+                    `,
+            variables: {
+                method: 'GET'
+            }
+        });
+    }
 
 
-    public getAllEvents(): QueryRef<any, any> {
-
+    public getAllEvents(queryset): QueryRef<any, any> {
         return  this.service.watchQuery({
-            query:  gql` query events {
-                                events {
+            query: gql` query events(   $limit: Int, 
+                                        $offset: Int, 
+                                        $start_date: DateTime, 
+                                        $end_date: DateTime, 
+                                        $event_type: Int,
+                                        $user: String,
+                                        $read_by: UUID) {
+                                count,
+                                events( limit: $limit,
+                                        offset: $offset, 
+                                        start_date: $start_date, 
+                                        end_date: $end_date, 
+                                        event_type: $event_type,
+                                        user: $user,
+                                        read_by: $read_by) {
                                     event_type
                                     message
                                     created
@@ -23,7 +50,8 @@ export class EventsService {
                             }
                     `,
             variables: {
-                method: 'GET'
+                method: 'GET',
+                ...queryset
             }
         });
     }

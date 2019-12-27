@@ -17,8 +17,8 @@ export class UsersService  {
 
     public getAllUsers(): QueryRef<any, any> {
        return  this.service.watchQuery({
-            query:  gql` query users($ordering:String, $reversed_order: Boolean) {
-                            users(ordering: $ordering, reversed_order: $reversed_order) {
+            query:  gql` query users($ordering:String) {
+                            users(ordering: $ordering) {
                                 username
                             }
                         }

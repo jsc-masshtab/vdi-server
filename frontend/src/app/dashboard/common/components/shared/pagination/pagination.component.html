@@ -1,0 +1,15 @@
+<div class="pages">
+  <span>Страница <b>{{currentPage}}</b> из <b>{{pages}}</b></span>
+
+  <button [disabled]="currentPage==1" (click)="emitPrevPage()">
+    <fa-icon [icon]="['fas', 'chevron-circle-left']"></fa-icon>
+    <span>Предыдущая</span>
+  </button>
+
+  <button [disabled]="currentPage==pages" (click)="emitNextPage()">
+    <span>Следующая</span>
+    <fa-icon [icon]="['fas', 'chevron-circle-right']"></fa-icon>
+  </button>
+
+  <span>Показано от <b>{{offset}}</b> до <b>{{limit + offset}}</b></span> <span>Всего: <b>{{count}}</b></span>
+</div>
