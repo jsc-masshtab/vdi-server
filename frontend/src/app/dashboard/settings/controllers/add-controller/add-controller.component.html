@@ -22,6 +22,10 @@
       <p class="field-name">Пароль</p>
       <input type="password" formControlName="password">
     </label>
+    <label class="field-inline">
+      <mat-checkbox [color]="'warn'" formControlName="ldap_connection"></mat-checkbox>
+      <p class="description">Использовать LDAP подключение</p>
+    </label>
     <label class="field">
       <p class="field-name">Описание</p>
       <textarea formControlName="description"></textarea>

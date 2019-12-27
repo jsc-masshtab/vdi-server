@@ -36,7 +36,7 @@ export class ControllersService {
         });
     }
 
-    public addController({address, description, username, verbose_name, password }) {
+    public addController({address, description, username, verbose_name, password, ldap_connection }) {
         return this.service.mutate<any>({
             mutation: gql`
                             mutation controllers($description: String,$address: String!,
@@ -56,7 +56,7 @@ export class ControllersService {
                 username,
                 verbose_name,
                 password,
-                ldap_connection: false
+                ldap_connection
             }
         });
     }
@@ -92,6 +92,22 @@ export class ControllersService {
                     method: 'POST',
                     id,
                     soft
+                }
+            });
+        }
+
+        if (!full && !soft) {
+            return this.service.mutate<any>({
+                mutation: gql`
+                                mutation controllers($id: UUID!) {
+                                    removeController(id: $id) {
+                                        ok
+                                    }
+                                }
+                `,
+                variables: {
+                    method: 'POST',
+                    id
                 }
             });
         }

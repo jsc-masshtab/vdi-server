@@ -32,7 +32,8 @@ export class AddControllerComponent implements OnInit, OnDestroy {
       username: '',
       verbose_name: '',
       password: '',
-      description: ''
+      description: '',
+      ldap_connection: false
     });
   }
 
