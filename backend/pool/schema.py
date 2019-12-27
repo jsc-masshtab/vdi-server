@@ -587,6 +587,34 @@ class UpdateAutomatedPoolMutation(graphene.Mutation, PoolValidator):
 
     ok = graphene.Boolean()
 
+    @staticmethod
+    async def validate_total_size(obj_dict, value):
+        if not value:
+            return
+
+        pool_id = obj_dict.get('pool_id')
+        if pool_id:
+            pool_obj = await Pool.get_pool(pool_id)
+            initial_size = obj_dict['initial_size'] if obj_dict.get('initial_size') else pool_obj.initial_size
+            min_size = obj_dict['min_size'] if obj_dict.get('min_size') else pool_obj.min_size
+            max_vm_amount = obj_dict['max_vm_amount'] if obj_dict.get('max_vm_amount') else pool_obj.max_vm_amount
+            total_size = pool_obj.total_size
+        else:
+            initial_size = obj_dict['initial_size']
+            min_size = obj_dict['min_size']
+            max_vm_amount = obj_dict['max_vm_amount']
+            total_size = None
+
+        if value < initial_size:
+            raise ValidationError('Максимальное количество создаваемых ВМ не может быть меньше '
+                                  'начального количества ВМ')
+        if value < min_size or value > max_vm_amount:
+            raise ValidationError('Максимальное количество создаваемых ВМ должно быть в интервале [{} {}]'.
+                                  format(min_size, max_vm_amount))
+        if total_size and value <= total_size:
+            raise ValidationError('Максимальное количество создаваемых ВМ не может быть уменьшено.')
+        return value
+
     @classmethod
     @superuser_required
     async def mutate(cls, root, info, **kwargs):
