@@ -38,14 +38,15 @@ update() {
   supervisorctl start vdi-server-8888
   echo "Preparing frontend..."
   cd $APP_DIR/frontend/
-  echo "Stopping Angular"
-  supervisorctl stop vdi-angular-4200
   echo "Removing old node_modules/..."
-  rm -rf node_modules  # audit fix not working without this.
+  rm -rf node_modules
+  echo "Removing old dis/..."
+  rm -rf dist/
   echo "Installing NODE dependencies..."
   npm install --unsafe-perm
-  echo "Starting Angular"
-  supervisorctl start vdi-angular-4200
+  echo "Compiling Angular"
+   npm run build -- --prod
+#  npm run build
   echo "Restarting nginx..."
   /etc/init.d/nginx restart
   echo "Done!"
@@ -57,19 +58,20 @@ start() {
   echo "Preparing frontend..."
   cd $APP_DIR/frontend/
   echo "Removing old node_modules/..."
-  rm -rf node_modules  # audit fix not working without this.
+  rm -rf node_modules
+  echo "Removing old dis/..."
+  rm -rf dist/
   echo "Installing NODE dependencies..."
   npm install --unsafe-perm
-  echo "Starting supervisor vdi-angular-4200..."
-  supervisorctl start vdi-angular-4200
+  echo "Compiling Angular"
+   npm run build -- --prod
+#  npm run build
   echo "Restarting nginx..."
   /etc/init.d/nginx restart
   echo "Done!"
 }
 
 stop() {
-  echo "Stopping angular"
-  supervisorctl stop vdi-angular-4200
   echo "Stopping tornado"
   supervisorctl stop vdi-server-8888
 }
