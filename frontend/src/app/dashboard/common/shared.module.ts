@@ -12,11 +12,13 @@ import { TableComponentComponent } from './components/shared/table-component/tab
 import { FormForEditComponent } from './forms-dinamic/change-form/form-edit.component';
 import { ReactiveFormsModule } from '@angular/forms';
 import { MatCheckboxModule } from '@angular/material';
+import { PaginationComponent } from './components/shared/pagination/pagination.component';
 
 
 const COMPONENTS = [
   TableComponentComponent,
   TableIntoComponent,
+  PaginationComponent
 ];
 
 const DIRECTIVES = [

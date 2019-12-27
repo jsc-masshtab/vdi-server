@@ -1,20 +1,21 @@
+/* tslint:disable:no-unused-variable */
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { EventsComponent } from './events.component';
+import { InfoEventComponent } from './info-event.component';
 
-describe('TemplatesComponent', () => {
-  let component: EventsComponent;
-  let fixture: ComponentFixture<EventsComponent>;
+describe('InfoEventComponent', () => {
+  let component: InfoEventComponent;
+  let fixture: ComponentFixture<InfoEventComponent>;
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [EventsComponent ]
+      declarations: [ InfoEventComponent ]
     })
     .compileComponents();
   }));
 
   beforeEach(() => {
-    fixture = TestBed.createComponent(EventsComponent);
+    fixture = TestBed.createComponent(InfoEventComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });
