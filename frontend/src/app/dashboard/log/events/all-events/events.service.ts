@@ -8,7 +8,7 @@ import gql from 'graphql-tag';
 export class EventsService {
 
     constructor(private service: Apollo) { }
-    
+
     public getAllUsers(): QueryRef<any, any> {
         return this.service.watchQuery({
             query: gql` query users {
@@ -27,18 +27,22 @@ export class EventsService {
 
     public getAllEvents(queryset): QueryRef<any, any> {
         return  this.service.watchQuery({
-            query: gql` query events(   $limit: Int, 
-                                        $offset: Int, 
-                                        $start_date: DateTime, 
-                                        $end_date: DateTime, 
+            query: gql` query events(   $limit: Int,
+                                        $offset: Int,
+                                        $start_date: DateTime,
+                                        $end_date: DateTime,
                                         $event_type: Int,
                                         $user: String,
                                         $read_by: UUID) {
-                                count,
+                                count(  start_date: $start_date,
+                                        end_date: $end_date,
+                                        event_type: $event_type,
+                                        user: $user,
+                                        read_by: $read_by),
                                 events( limit: $limit,
-                                        offset: $offset, 
-                                        start_date: $start_date, 
-                                        end_date: $end_date, 
+                                        offset: $offset,
+                                        start_date: $start_date,
+                                        end_date: $end_date,
                                         event_type: $event_type,
                                         user: $user,
                                         read_by: $read_by) {

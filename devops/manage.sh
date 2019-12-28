@@ -13,6 +13,7 @@ usage() {
     curr[ent]            output current release commit
     start                start front and back with supervisorctl
     stop                stop front and back with supervisorctl
+    truncate_controllers                truncate all controllers, events and related data from db
 EOF
 }
 
@@ -65,7 +66,7 @@ start() {
   npm install --unsafe-perm
   echo "Compiling Angular"
    npm run build -- --prod
-#  npm run build
+#  npm run build  # TODO: если хочется запустить dev-сборку
   echo "Restarting nginx..."
   /etc/init.d/nginx restart
   echo "Done!"
@@ -74,6 +75,18 @@ start() {
 stop() {
   echo "Stopping tornado"
   supervisorctl stop vdi-server-8888
+}
+
+truncate_controllers() {
+  echo "Stopping vdi-server."
+  supervisorctl stop vdi-server-8888
+  echo "Start truncating controllers. All related data will be lost."
+  psql -U postgres -d vdi -c 'TRUNCATE TABLE public."controller" CASCADE;' -e
+  # TODO: после появления сущностей можно убрать. Должна присутствовать связь с контроллерами
+  echo "Start truncating events. All related data will be lost."
+  psql -U postgres -d vdi -c 'TRUNCATE TABLE public."event" CASCADE;' -e
+  echo "Starting vdi-server."
+  supervisorctl start vdi-server-8888
 }
 
 # parse argv
@@ -85,6 +98,7 @@ while test $# -ne 0; do
     update) setup_env; update; exit ;;
     start) setup_env; start; exit ;;
     stop) setup_env; stop; exit ;;
+    truncate_controllers) setup_env; truncate_controllers; exit ;;
   esac
 done
 

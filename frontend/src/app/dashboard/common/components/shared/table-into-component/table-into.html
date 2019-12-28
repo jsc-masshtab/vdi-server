@@ -29,6 +29,8 @@
 
             <span *ngIf="obj.type === 'array-length'">{{ item[obj.property]?.length }}</span>
 
+            <span *ngIf="obj.type === 'time'">{{ moment(item[obj.property]).format('DD.MM.YYYY HH:mm:ss')  }}</span>
+
             <ng-container *ngIf="obj.type.typeDepend === 'propertyInObjectsInArray'">
               <ng-container *ngIf="item[obj.property]?.length; else nothing">
                 <span *ngFor="let objInItem of item[obj.property];let i = index">

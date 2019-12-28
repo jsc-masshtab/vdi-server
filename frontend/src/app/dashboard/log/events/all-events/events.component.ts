@@ -6,6 +6,15 @@ import { MatDialog } from '@angular/material';
 import { InfoEventComponent } from '../info-event/info-event.component';
 import { FormControl } from '@angular/forms';
 
+interface Event {
+  event: {
+    created: string
+    event_type: number
+    message: string
+    user: string
+  };
+}
+
 @Component({
   selector: 'vdi-events',
   templateUrl: './events.component.html',
@@ -13,7 +22,7 @@ import { FormControl } from '@angular/forms';
 })
 
 export class EventsComponent implements OnInit {
-  
+
   public limit = 100;
   public count = 0;
   public offset = 0;
@@ -24,8 +33,8 @@ export class EventsComponent implements OnInit {
   user = new FormControl('all');
   readed = new FormControl(false);
 
-  users = []
-  selected_user
+  users = [];
+  selected_user: string = '';
 
   public collection: object[] = [
     {
@@ -39,15 +48,13 @@ export class EventsComponent implements OnInit {
       title: 'Cоздатель',
       property: 'user',
       type: 'string',
-      class: 'name-end',
-      sort: true
+      class: 'name-end'
     },
     {
       title: 'Дата создания',
       property: 'created',
       type: 'time',
-      class: 'name-end',
-      sort: true
+      class: 'name-end'
     }
   ];
 
@@ -57,37 +64,37 @@ export class EventsComponent implements OnInit {
     private service: EventsService,
     private waitService: WaitService,
     public dialog: MatDialog) { }
-  
   ngOnInit() {
     this.refresh();
 
     this.start_date.valueChanges.subscribe(() => {
-      this.refresh()
-    })
+      this.getEvents();
+    });
 
     this.end_date.valueChanges.subscribe(() => {
-      this.refresh()
-    })
+      this.getEvents();
+    });
 
     this.event_type.valueChanges.subscribe(() => {
-      this.refresh()
-    })
+      this.getEvents();
+    });
 
     this.user.valueChanges.subscribe((user) => {
 
-      const id = this.users.findIndex(found => found.username ? found.username === user : false)
+      const id = this.users.findIndex(found => found.username ? found.username === user : false);
+
       if (id !== -1) {
-        this.selected_user = this.users[id].id
+        this.selected_user = this.users[id].id;
       } else {
-        this.selected_user = ''
+        this.selected_user = '';
       }
 
-      this.refresh()
-    })
+      this.getEvents();
+    });
 
     this.readed.valueChanges.subscribe(() => {
-      this.refresh()
-    })
+      this.getEvents();
+    });
   }
 
   public refresh(): void {
@@ -95,27 +102,26 @@ export class EventsComponent implements OnInit {
     this.getAllUsers();
   }
 
-  public clickRow(e) {
-    const event = { ...e }
-    this.openEventDetails(event)
+  public clickRow(event): void {
+    this.openEventDetails(event);
   }
 
   public toPage(message: any): void {
     this.offset = message.offset;
-    this.refresh();
+    this.getEvents();
   }
 
-  public getAllUsers() {
+  public getAllUsers(): void {
     this.service.getAllUsers().valueChanges.pipe(map(data => data.data))
       .subscribe((data) => {
         this.users = [...data.users];
       });
   }
 
-  public getEvents() {
+  public getEvents(): void {
 
-    const start_date = new Date(this.start_date.value).setHours(0, 0, 0)
-    const end_date = new Date(this.end_date.value).setHours(23, 59, 59)
+    const start_date = new Date(this.start_date.value).setHours(0, 0, 0);
+    const end_date = new Date(this.end_date.value).setHours(23, 59, 59);
 
     const queryset = {
       offset: this.offset,
@@ -124,21 +130,19 @@ export class EventsComponent implements OnInit {
       end_date: new Date(end_date).toISOString(),
       event_type: this.event_type.value,
       user: this.user.value
-    }
+    };
 
     if (this.readed.value && this.selected_user) {
-      queryset['read_by'] = this.selected_user
+      queryset['read_by'] = this.selected_user;
     }
 
-    if (this.user.value == 'all') {
-      delete queryset['user']
+    if (this.user.value === 'all') {
+      delete queryset['user'];
     }
 
-    if (this.event_type.value == 'all') {
-      delete queryset['event_type']
+    if (this.event_type.value === 'all') {
+      delete queryset['event_type'];
     }
-
-    console.log(queryset)
 
     this.waitService.setWait(true);
     this.service.getAllEvents(queryset).valueChanges.pipe(map(data => data.data))
@@ -149,11 +153,11 @@ export class EventsComponent implements OnInit {
       });
   }
 
-  public openEventDetails(event): void {
+  public openEventDetails(event: Event): void {
     this.dialog.open(InfoEventComponent, {
       width: '700px',
       data: {
-        event: event
+        event
       }
     });
   }

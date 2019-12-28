@@ -1,4 +1,4 @@
-import { Component, OnInit, Inject } from '@angular/core';
+import { Component, Inject } from '@angular/core';
 import { MAT_DIALOG_DATA } from '@angular/material';
 
 interface Event {
@@ -7,11 +7,11 @@ interface Event {
     event_type: number
     message: string
     user: string
-  }
+  };
 }
 
 interface IData {
-  event: Event
+  event: Event;
 }
 
 @Component({
@@ -19,9 +19,9 @@ interface IData {
   templateUrl: './info-event.component.html',
   styleUrls: ['./info-event.component.scss']
 })
-export class InfoEventComponent implements OnInit {
+export class InfoEventComponent {
 
-  event: Event
+  event: Event;
 
   public collection: any[] = [
     {
@@ -37,15 +37,11 @@ export class InfoEventComponent implements OnInit {
     {
       title: 'Создан',
       property: 'created',
-      type: 'string'
+      type: 'time'
     }
   ];
 
   constructor(@Inject(MAT_DIALOG_DATA) public data: IData) {
-    this.event = {...data.event}
+    this.event = data.event;
   }
-
-  ngOnInit() {
-  }
-
 }
