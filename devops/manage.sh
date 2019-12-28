@@ -13,6 +13,7 @@ usage() {
     curr[ent]            output current release commit
     start                start front and back with supervisorctl
     stop                stop front and back with supervisorctl
+    truncate_controllers                truncate all controllers, events and related data from db
 EOF
 }
 
@@ -97,6 +98,7 @@ while test $# -ne 0; do
     update) setup_env; update; exit ;;
     start) setup_env; start; exit ;;
     stop) setup_env; stop; exit ;;
+    truncate_controllers) setup_env; truncate_controllers; exit ;;
   esac
 done
 
