@@ -41,9 +41,7 @@ export class PoolsService {
                                 pools(ordering: $ordering) {
                                     pool_id
                                     verbose_name
-                                    vms {
-                                        id
-                                    }
+                                    vm_amount
                                     pool_type
                                     controller {
                                         address

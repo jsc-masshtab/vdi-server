@@ -15,6 +15,13 @@
     cursor: pointer;
     background: linear-gradient(to right, #282828 0%, #3f606b 120%);
 
+    > span {
+        width: 100px;
+        overflow: hidden;
+        display: flex;
+        justify-content: center;
+    }
+
     .header-user-menu {
         position: absolute;
         top: 50px;

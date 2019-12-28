@@ -75,7 +75,7 @@ export class TemplateDetailsComponent implements OnInit, OnDestroy {
   }
 
   public close() {
-    this.router.navigate(['resourses/templates']);
+    this.router.navigate(['pages/resourses/templates']);
   }
 
   public routeTo(route: string): void {

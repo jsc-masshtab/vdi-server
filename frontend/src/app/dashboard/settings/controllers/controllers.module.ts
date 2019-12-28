@@ -11,6 +11,7 @@ import { CommonModule } from '@angular/common';
 import { AddControllerComponent } from './add-controller/add-controller.component';
 import { RemoveControllerComponent } from './remove-controller/remove-controller.component';
 import { ReactiveFormsModule } from '@angular/forms';
+import { MatCheckboxModule } from '@angular/material';
 
 
 
@@ -27,7 +28,9 @@ import { ReactiveFormsModule } from '@angular/forms';
     AppRoutingModule,
     MatDialogModule,
     MatSelectModule,
-    ReactiveFormsModule
+    ReactiveFormsModule,
+    MatCheckboxModule
+
   ],
   providers: [ControllersService],
   exports: [
