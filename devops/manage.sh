@@ -65,7 +65,7 @@ start() {
   npm install --unsafe-perm
   echo "Compiling Angular"
    npm run build -- --prod
-#  npm run build
+#  npm run build  # TODO: если хочется запустить dev-сборку
   echo "Restarting nginx..."
   /etc/init.d/nginx restart
   echo "Done!"
@@ -74,6 +74,18 @@ start() {
 stop() {
   echo "Stopping tornado"
   supervisorctl stop vdi-server-8888
+}
+
+truncate_controllers() {
+  echo "Stopping vdi-server."
+  supervisorctl stop vdi-server-8888
+  echo "Start truncating controllers. All related data will be lost."
+  psql -U postgres -d vdi -c 'TRUNCATE TABLE public."controller" CASCADE;' -e
+  # TODO: после появления сущностей можно убрать. Должна присутствовать связь с контроллерами
+  echo "Start truncating events. All related data will be lost."
+  psql -U postgres -d vdi -c 'TRUNCATE TABLE public."event" CASCADE;' -e
+  echo "Starting vdi-server."
+  supervisorctl start vdi-server-8888
 }
 
 # parse argv
