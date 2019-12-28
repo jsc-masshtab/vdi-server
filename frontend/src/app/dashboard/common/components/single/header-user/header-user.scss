@@ -15,11 +15,21 @@
     cursor: pointer;
     background: linear-gradient(to right, #282828 0%, #3f606b 120%);
 
-    > span {
-        width: 100px;
+    .name-block {
+        width: 140px;
         overflow: hidden;
         display: flex;
+        height: 100%;
+        align-items: center;
         justify-content: center;
+
+        .name {
+            width: 100%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            text-align: center;
+            white-space: nowrap;
+        }
     }
 
     .header-user-menu {
