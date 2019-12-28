@@ -1,4 +1,4 @@
-import { Component, OnInit, Input, ChangeDetectionStrategy, Output, EventEmitter } from '@angular/core';
+import { Component, OnInit, Input, ChangeDetectionStrategy, Output, EventEmitter, OnChanges } from '@angular/core';
 
 @Component({
   selector: 'vdi-pagination',
@@ -6,7 +6,7 @@ import { Component, OnInit, Input, ChangeDetectionStrategy, Output, EventEmitter
   styleUrls: ['./pagination.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class PaginationComponent implements OnInit {
+export class PaginationComponent implements OnInit, OnChanges {
 
   @Input() limit: number = 100;
   @Input() count: number = 1;
@@ -26,21 +26,21 @@ export class PaginationComponent implements OnInit {
     this.updatePage();
 
     if (this.currentPage > this.pages) {
-      this.emitPrevPage(this.currentPage - this.pages)
+      this.emitPrevPage(this.currentPage - this.pages);
     }
   }
 
   private updatePage(): void {
     let suffix = 1;
 
-    if (this.count != 0) {
-      if (this.count % this.limit == 0) {
+    if (this.count !== 0) {
+      if (this.count % this.limit === 0) {
         suffix = 0;
       }
     }
 
     this.pages = Math.floor(this.count / this.limit) + suffix;
-    
+
     this.currentPage = Math.floor(this.offset / this.limit) + 1;
   }
 
