@@ -228,7 +228,7 @@ class PoolType(graphene.ObjectType):
     async def resolve_datapool(self, _info):
         controller_address = await Pool.get_controller_ip(self.pool_id)
         resources_http_client = await ResourcesHttpClient.create(controller_address)
-        datapool_id = await AutomatedPool.select('datapool_id').where(
+        datapool_id = await Pool.select('datapool_id').where(
             AutomatedPool.automated_pool_id == self.pool_id).gino.scalar()
 
         try:
@@ -237,7 +237,6 @@ class PoolType(graphene.ObjectType):
             datapool_type.controller = ControllerType(address=controller_address)
             return datapool_type
         except (HTTPClientError, HttpError):
-            # либо датапул изчес с контроллера, либо попытка получить датапул для статического пула
             return None
 
     async def resolve_template(self, _info):
@@ -397,19 +396,30 @@ class CreateStaticPoolMutation(graphene.Mutation, PoolValidator):
         # TODO: move to validator?
         if not all(vm_data['node']['id'] == first_vm_data['node']['id'] for vm_data in veil_vm_data_list):
             raise SimpleError("Все ВМ должны находится на одном сервере")
-        # All VMs are on the same node and cluster so we can take this data from the first item
+        # All VMs are on the same node and cluster, all VMs have the same datapool
+        # so we can take this data from the first item
         controller_ip = first_vm_data['controller_address']
         node_id = first_vm_data['node']['id']
         # determine cluster
         resources_http_client = await ResourcesHttpClient.create(controller_ip)
         node_data = await resources_http_client.fetch_node(node_id)
         cluster_id = node_data['cluster']
+        # determine datapool
+        vm_http_client = await VmHttpClient.create(controller_ip, first_vm_data['id'])
+        disks_list = await vm_http_client.fetch_vdisks_list()
+        print('disks_list', disks_list)
+        try:
+            datapool_id = disks_list[0]['datapool']['id']
+        except IndexError:
+            raise SimpleError('Не удалось определить datapool_id. Одна из ВМ не имеет дисков')
+
         try:
             await Vm.enable_remote_accesses(controller_ip, vm_ids)
             pool = await StaticPool.create(verbose_name=verbose_name,
                                            controller_ip=controller_ip,
                                            cluster_id=cluster_id,
-                                           node_id=node_id)
+                                           node_id=node_id,
+                                           datapool_id=datapool_id)
             # add vms to db
             for vm_id in vm_ids:
                 await Vm.create(id=vm_id, pool_id=pool.static_pool_id)
