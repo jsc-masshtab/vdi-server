@@ -62,6 +62,7 @@ async def get_resources_static_pool_test():
             continue
 
         # determine cluster
+        vm_http_client = await VmHttpClient.create(controller_ip, template['id'])
         template_info = await vm_http_client.info()
 
         return {'controller_ip': controller_ip, 'cluster_id': template_info['cluster'],
@@ -259,7 +260,7 @@ async def fixt_create_static_pool(fixt_db):
             'datapool_id': datapool_id,
             'controller_ip':controller_ip,
             'node_id': node_id,
-            'create_thin_clones': False
+            'create_thin_clones': True
         }
         vm_info = await Vm.copy(**params)
         return vm_info

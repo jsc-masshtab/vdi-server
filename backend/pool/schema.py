@@ -411,7 +411,7 @@ class CreateStaticPoolMutation(graphene.Mutation, PoolValidator):
         try:
             datapool_id = disks_list[0]['datapool']['id']
         except IndexError:
-            raise SimpleError('Не удалось определить datapool_id. Одна из ВМ не имеет дисков')
+            datapool_id = None
 
         try:
             await Vm.enable_remote_accesses(controller_ip, vm_ids)
