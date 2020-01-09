@@ -61,7 +61,7 @@ export class ControllersService {
         });
     }
 
-    public removeController({id, full, soft}) {
+    public removeController({id, full}) {
         if (full) {
             return this.service.mutate<any>({
                 mutation: gql`
@@ -77,26 +77,7 @@ export class ControllersService {
                     full
                 }
             });
-        }
-
-        if (soft) {
-            return this.service.mutate<any>({
-                mutation: gql`
-                                mutation controllers($id: UUID!, $soft: Boolean) {
-                                    removeController(id: $id, soft: $soft) {
-                                        ok
-                                    }
-                                }
-                `,
-                variables: {
-                    method: 'POST',
-                    id,
-                    soft
-                }
-            });
-        }
-
-        if (!full && !soft) {
+        } else {
             return this.service.mutate<any>({
                 mutation: gql`
                                 mutation controllers($id: UUID!) {

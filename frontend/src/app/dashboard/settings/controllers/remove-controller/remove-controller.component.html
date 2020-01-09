@@ -17,16 +17,12 @@
           </mat-option>
         </mat-select>
       </mat-form-field>
+      <div class="error" *ngIf="formRemove.hasError('required', 'id') && !valid">Поле обязательно для заполения</div>
     </label>
 
     <label class="field-inline">
-      <mat-checkbox [color]="'warn'" formControlName="full" [disabled]="formRemove.value.soft"></mat-checkbox>
+      <mat-checkbox [color]="'warn'" formControlName="full"></mat-checkbox>
       <p class="description" [class.cursorDefault]="formRemove.value.soft">FULL удаление (удаление сущности в статусе ACTIVE с удалением зависимых сущностей)</p>
-    </label>
-
-    <label class="field-inline">
-      <mat-checkbox [color]="'warn'" formControlName="soft" [disabled]="formRemove.value.full"></mat-checkbox>
-      <p class="description" [class.cursorDefault]="formRemove.value.full">SOFT удаление (удаление сущности независимо от статуса у которой нет зависимых сущностей)</p>
     </label>
   </div>
 
