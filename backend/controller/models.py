@@ -120,8 +120,7 @@ class Controller(db.Model):
 
     async def full_delete(self):
         """Удаление сущности в статусе ACTIVE с удалением зависимых сущностей"""
-
-        if self.status != Status.ACTIVE.value:
+        if self.status != Status.ACTIVE:
             error_msg = 'Удаление не может быть выполнено из-за блокирующего статуса. Выполните форсированное удаление.'
             raise SimpleError(error_msg)
 

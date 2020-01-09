@@ -3,6 +3,7 @@ from functools import wraps
 from tornado.escape import json_encode
 from graphql.execution.base import ResolveInfo
 
+from settings import AUTH_ENABLED
 from auth.utils.veil_jwt import extraxt_user_object
 from common.veil_errors import Unauthorized
 from event.models import Event
@@ -98,12 +99,14 @@ def user_passes_test(test_func, exc=Unauthorized('Invalid permissions.')):
         @wraps(f)
         @context(f)
         async def wrapper(cntxt, *args, **kwargs):  # noqa
-            user = await extraxt_user_object(cntxt.headers)
-            if user and test_func(user):
+            if AUTH_ENABLED:
+                user = await extraxt_user_object(cntxt.headers)
+                if user and test_func(user):
+                    return f(*args, **kwargs)
+                await Event.create_warning('Auth: {} IP: {}. username: {}'.format(exc.message, cntxt.remote_ip, user.username))
+                raise exc
+            else:
                 return f(*args, **kwargs)
-
-            await Event.create_warning('Auth: {} IP: {}. username: {}'.format(exc.message, cntxt.remote_ip, user.username))
-            raise exc
         return wrapper
     return decorator
 
