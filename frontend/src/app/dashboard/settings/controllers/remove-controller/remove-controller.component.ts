@@ -1,4 +1,4 @@
-import { FormBuilder, FormGroup } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { WaitService } from '../../../common/components/single/wait/wait.service';
 import { MatDialogRef } from '@angular/material';
 import { Component, OnInit, OnDestroy } from '@angular/core';
@@ -19,6 +19,7 @@ export class RemoveControllerComponent implements OnInit, OnDestroy {
   public pendingControllers: boolean = false;
   private destroy: Subject<any> = new Subject<any>();
   public formRemove: FormGroup;
+  public valid: boolean = true;
 
   constructor(private controllerService: ControllersService,
               private waitService: WaitService,
@@ -32,13 +33,22 @@ export class RemoveControllerComponent implements OnInit, OnDestroy {
 
   private createFormRemove(): void {
     this.formRemove = this.fb.group({
-      id: '',
-      full: false,
-      soft: false
+      id: ['', Validators.required],
+      full: false
     });
   }
 
+  private checkValid(): boolean {
+    if (this.formRemove.status === 'INVALID') {
+      this.valid = false;
+      return false;
+    }
+    this.valid = true;
+    return true;
+  }
+
   public send() {
+    this.checkValid();
     this.waitService.setWait(true);
     this.controllerService.removeController(this.formRemove.value).subscribe((res) => {
       if (res) {
