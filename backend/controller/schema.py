@@ -4,6 +4,7 @@ import graphene
 from graphql import GraphQLError
 
 from common.veil_decorators import superuser_required
+from common.veil_errors import SimpleError
 
 from auth.utils import crypto
 from controller.client import ControllerClient
@@ -85,10 +86,12 @@ class AddControllerMutation(graphene.Mutation):
                 address=address)
             await Event.create_info(msg)
             return AddControllerMutation(ok=True, controller=ControllerType(**controller.__values__))
-        except:
+        except Exception as E:
             msg = 'Add new controller with address {address}: operation failed.'.format(
                 address=address)
-            await Event.create_error(msg)
+            descr = str(E)
+            await Event.create_error(msg, description=descr)
+            raise SimpleError(msg)
 
 
 class UpdateControllerMutation(graphene.Mutation):
