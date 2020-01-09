@@ -205,14 +205,14 @@ static void shutdown_loop(GMainLoop *loop)
 
 //////////////////////////////// async task callbacks//////////////////////////////////////
 // callback which is invoked when pool data request finished
-static void on_get_vdi_pool_data_finished (GObject *source_object G_GNUC_UNUSED,
+static void on_get_vdi_pool_data_finished(GObject *source_object G_GNUC_UNUSED,
                                         GAsyncResult *res,
                                         gpointer user_data G_GNUC_UNUSED)
 {
     printf("%s\n", (const char *)__func__);
 
     GError *error;
-    gpointer  ptr_res =  g_task_propagate_pointer(G_TASK (res), &error); // take ownership
+    gpointer  ptr_res = g_task_propagate_pointer(G_TASK (res), &error); // take ownership
     if(ptr_res == NULL){
         set_vdi_client_state(VDI_RECEIVED_RESPONSE, "Не удалось получить список пулов", TRUE);
         return;
@@ -353,7 +353,7 @@ static gboolean on_window_deleted_cb(ConnectionInfo *ci)
 static void on_button_renew_clicked(GtkButton *button G_GNUC_UNUSED, gpointer data G_GNUC_UNUSED) {
 
     printf("%s\n", (const char *)__func__);
-    cancell_pending_requests();
+    vdi_api_cancell_pending_requests();
     unregister_all_pools();
     refresh_vdi_pool_data_async();
 }
@@ -390,7 +390,6 @@ static void on_vm_start_button_clicked(GtkButton *button, gpointer data G_GNUC_U
 GtkResponseType vdi_manager_dialog(GtkWindow *main_window G_GNUC_UNUSED, gchar **uri,
                                    gchar **password, gchar **vm_verbose_name)
 {
-    printf("vdi_manager_dialog url %s \n", *uri);
     set_init_values();
     vdi_manager.ci.response = FALSE;
     vdi_manager.ci.loop = NULL;
@@ -441,7 +440,7 @@ GtkResponseType vdi_manager_dialog(GtkWindow *main_window G_GNUC_UNUSED, gchar *
     g_main_loop_run(vdi_manager.ci.loop);
 
     // clear
-    cancell_pending_requests();
+    vdi_api_cancell_pending_requests();
     stop_vdi_ws_polling(&vdi_ws_client);
 
     unregister_all_pools();

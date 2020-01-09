@@ -10,6 +10,6 @@ void execute_async_task(GTaskThreadFunc  task_func,
                         gpointer callback_data);
 
 // sleep which can be cancelled so user will not notice any freeze
-void cancellable_sleep(gulong time, volatile gboolean cancel_flag);
+void cancellable_sleep(gulong microseconds, volatile gboolean *running_flag);
 
 #endif // ASYNC_H

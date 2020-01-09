@@ -10,17 +10,17 @@ void execute_async_task(GTaskThreadFunc task_func, GAsyncReadyCallback callback,
 }
 
 // sleep which can be cancelled so user will not notice any freeze
-void cancellable_sleep(gulong microseconds, volatile gboolean cancel_flag)
+void cancellable_sleep(gulong microseconds, volatile gboolean *running_flag)
 {
     const gulong interval = 30000; // 30 ms
 
     gulong fractional_part = microseconds % interval;
-    gulong integral__part = microseconds / interval;
+    gulong integral_part = microseconds / interval;
 
     g_usleep(fractional_part);
 
-    for (gulong i = 0; i < integral__part; ++i) {
-        if (cancel_flag)
+    for (gulong i = 0; i < integral_part; ++i) {
+        if (!(*running_flag))
             return;
         g_usleep(interval);
     }
