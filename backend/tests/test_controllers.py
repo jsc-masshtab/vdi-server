@@ -14,7 +14,7 @@ pytestmark = [pytest.mark.controllers]
 @pytest.mark.asyncio
 async def test_add_update_remove_controller(fixt_db, auth_context_fixture):
     """Add, update and remove controller"""
-    controller_ip = '192.168.6.122'
+    controller_ip = '192.168.11.102'
 
     # add controller
     qu = """
