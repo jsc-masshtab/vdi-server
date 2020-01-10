@@ -17,6 +17,11 @@ DB_NAME = 'vdi'
 SECRET_KEY = 'RSrf948GB2YXQKBjXhikwxDDJbfooHoBuewQYqO1A2MyBqK15G'
 FERNET_KEY = b'LRzSxWyxqKD4p2BR11-nVmghV67AVmQ4CxYi__S_OH8='
 
+# Auth settings
+# -----------------------------
+AUTH_ENABLED = True
+# AUTH_ENABLED = False  # Отключает проверку токенов, делает доступным стандартный интерфейс GpaphQL
+
 # JWT Options
 # -----------------------------
 JWT_EXPIRATION_DELTA = 86400
@@ -64,3 +69,4 @@ TESTS_LDAP_PASSWORD = 'Bazalt1!'
 TESTS_AD_DOMAIN_NAME = 'bazalt.team'
 TESTS_AD_VERBOSE_NAME = 'Bazalt'
 TESTS_AD_DIRECTORY_URL = 'ldap://192.168.11.180'
+

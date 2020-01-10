@@ -39,6 +39,7 @@ class Pool(db.Model):
     verbose_name = db.Column(db.Unicode(length=128), nullable=False, unique=True)
     cluster_id = db.Column(UUID(), nullable=False)
     node_id = db.Column(UUID(), nullable=False)
+    datapool_id = db.Column(UUID(), nullable=False)
     status = db.Column(AlchemyEnum(Status), nullable=False, index=True)
     controller = db.Column(UUID(), db.ForeignKey('controller.id', ondelete="CASCADE"), nullable=False)
 
@@ -229,6 +230,10 @@ class Pool(db.Model):
         return await Pool.select('node_id').where(Pool.pool_id == pool_id).gino.scalar()
 
     @staticmethod
+    async def get_datapool_id(pool_id):
+        return await Pool.select('datapool_id').where(Pool.pool_id == pool_id).gino.scalar()
+
+    @staticmethod
     async def get_name(pool_id):
         return await Pool.select('verbose_name').where(Pool.pool_id == pool_id).gino.scalar()
 
@@ -236,12 +241,13 @@ class Pool(db.Model):
     # Setters & etc.
 
     @classmethod
-    async def create(cls, verbose_name, cluster_id, node_id, controller_ip):
+    async def create(cls, verbose_name, cluster_id, node_id, datapool_id, controller_ip):
         controller_id = await Controller.get_controller_id_by_ip(controller_ip)
         if not controller_id:
             raise AssertionError('Controller {} not found.'.format(controller_ip))
 
         pool = await super().create(verbose_name=verbose_name, cluster_id=cluster_id, node_id=node_id,
+                                    datapool_id=datapool_id,
                                     controller=controller_id,
                                     status=Status.CREATING)
         return pool
@@ -301,7 +307,7 @@ class StaticPool(db.Model):
         return await pool_data.gino.first()
 
     @classmethod
-    async def create(cls, verbose_name, controller_ip, cluster_id, node_id):
+    async def create(cls, verbose_name, controller_ip, cluster_id, node_id, datapool_id):
         """Nested transactions are atomic."""
 
         async with db.transaction() as tx:
@@ -309,6 +315,7 @@ class StaticPool(db.Model):
             pool = await Pool.create(verbose_name=verbose_name,
                                      cluster_id=cluster_id,
                                      node_id=node_id,
+                                     datapool_id=datapool_id,
                                      controller_ip=controller_ip)
             # Create static pool
             return await super().create(static_pool_id=pool.pool_id)
@@ -338,7 +345,6 @@ class AutomatedPool(db.Model):
     __tablename__ = 'automated_pool'
 
     automated_pool_id = db.Column(UUID(), db.ForeignKey('pool.pool_id', ondelete="CASCADE"), primary_key=True)  # TODO: try with id
-    datapool_id = db.Column(UUID(), nullable=False)
     template_id = db.Column(UUID(), nullable=False)
 
     # Pool size settings
@@ -362,6 +368,10 @@ class AutomatedPool(db.Model):
     @property
     async def node_id(self):
         return await Pool.get_node_id(self.automated_pool_id)
+
+    @property
+    async def datapool_id(self):
+        return await Pool.get_datapool_id(self.automated_pool_id)
 
     @property
     async def verbose_name(self):
@@ -393,11 +403,11 @@ class AutomatedPool(db.Model):
             pool = await Pool.create(verbose_name=verbose_name,
                                      cluster_id=cluster_id,
                                      node_id=node_id,
+                                     datapool_id=datapool_id,
                                      controller_ip=controller_ip)
             # Create automated pool
             return await super().create(automated_pool_id=pool.pool_id,
                                         template_id=template_id,
-                                        datapool_id=datapool_id,
                                         min_size=min_size,
                                         max_size=max_size,
                                         max_vm_amount=max_vm_amount,
@@ -448,7 +458,7 @@ class AutomatedPool(db.Model):
             'verbose_name': "{}-{}".format(vm_name_template, domain_index),
             'name_template': vm_name_template,
             'domain_id': str(self.template_id),
-            'datapool_id': str(self.datapool_id),  # because of UUID
+            'datapool_id': str(await self.datapool_id),  # because of UUID
             'controller_ip': await self.controller_ip,
             'node_id': str(await self.node_id),
             'create_thin_clones': self.create_thin_clones

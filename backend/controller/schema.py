@@ -4,6 +4,7 @@ import graphene
 from graphql import GraphQLError
 
 from common.veil_decorators import superuser_required
+from common.veil_errors import SimpleError
 
 from auth.utils import crypto
 from controller.client import ControllerClient
@@ -85,10 +86,12 @@ class AddControllerMutation(graphene.Mutation):
                 address=address)
             await Event.create_info(msg)
             return AddControllerMutation(ok=True, controller=ControllerType(**controller.__values__))
-        except:
+        except Exception as E:
             msg = 'Add new controller with address {address}: operation failed.'.format(
                 address=address)
-            await Event.create_error(msg)
+            descr = str(E)
+            await Event.create_error(msg, description=descr)
+            raise SimpleError(msg)
 
 
 class UpdateControllerMutation(graphene.Mutation):
@@ -163,11 +166,14 @@ class RemoveControllerMutation(graphene.Mutation):
         if not controller:
             raise GraphQLError('No such controller.')
 
-        await resources_monitor_manager.remove_controller(controller.address)
         if full:
-            return RemoveControllerMutation(ok=await controller.full_delete())
+            ok = await controller.full_delete()
+        else:
+            ok = await controller.soft_delete()
 
-        return RemoveControllerMutation(ok=await controller.soft_delete())
+        await resources_monitor_manager.remove_controller(controller.address)
+
+        return RemoveControllerMutation(ok=ok)
 
 
 # Only for dev
@@ -182,11 +188,12 @@ class RemoveAllControllersMutation(graphene.Mutation):
     async def mutate(self, _info, full=False):
         controllers = await Controller.query.gino.all()
         for controller in controllers:
-            await resources_monitor_manager.remove_controller(controller.address)
             if full:
                 await controller.full_delete()
             else:
                 await controller.soft_delete()
+            await resources_monitor_manager.remove_controller(controller.address)
+
         return RemoveAllControllersMutation(ok=True)
 
 

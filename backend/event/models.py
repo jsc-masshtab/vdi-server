@@ -5,6 +5,8 @@ from sqlalchemy import and_
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.sql import func
 
+from asyncpg.exceptions._base import PostgresError
+
 from database import db
 from resources_monitoring.internal_event_monitor import internal_event_monitor
 from resources_monitoring.resources_monitoring_data import EVENTS_SUBSCRIPTION
@@ -75,12 +77,15 @@ class Event(db.Model):
                         event='event',
                         resource=EVENTS_SUBSCRIPTION)
         internal_event_monitor.signal_event_2(msg_dict)
-        await Event.create(
-            event_type=event_type,
-            message=msg,
-            description=description,
-            user=user
-        )
+        try:
+            await Event.create(
+                event_type=event_type,
+                message=msg,
+                description=description,
+                user=user
+            )
+        except PostgresError as E:
+            print('exp__', E.__class__.__name__)
 
     create_info = partialmethod(create_event, event_type=TYPE_INFO)
     create_warning = partialmethod(create_event, event_type=TYPE_WARNING)

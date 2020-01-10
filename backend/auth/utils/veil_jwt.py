@@ -3,7 +3,7 @@
 import jwt
 import datetime
 
-from settings import JWT_OPTIONS, SECRET_KEY, JWT_EXPIRATION_DELTA, JWT_AUTH_HEADER_PREFIX, JWT_ALGORITHM
+from settings import JWT_OPTIONS, SECRET_KEY, JWT_EXPIRATION_DELTA, JWT_AUTH_HEADER_PREFIX, JWT_ALGORITHM, AUTH_ENABLED
 from user.models import User, UserJwtInfo
 
 
@@ -31,7 +31,8 @@ def jwtauth(handler_class):
 
         async def _execute(self, transforms, *args, **kwargs):
             try:
-                await require_auth(self, kwargs)
+                if AUTH_ENABLED:
+                    await require_auth(self, kwargs)
             except:  # noqa
                 return False
             return await handler_execute(self, transforms, *args, **kwargs)
