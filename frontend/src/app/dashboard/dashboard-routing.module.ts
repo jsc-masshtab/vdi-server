@@ -20,6 +20,7 @@ import { UsersComponent } from './settings/users/all-users/users.component';
 import { VmDetailsComponent } from './resourses/vms/vms-details/vm-details.component';
 import { EventsComponent } from './log/events/all-events/events.component';
 import { DashboardComponent } from './dashboard.component';
+import { AuthenticationDirectoryComponent } from './settings/auth-directory/all-auth-directory/all-auth-directory.component';
 
 
 const routes: Routes = [
@@ -51,6 +52,10 @@ const routes: Routes = [
       {
         path: 'settings/users',
         component: UsersComponent
+      },
+      {
+        path: 'settings/auth-directory',
+        component: AuthenticationDirectoryComponent
       },
       {
         path: 'log/events',

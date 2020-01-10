@@ -29,7 +29,6 @@ import { faTimesCircle } from '@fortawesome/free-solid-svg-icons';
     ReactiveFormsModule,
     MatSelectModule,
     MatCheckboxModule
-    
   ],
   providers: [EventsService],
   entryComponents: [
@@ -39,7 +38,7 @@ import { faTimesCircle } from '@fortawesome/free-solid-svg-icons';
     EventsComponent
   ]
 })
-export class EventsModule { 
+export class EventsModule {
   constructor() {
     library.add(faTimesCircle);
   }

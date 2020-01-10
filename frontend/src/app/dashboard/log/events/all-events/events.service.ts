@@ -25,7 +25,7 @@ export class EventsService {
     }
 
 
-    public getAllEvents(queryset): QueryRef<any, any> {
+    public getAllEvents(props): QueryRef<any, any> {
         return  this.service.watchQuery({
             query: gql` query events(   $limit: Int,
                                         $offset: Int,
@@ -55,7 +55,7 @@ export class EventsService {
                     `,
             variables: {
                 method: 'GET',
-                ...queryset
+                ...props
             }
         });
     }
