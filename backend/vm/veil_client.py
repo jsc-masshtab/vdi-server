@@ -69,7 +69,8 @@ class VmHttpClient(VeilHttpClient):
         url = self.url + 'remove/'
         await self.fetch(url=url, method='POST', body=dict(full=True))
 
-    async def fetch_all_vms_list(self, node_id: str = None, ordering: str = None, reversed_order: bool = None):
+    async def fetch_all_vms_list(self, node_id: str = None, datapool_id: str = None,
+                                 ordering: str = None, reversed_order: bool = None, is_template=False):
 
         url = "http://{}/api/domains/?".format(self.controller_ip)
 
@@ -79,12 +80,16 @@ class VmHttpClient(VeilHttpClient):
         if node_id:
             url_vars['node'] = node_id
 
+        if datapool_id:
+            url_vars['datapool'] = datapool_id
+
         if ordering:
             order_sign = '-' if reversed_order else ''
             url_vars['ordering'] = order_sign + ordering
 
-        if url_vars:
-            url = url + urllib.parse.urlencode(url_vars)
+        url_vars['template'] = is_template
+
+        url = url + urllib.parse.urlencode(url_vars)
         # request
         resources_list_data = await self.fetch_with_response(url=url, method='GET')
         all_vms_list = resources_list_data['results']
@@ -94,15 +99,24 @@ class VmHttpClient(VeilHttpClient):
         #     all_vms_list = list(filter(lambda vm: vm['cluster'] == cluster_id, all_vms_list))
         return all_vms_list
 
-    async def fetch_vms_list(self, node_id: str = None, ordering: str = None, reversed_order: bool = None):
+    async def fetch_vms_list(self, node_id: str = None, datapool_id: str = None,
+                             ordering: str = None, reversed_order: bool = None):
         """Fetch lists of vms"""
-        all_vms_list = await self.fetch_all_vms_list(node_id, ordering, reversed_order)
-        vms_list = [vm for vm in all_vms_list if not vm['template']]
-        return vms_list
+        all_vms_list = await self.fetch_all_vms_list(node_id, datapool_id, ordering, reversed_order)
+        return all_vms_list
 
-    async def fetch_templates_list(self, node_id: str = None, ordering: str = None, reversed_order: bool = None):
+    async def fetch_templates_list(self, node_id: str = None, datapool_id: str = None,
+                                   ordering: str = None, reversed_order: bool = None):
         """Fetch lists of templates"""
-        all_vms_list = await self.fetch_all_vms_list(node_id, ordering, reversed_order)
-        print('all_vms_list', all_vms_list)
-        vms_list = [vm for vm in all_vms_list if vm['template']]
-        return vms_list
+        all_vms_list = await self.fetch_all_vms_list(node_id, datapool_id, ordering, reversed_order, True)
+        return all_vms_list
+
+    async def fetch_vdisks_list(self): # api/vdisks/?domain=21c97d06-3bd4-4764-b854-33c91827d391&limit=100
+        url = "http://{}/api/vdisks/?".format(self.controller_ip)
+        url_vars = dict(domain=self.vm_id)
+        url = url + urllib.parse.urlencode(url_vars)
+
+        resources_list_data = await self.fetch_with_response(url=url, method='GET')
+        # print('resources_list_data', resources_list_data)
+        disks_list = resources_list_data['results']
+        return disks_list

@@ -292,7 +292,7 @@ class VmQuery(graphene.ObjectType):
         if controller_ip:
             vm_http_client = await VmHttpClient.create(controller_ip, '')
             try:
-                vm_veil_data_list = await vm_http_client.fetch_vms_list(node_id=node_id)
+                vm_veil_data_list = await vm_http_client.fetch_vms_list(node_id=node_id, datapool_id=datapool_id)
             except HttpError as e:
                 raise SimpleError('Не удалось получить список ВМ: ' + e.message)
 
@@ -308,7 +308,8 @@ class VmQuery(graphene.ObjectType):
             for controller_address in controllers_addresses:
                 vm_http_client = await VmHttpClient.create(controller_address, '')
                 try:
-                    single_vm_veil_data_list = await vm_http_client.fetch_vms_list(node_id=node_id)
+                    single_vm_veil_data_list = await vm_http_client.fetch_vms_list(node_id=node_id,
+                                                                                   datapool_id=datapool_id)
 
                     single_vm_veil_data_list = await VmQuery.filter_domains_by_cluster(
                         single_vm_veil_data_list, controller_address, cluster_id)
