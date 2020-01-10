@@ -82,7 +82,6 @@ export class PoolAddComponent implements OnInit, OnDestroy {
   ];
 
   public checkValid: boolean = false;
-  private create_thin_clones: boolean = false;
 
   @ViewChild('selectNodeRef') selectNodeRef: ViewContainerRef;
   @ViewChild('selectDatapoolRef') selectDatapoolRef: ViewContainerRef;
@@ -118,7 +117,7 @@ export class PoolAddComponent implements OnInit, OnDestroy {
         initial_size: ['', [Validators.required, Validators.max(200), Validators.min(1)]],
         total_size: ['', [Validators.required, Validators.max(1000), Validators.min(1)]],
       }, {validators: this.totalSizeValidator()}),
-      create_thin_clones: this.create_thin_clones});
+      create_thin_clones: false });
     this.finishPoolView = {};
     this.getControllers();
   }
@@ -382,10 +381,6 @@ export class PoolAddComponent implements OnInit, OnDestroy {
         }
       ];
     }
-  }
-
-  public changeCheck(e) {
-    this.create_thin_clones = e.checked;
   }
 
   private totalSizeValidator() {

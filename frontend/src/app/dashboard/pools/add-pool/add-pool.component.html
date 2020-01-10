@@ -24,16 +24,12 @@
       <p class="radio-text">Статический</p>
     </label>
 
-    <label class="field-inline add-offset">
+    <label class="field-inline">
       <fa-icon [icon]="['fas','tv']" size="m"  class="icon-pool"></fa-icon>
       <input type="radio" formControlName="type" value="Автоматический">
       <p class="radio-text">Автоматический</p>
     </label>
 
-    <label class="field-inline offset" *ngIf="chooseTypeForm.value.type === 'Автоматический'" [@animForm]>
-      <mat-checkbox [color]="'warn'" name="create_thin_clones" (change)="changeCheck($event)" [checked]="create_thin_clones"></mat-checkbox>
-      <p class="description">Создать тонкие клоны</p>
-    </label>
   </div>
   <div class="form-actions"  *ngIf="step === 'chooseType'">
     <button type="button" (click)="send('createPool')" class="form-btn"><span class="action-name">Далее</span></button>
@@ -166,6 +162,11 @@
         <ng-container *ngIf="createPoolForm.hasError('required', 'reserve_size') && checkValid"><ng-container *ngTemplateOutlet="errorTemp"></ng-container></ng-container>
         <div class="error" *ngIf="(createPoolForm.hasError('min', 'reserve_size') ||  createPoolForm.hasError('max', 'reserve_size')) && 
           createPoolForm.controls.reserve_size.touched && createPoolForm.controls.reserve_size.dirty">Количество создаваемых ВМ должно быть в интервале 1-200</div>
+      </label>
+
+      <label class="field-inline" [@animForm]>
+        <mat-checkbox [color]="'warn'" formControlName="create_thin_clones"></mat-checkbox>
+        <p class="description">Создать тонкие клоны</p>
       </label>
     </ng-container>
 
