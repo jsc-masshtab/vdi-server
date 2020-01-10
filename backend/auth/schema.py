@@ -42,7 +42,7 @@ class AuthenticationDirectoryValidator(MutationValidation):
 
     @staticmethod
     async def validate_verbose_name(obj_dict, value):
-        if not len(value) == 0:
+        if len(value) == 0:
             raise ValidationError(
                 'Authentication directory verbose name should not be empty.')
         return value
