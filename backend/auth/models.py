@@ -7,12 +7,12 @@ import ldap
 from sqlalchemy.dialects.postgresql import UUID, ARRAY
 from sqlalchemy import Enum as AlchemyEnum
 
-from database import db, Status, AbstractSortableStatusModel
+from database import db, Status, AbstractSortableStatusModel, AbstractEntity
 from user.models import User
 from event.models import Event
 
 
-class AuthenticationDirectory(db.Model, AbstractSortableStatusModel):
+class AuthenticationDirectory(db.Model, AbstractSortableStatusModel, AbstractEntity):
     """
     Модель служб каталогов для авторизации пользователей в системе.
     Не может быть более 1го.
@@ -49,11 +49,9 @@ class AuthenticationDirectory(db.Model, AbstractSortableStatusModel):
 
     id = db.Column(UUID(), primary_key=True, default=uuid.uuid4)
     verbose_name = db.Column(db.Unicode(length=255), unique=True)
-    # connection_type = db.Column(db.Unicode(length=4), nullable=False, server_default=ConnectionTypes.LDAP)
     connection_type = db.Column(AlchemyEnum(ConnectionTypes), nullable=False, server_default=ConnectionTypes.LDAP.value)
     description = db.Column(db.Unicode(length=255), nullable=True)
     directory_url = db.Column(db.Unicode(length=255))
-    # directory_type = db.Column(db.Unicode(length=16), nullable=False, server_default=DirectoryTypes.ActiveDirectory)
     directory_type = db.Column(AlchemyEnum(DirectoryTypes), nullable=False,
                                server_default=DirectoryTypes.ActiveDirectory.value)
     domain_name = db.Column(db.Unicode(length=255), unique=True)

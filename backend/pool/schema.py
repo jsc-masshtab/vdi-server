@@ -28,7 +28,6 @@ from controller_resources.schema import ClusterType, NodeType, DatapoolType
 from pool.models import AutomatedPool, StaticPool, Pool, PoolUsers
 from pool.pool_task_manager import pool_task_manager
 
-from asyncpg import UniqueViolationError
 from asyncpg.exceptions._base import PostgresError
 
 from database import db
@@ -208,7 +207,7 @@ class PoolType(graphene.ObjectType):
     async def resolve_node(self, _info):
         controller_address = await Pool.get_controller_ip(self.pool_id)
         resources_http_client = await ResourcesHttpClient.create(controller_address)
-        node_id = await Pool.select('node_id').where(Pool.pool_id == self.pool_id).gino.scalar()
+        node_id = await Pool.select('node_id').where(Pool.id == self.pool_id).gino.scalar()
 
         node_data = await resources_http_client.fetch_node(node_id)
         node_type = make_graphene_type(NodeType, node_data)
@@ -218,7 +217,7 @@ class PoolType(graphene.ObjectType):
     async def resolve_cluster(self, _info):
         controller_address = await Pool.get_controller_ip(self.pool_id)
         resources_http_client = await ResourcesHttpClient.create(controller_address)
-        cluster_id = await Pool.select('cluster_id').where(Pool.pool_id == self.pool_id).gino.scalar()
+        cluster_id = await Pool.select('cluster_id').where(Pool.id == self.pool_id).gino.scalar()
 
         cluster_data = await resources_http_client.fetch_cluster(cluster_id)
         cluster_type = make_graphene_type(ClusterType, cluster_data)
@@ -229,7 +228,7 @@ class PoolType(graphene.ObjectType):
         controller_address = await Pool.get_controller_ip(self.pool_id)
         resources_http_client = await ResourcesHttpClient.create(controller_address)
         datapool_id = await Pool.select('datapool_id').where(
-            AutomatedPool.automated_pool_id == self.pool_id).gino.scalar()
+            AutomatedPool.id == self.pool_id).gino.scalar()
 
         try:
             datapool_data = await resources_http_client.fetch_datapool(datapool_id)
@@ -242,7 +241,7 @@ class PoolType(graphene.ObjectType):
     async def resolve_template(self, _info):
         controller_address = await Pool.get_controller_ip(self.pool_id)
         template_id = await AutomatedPool.select('template_id').where(
-            AutomatedPool.automated_pool_id == self.pool_id).gino.scalar()
+            AutomatedPool.id == self.pool_id).gino.scalar()
         vm_http_client = await VmHttpClient.create(controller_address, template_id)
 
         try:
@@ -273,6 +272,34 @@ class PoolType(graphene.ObjectType):
                 self.vms.append(vm_type)
 
 
+def pool_obj_to_type(pool_obj: Pool) -> dict:
+    pool_dict = {'pool_id': pool_obj.master_id,
+                 'master_id': pool_obj.master_id,
+                 'verbose_name': pool_obj.verbose_name,
+                 'pool_type': pool_obj.pool_type,
+                 'cluster_id': pool_obj.cluster_id,
+                 'node_id': pool_obj.node_id,
+                 'static_pool_id': pool_obj.master_id,
+                 'automated_pool_id': pool_obj.master_id,
+                 'template_id': pool_obj.template_id,
+                 'datapool_id': pool_obj.datapool_id,
+                 'min_size': pool_obj.min_size,
+                 'max_size': pool_obj.max_size,
+                 'max_vm_amount': pool_obj.max_vm_amount,
+                 'increase_step': pool_obj.increase_step,
+                 'max_amount_of_create_attempts': pool_obj.max_amount_of_create_attempts,
+                 'initial_size': pool_obj.initial_size,
+                 'reserve_size': pool_obj.reserve_size,
+                 'total_size': pool_obj.total_size,
+                 'vm_name_template': pool_obj.vm_name_template,
+                 'os_type': pool_obj.os_type,
+                 'keep_vms_on': pool_obj.keep_vms_on,
+                 'create_thin_clones': pool_obj.create_thin_clones,
+                 'controller': pool_obj.controller,
+                 }
+    return PoolType(**pool_dict)
+
+
 class PoolQuery(graphene.ObjectType):
 
     pools = graphene.List(PoolType, ordering=graphene.String())
@@ -283,7 +310,7 @@ class PoolQuery(graphene.ObjectType):
         # Сортировка может быть по полю модели Pool, либо по Pool.EXTRA_ORDER_FIELDS
         pools = await Pool.get_pools(ordering=ordering)
         objects = [
-            PoolType(**pool)
+            pool_obj_to_type(pool)
             for pool in pools
         ]
         return objects
@@ -293,7 +320,7 @@ class PoolQuery(graphene.ObjectType):
         pool = await Pool.get_pool(pool_id)
         if not pool:
             raise SimpleError('No such pool.')
-        return PoolType(**pool)
+        return pool_obj_to_type(pool)
 
 
 # --- --- --- --- ---
@@ -453,7 +480,7 @@ class AddVmsToStaticPoolMutation(graphene.Mutation):
         if not vm_ids:
             raise SimpleError("Список ВМ не должен быть пустым")
 
-        pool_data = await Pool.select('controller', 'node_id').where(Pool.pool_id == pool_id).gino.first()
+        pool_data = await Pool.select('controller', 'node_id').where(Pool.id == pool_id).gino.first()
         (controller_id, node_id) = pool_data
         controller_address = await Controller.select('address').where(Controller.id == controller_id).gino.scalar()
 
@@ -566,21 +593,20 @@ class CreateAutomatedPoolMutation(graphene.Mutation, PoolValidator):
         try:
             automated_pool = await AutomatedPool.create(**kwargs)
         except PostgresError as E:
-            await Event.create_error('Failed to create automated pool.')
-            print('exp__', E.__class__.__name__)
+            await Event.create_error('Failed to create automated pool.', entity=Pool().entity)
             raise SimpleError(E)
 
         # add data for protection
-        pool_task_manager.add_new_pool_data(str(automated_pool.automated_pool_id), str(automated_pool.template_id))
+        pool_task_manager.add_new_pool_data(str(automated_pool.id), str(automated_pool.template_id))
         # start task
         native_loop = asyncio.get_event_loop()
-        pool_lock = pool_task_manager.get_pool_lock(str(automated_pool.automated_pool_id))
+        pool_lock = pool_task_manager.get_pool_lock(str(automated_pool.id))
         pool_lock.create_pool_task = native_loop.create_task(automated_pool.create_pool())
 
         # pool creation task successfully started
-        pool = await Pool.get_pool(automated_pool.automated_pool_id)
+        pool = await Pool.get_pool(automated_pool.id)
         return CreateAutomatedPoolMutation(
-                pool=PoolType(**pool),
+                pool=pool_obj_to_type(pool),
                 ok=True)
 
 

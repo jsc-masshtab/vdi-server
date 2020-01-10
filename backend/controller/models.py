@@ -7,14 +7,14 @@ from sqlalchemy.dialects.postgresql import UUID
 
 from auth.utils import crypto
 from controller.client import ControllerClient
-from database import db, get_list_of_values_from_db, Status
+from database import db, get_list_of_values_from_db, Status, AbstractEntity
 from common.veil_errors import SimpleError
 from event.models import Event
 # TODO: validate token by expires_on parameter
 # TODO: validate status
 
 
-class Controller(db.Model):
+class Controller(db.Model, AbstractEntity):
     # TODO: indexes
     __tablename__ = 'controller'
     id = db.Column(UUID(), primary_key=True, default=uuid.uuid4)
@@ -109,7 +109,7 @@ class Controller(db.Model):
 
         msg = 'Выполнено удаление контроллера {id}.'.format(id=self.id)
         await self.delete()
-        await Event.create_info(msg)
+        await Event.create_info(msg, entity=self.entity)
         return True
 
     async def full_delete_pools(self):
@@ -119,14 +119,11 @@ class Controller(db.Model):
             await pool.full_delete(commit=False)
 
     async def full_delete(self):
-        """Удаление сущности в статусе ACTIVE с удалением зависимых сущностей"""
-        if self.status != Status.ACTIVE:
-            error_msg = 'Удаление не может быть выполнено из-за блокирующего статуса. Выполните форсированное удаление.'
-            raise SimpleError(error_msg)
+        """Удаление сущности с удалением зависимых сущностей"""
 
         msg = 'Выполнено полное удаление контроллера {id}.'.format(id=self.id)
         await self.delete()
-        await Event.create_info(msg)
+        await Event.create_info(msg, entity=self.entity)
         return True
 
     @classmethod

@@ -3,18 +3,18 @@ import uuid
 from sqlalchemy.dialects.postgresql import UUID
 import tornado.gen
 
-from database import db, get_list_of_values_from_db
+from database import db, get_list_of_values_from_db, AbstractEntity
 from vm.veil_client import VmHttpClient
 from event.models import Event
 
 # TODO: сделать схему и методы более осмысленными.
 
 
-class Vm(db.Model):
+class Vm(db.Model, AbstractEntity):
     __tablename__ = 'vm'
     id = db.Column(UUID(), primary_key=True, default=uuid.uuid4)
     template_id = db.Column(db.Unicode(length=100), nullable=True)
-    pool_id = db.Column(UUID(), db.ForeignKey('pool.pool_id', ondelete="CASCADE"))
+    pool_id = db.Column(UUID(), db.ForeignKey('pool.id', ondelete="CASCADE"))
     username = db.Column(db.Unicode(length=100))
 
     ACTIONS = ('start', 'suspend', 'reset', 'shutdown', 'resume', 'reboot')
