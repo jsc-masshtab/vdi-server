@@ -24,12 +24,56 @@ from resources_monitoring.handlers import WaiterSubscriptionObserver
 from resources_monitoring.resources_monitoring_data import VDI_TASKS_SUBSCRIPTION
 
 
-async def get_resources_pool_test():
+async def get_resources_static_pool_test():
     """На контроллере ищутся оптимальные ресурсы для проведения теста
     Альтернативы:
     1)Держать приготовленный контроллер специально для тестов,
     на котором уже гарантировано присутствуют нужные ресурсы
     2)На контроллере при каждом тесте создавать/удалять требуемые ресурсы (это может увеличить время тестов)
+    """
+    # controller
+    controllers_addresses = await Controller.get_controllers_addresses()
+    if not controllers_addresses:
+        raise RuntimeError('Нет контроллеров')
+
+    controller_ip = controllers_addresses[0]
+    print('controller_ip', controller_ip)
+
+    resources_http_client = await ResourcesHttpClient.create(controller_ip)
+    clusters = await resources_http_client.fetch_cluster_list()
+    if not clusters:
+        raise RuntimeError('На контроллере {} нет кластеров'.format(controller_ip))
+
+    vm_http_client = await VmHttpClient.create(controller_ip, '')
+    templates = await vm_http_client.fetch_templates_list()
+    if not templates:
+        raise RuntimeError('На контроллере {} нет шаблонов'.format(controller_ip))
+
+    for template in templates:
+        # check if template has a disk
+        vm_http_client = await VmHttpClient.create(controller_ip, template['id'])
+        disks_list = await vm_http_client.fetch_vdisks_list()
+        if not disks_list:
+            continue
+
+        # check if node active
+        node_info = await resources_http_client.fetch_node(template['node']['id'])
+        if node_info['status'] != 'ACTIVE':
+            continue
+
+        # determine cluster
+        vm_http_client = await VmHttpClient.create(controller_ip, template['id'])
+        template_info = await vm_http_client.info()
+
+        return {'controller_ip': controller_ip, 'cluster_id': template_info['cluster'],
+                'node_id': template['node']['id'], 'template_id': template['id'],
+                'datapool_id': disks_list[0]['datapool']['id']}
+
+    raise RuntimeError('Подходящие ресурсы не найдены.')
+
+
+async def get_resources_automated_pool_test():
+    """На контроллере ищутся оптимальные ресурсы для проведения теста
     """
     # controller
     controllers_addresses = await Controller.get_controllers_addresses()
@@ -128,8 +172,8 @@ async def fixt_create_automated_pool():
     # start resources_monitor to receive info  from controller. autopool creation doesnt work without it
     await resources_monitor_manager.start()
 
-    resources = await get_resources_pool_test()
-
+    resources = await get_resources_automated_pool_test()
+    print('resources', resources)
     qu = '''
         mutation {
             addDynamicPool(verbose_name: "%s", controller_ip: "%s", 
@@ -193,7 +237,7 @@ async def fixt_create_automated_pool():
 async def fixt_create_static_pool(fixt_db):
     """Создается ВМ, создается пул с этой ВМ, пул удаляется, ВМ удаляется."""
     print('create_static_pool')
-    pool_main_resources = await get_resources_pool_test()
+    pool_main_resources = await get_resources_static_pool_test()
     controller_ip = pool_main_resources['controller_ip']
     node_id = pool_main_resources['node_id']
     datapool_id = pool_main_resources['datapool_id']
@@ -216,7 +260,7 @@ async def fixt_create_static_pool(fixt_db):
             'datapool_id': datapool_id,
             'controller_ip':controller_ip,
             'node_id': node_id,
-            'create_thin_clones': False
+            'create_thin_clones': True
         }
         vm_info = await Vm.copy(**params)
         return vm_info
