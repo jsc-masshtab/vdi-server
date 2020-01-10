@@ -10,18 +10,19 @@ export class PoolDetailsService {
 
     constructor(private service: Apollo) { }
 
-    public removePool(pool_id: number) {
+    public removePool(pool_id: number,  full: boolean) {
         return this.service.mutate<any>({
             mutation: gql`
-                        mutation pools($pool_id: UUID) {
-                            removePool(pool_id: $pool_id) {
+                        mutation pools($pool_id: UUID, $full: Boolean) {
+                            removePool(pool_id: $pool_id, full: $full) {
                                 ok
                             }
                         }
             `,
             variables: {
                 method: 'POST',
-                pool_id
+                pool_id,
+                full
             }
         });
     }
@@ -106,6 +107,9 @@ export class PoolDetailsService {
                                         verbose_name
                                     }
                                     node {
+                                        verbose_name
+                                    }
+                                    datapool {
                                         verbose_name
                                     }
                                 }

@@ -1,3 +1,4 @@
+import { FormControl } from '@angular/forms';
 import { PoolsUpdateService } from './../../all-pools/pools.update.service';
 import { WaitService } from '../../../common/components/single/wait/wait.service';
 import { MatDialogRef } from '@angular/material';
@@ -18,6 +19,8 @@ interface IData {
 
 export class RemovePoolComponent  {
 
+  public fullDelete = new FormControl(false);
+
   constructor(
               private poolService: PoolDetailsService,
               private waitService: WaitService,
@@ -28,7 +31,7 @@ export class RemovePoolComponent  {
 
   public send() {
     this.waitService.setWait(true);
-    this.poolService.removePool(this.data.idPool).subscribe((res) => {
+    this.poolService.removePool(this.data.idPool, this.fullDelete.value).subscribe((res) => {
       if (res) {
         setTimeout(() => {
           this.dialogRef.close();
