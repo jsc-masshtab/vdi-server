@@ -171,6 +171,10 @@ class RemoveControllerMutation(graphene.Mutation):
         else:
             ok = await controller.soft_delete()
 
+        # todo:
+        #  Есть мысль: прекращать взаимодействие с контроллером по ws перед началом удаления самого контроллера
+        #  и возвращать взаимодействие, если контроллер не удалось удалить. Логика в том, чтобы не взаимодействовать
+        #  с сущностью, находящейся в удаляемом состоянии.
         await resources_monitor_manager.remove_controller(controller.address)
 
         return RemoveControllerMutation(ok=ok)
