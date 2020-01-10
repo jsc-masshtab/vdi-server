@@ -75,7 +75,7 @@ class ResourcesMonitor(AbstractMonitor):
                 # if controller is online then there wil not be any exception
                 resources_http_client = await ResourcesHttpClient.create(self._controller_ip)
                 await resources_http_client.check_controller()
-            except (HTTPClientError, HttpError, OSError):
+            except (HTTPClientError, HttpError, OSError, Exception):
                 # notify only if controller was online before (data changed)
                 if self._is_online:
                     response_dict['status'] = 'OFFLINE'
@@ -147,7 +147,7 @@ class ResourcesMonitor(AbstractMonitor):
         return True
 
     async def _on_message_received(self, message):
-        print(__class__.__name__, 'msg received from {}:'.format(self._controller_ip), message)
+        # print(__class__.__name__, 'msg received from {}:'.format(self._controller_ip), message)
         try:
             json_data = json.loads(message)
         except JSONDecodeError:
@@ -162,5 +162,8 @@ class ResourcesMonitor(AbstractMonitor):
     async def _close_connection(self):
         if self._ws_connection:
             print(__class__.__name__, 'Closing ws connection', self._controller_ip)
-            self._ws_connection.close()
+            try:
+                self._ws_connection.close()
+            except Exception:  # todo: вообще конкретное исключение не интересует
+                pass
 

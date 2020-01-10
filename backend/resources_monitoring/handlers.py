@@ -38,7 +38,7 @@ class AbstractSubscriptionObserver(ABC):
     def __init__(self):
         self._subscriptions = []
         self._message_queue = asyncio.Queue(100)  # 100 - max queue size
-        self._default_ms_process_timeout = 0.1
+        self._default_ms_process_timeout = 0.05
 
     # PUBLIC METHODS
     def on_notified(self, json_message):
