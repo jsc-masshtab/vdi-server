@@ -9,6 +9,8 @@ from event.models import Event
 
 
 class AuthHandler(BaseHandler, ABC):
+    entity = {'entity_type': 'Auth', 'entity_uuid': None}
+
     async def post(self):
         try:
             if not self.args:
@@ -37,11 +39,11 @@ class AuthHandler(BaseHandler, ABC):
         except AssertionError as E:
             error_message = str(E)
             response = {'errors': [{'message': error_message}]}
-            error_message = 'Auth by {ct}: {err} IP: {ip}. username: {usr}'.format(ct=self.args.get('client-type'),
-                                                                                   err=error_message,
-                                                                                   ip=self.remote_ip,
-                                                                                   usr=self.args.get('username'))
-            await Event.create_warning(error_message)
+            error_message = '{ct}: {err} IP: {ip}. username: {usr}'.format(ct=self.args.get('client-type'),
+                                                                           err=error_message,
+                                                                           ip=self.remote_ip,
+                                                                           usr=self.args.get('username'))
+            await Event.create_warning(error_message, entity=self.entity)
         return self.finish(response)
 
 

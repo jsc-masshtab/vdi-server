@@ -87,7 +87,7 @@ class PoolTaskManager:
     # PRIVATE METHODS
     async def _get_pools_data_from_db(self):
         from pool.models import AutomatedPool
-        auto_pools_data = await db.select([AutomatedPool.automated_pool_id, AutomatedPool.template_id]).\
+        auto_pools_data = await db.select([AutomatedPool.id, AutomatedPool.template_id]).\
             select_from(AutomatedPool).gino.all()
         return auto_pools_data
 

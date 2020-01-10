@@ -5,11 +5,11 @@ from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.sql import func
 
 from auth.utils import hashers
-from database import db, AbstractSortableStatusModel
+from database import db, AbstractSortableStatusModel, AbstractEntity
 from event.models import Event
 
 
-class User(AbstractSortableStatusModel, db.Model):
+class User(AbstractSortableStatusModel, db.Model, AbstractEntity):
     __tablename__ = 'user'
     id = db.Column(UUID(), primary_key=True, default=uuid.uuid4)
     username = db.Column(db.Unicode(length=128), nullable=False, unique=True)
