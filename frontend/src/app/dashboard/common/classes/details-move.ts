@@ -28,20 +28,16 @@ export class DetailsMove  {
   }
 
   public componentActivate(view: ElementRef): void {
-    setTimeout(() => {
-      this.pageHeight = this.pageHeightMin;
+    this.pageHeight = this.pageHeightMin;
 
-      if ((view.nativeElement.clientHeight - this.pageHeightMinNumber) < (this.pageHeightMinNumber + 250)) {
-        this.pageRollup = true;
-      }
-    }, 0);
+    if ((view.nativeElement.clientHeight - this.pageHeightMinNumber) < (this.pageHeightMinNumber + 250)) {
+      this.pageRollup = true;
+    }
   }
 
   public componentDeactivate(): void {
-    setTimeout(() => {
-      this.pageHeight = this.pageHeightMax;
-      this.pageRollup = false;
-    }, 0);
+    this.pageHeight = this.pageHeightMax;
+    this.pageRollup = false;
   }
 
 }
