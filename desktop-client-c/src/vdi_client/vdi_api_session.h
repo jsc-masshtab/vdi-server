@@ -32,6 +32,7 @@ typedef struct{
     gint64 vm_port;
     gchar *vm_password;
     gchar *vm_verbose_name;
+    gchar *remote_protocol_type;
 
     gchar *message;
 

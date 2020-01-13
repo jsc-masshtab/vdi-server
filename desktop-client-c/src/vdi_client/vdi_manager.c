@@ -43,6 +43,7 @@ typedef struct{
     gchar **url_ptr;
     gchar **password_ptr;
     gchar **vm_verbose_name_ptr;
+    gchar **remote_protocol_type_ptr;
 
     ConnectionInfo ci;
 } VdiManager;
@@ -91,6 +92,7 @@ static void set_init_values()
     vdi_manager.url_ptr = NULL;
     vdi_manager.password_ptr = NULL;
     vdi_manager.vm_verbose_name_ptr = NULL;
+    vdi_manager.remote_protocol_type_ptr = NULL;
 }
 
 // Set GUI state
@@ -297,10 +299,15 @@ static void on_get_vm_from_pool_finished(GObject *source_object G_GNUC_UNUSED,
         free_memory_safely(vdi_manager.url_ptr);
         *vdi_manager.url_ptr = g_strdup_printf("spice://%s:%ld", vdi_vm_data->vm_host, vdi_vm_data->vm_port);
         g_strstrip(*vdi_manager.url_ptr);
+
         free_memory_safely(vdi_manager.password_ptr);
         *vdi_manager.password_ptr = g_strdup(vdi_vm_data->vm_password);
+
         free_memory_safely(vdi_manager.vm_verbose_name_ptr);
         *vdi_manager.vm_verbose_name_ptr = g_strdup(vdi_vm_data->vm_verbose_name);
+
+        free_memory_safely(vdi_manager.remote_protocol_type_ptr);
+        *vdi_manager.remote_protocol_type_ptr = g_strdup(vdi_vm_data->remote_protocol_type);
         //
         set_vdi_client_state(VDI_RECEIVED_RESPONSE, "Получена вм из пула", FALSE);
 
@@ -388,7 +395,7 @@ static void on_vm_start_button_clicked(GtkButton *button, gpointer data G_GNUC_U
 
 /////////////////////////////////// main function
 GtkResponseType vdi_manager_dialog(GtkWindow *main_window G_GNUC_UNUSED, gchar **uri,
-                                   gchar **password, gchar **vm_verbose_name)
+                                   gchar **password, gchar **vm_verbose_name, gchar **remote_protocol_type)
 {
     set_init_values();
     vdi_manager.ci.response = FALSE;
@@ -397,6 +404,7 @@ GtkResponseType vdi_manager_dialog(GtkWindow *main_window G_GNUC_UNUSED, gchar *
     vdi_manager.url_ptr = uri;
     vdi_manager.password_ptr = password;
     vdi_manager.vm_verbose_name_ptr = vm_verbose_name;
+    vdi_manager.remote_protocol_type_ptr = remote_protocol_type;
 
     /* Create the widgets */
     vdi_manager.builder = virt_viewer_util_load_ui("vdi_manager_form.ui");

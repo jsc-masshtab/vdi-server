@@ -79,6 +79,7 @@ typedef struct
     gboolean *is_connect_to_prev_pool_ptr;
 
     gchar **vm_verbose_name;
+    gchar **remote_protocol_type;
 
 } RemoteViewerData;
 
@@ -401,7 +402,7 @@ static void fast_forward_connect_to_prev_pool_if_enabled(RemoteViewerData *ci)
 gboolean
 remote_viewer_connect_dialog(gchar **uri, gchar **user, gchar **password,
                              gchar **ip, gchar **port, gboolean *is_connect_to_prev_pool,
-                             gchar **vm_verbose_name)
+                             gchar **vm_verbose_name, gchar **remote_protocol_type)
 {
     // set params save group
     const gchar *paramToFileGrpoup = opt_manual_mode ? "RemoteViewerConnectManual" : "RemoteViewerConnect";
@@ -424,6 +425,7 @@ remote_viewer_connect_dialog(gchar **uri, gchar **user, gchar **password,
     ci.port = port;
     ci.is_connect_to_prev_pool_ptr = is_connect_to_prev_pool;
     ci.vm_verbose_name = vm_verbose_name;
+    ci.remote_protocol_type = remote_protocol_type;
 
     /* Create the widgets */
     builder = virt_viewer_util_load_ui("remote-viewer-connect_veil.ui");

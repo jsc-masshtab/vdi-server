@@ -25,7 +25,7 @@
 
 gboolean remote_viewer_connect_dialog(gchar **uri, gchar **user, gchar **password,
                                       gchar **ip, gchar **port, gboolean *is_connect_to_prev_pool,
-                                      gchar **vm_verbose_name);
+                                      gchar **vm_verbose_name, gchar **remote_protocol_type);
 
 #endif /* REMOTE_VIEWER_CONNECT_H */
 

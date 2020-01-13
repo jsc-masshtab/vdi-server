@@ -9,6 +9,6 @@
 
 
 GtkResponseType vdi_manager_dialog(GtkWindow *main_window, gchar **uri,
-                                   gchar **password, gchar **vm_verbose_name);
+                                   gchar **password, gchar **vm_verbose_name, gchar **remote_protocol_type);
 
 #endif //VIRT_VIEWER_VEIL_VDI_MANAGER_H
