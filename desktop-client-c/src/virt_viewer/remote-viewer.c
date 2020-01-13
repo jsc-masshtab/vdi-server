@@ -362,6 +362,64 @@ remote_viewer_session_connected(VirtViewerSession *session,
     g_free(uri);
 }
 
+static void
+child_watch_cb (GPid     pid,
+                gint     status,
+                gpointer user_data)
+{
+    g_message("Child %" G_PID_FORMAT " exited %s", pid,
+              g_spawn_check_exit_status (status, NULL) ? "normally" : "abnormally");
+
+    // Free any resources associated with the child process
+    g_spawn_close_pid(pid);
+
+    // stop process event loop
+    GMainLoop *loop = user_data;
+    g_main_loop_quit(loop);
+}
+
+static void
+remote_viewer_start_xfreerdp_porecess_and_wait()
+{
+    g_autoptr(GError) error = NULL;
+    const gchar * const argv[] = { "xfreerdp",
+                                   "/u:user",
+                                   "/p:user",
+                                   "/v:192.168.8.137",
+                                   "/sound:rate:44100,channel:2",
+                                   "/gfx-h264:AVC444",
+                                   "/video",
+                                   "/log-level:INFO",
+                                   "/w:1920",
+                                   "/h:1080",
+                                   "/gdi:hw",
+                                   //"/multimon",
+                                   "+decorations",
+                                   NULL };
+    //gint child_stdout, child_stderr;
+    GPid child_pid;
+
+    // Spawn child process.
+    g_spawn_async(NULL, argv, NULL, G_SPAWN_SEARCH_PATH | G_SPAWN_DO_NOT_REAP_CHILD, NULL,
+                             NULL, &child_pid, &error);
+
+//    g_spawn_command_line_async("xfreerdp /u:user /p:user /v:192.168.8.137", &error);
+//    g_spawn_command_line_sync("xfreerdp /u:user /p:user /v:192.168.8.137",
+//                              NULL, NULL, NULL, &error);
+
+    if (error != NULL) {
+        printf("%s: Spawning child failed: %s\n", (const char *)__func__, error->message);
+        return;
+    }
+
+    GMainLoop *loop = g_main_loop_new(NULL, FALSE);
+
+    // add calback upon the process return
+    g_child_watch_add(child_pid, child_watch_cb, loop);
+
+    g_main_loop_run(loop);
+}
+
 static gboolean
 remote_viewer_start(VirtViewerApp *app, GError **err, RemoteViewerState remoteViewerState)
 {
@@ -472,13 +530,23 @@ retry_connnect_to_vm:
 
         // set url and credentials
         g_object_set(app, "guri", guri, NULL);
-        setSpiceSessionCredentials(user, password);
 
-        // start connect attempt timer
-        virt_viewer_start_reconnect_poll(self);
+        const gchar *remote_protocol_type = "rdp";
+
+        if (g_strcmp0(remote_protocol_type, "spice") == 0) {
+            setSpiceSessionCredentials(user, password);
+            // start connect attempt timer
+            virt_viewer_start_reconnect_poll(self);
+            // Показывается окно virt viewer // virt_viewer_app_default_start
+            ret = VIRT_VIEWER_APP_CLASS(remote_viewer_parent_class)->start(app, &error, AUTH_DIALOG);
+
+        } else if (g_strcmp0(remote_protocol_type, "rdp") == 0) {
+            // start xfreerdp process
+            remote_viewer_start_xfreerdp_porecess_and_wait();
+        } else {
+
+        }
     }
-    // Показывается окно virt viewer // virt_viewer_app_default_start
-    ret = VIRT_VIEWER_APP_CLASS(remote_viewer_parent_class)->start(app, &error, AUTH_DIALOG);
 
 cleanup:
     //g_clear_object(&file);
