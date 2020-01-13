@@ -38,11 +38,11 @@
         background: #282828;
         width: 100%;
         color: #FFF;
-        z-index: 1;
         border-radius: 6px;
         border-top-right-radius: 0;
         border-bottom-right-radius: 0;
         background: linear-gradient(to right, #282828 0%, #3f606b 120%);
+        z-index: 5;
 
         > li {
             padding: 8px;

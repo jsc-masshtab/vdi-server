@@ -364,7 +364,7 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
 // @ts-ignore: Unreachable code error
   private changeName(): void {
     this.dialog.open(FormForEditComponent, {
-      width: '500px',
+      width: '60%',
       data: {
         post: {
           service: this.poolService,
