@@ -4,7 +4,5 @@
 directory = /opt/veil-vdi/backend
 process_name = vdi-server-8888
 environment=PYTHONPATH=/opt/veil-vdi/backend
-command = /usr/local/bin/pipenv run python app.py --access_to_stdout --logging=error --port=8888 --debug=True --autoreload=False
-stderr_logfile = /var/log/veil-vdi/tornado-stderr.log
-stdout_logfile = /var/log/veil-vdi/tornado-stdout.log
+command = /usr/local/bin/pipenv run python app.py --access_to_stdout --logging=info --port=8888 --debug=True --autoreload=False --log_file_prefix=/var/log/veil-vdi/vdi_tornado.log
 autorestart = true

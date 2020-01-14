@@ -63,7 +63,7 @@ DEFAULT_NAME = '-'
 # Settings for tests
 # -----------------------------
 TESTS_ADMIN_USERNAME = 'admin'
-TESTS_ADMIN_PASSWORD = 'qwe'
+TESTS_ADMIN_PASSWORD = 'veil'
 TESTS_LDAP_USERNAME = 'ad120'
 TESTS_LDAP_PASSWORD = 'Bazalt1!'
 TESTS_AD_DOMAIN_NAME = 'bazalt.team'

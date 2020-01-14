@@ -136,3 +136,7 @@ class AbstractEntity:
     @property
     def entity(self):
         return {'entity_type': self.entity_type, 'entity_uuid': self.uuid}
+
+    @property
+    def entity_list(self):
+        return [self.entity]
