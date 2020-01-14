@@ -107,9 +107,9 @@ class Controller(db.Model, AbstractEntity):
         if controller_has_pools:
             raise SimpleError('У контроллера есть пулы виртуальных машин. Выполните полное удаление.')
 
-        msg = 'Выполнено удаление контроллера {id}.'.format(id=self.id)
+        msg = 'Выполнено удаление контроллера {name}.'.format(name=self.verbose_name)
         await self.delete()
-        await Event.create_info(msg, entity=self.entity)
+        await Event.create_info(msg, entity_list=self.entity_list)
         return True
 
     async def full_delete_pools(self):
@@ -121,9 +121,9 @@ class Controller(db.Model, AbstractEntity):
     async def full_delete(self):
         """Удаление сущности с удалением зависимых сущностей"""
 
-        msg = 'Выполнено полное удаление контроллера {id}.'.format(id=self.id)
+        msg = 'Выполнено полное удаление контроллера {name}.'.format(name=self.verbose_name)
         await self.delete()
-        await Event.create_info(msg, entity=self.entity)
+        await Event.create_info(msg, entity_list=self.entity_list)
         return True
 
     @classmethod
