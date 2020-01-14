@@ -77,7 +77,7 @@ export class PoolsComponent extends DetailsMove implements OnInit, OnDestroy {
   ngOnInit() {
     this.getAllPools();
     this.updatePools();
-    setTimeout(() => this.ws.init(), 1000);
+    this.ws.init();
   }
 
   private updatePools(): void {
@@ -103,7 +103,6 @@ export class PoolsComponent extends DetailsMove implements OnInit, OnDestroy {
     this.getPoolsSub = this.service.getAllPools()
       .subscribe((data) => {
         this.pools = data;
-        console.log('getAllPools',this.service.paramsForGetPools.spin);
         this.waitService.setWait(false);
     });
   }
