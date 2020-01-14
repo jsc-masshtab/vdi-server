@@ -61,7 +61,7 @@
 
 <div class="components-info">
     <div class="component-list">
-        <vdi-table-component [data]="events" [collection]="collection" (clickRowData)="clickRow($event)" entity="events"></vdi-table-component>
+        <vdi-table-component class="table-with-pagination" [data]="events" [collection]="collection" (clickRowData)="clickRow($event)" entity="events"></vdi-table-component>
         <vdi-pagination [count]="count" [limit]="limit" [offset]="offset" (action)="toPage($event)"></vdi-pagination>
     </div>
 </div>
