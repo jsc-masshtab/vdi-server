@@ -5,23 +5,23 @@
 <div class="details-wrap">
 
     <div class="details-header">
-        <div class="title"><fa-icon [icon]="['fas','desktop']" size="s" ></fa-icon><span class="name">Пул <span *ngIf="host">{{pool?.name}}</span></span></div>
+        <div class="title"><fa-icon [icon]="['fas','desktop']" size="s" ></fa-icon><span class="name">Пул <span *ngIf="host">{{pool?.verbose_name}}</span></span></div>
         <div class="btns-part">
             <button class="btn-close" (click)="close()"><fa-icon [icon]="['fas','times-circle']"></fa-icon></button>
         </div>
     </div>
     <div class="details-control-panel">
         <button (click)="getPool()" class="btn-refresh" title="Обновить"><fa-icon [icon]="['fas','sync-alt']"></fa-icon></button>
-        <button (click)="removePool()" *ngIf="menuActive === 'info' && pool" title="Удалить пул" class="btn-control"><fa-icon [icon]="['fas','trash-alt']" size="xs"></fa-icon><span class="name">Удалить</span></button>
+        <button (click)="removePool()" *ngIf="menuActive === 'info' && pool" title="Удалить пул" class="btn-control"><fa-icon [icon]="['fas','trash-alt']" size="xs"></fa-icon><span class="name">Удалить пул</span></button>
 
         <ng-container *ngIf="menuActive === 'vms' && typePool === 'static' && pool">
-            <button (click)="addVM()" title="Добавить ВМ в пул" class="btn-control"><fa-icon [icon]="['fas','plus-circle']" size="xs"></fa-icon><span class="name">Добавить</span></button>
-            <button (click)="removeVM()" title="Удалить ВМ из пула" class="btn-control"><fa-icon [icon]="['fas','trash-alt']" size="xs"></fa-icon><span class="name">Удалить</span></button>
+            <button (click)="addVM()" title="Добавить ВМ в пул" class="btn-control"><fa-icon [icon]="['fas','plus-circle']" size="xs"></fa-icon><span class="name">Добавить ВМ</span></button>
+            <button (click)="removeVM()" title="Удалить ВМ из пула" class="btn-control"><fa-icon [icon]="['fas','trash-alt']" size="xs"></fa-icon><span class="name">Удалить ВМ</span></button>
         </ng-container>
 
         <ng-container *ngIf="menuActive === 'users' && pool">
-            <button (click)="addUsers()" title="Добавить пользователей" class="btn-control"><fa-icon [icon]="['fas','plus-circle']" size="xs"></fa-icon><span class="name">Добавить</span></button>
-            <button (click)="removeUsers()" title="Удалить пользователей" class="btn-control"><fa-icon [icon]="['fas','trash-alt']" size="xs"></fa-icon><span class="name">Удалить</span></button>
+            <button (click)="addUsers()" title="Добавить пользователей" class="btn-control"><fa-icon [icon]="['fas','plus-circle']" size="xs"></fa-icon><span class="name">Добавить пользователя</span></button>
+            <button (click)="removeUsers()" title="Удалить пользователей" class="btn-control"><fa-icon [icon]="['fas','trash-alt']" size="xs"></fa-icon><span class="name">Удалить пользователя</span></button>
         </ng-container>
     </div>
 

@@ -100,13 +100,13 @@ def extract_user(headers: dict) -> str:
     return decoded.get('username')
 
 
-def extract_user_with_no_expire_check(headers: dict) -> str:
+def extract_user_and_token_with_no_expire_check(headers: dict) -> str:
     """Exctract user from token if token is valid"""
     access_token = extract_access_token(headers)
     JWT_OPTIONS['verify_exp'] = False
     payload = decode_jwt(access_token, JWT_OPTIONS)
     username = payload['username']
-    return username
+    return username, access_token
 
 
 async def extraxt_user_object(headers: dict) -> User:

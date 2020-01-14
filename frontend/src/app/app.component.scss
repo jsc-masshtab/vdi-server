@@ -28,6 +28,9 @@ vdi-dashboard {
     height: calc(100% - 80px);
     display: flex;
     border-right: 5px solid #3f606b;
+    margin-top: 50px;
+
+    margin-right: 200px;
 }
 
 main {
@@ -39,7 +42,10 @@ main {
     background-repeat: repeat;
     background-size: 12px 14px, 12px 14px, 12px 11px;
     background-position: 0 0, 0 0, 0 20px;
+    margin-left: 200px;
 }
+
+@media all  and (max-width: 750px) { main { margin-left: 70px !important} }
 
 .cursorTrue {
     cursor: pointer !important;
@@ -54,6 +60,11 @@ main {
     height: 50px;
     border-bottom: 1px solid rgba(255,255,255,0.2);
     justify-content: space-between;
+    position: fixed;
+    top: 0;
+    z-index: 4;
+    left: 0px;
+    right: 0px;
 }
 
 .logo {

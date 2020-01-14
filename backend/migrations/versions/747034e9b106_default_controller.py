@@ -26,7 +26,7 @@ def upgrade():
     # TODO: change default admin username and password.
     # admin vdi
     insert_user_query = """insert into public."user" values ('f9599771-cc95-45e4-9ae5-c8177b796aff', 'admin', 
-    'pbkdf2_sha256$180000$4rVwLcWNf2op8PM4IhwkcsYluOYobsmNQNFZpIEK1TNvF4Bs1X$dUQihzANJkiYOCnXvN47XsVZGV5KECpMJrLGN43EnAs=',
+    'pbkdf2_sha256$180000$WEBRRFY2i6fIh0IqMVFkfvDcnrEAMBJT7lSJnlBzxwo8RO5CCn$6kR5yASdhj/n6VwXKOaYLfdr2cAXoTedgqrkpngvJhw=',
      'admin@admin.admin', null, null,null, null, null, true, True);"""  # admin - qwe
     op.execute(insert_user_query)
 

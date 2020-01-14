@@ -57,6 +57,11 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
       property_lv2: 'verbose_name'
     },
     {
+      title: 'Пул данных',
+      property: 'datapool',
+      property_lv2: 'verbose_name'
+    },
+    {
       title: 'Всего ВМ',
       property: 'vms',
       type: 'array-length'
@@ -359,7 +364,7 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
 // @ts-ignore: Unreachable code error
   private changeName(): void {
     this.dialog.open(FormForEditComponent, {
-      width: '500px',
+      width: '60%',
       data: {
         post: {
           service: this.poolService,

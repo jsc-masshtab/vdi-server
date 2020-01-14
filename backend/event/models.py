@@ -34,6 +34,7 @@ class Event(db.Model):
     def __init__(self, **kw):
         super().__init__(**kw)
         self._read_by = set()
+        self._entity = set()
 
     @property
     def read_by(self):
@@ -42,6 +43,14 @@ class Event(db.Model):
     @read_by.setter
     def add_read_by(self, user):
         self._read_by.add(user)
+
+    @property
+    def entity(self):
+        return self._entity
+
+    @entity.setter
+    def add_entity(self, entity):
+        self._entity.add(entity)
 
     @staticmethod
     async def mark_read_by(user_id, events_id_list):
@@ -72,7 +81,7 @@ class Event(db.Model):
         await EventReadByUser.delete.where(and_(*filters)).gino.status()
 
     @classmethod
-    async def soft_create(cls, event_type, msg, description, user, entity):
+    async def soft_create(cls, event_type, msg, description, user, entity_list: list):
         async with db.transaction() as tx:
             # 1. Создаем сам Евент
             event = await Event.create(
@@ -81,23 +90,25 @@ class Event(db.Model):
                 description=description,
                 user=user
             )
-            # 2. Создаем запись сущности
-            entity = await Entity.create(entity_uuid=entity.get('entity_uuid'), entity_type=entity.get('entity_type'))
-            # 3. Создаем связь
-            await EventEntity.create(entity_id=entity.id, event_id=event.id)
+            for entity in entity_list:
+                # 2. Создаем запись сущности
+                entity = await Entity.create(entity_uuid=entity.get('entity_uuid'), entity_type=entity.get('entity_type'))
+                # 3. Создаем связь
+                await EventEntity.create(entity_id=entity.id, event_id=event.id)
             return True
 
     @classmethod
-    async def create_event(cls, msg, event_type=TYPE_INFO, description=None, user='system', entity=None):
-        if not entity:
-            entity = dict()
+    async def create_event(cls, msg, event_type=TYPE_INFO, description=None, user='system', entity_list=None):
+        if not entity_list:
+            entity_list = [dict()]
+
         msg_dict = dict(event_type=event_type,
                         message=msg,
                         user=user,
                         event='event',
                         resource=EVENTS_SUBSCRIPTION)
         internal_event_monitor.signal_event_2(msg_dict)
-        await cls.soft_create(event_type, msg, description, user, entity)
+        await cls.soft_create(event_type, msg, description, user, entity_list)
 
     create_info = partialmethod(create_event, event_type=TYPE_INFO)
     create_warning = partialmethod(create_event, event_type=TYPE_WARNING)

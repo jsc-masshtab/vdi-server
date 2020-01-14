@@ -7,9 +7,12 @@
     background-color: #282828;
     overflow-y: auto;
     transition: width 100ms;
-    min-width: 200px;
+    width: 200px;
     font-size: 13px;
     font-family: Arial, Helvetica, sans-serif;
+
+    position: fixed;
+    z-index: 3;
   
     &-item {
       display: flex;
@@ -73,7 +76,16 @@
       &::after {
         height: 18px;
       }
-    }
+    } 
+}
 
+@media all  and (max-width: 750px) { 
+  .top-menu { width: 70px !important; }
   
+  .top-menu-item {
+    justify-content: center;
+    align-items: center;
+
+    > span { display: none;}
+  }
 }

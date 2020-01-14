@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
-from datetime import datetime
-
+import logging
 from cached_property import cached_property
 from tornado.httpclient import AsyncHTTPClient, HTTPRequest, HTTPClientError
 from tornado.escape import json_decode
@@ -9,7 +8,6 @@ from settings import VEIL_REQUEST_TIMEOUT, VEIL_CONNECTION_TIMEOUT, VEIL_MAX_BOD
 from common.veil_errors import NotFound, Unauthorized, ServerError, Forbidden, ControllerNotAccessible, BadRequest
 from common.veil_decorators import prepare_body
 
-from event.models import Event  # TODO: remprorary variant
 # TODO: добавить обработку исключений
 # TODO: Не tornado.curl_httpclient.CurlAsyncHTTPClient, т.к. не измерен реальный прирост производительности.
 # TODO: нужно менять статус контроллера и прочих сущностей после нескольких неудачных попыток подключения
@@ -20,6 +18,8 @@ from event.models import Event  # TODO: remprorary variant
 AsyncHTTPClient.configure("tornado.simple_httpclient.SimpleAsyncHTTPClient",
                           max_clients=VEIL_MAX_CLIENTS,
                           max_body_size=VEIL_MAX_BODY_SIZE)
+
+error_log = logging.getLogger('tornado.error')
 
 
 class VeilHttpClient:
@@ -60,14 +60,10 @@ class VeilHttpClient:
                                   request_timeout=VEIL_REQUEST_TIMEOUT)
             response = await self._client.fetch(request)
         except HTTPClientError as http_error:
-            body = self.get_response_body(http_error.response)
+            error_log.error('URL {url} - {http_error}'.format(url=url,
+                                                              http_error=str(http_error)))
 
-            # TODO: temprorary variant
-            error_msg = '{cls}: URL {url} {http_error}'.format(
-                cls=__class__.__name__,
-                url=url,
-                http_error=str(http_error))
-            await Event.create_error(error_msg[:255], description=str(http_error))
+            body = self.get_response_body(http_error.response)
 
             if http_error.code == 400:
                 raise BadRequest(body)

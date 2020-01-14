@@ -299,7 +299,7 @@ class Pool(db.Model, AbstractEntity):
             msg = 'Выполнено удаление пула рабочих столов {verbose_name}.'
             msg = msg.format(verbose_name=self.verbose_name)
             await self.delete()
-            await Event.create_info(msg, entity=self.entity)
+            await Event.create_info(msg, entity_list=self.entity_list)
         return True
 
     async def full_delete(self, commit=True):
@@ -311,7 +311,7 @@ class Pool(db.Model, AbstractEntity):
                 await AutomatedPool.remove_vms(self.id)
             await self.delete()
             msg = 'Выполнено полное удаление пула рабочих столов {verbose_name}.'.format(verbose_name=self.verbose_name)
-            await Event.create_info(msg, entity=self.entity)
+            await Event.create_info(msg, entity_list=self.entity_list)
         return True
 
     @classmethod
@@ -566,7 +566,7 @@ class AutomatedPool(db.Model, AbstractEntity):
         for row in vms_list:
             await Vm.remove_vm(controller_ip=row[1], vm_id=row[0])
             msg = 'Запущено удаление виртуальной машины {id} на ECP.'.format(id=row[0])
-            await Event.create_info(msg, entity=cls().entity)
+            await Event.create_info(msg, entity_list=cls().entity_list)
         return True
 
     async def add_initial_vms(self):
@@ -580,7 +580,7 @@ class AutomatedPool(db.Model, AbstractEntity):
         pool_os_type = Vm.get_template_os_type(controller_address=controller_address, template_id=self.template_id)
         await self.update(os_type=pool_os_type).apply()
 
-        await Event.create_info('Automated pool creation started', entity=self.entity)
+        await Event.create_info('Automated pool creation started', entity_list=self.entity_list)
 
         vm_list = list()
         try:
@@ -590,7 +590,7 @@ class AutomatedPool(db.Model, AbstractEntity):
                 vm_list.append(vm)
 
                 msg = 'Automated pool creation. Created {} VMs from {}'.format(vm_index, self.initial_size)
-                await Event.create_info(msg, entity=self.entity)
+                await Event.create_info(msg, entity_list=self.entity_list)
 
                 # notify VDI front about progress(WS)
                 msg_dict = dict(msg=msg,
@@ -613,11 +613,11 @@ class AutomatedPool(db.Model, AbstractEntity):
 
         if is_creation_successful:
             msg = 'Automated pool successfully created. Initial VM amount {}'.format(len(vm_list))
-            await Event.create_info(msg, entity=self.entity)
+            await Event.create_info(msg, entity_list=self.entity_list)
         else:
             msg = 'Automated pool created with errors. VMs created: {}. Required: {}'.format(len(vm_list),
                                                                                              self.initial_size)
-            await Event.create_error(msg, entity=self.entity)
+            await Event.create_error(msg, entity_list=self.entity_list)
 
         msg_dict = dict(msg=msg,
                         msg_type='data',
@@ -645,7 +645,7 @@ class AutomatedPool(db.Model, AbstractEntity):
 
                     verbose_name = await self.verbose_name
                     msg = 'Automated pool {verbose_name} created.'.format(verbose_name=verbose_name)
-                    await Event.create_info(msg, entity=self.entity)
+                    await Event.create_info(msg, entity_list=self.entity_list)
                 except PoolCreationError as E:
                     print('exp__', E.__class__.__name__)
                     await self.deactivate()
