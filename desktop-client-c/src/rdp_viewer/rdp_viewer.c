@@ -47,7 +47,7 @@ rdp_viewer_start(const gchar *usename, const gchar *password, gchar *ip, gchar *
                                    "/w:1920",
                                    "/h:1080",
                                    "/gdi:hw",
-                                   //"/multimon",
+                                   "/multimon",
                                    "+decorations",
                                    "/cert-ignore",
                                    //"/f",

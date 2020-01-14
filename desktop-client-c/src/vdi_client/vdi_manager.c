@@ -306,8 +306,9 @@ static void on_get_vm_from_pool_finished(GObject *source_object G_GNUC_UNUSED,
         free_memory_safely(vdi_manager.vm_verbose_name_ptr);
         *vdi_manager.vm_verbose_name_ptr = g_strdup(vdi_vm_data->vm_verbose_name);
 
+        // get from gui
         free_memory_safely(vdi_manager.remote_protocol_type_ptr);
-        *vdi_manager.remote_protocol_type_ptr = g_strdup(vdi_vm_data->remote_protocol_type);
+        //*vdi_manager.remote_protocol_type_ptr = g_strdup(vdi_vm_data->remote_protocol_type);
         //
         set_vdi_client_state(VDI_RECEIVED_RESPONSE, "Получена вм из пула", FALSE);
 

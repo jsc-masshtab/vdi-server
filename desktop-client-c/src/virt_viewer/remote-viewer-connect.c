@@ -195,6 +195,9 @@ on_get_vm_from_pool_finished(GObject *source_object G_GNUC_UNUSED,
         *ci->password = g_strdup(vdi_vm_data->vm_password);
         *ci->vm_verbose_name = g_strdup(vdi_vm_data->vm_verbose_name);
 
+        // get remote protocol type from file
+       // *ci->remote_protocol_type =
+
         shutdown_loop(ci->loop);
     }
     //

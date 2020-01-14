@@ -479,8 +479,9 @@ retry_connnect_to_vm:
         // connect to vm depending on remote protocol
         if (g_strcmp0(remote_protocol_type, "rdp") == 0) {
             // start xfreerdp process
-            rdp_viewer_start(user, password, ip, NULL);
+            //rdp_viewer_start(user, password, ip, NULL);
             //rdp_viewer_start("user", "user", "192.168.7.235", NULL);
+            rdp_viewer_start(get_vdi_username(), get_vdi_password(), ip, NULL);
             goto retry_connnect_to_vm;
 
         } else { // spice by default

@@ -29,7 +29,7 @@ class PoolHandler(BaseHandler, ABC):
 @jwtauth
 class PoolGetVm(BaseHandler, ABC):
 
-    async def post(self, pool_id):
+    async def post(self, pool_id):  # remote_protocol: rdp/spice
         # TODO: есть подозрение, что иногда несмотря на отправленный запрос на просыпание VM - отправляется
         #  недостаточное количество данных для подключения тонкого клиента
         username = self.get_current_user()
@@ -79,7 +79,19 @@ class PoolGetVm(BaseHandler, ABC):
             await vm_client.prepare()
             info = await vm_client.info()
 
-            response = {'data': dict(host=str(controller_ip),
+            remote_protocol = self.args['remote_protocol']
+            if remote_protocol == 'rdp':
+                try:
+                    vm_address = info['guest_utils']['ipv4'][0]
+                except (IndexError, ValueError):
+                    response_dict = {'data': dict(host='', port=0, password='',
+                                                  message='Не удалось получить адресс ВМ для подключения по RDP')}
+                    return await self.finish(response_dict)
+
+            else:  # spice by default
+                vm_address = str(controller_ip)
+
+            response = {'data': dict(host=vm_address,
                                      port=info['remote_access_port'],
                                      password=info['graphics_password'],
                                      vm_verbose_name=info['verbose_name'])
