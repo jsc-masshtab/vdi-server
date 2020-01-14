@@ -30,10 +30,12 @@ export class EventsComponent implements OnInit {
   start_date = new FormControl(new Date());
   end_date = new FormControl(new Date());
   event_type = new FormControl('all');
+  entity_type = new FormControl('all');
   user = new FormControl('all');
   readed = new FormControl(false);
 
   users = [];
+  entity_types = [];
   selected_user: string = '';
 
   public collection: object[] = [
@@ -76,6 +78,10 @@ export class EventsComponent implements OnInit {
     });
 
     this.event_type.valueChanges.subscribe(() => {
+      this.getEvents();
+    });
+
+    this.entity_type.valueChanges.subscribe(() => {
       this.getEvents();
     });
 
@@ -129,6 +135,7 @@ export class EventsComponent implements OnInit {
       start_date: new Date(start_date).toISOString(),
       end_date: new Date(end_date).toISOString(),
       event_type: this.event_type.value,
+      entity_type: this.entity_type.value,
       user: this.user.value
     };
 
@@ -144,10 +151,15 @@ export class EventsComponent implements OnInit {
       delete queryset['event_type'];
     }
 
+    if (this.entity_type.value === 'all') {
+      delete queryset['entity_type'];
+    }
+
     this.waitService.setWait(true);
     this.service.getAllEvents(queryset).valueChanges.pipe(map(data => data.data))
       .subscribe((data) => {
         this.events = [...data.events];
+        this.entity_types = [...data.entity_types];
         this.count = data.count;
         this.waitService.setWait(false);
       });
