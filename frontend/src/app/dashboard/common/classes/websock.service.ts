@@ -14,7 +14,7 @@ export class WebsocketService  {
   constructor(private ws_create_pool_service: WebsocketPoolService) {}
 
   public init(): void {
-    let url = `ws://${window.location.hostname}:8888/subscriptions`;
+    let url = `ws://192.168.20.110:8888/subscriptions`;
 
     this.ws = new WebSocket(url);
     if (this.ws) {
@@ -34,8 +34,9 @@ export class WebsocketService  {
     this.ws_create_pool_service.setMsg(event.data);
   }
 
-  private onListenClose(event: CloseEvent): void {
+  public onListenClose(event?: CloseEvent): void {
     this.ws_create_pool_service.setComplete();
+    this.ws.close();
     console.log(event, 'close');
   }
 

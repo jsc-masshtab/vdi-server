@@ -103,6 +103,7 @@ export class PoolsComponent extends DetailsMove implements OnInit, OnDestroy {
     this.getPoolsSub = this.service.getAllPools()
       .subscribe((data) => {
         this.pools = data;
+        console.log('getAllPools',this.service.paramsForGetPools.spin);
         this.waitService.setWait(false);
     });
   }
@@ -155,6 +156,7 @@ export class PoolsComponent extends DetailsMove implements OnInit, OnDestroy {
   ngOnDestroy() {
     this.getPoolsSub.unsubscribe();
     this.updateSub.unsubscribe();
+    this.ws.onListenClose();
     this.service.paramsForGetPools.spin = true;
     this.service.paramsForGetPools.nameSort = undefined;
   }

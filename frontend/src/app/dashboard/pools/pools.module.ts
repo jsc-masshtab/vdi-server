@@ -24,6 +24,7 @@ import { RemovePoolComponent } from './pool-details/remove-pool/remove-pool.comp
 import { VmDetalsPopupComponent } from './pool-details/vm-details-popup/vm-details-popup.component';
 
 import {MatCheckboxModule, MAT_CHECKBOX_CLICK_ACTION} from '@angular/material/checkbox';
+import { WebsocketPoolService } from '../common/classes/websockPool.service';
 
 @NgModule({
   declarations: [
@@ -54,7 +55,8 @@ import {MatCheckboxModule, MAT_CHECKBOX_CLICK_ACTION} from '@angular/material/ch
     PoolDetailsService,
     AddPoolService,
     {provide: MAT_CHECKBOX_CLICK_ACTION, useValue: 'check'},
-    PoolsUpdateService
+    PoolsUpdateService,
+    WebsocketPoolService
   ],
   entryComponents: [
     PoolAddComponent,

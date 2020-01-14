@@ -601,7 +601,7 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
 
   ngOnDestroy() {
     if (this.sub_ws_create_pool) {
-      // this.sub_ws_create_pool.unsubscribe();
+      this.sub_ws_create_pool.unsubscribe();
     }
 
     if (this.subPool) {

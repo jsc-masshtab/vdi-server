@@ -1,10 +1,7 @@
 import { Observable, ReplaySubject } from 'rxjs';
 import { Injectable } from '@angular/core';
 
-@Injectable({
-  providedIn: 'root',
-})
-
+@Injectable()
 export class WebsocketPoolService  {
 
     constructor() {}
@@ -16,6 +13,7 @@ export class WebsocketPoolService  {
     }
 
     public setMsg(msg: string): void {
+      console.log(msg);
       this.stream_create_pool$$.next(msg);
     }
 
