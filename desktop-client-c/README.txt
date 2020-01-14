@@ -4,10 +4,11 @@ Build checked on Ubuntu 18.04, CentOS 7, Windows 7.
 
 ======================================================Building on Linux===================================================
 1)Install followwing packages:
-sudo apt install spice-client-gtk
-sudo apt install libspice-gtk-3.0-dev
-sudo apt install libjson-glib-dev
-sudo apt install libxml2-dev
+spice-client-gtk
+libspice-client-gtk-3.0-dev
+libjson-glib-dev
+libxml2-dev
+libsoup2.4-dev
 
 2)Open terminal in desktop-client-c directory and execute commands:
 mkdir build
