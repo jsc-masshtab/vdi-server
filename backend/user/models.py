@@ -5,11 +5,11 @@ from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.sql import func
 
 from auth.utils import hashers
-from database import db, AbstractSortableStatusModel
+from database import db, AbstractSortableStatusModel, AbstractEntity
 from event.models import Event
 
 
-class User(AbstractSortableStatusModel, db.Model):
+class User(AbstractSortableStatusModel, db.Model, AbstractEntity):
     __tablename__ = 'user'
     id = db.Column(UUID(), primary_key=True, default=uuid.uuid4)
     username = db.Column(db.Unicode(length=128), nullable=False, unique=True)
@@ -25,6 +25,9 @@ class User(AbstractSortableStatusModel, db.Model):
 
     # ----- ----- ----- ----- ----- ----- -----
     # Properties and getters:
+    @property
+    def entity_type(self):
+        return 'Security'
 
     @staticmethod
     async def get_id(username):
@@ -35,18 +38,22 @@ class User(AbstractSortableStatusModel, db.Model):
     # ----- ----- ----- ----- ----- ----- -----
     # Setters & etc.
 
-    @classmethod
-    async def activate(cls, id):
-        query = cls.update.values(is_active=True).where(cls.id == id)
+    async def activate(self):
+        query = User.update.values(is_active=True).where(User.id == self.id)
         operation_status = await query.gino.status()
-        await Event.create_info('Auth: user {} has been activated.'.format(id))
+
+        info_message = 'User {username} has been activated.'.format(username=self.username)
+        await Event.create_info(info_message, entity_list=self.entity_list)
+
         return operation_status
 
-    @classmethod
-    async def deactivate(cls, id):
-        query = cls.update.values(is_active=False).where(cls.id == id)
+    async def deactivate(self):
+        query = User.update.values(is_active=False).where(User.id == self.id)
         operation_status = await query.gino.status()
-        await Event.create_info('Auth: user {} has been deactivated.'.format(id))
+
+        info_message = 'User {username} has been deactivated.'.format(username=self.username)
+        await Event.create_info(info_message, entity_list=self.entity_list)
+
         return operation_status
 
     @staticmethod
@@ -62,12 +69,14 @@ class User(AbstractSortableStatusModel, db.Model):
             return False
         return await User.check_password(username, raw_password)
 
-    @staticmethod
-    async def set_password(user_id, raw_password):
+    async def set_password(self, raw_password):
         encoded_password = hashers.make_password(raw_password)
         user_status = await User.update.values(password=encoded_password).where(
-            User.id == user_id).gino.status()
-        await Event.create_info('Auth: user {} changed local password.'.format(user_id))
+            User.id == self.id).gino.status()
+
+        info_message = 'Password of user {username} has been changed.'.format(username=self.username)
+        await Event.create_info(info_message, entity_list=self.entity_list)
+
         return user_status
 
     @staticmethod
@@ -76,8 +85,11 @@ class User(AbstractSortableStatusModel, db.Model):
         encoded_password = hashers.make_password(password)
         user_obj = await User.create(username=username, password=encoded_password, email=email, last_name=last_name,
                                      first_name=first_name, is_superuser=is_superuser)
-        user_message = 'Superuser' if is_superuser else 'User'
-        await Event.create_info('Auth: {} {} created.'.format(user_message, username))
+
+        user_role = 'Superuser' if is_superuser else 'User'
+        info_message = 'Creating user {username} with role {role}.'.format(username=username, role=user_role)
+        await Event.create_info(info_message, entity_list=user_obj.entity_list)
+
         return user_obj
 
     @classmethod
@@ -91,14 +103,17 @@ class User(AbstractSortableStatusModel, db.Model):
             user_kwargs['last_name'] = last_name
         if first_name:
             user_kwargs['first_name'] = first_name
-        if is_superuser or is_superuser == False:
+        if is_superuser or is_superuser is False:
             user_kwargs['is_superuser'] = is_superuser
         if user_kwargs:
             await User.update.values(**user_kwargs).where(
                 User.id == user_id).gino.status()
         user = await User.get(user_id)
+
         if user_kwargs.get('is_superuser'):
-            await Event.create_info('Auth: {} has become a superuser.'.format(user.username))
+            info_message = 'User {username} has become a superuser.'.format(username=user.username)
+            await Event.create_info(info_message, entity_list=user.entity_list)
+
         return user
 
     @classmethod
@@ -111,20 +126,32 @@ class User(AbstractSortableStatusModel, db.Model):
         await UserJwtInfo.soft_create(user_id=user.id, token=token)
 
         # Login event
-        login_message = 'User login (ldap)' if ldap else 'User login (local)'
-        info_message = 'Auth by {}: {}: IP: {}. username: {}'.format(client_type, login_message, ip,
-                                                                    username)
-        await Event.create_info(info_message)
+        info_message = 'User {username} has been logged in successfully. IP address: {ip}.'.format(username=username,
+                                                                                                   ip=ip)
+        entity_list = list()
+        entity_list.append({'entity_type': user.entity_type, 'entity_uuid': user.uuid})
+        entity_list.append({'entity_type': client_type, 'entity_uuid': user.uuid})
+        entity_list.append(
+            {'entity_type': 'LDAP_AUTH' if ldap else 'LOCAL_AUTH', 'entity_uuid': user.uuid})
+
+        await Event.create_info(info_message, entity_list=entity_list)
         return True
 
     @classmethod
-    async def logout(cls, username, client_type, ip):
+    async def logout(cls, username, access_token):
         user = await User.get_object(extra_field_name='username', extra_field_value=username)
         if not user:
             return False
+        # Проверяем, что нет попытки прервать запрещенный ранее токен
+        is_valid = await UserJwtInfo.check_token(username, access_token)
+        if not is_valid:
+            return False
+
+        # Запрещаем все выданные пользователю токены (Сейчас может быть только 1)
         await UserJwtInfo.delete.where(UserJwtInfo.user_id == user.id).gino.status()
-        info_message = 'Auth by {}: User {} logged out: IP: {}.'.format(client_type, username, ip)
-        await Event.create_info(info_message)
+
+        info_message = 'User {username} has logged out.'.format(username=username)
+        await Event.create_info(info_message, entity_list=user.entity_list)
         return True
 
 

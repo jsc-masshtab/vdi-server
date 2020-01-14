@@ -122,3 +122,21 @@ class AbstractSortableStatusModel:
 
 
 StatusGraphene = GrapheneEnum.from_enum(Status)
+
+
+class AbstractEntity:
+    @property
+    def uuid(self):
+        return str(self.id) if self.id else None
+
+    @property
+    def entity_type(self):
+        return self.__class__.__name__.lower()
+
+    @property
+    def entity(self):
+        return {'entity_type': self.entity_type, 'entity_uuid': self.uuid}
+
+    @property
+    def entity_list(self):
+        return [self.entity]

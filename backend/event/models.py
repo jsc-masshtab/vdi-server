@@ -5,11 +5,17 @@ from sqlalchemy import and_
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.sql import func
 
-from asyncpg.exceptions._base import PostgresError
-
 from database import db
 from resources_monitoring.internal_event_monitor import internal_event_monitor
 from resources_monitoring.resources_monitoring_data import EVENTS_SUBSCRIPTION
+
+
+class Entity(db.Model):
+    __tablename__ = 'entity'
+
+    id = db.Column(UUID(), primary_key=True, default=uuid.uuid4)
+    entity_uuid = db.Column(UUID(), nullable=True, index=True)  # UUID сущности
+    entity_type = db.Column(db.Unicode(), index=True)  # тип сущности (таблица в БД или абстрактная сущность)
 
 
 class Event(db.Model):
@@ -28,6 +34,7 @@ class Event(db.Model):
     def __init__(self, **kw):
         super().__init__(**kw)
         self._read_by = set()
+        self._entity = set()
 
     @property
     def read_by(self):
@@ -36,6 +43,14 @@ class Event(db.Model):
     @read_by.setter
     def add_read_by(self, user):
         self._read_by.add(user)
+
+    @property
+    def entity(self):
+        return self._entity
+
+    @entity.setter
+    def add_entity(self, entity):
+        self._entity.add(entity)
 
     @staticmethod
     async def mark_read_by(user_id, events_id_list):
@@ -66,30 +81,45 @@ class Event(db.Model):
         await EventReadByUser.delete.where(and_(*filters)).gino.status()
 
     @classmethod
-    async def create_event(cls, msg, event_type=TYPE_INFO, description=None, user='system'):
-        # TODO: build msg dict in an unified special format
-        # TODO: connect with task
-        # TODO: log event
-        print(msg)
+    async def soft_create(cls, event_type, msg, description, user, entity_list: list):
+        async with db.transaction() as tx:
+            # 1. Создаем сам Евент
+            event = await Event.create(
+                event_type=event_type,
+                message=msg,
+                description=description,
+                user=user
+            )
+            for entity in entity_list:
+                # 2. Создаем запись сущности
+                entity = await Entity.create(entity_uuid=entity.get('entity_uuid'), entity_type=entity.get('entity_type'))
+                # 3. Создаем связь
+                await EventEntity.create(entity_id=entity.id, event_id=event.id)
+            return True
+
+    @classmethod
+    async def create_event(cls, msg, event_type=TYPE_INFO, description=None, user='system', entity_list=None):
+        if not entity_list:
+            entity_list = [dict()]
+
         msg_dict = dict(event_type=event_type,
                         message=msg,
                         user=user,
                         event='event',
                         resource=EVENTS_SUBSCRIPTION)
         internal_event_monitor.signal_event_2(msg_dict)
-        try:
-            await Event.create(
-                event_type=event_type,
-                message=msg,
-                description=description,
-                user=user
-            )
-        except PostgresError as E:
-            print('exp__', E.__class__.__name__)
+        await cls.soft_create(event_type, msg, description, user, entity_list)
 
     create_info = partialmethod(create_event, event_type=TYPE_INFO)
     create_warning = partialmethod(create_event, event_type=TYPE_WARNING)
     create_error = partialmethod(create_event, event_type=TYPE_ERROR)
+
+
+class EventEntity(db.Model):
+    """Связывающая сущность"""
+    __tablename__ = 'event_entities'
+    event_id = db.Column(UUID(), db.ForeignKey('event.id'), nullable=False)
+    entity_id = db.Column(UUID(), db.ForeignKey('entity.id'), nullable=False)
 
 
 class EventReadByUser(db.Model):

@@ -19,8 +19,8 @@ FERNET_KEY = b'LRzSxWyxqKD4p2BR11-nVmghV67AVmQ4CxYi__S_OH8='
 
 # Auth settings
 # -----------------------------
-AUTH_ENABLED = True
-# AUTH_ENABLED = False  # Отключает проверку токенов, делает доступным стандартный интерфейс GpaphQL
+# AUTH_ENABLED = True
+AUTH_ENABLED = False  # Отключает проверку токенов, делает доступным стандартный интерфейс GpaphQL
 
 # JWT Options
 # -----------------------------
@@ -63,7 +63,7 @@ DEFAULT_NAME = '-'
 # Settings for tests
 # -----------------------------
 TESTS_ADMIN_USERNAME = 'admin'
-TESTS_ADMIN_PASSWORD = 'qwe'
+TESTS_ADMIN_PASSWORD = 'veil'
 TESTS_LDAP_USERNAME = 'ad120'
 TESTS_LDAP_PASSWORD = 'Bazalt1!'
 TESTS_AD_DOMAIN_NAME = 'bazalt.team'

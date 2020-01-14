@@ -40,6 +40,13 @@ class AuthenticationDirectoryValidator(MutationValidation):
                 'Authentication directory URL should start with ldap(s)://.')
         return value
 
+    @staticmethod
+    async def validate_verbose_name(obj_dict, value):
+        if len(value) == 0:
+            raise ValidationError(
+                'Authentication directory verbose name should not be empty.')
+        return value
+
 
 class AuthenticationDirectoryType(graphene.ObjectType):
     """Описание полей:

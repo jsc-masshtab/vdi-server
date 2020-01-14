@@ -1,0 +1,43 @@
+<div class="details-wrap">
+
+  <div class="details-header">
+    <div class="title">
+      <fa-icon [icon]="['fas','address-card']" size="s"></fa-icon>
+      <span class="name">
+        Служба каталогов <span >{{AuthenticationDirectory?.verbose_name}}</span>
+      </span>
+    </div>
+
+    <div class="btns-part">
+      <button class="btn-close" (click)="close()">
+        <fa-icon [icon]="['fas','times-circle']"></fa-icon>
+      </button>
+    </div>
+  </div>
+
+  <div class="details-control-panel">
+    <button (click)="getAuthenticationDirectory()" class="btn-refresh" title="Обновить">
+      <fa-icon [icon]="['fas','sync-alt']"></fa-icon>
+    </button>
+
+    <button (click)="remove()" title="Удалить службу каталогов" class="btn-control">
+      <fa-icon [icon]="['fas','trash-alt']" size="xs"></fa-icon>
+      <span class="name">Удалить</span>
+    </button>
+
+    <button (click)="testAuthDir()" title="Проверить соединение" class="btn-control">
+      <fa-icon [class.rotation]="testing" [icon]="['fas','sync-alt']" size="xs"></fa-icon>
+      <span class="name">Проверка соединения</span>
+      
+      <fa-icon *ngIf="tested && connected" class="ad-status ad-success" [icon]="['fas','check']" size="xs"></fa-icon>
+      <fa-icon *ngIf="tested && !connected" class="ad-status ad-failed" [icon]="['fas','times-circle']" size="xs"></fa-icon>
+
+      <span class="ad-status-text" [class.ad-success]="connected" [class.ad-failed]="!connected" *ngIf="tested && !connected">{{ connected ? 'Успшно' : 'Нет соединения' }}</span>
+    </button>
+  </div>
+
+  <div class="details-row">
+    <vdi-table-into [item]="AuthenticationDirectory" [collection]="collection" [style.width]="'100%'" (edit)=edit($event)></vdi-table-into>
+  </div>
+
+</div>

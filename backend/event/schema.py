@@ -1,13 +1,14 @@
 import graphene
 from graphql import GraphQLError
-from sqlalchemy import desc, and_
+from sqlalchemy import desc, and_, text
 
+from database import db
 from common.veil_decorators import superuser_required
-from event.models import Event, EventReadByUser
+from event.models import Event, EventReadByUser, Entity, EventEntity
 from user.schema import User, UserType
 
 
-def build_filters(event_type, start_date, end_date, user, read_by):
+def build_filters(event_type, start_date, end_date, user, read_by, entity_type):
     filters = []
 
     if event_type is not None:
@@ -18,8 +19,16 @@ def build_filters(event_type, start_date, end_date, user, read_by):
         filters.append((Event.created <= end_date))
     if user:
         filters.append((Event.user == user))
+    if entity_type:
+        filters.append((Entity.entity_type == entity_type))
 
     return filters
+
+
+class EntityType(graphene.ObjectType):
+    id = graphene.UUID()
+    entity_uuid = graphene.UUID()
+    entity_type = graphene.String()
 
 
 class EventType(graphene.ObjectType):
@@ -30,6 +39,8 @@ class EventType(graphene.ObjectType):
     created = graphene.DateTime()
     user = graphene.String()
     read_by = graphene.List(UserType)
+    entity = graphene.List(EntityType)
+    entity_types = graphene.List(graphene.String)
 
 
 class EventQuery(graphene.ObjectType):
@@ -38,7 +49,8 @@ class EventQuery(graphene.ObjectType):
         start_date=graphene.DateTime(),
         end_date=graphene.DateTime(),
         user=graphene.String(),
-        read_by=graphene.UUID())
+        read_by=graphene.UUID(),
+        entity_type=graphene.String())
 
     events = graphene.List(
         lambda: EventType,
@@ -48,36 +60,68 @@ class EventQuery(graphene.ObjectType):
         start_date=graphene.DateTime(),
         end_date=graphene.DateTime(),
         user=graphene.String(),
-        read_by=graphene.UUID())
+        read_by=graphene.UUID(),
+        entity=graphene.UUID(),
+        entity_type=graphene.String())
 
     event = graphene.Field(
         lambda: EventType,
         id=graphene.UUID())
 
+    entity_types = graphene.List(
+        graphene.String,
+        event_type=graphene.Int(),
+        start_date=graphene.DateTime(),
+        end_date=graphene.DateTime(),
+        user=graphene.String(),
+        read_by=graphene.UUID(),
+        entity_type=graphene.String()
+    )
+
     @superuser_required
     async def resolve_count(self, _info, event_type=None, start_date=None,
-                            end_date=None, user=None, read_by=None):
-        filters = build_filters(event_type, start_date, end_date, user, read_by)
-
-        event_count = len(await Event.query.where(and_(*filters)).gino.all())
+                            end_date=None, user=None, read_by=None, entity_type=None):
+        filters = build_filters(event_type, start_date, end_date, user, read_by, entity_type)
+        query = Event.outerjoin(EventReadByUser).outerjoin(User).outerjoin(
+            EventEntity).outerjoin(Entity).select().where(and_(*filters)).where(Entity.entity_type != None)
+        event_count = await db.select([db.func.count()]).select_from(query.alias()).gino.scalar()
         return event_count
 
     @superuser_required
-    async def resolve_events(self, _info, limit=100, offset=0, event_type=None,
-                             start_date=None, end_date=None, user=None, read_by=None):
-        filters = build_filters(event_type, start_date, end_date, user, read_by)
+    async def resolve_entity_types(self, _info, event_type=None, start_date=None,
+                                   end_date=None, user=None, read_by=None, entity_type=None):
+        # TODO: refactor me
+        filters = build_filters(event_type, start_date, end_date, user, read_by, entity_type)
 
-        query = Event.outerjoin(EventReadByUser).outerjoin(User).select()
+        query = Event.outerjoin(EventReadByUser).outerjoin(User).outerjoin(
+            EventEntity).outerjoin(Entity).select().where(
+            and_(*filters)
+        ).where(Entity.entity_type != None)
+
+        query = db.select([text('anon_1.entity_type')]).select_from(query.alias()).group_by(text('anon_1.entity_type'))
+
+        entity_types = await query.gino.all()
+        return [entity[0] for entity in entity_types]
+
+    @superuser_required
+    async def resolve_events(self, _info, limit=100, offset=0, event_type=None,
+                             start_date=None, end_date=None, user=None, read_by=None, entity_type=None):
+        filters = build_filters(event_type, start_date, end_date, user, read_by, entity_type)
+
+        query = Event.outerjoin(EventReadByUser).outerjoin(User).outerjoin(
+            EventEntity).outerjoin(Entity).select()
 
         events = await query.where(
             and_(*filters)
         ).order_by(desc(Event.created)).limit(limit).offset(offset).gino.load(
-            Event.distinct(Event.id).load(add_read_by=User.distinct(User.id))
+            Event.distinct(Event.id).load(add_read_by=User.distinct(User.id),
+                                          add_entity=Entity)
         ).all()
 
         event_type_list = [
             EventType(
                 read_by=[UserType(**user.__values__) for user in event.read_by],
+                entity=[EntityType(**entity.__values__) for entity in event.entity],
                 **event.__values__)
             for event in events
         ]
@@ -85,9 +129,11 @@ class EventQuery(graphene.ObjectType):
 
     @superuser_required
     async def resolve_event(self, _info, id):
-        query = Event.outerjoin(EventReadByUser).outerjoin(User).select()
-        event = await query.where(Event.id == id).gino.load(
-            Event.distinct(Event.id).load(add_read_by=User.distinct(User.id))
+        query = Event.outerjoin(EventReadByUser).outerjoin(User).outerjoin(
+            EventEntity).outerjoin(Entity).select().where(Event.id == id)
+
+        event = await query.gino.load(
+            Event.distinct(Event.id).load(add_read_by=User.distinct(User.id), add_entity=Entity)
         ).first()
 
         if not event:
@@ -95,6 +141,7 @@ class EventQuery(graphene.ObjectType):
 
         event_type = EventType(
             read_by=[UserType(**user.__values__) for user in event.read_by],
+            entity=[entity for entity in event.entity],
             **event.__values__)
 
         return event_type

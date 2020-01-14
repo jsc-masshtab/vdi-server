@@ -81,8 +81,8 @@ class AddControllerMutation(graphene.Mutation):
             )
 
             await resources_monitor_manager.add_controller(address)
-            msg = 'Successfully added new controller {id} with address {address}.'.format(
-                id=controller.id,
+            msg = 'Successfully added new controller {name} with address {address}.'.format(
+                name=controller.verbose_name,
                 address=address)
             await Event.create_info(msg)
             return AddControllerMutation(ok=True, controller=ControllerType(**controller.__values__))
@@ -145,10 +145,12 @@ class UpdateControllerMutation(graphene.Mutation):
                 address=address)
             await Event.create_info(msg)
             return UpdateControllerMutation(ok=True, controller=ControllerType(**controller.__values__))
-        except:
+        except Exception as E:
             msg = 'Update controller {id}: operation failed.'.format(
                 id=id)
-            await Event.create_error(msg)
+            descr = str(E)
+            await Event.create_error(msg, description=descr)
+            raise SimpleError(msg)
 
 
 class RemoveControllerMutation(graphene.Mutation):
@@ -171,6 +173,10 @@ class RemoveControllerMutation(graphene.Mutation):
         else:
             ok = await controller.soft_delete()
 
+        # todo:
+        #  Есть мысль: прекращать взаимодействие с контроллером по ws перед началом удаления самого контроллера
+        #  и возвращать взаимодействие, если контроллер не удалось удалить. Логика в том, чтобы не взаимодействовать
+        #  с сущностью, находящейся в удаляемом состоянии.
         await resources_monitor_manager.remove_controller(controller.address)
 
         return RemoveControllerMutation(ok=ok)

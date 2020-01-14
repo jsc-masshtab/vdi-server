@@ -31,7 +31,7 @@ from resources_monitoring.urls import ws_event_monitoring_urls
 
 
 logger = logging.getLogger(__name__)
-tornado.options.define("access_to_stdout", default=False, help="Log tornado.access to stdout")
+tornado.options.define("access_to_stdout", default=True, help="Log tornado.access to stdout")
 tornado.options.define("port", default=8888, help="port to listen on")
 tornado.options.define("autoreload", default=True, help="autoreload application")
 tornado.options.define("debug", default=True, help="debug mode")

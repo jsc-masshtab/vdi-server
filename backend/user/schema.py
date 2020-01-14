@@ -161,8 +161,11 @@ class ChangeUserPasswordMutation(graphene.Mutation, UserValidator):
     async def mutate(cls, root, info, **kwargs):
         await cls.validate_agruments(**kwargs)
         # Назначаем новый пароль
-        await User.set_password(kwargs['id'], kwargs['password'])
-        return ActivateUserMutation(ok=True)
+        user = await User.get(kwargs['id'])
+        if user:
+            await user.set_password(kwargs['password'])
+            return ChangeUserPasswordMutation(ok=True)
+        return ChangeUserPasswordMutation(ok=False)
 
 
 class ActivateUserMutation(graphene.Mutation, UserValidator):
@@ -176,8 +179,11 @@ class ActivateUserMutation(graphene.Mutation, UserValidator):
     async def mutate(cls, root, info, **kwargs):
         await cls.validate_agruments(**kwargs)
         # Меняем статус пользователя
-        await User.activate(kwargs['id'])
-        return ActivateUserMutation(ok=True)
+        user = await User.get(kwargs['id'])
+        if user:
+            await user.activate()
+            return ActivateUserMutation(ok=True)
+        return ActivateUserMutation(ok=False)
 
 
 class DeactivateUserMutation(graphene.Mutation, UserValidator):
@@ -191,8 +197,11 @@ class DeactivateUserMutation(graphene.Mutation, UserValidator):
     async def mutate(cls, root, info, **kwargs):
         await cls.validate_agruments(**kwargs)
         # Меняем статус пользователя
-        await User.deactivate(kwargs['id'])
-        return DeactivateUserMutation(ok=True)
+        user = await User.get(kwargs['id'])
+        if user:
+            await user.deactivate()
+            return DeactivateUserMutation(ok=True)
+        return DeactivateUserMutation(ok=False)
 
 
 class UserMutations(graphene.ObjectType):
