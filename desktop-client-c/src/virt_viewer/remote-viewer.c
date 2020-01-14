@@ -479,10 +479,10 @@ retry_connnect_to_vm:
         // connect to vm depending on remote protocol
         if (g_strcmp0(remote_protocol_type, "rdp") == 0) {
             // start xfreerdp process
-            //rdp_viewer_start(user, password, ip, NULL);
-            //rdp_viewer_start("user", "user", "192.168.7.235", NULL);
-            rdp_viewer_start(get_vdi_username(), get_vdi_password(), ip, NULL);
-            goto retry_connnect_to_vm;
+            //rdp_viewer_start("user", "user", "192.168.7.235", NULL); // test
+            //rdp_viewer_start(get_vdi_username(), get_vdi_password(), ip, NULL); // it's right
+            rdp_viewer_start("user", "user", ip, NULL); // todo: Remove later
+            if (!is_connect_to_prev_pool) goto retry_connnect_to_vm;
 
         } else { // spice by default
             setSpiceSessionCredentials(user, password);
@@ -501,6 +501,7 @@ cleanup:
     free_memory_safely(&ip);
     free_memory_safely(&port);
     free_memory_safely(&vm_verbose_name);
+    free_memory_safely(&remote_protocol_type);
 
     if (!ret && priv->open_recent_dialog) {
         if (error != NULL) {

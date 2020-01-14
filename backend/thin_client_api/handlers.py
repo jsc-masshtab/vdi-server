@@ -83,7 +83,7 @@ class PoolGetVm(BaseHandler, ABC):
             if remote_protocol == 'rdp':
                 try:
                     vm_address = info['guest_utils']['ipv4'][0]
-                except (IndexError, ValueError):
+                except (IndexError, KeyError):
                     response_dict = {'data': dict(host='', port=0, password='',
                                                   message='Не удалось получить адресс ВМ для подключения по RDP')}
                     return await self.finish(response_dict)
