@@ -1,10 +1,13 @@
 import { IParams } from '../../../../../../types';
 import { WaitService } from '../../../common/components/single/wait/wait.service';
 import { AddUserComponent } from '../add-user/add-user.component';
-import { Component, OnInit, OnDestroy } from '@angular/core';
-import { UsersService   } from './users.service';
+import { Component, OnInit, OnDestroy, ViewChild, ElementRef } from '@angular/core';
+import { UsersService   } from '../users.service';
 import { map } from 'rxjs/operators';
 import { MatDialog } from '@angular/material';
+import { Subscription } from 'rxjs';
+import { Router } from '@angular/router';
+import { DetailsMove } from '../../../common/classes/details-move';
 
 
 @Component({
@@ -14,7 +17,9 @@ import { MatDialog } from '@angular/material';
 })
 
 
-export class UsersComponent implements OnInit, OnDestroy {
+export class UsersComponent extends DetailsMove implements OnInit, OnDestroy {
+
+  private getUsersSub: Subscription;
 
   public users: [];
   public collection: object[] = [
@@ -25,16 +30,15 @@ export class UsersComponent implements OnInit, OnDestroy {
       icon: 'user',
       type: 'string',
       sort: true
-    },
-    /*{
-      title: 'Дата создания',
-      property: 'date_joined',
-      type: 'time',
-      reverse_sort: true
-    }*/
+    }
   ];
 
-  constructor(private service: UsersService, public dialog: MatDialog, private waitService: WaitService) {}
+  constructor(private service: UsersService, public dialog: MatDialog, private waitService: WaitService,
+              private router: Router) {
+    super();
+  }
+
+  @ViewChild('view') view: ElementRef;
 
   ngOnInit() {
     this.getAllUsers();
@@ -47,12 +51,22 @@ export class UsersComponent implements OnInit, OnDestroy {
   }
 
   public getAllUsers() {
+    if (this.getUsersSub) {
+      this.getUsersSub.unsubscribe();
+    }
+
     this.waitService.setWait(true);
+
     this.service.getAllUsers().valueChanges.pipe(map(data => data.data.users))
       .subscribe((data) => {
         this.users = data;
         this.waitService.setWait(false);
     });
+  }
+
+  public refresh(): void {
+    this.service.paramsForGetUsers.spin = true;
+    this.getAllUsers();
   }
 
   public sortList(param: IParams): void  {
@@ -61,8 +75,28 @@ export class UsersComponent implements OnInit, OnDestroy {
     this.getAllUsers();
   }
 
+  public routeTo(event): void {
+    this.router.navigate([`pages/settings/users/${event.id}`]);
+  }
+
+  public onResize(): void {
+    super.onResize(this.view);
+  }
+
+  public componentActivate(): void {
+    super.componentActivate(this.view);
+  }
+
+  public componentDeactivate(): void {
+    super.componentDeactivate();
+  }
+
   ngOnDestroy() {
     this.service.paramsForGetUsers.spin = true;
     this.service.paramsForGetUsers.nameSort = undefined;
+
+    if (this.getUsersSub) {
+      this.getUsersSub.unsubscribe();
+    }
   }
 }

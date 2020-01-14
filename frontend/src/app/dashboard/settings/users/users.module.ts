@@ -8,30 +8,39 @@ import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule } from '@angular/forms';
-import { UsersService } from './all-users/users.service';
+import { UsersService } from './users.service';
+import { UserDetailsComponent } from './user-details/user-details.component';
+import { MatCheckboxModule } from '@angular/material';
+import { MutateUserComponent } from './user-details/mutate-user/mutate-user.component';
 
 
 
 @NgModule({
-  declarations: [
-    UsersComponent,
-    AddUserComponent
-  ],
-  imports: [
-    SharedModule,
-    CommonModule,
-    FontAwesomeModule,
-    AppRoutingModule,
-    MatDialogModule,
-    MatSelectModule,
-    ReactiveFormsModule
-  ],
-  providers: [UsersService],
-  exports: [
-    UsersComponent
-  ],
-  entryComponents: [
-    AddUserComponent
-  ]
+   declarations: [
+      UsersComponent,
+      AddUserComponent,
+      UserDetailsComponent,
+      MutateUserComponent
+   ],
+   imports: [
+      SharedModule,
+      CommonModule,
+      FontAwesomeModule,
+      AppRoutingModule,
+      MatDialogModule,
+      MatSelectModule,
+      ReactiveFormsModule,
+      MatCheckboxModule
+   ],
+   providers: [
+      UsersService
+   ],
+   exports: [
+      UsersComponent
+   ],
+   entryComponents: [
+      AddUserComponent,
+      MutateUserComponent
+   ]
 })
 export class UsersModule { }

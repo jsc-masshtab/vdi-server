@@ -85,25 +85,26 @@ export class AuthenticationDirectoryService {
                             $subdomain_name: String,
                             $kdc_urls: [String],
                             $sso: Boolean,
+                        ){
+                            createAuthDir(
+                                domain_name :$domain_name,
+                                verbose_name: $verbose_name,
+                                directory_url :$directory_url,
+                                description :$description,
+                                connection_type :$connection_type,
+                                directory_type :$directory_type,
+                                service_username :$service_username,
+                                service_password :$service_password,
+                                admin_server :$admin_server,
+                                subdomain_name :$subdomain_name,
+                                kdc_urls :$kdc_urls,
+                                sso :$sso
                             ){
-                                createAuthDir(
-                                    domain_name :$domain_name,
-                                    verbose_name: $verbose_name,
-                                    directory_url :$directory_url,
-                                    description :$description,
-                                    connection_type :$connection_type,
-                                    directory_type :$directory_type,
-                                    service_username :$service_username,
-                                    service_password :$service_password,
-                                    admin_server :$admin_server,
-                                    subdomain_name :$subdomain_name,
-                                    kdc_urls :$kdc_urls,
-                                    sso :$sso){
-                                        ok,
-                                        auth_dir {
-                                            id
-                                        }
+                                ok,
+                                auth_dir {
+                                    id
                                 }
+                            }
                         }
             `,
             variables: {
