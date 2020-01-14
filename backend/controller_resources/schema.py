@@ -251,7 +251,8 @@ class ResourcesQuery(graphene.ObjectType):
     clusters = graphene.List(ClusterType, controller_ip=graphene.String(), ordering=graphene.String())
 
     datapool = graphene.Field(DatapoolType, id=graphene.String(), controller_address=graphene.String())
-    datapools = graphene.List(DatapoolType, node_id=graphene.String(), ordering=graphene.String())
+    datapools = graphene.List(DatapoolType, node_id=graphene.String(), take_broken = graphene.Boolean(),
+                              ordering=graphene.String())
 
     requests = graphene.List(RequestType, time=graphene.Float())
 
