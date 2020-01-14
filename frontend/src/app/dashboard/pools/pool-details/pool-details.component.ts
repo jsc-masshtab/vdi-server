@@ -147,7 +147,12 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
       type: 'array-length'
     },
     {
-      title: 'Шаблон для ВМ',
+      title: 'Шаблон ВМ',
+      property: 'template',
+      property_lv2: 'verbose_name'
+    },
+    {
+      title: 'Шаблон для имени ВМ',
       property: 'vm_name_template',
       type: 'string',
       edit: 'changeTemplateForVmAutomatedPool'
@@ -596,7 +601,7 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
 
   ngOnDestroy() {
     if (this.sub_ws_create_pool) {
-      this.sub_ws_create_pool.unsubscribe();
+      // this.sub_ws_create_pool.unsubscribe();
     }
 
     if (this.subPool) {
