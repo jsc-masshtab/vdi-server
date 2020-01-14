@@ -69,10 +69,7 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
     {
       title: 'Пользователи',
       property: 'users',
-      type: {
-        propertyDepend: 'username',
-        typeDepend: 'propertyInObjectsInArray'
-      }
+      type: 'array-length'
     }
   ];
   public collectionDetailsAutomated: any[] = [
@@ -158,10 +155,7 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
     {
       title: 'Пользователи',
       property: 'users',
-      type: {
-        propertyDepend: 'username',
-        typeDepend: 'propertyInObjectsInArray'
-      }
+      type: 'array-length'
     }
   ];
 
@@ -364,7 +358,7 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
 // @ts-ignore: Unreachable code error
   private changeName(): void {
     this.dialog.open(FormForEditComponent, {
-      width: '60%',
+      width: '500px',
       data: {
         post: {
           service: this.poolService,
