@@ -361,10 +361,11 @@ void get_vm_from_pool(GTask       *task,
                     gpointer       task_data G_GNUC_UNUSED,
                     GCancellable  *cancellable G_GNUC_UNUSED)
 {
-    gchar *url_str = g_strdup_printf("%s/client/pools/%s", vdiSession.api_url, get_current_pool_id());
+    gchar *url_str = g_strdup_printf("%s/client/pools/%s", vdiSession.api_url, vdiSession.current_pool_id);
 
     // todo: нормально создавать json
-    gchar *bodyStr = g_strdup_printf("{\"remote_protocol\":\"%s\"}", remote_protocol_to_str(get_current_remote_protocol()));
+    gchar *bodyStr = g_strdup_printf("{\"remote_protocol\":\"%s\"}",
+                                     remote_protocol_to_str(vdiSession.current_remote_protocol));
 
     gchar *response_body_str = api_call("POST", url_str, bodyStr);
     g_free(url_str);

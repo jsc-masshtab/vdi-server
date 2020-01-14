@@ -37,6 +37,7 @@ typedef struct{
     GtkWidget *status_label;
     GtkWidget *main_vm_spinner;
     GtkWidget *label_vdi_online;
+    GtkWidget *combobox_remote_protocol;
 
     GArray *pool_widgets_array;
 
@@ -86,6 +87,7 @@ static void set_init_values()
     vdi_manager.status_label = NULL;
     vdi_manager.main_vm_spinner = NULL;
     vdi_manager.label_vdi_online = NULL;
+    vdi_manager.combobox_remote_protocol = NULL;
 
     vdi_manager.pool_widgets_array = NULL;
 
@@ -426,6 +428,8 @@ GtkResponseType vdi_manager_dialog(GtkWindow *main_window G_GNUC_UNUSED, gchar *
 
     vdi_manager.main_vm_spinner = GTK_WIDGET(gtk_builder_get_object(vdi_manager.builder, "main_vm_spinner"));
     vdi_manager.label_vdi_online = GTK_WIDGET(gtk_builder_get_object(vdi_manager.builder, "label_vdi_online"));
+    vdi_manager.combobox_remote_protocol =
+            GTK_WIDGET(gtk_builder_get_object(vdi_manager.builder, "combobox-remote-protocol"));
 
     // connects
     //g_signal_connect_swapped(vdi_manager.window, "map-event", G_CALLBACK(mapped_user_function), &vdi_manager.ci);
