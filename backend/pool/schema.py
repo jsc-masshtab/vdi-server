@@ -449,12 +449,12 @@ class CreateStaticPoolMutation(graphene.Mutation, PoolValidator):
                                            datapool_id=datapool_id)
             # add vms to db
             for vm_id in vm_ids:
-                await Vm.create(id=vm_id, pool_id=pool.static_pool_id)
+                await Vm.create(id=vm_id, pool_id=pool.id)
 
             # response
             vms = [VmType(id=vm_id) for vm_id in vm_ids]
             await pool.activate()
-            msg = 'Static pool {id} created.'.format(id=pool.static_pool_id)
+            msg = 'Static pool {id} created.'.format(id=pool.id)
             await Event.create_info(msg)
         except Exception as E:  # Возможные исключения: дубликат имени или вм id, сетевой фейл enable_remote_accesses
             await Event.create_error('Failed to create static pool.', description=str(E))
@@ -462,7 +462,7 @@ class CreateStaticPoolMutation(graphene.Mutation, PoolValidator):
                 await pool.deactivate()
             return {'ok': False}
         return {
-            'pool': PoolType(pool_id=pool.static_pool_id, verbose_name=verbose_name, vms=vms),
+            'pool': PoolType(pool_id=pool.id, verbose_name=verbose_name, vms=vms),
             'ok': True
         }
 
