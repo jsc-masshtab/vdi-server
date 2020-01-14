@@ -35,6 +35,7 @@ export class WaitComponent implements OnInit, OnDestroy {
 
   ngOnInit() {
     this.waitSub = this.service.getWait().subscribe((wait: boolean) => {
+      console.log(wait, 'wait');
       this.wait = wait;
     });
   }

@@ -1,5 +1,5 @@
+import { WebsocketService } from './../../common/classes/websock.service';
 import { Subscription } from 'rxjs';
-import { WebsocketPoolService } from '../../common/classes/websockPool.service';
 import { IPool, IPoolVms } from './definitions/pool';
 import { VmDetalsPopupComponent } from './vm-details-popup/vm-details-popup.component';
 import { RemoveUsersPoolComponent } from './remove-users/remove-users.component';
@@ -239,7 +239,7 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
               private poolService: PoolDetailsService,
               private poolsService: PoolsUpdateService,
               public  dialog: MatDialog,
-              private ws_create_pool_service: WebsocketPoolService) {}
+              private ws: WebsocketService) {}
 
   ngOnInit() {
     this.activatedRoute.paramMap.subscribe((param: ParamMap) => {
@@ -256,7 +256,7 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
   }
 
   private getMsgCreatePool(): void {
-    this.sub_ws_create_pool = this.ws_create_pool_service.getMsg().pipe(
+    this.sub_ws_create_pool = this.ws.getMsgCreateVMPoll().pipe(
                                                                   skip(1),
                                                                   map(msg => JSON.parse(msg)),
                                                                   filter((msg: object) => msg['pool_id'] === this.idPool),
@@ -601,7 +601,7 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
 
   ngOnDestroy() {
     if (this.sub_ws_create_pool) {
-      // this.sub_ws_create_pool.unsubscribe();
+      this.sub_ws_create_pool.unsubscribe();
     }
 
     if (this.subPool) {
