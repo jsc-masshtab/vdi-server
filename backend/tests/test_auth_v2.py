@@ -52,9 +52,9 @@ class AuthTestCase(AsyncHTTPTestCase):
         self.assertIsInstance(response_dict, dict)
         data = response_dict['data']
         self.assertTrue(data.get('access_token'))
-        mock_event = 'Auth by Unknown: User login (local): IP: 127.0.0.1. username: {}'.format(TESTS_ADMIN_USERNAME)
+        mock_event = 'User {} has been logged in successfully.%'.format(TESTS_ADMIN_USERNAME)
         count = yield db.select([db.func.count()]).where((Event.event_type == Event.TYPE_INFO)
-                                                         & (Event.message == mock_event)).gino.scalar()
+                                                         & (Event.message.like(mock_event))).gino.scalar()
         self.assertTrue(count > 0)
 
     @gen_test
@@ -118,7 +118,7 @@ class AuthTestCase(AsyncHTTPTestCase):
     def test_locked_user_login(self):
         scope_username = 'TEST1111'
         user = yield User.soft_create(username=scope_username)
-        yield user.deactivate(id=user.id)
+        yield user.deactivate()
         body = '{"username": "%s","password": "qweqwe"}' % scope_username
         response = yield self.fetch_request(body=body)
         self.assertEqual(response.code, 200)
