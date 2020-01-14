@@ -5,14 +5,34 @@
     <button [mat-dialog-close]="true" class="form-close"><fa-icon [icon]="['fas','times-circle']"></fa-icon></button>
   </div>
 
-  <div class="form-fields" [formGroup]="createUserForm">
+  <div class="form-fields" [formGroup]="form">
     <label class="field">
       <p class="field-name">Имя пользователя</p>
       <input type="text" [focusMe]="true" placeholder="..." formControlName="username">
     </label>
+
     <label class="field">
       <p class="field-name">Пароль</p>
       <input type="password" placeholder="..." formControlName="password">
+    </label>
+
+    <label class="field">
+      <p class="field-name">Почтовый адрес</p>
+      <input type="text" placeholder="..." formControlName="email">
+    </label>
+
+    <label class="field">
+      <p class="field-name">Имя</p>
+      <input type="text" placeholder="..." formControlName="first_name">
+    </label>
+
+    <label class="field">
+      <p class="field-name">Фамилия</p>
+      <input type="text" placeholder="..." formControlName="last_name">
+    </label>
+
+    <label class="field-inline">
+      <mat-checkbox [color]="'primary'" formControlName="is_superuser">Администратор</mat-checkbox>
     </label>
   </div>
 

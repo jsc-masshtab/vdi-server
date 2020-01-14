@@ -30,6 +30,11 @@ export class InfoEventComponent {
       type: 'string'
     },
     {
+      title: 'Описание',
+      property: 'description',
+      type: 'string'
+    },
+    {
       title: 'Пользователь',
       property: 'user',
       type: 'string'

@@ -9,7 +9,7 @@
 
   <div class="form-fields" [formGroup]="formGroup">
     <label class="field" *ngFor="let field of data?.settings?.form; let i = index">
-      <ng-container *ngIf="field.type === 'text' || field.type === 'number'">
+      <ng-container *ngIf="field.type === 'text' || field.type === 'number' || field.type === 'password'">
         <ng-container *ngIf="i === 0">
           <input [type]="field.type"  [min]="0" [formControlName]="field.fieldName" [focusMe]="true">
         </ng-container>

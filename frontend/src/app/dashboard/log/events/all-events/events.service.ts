@@ -32,25 +32,30 @@ export class EventsService {
                                         $start_date: DateTime,
                                         $end_date: DateTime,
                                         $event_type: Int,
+                                        $entity_type: String,
                                         $user: String,
                                         $read_by: UUID) {
                                 count(  start_date: $start_date,
                                         end_date: $end_date,
                                         event_type: $event_type,
+                                        entity_type: $entity_type,
                                         user: $user,
                                         read_by: $read_by),
+                                entity_types,
                                 events( limit: $limit,
                                         offset: $offset,
                                         start_date: $start_date,
                                         end_date: $end_date,
                                         event_type: $event_type,
+                                        entity_type: $entity_type,
                                         user: $user,
                                         read_by: $read_by) {
                                     event_type
+                                    description
                                     message
                                     created
                                     user
-                                }
+                                },
                             }
                     `,
             variables: {
