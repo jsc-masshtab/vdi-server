@@ -9,6 +9,7 @@ import { FooterComponent } from './common/components/single/footer/footer.compon
 import { MainMenuComponent } from './common/components/single/main-menu/main-menu.component';
 import { WaitComponent } from './common/components/single/wait/wait.component';
 import { UsersModule } from './settings/users/users.module';
+import { AuthenticationDirectoryModule } from './settings/auth-directory/auth-directory.module';
 import { ControllersModule } from './settings/controllers/controllers.module';
 import { TemplatesModule } from './resourses/templates/templates.module';
 import { NodesModule } from './resourses/nodes/nodes.module';
@@ -16,6 +17,8 @@ import { DatapoolsModule } from './resourses/datapools/datapools.module';
 import { ClustersModule } from './resourses/clusters/clusters.module';
 import { PoolsModule } from './pools/pools.module';
 import { VmsModule } from './resourses/vms/vms.module';
+import { EventsModule } from './log/events/events.module';
+
 
 import {  HttpLink } from 'apollo-angular-link-http';
 import {  Apollo  } from 'apollo-angular';
@@ -34,8 +37,6 @@ import { MAT_DIALOG_DEFAULT_OPTIONS } from '@angular/material';
 import { onError } from 'apollo-link-error';
 import { InMemoryCache } from 'apollo-cache-inmemory';
 import { environment } from 'src/environments/environment';
-import { EventsModule } from './log/events/events.module';
-
 
 
 @NgModule({
@@ -59,6 +60,7 @@ import { EventsModule } from './log/events/events.module';
     VmsModule,
     ControllersModule,
     UsersModule,
+    AuthenticationDirectoryModule,
     EventsModule
   ],
   providers:
@@ -97,6 +99,9 @@ export class DashboardModule {
           break;
         case 'users':
           urlKnock = `${url + 'users'}`;
+          break;
+        case 'auth_dirs':
+          urlKnock = `${url + 'auth_dirs'}`;
           break;
         case 'events':
           urlKnock = `${url + 'events'}`;
