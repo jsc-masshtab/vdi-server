@@ -49,10 +49,7 @@ export class PoolsComponent extends DetailsMove implements OnInit, OnDestroy {
     {
       title: 'Пользователи',
       property: 'users',
-      type: {
-        propertyDepend: 'username',
-        typeDepend: 'propertyInObjectsInArray'
-      },
+      type: 'array-length',
       sort: true
     },
     {

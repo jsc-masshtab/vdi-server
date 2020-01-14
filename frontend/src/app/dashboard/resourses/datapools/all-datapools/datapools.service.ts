@@ -16,8 +16,8 @@ export class DatapoolsService {
 
     public getAllDatapools(): QueryRef<any, any> {
         return  this.service.watchQuery({
-            query:  gql` query resources($ordering:String) {
-                            datapools(ordering: $ordering) {
+            query:  gql` query resources($ordering:String, $take_broken: Boolean) {
+                            datapools(ordering: $ordering, take_broken: $take_broken) {
                                 id
                                 used_space
                                 free_space
@@ -35,7 +35,8 @@ export class DatapoolsService {
                     `,
             variables: {
                 method: 'GET',
-                ordering: this.paramsForGetDatapools.nameSort
+                ordering: this.paramsForGetDatapools.nameSort,
+                take_broken: true
             }
         });
     }

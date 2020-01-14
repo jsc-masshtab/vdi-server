@@ -69,10 +69,7 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
     {
       title: 'Пользователи',
       property: 'users',
-      type: {
-        propertyDepend: 'username',
-        typeDepend: 'propertyInObjectsInArray'
-      }
+      type: 'array-length'
     }
   ];
   public collectionDetailsAutomated: any[] = [
@@ -150,7 +147,12 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
       type: 'array-length'
     },
     {
-      title: 'Шаблон для ВМ',
+      title: 'Шаблон ВМ',
+      property: 'template',
+      property_lv2: 'verbose_name'
+    },
+    {
+      title: 'Шаблон для имени ВМ',
       property: 'vm_name_template',
       type: 'string',
       edit: 'changeTemplateForVmAutomatedPool'
@@ -158,10 +160,7 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
     {
       title: 'Пользователи',
       property: 'users',
-      type: {
-        propertyDepend: 'username',
-        typeDepend: 'propertyInObjectsInArray'
-      }
+      type: 'array-length'
     }
   ];
 
@@ -364,7 +363,7 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
 // @ts-ignore: Unreachable code error
   private changeName(): void {
     this.dialog.open(FormForEditComponent, {
-      width: '60%',
+      width: '500px',
       data: {
         post: {
           service: this.poolService,
@@ -602,7 +601,7 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
 
   ngOnDestroy() {
     if (this.sub_ws_create_pool) {
-      this.sub_ws_create_pool.unsubscribe();
+      // this.sub_ws_create_pool.unsubscribe();
     }
 
     if (this.subPool) {
