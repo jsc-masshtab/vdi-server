@@ -1,5 +1,6 @@
+import { WebsocketService } from './common/classes/websock.service';
 
-import { Component} from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 
 
 @Component({
@@ -7,6 +8,13 @@ import { Component} from '@angular/core';
   templateUrl: './dashboard.component.html'
 
 })
-export class DashboardComponent {
+export class DashboardComponent implements OnInit{
+
+  constructor(private ws: WebsocketService) {}
+
+  ngOnInit() {
+    this.ws.init();
+  }
 
 }
+

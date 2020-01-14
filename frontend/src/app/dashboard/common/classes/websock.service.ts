@@ -37,13 +37,16 @@ export class WebsocketService  {
     this.stream_create_pool$$.next(event.data);
   }
 
-  public onListenClose(event?: CloseEvent): void {
+  private onListenClose(event: CloseEvent): void {
     console.log(event, 'close ws');
-    this.ws.close();
   }
 
   private onListenError(event: Event): void {
     console.log(event, 'error ws');
+  }
+
+  public close() {
+    this.ws.close();
   }
 
   public getMsgCreateVMPoll(): Observable<string> {

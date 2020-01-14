@@ -1,3 +1,4 @@
+import { WebsocketService } from './../../../classes/websock.service';
 import { LoginService } from './../../../../../login/login.service';
 import { AuthStorageService } from './../../../../../login/authStorage.service';
 import { Component, OnInit } from '@angular/core';
@@ -13,7 +14,7 @@ export class HeaderUserComponent implements OnInit {
   public user: string;
   public openMenu: boolean = false;
 
-  constructor(private authStorageService: AuthStorageService, private loginService: LoginService) {}
+  constructor(private authStorageService: AuthStorageService, private loginService: LoginService, private ws: WebsocketService) {}
 
   ngOnInit() {
     this.user = this.authStorageService.getItemStorage('username');
@@ -26,6 +27,7 @@ export class HeaderUserComponent implements OnInit {
   public logout(): void {
     this.loginService.logout().subscribe(() => {
       this.authStorageService.logout();
+      this.ws.close();
     });
   }
 

@@ -1,5 +1,4 @@
 import { PoolsUpdateService } from './pools.update.service';
-import { WebsocketService } from './../../common/classes/websock.service';
 import { IParams } from '../../../../../types';
 import { PoolAddComponent } from '../add-pool/add-pool.component';
 import { WaitService } from '../../common/components/single/wait/wait.service';
@@ -67,7 +66,7 @@ export class PoolsComponent extends DetailsMove implements OnInit, OnDestroy {
 
 
   constructor(private service: PoolsService, public dialog: MatDialog,
-              private router: Router, private waitService: WaitService, private ws: WebsocketService,
+              private router: Router, private waitService: WaitService,
               private update: PoolsUpdateService) {
     super();
   }
@@ -77,7 +76,6 @@ export class PoolsComponent extends DetailsMove implements OnInit, OnDestroy {
   ngOnInit() {
     this.getAllPools();
     this.updatePools();
-    this.ws.init();
   }
 
   private updatePools(): void {
@@ -155,7 +153,6 @@ export class PoolsComponent extends DetailsMove implements OnInit, OnDestroy {
   ngOnDestroy() {
     this.getPoolsSub.unsubscribe();
     this.updateSub.unsubscribe();
-    this.ws.onListenClose();
     this.service.paramsForGetPools.spin = true;
     this.service.paramsForGetPools.nameSort = undefined;
   }
