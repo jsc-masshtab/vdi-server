@@ -1,4 +1,4 @@
-import { AddUserComponent } from './add-auth-directory/add-auth-directory.component';
+import { AddAuthenticationDirectoryComponent } from './add-auth-directory/add-auth-directory.component';
 import { AuthenticationDirectoryComponent } from './all-auth-directory/all-auth-directory.component';
 import { MatSelectModule } from '@angular/material/select';
 import { MatDialogModule } from '@angular/material/dialog';
@@ -9,27 +9,36 @@ import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule } from '@angular/forms';
 import { AuthenticationDirectoryService } from './auth-directory.service';
+import { MatCheckboxModule } from '@angular/material';
+import { AuthenticationDirectoryDetailsComponent } from './auth-directory-details/auth-directory-details.component';
+import { RemoveAuthenticationDirectoryComponent } from './auth-directory-details/remove-auth-directory/remove-auth-directory.component';
 
 @NgModule({
-  declarations: [
-    AuthenticationDirectoryComponent,
-    AddUserComponent
-  ],
-  imports: [
-    SharedModule,
-    CommonModule,
-    FontAwesomeModule,
-    AppRoutingModule,
-    MatDialogModule,
-    MatSelectModule,
-    ReactiveFormsModule
-  ],
-  providers: [AuthenticationDirectoryService],
-  exports: [
-    AuthenticationDirectoryComponent
-  ],
-  entryComponents: [
-    AddUserComponent
-  ]
+   declarations: [
+      AuthenticationDirectoryComponent,
+      AddAuthenticationDirectoryComponent,
+      AuthenticationDirectoryDetailsComponent,
+      RemoveAuthenticationDirectoryComponent
+   ],
+   imports: [
+      SharedModule,
+      CommonModule,
+      FontAwesomeModule,
+      AppRoutingModule,
+      MatDialogModule,
+      MatSelectModule,
+      ReactiveFormsModule,
+      MatCheckboxModule
+   ],
+   providers: [
+      AuthenticationDirectoryService
+   ],
+   exports: [
+      AuthenticationDirectoryComponent
+   ],
+   entryComponents: [
+      AddAuthenticationDirectoryComponent,
+      RemoveAuthenticationDirectoryComponent
+   ]
 })
 export class AuthenticationDirectoryModule {}

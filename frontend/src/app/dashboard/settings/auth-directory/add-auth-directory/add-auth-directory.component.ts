@@ -10,7 +10,7 @@ import { FormBuilder, FormGroup } from '@angular/forms';
   templateUrl: './add-auth-directory.component.html'
 })
 
-export class AddUserComponent {
+export class AddAuthenticationDirectoryComponent {
 
   public form: FormGroup;
 
@@ -26,23 +26,22 @@ export class AddUserComponent {
       service_password: '',
       admin_server: '',
       subdomain_name: '',
-      kdc_urls: '',
-      sso: '',
+      kdc_urls: [[]],
+      sso: false,
     });
   }
 
   constructor(private service: AuthenticationDirectoryService,
-              private dialogRef: MatDialogRef<AddUserComponent>,
+              private dialogRef: MatDialogRef<AddAuthenticationDirectoryComponent>,
               private fb: FormBuilder,
               private waitService: WaitService) {
                 this.initForm();
               }
 
-
   public send() {
     this.waitService.setWait(true);
     this.service.createAuthDir({ ...this.form.value }).subscribe(() => {
-      this.service.getAllAuthenticationDirectory().valueChanges.subscribe();
+      this.service.getAllAuthenticationDirectory().refetch();
       this.dialogRef.close();
       this.waitService.setWait(false);
     });

@@ -1,20 +1,20 @@
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { AddUserComponent } from './add-auth-directory.component';
+import { AddAuthenticationDirectoryComponent } from './add-auth-directory.component';
 
 describe('AddUserComponent', () => {
-  let component: AddUserComponent;
-  let fixture: ComponentFixture<AddUserComponent>;
+  let component: AddAuthenticationDirectoryComponent;
+  let fixture: ComponentFixture<AddAuthenticationDirectoryComponent>;
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [ AddUserComponent ]
+      declarations: [AddAuthenticationDirectoryComponent ]
     })
     .compileComponents();
   }));
 
   beforeEach(() => {
-    fixture = TestBed.createComponent(AddUserComponent);
+    fixture = TestBed.createComponent(AddAuthenticationDirectoryComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

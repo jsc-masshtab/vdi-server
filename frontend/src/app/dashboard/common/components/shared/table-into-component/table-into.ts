@@ -11,6 +11,7 @@ export class TableIntoComponent  {
   @Input() item: {};
   @Input() collection: object[] = [];
   @Output() action: EventEmitter<object> = new EventEmitter<object>();
+  @Output() edit: EventEmitter<any> = new EventEmitter<any>();
 
   public moment: any;
 
@@ -18,8 +19,9 @@ export class TableIntoComponent  {
     this.moment = moment;
   }
 
-  public actionEditField(method) {
+  public actionEditField(method, info = null) {
     this.action.emit(method);
+    this.edit.emit(info);
   }
 
 }

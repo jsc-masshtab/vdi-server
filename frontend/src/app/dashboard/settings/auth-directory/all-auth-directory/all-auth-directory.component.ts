@@ -1,10 +1,13 @@
 import { IParams } from '../../../../../../types';
 import { WaitService } from '../../../common/components/single/wait/wait.service';
-import { AddUserComponent } from '../add-auth-directory/add-auth-directory.component';
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { AddAuthenticationDirectoryComponent } from '../add-auth-directory/add-auth-directory.component';
+import { Component, OnInit, OnDestroy, ViewChild, ElementRef } from '@angular/core';
 import { AuthenticationDirectoryService   } from '../auth-directory.service';
 import { map } from 'rxjs/operators';
 import { MatDialog } from '@angular/material';
+import { Subscription } from 'rxjs';
+import { DetailsMove } from 'src/app/dashboard/common/classes/details-move';
+import { Router } from '@angular/router';
 
 
 @Component({
@@ -14,45 +17,72 @@ import { MatDialog } from '@angular/material';
 })
 
 
-export class AuthenticationDirectoryComponent implements OnInit, OnDestroy {
+export class AuthenticationDirectoryComponent extends DetailsMove implements OnInit, OnDestroy {
+
+  private getAllAuthenticationDirectorySub: Subscription;
 
   public authDirectory: [];
   public collection: object[] = [
     {
-      title: 'Имя пользователя',
-      property: 'auth-directoryname',
+      title: 'Название',
+      property: 'verbose_name',
       class: 'name-start',
-      icon: 'users',
+      icon: 'address-card',
       type: 'string',
       sort: true
-    },
-    /*{
-      title: 'Дата создания',
-      property: 'date_joined',
-      type: 'time',
-      reverse_sort: true
-    }*/
+    }
   ];
 
-  constructor(private service: AuthenticationDirectoryService, public dialog: MatDialog, private waitService: WaitService) {}
+  constructor(private service: AuthenticationDirectoryService, public dialog: MatDialog, private waitService: WaitService,
+              private router: Router) {
+    super();
+  }
+
+  @ViewChild('view') view: ElementRef;
 
   ngOnInit() {
     this.getAllAuthenticationDirectory();
   }
 
   public addUser() {
-    this.dialog.open(AddUserComponent, {
+    this.dialog.open(AddAuthenticationDirectoryComponent, {
       width: '500px'
     });
   }
 
   public getAllAuthenticationDirectory() {
+
+    if (this.getAllAuthenticationDirectorySub) {
+      this.getAllAuthenticationDirectorySub.unsubscribe();
+    }
+
     this.waitService.setWait(true);
-    this.service.getAllAuthenticationDirectory().valueChanges.pipe(map(data => data.data.authDirectory))
+    this.getAllAuthenticationDirectorySub = this.service.getAllAuthenticationDirectory().valueChanges.pipe(map(data => data.data))
       .subscribe((data) => {
-        this.authDirectory = data;
+        this.authDirectory = data.auth_dirs;
         this.waitService.setWait(false);
     });
+  }
+
+  public refresh(): void {
+    this.service.paramsForGetAuthenticationDirectory.spin = true;
+    this.getAllAuthenticationDirectory();
+  }
+
+  public routeTo(event): void {
+    this.router.navigate([`pages/settings/auth-directory/${event.id}`]);
+  }
+
+  public onResize(): void {
+    super.onResize(this.view);
+  }
+
+  public componentActivate(): void {
+    super.componentActivate(this.view);
+  }
+
+  public componentDeactivate(): void {
+    super.componentDeactivate();
   }
 
   public sortList(param: IParams): void  {
@@ -64,5 +94,9 @@ export class AuthenticationDirectoryComponent implements OnInit, OnDestroy {
   ngOnDestroy() {
     this.service.paramsForGetAuthenticationDirectory.spin = true;
     this.service.paramsForGetAuthenticationDirectory.nameSort = undefined;
+
+    if (this.getAllAuthenticationDirectorySub) {
+      this.getAllAuthenticationDirectorySub.unsubscribe();
+    }
   }
 }

@@ -3,7 +3,7 @@
 
       <div class="table-area-title">
         <span>{{ obj.title }}</span>
-        <button *ngIf="obj.edit && item" (click)="actionEditField(obj.edit)" class="edit-button">
+        <button *ngIf="obj.edit && item" (click)="actionEditField(obj.edit, obj)" class="edit-button">
           <fa-icon [icon]="['fas','edit']" size="xs"></fa-icon>
         </button>
       </div>
