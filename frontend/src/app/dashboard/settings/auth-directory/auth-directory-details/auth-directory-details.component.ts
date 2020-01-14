@@ -225,6 +225,7 @@ export class AuthenticationDirectoryDetailsComponent implements OnInit, OnDestro
       width: '500px',
       data: {
         id: this.id,
+        item: this.AuthenticationDirectory
       }
     });
   }
