@@ -9,7 +9,6 @@
 
 #include "virt-viewer-util.h"
 #include "vdi_manager.h"
-#include "vdi_api_session.h"
 #include "vdi_ws_client.h"
 #include "vdi_pool_widget.h"
 #include "jsonhandler.h"
@@ -37,12 +36,15 @@ typedef struct{
     GtkWidget *status_label;
     GtkWidget *main_vm_spinner;
     GtkWidget *label_vdi_online;
+    GtkWidget *combobox_remote_protocol;
 
     GArray *pool_widgets_array;
 
-    gchar **url_ptr;
+    gchar **ip_ptr;
+    gchar **port_ptr;
     gchar **password_ptr;
     gchar **vm_verbose_name_ptr;
+    VdiVmRemoteProtocol *remote_protocol_type_ptr;
 
     ConnectionInfo ci;
 } VdiManager;
@@ -85,12 +87,15 @@ static void set_init_values()
     vdi_manager.status_label = NULL;
     vdi_manager.main_vm_spinner = NULL;
     vdi_manager.label_vdi_online = NULL;
+    vdi_manager.combobox_remote_protocol = NULL;
 
     vdi_manager.pool_widgets_array = NULL;
 
-    vdi_manager.url_ptr = NULL;
+    vdi_manager.ip_ptr = NULL;
+    vdi_manager.port_ptr = NULL;
     vdi_manager.password_ptr = NULL;
     vdi_manager.vm_verbose_name_ptr = NULL;
+    vdi_manager.remote_protocol_type_ptr = NULL;
 }
 
 // Set GUI state
@@ -294,13 +299,20 @@ static void on_get_vm_from_pool_finished(GObject *source_object G_GNUC_UNUSED,
         // save to settings file the last pool we connected to
         write_str_to_ini_file("RemoteViewerConnect", "last_pool_id", get_current_pool_id());
 
-        free_memory_safely(vdi_manager.url_ptr);
-        *vdi_manager.url_ptr = g_strdup_printf("spice://%s:%ld", vdi_vm_data->vm_host, vdi_vm_data->vm_port);
-        g_strstrip(*vdi_manager.url_ptr);
+        free_memory_safely(vdi_manager.ip_ptr);
+        *vdi_manager.ip_ptr = g_strdup(vdi_vm_data->vm_host);
+        free_memory_safely(vdi_manager.port_ptr);
+        *vdi_manager.port_ptr = g_strdup_printf("%ld", vdi_vm_data->vm_port);
+
         free_memory_safely(vdi_manager.password_ptr);
         *vdi_manager.password_ptr = g_strdup(vdi_vm_data->vm_password);
+
         free_memory_safely(vdi_manager.vm_verbose_name_ptr);
         *vdi_manager.vm_verbose_name_ptr = g_strdup(vdi_vm_data->vm_verbose_name);
+
+        // get current remote protocol from gui
+        *vdi_manager.remote_protocol_type_ptr =
+            gtk_combo_box_get_active((GtkComboBox*)vdi_manager.combobox_remote_protocol);
         //
         set_vdi_client_state(VDI_RECEIVED_RESPONSE, "Получена вм из пула", FALSE);
 
@@ -373,7 +385,6 @@ static void on_button_quit_clicked(GtkButton *button G_GNUC_UNUSED, gpointer dat
 // vm start button pressed callback
 static void on_vm_start_button_clicked(GtkButton *button, gpointer data G_GNUC_UNUSED)
 {
-    //ConnectionInfo *ci = data;
     const gchar *pool_id = g_object_get_data(G_OBJECT(button), "pool_id");
     set_current_pool_id(pool_id);
     printf("%s  %s\n", (const char *)__func__, pool_id);
@@ -382,21 +393,42 @@ static void on_vm_start_button_clicked(GtkButton *button, gpointer data G_GNUC_U
     // start spinner on vm widget
     VdiPoolWidget vdi_pool_widget = get_vdi_pool_widget_by_id(pool_id);
     enable_spinner_visible(&vdi_pool_widget, TRUE);
+
+    // take from gui currect remote protocol
+    gint remote_protocol_index = gtk_combo_box_get_active((GtkComboBox*)vdi_manager.combobox_remote_protocol);
+    set_current_remote_protocol((VdiVmRemoteProtocol)remote_protocol_index);
     // execute task
     execute_async_task(get_vm_from_pool, on_get_vm_from_pool_finished, NULL, NULL);
 }
 
+static void
+read_data_from_ini_file()
+{
+    gint cur_remote_protocol_index = read_int_from_ini_file("General", "cur_remote_protocol_index");
+    gtk_combo_box_set_active((GtkComboBox*)vdi_manager.combobox_remote_protocol, cur_remote_protocol_index);
+}
+
+static void
+save_data_to_ini_file()
+{
+    gint cur_remote_protocol_index =
+            gtk_combo_box_get_active((GtkComboBox*)vdi_manager.combobox_remote_protocol);
+    write_int_to_ini_file("General", "cur_remote_protocol_index", cur_remote_protocol_index);
+}
+
 /////////////////////////////////// main function
-GtkResponseType vdi_manager_dialog(GtkWindow *main_window G_GNUC_UNUSED, gchar **uri,
-                                   gchar **password, gchar **vm_verbose_name)
+GtkResponseType vdi_manager_dialog(GtkWindow *main_window G_GNUC_UNUSED, gchar **ip, gchar **port,
+                                   gchar **password, gchar **vm_verbose_name, VdiVmRemoteProtocol *remote_protocol_type)
 {
     set_init_values();
     vdi_manager.ci.response = FALSE;
     vdi_manager.ci.loop = NULL;
     vdi_manager.ci.dialog_window_response = GTK_RESPONSE_CANCEL;
-    vdi_manager.url_ptr = uri;
+    vdi_manager.ip_ptr = ip;
+    vdi_manager.port_ptr = port;
     vdi_manager.password_ptr = password;
     vdi_manager.vm_verbose_name_ptr = vm_verbose_name;
+    vdi_manager.remote_protocol_type_ptr = remote_protocol_type;
 
     /* Create the widgets */
     vdi_manager.builder = virt_viewer_util_load_ui("vdi_manager_form.ui");
@@ -417,12 +449,16 @@ GtkResponseType vdi_manager_dialog(GtkWindow *main_window G_GNUC_UNUSED, gchar *
 
     vdi_manager.main_vm_spinner = GTK_WIDGET(gtk_builder_get_object(vdi_manager.builder, "main_vm_spinner"));
     vdi_manager.label_vdi_online = GTK_WIDGET(gtk_builder_get_object(vdi_manager.builder, "label_vdi_online"));
+    vdi_manager.combobox_remote_protocol =
+            GTK_WIDGET(gtk_builder_get_object(vdi_manager.builder, "combobox-remote-protocol"));
 
     // connects
     //g_signal_connect_swapped(vdi_manager.window, "map-event", G_CALLBACK(mapped_user_function), &vdi_manager.ci);
     g_signal_connect_swapped(vdi_manager.window, "delete-event", G_CALLBACK(on_window_deleted_cb), &vdi_manager.ci);
     g_signal_connect(vdi_manager.button_renew, "clicked", G_CALLBACK(on_button_renew_clicked), &vdi_manager.ci);
     g_signal_connect(vdi_manager.button_quit, "clicked", G_CALLBACK(on_button_quit_clicked), &vdi_manager.ci);
+
+    read_data_from_ini_file();
 
     // show window
     gtk_window_set_position (GTK_WINDOW(vdi_manager.window), GTK_WIN_POS_CENTER);
@@ -442,6 +478,9 @@ GtkResponseType vdi_manager_dialog(GtkWindow *main_window G_GNUC_UNUSED, gchar *
     // clear
     vdi_api_cancell_pending_requests();
     stop_vdi_ws_polling(&vdi_ws_client);
+
+    // save data to ini file
+    save_data_to_ini_file();
 
     unregister_all_pools();
     g_object_unref(vdi_manager.builder);

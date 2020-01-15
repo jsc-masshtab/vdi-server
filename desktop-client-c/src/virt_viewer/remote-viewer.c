@@ -57,6 +57,8 @@
 #include "vdi_manager.h"
 #include "vdi_api_session.h"
 
+#include "rdp_viewer.h"
+
 #define RECONNECT_TIMEOUT 1000
 
 extern gboolean opt_manual_mode;
@@ -362,6 +364,16 @@ remote_viewer_session_connected(VirtViewerSession *session,
     g_free(uri);
 }
 
+static void set_spice_session_data(VirtViewerApp *app, gchar *ip, gchar *port, gchar *user, gchar *password)
+{
+    gchar *guri = g_strconcat("spice://", ip, ":", port, NULL);
+    g_strstrip(guri);
+    g_object_set(app, "guri", guri, NULL);
+    g_free(guri);
+
+    virt_viewer_session_spice_set_credentials(user, password);
+}
+
 static gboolean
 remote_viewer_start(VirtViewerApp *app, GError **err, RemoteViewerState remoteViewerState)
 {
@@ -371,13 +383,13 @@ remote_viewer_start(VirtViewerApp *app, GError **err, RemoteViewerState remoteVi
     RemoteViewer *self = REMOTE_VIEWER(app);
     RemoteViewerPrivate *priv = self->priv;
     gboolean ret = FALSE;
-    gchar *guri = NULL;
     gchar *user = NULL;
     gchar *password = NULL;
     gchar *ip = NULL;
     gchar *port = NULL;
     gboolean is_connect_to_prev_pool = FALSE;
     gchar *vm_verbose_name = NULL;
+    VdiVmRemoteProtocol remote_protocol_type = VDI_SPICE_PROTOCOL;
     GError *error = NULL;
 
     switch (remoteViewerState) {
@@ -392,8 +404,8 @@ retry_auth:
     {
         // Забираем из ui адрес и порт
         GtkResponseType dialog_window_response =
-            remote_viewer_connect_dialog(&guri, &user, &password, &ip, &port,
-                                         &is_connect_to_prev_pool, &vm_verbose_name);
+            remote_viewer_connect_dialog(&user, &password, &ip, &port,
+                                         &is_connect_to_prev_pool, &vm_verbose_name, &remote_protocol_type);
 
         if (dialog_window_response == GTK_RESPONSE_CANCEL) {
             return FALSE;
@@ -404,17 +416,13 @@ retry_auth:
         }
     }
 
-    g_debug("Opening display to %s", guri);
     // После такого как забрали адресс с логином и паролем действуем в зависимости от opt_manual_mode
     // 1) в мануальном режиме сразу подключаемся к удаленноиу раб столу
     // 2) В дефолтном режиме вызываем vdi manager. В нем пользователь выберет машину для подключения
 retry_connnect_to_vm:
     // instant connect attempt
-    if (opt_manual_mode) {
-        // credentials
-        g_object_set(app, "guri", guri, NULL);
-
-        setSpiceSessionCredentials(user, password);
+    if (opt_manual_mode) { // only spice in manual mode
+        set_spice_session_data(app, ip, port, user, password);
         // Создание сессии
         if (!virt_viewer_app_create_session(app, "spice", &error))
             goto cleanup;
@@ -431,6 +439,7 @@ retry_connnect_to_vm:
             }
             goto cleanup;
         }
+        ret = VIRT_VIEWER_APP_CLASS(remote_viewer_parent_class)->start(app, &error, AUTH_DIALOG);
 
     } else {
         VirtViewerWindow *main_window = virt_viewer_app_get_main_window(app);
@@ -438,14 +447,15 @@ retry_connnect_to_vm:
         //Если is_connect_to_prev_pool true, то подключение к пред. запомненому пулу,
         // минуя vdi manager window
         if (!is_connect_to_prev_pool) {
-            free_memory_safely(&guri);
+            free_memory_safely(&ip);
+            free_memory_safely(&port);
             free_memory_safely(&password);
             free_memory_safely(&vm_verbose_name);
 
             // show VDI manager window
             GtkResponseType vdi_dialog_window_response =
-                    vdi_manager_dialog(virt_viewer_window_get_window(main_window), &guri,
-                                       &password, &vm_verbose_name);
+                    vdi_manager_dialog(virt_viewer_window_get_window(main_window), &ip, &port,
+                                       &password, &vm_verbose_name, &remote_protocol_type);
 
             if (vdi_dialog_window_response == GTK_RESPONSE_CANCEL) {
                 goto cleanup;
@@ -458,7 +468,6 @@ retry_connnect_to_vm:
 //        // remember username
         if (user)
             g_object_set(app, "username", user, NULL);
-        printf("uuiduser: %s \n", user);
 
         // get remembered user name
         gchar *username = NULL;
@@ -470,19 +479,25 @@ retry_connnect_to_vm:
         g_object_set(app, "guest-name", window_name, NULL);
         g_free(window_name);
 
-        // set url and credentials
-        g_object_set(app, "guri", guri, NULL);
-        setSpiceSessionCredentials(user, password);
+        // connect to vm depending on remote protocol
+        if (remote_protocol_type == VDI_RDP_PROTOCOL) {
+            // start xfreerdp process
+            //rdp_viewer_start("user", "user", "192.168.7.235", NULL); // test
+            rdp_viewer_start(get_vdi_username(), get_vdi_password(), ip, NULL); // it's right
+            //printf("user: %s   pass: %s", get_vdi_username(), get_vdi_password());
+            //rdp_viewer_start("user", "user", ip, NULL); // todo: Remove later
+            if (!is_connect_to_prev_pool) goto retry_connnect_to_vm;
 
-        // start connect attempt timer
-        virt_viewer_start_reconnect_poll(self);
+        } else { // spice by default
+            set_spice_session_data(app, ip, port, user, password);
+            // start connect attempt timer
+            virt_viewer_start_reconnect_poll(self);
+            // Показывается окно virt viewer // virt_viewer_app_default_start
+            ret = VIRT_VIEWER_APP_CLASS(remote_viewer_parent_class)->start(app, &error, AUTH_DIALOG);
+        }
     }
-    // Показывается окно virt viewer // virt_viewer_app_default_start
-    ret = VIRT_VIEWER_APP_CLASS(remote_viewer_parent_class)->start(app, &error, AUTH_DIALOG);
 
 cleanup:
-    //g_clear_object(&file);
-    free_memory_safely(&guri);
     free_memory_safely(&user);
     free_memory_safely(&password);
     free_memory_safely(&ip);
@@ -491,7 +506,7 @@ cleanup:
 
     if (!ret && priv->open_recent_dialog) {
         if (error != NULL) {
-            virt_viewer_app_simple_message_dialog(app, _("Unable to connect: %s"), error->message); // -
+            virt_viewer_app_simple_message_dialog(app, _("Unable to connect: %s"), error->message);
         }
         g_clear_error(&error);
         goto retry_auth;

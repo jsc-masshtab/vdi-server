@@ -23,6 +23,18 @@ static VdiSession vdiSession;
 // set session header
 // make api requests
 
+static const gchar *remote_protocol_to_str(VdiVmRemoteProtocol vm_remote_protocol)
+{
+    switch (vm_remote_protocol) {
+    case VDI_SPICE_PROTOCOL:
+        return "spice";
+    case VDI_RDP_PROTOCOL:
+        return "rdp";
+    case VDI_ANOTHER_REMOTE_PROTOCOL:
+        return "unknown_protocol";
+    }
+}
+
 static void free_session_memory(){
 
     free_memory_safely(&vdiSession.vdi_username);
@@ -136,6 +148,7 @@ void start_vdi_session()
 
     vdiSession.is_active = TRUE;
     vdiSession.current_pool_id = NULL;
+    vdiSession.current_remote_protocol = VDI_SPICE_PROTOCOL; // by default
 }
 
 void stop_vdi_session()
@@ -169,6 +182,16 @@ const gchar *get_vdi_ip()
 const gchar *get_vdi_port(void)
 {
     return vdiSession.vdi_port;
+}
+
+const gchar *get_vdi_username(void)
+{
+    return vdiSession.vdi_username;
+}
+
+const gchar *get_vdi_password(void)
+{
+    return vdiSession.vdi_password;
 }
 
 void vdi_api_cancell_pending_requests()
@@ -205,6 +228,16 @@ void set_current_pool_id(const gchar *current_pool_id)
 const gchar *get_current_pool_id()
 {
     return vdiSession.current_pool_id;
+}
+
+void set_current_remote_protocol(VdiVmRemoteProtocol remote_protocol)
+{
+    vdiSession.current_remote_protocol = remote_protocol;
+}
+
+VdiVmRemoteProtocol get_current_remote_protocol()
+{
+    return vdiSession.current_remote_protocol;
 }
 
 /*
@@ -328,9 +361,15 @@ void get_vm_from_pool(GTask       *task,
                     gpointer       task_data G_GNUC_UNUSED,
                     GCancellable  *cancellable G_GNUC_UNUSED)
 {
-    gchar *url_str = g_strdup_printf("%s/client/pools/%s", vdiSession.api_url, get_current_pool_id());
-    gchar *response_body_str = api_call("POST", url_str, NULL);
+    gchar *url_str = g_strdup_printf("%s/client/pools/%s", vdiSession.api_url, vdiSession.current_pool_id);
+
+    // todo: нормально создавать json
+    gchar *bodyStr = g_strdup_printf("{\"remote_protocol\":\"%s\"}",
+                                     remote_protocol_to_str(vdiSession.current_remote_protocol));
+
+    gchar *response_body_str = api_call("POST", url_str, bodyStr);
     g_free(url_str);
+    g_free(bodyStr);
 
     //response_body_str == NULL. didnt receive what we wanted
     if (!response_body_str) {
@@ -357,6 +396,7 @@ void get_vm_from_pool(GTask       *task,
     vdi_vm_data->vm_password = g_strdup(json_object_get_string_member_safely(data_member_object, "password"));
     vdi_vm_data->message = g_strdup(json_object_get_string_member_safely(data_member_object, "message"));
     vdi_vm_data->vm_verbose_name = g_strdup(json_object_get_string_member_safely(data_member_object, "vm_verbose_name"));
+
     printf("vm_host %s \n", vdi_vm_data->vm_host);
     printf("vm_port %ld \n", vdi_vm_data->vm_port);
     printf("vm_password %s \n", vdi_vm_data->vm_password);
