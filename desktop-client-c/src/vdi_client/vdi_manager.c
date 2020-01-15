@@ -9,7 +9,6 @@
 
 #include "virt-viewer-util.h"
 #include "vdi_manager.h"
-#include "vdi_api_session.h"
 #include "vdi_ws_client.h"
 #include "vdi_pool_widget.h"
 #include "jsonhandler.h"
@@ -41,10 +40,11 @@ typedef struct{
 
     GArray *pool_widgets_array;
 
-    gchar **url_ptr;
+    gchar **ip_ptr;
+    gchar **port_ptr;
     gchar **password_ptr;
     gchar **vm_verbose_name_ptr;
-    gchar **remote_protocol_type_ptr;
+    VdiVmRemoteProtocol *remote_protocol_type_ptr;
 
     ConnectionInfo ci;
 } VdiManager;
@@ -91,7 +91,8 @@ static void set_init_values()
 
     vdi_manager.pool_widgets_array = NULL;
 
-    vdi_manager.url_ptr = NULL;
+    vdi_manager.ip_ptr = NULL;
+    vdi_manager.port_ptr = NULL;
     vdi_manager.password_ptr = NULL;
     vdi_manager.vm_verbose_name_ptr = NULL;
     vdi_manager.remote_protocol_type_ptr = NULL;
@@ -298,9 +299,10 @@ static void on_get_vm_from_pool_finished(GObject *source_object G_GNUC_UNUSED,
         // save to settings file the last pool we connected to
         write_str_to_ini_file("RemoteViewerConnect", "last_pool_id", get_current_pool_id());
 
-        free_memory_safely(vdi_manager.url_ptr);
-        *vdi_manager.url_ptr = g_strdup_printf("spice://%s:%ld", vdi_vm_data->vm_host, vdi_vm_data->vm_port);
-        g_strstrip(*vdi_manager.url_ptr);
+        free_memory_safely(vdi_manager.ip_ptr);
+        *vdi_manager.ip_ptr = g_strdup(vdi_vm_data->vm_host);
+        free_memory_safely(vdi_manager.port_ptr);
+        *vdi_manager.port_ptr = g_strdup_printf("%ld", vdi_vm_data->vm_port);
 
         free_memory_safely(vdi_manager.password_ptr);
         *vdi_manager.password_ptr = g_strdup(vdi_vm_data->vm_password);
@@ -309,9 +311,8 @@ static void on_get_vm_from_pool_finished(GObject *source_object G_GNUC_UNUSED,
         *vdi_manager.vm_verbose_name_ptr = g_strdup(vdi_vm_data->vm_verbose_name);
 
         // get current remote protocol from gui
-        free_memory_safely(vdi_manager.remote_protocol_type_ptr);
         *vdi_manager.remote_protocol_type_ptr =
-            gtk_combo_box_text_get_active_text((GtkComboBoxText*)vdi_manager.combobox_remote_protocol);
+            gtk_combo_box_get_active((GtkComboBox*)vdi_manager.combobox_remote_protocol);
         //
         set_vdi_client_state(VDI_RECEIVED_RESPONSE, "Получена вм из пула", FALSE);
 
@@ -416,14 +417,15 @@ save_data_to_ini_file()
 }
 
 /////////////////////////////////// main function
-GtkResponseType vdi_manager_dialog(GtkWindow *main_window G_GNUC_UNUSED, gchar **uri,
-                                   gchar **password, gchar **vm_verbose_name, gchar **remote_protocol_type)
+GtkResponseType vdi_manager_dialog(GtkWindow *main_window G_GNUC_UNUSED, gchar **ip, gchar **port,
+                                   gchar **password, gchar **vm_verbose_name, VdiVmRemoteProtocol *remote_protocol_type)
 {
     set_init_values();
     vdi_manager.ci.response = FALSE;
     vdi_manager.ci.loop = NULL;
     vdi_manager.ci.dialog_window_response = GTK_RESPONSE_CANCEL;
-    vdi_manager.url_ptr = uri;
+    vdi_manager.ip_ptr = ip;
+    vdi_manager.port_ptr = port;
     vdi_manager.password_ptr = password;
     vdi_manager.vm_verbose_name_ptr = vm_verbose_name;
     vdi_manager.remote_protocol_type_ptr = remote_protocol_type;
