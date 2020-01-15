@@ -74,7 +74,7 @@ export class PoolsComponent extends DetailsMove implements OnInit, OnDestroy {
   @ViewChild('view') view: ElementRef;
 
   ngOnInit() {
-    this.getAllPools();
+    this.getAllPools({wait: true});
     this.updatePools();
   }
 
@@ -82,7 +82,7 @@ export class PoolsComponent extends DetailsMove implements OnInit, OnDestroy {
     this.updateSub = this.update.getUpdate().subscribe((param: string) => {
       if (param === 'update') {
         this.service.paramsForGetPools.spin = false;
-        this.getAllPools();
+        this.getAllPools({wait: false});
       }
     });
   }
@@ -93,21 +93,23 @@ export class PoolsComponent extends DetailsMove implements OnInit, OnDestroy {
     });
   }
 
-  public getAllPools(): void {
+  public getAllPools(wait: { wait: boolean}): void {
     if (this.getPoolsSub) {
       this.getPoolsSub.unsubscribe();
     }
-
     this.getPoolsSub = this.service.getAllPools()
       .subscribe((data) => {
         this.pools = data;
-        this.waitService.setWait(false);
+        if (wait.wait) {
+          this.waitService.setWait(false);
+          wait.wait = false; // чтобы не отправлял в waitService при obs$ = timer(0, 60000);
+        }
     });
   }
 
   public refresh(): void {
     this.service.paramsForGetPools.spin = true;
-    this.getAllPools();
+    this.getAllPools({wait: true});
   }
 
   public routeTo(event): void {
@@ -147,7 +149,7 @@ export class PoolsComponent extends DetailsMove implements OnInit, OnDestroy {
         output_param = param.nameSort;
     }
     this.service.paramsForGetPools.nameSort = output_param;
-    this.getAllPools();
+    this.getAllPools({wait: true});
   }
 
   ngOnDestroy() {

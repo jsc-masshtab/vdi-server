@@ -1,4 +1,4 @@
-import { Observable, ReplaySubject } from 'rxjs';
+import { Observable, Subject } from 'rxjs';
 import { Injectable } from '@angular/core';
 
 @Injectable({
@@ -9,7 +9,7 @@ export class WaitService  {
 
   constructor() {}
 
-  public wait$: ReplaySubject<any> = new ReplaySubject<any>();
+  public wait$: Subject<any> = new Subject<any>();
 
   public getWait(): Observable<any> {
     return this.wait$.asObservable();
