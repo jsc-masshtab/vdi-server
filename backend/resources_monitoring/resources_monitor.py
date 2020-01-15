@@ -7,6 +7,7 @@ from json import JSONDecodeError
 from tornado.httpclient import HTTPClientError
 from tornado.ioloop import IOLoop
 from tornado.websocket import WebSocketClosedError
+from tornado.websocket import WebSocketError
 from tornado.websocket import websocket_connect
 
 from common.veil_errors import HttpError
@@ -130,7 +131,7 @@ class ResourcesMonitor(AbstractMonitor):
         try:
             connect_url = 'ws://{}/ws/?token={}'.format(self._controller_ip, token)
             self._ws_connection = await websocket_connect(connect_url)
-        except ConnectionRefusedError:
+        except (ConnectionRefusedError, WebSocketError):
             msg = '{cls}: an not connect to {ip}'.format(
                 cls=__class__.__name__,
                 ip=self._controller_ip)

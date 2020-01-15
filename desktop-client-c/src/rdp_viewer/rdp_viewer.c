@@ -40,17 +40,14 @@ rdp_viewer_start(const gchar *usename, const gchar *password, gchar *ip, gchar *
                                    username_arg,
                                    password_arg,
                                    adress_arg,
-                                   "/sound:rate:44100,channel:2",
-                                   "/gfx-h264:AVC444",
-                                   "/video",
-                                   "/log-level:INFO",
-                                   "/w:1920",
-                                   "/h:1080",
-                                   "/gdi:hw",
+                                   "+clipboard",
                                    "/multimon",
-                                   "+decorations",
+                                   "/sound:sys:alsa",
+                                   "/microphone:sys:alsa",
+                                   "/gfx-h264:AVC444",
+                                   "/gdi:hw",
                                    "/cert-ignore",
-                                   //"/f",
+                                   "/usb:auto",
                                    NULL };
 
     //gint child_stdout, child_stderr;
