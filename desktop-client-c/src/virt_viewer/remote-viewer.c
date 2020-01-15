@@ -421,29 +421,25 @@ retry_auth:
     // 2) В дефолтном режиме вызываем vdi manager. В нем пользователь выберет машину для подключения
 retry_connnect_to_vm:
     // instant connect attempt
-    if (opt_manual_mode) {
-        if (remote_protocol_type == VDI_RDP_PROTOCOL) {
-            rdp_viewer_start("user", "user", ip, NULL);
-        } else { // spice by default
-            set_spice_session_data(app, ip, port, user, password);
-            // Создание сессии
-            if (!virt_viewer_app_create_session(app, "spice", &error))
-                goto cleanup;
+    if (opt_manual_mode) { // only spice in manual mode
+        set_spice_session_data(app, ip, port, user, password);
+        // Создание сессии
+        if (!virt_viewer_app_create_session(app, "spice", &error))
+            goto cleanup;
 
-            g_signal_connect(virt_viewer_app_get_session(app), "session-connected",
-                             G_CALLBACK(remote_viewer_session_connected), app);
+        g_signal_connect(virt_viewer_app_get_session(app), "session-connected",
+                         G_CALLBACK(remote_viewer_session_connected), app);
 
-            // Коннект к машине/*
-            if (!virt_viewer_app_initial_connect(app, &error)) {
-                if (error == NULL) {
-                    g_set_error_literal(&error,
-                                        VIRT_VIEWER_ERROR, VIRT_VIEWER_ERROR_FAILED,
-                                        _("Failed to initiate connection"));
-                }
-                goto cleanup;
+        // Коннект к машине/*
+        if (!virt_viewer_app_initial_connect(app, &error)) {
+            if (error == NULL) {
+                g_set_error_literal(&error,
+                                    VIRT_VIEWER_ERROR, VIRT_VIEWER_ERROR_FAILED,
+                                    _("Failed to initiate connection"));
             }
-            ret = VIRT_VIEWER_APP_CLASS(remote_viewer_parent_class)->start(app, &error, AUTH_DIALOG);
+            goto cleanup;
         }
+        ret = VIRT_VIEWER_APP_CLASS(remote_viewer_parent_class)->start(app, &error, AUTH_DIALOG);
 
     } else {
         VirtViewerWindow *main_window = virt_viewer_app_get_main_window(app);
@@ -472,7 +468,6 @@ retry_connnect_to_vm:
 //        // remember username
         if (user)
             g_object_set(app, "username", user, NULL);
-        printf("uuiduser: %s \n", user);
 
         // get remembered user name
         gchar *username = NULL;
@@ -488,8 +483,9 @@ retry_connnect_to_vm:
         if (remote_protocol_type == VDI_RDP_PROTOCOL) {
             // start xfreerdp process
             //rdp_viewer_start("user", "user", "192.168.7.235", NULL); // test
-            //rdp_viewer_start(get_vdi_username(), get_vdi_password(), ip, NULL); // it's right
-            rdp_viewer_start("user", "user", ip, NULL); // todo: Remove later
+            rdp_viewer_start(get_vdi_username(), get_vdi_password(), ip, NULL); // it's right
+            //printf("user: %s   pass: %s", get_vdi_username(), get_vdi_password());
+            //rdp_viewer_start("user", "user", ip, NULL); // todo: Remove later
             if (!is_connect_to_prev_pool) goto retry_connnect_to_vm;
 
         } else { // spice by default

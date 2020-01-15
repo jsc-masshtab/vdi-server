@@ -484,12 +484,14 @@ remote_viewer_connect_dialog(gchar **user, gchar **password,
     ci.ldap_checkbutton = ldap_checkbutton = GTK_WIDGET(gtk_builder_get_object(builder, "ldap-button"));
     gboolean is_ldap_btn_checked = read_int_from_ini_file("RemoteViewerConnect", "is_ldap_btn_checked");
     gtk_toggle_button_set_active((GtkToggleButton *)ci.ldap_checkbutton, is_ldap_btn_checked);
+    gtk_widget_set_sensitive(ci.ldap_checkbutton, !opt_manual_mode);
 
     // Connect to prev pool check button
     ci.conn_to_prev_pool_checkbutton = GTK_WIDGET(gtk_builder_get_object(builder, "connect-to-prev-button"));
     gboolean is_conn_to_prev_pool_btn_checked =
             read_int_from_ini_file("RemoteViewerConnect", "is_conn_to_prev_pool_btn_checked");
     gtk_toggle_button_set_active((GtkToggleButton *)ci.conn_to_prev_pool_checkbutton, is_conn_to_prev_pool_btn_checked);
+    gtk_widget_set_sensitive(ci.conn_to_prev_pool_checkbutton, !opt_manual_mode);
 
     // Remember check button
     ci.remember_checkbutton = remember_checkbutton = GTK_WIDGET(gtk_builder_get_object(builder, "remember-button"));
