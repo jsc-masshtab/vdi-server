@@ -442,6 +442,7 @@ retry_connnect_to_vm:
                 }
                 goto cleanup;
             }
+            ret = VIRT_VIEWER_APP_CLASS(remote_viewer_parent_class)->start(app, &error, AUTH_DIALOG);
         }
 
     } else {
