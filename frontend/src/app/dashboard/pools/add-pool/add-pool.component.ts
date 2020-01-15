@@ -471,6 +471,7 @@ export class PoolAddComponent implements OnInit, OnDestroy {
           if (res) {
             this.dialogRef.close();
             this.updatePools.setUpdate('update');
+            this.waitService.setWait(false);
           }
         });
     }
@@ -483,6 +484,7 @@ export class PoolAddComponent implements OnInit, OnDestroy {
           if (res) {
             this.dialogRef.close();
             this.updatePools.setUpdate('update');
+            this.waitService.setWait(false);
           }
         });
     }

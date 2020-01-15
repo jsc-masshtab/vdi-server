@@ -29,13 +29,12 @@ import {
 export class WaitComponent implements OnInit, OnDestroy {
 
   private waitSub: Subscription;
-  public wait: boolean = false;
+  public wait: boolean | undefined;
 
   constructor(private service: WaitService) {}
 
   ngOnInit() {
     this.waitSub = this.service.getWait().subscribe((wait: boolean) => {
-      console.log(wait, 'wait');
       this.wait = wait;
     });
   }
@@ -43,5 +42,4 @@ export class WaitComponent implements OnInit, OnDestroy {
   ngOnDestroy() {
     this.waitSub.unsubscribe();
   }
-
 }
