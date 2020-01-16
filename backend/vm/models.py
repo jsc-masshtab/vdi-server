@@ -175,13 +175,15 @@ class Vm(db.Model, AbstractEntity):
                     domain_index = domain_index + 1
                     verbose_name = re.sub(r'-{}$'.format(domain_index_old), '-{}'.format(domain_index), verbose_name)
                     domain_name = verbose_name
-                elif ecp_errors and 'detail' and inner_retry_count < 30:
+                elif ecp_errors and 'detail' in ecp_errors and inner_retry_count < 30:
                     # TODO: это очень странное условие, наверняка от него откажемся
                     application_log.warning('Possibly blocked by active task on ECP.')
+                    application_log.debug(http_error)
                     application_log.debug('Подождем подольше перед повторной попыткой.')
                     await asyncio.sleep(10)
                 else:
                     application_log.debug('Unknown exception. Break.')
+                    application_log.debug(ecp_errors)
                     raise BadRequest(http_error)
             else:
                 application_log.debug('No ex. Break')
