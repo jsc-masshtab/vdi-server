@@ -678,12 +678,20 @@ class UpdateAutomatedPoolMutation(graphene.Mutation, PoolValidator):
     @superuser_required
     async def mutate(cls, root, info, **kwargs):
         await cls.validate_agruments(**kwargs)
-        ok = await AutomatedPool.soft_update(kwargs['pool_id'], kwargs.get('verbose_name'), kwargs.get('reserve_size'),
-                                             kwargs.get('total_size'), kwargs.get('vm_name_template'),
-                                             kwargs.get('keep_vms_on'), kwargs.get('create_thin_clones'))
-        msg = 'Dynamic pool {id} updated.'.format(id=kwargs['pool_id'])
-        await Event.create_info(msg)
-        return UpdateAutomatedPoolMutation(ok=ok)
+        automated_pool = await AutomatedPool.get(kwargs['pool_id'])
+        if automated_pool:
+            await automated_pool.soft_update(kwargs.get('verbose_name'),
+                                             kwargs.get('reserve_size'),
+                                             kwargs.get('total_size'),
+                                             kwargs.get('vm_name_template'),
+                                             kwargs.get('keep_vms_on'),
+                                             kwargs.get('create_thin_clones'))
+            automated_pool = await AutomatedPool.get(kwargs['pool_id'])
+            msg = 'Automated pool {name} updated.'.format(name=automated_pool.verbose_name)
+            await Event.create_info(msg)
+            application_log.debug('Automated pool {} updated.'.format(automated_pool.verbose_name))
+            return UpdateAutomatedPoolMutation(ok=True)
+        return UpdateAutomatedPoolMutation(ok=False)
 
 
 # --- --- --- --- ---
