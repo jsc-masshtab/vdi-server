@@ -69,7 +69,7 @@ class PoolGetVm(BaseHandler, ABC):
                 async with pool_lock.lock:
                     native_loop = asyncio.get_event_loop()
                     await cancel_async_task(pool_lock.expand_pool_task)
-                    pool_lock.expand_pool_task = native_loop.create_task(pool.expand_pool_if_requred())
+                    pool_lock.expand_pool_task = native_loop.create_task(pool.expand_pool())
 
         if not vm_id:
             response_dict = {'data': dict(host='', port=0, password='', message='В пуле нет свободных машин')}

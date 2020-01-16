@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import asyncio
 import uuid
+import logging
 
 from sqlalchemy import Enum as AlchemyEnum
 from sqlalchemy import case, literal_column, desc, text
@@ -21,6 +22,8 @@ from settings import VEIL_WS_MAX_TIME_TO_WAIT
 from user.models import User
 from vm.models import Vm
 
+application_log = logging.getLogger('tornado.application')
+
 
 class Pool(db.Model, AbstractEntity):
     """На данный момент отсутствует смысловая валидация на уровне таблиц (она в схемах)."""
@@ -35,7 +38,7 @@ class Pool(db.Model, AbstractEntity):
 
     __tablename__ = 'pool'
 
-    id = db.Column(UUID(), primary_key=True, default=uuid.uuid4)  # TODO: try with id
+    id = db.Column(UUID(), primary_key=True, default=uuid.uuid4)
     verbose_name = db.Column(db.Unicode(length=128), nullable=False, unique=True)
     cluster_id = db.Column(UUID(), nullable=False)
     node_id = db.Column(UUID(), nullable=False)
@@ -64,9 +67,13 @@ class Pool(db.Model, AbstractEntity):
         return True
 
     @property
+    async def is_automated_pool(self):
+        return await db.scalar(db.exists().where(AutomatedPool.id == self.id).select())
+
+    @property
     async def pool_type(self):
         """Возвращает тип пула виртуальных машин"""
-        is_automated = await db.scalar(db.exists().where(AutomatedPool.id == self.id).select())
+        is_automated = await self.is_automated_pool
         return Pool.PoolTypes.AUTOMATED if is_automated else Pool.PoolTypes.STATIC
 
     @property
@@ -130,7 +137,6 @@ class Pool(db.Model, AbstractEntity):
         pool_type = case([(StaticPool.id == None, literal_column("'{}'".format(Pool.PoolTypes.AUTOMATED)))],
                          else_=literal_column("'{}'".format(Pool.PoolTypes.STATIC))).label(Pool.POOL_TYPE_LABEL)
 
-        # TODO: потенциально проблемное место. Возможно потребуется явно указать поля для селекта.
         # Формирование общего селекта из таблиц пулов с добавлением принадлежности пула.
         query = db.select([
                             Pool.id.label('master_id'),
@@ -207,11 +213,6 @@ class Pool(db.Model, AbstractEntity):
         return await query.gino.all()
 
     @staticmethod
-    async def get_desktop_type(pool_id):
-        # TODO: rewrite
-        return await Pool.select('desktop_pool_type').where(Pool.id == pool_id).gino.scalar()
-
-    @staticmethod
     async def get_controller_ip(pool_id):
         query = db.select([Controller.address]).select_from(Controller.join(Pool)).where(
             Pool.id == pool_id)
@@ -249,7 +250,7 @@ class Pool(db.Model, AbstractEntity):
     @staticmethod
     async def get_user_pool(pool_id: str, username=None):
         """Return first hit"""
-        # TODO: заменить хардкод поля на нормальное обращение к подзапросу
+
         query = Pool.get_pools_query()
         query = db.select([
             Controller.address,
@@ -328,15 +329,7 @@ class Pool(db.Model, AbstractEntity):
 class StaticPool(db.Model, AbstractEntity):
     """На данный момент отсутствует смысловая валидация на уровне таблиц (она в схемах)."""
     __tablename__ = 'static_pool'
-    id = db.Column(UUID(), db.ForeignKey('pool.id', ondelete="CASCADE"), primary_key=True)  # TODO: try with id
-
-    @classmethod
-    async def get_info(cls, pool_id: str):
-        if not pool_id:
-            raise AssertionError('Empty uid.')
-        pool_data = AutomatedPool.join(Pool).select().where(
-            Pool.id == pool_id)
-        return await pool_data.gino.first()
+    id = db.Column(UUID(), db.ForeignKey('pool.id', ondelete="CASCADE"), primary_key=True)
 
     @classmethod
     async def create(cls, verbose_name, controller_ip, cluster_id, node_id, datapool_id):
@@ -344,12 +337,14 @@ class StaticPool(db.Model, AbstractEntity):
 
         async with db.transaction() as tx:
             # Create pool first
+            application_log.debug('Create Pool')
             pool = await Pool.create(verbose_name=verbose_name,
                                      cluster_id=cluster_id,
                                      node_id=node_id,
                                      datapool_id=datapool_id,
                                      controller_ip=controller_ip)
             # Create static pool
+            application_log.debug('Create StaticPool')
             return await super().create(id=pool.id)
 
     @classmethod
@@ -394,35 +389,64 @@ class AutomatedPool(db.Model, AbstractEntity):
 
     create_thin_clones = db.Column(db.Boolean(), nullable=False, default=True)
 
-    # ----- ----- ----- ----- ----- ----- -----
-    # Properties and getters:
-
-    @property
-    async def node_id(self):
-        return await Pool.get_node_id(self.id)
-
-    @property
-    async def datapool_id(self):
-        return await Pool.get_datapool_id(self.id)
-
-    @property
-    async def verbose_name(self):
-        return await Pool.get_name(self.id)
-
-    @property
-    async def controller_ip(self):
-        return await Pool.get_controller_ip(self.id)
-
-    @classmethod
-    async def get_info(cls, pool_id: str):
-        if not pool_id:
-            raise AssertionError('Empty uid.')
-        pool_data = AutomatedPool.join(Pool).select().where(
-            Pool.id == pool_id)
-        return await pool_data.gino.first()
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.verbose_name = None
+        self.node_id = None
+        self.datapool_id = None
+        self.controller_ip = None
+        self.keep_vms_on = None
 
     # ----- ----- ----- ----- ----- ----- -----
-    # Setters & etc.
+    # Properties:
+
+    @property
+    def verbose_name(self):
+        return self.__verbose_name
+
+    @verbose_name.setter
+    def verbose_name(self, verbose_name: str):
+        self.__verbose_name = verbose_name if verbose_name else None
+
+    @property
+    def node_id(self):
+        return self.__node_id
+
+    @node_id.setter
+    def node_id(self, node_id: str):
+        self.__node_id = str(node_id) if node_id else None
+
+    @property
+    def datapool_id(self):
+        return self.__datapool_id
+
+    @datapool_id.setter
+    def datapool_id(self, datapool_id: str):
+        self.__datapool_id = str(datapool_id) if datapool_id else None
+
+    @property
+    def controller_ip(self):
+        return self.__controller_ip
+
+    @controller_ip.setter
+    def controller_ip(self, controller_ip):
+        self.__controller_ip = controller_ip if controller_ip else None
+
+    @property
+    def keep_vms_on(self):
+        return self.__keep_vms_on
+
+    @keep_vms_on.setter
+    def keep_vms_on(self, keep_vms_on: bool):
+        self.__keep_vms_on = keep_vms_on if isinstance(keep_vms_on, bool) else None
+
+    # ----- ----- ----- ----- ----- ----- -----
+
+    async def activate(self):
+        return await Pool.activate(self.id)
+
+    async def deactivate(self):
+        return await Pool.deactivate(self.id)
 
     @classmethod
     async def create(cls, verbose_name, controller_ip, cluster_id, node_id,
@@ -431,48 +455,68 @@ class AutomatedPool(db.Model, AbstractEntity):
                      create_thin_clones):
         """Nested transactions are atomic."""
         async with db.transaction() as tx:
-            # Create pool first
+            # Create Pool
+            application_log.debug('Create Pool')
             pool = await Pool.create(verbose_name=verbose_name,
                                      cluster_id=cluster_id,
                                      node_id=node_id,
                                      datapool_id=datapool_id,
                                      controller_ip=controller_ip)
-            # Create automated pool
-            return await super().create(id=pool.id,
-                                        template_id=template_id,
-                                        min_size=min_size,
-                                        max_size=max_size,
-                                        max_vm_amount=max_vm_amount,
-                                        increase_step=increase_step,
-                                        max_amount_of_create_attempts=max_amount_of_create_attempts,
-                                        initial_size=initial_size,
-                                        reserve_size=reserve_size,
-                                        total_size=total_size,
-                                        vm_name_template=vm_name_template,
-                                        create_thin_clones=create_thin_clones)
 
-    @classmethod
-    async def soft_update(cls, pool_id, verbose_name, reserve_size, total_size, vm_name_template, keep_vms_on,
-                          create_thin_clones):
+            application_log.debug('Create AutomatedPool')
+            # Create AutomatedPool
+            automated_pool = await super().create(id=pool.id,
+                                                  template_id=template_id,
+                                                  min_size=min_size,
+                                                  max_size=max_size,
+                                                  max_vm_amount=max_vm_amount,
+                                                  increase_step=increase_step,
+                                                  max_amount_of_create_attempts=max_amount_of_create_attempts,
+                                                  initial_size=initial_size,
+                                                  reserve_size=reserve_size,
+                                                  total_size=total_size,
+                                                  vm_name_template=vm_name_template,
+                                                  create_thin_clones=create_thin_clones)
+
+            # Set properties
+            setattr(automated_pool, 'verbose_name', verbose_name)
+            setattr(automated_pool, 'node_id', node_id)
+            setattr(automated_pool, 'datapool_id', datapool_id)
+            setattr(automated_pool, 'controller_ip', controller_ip)
+            return automated_pool
+
+    async def soft_update(self, pool_id, verbose_name, reserve_size, total_size, vm_name_template, keep_vms_on: bool,
+                          create_thin_clones: bool):
+        pool_kwargs = dict()
+        auto_pool_kwargs = dict()
+
         async with db.transaction() as tx:
+            # Update Pool values
             if verbose_name:
-                await Pool.update.values(verbose_name=verbose_name).where(
-                    Pool.id == pool_id).gino.status()
-            auto_pool_kwargs = dict()
+                pool_kwargs['verbose_name'] = verbose_name
+            if isinstance(keep_vms_on, bool):
+                pool_kwargs['keep_vms_on'] = keep_vms_on
+            if pool_kwargs:
+                application_log.debug('Update Pool values for AutomatedPool {}'.format(self.verbose_name))
+                Pool.update.values(**pool_kwargs).where(id == pool_id).gino.status()
+
+            # Update AutomatedPool values
             if reserve_size:
                 auto_pool_kwargs['reserve_size'] = reserve_size
             if total_size:
                 auto_pool_kwargs['total_size'] = total_size
             if vm_name_template:
                 auto_pool_kwargs['vm_name_template'] = vm_name_template
+            if isinstance(create_thin_clones, bool):
+                auto_pool_kwargs['create_thin_clones'] = create_thin_clones
             if auto_pool_kwargs:
-                await AutomatedPool.update.values(**auto_pool_kwargs).where(
-                    AutomatedPool.id == pool_id).gino.status()
-            if keep_vms_on is not None:
-                await Pool.update.values(keep_vms_on=keep_vms_on).where(Pool.id == pool_id).gino.status()
-            if create_thin_clones is not None:
-                await AutomatedPool.update.values(create_thin_clones=create_thin_clones).where(
-                    AutomatedPool.id == pool_id).gino.status()
+                application_log.debug('Update AutomatedPool values for {}'.format(self.verbose_name))
+                await self.update(**auto_pool_kwargs).apply()
+
+            # Set AutomatedPool properties
+            for kwarg in pool_kwargs:
+                setattr(self, kwarg, pool_kwargs[kwarg])
+            application_log.debug('AutomatedPool properties was set.')
         return True
 
     async def add_vm(self, domain_index):
@@ -481,39 +525,42 @@ class AutomatedPool(db.Model, AbstractEntity):
         :param domain_index:
         :return:
         """
-        # TODO: Получить инстанс пула, чтобы не дергать кадлый параметр отдельно
-        # TODO: rewrite
-        # TODO: beautify
-        vm_name_template = self.vm_name_template or await self.verbose_name
+
+        vm_name_template = self.vm_name_template or self.verbose_name
 
         params = {
             'verbose_name': "{}-{}".format(vm_name_template, domain_index),
             'name_template': vm_name_template,
             'domain_id': str(self.template_id),
-            'datapool_id': str(await self.datapool_id),  # because of UUID
-            'controller_ip': await self.controller_ip,
-            'node_id': str(await self.node_id),
-            'create_thin_clones': self.create_thin_clones
+            'datapool_id': str(self.datapool_id),
+            'controller_ip': self.controller_ip,
+            'node_id': str(self.node_id),
+            'create_thin_clones': self.create_thin_clones,
+            'domain_index': domain_index
         }
 
         # try to create vm
         for i in range(self.max_amount_of_create_attempts):
-            print('add_domain № {}, attempt № {}'.format(domain_index, i))
-            # send request to create vm
+            application_log.debug(
+                'add_domain {}, attempt № {}, of {}'.format(vm_name_template, i, self.max_amount_of_create_attempts))
             try:
                 vm_info = await Vm.copy(**params)
                 current_vm_task_id = vm_info['task_id']
-            except HttpError as E:
-                print(E)
+            except HttpError as http_error:
+                # Обработка BadRequest происходит в Vm.copy()
+                application_log.error(http_error)
                 continue
+            else:
+                application_log.debug('VM creation command successfully sended to ECP.')
 
             # TODO: не переписывал. Уточнить у Александра какой план насчет подписки на WS
-            # subscribe to ws messages
+
+            application_log.debug('Subscribe to ws messages.')
             response_waiter = WaiterSubscriptionObserver()
             response_waiter.add_subscription_source('/tasks/')
 
             resources_monitor_manager.subscribe(response_waiter)
-            # wait for result
+            application_log.debug('Wait for result.')
 
             def _is_vm_creation_task(name):
                 """
@@ -541,52 +588,41 @@ class AutomatedPool(db.Model, AbstractEntity):
             resources_monitor_manager.unsubscribe(response_waiter)
 
             if is_vm_successfully_created:
-                await Vm.create(id=vm_info['id'], pool_id=str(self.id),
-                                template_id=str(self.template_id))
+                application_log.debug('Vm {} is successfully created on ECP.'.format(vm_info['id']))
+                await Vm.create(id=vm_info['id'],
+                                pool_id=str(self.id),
+                                template_id=str(self.template_id),
+                                created_by_vdi=True,
+                                controller_address=self.controller_ip,
+                                verbose_name=vm_info['verbose_name'])
                 return vm_info
-            else:
-                await asyncio.sleep(0.1)  # Пожалеем контроллер и подождем чуть-чуть
-                continue  # go to try again
+
+            application_log.debug('Fail to create VM on ECP. Re-run.')
+            await asyncio.sleep(1)  # Пожалеем контроллер и подождем чуть-чуть
+            continue  # go to try again
 
         raise VmCreationError('Can\'t create VM')
 
-    @classmethod
-    async def remove_vms(cls, pool_id):
-        """Интерфейс для запуска команды HttpClient на удаление виртуалки"""
-        # TODO: была мысль обернуть в транзакции, но команда уходит на ECP, поэтому если команда
-        #  отработает для одной виртуалки, то ее уже не вернуть.
-
-        query = db.select([Vm.id, Controller.address]).select_from(Vm.join(Pool).join(Controller)).where(
-            Vm.pool_id == pool_id)
-
-        vms_list = await query.gino.all()
-
-        # TODO: указать verbose_name, когда он появится в модели vm
-        # TODO: явно получать и парсить данные (row[0], row[1] плохо)
-        for row in vms_list:
-            await Vm.remove_vm(controller_ip=row[1], vm_id=row[0])
-            msg = 'Запущено удаление виртуальной машины {id} на ECP.'.format(id=row[0])
-            await Event.create_info(msg, entity_list=cls().entity_list)
-        return True
-
     async def add_initial_vms(self):
-        """Create required initial amount of VMs for auto pool"""
-        # Основная логика сохранена со старой схемы. На рефакторинг внутреннего кода пока нет времени.
-        # TODO: главное, что бы хотелось тут и в других местах создания виртуалок - отправлять диапазоны виртуалок
+        """Create required initial amount of VMs for auto pool
+           Основная логика сохранена со старой схемы. На рефакторинг внутреннего кода нет времени.
+           Главное, что бы хотелось тут и в других местах создания виртуалок - отправлять диапазоны виртуалок
+        """
 
-        print('Add initial vms:')
+        application_log.debug('Add initial vms for pool {}'.format(self.verbose_name))
         # Fetching template info from controller.
-        controller_address = await self.controller_ip
+        controller_address = self.controller_ip
         pool_os_type = Vm.get_template_os_type(controller_address=controller_address, template_id=self.template_id)
         await self.update(os_type=pool_os_type).apply()
 
         await Event.create_info('Automated pool creation started', entity_list=self.entity_list)
 
         vm_list = list()
+        vm_index = 1
         try:
             for i in range(self.initial_size):
-                vm_index = 1 + i
                 vm = await self.add_vm(vm_index)
+                vm_index = vm['domain_index'] + 1
                 vm_list.append(vm)
 
                 msg = 'Automated pool creation. Created {} VMs from {}'.format(vm_index, self.initial_size)
@@ -606,7 +642,8 @@ class AutomatedPool(db.Model, AbstractEntity):
 
         except VmCreationError as E:
             # log that we cant create required initial amount of VMs
-            print('Cant create VM')
+            application_log.error('Can\'t create VM {}'.format(vm['verbose_name']))
+            application_log.error(E)
 
         # notify VDI front about pool creation result (WS)
         is_creation_successful = (len(vm_list) == self.initial_size)
@@ -634,23 +671,23 @@ class AutomatedPool(db.Model, AbstractEntity):
         if not is_creation_successful:
             raise PoolCreationError('Не удалось создать необходимое число машин.')
 
-    async def create_pool(self):
-        """Корутина создания автом. пула"""
+    async def init_pool(self):
+        """Создание на пуле виртуальных машин по параметрам пула."""
+
         # locks
         async with pool_task_manager.get_pool_lock(str(self.id)).lock:
             async with pool_task_manager.get_template_lock(str(self.template_id)).lock:
                 try:
                     await self.add_initial_vms()
-                    await self.activate()
-
-                    verbose_name = await self.verbose_name
-                    msg = 'Automated pool {verbose_name} created.'.format(verbose_name=verbose_name)
+                    msg = 'Automated pool {verbose_name} created.'.format(verbose_name=self.verbose_name)
                     await Event.create_info(msg, entity_list=self.entity_list)
                 except PoolCreationError as E:
-                    print('exp__', E.__class__.__name__)
+                    application_log.error('{exception}'.format(exception=str(E)))
                     await self.deactivate()
+                else:
+                    await self.activate()
 
-    async def expand_pool_if_requred(self):
+    async def expand_pool(self):
         """
         Корутина расширения автом. пула
         Check and expand pool if required
@@ -658,7 +695,6 @@ class AutomatedPool(db.Model, AbstractEntity):
         """
         async with pool_task_manager.get_pool_lock(str(self.id)).lock:
             async with pool_task_manager.get_template_lock(str(self.template_id)).lock:
-                # TODO: rewrite
                 # TODO: код перенесен, чтобы работал. Принципиально не перерабатывался.
                 # Check that total_size is not reached
                 pool = await Pool.get(self.id)
@@ -679,19 +715,27 @@ class AutomatedPool(db.Model, AbstractEntity):
                     real_amount_to_add = min(max_possible_amount_to_add, self.increase_step)
                     # add VMs.
                     try:
-                        # TODO: очень странная логика. Может есть смысл создавать как-то диапазоном на стороне ECP?
+                        # TODO: заменить на вызов multiple
                         for i in range(0, real_amount_to_add):
                             domain_index = vm_amount_in_pool + i
                             await self.add_vm(domain_index)
                     except VmCreationError:
                         print('Vm creating error')
+                        # TODO: proper log
                         pass
 
-    async def activate(self):
-        return await Pool.activate(self.id)
+    @classmethod
+    async def remove_vms(cls, pool_id):
+        """Интерфейс для запуска команды HttpClient на удаление виртуалки"""
 
-    async def deactivate(self):
-        return await Pool.deactivate(self.id)
+        vms_list = await db.select([Vm.id, Controller.address]).select_from(Vm.join(Pool).join(Controller)).where(
+            Vm.pool_id == pool_id).gino.all()
+
+        for row in vms_list:
+            # TODO: явно получать и парсить данные (row[0], row[1] плохо)
+            vm = Vm.get(row[0])
+            await vm.delete()
+        return True
 
 
 class PoolUsers(db.Model):

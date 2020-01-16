@@ -1,6 +1,10 @@
+import logging
+
 from controller.models import Controller
 from event.models import Event
 from resources_monitoring.resources_monitor import ResourcesMonitor
+
+application_log = logging.getLogger('tornado.application')
 
 
 # TODO: выделить функционал подписок
@@ -15,7 +19,7 @@ class ResourcesMonitorManager:
         Start monitors
         :return:
         """
-        print(__class__.__name__, ': Startup...')
+        application_log.info('{}: Startup...'.format(__class__.__name__))
         # get all active controller ips
         controllers_addresses = await Controller.get_controllers_addresses()
         msg = '{cls}: connected controllers -- {controllers}'.format(
@@ -27,7 +31,7 @@ class ResourcesMonitorManager:
         # start resources monitors
         for controller_address in controllers_addresses:
             self._add_monitor_for_controller(controller_address)
-        print(__class__.__name__, ': Started')
+        application_log.info('{}: Started'.format(__class__.__name__))
 
     async def stop(self):
         """

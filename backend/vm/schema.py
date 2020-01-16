@@ -54,13 +54,13 @@ class VmType(graphene.ObjectType):
 
     management_ip = graphene.String()
 
-    selections = None #List[str]
+    selections = None  # List[str]
     sql_data = None
 
     async def get_veil_info(self):
 
         if self.veil_info:
-            return
+            return self.veil_info
 
         try:
             vm_client = await VmHttpClient.create(controller_ip=self.controller.address, vm_id=self.id)
@@ -78,8 +78,7 @@ class VmType(graphene.ObjectType):
         await self.get_veil_info()
         if self.veil_info:
             return self.veil_info['verbose_name']
-        else:
-            return DEFAULT_NAME
+        return DEFAULT_NAME
 
     async def resolve_user(self, _info):
         username = await Vm.get_username(self.id)
@@ -192,16 +191,10 @@ class FreeVmFromUser(graphene.Mutation):
     @superuser_required
     async def mutate(self, _info, vm_id):
         # check if vm exists
-        vm_exists = await Vm.check_vm_exists(vm_id)
-        if not vm_exists:
-            raise GraphQLError('ВМ с заданным id не существует')
+        vm = await Vm.get(vm_id)
+        await vm.free_vm(vm_id)
 
-        # free vm from user
-        await Vm.free_vm(vm_id)
-
-        return {
-            'ok': True
-        }
+        return {'ok': True}
 
 
 class VmQuery(graphene.ObjectType):
@@ -211,10 +204,13 @@ class VmQuery(graphene.ObjectType):
     templates = graphene.List(TemplateType, controller_ip=graphene.String(), cluster_id=graphene.String(),
                               node_id=graphene.String(), ordering=graphene.String())
 
-    vms = graphene.List(VmType, controller_ip=graphene.String(), cluster_id=graphene.String(),
-                                node_id=graphene.String(), datapool_id=graphene.String(),
-                                get_vms_in_pools=graphene.Boolean(),
-                                ordering=graphene.String())
+    vms = graphene.List(VmType,
+                        controller_ip=graphene.String(),
+                        cluster_id=graphene.String(),
+                        node_id=graphene.String(),
+                        datapool_id=graphene.String(),
+                        get_vms_in_pools=graphene.Boolean(),
+                        ordering=graphene.String())
 
     @superuser_required
     async def resolve_template(self, _info, id, controller_address):
