@@ -87,14 +87,14 @@ class UserQuery(graphene.ObjectType):
         if not id and not username:
             raise SimpleError('Scpecify id or username.')
 
-        user = await User.get_object(id, username)
+        user = await User.get_object(id, username, include_inactive=True)
         if not user:
             raise SimpleError('No such user.')
         return UserQuery.instance_to_type(user)
 
     @superuser_required
     async def resolve_users(self, info, ordering=None):
-        users = await User.get_objects(ordering=ordering)
+        users = await User.get_objects(ordering=ordering, include_inactive=True)
         objects = [
             UserQuery.instance_to_type(user)
             for user in users

@@ -1,13 +1,15 @@
 # -*- coding: utf-8 -*-
 import re
 import asyncio
+import logging
 
 import graphene
 from tornado.httpclient import HTTPClientError  # TODO: точно это нужно тут?
+from asyncpg.exceptions import UniqueViolationError
 
-from database import StatusGraphene
+from database import StatusGraphene, db
 from common.veil_validators import MutationValidation
-from common.veil_errors import SimpleError, HttpError, ValidationError, VmCreationError
+from common.veil_errors import SimpleError, HttpError, ValidationError
 from common.utils import make_graphene_type
 from common.veil_decorators import superuser_required
 
@@ -28,9 +30,8 @@ from controller_resources.schema import ClusterType, NodeType, DatapoolType
 from pool.models import AutomatedPool, StaticPool, Pool, PoolUsers
 from pool.pool_task_manager import pool_task_manager
 
-from asyncpg.exceptions._base import PostgresError
 
-from database import db
+application_log = logging.getLogger('tornado.application')
 
 
 # TODO: отсутствует валидация входящих ресурсов вроде node_uid, cluster_uid и т.п. Ранее шла речь,
@@ -296,6 +297,7 @@ def pool_obj_to_type(pool_obj: Pool) -> dict:
                  'keep_vms_on': pool_obj.keep_vms_on,
                  'create_thin_clones': pool_obj.create_thin_clones,
                  'controller': pool_obj.controller,
+                 'status': pool_obj.status
                  }
     return PoolType(**pool_dict)
 
@@ -399,6 +401,7 @@ class CreateStaticPoolMutation(graphene.Mutation, PoolValidator):
             except (HttpError, OSError):
                 print('HttpError')
                 pass
+
         # find vm veil data by id
         vm_veil_data_list = []
         for vm_id in vm_ids:
@@ -416,25 +419,31 @@ class CreateStaticPoolMutation(graphene.Mutation, PoolValidator):
         pool = None
         vm_ids = kwargs['vm_ids']
         verbose_name = kwargs['verbose_name']
-        # get vm info
+
+        application_log.debug('StaticPool: Get vm info')
         veil_vm_data_list = await CreateStaticPoolMutation.fetch_veil_vm_data_list(vm_ids)
-        # Check that all vms are on the same node
+
+        application_log.debug('StaticPool: Check that all vms are on the same node')
         first_vm_data = veil_vm_data_list[0]
+
         # TODO: move to validator?
         if not all(vm_data['node']['id'] == first_vm_data['node']['id'] for vm_data in veil_vm_data_list):
             raise SimpleError("Все ВМ должны находится на одном сервере")
+
         # All VMs are on the same node and cluster, all VMs have the same datapool
         # so we can take this data from the first item
         controller_ip = first_vm_data['controller_address']
         node_id = first_vm_data['node']['id']
-        # determine cluster
+
+        application_log.debug('StaticPool: Determine cluster')
         resources_http_client = await ResourcesHttpClient.create(controller_ip)
         node_data = await resources_http_client.fetch_node(node_id)
         cluster_id = node_data['cluster']
-        # determine datapool
+
+        application_log.debug('StaticPool: Determine datapool')
         vm_http_client = await VmHttpClient.create(controller_ip, first_vm_data['id'])
         disks_list = await vm_http_client.fetch_vdisks_list()
-        print('disks_list', disks_list)
+
         try:
             datapool_id = disks_list[0]['datapool']['id']
         except IndexError:
@@ -442,22 +451,34 @@ class CreateStaticPoolMutation(graphene.Mutation, PoolValidator):
 
         try:
             await Vm.enable_remote_accesses(controller_ip, vm_ids)
+            application_log.debug('StaticPool: Determine datapool')
             pool = await StaticPool.create(verbose_name=verbose_name,
                                            controller_ip=controller_ip,
                                            cluster_id=cluster_id,
                                            node_id=node_id,
                                            datapool_id=datapool_id)
-            # add vms to db
-            for vm_id in vm_ids:
-                await Vm.create(id=vm_id, pool_id=pool.id)
+
+            application_log.debug('StaticPool: Objects on VDI DB created.')
+            # Add VMs to db
+            for vm_info in veil_vm_data_list:
+                application_log.debug('VM info {}'.format(vm_info))
+                await Vm.create(id=vm_info['id'],
+                                template_id=None,
+                                pool_id=pool.id,
+                                controller_address=controller_ip,
+                                created_by_vdi=False,
+                                verbose_name=vm_info['verbose_name'])
 
             # response
             vms = [VmType(id=vm_id) for vm_id in vm_ids]
             await pool.activate()
-            msg = 'Static pool {id} created.'.format(id=pool.id)
-            await Event.create_info(msg)
+
+            application_log.debug('StaticPool: pool {} created.'.format(verbose_name))
+            await Event.create_info('Static pool {name} created.'.format(name=verbose_name))
         except Exception as E:  # Возможные исключения: дубликат имени или вм id, сетевой фейл enable_remote_accesses
-            await Event.create_error('Failed to create static pool.', description=str(E))
+            application_log.error('Failed to create static pool {}.'.format(verbose_name))
+            application_log.debug(E)
+            await Event.create_error('Failed to create static pool {}.'.format(verbose_name))
             if pool:
                 await pool.deactivate()
             return {'ok': False}
@@ -501,9 +522,13 @@ class AddVmsToStaticPoolMutation(graphene.Mutation):
         # remote access
         await Vm.enable_remote_accesses(controller_address, vm_ids)
 
-        # add vms to db
-        for vm_id in vm_ids:
-            await Vm.create(id=vm_id, pool_id=pool_id)
+        # Add VMs to db
+        for vm_info in all_vms_on_node:
+            await Vm.create(id=vm_info['id'],
+                            pool_id=pool_id,
+                            controller_address=controller_address,
+                            created_by_vdi=False,
+                            verbose_name=vm_info['verbose_name'])
 
         return {
             'ok': True
@@ -525,7 +550,6 @@ class RemoveVmsFromStaticPoolMutation(graphene.Mutation):
         # vms check
         # get list of vms ids which are in pool_id
         vms_ids_in_pool = await Vm.get_vms_ids_in_pool(pool_id)
-        print('vms_ids_in_pool', vms_ids_in_pool)
 
         # check if given vm_ids in vms_ids_in_pool
         for vm_id in vm_ids:
@@ -574,7 +598,7 @@ class CreateAutomatedPoolMutation(graphene.Mutation, PoolValidator):
         max_size = graphene.Int(default_value=200)
         max_vm_amount = graphene.Int(default_value=1000)
         increase_step = graphene.Int(default_value=3)
-        max_amount_of_create_attempts = graphene.Int(default_value=10)
+        max_amount_of_create_attempts = graphene.Int(default_value=15)
         initial_size = graphene.Int(default_value=1)
         reserve_size = graphene.Int(default_value=1)
         total_size = graphene.Int(default_value=1)
@@ -591,8 +615,8 @@ class CreateAutomatedPoolMutation(graphene.Mutation, PoolValidator):
         await cls.validate_agruments(**kwargs)
         try:
             automated_pool = await AutomatedPool.create(**kwargs)
-        except PostgresError as E:
-            await Event.create_error('Failed to create automated pool.', entity=Pool().entity)
+        except UniqueViolationError as E:
+            await Event.create_error('Failed to create automated pool.', entity_list=Pool().entity_list)
             raise SimpleError(E)
 
         # add data for protection
@@ -600,7 +624,7 @@ class CreateAutomatedPoolMutation(graphene.Mutation, PoolValidator):
         # start task
         native_loop = asyncio.get_event_loop()
         pool_lock = pool_task_manager.get_pool_lock(str(automated_pool.id))
-        pool_lock.create_pool_task = native_loop.create_task(automated_pool.create_pool())
+        pool_lock.create_pool_task = native_loop.create_task(automated_pool.init_pool())
 
         # pool creation task successfully started
         pool = await Pool.get_pool(automated_pool.id)

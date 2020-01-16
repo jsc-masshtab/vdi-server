@@ -9,7 +9,7 @@ import tornado.web
 import tornado.log
 import tornado.options
 
-from settings import DB_NAME, DB_PASS, DB_USER, DB_PORT, DB_HOST, WS_PING_INTERVAL, WS_PING_TIMEOUT
+from settings import DB_NAME, DB_PASS, DB_USER, DB_PORT, DB_HOST, WS_PING_INTERVAL, WS_PING_TIMEOUT, AUTH_ENABLED
 from database import db
 from common.veil_handlers import VdiTornadoGraphQLHandler
 
@@ -28,7 +28,6 @@ from pool.pool_task_manager import pool_task_manager
 from auth.urls import auth_api_urls
 from thin_client_api.urls import thin_client_api_urls
 from resources_monitoring.urls import ws_event_monitoring_urls
-
 
 logger = logging.getLogger(__name__)
 tornado.options.define("access_to_stdout", default=True, help="Log tornado.access to stdout")
@@ -64,6 +63,13 @@ def init_logging(access_to_stdout=False):
         access_log.setLevel(logging.INFO)
         stdout_handler = logging.StreamHandler(sys.stdout)
         access_log.addHandler(stdout_handler)
+    if not AUTH_ENABLED:
+        general_log = logging.getLogger('tornado.general')
+        general_log.warning('Auth is disabled. Enable on production!')
+
+    # Disable query logging.
+    logging.getLogger('sqlalchemy').setLevel(logging.ERROR)
+    logging.getLogger('gino').setLevel(logging.ERROR)
 
 
 def init_signals():
@@ -124,3 +130,4 @@ async def shutdown_server():
 if __name__ == '__main__':
     bootstrap()
     start_server()
+
