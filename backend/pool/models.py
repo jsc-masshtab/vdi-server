@@ -733,8 +733,8 @@ class AutomatedPool(db.Model, AbstractEntity):
 
         for row in vms_list:
             # TODO: явно получать и парсить данные (row[0], row[1] плохо)
-            vm = Vm.get(row[0])
-            await vm.delete()
+            vm = await Vm.get(row[0])
+            await vm.soft_delete()
         return True
 
 

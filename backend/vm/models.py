@@ -78,7 +78,7 @@ class Vm(db.Model, AbstractEntity):
         application_log.debug('VM {} properties are set.'.format(verbose_name))
         return vm
 
-    async def delete(self):
+    async def soft_delete(self):
         if self.created_by_vdi:
             vm_http_client = await VmHttpClient.create(self.controller_address, self.id)
             try:
@@ -88,7 +88,7 @@ class Vm(db.Model, AbstractEntity):
                 application_log.warning('Fail to remove VM {} from ECP. '.format(self.verbose_name))
                 application_log.debug(http_error)
             application_log.debug('Vm {} removed from ECP.'.format(self.verbose_name))
-        return await super().delete()
+        return await self.delete()
 
     @staticmethod
     def domain_name(verbose_name: str, name_template: str):
@@ -198,7 +198,7 @@ class Vm(db.Model, AbstractEntity):
         """Remove given vms"""
         for vm_id in vm_ids:
             vm = Vm.get(vm_id)
-            await vm.delete()
+            await vm.soft_delete()
         return True
 
     @staticmethod

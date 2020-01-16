@@ -268,7 +268,7 @@ class AuthenticationDirectory(db.Model, AbstractSortableStatusModel, AbstractEnt
         # TODO: после ввода сущностей в Event, удалять зависимые записи журнала событий, возможно через ON_DELETE.
         auth_dir = await AuthenticationDirectory.get_object(id=id, include_inactive=True)
         if auth_dir:
-            msg = 'Authentication Directory {id} deleted.'.format(id=id)
+            msg = 'Authentication Directory {name} deleted.'.format(name=auth_dir.verbose_name)
             await auth_dir.delete()
             await Event.create_info(msg)
             return True
