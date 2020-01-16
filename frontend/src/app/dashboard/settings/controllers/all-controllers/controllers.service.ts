@@ -36,6 +36,28 @@ export class ControllersService {
         });
     }
 
+    public getController(id: string) {
+        return this.service.watchQuery({
+            query: gql`  query controllers($id: String) {
+                            controller(id: $id) {
+                                id
+                                verbose_name
+                                address
+                                description
+                                status
+                                version
+                                username
+                                password
+                                ldap_connection
+                            }
+                        }`,
+            variables: {
+                method: 'GET',
+                id
+            }
+        }).valueChanges;
+    }
+
     public addController({address, description, username, verbose_name, password, ldap_connection }) {
         return this.service.mutate<any>({
             mutation: gql`

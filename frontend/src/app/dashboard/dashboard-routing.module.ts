@@ -23,6 +23,7 @@ import { DashboardComponent } from './dashboard.component';
 import { AuthenticationDirectoryComponent } from './settings/auth-directory/all-auth-directory/all-auth-directory.component';
 import { AuthenticationDirectoryDetailsComponent } from './settings/auth-directory/auth-directory-details/auth-directory-details.component';
 import { UserDetailsComponent } from './settings/users/user-details/user-details.component';
+import { ControllerDetailsComponent } from './settings/controllers/controller-details/controller-details.component';
 
 
 const routes: Routes = [
@@ -49,7 +50,13 @@ const routes: Routes = [
       },
       {
         path: 'settings/controllers',
-        component: ControllersComponent
+        component: ControllersComponent,
+        children: [
+          {
+            path: ':id',
+            component: ControllerDetailsComponent
+          }
+        ]
       },
       {
         path: 'settings/users',

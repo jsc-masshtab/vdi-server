@@ -12,6 +12,7 @@ import { AddControllerComponent } from './add-controller/add-controller.componen
 import { RemoveControllerComponent } from './remove-controller/remove-controller.component';
 import { ReactiveFormsModule } from '@angular/forms';
 import { MatCheckboxModule } from '@angular/material';
+import { ControllerDetailsComponent } from './controller-details/controller-details.component';
 
 
 
@@ -19,7 +20,8 @@ import { MatCheckboxModule } from '@angular/material';
   declarations: [
     ControllersComponent,
     AddControllerComponent,
-    RemoveControllerComponent
+    RemoveControllerComponent,
+    ControllerDetailsComponent
   ],
   imports: [
     SharedModule,
@@ -34,7 +36,8 @@ import { MatCheckboxModule } from '@angular/material';
   ],
   providers: [ControllersService],
   exports: [
-    ControllersComponent
+    ControllersComponent,
+    ControllerDetailsComponent
   ],
   entryComponents: [
     AddControllerComponent,

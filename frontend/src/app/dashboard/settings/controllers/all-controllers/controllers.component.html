@@ -22,12 +22,11 @@
 
 </div>
 
-
-<div class="components-info">
-    <div class="component-list" [style.height]="'100%'">
-        <vdi-table-component [data]="controllers" [collection]="collection" (sortListNow)="sortList($event)"></vdi-table-component>
+<div class="components-info" #view>
+    <div class="component-list" [class.page-wrap]="pageRollup" [class.page-rollup]="pageRollup" [style.height]="pageHeight">
+        <vdi-table-component [data]="controllers" [collection]="collection" (sortListNow)="sortList($event)" (clickRowData)="routeTo($event)" cursor="true"></vdi-table-component>
     </div>
-    <!-- <div class="component-details" [class.page-height-min]="pageHeight==pageHeightMin" [class.page-height-max]="pageRollup">
-        <router-outlet (activate)="componentAdded()" (deactivate)="componentRemoved()"></router-outlet>
-    </div> -->
+    <div class="component-details" [class.page-height-min]="pageHeight==pageHeightMin" [class.page-height-max]="pageRollup">
+        <router-outlet (activate)="componentActivate()" (deactivate)="componentDeactivate()"></router-outlet>
+    </div>
 </div>

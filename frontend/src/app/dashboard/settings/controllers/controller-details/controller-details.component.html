@@ -1,0 +1,33 @@
+
+
+
+      
+<div class="details-wrap">
+
+    <div class="details-header">
+        <div class="title"><fa-icon [icon]="['fas','building']" size="s" ></fa-icon><span class="name">Контроллер <span *ngIf="host">{{controller?.verbose_name}}</span></span></div>
+        <div class="btns-part">
+            <button class="btn-close" (click)="close()"><fa-icon [icon]="['fas','times-circle']"></fa-icon></button>
+        </div>
+    </div>
+    <div class="details-control-panel">
+        <button (click)="getController()" class="btn-refresh" title="Обновить"><fa-icon [icon]="['fas','sync-alt']"></fa-icon></button>
+        <button (click)="removeController()" *ngIf="menuActive === 'info' && pool" title="Удалить пул" class="btn-control"><fa-icon [icon]="['fas','trash-alt']" size="xs"></fa-icon><span class="name">Удалить контроллер</span></button>
+    </div>
+
+    <div class="details-row">
+        <ul class="details-menu">
+            <li (click)="routeTo('info')" [class.active]="menuActive === 'info'" title="Информация о пуле"> <fa-icon [icon]="['fas','chart-bar']"></fa-icon><span class="name">Информация</span></li>
+        </ul>
+        
+        <div class="details-slide" *ngIf="host">
+            <div class="details-slide-header">
+                <ng-container *ngIf="menuActive === 'info'">Информация о контроллере</ng-container>
+            </div>
+            <div class="details-slide-into">
+                <vdi-table-into *ngIf="menuActive === 'info'" [item]="controller" [collection]="collection" (action)="actionEdit($event)"></vdi-table-into>
+            </div>     
+        </div>
+    </div>
+
+</div>

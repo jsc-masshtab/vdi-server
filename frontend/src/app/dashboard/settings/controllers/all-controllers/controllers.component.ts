@@ -1,6 +1,8 @@
+import { DetailsMove } from './../../../common/classes/details-move';
+import { Router } from '@angular/router';
 import { IParams } from '../../../../../../types';
 import { WaitService } from '../../../common/components/single/wait/wait.service';
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, ViewChild, ElementRef } from '@angular/core';
 import { ControllersService } from './controllers.service';
 import { map } from 'rxjs/operators';
 import { MatDialog } from '@angular/material';
@@ -12,7 +14,7 @@ import { RemoveControllerComponent } from '../remove-controller/remove-controlle
   templateUrl: './controllers.component.html'
 })
 
-export class ControllersComponent implements OnInit, OnDestroy {
+export class ControllersComponent extends DetailsMove implements OnInit, OnDestroy {
 
   public controllers: [];
   public collection: object[] = [
@@ -49,7 +51,10 @@ export class ControllersComponent implements OnInit, OnDestroy {
     }
   ];
 
-  constructor(private service: ControllersService, public dialog: MatDialog, private waitService: WaitService) { }
+  constructor(private service: ControllersService, public dialog: MatDialog,
+              private waitService: WaitService, private router: Router) { super(); }
+
+  @ViewChild('view') view: ElementRef;
 
   ngOnInit() {
     this.getAllControllers();
@@ -80,6 +85,22 @@ export class ControllersComponent implements OnInit, OnDestroy {
     this.service.paramsForGetControllers.spin = param.spin;
     this.service.paramsForGetControllers.nameSort = param.nameSort;
     this.getAllControllers();
+  }
+
+  public routeTo(event): void {
+    this.router.navigate([`pages/settings/controllers/${event['id']}`]);
+  }
+
+  public onResize(): void {
+    super.onResize(this.view);
+  }
+
+  public componentActivate(): void {
+    super.componentActivate(this.view);
+  }
+
+  public componentDeactivate(): void {
+    super.componentDeactivate();
   }
 
   ngOnDestroy() {
