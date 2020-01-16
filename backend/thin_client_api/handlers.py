@@ -87,7 +87,13 @@ class PoolGetVm(BaseHandler, ABC):
 
             info = await vm_client.info()
 
-            remote_protocol = self.args['remote_protocol']
+            # Определяем удаленный протокол. Если данные не были получены, то по умолчанию spice
+            try:
+                remote_protocol = self.args['remote_protocol']
+            except KeyError:
+                remote_protocol = 'spice'
+
+            # В зависимости от протокола определяем адрес машины
             if remote_protocol == 'rdp':
                 try:
                     vm_address = info['guest_utils']['ipv4'][0]
