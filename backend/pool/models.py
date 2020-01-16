@@ -640,10 +640,10 @@ class AutomatedPool(db.Model, AbstractEntity):
 
                 internal_event_monitor.signal_event(msg_dict)
 
-        except VmCreationError as E:
+        except VmCreationError as vm_error:
             # log that we cant create required initial amount of VMs
-            application_log.error('Can\'t create VM {}'.format(vm['verbose_name']))
-            application_log.error(E)
+            application_log.error('Can\'t create VM:')
+            application_log.error(vm_error)
 
         # notify VDI front about pool creation result (WS)
         is_creation_successful = (len(vm_list) == self.initial_size)
