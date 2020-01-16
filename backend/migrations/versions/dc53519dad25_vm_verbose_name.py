@@ -18,6 +18,7 @@ depends_on = None
 
 def upgrade():
     op.drop_constraint('vm_pool_id_key', 'vm', type_='unique')
+    op.drop_constraint('pools_users_pool_id_key', 'pools_users', type_='unique')
     op.alter_column('pool', 'datapool_id',
                     existing_type=postgresql.UUID(),
                     nullable=False)
@@ -25,6 +26,7 @@ def upgrade():
 
 
 def downgrade():
+    op.create_unique_constraint('pools_users_pool_id_key', 'pools_users', ['pool_id'])
     op.create_unique_constraint('vm_pool_id_key', 'vm', ['pool_id'])
     op.drop_column('vm', 'verbose_name')
     op.alter_column('pool', 'datapool_id',
