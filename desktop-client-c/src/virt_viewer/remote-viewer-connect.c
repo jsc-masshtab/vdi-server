@@ -32,7 +32,6 @@
 #include <ctype.h>
 
 #include "async.h"
-#include "vdi_api_session.h"
 #include "jsonhandler.h"
 
 
@@ -70,7 +69,6 @@ typedef struct
 
     gchar *current_pool_id;
 
-    gchar **uri;
     gchar **user;
     gchar **password;
     gchar **ip;
@@ -79,6 +77,7 @@ typedef struct
     gboolean *is_connect_to_prev_pool_ptr;
 
     gchar **vm_verbose_name;
+    VdiVmRemoteProtocol *remote_protocol_type;
 
 } RemoteViewerData;
 
@@ -123,8 +122,6 @@ get_data_from_gui(RemoteViewerData *ci)
 {
     *ci->ip = g_strdup(gtk_entry_get_text(GTK_ENTRY(ci->address_entry)));
     *ci->port = g_strdup(gtk_entry_get_text(GTK_ENTRY(ci->port_entry)));
-    *ci->uri = g_strconcat("spice://", *ci->ip, ":", *ci->port, NULL);
-    g_strstrip(*ci->uri);
     *ci->user = g_strdup(gtk_entry_get_text(GTK_ENTRY(ci->login_entry)));
     *ci->password = g_strdup(gtk_entry_get_text(GTK_ENTRY(ci->password_entry)));
 }
@@ -188,15 +185,16 @@ on_get_vm_from_pool_finished(GObject *source_object G_GNUC_UNUSED,
 
         *ci->ip = g_strdup(vdi_vm_data->vm_host);
         *ci->port = g_strdup_printf("%ld", vdi_vm_data->vm_port);
-        *ci->uri = g_strconcat("spice://", *ci->ip, ":", *ci->port, NULL);
-        g_strstrip(*ci->uri);
         *ci->user = NULL;
         *ci->password = g_strdup(vdi_vm_data->vm_password);
         *ci->vm_verbose_name = g_strdup(vdi_vm_data->vm_verbose_name);
 
+        // get remote protocol type from file
+        *ci->remote_protocol_type = get_current_remote_protocol();
+
         shutdown_loop(ci->loop);
     }
-    //
+
     free_vdi_vm_data(vdi_vm_data);
 }
 
@@ -252,6 +250,9 @@ void connect_to_vdi_server(RemoteViewerData *ci)
         }
         set_current_pool_id(last_pool_id);
         free_memory_safely(&last_pool_id);
+
+        VdiVmRemoteProtocol remote_protocol = read_int_from_ini_file("General", "cur_remote_protocol_index");
+        set_current_remote_protocol(remote_protocol);
 
         // start async task  get_vm_from_pool
         execute_async_task(get_vm_from_pool, on_get_vm_from_pool_finished, NULL, ci);
@@ -391,17 +392,12 @@ static void fast_forward_connect_to_prev_pool_if_enabled(RemoteViewerData *ci)
 * remote_viewer_connect_dialog
 *
 * @brief Opens connect dialog for remote viewer
-*
-* @param uri For returning the uri of chosen server, must be NULL
-*
-* @return TRUE if Connect or ENTER is pressed
-* @return FALSE if Cancel is pressed or dialog is closed
 */
 // todo: порт передавать как число, а не строку
 gboolean
-remote_viewer_connect_dialog(gchar **uri, gchar **user, gchar **password,
+remote_viewer_connect_dialog(gchar **user, gchar **password,
                              gchar **ip, gchar **port, gboolean *is_connect_to_prev_pool,
-                             gchar **vm_verbose_name)
+                             gchar **vm_verbose_name, VdiVmRemoteProtocol *remote_protocol_type)
 {
     // set params save group
     const gchar *paramToFileGrpoup = opt_manual_mode ? "RemoteViewerConnectManual" : "RemoteViewerConnect";
@@ -413,17 +409,17 @@ remote_viewer_connect_dialog(gchar **uri, gchar **user, gchar **password,
     gboolean active;
 
     RemoteViewerData ci;
-    memset(&ci, 0, sizeof(RemoteViewerData)); // in C++ I would do: RemoteViewerData ci = {};
+    memset(&ci, 0, sizeof(RemoteViewerData));
     ci.response = FALSE;
     ci.dialog_window_response = GTK_RESPONSE_CANCEL;
     // save pointers
-    ci.uri = uri;
     ci.user = user;
     ci.password = password;
     ci.ip = ip;
     ci.port = port;
     ci.is_connect_to_prev_pool_ptr = is_connect_to_prev_pool;
     ci.vm_verbose_name = vm_verbose_name;
+    ci.remote_protocol_type = remote_protocol_type;
 
     /* Create the widgets */
     builder = virt_viewer_util_load_ui("remote-viewer-connect_veil.ui");
@@ -488,12 +484,14 @@ remote_viewer_connect_dialog(gchar **uri, gchar **user, gchar **password,
     ci.ldap_checkbutton = ldap_checkbutton = GTK_WIDGET(gtk_builder_get_object(builder, "ldap-button"));
     gboolean is_ldap_btn_checked = read_int_from_ini_file("RemoteViewerConnect", "is_ldap_btn_checked");
     gtk_toggle_button_set_active((GtkToggleButton *)ci.ldap_checkbutton, is_ldap_btn_checked);
+    gtk_widget_set_sensitive(ci.ldap_checkbutton, !opt_manual_mode);
 
     // Connect to prev pool check button
     ci.conn_to_prev_pool_checkbutton = GTK_WIDGET(gtk_builder_get_object(builder, "connect-to-prev-button"));
     gboolean is_conn_to_prev_pool_btn_checked =
             read_int_from_ini_file("RemoteViewerConnect", "is_conn_to_prev_pool_btn_checked");
     gtk_toggle_button_set_active((GtkToggleButton *)ci.conn_to_prev_pool_checkbutton, is_conn_to_prev_pool_btn_checked);
+    gtk_widget_set_sensitive(ci.conn_to_prev_pool_checkbutton, !opt_manual_mode);
 
     // Remember check button
     ci.remember_checkbutton = remember_checkbutton = GTK_WIDGET(gtk_builder_get_object(builder, "remember-button"));

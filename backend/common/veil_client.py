@@ -19,7 +19,7 @@ AsyncHTTPClient.configure("tornado.simple_httpclient.SimpleAsyncHTTPClient",
                           max_clients=VEIL_MAX_CLIENTS,
                           max_body_size=VEIL_MAX_BODY_SIZE)
 
-error_log = logging.getLogger('tornado.error')
+application_log = logging.getLogger('tornado.application')
 
 
 class VeilHttpClient:
@@ -60,7 +60,7 @@ class VeilHttpClient:
                                   request_timeout=VEIL_REQUEST_TIMEOUT)
             response = await self._client.fetch(request)
         except HTTPClientError as http_error:
-            error_log.error('URL {url} - {http_error}'.format(url=url,
+            application_log.error('URL {url} - {http_error}'.format(url=url,
                                                               http_error=str(http_error)))
 
             body = self.get_response_body(http_error.response)

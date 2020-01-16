@@ -6,6 +6,8 @@ from tornado import websocket
 
 from common.utils import cancel_async_task
 from common.veil_handlers import BaseHandler
+from common.veil_errors import HttpError
+
 from auth.utils.veil_jwt import jwtauth
 from pool.models import Pool, Vm, AutomatedPool
 from vm.veil_client import VmHttpClient  # TODO: move to VM?
@@ -29,7 +31,7 @@ class PoolHandler(BaseHandler, ABC):
 @jwtauth
 class PoolGetVm(BaseHandler, ABC):
 
-    async def post(self, pool_id):
+    async def post(self, pool_id):  # remote_protocol: rdp/spice
         # TODO: есть подозрение, что иногда несмотря на отправленный запрос на просыпание VM - отправляется
         #  недостаточное количество данных для подключения тонкого клиента
         username = self.get_current_user()
@@ -67,7 +69,7 @@ class PoolGetVm(BaseHandler, ABC):
                 async with pool_lock.lock:
                     native_loop = asyncio.get_event_loop()
                     await cancel_async_task(pool_lock.expand_pool_task)
-                    pool_lock.expand_pool_task = native_loop.create_task(pool.expand_pool_if_requred())
+                    pool_lock.expand_pool_task = native_loop.create_task(pool.expand_pool())
 
         if not vm_id:
             response_dict = {'data': dict(host='', port=0, password='', message='В пуле нет свободных машин')}
@@ -76,10 +78,34 @@ class PoolGetVm(BaseHandler, ABC):
             #  Опытным путем было выяснено, что vm info содержит remote_access_port None, пока не врубишь
             # удаленный доступ. Поэтому врубаем его без проверки, чтоб не запрашивать инфу 2 раза
             vm_client = await VmHttpClient.create(controller_ip=str(controller_ip), vm_id=str(vm_id))
-            await vm_client.prepare()
+
+            # Опытным путем установлено: если машина уже включена, то запрос может вернуться с 400.  Поэтому try
+            try:
+                await vm_client.prepare()
+            except HttpError:
+                pass
+
             info = await vm_client.info()
 
-            response = {'data': dict(host=str(controller_ip),
+            # Определяем удаленный протокол. Если данные не были получены, то по умолчанию spice
+            try:
+                remote_protocol = self.args['remote_protocol']
+            except KeyError:
+                remote_protocol = 'spice'
+
+            # В зависимости от протокола определяем адрес машины
+            if remote_protocol == 'rdp':
+                try:
+                    vm_address = info['guest_utils']['ipv4'][0]
+                except (IndexError, KeyError):
+                    response_dict = {'data': dict(host='', port=0, password='',
+                                                  message='ВМ не поддерживает RDP')}
+                    return await self.finish(response_dict)
+
+            else:  # spice by default
+                vm_address = str(controller_ip)
+
+            response = {'data': dict(host=vm_address,
                                      port=info['remote_access_port'],
                                      password=info['graphics_password'],
                                      vm_verbose_name=info['verbose_name'])

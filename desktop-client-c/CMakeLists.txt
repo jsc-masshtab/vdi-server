@@ -9,6 +9,7 @@ INCLUDE_DIRECTORIES(
         src/virt_viewer
         src/utility
         src/vdi_client
+        src/rdp_viewer
 )
 
 #############################APP FILES#################################
@@ -59,6 +60,10 @@ FILE(GLOB SRC_CODE
         src/virt_viewer/remote-viewer-connect.h
         src/virt_viewer/remote-viewer-main.c
         #windows-cmdline-wrapper.c
+
+#rdp_viewer
+        src/rdp_viewer/rdp_viewer.h
+        src/rdp_viewer/rdp_viewer.c
         
 #utility
         src/utility/crashhandler.h

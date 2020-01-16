@@ -15,6 +15,12 @@
 
 #define HTTP_RESPONSE_TIOMEOUT 10
 
+// remote protocol type
+typedef enum{
+    VDI_SPICE_PROTOCOL,
+    VDI_RDP_PROTOCOL,
+    VDI_ANOTHER_REMOTE_PROTOCOL
+} VdiVmRemoteProtocol;
 
 // vm operational system
 typedef enum{
@@ -57,6 +63,7 @@ typedef struct{
     gboolean is_active;
 
     gchar *current_pool_id;
+    VdiVmRemoteProtocol current_remote_protocol;
 
 } VdiSession;
 
@@ -79,6 +86,10 @@ SoupSession *get_soup_session(void);
 const gchar *get_vdi_ip(void);
 // get port
 const gchar *get_vdi_port(void);
+// get username
+const gchar *get_vdi_username(void);
+// get password
+const gchar *get_vdi_password(void);
 // cancell pending requests
 void vdi_api_cancell_pending_requests(void);
 // set vdi session credentials
@@ -88,6 +99,12 @@ void set_vdi_credentials(const gchar *username, const gchar *password, const gch
 void set_current_pool_id(const gchar *current_pool_id);
 // get current vm id
 const gchar *get_current_pool_id(void);
+
+// set current remote protocol
+void set_current_remote_protocol(VdiVmRemoteProtocol remote_protocol);
+// get current remote protocol
+VdiVmRemoteProtocol get_current_remote_protocol(void);
+
 
 //void gInputStreamToBuffer(GInputStream *inputStream, gchar *responseBuffer);
 // Do api call. Return response body

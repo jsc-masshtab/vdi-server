@@ -4,7 +4,8 @@
 
 export const environment = {
   production: false,
-  url: 'api/'
+  url: 'api/',
+  ws: '192.168.20.110'
 };
 
 /*

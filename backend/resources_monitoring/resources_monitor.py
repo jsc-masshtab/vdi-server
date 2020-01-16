@@ -1,4 +1,5 @@
 import asyncio
+import logging
 import time
 import json
 from abc import ABC
@@ -7,6 +8,7 @@ from json import JSONDecodeError
 from tornado.httpclient import HTTPClientError
 from tornado.ioloop import IOLoop
 from tornado.websocket import WebSocketClosedError
+from tornado.websocket import WebSocketError
 from tornado.websocket import websocket_connect
 
 from common.veil_errors import HttpError
@@ -20,6 +22,9 @@ from .abstract_event_monitor import AbstractMonitor
 
 
 from common.utils import cancel_async_task
+
+
+application_log = logging.getLogger('tornado.application')
 
 
 class ResourcesMonitor(AbstractMonitor):
@@ -99,7 +104,8 @@ class ResourcesMonitor(AbstractMonitor):
         """
         while self._running_flag:
             is_connected = await self._connect()
-            print(__class__.__name__, ' is_connected', is_connected)
+
+            application_log.info('{} is connected {}'.format(__class__.__name__, is_connected))
             # reconnect if not connected
             if not is_connected:
                 await asyncio.sleep(self.RECONNECT_TIMEOUT)
@@ -123,14 +129,14 @@ class ResourcesMonitor(AbstractMonitor):
         try:
             token = await Controller.get_token(self._controller_ip)
         except Exception as E:
-            print(E)
+            application_log.error(E)
             return False
 
         # create ws connection
         try:
             connect_url = 'ws://{}/ws/?token={}'.format(self._controller_ip, token)
             self._ws_connection = await websocket_connect(connect_url)
-        except ConnectionRefusedError:
+        except (ConnectionRefusedError, WebSocketError):
             msg = '{cls}: an not connect to {ip}'.format(
                 cls=__class__.__name__,
                 ip=self._controller_ip)
@@ -161,9 +167,9 @@ class ResourcesMonitor(AbstractMonitor):
 
     async def _close_connection(self):
         if self._ws_connection:
-            print(__class__.__name__, 'Closing ws connection', self._controller_ip)
+            application_log.info('{} Closing ws connection {}'.format(__class__.__name__, self._controller_ip))
             try:
                 self._ws_connection.close()
-            except Exception:  # todo: вообще конкретное исключение не интересует
-                pass
+            except Exception as E:  # todo: вообще конкретное исключение не интересует
+                application_log.error(E)
 

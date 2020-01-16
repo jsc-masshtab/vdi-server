@@ -1180,7 +1180,7 @@ virt_viewer_session_spice_get_main_channel(VirtViewerSessionSpice *self)
 }
 
 void // todo: избавиться от этого
-setSpiceSessionCredentials(gchar *username, gchar *password)
+virt_viewer_session_spice_set_credentials(gchar *username, gchar *password)
 {
     free_memory_safely(&spice_session_username);
     free_memory_safely(&spice_session_password);
