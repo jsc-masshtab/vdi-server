@@ -42,7 +42,7 @@ class Pool(db.Model, AbstractEntity):
     verbose_name = db.Column(db.Unicode(length=128), nullable=False, unique=True)
     cluster_id = db.Column(UUID(), nullable=False)
     node_id = db.Column(UUID(), nullable=False)
-    datapool_id = db.Column(UUID(), nullable=False)
+    datapool_id = db.Column(UUID(), nullable=True)
     status = db.Column(AlchemyEnum(Status), nullable=False, index=True)
     controller = db.Column(UUID(), db.ForeignKey('controller.id', ondelete="CASCADE"), nullable=False)
 
