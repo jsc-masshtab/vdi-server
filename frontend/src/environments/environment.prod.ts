@@ -5,7 +5,7 @@
 export const environment = {
   production: true,
   url: 'api/',
-  ws: window.location.href
+  ws: window.location.host
 };
 /*
  * For easier debugging in development mode, you can import the following file
