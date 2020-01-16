@@ -195,7 +195,6 @@ class PoolType(graphene.ObjectType):
             UserType(id=user.id, username=user.username, email=user.email)
             for user in users_data
         ]
-        #print('user_type_list', user_type_list)
         return user_type_list
 
     async def resolve_vms(self, _info):
@@ -226,11 +225,10 @@ class PoolType(graphene.ObjectType):
         return cluster_type
 
     async def resolve_datapool(self, _info):
+        pool = await Pool.get(self.pool_id)
         controller_address = await Pool.get_controller_ip(self.pool_id)
         resources_http_client = await ResourcesHttpClient.create(controller_address)
-        datapool_id = await Pool.select('datapool_id').where(
-            AutomatedPool.id == self.pool_id).gino.scalar()
-
+        datapool_id = pool.datapool_id
         try:
             datapool_data = await resources_http_client.fetch_datapool(datapool_id)
             datapool_type = make_graphene_type(DatapoolType, datapool_data)
@@ -446,8 +444,9 @@ class CreateStaticPoolMutation(graphene.Mutation, PoolValidator):
 
         try:
             datapool_id = disks_list[0]['datapool']['id']
-        except IndexError:
+        except IndexError as ie:
             datapool_id = None
+            application_log.error(ie)
 
         try:
             await Vm.enable_remote_accesses(controller_ip, vm_ids)

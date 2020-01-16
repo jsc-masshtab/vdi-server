@@ -334,7 +334,9 @@ class StaticPool(db.Model, AbstractEntity):
     @classmethod
     async def create(cls, verbose_name, controller_ip, cluster_id, node_id, datapool_id):
         """Nested transactions are atomic."""
-
+        application_log.debug(
+            'Create StaticPool: verbose_name={vn}, controller_ip={ip}, cluster_id={ci}, node_id={ni}, datapool_id={di}.'.format(
+                vn=verbose_name, ip=controller_ip, ci=cluster_id, ni=node_id, di=datapool_id))
         async with db.transaction() as tx:
             # Create pool first
             application_log.debug('Create Pool')
