@@ -197,7 +197,7 @@ class Vm(db.Model, AbstractEntity):
     async def remove_vms(vm_ids):
         """Remove given vms"""
         for vm_id in vm_ids:
-            vm = Vm.get(vm_id)
+            vm = await Vm.get(vm_id)
             await vm.soft_delete()
         return True
 
