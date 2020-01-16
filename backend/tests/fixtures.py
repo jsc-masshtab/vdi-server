@@ -202,7 +202,7 @@ async def fixt_create_automated_pool():
     def _check_if_pool_created(json_message):
         try:
             if json_message['event'] == 'pool_creation_completed':
-                return True
+                return json_message['is_successful']
         except KeyError:
             pass
 
@@ -216,6 +216,7 @@ async def fixt_create_automated_pool():
 
     await yield_({
         'id': pool_id,
+        'is_pool_successfully_created': is_pool_successfully_created
     })
 
     # remove pool
