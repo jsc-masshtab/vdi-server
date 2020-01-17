@@ -61,6 +61,8 @@ class AddControllerMutation(graphene.Mutation):
     async def mutate(self, _info, verbose_name, address, username,
                      password, ldap_connection, description=None):
         try:
+            if len(verbose_name) < 1:
+                raise SimpleError('Имя контроллера не может быть пустым.')
             # check credentials
             controller_client = ControllerClient(address)
             auth_info = dict(username=username, password=password, ldap=ldap_connection)
@@ -86,6 +88,8 @@ class AddControllerMutation(graphene.Mutation):
                 address=address)
             await Event.create_info(msg)
             return AddControllerMutation(ok=True, controller=ControllerType(**controller.__values__))
+        except SimpleError as E:
+            raise SimpleError(E)
         except Exception as E:
             msg = 'Add new controller with address {address}: operation failed.'.format(
                 address=address)

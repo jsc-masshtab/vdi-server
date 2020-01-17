@@ -627,7 +627,7 @@ class AutomatedPool(db.Model, AbstractEntity):
                 vm_index = vm['domain_index'] + 1
                 vm_list.append(vm)
 
-                msg = 'Automated pool creation. Created {} VMs from {}'.format(vm_index, self.initial_size)
+                msg = 'Automated pool creation. Created {} VMs from {}'.format(i + 1, self.initial_size)
                 await Event.create_info(msg, entity_list=self.entity_list)
 
                 # notify VDI front about progress(WS)

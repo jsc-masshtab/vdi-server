@@ -25,7 +25,7 @@ class ResourcesMonitorManager:
         msg = '{cls}: connected controllers -- {controllers}'.format(
             cls=__class__.__name__,
             controllers=controllers_addresses)
-        await Event.create_info(msg)
+        application_log.info(msg)
         if not controllers_addresses:
             return
         # start resources monitors
