@@ -63,6 +63,8 @@
 #include "virt-viewer-session-spice.h"
 #endif
 
+#define RECONNECT_TIMEOUT 1000
+
 gboolean doDebug = FALSE;
 
 /* Signal handlers for about dialog */
@@ -156,6 +158,9 @@ struct _VirtViewerAppPrivate {
     guint remove_smartcard_accel_key;
     GdkModifierType remove_smartcard_accel_mods;
     gboolean quit_on_disconnect;
+
+    gboolean is_polling; // flag for session reconnect
+    guint reconnect_poll; // id for reconnect timer
 };
 
 
@@ -1418,7 +1423,7 @@ virt_viewer_app_deactivate(VirtViewerApp *self, gboolean connect_error)
         } else {
             g_clear_object(&priv->session);
             // Go to begining if no polling
-            if (!self->is_polling)
+            if (!priv->is_polling)
                 virt_viewer_app_deactivated(self, connect_error);
         }
     } else { // If app is not active then just go to preveous state
@@ -1430,12 +1435,11 @@ static void
 virt_viewer_app_connected(VirtViewerSession *session G_GNUC_UNUSED,
                           VirtViewerApp *self)
 {
-    printf("%s \n", (char *)__func__);
+    printf("%s \n", (const char *)__func__);
     VirtViewerAppPrivate *priv = self->priv;
 
     // turn off polling
-    RemoteViewer *remote_viewer = REMOTE_VIEWER(self);
-    virt_viewer_stop_reconnect_poll(remote_viewer);
+    virt_viewer_stop_reconnect_poll(self);
 
     priv->connected = TRUE;
 
@@ -1456,11 +1460,11 @@ void
 virt_viewer_app_disconnected(VirtViewerSession *session G_GNUC_UNUSED, const gchar *msg,
                              VirtViewerApp *self)
 {
-    printf("%s \n", (char *)__func__);
+    printf("%s \n", (const char *)__func__);
     VirtViewerAppPrivate *priv = self->priv;
     gboolean connect_error = !priv->connected && !priv->cancelled;
 
-    if (!self->is_polling) {
+    if (!priv->is_polling) {
         if (!priv->kiosk)
             virt_viewer_app_hide_all_windows(self);
         else if (priv->cancelled)
@@ -1470,7 +1474,7 @@ virt_viewer_app_disconnected(VirtViewerSession *session G_GNUC_UNUSED, const gch
     if (priv->quitting)
         g_application_quit(G_APPLICATION(self));
 
-    if (!self->is_polling && connect_error) {
+    if (!priv->is_polling && connect_error) {
         GtkWidget *dialog = virt_viewer_app_make_message_dialog(self,
             _("Unable to connect to the graphic server %s"), priv->pretty_address);
 
@@ -2653,6 +2657,66 @@ virt_viewer_app_add_option_entries(G_GNUC_UNUSED VirtViewerApp *self,
     };
 
     g_option_group_add_entries(group, options);
+}
+
+// connection polling
+static gboolean
+virt_viewer_connect_timer(VirtViewerApp *self)
+{
+    VirtViewerAppPrivate *app_priv = self->priv;
+    // stop polling if app->is_polling is false. it happens when spice session connected
+    if (!app_priv->is_polling){
+        virt_viewer_stop_reconnect_poll(self);
+        return FALSE;
+    }
+
+    g_debug("Connect timer fired");
+    // if app is not active then trying to connect
+    gboolean created = FALSE;
+    gboolean is_connected = FALSE;
+
+    created = virt_viewer_app_create_session(self, "spice", NULL);
+    if (!created)
+        return TRUE;
+
+    is_connected = virt_viewer_app_initial_connect(self, NULL);
+
+    printf("%s active %i created %i is_connected %i \n",
+           (const char *)__func__, virt_viewer_app_is_active(self), created, is_connected);
+
+    return TRUE;
+}
+
+void
+virt_viewer_start_reconnect_poll(VirtViewerApp *self)
+{
+    VirtViewerAppPrivate *app_priv = self->priv;
+    if (virt_viewer_app_is_active(self))
+        return;
+
+
+    g_debug("reconnect_poll: %d", app_priv->reconnect_poll);
+
+    if (app_priv->reconnect_poll != 0)
+        return;
+
+    app_priv->is_polling = TRUE;
+    app_priv->reconnect_poll = g_timeout_add(RECONNECT_TIMEOUT, (GSourceFunc)virt_viewer_connect_timer, self);
+}
+
+void
+virt_viewer_stop_reconnect_poll(VirtViewerApp *self)
+{
+    VirtViewerAppPrivate *app_priv = self->priv;
+    app_priv->is_polling = FALSE;
+
+    g_debug("reconnect_poll: %d", app_priv->reconnect_poll);
+
+    if (app_priv->reconnect_poll == 0)
+        return;
+
+    g_source_remove(app_priv->reconnect_poll);
+    app_priv->reconnect_poll = 0;
 }
 
 gboolean virt_viewer_app_get_session_cancelled(VirtViewerApp *self)
