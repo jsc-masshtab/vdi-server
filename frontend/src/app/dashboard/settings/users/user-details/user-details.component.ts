@@ -205,7 +205,7 @@ export class UserDetailsComponent implements OnInit, OnDestroy {
     });
   }
 
-  public аctivateUser(): void {
+  public activateUser(): void {
     this.dialog.open(MutateUserComponent, {
       width: '500px',
       data: {
@@ -217,7 +217,7 @@ export class UserDetailsComponent implements OnInit, OnDestroy {
           button: 'Активировать'
         },
         params: {
-          method: 'аctivateUser',
+          method: 'activateUser',
           args: `$id: UUID!`,
           call: `id: $id`,
           props: {

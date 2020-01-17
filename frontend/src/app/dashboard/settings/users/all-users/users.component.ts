@@ -30,6 +30,29 @@ export class UsersComponent extends DetailsMove implements OnInit, OnDestroy {
       icon: 'user',
       type: 'string',
       sort: true
+    },
+    {
+      title: 'Имя',
+      property: 'first_name',
+      type: 'string'
+    },
+    {
+      title: 'Фамилия',
+      property: 'last_name',
+      type: 'string'
+    },
+    {
+      title: 'E-mail',
+      property: 'email',
+      type: 'string'
+    },
+    {
+      title: 'Состояние',
+      property: 'is_active',
+      type: {
+        typeDepend: 'boolean',
+        propertyDepend: ['Активный', 'Не активный']
+      }
     }
   ];
 
