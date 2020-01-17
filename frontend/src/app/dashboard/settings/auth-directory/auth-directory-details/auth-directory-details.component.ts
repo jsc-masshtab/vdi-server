@@ -54,79 +54,13 @@ export class AuthenticationDirectoryDetailsComponent implements OnInit, OnDestro
       }
     },
     {
-      title: 'Connection type',
-      property: 'connection_type',
-      type: 'string'
-    },
-    {
-      title: 'Directory type',
-      property: 'directory_type',
-      type: 'string'
-    },
-    {
-      title: 'Service username',
-      property: 'service_username',
+      title: 'Описание',
+      property: 'description',
       type: 'string',
       edit: 'openEditForm',
       form: {
-        tag: 'input',
+        tag: 'textarea',
         type: 'text'
-      }
-    },
-    {
-      title: 'Service password',
-      property: 'service_password',
-      type: 'string',
-      edit: 'openEditForm',
-      form: {
-        tag: 'input',
-        type: 'text'
-      }
-    },
-    {
-      title: 'Admin server',
-      property: 'admin_server',
-      type: 'string',
-      edit: 'openEditForm',
-      form: {
-        tag: 'input',
-        type: 'text'
-      }
-    },
-    {
-      title: 'Subdomain name',
-      property: 'subdomain_name',
-      type: 'string',
-      edit: 'openEditForm',
-      form: {
-        tag: 'input',
-        type: 'text'
-      }
-    },
-    {
-      title: 'KDS urls',
-      property: 'kdc_urls',
-      type: 'string',
-      edit: 'openEditForm',
-      form: {
-        tag: 'input',
-        type: 'text',
-        gqlType: '[String]'
-      }
-    },
-    {
-      title: 'SSO',
-      property: 'sso',
-      type: {
-        typeDepend: 'boolean',
-        propertyDepend: ['Да', 'Нет']
-      },
-      edit: 'openEditForm',
-      form: {
-        tag: 'input',
-        type: 'checkbox',
-        description: 'SSO',
-        gqlType: 'Boolean'
       }
     }
   ];
