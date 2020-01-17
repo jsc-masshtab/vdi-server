@@ -35,11 +35,8 @@ class AuthHandler(BaseHandler, ABC):
             await User.login(username=self.args['username'], token=access_token.get('access_token'), ip=self.remote_ip,
                              ldap=self.args.get('ldap'), client_type=self.client_type)
             response = {'data': access_token}
-        except AssertionError as E:
-            error = str(E)
-            response = {'errors': [{'message': error}]}
-
-            error_message = 'Authentication failed: {err}'.format(err=error)
+        except AssertionError as auth_error:
+            error_message = 'Authentication failed: {err}'.format(err=auth_error)
             if self.args.get('username'):
                 error_message += ' for user {username}'.format(username=self.args['username'])
             error_message += '. IP address: {ip}'.format(ip=self.remote_ip)
@@ -48,6 +45,7 @@ class AuthHandler(BaseHandler, ABC):
                 {'entity_type': self.client_type, 'entity_uuid': None}
             ]
             await Event.create_warning(error_message, entity_list=entity_list)
+            response = {'errors': [{'message': error_message}]}
         return self.finish(response)
 
 

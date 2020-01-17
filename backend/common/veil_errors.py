@@ -137,7 +137,6 @@ class Forbidden(AuthError):
 
 class Unauthorized(AuthError):
     code = 401
-    message = "Необходимо авторизоваться в системе."
 
 
 class ServerError(HttpError):
