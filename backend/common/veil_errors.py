@@ -137,11 +137,12 @@ class Forbidden(AuthError):
 
 class Unauthorized(AuthError):
     code = 401
+    message = "Необходимо авторизоваться в системе."
 
 
 class ServerError(HttpError):
     code = 500
-    message = "Критическая ошибка контроллера"
+    message = "Критическая ошибка контроллера."
 
 
 class VmCreationError(Exception):

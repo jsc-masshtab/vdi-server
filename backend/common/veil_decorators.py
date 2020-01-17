@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import logging
 from functools import wraps
 from tornado.escape import json_encode
 from graphql.execution.base import ResolveInfo
@@ -7,6 +8,8 @@ from settings import AUTH_ENABLED
 from auth.utils.veil_jwt import extraxt_user_object
 from common.veil_errors import Unauthorized
 from event.models import Event
+
+application_log = logging.getLogger('tornado.application')
 
 
 def prepare_body(func):
@@ -91,10 +94,11 @@ def context(f):
     return decorator
 
 
-def user_passes_test(test_func, exc=Unauthorized('Invalid permissions.')):
+def user_passes_test(test_func, exc=Unauthorized('Authorization error.')):
     """exc в GraphQl вернется с 200тым кодом.
        https://github.com/graphql-python/graphene/issues/946
     """
+
     def decorator(f):
         @wraps(f)
         @context(f)
@@ -103,7 +107,10 @@ def user_passes_test(test_func, exc=Unauthorized('Invalid permissions.')):
                 user = await extraxt_user_object(cntxt.headers)
                 if user and test_func(user):
                     return f(*args, **kwargs)
-                await Event.create_warning('Auth: {} IP: {}. username: {}'.format(exc.message, cntxt.remote_ip, user.username))
+                application_log.debug('IP: . username: {}')
+                await Event.create_warning(
+                    'IP: {}. username: {}'.format('Authorization error.', cntxt.remote_ip, user.username),
+                    entity_list=[{'entity_type': 'Security', 'entity_uuid': None}])
                 raise exc
             else:
                 return f(*args, **kwargs)
