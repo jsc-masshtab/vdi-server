@@ -23,7 +23,7 @@
 #include <config.h>
 
 #include "settingsfile.h"
-#include "virt-viewer-session-spice.h"
+//#include "virt-viewer-session-spice.h"
 #include "remote-viewer-connect.h"
 #include "virt-viewer-util.h"
 #include <glib/gi18n.h>

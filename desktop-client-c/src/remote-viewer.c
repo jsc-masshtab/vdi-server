@@ -401,7 +401,7 @@ retry_connnect_to_vm:
                 return FALSE;
             }
         }
-//        // remember username
+        // remember username
         if (user)
             g_object_set(app, "username", user, NULL);
 
@@ -414,6 +414,7 @@ retry_connnect_to_vm:
         gchar *window_name = g_strconcat("ВМ: ", vm_verbose_name, "    Пользователь: ", username, NULL);
         g_object_set(app, "guest-name", window_name, NULL);
         g_free(window_name);
+        g_free(username);
 
         // connect to vm depending on remote protocol
         if (remote_protocol_type == VDI_RDP_PROTOCOL) {
