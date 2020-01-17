@@ -16,6 +16,11 @@ INCLUDE_DIRECTORIES(
 FILE(GLOB SRC_CODE
 
         config.h
+        src/remote-viewer.h
+        src/remote-viewer.c
+        src/remote-viewer-connect.c
+        src/remote-viewer-connect.h
+        src/main.c
 
 # virt_viewer
         src/virt_viewer/virt-viewer-resources.h
@@ -53,13 +58,6 @@ FILE(GLOB SRC_CODE
         src/virt_viewer/virt-viewer-display-spice.c
         src/virt_viewer/virt-viewer-file-transfer-dialog.h
         src/virt_viewer/virt-viewer-file-transfer-dialog.c
-        #remote_viewer_SOURCES
-        src/virt_viewer/remote-viewer.h
-        src/virt_viewer/remote-viewer.c
-        src/virt_viewer/remote-viewer-connect.c
-        src/virt_viewer/remote-viewer-connect.h
-        src/virt_viewer/remote-viewer-main.c
-        #windows-cmdline-wrapper.c
 
 #rdp_viewer
         src/rdp_viewer/rdp_viewer.h
