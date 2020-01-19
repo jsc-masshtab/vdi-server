@@ -1,5 +1,4 @@
 version: '3.7'
-
 services:
   postgres:
     image: postgres:9.6
@@ -12,3 +11,13 @@ services:
     container_name: vdi-postgres-alembic
     volumes:
       - ./postgres/:/docker-entrypoint-initdb.d/
+  frontend-dev:
+    image: teracy/angular-cli
+    ports:
+      - 4200:4200
+    container_name: vdi-angular-dev
+    volumes:
+      - ./frontend:/opt/veil-vdi
+      - ../../frontend/:/opt/veil-vdi/frontend/
+    command: sh /opt/veil-vdi/entrypoint.sh -dev
+    restart: unless-stopped

@@ -1,0 +1,11 @@
+# Пока идея в том, чтобы тут проверять собирается ли фронт в продакшн-режиме и, возможно, отсюда его коммитить в репу.
+# docker system prune && docker volume prune && docker-compose -f docker-compose-prod.yml up
+version: '3.7'
+services:
+  frontend-prod:
+    image: teracy/angular-cli
+    container_name: vdi-angular-prod
+    volumes:
+      - ./frontend:/opt/veil-vdi
+      - ../../frontend/:/opt/veil-vdi/frontend/
+    command: sh /opt/veil-vdi/entrypoint.sh -prod
