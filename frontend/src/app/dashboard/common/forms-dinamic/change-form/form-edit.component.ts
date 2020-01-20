@@ -12,11 +12,11 @@ interface IData {
     method: string,
     params: {
       id: string | number,
-      type: string
+      type?: string
     }
   };
   settings: {
-    entity: 'pool-details',
+    entity: 'pool-details' | 'controller-details' | 'user-details',
     header: string,
     buttonAction: string,
     form: [
@@ -24,7 +24,7 @@ interface IData {
         tag: 'input',
         type: 'number' | 'text' | 'checkbox',
         fieldName: string,
-        fieldValue: string | number,
+        fieldValue: string | number | boolean,
         description: string
       }
     ]

@@ -20,8 +20,12 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
-    //background: rgba(#111,0.1);
     position: fixed;
+    left: 200px;
+
+    .icon-spin {
+        margin-right: 200px;
+    }
 }
 
 .mat-dialog-container {
@@ -33,6 +37,7 @@ body {
 .cdk-overlay-pane {
     overflow-y: auto !important;
     overflow-x: hidden;
+    margin-right: 200px;
 }
 
 .mat-form-field {
@@ -46,4 +51,18 @@ body {
 .mat-primary .mat-pseudo-checkbox-checked, .mat-primary .mat-pseudo-checkbox-indeterminate {
     background: #00abff;
 }
+
+@media all  and (max-width: 750px) { 
+    .cdk-overlay-container {
+        left: 70px;
+    
+        .icon-spin {
+            margin-right: 70px;
+        }
+    }
+
+    .cdk-overlay-pane {
+        margin-right: 70px;
+    }
+  }
 
