@@ -313,12 +313,10 @@ static void remote_viewer_free_auth_data(gchar **user, gchar **password,
 }
 
 static gboolean
-remote_viewer_start(VirtViewerApp *app, GError **err, RemoteViewerState remoteViewerState)
+remote_viewer_start(VirtViewerApp *app, GError **err G_GNUC_UNUSED, RemoteViewerState remoteViewerState)
 {
     g_return_val_if_fail(REMOTE_VIEWER_IS(app), FALSE);
 
-    RemoteViewer *self = REMOTE_VIEWER(app);
-    RemoteViewerPrivate *priv = self->priv;
     gboolean ret = FALSE;
     gchar *user = NULL;
     gchar *password = NULL;
@@ -344,7 +342,7 @@ retry_auth:
                                          &is_connect_to_prev_pool, &vm_verbose_name, &remote_protocol_type);
 
         if (dialog_window_response == GTK_RESPONSE_CLOSE) {
-            g_application_quit(G_APPLICATION(app));
+            remote_viewer_free_auth_data(&user, &password, &ip, &port, &vm_verbose_name);
             return FALSE;
         }
     }
@@ -353,12 +351,16 @@ retry_auth:
     // 1) в мануальном режиме сразу подключаемся к удаленноиу раб столу
     // 2) В дефолтном режиме вызываем vdi manager. В нем пользователь выберет машину для подключения
 retry_connnect_to_vm:
-    // instant connect attempt
+    /// instant connect attempt
     if (opt_manual_mode) { // only spice in manual mode
         set_spice_session_data(app, ip, port, user, password);
+
         // Создание сессии
-        if (!virt_viewer_app_create_session(app, "spice", &error))
-            goto cleanup;
+        if (!virt_viewer_app_create_session(app, "spice", &error)) {
+            virt_viewer_app_simple_message_dialog(app, _("Unable to connect: %s"), error->message);
+            remote_viewer_free_auth_data(&user, &password, &ip, &port, &vm_verbose_name);
+            return FALSE;
+        }
 
         g_signal_connect(virt_viewer_app_get_session(app), "session-connected",
                          G_CALLBACK(remote_viewer_session_connected), app);
@@ -366,24 +368,28 @@ retry_connnect_to_vm:
         // Коннект к машине/*
         if (!virt_viewer_app_initial_connect(app, &error)) {
             if (error == NULL) {
-                g_set_error_literal(&error,
-                                    VIRT_VIEWER_ERROR, VIRT_VIEWER_ERROR_FAILED,
+                g_set_error_literal(&error, VIRT_VIEWER_ERROR, VIRT_VIEWER_ERROR_FAILED,
                                     _("Failed to initiate connection"));
             }
-            goto cleanup;
+
+            virt_viewer_app_simple_message_dialog(app, _("Unable to connect: %s"), error->message);
+            remote_viewer_free_auth_data(&user, &password, &ip, &port, &vm_verbose_name);
+            return FALSE;
         }
 
         ret = VIRT_VIEWER_APP_CLASS(remote_viewer_parent_class)->start(app, &error, AUTH_DIALOG);
         create_loop_and_launch(&virt_viewer_loop);
+
         // go back to auth or quit
+        remote_viewer_free_auth_data(&user, &password, &ip, &port, &vm_verbose_name);
         if (virt_viewer_app_is_quitting(app)) {
             return FALSE;
         }
         else {
-            remote_viewer_free_auth_data(&user, &password, &ip, &port, &vm_verbose_name);
             goto retry_auth;
         }
 
+    /// VDI connect mode
     } else {
         // remember username
         if (user)
@@ -402,10 +408,11 @@ retry_connnect_to_vm:
                                        &password, &vm_verbose_name, &remote_protocol_type);
 
             if (vdi_dialog_window_response == GTK_RESPONSE_CANCEL) {
-                goto cleanup;
+                remote_viewer_free_auth_data(&user, &password, &ip, &port, &vm_verbose_name);
+                goto retry_auth;
             }
             else if (vdi_dialog_window_response == GTK_RESPONSE_CLOSE) {
-                g_application_quit(G_APPLICATION(app));
+                remote_viewer_free_auth_data(&user, &password, &ip, &port, &vm_verbose_name);
                 return FALSE;
             }
         }
@@ -420,8 +427,6 @@ retry_connnect_to_vm:
             rdp_viewer_start(get_vdi_username(), get_vdi_password(), ip, NULL); // it's right
             //printf("user: %s   pass: %s", get_vdi_username(), get_vdi_password());
             //rdp_viewer_start("user", "user", ip, NULL); // todo: Remove later
-            if (!is_connect_to_prev_pool)
-                goto retry_connnect_to_vm;
 
         } else { // spice by default
             set_spice_session_data(app, ip, port, user, password);
@@ -430,21 +435,20 @@ retry_connnect_to_vm:
             // Показывается окно virt viewer // virt_viewer_app_default_start
             ret = VIRT_VIEWER_APP_CLASS(remote_viewer_parent_class)->start(app, &error, AUTH_DIALOG);
             create_loop_and_launch(&virt_viewer_loop);
-        }
-    }
 
-cleanup:
-    remote_viewer_free_auth_data(&user, &password, &ip, &port, &vm_verbose_name);
-
-    if (!ret && priv->open_recent_dialog) {
-        if (error != NULL) {
-            virt_viewer_app_simple_message_dialog(app, _("Unable to connect: %s"), error->message);
+            // go back to vdi manager or quit
+            if (virt_viewer_app_is_quitting(app)) {
+                remote_viewer_free_auth_data(&user, &password, &ip, &port, &vm_verbose_name);
+                return FALSE;
+            }
         }
-        g_clear_error(&error);
-        goto retry_auth;
+
+        remote_viewer_free_auth_data(&user, &password, &ip, &port, &vm_verbose_name);
+        if (!is_connect_to_prev_pool)
+            goto retry_connnect_to_vm;
+        else
+            goto retry_auth;
     }
-    if (error != NULL)
-        g_propagate_error(err, error);
 
     return ret;
 }
