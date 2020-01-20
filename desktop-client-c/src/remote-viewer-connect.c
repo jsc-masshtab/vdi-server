@@ -168,7 +168,7 @@ on_get_vm_from_pool_finished(GObject *source_object G_GNUC_UNUSED,
 
     GError *error = NULL;
     gpointer  ptr_res =  g_task_propagate_pointer (G_TASK (res), &error); // take ownership
-    if(ptr_res == NULL){
+    if (ptr_res == NULL) {
         set_error_message_to_label(GTK_LABEL(ci->message_display_label), "Не удалось получить вм из пула");
         return;
     }
@@ -328,6 +328,7 @@ connect_dialog_run(RemoteViewerData *ci)
 {
     ci->loop = g_main_loop_new(NULL, FALSE);
     g_main_loop_run(ci->loop);
+    g_main_loop_unref(ci->loop);
 }
 
 static void

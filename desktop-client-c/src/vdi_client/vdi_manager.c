@@ -474,6 +474,7 @@ GtkResponseType vdi_manager_dialog(GtkWindow *main_window G_GNUC_UNUSED, gchar *
     // event loop
     vdi_manager.ci.loop = g_main_loop_new(NULL, FALSE);
     g_main_loop_run(vdi_manager.ci.loop);
+    g_main_loop_unref(vdi_manager.ci.loop);
 
     // clear
     vdi_api_cancell_pending_requests();
