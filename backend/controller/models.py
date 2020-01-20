@@ -1,3 +1,4 @@
+import logging
 import uuid
 from datetime import datetime
 
@@ -10,6 +11,8 @@ from controller.client import ControllerClient
 from database import db, get_list_of_values_from_db, Status, AbstractEntity
 from common.veil_errors import SimpleError
 from event.models import Event
+
+application_log = logging.getLogger('tornado.application')
 # TODO: validate token by expires_on parameter
 # TODO: validate status
 
@@ -99,6 +102,42 @@ class Controller(db.Model, AbstractEntity):
             return token
         else:
             raise AssertionError('No such controller')
+
+    @classmethod
+    async def get_credentials(cls, address, username, password, ldap_connection):
+        try:
+            controller_client = ControllerClient(address)
+            auth_info = dict(username=username, password=password, ldap=ldap_connection)
+            token, expires_on = await controller_client.auth(auth_info=auth_info)
+            version = await controller_client.fetch_version()
+            return {'token': token, 'expires_on': expires_on, 'version': version}
+        except Exception as cotroller_ex:
+            application_log.error('Get controller credentials: {}'.format(cotroller_ex))
+            return {}
+
+    async def soft_update(self, verbose_name, address, description, username=None, password=None, ldap_connection=None):
+        controller_kwargs = dict()
+        if verbose_name:
+            controller_kwargs['verbose_name'] = verbose_name
+        if address:
+            controller_kwargs['address'] = address
+        if description:
+            controller_kwargs['description'] = description
+        if username:
+            controller_kwargs['username'] = username
+        if password:
+            controller_kwargs['password'] = password
+        if isinstance(ldap_connection, bool):
+            controller_kwargs['is_superuser'] = ldap_connection
+
+        if username or password or address or ldap_connection:
+            credentials = Controller.check_credentials(address, username, password, ldap_connection)
+            controller_kwargs.update(credentials)
+
+        if controller_kwargs:
+            return await Controller.update.values(**controller_kwargs).where(
+                Controller.id == self.id).gino.status()
+        return False
 
     async def soft_delete(self):
         """Удаление сущности независимо от статуса у которой нет зависимых сущностей"""
