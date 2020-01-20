@@ -110,6 +110,7 @@ class Controller(db.Model, AbstractEntity):
             auth_info = dict(username=username, password=password, ldap=ldap_connection)
             token, expires_on = await controller_client.auth(auth_info=auth_info)
             version = await controller_client.fetch_version()
+            application_log.debug('Get controller credentials: Controller\'s {} credentials are good.'.format(address))
             return {'token': token, 'expires_on': expires_on, 'version': version}
         except Exception as cotroller_ex:
             application_log.error('Get controller credentials: {}'.format(cotroller_ex))
