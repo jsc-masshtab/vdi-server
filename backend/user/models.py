@@ -14,7 +14,7 @@ class User(AbstractSortableStatusModel, db.Model, AbstractEntity):
     id = db.Column(UUID(), primary_key=True, default=uuid.uuid4)
     username = db.Column(db.Unicode(length=128), nullable=False, unique=True)
     password = db.Column(db.Unicode(length=128), nullable=False)
-    email = db.Column(db.Unicode(length=256), unique=True, nullable=True)
+    email = db.Column(db.Unicode(length=256), unique=False, nullable=True)  # TODO: включить обратно после получения email из AD.
     last_name = db.Column(db.Unicode(length=128))
     first_name = db.Column(db.Unicode(length=32))
     date_joined = db.Column(db.DateTime(timezone=True), server_default=func.now())

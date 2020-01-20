@@ -78,7 +78,7 @@ class Vm(db.Model, AbstractEntity):
         application_log.debug('VM {} properties are set.'.format(verbose_name))
         return vm
 
-    async def delete(self):
+    async def soft_delete(self):
         if self.created_by_vdi:
             vm_http_client = await VmHttpClient.create(self.controller_address, self.id)
             try:
@@ -88,7 +88,7 @@ class Vm(db.Model, AbstractEntity):
                 application_log.warning('Fail to remove VM {} from ECP. '.format(self.verbose_name))
                 application_log.debug(http_error)
             application_log.debug('Vm {} removed from ECP.'.format(self.verbose_name))
-        return await super().delete()
+        return await self.delete()
 
     @staticmethod
     def domain_name(verbose_name: str, name_template: str):
@@ -175,13 +175,15 @@ class Vm(db.Model, AbstractEntity):
                     domain_index = domain_index + 1
                     verbose_name = re.sub(r'-{}$'.format(domain_index_old), '-{}'.format(domain_index), verbose_name)
                     domain_name = verbose_name
-                elif ecp_errors and 'detail' and inner_retry_count < 30:
+                elif ecp_errors and 'detail' in ecp_errors and inner_retry_count < 30:
                     # TODO: это очень странное условие, наверняка от него откажемся
                     application_log.warning('Possibly blocked by active task on ECP.')
+                    application_log.debug(http_error)
                     application_log.debug('Подождем подольше перед повторной попыткой.')
                     await asyncio.sleep(10)
                 else:
                     application_log.debug('Unknown exception. Break.')
+                    application_log.debug(ecp_errors)
                     raise BadRequest(http_error)
             else:
                 application_log.debug('No ex. Break')
@@ -197,8 +199,8 @@ class Vm(db.Model, AbstractEntity):
     async def remove_vms(vm_ids):
         """Remove given vms"""
         for vm_id in vm_ids:
-            vm = Vm.get(vm_id)
-            await vm.delete()
+            vm = await Vm.get(vm_id)
+            await vm.soft_delete()
         return True
 
     @staticmethod

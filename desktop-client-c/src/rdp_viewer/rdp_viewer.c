@@ -53,7 +53,7 @@ rdp_viewer_start(const gchar *usename, const gchar *password, gchar *ip, gchar *
     //gint child_stdout, child_stderr;
     GPid child_pid;
 
-    // Spawn child process.
+    // Spawn child process. // todo: взято с доки, но это провоцирует предупреждение
     g_spawn_async(NULL, argv, NULL, G_SPAWN_SEARCH_PATH | G_SPAWN_DO_NOT_REAP_CHILD, NULL,
                              NULL, &child_pid, &error);
 

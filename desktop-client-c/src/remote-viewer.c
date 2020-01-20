@@ -59,13 +59,11 @@
 
 #include "rdp_viewer.h"
 
-#define RECONNECT_TIMEOUT 1000
 
 extern gboolean opt_manual_mode;
 
 struct _RemoteViewerPrivate {
     gboolean open_recent_dialog;
-    guint reconnect_poll; // id for reconnect timer
 };
 
 G_DEFINE_TYPE (RemoteViewer, remote_viewer, VIRT_VIEWER_TYPE_APP)
@@ -93,68 +91,6 @@ static void spice_foreign_menu_updated(RemoteViewer *self);
 static void foreign_menu_title_changed(SpiceCtrlForeignMenu *menu, GParamSpec *pspec, RemoteViewer *self);
 #endif
 
-// reconnect timer functions
-static gboolean
-virt_viewer_connect_timer(RemoteViewer *self)
-{
-    VirtViewerApp *app = VIRT_VIEWER_APP(self);
-    // stop polling if app->is_polling is false. it happens when spice session connected
-    if (!app->is_polling){
-        virt_viewer_stop_reconnect_poll(self);
-        return FALSE;
-    }
-
-    g_debug("Connect timer fired");
-    // if app is not active then trying to connect
-    gboolean created = FALSE;
-    gboolean is_connected = FALSE;
-
-    created = virt_viewer_app_create_session(app, "spice", NULL);
-    if (!created)
-        return TRUE;
-
-    is_connected = virt_viewer_app_initial_connect(app, NULL);
-
-    printf("%s active %i created %i is_connected %i \n",
-           (const char *)__func__, virt_viewer_app_is_active(app), created, is_connected);
-
-    return TRUE;
-}
-
-void
-virt_viewer_start_reconnect_poll(RemoteViewer *self)
-{
-    VirtViewerApp *app = VIRT_VIEWER_APP(self);
-    if (virt_viewer_app_is_active(app))
-        return;
-
-    RemoteViewerPrivate *priv = self->priv;
-
-    g_debug("reconnect_poll: %d", priv->reconnect_poll);
-
-    if (priv->reconnect_poll != 0)
-        return;
-
-    app->is_polling = TRUE;
-    priv->reconnect_poll = g_timeout_add(RECONNECT_TIMEOUT, (GSourceFunc)virt_viewer_connect_timer, self);
-}
-
-void
-virt_viewer_stop_reconnect_poll(RemoteViewer *self)
-{
-    VirtViewerApp *app = VIRT_VIEWER_APP(self);
-    app->is_polling = FALSE;
-
-    RemoteViewerPrivate *priv = self->priv;
-
-    g_debug("reconnect_poll: %d", priv->reconnect_poll);
-
-    if (priv->reconnect_poll == 0)
-        return;
-
-    g_source_remove(priv->reconnect_poll);
-    priv->reconnect_poll = 0;
-}
 
 static void
 remote_viewer_dispose (GObject *object)
@@ -465,7 +401,7 @@ retry_connnect_to_vm:
                 return FALSE;
             }
         }
-//        // remember username
+        // remember username
         if (user)
             g_object_set(app, "username", user, NULL);
 
@@ -478,6 +414,7 @@ retry_connnect_to_vm:
         gchar *window_name = g_strconcat("ВМ: ", vm_verbose_name, "    Пользователь: ", username, NULL);
         g_object_set(app, "guest-name", window_name, NULL);
         g_free(window_name);
+        g_free(username);
 
         // connect to vm depending on remote protocol
         if (remote_protocol_type == VDI_RDP_PROTOCOL) {
@@ -491,7 +428,7 @@ retry_connnect_to_vm:
         } else { // spice by default
             set_spice_session_data(app, ip, port, user, password);
             // start connect attempt timer
-            virt_viewer_start_reconnect_poll(self);
+            virt_viewer_start_reconnect_poll(app);
             // Показывается окно virt viewer // virt_viewer_app_default_start
             ret = VIRT_VIEWER_APP_CLASS(remote_viewer_parent_class)->start(app, &error, AUTH_DIALOG);
         }

@@ -141,7 +141,7 @@ class Unauthorized(AuthError):
 
 class ServerError(HttpError):
     code = 500
-    message = "Критическая ошибка контроллера"
+    message = "Критическая ошибка контроллера."
 
 
 class VmCreationError(Exception):

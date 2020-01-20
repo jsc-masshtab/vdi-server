@@ -18,16 +18,16 @@ export class AddAuthenticationDirectoryComponent {
     this.form = this.fb.group({
       domain_name: '',
       verbose_name: '',
-      directory_url: '',
+      directory_url: 'ldap://',
       description: '',
-      connection_type: 'LDAP',
+      /* connection_type: 'LDAP',
       directory_type: 'ActiveDirectory',
       service_username: '',
       service_password: '',
       admin_server: '',
       subdomain_name: '',
       kdc_urls: [[]],
-      sso: false,
+      sso: false, */
     });
   }
 

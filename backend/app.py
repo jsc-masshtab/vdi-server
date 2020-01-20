@@ -63,9 +63,6 @@ def init_logging(access_to_stdout=False):
         access_log.setLevel(logging.INFO)
         stdout_handler = logging.StreamHandler(sys.stdout)
         access_log.addHandler(stdout_handler)
-    if not AUTH_ENABLED:
-        general_log = logging.getLogger('tornado.general')
-        general_log.warning('Auth is disabled. Enable on production!')
 
     # Disable query logging.
     logging.getLogger('sqlalchemy').setLevel(logging.ERROR)
@@ -97,6 +94,11 @@ def bootstrap():
 
 def start_server():
     logger.info('Tornado VDI started')
+
+    if not AUTH_ENABLED:
+        general_log = logging.getLogger('tornado.general')
+        general_log.warning('Auth is disabled. Enable on production!')
+
     IOLoop.current().run_sync(
         lambda: db.init_app(app,
                             host=DB_HOST,

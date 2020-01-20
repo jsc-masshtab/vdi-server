@@ -32,7 +32,7 @@
       <fa-icon *ngIf="tested && connected" class="ad-status ad-success" [icon]="['fas','check']" size="xs"></fa-icon>
       <fa-icon *ngIf="tested && !connected" class="ad-status ad-failed" [icon]="['fas','times-circle']" size="xs"></fa-icon>
 
-      <span class="ad-status-text" [class.ad-success]="connected" [class.ad-failed]="!connected" *ngIf="tested && !connected">{{ connected ? 'Успшно' : 'Нет соединения' }}</span>
+      <span class="ad-status-text" [class.ad-success]="connected" [class.ad-failed]="!connected" *ngIf="tested">{{ connected ? 'Успешно' : 'Нет соединения' }}</span>
     </button>
   </div>
 

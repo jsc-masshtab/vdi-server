@@ -42,7 +42,7 @@ class Pool(db.Model, AbstractEntity):
     verbose_name = db.Column(db.Unicode(length=128), nullable=False, unique=True)
     cluster_id = db.Column(UUID(), nullable=False)
     node_id = db.Column(UUID(), nullable=False)
-    datapool_id = db.Column(UUID(), nullable=False)
+    datapool_id = db.Column(UUID(), nullable=True)
     status = db.Column(AlchemyEnum(Status), nullable=False, index=True)
     controller = db.Column(UUID(), db.ForeignKey('controller.id', ondelete="CASCADE"), nullable=False)
 
@@ -334,7 +334,9 @@ class StaticPool(db.Model, AbstractEntity):
     @classmethod
     async def create(cls, verbose_name, controller_ip, cluster_id, node_id, datapool_id):
         """Nested transactions are atomic."""
-
+        application_log.debug(
+            'Create StaticPool: verbose_name={vn}, controller_ip={ip}, cluster_id={ci}, node_id={ni}, datapool_id={di}.'.format(
+                vn=verbose_name, ip=controller_ip, ci=cluster_id, ni=node_id, di=datapool_id))
         async with db.transaction() as tx:
             # Create pool first
             application_log.debug('Create Pool')
@@ -625,7 +627,7 @@ class AutomatedPool(db.Model, AbstractEntity):
                 vm_index = vm['domain_index'] + 1
                 vm_list.append(vm)
 
-                msg = 'Automated pool creation. Created {} VMs from {}'.format(vm_index, self.initial_size)
+                msg = 'Automated pool creation. Created {} VMs from {}'.format(i + 1, self.initial_size)
                 await Event.create_info(msg, entity_list=self.entity_list)
 
                 # notify VDI front about progress(WS)
@@ -733,8 +735,8 @@ class AutomatedPool(db.Model, AbstractEntity):
 
         for row in vms_list:
             # TODO: явно получать и парсить данные (row[0], row[1] плохо)
-            vm = Vm.get(row[0])
-            await vm.delete()
+            vm = await Vm.get(row[0])
+            await vm.soft_delete()
         return True
 
 

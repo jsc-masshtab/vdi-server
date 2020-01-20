@@ -1,3 +1,7 @@
+### Запуск docker-контейнеров с БД и фронтом для локальной разработки:
+    
+    cd devops/docker && docker-compose up
+
 ### Шаблон для названий веток
 
     **feature**/**fix** **tg** {task#/us#}  -- feature tg 5467

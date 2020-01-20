@@ -61,6 +61,8 @@ class AddControllerMutation(graphene.Mutation):
     async def mutate(self, _info, verbose_name, address, username,
                      password, ldap_connection, description=None):
         try:
+            if len(verbose_name) < 1:
+                raise SimpleError('Имя контроллера не может быть пустым.')
             # check credentials
             controller_client = ControllerClient(address)
             auth_info = dict(username=username, password=password, ldap=ldap_connection)
@@ -86,6 +88,8 @@ class AddControllerMutation(graphene.Mutation):
                 address=address)
             await Event.create_info(msg)
             return AddControllerMutation(ok=True, controller=ControllerType(**controller.__values__))
+        except SimpleError as E:
+            raise SimpleError(E)
         except Exception as E:
             msg = 'Add new controller with address {address}: operation failed.'.format(
                 address=address)
@@ -97,44 +101,27 @@ class AddControllerMutation(graphene.Mutation):
 class UpdateControllerMutation(graphene.Mutation):
     class Arguments:
         id = graphene.UUID(required=True)
-        verbose_name = graphene.String(required=True)
-        address = graphene.String(required=True)
+        verbose_name = graphene.String()
+        address = graphene.String()
         description = graphene.String()
-
-        username = graphene.String(required=True)
-        password = graphene.String(required=True)
-        ldap_connection = graphene.Boolean(required=True)
+        username = graphene.String()
+        password = graphene.String()
+        ldap_connection = graphene.Boolean()
 
     ok = graphene.Boolean()
     controller = graphene.Field(lambda: ControllerType)
 
     @superuser_required
-    async def mutate(self, _info, id, verbose_name, address, username,
-                     password, ldap_connection, description=None):
+    async def mutate(self, _info, id, verbose_name=None, address=None, username=None,
+                     password=None, ldap_connection=None, description=None):
         try:
             # TODO: update only mutated fields
-
-            controller = await Controller.query.where(Controller.id == id).gino.first()
+            controller = await Controller.get(id)
             if not controller:
-                raise GraphQLError('No such controller.')
+                raise SimpleError('No such controller.')
 
-            # check credentials
-            controller_client = ControllerClient(address)
-            auth_info = dict(username=username, password=password, ldap=ldap_connection)
-            token, expires_on = await controller_client.auth(auth_info=auth_info)
-            version = await controller_client.fetch_version()
-
-            await controller.update(
-                verbose_name=verbose_name,
-                address=address,
-                description=description,
-                version=version,
-                username=username,
-                password=crypto.encrypt(password),
-                ldap_connection=ldap_connection,
-                token=token,
-                expires_on=expires_on
-            ).apply()
+            await controller.soft_update(verbose_name=verbose_name, address=address, description=description,
+                                         username=username, password=password, ldap_connection=ldap_connection)
 
             # TODO: change to update & restart
             await resources_monitor_manager.remove_controller(address)
