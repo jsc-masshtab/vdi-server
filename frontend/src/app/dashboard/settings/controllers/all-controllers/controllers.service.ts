@@ -61,9 +61,9 @@ export class ControllersService {
     public updateController({id}, {verbose_name, description, username, password, ldap_connection, address }) {
         return this.service.mutate<any>({
             mutation: gql`
-                            mutation controllers($id: UUID!,$verbose_name: String!,
-                                $description: String, $username: String!, $password: String!,
-                                $ldap_connection: Boolean!, $address: String!) {
+                            mutation controllers($id: UUID!,$verbose_name: String,
+                                $description: String, $username: String, $password: String,
+                                $ldap_connection: Boolean, $address: String) {
                                updateController(id: $id, verbose_name: $verbose_name,
                                     description: $description, username: $username,
                                     password: $password, ldap_connection: $ldap_connection, address: $address) {

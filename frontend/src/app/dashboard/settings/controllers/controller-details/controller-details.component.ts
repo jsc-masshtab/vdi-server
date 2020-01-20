@@ -40,6 +40,19 @@ export class ControllerDetailsComponent implements OnInit, OnDestroy {
       edit: 'openEditForm',
     },
     {
+      title: 'Описание',
+      property: 'description',
+      type: 'string',
+      formEdit: [{
+        header: 'Изменение описания контроллера',
+        tag: 'input',
+        type: 'text',
+        fieldName: 'description',
+        fieldValue: this.controller['description']
+      }],
+      edit: 'openEditForm',
+    },
+    {
       title: 'Адрес',
       property: 'address',
       type: 'string',
@@ -191,7 +204,7 @@ export class ControllerDetailsComponent implements OnInit, OnDestroy {
   }
 
   public close(): void  {
-    this.router.navigateByUrl('pages/controllers');
+    this.router.navigateByUrl('pages/settings/controllers');
   }
 
   ngOnDestroy() {
