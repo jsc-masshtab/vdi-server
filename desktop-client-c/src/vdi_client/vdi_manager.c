@@ -61,7 +61,6 @@ static void refresh_vdi_pool_data_async(void);
 static void unregister_all_pools(void);
 static void register_pool(const gchar *pool_id, const gchar *pool_name, const gchar *os_type, const gchar *status);
 static VdiPoolWidget get_vdi_pool_widget_by_id(const gchar *searched_id);
-static void shutdown_loop(GMainLoop *loop);
 
 static void on_get_vdi_pool_data_finished(GObject *source_object, GAsyncResult *res, gpointer user_data);
 static void on_get_vm_from_pool_finished(GObject *source_object, GAsyncResult *res, gpointer user_data);
@@ -199,13 +198,6 @@ static VdiPoolWidget get_vdi_pool_widget_by_id(const gchar *searched_id)
     }
 
     return searched_vdi_pool_widget;
-}
-
-// stop GMainLoop
-static void shutdown_loop(GMainLoop *loop)
-{
-    if (g_main_loop_is_running(loop))
-        g_main_loop_quit(loop);
 }
 
 //////////////////////////////// async task callbacks//////////////////////////////////////

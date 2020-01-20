@@ -81,13 +81,6 @@ typedef struct
 
 } RemoteViewerData;
 
-static void
-shutdown_loop(GMainLoop *loop)
-{
-    if (g_main_loop_is_running(loop))
-        g_main_loop_quit(loop);
-}
-
 // set gui state
 static void
 set_auth_dialog_state(AuthDialogState auth_dialog_state, RemoteViewerData *ci)
@@ -412,7 +405,7 @@ remote_viewer_connect_dialog(gchar **user, gchar **password,
     RemoteViewerData ci;
     memset(&ci, 0, sizeof(RemoteViewerData));
     ci.response = FALSE;
-    ci.dialog_window_response = GTK_RESPONSE_CANCEL;
+    ci.dialog_window_response = GTK_RESPONSE_CLOSE;
     // save pointers
     ci.user = user;
     ci.password = password;
@@ -512,7 +505,7 @@ remote_viewer_connect_dialog(gchar **user, gchar **password,
     if (is_conn_to_prev_pool_btn_checked)
         fast_forward_connect_to_prev_pool_if_enabled(&ci);
 
-    connect_dialog_run(&ci);
+    create_loop_and_launch(&ci.loop);
 
     // save data to ini file if required
     save_data_to_ini_file(&ci);

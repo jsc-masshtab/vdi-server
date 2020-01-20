@@ -92,6 +92,11 @@ static void foreign_menu_title_changed(SpiceCtrlForeignMenu *menu, GParamSpec *p
 #endif
 
 
+static gchar **opt_args = NULL;
+static char *opt_title = NULL;
+static gboolean opt_controller = FALSE;
+static GMainLoop *virt_viewer_loop = NULL;
+
 static void
 remote_viewer_dispose (GObject *object)
 {
@@ -101,22 +106,9 @@ remote_viewer_dispose (GObject *object)
 static void
 remote_viewer_deactivated(VirtViewerApp *app, gboolean connect_error)
 {
-    RemoteViewer *self = REMOTE_VIEWER(app);
-    RemoteViewerPrivate *priv = self->priv;
-
-    if (connect_error && priv->open_recent_dialog) {
-        RemoteViewerState remoteViewerState = opt_manual_mode ? AUTH_DIALOG : VDI_DIALOG;
-        if (virt_viewer_app_start(app, NULL, remoteViewerState)) {
-            return;
-        }
-    }
-
     VIRT_VIEWER_APP_CLASS(remote_viewer_parent_class)->deactivated(app, connect_error);
+    shutdown_loop(virt_viewer_loop);
 }
-
-static gchar **opt_args = NULL;
-static char *opt_title = NULL;
-static gboolean opt_controller = FALSE;
 
 static void
 remote_viewer_add_option_entries(VirtViewerApp *self, GOptionContext *context, GOptionGroup *group)
@@ -310,10 +302,19 @@ static void set_spice_session_data(VirtViewerApp *app, gchar *ip, gchar *port, g
     virt_viewer_session_spice_set_credentials(user, password);
 }
 
+static void remote_viewer_free_auth_data(gchar **user, gchar **password,
+                                         gchar **ip, gchar **port, gchar **vm_verbose_name)
+{
+    free_memory_safely(user);
+    free_memory_safely(password);
+    free_memory_safely(ip);
+    free_memory_safely(port);
+    free_memory_safely(vm_verbose_name);
+}
+
 static gboolean
 remote_viewer_start(VirtViewerApp *app, GError **err, RemoteViewerState remoteViewerState)
 {
-    printf("remote_viewer_start\n");
     g_return_val_if_fail(REMOTE_VIEWER_IS(app), FALSE);
 
     RemoteViewer *self = REMOTE_VIEWER(app);
@@ -339,14 +340,10 @@ remote_viewer_start(VirtViewerApp *app, GError **err, RemoteViewerState remoteVi
 retry_auth:
     {
         // Забираем из ui адрес и порт
-        GtkResponseType dialog_window_response =
-            remote_viewer_connect_dialog(&user, &password, &ip, &port,
+        GtkResponseType dialog_window_response = remote_viewer_connect_dialog(&user, &password, &ip, &port,
                                          &is_connect_to_prev_pool, &vm_verbose_name, &remote_protocol_type);
 
-        if (dialog_window_response == GTK_RESPONSE_CANCEL) {
-            return FALSE;
-        }
-        else if (dialog_window_response == GTK_RESPONSE_CLOSE) {
+        if (dialog_window_response == GTK_RESPONSE_CLOSE) {
             g_application_quit(G_APPLICATION(app));
             return FALSE;
         }
@@ -375,18 +372,29 @@ retry_connnect_to_vm:
             }
             goto cleanup;
         }
+
         ret = VIRT_VIEWER_APP_CLASS(remote_viewer_parent_class)->start(app, &error, AUTH_DIALOG);
+        create_loop_and_launch(&virt_viewer_loop);
+        // go back to auth or quit
+        if (virt_viewer_app_is_quitting(app)) {
+            return FALSE;
+        }
+        else {
+            remote_viewer_free_auth_data(&user, &password, &ip, &port, &vm_verbose_name);
+            goto retry_auth;
+        }
 
     } else {
+        // remember username
+        if (user)
+            g_object_set(app, "username", user, NULL);
+
         VirtViewerWindow *main_window = virt_viewer_app_get_main_window(app);
 
         //Если is_connect_to_prev_pool true, то подключение к пред. запомненому пулу,
         // минуя vdi manager window
         if (!is_connect_to_prev_pool) {
-            free_memory_safely(&ip);
-            free_memory_safely(&port);
-            free_memory_safely(&password);
-            free_memory_safely(&vm_verbose_name);
+            remote_viewer_free_auth_data(&user, &password, &ip, &port, &vm_verbose_name);
 
             // show VDI manager window
             GtkResponseType vdi_dialog_window_response =
@@ -401,20 +409,9 @@ retry_connnect_to_vm:
                 return FALSE;
             }
         }
-        // remember username
-        if (user)
-            g_object_set(app, "username", user, NULL);
 
-        // get remembered user name
-        gchar *username = NULL;
-        g_object_get(app, "username", &username, NULL);
-        printf("remembered_user %s \n", username);
-
-        // virt viewer takes its name from guest-name so lets not overcomplicate
-        gchar *window_name = g_strconcat("ВМ: ", vm_verbose_name, "    Пользователь: ", username, NULL);
-        g_object_set(app, "guest-name", window_name, NULL);
-        g_free(window_name);
-        g_free(username);
+        // set vort viewer window_name
+        virt_viewer_app_set_window_name(app, vm_verbose_name);
 
         // connect to vm depending on remote protocol
         if (remote_protocol_type == VDI_RDP_PROTOCOL) {
@@ -423,7 +420,8 @@ retry_connnect_to_vm:
             rdp_viewer_start(get_vdi_username(), get_vdi_password(), ip, NULL); // it's right
             //printf("user: %s   pass: %s", get_vdi_username(), get_vdi_password());
             //rdp_viewer_start("user", "user", ip, NULL); // todo: Remove later
-            if (!is_connect_to_prev_pool) goto retry_connnect_to_vm;
+            if (!is_connect_to_prev_pool)
+                goto retry_connnect_to_vm;
 
         } else { // spice by default
             set_spice_session_data(app, ip, port, user, password);
@@ -431,15 +429,12 @@ retry_connnect_to_vm:
             virt_viewer_start_reconnect_poll(app);
             // Показывается окно virt viewer // virt_viewer_app_default_start
             ret = VIRT_VIEWER_APP_CLASS(remote_viewer_parent_class)->start(app, &error, AUTH_DIALOG);
+            create_loop_and_launch(&virt_viewer_loop);
         }
     }
 
 cleanup:
-    free_memory_safely(&user);
-    free_memory_safely(&password);
-    free_memory_safely(&ip);
-    free_memory_safely(&port);
-    free_memory_safely(&vm_verbose_name);
+    remote_viewer_free_auth_data(&user, &password, &ip, &port, &vm_verbose_name);
 
     if (!ret && priv->open_recent_dialog) {
         if (error != NULL) {
