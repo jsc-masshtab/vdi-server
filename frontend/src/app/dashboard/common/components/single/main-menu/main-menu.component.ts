@@ -1,3 +1,4 @@
+import { MatDialog } from '@angular/material';
 import { Component } from '@angular/core';
 import { trigger, style, animate, transition } from '@angular/animations';
 import { Router, NavigationEnd} from '@angular/router';
@@ -26,12 +27,16 @@ export class MainMenuComponent {
   public toggleLog: boolean = false;
   public clickedManage: string = '';
 
-  constructor(private router: Router) {this.beginRoute(); }
+  constructor(private router: Router, private dialog: MatDialog) {this.beginRoute(); }
 
 
   private beginRoute() {
     this.router.events.subscribe((event) => {
         if (event instanceof NavigationEnd) {
+
+          if (this.dialog.openDialogs.length) {
+            this.dialog.closeAll();
+          }
 
           let clickedManage1 = event.urlAfterRedirects.split('/')[2] || null;
           let clickedManage2 = event.urlAfterRedirects.split('/')[3] || null;

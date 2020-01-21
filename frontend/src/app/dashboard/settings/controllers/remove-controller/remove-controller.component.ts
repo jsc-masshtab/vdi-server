@@ -1,72 +1,44 @@
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { Router } from '@angular/router';
 import { WaitService } from '../../../common/components/single/wait/wait.service';
-import { MatDialogRef } from '@angular/material';
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material';
+import { Component, OnDestroy, Inject } from '@angular/core';
 import { ControllersService } from '../all-controllers/controllers.service';
-import { map } from 'rxjs/operators';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 
+interface IData {
+  id: string;
+  verbose_name: string;
+}
 
 @Component({
   selector: 'vdi-remove-controller',
   templateUrl: './remove-controller.component.html'
 })
 
-export class RemoveControllerComponent implements OnInit, OnDestroy {
+export class RemoveControllerComponent implements OnDestroy {
 
-  public controllers: [];
-  public pendingControllers: boolean = false;
   private destroy: Subject<any> = new Subject<any>();
-  public formRemove: FormGroup;
-  public valid: boolean = true;
+  public full: boolean = false;
 
   constructor(private controllerService: ControllersService,
               private waitService: WaitService,
               private dialogRef: MatDialogRef<RemoveControllerComponent>,
-              private fb: FormBuilder) {}
+              @Inject(MAT_DIALOG_DATA) public data: IData,
+              private router: Router) {}
 
-  ngOnInit() {
-    this.createFormRemove();
-    this.getAllControllers();
-  }
-
-  private createFormRemove(): void {
-    this.formRemove = this.fb.group({
-      id: ['', Validators.required],
-      full: false
-    });
-  }
-
-  private checkValid(): boolean {
-    if (this.formRemove.status === 'INVALID') {
-      this.valid = false;
-      return false;
-    }
-    this.valid = true;
-    return true;
-  }
 
   public send() {
-    this.checkValid();
     this.waitService.setWait(true);
-    this.controllerService.removeController(this.formRemove.value).subscribe((res) => {
+    this.controllerService.removeController(this.data.id, this.full).subscribe((res) => {
       if (res) {
         this.controllerService.getAllControllers().valueChanges.pipe(takeUntil(this.destroy)).subscribe(() => {
           this.waitService.setWait(false);
           this.dialogRef.close();
+          this.router.navigateByUrl('/pages/settings/controllers');
         });
       }
     });
-  }
-
-  private getAllControllers() {
-    this.pendingControllers = true;
-    this.controllerService.getAllControllers().valueChanges.pipe(takeUntil(this.destroy), map(data => data.data.controllers))
-      .subscribe((data) => {
-        this.controllers = data;
-        this.pendingControllers = false;
-      });
   }
 
   ngOnDestroy() {

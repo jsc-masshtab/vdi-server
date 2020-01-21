@@ -36,6 +36,54 @@ export class ControllersService {
         });
     }
 
+    public getController(id: string) {
+        return this.service.watchQuery({
+            query: gql`  query controllers($id: String) {
+                            controller(id: $id) {
+                                id
+                                verbose_name
+                                address
+                                description
+                                status
+                                version
+                                username
+                                password
+                                ldap_connection
+                            }
+                        }`,
+            variables: {
+                method: 'GET',
+                id
+            }
+        }).valueChanges;
+    }
+
+    public updateController({id}, {verbose_name, description, username, password, ldap_connection, address }) {
+        return this.service.mutate<any>({
+            mutation: gql`
+                            mutation controllers($id: UUID!,$verbose_name: String,
+                                $description: String, $username: String, $password: String,
+                                $ldap_connection: Boolean, $address: String) {
+                               updateController(id: $id, verbose_name: $verbose_name,
+                                    description: $description, username: $username,
+                                    password: $password, ldap_connection: $ldap_connection, address: $address) {
+                                    ok
+                                }
+                            }
+            `,
+            variables: {
+                method: 'POST',
+                id,
+                verbose_name,
+                description,
+                username,
+                password,
+                ldap_connection,
+                address
+            }
+        });
+    }
+
     public addController({address, description, username, verbose_name, password, ldap_connection }) {
         return this.service.mutate<any>({
             mutation: gql`
@@ -61,7 +109,7 @@ export class ControllersService {
         });
     }
 
-    public removeController({id, full}) {
+    public removeController(id: string, full: boolean) {
         if (full) {
             return this.service.mutate<any>({
                 mutation: gql`
