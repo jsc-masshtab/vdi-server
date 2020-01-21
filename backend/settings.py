@@ -19,8 +19,8 @@ FERNET_KEY = b'LRzSxWyxqKD4p2BR11-nVmghV67AVmQ4CxYi__S_OH8='
 
 # Auth settings
 # -----------------------------
-#AUTH_ENABLED = True
-AUTH_ENABLED = False  # Отключает проверку токенов, делает доступным стандартный интерфейс GpaphQL
+AUTH_ENABLED = True
+# AUTH_ENABLED = False  # Отключает проверку токенов, делает доступным стандартный интерфейс GpaphQL
 
 # JWT Options
 # -----------------------------
@@ -59,6 +59,7 @@ VEIL_WS_MAX_TIME_TO_WAIT = 60
 # Others
 # -----------------------------
 DEFAULT_NAME = '-'
+LDAP_TIMEOUT = 5
 
 # Settings for tests
 # -----------------------------
