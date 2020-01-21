@@ -115,13 +115,13 @@ class UpdateControllerMutation(graphene.Mutation):
     async def mutate(self, _info, id, verbose_name=None, address=None, username=None,
                      password=None, ldap_connection=None, description=None):
         try:
-            # TODO: update only mutated fields
             controller = await Controller.get(id)
             if not controller:
                 raise SimpleError('No such controller.')
 
             await controller.soft_update(verbose_name=verbose_name, address=address, description=description,
-                                         username=username, password=password, ldap_connection=ldap_connection)
+                                         username=username, password=crypto.encrypt(password),
+                                         ldap_connection=ldap_connection)
 
             # TODO: change to update & restart
             await resources_monitor_manager.remove_controller(address)
@@ -190,6 +190,21 @@ class RemoveAllControllersMutation(graphene.Mutation):
         return RemoveAllControllersMutation(ok=True)
 
 
+class TestControllerMutation(graphene.Mutation):
+    class Arguments:
+        id = graphene.UUID(required=True)
+
+    ok = graphene.Boolean()
+
+    @superuser_required
+    async def mutate(self, _info, id):
+        controller = await Controller.get(id)
+        if not controller:
+            raise GraphQLError('No such controller.')
+        connection_ok = await controller.check_credentials()
+        return TestControllerMutation(ok=connection_ok)
+
+
 class ControllerQuery(graphene.ObjectType):
     controllers = graphene.List(lambda: ControllerType)
     controller = graphene.Field(lambda: ControllerType, id=graphene.String())
@@ -216,6 +231,7 @@ class ControllerMutations(graphene.ObjectType):
     updateController = UpdateControllerMutation.Field()
     removeController = RemoveControllerMutation.Field()
     removeAllControllers = RemoveAllControllersMutation.Field()
+    testController = TestControllerMutation.Field()
 
 
 controller_schema = graphene.Schema(query=ControllerQuery,
