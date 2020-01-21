@@ -129,22 +129,29 @@ class Controller(db.Model, AbstractEntity):
             return {}
 
     async def soft_update(self, verbose_name, address, description, username=None, password=None, ldap_connection=None):
-        # TODO: исправить редактирование пароля
         controller_kwargs = dict()
         if verbose_name:
             controller_kwargs['verbose_name'] = verbose_name
         if address:
             controller_kwargs['address'] = address
+        else:
+            address = self.address
         if description:
             controller_kwargs['description'] = description
         if username:
             controller_kwargs['username'] = username
+        else:
+            username = self.username
         if password:
             controller_kwargs['password'] = crypto.encrypt(password)
+        else:
+            password = self.password
         if isinstance(ldap_connection, bool):
             controller_kwargs['is_superuser'] = ldap_connection
+        else:
+            ldap_connection = self.ldap_connection
 
-        if username or password or address or ldap_connection:
+        if controller_kwargs.get('username') or controller_kwargs.get('password') or controller_kwargs.get('address') or controller_kwargs.get('ldap_connection'):
             credentials = await Controller.get_credentials(address, username, password, ldap_connection)
             controller_kwargs.update(credentials)
 
