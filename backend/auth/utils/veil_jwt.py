@@ -24,13 +24,13 @@ def jwtauth(handler_class):
             except jwt.ExpiredSignature:
                 application_log.debug('jwtauth: jwt.ExpiredSignature')
                 handler._transforms = []
-                handler.set_status(401)
+                handler.set_status(200)
                 response = {'errors': [{'message': 'Token invalid.'}]}
                 handler.finish(response)
             except AssertionError as error_message:
                 application_log.debug('jwtauth: Assertion error {}'.format(error_message))
                 handler._transforms = []
-                handler.set_status(401)
+                handler.set_status(200)
                 response = {'errors': [{'message': str(error_message)}]}
                 handler.finish(response)
             return True
