@@ -120,7 +120,7 @@ class UpdateControllerMutation(graphene.Mutation):
                 raise SimpleError('No such controller.')
 
             await controller.soft_update(verbose_name=verbose_name, address=address, description=description,
-                                         username=username, password=crypto.encrypt(password),
+                                         username=username, password=password,
                                          ldap_connection=ldap_connection)
 
             # TODO: change to update & restart

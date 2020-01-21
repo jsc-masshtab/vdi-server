@@ -140,7 +140,7 @@ class Controller(db.Model, AbstractEntity):
         if username:
             controller_kwargs['username'] = username
         if password:
-            controller_kwargs['password'] = password
+            controller_kwargs['password'] = crypto.encrypt(password)
         if isinstance(ldap_connection, bool):
             controller_kwargs['is_superuser'] = ldap_connection
 
