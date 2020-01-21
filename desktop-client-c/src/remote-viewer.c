@@ -107,6 +107,7 @@ static void
 remote_viewer_deactivated(VirtViewerApp *app, gboolean connect_error)
 {
     VIRT_VIEWER_APP_CLASS(remote_viewer_parent_class)->deactivated(app, connect_error);
+    virt_viewer_app_hide_all_windows_forced(app);
     shutdown_loop(virt_viewer_loop);
 }
 
@@ -417,7 +418,7 @@ retry_connnect_to_vm:
             }
         }
 
-        // set vort viewer window_name
+        // set virt viewer window_name
         virt_viewer_app_set_window_name(app, vm_verbose_name);
 
         // connect to vm depending on remote protocol
@@ -436,7 +437,7 @@ retry_connnect_to_vm:
             ret = VIRT_VIEWER_APP_CLASS(remote_viewer_parent_class)->start(app, &error, AUTH_DIALOG);
             create_loop_and_launch(&virt_viewer_loop);
 
-            // go back to vdi manager or quit
+            // quit if required
             if (virt_viewer_app_is_quitting(app)) {
                 remote_viewer_free_auth_data(&user, &password, &ip, &port, &vm_verbose_name);
                 return FALSE;
