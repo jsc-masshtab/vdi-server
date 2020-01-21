@@ -123,18 +123,19 @@ class UpdateControllerMutation(graphene.Mutation):
                                          username=username, password=password,
                                          ldap_connection=ldap_connection)
 
-            # TODO: change to update & restart
-            await resources_monitor_manager.remove_controller(address)
-            await resources_monitor_manager.add_controller(address)
+            controller = await Controller.get(id)
 
-            msg = 'Successfully update controller {id} with address {address}.'.format(
-                id=controller.id,
-                address=address)
+            await resources_monitor_manager.remove_controller(controller.address)
+            await resources_monitor_manager.add_controller(controller.address)
+
+            msg = 'Successfully update controller {name} with address {address}.'.format(
+                name=controller.verbose_name,
+                address=controller.address)
             await Event.create_info(msg)
             return UpdateControllerMutation(ok=True, controller=ControllerType(**controller.__values__))
         except Exception as E:
-            msg = 'Update controller {id}: operation failed.'.format(
-                id=id)
+            msg = 'Update controller {name}: operation failed.'.format(
+                name=controller.name)
             descr = str(E)
             await Event.create_error(msg, description=descr)
             raise SimpleError(msg)

@@ -105,8 +105,12 @@ class Controller(db.Model, AbstractEntity):
 
     async def check_credentials(self):
         try:
+            encrypted_password = crypto.decrypt(self.password)
+            application_log.debug(
+                'Checking controller credentials: address: {}, username: {}, password: {}, ldap_connection: {}'.format(
+                    self.address, self.username, encrypted_password, self.ldap_connection))
             controller_client = ControllerClient(self.address)
-            auth_info = dict(username=self.username, password=crypto.decrypt(self.password), ldap=self.ldap_connection)
+            auth_info = dict(username=self.username, password=encrypted_password, ldap=self.ldap_connection)
             await controller_client.auth(auth_info=auth_info)
         except Exception as ex:
             application_log.warning('Controller {} check failed.'.format(self.verbose_name))
@@ -118,6 +122,9 @@ class Controller(db.Model, AbstractEntity):
     @classmethod
     async def get_credentials(cls, address, username, password, ldap_connection):
         try:
+            application_log.debug(
+                'Checking controller credentials: address: {}, username: {}, password: {}, ldap_connection: {}'.format(
+                    address, username, password, ldap_connection))
             controller_client = ControllerClient(address)
             auth_info = dict(username=username, password=password, ldap=ldap_connection)
             token, expires_on = await controller_client.auth(auth_info=auth_info)
