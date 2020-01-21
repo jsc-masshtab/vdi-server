@@ -103,6 +103,18 @@ class Controller(db.Model, AbstractEntity):
         else:
             raise AssertionError('No such controller')
 
+    async def check_credentials(self):
+        try:
+            controller_client = ControllerClient(self.address)
+            auth_info = dict(username=self.username, password=crypto.decrypt(self.password), ldap=self.ldap_connection)
+            await controller_client.auth(auth_info=auth_info)
+        except Exception as ex:
+            application_log.warning('Controller {} check failed.'.format(self.verbose_name))
+            application_log.debug('Controller check: {}'.format(ex))
+            return False
+        application_log.info('Controller {} check passed successfull.'.format(self.verbose_name))
+        return True
+
     @classmethod
     async def get_credentials(cls, address, username, password, ldap_connection):
         try:
@@ -117,6 +129,7 @@ class Controller(db.Model, AbstractEntity):
             return {}
 
     async def soft_update(self, verbose_name, address, description, username=None, password=None, ldap_connection=None):
+        # TODO: исправить редактирование пароля
         controller_kwargs = dict()
         if verbose_name:
             controller_kwargs['verbose_name'] = verbose_name
@@ -132,7 +145,7 @@ class Controller(db.Model, AbstractEntity):
             controller_kwargs['is_superuser'] = ldap_connection
 
         if username or password or address or ldap_connection:
-            credentials = Controller.check_credentials(address, username, password, ldap_connection)
+            credentials = await Controller.get_credentials(address, username, password, ldap_connection)
             controller_kwargs.update(credentials)
 
         if controller_kwargs:
