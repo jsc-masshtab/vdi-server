@@ -352,8 +352,7 @@ class VmQuery(graphene.ObjectType):
                 raise SimpleError('Неверный параметр сортировки')
             vm_type_list = sorted(vm_type_list, key=sort_lam, reverse=reverse)
 
-        for vm_type in vm_type_list:
-            application_log.debug(vm_type)
+        application_log.debug('vm_type_list_count {}'.format(len(vm_type_list)))
         return vm_type_list
 
     @staticmethod
