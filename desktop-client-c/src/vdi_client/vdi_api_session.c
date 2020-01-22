@@ -111,12 +111,24 @@ static gboolean refresh_vdi_session_token()
 
     JsonParser *parser = json_parser_new();
     JsonObject *root_object = get_root_json_object(parser, msg->response_body->data);
-    if (!root_object)
+    if (!root_object) {
+        g_object_unref(msg);
         return FALSE;
+    }
+
+    // if response contains feild errors we consider request as a failure
+    if (json_object_has_member(root_object, "errors")) {
+        g_object_unref(msg);
+        g_object_unref (parser);
+        return FALSE;
+    }
 
     JsonObject *data_member_object = json_object_get_object_member_safely(root_object, "data");
-    if (!data_member_object)
+    if (!data_member_object) {
+        g_object_unref(msg);
+        g_object_unref (parser);
         return FALSE;
+    }
 
     free_memory_safely(&vdiSession.jwt);
     vdiSession.jwt = g_strdup(json_object_get_string_member_safely (data_member_object, "access_token"));
@@ -124,7 +136,6 @@ static gboolean refresh_vdi_session_token()
 
     g_object_unref(msg);
     g_object_unref (parser);
-
     return TRUE;
 }
 

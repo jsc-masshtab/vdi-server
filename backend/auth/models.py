@@ -2,14 +2,19 @@
 import uuid
 from typing import List
 from enum import Enum
+import logging
 
 import ldap
 from sqlalchemy.dialects.postgresql import UUID, ARRAY
 from sqlalchemy import Enum as AlchemyEnum
 
+from settings import LDAP_TIMEOUT
 from database import db, Status, AbstractSortableStatusModel, AbstractEntity
 from user.models import User
 from event.models import Event
+
+
+application_log = logging.getLogger('tornado.application')
 
 
 class AuthenticationDirectory(db.Model, AbstractSortableStatusModel, AbstractEntity):
@@ -74,13 +79,19 @@ class AuthenticationDirectory(db.Model, AbstractSortableStatusModel, AbstractEnt
         if self.connection_type == self.ConnectionTypes.LDAP:
             try:
                 ldap_server = ldap.initialize(self.directory_url)
+                ldap_server.set_option(ldap.OPT_TIMEOUT, LDAP_TIMEOUT)
                 ldap_server.simple_bind_s()
             except ldap.INVALID_CREDENTIALS:
                 return True
             except ldap.SERVER_DOWN:
-                await Event.create_warning('Auth: LDAP server {} is down.'.format(self.directory_url))
+                msg = 'LDAP server {} is down.'.format(self.directory_url)
+                application_log.warning(msg)
+                await Event.create_warning(msg, entity_list=self.entity_list)
                 return False
             return True
+        msg = 'Can\'t connect to LDAP server {}.'.format(self.directory_url)
+        application_log.warning(msg)
+        await Event.create_warning(msg, entity_list=self.entity_list)
         return False
 
     @staticmethod
@@ -205,7 +216,7 @@ class AuthenticationDirectory(db.Model, AbstractSortableStatusModel, AbstractEnt
             ldap.set_option(ldap.OPT_X_TLS_REQUIRE_CERT, ldap.OPT_X_TLS_NEVER)
             ldap_server = ldap.initialize(authentication_directory.directory_url)
             ldap_server.set_option(ldap.OPT_REFERRALS, 0)
-            ldap_server.set_option(ldap.OPT_NETWORK_TIMEOUT, 10)
+            ldap_server.set_option(ldap.OPT_NETWORK_TIMEOUT, LDAP_TIMEOUT)
             ldap_server.simple_bind_s(username, password)
         except ldap.INVALID_CREDENTIALS:
             # Если пользователь не проходит аутентификацию в службе каталогов с предоставленными

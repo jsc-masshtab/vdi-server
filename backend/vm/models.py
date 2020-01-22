@@ -154,6 +154,11 @@ class Vm(db.Model, AbstractEntity):
         """Copy existing VM template for new VM create."""
 
         domain_name = Vm.domain_name(verbose_name=verbose_name, name_template=name_template)
+        application_log.debug(
+            'VmHttpClient: controller_ip: {}, domain_id: {}, verbose_name: {}, name_template: {}'.format(controller_ip,
+                                                                                                         domain_id,
+                                                                                                         verbose_name,
+                                                                                                         name_template))
         client = await VmHttpClient.create(controller_ip, domain_id, verbose_name, name_template)
         inner_retry_count = 0
         while True:

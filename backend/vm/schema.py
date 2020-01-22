@@ -58,7 +58,7 @@ class VmType(graphene.ObjectType):
     async def get_veil_info(self):
 
         if self.veil_info:
-            return self.veil_info
+            return
 
         try:
             vm_client = await VmHttpClient.create(controller_ip=self.controller.address, vm_id=self.id)
@@ -131,19 +131,16 @@ class VmType(graphene.ObjectType):
         if self.template:
             return
 
-        template_id = await Vm.get_template_id(self.id)
-        if not template_id:
-            template_info = None
-        else:
-            # get data from veil
-            try:
-                vm_client = await VmHttpClient.create(controller_ip=self.controller.address, vm_id=template_id)
-                template_info = await vm_client.info()
-            except NotFound:
-                template_info = None
+        await self.get_veil_info()
+        # get template id and name from veil_info
+        try:
+            template_id = self.veil_info['parent']['id']
+            template_name = self.veil_info['parent']['verbose_name']
+        except (TypeError, KeyError):
+            template_id = None
+            template_name = DEFAULT_NAME
 
-        template_name = template_info['verbose_name'] if template_info else DEFAULT_NAME
-        self.template = TemplateType(id=template_id, veil_info=template_info, verbose_name=template_name)
+        self.template = TemplateType(id=template_id, veil_info=None, verbose_name=template_name)
 
 
 class AssignVmToUser(graphene.Mutation):
@@ -355,8 +352,7 @@ class VmQuery(graphene.ObjectType):
                 raise SimpleError('Неверный параметр сортировки')
             vm_type_list = sorted(vm_type_list, key=sort_lam, reverse=reverse)
 
-        for vm_type in vm_type_list:
-            application_log.debug(vm_type)
+        application_log.debug('vm_type_list_count {}'.format(len(vm_type_list)))
         return vm_type_list
 
     @staticmethod
