@@ -59,6 +59,7 @@ VEIL_WS_MAX_TIME_TO_WAIT = 60
 # Others
 # -----------------------------
 DEFAULT_NAME = '-'
+LDAP_TIMEOUT = 5
 
 # Settings for tests
 # -----------------------------

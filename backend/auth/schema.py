@@ -168,8 +168,8 @@ class TestAuthenticationDirectoryMutation(graphene.Mutation, AuthenticationDirec
     async def mutate(cls, root, info, **kwargs):
         await cls.validate_agruments(**kwargs)
         auth_dir = await AuthenticationDirectory.get_object(kwargs['id'])
-        conntection_ok = await auth_dir.test_connection()
-        return TestAuthenticationDirectoryMutation(ok=conntection_ok)
+        connection_ok = await auth_dir.test_connection()
+        return TestAuthenticationDirectoryMutation(ok=connection_ok)
 
 
 class UpdateAuthenticationDirectoryMutation(graphene.Mutation, AuthenticationDirectoryValidator):

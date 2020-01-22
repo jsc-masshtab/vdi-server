@@ -15,13 +15,14 @@ EOF
 
 dev() {
   echo "Install dependencies and run live Angular server"
-  # TODO: Нужнен environment.local.ts и сценарий сборки фронта, который бы в качестве урла назначал /, а в качестве урла для вебсокетов - локалхост.
   echo "Directory is:";
   pwd;
+  echo "Removing old dist and node_modules:"
+  rm -rf node_modules dist;
   echo "Installing dependencies via npm:"
   npm install --unsafe-perm;
   echo "Running angular-live:"
-  ng serve --host=0.0.0.0
+  npm start -- -c=docker --host=0.0.0.0
 }
 
 prod() {
