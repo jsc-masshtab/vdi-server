@@ -88,12 +88,12 @@ class TestUserSchema:
     async def test_user_create_bad(self, snapshot, auth_context_fixture):
         query = """mutation {
                 createUser(
-                username: "devyatkin",  # !обязательное поле
-                password: "qwQ123$%",  # !обязательное поле
-                email: "a.devyatkin@mashtab.org",  # !обязательное поле
-                last_name: "Devyatkin",  # !обязательное поле
-                first_name: "Aleksey",  # !обязательное поле
-                is_superuser: false  # Признак администратора
+                username: "devyatkin",
+                password: "qwQ123$%",
+                email: "a.devyatkin@mashtab.org",
+                last_name: "Devyatkin",
+                first_name: "Aleksey",
+                is_superuser: false
                 )
                 {
                 ok,
@@ -108,7 +108,7 @@ class TestUserSchema:
         try:
             await execute_scheme(user_schema, query, context=auth_context_fixture)
         except ExecError as E:
-            assert 'duplicate key value violates unique constraint "user_email_key"' in str(E)
+            assert 'duplicate key value violates unique constraint "user_username_key"' in str(E)
 
     async def test_user_edit(self, snapshot, auth_context_fixture):
         user_obj = await User.get_object(extra_field_name='username', extra_field_value='devyatkin',
@@ -137,8 +137,8 @@ class TestUserSchema:
         user_obj = await User.get_object(extra_field_name='username', extra_field_value='devyatkin',
                                          include_inactive=True)
         query = """mutation {
-                    changeUserPassword(id: "%s", # !обязательное поле
-                    password: "zpt36qQ!@"  # !обязательное поле
+                    changeUserPassword(id: "%s",
+                    password: "zpt36qQ!@"
                     )
                     {
                       ok
