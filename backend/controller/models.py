@@ -46,6 +46,15 @@ class Controller(db.Model, AbstractEntity):
         pools = await self.pools_query.gino.all()
         return True if pools else False
 
+    async def update_automated_pools(self):
+        from pool.models import AutomatedPool, Pool
+        automated_pools_q = db.select([AutomatedPool.id]).select_from(Controller.join(Pool).join(AutomatedPool).select().where(Controller.id == self.id).alias())
+        automated_pools = await automated_pools_q.gino.all()
+        for automated_pool in automated_pools:
+            automated_pool_class_instance = await AutomatedPool.get(automated_pool.id)
+            automated_pool_class_instance.controller_ip = self.address
+        return True
+
     @staticmethod
     async def get_controllers_addresses():
         return await get_list_of_values_from_db(Controller, Controller.address)
@@ -152,7 +161,7 @@ class Controller(db.Model, AbstractEntity):
         if password:
             controller_kwargs['password'] = crypto.encrypt(password)
         else:
-            password = self.password
+            password = crypto.decrypt(self.password)
         if isinstance(ldap_connection, bool):
             controller_kwargs['is_superuser'] = ldap_connection
         else:
@@ -163,8 +172,15 @@ class Controller(db.Model, AbstractEntity):
             controller_kwargs.update(credentials)
 
         if controller_kwargs:
-            return await Controller.update.values(**controller_kwargs).where(
-                Controller.id == self.id).gino.status()
+            try:
+                await Controller.update.values(**controller_kwargs).where(
+                    Controller.id == self.id).gino.status()
+            except Exception as E:
+                application_log.debug('Error with controller update: {}'.format(E))
+                return False
+            else:
+                # Для всех автоматических пулов обновляем пропертю с контроллером.
+                return await self.update_automated_pools()
         return False
 
     async def soft_delete(self):
