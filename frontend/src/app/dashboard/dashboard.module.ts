@@ -132,6 +132,12 @@ export class DashboardModule {
       if (networkError) {
         console.log(networkError, 'networkError');
         this.waitService.setWait(false);
+        if (networkError['status'] === 401) {
+          if (networkError['error'] && networkError['error']['errors']) {
+            this.errorService.setError(networkError['error']['errors']);
+            return;
+          }
+        }
         this.errorService.setError(networkError['message']);
       }
 

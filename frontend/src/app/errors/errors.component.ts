@@ -50,8 +50,6 @@ export class ErrorsComponent  implements OnInit, OnDestroy {
       } else {
         this.addError(errors);
       }
-
-      console.log(this.errors, 'err');
     });
   }
 
