@@ -432,6 +432,7 @@ class AutomatedPool(db.Model, AbstractEntity):
 
     @controller_ip.setter
     def controller_ip(self, controller_ip):
+        application_log.debug('Changing AutomatedPool propery for controller_ip: {}'.format(controller_ip))
         self.__controller_ip = controller_ip if controller_ip else None
 
     @property

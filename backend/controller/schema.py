@@ -134,8 +134,8 @@ class UpdateControllerMutation(graphene.Mutation):
             await Event.create_info(msg)
             return UpdateControllerMutation(ok=True, controller=ControllerType(**controller.__values__))
         except Exception as E:
-            msg = 'Update controller {name}: operation failed.'.format(
-                name=controller.name)
+            msg = 'Update controller {id}: operation failed.'.format(
+                id=id)
             descr = str(E)
             await Event.create_error(msg, description=descr)
             raise SimpleError(msg)

@@ -20,4 +20,12 @@ services:
       - ./frontend:/opt/veil-vdi
       - ../../frontend/:/opt/veil-vdi/frontend/
     command: sh /opt/veil-vdi/entrypoint.sh -dev
-    restart: unless-stopped
+  nginx-proxy:
+    image: nginx
+    container_name: vdi-nginx
+    volumes:
+      - ./nginx:/opt/veil-vdi
+      - ../conf:/opt/veil-vdi/conf
+      - ../../frontend/dist/frontend:/opt/veil-vdi/frontend/dist/frontend
+    command: sh /opt/veil-vdi/entrypoint.sh
+    network_mode: host
