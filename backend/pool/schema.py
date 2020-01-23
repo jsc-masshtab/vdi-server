@@ -679,12 +679,12 @@ class UpdateAutomatedPoolMutation(graphene.Mutation, PoolValidator):
         await cls.validate_agruments(**kwargs)
         automated_pool = await AutomatedPool.get(kwargs['pool_id'])
         if automated_pool:
-            await automated_pool.soft_update(kwargs.get('verbose_name'),
-                                             kwargs.get('reserve_size'),
-                                             kwargs.get('total_size'),
-                                             kwargs.get('vm_name_template'),
-                                             kwargs.get('keep_vms_on'),
-                                             kwargs.get('create_thin_clones'))
+            await automated_pool.soft_update(verbose_name=kwargs.get('verbose_name'),
+                                             reserve_size=kwargs.get('reserve_size'),
+                                             total_size=kwargs.get('total_size'),
+                                             vm_name_template=kwargs.get('vm_name_template'),
+                                             keep_vms_on=kwargs.get('keep_vms_on'),
+                                             create_thin_clones=kwargs.get('create_thin_clones'))
             automated_pool = await AutomatedPool.get(kwargs['pool_id'])
             msg = 'Automated pool {name} updated.'.format(name=automated_pool.verbose_name)
             await Event.create_info(msg)

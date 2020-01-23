@@ -45,8 +45,8 @@ class AuthHandler(BaseHandler, ABC):
                 {'entity_type': self.client_type, 'entity_uuid': None}
             ]
             await Event.create_warning(error_message, entity_list=entity_list)
-            response = {'errors': [{'message': error_message}], 'error_code': 401}
-        self.set_status(200)
+            response = {'errors': [{'message': error_message}]}
+            self.set_status(200)
         return self.finish(response)
 
 

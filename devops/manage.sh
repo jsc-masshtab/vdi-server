@@ -35,6 +35,8 @@ update() {
   echo "Apply database migrations"
   cd $APP_DIR/backend
   pipenv run alembic upgrade head
+#  TODO: добавить установку зависимостей из Pipfile
+#  TODO: добавить символические ссылки на конфиг, либо размещение его в нужных директориях
   echo "Starting VDI Tornado..."
   supervisorctl start vdi-server-8888
   echo "Preparing frontend..."

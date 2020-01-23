@@ -488,7 +488,7 @@ class AutomatedPool(db.Model, AbstractEntity):
             setattr(automated_pool, 'controller_ip', controller_ip)
             return automated_pool
 
-    async def soft_update(self, pool_id, verbose_name, reserve_size, total_size, vm_name_template, keep_vms_on: bool,
+    async def soft_update(self, verbose_name, reserve_size, total_size, vm_name_template, keep_vms_on: bool,
                           create_thin_clones: bool):
         pool_kwargs = dict()
         auto_pool_kwargs = dict()
