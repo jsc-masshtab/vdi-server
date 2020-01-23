@@ -172,16 +172,24 @@ class Vm(db.Model, AbstractEntity):
                 response = await client.copy_vm(node_id=node_id, datapool_id=datapool_id, domain_name=domain_name,
                                                 create_thin_clones=create_thin_clones)
             except BadRequest as http_error:
+                # TODO: Обработка ошибок это хардкод только для русской версии контроллера. Нужно что-то информативнее.
                 ecp_errors = http_error.errors.get('errors')
+                ecp_detail_l = ecp_errors.get('detail') if ecp_errors else None
+                ecp_detail = ecp_detail_l[0] if isinstance(ecp_detail_l, list) else None
                 application_log.debug(http_error)
+                application_log.debug(ecp_detail)
                 if ecp_errors and 'verbose_name' in ecp_errors:
                     application_log.warning('Bad domain name {}'.format(domain_name))
                     domain_index_old = domain_index
                     domain_index = domain_index + 1
                     verbose_name = re.sub(r'-{}$'.format(domain_index_old), '-{}'.format(domain_index), verbose_name)
                     domain_name = verbose_name
-                elif ecp_errors and 'detail' in ecp_errors and inner_retry_count < 30:
-                    # TODO: это очень странное условие, наверняка от него откажемся
+                elif ecp_errors and ecp_detail and 'недостаточно свободного места на пуле данных' in ecp_detail:
+                    application_log.info('На контроллере отсутствует место для создания новой VM.')
+                    raise VmCreationError('Недостаточно свободного места на пуле данных.')
+                elif ecp_errors and ecp_detail and inner_retry_count < 30:
+                    # Тут мы предполагаем, что контроллер заблокирован выполнением задачи. Это может быть и не так,
+                    # но сейчас нам это не понятно.
                     application_log.warning('Possibly blocked by active task on ECP.')
                     application_log.debug(http_error)
                     application_log.debug('Подождем подольше перед повторной попыткой.')
