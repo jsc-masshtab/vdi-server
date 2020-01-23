@@ -215,14 +215,7 @@ class AuthTestCase(AsyncHTTPTestCase):
             response = yield self.fetch_request(url='/users',
                                                 body='{"query":"{users{id}}"}',
                                                 headers=headers_auth)
-            self.assertEqual(response.code, 200)
         except HTTPClientError as http_error:
-            self.assertEqual(http_error.code, 200)
+            self.assertEqual(http_error.code, 401)
         else:
-            response_dict = json_decode(response.body)
-            self.assertIsInstance(response_dict, dict)
-            errors = response_dict['errors']
-            error_message = errors[0]['message']
-            error_code = response_dict['error_code']
-            self.assertEqual(error_code, 401)
-            self.assertEqual(error_message, 'Token invalid.')
+            self.assertTrue(False)
