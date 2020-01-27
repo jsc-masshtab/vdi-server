@@ -162,6 +162,7 @@ class PoolType(graphene.ObjectType):
     max_size = graphene.Int()
     max_vm_amount = graphene.Int()
     increase_step = graphene.Int()
+    min_free_vms_amount = graphene.Int()
     max_amount_of_create_attempts = graphene.Int()
     initial_size = graphene.Int()
     reserve_size = graphene.Int()
@@ -286,6 +287,7 @@ def pool_obj_to_type(pool_obj: Pool) -> dict:
                  'max_size': pool_obj.max_size,
                  'max_vm_amount': pool_obj.max_vm_amount,
                  'increase_step': pool_obj.increase_step,
+                 'min_free_vms_amount' : pool_obj.min_free_vms_amount,
                  'max_amount_of_create_attempts': pool_obj.max_amount_of_create_attempts,
                  'initial_size': pool_obj.initial_size,
                  'reserve_size': pool_obj.reserve_size,
@@ -597,6 +599,7 @@ class CreateAutomatedPoolMutation(graphene.Mutation, PoolValidator):
         max_size = graphene.Int(default_value=200)
         max_vm_amount = graphene.Int(default_value=1000)
         increase_step = graphene.Int(default_value=3)
+        min_free_vms_amount = graphene.Int(default_value=5)
         max_amount_of_create_attempts = graphene.Int(default_value=15)
         initial_size = graphene.Int(default_value=1)
         reserve_size = graphene.Int(default_value=1)
