@@ -1,0 +1,45 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+Vagrant.configure("2") do | config |
+  config.vm.provider "libvirt"
+  config.vm.synced_folder ".", "/vagrant", disabled: true
+
+#   controller_box = "veil-controller-dev"
+#   controller_box_url = "http://192.168.10.144/veil_vagrant/veil-controller-dev.json"
+    controller_box = "veil-controller-test"
+    controller_box_url = "http://192.168.10.144/veil_vagrant/veil-controller-test.json"
+
+  config.vm.define "controller" do | controller |
+    controller.vm.box = controller_box
+    controller.vm.box_url = controller_box_url
+    ip = "192.168.20.111"
+    mac = "00:00:00:00:00:02"
+
+    controller.vm.provision "shell", inline: "systemctl disable elasticsearch-veil"
+    controller.vm.provision "shell", inline: "/var/lib/ecp-veil/node/other/auto_configure_nic.sh -a init -f -m static -t 3 -u ens15 -i " + ip + " -h " + mac + " -g 192.168.20.1 -s 255.255.255.0"
+    controller.vm.network "private_network", ip: ip, :mac => mac
+    controller.vm.network "private_network", ip: "0.0.0.0", auto_config: false
+    controller.vm.network "private_network", ip: "0.0.0.0", auto_config: false
+    controller.vm.network "private_network", ip: "0.0.0.0", auto_config: false
+    controller.vm.network "private_network", ip: "0.0.0.0", auto_config: false
+    controller.vm.network "private_network", ip: "0.0.0.0", auto_config: false
+    controller.vm.network "private_network", ip: "0.0.0.0", auto_config: false
+
+    controller.vm.provider "libvirt" do | libvirt |
+      libvirt.memory = "3072"
+      libvirt.cpus = 2
+      libvirt.nested = true
+      libvirt.storage :file, :size => '1G', :cache => 'writeback'
+      libvirt.storage :file, :size => '1G', :cache => 'writeback'
+      libvirt.storage :file, :size => '1G', :cache => 'writeback'
+      libvirt.storage :file, :size => '1G', :cache => 'writeback'
+      libvirt.storage :file, :size => '1G', :cache => 'writeback'
+      libvirt.storage :file, :size => '1G', :cache => 'writeback'
+      libvirt.storage :file, :size => '1500M', :cache => 'writeback'
+      libvirt.storage :file, :size => '1500M', :cache => 'writeback'
+      libvirt.storage :file, :size => '1500M', :cache => 'writeback'
+      libvirt.management_network_autostart = true
+    end
+  end
+end
