@@ -501,7 +501,7 @@ class AutomatedPool(db.Model, AbstractEntity):
                 pool_kwargs['keep_vms_on'] = keep_vms_on
             if pool_kwargs:
                 application_log.debug('Update Pool values for AutomatedPool {}'.format(self.verbose_name))
-                Pool.update.values(**pool_kwargs).where(id == pool_id).gino.status()
+                Pool.update.values(**pool_kwargs).where(id == self.id).gino.status()
 
             # Update AutomatedPool values
             if reserve_size:
