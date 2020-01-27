@@ -187,9 +187,10 @@ class FreeVmFromUser(graphene.Mutation):
     async def mutate(self, _info, vm_id):
         # check if vm exists
         vm = await Vm.get(vm_id)
-        await vm.free_vm(vm_id)
-
-        return {'ok': True}
+        if vm:
+            await vm.free_vm()
+            return {'ok': True}
+        return {'ok': False}
 
 
 class VmQuery(graphene.ObjectType):
