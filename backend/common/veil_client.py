@@ -60,10 +60,33 @@ class VeilHttpClient:
                                   request_timeout=VEIL_REQUEST_TIMEOUT)
             response = await self._client.fetch(request)
         except HTTPClientError as http_error:
+
+            async def stop_controller(description: str):
+                # TODO: этому тут явно не место.
+                from event.models import Event
+                from resources_monitoring.resources_monitor_manager import resources_monitor_manager
+                if isinstance(description, list):
+                    description = description[0]
+                if not isinstance(description, str):
+                    description = ''
+                # Информируем систему о проблеме
+                await Event.create_error('Ошибка подключения к контроллеру {}'.format(self.controller_ip),
+                                         description=description)
+                # Останавливаем монитор ресурсов для контроллера.
+                await resources_monitor_manager.remove_controller(self.controller_ip)
+
             application_log.error('URL {url} - {http_error}'.format(url=url,
-                                                              http_error=str(http_error)))
+                                                                    http_error=str(http_error)))
 
             body = self.get_response_body(http_error.response)
+            if isinstance(body, dict):
+                errors = body['errors'] if body.get('errors') else {}
+                detail = errors['detail'] if errors.get('detail') else {}
+            elif isinstance(body, str):
+                detail = 'url: {} - {}'.format(url, body)
+            else:
+                detail = ''
+            await stop_controller(detail)
 
             if http_error.code == 400:
                 raise BadRequest(body)
@@ -78,7 +101,7 @@ class VeilHttpClient:
             elif http_error.code == 500:
                 raise ServerError(body)
             elif http_error.code == 599:
-                raise ServerError(http_error.message)
+                raise ServerError(str(http_error))
         return response
 
     @staticmethod
@@ -105,3 +128,11 @@ class VeilHttpClient:
         response = await self.fetch(url=url, method=method, headers=headers, body=body)
         response_body = self.get_response_body(response)
         return response_body
+
+    async def check_task_status(self, task_id):
+        """Проверяет статус выполнения задачи на контроллере"""
+        endpoint_url = '{api_url}tasks/{task_id}'.format(api_url=self.api_url, task_id=task_id)
+        response = await self.fetch_with_response(url=endpoint_url, method='GET')
+        if response.get('status') == 'SUCCESS':
+            return True
+        return False

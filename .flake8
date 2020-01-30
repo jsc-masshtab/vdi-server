@@ -1,0 +1,13 @@
+[flake8]
+ignore =
+    # E501 line too long
+    E501,
+    # E704 multiple statements on one line (def)
+    E704,
+    # A001 "id" is used as an argument and thus shadows a python builtin, consider renaming the argument
+    A001,
+    # A002 "id" is used as an argument and thus shadows a python builtin, consider renaming the argument
+    A002,
+    # A003 "id" is a python builtin, consider renaming the class attribute
+    A003,
+exclude = .git,__pycache__,migrations

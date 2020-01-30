@@ -83,7 +83,7 @@ class EventQuery(graphene.ObjectType):
                             end_date=None, user=None, read_by=None, entity_type=None):
         filters = build_filters(event_type, start_date, end_date, user, read_by, entity_type)
         query = Event.outerjoin(EventReadByUser).outerjoin(User).outerjoin(
-            EventEntity).outerjoin(Entity).select().where(and_(*filters)).where(Entity.entity_type != None)
+            EventEntity).outerjoin(Entity).select().where(and_(*filters)).where(Entity.entity_type != None)  # noqa
         event_count = await db.select([db.func.count()]).select_from(query.alias()).gino.scalar()
         return event_count
 
@@ -96,7 +96,7 @@ class EventQuery(graphene.ObjectType):
         query = Event.outerjoin(EventReadByUser).outerjoin(User).outerjoin(
             EventEntity).outerjoin(Entity).select().where(
             and_(*filters)
-        ).where(Entity.entity_type != None)
+        ).where(Entity.entity_type != None)  # noqa
 
         query = db.select([text('anon_1.entity_type')]).select_from(query.alias()).group_by(text('anon_1.entity_type'))
 

@@ -1,12 +1,9 @@
 import asyncio
 import logging
-import time
 import json
-from abc import ABC
 from json import JSONDecodeError
 
 from tornado.httpclient import HTTPClientError
-from tornado.ioloop import IOLoop
 from tornado.websocket import WebSocketClosedError
 from tornado.websocket import WebSocketError
 from tornado.websocket import websocket_connect
@@ -17,7 +14,6 @@ from controller_resources.veil_client import ResourcesHttpClient
 from event.models import Event
 
 from .resources_monitoring_data import CONTROLLER_SUBSCRIPTIONS_LIST, CONTROLLERS_SUBSCRIPTION
-from .internal_event_monitor import internal_event_monitor
 from .abstract_event_monitor import AbstractMonitor
 
 
@@ -135,6 +131,7 @@ class ResourcesMonitor(AbstractMonitor):
         # create ws connection
         try:
             connect_url = 'ws://{}/ws/?token={}'.format(self._controller_ip, token)
+            # application_log.debug('ws connection url is {}'.format(connect_url))
             self._ws_connection = await websocket_connect(connect_url)
         except (ConnectionRefusedError, WebSocketError):
             msg = '{cls}: an not connect to {ip}'.format(
@@ -153,7 +150,7 @@ class ResourcesMonitor(AbstractMonitor):
         return True
 
     async def _on_message_received(self, message):
-        # print(__class__.__name__, 'msg received from {}:'.format(self._controller_ip), message)
+        # application_log.debug('msg received from {}: {}'.format(self._controller_ip, message))
         try:
             json_data = json.loads(message)
         except JSONDecodeError:
@@ -172,4 +169,3 @@ class ResourcesMonitor(AbstractMonitor):
                 self._ws_connection.close()
             except Exception as E:  # todo: вообще конкретное исключение не интересует
                 application_log.error(E)
-

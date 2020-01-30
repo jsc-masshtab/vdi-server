@@ -5,20 +5,18 @@ import uuid
 from pool.schema import pool_schema
 from tests.utils import execute_scheme
 
-from tests.fixtures import (fixt_db,
-                            fixt_create_automated_pool,
-                            fixt_create_static_pool,
-                            fixt_entitle_user_to_pool,
-                            auth_context_fixture)
+from tests.fixtures import fixt_db, fixt_create_automated_pool, fixt_create_static_pool, fixt_entitle_user_to_pool, auth_context_fixture  # noqa
 
 
 pytestmark = [pytest.mark.pools]
 
 
+# TODO: нужно создать контроллер
+# TODO: сейчас может быть попытка использовать не ZFS-диски для клонирования на ZFS-пул.
 # ----------------------------------------------
 # Automated pool
 @pytest.mark.asyncio
-async def test_create_automated_pool(fixt_db, fixt_create_automated_pool, auth_context_fixture):
+async def test_create_automated_pool(fixt_db, fixt_create_automated_pool, auth_context_fixture):  # noqa
     """Create automated pool, make request to check data, remove this pool"""
     pool_id = fixt_create_automated_pool['id']
 
@@ -36,7 +34,7 @@ async def test_create_automated_pool(fixt_db, fixt_create_automated_pool, auth_c
 
 
 @pytest.mark.asyncio
-async def test_update_automated_pool(fixt_db, fixt_create_automated_pool, auth_context_fixture):
+async def test_update_automated_pool(fixt_db, fixt_create_automated_pool, auth_context_fixture):  # noqa
     """Create automated pool, update this pool, remove this pool"""
     pool_id = fixt_create_automated_pool['id']
 
@@ -62,7 +60,7 @@ async def test_update_automated_pool(fixt_db, fixt_create_automated_pool, auth_c
 # ----------------------------------------------
 # Static pool
 @pytest.mark.asyncio
-async def test_create_static_pool(fixt_create_static_pool, auth_context_fixture):
+async def test_create_static_pool(fixt_create_static_pool, auth_context_fixture):  # noqa
     """Create static pool, make request to check data, remove this pool"""
     pool_id = fixt_create_static_pool['id']
     assert fixt_create_static_pool['ok']
@@ -76,11 +74,11 @@ async def test_create_static_pool(fixt_create_static_pool, auth_context_fixture)
         }
       }
     }""" % pool_id
-    executed = await execute_scheme(pool_schema, qu, context=auth_context_fixture)
+    executed = await execute_scheme(pool_schema, qu, context=auth_context_fixture)  # noqa
 
 
 @pytest.mark.asyncio
-async def test_update_static_pool(fixt_create_static_pool, auth_context_fixture):
+async def test_update_static_pool(fixt_create_static_pool, auth_context_fixture):  # noqa
     """Create static pool, update this pool, remove this pool"""
     pool_id = fixt_create_static_pool['id']
 
@@ -96,7 +94,7 @@ async def test_update_static_pool(fixt_create_static_pool, auth_context_fixture)
 
 
 @pytest.mark.asyncio
-async def test_remove_and_add_vm_in_static_pool(fixt_create_static_pool, auth_context_fixture):
+async def test_remove_and_add_vm_in_static_pool(fixt_create_static_pool, auth_context_fixture):  # noqa
     """Create automated pool, make request to check data,
     remove a vm from this pool, add the removed vm back to this pool, remove this pool"""
     pool_id = fixt_create_static_pool['id']

@@ -1,7 +1,6 @@
 import logging
 
 from controller.models import Controller
-from event.models import Event
 from resources_monitoring.resources_monitor import ResourcesMonitor
 
 application_log = logging.getLogger('tornado.application')
@@ -50,7 +49,7 @@ class ResourcesMonitorManager:
         for resources_monitor in self._resources_monitors_list:
             resources_monitor.subscribe(observer)
 
-        #self._internal_monitor.subscribe(observer)
+        # self._internal_monitor.subscribe(observer)
 
     def unsubscribe(self, observer):
         """
@@ -61,7 +60,7 @@ class ResourcesMonitorManager:
         for resources_monitor in self._resources_monitors_list:
             resources_monitor.unsubscribe(observer)
 
-        #self._internal_monitor.unsubscribe(observer)
+        # self._internal_monitor.unsubscribe(observer)
 
     async def add_controller(self, controller_ip):
         # check if controller is already being monitored
@@ -69,14 +68,14 @@ class ResourcesMonitorManager:
             msg = '{cls}: Controller {ip} is already monitored!'.format(
                 cls=__class__.__name__,
                 ip=controller_ip)
-            await Event.create_warning(msg)
+            application_log.warning(msg)
             return
         # add monitor
         self._add_monitor_for_controller(controller_ip)
         msg = '{cls}: resource monitor for controller {ip} connected'.format(
             cls=__class__.__name__,
             ip=controller_ip)
-        await Event.create_info(msg)
+        application_log.info(msg)
 
     async def remove_controller(self, controller_ip):
         # find resources monitor by controller ip
@@ -87,7 +86,7 @@ class ResourcesMonitorManager:
             msg = '{cls}: controller {ip} is not monitored!'.format(
                 cls=__class__.__name__,
                 ip=controller_ip)
-            await Event.create_error(msg)
+            application_log.debug(msg)
             return
         # stop monitoring
         await resources_monitor.stop()
@@ -95,7 +94,7 @@ class ResourcesMonitorManager:
         msg = '{cls}: resource monitor for controller {ip} removed'.format(
             cls=__class__.__name__,
             ip=controller_ip)
-        await Event.create_info(msg)
+        application_log.warning(msg)
 
     # PRIVATE METHODS
     def _get_monitored_controllers_ips(self):

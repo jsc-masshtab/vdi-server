@@ -1,6 +1,6 @@
 import asyncio
 
-from database import db, Status
+from database import db
 
 from common.utils import cancel_async_task
 

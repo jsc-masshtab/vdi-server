@@ -2,7 +2,7 @@
 import pytest
 
 from tests.utils import execute_scheme
-from tests.fixtures import fixt_db, auth_context_fixture
+from tests.fixtures import fixt_db, auth_context_fixture  # noqa
 
 from vm.schema import vm_schema
 
@@ -11,13 +11,12 @@ pytestmark = [pytest.mark.vms]
 
 
 @pytest.mark.asyncio
-async def test_request_vms(fixt_db, auth_context_fixture):
+async def test_request_vms(fixt_db, auth_context_fixture):  # noqa
     qu = """
     {
         vms(ordering: "verbose_name"){
         verbose_name
         id
-        
         template{
           verbose_name
         }
@@ -29,11 +28,11 @@ async def test_request_vms(fixt_db, auth_context_fixture):
     }
     }
     """
-    executed = await execute_scheme(vm_schema, qu, context=auth_context_fixture)
+    executed = await execute_scheme(vm_schema, qu, context=auth_context_fixture)  # noqa
 
 
 @pytest.mark.asyncio
-async def test_request_templates(fixt_db, auth_context_fixture):
+async def test_request_templates(fixt_db, auth_context_fixture):  # noqa
     qu = """
     {
         templates{
@@ -44,4 +43,4 @@ async def test_request_templates(fixt_db, auth_context_fixture):
         }
     }
     """
-    executed = await execute_scheme(vm_schema, qu, context=auth_context_fixture)
+    executed = await execute_scheme(vm_schema, qu, context=auth_context_fixture)  # noqa

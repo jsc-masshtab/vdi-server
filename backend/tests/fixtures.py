@@ -1,5 +1,4 @@
 import pytest
-import asyncio
 import uuid
 from async_generator import async_generator, yield_
 from graphene import Context
@@ -102,20 +101,24 @@ async def get_resources_automated_pool_test():
 
         for node in nodes:
             if node['status'] == 'ACTIVE':
-                print('active node found')
                 # check if node has template
                 try:
                     template_id = next(template['id'] for template in templates
                                        if template['node']['id'] == node['id'])
-                except StopIteration: # node doesnt have template
+                except StopIteration:  # node doesnt have template
                     continue
-                else: # template found
+                else:  # template found
                     # find active datapool
                     resources_http_client = await ResourcesHttpClient.create(controller_ip)
                     datapools = await resources_http_client.fetch_datapool_list(node_id=node['id'])
+                    # Временное решение для исключения zfs-пулов.
+                    for datapool in datapools[:]:
+                        if datapool.get('zfs_pool'):
+                            datapools.remove(datapool)
+
                     try:
                         datapool_id = next(datapool['id'] for datapool in datapools if datapool['status'] == 'ACTIVE')
-                    except StopIteration: # No active datapools
+                    except StopIteration:  # No active datapools
                         continue
 
                     return {'controller_ip': controller_ip, 'cluster_id': cluster['id'],
@@ -173,10 +176,11 @@ async def fixt_create_automated_pool():
     await resources_monitor_manager.start()
 
     resources = await get_resources_automated_pool_test()
-    print('resources', resources)
+    if not resources:
+        print('resources not found!')
     qu = '''
         mutation {
-            addDynamicPool(verbose_name: "%s", controller_ip: "%s", 
+            addDynamicPool(verbose_name: "%s", controller_ip: "%s",
                            cluster_id: "%s", node_id: "%s", datapool_id: "%s", template_id: "%s",
                            initial_size: 1, total_size: 2, max_amount_of_create_attempts: 10,
                            create_thin_clones: false){
@@ -239,6 +243,7 @@ async def fixt_create_static_pool(fixt_db):
     """Создается ВМ, создается пул с этой ВМ, пул удаляется, ВМ удаляется."""
     print('create_static_pool')
     pool_main_resources = await get_resources_static_pool_test()
+    print(pool_main_resources)
     controller_ip = pool_main_resources['controller_ip']
     node_id = pool_main_resources['node_id']
     datapool_id = pool_main_resources['datapool_id']
@@ -256,10 +261,9 @@ async def fixt_create_static_pool(fixt_db):
 
         params = {
             'verbose_name': test_domain_name,
-            'name_template': '',
             'domain_id': template_id,
             'datapool_id': datapool_id,
-            'controller_ip':controller_ip,
+            'controller_ip': controller_ip,
             'node_id': node_id,
             'create_thin_clones': True,
             'domain_index': 666

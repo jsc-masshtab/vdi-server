@@ -38,4 +38,3 @@ class TestWebSockets(AsyncHTTPTestCase):
         response = yield ws_client.read_message()
         data = json.loads(response)
         self.assertEqual(data['error'], False)
-
