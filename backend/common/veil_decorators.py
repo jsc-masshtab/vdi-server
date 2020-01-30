@@ -94,7 +94,7 @@ def context(f):
     return decorator
 
 
-def user_passes_test(test_func, exc=Unauthorized('Invalid permissions')):
+def user_passes_test(test_func, exc=Unauthorized('Invalid permissions')):  # noqa
     """exc в GraphQl вернется с 200тым кодом.
        https://github.com/graphql-python/graphene/issues/946
     """

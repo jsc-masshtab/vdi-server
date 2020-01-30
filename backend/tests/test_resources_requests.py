@@ -1,9 +1,9 @@
 import pytest
 
-from graphene.test import Client
+from graphene.test import Client  # noqa
 
 from tests.utils import execute_scheme
-from tests.fixtures import fixt_db, auth_context_fixture
+from tests.fixtures import fixt_db, auth_context_fixture  # noqa
 
 from controller_resources.schema import resources_schema
 
@@ -12,7 +12,7 @@ pytestmark = [pytest.mark.resources]
 
 
 @pytest.mark.asyncio
-async def test_request_clusters(fixt_db, auth_context_fixture):
+async def test_request_clusters(fixt_db, auth_context_fixture):  # noqa
     """Request clusters data"""
     qu = """
     {
@@ -30,11 +30,11 @@ async def test_request_clusters(fixt_db, auth_context_fixture):
     }
     """
 
-    executed = await execute_scheme(resources_schema, qu, context=auth_context_fixture)
+    executed = await execute_scheme(resources_schema, qu, context=auth_context_fixture)  # noqa
 
 
 @pytest.mark.asyncio
-async def test_request_nodes(fixt_db, auth_context_fixture):
+async def test_request_nodes(fixt_db, auth_context_fixture):  # noqa
     """Request nodes data"""
     qu = """
     {
@@ -74,26 +74,25 @@ async def test_request_nodes(fixt_db, auth_context_fixture):
         """ % (node['id'], node['controller']['address'])
 
         executed = await execute_scheme(resources_schema, qu, context=auth_context_fixture)
-        print('___executed', executed)
         assert node['verbose_name'] == executed['node']['verbose_name']
 
 
 @pytest.mark.asyncio
-async def test_request_datapools(fixt_db, auth_context_fixture):
+async def test_request_datapools(fixt_db, auth_context_fixture):  # noqa
     """Request datapools data"""
     qu = """
     {
-        datapools {     
-            used_space      
-            free_space      
-            size      
-            status      
-            type      
-            vdisk_count      
-            file_count      
-            iso_count      
-            verbose_name    
-        }   
+        datapools {
+            used_space,
+            free_space,
+            size,
+            status,
+            type,
+            vdisk_count,
+            file_count,
+            iso_count,
+            verbose_name,
+        }
     }
     """
-    executed = await execute_scheme(resources_schema, qu, context=auth_context_fixture)
+    executed = await execute_scheme(resources_schema, qu, context=auth_context_fixture)  # noqa

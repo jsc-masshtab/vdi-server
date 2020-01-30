@@ -284,4 +284,3 @@ class AuthenticationDirectory(db.Model, AbstractSortableStatusModel, AbstractEnt
             await Event.create_info(msg)
             return True
         return False
-

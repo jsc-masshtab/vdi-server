@@ -22,9 +22,8 @@ class BaseHandler(RequestHandler, ABC):
 
     @property
     def remote_ip(self):
-        remote_ip = self.request.headers.get("X-Real-IP") or \
-                    self.request.headers.get("X-Forwarded-For") or \
-                    self.request.remote_ip
+        remote_ip = self.request.headers.get("X-Real-IP") or self.request.headers.get(
+            "X-Forwarded-For") or self.request.remote_ip
         return remote_ip
 
     @property

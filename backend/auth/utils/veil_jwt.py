@@ -66,7 +66,7 @@ def encode_jwt(username):
             'username': username}
 
 
-def decode_jwt(token, decode_options: dict = JWT_OPTIONS, algorithms: list = [JWT_ALGORITHM]):
+def decode_jwt(token, decode_options: dict = JWT_OPTIONS, algorithms: list = [JWT_ALGORITHM]):  # noqa
     """Decode JWT token"""
     try:
         decoded_jwt = jwt.decode(
@@ -137,4 +137,3 @@ def refresh_access_token_with_expire_check(headers: dict):
     payload = decode_jwt(access_token)
     username = payload['username']
     return encode_jwt(username)
-

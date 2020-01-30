@@ -14,9 +14,7 @@ from vm.veil_client import VmHttpClient  # TODO: move to VM?
 
 from pool.pool_task_manager import pool_task_manager
 
-from  controller.models import Controller
-
-from database import db
+from controller.models import Controller
 
 
 @jwtauth

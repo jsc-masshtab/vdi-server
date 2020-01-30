@@ -7,7 +7,7 @@ from graphql import GraphQLError
 
 from settings import DEFAULT_NAME
 from common.utils import extract_ordering_data
-from common.veil_errors import HttpError, SimpleError, NotFound
+from common.veil_errors import HttpError, SimpleError
 from common.veil_decorators import superuser_required
 from vm.models import Vm
 from vm.veil_client import VmHttpClient
@@ -109,13 +109,6 @@ class VmType(graphene.ObjectType):
         await self.determine_management_ip()
         return self.management_ip
 
-    async def determine_status(self):
-        await self.get_veil_info()
-        if self.veil_info:
-            self.status = self.veil_info['status']
-        else:
-            self.status = DEFAULT_NAME
-
     async def determine_management_ip(self):
         if self.management_ip:
             return
@@ -215,7 +208,7 @@ class VmQuery(graphene.ObjectType):
         try:
             veil_info = await vm_http_client.info()
         except HttpError as e:
-            raise SimpleError('Не удалось получить данные Шаблона: ' + e.message)
+            raise SimpleError('Не удалось получить данные Шаблона: {}'.format(e))
 
         return VmQuery.veil_template_data_to_graphene_type(veil_info, controller_address)
 
@@ -225,7 +218,7 @@ class VmQuery(graphene.ObjectType):
         try:
             veil_info = await vm_http_client.info()
         except HttpError as e:
-            raise SimpleError('Не удалось получить данные ВМ: ' + e.message)
+            raise SimpleError('Не удалось получить данные ВМ: {}'.format(e))
 
         return VmQuery.veil_vm_data_to_graphene_type(veil_info, controller_address)
 
@@ -236,7 +229,7 @@ class VmQuery(graphene.ObjectType):
             try:
                 template_veil_data_list = await vm_http_client.fetch_templates_list(node_id=node_id)
             except HttpError as e:
-                raise SimpleError('Не удалось получить список шаблонов: ' + e.message)
+                raise SimpleError('Не удалось получить список шаблонов: {}'.format(e))
 
             template_veil_data_list = await VmQuery.filter_domains_by_cluster(
                 template_veil_data_list, controller_ip, cluster_id)
@@ -287,7 +280,7 @@ class VmQuery(graphene.ObjectType):
             try:
                 vm_veil_data_list = await vm_http_client.fetch_vms_list(node_id=node_id, datapool_id=datapool_id)
             except HttpError as e:
-                raise SimpleError('Не удалось получить список ВМ: ' + e.message)
+                raise SimpleError('Не удалось получить список ВМ: {}'.format(e))
 
             vm_veil_data_list = await VmQuery.filter_domains_by_cluster(vm_veil_data_list, controller_ip, cluster_id)
 
@@ -358,7 +351,7 @@ class VmQuery(graphene.ObjectType):
 
     @staticmethod
     def veil_template_data_to_graphene_type(template_veil_data, controller_address):
-        application_log.debug(template_veil_data);
+        application_log.debug(template_veil_data)
         template_type = TemplateType(id=template_veil_data['id'], verbose_name=template_veil_data['verbose_name'],
                                      veil_info=template_veil_data)
         template_type.controller = ControllerType(address=controller_address)

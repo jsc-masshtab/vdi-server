@@ -9,7 +9,7 @@ from sqlalchemy.dialects.postgresql import UUID
 from auth.utils import crypto
 from controller.client import ControllerClient
 from database import db, get_list_of_values_from_db, Status, AbstractEntity
-from common.veil_errors import SimpleError
+from common.veil_errors import SimpleError, BadRequest
 from event.models import Event
 
 application_log = logging.getLogger('tornado.application')
@@ -45,15 +45,6 @@ class Controller(db.Model, AbstractEntity):
         """Проверяем наличие пулов"""
         pools = await self.pools_query.gino.all()
         return True if pools else False
-
-    async def update_automated_pools(self):
-        from pool.models import AutomatedPool, Pool
-        automated_pools_q = db.select([AutomatedPool.id]).select_from(Controller.join(Pool).join(AutomatedPool).select().where(Controller.id == self.id).alias())
-        automated_pools = await automated_pools_q.gino.all()
-        for automated_pool in automated_pools:
-            automated_pool_class_instance = await AutomatedPool.get(automated_pool.id)
-            automated_pool_class_instance.controller_ip = self.address
-        return True
 
     @staticmethod
     async def get_controllers_addresses():
@@ -130,22 +121,19 @@ class Controller(db.Model, AbstractEntity):
 
     @classmethod
     async def get_credentials(cls, address, username, password, ldap_connection):
-        try:
-            application_log.debug(
-                'Checking controller credentials: address: {}, username: {}, password: {}, ldap_connection: {}'.format(
-                    address, username, password, ldap_connection))
-            controller_client = ControllerClient(address)
-            auth_info = dict(username=username, password=password, ldap=ldap_connection)
-            token, expires_on = await controller_client.auth(auth_info=auth_info)
-            version = await controller_client.fetch_version()
-            application_log.debug('Get controller credentials: Controller\'s {} credentials are good.'.format(address))
-            return {'token': token, 'expires_on': expires_on, 'version': version}
-        except Exception as cotroller_ex:
-            application_log.error('Get controller credentials: {}'.format(cotroller_ex))
-            return {}
+        application_log.debug(
+            'Checking controller credentials: address: {}, username: {}, password: {}, ldap_connection: {}'.format(
+                address, username, password, ldap_connection))
+        controller_client = ControllerClient(address)
+        auth_info = dict(username=username, password=password, ldap=ldap_connection)
+        token, expires_on = await controller_client.auth(auth_info=auth_info)
+        version = await controller_client.fetch_version()
+        application_log.debug('Get controller credentials: Controller\'s {} credentials are good.'.format(address))
+        return {'token': token, 'expires_on': expires_on, 'version': version}
 
     async def soft_update(self, verbose_name, address, description, username=None, password=None, ldap_connection=None):
         controller_kwargs = dict()
+        credentials_valid = True
         if verbose_name:
             controller_kwargs['verbose_name'] = verbose_name
         if address:
@@ -163,24 +151,31 @@ class Controller(db.Model, AbstractEntity):
         else:
             password = crypto.decrypt(self.password)
         if isinstance(ldap_connection, bool):
-            controller_kwargs['is_superuser'] = ldap_connection
+            controller_kwargs['ldap_connection'] = ldap_connection
         else:
             ldap_connection = self.ldap_connection
 
-        if controller_kwargs.get('username') or controller_kwargs.get('password') or controller_kwargs.get('address') or controller_kwargs.get('ldap_connection'):
-            credentials = await Controller.get_credentials(address, username, password, ldap_connection)
-            controller_kwargs.update(credentials)
+        if (controller_kwargs.get('username') or controller_kwargs.get('password') or controller_kwargs.get(  # noqa
+                    'address') or controller_kwargs.get('ldap_connection')):  # noqa
+            try:
+                credentials = await Controller.get_credentials(address, username, password, ldap_connection)
+                controller_kwargs.update(credentials)
+            except BadRequest:
+                credentials_valid = False
+                application_log.warning(
+                    'Can\'t connect to controller {} with username: {}, password: {}, ldap_connection: {}'.format(
+                        address, username, password, ldap_connection))
 
         if controller_kwargs:
             try:
                 await Controller.update.values(**controller_kwargs).where(
                     Controller.id == self.id).gino.status()
+                if not credentials_valid:
+                    raise BadRequest('Can\'t login login to controller {}'.format(address))
             except Exception as E:
                 application_log.debug('Error with controller update: {}'.format(E))
-                return False
-            else:
-                # Для всех автоматических пулов обновляем пропертю с контроллером.
-                return await self.update_automated_pools()
+                raise SimpleError(E)
+            return True
         return False
 
     async def soft_delete(self):
