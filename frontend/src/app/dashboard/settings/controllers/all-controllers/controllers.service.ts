@@ -109,6 +109,22 @@ export class ControllersService {
         });
     }
 
+    public testController(id: string) {
+        return this.service.mutate<any>({
+            mutation: gql`
+                            mutation controllers($id: UUID!) {
+                                testController(id: $id) {
+                                    ok
+                                }
+                            }
+            `,
+            variables: {
+                method: 'POST',
+                id
+            }
+        });
+    }
+
     public removeController(id: string, full: boolean) {
         if (full) {
             return this.service.mutate<any>({
