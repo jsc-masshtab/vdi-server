@@ -28,3 +28,36 @@
         }
     }
 }
+
+@keyframes rotate {
+    0% {
+      transform: rotate(0);
+    }
+  
+    100% {
+      transform: rotate(360deg);
+    }
+  }
+  
+  .rotation {
+    display: inline-block;
+    transform: rotate(0);
+    animation: infinite rotate 1s linear;
+  }
+  
+  .ad-status {
+    margin-left: 5px;
+  }
+  
+  .ad-success {
+    color: green;
+  }
+  
+  .ad-failed {
+    color: red;
+  }
+  
+  .ad-status-text {
+    font-size: 11px;
+    margin-left: 3px;
+  }

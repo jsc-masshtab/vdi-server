@@ -13,6 +13,15 @@
     <div class="details-control-panel">
         <button (click)="getController()" class="btn-refresh" title="Обновить"><fa-icon [icon]="['fas','sync-alt']"></fa-icon></button>
         <button (click)="removeController()" *ngIf="menuActive === 'info'" title="Удалить контроллер" class="btn-control"><fa-icon [icon]="['fas','trash-alt']" size="xs"></fa-icon><span class="name">Удалить контроллер</span></button>
+        <button (click)="test()" title="Проверить соединение" class="btn-control">
+            <fa-icon [class.rotation]="testing" [icon]="['fas','sync-alt']" size="xs"></fa-icon>
+            <span class="name">Проверка соединения</span>
+            
+            <fa-icon *ngIf="tested && connected" class="ad-status ad-success" [icon]="['fas','check']" size="xs"></fa-icon>
+            <fa-icon *ngIf="tested && !connected" class="ad-status ad-failed" [icon]="['fas','times-circle']" size="xs"></fa-icon>
+      
+            <span class="ad-status-text" [class.ad-success]="connected" [class.ad-failed]="!connected" *ngIf="tested">{{ connected ? 'Успешно' : 'Нет соединения' }}</span>
+          </button>
     </div>
 
     <div class="details-row">
