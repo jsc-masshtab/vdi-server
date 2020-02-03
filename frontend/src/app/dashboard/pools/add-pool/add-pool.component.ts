@@ -348,6 +348,11 @@ export class PoolAddComponent implements OnInit, OnDestroy {
           type: 'string'
         },
         {
+          title: 'Порогове количество свободных ВМ',
+          property: 'min_free_vms_amount',
+          type: 'string'
+        },
+        {
           title: 'Имя шаблона для ВМ',
           property: 'vm_name_template',
           type: 'string'
@@ -446,6 +451,7 @@ export class PoolAddComponent implements OnInit, OnDestroy {
       this.finishPoolView.total_size = formValue.size.total_size;
       this.finishPoolView.vm_name_template = formValue.vm_name_template;
       this.finishPoolView.create_thin_clones = formValue.create_thin_clones;
+      this.finishPoolView.min_free_vms_amount = formValue.size.min_free_vms_amount;
     }
     this.finishPoolView.verbose_name = formValue.verbose_name;
     this.finishPoolView.type = this.chooseTypeForm.value.type;

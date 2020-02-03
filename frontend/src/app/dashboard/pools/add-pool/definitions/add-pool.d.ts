@@ -28,6 +28,7 @@ export interface IFinishPoolView {
     initial_size: number;
     vm_name_template: string; // auto
     create_thin_clones: boolean;//stat
+    min_free_vms_amount: number;// autos
 }
 
 export interface IFinishPoolForm {
