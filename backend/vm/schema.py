@@ -15,7 +15,7 @@ from pool.models import PoolUsers
 from controller_resources.veil_client import ResourcesHttpClient
 from controller.models import Controller
 from controller.schema import ControllerType
-from user.schema import UserType
+from user.user_schema import UserType
 from user.models import User
 
 application_log = logging.getLogger('tornado.application')

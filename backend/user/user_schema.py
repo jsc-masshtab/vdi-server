@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+# TODO: move to auth package
 import graphene
 import re
 
@@ -64,10 +66,7 @@ class UserType(graphene.ObjectType):
     async def resolve_password(self, _info):
         return '*' * 8  # dummy value for not displayed field
 
-
-class UserQuery(graphene.ObjectType):
-    users = graphene.List(UserType, ordering=graphene.String())
-    user = graphene.Field(UserType, id=graphene.UUID(), username=graphene.String())
+    # TODO: groups
 
     @staticmethod
     def instance_to_type(model_instance):
@@ -82,6 +81,11 @@ class UserQuery(graphene.ObjectType):
                         is_superuser=model_instance.is_superuser,
                         is_active=model_instance.is_active)
 
+
+class UserQuery(graphene.ObjectType):
+    users = graphene.List(UserType, ordering=graphene.String())
+    user = graphene.Field(UserType, id=graphene.UUID(), username=graphene.String())
+
     @superuser_required
     async def resolve_user(self, info, id=None, username=None):
         if not id and not username:
@@ -90,13 +94,13 @@ class UserQuery(graphene.ObjectType):
         user = await User.get_object(id, username, include_inactive=True)
         if not user:
             raise SimpleError('No such user.')
-        return UserQuery.instance_to_type(user)
+        return UserType.instance_to_type(user)
 
     @superuser_required
     async def resolve_users(self, info, ordering=None):
         users = await User.get_objects(ordering=ordering, include_inactive=True)
         objects = [
-            UserQuery.instance_to_type(user)
+            UserType.instance_to_type(user)
             for user in users
         ]
         return objects

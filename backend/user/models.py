@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# TODO: move to auth package
 import uuid
 
 from sqlalchemy.dialects.postgresql import UUID
@@ -24,6 +25,7 @@ class User(AbstractSortableStatusModel, db.Model, AbstractEntity):
     is_superuser = db.Column(db.Boolean(), default=False)
     is_active = db.Column(db.Boolean(), default=True)
 
+    # TODO: user groups
     # ----- ----- ----- ----- ----- ----- -----
     # Properties and getters:
     @property
@@ -201,3 +203,48 @@ class UserJwtInfo(db.Model):
         count = await db.select([db.func.count()]).where(
             (UserJwtInfo.user_id == user.id) & (UserJwtInfo.token == token)).gino.scalar()
         return count > 0
+
+
+class Group(AbstractSortableStatusModel, db.Model, AbstractEntity):
+    __tablename__ = 'group'
+    id = db.Column(UUID(), primary_key=True, default=uuid.uuid4)
+    verbose_name = db.Column(db.Unicode(length=128), nullable=False, unique=True)
+    description = db.Column(db.Unicode(length=255), nullable=True, unique=False)
+    date_created = db.Column(db.DateTime(timezone=True), server_default=func.now())
+    date_updated = db.Column(db.DateTime(timezone=True), onupdate=func.now())
+
+    # ----- ----- ----- ----- ----- ----- -----
+    # Properties and getters:
+    @property
+    def entity_type(self):
+        return 'Security'
+
+    async def add_user(self, user_id):
+        """Add user to group"""
+        # TODO: проверить не состоит ли пользователь уже в группе
+        return await UserGroup.create(user_id=user_id, group_id=self.id)
+
+    async def remove_user(self, user_id):
+        ug = await UserGroup.get(user_id=user_id, group_id=self.id)
+        return await ug.delete()
+
+    # TODO: add user
+    # TODO: remove user
+    async def soft_update(self, verbose_name, description):
+        group_kwargs = dict()
+        if verbose_name:
+            group_kwargs['verbose_name'] = verbose_name
+        if description:
+            group_kwargs['description'] = description
+
+        if group_kwargs:
+            await self.update(**group_kwargs).apply()
+
+        return self
+
+
+class UserGroup(db.Model):
+    __tablename__ = 'user_groups'
+    id = db.Column(UUID(), primary_key=True, default=uuid.uuid4)
+    user_id = db.Column(UUID(), db.ForeignKey(User.id, ondelete="CASCADE"), nullable=False)
+    group_id = db.Column(UUID(), db.ForeignKey(Group.id, ondelete="CASCADE"), nullable=False)

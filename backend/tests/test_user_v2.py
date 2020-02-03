@@ -8,7 +8,7 @@ import pytest
 from tests.utils import execute_scheme, ExecError
 from tests.fixtures import fixt_db, auth_context_fixture  # noqa
 
-from user.schema import user_schema
+from user.user_schema import user_schema
 from user.models import User
 
 pytestmark = [pytest.mark.asyncio, pytest.mark.users, pytest.mark.auth]

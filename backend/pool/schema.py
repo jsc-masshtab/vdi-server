@@ -13,7 +13,7 @@ from common.veil_errors import SimpleError, HttpError, ValidationError
 from common.utils import make_graphene_type
 from common.veil_decorators import superuser_required
 
-from user.schema import UserType
+from user.user_schema import UserType
 from user.models import User
 from event.models import Event
 
