@@ -154,21 +154,37 @@
             <div class="error" *ngIf="createPoolForm.get('size')?.errors?.maxLessInitial">Максимальное количество ВМ не может быть меньше начального количества ВМ</div>
           </ng-container>
         </label>
-      </div>
   
-      <label class="field">
-        <p class="field-name">Количество создаваемых ВМ</p>
-        <input type="number" formControlName="reserve_size"  min="0">
-        <ng-container *ngIf="createPoolForm.hasError('required', 'reserve_size') && checkValid"><ng-container *ngTemplateOutlet="errorTemp"></ng-container></ng-container>
-        <div class="error" *ngIf="(createPoolForm.hasError('min', 'reserve_size') ||  createPoolForm.hasError('max', 'reserve_size')) && 
-          createPoolForm.controls.reserve_size.touched && createPoolForm.controls.reserve_size.dirty">Количество создаваемых ВМ должно быть в интервале 1-200</div>
-      </label>
+        <label class="field">
+          <p class="field-name">Количество создаваемых ВМ</p>
+          <input type="number" formControlName="reserve_size"  min="0">
+          <ng-container *ngIf="createPoolForm.get('size').hasError('required', 'reserve_size') && checkValid"><ng-container *ngTemplateOutlet="errorTemp"></ng-container></ng-container>
 
-      <label class="field-inline" [@animForm]>
-        <mat-checkbox [color]="'warn'" formControlName="create_thin_clones"></mat-checkbox>
-        <p class="description">Создать тонкие клоны</p>
-      </label>
-    </ng-container>
+          <ng-container *ngIf="createPoolForm.get('size')?.controls?.reserve_size.touched && createPoolForm.get('size')?.controls?.reserve_size.dirty">
+            <div class="error" *ngIf="(createPoolForm.get('size').hasError('min', 'reserve_size') ||  createPoolForm.get('size').hasError('max', 'reserve_size'))">
+              Количество создаваемых ВМ должно быть в интервале 1-200
+            </div>
+          </ng-container>
+        </label>
+
+        <label class="field">
+          <p class="field-name">Порогове количество свободных ВМ</p>
+          <input type="number" formControlName="min_free_vms_amount"  min="1">
+          <ng-container *ngIf="createPoolForm.get('size').hasError('required', 'min_free_vms_amount') && checkValid"><ng-container *ngTemplateOutlet="errorTemp"></ng-container></ng-container>
+
+          <ng-container *ngIf="createPoolForm.get('size').controls.min_free_vms_amount.touched && createPoolForm.get('size').controls.min_free_vms_amount.dirty">
+            <div class="error" *ngIf="(createPoolForm.get('size').hasError('min', 'min_free_vms_amount') || createPoolForm.get('size')?.errors?.freeVmsMoreReserve)">
+              Порогове количество свободных ВМ должно быть меньше или равно количеству создаваемых ВМ и больше 1
+            </div>
+          </ng-container>
+        </label>
+    </div>
+
+    <label class="field-inline" [@animForm]>
+      <mat-checkbox [color]="'warn'" formControlName="create_thin_clones"></mat-checkbox>
+      <p class="description">Создать тонкие клоны</p>
+    </label>
+  </ng-container>
 
   </div>
 

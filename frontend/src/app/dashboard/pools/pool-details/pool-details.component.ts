@@ -142,6 +142,11 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
       edit: 'changeMaxAutomatedPool'
     },
     {
+      title: 'Пороговое количество свободных ВМ',
+      property: 'min_free_vms_amount',
+      type: 'string'
+    },
+    {
       title: 'Создано ВМ',
       property: 'vms',
       type: 'array-length'
