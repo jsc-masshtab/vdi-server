@@ -24,6 +24,7 @@ export class AddUsersPoolComponent implements OnInit, OnDestroy {
   public users: [] = [];
   private idUsers: [] = [];
   private destroy: Subject<any> = new Subject<any>();
+  public valid: boolean = true;
 
   constructor(private waitService: WaitService,
               private poolService: PoolDetailsService,
@@ -37,16 +38,20 @@ export class AddUsersPoolComponent implements OnInit, OnDestroy {
   }
 
   public send() {
-    this.waitService.setWait(true);
-    this.poolService.entitleUsersToPool(this.data.idPool, this.idUsers).pipe(takeUntil(this.destroy)).subscribe((res) => {
-      if (res) {
-        this.poolService.getPool(this.data.idPool, this.data.typePool).pipe(takeUntil(this.destroy)).subscribe(() => {
-          this.updatePools.setUpdate('update');
-          this.waitService.setWait(false);
-          this.dialogRef.close();
-        });
-      }
-    });
+    if (this.idUsers.length) {
+      this.waitService.setWait(true);
+      this.poolService.entitleUsersToPool(this.data.idPool, this.idUsers).pipe(takeUntil(this.destroy)).subscribe((res) => {
+        if (res) {
+          this.poolService.getPool(this.data.idPool, this.data.typePool).pipe(takeUntil(this.destroy)).subscribe(() => {
+            this.updatePools.setUpdate('update');
+            this.waitService.setWait(false);
+            this.dialogRef.close();
+          });
+        }
+      });
+    } else {
+      this.valid = false;
+    }
   }
 
   private getUsers() {
@@ -64,6 +69,7 @@ export class AddUsersPoolComponent implements OnInit, OnDestroy {
 
   public selectUser(value: string[]) {
     this.idUsers = value['value'];
+    this.valid = true;
   }
 
   ngOnDestroy() {
