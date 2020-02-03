@@ -25,7 +25,9 @@ pytestmark = [pytest.mark.asyncio, pytest.mark.auth]
 class AuthTestCase(AsyncHTTPTestCase):
     method = 'POST'
 
-    async def fetch_request(self, body, url='/auth', headers={'Content-Type': 'application/json'}):
+    async def fetch_request(self, body, url='/auth', headers=None):
+        if not headers:
+            headers = {'Content-Type': 'application/json'}
         """В попытке уменьшить дублирование кода в тесте, вынес в отдельный метод."""
         return await self.http_client.fetch(self.get_url(url),
                                             method=self.method,
@@ -54,7 +56,7 @@ class AuthTestCase(AsyncHTTPTestCase):
         self.assertTrue(data.get('access_token'))
         mock_event = 'User {} has been logged in successfully.%'.format(TESTS_ADMIN_USERNAME)
         count = yield db.select([db.func.count()]).where((Event.event_type == Event.TYPE_INFO)
-                                                         & (Event.message.like(mock_event))).gino.scalar()
+                                                         & (Event.message.like(mock_event))).gino.scalar()  # noqa
         self.assertTrue(count > 0)
 
     @gen_test
@@ -215,14 +217,7 @@ class AuthTestCase(AsyncHTTPTestCase):
             response = yield self.fetch_request(url='/users',
                                                 body='{"query":"{users{id}}"}',
                                                 headers=headers_auth)
-            self.assertEqual(response.code, 200)
         except HTTPClientError as http_error:
-            self.assertEqual(http_error.code, 200)
+            self.assertEqual(http_error.code, 401)
         else:
-            response_dict = json_decode(response.body)
-            self.assertIsInstance(response_dict, dict)
-            errors = response_dict['errors']
-            error_message = errors[0]['message']
-            error_code = response_dict['error_code']
-            self.assertEqual(error_code, 401)
-            self.assertEqual(error_message, 'Token invalid.')
+            self.assertTrue(False)

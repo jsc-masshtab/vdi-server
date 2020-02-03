@@ -162,6 +162,7 @@ class PoolType(graphene.ObjectType):
     max_size = graphene.Int()
     max_vm_amount = graphene.Int()
     increase_step = graphene.Int()
+    min_free_vms_amount = graphene.Int()
     max_amount_of_create_attempts = graphene.Int()
     initial_size = graphene.Int()
     reserve_size = graphene.Int()
@@ -186,7 +187,7 @@ class PoolType(graphene.ObjectType):
     async def resolve_users(self, _info, entitled=True):
         if entitled:
             users_data = await User.join(PoolUsers, User.id == PoolUsers.user_id).select().where(
-                 PoolUsers.pool_id == self.pool_id).gino.all()
+                PoolUsers.pool_id == self.pool_id).gino.all()  # noqa
         else:
             subquery = PoolUsers.select('user_id').where(PoolUsers.pool_id == self.pool_id)
             users_data = await User.select('username', 'email', 'id').where(User.id.notin_(subquery)).gino.all()
@@ -286,6 +287,7 @@ def pool_obj_to_type(pool_obj: Pool) -> dict:
                  'max_size': pool_obj.max_size,
                  'max_vm_amount': pool_obj.max_vm_amount,
                  'increase_step': pool_obj.increase_step,
+                 'min_free_vms_amount': pool_obj.min_free_vms_amount,
                  'max_amount_of_create_attempts': pool_obj.max_amount_of_create_attempts,
                  'initial_size': pool_obj.initial_size,
                  'reserve_size': pool_obj.reserve_size,
@@ -464,7 +466,6 @@ class CreateStaticPoolMutation(graphene.Mutation, PoolValidator):
                 await Vm.create(id=vm_info['id'],
                                 template_id=None,
                                 pool_id=pool.id,
-                                controller_address=controller_ip,
                                 created_by_vdi=False,
                                 verbose_name=vm_info['verbose_name'])
 
@@ -524,8 +525,8 @@ class AddVmsToStaticPoolMutation(graphene.Mutation):
         # Add VMs to db
         for vm_info in all_vms_on_node:
             await Vm.create(id=vm_info['id'],
+                            template_id=None,
                             pool_id=pool_id,
-                            controller_address=controller_address,
                             created_by_vdi=False,
                             verbose_name=vm_info['verbose_name'])
 
@@ -597,6 +598,7 @@ class CreateAutomatedPoolMutation(graphene.Mutation, PoolValidator):
         max_size = graphene.Int(default_value=200)
         max_vm_amount = graphene.Int(default_value=1000)
         increase_step = graphene.Int(default_value=3)
+        min_free_vms_amount = graphene.Int(default_value=5)
         max_amount_of_create_attempts = graphene.Int(default_value=15)
         initial_size = graphene.Int(default_value=1)
         reserve_size = graphene.Int(default_value=1)
@@ -628,8 +630,8 @@ class CreateAutomatedPoolMutation(graphene.Mutation, PoolValidator):
         # pool creation task successfully started
         pool = await Pool.get_pool(automated_pool.id)
         return CreateAutomatedPoolMutation(
-                pool=pool_obj_to_type(pool),
-                ok=True)
+            pool=pool_obj_to_type(pool),
+            ok=True)
 
 
 class UpdateAutomatedPoolMutation(graphene.Mutation, PoolValidator):
@@ -679,16 +681,16 @@ class UpdateAutomatedPoolMutation(graphene.Mutation, PoolValidator):
         await cls.validate_agruments(**kwargs)
         automated_pool = await AutomatedPool.get(kwargs['pool_id'])
         if automated_pool:
-            await automated_pool.soft_update(kwargs.get('verbose_name'),
-                                             kwargs.get('reserve_size'),
-                                             kwargs.get('total_size'),
-                                             kwargs.get('vm_name_template'),
-                                             kwargs.get('keep_vms_on'),
-                                             kwargs.get('create_thin_clones'))
+            await automated_pool.soft_update(verbose_name=kwargs.get('verbose_name'),
+                                             reserve_size=kwargs.get('reserve_size'),
+                                             total_size=kwargs.get('total_size'),
+                                             vm_name_template=kwargs.get('vm_name_template'),
+                                             keep_vms_on=kwargs.get('keep_vms_on'),
+                                             create_thin_clones=kwargs.get('create_thin_clones'))
             automated_pool = await AutomatedPool.get(kwargs['pool_id'])
-            msg = 'Automated pool {name} updated.'.format(name=automated_pool.verbose_name)
+            msg = 'Automated pool {name} updated.'.format(name=await automated_pool.verbose_name)
             await Event.create_info(msg)
-            application_log.debug('Automated pool {} updated.'.format(automated_pool.verbose_name))
+            application_log.debug('Automated pool {} updated.'.format(await automated_pool.verbose_name))
             return UpdateAutomatedPoolMutation(ok=True)
         return UpdateAutomatedPoolMutation(ok=False)
 

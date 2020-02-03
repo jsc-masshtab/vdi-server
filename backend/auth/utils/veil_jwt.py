@@ -24,14 +24,14 @@ def jwtauth(handler_class):
             except jwt.ExpiredSignature:
                 application_log.debug('jwtauth: jwt.ExpiredSignature')
                 handler._transforms = []
-                handler.set_status(200)
-                response = {'errors': [{'message': 'Token expired.'}], 'error_code': 401}
+                handler.set_status(401)
+                response = {'errors': [{'message': 'Token expired.'}]}
                 handler.finish(response)
             except AssertionError as error_message:
                 application_log.debug('jwtauth: Assertion error {}'.format(error_message))
                 handler._transforms = []
-                handler.set_status(200)
-                response = {'errors': [{'message': str(error_message)}], 'error_code': 401}
+                handler.set_status(401)
+                response = {'errors': [{'message': str(error_message)}]}
                 handler.finish(response)
             return True
 
@@ -66,7 +66,7 @@ def encode_jwt(username):
             'username': username}
 
 
-def decode_jwt(token, decode_options: dict = JWT_OPTIONS, algorithms: list = [JWT_ALGORITHM]):
+def decode_jwt(token, decode_options: dict = JWT_OPTIONS, algorithms: list = [JWT_ALGORITHM]):  # noqa
     """Decode JWT token"""
     try:
         decoded_jwt = jwt.decode(
@@ -137,4 +137,3 @@ def refresh_access_token_with_expire_check(headers: dict):
     payload = decode_jwt(access_token)
     username = payload['username']
     return encode_jwt(username)
-

@@ -2,8 +2,8 @@
 VAGRANTFILE_API_VERSION = "2"
 
 # CPU and RAM can be adjusted depending on your system
-CPU_COUNT = "2"
-RAM = "2048"
+CPU_COUNT = "1"
+RAM = "1024"
 
 Vagrant.configure(VAGRANTFILE_API_VERSION) do | config |
  config.vm.provider "libvirt"

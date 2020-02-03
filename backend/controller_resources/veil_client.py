@@ -1,13 +1,8 @@
 # -*- coding: utf-8 -*-
 from cached_property import cached_property
-
-from common.veil_client import VeilHttpClient
-from common.veil_errors import HttpError, SimpleError
-
 import urllib.parse
 
-from database import get_list_of_values_from_db
-
+from common.veil_client import VeilHttpClient
 from controller.models import Controller
 
 
@@ -107,5 +102,3 @@ class ResourcesHttpClient(VeilHttpClient):
 
         resources_list_data = await self.fetch_with_response(url=url, method='GET')
         return resources_list_data['results']
-
-

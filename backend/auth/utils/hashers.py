@@ -74,7 +74,7 @@ class ImproperlyConfigured(Exception):
     pass
 
 
-def get_hasher(algorithm='default', _hashers=[]):
+def get_hasher(algorithm='default', _hashers=[]):  # noqa
     if not _hashers:
         _hashers.append(PBKDF2PasswordHasher())
     return _hashers[0]
@@ -90,8 +90,8 @@ def identify_hasher(encoded):
     """
     # Ancient versions of Django created plain MD5 passwords and accepted
     # MD5 passwords with an empty salt.
-    if ((len(encoded) == 32 and '$' not in encoded) or
-            (len(encoded) == 37 and encoded.startswith('md5$$'))):
+    if ((len(encoded) == 32 and '$' not in encoded) or  # noqa
+            (len(encoded) == 37 and encoded.startswith('md5$$'))):  # noqa
         algorithm = 'unsalted_md5'
     # Ancient versions of Django accepted SHA1 passwords with an empty salt.
     elif len(encoded) == 46 and encoded.startswith('sha1$$'):
@@ -301,10 +301,10 @@ class Argon2PasswordHasher(BasePasswordHasher):
         assert algorithm == self.algorithm
         argon2 = self._load_library()
         return (
-            argon2.low_level.ARGON2_VERSION != version or
-            self.time_cost != time_cost or
-            self.memory_cost != memory_cost or
-            self.parallelism != parallelism
+            argon2.low_level.ARGON2_VERSION != version or  # noqa
+            self.time_cost != time_cost or  # noqa
+            self.memory_cost != memory_cost or  # noqa
+            self.parallelism != parallelism  # noqa
         )
 
     def harden_runtime(self, password, encoded):

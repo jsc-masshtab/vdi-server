@@ -6,7 +6,7 @@
 import pytest
 
 from tests.utils import execute_scheme, ExecError
-from tests.fixtures import fixt_db, auth_context_fixture
+from tests.fixtures import fixt_db, auth_context_fixture  # noqa
 
 from user.schema import user_schema
 from user.models import User
@@ -17,7 +17,7 @@ pytestmark = [pytest.mark.asyncio, pytest.mark.users, pytest.mark.auth]
 @pytest.mark.usefixtures('fixt_db')
 class TestUserSchema:
 
-    async def test_users_list(self, snapshot, auth_context_fixture):
+    async def test_users_list(self, snapshot, auth_context_fixture):  # noqa
         query = """{
           users{
             email
@@ -31,7 +31,7 @@ class TestUserSchema:
         executed = await execute_scheme(user_schema, query, context=auth_context_fixture)
         snapshot.assert_match(executed)
 
-    async def test_users_get_by_id(self, snapshot, auth_context_fixture):
+    async def test_users_get_by_id(self, snapshot, auth_context_fixture):  # noqa
         query = """{
                 user(id: "f9599771-cc95-45e4-9ae5-c8177b796aff"){
                     username,
@@ -45,7 +45,7 @@ class TestUserSchema:
         executed = await execute_scheme(user_schema, query, context=auth_context_fixture)
         snapshot.assert_match(executed)
 
-    async def test_users_get_by_username(self, snapshot, auth_context_fixture):
+    async def test_users_get_by_username(self, snapshot, auth_context_fixture):  # noqa
         query = """{
               user (
                     username: "admin"
@@ -62,7 +62,7 @@ class TestUserSchema:
         executed = await execute_scheme(user_schema, query, context=auth_context_fixture)
         snapshot.assert_match(executed)
 
-    async def test_user_create(self, snapshot, auth_context_fixture):
+    async def test_user_create(self, snapshot, auth_context_fixture):  # noqa
         query = """mutation {
                 createUser(
                 username: "devyatkin",  # !обязательное поле
@@ -85,7 +85,7 @@ class TestUserSchema:
         executed = await execute_scheme(user_schema, query, context=auth_context_fixture)
         snapshot.assert_match(executed)
 
-    async def test_user_create_bad(self, snapshot, auth_context_fixture):
+    async def test_user_create_bad(self, snapshot, auth_context_fixture):  # noqa
         query = """mutation {
                 createUser(
                 username: "devyatkin",
@@ -110,7 +110,7 @@ class TestUserSchema:
         except ExecError as E:
             assert 'duplicate key value violates unique constraint "user_username_key"' in str(E)
 
-    async def test_user_edit(self, snapshot, auth_context_fixture):
+    async def test_user_edit(self, snapshot, auth_context_fixture):  # noqa
         user_obj = await User.get_object(extra_field_name='username', extra_field_value='devyatkin',
                                          include_inactive=True)
         query = """mutation {
@@ -133,7 +133,7 @@ class TestUserSchema:
         executed = await execute_scheme(user_schema, query, context=auth_context_fixture)
         snapshot.assert_match(executed)
 
-    async def test_user_change_password(self, snapshot, auth_context_fixture):
+    async def test_user_change_password(self, snapshot, auth_context_fixture):  # noqa
         user_obj = await User.get_object(extra_field_name='username', extra_field_value='devyatkin',
                                          include_inactive=True)
         query = """mutation {
@@ -147,7 +147,7 @@ class TestUserSchema:
         executed = await execute_scheme(user_schema, query, context=auth_context_fixture)
         snapshot.assert_match(executed)
 
-    async def test_user_deactivate(self, snapshot, auth_context_fixture):
+    async def test_user_deactivate(self, snapshot, auth_context_fixture):  # noqa
         user_obj = await User.get_object(extra_field_name='username', extra_field_value='devyatkin',
                                          include_inactive=True)
         query = """mutation {
@@ -159,7 +159,7 @@ class TestUserSchema:
         executed = await execute_scheme(user_schema, query, context=auth_context_fixture)
         snapshot.assert_match(executed)
 
-    async def test_user_activate(self, snapshot, auth_context_fixture):
+    async def test_user_activate(self, snapshot, auth_context_fixture):  # noqa
         query = """mutation {
                         activateUser(id: "f9599771-cc95-45e4-9ae5-c8177b796aff")
                         {

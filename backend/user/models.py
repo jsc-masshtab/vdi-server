@@ -7,6 +7,7 @@ from sqlalchemy.sql import func
 from auth.utils import hashers
 from database import db, AbstractSortableStatusModel, AbstractEntity
 from event.models import Event
+from common.veil_errors import SimpleError
 
 
 class User(AbstractSortableStatusModel, db.Model, AbstractEntity):
@@ -48,6 +49,14 @@ class User(AbstractSortableStatusModel, db.Model, AbstractEntity):
         return operation_status
 
     async def deactivate(self):
+        # TODO: проверка, сколько останется активных администраторов не с этим id
+        query = db.select([db.func.count(User.id)]).where(
+            (User.id != self.id) & (User.is_superuser == True) & (User.is_active == True))  # noqa
+
+        superuser_count = await query.gino.scalar()
+        if superuser_count == 0:
+            raise SimpleError('There is no more active superuser. Leg shot.')
+
         query = User.update.values(is_active=False).where(User.id == self.id)
         operation_status = await query.gino.status()
 
@@ -64,7 +73,7 @@ class User(AbstractSortableStatusModel, db.Model, AbstractEntity):
     @staticmethod
     async def check_user(username, raw_password):
         count = await db.select([db.func.count()]).where(
-            (User.username == username) & (User.is_active == True)).gino.scalar()
+            (User.username == username) & (User.is_active == True)).gino.scalar()  # noqa
         if count == 0:
             return False
         return await User.check_password(username, raw_password)

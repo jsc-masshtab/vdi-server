@@ -71,7 +71,7 @@ def init_logging(access_to_stdout=False):
 
 def init_signals():
     signal.signal(signal.SIGTERM, exit_handler)
-    signal.signal(signal.SIGINT,  exit_handler)  # KeyboardInterrupt
+    signal.signal(signal.SIGINT, exit_handler)  # KeyboardInterrupt
 
 
 def init_callbacks():
@@ -132,4 +132,3 @@ async def shutdown_server():
 if __name__ == '__main__':
     bootstrap()
     start_server()
-

@@ -60,7 +60,7 @@ class Event(db.Model):
         if not events_id_list:
             results = await Event.select('id').gino.all()
             events_id_list = [value for value, in results]
-        async with db.transaction() as tx:
+        async with db.transaction() as tx:  # noqa
             for event_id in events_id_list:
                 # get_or_create
                 filters = [(EventReadByUser.event == event_id), (EventReadByUser.user == user_id)]
@@ -82,7 +82,7 @@ class Event(db.Model):
 
     @classmethod
     async def soft_create(cls, event_type, msg, description, user, entity_list: list):
-        async with db.transaction() as tx:
+        async with db.transaction() as tx:  # noqa
             # 1. Создаем сам Евент
             event = await Event.create(
                 event_type=event_type,

@@ -1,11 +1,6 @@
-# TODO: разобрать модуль. Это код с предыдущей версии Vdi, которая не нравится большей части бекендеров на проектею
-import inspect
-from functools import wraps
-from typing import List
+# TODO: разобрать модуль. Это код с предыдущей версии Vdi
 import re
 import asyncio
-
-# from vdi.settings import settings
 
 
 class Unset:
@@ -72,14 +67,14 @@ def make_graphene_type(type, data, fields_map=None):
     for k, v in data.items():
         if fields_map:
             k = fields_map.get(k, k)
-        if k in type._meta.fields:
+        if k in type._meta.fields:  # noqa
             dic[k] = v
     obj = type(**dic)
     obj.veil_info = data
     return obj
-#
-#
-# def print(msg, _print=print):
+
+
+# def print(msg, _print=print):  # noqa
 #     if getattr(settings, 'print', False):
 #         _print(msg)
 

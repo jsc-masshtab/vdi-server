@@ -25,15 +25,6 @@ class AuthenticationDirectoryValidator(MutationValidation):
         raise ValidationError('No such Authentication Directory.')
 
     @staticmethod
-    async def validate_service_password(obj_dict, value):
-        pass_re = re.compile('^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[@$!%*?&])[A-Za-z0-9@$!%*?&]{8,}$')
-        template_name = re.match(pass_re, value)
-        if template_name:
-            return value
-        raise ValidationError(
-            'Пароль должен быть не меньше 8 символов, содержать буквы, цифры и спец.символы.')
-
-    @staticmethod
     async def validate_directory_url(obj_dict, value):
         if not re.match(r'^ldap[s]?://[\S]+$', value):
             raise ValidationError(

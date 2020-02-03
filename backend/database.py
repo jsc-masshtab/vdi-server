@@ -95,7 +95,7 @@ class AbstractSortableStatusModel:
 
         if not include_inactive:
             if cls().has_status_field:
-                query = query.where(cls.is_active == True)
+                query = query.where(cls.is_active == True)  # noqa
             else:
                 query = query.where(cls.status != Status.DELETING)
 

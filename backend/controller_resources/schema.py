@@ -4,8 +4,8 @@ import json
 from vm.veil_client import VmHttpClient
 from vm.schema import VmType, TemplateType, VmQuery
 
-from common.utils import get_selections, make_graphene_type, extract_ordering_data
-from common.veil_errors import FieldError, SimpleError, FetchException, NotFound
+from common.utils import make_graphene_type, extract_ordering_data
+from common.veil_errors import SimpleError
 from common.veil_decorators import superuser_required
 
 from controller_resources.veil_client import ResourcesHttpClient
@@ -188,7 +188,7 @@ class NodeType(graphene.ObjectType):
             if self.veil_info is None:
                 self.veil_info = await self.get_veil_info()
             self.datacenter = DatacenterType(id=self.veil_info['datacenter_id'],
-                                  verbose_name=self.veil_info['datacenter_name'])
+                                             verbose_name=self.veil_info['datacenter_name'])
 
     async def resolve_resources_usage(self, _info):
         resources_http_client = await ResourcesHttpClient.create(self.controller.address)
@@ -251,7 +251,7 @@ class ResourcesQuery(graphene.ObjectType):
     clusters = graphene.List(ClusterType, controller_ip=graphene.String(), ordering=graphene.String())
 
     datapool = graphene.Field(DatapoolType, id=graphene.String(), controller_address=graphene.String())
-    datapools = graphene.List(DatapoolType, node_id=graphene.String(), take_broken = graphene.Boolean(),
+    datapools = graphene.List(DatapoolType, node_id=graphene.String(), take_broken=graphene.Boolean(),
                               ordering=graphene.String())
 
     requests = graphene.List(RequestType, time=graphene.Float())

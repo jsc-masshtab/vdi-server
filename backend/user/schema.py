@@ -28,7 +28,7 @@ class UserValidator(MutationValidation):
 
     @staticmethod
     async def validate_email(obj_dict, value):
-        email_re = re.compile('^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$')
+        email_re = re.compile('^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$')  # noqa
         template_name = re.match(email_re, value)
         if template_name:
             return value

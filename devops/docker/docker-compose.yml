@@ -20,6 +20,13 @@ services:
       - ./frontend:/opt/veil-vdi
       - ../../frontend/:/opt/veil-vdi/frontend/
     command: sh /opt/veil-vdi/entrypoint.sh -dev
+#  frontend-prod:
+#    image: teracy/angular-cli
+#    container_name: vdi-angular-prod
+#    volumes:
+#      - ./frontend:/opt/veil-vdi
+#      - ../../frontend/:/opt/veil-vdi/frontend/
+#    command: sh /opt/veil-vdi/entrypoint.sh -prod
   nginx-proxy:
     image: nginx
     container_name: vdi-nginx

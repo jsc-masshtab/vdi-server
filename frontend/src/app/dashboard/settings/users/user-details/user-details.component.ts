@@ -20,7 +20,7 @@ export class UserDetailsComponent implements OnInit, OnDestroy {
 
   public collection: object[] = [
     {
-      title: 'Название',
+      title: 'Имя пользователя',
       property: 'username',
       type: 'string',
       edit: 'openEditForm',

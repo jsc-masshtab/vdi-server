@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
+import logging
 import asyncio
-from abc import ABC
-from typing import Any
 import time
 
-import tornado.ioloop
+from abc import ABC
+from typing import Any
+
 import tornado.ioloop
 from tornado import httputil
 from tornado import websocket
@@ -14,6 +15,7 @@ from .resources_monitoring_data import VDI_FRONT_ALLOWED_SUBSCRIPTIONS_LIST, Sub
 from resources_monitoring.resources_monitor_manager import resources_monitor_manager
 from resources_monitoring.internal_event_monitor import internal_event_monitor
 
+application_log = logging.getLogger('tornado.application')
 # TODO: auth check?
 
 # class ClientManager:
@@ -192,9 +194,8 @@ class WaiterSubscriptionObserver(AbstractSubscriptionObserver):
                 json_message = self._message_queue.get_nowait()
             except asyncio.QueueEmpty:
                 continue
-            print(__class__.__name__, 'json_message', json_message)
+            # application_log.debug('WS message: {}'.format(json_message))
             if predicate(json_message):
                 return True
 
         return False
-
