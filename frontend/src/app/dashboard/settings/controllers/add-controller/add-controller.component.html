@@ -5,22 +5,30 @@
     <button [mat-dialog-close]="true" class="form-close"><fa-icon [icon]="['fas','times-circle']"></fa-icon></button>
   </div>
 
+  <ng-template #errorTemp>
+    <div class="error">Поле обязательно для заполения</div>
+  </ng-template>
+
   <div class="form-fields" [formGroup]="createForm">
     <label class="field">
       <p class="field-name">IP-адрес</p>
       <input type="text" formControlName="address" [focusMe]="true">
+      <ng-container *ngIf="createForm.hasError('required', 'address') && checkValid"><ng-container *ngTemplateOutlet="errorTemp"></ng-container></ng-container>
     </label>
     <label class="field">
       <p class="field-name">Название</p>
       <input type="text" formControlName="verbose_name">
+      <ng-container *ngIf="createForm.hasError('required', 'verbose_name') && checkValid"><ng-container *ngTemplateOutlet="errorTemp"></ng-container></ng-container>
     </label>
     <label class="field">
       <p class="field-name">Имя пользователя</p>
       <input type="text" formControlName="username">
+      <ng-container *ngIf="createForm.hasError('required', 'username') && checkValid"><ng-container *ngTemplateOutlet="errorTemp"></ng-container></ng-container>
     </label>
     <label class="field">
       <p class="field-name">Пароль</p>
       <input type="password" formControlName="password">
+      <ng-container *ngIf="createForm.hasError('required', 'password') && checkValid"><ng-container *ngTemplateOutlet="errorTemp"></ng-container></ng-container>
     </label>
     <label class="field-inline">
       <mat-checkbox [color]="'warn'" formControlName="ldap_connection"></mat-checkbox>
