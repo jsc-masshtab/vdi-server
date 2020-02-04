@@ -2,14 +2,13 @@
 # TODO: move to auth package
 import graphene
 
+from database import db
 from user.models import Group, User, UserGroup
 from common.veil_validators import MutationValidation
 from common.veil_errors import SimpleError, ValidationError
 # from common.veil_decorators import superuser_required
 from user.user_schema import UserType
 
-
-# TODO: ищем, что лучше - дублировать запрос для id или дублировать сообщение об ошибке. Ответ очевиден - лучше внутри валидатора возвращать инстанс группы
 
 class GroupValidator(MutationValidation):
     """Валидатор для сущности Group"""
@@ -28,7 +27,16 @@ class GroupValidator(MutationValidation):
             return value
         raise ValidationError('verbose_name is empty.')
 
-    # TODO: validate user_id
+    @staticmethod
+    async def validate_users(obj_dict, value):
+        value_count = len(value)
+        if value_count > 0 and isinstance(value, list):
+            # Нет желания явно проверять каждого пользователя на присутствие
+            exists_count = await db.select([db.func.count()]).where(User.id.in_(value)).gino.scalar()
+            if exists_count != value_count:
+                raise ValidationError('users count not much with db count.')
+            return value
+        raise ValidationError('users list is empty.')
 
 
 class GroupType(graphene.ObjectType):
@@ -137,13 +145,59 @@ class DeleteGroupMutation(graphene.Mutation, GroupValidator):
         return DeleteGroupMutation(ok=status)
 
 
+class AddGroupUserMutation(graphene.Mutation, GroupValidator):
+    class Arguments:
+        id = graphene.UUID(required=True)
+        users = graphene.NonNull(graphene.List(graphene.NonNull(graphene.UUID)))
+
+    group = graphene.Field(GroupType)
+    ok = graphene.Boolean(default_value=False)
+
+    @classmethod
+    # TODO: permission decorator
+    async def mutate(cls, root, info, **kwargs):
+        await cls.validate_agruments(**kwargs)
+        group = await Group.get(kwargs['id'])
+
+        async with db.transaction():
+            for user in kwargs['users']:
+                await UserGroup.create(group_id=group.id, user_id=user)
+
+        return AddGroupUserMutation(
+            group=GroupType(**group.__values__),
+            ok=True)
+
+
+class RemoveGroupUserMutation(graphene.Mutation, GroupValidator):
+    class Arguments:
+        id = graphene.UUID(required=True)
+        users = graphene.NonNull(graphene.List(graphene.NonNull(graphene.UUID)))
+
+    group = graphene.Field(GroupType)
+    ok = graphene.Boolean(default_value=False)
+
+    @classmethod
+    # TODO: permission decorator
+    async def mutate(cls, root, info, **kwargs):
+        await cls.validate_agruments(**kwargs)
+        group = await Group.get(kwargs['id'])
+
+        async with db.transaction():
+            users = kwargs['users']
+            status = await UserGroup.delete.where(
+                (UserGroup.user_id.in_(users)) & (UserGroup.group_id == group.id)).gino.status()
+
+        return RemoveGroupUserMutation(
+            group=GroupType(**group.__values__),
+            ok=status)
+
+
 class GroupMutations(graphene.ObjectType):
     createGroup = CreateGroupMutation.Field()
     updateGroup = UpdateGroupMutation.Field()
     deleteGroup = DeleteGroupMutation.Field()
-
-    # TODO: add user to group
-    # TODO: remove user from group
+    addGroupUser = AddGroupUserMutation.Field()
+    removeGroupUser = RemoveGroupUserMutation.Field()
 
 
 group_schema = graphene.Schema(query=GroupQuery,

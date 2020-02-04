@@ -4,6 +4,7 @@ import uuid
 
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.sql import func
+from sqlalchemy import Index
 
 from auth.utils import hashers
 from database import db, AbstractSortableStatusModel, AbstractEntity
@@ -248,3 +249,8 @@ class UserGroup(db.Model):
     id = db.Column(UUID(), primary_key=True, default=uuid.uuid4)
     user_id = db.Column(UUID(), db.ForeignKey(User.id, ondelete="CASCADE"), nullable=False)
     group_id = db.Column(UUID(), db.ForeignKey(Group.id, ondelete="CASCADE"), nullable=False)
+
+
+# -------- Составные индексы --------------------------------
+# Ограничение на включение пользователя в одну и ту же группу.
+Index('user_in_group', UserGroup.user_id, UserGroup.group_id, unique=True)
