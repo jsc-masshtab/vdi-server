@@ -15,7 +15,7 @@ from vm.models import Vm
 
 from pool.schema import pool_schema
 
-from user.models import Group
+from auth.models import Group
 
 from tests.utils import execute_scheme
 

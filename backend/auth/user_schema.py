@@ -3,7 +3,7 @@
 import graphene
 import re
 
-from user.models import User
+from auth.models import User
 from common.veil_validators import MutationValidation
 from common.veil_errors import SimpleError, ValidationError
 from common.veil_decorators import superuser_required

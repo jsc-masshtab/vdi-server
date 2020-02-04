@@ -5,11 +5,11 @@
 
 import pytest
 
-from tests.utils import execute_scheme, ExecError
 from tests.fixtures import fixt_db, auth_context_fixture, fixt_group  # noqa
+from tests.utils import execute_scheme, ExecError
 
-from user.group_schema import group_schema
-from user.models import Group
+from auth.group_schema import group_schema
+from auth.models import Group
 
 pytestmark = [pytest.mark.asyncio, pytest.mark.groups, pytest.mark.auth]
 

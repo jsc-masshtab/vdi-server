@@ -3,11 +3,11 @@
 import graphene
 
 from database import db
-from user.models import Group, User, UserGroup
+from auth.models import Group, User, UserGroup
 from common.veil_validators import MutationValidation
 from common.veil_errors import SimpleError, ValidationError
 from common.veil_decorators import superuser_required
-from user.user_schema import UserType
+from auth.user_schema import UserType
 
 
 class GroupValidator(MutationValidation):

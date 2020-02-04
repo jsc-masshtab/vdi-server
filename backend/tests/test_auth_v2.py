@@ -16,8 +16,7 @@ from settings import (DB_NAME, DB_PASS, DB_USER, DB_PORT, DB_HOST,
 from database import db
 from app import app
 
-from auth.models import AuthenticationDirectory
-from user.models import User, Event
+from auth.models import AuthenticationDirectory, User, Event
 
 pytestmark = [pytest.mark.asyncio, pytest.mark.auth]
 
