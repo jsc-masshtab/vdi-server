@@ -5,20 +5,27 @@
     <button [mat-dialog-close]="true" class="form-close"><fa-icon [icon]="['fas','times-circle']"></fa-icon></button>
   </div>
 
+  <ng-template #errorTemp>
+    <div class="error">Поле обязательно для заполения</div>
+  </ng-template>
+
   <div class="form-fields" [formGroup]="form">
     <label class="field">
       <p class="field-name">Название</p>
       <input type="text" [focusMe]="true" placeholder="..." formControlName="verbose_name">
+      <ng-container *ngIf="form.hasError('required', 'verbose_name') && checkValid"><ng-container *ngTemplateOutlet="errorTemp"></ng-container></ng-container>
     </label>
 
     <label class="field">
       <p class="field-name">Домен</p>
       <input type="text" placeholder="..." formControlName="domain_name">
+      <ng-container *ngIf="form.hasError('required', 'domain_name') && checkValid"><ng-container *ngTemplateOutlet="errorTemp"></ng-container></ng-container>
     </label>
 
     <label class="field">
       <p class="field-name">Directory url</p>
       <input type="text" placeholder="..." formControlName="directory_url">
+      <ng-container *ngIf="form.hasError('required', 'directory_url') && checkValid"><ng-container *ngTemplateOutlet="errorTemp"></ng-container></ng-container>
     </label>
 
    <!--  <label class="field">
