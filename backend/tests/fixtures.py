@@ -15,6 +15,8 @@ from vm.models import Vm
 
 from pool.schema import pool_schema
 
+from user.models import Group
+
 from tests.utils import execute_scheme
 
 from resources_monitoring.resources_monitor_manager import resources_monitor_manager
@@ -357,3 +359,24 @@ async def fixt_entitle_user_to_pool(fixt_create_static_pool):
     }
     ''' % (pool_id, user_name)
     await execute_scheme(pool_schema, qu, context=context)
+
+
+@pytest.fixture
+def fixt_group(request, event_loop):
+    group_name = 'test_group_1'
+
+    async def setup():
+        print('Creating group: {}'.format(group_name))
+        await Group.create(verbose_name=group_name, id="10913d5d-ba7a-4049-88c5-769267a6cbe4")
+
+    event_loop.run_until_complete(setup())
+
+    def teardown():
+        async def a_teardown():
+            print('Deleting group: {}'.format(group_name))
+            await Group.delete.where(Group.id == "10913d5d-ba7a-4049-88c5-769267a6cbe4").gino.status()
+
+        event_loop.run_until_complete(a_teardown())
+
+    request.addfinalizer(teardown)
+    return True

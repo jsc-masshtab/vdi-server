@@ -6,7 +6,7 @@ from database import db
 from user.models import Group, User, UserGroup
 from common.veil_validators import MutationValidation
 from common.veil_errors import SimpleError, ValidationError
-# from common.veil_decorators import superuser_required
+from common.veil_decorators import superuser_required
 from user.user_schema import UserType
 
 
@@ -73,6 +73,7 @@ class GroupQuery(graphene.ObjectType):
     group = graphene.Field(GroupType, id=graphene.UUID())
 
     # TODO: add permission decorator
+    @superuser_required
     async def resolve_group(self, info, id):  # noqa
         group = await Group.get(id)
         if not group:
@@ -80,6 +81,7 @@ class GroupQuery(graphene.ObjectType):
         return GroupType.instance_to_type(group)
 
     # TODO: add permission decorator
+    @superuser_required
     async def resolve_groups(self, info, ordering=None):  # noqa
         groups = await Group.get_objects(ordering=ordering, include_inactive=True)
         objects = [
@@ -98,6 +100,7 @@ class CreateGroupMutation(graphene.Mutation, GroupValidator):
     ok = graphene.Boolean(default_value=False)
 
     @classmethod
+    @superuser_required
     # TODO: permission decorator
     async def mutate(cls, root, info, **kwargs):
         await cls.validate_agruments(**kwargs)
@@ -119,6 +122,7 @@ class UpdateGroupMutation(graphene.Mutation, GroupValidator):
     ok = graphene.Boolean(default_value=False)
 
     @classmethod
+    @superuser_required
     # TODO: permission decorator
     async def mutate(cls, root, info, **kwargs):
         await cls.validate_agruments(**kwargs)
@@ -137,6 +141,7 @@ class DeleteGroupMutation(graphene.Mutation, GroupValidator):
     ok = graphene.Boolean(default_value=False)
 
     @classmethod
+    @superuser_required
     # TODO: permission decorator
     async def mutate(cls, root, info, **kwargs):
         await cls.validate_agruments(**kwargs)
@@ -154,6 +159,7 @@ class AddGroupUserMutation(graphene.Mutation, GroupValidator):
     ok = graphene.Boolean(default_value=False)
 
     @classmethod
+    @superuser_required
     # TODO: permission decorator
     async def mutate(cls, root, info, **kwargs):
         await cls.validate_agruments(**kwargs)
@@ -175,6 +181,7 @@ class RemoveGroupUserMutation(graphene.Mutation, GroupValidator):
     ok = graphene.Boolean(default_value=False)
 
     @classmethod
+    @superuser_required
     # TODO: permission decorator
     async def mutate(cls, root, info, **kwargs):
         await cls.validate_agruments(**kwargs)

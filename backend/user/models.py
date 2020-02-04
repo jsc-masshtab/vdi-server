@@ -13,6 +13,11 @@ from event.models import Event
 from common.veil_errors import SimpleError
 
 
+class Permission(db.Model):
+    """Набор не редактируемых политик назначаемых группам."""
+    pass
+
+
 class User(AbstractSortableStatusModel, db.Model, AbstractEntity):
     __tablename__ = 'user'
     id = db.Column(UUID(), primary_key=True, default=uuid.uuid4)
