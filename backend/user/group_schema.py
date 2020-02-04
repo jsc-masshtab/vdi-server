@@ -157,11 +157,9 @@ class AddGroupUserMutation(graphene.Mutation, GroupValidator):
     # TODO: permission decorator
     async def mutate(cls, root, info, **kwargs):
         await cls.validate_agruments(**kwargs)
-        group = await Group.get(kwargs['id'])
 
-        async with db.transaction():
-            for user in kwargs['users']:
-                await UserGroup.create(group_id=group.id, user_id=user)
+        group = await Group.get(kwargs['id'])
+        await group.add_users(kwargs['users'])
 
         return AddGroupUserMutation(
             group=GroupType(**group.__values__),
@@ -184,8 +182,7 @@ class RemoveGroupUserMutation(graphene.Mutation, GroupValidator):
 
         async with db.transaction():
             users = kwargs['users']
-            status = await UserGroup.delete.where(
-                (UserGroup.user_id.in_(users)) & (UserGroup.group_id == group.id)).gino.status()
+            status = await group.remove_users(users)
 
         return RemoveGroupUserMutation(
             group=GroupType(**group.__values__),

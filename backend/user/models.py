@@ -5,6 +5,7 @@ import uuid
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.sql import func
 from sqlalchemy import Index
+from asyncpg.exceptions import UniqueViolationError
 
 from auth.utils import hashers
 from database import db, AbstractSortableStatusModel, AbstractEntity
@@ -222,15 +223,24 @@ class Group(AbstractSortableStatusModel, db.Model, AbstractEntity):
 
     async def add_user(self, user_id):
         """Add user to group"""
-        # TODO: проверить не состоит ли пользователь уже в группе
-        return await UserGroup.create(user_id=user_id, group_id=self.id)
+        try:
+            return await UserGroup.create(user_id=user_id, group_id=self.id)
+        except UniqueViolationError:
+            raise SimpleError('Пользователь {} уже находится в группе {}'.format(user_id, self.id))
+
+    async def add_users(self, user_id_list):
+        async with db.transaction():
+            for user in user_id_list:
+                await self.add_user(user)
 
     async def remove_user(self, user_id):
         ug = await UserGroup.get(user_id=user_id, group_id=self.id)
         return await ug.delete()
 
-    # TODO: add user
-    # TODO: remove user
+    async def remove_users(self, user_id_list):
+        return await UserGroup.delete.where(
+            (UserGroup.user_id.in_(user_id_list)) & (UserGroup.group_id == self.id)).gino.status()
+
     async def soft_update(self, verbose_name, description):
         group_kwargs = dict()
         if verbose_name:
