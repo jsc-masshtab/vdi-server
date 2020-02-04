@@ -2,7 +2,7 @@ import { WaitService } from '../../../common/components/single/wait/wait.service
 import { MatDialogRef } from '@angular/material';
 import { Component } from '@angular/core';
 import { UsersService } from '../users.service';
-import { FormBuilder, FormGroup } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 
 
 @Component({
@@ -13,14 +13,15 @@ import { FormBuilder, FormGroup } from '@angular/forms';
 export class AddUserComponent {
 
   public form: FormGroup;
+  public checkValid: boolean = false;
 
   private initForm(): void {
     this.form = this.fb.group({
-      username: '',
-      password: '',
-      email: '',
-      last_name: '',
-      first_name: '',
+      username: ['', Validators.required],
+      password: ['', Validators.required],
+      email: ['', Validators.required],
+      last_name: ['', Validators.required],
+      first_name: ['', Validators.required],
       is_superuser: false
     });
   }
@@ -34,11 +35,14 @@ export class AddUserComponent {
 
 
   public send() {
-    this.waitService.setWait(true);
-    this.service.createUser({ ...this.form.value }).subscribe(() => {
-      this.service.getAllUsers().valueChanges.subscribe();
-      this.dialogRef.close();
-      this.waitService.setWait(false);
-    });
+    this.checkValid = true;
+    if (this.form.status === 'VALID') {
+      this.waitService.setWait(true);
+      this.service.createUser({ ...this.form.value }).subscribe(() => {
+        this.service.getAllUsers().valueChanges.subscribe();
+        this.dialogRef.close();
+        this.waitService.setWait(false);
+      });
+    }
   }
 }
