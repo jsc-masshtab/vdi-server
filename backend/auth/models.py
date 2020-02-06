@@ -83,12 +83,39 @@ class User(AbstractSortableStatusModel, db.Model, AbstractEntity):
     is_superuser = db.Column(db.Boolean(), default=False)
     is_active = db.Column(db.Boolean(), default=True)
 
-    # TODO: user groups
     # ----- ----- ----- ----- ----- ----- -----
     # Properties and getters:
     @property
     def entity_type(self):
         return 'Security'
+
+    @property
+    async def groups(self):
+        groups = await Group.join(UserGroup.query.where(UserGroup.user_id == self.id).alias()).select().gino.load(
+            Group).all()
+        return groups
+
+    @property
+    async def roles(self):
+        if self.is_superuser:
+            all_roles_set = set(Role)  # noqa
+            application_log.debug('User: {} full roles: {}'.format(self.username, all_roles_set))
+            return all_roles_set
+
+        user_roles = await UserRole.query.where(UserRole.user_id == self.id).gino.all()
+        all_roles_list = [role_type.role for role_type in user_roles]
+
+        application_log.debug('User {} roles: {}'.format(self.username, all_roles_list))
+
+        user_groups = await self.groups
+        for group in user_groups:
+            group_roles = await group.roles
+            application_log.debug('Group {} roles: {}'.format(group.verbose_name, group_roles))
+            all_roles_list += [role_type.role for role_type in group_roles]
+
+        roles_set = set(all_roles_list)
+        application_log.debug('User: {} full roles: {}'.format(self.username, roles_set))
+        return roles_set
 
     @staticmethod
     async def get_id(username):

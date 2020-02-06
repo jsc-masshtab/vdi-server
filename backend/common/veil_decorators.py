@@ -8,6 +8,7 @@ from settings import AUTH_ENABLED
 from auth.utils.veil_jwt import extraxt_user_object
 from common.veil_errors import Unauthorized
 from event.models import Event
+from auth.models import User, Role
 
 application_log = logging.getLogger('tornado.application')
 
@@ -105,8 +106,9 @@ def user_passes_test(test_func, exc=Unauthorized('Invalid permissions')):  # noq
         async def wrapper(cntxt, *args, **kwargs):  # noqa
             if AUTH_ENABLED:
                 user = await extraxt_user_object(cntxt.headers)
-                if user and test_func(user):
-                    return f(*args, **kwargs)
+                if user and isinstance(user, User):
+                    if test_func(await user.roles):
+                        return f(*args, **kwargs)
                 application_log.debug('IP: . username: {}')
                 await Event.create_warning(
                     'IP: {}. username: {}'.format('Authorization error.', cntxt.remote_ip, user.username),
@@ -118,8 +120,45 @@ def user_passes_test(test_func, exc=Unauthorized('Invalid permissions')):  # noq
     return decorator
 
 
-def is_superuser(user_object) -> bool:
-    return user_object.is_superuser
+def is_superuser(roles) -> bool:
+    # TODO: delete
+    return True
 
 
-superuser_required = user_passes_test(lambda u: is_superuser(u))
+def is_read_only(roles) -> bool:
+    return Role.READ_ONLY in roles
+
+
+def is_administrator(roles) -> bool:
+    return Role.ADMINISTRATOR in roles
+
+
+def is_security_administrator(roles) -> bool:
+    return Role.SECURITY_ADMINISTRATOR in roles
+
+
+def is_vm_administrator(roles) -> bool:
+    return Role.VM_ADMINISTRATOR in roles
+
+
+def is_network_administrator(roles) -> bool:
+    return Role.NETWORK_ADMINISTRATOR in roles
+
+
+def is_storage_administrator(roles) -> bool:
+    return Role.STORAGE_ADMINISTRATOR in roles
+
+
+def is_vm_operator(roles) -> bool:
+    return Role.VM_OPERATOR in roles
+
+
+superuser_required = user_passes_test(lambda roles: is_superuser(roles))  # TODO: delete
+
+readonly_required = user_passes_test(lambda roles: is_read_only(roles))
+administrator_required = user_passes_test(lambda roles: is_administrator(roles))
+security_administrator_required = user_passes_test(lambda roles: is_security_administrator(roles))
+vm_administrator_required = user_passes_test(lambda roles: is_vm_administrator(roles))
+network_administrator_required = user_passes_test(lambda roles: is_network_administrator(roles))
+storage_administrator_required = user_passes_test(lambda roles: is_storage_administrator(roles))
+vm_operator_required = user_passes_test(lambda roles: is_vm_operator(roles))

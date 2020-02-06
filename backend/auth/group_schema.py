@@ -6,7 +6,7 @@ from database import db
 from auth.models import Group, User, UserGroup, Role
 from common.veil_validators import MutationValidation
 from common.veil_errors import SimpleError, ValidationError
-from common.veil_decorators import superuser_required
+from common.veil_decorators import superuser_required, administrator_required
 from auth.user_schema import UserType
 
 
@@ -52,8 +52,6 @@ class GroupType(graphene.ObjectType):
     users = graphene.List(UserType)
     roles = graphene.List(RoleTypeGraphene)
 
-    # TODO: permission list
-
     @staticmethod
     def instance_to_type(model_instance):
         return GroupType(id=model_instance.id,
@@ -90,7 +88,8 @@ class GroupQuery(graphene.ObjectType):
         return GroupType.instance_to_type(group)
 
     # TODO: add permission decorator
-    @superuser_required
+    # @superuser_required
+    @administrator_required
     async def resolve_groups(self, info, ordering=None):  # noqa
         groups = await Group.get_objects(ordering=ordering, include_inactive=True)
         objects = [
@@ -159,7 +158,7 @@ class DeleteGroupMutation(graphene.Mutation, GroupValidator):
         return DeleteGroupMutation(ok=status)
 
 
-class AddGroupUserMutation(graphene.Mutation, GroupValidator):
+class AddGroupUsersMutation(graphene.Mutation, GroupValidator):
     class Arguments:
         id = graphene.UUID(required=True)
         users = graphene.NonNull(graphene.List(graphene.NonNull(graphene.UUID)))
@@ -176,12 +175,12 @@ class AddGroupUserMutation(graphene.Mutation, GroupValidator):
         group = await Group.get(kwargs['id'])
         await group.add_users(kwargs['users'])
 
-        return AddGroupUserMutation(
+        return AddGroupUsersMutation(
             group=GroupType(**group.__values__),
             ok=True)
 
 
-class RemoveGroupUserMutation(graphene.Mutation, GroupValidator):
+class RemoveGroupUsersMutation(graphene.Mutation, GroupValidator):
     class Arguments:
         id = graphene.UUID(required=True)
         users = graphene.NonNull(graphene.List(graphene.NonNull(graphene.UUID)))
@@ -200,7 +199,7 @@ class RemoveGroupUserMutation(graphene.Mutation, GroupValidator):
             users = kwargs['users']
             status = await group.remove_users(users)
 
-        return RemoveGroupUserMutation(
+        return RemoveGroupUsersMutation(
             group=GroupType(**group.__values__),
             ok=status)
 
@@ -245,8 +244,8 @@ class GroupMutations(graphene.ObjectType):
     createGroup = CreateGroupMutation.Field()
     updateGroup = UpdateGroupMutation.Field()
     deleteGroup = DeleteGroupMutation.Field()
-    addGroupUser = AddGroupUserMutation.Field()
-    removeGroupUser = RemoveGroupUserMutation.Field()
+    addGroupUsers = AddGroupUsersMutation.Field()
+    removeGroupUsers = RemoveGroupUsersMutation.Field()
     addGroupRole = AddGroupRoleMutation.Field()
     removeGroupRole = RemoveGroupRoleMutation.Field()
     # TODO: show all roles in the system?
