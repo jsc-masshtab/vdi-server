@@ -277,6 +277,11 @@ class Group(AbstractSortableStatusModel, db.Model, AbstractEntity):
     def entity_type(self):
         return 'Security'
 
+    @property
+    async def roles(self):
+        query = GroupRole.select('role').where(GroupRole.group_id == self.id)
+        return await query.gino.all()
+
     async def add_user(self, user_id):
         """Add user to group"""
         try:
@@ -289,13 +294,24 @@ class Group(AbstractSortableStatusModel, db.Model, AbstractEntity):
             for user in user_id_list:
                 await self.add_user(user)
 
-    async def remove_user(self, user_id):
-        ug = await UserGroup.get(user_id=user_id, group_id=self.id)
-        return await ug.delete()
-
     async def remove_users(self, user_id_list):
         return await UserGroup.delete.where(
             (UserGroup.user_id.in_(user_id_list)) & (UserGroup.group_id == self.id)).gino.status()
+
+    async def add_role(self, role):
+        try:
+            return await GroupRole.create(group_id=self.id, role=role)
+        except UniqueViolationError:
+            raise SimpleError('Группе {} уже назначена роль {}'.format(self.id, role))
+
+    async def add_roles(self, roles_list):
+        async with db.transaction():
+            for role in roles_list:
+                await self.add_role(role)
+
+    async def remove_roles(self, roles_list):
+        return await GroupRole.delete.where(
+            (GroupRole.role.in_(roles_list)) & (GroupRole.group_id == self.id)).gino.status()
 
     async def soft_update(self, verbose_name, description):
         group_kwargs = dict()

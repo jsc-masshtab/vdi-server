@@ -1,13 +1,16 @@
 # -*- coding: utf-8 -*-
-# TODO: move to auth package
 import graphene
+from graphene import Enum as GrapheneEnum
 
 from database import db
-from auth.models import Group, User, UserGroup
+from auth.models import Group, User, UserGroup, Role
 from common.veil_validators import MutationValidation
 from common.veil_errors import SimpleError, ValidationError
 from common.veil_decorators import superuser_required
 from auth.user_schema import UserType
+
+
+RoleTypeGraphene = GrapheneEnum.from_enum(Role)
 
 
 class GroupValidator(MutationValidation):
@@ -46,7 +49,8 @@ class GroupType(graphene.ObjectType):
     date_created = graphene.DateTime()
     date_updated = graphene.DateTime()
 
-    users = graphene.List(UserType, ordering=graphene.String())
+    users = graphene.List(UserType)
+    roles = graphene.List(RoleTypeGraphene)
 
     # TODO: permission list
 
@@ -66,6 +70,11 @@ class GroupType(graphene.ObjectType):
             for user in users
         ]
         return objects
+
+    async def resolve_roles(self, _info):
+        group = await Group.get(self.id)
+        roles = await group.roles
+        return [role_type.role for role_type in roles]
 
 
 class GroupQuery(graphene.ObjectType):
@@ -196,12 +205,51 @@ class RemoveGroupUserMutation(graphene.Mutation, GroupValidator):
             ok=status)
 
 
+class AddGroupRoleMutation(graphene.Mutation, GroupValidator):
+    class Arguments:
+        id = graphene.UUID(required=True)
+        roles = graphene.NonNull(graphene.List(graphene.NonNull(RoleTypeGraphene)))
+
+    group = graphene.Field(GroupType)
+    ok = graphene.Boolean(default_value=False)
+
+    @classmethod
+    @superuser_required
+    # TODO: permission decorator
+    async def mutate(cls, root, info, **kwargs):
+        await cls.validate_agruments(**kwargs)
+        group = await Group.get(kwargs['id'])
+        await group.add_roles(kwargs['roles'])
+        return AddGroupRoleMutation(group=GroupType(**group.__values__), ok=True)
+
+
+class RemoveGroupRoleMutation(graphene.Mutation, GroupValidator):
+    class Arguments:
+        id = graphene.UUID(required=True)
+        roles = graphene.NonNull(graphene.List(graphene.NonNull(RoleTypeGraphene)))
+
+    group = graphene.Field(GroupType)
+    ok = graphene.Boolean(default_value=False)
+
+    @classmethod
+    @superuser_required
+    # TODO: permission decorator
+    async def mutate(cls, root, info, **kwargs):
+        await cls.validate_agruments(**kwargs)
+        group = await Group.get(kwargs['id'])
+        await group.remove_roles(kwargs['roles'])
+        return RemoveGroupRoleMutation(group=GroupType(**group.__values__), ok=True)
+
+
 class GroupMutations(graphene.ObjectType):
     createGroup = CreateGroupMutation.Field()
     updateGroup = UpdateGroupMutation.Field()
     deleteGroup = DeleteGroupMutation.Field()
     addGroupUser = AddGroupUserMutation.Field()
     removeGroupUser = RemoveGroupUserMutation.Field()
+    addGroupRole = AddGroupRoleMutation.Field()
+    removeGroupRole = RemoveGroupRoleMutation.Field()
+    # TODO: show all roles in the system?
 
 
 group_schema = graphene.Schema(query=GroupQuery,
