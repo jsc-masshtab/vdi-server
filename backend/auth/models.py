@@ -21,9 +21,52 @@ from common.veil_errors import SimpleError
 application_log = logging.getLogger('tornado.application')
 
 
-class Permission(db.Model):
-    """Набор не редактируемых политик назначаемых группам."""
+class EnityType(Enum):
+    """Базовые виды сущностей"""
+    # TODO: перечислить явно возможные виды сущностей
+    # ANGULAR_WEB
+    # THIN_CLIENT
+    # CONTROLLER
+    # LOCAL_AUTH
+    # Security?
+    # AutomatedPool
+    # Pool
     pass
+
+
+class Permission(Enum):
+    VIEW = 'VIEW'
+    ADD = 'ADD'
+    CHANGE = 'CHANGE'
+    DELETE = 'DELETE'
+
+
+class Role(Enum):
+    READ_ONLY = 'READ_ONLY'
+    ADMINISTRATOR = 'ADMINISTRATOR'
+    SECURITY_ADMINISTRATOR = 'SECURITY_ADMINISTRATOR'
+    VM_ADMINISTRATOR = 'VM_ADMINISTRATOR'
+    NETWORK_ADMINISTRATOR = 'NETWORK_ADMINISTRATOR'
+    STORAGE_ADMINISTRATOR = 'STORAGE_ADMINISTRATOR'
+    VM_OPERATOR = 'VM_OPERATOR'
+
+
+class Entity(db.Model):
+    __tablename__ = 'entity'
+
+    id = db.Column(UUID(), primary_key=True, default=uuid.uuid4)
+    entity_uuid = db.Column(UUID(), nullable=True, index=True)  # UUID сущности
+    entity_type = db.Column(db.Unicode(), index=True)  # тип сущности (таблица в БД или абстрактная сущность)
+
+
+class RoleEntityPermission(db.Model):
+    # TODO: add combined unique index on EntityId, PermissionId and RoleId
+
+    __tablename__ = 'role_entity_permission'
+    id = db.Column(UUID(), primary_key=True, default=uuid.uuid4)
+    permission = db.Column(AlchemyEnum(Permission), nullable=False, index=True)
+    role = db.Column(AlchemyEnum(Role), nullable=False, index=True)
+    entity_id = db.Column(UUID(), db.ForeignKey(Entity.id, ondelete="CASCADE"))
 
 
 class User(AbstractSortableStatusModel, db.Model, AbstractEntity):
@@ -272,6 +315,20 @@ class UserGroup(db.Model):
     id = db.Column(UUID(), primary_key=True, default=uuid.uuid4)
     user_id = db.Column(UUID(), db.ForeignKey(User.id, ondelete="CASCADE"), nullable=False)
     group_id = db.Column(UUID(), db.ForeignKey(Group.id, ondelete="CASCADE"), nullable=False)
+
+
+class GroupRole(db.Model):
+    __tablename__ = 'group_role'
+    id = db.Column(UUID(), primary_key=True, default=uuid.uuid4)
+    role = db.Column(AlchemyEnum(Role), nullable=False, index=True)
+    group_id = db.Column(UUID(), db.ForeignKey(Group.id, ondelete="CASCADE"), nullable=False)
+
+
+class UserRole(db.Model):
+    __tablename__ = 'user_role'
+    id = db.Column(UUID(), primary_key=True, default=uuid.uuid4)
+    role = db.Column(AlchemyEnum(Role), nullable=False, index=True)
+    user_id = db.Column(UUID(), db.ForeignKey(User.id, ondelete="CASCADE"), nullable=False)
 
 
 class AuthenticationDirectory(db.Model, AbstractSortableStatusModel, AbstractEntity):
@@ -545,4 +602,11 @@ class AuthenticationDirectory(db.Model, AbstractSortableStatusModel, AbstractEnt
 
 # -------- Составные индексы --------------------------------
 # Ограничение на включение пользователя в одну и ту же группу.
-Index('user_in_group', UserGroup.user_id, UserGroup.group_id, unique=True)
+Index('ix_user_in_group', UserGroup.user_id, UserGroup.group_id, unique=True)
+Index('ix_role_entity_permission_role_entity_permission',
+      RoleEntityPermission.permission, RoleEntityPermission.role,
+      RoleEntityPermission.entity_id, unique=True)
+Index('ix_user_roles_user_roles',
+      UserRole.role, UserRole.user_id, unique=True)
+Index('ix_group_roles_group_roles',
+      GroupRole.role, GroupRole.group_id, unique=True)
