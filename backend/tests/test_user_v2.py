@@ -5,7 +5,7 @@
 
 import pytest
 
-from tests.fixtures import fixt_db, auth_context_fixture  # noqa
+from tests.fixtures import fixt_db, auth_context_fixture, fixt_user  # noqa
 from tests.utils import execute_scheme, ExecError
 
 from auth.user_schema import user_schema
@@ -173,3 +173,27 @@ class TestUserSchema:
         user = await User.get_object(include_inactive=True, extra_field_name='username', extra_field_value='devyatkin')
         await user.delete()
         assert True
+
+    async def test_user_role(self, snapshot, auth_context_fixture, fixt_user):  # noqa
+        query = """mutation {
+                      addUserRole(id: "10913d5d-ba7a-4049-88c5-769267a6cbe4", roles: [VM_ADMINISTRATOR, VM_OPERATOR]){
+                        user{
+                          username,
+                          roles
+                        },
+                        ok
+                      }
+                    }"""
+        executed = await execute_scheme(user_schema, query, context=auth_context_fixture)
+        snapshot.assert_match(executed)
+        query = """mutation {
+                      removeUserRole(id: "10913d5d-ba7a-4049-88c5-769267a6cbe4", roles: [VM_OPERATOR]){
+                        user{
+                          username,
+                          roles
+                        },
+                        ok
+                      }
+                    }"""
+        executed = await execute_scheme(user_schema, query, context=auth_context_fixture)
+        snapshot.assert_match(executed)

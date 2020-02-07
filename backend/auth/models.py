@@ -178,11 +178,16 @@ class User(AbstractSortableStatusModel, db.Model, AbstractEntity):
         return user_status
 
     @staticmethod
-    async def soft_create(username, password=None, email=None, last_name=None, first_name=None, is_superuser=False):
+    async def soft_create(username, password=None, email=None, last_name=None, first_name=None, is_superuser=False,
+                          id=None):
         """Если password будет None, то make_password вернет unusable password"""
         encoded_password = hashers.make_password(password)
-        user_obj = await User.create(username=username, password=encoded_password, email=email, last_name=last_name,
-                                     first_name=first_name, is_superuser=is_superuser)
+        user_kwargs = {'username': username, 'password': encoded_password, 'email': email, 'last_name': last_name,
+                       'first_name': first_name, 'is_superuser': is_superuser}
+        if id:
+            user_kwargs['id'] = id
+
+        user_obj = await User.create(**user_kwargs)
 
         user_role = 'Superuser' if is_superuser else 'User'
         info_message = 'Creating user {username} with role {role}.'.format(username=username, role=user_role)

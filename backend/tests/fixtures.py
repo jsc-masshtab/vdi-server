@@ -15,7 +15,7 @@ from vm.models import Vm
 
 from pool.schema import pool_schema
 
-from auth.models import Group
+from auth.models import Group, User
 
 from tests.utils import execute_scheme
 
@@ -375,6 +375,28 @@ def fixt_group(request, event_loop):
         async def a_teardown():
             print('Deleting group: {}'.format(group_name))
             await Group.delete.where(Group.id == "10913d5d-ba7a-4049-88c5-769267a6cbe4").gino.status()
+
+        event_loop.run_until_complete(a_teardown())
+
+    request.addfinalizer(teardown)
+    return True
+
+
+@pytest.fixture
+def fixt_user(request, event_loop):
+    user_name = 'test_group_1'
+    user_id = '10913d5d-ba7a-4049-88c5-769267a6cbe4'
+
+    async def setup():
+        print('Creating user: {}'.format('test_user_fixtrure'))
+        await User.soft_create(username=user_name, id=user_id)
+
+    event_loop.run_until_complete(setup())
+
+    def teardown():
+        async def a_teardown():
+            print('Deleting user: {}'.format(user_name))
+            await User.delete.where(User.id == user_id).gino.status()
 
         event_loop.run_until_complete(a_teardown())
 

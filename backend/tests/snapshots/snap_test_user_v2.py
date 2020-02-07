@@ -106,3 +106,28 @@ snapshots['TestUserSchema.test_users_get_by_id 1'] = {
         'username': 'admin'
     }
 }
+
+snapshots['TestUserSchema.test_user_role 1'] = {
+    'addUserRole': {
+        'ok': True,
+        'user': {
+            'roles': [
+                'VM_ADMINISTRATOR',
+                'VM_OPERATOR'
+            ],
+            'username': 'test_group_1'
+        }
+    }
+}
+
+snapshots['TestUserSchema.test_user_role 2'] = {
+    'removeUserRole': {
+        'ok': True,
+        'user': {
+            'roles': [
+                'VM_ADMINISTRATOR'
+            ],
+            'username': 'test_group_1'
+        }
+    }
+}
