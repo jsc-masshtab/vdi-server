@@ -2,6 +2,7 @@ import { Component, Input, Output, EventEmitter, OnInit } from '@angular/core';
 // @ts-ignore: Unreachable code error
 import * as moment from 'moment';
 
+
 interface ICollection {
   title: string;
   property: string;
@@ -34,6 +35,7 @@ export class TableComponentComponent implements OnInit {
   @Input() cursor: boolean = false;
   @Output() clickRowData: EventEmitter<object> = new EventEmitter<object>();
   @Output() sortListNow: EventEmitter<object> = new EventEmitter<object>();
+
 
   public titleSort: string;
   public orderingSort: string;

@@ -23,8 +23,15 @@
           <div class="table-area-property" *ngFor="let obj of collection" [class.name-start]="obj.class == 'name-start'" [class.name-end]="obj.class == 'name-end'"> <!--столбец-->
 
   <!-- icons -->
-            <span [class.icon-group]="entity === 'vm' || entity === 'events'" *ngIf="obj.icon">
-              <fa-icon [icon]="['fas',obj.icon]" size="xs"></fa-icon>
+            <span [class.icon-group]="entity === 'vm' || entity === 'events' || entity === 'users' && item.is_superuser" *ngIf="obj.icon">
+              <fa-icon [icon]="['fas',obj.icon]" size="xs" [class.stateOn]="item.is_active && entity === 'users'" 
+                [class.stateOff]="!item.is_active && entity === 'users'"
+              ></fa-icon>
+
+              <ng-container *ngIf="entity === 'users' && item.is_superuser"> <!-- подъюзеры -->
+                <fa-icon [icon]="['fas', 'crown']" title="Суперпользователь" class="extra-icon stateOn"></fa-icon>
+              </ng-container>
+
               <ng-container *ngIf="entity === 'vm' && item?.state && obj.property === 'verbose_name'"> <!-- статус вм -->
                 <fa-icon [icon]="['fas', 'play-circle']" *ngIf="item.state === 'ON'" class="extra-icon on" title="Включена"></fa-icon>
                 <fa-icon [icon]="['fas', 'stop-circle']" *ngIf="item.state === 'OFF'" class="extra-icon off" title="Выключена"></fa-icon>
