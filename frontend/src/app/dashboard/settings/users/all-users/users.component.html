@@ -20,7 +20,7 @@
 
 <div class="components-info" #view>
     <div class="component-list" [class.page-wrap]="pageRollup" [class.page-rollup]="pageRollup" [style.height]="pageHeight">
-        <vdi-table-component cursor="true" [data]="users" [collection]="collection" (sortListNow)="sortList($event)" (clickRowData)="routeTo($event)"></vdi-table-component>
+        <vdi-table-component cursor="true" [data]="users" entity="users" [collection]="collection" (sortListNow)="sortList($event)" (clickRowData)="routeTo($event)"></vdi-table-component>
     </div>
 
     <div class="component-details" [class.page-height-min]="pageHeight==pageHeightMin" [class.page-height-max]="pageRollup">

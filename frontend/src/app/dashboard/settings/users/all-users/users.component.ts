@@ -47,11 +47,19 @@ export class UsersComponent extends DetailsMove implements OnInit, OnDestroy {
       type: 'string'
     },
     {
+      title: 'Суперпользователь',
+      property: 'is_superuser',
+      type: {
+        typeDepend: 'boolean',
+        propertyDepend: ['Да', 'Нет']
+      }
+    },
+    {
       title: 'Состояние',
       property: 'is_active',
       type: {
         typeDepend: 'boolean',
-        propertyDepend: ['Активный', 'Не активный']
+        propertyDepend: ['Активен', 'Не активен']
       }
     }
   ];
@@ -80,7 +88,7 @@ export class UsersComponent extends DetailsMove implements OnInit, OnDestroy {
 
     this.waitService.setWait(true);
 
-    this.service.getAllUsers().valueChanges.pipe(map(data => data.data.users))
+    this.getUsersSub = this.service.getAllUsers().valueChanges.pipe(map(data => data.data.users))
       .subscribe((data) => {
         this.users = data;
         this.waitService.setWait(false);
