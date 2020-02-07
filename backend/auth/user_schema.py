@@ -1,12 +1,11 @@
 # -*- coding: utf-8 -*-
-# TODO: move to auth package
 import graphene
 import re
 
 from auth.models import User
 from common.veil_validators import MutationValidation
 from common.veil_errors import SimpleError, ValidationError
-from common.veil_decorators import superuser_required
+from common.veil_decorators import security_administrator_required, readonly_required
 
 
 class UserValidator(MutationValidation):
@@ -66,7 +65,8 @@ class UserType(graphene.ObjectType):
     async def resolve_password(self, _info):
         return '*' * 8  # dummy value for not displayed field
 
-    # TODO: groups
+    # TODO: show user groups
+    # TODO: show user roles
 
     @staticmethod
     def instance_to_type(model_instance):
@@ -86,7 +86,7 @@ class UserQuery(graphene.ObjectType):
     users = graphene.List(UserType, ordering=graphene.String())
     user = graphene.Field(UserType, id=graphene.UUID(), username=graphene.String())
 
-    @superuser_required
+    @readonly_required
     async def resolve_user(self, info, id=None, username=None):
         if not id and not username:
             raise SimpleError('Scpecify id or username.')
@@ -96,7 +96,7 @@ class UserQuery(graphene.ObjectType):
             raise SimpleError('No such user.')
         return UserType.instance_to_type(user)
 
-    @superuser_required
+    @readonly_required
     async def resolve_users(self, info, ordering=None):
         users = await User.get_objects(ordering=ordering, include_inactive=True)
         objects = [
@@ -119,7 +119,7 @@ class CreateUserMutation(graphene.Mutation, UserValidator):
     ok = graphene.Boolean(default_value=False)
 
     @classmethod
-    @superuser_required
+    @security_administrator_required
     async def mutate(cls, root, info, **kwargs):
         await cls.validate_agruments(**kwargs)
         user = await User.soft_create(**kwargs)
@@ -141,7 +141,7 @@ class UpdateUserMutation(graphene.Mutation, UserValidator):
     ok = graphene.Boolean(default_value=False)
 
     @classmethod
-    @superuser_required
+    @security_administrator_required
     async def mutate(cls, root, info, **kwargs):
         await cls.validate_agruments(**kwargs)
         user = await User.soft_update(kwargs['id'],
@@ -161,7 +161,7 @@ class ChangeUserPasswordMutation(graphene.Mutation, UserValidator):
     ok = graphene.Boolean()
 
     @classmethod
-    @superuser_required
+    @security_administrator_required
     async def mutate(cls, root, info, **kwargs):
         await cls.validate_agruments(**kwargs)
         # Назначаем новый пароль
@@ -179,7 +179,7 @@ class ActivateUserMutation(graphene.Mutation, UserValidator):
     ok = graphene.Boolean()
 
     @classmethod
-    @superuser_required
+    @security_administrator_required
     async def mutate(cls, root, info, **kwargs):
         await cls.validate_agruments(**kwargs)
         # Меняем статус пользователя
@@ -197,7 +197,7 @@ class DeactivateUserMutation(graphene.Mutation, UserValidator):
     ok = graphene.Boolean()
 
     @classmethod
-    @superuser_required
+    @security_administrator_required
     async def mutate(cls, root, info, **kwargs):
         await cls.validate_agruments(**kwargs)
         # Меняем статус пользователя

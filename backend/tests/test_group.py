@@ -108,7 +108,7 @@ class TestGroupSchema:
 
     async def test_group_user_add(self, snapshot, auth_context_fixture):  # noqa
         query = """mutation {
-                      addGroupUser(id: "10913d5d-ba7a-4049-88c5-769267a6cbe4",
+                      addGroupUsers(id: "10913d5d-ba7a-4049-88c5-769267a6cbe4",
                                     users: ["f9599771-cc95-45e4-9ae5-c8177b796aff"]) {
                         group {
                           verbose_name
@@ -124,7 +124,7 @@ class TestGroupSchema:
 
     async def test_group_user_remove(self, snapshot, auth_context_fixture):  # noqa
         query = """mutation {
-                      removeGroupUser(id: "10913d5d-ba7a-4049-88c5-769267a6cbe4",
+                      removeGroupUsers(id: "10913d5d-ba7a-4049-88c5-769267a6cbe4",
                                     users: ["f9599771-cc95-45e4-9ae5-c8177b796aff"]) {
                         group {
                           verbose_name

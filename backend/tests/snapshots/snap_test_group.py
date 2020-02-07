@@ -57,7 +57,7 @@ snapshots['TestGroupSchema.test_group_delete 1'] = {
 }
 
 snapshots['TestGroupSchema.test_group_user_add 1'] = {
-    'addGroupUser': {
+    'addGroupUsers': {
         'group': {
             'users': [
                 {
@@ -71,7 +71,7 @@ snapshots['TestGroupSchema.test_group_user_add 1'] = {
 }
 
 snapshots['TestGroupSchema.test_group_user_remove 1'] = {
-    'removeGroupUser': {
+    'removeGroupUsers': {
         'group': {
             'users': [
             ],

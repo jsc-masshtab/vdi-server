@@ -5,7 +5,7 @@ import re
 from auth.models import AuthenticationDirectory
 from common.veil_validators import MutationValidation
 from common.veil_errors import SimpleError, ValidationError
-from common.veil_decorators import superuser_required
+from common.veil_decorators import security_administrator_required, readonly_required
 
 from database import StatusGraphene
 
@@ -84,7 +84,7 @@ class AuthenticationDirectoryQuery(graphene.ObjectType):
     def instance_to_type(model_instance):
         return AuthenticationDirectoryType(**model_instance.__values__)
 
-    @superuser_required
+    @readonly_required
     async def resolve_auth_dir(self, info, id=None):
         if not id:
             raise SimpleError('Specify id.')
@@ -94,7 +94,7 @@ class AuthenticationDirectoryQuery(graphene.ObjectType):
             raise SimpleError('No such Authentication Directory.')
         return AuthenticationDirectoryQuery.instance_to_type(auth_dir)
 
-    @superuser_required
+    @readonly_required
     async def resolve_auth_dirs(self, info, ordering=None):
         auth_dirs = await AuthenticationDirectory.get_objects(ordering=ordering)
         objects = [
@@ -125,7 +125,7 @@ class CreateAuthenticationDirectoryMutation(graphene.Mutation, AuthenticationDir
     ok = graphene.Boolean(default_value=False)
 
     @classmethod
-    @superuser_required
+    @security_administrator_required
     async def mutate(cls, root, info, **kwargs):
         await cls.validate_agruments(**kwargs)
         auth_dir = await AuthenticationDirectory.soft_create(**kwargs)
@@ -141,7 +141,7 @@ class DeleteAuthenticationDirectoryMutation(graphene.Mutation, AuthenticationDir
     ok = graphene.Boolean()
 
     @classmethod
-    @superuser_required
+    @security_administrator_required
     async def mutate(cls, root, info, **kwargs):
         await cls.validate_agruments(**kwargs)
         await AuthenticationDirectory.soft_delete(id=kwargs['id'])
@@ -155,7 +155,7 @@ class TestAuthenticationDirectoryMutation(graphene.Mutation, AuthenticationDirec
     ok = graphene.Boolean()
 
     @classmethod
-    @superuser_required
+    @security_administrator_required
     async def mutate(cls, root, info, **kwargs):
         await cls.validate_agruments(**kwargs)
         auth_dir = await AuthenticationDirectory.get_object(kwargs['id'])
@@ -183,7 +183,7 @@ class UpdateAuthenticationDirectoryMutation(graphene.Mutation, AuthenticationDir
     ok = graphene.Boolean(default_value=False)
 
     @classmethod
-    @superuser_required
+    @security_administrator_required
     async def mutate(cls, root, info, **kwargs):
         await cls.validate_agruments(**kwargs)
         auth_dir = await AuthenticationDirectory.soft_update(kwargs['id'],
