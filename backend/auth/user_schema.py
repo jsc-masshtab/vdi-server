@@ -3,6 +3,7 @@ import graphene
 import re
 
 from auth.models import User
+from database import RoleTypeGraphene
 from common.veil_validators import MutationValidation
 from common.veil_errors import SimpleError, ValidationError
 from common.veil_decorators import security_administrator_required, readonly_required
@@ -47,6 +48,20 @@ class UserValidator(MutationValidation):
         #     'Пароль должен быть не меньше 8 символов, содержать буквы, цифры и спец.символы.')
 
 
+class UserGroupType(graphene.ObjectType):
+    """Намеренное дублирование GroupType с сокращением доступных полей.
+    Нет понимания в целесообразности абстрактного класса для обоих типов."""
+    id = graphene.UUID(required=True)
+    verbose_name = graphene.String()
+    description = graphene.String()
+
+    @staticmethod
+    def instance_to_type(model_instance):
+        return UserGroupType(id=model_instance.id,
+                             verbose_name=model_instance.verbose_name,
+                             description=model_instance.description)
+
+
 class UserType(graphene.ObjectType):
     id = graphene.UUID()
     username = graphene.String()
@@ -62,11 +77,8 @@ class UserType(graphene.ObjectType):
     is_superuser = graphene.Boolean()
     is_active = graphene.Boolean()
 
-    async def resolve_password(self, _info):
-        return '*' * 8  # dummy value for not displayed field
-
-    # TODO: show user groups
-    # TODO: show user roles
+    groups = graphene.List(UserGroupType)
+    roles = graphene.List(RoleTypeGraphene)
 
     @staticmethod
     def instance_to_type(model_instance):
@@ -80,6 +92,18 @@ class UserType(graphene.ObjectType):
                         last_login=model_instance.last_login,
                         is_superuser=model_instance.is_superuser,
                         is_active=model_instance.is_active)
+
+    async def resolve_password(self, _info):
+        return '*' * 8  # dummy value for not displayed field
+
+    async def resolve_groups(self, _info):
+        user = await User.get(self.id)
+        return await user.groups
+
+    async def resolve_roles(self, _info):
+        """Отображается объединение пользовательский ролей с ролями пользовательских групп."""
+        user = await User.get(self.id)
+        return await user.roles
 
 
 class UserQuery(graphene.ObjectType):
@@ -208,12 +232,49 @@ class DeactivateUserMutation(graphene.Mutation, UserValidator):
         return DeactivateUserMutation(ok=False)
 
 
+class AddUserRoleMutation(graphene.Mutation, UserValidator):
+    class Arguments:
+        id = graphene.UUID(required=True)
+        roles = graphene.NonNull(graphene.List(graphene.NonNull(RoleTypeGraphene)))
+
+    user = graphene.Field(UserType)
+    ok = graphene.Boolean(default_value=False)
+
+    @classmethod
+    @security_administrator_required
+    async def mutate(cls, root, info, **kwargs):
+        await cls.validate_agruments(**kwargs)
+        user = await User.get(kwargs['id'])
+        await user.add_roles(kwargs['roles'])
+        return AddUserRoleMutation(user=UserType(**user.__values__), ok=True)
+
+
+class RemoveUserRoleMutation(graphene.Mutation, UserValidator):
+    class Arguments:
+        id = graphene.UUID(required=True)
+        roles = graphene.NonNull(graphene.List(graphene.NonNull(RoleTypeGraphene)))
+
+    user = graphene.Field(UserType)
+    ok = graphene.Boolean(default_value=False)
+
+    @classmethod
+    @security_administrator_required
+    async def mutate(cls, root, info, **kwargs):
+        await cls.validate_agruments(**kwargs)
+        user = await User.get(kwargs['id'])
+        await user.remove_roles(kwargs['roles'])
+        return RemoveUserRoleMutation(user=UserType(**user.__values__), ok=True)
+
+
 class UserMutations(graphene.ObjectType):
     createUser = CreateUserMutation.Field()
     activateUser = ActivateUserMutation.Field()
     deactivateUser = DeactivateUserMutation.Field()
     updateUser = UpdateUserMutation.Field()
     changeUserPassword = ChangeUserPasswordMutation.Field()
+    addUserRole = AddUserRoleMutation.Field()
+    removeUserRole = RemoveUserRoleMutation.Field()
+    # TODO: show all roles in the system?
 
 
 user_schema = graphene.Schema(mutation=UserMutations,

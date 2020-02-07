@@ -12,7 +12,7 @@ from sqlalchemy import Enum as AlchemyEnum
 from asyncpg.exceptions import UniqueViolationError
 
 from settings import LDAP_TIMEOUT
-from database import db, Status, AbstractSortableStatusModel, AbstractEntity
+from database import db, Status, AbstractSortableStatusModel, AbstractEntity, Role
 from auth.utils import hashers
 from event.models import Event
 from common.veil_errors import SimpleError
@@ -41,16 +41,6 @@ class Permission(Enum):
     DELETE = 'DELETE'
 
 
-class Role(Enum):
-    READ_ONLY = 'READ_ONLY'
-    ADMINISTRATOR = 'ADMINISTRATOR'
-    SECURITY_ADMINISTRATOR = 'SECURITY_ADMINISTRATOR'
-    VM_ADMINISTRATOR = 'VM_ADMINISTRATOR'
-    NETWORK_ADMINISTRATOR = 'NETWORK_ADMINISTRATOR'
-    STORAGE_ADMINISTRATOR = 'STORAGE_ADMINISTRATOR'
-    VM_OPERATOR = 'VM_OPERATOR'
-
-
 class Entity(db.Model):
     __tablename__ = 'entity'
 
@@ -60,7 +50,6 @@ class Entity(db.Model):
 
 
 class RoleEntityPermission(db.Model):
-    # TODO: add combined unique index on EntityId, PermissionId and RoleId
 
     __tablename__ = 'role_entity_permission'
     id = db.Column(UUID(), primary_key=True, default=uuid.uuid4)
@@ -119,12 +108,25 @@ class User(AbstractSortableStatusModel, db.Model, AbstractEntity):
 
     @staticmethod
     async def get_id(username):
-        # TODO: это старый запрос. Есть мнение, что сейчас он уже не нужен. Лучше бы использовать get_object.
-        #  например, user = await User.get_object(username = username). user_id = user.id if user else None
         return await User.select('id').where(User.username == username).gino.scalar()
 
     # ----- ----- ----- ----- ----- ----- -----
     # Setters & etc.
+
+    async def add_role(self, role):
+        try:
+            return await UserRole.create(user_id=self.id, role=role)
+        except UniqueViolationError:
+            raise SimpleError('Пользователю {} уже назначена роль {}'.format(self.id, role))
+
+    async def add_roles(self, roles_list):
+        async with db.transaction():
+            for role in roles_list:
+                await self.add_role(role)
+
+    async def remove_roles(self, roles_list):
+        return await UserRole.delete.where(
+            (UserRole.role.in_(roles_list)) & (UserRole.user_id == self.id)).gino.status()
 
     async def activate(self):
         query = User.update.values(is_active=True).where(User.id == self.id)

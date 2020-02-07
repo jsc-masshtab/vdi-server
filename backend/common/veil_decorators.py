@@ -5,10 +5,13 @@ from tornado.escape import json_encode
 from graphql.execution.base import ResolveInfo
 
 from settings import AUTH_ENABLED
+from database import Role
+
 from auth.utils.veil_jwt import extraxt_user_object
 from common.veil_errors import Unauthorized
 from event.models import Event
-from auth.models import User, Role
+from auth.models import User
+
 
 application_log = logging.getLogger('tornado.application')
 

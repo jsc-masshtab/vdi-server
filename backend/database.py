@@ -30,6 +30,16 @@ class Status(Enum):
     BAD_AUTH = 'BAD_AUTH'
 
 
+class Role(Enum):
+    READ_ONLY = 'READ_ONLY'
+    ADMINISTRATOR = 'ADMINISTRATOR'
+    SECURITY_ADMINISTRATOR = 'SECURITY_ADMINISTRATOR'
+    VM_ADMINISTRATOR = 'VM_ADMINISTRATOR'
+    NETWORK_ADMINISTRATOR = 'NETWORK_ADMINISTRATOR'
+    STORAGE_ADMINISTRATOR = 'STORAGE_ADMINISTRATOR'
+    VM_OPERATOR = 'VM_OPERATOR'
+
+
 class AbstractSortableStatusModel:
     """Методы для сортировки таблицы и построения расширенных запросов в стиле Django."""
 
@@ -121,9 +131,6 @@ class AbstractSortableStatusModel:
         return await query.gino.all()
 
 
-StatusGraphene = GrapheneEnum.from_enum(Status)
-
-
 class AbstractEntity:
     @property
     def uuid(self):
@@ -140,3 +147,7 @@ class AbstractEntity:
     @property
     def entity_list(self):
         return [self.entity]
+
+
+StatusGraphene = GrapheneEnum.from_enum(Status)
+RoleTypeGraphene = GrapheneEnum.from_enum(Role)

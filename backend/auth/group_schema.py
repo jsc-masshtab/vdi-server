@@ -1,16 +1,12 @@
 # -*- coding: utf-8 -*-
 import graphene
-from graphene import Enum as GrapheneEnum
 
-from database import db
-from auth.models import Group, User, UserGroup, Role
+from database import db, RoleTypeGraphene
+from auth.models import Group, User, UserGroup
 from common.veil_validators import MutationValidation
 from common.veil_errors import SimpleError, ValidationError
 from common.veil_decorators import security_administrator_required, readonly_required
 from auth.user_schema import UserType
-
-
-RoleTypeGraphene = GrapheneEnum.from_enum(Role)
 
 
 class GroupValidator(MutationValidation):
