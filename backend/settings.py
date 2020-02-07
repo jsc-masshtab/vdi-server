@@ -19,8 +19,9 @@ FERNET_KEY = b'LRzSxWyxqKD4p2BR11-nVmghV67AVmQ4CxYi__S_OH8='
 
 # Auth settings
 # -----------------------------
-AUTH_ENABLED = True
-# AUTH_ENABLED = False  # Отключает проверку токенов, делает доступным стандартный интерфейс GpaphQL
+# TODO: enable!
+# AUTH_ENABLED = True
+AUTH_ENABLED = False  # Отключает проверку токенов, делает доступным стандартный интерфейс GpaphQL
 
 # JWT Options
 # -----------------------------

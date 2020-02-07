@@ -274,6 +274,7 @@ class UserMutations(graphene.ObjectType):
     changeUserPassword = ChangeUserPasswordMutation.Field()
     addUserRole = AddUserRoleMutation.Field()
     removeUserRole = RemoveUserRoleMutation.Field()
+    # TODO: добавление групп пользователю
     # TODO: show all roles in the system?
 
 
