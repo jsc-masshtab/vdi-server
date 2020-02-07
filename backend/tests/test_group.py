@@ -137,3 +137,29 @@ class TestGroupSchema:
                     }"""
         executed = await execute_scheme(group_schema, query, context=auth_context_fixture)
         snapshot.assert_match(executed)
+
+    async def test_group_role(self, snapshot, auth_context_fixture):  # noqa
+        query = """mutation {
+                    addGroupRole(id: "10913d5d-ba7a-4049-88c5-769267a6cbe4",
+                    roles: [NETWORK_ADMINISTRATOR, VM_OPERATOR]) {
+                    ok,
+                    group {
+                        verbose_name,
+                        roles
+                        }
+                    }
+                    }"""
+        executed = await execute_scheme(group_schema, query, context=auth_context_fixture)
+        snapshot.assert_match(executed)
+        query = """mutation {
+                            removeGroupRole(id: "10913d5d-ba7a-4049-88c5-769267a6cbe4",
+                            roles: [VM_OPERATOR]) {
+                            ok,
+                            group {
+                                verbose_name,
+                                roles
+                                }
+                            }
+                            }"""
+        executed = await execute_scheme(group_schema, query, context=auth_context_fixture)
+        snapshot.assert_match(executed)
