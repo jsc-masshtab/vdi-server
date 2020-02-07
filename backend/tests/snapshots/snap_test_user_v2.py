@@ -20,28 +20,6 @@ snapshots['TestUserSchema.test_users_list 1'] = {
     ]
 }
 
-snapshots['TestUserSchema.test_users_get_by_id TestUserSchema.test_users_get_by_id 1'] = {
-    'user': {
-        'email': 'admin@admin.admin',
-        'first_name': None,
-        'is_active': True,
-        'is_superuser': True,
-        'last_name': None,
-        'username': 'admin'
-    }
-}
-
-snapshots['TestUserSchema.test_users_get_by_username TestUserSchema.test_users_get_by_id 1'] = {
-    'user': {
-        'email': 'admin@admin.admin',
-        'first_name': None,
-        'is_active': True,
-        'is_superuser': True,
-        'last_name': None,
-        'username': 'admin'
-    }
-}
-
 snapshots['TestUserSchema.test_user_create 1'] = {
     'createUser': {
         'ok': True,
@@ -112,7 +90,6 @@ snapshots['TestUserSchema.test_user_role 1'] = {
         'ok': True,
         'user': {
             'roles': [
-                'VM_ADMINISTRATOR',
                 'VM_OPERATOR'
             ],
             'username': 'test_group_1'
@@ -125,7 +102,6 @@ snapshots['TestUserSchema.test_user_role 2'] = {
         'ok': True,
         'user': {
             'roles': [
-                'VM_ADMINISTRATOR'
             ],
             'username': 'test_group_1'
         }

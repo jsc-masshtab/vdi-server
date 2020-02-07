@@ -176,7 +176,7 @@ class TestUserSchema:
 
     async def test_user_role(self, snapshot, auth_context_fixture, fixt_user):  # noqa
         query = """mutation {
-                      addUserRole(id: "10913d5d-ba7a-4049-88c5-769267a6cbe4", roles: [VM_ADMINISTRATOR, VM_OPERATOR]){
+                      addUserRole(id: "10913d5d-ba7a-4049-88c5-769267a6cbe4", roles: [VM_OPERATOR]){
                         user{
                           username,
                           roles

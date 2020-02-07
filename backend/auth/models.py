@@ -104,6 +104,7 @@ class User(AbstractSortableStatusModel, db.Model, AbstractEntity):
 
         roles_set = set(all_roles_list)
         application_log.debug('User: {} full roles: {}'.format(self.username, roles_set))
+        # TODO: сейчас роли будет в случайноп порядке.
         return roles_set
 
     @staticmethod

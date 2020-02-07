@@ -67,18 +67,6 @@ snapshots['TestAuthenticationDirectorySchema.test_auth_dir_edit 1'] = {
     }
 }
 
-snapshots['TestAuthenticationDirectorySchema.test_auth_dir_deactivate 1'] = {
-    'deactivateAuthDir': {
-        'ok': True
-    }
-}
-
-snapshots['TestAuthenticationDirectorySchema.test_auth_dir_activate 1'] = {
-    'activateAuthDir': {
-        'ok': True
-    }
-}
-
 snapshots['TestAuthenticationDirectorySchema.test_drop_auth_dir 1'] = {
     'deleteAuthDir': {
         'ok': True
