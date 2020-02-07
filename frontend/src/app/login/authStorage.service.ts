@@ -14,7 +14,7 @@ export class AuthStorageService {
     // isTokenExpired() === false - не истек
 
     public checkLogin(): boolean {
-        let token: string = this.getItemStorage('token');
+        let token: string | null = this.getItemStorage('token');
         if (token && !this.jwt.isTokenExpired(token)) {
             return true;
         } else {

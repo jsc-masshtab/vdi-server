@@ -2,7 +2,7 @@ import { WaitService } from '../../../common/components/single/wait/wait.service
 import { MatDialogRef } from '@angular/material';
 import { Component } from '@angular/core';
 import { AuthenticationDirectoryService } from '../auth-directory.service';
-import { FormBuilder, FormGroup } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 
 
 @Component({
@@ -13,12 +13,13 @@ import { FormBuilder, FormGroup } from '@angular/forms';
 export class AddAuthenticationDirectoryComponent {
 
   public form: FormGroup;
+  public checkValid: boolean = false;
 
   private initForm(): void {
     this.form = this.fb.group({
-      domain_name: '',
-      verbose_name: '',
-      directory_url: 'ldap://',
+      domain_name: ['', Validators.required],
+      verbose_name: ['', Validators.required],
+      directory_url: ['ldap://', Validators.required],
       description: '',
       /* connection_type: 'LDAP',
       directory_type: 'ActiveDirectory',
@@ -39,11 +40,15 @@ export class AddAuthenticationDirectoryComponent {
               }
 
   public send() {
-    this.waitService.setWait(true);
-    this.service.createAuthDir({ ...this.form.value }).subscribe(() => {
-      this.service.getAllAuthenticationDirectory().refetch();
-      this.dialogRef.close();
-      this.waitService.setWait(false);
-    });
+    this.checkValid = true;
+    if (this.form.status === 'VALID') {
+      this.waitService.setWait(true);
+      this.service.createAuthDir({ ...this.form.value }).subscribe(() => {
+        this.service.getAllAuthenticationDirectory().refetch();
+        this.dialogRef.close();
+        this.waitService.setWait(false);
+      });
+    }
   }
 }
+

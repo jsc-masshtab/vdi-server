@@ -19,6 +19,9 @@ import { IEditFormObj } from 'types';
 export class ControllerDetailsComponent implements OnInit, OnDestroy {
 
   public host: boolean = false;
+  public testing: boolean = false;
+  public tested: boolean = false;
+  public connected: boolean = false;
 
   public controller = {};
   public  menuActive: string = 'info';
@@ -140,6 +143,29 @@ export class ControllerDetailsComponent implements OnInit, OnDestroy {
       },
       () => {
         this.host = true;
+      });
+  }
+
+  public test(): void {
+    this.testing = true;
+    this.controllerService.testController(
+        this.idController,
+      )
+      .subscribe((data) => {
+        if (data) {
+          setTimeout(() => {
+            this.testing = false;
+            this.tested = true;
+            this.connected = data.data.testController.ok;
+          }, 1000);
+
+          setTimeout(() => {
+            this.tested = false;
+          }, 5000);
+        } else {
+          this.testing = false;
+          this.tested = false;
+        }
       });
   }
 

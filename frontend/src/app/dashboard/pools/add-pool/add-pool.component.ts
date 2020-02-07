@@ -110,12 +110,13 @@ export class PoolAddComponent implements OnInit, OnDestroy {
       cluster_id: ['', Validators.required],
       node_id: ['', Validators.required],
       datapool_id: ['', Validators.required],
-      reserve_size: ['', [Validators.required, Validators.max(200), Validators.min(1)]],
       vm_name_template: ['', [Validators.required, Validators.pattern(/^[а-яА-ЯёЁa-zA-Z0-9]+[а-яА-ЯёЁa-zA-Z0-9.-_+ ]*$/)]],
       controller_ip: ['', Validators.required],
       size: this.fb.group({
         initial_size: ['', [Validators.required, Validators.max(200), Validators.min(1)]],
         total_size: ['', [Validators.required, Validators.max(1000), Validators.min(1)]],
+        min_free_vms_amount: ['', [Validators.required, Validators.min(1)]],
+        reserve_size: ['', [Validators.required, Validators.max(200), Validators.min(1)]],
       }, {validators: this.totalSizeValidator()}),
       create_thin_clones: false });
     this.finishPoolView = {};
@@ -347,6 +348,11 @@ export class PoolAddComponent implements OnInit, OnDestroy {
           type: 'string'
         },
         {
+          title: 'Порогове количество свободных ВМ',
+          property: 'min_free_vms_amount',
+          type: 'string'
+        },
+        {
           title: 'Имя шаблона для ВМ',
           property: 'vm_name_template',
           type: 'string'
@@ -387,6 +393,9 @@ export class PoolAddComponent implements OnInit, OnDestroy {
     return (group: FormGroup) => {
       if (group.controls['total_size'].value < group.controls['initial_size'].value) {
         return {maxLessInitial: true};
+      }
+      if (group.controls['min_free_vms_amount'].value > group.controls['reserve_size'].value) {
+        return {freeVmsMoreReserve: true};
       }
     };
   }
@@ -438,10 +447,11 @@ export class PoolAddComponent implements OnInit, OnDestroy {
 
     if (this.chooseTypeForm.value.type === 'Автоматический') {
       this.finishPoolView.initial_size = formValue.size.initial_size;
-      this.finishPoolView.reserve_size = formValue.reserve_size;
+      this.finishPoolView.reserve_size = formValue.size.reserve_size;
       this.finishPoolView.total_size = formValue.size.total_size;
       this.finishPoolView.vm_name_template = formValue.vm_name_template;
       this.finishPoolView.create_thin_clones = formValue.create_thin_clones;
+      this.finishPoolView.min_free_vms_amount = formValue.size.min_free_vms_amount;
     }
     this.finishPoolView.verbose_name = formValue.verbose_name;
     this.finishPoolView.type = this.chooseTypeForm.value.type;
@@ -462,11 +472,12 @@ export class PoolAddComponent implements OnInit, OnDestroy {
                               formValue.node_id,
                               formValue.datapool_id,
                               formValue.size.initial_size,
-                              formValue.reserve_size,
+                              formValue.size.reserve_size,
                               formValue.size.total_size,
                               formValue.vm_name_template,
                               formValue.controller_ip,
-                              formValue.create_thin_clones)
+                              formValue.create_thin_clones,
+                              formValue.size.min_free_vms_amount)
         .subscribe((res) => {
           if (res) {
             this.dialogRef.close();

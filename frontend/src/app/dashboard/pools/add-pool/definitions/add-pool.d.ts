@@ -28,6 +28,7 @@ export interface IFinishPoolView {
     initial_size: number;
     vm_name_template: string; // auto
     create_thin_clones: boolean;//stat
+    min_free_vms_amount: number;// autos
 }
 
 export interface IFinishPoolForm {
@@ -37,12 +38,13 @@ export interface IFinishPoolForm {
     datapool_id: string;
     vm_ids_list: string[]; //stat
     template_id: string; // auto
-    reserve_size: number;
     vm_name_template: string;// auto
     controller_ip: string; //auto
     size: {
         total_size: number;
         initial_size: number;
+        min_free_vms_amount: number; //auto
+        reserve_size: number;
     }
     create_thin_clones: boolean;//stat
 }
