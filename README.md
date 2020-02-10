@@ -1,3 +1,7 @@
+### Актуальная версия документации по проекту
+    http://192.168.7.175/pages/viewpage.action?pageId=40993535
+    http://confluence0.bazalt.team/pages/viewpage.action?pageId=40993535
+    
 ### Запуск docker-контейнеров с БД и фронтом для локальной разработки:
     
     cd devops/docker && docker-compose up
