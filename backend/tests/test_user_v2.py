@@ -179,7 +179,8 @@ class TestUserSchema:
                       addUserRole(id: "10913d5d-ba7a-4049-88c5-769267a6cbe4", roles: [VM_OPERATOR]){
                         user{
                           username,
-                          roles
+                          assigned_roles,
+                          possible_roles
                         },
                         ok
                       }
@@ -190,7 +191,8 @@ class TestUserSchema:
                       removeUserRole(id: "10913d5d-ba7a-4049-88c5-769267a6cbe4", roles: [VM_OPERATOR]){
                         user{
                           username,
-                          roles
+                          assigned_roles,
+                          possible_roles
                         },
                         ok
                       }
