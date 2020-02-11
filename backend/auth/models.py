@@ -5,14 +5,14 @@ from enum import Enum
 import logging
 
 import ldap
-from sqlalchemy.dialects.postgresql import UUID, ARRAY
+from sqlalchemy.dialects.postgresql import UUID, ARRAY, JSONB
 from sqlalchemy.sql import func
 from sqlalchemy import Index
 from sqlalchemy import Enum as AlchemyEnum
 from asyncpg.exceptions import UniqueViolationError
 
 from settings import LDAP_TIMEOUT
-from database import db, Status, AbstractSortableStatusModel, AbstractEntity, Role
+from database import db, Status, AbstractSortableStatusModel, AbstractEntity, Role, Permission
 from auth.utils import hashers
 from event.models import Event
 from common.veil_errors import SimpleError
@@ -32,13 +32,6 @@ class EnityType(Enum):
     # AutomatedPool
     # Pool
     pass
-
-
-class Permission(Enum):
-    VIEW = 'VIEW'
-    ADD = 'ADD'
-    CHANGE = 'CHANGE'
-    DELETE = 'DELETE'
 
 
 class Entity(db.Model):
@@ -401,6 +394,8 @@ class AuthenticationDirectory(db.Model, AbstractSortableStatusModel, AbstractEnt
     - sso: Технология Single Sign-on
     """
 
+    # TODO: move to authentication_directory package
+
     class ConnectionTypes(Enum):
         """
         Класс, описывающий доступные типы подключения служб каталогов.
@@ -651,6 +646,44 @@ class AuthenticationDirectory(db.Model, AbstractSortableStatusModel, AbstractEnt
         return False
 
 
+class Mapping(db.Model, AbstractEntity):
+    """
+    Модель отображения атрибутов пользователя службы каталогов на группы пользователей системы.
+    Описание полей:
+
+    - mapping_type: тип атрибута службы каталогов для отображения на группы системы
+    - values: список значений атрибутов пользователя службы каталогов
+    """
+    __tablename__ = 'mapping'
+
+    class MappingTypes(Enum):
+        """
+        Класс, описывающий доступные типы атрибутов службы каталогов.
+        """
+
+        USER = 'USER'
+        OU = 'OU'
+        GROUP = 'GROUP'
+
+    description = db.Column(db.Unicode(length=255), nullable=True, unique=False)
+    mapping_type = db.Column(AlchemyEnum(MappingTypes), nullable=False, index=True)
+    values = JSONB()
+    verbose_name = db.Column(db.Unicode(length=128), nullable=False, unique=True)
+    priority = db.Column(db.Integer(), nullable=False, default=0)
+
+
+class GroupAuthenticationDirectoryMapping(db.Model):
+    __tablename__ = 'group_authentication_directory_mappings'
+
+    id = db.Column(UUID(), primary_key=True, default=uuid.uuid4)
+    authentication_directory_id = db.Column(UUID(),
+                                            db.ForeignKey(AuthenticationDirectory.id, ondelete="CASCADE"),
+                                            nullable=False)
+    group_id = db.Column(UUID(),
+                         db.ForeignKey(Group.id, ondelete="CASCADE"),
+                         nullable=False)
+
+
 # -------- Составные индексы --------------------------------
 # Ограничение на включение пользователя в одну и ту же группу.
 Index('ix_user_in_group', UserGroup.user_id, UserGroup.group_id, unique=True)
@@ -661,3 +694,5 @@ Index('ix_user_roles_user_roles',
       UserRole.role, UserRole.user_id, unique=True)
 Index('ix_group_roles_group_roles',
       GroupRole.role, GroupRole.group_id, unique=True)
+Index('ix_group_auth_mapping', GroupAuthenticationDirectoryMapping.authentication_directory_id,
+      GroupAuthenticationDirectoryMapping.group_id, unique=True)
