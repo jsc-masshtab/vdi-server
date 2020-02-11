@@ -53,6 +53,11 @@
     <span>Контроллеры</span>
   </a>
 
+  <a class="top-menu-item item-tree" [@fadeInOut] *ngIf="toggleSetting" [class.clicked-link]="clickedManage =='groups'" (click)="routeTo('settings/groups')" (keydown.enter)="routeTo('settings/groups')" [class.clicked-link]="clickedManage =='groups'"  tabindex="0">
+    <fa-icon title="Пользователи" [icon]="['fas','users-cog']" size="s" [style.color]="'rgb(255, 235, 205)'"></fa-icon>
+    <span>Группы</span>
+  </a>
+
   <a class="top-menu-item item-tree" [@fadeInOut] *ngIf="toggleSetting" [class.clicked-link]="clickedManage =='users'" (click)="routeTo('settings/users')" (keydown.enter)="routeTo('settings/users')" [class.clicked-link]="clickedManage =='users'"  tabindex="0">
     <fa-icon title="Пользователи" [icon]="['fas','users']" size="s" [style.color]="'rgb(255, 235, 205)'"></fa-icon>
     <span>Пользователи</span>
