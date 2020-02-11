@@ -77,7 +77,9 @@ class UserType(graphene.ObjectType):
     is_superuser = graphene.Boolean()
     is_active = graphene.Boolean()
 
-    groups = graphene.List(UserGroupType)
+    assigned_groups = graphene.List(UserGroupType)
+    possible_groups = graphene.List(UserGroupType)
+
     assigned_roles = graphene.List(RoleTypeGraphene)
     possible_roles = graphene.List(RoleTypeGraphene)
 
@@ -97,9 +99,13 @@ class UserType(graphene.ObjectType):
     async def resolve_password(self, _info):
         return '*' * 8  # dummy value for not displayed field
 
-    async def resolve_groups(self, _info):
+    async def resolve_assigned_groups(self, _info):
         user = await User.get(self.id)
-        return await user.groups
+        return await user.assingned_groups
+
+    async def resolve_possible_groups(self, _info):
+        user = await User.get(self.id)
+        return await user.possible_groups
 
     async def resolve_assigned_roles(self, _info):
         """Отображается объединение пользовательский ролей с ролями пользовательских групп."""
@@ -107,7 +113,8 @@ class UserType(graphene.ObjectType):
         return await user.roles
 
     async def resolve_possible_roles(self, _info):
-        assigned_roles = await self.resolve_assigned_roles(_info)
+        user = await User.get(self.id)
+        assigned_roles = await user.roles
         all_roles = [role_type for role_type in Role]
         # Чтобы порядок всегда был одинаковый
         possible_roles = [role for role in all_roles if role not in assigned_roles]

@@ -4,7 +4,7 @@ from enum import Enum
 import logging
 
 from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy.sql import func, text  # noqa
+from sqlalchemy.sql import func, text
 from sqlalchemy import Index
 from sqlalchemy import Enum as AlchemyEnum
 from asyncpg.exceptions import UniqueViolationError
@@ -69,10 +69,15 @@ class User(AbstractSortableStatusModel, db.Model, AbstractEntity):
         return 'Security'
 
     @property
-    async def groups(self):
+    async def assingned_groups(self):
         groups = await Group.join(UserGroup.query.where(UserGroup.user_id == self.id).alias()).select().gino.load(
             Group).all()
         return groups
+
+    @property
+    async def possible_groups(self):
+        possible_groups_query = Group.join(UserGroup.query.where(UserGroup.user_id == self.id).alias(), isouter=True).select().where(text('anon_1.id is null'))  # noqa
+        return await possible_groups_query.gino.load(User).all()
 
     @property
     async def roles(self):
@@ -306,6 +311,19 @@ class Group(AbstractSortableStatusModel, db.Model, AbstractEntity):
     async def roles(self):
         query = GroupRole.select('role').where(GroupRole.group_id == self.id)
         return await query.gino.all()
+
+    @property
+    async def assigned_users(self):
+        users_query = User.join(UserGroup.query.where(UserGroup.group_id == self.id).alias()).select()
+        return await users_query.gino.load(User).all()
+
+    @property
+    async def possible_users(self):
+        """Берем всех АКТИВНЫХ пользователей и исключаем тех, кому уже назначена группа."""
+        possible_users_query = User.join(
+            UserGroup.query.where(UserGroup.group_id == self.id).alias(), isouter=True).select().where(
+            (text('anon_1.id is null')) & (User.is_active))  # noqa
+        return await possible_users_query.gino.load(User).all()
 
     async def add_user(self, user_id):
         """Add user to group"""
