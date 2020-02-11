@@ -1,0 +1,32 @@
+<div class="form">
+
+  <div class="form-header">
+    <h1>Задание пользователей для пула {{data?.namePool}}</h1>
+    <button [mat-dialog-close]="true" class="form-close">
+      <fa-icon [icon]="['fas','times-circle']"></fa-icon>
+    </button>
+  </div>
+
+  <div class="form-fields">
+    <label class="field">
+      <mat-form-field>
+        <mat-label *ngIf="pendingUsers">Загрузка ...</mat-label>
+        <mat-label *ngIf="users?.length && !pendingUsers">Выберите пользователей</mat-label>
+        <mat-label *ngIf="!users?.length && !pendingUsers">- нет пользователей -</mat-label>
+        <mat-select (selectionChange)="selectUser($event)" multiple="true">
+          <mat-option *ngFor="let user of users" [value]="user.id">
+            {{user.username}}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+      <div class="error" *ngIf="!valid">Выберите пользователя</div>
+    </label>
+  </div>
+
+  <div class="form-actions">
+    <button (click)="send()" class="form-btn">
+      <fa-icon [icon]="['fas','plus-circle']" size="xs"></fa-icon><span class="action-name">Добавить</span>
+    </button>
+  </div>
+
+</div>

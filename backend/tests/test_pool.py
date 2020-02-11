@@ -1,102 +1,134 @@
+# -*- coding: utf-8 -*-
 import pytest
+import uuid
 
-from fixtures.fixtures import (
-    fixt_db, fixt_create_static_pool, fixt_create_automated_pool,
-    conn
-)
+from pool.schema import pool_schema
+from tests.utils import execute_scheme
 
-from vdi.graphql_api.pool import DesktopPoolType
-from vdi.graphql_api import schema
+from tests.fixtures import fixt_db, fixt_create_automated_pool, fixt_create_static_pool, fixt_entitle_user_to_pool, auth_context_fixture  # noqa
 
 
+pytestmark = [pytest.mark.pools]
+
+
+# TODO: нужно создать контроллер
+# TODO: сейчас может быть попытка использовать не ZFS-диски для клонирования на ZFS-пул.
+# ----------------------------------------------
+# Automated pool
 @pytest.mark.asyncio
-async def test_create_automated_pool(fixt_create_automated_pool):
-    id = fixt_create_automated_pool['id']
+async def test_create_automated_pool(fixt_db, fixt_create_automated_pool, auth_context_fixture):  # noqa
+    """Create automated pool, make request to check data, remove this pool"""
+    pool_id = fixt_create_automated_pool['id']
+
+    # check that pool was successfully created'
+    assert fixt_create_automated_pool['is_pool_successfully_created']
 
     qu = """{
-      pool(id: %(id)s) {
-        desktop_pool_type
-        settings {
-          initial_size
-        }
-        state {
-          running
-          available {
-            id
-          }
-        }
+      pool(pool_id: "%s") {
+        pool_type,
+        initial_size
       }
-    }""" % locals()
-    res = await schema.exec(qu)
-    assert res['pool']['settings']['initial_size'] == 1
-    assert res['pool']['desktop_pool_type'] == DesktopPoolType.AUTOMATED.name
+    }""" % pool_id
+    executed = await execute_scheme(pool_schema, qu, context=auth_context_fixture)
+    assert executed['pool']['initial_size'] == 1
 
 
 @pytest.mark.asyncio
-async def test_create_static_pool(fixt_create_static_pool):
-    #
+async def test_update_automated_pool(fixt_db, fixt_create_automated_pool, auth_context_fixture):  # noqa
+    """Create automated pool, update this pool, remove this pool"""
+    pool_id = fixt_create_automated_pool['id']
+
+    # check that pool was successfully created'
+    assert fixt_create_automated_pool['is_pool_successfully_created']
+
+    new_pool_name = 'test_pool_{}'.format(str(uuid.uuid4())[:7])
+    qu = """
+    mutation {
+        updateDynamicPool(
+            pool_id: "%s"
+            verbose_name: "%s",
+            reserve_size: 1,
+            total_size: 5,
+            keep_vms_on: true){
+            ok
+        }
+    }""" % (pool_id, new_pool_name)
+    executed = await execute_scheme(pool_schema, qu, context=auth_context_fixture)
+    assert executed['updateDynamicPool']['ok']
+
+
+# ----------------------------------------------
+# Static pool
+@pytest.mark.asyncio
+async def test_create_static_pool(fixt_create_static_pool, auth_context_fixture):  # noqa
+    """Create static pool, make request to check data, remove this pool"""
+    pool_id = fixt_create_static_pool['id']
+    assert fixt_create_static_pool['ok']
+
+    # get pool info
+    qu = """{
+      pool(pool_id: "%s") {
+        pool_type
+          vms{
+            verbose_name
+        }
+      }
+    }""" % pool_id
+    executed = await execute_scheme(pool_schema, qu, context=auth_context_fixture)  # noqa
+
+
+@pytest.mark.asyncio
+async def test_update_static_pool(fixt_create_static_pool, auth_context_fixture):  # noqa
+    """Create static pool, update this pool, remove this pool"""
+    pool_id = fixt_create_static_pool['id']
+
+    new_pool_name = 'test_pool_{}'.format(str(uuid.uuid4())[:7])
+    qu = """
+    mutation {
+        updateStaticPool(pool_id: "%s", verbose_name: "%s", keep_vms_on: true){
+         ok
+    }
+    }""" % (pool_id, new_pool_name)
+    executed = await execute_scheme(pool_schema, qu, context=auth_context_fixture)
+    assert executed['updateStaticPool']['ok']
+
+
+@pytest.mark.asyncio
+async def test_remove_and_add_vm_in_static_pool(fixt_create_static_pool, auth_context_fixture):  # noqa
+    """Create automated pool, make request to check data,
+    remove a vm from this pool, add the removed vm back to this pool, remove this pool"""
     pool_id = fixt_create_static_pool['id']
 
     # get pool info
     qu = """{
-      pool(id: %i) {
-        desktop_pool_type
+      pool(pool_id: "%s") {
+        pool_type
           vms{
-            name
+            id
         }
       }
     }""" % pool_id
-    res = await schema.exec(qu)
-
-    li = res['pool']['vms']
-    assert len(li) == 2
-    assert res['pool']['desktop_pool_type'] == DesktopPoolType.STATIC.name
-
-
-@pytest.mark.asyncio
-async def test_change_pool_name(fixt_create_static_pool):
-    pool_id = fixt_create_static_pool['id']
-
-    # change name
-    qu = """
-    mutation {
-      changePoolName(new_name: "New_pool_name", pool_id: %i){
-        ok
-      }
-    }""" % pool_id
-    await schema.exec(qu)
-
-
-#@pytest.mark.asyncio
-#async def test_change_vm_name_template_in_autopool():
-
-
-@pytest.mark.asyncio
-async def test_remove_and_add_vm_in_static_pool(fixt_create_static_pool):
-
-    pool_id = fixt_create_static_pool['id']
-    vms_in_pool_list = fixt_create_static_pool['vms']
-    assert len(vms_in_pool_list) == 2
+    executed = await execute_scheme(pool_schema, qu, context=auth_context_fixture)
+    vms_in_pool_list = executed['pool']['vms']
+    assert len(vms_in_pool_list) == 1
 
     # remove first vm from pool
     vm_id = vms_in_pool_list[0]['id']
     qu = '''
       mutation {
-        removeVmsFromStaticPool(pool_id: %i, vm_ids: ["%s"]){
+        removeVmsFromStaticPool(pool_id: "%s", vm_ids: ["%s"]){
           ok
         }
       }''' % (pool_id, vm_id)
-    res = await schema.exec(qu)
-    assert res['removeVmsFromStaticPool']['ok']
+    executed = await execute_scheme(pool_schema, qu, context=auth_context_fixture)
+    assert executed['removeVmsFromStaticPool']['ok']
 
     # add removed machine back to pool
     qu = '''
       mutation {
-        addVmsToStaticPool(pool_id: %i, vm_ids: ["%s"]){
+        addVmsToStaticPool(pool_id: "%s", vm_ids: ["%s"]){
           ok
         }
       }''' % (pool_id, vm_id)
-    res = await schema.exec(qu)
-    assert res['addVmsToStaticPool']['ok']
-
-
+    executed = await execute_scheme(pool_schema, qu, context=auth_context_fixture)
+    assert executed['addVmsToStaticPool']['ok']

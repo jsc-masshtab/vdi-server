@@ -1,38 +1,22 @@
+### Alembic
+```shell script
+export PYTHONPATH=~/PycharmProjects/vdiserver/backend
 
-1. [Скачиваем](https://docs.conda.io/en/latest/miniconda.html) миниконду. Пусть мы установили её в `conda_dir`.
-2. В директории `backend` (то есть, именно там, где лежит environment.yml) запускаем
+alembic revision --autogenerate -m "Controller credentials"
 
-```
-conda_dir/bin/conda env update
-```
+alembic upgrade head
 
-3. Инициализируем базу
+alembic revision -m "create account table"
 
-```
-mkdir ~/pgdata
-conda_dir/bin/initdb --data ~/pgdata
-conda_dir/bin/pg_ctl -D ~/pgdata -l logfile start
-conda_dir/bin/createuser --superuser postgres
-conda_dir/bin/psql -c "create database vdi encoding 'utf8' lc_collate = 'en_US.UTF-8' lc_ctype = 'en_US.UTF-8' template template0;" -U postgres
+alembic merge heads
 ```
 
-Запускаем миграции
+### Tests
 
-```
-conda_dir/bin/mi apply
-```
+Для запуска тестов через PyCharm необходимо установить "**Default test runner**" - "**pytest**"
 
-4. Запускаем сервис:
+Чтобы обновить результаты выполнения snapshot - `pytest --snapshot-update`
 
-```
-conda_dir/bin/vdi
-```
-
-Порт vdi сервера:
-
-backend/vdi/settings.py
-```
-    vdi_server = {
-        'port': 80
-    }
-```
+Для запуска тестов из консоли перейти в каталог tests и запустить `pytest`, если нужно запустить
+специфичные тесты, указать **-m**, например `pytest -m "auth"` - этот набор запустит все тесты 
+Пользователей, AD и аутентификации.

@@ -48,7 +48,7 @@
     "no-redundant-jsdoc": true,
     "no-switch-case-fall-through": true,
     "no-use-before-declare": true,
-    "no-var-requires": false,
+    "no-var-requires": true,
     "object-literal-key-quotes": [
       true,
       "as-needed"
@@ -69,6 +69,11 @@
     "use-life-cycle-interface": true,
     "use-pipe-transform-interface": true,
     "component-class-suffix": true,
-    "directive-class-suffix": true
+    "directive-class-suffix": true,
+    "prefer-for-of": false,
+    "prefer-const": false,
+    "no-var-keyword": false,
+    "no-string-literal": false,
+    "variable-name": [ false ]
   }
 }

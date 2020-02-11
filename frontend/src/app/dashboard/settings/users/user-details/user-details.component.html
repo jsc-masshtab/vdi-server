@@ -1,0 +1,44 @@
+<div class="details-wrap">
+
+  <div class="details-header">
+    <div class="title">
+      <fa-icon [icon]="['fas','user']" size="s"></fa-icon>
+      <span class="name">
+        Пользователь <span>{{entity?.username}}</span>
+      </span>
+    </div>
+
+    <div class="btns-part">
+      <button class="btn-close" (click)="close()">
+        <fa-icon [icon]="['fas','times-circle']"></fa-icon>
+      </button>
+    </div>
+  </div>
+
+  <div class="details-control-panel">
+    <button (click)="getUser()" class="btn-refresh" title="Обновить">
+      <fa-icon [icon]="['fas','sync-alt']"></fa-icon>
+    </button>
+
+    <button *ngIf="entity?.is_active" (click)="deactivateUser()" title="Деактивация пользователя" class="btn-control">
+      <!-- <fa-icon [icon]="['fas','trash-alt']" size="xs"></fa-icon> -->
+      <span class="name">Деактивация пользователя</span>
+    </button>
+
+    <button *ngIf="!entity?.is_active" (click)="activateUser()" title="Активация пользователя" class="btn-control">
+      <!-- <fa-icon [icon]="['fas','trash-alt']" size="xs"></fa-icon> -->
+      <span class="name">Активация пользователя</span>
+    </button>
+
+    <button (click)="changeUserPassword()" title="Сброс пароля" class="btn-control">
+      <!-- <fa-icon [icon]="['fas','trash-alt']" size="xs"></fa-icon> -->
+      <span class="name">Сброс пароля</span>
+    </button>
+  </div>
+
+  <div class="details-row">
+    <vdi-table-into [item]="entity" [collection]="collection" [style.width]="'100%'"
+      (edit)="edit($event)"></vdi-table-into>
+  </div>
+
+</div>

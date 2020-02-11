@@ -1,0 +1,52 @@
+<div class="form">
+
+  <div class="form-header">
+    <h1>Добавление пользователя</h1>
+    <button [mat-dialog-close]="true" class="form-close"><fa-icon [icon]="['fas','times-circle']"></fa-icon></button>
+  </div>
+
+  <ng-template #errorTemp>
+    <div class="error">Поле обязательно для заполения</div>
+  </ng-template>
+
+  <div class="form-fields" [formGroup]="form">
+    <label class="field">
+      <p class="field-name">Имя пользователя</p>
+      <input type="text" [focusMe]="true" placeholder="..." formControlName="username">
+      <ng-container *ngIf="form.hasError('required', 'username') && checkValid"><ng-container *ngTemplateOutlet="errorTemp"></ng-container></ng-container>
+    </label>
+
+    <label class="field">
+      <p class="field-name">Пароль</p>
+      <input type="password" placeholder="..." formControlName="password">
+      <ng-container *ngIf="form.hasError('required', 'password') && checkValid"><ng-container *ngTemplateOutlet="errorTemp"></ng-container></ng-container>
+    </label>
+
+    <label class="field">
+      <p class="field-name">Почтовый адрес</p>
+      <input type="text" placeholder="..." formControlName="email">
+      <ng-container *ngIf="form.hasError('required', 'email') && checkValid"><ng-container *ngTemplateOutlet="errorTemp"></ng-container></ng-container>
+    </label>
+
+    <label class="field">
+      <p class="field-name">Имя</p>
+      <input type="text" placeholder="..." formControlName="first_name">
+      <ng-container *ngIf="form.hasError('required', 'first_name') && checkValid"><ng-container *ngTemplateOutlet="errorTemp"></ng-container></ng-container>
+    </label>
+
+    <label class="field">
+      <p class="field-name">Фамилия</p>
+      <input type="text" placeholder="..." formControlName="last_name">
+      <ng-container *ngIf="form.hasError('required', 'last_name') && checkValid"><ng-container *ngTemplateOutlet="errorTemp"></ng-container></ng-container>
+    </label>
+
+    <label class="field-inline">
+      <mat-checkbox [color]="'primary'" formControlName="is_superuser">Администратор</mat-checkbox>
+    </label>
+  </div>
+
+  <div class="form-actions">
+    <button (click)="send()" class="form-btn"><fa-icon [icon]="['fas','plus-circle']" size="xs"></fa-icon><span class="action-name">Добавить</span></button>
+  </div>
+
+</div>

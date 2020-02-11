@@ -1,0 +1,31 @@
+
+<div class="control-panel">
+    
+    <div class="crumb">
+        <fa-icon [icon]="['fas','desktop']"></fa-icon>
+        <span class="crumb-name">Пулы рабочих столов</span>
+    </div>
+
+    <button (click)="refresh()" class="btn-refresh" title="Обновить">
+        <fa-icon [icon]="['fas','sync-alt']"></fa-icon>
+    </button>
+
+    <div class="control-btns">
+        <button type="button" (click)="openCreatePool()">
+            <fa-icon [icon]="['fas','plus-circle']"></fa-icon>
+            <span class="btn-name">Добавить пул</span>
+        </button>
+    </div>
+</div>
+
+<div class="components-info" #view>
+    <div class="component-list" [class.page-wrap]="pageRollup" [class.page-rollup]="pageRollup" [style.height]="pageHeight">
+        <vdi-table-component  [data]="pools" [collection]="collection" cursor="true" (clickRowData)="routeTo($event)" (sortListNow)="sortList($event)"></vdi-table-component>
+    </div>
+    <div class="component-details" [class.page-height-min]="pageHeight==pageHeightMin" [class.page-height-max]="pageRollup">
+        <router-outlet (activate)="componentActivate()" (deactivate)="componentDeactivate()"></router-outlet>
+    </div>
+</div>
+
+
+

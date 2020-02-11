@@ -1,0 +1,206 @@
+<div class="form">
+
+  <div class="form-header">
+    <p>Создание пула виртуальных машин</p>
+    <button [mat-dialog-close]="true" class="form-close"><fa-icon [icon]="['fas','times-circle']" size="s"></fa-icon></button>
+  </div>
+
+  <div  class="manager-progress">
+    <div class="manager-progress-step" *ngFor="let point of steps; let ind = index">
+      <button  [class.step-current]="point.type===step" [class.button-completed]="point.completed" [disabled]="point.disabled" (click)="send(point.type)">{{ind + 1}}</button>
+      <div class="manager-progress-step-line" [class.step-completed]="point.completed"></div>
+    </div>
+  </div>
+
+  <ng-template #errorTemp>
+    <div class="error" [@animForm]="error">Поле обязательно для заполения</div>
+  </ng-template>
+
+  <div class="form-fields" [formGroup]="chooseTypeForm" *ngIf="step === 'chooseType'" [style.paddingLeft]="'20px'">
+
+    <label class="field-inline">
+      <fa-icon [icon]="['fas','desktop']" size="m" class="icon-pool"></fa-icon>
+      <input type="radio" formControlName="type" value="Статический">
+      <p class="radio-text">Статический</p>
+    </label>
+
+    <label class="field-inline">
+      <fa-icon [icon]="['fas','tv']" size="m"  class="icon-pool"></fa-icon>
+      <input type="radio" formControlName="type" value="Автоматический">
+      <p class="radio-text">Автоматический</p>
+    </label>
+
+  </div>
+  <div class="form-actions"  *ngIf="step === 'chooseType'">
+    <button type="button" (click)="send('createPool')" class="form-btn"><span class="action-name">Далее</span></button>
+  </div>
+
+  <div class="form-fields" [formGroup]="createPoolForm" *ngIf="step === 'createPool'">
+    <label class="field">
+      <p class="field-name">Имя пула</p>
+      <input type="text" [focusMe]="true" formControlName="verbose_name">
+      <ng-container *ngIf="createPoolForm.hasError('required', 'verbose_name') && checkValid"><ng-container *ngTemplateOutlet="errorTemp"></ng-container></ng-container>
+      <div class="error" [@animForm]="error" *ngIf="createPoolForm.hasError('pattern', 'verbose_name')">Имя содержит недопустимые символы</div>
+    </label>
+
+    <label class="field" *ngIf="chooseTypeForm.value.type === 'Автоматический'">
+      <mat-form-field>
+        <mat-label  *ngIf="pending.controllers">Загрузка ...</mat-label>
+        <mat-label  *ngIf="controllers?.length && !pending.controllers">Выберите контроллер</mat-label>
+        <mat-label  *ngIf="!controllers?.length && !pending.controllers">- нет контроллера -</mat-label>
+        <mat-select (selectionChange)="selectController($event)">
+          <mat-option *ngFor="let controller of controllers" [value]="controller">
+            {{controller.address}}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+      <ng-container *ngIf="createPoolForm.hasError('required', 'controller_ip') && checkValid"><ng-container *ngTemplateOutlet="errorTemp"></ng-container></ng-container>
+    </label>
+
+    <label class="field" *ngIf="chooseTypeForm.value.type === 'Автоматический' && ipController" [@animForm]>
+      <mat-form-field>
+        <mat-label  *ngIf="pending.templates">Загрузка ...</mat-label>
+        <mat-label  *ngIf="templates?.length && !pending.templates">Выберите шаблон ВМ</mat-label>
+        <mat-label  *ngIf="!templates?.length && !pending.templates">- нет шаблонов -</mat-label>
+        <mat-select (selectionChange)="selectTemplate($event)">
+          <mat-option *ngFor="let template of templates" [value]="template">
+            {{template.verbose_name}}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+      <ng-container *ngIf="createPoolForm.hasError('required', 'template_id') && checkValid"><ng-container *ngTemplateOutlet="errorTemp"></ng-container></ng-container>
+    </label>
+
+    <label class="field" *ngIf="chooseTypeForm.value.type === 'Автоматический' && ipController || chooseTypeForm.value.type === 'Статический'" [@animForm]>
+      <mat-form-field>
+        <mat-label  *ngIf="pending.clusters">Загрузка ...</mat-label>
+        <mat-label  *ngIf="clusters?.length && !pending.clusters">Выберите кластер</mat-label>
+        <mat-label  *ngIf="!clusters?.length && !pending.clusters">- нет кластеров -</mat-label>
+        <mat-select (selectionChange)="selectCluster($event)">
+          <mat-option *ngFor="let cluster of clusters" [value]="cluster">
+            {{cluster.verbose_name}}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+      <ng-container *ngIf="createPoolForm.hasError('required', 'cluster_id') && checkValid"><ng-container *ngTemplateOutlet="errorTemp"></ng-container></ng-container>
+    </label>
+
+    <label class="field" *ngIf="idCluster" [@animForm]>
+      <mat-form-field>
+        <mat-label  *ngIf="pending.nodes">Загрузка ...</mat-label>
+        <mat-label  *ngIf="nodes?.length && !pending.nodes">Выберите сервер</mat-label>
+        <mat-label  *ngIf="!nodes?.length && !pending.nodes">- нет серверов -</mat-label>
+        <mat-select (selectionChange)="selectNode($event)" #selectNodeRef>
+          <mat-option *ngFor="let node of nodes" [value]="node">
+            {{node.verbose_name}}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+      <ng-container *ngIf="createPoolForm.hasError('required', 'node_id') && checkValid"><ng-container *ngTemplateOutlet="errorTemp"></ng-container></ng-container>
+    </label>
+
+    <label class="field" *ngIf="idNode" [@animForm]>
+      <mat-form-field>
+        <mat-label *ngIf="pending.datapools">Загрузка ...</mat-label>
+        <mat-label *ngIf="datapools?.length && !pending.datapools">Выберите пул данных</mat-label>
+        <mat-label *ngIf="!datapools?.length && !pending.datapools">- нет пулов данных -</mat-label>
+        <mat-select (selectionChange)="selectDatapool($event)" #selectDatapoolRef>
+          <mat-option *ngFor="let datapool of datapools" [value]="datapool">
+            {{datapool.verbose_name}}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+      <ng-container *ngIf="createPoolForm.hasError('required', 'datapool_id') && checkValid"><ng-container *ngTemplateOutlet="errorTemp"></ng-container></ng-container>
+    </label>
+
+    <label class="field" *ngIf="idDatapool && chooseTypeForm.value.type === 'Статический'" [@animForm]>
+      <mat-form-field>
+        <mat-label *ngIf="pending.vms">Загрузка ...</mat-label>
+        <mat-label *ngIf="vms?.length && !pending.vms">Выберите свободные ВМ</mat-label>
+        <mat-label *ngIf="!vms?.length && !pending.vms">- нет виртуальных машин -</mat-label>
+        <mat-select (selectionChange)="selectVm($event)" multiple="true" #selectVmRef>
+          <mat-option *ngFor="let vm of vms" [value]="vm">
+            {{vm.verbose_name}}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+      <ng-container *ngIf="createPoolForm.hasError('required', 'vm_ids_list') && checkValid"><ng-container *ngTemplateOutlet="errorTemp"></ng-container></ng-container>
+    </label>
+
+    <ng-container *ngIf="chooseTypeForm.value.type === 'Автоматический'">
+      <label class="field">
+        <p class="field-name">Имя шаблона для ВМ</p>
+        <input type="text" formControlName="vm_name_template">
+        <ng-container *ngIf="createPoolForm.hasError('required', 'vm_name_template') && checkValid"><ng-container *ngTemplateOutlet="errorTemp"></ng-container></ng-container>
+        <div class="error" [@animForm]="error" *ngIf="createPoolForm.hasError('pattern', 'vm_name_template')">Имя содержит недопустимые символы</div>
+      </label>
+
+      <div formGroupName="size"  class="field">
+        <label class="field">
+          <p class="field-name">Начальное количество ВМ</p>
+          <input type="number" formControlName="initial_size" min="0" max="200">
+          <ng-container *ngIf="createPoolForm.get('size').hasError('required', 'initial_size') && checkValid"><ng-container *ngTemplateOutlet="errorTemp"></ng-container></ng-container>
+          <ng-container *ngIf="createPoolForm.get('size').controls.initial_size.touched && createPoolForm.get('size').controls.initial_size.dirty">
+            <div class="error" [@animForm]="error" *ngIf="createPoolForm.get('size').hasError('max', 'initial_size') || createPoolForm.get('size').hasError('min', 'initial_size')">Начальное количество ВМ должно быть в интервале 1 - 200</div>
+          </ng-container>
+        </label>
+    
+        <label class="field">
+          <p class="field-name">Максимальное количество создаваемых ВМ</p>
+          <input type="number" formControlName="total_size"  min="0">
+          <ng-container *ngIf="createPoolForm.get('size').hasError('required', 'total_size') && checkValid"><ng-container *ngTemplateOutlet="errorTemp"></ng-container></ng-container>
+          <ng-container *ngIf="createPoolForm.get('size').controls.total_size.touched && createPoolForm.get('size').controls.total_size.dirty">
+            <div class="error" *ngIf="createPoolForm.get('size').hasError('max', 'total_size') || createPoolForm.get('size').hasError('min', 'total_size')">Максимальное количество создаваемых ВМ должно быть в интервале 1-1000</div>
+            <div class="error" *ngIf="createPoolForm.get('size')?.errors?.maxLessInitial">Максимальное количество ВМ не может быть меньше начального количества ВМ</div>
+          </ng-container>
+        </label>
+  
+        <label class="field">
+          <p class="field-name">Количество создаваемых ВМ</p>
+          <input type="number" formControlName="reserve_size"  min="0">
+          <ng-container *ngIf="createPoolForm.get('size').hasError('required', 'reserve_size') && checkValid"><ng-container *ngTemplateOutlet="errorTemp"></ng-container></ng-container>
+
+          <ng-container *ngIf="createPoolForm.get('size')?.controls?.reserve_size.touched && createPoolForm.get('size')?.controls?.reserve_size.dirty">
+            <div class="error" *ngIf="(createPoolForm.get('size').hasError('min', 'reserve_size') ||  createPoolForm.get('size').hasError('max', 'reserve_size'))">
+              Количество создаваемых ВМ должно быть в интервале 1-200
+            </div>
+          </ng-container>
+        </label>
+
+        <label class="field">
+          <p class="field-name">Порогове количество свободных ВМ</p>
+          <input type="number" formControlName="min_free_vms_amount"  min="1">
+          <ng-container *ngIf="createPoolForm.get('size').hasError('required', 'min_free_vms_amount') && checkValid"><ng-container *ngTemplateOutlet="errorTemp"></ng-container></ng-container>
+
+          <ng-container *ngIf="createPoolForm.get('size').controls.min_free_vms_amount.touched && createPoolForm.get('size').controls.min_free_vms_amount.dirty">
+            <div class="error" *ngIf="(createPoolForm.get('size').hasError('min', 'min_free_vms_amount') || createPoolForm.get('size')?.errors?.freeVmsMoreReserve)">
+              Порогове количество свободных ВМ должно быть меньше или равно количеству создаваемых ВМ и больше 1
+            </div>
+          </ng-container>
+        </label>
+    </div>
+
+    <label class="field-inline" [@animForm]>
+      <mat-checkbox [color]="'warn'" formControlName="create_thin_clones"></mat-checkbox>
+      <p class="description">Создать тонкие клоны</p>
+    </label>
+  </ng-container>
+
+  </div>
+
+  <div class="form-actions" *ngIf="step === 'createPool'">
+    <button (click)="send('chooseType')" class="form-btn width-between"><span class="action-name">Назад</span></button>
+    <button  (click)="send('finish-see')" class="form-btn width-between"><span class="action-name">Далее</span></button>
+  </div>
+
+
+  <div class="field-table" *ngIf="step === 'finish-see'" [style.paddingBottom]="'20px'">
+    <h1 class="title">Информация о создаваемом пуле</h1>
+    <vdi-table-into [item]="finishPoolView" [collection]="tableField"></vdi-table-into>
+  </div>
+  <div class="form-actions" *ngIf="step === 'finish-see'">
+    <button (click)="send('createPool')" class="form-btn width-between" ><span class="action-name" >Назад</span></button>
+    <button (click)="send('finish-ok')" class="form-btn width-between" ><span class="action-name">Cоздать пул</span></button>
+  </div>
+  
+</div>

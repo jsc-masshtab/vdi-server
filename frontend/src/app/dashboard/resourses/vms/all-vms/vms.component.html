@@ -1,0 +1,22 @@
+
+<div class="control-panel">
+    
+    <div class="crumb">
+        <fa-icon [icon]="['fas','desktop']"></fa-icon>
+        <span class="crumb-name">Виртуальные машины</span>
+    </div>
+
+    <button (click)="getAllVms()" class="btn-refresh" title="Обновить">
+        <fa-icon [icon]="['fas','sync-alt']"></fa-icon>
+    </button>
+
+</div>
+
+<div class="components-info" #view>
+    <div class="component-list"  [class.page-wrap]="pageRollup" [class.page-rollup]="pageRollup" [style.height]="pageHeight">
+        <vdi-table-component [data]="vms" [collection]="collection" entity="vm" cursor="true" (clickRowData)="routeTo($event)" cursor="true"></vdi-table-component>
+    </div>
+    <div class="component-details" [class.page-height-min]="pageHeight==pageHeightMin" [class.page-height-max]="pageRollup">
+        <router-outlet (activate)="componentActivate()" (deactivate)="componentDeactivate()"></router-outlet>
+    </div>
+</div>

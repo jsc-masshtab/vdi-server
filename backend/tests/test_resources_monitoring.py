@@ -1,22 +1,40 @@
+# -*- coding: utf-8 -*-
 import pytest
+import json
 
-from starlette.testclient import TestClient
+import tornado
+from tornado.testing import AsyncHTTPTestCase, gen_test
 
-from vdi.application.app import app
+from resources_monitoring.handlers import VdiFrontWsHandler
 
 
-@pytest.mark.ws
-def test_resources_subscriptions():
-    client = TestClient(app)
-    with client.websocket_connect('/subscriptions') as websocket:
+pytestmark = [pytest.mark.ws_requests]
+
+
+class TestWebSockets(AsyncHTTPTestCase):
+    """Check ws subscription mechanism"""
+    def get_app(self):
+        # dummy application
+        app = tornado.web.Application([
+            (r'/subscriptions/?', VdiFrontWsHandler)
+        ])
+        return app
+
+    @gen_test
+    def test_websocket(self):
+        # self.get_http_port() gives us the port of the running test server.
+        ws_url = "ws://localhost:" + str(self.get_http_port()) + "/subscriptions"
+
+        ws_client = yield tornado.websocket.websocket_connect(ws_url)
+
         # subscribe
-        websocket.send_text('add /domains/')
-        data = websocket.receive_json()
-        print('data_from_server: ', data)
-        assert not data['error']
+        ws_client.write_message('add /domains/')
+        response = yield ws_client.read_message()
+        data = json.loads(response)
+        self.assertEqual(data['error'], False)
 
         # unsubscribe
-        websocket.send_text('delete /domains/')
-        data = websocket.receive_json()
-        print('data_from_server: ', data)
-        assert not data['error']
+        ws_client.write_message('delete /domains/')
+        response = yield ws_client.read_message()
+        data = json.loads(response)
+        self.assertEqual(data['error'], False)

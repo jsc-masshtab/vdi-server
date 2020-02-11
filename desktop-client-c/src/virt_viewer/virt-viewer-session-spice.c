@@ -40,9 +40,6 @@ static gchar *spice_session_username = NULL;
 static gchar *spice_session_password = NULL;
 
 
-gboolean  take_extern_credentials = FALSE;
-
-
 G_DEFINE_TYPE (VirtViewerSessionSpice, virt_viewer_session_spice, VIRT_VIEWER_TYPE_SESSION)
 
 
@@ -376,15 +373,15 @@ uuid_changed(GObject *gobject G_GNUC_UNUSED,
 static void
 name_changed(GObject *gobject G_GNUC_UNUSED,
               GParamSpec *pspec G_GNUC_UNUSED,
-              VirtViewerSessionSpice *self)
+              VirtViewerSessionSpice *self G_GNUC_UNUSED)
 {
-    gchar *name = NULL;
-    VirtViewerApp *app = virt_viewer_session_get_app(VIRT_VIEWER_SESSION(self));
+    //gchar *name = NULL;
+    //VirtViewerApp *app = virt_viewer_session_get_app(VIRT_VIEWER_SESSION(self));
 
-    g_object_get(self->priv->session, "name", &name, NULL);
+    //g_object_get(self->priv->session, "name", &name, NULL);
 
     //g_object_set(app, "guest-name", name, NULL);
-    g_free(name);
+    //g_free(name);
 }
 
 static void
@@ -1182,8 +1179,8 @@ virt_viewer_session_spice_get_main_channel(VirtViewerSessionSpice *self)
     return self->priv->main_channel;
 }
 
-void
-setSpiceSessionCredentials(gchar *username, gchar *password)
+void // todo: избавиться от этого
+virt_viewer_session_spice_set_credentials(gchar *username, gchar *password)
 {
     free_memory_safely(&spice_session_username);
     free_memory_safely(&spice_session_password);

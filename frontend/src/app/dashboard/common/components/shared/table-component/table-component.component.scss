@@ -1,0 +1,187 @@
+:host {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.table-component {
+    font-size: 13px;
+    height: 100%;
+
+    header {
+        display: flex;
+        font-size: 11px;
+        color: rgba(0,0,0,0.6);
+        background: rgb(217, 236, 244);
+        width: 100%;
+        font-weight: bold;
+    }
+
+    .table-header-part {
+        flex: 1;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+        position: relative;
+        padding: 5px;
+    }
+
+    .icon-sort {
+        position: absolute;
+        right: 0px;
+        width: 50px;
+        text-align: center;
+        color: #39769a;
+    }
+
+    .table-area {
+        display: flex;
+        flex-direction: column;
+        font-size: 13px;
+        background: #fff;
+        height: calc(100% - 21px);
+        overflow-y: auto;
+        background-color: #f5f5f5;
+        background-image: linear-gradient(to right bottom, rgba(255,255,255,0) 8px, #fff 9px, rgba(255,255,255,0) 10px),linear-gradient(to left bottom, rgba(255,255,255,0) 8px, #fff 9px, rgba(255,255,255,0) 10px);
+        background-repeat: repeat;
+        background-size: 12px 14px, 12px 14px, 12px 11px;
+        background-position: 0 0, 0 0, 0 20px;
+    }
+
+    .table-area-object {
+        display: flex;
+        border-bottom: 1px solid #DCDCDC;
+        background: #FFF;
+        cursor: default;
+        color: rgba(0, 0, 0, 0.6);
+        flex-shrink: 0;
+
+        &:hover {
+            background-color: #f9f9f9;
+            color:#698f96;
+        }
+
+        &:focus {
+            background-color: #f9f9f9;
+            color:#698f96;
+        }
+
+        &.status-fail {
+            background: #F08080;
+            color: #FFF;
+    
+            &:hover {
+                background-color: rgba(#F08080, 0.8);
+            }
+        }
+    
+        &.status-halt {
+            background-color: #fbe9c7;
+    
+            &:hover {
+                background-color: rgba(#fbe9c7, 0.8);
+            }
+        }
+    }
+
+    .table-area-property {
+        display: flex;
+        flex: 1;
+        border-right: 1px solid #DCDCDC;
+        padding: 6px;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+        overflow: hidden; 
+
+        &:last-child {
+            border-right: none;
+        }
+
+        > span.for-wrap {
+            display: flex;
+            flex-wrap: wrap; // flex-wrap: wrap; // при пользователях пула,например, не переносит слова break-word и не работает в edge
+            -ms-word-break: break-all;
+            /* This is the dangerous one in WebKit, as it breaks things wherever */
+            word-break: break-all;
+        }
+    }
+
+
+    .icon-group {
+        display: flex;
+        position: relative;
+        width: 20px;
+        margin-right: 5px;
+    }
+
+    fa-icon.extra-icon {
+        position: absolute;
+        bottom: -4px;
+        left: 16px;
+        font-size: 9px;
+        &.on {
+            color: #8bd22f;
+        }
+
+        &.off {
+            color: #F4493C;
+        }
+
+        &.suspended {
+            color: #d8a172;
+        }
+
+        &.undefined {
+            color: sienna;
+        }
+    }
+
+    fa-icon {
+        &.stateOn {
+            color: green;
+        }
+
+        &.stateOff {
+            color: red;
+        }
+    }
+
+    // частные случаи столбца
+
+    .name-start {
+        justify-content: flex-start;
+        min-width: 30%;
+    }
+
+    .name-end {
+        max-width: 200px;
+    }
+
+    .header-start {
+        min-width: 30%;
+    }
+
+    .name-entity {
+        margin-left: 5px;
+    }
+
+}
+
+.table-no-data {
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: #f5f5f5;
+    background-image: linear-gradient(to right bottom, rgba(255,255,255,0) 8px, #fff 9px, rgba(255,255,255,0) 10px),linear-gradient(to left bottom, rgba(255,255,255,0) 8px, #fff 9px, rgba(255,255,255,0) 10px);
+    background-repeat: repeat;
+    background-size: 12px 14px, 12px 14px, 12px 11px;
+    background-position: 0 0, 0 0, 0 20px;
+
+    fa-icon {
+        font-size: 50px;
+        color: rgb(216, 216, 216);
+    }
+}

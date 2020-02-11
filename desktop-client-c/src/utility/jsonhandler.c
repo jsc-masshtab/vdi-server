@@ -6,7 +6,7 @@
 
 #include "jsonhandler.h"
 
-JsonObject *get_json_object(JsonParser *parser, const gchar *data)
+JsonObject *get_root_json_object(JsonParser *parser, const gchar *data)
 {
 
     gboolean result = json_parser_load_from_data (parser, data, -1, NULL);
@@ -21,35 +21,30 @@ JsonObject *get_json_object(JsonParser *parser, const gchar *data)
     return object;
 }
 
-JsonArray *get_json_array(JsonParser *parser, const gchar *data)
-{
-    gboolean result = json_parser_load_from_data (parser, data, -1, NULL);
-    if(!result)
-        return NULL;
-
-    JsonNode *root = json_parser_get_root (parser);
-    if(!JSON_NODE_HOLDS_ARRAY (root))
-        return NULL;
-
-    JsonArray *array = json_node_get_array (root);
-
-    return array;
-}
-
-gint64 json_object_get_int_member_safely(JsonObject  *object, const gchar *member_name)
+gint64 json_object_get_int_member_safely(JsonObject *object, const gchar *member_name)
 {
     if (json_object_has_member(object, member_name))
         return json_object_get_int_member(object, member_name);
 
-    printf("json member %s does not exist \n", member_name);
+    printf("json member '%s' does not exist \n", member_name);
     return 0;
 }
 
-const gchar *json_object_get_string_member_safely(JsonObject  *object,const gchar *member_name)
+const gchar *json_object_get_string_member_safely(JsonObject *object,const gchar *member_name)
 {
     if (json_object_has_member(object, member_name))
         return json_object_get_string_member(object, member_name);
 
-    printf("json member %s does not exist \n", member_name);
+    printf("json member '%s' does not exist \n", member_name);
     return "";
 }
+
+JsonObject *json_object_get_object_member_safely(JsonObject *object, const gchar *member_name)
+{
+    if (json_object_has_member(object, member_name))
+        return json_object_get_object_member(object, member_name);
+
+    printf("json member '%s' does not exist \n", member_name);
+    return NULL;
+}
+

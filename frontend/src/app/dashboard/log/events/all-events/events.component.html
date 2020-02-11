@@ -1,0 +1,80 @@
+
+
+<div class="control-panel flexable-height">
+    
+    <div class="crumb">
+        <fa-icon [icon]="['fas','comment']"></fa-icon>
+        <span class="crumb-name">События</span>
+    </div>
+
+    <button (click)="refresh()" class="btn-refresh" title="Обновить">
+        <fa-icon [icon]="['fas','sync-alt']"></fa-icon>
+    </button>
+
+    <span><pre>Диапазон с  </pre></span> 
+    <input [matDatepicker]="start_picker" [formControl]="start_date">
+    <mat-datepicker-toggle [for]="start_picker"></mat-datepicker-toggle>
+    <mat-datepicker #start_picker></mat-datepicker>
+
+    <span><pre>по   </pre></span>
+    <input [matDatepicker]="end_picker" [formControl]="end_date">
+    <mat-datepicker-toggle [for]="end_picker"></mat-datepicker-toggle>
+    <mat-datepicker #end_picker></mat-datepicker>
+
+    <mat-form-field class="events-field">
+        <mat-label>Тип событий</mat-label>
+        <mat-select [formControl]="event_type">
+            <mat-option [value]="'all'">
+                Все
+            </mat-option>
+            <mat-option [value]="0">
+                Информационные
+            </mat-option>
+            <mat-option [value]="1">
+                Предупреждения
+            </mat-option>
+            <mat-option [value]="2">
+                Ошибки
+            </mat-option>
+        </mat-select>
+    </mat-form-field>
+
+    <mat-form-field class="events-field">
+        <mat-label>Пользователь</mat-label>
+        <mat-select [formControl]="user">
+            <mat-option [value]="'all'">
+                Все
+            </mat-option>
+            <mat-option [value]="'system'">
+                Системные
+            </mat-option>
+            <mat-option [value]="user.username" *ngFor="let user of users">
+                {{ user.username }}
+            </mat-option>
+        </mat-select>
+    </mat-form-field>
+
+    <mat-form-field class="events-field">
+        <mat-label>Тип сущности</mat-label>
+        <mat-select [formControl]="entity_type">
+            <mat-option [value]="'all'">
+                Все
+            </mat-option>
+            <mat-option [value]="type" *ngFor="let type of entity_types">
+                {{ type }}
+            </mat-option>
+        </mat-select>
+    </mat-form-field>
+
+    <mat-checkbox class="events-checkbox" [color]="'primary'" [formControl]="readed">
+        Прочитанные пользователем
+    </mat-checkbox>
+</div>
+
+<div class="components-info">
+    <div class="component-list">
+        <vdi-table-component cursor="true" class="table-with-pagination" [data]="events" [collection]="collection" (clickRowData)="clickRow($event)" entity="events"></vdi-table-component>
+        <vdi-pagination [count]="count" [limit]="limit" [offset]="offset" (action)="toPage($event)"></vdi-pagination>
+    </div>
+</div>
+

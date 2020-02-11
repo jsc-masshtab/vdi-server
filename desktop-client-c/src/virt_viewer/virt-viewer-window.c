@@ -1149,8 +1149,7 @@ virt_viewer_window_menu_switch_off(GtkWidget *menu G_GNUC_UNUSED, VirtViewerWind
 {
     printf("%s\n", (const char *)__func__);
     // turn off polling if its in process
-    RemoteViewer *remote_viewer = REMOTE_VIEWER(self->priv->app);
-    virt_viewer_stop_reconnect_poll(remote_viewer);
+    virt_viewer_stop_reconnect_poll(self->priv->app);
     // hide monitor windows
     virt_viewer_app_hide_all_windows_forced(self->priv->app);
     //deactivare app
@@ -1163,8 +1162,7 @@ virt_viewer_window_menu_start_vm(GtkWidget *menu G_GNUC_UNUSED, VirtViewerWindow
     printf("%s\n", (const char *)__func__);
     do_action_on_vm_async("start", FALSE);
     // start connect atempts
-    RemoteViewer *remote_viewer = REMOTE_VIEWER(self->priv->app);
-    virt_viewer_start_reconnect_poll(remote_viewer);
+    virt_viewer_start_reconnect_poll(self->priv->app);
 }
 
 G_MODULE_EXPORT void
@@ -1350,7 +1348,7 @@ virt_viewer_window_update_title(VirtViewerWindow *self)
 }
 
 void
-virt_viewer_window_set_menu_displays_sensitive(VirtViewerWindow *self, gboolean sensitive)
+virt_viewer_window_set_menu_displays_sensitive(VirtViewerWindow *self, gboolean sensitive G_GNUC_UNUSED)
 {
     VirtViewerWindowPrivate *priv;
     GtkWidget *menu;
