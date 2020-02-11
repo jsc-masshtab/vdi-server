@@ -69,7 +69,7 @@ class User(AbstractSortableStatusModel, db.Model, AbstractEntity):
         return 'Security'
 
     @property
-    async def assingned_groups(self):
+    async def assigned_groups(self):
         groups = await Group.join(UserGroup.query.where(UserGroup.user_id == self.id).alias()).select().gino.load(
             Group).all()
         return groups
@@ -91,7 +91,7 @@ class User(AbstractSortableStatusModel, db.Model, AbstractEntity):
 
         application_log.debug('User {} roles: {}'.format(self.username, all_roles_list))
 
-        user_groups = await self.groups
+        user_groups = await self.assigned_groups
         for group in user_groups:
             group_roles = await group.roles
             application_log.debug('Group {} roles: {}'.format(group.verbose_name, group_roles))

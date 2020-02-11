@@ -101,7 +101,7 @@ class UserType(graphene.ObjectType):
 
     async def resolve_assigned_groups(self, _info):
         user = await User.get(self.id)
-        return await user.assingned_groups
+        return await user.assigned_groups
 
     async def resolve_possible_groups(self, _info):
         user = await User.get(self.id)

@@ -22,9 +22,13 @@ class TestGroupSchema:
           groups {
             verbose_name
             description
-            users {
+            assigned_users {
               email
               username
+            }
+            possible_users {
+                email
+                username
             }
           }
         }"""
@@ -38,9 +42,13 @@ class TestGroupSchema:
                     id
                     verbose_name
                     description
-                    users {
+                    assigned_users {
                       email
                       username
+                    }
+                    possible_users {
+                        email
+                        username
                     }
                   }
                 }"""
@@ -52,7 +60,7 @@ class TestGroupSchema:
         query = """mutation{createGroup(verbose_name: "test group 2"){
                   group{
                     verbose_name,
-                    users{
+                    assigned_users{
                       email
                     }
                   },
@@ -67,7 +75,7 @@ class TestGroupSchema:
         query = """mutation{createGroup(verbose_name: "test_group_1"){
                           group{
                             verbose_name,
-                            users{
+                            assigned_users{
                               email
                             }
                           },
@@ -87,7 +95,7 @@ class TestGroupSchema:
                         verbose_name: "test group updated") {
                         group {
                           verbose_name
-                          users {
+                          assigned_users {
                             email
                           }
                         }
@@ -112,7 +120,10 @@ class TestGroupSchema:
                                     users: ["f9599771-cc95-45e4-9ae5-c8177b796aff"]) {
                         group {
                           verbose_name
-                          users {
+                          assigned_users {
+                            email
+                          }
+                          possible_users {
                             email
                           }
                         }
@@ -128,7 +139,10 @@ class TestGroupSchema:
                                     users: ["f9599771-cc95-45e4-9ae5-c8177b796aff"]) {
                         group {
                           verbose_name
-                          users {
+                          assigned_users {
+                            email
+                          }
+                          possible_users {
                             email
                           }
                         }
@@ -144,8 +158,8 @@ class TestGroupSchema:
                     roles: [NETWORK_ADMINISTRATOR, VM_OPERATOR]) {
                     ok,
                     group {
-                        verbose_name,
-                        assigned_roles,
+                        verbose_name
+                        assigned_roles
                         possible_roles
                         }
                     }
@@ -157,8 +171,8 @@ class TestGroupSchema:
                             roles: [VM_OPERATOR]) {
                             ok,
                             group {
-                                verbose_name,
-                                assigned_roles,
+                                verbose_name
+                                assigned_roles
                                 possible_roles
                                 }
                             }
