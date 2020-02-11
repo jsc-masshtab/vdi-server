@@ -17,8 +17,8 @@ export class GroupsDetailsComponent implements OnInit, OnDestroy {
   private sub: Subscription;
   private id: string;
   public entity: [] = [];
-  private host: boolean = false;
-  public  menuActive: string = 'info';
+  public host: boolean = false;
+  public menuActive: string = 'info';
 
   public collection: object[] = [
     {
