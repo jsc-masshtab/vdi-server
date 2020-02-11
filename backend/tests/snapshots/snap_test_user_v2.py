@@ -89,8 +89,16 @@ snapshots['TestUserSchema.test_user_role 1'] = {
     'addUserRole': {
         'ok': True,
         'user': {
-            'roles': [
+            'assigned_roles': [
                 'VM_OPERATOR'
+            ],
+            'possible_roles': [
+                'READ_ONLY',
+                'ADMINISTRATOR',
+                'SECURITY_ADMINISTRATOR',
+                'VM_ADMINISTRATOR',
+                'NETWORK_ADMINISTRATOR',
+                'STORAGE_ADMINISTRATOR'
             ],
             'username': 'test_group_1'
         }
@@ -101,7 +109,16 @@ snapshots['TestUserSchema.test_user_role 2'] = {
     'removeUserRole': {
         'ok': True,
         'user': {
-            'roles': [
+            'assigned_roles': [
+            ],
+            'possible_roles': [
+                'READ_ONLY',
+                'ADMINISTRATOR',
+                'SECURITY_ADMINISTRATOR',
+                'VM_ADMINISTRATOR',
+                'NETWORK_ADMINISTRATOR',
+                'STORAGE_ADMINISTRATOR',
+                'VM_OPERATOR'
             ],
             'username': 'test_group_1'
         }

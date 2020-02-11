@@ -145,7 +145,8 @@ class TestGroupSchema:
                     ok,
                     group {
                         verbose_name,
-                        roles
+                        assigned_roles,
+                        possible_roles
                         }
                     }
                     }"""
@@ -157,7 +158,8 @@ class TestGroupSchema:
                             ok,
                             group {
                                 verbose_name,
-                                roles
+                                assigned_roles,
+                                possible_roles
                                 }
                             }
                             }"""

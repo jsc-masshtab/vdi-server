@@ -3,7 +3,7 @@ import graphene
 import re
 
 from auth.models import User
-from database import RoleTypeGraphene
+from database import RoleTypeGraphene, Role
 from common.veil_validators import MutationValidation
 from common.veil_errors import SimpleError, ValidationError
 from common.veil_decorators import security_administrator_required, readonly_required
@@ -78,7 +78,8 @@ class UserType(graphene.ObjectType):
     is_active = graphene.Boolean()
 
     groups = graphene.List(UserGroupType)
-    roles = graphene.List(RoleTypeGraphene)
+    assigned_roles = graphene.List(RoleTypeGraphene)
+    possible_roles = graphene.List(RoleTypeGraphene)
 
     @staticmethod
     def instance_to_type(model_instance):
@@ -100,10 +101,17 @@ class UserType(graphene.ObjectType):
         user = await User.get(self.id)
         return await user.groups
 
-    async def resolve_roles(self, _info):
+    async def resolve_assigned_roles(self, _info):
         """Отображается объединение пользовательский ролей с ролями пользовательских групп."""
         user = await User.get(self.id)
         return await user.roles
+
+    async def resolve_possible_roles(self, _info):
+        assigned_roles = await self.resolve_assigned_roles(_info)
+        all_roles = [role_type for role_type in Role]
+        # Чтобы порядок всегда был одинаковый
+        possible_roles = [role for role in all_roles if role not in assigned_roles]
+        return possible_roles
 
 
 class UserQuery(graphene.ObjectType):
@@ -275,7 +283,6 @@ class UserMutations(graphene.ObjectType):
     addUserRole = AddUserRoleMutation.Field()
     removeUserRole = RemoveUserRoleMutation.Field()
     # TODO: добавление групп пользователю
-    # TODO: show all roles in the system?
 
 
 user_schema = graphene.Schema(mutation=UserMutations,

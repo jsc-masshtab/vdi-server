@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import graphene
 
-from database import db, RoleTypeGraphene
+from database import db, RoleTypeGraphene, Role
 from auth.models import Group, User, UserGroup
 from common.veil_validators import MutationValidation
 from common.veil_errors import SimpleError, ValidationError
@@ -46,7 +46,8 @@ class GroupType(graphene.ObjectType):
     date_updated = graphene.DateTime()
 
     users = graphene.List(UserType)
-    roles = graphene.List(RoleTypeGraphene)
+    assigned_roles = graphene.List(RoleTypeGraphene)
+    possible_roles = graphene.List(RoleTypeGraphene)
 
     @staticmethod
     def instance_to_type(model_instance):
@@ -65,10 +66,17 @@ class GroupType(graphene.ObjectType):
         ]
         return objects
 
-    async def resolve_roles(self, _info):
+    async def resolve_assigned_roles(self, _info):
         group = await Group.get(self.id)
         roles = await group.roles
         return [role_type.role for role_type in roles]
+
+    async def resolve_possible_roles(self, _info):
+        assigned_roles = await self.resolve_assigned_roles(_info)
+        all_roles = [role_type for role_type in Role]
+        # Чтобы порядок всегда был одинаковый
+        possible_roles = [role for role in all_roles if role not in assigned_roles]
+        return possible_roles
 
 
 class GroupQuery(graphene.ObjectType):
@@ -233,7 +241,6 @@ class GroupMutations(graphene.ObjectType):
     removeGroupUsers = RemoveGroupUsersMutation.Field()
     addGroupRole = AddGroupRoleMutation.Field()
     removeGroupRole = RemoveGroupRoleMutation.Field()
-    # TODO: show all roles in the system?
 
 
 group_schema = graphene.Schema(query=GroupQuery,
