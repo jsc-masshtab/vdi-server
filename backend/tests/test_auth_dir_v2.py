@@ -6,10 +6,9 @@
 import pytest
 
 from tests.utils import execute_scheme, ExecError
-from tests.fixtures import fixt_db, auth_context_fixture  # noqa
 
-from auth.auth_dir_schema import auth_dir_schema
-from auth.models import AuthenticationDirectory
+from auth.authentication_directory.auth_dir_schema import auth_dir_schema
+from auth.authentication_directory.models import AuthenticationDirectory
 
 pytestmark = [pytest.mark.asyncio, pytest.mark.auth_dir, pytest.mark.auth]
 

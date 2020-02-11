@@ -3,7 +3,8 @@ from abc import ABC
 
 from common.veil_handlers import BaseHandler
 from auth.utils.veil_jwt import encode_jwt, extract_user_and_token_with_no_expire_check
-from auth.models import User, AuthenticationDirectory
+from auth.models import User
+from auth.authentication_directory.models import AuthenticationDirectory
 from event.models import Event
 
 

@@ -2,7 +2,7 @@ import graphene
 from graphene import Enum as GrapheneEnum
 import re
 
-from auth.models import AuthenticationDirectory
+from auth.authentication_directory.models import AuthenticationDirectory, Mapping
 from common.veil_validators import MutationValidation
 from common.veil_errors import SimpleError, ValidationError
 from common.veil_decorators import security_administrator_required, readonly_required
@@ -12,6 +12,7 @@ from database import StatusGraphene
 
 ConntectionTypesGraphene = GrapheneEnum.from_enum(AuthenticationDirectory.ConnectionTypes)
 DirectoryTypesGraphene = GrapheneEnum.from_enum(AuthenticationDirectory.DirectoryTypes)
+MappingTypesGraphene = GrapheneEnum.from_enum(Mapping.MappingTypes)
 
 
 class AuthenticationDirectoryValidator(MutationValidation):
@@ -198,6 +199,16 @@ class UpdateAuthenticationDirectoryMutation(graphene.Mutation, AuthenticationDir
         return UpdateAuthenticationDirectoryMutation(
             auth_dir=AuthenticationDirectoryType(**auth_dir.__values__),
             ok=True)
+
+
+# class AddMappingMutation(graphene.Mutation):
+#     class Arguments:
+#         verbose_name = graphene.String(required=True)
+#         description = graphene.String()
+#         priority = graphene.Int(default_value=0)
+#         groups = None
+#         attribute = None
+#         attribute_values = None
 
 
 class AuthenticationDirectoryMutations(graphene.ObjectType):

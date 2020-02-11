@@ -16,7 +16,7 @@ from common.veil_handlers import VdiTornadoGraphQLHandler
 from event.schema import event_schema
 from auth.user_schema import user_schema
 from auth.group_schema import group_schema
-from auth.auth_dir_schema import auth_dir_schema
+from auth.authentication_directory.auth_dir_schema import auth_dir_schema
 from pool.schema import pool_schema
 from vm.schema import vm_schema
 from controller.schema import controller_schema
