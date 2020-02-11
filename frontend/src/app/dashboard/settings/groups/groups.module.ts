@@ -12,6 +12,8 @@ import { ReactiveFormsModule } from '@angular/forms';
 import { GroupsDetailsComponent } from './groups-details/groups-details.component';
 import { MatCheckboxModule } from '@angular/material';
 import { GroupsService } from './groups.service';
+import { AddRoleComponent } from './groups-details/add-role/add-role.component';
+import { RemoveRoleComponent } from './groups-details/remove-role/remove-role.component';
 
 
 
@@ -20,7 +22,9 @@ import { GroupsService } from './groups.service';
    declarations: [
       GroupsComponent,
       AddGroupComponent,
-      GroupsDetailsComponent
+      GroupsDetailsComponent,
+      AddRoleComponent,
+      RemoveRoleComponent
    ],
    imports: [
       SharedModule,
@@ -39,7 +43,9 @@ import { GroupsService } from './groups.service';
       GroupsComponent
    ],
    entryComponents: [
-      AddGroupComponent
+      AddGroupComponent,
+      AddRoleComponent,
+      RemoveRoleComponent
    ]
 })
 export class GroupsModule { }

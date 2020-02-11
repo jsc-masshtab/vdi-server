@@ -49,6 +49,8 @@ export class GroupsService  {
                                 users {
                                     username
                                 }
+                                assigned_roles
+                                possible_roles
                             }
                         }
                     `,
@@ -100,4 +102,49 @@ export class GroupsService  {
             }
         });
     }
+
+    public addGroupRole(roles: [], id: string) {
+        return this.service.mutate<any>({
+            mutation: gql`
+                            mutation groups(
+                                $roles: [Role!]!,
+                                $id: UUID!){
+                                addGroupRole(
+                                    roles: $roles,
+                                    id: $id
+                                ){
+                                    ok
+                                }
+                            }
+            `,
+            variables: {
+                method: 'POST',
+                roles,
+                id
+            }
+        });
+    }
+
+    public removeGroupRole(roles: [], id: string) {
+        return this.service.mutate<any>({
+            mutation: gql`
+                            mutation groups(
+                                $roles: [Role!]!,
+                                $id: UUID!){
+                                removeGroupRole(
+                                    roles: $roles,
+                                    id: $id
+                                ){
+                                    ok
+                                }
+                            }
+            `,
+            variables: {
+                method: 'POST',
+                roles,
+                id
+            }
+        });
+    }
+
 }

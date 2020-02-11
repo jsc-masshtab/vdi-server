@@ -4,10 +4,9 @@
     <div class="title">
       <fa-icon [icon]="['fas','users-cog']" size="s"></fa-icon>
       <span class="name">
-        Группа <span>{{entity?.verbose_name}}</span>
+        Группа <span *ngIf="host">{{entity?.verbose_name}}</span>
       </span>
     </div>
-
     <div class="btns-part">
       <button class="btn-close" (click)="close()">
         <fa-icon [icon]="['fas','times-circle']"></fa-icon>
@@ -19,18 +18,26 @@
     <button (click)="getGroup()" class="btn-refresh" title="Обновить">
       <fa-icon [icon]="['fas','sync-alt']"></fa-icon>
     </button>
+    <ng-container *ngIf="menuActive === 'roles'">
+      <button class="btn-control" (click)="addRole()" title="Добавить роль"><fa-icon [icon]="['fas','plus-circle']" size="xs"></fa-icon><span class="name">Добавить роль</span></button>
+      <button class="btn-control" *ngIf="entity.assigned_roles.length" (click)="removeRole()" title="Удалить роль"><fa-icon [icon]="['fas','trash-alt']" size="xs"></fa-icon><span class="name">Удалить роль</span></button>
+    </ng-container>
   </div>
+
 
   <div class="details-row">
     <ul class="details-menu">
       <li (click)="routeTo('info')" [class.active]="menuActive === 'info'" title="Информация о группе"> <fa-icon [icon]="['fas','chart-bar']"></fa-icon><span class="name">Информация</span></li>
+      <li (click)="routeTo('roles')" [class.active]="menuActive === 'roles'" title="Роли группы"> <fa-icon [icon]="['fas','users-cog']"></fa-icon><span class="name">Роли</span></li>
     </ul>
     <div class="details-slide" *ngIf="host">
       <div class="details-slide-header">
         <ng-container *ngIf="menuActive === 'info'">Информация о группе</ng-container>
+        <ng-container *ngIf="menuActive === 'roles'">Доступные роли группы</ng-container>
       </div>
       <div class="details-slide-into">
         <vdi-table-into *ngIf="menuActive === 'info'" [item]="entity" [collection]="collection" (edit)="edit($event)"></vdi-table-into>
+        <vdi-table-component *ngIf="menuActive === 'roles'" [data]="entity.assigned_roles" [collection]="collection_roles"></vdi-table-component>
       </div>     
     </div>
   </div>

@@ -4,6 +4,8 @@ import { Subscription } from 'rxjs';
 import { GroupsService} from '../groups.service';
 import { ActivatedRoute, Router, ParamMap } from '@angular/router';
 import { MatDialog } from '@angular/material';
+import { AddRoleComponent } from './add-role/add-role.component';
+import { RemoveRoleComponent } from './remove-role/remove-role.component';
 // import { FormForEditComponent } from 'src/app/dashboard/common/forms-dinamic/change-form/form-edit.component';
 
 
@@ -16,7 +18,7 @@ export class GroupsDetailsComponent implements OnInit, OnDestroy {
 
   private sub: Subscription;
   private id: string;
-  public entity: [] = [];
+  public entity = {};
   public host: boolean = false;
   public menuActive: string = 'info';
 
@@ -63,6 +65,16 @@ export class GroupsDetailsComponent implements OnInit, OnDestroy {
       title: 'Последнее редактирование',
       property: 'date_updated',
       type: 'time'
+    }
+  ];
+
+  public collection_roles: object[] = [
+    {
+      title: 'Роли',
+      type: 'array-type',
+      property: 'index-array',
+      class: 'name-start',
+      icon: 'users-cog'
     }
   ];
 
@@ -121,9 +133,34 @@ export class GroupsDetailsComponent implements OnInit, OnDestroy {
     });
   }
 
+  public addRole() {
+    this.dialog.open(AddRoleComponent, {
+      width: '500px',
+      data: {
+        id: this.id,
+        verbose_name: this.entity['verbose_name'],
+        roles: this.entity['possible_roles']
+      }
+    });
+  }
+
+  public removeRole() {
+    this.dialog.open(RemoveRoleComponent, {
+      width: '500px',
+      data: {
+        id: this.id,
+        verbose_name: this.entity['verbose_name'],
+        roles: this.entity['assigned_roles']
+      }
+    });
+  }
+
   public routeTo(route: string): void {
     if (route === 'info') {
       this.menuActive = 'info';
+    }
+    if (route === 'roles') {
+      this.menuActive = 'roles';
     }
   }
 

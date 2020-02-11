@@ -55,8 +55,10 @@
             </ng-container>
   <!-- obj.property -> all-types-here-->
             <ng-container *ngIf="obj.property && obj.property != 'status' && !obj.property_lv2">
-              <ng-container *ngIf="item[obj.property] || item[obj.property] === false && obj.type; else nothing">
+              <ng-container *ngIf="item[obj.property] || item[obj.property] === false && obj.type || obj.type === 'array-type' && obj.property === 'index-array'; else nothing">
                   <span *ngIf="obj.type === 'string'" [class.name-entity]="obj.class == 'name-start'"  class="for-wrap">{{ item[obj.property] }}</span>
+
+                  <span *ngIf="obj.type === 'array-type'" [class.name-entity]="obj.class == 'name-start'"  class="for-wrap">{{ item  }}</span>
 
                   <span *ngIf="obj.type === 'array-length'">{{ item[obj.property]?.length }}</span>
 

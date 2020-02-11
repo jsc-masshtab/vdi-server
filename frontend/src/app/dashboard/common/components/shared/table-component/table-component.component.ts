@@ -4,9 +4,9 @@ import * as moment from 'moment';
 
 interface ICollection {
   title: string;
-  property: string;
+  property: string | 'index-array';
   property_lv2?: string; // data : { property : {property_lv2: value}}
-  type?: 'string' | 'array-length' | IPropertyInObjects | IPropertyBoolean | 'time';
+  type?: 'string' | 'array-length' | IPropertyInObjects | IPropertyBoolean | 'time' | 'array-type';
   class?: 'name-start'; // flex-start
   icon?: string;
   sort?: boolean; // наличие поля и (sortListNow)="sortList($event)" включит сортировку
