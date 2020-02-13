@@ -5,7 +5,7 @@ import datetime
 import logging
 
 from settings import JWT_OPTIONS, SECRET_KEY, JWT_EXPIRATION_DELTA, JWT_AUTH_HEADER_PREFIX, JWT_ALGORITHM, AUTH_ENABLED
-from user.models import User, UserJwtInfo
+from auth.models import User, UserJwtInfo
 
 application_log = logging.getLogger('tornado.application')
 

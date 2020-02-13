@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from graphene.types.structures import NonNull
 from common.veil_errors import ValidationError, SimpleError
 
 
@@ -9,16 +10,18 @@ class MutationValidation:
     @classmethod
     async def validate_agruments(cls, **kwargs):
         # TODO: сделать аналогичный декоратор?
-        for argument in cls.Arguments.__dict__:
-            if argument.startswith('_'):
+        for argument_name in cls.Arguments.__dict__:
+            if argument_name.startswith('_'):
                 continue
-            field_validation_method_name = 'validate_{}'.format(argument)
+            field_validation_method_name = 'validate_{}'.format(argument_name)
             validator = getattr(cls, field_validation_method_name, None)
+            argument = getattr(cls.Arguments, argument_name)
+
             if callable(validator):
                 try:
-                    value = kwargs.get(argument)
-                    # Запускаем валидацию только если пришло значение. Обязательность значений указывается в схеме
-                    if value:
+                    value = kwargs.get(argument_name)
+                    # Проверка NonNull разрешает пустой список. Хочется иметь возможность ограничить такое валидатором.
+                    if value or isinstance(argument, NonNull):
                         await validator(kwargs, value)
                 except ValidationError as E:
-                    raise SimpleError('Field \"{}\" - {}'.format(argument, E))
+                    raise SimpleError('Field \"{}\" - {}'.format(argument_name, E))

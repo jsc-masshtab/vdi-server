@@ -10,14 +10,6 @@ from resources_monitoring.internal_event_monitor import internal_event_monitor
 from resources_monitoring.resources_monitoring_data import EVENTS_SUBSCRIPTION
 
 
-class Entity(db.Model):
-    __tablename__ = 'entity'
-
-    id = db.Column(UUID(), primary_key=True, default=uuid.uuid4)
-    entity_uuid = db.Column(UUID(), nullable=True, index=True)  # UUID сущности
-    entity_type = db.Column(db.Unicode(), index=True)  # тип сущности (таблица в БД или абстрактная сущность)
-
-
 class Event(db.Model):
     TYPE_INFO = 0
     TYPE_WARNING = 1
@@ -82,6 +74,8 @@ class Event(db.Model):
 
     @classmethod
     async def soft_create(cls, event_type, msg, description, user, entity_list: list):
+        # TODO: убрать создание типов сущности
+        from auth.models import Entity
         async with db.transaction() as tx:  # noqa
             # 1. Создаем сам Евент
             event = await Event.create(
@@ -90,6 +84,7 @@ class Event(db.Model):
                 description=description,
                 user=user
             )
+
             for entity in entity_list:
                 # 2. Создаем запись сущности
                 entity = await Entity.create(entity_uuid=entity.get('entity_uuid'), entity_type=entity.get('entity_type'))
