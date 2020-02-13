@@ -7,6 +7,7 @@ import ldap
 from sqlalchemy import Enum as AlchemyEnum
 from sqlalchemy.dialects.postgresql import UUID, ARRAY, JSONB
 from sqlalchemy import Index
+from sqlalchemy.sql import text
 
 from auth.models import application_log, User, Group
 from database import db, AbstractSortableStatusModel, AbstractEntity, Status
@@ -66,6 +67,42 @@ class AuthenticationDirectory(db.Model, AbstractSortableStatusModel, AbstractEnt
     kdc_urls = db.Column(ARRAY(db.Unicode(length=255)), nullable=True)
     sso = db.Column(db.Boolean(), default=False)
     status = db.Column(AlchemyEnum(Status), nullable=False, index=True)
+
+    @property
+    async def mappings(self):
+        query = Mapping.join(
+            GroupAuthenticationDirectoryMapping.query.where(AuthenticationDirectory.id == self.id).alias()).select()
+        return await query.gino.load(Mapping).all()
+
+    # async def add_mapping(self, verbose_name, description, attribute, attribute_values, priority, groups):
+    async def add_mapping(self, mapping: dict, groups: list):
+        """
+        :param mapping: Dictionary of Mapping table kwargs.
+        :param groups: List of Group.id strings.
+        """
+
+        async with db.transaction():
+            mapping_obj = await Mapping.create(**mapping)
+            for group_id in groups:
+                await GroupAuthenticationDirectoryMapping.create(authentication_directory_id=self.id,
+                                                                 group_id=group_id, mapping_id=mapping_obj.id)
+
+    async def edit_mapping(self, mapping: dict, groups: list):
+        """
+        :param mapping: Dictionary of Mapping table kwargs.
+        :param groups: List of Group.id strings.
+        """
+
+        async with db.transaction():
+            mapping_id = mapping.pop('mapping_id')
+            mapping_obj = await Mapping.get(mapping_id)
+            await mapping_obj.soft_update(**mapping)
+            if groups:
+                await GroupAuthenticationDirectoryMapping.delete.where(
+                    GroupAuthenticationDirectoryMapping.mapping_id == mapping_id).gino.status()
+                for group_id in groups:
+                    await GroupAuthenticationDirectoryMapping.create(authentication_directory_id=self.id,
+                                                                     group_id=group_id, mapping_id=mapping_id)
 
     async def test_connection(self) -> bool:
         """
@@ -295,7 +332,7 @@ class Mapping(db.Model, AbstractEntity):
     """
     __tablename__ = 'mapping'
 
-    class MappingTypes(Enum):
+    class ValueTypes(Enum):
         """
         Класс, описывающий доступные типы атрибутов службы каталогов.
         """
@@ -304,11 +341,47 @@ class Mapping(db.Model, AbstractEntity):
         OU = 'OU'
         GROUP = 'GROUP'
 
+    id = db.Column(UUID(), primary_key=True, default=uuid.uuid4)
     verbose_name = db.Column(db.Unicode(length=128), nullable=False, unique=True)
     description = db.Column(db.Unicode(length=255), nullable=True, unique=False)
-    mapping_type = db.Column(AlchemyEnum(MappingTypes), nullable=False, index=True)
-    values = JSONB()
+    value_type = db.Column(AlchemyEnum(ValueTypes), nullable=False, index=True)
+    values = db.Column(JSONB(), nullable=False)
     priority = db.Column(db.Integer(), nullable=False, default=0)
+
+    @property
+    async def assigned_groups(self):
+        query = Group.join(
+            GroupAuthenticationDirectoryMapping.query.where(
+                GroupAuthenticationDirectoryMapping.mapping_id == self.id).alias()).select()
+        return await query.gino.load(Group).all()
+
+    @property
+    async def possible_groups(self):
+        possible_groups_query = Group.join(
+            GroupAuthenticationDirectoryMapping.query.where(
+                GroupAuthenticationDirectoryMapping.mapping_id == self.id).alias(),
+            isouter=True).select().where(
+            (text('anon_1.id is null'))
+        )
+        return await possible_groups_query.gino.load(Group).all()
+
+    async def soft_update(self, verbose_name=None, description=None, value_type=None, values=None, priority=None):
+        mapping_kwargs = dict()
+        if verbose_name:
+            mapping_kwargs['verbose_name'] = verbose_name
+        if description:
+            mapping_kwargs['description'] = description
+        if value_type:
+            mapping_kwargs['value_type'] = value_type
+        if values:
+            mapping_kwargs['values'] = values
+        if priority:
+            mapping_kwargs['priority'] = priority
+        if mapping_kwargs:
+            await Mapping.update.values(**mapping_kwargs).where(
+                Mapping.id == self.id).gino.status()
+        # TODO: edit groups!!
+        return await Mapping.get(self.id)
 
 
 class GroupAuthenticationDirectoryMapping(db.Model):
@@ -321,7 +394,10 @@ class GroupAuthenticationDirectoryMapping(db.Model):
     group_id = db.Column(UUID(),
                          db.ForeignKey(Group.id, ondelete="CASCADE"),
                          nullable=False)
+    mapping_id = db.Column(UUID(),
+                           db.ForeignKey(Mapping.id, ondelete="CASCADE"),
+                           nullable=False)
 
 
 Index('ix_group_auth_mapping', GroupAuthenticationDirectoryMapping.authentication_directory_id,
-      GroupAuthenticationDirectoryMapping.group_id, unique=True)
+      GroupAuthenticationDirectoryMapping.group_id, GroupAuthenticationDirectoryMapping.mapping_id, unique=True)

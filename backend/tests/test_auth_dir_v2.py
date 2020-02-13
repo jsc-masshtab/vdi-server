@@ -3,16 +3,16 @@
    Snapshots are created on empty database.
    If you have local users - output for list may be different."""
 
-import pytest
-
+# import pytest
+#
 # from tests.utils import execute_scheme, ExecError
 #
 # from auth.authentication_directory.auth_dir_schema import auth_dir_schema
 # from auth.authentication_directory.models import AuthenticationDirectory
-
-pytestmark = [pytest.mark.asyncio, pytest.mark.auth_dir, pytest.mark.auth]
-
-
+#
+# pytestmark = [pytest.mark.asyncio, pytest.mark.auth_dir, pytest.mark.auth]
+#
+#
 # @pytest.mark.usefixtures('fixt_db')
 # class TestAuthenticationDirectorySchema:
 #
