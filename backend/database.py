@@ -40,6 +40,13 @@ class Role(Enum):
     VM_OPERATOR = 'VM_OPERATOR'
 
 
+class Permission(Enum):
+    VIEW = 'VIEW'
+    ADD = 'ADD'
+    CHANGE = 'CHANGE'
+    DELETE = 'DELETE'
+
+
 class AbstractSortableStatusModel:
     """Методы для сортировки таблицы и построения расширенных запросов в стиле Django."""
 

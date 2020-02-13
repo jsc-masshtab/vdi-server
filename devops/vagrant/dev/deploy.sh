@@ -1,16 +1,16 @@
-echo "Install apt packages"
+echo "Install apt-get packages"
 
-sed -i s/us\./ru\./g /etc/apt/sources.list
-apt update -y
-apt install --no-install-recommends -y postgresql-server-dev-9.6 python3-dev gcc python3-pip postgresql htop mc nginx # Не нашел на астре пакеты ncdu и bmon
-apt install -y libsasl2-dev python-dev libldap2-dev libssl-dev
+sed -i s/us\./ru\./g /etc/apt-get/sources.list
+apt-get update -y
+apt-get install --no-install-recommends -y postgresql-server-dev-9.6 python3-dev gcc python3-pip postgresql htop mc nginx # Не нашел на астре пакеты ncdu и bmon
+apt-get install -y libsasl2-dev python-dev libldap2-dev libssl-dev
 
 echo "Installing node v.10 && npm"
 curl -sL https://deb.nodesource.com/setup_10.x | bash
-apt install -y nodejs
+apt-get install -y nodejs
 
 echo "Installing additional packages"
-apt install -y supervisor logrotate
+apt-get install -y supervisor logrotate
 
 
 #------------------------------
@@ -43,6 +43,7 @@ systemctl restart nginx
 #------------------------------
 echo "Setting up env"
 
+python3.5 -m pip install setuptools 
 python3.5 -m pip install pipenv
 export PYTHONPATH=$APP_DIR/backend
 export PIPENV_PIPFILE=$APP_DIR/backend/Pipfile
@@ -64,7 +65,6 @@ rm -rf node_modules/
 rm -rf dist/
 npm install --unsafe-perm
 npm run build -- --prod
-#npm run build
 echo "Frontend compiled to /opt/veil-vdi/frontend/dist/frontend/"
 
 

@@ -10,8 +10,14 @@ snapshots = Snapshot()
 snapshots['TestGroupSchema.test_group_list 1'] = {
     'groups': [
         {
+            'assigned_users': [
+            ],
             'description': None,
-            'users': [
+            'possible_users': [
+                {
+                    'email': 'admin@admin.admin',
+                    'username': 'admin'
+                }
             ],
             'verbose_name': 'test_group_1'
         }
@@ -20,9 +26,15 @@ snapshots['TestGroupSchema.test_group_list 1'] = {
 
 snapshots['TestGroupSchema.test_group_get_by_id 1'] = {
     'group': {
+        'assigned_users': [
+        ],
         'description': None,
         'id': '10913d5d-ba7a-4049-88c5-769267a6cbe4',
-        'users': [
+        'possible_users': [
+            {
+                'email': 'admin@admin.admin',
+                'username': 'admin'
+            }
         ],
         'verbose_name': 'test_group_1'
     }
@@ -31,20 +43,9 @@ snapshots['TestGroupSchema.test_group_get_by_id 1'] = {
 snapshots['TestGroupSchema.test_group_edit 1'] = {
     'updateGroup': {
         'group': {
-            'users': [
+            'assigned_users': [
             ],
             'verbose_name': 'test group updated'
-        },
-        'ok': True
-    }
-}
-
-snapshots['TestGroupSchema.test_group_create 1'] = {
-    'createGroup': {
-        'group': {
-            'users': [
-            ],
-            'verbose_name': 'test group 2'
         },
         'ok': True
     }
@@ -59,10 +60,12 @@ snapshots['TestGroupSchema.test_group_delete 1'] = {
 snapshots['TestGroupSchema.test_group_user_add 1'] = {
     'addGroupUsers': {
         'group': {
-            'users': [
+            'assigned_users': [
                 {
                     'email': 'admin@admin.admin'
                 }
+            ],
+            'possible_users': [
             ],
             'verbose_name': 'test_group_1'
         },
@@ -73,7 +76,12 @@ snapshots['TestGroupSchema.test_group_user_add 1'] = {
 snapshots['TestGroupSchema.test_group_user_remove 1'] = {
     'removeGroupUsers': {
         'group': {
-            'users': [
+            'assigned_users': [
+            ],
+            'possible_users': [
+                {
+                    'email': 'admin@admin.admin'
+                }
             ],
             'verbose_name': 'test_group_1'
         },
@@ -116,6 +124,17 @@ snapshots['TestGroupSchema.test_group_role 2'] = {
                 'VM_OPERATOR'
             ],
             'verbose_name': 'test_group_1'
+        },
+        'ok': True
+    }
+}
+
+snapshots['TestGroupSchema.test_group_create 1'] = {
+    'createGroup': {
+        'group': {
+            'assigned_users': [
+            ],
+            'verbose_name': 'test group 2'
         },
         'ok': True
     }
