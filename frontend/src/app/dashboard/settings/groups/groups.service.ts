@@ -24,7 +24,7 @@ export class GroupsService  {
                                     id
                                     verbose_name
                                     description
-                                    users {
+                                    assigned_users {
                                       id
                                     }
                                 }
@@ -46,8 +46,14 @@ export class GroupsService  {
                                 description,
                                 date_created,
                                 date_updated,
-                                users {
-                                    username
+                                assigned_users {
+                                  username
+                                  is_active
+                                  id
+                                }
+                                possible_users{
+                                  id
+                                  username
                                 }
                                 assigned_roles
                                 possible_roles
@@ -146,5 +152,27 @@ export class GroupsService  {
             }
         });
     }
+
+    public addUsers(users: [], id: string) {
+      return this.service.mutate<any>({
+          mutation: gql`
+                          mutation groups(
+                              $users: [UUID!]!,
+                              $id: UUID!){
+                              addGroupUsers(
+                                  users: $users,
+                                  id: $id
+                              ){
+                                  ok
+                              }
+                          }
+          `,
+          variables: {
+              method: 'POST',
+              users,
+              id
+          }
+      });
+  }
 
 }

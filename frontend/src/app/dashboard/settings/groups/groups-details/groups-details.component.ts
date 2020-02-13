@@ -6,7 +6,7 @@ import { ActivatedRoute, Router, ParamMap } from '@angular/router';
 import { MatDialog } from '@angular/material';
 import { AddRoleComponent } from './add-role/add-role.component';
 import { RemoveRoleComponent } from './remove-role/remove-role.component';
-// import { FormForEditComponent } from 'src/app/dashboard/common/forms-dinamic/change-form/form-edit.component';
+import { AddUserGroupComponent } from './add-users/add-user.component';
 
 
 @Component({
@@ -75,6 +75,16 @@ export class GroupsDetailsComponent implements OnInit, OnDestroy {
       property: 'index-array',
       class: 'name-start',
       icon: 'users-cog'
+    }
+  ];
+
+  public collection_users: object[] = [
+    {
+      title: 'Пользователи',
+      type: 'string',
+      property: 'username',
+      class: 'name-start',
+      icon: 'user'
     }
   ];
 
@@ -155,12 +165,26 @@ export class GroupsDetailsComponent implements OnInit, OnDestroy {
     });
   }
 
+  public addUser() {
+    this.dialog.open(AddUserGroupComponent, {
+      width: '500px',
+      data: {
+        id: this.id,
+        verbose_name: this.entity['verbose_name'],
+        users: this.entity['possible_users']
+      }
+    });
+  }
+
   public routeTo(route: string): void {
     if (route === 'info') {
       this.menuActive = 'info';
     }
     if (route === 'roles') {
       this.menuActive = 'roles';
+    }
+    if (route === 'users') {
+      this.menuActive = 'users';
     }
   }
 

@@ -1,3 +1,4 @@
+
 import { AddGroupComponent } from './add-groups/add-groups.component';
 import { GroupsComponent } from './all-groups/groups.component';
 import { MatSelectModule } from '@angular/material/select';
@@ -14,6 +15,7 @@ import { MatCheckboxModule } from '@angular/material';
 import { GroupsService } from './groups.service';
 import { AddRoleComponent } from './groups-details/add-role/add-role.component';
 import { RemoveRoleComponent } from './groups-details/remove-role/remove-role.component';
+import { AddUserGroupComponent } from './groups-details/add-users/add-user.component';
 
 
 
@@ -24,7 +26,8 @@ import { RemoveRoleComponent } from './groups-details/remove-role/remove-role.co
       AddGroupComponent,
       GroupsDetailsComponent,
       AddRoleComponent,
-      RemoveRoleComponent
+      RemoveRoleComponent,
+      AddUserGroupComponent
    ],
    imports: [
       SharedModule,
@@ -45,7 +48,8 @@ import { RemoveRoleComponent } from './groups-details/remove-role/remove-role.co
    entryComponents: [
       AddGroupComponent,
       AddRoleComponent,
-      RemoveRoleComponent
+      RemoveRoleComponent,
+      AddUserGroupComponent
    ]
 })
 export class GroupsModule { }
