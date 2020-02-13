@@ -23,9 +23,6 @@ export class DatapoolsService {
                                 free_space
                                 status
                                 type
-                                vdisk_count
-                                file_count
-                                iso_count
                                 verbose_name
                                 controller {
                                     address
@@ -50,9 +47,6 @@ export class DatapoolsService {
                                 size
                                 status
                                 type
-                                vdisk_count
-                                file_count
-                                iso_count
                                 verbose_name
                             }
                         }

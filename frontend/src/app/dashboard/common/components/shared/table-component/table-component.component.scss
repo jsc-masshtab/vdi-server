@@ -138,6 +138,16 @@
         }
     }
 
+    fa-icon {
+        &.stateOn {
+            color: green;
+        }
+
+        &.stateOff {
+            color: red;
+        }
+    }
+
     // частные случаи столбца
 
     .name-start {

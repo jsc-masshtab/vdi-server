@@ -35,24 +35,6 @@ export class DatapoolsComponent extends DetailsMove implements OnInit, OnDestroy
       sort: true
     },
     {
-      title: 'Диски',
-      property: 'vdisk_count',
-      type: 'string',
-      sort: true
-    },
-    {
-      title: 'Образы',
-      property: 'iso_count',
-      type: 'string',
-      sort: true
-    },
-    {
-      title: 'Файлы',
-      property: 'file_count',
-      type: 'string',
-      sort: true
-    },
-    {
       title: 'Свободно (Мб)',
       property: 'free_space',
       type: 'string',
