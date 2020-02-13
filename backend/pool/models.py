@@ -20,7 +20,7 @@ from resources_monitoring.resources_monitoring_data import VDI_TASKS_SUBSCRIPTIO
 from resources_monitoring.internal_event_monitor import internal_event_monitor
 
 from settings import VEIL_WS_MAX_TIME_TO_WAIT
-from user.models import User
+from auth.models import User
 from vm.models import Vm
 from vm.veil_client import VmHttpClient
 
@@ -232,7 +232,7 @@ class Pool(db.Model, AbstractEntity):
 
     @staticmethod
     async def get_user_pools(username):
-
+        application_log.debug('Looking user {}'.format(username))
         user = await User.get_object(extra_field_name='username', extra_field_value=username)
         pools = Pool.get_pools_query()
         if not user.is_superuser:

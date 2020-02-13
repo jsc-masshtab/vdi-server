@@ -5,11 +5,11 @@
 
 import pytest
 
+from tests.fixtures import fixt_db, auth_context_fixture, fixt_group, fixt_auth_dir, fixt_mapping  # noqa
 from tests.utils import execute_scheme, ExecError
-from tests.fixtures import fixt_db, auth_context_fixture  # noqa
 
-from auth.schema import auth_dir_schema
-from auth.models import AuthenticationDirectory
+from auth.authentication_directory.auth_dir_schema import auth_dir_schema
+from auth.authentication_directory.models import AuthenticationDirectory, Mapping
 
 pytestmark = [pytest.mark.asyncio, pytest.mark.auth_dir, pytest.mark.auth]
 
@@ -67,14 +67,20 @@ class TestAuthenticationDirectorySchema:
                             description
                             directory_type
                             domain_name
-                            # SSO fields
-                            subdomain_name
-                            service_username
-                            service_password
-                            admin_server
-                            kdc_urls
-                            status
-                            sso
+                            mappings {
+                                id
+                                verbose_name
+                                description
+                                value_type
+                                values
+                                priority
+                                assigned_groups {
+                                  id
+                                }
+                                possible_groups {
+                                  id
+                                }
+                              }
                         }}"""
         executed = await execute_scheme(auth_dir_schema, query, context=auth_context_fixture)
         snapshot.assert_match(executed)
@@ -89,14 +95,20 @@ class TestAuthenticationDirectorySchema:
                         description
                         directory_type
                         domain_name
-                        # SSO fields
-                        subdomain_name
-                        service_username
-                        service_password
-                        admin_server
-                        kdc_urls
-                        status
-                        sso
+                        mappings {
+                            id
+                            verbose_name
+                            description
+                            value_type
+                            values
+                            priority
+                            assigned_groups {
+                              id
+                            }
+                            possible_groups {
+                              id
+                            }
+                          }
                     }}""" % auth_dir.id
         executed = await execute_scheme(auth_dir_schema, query, context=auth_context_fixture)
         snapshot.assert_match(executed)
@@ -141,5 +153,80 @@ class TestAuthenticationDirectorySchema:
         query = """mutation {deleteAuthDir(id: "%s") {
                       ok
                     }}""" % auth_dir.id
+        executed = await execute_scheme(auth_dir_schema, query, context=auth_context_fixture)
+        snapshot.assert_match(executed)
+
+    async def test_add_auth_dir_mapp(self, snapshot, auth_context_fixture, fixt_group, fixt_auth_dir):  # noqa
+        query = """mutation {
+                        addAuthDirMapping(
+                            id: "10913d5d-ba7a-4049-88c5-769267a6cbe4"
+                            verbose_name: "test_mapping2"
+                            value_type: OU
+                            values: ["test", "test2"]
+                            priority: 5000
+                            description: "test mapping description"
+                            groups: ["10913d5d-ba7a-4049-88c5-769267a6cbe4"]) {
+                            ok,
+                            auth_dir{
+                              id
+                              mappings{
+                                verbose_name
+                              }
+                            }
+                          }
+                        }"""
+        executed = await execute_scheme(auth_dir_schema, query, context=auth_context_fixture)
+        snapshot.assert_match(executed)
+        await Mapping.delete.gino.status()
+
+    async def test_edit_auth_dir_mapp(self, snapshot, auth_context_fixture, fixt_auth_dir, fixt_group, fixt_mapping):  # noqa
+        query = """mutation {
+                      editAuthDirMapping(
+                        id: "10913d5d-ba7a-4049-88c5-769267a6cbe4",
+                        verbose_name: "editted mapping",
+                        mapping_id: "10913d5d-ba7a-4049-88c5-769267a6cbe4"
+                        groups: ["10913d5d-ba7a-4049-88c5-769267a6cbe4"]
+                      ) {
+                        ok
+                        auth_dir {
+                          id
+                          mappings {
+                            id
+                            verbose_name
+                            assigned_groups{
+                              id
+                            }
+                            possible_groups{
+                              id
+                            }
+                          }
+                        }
+                      }
+                    }"""
+        executed = await execute_scheme(auth_dir_schema, query, context=auth_context_fixture)
+        snapshot.assert_match(executed)
+
+    async def test_del_auth_dir_mapp(self, snapshot, auth_context_fixture, fixt_auth_dir, fixt_group, fixt_mapping):  # noqa
+        query = """mutation {
+                      deleteAuthDirMapping(
+                        id: "10913d5d-ba7a-4049-88c5-769267a6cbe4",
+                        mapping_id: "10913d5d-ba7a-4049-88c5-769267a6cbe4"
+                      ) {
+                        ok
+                        auth_dir {
+                          id
+                          mappings {
+                            id
+                            verbose_name
+                            assigned_groups{
+                              id
+                            }
+                            possible_groups{
+                              id
+                            }
+                          }
+                        }
+                      }
+                    }"""
         executed = await execute_scheme(auth_dir_schema, query, context=auth_context_fixture)
         snapshot.assert_match(executed)

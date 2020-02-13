@@ -14,8 +14,9 @@ from database import db
 from common.veil_handlers import VdiTornadoGraphQLHandler
 
 from event.schema import event_schema
-from user.schema import user_schema
-from auth.schema import auth_dir_schema
+from auth.user_schema import user_schema
+from auth.group_schema import group_schema
+from auth.authentication_directory.auth_dir_schema import auth_dir_schema
 from pool.schema import pool_schema
 from vm.schema import vm_schema
 from controller.schema import controller_schema
@@ -39,6 +40,7 @@ handlers = [
     (r'/controllers', VdiTornadoGraphQLHandler, dict(graphiql=True, schema=controller_schema)),
     (r'/resources', VdiTornadoGraphQLHandler, dict(graphiql=True, schema=resources_schema)),
     (r'/users', VdiTornadoGraphQLHandler, dict(graphiql=True, schema=user_schema)),
+    (r'/groups', VdiTornadoGraphQLHandler, dict(graphiql=True, schema=group_schema)),
     (r'/auth_dirs', VdiTornadoGraphQLHandler, dict(graphiql=True, schema=auth_dir_schema)),
     (r'/vms', VdiTornadoGraphQLHandler, dict(graphiql=True, schema=vm_schema)),
     (r'/pools', VdiTornadoGraphQLHandler, dict(graphiql=True, schema=pool_schema)),

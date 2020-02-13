@@ -15,6 +15,9 @@ from vm.models import Vm
 
 from pool.schema import pool_schema
 
+from auth.models import Group, User
+from auth.authentication_directory.models import AuthenticationDirectory, Mapping
+
 from tests.utils import execute_scheme
 
 from resources_monitoring.resources_monitor_manager import resources_monitor_manager
@@ -357,3 +360,93 @@ async def fixt_entitle_user_to_pool(fixt_create_static_pool):
     }
     ''' % (pool_id, user_name)
     await execute_scheme(pool_schema, qu, context=context)
+
+
+@pytest.fixture
+def fixt_group(request, event_loop):
+    group_name = 'test_group_1'
+
+    async def setup():
+        print('Creating group: {}'.format(group_name))
+        await Group.create(verbose_name=group_name, id="10913d5d-ba7a-4049-88c5-769267a6cbe4")
+
+    event_loop.run_until_complete(setup())
+
+    def teardown():
+        async def a_teardown():
+            print('Deleting group: {}'.format(group_name))
+            await Group.delete.where(Group.id == "10913d5d-ba7a-4049-88c5-769267a6cbe4").gino.status()
+
+        event_loop.run_until_complete(a_teardown())
+
+    request.addfinalizer(teardown)
+    return True
+
+
+@pytest.fixture
+def fixt_user(request, event_loop):
+    user_name = 'test_group_1'
+    user_id = '10913d5d-ba7a-4049-88c5-769267a6cbe4'
+
+    async def setup():
+        print('Creating user: {}'.format(user_name))
+        await User.soft_create(username=user_name, id=user_id)
+
+    event_loop.run_until_complete(setup())
+
+    def teardown():
+        async def a_teardown():
+            print('Deleting user: {}'.format(user_name))
+            await User.delete.where(User.id == user_id).gino.status()
+
+        event_loop.run_until_complete(a_teardown())
+
+    request.addfinalizer(teardown)
+    return True
+
+
+@pytest.fixture
+def fixt_auth_dir(request, event_loop):
+    id = '10913d5d-ba7a-4049-88c5-769267a6cbe4'
+    verbose_name = 'test_auth_dir'
+    directory_url = 'ldap://127.0.0.1'
+    domain_name = 'yoba'
+
+    async def setup():
+        print('Creating auth dir: {}'.format(verbose_name))
+        await AuthenticationDirectory.soft_create(id=id, verbose_name=verbose_name, directory_url=directory_url,
+                                                  domain_name=domain_name)
+    event_loop.run_until_complete(setup())
+
+    def teardown():
+        async def a_teardown():
+            print('Deleting auth dir: {}'.format(verbose_name))
+            await AuthenticationDirectory.delete.where(AuthenticationDirectory.id == id).gino.status()
+
+        event_loop.run_until_complete(a_teardown())
+
+    request.addfinalizer(teardown)
+    return True
+
+
+@pytest.fixture
+def fixt_mapping(request, event_loop):
+    id = '10913d5d-ba7a-4049-88c5-769267a6cbe4'
+    verbose_name = 'test_mapping_fixt'
+    value_type = Mapping.ValueTypes.USER.value
+    values = '["test"]'
+
+    async def setup():
+        print('Creating mapping: {}'.format(verbose_name))
+        await Mapping.create(id=id, verbose_name=verbose_name, values=values, value_type=value_type)
+    event_loop.run_until_complete(setup())
+
+    def teardown():
+        async def a_teardown():
+            print('Deleting mapping: {}'.format(verbose_name))
+            await Mapping.delete.where(Mapping.id == id).gino.status()
+
+        event_loop.run_until_complete(a_teardown())
+
+    request.addfinalizer(teardown)
+    return True

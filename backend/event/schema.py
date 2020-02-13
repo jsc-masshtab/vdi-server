@@ -4,8 +4,9 @@ from sqlalchemy import desc, and_, text
 
 from database import db
 from common.veil_decorators import superuser_required
-from event.models import Event, EventReadByUser, Entity, EventEntity
-from user.schema import User, UserType
+from event.models import Event, EventReadByUser, EventEntity
+from auth.models import Entity
+from auth.user_schema import User, UserType
 
 
 def build_filters(event_type, start_date, end_date, user, read_by, entity_type):
