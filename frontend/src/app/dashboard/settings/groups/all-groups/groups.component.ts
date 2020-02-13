@@ -39,7 +39,7 @@ export class GroupsComponent extends DetailsMove implements OnInit, OnDestroy {
     },
     {
       title: 'Пользователи',
-      property: 'users',
+      property: 'assigned_users',
       type: 'array-length'
     }
   ];

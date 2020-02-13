@@ -1,0 +1,18 @@
+
+<div class="form">
+
+  <div class="form-header">
+    <h1>Удаление группы</h1>
+    <button [mat-dialog-close]="true" class="form-close"><fa-icon [icon]="['fas','times-circle']"></fa-icon></button>
+  </div>
+
+  <div class="form-message">
+    <p>Удалить группу {{ data?.verbose_name }}?</p>
+  </div>
+
+  <div class="form-actions">
+    <button (click)="send()" class="form-btn"><fa-icon [icon]="['fas','trash-alt']" size="xs"></fa-icon><span class="action-name">Удалить</span></button>
+  </div>
+
+</div>
+

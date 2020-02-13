@@ -89,6 +89,25 @@ export class GroupsService  {
         });
     }
 
+    public removeGroup(id: string) {
+      return this.service.mutate<any>({
+          mutation: gql`
+                          mutation groups(
+                              $id: UUID!){
+                              deleteGroup(
+                                  id: $id
+                              ){
+                                  ok
+                              }
+                          }
+          `,
+          variables: {
+              method: 'POST',
+              id
+          }
+      });
+    }
+
     public update({id}, {verbose_name, description}) {
         return this.service.mutate<any>({
             mutation: gql`
@@ -174,5 +193,27 @@ export class GroupsService  {
           }
       });
   }
+
+  public removeUsers(users: [], id: string) {
+    return this.service.mutate<any>({
+        mutation: gql`
+                        mutation groups(
+                            $users: [UUID!]!,
+                            $id: UUID!){
+                            removeGroupUsers(
+                                users: $users,
+                                id: $id
+                            ){
+                                ok
+                            }
+                        }
+        `,
+        variables: {
+            method: 'POST',
+            users,
+            id
+        }
+    });
+}
 
 }

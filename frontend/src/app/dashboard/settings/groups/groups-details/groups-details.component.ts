@@ -1,3 +1,5 @@
+import { RemoveGroupComponent } from './../remove-groups/remove-group.component';
+import { RemoveUserGroupComponent } from './remove-user/remove-user.component';
 import { FormForEditComponent } from './../../../common/forms-dinamic/change-form/form-edit.component';
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { Subscription } from 'rxjs';
@@ -53,7 +55,7 @@ export class GroupsDetailsComponent implements OnInit, OnDestroy {
     },
     {
       title: 'Пользователи',
-      property: 'users',
+      property: 'assigned_users',
       type: 'array-length'
     },
     {
@@ -172,6 +174,27 @@ export class GroupsDetailsComponent implements OnInit, OnDestroy {
         id: this.id,
         verbose_name: this.entity['verbose_name'],
         users: this.entity['possible_users']
+      }
+    });
+  }
+
+  public removeUser() {
+    this.dialog.open(RemoveUserGroupComponent, {
+      width: '500px',
+      data: {
+        id: this.id,
+        verbose_name: this.entity['verbose_name'],
+        users: this.entity['assigned_users']
+      }
+    });
+  }
+
+  public removeGroup() {
+    this.dialog.open(RemoveGroupComponent, {
+      width: '500px',
+      data: {
+        id: this.id,
+        verbose_name: this.entity['verbose_name']
       }
     });
   }

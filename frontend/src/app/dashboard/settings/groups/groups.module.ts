@@ -1,3 +1,5 @@
+import { RemoveGroupComponent } from './remove-groups/remove-group.component';
+import { RemoveUserGroupComponent } from './groups-details/remove-user/remove-user.component';
 
 import { AddGroupComponent } from './add-groups/add-groups.component';
 import { GroupsComponent } from './all-groups/groups.component';
@@ -27,7 +29,9 @@ import { AddUserGroupComponent } from './groups-details/add-users/add-user.compo
       GroupsDetailsComponent,
       AddRoleComponent,
       RemoveRoleComponent,
-      AddUserGroupComponent
+      AddUserGroupComponent,
+      RemoveUserGroupComponent,
+      RemoveGroupComponent
    ],
    imports: [
       SharedModule,
@@ -49,7 +53,9 @@ import { AddUserGroupComponent } from './groups-details/add-users/add-user.compo
       AddGroupComponent,
       AddRoleComponent,
       RemoveRoleComponent,
-      AddUserGroupComponent
+      AddUserGroupComponent,
+      RemoveUserGroupComponent,
+      RemoveGroupComponent
    ]
 })
 export class GroupsModule { }
