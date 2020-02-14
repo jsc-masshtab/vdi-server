@@ -232,7 +232,7 @@ class Pool(db.Model, AbstractEntity):
 
     @staticmethod
     async def get_user_pools(username):
-
+        application_log.debug('Looking user {}'.format(username))
         user = await User.get_object(extra_field_name='username', extra_field_value=username)
         pools = Pool.get_pools_query()
         if not user.is_superuser:

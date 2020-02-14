@@ -151,28 +151,32 @@ class AuthenticationDirectory(db.Model, AbstractSortableStatusModel, AbstractEnt
                           service_password=None,
                           description=None, connection_type=ConnectionTypes.LDAP,
                           directory_type=DirectoryTypes.ActiveDirectory, admin_server=None,
-                          subdomain_name=None, kdc_urls=None, sso=False):
+                          subdomain_name=None, kdc_urls=None, sso=False, id=None):
         """Сначала создается контроллер домена в статусе Creating.
            Затем проверяется доступность и происходит смена статуса на ACTIVE."""
-
         count = await db.func.count(AuthenticationDirectory.id).gino.scalar()
         if count > 0:
             raise AssertionError('More than one authentication directory can not be created.')
 
+        auth_dir_dict = {'verbose_name': verbose_name,
+                         'description': description,
+                         'directory_url': directory_url,
+                         'connection_type': connection_type,
+                         'directory_type': directory_type,
+                         'domain_name': domain_name,
+                         'service_username': service_username,
+                         'service_password': service_password,
+                         'admin_server': admin_server,
+                         'subdomain_name': subdomain_name,
+                         'kdc_urls': kdc_urls,
+                         'sso': sso,
+                         'status': Status.CREATING
+                         }
+        if id:
+            auth_dir_dict['id'] = id
+
         # TODO: crypto password
-        auth_dir = await AuthenticationDirectory.create(verbose_name=verbose_name,
-                                                        description=description,
-                                                        directory_url=directory_url,
-                                                        connection_type=connection_type,
-                                                        directory_type=directory_type,
-                                                        domain_name=domain_name,
-                                                        service_username=service_username,
-                                                        service_password=service_password,
-                                                        admin_server=admin_server,
-                                                        subdomain_name=subdomain_name,
-                                                        kdc_urls=kdc_urls,
-                                                        sso=sso,
-                                                        status=Status.CREATING)
+        auth_dir = await AuthenticationDirectory.create(**auth_dir_dict)
         connection_ok = await auth_dir.test_connection()
         if connection_ok:
             await auth_dir.update(status=Status.ACTIVE).apply()
@@ -254,12 +258,13 @@ class AuthenticationDirectory(db.Model, AbstractSortableStatusModel, AbstractEnt
             ldap_server.set_option(ldap.OPT_REFERRALS, 0)
             ldap_server.set_option(ldap.OPT_NETWORK_TIMEOUT, LDAP_TIMEOUT)
             ldap_server.simple_bind_s(username, password)
-        except ldap.INVALID_CREDENTIALS:
+        except ldap.INVALID_CREDENTIALS as ldap_error:
             # Если пользователь не проходит аутентификацию в службе каталогов с предоставленными
             # данными, то аутентификация в системе считается неуспешной и создается событие с
             # сообщением о неуспешности.
             # self._create_user_auth_failed_event(user)
             success = False
+            application_log.debug(ldap_error)
             raise AssertionError('Invalid credeintials (ldap).')
         except ldap.SERVER_DOWN:
             # Если нет связи с сервером службы каталогов, то возвращаем ошибку о недоступности
