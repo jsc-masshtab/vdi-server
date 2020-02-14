@@ -9,7 +9,7 @@ import { takeUntil } from 'rxjs/operators';
 
 interface IData {
   id: string;
-  username: string;
+  verbose_name: string;
   users: string[]; // доступные для добавления в группу
 }
 
