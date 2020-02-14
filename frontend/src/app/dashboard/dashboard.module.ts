@@ -1,3 +1,4 @@
+import { GroupsModule } from './settings/groups/groups.module';
 import { HeaderUserComponent } from './common/components/single/header-user/header-user.component';
 import { AuthStorageService } from './../login/authStorage.service';
 import { DashboardRoutingModule } from './dashboard-routing.module';
@@ -61,7 +62,8 @@ import { environment } from 'src/environments/environment';
     ControllersModule,
     UsersModule,
     AuthenticationDirectoryModule,
-    EventsModule
+    EventsModule,
+    GroupsModule
   ],
   providers:
     [
@@ -102,6 +104,9 @@ export class DashboardModule {
           break;
         case 'auth_dirs':
           urlKnock = `${url + 'auth_dirs'}`;
+          break;
+        case 'groups':
+          urlKnock = `${url + 'groups'}`;
           break;
         case 'events':
           urlKnock = `${url + 'events'}`;

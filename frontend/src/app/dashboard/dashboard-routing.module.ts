@@ -1,3 +1,5 @@
+import { GroupsDetailsComponent } from './settings/groups/groups-details/groups-details.component';
+import { GroupsComponent } from './settings/groups/all-groups/groups.component';
 import { LoginGuard } from './../login/login.guard';
 
 
@@ -65,6 +67,16 @@ const routes: Routes = [
           {
             path: ':id',
             component: UserDetailsComponent
+          }
+        ]
+      },
+      {
+        path: 'settings/groups',
+        component: GroupsComponent,
+        children: [
+          {
+            path: ':id',
+            component: GroupsDetailsComponent
           }
         ]
       },
