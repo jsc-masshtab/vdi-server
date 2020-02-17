@@ -100,7 +100,7 @@ snapshots['TestUserSchema.test_user_role 1'] = {
                 'NETWORK_ADMINISTRATOR',
                 'STORAGE_ADMINISTRATOR'
             ],
-            'username': 'test_group_1'
+            'username': 'test_user'
         }
     }
 }
@@ -120,7 +120,7 @@ snapshots['TestUserSchema.test_user_role 2'] = {
                 'STORAGE_ADMINISTRATOR',
                 'VM_OPERATOR'
             ],
-            'username': 'test_group_1'
+            'username': 'test_user'
         }
     }
 }

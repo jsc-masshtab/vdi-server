@@ -184,11 +184,11 @@ class User(AbstractSortableStatusModel, db.Model, AbstractEntity):
 
     @staticmethod
     async def soft_create(username, password=None, email=None, last_name=None, first_name=None, is_superuser=False,
-                          id=None):
+                          id=None, is_active=True):
         """Если password будет None, то make_password вернет unusable password"""
         encoded_password = hashers.make_password(password)
         user_kwargs = {'username': username, 'password': encoded_password, 'email': email, 'last_name': last_name,
-                       'first_name': first_name, 'is_superuser': is_superuser}
+                       'first_name': first_name, 'is_superuser': is_superuser, 'is_active': is_active}
         if id:
             user_kwargs['id'] = id
 
