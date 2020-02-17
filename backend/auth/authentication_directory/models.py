@@ -1,16 +1,17 @@
 # -*- coding: utf-8 -*-
 import uuid
+import re
 from enum import Enum
-from typing import List
+from typing import List, Tuple, Optional
 
 import ldap
 from sqlalchemy import Enum as AlchemyEnum
 from sqlalchemy.dialects.postgresql import UUID, ARRAY, JSONB
 from sqlalchemy import Index
-from sqlalchemy.sql import text
+from sqlalchemy.sql import text, desc
 
 from auth.models import application_log, User, Group
-from database import db, AbstractSortableStatusModel, AbstractEntity, Status
+from database import db, AbstractSortableStatusModel, AbstractEntity, Status, Role
 from event.models import Event
 from settings import LDAP_TIMEOUT
 
@@ -34,7 +35,30 @@ class AuthenticationDirectory(db.Model, AbstractSortableStatusModel, AbstractEnt
     - sso: Технология Single Sign-on
     """
 
-    # TODO: move to authentication_directory package
+    # @property
+    # def keytab(self) -> Optional['Keytab']:
+    #     # TODO: adapt for vdi
+    #     return self.keytabs.first()
+    #
+    # @property
+    # def sso_domain(self) -> str:
+    #     # TODO: adapt for vdi
+    #     return '.'.join([self.subdomain_name, self.domain_name])
+    #
+    # @classmethod
+    # def has_upload_keytab_permission(cls, request):
+    #     # TODO: adapt for vdi
+    #     return cls.has_configure_sso_permission(request)
+    #
+    # @classmethod
+    # def has_configure_sso_permission(cls, request):
+    #     # TODO: adapt for vdi
+    #     return cls.check_permission(request.user, 'configure_sso')
+    #
+    # @classmethod
+    # def has_test_connection_permission(cls, request):
+    #     # TODO: adapt for vdi
+    #     return cls.check_permission(request.user, 'test_connection')
 
     class ConnectionTypes(Enum):
         """
@@ -71,10 +95,95 @@ class AuthenticationDirectory(db.Model, AbstractSortableStatusModel, AbstractEnt
     @property
     async def mappings(self):
         query = Mapping.join(
-            GroupAuthenticationDirectoryMapping.query.where(AuthenticationDirectory.id == self.id).alias()).select()
+            GroupAuthenticationDirectoryMapping.query.where(
+                AuthenticationDirectory.id == self.id).alias()).select().order_by(desc(Mapping.priority))
         return await query.gino.load(Mapping).all()
 
-    # async def add_mapping(self, verbose_name, description, attribute, attribute_values, priority, groups):
+    @classmethod
+    async def soft_create(cls, verbose_name, directory_url, domain_name,
+                          service_username=None,
+                          service_password=None,
+                          description=None, connection_type=ConnectionTypes.LDAP,
+                          directory_type=DirectoryTypes.ActiveDirectory, admin_server=None,
+                          subdomain_name=None, kdc_urls=None, sso=False, id=None):
+        """Сначала создается контроллер домена в статусе Creating.
+           Затем проверяется доступность и происходит смена статуса на ACTIVE."""
+        count = await db.func.count(AuthenticationDirectory.id).gino.scalar()
+        if count > 0:
+            raise AssertionError('More than one authentication directory can not be created.')
+
+        auth_dir_dict = {'verbose_name': verbose_name,
+                         'description': description,
+                         'directory_url': directory_url,
+                         'connection_type': connection_type,
+                         'directory_type': directory_type,
+                         'domain_name': domain_name,
+                         'service_username': service_username,
+                         'service_password': service_password,
+                         'admin_server': admin_server,
+                         'subdomain_name': subdomain_name,
+                         'kdc_urls': kdc_urls,
+                         'sso': sso,
+                         'status': Status.CREATING
+                         }
+        if id:
+            auth_dir_dict['id'] = id
+
+        # TODO: crypto password
+        auth_dir = await AuthenticationDirectory.create(**auth_dir_dict)
+        connection_ok = await auth_dir.test_connection()
+        if connection_ok:
+            await auth_dir.update(status=Status.ACTIVE).apply()
+        return auth_dir
+
+    @classmethod
+    async def soft_update(cls, id, verbose_name, directory_url, connection_type, description, directory_type,
+                          domain_name, subdomain_name, service_username, service_password, admin_server, kdc_urls,
+                          sso):
+        object_kwargs = dict()
+        if verbose_name:
+            object_kwargs['verbose_name'] = verbose_name
+        if directory_url:
+            object_kwargs['directory_url'] = directory_url
+        if connection_type:
+            object_kwargs['connection_type'] = connection_type
+        if description:
+            object_kwargs['description'] = description
+        if sso or sso is False:
+            object_kwargs['sso'] = sso
+        if directory_type:
+            object_kwargs['directory_type'] = directory_type
+        if domain_name:
+            object_kwargs['domain_name'] = domain_name
+        if subdomain_name:
+            object_kwargs['subdomain_name'] = subdomain_name
+        if service_username:
+            object_kwargs['service_username'] = service_username
+        if service_password:
+            # TODO: password encryption
+            object_kwargs['service_password'] = service_password
+        if admin_server:
+            object_kwargs['admin_server'] = admin_server
+        if kdc_urls:
+            object_kwargs['kdc_urls'] = kdc_urls
+
+        if object_kwargs:
+            await cls.update.values(**object_kwargs).where(
+                cls.id == id).gino.status()
+        return await cls.get(id)
+
+    @classmethod
+    async def soft_delete(cls, id):
+        """Все удаления объектов AD необходимо делать тут."""
+        # TODO: после ввода сущностей в Event, удалять зависимые записи журнала событий, возможно через ON_DELETE.
+        auth_dir = await AuthenticationDirectory.get_object(id=id, include_inactive=True)
+        if auth_dir:
+            msg = 'Authentication Directory {name} deleted.'.format(name=auth_dir.verbose_name)
+            await auth_dir.delete()
+            await Event.create_info(msg)
+            return True
+        return False
+
     async def add_mapping(self, mapping: dict, groups: list):
         """
         :param mapping: Dictionary of Mapping table kwargs.
@@ -145,67 +254,59 @@ class AuthenticationDirectory(db.Model, AbstractSortableStatusModel, AbstractEnt
             return splitted_list[:2]
         return splitted_list[0], None
 
-    @classmethod
-    async def soft_create(cls, verbose_name, directory_url, domain_name,
-                          service_username=None,
-                          service_password=None,
-                          description=None, connection_type=ConnectionTypes.LDAP,
-                          directory_type=DirectoryTypes.ActiveDirectory, admin_server=None,
-                          subdomain_name=None, kdc_urls=None, sso=False, id=None):
-        """Сначала создается контроллер домена в статусе Creating.
-           Затем проверяется доступность и происходит смена статуса на ACTIVE."""
-        count = await db.func.count(AuthenticationDirectory.id).gino.scalar()
-        if count > 0:
-            raise AssertionError('More than one authentication directory can not be created.')
+    @staticmethod
+    def _get_ad_user_attributes(account_name: str,
+                                domain_name: str,
+                                ldap_server: 'ldap.ldapobject.SimpleLDAPObject'
+                                ) -> Tuple[Optional[str], dict]:
+        """
+        Метод получения информации о текущем пользователе из службы каталогов.
 
-        auth_dir_dict = {'verbose_name': verbose_name,
-                         'description': description,
-                         'directory_url': directory_url,
-                         'connection_type': connection_type,
-                         'directory_type': directory_type,
-                         'domain_name': domain_name,
-                         'service_username': service_username,
-                         'service_password': service_password,
-                         'admin_server': admin_server,
-                         'subdomain_name': subdomain_name,
-                         'kdc_urls': kdc_urls,
-                         'sso': sso,
-                         'status': Status.CREATING
-                         }
-        if id:
-            auth_dir_dict['id'] = id
+        :param account_name: имя пользовательской учетной записи
+        :param domain_name: доменное имя контроллера доменов
+        :param ldap_server: объект сервера службы каталогов
+        :return: атрибуты пользователя службы каталогов
+        """
+        base = 'dc={},dc={}'.format(*domain_name.split('.'))
+        user_info_filter = '(&(objectClass=user)(sAMAccountName={}))'.format(account_name)
+        user_info, user_groups = ldap_server.search_s(base, ldap.SCOPE_SUBTREE,
+                                                      user_info_filter, ['memberOf'])[0]
 
-        # TODO: crypto password
-        auth_dir = await AuthenticationDirectory.create(**auth_dir_dict)
-        connection_ok = await auth_dir.test_connection()
-        if connection_ok:
-            await auth_dir.update(status=Status.ACTIVE).apply()
-        return auth_dir
+        application_log.debug('AD user info: {}'.format(user_info))
+        application_log.debug('AD user groups: {}'.format(user_groups))
+        return user_info, user_groups
 
-    # @property
-    # def keytab(self) -> Optional['Keytab']:
-    #     # TODO: adapt for vdi
-    #     return self.keytabs.first()
-    #
-    # @property
-    # def sso_domain(self) -> str:
-    #     # TODO: adapt for vdi
-    #     return '.'.join([self.subdomain_name, self.domain_name])
-    #
-    # @classmethod
-    # def has_upload_keytab_permission(cls, request):
-    #     # TODO: adapt for vdi
-    #     return cls.has_configure_sso_permission(request)
-    #
-    # @classmethod
-    # def has_configure_sso_permission(cls, request):
-    #     # TODO: adapt for vdi
-    #     return cls.check_permission(request.user, 'configure_sso')
-    #
-    # @classmethod
-    # def has_test_connection_permission(cls, request):
-    #     # TODO: adapt for vdi
-    #     return cls.check_permission(request.user, 'test_connection')
+    @staticmethod
+    def _get_ad_user_groups(user_groups: List[bytes]) -> List[str]:
+        """
+        Метод получения имен групп пользователя службы каталогов.
+
+        :param user_groups: список строк, содержащих имена (CN) групп пользователя службы каталогов.
+        :return: список имен групп
+        """
+
+        groups_names = []
+        for group in user_groups:
+            group_attrs = re.split(r'(?<!\\),', group.decode())
+            for attr in group_attrs:
+                if attr.startswith('CN='):
+                    groups_names.append(attr[3:])
+        return groups_names
+
+    @staticmethod
+    def _get_ad_user_ou(user_info: str) -> Optional[str]:
+        """
+        Метод получения информации о структурном подразделении,
+        членом которого является пользователь.
+
+        :param user_info: строка, содержащая имя структурного подразделения (OU).
+        :return: имя структурного подразделения
+        """
+
+        if user_info:
+            for chunk in re.split(r'(?<!\\),', user_info):
+                if chunk.startswith('OU='):
+                    return chunk[3:]
 
     @classmethod
     async def _get_user(cls, username: str):
@@ -231,14 +332,77 @@ class AuthenticationDirectory(db.Model, AbstractSortableStatusModel, AbstractEnt
             created = False
         return user, created
 
+    async def assign_veil_roles(self,
+                                ldap_server: 'ldap.ldapobject.SimpleLDAPObject',
+                                user: 'User',
+                                account_name: str) -> bool:
+        """
+        Метод назначения пользователю системной группы на основе атрибутов его учетной записи
+        в службе каталогов.
+
+        :param ldap_server: объект сервера службы каталогов
+        :param user: объект пользователя
+        :param account_name: имя пользовательской учетной записи
+        :return: результат назначения системной группы пользователю службы каталогов
+        """
+        application_log.debug('Assigning veil groups to {}'.format(user.username))
+
+        # Удаляем пользователя из всех групп.
+        await user.remove_roles()
+        await user.remove_groups()
+
+        user_info, user_groups = self._get_ad_user_attributes(account_name,
+                                                              self.domain_name,
+                                                              ldap_server)
+
+        # Если отображения отсутствуют, то по-умолчанию всем пользователям
+        # назначается группа Оператор.
+        mappings = await self.mappings
+        application_log.debug('Mappings: {}'.format(mappings))
+
+        if not mappings:
+            await user.add_role(Role.VM_OPERATOR)
+            application_log.debug('Пользователю {} назначена роль VM_OPERATOR.'.format(user.username))
+            return True
+
+        user_veil_groups = False
+        ad_ou, ad_groups = (self._get_ad_user_ou(user_info),
+                            self._get_ad_user_groups(user_groups.get('memberOf', [])))
+
+        application_log.debug('OU: {}'.format(ad_ou))
+        application_log.debug('GROUPS: {}'.format(ad_groups))
+
+        # Производим проверку в порядке уменьшения приоритета.
+        # В случае, если совпадение найдено,
+        # проверка отображений более низкого приоритета не производится.
+
+        # Если есть мэппинги, значит в системе есть группы. Поэтому тут производим пользователю назначение групп.
+        for role_mapping in mappings:
+            escaped_values = list(map(ldap.dn.escape_dn_chars, role_mapping.values))
+            application_log.debug('escaped values: {}'.format(escaped_values))
+            application_log.debug('role mapping value type: {}'.format(role_mapping.value_type))
+
+            if role_mapping.value_type == Mapping.ValueTypes.USER:
+                user_veil_groups = account_name in escaped_values
+            elif role_mapping.value_type == Mapping.ValueTypes.OU:
+                user_veil_groups = ad_ou in escaped_values
+            elif role_mapping.value_type == Mapping.ValueTypes.GROUP:
+                user_veil_groups = any([gr_name in escaped_values for gr_name in ad_groups])
+
+            application_log.debug('{}'.format(role_mapping.value_type == Mapping.ValueTypes.GROUP))
+            application_log.debug('User veil groups: {}'.format(user_veil_groups))
+            if user_veil_groups:
+                for group in await role_mapping.assigned_groups:
+                    application_log.debug('Attaching user {} to group: {}'.format(user.username, group.verbose_name))
+                    await group.add_user(user.id)
+                return True
+        return False
+
     @classmethod
     async def authenticate(cls, username, password):
         """
         Метод аутентификации пользователя на основе данных из службы каталогов.
         """
-        success = False
-        created = False
-
         authentication_directory = await AuthenticationDirectory.get_objects(first=True)
         if not authentication_directory:
             # Если для доменного имени службы каталогов не создано записей в БД,
@@ -258,12 +422,15 @@ class AuthenticationDirectory(db.Model, AbstractSortableStatusModel, AbstractEnt
             ldap_server.set_option(ldap.OPT_REFERRALS, 0)
             ldap_server.set_option(ldap.OPT_NETWORK_TIMEOUT, LDAP_TIMEOUT)
             ldap_server.simple_bind_s(username, password)
+
+            await authentication_directory.assign_veil_roles(ldap_server, user, account_name)
+            success = True
         except ldap.INVALID_CREDENTIALS as ldap_error:
             # Если пользователь не проходит аутентификацию в службе каталогов с предоставленными
             # данными, то аутентификация в системе считается неуспешной и создается событие с
             # сообщением о неуспешности.
-            # self._create_user_auth_failed_event(user)
             success = False
+            created = False
             application_log.debug(ldap_error)
             raise AssertionError('Invalid credeintials (ldap).')
         except ldap.SERVER_DOWN:
@@ -271,60 +438,11 @@ class AuthenticationDirectory(db.Model, AbstractSortableStatusModel, AbstractEnt
             # сервера, так как не можем сделать вывод о правильности предоставленных данных.
             # self.server_down = True
             success = False
+            created = False
             raise AssertionError('Server down (ldap).')
-        else:
-            success = True
         finally:
             if not success and created:
                 await user.delete()
-
-    @classmethod
-    async def soft_update(cls, id, verbose_name, directory_url, connection_type, description, directory_type,
-                          domain_name, subdomain_name, service_username, service_password, admin_server, kdc_urls,
-                          sso):
-        object_kwargs = dict()
-        if verbose_name:
-            object_kwargs['verbose_name'] = verbose_name
-        if directory_url:
-            object_kwargs['directory_url'] = directory_url
-        if connection_type:
-            object_kwargs['connection_type'] = connection_type
-        if description:
-            object_kwargs['description'] = description
-        if sso or sso is False:
-            object_kwargs['sso'] = sso
-        if directory_type:
-            object_kwargs['directory_type'] = directory_type
-        if domain_name:
-            object_kwargs['domain_name'] = domain_name
-        if subdomain_name:
-            object_kwargs['subdomain_name'] = subdomain_name
-        if service_username:
-            object_kwargs['service_username'] = service_username
-        if service_password:
-            # TODO: password encryption
-            object_kwargs['service_password'] = service_password
-        if admin_server:
-            object_kwargs['admin_server'] = admin_server
-        if kdc_urls:
-            object_kwargs['kdc_urls'] = kdc_urls
-
-        if object_kwargs:
-            await cls.update.values(**object_kwargs).where(
-                cls.id == id).gino.status()
-        return await cls.get(id)
-
-    @classmethod
-    async def soft_delete(cls, id):
-        """Все удаления объектов AD необходимо делать тут."""
-        # TODO: после ввода сущностей в Event, удалять зависимые записи журнала событий, возможно через ON_DELETE.
-        auth_dir = await AuthenticationDirectory.get_object(id=id, include_inactive=True)
-        if auth_dir:
-            msg = 'Authentication Directory {name} deleted.'.format(name=auth_dir.verbose_name)
-            await auth_dir.delete()
-            await Event.create_info(msg)
-            return True
-        return False
 
 
 class Mapping(db.Model, AbstractEntity):

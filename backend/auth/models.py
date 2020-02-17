@@ -120,9 +120,18 @@ class User(AbstractSortableStatusModel, db.Model, AbstractEntity):
             for role in roles_list:
                 await self.add_role(role)
 
-    async def remove_roles(self, roles_list):
-        return await UserRole.delete.where(
-            (UserRole.role.in_(roles_list)) & (UserRole.user_id == self.id)).gino.status()
+    async def remove_roles(self, roles_list=None):
+        if not roles_list:
+            return await UserRole.delete.where(UserRole.user_id == self.id).gino.status()
+        if roles_list and isinstance(roles_list, list):
+            return await UserRole.delete.where(
+                (UserRole.role.in_(roles_list)) & (UserRole.user_id == self.id)).gino.status()
+
+    async def remove_groups(self):
+        groups = await self.assigned_groups
+        users_list = [self.id]
+        for group in groups:
+            await group.remove_users(users_list)
 
     async def activate(self):
         query = User.update.values(is_active=True).where(User.id == self.id)
@@ -338,6 +347,7 @@ class Group(AbstractSortableStatusModel, db.Model, AbstractEntity):
                 await self.add_user(user)
 
     async def remove_users(self, user_id_list):
+        application_log.debug('Removing users: {} from group {}'.format(user_id_list, self.verbose_name))
         return await UserGroup.delete.where(
             (UserGroup.user_id.in_(user_id_list)) & (UserGroup.group_id == self.id)).gino.status()
 
