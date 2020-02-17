@@ -94,6 +94,17 @@ def bootstrap():
     init_logging(tornado.options.options.access_to_stdout)
 
 
+def make_app():
+    IOLoop.current().run_sync(
+        lambda: db.init_app(app,
+                            host=DB_HOST,
+                            port=DB_PORT,
+                            user=DB_USER,
+                            password=DB_PASS,
+                            database=DB_NAME,
+                            pool_max_size=100))
+
+
 def start_server():
     logger.info('Tornado VDI started')
 
@@ -101,14 +112,7 @@ def start_server():
         general_log = logging.getLogger('tornado.general')
         general_log.warning('Auth is disabled. Enable on production!')
 
-    IOLoop.current().run_sync(
-        lambda: db.init_app(app,
-                            host=DB_HOST,
-                            port=DB_PORT,
-                            user=DB_USER,
-                            password=DB_PASS,
-                            database=DB_NAME))
-
+    make_app()
     app.listen(tornado.options.options.port)
     init_tasks()
     init_callbacks()
