@@ -3,8 +3,8 @@ import uuid
 from async_generator import async_generator, yield_
 from graphene import Context
 
-from database import db
-from settings import DB_PASS, DB_USER, DB_PORT, DB_HOST, DB_NAME, TESTS_ADMIN_USERNAME
+from database import db, Role
+from settings import DB_PASS, DB_USER, DB_PORT, DB_HOST, DB_NAME
 from auth.utils.veil_jwt import encode_jwt
 
 from controller.models import Controller
@@ -14,6 +14,9 @@ from vm.veil_client import VmHttpClient
 from vm.models import Vm
 
 from pool.schema import pool_schema
+
+from auth.models import Group, User
+from auth.authentication_directory.models import AuthenticationDirectory, Mapping
 
 from tests.utils import execute_scheme
 
@@ -149,7 +152,7 @@ async def get_auth_token():
     """Return JWT token for Admin user.
     Грязный хак в том, что пользователь и пароль при авторизации проверяется раньше.
     Тут напрямую вызывается уже генерация токена."""
-    access_token = 'jwt ' + encode_jwt(TESTS_ADMIN_USERNAME).get('access_token')
+    access_token = 'jwt ' + encode_jwt('admin').get('access_token')
     return access_token
 
 
@@ -357,3 +360,157 @@ async def fixt_entitle_user_to_pool(fixt_create_static_pool):
     }
     ''' % (pool_id, user_name)
     await execute_scheme(pool_schema, qu, context=context)
+
+
+@pytest.fixture
+def fixt_group(request, event_loop):
+    group_name = 'test_group_1'
+
+    async def setup():
+        print('Creating group: {}'.format(group_name))
+        await Group.create(verbose_name=group_name, id="10913d5d-ba7a-4049-88c5-769267a6cbe4")
+
+    event_loop.run_until_complete(setup())
+
+    def teardown():
+        async def a_teardown():
+            print('Deleting group: {}'.format(group_name))
+            await Group.delete.where(Group.id == "10913d5d-ba7a-4049-88c5-769267a6cbe4").gino.status()
+
+        event_loop.run_until_complete(a_teardown())
+
+    request.addfinalizer(teardown)
+    return True
+
+
+@pytest.fixture
+def fixt_user(request, event_loop):
+    user_name = 'test_user'
+    user_id = '10913d5d-ba7a-4049-88c5-769267a6cbe4'
+    user_password = 'veil'
+
+    async def setup():
+        print('Creating user: {}'.format(user_name))
+        await User.soft_create(username=user_name, id=user_id, password=user_password)
+
+    event_loop.run_until_complete(setup())
+
+    def teardown():
+        async def a_teardown():
+            print('Deleting user: {}'.format(user_name))
+            await User.delete.where(User.id == user_id).gino.status()
+
+        event_loop.run_until_complete(a_teardown())
+
+    request.addfinalizer(teardown)
+    return True
+
+
+@pytest.fixture
+def fixt_user_admin(request, event_loop):
+    user_name = 'test_user_admin'
+    user_id = '10913d5d-ba7a-4049-88c5-769267a6cbe3'
+    user_password = 'veil'
+
+    async def setup():
+        await User.soft_create(username=user_name, id=user_id, password=user_password, is_superuser=True)
+
+    event_loop.run_until_complete(setup())
+
+    def teardown():
+        async def a_teardown():
+            await User.delete.where(User.id == user_id).gino.status()
+
+        event_loop.run_until_complete(a_teardown())
+
+    request.addfinalizer(teardown)
+    return True
+
+
+@pytest.fixture
+def fixt_user_locked(request, event_loop):
+    user_id = '10913d5d-ba7a-4049-88c5-769267a6cbe6'
+
+    async def setup():
+        await User.soft_create(username='test_user_locked', id=user_id, is_active=False, password="qwe")
+
+    event_loop.run_until_complete(setup())
+
+    def teardown():
+        async def a_teardown():
+            await User.delete.where(User.id == user_id).gino.status()
+
+        event_loop.run_until_complete(a_teardown())
+
+    request.addfinalizer(teardown)
+    return True
+
+
+@pytest.fixture
+def fixt_auth_dir(request, event_loop):
+    id = '10913d5d-ba7a-4049-88c5-769267a6cbe4'
+    verbose_name = 'test_auth_dir'
+    directory_url = 'ldap://192.168.11.180'
+    domain_name = 'bazalt.team'
+
+    async def setup():
+        print('Creating auth dir: {}'.format(verbose_name))
+        await AuthenticationDirectory.soft_create(id=id, verbose_name=verbose_name, directory_url=directory_url,
+                                                  domain_name=domain_name)
+    event_loop.run_until_complete(setup())
+
+    def teardown():
+        async def a_teardown():
+            print('Deleting auth dir: {}'.format(verbose_name))
+            await AuthenticationDirectory.delete.where(AuthenticationDirectory.id == id).gino.status()
+            # TODO: опасное место
+            await User.delete.where(User.username == 'ad120').gino.status()
+
+        event_loop.run_until_complete(a_teardown())
+
+    request.addfinalizer(teardown)
+    return True
+
+
+@pytest.fixture
+def fixt_mapping(request, event_loop):
+    """Фикстура завязана на фикстуру AD и Групп."""
+
+    auth_dir_id = '10913d5d-ba7a-4049-88c5-769267a6cbe4'
+    group_id = '10913d5d-ba7a-4049-88c5-769267a6cbe4'
+    groups = [group_id]
+    mapping_dict = {
+        'id': '10913d5d-ba7a-4049-88c5-769267a6cbe4',
+        'verbose_name': 'test_mapping_fixt',
+        'value_type': Mapping.ValueTypes.GROUP,
+        'values': ["veil-ad-users"]
+
+    }
+
+    async def setup():
+        auth_dir = await AuthenticationDirectory.get(auth_dir_id)
+        await auth_dir.add_mapping(mapping=mapping_dict, groups=groups)
+    event_loop.run_until_complete(setup())
+
+    def teardown():
+        async def a_teardown():
+            await Mapping.delete.where(Mapping.id == mapping_dict['id']).gino.status()
+
+        event_loop.run_until_complete(a_teardown())
+
+    request.addfinalizer(teardown)
+    return True
+
+
+@pytest.fixture
+def fixt_group_role(request, event_loop):
+    """Фикстура завязана на фикстуру Групп"""
+
+    group_id = '10913d5d-ba7a-4049-88c5-769267a6cbe4'
+
+    async def setup():
+        """Подчищать не надо, группа будет удалена и эти записи удалятся каскадом"""
+        group = await Group.get(group_id)
+        await group.add_role(Role.READ_ONLY)
+    event_loop.run_until_complete(setup())
+    return True

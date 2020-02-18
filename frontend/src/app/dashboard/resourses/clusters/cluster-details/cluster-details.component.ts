@@ -104,21 +104,6 @@ export class ClusterDetailsComponent implements OnInit, OnDestroy {
       type: 'string'
     },
     {
-      title: 'Диски',
-      property: 'vdisk_count',
-      type: 'string'
-    },
-    {
-      title: 'Образы',
-      property: 'iso_count',
-      type: 'string'
-    },
-    {
-      title: 'Файлы',
-      property: 'file_count',
-      type: 'string'
-    },
-    {
       title: 'Свободно (Мб)',
       property: 'free_space',
       type: 'string'

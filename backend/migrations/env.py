@@ -2,9 +2,10 @@ from __future__ import with_statement
 from alembic import context
 from sqlalchemy import pool, engine_from_config
 from logging.config import fileConfig
-from app import app
+from app import app  # noqa
 from database import db as target_metadata
 
+# TODO: add export of python path
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config
