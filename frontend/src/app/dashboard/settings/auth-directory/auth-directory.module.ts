@@ -1,3 +1,4 @@
+import { AddMappingComponent } from './auth-directory-details/add-mapping/add-mapping.component';
 import { AddAuthenticationDirectoryComponent } from './add-auth-directory/add-auth-directory.component';
 import { AuthenticationDirectoryComponent } from './all-auth-directory/all-auth-directory.component';
 import { MatSelectModule } from '@angular/material/select';
@@ -18,7 +19,8 @@ import { RemoveAuthenticationDirectoryComponent } from './auth-directory-details
       AuthenticationDirectoryComponent,
       AddAuthenticationDirectoryComponent,
       AuthenticationDirectoryDetailsComponent,
-      RemoveAuthenticationDirectoryComponent
+      RemoveAuthenticationDirectoryComponent,
+      AddMappingComponent
    ],
    imports: [
       SharedModule,
@@ -38,7 +40,8 @@ import { RemoveAuthenticationDirectoryComponent } from './auth-directory-details
    ],
    entryComponents: [
       AddAuthenticationDirectoryComponent,
-      RemoveAuthenticationDirectoryComponent
+      RemoveAuthenticationDirectoryComponent,
+      AddMappingComponent
    ]
 })
 export class AuthenticationDirectoryModule {}

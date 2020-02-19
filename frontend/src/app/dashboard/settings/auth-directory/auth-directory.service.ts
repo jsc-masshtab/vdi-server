@@ -32,6 +32,13 @@ export class AuthenticationDirectoryService {
                                 subdomain_name,
                                 kdc_urls,
                                 sso
+                                mappings {
+                                    id
+                                    verbose_name
+                                    value_type
+                                    values
+                                    priority
+                                }
                             }
                         }
                     `,
@@ -148,6 +155,41 @@ export class AuthenticationDirectoryService {
             variables: {
                 method: 'POST',
                 ...props
+            }
+        });
+    }
+
+    public getGroups(): QueryRef<any, any> {
+        return  this.service.watchQuery({
+             query:  gql` query groups {
+                                groups {
+                                    id
+                                    verbose_name
+                                }
+                             }
+                     `,
+             variables: {
+                method: 'GET'
+             }
+        });
+     }
+
+     public addAuthDirMapping(props, id: string) {
+        return this.service.mutate<any>({
+            mutation: gql`
+                mutation auth_dirs($id: UUID!, $description: String,$verbose_name: String!,
+                                $value_type: ValueTypes, $groups: [UUID!]!,
+                                $values: [String!]!, $priority: Int) {
+                    addAuthDirMapping(id: $id, description: $description,verbose_name: $verbose_name,
+                        value_type: $value_type, groups: $groups, values: $values, priority: $priority) {
+                        ok
+                    }
+                }
+            `,
+            variables: {
+                method: 'POST',
+                ...props,
+                id
             }
         });
     }

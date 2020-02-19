@@ -1,3 +1,4 @@
+import { AddMappingComponent } from './add-mapping/add-mapping.component';
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { AuthenticationDirectoryService } from '../auth-directory.service';
 import { Subscription } from 'rxjs';
@@ -21,6 +22,8 @@ export class AuthenticationDirectoryDetailsComponent implements OnInit, OnDestro
   testing: boolean = false;
   tested: boolean = false;
   connected: boolean = false;
+  public menuActive: string = 'info';
+  public host: boolean = false;
 
   public collection: object[] = [
     {
@@ -65,6 +68,39 @@ export class AuthenticationDirectoryDetailsComponent implements OnInit, OnDestro
     }
   ];
 
+  public collection_mapping: object[] = [
+    {
+      title: 'Название',
+      property: 'verbose_name',
+      type: 'string',
+      edit: 'openEditForm'
+    },
+    {
+      title: 'Описание',
+      property: 'description',
+      type: 'string',
+      edit: 'openEditForm'
+    },
+    {
+      title: 'Тип атрибута службы каталогов',
+      property: 'value_type',
+      type: 'string',
+      edit: 'openEditForm'
+    },
+    {
+      title: 'Название',
+      property: 'verbose_name',
+      type: 'string',
+      edit: 'openEditForm'
+    },
+    {
+      title: 'Название',
+      property: 'verbose_name',
+      type: 'string',
+      edit: 'openEditForm'
+    }
+  ];
+
   constructor(private service: AuthenticationDirectoryService, private activatedRoute: ActivatedRoute, public dialog: MatDialog,
               private router: Router) { }
 
@@ -76,12 +112,14 @@ export class AuthenticationDirectoryDetailsComponent implements OnInit, OnDestro
   }
 
   public getAuthenticationDirectory(): void {
+    this.host = false;
     if (this.getAuthenticationDirectorySub) {
       this.getAuthenticationDirectorySub.unsubscribe();
     }
 
     this.getAuthenticationDirectorySub = this.service.getAuthenticationDirectory(this.id)
       .subscribe((data) => {
+        this.host = true;
         this.AuthenticationDirectory = data.auth_dir;
       });
   }
@@ -164,8 +202,26 @@ export class AuthenticationDirectoryDetailsComponent implements OnInit, OnDestro
     });
   }
 
+  public addMatch() {
+    this.dialog.open(AddMappingComponent, {
+      width: '500px',
+      data: {
+        id: this.id
+      }
+    });
+  }
+
   public close() {
     this.router.navigate(['pages/settings/auth-directory']);
+  }
+
+  public routeTo(route: string): void {
+    if (route === 'info') {
+      this.menuActive = 'info';
+    }
+    if (route === 'match') {
+      this.menuActive = 'match';
+    }
   }
 
   ngOnDestroy() {
