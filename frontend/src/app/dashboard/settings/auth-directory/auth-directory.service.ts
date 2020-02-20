@@ -38,6 +38,10 @@ export class AuthenticationDirectoryService {
                                     value_type
                                     values
                                     priority
+                                    assigned_groups {
+                                      id
+                                      verbose_name
+                                    }
                                 }
                             }
                         }
@@ -193,4 +197,29 @@ export class AuthenticationDirectoryService {
             }
         });
     }
+
+    public updateMapping(props, id: string, mapping_id: string) {
+      return this.service.mutate<any>({
+          mutation: gql`
+              mutation auth_dirs($id: UUID!, $description: String,$verbose_name: String!,
+                              $value_type: ValueTypes, $groups: [UUID!]!,
+                              $values: [String!]!, $priority: Int, $mapping_id: UUID!) {
+                    editAuthDirMapping(id: $id, description: $description,verbose_name: $verbose_name,
+                      value_type: $value_type, groups: $groups, values: $values, priority: $priority,
+                      mapping_id: $mapping_id) {
+                      ok
+                  }
+              }
+          `,
+          variables: {
+              method: 'POST',
+              ...props,
+             id,
+             mapping_id
+          }
+      });
+  }
+
 }
+
+

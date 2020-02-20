@@ -25,14 +25,14 @@
         <fa-icon [icon]="['fas','trash-alt']" size="xs"></fa-icon>
         <span class="name">Удалить</span>
       </button>
-  
+
       <button (click)="testAuthDir()" title="Проверить соединение" class="btn-control">
         <fa-icon [class.rotation]="testing" [icon]="['fas','sync-alt']" size="xs"></fa-icon>
         <span class="name">Проверка соединения</span>
-        
+
         <fa-icon *ngIf="tested && connected" class="ad-status ad-success" [icon]="['fas','check']" size="xs"></fa-icon>
         <fa-icon *ngIf="tested && !connected" class="ad-status ad-failed" [icon]="['fas','times-circle']" size="xs"></fa-icon>
-  
+
         <span class="ad-status-text" [class.ad-success]="connected" [class.ad-failed]="!connected" *ngIf="tested">{{ connected ? 'Успешно' : 'Нет соединения' }}</span>
       </button>
     </ng-container>
@@ -58,7 +58,7 @@
       </div>
       <div class="details-slide-into">
         <vdi-table-into [item]="AuthenticationDirectory" [collection]="collection"  (edit)="edit($event)" *ngIf="menuActive === 'info'"></vdi-table-into>
-        <vdi-table-into [item]="AuthenticationDirectory.mappings" [collection]="collection_mapping"  (edit)="edit($event)" *ngIf="menuActive === 'match'"></vdi-table-into>
+        <vdi-table-component cursor="true" (clickRowData)="openMapping($event)" [data]="AuthenticationDirectory.mappings" [collection]="collection_mapping"   *ngIf="menuActive === 'match'"></vdi-table-component>
       </div>
     </div>
   </div>

@@ -1,3 +1,4 @@
+import { MappingComponent } from './mapping/mapping.component';
 import { AddMappingComponent } from './add-mapping/add-mapping.component';
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { AuthenticationDirectoryService } from '../auth-directory.service';
@@ -76,28 +77,9 @@ export class AuthenticationDirectoryDetailsComponent implements OnInit, OnDestro
       edit: 'openEditForm'
     },
     {
-      title: 'Описание',
-      property: 'description',
-      type: 'string',
-      edit: 'openEditForm'
-    },
-    {
-      title: 'Тип атрибута службы каталогов',
-      property: 'value_type',
-      type: 'string',
-      edit: 'openEditForm'
-    },
-    {
-      title: 'Название',
-      property: 'verbose_name',
-      type: 'string',
-      edit: 'openEditForm'
-    },
-    {
-      title: 'Название',
-      property: 'verbose_name',
-      type: 'string',
-      edit: 'openEditForm'
+      title: 'Статус',
+      property: 'status',
+      type: 'string'
     }
   ];
 
@@ -210,6 +192,15 @@ export class AuthenticationDirectoryDetailsComponent implements OnInit, OnDestro
       }
     });
   }
+
+ public openMapping(mapping) {
+  mapping['idDirectory'] = this.id;
+  console.log(mapping);
+  this.dialog.open(MappingComponent, {
+    width: '500px',
+    data: mapping
+  });
+ }
 
   public close() {
     this.router.navigate(['pages/settings/auth-directory']);
