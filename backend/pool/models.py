@@ -53,7 +53,7 @@ class Pool(db.Model, AbstractEntity):
     # ----- ----- ----- ----- ----- ----- -----
     # Constants:
     POOL_TYPE_LABEL = 'pool_type'
-    EXTRA_ORDER_FIELDS = ['controller_address', 'users_count', 'vms_count', 'pool_type']
+    EXTRA_ORDER_FIELDS = ['controller_address', 'users_count', 'vm_amount', 'pool_type']
 
     # ----- ----- ----- ----- ----- ----- -----
     # Properties and getters:
@@ -108,7 +108,7 @@ class Pool(db.Model, AbstractEntity):
                 elif ordering == 'users_count':
                     users_count = db.func.count(PoolUsers.user_id)
                     query = query.order_by(desc(users_count)) if reversed_order else query.order_by(users_count)
-                elif ordering == 'vms_count':
+                elif ordering == 'vm_amount':
                     vms_count = db.func.count(Vm.id)
                     query = query.order_by(desc(vms_count)) if reversed_order else query.order_by(vms_count)
                 elif ordering == 'pool_type':
