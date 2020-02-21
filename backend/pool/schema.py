@@ -2,6 +2,7 @@
 import re
 import asyncio
 import logging
+import uuid
 
 import graphene
 from tornado.httpclient import HTTPClientError  # TODO: точно это нужно тут?
@@ -511,6 +512,8 @@ class AddVmsToStaticPoolMutation(graphene.Mutation):
         all_vm_ids_on_node = [vmachine['id'] for vmachine in all_vms_on_node]
         used_vm_ids = await Vm.get_all_vms_ids()  # get list of vms which are already in pools
 
+        application_log.debug('VM ids: {}'.format(vm_ids))
+
         for vm_id in vm_ids:
             # check if vm exists and it is on the correct node
             if str(vm_id) not in all_vm_ids_on_node:
@@ -522,13 +525,16 @@ class AddVmsToStaticPoolMutation(graphene.Mutation):
         # remote access
         await Vm.enable_remote_accesses(controller_address, vm_ids)
 
+        application_log.debug('All VMs on node: {}'.format(all_vms_on_node))
+
         # Add VMs to db
         for vm_info in all_vms_on_node:
-            await Vm.create(id=vm_info['id'],
-                            template_id=None,
-                            pool_id=pool_id,
-                            created_by_vdi=False,
-                            verbose_name=vm_info['verbose_name'])
+            if uuid.UUID(vm_info['id']) in vm_ids:
+                await Vm.create(id=vm_info['id'],
+                                template_id=None,
+                                pool_id=pool_id,
+                                created_by_vdi=False,
+                                verbose_name=vm_info['verbose_name'])
 
         return {
             'ok': True
