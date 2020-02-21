@@ -195,7 +195,6 @@ export class AuthenticationDirectoryDetailsComponent implements OnInit, OnDestro
 
  public openMapping(mapping) {
   mapping['idDirectory'] = this.id;
-  console.log(mapping);
   this.dialog.open(MappingComponent, {
     width: '500px',
     data: mapping

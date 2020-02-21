@@ -48,7 +48,7 @@
   <div class="details-row">
     <ul class="details-menu">
       <li (click)="routeTo('info')" [class.active]="menuActive === 'info'" title="Информация о службе каталогов"> <fa-icon [icon]="['fas','chart-bar']"></fa-icon><span class="name">Информация</span></li>
-      <li (click)="routeTo('match')" [class.active]="menuActive === 'match'" title="Соответствия"> <fa-icon [icon]="['fas','chart-bar']"></fa-icon><span class="name">Соответствия</span></li>
+      <li (click)="routeTo('match')" [class.active]="menuActive === 'match'" title="Соответствия"> <fa-icon [icon]="['fas','columns']"></fa-icon><span class="name">Соответствия</span></li>
     </ul>
 
     <div class="details-slide" *ngIf="host">

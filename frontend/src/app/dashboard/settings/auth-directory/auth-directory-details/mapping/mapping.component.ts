@@ -1,8 +1,10 @@
 import { WaitService } from '../../../../common/components/single/wait/wait.service';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material';
-import { Component, OnInit, Inject } from '@angular/core';
+import { Component, Inject, OnDestroy } from '@angular/core';
 import { AuthenticationDirectoryService } from '../../auth-directory.service';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { takeUntil } from 'rxjs/operators';
+import { Subject } from 'rxjs';
 
 
 interface IData {
@@ -21,12 +23,11 @@ interface IData {
   templateUrl: './mapping.component.html'
 })
 
-export class MappingComponent implements OnInit {
+export class MappingComponent implements OnDestroy {
 
   public form: FormGroup;
   public checkValid: boolean = false;
-
-
+  private destroy: Subject<any> = new Subject<any>();
 
   private initForm(): void {
     this.form = this.fb.group({
@@ -47,24 +48,20 @@ export class MappingComponent implements OnInit {
                 this.initForm();
               }
 
-  ngOnInit() {
-
-  }
 
   public compareFn(v1, v2): boolean {
     return v1 && v2 ? v1.id === v2.id : v1 === v2;
-}
+  }
 
   public send() {
     let value = {...this.form.value};
-    console.log(value);
-    value.groups.map(group => delete group.verbose_name);
-    console.log(value);
+    let groupId = this.form.value.groups.map((group) => group.id);
+    value.groups = groupId;
     this.checkValid = true;
     if (this.form.status === 'VALID') {
       this.waitService.setWait(true);
       this.service.updateMapping(value, this.data.idDirectory, this.data.id).subscribe(() => {
-        this.service.getAuthenticationDirectory(this.data.idDirectory).subscribe(() => {
+        this.service.getAuthenticationDirectory(this.data.idDirectory).pipe(takeUntil(this.destroy)).subscribe(() => {
           this.dialogRef.close();
           this.waitService.setWait(false);
         });
@@ -72,6 +69,19 @@ export class MappingComponent implements OnInit {
     }
   }
 
+  public delete() {
+    this.waitService.setWait(true);
+    this.service.deleteMapping(this.data.idDirectory, this.data.id).subscribe(() => {
+    this.service.getAuthenticationDirectory(this.data.idDirectory).pipe(takeUntil(this.destroy)).subscribe(() => {
+        this.dialogRef.close();
+        this.waitService.setWait(false);
+      });
+    });
+  }
+
+  ngOnDestroy() {
+    this.destroy.next(null);
+  }
 }
 
 

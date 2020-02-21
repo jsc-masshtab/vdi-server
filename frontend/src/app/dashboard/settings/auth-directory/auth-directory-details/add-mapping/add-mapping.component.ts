@@ -1,8 +1,10 @@
+import { takeUntil } from 'rxjs/operators';
 import { WaitService } from '../../../../common/components/single/wait/wait.service';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material';
-import { Component, OnInit, Inject } from '@angular/core';
+import { Component, OnInit, Inject, OnDestroy } from '@angular/core';
 import { AuthenticationDirectoryService } from '../../auth-directory.service';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { Subject } from 'rxjs';
 
 interface IData {
   id: string;
@@ -14,10 +16,11 @@ interface IData {
   templateUrl: './add-mapping.component.html'
 })
 
-export class AddMappingComponent implements OnInit {
+export class AddMappingComponent implements OnInit, OnDestroy {
 
   public form: FormGroup;
   public checkValid: boolean = false;
+  private destroy: Subject<any> = new Subject<any>();
 
   public pending = {
     groups: false
@@ -50,11 +53,10 @@ export class AddMappingComponent implements OnInit {
   }
 
   public send() {
-    console.log(this.form.value);
     this.checkValid = true;
     if (this.form.status === 'VALID') {
       this.waitService.setWait(true);
-      this.service.addAuthDirMapping(this.form.value, this.data.id).subscribe(() => {
+      this.service.addAuthDirMapping(this.form.value, this.data.id).pipe(takeUntil(this.destroy)).subscribe(() => {
         this.service.getAuthenticationDirectory(this.data.id).subscribe(() => {
           this.dialogRef.close();
           this.waitService.setWait(false);
@@ -65,11 +67,15 @@ export class AddMappingComponent implements OnInit {
 
   private getGroups(): void  {
     this.pending.groups = true;
-    this.service.getGroups().valueChanges
+    this.service.getGroups().valueChanges.pipe(takeUntil(this.destroy))
     .subscribe( (data) => {
       this.groups = data.data['groups'];
       this.pending.groups = false;
     });
+  }
+
+  ngOnDestroy() {
+    this.destroy.next(null);
   }
 
 

@@ -42,6 +42,7 @@ export class AuthenticationDirectoryService {
                                       id
                                       verbose_name
                                     }
+                                    description
                                 }
                             }
                         }
@@ -219,6 +220,23 @@ export class AuthenticationDirectoryService {
           }
       });
   }
+
+  public deleteMapping(id: string, mapping_id: string) {
+    return this.service.mutate<any>({
+        mutation: gql`
+            mutation auth_dirs($id: UUID!, $mapping_id: UUID!) {
+                deleteAuthDirMapping(id: $id, mapping_id: $mapping_id) {
+                    ok
+                }
+            }
+        `,
+        variables: {
+            method: 'POST',
+           id,
+           mapping_id
+        }
+    });
+}
 
 }
 
