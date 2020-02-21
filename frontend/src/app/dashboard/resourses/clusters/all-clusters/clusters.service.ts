@@ -61,9 +61,6 @@ export class ClustersService  {
                                     size
                                     status
                                     type
-                                    vdisk_count
-                                    file_count
-                                    iso_count
                                     verbose_name
                                 }
                                 templates {

@@ -20,28 +20,6 @@ snapshots['TestUserSchema.test_users_list 1'] = {
     ]
 }
 
-snapshots['TestUserSchema.test_users_get_by_id TestUserSchema.test_users_get_by_id 1'] = {
-    'user': {
-        'email': 'admin@admin.admin',
-        'first_name': None,
-        'is_active': True,
-        'is_superuser': True,
-        'last_name': None,
-        'username': 'admin'
-    }
-}
-
-snapshots['TestUserSchema.test_users_get_by_username TestUserSchema.test_users_get_by_id 1'] = {
-    'user': {
-        'email': 'admin@admin.admin',
-        'first_name': None,
-        'is_active': True,
-        'is_superuser': True,
-        'last_name': None,
-        'username': 'admin'
-    }
-}
-
 snapshots['TestUserSchema.test_user_create 1'] = {
     'createUser': {
         'ok': True,
@@ -104,5 +82,45 @@ snapshots['TestUserSchema.test_users_get_by_id 1'] = {
         'is_superuser': True,
         'last_name': None,
         'username': 'admin'
+    }
+}
+
+snapshots['TestUserSchema.test_user_role 1'] = {
+    'addUserRole': {
+        'ok': True,
+        'user': {
+            'assigned_roles': [
+                'VM_OPERATOR'
+            ],
+            'possible_roles': [
+                'READ_ONLY',
+                'ADMINISTRATOR',
+                'SECURITY_ADMINISTRATOR',
+                'VM_ADMINISTRATOR',
+                'NETWORK_ADMINISTRATOR',
+                'STORAGE_ADMINISTRATOR'
+            ],
+            'username': 'test_user'
+        }
+    }
+}
+
+snapshots['TestUserSchema.test_user_role 2'] = {
+    'removeUserRole': {
+        'ok': True,
+        'user': {
+            'assigned_roles': [
+            ],
+            'possible_roles': [
+                'READ_ONLY',
+                'ADMINISTRATOR',
+                'SECURITY_ADMINISTRATOR',
+                'VM_ADMINISTRATOR',
+                'NETWORK_ADMINISTRATOR',
+                'STORAGE_ADMINISTRATOR',
+                'VM_OPERATOR'
+            ],
+            'username': 'test_user'
+        }
     }
 }

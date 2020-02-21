@@ -21,7 +21,7 @@ body {
     justify-content: center;
     align-items: center;
     position: fixed;
-    left: 200px;
+    min-width: 320px;
 
     .icon-spin {
         margin-right: 200px;
@@ -37,7 +37,6 @@ body {
 .cdk-overlay-pane {
     overflow-y: auto !important;
     overflow-x: hidden;
-    margin-right: 200px;
 }
 
 .mat-form-field {
@@ -52,7 +51,7 @@ body {
     background: #00abff;
 }
 
-@media all  and (max-width: 750px) { 
+@media screen and (not handheld) and (max-width: 750px) { 
     .cdk-overlay-container {
         left: 70px;
     
@@ -65,4 +64,18 @@ body {
         margin-right: 70px;
     }
   }
+
+@media screen  and (min-width: 750px) { 
+    .cdk-overlay-container {
+        left: 200px;
+    
+        .icon-spin {
+            margin-right: 200px;
+        }
+    }
+
+    .cdk-overlay-pane {
+        margin-right: 200px;
+    }
+}
 

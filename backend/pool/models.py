@@ -20,7 +20,7 @@ from resources_monitoring.resources_monitoring_data import VDI_TASKS_SUBSCRIPTIO
 from resources_monitoring.internal_event_monitor import internal_event_monitor
 
 from settings import VEIL_WS_MAX_TIME_TO_WAIT
-from user.models import User
+from auth.models import User
 from vm.models import Vm
 from vm.veil_client import VmHttpClient
 
@@ -53,7 +53,7 @@ class Pool(db.Model, AbstractEntity):
     # ----- ----- ----- ----- ----- ----- -----
     # Constants:
     POOL_TYPE_LABEL = 'pool_type'
-    EXTRA_ORDER_FIELDS = ['controller_address', 'users_count', 'vms_count', 'pool_type']
+    EXTRA_ORDER_FIELDS = ['controller_address', 'users_count', 'vm_amount', 'pool_type']
 
     # ----- ----- ----- ----- ----- ----- -----
     # Properties and getters:
@@ -108,7 +108,7 @@ class Pool(db.Model, AbstractEntity):
                 elif ordering == 'users_count':
                     users_count = db.func.count(PoolUsers.user_id)
                     query = query.order_by(desc(users_count)) if reversed_order else query.order_by(users_count)
-                elif ordering == 'vms_count':
+                elif ordering == 'vm_amount':
                     vms_count = db.func.count(Vm.id)
                     query = query.order_by(desc(vms_count)) if reversed_order else query.order_by(vms_count)
                 elif ordering == 'pool_type':
@@ -232,7 +232,7 @@ class Pool(db.Model, AbstractEntity):
 
     @staticmethod
     async def get_user_pools(username):
-
+        application_log.debug('Looking user {}'.format(username))
         user = await User.get_object(extra_field_name='username', extra_field_value=username)
         pools = Pool.get_pools_query()
         if not user.is_superuser:

@@ -123,7 +123,7 @@ export class AddPoolService {
     public createDinamicPool(verbose_name: string, template_id: string, cluster_id: string,
                              node_id: string, datapool_id: string, initial_size: number,
                              reserve_size: number, total_size: number, vm_name_template: string, controller_ip: string,
-                             create_thin_clones: boolean, min_free_vms_amount : number) {
+                             create_thin_clones: boolean, min_free_vms_amount: number) {
 
         return this.service.mutate<any>({
             mutation: gql`

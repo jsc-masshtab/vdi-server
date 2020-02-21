@@ -1,10 +1,12 @@
+# -*- coding: utf-8 -*-
 import graphene
 import re
 
-from user.models import User
+from auth.models import User
+from database import RoleTypeGraphene, Role
 from common.veil_validators import MutationValidation
 from common.veil_errors import SimpleError, ValidationError
-from common.veil_decorators import superuser_required
+from common.veil_decorators import security_administrator_required, readonly_required
 
 
 class UserValidator(MutationValidation):
@@ -46,6 +48,20 @@ class UserValidator(MutationValidation):
         #     'Пароль должен быть не меньше 8 символов, содержать буквы, цифры и спец.символы.')
 
 
+class UserGroupType(graphene.ObjectType):
+    """Намеренное дублирование GroupType с сокращением доступных полей.
+    Нет понимания в целесообразности абстрактного класса для обоих типов."""
+    id = graphene.UUID(required=True)
+    verbose_name = graphene.String()
+    description = graphene.String()
+
+    @staticmethod
+    def instance_to_type(model_instance):
+        return UserGroupType(id=model_instance.id,
+                             verbose_name=model_instance.verbose_name,
+                             description=model_instance.description)
+
+
 class UserType(graphene.ObjectType):
     id = graphene.UUID()
     username = graphene.String()
@@ -61,13 +77,11 @@ class UserType(graphene.ObjectType):
     is_superuser = graphene.Boolean()
     is_active = graphene.Boolean()
 
-    async def resolve_password(self, _info):
-        return '*' * 8  # dummy value for not displayed field
+    assigned_groups = graphene.List(UserGroupType)
+    possible_groups = graphene.List(UserGroupType)
 
-
-class UserQuery(graphene.ObjectType):
-    users = graphene.List(UserType, ordering=graphene.String())
-    user = graphene.Field(UserType, id=graphene.UUID(), username=graphene.String())
+    assigned_roles = graphene.List(RoleTypeGraphene)
+    possible_roles = graphene.List(RoleTypeGraphene)
 
     @staticmethod
     def instance_to_type(model_instance):
@@ -82,7 +96,36 @@ class UserQuery(graphene.ObjectType):
                         is_superuser=model_instance.is_superuser,
                         is_active=model_instance.is_active)
 
-    @superuser_required
+    async def resolve_password(self, _info):
+        return '*' * 8  # dummy value for not displayed field
+
+    async def resolve_assigned_groups(self, _info):
+        user = await User.get(self.id)
+        return await user.assigned_groups
+
+    async def resolve_possible_groups(self, _info):
+        user = await User.get(self.id)
+        return await user.possible_groups
+
+    async def resolve_assigned_roles(self, _info):
+        """Отображается объединение пользовательский ролей с ролями пользовательских групп."""
+        user = await User.get(self.id)
+        return await user.roles
+
+    async def resolve_possible_roles(self, _info):
+        user = await User.get(self.id)
+        assigned_roles = await user.roles
+        all_roles = [role_type for role_type in Role]
+        # Чтобы порядок всегда был одинаковый
+        possible_roles = [role for role in all_roles if role not in assigned_roles]
+        return possible_roles
+
+
+class UserQuery(graphene.ObjectType):
+    users = graphene.List(UserType, ordering=graphene.String())
+    user = graphene.Field(UserType, id=graphene.UUID(), username=graphene.String())
+
+    @readonly_required
     async def resolve_user(self, info, id=None, username=None):
         if not id and not username:
             raise SimpleError('Scpecify id or username.')
@@ -90,13 +133,13 @@ class UserQuery(graphene.ObjectType):
         user = await User.get_object(id, username, include_inactive=True)
         if not user:
             raise SimpleError('No such user.')
-        return UserQuery.instance_to_type(user)
+        return UserType.instance_to_type(user)
 
-    @superuser_required
+    @readonly_required
     async def resolve_users(self, info, ordering=None):
         users = await User.get_objects(ordering=ordering, include_inactive=True)
         objects = [
-            UserQuery.instance_to_type(user)
+            UserType.instance_to_type(user)
             for user in users
         ]
         return objects
@@ -115,7 +158,7 @@ class CreateUserMutation(graphene.Mutation, UserValidator):
     ok = graphene.Boolean(default_value=False)
 
     @classmethod
-    @superuser_required
+    @security_administrator_required
     async def mutate(cls, root, info, **kwargs):
         await cls.validate_agruments(**kwargs)
         user = await User.soft_create(**kwargs)
@@ -137,7 +180,7 @@ class UpdateUserMutation(graphene.Mutation, UserValidator):
     ok = graphene.Boolean(default_value=False)
 
     @classmethod
-    @superuser_required
+    @security_administrator_required
     async def mutate(cls, root, info, **kwargs):
         await cls.validate_agruments(**kwargs)
         user = await User.soft_update(kwargs['id'],
@@ -157,7 +200,7 @@ class ChangeUserPasswordMutation(graphene.Mutation, UserValidator):
     ok = graphene.Boolean()
 
     @classmethod
-    @superuser_required
+    @security_administrator_required
     async def mutate(cls, root, info, **kwargs):
         await cls.validate_agruments(**kwargs)
         # Назначаем новый пароль
@@ -175,7 +218,7 @@ class ActivateUserMutation(graphene.Mutation, UserValidator):
     ok = graphene.Boolean()
 
     @classmethod
-    @superuser_required
+    @security_administrator_required
     async def mutate(cls, root, info, **kwargs):
         await cls.validate_agruments(**kwargs)
         # Меняем статус пользователя
@@ -193,7 +236,7 @@ class DeactivateUserMutation(graphene.Mutation, UserValidator):
     ok = graphene.Boolean()
 
     @classmethod
-    @superuser_required
+    @security_administrator_required
     async def mutate(cls, root, info, **kwargs):
         await cls.validate_agruments(**kwargs)
         # Меняем статус пользователя
@@ -204,12 +247,49 @@ class DeactivateUserMutation(graphene.Mutation, UserValidator):
         return DeactivateUserMutation(ok=False)
 
 
+class AddUserRoleMutation(graphene.Mutation, UserValidator):
+    class Arguments:
+        id = graphene.UUID(required=True)
+        roles = graphene.NonNull(graphene.List(graphene.NonNull(RoleTypeGraphene)))
+
+    user = graphene.Field(UserType)
+    ok = graphene.Boolean(default_value=False)
+
+    @classmethod
+    @security_administrator_required
+    async def mutate(cls, root, info, **kwargs):
+        await cls.validate_agruments(**kwargs)
+        user = await User.get(kwargs['id'])
+        await user.add_roles(kwargs['roles'])
+        return AddUserRoleMutation(user=UserType(**user.__values__), ok=True)
+
+
+class RemoveUserRoleMutation(graphene.Mutation, UserValidator):
+    class Arguments:
+        id = graphene.UUID(required=True)
+        roles = graphene.NonNull(graphene.List(graphene.NonNull(RoleTypeGraphene)))
+
+    user = graphene.Field(UserType)
+    ok = graphene.Boolean(default_value=False)
+
+    @classmethod
+    @security_administrator_required
+    async def mutate(cls, root, info, **kwargs):
+        await cls.validate_agruments(**kwargs)
+        user = await User.get(kwargs['id'])
+        await user.remove_roles(kwargs['roles'])
+        return RemoveUserRoleMutation(user=UserType(**user.__values__), ok=True)
+
+
 class UserMutations(graphene.ObjectType):
     createUser = CreateUserMutation.Field()
     activateUser = ActivateUserMutation.Field()
     deactivateUser = DeactivateUserMutation.Field()
     updateUser = UpdateUserMutation.Field()
     changeUserPassword = ChangeUserPasswordMutation.Field()
+    addUserRole = AddUserRoleMutation.Field()
+    removeUserRole = RemoveUserRoleMutation.Field()
+    # TODO: добавление групп пользователю
 
 
 user_schema = graphene.Schema(mutation=UserMutations,
