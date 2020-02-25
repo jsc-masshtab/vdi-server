@@ -32,9 +32,9 @@ export class AddMappingComponent implements OnInit, OnDestroy {
     this.form = this.fb.group({
       verbose_name: ['', Validators.required],
       description: '',
-      value_type: '',
+      value_type: ['', Validators.required],
       groups: ['', Validators.required],
-      priority: '',
+      priority: ['', Validators.required],
       values: [[], Validators.required]
     });
   }

@@ -49,7 +49,8 @@
       <mat-form-field>
         <mat-label>Значение атрибутов службы каталогов</mat-label>
         <mat-select  multiple="true" formControlName="values" [compareWith]="compareFn2">
-          <mat-option *ngFor="let value of data.values" [value]="value">
+          <mat-option *ngIf="!form.value.values.length" [disabled]="true" >-- нет атрибутов --</mat-option>
+          <mat-option *ngFor="let value of form.value.values" [value]="value">
             {{ value }}
           </mat-option>
           <vdi-add-select (addValue)="addValue($event)"></vdi-add-select>

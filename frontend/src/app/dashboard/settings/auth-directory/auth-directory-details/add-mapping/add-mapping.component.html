@@ -25,6 +25,7 @@
           </mat-option>
         </mat-select>
       </mat-form-field>
+      <ng-container *ngIf="form.hasError('required', 'value_type') && checkValid"><ng-container *ngTemplateOutlet="errorTemp"></ng-container></ng-container>
     </label>
 
     <label class="field">
@@ -44,19 +45,21 @@
     <label class="field">
       <p class="field-name">Приоритет</p>
       <input type="number"  formControlName="priority">
+      <ng-container *ngIf="form.hasError('required', 'priority') && checkValid"><ng-container *ngTemplateOutlet="errorTemp"></ng-container></ng-container>
     </label>
 
     <label class="field">
-      <mat-form-field (click)="openAdd = true">
+      <mat-form-field>
         <mat-label>Значение атрибутов службы каталогов</mat-label>
         <mat-select  multiple="true" formControlName="values">
+          <mat-option *ngIf="!form.value.values.length" [disabled]="true" >-- нет атрибутов --</mat-option>
           <mat-option *ngFor="let value of form.value.values" [value]="value">
             {{ value }}
           </mat-option>
+          <vdi-add-select (addValue)="addValue($event)"></vdi-add-select>
         </mat-select>
-        <ng-container *ngIf="form.hasError('required', 'values') && checkValid"><ng-container *ngTemplateOutlet="errorTemp"></ng-container></ng-container>
       </mat-form-field>
-      <vdi-add-select *ngIf="openAdd" (addValue)="addValue($event)"></vdi-add-select>
+      <ng-container *ngIf="form.hasError('required', 'values') && checkValid"><ng-container *ngTemplateOutlet="errorTemp"></ng-container></ng-container>
     </label>
 
     <label class="field">

@@ -85,8 +85,10 @@ export class MappingComponent implements OnDestroy {
   }
 
   public addValue(value) {
-    if (value && !this.data.values.includes(value)) {
-      this.data.values.push(value);
+    let arr = [...this.form.value.values];
+    arr.push(value);
+    if (value && !this.form.value.values.includes(value)) {
+      this.form.get('values').setValue(arr);
     }
   }
 
