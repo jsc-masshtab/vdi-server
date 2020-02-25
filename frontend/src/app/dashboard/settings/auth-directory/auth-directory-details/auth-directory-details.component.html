@@ -20,24 +20,47 @@
       <fa-icon [icon]="['fas','sync-alt']"></fa-icon>
     </button>
 
-    <button (click)="remove()" title="Удалить службу каталогов" class="btn-control">
-      <fa-icon [icon]="['fas','trash-alt']" size="xs"></fa-icon>
-      <span class="name">Удалить</span>
-    </button>
+    <ng-container *ngIf="menuActive === 'info'">
+      <button (click)="remove()" title="Удалить службу каталогов" class="btn-control">
+        <fa-icon [icon]="['fas','trash-alt']" size="xs"></fa-icon>
+        <span class="name">Удалить</span>
+      </button>
 
-    <button (click)="testAuthDir()" title="Проверить соединение" class="btn-control">
-      <fa-icon [class.rotation]="testing" [icon]="['fas','sync-alt']" size="xs"></fa-icon>
-      <span class="name">Проверка соединения</span>
-      
-      <fa-icon *ngIf="tested && connected" class="ad-status ad-success" [icon]="['fas','check']" size="xs"></fa-icon>
-      <fa-icon *ngIf="tested && !connected" class="ad-status ad-failed" [icon]="['fas','times-circle']" size="xs"></fa-icon>
+      <button (click)="testAuthDir()" title="Проверить соединение" class="btn-control">
+        <fa-icon [class.rotation]="testing" [icon]="['fas','sync-alt']" size="xs"></fa-icon>
+        <span class="name">Проверка соединения</span>
 
-      <span class="ad-status-text" [class.ad-success]="connected" [class.ad-failed]="!connected" *ngIf="tested">{{ connected ? 'Успешно' : 'Нет соединения' }}</span>
-    </button>
+        <fa-icon *ngIf="tested && connected" class="ad-status ad-success" [icon]="['fas','check']" size="xs"></fa-icon>
+        <fa-icon *ngIf="tested && !connected" class="ad-status ad-failed" [icon]="['fas','times-circle']" size="xs"></fa-icon>
+
+        <span class="ad-status-text" [class.ad-success]="connected" [class.ad-failed]="!connected" *ngIf="tested">{{ connected ? 'Успешно' : 'Нет соединения' }}</span>
+      </button>
+    </ng-container>
+
+    <ng-container *ngIf="menuActive === 'match'">
+      <button (click)="addMatch()" title="Добавить соответствия" class="btn-control">
+        <fa-icon [icon]="['fas','plus-circle']" size="xs"></fa-icon>
+        <span class="name">Добавить соответствия</span>
+      </button>
+    </ng-container>
   </div>
 
   <div class="details-row">
-    <vdi-table-into [item]="AuthenticationDirectory" [collection]="collection" [style.width]="'100%'" (edit)="edit($event)"></vdi-table-into>
+    <ul class="details-menu">
+      <li (click)="routeTo('info')" [class.active]="menuActive === 'info'" title="Информация о службе каталогов"> <fa-icon [icon]="['fas','chart-bar']"></fa-icon><span class="name">Информация</span></li>
+      <li (click)="routeTo('match')" [class.active]="menuActive === 'match'" title="Соответствия"> <fa-icon [icon]="['fas','columns']"></fa-icon><span class="name">Соответствия</span></li>
+    </ul>
+
+    <div class="details-slide" *ngIf="host">
+      <div class="details-slide-header">
+        <ng-container *ngIf="menuActive === 'info'">Информация о службе каталогов</ng-container>
+        <ng-container *ngIf="menuActive === 'match'">Соответствия</ng-container>
+      </div>
+      <div class="details-slide-into">
+        <vdi-table-into [item]="AuthenticationDirectory" [collection]="collection"  (edit)="edit($event)" *ngIf="menuActive === 'info'"></vdi-table-into>
+        <vdi-table-component cursor="true" (clickRowData)="openMapping($event)" [data]="AuthenticationDirectory.mappings" [collection]="collection_mapping"   *ngIf="menuActive === 'match'"></vdi-table-component>
+      </div>
+    </div>
   </div>
 
 </div>
