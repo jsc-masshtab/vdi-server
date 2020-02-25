@@ -55,9 +55,8 @@
           </mat-option>
           <vdi-add-select (addValue)="addValue($event)"></vdi-add-select>
         </mat-select>
-
-        <ng-container *ngIf="form.hasError('required', 'values') && checkValid"><ng-container *ngTemplateOutlet="errorTemp"></ng-container></ng-container>
       </mat-form-field>
+      <ng-container *ngIf="form.hasError('required', 'values') && checkValid"><ng-container *ngTemplateOutlet="errorTemp"></ng-container></ng-container>
     </label>
 
     <label class="field">
