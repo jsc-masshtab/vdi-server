@@ -47,9 +47,16 @@
     </label>
 
     <label class="field">
-      <p class="field-name">Значение атрибутов службы каталогов через зяпятую</p>
-      <input type="text"  formControlName="values">
-      <ng-container *ngIf="form.hasError('required', 'values') && checkValid"><ng-container *ngTemplateOutlet="errorTemp"></ng-container></ng-container>
+      <mat-form-field (click)="openAdd = true">
+        <mat-label>Значение атрибутов службы каталогов</mat-label>
+        <mat-select  multiple="true" formControlName="values">
+          <mat-option *ngFor="let value of form.value.values" [value]="value">
+            {{ value }}
+          </mat-option>
+        </mat-select>
+        <ng-container *ngIf="form.hasError('required', 'values') && checkValid"><ng-container *ngTemplateOutlet="errorTemp"></ng-container></ng-container>
+      </mat-form-field>
+      <vdi-add-select *ngIf="openAdd" (addValue)="addValue($event)"></vdi-add-select>
     </label>
 
     <label class="field">

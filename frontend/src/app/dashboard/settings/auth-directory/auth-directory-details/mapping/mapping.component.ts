@@ -1,6 +1,6 @@
 import { WaitService } from '../../../../common/components/single/wait/wait.service';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material';
-import { Component, Inject, OnDestroy, OnInit } from '@angular/core';
+import { Component, Inject, OnDestroy } from '@angular/core';
 import { AuthenticationDirectoryService } from '../../auth-directory.service';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { takeUntil } from 'rxjs/operators';
@@ -23,7 +23,7 @@ interface IData {
   templateUrl: './mapping.component.html'
 })
 
-export class MappingComponent implements OnDestroy, OnInit {
+export class MappingComponent implements OnDestroy {
 
   public form: FormGroup;
   public checkValid: boolean = false;
@@ -48,9 +48,7 @@ export class MappingComponent implements OnDestroy, OnInit {
                 this.initForm();
               }
 
-  ngOnInit() {
-    console.log(this.form.value.values, this.data.values);
-  }
+
 
   public compareFn(v1, v2): boolean {
     return v1 && v2 ? v1.id === v2.id : false;
@@ -63,8 +61,7 @@ export class MappingComponent implements OnDestroy, OnInit {
 
   public send() {
     let value = {...this.form.value};
-    let groupId = this.form.value.groups.map((group) => group.id);
-    value.groups = groupId;
+    value.groups = this.form.value.groups.map((group) => group.id);
     this.checkValid = true;
     if (this.form.status === 'VALID') {
       this.waitService.setWait(true);

@@ -1,7 +1,7 @@
 import { takeUntil } from 'rxjs/operators';
 import { WaitService } from '../../../../common/components/single/wait/wait.service';
-import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material';
-import { Component, OnInit, Inject, OnDestroy } from '@angular/core';
+import { MatDialogRef, MAT_DIALOG_DATA, } from '@angular/material';
+import { Component, OnInit, Inject, OnDestroy, } from '@angular/core';
 import { AuthenticationDirectoryService } from '../../auth-directory.service';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Subject } from 'rxjs';
@@ -21,7 +21,6 @@ export class AddMappingComponent implements OnInit, OnDestroy {
   public form: FormGroup;
   public checkValid: boolean = false;
   private destroy: Subject<any> = new Subject<any>();
-
   public pending = {
     groups: false
   };
@@ -36,7 +35,7 @@ export class AddMappingComponent implements OnInit, OnDestroy {
       value_type: '',
       groups: ['', Validators.required],
       priority: '',
-      values: ['', Validators.required]
+      values: [[], Validators.required]
     });
   }
 
@@ -73,6 +72,15 @@ export class AddMappingComponent implements OnInit, OnDestroy {
       this.pending.groups = false;
     });
   }
+
+  public addValue(value) {
+    let arr = [...this.form.value.values];
+    arr.push(value);
+    if (value && !this.form.value.values.includes(value)) {
+      this.form.get('values').setValue(arr);
+    }
+  }
+
 
   ngOnDestroy() {
     this.destroy.next(null);
