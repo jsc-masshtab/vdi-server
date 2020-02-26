@@ -354,6 +354,10 @@ retry_auth:
 retry_connnect_to_vm:
     /// instant connect attempt
     if (opt_manual_mode) { // only spice in manual mode
+        if (remote_protocol_type == VDI_RDP_PROTOCOL) {
+            rdp_viewer_start(user, password, ip, 0);
+            goto retry_auth;
+        } else { // spice by default
         set_spice_session_data(app, ip, port, user, password);
 
         // Создание сессии
@@ -389,7 +393,7 @@ retry_connnect_to_vm:
         else {
             goto retry_auth;
         }
-
+    }
     /// VDI connect mode
     } else {
         // remember username
@@ -425,7 +429,7 @@ retry_connnect_to_vm:
         if (remote_protocol_type == VDI_RDP_PROTOCOL) {
             // start xfreerdp process
             //rdp_viewer_start("user", "user", "192.168.7.235", NULL); // test
-            rdp_viewer_start(get_vdi_username(), get_vdi_password(), ip, NULL); // it's right
+            rdp_viewer_start(get_vdi_username(), get_vdi_password(), ip, 0);
             //printf("user: %s   pass: %s", get_vdi_username(), get_vdi_password());
             //rdp_viewer_start("user", "user", ip, NULL); // todo: Remove later
 

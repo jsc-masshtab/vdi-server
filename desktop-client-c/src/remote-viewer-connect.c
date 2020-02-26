@@ -182,9 +182,6 @@ on_get_vm_from_pool_finished(GObject *source_object G_GNUC_UNUSED,
         *ci->password = g_strdup(vdi_vm_data->vm_password);
         *ci->vm_verbose_name = g_strdup(vdi_vm_data->vm_verbose_name);
 
-        // get remote protocol type from file
-        *ci->remote_protocol_type = get_current_remote_protocol();
-
         shutdown_loop(ci->loop);
     }
 
@@ -244,8 +241,8 @@ void connect_to_vdi_server(RemoteViewerData *ci)
         set_current_pool_id(last_pool_id);
         free_memory_safely(&last_pool_id);
 
-        VdiVmRemoteProtocol remote_protocol = read_int_from_ini_file("General", "cur_remote_protocol_index");
-        set_current_remote_protocol(remote_protocol);
+//        VdiVmRemoteProtocol remote_protocol = read_int_from_ini_file("General", "cur_remote_protocol_index");
+//        set_current_remote_protocol(remote_protocol);
 
         // start async task  get_vm_from_pool
         execute_async_task(get_vm_from_pool, on_get_vm_from_pool_finished, NULL, ci);
@@ -388,6 +385,7 @@ static void fast_forward_connect_to_prev_pool_if_enabled(RemoteViewerData *ci)
 * @brief Opens connect dialog for remote viewer
 */
 // todo: порт передавать как число, а не строку
+// todo: this function seems to be too big. its kinda bad
 gboolean
 remote_viewer_connect_dialog(gchar **user, gchar **password,
                              gchar **ip, gchar **port, gboolean *is_connect_to_prev_pool,
@@ -473,6 +471,11 @@ remote_viewer_connect_dialog(gchar **user, gchar **password,
             free_memory_safely(&password_from_settings_file);
         }
     }
+
+    // remote_protocol_type
+    VdiVmRemoteProtocol remote_protocol = read_int_from_ini_file("General", "cur_remote_protocol_index");
+    set_current_remote_protocol(remote_protocol);
+    *ci.remote_protocol_type = get_current_remote_protocol();
 
     // LDAP check button
     ci.ldap_checkbutton = ldap_checkbutton = GTK_WIDGET(gtk_builder_get_object(builder, "ldap-button"));
