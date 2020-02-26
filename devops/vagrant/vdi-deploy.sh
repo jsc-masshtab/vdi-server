@@ -31,6 +31,8 @@ echo "Setting up vdi folder"
 APP_DIR=/opt/veil-vdi
 cd $APP_DIR
 
+cp -r /vagrant/ $APP_DIR
+
 
 #------------------------------
 echo "Setting up nginx"
