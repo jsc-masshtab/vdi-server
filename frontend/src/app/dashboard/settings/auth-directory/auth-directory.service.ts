@@ -43,6 +43,7 @@ export class AuthenticationDirectoryService {
                                       verbose_name
                                     }
                                     description
+                                    status
                                 }
                             }
                         }
