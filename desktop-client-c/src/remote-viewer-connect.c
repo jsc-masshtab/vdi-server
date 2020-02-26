@@ -462,15 +462,15 @@ remote_viewer_connect_dialog(gchar **user, gchar **password,
 
     // login entry
     login_entry = ci.login_entry = GTK_WIDGET(gtk_builder_get_object(builder, "login-entry"));
-    gtk_widget_set_sensitive(login_entry, !opt_manual_mode);
+    //gtk_widget_set_sensitive(login_entry, !opt_manual_mode);
 
-    if (!opt_manual_mode) {
-        gchar *user_from_settings_file = read_str_from_ini_file(paramToFileGrpoup, "username");
-        if (user_from_settings_file) {
-            gtk_entry_set_text(GTK_ENTRY(login_entry), user_from_settings_file);
-            free_memory_safely(&password_from_settings_file);
-        }
+    //if (!opt_manual_mode) {
+    gchar *user_from_settings_file = read_str_from_ini_file(paramToFileGrpoup, "username");
+    if (user_from_settings_file) {
+        gtk_entry_set_text(GTK_ENTRY(login_entry), user_from_settings_file);
+        free_memory_safely(&user_from_settings_file);
     }
+    //}
 
     // remote_protocol_type
     VdiVmRemoteProtocol remote_protocol = read_int_from_ini_file("General", "cur_remote_protocol_index");

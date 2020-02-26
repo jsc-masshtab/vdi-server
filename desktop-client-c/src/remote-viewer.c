@@ -355,6 +355,9 @@ retry_connnect_to_vm:
     /// instant connect attempt
     if (opt_manual_mode) { // only spice in manual mode
         if (remote_protocol_type == VDI_RDP_PROTOCOL) {
+            printf("%s TEST user %s\n", (const char *)__func__, user);
+            printf("%s TEST password %s\n", (const char *)__func__, password);
+            printf("%s TEST ip %s\n", (const char *)__func__, ip);
             rdp_viewer_start(user, password, ip, 0);
             goto retry_auth;
         } else { // spice by default
