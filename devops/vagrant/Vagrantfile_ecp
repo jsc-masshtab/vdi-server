@@ -3,14 +3,12 @@
 
 Vagrant.configure("2") do | config |
   config.vm.provider "libvirt"
-  config.vm.synced_folder ".", "/vagrant", disabled: true
 
-#   controller_box = "veil-controller-dev"
-#   controller_box_url = "http://192.168.10.144/veil_vagrant/veil-controller-dev.json"
-    controller_box = "veil-controller-test"
-    controller_box_url = "http://192.168.10.144/veil_vagrant/veil-controller-test.json"
+  controller_box = "veil-controller-test"
+  controller_box_url = "http://192.168.10.144/veil_vagrant/veil-controller-test.json"
 
   config.vm.define "controller" do | controller |
+    controller.vm.synced_folder ".", "/vagrant", disabled: true
     controller.vm.box = controller_box
     controller.vm.box_url = controller_box_url
     ip = "192.168.20.111"
@@ -40,6 +38,23 @@ Vagrant.configure("2") do | config |
       libvirt.storage :file, :size => '1500M', :cache => 'writeback'
       libvirt.storage :file, :size => '1500M', :cache => 'writeback'
       libvirt.management_network_autostart = true
+    end
+  end
+
+  config.vm.define "vdi" do | vdi |
+
+    vdi.vm.synced_folder './../../', '/opt/veil-vdi', type: "rsync", owner: "vagrant", group: "vagrant"
+    vdi.vm.network "private_network", ip: "192.168.20.110"
+    vdi.vm.provision :shell, path: "./deploy.sh", privileged: true
+    vdi.ssh.password = "vagrant"
+    vdi.vm.box_check_update = false
+    
+    vdi.vm.box = "generic/debian9"
+    vdi.vm.hostname = "vdihost"
+  
+    vdi.vm.provider "libvirt" do | libvirt |
+      libvirt.cpus = 2
+      libvirt.memory = 1024
     end
   end
 end
