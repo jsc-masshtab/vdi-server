@@ -562,6 +562,19 @@ void virt_viewer_app_hide_all_windows_forced(VirtViewerApp *app)
     g_list_foreach(app->priv->windows, hide_one_window_forced, app);
 }
 
+void virt_viewer_app_set_window_name(VirtViewerApp *app, const gchar *vm_verbose_name)
+{
+    gchar *username = NULL;
+    g_object_get(app, "username", &username, NULL);
+    printf("remembered_user %s \n", username);
+
+    // virt viewer takes its name from guest-name so lets not overcomplicate
+    gchar *window_name = g_strconcat("ВМ: ", vm_verbose_name, "    Пользователь: ", username, NULL);
+    g_object_set(app, "guest-name", window_name, NULL);
+    g_free(window_name);
+    g_free(username);
+}
+
 G_MODULE_EXPORT void
 virt_viewer_app_about_close(GtkWidget *dialog,
                             VirtViewerApp *self G_GNUC_UNUSED)
@@ -2722,6 +2735,11 @@ virt_viewer_stop_reconnect_poll(VirtViewerApp *self)
 gboolean virt_viewer_app_get_session_cancelled(VirtViewerApp *self)
 {
     return self->priv->cancelled;
+}
+
+gboolean virt_viewer_app_is_quitting(VirtViewerApp *self)
+{
+    return self->priv->quitting;
 }
 
 /*

@@ -41,6 +41,22 @@
 
 #include "virt-viewer-util.h"
 
+void
+create_loop_and_launch(GMainLoop **loop)
+{
+    *loop = g_main_loop_new(NULL, FALSE);
+    g_main_loop_run(*loop);
+    g_main_loop_unref(*loop);
+    *loop = NULL;
+}
+
+void
+shutdown_loop(GMainLoop *loop)
+{
+    if (loop && g_main_loop_is_running(loop))
+        g_main_loop_quit(loop);
+}
+
 GQuark
 virt_viewer_error_quark(void)
 {
