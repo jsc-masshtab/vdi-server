@@ -57,6 +57,7 @@ write_str_to_ini_file(const gchar *group_name,  const gchar *key, const gchar *s
         g_key_file_set_value(keyfile, group_name, key, str_value);
     }
 
+    error = NULL;
     g_key_file_save_to_file(keyfile, ini_file_path, &error);
     g_key_file_free(keyfile);
 }
@@ -105,6 +106,7 @@ write_int_to_ini_file(const gchar *group_name,  const gchar *key, gint value)
         g_key_file_set_integer(keyfile, group_name, key, value);
     }
 
+    error = NULL;
     g_key_file_save_to_file(keyfile, ini_file_path, &error);
     g_key_file_free(keyfile);
 }
