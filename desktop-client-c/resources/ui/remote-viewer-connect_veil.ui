@@ -13,7 +13,7 @@
         <property name="visible">True</property>
         <property name="can_focus">False</property>
         <property name="border_width">7</property>
-        <property name="spacing">15</property>
+        <property name="spacing">12</property>
         <child>
           <object class="GtkLabel" id="header-label">
             <property name="visible">True</property>
@@ -154,6 +154,34 @@
             <property name="expand">True</property>
             <property name="fill">True</property>
             <property name="position">8</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkBox">
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+            <property name="homogeneous">True</property>
+            <child>
+              <object class="GtkComboBoxText" id="combobox-remote-protocol1">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="active">0</property>
+                <items>
+                  <item translatable="yes">spice</item>
+                  <item translatable="yes">rdp</item>
+                </items>
+              </object>
+              <packing>
+                <property name="expand">True</property>
+                <property name="fill">True</property>
+                <property name="position">1</property>
+              </packing>
+            </child>
+          </object>
+          <packing>
+            <property name="expand">True</property>
+            <property name="fill">True</property>
+            <property name="position">9</property>
           </packing>
         </child>
         <child>

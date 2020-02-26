@@ -111,6 +111,7 @@ if (UNIX)
             m
             -rdynamic
             -pthread
+            -lX11
     )
 
     SET(GUI_TYPE)

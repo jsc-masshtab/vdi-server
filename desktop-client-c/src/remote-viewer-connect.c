@@ -63,6 +63,8 @@ typedef struct
     GtkWidget *conn_to_prev_pool_checkbutton;
     GtkWidget *remember_checkbutton;
 
+    GtkWidget *remote_protocol_combobox;
+
     GtkResponseType dialog_window_response;
 
     gboolean response;
@@ -137,6 +139,11 @@ save_data_to_ini_file(RemoteViewerData *ci)
         gboolean is_conn_to_prev_pool_btn_checked =
                 gtk_toggle_button_get_active((GtkToggleButton *)ci->conn_to_prev_pool_checkbutton);
         write_int_to_ini_file(paramToFileGrpoup, "is_conn_to_prev_pool_btn_checked", is_conn_to_prev_pool_btn_checked);
+
+        if (ci->remote_protocol_combobox) {
+            gint cur_remote_protocol_index = gtk_combo_box_get_active((GtkComboBox*)ci->remote_protocol_combobox);
+            write_int_to_ini_file("General", "cur_remote_protocol_index", cur_remote_protocol_index);
+        }
     }
 }
 
@@ -241,8 +248,8 @@ void connect_to_vdi_server(RemoteViewerData *ci)
         set_current_pool_id(last_pool_id);
         free_memory_safely(&last_pool_id);
 
-//        VdiVmRemoteProtocol remote_protocol = read_int_from_ini_file("General", "cur_remote_protocol_index");
-//        set_current_remote_protocol(remote_protocol);
+        VdiVmRemoteProtocol remote_protocol = read_int_from_ini_file("General", "cur_remote_protocol_index");
+        set_current_remote_protocol(remote_protocol);
 
         // start async task  get_vm_from_pool
         execute_async_task(get_vm_from_pool, on_get_vm_from_pool_finished, NULL, ci);
@@ -472,11 +479,6 @@ remote_viewer_connect_dialog(gchar **user, gchar **password,
     }
     //}
 
-    // remote_protocol_type
-    VdiVmRemoteProtocol remote_protocol = read_int_from_ini_file("General", "cur_remote_protocol_index");
-    set_current_remote_protocol(remote_protocol);
-    *ci.remote_protocol_type = get_current_remote_protocol();
-
     // LDAP check button
     ci.ldap_checkbutton = ldap_checkbutton = GTK_WIDGET(gtk_builder_get_object(builder, "ldap-button"));
     gboolean is_ldap_btn_checked = read_int_from_ini_file("RemoteViewerConnect", "is_ldap_btn_checked");
@@ -492,6 +494,17 @@ remote_viewer_connect_dialog(gchar **user, gchar **password,
 
     // Remember check button
     ci.remember_checkbutton = remember_checkbutton = GTK_WIDGET(gtk_builder_get_object(builder, "remember-button"));
+
+    // remote_protocol_type
+    VdiVmRemoteProtocol remote_protocol = read_int_from_ini_file("General", "cur_remote_protocol_index");
+    // protocol selection (we show it only in manual mode)
+    ci.remote_protocol_combobox = GTK_WIDGET(gtk_builder_get_object(builder, "combobox-remote-protocol1"));
+    if (!opt_manual_mode) {
+        gtk_widget_destroy(ci.remote_protocol_combobox);
+        ci.remote_protocol_combobox = NULL;
+    }
+    else
+        gtk_combo_box_set_active((GtkComboBox*)ci.remote_protocol_combobox, (gint)remote_protocol);
 
     // Signal - callbacks connections
     g_signal_connect(window, "key-press-event", G_CALLBACK(key_pressed_cb), window);
@@ -512,6 +525,11 @@ remote_viewer_connect_dialog(gchar **user, gchar **password,
 
     // save data to ini file if required
     save_data_to_ini_file(&ci);
+
+    // get remote protocol from gui
+    gint cur_remote_protocol_index = gtk_combo_box_get_active((GtkComboBox*)ci.remote_protocol_combobox);
+    set_current_remote_protocol((VdiVmRemoteProtocol)cur_remote_protocol_index);
+    *ci.remote_protocol_type = get_current_remote_protocol();
 
     g_object_unref(builder);
     gtk_widget_destroy(window);

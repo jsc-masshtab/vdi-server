@@ -20,6 +20,8 @@
  * Author: Marc-André Lureau <marcandre.lureau@redhat.com>
  */
 
+#include <X11/Xlib.h>
+
 #include <config.h>
 #include <locale.h>
 #include <gio/gio.h>
@@ -35,7 +37,6 @@
 void
 setup_logging()
 {
-
     // get ts
     gint64 cur_ts = g_get_real_time();
     gchar *ts_string = g_strdup_printf("%lld", (long long int)cur_ts);
@@ -81,6 +82,8 @@ main(int argc, char **argv)
 #endif
     // disable stdout buffering
     setbuf(stdout, NULL);
+
+    XInitThreads(); // todo: linux native
 
     // print version
     printf("APP VERSION %s\n", VERSION);
