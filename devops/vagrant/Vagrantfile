@@ -2,6 +2,7 @@
 # vi: set ft=ruby :
 
 Vagrant.configure("2") do | config |
+
     config.vm.provider "libvirt"
     config.vm.box_check_update = false
 
@@ -10,7 +11,7 @@ Vagrant.configure("2") do | config |
         
         vdi_host.vm.synced_folder './../../', '/opt/veil-vdi', type: "rsync", owner: "vagrant", group: "vagrant"
         vdi_host.vm.network "private_network", ip: "192.168.20.110"
-        vdi_host.vm.provision :shell, path: "./deploy.sh", privileged: true
+        vdi_host.vm.provision :shell, path: "./vdi-deploy.sh", privileged: true
         vdi_host.ssh.password = "vagrant"
         
         vdi_host.vm.box = "generic/debian9"
@@ -61,4 +62,41 @@ Vagrant.configure("2") do | config |
             libvirt.management_network_autostart = true
         end
     end
+
+
+    node_box = "veil-node-dev"
+    node_box_url = "http://192.168.10.144/veil_vagrant/veil-node-dev.json"
+
+        config.vm.define "vdi_node1" do | vdi_node1 |
+        vdi_node1.vm.box = node_box
+        vdi_node1.vm.box_url = node_box_url
+        ip = "192.168.20.112"
+        mac = "00:00:00:00:00:21"
+        vdi_node1.vm.provision "shell", inline: "/var/lib/ecp-veil/node/other/auto_configure_nic.sh -a init -f -m static -t 3 -u ens15 -i " + ip + " -h " + mac + " -g 192.168.20.1 -s 255.255.255.0"
+        vdi_node1.vm.network "private_network", ip: ip, :mac => mac
+        vdi_node1.vm.network "private_network", ip: "0.0.0.0", auto_config: false
+        vdi_node1.vm.network "private_network", ip: "0.0.0.0", auto_config: false
+        vdi_node1.vm.network "private_network", ip: "0.0.0.0", auto_config: false
+        vdi_node1.vm.network "private_network", ip: "0.0.0.0", auto_config: false
+        vdi_node1.vm.network "private_network", ip: "0.0.0.0", auto_config: false
+        vdi_node1.vm.network "private_network", ip: "0.0.0.0", auto_config: false
+        # vdi_node1.vm.hostname = "vdi_node1"
+        vdi_node1.vm.provider "libvirt" do | libvirt |
+            libvirt.memory = "2048"
+            libvirt.cpus = 1
+            libvirt.nested = true
+            libvirt.volume_cache = 'writeback'
+            libvirt.storage :file, :size => '1G', :cache => 'writeback'
+            libvirt.storage :file, :size => '1G', :cache => 'writeback'
+            libvirt.storage :file, :size => '1G', :cache => 'writeback'
+            libvirt.storage :file, :size => '1G', :cache => 'writeback'
+            libvirt.storage :file, :size => '1G', :cache => 'writeback'
+            libvirt.storage :file, :size => '1G', :cache => 'writeback'
+            libvirt.storage :file, :size => '1500M', :cache => 'writeback'
+            libvirt.storage :file, :size => '1500M', :cache => 'writeback'
+            libvirt.storage :file, :size => '1500M', :cache => 'writeback'
+            libvirt.management_network_autostart = true
+        end
+    end
+
 end
