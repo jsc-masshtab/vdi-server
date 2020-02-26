@@ -73,4 +73,5 @@ rdp_viewer_start(const gchar *usename, const gchar *password, gchar *ip, gchar *
 
     // start loop
     g_main_loop_run(loop);
+    g_main_loop_unref(loop);
 }

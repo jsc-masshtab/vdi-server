@@ -1,5 +1,5 @@
 import { ErrorsService } from './errors.service';
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { Subscription } from 'rxjs';
 
 import {
@@ -9,6 +9,7 @@ import {
   animate
 } from '@angular/animations';
 import { filter } from 'rxjs/operators';
+
 
 
 interface IError {
@@ -30,7 +31,8 @@ interface IError {
         animate('150ms', style({ opacity: 0 }))
       ])
     ])
-  ]
+  ],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class ErrorsComponent  implements OnInit, OnDestroy {
 
@@ -38,7 +40,7 @@ export class ErrorsComponent  implements OnInit, OnDestroy {
   private timers: any[] = [];
   private errorsSub: Subscription;
 
-  constructor(private service: ErrorsService) {}
+  constructor(private service: ErrorsService, private cdr: ChangeDetectorRef) {}
 
   ngOnInit() {
     this.errorsSub = this.service.getErrors().pipe(filter(value => Array.isArray(value) || typeof value === 'string'))
@@ -50,6 +52,7 @@ export class ErrorsComponent  implements OnInit, OnDestroy {
       } else {
         this.addError(errors);
       }
+      this.cdr.detectChanges();
     });
   }
 
@@ -63,6 +66,7 @@ export class ErrorsComponent  implements OnInit, OnDestroy {
       const timeFunc = setTimeout(() => {
         this.errors.pop();
         this.timers.pop();
+        this.cdr.detectChanges();
       }, 8000);
       this.timers.unshift(timeFunc);
     }

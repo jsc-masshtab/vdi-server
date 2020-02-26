@@ -1,0 +1,75 @@
+<div class="form">
+
+  <div class="form-header">
+    <h1>Добавление соответствия</h1>
+    <button [mat-dialog-close]="true" class="form-close"><fa-icon [icon]="['fas','times-circle']"></fa-icon></button>
+  </div>
+
+  <ng-template #errorTemp>
+    <div class="error">Поле обязательно для заполения</div>
+  </ng-template>
+
+  <div class="form-fields" [formGroup]="form">
+    <label class="field">
+      <p class="field-name">Название</p>
+      <input type="text" [focusMe]="true" formControlName="verbose_name">
+      <ng-container *ngIf="form.hasError('required', 'verbose_name') && checkValid"><ng-container *ngTemplateOutlet="errorTemp"></ng-container></ng-container>
+    </label>
+
+    <label class="field">
+      <mat-form-field>
+        <mat-label>Тип атрибута службы каталогов</mat-label>
+        <mat-select formControlName="value_type">
+          <mat-option *ngFor="let type of ['USER','OU','GROUP']" [value]="type">
+            {{type}}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+      <ng-container *ngIf="form.hasError('required', 'value_type') && checkValid"><ng-container *ngTemplateOutlet="errorTemp"></ng-container></ng-container>
+    </label>
+
+    <label class="field">
+      <mat-form-field>
+        <mat-label  *ngIf="pending.groups">Загрузка ...</mat-label>
+        <mat-label  *ngIf="groups?.length && !pending.groups">Выберите группу</mat-label>
+        <mat-label  *ngIf="!groups?.length && !pending.groups">- нет группы -</mat-label>
+        <mat-select  multiple="true" formControlName="groups">
+          <mat-option *ngFor="let group of groups" [value]="group.id">
+            {{ group.verbose_name }}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+      <ng-container *ngIf="form.hasError('required', 'groups') && checkValid"><ng-container *ngTemplateOutlet="errorTemp"></ng-container></ng-container>
+    </label>
+
+    <label class="field">
+      <p class="field-name">Приоритет</p>
+      <input type="number"  formControlName="priority">
+      <ng-container *ngIf="form.hasError('required', 'priority') && checkValid"><ng-container *ngTemplateOutlet="errorTemp"></ng-container></ng-container>
+    </label>
+
+    <label class="field">
+      <mat-form-field>
+        <mat-label>Значение атрибутов службы каталогов</mat-label>
+        <mat-select  multiple="true" formControlName="values">
+          <mat-option *ngIf="!form.value.values.length" [disabled]="true" >-- нет атрибутов --</mat-option>
+          <mat-option *ngFor="let value of form.value.values" [value]="value">
+            {{ value }}
+          </mat-option>
+          <vdi-add-select (addValue)="addValue($event)"></vdi-add-select>
+        </mat-select>
+      </mat-form-field>
+      <ng-container *ngIf="form.hasError('required', 'values') && checkValid"><ng-container *ngTemplateOutlet="errorTemp"></ng-container></ng-container>
+    </label>
+
+    <label class="field">
+      <p class="field-name">Описание</p>
+      <textarea formControlName="description"></textarea>
+    </label>
+  </div>
+
+  <div class="form-actions">
+    <button (click)="send()" class="form-btn"><fa-icon [icon]="['fas','plus-circle']" size="xs"></fa-icon><span class="action-name">Добавить</span></button>
+  </div>
+
+</div>
