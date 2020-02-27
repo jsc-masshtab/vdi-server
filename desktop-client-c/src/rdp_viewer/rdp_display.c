@@ -265,7 +265,7 @@ GtkWidget *rdp_display_create(ExtendedRdpContext *ex_context, UINT32 *last_rdp_e
     ex_context->rdp_display = rdp_display;
 
     gtk_widget_add_events(rdp_display, GDK_POINTER_MOTION_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK |
-                          GDK_SCROLL_MASK);
+                          GDK_SCROLL_MASK | GDK_SMOOTH_SCROLL_MASK);
 
     g_object_set_data(G_OBJECT(rdp_display), "last_rdp_error", last_rdp_error_p);
 

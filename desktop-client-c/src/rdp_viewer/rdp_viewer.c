@@ -274,18 +274,22 @@ GtkResponseType rdp_viewer_start(const gchar *usename, const gchar *password, gc
     RdpViewerData rdp_viewer_data;
     rdp_viewer_data.dialog_window_response = GTK_RESPONSE_CLOSE;
 
+    // create RDP context
+    UINT32 last_rdp_error = 0;
+    ExtendedRdpContext *ex_context = create_rdp_context(&last_rdp_error); // deleted upon widget deletion
+    rdp_client_set_credentials(ex_context, usename, password, ip, port);
+
     // gui
     GtkBuilder *builder = virt_viewer_util_load_ui("virt-viewer_veil.ui");
 
     gtk_widget_set_sensitive(GTK_WIDGET(gtk_builder_get_object(builder, "menu-file")), FALSE);
 
     GtkWidget *rdp_viewer_window = GTK_WIDGET(gtk_builder_get_object(builder, "viewer"));
+    g_signal_connect_swapped(rdp_viewer_window, "delete-event",
+                             G_CALLBACK(rdp_viewer_window_deleted_cb), &rdp_viewer_data);
+    g_signal_connect(rdp_viewer_window, "map-event", G_CALLBACK(rdp_viewer_event_on_mapped), ex_context);
 
     GtkWidget *vbox = GTK_WIDGET(gtk_builder_get_object(builder, "viewer-box"));
-
-    GtkWidget *menu_send = GTK_WIDGET(gtk_builder_get_object(builder, "menu-send"));
-    GtkMenu *sub_menu_send = GTK_MENU(gtk_menu_new()); // todo: when will it get deleted?
-    gtk_menu_item_set_submenu(GTK_MENU_ITEM(menu_send), (GtkWidget*)sub_menu_send);
 
     GtkWidget *menu_view = GTK_WIDGET(gtk_builder_get_object(builder, "menu-view"));
     gtk_widget_destroy(menu_view); // todo: view settings will be implemented in future (aproximately in 22nd century)
@@ -299,28 +303,23 @@ GtkResponseType rdp_viewer_start(const gchar *usename, const gchar *password, gc
     gtk_widget_destroy(GTK_WIDGET(gtk_builder_get_object(builder, "menu-change-cd")));
     gtk_widget_destroy(GTK_WIDGET(gtk_builder_get_object(builder, "menu-preferences")));
 
+    GtkWidget *menu_send = GTK_WIDGET(gtk_builder_get_object(builder, "menu-send"));
+    GtkMenu *sub_menu_send = GTK_MENU(gtk_menu_new()); // todo: when will it get deleted?
+    gtk_menu_item_set_submenu(GTK_MENU_ITEM(menu_send), (GtkWidget*)sub_menu_send);
+    // fill shortcuts
+    fill_shortcuts_menu(sub_menu_send, ex_context);
+
+    // help menu
     GtkWidget *item_external_link = GTK_WIDGET(gtk_builder_get_object(builder, "imagemenuitem10"));
     GtkWidget *item_about = GTK_WIDGET(gtk_builder_get_object(builder, "menu-help-guest-details"));
-
-    // create RDP context
-    UINT32 last_rdp_error = 0;
-    ExtendedRdpContext *ex_context = create_rdp_context(&last_rdp_error); // deleted upon widget deletion
-    rdp_client_set_credentials(ex_context, usename, password, ip, port);
+    g_signal_connect(item_external_link, "activate", G_CALLBACK(rdp_viewer_item_about_activated), rdp_viewer_window);
+    g_signal_connect(item_about, "activate", G_CALLBACK(rdp_viewer_item_details_activated), NULL);
 
     // create RDP display
     GtkWidget *rdp_display = rdp_display_create(ex_context, &last_rdp_error);
     gtk_box_pack_end(GTK_BOX(vbox), GTK_WIDGET(rdp_display), TRUE, TRUE, 0);
 
-    // some signals
-    g_signal_connect_swapped(rdp_viewer_window, "delete-event", G_CALLBACK(rdp_viewer_window_deleted_cb), &rdp_viewer_data);
-    g_signal_connect(rdp_viewer_window, "map-event", G_CALLBACK(rdp_viewer_event_on_mapped), ex_context);
-
-    g_signal_connect(item_external_link, "activate", G_CALLBACK(rdp_viewer_item_about_activated), rdp_viewer_window);
-    g_signal_connect(item_about, "activate", G_CALLBACK(rdp_viewer_item_details_activated), NULL);
-
-    // fill shortcuts
-    fill_shortcuts_menu(sub_menu_send, ex_context);
-
+    // show
     gtk_window_set_position((GtkWindow *)rdp_viewer_window, GTK_WIN_POS_CENTER);
     gtk_widget_show_all(rdp_viewer_window);
     guint g_timeout_id = g_timeout_add(16, (GSourceFunc)gtk_update_v2, rdp_display);
