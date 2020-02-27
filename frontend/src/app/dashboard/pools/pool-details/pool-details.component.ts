@@ -1,4 +1,4 @@
-import { WebsocketService } from './../../common/classes/websock.service';
+
 import { Subscription } from 'rxjs';
 import { IPool, IPoolVms } from './definitions/pool';
 import { VmDetalsPopupComponent } from './vm-details-popup/vm-details-popup.component';
@@ -12,8 +12,8 @@ import { MatDialog } from '@angular/material';
 import { RemovePoolComponent } from './remove-pool/remove-pool.component';
 import { PoolDetailsService } from './pool-details.service';
 import { FormForEditComponent } from 'src/app/dashboard/common/forms-dinamic/change-form/form-edit.component';
-import { skip, map, filter, catchError } from 'rxjs/operators';
-import { of } from 'rxjs';
+// import { skip, map, filter, catchError } from 'rxjs/operators';
+// import { of } from 'rxjs';
 import { PoolsUpdateService } from '../all-pools/pools.update.service';
 
 
@@ -243,8 +243,7 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
               private router: Router,
               private poolService: PoolDetailsService,
               private poolsService: PoolsUpdateService,
-              public  dialog: MatDialog,
-              private ws: WebsocketService) {}
+              public  dialog: MatDialog) {}
 
   ngOnInit() {
     this.activatedRoute.paramMap.subscribe((param: ParamMap) => {
@@ -256,25 +255,25 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
         this.menuActive = 'info'; // у стат. пула нет 'event-vm'
       }
       this.getPool();
-      this.getMsgCreatePool();
+      // this.getMsgCreatePool();
     });
   }
 
-  private getMsgCreatePool(): void {
-    this.sub_ws_create_pool = this.ws.getMsgCreateVMPoll().pipe(
-                                                                  skip(1),
-                                                                  map(msg => JSON.parse(msg)),
-                                                                  filter((msg: object) => msg['pool_id'] === this.idPool),
-                                                                  catchError(() => of('error')) // complete()
-                                                                  )
-    .subscribe((msg: object | 'error') => {
-      if (msg !== 'error') {
-        this.eventCreatedVm.push(msg);
-      }
-    },
-    (error) => console.log(error, 'error'),
-    () =>  console.log( 'complete'));
-  }
+  // private getMsgCreatePool(): void {
+  //   this.sub_ws_create_pool = this.ws.getMsgCreateVMPoll().pipe(
+  //                                                                 skip(1),
+  //                                                                 map(msg => JSON.parse(msg)),
+  //                                                                 filter((msg: object) => msg['pool_id'] === this.idPool),
+  //                                                                 catchError(() => of('error')) // complete()
+  //                                                                 )
+  //   .subscribe((msg: object | 'error') => {
+  //     if (msg !== 'error') {
+  //       this.eventCreatedVm.push(msg);
+  //     }
+  //   },
+  //   (error) => console.log(error, 'error'),
+  //   () =>  console.log( 'complete'));
+  // }
 
 
   public getPool(): void {
