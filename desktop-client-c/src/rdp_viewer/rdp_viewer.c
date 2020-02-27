@@ -21,6 +21,8 @@
 #include "virt-viewer-util.h"
 #include "config.h"
 
+#include "vdi_api_session.h"
+
 #define MAX_KEY_COMBO 4
 struct keyComboDef {
     guint keys[MAX_KEY_COMBO];
@@ -221,6 +223,74 @@ static void rdp_viewer_window_menu_send(GtkWidget *menu, gpointer userdata)
     send_key_shortcut(&context, *key_shortcut_index);
 }
 
+static void
+rdp_viewer_window_menu_switch_off(GtkWidget *menu G_GNUC_UNUSED, gpointer userdata G_GNUC_UNUSED)
+{
+    printf("%s\n", (const char *)__func__);
+}
+
+static void
+rdp_viewer_window_menu_start_vm(GtkWidget *menu G_GNUC_UNUSED, gpointer userdata G_GNUC_UNUSED)
+{
+    printf("%s\n", (const char *)__func__);
+    do_action_on_vm_async("start", FALSE);
+    // start connect atempts
+}
+
+static void
+rdp_viewer_window_menu_suspend_vm(GtkWidget *menu G_GNUC_UNUSED, gpointer userdata G_GNUC_UNUSED)
+{
+    printf("%s\n", (const char *)__func__);
+    do_action_on_vm_async("suspend", FALSE);
+}
+
+static void
+rdp_viewer_window_menu_shutdown_vm(GtkWidget *menu G_GNUC_UNUSED, gpointer userdata G_GNUC_UNUSED)
+{
+    printf("%s\n", (const char *)__func__);
+    do_action_on_vm_async("shutdown", FALSE);
+}
+
+static void
+rdp_viewer_window_menu_shutdown_vm_force(GtkWidget *menu G_GNUC_UNUSED, gpointer userdata G_GNUC_UNUSED)
+{
+    printf("%s\n", (const char *)__func__);
+    do_action_on_vm_async("shutdown", TRUE);
+}
+
+static void
+rdp_viewer_window_menu_reboot_vm(GtkWidget *menu G_GNUC_UNUSED, gpointer userdata G_GNUC_UNUSED)
+{
+    printf("%s\n", (const char *)__func__);
+    do_action_on_vm_async("reboot", FALSE);
+}
+
+static void
+rdp_viewer_window_menu_reboot_vm_force(GtkWidget *menu G_GNUC_UNUSED, gpointer userdata G_GNUC_UNUSED)
+{
+    printf("%s\n", (const char *)__func__);
+    do_action_on_vm_async("reboot", TRUE);
+}
+
+static void setup_control_menu(GtkBuilder *builder, RdpViewerData *rdp_viewer_data G_GNUC_UNUSED)
+{
+    GtkMenuItem *menu_switch_off = GTK_MENU_ITEM(gtk_builder_get_object(builder, "menu-switch-off"));
+    GtkMenuItem *menu_start_vm = GTK_MENU_ITEM(gtk_builder_get_object(builder, "menu-start-vm"));
+    GtkMenuItem *menu_suspend_vm = GTK_MENU_ITEM(gtk_builder_get_object(builder, "menu-suspend-vm"));
+    GtkMenuItem *menu_shutdown_vm = GTK_MENU_ITEM(gtk_builder_get_object(builder, "menu-shutdown-vm"));
+    GtkMenuItem *menu_shutdown_vm_force = GTK_MENU_ITEM(gtk_builder_get_object(builder, "menu-shutdown-vm-force"));
+    GtkMenuItem *menu_reboot_vm = GTK_MENU_ITEM(gtk_builder_get_object(builder, "menu-reboot-vm"));
+    GtkMenuItem *menu_reboot_vm_force = GTK_MENU_ITEM(gtk_builder_get_object(builder, "menu-reboot-vm-force"));
+
+    g_signal_connect(menu_switch_off, "activate", G_CALLBACK(rdp_viewer_window_menu_switch_off), NULL);
+    g_signal_connect(menu_start_vm, "activate", G_CALLBACK(rdp_viewer_window_menu_start_vm), NULL);
+    g_signal_connect(menu_suspend_vm, "activate", G_CALLBACK(rdp_viewer_window_menu_suspend_vm), NULL);
+    g_signal_connect(menu_shutdown_vm, "activate", G_CALLBACK(rdp_viewer_window_menu_shutdown_vm), NULL);
+    g_signal_connect(menu_shutdown_vm_force, "activate", G_CALLBACK(rdp_viewer_window_menu_shutdown_vm_force), NULL);
+    g_signal_connect(menu_reboot_vm, "activate", G_CALLBACK(rdp_viewer_window_menu_reboot_vm), NULL);
+    g_signal_connect(menu_reboot_vm_force, "activate", G_CALLBACK(rdp_viewer_window_menu_reboot_vm_force), NULL);
+}
+
 static void fill_shortcuts_menu(GtkMenu *sub_menu_send, ExtendedRdpContext* ex_context)
 {
     int num_of_shortcuts = G_N_ELEMENTS(keyCombos);
@@ -282,18 +352,17 @@ GtkResponseType rdp_viewer_start(const gchar *usename, const gchar *password, gc
     // gui
     GtkBuilder *builder = virt_viewer_util_load_ui("virt-viewer_veil.ui");
 
-    gtk_widget_set_sensitive(GTK_WIDGET(gtk_builder_get_object(builder, "menu-file")), FALSE);
+    //gtk_widget_set_sensitive(GTK_WIDGET(gtk_builder_get_object(builder, "menu-file")), FALSE);
 
     GtkWidget *rdp_viewer_window = GTK_WIDGET(gtk_builder_get_object(builder, "viewer"));
     g_signal_connect_swapped(rdp_viewer_window, "delete-event",
                              G_CALLBACK(rdp_viewer_window_deleted_cb), &rdp_viewer_data);
     g_signal_connect(rdp_viewer_window, "map-event", G_CALLBACK(rdp_viewer_event_on_mapped), ex_context);
 
-    GtkWidget *vbox = GTK_WIDGET(gtk_builder_get_object(builder, "viewer-box"));
-
+    // view menu
     GtkWidget *menu_view = GTK_WIDGET(gtk_builder_get_object(builder, "menu-view"));
     gtk_widget_destroy(menu_view); // todo: view settings will be implemented in future (aproximately in 22nd century)
-
+    // usb menu is not required for rdp?
     GtkWidget *menu_usb = GTK_WIDGET(gtk_builder_get_object(builder, "menu-file-usb"));
     gtk_widget_destroy(menu_usb); // rdp automaticly redirects usb if app is launched with corresponding flag
 
@@ -303,10 +372,13 @@ GtkResponseType rdp_viewer_start(const gchar *usename, const gchar *password, gc
     gtk_widget_destroy(GTK_WIDGET(gtk_builder_get_object(builder, "menu-change-cd")));
     gtk_widget_destroy(GTK_WIDGET(gtk_builder_get_object(builder, "menu-preferences")));
 
+    // control menu
+    setup_control_menu(builder, &rdp_viewer_data);
+
+    // shortcuts
     GtkWidget *menu_send = GTK_WIDGET(gtk_builder_get_object(builder, "menu-send"));
     GtkMenu *sub_menu_send = GTK_MENU(gtk_menu_new()); // todo: when will it get deleted?
     gtk_menu_item_set_submenu(GTK_MENU_ITEM(menu_send), (GtkWidget*)sub_menu_send);
-    // fill shortcuts
     fill_shortcuts_menu(sub_menu_send, ex_context);
 
     // help menu
@@ -317,6 +389,7 @@ GtkResponseType rdp_viewer_start(const gchar *usename, const gchar *password, gc
 
     // create RDP display
     GtkWidget *rdp_display = rdp_display_create(ex_context, &last_rdp_error);
+    GtkWidget *vbox = GTK_WIDGET(gtk_builder_get_object(builder, "viewer-box"));
     gtk_box_pack_end(GTK_BOX(vbox), GTK_WIDGET(rdp_display), TRUE, TRUE, 0);
 
     // show
