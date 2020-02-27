@@ -224,9 +224,12 @@ static void rdp_viewer_window_menu_send(GtkWidget *menu, gpointer userdata)
 }
 
 static void
-rdp_viewer_window_menu_switch_off(GtkWidget *menu G_GNUC_UNUSED, gpointer userdata G_GNUC_UNUSED)
+rdp_viewer_window_menu_switch_off(GtkWidget *menu G_GNUC_UNUSED, gpointer userdata)
 {
     printf("%s\n", (const char *)__func__);
+    RdpViewerData *rdp_viewer_data = (RdpViewerData *)userdata;
+    rdp_viewer_data->dialog_window_response = GTK_RESPONSE_CANCEL;
+    shutdown_loop(rdp_viewer_data->loop);
 }
 
 static void
@@ -234,7 +237,6 @@ rdp_viewer_window_menu_start_vm(GtkWidget *menu G_GNUC_UNUSED, gpointer userdata
 {
     printf("%s\n", (const char *)__func__);
     do_action_on_vm_async("start", FALSE);
-    // start connect atempts
 }
 
 static void
@@ -272,7 +274,7 @@ rdp_viewer_window_menu_reboot_vm_force(GtkWidget *menu G_GNUC_UNUSED, gpointer u
     do_action_on_vm_async("reboot", TRUE);
 }
 
-static void setup_control_menu(GtkBuilder *builder, RdpViewerData *rdp_viewer_data G_GNUC_UNUSED)
+static void setup_control_menu(GtkBuilder *builder, RdpViewerData *rdp_viewer_data)
 {
     GtkMenuItem *menu_switch_off = GTK_MENU_ITEM(gtk_builder_get_object(builder, "menu-switch-off"));
     GtkMenuItem *menu_start_vm = GTK_MENU_ITEM(gtk_builder_get_object(builder, "menu-start-vm"));
@@ -282,7 +284,7 @@ static void setup_control_menu(GtkBuilder *builder, RdpViewerData *rdp_viewer_da
     GtkMenuItem *menu_reboot_vm = GTK_MENU_ITEM(gtk_builder_get_object(builder, "menu-reboot-vm"));
     GtkMenuItem *menu_reboot_vm_force = GTK_MENU_ITEM(gtk_builder_get_object(builder, "menu-reboot-vm-force"));
 
-    g_signal_connect(menu_switch_off, "activate", G_CALLBACK(rdp_viewer_window_menu_switch_off), NULL);
+    g_signal_connect(menu_switch_off, "activate", G_CALLBACK(rdp_viewer_window_menu_switch_off), rdp_viewer_data);
     g_signal_connect(menu_start_vm, "activate", G_CALLBACK(rdp_viewer_window_menu_start_vm), NULL);
     g_signal_connect(menu_suspend_vm, "activate", G_CALLBACK(rdp_viewer_window_menu_suspend_vm), NULL);
     g_signal_connect(menu_shutdown_vm, "activate", G_CALLBACK(rdp_viewer_window_menu_shutdown_vm), NULL);
