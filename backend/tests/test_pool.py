@@ -4,19 +4,18 @@ import uuid
 
 from pool.schema import pool_schema
 from tests.utils import execute_scheme
+from pool.models import Pool
 
-from tests.fixtures import fixt_db, fixt_create_automated_pool, fixt_create_static_pool, fixt_entitle_user_to_pool, auth_context_fixture  # noqa
-
+from tests.fixtures import (fixt_db, fixt_create_automated_pool, fixt_create_static_pool, fixt_entitle_user_to_pool,  # noqa
+                            auth_context_fixture, fixt_controller, fixt_group, fixt_user)  # noqa
 
 pytestmark = [pytest.mark.pools]
 
 
-# TODO: нужно создать контроллер
-# TODO: сейчас может быть попытка использовать не ZFS-диски для клонирования на ZFS-пул.
 # ----------------------------------------------
 # Automated pool
 @pytest.mark.asyncio
-async def test_create_automated_pool(fixt_db, fixt_create_automated_pool, auth_context_fixture):  # noqa
+async def test_create_automated_pool(fixt_db, fixt_controller, fixt_create_automated_pool, auth_context_fixture):  # noqa
     """Create automated pool, make request to check data, remove this pool"""
     pool_id = fixt_create_automated_pool['id']
 
@@ -34,7 +33,7 @@ async def test_create_automated_pool(fixt_db, fixt_create_automated_pool, auth_c
 
 
 @pytest.mark.asyncio
-async def test_update_automated_pool(fixt_db, fixt_create_automated_pool, auth_context_fixture):  # noqa
+async def test_update_automated_pool(fixt_db, fixt_controller, fixt_create_automated_pool, auth_context_fixture):  # noqa
     """Create automated pool, update this pool, remove this pool"""
     pool_id = fixt_create_automated_pool['id']
 
@@ -60,7 +59,7 @@ async def test_update_automated_pool(fixt_db, fixt_create_automated_pool, auth_c
 # ----------------------------------------------
 # Static pool
 @pytest.mark.asyncio
-async def test_create_static_pool(fixt_create_static_pool, auth_context_fixture):  # noqa
+async def test_create_static_pool(fixt_db, fixt_controller, fixt_create_static_pool, auth_context_fixture):  # noqa
     """Create static pool, make request to check data, remove this pool"""
     pool_id = fixt_create_static_pool['id']
     assert fixt_create_static_pool['ok']
@@ -78,7 +77,7 @@ async def test_create_static_pool(fixt_create_static_pool, auth_context_fixture)
 
 
 @pytest.mark.asyncio
-async def test_update_static_pool(fixt_create_static_pool, auth_context_fixture):  # noqa
+async def test_update_static_pool(fixt_db, fixt_controller, fixt_create_static_pool, auth_context_fixture):  # noqa
     """Create static pool, update this pool, remove this pool"""
     pool_id = fixt_create_static_pool['id']
 
@@ -94,7 +93,7 @@ async def test_update_static_pool(fixt_create_static_pool, auth_context_fixture)
 
 
 @pytest.mark.asyncio
-async def test_remove_and_add_vm_in_static_pool(fixt_create_static_pool, auth_context_fixture):  # noqa
+async def test_remove_and_add_vm_in_static_pool(fixt_db, fixt_controller, fixt_create_static_pool, auth_context_fixture):  # noqa
     """Create automated pool, make request to check data,
     remove a vm from this pool, add the removed vm back to this pool, remove this pool"""
     pool_id = fixt_create_static_pool['id']
@@ -132,3 +131,83 @@ async def test_remove_and_add_vm_in_static_pool(fixt_create_static_pool, auth_co
       }''' % (pool_id, vm_id)
     executed = await execute_scheme(pool_schema, qu, context=auth_context_fixture)
     assert executed['addVmsToStaticPool']['ok']
+
+
+@pytest.mark.asyncio
+@pytest.mark.usefixtures('fixt_db', 'fixt_controller', 'fixt_group', 'fixt_user', 'fixt_create_static_pool')
+class TestPoolPermissionsSchema:
+
+    async def test_pool_user_permission(self, snapshot, auth_context_fixture):  # noqa
+        pools = await Pool.query.gino.all()
+        pool = pools[0]
+        query = """mutation{
+                            entitleUsersToPool(pool_id: "%s",
+                                               users: ["10913d5d-ba7a-4049-88c5-769267a6cbe4"])
+                            {
+                                ok,
+                                pool{users{id}}
+                            }}""" % pool.id
+
+        executed = await execute_scheme(pool_schema, query, context=auth_context_fixture)
+        snapshot.assert_match(executed)
+
+        query = """mutation{
+                    removeUserEntitlementsFromPool(pool_id: "%s",
+                                       users: ["10913d5d-ba7a-4049-88c5-769267a6cbe4"])
+                    {
+                        ok,
+                        pool{users{id}}
+                    }}""" % pool.id
+
+        executed = await execute_scheme(pool_schema, query, context=auth_context_fixture)
+        snapshot.assert_match(executed)
+
+    async def test_pool_group_permission(self, snapshot, auth_context_fixture):  # noqa
+        pools = await Pool.query.gino.all()
+        pool = pools[0]
+        query = """mutation{
+                                    addPoolGroup(pool_id: "%s",
+                                                 groups: ["10913d5d-ba7a-4049-88c5-769267a6cbe4"])
+                                    {
+                                        ok,
+                                        pool{assigned_groups{id}, possible_groups{id}}
+                                    }}""" % pool.id
+
+        executed = await execute_scheme(pool_schema, query, context=auth_context_fixture)
+        snapshot.assert_match(executed)
+
+        query = """mutation{
+                            removePoolGroup(pool_id: "%s",
+                                            groups: ["10913d5d-ba7a-4049-88c5-769267a6cbe4"])
+                            {
+                                ok,
+                                pool{assigned_groups{id}, possible_groups{id}}
+                            }}""" % pool.id
+
+        executed = await execute_scheme(pool_schema, query, context=auth_context_fixture)
+        snapshot.assert_match(executed)
+
+    async def test_pool_role_permission(self, snapshot, auth_context_fixture):  # noqa
+        pools = await Pool.query.gino.all()
+        pool = pools[0]
+        query = """mutation{
+                            addPoolRole(pool_id: "%s",
+                                        roles: [VM_ADMINISTRATOR, READ_ONLY])
+                            {
+                                ok,
+                                pool{assigned_roles, possible_roles}
+                            }}""" % pool.id
+
+        executed = await execute_scheme(pool_schema, query, context=auth_context_fixture)
+        snapshot.assert_match(executed)
+
+        query = """mutation{
+                            removePoolRole(pool_id: "%s",
+                                        roles: [READ_ONLY])
+                            {
+                                ok,
+                                pool{assigned_roles, possible_roles}
+                            }}""" % pool.id
+
+        executed = await execute_scheme(pool_schema, query, context=auth_context_fixture)
+        snapshot.assert_match(executed)

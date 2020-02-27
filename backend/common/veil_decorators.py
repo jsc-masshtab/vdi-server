@@ -5,7 +5,7 @@ from tornado.escape import json_encode
 from graphql.execution.base import ResolveInfo
 
 from settings import AUTH_ENABLED
-from database import Role
+from database import Role, EntityType
 
 from auth.utils.veil_jwt import extraxt_user_object
 from common.veil_errors import Unauthorized
@@ -115,7 +115,7 @@ def user_passes_test(test_func, exc=Unauthorized('Invalid permissions')):  # noq
                 application_log.debug('IP: . username: {}')
                 await Event.create_warning(
                     'IP: {}. username: {}'.format('Authorization error.', cntxt.remote_ip, user.username),
-                    entity_list=[{'entity_type': 'Security', 'entity_uuid': None}])
+                    entity_dict={'entity_type': EntityType.SECURITY, 'entity_uuid': None})
                 raise exc
             else:
                 return f(*args, **kwargs)

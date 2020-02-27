@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from abc import ABC
+import logging
 import asyncio
 
 from tornado import websocket
@@ -9,19 +10,21 @@ from common.veil_handlers import BaseHandler
 from common.veil_errors import HttpError
 
 from auth.utils.veil_jwt import jwtauth
+from auth.models import User
 from pool.models import Pool, Vm, AutomatedPool
 from vm.veil_client import VmHttpClient  # TODO: move to VM?
-
 from pool.pool_task_manager import pool_task_manager
-
 from controller.models import Controller
+
+application_log = logging.getLogger('tornado.application')
 
 
 @jwtauth
 class PoolHandler(BaseHandler, ABC):
     async def get(self):
         username = self.get_current_user()
-        pools = await Pool.get_user_pools(username)
+        user = await User.get_object(extra_field_name='username', extra_field_value=username)
+        pools = await user.pools
         response = {"data": pools}
         return self.finish(response)
 
@@ -30,33 +33,44 @@ class PoolHandler(BaseHandler, ABC):
 class PoolGetVm(BaseHandler, ABC):
 
     async def post(self, pool_id):  # remote_protocol: rdp/spice
-        # TODO: есть подозрение, что иногда несмотря на отправленный запрос на просыпание VM - отправляется
-        #  недостаточное количество данных для подключения тонкого клиента
-        username = self.get_current_user()
 
-        # Древние говорили, что сочитание pool id и имя пользователя должно быть обязательно уникальным
-        # так как пользователь не может иметь больше одной машины в пуле
-        # get pool data
-        pool_data = await Pool.get_pool(pool_id)
-        if not pool_data:
+        # Сочитание pool id и username уникальное, т.к. пользователь не может иметь больше одной машины в пуле
+
+        username = self.get_current_user()
+        pool = await Pool.get(pool_id)
+        if not pool:
             response_dict = {'data': dict(host='', port=0, password='', message='Пул не найден')}
             return await self.finish(response_dict)
 
-        controller_ip = await Controller.select('address').where(Controller.id == pool_data.controller).gino.scalar()
+        controller_ip = await Controller.select('address').where(Controller.id == pool.controller).gino.scalar()
 
-        # get vm from pool
-        vm_data = await Vm.select('id').where((Vm.pool_id == pool_id) & (Vm.username == username)).gino.first()
-        if not vm_data:
-            # Древние говорили, что если у пользователя нет VM в пуле, то нужно попытаться назначить ему свободную VM.
+        # Проверяем права пользователя на доступ к пулу:
+        # TODO: после перевода VM на новую модель разрешений - необходимо будет учесть наличие роли
+        assigned_users = await pool.assigned_users
+        assigned_users_list = [user.username for user in assigned_users]
+        if username not in assigned_users_list:
+            response_dict = {
+                'data': dict(host='', port=0, password='', message='У пользователя нет разрешений использовать пул.')}
+            return await self.finish(response_dict)
+
+        # Ищем VM закрепленную за пользователем:
+        vms_query = Vm.select('id').where((Vm.pool_id == pool_id) & (Vm.username == username))
+        vm_data = await vms_query.gino.first()
+
+        if vm_data:
+            vm_id = vm_data.id
+        else:
+            # TODO: добавить третий метод в VM, который делает это
+            # Если у пользователя нет VM в пуле, то нужно попытаться назначить ему свободную VM.
             vm_id = await Vm.get_free_vm_id_from_pool(pool_id)
             # Если свободная VM найдена, нужно закрепить ее за пользователем.
             if vm_id:
                 await Vm.attach_vm_to_user(vm_id, username)
-        else:
-            vm_id = vm_data.id
 
         # В отдельной корутине запускаем расширение пула
-        if pool_data.pool_type == 'AUTOMATED':
+
+        if await pool.pool_type == Pool.PoolTypes.AUTOMATED:
+            application_log.debug('Pool {} type is AUTOMATED.'.format(pool.verbose_name))
             pool = await AutomatedPool.get(pool_id)
             #
             pool_lock = pool_task_manager.get_pool_lock(pool_id)
@@ -72,44 +86,44 @@ class PoolGetVm(BaseHandler, ABC):
         if not vm_id:
             response_dict = {'data': dict(host='', port=0, password='', message='В пуле нет свободных машин')}
             return await self.finish(response_dict)
-        else:
-            #  Опытным путем было выяснено, что vm info содержит remote_access_port None, пока не врубишь
-            # удаленный доступ. Поэтому врубаем его без проверки, чтоб не запрашивать инфу 2 раза
-            vm_client = await VmHttpClient.create(controller_ip=str(controller_ip), vm_id=str(vm_id))
 
-            # Опытным путем установлено: если машина уже включена, то запрос может вернуться с 400.  Поэтому try
+        #  Опытным путем было выяснено, что vm info содержит remote_access_port None, пока не врубишь
+        # удаленный доступ. Поэтому врубаем его без проверки, чтоб не запрашивать инфу 2 раза
+        vm_client = await VmHttpClient.create(controller_ip=str(controller_ip), vm_id=str(vm_id))
+
+        # Опытным путем установлено: если машина уже включена, то запрос может вернуться с 400.  Поэтому try
+        try:
+            await vm_client.prepare()
+        except HttpError:
+            pass
+
+        info = await vm_client.info()
+
+        # Определяем удаленный протокол. Если данные не были получены, то по умолчанию spice
+        try:
+            remote_protocol = self.args['remote_protocol']
+        except KeyError:
+            remote_protocol = 'spice'
+
+        # В зависимости от протокола определяем адрес машины
+        if remote_protocol == 'rdp':
             try:
-                await vm_client.prepare()
-            except HttpError:
-                pass
+                vm_address = info['guest_utils']['ipv4'][0]
+            except (IndexError, KeyError):
+                response_dict = {'data': dict(host='', port=0, password='',
+                                              message='ВМ не поддерживает RDP')}
+                return await self.finish(response_dict)
 
-            info = await vm_client.info()
+        else:  # spice by default
+            vm_address = str(controller_ip)
 
-            # Определяем удаленный протокол. Если данные не были получены, то по умолчанию spice
-            try:
-                remote_protocol = self.args['remote_protocol']
-            except KeyError:
-                remote_protocol = 'spice'
+        response = {'data': dict(host=vm_address,
+                                 port=info['remote_access_port'],
+                                 password=info['graphics_password'],
+                                 vm_verbose_name=info['verbose_name'])
+                    }
 
-            # В зависимости от протокола определяем адрес машины
-            if remote_protocol == 'rdp':
-                try:
-                    vm_address = info['guest_utils']['ipv4'][0]
-                except (IndexError, KeyError):
-                    response_dict = {'data': dict(host='', port=0, password='',
-                                                  message='ВМ не поддерживает RDP')}
-                    return await self.finish(response_dict)
-
-            else:  # spice by default
-                vm_address = str(controller_ip)
-
-            response = {'data': dict(host=vm_address,
-                                     port=info['remote_access_port'],
-                                     password=info['graphics_password'],
-                                     vm_verbose_name=info['verbose_name'])
-                        }
-
-            return await self.finish(response)
+        return await self.finish(response)
 
 
 @jwtauth
@@ -118,6 +132,7 @@ class ActionOnVm(BaseHandler, ABC):
         vm_action = action
         username = self.get_current_user()
 
+        # TODO: update
         vms = await Vm.get_vm_id(pool_id=pool_id, username=username)
         if not vms:
             return await self.finish({'error': 'Нет вм с указанным pool_id'})
@@ -128,7 +143,7 @@ class ActionOnVm(BaseHandler, ABC):
         return await self.finish({'error': 'null'})
 
 
-class ThinClientWsHandler(websocket.WebSocketHandler):
+class ThinClientWsHandler(websocket.WebSocketHandler):  # noqa
     # def __init__(self, application: Application, request: httputil.HTTPServerRequest, **kwargs: Any):
     #     websocket.WebSocketHandler.__init__(self, application, request, **kwargs)
     #     print('init')

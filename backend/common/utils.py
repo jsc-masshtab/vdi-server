@@ -74,11 +74,6 @@ def make_graphene_type(type, data, fields_map=None):
     return obj
 
 
-# def print(msg, _print=print):  # noqa
-#     if getattr(settings, 'print', False):
-#         _print(msg)
-
-
 def into_words(s):
     return [w for w in s.split() if w]
 

@@ -6,9 +6,11 @@ from graphene import Context
 from database import db, Role
 from settings import DB_PASS, DB_USER, DB_PORT, DB_HOST, DB_NAME
 from auth.utils.veil_jwt import encode_jwt
+from auth.utils import crypto
 
 from controller.models import Controller
 from controller_resources.veil_client import ResourcesHttpClient
+from controller.client import ControllerClient
 
 from vm.veil_client import VmHttpClient
 from vm.models import Vm
@@ -39,8 +41,6 @@ async def get_resources_static_pool_test():
         raise RuntimeError('Нет контроллеров')
 
     controller_ip = controllers_addresses[0]
-    print('controller_ip', controller_ip)
-
     resources_http_client = await ResourcesHttpClient.create(controller_ip)
     clusters = await resources_http_client.fetch_cluster_list()
     if not clusters:
@@ -83,8 +83,6 @@ async def get_resources_automated_pool_test():
         raise RuntimeError('Нет контроллеров')
 
     controller_ip = controllers_addresses[0]
-    print('controller_ip', controller_ip)
-
     resources_http_client = await ResourcesHttpClient.create(controller_ip)
     clusters = await resources_http_client.fetch_cluster_list()
     if not clusters:
@@ -513,4 +511,39 @@ def fixt_group_role(request, event_loop):
         group = await Group.get(group_id)
         await group.add_role(Role.READ_ONLY)
     event_loop.run_until_complete(setup())
+    return True
+
+
+@pytest.fixture
+def fixt_controller(request, event_loop):
+
+    id = '10913d5d-ba7a-4049-88c5-769267a6cbe4'
+    verbose_name = 'test controller'
+    username = 'test_vdi_user'
+    password = 'test_vdi_user'
+    address = '192.168.11.102'
+
+    async def setup():
+        controller_client = ControllerClient(address)
+        auth_info = dict(username=username, password=password, ldap=False)
+        token, expires_on = await controller_client.auth(auth_info=auth_info)
+        await Controller.create(id=id,
+                                verbose_name=verbose_name,
+                                address=address,
+                                status='ACTIVE',  # TODO: special class for all statuses
+                                username=username,
+                                password=crypto.encrypt(password),
+                                ldap_connection=False,
+                                token=token,
+                                expires_on=expires_on
+                                )
+    event_loop.run_until_complete(setup())
+
+    def teardown():
+        async def a_teardown():
+            await Controller.delete.where(Controller.id == id).gino.status()
+
+        event_loop.run_until_complete(a_teardown())
+
+    request.addfinalizer(teardown)
     return True

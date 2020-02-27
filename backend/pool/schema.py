@@ -8,14 +8,13 @@ import graphene
 from tornado.httpclient import HTTPClientError  # TODO: точно это нужно тут?
 from asyncpg.exceptions import UniqueViolationError
 
-from database import StatusGraphene, db
+from database import StatusGraphene, db, RoleTypeGraphene, Role
 from common.veil_validators import MutationValidation
 from common.veil_errors import SimpleError, HttpError, ValidationError
 from common.utils import make_graphene_type
 from common.veil_decorators import superuser_required
 
 from auth.user_schema import UserType
-from auth.models import User
 from event.models import Event
 
 from vm.schema import VmType, VmQuery, TemplateType
@@ -28,7 +27,7 @@ from controller.models import Controller
 from controller_resources.veil_client import ResourcesHttpClient
 from controller_resources.schema import ClusterType, NodeType, DatapoolType
 
-from pool.models import AutomatedPool, StaticPool, Pool, PoolUsers
+from pool.models import AutomatedPool, StaticPool, Pool
 from pool.pool_task_manager import pool_task_manager
 
 
@@ -138,6 +137,20 @@ class PoolValidator(MutationValidation):
         return value
 
 
+class PoolGroupType(graphene.ObjectType):
+    """Намеренное дублирование UserGroupType и GroupType +с сокращением доступных полей.
+    Нет понимания в целесообразности абстрактного класса для обоих типов."""
+    id = graphene.UUID(required=True)
+    verbose_name = graphene.String()
+    description = graphene.String()
+
+    @staticmethod
+    def instance_to_type(model_instance):
+        return PoolGroupType(id=model_instance.id,
+                             verbose_name=model_instance.verbose_name,
+                             description=model_instance.description)
+
+
 class PoolType(graphene.ObjectType):
 
     # Pool fields
@@ -172,6 +185,10 @@ class PoolType(graphene.ObjectType):
     os_type = graphene.String()
 
     users = graphene.List(UserType, entitled=graphene.Boolean())
+    assigned_roles = graphene.List(RoleTypeGraphene)
+    possible_roles = graphene.List(RoleTypeGraphene)
+    assigned_groups = graphene.List(PoolGroupType)
+    possible_groups = graphene.List(PoolGroupType)
 
     node = graphene.Field(NodeType)
     cluster = graphene.Field(ClusterType)
@@ -185,19 +202,28 @@ class PoolType(graphene.ObjectType):
         controller_obj = await Controller.get(self.controller)
         return ControllerType(**controller_obj.__values__)
 
-    async def resolve_users(self, _info, entitled=True):
-        if entitled:
-            users_data = await User.join(PoolUsers, User.id == PoolUsers.user_id).select().where(
-                PoolUsers.pool_id == self.pool_id).gino.all()  # noqa
-        else:
-            subquery = PoolUsers.select('user_id').where(PoolUsers.pool_id == self.pool_id)
-            users_data = await User.select('username', 'email', 'id').where(User.id.notin_(subquery)).gino.all()
+    async def resolve_assigned_roles(self, info):
+        pool = await Pool.get(self.pool_id)
+        roles = await pool.roles
+        return [role_type.role for role_type in roles]
 
-        user_type_list = [
-            UserType(id=user.id, username=user.username, email=user.email)
-            for user in users_data
-        ]
-        return user_type_list
+    async def resolve_possible_roles(self, info):
+        pool = await Pool.get(self.pool_id)
+        assigned_roles = await pool.roles
+        all_roles = [role_type for role_type in Role]
+        return [role for role in all_roles if role.value not in assigned_roles]
+
+    async def resolve_assigned_groups(self, info):
+        pool = await Pool.get(self.pool_id)
+        return await pool.assigned_groups
+
+    async def resolve_possible_groups(self, _info):
+        pool = await Pool.get(self.pool_id)
+        return await pool.possible_groups
+
+    async def resolve_users(self, _info, entitled=True):
+        pool = await Pool.get(self.pool_id)
+        return await pool.assigned_users if entitled else await pool.possible_users
 
     async def resolve_vms(self, _info):
         await self._build_vms_list()
@@ -399,8 +425,8 @@ class CreateStaticPoolMutation(graphene.Mutation, PoolValidator):
                 for vm_veil_data in single_vm_veil_data_list:
                     vm_veil_data['controller_address'] = controller_address
                 all_vm_veil_data_list.extend(single_vm_veil_data_list)
-            except (HttpError, OSError):
-                print('HttpError')
+            except (HttpError, OSError) as error_msg:
+                application_log.error('HttpError: {}'.format(error_msg))
                 pass
 
         # find vm veil data by id
@@ -623,7 +649,7 @@ class CreateAutomatedPoolMutation(graphene.Mutation, PoolValidator):
         try:
             automated_pool = await AutomatedPool.create(**kwargs)
         except UniqueViolationError as E:
-            await Event.create_error('Failed to create automated pool.', entity_list=Pool().entity_list)
+            await Event.create_error('Failed to create automated pool {}.'.format(kwargs['verbose_name']))
             raise SimpleError(E)
 
         # add data for protection
@@ -703,50 +729,129 @@ class UpdateAutomatedPoolMutation(graphene.Mutation, PoolValidator):
 
 # --- --- --- --- ---
 # pools <-> users relations
-class AddPoolPermissionsMutation(graphene.Mutation):
+class PoolUserAddPermissionsMutation(graphene.Mutation):
 
     class Arguments:
-        pool_id = graphene.ID()
-        users = graphene.List(graphene.ID)
+        pool_id = graphene.UUID(required=True)
+        users = graphene.NonNull(graphene.List(graphene.NonNull(graphene.UUID)))
 
     ok = graphene.Boolean()
+    pool = graphene.Field(PoolType)
 
     @superuser_required
     async def mutate(self, _info, pool_id, users):
-        async with db.transaction():
-            if users:
-                for user in users:
-                    await PoolUsers.create(pool_id=pool_id, user_id=user)
+        pool = await Pool.get(pool_id)
+        if not pool:
+            return {'ok': False}
 
-        return {'ok': True}
+        await pool.add_users(users)
+        pool_record = await Pool.get_pool(pool.id)
+        return PoolUserAddPermissionsMutation(ok=True, pool=pool_obj_to_type(pool_record))
 
 
-class DropPoolPermissionsMutation(graphene.Mutation):
+class PoolUserDropPermissionsMutation(graphene.Mutation):
 
     class Arguments:
-        pool_id = graphene.ID()
-        users = graphene.List(graphene.ID)
+        pool_id = graphene.UUID(required=True)
+        users = graphene.NonNull(graphene.List(graphene.NonNull(graphene.UUID)))
         free_assigned_vms = graphene.Boolean()
 
     ok = graphene.Boolean()
+    pool = graphene.Field(PoolType)
 
     @superuser_required
     async def mutate(self, _info, pool_id, users, free_assigned_vms=True):
-        if users:
-            async with db.transaction():
-                # remove entitlements # PoolUsers.user_id.in_(users) and
-                await PoolUsers.delete.where(
-                    (PoolUsers.user_id.in_(users)) & (PoolUsers.pool_id == pool_id)).gino.status()
+        pool = await Pool.get(pool_id)
+        if not pool:
+            return {'ok': False}
 
-                # free vms in pool from users
-                if free_assigned_vms:
-                    # todo: похоже у нас в БД изъян. Нужно чтоб в таблице Vm хранились id юзеров а не имена
-                    subquery = User.select('username').where(User.id.in_(users))
+        async with db.transaction():
+            await pool.remove_users(users)
+            if free_assigned_vms:
+                await pool.free_assigned_vms(users)
 
-                    await Vm.update.values(username=None).where(
-                        (Vm.username.in_(subquery)) & (Vm.pool_id == pool_id)).gino.status()
+        pool_record = await Pool.get_pool(pool.id)
+        return PoolUserDropPermissionsMutation(ok=True, pool=pool_obj_to_type(pool_record))
 
-        return {'ok': True}
+
+class PoolGroupAddPermissionsMutation(graphene.Mutation):
+    class Arguments:
+        pool_id = graphene.UUID(required=True)
+        groups = graphene.NonNull(graphene.List(graphene.NonNull(graphene.UUID)))
+
+    ok = graphene.Boolean()
+    pool = graphene.Field(PoolType)
+
+    @superuser_required
+    async def mutate(self, _info, pool_id, groups):
+        pool = await Pool.get(pool_id)
+        if not pool:
+            return {'ok': False}
+
+        await pool.add_groups(groups)
+
+        pool_record = await Pool.get_pool(pool.id)
+        return PoolGroupAddPermissionsMutation(ok=True, pool=pool_obj_to_type(pool_record))
+
+
+class PoolGroupDropPermissionsMutation(graphene.Mutation):
+    class Arguments:
+        pool_id = graphene.UUID(required=True)
+        groups = graphene.NonNull(graphene.List(graphene.NonNull(graphene.UUID)))
+
+    ok = graphene.Boolean()
+    pool = graphene.Field(PoolType)
+
+    @superuser_required
+    async def mutate(self, _info, pool_id, groups):
+        pool = await Pool.get(pool_id)
+        if not pool:
+            return {'ok': False}
+
+        await pool.remove_groups(groups)
+
+        pool_record = await Pool.get_pool(pool.id)
+        return PoolGroupDropPermissionsMutation(ok=True, pool=pool_obj_to_type(pool_record))
+
+
+class PoolRoleAddPermissionsMutation(graphene.Mutation):
+    class Arguments:
+        pool_id = graphene.UUID(required=True)
+        roles = graphene.NonNull(graphene.List(graphene.NonNull(RoleTypeGraphene)))
+
+    ok = graphene.Boolean()
+    pool = graphene.Field(PoolType)
+
+    @superuser_required
+    async def mutate(self, _info, pool_id, roles):
+        pool = await Pool.get(pool_id)
+        if not pool:
+            return {'ok': False}
+
+        await pool.add_roles(roles)
+
+        pool_record = await Pool.get_pool(pool.id)
+        return PoolRoleAddPermissionsMutation(ok=True, pool=pool_obj_to_type(pool_record))
+
+
+class PoolRoleDropPermissionsMutation(graphene.Mutation):
+    class Arguments:
+        pool_id = graphene.UUID(required=True)
+        roles = graphene.NonNull(graphene.List(graphene.NonNull(RoleTypeGraphene)))
+
+    ok = graphene.Boolean()
+    pool = graphene.Field(PoolType)
+
+    @superuser_required
+    async def mutate(self, _info, pool_id, roles):
+        pool = await Pool.get(pool_id)
+        if not pool:
+            return {'ok': False}
+
+        await pool.remove_roles(roles)
+
+        pool_record = await Pool.get_pool(pool.id)
+        return PoolRoleAddPermissionsMutation(ok=True, pool=pool_obj_to_type(pool_record))
 
 
 # --- --- --- --- ---
@@ -760,8 +865,12 @@ class PoolMutations(graphene.ObjectType):
     updateDynamicPool = UpdateAutomatedPoolMutation.Field()
     updateStaticPool = UpdateStaticPoolMutation.Field()
 
-    entitleUsersToPool = AddPoolPermissionsMutation.Field()
-    removeUserEntitlementsFromPool = DropPoolPermissionsMutation.Field()
+    entitleUsersToPool = PoolUserAddPermissionsMutation.Field()
+    removeUserEntitlementsFromPool = PoolUserDropPermissionsMutation.Field()
+    addPoolGroup = PoolGroupAddPermissionsMutation.Field()
+    removePoolGroup = PoolGroupDropPermissionsMutation.Field()
+    addPoolRole = PoolRoleAddPermissionsMutation.Field()
+    removePoolRole = PoolRoleDropPermissionsMutation.Field()
 
 
 pool_schema = graphene.Schema(query=PoolQuery,
