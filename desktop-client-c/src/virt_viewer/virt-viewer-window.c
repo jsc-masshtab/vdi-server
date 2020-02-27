@@ -1055,11 +1055,10 @@ virt_viewer_window_menu_view_release_cursor(GtkWidget *menu G_GNUC_UNUSED,
 
 G_MODULE_EXPORT void
 virt_viewer_window_menu_help_guest_details(GtkWidget *menu G_GNUC_UNUSED,
-                                           VirtViewerWindow *self)
+                                           VirtViewerWindow *self G_GNUC_UNUSED)
 {
     GError *error = NULL;
-    GdkScreen *default_screen = gdk_screen_get_default ();
-    gtk_show_uri (default_screen, "http://mashtab.org/files/veil/index.html", GDK_CURRENT_TIME, &error);
+    gtk_show_uri_on_window(NULL, "http://mashtab.org/files/veil/index.html", GDK_CURRENT_TIME, &error);
 }
 
 G_MODULE_EXPORT void
