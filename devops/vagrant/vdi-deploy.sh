@@ -1,3 +1,5 @@
+#!/bin/bash
+
 echo "Install apt-get packages"
 
 sed -i s/us\./ru\./g /etc/apt/sources.list
@@ -29,6 +31,7 @@ sudo su postgres -c "psql -c \"create database vdi encoding 'utf8' lc_collate = 
 echo "Setting up vdi folder"
 
 APP_DIR=/opt/veil-vdi
+mkdir $APP_DIR
 cd $APP_DIR
 
 cp -r /vagrant/ $APP_DIR
