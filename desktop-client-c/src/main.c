@@ -20,7 +20,9 @@
  * Author: Marc-André Lureau <marcandre.lureau@redhat.com>
  */
 
+#ifdef __linux__
 #include <X11/Xlib.h>
+#endif
 
 #include <config.h>
 #include <locale.h>
@@ -83,7 +85,9 @@ main(int argc, char **argv)
     // disable stdout buffering
     setbuf(stdout, NULL);
 
-    XInitThreads(); // todo: linux native
+#ifdef __linux__
+    XInitThreads();
+#endif
 
     // print version
     printf("APP VERSION %s\n", VERSION);
