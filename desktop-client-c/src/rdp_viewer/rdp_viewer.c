@@ -388,7 +388,7 @@ GtkResponseType rdp_viewer_start(const gchar *usename, const gchar *password, gc
     g_signal_connect(item_about, "activate", G_CALLBACK(rdp_viewer_item_details_activated), NULL);
 
     // create RDP display
-    GtkWidget *rdp_display = rdp_display_create(ex_context, &last_rdp_error);
+    GtkWidget *rdp_display = rdp_display_create(rdp_viewer_window, ex_context, &last_rdp_error);
     GtkWidget *vbox = GTK_WIDGET(gtk_builder_get_object(builder, "viewer-box"));
     gtk_box_pack_end(GTK_BOX(vbox), GTK_WIDGET(rdp_display), TRUE, TRUE, 0);
 

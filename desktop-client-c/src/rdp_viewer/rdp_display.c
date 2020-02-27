@@ -103,14 +103,15 @@ static gboolean rdp_display_key_pressed(GtkWidget *widget G_GNUC_UNUSED, GdkEven
 
     rdpInput *input = tf->context.input;
 
-    printf("%s: key %i\n", (const char *)__func__, event->keyval);
+    //printf("%s: key %i\n", (const char *)__func__, event->keyval);
 
     // todo: guess its not gonna work on Windows
     DWORD rdp_scancode = freerdp_keyboard_get_rdp_scancode_from_x11_keycode(event->hardware_keycode);
     BOOL is_success = freerdp_input_send_keyboard_event_ex(input, TRUE, rdp_scancode);
+    (void)is_success;
     //BOOL is_success = freerdp_input_send_keyboard_event(input, (UINT16)1, (UINT16)event->hardware_keycode);
 
-    printf("%s: key %i %i %i\n", (const char *)__func__, event->hardware_keycode, rdp_scancode, is_success);
+    //printf("%s: key %i %i %i\n", (const char *)__func__, event->hardware_keycode, rdp_scancode, is_success);
     //printf("%s:  %i\n", (const char *)__func__, );
 
     return TRUE;
@@ -127,7 +128,8 @@ static gboolean rdp_display_key_released(GtkWidget *widget G_GNUC_UNUSED, GdkEve
 
     DWORD rdp_scancode = freerdp_keyboard_get_rdp_scancode_from_x11_keycode(event->hardware_keycode);
     BOOL is_success = freerdp_input_send_keyboard_event_ex(input, FALSE, rdp_scancode);
-    printf("%s: key %i %i %i\n", (const char *)__func__, event->hardware_keycode, rdp_scancode, is_success);
+    (void)is_success;
+    //printf("%s: key %i %i %i\n", (const char *)__func__, event->hardware_keycode, rdp_scancode, is_success);
 
     return TRUE;
 }
@@ -258,7 +260,7 @@ static gboolean rdp_display_event_on_draw(GtkWidget* widget, cairo_t* context, g
     return TRUE;
 }
 
-GtkWidget *rdp_display_create(ExtendedRdpContext *ex_context, UINT32 *last_rdp_error_p)
+GtkWidget *rdp_display_create(GtkWidget *rdp_viewer_window, ExtendedRdpContext *ex_context, UINT32 *last_rdp_error_p)
 {
     GtkWidget *rdp_display = gtk_drawing_area_new(); // todo: free memory
 
@@ -269,8 +271,8 @@ GtkWidget *rdp_display_create(ExtendedRdpContext *ex_context, UINT32 *last_rdp_e
 
     g_object_set_data(G_OBJECT(rdp_display), "last_rdp_error", last_rdp_error_p);
 
-    g_signal_connect(rdp_display, "key-press-event", G_CALLBACK(rdp_display_key_pressed), ex_context);
-    g_signal_connect(rdp_display, "key-release-event", G_CALLBACK(rdp_display_key_released), ex_context);
+    g_signal_connect(rdp_viewer_window, "key-press-event", G_CALLBACK(rdp_display_key_pressed), ex_context);
+    g_signal_connect(rdp_viewer_window, "key-release-event", G_CALLBACK(rdp_display_key_released), ex_context);
     g_signal_connect(rdp_display, "motion-notify-event",G_CALLBACK (rdp_display_mouse_moved), ex_context);
     g_signal_connect(rdp_display, "button-press-event",G_CALLBACK (rdp_display_mouse_btn_pressed), ex_context);
     g_signal_connect(rdp_display, "button-release-event",G_CALLBACK (rdp_display_mouse_btn_released), ex_context);

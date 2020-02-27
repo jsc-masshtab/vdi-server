@@ -10,7 +10,7 @@
 
 #include "rdp_client.h"
 
-GtkWidget *rdp_display_create(ExtendedRdpContext *ex_context, UINT32 *last_rdp_error_p);
+GtkWidget *rdp_display_create(GtkWidget *rdp_viewer_window, ExtendedRdpContext *ex_context, UINT32 *last_rdp_error_p);
 
 
 
