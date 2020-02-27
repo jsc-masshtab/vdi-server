@@ -62,7 +62,7 @@ virt_viewer_error_quark(void)
 {
   return g_quark_from_static_string ("virt-viewer-error-quark");
 }
-
+// todo: rename and place in more common place
 GtkBuilder *virt_viewer_util_load_ui(const char *name)
 {
     GtkBuilder *builder;

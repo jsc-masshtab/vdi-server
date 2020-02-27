@@ -84,7 +84,7 @@ GHashTable* virt_viewer_parse_monitor_mappings(gchar **mappings,
                                                const gsize nmappings,
                                                const gint nmonitors);
 
-// save memory free
+// save memory free. todo: place in more common location since we have rdp viewer
 void free_memory_safely(gchar **string_ptr);
 
 #endif

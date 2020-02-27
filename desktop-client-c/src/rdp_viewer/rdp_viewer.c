@@ -18,6 +18,9 @@
 #include "rdp_client.h"
 #include "rdp_display.h"
 
+#include "virt-viewer-util.h"
+#include "config.h"
+
 #define MAX_KEY_COMBO 4
 struct keyComboDef {
     guint keys[MAX_KEY_COMBO];
@@ -159,9 +162,38 @@ static void rdp_viewer_item_details_activated(GtkWidget *menu G_GNUC_UNUSED, gpo
     gtk_show_uri_on_window(NULL, "http://mashtab.org/files/veil/index.html", GDK_CURRENT_TIME, &error);
 }
 
-static void rdp_viewer_item_about_activated(GtkWidget *menu G_GNUC_UNUSED, gpointer userdata G_GNUC_UNUSED)
+static void rdp_viewer_item_about_activated(GtkWidget *menu G_GNUC_UNUSED, gpointer userdata)
 {
     printf("%s\n", (const char *)__func__);
+    // todo: code repeat with virt viewer
+    GtkBuilder *about;
+    GtkWidget *dialog;
+    GdkPixbuf *icon;
+
+    about = virt_viewer_util_load_ui("virt-viewer-about.ui");
+
+    dialog = GTK_WIDGET(gtk_builder_get_object(about, "about"));
+    gtk_about_dialog_set_version ((GtkAboutDialog *)dialog, VERSION);
+    gtk_about_dialog_set_license ((GtkAboutDialog *)dialog, "");
+
+    //gtk_about_dialog_set_version(GTK_ABOUT_DIALOG(dialog), VERSION BUILDID);
+
+    icon = gdk_pixbuf_new_from_resource(VIRT_VIEWER_RESOURCE_PREFIX"/icons/content/img/veil-32x32.png", NULL);
+    if (icon != NULL) {
+        gtk_about_dialog_set_logo(GTK_ABOUT_DIALOG(dialog), icon);
+        g_object_unref(icon);
+    } else {
+        gtk_about_dialog_set_logo_icon_name(GTK_ABOUT_DIALOG(dialog), "virt-viewer_veil");
+    }
+
+    GtkWindow *rdp_viewer_window = userdata;
+    gtk_window_set_transient_for(GTK_WINDOW(dialog), rdp_viewer_window);
+
+    gtk_builder_connect_signals(about, rdp_viewer_window);
+
+    gtk_widget_show_all(dialog);
+
+    g_object_unref(G_OBJECT(about));
 }
 
 static void send_key_shortcut(rdpContext* context, int key_shortcut_index)
@@ -244,8 +276,7 @@ static void destroy_rdp_context(rdpContext* context)
 void rdp_viewer_start(const gchar *usename, const gchar *password, gchar *ip, int port)
 {
     // gui
-    GtkBuilder *builder = gtk_builder_new_from_file(
-                "/home/ubuntu/job/vdiserver/desktop-client-c/resources/ui/virt-viewer_veil.ui");
+    GtkBuilder *builder = virt_viewer_util_load_ui("virt-viewer_veil.ui");
 
     gtk_widget_set_sensitive(GTK_WIDGET(gtk_builder_get_object(builder, "menu-file")), FALSE);
 
@@ -285,12 +316,13 @@ void rdp_viewer_start(const gchar *usename, const gchar *password, gchar *ip, in
     g_signal_connect_swapped(rdp_viewer_window, "delete-event", G_CALLBACK(rdp_viewer_window_deleted_cb), ex_context);
     g_signal_connect(rdp_viewer_window, "map-event", G_CALLBACK(rdp_viewer_event_on_mapped), ex_context);
 
-    g_signal_connect(item_external_link, "activate", G_CALLBACK(rdp_viewer_item_about_activated), ex_context);
+    g_signal_connect(item_external_link, "activate", G_CALLBACK(rdp_viewer_item_about_activated), rdp_viewer_window);
     g_signal_connect(item_about, "activate", G_CALLBACK(rdp_viewer_item_details_activated), NULL);
 
     // fill shortcuts
     fill_shortcuts_menu(sub_menu_send, ex_context);
 
+    gtk_window_set_position((GtkWindow *)rdp_viewer_window, GTK_WIN_POS_CENTER);
     gtk_widget_show_all(rdp_viewer_window);
     guint g_timeout_id = g_timeout_add(16, (GSourceFunc)gtk_update_v2, rdp_display);
     //gtk_widget_add_tick_callback(rdp_display, gtk_update, context, NULL);

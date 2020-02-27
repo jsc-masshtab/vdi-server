@@ -57,6 +57,8 @@
 #include "rdp_client.h"
 #include "rdp_cursor.h"
 
+#include "virt-viewer-util.h"
+
 #define PROGRAMM_NAME "rdp_gtk_client"
 #define TAG CLIENT_TAG(PROGRAMM_NAME)
 
@@ -488,6 +490,9 @@ static void rdp_client_free(freerdp* instance G_GNUC_UNUSED, rdpContext* context
 //    ex_context->usename;
 //    ex_context->password;
 //    ex_context->ip;
+    free_memory_safely(&ex_context->usename);
+    free_memory_safely(&ex_context->password);
+    free_memory_safely(&ex_context->ip);
 }
 
 static int rdp_client_start(rdpContext* context)
