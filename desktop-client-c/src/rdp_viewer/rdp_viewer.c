@@ -81,9 +81,8 @@ static gboolean rdp_viewer_window_deleted_cb(rdpContext* context)
     destroy_rdp_context(context);
 
     printf("%s g_mutex_unlock\n", (const char *)__func__);
-    usleep(10000); // todo: is it rquired?
-    if (loop && g_main_loop_is_running(loop))
-        g_main_loop_quit(loop);
+    //usleep(10000); // todo: is it rquired?
+    shutdown_loop(loop);
 
     return TRUE;
 }
@@ -327,8 +326,7 @@ void rdp_viewer_start(const gchar *usename, const gchar *password, gchar *ip, in
     guint g_timeout_id = g_timeout_add(16, (GSourceFunc)gtk_update_v2, rdp_display);
     //gtk_widget_add_tick_callback(rdp_display, gtk_update, context, NULL);
 
-    loop = g_main_loop_new(NULL, FALSE);
-    g_main_loop_run(loop);
+    create_loop_and_launch(&loop);
 
     // clear memory!
     g_source_remove(g_timeout_id);

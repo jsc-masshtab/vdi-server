@@ -464,9 +464,10 @@ GtkResponseType vdi_manager_dialog(GtkWindow *main_window G_GNUC_UNUSED, gchar *
     // get pool data
     refresh_vdi_pool_data_async();
     // event loop // todo: use create_loop_and_launch
-    vdi_manager.ci.loop = g_main_loop_new(NULL, FALSE);
-    g_main_loop_run(vdi_manager.ci.loop);
-    g_main_loop_unref(vdi_manager.ci.loop);
+//    vdi_manager.ci.loop = g_main_loop_new(NULL, FALSE);
+//    g_main_loop_run(vdi_manager.ci.loop);
+//    g_main_loop_unref(vdi_manager.ci.loop);
+    create_loop_and_launch(&vdi_manager.ci.loop);
 
     // clear
     vdi_api_cancell_pending_requests();
