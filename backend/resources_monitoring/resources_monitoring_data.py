@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # subscription to receive events
 EVENTS_SUBSCRIPTION = '/events/'
 # subscription to receive controller status

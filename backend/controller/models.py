@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import logging
 import uuid
 from datetime import datetime
@@ -8,7 +9,7 @@ from sqlalchemy.dialects.postgresql import UUID
 
 from auth.utils import crypto
 from controller.client import ControllerClient
-from database import db, get_list_of_values_from_db, Status, AbstractEntity
+from database import db, get_list_of_values_from_db, Status, EntityType
 from common.veil_errors import SimpleError, BadRequest
 from event.models import Event
 
@@ -17,9 +18,10 @@ application_log = logging.getLogger('tornado.application')
 # TODO: validate status
 
 
-class Controller(db.Model, AbstractEntity):
+class Controller(db.Model):
     # TODO: indexes
     __tablename__ = 'controller'
+
     id = db.Column(UUID(), primary_key=True, default=uuid.uuid4)
     verbose_name = db.Column(db.Unicode(length=128), nullable=False, unique=True)
     status = db.Column(AlchemyEnum(Status), nullable=False, index=True)
@@ -32,6 +34,14 @@ class Controller(db.Model, AbstractEntity):
     ldap_connection = db.Column(db.Boolean(), nullable=False, default=False)
     token = db.Column(db.Unicode(length=1024))
     expires_on = db.Column(db.DateTime(timezone=True))  # Срок истечения токена.
+
+    @property
+    def entity_type(self):
+        return EntityType.CONTROLLER
+
+    @property
+    def entity(self):
+        return {'entity_type': self.entity_type, 'entity_uuid': self.id}
 
     @property
     def pools_query(self):
@@ -187,7 +197,7 @@ class Controller(db.Model, AbstractEntity):
 
         msg = 'Выполнено удаление контроллера {name}.'.format(name=self.verbose_name)
         await self.delete()
-        await Event.create_info(msg, entity_list=self.entity_list)
+        await Event.create_info(msg, entity_dict=self.entity)
         return True
 
     async def full_delete_pools(self):
@@ -201,7 +211,7 @@ class Controller(db.Model, AbstractEntity):
 
         msg = 'Выполнено полное удаление контроллера {name}.'.format(name=self.verbose_name)
         await self.delete()
-        await Event.create_info(msg, entity_list=self.entity_list)
+        await Event.create_info(msg, entity_dict=self.entity)
         return True
 
     @classmethod

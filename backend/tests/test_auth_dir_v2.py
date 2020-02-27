@@ -150,9 +150,7 @@ class TestAuthenticationDirectorySchema:
         auth_dir = await AuthenticationDirectory.get_object(extra_field_name='verbose_name',
                                                             extra_field_value='tst_verbose_name',
                                                             include_inactive=True)
-        query = """mutation {deleteAuthDir(id: "%s") {
-                      ok
-                    }}""" % auth_dir.id
+        query = """mutation{deleteAuthDir(id: "%s"){ok}}""" % auth_dir.id
         executed = await execute_scheme(auth_dir_schema, query, context=auth_context_fixture)
         snapshot.assert_match(executed)
 

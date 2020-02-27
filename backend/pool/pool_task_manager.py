@@ -1,7 +1,7 @@
+# -*- coding: utf-8 -*-
 import asyncio
 
 from database import db
-
 from common.utils import cancel_async_task
 
 

@@ -1,5 +1,6 @@
-from .resources_monitoring_data import VDI_TASKS_SUBSCRIPTION, EVENTS_SUBSCRIPTION
-from .abstract_event_monitor import AbstractMonitor
+# -*- coding: utf-8 -*-
+from resources_monitoring.resources_monitoring_data import VDI_TASKS_SUBSCRIPTION, EVENTS_SUBSCRIPTION
+from resources_monitoring.abstract_event_monitor import AbstractMonitor
 
 
 class InternalMonitor(AbstractMonitor):

@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import logging
 import graphene
 from graphql import GraphQLError
@@ -5,13 +6,13 @@ from graphql import GraphQLError
 from common.veil_decorators import superuser_required
 from common.veil_errors import SimpleError
 
+from database import StatusGraphene
 from auth.utils import crypto
 from controller.client import ControllerClient
 from controller.models import Controller
 from event.models import Event
 from resources_monitoring.resources_monitor_manager import resources_monitor_manager
 
-from database import StatusGraphene
 
 application_log = logging.getLogger('tornado.application')
 

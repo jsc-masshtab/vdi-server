@@ -1,7 +1,7 @@
+# -*- coding: utf-8 -*-
 import asyncio
 import logging
 import json
-from json import JSONDecodeError
 
 from tornado.httpclient import HTTPClientError
 from tornado.websocket import WebSocketClosedError
@@ -13,8 +13,8 @@ from controller.models import Controller
 from controller_resources.veil_client import ResourcesHttpClient
 from event.models import Event
 
-from .resources_monitoring_data import CONTROLLER_SUBSCRIPTIONS_LIST, CONTROLLERS_SUBSCRIPTION
-from .abstract_event_monitor import AbstractMonitor
+from resources_monitoring.resources_monitoring_data import CONTROLLER_SUBSCRIPTIONS_LIST, CONTROLLERS_SUBSCRIPTION
+from resources_monitoring.abstract_event_monitor import AbstractMonitor
 
 
 from common.utils import cancel_async_task
@@ -153,7 +153,7 @@ class ResourcesMonitor(AbstractMonitor):
         # application_log.debug('msg received from {}: {}'.format(self._controller_ip, message))
         try:
             json_data = json.loads(message)
-        except JSONDecodeError:
+        except json.JSONDecodeError:
             return
         #  notify subscribed observers
         try:

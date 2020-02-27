@@ -1,3 +1,7 @@
+# -*- coding: utf-8 -*-
+# TODO: удалять зависимые записи журнала событий, возможно через ON_DELETE
+#  при удалении родительской сущности (нет явной связи, сами не удалятся).
+
 import uuid
 from functools import partialmethod
 
@@ -52,7 +56,7 @@ class Event(db.Model):
         if not events_id_list:
             results = await Event.select('id').gino.all()
             events_id_list = [value for value, in results]
-        async with db.transaction() as tx:  # noqa
+        async with db.transaction():
             for event_id in events_id_list:
                 # get_or_create
                 filters = [(EventReadByUser.event == event_id), (EventReadByUser.user == user_id)]
@@ -73,10 +77,9 @@ class Event(db.Model):
         await EventReadByUser.delete.where(and_(*filters)).gino.status()
 
     @classmethod
-    async def soft_create(cls, event_type, msg, description, user, entity_list: list):
-        # TODO: убрать создание типов сущности
+    async def soft_create(cls, event_type, msg, description, user, entity_dict: dict):
         from auth.models import Entity
-        async with db.transaction() as tx:  # noqa
+        async with db.transaction():  # noqa
             # 1. Создаем сам Евент
             event = await Event.create(
                 event_type=event_type,
@@ -84,26 +87,27 @@ class Event(db.Model):
                 description=description,
                 user=user
             )
-
-            for entity in entity_list:
-                # 2. Создаем запись сущности
-                entity = await Entity.create(entity_uuid=entity.get('entity_uuid'), entity_type=entity.get('entity_type'))
+            # 2. Создаем запись сущности
+            if entity_dict and isinstance(entity_dict, dict):
+                entity = await Entity.query.where(  # noqa
+                    (Entity.entity_type == entity_dict['entity_type']) &  # noqa
+                    (Entity.entity_uuid == entity_dict.get('entity_uuid'))  # noqa
+                ).gino.first()  # noqa
+                if not entity:
+                    entity = await Entity.create(**entity_dict)
                 # 3. Создаем связь
                 await EventEntity.create(entity_id=entity.id, event_id=event.id)
             return True
 
     @classmethod
-    async def create_event(cls, msg, event_type=TYPE_INFO, description=None, user='system', entity_list=None):
-        if not entity_list:
-            entity_list = [dict()]
-
+    async def create_event(cls, msg, event_type=TYPE_INFO, description=None, user='system', entity_dict=None):
         msg_dict = dict(event_type=event_type,
                         message=msg,
                         user=user,
                         event='event',
                         resource=EVENTS_SUBSCRIPTION)
         internal_event_monitor.signal_event_2(msg_dict)
-        await cls.soft_create(event_type, msg, description, user, entity_list)
+        await cls.soft_create(event_type, msg, description, user, entity_dict)
 
     create_info = partialmethod(create_event, event_type=TYPE_INFO)
     create_warning = partialmethod(create_event, event_type=TYPE_WARNING)

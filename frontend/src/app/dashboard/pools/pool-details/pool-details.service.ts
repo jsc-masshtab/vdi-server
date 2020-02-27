@@ -222,7 +222,7 @@ export class PoolDetailsService {
     public removeUserEntitlementsFromPool(pool_id: string, users: []) {
         return this.service.mutate<any>({
             mutation: gql`
-                            mutation pools($pool_id: ID,$users: [ID]) {
+                            mutation pools($pool_id: UUID!,$users: [UUID!]!) {
                                 removeUserEntitlementsFromPool(pool_id: $pool_id, users: $users) {
                                     ok
                                 }
@@ -240,7 +240,7 @@ export class PoolDetailsService {
     public entitleUsersToPool(pool_id: string, users: []) {
         return this.service.mutate<any>({
             mutation: gql`
-                            mutation pools($pool_id: ID,$users: [ID]) {
+                            mutation pools($pool_id: UUID!,$users: [UUID!]!) {
                                 entitleUsersToPool(pool_id: $pool_id, users: $users) {
                                     ok
                                 }

@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from enum import Enum
 
 from gino.ext.tornado import Gino
@@ -19,6 +20,18 @@ async def get_list_of_values_from_db(db_model, column):
     return values
 
 
+class EntityType(Enum):
+    """Базовые виды сущностей"""
+    # TODO: расширить виды сущностей при рефакторинге
+    ANGLUAR = 'ANGULAR'  # TODO: есть ощущение, что это не взлетело
+    THIN_CLIENT = 'THIN_CLIENT'  # TODO: есть ощущение, что это не взлетело
+    CONTROLLER = 'CONTROLLER'
+    SECURITY = 'SECURITY'
+    POOL = 'POOL'
+    SYSTEM = 'SYSTEM'
+    VM = 'VM'
+
+
 class Status(Enum):
 
     CREATING = 'CREATING'
@@ -31,20 +44,14 @@ class Status(Enum):
 
 
 class Role(Enum):
+
     READ_ONLY = 'READ_ONLY'
     ADMINISTRATOR = 'ADMINISTRATOR'
     SECURITY_ADMINISTRATOR = 'SECURITY_ADMINISTRATOR'
     VM_ADMINISTRATOR = 'VM_ADMINISTRATOR'
-    NETWORK_ADMINISTRATOR = 'NETWORK_ADMINISTRATOR'
-    STORAGE_ADMINISTRATOR = 'STORAGE_ADMINISTRATOR'
+    NETWORK_ADMINISTRATOR = 'NETWORK_ADMINISTRATOR'  # использование маловероятно
+    STORAGE_ADMINISTRATOR = 'STORAGE_ADMINISTRATOR'  # использование маловероятно
     VM_OPERATOR = 'VM_OPERATOR'
-
-
-class Permission(Enum):
-    VIEW = 'VIEW'
-    ADD = 'ADD'
-    CHANGE = 'CHANGE'
-    DELETE = 'DELETE'
 
 
 class AbstractSortableStatusModel:
@@ -136,24 +143,6 @@ class AbstractSortableStatusModel:
         if first:
             return await query.gino.first()
         return await query.gino.all()
-
-
-class AbstractEntity:
-    @property
-    def uuid(self):
-        return str(self.id) if self.id else None
-
-    @property
-    def entity_type(self):
-        return self.__class__.__name__.lower()
-
-    @property
-    def entity(self):
-        return {'entity_type': self.entity_type, 'entity_uuid': self.uuid}
-
-    @property
-    def entity_list(self):
-        return [self.entity]
 
 
 StatusGraphene = GrapheneEnum.from_enum(Status)
