@@ -30,11 +30,9 @@ sudo su postgres -c "psql -c \"create database vdi encoding 'utf8' lc_collate = 
 #------------------------------
 echo "Setting up vdi folder"
 
-APP_DIR=/opt/veil-vdi
-mkdir $APP_DIR
-cd $APP_DIR
+APP_DIR=/vagrant
 
-cp -r /vagrant/ $APP_DIR
+cd $APP_DIR
 
 
 #------------------------------
@@ -70,7 +68,7 @@ rm -rf node_modules/
 rm -rf dist/
 npm install --unsafe-perm
 npm run build -- --prod
-echo "Frontend compiled to /opt/veil-vdi/frontend/dist/frontend/"
+echo "Frontend compiled to /vagrant/frontend/dist/frontend/"
 
 
 #------------------------------
