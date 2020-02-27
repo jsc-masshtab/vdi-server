@@ -28,10 +28,12 @@ struct keyComboDef {
     const gchar* accel_path;
 };
 
+typedef struct{
+    GtkResponseType dialog_window_response;
+    GMainLoop *loop;
+} RdpViewerData;
+
 // static variables and constants
-static GMainLoop *loop = NULL; // temp
-
-
 static const struct keyComboDef keyCombos[] = {
     { { RDP_SCANCODE_LCONTROL, RDP_SCANCODE_LMENU, RDP_SCANCODE_DELETE, GDK_KEY_VoidSymbol }, "Ctrl+Alt+_Del", NULL},
     { { RDP_SCANCODE_LCONTROL, RDP_SCANCODE_LMENU, GDK_KEY_BackSpace, GDK_KEY_VoidSymbol }, "Ctrl+Alt+_Backspace", NULL},
@@ -52,7 +54,7 @@ static const struct keyComboDef keyCombos[] = {
 
 // function declarations
 static ExtendedRdpContext* create_rdp_context(UINT32 *last_rdp_error_p);
-static void destroy_rdp_context(rdpContext* context);
+static void destroy_rdp_context(ExtendedRdpContext* ex_context);
 
 // function implementations
 
@@ -75,14 +77,11 @@ void wair_for_mutex_and_clear(GMutex *cursor_mutex)
 }
 
 // if rdp session closed the context contains trash
-static gboolean rdp_viewer_window_deleted_cb(rdpContext* context)
+static gboolean rdp_viewer_window_deleted_cb(gpointer userdata)
 {
     printf("%s\n", (const char *)__func__);
-    destroy_rdp_context(context);
-
-    printf("%s g_mutex_unlock\n", (const char *)__func__);
-    //usleep(10000); // todo: is it rquired?
-    shutdown_loop(loop);
+    RdpViewerData *rdp_viewer_data = (RdpViewerData *)userdata;
+    shutdown_loop(rdp_viewer_data->loop);
 
     return TRUE;
 }
@@ -252,28 +251,29 @@ static ExtendedRdpContext* create_rdp_context(UINT32 *last_rdp_error_p)
     return ex_context;
 }
 
-static void destroy_rdp_context(rdpContext* context)
+static void destroy_rdp_context(ExtendedRdpContext* ex_context)
 {
-    ExtendedRdpContext* ex_context = (ExtendedRdpContext*)context;
-
     if (ex_context && ex_context->is_running) {
         // stopping RDP routine
 
         printf("%s: abort now: %i\n", (const char *)__func__, ex_context->test_int);
 
-        freerdp_abort_connect(context->instance);
+        freerdp_abort_connect(ex_context->context.instance);
         // wait untill rdp thread finished. todo: seriously think if some sort of event primitive could be used
         wair_for_mutex_and_clear(&ex_context->rdp_routine_mutex);
         wair_for_mutex_and_clear(&ex_context->cursor_mutex);
 
         printf("%s: context free now: %i\n", (const char *)__func__, ex_context->test_int);
-        freerdp_client_context_free(context);
-        context = NULL;
+        freerdp_client_context_free((rdpContext*)ex_context);
+        ex_context = NULL;
     }
 }
 
-void rdp_viewer_start(const gchar *usename, const gchar *password, gchar *ip, int port)
+GtkResponseType rdp_viewer_start(const gchar *usename, const gchar *password, gchar *ip, int port)
 {
+    RdpViewerData rdp_viewer_data;
+    rdp_viewer_data.dialog_window_response = GTK_RESPONSE_CLOSE;
+
     // gui
     GtkBuilder *builder = virt_viewer_util_load_ui("virt-viewer_veil.ui");
 
@@ -312,7 +312,7 @@ void rdp_viewer_start(const gchar *usename, const gchar *password, gchar *ip, in
     gtk_box_pack_end(GTK_BOX(vbox), GTK_WIDGET(rdp_display), TRUE, TRUE, 0);
 
     // some signals
-    g_signal_connect_swapped(rdp_viewer_window, "delete-event", G_CALLBACK(rdp_viewer_window_deleted_cb), ex_context);
+    g_signal_connect_swapped(rdp_viewer_window, "delete-event", G_CALLBACK(rdp_viewer_window_deleted_cb), &rdp_viewer_data);
     g_signal_connect(rdp_viewer_window, "map-event", G_CALLBACK(rdp_viewer_event_on_mapped), ex_context);
 
     g_signal_connect(item_external_link, "activate", G_CALLBACK(rdp_viewer_item_about_activated), rdp_viewer_window);
@@ -326,10 +326,13 @@ void rdp_viewer_start(const gchar *usename, const gchar *password, gchar *ip, in
     guint g_timeout_id = g_timeout_add(16, (GSourceFunc)gtk_update_v2, rdp_display);
     //gtk_widget_add_tick_callback(rdp_display, gtk_update, context, NULL);
 
-    create_loop_and_launch(&loop);
+    create_loop_and_launch(&rdp_viewer_data.loop);
 
     // clear memory!
+    destroy_rdp_context(ex_context);
     g_source_remove(g_timeout_id);
     g_object_unref(builder);
     gtk_widget_destroy(rdp_viewer_window);
+
+    return rdp_viewer_data.dialog_window_response;
 }

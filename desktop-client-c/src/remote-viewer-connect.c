@@ -401,7 +401,7 @@ static void fast_forward_connect_to_prev_pool_if_enabled(RemoteViewerData *ci)
 */
 // todo: порт передавать как число, а не строку
 // todo: this function seems to be too big. its kinda bad
-gboolean
+GtkResponseType
 remote_viewer_connect_dialog(gchar **user, gchar **password,
                              gchar **ip, gchar **port, gboolean *is_connect_to_prev_pool,
                              gchar **vm_verbose_name, VdiVmRemoteProtocol *remote_protocol_type)

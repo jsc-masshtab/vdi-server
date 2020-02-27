@@ -25,7 +25,7 @@
 
 #include "vdi_api_session.h"
 
-gboolean remote_viewer_connect_dialog(gchar **user, gchar **password,
+GtkResponseType remote_viewer_connect_dialog(gchar **user, gchar **password,
                                       gchar **ip, gchar **port, gboolean *is_connect_to_prev_pool,
                                       gchar **vm_verbose_name, VdiVmRemoteProtocol *remote_protocol_type);
 

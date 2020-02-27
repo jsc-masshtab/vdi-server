@@ -358,8 +358,12 @@ retry_connnect_to_vm:
 //            printf("%s TEST user %s\n", (const char *)__func__, user);
 //            printf("%s TEST password %s\n", (const char *)__func__, password);
 //            printf("%s TEST ip %s\n", (const char *)__func__, ip);
-            rdp_viewer_start(user, password, ip, 0);
-            goto retry_auth;
+            GtkResponseType rdp_viewer_res = rdp_viewer_start(user, password, ip, 0);
+            remote_viewer_free_auth_data(&user, &password, &ip, &port, &vm_verbose_name);
+            if (rdp_viewer_res == GTK_RESPONSE_CANCEL)
+                goto retry_auth;
+            else if (rdp_viewer_res == GTK_RESPONSE_CLOSE)
+                return FALSE;
         } else { // spice by default
         set_spice_session_data(app, ip, port, user, password);
 
@@ -414,7 +418,6 @@ retry_connnect_to_vm:
             GtkResponseType vdi_dialog_window_response =
                     vdi_manager_dialog(virt_viewer_window_get_window(main_window), &ip, &port,
                                        &password, &vm_verbose_name, &remote_protocol_type);
-
             if (vdi_dialog_window_response == GTK_RESPONSE_CANCEL) {
                 remote_viewer_free_auth_data(&user, &password, &ip, &port, &vm_verbose_name);
                 goto retry_auth;
@@ -430,13 +433,18 @@ retry_connnect_to_vm:
 
         // connect to vm depending on remote protocol
         if (remote_protocol_type == VDI_RDP_PROTOCOL) {
-            // start xfreerdp process
-            //rdp_viewer_start("user", "user", "192.168.7.235", NULL); // test
-            rdp_viewer_start(get_vdi_username(), get_vdi_password(), ip, 0);
+            GtkResponseType rdp_viewer_res = rdp_viewer_start(get_vdi_username(), get_vdi_password(), ip, 0);
             //printf("user: %s   pass: %s", get_vdi_username(), get_vdi_password());
             //rdp_viewer_start("user", "user", ip, NULL); // todo: Remove later
+            // quit if required
+            if (rdp_viewer_res == GTK_RESPONSE_CLOSE) {
+                remote_viewer_free_auth_data(&user, &password, &ip, &port, &vm_verbose_name);
+                return FALSE;
+            }
 
         } else { // spice by default
+            printf("%s port %s\n", (const char *)__func__, port);
+            printf("%s user %s\n", (const char *)__func__, user);
             set_spice_session_data(app, ip, port, user, password);
             // start connect attempt timer
             virt_viewer_start_reconnect_poll(app);
