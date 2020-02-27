@@ -313,6 +313,14 @@ connect_button_clicked_cb(GtkButton *button G_GNUC_UNUSED, gpointer data)
             ci->dialog_window_response = GTK_RESPONSE_OK;
             get_data_from_gui(ci);
 
+            gint cur_remote_protocol_index;
+            // get remote protocol from gui
+            if (ci->remote_protocol_combobox) {
+                cur_remote_protocol_index = gtk_combo_box_get_active((GtkComboBox*)ci->remote_protocol_combobox);
+                set_current_remote_protocol((VdiVmRemoteProtocol)cur_remote_protocol_index);
+                *ci->remote_protocol_type = get_current_remote_protocol();
+            }
+
             shutdown_loop(ci->loop);
         } else {
             connect_to_vdi_server(ci);
@@ -496,7 +504,7 @@ remote_viewer_connect_dialog(gchar **user, gchar **password,
     ci.remember_checkbutton = remember_checkbutton = GTK_WIDGET(gtk_builder_get_object(builder, "remember-button"));
 
     // remote_protocol_type
-    VdiVmRemoteProtocol remote_protocol = read_int_from_ini_file("General", "cur_remote_protocol_index");
+    *remote_protocol_type = read_int_from_ini_file("General", "cur_remote_protocol_index");
     // protocol selection (we show it only in manual mode)
     ci.remote_protocol_combobox = GTK_WIDGET(gtk_builder_get_object(builder, "combobox-remote-protocol1"));
     if (!opt_manual_mode) {
@@ -504,7 +512,7 @@ remote_viewer_connect_dialog(gchar **user, gchar **password,
         ci.remote_protocol_combobox = NULL;
     }
     else
-        gtk_combo_box_set_active((GtkComboBox*)ci.remote_protocol_combobox, (gint)remote_protocol);
+        gtk_combo_box_set_active((GtkComboBox*)ci.remote_protocol_combobox, (gint)(*remote_protocol_type));
 
     // Signal - callbacks connections
     g_signal_connect(window, "key-press-event", G_CALLBACK(key_pressed_cb), window);
@@ -525,11 +533,6 @@ remote_viewer_connect_dialog(gchar **user, gchar **password,
 
     // save data to ini file if required
     save_data_to_ini_file(&ci);
-
-    // get remote protocol from gui
-    gint cur_remote_protocol_index = gtk_combo_box_get_active((GtkComboBox*)ci.remote_protocol_combobox);
-    set_current_remote_protocol((VdiVmRemoteProtocol)cur_remote_protocol_index);
-    *ci.remote_protocol_type = get_current_remote_protocol();
 
     g_object_unref(builder);
     gtk_widget_destroy(window);
