@@ -6,7 +6,7 @@ sudo apt-get install -y sshpass
 
 base_cmd="/var/lib/ecp-veil/cli/app/shell.py api node"
 ssh_opts="-q -tt -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -oConnectTimeout=5"
-controller_ip="192.168.20.111"
+controller_ip="192.168.20.110"
 node1_ip="192.168.20.111"
 root_password="bazalt"
 api_user="admin"

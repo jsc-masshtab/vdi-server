@@ -1,3 +1,5 @@
+#!/bin/bash
+
 echo "Install apt-get packages"
 
 sed -i s/us\./ru\./g /etc/apt/sources.list
@@ -28,11 +30,10 @@ sudo su postgres -c "psql -c \"create database vdi encoding 'utf8' lc_collate = 
 #------------------------------
 echo "Setting up vdi folder"
 
-APP_DIR=/opt/veil-vdi
+APP_DIR=/vagrant
+
+# mkdir $APP_DIR
 cd $APP_DIR
-
-cp -r /vagrant/ $APP_DIR
-
 
 #------------------------------
 echo "Setting up nginx"
@@ -67,7 +68,7 @@ rm -rf node_modules/
 rm -rf dist/
 npm install --unsafe-perm
 npm run build -- --prod
-echo "Frontend compiled to /opt/veil-vdi/frontend/dist/frontend/"
+echo "Frontend compiled to /vagrant/frontend/dist/frontend/"
 
 
 #------------------------------
