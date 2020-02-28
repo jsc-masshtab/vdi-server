@@ -30,9 +30,8 @@ sudo su postgres -c "psql -c \"create database vdi encoding 'utf8' lc_collate = 
 #------------------------------
 echo "Setting up vdi folder"
 
-APP_DIR=/vagrant
+APP_DIR=/opt/veil-vdi
 
-# mkdir $APP_DIR
 cd $APP_DIR
 
 #------------------------------

@@ -84,9 +84,9 @@ Vagrant.configure("2") do | config |
 
     config.vm.define "vdi_host" do | vdi_host |
         
-        # vdi_host.vm.synced_folder "./../../", "/vagrant", type: "nfs", nfs_version: "3", nfs_udp: false, \
+        # vdi_host.vm.synced_folder "./../../", "/opt/veil-vdi", type: "nfs", nfs_version: "3", nfs_udp: false, \
                                             # mount_options: ["rw", "tcp", "nolock", "noacl", "async"]
-        vdi_host.vm.synced_folder './../../', '/vagrant', type: "rsync", owner: "vagrant", group: "vagrant"
+        vdi_host.vm.synced_folder './../../', '/opt/veil-vdi', type: "rsync", owner: "vagrant", group: "vagrant"
         vdi_host.vm.network "private_network", ip: "192.168.20.112"
         vdi_host.vm.provision :shell, path: "./vdi-deploy.sh", privileged: true
         vdi_host.ssh.password = "vagrant"
