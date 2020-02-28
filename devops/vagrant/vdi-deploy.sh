@@ -32,8 +32,8 @@ echo "Setting up vdi folder"
 
 APP_DIR=/vagrant
 
+# mkdir $APP_DIR
 cd $APP_DIR
-
 
 #------------------------------
 echo "Setting up nginx"
