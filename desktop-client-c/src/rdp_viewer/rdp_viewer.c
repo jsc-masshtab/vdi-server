@@ -70,14 +70,6 @@ static guint get_nkeys(const guint *keys)
     return i;
 }
 
-
-void wair_for_mutex_and_clear(GMutex *cursor_mutex)
-{
-    g_mutex_lock(cursor_mutex);
-    g_mutex_unlock(cursor_mutex);
-    g_mutex_clear(cursor_mutex);
-}
-
 // if rdp session closed the context contains trash
 static gboolean rdp_viewer_window_deleted_cb(gpointer userdata)
 {

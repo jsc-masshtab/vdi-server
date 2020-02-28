@@ -59,6 +59,8 @@
 
 #include "virt-viewer-util.h"
 
+#include "async.h"
+
 #define PROGRAMM_NAME "rdp_gtk_client"
 #define TAG CLIENT_TAG(PROGRAMM_NAME)
 
@@ -472,7 +474,8 @@ static BOOL rdp_client_new(freerdp* instance, rdpContext* context)
 	instance->VerifyCertificateEx = client_cli_verify_certificate_ex;
 	instance->VerifyChangedCertificateEx = client_cli_verify_changed_certificate_ex;
     instance->LogonErrorInfo = rdp_logon_error_info;
-	/* TODO: Client display set up */
+
+    g_mutex_init(&tf->primary_buffer_mutex);
 
 	return TRUE;
 }
@@ -480,19 +483,18 @@ static BOOL rdp_client_new(freerdp* instance, rdpContext* context)
 static void rdp_client_free(freerdp* instance G_GNUC_UNUSED, rdpContext* context)
 {
     printf("%s\n", (const char *)__func__);
-    //ExtendedRdpContext* tf = (ExtendedRdpContext*)instance->context;
 
 	if (!context)
 		return;
 
-    // some clean. todo: use safe string free
+    // some clean.
     ExtendedRdpContext* ex_context = (ExtendedRdpContext*)context;
-//    ex_context->usename;
-//    ex_context->password;
-//    ex_context->ip;
+
     free_memory_safely(&ex_context->usename);
     free_memory_safely(&ex_context->password);
     free_memory_safely(&ex_context->ip);
+
+    wair_for_mutex_and_clear(&ex_context->primary_buffer_mutex);
 }
 
 static int rdp_client_start(rdpContext* context)
@@ -500,8 +502,6 @@ static int rdp_client_start(rdpContext* context)
 	/* TODO: Start client related stuff */
     ExtendedRdpContext* tf = (ExtendedRdpContext*)context;
     printf("%s: %i\n", (const char *)__func__, tf->test_int);
-
-    g_mutex_init(&tf->primary_buffer_mutex); // todo: clear
 
 	return 0;
 }
@@ -511,10 +511,6 @@ static int rdp_client_stop(rdpContext* context)
 	/* TODO: Stop client related stuff */
     ExtendedRdpContext* tf = (ExtendedRdpContext*)context;
     printf("%s: %i\n", (const char *)__func__, tf->test_int);
-
-    g_mutex_lock(&tf->primary_buffer_mutex);
-    g_mutex_unlock(&tf->primary_buffer_mutex);
-    g_mutex_clear(&tf->primary_buffer_mutex);
 
 	return 0;
 }

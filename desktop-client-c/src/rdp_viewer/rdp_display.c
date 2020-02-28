@@ -1,4 +1,4 @@
-#include "rdp_display.h"
+#include <math.h>
 
 #include <gio/gio.h>
 #include <gtk/gtk.h>
@@ -9,6 +9,16 @@
 
 #include <freerdp/locale/keyboard.h>
 #include <freerdp/scancode.h>
+
+#include "rdp_display.h"
+
+static double scale_f = 1; // todo: make local
+
+static gboolean fuzzy_compare(double number_1, double number_2)
+{
+    const double epsilon = 0.00001;
+    return fabs(number_1 - number_2) < epsilon;
+}
 
 static const gchar *error_to_str(UINT32 rdp_error)
 {
@@ -143,7 +153,8 @@ static gboolean rdp_display_mouse_moved(GtkWidget *widget G_GNUC_UNUSED, GdkEven
     rdpContext* context = user_data;
     rdpInput *input = context->input;
 
-    BOOL is_success = freerdp_input_send_mouse_event(input, PTR_FLAGS_MOVE, (UINT16)event->x, (UINT16)event->y);
+    BOOL is_success = freerdp_input_send_mouse_event(input, PTR_FLAGS_MOVE,
+                                                     (UINT16)(event->x * scale_f), (UINT16)(event->y * scale_f));
     (void)is_success;
     //printf("%s: event->x %f, event->y %f  %i\n", (const char *)__func__, event->x, event->y, is_success);
 
@@ -179,7 +190,8 @@ static void rdp_viewer_handle_mouse_btn_event(GtkWidget *widget G_GNUC_UNUSED, G
 
     if (button) {
         //event->state;
-        freerdp_input_send_mouse_event(input, additional_flags | button, (UINT16)event->x, (UINT16)event->y);
+        freerdp_input_send_mouse_event(input, additional_flags | button,
+                                       (UINT16)(event->x * scale_f), (UINT16)(event->y * scale_f));
 //        printf("%s: event->x %f, event->y %f  %i %i\n", (const char *)__func__,
 //               event->x, event->y, event->button, event->state);
     }
@@ -229,10 +241,15 @@ static gboolean rdp_display_event_on_draw(GtkWidget* widget, cairo_t* context, g
         if (rdp_contect->surface) {
 
             cairo_set_source_surface(context, rdp_contect->surface, 0, 0);
+            if (!fuzzy_compare(scale_f, 1))
+                cairo_surface_set_device_scale(rdp_contect->surface, scale_f, scale_f);
+
             cairo_set_operator(context, CAIRO_OPERATOR_OVER);     // Ignore alpha channel from FreeRDP
             cairo_set_antialias(context, CAIRO_ANTIALIAS_FAST);
-            cairo_set_tolerance(context, 10);
-
+//            cairo_rectangle(context, 0, 0, 1024, 750);
+//            cairo_clip(context);
+            //cairo_set_tolerance(context, 10);
+            //cairo_rotate(context, 57);
             cairo_paint(context);
             //cairo_fill(context);
         }
