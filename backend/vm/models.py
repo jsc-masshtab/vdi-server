@@ -7,31 +7,42 @@ import asyncio
 from sqlalchemy.dialects.postgresql import UUID
 import tornado.gen
 
-from database import db, get_list_of_values_from_db, AbstractEntity
+from database import db, get_list_of_values_from_db, EntityType
 from common.veil_errors import BadRequest, HttpError, VmCreationError
 from vm.veil_client import VmHttpClient
 
 application_log = logging.getLogger('tornado.application')
 
 
-class Vm(db.Model, AbstractEntity):
-    # TODO: положить в таблицу данные о удаленном подключении из ECP
-
+class Vm(db.Model):
+    """
     ACTIONS = ('start', 'suspend', 'reset', 'shutdown', 'resume', 'reboot')
     POWER_STATES = ('unknown', 'power off', 'power on and suspended', 'power on')
+    """
+    # TODO: положить в таблицу данные о удаленном подключении из ECP
+    # TODO: ip address of domain
+    # TODO: port of domain
 
     __tablename__ = 'vm'
 
     id = db.Column(UUID(), primary_key=True, default=uuid.uuid4)
     verbose_name = db.Column(db.Unicode(length=255), nullable=False)
     pool_id = db.Column(UUID(), db.ForeignKey('pool.id', ondelete="CASCADE"), unique=False)
-    username = db.Column(db.Unicode(length=100))  # TODO: change to user.id
+
+    # user_id = db.Column(UUID(), db.ForeignKey('user.id', ondelete="CASCADE"), nullable=True)
+    username = db.Column(db.Unicode(length=100))  # TODO: change to user_id
+
     template_id = db.Column(db.Unicode(length=100), nullable=True)
     created_by_vdi = db.Column(db.Boolean(), nullable=False, default=False)
     broken = db.Column(db.Boolean(), nullable=False, default=False)
 
-    # TODO: ip address of domain
-    # TODO: port of domain
+    @property
+    def entity_type(self):
+        return EntityType.VM
+
+    @property
+    def entity(self):
+        return {'entity_type': self.entity_type, 'entity_uuid': self.id}
 
     @property
     def controller_query(self):
@@ -94,6 +105,7 @@ class Vm(db.Model, AbstractEntity):
 
     @staticmethod
     async def get_vm_id(pool_id, username):
+        # TODO: update
         return await Vm.select('id').where((Vm.username == username) & (Vm.pool_id == pool_id)).gino.scalar()
 
     @staticmethod
@@ -122,6 +134,7 @@ class Vm(db.Model, AbstractEntity):
     @staticmethod
     async def get_free_vm_id_from_pool(pool_id):
         """Get fee vm"""
+        # TODO: update
         res = await Vm.select('id').where(((Vm.username == None) & (Vm.pool_id == pool_id))).gino.first()  # noqa
         if res:
             (vm_id, ) = res

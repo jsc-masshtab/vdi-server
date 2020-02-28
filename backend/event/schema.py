@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import graphene
 from graphql import GraphQLError
 from sqlalchemy import desc, and_, text

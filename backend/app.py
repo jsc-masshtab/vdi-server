@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import time
 import sys
 import logging
@@ -5,7 +6,6 @@ import signal
 
 from tornado.ioloop import IOLoop
 import tornado.web
-
 import tornado.log
 import tornado.options
 
@@ -89,7 +89,8 @@ def init_tasks():
 def bootstrap():
     """Запускает логгирование"""
     init_signals()
-    # tornado.options.options.log_file_prefix = 'vdi_tornado.log'  # TODO: uncomment for run without supervisor.
+    # uncomment for run without supervisor:
+    # tornado.options.options.log_file_prefix = 'vdi_tornado.log'
     tornado.options.parse_command_line(final=True)
     init_logging(tornado.options.options.access_to_stdout)
 

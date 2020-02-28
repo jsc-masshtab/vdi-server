@@ -9,9 +9,9 @@ from settings import DEFAULT_NAME
 from common.utils import extract_ordering_data
 from common.veil_errors import HttpError, SimpleError
 from common.veil_decorators import superuser_required
+from pool.models import Pool
 from vm.models import Vm
 from vm.veil_client import VmHttpClient
-from pool.models import PoolUsers
 from controller_resources.veil_client import ResourcesHttpClient
 from controller.models import Controller
 from controller.schema import ControllerType
@@ -153,8 +153,12 @@ class AssignVmToUser(graphene.Mutation):
 
         # check if the user is entitled to pool(pool_id) the vm belongs to
         user_id = await User.get_id(username)
-        row_exists = await PoolUsers.check_row_exists(pool_id, user_id)
-        if not row_exists:
+
+        pool = await Pool.get(pool_id)
+        assigned_users = await pool.assigned_users
+        assigned_users_list = [user.id for user in assigned_users]
+
+        if user_id not in assigned_users_list:
             # Requested user is not entitled to the pool the requested vm belongs to
             raise GraphQLError('У пользователя нет прав на использование пула, которому принадлежит ВМ')
 

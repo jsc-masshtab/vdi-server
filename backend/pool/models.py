@@ -2,15 +2,15 @@
 import asyncio
 import uuid
 import logging
-
-from sqlalchemy import Enum as AlchemyEnum
-from sqlalchemy import case, literal_column, desc, text
+from sqlalchemy import union_all, case, literal_column, desc, text, Enum as AlchemyEnum
 from sqlalchemy.dialects.postgresql import UUID
+from asyncpg.exceptions import UniqueViolationError
 
 from common.veil_errors import VmCreationError, PoolCreationError, HttpError, SimpleError
 from common.veil_client import VeilHttpClient
+from settings import VEIL_WS_MAX_TIME_TO_WAIT
+from database import db, Status, EntityType
 from controller.models import Controller
-from database import db, Status, AbstractEntity
 from event.models import Event
 from pool.pool_task_manager import pool_task_manager
 
@@ -19,15 +19,15 @@ from resources_monitoring.resources_monitor_manager import resources_monitor_man
 from resources_monitoring.resources_monitoring_data import VDI_TASKS_SUBSCRIPTION
 from resources_monitoring.internal_event_monitor import internal_event_monitor
 
-from settings import VEIL_WS_MAX_TIME_TO_WAIT
-from auth.models import User
+
+from auth.models import User, Entity, EntityRoleOwner, Group, UserGroup
 from vm.models import Vm
 from vm.veil_client import VmHttpClient
 
 application_log = logging.getLogger('tornado.application')
 
 
-class Pool(db.Model, AbstractEntity):
+class Pool(db.Model):
     """На данный момент отсутствует смысловая валидация на уровне таблиц (она в схемах)."""
 
     class PoolTypes:
@@ -40,7 +40,7 @@ class Pool(db.Model, AbstractEntity):
 
     __tablename__ = 'pool'
 
-    id = db.Column(UUID(), primary_key=True, default=uuid.uuid4)
+    id = db.Column(UUID(), primary_key=True, default=uuid.uuid4, unique=True)
     verbose_name = db.Column(db.Unicode(length=128), nullable=False, unique=True)
     cluster_id = db.Column(UUID(), nullable=False)
     node_id = db.Column(UUID(), nullable=False)
@@ -59,6 +59,19 @@ class Pool(db.Model, AbstractEntity):
     # Properties and getters:
 
     @property
+    def entity_type(self):
+        return EntityType.POOL
+
+    @property
+    def entity(self):
+        return {'entity_type': self.entity_type, 'entity_uuid': self.id}
+
+    @property
+    async def entity_obj(self):
+        return await Entity.query.where(
+            (Entity.entity_type == self.entity_type) & (Entity.entity_uuid == self.id)).gino.first()
+
+    @property
     async def has_vms(self):
         """Проверяем наличие виртуальных машин"""
 
@@ -75,6 +88,7 @@ class Pool(db.Model, AbstractEntity):
     @property
     async def pool_type(self):
         """Возвращает тип пула виртуальных машин"""
+        # TODO: проверить используется ли
         is_automated = await self.is_automated_pool
         return Pool.PoolTypes.AUTOMATED if is_automated else Pool.PoolTypes.STATIC
 
@@ -106,7 +120,7 @@ class Pool(db.Model, AbstractEntity):
                     query = query.order_by(desc(Controller.address)) if reversed_order else query.order_by(
                         Controller.address)
                 elif ordering == 'users_count':
-                    users_count = db.func.count(PoolUsers.user_id)
+                    users_count = db.func.count(text('anon_1.entity_role_owner_user_id'))
                     query = query.order_by(desc(users_count)) if reversed_order else query.order_by(users_count)
                 elif ordering == 'vm_amount':
                     vms_count = db.func.count(Vm.id)
@@ -122,22 +136,11 @@ class Pool(db.Model, AbstractEntity):
         return query
 
     @staticmethod
-    def get_pools_query(ordering=None):
-        """Содержит только логику запроса
-           Обьединяет таблицы Статического и Динамического пула и проставляет им поле pool_type
-           SimpePoolsQuery:
-            db.select([Pool,
-                           AutomatedPool,
-                           StaticPool,
-                           pool_type]).select_from(Pool.join(AutomatedPool,
-                                                             isouter=True).join(StaticPool,
-                                                                          isouter=True)
-
-        """
+    def get_pools_query(ordering=None, user_id=None, groups_ids_list=None, role_set=None):
 
         # Добавление в итоговый НД данных о признаке пула
-        pool_type = case([(StaticPool.id == None, literal_column("'{}'".format(Pool.PoolTypes.AUTOMATED)))],
-                         else_=literal_column("'{}'".format(Pool.PoolTypes.STATIC))).label(Pool.POOL_TYPE_LABEL)  # noqa
+        pool_type = case([(AutomatedPool.id.isnot(None), literal_column("'{}'".format(Pool.PoolTypes.AUTOMATED)))],
+                         else_=literal_column("'{}'".format(Pool.PoolTypes.STATIC))).label(Pool.POOL_TYPE_LABEL)
 
         # Формирование общего селекта из таблиц пулов с добавлением принадлежности пула.
         query = db.select([
@@ -164,48 +167,62 @@ class Pool(db.Model, AbstractEntity):
             AutomatedPool.create_thin_clones,
             pool_type])
 
-        if ordering:
+        if ordering or user_id:
             # Добавляем пересечение с дополнительными внешними таблицами для возможности сортировки
-            query = query.select_from(Pool.join(AutomatedPool,
-                                                isouter=True).join(StaticPool,
-                                                                   isouter=True).join(Controller,
-                                                                                      isouter=True).join(
-                PoolUsers, isouter=True).join(Vm, isouter=True)).group_by(Pool.id,
-                                                                          Pool.verbose_name,
-                                                                          Pool.cluster_id,
-                                                                          Pool.node_id,
-                                                                          Pool.datapool_id,
-                                                                          Pool.status,
-                                                                          Pool.controller,
-                                                                          Pool.keep_vms_on,
-                                                                          AutomatedPool.id,
-                                                                          AutomatedPool.template_id,
-                                                                          AutomatedPool.min_size,
-                                                                          AutomatedPool.max_size,
-                                                                          AutomatedPool.max_vm_amount,
-                                                                          AutomatedPool.increase_step,
-                                                                          AutomatedPool.min_free_vms_amount,
-                                                                          AutomatedPool.max_amount_of_create_attempts,
-                                                                          AutomatedPool.initial_size,
-                                                                          AutomatedPool.reserve_size,
-                                                                          AutomatedPool.total_size,
-                                                                          AutomatedPool.vm_name_template,
-                                                                          AutomatedPool.os_type,
-                                                                          AutomatedPool.create_thin_clones,
-                                                                          StaticPool.id,
-                                                                          Controller.address)
+
+            if user_id or role_set or groups_ids_list:
+                if not role_set or not isinstance(role_set, set):
+                    role_set = set()
+                if not groups_ids_list or not isinstance(groups_ids_list, list):
+                    groups_ids_list = list()
+                permission_outer = False
+                permissions_query = Entity.join(EntityRoleOwner.query.where(
+                    (EntityRoleOwner.user_id == user_id) | (EntityRoleOwner.role.in_(role_set)) | (
+                        EntityRoleOwner.group_id.in_(groups_ids_list))).alias())
+            else:
+                permission_outer = True
+                permissions_query = Entity.join(EntityRoleOwner)
+
+            query = query.select_from(
+                Pool.join(AutomatedPool, isouter=True).join(Controller, isouter=True).join(Vm, isouter=True).join(
+                    permissions_query.alias(), (Pool.id == text('entity_entity_uuid')),
+                    isouter=permission_outer)).group_by(
+                Pool.id,
+                Pool.verbose_name,
+                Pool.cluster_id,
+                Pool.node_id,
+                Pool.datapool_id,
+                Pool.status,
+                Pool.controller,
+                Pool.keep_vms_on,
+                AutomatedPool.id,
+                AutomatedPool.template_id,
+                AutomatedPool.min_size,
+                AutomatedPool.max_size,
+                AutomatedPool.max_vm_amount,
+                AutomatedPool.increase_step,
+                AutomatedPool.min_free_vms_amount,
+                AutomatedPool.max_amount_of_create_attempts,
+                AutomatedPool.initial_size,
+                AutomatedPool.reserve_size,
+                AutomatedPool.total_size,
+                AutomatedPool.vm_name_template,
+                AutomatedPool.os_type,
+                AutomatedPool.create_thin_clones,
+                Controller.address)
+
+            # Сортировка
+            query = Pool.build_ordering(query, ordering)
         else:
             # Делаем пересечение только с основными таблицами
-            query = query.select_from(Pool.join(AutomatedPool, isouter=True).join(StaticPool, isouter=True))
+            query = query.select_from(Pool.join(AutomatedPool, isouter=True))
 
-        # Сортировка
-        if ordering:
-            query = Pool.build_ordering(query, ordering)
         return query
 
     @staticmethod
     async def get_pool(pool_id, ordering=None):
         """Такое построение запроса вызвано желанием иметь только 1 запрос с изначальным построением."""
+        # TODO: проверить используется ли. Заменить на Pool.get?
         query = Pool.get_pools_query(ordering=ordering)
         query = query.where(Pool.id == pool_id)
         return await query.gino.first()
@@ -213,73 +230,175 @@ class Pool(db.Model, AbstractEntity):
     @staticmethod
     async def get_pools(ordering=None):
         """Такое построение запроса вызвано желанием иметь только 1 запрос с изначальным построением."""
+        # TODO: проверить используется ли. Заменить на Pool.get?
         query = Pool.get_pools_query(ordering=ordering)
         return await query.gino.all()
 
     @staticmethod
     async def get_controller_ip(pool_id):
+        # TODO: проверить используется ли. Заменить на Pool.get?
         query = db.select([Controller.address]).select_from(Controller.join(Pool)).where(
             Pool.id == pool_id)
         return await query.gino.scalar()
 
     async def get_vm_amount(self, only_free=False):
         """ == None because GINO can't work with is None"""
+        # TODO: update
         if only_free:
             return await db.select([db.func.count()]).where(
                 (Vm.pool_id == self.id) & (Vm.username == None)).gino.scalar()  # noqa
         else:
             return await db.select([db.func.count()]).where(Vm.pool_id == self.id).gino.scalar()
 
-    @staticmethod
-    async def get_user_pools(username):
-        application_log.debug('Looking user {}'.format(username))
-        user = await User.get_object(extra_field_name='username', extra_field_value=username)
-        pools = Pool.get_pools_query()
-        if not user.is_superuser:
-            # Можно было бы сразу в Join сделать, но быстро не разобрался как.
-            pools = pools.alias().join(PoolUsers).select().where(PoolUsers.user_id == user.id)
+    @property
+    async def roles(self):
+        """Уникальные роли назначенные пулу (без учета групп и пользователей)."""
+        query = Entity.query.where((Entity.entity_type == EntityType.POOL) & (Entity.entity_uuid == self.id)).alias()
+        filtered_query = EntityRoleOwner.join(query).select().alias()
+        result_query = db.select([text('anon_1.role')]).select_from(filtered_query).group_by('role')
+        return await result_query.gino.all()
 
-        pools_list = await pools.gino.all()
+    @property
+    async def assigned_groups(self):
+        """Группы назначенные пулу"""
+        # TODO: возможно нужно добавить группы и пользователей обладающих Ролью
+        query = Entity.query.where((Entity.entity_type == EntityType.POOL) & (Entity.entity_uuid == self.id)).alias()
+        filtered_query = Group.join(EntityRoleOwner.join(query).alias()).select()
+        return await filtered_query.gino.load(Group).all()
 
-        ans = list()
-        for pool in pools_list:
-            ans_d = dict()
-            ans_d['id'] = str(pool.master_id)
-            ans_d['name'] = pool.verbose_name
-            ans_d['os_type'] = pool.os_type
-            ans_d['status'] = pool.status.value
-            ans.append(ans_d)
-        return ans
+    @property
+    async def possible_groups(self):
+        query = Entity.query.where((Entity.entity_type == EntityType.POOL) & (Entity.entity_uuid == self.id)).alias()
+        filtered_query = Group.join(EntityRoleOwner.join(query).alias(), isouter=True).select().where(text('anon_1.entity_role_owner_group_id is null'))  # noqa
+        return await filtered_query.gino.load(Group).all()
 
-    @staticmethod
-    async def get_user_pool(pool_id: str, username=None):
-        """Return first hit"""
+    @property
+    async def assigned_users(self):
+        """Пользователи назначенные пулу (с учетом групп)"""
+        # TODO: возможно нужно добавить группы и пользователей обладающих Ролью
 
-        query = Pool.get_pools_query()
-        query = db.select([
-            Controller.address,
-            text('anon_1.pool_type'),  # не нашел пока как обратиться корректно к полю из подзапроса
-            Vm.id,
-        ]).select_from(query.alias().join(Vm, (Vm.username == username) & (Vm.pool_id == text('anon_1.id')),
-                                          isouter=True)).where(
-            Pool.id == pool_id).order_by(Vm.id)
+        query = Entity.query.where((Entity.entity_type == EntityType.POOL) & (Entity.entity_uuid == self.id)).alias()
 
-        return await query.gino.first()
+        # Список администраторов системы
+        admins_query = User.query.where(User.is_superuser)
+        admins_query_ids = db.select([text('id')]).select_from(admins_query).alias()
 
-    @staticmethod
-    async def get_node_id(pool_id):
-        return await Pool.select('node_id').where(Pool.id == pool_id).gino.scalar()
+        # Список явных пользователей
+        users_query = EntityRoleOwner.join(query)
+        user_query_ids = db.select([text('user_id')]).select_from(users_query)
 
-    @staticmethod
-    async def get_datapool_id(pool_id):
-        return await Pool.select('datapool_id').where(Pool.id == pool_id).gino.scalar()
+        # Список пользователей состоящих в группах
+        group_users_query = UserGroup.join(Group).join(EntityRoleOwner.join(query))
+        group_users_ids = db.select([text('user_groups.user_id')]).select_from(group_users_query)
 
-    @staticmethod
-    async def get_name(pool_id):
-        return await Pool.select('verbose_name').where(Pool.id == pool_id).gino.scalar()
+        # Список пользователей встречающихся в пересечении
+        union_query = union_all(admins_query_ids, user_query_ids, group_users_ids).alias()
+
+        # Формирование заключительного списка пользователей
+        finish_query = User.join(union_query, (User.id == text('anon_1.id'))).select().group_by(User.id)
+        return await finish_query.gino.all()
+
+    @property
+    async def possible_users(self):
+        """Пользователи которых можно закрепить за пулом"""
+        query = Entity.query.where((Entity.entity_type == EntityType.POOL) & (Entity.entity_uuid == self.id)).alias()
+
+        # Список пользователей состоящих в группах
+        group_users_query = UserGroup.join(Group).join(EntityRoleOwner.join(query).alias()).select().alias()
+        group_users_ids = db.select([text('anon_7.user_id')]).select_from(group_users_query).alias()
+
+        # Список явных пользователей
+        users_query = EntityRoleOwner.join(query).select().alias()
+        user_query_ids = db.select([text('anon_4.user_id')]).select_from(users_query).alias()
+
+        # Список администраторов системы
+        admins_query = User.query.where(User.is_superuser).alias()
+        admins_query_ids = db.select([text('anon_2.id')]).select_from(admins_query).alias()
+
+        # Обьединяем все три запроса и фильтруем активных пользователей
+        # Outer join, потому что union_all что-то не взлетел
+        union_query = User.join(admins_query_ids, (User.id == text('anon_1.id')), isouter=True).join(user_query_ids, (  # noqa
+                User.id == text('anon_3.user_id')), isouter=True).join(group_users_ids,  # noqa
+                                                                       (User.id == text('anon_6.user_id')),  # noqa
+                                                                       isouter=True).select().where((text('anon_1.id is null') & text('anon_3.user_id is null') & text('anon_6.user_id is null')) & (User.is_active))  # noqa
+
+        return await union_query.gino.load(User).all()
 
     # ----- ----- ----- ----- ----- ----- -----
     # Setters & etc.
+    # TODO: избавиться от дублирования
+
+    async def add_user(self, user_id):
+        entity = await self.entity_obj
+        try:
+            async with db.transaction():
+                if not entity:
+                    entity = await Entity.create(**self.entity)
+                ero = await EntityRoleOwner.create(entity_id=entity.id, user_id=user_id)
+        except UniqueViolationError:
+            raise SimpleError('Pool already has permission.')
+        return ero
+
+    async def add_users(self, users_list: list):
+        for user_id in users_list:
+            await self.add_user(user_id)
+        return True
+
+    async def remove_users(self, users_list: list):
+        entity = Entity.select('id').where((Entity.entity_type == self.entity_type) & (Entity.entity_uuid == self.id))
+        return await EntityRoleOwner.delete.where(
+            (EntityRoleOwner.user_id.in_(users_list)) & (EntityRoleOwner.entity_id == entity)).gino.status()
+
+    async def add_group(self, group_id):
+        entity = await self.entity_obj
+
+        try:
+            async with db.transaction():
+                if not entity:
+                    entity = await Entity.create(**self.entity)
+                ero = await EntityRoleOwner.create(entity_id=entity.id, group_id=group_id)
+        except UniqueViolationError:
+            raise SimpleError('Pool already has permission.')
+        return ero
+
+    async def add_groups(self, groups_list: list):
+        for group_id in groups_list:
+            await self.add_group(group_id)
+        return True
+
+    async def remove_groups(self, groups_list: list):
+        entity = Entity.select('id').where((Entity.entity_type == self.entity_type) & (Entity.entity_uuid == self.id))
+        return await EntityRoleOwner.delete.where(
+            (EntityRoleOwner.group_id.in_(groups_list)) & (EntityRoleOwner.entity_id == entity)).gino.status()
+
+    async def add_role(self, role):
+        entity = await self.entity_obj
+
+        try:
+            async with db.transaction():
+                if not entity:
+                    entity = await Entity.create(**self.entity)
+                ero = await EntityRoleOwner.create(entity_id=entity.id, role=role)
+        except UniqueViolationError:
+            raise SimpleError('Pool already has role.')
+        return ero
+
+    async def add_roles(self, roles_list):
+        async with db.transaction():
+            for role in roles_list:
+                await self.add_role(role)
+
+    async def remove_roles(self, roles_list: list):
+        entity = Entity.select('id').where((Entity.entity_type == self.entity_type) & (Entity.entity_uuid == self.id))
+        return await EntityRoleOwner.delete.where(
+            (EntityRoleOwner.role.in_(roles_list)) & (EntityRoleOwner.entity_id == entity)).gino.status()
+
+    async def free_assigned_vms(self, users_list: list):
+        # TODO: после переключение VM на использование user_id subquery не нужен.
+        # TODO: update
+        users_subquery = User.select('username').where(User.id.in_(users_list))
+        return await Vm.update.values(username=None).where(
+            (Vm.username.in_(users_subquery)) & (Vm.pool_id == self.id)).gino.status()
 
     @classmethod
     async def create(cls, verbose_name, cluster_id, node_id, datapool_id, controller_ip):
@@ -304,7 +423,7 @@ class Pool(db.Model, AbstractEntity):
             msg = 'Выполнено удаление пула рабочих столов {verbose_name}.'
             msg = msg.format(verbose_name=self.verbose_name)
             await self.delete()
-            await Event.create_info(msg, entity_list=self.entity_list)
+            await Event.create_info(msg, entity_dict=self.entity)
         return True
 
     async def full_delete(self, commit=True):
@@ -318,7 +437,7 @@ class Pool(db.Model, AbstractEntity):
 
             await self.delete()
             msg = 'Выполнено полное удаление пула рабочих столов {verbose_name}.'.format(verbose_name=self.verbose_name)
-            await Event.create_info(msg, entity_list=self.entity_list)
+            await Event.create_info(msg, entity_dict=self.entity)
         return True
 
     @classmethod
@@ -332,10 +451,18 @@ class Pool(db.Model, AbstractEntity):
             Pool.id == pool_id).gino.status()
 
 
-class StaticPool(db.Model, AbstractEntity):
+class StaticPool(db.Model):
     """На данный момент отсутствует смысловая валидация на уровне таблиц (она в схемах)."""
     __tablename__ = 'static_pool'
-    id = db.Column(UUID(), db.ForeignKey('pool.id', ondelete="CASCADE"), primary_key=True)
+    id = db.Column(UUID(), db.ForeignKey('pool.id', ondelete="CASCADE"), primary_key=True, unique=True)
+
+    @property
+    def entity_type(self):
+        return EntityType.POOL
+
+    @property
+    def entity(self):
+        return {'entity_type': self.entity_type, 'entity_uuid': self.id}
 
     @classmethod
     async def create(cls, verbose_name, controller_ip, cluster_id, node_id, datapool_id):
@@ -371,7 +498,7 @@ class StaticPool(db.Model, AbstractEntity):
         return await Pool.deactivate(self.id)
 
 
-class AutomatedPool(db.Model, AbstractEntity):
+class AutomatedPool(db.Model):
     """
     reserve_size - желаемое минимальное количество подогретых машин (добавленных в пул, но не имеющих пользователя)
     На данный момент отсутствует смысловая валидация на уровне таблиц (она в схемах).
@@ -379,7 +506,7 @@ class AutomatedPool(db.Model, AbstractEntity):
 
     __tablename__ = 'automated_pool'
 
-    id = db.Column(UUID(), db.ForeignKey('pool.id', ondelete="CASCADE"), primary_key=True)
+    id = db.Column(UUID(), db.ForeignKey('pool.id', ondelete="CASCADE"), primary_key=True, unique=True)
     template_id = db.Column(UUID(), nullable=False)
 
     # Pool size settings
@@ -400,6 +527,14 @@ class AutomatedPool(db.Model, AbstractEntity):
 
     # ----- ----- ----- ----- ----- ----- -----
     # Properties:
+
+    @property
+    def entity_type(self):
+        return EntityType.POOL
+
+    @property
+    def entity(self):
+        return {'entity_type': self.entity_type, 'entity_uuid': self.id}
 
     @property
     async def verbose_name(self):
@@ -633,7 +768,7 @@ class AutomatedPool(db.Model, AbstractEntity):
         application_log.debug('Pool {} os type is: {}'.format(verbose_name, pool_os_type))
         await self.update(os_type=pool_os_type).apply()
 
-        await Event.create_info('Automated pool creation started', entity_list=self.entity_list)
+        await Event.create_info('Automated pool creation started', entity_dict=self.entity)
 
         vm_list = list()
         vm_index = 1
@@ -645,7 +780,7 @@ class AutomatedPool(db.Model, AbstractEntity):
                 vm_list.append(vm)
 
                 msg = 'Automated pool creation. Created {} VMs from {}'.format(i + 1, self.initial_size)
-                await Event.create_info(msg, entity_list=self.entity_list)
+                await Event.create_info(msg, entity_dict=self.entity)
 
                 # notify VDI front about progress(WS)
                 msg_dict = dict(msg=msg,
@@ -670,11 +805,11 @@ class AutomatedPool(db.Model, AbstractEntity):
 
         if is_creation_successful:
             msg = 'Automated pool successfully created. Initial VM amount {}'.format(len(vm_list))
-            await Event.create_info(msg, entity_list=self.entity_list)
+            await Event.create_info(msg, entity_dict=self.entity)
         else:
             msg = 'Automated pool created with errors. VMs created: {}. Required: {}'.format(len(vm_list),
                                                                                              self.initial_size)
-            await Event.create_error(msg, entity_list=self.entity_list)
+            await Event.create_error(msg, entity_dict=self.entity)
 
         msg_dict = dict(msg=msg,
                         msg_type='data',
@@ -733,7 +868,6 @@ class AutomatedPool(db.Model, AbstractEntity):
                     real_amount_to_add = min(max_possible_amount_to_add, self.increase_step)
                     # add VMs.
                     try:
-                        # TODO: заменить на вызов multiple
                         for i in range(0, real_amount_to_add):
                             domain_index = vm_amount_in_pool + i
                             await self.add_vm(domain_index)
@@ -750,14 +884,3 @@ class AutomatedPool(db.Model, AbstractEntity):
             application_log.debug('Calling soft delete for vm {}'.format(vm.verbose_name))
             await vm.soft_delete()
         return True
-
-
-class PoolUsers(db.Model):
-    __tablename__ = 'pools_users'
-    pool_id = db.Column(UUID(), db.ForeignKey('pool.id', ondelete="CASCADE"))
-    user_id = db.Column(UUID(), db.ForeignKey('user.id', ondelete="CASCADE"))
-
-    @staticmethod
-    async def check_row_exists(pool_id, user_id):
-        row = await PoolUsers.select().where((PoolUsers.user_id == user_id) & (PoolUsers.pool_id == pool_id)).gino.all()
-        return row

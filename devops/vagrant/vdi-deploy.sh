@@ -1,6 +1,6 @@
 echo "Install apt-get packages"
 
-sed -i s/us\./ru\./g /etc/apt-get/sources.list
+sed -i s/us\./ru\./g /etc/apt/sources.list
 apt-get update -y
 apt-get install --no-install-recommends -y postgresql-server-dev-9.6 python3-dev gcc python3-pip postgresql htop mc nginx # Не нашел на астре пакеты ncdu и bmon
 apt-get install -y libsasl2-dev python-dev libldap2-dev libssl-dev
@@ -30,6 +30,8 @@ echo "Setting up vdi folder"
 
 APP_DIR=/opt/veil-vdi
 cd $APP_DIR
+
+cp -r /vagrant/ $APP_DIR
 
 
 #------------------------------

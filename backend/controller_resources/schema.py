@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import graphene
 import json
 
@@ -336,7 +337,7 @@ class ResourcesQuery(graphene.ObjectType):
                 ClusterType, clusters, controller_ip)
         else:
             controllers_addresses = await Controller.get_controllers_addresses()
-            print('test controllers', controllers_addresses)
+            # print('test controllers', controllers_addresses)
             # form list of clusters
             list_of_all_cluster_types = []
 
