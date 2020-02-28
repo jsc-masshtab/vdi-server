@@ -8,13 +8,20 @@
 #include <X11/Xlib.h>
 #endif
 
+#include <fcntl.h>
+
 #include <config.h>
 #include <locale.h>
 #include <gio/gio.h>
 #include <gtk/gtk.h>
+
 #include <glib/gi18n.h>
+#include <glib.h>
+#include <glib/gstdio.h>
+
 #include <stdlib.h>
 
+#include "settingsfile.h"
 #include "remote-viewer.h"
 #include "virt-viewer-util.h"
 #include "crashhandler.h"
@@ -48,6 +55,18 @@ setup_logging()
 }
 
 void
+setup_ini_file()
+{
+    if (!g_file_test(get_ini_file_name(), G_FILE_TEST_EXISTS))
+    {
+        //g_creat(get_ini_file_name(), O_WRONLY | O_CREAT | O_TRUNC); // dont work somehow
+        FILE *fp;
+        fp = fopen (get_ini_file_name(), "ab");
+        fclose(fp);
+    }
+}
+
+void
 setup_css()
 {
 //    gtk_widget_set_name(vdi_manager.label_vdi_online, "label_vdi_online");
@@ -72,6 +91,9 @@ main(int argc, char **argv)
 #ifdef __linux__
     XInitThreads();
 #endif
+
+    // create ini file if it dosnt exist
+    setup_ini_file();
 
     // print version
     printf("APP VERSION %s\n", VERSION);
