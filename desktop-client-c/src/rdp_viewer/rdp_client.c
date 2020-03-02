@@ -113,6 +113,9 @@ void rdp_client_routine(GTask   *task,
         g_strdup("-clipboard"),
         g_strdup("/sound:rate:44100,channel:2"),
         g_strdup("/cert-ignore"),
+        g_strdup("+drives"),
+        g_strdup("+home-drive"),
+        g_strdup("/usb:auto"),
         NULL
     };
     int argc = sizeof(argv) / sizeof(char*) - 1;
