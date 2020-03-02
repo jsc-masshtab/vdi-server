@@ -52,3 +52,10 @@ class LogoutHandler(BaseHandler, ABC):
     async def post(self):
         username, token = extract_user_and_token_with_no_expire_check(self.request.headers)
         await User.logout(username=username, access_token=token)
+
+
+class VersionHandler(BaseHandler, ABC):
+    async def get(self):
+        response = {'data': {'version': '0.31', 'year': '2020', 'url': 'https://mashtab.org',
+                             'comment': 'Демонстрационная версия'}}
+        return self.finish(response)
