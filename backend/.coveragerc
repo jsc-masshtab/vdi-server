@@ -1,0 +1,28 @@
+# -*- coding: utf-8 -*-
+# https://coverage.readthedocs.io/en/latest/config.html#run
+# .coveragerc to control coverage.py
+
+[report]
+# Regexes for lines to exclude from consideration
+include =
+    auth/*
+    controller/*
+    controller_resources/*
+    event/*
+    pool/*
+    resources_monitoring/*
+    thin_client_api/*
+    vm/*
+
+exclude_lines =
+    # Have to re-enable the standard pragma
+    pragma: no cover
+
+    # Don't complain if tests don't hit defensive assertion code:
+    raise AssertionError
+    raise NotImplementedError
+
+ignore_errors = True
+
+[html]
+directory = tests/htmlcov
