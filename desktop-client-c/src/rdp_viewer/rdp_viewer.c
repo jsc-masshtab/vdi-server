@@ -60,6 +60,17 @@ static void destroy_rdp_context(ExtendedRdpContext* ex_context);
 
 // function implementations
 
+static GdkRectangle get_default_monitor_geometry()
+{
+    GdkDisplay *display = gdk_display_get_default();
+    GdkMonitor *monitor = gdk_display_get_monitor(display, 0);
+    GdkRectangle geometry;
+    gdk_monitor_get_geometry(monitor, &geometry);
+    printf ("TESTT W: %u x H:%u\n", geometry.width, geometry.height);
+
+    return geometry;
+}
+
 static guint get_nkeys(const guint *keys)
 {
     guint i;
@@ -138,7 +149,7 @@ static gboolean update_cursor_callback(rdpContext* context)
     GdkWindow *parent_window = gtk_widget_get_parent_window(ex_context->rdp_display);
     if (parent_window) {
         g_mutex_lock(&ex_context->cursor_mutex);
-        //printf("%s ex_pointer->test_int: %i\n", (const char *)__func__,  ex_pointer->test_int);
+        //printf("%s ex_pointer->test_int: \n", (const char *)__func__);
         gdk_window_set_cursor(parent_window,  ex_context->gdk_cursor);
         //g_object_unref(ex_context->gdk_cursor); // TODO: problems
         g_mutex_unlock(&ex_context->cursor_mutex);
@@ -338,10 +349,13 @@ GtkResponseType rdp_viewer_start(const gchar *usename, const gchar *password, gc
     RdpViewerData rdp_viewer_data;
     rdp_viewer_data.dialog_window_response = GTK_RESPONSE_CLOSE;
 
+    GdkRectangle default_monitor_geometry = get_default_monitor_geometry();
+
     // create RDP context
     UINT32 last_rdp_error = 0;
     ExtendedRdpContext *ex_context = create_rdp_context(&last_rdp_error); // deleted upon widget deletion
     rdp_client_set_credentials(ex_context, usename, password, ip, port);
+    rdp_client_set_screen_resolution(ex_context, default_monitor_geometry);
 
     // gui
     GtkBuilder *builder = virt_viewer_util_load_ui("virt-viewer_veil.ui");
@@ -387,9 +401,11 @@ GtkResponseType rdp_viewer_start(const gchar *usename, const gchar *password, gc
     gtk_box_pack_end(GTK_BOX(vbox), GTK_WIDGET(rdp_display), TRUE, TRUE, 0);
 
     // show
-    gtk_window_set_position((GtkWindow *)rdp_viewer_window, GTK_WIN_POS_CENTER);
+    gtk_window_set_position(GTK_WINDOW(rdp_viewer_window), GTK_WIN_POS_CENTER);
+    gtk_window_resize(GTK_WINDOW(rdp_viewer_window), 1920, 1080);
+    gtk_window_set_resizable (GTK_WINDOW(rdp_viewer_window), FALSE);
     gtk_widget_show_all(rdp_viewer_window);
-    guint g_timeout_id = g_timeout_add(16, (GSourceFunc)gtk_update_v2, rdp_display);
+    guint g_timeout_id = g_timeout_add(33, (GSourceFunc)gtk_update_v2, rdp_display);
     //gtk_widget_add_tick_callback(rdp_display, gtk_update, context, NULL);
 
     create_loop_and_launch(&rdp_viewer_data.loop);

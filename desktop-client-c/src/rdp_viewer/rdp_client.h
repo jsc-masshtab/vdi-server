@@ -24,6 +24,8 @@ struct ExtendedRdpContext;
 typedef gboolean (*UpdateImageCallback) (rdpContext* context);
 typedef gboolean (*UpdateCursorCallback) (rdpContext* context);
 
+//#define MAX_DISPLAY_NUMBER 3
+
 typedef struct {
 	rdpContext context;
 
@@ -59,6 +61,10 @@ typedef struct {
     gchar *ip;
     int port;
 
+    //client monitors geometry info
+    //GdkRectangle client_monitors_geometry[MAX_DISPLAY_NUMBER];
+    GdkRectangle client_default_geometry;
+
     UpdateImageCallback update_image_callback; // callback for updating image in the main thread
     UpdateCursorCallback update_cursor_callback; // callback for updating cursor in the main thread
 
@@ -69,6 +75,7 @@ rdpContext* rdp_client_create_context(void);
 
 void rdp_client_set_credentials(ExtendedRdpContext *ex_context,
                                 const gchar *usename, const gchar *password, gchar *ip, int port);
+void rdp_client_set_screen_resolution(ExtendedRdpContext *ex_context, GdkRectangle client_default_geometry);
 
 void rdp_client_routine(GTask   *task,
                  gpointer       source_object G_GNUC_UNUSED,

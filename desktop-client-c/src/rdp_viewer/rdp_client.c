@@ -78,7 +78,6 @@ rdpContext* rdp_client_create_context()
     return context;
 }
 
-
 void rdp_client_set_credentials(ExtendedRdpContext *ex_context,
                                 const gchar *usename, const gchar *password, gchar *ip, int port)
 {
@@ -86,6 +85,11 @@ void rdp_client_set_credentials(ExtendedRdpContext *ex_context,
     ex_context->password = g_strdup(password);
     ex_context->ip = g_strdup(ip);
     ex_context->port = port;
+}
+
+void rdp_client_set_screen_resolution(ExtendedRdpContext *ex_context, GdkRectangle client_default_geometry)
+{
+    ex_context->client_default_geometry = client_default_geometry;
 }
 //===============================Thread for client routine==================================
 void rdp_client_routine(GTask   *task,
@@ -116,6 +120,12 @@ void rdp_client_routine(GTask   *task,
         g_strdup("+drives"),
         g_strdup("+home-drive"),
         g_strdup("/usb:auto"),
+        g_strdup("+window-drag"),
+        g_strdup("/w:1920"), // 1920
+        g_strdup("/h:1080"), // 1080
+//        g_strdup("/jpeg"),
+//        g_strdup("/jpeg-quality:10"),
+//        g_strdup("/codec-cache:jpeg"),
         NULL
     };
     int argc = sizeof(argv) / sizeof(char*) - 1;
