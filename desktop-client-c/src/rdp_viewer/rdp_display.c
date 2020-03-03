@@ -279,6 +279,14 @@ static gboolean rdp_display_event_on_draw(GtkWidget* widget, cairo_t* context, g
     return TRUE;
 }
 
+static gboolean rdp_display_event_on_configure(GtkWidget *widget, GdkEvent  *event, gpointer   user_data)
+{
+    ExtendedRdpContext *ex_contect = user_data;
+    rdp_client_adjust_im_origin_point(ex_contect);
+
+    return TRUE;
+}
+
 GtkWidget *rdp_display_create(GtkWidget *rdp_viewer_window, ExtendedRdpContext *ex_context, UINT32 *last_rdp_error_p)
 {
     GtkWidget *rdp_display = gtk_drawing_area_new(); // todo: free memory
@@ -297,6 +305,7 @@ GtkWidget *rdp_display_create(GtkWidget *rdp_viewer_window, ExtendedRdpContext *
     g_signal_connect(rdp_display, "button-release-event",G_CALLBACK (rdp_display_mouse_btn_released), ex_context);
     g_signal_connect(rdp_display, "scroll-event",G_CALLBACK (rdp_display_wheel_scrolled), ex_context);
     g_signal_connect(rdp_display, "draw", G_CALLBACK(rdp_display_event_on_draw), ex_context);
+    g_signal_connect(rdp_display, "configure-event", G_CALLBACK(rdp_display_event_on_configure), ex_context);
 
     return rdp_display;
 }

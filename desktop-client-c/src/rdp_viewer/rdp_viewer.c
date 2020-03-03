@@ -165,6 +165,15 @@ static void rdp_viewer_item_details_activated(GtkWidget *menu G_GNUC_UNUSED, gpo
     gtk_show_uri_on_window(NULL, "http://mashtab.org/files/veil/index.html", GDK_CURRENT_TIME, &error);
 }
 
+static void rdp_viewer_item_fullscreen_activated(GtkWidget *menu G_GNUC_UNUSED, gpointer userdata)
+{
+    GtkWidget *rdp_viewer_window = GTK_WIDGET(userdata);
+
+    gtk_window_set_resizable(GTK_WINDOW(rdp_viewer_window), TRUE);
+    gtk_window_fullscreen(GTK_WINDOW(rdp_viewer_window));
+    //gtk_window_set_resizable(GTK_WINDOW(rdp_viewer_window), FALSE);
+}
+
 static void rdp_viewer_item_about_activated(GtkWidget *menu G_GNUC_UNUSED, gpointer userdata)
 {
     printf("%s\n", (const char *)__func__);
@@ -355,12 +364,15 @@ GtkResponseType rdp_viewer_start(const gchar *usename, const gchar *password, gc
     UINT32 last_rdp_error = 0;
     ExtendedRdpContext *ex_context = create_rdp_context(&last_rdp_error); // deleted upon widget deletion
     rdp_client_set_credentials(ex_context, usename, password, ip, port);
-    rdp_client_set_screen_resolution(ex_context, default_monitor_geometry);
+
+    const int max_image_width = 1920;
+    const int max_image_height = 1080;
+    int optimal_image_width = MIN(max_image_width, default_monitor_geometry.width);
+    int optimal_image_height = MIN(max_image_height, default_monitor_geometry.height);
+    rdp_client_set_optimilal_image_size(ex_context, optimal_image_width, optimal_image_height);
 
     // gui
     GtkBuilder *builder = virt_viewer_util_load_ui("virt-viewer_veil.ui");
-
-    //gtk_widget_set_sensitive(GTK_WIDGET(gtk_builder_get_object(builder, "menu-file")), FALSE);
 
     GtkWidget *rdp_viewer_window = GTK_WIDGET(gtk_builder_get_object(builder, "viewer"));
     g_signal_connect_swapped(rdp_viewer_window, "delete-event",
@@ -368,8 +380,12 @@ GtkResponseType rdp_viewer_start(const gchar *usename, const gchar *password, gc
     g_signal_connect(rdp_viewer_window, "map-event", G_CALLBACK(rdp_viewer_event_on_mapped), ex_context);
 
     // view menu
-    GtkWidget *menu_view = GTK_WIDGET(gtk_builder_get_object(builder, "menu-view"));
-    gtk_widget_destroy(menu_view); // todo: view settings will be implemented in future (aproximately in 22nd century)
+    gtk_widget_destroy(GTK_WIDGET(gtk_builder_get_object(builder, "menu-view-zoom")));
+    gtk_widget_destroy(GTK_WIDGET(gtk_builder_get_object(builder, "menu-displays")));
+    gtk_widget_destroy(GTK_WIDGET(gtk_builder_get_object(builder, "menu-view-release-cursor")));
+    GtkWidget *item_fullscreen = GTK_WIDGET(gtk_builder_get_object(builder, "menu-view-fullscreen"));
+    g_signal_connect(item_fullscreen, "activate", G_CALLBACK(rdp_viewer_item_fullscreen_activated), rdp_viewer_window);
+
     // usb menu is not required for rdp?
     GtkWidget *menu_usb = GTK_WIDGET(gtk_builder_get_object(builder, "menu-file-usb"));
     gtk_widget_destroy(menu_usb); // rdp automaticly redirects usb if app is launched with corresponding flag
@@ -402,13 +418,14 @@ GtkResponseType rdp_viewer_start(const gchar *usename, const gchar *password, gc
 
     // show
     gtk_window_set_position(GTK_WINDOW(rdp_viewer_window), GTK_WIN_POS_CENTER);
-    //gtk_window_resize(GTK_WINDOW(rdp_viewer_window), DEFAULT_WIDTH, DEFAULT_HEIGHT);
     //gtk_window_resize(GTK_WINDOW(rdp_viewer_window), default_monitor_geometry.width, default_monitor_geometry.height);
+
+    //gtk_window_unfullscreen(GTK_WINDOW(rdp_viewer_window));
+    gtk_window_resize(GTK_WINDOW(rdp_viewer_window), optimal_image_width, optimal_image_height);
     //gtk_window_set_resizable(GTK_WINDOW(rdp_viewer_window), FALSE);
     gtk_widget_show_all(rdp_viewer_window);
-    gtk_window_fullscreen(GTK_WINDOW(rdp_viewer_window)); // this works
 
-    guint g_timeout_id = g_timeout_add(33, (GSourceFunc)gtk_update_v2, rdp_display);
+    guint g_timeout_id = g_timeout_add(40, (GSourceFunc)gtk_update_v2, rdp_display);
     //gtk_widget_add_tick_callback(rdp_display, gtk_update, context, NULL);
 
     create_loop_and_launch(&rdp_viewer_data.loop);

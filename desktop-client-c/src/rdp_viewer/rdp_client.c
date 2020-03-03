@@ -30,6 +30,9 @@
 #include <errno.h>
 #include <stdio.h>
 #include <string.h>
+#include <math.h>
+
+#include <glib.h>
 
 #include <freerdp/freerdp.h>
 #include <freerdp/constants.h>
@@ -87,9 +90,11 @@ void rdp_client_set_credentials(ExtendedRdpContext *ex_context,
     ex_context->port = port;
 }
 
-void rdp_client_set_screen_resolution(ExtendedRdpContext *ex_context, GdkRectangle client_default_geometry)
+void rdp_client_set_optimilal_image_size(ExtendedRdpContext *ex_context,
+                                         int optimal_image_width, int optimal_image_height)
 {
-    ex_context->client_default_geometry = client_default_geometry;
+    ex_context->optimal_image_width = optimal_image_width;
+    ex_context->optimal_image_height = optimal_image_height;
 }
 //===============================Thread for client routine==================================
 void rdp_client_routine(GTask   *task,
@@ -121,8 +126,8 @@ void rdp_client_routine(GTask   *task,
         g_strdup("+home-drive"),
         g_strdup("/usb:auto"),
 //        g_strdup("+window-drag"),
-        g_strdup_printf("/w:%i", DEFAULT_WIDTH), // 1920
-        g_strdup_printf("/h:%i", DEFAULT_HEIGHT), // 1080
+        g_strdup_printf("/w:%i", tf->optimal_image_width),
+        g_strdup_printf("/h:%i", tf->optimal_image_height),
 //        g_strdup("/jpeg"),
 //        g_strdup("/jpeg-quality:10"),
 //        g_strdup("/codec-cache:jpeg"),
@@ -159,6 +164,20 @@ fail:
     printf("%s: g_mutex_unlock\n", (const char *)__func__);
     g_mutex_unlock(&tf->rdp_routine_mutex);
     tf->is_running = FALSE;
+}
+
+void rdp_client_adjust_im_origin_point(ExtendedRdpContext* ex_context)
+{
+    if (ex_context->surface && ex_context->rdp_display) {
+
+        int delta_x = gtk_widget_get_allocated_width(ex_context->rdp_display) -
+                cairo_image_surface_get_width(ex_context->surface);
+        int delta_y = gtk_widget_get_allocated_height(ex_context->rdp_display) -
+                cairo_image_surface_get_height(ex_context->surface);
+
+        ex_context->im_origin_x = delta_x <= 0 ? 0.0: (double)delta_x * 0.5;
+        ex_context->im_origin_y = delta_y <= 0 ? 0.0: (double)delta_y * 0.5;
+    }
 }
 
 //static BOOL update_send_synchronize(rdpContext* context)
@@ -350,10 +369,7 @@ static BOOL rdp_post_connect(freerdp* instance)
                                                       cairo_format, gdi->width, gdi->height, stride);
 
     // calculate point in which the image is displayed
-    int delta_x = gtk_widget_get_allocated_width(tf->rdp_display) - cairo_image_surface_get_width(tf->surface);
-    int delta_y = gtk_widget_get_allocated_height(tf->rdp_display) - cairo_image_surface_get_height(tf->surface);
-    tf->im_origin_x = delta_x <= 0 ? 0.0: (double)delta_x * 0.5;
-    tf->im_origin_y = delta_y <= 0 ? 0.0: (double)delta_y * 0.5;
+    rdp_client_adjust_im_origin_point(tf);
 
     g_mutex_unlock(&tf->primary_buffer_mutex);
 
