@@ -19,6 +19,7 @@
 #include "rdp_display.h"
 
 #include "virt-viewer-util.h"
+#include "virt-viewer-timed-revealer.h"
 #include "config.h"
 
 #include "vdi_api_session.h"
@@ -33,6 +34,11 @@ struct keyComboDef {
 typedef struct{
     GtkResponseType dialog_window_response;
     GMainLoop *loop;
+
+    GtkWidget *rdp_viewer_window;
+    GtkWidget *overlay_toolbar;
+    VirtViewerTimedRevealer *revealer;
+
 } RdpViewerData;
 
 // static variables and constants
@@ -167,11 +173,15 @@ static void rdp_viewer_item_details_activated(GtkWidget *menu G_GNUC_UNUSED, gpo
 
 static void rdp_viewer_item_fullscreen_activated(GtkWidget *menu G_GNUC_UNUSED, gpointer userdata)
 {
-    GtkWidget *rdp_viewer_window = GTK_WIDGET(userdata);
+    RdpViewerData *rdp_viewer_data = (RdpViewerData *)userdata;
 
-    gtk_window_set_resizable(GTK_WINDOW(rdp_viewer_window), TRUE);
-    gtk_window_fullscreen(GTK_WINDOW(rdp_viewer_window));
+    gtk_window_set_resizable(GTK_WINDOW(rdp_viewer_data->rdp_viewer_window), TRUE);
+    gtk_window_fullscreen(GTK_WINDOW(rdp_viewer_data->rdp_viewer_window));
     //gtk_window_set_resizable(GTK_WINDOW(rdp_viewer_window), FALSE);
+
+    // show toolbar
+    gtk_widget_show(rdp_viewer_data->overlay_toolbar);
+    virt_viewer_timed_revealer_force_reveal(rdp_viewer_data->revealer, TRUE);
 }
 
 static void rdp_viewer_item_about_activated(GtkWidget *menu G_GNUC_UNUSED, gpointer userdata)
@@ -286,7 +296,7 @@ rdp_viewer_window_menu_reboot_vm_force(GtkWidget *menu G_GNUC_UNUSED, gpointer u
     do_action_on_vm_async("reboot", TRUE);
 }
 
-static void setup_control_menu(GtkBuilder *builder, RdpViewerData *rdp_viewer_data)
+static void rdp_viewer_control_menu_setup(GtkBuilder *builder, RdpViewerData *rdp_viewer_data)
 {
     GtkMenuItem *menu_switch_off = GTK_MENU_ITEM(gtk_builder_get_object(builder, "menu-switch-off"));
     GtkMenuItem *menu_start_vm = GTK_MENU_ITEM(gtk_builder_get_object(builder, "menu-start-vm"));
@@ -303,6 +313,41 @@ static void setup_control_menu(GtkBuilder *builder, RdpViewerData *rdp_viewer_da
     g_signal_connect(menu_shutdown_vm_force, "activate", G_CALLBACK(rdp_viewer_window_menu_shutdown_vm_force), NULL);
     g_signal_connect(menu_reboot_vm, "activate", G_CALLBACK(rdp_viewer_window_menu_reboot_vm), NULL);
     g_signal_connect(menu_reboot_vm_force, "activate", G_CALLBACK(rdp_viewer_window_menu_reboot_vm_force), NULL);
+}
+
+static void rdp_viewer_window_toolbar_leave_fullscreen(GtkWidget *button G_GNUC_UNUSED, gpointer userdata)
+{
+    RdpViewerData *rdp_viewer_data = (RdpViewerData *)userdata;
+
+    gtk_widget_hide(rdp_viewer_data->overlay_toolbar);
+    //gtk_widget_set_size_request(priv->window, -1, -1);
+    gtk_window_unfullscreen(GTK_WINDOW(rdp_viewer_data->rdp_viewer_window));
+}
+
+static void rdp_viewer_toolbar_setup(GtkBuilder *builder, RdpViewerData *rdp_viewer_data)
+{
+    GtkWidget *button;
+
+    // create a toolbar which will be shown in fullscreen mode
+    rdp_viewer_data->overlay_toolbar = gtk_toolbar_new();
+    gtk_toolbar_set_show_arrow(GTK_TOOLBAR(rdp_viewer_data->overlay_toolbar), FALSE);
+    gtk_widget_set_no_show_all(rdp_viewer_data->overlay_toolbar, TRUE);
+    gtk_toolbar_set_style(GTK_TOOLBAR(rdp_viewer_data->overlay_toolbar), GTK_TOOLBAR_BOTH_HORIZ);
+
+    /* Leave fullscreen */
+    button = GTK_WIDGET(gtk_tool_button_new(NULL, NULL));
+    gtk_tool_button_set_icon_name(GTK_TOOL_BUTTON(button), "view-restore");
+    gtk_tool_button_set_label(GTK_TOOL_BUTTON(button), ("Leave fullscreen"));
+    gtk_tool_item_set_tooltip_text(GTK_TOOL_ITEM(button), ("Leave fullscreen"));
+    gtk_tool_item_set_is_important(GTK_TOOL_ITEM(button), TRUE);
+    gtk_widget_show(button);
+    gtk_toolbar_insert(GTK_TOOLBAR(rdp_viewer_data->overlay_toolbar), GTK_TOOL_ITEM(button), 0);
+    g_signal_connect(button, "clicked", G_CALLBACK(rdp_viewer_window_toolbar_leave_fullscreen), rdp_viewer_data);
+
+    // add tollbar to overlay
+    rdp_viewer_data->revealer = virt_viewer_timed_revealer_new(rdp_viewer_data->overlay_toolbar);
+    GtkWidget *overlay = GTK_WIDGET(gtk_builder_get_object(builder, "viewer-overlay"));
+    gtk_overlay_add_overlay(GTK_OVERLAY(overlay), GTK_WIDGET(rdp_viewer_data->revealer));
 }
 
 static void fill_shortcuts_menu(GtkMenu *sub_menu_send, ExtendedRdpContext* ex_context)
@@ -374,19 +419,13 @@ GtkResponseType rdp_viewer_start(const gchar *usename, const gchar *password, gc
     // gui
     GtkBuilder *builder = virt_viewer_util_load_ui("virt-viewer_veil.ui");
 
-    GtkWidget *rdp_viewer_window = GTK_WIDGET(gtk_builder_get_object(builder, "viewer"));
+    GtkWidget *rdp_viewer_window = rdp_viewer_data.rdp_viewer_window =
+            GTK_WIDGET(gtk_builder_get_object(builder, "viewer"));
     g_signal_connect_swapped(rdp_viewer_window, "delete-event",
                              G_CALLBACK(rdp_viewer_window_deleted_cb), &rdp_viewer_data);
     g_signal_connect(rdp_viewer_window, "map-event", G_CALLBACK(rdp_viewer_event_on_mapped), ex_context);
 
-    // view menu
-    gtk_widget_destroy(GTK_WIDGET(gtk_builder_get_object(builder, "menu-view-zoom")));
-    gtk_widget_destroy(GTK_WIDGET(gtk_builder_get_object(builder, "menu-displays")));
-    gtk_widget_destroy(GTK_WIDGET(gtk_builder_get_object(builder, "menu-view-release-cursor")));
-    GtkWidget *item_fullscreen = GTK_WIDGET(gtk_builder_get_object(builder, "menu-view-fullscreen"));
-    g_signal_connect(item_fullscreen, "activate", G_CALLBACK(rdp_viewer_item_fullscreen_activated), rdp_viewer_window);
-
-    // usb menu is not required for rdp?
+    // usb menu is not required for rdp
     GtkWidget *menu_usb = GTK_WIDGET(gtk_builder_get_object(builder, "menu-file-usb"));
     gtk_widget_destroy(menu_usb); // rdp automaticly redirects usb if app is launched with corresponding flag
 
@@ -397,7 +436,17 @@ GtkResponseType rdp_viewer_start(const gchar *usename, const gchar *password, gc
     gtk_widget_destroy(GTK_WIDGET(gtk_builder_get_object(builder, "menu-preferences")));
 
     // control menu
-    setup_control_menu(builder, &rdp_viewer_data);
+    rdp_viewer_control_menu_setup(builder, &rdp_viewer_data);
+
+    // controll toolbar used in fullscreen
+    rdp_viewer_toolbar_setup(builder, &rdp_viewer_data);
+
+    // view menu
+    gtk_widget_destroy(GTK_WIDGET(gtk_builder_get_object(builder, "menu-view-zoom")));
+    gtk_widget_destroy(GTK_WIDGET(gtk_builder_get_object(builder, "menu-displays")));
+    gtk_widget_destroy(GTK_WIDGET(gtk_builder_get_object(builder, "menu-view-release-cursor")));
+    GtkWidget *item_fullscreen = GTK_WIDGET(gtk_builder_get_object(builder, "menu-view-fullscreen"));
+    g_signal_connect(item_fullscreen, "activate", G_CALLBACK(rdp_viewer_item_fullscreen_activated), &rdp_viewer_data);
 
     // shortcuts
     GtkWidget *menu_send = GTK_WIDGET(gtk_builder_get_object(builder, "menu-send"));

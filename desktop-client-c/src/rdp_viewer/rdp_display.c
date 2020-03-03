@@ -279,7 +279,8 @@ static gboolean rdp_display_event_on_draw(GtkWidget* widget, cairo_t* context, g
     return TRUE;
 }
 
-static gboolean rdp_display_event_on_configure(GtkWidget *widget, GdkEvent  *event, gpointer   user_data)
+static gboolean rdp_display_event_on_configure(GtkWidget *widget G_GNUC_UNUSED,
+                                               GdkEvent *event G_GNUC_UNUSED, gpointer user_data)
 {
     ExtendedRdpContext *ex_contect = user_data;
     rdp_client_adjust_im_origin_point(ex_contect);
