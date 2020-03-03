@@ -402,9 +402,12 @@ GtkResponseType rdp_viewer_start(const gchar *usename, const gchar *password, gc
 
     // show
     gtk_window_set_position(GTK_WINDOW(rdp_viewer_window), GTK_WIN_POS_CENTER);
-    gtk_window_resize(GTK_WINDOW(rdp_viewer_window), 1920, 1080);
-    gtk_window_set_resizable (GTK_WINDOW(rdp_viewer_window), FALSE);
+    //gtk_window_resize(GTK_WINDOW(rdp_viewer_window), DEFAULT_WIDTH, DEFAULT_HEIGHT);
+    //gtk_window_resize(GTK_WINDOW(rdp_viewer_window), default_monitor_geometry.width, default_monitor_geometry.height);
+    //gtk_window_set_resizable(GTK_WINDOW(rdp_viewer_window), FALSE);
     gtk_widget_show_all(rdp_viewer_window);
+    gtk_window_fullscreen(GTK_WINDOW(rdp_viewer_window)); // this works
+
     guint g_timeout_id = g_timeout_add(33, (GSourceFunc)gtk_update_v2, rdp_display);
     //gtk_widget_add_tick_callback(rdp_display, gtk_update, context, NULL);
 

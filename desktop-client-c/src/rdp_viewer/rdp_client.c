@@ -120,9 +120,9 @@ void rdp_client_routine(GTask   *task,
         g_strdup("+drives"),
         g_strdup("+home-drive"),
         g_strdup("/usb:auto"),
-        g_strdup("+window-drag"),
-        g_strdup("/w:1920"), // 1920
-        g_strdup("/h:1080"), // 1080
+//        g_strdup("+window-drag"),
+        g_strdup_printf("/w:%i", DEFAULT_WIDTH), // 1920
+        g_strdup_printf("/h:%i", DEFAULT_HEIGHT), // 1080
 //        g_strdup("/jpeg"),
 //        g_strdup("/jpeg-quality:10"),
 //        g_strdup("/codec-cache:jpeg"),
@@ -348,6 +348,12 @@ static BOOL rdp_post_connect(freerdp* instance)
     int stride = cairo_format_stride_for_width(cairo_format, gdi->width);
     tf->surface = cairo_image_surface_create_for_data((unsigned char*)gdi->primary_buffer,
                                                       cairo_format, gdi->width, gdi->height, stride);
+
+    // calculate point in which the image is displayed
+    int delta_x = gtk_widget_get_allocated_width(tf->rdp_display) - cairo_image_surface_get_width(tf->surface);
+    int delta_y = gtk_widget_get_allocated_height(tf->rdp_display) - cairo_image_surface_get_height(tf->surface);
+    tf->im_origin_x = delta_x <= 0 ? 0.0: (double)delta_x * 0.5;
+    tf->im_origin_y = delta_y <= 0 ? 0.0: (double)delta_y * 0.5;
 
     g_mutex_unlock(&tf->primary_buffer_mutex);
 

@@ -19,6 +19,9 @@
 
 #include "rdp_cursor.h"
 
+#define DEFAULT_WIDTH 1920
+#define DEFAULT_HEIGHT 1080
+
 struct ExtendedRdpContext;
 
 typedef gboolean (*UpdateImageCallback) (rdpContext* context);
@@ -41,7 +44,9 @@ typedef struct {
 
     GMutex rdp_routine_mutex; // used to wait untill rdp_client_routine finished
 
-    cairo_surface_t* surface; //
+    cairo_surface_t* surface; // image surface
+    double im_origin_x; // origin point of image
+    double im_origin_y; // origin point of image
 
 //    INT32 ninvalid;// number of invalid regions
 //    HGDI_RGN cinvalid;
@@ -64,6 +69,7 @@ typedef struct {
     //client monitors geometry info
     //GdkRectangle client_monitors_geometry[MAX_DISPLAY_NUMBER];
     GdkRectangle client_default_geometry;
+
 
     UpdateImageCallback update_image_callback; // callback for updating image in the main thread
     UpdateCursorCallback update_cursor_callback; // callback for updating cursor in the main thread
