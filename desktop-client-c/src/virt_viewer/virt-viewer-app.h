@@ -26,7 +26,7 @@
 #include <glib-object.h>
 #include <gtk/gtk.h>
 #include "virt-viewer-window.h"
-#include "virt-viewer-util.h"
+#include "remote-viewer-util.h"
 
 G_BEGIN_DECLS
 

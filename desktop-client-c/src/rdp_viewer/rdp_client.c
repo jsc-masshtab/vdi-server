@@ -60,7 +60,7 @@
 #include "rdp_client.h"
 #include "rdp_cursor.h"
 
-#include "virt-viewer-util.h"
+#include "remote-viewer-util.h"
 
 #include "async.h"
 

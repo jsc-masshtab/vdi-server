@@ -31,7 +31,7 @@
 #include <usb-device-widget.h>
 #include "virt-viewer-file.h"
 #include "virt-viewer-file-transfer-dialog.h"
-#include "virt-viewer-util.h"
+#include "remote-viewer-util.h"
 #include "virt-viewer-session-spice.h"
 #include "virt-viewer-display-spice.h"
 #include "virt-viewer-auth.h"

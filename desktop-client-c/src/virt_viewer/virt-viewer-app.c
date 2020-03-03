@@ -54,7 +54,7 @@
 #include "virt-viewer-auth.h"
 #include "virt-viewer-window.h"
 #include "virt-viewer-session.h"
-#include "virt-viewer-util.h"
+#include "remote-viewer-util.h"
 #include "remote-viewer.h"
 #ifdef HAVE_GTK_VNC
 #include "virt-viewer-session-vnc.h"
@@ -2558,7 +2558,7 @@ static GtkWidget *
 virt_viewer_app_get_preferences(VirtViewerApp *self)
 {
     VirtViewerSession *session = virt_viewer_app_get_session(self);
-    GtkBuilder *builder = virt_viewer_util_load_ui("virt-viewer-preferences.ui");
+    GtkBuilder *builder = remote_viewer_util_load_ui("virt-viewer-preferences.ui");
     gboolean can_share_folder = virt_viewer_session_can_share_folder(session);
     GtkWidget *preferences = self->priv->preferences;
     gchar *path;

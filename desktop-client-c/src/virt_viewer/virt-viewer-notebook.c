@@ -25,7 +25,7 @@
 #include <config.h>
 
 #include "virt-viewer-notebook.h"
-#include "virt-viewer-util.h"
+#include "remote-viewer-util.h"
 
 G_DEFINE_TYPE (VirtViewerNotebook, virt_viewer_notebook, GTK_TYPE_NOTEBOOK)
 

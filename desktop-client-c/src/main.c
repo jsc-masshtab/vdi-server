@@ -23,7 +23,7 @@
 
 #include "settingsfile.h"
 #include "remote-viewer.h"
-#include "virt-viewer-util.h"
+#include "remote-viewer-util.h"
 #include "crashhandler.h"
 #include "vdi_api_session.h"
 

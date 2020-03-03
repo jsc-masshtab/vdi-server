@@ -18,8 +18,8 @@
 #include "rdp_client.h"
 #include "rdp_display.h"
 
-#include "virt-viewer-util.h"
-#include "virt-viewer-timed-revealer.h"
+#include "remote-viewer-util.h"
+#include "remote-viewer-timed-revealer.h"
 #include "config.h"
 
 #include "vdi_api_session.h"
@@ -192,7 +192,7 @@ static void rdp_viewer_item_about_activated(GtkWidget *menu G_GNUC_UNUSED, gpoin
     GtkWidget *dialog;
     GdkPixbuf *icon;
 
-    about = virt_viewer_util_load_ui("virt-viewer-about.ui");
+    about = remote_viewer_util_load_ui("virt-viewer-about.ui");
 
     dialog = GTK_WIDGET(gtk_builder_get_object(about, "about"));
     gtk_about_dialog_set_version ((GtkAboutDialog *)dialog, VERSION);
@@ -337,8 +337,8 @@ static void rdp_viewer_toolbar_setup(GtkBuilder *builder, RdpViewerData *rdp_vie
     /* Leave fullscreen */
     button = GTK_WIDGET(gtk_tool_button_new(NULL, NULL));
     gtk_tool_button_set_icon_name(GTK_TOOL_BUTTON(button), "view-restore");
-    gtk_tool_button_set_label(GTK_TOOL_BUTTON(button), ("Leave fullscreen"));
-    gtk_tool_item_set_tooltip_text(GTK_TOOL_ITEM(button), ("Leave fullscreen"));
+    gtk_tool_button_set_label(GTK_TOOL_BUTTON(button), ("Покинуть полный экран"));
+    gtk_tool_item_set_tooltip_text(GTK_TOOL_ITEM(button), ("Покинуть полный экран"));
     gtk_tool_item_set_is_important(GTK_TOOL_ITEM(button), TRUE);
     gtk_widget_show(button);
     gtk_toolbar_insert(GTK_TOOLBAR(rdp_viewer_data->overlay_toolbar), GTK_TOOL_ITEM(button), 0);
@@ -417,7 +417,7 @@ GtkResponseType rdp_viewer_start(const gchar *usename, const gchar *password, gc
     rdp_client_set_optimilal_image_size(ex_context, optimal_image_width, optimal_image_height);
 
     // gui
-    GtkBuilder *builder = virt_viewer_util_load_ui("virt-viewer_veil.ui");
+    GtkBuilder *builder = remote_viewer_util_load_ui("virt-viewer_veil.ui");
 
     GtkWidget *rdp_viewer_window = rdp_viewer_data.rdp_viewer_window =
             GTK_WIDGET(gtk_builder_get_object(builder, "viewer"));

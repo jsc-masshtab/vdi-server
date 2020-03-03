@@ -39,7 +39,7 @@
 #include <libxml/xpath.h>
 #include <libxml/uri.h>
 
-#include "virt-viewer-util.h"
+#include "remote-viewer-util.h"
 
 void
 create_loop_and_launch(GMainLoop **loop)
@@ -62,8 +62,8 @@ virt_viewer_error_quark(void)
 {
   return g_quark_from_static_string ("virt-viewer-error-quark");
 }
-// todo: rename and place in more common place
-GtkBuilder *virt_viewer_util_load_ui(const char *name)
+
+GtkBuilder *remote_viewer_util_load_ui(const char *name)
 {
     GtkBuilder *builder;
     gchar *resource = g_strdup_printf("%s/ui/%s",

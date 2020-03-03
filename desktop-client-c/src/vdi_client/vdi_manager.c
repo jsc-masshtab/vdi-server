@@ -7,7 +7,7 @@
 #include <cairo-features.h>
 #include <libsoup/soup-session.h>
 
-#include "virt-viewer-util.h"
+#include "remote-viewer-util.h"
 #include "vdi_manager.h"
 #include "vdi_ws_client.h"
 #include "vdi_pool_widget.h"
@@ -423,7 +423,7 @@ GtkResponseType vdi_manager_dialog(GtkWindow *main_window G_GNUC_UNUSED, gchar *
     vdi_manager.remote_protocol_type_ptr = remote_protocol_type;
 
     /* Create the widgets */
-    vdi_manager.builder = virt_viewer_util_load_ui("vdi_manager_form.ui");
+    vdi_manager.builder = remote_viewer_util_load_ui("vdi_manager_form.ui");
     g_return_val_if_fail(vdi_manager.builder != NULL, GTK_RESPONSE_NONE);
 
     vdi_manager.window = GTK_WIDGET(gtk_builder_get_object(vdi_manager.builder, "vdi-main-window"));
