@@ -208,12 +208,9 @@ on_get_vdi_token_finished(GObject *source_object G_GNUC_UNUSED,
 void connect_to_vdi_server(RemoteViewerData *ci)
 {
     // set credential for connection to VDI server
-    const gchar *ip = gtk_entry_get_text(GTK_ENTRY(ci->address_entry));
-    const gchar *port = gtk_entry_get_text(GTK_ENTRY(ci->port_entry));
-    const gchar *user = gtk_entry_get_text(GTK_ENTRY(ci->login_entry));
-    const gchar *password = gtk_entry_get_text(GTK_ENTRY(ci->password_entry));
+    get_data_from_gui(ci);
     gboolean is_ldap = gtk_toggle_button_get_active((GtkToggleButton *)ci->ldap_checkbutton);
-    set_vdi_credentials(user, password, ip, port, is_ldap);
+    set_vdi_credentials(*ci->user, *ci->password, *ci->ip, *ci->port, is_ldap);
 
     set_auth_dialog_state(AUTH_GUI_CONNECT_TRY_STARTED, ci);
 

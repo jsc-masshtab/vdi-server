@@ -7,16 +7,19 @@
 
 typedef struct{
 
-   gchar *user;
-   gchar *password;
+   gchar *ip;
+   int port;
 
    gboolean is_ldap;
-   gboolean *is_connect_to_prev_pool;
-   VdiVmRemoteProtocol *remote_protocol_type;
+   gboolean is_connect_to_prev_pool;
 
-} StartSettingsData;
+   VdiVmRemoteProtocol remote_protocol_type;
 
-GtkResponseType remote_viewer_start_settings_dialog(void);
+} ConnectSettingsData;
+
+
+GtkResponseType remote_viewer_start_settings_dialog(ConnectSettingsData *connect_settings_data);
+void free_connect_settings_data(ConnectSettingsData *connect_settings_data);
 
 
 #endif // REMOTE_VIEWER_START_SETTINGS_H
