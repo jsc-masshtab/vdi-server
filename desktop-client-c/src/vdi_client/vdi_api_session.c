@@ -5,7 +5,7 @@
 // но одновременный доступ к ним не предполагается, так что защита не нужна
 
 #include <libsoup/soup-session.h>
-#include "virt-viewer-util.h"
+#include "remote-viewer-util.h"
 #include <json-glib/json-glib.h>
 
 #include "vdi_api_session.h"

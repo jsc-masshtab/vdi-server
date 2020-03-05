@@ -1,4 +1,4 @@
-#include "rdp_display.h"
+#include <math.h>
 
 #include <gio/gio.h>
 #include <gtk/gtk.h>
@@ -9,6 +9,16 @@
 
 #include <freerdp/locale/keyboard.h>
 #include <freerdp/scancode.h>
+
+#include "rdp_display.h"
+
+static double scale_f = 1; // todo: make local
+
+static gboolean fuzzy_compare(double number_1, double number_2)
+{
+    const double epsilon = 0.00001;
+    return fabs(number_1 - number_2) < epsilon;
+}
 
 static const gchar *error_to_str(UINT32 rdp_error)
 {
@@ -136,14 +146,16 @@ static gboolean rdp_display_key_released(GtkWidget *widget G_GNUC_UNUSED, GdkEve
 
 static gboolean rdp_display_mouse_moved(GtkWidget *widget G_GNUC_UNUSED, GdkEventMotion *event, gpointer user_data)
 {
-    ExtendedRdpContext* tf = (ExtendedRdpContext*)user_data;
-    if (!tf || !tf->is_running)
+    ExtendedRdpContext* ex_contect = (ExtendedRdpContext*)user_data;
+    if (!ex_contect || !ex_contect->is_running)
         return TRUE;
 
-    rdpContext* context = user_data;
-    rdpInput *input = context->input;
+    rdpContext* rdp_contect = user_data;
+    rdpInput *input = rdp_contect->input;
 
-    BOOL is_success = freerdp_input_send_mouse_event(input, PTR_FLAGS_MOVE, (UINT16)event->x, (UINT16)event->y);
+    BOOL is_success = freerdp_input_send_mouse_event(input, PTR_FLAGS_MOVE,
+                                                     (UINT16)((event->x - ex_contect->im_origin_x) * scale_f),
+                                                     (UINT16)((event->y - ex_contect->im_origin_y) * scale_f));
     (void)is_success;
     //printf("%s: event->x %f, event->y %f  %i\n", (const char *)__func__, event->x, event->y, is_success);
 
@@ -153,8 +165,8 @@ static gboolean rdp_display_mouse_moved(GtkWidget *widget G_GNUC_UNUSED, GdkEven
 static void rdp_viewer_handle_mouse_btn_event(GtkWidget *widget G_GNUC_UNUSED, GdkEventButton *event, gpointer user_data,
                                                   UINT16 additional_flags)
 {
-    ExtendedRdpContext* tf = (ExtendedRdpContext*)user_data;
-    if (!tf || !tf->is_running)
+    ExtendedRdpContext* ex_contect = (ExtendedRdpContext*)user_data;
+    if (!ex_contect || !ex_contect->is_running)
         return;
 
     rdpContext* context = user_data;
@@ -179,7 +191,9 @@ static void rdp_viewer_handle_mouse_btn_event(GtkWidget *widget G_GNUC_UNUSED, G
 
     if (button) {
         //event->state;
-        freerdp_input_send_mouse_event(input, additional_flags | button, (UINT16)event->x, (UINT16)event->y);
+        freerdp_input_send_mouse_event(input, additional_flags | button,
+                                       (UINT16)((event->x - ex_contect->im_origin_x) * scale_f),
+                                       (UINT16)((event->y - ex_contect->im_origin_y) * scale_f));
 //        printf("%s: event->x %f, event->y %f  %i %i\n", (const char *)__func__,
 //               event->x, event->y, event->button, event->state);
     }
@@ -228,11 +242,16 @@ static gboolean rdp_display_event_on_draw(GtkWidget* widget, cairo_t* context, g
 
         if (rdp_contect->surface) {
 
-            cairo_set_source_surface(context, rdp_contect->surface, 0, 0);
+            cairo_set_source_surface(context, rdp_contect->surface, rdp_contect->im_origin_x, rdp_contect->im_origin_y);
+            if (!fuzzy_compare(scale_f, 1))
+                cairo_surface_set_device_scale(rdp_contect->surface, scale_f, scale_f);
+
             cairo_set_operator(context, CAIRO_OPERATOR_OVER);     // Ignore alpha channel from FreeRDP
             cairo_set_antialias(context, CAIRO_ANTIALIAS_FAST);
-            cairo_set_tolerance(context, 10);
-
+//            cairo_rectangle(context, 0, 0, 1024, 750);
+//            cairo_clip(context);
+            //cairo_set_tolerance(context, 10);
+            //cairo_rotate(context, 57);
             cairo_paint(context);
             //cairo_fill(context);
         }
@@ -260,9 +279,23 @@ static gboolean rdp_display_event_on_draw(GtkWidget* widget, cairo_t* context, g
     return TRUE;
 }
 
+static gboolean rdp_display_event_on_configure(GtkWidget *widget G_GNUC_UNUSED,
+                                               GdkEvent *event G_GNUC_UNUSED, gpointer user_data)
+{
+    ExtendedRdpContext *ex_contect = (ExtendedRdpContext *)user_data;
+
+    if (ex_contect && ex_contect->is_running) {
+        g_mutex_lock(&ex_contect->primary_buffer_mutex);
+        rdp_client_adjust_im_origin_point(ex_contect);
+        g_mutex_unlock(&ex_contect->primary_buffer_mutex);
+    }
+
+    return TRUE;
+}
+
 GtkWidget *rdp_display_create(GtkWidget *rdp_viewer_window, ExtendedRdpContext *ex_context, UINT32 *last_rdp_error_p)
 {
-    GtkWidget *rdp_display = gtk_drawing_area_new(); // todo: free memory
+    GtkWidget *rdp_display = gtk_drawing_area_new();
 
     ex_context->rdp_display = rdp_display;
 
@@ -278,6 +311,7 @@ GtkWidget *rdp_display_create(GtkWidget *rdp_viewer_window, ExtendedRdpContext *
     g_signal_connect(rdp_display, "button-release-event",G_CALLBACK (rdp_display_mouse_btn_released), ex_context);
     g_signal_connect(rdp_display, "scroll-event",G_CALLBACK (rdp_display_wheel_scrolled), ex_context);
     g_signal_connect(rdp_display, "draw", G_CALLBACK(rdp_display_event_on_draw), ex_context);
+    g_signal_connect(rdp_display, "configure-event", G_CALLBACK(rdp_display_event_on_configure), ex_context);
 
     return rdp_display;
 }

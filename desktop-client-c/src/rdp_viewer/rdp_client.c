@@ -30,6 +30,9 @@
 #include <errno.h>
 #include <stdio.h>
 #include <string.h>
+#include <math.h>
+
+#include <glib.h>
 
 #include <freerdp/freerdp.h>
 #include <freerdp/constants.h>
@@ -57,7 +60,9 @@
 #include "rdp_client.h"
 #include "rdp_cursor.h"
 
-#include "virt-viewer-util.h"
+#include "remote-viewer-util.h"
+
+#include "async.h"
 
 #define PROGRAMM_NAME "rdp_gtk_client"
 #define TAG CLIENT_TAG(PROGRAMM_NAME)
@@ -76,7 +81,6 @@ rdpContext* rdp_client_create_context()
     return context;
 }
 
-
 void rdp_client_set_credentials(ExtendedRdpContext *ex_context,
                                 const gchar *usename, const gchar *password, gchar *ip, int port)
 {
@@ -84,6 +88,13 @@ void rdp_client_set_credentials(ExtendedRdpContext *ex_context,
     ex_context->password = g_strdup(password);
     ex_context->ip = g_strdup(ip);
     ex_context->port = port;
+}
+
+void rdp_client_set_optimilal_image_size(ExtendedRdpContext *ex_context,
+                                         int optimal_image_width, int optimal_image_height)
+{
+    ex_context->optimal_image_width = optimal_image_width;
+    ex_context->optimal_image_height = optimal_image_height;
 }
 //===============================Thread for client routine==================================
 void rdp_client_routine(GTask   *task,
@@ -111,6 +122,15 @@ void rdp_client_routine(GTask   *task,
         g_strdup("-clipboard"),
         g_strdup("/sound:rate:44100,channel:2"),
         g_strdup("/cert-ignore"),
+        g_strdup("+drives"),
+        g_strdup("+home-drive"),
+        g_strdup("/usb:auto"),
+//        g_strdup("+window-drag"),
+        g_strdup_printf("/w:%i", tf->optimal_image_width),
+        g_strdup_printf("/h:%i", tf->optimal_image_height),
+//        g_strdup("/jpeg"),
+//        g_strdup("/jpeg-quality:10"),
+//        g_strdup("/codec-cache:jpeg"),
         NULL
     };
     int argc = sizeof(argv) / sizeof(char*) - 1;
@@ -146,6 +166,20 @@ fail:
     tf->is_running = FALSE;
 }
 
+void rdp_client_adjust_im_origin_point(ExtendedRdpContext* ex_context)
+{
+    if (ex_context->surface && ex_context->rdp_display) {
+
+        int delta_x = gtk_widget_get_allocated_width(ex_context->rdp_display) -
+                cairo_image_surface_get_width(ex_context->surface);
+        int delta_y = gtk_widget_get_allocated_height(ex_context->rdp_display) -
+                cairo_image_surface_get_height(ex_context->surface);
+
+        ex_context->im_origin_x = delta_x <= 0 ? 0.0: (double)delta_x * 0.5;
+        ex_context->im_origin_y = delta_y <= 0 ? 0.0: (double)delta_y * 0.5;
+    }
+}
+
 //static BOOL update_send_synchronize(rdpContext* context)
 //{
 //    //printf("%s\n", (const char *)__func__);
@@ -162,7 +196,7 @@ static BOOL rdp_begin_paint(rdpContext* context)
     // Lock mutex to protect buffer
     ExtendedRdpContext* tf = (ExtendedRdpContext*)context;
 
-    g_mutex_lock(&tf->primary_buffer_mutex);
+    //g_mutex_lock(&tf->primary_buffer_mutex);
 	return TRUE;
 }
 
@@ -178,12 +212,12 @@ static BOOL rdp_end_paint(rdpContext* context)
     ExtendedRdpContext* tf = (ExtendedRdpContext*)context;
 
     if (gdi->primary->hdc->hwnd->invalid->null) {
-        g_mutex_unlock(&tf->primary_buffer_mutex);
+        //g_mutex_unlock(&tf->primary_buffer_mutex);
         return TRUE;
     }
 
     if (gdi->primary->hdc->hwnd->ninvalid < 1) {
-        g_mutex_unlock(&tf->primary_buffer_mutex);
+        //g_mutex_unlock(&tf->primary_buffer_mutex);
         return TRUE;
     }
 
@@ -196,7 +230,7 @@ static BOOL rdp_end_paint(rdpContext* context)
     gdi->primary->hdc->hwnd->invalid->null = TRUE;
     gdi->primary->hdc->hwnd->ninvalid = 0;
 
-    g_mutex_unlock(&tf->primary_buffer_mutex);
+    //g_mutex_unlock(&tf->primary_buffer_mutex);
     return TRUE;
 }
 
@@ -333,6 +367,9 @@ static BOOL rdp_post_connect(freerdp* instance)
     int stride = cairo_format_stride_for_width(cairo_format, gdi->width);
     tf->surface = cairo_image_surface_create_for_data((unsigned char*)gdi->primary_buffer,
                                                       cairo_format, gdi->width, gdi->height, stride);
+
+    // calculate point in which the image is displayed
+    rdp_client_adjust_im_origin_point(tf);
 
     g_mutex_unlock(&tf->primary_buffer_mutex);
 
@@ -472,7 +509,8 @@ static BOOL rdp_client_new(freerdp* instance, rdpContext* context)
 	instance->VerifyCertificateEx = client_cli_verify_certificate_ex;
 	instance->VerifyChangedCertificateEx = client_cli_verify_changed_certificate_ex;
     instance->LogonErrorInfo = rdp_logon_error_info;
-	/* TODO: Client display set up */
+
+    g_mutex_init(&tf->primary_buffer_mutex);
 
 	return TRUE;
 }
@@ -480,19 +518,18 @@ static BOOL rdp_client_new(freerdp* instance, rdpContext* context)
 static void rdp_client_free(freerdp* instance G_GNUC_UNUSED, rdpContext* context)
 {
     printf("%s\n", (const char *)__func__);
-    //ExtendedRdpContext* tf = (ExtendedRdpContext*)instance->context;
 
 	if (!context)
 		return;
 
-    // some clean. todo: use safe string free
+    // some clean.
     ExtendedRdpContext* ex_context = (ExtendedRdpContext*)context;
-//    ex_context->usename;
-//    ex_context->password;
-//    ex_context->ip;
+
     free_memory_safely(&ex_context->usename);
     free_memory_safely(&ex_context->password);
     free_memory_safely(&ex_context->ip);
+
+    wair_for_mutex_and_clear(&ex_context->primary_buffer_mutex);
 }
 
 static int rdp_client_start(rdpContext* context)
@@ -500,8 +537,6 @@ static int rdp_client_start(rdpContext* context)
 	/* TODO: Start client related stuff */
     ExtendedRdpContext* tf = (ExtendedRdpContext*)context;
     printf("%s: %i\n", (const char *)__func__, tf->test_int);
-
-    g_mutex_init(&tf->primary_buffer_mutex); // todo: clear
 
 	return 0;
 }
@@ -511,10 +546,6 @@ static int rdp_client_stop(rdpContext* context)
 	/* TODO: Stop client related stuff */
     ExtendedRdpContext* tf = (ExtendedRdpContext*)context;
     printf("%s: %i\n", (const char *)__func__, tf->test_int);
-
-    g_mutex_lock(&tf->primary_buffer_mutex);
-    g_mutex_unlock(&tf->primary_buffer_mutex);
-    g_mutex_clear(&tf->primary_buffer_mutex);
 
 	return 0;
 }

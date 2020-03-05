@@ -24,7 +24,7 @@
 #include <glib/gi18n.h>
 #include <glib/gstdio.h>
 
-#include "virt-viewer-util.h"
+#include "remote-viewer-util.h"
 #include "virt-viewer-file.h"
 
 /*

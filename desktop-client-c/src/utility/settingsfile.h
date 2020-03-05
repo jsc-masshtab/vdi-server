@@ -10,6 +10,7 @@
 #include <gdk/gdkkeysyms.h>
 #include <glib/gtypes.h>
 
+const gchar *get_ini_file_name(void);
 
 gchar *read_str_from_ini_file(const gchar *group_name,  const gchar *key);
 void write_str_to_ini_file(const gchar *group_name,  const gchar *key, const gchar *str_value);

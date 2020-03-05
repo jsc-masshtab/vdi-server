@@ -20,6 +20,10 @@ FILE(GLOB SRC_CODE
         src/remote-viewer.c
         src/remote-viewer-connect.c
         src/remote-viewer-connect.h
+        src/remote-viewer-util.h
+        src/remote-viewer-util.c
+        src/remote-viewer-timed-revealer.c
+        src/remote-viewer-timed-revealer.h
         src/main.c
 
 # virt_viewer
@@ -27,10 +31,7 @@ FILE(GLOB SRC_CODE
         src/virt_viewer/virt-viewer-resources.c
         src/virt_viewer/virt-viewer-enums.h
         src/virt_viewer/virt-viewer-enums.c
-        
-        src/virt_viewer/virt-viewer-util.h
-        src/virt_viewer/virt-viewer-util.c
-        
+
         src/virt_viewer/virt-viewer-auth.h
         src/virt_viewer/virt-viewer-auth.c
         src/virt_viewer/virt-viewer-app.h
@@ -49,8 +50,6 @@ FILE(GLOB SRC_CODE
         src/virt_viewer/virt-viewer-vm-connection.c
         src/virt_viewer/virt-viewer-display-vte.h
         src/virt_viewer/virt-viewer-display-vte.c
-        src/virt_viewer/virt-viewer-timed-revealer.c
-        src/virt_viewer/virt-viewer-timed-revealer.h
         #HAVE_SPICE_GTK
         src/virt_viewer/virt-viewer-session-spice.h
         src/virt_viewer/virt-viewer-session-spice.c

@@ -25,3 +25,10 @@ void cancellable_sleep(gulong microseconds, volatile gboolean *running_flag)
         g_usleep(interval);
     }
 }
+
+void wair_for_mutex_and_clear(GMutex *cursor_mutex)
+{
+    g_mutex_lock(cursor_mutex);
+    g_mutex_unlock(cursor_mutex);
+    g_mutex_clear(cursor_mutex);
+}
