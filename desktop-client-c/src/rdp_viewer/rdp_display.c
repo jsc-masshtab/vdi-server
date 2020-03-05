@@ -282,15 +282,20 @@ static gboolean rdp_display_event_on_draw(GtkWidget* widget, cairo_t* context, g
 static gboolean rdp_display_event_on_configure(GtkWidget *widget G_GNUC_UNUSED,
                                                GdkEvent *event G_GNUC_UNUSED, gpointer user_data)
 {
-    ExtendedRdpContext *ex_contect = user_data;
-    rdp_client_adjust_im_origin_point(ex_contect);
+    ExtendedRdpContext *ex_contect = (ExtendedRdpContext *)user_data;
+
+    if (ex_contect && ex_contect->is_running) {
+        g_mutex_lock(&ex_contect->primary_buffer_mutex);
+        rdp_client_adjust_im_origin_point(ex_contect);
+        g_mutex_unlock(&ex_contect->primary_buffer_mutex);
+    }
 
     return TRUE;
 }
 
 GtkWidget *rdp_display_create(GtkWidget *rdp_viewer_window, ExtendedRdpContext *ex_context, UINT32 *last_rdp_error_p)
 {
-    GtkWidget *rdp_display = gtk_drawing_area_new(); // todo: free memory
+    GtkWidget *rdp_display = gtk_drawing_area_new();
 
     ex_context->rdp_display = rdp_display;
 
