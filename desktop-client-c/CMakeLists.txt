@@ -24,6 +24,8 @@ FILE(GLOB SRC_CODE
         src/remote-viewer-util.c
         src/remote-viewer-timed-revealer.c
         src/remote-viewer-timed-revealer.h
+        src/remote_viewer_start_settings.h
+        src/remote_viewer_start_settings.c
         src/main.c
 
 # virt_viewer

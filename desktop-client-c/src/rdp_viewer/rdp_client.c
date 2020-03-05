@@ -194,7 +194,7 @@ static BOOL rdp_begin_paint(rdpContext* context)
 	gdi->primary->hdc->hwnd->invalid->null = TRUE;
 
     // Lock mutex to protect buffer
-    ExtendedRdpContext* tf = (ExtendedRdpContext*)context;
+    //ExtendedRdpContext* tf = (ExtendedRdpContext*)context;
 
     //g_mutex_lock(&tf->primary_buffer_mutex);
 	return TRUE;
@@ -209,7 +209,7 @@ static BOOL rdp_end_paint(rdpContext* context)
     //printf("%s\n", (const char *)__func__);
 
     rdpGdi* gdi = context->gdi;
-    ExtendedRdpContext* tf = (ExtendedRdpContext*)context;
+    //ExtendedRdpContext* tf = (ExtendedRdpContext*)context;
 
     if (gdi->primary->hdc->hwnd->invalid->null) {
         //g_mutex_unlock(&tf->primary_buffer_mutex);
