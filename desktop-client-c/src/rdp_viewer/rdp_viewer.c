@@ -400,6 +400,9 @@ static void destroy_rdp_context(ExtendedRdpContext* ex_context)
 
 GtkResponseType rdp_viewer_start(const gchar *usename, const gchar *password, gchar *ip, int port)
 {
+    printf("%s usename %s\n", (const char *)__func__, usename);
+    printf("%s password %s\n", (const char *)__func__, password);
+    printf("%s ip %s\n", (const char *)__func__, ip);
     RdpViewerData rdp_viewer_data;
     rdp_viewer_data.dialog_window_response = GTK_RESPONSE_CLOSE;
 
@@ -467,11 +470,7 @@ GtkResponseType rdp_viewer_start(const gchar *usename, const gchar *password, gc
 
     // show
     gtk_window_set_position(GTK_WINDOW(rdp_viewer_window), GTK_WIN_POS_CENTER);
-    //gtk_window_resize(GTK_WINDOW(rdp_viewer_window), default_monitor_geometry.width, default_monitor_geometry.height);
-
-    //gtk_window_unfullscreen(GTK_WINDOW(rdp_viewer_window));
     gtk_window_resize(GTK_WINDOW(rdp_viewer_window), optimal_image_width, optimal_image_height);
-    //gtk_window_set_resizable(GTK_WINDOW(rdp_viewer_window), FALSE);
     gtk_widget_show_all(rdp_viewer_window);
 
     guint g_timeout_id = g_timeout_add(40, (GSourceFunc)gtk_update_v2, rdp_display);

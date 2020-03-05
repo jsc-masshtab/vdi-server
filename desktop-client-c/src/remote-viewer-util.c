@@ -734,7 +734,7 @@ configerror:
     g_hash_table_unref(displaymap);
     return NULL;
 }
-
+// todo: rename to free_string_safely
 void free_memory_safely(gchar **string_ptr){
 
     if(string_ptr && *string_ptr) {
