@@ -175,8 +175,8 @@ void rdp_client_adjust_im_origin_point(ExtendedRdpContext* ex_context)
         int delta_y = gtk_widget_get_allocated_height(ex_context->rdp_display) -
                 cairo_image_surface_get_height(ex_context->surface);
 
-        ex_context->im_origin_x = delta_x <= 0 ? 0.0: (double)delta_x * 0.5;
-        ex_context->im_origin_y = delta_y <= 0 ? 0.0: (double)delta_y * 0.5;
+        ex_context->im_origin_x = delta_x <= 0 ? 0.0 : (int)(delta_x * 0.5);
+        ex_context->im_origin_y = delta_y <= 0 ? 0.0 : (int)(delta_y * 0.5);
     }
 }
 
