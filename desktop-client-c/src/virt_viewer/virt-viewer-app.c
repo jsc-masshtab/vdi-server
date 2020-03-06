@@ -240,9 +240,9 @@ virt_viewer_app_simple_message_dialog(VirtViewerApp *self,
     msg = g_strdup_vprintf(fmt, vargs);
     va_end(vargs);
 
-//    dialog = virt_viewer_app_make_message_dialog(self, msg);
-//    gtk_dialog_run(GTK_DIALOG(dialog));
-//    gtk_widget_destroy(dialog);
+    dialog = virt_viewer_app_make_message_dialog(self, msg);
+    gtk_dialog_run(GTK_DIALOG(dialog));
+    gtk_widget_destroy(dialog);
 
     printf("%s \n", msg);
 
@@ -1523,6 +1523,9 @@ static void virt_viewer_app_auth_refused(VirtViewerSession *session,
      * VirtViewerApp needs to schedule a new connection to retry */
     priv->authretry = (!virt_viewer_session_can_retry_auth(session) &&
                        !virt_viewer_session_get_file(session));
+
+    // no point to try to connect if credentials are wrong
+    virt_viewer_stop_reconnect_poll(self);
 }
 
 static void virt_viewer_app_auth_unsupported(VirtViewerSession *session G_GNUC_UNUSED,

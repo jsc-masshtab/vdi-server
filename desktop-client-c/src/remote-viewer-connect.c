@@ -273,14 +273,6 @@ connect_button_clicked_cb(GtkButton *button G_GNUC_UNUSED, gpointer data)
 }
 
 static void
-connect_dialog_run(RemoteViewerData *ci)
-{
-    ci->loop = g_main_loop_new(NULL, FALSE);
-    g_main_loop_run(ci->loop);
-    g_main_loop_unref(ci->loop);
-}
-
-static void
 read_data_from_ini_file(RemoteViewerData *ci)
 {
     // set params save group
