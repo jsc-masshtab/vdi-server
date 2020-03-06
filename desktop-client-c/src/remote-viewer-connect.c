@@ -259,7 +259,7 @@ connect_button_clicked_cb(GtkButton *button G_GNUC_UNUSED, gpointer data)
 {
     RemoteViewerData *ci = data;
 
-    if (strlen(ci->connect_settings_data.ip) > 0) {
+    if (strlen_safely(ci->connect_settings_data.ip) > 0) {
         // In manual mode we shudown the loop.
         if (opt_manual_mode) {
             ci->dialog_window_response = GTK_RESPONSE_OK;

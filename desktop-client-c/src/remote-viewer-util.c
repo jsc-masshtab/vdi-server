@@ -735,12 +735,21 @@ configerror:
     return NULL;
 }
 // todo: rename to free_string_safely
-void free_memory_safely(gchar **string_ptr){
+void free_memory_safely(gchar **string_ptr)
+{
 
     if(string_ptr && *string_ptr) {
         g_free(*string_ptr);
         *string_ptr = NULL;
     }
+}
+
+size_t strlen_safely(const gchar * str)
+{
+    if (str)
+        return strlen(str);
+    else
+        return 0;
 }
 
 /*
