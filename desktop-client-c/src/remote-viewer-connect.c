@@ -98,6 +98,9 @@ set_data_from_gui_in_outer_pointers(RemoteViewerData *ci)
     *ci->port = g_strdup_printf("%i", ci->connect_settings_data.port);
     *ci->user = g_strdup(gtk_entry_get_text(GTK_ENTRY(ci->login_entry)));
     *ci->password = g_strdup(gtk_entry_get_text(GTK_ENTRY(ci->password_entry)));
+
+    set_current_remote_protocol(ci->connect_settings_data.remote_protocol_type);
+    *ci->remote_protocol_type = get_current_remote_protocol();
 }
 
 // save data to ini file
@@ -262,9 +265,6 @@ connect_button_clicked_cb(GtkButton *button G_GNUC_UNUSED, gpointer data)
             ci->dialog_window_response = GTK_RESPONSE_OK;
             set_data_from_gui_in_outer_pointers(ci);
 
-            set_current_remote_protocol(ci->connect_settings_data.remote_protocol_type);
-            *ci->remote_protocol_type = get_current_remote_protocol();
-
             shutdown_loop(ci->loop);
         } else {
             connect_to_vdi_server(ci);
@@ -308,7 +308,7 @@ read_data_from_ini_file(RemoteViewerData *ci)
 static void fast_forward_connect_to_prev_pool_if_enabled(RemoteViewerData *ci)
 {
     gboolean is_fastforward_conn_to_prev_pool =
-            read_int_from_ini_file("RemoteViewerConnect", "is_fastforward_conn_to_prev_pool");
+            read_int_from_ini_file("RemoteViewerConnect", "is_conn_to_prev_pool_btn_checked");
 
     static gboolean is_first_time = TRUE;
     if (is_fastforward_conn_to_prev_pool && is_first_time) {

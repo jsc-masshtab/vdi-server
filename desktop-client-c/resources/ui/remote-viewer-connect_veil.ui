@@ -46,48 +46,25 @@
           <object class="GtkLabel">
             <property name="visible">True</property>
             <property name="can_focus">False</property>
+            <property name="halign">start</property>
+            <property name="label" translatable="yes">Имя пользователя</property>
           </object>
           <packing>
-            <property name="expand">True</property>
+            <property name="expand">False</property>
             <property name="fill">True</property>
-            <property name="position">2</property>
+            <property name="position">3</property>
           </packing>
         </child>
         <child>
-          <object class="GtkBox">
+          <object class="GtkEntry" id="login-entry">
             <property name="visible">True</property>
-            <property name="can_focus">False</property>
-            <property name="homogeneous">True</property>
-            <child>
-              <object class="GtkLabel">
-                <property name="visible">True</property>
-                <property name="can_focus">False</property>
-                <property name="halign">start</property>
-                <property name="label" translatable="yes">Имя пользователя</property>
-              </object>
-              <packing>
-                <property name="expand">False</property>
-                <property name="fill">True</property>
-                <property name="position">0</property>
-              </packing>
-            </child>
-            <child>
-              <object class="GtkEntry" id="login-entry">
-                <property name="visible">True</property>
-                <property name="can_focus">True</property>
-                <property name="placeholder_text" translatable="yes">Пользователь</property>
-              </object>
-              <packing>
-                <property name="expand">True</property>
-                <property name="fill">True</property>
-                <property name="position">1</property>
-              </packing>
-            </child>
+            <property name="can_focus">True</property>
+            <property name="placeholder_text" translatable="yes">Пользователь</property>
           </object>
           <packing>
             <property name="expand">True</property>
             <property name="fill">True</property>
-            <property name="position">3</property>
+            <property name="position">4</property>
           </packing>
         </child>
         <child>
@@ -108,6 +85,18 @@
                 <property name="position">0</property>
               </packing>
             </child>
+          </object>
+          <packing>
+            <property name="expand">True</property>
+            <property name="fill">True</property>
+            <property name="position">5</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkBox">
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+            <property name="homogeneous">True</property>
             <child>
               <object class="GtkEntry" id="password-entry">
                 <property name="visible">True</property>
@@ -119,14 +108,14 @@
               <packing>
                 <property name="expand">True</property>
                 <property name="fill">True</property>
-                <property name="position">1</property>
+                <property name="position">0</property>
               </packing>
             </child>
           </object>
           <packing>
             <property name="expand">True</property>
             <property name="fill">True</property>
-            <property name="position">4</property>
+            <property name="position">6</property>
           </packing>
         </child>
         <child>
@@ -137,7 +126,7 @@
           <packing>
             <property name="expand">True</property>
             <property name="fill">True</property>
-            <property name="position">5</property>
+            <property name="position">7</property>
           </packing>
         </child>
         <child>
@@ -185,7 +174,7 @@
           <packing>
             <property name="expand">True</property>
             <property name="fill">True</property>
-            <property name="position">6</property>
+            <property name="position">8</property>
           </packing>
         </child>
         <child>
@@ -234,7 +223,7 @@
           <packing>
             <property name="expand">True</property>
             <property name="fill">True</property>
-            <property name="position">7</property>
+            <property name="position">9</property>
           </packing>
         </child>
       </object>
