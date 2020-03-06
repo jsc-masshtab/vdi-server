@@ -23,7 +23,7 @@
 
 #include <config.h>
 
-#include "virt-viewer-timed-revealer.h"
+#include "remote-viewer-timed-revealer.h"
 
 G_DEFINE_TYPE (VirtViewerTimedRevealer, virt_viewer_timed_revealer, GTK_TYPE_EVENT_BOX)
 

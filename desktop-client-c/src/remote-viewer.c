@@ -29,7 +29,7 @@
 #include "virt-viewer-auth.h"
 #include "virt-viewer-file.h"
 #include "virt-viewer-session.h"
-#include "virt-viewer-util.h"
+#include "remote-viewer-util.h"
 #include "remote-viewer.h"
 #include "remote-viewer-connect.h"
 #include "vdi_manager.h"

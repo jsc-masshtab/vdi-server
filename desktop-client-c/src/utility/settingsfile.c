@@ -6,6 +6,12 @@
 
 static const gchar *ini_file_path = "veil_client_settings.ini";
 
+const gchar *
+get_ini_file_name()
+{
+    return ini_file_path;
+}
+
 // Это конечно не оптимально открывать файл каждый раз чтоб записать или получить одно значение.
 // Но потери производительности не существенны, зато существенно облегчение работы с ini.
 /// str

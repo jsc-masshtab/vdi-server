@@ -9,7 +9,7 @@
 #include "settingsfile.h"
 //#include "virt-viewer-session-spice.h"
 #include "remote-viewer-connect.h"
-#include "virt-viewer-util.h"
+#include "remote-viewer-util.h"
 #include <glib/gi18n.h>
 #include <gdk/gdkkeysyms.h>
 
@@ -413,7 +413,7 @@ remote_viewer_connect_dialog(gchar **user, gchar **password,
     ci.remote_protocol_type = remote_protocol_type;
 
     /* Create the widgets */
-    builder = virt_viewer_util_load_ui("remote-viewer-connect_veil.ui");
+    builder = remote_viewer_util_load_ui("remote-viewer-connect_veil.ui");
     g_return_val_if_fail(builder != NULL, GTK_RESPONSE_NONE);
 
     window = GTK_WIDGET(gtk_builder_get_object(builder, "remote-viewer-connection-window"));

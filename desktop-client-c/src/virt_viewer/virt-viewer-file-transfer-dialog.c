@@ -21,7 +21,7 @@
 #include <config.h>
 
 #include "virt-viewer-file-transfer-dialog.h"
-#include "virt-viewer-util.h"
+#include "remote-viewer-util.h"
 #include <glib/gi18n.h>
 
 struct _VirtViewerFileTransferDialogPrivate

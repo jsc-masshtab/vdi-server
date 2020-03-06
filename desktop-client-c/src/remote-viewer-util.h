@@ -58,7 +58,7 @@ GQuark virt_viewer_error_quark(void);
 
 void virt_viewer_util_init(const char *appname);
 
-GtkBuilder *virt_viewer_util_load_ui(const char *name);
+GtkBuilder *remote_viewer_util_load_ui(const char *name);
 int virt_viewer_util_extract_host(const char *uristr,
                                   char **scheme,
                                   char **host,
@@ -84,7 +84,6 @@ GHashTable* virt_viewer_parse_monitor_mappings(gchar **mappings,
                                                const gsize nmappings,
                                                const gint nmonitors);
 
-// save memory free. todo: place in more common location since we have rdp viewer
 void free_memory_safely(gchar **string_ptr);
 
 #endif

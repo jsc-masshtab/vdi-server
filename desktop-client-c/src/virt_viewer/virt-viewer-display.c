@@ -29,7 +29,7 @@
 
 #include "virt-viewer-session.h"
 #include "virt-viewer-display.h"
-#include "virt-viewer-util.h"
+#include "remote-viewer-util.h"
 
 #define VIRT_VIEWER_DISPLAY_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE((o), VIRT_VIEWER_TYPE_DISPLAY, VirtViewerDisplayPrivate))
 

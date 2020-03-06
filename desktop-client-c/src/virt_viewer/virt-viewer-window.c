@@ -40,8 +40,8 @@
 #include "virt-viewer-display.h"
 #include "virt-viewer-session.h"
 #include "virt-viewer-app.h"
-#include "virt-viewer-util.h"
-#include "virt-viewer-timed-revealer.h"
+#include "remote-viewer-util.h"
+#include "remote-viewer-timed-revealer.h"
 #include "remote-viewer.h"
 
 #include "vdi_api_session.h"
@@ -324,7 +324,7 @@ virt_viewer_window_init (VirtViewerWindow *self)
     priv->notebook = virt_viewer_notebook_new();
     gtk_widget_show(GTK_WIDGET(priv->notebook));
 
-    priv->builder = virt_viewer_util_load_ui("virt-viewer_veil.ui");
+    priv->builder = remote_viewer_util_load_ui("virt-viewer_veil.ui");
 
     gtk_widget_set_sensitive(GTK_WIDGET(gtk_builder_get_object(self->priv->builder, "menu-send")), FALSE);
     gtk_widget_set_sensitive(GTK_WIDGET(gtk_builder_get_object(self->priv->builder, "menu-view-zoom")), FALSE);
@@ -1078,7 +1078,7 @@ virt_viewer_window_menu_help_about(GtkWidget *menu G_GNUC_UNUSED,
     GtkWidget *dialog;
     GdkPixbuf *icon;
 
-    about = virt_viewer_util_load_ui("virt-viewer-about.ui");
+    about = remote_viewer_util_load_ui("virt-viewer-about.ui");
 
     dialog = GTK_WIDGET(gtk_builder_get_object(about, "about"));
     gtk_about_dialog_set_version ((GtkAboutDialog *)dialog, VERSION);
