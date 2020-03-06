@@ -165,3 +165,4 @@ target_link_libraries(
     thin_client_veil # exec
     ${LIBS} # libs
 )
+# freerdp2-dev  libfreerdp-client2-2  libwinpr2-2 libwinpr2-dev

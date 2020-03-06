@@ -52,6 +52,8 @@ typedef struct
 
     gchar **user;
     gchar **password;
+
+    gchar **domain;
     gchar **ip;
     gchar **port;
 
@@ -94,6 +96,8 @@ set_auth_dialog_state(AuthDialogState auth_dialog_state, RemoteViewerData *ci)
 static void
 set_data_from_gui_in_outer_pointers(RemoteViewerData *ci)
 {
+    *ci->domain = g_strdup(ci->connect_settings_data.domain);
+    printf("%s *ci->domain %s\n", (const char *)__func__, *ci->domain);
     *ci->ip = g_strdup(ci->connect_settings_data.ip);
     *ci->port = g_strdup_printf("%i", ci->connect_settings_data.port);
     *ci->user = g_strdup(gtk_entry_get_text(GTK_ENTRY(ci->login_entry)));
@@ -314,9 +318,9 @@ static void fast_forward_connect_to_prev_pool_if_enabled(RemoteViewerData *ci)
 *
 * @brief Opens connect dialog for remote viewer
 */
-// todo: порт передавать как число, а не строку
+// todo: порт передавать как число, а не строку. Передавать структуру, а не 100500 аргументов
 GtkResponseType
-remote_viewer_connect_dialog(gchar **user, gchar **password,
+remote_viewer_connect_dialog(gchar **user, gchar **password, gchar **domain,
                              gchar **ip, gchar **port, gboolean *is_connect_to_prev_pool,
                              gchar **vm_verbose_name, VdiVmRemoteProtocol *remote_protocol_type)
 {
@@ -331,6 +335,7 @@ remote_viewer_connect_dialog(gchar **user, gchar **password,
     // save pointers
     ci.user = user;
     ci.password = password;
+    ci.domain = domain;
     ci.ip = ip;
     ci.port = port;
     ci.is_connect_to_prev_pool_ptr = is_connect_to_prev_pool;

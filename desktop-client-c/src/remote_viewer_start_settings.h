@@ -7,6 +7,7 @@
 
 typedef struct{
 
+   gchar *domain;
    gchar *ip;
    int port;
 

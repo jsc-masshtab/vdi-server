@@ -62,6 +62,7 @@ typedef struct {
     // credentials
     gchar *usename;
     gchar *password;
+    gchar *domain;
     gchar *ip;
     int port;
 
@@ -77,7 +78,7 @@ typedef struct {
 rdpContext* rdp_client_create_context(void);
 
 void rdp_client_set_credentials(ExtendedRdpContext *ex_context,
-                                const gchar *usename, const gchar *password, gchar *ip, int port);
+                                const gchar *usename, const gchar *password, gchar *domain, gchar *ip, int port);
 void rdp_client_set_optimilal_image_size(ExtendedRdpContext *ex_context,
                                          int optimal_image_width, int optimal_image_height);
 

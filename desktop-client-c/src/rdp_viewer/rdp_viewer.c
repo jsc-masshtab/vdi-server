@@ -398,11 +398,9 @@ static void destroy_rdp_context(ExtendedRdpContext* ex_context)
     }
 }
 
-GtkResponseType rdp_viewer_start(const gchar *usename, const gchar *password, gchar *ip, int port)
+GtkResponseType rdp_viewer_start(const gchar *usename, const gchar *password, gchar *domain, gchar *ip, int port)
 {
-    printf("%s usename %s\n", (const char *)__func__, usename);
-    printf("%s password %s\n", (const char *)__func__, password);
-    printf("%s ip %s\n", (const char *)__func__, ip);
+    printf("%s domain %s\n", (const char *)__func__, domain);
     RdpViewerData rdp_viewer_data;
     rdp_viewer_data.dialog_window_response = GTK_RESPONSE_CLOSE;
 
@@ -411,7 +409,7 @@ GtkResponseType rdp_viewer_start(const gchar *usename, const gchar *password, gc
     // create RDP context
     UINT32 last_rdp_error = 0;
     ExtendedRdpContext *ex_context = create_rdp_context(&last_rdp_error); // deleted upon widget deletion
-    rdp_client_set_credentials(ex_context, usename, password, ip, port);
+    rdp_client_set_credentials(ex_context, usename, password, domain, ip, port);
 
     const int max_image_width = 1920;
     const int max_image_height = 1080;

@@ -16,6 +16,7 @@ typedef struct{
     GtkBuilder *builder;
     GtkWidget *window;
 
+    GtkWidget *domain_entry;
     GtkWidget *address_entry;
     GtkWidget *port_entry;
     GtkWidget *ldap_checkbutton;
@@ -47,6 +48,9 @@ fill_connect_settings_data_from_gui(ConnectSettingsData *connect_settings_data, 
 {
     if (dialog_data->dialog_window_response != GTK_RESPONSE_OK)
         return;
+
+    free_memory_safely(&connect_settings_data->domain);
+     connect_settings_data->domain = g_strdup(gtk_entry_get_text(GTK_ENTRY(dialog_data->domain_entry)));
 
    free_memory_safely(&connect_settings_data->ip);
     connect_settings_data->ip = g_strdup(gtk_entry_get_text(GTK_ENTRY(dialog_data->address_entry)));
@@ -91,6 +95,11 @@ static void
 fill_connect_settings_dialog_data(ConnectSettingsDialogData *dialog_data, ConnectSettingsData *connect_settings_data)
 {
     const gchar *paramToFileGrpoup = opt_manual_mode ? "RemoteViewerConnectManual" : "RemoteViewerConnect";
+
+    // domain
+    if (connect_settings_data->domain) {
+        gtk_entry_set_text(GTK_ENTRY(dialog_data->domain_entry), connect_settings_data->domain);
+    }
     // ip
     if (connect_settings_data->ip) {
         gtk_entry_set_text(GTK_ENTRY(dialog_data->address_entry), connect_settings_data->ip);
@@ -122,8 +131,10 @@ save_data_to_ini_file(ConnectSettingsDialogData *dialog_data)
     if (dialog_data->dialog_window_response != GTK_RESPONSE_OK)
         return;
 
-    // ip port
     const gchar *paramToFileGrpoup = opt_manual_mode ? "RemoteViewerConnectManual" : "RemoteViewerConnect";
+    // domain
+    write_str_to_ini_file(paramToFileGrpoup, "domain", gtk_entry_get_text(GTK_ENTRY(dialog_data->domain_entry)));
+    // ip port
     write_str_to_ini_file(paramToFileGrpoup, "ip", gtk_entry_get_text(GTK_ENTRY(dialog_data->address_entry)));
     write_str_to_ini_file(paramToFileGrpoup, "port", gtk_entry_get_text(GTK_ENTRY(dialog_data->port_entry)));
     // ldap
@@ -153,6 +164,7 @@ GtkResponseType remote_viewer_start_settings_dialog(ConnectSettingsData *connect
     dialog_data.window = GTK_WIDGET(gtk_builder_get_object(dialog_data.builder, "start-settings-window"));
     dialog_data.bt_cancel = GTK_WIDGET(gtk_builder_get_object(dialog_data.builder, "btn_cancel"));
     dialog_data.bt_ok = GTK_WIDGET(gtk_builder_get_object(dialog_data.builder, "btn_ok"));
+    dialog_data.domain_entry = GTK_WIDGET(gtk_builder_get_object(dialog_data.builder, "domain-entry"));
     dialog_data.address_entry = GTK_WIDGET(gtk_builder_get_object(dialog_data.builder, "connection-address-entry"));
     dialog_data.port_entry = GTK_WIDGET(gtk_builder_get_object(dialog_data.builder, "connection-port-entry"));
     dialog_data.ldap_checkbutton = GTK_WIDGET(gtk_builder_get_object(dialog_data.builder, "ldap-button"));
@@ -200,9 +212,13 @@ void
 fill_connect_settings_data_from_ini_file(ConnectSettingsData *connect_settings_data)
 {
     const gchar *paramToFileGrpoup = opt_manual_mode ? "RemoteViewerConnectManual" : "RemoteViewerConnect";
+    // domain
+    free_memory_safely(&connect_settings_data->domain);
+    connect_settings_data->domain = read_str_from_ini_file(paramToFileGrpoup, "domain");
+    printf("%s connect_settings_data->domain %s\n", (const char *)__func__, connect_settings_data->domain);
     // ip
     free_memory_safely(&connect_settings_data->ip);
-    connect_settings_data->ip = read_str_from_ini_file(paramToFileGrpoup, "ip"); // memory must be freed!
+    connect_settings_data->ip = read_str_from_ini_file(paramToFileGrpoup, "ip");
     // port
     connect_settings_data->port = read_int_from_ini_file(paramToFileGrpoup, "port");
     // ldap

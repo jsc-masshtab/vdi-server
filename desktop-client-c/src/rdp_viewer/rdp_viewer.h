@@ -3,6 +3,6 @@
 
 #include <gtk/gtk.h>
 
-GtkResponseType rdp_viewer_start(const gchar *usename, const gchar *password, gchar *ip, int port);
+GtkResponseType rdp_viewer_start(const gchar *usename, const gchar *password, gchar *domain, gchar *ip, int port);
 
 #endif /* RDK_VIEWER_H */

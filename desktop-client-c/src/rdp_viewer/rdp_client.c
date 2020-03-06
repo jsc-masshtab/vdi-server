@@ -82,10 +82,11 @@ rdpContext* rdp_client_create_context()
 }
 
 void rdp_client_set_credentials(ExtendedRdpContext *ex_context,
-                                const gchar *usename, const gchar *password, gchar *ip, int port)
+                                const gchar *usename, const gchar *password, gchar *domain, gchar *ip, int port)
 {
     ex_context->usename = g_strdup(usename);
     ex_context->password = g_strdup(password);
+    ex_context->domain = g_strdup(domain);
     ex_context->ip = g_strdup(ip);
     ex_context->port = port;
 }
@@ -112,11 +113,16 @@ void rdp_client_routine(GTask   *task,
     if (!context)
         goto fail;
 
+//    printf("%s usename %s\n", (const char *)__func__, usename);
+//    printf("%s password %s\n", (const char *)__func__, password);
+    printf("%s tf->usename %s\n", (const char *)__func__, tf->usename);
+    printf("%s tf->domain %s\n", (const char *)__func__, tf->domain);
     // /v:192.168.20.104 /u:solomin /p:5555 -clipboard /sound:rate:44100,channel:2 /cert-ignore
     //int argc = 8;
     char* argv[] = {
         g_strdup(PROGRAMM_NAME),
         g_strdup_printf("/v:%s", tf->ip),
+        g_strdup_printf("/d:%s", tf->domain),
         g_strdup_printf("/u:%s", tf->usename),
         g_strdup_printf("/p:%s", tf->password),
         g_strdup("-clipboard"),
@@ -527,6 +533,7 @@ static void rdp_client_free(freerdp* instance G_GNUC_UNUSED, rdpContext* context
 
     free_memory_safely(&ex_context->usename);
     free_memory_safely(&ex_context->password);
+    free_memory_safely(&ex_context->domain);
     free_memory_safely(&ex_context->ip);
 
     wair_for_mutex_and_clear(&ex_context->primary_buffer_mutex);
