@@ -281,11 +281,12 @@ static void set_spice_session_data(VirtViewerApp *app, gchar *ip, gchar *port, g
     virt_viewer_session_spice_set_credentials(user, password);
 }
 
-static void remote_viewer_free_auth_data(gchar **user, gchar **password,
+static void remote_viewer_free_auth_data(gchar **user, gchar **password, gchar **domain,
                                          gchar **ip, gchar **port, gchar **vm_verbose_name)
 {
     free_memory_safely(user);
     free_memory_safely(password);
+    //free_memory_safely(domain);
     free_memory_safely(ip);
     free_memory_safely(port);
     free_memory_safely(vm_verbose_name);
@@ -299,6 +300,7 @@ remote_viewer_start(VirtViewerApp *app, GError **err G_GNUC_UNUSED, RemoteViewer
     gboolean ret = FALSE;
     gchar *user = NULL;
     gchar *password = NULL;
+    gchar *domain = NULL; // for RDP
     gchar *ip = NULL;
     gchar *port = NULL;
     gboolean is_connect_to_prev_pool = FALSE;
@@ -317,11 +319,11 @@ remote_viewer_start(VirtViewerApp *app, GError **err G_GNUC_UNUSED, RemoteViewer
 retry_auth:
     {
         // Забираем из ui адрес и порт
-        GtkResponseType dialog_window_response = remote_viewer_connect_dialog(&user, &password, &ip, &port,
+        GtkResponseType dialog_window_response = remote_viewer_connect_dialog(&user, &password, &domain, &ip, &port,
                                          &is_connect_to_prev_pool, &vm_verbose_name, &remote_protocol_type);
 
         if (dialog_window_response == GTK_RESPONSE_CLOSE) {
-            remote_viewer_free_auth_data(&user, &password, &ip, &port, &vm_verbose_name);
+            remote_viewer_free_auth_data(&user, &password, &domain, &ip, &port, &vm_verbose_name);
             return FALSE;
         }
     }
@@ -336,8 +338,8 @@ retry_connnect_to_vm:
 //            printf("%s TEST user %s\n", (const char *)__func__, user);
 //            printf("%s TEST password %s\n", (const char *)__func__, password);
 //            printf("%s TEST ip %s\n", (const char *)__func__, ip);
-            GtkResponseType rdp_viewer_res = rdp_viewer_start(user, password, ip, 0);
-            remote_viewer_free_auth_data(&user, &password, &ip, &port, &vm_verbose_name);
+            GtkResponseType rdp_viewer_res = rdp_viewer_start(user, password, domain, ip, 0);
+            remote_viewer_free_auth_data(&user, &password, &domain, &ip, &port, &vm_verbose_name);
             if (rdp_viewer_res == GTK_RESPONSE_CANCEL)
                 goto retry_auth;
             else if (rdp_viewer_res == GTK_RESPONSE_CLOSE)
@@ -348,7 +350,7 @@ retry_connnect_to_vm:
         // Создание сессии
         if (!virt_viewer_app_create_session(app, "spice", &error)) {
             virt_viewer_app_simple_message_dialog(app, _("Unable to connect: %s"), error->message);
-            remote_viewer_free_auth_data(&user, &password, &ip, &port, &vm_verbose_name);
+            remote_viewer_free_auth_data(&user, &password, &domain, &ip, &port, &vm_verbose_name);
             return FALSE;
         }
 
@@ -363,7 +365,7 @@ retry_connnect_to_vm:
             }
 
             virt_viewer_app_simple_message_dialog(app, _("Unable to connect: %s"), error->message);
-            remote_viewer_free_auth_data(&user, &password, &ip, &port, &vm_verbose_name);
+            remote_viewer_free_auth_data(&user, &password, &domain, &ip, &port, &vm_verbose_name);
             return FALSE;
         }
 
@@ -371,7 +373,7 @@ retry_connnect_to_vm:
         create_loop_and_launch(&virt_viewer_loop);
 
         // go back to auth or quit
-        remote_viewer_free_auth_data(&user, &password, &ip, &port, &vm_verbose_name);
+        remote_viewer_free_auth_data(&user, &password, &domain, &ip, &port, &vm_verbose_name);
         if (virt_viewer_app_is_quitting(app)) {
             return FALSE;
         }
@@ -390,18 +392,18 @@ retry_connnect_to_vm:
         //Если is_connect_to_prev_pool true, то подключение к пред. запомненому пулу,
         // минуя vdi manager window
         if (!is_connect_to_prev_pool) {
-            remote_viewer_free_auth_data(&user, &password, &ip, &port, &vm_verbose_name);
+            remote_viewer_free_auth_data(&user, &password, &domain, &ip, &port, &vm_verbose_name);
 
             // show VDI manager window
             GtkResponseType vdi_dialog_window_response =
                     vdi_manager_dialog(virt_viewer_window_get_window(main_window), &ip, &port,
                                        &password, &vm_verbose_name, &remote_protocol_type);
             if (vdi_dialog_window_response == GTK_RESPONSE_CANCEL) {
-                remote_viewer_free_auth_data(&user, &password, &ip, &port, &vm_verbose_name);
+                remote_viewer_free_auth_data(&user, &password, &domain, &ip, &port, &vm_verbose_name);
                 goto retry_auth;
             }
             else if (vdi_dialog_window_response == GTK_RESPONSE_CLOSE) {
-                remote_viewer_free_auth_data(&user, &password, &ip, &port, &vm_verbose_name);
+                remote_viewer_free_auth_data(&user, &password, &domain, &ip, &port, &vm_verbose_name);
                 return FALSE;
             }
         }
@@ -411,12 +413,12 @@ retry_connnect_to_vm:
 
         // connect to vm depending on remote protocol
         if (remote_protocol_type == VDI_RDP_PROTOCOL) {
-            GtkResponseType rdp_viewer_res = rdp_viewer_start(get_vdi_username(), get_vdi_password(), ip, 0);
+            GtkResponseType rdp_viewer_res = rdp_viewer_start(get_vdi_username(), get_vdi_password(), domain, ip, 0);
             //printf("user: %s   pass: %s", get_vdi_username(), get_vdi_password());
             //rdp_viewer_start("user", "user", ip, NULL); // todo: Remove later
             // quit if required
             if (rdp_viewer_res == GTK_RESPONSE_CLOSE) {
-                remote_viewer_free_auth_data(&user, &password, &ip, &port, &vm_verbose_name);
+                remote_viewer_free_auth_data(&user, &password, &domain, &ip, &port, &vm_verbose_name);
                 return FALSE;
             }
 
@@ -432,12 +434,12 @@ retry_connnect_to_vm:
 
             // quit if required
             if (virt_viewer_app_is_quitting(app)) {
-                remote_viewer_free_auth_data(&user, &password, &ip, &port, &vm_verbose_name);
+                remote_viewer_free_auth_data(&user, &password, &domain, &ip, &port, &vm_verbose_name);
                 return FALSE;
             }
         }
 
-        remote_viewer_free_auth_data(&user, &password, &ip, &port, &vm_verbose_name);
+        remote_viewer_free_auth_data(&user, &password, &ip, &domain, &port, &vm_verbose_name);
         if (!is_connect_to_prev_pool)
             goto retry_connnect_to_vm;
         else

@@ -24,6 +24,8 @@ FILE(GLOB SRC_CODE
         src/remote-viewer-util.c
         src/remote-viewer-timed-revealer.c
         src/remote-viewer-timed-revealer.h
+        src/remote_viewer_start_settings.h
+        src/remote_viewer_start_settings.c
         src/main.c
 
 # virt_viewer
@@ -163,3 +165,4 @@ target_link_libraries(
     thin_client_veil # exec
     ${LIBS} # libs
 )
+# freerdp2-dev  libfreerdp-client2-2  libwinpr2-2 libwinpr2-dev

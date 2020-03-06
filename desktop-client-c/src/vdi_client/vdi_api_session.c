@@ -93,7 +93,7 @@ static gboolean refresh_vdi_session_token()
                                    vdiSession.vdi_username, vdiSession.vdi_password, ldap_str);
     printf("%s  messageBodyStr %s\n", (const char *)__func__, messageBodyStr);
     soup_message_set_request(msg, "application/json",
-                             SOUP_MEMORY_COPY, messageBodyStr, strlen (messageBodyStr));
+                             SOUP_MEMORY_COPY, messageBodyStr, strlen_safely(messageBodyStr));
     g_free(messageBodyStr);
     g_free(ldap_str);
 
@@ -279,7 +279,7 @@ gchar *api_call(const char *method, const char *uri_string, const gchar *body_st
     // set body
     if(body_str)
         soup_message_set_request (msg, "application/json",
-                                  SOUP_MEMORY_COPY, body_str, strlen (body_str));
+                                  SOUP_MEMORY_COPY, body_str, strlen_safely(body_str));
 
     // start attempts
     const int max_attempt_count = 2;

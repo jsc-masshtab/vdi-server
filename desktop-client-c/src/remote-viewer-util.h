@@ -86,6 +86,8 @@ GHashTable* virt_viewer_parse_monitor_mappings(gchar **mappings,
 
 void free_memory_safely(gchar **string_ptr);
 
+size_t strlen_safely(const gchar * str);
+
 #endif
 
 /*

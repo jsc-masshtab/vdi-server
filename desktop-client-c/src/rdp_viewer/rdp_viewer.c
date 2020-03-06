@@ -398,8 +398,9 @@ static void destroy_rdp_context(ExtendedRdpContext* ex_context)
     }
 }
 
-GtkResponseType rdp_viewer_start(const gchar *usename, const gchar *password, gchar *ip, int port)
+GtkResponseType rdp_viewer_start(const gchar *usename, const gchar *password, gchar *domain, gchar *ip, int port)
 {
+    printf("%s domain %s\n", (const char *)__func__, domain);
     RdpViewerData rdp_viewer_data;
     rdp_viewer_data.dialog_window_response = GTK_RESPONSE_CLOSE;
 
@@ -408,7 +409,7 @@ GtkResponseType rdp_viewer_start(const gchar *usename, const gchar *password, gc
     // create RDP context
     UINT32 last_rdp_error = 0;
     ExtendedRdpContext *ex_context = create_rdp_context(&last_rdp_error); // deleted upon widget deletion
-    rdp_client_set_credentials(ex_context, usename, password, ip, port);
+    rdp_client_set_credentials(ex_context, usename, password, domain, ip, port);
 
     const int max_image_width = 1920;
     const int max_image_height = 1080;
@@ -467,11 +468,7 @@ GtkResponseType rdp_viewer_start(const gchar *usename, const gchar *password, gc
 
     // show
     gtk_window_set_position(GTK_WINDOW(rdp_viewer_window), GTK_WIN_POS_CENTER);
-    //gtk_window_resize(GTK_WINDOW(rdp_viewer_window), default_monitor_geometry.width, default_monitor_geometry.height);
-
-    //gtk_window_unfullscreen(GTK_WINDOW(rdp_viewer_window));
     gtk_window_resize(GTK_WINDOW(rdp_viewer_window), optimal_image_width, optimal_image_height);
-    //gtk_window_set_resizable(GTK_WINDOW(rdp_viewer_window), FALSE);
     gtk_widget_show_all(rdp_viewer_window);
 
     guint g_timeout_id = g_timeout_add(40, (GSourceFunc)gtk_update_v2, rdp_display);

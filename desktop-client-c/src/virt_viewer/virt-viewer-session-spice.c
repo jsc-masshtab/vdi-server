@@ -702,9 +702,17 @@ virt_viewer_session_spice_main_channel_event(SpiceChannel *channel,
                                             SPICE_CLIENT_ERROR,
                                             SPICE_CLIENT_ERROR_AUTH_NEEDS_PASSWORD_AND_USERNAME);
 
-        if (self->priv->pass_try > 0)
+
+        if (self->priv->pass_try == 1) {
             g_signal_emit_by_name(session, "session-auth-refused",
                                   error != NULL ? error->message : _("Invalid password"));
+        }
+        // stop after 2 tries
+        else if (self->priv->pass_try > 1) {
+            self->priv->pass_try = 0;
+            g_signal_emit_by_name(session, "session-cancelled");
+        }
+
         self->priv->pass_try++;
 
         /* The username is firstly pre-filled with the username of the current
@@ -713,57 +721,26 @@ virt_viewer_session_spice_main_channel_event(SpiceChannel *channel,
          * Unfortunately, we don't have a clear way to differantiate bewteen
          * invalid username and invalid password. So, in both cases the username
          * entry will be pre-filled with the username used in the previous attempt. */
-        if (username_required) {
-//            // set username
-//            if(take_extern_credentials){
-//                user = g_strdup(spice_session_username);
-//            }
-//            else {
-//                g_object_get(self->priv->session, "username", &user, NULL);
-//                if (user == NULL || *user == '\0')
-//                    user = g_strdup(g_get_user_name());
-//            }
+        if (username_required)
             user = g_strdup(spice_session_username);
-        }
 
         g_object_get(self->priv->session, "host", &host, NULL);
 
         // set password
         password = g_strdup(spice_session_password);
-        ret = GTK_RESPONSE_OK;
-//        if (take_extern_credentials) {
-//            password = g_strdup(spice_session_password);
-//            ret = GTK_RESPONSE_OK;
-//            take_extern_credentials = FALSE;
-//        }
-//        // Если с формы получили неправильный пароль , то вызываем форму авторизации
-//        else{
-//            ret = virt_viewer_auth_collect_credentials(self->priv->main_window,
-//                                                       "SPICE",
-//                                                       host,
-//                                                       username_required ? &user : NULL,
-//                                                       &password);
-//        }
 
         g_free(host);
-        if (!ret) {
-            /* ret is false when dialog did not return GTK_RESPONSE_OK. We
-             * should ignore auth error dialog if user has cancelled or closed
-             * the dialog */
-            self->priv->pass_try = 0;
-            g_signal_emit_by_name(session, "session-cancelled");
-        } else {
-            gboolean openfd;
 
-            g_object_set(self->priv->session, "username", user, NULL);
-            g_object_set(self->priv->session, "password", password, NULL);
-            g_object_get(self->priv->session, "client-sockets", &openfd, NULL);
+        gboolean openfd;
+        g_object_set(self->priv->session, "username", user, NULL);
+        g_object_set(self->priv->session, "password", password, NULL);
+        g_object_get(self->priv->session, "client-sockets", &openfd, NULL);
 
-            if (openfd)
-                spice_session_open_fd(self->priv->session, -1);
-            else
-                spice_session_connect(self->priv->session);
-        }
+        if (openfd)
+            spice_session_open_fd(self->priv->session, -1);
+        else
+            spice_session_connect(self->priv->session);
+
         break;
     }
     case SPICE_CHANNEL_ERROR_CONNECT:
