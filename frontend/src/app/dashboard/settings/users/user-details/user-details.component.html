@@ -20,25 +20,92 @@
       <fa-icon [icon]="['fas','sync-alt']"></fa-icon>
     </button>
 
-    <button *ngIf="entity?.is_active" (click)="deactivateUser()" title="Деактивация пользователя" class="btn-control">
-      <!-- <fa-icon [icon]="['fas','trash-alt']" size="xs"></fa-icon> -->
-      <span class="name">Деактивация пользователя</span>
-    </button>
+    <ng-container *ngIf="menuActive === 'info'">
+      <button *ngIf="entity?.is_active" (click)="deactivateUser()" title="Деактивация пользователя" class="btn-control">
+        <!-- <fa-icon [icon]="['fas','trash-alt']" size="xs"></fa-icon> -->
+        <span class="name">Деактивация пользователя</span>
+      </button>
 
-    <button *ngIf="!entity?.is_active" (click)="activateUser()" title="Активация пользователя" class="btn-control">
-      <!-- <fa-icon [icon]="['fas','trash-alt']" size="xs"></fa-icon> -->
-      <span class="name">Активация пользователя</span>
-    </button>
+      <button *ngIf="!entity?.is_active" (click)="activateUser()" title="Активация пользователя" class="btn-control">
+        <!-- <fa-icon [icon]="['fas','trash-alt']" size="xs"></fa-icon> -->
+        <span class="name">Активация пользователя</span>
+      </button>
 
-    <button (click)="changeUserPassword()" title="Сброс пароля" class="btn-control">
-      <!-- <fa-icon [icon]="['fas','trash-alt']" size="xs"></fa-icon> -->
-      <span class="name">Сброс пароля</span>
-    </button>
+      <button (click)="changeUserPassword()" title="Сброс пароля" class="btn-control">
+        <!-- <fa-icon [icon]="['fas','trash-alt']" size="xs"></fa-icon> -->
+        <span class="name">Сброс пароля</span>
+      </button>
+    </ng-container>
+
+    <ng-container *ngIf="menuActive === 'roles'">
+      <button class="btn-control" (click)="addRole()" title="Добавить роль">
+        <fa-icon [icon]="['fas','plus-circle']" size="xs"></fa-icon>
+        <span class="name">Добавить роль</span>
+      </button>
+
+      <button *ngIf="entity?.assigned_roles?.length" class="btn-control" (click)="removeRole()" title="Удалить роль">
+        <fa-icon [icon]="['fas','trash-alt']" size="xs"></fa-icon>
+        <span class="name">Удалить роль</span>
+      </button>
+    </ng-container>
+
+    <ng-container *ngIf="menuActive === 'groups'">
+      <button class="btn-control" (click)="addGroup()" title="Добавить группу">
+        <fa-icon [icon]="['fas','plus-circle']" size="xs"></fa-icon>
+        <span class="name">Добавить группу</span>
+      </button>
+
+      <button *ngIf="entity?.assigned_groups?.length" class="btn-control" (click)="removeGroup()" title="Удалить группу" >
+        <fa-icon [icon]="['fas','trash-alt']" size="xs"></fa-icon>
+        <span class="name">Удалить группу</span>
+      </button>
+    </ng-container>
+    
   </div>
 
   <div class="details-row">
-    <vdi-table-into [item]="entity" [collection]="collection" [style.width]="'100%'"
-      (edit)="edit($event)"></vdi-table-into>
+    <ul class="details-menu">
+      <li (click)="routeTo('info')" [class.active]="menuActive === 'info'" title="Информация о группе">
+        <fa-icon [icon]="['fas','chart-bar']"></fa-icon><span class="name">Информация</span>
+      </li>
+      <li (click)="routeTo('roles')" [class.active]="menuActive === 'roles'" title="Роли пользователя">
+        <fa-icon [icon]="['fas','users-cog']"></fa-icon><span class="name">Роли</span>
+      </li>
+      <li (click)="routeTo('groups')" [class.active]="menuActive === 'groups'" title="Группы пользователя">
+        <fa-icon [icon]="['fas','users-cog']"></fa-icon><span class="name">Группы</span>
+      </li>
+    </ul>
+
+    <div class="details-slide">
+      <div class="details-slide-header">
+        <ng-container *ngIf="menuActive === 'info'">Информация о пользователе</ng-container>
+        <ng-container *ngIf="menuActive === 'roles'">Роли пользователя</ng-container>
+        <ng-container *ngIf="menuActive === 'groups'">Группы пользователя</ng-container>
+      </div>
+
+      <div class="details-slide-into">
+        <vdi-table-into 
+          *ngIf="menuActive === 'info'" 
+          [item]="entity" 
+          [collection]="collection" 
+          (edit)="edit($event)">
+        </vdi-table-into>
+
+        <vdi-table-component 
+          *ngIf="menuActive === 'roles'" 
+          [data]="entity.assigned_roles"
+          entity="users"
+          [collection]="collection_roles">
+        </vdi-table-component>
+
+        <vdi-table-component 
+          *ngIf="menuActive === 'groups'" 
+          [data]="entity.assigned_groups" 
+          entity="users"
+          [collection]="collection_groups">
+        </vdi-table-component>
+      </div>
+    </div>
   </div>
 
 </div>

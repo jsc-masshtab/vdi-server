@@ -1,0 +1,33 @@
+<div class="form">
+
+  <div class="form-header">
+    <h1>Добавление роли пользователю {{data?.verbose_name}}</h1>
+    <button [mat-dialog-close]="true" class="form-close"><fa-icon [icon]="['fas','times-circle']"></fa-icon></button>
+  </div>
+
+  <div class="form-fields">
+    <label class="field">
+      <mat-form-field>
+        <mat-label *ngIf="pending">Загрузка ...</mat-label>
+        <mat-label *ngIf="data.roles?.length && !pending">Выберите  группу</mat-label>
+        <mat-label *ngIf="!data.roles?.length && !pending">- нет групп -</mat-label>
+        <mat-select 
+          (selectionChange)="select($event)" 
+          multiple="true">
+          <mat-option *ngFor="let role of data.roles" [value]="role">
+            {{role}}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+      <div class="error" *ngIf="!valid">Выберите роль</div>
+    </label>
+  </div>
+
+  <div class="form-actions">
+    <button (click)="send()" class="form-btn">
+      <fa-icon [icon]="['fas','plus-circle']" size="xs"></fa-icon>
+      <span class="action-name">Добавить</span>
+    </button>
+  </div>
+
+</div>

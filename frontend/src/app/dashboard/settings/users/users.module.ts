@@ -12,13 +12,15 @@ import { UsersService } from './users.service';
 import { UserDetailsComponent } from './user-details/user-details.component';
 import { MatCheckboxModule } from '@angular/material';
 import { MutateUserComponent } from './user-details/mutate-user/mutate-user.component';
-
-
+import { AddGropComponent } from './user-details/add-group/add-group.component';
+import { AddRoleComponent } from './user-details/add-role/add-role.component';
 
 @NgModule({
    declarations: [
       UsersComponent,
       AddUserComponent,
+      AddGropComponent,
+      AddRoleComponent,
       UserDetailsComponent,
       MutateUserComponent
    ],
@@ -40,6 +42,8 @@ import { MutateUserComponent } from './user-details/mutate-user/mutate-user.comp
    ],
    entryComponents: [
       AddUserComponent,
+      AddGropComponent,
+      AddRoleComponent,
       MutateUserComponent
    ]
 })
