@@ -382,7 +382,7 @@ remote_viewer_connect_dialog(gchar **user, gchar **password, gchar **domain,
     gtk_window_set_resizable(GTK_WINDOW(window), FALSE);
 
     // connect to the prev pool if requred
-    if (ci.connect_settings_data.is_connect_to_prev_pool)
+    if (ci.connect_settings_data.is_connect_to_prev_pool && !opt_manual_mode)
         fast_forward_connect_to_prev_pool_if_enabled(&ci);
 
     create_loop_and_launch(&ci.loop);
