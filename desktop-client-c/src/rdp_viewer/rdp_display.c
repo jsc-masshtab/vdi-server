@@ -50,18 +50,18 @@ static const gchar *error_to_str(UINT32 rdp_error)
             return "ERRINFO_RPC_INITIATED_DISCONNECT_BY_USER";
         case ERRINFO_LOGOFF_BY_USER:
             return "ERRINFO_LOGOFF_BY_USER";
-        case ERRINFO_CLOSE_STACK_ON_DRIVER_NOT_READY:
-            return "ERRINFO_CLOSE_STACK_ON_DRIVER_NOT_READY";
-        case ERRINFO_SERVER_DWM_CRASH:
-            return "ERRINFO_SERVER_DWM_CRASH";
-        case ERRINFO_CLOSE_STACK_ON_DRIVER_FAILURE:
-            return "ERRINFO_CLOSE_STACK_ON_DRIVER_FAILURE";
-        case ERRINFO_CLOSE_STACK_ON_DRIVER_IFACE_FAILURE:
-            return "ERRINFO_CLOSE_STACK_ON_DRIVER_IFACE_FAILURE";
-        case ERRINFO_SERVER_WINLOGON_CRASH:
-            return "ERRINFO_SERVER_WINLOGON_CRASH";
-        case ERRINFO_SERVER_CSRSS_CRASH:
-            return "ERRINFO_SERVER_CSRSS_CRASH";
+//        case ERRINFO_CLOSE_STACK_ON_DRIVER_NOT_READY:
+//            return "ERRINFO_CLOSE_STACK_ON_DRIVER_NOT_READY";
+//        case ERRINFO_SERVER_DWM_CRASH:
+//            return "ERRINFO_SERVER_DWM_CRASH";
+//        case ERRINFO_CLOSE_STACK_ON_DRIVER_FAILURE:
+//            return "ERRINFO_CLOSE_STACK_ON_DRIVER_FAILURE";
+//        case ERRINFO_CLOSE_STACK_ON_DRIVER_IFACE_FAILURE:
+//            return "ERRINFO_CLOSE_STACK_ON_DRIVER_IFACE_FAILURE";
+//        case ERRINFO_SERVER_WINLOGON_CRASH:
+//            return "ERRINFO_SERVER_WINLOGON_CRASH";
+//        case ERRINFO_SERVER_CSRSS_CRASH:
+//            return "ERRINFO_SERVER_CSRSS_CRASH";
         default:
             return "";
         }

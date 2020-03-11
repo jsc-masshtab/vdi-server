@@ -46,8 +46,8 @@
 #include <freerdp/channels/channels.h>
 
 #include <freerdp/locale/keyboard.h>
-
 #include <freerdp/error.h>
+#include <freerdp/version.h>
 
 #include <winpr/crt.h>
 #include <winpr/synch.h>
@@ -512,8 +512,12 @@ static BOOL rdp_client_new(freerdp* instance, rdpContext* context)
     instance->PostDisconnect = rdp_post_disconnect;
 	instance->Authenticate = client_cli_authenticate;
 	instance->GatewayAuthenticate = client_cli_gw_authenticate;
-	instance->VerifyCertificateEx = client_cli_verify_certificate_ex;
-	instance->VerifyChangedCertificateEx = client_cli_verify_changed_certificate_ex;
+    //instance->VerifyCertificateEx = client_cli_verify_certificate_ex;
+    //instance->VerifyChangedCertificateEx = client_cli_verify_changed_certificate_ex;
+    instance->VerifyCertificate = client_cli_verify_certificate;
+    instance->VerifyChangedCertificate = client_cli_verify_changed_certificate;
+
+
     instance->LogonErrorInfo = rdp_logon_error_info;
 
     g_mutex_init(&tf->primary_buffer_mutex);
