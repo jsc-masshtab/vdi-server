@@ -35,7 +35,7 @@ typedef struct{
     GtkWidget *gtk_flow_box;
     GtkWidget *status_label;
     GtkWidget *main_vm_spinner;
-    GtkWidget *label_vdi_online;
+    GtkWidget *image_label_vdi_online;
     GtkWidget *combobox_remote_protocol;
 
     GArray *pool_widgets_array;
@@ -85,7 +85,7 @@ static void set_init_values()
     vdi_manager.gtk_flow_box = NULL;
     vdi_manager.status_label = NULL;
     vdi_manager.main_vm_spinner = NULL;
-    vdi_manager.label_vdi_online = NULL;
+    vdi_manager.image_label_vdi_online = NULL;
     vdi_manager.combobox_remote_protocol = NULL;
 
     vdi_manager.pool_widgets_array = NULL;
@@ -321,17 +321,29 @@ static void on_get_vm_from_pool_finished(GObject *source_object G_GNUC_UNUSED,
 static gboolean on_ws_data_from_vdi_received(gboolean is_vdi_online)
 {
     //printf("In %s :thread id = %lu\n", (const char *)__func__, pthread_self());
-    gchar *message;
-    if (vdi_manager.label_vdi_online){
-        if (is_vdi_online){
-            message = g_strdup("<span background=\"green\" color=\"white\">  Сервер доступен  </span>");
-        }
-        else{
-            message = g_strdup("<span background=\"red\" color=\"white\">  Сервер недоступен  </span>");
-        }
+//    gchar *message;
+//    if (vdi_manager.label_vdi_online){
+//        if (is_vdi_online){
+//            message = g_strdup("<span background=\"green\" color=\"white\">  Сервер доступен  </span>");
+//        }
+//        else{
+//            message = g_strdup("<span background=\"red\" color=\"white\">  Сервер недоступен  </span>");
+//        }
 
-        gtk_label_set_markup(GTK_LABEL (vdi_manager.label_vdi_online), message);
-        g_free(message);
+//        gtk_label_set_markup(GTK_LABEL (vdi_manager.label_vdi_online), message);
+//        g_free(message);
+//    }
+
+    if (vdi_manager.image_label_vdi_online) {
+
+        gchar *resource_path;
+        if (is_vdi_online)
+            resource_path = g_strdup(VIRT_VIEWER_RESOURCE_PREFIX"/icons/content/img/green_circle.png");
+        else
+            resource_path = g_strdup(VIRT_VIEWER_RESOURCE_PREFIX"/icons/content/img/red_circle.png");
+
+        gtk_image_set_from_resource((GtkImage *)vdi_manager.image_label_vdi_online, resource_path);
+        g_free(resource_path);
     }
 
     return FALSE;
@@ -440,9 +452,10 @@ GtkResponseType vdi_manager_dialog(GtkWindow *main_window G_GNUC_UNUSED, gchar *
     gtk_box_pack_start(GTK_BOX(vdi_manager.vm_main_box), vdi_manager.gtk_flow_box, FALSE, TRUE, 0);
 
     vdi_manager.main_vm_spinner = GTK_WIDGET(gtk_builder_get_object(vdi_manager.builder, "main_vm_spinner"));
-    vdi_manager.label_vdi_online = GTK_WIDGET(gtk_builder_get_object(vdi_manager.builder, "label_vdi_online"));
     vdi_manager.combobox_remote_protocol =
             GTK_WIDGET(gtk_builder_get_object(vdi_manager.builder, "combobox-remote-protocol"));
+
+    vdi_manager.image_label_vdi_online = GTK_WIDGET(gtk_builder_get_object(vdi_manager.builder, "image_label_vdi_online"));
 
     // connects
     //g_signal_connect_swapped(vdi_manager.window, "map-event", G_CALLBACK(mapped_user_function), &vdi_manager.ci);
@@ -463,10 +476,7 @@ GtkResponseType vdi_manager_dialog(GtkWindow *main_window G_GNUC_UNUSED, gchar *
     // соответствующие кнопки  в скрол области.
     // get pool data
     refresh_vdi_pool_data_async();
-    // event loop // todo: use create_loop_and_launch
-//    vdi_manager.ci.loop = g_main_loop_new(NULL, FALSE);
-//    g_main_loop_run(vdi_manager.ci.loop);
-//    g_main_loop_unref(vdi_manager.ci.loop);
+    // event loop
     create_loop_and_launch(&vdi_manager.ci.loop);
 
     // clear

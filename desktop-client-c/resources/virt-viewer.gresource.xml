@@ -18,5 +18,7 @@
     <file alias="icons/content/img/other_icon.png">icons/content/img/other_icon.png</file>
     <file alias="icons/content/img/linux_icon.png">icons/content/img/linux_icon.png</file>
     <file alias="icons/content/img/windows_icon.png">icons/content/img/windows_icon.png</file>
+    <file alias="icons/content/img/red_circle.png">icons/content/img/red_circle.png</file> 
+    <file alias="icons/content/img/green_circle.png">icons/content/img/green_circle.png</file>	
   </gresource>
 </gresources>
