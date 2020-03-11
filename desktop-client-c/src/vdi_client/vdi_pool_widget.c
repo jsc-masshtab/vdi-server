@@ -16,7 +16,7 @@ VdiPoolWidget build_pool_widget(const gchar *pool_id, const gchar *pool_name,
 
     //GtkFrame
     //gchar *header_label = g_strdup_printf("id %s ", pool_id);
-    vdi_pool_widget.main_widget = gtk_frame_new(status);
+    vdi_pool_widget.main_widget = gtk_frame_new(""); // status
     //g_free(header_label);
 
     vdi_pool_widget.gtk_box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 3);
@@ -43,7 +43,7 @@ VdiPoolWidget build_pool_widget(const gchar *pool_id, const gchar *pool_name,
         os_icon_path = g_strdup(VIRT_VIEWER_RESOURCE_PREFIX"/icons/content/img/linux_icon.png");
 
     } else {
-        os_icon_path = g_strdup(VIRT_VIEWER_RESOURCE_PREFIX"/icons/content/img/other_icon.png");
+        os_icon_path = g_strdup(VIRT_VIEWER_RESOURCE_PREFIX"/icons/content/img/veil-32x32.png");
     }
 
     vdi_pool_widget.image_widget = gtk_image_new_from_resource(os_icon_path);
@@ -57,6 +57,12 @@ VdiPoolWidget build_pool_widget(const gchar *pool_id, const gchar *pool_name,
     //
     gtk_widget_set_size_request(vdi_pool_widget.main_widget, 100, 120);
     gtk_flow_box_insert((GtkFlowBox *)gtk_flow_box, vdi_pool_widget.main_widget, 0);
+
+    // if pool status is not ACTIVE them we disable the widget
+    if (g_strcmp0(status, "ACTIVE") != 0) {
+        gtk_widget_set_sensitive(vdi_pool_widget.main_widget, FALSE);
+        gtk_frame_set_label(GTK_FRAME(vdi_pool_widget.main_widget), status);
+    }
 
     gtk_widget_show_all(vdi_pool_widget.main_widget);
 
