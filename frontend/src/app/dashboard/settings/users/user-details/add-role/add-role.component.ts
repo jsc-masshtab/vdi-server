@@ -7,12 +7,6 @@ import { MAT_DIALOG_DATA } from '@angular/material';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 
-interface IData {
-  id: string;
-  verbose_name: string;
-  roles: string[]; // доступные для группы
-}
-
 @Component({
   selector: 'vdi-add-role',
   templateUrl: './add-role.component.html'
@@ -28,7 +22,7 @@ export class AddRoleComponent implements OnDestroy {
   constructor(private service: UsersService,
               private waitService: WaitService,
               private dialogRef: MatDialogRef<AddRoleComponent>,
-              @Inject(MAT_DIALOG_DATA) public data: IData) { }
+              @Inject(MAT_DIALOG_DATA) public data: any) { }
 
 
 

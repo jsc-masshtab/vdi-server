@@ -7,12 +7,6 @@ import { MAT_DIALOG_DATA } from '@angular/material';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 
-interface IData {
-  id: string;
-  verbose_name: string;
-  roles: string[]; // доступные для группы
-}
-
 @Component({
   selector: 'vdi-add-group',
   templateUrl: './add-group.component.html'
@@ -28,7 +22,7 @@ export class AddGropComponent implements OnDestroy {
   constructor(private service: UsersService,
               private waitService: WaitService,
               private dialogRef: MatDialogRef<AddGropComponent>,
-              @Inject(MAT_DIALOG_DATA) public data: IData) { }
+              @Inject(MAT_DIALOG_DATA) public data: any) { }
 
   public send() {
     if (this.groups.length) {
