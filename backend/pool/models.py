@@ -472,9 +472,14 @@ class Pool(db.Model):
     async def get_free_vm(self):
         """Логика такая, что если сущность отсутствует в таблице разрешений - значит никто ей не владеет.
            Требует расширения после расширения модели владения VM"""
-        free_vm_query = Vm.join(Entity, (Vm.id == Entity.entity_uuid)).join(EntityRoleOwner).select().where(
-            (Entity.entity_type == EntityType.VM) & (Vm.pool_id == self.id) & (text('entity_uuid is null')))
-        return await free_vm_query.gino.load(Vm).first()
+        # free_vm_query = Vm.join(Entity, (Vm.id == Entity.entity_uuid)).join(EntityRoleOwner).select().where(
+        #     (Entity.entity_type == EntityType.VM) & (Vm.pool_id == self.id) & (text('entity_uuid is null')))
+        # application_log.debug(free_vm_query)
+        # return await free_vm_query.gino.load(Vm).first()
+        entity_query = Entity.select('entity_uuid').where(
+            (Entity.entity_type == EntityType.VM) & (Entity.id.in_(EntityRoleOwner.select('entity_id'))))
+        vm_query = Vm.query.where((Vm.pool_id == self.id) & (Vm.broken == False) & (Vm.id.notin_(entity_query)))  # noqa
+        return await vm_query.gino.first()
 
     async def free_user_vms(self, user_id):
         """Т.к. на тонком клиенте нет выбора VM - будут сложности если у пользователя несколько VM в рамках 1 пула."""
