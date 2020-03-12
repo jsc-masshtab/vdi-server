@@ -34,6 +34,8 @@
 #include "rdp_channels.h"
 #include "rdp_client.h"
 
+#include "remote-viewer-util.h"
+
 /**
  * Function description
  *
@@ -43,8 +45,8 @@ static UINT
 rdp_encomsp_participant_created(EncomspClientContext* context,
                                const ENCOMSP_PARTICIPANT_CREATED_PDU* participantCreated)
 {
-	WINPR_UNUSED(context);
-	WINPR_UNUSED(participantCreated);
+    MARK_VAR_UNUSED(context);
+    MARK_VAR_UNUSED(participantCreated);
 	return CHANNEL_RC_OK;
 }
 

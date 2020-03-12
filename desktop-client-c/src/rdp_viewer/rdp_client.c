@@ -245,8 +245,8 @@ static BOOL rdp_end_paint(rdpContext* context)
 static BOOL rdp_play_sound(rdpContext* context, const PLAY_SOUND_UPDATE* play_sound)
 {
 	/* TODO: Implement */
-	WINPR_UNUSED(context);
-	WINPR_UNUSED(play_sound);
+    MARK_VAR_UNUSED(context);
+    MARK_VAR_UNUSED(play_sound);
 	return TRUE;
 }
 
@@ -254,8 +254,8 @@ static BOOL rdp_play_sound(rdpContext* context, const PLAY_SOUND_UPDATE* play_so
 static BOOL rdp_keyboard_set_indicators(rdpContext* context, UINT16 led_flags)
 {
 	/* TODO: Set local keyboard indicator LED status */
-	WINPR_UNUSED(context);
-	WINPR_UNUSED(led_flags);
+    MARK_VAR_UNUSED(context);
+    MARK_VAR_UNUSED(led_flags);
 	return TRUE;
 }
 
@@ -495,7 +495,7 @@ static int rdp_logon_error_info(freerdp* instance, UINT32 data, UINT32 type)
 
     tf = (ExtendedRdpContext*)instance->context;
 	WLog_INFO(TAG, "Logon Error Info %s [%s]", str_data, str_type);
-	WINPR_UNUSED(tf);
+    MARK_VAR_UNUSED(tf);
 
 	return 1;
 }
