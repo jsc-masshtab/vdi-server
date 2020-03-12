@@ -3,8 +3,8 @@ import uuid
 from async_generator import async_generator, yield_
 from graphene import Context
 
-from database import db, Role
-from settings import DB_PASS, DB_USER, DB_PORT, DB_HOST, DB_NAME
+from app import start_gino, stop_gino
+from database import Role, Status
 from auth.utils.veil_jwt import encode_jwt
 from auth.utils import crypto
 
@@ -137,13 +137,10 @@ def get_test_pool_name():
 @async_generator
 async def fixt_db():
     """Actual fixture for requests working with db."""
-    await db.set_bind(
-        'postgresql://{DB_USER}:{DB_PASS}@{DB_HOST}:{DB_PORT}/{DB_NAME}'.format(DB_USER=DB_USER, DB_PASS=DB_PASS,
-                                                                                DB_HOST=DB_HOST, DB_PORT=DB_PORT,
-                                                                                DB_NAME=DB_NAME))
-    await yield_()
 
-    await db.pop_bind().close()
+    await start_gino()
+    await yield_()
+    await stop_gino()
 
 
 async def get_auth_token():
@@ -164,7 +161,7 @@ async def get_auth_context():
 
 
 @pytest.fixture
-async def auth_context_fixture():
+async def fixt_auth_context():
     """Auth context fixture."""
     return await get_auth_context()
 
@@ -179,12 +176,14 @@ async def fixt_create_automated_pool():
     resources = await get_resources_automated_pool_test()
     if not resources:
         print('resources not found!')
+
     qu = '''
         mutation {
             addDynamicPool(verbose_name: "%s", controller_ip: "%s",
                            cluster_id: "%s", node_id: "%s", datapool_id: "%s", template_id: "%s",
+                           max_size: 4, max_vm_amount: 4, increase_step: 1, min_free_vms_amount: 1,
                            initial_size: 1, total_size: 2, max_amount_of_create_attempts: 10,
-                           create_thin_clones: false){
+                           create_thin_clones: true){
                     ok
                     pool{
                         pool_id
@@ -217,7 +216,6 @@ async def fixt_create_automated_pool():
     is_pool_successfully_created = await pool_creation_waiter.wait_for_message(
         _check_if_pool_created, POOL_CREATION_TIMEOUT)
     internal_event_monitor.unsubscribe(pool_creation_waiter)
-    print('is_pool_successfully_created', is_pool_successfully_created)
 
     await yield_({
         'id': pool_id,
@@ -242,9 +240,7 @@ async def fixt_create_automated_pool():
 @async_generator
 async def fixt_create_static_pool(fixt_db):
     """Создается ВМ, создается пул с этой ВМ, пул удаляется, ВМ удаляется."""
-    print('create_static_pool')
     pool_main_resources = await get_resources_static_pool_test()
-    print(pool_main_resources)
     controller_ip = pool_main_resources['controller_ip']
     node_id = pool_main_resources['node_id']
     datapool_id = pool_main_resources['datapool_id']
@@ -273,6 +269,7 @@ async def fixt_create_static_pool(fixt_db):
         return vm_info
 
     domain_info = await _create_domain()
+    print('domain info: {}'.format(domain_info))
     current_vm_task_id = domain_info['task_id']
 
     def _check_if_vm_created(json_message):
@@ -302,7 +299,6 @@ async def fixt_create_static_pool(fixt_db):
         ''' % (get_test_pool_name(), domain_info['id'])
 
     pool_create_res = await execute_scheme(pool_schema, qu, context=context)
-    # print('pool_create_res', pool_create_res)
 
     pool_id = pool_create_res['addStaticPool']['pool']['pool_id']
     await yield_({
@@ -323,41 +319,6 @@ async def fixt_create_static_pool(fixt_db):
     # --- remove test VM ---
     vm_http_client = await VmHttpClient.create(controller_ip, domain_info['id'])
     await vm_http_client.remove_vm()
-
-
-@pytest.fixture
-@async_generator
-async def fixt_entitle_user_to_pool(fixt_create_static_pool):
-    """Create a static pool. Give the user permissions to use this pool. Yield. Remove the pool."""
-    context = await get_auth_context()
-    pool_id = fixt_create_static_pool['id']
-
-    # entitle user to pool
-    user_name = "admin"
-    qu = '''
-    mutation {
-      entitleUsersToPool(pool_id: "%s", users: ["%s"]) {
-        ok
-      }
-    }
-    ''' % (pool_id, user_name)
-    res = await execute_scheme(pool_schema, qu, context=context)
-    # print('test_res', res)
-
-    await yield_({
-        'id': pool_id,
-        'ok': res['entitleUsersToPool']['ok']
-    })
-
-    # remove entitlement
-    qu = '''
-    mutation {
-    removeUserEntitlementsFromPool(pool_id: "%s", users: ["%s"]) {
-        ok
-    }
-    }
-    ''' % (pool_id, user_name)
-    await execute_scheme(pool_schema, qu, context=context)
 
 
 @pytest.fixture
@@ -383,6 +344,7 @@ def fixt_group(request, event_loop):
 
 @pytest.fixture
 def fixt_user(request, event_loop):
+    """Фикстура учитывает данные фикстуры пула."""
     user_name = 'test_user'
     user_id = '10913d5d-ba7a-4049-88c5-769267a6cbe4'
     user_password = 'veil'
@@ -408,6 +370,27 @@ def fixt_user(request, event_loop):
 def fixt_user_admin(request, event_loop):
     user_name = 'test_user_admin'
     user_id = '10913d5d-ba7a-4049-88c5-769267a6cbe3'
+    user_password = 'veil'
+
+    async def setup():
+        await User.soft_create(username=user_name, id=user_id, password=user_password, is_superuser=True)
+
+    event_loop.run_until_complete(setup())
+
+    def teardown():
+        async def a_teardown():
+            await User.delete.where(User.id == user_id).gino.status()
+
+        event_loop.run_until_complete(a_teardown())
+
+    request.addfinalizer(teardown)
+    return True
+
+
+@pytest.fixture
+def fixt_user_another_admin(request, event_loop):
+    user_name = 'test_user_admin2'
+    user_id = '10913d5d-ba7a-4149-88c5-769267a6cbe3'
     user_password = 'veil'
 
     async def setup():
@@ -530,7 +513,7 @@ def fixt_controller(request, event_loop):
         await Controller.create(id=id,
                                 verbose_name=verbose_name,
                                 address=address,
-                                status='ACTIVE',  # TODO: special class for all statuses
+                                status=Status.ACTIVE,
                                 username=username,
                                 password=crypto.encrypt(password),
                                 ldap_connection=False,
@@ -542,6 +525,26 @@ def fixt_controller(request, event_loop):
     def teardown():
         async def a_teardown():
             await Controller.delete.where(Controller.id == id).gino.status()
+
+        event_loop.run_until_complete(a_teardown())
+
+    request.addfinalizer(teardown)
+    return True
+
+
+@pytest.fixture
+def fixt_vm(request, event_loop):
+
+    id = '10913d5d-ba7a-4049-88c5-769267a6cbe4'
+    verbose_name = 'test_vm'
+
+    async def setup():
+        await Vm.create(pool_id=None, template_id=None, created_by_vdi=True, verbose_name=verbose_name, id=id)
+    event_loop.run_until_complete(setup())
+
+    def teardown():
+        async def a_teardown():
+            await Vm.delete.where(Vm.id == id).gino.status()
 
         event_loop.run_until_complete(a_teardown())
 

@@ -79,7 +79,8 @@ class VmType(graphene.ObjectType):
         return DEFAULT_NAME
 
     async def resolve_user(self, _info):
-        username = await Vm.get_username(self.id)
+        vm = await Vm.get(self.id)
+        username = await vm.username if vm else None
         return UserType(username=username)
 
     async def resolve_template(self, _info):
@@ -142,36 +143,36 @@ class AssignVmToUser(graphene.Mutation):
         username = graphene.String(required=True)
 
     ok = graphene.Boolean()
+    vm = graphene.Field(VmType)
 
     @superuser_required
     async def mutate(self, _info, vm_id, username):
         # find pool the vm belongs to
-        pool_id = await Vm.get_pool_id(vm_id)
-        if not pool_id:
-            # Requested vm doesnt belong to any pool
-            raise GraphQLError('ВМ не находится ни в одном из пулов')
+        vm = await Vm.get(vm_id)
+        if not vm:
+            raise SimpleError('There is no VM {}'.format(vm_id))
+
+        pool_id = vm.pool_id
+        user_id = await User.get_id(username)
+        # if not pool_id:
+        #     # Requested vm doesnt belong to any pool
+        #     raise GraphQLError('VM don\'t belongs to any Pool.')
 
         # check if the user is entitled to pool(pool_id) the vm belongs to
-        user_id = await User.get_id(username)
+        if pool_id:
+            pool = await Pool.get(pool_id)
+            assigned_users = await pool.assigned_users
+            assigned_users_list = [user.id for user in assigned_users]
 
-        pool = await Pool.get(pool_id)
-        assigned_users = await pool.assigned_users
-        assigned_users_list = [user.id for user in assigned_users]
+            if user_id not in assigned_users_list:
+                # Requested user is not entitled to the pool the requested vm belongs to
+                raise GraphQLError('У пользователя нет прав на использование пула, которому принадлежит VM.')
 
-        if user_id not in assigned_users_list:
-            # Requested user is not entitled to the pool the requested vm belongs to
-            raise GraphQLError('У пользователя нет прав на использование пула, которому принадлежит ВМ')
+            # another vm in the pool may have this user as owner. Remove assignment
+            await pool.free_user_vms(user_id)
 
-        # another vm in the pool may have this user as owner. Remove assignment
-        await Vm.update.values(username=None).where(
-            (Vm.pool_id == pool_id) & (Vm.username == username)).gino.status()
-
-        # assign vm to the user(username)
-        await Vm.attach_vm_to_user(vm_id, username)
-
-        return {
-            'ok': True
-        }
+        await vm.add_user(user_id)
+        return AssignVmToUser(ok=True, vm=vm)
 
 
 class FreeVmFromUser(graphene.Mutation):
@@ -182,12 +183,12 @@ class FreeVmFromUser(graphene.Mutation):
 
     @superuser_required
     async def mutate(self, _info, vm_id):
-        # check if vm exists
         vm = await Vm.get(vm_id)
         if vm:
-            await vm.free_vm()
-            return {'ok': True}
-        return {'ok': False}
+            # await vm.free_vm()
+            await vm.remove_users(users_list=None)
+            return FreeVmFromUser(ok=True)
+        return FreeVmFromUser(ok=False)
 
 
 class VmQuery(graphene.ObjectType):

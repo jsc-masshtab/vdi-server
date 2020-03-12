@@ -68,7 +68,7 @@ class VdiFrontWsHandler(websocket.WebSocketHandler, AbstractSubscriptionObserver
         AbstractSubscriptionObserver.__init__(self)
 
         self._send_messages_flag = False
-        application_log.debug('init VdiFrontWsHandler')
+        # application_log.debug('init VdiFrontWsHandler')
 
     def __del__(self):
         application_log.debug('destructor VdiFrontWsHandler')
@@ -78,7 +78,7 @@ class VdiFrontWsHandler(websocket.WebSocketHandler, AbstractSubscriptionObserver
         return True
 
     async def open(self):
-        application_log.debug('WebSocket opened')
+        # application_log.debug('WebSocket opened')
         self._start_message_sending()
         resources_monitor_manager.subscribe(self)
         internal_event_monitor.subscribe(self)

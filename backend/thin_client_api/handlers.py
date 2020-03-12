@@ -37,13 +37,14 @@ class PoolGetVm(BaseHandler, ABC):
         # Сочитание pool id и username уникальное, т.к. пользователь не может иметь больше одной машины в пуле
 
         username = self.get_current_user()
+        user_id = await User.get_id(username)
         pool = await Pool.get(pool_id)
         if not pool:
             response_dict = {'data': dict(host='', port=0, password='', message='Пул не найден')}
             return await self.finish(response_dict)
 
         controller_ip = await Controller.select('address').where(Controller.id == pool.controller).gino.scalar()
-
+        # TODO: отказаться от vm_id
         # Проверяем права пользователя на доступ к пулу:
         # TODO: после перевода VM на новую модель разрешений - необходимо будет учесть наличие роли
         assigned_users = await pool.assigned_users
@@ -54,25 +55,24 @@ class PoolGetVm(BaseHandler, ABC):
             return await self.finish(response_dict)
 
         # Ищем VM закрепленную за пользователем:
-        vms_query = Vm.select('id').where((Vm.pool_id == pool_id) & (Vm.username == username))
-        vm_data = await vms_query.gino.first()
+        vm_id = await Vm.get_vm_id(pool_id, user_id)
 
-        if vm_data:
-            vm_id = vm_data.id
-        else:
+        if not vm_id:
             # TODO: добавить третий метод в VM, который делает это
             # Если у пользователя нет VM в пуле, то нужно попытаться назначить ему свободную VM.
-            vm_id = await Vm.get_free_vm_id_from_pool(pool_id)
+            # vm_id = await pool.get_free_vm_id()
+            vm = await pool.get_free_vm()
+
             # Если свободная VM найдена, нужно закрепить ее за пользователем.
-            if vm_id:
-                await Vm.attach_vm_to_user(vm_id, username)
+            if vm:
+                vm_id = vm.id
+                await vm.add_user(user_id)
+                # await vm.attach_to_user(user_id)
 
         # В отдельной корутине запускаем расширение пула
 
         if await pool.pool_type == Pool.PoolTypes.AUTOMATED:
-            application_log.debug('Pool {} type is AUTOMATED.'.format(pool.verbose_name))
             pool = await AutomatedPool.get(pool_id)
-            #
             pool_lock = pool_task_manager.get_pool_lock(pool_id)
             template_lock = pool_task_manager.get_template_lock(str(pool.template_id))
             # Проверяем залочены ли локи. Если залочены, то ничего не делаем, так как любые другие действия с
@@ -127,23 +127,33 @@ class PoolGetVm(BaseHandler, ABC):
 
 
 @jwtauth
-class ActionOnVm(BaseHandler, ABC):
+class VmAction(BaseHandler, ABC):
+
     async def post(self, pool_id, action):
-        vm_action = action
-        username = self.get_current_user()
+        try:
+            username = self.get_current_user()
+            user_id = await User.get_id(username)
+            if not user_id:
+                raise AssertionError('User {} not found.'.format(username))
+            pool = await Pool.get(pool_id)
+            if not pool:
+                raise AssertionError('There is no pool with id: {}'.format(pool_id))
+            # TODO: проверить права доступа пользователя к VM через assigned_users у Pool
+            vm_id = await Vm.get_vm_id(pool_id=pool_id, user_id=user_id)
+            if not vm_id:
+                raise AssertionError('User {} has no VM on pool {}'.format(username, pool_id))
 
-        # TODO: update
-        vms = await Vm.get_vm_id(pool_id=pool_id, username=username)
-        if not vms:
-            return await self.finish({'error': 'Нет вм с указанным pool_id'})
-
-        controller_ip = await Pool.get_controller_ip(pool_id)
-        client = await VmHttpClient.create(controller_ip=controller_ip, vm_id=vms)
-        await client.send_action(action=vm_action, body=self.args)
-        return await self.finish({'error': 'null'})
+            controller_ip = await Pool.get_controller_ip(pool_id)
+            client = await VmHttpClient.create(controller_ip=controller_ip, vm_id=vm_id)
+            await client.send_action(action=action, body=self.args)
+            response = {'data': 'success'}
+        except AssertionError as vm_action_error:
+            response = {'errors': [{'message': str(vm_action_error)}]}
+        return self.finish(response)
 
 
 class ThinClientWsHandler(websocket.WebSocketHandler):  # noqa
+    # TODO: есть стойкое ощущение, что не нужен этот блок и лучше таймаутом ходить и получать статус сервера
     # def __init__(self, application: Application, request: httputil.HTTPServerRequest, **kwargs: Any):
     #     websocket.WebSocketHandler.__init__(self, application, request, **kwargs)
     #     print('init')

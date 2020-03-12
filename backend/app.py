@@ -51,12 +51,6 @@ handlers += auth_api_urls
 handlers += thin_client_api_urls
 handlers += ws_event_monitoring_urls
 
-app = tornado.web.Application(handlers,
-                              debug=tornado.options.options.debug,
-                              websocket_ping_interval=WS_PING_INTERVAL,
-                              websocket_ping_timeout=WS_PING_TIMEOUT,
-                              autoreload=tornado.options.options.autoreload)
-
 
 def init_logging(access_to_stdout=False):
     if access_to_stdout:
@@ -96,14 +90,26 @@ def bootstrap():
 
 
 def make_app():
-    IOLoop.current().run_sync(
-        lambda: db.init_app(app,
-                            host=DB_HOST,
-                            port=DB_PORT,
-                            user=DB_USER,
-                            password=DB_PASS,
-                            database=DB_NAME,
-                            pool_max_size=100))
+    return tornado.web.Application(handlers,
+                                   debug=tornado.options.options.debug,
+                                   websocket_ping_interval=WS_PING_INTERVAL,
+                                   websocket_ping_timeout=WS_PING_TIMEOUT,
+                                   autoreload=tornado.options.options.autoreload)
+
+
+async def start_gino():
+    await db.set_bind(
+        'postgresql://{DB_USER}:{DB_PASS}@{DB_HOST}:{DB_PORT}/{DB_NAME}'.format(DB_USER=DB_USER, DB_PASS=DB_PASS,
+                                                                                DB_HOST=DB_HOST, DB_PORT=DB_PORT,
+                                                                                DB_NAME=DB_NAME))
+
+
+async def stop_gino():
+    await db.pop_bind().close()
+
+
+def init_gino():
+    IOLoop.current().run_sync(lambda: start_gino())
 
 
 def start_server():
@@ -113,7 +119,8 @@ def start_server():
         general_log = logging.getLogger('tornado.general')
         general_log.warning('Auth is disabled. Enable on production!')
 
-    make_app()
+    app = make_app()
+    init_gino()
     app.listen(tornado.options.options.port)
     init_tasks()
     init_callbacks()
@@ -129,6 +136,9 @@ async def shutdown_server():
 
     logger.info('Stopping resources_monitor_manager')
     await resources_monitor_manager.stop()
+
+    logger.info('Stopping GINO')
+    await stop_gino()
 
     logger.info('Stopping IOLoop')
     IOLoop.current().stop()

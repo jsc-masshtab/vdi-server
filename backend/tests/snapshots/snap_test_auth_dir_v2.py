@@ -59,42 +59,6 @@ snapshots['TestAuthenticationDirectorySchema.test_auth_dirs_get_by_id 1'] = {
     }
 }
 
-snapshots['TestAuthenticationDirectorySchema.test_add_auth_dir_mapping 1'] = {
-    'addAuthDirMapping': {
-        'auth_dir': {
-            'id': '10913d5d-ba7a-4049-88c5-769267a6cbe4',
-            'mappings': [
-                {
-                    'verbose_name': 'test_mapping2'
-                }
-            ]
-        },
-        'ok': True
-    }
-}
-
-snapshots['TestAuthenticationDirectorySchema.test_edit_auth_dir_mapping 1'] = {
-    'editAuthDirMapping': {
-        'auth_dir': {
-            'id': '10913d5d-ba7a-4049-88c5-769267a6cbe4',
-            'mappings': [
-                {
-                    'assigned_groups': [
-                        {
-                            'id': '10913d5d-ba7a-4049-88c5-769267a6cbe4'
-                        }
-                    ],
-                    'id': '10913d5d-ba7a-4049-88c5-769267a6cbe4',
-                    'possible_groups': [
-                    ],
-                    'verbose_name': 'editted mapping'
-                }
-            ]
-        },
-        'ok': True
-    }
-}
-
 snapshots['TestAuthenticationDirectorySchema.test_edit_auth_dir_mapp 1'] = {
     'editAuthDirMapping': {
         'auth_dir': {
@@ -110,20 +74,6 @@ snapshots['TestAuthenticationDirectorySchema.test_edit_auth_dir_mapp 1'] = {
                     'possible_groups': [
                     ],
                     'verbose_name': 'editted mapping'
-                }
-            ]
-        },
-        'ok': True
-    }
-}
-
-snapshots['TestAuthenticationDirectorySchema.test_add_and_delete_auth_dir_mapp 1'] = {
-    'addAuthDirMapping': {
-        'auth_dir': {
-            'id': '10913d5d-ba7a-4049-88c5-769267a6cbe4',
-            'mappings': [
-                {
-                    'verbose_name': 'test_mapping2'
                 }
             ]
         },
