@@ -1,4 +1,3 @@
-
 import { Subscription } from 'rxjs';
 import { IPool, IPoolVms } from './definitions/pool';
 import { VmDetalsPopupComponent } from './vm-details-popup/vm-details-popup.component';
@@ -12,17 +11,18 @@ import { MatDialog } from '@angular/material';
 import { RemovePoolComponent } from './remove-pool/remove-pool.component';
 import { PoolDetailsService } from './pool-details.service';
 import { FormForEditComponent } from 'src/app/dashboard/common/forms-dinamic/change-form/form-edit.component';
-// import { skip, map, filter, catchError } from 'rxjs/operators';
+import { map } from 'rxjs/operators';
 // import { of } from 'rxjs';
 import { PoolsUpdateService } from '../all-pools/pools.update.service';
-
-
+import { RemoveRoleComponent } from './remove-role/remove-role.component';
+import { AddRoleComponent } from './add-role/add-role.component';
+import { RemoveGroupComponent } from './remove-group/remove-group.component';
+import { AddGropComponent } from './add-group/add-group.component';
 
 @Component({
   selector: 'vdi-pool-details',
   templateUrl: './pool-details.component.html'
 })
-
 
 export class PoolDetailsComponent implements OnInit, OnDestroy {
 
@@ -231,6 +231,26 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
     }
   ];
 
+  public collectionRoles: object[] = [
+    {
+      title: 'Роли',
+      type: 'array-type',
+      property: 'index-array',
+      class: 'name-start',
+      icon: 'users-cog'
+    }
+  ];
+
+  public collectionGroups: object[] = [
+    {
+      title: 'Название группы',
+      type: 'string',
+      property: 'verbose_name',
+      class: 'name-start',
+      icon: 'users-cog'
+    }
+  ];
+
   private idPool: string;
   public  typePool: string;
   public  menuActive: string = 'info';
@@ -275,13 +295,13 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
   //   () =>  console.log( 'complete'));
   // }
 
-
   public getPool(): void {
     if (this.subPool) {
       this.subPool.unsubscribe();
     }
     this.host = false;
     this.subPool = this.poolService.getPool(this.idPool, this.typePool)
+      .valueChanges.pipe(map((data: any) => data.data['pool']))
       .subscribe( (data) => {
         this.pool = data;
         this.host = true;
@@ -582,25 +602,59 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
   }
 
   public routeTo(route: string): void {
-    if (route === 'info') {
-      this.menuActive = 'info';
-    }
-
-    if (route === 'vms') {
-      this.menuActive = 'vms';
-    }
-
-    if (route === 'users') {
-      this.menuActive = 'users';
-    }
-
-    if (route === 'event-vm') {
-      this.menuActive = 'event-vm';
-    }
+    this.menuActive = route;
   }
 
   public close(): void  {
     this.router.navigateByUrl('pages/pools');
+  }
+
+  public addGroup() {
+    this.dialog.open(AddGropComponent, {
+      width: '500px',
+      data: {
+        id: this.idPool,
+        typePool: this.typePool,
+        verbose_name: this.pool['verbose_name'],
+        groups: this.pool['possible_groups']
+      }
+    });
+  }
+
+  public removeGroup() {
+    this.dialog.open(RemoveGroupComponent, {
+      width: '500px',
+      data: {
+        id: this.idPool,
+        typePool: this.typePool,
+        verbose_name: this.pool['verbose_name'],
+        groups: this.pool['assigned_groups']
+      }
+    });
+  }
+
+  public addRole() {
+    this.dialog.open(AddRoleComponent, {
+      width: '500px',
+      data: {
+        id: this.idPool,
+        typePool: this.typePool,
+        verbose_name: this.pool['verbose_name'],
+        roles: this.pool['possible_roles']
+      }
+    });
+  }
+
+  public removeRole() {
+    this.dialog.open(RemoveRoleComponent, {
+      width: '500px',
+      data: {
+        id: this.idPool,
+        typePool: this.typePool,
+        verbose_name: this.pool['verbose_name'],
+        roles: this.pool['assigned_roles']
+      }
+    });
   }
 
   ngOnDestroy() {

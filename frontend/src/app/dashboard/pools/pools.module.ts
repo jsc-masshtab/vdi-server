@@ -24,6 +24,10 @@ import { RemovePoolComponent } from './pool-details/remove-pool/remove-pool.comp
 import { VmDetalsPopupComponent } from './pool-details/vm-details-popup/vm-details-popup.component';
 
 import {MatCheckboxModule, MAT_CHECKBOX_CLICK_ACTION} from '@angular/material/checkbox';
+import { RemoveRoleComponent } from './pool-details/remove-role/remove-role.component';
+import { RemoveGroupComponent } from './pool-details/remove-group/remove-group.component';
+import { AddRoleComponent } from './pool-details/add-role/add-role.component';
+import { AddGropComponent } from './pool-details/add-group/add-group.component';
 
 @NgModule({
   declarations: [
@@ -37,7 +41,11 @@ import {MatCheckboxModule, MAT_CHECKBOX_CLICK_ACTION} from '@angular/material/ch
     RemovePoolComponent,
     VmDetalsPopupComponent,
     AddUserVmComponent,
-    RemoveUserVmComponent
+    RemoveUserVmComponent,
+    RemoveRoleComponent,
+    RemoveGroupComponent,
+    AddGropComponent,
+    AddRoleComponent
   ],
   imports: [
     SharedModule,
@@ -65,7 +73,11 @@ import {MatCheckboxModule, MAT_CHECKBOX_CLICK_ACTION} from '@angular/material/ch
     RemovePoolComponent,
     VmDetalsPopupComponent,
     AddUserVmComponent,
-    RemoveUserVmComponent
+    RemoveUserVmComponent,
+    RemoveRoleComponent,
+    RemoveGroupComponent,
+    AddGropComponent,
+    AddRoleComponent
   ],
   exports: [
     PoolsComponent,

@@ -1,6 +1,5 @@
-import { Subscription } from 'rxjs';
 import { WaitService } from '../../../../common/components/single/wait/wait.service';
-import { Component, Inject, OnDestroy } from '@angular/core';
+import { Component, Inject } from '@angular/core';
 import { MAT_DIALOG_DATA, MatDialog } from '@angular/material';
 import { PoolDetailsService } from '../../pool-details.service';
 
@@ -26,10 +25,9 @@ interface IData  {
   templateUrl: './add-user.component.html'
 })
 
-export class AddUserVmComponent implements OnDestroy  {
+export class AddUserVmComponent {
 
   private user: string;
-  private sub: Subscription;
   public valid: boolean = true;
 
   constructor(private waitService: WaitService,
@@ -43,10 +41,9 @@ export class AddUserVmComponent implements OnDestroy  {
       this.waitService.setWait(true);
       this.poolService.assignVmToUser(this.data.vm.id, this.user).subscribe((res) => {
         if (res) {
-          this.sub = this.poolService.getPool(this.data.idPool, this.data.typePool).subscribe(() => {
-            this.waitService.setWait(false);
-            this.dialog.closeAll();
-          });
+          this.poolService.getPool(this.data.idPool, this.data.typePool).refetch()
+          this.waitService.setWait(false);
+          this.dialog.closeAll();
         }
       });
     } else {
@@ -58,11 +55,4 @@ export class AddUserVmComponent implements OnDestroy  {
     this.user = value['value'];
     this.valid = true;
   }
-
-  ngOnDestroy() {
-    if (this.sub) {
-      this.sub.unsubscribe();
-    }
-  }
-
 }

@@ -1,4 +1,4 @@
-import { GroupsService } from './../../groups.service';
+import { UsersService } from '../../users.service';
 
 import { WaitService } from '../../../../common/components/single/wait/wait.service';
 import { MatDialogRef } from '@angular/material';
@@ -10,46 +10,46 @@ import { takeUntil } from 'rxjs/operators';
 interface IData {
   id: string;
   verbose_name: string;
-  users: string[]; // доступные для добавления в группу
+  roles: string[]; // роли группы
 }
 
 @Component({
-  selector: 'vdi-add-user',
-  templateUrl: './add-user.component.html'
+  selector: 'vdi-remove-role',
+  templateUrl: './remove-role.component.html'
 })
 
-export class AddUserGroupComponent implements OnDestroy {
+export class RemoveRoleComponent implements OnDestroy {
 
   public pending: boolean = false;
-  public users: [] = [];
+  public roles: [] = [];
   private destroy: Subject<any> = new Subject<any>();
   public valid: boolean = true;
 
-  constructor(private service: GroupsService,
+  constructor(private service: UsersService,
               private waitService: WaitService,
-              private dialogRef: MatDialogRef<AddUserGroupComponent>,
+              private dialogRef: MatDialogRef<RemoveRoleComponent>,
               @Inject(MAT_DIALOG_DATA) public data: IData) { }
 
 
-  public select(value: []) {
-    this.users = value['value'];
-    this.valid = true;
-  }
 
   public send() {
-    if (this.users.length) {
+    if (this.roles.length) {
       this.waitService.setWait(true);
-      this.service.addUsers(this.users, this.data.id).pipe(takeUntil(this.destroy)).subscribe((res) => {
+      this.service.removeRole(this.data.id, this.roles).pipe(takeUntil(this.destroy)).subscribe((res) => {
         if (res) {
-          this.service.getGroup(this.data.id).pipe(takeUntil(this.destroy)).subscribe(() => {
-            this.waitService.setWait(false);
-            this.dialogRef.close();
-          });
+          this.service.getUser(this.data.id).refetch();
+          this.waitService.setWait(false);
+          this.dialogRef.close();
         }
       });
     } else {
       this.valid = false;
     }
+  }
+
+  public select(value: []) {
+    this.roles = value['value'];
+    this.valid = true;
   }
 
   ngOnDestroy() {
