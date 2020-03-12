@@ -5,6 +5,11 @@ import { ActivatedRoute, Router, ParamMap } from '@angular/router';
 import { MatDialog } from '@angular/material';
 import { FormForEditComponent } from 'src/app/dashboard/common/forms-dinamic/change-form/form-edit.component';
 import { MutateUserComponent } from './mutate-user/mutate-user.component';
+import { AddGropComponent } from './add-group/add-group.component';
+import { AddRoleComponent } from './add-role/add-role.component';
+import { RemoveRoleComponent } from './remove-role/remove-role.component';
+
+import { map } from 'rxjs/operators';
 
 @Component({
   selector: 'user-details',
@@ -17,6 +22,8 @@ export class UserDetailsComponent implements OnInit, OnDestroy {
 
   id: string;
   entity: any;
+
+  menuActive: string = 'info';
 
   public collection: object[] = [
     {
@@ -99,6 +106,26 @@ export class UserDetailsComponent implements OnInit, OnDestroy {
     }
   ];
 
+  public collection_roles: object[] = [
+    {
+      title: 'Роли',
+      type: 'array-type',
+      property: 'index-array',
+      class: 'name-start',
+      icon: 'users-cog'
+    }
+  ];
+
+  public collection_groups: object[] = [
+    {
+      title: 'Название группы',
+      type: 'string',
+      property: 'verbose_name',
+      class: 'name-start',
+      icon: 'users-cog'
+    }
+  ];
+
   constructor(private service: UsersService, private activatedRoute: ActivatedRoute, public dialog: MatDialog,
               private router: Router) { }
 
@@ -109,12 +136,17 @@ export class UserDetailsComponent implements OnInit, OnDestroy {
     });
   }
 
+  public routeTo(route: string): void {
+    this.menuActive = route;
+  }
+
   public getUser(): void {
     if (this.sub) {
       this.sub.unsubscribe();
     }
 
     this.sub = this.service.getUser(this.id)
+      .valueChanges.pipe(map(data => data.data))
       .subscribe((data) => {
         this.entity = data.user;
       });
@@ -230,6 +262,50 @@ export class UserDetailsComponent implements OnInit, OnDestroy {
 
   public close() {
     this.router.navigate(['pages/settings/users']);
+  }
+
+  public addGroup() {
+    this.dialog.open(AddGropComponent, {
+      width: '500px',
+      data: {
+        id: this.id,
+        verbose_name: this.entity['verbose_name'],
+        groups: this.entity['possible_groups']
+      }
+    });
+  }
+
+  public removeGroup() {
+    this.dialog.open(RemoveRoleComponent, {
+      width: '500px',
+      data: {
+        id: this.id,
+        verbose_name: this.entity['verbose_name'],
+        roles: this.entity['assigned_roles']
+      }
+    });
+  }
+
+  public addRole() {
+    this.dialog.open(AddRoleComponent, {
+      width: '500px',
+      data: {
+        id: this.id,
+        verbose_name: this.entity['verbose_name'],
+        roles: this.entity['possible_roles']
+      }
+    });
+  }
+
+  public removeRole() {
+    this.dialog.open(RemoveRoleComponent, {
+      width: '500px',
+      data: {
+        id: this.id,
+        verbose_name: this.entity['verbose_name'],
+        roles: this.entity['assigned_roles']
+      }
+    });
   }
 
   ngOnDestroy() {

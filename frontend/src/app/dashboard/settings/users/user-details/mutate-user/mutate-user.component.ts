@@ -22,7 +22,7 @@ export class MutateUserComponent {
       if (res) {
         setTimeout(() => {
           this.dialogRef.close();
-          this.service.getUser(this.data.id).subscribe();
+          this.service.getUser(this.data.id).refetch();
           this.service.getAllUsers().refetch();
           this.waitService.setWait(false);
         }, 1000);

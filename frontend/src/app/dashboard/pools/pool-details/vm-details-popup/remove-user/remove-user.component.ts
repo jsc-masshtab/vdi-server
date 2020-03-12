@@ -1,6 +1,5 @@
-import { Subscription } from 'rxjs';
 import { WaitService } from '../../../../common/components/single/wait/wait.service';
-import { Component, Inject, OnDestroy } from '@angular/core';
+import { Component, Inject } from '@angular/core';
 import { MatDialog, MAT_DIALOG_DATA } from '@angular/material';
 import { PoolDetailsService } from '../../pool-details.service';
 
@@ -26,9 +25,7 @@ interface IData  {
   templateUrl: './remove-user.component.html'
 })
 
-export class RemoveUserVmComponent implements OnDestroy {
-
-  private sub: Subscription;
+export class RemoveUserVmComponent {
 
   constructor(private waitService: WaitService,
               private poolService: PoolDetailsService,
@@ -40,18 +37,10 @@ export class RemoveUserVmComponent implements OnDestroy {
     this.waitService.setWait(true);
     this.poolService.freeVmFromUser(this.data.vm.id).subscribe((res) => {
       if (res) {
-        this.sub = this.poolService.getPool(this.data.idPool, this.data.typePool).subscribe(() => {
-          this.waitService.setWait(false);
-          this.dialog.closeAll();
-        });
+        this.poolService.getPool(this.data.idPool, this.data.typePool).refetch();
+        this.waitService.setWait(false);
+        this.dialog.closeAll();
       }
     });
   }
-
-  ngOnDestroy() {
-    if (this.sub) {
-      this.sub.unsubscribe();
-    }
-  }
-
 }

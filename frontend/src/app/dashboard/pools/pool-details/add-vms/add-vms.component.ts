@@ -41,11 +41,10 @@ export class AddVMStaticPoolComponent implements OnInit, OnDestroy {
     this.waitService.setWait(true);
     this.poolService.addVMStaticPool(this.data.idPool, this.idVms).pipe(takeUntil(this.destroy)).subscribe((res) => {
       if (res) {
-        this.poolService.getPool(this.data.idPool, this.data.typePool).pipe(takeUntil(this.destroy)).subscribe(() => {
-          this.waitService.setWait(false);
-          this.dialogRef.close();
-          this.updatePools.setUpdate('update');
-        });
+        this.poolService.getPool(this.data.idPool, this.data.typePool).refetch()
+        this.waitService.setWait(false);
+        this.dialogRef.close();
+        this.updatePools.setUpdate('update');
       }
     });
   }
