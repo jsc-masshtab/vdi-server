@@ -1,17 +1,12 @@
-import { UsersService } from '../../users.service';
+import { PoolDetailsService } from '../pool-details.service';
 
-import { WaitService } from '../../../../common/components/single/wait/wait.service';
 import { MatDialogRef } from '@angular/material';
 import { Component, Inject, OnDestroy } from '@angular/core';
 import { MAT_DIALOG_DATA } from '@angular/material';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
-
-interface IData {
-  id: string;
-  verbose_name: string;
-  roles: string[]; // доступные для группы
-}
+import { WaitService } from 'src/app/dashboard/common/components/single/wait/wait.service';
+import { PoolsUpdateService } from '../../all-pools/pools.update.service';
 
 @Component({
   selector: 'vdi-add-group',
@@ -25,10 +20,11 @@ export class AddGropComponent implements OnDestroy {
   private destroy: Subject<any> = new Subject<any>();
   public valid: boolean = true;
 
-  constructor(private service: UsersService,
+  constructor(private service: PoolDetailsService,
+              private updatePools: PoolsUpdateService,
               private waitService: WaitService,
               private dialogRef: MatDialogRef<AddGropComponent>,
-              @Inject(MAT_DIALOG_DATA) public data: IData) { }
+              @Inject(MAT_DIALOG_DATA) public data: any) { }
 
   public send() {
     if (this.groups.length) {
@@ -37,7 +33,8 @@ export class AddGropComponent implements OnDestroy {
         .addGrop(this.data.id, this.groups)
         .pipe(takeUntil(this.destroy)).subscribe((res) => {
           if (res) {
-            this.service.getUser(this.data.id).refetch();
+            this.service.getPool(this.data.idPool, this.data.typePool).refetch();
+            this.updatePools.setUpdate('update');
             this.waitService.setWait(false);
             this.dialogRef.close();
           }
@@ -55,5 +52,4 @@ export class AddGropComponent implements OnDestroy {
   ngOnDestroy() {
     this.destroy.next(null);
   }
-
 }

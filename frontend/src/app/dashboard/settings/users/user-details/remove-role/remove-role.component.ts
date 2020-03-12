@@ -10,45 +10,45 @@ import { takeUntil } from 'rxjs/operators';
 interface IData {
   id: string;
   verbose_name: string;
-  roles: string[]; // доступные для группы
+  roles: string[]; // роли группы
 }
 
 @Component({
-  selector: 'vdi-add-group',
-  templateUrl: './add-group.component.html'
+  selector: 'vdi-remove-role',
+  templateUrl: './remove-role.component.html'
 })
 
-export class AddGropComponent implements OnDestroy {
+export class RemoveRoleComponent implements OnDestroy {
 
   public pending: boolean = false;
-  public groups: [] = [];
+  public roles: [] = [];
   private destroy: Subject<any> = new Subject<any>();
   public valid: boolean = true;
 
   constructor(private service: UsersService,
               private waitService: WaitService,
-              private dialogRef: MatDialogRef<AddGropComponent>,
+              private dialogRef: MatDialogRef<RemoveRoleComponent>,
               @Inject(MAT_DIALOG_DATA) public data: IData) { }
 
+
+
   public send() {
-    if (this.groups.length) {
+    if (this.roles.length) {
       this.waitService.setWait(true);
-      this.service
-        .addGrop(this.data.id, this.groups)
-        .pipe(takeUntil(this.destroy)).subscribe((res) => {
-          if (res) {
-            this.service.getUser(this.data.id).refetch();
-            this.waitService.setWait(false);
-            this.dialogRef.close();
-          }
-        });
+      this.service.removeRole(this.data.id, this.roles).pipe(takeUntil(this.destroy)).subscribe((res) => {
+        if (res) {
+          this.service.getUser(this.data.id).refetch();
+          this.waitService.setWait(false);
+          this.dialogRef.close();
+        }
+      });
     } else {
       this.valid = false;
     }
   }
 
   public select(value: []) {
-    this.groups = value['value'];
+    this.roles = value['value'];
     this.valid = true;
   }
 

@@ -23,6 +23,30 @@
             <button (click)="addUsers()" title="Добавить пользователей" class="btn-control"><fa-icon [icon]="['fas','plus-circle']" size="xs"></fa-icon><span class="name">Добавить пользователя</span></button>
             <button (click)="removeUsers()" title="Удалить пользователей" class="btn-control"><fa-icon [icon]="['fas','trash-alt']" size="xs"></fa-icon><span class="name">Удалить пользователя</span></button>
         </ng-container>
+
+        <ng-container *ngIf="menuActive === 'roles'">
+            <button class="btn-control" (click)="addRole()" title="Добавить роль">
+                <fa-icon [icon]="['fas','plus-circle']" size="xs"></fa-icon>
+                <span class="name">Добавить роль</span>
+            </button>
+        
+            <button *ngIf="pool?.assigned_roles?.length" class="btn-control" (click)="removeRole()" title="Удалить роль">
+                <fa-icon [icon]="['fas','trash-alt']" size="xs"></fa-icon>
+                <span class="name">Удалить роль</span>
+            </button>
+        </ng-container>
+        
+        <ng-container *ngIf="menuActive === 'groups'">
+            <button class="btn-control" (click)="addGroup()" title="Добавить группу">
+                <fa-icon [icon]="['fas','plus-circle']" size="xs"></fa-icon>
+                <span class="name">Добавить группу</span>
+            </button>
+        
+            <button *ngIf="pool?.assigned_groups?.length" class="btn-control" (click)="removeGroup()" title="Удалить группу">
+                <fa-icon [icon]="['fas','trash-alt']" size="xs"></fa-icon>
+                <span class="name">Удалить группу</span>
+            </button>
+        </ng-container>
     </div>
 
     <div class="details-row">
@@ -31,6 +55,8 @@
             <li (click)="routeTo('vms')" [class.active]="menuActive === 'vms'" title="Виртуальные машины в пуле"> <fa-icon [icon]="['fas','desktop']"></fa-icon><span class="name">Виртуальные машины</span></li>
             <!-- <li (click)="routeTo('event-vm')" *ngIf="typePool === 'automated'" [class.active]="menuActive === 'event-vm'" title="События создания ВМ в пуле"> <fa-icon [icon]="['fas','comment']"></fa-icon><span class="name">События создания ВМ</span></li> -->
             <li (click)="routeTo('users')" [class.active]="menuActive === 'users'" title="Пользователи пула"> <fa-icon [icon]="['fas','users']"></fa-icon><span class="name">Пользователи</span></li>
+            <li (click)="routeTo('groups')" [class.active]="menuActive === 'groups'" title="Пользователи пула"> <fa-icon [icon]="['fas','users-cog']"></fa-icon><span class="name">Группы</span></li>
+            <li (click)="routeTo('roles')" [class.active]="menuActive === 'roles'" title="Пользователи пула"> <fa-icon [icon]="['fas','users-cog']"></fa-icon><span class="name">Роли</span></li>
         </ul>
         
         <div class="details-slide" *ngIf="host">
@@ -38,8 +64,11 @@
                 <ng-container *ngIf="menuActive === 'info'">Информация о пулах рабочих столов</ng-container>
                 <ng-container *ngIf="menuActive === 'vms'">ВМ в пуле</ng-container>
                 <ng-container *ngIf="menuActive === 'users'">Пользователи пула</ng-container>
+                <ng-container *ngIf="menuActive === 'groups'">Группы пула</ng-container>
+                <ng-container *ngIf="menuActive === 'roles'">Роли пула</ng-container>
                 <!-- <ng-container *ngIf="menuActive === 'event-vm'">События создания ВМ</ng-container> -->
             </div>
+            
             <div class="details-slide-into">
                 <ng-container *ngIf="typePool === 'automated'">
                     <vdi-table-into *ngIf="menuActive === 'info'" [item]="pool" [collection]="collectionDetailsAutomated" (action)="actionEdit($event)"></vdi-table-into>
@@ -53,6 +82,8 @@
                 </ng-container>
 
                 <vdi-table-component *ngIf="menuActive === 'users'" [data]="pool?.users" [collection]="collectionUsers"></vdi-table-component> 
+                <vdi-table-component *ngIf="menuActive === 'groups'" [data]="pool?.assigned_groups" [collection]="collectionGroups"></vdi-table-component> 
+                <vdi-table-component *ngIf="menuActive === 'roles'" [data]="pool?.assigned_roles" [collection]="collectionRoles"></vdi-table-component> 
             </div>     
         </div>
     </div>

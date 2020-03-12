@@ -1,7 +1,7 @@
 <div class="form">
 
   <div class="form-header">
-    <h1>Добавление роли пользователю {{data?.username}}</h1>
+    <h1>Выдача роли прав пользования пулом {{data?.verbose_name}}</h1>
     <button [mat-dialog-close]="true" class="form-close"><fa-icon [icon]="['fas','times-circle']"></fa-icon></button>
   </div>
 
@@ -9,7 +9,7 @@
     <label class="field">
       <mat-form-field>
         <mat-label *ngIf="pending">Загрузка ...</mat-label>
-        <mat-label *ngIf="data.roles?.length && !pending">Выберите роли</mat-label>
+        <mat-label *ngIf="data.roles?.length && !pending">Выберите  роли</mat-label>
         <mat-label *ngIf="!data.roles?.length && !pending">- нет ролей -</mat-label>
         <mat-select (selectionChange)="select($event)" multiple="true">
           <mat-option *ngFor="let role of data.roles" [value]="role">

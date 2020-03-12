@@ -53,6 +53,8 @@ export class UsersService  {
                         last_login,
                         is_superuser,
                         is_active,
+                        assigned_roles,
+                        possible_roles,
                         assigned_groups {
                             id
                             verbose_name
@@ -148,7 +150,7 @@ export class UsersService  {
         });
     }
 
-    public addUserGrop(id, groups) {
+    public addGrop(id, groups) {
         return this.service.mutate<any>({
             mutation: gql`
                 mutation users(
@@ -170,6 +172,28 @@ export class UsersService  {
         });
     }
 
+    public removeGroup(id, groups) {
+        return this.service.mutate<any>({
+            mutation: gql`
+                mutation users(
+                    $roles: [Role!]!,
+                    $id: UUID!){
+                    addUserRole(
+                        roles: $roles,
+                        id: $id
+                    ){
+                        ok
+                    }
+                }
+            `,
+            variables: {
+                method: 'POST',
+                groups,
+                id
+            }
+        });
+    }
+
     public addRole(id, roles) {
         return this.service.mutate<any>({
             mutation: gql`
@@ -177,6 +201,28 @@ export class UsersService  {
                     $roles: [Role!]!,
                     $id: UUID!){
                     addUserRole(
+                        roles: $roles,
+                        id: $id
+                    ){
+                        ok
+                    }
+                }
+            `,
+            variables: {
+                method: 'POST',
+                roles,
+                id
+            }
+        });
+    }
+
+    public removeRole(id, roles) {
+        return this.service.mutate<any>({
+            mutation: gql`
+                mutation users(
+                    $roles: [Role!]!,
+                    $id: UUID!){
+                    removeUserRole(
                         roles: $roles,
                         id: $id
                     ){

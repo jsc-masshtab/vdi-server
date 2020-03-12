@@ -10,15 +10,15 @@ import { takeUntil } from 'rxjs/operators';
 interface IData {
   id: string;
   verbose_name: string;
-  roles: string[]; // доступные для группы
+  users: string[]; // юзеры группы
 }
 
 @Component({
-  selector: 'vdi-add-group',
-  templateUrl: './add-group.component.html'
+  selector: 'vdi-remove-user',
+  templateUrl: './remove-group.component.html'
 })
 
-export class AddGropComponent implements OnDestroy {
+export class RemoveGroupComponent implements OnDestroy {
 
   public pending: boolean = false;
   public groups: [] = [];
@@ -27,21 +27,21 @@ export class AddGropComponent implements OnDestroy {
 
   constructor(private service: UsersService,
               private waitService: WaitService,
-              private dialogRef: MatDialogRef<AddGropComponent>,
+              private dialogRef: MatDialogRef<RemoveGroupComponent>,
               @Inject(MAT_DIALOG_DATA) public data: IData) { }
+
+
 
   public send() {
     if (this.groups.length) {
       this.waitService.setWait(true);
-      this.service
-        .addGrop(this.data.id, this.groups)
-        .pipe(takeUntil(this.destroy)).subscribe((res) => {
-          if (res) {
-            this.service.getUser(this.data.id).refetch();
-            this.waitService.setWait(false);
-            this.dialogRef.close();
-          }
-        });
+      this.service.removeGroup(this.data.id, this.groups).pipe(takeUntil(this.destroy)).subscribe((res) => {
+        if (res) {
+          this.service.getUser(this.data.id).refetch();
+          this.waitService.setWait(false);
+          this.dialogRef.close();
+        }
+      });
     } else {
       this.valid = false;
     }
