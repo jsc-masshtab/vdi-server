@@ -49,7 +49,6 @@ typedef struct
 
 #define VIRT_VIEWER_ERROR virt_viewer_error_quark ()
 #define VIRT_VIEWER_RESOURCE_PREFIX  "/org/virt-manager/virt-viewer"
-//#define VIRT_VIEWER_RESOURCE_PREFIX "/home/ubuntu/job/virt-viewer-6.0/src/resources"
 
 void create_loop_and_launch(GMainLoop **loop);
 void shutdown_loop(GMainLoop *loop);
