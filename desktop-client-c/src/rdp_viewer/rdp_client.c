@@ -137,6 +137,7 @@ void rdp_client_routine(GTask   *task,
 //        g_strdup("/jpeg"),
 //        g_strdup("/jpeg-quality:10"),
 //        g_strdup("/codec-cache:jpeg"),
+        g_strdup_printf("/smartcard"),
         NULL
     };
     int argc = sizeof(argv) / sizeof(char*) - 1;
