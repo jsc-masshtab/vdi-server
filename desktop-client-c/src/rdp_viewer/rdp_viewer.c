@@ -38,6 +38,7 @@ typedef struct{
     GtkWidget *rdp_viewer_window;
     GtkWidget *overlay_toolbar;
     VirtViewerTimedRevealer *revealer;
+    GtkWidget *top_menu;
 
 } RdpViewerData;
 
@@ -180,6 +181,7 @@ static void rdp_viewer_item_fullscreen_activated(GtkWidget *menu G_GNUC_UNUSED, 
     //gtk_window_set_resizable(GTK_WINDOW(rdp_viewer_window), FALSE);
 
     // show toolbar
+    gtk_widget_hide(rdp_viewer_data->top_menu);
     gtk_widget_show(rdp_viewer_data->overlay_toolbar);
     virt_viewer_timed_revealer_force_reveal(rdp_viewer_data->revealer, TRUE);
 }
@@ -322,6 +324,7 @@ static void rdp_viewer_window_toolbar_leave_fullscreen(GtkWidget *button G_GNUC_
     gtk_widget_hide(rdp_viewer_data->overlay_toolbar);
     //gtk_widget_set_size_request(priv->window, -1, -1);
     gtk_window_unfullscreen(GTK_WINDOW(rdp_viewer_data->rdp_viewer_window));
+    gtk_widget_show(rdp_viewer_data->top_menu);
 }
 
 static void rdp_viewer_toolbar_setup(GtkBuilder *builder, RdpViewerData *rdp_viewer_data)
@@ -425,6 +428,8 @@ GtkResponseType rdp_viewer_start(const gchar *usename, const gchar *password, gc
     g_signal_connect_swapped(rdp_viewer_window, "delete-event",
                              G_CALLBACK(rdp_viewer_window_deleted_cb), &rdp_viewer_data);
     g_signal_connect(rdp_viewer_window, "map-event", G_CALLBACK(rdp_viewer_event_on_mapped), ex_context);
+
+    rdp_viewer_data.top_menu = GTK_WIDGET(gtk_builder_get_object(builder, "top-menu"));
 
     // usb menu is not required for rdp
     GtkWidget *menu_usb = GTK_WIDGET(gtk_builder_get_object(builder, "menu-file-usb"));
