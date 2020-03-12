@@ -3,16 +3,16 @@ import pytest
 
 from controller.schema import controller_schema
 from tests.utils import execute_scheme
-from tests.fixtures import fixt_db, auth_context_fixture  # noqa
+from tests.fixtures import fixt_db, fixt_auth_context  # noqa
 
 
 pytestmark = [pytest.mark.controllers]
 
 
 @pytest.mark.asyncio
-async def test_add_update_remove_controller(fixt_db, auth_context_fixture):  # noqa
+async def test_add_update_remove_controller(fixt_db, fixt_auth_context):  # noqa
     """Add, update and remove controller"""
-    controller_ip = '192.168.20.120'  # TODO: заменить на контроллер из вагранта
+    controller_ip = '192.168.11.102'
 
     # add controller
     qu = """
@@ -37,7 +37,7 @@ async def test_add_update_remove_controller(fixt_db, auth_context_fixture):  # n
     }
     """ % controller_ip
 
-    executed = await execute_scheme(controller_schema, qu, context=auth_context_fixture)
+    executed = await execute_scheme(controller_schema, qu, context=fixt_auth_context)
     assert executed['addController']['ok']
 
     controller_id = executed['addController']['controller']['id']
@@ -65,7 +65,7 @@ async def test_add_update_remove_controller(fixt_db, auth_context_fixture):  # n
 }
     """ % (controller_id, controller_ip)
     print('\n222222')
-    executed = await execute_scheme(controller_schema, qu, context=auth_context_fixture)
+    executed = await execute_scheme(controller_schema, qu, context=fixt_auth_context)
     assert executed['updateController']['ok']
 
     # remove controller
@@ -77,5 +77,5 @@ async def test_add_update_remove_controller(fixt_db, auth_context_fixture):  # n
     }
     """ % controller_id
     print('\n33333333')
-    executed = await execute_scheme(controller_schema, qu, context=auth_context_fixture)
+    executed = await execute_scheme(controller_schema, qu, context=fixt_auth_context)
     assert executed['removeController']['ok']

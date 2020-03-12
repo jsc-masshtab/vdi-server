@@ -1,47 +1,18 @@
 # -*- coding: utf-8 -*-
 
 import pytest
-from abc import ABC
-
-from tornado.ioloop import IOLoop
-from tornado.testing import AsyncHTTPTestCase, gen_test
+from tornado.testing import gen_test
 from tornado.httpclient import HTTPClientError
-from tornado.escape import json_decode
 
+from tests.utils import VdiHttpTestCase
 from tests.fixtures import (fixt_db, fixt_user_locked, fixt_user, fixt_user_admin, fixt_auth_dir,  # noqa
                             fixt_mapping, fixt_group, fixt_group_role)  # noqa
-from app import app, make_app
+
 
 pytestmark = [pytest.mark.asyncio, pytest.mark.auth]
 
 
-class AuthHttpTestCase(AsyncHTTPTestCase, ABC):
-    method = 'POST'
-
-    def get_app(self):
-        make_app()
-        return app
-
-    def get_new_ioloop(self):
-        return IOLoop.current()
-
-    async def fetch_request(self, body, url, headers):
-        if not headers:
-            headers = {'Content-Type': 'application/json'}
-        return await self.http_client.fetch(self.get_url(url),
-                                            method=self.method,
-                                            body=body,
-                                            headers=headers)
-
-    async def get_response(self, body: dict, url='/auth', headers=None):
-        response = await self.fetch_request(body=body, url=url, headers=headers)
-        self.assertEqual(response.code, 200)
-        response_dict = json_decode(response.body)
-        self.assertIsInstance(response_dict, dict)
-        return response_dict
-
-
-class AuthLocalTestCase(AuthHttpTestCase):
+class AuthLocalTestCase(VdiHttpTestCase):
 
     @pytest.mark.usefixtures('fixt_db', 'fixt_user_admin')
     @gen_test
@@ -51,6 +22,7 @@ class AuthLocalTestCase(AuthHttpTestCase):
         access_token = response_dict['data']['access_token']
         self.assertTrue(access_token)
 
+    @pytest.mark.usefixtures('fixt_db')
     @gen_test
     def test_local_auth_bad(self):
         body = '{"username": "test_user_admin","password": "qwe11"}'
@@ -66,6 +38,7 @@ class AuthLocalTestCase(AuthHttpTestCase):
         error_message = response_dict['errors'][0]['message']
         self.assertIn('Invalid credentials', error_message)
 
+    @pytest.mark.usefixtures('fixt_db')
     @gen_test
     def test_user_login_without_pass(self):
         body = '{"username": "test_user_admin","password": ""}'
@@ -121,7 +94,7 @@ class AuthLocalTestCase(AuthHttpTestCase):
             self.assertTrue(False)
 
 
-class AuthLdapTestCase(AuthHttpTestCase):
+class AuthLdapTestCase(VdiHttpTestCase):
 
     @pytest.mark.usefixtures('fixt_db', 'fixt_user')
     @gen_test

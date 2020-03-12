@@ -2,7 +2,7 @@ from __future__ import with_statement
 from alembic import context
 from sqlalchemy import pool, engine_from_config
 from logging.config import fileConfig
-from app import app  # noqa
+from app import make_app  # noqa
 from database import db as target_metadata
 
 # TODO: add export of python path
@@ -24,6 +24,8 @@ fileConfig(config.config_file_name)
 # can be acquired:
 # my_important_option = config.get_main_option("my_important_option")
 # ... etc.
+
+app = make_app()
 
 
 def run_migrations_offline():
