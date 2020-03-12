@@ -111,9 +111,6 @@ BOOL rdp_register_pointer(rdpGraphics* graphics)
     pointer->SetDefault = xf_Pointer_SetDefault;
     pointer->SetPosition = xf_Pointer_SetPosition;
 
-    ExtendedPointer *ex_pointer = (ExtendedPointer *)pointer;
-    ex_pointer->test_int = 444;
-
     graphics_register_pointer(graphics, pointer);
 
     free(pointer);

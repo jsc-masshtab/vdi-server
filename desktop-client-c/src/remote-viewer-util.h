@@ -50,6 +50,8 @@ typedef struct
 #define VIRT_VIEWER_ERROR virt_viewer_error_quark ()
 #define VIRT_VIEWER_RESOURCE_PREFIX  "/org/virt-manager/virt-viewer"
 
+#define MARK_VAR_UNUSED(x) (void)(x)
+
 void create_loop_and_launch(GMainLoop **loop);
 void shutdown_loop(GMainLoop *loop);
 

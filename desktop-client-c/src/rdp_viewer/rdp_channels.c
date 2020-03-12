@@ -34,6 +34,8 @@
 #include "rdp_channels.h"
 #include "rdp_client.h"
 
+#include "remote-viewer-util.h"
+
 /**
  * Function description
  *
