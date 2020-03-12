@@ -5,7 +5,7 @@
 
 import pytest
 
-from tests.fixtures import fixt_db, auth_context_fixture, fixt_group  # noqa
+from tests.fixtures import fixt_db, fixt_auth_context, fixt_group  # noqa
 from tests.utils import execute_scheme, ExecError
 
 from auth.group_schema import group_schema
@@ -17,7 +17,7 @@ pytestmark = [pytest.mark.asyncio, pytest.mark.groups, pytest.mark.auth]
 @pytest.mark.usefixtures('fixt_db', 'fixt_group')
 class TestGroupSchema:
 
-    async def test_group_list(self, snapshot, auth_context_fixture):  # noqa
+    async def test_group_list(self, snapshot, fixt_auth_context):  # noqa
         query = """{
           groups {
             verbose_name
@@ -32,10 +32,10 @@ class TestGroupSchema:
             }
           }
         }"""
-        executed = await execute_scheme(group_schema, query, context=auth_context_fixture)
+        executed = await execute_scheme(group_schema, query, context=fixt_auth_context)
         snapshot.assert_match(executed)
 
-    async def test_group_get_by_id(self, snapshot, auth_context_fixture):  # noqa
+    async def test_group_get_by_id(self, snapshot, fixt_auth_context):  # noqa
         # Хардкод идентификатора лежит в фикстуре.
         query = """{
                   group(id: "10913d5d-ba7a-4049-88c5-769267a6cbe4") {
@@ -52,10 +52,10 @@ class TestGroupSchema:
                     }
                   }
                 }"""
-        executed = await execute_scheme(group_schema, query, context=auth_context_fixture)
+        executed = await execute_scheme(group_schema, query, context=fixt_auth_context)
         snapshot.assert_match(executed)
 
-    async def test_group_create(self, snapshot, auth_context_fixture):  # noqa
+    async def test_group_create(self, snapshot, fixt_auth_context):  # noqa
 
         query = """mutation{createGroup(verbose_name: "test group 2"){
                   group{
@@ -66,12 +66,12 @@ class TestGroupSchema:
                   },
                   ok
                 }}"""
-        executed = await execute_scheme(group_schema, query, context=auth_context_fixture)
+        executed = await execute_scheme(group_schema, query, context=fixt_auth_context)
         snapshot.assert_match(executed)
         await Group.delete.where(Group.verbose_name == 'test group 2').gino.status()
         assert True
 
-    async def test_group_create_bad(self, snapshot, auth_context_fixture):  # noqa
+    async def test_group_create_bad(self, snapshot, fixt_auth_context):  # noqa
         query = """mutation{createGroup(verbose_name: "test_group_1"){
                           group{
                             verbose_name,
@@ -82,13 +82,13 @@ class TestGroupSchema:
                           ok
                         }}"""
         try:
-            await execute_scheme(group_schema, query, context=auth_context_fixture)
+            await execute_scheme(group_schema, query, context=fixt_auth_context)
         except ExecError as E:
             assert 'duplicate key value violates unique constraint' in str(E)
         else:
             raise AssertionError
 
-    async def test_group_edit(self, snapshot, auth_context_fixture):  # noqa
+    async def test_group_edit(self, snapshot, fixt_auth_context):  # noqa
 
         query = """mutation {
                       updateGroup(id: "10913d5d-ba7a-4049-88c5-769267a6cbe4",
@@ -102,19 +102,19 @@ class TestGroupSchema:
                         ok
                       }
                     }"""
-        executed = await execute_scheme(group_schema, query, context=auth_context_fixture)
+        executed = await execute_scheme(group_schema, query, context=fixt_auth_context)
         snapshot.assert_match(executed)
 
-    async def test_group_delete(self, snapshot, auth_context_fixture):  # noqa
+    async def test_group_delete(self, snapshot, fixt_auth_context):  # noqa
         query = """mutation {
                       deleteGroup(id: "10913d5d-ba7a-4049-88c5-769267a6cbe4") {
                         ok
                       }
                     }"""
-        executed = await execute_scheme(group_schema, query, context=auth_context_fixture)
+        executed = await execute_scheme(group_schema, query, context=fixt_auth_context)
         snapshot.assert_match(executed)
 
-    async def test_group_user_add(self, snapshot, auth_context_fixture):  # noqa
+    async def test_group_user_add(self, snapshot, fixt_auth_context):  # noqa
         query = """mutation {
                       addGroupUsers(id: "10913d5d-ba7a-4049-88c5-769267a6cbe4",
                                     users: ["f9599771-cc95-45e4-9ae5-c8177b796aff"]) {
@@ -130,10 +130,10 @@ class TestGroupSchema:
                         ok
                       }
                     }"""
-        executed = await execute_scheme(group_schema, query, context=auth_context_fixture)
+        executed = await execute_scheme(group_schema, query, context=fixt_auth_context)
         snapshot.assert_match(executed)
 
-    async def test_group_user_remove(self, snapshot, auth_context_fixture):  # noqa
+    async def test_group_user_remove(self, snapshot, fixt_auth_context):  # noqa
         query = """mutation {
                       removeGroupUsers(id: "10913d5d-ba7a-4049-88c5-769267a6cbe4",
                                     users: ["f9599771-cc95-45e4-9ae5-c8177b796aff"]) {
@@ -149,10 +149,10 @@ class TestGroupSchema:
                         ok
                       }
                     }"""
-        executed = await execute_scheme(group_schema, query, context=auth_context_fixture)
+        executed = await execute_scheme(group_schema, query, context=fixt_auth_context)
         snapshot.assert_match(executed)
 
-    async def test_group_role(self, snapshot, auth_context_fixture):  # noqa
+    async def test_group_role(self, snapshot, fixt_auth_context):  # noqa
         query = """mutation {
                     addGroupRole(id: "10913d5d-ba7a-4049-88c5-769267a6cbe4",
                     roles: [NETWORK_ADMINISTRATOR, VM_OPERATOR]) {
@@ -164,7 +164,7 @@ class TestGroupSchema:
                         }
                     }
                     }"""
-        executed = await execute_scheme(group_schema, query, context=auth_context_fixture)
+        executed = await execute_scheme(group_schema, query, context=fixt_auth_context)
         snapshot.assert_match(executed)
         query = """mutation {
                             removeGroupRole(id: "10913d5d-ba7a-4049-88c5-769267a6cbe4",
@@ -177,5 +177,5 @@ class TestGroupSchema:
                                 }
                             }
                             }"""
-        executed = await execute_scheme(group_schema, query, context=auth_context_fixture)
+        executed = await execute_scheme(group_schema, query, context=fixt_auth_context)
         snapshot.assert_match(executed)

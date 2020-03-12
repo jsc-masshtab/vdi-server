@@ -6,10 +6,12 @@ import asyncio
 
 from sqlalchemy.dialects.postgresql import UUID
 import tornado.gen
+from asyncpg.exceptions import UniqueViolationError
 
 from database import db, get_list_of_values_from_db, EntityType
-from common.veil_errors import BadRequest, HttpError, VmCreationError
+from common.veil_errors import BadRequest, HttpError, VmCreationError, SimpleError
 from vm.veil_client import VmHttpClient
+from auth.models import Entity, EntityRoleOwner, User
 
 application_log = logging.getLogger('tornado.application')
 
@@ -20,18 +22,14 @@ class Vm(db.Model):
     POWER_STATES = ('unknown', 'power off', 'power on and suspended', 'power on')
     """
     # TODO: положить в таблицу данные о удаленном подключении из ECP
-    # TODO: ip address of domain
-    # TODO: port of domain
+    # TODO: ip address of domain?
+    # TODO: port of domain?
 
     __tablename__ = 'vm'
 
     id = db.Column(UUID(), primary_key=True, default=uuid.uuid4)
     verbose_name = db.Column(db.Unicode(length=255), nullable=False)
     pool_id = db.Column(UUID(), db.ForeignKey('pool.id', ondelete="CASCADE"), unique=False)
-
-    # user_id = db.Column(UUID(), db.ForeignKey('user.id', ondelete="CASCADE"), nullable=True)
-    username = db.Column(db.Unicode(length=100))  # TODO: change to user_id
-
     template_id = db.Column(db.Unicode(length=100), nullable=True)
     created_by_vdi = db.Column(db.Boolean(), nullable=False, default=False)
     broken = db.Column(db.Boolean(), nullable=False, default=False)
@@ -45,6 +43,11 @@ class Vm(db.Model):
         return {'entity_type': self.entity_type, 'entity_uuid': self.id}
 
     @property
+    async def entity_obj(self):
+        return await Entity.query.where(
+            (Entity.entity_type == self.entity_type) & (Entity.entity_uuid == self.id)).gino.first()
+
+    @property
     def controller_query(self):
         from controller.models import Controller
         from pool.models import Pool
@@ -55,17 +58,23 @@ class Vm(db.Model):
     async def controller_address(self):
         return await self.controller_query.gino.scalar()
 
+    @property
+    async def username(self):
+        entity_query = Entity.select('id').where((Entity.entity_type == EntityType.VM) & (Entity.entity_uuid == self.id))
+        ero_query = EntityRoleOwner.select('user_id').where(EntityRoleOwner.entity_id == entity_query)
+        user_id = await ero_query.gino.scalar()
+        user = await User.get(user_id) if user_id else None
+        return user.username if user else None
+
     # ----- ----- ----- ----- ----- ----- -----
 
     @classmethod
     async def create(cls, pool_id, template_id, verbose_name, id=None,
-                     username=None, created_by_vdi=False, broken=False):
-        # TODO: убедиться, что если в create не передан id присвоится значение по-умолчанию
+                     created_by_vdi=False, broken=False):
         application_log.debug('Create VM {} on VDI DB.'.format(verbose_name))
         try:
             vm = await super().create(id=id,
                                       pool_id=pool_id,
-                                      username=username,
                                       template_id=template_id,
                                       verbose_name=verbose_name,
                                       created_by_vdi=created_by_vdi,
@@ -76,52 +85,53 @@ class Vm(db.Model):
         return vm
 
     async def soft_delete(self):
-        application_log.debug('VM {} created by VDI: {}'.format(self.verbose_name, self.created_by_vdi))
-
         if self.created_by_vdi:
             controller_address = await self.controller_address
-            if not controller_address:
-                application_log.warning(
-                    'There is no controller for AutomatedPool {}. Can\'t delete VMs'.format(self.verbose_name))
-
             if controller_address:
                 vm_http_client = await VmHttpClient.create(controller_address, self.id)
                 try:
-                    application_log.debug('Starting remove VM {} from ECP.'.format(self.verbose_name))
                     await vm_http_client.remove_vm()
                 except HttpError as http_error:
-                    application_log.warning('Fail to remove VM {} from ECP. '.format(self.verbose_name))
-                    application_log.debug(http_error)
+                    application_log.warning('Fail to remove VM {} from ECP: '.format(self.verbose_name, http_error))
                 application_log.debug('Vm {} removed from ECP.'.format(self.verbose_name))
         return await self.delete()
 
-    @staticmethod
-    async def attach_vm_to_user(vm_id, username):
-        return await Vm.update.values(username=username).where(
-            Vm.id == vm_id).gino.status()
+    # TODO: очевидное дублирование однотипного кода. Переселить это все в универсальный метод
+    async def add_user(self, user_id):
+        entity = await self.entity_obj
+        try:
+            async with db.transaction():
+                if not entity:
+                    entity = await Entity.create(**self.entity)
+                ero = await EntityRoleOwner.create(entity_id=entity.id, user_id=user_id)
+        except UniqueViolationError:
+            raise SimpleError('Vm already has permission.')
+        return ero
 
-    async def free_vm(self):
-        return await self.update(username=None).apply()
+    async def add_users(self, users_list: list):
+        for user_id in users_list:
+            await self.add_user(user_id)
+        return True
+
+    async def remove_users(self, users_list: list):
+        entity = Entity.select('id').where((Entity.entity_type == self.entity_type) & (Entity.entity_uuid == self.id))
+        # TODO: временное решение. Скорее всего потом права отзываться будут на конкретные сущности
+        if not users_list:
+            return await EntityRoleOwner.delete.where(EntityRoleOwner.entity_id == entity).gino.status()
+        return await EntityRoleOwner.delete.where(
+            (EntityRoleOwner.user_id.in_(users_list)) & (EntityRoleOwner.entity_id == entity)).gino.status()
 
     @staticmethod
-    async def get_vm_id(pool_id, username):
-        # TODO: update
-        return await Vm.select('id').where((Vm.username == username) & (Vm.pool_id == pool_id)).gino.scalar()
-
-    @staticmethod
-    async def get_template_id(vm_id):
-        return await Vm.select('template_id').where((Vm.id == vm_id)).gino.scalar()
-
-    @staticmethod
-    async def get_pool_id(vm_id):
-        return await Vm.select('pool_id').where((Vm.id == vm_id)).gino.scalar()
-
-    @staticmethod
-    async def get_username(vm_id):
-        return await Vm.select('username').where((Vm.id == vm_id)).gino.scalar()
+    async def get_vm_id(pool_id, user_id):
+        entity_query = Entity.select('entity_uuid').where(
+            (Entity.entity_type == EntityType.VM) & (
+                Entity.id.in_(EntityRoleOwner.select('entity_id').where(EntityRoleOwner.user_id == user_id))))
+        vm_query = Vm.select('id').where((Vm.id.in_(entity_query)) & (Vm.pool_id == pool_id))
+        return await vm_query.gino.scalar()
 
     @staticmethod
     async def get_all_vms_ids():
+        # TODO: какой-то бесполезный метод
         return await get_list_of_values_from_db(Vm, Vm.id)
 
     @staticmethod
@@ -130,17 +140,6 @@ class Vm(db.Model):
         vm_ids_data = await Vm.select('id').where((Vm.pool_id == pool_id)).gino.all()
         vm_ids = [str(vm_id) for (vm_id,) in vm_ids_data]
         return vm_ids
-
-    @staticmethod
-    async def get_free_vm_id_from_pool(pool_id):
-        """Get fee vm"""
-        # TODO: update
-        res = await Vm.select('id').where(((Vm.username == None) & (Vm.pool_id == pool_id))).gino.first()  # noqa
-        if res:
-            (vm_id, ) = res
-            return vm_id
-        else:
-            return None
 
     @staticmethod
     def ready_to_connect(**info) -> bool:

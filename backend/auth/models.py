@@ -48,7 +48,7 @@ class User(AbstractSortableStatusModel, db.Model):
     id = db.Column(UUID(), primary_key=True, default=uuid.uuid4)
     username = db.Column(db.Unicode(length=128), nullable=False, unique=True)
     password = db.Column(db.Unicode(length=128), nullable=False)
-    email = db.Column(db.Unicode(length=256), unique=False, nullable=True)  # TODO: включить обратно после получения email из AD.  # noqa
+    email = db.Column(db.Unicode(length=256), unique=False, nullable=True)
     last_name = db.Column(db.Unicode(length=128))
     first_name = db.Column(db.Unicode(length=32))
     date_joined = db.Column(db.DateTime(timezone=True), server_default=func.now())
@@ -89,7 +89,7 @@ class User(AbstractSortableStatusModel, db.Model):
     async def roles(self):
         if self.is_superuser:
             all_roles_set = set(Role)  # noqa
-            application_log.debug('User: {} full roles: {}'.format(self.username, all_roles_set))
+            # application_log.debug('User: {} full roles: {}'.format(self.username, all_roles_set))
             return all_roles_set
 
         user_roles = await UserRole.query.where(UserRole.user_id == self.id).gino.all()
@@ -104,8 +104,8 @@ class User(AbstractSortableStatusModel, db.Model):
             all_roles_list += [role_type.role for role_type in group_roles]
 
         roles_set = set(all_roles_list)
-        application_log.debug('User: {} full roles: {}'.format(self.username, roles_set))
-        # TODO: сейчас роли будет в случайноп порядке.
+        # Сейчас роли будет в случайноп порядке.
+        # application_log.debug('User: {} full roles: {}'.format(self.username, roles_set))
         return roles_set
 
     @property

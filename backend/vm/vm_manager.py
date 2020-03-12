@@ -7,6 +7,7 @@ from vm.models import Vm
 from vm.schema import VmState
 from vm.veil_client import VmHttpClient
 from pool.models import Pool
+from auth.models import Entity, EntityRoleOwner, EntityType
 from controller.models import Controller
 
 
@@ -26,8 +27,14 @@ class VmManager:
         # TODO: update
         while self._is_running:
             # get vms which have users
-            local_vm_data_list = await db.select([Vm.id, Pool.keep_vms_on]).select_from(Vm.join(Pool)).where(
-                Vm.username != '').gino.all()
+            # local_vm_data_list = await db.select([Vm.id, Pool.keep_vms_on]).select_from(Vm.join(Pool)).where(
+            #     Vm.username != '').gino.all()
+
+            local_vm_data_query = db.select([Vm.id, Pool.keep_vms_on]).select_from(Vm.join(Pool)).where(
+                Vm.id.in_(Entity.select('entity_uuid').where((Entity.entity_type == EntityType.VM) & (Entity.id.in_(
+                    EntityRoleOwner.select('entity_id').where(EntityRoleOwner.user_id != None))))))  # noqa
+
+            local_vm_data_list = await local_vm_data_query.gino.all()
 
             # get vm info from controllers
             controllers_addresses = await Controller.get_controllers_addresses()

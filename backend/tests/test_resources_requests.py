@@ -3,7 +3,7 @@ import pytest
 from graphene.test import Client  # noqa
 
 from tests.utils import execute_scheme
-from tests.fixtures import fixt_db, auth_context_fixture  # noqa
+from tests.fixtures import fixt_db, fixt_auth_context  # noqa
 
 from controller_resources.schema import resources_schema
 
@@ -12,7 +12,7 @@ pytestmark = [pytest.mark.resources]
 
 
 @pytest.mark.asyncio
-async def test_request_clusters(fixt_db, auth_context_fixture):  # noqa
+async def test_request_clusters(fixt_db, fixt_auth_context):  # noqa
     """Request clusters data"""
     qu = """
     {
@@ -30,11 +30,11 @@ async def test_request_clusters(fixt_db, auth_context_fixture):  # noqa
     }
     """
 
-    executed = await execute_scheme(resources_schema, qu, context=auth_context_fixture)  # noqa
+    executed = await execute_scheme(resources_schema, qu, context=fixt_auth_context)  # noqa
 
 
 @pytest.mark.asyncio
-async def test_request_nodes(fixt_db, auth_context_fixture):  # noqa
+async def test_request_nodes(fixt_db, fixt_auth_context):  # noqa
     """Request nodes data"""
     qu = """
     {
@@ -51,7 +51,7 @@ async def test_request_nodes(fixt_db, auth_context_fixture):  # noqa
     }
     }
     """
-    executed = await execute_scheme(resources_schema, qu, context=auth_context_fixture)
+    executed = await execute_scheme(resources_schema, qu, context=fixt_auth_context)
 
     # Чекним запрос определенного сервера (первого в списке), если серверы есть
     if executed['nodes']:
@@ -73,12 +73,12 @@ async def test_request_nodes(fixt_db, auth_context_fixture):  # noqa
         }
         """ % (node['id'], node['controller']['address'])
 
-        executed = await execute_scheme(resources_schema, qu, context=auth_context_fixture)
+        executed = await execute_scheme(resources_schema, qu, context=fixt_auth_context)
         assert node['verbose_name'] == executed['node']['verbose_name']
 
 
 @pytest.mark.asyncio
-async def test_request_datapools(fixt_db, auth_context_fixture):  # noqa
+async def test_request_datapools(fixt_db, fixt_auth_context):  # noqa
     """Request datapools data"""
     qu = """
     {
@@ -95,4 +95,4 @@ async def test_request_datapools(fixt_db, auth_context_fixture):  # noqa
         }
     }
     """
-    executed = await execute_scheme(resources_schema, qu, context=auth_context_fixture)  # noqa
+    executed = await execute_scheme(resources_schema, qu, context=fixt_auth_context)  # noqa

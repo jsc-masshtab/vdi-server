@@ -236,19 +236,29 @@ class Pool(db.Model):
 
     @staticmethod
     async def get_controller_ip(pool_id):
-        # TODO: проверить используется ли. Заменить на Pool.get?
+        # TODO: заменить на property controller_address
         query = db.select([Controller.address]).select_from(Controller.join(Pool)).where(
             Pool.id == pool_id)
         return await query.gino.scalar()
 
     async def get_vm_amount(self, only_free=False):
-        """ == None because GINO can't work with is None"""
-        # TODO: update
+        """
+        Нужно дорабатывать - отказаться от in и дублирования кода.
+        :param only_free: учитываем только свободные VM
+        :return: int
+        """
+
         if only_free:
-            return await db.select([db.func.count()]).where(
-                (Vm.pool_id == self.id) & (Vm.username == None)).gino.scalar()  # noqa
-        else:
-            return await db.select([db.func.count()]).where(Vm.pool_id == self.id).gino.scalar()
+            entity_query = Entity.select('entity_uuid').where(
+                (Entity.entity_type == EntityType.VM) & (
+                    Entity.id.in_(EntityRoleOwner.select('id').where(EntityRoleOwner.user_id != None))))  # noqa
+
+            vm_query = db.select([db.func.count(Vm.id)]).where(
+                (Vm.pool_id == self.id) & (Vm.id.notin_(entity_query))).group_by(Vm.id)
+
+            return await vm_query.gino.scalar()
+
+        return await db.select([db.func.count()]).where(Vm.pool_id == self.id).gino.scalar()
 
     @property
     async def roles(self):
@@ -394,11 +404,20 @@ class Pool(db.Model):
             (EntityRoleOwner.role.in_(roles_list)) & (EntityRoleOwner.entity_id == entity)).gino.status()
 
     async def free_assigned_vms(self, users_list: list):
-        # TODO: после переключение VM на использование user_id subquery не нужен.
-        # TODO: update
-        users_subquery = User.select('username').where(User.id.in_(users_list))
-        return await Vm.update.values(username=None).where(
-            (Vm.username.in_(users_subquery)) & (Vm.pool_id == self.id)).gino.status()
+        """
+        Будут удалены все записи из EntityRoleOwner соответствующие условию.
+        Запрос такой ублюдский, потому что через Join в текущей версии Gino получалось очень много подзапросов.
+        :param users_list: uuid пользователей для которых выполняется поиск
+        :return: gino.status()
+        """
+
+        entity_query = Entity.select('id').where((Entity.entity_type == EntityType.VM) & (
+            Entity.entity_uuid.in_(Vm.select('id').where(Vm.pool_id == self.id))))
+
+        ero_query = EntityRoleOwner.delete.where(
+            EntityRoleOwner.entity_id.in_(entity_query) & EntityRoleOwner.user_id.in_(users_list))
+
+        return await ero_query.gino.status()
 
     @classmethod
     async def create(cls, verbose_name, cluster_id, node_id, datapool_id, controller_ip):
@@ -449,6 +468,23 @@ class Pool(db.Model):
     async def deactivate(cls, pool_id):
         return await Pool.update.values(status=Status.FAILED).where(
             Pool.id == pool_id).gino.status()
+
+    async def get_free_vm(self):
+        """Логика такая, что если сущность отсутствует в таблице разрешений - значит никто ей не владеет.
+           Требует расширения после расширения модели владения VM"""
+        free_vm_query = Vm.join(Entity, (Vm.id == Entity.entity_uuid)).join(EntityRoleOwner).select().where(
+            (Entity.entity_type == EntityType.VM) & (Vm.pool_id == self.id) & (text('entity_uuid is null')))
+        return await free_vm_query.gino.load(Vm).first()
+
+    async def free_user_vms(self, user_id):
+        """Т.к. на тонком клиенте нет выбора VM - будут сложности если у пользователя несколько VM в рамках 1 пула."""
+        vms_query = Vm.select('id').where(Vm.pool_id == self.id)
+        entity_query = Entity.select('id').where(
+            (Entity.entity_type == EntityType.VM) & (Entity.entity_uuid.in_(vms_query)))
+        ero_query = EntityRoleOwner.delete.where(
+            (EntityRoleOwner.user_id == user_id) & (EntityRoleOwner.entity_id.in_(entity_query)))
+
+        return await ero_query.gino.status()
 
 
 class StaticPool(db.Model):
@@ -861,7 +897,8 @@ class AutomatedPool(db.Model):
                 free_vm_amount = await pool.get_vm_amount(only_free=True)
 
                 # Если подогретых машин слишком мало, то пробуем добавить еще
-                if free_vm_amount < self.reserve_size and free_vm_amount <= self.min_free_vms_amount:
+                # Условие расширения изменено. Первое условие было < - тестируем.
+                if free_vm_amount <= self.reserve_size and free_vm_amount <= self.min_free_vms_amount:
                     # Max possible amount of VMs which we can add to the pool
                     max_possible_amount_to_add = self.total_size - vm_amount_in_pool
                     # Real amount that we can add to the pool

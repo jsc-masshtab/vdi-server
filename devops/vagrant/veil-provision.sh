@@ -31,9 +31,14 @@ done
 
 echo "run Veil provision"
 # Добавляем узлы
+echo "attempt to add node ${controller_ip} to controller ${controller_ip}"
+sshpass -p ${root_password} ssh ${ssh_opts} root@${controller_ip} ${base_cmd} node add ${api_user} ${api_password} ${controller_ip} ${controller_ip} ${root_password} -c ${controller_ip}
+echo "attempt to add node ${node1_ip} to controller ${controller_ip}"
 sshpass -p ${root_password} ssh ${ssh_opts} root@${controller_ip} ${base_cmd} node add ${api_user} ${api_password} ${node1_ip} ${node1_ip} ${root_password} -c ${controller_ip}
 # sshpass -p ${root_password} ssh ${ssh_opts} root@${controller_ip} ${base_cmd} node list ${api_user} ${api_password} -c ${controller_ip}
 
-# Добавляем ВМ и шаблон на первом попавшемся активнгом узле
-sshpass -p ${root_password} ssh ${ssh_opts} root@${controller_ip} ${base_cmd} domain create ${api_user} ${api_password} domain
-sshpass -p ${root_password} ssh ${ssh_opts} root@${controller_ip} ${base_cmd} domain create_template ${api_user} ${api_password} template
+# Добавляем ВМ и шаблон на первом попавшемся активном узле
+echo "attempt to create domain on first random active node"
+sshpass -p ${root_password} ssh ${ssh_opts} root@${controller_ip} ${base_cmd} domain create ${api_user} ${api_password} domain -c ${controller_ip}
+echo "attempt to create template on first random  active node"
+sshpass -p ${root_password} ssh ${ssh_opts} root@${controller_ip} ${base_cmd} domain create_template ${api_user} ${api_password} template -c ${controller_ip}
