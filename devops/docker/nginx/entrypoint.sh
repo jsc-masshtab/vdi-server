@@ -7,7 +7,7 @@ echo "Stopping nginx..."
 echo "Removing default config file..."
 rm /etc/nginx/conf.d/default.conf
 echo "Copy local config to nginx default dir"
-cp vdi_nginx-dev.conf /etc/nginx/conf.d/default.conf
+cp vdi_nginx.conf /etc/nginx/conf.d/default.conf
 echo "Checking nginx config file..."
 /etc/init.d/nginx configtest
 echo "Starting nginx..."
