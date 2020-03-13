@@ -59,6 +59,6 @@ class VersionHandler(BaseHandler, ABC):
         response = {'data': {'version': '0.31',
                              'year': '2019-2020',
                              'url': 'https://mashtab.org',
-                             'copyright': '	&copy;mashtab.org',
+                             'copyright': '©mashtab.org',
                              'comment': 'Демонстрационная версия'}}
         return self.finish(response)
