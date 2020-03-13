@@ -21,7 +21,7 @@
             <property name="can_focus">False</property>
             <property name="homogeneous">True</property>
             <child>
-              <object class="GtkLabel">
+              <object class="GtkLabel" id="serber-ip-">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="halign">start</property>
@@ -38,6 +38,7 @@
             </child>
             <child>
               <object class="GtkEntry" id="connection-address-entry">
+                <property name="name">connection-address-entry</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="hexpand">True</property>
@@ -80,6 +81,7 @@
             </child>
             <child>
               <object class="GtkEntry" id="connection-port-entry">
+                <property name="name">connection-port-entry</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="text" translatable="yes">5908</property>
@@ -118,6 +120,7 @@
             </child>
             <child>
               <object class="GtkEntry" id="domain-entry">
+                <property name="name">domain-entry</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
               </object>
@@ -137,6 +140,7 @@
         <child>
           <object class="GtkCheckButton" id="ldap-button">
             <property name="label" translatable="yes">Внешняя служба авторизации</property>
+            <property name="name">ldap-button</property>
             <property name="visible">True</property>
             <property name="can_focus">True</property>
             <property name="receives_default">False</property>
@@ -151,6 +155,7 @@
         <child>
           <object class="GtkCheckButton" id="connect-to-prev-button">
             <property name="label" translatable="yes">Автоподключение</property>
+            <property name="name">connect-to-prev-button</property>
             <property name="visible">True</property>
             <property name="can_focus">True</property>
             <property name="receives_default">False</property>
@@ -164,6 +169,7 @@
         </child>
         <child>
           <object class="GtkComboBoxText" id="combobox-remote-protocol">
+            <property name="name">combobox-remote-protocol</property>
             <property name="visible">True</property>
             <property name="can_focus">False</property>
             <property name="active">0</property>
@@ -189,6 +195,7 @@
             <child>
               <object class="GtkButton" id="btn_cancel">
                 <property name="label" translatable="yes">Отменить</property>
+                <property name="name">btn_cancel</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
@@ -202,6 +209,7 @@
             <child>
               <object class="GtkButton" id="btn_ok">
                 <property name="label" translatable="yes">Сохранить</property>
+                <property name="name">btn_ok</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>

@@ -16,6 +16,7 @@
         <property name="spacing">9</property>
         <child>
           <object class="GtkLabel" id="header-label">
+            <property name="name">header-label</property>
             <property name="visible">True</property>
             <property name="can_focus">False</property>
             <property name="label" translatable="yes">версия</property>
@@ -43,7 +44,8 @@
           </packing>
         </child>
         <child>
-          <object class="GtkLabel">
+          <object class="GtkLabel" id="user-name-label">
+            <property name="name">user-name-label</property>
             <property name="visible">True</property>
             <property name="can_focus">False</property>
             <property name="halign">start</property>
@@ -57,6 +59,7 @@
         </child>
         <child>
           <object class="GtkEntry" id="login-entry">
+            <property name="name">login-entry</property>
             <property name="visible">True</property>
             <property name="can_focus">True</property>
             <property name="placeholder_text" translatable="yes">Пользователь</property>
@@ -73,7 +76,8 @@
             <property name="can_focus">False</property>
             <property name="homogeneous">True</property>
             <child>
-              <object class="GtkLabel">
+              <object class="GtkLabel" id="password-label">
+                <property name="name">password-label</property>
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="halign">start</property>
@@ -99,6 +103,7 @@
             <property name="homogeneous">True</property>
             <child>
               <object class="GtkEntry" id="password-entry">
+                <property name="name">password-entry</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="visibility">False</property>
@@ -120,6 +125,7 @@
         </child>
         <child>
           <object class="GtkLabel" id="message-display-label">
+            <property name="name">message-display-label</property>
             <property name="visible">True</property>
             <property name="can_focus">False</property>
           </object>
@@ -148,6 +154,7 @@
             <child>
               <object class="GtkButton" id="btn_settings">
                 <property name="label" translatable="yes">Настройки</property>
+                <property name="name">btn_settings</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
@@ -196,6 +203,7 @@
             <child>
               <object class="GtkButton" id="connect-button">
                 <property name="label" translatable="yes">Войти</property>
+                <property name="name">connect-button</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
@@ -209,6 +217,7 @@
             </child>
             <child>
               <object class="GtkSpinner" id="connect-spinner">
+                <property name="name">connect-spinner</property>
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="halign">start</property>
