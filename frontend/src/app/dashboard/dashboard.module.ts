@@ -24,7 +24,7 @@ import { EventsModule } from './log/events/events.module';
 import {  HttpLink } from 'apollo-angular-link-http';
 import {  Apollo  } from 'apollo-angular';
 import { ApolloLink, from } from 'apollo-link';
-import { HttpHeaders } from '@angular/common/http';
+import { HttpHeaders, HttpClientModule } from '@angular/common/http';
 
 import { NgModule } from '@angular/core';
 
@@ -39,7 +39,6 @@ import { onError } from 'apollo-link-error';
 import { InMemoryCache } from 'apollo-cache-inmemory';
 import { environment } from 'src/environments/environment';
 
-
 @NgModule({
   declarations: [
     DashboardComponent,
@@ -52,7 +51,7 @@ import { environment } from 'src/environments/environment';
     CommonModule,
     DashboardRoutingModule,
     FontAwesomeModule,
-
+    HttpClientModule,
     PoolsModule,
     ClustersModule,
     DatapoolsModule,

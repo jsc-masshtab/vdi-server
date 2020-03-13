@@ -126,7 +126,8 @@ class Pool(db.Model):
                     vms_count = db.func.count(Vm.id)
                     query = query.order_by(desc(vms_count)) if reversed_order else query.order_by(vms_count)
                 elif ordering == 'pool_type':
-                    query.order_by(text(Pool.POOL_TYPE_LABEL))
+                    query = query.order_by(desc(text(Pool.POOL_TYPE_LABEL))) if reversed_order else query.order_by(
+                        text(Pool.POOL_TYPE_LABEL))
             else:
                 # Соответствие переданного наименования поля полю модели, чтобы не использовать raw_sql в order
                 query = query.order_by(desc(getattr(Pool, ordering))) if reversed_order else query.order_by(
