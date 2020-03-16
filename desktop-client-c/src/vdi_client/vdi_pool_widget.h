@@ -10,7 +10,7 @@
 #include <gtk/gtk.h>
 #include <gtk/gtktypes.h>
 
-#include "virt-viewer-util.h"
+#include "remote-viewer-util.h"
 
 typedef struct{
 

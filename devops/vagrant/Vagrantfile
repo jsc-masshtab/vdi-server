@@ -1,0 +1,103 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+Vagrant.configure("2") do | config |
+
+    config.vm.provider "libvirt"
+    config.vm.box_check_update = false
+
+
+    controller_box = "veil-controller-dev"
+    controller_box_url = "http://192.168.10.144/veil_vagrant/veil-controller-dev.json"
+
+    config.vm.define "vdi_controller" do | vdi_controller |
+
+        vdi_controller.vm.synced_folder ".", "/vagrant", disabled: true
+        vdi_controller.vm.box = controller_box
+        vdi_controller.vm.box_url = controller_box_url
+        ip = "192.168.20.110"
+        mac = "00:00:00:00:00:20"
+
+        vdi_controller.vm.provision "shell", inline: "systemctl disable elasticsearch-veil"
+        vdi_controller.vm.provision "shell", inline: "/var/lib/ecp-veil/node/other/auto_configure_nic.sh -a init -f -m static -t 3 -u ens15 -i " \
+                                                    + ip + " -h " + mac + " -g 192.168.20.1 -s 255.255.255.0"
+        vdi_controller.vm.network "private_network", ip: ip, :mac => mac
+        vdi_controller.vm.network "private_network", ip: "0.0.0.0", auto_config: false
+        vdi_controller.vm.network "private_network", ip: "0.0.0.0", auto_config: false
+        vdi_controller.vm.network "private_network", ip: "0.0.0.0", auto_config: false
+        vdi_controller.vm.network "private_network", ip: "0.0.0.0", auto_config: false
+        vdi_controller.vm.network "private_network", ip: "0.0.0.0", auto_config: false
+        vdi_controller.vm.network "private_network", ip: "0.0.0.0", auto_config: false
+
+        vdi_controller.vm.provider "libvirt" do | libvirt |
+            libvirt.memory = "3072"
+            libvirt.cpus = 2
+            libvirt.nested = true
+            libvirt.storage :file, :size => '1G', :cache => 'writeback'
+            libvirt.storage :file, :size => '1G', :cache => 'writeback'
+            libvirt.storage :file, :size => '1G', :cache => 'writeback'
+            libvirt.storage :file, :size => '1G', :cache => 'writeback'
+            libvirt.storage :file, :size => '1G', :cache => 'writeback'
+            libvirt.storage :file, :size => '1G', :cache => 'writeback'
+            libvirt.storage :file, :size => '1500M', :cache => 'writeback'
+            libvirt.storage :file, :size => '1500M', :cache => 'writeback'
+            libvirt.storage :file, :size => '1500M', :cache => 'writeback'
+            libvirt.management_network_autostart = true
+        end
+    end
+
+
+    node_box = "veil-node-dev"
+    node_box_url = "http://192.168.10.144/veil_vagrant/veil-node-dev.json"
+
+        config.vm.define "vdi_node" do | vdi_node |
+        vdi_node.vm.box = node_box
+        vdi_node.vm.box_url = node_box_url
+        ip = "192.168.20.111"
+        mac = "00:00:00:00:00:21"
+        vdi_node.vm.provision "shell", inline: "/var/lib/ecp-veil/node/other/auto_configure_nic.sh -a init -f -m static -t 3 -u ens15 -i " + ip + " -h " + mac + " -g 192.168.20.1 -s 255.255.255.0"
+        vdi_node.vm.network "private_network", ip: ip, :mac => mac
+        vdi_node.vm.network "private_network", ip: "0.0.0.0", auto_config: false
+        vdi_node.vm.network "private_network", ip: "0.0.0.0", auto_config: false
+        vdi_node.vm.network "private_network", ip: "0.0.0.0", auto_config: false
+        vdi_node.vm.network "private_network", ip: "0.0.0.0", auto_config: false
+        vdi_node.vm.network "private_network", ip: "0.0.0.0", auto_config: false
+        vdi_node.vm.network "private_network", ip: "0.0.0.0", auto_config: false
+        # vdi_node.vm.hostname = "vdi_node"
+        vdi_node.vm.provider "libvirt" do | libvirt |
+            libvirt.memory = "2048"
+            libvirt.cpus = 1
+            libvirt.nested = true
+            libvirt.volume_cache = 'writeback'
+            libvirt.storage :file, :size => '1G', :cache => 'writeback'
+            libvirt.storage :file, :size => '1G', :cache => 'writeback'
+            libvirt.storage :file, :size => '1G', :cache => 'writeback'
+            libvirt.storage :file, :size => '1G', :cache => 'writeback'
+            libvirt.storage :file, :size => '1G', :cache => 'writeback'
+            libvirt.storage :file, :size => '1G', :cache => 'writeback'
+            libvirt.storage :file, :size => '1500M', :cache => 'writeback'
+            libvirt.storage :file, :size => '1500M', :cache => 'writeback'
+            libvirt.storage :file, :size => '1500M', :cache => 'writeback'
+            libvirt.management_network_autostart = true
+        end
+    end
+
+    config.vm.define "vdi_host" do | vdi_host |
+        
+        # vdi_host.vm.synced_folder "./../../", "/opt/veil-vdi", type: "nfs", nfs_version: "3", nfs_udp: false, \
+                                            # mount_options: ["rw", "tcp", "nolock", "noacl", "async"]
+        vdi_host.vm.synced_folder './../../', '/opt/veil-vdi', type: "rsync", owner: "vagrant", group: "vagrant"
+        vdi_host.vm.network "private_network", ip: "192.168.20.112"
+        vdi_host.vm.provision :shell, path: "./vdi-deploy.sh", privileged: true
+        vdi_host.vm.provision :shell, path: "./veil-provision.sh", privileged: true
+        vdi_host.ssh.password = "vagrant"
+        
+        vdi_host.vm.box = "generic/debian9"
+        vdi_host.vm.hostname = "vdihost"
+    
+        vdi_host.vm.provider "libvirt" do | libvirt |
+            libvirt.cpus = 2
+            libvirt.memory = 1024*2
+        end
+    end
+end

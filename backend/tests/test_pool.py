@@ -1,22 +1,25 @@
 # -*- coding: utf-8 -*-
 import pytest
 import uuid
+from tests.utils import VdiHttpTestCase
+from tornado.testing import gen_test
+from tornado import gen
 
+from settings import VEIL_WS_MAX_TIME_TO_WAIT
 from pool.schema import pool_schema
 from tests.utils import execute_scheme
+from pool.models import Pool
 
-from tests.fixtures import fixt_db, fixt_create_automated_pool, fixt_create_static_pool, fixt_entitle_user_to_pool, auth_context_fixture  # noqa
-
+from tests.fixtures import (fixt_db, fixt_controller, fixt_create_automated_pool, fixt_create_static_pool,  # noqa
+                            fixt_auth_context, fixt_group, fixt_user, fixt_user_admin, fixt_user_another_admin)  # noqa
 
 pytestmark = [pytest.mark.pools]
 
 
-# TODO: нужно создать контроллер
-# TODO: сейчас может быть попытка использовать не ZFS-диски для клонирования на ZFS-пул.
 # ----------------------------------------------
 # Automated pool
 @pytest.mark.asyncio
-async def test_create_automated_pool(fixt_db, fixt_create_automated_pool, auth_context_fixture):  # noqa
+async def test_create_automated_pool(fixt_db, fixt_controller, fixt_create_automated_pool, fixt_auth_context):  # noqa
     """Create automated pool, make request to check data, remove this pool"""
     pool_id = fixt_create_automated_pool['id']
 
@@ -29,12 +32,12 @@ async def test_create_automated_pool(fixt_db, fixt_create_automated_pool, auth_c
         initial_size
       }
     }""" % pool_id
-    executed = await execute_scheme(pool_schema, qu, context=auth_context_fixture)
+    executed = await execute_scheme(pool_schema, qu, context=fixt_auth_context)
     assert executed['pool']['initial_size'] == 1
 
 
 @pytest.mark.asyncio
-async def test_update_automated_pool(fixt_db, fixt_create_automated_pool, auth_context_fixture):  # noqa
+async def test_update_automated_pool(fixt_db, fixt_controller, fixt_create_automated_pool, fixt_auth_context):  # noqa
     """Create automated pool, update this pool, remove this pool"""
     pool_id = fixt_create_automated_pool['id']
 
@@ -48,19 +51,75 @@ async def test_update_automated_pool(fixt_db, fixt_create_automated_pool, auth_c
             pool_id: "%s"
             verbose_name: "%s",
             reserve_size: 1,
-            total_size: 5,
+            total_size: 4,
             keep_vms_on: true){
             ok
         }
     }""" % (pool_id, new_pool_name)
-    executed = await execute_scheme(pool_schema, qu, context=auth_context_fixture)
+    executed = await execute_scheme(pool_schema, qu, context=fixt_auth_context)
     assert executed['updateDynamicPool']['ok']
+
+
+@pytest.mark.asyncio
+@pytest.mark.usefixtures('fixt_db', 'fixt_controller', 'fixt_user_admin', 'fixt_create_automated_pool', 'fixt_user_another_admin')  # noqa
+class PoolTestCase(VdiHttpTestCase):
+
+    @gen_test(timeout=VEIL_WS_MAX_TIME_TO_WAIT + 10)
+    def test_automated_pool_expand(self):
+
+        pool = yield Pool.query.gino.first()
+        pool_type = yield pool.pool_type
+        self.assertEqual(pool_type, Pool.PoolTypes.AUTOMATED)
+        pool_id = pool.id
+
+        vms_amount = yield pool.get_vm_amount()
+        self.assertEqual(vms_amount, 1)  # Сначала в пуле должна быть 1 VM
+
+        # Авторизуемся, чтобы получить токен
+        body = '{"username": "test_user_admin","password": "veil"}'
+        response_dict = yield self.get_response(body=body, url='/auth')
+        access_token = response_dict['data']['access_token']
+        self.assertTrue(access_token)
+
+        # Формируем данные для тестируемого параметра
+        headers = {'Content-Type': 'application/json', 'Authorization': 'jwt {}'.format(access_token)}
+        body = '{"remote_protocol": "spice"}'
+        url = '/client/pools/{pool_id}/'.format(pool_id=pool_id)
+
+        response_dict = yield self.get_response(body=body, url=url, headers=headers)
+        response_data = response_dict['data']
+        self.assertIsInstance(response_data, dict)
+        self.assertIn('port', response_data)
+
+        # Расширение пула не могло произойти так быстро, поэтому убеждаемся, что нет свободных ВМ.
+        # Авторизуемся под вторым админом, чтобы получить токен
+        body = '{"username": "test_user_admin2","password": "veil"}'
+        response_dict = yield self.get_response(body=body, url='/auth')
+        access_token = response_dict['data']['access_token']
+        self.assertTrue(access_token)
+
+        # Формируем данные для тестируемого параметра
+        headers = {'Content-Type': 'application/json', 'Authorization': 'jwt {}'.format(access_token)}
+        body = '{"remote_protocol": "spice"}'
+        url = '/client/pools/{pool_id}/'.format(pool_id=pool_id)
+
+        response_dict = yield self.get_response(body=body, url=url, headers=headers)
+        response_data = response_dict['data']
+        self.assertIsInstance(response_data, dict)
+        response_message = response_data['message']
+        self.assertEqual('В пуле нет свободных машин', response_message)
+
+        # Ждем примерно максимальное время ожидания монитора ресурсов + накладки, чтобы убедиться, что пул расширился.
+        yield gen.sleep(VEIL_WS_MAX_TIME_TO_WAIT + 5)
+
+        vms_amount = yield pool.get_vm_amount()
+        self.assertEqual(2, vms_amount)  # Тут ожидаем, что уже 2
 
 
 # ----------------------------------------------
 # Static pool
 @pytest.mark.asyncio
-async def test_create_static_pool(fixt_create_static_pool, auth_context_fixture):  # noqa
+async def test_create_static_pool(fixt_db, fixt_controller, fixt_create_static_pool, fixt_auth_context):  # noqa
     """Create static pool, make request to check data, remove this pool"""
     pool_id = fixt_create_static_pool['id']
     assert fixt_create_static_pool['ok']
@@ -74,11 +133,11 @@ async def test_create_static_pool(fixt_create_static_pool, auth_context_fixture)
         }
       }
     }""" % pool_id
-    executed = await execute_scheme(pool_schema, qu, context=auth_context_fixture)  # noqa
+    executed = await execute_scheme(pool_schema, qu, context=fixt_auth_context)  # noqa
 
 
 @pytest.mark.asyncio
-async def test_update_static_pool(fixt_create_static_pool, auth_context_fixture):  # noqa
+async def test_update_static_pool(fixt_db, fixt_controller, fixt_create_static_pool, fixt_auth_context):  # noqa
     """Create static pool, update this pool, remove this pool"""
     pool_id = fixt_create_static_pool['id']
 
@@ -89,12 +148,12 @@ async def test_update_static_pool(fixt_create_static_pool, auth_context_fixture)
          ok
     }
     }""" % (pool_id, new_pool_name)
-    executed = await execute_scheme(pool_schema, qu, context=auth_context_fixture)
+    executed = await execute_scheme(pool_schema, qu, context=fixt_auth_context)
     assert executed['updateStaticPool']['ok']
 
 
 @pytest.mark.asyncio
-async def test_remove_and_add_vm_in_static_pool(fixt_create_static_pool, auth_context_fixture):  # noqa
+async def test_remove_and_add_vm_in_static_pool(fixt_db, fixt_controller, fixt_create_static_pool, fixt_auth_context):  # noqa
     """Create automated pool, make request to check data,
     remove a vm from this pool, add the removed vm back to this pool, remove this pool"""
     pool_id = fixt_create_static_pool['id']
@@ -108,7 +167,7 @@ async def test_remove_and_add_vm_in_static_pool(fixt_create_static_pool, auth_co
         }
       }
     }""" % pool_id
-    executed = await execute_scheme(pool_schema, qu, context=auth_context_fixture)
+    executed = await execute_scheme(pool_schema, qu, context=fixt_auth_context)
     vms_in_pool_list = executed['pool']['vms']
     assert len(vms_in_pool_list) == 1
 
@@ -120,7 +179,7 @@ async def test_remove_and_add_vm_in_static_pool(fixt_create_static_pool, auth_co
           ok
         }
       }''' % (pool_id, vm_id)
-    executed = await execute_scheme(pool_schema, qu, context=auth_context_fixture)
+    executed = await execute_scheme(pool_schema, qu, context=fixt_auth_context)
     assert executed['removeVmsFromStaticPool']['ok']
 
     # add removed machine back to pool
@@ -130,5 +189,85 @@ async def test_remove_and_add_vm_in_static_pool(fixt_create_static_pool, auth_co
           ok
         }
       }''' % (pool_id, vm_id)
-    executed = await execute_scheme(pool_schema, qu, context=auth_context_fixture)
+    executed = await execute_scheme(pool_schema, qu, context=fixt_auth_context)
     assert executed['addVmsToStaticPool']['ok']
+
+
+@pytest.mark.asyncio
+@pytest.mark.usefixtures('fixt_db', 'fixt_controller', 'fixt_group', 'fixt_user', 'fixt_create_static_pool')
+class TestPoolPermissionsSchema:
+
+    async def test_pool_user_permission(self, snapshot, fixt_auth_context):  # noqa
+        pools = await Pool.query.gino.all()
+        pool = pools[0]
+        query = """mutation{
+                            entitleUsersToPool(pool_id: "%s",
+                                               users: ["10913d5d-ba7a-4049-88c5-769267a6cbe4"])
+                            {
+                                ok,
+                                pool{users{id}}
+                            }}""" % pool.id
+
+        executed = await execute_scheme(pool_schema, query, context=fixt_auth_context)
+        snapshot.assert_match(executed)
+
+        query = """mutation{
+                    removeUserEntitlementsFromPool(pool_id: "%s",
+                                       users: ["10913d5d-ba7a-4049-88c5-769267a6cbe4"])
+                    {
+                        ok,
+                        pool{users{id}}
+                    }}""" % pool.id
+
+        executed = await execute_scheme(pool_schema, query, context=fixt_auth_context)
+        snapshot.assert_match(executed)
+
+    async def test_pool_group_permission(self, snapshot, fixt_auth_context):  # noqa
+        pools = await Pool.query.gino.all()
+        pool = pools[0]
+        query = """mutation{
+                                    addPoolGroup(pool_id: "%s",
+                                                 groups: ["10913d5d-ba7a-4049-88c5-769267a6cbe4"])
+                                    {
+                                        ok,
+                                        pool{assigned_groups{id}, possible_groups{id}}
+                                    }}""" % pool.id
+
+        executed = await execute_scheme(pool_schema, query, context=fixt_auth_context)
+        snapshot.assert_match(executed)
+
+        query = """mutation{
+                            removePoolGroup(pool_id: "%s",
+                                            groups: ["10913d5d-ba7a-4049-88c5-769267a6cbe4"])
+                            {
+                                ok,
+                                pool{assigned_groups{id}, possible_groups{id}}
+                            }}""" % pool.id
+
+        executed = await execute_scheme(pool_schema, query, context=fixt_auth_context)
+        snapshot.assert_match(executed)
+
+    async def test_pool_role_permission(self, snapshot, fixt_auth_context):  # noqa
+        pools = await Pool.query.gino.all()
+        pool = pools[0]
+        query = """mutation{
+                            addPoolRole(pool_id: "%s",
+                                        roles: [VM_ADMINISTRATOR, READ_ONLY])
+                            {
+                                ok,
+                                pool{assigned_roles, possible_roles}
+                            }}""" % pool.id
+
+        executed = await execute_scheme(pool_schema, query, context=fixt_auth_context)
+        snapshot.assert_match(executed)
+
+        query = """mutation{
+                            removePoolRole(pool_id: "%s",
+                                        roles: [READ_ONLY])
+                            {
+                                ok,
+                                pool{assigned_roles, possible_roles}
+                            }}""" % pool.id
+
+        executed = await execute_scheme(pool_schema, query, context=fixt_auth_context)
+        snapshot.assert_match(executed)

@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 3.7)
 project(thin_client_veil C)
 
 set(CMAKE_C_STANDARD 99)
@@ -20,6 +20,12 @@ FILE(GLOB SRC_CODE
         src/remote-viewer.c
         src/remote-viewer-connect.c
         src/remote-viewer-connect.h
+        src/remote-viewer-util.h
+        src/remote-viewer-util.c
+        src/remote-viewer-timed-revealer.c
+        src/remote-viewer-timed-revealer.h
+        src/remote_viewer_start_settings.h
+        src/remote_viewer_start_settings.c
         src/main.c
 
 # virt_viewer
@@ -27,10 +33,7 @@ FILE(GLOB SRC_CODE
         src/virt_viewer/virt-viewer-resources.c
         src/virt_viewer/virt-viewer-enums.h
         src/virt_viewer/virt-viewer-enums.c
-        
-        src/virt_viewer/virt-viewer-util.h
-        src/virt_viewer/virt-viewer-util.c
-        
+
         src/virt_viewer/virt-viewer-auth.h
         src/virt_viewer/virt-viewer-auth.c
         src/virt_viewer/virt-viewer-app.h
@@ -49,8 +52,6 @@ FILE(GLOB SRC_CODE
         src/virt_viewer/virt-viewer-vm-connection.c
         src/virt_viewer/virt-viewer-display-vte.h
         src/virt_viewer/virt-viewer-display-vte.c
-        src/virt_viewer/virt-viewer-timed-revealer.c
-        src/virt_viewer/virt-viewer-timed-revealer.h
         #HAVE_SPICE_GTK
         src/virt_viewer/virt-viewer-session-spice.h
         src/virt_viewer/virt-viewer-session-spice.c
@@ -62,6 +63,14 @@ FILE(GLOB SRC_CODE
 #rdp_viewer
         src/rdp_viewer/rdp_viewer.h
         src/rdp_viewer/rdp_viewer.c
+        src/rdp_viewer/rdp_channels.h
+        src/rdp_viewer/rdp_channels.c
+        src/rdp_viewer/rdp_client.h
+        src/rdp_viewer/rdp_client.c
+        src/rdp_viewer/rdp_cursor.h
+        src/rdp_viewer/rdp_cursor.c
+        src/rdp_viewer/rdp_display.h
+        src/rdp_viewer/rdp_display.c
         
 #utility
         src/utility/crashhandler.h
@@ -103,6 +112,7 @@ if (UNIX)
             m
             -rdynamic
             -pthread
+            -lX11
     )
 
     SET(GUI_TYPE)
@@ -127,10 +137,6 @@ endif (WIN32)
     INCLUDE_DIRECTORIES(${LIBS_INCLUDE_PATH}/libxml2)
     SET(LIBS ${LIBS} xml2)
 
-    # rest 0.7
-    #INCLUDE_DIRECTORIES(${LIBS_INCLUDE_PATH}rest-0.7)
-    #SET(LIBS ${LIBS} rest-0.7)
-
     # SPICE_GTK
     INCLUDE_DIRECTORIES(${LIBS_INCLUDE_PATH}spice-client-gtk-3.0)
     INCLUDE_DIRECTORIES(${LIBS_INCLUDE_PATH}spice-client-glib-2.0)
@@ -145,9 +151,19 @@ endif (WIN32)
     INCLUDE_DIRECTORIES(${LIBS_INCLUDE_PATH}json-glib-1.0)
     SET(LIBS ${LIBS} json-glib-1.0)
 
+    # freerdp
+    add_definitions(-DNEW_FREEERDP_VERSION)
+    INCLUDE_DIRECTORIES(${LIBS_INCLUDE_PATH}freerdp2)
+    SET(LIBS ${LIBS} freerdp2 freerdp-client2)
+
+    # winpr2
+    INCLUDE_DIRECTORIES(${LIBS_INCLUDE_PATH}winpr2)
+    SET(LIBS ${LIBS} winpr2)
+
 #############################LINKING###################################
 ADD_EXECUTABLE(thin_client_veil ${GUI_TYPE} ${SRC_CODE})
 target_link_libraries(
     thin_client_veil # exec
     ${LIBS} # libs
 )
+# freerdp2-dev  libfreerdp-client2-2  libwinpr2-2 libwinpr2-dev

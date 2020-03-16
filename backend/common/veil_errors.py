@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Old errors moved from Vdi v0"""
+"""Old errors moved from Vdi v0.2"""
 from abc import ABC
 
 from cached_property import cached_property

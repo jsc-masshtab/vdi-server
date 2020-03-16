@@ -29,6 +29,7 @@
             <property name="homogeneous">True</property>
             <child>
               <object class="GtkComboBoxText" id="combobox-remote-protocol">
+                <property name="name">combobox-remote-protocol</property>
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="halign">start</property>
@@ -70,6 +71,7 @@
             <child>
               <object class="GtkButton" id="button-renew">
                 <property name="label">Обновить</property>
+                <property name="name">button-renew</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
@@ -85,6 +87,7 @@
             <child>
               <object class="GtkButton" id="button-quit">
                 <property name="label">Выйти</property>
+                <property name="name">button-quit</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
@@ -143,16 +146,41 @@
           </packing>
         </child>
         <child>
-          <object class="GtkLabel" id="status_label">
+          <object class="GtkBox">
             <property name="visible">True</property>
             <property name="can_focus">False</property>
-            <property name="halign">start</property>
-            <property name="label" translatable="yes">Отправлен запрос на список пулов</property>
+            <child>
+              <object class="GtkLabel" id="status_label">
+                <property name="name">status_label</property>
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="halign">start</property>
+                <property name="label" translatable="yes">Отправлен запрос на список пулов</property>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">False</property>
+                <property name="position">0</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkImage" id="image_label_vdi_online">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="icon_name">help-browser</property>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">True</property>
+                <property name="pack_type">end</property>
+                <property name="position">1</property>
+              </packing>
+            </child>
           </object>
           <packing>
             <property name="expand">False</property>
-            <property name="fill">False</property>
-            <property name="position">2</property>
+            <property name="fill">True</property>
+            <property name="position">3</property>
           </packing>
         </child>
       </object>

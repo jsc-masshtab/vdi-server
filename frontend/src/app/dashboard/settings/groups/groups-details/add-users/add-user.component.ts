@@ -31,6 +31,10 @@ export class AddUserGroupComponent implements OnDestroy {
               @Inject(MAT_DIALOG_DATA) public data: IData) { }
 
 
+  public select(value: []) {
+    this.users = value['value'];
+    this.valid = true;
+  }
 
   public send() {
     if (this.users.length) {
@@ -46,11 +50,6 @@ export class AddUserGroupComponent implements OnDestroy {
     } else {
       this.valid = false;
     }
-  }
-
-  public select(value: []) {
-    this.users = value['value'];
-    this.valid = true;
   }
 
   ngOnDestroy() {

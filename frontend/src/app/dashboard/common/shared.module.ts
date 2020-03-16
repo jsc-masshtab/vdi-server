@@ -1,3 +1,4 @@
+import { AddSelectComponent } from './components/shared/add-select/add-select';
 import { AppRoutingModule } from '../../app-routing.module';
 
 
@@ -10,7 +11,7 @@ import { NgModule } from '@angular/core';
 import { TableIntoComponent } from './components/shared/table-into-component/table-into';
 import { TableComponentComponent } from './components/shared/table-component/table-component.component';
 import { FormForEditComponent } from './forms-dinamic/change-form/form-edit.component';
-import { ReactiveFormsModule } from '@angular/forms';
+import { ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { MatCheckboxModule } from '@angular/material';
 import { PaginationComponent } from './components/shared/pagination/pagination.component';
 
@@ -18,7 +19,8 @@ import { PaginationComponent } from './components/shared/pagination/pagination.c
 const COMPONENTS = [
   TableComponentComponent,
   TableIntoComponent,
-  PaginationComponent
+  PaginationComponent,
+  AddSelectComponent
 ];
 
 const DIRECTIVES = [
@@ -54,7 +56,8 @@ const FORMS_DINAMIC = [
     MatDialogModule,
     ReactiveFormsModule,
     MatCheckboxModule,
-    AppRoutingModule
+    AppRoutingModule,
+    FormsModule
   ],
   entryComponents: [
     ...FORMS_DINAMIC

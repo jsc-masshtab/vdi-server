@@ -100,3 +100,9 @@ nohup.out
 
 pgdata/
 logfile
+
+# Yandex.Tank
+tests/yandex.tank/logs/
+tests/yandex.tank/*.log
+tests/yandex.tank/*.txt
+tests/yandex.tank/data

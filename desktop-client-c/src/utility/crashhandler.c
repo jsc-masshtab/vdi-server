@@ -62,8 +62,9 @@ void install_crash_handler(const char *logFileName){
 
     memcpy(&fileName[0], logFileName, strlen(logFileName));
 
-    signal(SIGSEGV, crush_handler);
+    signal(SIGILL, crush_handler);
     signal(SIGABRT, crush_handler);
+    signal(SIGSEGV, crush_handler);
     signal(SIGFPE, crush_handler);
 }
 

@@ -348,7 +348,7 @@ export class PoolAddComponent implements OnInit, OnDestroy {
           type: 'string'
         },
         {
-          title: 'Порогове количество свободных ВМ',
+          title: 'Пороговое количество свободных ВМ',
           property: 'min_free_vms_amount',
           type: 'string'
         },

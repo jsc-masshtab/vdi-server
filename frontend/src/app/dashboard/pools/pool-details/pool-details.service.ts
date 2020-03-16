@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { Apollo } from 'apollo-angular';
+import { Apollo, QueryRef } from 'apollo-angular';
 import gql from 'graphql-tag';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
@@ -27,7 +27,7 @@ export class PoolDetailsService {
         });
     }
 
-    public getPool(pool_id: string | number , type: string): Observable<any> {
+    public getPool(pool_id: string | number, type: string): QueryRef<any, any> {
         if (type === 'automated') {
             return this.service.watchQuery({
                 query: gql`  query pools($pool_id: String) {
@@ -72,13 +72,23 @@ export class PoolDetailsService {
                                     }
                                     create_thin_clones
                                     keep_vms_on
+                                    assigned_roles
+                                    possible_roles
+                                    assigned_groups {
+                                        id
+                                        verbose_name
+                                    }
+                                    possible_groups{
+                                        id
+                                        verbose_name
+                                    }
                                 }
                             }`,
                 variables: {
                     method: 'GET',
                     pool_id
                 }
-            }).valueChanges.pipe(map(data => data.data['pool']));
+            });
         }
 
         if (type === 'static') {
@@ -113,13 +123,23 @@ export class PoolDetailsService {
                                     datapool {
                                         verbose_name
                                     }
+                                    assigned_roles
+                                    possible_roles
+                                    assigned_groups {
+                                        id
+                                        verbose_name
+                                    }
+                                    possible_groups{
+                                        id
+                                        verbose_name
+                                    }
                                 }
                             }`,
                 variables: {
                     method: 'GET',
                     pool_id
                 }
-            }).valueChanges.pipe(map(data => data.data['pool']));
+            });
         }
     }
 
@@ -222,7 +242,7 @@ export class PoolDetailsService {
     public removeUserEntitlementsFromPool(pool_id: string, users: []) {
         return this.service.mutate<any>({
             mutation: gql`
-                            mutation pools($pool_id: ID,$users: [ID]) {
+                            mutation pools($pool_id: UUID!,$users: [UUID!]!) {
                                 removeUserEntitlementsFromPool(pool_id: $pool_id, users: $users) {
                                     ok
                                 }
@@ -240,7 +260,7 @@ export class PoolDetailsService {
     public entitleUsersToPool(pool_id: string, users: []) {
         return this.service.mutate<any>({
             mutation: gql`
-                            mutation pools($pool_id: ID,$users: [ID]) {
+                            mutation pools($pool_id: UUID!,$users: [UUID!]!) {
                                 entitleUsersToPool(pool_id: $pool_id, users: $users) {
                                     ok
                                 }
@@ -336,6 +356,140 @@ export class PoolDetailsService {
             variables: {
                 method: 'POST',
                 vm_id
+            }
+        });
+    }
+
+    //
+
+    public addGrop(id, groups) {
+        return this.service.mutate<any>({
+            mutation: gql`
+                mutation pools(
+                    $groups: [UUID!]!,
+                    $id: UUID!){
+                    addPoolGroup(
+                        groups: $groups,
+                        pool_id: $id
+                    ){
+                        ok
+                    }
+                }
+            `,
+            variables: {
+                method: 'POST',
+                groups,
+                id
+            }
+        });
+    }
+
+    public removeGroup(id, groups) {
+        return this.service.mutate<any>({
+            mutation: gql`
+                mutation pools(
+                    $groups: [UUID!]!,
+                    $id: UUID!){
+                    removePoolGroup(
+                        groups: $groups,
+                        pool_id: $id
+                    ){
+                        ok
+                    }
+                }
+            `,
+            variables: {
+                method: 'POST',
+                groups,
+                id
+            }
+        });
+    }
+
+    public addRole(id, roles) {
+        return this.service.mutate<any>({
+            mutation: gql`
+                mutation pools(
+                    $roles: [Role!]!,
+                    $id: UUID!){
+                    addPoolRole(
+                        roles: $roles,
+                        pool_id: $id
+                    ){
+                        ok
+                    }
+                }
+            `,
+            variables: {
+                method: 'POST',
+                roles,
+                id
+            }
+        });
+    }
+
+    public removeRole(id, roles) {
+        return this.service.mutate<any>({
+            mutation: gql`
+                mutation pools(
+                    $roles: [Role!]!,
+                    $id: UUID!){
+                    removePoolRole(
+                        roles: $roles,
+                        pool_id: $id
+                    ){
+                        ok
+                    }
+                }
+            `,
+            variables: {
+                method: 'POST',
+                roles,
+                id
+            }
+        });
+    }
+
+    public entitleUsersPools(id, users) {
+        return this.service.mutate<any>({
+            mutation: gql`
+                mutation pools(
+                    $users: [UUID!]!,
+                    $id: UUID!){
+                    entitleUsersToPool(
+                        users: $users,
+                        pool_id: $id
+                    ){
+                        ok
+                    }
+                }
+            `,
+            variables: {
+                method: 'POST',
+                users,
+                id
+            }
+        });
+    }
+
+    public removeUserEntitlementsPool(id, users) {
+        return this.service.mutate<any>({
+            mutation: gql`
+                mutation pools(
+                    $users: [UUID!]!,
+                    $id: UUID!){
+                    removePoolRole(
+                        users: $users,
+                        pool_id: $id
+                    ){
+                        ok
+                    }
+                }
+            `,
+            variables: {
+                method: 'POST',
+                users,
+                id
             }
         });
     }

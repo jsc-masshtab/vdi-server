@@ -26,7 +26,7 @@
 #include <glib-object.h>
 #include <gtk/gtk.h>
 #include "virt-viewer-window.h"
-#include "virt-viewer-util.h"
+#include "remote-viewer-util.h"
 
 G_BEGIN_DECLS
 
@@ -103,10 +103,12 @@ void virt_viewer_start_reconnect_poll(VirtViewerApp *self);
 
 
 gboolean virt_viewer_app_get_session_cancelled(VirtViewerApp *self);
-
+gboolean virt_viewer_app_is_quitting(VirtViewerApp *self);
 
 void virt_viewer_app_hide_all_windows_forced(VirtViewerApp *app);
-// Вынесено из внутренних
+
+void virt_viewer_app_set_window_name(VirtViewerApp *app, const gchar *vm_verbose_name);
+// Вынесено из внутренних // todo: вернуть взад
 void virt_viewer_app_deactivate(VirtViewerApp *self, gboolean connect_error);
 
 G_END_DECLS

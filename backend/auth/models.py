@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 import uuid
-from enum import Enum
 import logging
 
 from sqlalchemy.dialects.postgresql import UUID
@@ -9,7 +8,7 @@ from sqlalchemy import Index
 from sqlalchemy import Enum as AlchemyEnum
 from asyncpg.exceptions import UniqueViolationError
 
-from database import db, AbstractSortableStatusModel, AbstractEntity, Role, Permission
+from database import db, AbstractSortableStatusModel, Role, EntityType
 from auth.utils import hashers
 from event.models import Event
 from common.veil_errors import SimpleError
@@ -18,42 +17,38 @@ from common.veil_errors import SimpleError
 application_log = logging.getLogger('tornado.application')
 
 
-class EnityType(Enum):
-    """Базовые виды сущностей"""
-    # TODO: перечислить явно возможные виды сущностей
-    # ANGULAR_WEB
-    # THIN_CLIENT
-    # CONTROLLER
-    # LOCAL_AUTH
-    # Security?
-    # AutomatedPool
-    # Pool
-    pass
-
-
 class Entity(db.Model):
+    """
+    entity_type: тип сущности из Enum
+    entity_uuid: UUID сущности, если в качестве EntityType указано название таблицы  # TODO: rename to object_uuid
+    """
     __tablename__ = 'entity'
 
     id = db.Column(UUID(), primary_key=True, default=uuid.uuid4)
-    entity_uuid = db.Column(UUID(), nullable=True, index=True)  # UUID сущности
-    entity_type = db.Column(db.Unicode(), index=True)  # тип сущности (таблица в БД или абстрактная сущность)
+    entity_type = db.Column(AlchemyEnum(EntityType), nullable=False, index=True, default=EntityType.SYSTEM)
+    entity_uuid = db.Column(UUID(), nullable=True, index=True)
 
 
-class RoleEntityPermission(db.Model):
+class EntityRoleOwner(db.Model):
+    """Ограничение прав доступа к сущности для конкретного типа роли.
+       Если user_id и group_id null, то ограничение доступа к сущности только по Роли
+       Если role пустой, то только по пользователю"""
+    __tablename__ = 'entity_role_owner'
 
-    __tablename__ = 'role_entity_permission'
     id = db.Column(UUID(), primary_key=True, default=uuid.uuid4)
-    permission = db.Column(AlchemyEnum(Permission), nullable=False, index=True)
-    role = db.Column(AlchemyEnum(Role), nullable=False, index=True)
     entity_id = db.Column(UUID(), db.ForeignKey(Entity.id, ondelete="CASCADE"))
+    role = db.Column(AlchemyEnum(Role), nullable=True, index=True)  # TODO: заменить на array?
+    user_id = db.Column(UUID(), db.ForeignKey('user.id', ondelete="CASCADE"), nullable=True)
+    group_id = db.Column(UUID(), db.ForeignKey('group.id', ondelete="CASCADE"), nullable=True)
 
 
-class User(AbstractSortableStatusModel, db.Model, AbstractEntity):
+class User(AbstractSortableStatusModel, db.Model):
     __tablename__ = 'user'
+
     id = db.Column(UUID(), primary_key=True, default=uuid.uuid4)
     username = db.Column(db.Unicode(length=128), nullable=False, unique=True)
     password = db.Column(db.Unicode(length=128), nullable=False)
-    email = db.Column(db.Unicode(length=256), unique=False, nullable=True)  # TODO: включить обратно после получения email из AD.
+    email = db.Column(db.Unicode(length=256), unique=False, nullable=True)
     last_name = db.Column(db.Unicode(length=128))
     first_name = db.Column(db.Unicode(length=32))
     date_joined = db.Column(db.DateTime(timezone=True), server_default=func.now())
@@ -64,15 +59,26 @@ class User(AbstractSortableStatusModel, db.Model, AbstractEntity):
 
     # ----- ----- ----- ----- ----- ----- -----
     # Properties and getters:
+
     @property
     def entity_type(self):
-        return 'Security'
+        return EntityType.SECURITY
+
+    @property
+    def entity(self):
+        return {'entity_type': self.entity_type, 'entity_uuid': self.id}
 
     @property
     async def assigned_groups(self):
         groups = await Group.join(UserGroup.query.where(UserGroup.user_id == self.id).alias()).select().gino.load(
             Group).all()
         return groups
+
+    @property
+    async def assigned_groups_ids(self):
+        groups = await UserGroup.select('group_id').where(UserGroup.user_id == self.id).gino.all()
+        groups_ids_list = [group.group_id for group in groups]
+        return groups_ids_list
 
     @property
     async def possible_groups(self):
@@ -83,7 +89,7 @@ class User(AbstractSortableStatusModel, db.Model, AbstractEntity):
     async def roles(self):
         if self.is_superuser:
             all_roles_set = set(Role)  # noqa
-            application_log.debug('User: {} full roles: {}'.format(self.username, all_roles_set))
+            # application_log.debug('User: {} full roles: {}'.format(self.username, all_roles_set))
             return all_roles_set
 
         user_roles = await UserRole.query.where(UserRole.user_id == self.id).gino.all()
@@ -98,9 +104,30 @@ class User(AbstractSortableStatusModel, db.Model, AbstractEntity):
             all_roles_list += [role_type.role for role_type in group_roles]
 
         roles_set = set(all_roles_list)
-        application_log.debug('User: {} full roles: {}'.format(self.username, roles_set))
-        # TODO: сейчас роли будет в случайноп порядке.
+        # Сейчас роли будет в случайноп порядке.
+        # application_log.debug('User: {} full roles: {}'.format(self.username, roles_set))
         return roles_set
+
+    @property
+    async def pools(self):
+        # Либо размещать staticmethod в пулах, либо импорт тут, либо хардкодить названия полей.
+        from pool.models import Pool
+
+        if self.is_superuser:
+            # superuser есть все роли - мы просто выбираем все доступные пулы.
+            pools_query = Pool.get_pools_query()
+        else:
+            user_roles = await self.roles
+            user_groups_ids = await self.assigned_groups_ids
+            pools_query = Pool.get_pools_query(user_id=self.id, groups_ids_list=user_groups_ids, role_set=user_roles)
+
+        pools = await pools_query.gino.all()
+
+        pools_list = [
+            {'id': str(pool.master_id), 'name': pool.verbose_name, 'os_type': pool.os_type, 'status': pool.status.value}
+            for pool in pools]
+
+        return pools_list
 
     @staticmethod
     async def get_id(username):
@@ -138,12 +165,12 @@ class User(AbstractSortableStatusModel, db.Model, AbstractEntity):
         operation_status = await query.gino.status()
 
         info_message = 'User {username} has been activated.'.format(username=self.username)
-        await Event.create_info(info_message, entity_list=self.entity_list)
+        await Event.create_info(info_message, entity_dict=self.entity)
 
         return operation_status
 
     async def deactivate(self):
-        # TODO: проверка, сколько останется активных администраторов не с этим id
+        """Деактивировать всех суперпользователей в системе - нельзя."""
         query = db.select([db.func.count(User.id)]).where(
             (User.id != self.id) & (User.is_superuser == True) & (User.is_active == True))  # noqa
 
@@ -155,7 +182,7 @@ class User(AbstractSortableStatusModel, db.Model, AbstractEntity):
         operation_status = await query.gino.status()
 
         info_message = 'User {username} has been deactivated.'.format(username=self.username)
-        await Event.create_info(info_message, entity_list=self.entity_list)
+        await Event.create_info(info_message, entity_dict=self.entity)
 
         return operation_status
 
@@ -178,7 +205,7 @@ class User(AbstractSortableStatusModel, db.Model, AbstractEntity):
             User.id == self.id).gino.status()
 
         info_message = 'Password of user {username} has been changed.'.format(username=self.username)
-        await Event.create_info(info_message, entity_list=self.entity_list)
+        await Event.create_info(info_message, entity_dict=self.entity)
 
         return user_status
 
@@ -195,8 +222,8 @@ class User(AbstractSortableStatusModel, db.Model, AbstractEntity):
         user_obj = await User.create(**user_kwargs)
 
         user_role = 'Superuser' if is_superuser else 'User'
-        info_message = 'Creating user {username} with role {role}.'.format(username=username, role=user_role)
-        await Event.create_info(info_message, entity_list=user_obj.entity_list)
+        info_message = '{role} "{username}" created.'.format(username=username, role=user_role)
+        await Event.create_info(info_message, entity_dict=user_obj.entity)
 
         return user_obj
 
@@ -220,7 +247,7 @@ class User(AbstractSortableStatusModel, db.Model, AbstractEntity):
 
         if user_kwargs.get('is_superuser'):
             info_message = 'User {username} has become a superuser.'.format(username=user.username)
-            await Event.create_info(info_message, entity_list=user.entity_list)
+            await Event.create_info(info_message, entity_dict=user.entity)
 
         return user
 
@@ -230,19 +257,18 @@ class User(AbstractSortableStatusModel, db.Model, AbstractEntity):
         user = await User.get_object(extra_field_name='username', extra_field_value=username)
         if not user:
             return False
+
         await user.update(last_login=func.now()).apply()
         await UserJwtInfo.soft_create(user_id=user.id, token=token)
 
         # Login event
-        info_message = 'User {username} has been logged in successfully. IP address: {ip}.'.format(username=username,
-                                                                                                   ip=ip)
-        entity_list = list()
-        entity_list.append({'entity_type': user.entity_type, 'entity_uuid': user.uuid})
-        entity_list.append({'entity_type': client_type, 'entity_uuid': user.uuid})
-        entity_list.append(
-            {'entity_type': 'LDAP_AUTH' if ldap else 'LOCAL_AUTH', 'entity_uuid': user.uuid})
+        auth_type = 'Ldap' if ldap else 'Local'
+        info_message = '{auth_type} user {username} has been logged in successfully. IP: {ip}.'.format(
+            auth_type=auth_type,
+            username=username,
+            ip=ip)
 
-        await Event.create_info(info_message, entity_list=entity_list)
+        await Event.create_info(info_message, entity_dict=user.entity)
         return True
 
     @classmethod
@@ -255,11 +281,11 @@ class User(AbstractSortableStatusModel, db.Model, AbstractEntity):
         if not is_valid:
             return False
 
-        # Запрещаем все выданные пользователю токены (Сейчас может быть только 1)
+        # Запрещаем все выданные пользователю токены (Может быть только 1)
         await UserJwtInfo.delete.where(UserJwtInfo.user_id == user.id).gino.status()
 
         info_message = 'User {username} has logged out.'.format(username=username)
-        await Event.create_info(info_message, entity_list=user.entity_list)
+        await Event.create_info(info_message, entity_dict=user.entity)
         return True
 
 
@@ -271,6 +297,7 @@ class UserJwtInfo(db.Model):
     становятся невалидными.
     """
     __tablename__ = 'user_jwtinfo'
+
     user_id = db.Column(UUID(), db.ForeignKey(User.id, ondelete="CASCADE"), primary_key=True)
     # не хранит в себе 'jwt ' максимальный размер намеренно не установлен, т.к. четкого ограничение в стандарте нет.
     token = db.Column(db.Unicode(), nullable=False, index=True)
@@ -302,8 +329,9 @@ class UserJwtInfo(db.Model):
         return count > 0
 
 
-class Group(AbstractSortableStatusModel, db.Model, AbstractEntity):
+class Group(AbstractSortableStatusModel, db.Model):
     __tablename__ = 'group'
+
     id = db.Column(UUID(), primary_key=True, default=uuid.uuid4)
     verbose_name = db.Column(db.Unicode(length=128), nullable=False, unique=True)
     description = db.Column(db.Unicode(length=255), nullable=True, unique=False)
@@ -312,9 +340,14 @@ class Group(AbstractSortableStatusModel, db.Model, AbstractEntity):
 
     # ----- ----- ----- ----- ----- ----- -----
     # Properties and getters:
+
     @property
     def entity_type(self):
-        return 'Security'
+        return EntityType.SECURITY
+
+    @property
+    def entity(self):
+        return {'entity_type': self.entity_type, 'entity_uuid': self.id}
 
     @property
     async def roles(self):
@@ -337,7 +370,13 @@ class Group(AbstractSortableStatusModel, db.Model, AbstractEntity):
     async def add_user(self, user_id):
         """Add user to group"""
         try:
-            return await UserGroup.create(user_id=user_id, group_id=self.id)
+            user_group = await UserGroup.create(user_id=user_id, group_id=self.id)
+
+            user = await User.get(user_id)
+            info_message = 'User {username} has been included to group {groupname}.'.format(username=user.username,
+                                                                                            groupname=self.verbose_name)
+            await Event.create_info(info_message, entity_dict=self.entity)
+            return user_group
         except UniqueViolationError:
             raise SimpleError('Пользователь {} уже находится в группе {}'.format(user_id, self.id))
 
@@ -353,9 +392,14 @@ class Group(AbstractSortableStatusModel, db.Model, AbstractEntity):
 
     async def add_role(self, role):
         try:
-            return await GroupRole.create(group_id=self.id, role=role)
+            group_role = await GroupRole.create(group_id=self.id, role=role)
+            info_message = 'Role {role} has been set to group {groupname}.'.format(groupname=self.verbose_name,
+                                                                                   role=role)
+            await Event.create_info(info_message, entity_dict=self.entity)
+
         except UniqueViolationError:
             raise SimpleError('Группе {} уже назначена роль {}'.format(self.id, role))
+        return group_role
 
     async def add_roles(self, roles_list):
         async with db.transaction():
@@ -381,6 +425,7 @@ class Group(AbstractSortableStatusModel, db.Model, AbstractEntity):
 
 class UserGroup(db.Model):
     __tablename__ = 'user_groups'
+
     id = db.Column(UUID(), primary_key=True, default=uuid.uuid4)
     user_id = db.Column(UUID(), db.ForeignKey(User.id, ondelete="CASCADE"), nullable=False)
     group_id = db.Column(UUID(), db.ForeignKey(Group.id, ondelete="CASCADE"), nullable=False)
@@ -388,6 +433,7 @@ class UserGroup(db.Model):
 
 class GroupRole(db.Model):
     __tablename__ = 'group_role'
+
     id = db.Column(UUID(), primary_key=True, default=uuid.uuid4)
     role = db.Column(AlchemyEnum(Role), nullable=False, index=True)
     group_id = db.Column(UUID(), db.ForeignKey(Group.id, ondelete="CASCADE"), nullable=False)
@@ -396,17 +442,26 @@ class GroupRole(db.Model):
 class UserRole(db.Model):
     __tablename__ = 'user_role'
     id = db.Column(UUID(), primary_key=True, default=uuid.uuid4)
+
     role = db.Column(AlchemyEnum(Role), nullable=False, index=True)
     user_id = db.Column(UUID(), db.ForeignKey(User.id, ondelete="CASCADE"), nullable=False)
 
 
 # -------- Составные индексы --------------------------------
-# Ограничение на включение пользователя в одну и ту же группу.
+Index('ix_entity_entity_object_entity_type', Entity.entity_uuid, Entity.entity_type, unique=True)
+
 Index('ix_user_in_group', UserGroup.user_id, UserGroup.group_id, unique=True)
-Index('ix_role_entity_permission_role_entity_permission',
-      RoleEntityPermission.permission, RoleEntityPermission.role,
-      RoleEntityPermission.entity_id, unique=True)
 Index('ix_user_roles_user_roles',
       UserRole.role, UserRole.user_id, unique=True)
 Index('ix_group_roles_group_roles',
       GroupRole.role, GroupRole.group_id, unique=True)
+
+Index('ix_entity_role_owner_entity_role_user',
+      EntityRoleOwner.entity_id, EntityRoleOwner.role,
+      EntityRoleOwner.user_id, unique=True)
+Index('ix_entity_role_owner_entity_role_group',
+      EntityRoleOwner.entity_id, EntityRoleOwner.role,
+      EntityRoleOwner.group_id, unique=True)
+Index('ix_entity_role_owner_entity_role_owner',
+      EntityRoleOwner.entity_id, EntityRoleOwner.role,
+      EntityRoleOwner.group_id, EntityRoleOwner.user_id, unique=True)

@@ -1,0 +1,23 @@
+:host {
+    width: 100%;
+    display: flex;
+}
+
+input {
+    width: 80%;
+    padding: 5px;
+    border-radius: 2px;
+    border: 1px solid rgba(0,0,0,.54);
+}
+
+button {
+    width: 20%;
+    color: #FFF;
+    background: #111;
+    border: 1px solid rgba(0,0,0,.54);
+
+    &:hover {
+        background: #00abff;
+        color: #FFF;
+    }
+}

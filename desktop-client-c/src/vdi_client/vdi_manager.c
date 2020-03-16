@@ -7,7 +7,7 @@
 #include <cairo-features.h>
 #include <libsoup/soup-session.h>
 
-#include "virt-viewer-util.h"
+#include "remote-viewer-util.h"
 #include "vdi_manager.h"
 #include "vdi_ws_client.h"
 #include "vdi_pool_widget.h"
@@ -35,7 +35,7 @@ typedef struct{
     GtkWidget *gtk_flow_box;
     GtkWidget *status_label;
     GtkWidget *main_vm_spinner;
-    GtkWidget *label_vdi_online;
+    GtkWidget *image_label_vdi_online;
     GtkWidget *combobox_remote_protocol;
 
     GArray *pool_widgets_array;
@@ -61,7 +61,6 @@ static void refresh_vdi_pool_data_async(void);
 static void unregister_all_pools(void);
 static void register_pool(const gchar *pool_id, const gchar *pool_name, const gchar *os_type, const gchar *status);
 static VdiPoolWidget get_vdi_pool_widget_by_id(const gchar *searched_id);
-static void shutdown_loop(GMainLoop *loop);
 
 static void on_get_vdi_pool_data_finished(GObject *source_object, GAsyncResult *res, gpointer user_data);
 static void on_get_vm_from_pool_finished(GObject *source_object, GAsyncResult *res, gpointer user_data);
@@ -86,7 +85,7 @@ static void set_init_values()
     vdi_manager.gtk_flow_box = NULL;
     vdi_manager.status_label = NULL;
     vdi_manager.main_vm_spinner = NULL;
-    vdi_manager.label_vdi_online = NULL;
+    vdi_manager.image_label_vdi_online = NULL;
     vdi_manager.combobox_remote_protocol = NULL;
 
     vdi_manager.pool_widgets_array = NULL;
@@ -199,13 +198,6 @@ static VdiPoolWidget get_vdi_pool_widget_by_id(const gchar *searched_id)
     }
 
     return searched_vdi_pool_widget;
-}
-
-// stop GMainLoop
-static void shutdown_loop(GMainLoop *loop)
-{
-    if (g_main_loop_is_running(loop))
-        g_main_loop_quit(loop);
 }
 
 //////////////////////////////// async task callbacks//////////////////////////////////////
@@ -329,17 +321,29 @@ static void on_get_vm_from_pool_finished(GObject *source_object G_GNUC_UNUSED,
 static gboolean on_ws_data_from_vdi_received(gboolean is_vdi_online)
 {
     //printf("In %s :thread id = %lu\n", (const char *)__func__, pthread_self());
-    gchar *message;
-    if (vdi_manager.label_vdi_online){
-        if (is_vdi_online){
-            message = g_strdup("<span background=\"green\" color=\"white\">  Сервер доступен  </span>");
-        }
-        else{
-            message = g_strdup("<span background=\"red\" color=\"white\">  Сервер недоступен  </span>");
-        }
+//    gchar *message;
+//    if (vdi_manager.label_vdi_online){
+//        if (is_vdi_online){
+//            message = g_strdup("<span background=\"green\" color=\"white\">  Сервер доступен  </span>");
+//        }
+//        else{
+//            message = g_strdup("<span background=\"red\" color=\"white\">  Сервер недоступен  </span>");
+//        }
 
-        gtk_label_set_markup(GTK_LABEL (vdi_manager.label_vdi_online), message);
-        g_free(message);
+//        gtk_label_set_markup(GTK_LABEL (vdi_manager.label_vdi_online), message);
+//        g_free(message);
+//    }
+
+    if (vdi_manager.image_label_vdi_online) {
+
+        gchar *resource_path;
+        if (is_vdi_online)
+            resource_path = g_strdup(VIRT_VIEWER_RESOURCE_PREFIX"/icons/content/img/green_circle.png");
+        else
+            resource_path = g_strdup(VIRT_VIEWER_RESOURCE_PREFIX"/icons/content/img/red_circle.png");
+
+        gtk_image_set_from_resource((GtkImage *)vdi_manager.image_label_vdi_online, resource_path);
+        g_free(resource_path);
     }
 
     return FALSE;
@@ -431,7 +435,7 @@ GtkResponseType vdi_manager_dialog(GtkWindow *main_window G_GNUC_UNUSED, gchar *
     vdi_manager.remote_protocol_type_ptr = remote_protocol_type;
 
     /* Create the widgets */
-    vdi_manager.builder = virt_viewer_util_load_ui("vdi_manager_form.ui");
+    vdi_manager.builder = remote_viewer_util_load_ui("vdi_manager_form.ui");
     g_return_val_if_fail(vdi_manager.builder != NULL, GTK_RESPONSE_NONE);
 
     vdi_manager.window = GTK_WIDGET(gtk_builder_get_object(vdi_manager.builder, "vdi-main-window"));
@@ -448,9 +452,10 @@ GtkResponseType vdi_manager_dialog(GtkWindow *main_window G_GNUC_UNUSED, gchar *
     gtk_box_pack_start(GTK_BOX(vdi_manager.vm_main_box), vdi_manager.gtk_flow_box, FALSE, TRUE, 0);
 
     vdi_manager.main_vm_spinner = GTK_WIDGET(gtk_builder_get_object(vdi_manager.builder, "main_vm_spinner"));
-    vdi_manager.label_vdi_online = GTK_WIDGET(gtk_builder_get_object(vdi_manager.builder, "label_vdi_online"));
     vdi_manager.combobox_remote_protocol =
             GTK_WIDGET(gtk_builder_get_object(vdi_manager.builder, "combobox-remote-protocol"));
+
+    vdi_manager.image_label_vdi_online = GTK_WIDGET(gtk_builder_get_object(vdi_manager.builder, "image_label_vdi_online"));
 
     // connects
     //g_signal_connect_swapped(vdi_manager.window, "map-event", G_CALLBACK(mapped_user_function), &vdi_manager.ci);
@@ -472,8 +477,7 @@ GtkResponseType vdi_manager_dialog(GtkWindow *main_window G_GNUC_UNUSED, gchar *
     // get pool data
     refresh_vdi_pool_data_async();
     // event loop
-    vdi_manager.ci.loop = g_main_loop_new(NULL, FALSE);
-    g_main_loop_run(vdi_manager.ci.loop);
+    create_loop_and_launch(&vdi_manager.ci.loop);
 
     // clear
     vdi_api_cancell_pending_requests();

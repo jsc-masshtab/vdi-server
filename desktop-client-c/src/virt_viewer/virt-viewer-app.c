@@ -54,7 +54,7 @@
 #include "virt-viewer-auth.h"
 #include "virt-viewer-window.h"
 #include "virt-viewer-session.h"
-#include "virt-viewer-util.h"
+#include "remote-viewer-util.h"
 #include "remote-viewer.h"
 #ifdef HAVE_GTK_VNC
 #include "virt-viewer-session-vnc.h"
@@ -240,9 +240,9 @@ virt_viewer_app_simple_message_dialog(VirtViewerApp *self,
     msg = g_strdup_vprintf(fmt, vargs);
     va_end(vargs);
 
-//    dialog = virt_viewer_app_make_message_dialog(self, msg);
-//    gtk_dialog_run(GTK_DIALOG(dialog));
-//    gtk_widget_destroy(dialog);
+    dialog = virt_viewer_app_make_message_dialog(self, msg);
+    gtk_dialog_run(GTK_DIALOG(dialog));
+    gtk_widget_destroy(dialog);
 
     printf("%s \n", msg);
 
@@ -560,6 +560,19 @@ virt_viewer_app_hide_all_windows(VirtViewerApp *app)
 void virt_viewer_app_hide_all_windows_forced(VirtViewerApp *app)
 {
     g_list_foreach(app->priv->windows, hide_one_window_forced, app);
+}
+
+void virt_viewer_app_set_window_name(VirtViewerApp *app, const gchar *vm_verbose_name)
+{
+    gchar *username = NULL;
+    g_object_get(app, "username", &username, NULL);
+    printf("remembered_user %s \n", username);
+
+    // virt viewer takes its name from guest-name so lets not overcomplicate
+    gchar *window_name = g_strconcat("ВМ: ", vm_verbose_name, "    Пользователь: ", username, NULL);
+    g_object_set(app, "guest-name", window_name, NULL);
+    g_free(window_name);
+    g_free(username);
 }
 
 G_MODULE_EXPORT void
@@ -1510,6 +1523,9 @@ static void virt_viewer_app_auth_refused(VirtViewerSession *session,
      * VirtViewerApp needs to schedule a new connection to retry */
     priv->authretry = (!virt_viewer_session_can_retry_auth(session) &&
                        !virt_viewer_session_get_file(session));
+
+    // no point to try to connect if credentials are wrong
+    virt_viewer_stop_reconnect_poll(self);
 }
 
 static void virt_viewer_app_auth_unsupported(VirtViewerSession *session G_GNUC_UNUSED,
@@ -2545,7 +2561,7 @@ static GtkWidget *
 virt_viewer_app_get_preferences(VirtViewerApp *self)
 {
     VirtViewerSession *session = virt_viewer_app_get_session(self);
-    GtkBuilder *builder = virt_viewer_util_load_ui("virt-viewer-preferences.ui");
+    GtkBuilder *builder = remote_viewer_util_load_ui("virt-viewer-preferences.ui");
     gboolean can_share_folder = virt_viewer_session_can_share_folder(session);
     GtkWidget *preferences = self->priv->preferences;
     gchar *path;
@@ -2722,6 +2738,11 @@ virt_viewer_stop_reconnect_poll(VirtViewerApp *self)
 gboolean virt_viewer_app_get_session_cancelled(VirtViewerApp *self)
 {
     return self->priv->cancelled;
+}
+
+gboolean virt_viewer_app_is_quitting(VirtViewerApp *self)
+{
+    return self->priv->quitting;
 }
 
 /*

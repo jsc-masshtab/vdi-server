@@ -29,7 +29,7 @@
 
 #include <glib/gi18n.h>
 
-#include "virt-viewer-util.h"
+#include "remote-viewer-util.h"
 #include "virt-viewer-display-spice.h"
 #include "virt-viewer-auth.h"
 

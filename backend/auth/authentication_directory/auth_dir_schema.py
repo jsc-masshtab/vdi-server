@@ -2,7 +2,7 @@ import graphene
 from graphene import Enum as GrapheneEnum
 import re
 
-from database import StatusGraphene, db
+from database import StatusGraphene, db, Status
 from common.veil_validators import MutationValidation
 from common.veil_errors import SimpleError, ValidationError
 from common.veil_decorators import security_administrator_required, readonly_required
@@ -80,6 +80,7 @@ class MappingType(graphene.ObjectType):
     value_type = MappingTypesGraphene()
     values = graphene.List(graphene.String)
     priority = graphene.Int()
+    status = StatusGraphene()
 
     assigned_groups = graphene.List(MappingGroupType)
     possible_groups = graphene.List(MappingGroupType)
@@ -91,6 +92,9 @@ class MappingType(graphene.ObjectType):
     async def resolve_possible_groups(self, _info):
         mapping = await Mapping.get(self.id)
         return await mapping.possible_groups
+
+    async def resolve_status(self, _info):
+        return Status.ACTIVE
 
 
 class AuthenticationDirectoryType(graphene.ObjectType):

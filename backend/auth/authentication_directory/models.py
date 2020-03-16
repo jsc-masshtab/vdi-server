@@ -5,18 +5,17 @@ from enum import Enum
 from typing import List, Tuple, Optional
 
 import ldap
-from sqlalchemy import Enum as AlchemyEnum
+from sqlalchemy import Index, Enum as AlchemyEnum
 from sqlalchemy.dialects.postgresql import UUID, ARRAY, JSONB
-from sqlalchemy import Index
 from sqlalchemy.sql import text, desc
 
-from auth.models import application_log, User, Group
-from database import db, AbstractSortableStatusModel, AbstractEntity, Status, Role
-from event.models import Event
 from settings import LDAP_TIMEOUT
+from database import db, AbstractSortableStatusModel, Status, Role, EntityType
+from auth.models import application_log, User, Group
+from event.models import Event
 
 
-class AuthenticationDirectory(db.Model, AbstractSortableStatusModel, AbstractEntity):
+class AuthenticationDirectory(db.Model, AbstractSortableStatusModel):
     """
     Модель служб каталогов для авторизации пользователей в системе.
     Не может быть более 1го.
@@ -91,6 +90,14 @@ class AuthenticationDirectory(db.Model, AbstractSortableStatusModel, AbstractEnt
     kdc_urls = db.Column(ARRAY(db.Unicode(length=255)), nullable=True)
     sso = db.Column(db.Boolean(), default=False)
     status = db.Column(AlchemyEnum(Status), nullable=False, index=True)
+
+    @property
+    def entity_type(self):
+        return EntityType.SECURITY
+
+    @property
+    def entity(self):
+        return {'entity_type': self.entity_type, 'entity_uuid': self.id}
 
     @property
     async def mappings(self):
@@ -175,12 +182,10 @@ class AuthenticationDirectory(db.Model, AbstractSortableStatusModel, AbstractEnt
     @classmethod
     async def soft_delete(cls, id):
         """Все удаления объектов AD необходимо делать тут."""
-        # TODO: после ввода сущностей в Event, удалять зависимые записи журнала событий, возможно через ON_DELETE.
-        auth_dir = await AuthenticationDirectory.get_object(id=id, include_inactive=True)
+
+        auth_dir = await AuthenticationDirectory.get(id)
         if auth_dir:
-            msg = 'Authentication Directory {name} deleted.'.format(name=auth_dir.verbose_name)
             await auth_dir.delete()
-            await Event.create_info(msg)
             return True
         return False
 
@@ -216,28 +221,21 @@ class AuthenticationDirectory(db.Model, AbstractSortableStatusModel, AbstractEnt
     async def test_connection(self) -> bool:
         """
         Метод тестирования соединения с сервером службы каталогов.
-
-        :param directory_url: адрес службы каталогов
-        :param connection_type: тип подключения
         :return: результат проверки соединения
         """
-        if self.connection_type == self.ConnectionTypes.LDAP:
-            try:
-                ldap_server = ldap.initialize(self.directory_url)
-                ldap_server.set_option(ldap.OPT_TIMEOUT, LDAP_TIMEOUT)
-                ldap_server.simple_bind_s()
-            except ldap.INVALID_CREDENTIALS:
-                return True
-            except ldap.SERVER_DOWN:
-                msg = 'LDAP server {} is down.'.format(self.directory_url)
-                application_log.warning(msg)
-                await Event.create_warning(msg, entity_list=self.entity_list)
-                return False
+
+        try:
+            ldap_server = ldap.initialize(self.directory_url)
+            ldap_server.set_option(ldap.OPT_TIMEOUT, LDAP_TIMEOUT)
+            ldap_server.simple_bind_s()
+        except ldap.INVALID_CREDENTIALS:
             return True
-        msg = 'Can\'t connect to LDAP server {}.'.format(self.directory_url)
-        application_log.warning(msg)
-        await Event.create_warning(msg, entity_list=self.entity_list)
-        return False
+        except ldap.SERVER_DOWN:
+            msg = 'Authentication directory server {} is down.'.format(self.directory_url)
+            application_log.warning(msg)
+            await Event.create_warning(msg, entity_dict=self.entity)
+            return False
+        return True
 
     @staticmethod
     def _extract_domain_from_username(username: str) -> List[str]:
@@ -445,7 +443,7 @@ class AuthenticationDirectory(db.Model, AbstractSortableStatusModel, AbstractEnt
                 await user.delete()
 
 
-class Mapping(db.Model, AbstractEntity):
+class Mapping(db.Model):
     """
     Модель отображения атрибутов пользователя службы каталогов на группы пользователей системы.
     Описание полей:
@@ -470,6 +468,14 @@ class Mapping(db.Model, AbstractEntity):
     value_type = db.Column(AlchemyEnum(ValueTypes), nullable=False, index=True)
     values = db.Column(JSONB(), nullable=False)
     priority = db.Column(db.Integer(), nullable=False, default=0)
+
+    @property
+    def entity_type(self):
+        return EntityType.SECURITY
+
+    @property
+    def entity(self):
+        return {'entity_type': self.entity_type, 'entity_uuid': self.id}
 
     @property
     async def assigned_groups(self):
@@ -503,7 +509,6 @@ class Mapping(db.Model, AbstractEntity):
         if mapping_kwargs:
             await Mapping.update.values(**mapping_kwargs).where(
                 Mapping.id == self.id).gino.status()
-        # TODO: edit groups!!
         return await Mapping.get(self.id)
 
 

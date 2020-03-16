@@ -4,7 +4,7 @@
   <requires lib="gtk+" version="3.0"/>
   <object class="GtkWindow" id="remote-viewer-connection-window">
     <property name="can_focus">False</property>
-    <property name="title" translatable="yes">ECP Veil VDI</property>
+    <property name="modal">True</property>
     <child>
       <placeholder/>
     </child>
@@ -13,9 +13,10 @@
         <property name="visible">True</property>
         <property name="can_focus">False</property>
         <property name="border_width">7</property>
-        <property name="spacing">15</property>
+        <property name="spacing">9</property>
         <child>
           <object class="GtkLabel" id="header-label">
+            <property name="name">header-label</property>
             <property name="visible">True</property>
             <property name="can_focus">False</property>
             <property name="label" translatable="yes">версия</property>
@@ -43,59 +44,25 @@
           </packing>
         </child>
         <child>
-          <object class="GtkGrid">
+          <object class="GtkLabel" id="user-name-label">
+            <property name="name">user-name-label</property>
             <property name="visible">True</property>
             <property name="can_focus">False</property>
-            <property name="row_homogeneous">True</property>
-            <property name="column_homogeneous">True</property>
-            <child>
-              <object class="GtkEntry" id="connection-address-entry">
-                <property name="visible">True</property>
-                <property name="can_focus">True</property>
-                <property name="text" translatable="yes">192.168.11.110</property>
-              </object>
-              <packing>
-                <property name="left_attach">0</property>
-                <property name="top_attach">0</property>
-              </packing>
-            </child>
-            <child>
-              <object class="GtkEntry" id="connection-port-entry">
-                <property name="visible">True</property>
-                <property name="can_focus">True</property>
-                <property name="text" translatable="yes">5908</property>
-              </object>
-              <packing>
-                <property name="left_attach">1</property>
-                <property name="top_attach">0</property>
-              </packing>
-            </child>
+            <property name="halign">start</property>
+            <property name="label" translatable="yes">Имя пользователя</property>
           </object>
           <packing>
-            <property name="expand">True</property>
-            <property name="fill">True</property>
-            <property name="position">2</property>
-          </packing>
-        </child>
-        <child>
-          <object class="GtkEntry" id="login-entry">
-            <property name="visible">True</property>
-            <property name="can_focus">True</property>
-            <property name="placeholder_text" translatable="yes">Пользователь</property>
-          </object>
-          <packing>
-            <property name="expand">True</property>
+            <property name="expand">False</property>
             <property name="fill">True</property>
             <property name="position">3</property>
           </packing>
         </child>
         <child>
-          <object class="GtkEntry" id="password-entry">
+          <object class="GtkEntry" id="login-entry">
+            <property name="name">login-entry</property>
             <property name="visible">True</property>
             <property name="can_focus">True</property>
-            <property name="visibility">False</property>
-            <property name="invisible_char">*</property>
-            <property name="placeholder_text" translatable="yes">Пароль</property>
+            <property name="placeholder_text" translatable="yes">Пользователь</property>
           </object>
           <packing>
             <property name="expand">True</property>
@@ -104,12 +71,24 @@
           </packing>
         </child>
         <child>
-          <object class="GtkCheckButton" id="ldap-button">
-            <property name="label" translatable="yes">LDAP</property>
+          <object class="GtkBox">
             <property name="visible">True</property>
-            <property name="can_focus">True</property>
-            <property name="receives_default">False</property>
-            <property name="draw_indicator">True</property>
+            <property name="can_focus">False</property>
+            <property name="homogeneous">True</property>
+            <child>
+              <object class="GtkLabel" id="password-label">
+                <property name="name">password-label</property>
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="halign">start</property>
+                <property name="label" translatable="yes">Пароль</property>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">True</property>
+                <property name="position">0</property>
+              </packing>
+            </child>
           </object>
           <packing>
             <property name="expand">True</property>
@@ -118,12 +97,25 @@
           </packing>
         </child>
         <child>
-          <object class="GtkCheckButton" id="connect-to-prev-button">
-            <property name="label" translatable="yes">Подключиться к предыдущему пулу</property>
+          <object class="GtkBox">
             <property name="visible">True</property>
-            <property name="can_focus">True</property>
-            <property name="receives_default">False</property>
-            <property name="draw_indicator">True</property>
+            <property name="can_focus">False</property>
+            <property name="homogeneous">True</property>
+            <child>
+              <object class="GtkEntry" id="password-entry">
+                <property name="name">password-entry</property>
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="visibility">False</property>
+                <property name="invisible_char">*</property>
+                <property name="placeholder_text" translatable="yes">Пароль</property>
+              </object>
+              <packing>
+                <property name="expand">True</property>
+                <property name="fill">True</property>
+                <property name="position">0</property>
+              </packing>
+            </child>
           </object>
           <packing>
             <property name="expand">True</property>
@@ -132,12 +124,10 @@
           </packing>
         </child>
         <child>
-          <object class="GtkCheckButton" id="remember-button">
-            <property name="label" translatable="yes">Запомнить</property>
+          <object class="GtkLabel" id="message-display-label">
+            <property name="name">message-display-label</property>
             <property name="visible">True</property>
-            <property name="can_focus">True</property>
-            <property name="receives_default">False</property>
-            <property name="draw_indicator">True</property>
+            <property name="can_focus">False</property>
           </object>
           <packing>
             <property name="expand">True</property>
@@ -146,9 +136,47 @@
           </packing>
         </child>
         <child>
-          <object class="GtkLabel" id="message-display-label">
+          <object class="GtkBox">
             <property name="visible">True</property>
             <property name="can_focus">False</property>
+            <property name="homogeneous">True</property>
+            <child>
+              <object class="GtkLabel">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">True</property>
+                <property name="position">0</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkButton" id="btn_settings">
+                <property name="label" translatable="yes">Настройки</property>
+                <property name="name">btn_settings</property>
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="receives_default">True</property>
+                <property name="valign">baseline</property>
+              </object>
+              <packing>
+                <property name="expand">True</property>
+                <property name="fill">True</property>
+                <property name="position">1</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">True</property>
+                <property name="position">2</property>
+              </packing>
+            </child>
           </object>
           <packing>
             <property name="expand">True</property>
@@ -157,20 +185,17 @@
           </packing>
         </child>
         <child>
-          <object class="GtkHButtonBox" id="button-box">
+          <object class="GtkBox">
             <property name="visible">True</property>
             <property name="can_focus">False</property>
-            <property name="margin_top">1</property>
-            <property name="resize_mode">immediate</property>
-            <property name="spacing">6</property>
-            <property name="layout_style">center</property>
+            <property name="homogeneous">True</property>
             <child>
               <object class="GtkLabel">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
               </object>
               <packing>
-                <property name="expand">True</property>
+                <property name="expand">False</property>
                 <property name="fill">True</property>
                 <property name="position">0</property>
               </packing>
@@ -178,6 +203,7 @@
             <child>
               <object class="GtkButton" id="connect-button">
                 <property name="label" translatable="yes">Войти</property>
+                <property name="name">connect-button</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
@@ -191,6 +217,7 @@
             </child>
             <child>
               <object class="GtkSpinner" id="connect-spinner">
+                <property name="name">connect-spinner</property>
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="halign">start</property>
@@ -203,9 +230,8 @@
             </child>
           </object>
           <packing>
-            <property name="expand">False</property>
-            <property name="fill">False</property>
-            <property name="pack_type">end</property>
+            <property name="expand">True</property>
+            <property name="fill">True</property>
             <property name="position">9</property>
           </packing>
         </child>

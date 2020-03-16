@@ -2,6 +2,7 @@
 from abc import ABC
 
 from common.veil_handlers import BaseHandler
+from database import EntityType
 from auth.utils.veil_jwt import encode_jwt, extract_user_and_token_with_no_expire_check
 from auth.models import User
 from auth.authentication_directory.models import AuthenticationDirectory
@@ -39,12 +40,9 @@ class AuthHandler(BaseHandler, ABC):
             error_message = 'Authentication failed: {err}'.format(err=auth_error)
             if self.args.get('username'):
                 error_message += ' for user {username}'.format(username=self.args['username'])
-            error_message += '. IP address: {ip}'.format(ip=self.remote_ip)
-            entity_list = [
-                {'entity_type': 'Security', 'entity_uuid': None},
-                {'entity_type': self.client_type, 'entity_uuid': None}
-            ]
-            await Event.create_warning(error_message, entity_list=entity_list)
+            error_message += '. IP: {ip}'.format(ip=self.remote_ip)
+            entity = {'entity_type': EntityType.SECURITY, 'entity_uuid': None}
+            await Event.create_warning(error_message, entity_dict=entity)
             response = {'errors': [{'message': error_message}]}
             self.set_status(200)
         return self.finish(response)
@@ -56,15 +54,11 @@ class LogoutHandler(BaseHandler, ABC):
         await User.logout(username=username, access_token=token)
 
 
-# Сейчас функционал обновления токена не реализован на клиенте.
-# class RefreshAuthHandler(BaseHandler, ABC):
-#     # TODO: не окончательная версия. Нужно решить, делаем как в ECP разрешая обновлять только
-#     #  не истекшие времени или проверяем это по хранимому токену
-#     def post(self):
-#         try:
-#             token_info = refresh_access_token(self.request.headers)
-#         except:
-#             self._transforms = []
-#             self.set_status(401)
-#             return self.finish('Token has expired.')
-#         return self.finish(token_info)
+class VersionHandler(BaseHandler, ABC):
+    async def get(self):
+        response = {'data': {'version': '0.31',
+                             'year': '2019-2020',
+                             'url': 'https://mashtab.org',
+                             'copyright': '©mashtab.org',
+                             'comment': 'Демонстрационная версия'}}
+        return self.finish(response)

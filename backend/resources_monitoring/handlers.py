@@ -1,9 +1,8 @@
 # -*- coding: utf-8 -*-
+from abc import ABC
 import logging
 import asyncio
 import time
-
-from abc import ABC
 from typing import Any
 
 import tornado.ioloop
@@ -11,7 +10,7 @@ from tornado import httputil
 from tornado import websocket
 from tornado.web import Application
 
-from .resources_monitoring_data import VDI_FRONT_ALLOWED_SUBSCRIPTIONS_LIST, SubscriptionCmd
+from resources_monitoring.resources_monitoring_data import VDI_FRONT_ALLOWED_SUBSCRIPTIONS_LIST, SubscriptionCmd
 from resources_monitoring.resources_monitor_manager import resources_monitor_manager
 from resources_monitoring.internal_event_monitor import internal_event_monitor
 
@@ -49,7 +48,6 @@ class AbstractSubscriptionObserver(ABC):
         :param json_message:
         :return:
         """
-        # print(__class__.__name__, json_message)
         try:
             self._message_queue.put_nowait(json_message)
         except asyncio.QueueFull:
@@ -63,31 +61,30 @@ class AbstractSubscriptionObserver(ABC):
         return self._subscriptions
 
 
-class VdiFrontWsHandler(websocket.WebSocketHandler, AbstractSubscriptionObserver):
+class VdiFrontWsHandler(websocket.WebSocketHandler, AbstractSubscriptionObserver):  # noqa
 
     def __init__(self, application: Application, request: httputil.HTTPServerRequest, **kwargs: Any):
         websocket.WebSocketHandler.__init__(self, application, request, **kwargs)
         AbstractSubscriptionObserver.__init__(self)
 
         self._send_messages_flag = False
-        print('init VdiFrontWsHandler')
+        # application_log.debug('init VdiFrontWsHandler')
 
     def __del__(self):
-        print('destructor VdiFrontWsHandler')
+        application_log.debug('destructor VdiFrontWsHandler')
 
     # todo: security problems. implement proper origin checking
     def check_origin(self, origin):
         return True
 
     async def open(self):
-        print("WebSocket opened")
+        # application_log.debug('WebSocket opened')
         self._start_message_sending()
         resources_monitor_manager.subscribe(self)
         internal_event_monitor.subscribe(self)
 
     async def on_message(self, message):
-        print('message', message)
-
+        application_log.debug('Message: '.format(message))
         response_dict = {'msg_type': 'control', 'error': False}
         # determine if message contains subscription command ('delete /domains/' for example)
         try:
@@ -100,7 +97,7 @@ class VdiFrontWsHandler(websocket.WebSocketHandler, AbstractSubscriptionObserver
             return
         # check if allowed
         if subscription_source not in VDI_FRONT_ALLOWED_SUBSCRIPTIONS_LIST:
-            print(__class__.__name__, ' Unknown subscription source')
+            application_log.error('Unknown subscription source')
             response_dict['error'] = True
             await self.write_msg(response_dict)
             return
@@ -111,11 +108,11 @@ class VdiFrontWsHandler(websocket.WebSocketHandler, AbstractSubscriptionObserver
             response_dict['error'] = False
         # if 'add' cmd and subscribed then do nothing
         elif subscription_cmd == SubscriptionCmd.add and subscription_source in self._subscriptions:
-            print(__class__.__name__, 'already subscribed')
+            application_log.debug('already subscribed')
             response_dict['error'] = True
         # if 'delete' cmd and not subscribed  then do nothing
         elif subscription_cmd == SubscriptionCmd.delete and subscription_source not in self._subscriptions:
-            print(__class__.__name__, 'not subscribed')
+            application_log.debug('not subscribed')
             response_dict['error'] = True
         # if 'delete' cmd and subscribed then unsubscribe
         elif subscription_cmd == SubscriptionCmd.delete and subscription_source in self._subscriptions:
@@ -126,7 +123,7 @@ class VdiFrontWsHandler(websocket.WebSocketHandler, AbstractSubscriptionObserver
         await self.write_msg(response_dict)
 
     def on_close(self):
-        print("WebSocket closed")
+        application_log.debug('WebSocket closed')
         resources_monitor_manager.unsubscribe(self)
         internal_event_monitor.unsubscribe(self)
 
@@ -158,7 +155,7 @@ class VdiFrontWsHandler(websocket.WebSocketHandler, AbstractSubscriptionObserver
         try:
             await self.write_message(msg)
         except tornado.websocket.WebSocketClosedError:
-            print(__class__.__name__, 'write error')
+            application_log.debug('Write error')
 
 
 class WaiterSubscriptionObserver(AbstractSubscriptionObserver):

@@ -5,7 +5,7 @@
 
 import pytest
 
-from tests.fixtures import fixt_db, auth_context_fixture, fixt_group, fixt_auth_dir, fixt_mapping  # noqa
+from tests.fixtures import fixt_db, fixt_auth_context, fixt_group, fixt_auth_dir, fixt_mapping  # noqa
 from tests.utils import execute_scheme, ExecError
 
 from auth.authentication_directory.auth_dir_schema import auth_dir_schema
@@ -17,7 +17,7 @@ pytestmark = [pytest.mark.asyncio, pytest.mark.auth_dir, pytest.mark.auth]
 @pytest.mark.usefixtures('fixt_db')
 class TestAuthenticationDirectorySchema:
 
-    async def test_auth_dir_create(self, snapshot, auth_context_fixture):  # noqa
+    async def test_auth_dir_create(self, snapshot, fixt_auth_context):  # noqa
         query = """mutation {createAuthDir(
                       domain_name: "bazalt.team" #!Обязательное поле
                       verbose_name: "Bazalt" #!Обязательное поле
@@ -34,10 +34,10 @@ class TestAuthenticationDirectorySchema:
                     ) {
                       ok
                     }}"""
-        executed = await execute_scheme(auth_dir_schema, query, context=auth_context_fixture)
+        executed = await execute_scheme(auth_dir_schema, query, context=fixt_auth_context)
         snapshot.assert_match(executed)
 
-    async def test_auth_dir_create_bad(self, auth_context_fixture):  # noqa
+    async def test_auth_dir_create_bad(self, fixt_auth_context):  # noqa
         query = """mutation {createAuthDir(
                       domain_name: "bazalt.team" #!Обязательное поле
                       verbose_name: "Bazalt" #!Обязательное поле
@@ -55,11 +55,11 @@ class TestAuthenticationDirectorySchema:
                       ok
                     }}"""
         try:
-            await execute_scheme(auth_dir_schema, query, context=auth_context_fixture)
+            await execute_scheme(auth_dir_schema, query, context=fixt_auth_context)
         except ExecError as E:
             assert 'More than one authentication directory can not be created.' in str(E)
 
-    async def test_auth_dirs_list(self, snapshot, auth_context_fixture):  # noqa
+    async def test_auth_dirs_list(self, snapshot, fixt_auth_context):  # noqa
         query = """query{auth_dirs {
                             verbose_name
                             directory_url
@@ -82,10 +82,10 @@ class TestAuthenticationDirectorySchema:
                                 }
                               }
                         }}"""
-        executed = await execute_scheme(auth_dir_schema, query, context=auth_context_fixture)
+        executed = await execute_scheme(auth_dir_schema, query, context=fixt_auth_context)
         snapshot.assert_match(executed)
 
-    async def test_auth_dirs_get_by_id(self, snapshot, auth_context_fixture):  # noqa
+    async def test_auth_dirs_get_by_id(self, snapshot, fixt_auth_context):  # noqa
         auth_dir = await AuthenticationDirectory.get_object(extra_field_name='verbose_name', extra_field_value='Bazalt',
                                                             include_inactive=True)
         query = """{auth_dir(id: "%s") {
@@ -110,10 +110,10 @@ class TestAuthenticationDirectorySchema:
                             }
                           }
                     }}""" % auth_dir.id
-        executed = await execute_scheme(auth_dir_schema, query, context=auth_context_fixture)
+        executed = await execute_scheme(auth_dir_schema, query, context=fixt_auth_context)
         snapshot.assert_match(executed)
 
-    async def test_auth_dir_check(self, snapshot, auth_context_fixture):  # noqa
+    async def test_auth_dir_check(self, snapshot, fixt_auth_context):  # noqa
         auth_dir = await AuthenticationDirectory.get_object(extra_field_name='verbose_name', extra_field_value='Bazalt',
                                                             include_inactive=True)
         query = """mutation {
@@ -121,10 +121,10 @@ class TestAuthenticationDirectorySchema:
                     {
                       ok
                     }}""" % auth_dir.id
-        executed = await execute_scheme(auth_dir_schema, query, context=auth_context_fixture)
+        executed = await execute_scheme(auth_dir_schema, query, context=fixt_auth_context)
         snapshot.assert_match(executed)
 
-    async def test_auth_dir_edit(self, snapshot, auth_context_fixture):  # noqa
+    async def test_auth_dir_edit(self, snapshot, fixt_auth_context):  # noqa
         auth_dir = await AuthenticationDirectory.get_object(extra_field_name='verbose_name', extra_field_value='Bazalt',
                                                             include_inactive=True)
         query = """mutation {updateAuthDir(
@@ -143,20 +143,18 @@ class TestAuthenticationDirectorySchema:
                     ) {
                       ok,
                     }}""" % auth_dir.id
-        executed = await execute_scheme(auth_dir_schema, query, context=auth_context_fixture)
+        executed = await execute_scheme(auth_dir_schema, query, context=fixt_auth_context)
         snapshot.assert_match(executed)
 
-    async def test_drop_auth_dir(self, snapshot, auth_context_fixture):  # noqa
+    async def test_drop_auth_dir(self, snapshot, fixt_auth_context):  # noqa
         auth_dir = await AuthenticationDirectory.get_object(extra_field_name='verbose_name',
                                                             extra_field_value='tst_verbose_name',
                                                             include_inactive=True)
-        query = """mutation {deleteAuthDir(id: "%s") {
-                      ok
-                    }}""" % auth_dir.id
-        executed = await execute_scheme(auth_dir_schema, query, context=auth_context_fixture)
+        query = """mutation{deleteAuthDir(id: "%s"){ok}}""" % auth_dir.id
+        executed = await execute_scheme(auth_dir_schema, query, context=fixt_auth_context)
         snapshot.assert_match(executed)
 
-    async def test_add_auth_dir_mapp(self, snapshot, auth_context_fixture, fixt_group, fixt_auth_dir):  # noqa
+    async def test_add_auth_dir_mapp(self, snapshot, fixt_auth_context, fixt_group, fixt_auth_dir):  # noqa
         query = """mutation {
                         addAuthDirMapping(
                             id: "10913d5d-ba7a-4049-88c5-769267a6cbe4"
@@ -175,11 +173,11 @@ class TestAuthenticationDirectorySchema:
                             }
                           }
                         }"""
-        executed = await execute_scheme(auth_dir_schema, query, context=auth_context_fixture)
+        executed = await execute_scheme(auth_dir_schema, query, context=fixt_auth_context)
         snapshot.assert_match(executed)
         await Mapping.delete.gino.status()
 
-    async def test_edit_auth_dir_mapp(self, snapshot, auth_context_fixture, fixt_auth_dir, fixt_group, fixt_mapping):  # noqa
+    async def test_edit_auth_dir_mapp(self, snapshot, fixt_auth_context, fixt_auth_dir, fixt_group, fixt_mapping):  # noqa
         query = """mutation {
                       editAuthDirMapping(
                         id: "10913d5d-ba7a-4049-88c5-769267a6cbe4",
@@ -203,10 +201,10 @@ class TestAuthenticationDirectorySchema:
                         }
                       }
                     }"""
-        executed = await execute_scheme(auth_dir_schema, query, context=auth_context_fixture)
+        executed = await execute_scheme(auth_dir_schema, query, context=fixt_auth_context)
         snapshot.assert_match(executed)
 
-    async def test_del_auth_dir_mapp(self, snapshot, auth_context_fixture, fixt_auth_dir, fixt_group, fixt_mapping):  # noqa
+    async def test_del_auth_dir_mapp(self, snapshot, fixt_auth_context, fixt_auth_dir, fixt_group, fixt_mapping):  # noqa
         query = """mutation {
                       deleteAuthDirMapping(
                         id: "10913d5d-ba7a-4049-88c5-769267a6cbe4",
@@ -228,5 +226,5 @@ class TestAuthenticationDirectorySchema:
                         }
                       }
                     }"""
-        executed = await execute_scheme(auth_dir_schema, query, context=auth_context_fixture)
+        executed = await execute_scheme(auth_dir_schema, query, context=fixt_auth_context)
         snapshot.assert_match(executed)
