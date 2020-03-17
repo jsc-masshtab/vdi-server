@@ -176,3 +176,17 @@ target_link_libraries(
     thin_client_veil # exec
     ${LIBS} # libs
 )
+
+#############################CONFIGS###################################
+# translations
+file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/po/ru
+     DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/local)
+# CSS
+file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/doc/css_style.css
+     DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+# start script
+file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/doc/start_vdi_client.sh
+     DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+## ini  Приложение генерирует ini файл при первом запуске если его нет, что предпочтительнее
+#file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/doc/veil_client_settings.ini
+#     DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
