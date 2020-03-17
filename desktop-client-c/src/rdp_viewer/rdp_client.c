@@ -128,12 +128,12 @@ void rdp_client_routine(GTask   *task,
         g_strdup_printf("/h:%i", tf->optimal_image_height),
         g_strdup("-clipboard"),
         g_strdup("/cert-ignore"),
-    #ifdef __linux__
         g_strdup("/sound:rate:44100,channel:2"),
+        g_strdup_printf("/smartcard"),
         g_strdup("+drives"),
         g_strdup("+home-drive"),
+    #ifdef __linux__
         g_strdup("/usb:auto"),
-        g_strdup_printf("/smartcard"),
     #elif _WIN32
         g_strdup("/relax-order-checks"),
         g_strdup("+glyph-cache"),
