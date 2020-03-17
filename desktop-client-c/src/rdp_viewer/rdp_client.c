@@ -126,18 +126,18 @@ void rdp_client_routine(GTask   *task,
         g_strdup_printf("/u:%s", tf->usename),
         g_strdup_printf("/p:%s", tf->password),
         g_strdup("-clipboard"),
-        g_strdup("/sound:rate:44100,channel:2"),
+//        g_strdup("/sound:rate:44100,channel:2"),
         g_strdup("/cert-ignore"),
-        g_strdup("+drives"),
-        g_strdup("+home-drive"),
-        g_strdup("/usb:auto"),
-//        g_strdup("+window-drag"),
+//        g_strdup("+drives"),
+//        g_strdup("+home-drive"),
+//        g_strdup("/usb:auto"),
+
         g_strdup_printf("/w:%i", tf->optimal_image_width),
         g_strdup_printf("/h:%i", tf->optimal_image_height),
-//        g_strdup("/jpeg"),
-//        g_strdup("/jpeg-quality:10"),
-//        g_strdup("/codec-cache:jpeg"),
-        g_strdup_printf("/smartcard"),
+//        g_strdup_printf("/smartcard"),
+
+        g_strdup("/relax-order-checks"),
+        //g_strdup("+glyph-cache"),
         NULL
     };
     int argc = sizeof(argv) / sizeof(char*) - 1;

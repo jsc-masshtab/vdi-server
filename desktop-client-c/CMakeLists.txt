@@ -129,17 +129,17 @@ endif (UNIX)
 
 if (WIN32)
     SET(LIBS_INCLUDE_PATH C:/msys64/mingw64/include/)
+    SET(FREERDP_PATH C:/job/freerdp/FreeRDP-2.0.0-rc4/FreeRDP-2.0.0-rc4/)
 
     # freerdp
-    SET(FREERDP_PATH C:/job/freerdp/FreeRDP-2.0.0-rc4/FreeRDP-2.0.0-rc4/)
     INCLUDE_DIRECTORIES(${FREERDP_PATH}include)
-    SET(LIBS ${LIBS} ${FREERDP_PATH}Release/freerdp2.lib)
-    SET(LIBS ${LIBS} ${FREERDP_PATH}Release/freerdp-client2.lib)
+    SET(LIBS ${LIBS} ${FREERDP_PATH}Release/freerdp2.dll)
+    SET(LIBS ${LIBS} ${FREERDP_PATH}Release/freerdp-client2.dll)
 
     # winpr2
     INCLUDE_DIRECTORIES(${FREERDP_PATH}winpr/include)
-    SET(LIBS ${LIBS} ${FREERDP_PATH}Release/winpr-tools2.lib)
-    SET(LIBS ${LIBS} ${FREERDP_PATH}Release/winpr2.lib)
+    SET(LIBS ${LIBS} ${FREERDP_PATH}Release/winpr-tools2.dll)
+    SET(LIBS ${LIBS} ${FREERDP_PATH}Release/winpr2.dll)
 
     # other libs
     SET(LIBS ${LIBS}
