@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2020-03-16 19:16+0300\n"
+"POT-Creation-Date: 2020-03-17 16:09+0300\n"
 "PO-Revision-Date: 2020-03-16 17:12+0300\n"
 "Last-Translator: Emil <e.gareev@mashtab.org>\n"
 "Language-Team: English\n"
@@ -74,7 +74,7 @@ msgstr "No such mapping."
 msgid "Specify id."
 msgstr "Specify id."
 
-#: auth/authentication_directory/models.py:125
+#: auth/authentication_directory/models.py:125 tests/test_auth_dir_v2.py:65
 msgid "More than one authentication directory can not be created."
 msgstr "More than one authentication directory can not be created."
 
@@ -135,11 +135,11 @@ msgstr "User veil groups: {}"
 msgid "Attaching user {} to group: {}"
 msgstr "Attaching user {} to group: {}"
 
-#: auth/authentication_directory/models.py:413
+#: auth/authentication_directory/models.py:413 tests/test_auth_v2.py:109
 msgid "No authentication directory controllers."
 msgstr "No authentication directory controllers."
 
-#: auth/authentication_directory/models.py:438
+#: auth/authentication_directory/models.py:438 tests/test_auth_v2.py:125
 msgid "Invalid credeintials (ldap)."
 msgstr "Invalid credeintials (ldap)."
 
@@ -171,11 +171,11 @@ msgstr "Missing username and password"
 msgid "Missing username"
 msgstr "Missing username"
 
-#: auth/handlers.py:31
+#: auth/handlers.py:31 tests/test_auth_v2.py:51
 msgid "Missing password"
 msgstr "Missing password"
 
-#: auth/handlers.py:38
+#: auth/handlers.py:38 tests/test_auth_v2.py:35 tests/test_auth_v2.py:43
 msgid "Invalid credentials"
 msgstr "Invalid credentials"
 
@@ -852,6 +852,11 @@ msgstr "{cls}: controller {ip} is not monitored!"
 msgid "{cls}: resource monitor for controller {ip} removed"
 msgstr "{cls}: resource monitor for controller {ip} removed"
 
+#: tests/test_vms.py:141
+#, fuzzy
+msgid "Parameter action value {} is invalid. Valid values are"
+msgstr "Parameter {} value {} is invalid. Valid values are: {}"
+
 #: thin_client_api/handlers.py:48
 msgid "Pool not found."
 msgstr "Pool not found."
@@ -972,8 +977,8 @@ msgstr "VMs list could not be retrieved: {}"
 msgid "GraphQL: VM type list:"
 msgstr "GraphQL: VM type list:"
 
-#~ msgid "Пользователю {} назначена роль VM_OPERATOR."
-#~ msgstr "Пользователю {} назначена роль VM_OPERATOR."
-
 #~ msgid "OU="
 #~ msgstr "OU="
+
+#~ msgid "Пользователю {} назначена роль VM_OPERATOR."
+#~ msgstr "Пользователю {} назначена роль VM_OPERATOR."

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2020-03-16 19:16+0300\n"
+"POT-Creation-Date: 2020-03-17 17:04+0300\n"
 "PO-Revision-Date: 2020-03-16 17:13+0300\n"
 "Last-Translator: Emil <e.gareev@mashtab.org>\n"
 "Language-Team: Russian\n"
@@ -74,7 +74,7 @@ msgstr "Нет такого отображения."
 msgid "Specify id."
 msgstr "Укажите ID."
 
-#: auth/authentication_directory/models.py:125
+#: auth/authentication_directory/models.py:125 tests/test_auth_dir_v2.py:65
 msgid "More than one authentication directory can not be created."
 msgstr "Не может быть создано более одной директории авторизации."
 
@@ -134,11 +134,11 @@ msgstr "Группы пользователей veil: {}"
 msgid "Attaching user {} to group: {}"
 msgstr "Прикрепление пользователя {} к группе {}."
 
-#: auth/authentication_directory/models.py:413
+#: auth/authentication_directory/models.py:413 tests/test_auth_v2.py:109
 msgid "No authentication directory controllers."
 msgstr "Отсутствует директория авторизации контроллеров."
 
-#: auth/authentication_directory/models.py:438
+#: auth/authentication_directory/models.py:438 tests/test_auth_v2.py:125
 msgid "Invalid credeintials (ldap)."
 msgstr "Неверные полномочия (ldap)."
 
@@ -170,13 +170,13 @@ msgstr "Отсутствует имя пользователя и пароль."
 msgid "Missing username"
 msgstr "Отсутствует имя пользователя."
 
-#: auth/handlers.py:31
+#: auth/handlers.py:31 tests/test_auth_v2.py:51
 msgid "Missing password"
-msgstr "Отсутствует пароль."
+msgstr "Отсутствует пароль"
 
-#: auth/handlers.py:38
+#: auth/handlers.py:38 tests/test_auth_v2.py:35 tests/test_auth_v2.py:43
 msgid "Invalid credentials"
-msgstr "Неверные полномочия."
+msgstr "Неверные полномочия"
 
 #: auth/handlers.py:45
 #, python-brace-format
@@ -851,6 +851,11 @@ msgstr "{cls}: контроллер {ip} не отслеживается!"
 msgid "{cls}: resource monitor for controller {ip} removed"
 msgstr "{cls}: удален монитор ресурсов для контроллера {ip}."
 
+#: tests/test_vms.py:140
+#, fuzzy
+msgid "Parameter action value {} is invalid"
+msgstr "Параметр action значения {} неверный"
+
 #: thin_client_api/handlers.py:48
 msgid "Pool not found."
 msgstr "Пул не найден."
@@ -861,7 +866,7 @@ msgstr "Пользователь не имеет разрешения на ис�
 
 #: thin_client_api/handlers.py:92
 msgid "Pool has not free machines"
-msgstr "В пуле нет свободных машин."
+msgstr "В пуле нет свободных машин"
 
 #: thin_client_api/handlers.py:119
 msgid "VM does not support RDP"

@@ -8,6 +8,9 @@ pytest = "==5.2.2"
 pytest-asyncio = "==0.10.0"
 snapshottest = "==0.5.1"
 pytest-cov = "==2.8.1"
+flake8 = "==3.7.9"
+flake8-builtins = "==1.5.2"
+flake8-bugbear = "==19.8.0"
 
 [packages]
 pyjwt = "==1.7.1"  # JWTTokens
