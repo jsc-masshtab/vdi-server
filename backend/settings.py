@@ -19,8 +19,8 @@ FERNET_KEY = b'LRzSxWyxqKD4p2BR11-nVmghV67AVmQ4CxYi__S_OH8='
 
 # Auth settings
 # -----------------------------
-AUTH_ENABLED = True
-# AUTH_ENABLED = False  # Отключает проверку токенов, делает доступным стандартный интерфейс GpaphQL
+# AUTH_ENABLED = True
+AUTH_ENABLED = False  # Отключает проверку токенов, делает доступным стандартный интерфейс GpaphQL
 
 # JWT Options
 # -----------------------------
@@ -49,6 +49,10 @@ VEIL_MAX_BODY_SIZE = 1000 * 1024 ^ 3
 VEIL_MAX_CLIENTS = 10
 VEIL_SSL_ON = False
 VEIL_WS_MAX_TIME_TO_WAIT = 60
+
+# Locale settings
+# -----------------------------
+LANGUAGE = 'ru'
 
 # Others
 # -----------------------------

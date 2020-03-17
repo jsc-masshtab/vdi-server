@@ -9,6 +9,11 @@ from event.models import Event, EventReadByUser, EventEntity
 from auth.models import Entity
 from auth.user_schema import User, UserType
 
+from languages import lang_init
+
+
+_ = lang_init()
+
 
 def build_filters(event_type, start_date, end_date, user, read_by, entity_type):
     filters = []
@@ -139,7 +144,7 @@ class EventQuery(graphene.ObjectType):
         ).first()
 
         if not event:
-            raise GraphQLError('No such event.')
+            raise GraphQLError(_('No such event.'))
 
         event_type = EventType(
             read_by=[UserType(**user.__values__) for user in event.read_by],
@@ -184,7 +189,7 @@ class RemoveAllEventsMutation(graphene.Mutation):
     @superuser_required
     async def mutate(self, _info):
         await Event.delete.gino.status()
-        await Event.create_info("Журнал очищен")
+        await Event.create_info(_("Journal is clear."))
         return RemoveAllEventsMutation(ok=True)
 
 

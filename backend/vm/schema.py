@@ -18,6 +18,11 @@ from controller.schema import ControllerType
 from auth.user_schema import UserType
 from auth.models import User
 
+from languages import lang_init
+
+
+_ = lang_init()
+
 application_log = logging.getLogger('tornado.application')
 
 
@@ -150,7 +155,7 @@ class AssignVmToUser(graphene.Mutation):
         # find pool the vm belongs to
         vm = await Vm.get(vm_id)
         if not vm:
-            raise SimpleError('There is no VM {}'.format(vm_id))
+            raise SimpleError(_('There is no VM {}').format(vm_id))
 
         pool_id = vm.pool_id
         user_id = await User.get_id(username)
@@ -166,7 +171,7 @@ class AssignVmToUser(graphene.Mutation):
 
             if user_id not in assigned_users_list:
                 # Requested user is not entitled to the pool the requested vm belongs to
-                raise GraphQLError('У пользователя нет прав на использование пула, которому принадлежит VM.')
+                raise GraphQLError(_('User does not have the right to use pool, which has VM.'))
 
             # another vm in the pool may have this user as owner. Remove assignment
             await pool.free_user_vms(user_id)
@@ -208,12 +213,12 @@ class VmQuery(graphene.ObjectType):
 
     @superuser_required
     async def resolve_template(self, _info, id, controller_address):
-        application_log.debug('GraphQL: Resolving template info')
+        application_log.debug(_('GraphQL: Resolving template info'))
         vm_http_client = await VmHttpClient.create(controller_address, id)
         try:
             veil_info = await vm_http_client.info()
         except HttpError as e:
-            raise SimpleError('Не удалось получить данные Шаблона: {}'.format(e))
+            raise SimpleError(_('Template data could not be retrieved: {}').format(e))
 
         return VmQuery.veil_template_data_to_graphene_type(veil_info, controller_address)
 
@@ -223,7 +228,7 @@ class VmQuery(graphene.ObjectType):
         try:
             veil_info = await vm_http_client.info()
         except HttpError as e:
-            raise SimpleError('Не удалось получить данные ВМ: {}'.format(e))
+            raise SimpleError(_('VM data could not be retrieved: {}').format(e))
 
         return VmQuery.veil_vm_data_to_graphene_type(veil_info, controller_address)
 
@@ -234,7 +239,7 @@ class VmQuery(graphene.ObjectType):
             try:
                 template_veil_data_list = await vm_http_client.fetch_templates_list(node_id=node_id)
             except HttpError as e:
-                raise SimpleError('Не удалось получить список шаблонов: {}'.format(e))
+                raise SimpleError(_('Templates list could not be retrieved: {}').format(e))
 
             template_veil_data_list = await VmQuery.filter_domains_by_cluster(
                 template_veil_data_list, controller_ip, cluster_id)
@@ -270,7 +275,7 @@ class VmQuery(graphene.ObjectType):
                 def sort_lam(template_type):
                     return template_type.controller.address if template_type.controller.address else DEFAULT_NAME
             else:
-                raise SimpleError('Неверный параметр сортировки')
+                raise SimpleError(_('Incorrect sort parameter'))
             template_type_list = sorted(template_type_list, key=sort_lam, reverse=reverse)
 
         return template_type_list
@@ -278,19 +283,19 @@ class VmQuery(graphene.ObjectType):
     @superuser_required
     async def resolve_vms(self, _info, controller_ip=None, cluster_id=None, node_id=None, datapool_id=None,
                           get_vms_in_pools=False, ordering=None):
-        application_log.debug('GraphQL: Resolving VMs')
+        application_log.debug(_('GraphQL: Resolving VMs'))
         # get veil vm data list
         if controller_ip:
             vm_http_client = await VmHttpClient.create(controller_ip, '')
             try:
                 vm_veil_data_list = await vm_http_client.fetch_vms_list(node_id=node_id, datapool_id=datapool_id)
             except HttpError as e:
-                raise SimpleError('Не удалось получить список ВМ: {}'.format(e))
+                raise SimpleError(_('VMs list could not be retrieved: {}').format(e))
 
             vm_veil_data_list = await VmQuery.filter_domains_by_cluster(vm_veil_data_list, controller_ip, cluster_id)
 
             vm_type_list = VmQuery.veil_vm_data_to_graphene_type_list(vm_veil_data_list, controller_ip)
-            application_log.debug('GraphQL: VM type list:')
+            application_log.debug(_('GraphQL: VM type list:'))
 
         # if controller address is not provided then take all vms from all controllers
         else:
@@ -348,7 +353,7 @@ class VmQuery(graphene.ObjectType):
                 def sort_lam(vm_type):
                     return vm_type.status if vm_type and vm_type.status else DEFAULT_NAME
             else:
-                raise SimpleError('Неверный параметр сортировки')
+                raise SimpleError(_('Incorrect sort parameter'))
             vm_type_list = sorted(vm_type_list, key=sort_lam, reverse=reverse)
 
         application_log.debug('vm_type_list_count {}'.format(len(vm_type_list)))

@@ -8,6 +8,11 @@ from common.veil_validators import MutationValidation
 from common.veil_errors import SimpleError, ValidationError
 from common.veil_decorators import security_administrator_required, readonly_required
 
+from languages import lang_init
+
+
+_ = lang_init()
+
 
 class UserValidator(MutationValidation):
     """Валидатор для сущности User"""
@@ -17,7 +22,7 @@ class UserValidator(MutationValidation):
         user = await User.get_object(id=value, include_inactive=True)
         if user:
             return value
-        raise ValidationError('No such user.')
+        raise ValidationError(_('No such user.'))
 
     @staticmethod
     async def validate_username(obj_dict, value):
@@ -26,7 +31,7 @@ class UserValidator(MutationValidation):
         if template_name:
             return value
         raise ValidationError(
-            'Имя пользователя должно содержать буквы, цифры, _, -, + и быть не короче 3 символов.')
+            _('User name must contain minimum 3 characters. It must contain letters and digits, _, -, +.'))
 
     @staticmethod
     async def validate_email(obj_dict, value):
@@ -35,7 +40,7 @@ class UserValidator(MutationValidation):
         if template_name:
             return value
         raise ValidationError(
-            'Email должен быть содержать символы латинского алфавита и/или цифры, иметь @ и домен.')
+            _('Email must contain English characters and/or digits, @ and domain name.'))
 
     @staticmethod
     async def validate_password(obj_dict, value):
@@ -128,11 +133,11 @@ class UserQuery(graphene.ObjectType):
     @readonly_required
     async def resolve_user(self, info, id=None, username=None):
         if not id and not username:
-            raise SimpleError('Scpecify id or username.')
+            raise SimpleError(_('Scpecify id or username.'))
 
         user = await User.get_object(id, username, include_inactive=True)
         if not user:
-            raise SimpleError('No such user.')
+            raise SimpleError(_('No such user.'))
         return UserType.instance_to_type(user)
 
     @readonly_required

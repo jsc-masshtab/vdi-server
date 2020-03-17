@@ -13,6 +13,11 @@ from common.veil_errors import BadRequest, HttpError, VmCreationError, SimpleErr
 from vm.veil_client import VmHttpClient
 from auth.models import Entity, EntityRoleOwner, User
 
+from languages import lang_init
+
+
+_ = lang_init()
+
 application_log = logging.getLogger('tornado.application')
 
 
@@ -71,7 +76,7 @@ class Vm(db.Model):
     @classmethod
     async def create(cls, pool_id, template_id, verbose_name, id=None,
                      created_by_vdi=False, broken=False):
-        application_log.debug('Create VM {} on VDI DB.'.format(verbose_name))
+        application_log.debug(_('Create VM {} on VDI DB.').format(verbose_name))
         try:
             vm = await super().create(id=id,
                                       pool_id=pool_id,
@@ -92,8 +97,8 @@ class Vm(db.Model):
                 try:
                     await vm_http_client.remove_vm()
                 except HttpError as http_error:
-                    application_log.warning('Fail to remove VM {} from ECP: '.format(self.verbose_name, http_error))
-                application_log.debug('Vm {} removed from ECP.'.format(self.verbose_name))
+                    application_log.warning(_('Fail to remove VM {} from ECP: ').format(self.verbose_name, http_error))
+                application_log.debug(_('Vm {} removed from ECP.').format(self.verbose_name))
         return await self.delete()
 
     # TODO: очевидное дублирование однотипного кода. Переселить это все в универсальный метод
@@ -105,7 +110,7 @@ class Vm(db.Model):
                     entity = await Entity.create(**self.entity)
                 ero = await EntityRoleOwner.create(entity_id=entity.id, user_id=user_id)
         except UniqueViolationError:
-            raise SimpleError('Vm already has permission.')
+            raise SimpleError(_('Vm already has permission.'))
         return ero
 
     async def add_users(self, users_list: list):
@@ -164,39 +169,39 @@ class Vm(db.Model):
             inner_retry_count += 1
             try:
                 application_log.info(
-                    'Trying to create VM on ECP with verbose_name={}'.format(verbose_name))
+                    _('Trying to create VM on ECP with verbose_name={}').format(verbose_name))
 
                 response = await client.copy_vm(node_id=node_id,
                                                 datapool_id=datapool_id,
                                                 domain_name=verbose_name,
                                                 create_thin_clones=create_thin_clones)
-                application_log.debug('Запрос на создание VM отправлен без неожиданностей. Покидаем while.')
+                application_log.debug(_('Request to create VM sent without surprise. Leaving while.'))
                 break
             except BadRequest as http_error:
                 # TODO: Обработка ошибок это хардкод только для русской версии контроллера. Нужно что-то информативнее.
                 ecp_errors = http_error.errors.get('errors')
                 ecp_detail_l = ecp_errors.get('detail') if ecp_errors else None
                 ecp_detail = ecp_detail_l[0] if isinstance(ecp_detail_l, list) else None
-                application_log.debug('ECP error: {}'.format(ecp_errors))
+                application_log.debug(_('ECP error: {}').format(ecp_errors))
                 if ecp_errors and 'verbose_name' in ecp_errors:
-                    application_log.warning('Bad domain name {}'.format(verbose_name))
+                    application_log.warning(_('Bad domain name {}').format(verbose_name))
                     domain_index_old = domain_index
                     domain_index = domain_index + 1
                     verbose_name = re.sub(r'-{}$'.format(domain_index_old), '-{}'.format(domain_index), verbose_name)
-                elif ecp_errors and ecp_detail and ('недостаточно свободного места на пуле данных' in ecp_detail or 'ot enough free space on data pool' in ecp_detail):
-                    application_log.info('На контроллере отсутствует место для создания новой VM.')
-                    raise VmCreationError('Недостаточно свободного места на пуле данных.')
+                elif ecp_errors and ecp_detail and ('Недостаточно свободного места в пуле данных' in ecp_detail or 'not enough free space on data pool' in ecp_detail):
+                    application_log.info(_('Controller has not free space for creating new VM.'))
+                    raise VmCreationError(_('Not enough free space on data pool'))
                 elif ecp_errors and ecp_detail and inner_retry_count < 30:
                     # Тут мы предполагаем, что контроллер заблокирован выполнением задачи. Это может быть и не так,
                     # но сейчас нам это не понятно.
-                    application_log.debug('Possibly blocked by active task on ECP. Подождем перед повторной попыткой.')
+                    application_log.debug(_('Possibly blocked by active task on ECP. Wait before next try.'))
                     await asyncio.sleep(10)
                 else:
-                    application_log.debug('Что-то пошло не так. Прерываем while.')
+                    application_log.debug(_('Something went wrong. Interrupt while.'))
                     application_log.debug(ecp_errors)
                     raise BadRequest(http_error)
 
-            application_log.debug('Нам нужна еще 1 попытка. Подождем.')
+            application_log.debug(_('Wait one more try'))
             await asyncio.sleep(1)
 
         copy_result = dict(id=response['entity'],

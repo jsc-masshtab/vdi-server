@@ -12,6 +12,10 @@ from common.veil_errors import Unauthorized
 from event.models import Event
 from auth.models import User
 
+from languages import lang_init
+
+
+_ = lang_init()
 
 application_log = logging.getLogger('tornado.application')
 
@@ -21,7 +25,7 @@ def prepare_body(func):
     def wrapper(*args, **kwargs):
         if len(args) >= 4 and kwargs.get('body'):
             raise AssertionError(
-                'Expect that \'body\' is the 4 parameter in args. But in the same time \'body\' in kwargs. Check it.')
+                _('Expect that \'body\' is the 4 parameter in args. But in the same time \'body\' in kwargs. Check it.'))
         if len(args) >= 4:
             input_body = args[4]
         else:
@@ -55,12 +59,12 @@ def check_params(*a_params, **k_params):
     def decorator(func):
         def wrapper(*args, **kwargs):
             if len(a_params) > 0 and len(k_params) > 0:
-                raise NotImplementedError('Can check only kwargs or args. Not both at the same time.')
+                raise NotImplementedError(_('Can check only kwargs or args. Not both at the same time.'))
 
             if len(a_params) > 1:
                 if len(kwargs) > 0:
                     raise AssertionError(
-                        'The parameters to be checked are in an dict. Can\'t explicitly match values with tuple.')
+                        _('The parameters to be checked are in an dict. Can\'t explicitly match values with tuple.'))
                 if not isinstance(args[0], str) or not isinstance(args[0], int):
                     # First element in args can be self of a method.
                     local_args = args[1:]
@@ -70,19 +74,19 @@ def check_params(*a_params, **k_params):
                     valid_values = a_params[idx]
                     if parameter_value not in valid_values:
                         raise AssertionError(
-                            'Value {} is invalid. Valid values are: {}'.format(parameter_value, valid_values))
+                            _('Value {} is invalid. Valid values are: {}').format(parameter_value, valid_values))
             elif len(k_params) > 0:
                 if len(args) > 1:
                     raise AssertionError(
-                        'The parameters to be checked are in an dict. Can\'t explicitly match values with tuple.')
+                        _('The parameters to be checked are in an dict. Can\'t explicitly match values with tuple.'))
                 for parameter in k_params:
                     if not kwargs.get(parameter):
-                        raise AssertionError('Parameter {} is necessary.'.format(parameter))
+                        raise AssertionError(_('Parameter {} is necessary.').format(parameter))
                     parameter_value = kwargs.get(parameter)
                     valid_values = k_params.get(parameter)
                     if parameter_value not in valid_values:
                         raise AssertionError(
-                            'Parameter {} value {} is invalid. Valid values are: {}'.format(parameter, parameter_value,
+                            _('Parameter {} value {} is invalid. Valid values are: {}').format(parameter, parameter_value,
                                                                                             valid_values))
             return func(*args, **kwargs)
         return wrapper
@@ -112,9 +116,9 @@ def user_passes_test(test_func, exc=Unauthorized('Invalid permissions')):  # noq
                 if user and isinstance(user, User):
                     if test_func(await user.roles):
                         return f(*args, **kwargs)
-                application_log.debug('IP: . username: {}')
+                application_log.debug(_('IP: . username: {}'))
                 await Event.create_warning(
-                    'IP: {}. username: {}'.format('Authorization error.', cntxt.remote_ip, user.username),
+                    _('IP: {}. username: {}').format('Authorization error.', cntxt.remote_ip, user.username),
                     entity_dict={'entity_type': EntityType.SECURITY, 'entity_uuid': None})
                 raise exc
             else:
