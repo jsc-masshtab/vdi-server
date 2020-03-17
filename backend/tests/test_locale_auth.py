@@ -2,11 +2,8 @@
 
 import pytest
 from tornado.testing import gen_test
-from tornado.httpclient import HTTPClientError
 
 from tests.utils import VdiHttpTestCase
-from tests.fixtures import (fixt_db, fixt_user_locked, fixt_user, fixt_user_admin, fixt_auth_dir,  # noqa
-                            fixt_mapping, fixt_group, fixt_group_role)  # noqa
 
 from languages import lang_init
 
