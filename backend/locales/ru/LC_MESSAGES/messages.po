@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2020-03-17 17:04+0300\n"
+"POT-Creation-Date: 2020-03-17 18:14+0300\n"
 "PO-Revision-Date: 2020-03-16 17:13+0300\n"
 "Last-Translator: Emil <e.gareev@mashtab.org>\n"
 "Language-Team: Russian\n"
@@ -170,7 +170,7 @@ msgstr "Отсутствует имя пользователя и пароль."
 msgid "Missing username"
 msgstr "Отсутствует имя пользователя."
 
-#: auth/handlers.py:31 tests/test_auth_v2.py:51
+#: auth/handlers.py:31 tests/test_auth_v2.py:51 tests/test_locale_auth.py:26
 msgid "Missing password"
 msgstr "Отсутствует пароль"
 
@@ -851,11 +851,6 @@ msgstr "{cls}: контроллер {ip} не отслеживается!"
 msgid "{cls}: resource monitor for controller {ip} removed"
 msgstr "{cls}: удален монитор ресурсов для контроллера {ip}."
 
-#: tests/test_vms.py:140
-#, fuzzy
-msgid "Parameter action value {} is invalid"
-msgstr "Параметр action значения {} неверный"
-
 #: thin_client_api/handlers.py:48
 msgid "Pool not found."
 msgstr "Пул не найден."
@@ -975,3 +970,7 @@ msgstr "Не удалось получить список виртуальных
 #: vm/schema.py:298
 msgid "GraphQL: VM type list:"
 msgstr "GraphQL: список типов виртуальных машин:"
+
+#, fuzzy
+#~ msgid "Parameter action value {} is invalid"
+#~ msgstr "Параметр action значения {} неверный"
