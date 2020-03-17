@@ -118,26 +118,26 @@ void rdp_client_routine(GTask   *task,
     printf("%s tf->usename %s\n", (const char *)__func__, tf->usename);
     printf("%s tf->domain %s\n", (const char *)__func__, tf->domain);
     // /v:192.168.20.104 /u:solomin /p:5555 -clipboard /sound:rate:44100,channel:2 /cert-ignore
-    //int argc = 8;
     char* argv[] = {
         g_strdup(PROGRAMM_NAME),
         g_strdup_printf("/v:%s", tf->ip),
         g_strdup_printf("/d:%s", tf->domain),
         g_strdup_printf("/u:%s", tf->usename),
         g_strdup_printf("/p:%s", tf->password),
-        g_strdup("-clipboard"),
-//        g_strdup("/sound:rate:44100,channel:2"),
-        g_strdup("/cert-ignore"),
-//        g_strdup("+drives"),
-//        g_strdup("+home-drive"),
-//        g_strdup("/usb:auto"),
-
         g_strdup_printf("/w:%i", tf->optimal_image_width),
         g_strdup_printf("/h:%i", tf->optimal_image_height),
-//        g_strdup_printf("/smartcard"),
-
+        g_strdup("-clipboard"),
+        g_strdup("/cert-ignore"),
+    #ifdef __linux__
+        g_strdup("/sound:rate:44100,channel:2"),
+        g_strdup("+drives"),
+        g_strdup("+home-drive"),
+        g_strdup("/usb:auto"),
+        g_strdup_printf("/smartcard"),
+    #elif _WIN32
         g_strdup("/relax-order-checks"),
-        //g_strdup("+glyph-cache"),
+        g_strdup("+glyph-cache"),
+    #endif
         NULL
     };
     int argc = sizeof(argv) / sizeof(char*) - 1;
