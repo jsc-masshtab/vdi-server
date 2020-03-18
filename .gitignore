@@ -102,7 +102,8 @@ pgdata/
 logfile
 
 # Yandex.Tank
-tests/yandex.tank/logs/
-tests/yandex.tank/*.log
-tests/yandex.tank/*.txt
-tests/yandex.tank/data
+/backend/tests/yandex.tank/logs/
+/backend/tests/yandex.tank/.tank
+/backend/tests/yandex.tank/ammo
+yandex.tank/*.log
+yandex.tank/*.txt
