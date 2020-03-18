@@ -377,8 +377,7 @@ class Group(AbstractSortableStatusModel, db.Model):
             user_group = await UserGroup.create(user_id=user_id, group_id=self.id)
 
             user = await User.get(user_id)
-            info_message = _('User {username} has been included to group {groupname}.').format(username=user.username,
-                                                                                            groupname=self.verbose_name)
+            info_message = _('User {} has been included to group {}.').format(user.username, self.verbose_name)
             await Event.create_info(info_message, entity_dict=self.entity)
             return user_group
         except UniqueViolationError:
@@ -397,8 +396,7 @@ class Group(AbstractSortableStatusModel, db.Model):
     async def add_role(self, role):
         try:
             group_role = await GroupRole.create(group_id=self.id, role=role)
-            info_message = _('Role {role} has been set to group {groupname}.').format(groupname=self.verbose_name,
-                                                                                   role=role)
+            info_message = _('Role {} has been set to group {}.').format(role, self.verbose_name)
             await Event.create_info(info_message, entity_dict=self.entity)
 
         except UniqueViolationError:

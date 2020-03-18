@@ -806,8 +806,8 @@ class AutomatedPool(db.Model):
         verbose_name = await self.verbose_name
 
         application_log.debug(_('Add {} initial vms for pool {}. Controller address: {}').format(self.initial_size,
-                                                                                              verbose_name,
-                                                                                              controller_address))
+                                                                                                 verbose_name,
+                                                                                                 controller_address))
 
         pool_os_type = await Vm.get_template_os_type(controller_address=controller_address,
                                                      template_id=self.template_id)
@@ -855,7 +855,7 @@ class AutomatedPool(db.Model):
             await Event.create_info(msg, entity_dict=self.entity)
         else:
             msg = _('Automated pool created with errors. VMs created: {}. Required: {}').format(len(vm_list),
-                                                                                             self.initial_size)
+                                                                                                self.initial_size)
             await Event.create_error(msg, entity_dict=self.entity)
 
         msg_dict = dict(msg=msg,

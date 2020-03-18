@@ -86,8 +86,9 @@ def check_params(*a_params, **k_params):
                     valid_values = k_params.get(parameter)
                     if parameter_value not in valid_values:
                         raise AssertionError(
-                            _('Parameter {} value {} is invalid. Valid values are: {}').format(parameter, parameter_value,
-                                                                                            valid_values))
+                            _('Parameter {} value {} is invalid. Valid values are: {}').format(parameter,
+                                                                                               parameter_value,
+                                                                                               valid_values))
             return func(*args, **kwargs)
         return wrapper
     return decorator

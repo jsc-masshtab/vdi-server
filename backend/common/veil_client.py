@@ -81,7 +81,7 @@ class VeilHttpClient:
                 await resources_monitor_manager.remove_controller(self.controller_ip)
 
             application_log.error(_('URL {url} - {http_error}').format(url=url,
-                                                                    http_error=str(http_error)))
+                                                                       http_error=str(http_error)))
 
             body = self.get_response_body(http_error.response)
             if isinstance(body, dict):

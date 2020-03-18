@@ -95,8 +95,7 @@ class PoolValidator(MutationValidation):
             return
         if value < obj_dict['min_size'] or value > obj_dict['max_size']:
             raise ValidationError(
-                _('Initial number of VM must be in {}-{} interval').format(obj_dict['min_size'],
-                                                                               obj_dict['max_size']))
+                _('Initial number of VM must be in {}-{} interval').format(obj_dict['min_size'], obj_dict['max_size']))
         return value
 
     @staticmethod

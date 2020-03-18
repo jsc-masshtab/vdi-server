@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2020-03-17 18:14+0300\n"
+"POT-Creation-Date: 2020-03-18 11:39+0300\n"
 "PO-Revision-Date: 2020-03-16 17:12+0300\n"
 "Last-Translator: Emil <e.gareev@mashtab.org>\n"
 "Language-Team: English\n"
@@ -105,7 +105,7 @@ msgstr "Mappings: {}"
 #: auth/authentication_directory/models.py:368
 #, fuzzy
 msgid "Role VM_OPERATOR has assigned to user {}."
-msgstr "Role {} is assigned to user {}"
+msgstr "Role VM_OPERATOR is assigned to user {}"
 
 #: auth/authentication_directory/models.py:375
 msgid "OU: {}"
@@ -171,7 +171,7 @@ msgstr "Missing username and password"
 msgid "Missing username"
 msgstr "Missing username"
 
-#: auth/handlers.py:31 tests/test_auth_v2.py:51 tests/test_locale_auth.py:26
+#: auth/handlers.py:31 tests/test_auth_v2.py:51 tests/test_locale.py:25
 msgid "Missing password"
 msgstr "Missing password"
 
@@ -250,24 +250,24 @@ msgid "User {username} has logged out."
 msgstr "User {username} has logged out."
 
 #: auth/models.py:380
-#, python-brace-format
-msgid "User {username} has been included to group {groupname}."
-msgstr "User {username} has been included to group {groupname}."
+#, fuzzy
+msgid "User {} has been included to group {}."
+msgstr "User {} has been included to group {}."
 
-#: auth/models.py:385
+#: auth/models.py:384
 msgid "User {} is already in group {}"
 msgstr "User {} is already in group {}"
 
-#: auth/models.py:393
+#: auth/models.py:392
 msgid "Removing users: {} from group {}"
 msgstr "Removing users: {} from group {}"
 
-#: auth/models.py:400
-#, python-brace-format
-msgid "Role {role} has been set to group {groupname}."
-msgstr "Role {role} has been set to group {groupname}."
+#: auth/models.py:399
+#, fuzzy
+msgid "Role {} has been set to group {}."
+msgstr "Role {} has been set to group {}."
 
-#: auth/models.py:405
+#: auth/models.py:403
 msgid "Group {} has already role {}"
 msgstr "Group {} has already role {}"
 
@@ -391,11 +391,11 @@ msgstr "Parameter {} is necessary."
 msgid "Parameter {} value {} is invalid. Valid values are: {}"
 msgstr "Parameter {} value {} is invalid. Valid values are: {}"
 
-#: common/veil_decorators.py:119
+#: common/veil_decorators.py:120
 msgid "IP: . username: {}"
 msgstr "IP: . username: {}"
 
-#: common/veil_decorators.py:121
+#: common/veil_decorators.py:122
 msgid "IP: {}. username: {}"
 msgstr "IP: {}. username: {}"
 
@@ -656,7 +656,7 @@ msgstr "Calling soft delete for vm {}"
 msgid "Logic error: no such pool"
 msgstr "Logic error: no such pool"
 
-#: pool/schema.py:57 pool/schema.py:354 pool/schema.py:381
+#: pool/schema.py:57 pool/schema.py:353 pool/schema.py:380
 msgid "No such pool."
 msgstr "No such pool."
 
@@ -676,105 +676,105 @@ msgstr "Template name of VM must contain only characters, digits, _, -"
 msgid "Initial number of VM must be in {}-{} interval"
 msgstr "Initial number of VM must be in {}-{} interval"
 
-#: pool/schema.py:115
+#: pool/schema.py:114
 msgid "Number of created VM must be in {}-{} interval"
 msgstr "Number of created VM must be in {}-{} interval"
 
-#: pool/schema.py:136 pool/schema.py:704
+#: pool/schema.py:135 pool/schema.py:703
 msgid "Maximal number of created VM should be less than initial number of VM"
 msgstr "Maximal number of created VM should be less than initial number of VM"
 
-#: pool/schema.py:138 pool/schema.py:706
+#: pool/schema.py:137 pool/schema.py:705
 msgid "Maximal number of created VM must be in [{} {}] interval"
 msgstr "Maximal number of created VM must be in [{} {}] interval"
 
-#: pool/schema.py:432
+#: pool/schema.py:431
 msgid "HttpError: {}"
 msgstr "HttpError: {}"
 
-#: pool/schema.py:442
+#: pool/schema.py:441
 msgid "VM with id {} not found in any controllers"
 msgstr "VM with id {} not found in any controllers"
 
-#: pool/schema.py:453
+#: pool/schema.py:452
 msgid "StaticPool: Get vm info"
 msgstr "StaticPool: Get vm info"
 
-#: pool/schema.py:456
+#: pool/schema.py:455
 msgid "StaticPool: Check that all vms are on the same node"
 msgstr "StaticPool: Check that all vms are on the same node"
 
-#: pool/schema.py:461
+#: pool/schema.py:460
 msgid "All of VM must be at one server"
 msgstr "All of VM must be at one server"
 
-#: pool/schema.py:468
+#: pool/schema.py:467
 msgid "StaticPool: Determine cluster"
 msgstr "StaticPool: Determine cluster"
 
-#: pool/schema.py:473 pool/schema.py:485
+#: pool/schema.py:472 pool/schema.py:484
 msgid "StaticPool: Determine datapool"
 msgstr "StaticPool: Determine datapool"
 
-#: pool/schema.py:492
+#: pool/schema.py:491
 msgid "StaticPool: Objects on VDI DB created."
 msgstr "StaticPool: Objects on VDI DB created."
 
-#: pool/schema.py:495
+#: pool/schema.py:494
 msgid "VM info {}"
 msgstr "VM info {}"
 
-#: pool/schema.py:506
+#: pool/schema.py:505
 msgid "StaticPool: pool {} created."
 msgstr "StaticPool: pool {} created."
 
-#: pool/schema.py:507
+#: pool/schema.py:506
 #, python-brace-format
 msgid "Static pool {name} created."
 msgstr "Static pool {name} created."
 
-#: pool/schema.py:509 pool/schema.py:511
+#: pool/schema.py:508 pool/schema.py:510
 msgid "Failed to create static pool {}."
 msgstr "Failed to create static pool {}."
 
-#: pool/schema.py:531 pool/schema.py:583
+#: pool/schema.py:530 pool/schema.py:582
 msgid "List of VM should not be empty"
 msgstr "List of VM should not be empty"
 
-#: pool/schema.py:544
+#: pool/schema.py:543
 msgid "VM ids: {}"
 msgstr "VM ids: {}"
 
-#: pool/schema.py:549
+#: pool/schema.py:548
 msgid "VM {} is at server different from pool server now"
 msgstr "VM {} is at server different from pool server now"
 
-#: pool/schema.py:552
+#: pool/schema.py:551
 msgid "VM {} is already in one of pools"
 msgstr "VM {} is already in one of pools"
 
-#: pool/schema.py:557
+#: pool/schema.py:556
 msgid "All VMs on node: {}"
 msgstr "All VMs on node: {}"
 
-#: pool/schema.py:592
+#: pool/schema.py:591
 msgid "VM doesn't belong to specified pool"
 msgstr "VM doesn't belong to specified pool"
 
-#: pool/schema.py:655
+#: pool/schema.py:654
 msgid "Failed to create automated pool {}."
 msgstr "Failed to create automated pool {}."
 
-#: pool/schema.py:709
+#: pool/schema.py:708
 msgid "Maximal number of created VM can not be reduced."
 msgstr "Maximal number of created VM can not be reduced."
 
-#: pool/schema.py:725
+#: pool/schema.py:724
 #, python-brace-format
 msgid "Automated pool {name} updated."
 msgstr "Automated pool {name} updated."
 
-#: pool/schema.py:727
+#: pool/schema.py:726
 msgid "Automated pool {} updated."
 msgstr "Automated pool {} updated."
 
@@ -971,13 +971,3 @@ msgstr "VMs list could not be retrieved: {}"
 #: vm/schema.py:298
 msgid "GraphQL: VM type list:"
 msgstr "GraphQL: VM type list:"
-
-#, fuzzy
-#~ msgid "Parameter action value {} is invalid. Valid values are"
-#~ msgstr "Parameter {} value {} is invalid. Valid values are: {}"
-
-#~ msgid "OU="
-#~ msgstr "OU="
-
-#~ msgid "Пользователю {} назначена роль VM_OPERATOR."
-#~ msgstr "Пользователю {} назначена роль VM_OPERATOR."
