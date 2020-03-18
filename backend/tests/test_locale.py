@@ -16,7 +16,7 @@ class AuthTestLocale(VdiHttpTestCase):
     @pytest.mark.usefixtures('fixt_db', 'fixt_user')
     @gen_test
     def test_locale_auth_without_password(self):
-        body = '{"username": "test_user","password": "!", "ldap": true}'  # Пропущен пароль
+        body = '{"username": "test_user","password": "!", "ldap": true}'  # Пропущен пароль!
         response_dict = yield self.get_response(body=body)
         error_message = response_dict['errors'][0]['message']
         if LANGUAGE == 'en':
