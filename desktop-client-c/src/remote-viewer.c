@@ -286,7 +286,7 @@ static void remote_viewer_free_auth_data(gchar **user, gchar **password, gchar *
 {
     free_memory_safely(user);
     free_memory_safely(password);
-    //free_memory_safely(domain);
+    //free_memory_safely(domain); // todo: leak!!!
     free_memory_safely(ip);
     free_memory_safely(port);
     free_memory_safely(vm_verbose_name);
