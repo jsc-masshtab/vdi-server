@@ -15,6 +15,11 @@ from controller.models import Controller
 
 from settings import DEFAULT_NAME
 
+from languages import lang_init
+
+
+_ = lang_init()
+
 
 class RequestType(graphene.ObjectType):
     url = graphene.String()
@@ -313,7 +318,7 @@ class ResourcesQuery(graphene.ObjectType):
             elif ordering == 'management_ip':
                 def sort_lam(node): return node.management_ip if node.management_ip else DEFAULT_NAME
             else:
-                raise SimpleError('Неверный параметр сортировки')
+                raise SimpleError(_('The sort parameter is incorrect'))
 
             list_of_all_node_types = sorted(list_of_all_node_types, key=sort_lam, reverse=reverse)
 
@@ -366,7 +371,7 @@ class ResourcesQuery(graphene.ObjectType):
             elif ordering == 'controller':
                 def sort_lam(cluster): return cluster.controller.address if cluster.controller.address else DEFAULT_NAME
             else:
-                raise SimpleError('Неверный параметр сортировки')
+                raise SimpleError(_('The sort parameter is incorrect'))
             list_of_all_cluster_types = sorted(list_of_all_cluster_types, key=sort_lam, reverse=reverse)
 
         return list_of_all_cluster_types
@@ -415,7 +420,7 @@ class ResourcesQuery(graphene.ObjectType):
             elif ordering == 'status':
                 def sort_lam(datapool): return datapool.status if datapool.status else DEFAULT_NAME
             else:
-                raise SimpleError('Неверный параметр сортировки')
+                raise SimpleError(_('The sort parameter is incorrect'))
             list_of_all_datapool_types = sorted(list_of_all_datapool_types, key=sort_lam, reverse=reverse)
 
         return list_of_all_datapool_types

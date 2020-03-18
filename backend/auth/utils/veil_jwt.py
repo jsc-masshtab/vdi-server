@@ -7,6 +7,11 @@ import logging
 from settings import JWT_OPTIONS, SECRET_KEY, JWT_EXPIRATION_DELTA, JWT_AUTH_HEADER_PREFIX, JWT_ALGORITHM, AUTH_ENABLED
 from auth.models import User, UserJwtInfo
 
+from languages import lang_init
+
+
+_ = lang_init()
+
 application_log = logging.getLogger('tornado.application')
 
 
@@ -20,15 +25,15 @@ def jwtauth(handler_class):
                 payload_user = payload.get('username')
                 is_valid = await UserJwtInfo.check_token(payload_user, token)
                 if not is_valid:
-                    raise AssertionError('Token invalid.')
+                    raise AssertionError(_('Token invalid.'))
             except jwt.ExpiredSignature:
-                application_log.debug('jwtauth: jwt.ExpiredSignature')
+                application_log.debug(_('jwtauth: jwt.ExpiredSignature'))
                 handler._transforms = []
                 handler.set_status(401)
-                response = {'errors': [{'message': 'Token expired.'}]}
+                response = {'errors': [{'message': _('Token expired.')}]}
                 handler.finish(response)
             except AssertionError as error_message:
-                application_log.debug('jwtauth: Assertion error {}'.format(error_message))
+                application_log.debug(_('jwtauth: Assertion error {}').format(error_message))
                 handler._transforms = []
                 handler.set_status(401)
                 response = {'errors': [{'message': str(error_message)}]}
@@ -78,7 +83,7 @@ def decode_jwt(token, decode_options: dict = JWT_OPTIONS, algorithms: list = [JW
     except jwt.ExpiredSignatureError:
         raise jwt.ExpiredSignatureError()
     except Exception as E:  # noqa
-        raise AssertionError("Error with JWT decode")
+        raise AssertionError(_("Error with JWT decode"))
     return decoded_jwt
 
 
@@ -88,15 +93,15 @@ def extract_access_token(headers: dict) -> str:
     if auth:
         parts = auth.split()
         if parts[0].upper() != JWT_AUTH_HEADER_PREFIX:
-            raise AssertionError("invalid header authorization")
+            raise AssertionError(_("invalid header authorization"))
         elif len(parts) == 1:
-            raise AssertionError("invalid header authorization")
+            raise AssertionError(_("invalid header authorization"))
         elif len(parts) > 2:
-            raise AssertionError("invalid header authorization")
+            raise AssertionError(_("invalid header authorization"))
         access_token = parts[1]
         return access_token
     else:
-        raise AssertionError("Missing Authorization header")
+        raise AssertionError(_("Missing Authorization header"))
 
 
 def extract_user(headers: dict) -> str:

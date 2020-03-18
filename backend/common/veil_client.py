@@ -8,6 +8,11 @@ from settings import VEIL_REQUEST_TIMEOUT, VEIL_CONNECTION_TIMEOUT, VEIL_MAX_BOD
 from common.veil_errors import NotFound, Unauthorized, ServerError, Forbidden, ControllerNotAccessible, BadRequest
 from common.veil_decorators import prepare_body
 
+from languages import lang_init
+
+
+_ = lang_init()
+
 # TODO: добавить обработку исключений
 # TODO: Не tornado.curl_httpclient.CurlAsyncHTTPClient, т.к. не измерен реальный прирост производительности.
 # TODO: нужно менять статус контроллера и прочих сущностей после нескольких неудачных попыток подключения
@@ -40,7 +45,7 @@ class VeilHttpClient:
     async def headers(self):
         """controller ip-address must be set in the descendant class."""
         headers = {
-            'Authorization': 'jwt {}'.format(self.token),
+            'Authorization': _('jwt {}').format(self.token),
             'Content-Type': 'application/json',
         }
         return headers
@@ -70,20 +75,20 @@ class VeilHttpClient:
                 if not isinstance(description, str):
                     description = ''
                 # Информируем систему о проблеме
-                await Event.create_error('Ошибка подключения к контроллеру {}'.format(self.controller_ip),
+                await Event.create_error(_('Controller {} connection error').format(self.controller_ip),
                                          description=description)
                 # Останавливаем монитор ресурсов для контроллера.
                 await resources_monitor_manager.remove_controller(self.controller_ip)
 
-            application_log.error('URL {url} - {http_error}'.format(url=url,
-                                                                    http_error=str(http_error)))
+            application_log.error(_('URL {url} - {http_error}').format(url=url,
+                                                                       http_error=str(http_error)))
 
             body = self.get_response_body(http_error.response)
             if isinstance(body, dict):
                 errors = body['errors'] if body.get('errors') else {}
                 detail = errors['detail'] if errors.get('detail') else {}
             elif isinstance(body, str):
-                detail = 'url: {} - {}'.format(url, body)
+                detail = _('url: {} - {}').format(url, body)
             else:
                 detail = ''
             await stop_controller(detail)
@@ -95,7 +100,7 @@ class VeilHttpClient:
             elif http_error.code == 403:
                 raise Forbidden(body)
             elif http_error.code == 404:
-                raise NotFound('Не найден URL', url)
+                raise NotFound(_('URL not found'), url)
             elif http_error.code == 408:
                 raise ControllerNotAccessible(body)
             elif http_error.code == 500:
@@ -113,10 +118,10 @@ class VeilHttpClient:
         response_content_type = response_headers.get('Content-Type')
 
         if not isinstance(response_content_type, str):
-            raise AssertionError('Can\'t process Content-Type.')
+            raise AssertionError(_('Can\'t process Content-Type.'))
 
         if response_content_type.lower().find('json') == -1:
-            raise NotImplementedError('Only \'json\' Content-Type.')
+            raise NotImplementedError(_('Only \'json\' Content-Type.'))
         try:
             response = json_decode(response.body)
         except ValueError:

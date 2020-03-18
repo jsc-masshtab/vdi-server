@@ -9,6 +9,11 @@ import warnings
 
 from auth.utils.django_crypto import constant_time_compare, get_random_string, pbkdf2
 
+from languages import lang_init
+
+
+_ = lang_init()
+
 UNUSABLE_PASSWORD_PREFIX = '!'  # This will never be a valid encoded hash
 UNUSABLE_PASSWORD_SUFFIX_LENGTH = 40  # number of random chars to add after UNUSABLE_PASSWORD_PREFIX
 
@@ -132,10 +137,10 @@ class BasePasswordHasher:
             try:
                 module = importlib.import_module(mod_path)
             except ImportError as e:
-                raise ValueError("Couldn't load %r algorithm library: %s" %
+                raise ValueError(_("Couldn't load %r algorithm library: %s") %
                                  (self.__class__.__name__, e))
             return module
-        raise ValueError("Hasher %r doesn't specify a library attribute" %
+        raise ValueError(_("Hasher %r doesn't specify a library attribute") %
                          self.__class__.__name__)
 
     def salt(self):
@@ -144,7 +149,7 @@ class BasePasswordHasher:
 
     def verify(self, password, encoded):
         """Check if the given password is correct."""
-        raise NotImplementedError('subclasses of BasePasswordHasher must provide a verify() method')
+        raise NotImplementedError(_('Subclasses of BasePasswordHasher must provide a verify() method'))
 
     def encode(self, password, salt):
         """
@@ -153,7 +158,7 @@ class BasePasswordHasher:
         The result is normally formatted as "algorithm$salt$hash" and
         must be fewer than 128 characters.
         """
-        raise NotImplementedError('subclasses of BasePasswordHasher must provide an encode() method')
+        raise NotImplementedError(_('Subclasses of BasePasswordHasher must provide an encode() method'))
 
     def safe_summary(self, encoded):
         """
@@ -178,7 +183,7 @@ class BasePasswordHasher:
         for any hasher that has a work factor. If not, this method should be
         defined as a no-op to silence the warning.
         """
-        warnings.warn('subclasses of BasePasswordHasher should provide a harden_runtime() method')
+        warnings.warn(_('Subclasses of BasePasswordHasher should provide a harden_runtime() method'))
 
 
 class PBKDF2PasswordHasher(BasePasswordHasher):

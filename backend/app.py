@@ -30,6 +30,11 @@ from auth.urls import auth_api_urls
 from thin_client_api.urls import thin_client_api_urls
 from resources_monitoring.urls import ws_event_monitoring_urls
 
+from languages import lang_init
+
+
+_ = lang_init()
+
 logger = logging.getLogger(__name__)
 tornado.options.define("access_to_stdout", default=True, help="Log tornado.access to stdout")
 tornado.options.define("port", default=8888, help="port to listen on")
@@ -113,11 +118,11 @@ def init_gino():
 
 
 def start_server():
-    logger.info('Tornado VDI started')
+    logger.info(_('Tornado VDI started'))
 
     if not AUTH_ENABLED:
         general_log = logging.getLogger('tornado.general')
-        general_log.warning('Auth is disabled. Enable on production!')
+        general_log.warning(_('Auth is disabled. Enable on production!'))
 
     app = make_app()
     init_gino()
@@ -132,18 +137,18 @@ def exit_handler(sig, frame):
 
 
 async def shutdown_server():
-    logger.info('Stopping Tornado VDI')
+    logger.info(_('Stopping Tornado VDI'))
 
-    logger.info('Stopping resources_monitor_manager')
+    logger.info(_('Stopping resources_monitor_manager'))
     await resources_monitor_manager.stop()
 
-    logger.info('Stopping GINO')
+    logger.info(_('Stopping GINO'))
     await stop_gino()
 
-    logger.info('Stopping IOLoop')
+    logger.info(_('Stopping IOLoop'))
     IOLoop.current().stop()
 
-    logger.info('Tornado VDI stopped')
+    logger.info(_('Tornado VDI stopped'))
 
 
 if __name__ == '__main__':

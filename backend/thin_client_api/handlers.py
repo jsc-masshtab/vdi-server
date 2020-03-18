@@ -16,6 +16,11 @@ from vm.veil_client import VmHttpClient  # TODO: move to VM?
 from pool.pool_task_manager import pool_task_manager
 from controller.models import Controller
 
+from languages import lang_init
+
+
+_ = lang_init()
+
 application_log = logging.getLogger('tornado.application')
 
 
@@ -40,7 +45,7 @@ class PoolGetVm(BaseHandler, ABC):
         user_id = await User.get_id(username)
         pool = await Pool.get(pool_id)
         if not pool:
-            response_dict = {'data': dict(host='', port=0, password='', message='Пул не найден')}
+            response_dict = {'data': dict(host='', port=0, password='', message=_('Pool not found.'))}
             return await self.finish(response_dict)
 
         controller_ip = await Controller.select('address').where(Controller.id == pool.controller).gino.scalar()
@@ -51,7 +56,7 @@ class PoolGetVm(BaseHandler, ABC):
         assigned_users_list = [user.username for user in assigned_users]
         if username not in assigned_users_list:
             response_dict = {
-                'data': dict(host='', port=0, password='', message='У пользователя нет разрешений использовать пул.')}
+                'data': dict(host='', port=0, password='', message=_('User does not have permission to use pool.'))}
             return await self.finish(response_dict)
 
         # Ищем VM закрепленную за пользователем:
@@ -84,7 +89,7 @@ class PoolGetVm(BaseHandler, ABC):
                     pool_lock.expand_pool_task = native_loop.create_task(pool.expand_pool())
 
         if not vm_id:
-            response_dict = {'data': dict(host='', port=0, password='', message='В пуле нет свободных машин')}
+            response_dict = {'data': dict(host='', port=0, password='', message=_('Pool has not free machines'))}
             return await self.finish(response_dict)
 
         #  Опытным путем было выяснено, что vm info содержит remote_access_port None, пока не врубишь
@@ -111,7 +116,7 @@ class PoolGetVm(BaseHandler, ABC):
                 vm_address = info['guest_utils']['ipv4'][0]
             except (IndexError, KeyError):
                 response_dict = {'data': dict(host='', port=0, password='',
-                                              message='ВМ не поддерживает RDP')}
+                                              message=_('VM does not support RDP'))}
                 return await self.finish(response_dict)
 
         else:  # spice by default
@@ -134,14 +139,14 @@ class VmAction(BaseHandler, ABC):
             username = self.get_current_user()
             user_id = await User.get_id(username)
             if not user_id:
-                raise AssertionError('User {} not found.'.format(username))
+                raise AssertionError(_('User {} not found.').format(username))
             pool = await Pool.get(pool_id)
             if not pool:
-                raise AssertionError('There is no pool with id: {}'.format(pool_id))
+                raise AssertionError(_('There is no pool with id: {}').format(pool_id))
             # TODO: проверить права доступа пользователя к VM через assigned_users у Pool
             vm_id = await Vm.get_vm_id(pool_id=pool_id, user_id=user_id)
             if not vm_id:
-                raise AssertionError('User {} has no VM on pool {}'.format(username, pool_id))
+                raise AssertionError(_('User {} has no VM on pool {}').format(username, pool_id))
 
             controller_ip = await Pool.get_controller_ip(pool_id)
             client = await VmHttpClient.create(controller_ip=controller_ip, vm_id=vm_id)

@@ -4,6 +4,11 @@ import asyncio
 from database import db
 from common.utils import cancel_async_task
 
+from languages import lang_init
+
+
+_ = lang_init()
+
 
 class PoolLock:
 
@@ -62,7 +67,7 @@ class PoolTaskManager:
     async def cancel_all_tasks_for_pool(self, pool_id: str):
         """Завершить все таски, связанные с пулом"""
         if pool_id not in self._pool_lock_dict:
-            print(__class__.__name__, 'Logic error: no such pool')
+            print(__class__.__name__, _('Logic error: no such pool'))
             return
 
         cur_pool_lock = self._pool_lock_dict[pool_id]

@@ -8,6 +8,11 @@ from common.veil_errors import SimpleError, ValidationError
 from common.veil_decorators import security_administrator_required, readonly_required
 from auth.user_schema import UserType
 
+from languages import lang_init
+
+
+_ = lang_init()
+
 
 class GroupValidator(MutationValidation):
     """Валидатор для сущности Group"""
@@ -18,13 +23,13 @@ class GroupValidator(MutationValidation):
         if group:
             obj_dict['group'] = group
             return value
-        raise ValidationError('No such group.')
+        raise ValidationError(_('No such group.'))
 
     @staticmethod
     async def validate_verbose_name(obj_dict, value):
         if len(value) > 0:
             return value
-        raise ValidationError('verbose_name is empty.')
+        raise ValidationError(_('verbose_name is empty.'))
 
     @staticmethod
     async def validate_users(obj_dict, value):
@@ -33,9 +38,9 @@ class GroupValidator(MutationValidation):
             # Нет желания явно проверять каждого пользователя на присутствие
             exists_count = await db.select([db.func.count()]).where(User.id.in_(value)).gino.scalar()
             if exists_count != value_count:
-                raise ValidationError('users count not much with db count.')
+                raise ValidationError(_('users count not much with db count.'))
             return value
-        raise ValidationError('users list is empty.')
+        raise ValidationError(_('users list is empty.'))
 
 
 class GroupType(graphene.ObjectType):
@@ -88,7 +93,7 @@ class GroupQuery(graphene.ObjectType):
     async def resolve_group(self, info, id):  # noqa
         group = await Group.get(id)
         if not group:
-            raise SimpleError('No such group.')
+            raise SimpleError(_('No such group.'))
         return GroupType.instance_to_type(group)
 
     @readonly_required
