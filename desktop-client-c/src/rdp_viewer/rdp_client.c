@@ -118,9 +118,11 @@ void rdp_client_routine(GTask   *task,
     printf("%s tf->usename %s\n", (const char *)__func__, tf->usename);
     printf("%s tf->domain %s\n", (const char *)__func__, tf->domain);
     // /v:192.168.20.104 /u:solomin /p:5555 -clipboard /sound:rate:44100,channel:2 /cert-ignore
+    gchar *full_adress = tf->port != 0 ? g_strdup_printf("/v:%s:%i", tf->ip, tf->port) : g_strdup_printf("/v:%s", tf->ip);
+
     char* argv[] = {
         g_strdup(PROGRAMM_NAME),
-        g_strdup_printf("/v:%s", tf->ip),
+        full_adress,
         g_strdup_printf("/d:%s", tf->domain),
         g_strdup_printf("/u:%s", tf->usename),
         g_strdup_printf("/p:%s", tf->password),

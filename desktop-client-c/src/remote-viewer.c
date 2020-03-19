@@ -338,7 +338,7 @@ retry_connnect_to_vm:
 //            printf("%s TEST user %s\n", (const char *)__func__, user);
 //            printf("%s TEST password %s\n", (const char *)__func__, password);
 //            printf("%s TEST ip %s\n", (const char *)__func__, ip);
-            GtkResponseType rdp_viewer_res = rdp_viewer_start(user, password, domain, ip, 0);
+            GtkResponseType rdp_viewer_res = rdp_viewer_start(user, password, domain, ip, atoi(port));
             remote_viewer_free_auth_data(&user, &password, &domain, &ip, &port, &vm_verbose_name);
             if (rdp_viewer_res == GTK_RESPONSE_CANCEL)
                 goto retry_auth;
