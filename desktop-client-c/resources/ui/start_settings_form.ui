@@ -3,6 +3,7 @@
 <interface>
   <requires lib="gtk+" version="3.20"/>
   <object class="GtkWindow" id="start-settings-window">
+    <property name="name">start-setting</property>
     <property name="can_focus">False</property>
     <property name="border_width">7</property>
     <property name="modal">True</property>
@@ -11,6 +12,7 @@
     </child>
     <child>
       <object class="GtkBox">
+        <property name="name">start-setting-box</property>
         <property name="visible">True</property>
         <property name="can_focus">False</property>
         <property name="orientation">vertical</property>
@@ -24,9 +26,8 @@
               <object class="GtkLabel" id="serber-ip-">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
-                <property name="halign">start</property>
-                <property name="margin_left">2</property>
-                <property name="margin_right">2</property>
+                <property name="halign">end</property>
+                <property name="margin_right">10</property>
                 <property name="hexpand">True</property>
                 <property name="label" translatable="yes">Адрес сервера</property>
               </object>
@@ -67,9 +68,8 @@
               <object class="GtkLabel">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
-                <property name="halign">start</property>
-                <property name="margin_left">2</property>
-                <property name="margin_right">2</property>
+                <property name="halign">end</property>
+                <property name="margin_right">10</property>
                 <property name="hexpand">False</property>
                 <property name="label" translatable="yes">Порт сервера</property>
               </object>
@@ -102,6 +102,7 @@
         </child>
         <child>
           <object class="GtkBox">
+            <property name="name">start-setting-domain</property>
             <property name="visible">True</property>
             <property name="can_focus">False</property>
             <property name="homogeneous">True</property>
@@ -109,7 +110,8 @@
               <object class="GtkLabel">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
-                <property name="halign">start</property>
+                <property name="halign">end</property>
+                <property name="margin_right">10</property>
                 <property name="label" translatable="yes">Домен</property>
               </object>
               <packing>
@@ -189,6 +191,7 @@
         </child>
         <child>
           <object class="GtkBox">
+            <property name="name">start-setting-buttons</property>
             <property name="visible">True</property>
             <property name="can_focus">False</property>
             <property name="homogeneous">True</property>

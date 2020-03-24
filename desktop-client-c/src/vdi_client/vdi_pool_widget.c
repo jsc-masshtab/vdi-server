@@ -18,6 +18,8 @@ VdiPoolWidget build_pool_widget(const gchar *pool_id, const gchar *pool_name,
     vdi_pool_widget.main_widget = gtk_frame_new(NULL); // status
 
     vdi_pool_widget.gtk_box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 3);
+    gtk_widget_set_name(vdi_pool_widget.main_widget, "vdi_pool_widget_box");
+    
     // overlay
     vdi_pool_widget.gtk_overlay = gtk_overlay_new();
     gtk_container_add((GtkContainer *)vdi_pool_widget.gtk_overlay, vdi_pool_widget.gtk_box);
