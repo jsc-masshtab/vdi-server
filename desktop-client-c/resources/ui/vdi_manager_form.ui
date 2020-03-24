@@ -8,6 +8,7 @@
     <property name="stock">gtk-refresh</property>
   </object>
   <object class="GtkWindow" id="vdi-main-window">
+    <property name="name">main-window</property>
     <property name="can_focus">False</property>
     <property name="title" translatable="yes">ECP Veil VDI менеджер</property>
     <child>
@@ -15,12 +16,12 @@
     </child>
     <child>
       <object class="GtkVBox" id="main-box">
+        <property name="name">main-window-box</property>
         <property name="visible">True</property>
         <property name="can_focus">False</property>
-        <property name="border_width">10</property>
-        <property name="spacing">6</property>
         <child>
           <object class="GtkBox">
+            <property name="name">main-window-controls</property>
             <property name="visible">True</property>
             <property name="can_focus">False</property>
             <property name="hexpand">False</property>
@@ -108,6 +109,7 @@
         </child>
         <child>
           <object class="GtkScrolledWindow">
+            <property name="name">main-window-list</property>
             <property name="visible">True</property>
             <property name="can_focus">True</property>
             <property name="shadow_type">in</property>
@@ -147,6 +149,7 @@
         </child>
         <child>
           <object class="GtkBox">
+            <property name="name">main-window-status</property>
             <property name="visible">True</property>
             <property name="can_focus">False</property>
             <child>
@@ -164,17 +167,7 @@
               </packing>
             </child>
             <child>
-              <object class="GtkImage" id="image_label_vdi_online">
-                <property name="visible">True</property>
-                <property name="can_focus">False</property>
-                <property name="icon_name">help-browser</property>
-              </object>
-              <packing>
-                <property name="expand">False</property>
-                <property name="fill">True</property>
-                <property name="pack_type">end</property>
-                <property name="position">1</property>
-              </packing>
+              <placeholder/>
             </child>
           </object>
           <packing>
