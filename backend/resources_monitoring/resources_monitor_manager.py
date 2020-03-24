@@ -4,6 +4,11 @@ import logging
 from controller.models import Controller
 from resources_monitoring.resources_monitor import ResourcesMonitor
 
+from languages import lang_init
+
+
+_ = lang_init()
+
 application_log = logging.getLogger('tornado.application')
 
 
@@ -22,7 +27,7 @@ class ResourcesMonitorManager:
         application_log.info('{}: Startup...'.format(__class__.__name__))
         # get all active controller ips
         controllers_addresses = await Controller.get_controllers_addresses()
-        msg = '{cls}: connected controllers -- {controllers}'.format(
+        msg = _('{cls}: connected controllers -- {controllers}').format(
             cls=__class__.__name__,
             controllers=controllers_addresses)
         application_log.info(msg)
@@ -31,7 +36,7 @@ class ResourcesMonitorManager:
         # start resources monitors
         for controller_address in controllers_addresses:
             self._add_monitor_for_controller(controller_address)
-        application_log.info('{}: Started'.format(__class__.__name__))
+        application_log.info(_('{}: Started').format(__class__.__name__))
 
     async def stop(self):
         """
@@ -66,14 +71,14 @@ class ResourcesMonitorManager:
     async def add_controller(self, controller_ip):
         # check if controller is already being monitored
         if controller_ip in self._get_monitored_controllers_ips():
-            msg = '{cls}: Controller {ip} is already monitored!'.format(
+            msg = _('{cls}: Controller {ip} is already monitored!').format(
                 cls=__class__.__name__,
                 ip=controller_ip)
             application_log.warning(msg)
             return
         # add monitor
         self._add_monitor_for_controller(controller_ip)
-        msg = '{cls}: resource monitor for controller {ip} connected'.format(
+        msg = _('{cls}: resource monitor for controller {ip} connected').format(
             cls=__class__.__name__,
             ip=controller_ip)
         application_log.info(msg)
@@ -84,7 +89,7 @@ class ResourcesMonitorManager:
             resources_monitor = next(resources_monitor for resources_monitor in self._resources_monitors_list
                                      if resources_monitor.get_controller_ip() == controller_ip)
         except StopIteration:
-            msg = '{cls}: controller {ip} is not monitored!'.format(
+            msg = _('{cls}: controller {ip} is not monitored!').format(
                 cls=__class__.__name__,
                 ip=controller_ip)
             application_log.debug(msg)
@@ -92,7 +97,7 @@ class ResourcesMonitorManager:
         # stop monitoring
         await resources_monitor.stop()
         self._resources_monitors_list.remove(resources_monitor)
-        msg = '{cls}: resource monitor for controller {ip} removed'.format(
+        msg = _('{cls}: resource monitor for controller {ip} removed').format(
             cls=__class__.__name__,
             ip=controller_ip)
         application_log.warning(msg)

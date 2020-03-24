@@ -13,6 +13,10 @@ from auth.utils import hashers
 from event.models import Event
 from common.veil_errors import SimpleError
 
+from languages import lang_init
+
+
+_ = lang_init()
 
 application_log = logging.getLogger('tornado.application')
 
@@ -89,23 +93,23 @@ class User(AbstractSortableStatusModel, db.Model):
     async def roles(self):
         if self.is_superuser:
             all_roles_set = set(Role)  # noqa
-            # application_log.debug('User: {} full roles: {}'.format(self.username, all_roles_set))
+            # application_log.debug(_('User: {} full roles: {}').format(self.username, all_roles_set))
             return all_roles_set
 
         user_roles = await UserRole.query.where(UserRole.user_id == self.id).gino.all()
         all_roles_list = [role_type.role for role_type in user_roles]
 
-        application_log.debug('User {} roles: {}'.format(self.username, all_roles_list))
+        application_log.debug(_('User {} roles: {}').format(self.username, all_roles_list))
 
         user_groups = await self.assigned_groups
         for group in user_groups:
             group_roles = await group.roles
-            application_log.debug('Group {} roles: {}'.format(group.verbose_name, group_roles))
+            application_log.debug(_('Group {} roles: {}').format(group.verbose_name, group_roles))
             all_roles_list += [role_type.role for role_type in group_roles]
 
         roles_set = set(all_roles_list)
         # Сейчас роли будет в случайноп порядке.
-        # application_log.debug('User: {} full roles: {}'.format(self.username, roles_set))
+        # application_log.debug(_('User: {} full roles: {}').format(self.username, roles_set))
         return roles_set
 
     @property
@@ -140,7 +144,7 @@ class User(AbstractSortableStatusModel, db.Model):
         try:
             return await UserRole.create(user_id=self.id, role=role)
         except UniqueViolationError:
-            raise SimpleError('Пользователю {} уже назначена роль {}'.format(self.id, role))
+            raise SimpleError(_('Role {} is assigned to user {}').format(role, self.id))
 
     async def add_roles(self, roles_list):
         async with db.transaction():
@@ -164,7 +168,7 @@ class User(AbstractSortableStatusModel, db.Model):
         query = User.update.values(is_active=True).where(User.id == self.id)
         operation_status = await query.gino.status()
 
-        info_message = 'User {username} has been activated.'.format(username=self.username)
+        info_message = _('User {username} has been activated.').format(username=self.username)
         await Event.create_info(info_message, entity_dict=self.entity)
 
         return operation_status
@@ -176,12 +180,12 @@ class User(AbstractSortableStatusModel, db.Model):
 
         superuser_count = await query.gino.scalar()
         if superuser_count == 0:
-            raise SimpleError('There is no more active superuser. Leg shot.')
+            raise SimpleError(_('There is no more active superuser.'))
 
         query = User.update.values(is_active=False).where(User.id == self.id)
         operation_status = await query.gino.status()
 
-        info_message = 'User {username} has been deactivated.'.format(username=self.username)
+        info_message = _('User {username} has been deactivated.').format(username=self.username)
         await Event.create_info(info_message, entity_dict=self.entity)
 
         return operation_status
@@ -204,7 +208,7 @@ class User(AbstractSortableStatusModel, db.Model):
         user_status = await User.update.values(password=encoded_password).where(
             User.id == self.id).gino.status()
 
-        info_message = 'Password of user {username} has been changed.'.format(username=self.username)
+        info_message = _('Password of user {username} has been changed.').format(username=self.username)
         await Event.create_info(info_message, entity_dict=self.entity)
 
         return user_status
@@ -222,7 +226,7 @@ class User(AbstractSortableStatusModel, db.Model):
         user_obj = await User.create(**user_kwargs)
 
         user_role = 'Superuser' if is_superuser else 'User'
-        info_message = '{role} "{username}" created.'.format(username=username, role=user_role)
+        info_message = _('{role} "{username}" created.').format(username=username, role=user_role)
         await Event.create_info(info_message, entity_dict=user_obj.entity)
 
         return user_obj
@@ -246,7 +250,7 @@ class User(AbstractSortableStatusModel, db.Model):
         user = await User.get(user_id)
 
         if user_kwargs.get('is_superuser'):
-            info_message = 'User {username} has become a superuser.'.format(username=user.username)
+            info_message = _('User {username} has become a superuser.').format(username=user.username)
             await Event.create_info(info_message, entity_dict=user.entity)
 
         return user
@@ -263,7 +267,7 @@ class User(AbstractSortableStatusModel, db.Model):
 
         # Login event
         auth_type = 'Ldap' if ldap else 'Local'
-        info_message = '{auth_type} user {username} has been logged in successfully. IP: {ip}.'.format(
+        info_message = _('{auth_type} user {username} has been logged in successfully. IP: {ip}.').format(
             auth_type=auth_type,
             username=username,
             ip=ip)
@@ -284,7 +288,7 @@ class User(AbstractSortableStatusModel, db.Model):
         # Запрещаем все выданные пользователю токены (Может быть только 1)
         await UserJwtInfo.delete.where(UserJwtInfo.user_id == user.id).gino.status()
 
-        info_message = 'User {username} has logged out.'.format(username=username)
+        info_message = _('User {username} has logged out.').format(username=username)
         await Event.create_info(info_message, entity_dict=user.entity)
         return True
 
@@ -373,12 +377,11 @@ class Group(AbstractSortableStatusModel, db.Model):
             user_group = await UserGroup.create(user_id=user_id, group_id=self.id)
 
             user = await User.get(user_id)
-            info_message = 'User {username} has been included to group {groupname}.'.format(username=user.username,
-                                                                                            groupname=self.verbose_name)
+            info_message = _('User {} has been included to group {}.').format(user.username, self.verbose_name)
             await Event.create_info(info_message, entity_dict=self.entity)
             return user_group
         except UniqueViolationError:
-            raise SimpleError('Пользователь {} уже находится в группе {}'.format(user_id, self.id))
+            raise SimpleError(_('User {} is already in group {}').format(user_id, self.id))
 
     async def add_users(self, user_id_list):
         async with db.transaction():
@@ -386,19 +389,18 @@ class Group(AbstractSortableStatusModel, db.Model):
                 await self.add_user(user)
 
     async def remove_users(self, user_id_list):
-        application_log.debug('Removing users: {} from group {}'.format(user_id_list, self.verbose_name))
+        application_log.debug(_('Removing users: {} from group {}').format(user_id_list, self.verbose_name))
         return await UserGroup.delete.where(
             (UserGroup.user_id.in_(user_id_list)) & (UserGroup.group_id == self.id)).gino.status()
 
     async def add_role(self, role):
         try:
             group_role = await GroupRole.create(group_id=self.id, role=role)
-            info_message = 'Role {role} has been set to group {groupname}.'.format(groupname=self.verbose_name,
-                                                                                   role=role)
+            info_message = _('Role {} has been set to group {}.').format(role, self.verbose_name)
             await Event.create_info(info_message, entity_dict=self.entity)
 
         except UniqueViolationError:
-            raise SimpleError('Группе {} уже назначена роль {}'.format(self.id, role))
+            raise SimpleError(_('Group {} has already role {}').format(self.id, role))
         return group_role
 
     async def add_roles(self, roles_list):

@@ -10,6 +10,10 @@ from common.veil_decorators import security_administrator_required, readonly_req
 from auth.authentication_directory.models import AuthenticationDirectory, Mapping
 from auth.models import Group
 
+from languages import lang_init
+
+
+_ = lang_init()
 
 ConntectionTypesGraphene = GrapheneEnum.from_enum(AuthenticationDirectory.ConnectionTypes)
 DirectoryTypesGraphene = GrapheneEnum.from_enum(AuthenticationDirectory.DirectoryTypes)
@@ -24,20 +28,20 @@ class AuthenticationDirectoryValidator(MutationValidation):
         ad = await AuthenticationDirectory.get_object(id=value, include_inactive=True)
         if ad:
             return value
-        raise ValidationError('No such Authentication Directory.')
+        raise ValidationError(_('No such Authentication Directory.'))
 
     @staticmethod
     async def validate_directory_url(obj_dict, value):
         if not re.match(r'^ldap[s]?://[\S]+$', value):
             raise ValidationError(
-                'Authentication directory URL should start with ldap(s)://.')
+                _('Authentication directory URL should start with ldap(s)://.'))
         return value
 
     @staticmethod
     async def validate_verbose_name(obj_dict, value):
         if len(value) == 0:
             raise ValidationError(
-                'Verbose name should not be empty.')
+                _('Verbose name should not be empty.'))
         return value
 
     @staticmethod
@@ -53,16 +57,16 @@ class AuthenticationDirectoryValidator(MutationValidation):
             # Нет желания явно проверять каждого пользователя на присутствие
             exists_count = await db.select([db.func.count()]).where(Group.id.in_(value)).gino.scalar()
             if exists_count != value_count:
-                raise ValidationError('users count not much with db count.')
+                raise ValidationError(_('users count not much with db count.'))
             return value
-        raise ValidationError('groups list is empty.')
+        raise ValidationError(_('groups list is empty.'))
 
     @staticmethod
     async def validate_mapping_id(obj_dict, value):
         mapping = await Mapping.get(value)
         if mapping:
             return value
-        raise ValidationError('No such mapping.')
+        raise ValidationError(_('No such mapping.'))
 
 
 class MappingGroupType(graphene.ObjectType):
@@ -152,11 +156,11 @@ class AuthenticationDirectoryQuery(graphene.ObjectType):
     @readonly_required
     async def resolve_auth_dir(self, info, id=None):
         if not id:
-            raise SimpleError('Specify id.')
+            raise SimpleError(_('Specify id.'))
 
         auth_dir = await AuthenticationDirectory.get_object(id)
         if not auth_dir:
-            raise SimpleError('No such Authentication Directory.')
+            raise SimpleError(_('No such Authentication Directory.'))
         return AuthenticationDirectoryQuery.instance_to_type(auth_dir)
 
     @readonly_required

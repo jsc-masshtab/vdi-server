@@ -19,8 +19,10 @@ FERNET_KEY = b'LRzSxWyxqKD4p2BR11-nVmghV67AVmQ4CxYi__S_OH8='
 
 # Auth settings
 # -----------------------------
-AUTH_ENABLED = True
-# AUTH_ENABLED = False  # Отключает проверку токенов, делает доступным стандартный интерфейс GpaphQL
+# Включает проверку токенов, стандартный интерфейс GpaphQL становится недоступным
+# AUTH_ENABLED = True
+# Отключает проверку токенов, делает доступным стандартный интерфейс GpaphQL
+AUTH_ENABLED = False
 
 # JWT Options
 # -----------------------------
@@ -48,9 +50,21 @@ VEIL_CONNECTION_TIMEOUT = 15
 VEIL_MAX_BODY_SIZE = 1000 * 1024 ^ 3
 VEIL_MAX_CLIENTS = 10
 VEIL_SSL_ON = False
-VEIL_WS_MAX_TIME_TO_WAIT = 60
+# VEIL_WS_MAX_TIME_TO_WAIT = 60
+VEIL_WS_MAX_TIME_TO_WAIT = 10
+
+# Locale settings
+# -----------------------------
+LANGUAGE = 'ru'
 
 # Others
 # -----------------------------
 DEFAULT_NAME = '-'
 LDAP_TIMEOUT = 5
+
+# File system paths
+# -----------------------------
+# TODO: Актуализировать путь хранения ключей
+# CONF_PATH = '/opt/veil-vdi/devops/conf/license'
+# Относительные пути для локальной разработки
+CONF_PATH = '../devops/conf/license'

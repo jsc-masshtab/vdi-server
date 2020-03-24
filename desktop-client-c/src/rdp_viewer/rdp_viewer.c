@@ -476,7 +476,7 @@ GtkResponseType rdp_viewer_start(const gchar *usename, const gchar *password, gc
     gtk_window_resize(GTK_WINDOW(rdp_viewer_window), optimal_image_width, optimal_image_height);
     gtk_widget_show_all(rdp_viewer_window);
 
-    guint g_timeout_id = g_timeout_add(40, (GSourceFunc)gtk_update_v2, rdp_display);
+    guint g_timeout_id = g_timeout_add(30, (GSourceFunc)gtk_update_v2, rdp_display);
     //gtk_widget_add_tick_callback(rdp_display, gtk_update, context, NULL);
 
     create_loop_and_launch(&rdp_viewer_data.loop);

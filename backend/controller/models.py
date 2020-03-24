@@ -13,6 +13,11 @@ from database import db, get_list_of_values_from_db, Status, EntityType
 from common.veil_errors import SimpleError, BadRequest
 from event.models import Event
 
+from languages import lang_init
+
+
+_ = lang_init()
+
 application_log = logging.getLogger('tornado.application')
 # TODO: validate token by expires_on parameter
 # TODO: validate status
@@ -77,7 +82,7 @@ class Controller(db.Model):
                 token = await Controller.refresh_token(ip_address)
             return token
         else:
-            raise AssertionError('No such controller')
+            raise AssertionError(_('No such controller'))
 
     @staticmethod
     async def invalidate_auth(ip_address: str):
@@ -111,34 +116,34 @@ class Controller(db.Model):
             ).where(Controller.address == ip_address).gino.status()
             return token
         else:
-            raise AssertionError('No such controller')
+            raise AssertionError(_('No such controller'))
 
     async def check_credentials(self):
         try:
             encrypted_password = crypto.decrypt(self.password)
             application_log.debug(
-                'Checking controller credentials: address: {}, username: {}, password: {}, ldap_connection: {}'.format(
+                _('Checking controller credentials: address: {}, username: {}, password: {}, ldap_connection: {}').format(
                     self.address, self.username, encrypted_password, self.ldap_connection))
             controller_client = ControllerClient(self.address)
             auth_info = dict(username=self.username, password=encrypted_password, ldap=self.ldap_connection)
             await controller_client.auth(auth_info=auth_info)
         except Exception as ex:
-            application_log.warning('Controller {} check failed.'.format(self.verbose_name))
-            application_log.debug('Controller check: {}'.format(ex))
+            application_log.warning(_('Controller {} check failed.').format(self.verbose_name))
+            application_log.debug(_('Controller check: {}').format(ex))
             return False
-        application_log.info('Controller {} check passed successfull.'.format(self.verbose_name))
+        application_log.info(_('Controller {} check passed successfull.').format(self.verbose_name))
         return True
 
     @classmethod
     async def get_credentials(cls, address, username, password, ldap_connection):
         application_log.debug(
-            'Checking controller credentials: address: {}, username: {}, password: {}, ldap_connection: {}'.format(
+            _('Checking controller credentials: address: {}, username: {}, password: {}, ldap_connection: {}').format(
                 address, username, password, ldap_connection))
         controller_client = ControllerClient(address)
         auth_info = dict(username=username, password=password, ldap=ldap_connection)
         token, expires_on = await controller_client.auth(auth_info=auth_info)
         version = await controller_client.fetch_version()
-        application_log.debug('Get controller credentials: Controller\'s {} credentials are good.'.format(address))
+        application_log.debug(_('Get controller credentials: Controller\'s {} credentials are good.').format(address))
         return {'token': token, 'expires_on': expires_on, 'version': version}
 
     async def soft_update(self, verbose_name, address, description, username=None, password=None, ldap_connection=None):
@@ -173,7 +178,7 @@ class Controller(db.Model):
             except BadRequest:
                 credentials_valid = False
                 application_log.warning(
-                    'Can\'t connect to controller {} with username: {}, password: {}, ldap_connection: {}'.format(
+                    _('Can\'t connect to controller {} with username: {}, password: {}, ldap_connection: {}').format(
                         address, username, password, ldap_connection))
 
         if controller_kwargs:
@@ -181,9 +186,9 @@ class Controller(db.Model):
                 await Controller.update.values(**controller_kwargs).where(
                     Controller.id == self.id).gino.status()
                 if not credentials_valid:
-                    raise BadRequest('Can\'t login login to controller {}'.format(address))
+                    raise BadRequest(_('Can\'t login login to controller {}').format(address))
             except Exception as E:
-                application_log.debug('Error with controller update: {}'.format(E))
+                application_log.debug(_('Error with controller update: {}').format(E))
                 raise SimpleError(E)
             return True
         return False
@@ -193,9 +198,9 @@ class Controller(db.Model):
 
         controller_has_pools = await self.has_pools
         if controller_has_pools:
-            raise SimpleError('У контроллера есть пулы виртуальных машин. Выполните полное удаление.')
+            raise SimpleError(_('Controller has pool of virtual machines. Please completely remove.'))
 
-        msg = 'Выполнено удаление контроллера {name}.'.format(name=self.verbose_name)
+        msg = _('Controller {name} had remove.').format(name=self.verbose_name)
         await self.delete()
         await Event.create_info(msg, entity_dict=self.entity)
         return True
@@ -209,7 +214,7 @@ class Controller(db.Model):
     async def full_delete(self):
         """Удаление сущности с удалением зависимых сущностей"""
 
-        msg = 'Выполнено полное удаление контроллера {name}.'.format(name=self.verbose_name)
+        msg = _('Controller {name} had completely remove.').format(name=self.verbose_name)
         await self.delete()
         await Event.create_info(msg, entity_dict=self.entity)
         return True

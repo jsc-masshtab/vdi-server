@@ -8,6 +8,10 @@ from tests.utils import VdiHttpTestCase
 from tests.fixtures import (fixt_db, fixt_user_locked, fixt_user, fixt_user_admin, fixt_auth_dir,  # noqa
                             fixt_mapping, fixt_group, fixt_group_role)  # noqa
 
+from languages import lang_init
+
+
+_ = lang_init()
 
 pytestmark = [pytest.mark.asyncio, pytest.mark.auth]
 
@@ -28,7 +32,7 @@ class AuthLocalTestCase(VdiHttpTestCase):
         body = '{"username": "test_user_admin","password": "qwe11"}'
         response_dict = yield self.get_response(body=body)
         error_message = response_dict['errors'][0]['message']
-        self.assertIn('Invalid credentials', error_message)
+        self.assertIn(_('Invalid credentials'), error_message)
 
     @pytest.mark.usefixtures('fixt_db', 'fixt_user_locked')
     @gen_test
@@ -36,7 +40,7 @@ class AuthLocalTestCase(VdiHttpTestCase):
         body = '{"username": "test_user_locked","password": "qwe"}'
         response_dict = yield self.get_response(body=body)
         error_message = response_dict['errors'][0]['message']
-        self.assertIn('Invalid credentials', error_message)
+        self.assertIn(_('Invalid credentials'), error_message)
 
     @pytest.mark.usefixtures('fixt_db')
     @gen_test
@@ -44,7 +48,7 @@ class AuthLocalTestCase(VdiHttpTestCase):
         body = '{"username": "test_user_admin","password": ""}'
         response_dict = yield self.get_response(body=body)
         error_message = response_dict['errors'][0]['message']
-        self.assertIn('Missing password', error_message)
+        self.assertIn(_('Missing password'), error_message)
 
     @pytest.mark.usefixtures('fixt_db', 'fixt_user', 'fixt_user_admin')
     @gen_test
@@ -102,7 +106,7 @@ class AuthLdapTestCase(VdiHttpTestCase):
         body = '{"username": "test_user","password": "veil", "ldap": true}'
         response_dict = yield self.get_response(body=body)
         error_message = response_dict['errors'][0]['message']
-        self.assertIn('No authentication directory controllers', error_message)
+        self.assertIn(_('No authentication directory controllers.'), error_message)
 
     @pytest.mark.usefixtures('fixt_db', 'fixt_auth_dir', 'fixt_user')
     @gen_test
@@ -118,7 +122,7 @@ class AuthLdapTestCase(VdiHttpTestCase):
         body = '{"username": "test_user","password": "veil", "ldap": true}'
         response_dict = yield self.get_response(body=body)
         error_message = response_dict['errors'][0]['message']
-        self.assertIn('Invalid credeintials (ldap).', error_message)
+        self.assertIn(_('Invalid credeintials (ldap).'), error_message)
 
     @pytest.mark.usefixtures('fixt_db', 'fixt_auth_dir', 'fixt_group', 'fixt_mapping', 'fixt_group_role')
     @gen_test

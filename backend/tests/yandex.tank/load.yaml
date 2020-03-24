@@ -1,15 +1,15 @@
 
 
 phantom:
-  address: 192.168.20.112:8888
+  address: 192.168.6.52:8888
   ssl: false
   load_profile:
     load_type: rps
     schedule: line(1, 100, 1m)
-  ammofile: /var/loadtest/ammo.txt
-  ammo_type: uripost
+  ammofile: /var/loadtest/ammo
+  ammo_type: phantom
   headers:
-    - "[Host: 192.168.20.112]"
+    - "[Host: 192.168.6.52]"
     - "[Connection: close]"
     - "[User-Agent: Tank]"
     - "[Content-Type: application/json]"

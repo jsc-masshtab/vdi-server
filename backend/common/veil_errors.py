@@ -4,6 +4,11 @@ from abc import ABC
 
 from cached_property import cached_property
 
+from languages import lang_init
+
+
+_ = lang_init()
+
 
 class ValidationError(AssertionError):
     pass
@@ -115,7 +120,7 @@ class BadRequest(HttpError):
 
 class ControllerNotAccessible(HttpError):
     code = 408
-    message = 'Контроллер недоступен'
+    message = _('Controller is not available.')
 
     def __init__(self, *, ip):
         self.ip = ip
@@ -132,7 +137,7 @@ class AuthError(HttpError, ABC):
 
 class Forbidden(AuthError):
     code = 403
-    message = "Не удалось войти в систему с предоставленными учетными данными."
+    message = _("Unable to logon to system using these credentials.")
 
 
 class Unauthorized(AuthError):
@@ -141,7 +146,7 @@ class Unauthorized(AuthError):
 
 class ServerError(HttpError):
     code = 500
-    message = "Критическая ошибка контроллера."
+    message = _("Critical controller error.")
 
 
 class VmCreationError(Exception):

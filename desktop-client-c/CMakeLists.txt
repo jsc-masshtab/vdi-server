@@ -107,6 +107,14 @@ FILE(GLOB SRC_CODE
 if (UNIX)
     SET(LIBS_INCLUDE_PATH /usr/include/)
 
+    # freerdp
+    INCLUDE_DIRECTORIES(${LIBS_INCLUDE_PATH}freerdp2)
+    SET(LIBS ${LIBS} freerdp2 freerdp-client2)
+
+    # winpr2
+    INCLUDE_DIRECTORIES(${LIBS_INCLUDE_PATH}winpr2)
+    SET(LIBS ${LIBS} winpr2 winpr-tools2)
+
     # other libs
     SET(LIBS ${LIBS}
             m
@@ -121,6 +129,17 @@ endif (UNIX)
 
 if (WIN32)
     SET(LIBS_INCLUDE_PATH C:/msys64/mingw64/include/)
+    SET(FREERDP_PATH C:/job/freerdp/FreeRDP-2.0.0-rc4/FreeRDP-2.0.0-rc4/)
+
+    # freerdp
+    INCLUDE_DIRECTORIES(${FREERDP_PATH}include)
+    SET(LIBS ${LIBS} ${FREERDP_PATH}Release/freerdp2.dll)
+    SET(LIBS ${LIBS} ${FREERDP_PATH}Release/freerdp-client2.dll)
+
+    # winpr2
+    INCLUDE_DIRECTORIES(${FREERDP_PATH}winpr/include)
+    SET(LIBS ${LIBS} ${FREERDP_PATH}Release/winpr-tools2.dll)
+    SET(LIBS ${LIBS} ${FREERDP_PATH}Release/winpr2.dll)
 
     # other libs
     SET(LIBS ${LIBS}
@@ -134,7 +153,7 @@ if (WIN32)
 endif (WIN32)
 
     # libxml
-    INCLUDE_DIRECTORIES(${LIBS_INCLUDE_PATH}/libxml2)
+    INCLUDE_DIRECTORIES(${LIBS_INCLUDE_PATH}libxml2)
     SET(LIBS ${LIBS} xml2)
 
     # SPICE_GTK
@@ -151,19 +170,23 @@ endif (WIN32)
     INCLUDE_DIRECTORIES(${LIBS_INCLUDE_PATH}json-glib-1.0)
     SET(LIBS ${LIBS} json-glib-1.0)
 
-    # freerdp
-    add_definitions(-DNEW_FREEERDP_VERSION)
-    INCLUDE_DIRECTORIES(${LIBS_INCLUDE_PATH}freerdp2)
-    SET(LIBS ${LIBS} freerdp2 freerdp-client2)
-
-    # winpr2
-    INCLUDE_DIRECTORIES(${LIBS_INCLUDE_PATH}winpr2)
-    SET(LIBS ${LIBS} winpr2)
-
 #############################LINKING###################################
 ADD_EXECUTABLE(thin_client_veil ${GUI_TYPE} ${SRC_CODE})
 target_link_libraries(
     thin_client_veil # exec
     ${LIBS} # libs
 )
-# freerdp2-dev  libfreerdp-client2-2  libwinpr2-2 libwinpr2-dev
+
+#############################CONFIGS###################################
+# translations
+file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/po/ru
+     DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/local)
+# CSS
+file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/doc/css_style.css
+     DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+# start script
+file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/doc/start_vdi_client.sh
+     DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+## ini  Приложение генерирует ini файл при первом запуске если его нет, что предпочтительнее
+#file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/doc/veil_client_settings.ini
+#     DESTINATION ${CMAKE_CURRENT_BINARY_DIR})

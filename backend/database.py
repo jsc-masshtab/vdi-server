@@ -8,6 +8,11 @@ from sqlalchemy.sql.schema import Column
 
 from common.veil_errors import SimpleError
 
+from languages import lang_init
+
+
+_ = lang_init()
+
 db = Gino()
 
 
@@ -76,7 +81,7 @@ class AbstractSortableStatusModel:
         field = cls._get_table_field(field_name)
         if field is None:
             # TODO: switch SimpleError to FieldError
-            raise SimpleError('Неверный параметр сортировки {}'.format(field_name))
+            raise SimpleError(_('Incorrect sort parameter {}').format(field_name))
         return field
 
     @classmethod
@@ -85,7 +90,7 @@ class AbstractSortableStatusModel:
         field = cls._get_table_field(field_name)
         if field is None:
             # TODO: switch SimpleError to FieldError
-            raise SimpleError('Неверный параметр запроса {}'.format(field_name))
+            raise SimpleError(_('Incorrect request parameter {}').format(field_name))
         return field
 
     @classmethod
