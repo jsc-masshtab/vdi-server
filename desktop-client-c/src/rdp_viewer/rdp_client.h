@@ -19,6 +19,8 @@
 
 #include "rdp_cursor.h"
 
+#define MAX_MON_AMOUNT
+
 struct ExtendedRdpContext;
 
 typedef gboolean (*UpdateImageCallback) (rdpContext* context);

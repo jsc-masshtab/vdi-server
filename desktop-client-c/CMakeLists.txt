@@ -71,6 +71,8 @@ FILE(GLOB SRC_CODE
         src/rdp_viewer/rdp_cursor.c
         src/rdp_viewer/rdp_display.h
         src/rdp_viewer/rdp_display.c
+        src/rdp_viewer/rdp_viewer_window.h
+        src/rdp_viewer/rdp_viewer_window.c
         
 #utility
         src/utility/crashhandler.h
