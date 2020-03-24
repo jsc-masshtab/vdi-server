@@ -1,0 +1,7 @@
+#ifndef RDP_VIEWER_WINDOW_H
+#define RDP_VIEWER_WINDOW_H
+
+
+
+
+#endif // RDP_VIEWER_WINDOW_H
