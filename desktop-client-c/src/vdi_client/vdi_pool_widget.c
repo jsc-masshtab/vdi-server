@@ -42,10 +42,12 @@ VdiPoolWidget build_pool_widget(const gchar *pool_id, const gchar *pool_name,
     }
 
     vdi_pool_widget.image_widget = gtk_image_new_from_resource(os_icon_path);
+    gtk_widget_set_name(vdi_pool_widget.image_widget, "vdi_pool_widget_image");
     free_memory_safely(&os_icon_path);
 
     // vm start button
     vdi_pool_widget.vm_start_button = gtk_button_new_with_label(pool_name);
+    gtk_widget_set_name(vdi_pool_widget.vm_start_button, "vdi_pool_widget_button");
 
     gtk_button_set_always_show_image(GTK_BUTTON (vdi_pool_widget.vm_start_button), TRUE);
     gtk_button_set_image(GTK_BUTTON (vdi_pool_widget.vm_start_button), vdi_pool_widget.image_widget);
