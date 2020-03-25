@@ -353,7 +353,7 @@ export class PoolAddComponent implements OnInit, OnDestroy {
           type: 'string'
         },
         {
-          title: 'Имя шаблона для ВМ',
+          title: 'Шаблон имени ВМ',
           property: 'vm_name_template',
           type: 'string'
         }
