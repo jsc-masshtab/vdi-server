@@ -19,7 +19,7 @@
 
 #include "rdp_cursor.h"
 
-#define MAX_MON_AMOUNT
+#define MAX_MONITOR_AMOUNT 3
 
 struct ExtendedRdpContext;
 

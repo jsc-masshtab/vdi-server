@@ -22,6 +22,7 @@
 #include "remote-viewer-util.h"
 #include "config.h"
 
+#include "async.h"
 
 static ExtendedRdpContext* create_rdp_context(UINT32 *last_rdp_error_p)
 {
@@ -66,16 +67,22 @@ GtkResponseType rdp_viewer_start(const gchar *usename, const gchar *password, gc
     ExtendedRdpContext *ex_context = create_rdp_context(&last_rdp_error); // deleted upon widget deletion
     rdp_client_set_credentials(ex_context, usename, password, domain, ip, port);
 
-    RdpViewerData rdp_viewer_data;
+    // determine monitor number
+    unsigned int monitor_number = 1;
 
+    // create rdp viewer windows
+    RdpViewerData **rdp_viewer_data_array = malloc(monitor_number * sizeof (RdpViewerData *));
+    for(unsigned int i = 0; i < monitor_number; ++i){
+        rdp_viewer_data_array[i] = rdp_viewer_window_create(ex_context, &last_rdp_error);
+    }
 
-    create_loop_and_launch(&rdp_viewer_data.loop);
+    GtkResponseType dialog_window_response = GTK_RESPONSE_CLOSE;
+    GMainLoop *loop;
+    create_loop_and_launch(&loop);
 
     // clear memory!
     destroy_rdp_context(ex_context);
-    g_source_remove(g_timeout_id);
-    g_object_unref(builder);
-    gtk_widget_destroy(rdp_viewer_window);
+    rdp_viewer_window_destroy(rdp_viewer_data);
 
-    return rdp_viewer_data.dialog_window_response;
+    return dialog_window_response;
 }
