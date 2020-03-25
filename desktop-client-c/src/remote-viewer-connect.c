@@ -368,10 +368,10 @@ remote_viewer_connect_dialog(gchar **user, gchar **password, gchar **domain,
     ci.header_label = GTK_WIDGET(gtk_builder_get_object(builder, "header-label"));
     gtk_label_set_text(GTK_LABEL(ci.header_label), VERSION);
 
-    // Set veil image
-    veil_image = GTK_WIDGET(gtk_builder_get_object(builder, "veil-image"));
-    gtk_image_set_from_resource((GtkImage *)veil_image,
-            VIRT_VIEWER_RESOURCE_PREFIX"/icons/content/img/veil-32x32.png");
+//    // Set veil image
+//    veil_image = GTK_WIDGET(gtk_builder_get_object(builder, "veil-image"));
+//    gtk_image_set_from_resource((GtkImage *)veil_image,
+//            VIRT_VIEWER_RESOURCE_PREFIX"/icons/content/img/veil-32x32.png");
 
     // password entry
     ci.password_entry = GTK_WIDGET(gtk_builder_get_object(builder, "password-entry"));
