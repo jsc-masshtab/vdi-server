@@ -105,22 +105,23 @@ fill_connect_settings_dialog_data(ConnectSettingsDialogData *dialog_data, Connec
         gtk_entry_set_text(GTK_ENTRY(dialog_data->address_entry), connect_settings_data->ip);
     }
     // port. TODO: why gtk entry for port?
-    int port_from_config_file = read_int_from_ini_file(paramToFileGrpoup, "port");
+    int port_from_config_file = connect_settings_data->port;
     if (port_from_config_file != 0) {
         gchar *port_str = g_strdup_printf("%i", port_from_config_file);
         gtk_entry_set_text(GTK_ENTRY(dialog_data->port_entry), port_str);
         free_memory_safely(&port_str);
+    } else {
+        gtk_entry_set_text(GTK_ENTRY(dialog_data->port_entry), "");
     }
     // ldap
-    gboolean is_ldap_btn_checked = read_int_from_ini_file("RemoteViewerConnect", "is_ldap_btn_checked");
+    gboolean is_ldap_btn_checked = connect_settings_data->is_ldap;
     gtk_toggle_button_set_active((GtkToggleButton *)dialog_data->ldap_checkbutton, is_ldap_btn_checked);
     // Connect to prev pool
-    gboolean is_conn_to_prev_pool_btn_checked =
-            read_int_from_ini_file("RemoteViewerConnect", "is_conn_to_prev_pool_btn_checked");
+    gboolean is_conn_to_prev_pool_btn_checked = connect_settings_data->is_connect_to_prev_pool;
     gtk_toggle_button_set_active((GtkToggleButton *)dialog_data->conn_to_prev_pool_checkbutton,
                                  is_conn_to_prev_pool_btn_checked);
     // remote protocol
-    gint remote_protocol_type = read_int_from_ini_file("General", "cur_remote_protocol_index");
+    gint remote_protocol_type = (gint)connect_settings_data->remote_protocol_type;
     if (dialog_data->remote_protocol_combobox)
         gtk_combo_box_set_active((GtkComboBox*)dialog_data->remote_protocol_combobox, remote_protocol_type);
 }
