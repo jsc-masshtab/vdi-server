@@ -81,21 +81,21 @@ rdpContext* rdp_client_create_context()
     return context;
 }
 
-void rdp_client_set_credentials(ExtendedRdpContext *ex_context,
+void rdp_client_set_credentials(ExtendedRdpContext *ex_rdp_context,
                                 const gchar *usename, const gchar *password, gchar *domain, gchar *ip, int port)
 {
-    ex_context->usename = g_strdup(usename);
-    ex_context->password = g_strdup(password);
-    ex_context->domain = g_strdup(domain);
-    ex_context->ip = g_strdup(ip);
-    ex_context->port = port;
+    ex_rdp_context->usename = g_strdup(usename);
+    ex_rdp_context->password = g_strdup(password);
+    ex_rdp_context->domain = g_strdup(domain);
+    ex_rdp_context->ip = g_strdup(ip);
+    ex_rdp_context->port = port;
 }
 
-void rdp_client_set_optimilal_image_size(ExtendedRdpContext *ex_context,
+void rdp_client_set_optimilal_image_size(ExtendedRdpContext *ex_rdp_context,
                                          int optimal_image_width, int optimal_image_height)
 {
-    ex_context->optimal_image_width = optimal_image_width;
-    ex_context->optimal_image_height = optimal_image_height;
+    ex_rdp_context->optimal_image_width = optimal_image_width;
+    ex_rdp_context->optimal_image_height = optimal_image_height;
 }
 //===============================Thread for client routine==================================
 void rdp_client_routine(GTask   *task,
@@ -173,17 +173,17 @@ fail:
     tf->is_running = FALSE;
 }
 
-//void rdp_client_adjust_im_origin_point(ExtendedRdpContext* ex_context)
+//void rdp_client_adjust_im_origin_point(ExtendedRdpContext* ex_rdp_context)
 //{
-//    if (ex_context->surface && ex_context->rdp_display) {
+//    if (ex_rdp_context->surface && ex_rdp_context->rdp_display) {
 
-//        int delta_x = gtk_widget_get_allocated_width(ex_context->rdp_display) -
-//                cairo_image_surface_get_width(ex_context->surface);
-//        int delta_y = gtk_widget_get_allocated_height(ex_context->rdp_display) -
-//                cairo_image_surface_get_height(ex_context->surface);
+//        int delta_x = gtk_widget_get_allocated_width(ex_rdp_context->rdp_display) -
+//                cairo_image_surface_get_width(ex_rdp_context->surface);
+//        int delta_y = gtk_widget_get_allocated_height(ex_rdp_context->rdp_display) -
+//                cairo_image_surface_get_height(ex_rdp_context->surface);
 
-//        ex_context->im_origin_x = delta_x <= 0 ? 0.0 : (int)(delta_x * 0.5);
-//        ex_context->im_origin_y = delta_y <= 0 ? 0.0 : (int)(delta_y * 0.5);
+//        ex_rdp_context->im_origin_x = delta_x <= 0 ? 0.0 : (int)(delta_x * 0.5);
+//        ex_rdp_context->im_origin_y = delta_y <= 0 ? 0.0 : (int)(delta_y * 0.5);
 //    }
 //}
 
@@ -242,20 +242,16 @@ static BOOL rdp_end_paint(rdpContext* context)
 }
 
 /* This function is called to output a System BEEP */
-static BOOL rdp_play_sound(rdpContext* context, const PLAY_SOUND_UPDATE* play_sound)
+static BOOL rdp_play_sound(rdpContext* context G_GNUC_UNUSED, const PLAY_SOUND_UPDATE* play_sound G_GNUC_UNUSED)
 {
     /* TODO: Implement */
-    /* WINPR_UNUSED(context);
-    WINPR_UNUSED(play_sound); */
     return TRUE;
 }
 
 /* This function is called to update the keyboard indocator LED */
-static BOOL rdp_keyboard_set_indicators(rdpContext* context, UINT16 led_flags)
+static BOOL rdp_keyboard_set_indicators(rdpContext* context G_GNUC_UNUSED, UINT16 led_flags G_GNUC_UNUSED)
 {
     /* TODO: Set local keyboard indicator LED status */
-    /* WINPR_UNUSED(context);
-    WINPR_UNUSED(led_flags); */
     return TRUE;
 }
 
@@ -316,7 +312,7 @@ static BOOL rdp_pre_connect(freerdp* instance)
 //    settings->OrderSupport[NEG_ELLIPSE_SC_INDEX] = TRUE;
 //    settings->OrderSupport[NEG_ELLIPSE_CB_INDEX] = TRUE;
 
-
+    //settings->MonitorCount
 
     /* settings->OrderSupport is initialized at this point.
      * Only override it if you plan to implement custom order
@@ -486,16 +482,15 @@ static void rdp_client_global_uninit(void)
 
 static int rdp_logon_error_info(freerdp* instance, UINT32 data, UINT32 type)
 {
-    ExtendedRdpContext* tf;
+    //ExtendedRdpContext* tf;
     const char* str_data = freerdp_get_logon_error_info_data(data);
     const char* str_type = freerdp_get_logon_error_info_type(type);
 
     if (!instance || !instance->context)
         return -1;
 
-    tf = (ExtendedRdpContext*)instance->context;
+    //tf = (ExtendedRdpContext*)instance->context;
     WLog_INFO(TAG, "Logon Error Info %s [%s]", str_data, str_type);
-    /* WINPR_UNUSED(tf); */
 
     return 1;
 }
@@ -534,14 +529,14 @@ static void rdp_client_free(freerdp* instance G_GNUC_UNUSED, rdpContext* context
         return;
 
     // some clean.
-    ExtendedRdpContext* ex_context = (ExtendedRdpContext*)context;
+    ExtendedRdpContext* ex_rdp_context = (ExtendedRdpContext*)context;
 
-    free_memory_safely(&ex_context->usename);
-    free_memory_safely(&ex_context->password);
-    free_memory_safely(&ex_context->domain);
-    free_memory_safely(&ex_context->ip);
+    free_memory_safely(&ex_rdp_context->usename);
+    free_memory_safely(&ex_rdp_context->password);
+    free_memory_safely(&ex_rdp_context->domain);
+    free_memory_safely(&ex_rdp_context->ip);
 
-    wair_for_mutex_and_clear(&ex_context->primary_buffer_mutex);
+    wair_for_mutex_and_clear(&ex_rdp_context->primary_buffer_mutex);
 }
 
 static int rdp_client_start(rdpContext* context)

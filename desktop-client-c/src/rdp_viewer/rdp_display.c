@@ -214,7 +214,7 @@ static gboolean rdp_display_mouse_btn_released(GtkWidget *widget, GdkEventButton
     return TRUE;
 }
 
-static gboolean rdp_display_wheel_scrolled(GtkWidget *widget G_GNUC_UNUSED, GdkEventScroll  *event, gpointer   user_data)
+static gboolean rdp_display_wheel_scrolled(GtkWidget *widget G_GNUC_UNUSED, GdkEventScroll *event, gpointer user_data)
 {
     ExtendedRdpContext* tf = (ExtendedRdpContext*)user_data;
     if (!tf || !tf->is_running)
@@ -234,30 +234,40 @@ static gboolean rdp_display_wheel_scrolled(GtkWidget *widget G_GNUC_UNUSED, GdkE
 static gboolean rdp_display_event_on_draw(GtkWidget* widget, cairo_t* context, gpointer user_data)
 {
     //printf("%s START\n", (const char *)__func__);
-//    //TRACE_CALL(__func__);
-    ExtendedRdpContext *rdp_contect = user_data;
-    if (rdp_contect && rdp_contect->is_running) {
 
-        g_mutex_lock(&rdp_contect->primary_buffer_mutex);
+    RdpViewerData *rdp_viewer_data = (RdpViewerData *)user_data;
+    ExtendedRdpContext *ex_rdp_contect = rdp_viewer_data->ex_rdp_context;
+    //GtkWidget *rdp_viewer_window = rdp_viewer_data->rdp_viewer_window;
 
-        if (rdp_contect->surface) {
+    if (ex_rdp_contect && ex_rdp_contect->is_running) {
 
-            cairo_set_source_surface(context, rdp_contect->surface, rdp_contect->im_origin_x, rdp_contect->im_origin_y);
+        g_mutex_lock(&ex_rdp_contect->primary_buffer_mutex);
+
+        if (ex_rdp_contect->surface) {
+
+            //cairo_set_source_surface(context, ex_rdp_contect->surface,
+            //ex_rdp_contect->im_origin_x, ex_rdp_contect->im_origin_y);
+            cairo_set_source_surface(context, ex_rdp_contect->surface, -rdp_viewer_data->monitor_geometry.x,
+                                     -rdp_viewer_data->monitor_geometry.y);
             if (!fuzzy_compare(scale_f, 1))
-                cairo_surface_set_device_scale(rdp_contect->surface, scale_f, scale_f);
+                cairo_surface_set_device_scale(ex_rdp_contect->surface, scale_f, scale_f);
 
             cairo_set_operator(context, CAIRO_OPERATOR_OVER);     // Ignore alpha channel from FreeRDP
             cairo_set_antialias(context, CAIRO_ANTIALIAS_FAST);
-//            cairo_rectangle(context, 0, 0, 1024, 750);
-//            cairo_clip(context);
-            //cairo_set_tolerance(context, 10);
-            //cairo_rotate(context, 57);
-            cairo_paint(context);
-            //cairo_fill(context);
-        }
-        //printf("%s END\n", (const char *)__func__);
 
-        g_mutex_unlock(&rdp_contect->primary_buffer_mutex);
+            double x = 0;
+            double y = 0;
+            double width = (ex_rdp_contect->optimal_image_width - rdp_viewer_data->monitor_geometry.x);
+            double height = (ex_rdp_contect->optimal_image_height - rdp_viewer_data->monitor_geometry.y);
+            cairo_rectangle(context, x, y, width, height);
+
+            if (width > 0 && height > 0) {
+                cairo_clip(context);
+                cairo_paint(context);
+            }
+        }
+
+        g_mutex_unlock(&ex_rdp_contect->primary_buffer_mutex);
 
     } else {
         /* Draw text */
@@ -293,7 +303,7 @@ static gboolean rdp_display_event_on_configure(GtkWidget *widget G_GNUC_UNUSED,
     return TRUE;
 }
 
-GtkWidget *rdp_display_create(GtkWidget *rdp_viewer_window, ExtendedRdpContext *ex_context, UINT32 *last_rdp_error_p)
+GtkWidget *rdp_display_create(RdpViewerData *rdp_viewer_data, ExtendedRdpContext *ex_rdp_context, UINT32 *last_rdp_error_p)
 {
     GtkWidget *rdp_display = gtk_drawing_area_new();
 
@@ -302,14 +312,16 @@ GtkWidget *rdp_display_create(GtkWidget *rdp_viewer_window, ExtendedRdpContext *
 
     g_object_set_data(G_OBJECT(rdp_display), "last_rdp_error", last_rdp_error_p);
 
-    g_signal_connect(rdp_viewer_window, "key-press-event", G_CALLBACK(rdp_display_key_pressed), ex_context);
-    g_signal_connect(rdp_viewer_window, "key-release-event", G_CALLBACK(rdp_display_key_released), ex_context);
-    g_signal_connect(rdp_display, "motion-notify-event",G_CALLBACK (rdp_display_mouse_moved), ex_context);
-    g_signal_connect(rdp_display, "button-press-event",G_CALLBACK (rdp_display_mouse_btn_pressed), ex_context);
-    g_signal_connect(rdp_display, "button-release-event",G_CALLBACK (rdp_display_mouse_btn_released), ex_context);
-    g_signal_connect(rdp_display, "scroll-event",G_CALLBACK (rdp_display_wheel_scrolled), ex_context);
-    g_signal_connect(rdp_display, "draw", G_CALLBACK(rdp_display_event_on_draw), ex_context);
-    g_signal_connect(rdp_display, "configure-event", G_CALLBACK(rdp_display_event_on_configure), ex_context);
+    GtkWidget *rdp_viewer_window = rdp_viewer_data->rdp_viewer_window;
+    g_signal_connect(rdp_viewer_window, "key-press-event", G_CALLBACK(rdp_display_key_pressed), ex_rdp_context);
+    g_signal_connect(rdp_viewer_window, "key-release-event", G_CALLBACK(rdp_display_key_released), ex_rdp_context);
+
+    g_signal_connect(rdp_display, "motion-notify-event",G_CALLBACK (rdp_display_mouse_moved), ex_rdp_context);
+    g_signal_connect(rdp_display, "button-press-event",G_CALLBACK (rdp_display_mouse_btn_pressed), ex_rdp_context);
+    g_signal_connect(rdp_display, "button-release-event",G_CALLBACK (rdp_display_mouse_btn_released), ex_rdp_context);
+    g_signal_connect(rdp_display, "scroll-event",G_CALLBACK (rdp_display_wheel_scrolled), ex_rdp_context);
+    g_signal_connect(rdp_display, "configure-event", G_CALLBACK(rdp_display_event_on_configure), ex_rdp_context);
+    g_signal_connect(rdp_display, "draw", G_CALLBACK(rdp_display_event_on_draw), rdp_viewer_data);
 
     return rdp_display;
 }

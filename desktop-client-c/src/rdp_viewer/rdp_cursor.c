@@ -6,7 +6,7 @@
 static BOOL xf_Pointer_New(rdpContext* context, rdpPointer* pointer)
 {
     //printf("%s\n", (const char *)__func__);
-    //ExtendedRdpContext *ex_context = (ExtendedRdpContext*)context;
+    //ExtendedRdpContext *ex_rdp_context = (ExtendedRdpContext*)context;
     ExtendedPointer *ex_pointer = (ExtendedPointer *)pointer;
 
     UINT32 cursor_format = PIXEL_FORMAT_RGBA32; // todo: random pick. think about this
@@ -35,7 +35,7 @@ static BOOL xf_Pointer_New(rdpContext* context, rdpPointer* pointer)
 
 static void xf_Pointer_Free(rdpContext* context G_GNUC_UNUSED, rdpPointer* pointer)
 {
-    //ExtendedRdpContext* ex_context = (ExtendedRdpContext*)context;
+    //ExtendedRdpContext* ex_rdp_context = (ExtendedRdpContext*)context;
     ExtendedPointer *ex_pointer = (ExtendedPointer *)pointer;
 
     free(ex_pointer->cursor_image_buffer);
@@ -44,7 +44,7 @@ static void xf_Pointer_Free(rdpContext* context G_GNUC_UNUSED, rdpPointer* point
 static BOOL xf_Pointer_Set(rdpContext* context, const rdpPointer* pointer)
 {
     //printf("%s\n", (const char *)__func__);
-    ExtendedRdpContext* ex_context = (ExtendedRdpContext*)context;
+    ExtendedRdpContext* ex_rdp_context = (ExtendedRdpContext*)context;
     const ExtendedPointer *ex_pointer = (const ExtendedPointer *)pointer;
     //printf("%s ex_pointer->test_int: %i\n", (const char *)__func__,  ex_pointer->test_int);
 
@@ -65,16 +65,16 @@ static BOOL xf_Pointer_Set(rdpContext* context, const rdpPointer* pointer)
         return TRUE;
     }
 
-    g_mutex_lock(&ex_context->cursor_mutex);
-    if (ex_context->gdk_cursor)
-        g_object_unref(ex_context->gdk_cursor);
-    ex_context->gdk_cursor = gdk_cursor_new_from_pixbuf(display, pix_buff, (gint)pointer->xPos, (gint)pointer->yPos);
-    g_mutex_unlock(&ex_context->cursor_mutex);
+    g_mutex_lock(&ex_rdp_context->cursor_mutex);
+    if (ex_rdp_context->gdk_cursor)
+        g_object_unref(ex_rdp_context->gdk_cursor);
+    ex_rdp_context->gdk_cursor = gdk_cursor_new_from_pixbuf(display, pix_buff, (gint)pointer->xPos, (gint)pointer->yPos);
+    g_mutex_unlock(&ex_rdp_context->cursor_mutex);
 
     g_object_unref(pix_buff);
 
     // invoke callback to set cursor in main (gui) thread.
-    g_idle_add((GSourceFunc)ex_context->update_cursor_callback, context);
+    g_idle_add((GSourceFunc)ex_rdp_context->update_cursor_callback, context);
     return TRUE;
 }
 

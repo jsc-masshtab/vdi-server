@@ -77,9 +77,9 @@ typedef struct {
 
 rdpContext* rdp_client_create_context(void);
 
-void rdp_client_set_credentials(ExtendedRdpContext *ex_context,
+void rdp_client_set_credentials(ExtendedRdpContext *ex_rdp_context,
                                 const gchar *usename, const gchar *password, gchar *domain, gchar *ip, int port);
-void rdp_client_set_optimilal_image_size(ExtendedRdpContext *ex_context,
+void rdp_client_set_optimilal_image_size(ExtendedRdpContext *ex_rdp_context,
                                          int optimal_image_width, int optimal_image_height);
 
 void rdp_client_routine(GTask   *task,
@@ -87,7 +87,7 @@ void rdp_client_routine(GTask   *task,
                  gpointer       task_data G_GNUC_UNUSED,
                  GCancellable  *cancellable G_GNUC_UNUSED);
 
-void rdp_client_adjust_im_origin_point(ExtendedRdpContext* ex_context);
+void rdp_client_adjust_im_origin_point(ExtendedRdpContext* ex_rdp_context);
 
 
 #endif /* FREERDP_CLIENT_SAMPLE_H */
