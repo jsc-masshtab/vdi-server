@@ -121,11 +121,11 @@ GtkResponseType rdp_viewer_start(const gchar *usename, const gchar *password, gc
     // set monitor data to rdp client
     //GdkRectangle default_monitor_geometry = get_default_monitor_geometry(); // temp
 
-    const int max_image_width = 3840;//1920;
-    const int max_image_height = 1080;
+    const int max_image_width = 5120;//2560; 5120
+    const int max_image_height = 1440;
     int optimal_image_width = MIN(max_image_width, total_monitor_width);
     int optimal_image_height = MIN(max_image_height, total_monitor_height);
-    rdp_client_set_optimilal_image_size(ex_rdp_context, optimal_image_width, optimal_image_height);
+    rdp_client_set_rdp_image_size(ex_rdp_context, optimal_image_width, optimal_image_height);
 
     // launch RDP routine in thread
     GTask *task = g_task_new(NULL, NULL, NULL, NULL);

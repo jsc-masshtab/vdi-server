@@ -107,6 +107,7 @@ static void rdp_viewer_item_details_activated(GtkWidget *menu G_GNUC_UNUSED, gpo
 
 static void rdp_viewer_item_fullscreen_activated(GtkWidget *menu G_GNUC_UNUSED, gpointer userdata)
 {
+    printf("%s\n", (const char *)__func__);
     RdpViewerData *rdp_viewer_data = (RdpViewerData *)userdata;
 
     gtk_window_set_resizable(GTK_WINDOW(rdp_viewer_data->rdp_viewer_window), TRUE);
@@ -362,7 +363,7 @@ RdpViewerData *rdp_viewer_window_create(ExtendedRdpContext *ex_rdp_context, UINT
     //gtk_window_resize(GTK_WINDOW(rdp_viewer_window), optimal_image_width, optimal_image_height);
     gtk_widget_show_all(rdp_viewer_window);
 
-    rdp_viewer_data->g_timeout_id = g_timeout_add(30, (GSourceFunc)gtk_update_v2, rdp_viewer_data->rdp_display);
+    rdp_viewer_data->g_timeout_id = g_timeout_add(40, (GSourceFunc)gtk_update_v2, rdp_viewer_data->rdp_display);
     //gtk_widget_add_tick_callback(rdp_display, gtk_update, context, NULL);
 
     return rdp_viewer_data;

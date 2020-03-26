@@ -91,7 +91,7 @@ void rdp_client_set_credentials(ExtendedRdpContext *ex_rdp_context,
     ex_rdp_context->port = port;
 }
 
-void rdp_client_set_optimilal_image_size(ExtendedRdpContext *ex_rdp_context,
+void rdp_client_set_rdp_image_size(ExtendedRdpContext *ex_rdp_context,
                                          int optimal_image_width, int optimal_image_height)
 {
     ex_rdp_context->optimal_image_width = optimal_image_width;

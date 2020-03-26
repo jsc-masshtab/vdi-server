@@ -104,6 +104,15 @@ static const gchar *error_to_str(UINT32 rdp_error)
     }
 }
 
+static void rdp_display_translate_mouse_pos(UINT16 *rdp_x_p, UINT16 *rdp_y_p,
+                                gdouble gtk_x, gdouble gtk_y, RdpViewerData *rdp_viewer_data)
+{
+    ExtendedRdpContext *ex_rdp_context = rdp_viewer_data->ex_rdp_context;
+
+    *rdp_x_p = (UINT16)((gtk_x - ex_rdp_context->im_origin_x + rdp_viewer_data->monitor_geometry.x) * scale_f);
+    *rdp_y_p = (UINT16)((gtk_y - ex_rdp_context->im_origin_y + rdp_viewer_data->monitor_geometry.y) * scale_f);
+}
+
 // TODO: Почему-то не работает переключение языка
 static gboolean rdp_display_key_pressed(GtkWidget *widget G_GNUC_UNUSED, GdkEventKey *event, gpointer user_data)
 {
@@ -146,16 +155,17 @@ static gboolean rdp_display_key_released(GtkWidget *widget G_GNUC_UNUSED, GdkEve
 
 static gboolean rdp_display_mouse_moved(GtkWidget *widget G_GNUC_UNUSED, GdkEventMotion *event, gpointer user_data)
 {
-    ExtendedRdpContext* ex_contect = (ExtendedRdpContext*)user_data;
+    RdpViewerData *rdp_viewer_data = (RdpViewerData *)user_data;
+    ExtendedRdpContext* ex_contect = rdp_viewer_data->ex_rdp_context;
     if (!ex_contect || !ex_contect->is_running)
         return TRUE;
 
-    rdpContext* rdp_contect = user_data;
+    rdpContext* rdp_contect = (rdpContext*)ex_contect;
     rdpInput *input = rdp_contect->input;
 
-    BOOL is_success = freerdp_input_send_mouse_event(input, PTR_FLAGS_MOVE,
-                                                     (UINT16)((event->x - ex_contect->im_origin_x) * scale_f),
-                                                     (UINT16)((event->y - ex_contect->im_origin_y) * scale_f));
+    UINT16 x, y;
+    rdp_display_translate_mouse_pos(&x, &y, event->x, event->y, rdp_viewer_data);
+    BOOL is_success = freerdp_input_send_mouse_event(input, PTR_FLAGS_MOVE, x, y);
     (void)is_success;
     //printf("%s: event->x %f, event->y %f  %i\n", (const char *)__func__, event->x, event->y, is_success);
 
@@ -165,11 +175,12 @@ static gboolean rdp_display_mouse_moved(GtkWidget *widget G_GNUC_UNUSED, GdkEven
 static void rdp_viewer_handle_mouse_btn_event(GtkWidget *widget G_GNUC_UNUSED, GdkEventButton *event, gpointer user_data,
                                                   UINT16 additional_flags)
 {
-    ExtendedRdpContext* ex_contect = (ExtendedRdpContext*)user_data;
-    if (!ex_contect || !ex_contect->is_running)
+    RdpViewerData *rdp_viewer_data = (RdpViewerData *)user_data;
+    ExtendedRdpContext* ex_rdp_contect = rdp_viewer_data->ex_rdp_context;
+    if (!ex_rdp_contect || !ex_rdp_contect->is_running)
         return;
 
-    rdpContext* context = user_data;
+    rdpContext* context = (rdpContext*)ex_rdp_contect;
     rdpInput *input = context->input;
 
     UINT16 button = 0;
@@ -191,9 +202,9 @@ static void rdp_viewer_handle_mouse_btn_event(GtkWidget *widget G_GNUC_UNUSED, G
 
     if (button) {
         //event->state;
-        freerdp_input_send_mouse_event(input, additional_flags | button,
-                                       (UINT16)((event->x - ex_contect->im_origin_x) * scale_f),
-                                       (UINT16)((event->y - ex_contect->im_origin_y) * scale_f));
+        UINT16 x, y;
+        rdp_display_translate_mouse_pos(&x, &y, event->x, event->y, rdp_viewer_data);
+        freerdp_input_send_mouse_event(input, additional_flags | button, x, y);
 //        printf("%s: event->x %f, event->y %f  %i %i\n", (const char *)__func__,
 //               event->x, event->y, event->button, event->state);
     }
@@ -216,17 +227,21 @@ static gboolean rdp_display_mouse_btn_released(GtkWidget *widget, GdkEventButton
 
 static gboolean rdp_display_wheel_scrolled(GtkWidget *widget G_GNUC_UNUSED, GdkEventScroll *event, gpointer user_data)
 {
-    ExtendedRdpContext* tf = (ExtendedRdpContext*)user_data;
-    if (!tf || !tf->is_running)
+    RdpViewerData *rdp_viewer_data = (RdpViewerData *)user_data;
+    ExtendedRdpContext* ex_rdp_context = rdp_viewer_data->ex_rdp_context;
+    if (!ex_rdp_context || !ex_rdp_context->is_running)
         return TRUE;
 
-    rdpContext* context = user_data;
+    rdpContext* context = (rdpContext*)ex_rdp_context;
     rdpInput *input = context->input;
     //printf("%s event->delta_y %f event->delta_x %f\n", (const char *)__func__, event->delta_y, event->delta_x);
+
+    UINT16 x, y;
+    rdp_display_translate_mouse_pos(&x, &y, event->x, event->y, rdp_viewer_data);
     if ( event->delta_y > 0.5)
-        freerdp_input_send_mouse_event(input, PTR_FLAGS_WHEEL | PTR_FLAGS_WHEEL_NEGATIVE | 0x0078, 0, 0);
+        freerdp_input_send_mouse_event(input, PTR_FLAGS_WHEEL | PTR_FLAGS_WHEEL_NEGATIVE | 0x0078, x, y);
     else if (event->delta_y < -0.5)
-        freerdp_input_send_mouse_event(input, PTR_FLAGS_WHEEL | 0x0078, 0, 0);
+        freerdp_input_send_mouse_event(input, PTR_FLAGS_WHEEL | 0x0078, x, y);
 
     return TRUE;
 }
@@ -292,7 +307,8 @@ static gboolean rdp_display_event_on_draw(GtkWidget* widget, cairo_t* context, g
 static gboolean rdp_display_event_on_configure(GtkWidget *widget G_GNUC_UNUSED,
                                                GdkEvent *event G_GNUC_UNUSED, gpointer user_data)
 {
-    ExtendedRdpContext *ex_contect = (ExtendedRdpContext *)user_data;
+    RdpViewerData *rdp_viewer_data = (RdpViewerData *)user_data;
+    ExtendedRdpContext *ex_contect = rdp_viewer_data->ex_rdp_context;
 
     if (ex_contect && ex_contect->is_running) {
         g_mutex_lock(&ex_contect->primary_buffer_mutex);
@@ -303,7 +319,8 @@ static gboolean rdp_display_event_on_configure(GtkWidget *widget G_GNUC_UNUSED,
     return TRUE;
 }
 
-GtkWidget *rdp_display_create(RdpViewerData *rdp_viewer_data, ExtendedRdpContext *ex_rdp_context, UINT32 *last_rdp_error_p)
+GtkWidget *rdp_display_create(RdpViewerData *rdp_viewer_data, ExtendedRdpContext *ex_rdp_context,
+                              UINT32 *last_rdp_error_p)
 {
     GtkWidget *rdp_display = gtk_drawing_area_new();
 
@@ -316,11 +333,11 @@ GtkWidget *rdp_display_create(RdpViewerData *rdp_viewer_data, ExtendedRdpContext
     g_signal_connect(rdp_viewer_window, "key-press-event", G_CALLBACK(rdp_display_key_pressed), ex_rdp_context);
     g_signal_connect(rdp_viewer_window, "key-release-event", G_CALLBACK(rdp_display_key_released), ex_rdp_context);
 
-    g_signal_connect(rdp_display, "motion-notify-event",G_CALLBACK (rdp_display_mouse_moved), ex_rdp_context);
-    g_signal_connect(rdp_display, "button-press-event",G_CALLBACK (rdp_display_mouse_btn_pressed), ex_rdp_context);
-    g_signal_connect(rdp_display, "button-release-event",G_CALLBACK (rdp_display_mouse_btn_released), ex_rdp_context);
-    g_signal_connect(rdp_display, "scroll-event",G_CALLBACK (rdp_display_wheel_scrolled), ex_rdp_context);
-    g_signal_connect(rdp_display, "configure-event", G_CALLBACK(rdp_display_event_on_configure), ex_rdp_context);
+    g_signal_connect(rdp_display, "motion-notify-event",G_CALLBACK (rdp_display_mouse_moved), rdp_viewer_data);
+    g_signal_connect(rdp_display, "button-press-event",G_CALLBACK (rdp_display_mouse_btn_pressed), rdp_viewer_data);
+    g_signal_connect(rdp_display, "button-release-event",G_CALLBACK (rdp_display_mouse_btn_released), rdp_viewer_data);
+    g_signal_connect(rdp_display, "scroll-event",G_CALLBACK (rdp_display_wheel_scrolled), rdp_viewer_data);
+    g_signal_connect(rdp_display, "configure-event", G_CALLBACK(rdp_display_event_on_configure), rdp_viewer_data);
     g_signal_connect(rdp_display, "draw", G_CALLBACK(rdp_display_event_on_draw), rdp_viewer_data);
 
     return rdp_display;
