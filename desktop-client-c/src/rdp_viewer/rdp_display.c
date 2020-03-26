@@ -123,13 +123,13 @@ static gboolean rdp_display_key_pressed(GtkWidget *widget G_GNUC_UNUSED, GdkEven
     rdpInput *input = tf->context.input;
 
     //printf("%s: key %i\n", (const char *)__func__, event->keyval);
-
-    // todo: guess its not gonna work on Windows
+#ifdef __linux__
     DWORD rdp_scancode = freerdp_keyboard_get_rdp_scancode_from_x11_keycode(event->hardware_keycode);
+#elif _WIN32
+    DWORD rdp_scancode = GetVirtualScanCodeFromVirtualKeyCode(event->hardware_keycode, 4);
+#endif
     BOOL is_success = freerdp_input_send_keyboard_event_ex(input, TRUE, rdp_scancode);
     (void)is_success;
-    //BOOL is_success = freerdp_input_send_keyboard_event(input, (UINT16)1, (UINT16)event->hardware_keycode);
-
     //printf("%s: key %i %i %i\n", (const char *)__func__, event->hardware_keycode, rdp_scancode, is_success);
     //printf("%s:  %i\n", (const char *)__func__, );
 
@@ -145,7 +145,11 @@ static gboolean rdp_display_key_released(GtkWidget *widget G_GNUC_UNUSED, GdkEve
     rdpContext* context = user_data;
     rdpInput *input = context->input;
 
+#ifdef __linux__
     DWORD rdp_scancode = freerdp_keyboard_get_rdp_scancode_from_x11_keycode(event->hardware_keycode);
+#elif _WIN32
+    DWORD rdp_scancode = GetVirtualScanCodeFromVirtualKeyCode(event->hardware_keycode, 4);
+#endif
     BOOL is_success = freerdp_input_send_keyboard_event_ex(input, FALSE, rdp_scancode);
     (void)is_success;
     //printf("%s: key %i %i %i\n", (const char *)__func__, event->hardware_keycode, rdp_scancode, is_success);

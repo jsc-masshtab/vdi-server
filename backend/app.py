@@ -27,6 +27,7 @@ from resources_monitoring.resources_monitor_manager import resources_monitor_man
 from pool.pool_task_manager import pool_task_manager
 
 from auth.urls import auth_api_urls
+from auth.license.urls import license_api_urls
 from thin_client_api.urls import thin_client_api_urls
 from resources_monitoring.urls import ws_event_monitoring_urls
 
@@ -55,6 +56,7 @@ handlers = [
 handlers += auth_api_urls
 handlers += thin_client_api_urls
 handlers += ws_event_monitoring_urls
+handlers += license_api_urls
 
 
 def init_logging(access_to_stdout=False):

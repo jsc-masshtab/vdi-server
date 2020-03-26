@@ -18,6 +18,8 @@ VdiPoolWidget build_pool_widget(const gchar *pool_id, const gchar *pool_name,
     vdi_pool_widget.main_widget = gtk_frame_new(NULL); // status
 
     vdi_pool_widget.gtk_box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 3);
+    gtk_widget_set_name(vdi_pool_widget.main_widget, "vdi_pool_widget_box");
+    
     // overlay
     vdi_pool_widget.gtk_overlay = gtk_overlay_new();
     gtk_container_add((GtkContainer *)vdi_pool_widget.gtk_overlay, vdi_pool_widget.gtk_box);
@@ -42,10 +44,12 @@ VdiPoolWidget build_pool_widget(const gchar *pool_id, const gchar *pool_name,
     }
 
     vdi_pool_widget.image_widget = gtk_image_new_from_resource(os_icon_path);
+    gtk_widget_set_name(vdi_pool_widget.image_widget, "vdi_pool_widget_image");
     free_memory_safely(&os_icon_path);
 
     // vm start button
     vdi_pool_widget.vm_start_button = gtk_button_new_with_label(pool_name);
+    gtk_widget_set_name(vdi_pool_widget.vm_start_button, "vdi_pool_widget_button");
 
     gtk_button_set_always_show_image(GTK_BUTTON (vdi_pool_widget.vm_start_button), TRUE);
     gtk_button_set_image(GTK_BUTTON (vdi_pool_widget.vm_start_button), vdi_pool_widget.image_widget);
