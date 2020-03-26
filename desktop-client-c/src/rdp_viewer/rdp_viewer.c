@@ -33,12 +33,10 @@ static gboolean update_cursor_callback(rdpContext* context)
 
     g_mutex_lock(&ex_context->cursor_mutex);
 
-//    for(unsigned int i = 0; i < ex_context->monitor_number; ++i){
-//        gdk_window_set_cursor(ex_context->rdp_viewer_data_array[i]->rdp_viewer_window,  ex_context->gdk_cursor);
-//    }
     for (guint i = 0; i < ex_context->rdp_viewer_data_array->len; ++i) {
         RdpViewerData *rdp_viewer_data = g_array_index(ex_context->rdp_viewer_data_array, RdpViewerData *, i);
-        //gdk_window_set_cursor(GTK_WINDOW(rdp_viewer_data->rdp_viewer_window),  ex_context->gdk_cursor);
+        GdkWindow *parent_window = gtk_widget_get_parent_window(rdp_viewer_data->rdp_display);
+        gdk_window_set_cursor(parent_window,  ex_context->gdk_cursor);
     }
 
     //printf("%s ex_pointer->test_int: \n", (const char *)__func__);

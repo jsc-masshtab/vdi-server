@@ -64,7 +64,6 @@
 
 #include "async.h"
 
-
 #define PROGRAMM_NAME "rdp_gtk_client"
 #define TAG CLIENT_TAG(PROGRAMM_NAME)
 
@@ -114,16 +113,14 @@ void rdp_client_routine(GTask   *task,
     if (!context)
         goto fail;
 
-    printf("%s port %i\n", (const char *)__func__, tf->port);
-    printf("%s ip %s\n", (const char *)__func__, tf->ip);
+//    printf("%s usename %s\n", (const char *)__func__, usename);
+//    printf("%s password %s\n", (const char *)__func__, password);
     printf("%s tf->usename %s\n", (const char *)__func__, tf->usename);
-    printf("%s tf->password %s\n", (const char *)__func__, tf->password);
+    printf("%s tf->domain %s\n", (const char *)__func__, tf->domain);
     // /v:192.168.20.104 /u:solomin /p:5555 -clipboard /sound:rate:44100,channel:2 /cert-ignore
-    gchar *full_adress = tf->port != 0 ? g_strdup_printf("/v:%s:%i", tf->ip, tf->port) : g_strdup_printf("/v:%s", tf->ip);
-
     char* argv[] = {
         g_strdup(PROGRAMM_NAME),
-        full_adress,
+        g_strdup_printf("/v:%s", tf->ip),
         g_strdup_printf("/d:%s", tf->domain),
         g_strdup_printf("/u:%s", tf->usename),
         g_strdup_printf("/p:%s", tf->password),
@@ -200,14 +197,14 @@ fail:
 static BOOL rdp_begin_paint(rdpContext* context)
 {
     //printf("%s\n", (const char *)__func__);
-	rdpGdi* gdi = context->gdi;
-	gdi->primary->hdc->hwnd->invalid->null = TRUE;
+    rdpGdi* gdi = context->gdi;
+    gdi->primary->hdc->hwnd->invalid->null = TRUE;
 
     // Lock mutex to protect buffer
     //ExtendedRdpContext* tf = (ExtendedRdpContext*)context;
 
     //g_mutex_lock(&tf->primary_buffer_mutex);
-	return TRUE;
+    return TRUE;
 }
 
 /* This function is called when the library completed composing a new
@@ -247,33 +244,33 @@ static BOOL rdp_end_paint(rdpContext* context)
 /* This function is called to output a System BEEP */
 static BOOL rdp_play_sound(rdpContext* context, const PLAY_SOUND_UPDATE* play_sound)
 {
-	/* TODO: Implement */
-	/* WINPR_UNUSED(context);
-	WINPR_UNUSED(play_sound); */
-	return TRUE;
+    /* TODO: Implement */
+    /* WINPR_UNUSED(context);
+    WINPR_UNUSED(play_sound); */
+    return TRUE;
 }
 
 /* This function is called to update the keyboard indocator LED */
 static BOOL rdp_keyboard_set_indicators(rdpContext* context, UINT16 led_flags)
 {
-	/* TODO: Set local keyboard indicator LED status */
-	/* WINPR_UNUSED(context);
-	WINPR_UNUSED(led_flags); */
-	return TRUE;
+    /* TODO: Set local keyboard indicator LED status */
+    /* WINPR_UNUSED(context);
+    WINPR_UNUSED(led_flags); */
+    return TRUE;
 }
 
 /* This function is called to set the IME state */
 static BOOL rdp_keyboard_set_ime_status(rdpContext* context, UINT16 imeId, UINT32 imeState,
                                        UINT32 imeConvMode)
 {
-	if (!context)
-		return FALSE;
+    if (!context)
+        return FALSE;
 
-	WLog_WARN(TAG,
-	          "KeyboardSetImeStatus(unitId=%04" PRIx16 ", imeState=%08" PRIx32
-	          ", imeConvMode=%08" PRIx32 ") ignored",
-	          imeId, imeState, imeConvMode);
-	return TRUE;
+    WLog_WARN(TAG,
+              "KeyboardSetImeStatus(unitId=%04" PRIx16 ", imeState=%08" PRIx32
+              ", imeConvMode=%08" PRIx32 ") ignored",
+              imeId, imeState, imeConvMode);
+    return TRUE;
 }
 // XInitThreads  GDK_SYNCHRONIZE
 /* Called before a connection is established.
@@ -281,9 +278,9 @@ static BOOL rdp_keyboard_set_ime_status(rdpContext* context, UINT16 imeId, UINT3
 static BOOL rdp_pre_connect(freerdp* instance)
 {
     printf("%s\n", (const char *)__func__);
-	rdpSettings* settings;
-	settings = instance->settings;
-	/* Optional OS identifier sent to server */
+    rdpSettings* settings;
+    settings = instance->settings;
+    /* Optional OS identifier sent to server */
     settings->OsMajorType = OSMAJORTYPE_UNSPECIFIED;
     settings->OsMinorType = OSMINORTYPE_UNSPECIFIED;
 
@@ -321,25 +318,25 @@ static BOOL rdp_pre_connect(freerdp* instance)
 
 
 
-	/* settings->OrderSupport is initialized at this point.
-	 * Only override it if you plan to implement custom order
-	 * callbacks or deactiveate certain features. */
-	/* Register the channel listeners.
-	 * They are required to set up / tear down channels if they are loaded. */
+    /* settings->OrderSupport is initialized at this point.
+     * Only override it if you plan to implement custom order
+     * callbacks or deactiveate certain features. */
+    /* Register the channel listeners.
+     * They are required to set up / tear down channels if they are loaded. */
     PubSub_SubscribeChannelConnected(instance->context->pubSub, rdp_OnChannelConnectedEventHandler);
     PubSub_SubscribeChannelDisconnected(instance->context->pubSub,
                                         rdp_OnChannelDisconnectedEventHandler);
 
-	/* Load all required plugins / channels / libraries specified by current
-	 * settings. */
-	if (!freerdp_client_load_addins(instance->context->channels, instance->settings))
-		return FALSE;
+    /* Load all required plugins / channels / libraries specified by current
+     * settings. */
+    if (!freerdp_client_load_addins(instance->context->channels, instance->settings))
+        return FALSE;
 
     // its required for key event sending
     freerdp_keyboard_init(instance->context->settings->KeyboardLayout);
 
-	/* TODO: Any code your client requires */
-	return TRUE;
+    /* TODO: Any code your client requires */
+    return TRUE;
 }
 
 /* Called after a RDP connection was successfully established.
@@ -354,7 +351,7 @@ static BOOL rdp_post_connect(freerdp* instance)
 {
     printf("%s\n", (const char *)__func__);
     if (!gdi_init(instance, PIXEL_FORMAT_RGB16)) // PIXEL_FORMAT_RGBA32
-		return FALSE;
+        return FALSE;
 
     if (!rdp_register_pointer(instance->context->graphics))
         return FALSE;
@@ -383,7 +380,7 @@ static BOOL rdp_post_connect(freerdp* instance)
 
     g_mutex_unlock(&tf->primary_buffer_mutex);
 
-	return TRUE;
+    return TRUE;
 }
 
 /* This function is called whether a session ends by failure or success.
@@ -393,11 +390,11 @@ static void rdp_post_disconnect(freerdp* instance)
 {
     printf("%s\n", (const char *)__func__);
 
-	if (!instance)
-		return;
+    if (!instance)
+        return;
 
-	if (!instance->context)
-		return;
+    if (!instance->context)
+        return;
 
     ExtendedRdpContext* context = (ExtendedRdpContext*)instance->context;
     PubSub_UnsubscribeChannelConnected(instance->context->pubSub,
@@ -417,8 +414,8 @@ static void rdp_post_disconnect(freerdp* instance)
 //    }
     //rdp_print_errinfo();
 
-	gdi_free(instance);
-	/* TODO : Clean up custom stuff */
+    gdi_free(instance);
+    /* TODO : Clean up custom stuff */
 }
 
 /* RDP main loop.
@@ -427,47 +424,47 @@ static void rdp_post_disconnect(freerdp* instance)
 static DWORD WINAPI rdp_client_thread_proc(ExtendedRdpContext* tf)
 {
     freerdp* instance = (freerdp*)tf->context.instance;
-	DWORD nCount;
-	DWORD status;
-	HANDLE handles[64];
+    DWORD nCount;
+    DWORD status;
+    HANDLE handles[64];
 
-	if (!freerdp_connect(instance))
-	{
-		WLog_ERR(TAG, "connection failure");
+    if (!freerdp_connect(instance))
+    {
+        WLog_ERR(TAG, "connection failure");
         return 0;
-	}
+    }
 
     while (!freerdp_shall_disconnect(instance))
-	{
-		nCount = freerdp_get_event_handles(instance->context, &handles[0], 64);
+    {
+        nCount = freerdp_get_event_handles(instance->context, &handles[0], 64);
 
-		if (nCount == 0)
-		{
-			WLog_ERR(TAG, "%s: freerdp_get_event_handles failed", __FUNCTION__);
-			break;
-		}
+        if (nCount == 0)
+        {
+            WLog_ERR(TAG, "%s: freerdp_get_event_handles failed", __FUNCTION__);
+            break;
+        }
 
-		status = WaitForMultipleObjects(nCount, handles, FALSE, 100);
+        status = WaitForMultipleObjects(nCount, handles, FALSE, 100);
 
-		if (status == WAIT_FAILED)
-		{
-			WLog_ERR(TAG, "%s: WaitForMultipleObjects failed with %" PRIu32 "", __FUNCTION__,
-			         status);
-			break;
-		}
+        if (status == WAIT_FAILED)
+        {
+            WLog_ERR(TAG, "%s: WaitForMultipleObjects failed with %" PRIu32 "", __FUNCTION__,
+                     status);
+            break;
+        }
 
-		if (!freerdp_check_event_handles(instance->context))
-		{
-			if (freerdp_get_last_error(instance->context) == FREERDP_ERROR_SUCCESS)
-				WLog_ERR(TAG, "Failed to check FreeRDP event handles");
+        if (!freerdp_check_event_handles(instance->context))
+        {
+            if (freerdp_get_last_error(instance->context) == FREERDP_ERROR_SUCCESS)
+                WLog_ERR(TAG, "Failed to check FreeRDP event handles");
 
-			break;
-		}
-	}
+            break;
+        }
+    }
 
     BOOL res = freerdp_disconnect(instance);
     printf("diss conn res: %i\n", res);
-	return 0;
+    return 0;
 }
 
 
@@ -476,10 +473,10 @@ static DWORD WINAPI rdp_client_thread_proc(ExtendedRdpContext* tf)
  * if available. */
 static BOOL rdp_client_global_init(void)
 {
-	if (freerdp_handle_signals() != 0)
-		return FALSE;
+    if (freerdp_handle_signals() != 0)
+        return FALSE;
 
-	return TRUE;
+    return TRUE;
 }
 
 /* Optional global tear down */
@@ -490,17 +487,17 @@ static void rdp_client_global_uninit(void)
 static int rdp_logon_error_info(freerdp* instance, UINT32 data, UINT32 type)
 {
     ExtendedRdpContext* tf;
-	const char* str_data = freerdp_get_logon_error_info_data(data);
-	const char* str_type = freerdp_get_logon_error_info_type(type);
+    const char* str_data = freerdp_get_logon_error_info_data(data);
+    const char* str_type = freerdp_get_logon_error_info_type(type);
 
-	if (!instance || !instance->context)
-		return -1;
+    if (!instance || !instance->context)
+        return -1;
 
     tf = (ExtendedRdpContext*)instance->context;
-	WLog_INFO(TAG, "Logon Error Info %s [%s]", str_data, str_type);
-	/* WINPR_UNUSED(tf); */
+    WLog_INFO(TAG, "Logon Error Info %s [%s]", str_data, str_type);
+    /* WINPR_UNUSED(tf); */
 
-	return 1;
+    return 1;
 }
 
 static BOOL rdp_client_new(freerdp* instance, rdpContext* context)
@@ -508,14 +505,14 @@ static BOOL rdp_client_new(freerdp* instance, rdpContext* context)
     ExtendedRdpContext* tf = (ExtendedRdpContext*)context;
     printf("%s: tf->test_int: %i\n", (const char *)__func__, tf->test_int);
 
-	if (!instance || !context)
-		return FALSE;
+    if (!instance || !context)
+        return FALSE;
 
     instance->PreConnect = rdp_pre_connect;
     instance->PostConnect = rdp_post_connect;
     instance->PostDisconnect = rdp_post_disconnect;
-	instance->Authenticate = client_cli_authenticate;
-	instance->GatewayAuthenticate = client_cli_gw_authenticate;
+    instance->Authenticate = client_cli_authenticate;
+    instance->GatewayAuthenticate = client_cli_gw_authenticate;
     //instance->VerifyCertificateEx = client_cli_verify_certificate_ex;
     //instance->VerifyChangedCertificateEx = client_cli_verify_changed_certificate_ex;
     instance->VerifyCertificate = client_cli_verify_certificate;
@@ -526,15 +523,15 @@ static BOOL rdp_client_new(freerdp* instance, rdpContext* context)
 
     g_mutex_init(&tf->primary_buffer_mutex);
 
-	return TRUE;
+    return TRUE;
 }
 
 static void rdp_client_free(freerdp* instance G_GNUC_UNUSED, rdpContext* context)
 {
     printf("%s\n", (const char *)__func__);
 
-	if (!context)
-		return;
+    if (!context)
+        return;
 
     // some clean.
     ExtendedRdpContext* ex_context = (ExtendedRdpContext*)context;
@@ -549,20 +546,20 @@ static void rdp_client_free(freerdp* instance G_GNUC_UNUSED, rdpContext* context
 
 static int rdp_client_start(rdpContext* context)
 {
-	/* TODO: Start client related stuff */
+    /* TODO: Start client related stuff */
     ExtendedRdpContext* tf = (ExtendedRdpContext*)context;
     printf("%s: %i\n", (const char *)__func__, tf->test_int);
 
-	return 0;
+    return 0;
 }
 
 static int rdp_client_stop(rdpContext* context)
 {
-	/* TODO: Stop client related stuff */
+    /* TODO: Stop client related stuff */
     ExtendedRdpContext* tf = (ExtendedRdpContext*)context;
     printf("%s: %i\n", (const char *)__func__, tf->test_int);
 
-	return 0;
+    return 0;
 }
 
 static int rdp_client_entry(RDP_CLIENT_ENTRY_POINTS* pEntryPoints)
