@@ -64,6 +64,7 @@
 
 #include "async.h"
 
+
 #define PROGRAMM_NAME "rdp_gtk_client"
 #define TAG CLIENT_TAG(PROGRAMM_NAME)
 
@@ -113,10 +114,10 @@ void rdp_client_routine(GTask   *task,
     if (!context)
         goto fail;
 
-//    printf("%s usename %s\n", (const char *)__func__, usename);
-//    printf("%s password %s\n", (const char *)__func__, password);
+    printf("%s port %i\n", (const char *)__func__, tf->port);
+    printf("%s ip %s\n", (const char *)__func__, tf->ip);
     printf("%s tf->usename %s\n", (const char *)__func__, tf->usename);
-    printf("%s tf->domain %s\n", (const char *)__func__, tf->domain);
+    printf("%s tf->password %s\n", (const char *)__func__, tf->password);
     // /v:192.168.20.104 /u:solomin /p:5555 -clipboard /sound:rate:44100,channel:2 /cert-ignore
     gchar *full_adress = tf->port != 0 ? g_strdup_printf("/v:%s:%i", tf->ip, tf->port) : g_strdup_printf("/v:%s", tf->ip);
 
@@ -175,19 +176,19 @@ fail:
     tf->is_running = FALSE;
 }
 
-void rdp_client_adjust_im_origin_point(ExtendedRdpContext* ex_context)
-{
-    if (ex_context->surface && ex_context->rdp_display) {
+//void rdp_client_adjust_im_origin_point(ExtendedRdpContext* ex_context)
+//{
+//    if (ex_context->surface && ex_context->rdp_display) {
 
-        int delta_x = gtk_widget_get_allocated_width(ex_context->rdp_display) -
-                cairo_image_surface_get_width(ex_context->surface);
-        int delta_y = gtk_widget_get_allocated_height(ex_context->rdp_display) -
-                cairo_image_surface_get_height(ex_context->surface);
+//        int delta_x = gtk_widget_get_allocated_width(ex_context->rdp_display) -
+//                cairo_image_surface_get_width(ex_context->surface);
+//        int delta_y = gtk_widget_get_allocated_height(ex_context->rdp_display) -
+//                cairo_image_surface_get_height(ex_context->surface);
 
-        ex_context->im_origin_x = delta_x <= 0 ? 0.0 : (int)(delta_x * 0.5);
-        ex_context->im_origin_y = delta_y <= 0 ? 0.0 : (int)(delta_y * 0.5);
-    }
-}
+//        ex_context->im_origin_x = delta_x <= 0 ? 0.0 : (int)(delta_x * 0.5);
+//        ex_context->im_origin_y = delta_y <= 0 ? 0.0 : (int)(delta_y * 0.5);
+//    }
+//}
 
 //static BOOL update_send_synchronize(rdpContext* context)
 //{
@@ -378,7 +379,7 @@ static BOOL rdp_post_connect(freerdp* instance)
                                                       cairo_format, gdi->width, gdi->height, stride);
 
     // calculate point in which the image is displayed
-    rdp_client_adjust_im_origin_point(tf);
+    //rdp_client_adjust_im_origin_point(tf);
 
     g_mutex_unlock(&tf->primary_buffer_mutex);
 
@@ -433,7 +434,7 @@ static DWORD WINAPI rdp_client_thread_proc(ExtendedRdpContext* tf)
 	if (!freerdp_connect(instance))
 	{
 		WLog_ERR(TAG, "connection failure");
-		return 0;
+        return 0;
 	}
 
     while (!freerdp_shall_disconnect(instance))

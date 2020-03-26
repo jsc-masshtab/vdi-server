@@ -24,6 +24,29 @@
 
 #include "async.h"
 
+static gboolean update_cursor_callback(rdpContext* context)
+{
+    ExtendedRdpContext* ex_context = (ExtendedRdpContext*)context;
+
+    if (!ex_context || !ex_context->is_running)
+        return TRUE;
+
+    g_mutex_lock(&ex_context->cursor_mutex);
+
+//    for(unsigned int i = 0; i < ex_context->monitor_number; ++i){
+//        gdk_window_set_cursor(ex_context->rdp_viewer_data_array[i]->rdp_viewer_window,  ex_context->gdk_cursor);
+//    }
+    for (guint i = 0; i < ex_context->rdp_viewer_data_array->len; ++i) {
+        RdpViewerData *rdp_viewer_data = g_array_index(ex_context->rdp_viewer_data_array, RdpViewerData *, i);
+        //gdk_window_set_cursor(GTK_WINDOW(rdp_viewer_data->rdp_viewer_window),  ex_context->gdk_cursor);
+    }
+
+    //printf("%s ex_pointer->test_int: \n", (const char *)__func__);
+    g_mutex_unlock(&ex_context->cursor_mutex);
+
+    return FALSE;
+}
+
 static ExtendedRdpContext* create_rdp_context(UINT32 *last_rdp_error_p)
 {
     rdpContext* context = rdp_client_create_context();
@@ -62,27 +85,46 @@ GtkResponseType rdp_viewer_start(const gchar *usename, const gchar *password, gc
 {
     printf("%s domain %s\n", (const char *)__func__, domain);
 
+    GtkResponseType dialog_window_response = GTK_RESPONSE_CLOSE;
+    GMainLoop *loop;
     // create RDP context
     UINT32 last_rdp_error = 0;
-    ExtendedRdpContext *ex_context = create_rdp_context(&last_rdp_error); // deleted upon widget deletion
+    ExtendedRdpContext *ex_context = create_rdp_context(&last_rdp_error);
     rdp_client_set_credentials(ex_context, usename, password, domain, ip, port);
 
     // determine monitor number
     unsigned int monitor_number = 1;
 
     // create rdp viewer windows
-    RdpViewerData **rdp_viewer_data_array = malloc(monitor_number * sizeof (RdpViewerData *));
-    for(unsigned int i = 0; i < monitor_number; ++i){
-        rdp_viewer_data_array[i] = rdp_viewer_window_create(ex_context, &last_rdp_error);
+    GArray *rdp_viewer_data_array = g_array_new(FALSE, FALSE, sizeof(RdpViewerData *));
+    for (guint i = 0; i < monitor_number; ++i) {
+        RdpViewerData *rdp_viewer_data = rdp_viewer_window_create(ex_context, &last_rdp_error);
+         g_array_append_val(rdp_viewer_data_array, rdp_viewer_data);
+
+         rdp_viewer_data->dialog_window_response_p = &dialog_window_response;
+         rdp_viewer_data->loop_p = &loop;
     }
 
-    GtkResponseType dialog_window_response = GTK_RESPONSE_CLOSE;
-    GMainLoop *loop;
+    ex_context->rdp_viewer_data_array = rdp_viewer_data_array;
+
+    // launch RDP routine in thread
+    GTask *task = g_task_new(NULL, NULL, NULL, NULL);
+    g_task_set_task_data(task, (rdpContext *)ex_context, NULL);
+    g_task_run_in_thread(task, rdp_client_routine);
+    g_object_unref(task);
+
+    // launch event loop
     create_loop_and_launch(&loop);
 
-    // clear memory!
+    // clear memory
     destroy_rdp_context(ex_context);
-    rdp_viewer_window_destroy(rdp_viewer_data);
+
+    guint i;
+    for (i = 0; i < rdp_viewer_data_array->len; ++i) {
+        RdpViewerData *rdp_viewer_data = g_array_index(rdp_viewer_data_array, RdpViewerData *, i);
+        rdp_viewer_window_destroy(rdp_viewer_data);
+    }
+    g_array_free(rdp_viewer_data_array, TRUE);
 
     return dialog_window_response;
 }

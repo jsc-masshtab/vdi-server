@@ -4,6 +4,7 @@
 #include "config.h"
 
 #include "rdp_display.h"
+#include "rdp_viewer_window.h"
 
 #include "vdi_api_session.h"
 
@@ -34,8 +35,7 @@ static const struct keyComboDef keyCombos[] = {
 };
 
 // function declarations
-static ExtendedRdpContext* create_rdp_context(UINT32 *last_rdp_error_p);
-static void destroy_rdp_context(ExtendedRdpContext* ex_context);
+
 
 // function implementations
 
@@ -106,34 +106,6 @@ static gboolean gtk_update_v2(gpointer user_data)
     gtk_widget_queue_draw(rdp_display);
 
     return TRUE;
-}
-
-void rdp_viewer_event_on_mapped(GtkWidget *widget G_GNUC_UNUSED, GdkEvent *event G_GNUC_UNUSED, gpointer user_data)
-{
-    rdpContext* context = user_data;
-    // launch RDP routine in thread. Stop its when GTK window closed
-    GTask *task = g_task_new(NULL, NULL, NULL, NULL);
-    g_task_set_task_data(task, context, NULL);
-    g_task_run_in_thread(task, rdp_client_routine);
-    g_object_unref(task);
-}
-
-static gboolean update_cursor_callback(rdpContext* context)
-{
-    ExtendedRdpContext* ex_context = (ExtendedRdpContext*)context;
-
-    if (!ex_context || !ex_context->is_running)
-        return TRUE;
-
-    GdkWindow *parent_window = gtk_widget_get_parent_window(ex_context->rdp_display);
-    if (parent_window) {
-        g_mutex_lock(&ex_context->cursor_mutex);
-        //printf("%s ex_pointer->test_int: \n", (const char *)__func__);
-        gdk_window_set_cursor(parent_window,  ex_context->gdk_cursor);
-        g_mutex_unlock(&ex_context->cursor_mutex);
-    }
-
-    return FALSE;
 }
 
 static void rdp_viewer_item_details_activated(GtkWidget *menu G_GNUC_UNUSED, gpointer userdata G_GNUC_UNUSED)
@@ -358,7 +330,6 @@ RdpViewerData *rdp_viewer_window_create(ExtendedRdpContext *ex_context, UINT32 *
             GTK_WIDGET(gtk_builder_get_object(builder, "viewer"));
     g_signal_connect_swapped(rdp_viewer_window, "delete-event",
                              G_CALLBACK(rdp_viewer_window_deleted_cb), rdp_viewer_data);
-    g_signal_connect(rdp_viewer_window, "map-event", G_CALLBACK(rdp_viewer_event_on_mapped), ex_context);
 
     rdp_viewer_data->top_menu = GTK_WIDGET(gtk_builder_get_object(builder, "top-menu"));
 
@@ -398,16 +369,16 @@ RdpViewerData *rdp_viewer_window_create(ExtendedRdpContext *ex_context, UINT32 *
     g_signal_connect(item_about, "activate", G_CALLBACK(rdp_viewer_item_details_activated), NULL);
 
     // create RDP display
-    GtkWidget *rdp_display = rdp_display_create(rdp_viewer_window, ex_context, last_rdp_error_p);
+    rdp_viewer_data->rdp_display = rdp_display_create(rdp_viewer_window, ex_context, last_rdp_error_p);
     GtkWidget *vbox = GTK_WIDGET(gtk_builder_get_object(builder, "viewer-box"));
-    gtk_box_pack_end(GTK_BOX(vbox), GTK_WIDGET(rdp_display), TRUE, TRUE, 0);
+    gtk_box_pack_end(GTK_BOX(vbox), rdp_viewer_data->rdp_display, TRUE, TRUE, 0);
 
     // show
     gtk_window_set_position(GTK_WINDOW(rdp_viewer_window), GTK_WIN_POS_CENTER);
     gtk_window_resize(GTK_WINDOW(rdp_viewer_window), optimal_image_width, optimal_image_height);
     gtk_widget_show_all(rdp_viewer_window);
 
-    rdp_viewer_data->g_timeout_id = g_timeout_add(30, (GSourceFunc)gtk_update_v2, rdp_display);
+    rdp_viewer_data->g_timeout_id = g_timeout_add(30, (GSourceFunc)gtk_update_v2, rdp_viewer_data->rdp_display);
     //gtk_widget_add_tick_callback(rdp_display, gtk_update, context, NULL);
 
     return rdp_viewer_data;

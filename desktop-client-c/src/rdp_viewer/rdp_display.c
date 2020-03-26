@@ -286,7 +286,7 @@ static gboolean rdp_display_event_on_configure(GtkWidget *widget G_GNUC_UNUSED,
 
     if (ex_contect && ex_contect->is_running) {
         g_mutex_lock(&ex_contect->primary_buffer_mutex);
-        rdp_client_adjust_im_origin_point(ex_contect);
+        //rdp_client_adjust_im_origin_point(ex_contect);
         g_mutex_unlock(&ex_contect->primary_buffer_mutex);
     }
 
@@ -296,8 +296,6 @@ static gboolean rdp_display_event_on_configure(GtkWidget *widget G_GNUC_UNUSED,
 GtkWidget *rdp_display_create(GtkWidget *rdp_viewer_window, ExtendedRdpContext *ex_context, UINT32 *last_rdp_error_p)
 {
     GtkWidget *rdp_display = gtk_drawing_area_new();
-
-    ex_context->rdp_display = rdp_display;
 
     gtk_widget_add_events(rdp_display, GDK_POINTER_MOTION_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK |
                           GDK_SCROLL_MASK | GDK_SMOOTH_SCROLL_MASK | GDK_KEY_PRESS_MASK | GDK_KEY_RELEASE_MASK);

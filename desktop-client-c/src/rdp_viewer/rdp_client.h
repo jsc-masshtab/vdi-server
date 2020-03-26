@@ -4,8 +4,8 @@
  * Solomin a.solomin@mashtab.otg
  */
 
-#ifndef FREERDP_CLIENT_SAMPLE_H
-#define FREERDP_CLIENT_SAMPLE_H
+#ifndef GTK_FREERDP_CLIENT_H
+#define GTK_FREERDP_CLIENT_H
 
 #include <freerdp/freerdp.h>
 #include <freerdp/client/rdpei.h>
@@ -19,9 +19,8 @@
 
 #include "rdp_cursor.h"
 
-#define MAX_MONITOR_AMOUNT 3
 
-struct ExtendedRdpContext;
+#define MAX_MONITOR_AMOUNT 3
 
 typedef gboolean (*UpdateImageCallback) (rdpContext* context);
 typedef gboolean (*UpdateCursorCallback) (rdpContext* context);
@@ -36,9 +35,8 @@ typedef struct {
     RdpgfxClientContext *gfx;
     EncomspClientContext *encomsp;
 
-    GtkWidget *rdp_display; // pointer to display widget
+    GArray *rdp_viewer_data_array; //
 
-    GdkPixbuf *frame_pix_buf; //frame image data
     GMutex primary_buffer_mutex; // mutex for protecting primary_buffer
 
     GMutex rdp_routine_mutex; // used to wait untill rdp_client_routine finished
@@ -92,4 +90,4 @@ void rdp_client_routine(GTask   *task,
 void rdp_client_adjust_im_origin_point(ExtendedRdpContext* ex_context);
 
 
-#endif /* FREERDP_CLIENT_SAMPLE_H */
+#endif /* GTK_FREERDP_CLIENT_H */
