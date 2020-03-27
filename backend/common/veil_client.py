@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-import logging
 from cached_property import cached_property
 from tornado.httpclient import AsyncHTTPClient, HTTPRequest, HTTPClientError
 from tornado.escape import json_decode
@@ -9,6 +8,7 @@ from common.veil_errors import NotFound, Unauthorized, ServerError, Forbidden, C
 from common.veil_decorators import prepare_body
 
 from languages import lang_init
+from journal.journal import Log as log
 
 
 _ = lang_init()
@@ -23,8 +23,6 @@ _ = lang_init()
 AsyncHTTPClient.configure("tornado.simple_httpclient.SimpleAsyncHTTPClient",
                           max_clients=VEIL_MAX_CLIENTS,
                           max_body_size=VEIL_MAX_BODY_SIZE)
-
-application_log = logging.getLogger('tornado.application')
 
 
 class VeilHttpClient:
@@ -68,20 +66,18 @@ class VeilHttpClient:
 
             async def stop_controller(description: str):
                 # TODO: этому тут явно не место.
-                from event.models import Event
                 from resources_monitoring.resources_monitor_manager import resources_monitor_manager
                 if isinstance(description, list):
                     description = description[0]
                 if not isinstance(description, str):
                     description = ''
                 # Информируем систему о проблеме
-                await Event.create_error(_('Controller {} connection error').format(self.controller_ip),
-                                         description=description)
+                await log.error(_('Controller {} connection error').format(self.controller_ip),
+                                description=description)
                 # Останавливаем монитор ресурсов для контроллера.
                 await resources_monitor_manager.remove_controller(self.controller_ip)
 
-            application_log.error(_('URL {url} - {http_error}').format(url=url,
-                                                                       http_error=str(http_error)))
+            log.error(_('URL {url} - {http_error}').format(url=url, http_error=str(http_error)))
 
             body = self.get_response_body(http_error.response)
             if isinstance(body, dict):

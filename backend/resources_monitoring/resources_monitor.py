@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 import asyncio
-import logging
 import json
 
 from tornado.httpclient import HTTPClientError
@@ -11,7 +10,6 @@ from tornado.websocket import websocket_connect
 from common.veil_errors import HttpError
 from controller.models import Controller
 from controller_resources.veil_client import ResourcesHttpClient
-from event.models import Event
 
 from resources_monitoring.resources_monitoring_data import CONTROLLER_SUBSCRIPTIONS_LIST, CONTROLLERS_SUBSCRIPTION
 from resources_monitoring.abstract_event_monitor import AbstractMonitor
@@ -19,11 +17,10 @@ from resources_monitoring.abstract_event_monitor import AbstractMonitor
 from common.utils import cancel_async_task
 
 from languages import lang_init
+from journal.journal import Log as log
 
 
 _ = lang_init()
-
-application_log = logging.getLogger('tornado.application')
 
 
 class ResourcesMonitor(AbstractMonitor):
@@ -104,7 +101,7 @@ class ResourcesMonitor(AbstractMonitor):
         while self._running_flag:
             is_connected = await self._connect()
 
-            application_log.info(_('{} is connected {}').format(__class__.__name__, is_connected))
+            log.debug(_('{} is connected {}').format(__class__.__name__, is_connected))
             # reconnect if not connected
             if not is_connected:
                 await asyncio.sleep(self.RECONNECT_TIMEOUT)
@@ -128,19 +125,19 @@ class ResourcesMonitor(AbstractMonitor):
         try:
             token = await Controller.get_token(self._controller_ip)
         except Exception as E:
-            application_log.error(E)
+            log.error(E)
             return False
 
         # create ws connection
         try:
             connect_url = 'ws://{}/ws/?token={}'.format(self._controller_ip, token)
-            # application_log.debug('ws connection url is {}'.format(connect_url))
+            # log.debug('ws connection url is {}'.format(connect_url))
             self._ws_connection = await websocket_connect(connect_url)
         except (ConnectionRefusedError, WebSocketError):
             msg = _('{cls}: an not connect to {ip}').format(
                 cls=__class__.__name__,
                 ip=self._controller_ip)
-            await Event.create_error(msg)
+            await log.error(msg)
             return False
 
         # subscribe to events on controller
@@ -153,7 +150,7 @@ class ResourcesMonitor(AbstractMonitor):
         return True
 
     async def _on_message_received(self, message):
-        # application_log.debug('msg received from {}: {}'.format(self._controller_ip, message))
+        # log.debug('msg received from {}: {}'.format(self._controller_ip, message))
         try:
             json_data = json.loads(message)
         except json.JSONDecodeError:
@@ -167,8 +164,8 @@ class ResourcesMonitor(AbstractMonitor):
 
     async def _close_connection(self):
         if self._ws_connection:
-            application_log.info(_('{} Closing ws connection {}').format(__class__.__name__, self._controller_ip))
+            log.debug(_('{} Closing ws connection {}').format(__class__.__name__, self._controller_ip))
             try:
                 self._ws_connection.close()
             except Exception as E:  # todo: вообще конкретное исключение не интересует
-                application_log.error(E)
+                log.error(E)

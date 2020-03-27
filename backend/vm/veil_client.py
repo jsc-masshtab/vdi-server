@@ -1,13 +1,11 @@
 # -*- coding: utf-8 -*-
-import logging
 import urllib.parse
 
 from common.veil_decorators import check_params
 from common.veil_client import VeilHttpClient
 from controller.models import Controller
 
-
-application_log = logging.getLogger('tornado.application')
+from journal.journal import Log as log
 
 
 class VmHttpClient(VeilHttpClient):
@@ -127,6 +125,6 @@ class VmHttpClient(VeilHttpClient):
         resources_list_data = await self.fetch_with_response(url=url, method='GET')
         # print('resources_list_data', resources_list_data)
         disks_list = resources_list_data['results']
-        application_log.debug('VDISKS list:')
-        application_log.debug(disks_list)
+        log.debug('VDISKS list:')
+        log.debug(disks_list)
         return disks_list

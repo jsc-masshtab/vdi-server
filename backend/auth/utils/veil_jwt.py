@@ -2,17 +2,15 @@
 """JWT additions for Tornado"""
 import jwt
 import datetime
-import logging
 
 from settings import JWT_OPTIONS, SECRET_KEY, JWT_EXPIRATION_DELTA, JWT_AUTH_HEADER_PREFIX, JWT_ALGORITHM, AUTH_ENABLED
 from auth.models import User, UserJwtInfo
 
 from languages import lang_init
+from journal.journal import Log as log
 
 
 _ = lang_init()
-
-application_log = logging.getLogger('tornado.application')
 
 
 def jwtauth(handler_class):
@@ -27,13 +25,13 @@ def jwtauth(handler_class):
                 if not is_valid:
                     raise AssertionError(_('Token invalid.'))
             except jwt.ExpiredSignature:
-                application_log.debug(_('jwtauth: jwt.ExpiredSignature'))
+                log.debug(_('jwtauth: jwt.ExpiredSignature'))
                 handler._transforms = []
                 handler.set_status(401)
                 response = {'errors': [{'message': _('Token expired.')}]}
                 handler.finish(response)
             except AssertionError as error_message:
-                application_log.debug(_('jwtauth: Assertion error {}').format(error_message))
+                log.debug(_('jwtauth: Assertion error {}').format(error_message))
                 handler._transforms = []
                 handler.set_status(401)
                 response = {'errors': [{'message': str(error_message)}]}

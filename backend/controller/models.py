@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-import logging
 import uuid
 from datetime import datetime
 
@@ -11,14 +10,13 @@ from auth.utils import crypto
 from controller.client import ControllerClient
 from database import db, get_list_of_values_from_db, Status, EntityType
 from common.veil_errors import SimpleError, BadRequest
-from event.models import Event
 
 from languages import lang_init
+from journal.journal import Log as log
 
 
 _ = lang_init()
 
-application_log = logging.getLogger('tornado.application')
 # TODO: validate token by expires_on parameter
 # TODO: validate status
 
@@ -121,29 +119,29 @@ class Controller(db.Model):
     async def check_credentials(self):
         try:
             encrypted_password = crypto.decrypt(self.password)
-            application_log.debug(
-                _('Checking controller credentials: address: {}, username: {}, password: {}, ldap_connection: {}').format(
-                    self.address, self.username, encrypted_password, self.ldap_connection))
+            log.debug(_(
+                'Checking controller credentials: address: {}, username: {}, password: {}, ldap_connection: {}').format(
+                self.address, self.username, encrypted_password, self.ldap_connection))
             controller_client = ControllerClient(self.address)
             auth_info = dict(username=self.username, password=encrypted_password, ldap=self.ldap_connection)
             await controller_client.auth(auth_info=auth_info)
         except Exception as ex:
-            application_log.warning(_('Controller {} check failed.').format(self.verbose_name))
-            application_log.debug(_('Controller check: {}').format(ex))
+            log.warning(_('Controller {} check failed.').format(self.verbose_name))
+            log.debug(_('Controller check: {}').format(ex))
             return False
-        application_log.info(_('Controller {} check passed successfull.').format(self.verbose_name))
+        log.info(_('Controller {} check passed successfull.').format(self.verbose_name))
         return True
 
     @classmethod
     async def get_credentials(cls, address, username, password, ldap_connection):
-        application_log.debug(
+        log.debug(
             _('Checking controller credentials: address: {}, username: {}, password: {}, ldap_connection: {}').format(
                 address, username, password, ldap_connection))
         controller_client = ControllerClient(address)
         auth_info = dict(username=username, password=password, ldap=ldap_connection)
         token, expires_on = await controller_client.auth(auth_info=auth_info)
         version = await controller_client.fetch_version()
-        application_log.debug(_('Get controller credentials: Controller\'s {} credentials are good.').format(address))
+        log.debug(_('Get controller credentials: Controller\'s {} credentials are good.').format(address))
         return {'token': token, 'expires_on': expires_on, 'version': version}
 
     async def soft_update(self, verbose_name, address, description, username=None, password=None, ldap_connection=None):
@@ -177,7 +175,7 @@ class Controller(db.Model):
                 controller_kwargs.update(credentials)
             except BadRequest:
                 credentials_valid = False
-                application_log.warning(
+                log.warning(
                     _('Can\'t connect to controller {} with username: {}, password: {}, ldap_connection: {}').format(
                         address, username, password, ldap_connection))
 
@@ -188,7 +186,7 @@ class Controller(db.Model):
                 if not credentials_valid:
                     raise BadRequest(_('Can\'t login login to controller {}').format(address))
             except Exception as E:
-                application_log.debug(_('Error with controller update: {}').format(E))
+                # log.debug(_('Error with controller update: {}').format(E))
                 raise SimpleError(E)
             return True
         return False
@@ -202,7 +200,7 @@ class Controller(db.Model):
 
         msg = _('Controller {name} had remove.').format(name=self.verbose_name)
         await self.delete()
-        await Event.create_info(msg, entity_dict=self.entity)
+        await log.info(msg, entity_dict=self.entity)
         return True
 
     async def full_delete_pools(self):
@@ -216,7 +214,7 @@ class Controller(db.Model):
 
         msg = _('Controller {name} had completely remove.').format(name=self.verbose_name)
         await self.delete()
-        await Event.create_info(msg, entity_dict=self.entity)
+        await log.info(msg, entity_dict=self.entity)
         return True
 
     @classmethod

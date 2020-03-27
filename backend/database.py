@@ -6,8 +6,6 @@ from graphene import Enum as GrapheneEnum
 from sqlalchemy.sql import desc
 from sqlalchemy.sql.schema import Column
 
-from common.veil_errors import SimpleError
-
 from languages import lang_init
 
 
@@ -77,6 +75,7 @@ class AbstractSortableStatusModel:
 
     @classmethod
     def get_order_field(cls, field_name):
+        from common.veil_errors import SimpleError
         """Соответствие переданного наименования поля полю модели, чтобы не использовать raw_sql в order"""
         field = cls._get_table_field(field_name)
         if field is None:
@@ -86,6 +85,7 @@ class AbstractSortableStatusModel:
 
     @classmethod
     def get_query_field(cls, field_name):
+        from common.veil_errors import SimpleError
         """Соответствие переданного наименования поля полю модели, чтобы не использовать raw_sql в where"""
         field = cls._get_table_field(field_name)
         if field is None:

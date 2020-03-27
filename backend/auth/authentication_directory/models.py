@@ -11,10 +11,10 @@ from sqlalchemy.sql import text, desc
 
 from settings import LDAP_TIMEOUT
 from database import db, AbstractSortableStatusModel, Status, Role, EntityType
-from auth.models import application_log, User, Group
-from event.models import Event
+from auth.models import User, Group
 
 from languages import lang_init
+from journal.journal import Log as log
 
 
 _ = lang_init()
@@ -237,8 +237,8 @@ class AuthenticationDirectory(db.Model, AbstractSortableStatusModel):
             return True
         except ldap.SERVER_DOWN:
             msg = _('Authentication directory server {} is down.').format(self.directory_url)
-            application_log.warning(msg)
-            await Event.create_warning(msg, entity_dict=self.entity)
+            # log.warning(msg)
+            await log.warning(msg, entity_dict=self.entity)
             return False
         return True
 
@@ -275,8 +275,8 @@ class AuthenticationDirectory(db.Model, AbstractSortableStatusModel):
         user_info, user_groups = ldap_server.search_s(base, ldap.SCOPE_SUBTREE,
                                                       user_info_filter, ['memberOf'])[0]
 
-        application_log.debug(_('AD user info: {}').format(user_info))
-        application_log.debug(_('AD user groups: {}').format(user_groups))
+        log.debug(_('AD user info: {}').format(user_info))
+        log.debug(_('AD user groups: {}').format(user_groups))
         return user_info, user_groups
 
     @staticmethod
@@ -348,7 +348,7 @@ class AuthenticationDirectory(db.Model, AbstractSortableStatusModel):
         :param account_name: имя пользовательской учетной записи
         :return: результат назначения системной группы пользователю службы каталогов
         """
-        application_log.debug(_('Assigning veil groups to {}').format(user.username))
+        log.debug(_('Assigning veil groups to {}').format(user.username))
 
         # Удаляем пользователя из всех групп.
         await user.remove_roles()
@@ -361,19 +361,19 @@ class AuthenticationDirectory(db.Model, AbstractSortableStatusModel):
         # Если отображения отсутствуют, то по-умолчанию всем пользователям
         # назначается группа Оператор.
         mappings = await self.mappings
-        application_log.debug(_('Mappings: {}').format(mappings))
+        log.debug(_('Mappings: {}').format(mappings))
 
         if not mappings:
             await user.add_role(Role.VM_OPERATOR)
-            application_log.debug(_('Role VM_OPERATOR has assigned to user {}.').format(user.username))
+            log.debug(_('Role VM_OPERATOR has assigned to user {}.').format(user.username))
             return True
 
         user_veil_groups = False
         ad_ou, ad_groups = (self._get_ad_user_ou(user_info),
                             self._get_ad_user_groups(user_groups.get('memberOf', [])))
 
-        application_log.debug(_('OU: {}').format(ad_ou))
-        application_log.debug(_('GROUPS: {}').format(ad_groups))
+        log.debug(_('OU: {}').format(ad_ou))
+        log.debug(_('GROUPS: {}').format(ad_groups))
 
         # Производим проверку в порядке уменьшения приоритета.
         # В случае, если совпадение найдено,
@@ -382,8 +382,8 @@ class AuthenticationDirectory(db.Model, AbstractSortableStatusModel):
         # Если есть мэппинги, значит в системе есть группы. Поэтому тут производим пользователю назначение групп.
         for role_mapping in mappings:
             escaped_values = list(map(ldap.dn.escape_dn_chars, role_mapping.values))
-            application_log.debug(_('escaped values: {}').format(escaped_values))
-            application_log.debug(_('role mapping value type: {}').format(role_mapping.value_type))
+            log.debug(_('escaped values: {}').format(escaped_values))
+            log.debug(_('role mapping value type: {}').format(role_mapping.value_type))
 
             if role_mapping.value_type == Mapping.ValueTypes.USER:
                 user_veil_groups = account_name in escaped_values
@@ -392,11 +392,11 @@ class AuthenticationDirectory(db.Model, AbstractSortableStatusModel):
             elif role_mapping.value_type == Mapping.ValueTypes.GROUP:
                 user_veil_groups = any([gr_name in escaped_values for gr_name in ad_groups])
 
-            application_log.debug(_('{}').format(role_mapping.value_type == Mapping.ValueTypes.GROUP))
-            application_log.debug(_('User veil groups: {}').format(user_veil_groups))
+            log.debug(_('{}').format(role_mapping.value_type == Mapping.ValueTypes.GROUP))
+            log.debug(_('User veil groups: {}').format(user_veil_groups))
             if user_veil_groups:
                 for group in await role_mapping.assigned_groups:
-                    application_log.debug(_('Attaching user {} to group: {}').format(user.username, group.verbose_name))
+                    log.debug(_('Attaching user {} to group: {}').format(user.username, group.verbose_name))
                     await group.add_user(user.id)
                 return True
         return False
@@ -434,8 +434,8 @@ class AuthenticationDirectory(db.Model, AbstractSortableStatusModel):
             # сообщением о неуспешности.
             success = False
             created = False
-            application_log.debug(ldap_error)
-            raise AssertionError(_('Invalid credeintials (ldap).'))
+            # log.debug(ldap_error)
+            raise AssertionError(_('Invalid credeintials (ldap): {}').format(ldap_error))
         except ldap.SERVER_DOWN:
             # Если нет связи с сервером службы каталогов, то возвращаем ошибку о недоступности
             # сервера, так как не можем сделать вывод о правильности предоставленных данных.
