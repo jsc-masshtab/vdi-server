@@ -6,9 +6,9 @@ from database import EntityType
 from auth.utils.veil_jwt import encode_jwt, extract_user_and_token_with_no_expire_check
 from auth.models import User
 from auth.authentication_directory.models import AuthenticationDirectory
-from event.models import Event
 
 from languages import lang_init
+from journal.journal import Log as log
 
 
 _ = lang_init()
@@ -47,7 +47,7 @@ class AuthHandler(BaseHandler, ABC):
                 error_message += _(' for user {username}').format(username=self.args['username'])
             error_message += _('. IP: {ip}').format(ip=self.remote_ip)
             entity = {'entity_type': EntityType.SECURITY, 'entity_uuid': None}
-            await Event.create_warning(error_message, entity_dict=entity)
+            await log.warning(error_message, entity_dict=entity)
             response = {'errors': [{'message': error_message}]}
             self.set_status(200)
         return self.finish(response)

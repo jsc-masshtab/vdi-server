@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-import logging
 import graphene
 from graphql import GraphQLError
 
@@ -10,15 +9,13 @@ from database import StatusGraphene
 from auth.utils import crypto
 from controller.client import ControllerClient
 from controller.models import Controller
-from event.models import Event
 from resources_monitoring.resources_monitor_manager import resources_monitor_manager
 
 from languages import lang_init
+from journal.journal import Log as log
 
 
 _ = lang_init()
-
-application_log = logging.getLogger('tornado.application')
 
 # TODO: перенести добавление контроллера в ресурс монитор в методы модели, чтобы сократить дублирование кода.
 
@@ -94,16 +91,14 @@ class AddControllerMutation(graphene.Mutation):
             msg = _('Successfully added new controller {name} with address {address}.').format(
                 name=controller.verbose_name,
                 address=address)
-            await Event.create_info(msg)
+            await log.info(msg)
             return AddControllerMutation(ok=True, controller=ControllerType(**controller.__values__))
         except SimpleError as E:
             raise SimpleError(E)
         except Exception as E:
-            msg = _('Add new controller with address {address}: operation failed.').format(
-                address=address)
+            msg = _('Add new controller with address {address}: operation failed.').format(address=address)
             descr = str(E)
-            await Event.create_error(msg, description=descr)
-            raise SimpleError(msg)
+            raise SimpleError(msg, description=descr)
 
 
 class UpdateControllerMutation(graphene.Mutation):
@@ -144,7 +139,7 @@ class UpdateControllerMutation(graphene.Mutation):
         except Exception as E:
             msg = _('Fail to update controller {id}: {error}').format(
                 id=id, error=E)
-            application_log.error(msg)
+            # log.error(msg)
             # При редактировании с контроллером произошла ошибка - нужно остановить монитор ресурсов.
             await resources_monitor_manager.remove_controller(controller.address)
             # И деактивировать контроллер
@@ -154,7 +149,7 @@ class UpdateControllerMutation(graphene.Mutation):
         msg = _('Successfully update controller {name} with address {address}.').format(
             name=controller.verbose_name,
             address=controller.address)
-        application_log.info(msg)
+        log.info(msg)
         # На случай, если контроллер был не активен - активируем его.
         await Controller.activate(id)
         return UpdateControllerMutation(ok=True, controller=ControllerType(**controller.__values__))

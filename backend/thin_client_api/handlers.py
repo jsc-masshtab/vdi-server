@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 from abc import ABC
-import logging
 import asyncio
 
 from tornado import websocket
@@ -20,8 +19,6 @@ from languages import lang_init
 
 
 _ = lang_init()
-
-application_log = logging.getLogger('tornado.application')
 
 
 @jwtauth
