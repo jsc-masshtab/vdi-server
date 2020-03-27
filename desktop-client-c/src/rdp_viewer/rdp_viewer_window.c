@@ -94,11 +94,11 @@ static gboolean rdp_viewer_window_deleted_cb(gpointer userdata)
 //    return TRUE;
 //}
 
-static gboolean gtk_update_v2(gpointer user_data)
+static gboolean gtk_update(gpointer user_data)
 {
-    //ExtendedRdpContext* tf = (ExtendedRdpContext*)user_data;
-    GtkWidget *rdp_display = (GtkWidget *)user_data;
-    gtk_widget_queue_draw(rdp_display);
+    RdpViewerData *rdp_viewer_data = (RdpViewerData *)user_data;
+    if (!rdp_viewer_data->is_rdp_display_being_redrawed)
+        gtk_widget_queue_draw(rdp_viewer_data->rdp_display);
 
     return TRUE;
 }
@@ -375,7 +375,7 @@ RdpViewerData *rdp_viewer_window_create(ExtendedRdpContext *ex_rdp_context, UINT
 //    rdp_viewer_data->ggs = gdk_seat_grab(seat, gtk_widget_get_window(rdp_viewer_window),
 //                        GDK_SEAT_CAPABILITY_ALL, TRUE, NULL, NULL, NULL, NULL);
 
-    rdp_viewer_data->g_timeout_id = g_timeout_add(40, (GSourceFunc)gtk_update_v2, rdp_viewer_data->rdp_display);
+    rdp_viewer_data->g_timeout_id = g_timeout_add(40, (GSourceFunc)gtk_update, rdp_viewer_data);
     //gtk_widget_add_tick_callback(rdp_display, gtk_update, context, NULL);
 
     return rdp_viewer_data;

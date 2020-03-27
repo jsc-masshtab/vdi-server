@@ -20,6 +20,7 @@ typedef struct{
     VirtViewerTimedRevealer *revealer;
     GtkWidget *top_menu;
 
+    gboolean is_rdp_display_being_redrawed;
     GtkWidget *rdp_display;
 
     // image data

@@ -255,6 +255,8 @@ static gboolean rdp_display_event_on_draw(GtkWidget* widget, cairo_t* context, g
     //printf("%s START\n", (const char *)__func__);
 
     RdpViewerData *rdp_viewer_data = (RdpViewerData *)user_data;
+    rdp_viewer_data->is_rdp_display_being_redrawed = TRUE;
+
     ExtendedRdpContext *ex_rdp_contect = rdp_viewer_data->ex_rdp_context;
     //GtkWidget *rdp_viewer_window = rdp_viewer_data->rdp_viewer_window;
 
@@ -305,6 +307,7 @@ static gboolean rdp_display_event_on_draw(GtkWidget* widget, cairo_t* context, g
         g_free(msg);
     }
 
+    rdp_viewer_data->is_rdp_display_being_redrawed = FALSE;
     return TRUE;
 }
 
