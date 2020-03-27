@@ -38,6 +38,7 @@ typedef struct
     GtkWidget *login_entry;
     GtkWidget *password_entry;
 
+    GtkWidget *window;
     GtkWidget *settings_button;
     GtkWidget *connect_button;
     GtkWidget *connect_spinner;
@@ -92,7 +93,7 @@ set_auth_dialog_state(AuthDialogState auth_dialog_state, RemoteViewerData *ci)
     }
     }
 }
-
+// header-label
 static void
 set_data_from_gui_in_outer_pointers(RemoteViewerData *ci)
 {
@@ -254,7 +255,7 @@ settings_button_clicked_cb(GtkButton *button G_GNUC_UNUSED, gpointer data)
 {
     RemoteViewerData *ci = data;
 
-    GtkResponseType res = remote_viewer_start_settings_dialog(&ci->connect_settings_data);
+    GtkResponseType res = remote_viewer_start_settings_dialog(&ci->connect_settings_data, GTK_WINDOW(ci->window));
     (void)res;
 }
 
@@ -340,8 +341,6 @@ remote_viewer_connect_dialog(gchar **user, gchar **password, gchar **domain,
                              gchar **ip, gchar **port, gboolean *is_connect_to_prev_pool,
                              gchar **vm_verbose_name, VdiVmRemoteProtocol *remote_protocol_type)
 {
-    GtkWidget *window, *veil_image;
-
     GtkBuilder *builder;
 
     RemoteViewerData ci;
@@ -365,7 +364,7 @@ remote_viewer_connect_dialog(gchar **user, gchar **password, gchar **domain,
     builder = remote_viewer_util_load_ui("remote-viewer-connect_veil.ui");
     g_return_val_if_fail(builder != NULL, GTK_RESPONSE_NONE);
 
-    window = GTK_WIDGET(gtk_builder_get_object(builder, "remote-viewer-connection-window"));
+    ci.window = GTK_WIDGET(gtk_builder_get_object(builder, "remote-viewer-connection-window"));
 
     ci.settings_button = GTK_WIDGET(gtk_builder_get_object(builder, "btn_settings"));
     ci.connect_button = GTK_WIDGET(gtk_builder_get_object(builder, "connect-button"));
@@ -385,8 +384,8 @@ remote_viewer_connect_dialog(gchar **user, gchar **password, gchar **domain,
     ci.login_entry = GTK_WIDGET(gtk_builder_get_object(builder, "login-entry"));
 
     // Signal - callbacks connections
-    g_signal_connect(window, "key-press-event", G_CALLBACK(key_pressed_cb), window);
-    g_signal_connect_swapped(window, "delete-event", G_CALLBACK(window_deleted_cb), &ci);
+    g_signal_connect(ci.window, "key-press-event", G_CALLBACK(key_pressed_cb), ci.window);
+    g_signal_connect_swapped(ci.window, "delete-event", G_CALLBACK(window_deleted_cb), &ci);
     g_signal_connect(ci.settings_button, "clicked", G_CALLBACK(settings_button_clicked_cb), &ci);
     g_signal_connect(ci.settings_button, "activate-link", G_CALLBACK(settings_button_link_clicked_cb), &ci);
     g_signal_connect(ci.connect_button, "clicked", G_CALLBACK(connect_button_clicked_cb), &ci);
@@ -395,11 +394,11 @@ remote_viewer_connect_dialog(gchar **user, gchar **password, gchar **domain,
     read_data_from_ini_file(&ci);
 
     /* show and wait for response */
-    gtk_window_set_position(GTK_WINDOW(window), GTK_WIN_POS_CENTER);
+    gtk_window_set_position(GTK_WINDOW(ci.window), GTK_WIN_POS_CENTER);
     //gtk_window_resize(GTK_WINDOW(window), 340, 340);
 
-    gtk_widget_show_all(window);
-    gtk_window_set_resizable(GTK_WINDOW(window), FALSE);
+    gtk_widget_show_all(ci.window);
+    gtk_window_set_resizable(GTK_WINDOW(ci.window), FALSE);
 
     // connect to the prev pool if requred
     fast_forward_connect_to_prev_pool_if_enabled(&ci);
@@ -410,8 +409,9 @@ remote_viewer_connect_dialog(gchar **user, gchar **password, gchar **domain,
     save_data_to_ini_file(&ci);
 
     g_object_unref(builder);
-    gtk_widget_destroy(window);
+    gtk_widget_destroy(ci.window);
     free_memory_safely(&ci.connect_settings_data.ip);
+    free_memory_safely(&ci.connect_settings_data.domain);
 
     return ci.dialog_window_response;
 }

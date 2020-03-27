@@ -19,7 +19,7 @@ typedef struct{
 } ConnectSettingsData;
 
 
-GtkResponseType remote_viewer_start_settings_dialog(ConnectSettingsData *connect_settings_data);
+GtkResponseType remote_viewer_start_settings_dialog(ConnectSettingsData *connect_settings_data, GtkWindow *parent);
 void fill_connect_settings_data_from_ini_file(ConnectSettingsData *connect_settings_data);
 
 

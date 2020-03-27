@@ -152,7 +152,7 @@ save_data_to_ini_file(ConnectSettingsDialogData *dialog_data)
     }
 }
 
-GtkResponseType remote_viewer_start_settings_dialog(ConnectSettingsData *connect_settings_data)
+GtkResponseType remote_viewer_start_settings_dialog(ConnectSettingsData *connect_settings_data, GtkWindow *parent)
 {
     ConnectSettingsDialogData dialog_data;
     memset(&dialog_data, 0, sizeof(ConnectSettingsDialogData));
@@ -191,6 +191,7 @@ GtkResponseType remote_viewer_start_settings_dialog(ConnectSettingsData *connect
     fill_connect_settings_dialog_data(&dialog_data, connect_settings_data);
 
     // show window
+    gtk_window_set_transient_for(GTK_WINDOW(dialog_data.window), parent);
     gtk_window_set_position(GTK_WINDOW(dialog_data.window), GTK_WIN_POS_CENTER);
     gtk_widget_show_all(dialog_data.window);
     gtk_window_set_resizable(GTK_WINDOW(dialog_data.window), FALSE);

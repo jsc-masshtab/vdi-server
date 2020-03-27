@@ -278,9 +278,9 @@ static gboolean rdp_display_event_on_draw(GtkWidget* widget, cairo_t* context, g
             double y = 0;
             double width = (ex_rdp_contect->optimal_image_width - rdp_viewer_data->monitor_geometry.x);
             double height = (ex_rdp_contect->optimal_image_height - rdp_viewer_data->monitor_geometry.y);
-            cairo_rectangle(context, x, y, width, height);
 
             if (width > 0 && height > 0) {
+                cairo_rectangle(context, x, y, width, height);
                 cairo_clip(context);
                 cairo_paint(context);
             }
