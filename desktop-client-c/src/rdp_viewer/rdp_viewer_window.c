@@ -60,6 +60,11 @@ static gboolean rdp_viewer_window_deleted_cb(gpointer userdata)
     return TRUE;
 }
 
+//static void rdp_viewer_event_on_mapped(GtkWidget *widget G_GNUC_UNUSED, GdkEvent *event G_GNUC_UNUSED, gpointer user_data)
+//{
+
+//}
+
 ////static GTimer *timer = NULL;
 //static gboolean gtk_update(GtkWidget *widget, GdkFrameClock *frame_clock, gpointer user_data)
 //{
@@ -315,6 +320,7 @@ RdpViewerData *rdp_viewer_window_create(ExtendedRdpContext *ex_rdp_context, UINT
             GTK_WIDGET(gtk_builder_get_object(builder, "viewer"));
     g_signal_connect_swapped(rdp_viewer_window, "delete-event",
                              G_CALLBACK(rdp_viewer_window_deleted_cb), rdp_viewer_data);
+    //g_signal_connect(rdp_viewer_window, "map-event", G_CALLBACK(rdp_viewer_event_on_mapped), ex_context);
 
     rdp_viewer_data->top_menu = GTK_WIDGET(gtk_builder_get_object(builder, "top-menu"));
 
@@ -362,6 +368,12 @@ RdpViewerData *rdp_viewer_window_create(ExtendedRdpContext *ex_rdp_context, UINT
     gtk_window_set_position(GTK_WINDOW(rdp_viewer_window), GTK_WIN_POS_CENTER);
     //gtk_window_resize(GTK_WINDOW(rdp_viewer_window), optimal_image_width, optimal_image_height);
     gtk_widget_show_all(rdp_viewer_window);
+
+//    // turn on keyboard grab
+//    GdkDisplay *display = gtk_widget_get_display(rdp_viewer_window);
+//    GdkSeat *seat = gdk_display_get_default_seat(display);
+//    rdp_viewer_data->ggs = gdk_seat_grab(seat, gtk_widget_get_window(rdp_viewer_window),
+//                        GDK_SEAT_CAPABILITY_ALL, TRUE, NULL, NULL, NULL, NULL);
 
     rdp_viewer_data->g_timeout_id = g_timeout_add(40, (GSourceFunc)gtk_update_v2, rdp_viewer_data->rdp_display);
     //gtk_widget_add_tick_callback(rdp_display, gtk_update, context, NULL);
