@@ -8,6 +8,7 @@ from common.utils import cancel_async_task
 from common.veil_handlers import BaseHandler
 from common.veil_errors import HttpError
 
+from settings import REDIS_PORT, REDIS_THIN_CLIENT_CHANNEL, REDIS_PASSWORD, REDIS_DB
 from auth.utils.veil_jwt import jwtauth
 from auth.models import User
 from pool.models import Pool, Vm, AutomatedPool
@@ -22,8 +23,30 @@ _ = lang_init()
 
 
 @jwtauth
-class PoolHandler(BaseHandler, ABC):
+class RedisInfoHandler(BaseHandler, ABC):
     async def get(self):
+        """
+        Данные для подключения тонких клиентов к Redis
+        {
+            "data": {
+                "port": 6379,
+                "password": "veil",
+                "channel": "TC_CHANNEL"
+                "db": 0:
+            }
+        }
+        """
+        redis_info = dict(port=REDIS_PORT, channel=REDIS_THIN_CLIENT_CHANNEL, password=REDIS_PASSWORD, db=REDIS_DB)
+        response = dict(data=redis_info)
+        return self.finish(response)
+
+
+@jwtauth
+class PoolHandler(BaseHandler, ABC):
+
+    async def get(self):
+        """Возвращает все пулы пользователя"""
+
         username = self.get_current_user()
         user = await User.get_object(extra_field_name='username', extra_field_value=username)
         pools = await user.pools
@@ -35,6 +58,12 @@ class PoolHandler(BaseHandler, ABC):
 class PoolGetVm(BaseHandler, ABC):
 
     async def post(self, pool_id):  # remote_protocol: rdp/spice
+
+        # Проверяем лимит виртуальных машин
+
+        if Pool.thin_client_limit_exceeded():
+            response = {'errors': [{'message': _('Thin client limit exceeded.')}]}
+            return await self.finish(response)
 
         # Сочитание pool id и username уникальное, т.к. пользователь не может иметь больше одной машины в пуле
 

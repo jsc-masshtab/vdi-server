@@ -7,8 +7,10 @@ from asyncpg.exceptions import UniqueViolationError
 
 from common.veil_errors import VmCreationError, PoolCreationError, HttpError, SimpleError
 from common.veil_client import VeilHttpClient
+from auth.license.utils import License
 from settings import VEIL_WS_MAX_TIME_TO_WAIT
 from database import db, Status, EntityType
+from redis_broker import get_thin_clients_count
 from controller.models import Controller
 from pool.pool_task_manager import pool_task_manager
 
@@ -100,6 +102,11 @@ class Pool(db.Model):
         template_id = await AutomatedPool.select('template_id').where(
             AutomatedPool.id == self.id).gino.scalar()
         return template_id
+
+    @classmethod
+    def thin_client_limit_exceeded(cls):
+        current_license = License()
+        return get_thin_clients_count() >= current_license.thin_clients_limit
 
     @staticmethod
     def build_ordering(query, ordering=None):

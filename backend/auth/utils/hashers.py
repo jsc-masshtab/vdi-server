@@ -137,8 +137,7 @@ class BasePasswordHasher:
             try:
                 module = importlib.import_module(mod_path)
             except ImportError as e:
-                raise ValueError(_("Couldn't load %r algorithm library: %s") %
-                                 (self.__class__.__name__, e))
+                raise ValueError(_("Couldn't load {} algorithm library: {}").format(self.__class__.__name__, e))
             return module
         raise ValueError(_("Hasher %r doesn't specify a library attribute") %
                          self.__class__.__name__)

@@ -11,6 +11,12 @@ services:
     container_name: vdi-postgres-alembic
     volumes:
       - ./postgres/:/docker-entrypoint-initdb.d/
+  redis:
+    image: redis
+    container_name: vdi-redis
+    ports:
+      - 6379:6379
+    command: redis-server --requirepass 4NZ7GpHn4IlshPhb
 #  frontend-dev:
 #    image: teracy/angular-cli
 #    ports:

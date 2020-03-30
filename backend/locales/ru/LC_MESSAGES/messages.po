@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2020-03-26 18:22+0300\n"
+"POT-Creation-Date: 2020-03-30 17:49+0300\n"
 "PO-Revision-Date: 2020-03-16 17:13+0300\n"
 "Last-Translator: Emil <e.gareev@mashtab.org>\n"
 "Language-Team: Russian\n"
@@ -17,31 +17,48 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
 
-#: app.py:107
+#: app.py:115
 msgid "Tornado VDI started"
 msgstr "Tornado VDI запущен"
 
-#: app.py:110
+#: app.py:119
 msgid "Auth is disabled. Enable on production!"
 msgstr "Используйте выключенную авторизацию только в режиме отладки!"
 
-#: app.py:125
+#: app.py:124
+msgid "The license is expired. Some functions will be blocked. Contact your dealer."
+msgstr "Лицензия истекла. Некоторые функции будут недоступны."
+
+#: app.py:126
+msgid "License information:"
+msgstr "Информация о лицензии:"
+
+#: app.py:127
+msgid "License status: {}, expiration time: {}, thin clients limit: {}"
+msgstr "Статус лицензии: {}, дата истечения: {}, лимит тонких клиентов: {}"
+
+#: app.py:145
 msgid "Stopping Tornado VDI"
 msgstr "Остановка Tornado VDI"
 
-#: app.py:127
+#: app.py:147
+#, fuzzy
+msgid "Stopping redis"
+msgstr "Остановка GINO"
+
+#: app.py:150
 msgid "Stopping resources_monitor_manager"
 msgstr "Остановка менеджера мониторинга ресурсов"
 
-#: app.py:130
+#: app.py:153
 msgid "Stopping GINO"
 msgstr "Остановка GINO"
 
-#: app.py:133
+#: app.py:156
 msgid "Stopping IOLoop"
 msgstr "Остановка IOLoop"
 
-#: app.py:136
+#: app.py:159
 msgid "Tornado VDI stopped"
 msgstr "Tornado VDI остановлен"
 
@@ -197,6 +214,10 @@ msgstr ". IP: {ip}"
 msgid "Demo version"
 msgstr "Демонстрационная версия"
 
+#: auth/license/handlers.py:39
+msgid "Fail to open license key file."
+msgstr "Не удалось открыть лицензионный ключ."
+
 #: auth/models.py:98
 msgid "User {} roles: {}"
 msgstr "Роли пользователя {}: {}"
@@ -285,24 +306,24 @@ msgid "Scpecify id or username."
 msgstr "Укажите ID или имя пользователя."
 
 #: auth/utils/hashers.py:140
-#, python-format
-msgid "Couldn't load %r algorithm library: %s"
+#, fuzzy
+msgid "Couldn't load {} algorithm library: {}"
 msgstr "Не может загрузиться %r библиотека алгоритмов: %s"
 
-#: auth/utils/hashers.py:143
+#: auth/utils/hashers.py:142
 #, python-format
 msgid "Hasher %r doesn't specify a library attribute"
 msgstr "Hasher %r не указывает атрибут библиотеки"
 
-#: auth/utils/hashers.py:152
+#: auth/utils/hashers.py:151
 msgid "Subclasses of BasePasswordHasher must provide a verify() method"
 msgstr "Подклассы BasePasswordHasher должны предоставлять метод verify()"
 
-#: auth/utils/hashers.py:161
+#: auth/utils/hashers.py:160
 msgid "Subclasses of BasePasswordHasher must provide an encode() method"
 msgstr "Подклассы BasePasswordHasher должны предоставлять метод encode()"
 
-#: auth/utils/hashers.py:186
+#: auth/utils/hashers.py:185
 msgid "Subclasses of BasePasswordHasher should provide a harden_runtime() method"
 msgstr "Подклассы BasePasswordHasher должны предоставлять метод harden_runtime()"
 
@@ -516,137 +537,137 @@ msgstr "Нет такого события."
 msgid "Journal is clear."
 msgstr "Журнал очищен."
 
-#: pool/models.py:138
+#: pool/models.py:145
 msgid "Incorrect sorting option {}."
 msgstr "Неверный параметр сортировки {}."
 
-#: pool/models.py:352 pool/models.py:374
+#: pool/models.py:359 pool/models.py:381
 msgid "Pool already has permission."
 msgstr "Пул уже имеет разрешение."
 
-#: pool/models.py:396
+#: pool/models.py:403
 msgid "Pool already has role."
 msgstr "Пул уже имеет роль."
 
-#: pool/models.py:429
+#: pool/models.py:436
 msgid "Controller {} not found."
 msgstr "Контроллер {} не найден."
 
-#: pool/models.py:442
+#: pool/models.py:449
 msgid "Pool has VMs. Please completely remove."
 msgstr "У пула виртуальных машин есть виртуальные машины. Выполните полное удаление."
 
-#: pool/models.py:445
+#: pool/models.py:452
 #, python-brace-format
 msgid "Removal pool of desktops {verbose_name} is done."
 msgstr "Выполнено удаление пула рабочих столов {verbose_name}."
 
-#: pool/models.py:461
+#: pool/models.py:468
 #, python-brace-format
 msgid "Complete removal pool of desktops {verbose_name} is done."
 msgstr "Выполнено полнлое удаление пула рабочих столов {verbose_name}."
 
-#: pool/models.py:519
+#: pool/models.py:526
 msgid "Create Pool"
 msgstr "Создание пула"
 
-#: pool/models.py:526
+#: pool/models.py:533
 msgid "Create StaticPool"
 msgstr "Создание статического пула"
 
-#: pool/models.py:627
+#: pool/models.py:634
 msgid "Create Pool {}"
 msgstr "Создание пула {}"
 
-#: pool/models.py:634
+#: pool/models.py:641
 msgid "Create AutomatedPool {}"
 msgstr "Создание автоматического пула {}"
 
-#: pool/models.py:665
+#: pool/models.py:672
 msgid "Update Pool values for AutomatedPool {}"
 msgstr "Обновление значений пула для автоматического пула {}"
 
-#: pool/models.py:679
+#: pool/models.py:686
 msgid "Update AutomatedPool values for {}"
 msgstr "Обновление значений автоматического пула для {}"
 
-#: pool/models.py:705
+#: pool/models.py:712
 msgid "add_domain {}, attempt № {}, of {}"
 msgstr "Добавление домена {}, попытка № {} из {}"
 
-#: pool/models.py:709
+#: pool/models.py:716
 msgid "VM creation task id: {}"
 msgstr "ID задачи создания виртуальной машины: {}"
 
-#: pool/models.py:713
+#: pool/models.py:720
 msgid "Fail to create VM on ECP. Re-run."
 msgstr "Ошибка создания виртуальной машины на ECP. Перезапустите."
 
-#: pool/models.py:719
+#: pool/models.py:726
 msgid "Subscribe to ws messages."
 msgstr "Подпишитесь на сообщения ws."
 
-#: pool/models.py:724
+#: pool/models.py:731
 msgid "Wait for result."
 msgstr "Ожидайте результата."
 
-#: pool/models.py:730
+#: pool/models.py:737
 msgid "Create virtual machine"
 msgstr "Создание виртуальной машины."
 
-#: pool/models.py:763
+#: pool/models.py:770
 msgid "Could not get the response about result of creation VM on ECP by WS. Task status check."
 msgstr "Не удалось получить ответ о результате создания ВМ на ECP по WS. Проверим статус задачи."
 
-#: pool/models.py:767
+#: pool/models.py:774
 msgid "Probably task is not done. Check VM status."
 msgstr "Вероятно, задание не выполнено. Проверьте состояние ВМ."
 
-#: pool/models.py:792
+#: pool/models.py:799
 msgid "Error with create VM {} was {} times."
 msgstr "Ошибка с созданием виртуальной машины {} была {} раз."
 
-#: pool/models.py:804
+#: pool/models.py:811
 msgid "Add {} initial vms for pool {}. Controller address: {}"
 msgstr "Добавление {} начальных виртуальных машин для пула {}. Адрес контроллера: {}."
 
-#: pool/models.py:811
+#: pool/models.py:818
 msgid "Pool {} os type is: {}"
 msgstr "Операционная система пула {}: {}"
 
-#: pool/models.py:814
+#: pool/models.py:821
 msgid "Automated pool creation started"
 msgstr "Автоматическое создание пула началось"
 
-#: pool/models.py:825
+#: pool/models.py:832
 msgid "Automated pool creation. Created {} VMs from {}"
 msgstr "Автоматическое создание пула. Создание {} виртуальных машин из {}"
 
-#: pool/models.py:844
+#: pool/models.py:851
 msgid "Can't create VM"
 msgstr "Невозможно создать виртуальную машину"
 
-#: pool/models.py:850
+#: pool/models.py:857
 msgid "Automated pool successfully created. Initial VM amount {}"
 msgstr "Автоматический пул успешно создан. Начальное количество виртуальных машин {}"
 
-#: pool/models.py:853
+#: pool/models.py:860
 msgid "Automated pool created with errors. VMs created: {}. Required: {}"
 msgstr "Автоматический пул создан с ошибками. Созданные виртуальные машины: {}. Необходимо: {}."
 
-#: pool/models.py:870
+#: pool/models.py:877
 msgid "Could not create the required number of machines."
 msgstr "Не удалось создать необходимое количество машин."
 
-#: pool/models.py:919
+#: pool/models.py:926
 msgid "VM creating error:"
 msgstr "Ошибка создания виртуальной машины:"
 
-#: pool/models.py:925
+#: pool/models.py:932
 msgid "Delete VMs for AutomatedPool {}"
 msgstr "Удаление виртуальных машин для автоматического пула {}"
 
-#: pool/models.py:928
+#: pool/models.py:935
 msgid "Calling soft delete for vm {}"
 msgstr "Вызов мягкого удаления для виртуальной машины {}"
 
@@ -847,30 +868,34 @@ msgid "Invalid credeintials (ldap)"
 msgstr "Неверные полномочия (ldap)"
 
 #: thin_client_api/handlers.py:45
+msgid "Thin client limit exceeded."
+msgstr "Превышен лимит тонких клиентов."
+
+#: thin_client_api/handlers.py:54
 msgid "Pool not found."
 msgstr "Пул не найден."
 
-#: thin_client_api/handlers.py:56
+#: thin_client_api/handlers.py:65
 msgid "User does not have permission to use pool."
 msgstr "Пользователь не имеет разрешения на использование пула."
 
-#: thin_client_api/handlers.py:89
+#: thin_client_api/handlers.py:98
 msgid "Pool has not free machines"
 msgstr "В пуле нет свободных машин"
 
-#: thin_client_api/handlers.py:116
+#: thin_client_api/handlers.py:125
 msgid "VM does not support RDP"
 msgstr "Виртуальная машина не поддерживает RDP"
 
-#: thin_client_api/handlers.py:139
+#: thin_client_api/handlers.py:148
 msgid "User {} not found."
 msgstr "Пользователь {} не найден."
 
-#: thin_client_api/handlers.py:142
+#: thin_client_api/handlers.py:151
 msgid "There is no pool with id: {}"
 msgstr "Отсутствует пул с ID: {}."
 
-#: thin_client_api/handlers.py:146
+#: thin_client_api/handlers.py:155
 msgid "User {} has no VM on pool {}"
 msgstr "У пользователя {} нет виртуальной машины в пуле {}"
 
