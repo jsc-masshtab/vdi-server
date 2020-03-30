@@ -9,9 +9,11 @@ import tornado.options
 
 from settings import DB_NAME, DB_PASS, DB_USER, DB_PORT, DB_HOST, WS_PING_INTERVAL, WS_PING_TIMEOUT, AUTH_ENABLED
 from database import db
+from redis_broker import REDIS_POOL
 from common.veil_handlers import VdiTornadoGraphQLHandler
 
 from journal.event.schema import event_schema
+from auth.license.utils import License
 from auth.user_schema import user_schema
 from auth.group_schema import group_schema
 from auth.authentication_directory.auth_dir_schema import auth_dir_schema
@@ -105,11 +107,26 @@ def init_gino():
     IOLoop.current().run_sync(lambda: start_gino())
 
 
+def init_license():
+    return License()
+
+
 def start_server():
     log.name(_('Tornado VDI started'))
 
     if not AUTH_ENABLED:
+        # TODO: change to WARNING
         log.name(_('Auth is disabled. Enable on production!'))
+
+    vdi_license = init_license()
+    if vdi_license.expired:
+        # TODO: change to WARNING
+        log.name(_('The license is expired. Some functions will be blocked. Contact your dealer.'))
+
+    log.name(_('License status: {}, expiration time: {}, thin clients limit: {}').format(
+        not vdi_license.expired,
+        vdi_license.expiration_date,
+        vdi_license.thin_clients_limit))
 
     app = make_app()
     init_gino()
@@ -125,6 +142,9 @@ def exit_handler(sig, frame):
 
 async def shutdown_server():
     log.name(_('Stopping Tornado VDI'))
+
+    log.name(_('Stopping redis'))
+    REDIS_POOL.disconnect()
 
     log.name(_('Stopping resources_monitor_manager'))
     await resources_monitor_manager.stop()

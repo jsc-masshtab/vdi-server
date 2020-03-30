@@ -28,6 +28,7 @@ cached-property = "==1.5.1"  # cached-property decorator
 async_generator = "==1.10"  # classy_async
 cryptography = "==2.8"  # controller password encryption
 python-ldap = "==3.2.0"  # ldap integration
+redis = "==3.4.1"  # thin client message broker
 
 [requires]
 python_version = "3.5.3"

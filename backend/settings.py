@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 """Project settings."""
+import os
 # TODO: секретные штуки перенести в переменные окружения или более модные способы.
 
 
@@ -19,10 +20,10 @@ FERNET_KEY = b'LRzSxWyxqKD4p2BR11-nVmghV67AVmQ4CxYi__S_OH8='
 
 # Auth settings
 # -----------------------------
-# Включает проверку токенов, стандартный интерфейс GpaphQL становится недоступным
-# AUTH_ENABLED = True
-# Отключает проверку токенов, делает доступным стандартный интерфейс GpaphQL
-AUTH_ENABLED = False
+# Включает проверку токенов, стандартный интерфейс GraphQL становится недоступным
+AUTH_ENABLED = True
+# Отключает проверку токенов, делает доступным стандартный интерфейс GraphQL
+# AUTH_ENABLED = False
 
 # JWT Options
 # -----------------------------
@@ -64,7 +65,20 @@ LDAP_TIMEOUT = 5
 
 # File system paths
 # -----------------------------
-# TODO: Актуализировать путь хранения ключей
-# CONF_PATH = '/opt/veil-vdi/devops/conf/license'
+
 # Относительные пути для локальной разработки
-CONF_PATH = '../devops/conf/license'
+KEYS_PATH = '../devops/conf/license'
+
+SERIAL_KEY_FNAME = 'serial.key'
+PRIVATE_PEM_FNAME = 'broker_private.pem'
+SERIAL_KEY_FPATH = os.path.join(KEYS_PATH, SERIAL_KEY_FNAME)
+PRIVATE_PEM_FPATH = os.path.join(KEYS_PATH, PRIVATE_PEM_FNAME)
+
+# Redis settings
+# -----------------------------
+REDIS_PORT = 6379
+REDIS_DB = 0
+REDIS_PASSWORD = '4NZ7GpHn4IlshPhb'
+REDIS_TIMEOUT = 5
+REDIS_THIN_CLIENT_CHANNEL = 'TC_CHANNEL'
+REDIS_URL = 'redis://:{}@localhost:{}/{}'.format(REDIS_PASSWORD, REDIS_PORT, REDIS_DB)
