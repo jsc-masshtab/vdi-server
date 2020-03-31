@@ -5,11 +5,12 @@ from sqlalchemy import desc, and_, text
 
 from database import db
 from common.veil_decorators import superuser_required
-from event.models import Event, EventReadByUser, EventEntity
+from journal.event.models import Event, EventReadByUser, EventEntity
 from auth.models import Entity
 from auth.user_schema import User, UserType
 
 from languages import lang_init
+from journal.journal import Log as log
 
 
 _ = lang_init()
@@ -189,7 +190,7 @@ class RemoveAllEventsMutation(graphene.Mutation):
     @superuser_required
     async def mutate(self, _info):
         await Event.delete.gino.status()
-        await Event.create_info(_("Journal is clear."))
+        await log.info(_("Journal is clear."))
         return RemoveAllEventsMutation(ok=True)
 
 

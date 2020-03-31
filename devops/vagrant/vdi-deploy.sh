@@ -14,6 +14,14 @@ curl -sL https://deb.nodesource.com/setup_10.x | bash
 apt-get install -y nodejs
 
 #------------------------------
+echo "Setting up redis"
+
+apt-get install -y redis-server
+systemctl enable redis-server.service
+echo 'requirepass 4NZ7GpHn4IlshPhb' >> /etc/redis/redis.conf
+systemctl restart redis-server
+
+#------------------------------
 echo "Setting up database"
 
 sed -i 's/peer/trust/g' /etc/postgresql/9.6/main/pg_hba.conf

@@ -3,7 +3,6 @@
 #  при удалении родительской сущности (нет явной связи, сами не удалятся).
 
 import uuid
-from functools import partialmethod
 
 from sqlalchemy import and_
 from sqlalchemy.dialects.postgresql import UUID
@@ -101,17 +100,21 @@ class Event(db.Model):
 
     @classmethod
     async def create_event(cls, msg, event_type=TYPE_INFO, description=None, user='system', entity_dict=None):
+        from journal.log.logging import Logging
         msg_dict = dict(event_type=event_type,
                         message=msg,
                         user=user,
                         event='event',
                         resource=EVENTS_SUBSCRIPTION)
+        if event_type == 0:
+            Logging.logger_application_info(msg)
+        elif event_type == 1:
+            Logging.logger_application_warning(msg)
+        elif event_type == 2:
+            Logging.logger_application_error(msg)
+
         internal_event_monitor.signal_event_2(msg_dict)
         await cls.soft_create(event_type, msg, description, user, entity_dict)
-
-    create_info = partialmethod(create_event, event_type=TYPE_INFO)
-    create_warning = partialmethod(create_event, event_type=TYPE_WARNING)
-    create_error = partialmethod(create_event, event_type=TYPE_ERROR)
 
 
 class EventEntity(db.Model):

@@ -1,6 +1,5 @@
 import graphene
 import json
-import logging
 
 from tornado.httpclient import HTTPClientError
 from graphql import GraphQLError
@@ -19,11 +18,10 @@ from auth.user_schema import UserType
 from auth.models import User
 
 from languages import lang_init
+from journal.journal import Log as log
 
 
 _ = lang_init()
-
-application_log = logging.getLogger('tornado.application')
 
 
 class VmState(graphene.Enum):
@@ -213,7 +211,7 @@ class VmQuery(graphene.ObjectType):
 
     @superuser_required
     async def resolve_template(self, _info, id, controller_address):
-        application_log.debug(_('GraphQL: Resolving template info'))
+        log.debug(_('GraphQL: Resolving template info'))
         vm_http_client = await VmHttpClient.create(controller_address, id)
         try:
             veil_info = await vm_http_client.info()
@@ -283,7 +281,7 @@ class VmQuery(graphene.ObjectType):
     @superuser_required
     async def resolve_vms(self, _info, controller_ip=None, cluster_id=None, node_id=None, datapool_id=None,
                           get_vms_in_pools=False, ordering=None):
-        application_log.debug(_('GraphQL: Resolving VMs'))
+        log.debug(_('GraphQL: Resolving VMs'))
         # get veil vm data list
         if controller_ip:
             vm_http_client = await VmHttpClient.create(controller_ip, '')
@@ -295,7 +293,7 @@ class VmQuery(graphene.ObjectType):
             vm_veil_data_list = await VmQuery.filter_domains_by_cluster(vm_veil_data_list, controller_ip, cluster_id)
 
             vm_type_list = VmQuery.veil_vm_data_to_graphene_type_list(vm_veil_data_list, controller_ip)
-            application_log.debug(_('GraphQL: VM type list:'))
+            log.debug(_('GraphQL: VM type list:'))
 
         # if controller address is not provided then take all vms from all controllers
         else:
@@ -356,12 +354,12 @@ class VmQuery(graphene.ObjectType):
                 raise SimpleError(_('Incorrect sort parameter'))
             vm_type_list = sorted(vm_type_list, key=sort_lam, reverse=reverse)
 
-        application_log.debug('vm_type_list_count {}'.format(len(vm_type_list)))
+        log.debug('vm_type_list_count {}'.format(len(vm_type_list)))
         return vm_type_list
 
     @staticmethod
     def veil_template_data_to_graphene_type(template_veil_data, controller_address):
-        application_log.debug(template_veil_data)
+        log.debug(template_veil_data)
         template_type = TemplateType(id=template_veil_data['id'], verbose_name=template_veil_data['verbose_name'],
                                      veil_info=template_veil_data)
         template_type.controller = ControllerType(address=controller_address)

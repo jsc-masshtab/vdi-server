@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 from abc import ABC
-import logging
 import asyncio
 import time
 from typing import Any
@@ -15,11 +14,11 @@ from resources_monitoring.resources_monitor_manager import resources_monitor_man
 from resources_monitoring.internal_event_monitor import internal_event_monitor
 
 from languages import lang_init
+from journal.journal import Log as log
 
 
 _ = lang_init()
 
-application_log = logging.getLogger('tornado.application')
 # TODO: auth check?
 
 # class ClientManager:
@@ -73,23 +72,23 @@ class VdiFrontWsHandler(websocket.WebSocketHandler, AbstractSubscriptionObserver
         AbstractSubscriptionObserver.__init__(self)
 
         self._send_messages_flag = False
-        # application_log.debug(_('init VdiFrontWsHandler'))
+        # log.debug(_('init VdiFrontWsHandler'))
 
     def __del__(self):
-        application_log.debug(_('destructor VdiFrontWsHandler'))
+        log.debug(_('destructor VdiFrontWsHandler'))
 
     # todo: security problems. implement proper origin checking
     def check_origin(self, origin):
         return True
 
     async def open(self):
-        # application_log.debug(_('WebSocket opened'))
+        # log.debug(_('WebSocket opened'))
         self._start_message_sending()
         resources_monitor_manager.subscribe(self)
         internal_event_monitor.subscribe(self)
 
     async def on_message(self, message):
-        application_log.debug(_('Message: ').format(message))
+        log.debug(_('Message: {}').format(message))
         response_dict = {'msg_type': 'control', 'error': False}
         # determine if message contains subscription command ('delete /domains/' for example)
         try:
@@ -102,7 +101,7 @@ class VdiFrontWsHandler(websocket.WebSocketHandler, AbstractSubscriptionObserver
             return
         # check if allowed
         if subscription_source not in VDI_FRONT_ALLOWED_SUBSCRIPTIONS_LIST:
-            application_log.error(_('Unknown subscription source'))
+            log.error(_('Unknown subscription source'))
             response_dict['error'] = True
             await self.write_msg(response_dict)
             return
@@ -113,11 +112,11 @@ class VdiFrontWsHandler(websocket.WebSocketHandler, AbstractSubscriptionObserver
             response_dict['error'] = False
         # if 'add' cmd and subscribed then do nothing
         elif subscription_cmd == SubscriptionCmd.add and subscription_source in self._subscriptions:
-            application_log.debug(_('already subscribed'))
+            log.debug(_('already subscribed'))
             response_dict['error'] = True
         # if 'delete' cmd and not subscribed  then do nothing
         elif subscription_cmd == SubscriptionCmd.delete and subscription_source not in self._subscriptions:
-            application_log.debug(_('not subscribed'))
+            log.debug(_('not subscribed'))
             response_dict['error'] = True
         # if 'delete' cmd and subscribed then unsubscribe
         elif subscription_cmd == SubscriptionCmd.delete and subscription_source in self._subscriptions:
@@ -128,7 +127,7 @@ class VdiFrontWsHandler(websocket.WebSocketHandler, AbstractSubscriptionObserver
         await self.write_msg(response_dict)
 
     def on_close(self):
-        application_log.debug(_('WebSocket closed'))
+        log.debug(_('WebSocket closed'))
         resources_monitor_manager.unsubscribe(self)
         internal_event_monitor.unsubscribe(self)
 
@@ -160,7 +159,7 @@ class VdiFrontWsHandler(websocket.WebSocketHandler, AbstractSubscriptionObserver
         try:
             await self.write_message(msg)
         except tornado.websocket.WebSocketClosedError:
-            application_log.debug(_('Write error'))
+            log.debug(_('Write error'))
 
 
 class WaiterSubscriptionObserver(AbstractSubscriptionObserver):
@@ -196,7 +195,7 @@ class WaiterSubscriptionObserver(AbstractSubscriptionObserver):
                 json_message = self._message_queue.get_nowait()
             except asyncio.QueueEmpty:
                 continue
-            # application_log.debug('WS message: {}'.format(json_message))
+            # log.debug('WS message: {}'.format(json_message))
             if predicate(json_message):
                 return True
 

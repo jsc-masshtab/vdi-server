@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 import uuid
-import logging
 
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.sql import func, text
@@ -10,15 +9,12 @@ from asyncpg.exceptions import UniqueViolationError
 
 from database import db, AbstractSortableStatusModel, Role, EntityType
 from auth.utils import hashers
-from event.models import Event
 from common.veil_errors import SimpleError
 
 from languages import lang_init
-
+from journal.journal import Log as log
 
 _ = lang_init()
-
-application_log = logging.getLogger('tornado.application')
 
 
 class Entity(db.Model):
@@ -93,23 +89,23 @@ class User(AbstractSortableStatusModel, db.Model):
     async def roles(self):
         if self.is_superuser:
             all_roles_set = set(Role)  # noqa
-            # application_log.debug(_('User: {} full roles: {}').format(self.username, all_roles_set))
+            # log.debug(_('User: {} full roles: {}').format(self.username, all_roles_set))
             return all_roles_set
 
         user_roles = await UserRole.query.where(UserRole.user_id == self.id).gino.all()
         all_roles_list = [role_type.role for role_type in user_roles]
 
-        application_log.debug(_('User {} roles: {}').format(self.username, all_roles_list))
+        log.debug(_('User {} roles: {}').format(self.username, all_roles_list))
 
         user_groups = await self.assigned_groups
         for group in user_groups:
             group_roles = await group.roles
-            application_log.debug(_('Group {} roles: {}').format(group.verbose_name, group_roles))
+            log.debug(_('Group {} roles: {}').format(group.verbose_name, group_roles))
             all_roles_list += [role_type.role for role_type in group_roles]
 
         roles_set = set(all_roles_list)
         # Сейчас роли будет в случайноп порядке.
-        # application_log.debug(_('User: {} full roles: {}').format(self.username, roles_set))
+        # log.debug(_('User: {} full roles: {}').format(self.username, roles_set))
         return roles_set
 
     @property
@@ -169,7 +165,7 @@ class User(AbstractSortableStatusModel, db.Model):
         operation_status = await query.gino.status()
 
         info_message = _('User {username} has been activated.').format(username=self.username)
-        await Event.create_info(info_message, entity_dict=self.entity)
+        await log.info(info_message, entity_dict=self.entity)
 
         return operation_status
 
@@ -186,7 +182,7 @@ class User(AbstractSortableStatusModel, db.Model):
         operation_status = await query.gino.status()
 
         info_message = _('User {username} has been deactivated.').format(username=self.username)
-        await Event.create_info(info_message, entity_dict=self.entity)
+        await log.info(info_message, entity_dict=self.entity)
 
         return operation_status
 
@@ -209,7 +205,7 @@ class User(AbstractSortableStatusModel, db.Model):
             User.id == self.id).gino.status()
 
         info_message = _('Password of user {username} has been changed.').format(username=self.username)
-        await Event.create_info(info_message, entity_dict=self.entity)
+        await log.info(info_message, entity_dict=self.entity)
 
         return user_status
 
@@ -227,7 +223,7 @@ class User(AbstractSortableStatusModel, db.Model):
 
         user_role = 'Superuser' if is_superuser else 'User'
         info_message = _('{role} "{username}" created.').format(username=username, role=user_role)
-        await Event.create_info(info_message, entity_dict=user_obj.entity)
+        await log.info(info_message, entity_dict=user_obj.entity)
 
         return user_obj
 
@@ -251,7 +247,7 @@ class User(AbstractSortableStatusModel, db.Model):
 
         if user_kwargs.get('is_superuser'):
             info_message = _('User {username} has become a superuser.').format(username=user.username)
-            await Event.create_info(info_message, entity_dict=user.entity)
+            await log.info(info_message, entity_dict=user.entity)
 
         return user
 
@@ -272,7 +268,7 @@ class User(AbstractSortableStatusModel, db.Model):
             username=username,
             ip=ip)
 
-        await Event.create_info(info_message, entity_dict=user.entity)
+        await log.info(info_message, entity_dict=user.entity)
         return True
 
     @classmethod
@@ -289,7 +285,7 @@ class User(AbstractSortableStatusModel, db.Model):
         await UserJwtInfo.delete.where(UserJwtInfo.user_id == user.id).gino.status()
 
         info_message = _('User {username} has logged out.').format(username=username)
-        await Event.create_info(info_message, entity_dict=user.entity)
+        await log.info(info_message, entity_dict=user.entity)
         return True
 
 
@@ -378,7 +374,7 @@ class Group(AbstractSortableStatusModel, db.Model):
 
             user = await User.get(user_id)
             info_message = _('User {} has been included to group {}.').format(user.username, self.verbose_name)
-            await Event.create_info(info_message, entity_dict=self.entity)
+            await log.info(info_message, entity_dict=self.entity)
             return user_group
         except UniqueViolationError:
             raise SimpleError(_('User {} is already in group {}').format(user_id, self.id))
@@ -389,7 +385,7 @@ class Group(AbstractSortableStatusModel, db.Model):
                 await self.add_user(user)
 
     async def remove_users(self, user_id_list):
-        application_log.debug(_('Removing users: {} from group {}').format(user_id_list, self.verbose_name))
+        log.debug(_('Removing users: {} from group {}').format(user_id_list, self.verbose_name))
         return await UserGroup.delete.where(
             (UserGroup.user_id.in_(user_id_list)) & (UserGroup.group_id == self.id)).gino.status()
 
@@ -397,7 +393,7 @@ class Group(AbstractSortableStatusModel, db.Model):
         try:
             group_role = await GroupRole.create(group_id=self.id, role=role)
             info_message = _('Role {} has been set to group {}.').format(role, self.verbose_name)
-            await Event.create_info(info_message, entity_dict=self.entity)
+            await log.info(info_message, entity_dict=self.entity)
 
         except UniqueViolationError:
             raise SimpleError(_('Group {} has already role {}').format(self.id, role))

@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 import uuid
-import logging
 import re
 import asyncio
 
@@ -14,11 +13,10 @@ from vm.veil_client import VmHttpClient
 from auth.models import Entity, EntityRoleOwner, User
 
 from languages import lang_init
+from journal.journal import Log as log
 
 
 _ = lang_init()
-
-application_log = logging.getLogger('tornado.application')
 
 
 class Vm(db.Model):
@@ -76,7 +74,7 @@ class Vm(db.Model):
     @classmethod
     async def create(cls, pool_id, template_id, verbose_name, id=None,
                      created_by_vdi=False, broken=False):
-        application_log.debug(_('Create VM {} on VDI DB.').format(verbose_name))
+        log.debug(_('Create VM {} on VDI DB.').format(verbose_name))
         try:
             vm = await super().create(id=id,
                                       pool_id=pool_id,
@@ -85,7 +83,7 @@ class Vm(db.Model):
                                       created_by_vdi=created_by_vdi,
                                       broken=broken)
         except Exception as E:
-            application_log.error(E)
+            # log.error(E)
             raise VmCreationError(E)
         return vm
 
@@ -97,8 +95,8 @@ class Vm(db.Model):
                 try:
                     await vm_http_client.remove_vm()
                 except HttpError as http_error:
-                    application_log.warning(_('Fail to remove VM {} from ECP: ').format(self.verbose_name, http_error))
-                application_log.debug(_('Vm {} removed from ECP.').format(self.verbose_name))
+                    log.warning(_('Fail to remove VM {} from ECP: ').format(self.verbose_name, http_error))
+                log.debug(_('Vm {} removed from ECP.').format(self.verbose_name))
         return await self.delete()
 
     # TODO: очевидное дублирование однотипного кода. Переселить это все в универсальный метод
@@ -158,7 +156,7 @@ class Vm(db.Model):
                    node_id: str, create_thin_clones: bool, domain_index: int):
         """Copy existing VM template for new VM create."""
 
-        application_log.debug(
+        log.debug(
             'VmHttpClient: controller_ip: {}, domain_id: {}, verbose_name: {}'.format(controller_ip,
                                                                                       domain_id,
                                                                                       verbose_name))
@@ -168,47 +166,46 @@ class Vm(db.Model):
         while True:
             inner_retry_count += 1
             try:
-                application_log.info(
-                    _('Trying to create VM on ECP with verbose_name={}').format(verbose_name))
+                log.info(_('Trying to create VM on ECP with verbose_name={}').format(verbose_name))
 
                 response = await client.copy_vm(node_id=node_id,
                                                 datapool_id=datapool_id,
                                                 domain_name=verbose_name,
                                                 create_thin_clones=create_thin_clones)
-                application_log.debug(_('Request to create VM sent without surprise. Leaving while.'))
+                log.debug(_('Request to create VM sent without surprise. Leaving while.'))
                 break
             except BadRequest as http_error:
                 # TODO: Обработка ошибок это хардкод только для русской версии контроллера. Нужно что-то информативнее.
                 ecp_errors = http_error.errors.get('errors')
                 ecp_detail_l = ecp_errors.get('detail') if ecp_errors else None
                 ecp_detail = ecp_detail_l[0] if isinstance(ecp_detail_l, list) else None
-                application_log.debug(_('ECP error: {}').format(ecp_errors))
+                log.debug(_('ECP error: {}').format(ecp_errors))
                 if ecp_errors and 'verbose_name' in ecp_errors:
-                    application_log.warning(_('Bad domain name {}').format(verbose_name))
+                    log.warning(_('Bad domain name {}').format(verbose_name))
                     domain_index_old = domain_index
                     domain_index = domain_index + 1
                     verbose_name = re.sub(r'-{}$'.format(domain_index_old), '-{}'.format(domain_index), verbose_name)
                 elif ecp_errors and ecp_detail and ('Недостаточно свободного места в пуле данных' in ecp_detail or 'not enough free space on data pool' in ecp_detail):
-                    application_log.info(_('Controller has not free space for creating new VM.'))
+                    log.info(_('Controller has not free space for creating new VM.'))
                     raise VmCreationError(_('Not enough free space on data pool'))
                 elif ecp_errors and ecp_detail and inner_retry_count < 30:
                     # Тут мы предполагаем, что контроллер заблокирован выполнением задачи. Это может быть и не так,
                     # но сейчас нам это не понятно.
-                    application_log.debug(_('Possibly blocked by active task on ECP. Wait before next try.'))
+                    log.debug(_('Possibly blocked by active task on ECP. Wait before next try.'))
                     await asyncio.sleep(10)
                 else:
-                    application_log.debug(_('Something went wrong. Interrupt while.'))
-                    application_log.debug(ecp_errors)
+                    log.debug(_('Something went wrong. Interrupt while.'))
+                    log.debug(ecp_errors)
                     raise BadRequest(http_error)
 
-            application_log.debug(_('Wait one more try'))
+            log.debug(_('Wait one more try'))
             await asyncio.sleep(1)
 
         copy_result = dict(id=response['entity'],
                            task_id=response['_task']['id'],
                            verbose_name=verbose_name,
                            domain_index=domain_index)
-        application_log.debug(copy_result)
+        log.debug(copy_result)
         return copy_result
 
     @staticmethod
