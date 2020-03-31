@@ -124,7 +124,7 @@ GtkResponseType rdp_viewer_start(const gchar *usename, const gchar *password, gc
         //if (i ==1) geometry.x = geometry.width; // temp
 
         // set monitor data for rdp viewer window
-        rdp_viewer_set_monitor_data(rdp_viewer_data, geometry, i); // i
+        rdp_viewer_window_set_monitor_data(rdp_viewer_data, geometry, i); // i
 
         // set monitor data for rdp client
         settings->MonitorDefArray[i].x = geometry.x;

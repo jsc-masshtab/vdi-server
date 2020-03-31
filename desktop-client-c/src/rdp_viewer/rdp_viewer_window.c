@@ -38,7 +38,26 @@ static const struct keyComboDef keyCombos[] = {
 
 
 // function implementations
+static void rdp_viewer_window_toggle_fullscreen(RdpViewerData *rdp_viewer_data, gboolean is_fullscreen)
+{
+    if (is_fullscreen) {
 
+        gtk_window_set_resizable(GTK_WINDOW(rdp_viewer_data->rdp_viewer_window), TRUE);
+        gtk_window_fullscreen(GTK_WINDOW(rdp_viewer_data->rdp_viewer_window));
+        //gtk_window_set_resizable(GTK_WINDOW(rdp_viewer_window), FALSE);
+
+        // show toolbar
+        gtk_widget_hide(rdp_viewer_data->top_menu);
+        gtk_widget_show(rdp_viewer_data->overlay_toolbar);
+        virt_viewer_timed_revealer_force_reveal(rdp_viewer_data->revealer, TRUE);
+
+    } else {
+        gtk_widget_hide(rdp_viewer_data->overlay_toolbar);
+        //gtk_widget_set_size_request(priv->window, -1, -1);
+        gtk_window_unfullscreen(GTK_WINDOW(rdp_viewer_data->rdp_viewer_window));
+        gtk_widget_show(rdp_viewer_data->top_menu);
+    }
+}
 
 static guint get_nkeys(const guint *keys)
 {
@@ -60,10 +79,13 @@ static gboolean rdp_viewer_window_deleted_cb(gpointer userdata)
     return TRUE;
 }
 
-//static void rdp_viewer_event_on_mapped(GtkWidget *widget G_GNUC_UNUSED, GdkEvent *event G_GNUC_UNUSED, gpointer user_data)
-//{
+static void rdp_viewer_event_on_mapped(GtkWidget *widget G_GNUC_UNUSED, GdkEvent *event G_GNUC_UNUSED,
+        gpointer user_data)
+{
+    RdpViewerData *rdp_viewer_data = (RdpViewerData *)user_data;
 
-//}
+    rdp_viewer_window_toggle_fullscreen(rdp_viewer_data, TRUE);
+}
 
 ////static GTimer *timer = NULL;
 //static gboolean gtk_update(GtkWidget *widget, GdkFrameClock *frame_clock, gpointer user_data)
@@ -110,21 +132,6 @@ static void rdp_viewer_item_details_activated(GtkWidget *menu G_GNUC_UNUSED, gpo
     gtk_show_uri_on_window(NULL, "http://mashtab.org/files/veil/index.html", GDK_CURRENT_TIME, &error);
 }
 
-static void rdp_viewer_item_fullscreen_activated(GtkWidget *menu G_GNUC_UNUSED, gpointer userdata)
-{
-    printf("%s\n", (const char *)__func__);
-    RdpViewerData *rdp_viewer_data = (RdpViewerData *)userdata;
-
-    gtk_window_set_resizable(GTK_WINDOW(rdp_viewer_data->rdp_viewer_window), TRUE);
-    gtk_window_fullscreen(GTK_WINDOW(rdp_viewer_data->rdp_viewer_window));
-    //gtk_window_set_resizable(GTK_WINDOW(rdp_viewer_window), FALSE);
-
-    // show toolbar
-    gtk_widget_hide(rdp_viewer_data->top_menu);
-    gtk_widget_show(rdp_viewer_data->overlay_toolbar);
-    virt_viewer_timed_revealer_force_reveal(rdp_viewer_data->revealer, TRUE);
-}
-
 static void rdp_viewer_item_about_activated(GtkWidget *menu G_GNUC_UNUSED, gpointer userdata)
 {
     printf("%s\n", (const char *)__func__);
@@ -159,7 +166,7 @@ static void rdp_viewer_item_about_activated(GtkWidget *menu G_GNUC_UNUSED, gpoin
     g_object_unref(G_OBJECT(about));
 }
 
-static void send_key_shortcut(rdpContext* context, int key_shortcut_index)
+static void rdp_viewer_window_send_key_shortcut(rdpContext* context, int key_shortcut_index)
 {
     rdpInput *input = context->input;
 
@@ -183,7 +190,7 @@ static void rdp_viewer_window_menu_send(GtkWidget *menu, gpointer userdata)
     printf("%s %i %i %i\n", (const char *)__func__,
            keyCombos[*key_shortcut_index].keys[0], keyCombos[*key_shortcut_index].keys[1],
             keyCombos[*key_shortcut_index].keys[2]);
-    send_key_shortcut(&context, *key_shortcut_index);
+    rdp_viewer_window_send_key_shortcut(&context, *key_shortcut_index);
 }
 
 static void
@@ -256,14 +263,17 @@ static void rdp_viewer_control_menu_setup(GtkBuilder *builder, RdpViewerData *rd
     g_signal_connect(menu_reboot_vm_force, "activate", G_CALLBACK(rdp_viewer_window_menu_reboot_vm_force), NULL);
 }
 
+static void rdp_viewer_item_fullscreen_activated(GtkWidget *menu G_GNUC_UNUSED, gpointer userdata)
+{
+    printf("%s\n", (const char *)__func__);
+    RdpViewerData *rdp_viewer_data = (RdpViewerData *)userdata;
+    rdp_viewer_window_toggle_fullscreen(rdp_viewer_data, TRUE);
+}
+
 static void rdp_viewer_window_toolbar_leave_fullscreen(GtkWidget *button G_GNUC_UNUSED, gpointer userdata)
 {
     RdpViewerData *rdp_viewer_data = (RdpViewerData *)userdata;
-
-    gtk_widget_hide(rdp_viewer_data->overlay_toolbar);
-    //gtk_widget_set_size_request(priv->window, -1, -1);
-    gtk_window_unfullscreen(GTK_WINDOW(rdp_viewer_data->rdp_viewer_window));
-    gtk_widget_show(rdp_viewer_data->top_menu);
+    rdp_viewer_window_toggle_fullscreen(rdp_viewer_data, FALSE);
 }
 
 static void rdp_viewer_toolbar_setup(GtkBuilder *builder, RdpViewerData *rdp_viewer_data)
@@ -320,7 +330,8 @@ RdpViewerData *rdp_viewer_window_create(ExtendedRdpContext *ex_rdp_context, UINT
             GTK_WIDGET(gtk_builder_get_object(builder, "viewer"));
     g_signal_connect_swapped(rdp_viewer_window, "delete-event",
                              G_CALLBACK(rdp_viewer_window_deleted_cb), rdp_viewer_data);
-    //g_signal_connect(rdp_viewer_window, "map-event", G_CALLBACK(rdp_viewer_event_on_mapped), ex_context);
+    g_signal_connect(rdp_viewer_window, "map-event",
+            G_CALLBACK(rdp_viewer_event_on_mapped), rdp_viewer_data);
 
     rdp_viewer_data->top_menu = GTK_WIDGET(gtk_builder_get_object(builder, "top-menu"));
 
@@ -375,7 +386,7 @@ RdpViewerData *rdp_viewer_window_create(ExtendedRdpContext *ex_rdp_context, UINT
 //    rdp_viewer_data->ggs = gdk_seat_grab(seat, gtk_widget_get_window(rdp_viewer_window),
 //                        GDK_SEAT_CAPABILITY_ALL, TRUE, NULL, NULL, NULL, NULL);
 
-    rdp_viewer_data->g_timeout_id = g_timeout_add(40, (GSourceFunc)gtk_update, rdp_viewer_data);
+    rdp_viewer_data->g_timeout_id = g_timeout_add(35, (GSourceFunc)gtk_update, rdp_viewer_data);
     //gtk_widget_add_tick_callback(rdp_display, gtk_update, context, NULL);
 
     return rdp_viewer_data;
@@ -390,7 +401,7 @@ void rdp_viewer_window_destroy(RdpViewerData *rdp_viewer_data)
     free(rdp_viewer_data);
 }
 
-void rdp_viewer_set_monitor_data(RdpViewerData *rdp_viewer_data, GdkRectangle geometry, int monitor_index)
+void rdp_viewer_window_set_monitor_data(RdpViewerData *rdp_viewer_data, GdkRectangle geometry, int monitor_index)
 {
     rdp_viewer_data->monitor_index = monitor_index;
     printf ("TESTT W: %u x H:%u\n", geometry.width, geometry.height);
