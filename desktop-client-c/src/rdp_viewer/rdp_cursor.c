@@ -43,7 +43,7 @@ static void xf_Pointer_Free(rdpContext* context G_GNUC_UNUSED, rdpPointer* point
 
 static BOOL xf_Pointer_Set(rdpContext* context, const rdpPointer* pointer)
 {
-    //printf("%s\n", (const char *)__func__);
+    printf("%s\n", (const char *)__func__);
     ExtendedRdpContext* ex_rdp_context = (ExtendedRdpContext*)context;
     const ExtendedPointer *ex_pointer = (const ExtendedPointer *)pointer;
     //printf("%s ex_pointer->test_int: %i\n", (const char *)__func__,  ex_pointer->test_int);

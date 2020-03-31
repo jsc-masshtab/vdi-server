@@ -82,7 +82,8 @@ rdpContext* rdp_client_create_context()
 }
 
 void rdp_client_set_credentials(ExtendedRdpContext *ex_rdp_context,
-                                const gchar *usename, const gchar *password, gchar *domain, gchar *ip, int port)
+                                const gchar *usename, const gchar *password, gchar *domain,
+                                gchar *ip, int port)
 {
     ex_rdp_context->usename = g_strdup(usename);
     ex_rdp_context->password = g_strdup(password);
@@ -314,8 +315,6 @@ static BOOL rdp_pre_connect(freerdp* instance)
 //    settings->OrderSupport[NEG_ELLIPSE_SC_INDEX] = TRUE;
 //    settings->OrderSupport[NEG_ELLIPSE_CB_INDEX] = TRUE;
 
-    //settings->MonitorCount
-
     /* settings->OrderSupport is initialized at this point.
      * Only override it if you plan to implement custom order
      * callbacks or deactiveate certain features. */
@@ -434,6 +433,7 @@ static DWORD WINAPI rdp_client_thread_proc(ExtendedRdpContext* tf)
 
     while (!freerdp_shall_disconnect(instance))
     {
+        //printf("In RDP while\n");
         nCount = freerdp_get_event_handles(instance->context, &handles[0], 64);
 
         if (nCount == 0)
