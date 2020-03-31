@@ -30,6 +30,7 @@ interface IData {
     ]
   };
   update: {
+    refetch: boolean;
     method: string;
     params: [],
   };
@@ -86,16 +87,22 @@ export class FormForEditComponent implements OnInit, OnDestroy {
     if (this.data.post && this.data.update) {
       this.waitService.setWait(true);
       this.data.post.service[this.data.post.method](this.data.post.params, this.formGroup.value).subscribe(() => {
-        this.sub =  this.data.post.service[this.data.update.method](...this.data.update.params).subscribe(() => {
+        if (this.data.update.refetch) {
+          this.data.post.service[this.data.update.method](...this.data.update.params).refetch();
           this.waitService.setWait(false);
-          if (this.data.updateDepend) {
-            this.data.updateDepend.service[this.data.updateDepend.method](...this.data.updateDepend.params);
-          }
           this.dialogRef.close();
-        });
+        } else {
+          this.sub =  this.data.post.service[this.data.update.method](...this.data.update.params).subscribe(() => {
+            this.waitService.setWait(false);
+            if (this.data.updateDepend) {
+              this.data.updateDepend.service[this.data.updateDepend.method](...this.data.updateDepend.params);
+            }
+            this.dialogRef.close();
+          });
+        }
       });
     } else {
-      throw new Error('post || update отсутствует');
+      throw new Error('post || update отсутствует'); // а если я не хочу обновлять?
     }
   }
 

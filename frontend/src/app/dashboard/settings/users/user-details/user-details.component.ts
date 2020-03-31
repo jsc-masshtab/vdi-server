@@ -205,6 +205,7 @@ export class UserDetailsComponent implements OnInit, OnDestroy {
           }]
         },
         update: {
+          refetch: true,
           method: 'getUser',
           params: [
             this.id
