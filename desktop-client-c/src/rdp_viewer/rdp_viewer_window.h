@@ -37,7 +37,7 @@ typedef struct{
 
     ExtendedRdpContext *ex_rdp_context;
 
-    GdkGrabStatus ggs;
+    GdkSeat *seat;
 
 } RdpViewerData;
 

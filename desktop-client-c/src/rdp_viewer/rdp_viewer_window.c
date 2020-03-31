@@ -42,6 +42,14 @@ static void rdp_viewer_window_toggle_fullscreen(RdpViewerData *rdp_viewer_data, 
 {
     if (is_fullscreen) {
 
+        // turn on keyboard grab in full screen
+        GdkDisplay *display = gtk_widget_get_display(rdp_viewer_data->rdp_viewer_window);
+        rdp_viewer_data->seat = gdk_display_get_default_seat(display);
+        GdkGrabStatus ggs = gdk_seat_grab(rdp_viewer_data->seat,
+                                          gtk_widget_get_window(rdp_viewer_data->rdp_viewer_window),
+                                          GDK_SEAT_CAPABILITY_KEYBOARD, TRUE, NULL, NULL, NULL, NULL);
+
+        // fullscreen
         gtk_window_set_resizable(GTK_WINDOW(rdp_viewer_data->rdp_viewer_window), TRUE);
         gtk_window_fullscreen(GTK_WINDOW(rdp_viewer_data->rdp_viewer_window));
         //gtk_window_set_resizable(GTK_WINDOW(rdp_viewer_window), FALSE);
@@ -52,6 +60,11 @@ static void rdp_viewer_window_toggle_fullscreen(RdpViewerData *rdp_viewer_data, 
         virt_viewer_timed_revealer_force_reveal(rdp_viewer_data->revealer, TRUE);
 
     } else {
+        // ungrab keyboard
+        if (rdp_viewer_data->seat)
+            gdk_seat_ungrab(rdp_viewer_data->seat);
+
+        //  leave fulscreen
         gtk_widget_hide(rdp_viewer_data->overlay_toolbar);
         //gtk_widget_set_size_request(priv->window, -1, -1);
         gtk_window_unfullscreen(GTK_WINDOW(rdp_viewer_data->rdp_viewer_window));
@@ -379,12 +392,6 @@ RdpViewerData *rdp_viewer_window_create(ExtendedRdpContext *ex_rdp_context, UINT
     gtk_window_set_position(GTK_WINDOW(rdp_viewer_window), GTK_WIN_POS_CENTER);
     //gtk_window_resize(GTK_WINDOW(rdp_viewer_window), optimal_image_width, optimal_image_height);
     gtk_widget_show_all(rdp_viewer_window);
-
-//    // turn on keyboard grab
-//    GdkDisplay *display = gtk_widget_get_display(rdp_viewer_window);
-//    GdkSeat *seat = gdk_display_get_default_seat(display);
-//    rdp_viewer_data->ggs = gdk_seat_grab(seat, gtk_widget_get_window(rdp_viewer_window),
-//                        GDK_SEAT_CAPABILITY_ALL, TRUE, NULL, NULL, NULL, NULL);
 
     rdp_viewer_data->g_timeout_id = g_timeout_add(35, (GSourceFunc)gtk_update, rdp_viewer_data);
     //gtk_widget_add_tick_callback(rdp_display, gtk_update, context, NULL);
