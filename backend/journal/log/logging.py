@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+# TODO: init_logging перенести в конструктор
+# TODO: уровень логов для лога принимать из параметров при запуске приложения
 
 import logging
 import sys

@@ -83,6 +83,7 @@ class HttpError(BackendError):
 
     def __init__(self, message=None):
         if message:
+            message = str(message)
             native_loop = asyncio.get_event_loop()
             self.create_event = native_loop.create_task(self.create_error_event(message))
             self.message = message
@@ -103,6 +104,7 @@ class HttpError(BackendError):
 
 class NotFound(HttpError):
     def __init__(self, message, url):
+        message = str(message)
         native_loop = asyncio.get_event_loop()
         self.create_event = native_loop.create_task(self.create_error_event(message))
         self.message = message
@@ -177,6 +179,7 @@ class ServerError(HttpError):
 
 class VmCreationError(Exception):
     def __init__(self, message):
+        message = str(message)
         native_loop = asyncio.get_event_loop()
         self.create_event = native_loop.create_task(self.create_error_event(message))
         self.message = message
@@ -188,6 +191,7 @@ class VmCreationError(Exception):
 
 class PoolCreationError(Exception):
     def __init__(self, message):
+        message = str(message)
         native_loop = asyncio.get_event_loop()
         self.create_event = native_loop.create_task(self.create_error_event(message))
         self.message = message
