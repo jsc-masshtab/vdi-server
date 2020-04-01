@@ -410,6 +410,7 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
         },
         update: {
           method: 'getPool',
+          refetch: true,
           params: [
             this.idPool,
             this.typePool
@@ -450,6 +451,7 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
         },
         update: {
           method: 'getPool',
+          refetch: true,
           params: [
             this.idPool,
             this.typePool
@@ -485,6 +487,7 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
         },
         update: {
           method: 'getPool',
+          refetch: true,
           params: [
             this.idPool,
             this.typePool
@@ -520,6 +523,7 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
         },
         update: {
           method: 'getPool',
+          refetch: true,
           params: [
             this.idPool,
             this.typePool
@@ -556,6 +560,7 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
         },
         update: {
           method: 'getPool',
+          refetch: true,
           params: [
             this.idPool,
             this.typePool
@@ -592,6 +597,7 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
         },
         update: {
           method: 'getPool',
+          refetch: true,
           params: [
             this.idPool,
             this.typePool
