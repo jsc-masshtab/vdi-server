@@ -4,25 +4,6 @@
  * Solomin a.solomin@mashtab.otg
  */
 
-
-//HGDI_RGN cinvalid = gdi->primary->hdc->hwnd->cinvalid;
-//int ninvalid = gdi->primary->hdc->hwnd->ninvalid;
-
-//int x1 = cinvalid[0].x;
-//int y1 = cinvalid[0].y;
-//int x2 = cinvalid[0].x + cinvalid[0].w;
-//int y2 = cinvalid[0].y + cinvalid[0].h;
-
-//for (int i = 0; i < ninvalid; i++)
-//{
-//    x1 = MIN(x1, cinvalid[i].x);
-//    y1 = MIN(y1, cinvalid[i].y);
-//    x2 = MAX(x2, cinvalid[i].x + cinvalid[i].w);
-//    y2 = MAX(y2, cinvalid[i].y + cinvalid[i].h);
-//}
-
-
-
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -61,6 +42,7 @@
 #include "rdp_cursor.h"
 
 #include "remote-viewer-util.h"
+#include "settingsfile.h"
 
 #include "async.h"
 
@@ -71,6 +53,56 @@
 static DWORD WINAPI rdp_client_thread_proc(ExtendedRdpContext *tf);
 static int rdp_client_entry(RDP_CLIENT_ENTRY_POINTS* pEntryPoints);
 
+static void add_rdp_param(GArray *rdp_params_dyn_array, gchar *rdp_param)
+{
+    g_array_append_val(rdp_params_dyn_array, rdp_param);
+}
+
+static GArray * rdp_client_create_params_array(ExtendedRdpContext* tf)
+{
+    GArray *rdp_params_dyn_array = g_array_new(FALSE, FALSE, sizeof(gchar *));
+
+    add_rdp_param(rdp_params_dyn_array, g_strdup(PROGRAMM_NAME));
+    gchar *full_adress = tf->port != 0 ? g_strdup_printf("/v:%s:%i", tf->ip, tf->port) : g_strdup_printf("/v:%s", tf->ip);
+    add_rdp_param(rdp_params_dyn_array, full_adress);
+    add_rdp_param(rdp_params_dyn_array, g_strdup_printf("/d:%s", tf->domain));
+    add_rdp_param(rdp_params_dyn_array, g_strdup_printf("/u:%s", tf->usename));
+    add_rdp_param(rdp_params_dyn_array, g_strdup_printf("/p:%s", tf->password));
+    add_rdp_param(rdp_params_dyn_array, g_strdup_printf("/w:%i", tf->optimal_image_width));
+    add_rdp_param(rdp_params_dyn_array, g_strdup_printf("/h:%i", tf->optimal_image_height));
+    add_rdp_param(rdp_params_dyn_array, g_strdup("-clipboard"));
+    add_rdp_param(rdp_params_dyn_array, g_strdup("/cert-ignore"));
+    add_rdp_param(rdp_params_dyn_array, g_strdup("/sound:rate:44100,channel:2"));
+    add_rdp_param(rdp_params_dyn_array, g_strdup("/smartcard"));
+    gboolean is_drives_redirected =  read_int_from_ini_file("General", "is_drives_redirected");
+    if (is_drives_redirected) {
+        add_rdp_param(rdp_params_dyn_array, g_strdup("+drives"));
+        add_rdp_param(rdp_params_dyn_array, g_strdup("+home-drive"));
+    }
+    write_int_to_ini_file("General", "is_drives_redirected", is_drives_redirected);
+    gboolean is_gfx_h264_AVC444_used =  read_int_from_ini_file("General", "is_gfx_h264_AVC444_used");
+    if (is_gfx_h264_AVC444_used)
+        add_rdp_param(rdp_params_dyn_array, g_strdup("/gfx-h264:AVC444"));
+    write_int_to_ini_file("General", "is_gfx_h264_AVC444_used", is_gfx_h264_AVC444_used);
+#ifdef __linux__
+    add_rdp_param(rdp_params_dyn_array,g_strdup("/usb:auto"));
+#elif _WIN32
+    add_rdp_param(rdp_params_dyn_array, g_strdup("/relax-order-checks"));
+    add_rdp_param(rdp_params_dyn_array, g_strdup("+glyph-cache"));
+#endif
+    add_rdp_param(rdp_params_dyn_array, NULL);
+
+    return rdp_params_dyn_array;
+}
+
+static void rdp_client_destroy_params_array(GArray *rdp_params_dyn_array)
+{
+    for (guint i = 0; i < rdp_params_dyn_array->len; ++i) {
+        gchar *rdp_param = g_array_index(rdp_params_dyn_array, gchar*, i);
+        free_memory_safely(&rdp_param);
+    }
+    g_array_free(rdp_params_dyn_array, TRUE);
+}
 
 rdpContext* rdp_client_create_context()
 {
@@ -98,6 +130,7 @@ void rdp_client_set_rdp_image_size(ExtendedRdpContext *ex_rdp_context,
     ex_rdp_context->optimal_image_width = optimal_image_width;
     ex_rdp_context->optimal_image_height = optimal_image_height;
 }
+
 //===============================Thread for client routine==================================
 void rdp_client_routine(GTask   *task,
                  gpointer       source_object G_GNUC_UNUSED,
@@ -114,44 +147,27 @@ void rdp_client_routine(GTask   *task,
     if (!context)
         goto fail;
 
-//    printf("%s usename %s\n", (const char *)__func__, usename);
-//    printf("%s password %s\n", (const char *)__func__, password);
+    // rdp params
+    GArray *rdp_params_dyn_array = rdp_client_create_params_array(tf);
+
     printf("%s tf->usename %s\n", (const char *)__func__, tf->usename);
     printf("%s tf->domain %s\n", (const char *)__func__, tf->domain);
     // /v:192.168.20.104 /u:solomin /p:5555 -clipboard /sound:rate:44100,channel:2 /cert-ignore
-    gchar *full_adress = tf->port != 0 ? g_strdup_printf("/v:%s:%i", tf->ip, tf->port) : g_strdup_printf("/v:%s", tf->ip);
 
-    char* argv[] = {
-        g_strdup(PROGRAMM_NAME),
-        full_adress,
-        g_strdup_printf("/d:%s", tf->domain),
-        g_strdup_printf("/u:%s", tf->usename),
-        g_strdup_printf("/p:%s", tf->password),
-        g_strdup_printf("/w:%i", tf->optimal_image_width),
-        g_strdup_printf("/h:%i", tf->optimal_image_height),
-        g_strdup("-clipboard"),
-        g_strdup("/cert-ignore"),
-        g_strdup("/sound:rate:44100,channel:2"),
-        g_strdup("/smartcard"),
-        g_strdup("+drives"),
-        g_strdup("+home-drive"),
-    #ifdef __linux__
-        g_strdup("/usb:auto"),
-    #elif _WIN32
-        g_strdup("/relax-order-checks"),
-        g_strdup("+glyph-cache"),
-    #endif
-        NULL
-    };
-    int argc = sizeof(argv) / sizeof(char*) - 1;
-    printf("sizeof(argv): %lu, argc: %i", sizeof(argv), argc);
+    gchar** argv = malloc(rdp_params_dyn_array->len * sizeof(gchar*));
+    for (guint i = 0; i < rdp_params_dyn_array->len; ++i)
+        argv[i] = g_array_index(rdp_params_dyn_array, gchar*, i);
 
+    int argc = rdp_params_dyn_array->len - 1;
+    printf("sizeof(argv): %lu, argc: %i\n", sizeof(argv), argc);
+
+    // set rdp params
     status = freerdp_client_settings_parse_command_line(context->settings, argc, argv, FALSE);
     status = freerdp_client_settings_command_line_status_print(context->settings, status, argc, argv);
 
-    for(int i = 0; i < argc; ++i) {
-        g_free(argv[i]);
-    }
+    // clear memory
+    free(argv);
+    rdp_client_destroy_params_array(rdp_params_dyn_array);
 
     if (status) {
         g_mutex_unlock(&tf->rdp_routine_mutex);
@@ -170,7 +186,6 @@ void rdp_client_routine(GTask   *task,
         rc = -1;
 
 fail:
-    //freerdp_client_context_free(context);
     printf("%s: g_mutex_unlock\n", (const char *)__func__);
     g_mutex_unlock(&tf->rdp_routine_mutex);
     tf->is_running = FALSE;
