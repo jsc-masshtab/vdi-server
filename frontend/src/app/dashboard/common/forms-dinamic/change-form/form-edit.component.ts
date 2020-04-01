@@ -90,6 +90,9 @@ export class FormForEditComponent implements OnInit, OnDestroy {
         if (this.data.update.refetch) {
           this.data.post.service[this.data.update.method](...this.data.update.params).refetch();
           this.waitService.setWait(false);
+          if (this.data.updateDepend) {
+            this.data.updateDepend.service[this.data.updateDepend.method](...this.data.updateDepend.params);
+          }
           this.dialogRef.close();
         } else {
           this.sub =  this.data.post.service[this.data.update.method](...this.data.update.params).subscribe(() => {
