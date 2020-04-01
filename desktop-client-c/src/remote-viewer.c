@@ -292,6 +292,15 @@ static void remote_viewer_free_auth_data(gchar **user, gchar **password, gchar *
     free_memory_safely(vm_verbose_name);
 }
 
+static void setup_css()
+{
+    GtkCssProvider *cssProvider = gtk_css_provider_new(); // todo: free
+    gtk_css_provider_load_from_path(cssProvider, "css_style.css", NULL);
+    gtk_style_context_add_provider_for_screen(gdk_screen_get_default(),
+                                              GTK_STYLE_PROVIDER(cssProvider),
+                                              GTK_STYLE_PROVIDER_PRIORITY_USER);
+}
+
 static gboolean
 remote_viewer_start(VirtViewerApp *app, GError **err G_GNUC_UNUSED, RemoteViewerState remoteViewerState)
 {
@@ -308,6 +317,7 @@ remote_viewer_start(VirtViewerApp *app, GError **err G_GNUC_UNUSED, RemoteViewer
     VdiVmRemoteProtocol remote_protocol_type = VDI_SPICE_PROTOCOL;
     GError *error = NULL;
 
+    setup_css(); // CSS setup
     switch (remoteViewerState) {
         case AUTH_DIALOG:
             goto retry_auth;

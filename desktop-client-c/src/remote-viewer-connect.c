@@ -320,16 +320,6 @@ static void fast_forward_connect_to_prev_pool_if_enabled(RemoteViewerData *ci)
     }
 }
 
-void
-setup_css()
-{
-    GtkCssProvider *cssProvider = gtk_css_provider_new(); // todo: free
-    gtk_css_provider_load_from_path(cssProvider, "css_style.css", NULL);
-    gtk_style_context_add_provider_for_screen(gdk_screen_get_default(),
-                                              GTK_STYLE_PROVIDER(cssProvider),
-                                              GTK_STYLE_PROVIDER_PRIORITY_USER);
-}
-
 /**
 * remote_viewer_connect_dialog
 *
@@ -346,9 +336,6 @@ remote_viewer_connect_dialog(gchar **user, gchar **password, gchar **domain,
     RemoteViewerData ci;
     memset(&ci, 0, sizeof(RemoteViewerData));
     ci.dialog_window_response = GTK_RESPONSE_CLOSE;
-
-    // css
-    setup_css();
 
     // save pointers
     ci.user = user;
