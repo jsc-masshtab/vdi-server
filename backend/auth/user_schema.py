@@ -35,6 +35,12 @@ class UserValidator(MutationValidation):
 
     @staticmethod
     async def validate_email(obj_dict, value):
+        # Проверка на уникальность
+        email_is_free = await User.check_email(value)
+        if not email_is_free:
+            raise ValidationError(_('Email {} is already busy').format(value))
+
+        # Проверка на маску
         email_re = re.compile('^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$')  # noqa
         template_name = re.match(email_re, value)
         if template_name:

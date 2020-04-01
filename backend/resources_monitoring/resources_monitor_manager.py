@@ -81,6 +81,10 @@ class ResourcesMonitorManager:
         log.info(msg)
 
     async def remove_controller(self, controller_ip):
+        # Деактивируем контроллер
+        controller_id = await Controller.get_controller_id_by_ip(controller_ip)
+        await Controller.deactivate(controller_id)
+
         # find resources monitor by controller ip
         try:
             resources_monitor = next(resources_monitor for resources_monitor in self._resources_monitors_list
