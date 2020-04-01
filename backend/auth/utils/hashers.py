@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 """Django's standard hashers."""
+# TODO: @e.gareev убрать переводы
 
 import base64
 import binascii

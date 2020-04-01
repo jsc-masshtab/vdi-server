@@ -77,9 +77,8 @@ def init_tasks():
 
 def bootstrap():
     """Запускает логгирование"""
+
     init_signals()
-    # uncomment for run without supervisor:
-    # tornado.options.options.log_file_prefix = 'vdi_tornado.log'
     tornado.options.parse_command_line(final=True)
     Logging.init_logging(tornado.options.options.access_to_stdout)
 
@@ -112,6 +111,15 @@ def init_license():
 
 
 def start_server():
+
+    app = make_app()
+    server = tornado.httpserver.HTTPServer(app)
+    server.listen(tornado.options.options.port)
+
+    server.start(0)
+
+    bootstrap()
+
     log.name(_('Tornado VDI started'))
 
     if not AUTH_ENABLED:
@@ -128,9 +136,8 @@ def start_server():
         vdi_license.expiration_date,
         vdi_license.thin_clients_limit))
 
-    app = make_app()
     init_gino()
-    app.listen(tornado.options.options.port)
+
     init_tasks()
     init_callbacks()
     IOLoop.current().start()
@@ -159,5 +166,4 @@ async def shutdown_server():
 
 
 if __name__ == '__main__':
-    bootstrap()
     start_server()
