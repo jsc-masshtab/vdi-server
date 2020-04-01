@@ -471,13 +471,35 @@ class Pool(db.Model):
 
     @classmethod
     async def activate(cls, pool_id):
-        return await Pool.update.values(status=Status.ACTIVE).where(
-            Pool.id == pool_id).gino.status()
+        pool = await Pool.get(pool_id)
+        await pool.update(status=Status.ACTIVE).apply()
+        await log.info(_('Pool {} has been activated.').format(pool.verbose_name))
+        return True
 
     @classmethod
     async def deactivate(cls, pool_id):
-        return await Pool.update.values(status=Status.FAILED).where(
-            Pool.id == pool_id).gino.status()
+        pool = await Pool.get(pool_id)
+        await pool.update(status=Status.FAILED).apply()
+        await log.info(_('Pool {} has been deactivated.').format(pool.verbose_name))
+        return True
+
+    @classmethod
+    async def enable(cls, pool_id):
+        """Отличается от activate тем, что проверяет предыдущий статус."""
+        pool = await Pool.get(pool_id)
+        # Т.к. сейчас нет возможности остановить создание пула - не трогаем не активные
+        if pool.status == Status.FAILED:
+            return await pool.activate(pool.id)
+        return False
+
+    @classmethod
+    async def disable(cls, pool_id):
+        """Отличается от deactivate тем, что проверяет предыдущий статус."""
+        pool = await Pool.get(pool_id)
+        # Т.к. сейчас нет возможности остановить создание пула - не трогаем не активные
+        if pool.status == Status.ACTIVE:
+            return await pool.deactivate(pool.id)
+        return False
 
     async def get_free_vm(self):
         """Логика такая, что если сущность отсутствует в таблице разрешений - значит никто ей не владеет.

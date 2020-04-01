@@ -20,6 +20,10 @@ _ = lang_init()
 # TODO: validate token by expires_on parameter
 # TODO: validate status
 
+# TODO: Сейчас при деактивации контроллера задачи создания пула не прекращаются.
+#  Нужно сделать, чтобы деактивация контроллера останавливала создание пула и скидывала задачу в очередь.
+#  При активации контроллера нужно брать задачи в очереди.
+
 
 class Controller(db.Model):
     # TODO: indexes
@@ -49,7 +53,6 @@ class Controller(db.Model):
     @property
     def pools_query(self):
         from pool.models import Pool  # Такой импорт из-за импорта в Pool модели Controller.
-
         pools_query = Controller.join(Pool).select().where(Controller.id == self.id)
         return pools_query
 
@@ -58,6 +61,12 @@ class Controller(db.Model):
         """Проверяем наличие пулов"""
         pools = await self.pools_query.gino.all()
         return True if pools else False
+
+    @property
+    async def pools(self):
+        # Либо размещать staticmethod в пулах, либо импорт тут, либо хардкодить названия полей.
+        from pool.models import Pool
+        return await Pool.query.where(Controller.id == self.id).gino.all()
 
     @staticmethod
     async def get_controllers_addresses():
@@ -219,10 +228,36 @@ class Controller(db.Model):
 
     @classmethod
     async def activate(cls, id):
-        return await Controller.update.values(status=Status.ACTIVE).where(
-            Controller.id == id).gino.status()
+        controller = await Controller.get(id)
+        if not controller:
+            return False
+
+        if controller.status != Status.ACTIVE:
+            await controller.update(status=Status.ACTIVE).apply()
+            await log.info(_('Controller {} has been activated.').format(controller.verbose_name))
+
+            # Активируем пулы
+            pools = await controller.pools
+            for pool in pools:
+                await pool.enable(pool.id)
+
+        # TODO: активировать VM?
+        return True
 
     @classmethod
     async def deactivate(cls, id):
-        return await Controller.update.values(status=Status.FAILED).where(
-            Controller.id == id).gino.status()
+        controller = await Controller.get(id)
+        if not controller:
+            return False
+
+        if controller.status != Status.FAILED:
+            await controller.update(status=Status.FAILED).apply()
+            await log.info(_('Controller {} has been deactivated.').format(controller.verbose_name))
+
+            # Деактивируем пулы
+            pools = await controller.pools
+            for pool in pools:
+                await pool.disable(pool.id)
+
+        # TODO: деактивировать VM?
+        return True

@@ -1,5 +1,6 @@
 version: '3.7'
 services:
+
   postgres:
     image: postgres:9.6
     ports:
@@ -11,12 +12,16 @@ services:
     container_name: vdi-postgres-alembic
     volumes:
       - ./postgres/:/docker-entrypoint-initdb.d/
+#    TODO: alembic upgrade head
+
   redis:
     image: redis
     container_name: vdi-redis
     ports:
       - 6379:6379
     command: redis-server --requirepass 4NZ7GpHn4IlshPhb
+
+# TODO: Изменилась сборка фронта. Сейчас не работает.
 #  frontend-dev:
 #    image: teracy/angular-cli
 #    ports:
@@ -26,6 +31,7 @@ services:
 #      - ./frontend:/opt/veil-vdi
 #      - ../../frontend/:/opt/veil-vdi/frontend/
 #    command: sh /opt/veil-vdi/entrypoint.sh -dev
+
 #  frontend-prod:
 #    image: teracy/angular-cli
 #    container_name: vdi-angular-prod
@@ -33,6 +39,8 @@ services:
 #      - ./frontend:/opt/veil-vdi
 #      - ../../frontend/:/opt/veil-vdi/frontend/
 #    command: sh /opt/veil-vdi/entrypoint.sh -prod
+
+# TODO: не учитывает сертификат
 #  nginx-proxy:
 #    image: nginx
 #    container_name: vdi-nginx

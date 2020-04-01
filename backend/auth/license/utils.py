@@ -12,10 +12,8 @@ from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import serialization, hashes
 from cryptography.hazmat.primitives.asymmetric import padding, rsa
 
-from settings import PRIVATE_PEM_FPATH, SERIAL_KEY_FPATH
+from settings import PRIVATE_PEM_FPATH, SERIAL_KEY_FPATH, PUBLIC_PEM_FPATH
 
-
-# TODO: tests
 
 class LicenseData:
     """Структура лицензионного ключа"""
@@ -168,13 +166,14 @@ class License:
             """
             Проверяется ключ из файла.
             """
-            # TODO: как-то сомнительно выглядит, что используется приватный ключ для чтения. Наверняка нужен публичный.
+
             try:
                 with open(self.veil_pem, "rb") as key_file:
                     private_key = serialization.load_pem_private_key(
                         key_file.read(),
-                        password=None,
-                        backend=default_backend())
+                        backend=default_backend(),
+                        password=None)
+
                     with open(self.veil_serial_key, "rb") as f:
                         data = f.read()
                         decrypted_data_bytes = private_key.decrypt(
@@ -219,34 +218,61 @@ class License:
         return setattr(self.instance, name)
 
     @staticmethod
-    def key_generation(thin_clients_limit: int = 2,
+    def key_generation(generate_keys: bool = False,
+                       thin_clients_limit: int = 2,
                        expiration_date='2100-01-01', support_expiration_date='2100-01-01',
                        company: str = None, email: str = None,
                        verbose_name: str = 'Veil VDI',
                        private_key_file: str = PRIVATE_PEM_FPATH,
+                       public_key_file: str = PUBLIC_PEM_FPATH,
                        encrypted_key_file: str = SERIAL_KEY_FPATH) -> str:
         """
         Генерация нового лицензионного ключа
         """
 
-        # Генерация нового открытого и закрытого ключей и запись их в файлы
-        private_key = rsa.generate_private_key(
-            public_exponent=65537,
-            key_size=4096,
-            backend=default_backend())
-        public_key = private_key.public_key()
+        def generate_broker_keys(private_key_file_path: str, public_key_file_path: str):
+            """Генерация нового открытого и закрытого ключей и запись их в файлы"""
 
-        pem = private_key.private_bytes(
-            encoding=serialization.Encoding.PEM,
-            format=serialization.PrivateFormat.PKCS8,
-            encryption_algorithm=serialization.NoEncryption())
+            private_key = rsa.generate_private_key(
+                public_exponent=65537,
+                key_size=4096,
+                backend=default_backend())
+            public_key = private_key.public_key()
 
-        with open(private_key_file, 'wb') as f:
-            f.write(pem)
+            pem = private_key.private_bytes(
+                encoding=serialization.Encoding.PEM,
+                format=serialization.PrivateFormat.PKCS8,
+                encryption_algorithm=serialization.NoEncryption())
 
-        public_pem = public_key.public_bytes(
-            encoding=serialization.Encoding.PEM,
-            format=serialization.PublicFormat.SubjectPublicKeyInfo)
+            with open(private_key_file_path, 'wb') as priv_key_file:
+                priv_key_file.write(pem)
+
+            pub_pem = public_key.public_bytes(
+                encoding=serialization.Encoding.PEM,
+                format=serialization.PublicFormat.SubjectPublicKeyInfo)
+
+            with open(public_key_file_path, 'wb') as pub_key_file:
+                pub_key_file.write(pub_pem)
+
+        def load_broker_keys(private_key_file_path: str, public_key_file_path: str):
+            """Читает существующие ключи из файлов"""
+
+            with open(private_key_file_path, 'rb') as priv_pem:
+                private_key = serialization.load_pem_private_key(
+                    priv_pem.read(),
+                    backend=default_backend(),
+                    password=None)
+
+            with open(public_key_file_path, 'rb') as pub_pem:
+                pub_key = serialization.load_pem_public_key(pub_pem.read(),
+                                                            backend=default_backend())
+
+            return private_key, pub_key
+
+        if generate_keys:
+            generate_broker_keys(private_key_file, public_key_file)
+
+        _, public_pem = load_broker_keys(private_key_file, public_key_file)
 
         # Генерация ключа
         license_data = LicenseData(thin_clients_limit=thin_clients_limit, expiration_date=expiration_date,
@@ -255,11 +281,11 @@ class License:
                                    uuid=str(uuid4()), verbose_name=verbose_name)
 
         # Чтение открытого ключа для кодировки
-        public_key = serialization.load_pem_public_key(public_pem, backend=default_backend())
+        # public_key = serialization.load_pem_public_key(public_pem, backend=default_backend())
 
         # Генерация закриптованного ключа
         data_bytes = license_data.new_license_attrs_json.encode('utf-8')
-        encrypted = public_key.encrypt(
+        encrypted = public_pem.encrypt(
             data_bytes,
             padding.OAEP(
                 mgf=padding.MGF1(algorithm=hashes.SHA256()),

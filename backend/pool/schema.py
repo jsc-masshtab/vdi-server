@@ -503,10 +503,11 @@ class CreateStaticPoolMutation(graphene.Mutation, PoolValidator):
         except Exception as E:  # Возможные исключения: дубликат имени или вм id, сетевой фейл enable_remote_accesses
             # log.error(_('Failed to create static pool {}.').format(verbose_name))
             log.debug(E)
-            await log.error(_('Failed to create static pool {}.').format(verbose_name))
+            error_msg = _('Failed to create static pool {}.').format(verbose_name)
+            await log.error(error_msg)
             if pool:
                 await pool.deactivate()
-            return {'ok': False}
+            raise SimpleError(error_msg)
         return {
             'pool': PoolType(pool_id=pool.id, verbose_name=verbose_name, vms=vms),
             'ok': True
@@ -607,9 +608,15 @@ class UpdateStaticPoolMutation(graphene.Mutation, PoolValidator):
     @superuser_required
     async def mutate(cls, _root, _info, **kwargs):
         await cls.validate_agruments(**kwargs)
-        ok = await StaticPool.soft_update(kwargs['pool_id'], kwargs.get('verbose_name'), kwargs.get('keep_vms_on'))
-        msg = 'Static pool {id} updated.'.format(id=kwargs['pool_id'])
-        await log.info(msg)
+        try:
+            ok = await StaticPool.soft_update(kwargs['pool_id'], kwargs.get('verbose_name'), kwargs.get('keep_vms_on'))
+        except UniqueViolationError:
+            error_msg = _('Failed to update static pool {}. Name must be unique.').format(kwargs['pool_id'])
+            await log.error(error_msg)
+            raise SimpleError(error_msg)
+        else:
+            msg = _('Static pool {} is updated.').format(kwargs['pool_id'])
+            await log.info(msg)
         return UpdateStaticPoolMutation(ok=ok)
 
 
@@ -646,9 +653,10 @@ class CreateAutomatedPoolMutation(graphene.Mutation, PoolValidator):
         await cls.validate_agruments(**kwargs)
         try:
             automated_pool = await AutomatedPool.create(**kwargs)
-        except UniqueViolationError as E:
-            await log.error(_('Failed to create automated pool {}.').format(kwargs['verbose_name']))
-            raise SimpleError(E)
+        except UniqueViolationError:
+            error_msg = _('Failed to create automated pool {}. Name must be unique.').format(kwargs['verbose_name'])
+            await log.error(error_msg)
+            raise SimpleError(error_msg)
 
         # add data for protection
         pool_task_manager.add_new_pool_data(str(automated_pool.id), str(automated_pool.template_id))
@@ -710,17 +718,23 @@ class UpdateAutomatedPoolMutation(graphene.Mutation, PoolValidator):
         await cls.validate_agruments(**kwargs)
         automated_pool = await AutomatedPool.get(kwargs['pool_id'])
         if automated_pool:
-            await automated_pool.soft_update(verbose_name=kwargs.get('verbose_name'),
-                                             reserve_size=kwargs.get('reserve_size'),
-                                             total_size=kwargs.get('total_size'),
-                                             vm_name_template=kwargs.get('vm_name_template'),
-                                             keep_vms_on=kwargs.get('keep_vms_on'),
-                                             create_thin_clones=kwargs.get('create_thin_clones'))
-            automated_pool = await AutomatedPool.get(kwargs['pool_id'])
-            msg = _('Automated pool {name} updated.').format(name=await automated_pool.verbose_name)
-            await log.info(msg)
-            # log.debug(_('Automated pool {} updated.').format(await automated_pool.verbose_name))
-            return UpdateAutomatedPoolMutation(ok=True)
+            try:
+                await automated_pool.soft_update(verbose_name=kwargs.get('verbose_name'),
+                                                 reserve_size=kwargs.get('reserve_size'),
+                                                 total_size=kwargs.get('total_size'),
+                                                 vm_name_template=kwargs.get('vm_name_template'),
+                                                 keep_vms_on=kwargs.get('keep_vms_on'),
+                                                 create_thin_clones=kwargs.get('create_thin_clones'))
+            except UniqueViolationError:
+                error_msg = _('Failed to update automated pool {}. Name must be unique.').format(kwargs['verbose_name'])
+                await log.error(error_msg)
+                raise SimpleError(error_msg)
+            else:
+                automated_pool = await AutomatedPool.get(kwargs['pool_id'])
+                msg = _('Automated pool {name} updated.').format(name=await automated_pool.verbose_name)
+                await log.info(msg)
+                # log.debug(_('Automated pool {} updated.').format(await automated_pool.verbose_name))
+                return UpdateAutomatedPoolMutation(ok=True)
         return UpdateAutomatedPoolMutation(ok=False)
 
 

@@ -20,9 +20,8 @@ FERNET_KEY = b'LRzSxWyxqKD4p2BR11-nVmghV67AVmQ4CxYi__S_OH8='
 
 # Auth settings
 # -----------------------------
-# Включает проверку токенов, стандартный интерфейс GraphQL становится недоступным
+# Включает/выключает проверку токенов, стандартный интерфейс GraphQL становится недоступным/доступным
 AUTH_ENABLED = True
-# Отключает проверку токенов, делает доступным стандартный интерфейс GraphQL
 # AUTH_ENABLED = False
 
 # JWT Options
@@ -71,8 +70,10 @@ KEYS_PATH = '../devops/conf/license'
 
 SERIAL_KEY_FNAME = 'serial.key'
 PRIVATE_PEM_FNAME = 'broker_private.pem'
+PUBLIC_PEM_FNAME = 'broker_public.pem'
 SERIAL_KEY_FPATH = os.path.join(KEYS_PATH, SERIAL_KEY_FNAME)
 PRIVATE_PEM_FPATH = os.path.join(KEYS_PATH, PRIVATE_PEM_FNAME)
+PUBLIC_PEM_FPATH = os.path.join(KEYS_PATH, PUBLIC_PEM_FNAME)
 
 # Redis settings
 # -----------------------------

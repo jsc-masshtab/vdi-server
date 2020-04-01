@@ -192,6 +192,11 @@ class User(AbstractSortableStatusModel, db.Model):
         return await hashers.check_password(raw_password, password)
 
     @staticmethod
+    async def check_email(email):
+        email_count = await db.select([db.func.count()]).where(User.email == email).gino.scalar()
+        return email_count < 1
+
+    @staticmethod
     async def check_user(username, raw_password):
         count = await db.select([db.func.count()]).where(
             (User.username == username) & (User.is_active == True)).gino.scalar()  # noqa
