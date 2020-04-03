@@ -122,24 +122,10 @@ static gboolean refresh_vdi_session_token()
 
 void start_vdi_session()
 {
-    if (vdiSession.is_active){
-        printf("%s: Session is already active\n", (const char *)__func__);
-        return;
-    }
+    memset(&vdiSession, 0, sizeof(VdiSession));
+
     // creae session
     vdiSession.soup_session = soup_session_new_with_options("timeout", HTTP_RESPONSE_TIOMEOUT, NULL);
-
-    vdiSession.vdi_username = NULL;
-    vdiSession.vdi_password = NULL;
-    vdiSession.vdi_ip = NULL;
-    vdiSession.vdi_port = NULL;
-
-    vdiSession.api_url = NULL;
-    vdiSession.auth_url = NULL;
-    vdiSession.jwt = NULL;
-
-    vdiSession.is_active = TRUE;
-    vdiSession.current_pool_id = NULL;
     vdiSession.current_remote_protocol = VDI_SPICE_PROTOCOL; // by default
 }
 
@@ -394,9 +380,9 @@ void vdi_api_session_connect_to_redis_and_subscribe(GTask         *task,
     g_free(url_str);
 
     JsonParser *parser = json_parser_new();
-    JsonNode *data_member = jsonhandler_get_data_object(parser, response_body_str);
+    JsonObject *data_member_object = jsonhandler_get_data_object(parser, response_body_str);
 
-    if (!data_member)
+    if (!data_member_object)
         return;
 
     // connect to Redis and subscribe to channel

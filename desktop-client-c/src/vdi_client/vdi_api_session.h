@@ -12,6 +12,7 @@
 
 #include "vdi_ws_client.h"
 #include "async.h"
+#include "vdi_redis_client.h"
 
 #define HTTP_RESPONSE_TIOMEOUT 10
 
@@ -65,6 +66,8 @@ typedef struct{
 
     gchar *current_pool_id;
     VdiVmRemoteProtocol current_remote_protocol;
+
+    RedisClient *redis_client;
 
 } VdiSession;
 

@@ -220,39 +220,45 @@ static void on_get_vdi_pool_data_finished(GObject *source_object G_GNUC_UNUSED,
 
     // parse vm data  json
     JsonParser *parser = json_parser_new();
-    JsonObject *data_member_object = jsonhandler_get_data_object(parser, response_body_str);
+    JsonObject *root_object = get_root_json_object(parser, response_body_str);
 
-    if (!data_member_object) {
+    JsonNode *data_member = NULL;
+    if (root_object)
+        data_member = json_object_get_member(root_object, "data");
+
+    JsonArray *jsonArray = NULL;
+    if (data_member)
+        jsonArray = json_node_get_array(data_member);
+
+    if (!jsonArray) {
         g_object_unref(parser);
         g_free(ptr_res);
+        set_vdi_client_state(VDI_RECEIVED_RESPONSE, "Не удалось получить список пулов", TRUE);
+        return;
     }
-
-    JsonArray *jsonArray = json_node_get_array(data_member_object);
 
     // prepare  pool_widgets_array
     unregister_all_pools();
 
-    // parse json data and fill pool_widgets_array
-    if (jsonArray) {
+    // fill pool_widgets_array
+    guint jsonArrayLength = MIN(json_array_get_length(jsonArray), MAX_POOL_NUMBER);
+    printf("Number of vm pools: %i\n", jsonArrayLength);
 
-        guint jsonArrayLength = MIN(json_array_get_length(jsonArray), MAX_POOL_NUMBER);
-        printf("Number of vm pools: %i\n", jsonArrayLength);
+    int i;
+    for(i = (int)jsonArrayLength - 1; i >= 0; --i){
 
-        int i;
-        for(i = (int)jsonArrayLength - 1; i >= 0; --i){
+        JsonNode *jsonNode = json_array_get_element (jsonArray, (guint)i);
+        JsonObject *object = json_node_get_object (jsonNode);
 
-            JsonNode *jsonNode = json_array_get_element (jsonArray, (guint)i);
-            JsonObject *object = json_node_get_object (jsonNode);
-
-            const gchar *pool_id = json_object_get_string_member_safely(object, "id");
-            const gchar *pool_name = json_object_get_string_member_safely(object, "name");
-            const gchar *os_type = json_object_get_string_member_safely(object, "os_type");
-            const gchar *status = json_object_get_string_member_safely(object, "status");
-            //printf("os_type %s\n", os_type);
-            //printf("pool_name %s\n", pool_name);
-            register_pool(pool_id, pool_name, os_type, status);
-        }
+        const gchar *pool_id = json_object_get_string_member_safely(object, "id");
+        const gchar *pool_name = json_object_get_string_member_safely(object, "name");
+        const gchar *os_type = json_object_get_string_member_safely(object, "os_type");
+        const gchar *status = json_object_get_string_member_safely(object, "status");
+        //printf("os_type %s\n", os_type);
+        //printf("pool_name %s\n", pool_name);
+        register_pool(pool_id, pool_name, os_type, status);
     }
+
     //
     set_vdi_client_state(VDI_RECEIVED_RESPONSE, "Получен список пулов", FALSE);
     //

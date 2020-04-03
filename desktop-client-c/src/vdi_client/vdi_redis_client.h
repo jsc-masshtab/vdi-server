@@ -7,12 +7,13 @@
 
 typedef struct{
 
+    redisContext *redis_context;
     gboolean is_connected;
     //GMutex lock;
     //GCancellable *cancel_job;
 
 } RedisClient;
 
-void vdi_redis_client_connect(gchar *password, gchar *channel, int port);
+void vdi_redis_client_connect(RedisClient *redis_client, gchar *password, gchar *channel, int port);
 
 #endif // VDI_REDIS_CLIENT_H
