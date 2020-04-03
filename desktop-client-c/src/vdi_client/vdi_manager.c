@@ -191,7 +191,7 @@ static VdiPoolWidget get_vdi_pool_widget_by_id(const gchar *searched_id)
     for (i = 0; i < vdi_manager.pool_widgets_array->len; ++i) {
         VdiPoolWidget vdi_pool_widget = g_array_index(vdi_manager.pool_widgets_array, VdiPoolWidget, i);
 
-        if(g_strcmp0(searched_id, vdi_pool_widget.pool_id) == 0){
+        if (g_strcmp0(searched_id, vdi_pool_widget.pool_id) == 0) {
             searched_vdi_pool_widget = vdi_pool_widget;
             break;
         }
@@ -220,16 +220,14 @@ static void on_get_vdi_pool_data_finished(GObject *source_object G_GNUC_UNUSED,
 
     // parse vm data  json
     JsonParser *parser = json_parser_new();
+    JsonObject *data_member_object = jsonhandler_get_data_object(parser, response_body_str);
 
-    JsonObject *root_object = get_root_json_object(parser, response_body_str);
-    if (!root_object)
-        return;
+    if (!data_member_object) {
+        g_object_unref(parser);
+        g_free(ptr_res);
+    }
 
-    JsonNode *data_member = json_object_get_member(root_object, "data");
-    if (!data_member)
-        return;
-
-    JsonArray *jsonArray = json_node_get_array(data_member);
+    JsonArray *jsonArray = json_node_get_array(data_member_object);
 
     // prepare  pool_widgets_array
     unregister_all_pools();

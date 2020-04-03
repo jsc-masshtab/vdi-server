@@ -1,8 +1,6 @@
 //
 // Created by solomin on 15.06.19.
 //
-// !!* -переменные с этой пометкой используются в разных потоках,
-// но одновременный доступ к ним не предполагается, так что защита не нужна
 
 #include <libsoup/soup-session.h>
 #include "remote-viewer-util.h"
@@ -17,11 +15,6 @@
 #define AUTH_FAIL_RESPONSE 401
 
 static VdiSession vdiSession;
-
-// Не предполагается одновременное выполнение больше одного запроса, поэтому защита полей VdiSession не реализуется
-// get token  (make post request)
-// set session header
-// make api requests
 
 static const gchar *remote_protocol_to_str(VdiVmRemoteProtocol vm_remote_protocol)
 {
@@ -110,20 +103,8 @@ static gboolean refresh_vdi_session_token()
     }
 
     JsonParser *parser = json_parser_new();
-    JsonObject *root_object = get_root_json_object(parser, msg->response_body->data);
-    if (!root_object) {
-        g_object_unref(msg);
-        return FALSE;
-    }
+    JsonObject *data_member_object = jsonhandler_get_data_object(parser, msg->response_body->data);
 
-    // if response contains feild errors we consider request as a failure
-    if (json_object_has_member(root_object, "errors")) {
-        g_object_unref(msg);
-        g_object_unref (parser);
-        return FALSE;
-    }
-
-    JsonObject *data_member_object = json_object_get_object_member_safely(root_object, "data");
     if (!data_member_object) {
         g_object_unref(msg);
         g_object_unref (parser);
@@ -208,9 +189,6 @@ const gchar *get_vdi_password(void)
 void vdi_api_cancell_pending_requests()
 {
     soup_session_abort(vdiSession.soup_session);
-    // sleep to give the async tasks time to stop.
-    // They will stop almost immediately after soup_session_abort
-    //g_usleep(20000);
 }
 
 void set_vdi_credentials(const gchar *username, const gchar *password, const gchar *ip,
@@ -315,45 +293,6 @@ void get_vdi_token(GTask       *task,
     g_task_return_boolean(task, token_refreshed);
 }
 
-gboolean vdi_api_logout(void)
-{
-    printf("%s \n", (const char *)__func__);
-    if (vdiSession.jwt) {
-        gchar *url_str = g_strdup_printf("%s/logout", vdiSession.api_url);
-
-        SoupMessage *msg = soup_message_new("POST", url_str);
-        g_free(url_str);
-
-        if (msg == NULL) {
-            printf("%s : Cant construct logout message\n", (const char *)__func__);
-            return FALSE;
-
-        } else {
-            // set header
-            setup_header_for_api_call(msg);
-            // send
-            g_object_set(vdiSession.soup_session, "timeout", 1, NULL);
-            send_message(msg);
-            g_object_set(vdiSession.soup_session, "timeout", HTTP_RESPONSE_TIOMEOUT, NULL);
-
-            guint res_code = msg->status_code;
-            g_object_unref(msg);
-
-            if (res_code == OK_RESPONSE) {
-                // logout was succesfull so we can foget the token
-                free_memory_safely(&vdiSession.jwt);
-                return TRUE;
-            }
-            else
-                return FALSE;
-        }
-
-    } else {
-        printf("%s : No token info\n", (const char *)__func__);
-        return FALSE;
-    }
-}
-
 void get_vdi_pool_data(GTask   *task,
                  gpointer       source_object G_GNUC_UNUSED,
                  gpointer       task_data G_GNUC_UNUSED,
@@ -390,8 +329,7 @@ void get_vm_from_pool(GTask       *task,
 
     // parse response
     JsonParser *parser = json_parser_new();
-    JsonObject *root_object = get_root_json_object(parser, response_body_str);
-    JsonObject *data_member_object = json_object_get_object_member_safely(root_object, "data");
+    JsonObject *data_member_object = jsonhandler_get_data_object(parser, response_body_str);
 
     // no point to parse if data is invalid
     if (!data_member_object) {
@@ -444,7 +382,66 @@ void do_action_on_vm(GTask      *task,
     free_action_on_vm_data(action_on_vm_data);
 }
 
-void do_action_on_vm_async(const gchar *actionStr, gboolean isForced)
+void vdi_api_session_connect_to_redis_and_subscribe(GTask         *task,
+                                                    gpointer       source_object,
+                                                    gpointer       task_data,
+                                                    GCancellable  *cancellable)
+{
+    // do request to vdi server in order to get data fot Redis connection
+    gchar *url_str = g_strdup_printf("%s/client/message_broker/", vdiSession.api_url);
+    gchar *response_body_str = api_call("GET", url_str, NULL);
+    printf("%s: response_body_str %s\n", (const char *)__func__, response_body_str);
+    g_free(url_str);
+
+    JsonParser *parser = json_parser_new();
+    JsonNode *data_member = jsonhandler_get_data_object(parser, response_body_str);
+
+    if (!data_member)
+        return;
+
+    // connect to Redis and subscribe to channel
+}
+
+gboolean vdi_api_logout(void)
+{
+    printf("%s \n", (const char *)__func__);
+    if (vdiSession.jwt) {
+        gchar *url_str = g_strdup_printf("%s/logout", vdiSession.api_url);
+
+        SoupMessage *msg = soup_message_new("POST", url_str);
+        g_free(url_str);
+
+        if (msg == NULL) {
+            printf("%s : Cant construct logout message\n", (const char *)__func__);
+            return FALSE;
+
+        } else {
+            // set header
+            setup_header_for_api_call(msg);
+            // send
+            g_object_set(vdiSession.soup_session, "timeout", 1, NULL);
+            send_message(msg);
+            g_object_set(vdiSession.soup_session, "timeout", HTTP_RESPONSE_TIOMEOUT, NULL);
+
+            guint res_code = msg->status_code;
+            g_object_unref(msg);
+
+            if (res_code == OK_RESPONSE) {
+                // logout was succesfull so we can foget the token
+                free_memory_safely(&vdiSession.jwt);
+                return TRUE;
+            }
+            else
+                return FALSE;
+        }
+
+    } else {
+        printf("%s : No token info\n", (const char *)__func__);
+        return FALSE;
+    }
+}
+
+void do_action_on_vm_launch_task(const gchar *actionStr, gboolean isForced)
 {
     ActionOnVmData *action_on_vm_data = malloc(sizeof(ActionOnVmData));
     action_on_vm_data->current_vm_id = g_strdup(get_current_pool_id());

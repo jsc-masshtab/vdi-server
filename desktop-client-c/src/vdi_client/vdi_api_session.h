@@ -45,7 +45,8 @@ typedef struct{
 
 } VdiVmData;
 
-// vdi session
+// vdi session todo: по-хорошему надо защитить поля от одновременного домтупа из разных потоков
+// soup_session - thread safe. его не надо защищать
 typedef struct{
 
     SoupSession *soup_session;
@@ -53,13 +54,13 @@ typedef struct{
     gchar *vdi_username;
     gchar *vdi_password;
     gchar *vdi_ip;
-    gchar *vdi_port;
+    gchar *vdi_port; // todo: make it int!
 
     gchar *api_url;
     gchar *auth_url;
     gchar *jwt;
-
     gboolean is_ldap;
+
     gboolean is_active;
 
     gchar *current_pool_id;
@@ -110,7 +111,7 @@ VdiVmRemoteProtocol get_current_remote_protocol(void);
 // Do api call. Return response body
 gchar *api_call(const char *method, const char *uri_string, const gchar *body_str);
 
-/// Функции выполняемые в потоке
+/// Таски выполняемые в потоке
 // Fetch token
 void get_vdi_token(GTask         *task,
                    gpointer       source_object,
@@ -135,10 +136,16 @@ void do_action_on_vm(GTask         *task,
                      gpointer       task_data,
                      GCancellable  *cancellable);
 
+// Connect to Redis and subscribe
+void vdi_api_session_connect_to_redis_and_subscribe(GTask         *task,
+                                                    gpointer       source_object,
+                                                    gpointer       task_data,
+                                                    GCancellable  *cancellable);
+
 // Log out
 gboolean vdi_api_logout(void);
 
-void do_action_on_vm_async(const gchar *actionStr, gboolean isForced);
+void do_action_on_vm_launch_task(const gchar *actionStr, gboolean isForced);
 
 
 void free_action_on_vm_data(ActionOnVmData *action_on_vm_data);

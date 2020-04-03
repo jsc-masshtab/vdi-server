@@ -93,6 +93,8 @@ FILE(GLOB SRC_CODE
         src/vdi_client/vdi_pool_widget.c
         src/vdi_client/vdi_ws_client.h
         src/vdi_client/vdi_ws_client.c
+        src/vdi_client/vdi_redis_client.h
+        src/vdi_client/vdi_redis_client.c
 )
 ###############################LIBRARIES###############################
     # GLIB
@@ -108,6 +110,10 @@ FILE(GLOB SRC_CODE
 
 if (UNIX)
     SET(LIBS_INCLUDE_PATH /usr/include/)
+
+    # redis hiredis
+    INCLUDE_DIRECTORIES(${LIBS_INCLUDE_PATH}hiredis)
+    SET(LIBS ${LIBS} hiredis)
 
     # freerdp
     INCLUDE_DIRECTORIES(${LIBS_INCLUDE_PATH}freerdp2)

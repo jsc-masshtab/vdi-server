@@ -48,3 +48,16 @@ JsonObject *json_object_get_object_member_safely(JsonObject *object, const gchar
     return NULL;
 }
 
+JsonObject *jsonhandler_get_data_object(JsonParser *parser, gchar *json_str)
+{
+    JsonObject *root_object = get_root_json_object(parser, json_str);
+    if (!root_object)
+        return NULL;
+
+    // if response contains errors feild we consider request as a failure and dont parse the data
+    if (json_object_has_member(root_object, "errors"))
+        return NULL;
+
+    JsonObject *data_member_object = json_object_get_object_member_safely(root_object, "data");
+    return data_member_object;
+}
