@@ -38,10 +38,11 @@ from journal.journal import Log as log
 
 _ = lang_init()
 
-tornado.options.define("access_to_stdout", default=True, help="Log tornado.access to stdout")
+tornado.options.define("access_to_stdout", default=True, help="tornado.access to stdout")
 tornado.options.define("port", default=8888, help="port to listen on")
 tornado.options.define("autoreload", default=True, help="autoreload application")
 tornado.options.define("debug", default=True, help="debug mode")
+tornado.options.define("workers", default=1, help="num of process forks. 0 forks one process per cpu")
 
 handlers = [
     (r'/controllers', VdiTornadoGraphQLHandler, dict(graphiql=True, schema=controller_schema)),
@@ -75,14 +76,6 @@ def init_tasks():
     IOLoop.instance().add_timeout(time.time(), vm_manager.start)
 
 
-def bootstrap():
-    """Запускает логгирование"""
-
-    init_signals()
-    tornado.options.parse_command_line(final=True)
-    Logging.init_logging(tornado.options.options.access_to_stdout)
-
-
 def make_app():
     return tornado.web.Application(handlers,
                                    debug=tornado.options.options.debug,
@@ -110,15 +103,37 @@ def init_license():
     return License()
 
 
+def exit_handler(sig, frame):
+    IOLoop.instance().add_callback_from_signal(shutdown_server)
+
+
+async def shutdown_server():
+    log.name(_('Stopping Tornado VDI'))
+
+    log.name(_('Stopping redis'))
+    REDIS_POOL.disconnect()
+
+    log.name(_('Stopping resources_monitor_manager'))
+    await resources_monitor_manager.stop()
+
+    log.name(_('Stopping GINO'))
+    await stop_gino()
+
+    log.name(_('Stopping IOLoop'))
+    IOLoop.current().stop()
+
+    log.name(_('Tornado VDI stopped'))
+
+
 def start_server():
+    tornado.options.parse_command_line(final=True)
+    Logging.init_logging(tornado.options.options.access_to_stdout)
+    init_signals()
 
     app = make_app()
     server = tornado.httpserver.HTTPServer(app)
     server.listen(tornado.options.options.port)
-
-    server.start(0)
-
-    bootstrap()
+    server.start(tornado.options.options.workers)
 
     log.name(_('Tornado VDI started'))
 
@@ -141,28 +156,6 @@ def start_server():
     init_tasks()
     init_callbacks()
     IOLoop.current().start()
-
-
-def exit_handler(sig, frame):
-    IOLoop.instance().add_callback_from_signal(shutdown_server)
-
-
-async def shutdown_server():
-    log.name(_('Stopping Tornado VDI'))
-
-    log.name(_('Stopping redis'))
-    REDIS_POOL.disconnect()
-
-    log.name(_('Stopping resources_monitor_manager'))
-    await resources_monitor_manager.stop()
-
-    log.name(_('Stopping GINO'))
-    await stop_gino()
-
-    log.name(_('Stopping IOLoop'))
-    IOLoop.current().stop()
-
-    log.name(_('Tornado VDI stopped'))
 
 
 if __name__ == '__main__':
