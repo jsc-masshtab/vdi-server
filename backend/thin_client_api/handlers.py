@@ -62,7 +62,7 @@ class PoolGetVm(BaseHandler, ABC):
         # Проверяем лимит виртуальных машин
 
         if Pool.thin_client_limit_exceeded():
-            response = {'errors': [{'message': _('Thin client limit exceeded.')}]}
+            response = {'errors': [{'message': _('Thin client limit exceeded.'), 'code': '001'}]}
             return await self.finish(response)
 
         # Сочитание pool id и username уникальное, т.к. пользователь не может иметь больше одной машины в пуле
