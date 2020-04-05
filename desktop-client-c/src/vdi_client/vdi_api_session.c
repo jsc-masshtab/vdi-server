@@ -64,7 +64,7 @@ static guint send_message(SoupMessage *msg)
 }
 
 // Получаем токен
-static gboolean refresh_vdi_session_token()
+static gboolean vdi_api_session_get_token()
 {
     printf("%s\n", (const char *)__func__);
 
@@ -120,6 +120,35 @@ static gboolean refresh_vdi_session_token()
     return TRUE;
 }
 
+// connect to reddis and subscribe for licence handling
+static void vdi_api_session_register_for_license()
+{
+    // do request to vdi server in order to get data fot Redis connection
+    gchar *url_str = g_strdup_printf("%s/client/message_broker/", vdiSession.api_url);
+    gchar *response_body_str = api_call("GET", url_str, NULL);
+    printf("%s: response_body_str %s\n", (const char *)__func__, response_body_str);
+    g_free(url_str);
+
+    // parse the response
+    JsonParser *parser = json_parser_new();
+    JsonObject *data_member_object = jsonhandler_get_data_object(parser, response_body_str);
+
+    if (!data_member_object)
+        return;
+
+    vdiSession.redis_client.adress = g_strdup(vdiSession.vdi_ip);
+    vdiSession.redis_client.port = json_object_get_int_member_safely(data_member_object, "port");
+    vdiSession.redis_client.password = g_strdup(
+            g_strdup(json_object_get_string_member_safely(data_member_object, "password")));
+    vdiSession.redis_client.channel = g_strdup(
+            g_strdup(json_object_get_string_member_safely(data_member_object, "channel")));
+    vdiSession.redis_client.db = json_object_get_int_member_safely(data_member_object, "db");
+
+    // connect to Redis and subscribe to channel
+
+    vdi_redis_client_init(&vdiSession.redis_client);
+}
+
 void start_vdi_session()
 {
     memset(&vdiSession, 0, sizeof(VdiSession));
@@ -137,7 +166,7 @@ void stop_vdi_session()
     }
 
     // logout
-    vdi_api_logout();
+    vdi_api_session_logout();
 
     vdi_api_cancell_pending_requests();
     g_object_unref(vdiSession.soup_session);
@@ -232,7 +261,7 @@ gchar *api_call(const char *method, const char *uri_string, const gchar *body_st
         return response_body_str;
 
     if (vdiSession.jwt == NULL) // get the token if we dont have it
-        refresh_vdi_session_token();
+        vdi_api_session_get_token();
 
     SoupMessage *msg = soup_message_new(method, uri_string);
     if (msg == NULL) // this may happen according to doc
@@ -259,7 +288,7 @@ gchar *api_call(const char *method, const char *uri_string, const gchar *body_st
             break;
 
         } else if (msg->status_code == AUTH_FAIL_RESPONSE) {
-            refresh_vdi_session_token();
+            vdi_api_session_get_token();
         }
     }
 
@@ -268,15 +297,20 @@ gchar *api_call(const char *method, const char *uri_string, const gchar *body_st
     return response_body_str;
 }
 
-void get_vdi_token(GTask       *task,
+void vdi_api_session_log_in(GTask       *task,
                    gpointer       source_object G_GNUC_UNUSED,
                    gpointer       task_data G_GNUC_UNUSED,
                    GCancellable  *cancellable G_GNUC_UNUSED)
 {
+    // get token
     free_memory_safely(&vdiSession.jwt);
-    gboolean token_refreshed = refresh_vdi_session_token();
+    gboolean token_received = vdi_api_session_get_token();
 
-    g_task_return_boolean(task, token_refreshed);
+    // register for licensing
+    if (token_received)
+        vdi_api_session_register_for_license();
+
+    g_task_return_boolean(task, token_received);
 }
 
 void get_vdi_pool_data(GTask   *task,
@@ -368,27 +402,7 @@ void do_action_on_vm(GTask      *task,
     free_action_on_vm_data(action_on_vm_data);
 }
 
-void vdi_api_session_connect_to_redis_and_subscribe(GTask         *task,
-                                                    gpointer       source_object,
-                                                    gpointer       task_data,
-                                                    GCancellable  *cancellable)
-{
-    // do request to vdi server in order to get data fot Redis connection
-    gchar *url_str = g_strdup_printf("%s/client/message_broker/", vdiSession.api_url);
-    gchar *response_body_str = api_call("GET", url_str, NULL);
-    printf("%s: response_body_str %s\n", (const char *)__func__, response_body_str);
-    g_free(url_str);
-
-    JsonParser *parser = json_parser_new();
-    JsonObject *data_member_object = jsonhandler_get_data_object(parser, response_body_str);
-
-    if (!data_member_object)
-        return;
-
-    // connect to Redis and subscribe to channel
-}
-
-gboolean vdi_api_logout(void)
+gboolean vdi_api_session_logout(void)
 {
     printf("%s \n", (const char *)__func__);
     if (vdiSession.jwt) {
@@ -427,7 +441,7 @@ gboolean vdi_api_logout(void)
     }
 }
 
-void do_action_on_vm_launch_task(const gchar *actionStr, gboolean isForced)
+void vdi_api_session_do_action_on_vm(const gchar *actionStr, gboolean isForced)
 {
     ActionOnVmData *action_on_vm_data = malloc(sizeof(ActionOnVmData));
     action_on_vm_data->current_vm_id = g_strdup(get_current_pool_id());

@@ -383,7 +383,7 @@ static void on_button_quit_clicked(GtkButton *button G_GNUC_UNUSED, gpointer dat
     printf("%s\n", (const char *)__func__);
 
     // logout
-    vdi_api_logout();
+    vdi_api_session_logout();
 
     ConnectionInfo *ci = data;
     ci->response = FALSE;

@@ -166,7 +166,7 @@ on_get_vm_from_pool_finished(GObject *source_object G_GNUC_UNUSED,
 
 // token fetch callback
 static void
-on_get_vdi_token_finished(GObject *source_object G_GNUC_UNUSED,
+on_vdi_api_session_log_in_finished(GObject *source_object G_GNUC_UNUSED,
                                       GAsyncResult *res,
                                       gpointer user_data)
 {
@@ -182,8 +182,8 @@ on_get_vdi_token_finished(GObject *source_object G_GNUC_UNUSED,
         ci->dialog_window_response = GTK_RESPONSE_OK;
         set_data_from_gui_in_outer_pointers(ci);
 
-        // redis related actions upon succesful auhtorization
-        execute_async_task(vdi_api_session_connect_to_redis_and_subscribe, NULL, NULL, NULL);
+        //// redis related actions upon succesful auhtorization
+        //execute_async_task(vdi_api_session_connect_to_redis_and_subscribe, NULL, NULL, NULL);
 
         shutdown_loop(ci->loop);
     } else {
@@ -221,7 +221,7 @@ void connect_to_vdi_server(RemoteViewerData *ci)
         execute_async_task(get_vm_from_pool, on_get_vm_from_pool_finished, NULL, ci);
     } else {
         // fetch token task starting
-        execute_async_task(get_vdi_token, on_get_vdi_token_finished, NULL, ci);
+        execute_async_task(vdi_api_session_log_in, on_vdi_api_session_log_in_finished, NULL, ci);
     }
 }
 

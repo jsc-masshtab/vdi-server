@@ -67,7 +67,7 @@ typedef struct{
     gchar *current_pool_id;
     VdiVmRemoteProtocol current_remote_protocol;
 
-    RedisClient *redis_client;
+    RedisClient redis_client;
 
 } VdiSession;
 
@@ -116,7 +116,7 @@ gchar *api_call(const char *method, const char *uri_string, const gchar *body_st
 
 /// Таски выполняемые в потоке
 // Fetch token
-void get_vdi_token(GTask         *task,
+void vdi_api_session_log_in(GTask         *task,
                    gpointer       source_object,
                    gpointer       task_data,
                    GCancellable  *cancellable);
@@ -139,16 +139,10 @@ void do_action_on_vm(GTask         *task,
                      gpointer       task_data,
                      GCancellable  *cancellable);
 
-// Connect to Redis and subscribe
-void vdi_api_session_connect_to_redis_and_subscribe(GTask         *task,
-                                                    gpointer       source_object,
-                                                    gpointer       task_data,
-                                                    GCancellable  *cancellable);
-
-// Log out
-gboolean vdi_api_logout(void);
-
-void do_action_on_vm_launch_task(const gchar *actionStr, gboolean isForced);
+// Log out sync
+gboolean vdi_api_session_logout(void);
+// Do action on vm async
+void vdi_api_session_do_action_on_vm(const gchar *actionStr, gboolean isForced);
 
 
 void free_action_on_vm_data(ActionOnVmData *action_on_vm_data);

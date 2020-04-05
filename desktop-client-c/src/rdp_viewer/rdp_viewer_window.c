@@ -219,42 +219,42 @@ static void
 rdp_viewer_window_menu_start_vm(GtkWidget *menu G_GNUC_UNUSED, gpointer userdata G_GNUC_UNUSED)
 {
     printf("%s\n", (const char *)__func__);
-    do_action_on_vm_launch_task("start", FALSE);
+    vdi_api_session_do_action_on_vm("start", FALSE);
 }
 
 static void
 rdp_viewer_window_menu_suspend_vm(GtkWidget *menu G_GNUC_UNUSED, gpointer userdata G_GNUC_UNUSED)
 {
     printf("%s\n", (const char *)__func__);
-    do_action_on_vm_launch_task("suspend", FALSE);
+    vdi_api_session_do_action_on_vm("suspend", FALSE);
 }
 
 static void
 rdp_viewer_window_menu_shutdown_vm(GtkWidget *menu G_GNUC_UNUSED, gpointer userdata G_GNUC_UNUSED)
 {
     printf("%s\n", (const char *)__func__);
-    do_action_on_vm_launch_task("shutdown", FALSE);
+    vdi_api_session_do_action_on_vm("shutdown", FALSE);
 }
 
 static void
 rdp_viewer_window_menu_shutdown_vm_force(GtkWidget *menu G_GNUC_UNUSED, gpointer userdata G_GNUC_UNUSED)
 {
     printf("%s\n", (const char *)__func__);
-    do_action_on_vm_launch_task("shutdown", TRUE);
+    vdi_api_session_do_action_on_vm("shutdown", TRUE);
 }
 
 static void
 rdp_viewer_window_menu_reboot_vm(GtkWidget *menu G_GNUC_UNUSED, gpointer userdata G_GNUC_UNUSED)
 {
     printf("%s\n", (const char *)__func__);
-    do_action_on_vm_launch_task("reboot", FALSE);
+    vdi_api_session_do_action_on_vm("reboot", FALSE);
 }
 
 static void
 rdp_viewer_window_menu_reboot_vm_force(GtkWidget *menu G_GNUC_UNUSED, gpointer userdata G_GNUC_UNUSED)
 {
     printf("%s\n", (const char *)__func__);
-    do_action_on_vm_launch_task("reboot", TRUE);
+    vdi_api_session_do_action_on_vm("reboot", TRUE);
 }
 
 static void rdp_viewer_control_menu_setup(GtkBuilder *builder, RdpViewerData *rdp_viewer_data)

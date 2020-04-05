@@ -50,6 +50,9 @@ JsonObject *json_object_get_object_member_safely(JsonObject *object, const gchar
 
 JsonObject *jsonhandler_get_data_object(JsonParser *parser, gchar *json_str)
 {
+    if (!json_str)
+        return NULL;
+
     JsonObject *root_object = get_root_json_object(parser, json_str);
     if (!root_object)
         return NULL;
