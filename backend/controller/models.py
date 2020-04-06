@@ -66,7 +66,8 @@ class Controller(db.Model):
     async def pools(self):
         # Либо размещать staticmethod в пулах, либо импорт тут, либо хардкодить названия полей.
         from pool.models import Pool
-        return await Pool.query.where(Controller.id == self.id).gino.all()
+        query = Pool.join(Controller.query.where(Controller.id == self.id).alias()).alias().select()
+        return await query.gino.load(Pool).all()
 
     @staticmethod
     async def get_controllers_addresses():

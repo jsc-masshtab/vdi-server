@@ -92,7 +92,7 @@ class VeilHttpClient:
             if http_error.code == 400:
                 raise BadRequest(body)
             elif http_error.code == 401:
-                raise Unauthorized()
+                raise Unauthorized(_('Controller {} connection error.').format(self.controller_ip))
             elif http_error.code == 403:
                 raise Forbidden(body)
             elif http_error.code == 404:
