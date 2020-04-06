@@ -118,7 +118,7 @@ export class PoolAddComponent implements OnInit, OnDestroy {
         min_free_vms_amount: ['', [Validators.required, Validators.min(1)]],
         reserve_size: ['', [Validators.required, Validators.max(200), Validators.min(1)]],
       }, {validators: this.totalSizeValidator()}),
-      create_thin_clones: false });
+      create_thin_clones: true });
     this.finishPoolView = {};
     this.getControllers();
   }
