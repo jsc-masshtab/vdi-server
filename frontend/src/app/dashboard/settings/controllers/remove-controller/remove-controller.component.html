@@ -9,10 +9,7 @@
   <div class="form-message">
     <p>Удалить контроллер {{ data?.verbose_name }}?</p>
 
-    <label class="field-inline">
-      <mat-checkbox [color]="'warn'" (change)="full = $event.checked"></mat-checkbox>
-      <p class="description">FULL удаление (удаление сущности в статусе ACTIVE с удалением зависимых сущностей)</p>
-    </label>
+    <p class="description">Будут удалены все пулы на контроллере</p>
   </div>
 
   <div class="form-actions">

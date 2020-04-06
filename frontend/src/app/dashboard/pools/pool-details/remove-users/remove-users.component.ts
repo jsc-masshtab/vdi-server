@@ -57,7 +57,7 @@ export class RemoveUsersPoolComponent  implements OnInit, OnDestroy {
     this.pendingUsers = true;
     this.poolService.getAllUsersEntitleToPool(this.data.idPool).pipe(takeUntil(this.destroy))
     .subscribe( (data) => {
-      this.users = data;
+      this.users = data.filter(e => !e.is_superuser);
       this.pendingUsers = false;
     },
     () => {

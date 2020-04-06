@@ -225,6 +225,7 @@ export class PoolDetailsService {
                             query  pools($pool_id: String) {
                                 pool(pool_id: $pool_id) {
                                     users {
+                                        is_superuser
                                         username
                                         id
                                     }

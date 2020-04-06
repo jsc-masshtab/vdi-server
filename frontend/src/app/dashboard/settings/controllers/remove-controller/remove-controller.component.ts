@@ -19,7 +19,7 @@ interface IData {
 export class RemoveControllerComponent implements OnDestroy {
 
   private destroy: Subject<any> = new Subject<any>();
-  public full: boolean = false;
+  public full: boolean = true;
 
   constructor(private controllerService: ControllersService,
               private waitService: WaitService,
