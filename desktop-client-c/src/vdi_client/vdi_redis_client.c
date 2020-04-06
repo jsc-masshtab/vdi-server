@@ -39,7 +39,6 @@ void vdi_redis_client_init(RedisClient *redis_client)
     struct timeval timeout = { 1, 500000 }; // 1.5 seconds
     redis_client->redis_context = redisConnectWithTimeout(
                 redis_client->adress, redis_client->port, timeout);
-    //g_free(redis_adress);
 
     if (redis_client->redis_context == NULL || redis_client->redis_context->err) {
 
@@ -96,6 +95,7 @@ void vdi_redis_client_deinit(RedisClient *redis_client)
 
         // dissconnect
         redisFree(redis_client->redis_context);
+        printf("Disconnected from Redis\n");
     }
     redis_client->redis_context = NULL;
     redis_client->is_subscribed = FALSE;

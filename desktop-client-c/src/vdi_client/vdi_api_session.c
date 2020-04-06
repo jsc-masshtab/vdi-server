@@ -265,9 +265,6 @@ gchar *api_call(const char *method, const char *uri_string, const gchar *body_st
     if (vdiSession.jwt == NULL)
         vdi_api_session_get_token();
 
-//    // register for licensing if its still not done
-//    vdi_api_session_register_for_license();
-
     SoupMessage *msg = soup_message_new(method, uri_string);
     if (msg == NULL) // this may happen according to doc
         return response_body_str;
@@ -337,6 +334,10 @@ void get_vm_from_pool(GTask       *task,
                     gpointer       task_data G_GNUC_UNUSED,
                     GCancellable  *cancellable G_GNUC_UNUSED)
 {
+    // register for licensing if its still not done
+    vdi_api_session_register_for_license();
+
+    // get vm from pool
     gchar *url_str = g_strdup_printf("%s/client/pools/%s", vdiSession.api_url, vdiSession.current_pool_id);
 
     // todo: нормально создавать json
