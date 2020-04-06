@@ -245,7 +245,7 @@ class VmQuery(graphene.ObjectType):
             template_type_list = VmQuery.veil_template_data_to_graphene_type_list(
                 template_veil_data_list, controller_ip)
         else:
-            controllers_addresses = await Controller.get_controllers_addresses()
+            controllers_addresses = await Controller.get_addresses()
 
             template_type_list = []
             for controller_address in controllers_addresses:
@@ -297,7 +297,7 @@ class VmQuery(graphene.ObjectType):
 
         # if controller address is not provided then take all vms from all controllers
         else:
-            controllers_addresses = await Controller.get_controllers_addresses()
+            controllers_addresses = await Controller.get_addresses()
 
             vm_type_list = []
             for controller_address in controllers_addresses:

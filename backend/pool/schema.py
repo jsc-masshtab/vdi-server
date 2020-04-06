@@ -412,7 +412,7 @@ class CreateStaticPoolMutation(graphene.Mutation, PoolValidator):
     async def fetch_veil_vm_data_list(vm_ids):
         # TODO: не пересена в модель, потому что есть предложение вообще отказаться от такой проверки.
         #  Более удобным вариантом кажется хранить ресурсы в кеше и валидировать их из него.
-        controller_adresses = await Controller.get_controllers_addresses()
+        controller_adresses = await Controller.get_addresses()
         # create list of all vms on controllers
         all_vm_veil_data_list = []
         for controller_address in controller_adresses:

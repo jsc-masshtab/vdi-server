@@ -8,7 +8,7 @@ from sqlalchemy.dialects.postgresql import UUID
 
 from auth.utils import crypto
 from controller.client import ControllerClient
-from database import db, get_list_of_values_from_db, Status, EntityType
+from database import db, Status, EntityType
 from common.veil_errors import SimpleError, BadRequest
 
 from languages import lang_init
@@ -70,8 +70,13 @@ class Controller(db.Model):
         return await query.gino.load(Pool).all()
 
     @staticmethod
-    async def get_controllers_addresses():
-        return await get_list_of_values_from_db(Controller, Controller.address)
+    async def get_addresses(status=Status.ACTIVE):
+        """Возвращает ip-контроллеров находящихся в переданном статусе"""
+
+        query = Controller.select('address').where(Controller.status == status)
+        addresses = await query.gino.all()
+        addresses_list = [address[0] for address in addresses]
+        return addresses_list
 
     @staticmethod
     async def get_controller_id_by_ip(ip_address):

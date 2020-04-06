@@ -23,7 +23,7 @@ class ResourcesMonitorManager:
         """
         log.debug('{}: Startup...'.format(__class__.__name__))
         # get all active controller ips
-        controllers_addresses = await Controller.get_controllers_addresses()
+        controllers_addresses = await Controller.get_addresses()
         msg = _('{cls}: connected controllers -- {controllers}').format(
             cls=__class__.__name__,
             controllers=controllers_addresses)

@@ -282,7 +282,7 @@ class ResourcesQuery(graphene.ObjectType):
 
     @superuser_required
     async def resolve_nodes(self, _info, cluster_id=None, ordering=None):
-        controllers_addresses = await Controller.get_controllers_addresses()
+        controllers_addresses = await Controller.get_addresses()
 
         # form list of nodes
         list_of_all_node_types = []
@@ -341,7 +341,7 @@ class ResourcesQuery(graphene.ObjectType):
             list_of_all_cluster_types = await ResourcesQuery.resource_veil_to_graphene_type_list(
                 ClusterType, clusters, controller_ip)
         else:
-            controllers_addresses = await Controller.get_controllers_addresses()
+            controllers_addresses = await Controller.get_addresses()
             # print('test controllers', controllers_addresses)
             # form list of clusters
             list_of_all_cluster_types = []
@@ -390,7 +390,7 @@ class ResourcesQuery(graphene.ObjectType):
         # form list of datapools
         list_of_all_datapool_types = []
 
-        controllers_addresses = await Controller.get_controllers_addresses()
+        controllers_addresses = await Controller.get_addresses()
         for controllers_address in controllers_addresses:
             resources_http_client = await ResourcesHttpClient.create(controllers_address)
             datapools = await resources_http_client.fetch_datapool_list(node_id=node_id, take_broken=take_broken)

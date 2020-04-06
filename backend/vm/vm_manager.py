@@ -35,7 +35,7 @@ class VmManager:
             local_vm_data_list = await local_vm_data_query.gino.all()
 
             # get vm info from controllers
-            controllers_addresses = await Controller.get_controllers_addresses()
+            controllers_addresses = await Controller.get_addresses()
 
             remote_vm_data_list = []
             for controller_address in controllers_addresses:
