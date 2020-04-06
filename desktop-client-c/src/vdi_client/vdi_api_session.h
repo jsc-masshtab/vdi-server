@@ -62,8 +62,6 @@ typedef struct{
     gchar *jwt;
     gboolean is_ldap;
 
-    gboolean is_active;
-
     gchar *current_pool_id;
     VdiVmRemoteProtocol current_remote_protocol;
 

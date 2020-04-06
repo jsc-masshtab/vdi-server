@@ -23,5 +23,7 @@ typedef struct{
 } RedisClient;
 
 void vdi_redis_client_init(RedisClient *redis_client);
+void vdi_redis_client_deinit(RedisClient *redis_client);
+void vdi_redis_client_clear_connection_data(RedisClient *redis_client);
 
 #endif // VDI_REDIS_CLIENT_H

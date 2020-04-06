@@ -123,6 +123,9 @@ static gboolean vdi_api_session_get_token()
 // connect to reddis and subscribe for licence handling
 static void vdi_api_session_register_for_license()
 {
+    if (vdiSession.redis_client.is_subscribed)
+        return;
+
     // do request to vdi server in order to get data fot Redis connection
     gchar *url_str = g_strdup_printf("%s/client/message_broker/", vdiSession.api_url);
     gchar *response_body_str = api_call("GET", url_str, NULL);
@@ -136,6 +139,7 @@ static void vdi_api_session_register_for_license()
     if (!data_member_object)
         return;
 
+    vdi_redis_client_clear_connection_data(&vdiSession.redis_client);
     vdiSession.redis_client.adress = g_strdup(vdiSession.vdi_ip);
     vdiSession.redis_client.port = json_object_get_int_member_safely(data_member_object, "port");
     vdiSession.redis_client.password = g_strdup(
@@ -145,7 +149,6 @@ static void vdi_api_session_register_for_license()
     vdiSession.redis_client.db = json_object_get_int_member_safely(data_member_object, "db");
 
     // connect to Redis and subscribe to channel
-
     vdi_redis_client_init(&vdiSession.redis_client);
 }
 
@@ -160,10 +163,10 @@ void start_vdi_session()
 
 void stop_vdi_session()
 {
-    if (!vdiSession.is_active){
-        printf("%s: Session is not active\n", (const char *)__func__);
-        return;
-    }
+//    if (!vdiSession.is_active){
+//        printf("%s: Session is not active\n", (const char *)__func__);
+//        return;
+//    }
 
     // logout
     vdi_api_session_logout();
@@ -172,8 +175,6 @@ void stop_vdi_session()
     g_object_unref(vdiSession.soup_session);
 
     free_session_memory();
-
-    vdiSession.is_active = FALSE;
 }
 
 SoupSession *get_soup_session()
@@ -260,8 +261,12 @@ gchar *api_call(const char *method, const char *uri_string, const gchar *body_st
     if (uri_string == NULL)
         return response_body_str;
 
-    if (vdiSession.jwt == NULL) // get the token if we dont have it
+    // get the token if we dont have it
+    if (vdiSession.jwt == NULL)
         vdi_api_session_get_token();
+
+//    // register for licensing if its still not done
+//    vdi_api_session_register_for_license();
 
     SoupMessage *msg = soup_message_new(method, uri_string);
     if (msg == NULL) // this may happen according to doc
@@ -287,6 +292,7 @@ gchar *api_call(const char *method, const char *uri_string, const gchar *body_st
             response_body_str = g_strdup(msg->response_body->data); // json_string_with_data. memory allocation!
             break;
 
+        // get the token if it expired...
         } else if (msg->status_code == AUTH_FAIL_RESPONSE) {
             vdi_api_session_get_token();
         }
@@ -404,6 +410,9 @@ void do_action_on_vm(GTask      *task,
 
 gboolean vdi_api_session_logout(void)
 {
+    // disconnect from license server(redis)
+    vdi_redis_client_deinit(&vdiSession.redis_client);
+
     printf("%s \n", (const char *)__func__);
     if (vdiSession.jwt) {
         gchar *url_str = g_strdup_printf("%s/logout", vdiSession.api_url);

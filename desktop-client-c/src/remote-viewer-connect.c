@@ -182,9 +182,6 @@ on_vdi_api_session_log_in_finished(GObject *source_object G_GNUC_UNUSED,
         ci->dialog_window_response = GTK_RESPONSE_OK;
         set_data_from_gui_in_outer_pointers(ci);
 
-        //// redis related actions upon succesful auhtorization
-        //execute_async_task(vdi_api_session_connect_to_redis_and_subscribe, NULL, NULL, NULL);
-
         shutdown_loop(ci->loop);
     } else {
         set_error_message_to_label(GTK_LABEL(ci->message_display_label), "Не удалось авторизоваться");

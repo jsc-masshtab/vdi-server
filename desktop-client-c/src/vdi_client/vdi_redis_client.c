@@ -2,16 +2,6 @@
 
 #include "remote-viewer-util.h"
 
-
-static void vdi_redis_client_clear_connection_data(RedisClient *redis_client)
-{
-    redis_client->port = 0;
-    redis_client->db = 0;
-    free_memory_safely(&redis_client->adress);
-    free_memory_safely(&redis_client->password);
-    free_memory_safely(&redis_client->channel);
-}
-
 static void vdi_redis_client_clear_redis_reply(redisReply *reply)
 {
     if (reply)
@@ -33,7 +23,6 @@ static gboolean vdi_redis_client_check_if_reply_contains_errors(
 
         redisFree(redis_client->redis_context);
         redis_client->redis_context = NULL;
-        vdi_redis_client_clear_connection_data(redis_client);
         return TRUE;
     }
 
@@ -63,7 +52,6 @@ void vdi_redis_client_init(RedisClient *redis_client)
         }
 
         redis_client->redis_context = NULL;
-        vdi_redis_client_clear_connection_data(redis_client);
         return;
     }
 
@@ -94,8 +82,31 @@ void vdi_redis_client_init(RedisClient *redis_client)
     printf("%s Successfully subscrubed to channel %s\n", (const char *)__func__,
            redis_client->channel);
 
-    vdi_redis_client_clear_connection_data(redis_client);
-    redisFree(redis_client->redis_context); // temp. Remove it!
+    redis_client->is_subscribed = TRUE;
 }
 
+void vdi_redis_client_deinit(RedisClient *redis_client)
+{
+    if (redis_client->redis_context) {
+        // unsubscribe
+        redisReply * reply = redisCommand(
+                    redis_client->redis_context, "UNSUBSCRIBE %s", redis_client->channel);
+        vdi_redis_client_check_if_reply_contains_errors(redis_client, reply, "unsubscribing");
+        vdi_redis_client_clear_redis_reply(reply);
 
+        // dissconnect
+        redisFree(redis_client->redis_context);
+    }
+    redis_client->redis_context = NULL;
+    redis_client->is_subscribed = FALSE;
+    vdi_redis_client_clear_connection_data(redis_client);
+}
+
+void vdi_redis_client_clear_connection_data(RedisClient *redis_client)
+{
+    redis_client->port = 0;
+    redis_client->db = 0;
+    free_memory_safely(&redis_client->adress);
+    free_memory_safely(&redis_client->password);
+    free_memory_safely(&redis_client->channel);
+}
