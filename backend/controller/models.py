@@ -220,14 +220,16 @@ class Controller(db.Model):
 
     async def full_delete_pools(self):
         """Полное удаление пулов контроллера"""
-        pools = await self.pools_query.gino.all()
+
+        pools = await self.pools
         for pool in pools:
-            await pool.full_delete(commit=False)
+            await pool.full_delete(commit=True)
 
     async def full_delete(self):
         """Удаление сущности с удалением зависимых сущностей"""
 
         msg = _('Controller {name} had completely remove.').format(name=self.verbose_name)
+        await self.full_delete_pools()
         await self.delete()
         await log.info(msg, entity_dict=self.entity)
         return True
