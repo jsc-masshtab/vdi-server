@@ -224,6 +224,22 @@ void connect_to_vdi_server(RemoteViewerData *ci)
     }
 }
 
+static void
+handle_connect_event(RemoteViewerData *ci)
+{
+    if (strlen_safely(ci->connect_settings_data.ip) > 0) {
+        // In manual mode we shudown the loop.
+        if (opt_manual_mode) {
+            ci->dialog_window_response = GTK_RESPONSE_OK;
+            set_data_from_gui_in_outer_pointers(ci);
+
+            shutdown_loop(ci->loop);
+        } else {
+            connect_to_vdi_server(ci);
+        }
+    }
+}
+
 static gboolean
 window_deleted_cb(RemoteViewerData *ci)
 {
@@ -235,10 +251,16 @@ window_deleted_cb(RemoteViewerData *ci)
 static gboolean
 key_pressed_cb(GtkWidget *widget G_GNUC_UNUSED, GdkEvent *event, gpointer data)
 {
-    GtkWidget *window = data;
+    RemoteViewerData *ci = data;
+    GtkWidget *window = ci->window;
     gboolean retval;
     if (event->type == GDK_KEY_PRESS) {
+        printf("GDK_KEY_PRESS event->key.keyval %i \n", event->key.keyval);
         switch (event->key.keyval) {
+            case GDK_KEY_Return:
+                printf("GDK_KEY_Return\n");
+                handle_connect_event(ci);
+                return TRUE;
             case GDK_KEY_Escape:
                 g_signal_emit_by_name(window, "delete-event", NULL, &retval);
                 return TRUE;
@@ -269,18 +291,7 @@ static void
 connect_button_clicked_cb(GtkButton *button G_GNUC_UNUSED, gpointer data)
 {
     RemoteViewerData *ci = data;
-
-    if (strlen_safely(ci->connect_settings_data.ip) > 0) {
-        // In manual mode we shudown the loop.
-        if (opt_manual_mode) {
-            ci->dialog_window_response = GTK_RESPONSE_OK;
-            set_data_from_gui_in_outer_pointers(ci);
-
-            shutdown_loop(ci->loop);
-        } else {
-            connect_to_vdi_server(ci);
-        }
-    }
+    handle_connect_event(ci);
 }
 
 static void
@@ -371,7 +382,7 @@ remote_viewer_connect_dialog(gchar **user, gchar **password, gchar **domain,
     ci.login_entry = GTK_WIDGET(gtk_builder_get_object(builder, "login-entry"));
 
     // Signal - callbacks connections
-    g_signal_connect(ci.window, "key-press-event", G_CALLBACK(key_pressed_cb), ci.window);
+    g_signal_connect(ci.window, "key-press-event", G_CALLBACK(key_pressed_cb), &ci);
     g_signal_connect_swapped(ci.window, "delete-event", G_CALLBACK(window_deleted_cb), &ci);
     g_signal_connect(ci.settings_button, "clicked", G_CALLBACK(settings_button_clicked_cb), &ci);
     g_signal_connect(ci.settings_button, "activate-link", G_CALLBACK(settings_button_link_clicked_cb), &ci);
