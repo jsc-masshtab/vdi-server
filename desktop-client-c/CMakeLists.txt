@@ -73,6 +73,8 @@ FILE(GLOB SRC_CODE
         src/rdp_viewer/rdp_display.c
         src/rdp_viewer/rdp_viewer_window.h
         src/rdp_viewer/rdp_viewer_window.c
+        src/rdp_viewer/windows_rdp_launcher.h
+        src/rdp_viewer/windows_rdp_launcher.c
         
 #utility
         src/utility/crashhandler.h
@@ -131,7 +133,7 @@ endif (UNIX)
 
 if (WIN32)
     SET(LIBS_INCLUDE_PATH C:/msys64/mingw64/include/)
-    SET(FREERDP_PATH C:/job/freerdp/FreeRDP-2.0.0-rc4/FreeRDP-2.0.0-rc4/)
+    SET(FREERDP_PATH C:/job/FreeRDP-2.0.0-rc4/FreeRDP-2.0.0-rc4/)
 
     # freerdp
     INCLUDE_DIRECTORIES(${FREERDP_PATH}include)

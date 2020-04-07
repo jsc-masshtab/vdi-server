@@ -36,7 +36,7 @@
 #include "vdi_api_session.h"
 
 #include "rdp_viewer.h"
-
+#include "windows_rdp_launcher.h"
 
 extern gboolean opt_manual_mode;
 
@@ -343,7 +343,7 @@ retry_auth:
     // 2) В дефолтном режиме вызываем vdi manager. В нем пользователь выберет машину для подключения
 retry_connnect_to_vm:
     /// instant connect attempt
-    if (opt_manual_mode) { // only spice in manual mode
+    if (opt_manual_mode) {
         if (remote_protocol_type == VDI_RDP_PROTOCOL) {
 //            printf("%s TEST user %s\n", (const char *)__func__, user);
 //            printf("%s TEST password %s\n", (const char *)__func__, password);
@@ -403,7 +403,6 @@ retry_connnect_to_vm:
         // минуя vdi manager window
         if (!is_connect_to_prev_pool) {
             remote_viewer_free_auth_data(&user, &password, &domain, &ip, &port, &vm_verbose_name);
-
             // show VDI manager window
             GtkResponseType vdi_dialog_window_response =
                     vdi_manager_dialog(virt_viewer_window_get_window(main_window), &ip, &port,
@@ -417,7 +416,6 @@ retry_connnect_to_vm:
                 return FALSE;
             }
         }
-
         // set virt viewer window_name
         virt_viewer_app_set_window_name(app, vm_verbose_name);
 
@@ -431,7 +429,9 @@ retry_connnect_to_vm:
                 remote_viewer_free_auth_data(&user, &password, &domain, &ip, &port, &vm_verbose_name);
                 return FALSE;
             }
-
+        }else if (remote_protocol_type == VDI_RDP_WINDOWS_NATIVE_PROTOCOL) {
+                launch_windows_rdp_client(get_vdi_username(), get_vdi_password(), ip, 0);
+                //return FALSE;
         } else { // spice by default
             printf("%s port %s\n", (const char *)__func__, port);
             printf("%s user %s\n", (const char *)__func__, user);

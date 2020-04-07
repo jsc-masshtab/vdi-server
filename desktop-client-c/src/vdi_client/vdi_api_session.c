@@ -30,6 +30,8 @@ static const gchar *remote_protocol_to_str(VdiVmRemoteProtocol vm_remote_protoco
         return "spice";
     case VDI_RDP_PROTOCOL:
         return "rdp";
+     case VDI_RDP_WINDOWS_NATIVE_PROTOCOL:
+         return "rdp native";
     case VDI_ANOTHER_REMOTE_PROTOCOL:
         return "unknown_protocol";
     }
