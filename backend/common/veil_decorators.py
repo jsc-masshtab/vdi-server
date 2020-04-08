@@ -19,14 +19,19 @@ _ = lang_init()
 
 def prepare_body(func):
     """Convert dict to HTTPClient request.body"""
+
     def wrapper(*args, **kwargs):
+
         if len(args) >= 4 and kwargs.get('body'):
             raise AssertionError(
-                _('Expect that \'body\' is the 4 parameter in args. But in the same time \'body\' in kwargs. Check it.'))
+                _('\'body\' index in args must be 4, but in the same time \'body\' in kwargs'))
+
         if len(args) >= 4:
             input_body = args[4]
+            input_method = args[2]
         else:
             input_body = kwargs.get('body')
+            input_method = kwargs.get('method')
 
         if not input_body:
             body = ''
@@ -41,6 +46,10 @@ def prepare_body(func):
                 body = ''
         else:
             body = ''
+
+        if body == '' and input_method == 'GET':
+            body = None
+
         if len(args) >= 4:
             args_list = list(args)
             args_list[4] = body

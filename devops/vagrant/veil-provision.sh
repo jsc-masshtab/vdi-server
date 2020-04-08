@@ -30,15 +30,18 @@ for i in $(seq ${attempts_count}); do
 done
 
 echo "run Veil provision"
+# auth
+echo "attempt to auth to controller ${controller_ip}"
+sshpass -p ${root_password} ssh ${ssh_opts} root@${controller_ip} ${base_cmd} auth ${api_user} ${api_password} -c ${controller_ip}
+
 # Добавляем узлы
 echo "attempt to add node ${controller_ip} to controller ${controller_ip}"
-sshpass -p ${root_password} ssh ${ssh_opts} root@${controller_ip} ${base_cmd} node add ${api_user} ${api_password} ${controller_ip} ${controller_ip} ${root_password} -c ${controller_ip}
+sshpass -p ${root_password} ssh ${ssh_opts} root@${controller_ip} ${base_cmd} node add ${controller_ip} ${controller_ip} ${root_password}
 echo "attempt to add node ${node1_ip} to controller ${controller_ip}"
-sshpass -p ${root_password} ssh ${ssh_opts} root@${controller_ip} ${base_cmd} node add ${api_user} ${api_password} ${node1_ip} ${node1_ip} ${root_password} -c ${controller_ip}
-# sshpass -p ${root_password} ssh ${ssh_opts} root@${controller_ip} ${base_cmd} node list ${api_user} ${api_password} -c ${controller_ip}
+sshpass -p ${root_password} ssh ${ssh_opts} root@${controller_ip} ${base_cmd} node add ${node1_ip} ${node1_ip} ${root_password}
 
 # Добавляем ВМ и шаблон на первом попавшемся активном узле
 echo "attempt to create domain on first random active node"
-sshpass -p ${root_password} ssh ${ssh_opts} root@${controller_ip} ${base_cmd} domain create ${api_user} ${api_password} domain -c ${controller_ip}
+sshpass -p ${root_password} ssh ${ssh_opts} root@${controller_ip} ${base_cmd} domain create domain
 echo "attempt to create template on first random  active node"
-sshpass -p ${root_password} ssh ${ssh_opts} root@${controller_ip} ${base_cmd} domain create_template ${api_user} ${api_password} template -c ${controller_ip}
+sshpass -p ${root_password} ssh ${ssh_opts} root@${controller_ip} ${base_cmd} domain create_template template

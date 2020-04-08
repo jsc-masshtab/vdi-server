@@ -49,23 +49,33 @@ class VeilHttpClient:
         return headers
 
     @prepare_body
-    async def fetch(self, url: str, method: str, headers: dict = None, body: str = ''):
-        if method == 'GET' and body == '':
-            body = None
+    async def fetch(self, url: str, method: str, headers: dict = None, body: str = '', controller_control: bool = True):
+        """
+
+        :param url: URL запроса
+        :param method: Метод запроса
+        :param headers: Заголовки запроса
+        :param body: Тело запроса
+        :param controller_control: нужно ли управлять контроллером по результатам исключения
+        :return: HttpResponse
+        """
+
         if not headers:
             headers = await self.headers
+
+        request = HTTPRequest(url=url,
+                              method=method,
+                              headers=headers,
+                              body=body,
+                              connect_timeout=VEIL_CONNECTION_TIMEOUT,
+                              request_timeout=VEIL_REQUEST_TIMEOUT)
+
         try:
-            request = HTTPRequest(url=url,
-                                  method=method,
-                                  headers=headers,
-                                  body=body,
-                                  connect_timeout=VEIL_CONNECTION_TIMEOUT,
-                                  request_timeout=VEIL_REQUEST_TIMEOUT)
             response = await self._client.fetch(request)
         except HTTPClientError as http_error:
 
             async def stop_controller(description: str):
-                # TODO: этому тут явно не место.
+                # TODO: этому тут не место.
                 from resources_monitoring.resources_monitor_manager import resources_monitor_manager
                 if isinstance(description, list):
                     description = description[0]
@@ -77,8 +87,6 @@ class VeilHttpClient:
                 # Останавливаем монитор ресурсов для контроллера.
                 await resources_monitor_manager.remove_controller(self.controller_ip)
 
-            log.error(_('URL {url} - {http_error}').format(url=url, http_error=str(http_error)))
-
             body = self.get_response_body(http_error.response)
             if isinstance(body, dict):
                 errors = body['errors'] if body.get('errors') else {}
@@ -87,7 +95,9 @@ class VeilHttpClient:
                 detail = _('url: {} - {}').format(url, body)
             else:
                 detail = ''
-            await stop_controller(detail)
+
+            if controller_control:
+                await stop_controller(detail)
 
             if http_error.code == 400:
                 raise BadRequest(body)
@@ -124,9 +134,11 @@ class VeilHttpClient:
             response = dict()
         return response
 
-    async def fetch_with_response(self, url: str, method: str, headers: dict = None, body: str = None):
+    async def fetch_with_response(self, url: str, method: str, headers: dict = None, body: str = None,
+                                  controller_control: bool = True):
         """Check response headers. Search json in content-type value"""
-        response = await self.fetch(url=url, method=method, headers=headers, body=body)
+        response = await self.fetch(url=url, method=method, headers=headers, body=body,
+                                    controller_control=controller_control)
         response_body = self.get_response_body(response)
         return response_body
 
