@@ -137,7 +137,12 @@ endif (UNIX)
 
 if (WIN32)
     SET(LIBS_INCLUDE_PATH C:/msys64/mingw64/include/)
-    SET(FREERDP_PATH C:/job/freerdp/FreeRDP-2.0.0-rc4/FreeRDP-2.0.0-rc4/)
+    SET(FREERDP_PATH C:/job/FreeRDP-2.0.0-rc4/FreeRDP-2.0.0-rc4/)
+    SET(HIREDIS_PATH C:/job/hiredis-mingw/)
+
+    # hiredis port to Windows
+    INCLUDE_DIRECTORIES(${HIREDIS_PATH})
+    SET(LIBS ${LIBS} ${HIREDIS_PATH}cmake-build-release/libhiredis.a)
 
     # freerdp
     INCLUDE_DIRECTORIES(${FREERDP_PATH}include)
@@ -153,6 +158,8 @@ if (WIN32)
     SET(LIBS ${LIBS}
             m
             -pthread
+            -lwsock32
+            -lws2_32
     )
 
     SET(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)

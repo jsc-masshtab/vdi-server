@@ -16,6 +16,6 @@ JsonObject *json_object_get_object_member_safely(JsonObject  *object, const gcha
 
 // Return data_object pointer or NULL if an error occured
 // Every reply from VDI must contain errors or data
-JsonObject *jsonhandler_get_data_object(JsonParser *parser, gchar *json_str);
+JsonObject *jsonhandler_get_data_object(JsonParser *parser, const gchar *json_str);
 
 #endif //THIN_CLIENT_VEIL_JSONHANDLER_H

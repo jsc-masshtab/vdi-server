@@ -48,7 +48,7 @@ JsonObject *json_object_get_object_member_safely(JsonObject *object, const gchar
     return NULL;
 }
 
-JsonObject *jsonhandler_get_data_object(JsonParser *parser, gchar *json_str)
+JsonObject *jsonhandler_get_data_object(JsonParser *parser, const gchar *json_str)
 {
     if (!json_str)
         return NULL;
