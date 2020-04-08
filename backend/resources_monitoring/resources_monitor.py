@@ -125,7 +125,7 @@ class ResourcesMonitor(AbstractMonitor):
         try:
             token = await Controller.get_token(self._controller_ip)
         except Exception as E:
-            log.error(E)
+            await log.error(E)
             return False
 
         # create ws connection
@@ -168,4 +168,4 @@ class ResourcesMonitor(AbstractMonitor):
             try:
                 self._ws_connection.close()
             except Exception as E:  # todo: вообще конкретное исключение не интересует
-                log.error(E)
+                await log.error(E)

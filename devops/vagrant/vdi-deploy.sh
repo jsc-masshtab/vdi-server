@@ -20,6 +20,7 @@ echo "Setting up redis"
 apt-get install -y redis-server
 systemctl enable redis-server.service
 echo 'requirepass 4NZ7GpHn4IlshPhb' >> /etc/redis/redis.conf
+sed -i 's/bind 127.0.0.1/bind 0.0.0.0/g' /etc/redis/redis.conf
 systemctl restart redis-server
 
 #------------------------------

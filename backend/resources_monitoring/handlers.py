@@ -101,7 +101,7 @@ class VdiFrontWsHandler(websocket.WebSocketHandler, AbstractSubscriptionObserver
             return
         # check if allowed
         if subscription_source not in VDI_FRONT_ALLOWED_SUBSCRIPTIONS_LIST:
-            log.error(_('Unknown subscription source'))
+            await log.error(_('Unknown subscription source'))
             response_dict['error'] = True
             await self.write_msg(response_dict)
             return

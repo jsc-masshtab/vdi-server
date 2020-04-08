@@ -424,8 +424,7 @@ class CreateStaticPoolMutation(graphene.Mutation, PoolValidator):
                     vm_veil_data['controller_address'] = controller_address
                 all_vm_veil_data_list.extend(single_vm_veil_data_list)
             except (HttpError, OSError) as error_msg:
-                log.error(_('HttpError: {}').format(error_msg))
-                pass
+                await log.error(_('HttpError: {}').format(error_msg))
 
         # find vm veil data by id
         vm_veil_data_list = []
@@ -473,7 +472,7 @@ class CreateStaticPoolMutation(graphene.Mutation, PoolValidator):
             datapool_id = disks_list[0]['datapool']['id']
         except IndexError as ie:
             datapool_id = None
-            log.error(ie)
+            await log.error(ie)
 
         try:
             await Vm.enable_remote_accesses(controller_ip, vm_ids)
@@ -501,7 +500,6 @@ class CreateStaticPoolMutation(graphene.Mutation, PoolValidator):
             # log.debug(_('StaticPool: pool {} created.').format(verbose_name))
             await log.info(_('Static pool {name} created.').format(name=verbose_name))
         except Exception as E:  # Возможные исключения: дубликат имени или вм id, сетевой фейл enable_remote_accesses
-            # log.error(_('Failed to create static pool {}.').format(verbose_name))
             log.debug(E)
             error_msg = _('Failed to create static pool {}.').format(verbose_name)
             await log.error(error_msg)

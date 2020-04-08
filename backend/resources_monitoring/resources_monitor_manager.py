@@ -33,7 +33,7 @@ class ResourcesMonitorManager:
         # start resources monitors
         for controller_address in controllers_addresses:
             self._add_monitor_for_controller(controller_address)
-        log.info(_('{}: Started').format(__class__.__name__))
+        await log.info(_('{}: Started').format(__class__.__name__))
 
     async def stop(self):
         """
@@ -71,14 +71,14 @@ class ResourcesMonitorManager:
             msg = _('{cls}: Controller {ip} is already monitored!').format(
                 cls=__class__.__name__,
                 ip=controller_ip)
-            log.warning(msg)
+            await log.warning(msg)
             return
         # add monitor
         self._add_monitor_for_controller(controller_ip)
         msg = _('{cls}: resource monitor for controller {ip} connected').format(
             cls=__class__.__name__,
             ip=controller_ip)
-        log.info(msg)
+        await log.info(msg)
 
     async def remove_controller(self, controller_ip):
         # Деактивируем контроллер
@@ -101,7 +101,7 @@ class ResourcesMonitorManager:
         msg = _('{cls}: resource monitor for controller {ip} removed').format(
             cls=__class__.__name__,
             ip=controller_ip)
-        log.warning(msg)
+        await log.warning(msg)
 
     # PRIVATE METHODS
     def _get_monitored_controllers_ips(self):
