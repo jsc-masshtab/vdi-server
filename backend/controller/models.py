@@ -141,10 +141,10 @@ class Controller(db.Model):
             auth_info = dict(username=self.username, password=encrypted_password, ldap=self.ldap_connection)
             await controller_client.auth(auth_info=auth_info)
         except Exception as ex:
-            log.warning(_('Controller {} check failed.').format(self.verbose_name))
+            await log.warning(_('Controller {} check failed.').format(self.verbose_name))
             log.debug(_('Controller check: {}').format(ex))
             return False
-        log.info(_('Controller {} check passed successfull.').format(self.verbose_name))
+        await log.info(_('Controller {} check passed successfull.').format(self.verbose_name))
         return True
 
     @classmethod
@@ -190,7 +190,7 @@ class Controller(db.Model):
                 controller_kwargs.update(credentials)
             except BadRequest:
                 credentials_valid = False
-                log.warning(
+                await log.warning(
                     _('Can\'t connect to controller {} with username: {}, password: {}, ldap_connection: {}').format(
                         address, username, password, ldap_connection))
 

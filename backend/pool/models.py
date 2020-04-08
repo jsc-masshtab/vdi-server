@@ -738,7 +738,7 @@ class AutomatedPool(db.Model):
                 log.debug(_('VM creation task id: {}').format(current_vm_task_id))
             except HttpError as http_error:
                 # Обработка BadRequest происходит в Vm.copy()
-                log.error(http_error)
+                await log.error(http_error)
                 log.debug(_('Fail to create VM on ECP. Re-run.'))
                 await asyncio.sleep(1)
                 continue
@@ -868,8 +868,6 @@ class AutomatedPool(db.Model):
 
         except VmCreationError as vm_error:
             # log that we cant create required initial amount of VMs
-            # log.error(_('Can\'t create VM:'))
-            # log.error(vm_error)
             await log.error(msg=_('Can\'t create VM'), description=str(vm_error))
 
         # notify VDI front about pool creation result (WS)
@@ -907,7 +905,7 @@ class AutomatedPool(db.Model):
                 try:
                     await self.add_initial_vms()
                 except PoolCreationError as E:
-                    log.error('{exception}'.format(exception=str(E)))
+                    await log.error('{exception}'.format(exception=str(E)))
                     await self.deactivate()
                 else:
                     await self.activate()
@@ -945,8 +943,8 @@ class AutomatedPool(db.Model):
                             domain_index = vm_amount_in_pool + i
                             await self.add_vm(domain_index)
                     except VmCreationError as vm_error:
-                        log.error(_('VM creating error:'))
-                        log.error(vm_error)
+                        await log.error(_('VM creating error:'))
+                        log.debug(vm_error)
 
     async def remove_vms(self):
         """Интерфейс для запуска команды HttpClient на удаление виртуалки"""

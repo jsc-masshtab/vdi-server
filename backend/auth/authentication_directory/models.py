@@ -237,7 +237,6 @@ class AuthenticationDirectory(db.Model, AbstractSortableStatusModel):
             return True
         except ldap.SERVER_DOWN:
             msg = _('Authentication directory server {} is down.').format(self.directory_url)
-            # log.warning(msg)
             await log.warning(msg, entity_dict=self.entity)
             return False
         return True

@@ -139,7 +139,7 @@ class UpdateControllerMutation(graphene.Mutation):
         except Exception as E:
             msg = _('Fail to update controller {id}: {error}').format(
                 id=id, error=E)
-            # log.error(msg)
+            await log.error(msg)
             # При редактировании с контроллером произошла ошибка - нужно остановить монитор ресурсов.
             await resources_monitor_manager.remove_controller(controller.address)
             # И деактивировать контроллер
@@ -149,7 +149,7 @@ class UpdateControllerMutation(graphene.Mutation):
         msg = _('Successfully update controller {name} with address {address}.').format(
             name=controller.verbose_name,
             address=controller.address)
-        log.info(msg)
+        await log.info(msg)
         # На случай, если контроллер был не активен - активируем его.
         await Controller.activate(id)
         return UpdateControllerMutation(ok=True, controller=ControllerType(**controller.__values__))
