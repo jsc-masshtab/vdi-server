@@ -31,7 +31,7 @@ static const gchar *remote_protocol_to_str(VdiVmRemoteProtocol vm_remote_protoco
     case VDI_RDP_PROTOCOL:
         return "rdp";
      case VDI_RDP_WINDOWS_NATIVE_PROTOCOL:
-         return "rdp native";
+         return "rdp";
     case VDI_ANOTHER_REMOTE_PROTOCOL:
         return "unknown_protocol";
     }
@@ -375,8 +375,6 @@ void get_vm_from_pool(GTask       *task,
                     GCancellable  *cancellable G_GNUC_UNUSED)
 {
     gchar *url_str = g_strdup_printf("%s/client/pools/%s", vdiSession.api_url, vdiSession.current_pool_id);
-
-    // todo: нормально создавать json
     gchar *bodyStr = g_strdup_printf("{\"remote_protocol\":\"%s\"}",
                                      remote_protocol_to_str(vdiSession.current_remote_protocol));
 

@@ -75,7 +75,6 @@ FILE(GLOB SRC_CODE
         src/rdp_viewer/rdp_viewer_window.c
         src/rdp_viewer/windows_rdp_launcher.h
         src/rdp_viewer/windows_rdp_launcher.c
-        
 #utility
         src/utility/crashhandler.h
         src/utility/crashhandler.c
@@ -182,6 +181,11 @@ target_link_libraries(
 )
 
 #############################CONFIGS###################################
+# rdp template file for Windows native client
+if (WIN32)
+    file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/doc/rdp_data
+            DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+endif (WIN32)
 # translations
 file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/po/ru
      DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/local)

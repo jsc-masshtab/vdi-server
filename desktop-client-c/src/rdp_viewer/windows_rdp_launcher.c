@@ -2,105 +2,25 @@
 #include <gio/gio.h>
 #include <gtk/gtk.h>
 
+#ifdef _WIN32
 #include <windows.h>
 #include <stdio.h>
 #include <tchar.h>
+#endif
 
 #include "rdp_viewer.h"
 
 /// В msys2 не нашел gspawn-win32-helper. Без него запуск ппроцессов с помощтю gtk невозможен
 
-//static void
-//child_watch_cb (GPid     pid,
-//                gint     status,
-//                gpointer user_data)
-//{
-//    g_message("Child %" G_PID_FORMAT " exited %s", pid,
-//              g_spawn_check_exit_status (status, NULL) ? "normally" : "abnormally");
-//
-//    // Free any resources associated with the child process
-//    g_spawn_close_pid(pid);
-//
-//    // stop process event loop
-//    GMainLoop *loop = user_data;
-//    g_main_loop_quit(loop);
-//}
-//
-//void
-//launch_windows_rdp_client(const gchar *usename, const gchar *password, gchar *ip, int port)
-//{
-//    g_autoptr(GError) error = NULL;
-//
-//    gchar *username_arg = g_strconcat("/u:", usename, NULL);
-//    gchar *password_arg = g_strconcat("/p:", password, NULL);
-//
-//    gchar *adress_arg;
-//    if (port)
-//        adress_arg = g_strconcat("/v:", ip, ":", port, NULL);
-//    else
-//        adress_arg = g_strconcat("/v:", ip, NULL);
-//
-//    printf("username_arg test %s\n", username_arg);
-//    const gchar * const argv[] = { "mstsc",
-//                                   "win10.rdp",
-//                                   NULL };
-//
-//    //gint child_stdout, child_stderr;
-//    GPid child_pid;
-//
-//    // Spawn child process. // todo: взято с доки, но это провоцирует предупреждение
-////    g_spawn_async(NULL, argv, NULL, G_SPAWN_SEARCH_PATH | G_SPAWN_DO_NOT_REAP_CHILD, NULL,
-////                             NULL, &child_pid, &error);
-//
-//    g_spawn_command_line_async("mstsc.exe", &error);
-//
-//    g_free(username_arg);
-//    g_free(password_arg);
-//    g_free(adress_arg);
-//
-//    if (error != NULL) {
-//        printf("%s: Spawning child failed: %s\n", (const char *)__func__, error->message);
-//        g_clear_error(&error);
-//        return;
-//    }
-//
-//    GMainLoop *loop = g_main_loop_new(NULL, FALSE);
-//
-//    // add calback upon the process return
-//    g_child_watch_add(child_pid, child_watch_cb, loop);
-//
-//    // start loop
-//    g_main_loop_run(loop);
-//}
-
-/**
- * Copy file contents character by charcter from
- * one file to another.
- * It return total character copied count.
- *
- * @sourceFile  Pointer to source FILE.
- * @destFile    Pointer to destination FILE.
- */
-static int fcpy(FILE * sourceFile, FILE * destFile)
-{
-    int  count = 0;
-    char ch;
-
-    /* Copy file contents character by character. */
-    while ((ch = fgetc(sourceFile)) != EOF)
-    {
-        fputc(ch, destFile);
-
-        /* Increment character copied count */
-        count++;
-    }
-
-    return count;
-}
 
 void
-launch_windows_rdp_client(const gchar *usename, const gchar *password, gchar *ip, int port)
+launch_windows_rdp_client(const gchar *usename, const gchar *password G_GNUC_UNUSED,
+                          const gchar *ip, int port G_GNUC_UNUSED)
 {
+#ifdef __linux__
+    (void)usename;
+    (void)ip;
+#elif defined _WIN32
     //create rdp file based on template
     //open template for reading and take its content
     FILE *sourceFile;
@@ -179,4 +99,5 @@ launch_windows_rdp_client(const gchar *usename, const gchar *password, gchar *ip
     // Close process and thread handles.
     CloseHandle( pi.hProcess );
     CloseHandle( pi.hThread );
+#endif
 }

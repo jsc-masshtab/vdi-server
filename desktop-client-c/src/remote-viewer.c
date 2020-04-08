@@ -33,10 +33,11 @@
 #include "remote-viewer.h"
 #include "remote-viewer-connect.h"
 #include "vdi_manager.h"
-#include "vdi_api_session.h"
 
 #include "rdp_viewer.h"
+#ifdef _WIN32
 #include "windows_rdp_launcher.h"
+#endif
 
 extern gboolean opt_manual_mode;
 
@@ -423,15 +424,15 @@ retry_connnect_to_vm:
         if (remote_protocol_type == VDI_RDP_PROTOCOL) {
             GtkResponseType rdp_viewer_res = rdp_viewer_start(get_vdi_username(), get_vdi_password(), domain, ip, 0);
             //printf("user: %s   pass: %s", get_vdi_username(), get_vdi_password());
-            //rdp_viewer_start("user", "user", ip, NULL); // todo: Remove later
             // quit if required
             if (rdp_viewer_res == GTK_RESPONSE_CLOSE) {
                 remote_viewer_free_auth_data(&user, &password, &domain, &ip, &port, &vm_verbose_name);
                 return FALSE;
             }
+#ifdef _WIN32
         }else if (remote_protocol_type == VDI_RDP_WINDOWS_NATIVE_PROTOCOL) {
                 launch_windows_rdp_client(get_vdi_username(), get_vdi_password(), ip, 0);
-                //return FALSE;
+#endif
         } else { // spice by default
             printf("%s port %s\n", (const char *)__func__, port);
             printf("%s user %s\n", (const char *)__func__, user);

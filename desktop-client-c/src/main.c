@@ -41,7 +41,8 @@ setup_logging()
 
     //error output
     gchar *stderr_file_name = g_strconcat(log_dir, ts_string, "_stderr.txt", NULL);
-    freopen(stderr_file_name, "w", stderr);
+    FILE *file_desc = freopen(stderr_file_name, "w", stderr);
+    (void)file_desc;
 
 //    //stdout output
 //    gchar *stdout_file_name = g_strconcat(log_dir, ts_string, "_stdout.txt", NULL);
