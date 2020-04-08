@@ -454,7 +454,10 @@ GtkResponseType vdi_manager_dialog(GtkWindow *main_window G_GNUC_UNUSED, gchar *
     vdi_manager.main_vm_spinner = GTK_WIDGET(gtk_builder_get_object(vdi_manager.builder, "main_vm_spinner"));
     vdi_manager.combobox_remote_protocol =
             GTK_WIDGET(gtk_builder_get_object(vdi_manager.builder, "combobox-remote-protocol"));
-
+    // remove tdp native optin if we are on linux
+#ifdef __linux__
+    gtk_combo_box_text_remove(vdi_manager.combobox_remote_protoco, 2);
+#endif
     vdi_manager.image_label_vdi_online = GTK_WIDGET(gtk_builder_get_object(vdi_manager.builder, "image_label_vdi_online"));
 
     // connects

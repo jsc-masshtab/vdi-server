@@ -73,33 +73,8 @@
 //    g_main_loop_run(loop);
 //}
 
-/**
- * Copy file contents character by charcter from
- * one file to another.
- * It return total character copied count.
- *
- * @sourceFile  Pointer to source FILE.
- * @destFile    Pointer to destination FILE.
- */
-static int fcpy(FILE * sourceFile, FILE * destFile)
-{
-    int  count = 0;
-    char ch;
-
-    /* Copy file contents character by character. */
-    while ((ch = fgetc(sourceFile)) != EOF)
-    {
-        fputc(ch, destFile);
-
-        /* Increment character copied count */
-        count++;
-    }
-
-    return count;
-}
-
 void
-launch_windows_rdp_client(const gchar *usename, const gchar *password, gchar *ip, int port)
+launch_windows_rdp_client(const gchar *usename, const gchar *password, const gchar *ip, int port)
 {
     //create rdp file based on template
     //open template for reading and take its content

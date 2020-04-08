@@ -73,9 +73,10 @@ FILE(GLOB SRC_CODE
         src/rdp_viewer/rdp_display.c
         src/rdp_viewer/rdp_viewer_window.h
         src/rdp_viewer/rdp_viewer_window.c
+if (WIN32)
         src/rdp_viewer/windows_rdp_launcher.h
         src/rdp_viewer/windows_rdp_launcher.c
-        
+endif (WIN32)
 #utility
         src/utility/crashhandler.h
         src/utility/crashhandler.c
