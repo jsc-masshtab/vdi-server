@@ -183,6 +183,11 @@ target_link_libraries(
 )
 
 #############################CONFIGS###################################
+# rdp template file for Windows native client
+if (WIN32)
+    file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/doc/rdp_data
+            DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+endif (WIN32)
 # translations
 file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/po/ru
      DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/local)
