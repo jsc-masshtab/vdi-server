@@ -24,8 +24,8 @@ extern gboolean opt_manual_mode;
 
 typedef enum
 {
-    AUTH_GUI_BEFORE_CONNECT,
-    AUTH_GUI_CONNECT_TRY_STARTED
+    AUTH_GUI_DEFAULT_STATE,
+    AUTH_GUI_CONNECT_TRY_STATE
 
 } AuthDialogState;
 
@@ -70,7 +70,7 @@ static void
 set_auth_dialog_state(AuthDialogState auth_dialog_state, RemoteViewerData *ci)
 {
     switch (auth_dialog_state) {
-    case AUTH_GUI_BEFORE_CONNECT: {
+    case AUTH_GUI_DEFAULT_STATE: {
         // stop connect spinner
         gtk_spinner_stop((GtkSpinner *)ci->connect_spinner);
 
@@ -80,7 +80,7 @@ set_auth_dialog_state(AuthDialogState auth_dialog_state, RemoteViewerData *ci)
 
         break;
     }
-    case AUTH_GUI_CONNECT_TRY_STARTED: {
+    case AUTH_GUI_CONNECT_TRY_STATE: {
         // clear message display
         gtk_label_set_text(GTK_LABEL(ci->message_display_label), " ");
 
@@ -134,7 +134,7 @@ on_get_vm_from_pool_finished(GObject *source_object G_GNUC_UNUSED,
 {
     RemoteViewerData *ci = user_data;
 
-    set_auth_dialog_state(AUTH_GUI_BEFORE_CONNECT, ci);
+    set_auth_dialog_state(AUTH_GUI_DEFAULT_STATE, ci);
 
     GError *error = NULL;
     gpointer  ptr_res =  g_task_propagate_pointer (G_TASK (res), &error); // take ownership
@@ -166,7 +166,7 @@ on_get_vm_from_pool_finished(GObject *source_object G_GNUC_UNUSED,
 
 // token fetch callback
 static void
-on_get_vdi_token_finished(GObject *source_object G_GNUC_UNUSED,
+on_vdi_api_session_log_in_finished(GObject *source_object G_GNUC_UNUSED,
                                       GAsyncResult *res,
                                       gpointer user_data)
 {
@@ -176,7 +176,7 @@ on_get_vdi_token_finished(GObject *source_object G_GNUC_UNUSED,
     gboolean token_refreshed = g_task_propagate_boolean(G_TASK(res), &error);
     printf("%s: is_token_refreshed %i\n", (const char *)__func__, token_refreshed);
 
-    set_auth_dialog_state(AUTH_GUI_BEFORE_CONNECT, ci);
+    set_auth_dialog_state(AUTH_GUI_DEFAULT_STATE, ci);
 
     if (token_refreshed) {
         ci->dialog_window_response = GTK_RESPONSE_OK;
@@ -195,11 +195,9 @@ void connect_to_vdi_server(RemoteViewerData *ci)
     set_data_from_gui_in_outer_pointers(ci);
     set_vdi_credentials(*ci->user, *ci->password, *ci->ip, *ci->port, ci->connect_settings_data.is_ldap);
 
-    set_auth_dialog_state(AUTH_GUI_CONNECT_TRY_STARTED, ci);
+    set_auth_dialog_state(AUTH_GUI_CONNECT_TRY_STATE, ci);
 
     // 2 варианта: подключиться к сразу к предыдущему пулу, либо перейти к vdi менеджеру для выбора пула
-//    *ci->is_connect_to_prev_pool_ptr  =
-//            gtk_toggle_button_get_active((GtkToggleButton *)ci->conn_to_prev_pool_checkbutton);
     *ci->is_connect_to_prev_pool_ptr  = ci->connect_settings_data.is_connect_to_prev_pool;
     if (*ci->is_connect_to_prev_pool_ptr) {
 
@@ -207,7 +205,7 @@ void connect_to_vdi_server(RemoteViewerData *ci)
         gchar *last_pool_id = read_str_from_ini_file("RemoteViewerConnect", "last_pool_id");
         if (!last_pool_id) {
             set_error_message_to_label(GTK_LABEL(ci->message_display_label), "Нет информации о предыдущем пуле");
-            set_auth_dialog_state(AUTH_GUI_BEFORE_CONNECT, ci);
+            set_auth_dialog_state(AUTH_GUI_DEFAULT_STATE, ci);
             return;
         }
         set_current_pool_id(last_pool_id);
@@ -220,7 +218,7 @@ void connect_to_vdi_server(RemoteViewerData *ci)
         execute_async_task(get_vm_from_pool, on_get_vm_from_pool_finished, NULL, ci);
     } else {
         // fetch token task starting
-        execute_async_task(get_vdi_token, on_get_vdi_token_finished, NULL, ci);
+        execute_async_task(vdi_api_session_log_in, on_vdi_api_session_log_in_finished, NULL, ci);
     }
 }
 
@@ -400,6 +398,9 @@ remote_viewer_connect_dialog(gchar **user, gchar **password, gchar **domain,
 
     // connect to the prev pool if requred
     fast_forward_connect_to_prev_pool_if_enabled(&ci);
+
+    /// temp  redis try
+
 
     create_loop_and_launch(&ci.loop);
 
