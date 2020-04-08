@@ -39,6 +39,7 @@
                 <items>
                   <item translatable="yes">spice</item>
                   <item translatable="yes">rdp</item>
+                  <item translatable="yes">rdp native</item>
                 </items>
               </object>
               <packing>
