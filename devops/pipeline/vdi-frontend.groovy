@@ -24,7 +24,7 @@ properties([
 node("${AGENT}") {
     env.APT_SRV="192.168.11.118"
     env.PRJNAME="vdi-frontend"
-    env.APP_DIR="/opt/veil-vdi"
+    env.APP_DIR="opt/veil-vdi"
     // env.ROOTPATH="${WORKSPACE}"
     env.DEB_ROOT="${WORKSPACE}/devops/deb_config"
     env.DATE="$currentDate"
@@ -61,8 +61,8 @@ node("${AGENT}") {
 
                         echo "Install base packages"
 
-                        sed -i s/us\\./ru\\./g /etc/apt/sources.list
-                        apt-get update -y
+                        sudo sed -i s/us\\./ru\\./g /etc/apt/sources.list
+                        sudo apt-get update -y
                         sudo apt-get install -y postgresql-server-dev-9.6 python3-dev python3-setuptools python-dev gcc python3-pip postgresql htop mc nginx libsasl2-dev libldap2-dev libssl-dev sudo curl apt-utils
 
                         echo "Installing node v.10 && npm"
@@ -87,7 +87,7 @@ node("${AGENT}") {
                         echo "frontend compiled frontend/dist/frontend"
 
                         mkdir -p "${DEB_ROOT}/${PRJNAME}/root/${APP_DIR}"
-                        cp -r ./frontend/dist/frontend "${DEB_ROOT}/${PRJNAME}/root/${APP_DIR}"
+                        cp -r ./dist/frontend "${DEB_ROOT}/${PRJNAME}/root/${APP_DIR}"
 
                         [ "${DEB}" = "false" ] && return 0
 
