@@ -44,10 +44,12 @@ static void rdp_viewer_window_toggle_fullscreen(RdpViewerData *rdp_viewer_data, 
 
         // turn on keyboard grab in full screen
         GdkDisplay *display = gtk_widget_get_display(rdp_viewer_data->rdp_viewer_window);
+
         rdp_viewer_data->seat = gdk_display_get_default_seat(display);
         GdkGrabStatus ggs = gdk_seat_grab(rdp_viewer_data->seat,
                                           gtk_widget_get_window(rdp_viewer_data->rdp_viewer_window),
                                           GDK_SEAT_CAPABILITY_KEYBOARD, TRUE, NULL, NULL, NULL, NULL);
+        printf("%s ggs: %i\n", (const char *)__func__, ggs);
 
         // fullscreen
         gtk_window_set_resizable(GTK_WINDOW(rdp_viewer_data->rdp_viewer_window), TRUE);
@@ -341,6 +343,7 @@ RdpViewerData *rdp_viewer_window_create(ExtendedRdpContext *ex_rdp_context, UINT
 
     GtkWidget *rdp_viewer_window = rdp_viewer_data->rdp_viewer_window =
             GTK_WIDGET(gtk_builder_get_object(builder, "viewer"));
+    gtk_widget_add_events(rdp_viewer_window,   GDK_KEY_PRESS_MASK | GDK_KEY_RELEASE_MASK);
     g_signal_connect_swapped(rdp_viewer_window, "delete-event",
                              G_CALLBACK(rdp_viewer_window_deleted_cb), rdp_viewer_data);
     g_signal_connect(rdp_viewer_window, "map-event",

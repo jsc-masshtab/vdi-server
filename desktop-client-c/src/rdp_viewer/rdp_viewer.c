@@ -100,7 +100,7 @@ GtkResponseType rdp_viewer_start(const gchar *usename, const gchar *password, gc
 
     // set monitor data for rdp client
     rdpSettings* settings = ex_rdp_context->context.settings;
-    settings->MonitorCount = 2;
+    settings->MonitorCount = monitor_number;
     settings->UseMultimon = TRUE;
     settings->ForceMultimon = TRUE;
 

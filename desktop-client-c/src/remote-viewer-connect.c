@@ -253,7 +253,7 @@ key_pressed_cb(GtkWidget *widget G_GNUC_UNUSED, GdkEvent *event, gpointer data)
     GtkWidget *window = ci->window;
     gboolean retval;
     if (event->type == GDK_KEY_PRESS) {
-        printf("GDK_KEY_PRESS event->key.keyval %i \n", event->key.keyval);
+        //printf("GDK_KEY_PRESS event->key.keyval %i \n", event->key.keyval);
         switch (event->key.keyval) {
             case GDK_KEY_Return:
                 printf("GDK_KEY_Return\n");

@@ -113,46 +113,45 @@ static void rdp_display_translate_mouse_pos(UINT16 *rdp_x_p, UINT16 *rdp_y_p,
     *rdp_y_p = (UINT16)((gtk_y - ex_rdp_context->im_origin_y + rdp_viewer_data->monitor_geometry.y) * scale_f);
 }
 
-// TODO: Почему-то не работает переключение языка
+static void rdp_viewer_handle_key_event(GdkEventKey *event, ExtendedRdpContext* tf, gboolean down)
+{
+    if (!tf || !tf->is_running)
+        return;
+    rdpInput *input = tf->context.input;
+
+#ifdef __linux__
+    DWORD rdp_scancode = freerdp_keyboard_get_rdp_scancode_from_x11_keycode(event->hardware_keycode);
+#elif _WIN32
+    // keys with special treatment
+    DWORD rdp_scancode = 0;
+    switch (event->keyval) {
+        case GDK_KEY_Control_L:
+            rdp_scancode = RDP_SCANCODE_LCONTROL;
+            break;
+        default:
+            // other keys
+            rdp_scancode = GetVirtualScanCodeFromVirtualKeyCode(event->hardware_keycode, 4);
+            break;
+    }
+#endif
+    BOOL is_success = freerdp_input_send_keyboard_event_ex(input, down, rdp_scancode);
+    (void)is_success;
+    printf("%s: hardkey %i %i keyval: %i\n", (const char *)__func__,
+           event->hardware_keycode, rdp_scancode, event->keyval);
+}
+
 static gboolean rdp_display_key_pressed(GtkWidget *widget G_GNUC_UNUSED, GdkEventKey *event, gpointer user_data)
 {
     ExtendedRdpContext* tf = (ExtendedRdpContext*)user_data;
-    if (!tf || !tf->is_running)
-        return TRUE;
-
-    rdpInput *input = tf->context.input;
-
-    //printf("%s: key %i\n", (const char *)__func__, event->keyval);
-#ifdef __linux__
-    DWORD rdp_scancode = freerdp_keyboard_get_rdp_scancode_from_x11_keycode(event->hardware_keycode);
-#elif _WIN32
-    DWORD rdp_scancode = GetVirtualScanCodeFromVirtualKeyCode(event->hardware_keycode, 4);
-#endif
-    BOOL is_success = freerdp_input_send_keyboard_event_ex(input, TRUE, rdp_scancode);
-    (void)is_success;
-    //printf("%s: key %i %i %i\n", (const char *)__func__, event->hardware_keycode, rdp_scancode, is_success);
-    //printf("%s:  %i\n", (const char *)__func__, );
+    rdp_viewer_handle_key_event(event, tf, TRUE);
 
     return TRUE;
 }
-// TODO: Get rid of code repeat
+
 static gboolean rdp_display_key_released(GtkWidget *widget G_GNUC_UNUSED, GdkEventKey *event, gpointer user_data)
 {
     ExtendedRdpContext* tf = (ExtendedRdpContext*)user_data;
-    if (!tf || !tf->is_running)
-        return TRUE;
-
-    rdpContext* context = user_data;
-    rdpInput *input = context->input;
-
-#ifdef __linux__
-    DWORD rdp_scancode = freerdp_keyboard_get_rdp_scancode_from_x11_keycode(event->hardware_keycode);
-#elif _WIN32
-    DWORD rdp_scancode = GetVirtualScanCodeFromVirtualKeyCode(event->hardware_keycode, 4);
-#endif
-    BOOL is_success = freerdp_input_send_keyboard_event_ex(input, FALSE, rdp_scancode);
-    (void)is_success;
-    //printf("%s: key %i %i %i\n", (const char *)__func__, event->hardware_keycode, rdp_scancode, is_success);
+    rdp_viewer_handle_key_event(event, tf, FALSE);
 
     return TRUE;
 }
