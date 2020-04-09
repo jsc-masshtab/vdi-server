@@ -75,6 +75,8 @@ FILE(GLOB SRC_CODE
         src/rdp_viewer/rdp_viewer_window.c
         src/rdp_viewer/windows_rdp_launcher.h
         src/rdp_viewer/windows_rdp_launcher.c
+
+
 #utility
         src/utility/crashhandler.h
         src/utility/crashhandler.c
@@ -84,7 +86,7 @@ FILE(GLOB SRC_CODE
         src/utility/settingsfile.h
         src/utility/async.h
         src/utility/async.c
-        
+
 # vdi client
         src/vdi_client/vdi_manager.h
         src/vdi_client/vdi_manager.c
@@ -94,13 +96,15 @@ FILE(GLOB SRC_CODE
         src/vdi_client/vdi_pool_widget.c
         src/vdi_client/vdi_ws_client.h
         src/vdi_client/vdi_ws_client.c
+        src/vdi_client/vdi_redis_client.h
+        src/vdi_client/vdi_redis_client.c
 )
 ###############################LIBRARIES###############################
     # GLIB
     find_package(PkgConfig REQUIRED)
     pkg_search_module(GLIB REQUIRED glib-2.0)
     INCLUDE_DIRECTORIES(${GLIB_INCLUDE_DIRS})
-    
+
     # GTK
     PKG_CHECK_MODULES(GTK3 REQUIRED gtk+-3.0)
     INCLUDE_DIRECTORIES(${GTK3_INCLUDE_DIRS})
@@ -109,6 +113,10 @@ FILE(GLOB SRC_CODE
 
 if (UNIX)
     SET(LIBS_INCLUDE_PATH /usr/include/)
+
+    # redis hiredis
+    INCLUDE_DIRECTORIES(${LIBS_INCLUDE_PATH}hiredis)
+    SET(LIBS ${LIBS} hiredis)
 
     # freerdp
     INCLUDE_DIRECTORIES(${LIBS_INCLUDE_PATH}freerdp2)
@@ -133,6 +141,11 @@ endif (UNIX)
 if (WIN32)
     SET(LIBS_INCLUDE_PATH C:/msys64/mingw64/include/)
     SET(FREERDP_PATH C:/job/FreeRDP-2.0.0-rc4/FreeRDP-2.0.0-rc4/)
+    SET(HIREDIS_PATH C:/job/hiredis-mingw/)
+
+    # hiredis port to Windows
+    INCLUDE_DIRECTORIES(${HIREDIS_PATH})
+    SET(LIBS ${LIBS} ${HIREDIS_PATH}cmake-build-release/libhiredis.a)
 
     # freerdp
     INCLUDE_DIRECTORIES(${FREERDP_PATH}include)
@@ -148,6 +161,8 @@ if (WIN32)
     SET(LIBS ${LIBS}
             m
             -pthread
+            -lwsock32
+            -lws2_32
     )
 
     SET(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
@@ -186,6 +201,7 @@ if (WIN32)
     file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/doc/rdp_data
             DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 endif (WIN32)
+
 # translations
 file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/po/ru
      DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/local)
