@@ -32,10 +32,6 @@ get_frontend_dir(){
   scp -r vagrant@192.168.20.112:/opt/veil-vdi/frontend/dist/ "$FRONTEND_DIR"
 }
 
-prepeare_ssh(){
-  ssh-keygen -f "~/.ssh/known_hosts" -R "192.168.20.112"
-}
-
 get_configurations(){
   echo "Getting configuration files from Vagrant..."
   rsync -rv --exclude={license,veil_ssl} vagrant@192.168.20.112:/opt/veil-vdi/devops/conf/ "$CONF_DIR"
@@ -57,7 +53,6 @@ remove_tmp(){
 }
 
 new() {
-  prepare_ssh;
   prepare_folders;
   get_frontend_dir;
   get_configurations;
