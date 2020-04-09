@@ -1,11 +1,12 @@
 # /etc/logrotate.d/veil-vdi
 
 /var/log/veil-vdi/*.log {
-        daily
-        missingok
-        rotate 30
-        compress
-        delaycompress
-        copytruncate
-        dateext
+  daily
+  missingok
+  rotate 30
+  compress
+  delaycompress
+  copytruncate
+  dateext
+  dateyesterday
 }
