@@ -1,5 +1,6 @@
 version: '3.7'
 services:
+
   postgres:
     image: postgres:9.6
     ports:
@@ -11,28 +12,11 @@ services:
     container_name: vdi-postgres-alembic
     volumes:
       - ./postgres/:/docker-entrypoint-initdb.d/
-#  frontend-dev:
-#    image: teracy/angular-cli
-#    ports:
-#      - 4200:4200
-#    container_name: vdi-angular-dev
-#    volumes:
-#      - ./frontend:/opt/veil-vdi
-#      - ../../frontend/:/opt/veil-vdi/frontend/
-#    command: sh /opt/veil-vdi/entrypoint.sh -dev
-#  frontend-prod:
-#    image: teracy/angular-cli
-#    container_name: vdi-angular-prod
-#    volumes:
-#      - ./frontend:/opt/veil-vdi
-#      - ../../frontend/:/opt/veil-vdi/frontend/
-#    command: sh /opt/veil-vdi/entrypoint.sh -prod
-#  nginx-proxy:
-#    image: nginx
-#    container_name: vdi-nginx
-#    volumes:
-#      - ./nginx:/opt/veil-vdi
-#      - ../conf:/opt/veil-vdi/conf
-#      - ../../frontend/dist/frontend:/opt/veil-vdi/frontend/dist/frontend
-#    command: sh /opt/veil-vdi/entrypoint.sh
-#    network_mode: host
+#    TODO: alembic upgrade head
+
+  redis:
+    image: redis
+    container_name: vdi-redis
+    ports:
+      - 6379:6379
+    command: redis-server --requirepass 4NZ7GpHn4IlshPhb

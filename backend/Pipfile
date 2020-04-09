@@ -6,8 +6,13 @@ verify_ssl = true
 [dev-packages]
 pytest = "==5.2.2"
 pytest-asyncio = "==0.10.0"
-snapshottest = "==0.5.1"
 pytest-cov = "==2.8.1"
+wasmer = "==0.3.0"
+snapshottest = "==0.5.1"
+flake8 = "==3.7.9"
+flake8-builtins = "==1.5.2"
+flake8-bugbear = "==19.8.0"
+requests = "==2.23.0"
 
 [packages]
 pyjwt = "==1.7.1"  # JWTTokens
@@ -23,6 +28,7 @@ cached-property = "==1.5.1"  # cached-property decorator
 async_generator = "==1.10"  # classy_async
 cryptography = "==2.8"  # controller password encryption
 python-ldap = "==3.2.0"  # ldap integration
+redis = "==3.4.1"  # thin client message broker
 
 [requires]
 python_version = "3.5.3"

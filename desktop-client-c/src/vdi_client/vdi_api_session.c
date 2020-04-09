@@ -1,8 +1,6 @@
 //
 // Created by solomin on 15.06.19.
 //
-// !!* -переменные с этой пометкой используются в разных потоках,
-// но одновременный доступ к ним не предполагается, так что защита не нужна
 
 #include <libsoup/soup-session.h>
 #include "remote-viewer-util.h"
@@ -18,11 +16,6 @@
 
 static VdiSession vdiSession;
 
-// Не предполагается одновременное выполнение больше одного запроса, поэтому защита полей VdiSession не реализуется
-// get token  (make post request)
-// set session header
-// make api requests
-
 static const gchar *remote_protocol_to_str(VdiVmRemoteProtocol vm_remote_protocol)
 {
     switch (vm_remote_protocol) {
@@ -30,6 +23,8 @@ static const gchar *remote_protocol_to_str(VdiVmRemoteProtocol vm_remote_protoco
         return "spice";
     case VDI_RDP_PROTOCOL:
         return "rdp";
+     case VDI_RDP_WINDOWS_NATIVE_PROTOCOL:
+         return "rdp";
     case VDI_ANOTHER_REMOTE_PROTOCOL:
         return "unknown_protocol";
     }
@@ -71,7 +66,7 @@ static guint send_message(SoupMessage *msg)
 }
 
 // Получаем токен
-static gboolean refresh_vdi_session_token()
+static gboolean vdi_api_session_get_token()
 {
     printf("%s\n", (const char *)__func__);
 
@@ -110,20 +105,8 @@ static gboolean refresh_vdi_session_token()
     }
 
     JsonParser *parser = json_parser_new();
-    JsonObject *root_object = get_root_json_object(parser, msg->response_body->data);
-    if (!root_object) {
-        g_object_unref(msg);
-        return FALSE;
-    }
+    JsonObject *data_member_object = jsonhandler_get_data_object(parser, msg->response_body->data);
 
-    // if response contains feild errors we consider request as a failure
-    if (json_object_has_member(root_object, "errors")) {
-        g_object_unref(msg);
-        g_object_unref (parser);
-        return FALSE;
-    }
-
-    JsonObject *data_member_object = json_object_get_object_member_safely(root_object, "data");
     if (!data_member_object) {
         g_object_unref(msg);
         g_object_unref (parser);
@@ -139,45 +122,61 @@ static gboolean refresh_vdi_session_token()
     return TRUE;
 }
 
+// connect to reddis and subscribe for licence handling
+static void vdi_api_session_register_for_license()
+{
+    if (vdiSession.redis_client.is_subscribed)
+        return;
+
+    // do request to vdi server in order to get data fot Redis connection
+    gchar *url_str = g_strdup_printf("%s/client/message_broker/", vdiSession.api_url);
+    gchar *response_body_str = api_call("GET", url_str, NULL);
+    printf("%s: response_body_str %s\n", (const char *)__func__, response_body_str);
+    g_free(url_str);
+
+    // parse the response
+    JsonParser *parser = json_parser_new();
+    JsonObject *data_member_object = jsonhandler_get_data_object(parser, response_body_str);
+
+    if (!data_member_object)
+        return;
+
+    vdi_redis_client_clear_connection_data(&vdiSession.redis_client);
+    vdiSession.redis_client.adress = g_strdup(vdiSession.vdi_ip);
+    vdiSession.redis_client.port = json_object_get_int_member_safely(data_member_object, "port");
+    vdiSession.redis_client.password = g_strdup(
+            g_strdup(json_object_get_string_member_safely(data_member_object, "password")));
+    vdiSession.redis_client.channel = g_strdup(
+            g_strdup(json_object_get_string_member_safely(data_member_object, "channel")));
+    vdiSession.redis_client.db = json_object_get_int_member_safely(data_member_object, "db");
+
+    // connect to Redis and subscribe to channel
+    vdi_redis_client_init(&vdiSession.redis_client);
+}
+
 void start_vdi_session()
 {
-    if (vdiSession.is_active){
-        printf("%s: Session is already active\n", (const char *)__func__);
-        return;
-    }
+    memset(&vdiSession, 0, sizeof(VdiSession));
+
     // creae session
     vdiSession.soup_session = soup_session_new_with_options("timeout", HTTP_RESPONSE_TIOMEOUT, NULL);
-
-    vdiSession.vdi_username = NULL;
-    vdiSession.vdi_password = NULL;
-    vdiSession.vdi_ip = NULL;
-    vdiSession.vdi_port = NULL;
-
-    vdiSession.api_url = NULL;
-    vdiSession.auth_url = NULL;
-    vdiSession.jwt = NULL;
-
-    vdiSession.is_active = TRUE;
-    vdiSession.current_pool_id = NULL;
     vdiSession.current_remote_protocol = VDI_SPICE_PROTOCOL; // by default
 }
 
 void stop_vdi_session()
 {
-    if (!vdiSession.is_active){
-        printf("%s: Session is not active\n", (const char *)__func__);
-        return;
-    }
+//    if (!vdiSession.is_active){
+//        printf("%s: Session is not active\n", (const char *)__func__);
+//        return;
+//    }
 
     // logout
-    vdi_api_logout();
+    vdi_api_session_logout();
 
     vdi_api_cancell_pending_requests();
     g_object_unref(vdiSession.soup_session);
 
     free_session_memory();
-
-    vdiSession.is_active = FALSE;
 }
 
 SoupSession *get_soup_session()
@@ -208,9 +207,6 @@ const gchar *get_vdi_password(void)
 void vdi_api_cancell_pending_requests()
 {
     soup_session_abort(vdiSession.soup_session);
-    // sleep to give the async tasks time to stop.
-    // They will stop almost immediately after soup_session_abort
-    //g_usleep(20000);
 }
 
 void set_vdi_credentials(const gchar *username, const gchar *password, const gchar *ip,
@@ -267,8 +263,9 @@ gchar *api_call(const char *method, const char *uri_string, const gchar *body_st
     if (uri_string == NULL)
         return response_body_str;
 
-    if (vdiSession.jwt == NULL) // get the token if we dont have it
-        refresh_vdi_session_token();
+    // get the token if we dont have it
+    if (vdiSession.jwt == NULL)
+        vdi_api_session_get_token();
 
     SoupMessage *msg = soup_message_new(method, uri_string);
     if (msg == NULL) // this may happen according to doc
@@ -294,8 +291,9 @@ gchar *api_call(const char *method, const char *uri_string, const gchar *body_st
             response_body_str = g_strdup(msg->response_body->data); // json_string_with_data. memory allocation!
             break;
 
+        // get the token if it expired...
         } else if (msg->status_code == AUTH_FAIL_RESPONSE) {
-            refresh_vdi_session_token();
+            vdi_api_session_get_token();
         }
     }
 
@@ -304,54 +302,20 @@ gchar *api_call(const char *method, const char *uri_string, const gchar *body_st
     return response_body_str;
 }
 
-void get_vdi_token(GTask       *task,
+void vdi_api_session_log_in(GTask       *task,
                    gpointer       source_object G_GNUC_UNUSED,
                    gpointer       task_data G_GNUC_UNUSED,
                    GCancellable  *cancellable G_GNUC_UNUSED)
 {
+    // get token
     free_memory_safely(&vdiSession.jwt);
-    gboolean token_refreshed = refresh_vdi_session_token();
+    gboolean token_received = vdi_api_session_get_token();
 
-    g_task_return_boolean(task, token_refreshed);
-}
+    // register for licensing
+    if (token_received)
+        vdi_api_session_register_for_license();
 
-gboolean vdi_api_logout(void)
-{
-    printf("%s \n", (const char *)__func__);
-    if (vdiSession.jwt) {
-        gchar *url_str = g_strdup_printf("%s/logout", vdiSession.api_url);
-
-        SoupMessage *msg = soup_message_new("POST", url_str);
-        g_free(url_str);
-
-        if (msg == NULL) {
-            printf("%s : Cant construct logout message\n", (const char *)__func__);
-            return FALSE;
-
-        } else {
-            // set header
-            setup_header_for_api_call(msg);
-            // send
-            g_object_set(vdiSession.soup_session, "timeout", 1, NULL);
-            send_message(msg);
-            g_object_set(vdiSession.soup_session, "timeout", HTTP_RESPONSE_TIOMEOUT, NULL);
-
-            guint res_code = msg->status_code;
-            g_object_unref(msg);
-
-            if (res_code == OK_RESPONSE) {
-                // logout was succesfull so we can foget the token
-                free_memory_safely(&vdiSession.jwt);
-                return TRUE;
-            }
-            else
-                return FALSE;
-        }
-
-    } else {
-        printf("%s : No token info\n", (const char *)__func__);
-        return FALSE;
-    }
+    g_task_return_boolean(task, token_received);
 }
 
 void get_vdi_pool_data(GTask   *task,
@@ -372,9 +336,11 @@ void get_vm_from_pool(GTask       *task,
                     gpointer       task_data G_GNUC_UNUSED,
                     GCancellable  *cancellable G_GNUC_UNUSED)
 {
-    gchar *url_str = g_strdup_printf("%s/client/pools/%s", vdiSession.api_url, vdiSession.current_pool_id);
+    // register for licensing if its still not done
+    vdi_api_session_register_for_license();
 
-    // todo: нормально создавать json
+    // get vm from pool
+    gchar *url_str = g_strdup_printf("%s/client/pools/%s", vdiSession.api_url, vdiSession.current_pool_id);
     gchar *bodyStr = g_strdup_printf("{\"remote_protocol\":\"%s\"}",
                                      remote_protocol_to_str(vdiSession.current_remote_protocol));
 
@@ -390,8 +356,7 @@ void get_vm_from_pool(GTask       *task,
 
     // parse response
     JsonParser *parser = json_parser_new();
-    JsonObject *root_object = get_root_json_object(parser, response_body_str);
-    JsonObject *data_member_object = json_object_get_object_member_safely(root_object, "data");
+    JsonObject *data_member_object = jsonhandler_get_data_object(parser, response_body_str);
 
     // no point to parse if data is invalid
     if (!data_member_object) {
@@ -444,7 +409,49 @@ void do_action_on_vm(GTask      *task,
     free_action_on_vm_data(action_on_vm_data);
 }
 
-void do_action_on_vm_async(const gchar *actionStr, gboolean isForced)
+gboolean vdi_api_session_logout(void)
+{
+    // disconnect from license server(redis)
+    vdi_redis_client_deinit(&vdiSession.redis_client);
+
+    printf("%s \n", (const char *)__func__);
+    if (vdiSession.jwt) {
+        gchar *url_str = g_strdup_printf("%s/logout", vdiSession.api_url);
+
+        SoupMessage *msg = soup_message_new("POST", url_str);
+        g_free(url_str);
+
+        if (msg == NULL) {
+            printf("%s : Cant construct logout message\n", (const char *)__func__);
+            return FALSE;
+
+        } else {
+            // set header
+            setup_header_for_api_call(msg);
+            // send
+            g_object_set(vdiSession.soup_session, "timeout", 1, NULL);
+            send_message(msg);
+            g_object_set(vdiSession.soup_session, "timeout", HTTP_RESPONSE_TIOMEOUT, NULL);
+
+            guint res_code = msg->status_code;
+            g_object_unref(msg);
+
+            if (res_code == OK_RESPONSE) {
+                // logout was succesfull so we can foget the token
+                free_memory_safely(&vdiSession.jwt);
+                return TRUE;
+            }
+            else
+                return FALSE;
+        }
+
+    } else {
+        printf("%s : No token info\n", (const char *)__func__);
+        return FALSE;
+    }
+}
+
+void vdi_api_session_do_action_on_vm(const gchar *actionStr, gboolean isForced)
 {
     ActionOnVmData *action_on_vm_data = malloc(sizeof(ActionOnVmData));
     action_on_vm_data->current_vm_id = g_strdup(get_current_pool_id());

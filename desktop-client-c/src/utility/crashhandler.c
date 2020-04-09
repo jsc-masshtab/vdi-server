@@ -20,20 +20,20 @@
 
 
 //static const int nameSize = 200;
-#define nameSize 200
-static char fileName[nameSize];
+#define NAME_LENGTH 200
+#define ARRAY_SIZE 20
+static char fileName[NAME_LENGTH];
 
 void crush_handler(int sig){
 
 #ifdef __linux__
-    const int arraySize = 20;
-    void *array[arraySize];
+    void *array[ARRAY_SIZE];
     int size;
 
     fprintf(stderr, "Oops! Error: %s.\n", strsignal(sig));
 
     // get void*'s for all entries on the stack
-    size = backtrace(array, arraySize);
+    size = backtrace(array, ARRAY_SIZE);
 
     // to console
     backtrace_symbols_fd(array, size, STDERR_FILENO);

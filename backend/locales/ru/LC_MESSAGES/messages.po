@@ -1,0 +1,1039 @@
+# Russian translations for PACKAGE package.
+# Copyright (C) 2020 THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# Emil <e.gareev@mashtab.org>, 2020.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2020-04-06 14:39+0300\n"
+"PO-Revision-Date: 2020-03-16 17:13+0300\n"
+"Last-Translator: Emil <e.gareev@mashtab.org>\n"
+"Language-Team: Russian\n"
+"Language: ru\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
+
+#: app.py:111
+msgid "Stopping Tornado VDI"
+msgstr "Остановка Tornado VDI"
+
+#: app.py:113
+msgid "Stopping redis"
+msgstr "Остановка redis"
+
+#: app.py:116
+msgid "Stopping resources_monitor_manager"
+msgstr "Остановка менеджера мониторинга ресурсов"
+
+#: app.py:119
+msgid "Stopping GINO"
+msgstr "Остановка GINO"
+
+#: app.py:122
+msgid "Stopping IOLoop"
+msgstr "Остановка IOLoop"
+
+#: app.py:125
+msgid "Tornado VDI stopped"
+msgstr "Tornado VDI остановлен"
+
+#: app.py:138
+msgid "Tornado VDI started"
+msgstr "Tornado VDI запущен"
+
+#: app.py:142
+msgid "Auth is disabled. Enable on production!"
+msgstr "Используйте выключенную авторизацию только в режиме отладки!"
+
+#: app.py:147
+msgid "The license is expired. Some functions will be blocked. Contact your dealer."
+msgstr "Лицензия истекла. Некоторые функции будут недоступны."
+
+#: app.py:149
+msgid "License status: {}, expiration time: {}, thin clients limit: {}"
+msgstr "Статус лицензии: {}, дата истечения: {}, лимит тонких клиентов: {}"
+
+#: auth/authentication_directory/auth_dir_schema.py:31
+#: auth/authentication_directory/auth_dir_schema.py:163
+msgid "No such Authentication Directory."
+msgstr "Отсутствует такая директория авторизации."
+
+#: auth/authentication_directory/auth_dir_schema.py:37
+msgid "Authentication directory URL should start with ldap(s)://."
+msgstr "Ссылка на директорию авторизации должна начинаться с ldap(s)://."
+
+#: auth/authentication_directory/auth_dir_schema.py:44
+msgid "Verbose name should not be empty."
+msgstr "Имя verbose не должно быть пустым."
+
+#: auth/authentication_directory/auth_dir_schema.py:60 auth/group_schema.py:41
+msgid "users count not much with db count."
+msgstr "Счетчик пользователей не коррелирует с счетчиком БД."
+
+#: auth/authentication_directory/auth_dir_schema.py:62
+msgid "groups list is empty."
+msgstr "Список групп пуст."
+
+#: auth/authentication_directory/auth_dir_schema.py:69
+msgid "No such mapping."
+msgstr "Нет такого отображения."
+
+#: auth/authentication_directory/auth_dir_schema.py:159
+msgid "Specify id."
+msgstr "Укажите ID."
+
+#: auth/authentication_directory/models.py:125 tests/test_auth_dir_v2.py:65
+msgid "More than one authentication directory can not be created."
+msgstr "Не может быть создано более одной директории авторизации."
+
+#: auth/authentication_directory/models.py:239
+msgid "Authentication directory server {} is down."
+msgstr "Сервер директории авторизации {} не работает."
+
+#: auth/authentication_directory/models.py:278
+msgid "AD user info: {}"
+msgstr "Информация пользователя AD: {}"
+
+#: auth/authentication_directory/models.py:279
+msgid "AD user groups: {}"
+msgstr "Группы пользователей AD: {}"
+
+#: auth/authentication_directory/models.py:326
+msgid "Username must be a string."
+msgstr "Имя пользователя должно быть строкой."
+
+#: auth/authentication_directory/models.py:351
+msgid "Assigning veil groups to {}"
+msgstr "Присвоение групп veil {}"
+
+#: auth/authentication_directory/models.py:364
+msgid "Mappings: {}"
+msgstr "Отображения: {}"
+
+#: auth/authentication_directory/models.py:368
+msgid "Role VM_OPERATOR has assigned to user {}."
+msgstr "Пользователю {} назначена роль VM_OPERATOR."
+
+#: auth/authentication_directory/models.py:375
+msgid "OU: {}"
+msgstr "Подразделения: {}"
+
+#: auth/authentication_directory/models.py:376
+msgid "GROUPS: {}"
+msgstr "Группы: {}"
+
+#: auth/authentication_directory/models.py:385
+msgid "escaped values: {}"
+msgstr "cкрытые значения: {}"
+
+#: auth/authentication_directory/models.py:386
+msgid "role mapping value type: {}"
+msgstr "nип значений отображения роли: {}"
+
+#: auth/authentication_directory/models.py:395
+msgid "{}"
+msgstr "{}"
+
+#: auth/authentication_directory/models.py:396
+msgid "User veil groups: {}"
+msgstr "Группы пользователей veil: {}"
+
+#: auth/authentication_directory/models.py:399
+msgid "Attaching user {} to group: {}"
+msgstr "Прикрепление пользователя {} к группе {}"
+
+#: auth/authentication_directory/models.py:413 tests/test_auth_v2.py:109
+msgid "No authentication directory controllers."
+msgstr "Отсутствует директория авторизации контроллеров."
+
+#: auth/authentication_directory/models.py:438
+msgid "Invalid credeintials (ldap): {}"
+msgstr "Неверные полномочия (ldap): {}"
+
+#: auth/authentication_directory/models.py:445
+msgid "Server down (ldap)."
+msgstr "Сервер не работает (ldap)."
+
+#: auth/group_schema.py:26 auth/group_schema.py:96
+msgid "No such group."
+msgstr "Отсутствует такая группа."
+
+#: auth/group_schema.py:32
+msgid "verbose_name is empty."
+msgstr "Имя verbose пустое."
+
+#: auth/group_schema.py:43
+msgid "users list is empty."
+msgstr "cписок пользователей пуст."
+
+#: auth/handlers.py:22
+msgid "Missing request body"
+msgstr "Отсутствует тело запроса"
+
+#: auth/handlers.py:24
+msgid "Missing username and password"
+msgstr "Отсутствует имя пользователя и пароль"
+
+#: auth/handlers.py:29
+msgid "Missing username"
+msgstr "Отсутствует имя пользователя"
+
+#: auth/handlers.py:31 tests/test_auth_v2.py:51
+msgid "Missing password"
+msgstr "Отсутствует пароль"
+
+#: auth/handlers.py:38 tests/test_auth_v2.py:35 tests/test_auth_v2.py:43
+msgid "Invalid credentials"
+msgstr "Неверные полномочия"
+
+#: auth/handlers.py:45
+#, python-brace-format
+msgid "Authentication failed: {err}"
+msgstr "Ошибка авторизации {err}"
+
+#: auth/handlers.py:47
+#, python-brace-format
+msgid " for user {username}"
+msgstr " для пользователя {username}"
+
+#: auth/handlers.py:48
+#, python-brace-format
+msgid ". IP: {ip}"
+msgstr ". IP: {ip}"
+
+#: auth/handlers.py:68
+msgid "Demo version"
+msgstr "Демонстрационная версия"
+
+#: auth/license/handlers.py:39
+msgid "Fail to open license key file."
+msgstr "Не удалось открыть лицензионный ключ."
+
+#: auth/models.py:98
+msgid "User {} roles: {}"
+msgstr "Роли пользователя {}: {}"
+
+#: auth/models.py:103
+msgid "Group {} roles: {}"
+msgstr "Роли группы {}: {}"
+
+#: auth/models.py:143
+msgid "Role {} is assigned to user {}"
+msgstr "Роль {} назначена пользователю {}"
+
+#: auth/models.py:167
+#, python-brace-format
+msgid "User {username} has been activated."
+msgstr "Пользователь {username} активирован."
+
+#: auth/models.py:179
+msgid "There is no more active superuser."
+msgstr "Больше нет активного суперпользователя."
+
+#: auth/models.py:184
+#, python-brace-format
+msgid "User {username} has been deactivated."
+msgstr "Пользователь {username} деактивирован."
+
+#: auth/models.py:212
+#, python-brace-format
+msgid "Password of user {username} has been changed."
+msgstr "Пароль пользователя {username} изменен."
+
+#: auth/models.py:230
+#, python-brace-format
+msgid "{role} \"{username}\" created."
+msgstr "{role} пользователя {username} создана."
+
+#: auth/models.py:254
+#, python-brace-format
+msgid "User {username} has become a superuser."
+msgstr "Пользователь {username} стал суперпользователем."
+
+#: auth/models.py:271
+#, python-brace-format
+msgid "{auth_type} user {username} has been logged in successfully. IP: {ip}."
+msgstr "{auth_type} пользователь {username} успешно зарегистрирован. IP: {ip}."
+
+#: auth/models.py:292
+#, python-brace-format
+msgid "User {username} has logged out."
+msgstr "Пользователь {username} вышел из системы."
+
+#: auth/models.py:381
+msgid "User {} has been included to group {}."
+msgstr "Пользователь {} был включен в группу {}."
+
+#: auth/models.py:385
+msgid "User {} is already in group {}"
+msgstr "Пользователь {} уже находится в группе {}"
+
+#: auth/models.py:393
+msgid "Removing users: {} from group {}"
+msgstr "Удаление пользователей {} из группы {}"
+
+#: auth/models.py:400
+msgid "Role {} has been set to group {}."
+msgstr "Роль {} добавлена в группу {}."
+
+#: auth/models.py:404
+msgid "Group {} has already role {}"
+msgstr "Группе {} уже назначена роль {}."
+
+#: auth/user_schema.py:25 auth/user_schema.py:146
+msgid "No such user."
+msgstr "Нет такого пользователя."
+
+#: auth/user_schema.py:34
+msgid "User name must contain minimum 3 characters. It must contain letters and digits, _, -, +."
+msgstr "Имя пользователя должно содержать буквы, цифры, _, -, + и быть не короче 3 символов."
+
+#: auth/user_schema.py:41
+msgid "Email {} is already busy"
+msgstr "Email {} уже используется"
+
+#: auth/user_schema.py:49
+msgid "Email must contain English characters and/or digits, @ and domain name."
+msgstr "Email должен содержать символы латинского алфавита и/или цифры, иметь @ и домен."
+
+#: auth/user_schema.py:142
+msgid "Scpecify id or username."
+msgstr "Укажите ID или имя пользователя."
+
+#: auth/utils/hashers.py:141
+#, fuzzy
+msgid "Couldn't load {} algorithm library: {}"
+msgstr "Не может загрузиться %r библиотека алгоритмов: %s"
+
+#: auth/utils/hashers.py:143
+#, python-format
+msgid "Hasher %r doesn't specify a library attribute"
+msgstr "Hasher %r не указывает атрибут библиотеки"
+
+#: auth/utils/hashers.py:152
+msgid "Subclasses of BasePasswordHasher must provide a verify() method"
+msgstr "Подклассы BasePasswordHasher должны предоставлять метод verify()"
+
+#: auth/utils/hashers.py:161
+msgid "Subclasses of BasePasswordHasher must provide an encode() method"
+msgstr "Подклассы BasePasswordHasher должны предоставлять метод encode()"
+
+#: auth/utils/hashers.py:186
+msgid "Subclasses of BasePasswordHasher should provide a harden_runtime() method"
+msgstr "Подклассы BasePasswordHasher должны предоставлять метод harden_runtime()"
+
+#: auth/utils/veil_jwt.py:26
+msgid "Token invalid."
+msgstr "Недействительный токен."
+
+#: auth/utils/veil_jwt.py:28
+msgid "jwtauth: jwt.ExpiredSignature"
+msgstr "jwtauth: jwt.ExpiredSignature"
+
+#: auth/utils/veil_jwt.py:31
+msgid "Token expired."
+msgstr "Срок действия токена истек."
+
+#: auth/utils/veil_jwt.py:34
+msgid "jwtauth: Assertion error {}"
+msgstr "jwtauth: ошибка утверждения {}."
+
+#: auth/utils/veil_jwt.py:84
+msgid "Error with JWT decode"
+msgstr "Ошибка JWT декодирования."
+
+#: auth/utils/veil_jwt.py:94 auth/utils/veil_jwt.py:96
+#: auth/utils/veil_jwt.py:98
+msgid "invalid header authorization"
+msgstr "недействительный заголовок авторизации"
+
+#: auth/utils/veil_jwt.py:102
+msgid "Missing Authorization header"
+msgstr "Пропущен заголовок авторизации"
+
+#: common/veil_client.py:46
+msgid "jwt {}"
+msgstr "jwt {}"
+
+#: common/veil_client.py:75
+msgid "Controller {} connection error"
+msgstr "Ошибка подключения к контроллеру {}"
+
+#: common/veil_client.py:80
+#, python-brace-format
+msgid "URL {url} - {http_error}"
+msgstr "URL {url} - {http_error}"
+
+#: common/veil_client.py:87
+msgid "url: {} - {}"
+msgstr "url: {} - {}"
+
+#: common/veil_client.py:95
+#, fuzzy
+msgid "Controller {} connection error."
+msgstr "Ошибка подключения к контроллеру {}"
+
+#: common/veil_client.py:99
+msgid "URL not found"
+msgstr "URL не найден"
+
+#: common/veil_client.py:117
+msgid "Can't process Content-Type."
+msgstr "Не может обработаться Content-Type."
+
+#: common/veil_client.py:120
+msgid "Only 'json' Content-Type."
+msgstr "Content-Type только 'json'."
+
+#: common/veil_decorators.py:25
+msgid "Expect that 'body' is the 4 parameter in args. But in the same time 'body' in kwargs. Check it."
+msgstr "Ожидается, что 'body' это 4 параметра в аргументах. Но в то же время 'body' в kwargs. Проверьте."
+
+#: common/veil_decorators.py:59
+msgid "Can check only kwargs or args. Not both at the same time."
+msgstr "Можете проверить только kwargs или аргументы. Не оба обдовременно."
+
+#: common/veil_decorators.py:64 common/veil_decorators.py:78
+msgid "The parameters to be checked are in an dict. Can't explicitly match values with tuple."
+msgstr "Параметры, которые нужно проверить, указаны в формате словаря. Значения не могут явно сопоставиться с кортежем."
+
+#: common/veil_decorators.py:74
+msgid "Value {} is invalid. Valid values are: {}"
+msgstr "Значение {} неверно. Допустимые значения: {}"
+
+#: common/veil_decorators.py:81
+msgid "Parameter {} is necessary."
+msgstr "Параметр {} необходим."
+
+#: common/veil_decorators.py:86
+msgid "Parameter {} value {} is invalid. Valid values are: {}"
+msgstr "Параметр {} значения {} неверный. Допустимые значения: {}"
+
+#: common/veil_decorators.py:103 tests/test_auth_v2.py:75
+msgid "Invalid permissions"
+msgstr "Неверные разрешения."
+
+#: common/veil_decorators.py:119
+msgid "IP: {}. username: {}"
+msgstr "IP: {}. Пользователь: {}."
+
+#: common/veil_errors.py:146
+msgid "Controller is not available."
+msgstr "Контроллер недоступен."
+
+#: common/veil_errors.py:164
+msgid "Unable to logon to system using these credentials."
+msgstr "Не удалось войти в систему с предоставленными учетными данными."
+
+#: common/veil_errors.py:170
+msgid "401: Unauthorized."
+msgstr "Ошибка 401: проблема с авторизацией."
+
+#: common/veil_errors.py:176
+msgid "Critical controller error."
+msgstr "Критическая ошибка контроллера."
+
+#: common/veil_validators.py:32
+msgid "Field \"{}\" - {}"
+msgstr "Поле \"{}\" - {}"
+
+#: controller/client.py:27
+msgid "Auth failed."
+msgstr "Ошибка авторизации."
+
+#: controller/models.py:93 controller/models.py:127
+msgid "No such controller"
+msgstr "Нет такого контроллера."
+
+#: controller/models.py:133 controller/models.py:148
+msgid "Checking controller credentials: address: {}, username: {}, password: {}, ldap_connection: {}"
+msgstr "Проверка учетных данных контроллера: адрес: {}, имя: {}, пароль: {}, ldap_connection: {}."
+
+#: controller/models.py:139
+msgid "Controller {} check failed."
+msgstr "Проверка контроллера {} не удалась."
+
+#: controller/models.py:140
+msgid "Controller check: {}"
+msgstr "Проверка контроллера: {}"
+
+#: controller/models.py:142
+msgid "Controller {} check passed successfull."
+msgstr "Проверка контроллера {} прошла успешно."
+
+#: controller/models.py:154
+msgid "Get controller credentials: Controller's {} credentials are good."
+msgstr "Получение учетных данных контроллера: Хорошие учетные данные контроллера {}."
+
+#: controller/models.py:189
+msgid "Can't connect to controller {} with username: {}, password: {}, ldap_connection: {}"
+msgstr "Не подключается к контроллеру {} с именем: {}, паролем: {}, ldap_connection: {}."
+
+#: controller/models.py:197
+msgid "Can't login login to controller {}"
+msgstr "Не получается войти на контроллер {}"
+
+#: controller/models.py:209
+msgid "Controller has pool of virtual machines. Please completely remove."
+msgstr "У контроллера есть пулы виртуальных машин. Выполните полное удаление."
+
+#: controller/models.py:211
+#, python-brace-format
+msgid "Controller {name} had remove."
+msgstr "Выполнено удаление контроллера {name}."
+
+#: controller/models.py:225
+#, python-brace-format
+msgid "Controller {name} had completely remove."
+msgstr "Выполнено полное удаление контроллера {name}."
+
+#: controller/models.py:238
+msgid "Controller {} has been activated."
+msgstr "Контроллер {} активирован."
+
+#: controller/models.py:256
+msgid "Controller {} has been deactivated."
+msgstr "Контроллер {} деактивирован."
+
+#: controller/schema.py:70
+msgid "Controller name cannot be empty."
+msgstr "Имя контроллера не может быть пустым."
+
+#: controller/schema.py:91
+#, python-brace-format
+msgid "Successfully added new controller {name} with address {address}."
+msgstr "Успешно добавлен новый контроллер {name} с адресом {address}."
+
+#: controller/schema.py:99
+#, python-brace-format
+msgid "Add new controller with address {address}: operation failed."
+msgstr "Ошибка добавления нового контроллера с адресом {address}."
+
+#: controller/schema.py:124 controller/schema.py:171 controller/schema.py:197
+#: controller/schema.py:226
+msgid "No such controller."
+msgstr "Нет такого контроллера."
+
+#: controller/schema.py:140
+#, python-brace-format
+msgid "Fail to update controller {id}: {error}"
+msgstr "Ошибка обновления контроллера {id}: {error}"
+
+#: controller/schema.py:149
+#, python-brace-format
+msgid "Successfully update controller {name} with address {address}."
+msgstr "Успешно обновлен контроллер {name} с адресом {address}."
+
+#: controller_resources/schema.py:321 controller_resources/schema.py:374
+#: controller_resources/schema.py:423
+msgid "The sort parameter is incorrect"
+msgstr "Неверный параметр сортировки"
+
+#: database.py:83
+msgid "Incorrect sort parameter {}"
+msgstr "Неверный параметр сортировки {}"
+
+#: database.py:93
+msgid "Incorrect request parameter {}"
+msgstr "Неверный параметр запроса {}"
+
+#: journal/event/schema.py:148
+msgid "No such event."
+msgstr "Нет такого события."
+
+#: journal/event/schema.py:193
+msgid "Journal is clear."
+msgstr "Журнал очищен."
+
+#: pool/models.py:145
+msgid "Incorrect sorting option {}."
+msgstr "Неверный параметр сортировки {}."
+
+#: pool/models.py:359 pool/models.py:381
+msgid "Pool already has permission."
+msgstr "Пул уже имеет разрешение."
+
+#: pool/models.py:403
+msgid "Pool already has role."
+msgstr "Пул уже имеет роль."
+
+#: pool/models.py:436
+msgid "Controller {} not found."
+msgstr "Контроллер {} не найден."
+
+#: pool/models.py:449
+msgid "Pool has VMs. Please completely remove."
+msgstr "У пула виртуальных машин есть виртуальные машины. Выполните полное удаление."
+
+#: pool/models.py:452
+#, python-brace-format
+msgid "Removal pool of desktops {verbose_name} is done."
+msgstr "Выполнено удаление пула рабочих столов {verbose_name}."
+
+#: pool/models.py:468
+#, python-brace-format
+msgid "Complete removal pool of desktops {verbose_name} is done."
+msgstr "Выполнено полнлое удаление пула рабочих столов {verbose_name}."
+
+#: pool/models.py:476
+msgid "Pool {} has been activated."
+msgstr "Пул {} активирован."
+
+#: pool/models.py:483
+msgid "Pool {} has been deactivated."
+msgstr "Пул {} деактивирован."
+
+#: pool/models.py:548
+msgid "Create Pool"
+msgstr "Создание пула"
+
+#: pool/models.py:555
+msgid "Create StaticPool"
+msgstr "Создание статического пула"
+
+#: pool/models.py:656
+msgid "Create Pool {}"
+msgstr "Создание пула {}"
+
+#: pool/models.py:663
+msgid "Create AutomatedPool {}"
+msgstr "Создание автоматического пула {}"
+
+#: pool/models.py:694
+msgid "Update Pool values for AutomatedPool {}"
+msgstr "Обновление значений пула для автоматического пула {}"
+
+#: pool/models.py:708
+msgid "Update AutomatedPool values for {}"
+msgstr "Обновление значений автоматического пула для {}"
+
+#: pool/models.py:734
+msgid "add_domain {}, attempt № {}, of {}"
+msgstr "Добавление домена {}, попытка № {} из {}"
+
+#: pool/models.py:738
+msgid "VM creation task id: {}"
+msgstr "ID задачи создания виртуальной машины: {}"
+
+#: pool/models.py:742
+msgid "Fail to create VM on ECP. Re-run."
+msgstr "Ошибка создания виртуальной машины на ECP. Перезапустите."
+
+#: pool/models.py:748
+msgid "Subscribe to ws messages."
+msgstr "Подпишитесь на сообщения ws."
+
+#: pool/models.py:753
+msgid "Wait for result."
+msgstr "Ожидайте результата."
+
+#: pool/models.py:759
+msgid "Create virtual machine"
+msgstr "Создание виртуальной машины."
+
+#: pool/models.py:792
+msgid "Could not get the response about result of creation VM on ECP by WS. Task status check."
+msgstr "Не удалось получить ответ о результате создания ВМ на ECP по WS. Проверим статус задачи."
+
+#: pool/models.py:796
+msgid "Probably task is not done. Check VM status."
+msgstr "Вероятно, задание не выполнено. Проверьте состояние ВМ."
+
+#: pool/models.py:821
+msgid "Error with create VM {} was {} times."
+msgstr "Ошибка с созданием виртуальной машины {} была {} раз."
+
+#: pool/models.py:833
+msgid "Add {} initial vms for pool {}. Controller address: {}"
+msgstr "Добавление {} начальных виртуальных машин для пула {}. Адрес контроллера: {}."
+
+#: pool/models.py:840
+msgid "Pool {} os type is: {}"
+msgstr "Операционная система пула {}: {}"
+
+#: pool/models.py:843
+msgid "Automated pool creation started"
+msgstr "Автоматическое создание пула началось"
+
+#: pool/models.py:854
+msgid "Automated pool creation. Created {} VMs from {}"
+msgstr "Автоматическое создание пула. Создание {} виртуальных машин из {}"
+
+#: pool/models.py:873
+msgid "Can't create VM"
+msgstr "Невозможно создать виртуальную машину"
+
+#: pool/models.py:879
+msgid "Automated pool successfully created. Initial VM amount {}"
+msgstr "Автоматический пул успешно создан. Начальное количество виртуальных машин {}"
+
+#: pool/models.py:882
+msgid "Automated pool created with errors. VMs created: {}. Required: {}"
+msgstr "Автоматический пул создан с ошибками. Созданные виртуальные машины: {}. Необходимо: {}."
+
+#: pool/models.py:899
+msgid "Could not create the required number of machines."
+msgstr "Не удалось создать необходимое количество машин."
+
+#: pool/models.py:948
+msgid "VM creating error:"
+msgstr "Ошибка создания виртуальной машины:"
+
+#: pool/models.py:954
+msgid "Delete VMs for AutomatedPool {}"
+msgstr "Удаление виртуальных машин для автоматического пула {}"
+
+#: pool/models.py:957
+msgid "Calling soft delete for vm {}"
+msgstr "Вызов мягкого удаления для виртуальной машины {}"
+
+#: pool/pool_task_manager.py:70
+msgid "Logic error: no such pool"
+msgstr "Логическая ошибка: нет такого пула"
+
+#: pool/schema.py:53 pool/schema.py:349 pool/schema.py:376
+msgid "No such pool."
+msgstr "Нет такого пула."
+
+#: pool/schema.py:65
+msgid "ip-address probably invalid."
+msgstr "Возможно, неверный IP адрес."
+
+#: pool/schema.py:75
+msgid "Pool name must contain only characters, digits, _, -"
+msgstr "Имя пула должно содержать только буквы, цифры, _, -"
+
+#: pool/schema.py:86
+msgid "Template name of VM must contain only characters, digits, _, -"
+msgstr "Шаблонное имя вм должно содержать только буквы, цифры, _, -"
+
+#: pool/schema.py:94
+msgid "Initial number of VM must be in {}-{} interval"
+msgstr "Начальное число виртуальных машин должно быть в интервале {}-{}."
+
+#: pool/schema.py:110
+msgid "Number of created VM must be in {}-{} interval"
+msgstr "Число создаваемых виртуальных машин должно быть в интервале {}-{}."
+
+#: pool/schema.py:131 pool/schema.py:707
+msgid "Maximal number of created VM should be less than initial number of VM"
+msgstr "Максимальное число создаваемых виртуальных машин не должно быть меньше начального числа ВМ"
+
+#: pool/schema.py:133 pool/schema.py:709
+msgid "Maximal number of created VM must be in [{} {}] interval"
+msgstr "Максимальное число создаваемых виртуальных машин должно быть в интервале [{} {}]."
+
+#: pool/schema.py:427
+msgid "HttpError: {}"
+msgstr "Ошибка Http: {}"
+
+#: pool/schema.py:437
+msgid "VM with id {} not found in any controllers"
+msgstr "Виртуальная машина с {} ID не найдена ни на одном из известных контроллеров"
+
+#: pool/schema.py:448
+msgid "StaticPool: Get vm info"
+msgstr "Статический пул: получение информации о ВМ"
+
+#: pool/schema.py:451
+msgid "StaticPool: Check that all vms are on the same node"
+msgstr "Статический пул: Убедитесь, что все виртуальные машины находятся на одном узле"
+
+#: pool/schema.py:456
+msgid "All of VM must be at one server"
+msgstr "Все виртуальные машины должны быть на одном сервере"
+
+#: pool/schema.py:463
+msgid "StaticPool: Determine cluster"
+msgstr "Статический пул: Определение кластера"
+
+#: pool/schema.py:468 pool/schema.py:480
+msgid "StaticPool: Determine datapool"
+msgstr "Статический пул: Определение пула данных."
+
+#: pool/schema.py:487
+msgid "StaticPool: Objects on VDI DB created."
+msgstr "Статический пул: объекты на VDI DB созданы."
+
+#: pool/schema.py:490
+msgid "VM info {}"
+msgstr "Информация о ВМ {}"
+
+#: pool/schema.py:502
+#, python-brace-format
+msgid "Static pool {name} created."
+msgstr "Статический пул {name} создан."
+
+#: pool/schema.py:506
+msgid "Failed to create static pool {}."
+msgstr "Ошибка создания статического пула {}."
+
+#: pool/schema.py:527 pool/schema.py:579
+msgid "List of VM should not be empty"
+msgstr "Список виртуальных машин не должен быть пустым."
+
+#: pool/schema.py:540
+msgid "VM ids: {}"
+msgstr "ID виртуальных машин: {}"
+
+#: pool/schema.py:545
+msgid "VM {} is at server different from pool server now"
+msgstr "ВМ {} находится на сервере отличном от сервера пула."
+
+#: pool/schema.py:548
+msgid "VM {} is already in one of pools"
+msgstr "Виртуальная машина {} уже в одном из пулов."
+
+#: pool/schema.py:553
+msgid "All VMs on node: {}"
+msgstr "Все виртуальные машины на узле: {}"
+
+#: pool/schema.py:588
+msgid "VM doesn't belong to specified pool"
+msgstr "Виртуальная машина не принадлежит заданному пулу"
+
+#: pool/schema.py:614
+msgid "Failed to update static pool {}. Name must be unique."
+msgstr "Ошибка редактирования статического пула {}. Имя должно быть уникальным."
+
+#: pool/schema.py:618
+msgid "Static pool {} is updated."
+msgstr "Статический пул {} обновлен."
+
+#: pool/schema.py:657
+msgid "Failed to create automated pool {}. Name must be unique."
+msgstr "Ошибка создания автоматического пула {}. Имя должно быть уникальным."
+
+#: pool/schema.py:712
+msgid "Maximal number of created VM can not be reduced."
+msgstr "Максимальное количество создаваемых виртуальных машин не может быть уменьшено."
+
+#: pool/schema.py:729
+msgid "Failed to update automated pool {}. Name must be unique."
+msgstr "Ошибка редактирования автоматического пула {}. Имя должно быть уникальным."
+
+#: pool/schema.py:734
+#, python-brace-format
+msgid "Automated pool {name} updated."
+msgstr "Автоматический пул {name} обновлен."
+
+#: resources_monitoring/handlers.py:78
+msgid "destructor VdiFrontWsHandler"
+msgstr "Деструктор VdiFrontWsHandler"
+
+#: resources_monitoring/handlers.py:91
+msgid "Message: {}"
+msgstr "Сообщение: {}"
+
+#: resources_monitoring/handlers.py:104
+msgid "Unknown subscription source"
+msgstr "Неизвестный источник подписки"
+
+#: resources_monitoring/handlers.py:115
+msgid "already subscribed"
+msgstr "уже подписан"
+
+#: resources_monitoring/handlers.py:119
+msgid "not subscribed"
+msgstr "не подписан"
+
+#: resources_monitoring/handlers.py:130
+msgid "WebSocket closed"
+msgstr "WebSocket закрыт"
+
+#: resources_monitoring/handlers.py:162
+msgid "Write error"
+msgstr "Ошибка записи"
+
+#: resources_monitoring/resources_monitor.py:104
+msgid "{} is connected {}"
+msgstr "{} подключен к {}."
+
+#: resources_monitoring/resources_monitor.py:137
+#, python-brace-format
+msgid "{cls}: an not connect to {ip}"
+msgstr "{cls}: не подключен к {ip}."
+
+#: resources_monitoring/resources_monitor.py:146
+msgid "add {}"
+msgstr "добавление {}"
+
+#: resources_monitoring/resources_monitor.py:167
+msgid "{} Closing ws connection {}"
+msgstr "{} Закрытие ws соединения {}"
+
+#: resources_monitoring/resources_monitor_manager.py:27
+#, python-brace-format
+msgid "{cls}: connected controllers -- {controllers}"
+msgstr "{cls}: подключенные контроллеры -- {controllers}."
+
+#: resources_monitoring/resources_monitor_manager.py:36
+msgid "{}: Started"
+msgstr "{}: Запущен"
+
+#: resources_monitoring/resources_monitor_manager.py:71
+#, python-brace-format
+msgid "{cls}: Controller {ip} is already monitored!"
+msgstr "{cls}: Контроллер {ip} уже отслеживается!"
+
+#: resources_monitoring/resources_monitor_manager.py:78
+#, python-brace-format
+msgid "{cls}: resource monitor for controller {ip} connected"
+msgstr "{cls}: монитор ресурсов для контроллера {ip} подключен"
+
+#: resources_monitoring/resources_monitor_manager.py:93
+#, python-brace-format
+msgid "{cls}: controller {ip} is not monitored!"
+msgstr "{cls}: контроллер {ip} не отслеживается!"
+
+#: resources_monitoring/resources_monitor_manager.py:101
+#, python-brace-format
+msgid "{cls}: resource monitor for controller {ip} removed"
+msgstr "{cls}: удален монитор ресурсов для контроллера {ip}"
+
+#: tests/test_auth_v2.py:125
+msgid "Invalid credeintials (ldap)"
+msgstr "Неверные полномочия (ldap)"
+
+#: thin_client_api/handlers.py:65
+msgid "Thin client limit exceeded."
+msgstr "Превышен лимит тонких клиентов."
+
+#: thin_client_api/handlers.py:74
+msgid "Pool not found."
+msgstr "Пул не найден."
+
+#: thin_client_api/handlers.py:85
+msgid "User does not have permission to use pool."
+msgstr "Пользователь не имеет разрешения на использование пула."
+
+#: thin_client_api/handlers.py:118
+msgid "Pool has not free machines"
+msgstr "В пуле нет свободных машин"
+
+#: thin_client_api/handlers.py:145
+msgid "VM does not support RDP"
+msgstr "Виртуальная машина не поддерживает RDP"
+
+#: thin_client_api/handlers.py:168
+msgid "User {} not found."
+msgstr "Пользователь {} не найден."
+
+#: thin_client_api/handlers.py:171
+msgid "There is no pool with id: {}"
+msgstr "Отсутствует пул с ID: {}."
+
+#: thin_client_api/handlers.py:175
+msgid "User {} has no VM on pool {}"
+msgstr "У пользователя {} нет виртуальной машины в пуле {}"
+
+#: vm/models.py:77
+msgid "Create VM {} on VDI DB."
+msgstr "Создание виртуальной машины {} на VDI DB."
+
+#: vm/models.py:98
+msgid "Fail to remove VM {} from ECP: "
+msgstr "Ошибка удаления ВМ {} из ECP: "
+
+#: vm/models.py:99
+msgid "Vm {} removed from ECP."
+msgstr "ВМ {} удалена из ECP."
+
+#: vm/models.py:111
+msgid "Vm already has permission."
+msgstr "Вм уже имеет разрешение"
+
+#: vm/models.py:169
+msgid "Trying to create VM on ECP with verbose_name={}"
+msgstr "Попытка создать виртуальную машину на ECP с verbose_name = {}"
+
+#: vm/models.py:175
+msgid "Request to create VM sent without surprise. Leaving while."
+msgstr "Запрос на создание ВМ отправлен без неожиданностей. Покидаем while."
+
+#: vm/models.py:182
+msgid "ECP error: {}"
+msgstr "Ошибка ECP: {}"
+
+#: vm/models.py:184
+msgid "Bad domain name {}"
+msgstr "Неверное доменное имя {}"
+
+#: vm/models.py:189
+msgid "Controller has not free space for creating new VM."
+msgstr "На контроллере отсутствует место для создания новой виртуальной машины."
+
+#: vm/models.py:190
+msgid "Not enough free space on data pool"
+msgstr "Недостаточно свободного места в пуле данных"
+
+#: vm/models.py:194
+msgid "Possibly blocked by active task on ECP. Wait before next try."
+msgstr "Возможно, заблокировано активным заданием на ECP. Подождите перед следующей попыткой."
+
+#: vm/models.py:197
+msgid "Something went wrong. Interrupt while."
+msgstr "Что-то пошло не так. Прерываем while."
+
+#: vm/models.py:201
+msgid "Wait one more try"
+msgstr "Подождите еще одну попытку."
+
+#: vm/schema.py:156
+msgid "There is no VM {}"
+msgstr "Нет ВМ {}."
+
+#: vm/schema.py:172
+msgid "User does not have the right to use pool, which has VM."
+msgstr "У пользователя нет прав на использование пула, которому принадлежит ВМ."
+
+#: vm/schema.py:214
+msgid "GraphQL: Resolving template info"
+msgstr "GraphQL: разрешение информации о шаблоне."
+
+#: vm/schema.py:219
+msgid "Template data could not be retrieved: {}"
+msgstr "Не удалось получить данные Шаблона: {}"
+
+#: vm/schema.py:229
+msgid "VM data could not be retrieved: {}"
+msgstr "Не удалось получить данные виртуальной машины: {}"
+
+#: vm/schema.py:240
+msgid "Templates list could not be retrieved: {}"
+msgstr "Не удалось получить список шаблонов: {}"
+
+#: vm/schema.py:276 vm/schema.py:354
+msgid "Incorrect sort parameter"
+msgstr "Неверный параметр сортировки"
+
+#: vm/schema.py:284
+msgid "GraphQL: Resolving VMs"
+msgstr "GraphQL: разрешение виртуальных машин"
+
+#: vm/schema.py:291
+msgid "VMs list could not be retrieved: {}"
+msgstr "Не удалось получить список виртуальных машин: {}"
+
+#: vm/schema.py:296
+msgid "GraphQL: VM type list:"
+msgstr "GraphQL: список типов виртуальных машин:"
+
+#~ msgid "License information:"
+#~ msgstr "Информация о лицензии:"
+
+#~ msgid "IP: . username: {}"
+#~ msgstr "IP: . пользователь: {}"
+
+#~ msgid "Error with controller update: {}"
+#~ msgstr "Ошибка с обновлением контроллера {}."
+
+#~ msgid "Can't create VM:"
+#~ msgstr "Невозможно создать виртуальную машину:"
+
+#~ msgid "StaticPool: pool {} created."
+#~ msgstr "Статический пул: пул {} создан."

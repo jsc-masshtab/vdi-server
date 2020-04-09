@@ -1,8 +1,16 @@
 # -*- coding: utf-8 -*-
 """Old errors moved from Vdi v0.2"""
+import asyncio
+
 from abc import ABC
 
 from cached_property import cached_property
+
+from languages import lang_init
+from journal.journal import Log as log
+
+
+_ = lang_init()
 
 
 class ValidationError(AssertionError):
@@ -34,11 +42,17 @@ class FieldError(BackendError):
 
 
 class SimpleError(BackendError):
-    def __init__(self, message):
+    def __init__(self, message, **kwargs):
+        native_loop = asyncio.get_event_loop()
+        self.create_event = native_loop.create_task(self.create_error_event(message, **kwargs))
         self.message = message
 
     def format_error(self):
         return self.message
+
+    @staticmethod
+    async def create_error_event(message, **kwargs):
+        await log.error(message, **kwargs)
 
 
 class FetchException(BackendError):
@@ -69,6 +83,9 @@ class HttpError(BackendError):
 
     def __init__(self, message=None):
         if message:
+            message = str(message)
+            native_loop = asyncio.get_event_loop()
+            self.create_event = native_loop.create_task(self.create_error_event(message))
             self.message = message
 
     @cached_property
@@ -80,9 +97,16 @@ class HttpError(BackendError):
             'type': 'HttpError', 'code': self.code, 'message': self.message,
         }
 
+    @staticmethod
+    async def create_error_event(message):
+        await log.error(message)
+
 
 class NotFound(HttpError):
     def __init__(self, message, url):
+        message = str(message)
+        native_loop = asyncio.get_event_loop()
+        self.create_event = native_loop.create_task(self.create_error_event(message))
         self.message = message
         self.url = url
 
@@ -94,10 +118,14 @@ class NotFound(HttpError):
             **super().format_error(), **self.__dict__
         }
 
+    @staticmethod
+    async def create_error_event(message):
+        await log.error(message)
+
 
 class BadRequest(HttpError):
-
     def __init__(self, errors):
+        log.debug(errors)
         self.errors = errors
 
     def code(self):
@@ -115,7 +143,8 @@ class BadRequest(HttpError):
 
 class ControllerNotAccessible(HttpError):
     code = 408
-    message = 'Контроллер недоступен'
+    message = _('Controller is not available.')
+    log.debug(message)
 
     def __init__(self, *, ip):
         self.ip = ip
@@ -132,21 +161,41 @@ class AuthError(HttpError, ABC):
 
 class Forbidden(AuthError):
     code = 403
-    message = "Не удалось войти в систему с предоставленными учетными данными."
+    message = _("Unable to logon to system using these credentials.")
+    log.debug(message)
 
 
 class Unauthorized(AuthError):
     code = 401
+    message = _('401: Unauthorized.')
+    log.debug(message)
 
 
 class ServerError(HttpError):
     code = 500
-    message = "Критическая ошибка контроллера."
+    message = _("Critical controller error.")
+    log.debug(message)
 
 
 class VmCreationError(Exception):
-    pass
+    def __init__(self, message):
+        message = str(message)
+        native_loop = asyncio.get_event_loop()
+        self.create_event = native_loop.create_task(self.create_error_event(message))
+        self.message = message
+
+    @staticmethod
+    async def create_error_event(message):
+        await log.error(message)
 
 
 class PoolCreationError(Exception):
-    pass
+    def __init__(self, message):
+        message = str(message)
+        native_loop = asyncio.get_event_loop()
+        self.create_event = native_loop.create_task(self.create_error_event(message))
+        self.message = message
+
+    @staticmethod
+    async def create_error_event(message):
+        await log.error(message)

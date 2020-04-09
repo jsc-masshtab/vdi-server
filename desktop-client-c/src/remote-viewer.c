@@ -33,10 +33,11 @@
 #include "remote-viewer.h"
 #include "remote-viewer-connect.h"
 #include "vdi_manager.h"
-#include "vdi_api_session.h"
 
 #include "rdp_viewer.h"
-
+#ifdef _WIN32
+#include "windows_rdp_launcher.h"
+#endif
 
 extern gboolean opt_manual_mode;
 
@@ -286,10 +287,19 @@ static void remote_viewer_free_auth_data(gchar **user, gchar **password, gchar *
 {
     free_memory_safely(user);
     free_memory_safely(password);
-    //free_memory_safely(domain);
+    //free_memory_safely(domain); // todo: leak!!!
     free_memory_safely(ip);
     free_memory_safely(port);
     free_memory_safely(vm_verbose_name);
+}
+
+static void setup_css()
+{
+    GtkCssProvider *cssProvider = gtk_css_provider_new(); // todo: free
+    gtk_css_provider_load_from_path(cssProvider, "css_style.css", NULL);
+    gtk_style_context_add_provider_for_screen(gdk_screen_get_default(),
+                                              GTK_STYLE_PROVIDER(cssProvider),
+                                              GTK_STYLE_PROVIDER_PRIORITY_USER);
 }
 
 static gboolean
@@ -308,6 +318,7 @@ remote_viewer_start(VirtViewerApp *app, GError **err G_GNUC_UNUSED, RemoteViewer
     VdiVmRemoteProtocol remote_protocol_type = VDI_SPICE_PROTOCOL;
     GError *error = NULL;
 
+    setup_css(); // CSS setup
     switch (remoteViewerState) {
         case AUTH_DIALOG:
             goto retry_auth;
@@ -333,12 +344,12 @@ retry_auth:
     // 2) В дефолтном режиме вызываем vdi manager. В нем пользователь выберет машину для подключения
 retry_connnect_to_vm:
     /// instant connect attempt
-    if (opt_manual_mode) { // only spice in manual mode
+    if (opt_manual_mode) {
         if (remote_protocol_type == VDI_RDP_PROTOCOL) {
 //            printf("%s TEST user %s\n", (const char *)__func__, user);
 //            printf("%s TEST password %s\n", (const char *)__func__, password);
 //            printf("%s TEST ip %s\n", (const char *)__func__, ip);
-            GtkResponseType rdp_viewer_res = rdp_viewer_start(user, password, domain, ip, 0);
+            GtkResponseType rdp_viewer_res = rdp_viewer_start(user, password, domain, ip, atoi(port));
             remote_viewer_free_auth_data(&user, &password, &domain, &ip, &port, &vm_verbose_name);
             if (rdp_viewer_res == GTK_RESPONSE_CANCEL)
                 goto retry_auth;
@@ -393,7 +404,6 @@ retry_connnect_to_vm:
         // минуя vdi manager window
         if (!is_connect_to_prev_pool) {
             remote_viewer_free_auth_data(&user, &password, &domain, &ip, &port, &vm_verbose_name);
-
             // show VDI manager window
             GtkResponseType vdi_dialog_window_response =
                     vdi_manager_dialog(virt_viewer_window_get_window(main_window), &ip, &port,
@@ -407,7 +417,6 @@ retry_connnect_to_vm:
                 return FALSE;
             }
         }
-
         // set virt viewer window_name
         virt_viewer_app_set_window_name(app, vm_verbose_name);
 
@@ -415,13 +424,15 @@ retry_connnect_to_vm:
         if (remote_protocol_type == VDI_RDP_PROTOCOL) {
             GtkResponseType rdp_viewer_res = rdp_viewer_start(get_vdi_username(), get_vdi_password(), domain, ip, 0);
             //printf("user: %s   pass: %s", get_vdi_username(), get_vdi_password());
-            //rdp_viewer_start("user", "user", ip, NULL); // todo: Remove later
             // quit if required
             if (rdp_viewer_res == GTK_RESPONSE_CLOSE) {
                 remote_viewer_free_auth_data(&user, &password, &domain, &ip, &port, &vm_verbose_name);
                 return FALSE;
             }
-
+#ifdef _WIN32
+        }else if (remote_protocol_type == VDI_RDP_WINDOWS_NATIVE_PROTOCOL) {
+                launch_windows_rdp_client(get_vdi_username(), get_vdi_password(), ip, 0);
+#endif
         } else { // spice by default
             printf("%s port %s\n", (const char *)__func__, port);
             printf("%s user %s\n", (const char *)__func__, user);

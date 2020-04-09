@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-import logging
 import graphene
 from graphql import GraphQLError
 
@@ -10,11 +9,13 @@ from database import StatusGraphene
 from auth.utils import crypto
 from controller.client import ControllerClient
 from controller.models import Controller
-from event.models import Event
 from resources_monitoring.resources_monitor_manager import resources_monitor_manager
 
+from languages import lang_init
+from journal.journal import Log as log
 
-application_log = logging.getLogger('tornado.application')
+
+_ = lang_init()
 
 # TODO: перенести добавление контроллера в ресурс монитор в методы модели, чтобы сократить дублирование кода.
 
@@ -66,7 +67,7 @@ class AddControllerMutation(graphene.Mutation):
                      password, ldap_connection, description=None):
         try:
             if len(verbose_name) < 1:
-                raise SimpleError('Имя контроллера не может быть пустым.')
+                raise SimpleError(_('Controller name cannot be empty.'))
             # check credentials
             controller_client = ControllerClient(address)
             auth_info = dict(username=username, password=password, ldap=ldap_connection)
@@ -87,19 +88,17 @@ class AddControllerMutation(graphene.Mutation):
             )
 
             await resources_monitor_manager.add_controller(address)
-            msg = 'Successfully added new controller {name} with address {address}.'.format(
+            msg = _('Successfully added new controller {name} with address {address}.').format(
                 name=controller.verbose_name,
                 address=address)
-            await Event.create_info(msg)
+            await log.info(msg)
             return AddControllerMutation(ok=True, controller=ControllerType(**controller.__values__))
         except SimpleError as E:
             raise SimpleError(E)
         except Exception as E:
-            msg = 'Add new controller with address {address}: operation failed.'.format(
-                address=address)
+            msg = _('Add new controller with address {address}: operation failed.').format(address=address)
             descr = str(E)
-            await Event.create_error(msg, description=descr)
-            raise SimpleError(msg)
+            raise SimpleError(msg, description=descr)
 
 
 class UpdateControllerMutation(graphene.Mutation):
@@ -122,7 +121,7 @@ class UpdateControllerMutation(graphene.Mutation):
         # TODO: это нужно перенести в валидатор
         controller = await Controller.get(id)
         if not controller:
-            raise SimpleError('No such controller.')
+            raise SimpleError(_('No such controller.'))
 
         try:
             await controller.soft_update(verbose_name=verbose_name,
@@ -138,19 +137,19 @@ class UpdateControllerMutation(graphene.Mutation):
             await resources_monitor_manager.remove_controller(controller.address)
             await resources_monitor_manager.add_controller(controller.address)
         except Exception as E:
-            msg = 'Fail to update controller {id}: {error}'.format(
+            msg = _('Fail to update controller {id}: {error}').format(
                 id=id, error=E)
-            application_log.error(msg)
+            await log.error(msg)
             # При редактировании с контроллером произошла ошибка - нужно остановить монитор ресурсов.
             await resources_monitor_manager.remove_controller(controller.address)
             # И деактивировать контроллер
             await Controller.deactivate(id)
             raise SimpleError(msg)
 
-        msg = 'Successfully update controller {name} with address {address}.'.format(
+        msg = _('Successfully update controller {name} with address {address}.').format(
             name=controller.verbose_name,
             address=controller.address)
-        application_log.info(msg)
+        await log.info(msg)
         # На случай, если контроллер был не активен - активируем его.
         await Controller.activate(id)
         return UpdateControllerMutation(ok=True, controller=ControllerType(**controller.__values__))
@@ -169,7 +168,7 @@ class RemoveControllerMutation(graphene.Mutation):
 
         controller = await Controller.query.where(Controller.id == id).gino.first()
         if not controller:
-            raise GraphQLError('No such controller.')
+            raise GraphQLError(_('No such controller.'))
 
         if full:
             ok = await controller.full_delete()
@@ -195,7 +194,7 @@ class TestControllerMutation(graphene.Mutation):
     async def mutate(self, _info, id):
         controller = await Controller.get(id)
         if not controller:
-            raise GraphQLError('No such controller.')
+            raise GraphQLError(_('No such controller.'))
         connection_ok = await controller.check_credentials()
         if connection_ok:
             await Controller.activate(id)
@@ -224,7 +223,7 @@ class ControllerQuery(graphene.ObjectType):
     async def resolve_controller(self, _info, id):
         controller = await Controller.query.where(Controller.id == id).gino.first()
         if not controller:
-            raise GraphQLError('No such controller.')
+            raise GraphQLError(_('No such controller.'))
         return ControllerType(**controller.__values__)
 
 

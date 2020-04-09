@@ -87,6 +87,10 @@ class PoolTestCase(VdiHttpTestCase):
         url = '/client/pools/{pool_id}/'.format(pool_id=pool_id)
 
         response_dict = yield self.get_response(body=body, url=url, headers=headers)
+
+        # print('Response dict:')
+        # print(response_dict)
+
         response_data = response_dict['data']
         self.assertIsInstance(response_data, dict)
         self.assertIn('port', response_data)

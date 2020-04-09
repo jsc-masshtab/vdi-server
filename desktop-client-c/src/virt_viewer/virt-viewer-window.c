@@ -1159,7 +1159,7 @@ G_MODULE_EXPORT void
 virt_viewer_window_menu_start_vm(GtkWidget *menu G_GNUC_UNUSED, VirtViewerWindow *self)
 {
     printf("%s\n", (const char *)__func__);
-    do_action_on_vm_async("start", FALSE);
+    vdi_api_session_do_action_on_vm("start", FALSE);
     // start connect atempts
     virt_viewer_start_reconnect_poll(self->priv->app);
 }
@@ -1168,35 +1168,35 @@ G_MODULE_EXPORT void
 virt_viewer_window_menu_suspend_vm(GtkWidget *menu G_GNUC_UNUSED, VirtViewerWindow *self G_GNUC_UNUSED)
 {
     printf("%s\n", (const char *)__func__);
-    do_action_on_vm_async("suspend", FALSE);
+    vdi_api_session_do_action_on_vm("suspend", FALSE);
 }
 
 G_MODULE_EXPORT void
 virt_viewer_window_menu_shutdown_vm(GtkWidget *menu G_GNUC_UNUSED, VirtViewerWindow *self G_GNUC_UNUSED)
 {
     printf("%s\n", (const char *)__func__);
-    do_action_on_vm_async("shutdown", FALSE);
+    vdi_api_session_do_action_on_vm("shutdown", FALSE);
 }
 
 G_MODULE_EXPORT void
 virt_viewer_window_menu_shutdown_vm_force(GtkWidget *menu G_GNUC_UNUSED, VirtViewerWindow *self G_GNUC_UNUSED)
 {
     printf("%s\n", (const char *)__func__);
-    do_action_on_vm_async("shutdown", TRUE);
+    vdi_api_session_do_action_on_vm("shutdown", TRUE);
 }
 
 G_MODULE_EXPORT void
 virt_viewer_window_menu_reboot_vm(GtkWidget *menu G_GNUC_UNUSED, VirtViewerWindow *self G_GNUC_UNUSED)
 {
     printf("%s\n", (const char *)__func__);
-    do_action_on_vm_async("reboot", FALSE);
+    vdi_api_session_do_action_on_vm("reboot", FALSE);
 }
 
 G_MODULE_EXPORT void
 virt_viewer_window_menu_reboot_vm_force(GtkWidget *menu G_GNUC_UNUSED, VirtViewerWindow *self G_GNUC_UNUSED)
 {
     printf("%s\n", (const char *)__func__);
-    do_action_on_vm_async("reboot", TRUE);
+    vdi_api_session_do_action_on_vm("reboot", TRUE);
 }
 
 static void

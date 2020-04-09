@@ -9,8 +9,15 @@
 #include <freerdp/utils/signal.h>
 
 #include "rdp_client.h"
+#include "rdp_viewer_window.h"
 
-GtkWidget *rdp_display_create(GtkWidget *rdp_viewer_window, ExtendedRdpContext *ex_context, UINT32 *last_rdp_error_p);
+//typedef struct{
+//    RdpViewerData *rdp_viewer_data;
+//    ExtendedRdpContext *ex_rdp_context;
+
+//} RdpDisplayData;
+
+GtkWidget *rdp_display_create(RdpViewerData *rdp_viewer_data, ExtendedRdpContext *ex_rdp_context, UINT32 *last_rdp_error_p);
 
 
 

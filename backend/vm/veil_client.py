@@ -1,13 +1,9 @@
 # -*- coding: utf-8 -*-
-import logging
 import urllib.parse
 
 from common.veil_decorators import check_params
 from common.veil_client import VeilHttpClient
 from controller.models import Controller
-
-
-application_log = logging.getLogger('tornado.application')
 
 
 class VmHttpClient(VeilHttpClient):
@@ -45,16 +41,16 @@ class VmHttpClient(VeilHttpClient):
     async def send_action(self, action: str, body: str = ''):
         """Send remote action for domain on VEIL"""
         url = self.url + action + '/'
-        await self.fetch(url=url, method='POST', body=body)
+        await self.fetch(url=url, method='POST', body=body, controller_control=False)
 
     async def enable_remote_access(self):
         """Enable remote access on remote VM"""
         url = self.url + 'remote-access/'
-        await self.fetch(url=url, method='POST', body=dict(remote_access=True))
+        await self.fetch(url=url, method='POST', body=dict(remote_access=True), controller_control=False)
 
     async def info(self):
         """Endpoint for receiving information about VMs from a remote controller."""
-        response_body = await self.fetch_with_response(url=self.url, method='GET')
+        response_body = await self.fetch_with_response(url=self.url, method='GET', controller_control=False)
         return response_body
 
     async def check_status(self):
@@ -70,11 +66,11 @@ class VmHttpClient(VeilHttpClient):
                     datapool=datapool_id,
                     parent=self.vm_id,
                     thin=create_thin_clones)
-        return await self.fetch_with_response(url=url, method='POST', body=body)
+        return await self.fetch_with_response(url=url, method='POST', body=body, controller_control=False)
 
     async def remove_vm(self):
         url = self.url + 'remove/'
-        await self.fetch(url=url, method='POST', body=dict(full=True))
+        await self.fetch(url=url, method='POST', body=dict(full=True), controller_control=False)
 
     async def fetch_all_vms_list(self, node_id: str = None, datapool_id: str = None,
                                  ordering: str = None, reversed_order: bool = None, is_template=False):
@@ -98,7 +94,7 @@ class VmHttpClient(VeilHttpClient):
 
         url = url + urllib.parse.urlencode(url_vars)
         # request
-        resources_list_data = await self.fetch_with_response(url=url, method='GET')
+        resources_list_data = await self.fetch_with_response(url=url, method='GET', controller_control=False)
         all_vms_list = resources_list_data['results']
 
         # # filter bu cluster
@@ -119,14 +115,10 @@ class VmHttpClient(VeilHttpClient):
         return all_vms_list
 
     async def fetch_vdisks_list(self):
-        # api/vdisks/?domain=21c97d06-3bd4-4764-b854-33c91827d391&limit=100
+        """url example: api/vdisks/?domain=21c97d06-3bd4-4764-b854-33c91827d391&limit=100"""
         url = "http://{}/api/vdisks/?".format(self.controller_ip)
         url_vars = dict(domain=self.vm_id)
         url = url + urllib.parse.urlencode(url_vars)
-
-        resources_list_data = await self.fetch_with_response(url=url, method='GET')
-        # print('resources_list_data', resources_list_data)
+        resources_list_data = await self.fetch_with_response(url=url, method='GET', controller_control=False)
         disks_list = resources_list_data['results']
-        application_log.debug('VDISKS list:')
-        application_log.debug(disks_list)
         return disks_list

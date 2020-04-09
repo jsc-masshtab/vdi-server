@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
 import time
-import sys
-import logging
 import signal
 
 from tornado.ioloop import IOLoop
@@ -11,9 +9,11 @@ import tornado.options
 
 from settings import DB_NAME, DB_PASS, DB_USER, DB_PORT, DB_HOST, WS_PING_INTERVAL, WS_PING_TIMEOUT, AUTH_ENABLED
 from database import db
+from redis_broker import REDIS_POOL
 from common.veil_handlers import VdiTornadoGraphQLHandler
 
-from event.schema import event_schema
+from journal.event.schema import event_schema
+from auth.license.utils import License
 from auth.user_schema import user_schema
 from auth.group_schema import group_schema
 from auth.authentication_directory.auth_dir_schema import auth_dir_schema
@@ -27,14 +27,22 @@ from resources_monitoring.resources_monitor_manager import resources_monitor_man
 from pool.pool_task_manager import pool_task_manager
 
 from auth.urls import auth_api_urls
+from auth.license.urls import license_api_urls
 from thin_client_api.urls import thin_client_api_urls
 from resources_monitoring.urls import ws_event_monitoring_urls
 
-logger = logging.getLogger(__name__)
-tornado.options.define("access_to_stdout", default=True, help="Log tornado.access to stdout")
+from languages import lang_init
+from journal.log.logging import Logging
+from journal.journal import Log as log
+
+
+_ = lang_init()
+
+tornado.options.define("access_to_stdout", default=True, help="tornado.access to stdout")
 tornado.options.define("port", default=8888, help="port to listen on")
 tornado.options.define("autoreload", default=True, help="autoreload application")
 tornado.options.define("debug", default=True, help="debug mode")
+tornado.options.define("workers", default=1, help="num of process forks. 0 forks one process per cpu")
 
 handlers = [
     (r'/controllers', VdiTornadoGraphQLHandler, dict(graphiql=True, schema=controller_schema)),
@@ -50,19 +58,7 @@ handlers = [
 handlers += auth_api_urls
 handlers += thin_client_api_urls
 handlers += ws_event_monitoring_urls
-
-
-def init_logging(access_to_stdout=False):
-    if access_to_stdout:
-        access_log = logging.getLogger('tornado.access')
-        access_log.propagate = False
-        access_log.setLevel(logging.INFO)
-        stdout_handler = logging.StreamHandler(sys.stdout)
-        access_log.addHandler(stdout_handler)
-
-    # Disable query logging.
-    logging.getLogger('sqlalchemy').setLevel(logging.ERROR)
-    logging.getLogger('gino').setLevel(logging.ERROR)
+handlers += license_api_urls
 
 
 def init_signals():
@@ -78,15 +74,6 @@ def init_callbacks():
 def init_tasks():
     vm_manager = VmManager()
     IOLoop.instance().add_timeout(time.time(), vm_manager.start)
-
-
-def bootstrap():
-    """Запускает логгирование"""
-    init_signals()
-    # uncomment for run without supervisor:
-    # tornado.options.options.log_file_prefix = 'vdi_tornado.log'
-    tornado.options.parse_command_line(final=True)
-    init_logging(tornado.options.options.access_to_stdout)
 
 
 def make_app():
@@ -112,19 +99,8 @@ def init_gino():
     IOLoop.current().run_sync(lambda: start_gino())
 
 
-def start_server():
-    logger.info('Tornado VDI started')
-
-    if not AUTH_ENABLED:
-        general_log = logging.getLogger('tornado.general')
-        general_log.warning('Auth is disabled. Enable on production!')
-
-    app = make_app()
-    init_gino()
-    app.listen(tornado.options.options.port)
-    init_tasks()
-    init_callbacks()
-    IOLoop.current().start()
+def init_license():
+    return License()
 
 
 def exit_handler(sig, frame):
@@ -132,20 +108,55 @@ def exit_handler(sig, frame):
 
 
 async def shutdown_server():
-    logger.info('Stopping Tornado VDI')
+    log.name(_('Stopping Tornado VDI'))
 
-    logger.info('Stopping resources_monitor_manager')
+    log.name(_('Stopping redis'))
+    REDIS_POOL.disconnect()
+
+    log.name(_('Stopping resources_monitor_manager'))
     await resources_monitor_manager.stop()
 
-    logger.info('Stopping GINO')
+    log.name(_('Stopping GINO'))
     await stop_gino()
 
-    logger.info('Stopping IOLoop')
+    log.name(_('Stopping IOLoop'))
     IOLoop.current().stop()
 
-    logger.info('Tornado VDI stopped')
+    log.name(_('Tornado VDI stopped'))
+
+
+def start_server():
+    tornado.options.parse_command_line(final=True)
+    Logging.init_logging(tornado.options.options.access_to_stdout)
+    init_signals()
+
+    app = make_app()
+    server = tornado.httpserver.HTTPServer(app)
+    server.listen(tornado.options.options.port)
+    server.start(tornado.options.options.workers)
+
+    log.name(_('Tornado VDI started'))
+
+    if not AUTH_ENABLED:
+        # TODO: change to WARNING
+        log.name(_('Auth is disabled. Enable on production!'))
+
+    vdi_license = init_license()
+    if vdi_license.expired:
+        # TODO: change to WARNING
+        log.name(_('The license is expired. Some functions will be blocked. Contact your dealer.'))
+
+    log.name(_('License status: {}, expiration time: {}, thin clients limit: {}').format(
+        not vdi_license.expired,
+        vdi_license.expiration_date,
+        vdi_license.thin_clients_limit))
+
+    init_gino()
+
+    init_tasks()
+    init_callbacks()
+    IOLoop.current().start()
 
 
 if __name__ == '__main__':
-    bootstrap()
     start_server()

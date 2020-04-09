@@ -6,7 +6,10 @@ from graphene import Enum as GrapheneEnum
 from sqlalchemy.sql import desc
 from sqlalchemy.sql.schema import Column
 
-from common.veil_errors import SimpleError
+from languages import lang_init
+
+
+_ = lang_init()
 
 db = Gino()
 
@@ -72,20 +75,22 @@ class AbstractSortableStatusModel:
 
     @classmethod
     def get_order_field(cls, field_name):
+        from common.veil_errors import SimpleError
         """Соответствие переданного наименования поля полю модели, чтобы не использовать raw_sql в order"""
         field = cls._get_table_field(field_name)
         if field is None:
             # TODO: switch SimpleError to FieldError
-            raise SimpleError('Неверный параметр сортировки {}'.format(field_name))
+            raise SimpleError(_('Incorrect sort parameter {}').format(field_name))
         return field
 
     @classmethod
     def get_query_field(cls, field_name):
+        from common.veil_errors import SimpleError
         """Соответствие переданного наименования поля полю модели, чтобы не использовать raw_sql в where"""
         field = cls._get_table_field(field_name)
         if field is None:
             # TODO: switch SimpleError to FieldError
-            raise SimpleError('Неверный параметр запроса {}'.format(field_name))
+            raise SimpleError(_('Incorrect request parameter {}').format(field_name))
         return field
 
     @classmethod

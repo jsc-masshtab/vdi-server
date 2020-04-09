@@ -12,7 +12,7 @@ from controller.models import Controller
 
 
 class VmManager:
-    """"""
+    query_interval = 10
 
     def __init__(self):
         self._is_running = True
@@ -24,11 +24,9 @@ class VmManager:
 
     async def _keep_vms_on_task(self):
         """Держим машины вкюченными, если машины находятся в пуле с поднятым флагом keep_vms_on"""
-        # TODO: update
+
         while self._is_running:
             # get vms which have users
-            # local_vm_data_list = await db.select([Vm.id, Pool.keep_vms_on]).select_from(Vm.join(Pool)).where(
-            #     Vm.username != '').gino.all()
 
             local_vm_data_query = db.select([Vm.id, Pool.keep_vms_on]).select_from(Vm.join(Pool)).where(
                 Vm.id.in_(Entity.select('entity_uuid').where((Entity.entity_type == EntityType.VM) & (Entity.id.in_(
@@ -37,7 +35,7 @@ class VmManager:
             local_vm_data_list = await local_vm_data_query.gino.all()
 
             # get vm info from controllers
-            controllers_addresses = await Controller.get_controllers_addresses()
+            controllers_addresses = await Controller.get_addresses()
 
             remote_vm_data_list = []
             for controller_address in controllers_addresses:
@@ -70,5 +68,4 @@ class VmManager:
                     except (HttpError, OSError):
                         pass
 
-            QUERY_INTERVAL = 10
-            await asyncio.sleep(QUERY_INTERVAL)
+            await asyncio.sleep(self.query_interval)

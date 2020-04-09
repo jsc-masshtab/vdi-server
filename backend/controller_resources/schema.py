@@ -15,6 +15,11 @@ from controller.models import Controller
 
 from settings import DEFAULT_NAME
 
+from languages import lang_init
+
+
+_ = lang_init()
+
 
 class RequestType(graphene.ObjectType):
     url = graphene.String()
@@ -277,7 +282,7 @@ class ResourcesQuery(graphene.ObjectType):
 
     @superuser_required
     async def resolve_nodes(self, _info, cluster_id=None, ordering=None):
-        controllers_addresses = await Controller.get_controllers_addresses()
+        controllers_addresses = await Controller.get_addresses()
 
         # form list of nodes
         list_of_all_node_types = []
@@ -313,7 +318,7 @@ class ResourcesQuery(graphene.ObjectType):
             elif ordering == 'management_ip':
                 def sort_lam(node): return node.management_ip if node.management_ip else DEFAULT_NAME
             else:
-                raise SimpleError('Неверный параметр сортировки')
+                raise SimpleError(_('The sort parameter is incorrect'))
 
             list_of_all_node_types = sorted(list_of_all_node_types, key=sort_lam, reverse=reverse)
 
@@ -336,7 +341,7 @@ class ResourcesQuery(graphene.ObjectType):
             list_of_all_cluster_types = await ResourcesQuery.resource_veil_to_graphene_type_list(
                 ClusterType, clusters, controller_ip)
         else:
-            controllers_addresses = await Controller.get_controllers_addresses()
+            controllers_addresses = await Controller.get_addresses()
             # print('test controllers', controllers_addresses)
             # form list of clusters
             list_of_all_cluster_types = []
@@ -366,7 +371,7 @@ class ResourcesQuery(graphene.ObjectType):
             elif ordering == 'controller':
                 def sort_lam(cluster): return cluster.controller.address if cluster.controller.address else DEFAULT_NAME
             else:
-                raise SimpleError('Неверный параметр сортировки')
+                raise SimpleError(_('The sort parameter is incorrect'))
             list_of_all_cluster_types = sorted(list_of_all_cluster_types, key=sort_lam, reverse=reverse)
 
         return list_of_all_cluster_types
@@ -385,7 +390,7 @@ class ResourcesQuery(graphene.ObjectType):
         # form list of datapools
         list_of_all_datapool_types = []
 
-        controllers_addresses = await Controller.get_controllers_addresses()
+        controllers_addresses = await Controller.get_addresses()
         for controllers_address in controllers_addresses:
             resources_http_client = await ResourcesHttpClient.create(controllers_address)
             datapools = await resources_http_client.fetch_datapool_list(node_id=node_id, take_broken=take_broken)
@@ -415,7 +420,7 @@ class ResourcesQuery(graphene.ObjectType):
             elif ordering == 'status':
                 def sort_lam(datapool): return datapool.status if datapool.status else DEFAULT_NAME
             else:
-                raise SimpleError('Неверный параметр сортировки')
+                raise SimpleError(_('The sort parameter is incorrect'))
             list_of_all_datapool_types = sorted(list_of_all_datapool_types, key=sort_lam, reverse=reverse)
 
         return list_of_all_datapool_types

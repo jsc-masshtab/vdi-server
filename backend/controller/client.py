@@ -3,6 +3,11 @@ from datetime import datetime
 
 from common.veil_client import VeilHttpClient
 
+from languages import lang_init
+
+
+_ = lang_init()
+
 
 class ControllerClient(VeilHttpClient):
 
@@ -19,7 +24,7 @@ class ControllerClient(VeilHttpClient):
         self.token = response.get('token')
         self.expires_on = datetime.strptime(response.get('expires_on'), "%d.%m.%Y %H:%M:%S UTC")
         if not self.token or not self.expires_on:
-            raise AssertionError('Auth failed.')
+            raise AssertionError(_('Auth failed.'))
         return self.token, self.expires_on
 
     async def fetch_version(self):

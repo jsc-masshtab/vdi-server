@@ -36,7 +36,7 @@ async def get_resources_static_pool_test():
     2)На контроллере при каждом тесте создавать/удалять требуемые ресурсы (это может увеличить время тестов)
     """
     # controller
-    controllers_addresses = await Controller.get_controllers_addresses()
+    controllers_addresses = await Controller.get_addresses()
     if not controllers_addresses:
         raise RuntimeError('Нет контроллеров')
 
@@ -78,7 +78,7 @@ async def get_resources_automated_pool_test():
     """На контроллере ищутся оптимальные ресурсы для проведения теста
     """
     # controller
-    controllers_addresses = await Controller.get_controllers_addresses()
+    controllers_addresses = await Controller.get_addresses()
     if not controllers_addresses:
         raise RuntimeError('Нет контроллеров')
 

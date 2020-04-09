@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-import logging
 from cached_property import cached_property
 from tornado.httpclient import AsyncHTTPClient, HTTPRequest, HTTPClientError
 from tornado.escape import json_decode
@@ -7,6 +6,12 @@ from tornado.escape import json_decode
 from settings import VEIL_REQUEST_TIMEOUT, VEIL_CONNECTION_TIMEOUT, VEIL_MAX_BODY_SIZE, VEIL_MAX_CLIENTS
 from common.veil_errors import NotFound, Unauthorized, ServerError, Forbidden, ControllerNotAccessible, BadRequest
 from common.veil_decorators import prepare_body
+
+from languages import lang_init
+from journal.journal import Log as log
+
+
+_ = lang_init()
 
 # TODO: добавить обработку исключений
 # TODO: Не tornado.curl_httpclient.CurlAsyncHTTPClient, т.к. не измерен реальный прирост производительности.
@@ -18,8 +23,6 @@ from common.veil_decorators import prepare_body
 AsyncHTTPClient.configure("tornado.simple_httpclient.SimpleAsyncHTTPClient",
                           max_clients=VEIL_MAX_CLIENTS,
                           max_body_size=VEIL_MAX_BODY_SIZE)
-
-application_log = logging.getLogger('tornado.application')
 
 
 class VeilHttpClient:
@@ -40,62 +43,70 @@ class VeilHttpClient:
     async def headers(self):
         """controller ip-address must be set in the descendant class."""
         headers = {
-            'Authorization': 'jwt {}'.format(self.token),
+            'Authorization': _('jwt {}').format(self.token),
             'Content-Type': 'application/json',
         }
         return headers
 
     @prepare_body
-    async def fetch(self, url: str, method: str, headers: dict = None, body: str = ''):
-        if method == 'GET' and body == '':
-            body = None
+    async def fetch(self, url: str, method: str, headers: dict = None, body: str = '', controller_control: bool = True):
+        """
+
+        :param url: URL запроса
+        :param method: Метод запроса
+        :param headers: Заголовки запроса
+        :param body: Тело запроса
+        :param controller_control: нужно ли управлять контроллером по результатам исключения
+        :return: HttpResponse
+        """
+
         if not headers:
             headers = await self.headers
+
+        request = HTTPRequest(url=url,
+                              method=method,
+                              headers=headers,
+                              body=body,
+                              connect_timeout=VEIL_CONNECTION_TIMEOUT,
+                              request_timeout=VEIL_REQUEST_TIMEOUT)
+
         try:
-            request = HTTPRequest(url=url,
-                                  method=method,
-                                  headers=headers,
-                                  body=body,
-                                  connect_timeout=VEIL_CONNECTION_TIMEOUT,
-                                  request_timeout=VEIL_REQUEST_TIMEOUT)
             response = await self._client.fetch(request)
         except HTTPClientError as http_error:
 
             async def stop_controller(description: str):
-                # TODO: этому тут явно не место.
-                from event.models import Event
+                # TODO: этому тут не место.
                 from resources_monitoring.resources_monitor_manager import resources_monitor_manager
                 if isinstance(description, list):
                     description = description[0]
                 if not isinstance(description, str):
                     description = ''
                 # Информируем систему о проблеме
-                await Event.create_error('Ошибка подключения к контроллеру {}'.format(self.controller_ip),
-                                         description=description)
+                await log.error(_('Controller {} connection error').format(self.controller_ip),
+                                description=description)
                 # Останавливаем монитор ресурсов для контроллера.
                 await resources_monitor_manager.remove_controller(self.controller_ip)
-
-            application_log.error('URL {url} - {http_error}'.format(url=url,
-                                                                    http_error=str(http_error)))
 
             body = self.get_response_body(http_error.response)
             if isinstance(body, dict):
                 errors = body['errors'] if body.get('errors') else {}
                 detail = errors['detail'] if errors.get('detail') else {}
             elif isinstance(body, str):
-                detail = 'url: {} - {}'.format(url, body)
+                detail = _('url: {} - {}').format(url, body)
             else:
                 detail = ''
-            await stop_controller(detail)
+
+            if controller_control:
+                await stop_controller(detail)
 
             if http_error.code == 400:
                 raise BadRequest(body)
             elif http_error.code == 401:
-                raise Unauthorized()
+                raise Unauthorized(_('Controller {} connection error.').format(self.controller_ip))
             elif http_error.code == 403:
                 raise Forbidden(body)
             elif http_error.code == 404:
-                raise NotFound('Не найден URL', url)
+                raise NotFound(_('URL not found'), url)
             elif http_error.code == 408:
                 raise ControllerNotAccessible(body)
             elif http_error.code == 500:
@@ -113,19 +124,21 @@ class VeilHttpClient:
         response_content_type = response_headers.get('Content-Type')
 
         if not isinstance(response_content_type, str):
-            raise AssertionError('Can\'t process Content-Type.')
+            raise AssertionError(_('Can\'t process Content-Type.'))
 
         if response_content_type.lower().find('json') == -1:
-            raise NotImplementedError('Only \'json\' Content-Type.')
+            raise NotImplementedError(_('Only \'json\' Content-Type.'))
         try:
             response = json_decode(response.body)
         except ValueError:
             response = dict()
         return response
 
-    async def fetch_with_response(self, url: str, method: str, headers: dict = None, body: str = None):
+    async def fetch_with_response(self, url: str, method: str, headers: dict = None, body: str = None,
+                                  controller_control: bool = True):
         """Check response headers. Search json in content-type value"""
-        response = await self.fetch(url=url, method=method, headers=headers, body=body)
+        response = await self.fetch(url=url, method=method, headers=headers, body=body,
+                                    controller_control=controller_control)
         response_body = self.get_response_body(response)
         return response_body
 

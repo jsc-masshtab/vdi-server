@@ -11,6 +11,11 @@ from tests.utils import execute_scheme, ExecError
 from auth.authentication_directory.auth_dir_schema import auth_dir_schema
 from auth.authentication_directory.models import AuthenticationDirectory, Mapping
 
+from languages import lang_init
+
+
+_ = lang_init()
+
 pytestmark = [pytest.mark.asyncio, pytest.mark.auth_dir, pytest.mark.auth]
 
 
@@ -57,7 +62,7 @@ class TestAuthenticationDirectorySchema:
         try:
             await execute_scheme(auth_dir_schema, query, context=fixt_auth_context)
         except ExecError as E:
-            assert 'More than one authentication directory can not be created.' in str(E)
+            assert _('More than one authentication directory can not be created.') in str(E)
 
     async def test_auth_dirs_list(self, snapshot, fixt_auth_context):  # noqa
         query = """query{auth_dirs {

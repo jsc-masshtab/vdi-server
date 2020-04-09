@@ -1,4 +1,5 @@
 #!/bin/bash
+APP_DIR=/opt/veil-vdi
 
 echo "Install base packages"
 
@@ -14,8 +15,18 @@ curl -sL https://deb.nodesource.com/setup_10.x | bash
 apt-get install -y nodejs
 
 #------------------------------
+echo "Setting up redis"
+
+apt-get install -y redis-server
+systemctl enable redis-server.service
+echo 'requirepass 4NZ7GpHn4IlshPhb' >> /etc/redis/redis.conf
+sed -i 's/bind 127.0.0.1/bind 0.0.0.0/g' /etc/redis/redis.conf
+systemctl restart redis-server
+
+#------------------------------
 echo "Setting up database"
 
+cp $APP_DIR/devops/conf/vdi.postgresql /etc/postgresql/9.6/main/postgresql.conf
 sed -i 's/peer/trust/g' /etc/postgresql/9.6/main/pg_hba.conf
 sed -i "s/#listen_addresses = 'localhost'/listen_addresses = '192.168.20.112,127.0.0.1'/g" /etc/postgresql/9.6/main/postgresql.conf
 echo 'host  vdi postgres  0.0.0.0/0  trust' >> /etc/postgresql/9.6/main/pg_hba.conf
@@ -28,14 +39,12 @@ sudo su postgres -c "psql -c \"create database vdi encoding 'utf8' lc_collate = 
 
 #------------------------------
 echo "Setting up vdi folder"
-
-APP_DIR=/opt/veil-vdi
 cd $APP_DIR
 
 #------------------------------
 echo "Setting up nginx"
 
-cp $APP_DIR/devops/conf/vdi_nginx.conf /etc/nginx/conf.d/vdi_nginx.conf
+cp $APP_DIR/devops/conf/vdi.nginx /etc/nginx/conf.d/vdi_nginx.conf
 rm /etc/nginx/sites-enabled/*
 systemctl restart nginx
 
@@ -70,7 +79,7 @@ mkdir /var/log/veil-vdi/
 
 echo "Deploying configuration files for logrotate"
 
-cp $APP_DIR/devops/conf/veil-vdi /etc/logrotate.d/veil-vdi
+cp $APP_DIR/devops/conf/tornado.logrotate /etc/logrotate.d/veil-vdi
 
 echo "Deploying configuration files for supervisor"
 

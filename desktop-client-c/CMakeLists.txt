@@ -71,7 +71,12 @@ FILE(GLOB SRC_CODE
         src/rdp_viewer/rdp_cursor.c
         src/rdp_viewer/rdp_display.h
         src/rdp_viewer/rdp_display.c
-        
+        src/rdp_viewer/rdp_viewer_window.h
+        src/rdp_viewer/rdp_viewer_window.c
+        src/rdp_viewer/windows_rdp_launcher.h
+        src/rdp_viewer/windows_rdp_launcher.c
+
+
 #utility
         src/utility/crashhandler.h
         src/utility/crashhandler.c
@@ -81,7 +86,7 @@ FILE(GLOB SRC_CODE
         src/utility/settingsfile.h
         src/utility/async.h
         src/utility/async.c
-        
+
 # vdi client
         src/vdi_client/vdi_manager.h
         src/vdi_client/vdi_manager.c
@@ -91,13 +96,15 @@ FILE(GLOB SRC_CODE
         src/vdi_client/vdi_pool_widget.c
         src/vdi_client/vdi_ws_client.h
         src/vdi_client/vdi_ws_client.c
+        src/vdi_client/vdi_redis_client.h
+        src/vdi_client/vdi_redis_client.c
 )
 ###############################LIBRARIES###############################
     # GLIB
     find_package(PkgConfig REQUIRED)
     pkg_search_module(GLIB REQUIRED glib-2.0)
     INCLUDE_DIRECTORIES(${GLIB_INCLUDE_DIRS})
-    
+
     # GTK
     PKG_CHECK_MODULES(GTK3 REQUIRED gtk+-3.0)
     INCLUDE_DIRECTORIES(${GTK3_INCLUDE_DIRS})
@@ -106,6 +113,18 @@ FILE(GLOB SRC_CODE
 
 if (UNIX)
     SET(LIBS_INCLUDE_PATH /usr/include/)
+
+    # redis hiredis
+    INCLUDE_DIRECTORIES(${LIBS_INCLUDE_PATH}hiredis)
+    SET(LIBS ${LIBS} hiredis)
+
+    # freerdp
+    INCLUDE_DIRECTORIES(${LIBS_INCLUDE_PATH}freerdp2)
+    SET(LIBS ${LIBS} freerdp2 freerdp-client2)
+
+    # winpr2
+    INCLUDE_DIRECTORIES(${LIBS_INCLUDE_PATH}winpr2)
+    SET(LIBS ${LIBS} winpr2 winpr-tools2)
 
     # other libs
     SET(LIBS ${LIBS}
@@ -121,11 +140,29 @@ endif (UNIX)
 
 if (WIN32)
     SET(LIBS_INCLUDE_PATH C:/msys64/mingw64/include/)
+    SET(FREERDP_PATH C:/job/FreeRDP-2.0.0-rc4/FreeRDP-2.0.0-rc4/)
+    SET(HIREDIS_PATH C:/job/hiredis-mingw/)
+
+    # hiredis port to Windows
+    INCLUDE_DIRECTORIES(${HIREDIS_PATH})
+    SET(LIBS ${LIBS} ${HIREDIS_PATH}cmake-build-release/libhiredis.a)
+
+    # freerdp
+    INCLUDE_DIRECTORIES(${FREERDP_PATH}include)
+    SET(LIBS ${LIBS} ${FREERDP_PATH}Release/freerdp2.dll)
+    SET(LIBS ${LIBS} ${FREERDP_PATH}Release/freerdp-client2.dll)
+
+    # winpr2
+    INCLUDE_DIRECTORIES(${FREERDP_PATH}winpr/include)
+    SET(LIBS ${LIBS} ${FREERDP_PATH}Release/winpr-tools2.dll)
+    SET(LIBS ${LIBS} ${FREERDP_PATH}Release/winpr2.dll)
 
     # other libs
     SET(LIBS ${LIBS}
             m
             -pthread
+            -lwsock32
+            -lws2_32
     )
 
     SET(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
@@ -134,7 +171,7 @@ if (WIN32)
 endif (WIN32)
 
     # libxml
-    INCLUDE_DIRECTORIES(${LIBS_INCLUDE_PATH}/libxml2)
+    INCLUDE_DIRECTORIES(${LIBS_INCLUDE_PATH}libxml2)
     SET(LIBS ${LIBS} xml2)
 
     # SPICE_GTK
@@ -151,19 +188,29 @@ endif (WIN32)
     INCLUDE_DIRECTORIES(${LIBS_INCLUDE_PATH}json-glib-1.0)
     SET(LIBS ${LIBS} json-glib-1.0)
 
-    # freerdp
-    add_definitions(-DNEW_FREEERDP_VERSION)
-    INCLUDE_DIRECTORIES(${LIBS_INCLUDE_PATH}freerdp2)
-    SET(LIBS ${LIBS} freerdp2 freerdp-client2)
-
-    # winpr2
-    INCLUDE_DIRECTORIES(${LIBS_INCLUDE_PATH}winpr2)
-    SET(LIBS ${LIBS} winpr2)
-
 #############################LINKING###################################
 ADD_EXECUTABLE(thin_client_veil ${GUI_TYPE} ${SRC_CODE})
 target_link_libraries(
     thin_client_veil # exec
     ${LIBS} # libs
 )
-# freerdp2-dev  libfreerdp-client2-2  libwinpr2-2 libwinpr2-dev
+
+#############################CONFIGS###################################
+# rdp template file for Windows native client
+if (WIN32)
+    file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/doc/rdp_data
+            DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+endif (WIN32)
+
+# translations
+file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/po/ru
+     DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/local)
+# CSS
+file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/doc/css_style.css
+     DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+# start script
+file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/doc/start_vdi_client.sh
+     DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+## ini  Приложение генерирует ini файл при первом запуске если его нет, что предпочтительнее
+#file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/doc/veil_client_settings.ini
+#     DESTINATION ${CMAKE_CURRENT_BINARY_DIR})

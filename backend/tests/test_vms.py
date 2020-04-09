@@ -134,5 +134,5 @@ class VmActionTestCase(VdiHttpTestCase):
         self.assertIsInstance(moking_dict, dict)
         response_dict = yield self.get_response(**moking_dict)
         response_error = response_dict['errors'][0]['message']
-        expected_error = 'Parameter action value {} is invalid. Valid values are'.format(action)
+        expected_error = 'Параметр action значения {} неверный'.format(action)
         self.assertIn(expected_error, response_error)

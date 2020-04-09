@@ -191,7 +191,7 @@ static VdiPoolWidget get_vdi_pool_widget_by_id(const gchar *searched_id)
     for (i = 0; i < vdi_manager.pool_widgets_array->len; ++i) {
         VdiPoolWidget vdi_pool_widget = g_array_index(vdi_manager.pool_widgets_array, VdiPoolWidget, i);
 
-        if(g_strcmp0(searched_id, vdi_pool_widget.pool_id) == 0){
+        if (g_strcmp0(searched_id, vdi_pool_widget.pool_id) == 0) {
             searched_vdi_pool_widget = vdi_pool_widget;
             break;
         }
@@ -220,41 +220,45 @@ static void on_get_vdi_pool_data_finished(GObject *source_object G_GNUC_UNUSED,
 
     // parse vm data  json
     JsonParser *parser = json_parser_new();
-
     JsonObject *root_object = get_root_json_object(parser, response_body_str);
-    if (!root_object)
-        return;
 
-    JsonNode *data_member = json_object_get_member(root_object, "data");
-    if (!data_member)
-        return;
+    JsonNode *data_member = NULL;
+    if (root_object)
+        data_member = json_object_get_member(root_object, "data");
 
-    JsonArray *jsonArray = json_node_get_array(data_member);
+    JsonArray *jsonArray = NULL;
+    if (data_member)
+        jsonArray = json_node_get_array(data_member);
+
+    if (!jsonArray) {
+        g_object_unref(parser);
+        g_free(ptr_res);
+        set_vdi_client_state(VDI_RECEIVED_RESPONSE, "Не удалось получить список пулов", TRUE);
+        return;
+    }
 
     // prepare  pool_widgets_array
     unregister_all_pools();
 
-    // parse json data and fill pool_widgets_array
-    if (jsonArray) {
+    // fill pool_widgets_array
+    guint jsonArrayLength = MIN(json_array_get_length(jsonArray), MAX_POOL_NUMBER);
+    printf("Number of vm pools: %i\n", jsonArrayLength);
 
-        guint jsonArrayLength = MIN(json_array_get_length(jsonArray), MAX_POOL_NUMBER);
-        printf("Number of vm pools: %i\n", jsonArrayLength);
+    int i;
+    for(i = (int)jsonArrayLength - 1; i >= 0; --i){
 
-        int i;
-        for(i = (int)jsonArrayLength - 1; i >= 0; --i){
+        JsonNode *jsonNode = json_array_get_element (jsonArray, (guint)i);
+        JsonObject *object = json_node_get_object (jsonNode);
 
-            JsonNode *jsonNode = json_array_get_element (jsonArray, (guint)i);
-            JsonObject *object = json_node_get_object (jsonNode);
-
-            const gchar *pool_id = json_object_get_string_member_safely(object, "id");
-            const gchar *pool_name = json_object_get_string_member_safely(object, "name");
-            const gchar *os_type = json_object_get_string_member_safely(object, "os_type");
-            const gchar *status = json_object_get_string_member_safely(object, "status");
-            //printf("os_type %s\n", os_type);
-            //printf("pool_name %s\n", pool_name);
-            register_pool(pool_id, pool_name, os_type, status);
-        }
+        const gchar *pool_id = json_object_get_string_member_safely(object, "id");
+        const gchar *pool_name = json_object_get_string_member_safely(object, "name");
+        const gchar *os_type = json_object_get_string_member_safely(object, "os_type");
+        const gchar *status = json_object_get_string_member_safely(object, "status");
+        //printf("os_type %s\n", os_type);
+        //printf("pool_name %s\n", pool_name);
+        register_pool(pool_id, pool_name, os_type, status);
     }
+
     //
     set_vdi_client_state(VDI_RECEIVED_RESPONSE, "Получен список пулов", FALSE);
     //
@@ -379,7 +383,7 @@ static void on_button_quit_clicked(GtkButton *button G_GNUC_UNUSED, gpointer dat
     printf("%s\n", (const char *)__func__);
 
     // logout
-    vdi_api_logout();
+    vdi_api_session_logout();
 
     ConnectionInfo *ci = data;
     ci->response = FALSE;
@@ -454,7 +458,10 @@ GtkResponseType vdi_manager_dialog(GtkWindow *main_window G_GNUC_UNUSED, gchar *
     vdi_manager.main_vm_spinner = GTK_WIDGET(gtk_builder_get_object(vdi_manager.builder, "main_vm_spinner"));
     vdi_manager.combobox_remote_protocol =
             GTK_WIDGET(gtk_builder_get_object(vdi_manager.builder, "combobox-remote-protocol"));
-
+    // remove tdp native optin if we are on linux
+#ifdef __linux__
+    gtk_combo_box_text_remove((GtkComboBoxText *)vdi_manager.combobox_remote_protocol, 2);
+#endif
     vdi_manager.image_label_vdi_online = GTK_WIDGET(gtk_builder_get_object(vdi_manager.builder, "image_label_vdi_online"));
 
     // connects

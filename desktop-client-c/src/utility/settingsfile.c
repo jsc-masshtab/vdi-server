@@ -86,9 +86,10 @@ read_int_from_ini_file(const gchar *group_name,  const gchar *key)
     }
     else
     {
-        value = g_key_file_get_integer(keyfile, group_name, key, &error);
+        value = g_key_file_get_integer(keyfile, group_name, key, NULL);
     }
 
+    g_clear_error(&error);
     g_key_file_free(keyfile);
 
     return value;
