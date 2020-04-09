@@ -38,6 +38,7 @@ import { MAT_DIALOG_DEFAULT_OPTIONS } from '@angular/material';
 import { onError } from 'apollo-link-error';
 import { InMemoryCache } from 'apollo-cache-inmemory';
 import { environment } from 'src/environments/environment';
+import { LicenseModule } from './settings/license/license.module';
 
 @NgModule({
   declarations: [
@@ -62,7 +63,8 @@ import { environment } from 'src/environments/environment';
     UsersModule,
     AuthenticationDirectoryModule,
     EventsModule,
-    GroupsModule
+    GroupsModule,
+    LicenseModule
   ],
   providers:
     [
