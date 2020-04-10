@@ -343,7 +343,7 @@ RdpViewerData *rdp_viewer_window_create(ExtendedRdpContext *ex_rdp_context, UINT
 
     GtkWidget *rdp_viewer_window = rdp_viewer_data->rdp_viewer_window =
             GTK_WIDGET(gtk_builder_get_object(builder, "viewer"));
-    gtk_widget_add_events(rdp_viewer_window,   GDK_KEY_PRESS_MASK | GDK_KEY_RELEASE_MASK);
+    gtk_widget_add_events(rdp_viewer_window, GDK_KEY_PRESS_MASK | GDK_KEY_RELEASE_MASK);
     g_signal_connect_swapped(rdp_viewer_window, "delete-event",
                              G_CALLBACK(rdp_viewer_window_deleted_cb), rdp_viewer_data);
     g_signal_connect(rdp_viewer_window, "map-event",

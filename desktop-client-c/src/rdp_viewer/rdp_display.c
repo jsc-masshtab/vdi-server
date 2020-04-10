@@ -105,12 +105,11 @@ static const gchar *error_to_str(UINT32 rdp_error)
 }
 
 static void rdp_display_translate_mouse_pos(UINT16 *rdp_x_p, UINT16 *rdp_y_p,
-                                gdouble gtk_x, gdouble gtk_y, RdpViewerData *rdp_viewer_data)
-{
+                                            gdouble gtk_x, gdouble gtk_y, RdpViewerData *rdp_viewer_data) {
     ExtendedRdpContext *ex_rdp_context = rdp_viewer_data->ex_rdp_context;
 
-    *rdp_x_p = (UINT16)((gtk_x - ex_rdp_context->im_origin_x + rdp_viewer_data->monitor_geometry.x) * scale_f);
-    *rdp_y_p = (UINT16)((gtk_y - ex_rdp_context->im_origin_y + rdp_viewer_data->monitor_geometry.y) * scale_f);
+    *rdp_x_p = (UINT16) ((gtk_x - ex_rdp_context->im_origin_x + rdp_viewer_data->monitor_geometry.x) * scale_f);
+    *rdp_y_p = (UINT16) ((gtk_y - ex_rdp_context->im_origin_y + rdp_viewer_data->monitor_geometry.y) * scale_f);
 }
 
 static void rdp_viewer_handle_key_event(GdkEventKey *event, ExtendedRdpContext* tf, gboolean down)
@@ -122,11 +121,38 @@ static void rdp_viewer_handle_key_event(GdkEventKey *event, ExtendedRdpContext* 
 #ifdef __linux__
     DWORD rdp_scancode = freerdp_keyboard_get_rdp_scancode_from_x11_keycode(event->hardware_keycode);
 #elif _WIN32
-    // keys with special treatment
     DWORD rdp_scancode = 0;
     switch (event->keyval) {
+        // keys with special treatment
         case GDK_KEY_Control_L:
             rdp_scancode = RDP_SCANCODE_LCONTROL;
+            break;
+        case GDK_KEY_Control_R:
+            rdp_scancode = RDP_SCANCODE_RCONTROL;
+            break;
+        case GDK_KEY_Shift_L:
+            rdp_scancode = RDP_SCANCODE_LSHIFT;
+            break;
+        case GDK_KEY_Shift_R:
+            rdp_scancode = RDP_SCANCODE_RSHIFT;
+            break;
+        case GDK_KEY_Alt_L:
+            rdp_scancode = RDP_SCANCODE_LMENU;
+            break;
+        case GDK_KEY_Alt_R:
+            rdp_scancode = RDP_SCANCODE_RMENU;
+            break;
+        case GDK_KEY_Left:
+            rdp_scancode = RDP_SCANCODE_LEFT;
+            break;
+        case GDK_KEY_Up:
+            rdp_scancode = RDP_SCANCODE_UP;
+            break;
+        case GDK_KEY_Right:
+            rdp_scancode = RDP_SCANCODE_RIGHT;
+            break;
+        case GDK_KEY_Down:
+            rdp_scancode = RDP_SCANCODE_DOWN;
             break;
         default:
             // other keys
@@ -135,9 +161,9 @@ static void rdp_viewer_handle_key_event(GdkEventKey *event, ExtendedRdpContext* 
     }
 #endif
     BOOL is_success = freerdp_input_send_keyboard_event_ex(input, down, rdp_scancode);
-    (void)is_success;
-    printf("%s: hardkey %i %i keyval: %i\n", (const char *)__func__,
-           event->hardware_keycode, rdp_scancode, event->keyval);
+    (void) is_success;
+    //printf("%s: hardkey %i %i keyval: %i down: %i\n", (const char *) __func__,
+    //       event->hardware_keycode, rdp_scancode, event->keyval, down);
 }
 
 static gboolean rdp_display_key_pressed(GtkWidget *widget G_GNUC_UNUSED, GdkEventKey *event, gpointer user_data)
