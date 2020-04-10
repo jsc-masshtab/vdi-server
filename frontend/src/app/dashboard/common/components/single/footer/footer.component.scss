@@ -16,6 +16,24 @@ footer {
     right: 0px;
     min-width: 320px;
 
+    .license {
+        display: flex;
+        color: black;
+        padding: 0 20px;
+
+        > span {
+            display: flex;
+            margin: 0 10px;
+            font-size: 11px;
+            line-height: 11px;
+            padding: 3px;
+        }
+    
+        .warning {
+            color: #ce3131;
+        }
+    }
+
     .copyright {
         display: flex;
         align-items: center;
