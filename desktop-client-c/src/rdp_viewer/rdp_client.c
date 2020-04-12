@@ -74,6 +74,8 @@ static GArray * rdp_client_create_params_array(ExtendedRdpContext* tf)
     add_rdp_param(rdp_params_dyn_array, g_strdup("/cert-ignore"));
     add_rdp_param(rdp_params_dyn_array, g_strdup("/sound:rate:44100,channel:2"));
     add_rdp_param(rdp_params_dyn_array, g_strdup("/smartcard"));
+    add_rdp_param(rdp_params_dyn_array, g_strdup("+fonts"));
+
     gboolean is_drives_redirected =  read_int_from_ini_file("General", "is_drives_redirected");
     if (is_drives_redirected) {
         add_rdp_param(rdp_params_dyn_array, g_strdup("+drives"));
