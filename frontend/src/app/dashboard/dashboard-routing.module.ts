@@ -26,6 +26,7 @@ import { AuthenticationDirectoryComponent } from './settings/auth-directory/all-
 import { AuthenticationDirectoryDetailsComponent } from './settings/auth-directory/auth-directory-details/auth-directory-details.component';
 import { UserDetailsComponent } from './settings/users/user-details/user-details.component';
 import { ControllerDetailsComponent } from './settings/controllers/controller-details/controller-details.component';
+import { LicenseComponent } from './settings/license/license.component';
 
 
 const routes: Routes = [
@@ -59,6 +60,10 @@ const routes: Routes = [
             component: ControllerDetailsComponent
           }
         ]
+      },
+      {
+        path: 'settings/license',
+        component: LicenseComponent
       },
       {
         path: 'settings/users',

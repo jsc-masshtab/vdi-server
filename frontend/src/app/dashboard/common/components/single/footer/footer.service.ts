@@ -11,4 +11,8 @@ export class FooterService {
   public getInfo(): any {
     return this.http.get('/api/version/');
   }
+
+  public getLicence(): any {
+    return this.http.get('/api/license/');
+  }
 }
