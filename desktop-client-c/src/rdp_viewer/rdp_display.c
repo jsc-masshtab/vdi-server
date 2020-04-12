@@ -162,8 +162,8 @@ static void rdp_viewer_handle_key_event(GdkEventKey *event, ExtendedRdpContext* 
 #endif
     BOOL is_success = freerdp_input_send_keyboard_event_ex(input, down, rdp_scancode);
     (void) is_success;
-    //printf("%s: hardkey %i %i keyval: %i down: %i\n", (const char *) __func__,
-    //       event->hardware_keycode, rdp_scancode, event->keyval, down);
+//    printf("%s: hardkey %i %i keyval: %i down: %i\n", (const char *) __func__,
+//           event->hardware_keycode, rdp_scancode, event->keyval, down);
 }
 
 static gboolean rdp_display_key_pressed(GtkWidget *widget G_GNUC_UNUSED, GdkEventKey *event, gpointer user_data)

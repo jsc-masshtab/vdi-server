@@ -38,6 +38,9 @@ typedef struct{
     ExtendedRdpContext *ex_rdp_context;
 
     GdkSeat *seat;
+#ifdef _WIN32
+    HHOOK keyboard_hook;
+#endif
 
 } RdpViewerData;
 

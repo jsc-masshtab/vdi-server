@@ -90,9 +90,9 @@ static BOOL xf_Pointer_SetDefault(rdpContext* context G_GNUC_UNUSED)
     return TRUE;
 }
 
-static BOOL xf_Pointer_SetPosition(rdpContext* context G_GNUC_UNUSED, UINT32 x, UINT32 y)
+static BOOL xf_Pointer_SetPosition(rdpContext* context G_GNUC_UNUSED, UINT32 x G_GNUC_UNUSED, UINT32 y G_GNUC_UNUSED)
 {
-    printf("%s x %i y %i \n", (const char *)__func__, x, y);
+    //printf("%s x %i y %i \n", (const char *)__func__, x, y);
     return TRUE;
 }
 
