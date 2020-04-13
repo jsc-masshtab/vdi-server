@@ -7,7 +7,7 @@ properties([
         logRotator(
             artifactDaysToKeepStr: '',
             artifactNumToKeepStr: '',
-            daysToKeepStr: '30',
+            daysToKeepStr: '60',
             numToKeepStr: '20'
         )
     ),
@@ -24,8 +24,6 @@ properties([
 node("${AGENT}") {
     env.APT_SRV="192.168.11.118"
     env.PRJNAME="vdi-frontend"
-    env.APP_DIR="opt/veil-vdi"
-    // env.ROOTPATH="${WORKSPACE}"
     env.DEB_ROOT="${WORKSPACE}/devops/deb_config"
     env.DATE="$currentDate"
 
@@ -50,8 +48,8 @@ node("${AGENT}") {
                     println "GIT_BRANCH - $env.GIT_BRANCH"
 
                     env.GIT_COMMIT_DATE=sh(script:"git show -s --format=%ci", returnStdout: true).trim()
-                    println "env.GIT_COMMIT_DATE - $env.GIT_COMMIT_DATE"
 
+                    println "env.GIT_COMMIT_DATE - $env.GIT_COMMIT_DATE"
                     println "env.DATE - $env.DATE"
                 }
 
@@ -72,7 +70,6 @@ node("${AGENT}") {
 
                         VER="${VERSION}-${BUILD_NUMBER}"
                         echo "VER: $VER"
-                        # echo "MY_TAG: $MY_TAG"
                         
                         sed -i "s:%%VER%%:${VER}:g" "${DEB_ROOT}/${PRJNAME}/root/DEBIAN/control"
                     '''
@@ -86,8 +83,8 @@ node("${AGENT}") {
 
                         echo "frontend compiled frontend/dist/frontend"
 
-                        mkdir -p "${DEB_ROOT}/${PRJNAME}/root/${APP_DIR}"
-                        cp -r ./dist/frontend "${DEB_ROOT}/${PRJNAME}/root/${APP_DIR}"
+                        mkdir -p "${DEB_ROOT}/${PRJNAME}/root/opt/veil-vdi"
+                        cp -r ./dist/frontend "${DEB_ROOT}/${PRJNAME}/root/opt/veil-vdi"
 
                         [ "${DEB}" = "false" ] && return 0
 
@@ -106,7 +103,7 @@ node("${AGENT}") {
                         cp ${DEB_ROOT}/${PRJNAME}/*.deb /nfs/vdi-deb/
                         
                         
-                        # upload files
+                        # upload files to temp repo
                         DEB=$(ls -1 ${DEB_ROOT}/${PRJNAME}/*.deb)
                         for ITEM in $DEB
                         do
