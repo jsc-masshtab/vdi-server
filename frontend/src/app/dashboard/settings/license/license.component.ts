@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { HttpResponse } from '@angular/common/http';
 import { LicenseService } from './license.service';
+import { ErrorsService } from 'src/app/errors/errors.service';
 
 @Component({
   selector: 'vdi-license',
@@ -44,7 +45,9 @@ export class LicenseComponent implements OnInit {
     }
   ];
 
-  constructor(private service: LicenseService) { }
+  constructor(
+    private service: LicenseService,
+    private errorService: ErrorsService) { }
 
   ngOnInit() {
     this.refresh();
@@ -64,10 +67,15 @@ export class LicenseComponent implements OnInit {
     for (let file of files) {
 
       formData.append(file.name, file);
+      formData.append('keyFile', file.name);
 
-      this.service.upload('/api/license/', formData).subscribe(event => {
+      this.service.upload('/api/license/', formData).subscribe((event:any) => {
         if (event instanceof HttpResponse) {
           this.refresh();
+
+          if(event.body.errors) {
+            this.errorService.setError(event.body.errors);
+          }
         }
       });
     }
