@@ -83,7 +83,7 @@ node("$AGENT") {
                 }
 
                 stage ('build') {
-                    sh script: '''
+                    sh script: """
                         cd frontend
                         npm install --unsafe-perm
                         npm run build -- --prod
@@ -97,42 +97,44 @@ node("$AGENT") {
 
                         make -C ${DEB_ROOT}/${PRJNAME}
 
-                    '''
+                    """
                 }
 
                 stage ('publish to repo') {
-                    sh script: '''
-                        echo "Repo is - ${REPO}"
+
+                    JSON1 = "{\'Name\':\'veil-${REPO}-${DATE}\'}"
+                    JSON2 = "{\'Snapshots\':[{\'Component\':\'main\',\'Name\':\'veil-${REPO}-${DATE}\'}]}"
+
+                    sh script: """
+                        echo "Repo is - $REPO"
 
                         # upload to nfs
                         mkdir -p /nfs/vdi-deb
                         rm -f /nfs/vdi-deb/vdi-frontend*.deb
-                        cp ${DEB_ROOT}/${PRJNAME}/*.deb /nfs/vdi-deb/
-                        
+                        cp $DEB_ROOT/$PRJNAME/*.deb /nfs/vdi-deb/
                         
                         # upload files to temp repo
-                        DEB=$(ls -1 ${DEB_ROOT}/${PRJNAME}/*.deb)
-                        for ITEM in $DEB
+                        DEB=\$(ls -1 $DEB_ROOT/$PRJNAME/*.deb)
+                        echo "\$DEB"
+
+                        for ITEM in \$DEB
                         do
-                            echo "Processing $ITEM packet:"
-                            echo "$ITEM"
-                            curl -sS -X POST -F file=@$ITEM http://$APT_SRV:8008/api/files/veil-${REPO}; echo ""
+                            echo "Processing \$ITEM packet:"
+                            echo "\$ITEM"
+                            curl -sS -X POST -F file=@\$ITEM http://$APT_SRV:8008/api/files/veil-$REPO; echo ""
                         done
 
-                        JSON1="{\\"Name\\":\\"veil-${REPO}-${DATE}\\"}"
-                        echo ${JSON1}
-                        JSON2="{\\"Snapshots\\":[{\\"Component\\":\\"main\\",\\"Name\\":\\"veil-${REPO}-${DATE}\\"}]}"
-                        echo ${JSON2}
-                        
                         # upload folder
-                        curl -sS -X POST http://$APT_SRV:8008/api/repos/veil-${REPO}/file/veil-${REPO}; echo ""
+                        curl -sS -X POST http://$APT_SRV:8008/api/repos/veil-$REPO/file/veil-$REPO; echo ""
 
                         # make snapshot repo
-                        curl -sS -X POST -H 'Content-Type: application/json' -d ${JSON1} http://$APT_SRV:8008/api/repos/veil-${REPO}/snapshots; echo ""
+                        echo $JSON1
+                        curl -sS -X POST -H 'Content-Type: application/json' -d $JSON1 http://$APT_SRV:8008/api/repos/veil-$REPO/snapshots; echo ""
 
                         # switch publish repo - aptly publish switch veil test veil-test-20180906161745
-                        curl -sS -X PUT -H 'Content-Type: application/json' -d ${JSON2} http://$APT_SRV:8008/api/publish/${REPO}/veil; echo ""
-                    '''
+                        echo $JSON2
+                        curl -sS -X PUT -H 'Content-Type: application/json' -d $JSON2 http://$APT_SRV:8008/api/publish/$REPO/veil; echo ""
+                    """
                 }
         } catch (InterruptedException err) {
                 currentBuild.result = 'FAILURE'
