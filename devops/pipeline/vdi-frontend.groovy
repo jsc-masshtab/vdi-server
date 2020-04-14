@@ -102,8 +102,11 @@ node("$AGENT") {
 
                 stage ('publish to repo') {
 
-                    JSON1 = "{\'Name\':\'veil-${REPO}-${DATE}\'}"
-                    JSON2 = "{\'Snapshots\':[{\'Component\':\'main\',\'Name\':\'veil-${REPO}-${DATE}\'}]}"
+                    JSON1 = "{\\\"Name\\\":\\\"veil-${REPO}-${DATE}\\\"}"
+                    JSON2 = "{\\\"Snapshots\\\":[{\\\"Component\\\":\\\"main\\\",\\\"Name\\\":\\\"veil-${REPO}-${DATE}\\\"}]}"
+
+                    println "$JSON1"
+                    println "$JSON2"
 
                     sh script: """
                         echo "Repo is - $REPO"
