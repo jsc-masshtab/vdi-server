@@ -1,6 +1,10 @@
 def currentDate = new Date().format('yyyyMMddHHmmss')
 def slackNotify = false
 
+// git@192.168.10.145:vdi/vdiserver.git
+// $BRANCH
+// devops/pipeline/vdi-frontend.groovy
+
 // build properties
 properties([
     buildDiscarder(
@@ -45,18 +49,19 @@ node("$AGENT") {
                     
                     env.GIT_COMMIT = scmVars.GIT_COMMIT
                     env.GIT_BRANCH = scmVars.GIT_BRANCH                    
+                    env.GIT_COMMIT_DATE=sh(script:"git show -s --format=%ci", returnStdout: true).trim()
 
                     println "env.GIT_COMMIT - $env.GIT_COMMIT"
                     println "env.GIT_BRANCH - $env.GIT_BRANCH"
-
-                    env.GIT_COMMIT_DATE=sh(script:"git show -s --format=%ci", returnStdout: true).trim()
                     println "env.GIT_COMMIT_DATE - $env.GIT_COMMIT_DATE"
 
                     println "env.DATE - $env.DATE"
                 }
 
                 stage ('prepare environment') {
-                    def SOMETHING = "fgbdhbfgsrth"
+                    
+                    VER = "${VERSION}-${BUILD_NUMBER}"
+
                     sh script: """
                         rm -rf ${WORKSPACE}/.git ${WORKSPACE}/.gitignore
 
@@ -70,15 +75,10 @@ node("$AGENT") {
                         curl -sL https://deb.nodesource.com/setup_10.x | sudo bash
                         sudo apt-get install -y nodejs
 
-
-                        VER="${VERSION}-${BUILD_NUMBER}"
-                        echo "VER: $VER"
+                        echo "Version software: $VER"
                         
-                        sed -i "s:%%VER%%:${VER}:g" "${DEB_ROOT}/${PRJNAME}/root/DEBIAN/control"
+                        sed -i "s:%%VER%%:$VER:g" "$DEB_ROOT/$PRJNAME/root/DEBIAN/control"
 
-                        # check no interpolation in bash in tripple quotes
-                        echo "Some with quote $SOMETHING"
-                        echo Some without quote $SOMETHING
                     """
                 }
 
