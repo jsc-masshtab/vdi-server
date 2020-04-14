@@ -21,11 +21,13 @@ properties([
     ])
 ])
 
-node("${AGENT}") {
+node("$AGENT") {
+
     env.APT_SRV="192.168.11.118"
     env.PRJNAME="vdi-frontend"
     env.DEB_ROOT="${WORKSPACE}/devops/deb_config"
     env.DATE="$currentDate"
+
 
     notifyBuild(slackNotify, "STARTED", "Start new build. Version: ${DATE}")
     
@@ -44,17 +46,18 @@ node("${AGENT}") {
                     env.GIT_COMMIT = scmVars.GIT_COMMIT
                     env.GIT_BRANCH = scmVars.GIT_BRANCH                    
 
-                    println "GIT_COMMIT - $env.GIT_COMMIT"
-                    println "GIT_BRANCH - $env.GIT_BRANCH"
+                    println "env.GIT_COMMIT - $env.GIT_COMMIT"
+                    println "env.GIT_BRANCH - $env.GIT_BRANCH"
 
                     env.GIT_COMMIT_DATE=sh(script:"git show -s --format=%ci", returnStdout: true).trim()
-
                     println "env.GIT_COMMIT_DATE - $env.GIT_COMMIT_DATE"
+
                     println "env.DATE - $env.DATE"
                 }
 
                 stage ('prepare environment') {
-                    sh script: '''
+                    def SOMETHING = "fgbdhbfgsrth"
+                    sh script: """
                         rm -rf ${WORKSPACE}/.git ${WORKSPACE}/.gitignore
 
                         echo "Install base packages"
@@ -72,11 +75,15 @@ node("${AGENT}") {
                         echo "VER: $VER"
                         
                         sed -i "s:%%VER%%:${VER}:g" "${DEB_ROOT}/${PRJNAME}/root/DEBIAN/control"
-                    '''
+
+                        # check no interpolation in bash in tripple quotes
+                        echo "Some with quote $SOMETHING"
+                        echo Some without quote $SOMETHING
+                    """
                 }
 
                 stage ('build') {
-                    sh label: '', script: '''
+                    sh script: '''
                         cd frontend
                         npm install --unsafe-perm
                         npm run build -- --prod
@@ -118,13 +125,13 @@ node("${AGENT}") {
                         echo ${JSON2}
                         
                         # upload folder
-                        curl -sS -X POST http://$APT_SRV:8008/api/repos/veil-${REPO}/file/veil-${REPO}
+                        curl -sS -X POST http://$APT_SRV:8008/api/repos/veil-${REPO}/file/veil-${REPO}; echo ""
 
                         # make snapshot repo
-                        curl -sS -X POST -H 'Content-Type: application/json' -d ${JSON1} http://$APT_SRV:8008/api/repos/veil-${REPO}/snapshots
+                        curl -sS -X POST -H 'Content-Type: application/json' -d ${JSON1} http://$APT_SRV:8008/api/repos/veil-${REPO}/snapshots; echo ""
 
                         # switch publish repo - aptly publish switch veil test veil-test-20180906161745
-                        curl -sS -X PUT -H 'Content-Type: application/json' -d ${JSON2} http://$APT_SRV:8008/api/publish/${REPO}/veil
+                        curl -sS -X PUT -H 'Content-Type: application/json' -d ${JSON2} http://$APT_SRV:8008/api/publish/${REPO}/veil; echo ""
                     '''
                 }
         } catch (InterruptedException err) {
@@ -169,6 +176,6 @@ def notifyBuild(slackNotify, buildStatus, msg) {
         summary += "${msg}"
     }
     if (slackNotify){
-    slackSend (color: colorCode, message: summary)
+        slackSend (color: colorCode, message: summary)
     }
 }
