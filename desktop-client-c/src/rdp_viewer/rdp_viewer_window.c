@@ -1,3 +1,7 @@
+#ifdef _WIN32
+#include <gdk/gdkwin32.h>
+#endif
+
 #include "rdp_viewer_window.h"
 
 #include "remote-viewer-util.h"
@@ -34,20 +38,72 @@ static const struct keyComboDef keyCombos[] = {
     { { RDP_SCANCODE_PRINTSCREEN, GDK_KEY_VoidSymbol }, "_PrintScreen", NULL},
 };
 
+#ifdef G_OS_WIN32
+static HWND win32_window = NULL;
+#endif
+
 // function declarations
 
 
 // function implementations
+
+// taken from spice-widget.c   https://github.com/freedesktop/spice-gtk
+#ifdef G_OS_WIN32
+static LRESULT CALLBACK keyboard_hook_cb(int code, WPARAM wparam, LPARAM lparam)
+{
+    if  (win32_window && code == HC_ACTION && wparam != WM_KEYUP) {
+        KBDLLHOOKSTRUCT *hooked = (KBDLLHOOKSTRUCT*)lparam;
+        DWORD dwmsg = (hooked->flags << 24) | (hooked->scanCode << 16) | 1;
+
+        if (hooked->vkCode == VK_NUMLOCK || hooked->vkCode == VK_RSHIFT) {
+            dwmsg &= ~(1 << 24);
+            SendMessage(win32_window, wparam, hooked->vkCode, dwmsg);
+        }
+        switch (hooked->vkCode) {
+            case VK_CAPITAL:
+            case VK_SCROLL:
+            case VK_NUMLOCK:
+            case VK_LSHIFT:
+            case VK_RSHIFT:
+            case VK_RCONTROL:
+            case VK_LMENU:
+            case VK_RMENU:
+                break;
+            case VK_LCONTROL:
+                /* When pressing AltGr, an extra VK_LCONTROL with a special
+                 * scancode with bit 9 set is sent. Let's ignore the extra
+                 * VK_LCONTROL, as that will make AltGr misbehave. */
+                if (hooked->scanCode & 0x200)
+                    return 1;
+                break;
+            default:
+                SendMessage(win32_window, wparam, hooked->vkCode, dwmsg);
+                return 1;
+        }
+    }
+    return CallNextHookEx(NULL, code, wparam, lparam);
+}
+#endif
+
 static void rdp_viewer_window_toggle_fullscreen(RdpViewerData *rdp_viewer_data, gboolean is_fullscreen)
 {
     if (is_fullscreen) {
-
         // turn on keyboard grab in full screen
+#ifdef G_OS_WIN32
+        win32_window = gdk_win32_window_get_impl_hwnd(gtk_widget_get_window(rdp_viewer_data->rdp_viewer_window));
+
+        if (rdp_viewer_data->keyboard_hook == NULL)
+            rdp_viewer_data->keyboard_hook = SetWindowsHookEx(WH_KEYBOARD_LL, keyboard_hook_cb,
+                                                GetModuleHandle(NULL), 0);
+        g_warn_if_fail(rdp_viewer_data->keyboard_hook != NULL);
+#endif
         GdkDisplay *display = gtk_widget_get_display(rdp_viewer_data->rdp_viewer_window);
         rdp_viewer_data->seat = gdk_display_get_default_seat(display);
         GdkGrabStatus ggs = gdk_seat_grab(rdp_viewer_data->seat,
                                           gtk_widget_get_window(rdp_viewer_data->rdp_viewer_window),
                                           GDK_SEAT_CAPABILITY_KEYBOARD, TRUE, NULL, NULL, NULL, NULL);
+
+        printf("%s ggs: %i\n", (const char *)__func__, ggs);
 
         // fullscreen
         gtk_window_set_resizable(GTK_WINDOW(rdp_viewer_data->rdp_viewer_window), TRUE);
@@ -63,7 +119,12 @@ static void rdp_viewer_window_toggle_fullscreen(RdpViewerData *rdp_viewer_data, 
         // ungrab keyboard
         if (rdp_viewer_data->seat)
             gdk_seat_ungrab(rdp_viewer_data->seat);
-
+#ifdef G_OS_WIN32
+        if (rdp_viewer_data->keyboard_hook) {
+            UnhookWindowsHookEx(rdp_viewer_data->keyboard_hook);
+            rdp_viewer_data->keyboard_hook = NULL;
+        }
+#endif
         //  leave fulscreen
         gtk_widget_hide(rdp_viewer_data->overlay_toolbar);
         //gtk_widget_set_size_request(priv->window, -1, -1);
@@ -341,6 +402,7 @@ RdpViewerData *rdp_viewer_window_create(ExtendedRdpContext *ex_rdp_context, UINT
 
     GtkWidget *rdp_viewer_window = rdp_viewer_data->rdp_viewer_window =
             GTK_WIDGET(gtk_builder_get_object(builder, "viewer"));
+    gtk_widget_add_events(rdp_viewer_window, GDK_KEY_PRESS_MASK | GDK_KEY_RELEASE_MASK);
     g_signal_connect_swapped(rdp_viewer_window, "delete-event",
                              G_CALLBACK(rdp_viewer_window_deleted_cb), rdp_viewer_data);
     g_signal_connect(rdp_viewer_window, "map-event",

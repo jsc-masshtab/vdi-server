@@ -1,0 +1,22 @@
+<div class="control-panel">
+    
+    <div class="crumb" [style.marginRight]="'15px'">
+        <fa-icon [icon]="['fas','id-card']"></fa-icon>
+        <span class="crumb-name">Лицензирование</span>
+    </div>
+
+    <div class="control-btns">
+      <input #file id="upload" type="file" (click)="file.value=''" accept=".key" (change)="upload(file.files)">
+      <label for="upload">
+          <fa-icon [icon]="['fas','upload']"></fa-icon>
+          <span class="btn-name">Выбрать файл лицензии</span>
+      </label>    
+    </div>
+</div>
+
+<div class="components-info">
+  <vdi-table-into 
+    [item]="license" 
+    [collection]="collection">
+  </vdi-table-into>
+</div>

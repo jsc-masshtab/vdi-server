@@ -1,23 +1,27 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { HttpClient, HttpRequest, HttpHeaders } from '@angular/common/http';
 import { AuthStorageService } from 'src/app/login/authStorage.service';
 
 @Injectable({
   providedIn: 'root'
 })
-export class FooterService {
+export class LicenseService {
 
   constructor(private http: HttpClient, private authStorageService: AuthStorageService) { }
-
-  public getInfo(): any {
-    return this.http.get('/api/version/');
-  }
 
   public getLicence(): any {
     let headers = new HttpHeaders().set('Content-Type', 'application/json')
     .set('Authorization', `jwt ${this.authStorageService.getItemStorage('token')}`)
     .set('Client-Type', 'angular-web');
-
+    
     return this.http.get('/api/license/', { headers });
+  }
+
+  public upload(url, file) {
+    const req = new HttpRequest('POST', url, file, {
+      reportProgress: true,
+    });
+
+    return this.http.request(req);
   }
 }

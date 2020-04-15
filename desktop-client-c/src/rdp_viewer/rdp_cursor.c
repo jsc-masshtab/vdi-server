@@ -28,7 +28,7 @@ static BOOL xf_Pointer_New(rdpContext* context, rdpPointer* pointer)
 
     static int counter = 0;
     ex_pointer->test_int = counter++;
-    printf("%s ex_pointer->test_int: %i\n", (const char *)__func__,  ex_pointer->test_int);
+    //printf("%s ex_pointer->test_int: %i\n", (const char *)__func__,  ex_pointer->test_int);
 
     return TRUE;
 }
@@ -43,7 +43,7 @@ static void xf_Pointer_Free(rdpContext* context G_GNUC_UNUSED, rdpPointer* point
 
 static BOOL xf_Pointer_Set(rdpContext* context, const rdpPointer* pointer)
 {
-    printf("%s\n", (const char *)__func__);
+    //printf("%s\n", (const char *)__func__);
     ExtendedRdpContext* ex_rdp_context = (ExtendedRdpContext*)context;
     const ExtendedPointer *ex_pointer = (const ExtendedPointer *)pointer;
     //printf("%s ex_pointer->test_int: %i\n", (const char *)__func__,  ex_pointer->test_int);
@@ -80,7 +80,7 @@ static BOOL xf_Pointer_Set(rdpContext* context, const rdpPointer* pointer)
 
 static BOOL xf_Pointer_SetNull(rdpContext* context G_GNUC_UNUSED)
 {
-    printf("%s\n", (const char *)__func__);
+    //printf("%s\n", (const char *)__func__);
     return TRUE;
 }
 
@@ -90,9 +90,9 @@ static BOOL xf_Pointer_SetDefault(rdpContext* context G_GNUC_UNUSED)
     return TRUE;
 }
 
-static BOOL xf_Pointer_SetPosition(rdpContext* context G_GNUC_UNUSED, UINT32 x, UINT32 y)
+static BOOL xf_Pointer_SetPosition(rdpContext* context G_GNUC_UNUSED, UINT32 x G_GNUC_UNUSED, UINT32 y G_GNUC_UNUSED)
 {
-    printf("%s x %i y %i \n", (const char *)__func__, x, y);
+    //printf("%s x %i y %i \n", (const char *)__func__, x, y);
     return TRUE;
 }
 

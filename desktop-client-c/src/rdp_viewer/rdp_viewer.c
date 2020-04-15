@@ -7,7 +7,6 @@
 #include <gio/gio.h>
 #include <gtk/gtk.h>
 #include <glib/garray.h>
-#include <gdk-pixbuf/gdk-pixbuf.h>
 
 #include <cairo/cairo.h>
 
@@ -16,7 +15,6 @@
 
 #include "rdp_viewer.h"
 #include "rdp_client.h"
-#include "rdp_display.h"
 #include "rdp_viewer_window.h"
 
 #include "remote-viewer-util.h"
@@ -26,10 +24,13 @@
 
 #define MAX_MONITOR_AMOUNT 2
 
+static gboolean is_rdp_context_created = FALSE;
+
 static gboolean update_cursor_callback(rdpContext* context)
 {
+    if (!is_rdp_context_created)
+        return TRUE;
     ExtendedRdpContext* ex_rdp_context = (ExtendedRdpContext*)context;
-
     if (!ex_rdp_context || !ex_rdp_context->is_running)
         return TRUE;
 
@@ -60,12 +61,14 @@ static ExtendedRdpContext* create_rdp_context(UINT32 *last_rdp_error_p)
     g_mutex_init(&ex_rdp_context->rdp_routine_mutex);
     g_mutex_init(&ex_rdp_context->cursor_mutex);
 
+    is_rdp_context_created = TRUE;
+
     return ex_rdp_context;
 }
 
 static void destroy_rdp_context(ExtendedRdpContext* ex_rdp_context)
 {
-    if (ex_rdp_context && ex_rdp_context->is_running) {
+    if (ex_rdp_context) {
         // stopping RDP routine
 
         printf("%s: abort now: %i\n", (const char *)__func__, ex_rdp_context->test_int);
@@ -79,8 +82,9 @@ static void destroy_rdp_context(ExtendedRdpContext* ex_rdp_context)
 
         printf("%s: context free now: %i\n", (const char *)__func__, ex_rdp_context->test_int);
         freerdp_client_context_free((rdpContext*)ex_rdp_context);
-        ex_rdp_context = NULL;
     }
+
+    is_rdp_context_created = FALSE;
 }
 
 GtkResponseType rdp_viewer_start(const gchar *usename, const gchar *password, gchar *domain, gchar *ip, int port)
@@ -100,7 +104,7 @@ GtkResponseType rdp_viewer_start(const gchar *usename, const gchar *password, gc
 
     // set monitor data for rdp client
     rdpSettings* settings = ex_rdp_context->context.settings;
-    settings->MonitorCount = 2;
+    settings->MonitorCount = monitor_number;
     settings->UseMultimon = TRUE;
     settings->ForceMultimon = TRUE;
 

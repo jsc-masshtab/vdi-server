@@ -24,7 +24,14 @@ class LicenseHandler(BaseHandler, ABC):
         """Upload license key"""
 
         try:
-            key_file_dict = self.request.files.get('keyFile')[0]
+            key_file_dict = dict()
+            for file_name in self.request.files:
+                if file_name.endswith('.key'):
+                    key_file_dict = self.request.files.get(file_name)[0]
+                    break
+
+            if not key_file_dict:
+                raise AssertionError('Can\'t extract file.')
 
             key_file_name = key_file_dict['filename']
             if not key_file_name.endswith('.key'):
