@@ -26,7 +26,6 @@ properties([
 
 node("$AGENT") {
 
-    env.APT_SRV="192.168.11.118"
     env.PRJNAME="vdi-frontend"
     env.DEB_ROOT="${WORKSPACE}/devops/deb_config"
     env.DATE="$currentDate"
@@ -102,31 +101,33 @@ node("$AGENT") {
 
                         # upload to nfs
                         mkdir -p /nfs/vdi-deb
-                        rm -f /nfs/vdi-deb/vdi-frontend*.deb
+                        rm -f /nfs/vdi-deb/${PRJNAME}*.deb
                         cp ${DEB_ROOT}/${PRJNAME}/*.deb /nfs/vdi-deb/
-                        
                         
                         # upload files to temp repo
                         DEB=$(ls -1 ${DEB_ROOT}/${PRJNAME}/*.deb)
                         for ITEM in $DEB
                         do
                             echo "Processing packet: $ITEM"
-                            curl -sS -X POST -F file=@$ITEM http://$APT_SRV:8008/api/files/veil-${REPO}; echo ""
+                            curl -sS -X POST -F file=@$ITEM http://qa2:8008/api/files/veil-${REPO}
+                            echo ""
                         done
 
-                        
                         # upload folder
-                        curl -sS -X POST http://$APT_SRV:8008/api/repos/veil-${REPO}/file/veil-${REPO}; echo ""
+                        curl -sS -X POST http://qa2:8008/api/repos/veil-${REPO}/file/veil-${REPO}
+                        echo ""
 
                         # make snapshot repo
                         JSON1="{\\"Name\\":\\"veil-${REPO}-${DATE}\\"}"
                         echo "JSON1 - $JSON1"
-                        curl -sS -X POST -H 'Content-Type: application/json' -d $JSON1 http://$APT_SRV:8008/api/repos/veil-${REPO}/snapshots; echo ""
+                        curl -sS -X POST -H 'Content-Type: application/json' -d $JSON1 http://qa2:8008/api/repos/veil-${REPO}/snapshots
+                        echo ""
 
                         # switch publish repo - aptly publish switch veil test veil-test-20180906161745
                         JSON2="{\\"Snapshots\\":[{\\"Component\\":\\"main\\",\\"Name\\":\\"veil-${REPO}-${DATE}\\"}]}"
                         echo "JSON2 - $JSON2"
-                        curl -sS -X PUT -H 'Content-Type: application/json' -d $JSON2 http://$APT_SRV:8008/api/publish/${REPO}/veil; echo ""
+                        curl -sS -X PUT -H 'Content-Type: application/json' -d $JSON2 http://qa2:8008/api/publish/${REPO}/veil
+                        echo ""
                     '''
                 }
         } catch (InterruptedException err) {
