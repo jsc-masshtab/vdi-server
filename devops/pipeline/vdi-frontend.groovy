@@ -59,7 +59,6 @@ node("$AGENT") {
 
                 stage ('prepare environment') {
                     
-                    VER = "${VERSION}-${BUILD_NUMBER}"
 
                     sh script: '''
                         rm -rf ${WORKSPACE}/.git ${WORKSPACE}/.gitignore
@@ -74,8 +73,8 @@ node("$AGENT") {
                         curl -sL https://deb.nodesource.com/setup_10.x | sudo bash
                         sudo apt-get install -y nodejs
 
-                        echo "Version software: $VER"
-                        
+                        # version software
+                        VER="${VERSION}-${BUILD_NUMBER}"
                         sed -i "s:%%VER%%:$VER:g" "$DEB_ROOT/$PRJNAME/root/DEBIAN/control"
 
                     '''
@@ -87,7 +86,7 @@ node("$AGENT") {
                         npm install --unsafe-perm
                         npm run build -- --prod
 
-                        echo "frontend compiled frontend/dist/frontend"
+                        # frontend compiled frontend/dist/frontend
 
                         mkdir -p "${DEB_ROOT}/${PRJNAME}/root/opt/veil-vdi"
                         cp -r ./dist/frontend "${DEB_ROOT}/${PRJNAME}/root/opt/veil-vdi"
