@@ -27,6 +27,7 @@ properties([
 node("$AGENT") {
 
     env.PRJNAME="vdi-backend"
+    env.NFS_DIR="vdi-deb"
     env.DEB_ROOT="${WORKSPACE}/devops/deb_config"
     env.DATE="$currentDate"
 
@@ -95,15 +96,19 @@ node("$AGENT") {
                     '''
                 }
 
-                stage ('publish to repo') {
-                     sh script: '''
-                        echo "REPO - $REPO"
-
+                 stage ('publish to nfs') {
+                    sh script: '''
                         # upload to nfs
-                        mkdir -p /nfs/vdi-deb
+                        mkdir -p /nfs/${NFS_DIR}
                         rm -f /nfs/vdi-deb/${PRJNAME}*.deb
-                        cp ${DEB_ROOT}/${PRJNAME}/*.deb /nfs/vdi-deb/
-                        
+                        cp ${DEB_ROOT}/${PRJNAME}/*.deb /nfs/${NFS_DIR}/
+                    '''
+                }
+                
+                stage ('publish to repo') {
+                    sh script: '''
+                        echo "REPO - $REPO"
+                     
                         # upload files to temp repo
                         DEB=$(ls -1 ${DEB_ROOT}/${PRJNAME}/*.deb)
                         for ITEM in $DEB
@@ -130,20 +135,20 @@ node("$AGENT") {
                         echo ""
                     '''
                 }
-        } catch (InterruptedException err) {
-                currentBuild.result = 'FAILURE'
-                println "Build was interrupted manually"
-                println "Current build marked as ${currentBuild.result}: ${err.toString()}"
-                notifyBuild(slackNotify,"FAILED", "Build was interrupted manually. Version: ${DATE}")
-                throw err
-        } catch (Exception err) {
-                currentBuild.result = 'FAILURE'
-                println "Something goes wrong"
-                println "Current build marked as ${currentBuild.result}: ${err.toString()}"
-                notifyBuild(slackNotify,"FAILED", "Something goes wrong. Version: ${DATE}")
-                throw err
+            } catch (InterruptedException err) {
+                    currentBuild.result = 'FAILURE'
+                    println "Build was interrupted manually"
+                    println "Current build marked as ${currentBuild.result}: ${err.toString()}"
+                    notifyBuild(slackNotify,"FAILED", "Build was interrupted manually. Version: ${DATE}")
+                    throw err
+            } catch (Exception err) {
+                    currentBuild.result = 'FAILURE'
+                    println "Something goes wrong"
+                    println "Current build marked as ${currentBuild.result}: ${err.toString()}"
+                    notifyBuild(slackNotify,"FAILED", "Something goes wrong. Version: ${DATE}")
+                    throw err
+            }
         }
-    }
     
     notifyBuild(slackNotify, "SUCCESSFUL","Build SUCCESSFUL. Version: ${DATE}")
     
