@@ -12,7 +12,6 @@ usage() {
   Usage: deploy [options] [command]
   Options:
     -h, --help             show help information
-    -c, --compress         compress rezult
   Commands:
     -n                     generate new update from vagrant in directory
 EOF
