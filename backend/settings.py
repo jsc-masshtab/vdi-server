@@ -66,7 +66,7 @@ LDAP_TIMEOUT = 5
 # -----------------------------
 
 # Относительные пути для локальной разработки
-KEYS_PATH = '../devops/conf/license'
+KEYS_PATH = '../'
 
 SERIAL_KEY_FNAME = 'serial.key'
 PRIVATE_PEM_FNAME = 'broker_private.pem'
