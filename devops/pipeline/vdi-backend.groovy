@@ -104,7 +104,7 @@ node("$AGENT") {
                         # configure redis
 
                         sudo systemctl enable redis-server.service
-                        sudo echo 'requirepass 4NZ7GpHn4IlshPhb' >> /etc/redis/redis.conf
+                        echo 'requirepass 4NZ7GpHn4IlshPhb' | sudo tee -a /etc/redis/redis.conf
                         sudo sed -i 's/bind 127.0.0.1/bind 0.0.0.0/g' /etc/redis/redis.conf
                         sudo systemctl restart redis-server
 
@@ -117,15 +117,16 @@ node("$AGENT") {
                         sudo systemctl restart postgresql
 
                         echo 'postgres:postgres' | sudo chpasswd
-                        sudo su postgres -c "psql -c \"ALTER ROLE postgres PASSWORD 'postgres';\" "
+                        sudo -u postgres -i psql -c "ALTER ROLE postgres PASSWORD 'postgres';"
                         # На астре нету бездуховной кодировки en_US.UTF-8. Есть C.UTF-8
-                        sudo su postgres -c "psql -c \"create database vdi encoding 'utf8' lc_collate = 'en_US.UTF-8' lc_ctype = 'en_US.UTF-8' template template0;\" "
+                        sudo -u postgres -i psql -c "create database vdi encoding 'utf8' lc_collate = 'en_US.UTF-8' lc_ctype = 'en_US.UTF-8' template template0;" || true
 
                         # setting up nginx
 
-                        cp ${WORKSPACE}/devops/deb-config/vdi-backend/root/opt/veil-vdi/other/vdi.nginx /etc/nginx/conf.d/vdi_nginx.conf
-                        rm /etc/nginx/sites-enabled/*
-                        systemctl restart nginx
+                        sudo cp ${WORKSPACE}/devops/deb-config/vdi-backend/root/opt/veil-vdi/other/vdi.nginx /etc/nginx/conf.d/vdi_nginx.conf
+                        
+                        sudo rm /etc/nginx/sites-enabled/* || true
+                        sudo systemctl restart nginx
 
                         # apply database migrations
 
@@ -133,18 +134,18 @@ node("$AGENT") {
                         pipenv run alembic upgrade head
 
                         # creating logs directory at /var/log/veil-vdi/
-                        mkdir -p /var/log/veil-vdi/
+                        sudo mkdir -p /var/log/veil-vdi/
 
                         # deploying configuration files for logrotate
-                        cp ${WORKSPACE}/devops/deb-config/vdi-backend/root/opt/veil-vdi/other/tornado.logrotate /etc/logrotate.d/veil-vdi
+                        sudo cp ${WORKSPACE}/devops/deb-config/vdi-backend/root/opt/veil-vdi/other/tornado.logrotate /etc/logrotate.d/veil-vdi
 
                         # deploying configuration files for supervisor
-                        rm /etc/supervisor/supervisord.conf
-                        cp ${WORKSPACE}/devops/deb-config/vdi-backend/root/opt/veil-vdi/other/supervisord.conf /etc/supervisor/supervisord.conf
-                        supervisorctl reload
+                        sudo rm /etc/supervisor/supervisord.conf
+                        sudo cp ${WORKSPACE}/devops/deb-config/vdi-backend/root/opt/veil-vdi/other/supervisord.conf /etc/supervisor/supervisord.conf
+                        sudo supervisorctl reload
 
                         # vdi backend status
-                        supervisorctl status
+                        sudo supervisorctl status
 
                     '''
                 }

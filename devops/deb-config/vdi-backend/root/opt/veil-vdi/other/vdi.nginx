@@ -15,8 +15,8 @@ server {
   access_log /var/log/nginx/vdi.acc;
   error_log /var/log/nginx/vdi.err;
 
-  ssl_certificate     /opt/veil-vdi/conf/veil_ssl/veil_default.crt;
-  ssl_certificate_key /opt/veil-vdi/conf/veil_ssl/veil_default.key;
+  ssl_certificate     /opt/veil-vdi/other/veil_ssl/veil_default.crt;
+  ssl_certificate_key /opt/veil-vdi/other/veil_ssl/veil_default.key;
 
   proxy_read_timeout          180s;
   proxy_connect_timeout       180s;
