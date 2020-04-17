@@ -59,7 +59,7 @@ node("$AGENT") {
 
                         sudo sed -i s/us\\./ru\\./g /etc/apt/sources.list
                         sudo apt-get update -y
-                        
+
                         sudo apt-get install -y postgresql-server-dev-9.6 python3-dev python3-setuptools python-dev gcc python3-pip postgresql htop mc nginx libsasl2-dev libldap2-dev libssl-dev sudo curl apt-utils
 
                         echo "Installing node v.10 && npm"
@@ -75,14 +75,15 @@ node("$AGENT") {
 
                 stage ('build') {
                     sh script: '''
-                        cd frontend
+                        cd ${WORKSPACE}/frontend
                         npm install --unsafe-perm
                         npm run build -- --prod
 
-                        # frontend compiled frontend/dist/frontend
+                        # frontend compiled ${WORKSPACE}/frontend/dist/frontend
 
                         mkdir -p "${DEB_ROOT}/${PRJNAME}/root/opt/veil-vdi/www"
-                        cp -r ./dist/frontend/* "${DEB_ROOT}/${PRJNAME}/root/opt/veil-vdi/www"
+                        cp -r ${WORKSPACE}/frontend/dist/frontend/* /opt/veil-vdi/www
+                        cp -r ${WORKSPACE}/frontend/dist/frontend/* "${DEB_ROOT}/${PRJNAME}/root/opt/veil-vdi/www"
 
                         make -C ${DEB_ROOT}/${PRJNAME}
 

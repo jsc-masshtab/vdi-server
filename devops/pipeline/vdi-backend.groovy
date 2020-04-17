@@ -83,18 +83,74 @@ node("$AGENT") {
                         python3 -m pip install pipenv
                         pipenv install
 
-                        # каталог с файлами фиртуального окружения
+                        #  копируем каталог с файлами фиртуального окружения в пакет
                         PIPENV_PATH=$(pipenv --venv)
                         mkdir -p "${DEB_ROOT}/${PRJNAME}/root/opt/veil-vdi/env"
+                        cp -r ${PIPENV_PATH}/* /opt/veil-vdi/env
                         cp -r ${PIPENV_PATH}/* "${DEB_ROOT}/${PRJNAME}/root/opt/veil-vdi/env"
                     '''
                 }
 
-                stage ('build') {
+                stage ('prepare backend app') {
                     sh script: '''
                         mkdir -p "${DEB_ROOT}/${PRJNAME}/root/opt/veil-vdi/app"
-                        cp -r ./backend/* "${DEB_ROOT}/${PRJNAME}/root/opt/veil-vdi/app"
+                        cp -r ${WORKSPACE}/backend/* /opt/veil-vdi/app
+                        cp -r ${WORKSPACE}/backend/* "${DEB_ROOT}/${PRJNAME}/root/opt/veil-vdi/app"
+                    '''
+                }
 
+                stage ('prepare config') {
+                    sh script: '''
+                        # configure redis
+
+                        sudo systemctl enable redis-server.service
+                        sudo echo 'requirepass 4NZ7GpHn4IlshPhb' >> /etc/redis/redis.conf
+                        sudo sed -i 's/bind 127.0.0.1/bind 0.0.0.0/g' /etc/redis/redis.conf
+                        sudo systemctl restart redis-server
+
+                        # configure postgres
+
+                        sudo cp ${WORKSPACE}/devops/deb_config/vdi-backend/root/opt/veil-vdi/other/vdi.postgresql /etc/postgresql/9.6/main/postgresql.conf
+                        sudo sed -i 's/peer/trust/g' /etc/postgresql/9.6/main/pg_hba.conf
+                        sudo sed -i "s/#listen_addresses = 'localhost'/listen_addresses = '192.168.20.112,127.0.0.1'/g" /etc/postgresql/9.6/main/postgresql.conf
+                        echo 'host  vdi postgres  0.0.0.0/0  trust' | sudo tee -a /etc/postgresql/9.6/main/pg_hba.conf
+                        sudo systemctl restart postgresql
+
+                        echo 'postgres:postgres' | sudo chpasswd
+                        sudo su postgres -c "psql -c \"ALTER ROLE postgres PASSWORD 'postgres';\" "
+                        # На астре нету бездуховной кодировки en_US.UTF-8. Есть C.UTF-8
+                        sudo su postgres -c "psql -c \"create database vdi encoding 'utf8' lc_collate = 'en_US.UTF-8' lc_ctype = 'en_US.UTF-8' template template0;\" "
+
+                        # setting up nginx
+
+                        cp ${WORKSPACE}/devops/deb_config/vdi-backend/root/opt/veil-vdi/other/vdi.nginx /etc/nginx/conf.d/vdi_nginx.conf
+                        rm /etc/nginx/sites-enabled/*
+                        systemctl restart nginx
+
+                        # apply database migrations
+
+                        cd ${WORKSPACE}/backend
+                        pipenv run alembic upgrade head
+
+                        # creating logs directory at /var/log/veil-vdi/
+                        mkdir -p /var/log/veil-vdi/
+
+                        # deploying configuration files for logrotate
+                        cp ${WORKSPACE}/devops/deb_config/vdi-backend/root/opt/veil-vdi/other/tornado.logrotate /etc/logrotate.d/veil-vdi
+
+                        # deploying configuration files for supervisor
+                        rm /etc/supervisor/supervisord.conf
+                        cp ${WORKSPACE}/devops/deb_config/vdi-backend/root/opt/veil-vdi/other/supervisord.conf /etc/supervisor/supervisord.conf
+                        supervisorctl reload
+
+                        # vdi backend status
+                        supervisorctl status
+
+                    '''
+                }
+
+                stage ('build app') {
+                    sh script: '''
                         make -C ${DEB_ROOT}/${PRJNAME}
                     '''
                 }
