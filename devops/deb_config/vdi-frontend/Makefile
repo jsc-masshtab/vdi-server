@@ -8,7 +8,7 @@ deb:
 
 clean:
 	@rm -f *.xz *.deb
-	@rm -rf root/opt/veil-vdi/frontend
-	@mkdir -p root/opt/veil-vdi/frontend
+	@rm -rf root/opt/veil-vdi/www
+	@mkdir -p root/opt/veil-vdi/www
 
 .PHONY: deb
