@@ -49,7 +49,7 @@ node("$AGENT") {
                     println "env.DATE - $env.DATE"
                 }
 
-                stage ('prepare environment') {
+                stage ('prepare build environment') {
                     
 
                     sh script: '''
@@ -62,8 +62,9 @@ node("$AGENT") {
 
                         sudo apt-get install -y postgresql-server-dev-9.6 python3-dev python3-setuptools python-dev gcc python3-pip postgresql htop mc nginx libsasl2-dev libldap2-dev libssl-dev sudo curl apt-utils
 
+                        echo "Installing additional packages"
                         sudo apt-get install -y supervisor logrotate
-                        apt-get install -y redis-server
+                        sudo apt-get install -y redis-server
 
                         # version software
                         VER="${VERSION}-${BUILD_NUMBER}"
@@ -72,19 +73,29 @@ node("$AGENT") {
                     '''
                 }
 
+                stage ('prepare virtual env') {
+                    sh script: '''
+
+                        export PYTHONPATH=${WORKSPACE}/backend
+                        export PIPENV_PIPFILE=${WORKSPACE}/backend/Pipfile
+                        # на версии 20.0.0 перестал работать pipenv
+                        python3 -m pip install 'virtualenv<20.0.0' --force-reinstall
+                        python3 -m pip install pipenv
+                        pipenv install
+
+                        # каталог с файлами фиртуального окружения
+                        PIPENV_PATH=$(pipenv --venv)
+                        mkdir -p "${DEB_ROOT}/${PRJNAME}/root/opt/veil-vdi/env"
+                        cp -r ${PIPENV_PATH}/* "${DEB_ROOT}/${PRJNAME}/root/opt/veil-vdi/env"
+                    '''
+                }
+
                 stage ('build') {
                     sh script: '''
-                        cd frontend
-                        npm install --unsafe-perm
-                        npm run build -- --prod
-
-                        # frontend compiled frontend/dist/frontend
-
-                        mkdir -p "${DEB_ROOT}/${PRJNAME}/root/opt/veil-vdi"
-                        cp -r ./dist/frontend "${DEB_ROOT}/${PRJNAME}/root/opt/veil-vdi"
+                        mkdir -p "${DEB_ROOT}/${PRJNAME}/root/opt/veil-vdi/app"
+                        cp -r ./backend/* "${DEB_ROOT}/${PRJNAME}/root/opt/veil-vdi/app"
 
                         make -C ${DEB_ROOT}/${PRJNAME}
-
                     '''
                 }
 
