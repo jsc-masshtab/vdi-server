@@ -28,7 +28,7 @@ node("$AGENT") {
 
     env.PRJNAME="vdi-backend"
     env.NFS_DIR="vdi-deb"
-    env.DEB_ROOT="${WORKSPACE}/devops/deb_config"
+    env.DEB_ROOT="${WORKSPACE}/devops/deb-config"
     env.DATE="$currentDate"
 
 
@@ -110,7 +110,7 @@ node("$AGENT") {
 
                         # configure postgres
 
-                        sudo cp ${WORKSPACE}/devops/deb_config/vdi-backend/root/opt/veil-vdi/other/vdi.postgresql /etc/postgresql/9.6/main/postgresql.conf
+                        sudo cp ${WORKSPACE}/devops/deb-config/vdi-backend/root/opt/veil-vdi/other/vdi.postgresql /etc/postgresql/9.6/main/postgresql.conf
                         sudo sed -i 's/peer/trust/g' /etc/postgresql/9.6/main/pg_hba.conf
                         sudo sed -i "s/#listen_addresses = 'localhost'/listen_addresses = '192.168.20.112,127.0.0.1'/g" /etc/postgresql/9.6/main/postgresql.conf
                         echo 'host  vdi postgres  0.0.0.0/0  trust' | sudo tee -a /etc/postgresql/9.6/main/pg_hba.conf
@@ -123,7 +123,7 @@ node("$AGENT") {
 
                         # setting up nginx
 
-                        cp ${WORKSPACE}/devops/deb_config/vdi-backend/root/opt/veil-vdi/other/vdi.nginx /etc/nginx/conf.d/vdi_nginx.conf
+                        cp ${WORKSPACE}/devops/deb-config/vdi-backend/root/opt/veil-vdi/other/vdi.nginx /etc/nginx/conf.d/vdi_nginx.conf
                         rm /etc/nginx/sites-enabled/*
                         systemctl restart nginx
 
@@ -136,11 +136,11 @@ node("$AGENT") {
                         mkdir -p /var/log/veil-vdi/
 
                         # deploying configuration files for logrotate
-                        cp ${WORKSPACE}/devops/deb_config/vdi-backend/root/opt/veil-vdi/other/tornado.logrotate /etc/logrotate.d/veil-vdi
+                        cp ${WORKSPACE}/devops/deb-config/vdi-backend/root/opt/veil-vdi/other/tornado.logrotate /etc/logrotate.d/veil-vdi
 
                         # deploying configuration files for supervisor
                         rm /etc/supervisor/supervisord.conf
-                        cp ${WORKSPACE}/devops/deb_config/vdi-backend/root/opt/veil-vdi/other/supervisord.conf /etc/supervisor/supervisord.conf
+                        cp ${WORKSPACE}/devops/deb-config/vdi-backend/root/opt/veil-vdi/other/supervisord.conf /etc/supervisor/supervisord.conf
                         supervisorctl reload
 
                         # vdi backend status
