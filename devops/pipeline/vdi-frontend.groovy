@@ -46,14 +46,6 @@ node("$AGENT") {
                         userRemoteConfigs: [[credentialsId: '', url: 'git@gitlab.bazalt.team:vdi/vdiserver.git']]
                     ])
                     
-                    env.GIT_COMMIT = scmVars.GIT_COMMIT
-                    env.GIT_BRANCH = scmVars.GIT_BRANCH                    
-                    env.GIT_COMMIT_DATE=sh(script:"git show -s --format=%ci", returnStdout: true).trim()
-
-                    println "env.GIT_COMMIT - $env.GIT_COMMIT"
-                    println "env.GIT_BRANCH - $env.GIT_BRANCH"
-                    println "env.GIT_COMMIT_DATE - $env.GIT_COMMIT_DATE"
-
                     println "env.DATE - $env.DATE"
                 }
 
