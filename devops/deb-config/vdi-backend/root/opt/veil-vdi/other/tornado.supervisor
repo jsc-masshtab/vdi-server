@@ -3,8 +3,8 @@
 [program:vdi-server-8888]
 command=/usr/local/bin/pipenv run python app.py --access_to_stdout=True --logging=debug --port=8888 --debug=True --autoreload=False --log_file_prefix=/var/log/veil-vdi/vdi_tornado.log  --workers=1
 process_name=%(program_name)s
-directory=/opt/veil-vdi/backend
-environment=PYTHONPATH=/opt/veil-vdi/backend
+directory=/opt/veil-vdi/app
+environment=PYTHONPATH=/opt/veil-vdi/app
 autorestart=unexpected
 autostart=true
 startretries=3

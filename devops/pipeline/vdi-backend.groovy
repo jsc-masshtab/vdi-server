@@ -78,10 +78,10 @@ node("$AGENT") {
                         mkdir -p /opt/veil-vdi/app
                         mkdir -p "${DEB_ROOT}/${PRJNAME}/root/opt/veil-vdi/app"
                         mkdir -p /opt/veil-vdi/other
-                        cp -r ${WORKSPACE}/backend/* /opt/veil-vdi/app
-                        cp -r ${WORKSPACE}/backend/* "${DEB_ROOT}/${PRJNAME}/root/opt/veil-vdi/app"
+                        rsync -a --delete ${WORKSPACE}/backend/ /opt/veil-vdi/app
+                        rsync -a --delete ${WORKSPACE}/backend/ "${DEB_ROOT}/${PRJNAME}/root/opt/veil-vdi/app"
                         # copy other catalog
-                        sudo cp -r ${WORKSPACE}/devops/deb-config/vdi-backend/root/opt/veil-vdi/other/* /opt/veil-vdi/other
+                        sudo rsync -a --delete ${WORKSPACE}/devops/deb-config/vdi-backend/root/opt/veil-vdi/other/ /opt/veil-vdi/other
 
                     '''
                 }
@@ -99,7 +99,7 @@ node("$AGENT") {
 
                         sudo cp ${WORKSPACE}/devops/deb-config/vdi-backend/root/opt/veil-vdi/other/vdi.postgresql /etc/postgresql/9.6/main/postgresql.conf
                         sudo sed -i 's/peer/trust/g' /etc/postgresql/9.6/main/pg_hba.conf
-                        sudo sed -i "s/#listen_addresses = 'localhost'/listen_addresses = '192.168.20.112,127.0.0.1'/g" /etc/postgresql/9.6/main/postgresql.conf
+                        sudo sed -i "s/#listen_addresses = 'localhost'/listen_addresses = '127.0.0.1'/g" /etc/postgresql/9.6/main/postgresql.conf
                         echo 'host  vdi postgres  0.0.0.0/0  trust' | sudo tee -a /etc/postgresql/9.6/main/pg_hba.conf
                         sudo systemctl restart postgresql
 
@@ -137,8 +137,8 @@ node("$AGENT") {
                         PIPENV_PATH=$(pipenv --venv)
                         mkdir -p /opt/veil-vdi/env
                         mkdir -p "${DEB_ROOT}/${PRJNAME}/root/opt/veil-vdi/env"
-                        cp -r ${PIPENV_PATH}/* /opt/veil-vdi/env
-                        cp -r ${PIPENV_PATH}/* "${DEB_ROOT}/${PRJNAME}/root/opt/veil-vdi/env"
+                        rsync -a --delete ${PIPENV_PATH}/ /opt/veil-vdi/env
+                        rsync -a --delete ${PIPENV_PATH}/ "${DEB_ROOT}/${PRJNAME}/root/opt/veil-vdi/env"
                     '''
                 }
                 
@@ -156,7 +156,7 @@ node("$AGENT") {
                         sudo supervisorctl reload
 
                         # vdi backend status
-                        sudo supervisorctl status                    
+                        sudo supervisorctl status
                     '''
                 }
                 

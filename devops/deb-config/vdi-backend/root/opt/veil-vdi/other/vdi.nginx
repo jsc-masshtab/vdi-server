@@ -57,7 +57,7 @@ server {
 
   # serve static files
   location / {
-    root /opt/veil-vdi/frontend;
+    root /opt/veil-vdi/www;
     try_files $uri$args $uri$args/ /index.html;
     # expires 7d; временно отключено
   }
