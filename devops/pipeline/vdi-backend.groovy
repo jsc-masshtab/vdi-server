@@ -73,29 +73,16 @@ node("$AGENT") {
                     '''
                 }
 
-                stage ('prepare virtual env') {
-                    sh script: '''
-
-                        export PYTHONPATH=${WORKSPACE}/backend
-                        export PIPENV_PIPFILE=${WORKSPACE}/backend/Pipfile
-                        # на версии 20.0.0 перестал работать pipenv
-                        python3 -m pip install 'virtualenv<20.0.0' --force-reinstall
-                        python3 -m pip install pipenv
-                        pipenv install
-
-                        #  копируем каталог с файлами фиртуального окружения в пакет
-                        PIPENV_PATH=$(pipenv --venv)
-                        mkdir -p "${DEB_ROOT}/${PRJNAME}/root/opt/veil-vdi/env"
-                        cp -r ${PIPENV_PATH}/* /opt/veil-vdi/env
-                        cp -r ${PIPENV_PATH}/* "${DEB_ROOT}/${PRJNAME}/root/opt/veil-vdi/env"
-                    '''
-                }
-
                 stage ('prepare backend app') {
                     sh script: '''
+                        mkdir -p /opt/veil-vdi/app
                         mkdir -p "${DEB_ROOT}/${PRJNAME}/root/opt/veil-vdi/app"
+                        mkdir -p /opt/veil-vdi/other
                         cp -r ${WORKSPACE}/backend/* /opt/veil-vdi/app
                         cp -r ${WORKSPACE}/backend/* "${DEB_ROOT}/${PRJNAME}/root/opt/veil-vdi/app"
+                        # copy other catalog
+                        sudo cp -r ${WORKSPACE}/devops/deb-config/vdi-backend/root/opt/veil-vdi/other/* /opt/veil-vdi/other
+
                     '''
                 }
 
@@ -124,15 +111,39 @@ node("$AGENT") {
                         # setting up nginx
 
                         sudo cp ${WORKSPACE}/devops/deb-config/vdi-backend/root/opt/veil-vdi/other/vdi.nginx /etc/nginx/conf.d/vdi_nginx.conf
-                        
+
                         sudo rm /etc/nginx/sites-enabled/* || true
                         sudo systemctl restart nginx
+
+                    '''
+                }
+
+                stage ('prepare virtual env') {
+                    sh script: '''
+
+                        export PYTHONPATH=${WORKSPACE}/backend
+                        export PIPENV_PIPFILE=${WORKSPACE}/backend/Pipfile
+                        # на версии 20.0.0 перестал работать pipenv
+                        python3 -m pip install 'virtualenv<20.0.0' --force-reinstall
+                        python3 -m pip install pipenv
+                        pipenv install
 
                         # apply database migrations
 
                         cd ${WORKSPACE}/backend
                         pipenv run alembic upgrade head
 
+                        #  копируем каталог с файлами фиртуального окружения в пакет
+                        PIPENV_PATH=$(pipenv --venv)
+                        mkdir -p /opt/veil-vdi/env
+                        mkdir -p "${DEB_ROOT}/${PRJNAME}/root/opt/veil-vdi/env"
+                        cp -r ${PIPENV_PATH}/* /opt/veil-vdi/env
+                        cp -r ${PIPENV_PATH}/* "${DEB_ROOT}/${PRJNAME}/root/opt/veil-vdi/env"
+                    '''
+                }
+                
+                stage ('additional settings') {
+                    sh script: '''
                         # creating logs directory at /var/log/veil-vdi/
                         sudo mkdir -p /var/log/veil-vdi/
 
@@ -145,11 +156,10 @@ node("$AGENT") {
                         sudo supervisorctl reload
 
                         # vdi backend status
-                        sudo supervisorctl status
-
+                        sudo supervisorctl status                    
                     '''
                 }
-
+                
                 stage ('build app') {
                     sh script: '''
                         make -C ${DEB_ROOT}/${PRJNAME}
