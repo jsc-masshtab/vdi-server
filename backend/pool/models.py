@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 import asyncio
 import uuid
+from enum import Enum
 from sqlalchemy import union_all, case, literal_column, desc, text, Enum as AlchemyEnum
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.dialects.postgresql import UUID, ARRAY
 from asyncpg.exceptions import UniqueViolationError
 
 from common.veil_errors import VmCreationError, PoolCreationError, HttpError, SimpleError
@@ -35,12 +36,17 @@ class Pool(db.Model):
     """На данный момент отсутствует смысловая валидация на уровне таблиц (она в схемах)."""
 
     class PoolTypes:
-        """
-        Класс, описывающий доступные типы подключения служб каталогов.
-        """
+        """Доступные типы подключения служб каталогов."""
 
         AUTOMATED = 'AUTOMATED'
         STATIC = 'STATIC'
+
+    class PoolConnectionTypes(Enum):
+        """Типы подключений к VM доступные пулу."""
+
+        SPICE = 'SPICE'
+        RDP = 'RDP'
+        NATIVE_RDP = 'NATIVE_RDP'
 
     __tablename__ = 'pool'
 
@@ -53,6 +59,7 @@ class Pool(db.Model):
     controller = db.Column(UUID(), db.ForeignKey('controller.id', ondelete="CASCADE"), nullable=False)
 
     keep_vms_on = db.Column(db.Boolean(), nullable=False, default=False)
+    connection_types = db.Column(ARRAY(AlchemyEnum(PoolConnectionTypes)), nullable=False, index=True)
 
     # ----- ----- ----- ----- ----- ----- -----
     # Constants:
@@ -61,6 +68,11 @@ class Pool(db.Model):
 
     # ----- ----- ----- ----- ----- ----- -----
     # Properties and getters:
+
+    @property
+    async def possible_connection_types(self):
+        return [connection_type for connection_type in self.PoolConnectionTypes if
+                connection_type not in self.connection_types]
 
     @property
     def entity_type(self):
@@ -98,7 +110,7 @@ class Pool(db.Model):
 
     @property
     async def template_id(self):
-        """Возвращает tenplate_id для автоматического пула, либо null"""
+        """Возвращает template_id для автоматического пула, либо null"""
         template_id = await AutomatedPool.select('template_id').where(
             AutomatedPool.id == self.id).gino.scalar()
         return template_id
@@ -175,7 +187,9 @@ class Pool(db.Model):
             AutomatedPool.vm_name_template,
             AutomatedPool.os_type,
             AutomatedPool.create_thin_clones,
-            pool_type])
+            pool_type,
+            Pool.connection_types
+        ])
 
         if ordering or user_id:
             # Добавляем пересечение с дополнительными внешними таблицами для возможности сортировки
@@ -430,7 +444,7 @@ class Pool(db.Model):
         return await ero_query.gino.status()
 
     @classmethod
-    async def create(cls, verbose_name, cluster_id, node_id, datapool_id, controller_ip):
+    async def create(cls, verbose_name, cluster_id, node_id, datapool_id, controller_ip, connection_types):
         controller_id = await Controller.get_controller_id_by_ip(controller_ip)
         if not controller_id:
             raise AssertionError(_('Controller {} not found.').format(controller_ip))
@@ -438,7 +452,8 @@ class Pool(db.Model):
         pool = await super().create(verbose_name=verbose_name, cluster_id=cluster_id, node_id=node_id,
                                     datapool_id=datapool_id,
                                     controller=controller_id,
-                                    status=Status.CREATING)
+                                    status=Status.CREATING,
+                                    connection_types=connection_types)
         return pool
 
     async def soft_delete(self, commit=True):
@@ -538,7 +553,7 @@ class StaticPool(db.Model):
         return {'entity_type': self.entity_type, 'entity_uuid': self.id}
 
     @classmethod
-    async def create(cls, verbose_name, controller_ip, cluster_id, node_id, datapool_id):
+    async def create(cls, verbose_name, controller_ip, cluster_id, node_id, datapool_id, connection_types):
         """Nested transactions are atomic."""
         log.debug(
             'Create StaticPool: verbose_name={vn}, controller_ip={ip}, cluster_id={ci}, node_id={ni}, datapool_id={di}.'.format(
@@ -550,18 +565,21 @@ class StaticPool(db.Model):
                                      cluster_id=cluster_id,
                                      node_id=node_id,
                                      datapool_id=datapool_id,
-                                     controller_ip=controller_ip)
+                                     controller_ip=controller_ip,
+                                     connection_types=connection_types)
             # Create static pool
             log.debug(_('Create StaticPool'))
             return await super().create(id=pool.id)
 
     @classmethod
-    async def soft_update(cls, pool_id, verbose_name, keep_vms_on):
+    async def soft_update(cls, pool_id, verbose_name, keep_vms_on, connection_types):
         async with db.transaction() as tx:  # noqa
             if verbose_name:
                 await Pool.update.values(verbose_name=verbose_name).where(Pool.id == pool_id).gino.status()
             if keep_vms_on is not None:
                 await Pool.update.values(keep_vms_on=keep_vms_on).where(Pool.id == pool_id).gino.status()
+            if connection_types is not None and connection_types:
+                await Pool.update.values(connection_types=connection_types).where(Pool.id == pool_id).gino.status()
         return True
 
     async def activate(self):
@@ -649,7 +667,7 @@ class AutomatedPool(db.Model):
     async def create(cls, verbose_name, controller_ip, cluster_id, node_id,
                      template_id, datapool_id, min_size, max_size, max_vm_amount, increase_step, min_free_vms_amount,
                      max_amount_of_create_attempts, initial_size, reserve_size, total_size, vm_name_template,
-                     create_thin_clones):
+                     create_thin_clones, connection_types):
         """Nested transactions are atomic."""
         async with db.transaction() as tx:  # noqa
             # Create Pool
@@ -658,7 +676,8 @@ class AutomatedPool(db.Model):
                                      cluster_id=cluster_id,
                                      node_id=node_id,
                                      datapool_id=datapool_id,
-                                     controller_ip=controller_ip)
+                                     controller_ip=controller_ip,
+                                     connection_types=connection_types)
 
             log.debug(_('Create AutomatedPool {}').format(verbose_name))
             # Create AutomatedPool
@@ -679,7 +698,7 @@ class AutomatedPool(db.Model):
             return automated_pool
 
     async def soft_update(self, verbose_name, reserve_size, total_size, vm_name_template, keep_vms_on: bool,
-                          create_thin_clones: bool):
+                          create_thin_clones: bool, connection_types):
         pool_kwargs = dict()
         auto_pool_kwargs = dict()
 
@@ -689,6 +708,8 @@ class AutomatedPool(db.Model):
                 pool_kwargs['verbose_name'] = verbose_name
             if isinstance(keep_vms_on, bool):
                 pool_kwargs['keep_vms_on'] = keep_vms_on
+            if connection_types:
+                pool_kwargs['connection_types'] = connection_types
 
             if pool_kwargs:
                 log.debug(_('Update Pool values for AutomatedPool {}').format(await self.verbose_name))

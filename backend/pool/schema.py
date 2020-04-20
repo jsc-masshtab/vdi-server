@@ -39,6 +39,8 @@ _ = lang_init()
 #  обращаться к этому хранилищу для проверки корректности присланных ресурсов. Аналогичный принцип
 #  стоит применить и к статическим пулам (вместо похода на вейл для проверки присланных параметров).
 
+ConnectionTypesGraphene = graphene.Enum.from_enum(Pool.PoolConnectionTypes)
+
 
 class PoolValidator(MutationValidation):
     """Валидатор для сущности Pool"""
@@ -195,6 +197,8 @@ class PoolType(graphene.ObjectType):
 
     keep_vms_on = graphene.Boolean()
     create_thin_clones = graphene.Boolean()
+    assigned_connection_types = graphene.List(ConnectionTypesGraphene)
+    possible_connection_types = graphene.List(ConnectionTypesGraphene)
 
     async def resolve_controller(self, info):
         controller_obj = await Controller.get(self.controller)
@@ -296,6 +300,14 @@ class PoolType(graphene.ObjectType):
 
                 self.vms.append(vm_type)
 
+    async def resolve_assigned_connection_types(self, _info):
+        pool = await Pool.get(self.pool_id)
+        return pool.connection_types
+
+    async def resolve_possible_connection_types(self, _info):
+        pool = await Pool.get(self.pool_id)
+        return await pool.possible_connection_types
+
 
 def pool_obj_to_type(pool_obj: Pool) -> dict:
     pool_dict = {'pool_id': pool_obj.master_id,
@@ -322,7 +334,8 @@ def pool_obj_to_type(pool_obj: Pool) -> dict:
                  'keep_vms_on': pool_obj.keep_vms_on,
                  'create_thin_clones': pool_obj.create_thin_clones,
                  'controller': pool_obj.controller,
-                 'status': pool_obj.status
+                 'status': pool_obj.status,
+                 # 'assigned_connection_types': pool_obj.connection_types
                  }
     return PoolType(**pool_dict)
 
@@ -403,7 +416,9 @@ class DeletePoolMutation(graphene.Mutation, PoolValidator):
 class CreateStaticPoolMutation(graphene.Mutation, PoolValidator):
     class Arguments:
         verbose_name = graphene.String(required=True)
-        vm_ids = graphene.List(graphene.UUID, required=True)
+        vm_ids = graphene.NonNull(graphene.List(graphene.NonNull(graphene.UUID)))
+        connection_types = graphene.List(graphene.NonNull(ConnectionTypesGraphene),
+                                         default_value=[Pool.PoolConnectionTypes.SPICE.value])
 
     pool = graphene.Field(lambda: PoolType)
     ok = graphene.Boolean()
@@ -442,6 +457,9 @@ class CreateStaticPoolMutation(graphene.Mutation, PoolValidator):
         await cls.validate_agruments(**kwargs)
         pool = None
         vm_ids = kwargs['vm_ids']
+        if not vm_ids:
+            raise SimpleError('VM ids is empty.')
+
         verbose_name = kwargs['verbose_name']
 
         log.debug(_('StaticPool: Get vm info'))
@@ -481,7 +499,8 @@ class CreateStaticPoolMutation(graphene.Mutation, PoolValidator):
                                            controller_ip=controller_ip,
                                            cluster_id=cluster_id,
                                            node_id=node_id,
-                                           datapool_id=datapool_id)
+                                           datapool_id=datapool_id,
+                                           connection_types=kwargs['connection_types'])
 
             log.debug(_('StaticPool: Objects on VDI DB created.'))
             # Add VMs to db
@@ -497,7 +516,6 @@ class CreateStaticPoolMutation(graphene.Mutation, PoolValidator):
             vms = [VmType(id=vm_id) for vm_id in vm_ids]
             await pool.activate()
 
-            # log.debug(_('StaticPool: pool {} created.').format(verbose_name))
             await log.info(_('Static pool {name} created.').format(name=verbose_name))
         except Exception as E:  # Возможные исключения: дубликат имени или вм id, сетевой фейл enable_remote_accesses
             log.debug(E)
@@ -599,6 +617,7 @@ class UpdateStaticPoolMutation(graphene.Mutation, PoolValidator):
         pool_id = graphene.UUID(required=True)
         verbose_name = graphene.String()
         keep_vms_on = graphene.Boolean()
+        connection_types = graphene.List(graphene.NonNull(ConnectionTypesGraphene))
 
     ok = graphene.Boolean()
 
@@ -607,7 +626,8 @@ class UpdateStaticPoolMutation(graphene.Mutation, PoolValidator):
     async def mutate(cls, _root, _info, **kwargs):
         await cls.validate_agruments(**kwargs)
         try:
-            ok = await StaticPool.soft_update(kwargs['pool_id'], kwargs.get('verbose_name'), kwargs.get('keep_vms_on'))
+            ok = await StaticPool.soft_update(kwargs['pool_id'], kwargs.get('verbose_name'), kwargs.get('keep_vms_on'),
+                                              kwargs.get('connection_types'))
         except UniqueViolationError:
             error_msg = _('Failed to update static pool {}. Name must be unique.').format(kwargs['pool_id'])
             await log.error(error_msg)
@@ -641,6 +661,8 @@ class CreateAutomatedPoolMutation(graphene.Mutation, PoolValidator):
         vm_name_template = graphene.String(default_value='')
 
         create_thin_clones = graphene.Boolean(default_value=True)
+        connection_types = graphene.List(graphene.NonNull(ConnectionTypesGraphene),
+                                         default_value=[Pool.PoolConnectionTypes.SPICE.value])
 
     pool = graphene.Field(lambda: PoolType)
     ok = graphene.Boolean()
@@ -680,6 +702,7 @@ class UpdateAutomatedPoolMutation(graphene.Mutation, PoolValidator):
         vm_name_template = graphene.String()
         keep_vms_on = graphene.Boolean()
         create_thin_clones = graphene.Boolean()
+        connection_types = graphene.List(graphene.NonNull(ConnectionTypesGraphene))
 
     ok = graphene.Boolean()
 
@@ -722,7 +745,8 @@ class UpdateAutomatedPoolMutation(graphene.Mutation, PoolValidator):
                                                  total_size=kwargs.get('total_size'),
                                                  vm_name_template=kwargs.get('vm_name_template'),
                                                  keep_vms_on=kwargs.get('keep_vms_on'),
-                                                 create_thin_clones=kwargs.get('create_thin_clones'))
+                                                 create_thin_clones=kwargs.get('create_thin_clones'),
+                                                 connection_types=kwargs.get('connection_types'))
             except UniqueViolationError:
                 error_msg = _('Failed to update automated pool {}. Name must be unique.').format(kwargs['verbose_name'])
                 await log.error(error_msg)
