@@ -124,7 +124,8 @@ class User(AbstractSortableStatusModel, db.Model):
         pools = await pools_query.gino.all()
 
         pools_list = [
-            {'id': str(pool.master_id), 'name': pool.verbose_name, 'os_type': pool.os_type, 'status': pool.status.value}
+            {'id': str(pool.master_id), 'name': pool.verbose_name, 'os_type': pool.os_type, 'status': pool.status.value,
+             'connection_types': [connection_type.value for connection_type in pool.connection_types]}
             for pool in pools]
 
         return pools_list
