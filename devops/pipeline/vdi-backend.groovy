@@ -75,10 +75,10 @@ node("$AGENT") {
 
                 stage ('prepare backend app') {
                     sh script: '''
-                        mkdir -p /opt/veil-vdi/app
+                        sudo mkdir -p /opt/veil-vdi/app
                         mkdir -p "${DEB_ROOT}/${PRJNAME}/root/opt/veil-vdi/app"
-                        mkdir -p /opt/veil-vdi/other
-                        rsync -a --delete ${WORKSPACE}/backend/ /opt/veil-vdi/app
+                        sudo mkdir -p /opt/veil-vdi/other
+                        sudo rsync -a --delete ${WORKSPACE}/backend/ /opt/veil-vdi/app
                         rsync -a --delete ${WORKSPACE}/backend/ "${DEB_ROOT}/${PRJNAME}/root/opt/veil-vdi/app"
                         # copy other catalog
                         sudo rsync -a --delete ${WORKSPACE}/devops/deb-config/vdi-backend/root/opt/veil-vdi/other/ /opt/veil-vdi/other
@@ -135,9 +135,9 @@ node("$AGENT") {
 
                         #  копируем каталог с файлами фиртуального окружения в пакет
                         PIPENV_PATH=$(pipenv --venv)
-                        mkdir -p /opt/veil-vdi/env
+                        sudo mkdir -p /opt/veil-vdi/env
                         mkdir -p "${DEB_ROOT}/${PRJNAME}/root/opt/veil-vdi/env"
-                        rsync -a --delete ${PIPENV_PATH}/ /opt/veil-vdi/env
+                        sudo rsync -a --delete ${PIPENV_PATH}/ /opt/veil-vdi/env
                         rsync -a --delete ${PIPENV_PATH}/ "${DEB_ROOT}/${PRJNAME}/root/opt/veil-vdi/env"
                     '''
                 }
