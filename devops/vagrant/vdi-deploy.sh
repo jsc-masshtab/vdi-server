@@ -1,6 +1,11 @@
 #!/bin/bash
 APP_DIR=/opt/veil-vdi
 mkdir $APP_DIR/other
+mkdir $APP_DIR/app
+mkdir $APP_DIR/env
+
+# Переносим backend в app/
+cp -r $APP_DIR/backend/* $APP_DIR/app/
 
 echo "Install base packages"
 
@@ -59,17 +64,20 @@ systemctl restart nginx
 #------------------------------
 echo "Setting up env"
 
-export PYTHONPATH=$APP_DIR/backend
-export PIPENV_PIPFILE=$APP_DIR/backend/Pipfile
+export PYTHONPATH=$APP_DIR/app
+export PIPENV_PIPFILE=$APP_DIR/app/Pipfile
 /usr/bin/python3 -m pip install 'virtualenv<20.0.0' --force-reinstall  # На версии 20.0.0 перестал работать pipenv
 /usr/bin/python3 -m pip install pipenv
-pipenv install
+/usr/local/bin/pipenv install
+
+# Переносим установленное окружение в /opt/veil-vdi/env
+export PIPENV_VERBOSITY=-1
+cp -r $(/usr/local/bin/pipenv --venv)/* $APP_DIR/env
 
 #------------------------------
 echo "Apply database migrations"
-
-cd $APP_DIR/backend
-pipenv run alembic upgrade head
+cd $APP_DIR/app/
+/opt/veil-vdi/env/bin/alembic upgrade head
 
 #------------------------------
 echo "Setting up frontend"
@@ -103,3 +111,4 @@ echo "Vdi backend status:"
 supervisorctl status
 
 rm -rf $APP_DIR/devops
+rm -rf $APP_DIR/backend
