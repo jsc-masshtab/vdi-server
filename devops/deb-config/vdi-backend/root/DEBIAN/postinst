@@ -2,24 +2,6 @@
 
 set -e
 
-config_baloon()
-{
-	local lsmod_exit
-
-	lsmod_exit=$(lsmod | grep -i balloon)
-
-	if [ -z "$lsmod_exit" ]; then
-		LOG "* ${CYAN}${MY_APPLICATION}: ${WHITE}balloon module has been loaded${NORMAL}"
-		modprobe virtio_balloon
-	fi
-	
-	# добавляем модуль в /etc/modules-load.d/modules.conf
-	if ! grep -q "balloon" /etc/modules-load.d/modules.conf; then
-		echo "virtio_balloon" >> /etc/modules-load.d/modules.conf
-	fi
-
-}
-
 configure_redis()
 {
 	systemctl enable redis-server.service
@@ -40,7 +22,7 @@ configure_postgres()
 	echo 'postgres:postgres' | chpasswd
 	sudo -u postgres psql -c "ALTER ROLE postgres PASSWORD 'postgres';"
 	# на астре нету бездуховной кодировки en_US.UTF-8. Есть C.UTF-8
-	sudo -u postgres psql -c "create database vdi encoding 'utf8' lc_collate = 'en_US.UTF-8' lc_ctype = 'en_US.UTF-8' template template0;" || true}
+	sudo -u postgres psql -c "create database vdi encoding 'utf8' lc_collate = 'en_US.UTF-8' lc_ctype = 'en_US.UTF-8' template template0;" || true
 }
 
 configure_nginx()
@@ -50,23 +32,41 @@ configure_nginx()
 	systemctl restart nginx
 }
 
+configure_logs()
+{
+	# creating logs directory at /var/log/veil-vdi/
+	mkdir -p /var/log/veil-vdi/
+
+	# deploying configuration files for logrotate
+	cp /opt/veil-vdi/other/tornado.logrotate /etc/logrotate.d/veil-vdi
+}
+
+configure_supervisor()
+{
+	# deploying configuration files for supervisor
+	rm /etc/supervisor/supervisord.conf || true
+	cp /opt/veil-vdi/other/supervisord.conf /etc/supervisor/supervisord.conf
+	supervisorctl reload
+}
+
 case "$1" in
 	configure)
 		# действия и при установке и при обновлении
 
-		config_baloon
+		configure_supervisor
 
 		# действия только при установке
 		if [ ! -n "$2" ] ; then
 			configure_redis
 			configure_postgres
 			configure_nginx
+			configure_logs
+			configure_supervisor
 		fi
 
 		exit 0
 		;;
 	abort-upgrade|abort-remove|abort-deconfigure)
-		systemctl restart cron
 		exit 0
 		;;
 	*)
