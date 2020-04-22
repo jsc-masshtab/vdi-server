@@ -1,0 +1,68 @@
+#!/bin/
+
+set -e
+
+config_baloon()
+{
+	local lsmod_exit
+
+	lsmod_exit=$(lsmod | grep -i balloon)
+
+	if [ -z "$lsmod_exit" ]; then
+		LOG "* ${CYAN}${MY_APPLICATION}: ${WHITE}balloon module has been loaded${NORMAL}"
+		modprobe virtio_balloon
+	fi
+	
+	# добавляем модуль в /etc/modules-load.d/modules.conf
+	if ! grep -q "balloon" /etc/modules-load.d/modules.conf; then
+		echo "virtio_balloon" >> /etc/modules-load.d/modules.conf
+	fi
+
+}
+
+case "$1" in
+	configure)
+		# действия и при установке и при обновлении
+
+		systemctl daemon-reload || true
+		configure_log
+		create_backup_config
+		create_global_config
+		create_controller_config
+		create_node_config
+		create_media_config
+		update_motd
+		/usr/local/bin/update-veil-issue.sh > /dev/null 2>&1
+		#configure_atop
+		configure_resolv
+		configure_sysctl
+		remove_hosts_ipv6
+		fix_perms
+		config_puppet_conf
+		config_zfs
+		config_dlm
+		config_baloon
+		systemctl daemon-reload || true
+
+		# действия только при установке
+		if [ ! -n "$2" ] ; then
+			systemctl enable veil-watchrole.service > /dev/null || true
+			systemctl stop veil-watchrole.service > /dev/null || true
+			systemctl start veil-watchrole.service > /dev/null || true
+		fi
+
+		# init rsa key for controller repl if necessary
+		echo "genkey" >> /var/log/veil/genkey.log
+		/usr/local/sbin/veil-controller -i >> /var/log/veil/genkey.log
+		/usr/bin/veil-sendrole full > /dev/null
+		exit 0
+		;;
+	abort-upgrade|abort-remove|abort-deconfigure)
+		systemctl restart cron
+		exit 0
+		;;
+	*)
+		LOG "postinst called with unknown argument: $*" >&2
+		exit 1
+		;;
+esac
