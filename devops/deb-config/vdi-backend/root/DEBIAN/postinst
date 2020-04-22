@@ -23,23 +23,36 @@ config_baloon()
 configure_redis()
 {
 	systemctl enable redis-server.service
-	echo 'requirepass 4NZ7GpHn4IlshPhb' | sudo tee -a /etc/redis/redis.conf
+	echo 'requirepass 4NZ7GpHn4IlshPhb' | tee -a /etc/redis/redis.conf
 	sed -i 's/bind 127.0.0.1/bind 0.0.0.0/g' /etc/redis/redis.conf
 	systemctl restart redis-server
+}
+
+configure_postgres()
+{
+	cp /opt/veil-vdi/other/vdi.postgresql /etc/postgresql/9.6/main/postgresql.conf
+	sed -i 's/peer/trust/g' /etc/postgresql/9.6/main/pg_hba.conf
+	sed -i "s/#listen_addresses = 'localhost'/listen_addresses = '127.0.0.1'/g" /etc/postgresql/9.6/main/postgresql.conf
+	echo 'host  vdi postgres  0.0.0.0/0  trust' | tee -a /etc/postgresql/9.6/main/pg_hba.conf
+	
+	systemctl restart postgresql
+
+	echo 'postgres:postgres' | chpasswd
+	sudo -u postgres psql -c "ALTER ROLE postgres PASSWORD 'postgres';"
+	# на астре нету бездуховной кодировки en_US.UTF-8. Есть C.UTF-8
+	sudo -u postgres psql -c "create database vdi encoding 'utf8' lc_collate = 'en_US.UTF-8' lc_ctype = 'en_US.UTF-8' template template0;" || true}
 }
 
 case "$1" in
 	configure)
 		# действия и при установке и при обновлении
 
-		config_zfs
-		config_dlm
 		config_baloon
-		systemctl daemon-reload || true
 
 		# действия только при установке
 		if [ ! -n "$2" ] ; then
 			configure_redis
+			configure_postgres
 		fi
 
 		exit 0
