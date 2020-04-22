@@ -20,25 +20,18 @@ config_baloon()
 
 }
 
+configure_redis()
+{
+	systemctl enable redis-server.service
+	echo 'requirepass 4NZ7GpHn4IlshPhb' | sudo tee -a /etc/redis/redis.conf
+	sed -i 's/bind 127.0.0.1/bind 0.0.0.0/g' /etc/redis/redis.conf
+	systemctl restart redis-server
+}
+
 case "$1" in
 	configure)
 		# действия и при установке и при обновлении
 
-		systemctl daemon-reload || true
-		configure_log
-		create_backup_config
-		create_global_config
-		create_controller_config
-		create_node_config
-		create_media_config
-		update_motd
-		/usr/local/bin/update-veil-issue.sh > /dev/null 2>&1
-		#configure_atop
-		configure_resolv
-		configure_sysctl
-		remove_hosts_ipv6
-		fix_perms
-		config_puppet_conf
 		config_zfs
 		config_dlm
 		config_baloon
@@ -46,15 +39,9 @@ case "$1" in
 
 		# действия только при установке
 		if [ ! -n "$2" ] ; then
-			systemctl enable veil-watchrole.service > /dev/null || true
-			systemctl stop veil-watchrole.service > /dev/null || true
-			systemctl start veil-watchrole.service > /dev/null || true
+			configure_redis
 		fi
 
-		# init rsa key for controller repl if necessary
-		echo "genkey" >> /var/log/veil/genkey.log
-		/usr/local/sbin/veil-controller -i >> /var/log/veil/genkey.log
-		/usr/bin/veil-sendrole full > /dev/null
 		exit 0
 		;;
 	abort-upgrade|abort-remove|abort-deconfigure)
