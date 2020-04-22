@@ -2,9 +2,9 @@
 
 CURRENT_DATE=$(date +"%Y%m%d%H%M")
 ROOT_DIRECTORY='tmp'$CURRENT_DATE;
-BACKEND_DIR=$ROOT_DIRECTORY/backend/
+BACKEND_DIR=$ROOT_DIRECTORY/app/
 FRONTEND_DIR=$ROOT_DIRECTORY/frontend/
-CONF_DIR=$ROOT_DIRECTORY/devops/
+CONF_DIR=$ROOT_DIRECTORY/other/
 
 
 usage() {
@@ -28,17 +28,17 @@ prepare_folders(){
 
 get_frontend_dir(){
   echo "Getting frontend staticfiles from Vagrant..."
-  scp -r vagrant@192.168.20.112:/opt/veil-vdi/frontend/dist/ "$FRONTEND_DIR"
+  scp -r vagrant@192.168.20.112:/opt/veil-vdi/frontend/* "$FRONTEND_DIR"
 }
 
 get_configurations(){
   echo "Getting configuration files from Vagrant..."
-  rsync -rv --exclude={license,veil_ssl} vagrant@192.168.20.112:/opt/veil-vdi/devops/conf/ "$CONF_DIR"
+  rsync -rv --exclude={license,veil_ssl} vagrant@192.168.20.112:/opt/veil-vdi/other/ "$CONF_DIR"
 }
 
 get_backend(){
   echo "Getting backend files from Vagrant..."
-  rsync -rv --exclude={*.pyc,.idea,.pytest_cache,__pycache__,.coveragerc,.python-version,tests} vagrant@192.168.20.112:/opt/veil-vdi/backend/ "$BACKEND_DIR"
+  rsync -rv --exclude={*.pyc,.idea,.pytest_cache,__pycache__,.coveragerc,.python-version,tests} vagrant@192.168.20.112:/opt/veil-vdi/app/ "$BACKEND_DIR"
 }
 
 compress_resuls(){

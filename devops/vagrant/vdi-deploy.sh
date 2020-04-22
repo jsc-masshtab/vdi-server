@@ -2,6 +2,12 @@
 # debug - bash vdi-deploy.sh 2>error.log
 
 APP_DIR=/opt/veil-vdi
+mkdir $APP_DIR/other
+mkdir $APP_DIR/app
+mkdir $APP_DIR/env
+
+# Переносим backend в app/
+cp -r $APP_DIR/backend/* $APP_DIR/app/
 
 echo "Install base packages"
 
@@ -18,22 +24,29 @@ apt-get install -y nodejs
 
 #------------------------------
 echo "Setting up redis"
-
 apt-get install -y redis-server
 systemctl enable redis-server.service
-echo 'requirepass 4NZ7GpHn4IlshPhb' >> /etc/redis/redis.conf
-sed -i 's/bind 127.0.0.1/bind 0.0.0.0/g' /etc/redis/redis.conf
+# Сохраняем исходный конфиг
+cp /etc/redis/redis.conf /etc/redis/redis.default
+# Подкладываем наш из conf
+cp $APP_DIR/devops/conf/vdi.redis /etc/redis/redis.conf
 systemctl restart redis-server
 
 #------------------------------
 echo "Setting up database"
 
+# Сохраняем исходный конфиг
+cp /etc/postgresql/9.6/main/postgresql.conf /etc/postgresql/9.6/main/postgresql.default
+# Перекладываем наш из conf
 cp $APP_DIR/devops/conf/vdi.postgresql /etc/postgresql/9.6/main/postgresql.conf
+
+# Добавляем возможность подключения с удаленного сервера к БД внутри vagrant
 sed -i 's/peer/trust/g' /etc/postgresql/9.6/main/pg_hba.conf
-sed -i "s/#listen_addresses = 'localhost'/listen_addresses = '192.168.20.112,127.0.0.1'/g" /etc/postgresql/9.6/main/postgresql.conf
+sed -i "s/#listen_addresses = 'localhost'/listen_addresses = '0.0.0.0'/g" /etc/postgresql/9.6/main/postgresql.conf
 echo 'host  vdi postgres  0.0.0.0/0  trust' >> /etc/postgresql/9.6/main/pg_hba.conf
 systemctl restart postgresql
 
+# Создаем БД
 echo 'postgres:postgres' | chpasswd
 sudo su postgres -c "psql -c \"ALTER ROLE postgres PASSWORD 'postgres';\" "
 # На астре нету бездуховной кодировки en_US.UTF-8. Есть C.UTF-8
@@ -45,7 +58,7 @@ cd $APP_DIR
 
 #------------------------------
 echo "Setting up nginx"
-
+cp -r $APP_DIR/devops/conf/veil_ssl/ $APP_DIR/other/veil_ssl/
 cp $APP_DIR/devops/conf/vdi.nginx /etc/nginx/conf.d/vdi_nginx.conf
 rm /etc/nginx/sites-enabled/*
 systemctl restart nginx
@@ -53,17 +66,20 @@ systemctl restart nginx
 #------------------------------
 echo "Setting up env"
 
-export PYTHONPATH=$APP_DIR/backend
-export PIPENV_PIPFILE=$APP_DIR/backend/Pipfile
+export PYTHONPATH=$APP_DIR/app
+export PIPENV_PIPFILE=$APP_DIR/app/Pipfile
 /usr/bin/python3 -m pip install 'virtualenv<20.0.0' --force-reinstall  # На версии 20.0.0 перестал работать pipenv
 /usr/bin/python3 -m pip install pipenv
-pipenv install
+/usr/local/bin/pipenv install
+
+# Переносим установленное окружение в /opt/veil-vdi/env
+export PIPENV_VERBOSITY=-1
+cp -r $(/usr/local/bin/pipenv --venv)/* $APP_DIR/env
 
 #------------------------------
 echo "Apply database migrations"
-
-cd $APP_DIR/backend
-pipenv run alembic upgrade head
+cd $APP_DIR/app/
+/opt/veil-vdi/env/bin/alembic upgrade head
 
 #------------------------------
 echo "Setting up frontend"
@@ -72,8 +88,12 @@ cd $APP_DIR/frontend/
 rm -rf node_modules/ dist/
 npm install --unsafe-perm
 npm run build -- --prod
-
-echo "Frontend compiled to /opt/veil-vdi/frontend/dist/frontend/"
+mkdir $APP_DIR/tmp
+cp -r $APP_DIR/frontend/dist/frontend/* $APP_DIR/tmp/
+rm -rf $APP_DIR/frontend
+cp -r $APP_DIR/tmp $APP_DIR/frontend
+rm -rf $APP_DIR/tmp
+echo "Frontend compiled to /opt/veil-vdi/frontend"
 
 #------------------------------
 echo "Creating logs directory at /var/log/veil-vdi/"
@@ -84,10 +104,13 @@ echo "Deploying configuration files for logrotate"
 cp $APP_DIR/devops/conf/tornado.logrotate /etc/logrotate.d/veil-vdi
 
 echo "Deploying configuration files for supervisor"
-
-rm /etc/supervisor/supervisord.conf
+cp /etc/supervisor/supervisord.conf /etc/supervisor/supervisord.default
 cp $APP_DIR/devops/conf/supervisord.conf /etc/supervisor/supervisord.conf
+cp $APP_DIR/devops/conf/tornado.supervisor $APP_DIR/other/tornado.supervisor
 supervisorctl reload
 
 echo "Vdi backend status:"
 supervisorctl status
+
+rm -rf $APP_DIR/devops
+rm -rf $APP_DIR/backend

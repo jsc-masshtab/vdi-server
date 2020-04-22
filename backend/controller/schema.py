@@ -87,7 +87,9 @@ class AddControllerMutation(graphene.Mutation):
                 expires_on=expires_on
             )
 
+            await controller.activate(controller.id)
             await resources_monitor_manager.add_controller(address)
+
             msg = _('Successfully added new controller {name} with address {address}.').format(
                 name=controller.verbose_name,
                 address=address)
@@ -135,6 +137,7 @@ class UpdateControllerMutation(graphene.Mutation):
             controller = await Controller.get(id)
             # Переподключаем монитор ресурсов
             await resources_monitor_manager.remove_controller(controller.address)
+            await controller.activate(controller.id)
             await resources_monitor_manager.add_controller(controller.address)
         except Exception as E:
             msg = _('Fail to update controller {id}: {error}').format(
@@ -197,8 +200,8 @@ class TestControllerMutation(graphene.Mutation):
             raise GraphQLError(_('No such controller.'))
         connection_ok = await controller.check_credentials()
         if connection_ok:
-            await Controller.activate(id)
             await resources_monitor_manager.remove_controller(controller.address)
+            await Controller.activate(id)
             await resources_monitor_manager.add_controller(controller.address)
         else:
             await Controller.deactivate(id)
