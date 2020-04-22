@@ -1,4 +1,6 @@
 #!/bin/bash
+# debug - bash vdi-deploy.sh 2>error.log
+
 APP_DIR=/opt/veil-vdi
 mkdir $APP_DIR/other
 mkdir $APP_DIR/app
@@ -11,7 +13,7 @@ echo "Install base packages"
 
 sed -i s/us\./ru\./g /etc/apt/sources.list
 apt-get update -y
-apt-get install -y postgresql-server-dev-9.6 python3-dev python3-setuptools python-dev gcc python3-pip postgresql htop mc nginx libsasl2-dev libldap2-dev libssl-dev
+apt-get install -y postgresql-server-dev-9.6 python3-dev python3-setuptools python-dev gcc python3-pip postgresql htop mc nginx libsasl2-dev libldap2-dev libssl-dev sudo curl apt-utils
 
 echo "Installing additional packages"
 apt-get install -y supervisor logrotate
