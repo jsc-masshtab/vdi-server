@@ -43,6 +43,13 @@ configure_postgres()
 	sudo -u postgres psql -c "create database vdi encoding 'utf8' lc_collate = 'en_US.UTF-8' lc_ctype = 'en_US.UTF-8' template template0;" || true}
 }
 
+configure_nginx()
+{
+	cp /opt/veil-vdi/other/vdi.nginx /etc/nginx/conf.d/vdi_nginx.conf
+	rm /etc/nginx/sites-enabled/* || true
+	systemctl restart nginx
+}
+
 case "$1" in
 	configure)
 		# действия и при установке и при обновлении
@@ -53,6 +60,7 @@ case "$1" in
 		if [ ! -n "$2" ] ; then
 			configure_redis
 			configure_postgres
+			configure_nginx
 		fi
 
 		exit 0
