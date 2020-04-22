@@ -75,6 +75,7 @@ node("$AGENT") {
 
                 stage ('prepare backend app') {
                     sh script: '''
+                        sudo rm -rf /opt/veil-vdi/app
                         sudo mkdir -p /opt/veil-vdi/app
                         mkdir -p "${DEB_ROOT}/${PRJNAME}/root/opt/veil-vdi/app"
                         sudo mkdir -p /opt/veil-vdi/other

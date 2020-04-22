@@ -1,4 +1,4 @@
-#!/bin/
+#!/bin/bash
 
 set -e
 
@@ -70,7 +70,7 @@ case "$1" in
 		exit 0
 		;;
 	*)
-		LOG "postinst called with unknown argument: $*" >&2
+		echo "postinst called with unknown argument: $*" >&2
 		exit 1
 		;;
 esac
