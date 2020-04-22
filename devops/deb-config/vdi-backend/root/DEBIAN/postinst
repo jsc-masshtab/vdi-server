@@ -53,7 +53,7 @@ case "$1" in
 	configure)
 		# действия и при установке и при обновлении
 
-		configure_supervisor
+		#configure_supervisor
 
 		# действия только при установке
 		if [ ! -n "$2" ] ; then
