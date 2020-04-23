@@ -416,7 +416,7 @@ class DeletePoolMutation(graphene.Mutation, PoolValidator):
 class CreateStaticPoolMutation(graphene.Mutation, PoolValidator):
     class Arguments:
         verbose_name = graphene.String(required=True)
-        vm_ids = graphene.NonNull(graphene.List(graphene.NonNull(graphene.UUID)))
+        vm_ids = graphene.List(graphene.UUID, required=True)
         connection_types = graphene.List(graphene.NonNull(ConnectionTypesGraphene),
                                          default_value=[Pool.PoolConnectionTypes.SPICE.value])
 
