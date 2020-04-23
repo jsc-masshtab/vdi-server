@@ -84,6 +84,9 @@ class Vm(db.Model):
                                       broken=broken)
         except Exception as E:
             raise VmCreationError(E)
+
+        await log.info(_('VM {} is created').format(verbose_name))
+
         return vm
 
     async def soft_delete(self):
@@ -106,6 +109,8 @@ class Vm(db.Model):
                 if not entity:
                     entity = await Entity.create(**self.entity)
                 ero = await EntityRoleOwner.create(entity_id=entity.id, user_id=user_id)
+                user = await User.get(user_id)
+                await log.info(_('User {} is added to VM {}').format(user.username, self.verbose_name))
         except UniqueViolationError:
             raise SimpleError(_('Vm already has permission.'))
         return ero
@@ -118,6 +123,7 @@ class Vm(db.Model):
     async def remove_users(self, users_list: list):
         entity = Entity.select('id').where((Entity.entity_type == self.entity_type) & (Entity.entity_uuid == self.id))
         # TODO: временное решение. Скорее всего потом права отзываться будут на конкретные сущности
+        await log.info(_('VM {} is clear from users').format(self.verbose_name))
         if not users_list:
             return await EntityRoleOwner.delete.where(EntityRoleOwner.entity_id == entity).gino.status()
         return await EntityRoleOwner.delete.where(
@@ -215,6 +221,7 @@ class Vm(db.Model):
         for vm_id in vm_ids:
             vm = await Vm.get(vm_id)
             await vm.soft_delete()
+            await log.info(_('Vm {} removed from pool').format(vm.verbose_name))
         return True
 
     @staticmethod

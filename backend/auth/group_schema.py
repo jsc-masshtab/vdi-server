@@ -118,9 +118,7 @@ class CreateGroupMutation(graphene.Mutation, GroupValidator):
     @security_administrator_required
     async def mutate(cls, root, info, **kwargs):
         await cls.validate_agruments(**kwargs)
-        group = await Group.create(verbose_name=kwargs['verbose_name'],
-                                   description=kwargs.get('description'))
-
+        group = await Group.soft_create(**kwargs)
         return CreateGroupMutation(
             group=GroupType(**group.__values__),
             ok=True)
@@ -157,7 +155,8 @@ class DeleteGroupMutation(graphene.Mutation, GroupValidator):
     @security_administrator_required
     async def mutate(cls, root, info, **kwargs):
         await cls.validate_agruments(**kwargs)
-        status = await Group.delete.where(Group.id == kwargs['id']).gino.status()
+        group = await Group.get(kwargs['id'])
+        status = await group.soft_delete(id=kwargs['id'])
         return DeleteGroupMutation(ok=status)
 
 

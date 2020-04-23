@@ -359,7 +359,7 @@ class VmQuery(graphene.ObjectType):
 
     @staticmethod
     def veil_template_data_to_graphene_type(template_veil_data, controller_address):
-        log.debug(template_veil_data)
+        log.debug('template_veil_data: {}'.format(template_veil_data))
         template_type = TemplateType(id=template_veil_data['id'], verbose_name=template_veil_data['verbose_name'],
                                      veil_info=template_veil_data)
         template_type.controller = ControllerType(address=controller_address)

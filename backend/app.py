@@ -138,13 +138,11 @@ def start_server():
     log.name(_('Tornado VDI started'))
 
     if not AUTH_ENABLED:
-        # TODO: change to WARNING
-        log.name(_('Auth is disabled. Enable on production!'))
+        log.general(_('Auth is disabled. Enable on production!'))
 
     vdi_license = init_license()
     if vdi_license.expired:
-        # TODO: change to WARNING
-        log.name(_('The license is expired. Some functions will be blocked. Contact your dealer.'))
+        log.general(_('The license is expired. Some functions will be blocked. Contact your dealer.'))
 
     log.name(_('License status: {}, expiration time: {}, thin clients limit: {}').format(
         not vdi_license.expired,

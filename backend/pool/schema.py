@@ -419,111 +419,68 @@ class CreateStaticPoolMutation(graphene.Mutation, PoolValidator):
         vm_ids = graphene.List(graphene.UUID, required=True)
         connection_types = graphene.List(graphene.NonNull(ConnectionTypesGraphene),
                                          default_value=[Pool.PoolConnectionTypes.SPICE.value])
-
     pool = graphene.Field(lambda: PoolType)
     ok = graphene.Boolean()
-
-    @staticmethod
-    async def fetch_veil_vm_data_list(vm_ids):
-        # TODO: не пересена в модель, потому что есть предложение вообще отказаться от такой проверки.
-        #  Более удобным вариантом кажется хранить ресурсы в кеше и валидировать их из него.
-        controller_adresses = await Controller.get_addresses()
-        # create list of all vms on controllers
-        all_vm_veil_data_list = []
-        for controller_address in controller_adresses:
-            vm_http_client = await VmHttpClient.create(controller_address, '')
-            try:
-                single_vm_veil_data_list = await vm_http_client.fetch_vms_list()
-                # add data about controller address
-                for vm_veil_data in single_vm_veil_data_list:
-                    vm_veil_data['controller_address'] = controller_address
-                all_vm_veil_data_list.extend(single_vm_veil_data_list)
-            except (HttpError, OSError) as error_msg:
-                await log.error(_('HttpError: {}').format(error_msg))
-
-        # find vm veil data by id
-        vm_veil_data_list = []
-        for vm_id in vm_ids:
-            try:
-                data = next(veil_vm_data for veil_vm_data in all_vm_veil_data_list if veil_vm_data['id'] == str(vm_id))
-                vm_veil_data_list.append(data)
-            except StopIteration:
-                raise SimpleError(_('VM with id {} not found in any controllers').format(vm_id))
-        return vm_veil_data_list
 
     @classmethod
     @superuser_required
     async def mutate(cls, root, info, **kwargs):
+        """Мутация создания Статического пула виртуальных машин.
+
+        1. Проверка переданных vm_ids
+        2. Получение дополнительной информации (datapool_id, cluster_id, node_id, controller_address
+        3. Создание Pool
+        4. Создание StaticPool
+        5. Создание не удаляемых VM в локальной таблице VM
+        6. Разрешение удаленного доступа к VM на veil
+        7. Активация Pool
+        """
+
         await cls.validate_agruments(**kwargs)
-        pool = None
         vm_ids = kwargs['vm_ids']
+        verbose_name = kwargs['verbose_name']
+        connection_types = kwargs['connection_types']
+
+        # TODO: validate_arguments срабатывает позже чем нужно
         if not vm_ids:
             raise SimpleError('VM ids is empty.')
 
-        verbose_name = kwargs['verbose_name']
+        # --- Получение дополнительной информации
+        log.debug(_('StaticPool: Get additional info from Veil'))
+        veil_vm_data_list = await StaticPool.fetch_veil_vm_data(vm_ids)
 
-        log.debug(_('StaticPool: Get vm info'))
-        veil_vm_data_list = await CreateStaticPoolMutation.fetch_veil_vm_data_list(vm_ids)
+        first_vm_id = veil_vm_data_list[0]['id']
+        first_vm_node_id = veil_vm_data_list[0]['node']['id']
+        first_vm_controller_address = veil_vm_data_list[0]['controller_address']
 
-        log.debug(_('StaticPool: Check that all vms are on the same node'))
-        first_vm_data = veil_vm_data_list[0]
-
-        # TODO: move to validator?
-        if not all(vm_data['node']['id'] == first_vm_data['node']['id'] for vm_data in veil_vm_data_list):
+        if not StaticPool.vms_on_same_node(node_id=first_vm_node_id, veil_vm_data=veil_vm_data_list):
             raise SimpleError(_("All of VM must be at one server"))
 
-        # All VMs are on the same node and cluster, all VMs have the same datapool
-        # so we can take this data from the first item
-        controller_ip = first_vm_data['controller_address']
-        node_id = first_vm_data['node']['id']
-
         log.debug(_('StaticPool: Determine cluster'))
-        resources_http_client = await ResourcesHttpClient.create(controller_ip)
-        node_data = await resources_http_client.fetch_node(node_id)
+        resources_http_client = await ResourcesHttpClient.create(first_vm_controller_address)
+        node_data = await resources_http_client.fetch_node(first_vm_node_id)
         cluster_id = node_data['cluster']
 
-        log.debug(_('StaticPool: Determine datapool'))
-        vm_http_client = await VmHttpClient.create(controller_ip, first_vm_data['id'])
+        vm_http_client = await VmHttpClient.create(first_vm_controller_address, first_vm_id)
         disks_list = await vm_http_client.fetch_vdisks_list()
+        if not isinstance(disks_list, list) and len(disks_list) < 1:
+            raise SimpleError(_('VM has no disks.'))
+        datapool_id = disks_list[0]['datapool']['id']
 
+        # --- Создание записей в БД
         try:
-            datapool_id = disks_list[0]['datapool']['id']
-        except IndexError as ie:
-            datapool_id = None
-            await log.error(ie)
-
-        try:
-            await Vm.enable_remote_accesses(controller_ip, vm_ids)
-            log.debug(_('StaticPool: Determine datapool'))
-            pool = await StaticPool.create(verbose_name=verbose_name,
-                                           controller_ip=controller_ip,
-                                           cluster_id=cluster_id,
-                                           node_id=node_id,
-                                           datapool_id=datapool_id,
-                                           connection_types=kwargs['connection_types'])
-
-            log.debug(_('StaticPool: Objects on VDI DB created.'))
-            # Add VMs to db
-            for vm_info in veil_vm_data_list:
-                log.debug(_('VM info {}').format(vm_info))
-                await Vm.create(id=vm_info['id'],
-                                template_id=None,
-                                pool_id=pool.id,
-                                created_by_vdi=False,
-                                verbose_name=vm_info['verbose_name'])
-
-            # response
+            pool = await StaticPool.soft_create(veil_vm_data=veil_vm_data_list, verbose_name=verbose_name,
+                                                cluster_id=cluster_id, datapool_id=datapool_id,
+                                                controller_address=first_vm_controller_address,
+                                                node_id=first_vm_node_id, connection_types=connection_types)
             vms = [VmType(id=vm_id) for vm_id in vm_ids]
-            await pool.activate()
-
-            await log.info(_('Static pool {name} created.').format(name=verbose_name))
         except Exception as E:  # Возможные исключения: дубликат имени или вм id, сетевой фейл enable_remote_accesses
-            log.debug(E)
+            # TODO: указать конкретные Exception
+            desc = str(E)
             error_msg = _('Failed to create static pool {}.').format(verbose_name)
-            await log.error(error_msg)
-            if pool:
-                await pool.deactivate()
-            raise SimpleError(error_msg)
+            raise SimpleError(error_msg, description=desc)
+        # --- Активация удаленного доступа к VM на Veil
+        await Vm.enable_remote_accesses(first_vm_controller_address, vm_ids)
         return {
             'pool': PoolType(pool_id=pool.id, verbose_name=verbose_name, vms=vms),
             'ok': True
@@ -576,6 +533,8 @@ class AddVmsToStaticPoolMutation(graphene.Mutation):
                                 pool_id=pool_id,
                                 created_by_vdi=False,
                                 verbose_name=vm_info['verbose_name'])
+                name = await Pool.get(pool_id)
+                await log.info(_('Vm {} is added to pool {}').format(vm_info['verbose_name'], name.verbose_name))
 
         return {
             'ok': True
@@ -630,11 +589,7 @@ class UpdateStaticPoolMutation(graphene.Mutation, PoolValidator):
                                               kwargs.get('connection_types'))
         except UniqueViolationError:
             error_msg = _('Failed to update static pool {}. Name must be unique.').format(kwargs['pool_id'])
-            await log.error(error_msg)
             raise SimpleError(error_msg)
-        else:
-            msg = _('Static pool {} is updated.').format(kwargs['pool_id'])
-            await log.info(msg)
         return UpdateStaticPoolMutation(ok=ok)
 
 
@@ -672,7 +627,7 @@ class CreateAutomatedPoolMutation(graphene.Mutation, PoolValidator):
     async def mutate(cls, root, info, **kwargs):
         await cls.validate_agruments(**kwargs)
         try:
-            automated_pool = await AutomatedPool.create(**kwargs)
+            automated_pool = await AutomatedPool.soft_create(**kwargs)
         except UniqueViolationError:
             error_msg = _('Failed to create automated pool {}. Name must be unique.').format(kwargs['verbose_name'])
             await log.error(error_msg)
@@ -752,10 +707,6 @@ class UpdateAutomatedPoolMutation(graphene.Mutation, PoolValidator):
                 await log.error(error_msg)
                 raise SimpleError(error_msg)
             else:
-                automated_pool = await AutomatedPool.get(kwargs['pool_id'])
-                msg = _('Automated pool {name} updated.').format(name=await automated_pool.verbose_name)
-                await log.info(msg)
-                # log.debug(_('Automated pool {} updated.').format(await automated_pool.verbose_name))
                 return UpdateAutomatedPoolMutation(ok=True)
         return UpdateAutomatedPoolMutation(ok=False)
 

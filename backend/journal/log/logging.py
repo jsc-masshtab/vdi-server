@@ -25,22 +25,36 @@ class Logging:
         app_log.setLevel(logging.DEBUG)
         app_log.debug(self)
 
-    def logger_application_error(self):
+    def logger_application_error(self, description):
         app_log = logging.getLogger('tornado.application')
         app_log.setLevel(logging.ERROR)
-        app_log.error(self)
+        msg = '{}\nDescription: {}'.format(self, description)
+        if description is None:
+            msg = self
+        app_log.error(msg)
 
-    def logger_application_info(self):
+    def logger_application_info(self, description):
         app_log = logging.getLogger('tornado.application')
         app_log.setLevel(logging.INFO)
-        app_log.info(self)
+        msg = '{}\nDescription: {}'.format(self, description)
+        if description is None:
+            msg = self
+        app_log.info(msg)
 
-    def logger_application_warning(self):
+    def logger_application_warning(self, description):
         app_log = logging.getLogger('tornado.application')
         app_log.setLevel(logging.WARNING)
-        app_log.warning(self)
+        msg = '{}\nDescription: {}'.format(self, description)
+        if description is None:
+            msg = self
+        app_log.warning(msg)
 
     def logger_name(self):
         name_log = logging.getLogger(__name__)
         name_log.setLevel(logging.INFO)
         name_log.info(self)
+
+    def logger_genaral(self):
+        general_log = logging.getLogger('tornado.general')
+        general_log.setLevel(logging.WARNING)
+        general_log.warning(self)

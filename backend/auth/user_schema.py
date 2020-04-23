@@ -5,7 +5,7 @@ import re
 from auth.models import User
 from database import RoleTypeGraphene, Role
 from common.veil_validators import MutationValidation
-from common.veil_errors import SimpleError, ValidationError
+from common.veil_errors import SimpleError, ValidationError, AssertError
 from common.veil_decorators import security_administrator_required, readonly_required
 
 from languages import lang_init
@@ -30,7 +30,7 @@ class UserValidator(MutationValidation):
         template_name = re.match(usernamename_re, value)
         if template_name:
             return value
-        raise ValidationError(
+        raise AssertError(
             _('User name must contain minimum 3 characters. It must contain letters and digits, _, -, +.'))
 
     @staticmethod
@@ -45,7 +45,7 @@ class UserValidator(MutationValidation):
         template_name = re.match(email_re, value)
         if template_name:
             return value
-        raise ValidationError(
+        raise AssertError(
             _('Email must contain English characters and/or digits, @ and domain name.'))
 
     @staticmethod
@@ -55,7 +55,7 @@ class UserValidator(MutationValidation):
         # template_name = re.match(pass_re, value)
         # if template_name:
         #     return value
-        # raise ValidationError(
+        # raise AssertError(
         #     'Пароль должен быть не меньше 8 символов, содержать буквы, цифры и спец.символы.')
 
 

@@ -70,15 +70,15 @@
         &.status-fail {
             background: #F08080;
             color: #FFF;
-    
+
             &:hover {
                 background-color: rgba(#F08080, 0.8);
             }
         }
-    
+
         &.status-halt {
             background-color: #fbe9c7;
-    
+
             &:hover {
                 background-color: rgba(#fbe9c7, 0.8);
             }
@@ -93,7 +93,7 @@
         justify-content: center;
         align-items: center;
         text-align: center;
-        overflow: hidden; 
+        overflow: hidden;
 
         &:last-child {
             border-right: none;

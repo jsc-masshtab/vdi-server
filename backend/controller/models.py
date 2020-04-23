@@ -9,7 +9,7 @@ from sqlalchemy.dialects.postgresql import UUID
 from auth.utils import crypto
 from controller.client import ControllerClient
 from database import db, Status, EntityType
-from common.veil_errors import SimpleError, BadRequest
+from common.veil_errors import SimpleError, BadRequest, ValidationError
 
 from languages import lang_init
 from journal.journal import Log as log
@@ -95,7 +95,7 @@ class Controller(db.Model):
                 token = await Controller.refresh_token(ip_address)
             return token
         else:
-            raise AssertionError(_('No such controller'))
+            raise ValidationError(_('No such controller'))
 
     @staticmethod
     async def invalidate_auth(ip_address: str):
@@ -129,14 +129,14 @@ class Controller(db.Model):
             ).where(Controller.address == ip_address).gino.status()
             return token
         else:
-            raise AssertionError(_('No such controller'))
+            raise ValidationError(_('No such controller'))
 
     async def check_credentials(self):
         try:
             encrypted_password = crypto.decrypt(self.password)
             log.debug(_(
-                'Checking controller credentials: address: {}, username: {}, password: {}, ldap_connection: {}').format(
-                self.address, self.username, encrypted_password, self.ldap_connection))
+                'Checking controller credentials: address: {}, username: {}, ldap_connection: {}').format(
+                self.address, self.username, self.ldap_connection))
             controller_client = ControllerClient(self.address)
             auth_info = dict(username=self.username, password=encrypted_password, ldap=self.ldap_connection)
             await controller_client.auth(auth_info=auth_info)
@@ -150,14 +150,39 @@ class Controller(db.Model):
     @classmethod
     async def get_credentials(cls, address, username, password, ldap_connection):
         log.debug(
-            _('Checking controller credentials: address: {}, username: {}, password: {}, ldap_connection: {}').format(
-                address, username, password, ldap_connection))
+            _('Checking controller credentials: address: {}, username: {}, ldap_connection: {}').format(
+                address, username, ldap_connection))
         controller_client = ControllerClient(address)
         auth_info = dict(username=username, password=password, ldap=ldap_connection)
         token, expires_on = await controller_client.auth(auth_info=auth_info)
         version = await controller_client.fetch_version()
         log.debug(_('Get controller credentials: Controller\'s {} credentials are good.').format(address))
         return {'token': token, 'expires_on': expires_on, 'version': version}
+
+    @classmethod
+    async def soft_create(cls, verbose_name, address, username, password, ldap_connection, description=None):
+        controller_client = ControllerClient(address)
+        auth_info = dict(username=username, password=password, ldap=ldap_connection)
+        token, expires_on = await controller_client.auth(auth_info=auth_info)
+        version = await controller_client.fetch_version()
+
+        controller_dict = {'verbose_name': verbose_name,
+                           'address': address,
+                           'description': description,
+                           'version': version,
+                           'status': 'ACTIVE',  # TODO: special class for all statuses
+                           'username': username,
+                           'password': crypto.encrypt(password),
+                           'ldap_connection': ldap_connection,
+                           'token': token,
+                           'expires_on': expires_on
+                           }
+
+        controller = await Controller.create(**controller_dict)
+
+        msg = _('Successfully added new controller {} with address {}.').format(controller.verbose_name, address)
+        await log.info(msg)
+        return controller
 
     async def soft_update(self, verbose_name, address, description, username=None, password=None, ldap_connection=None):
         controller_kwargs = dict()
@@ -191,8 +216,8 @@ class Controller(db.Model):
             except BadRequest:
                 credentials_valid = False
                 await log.warning(
-                    _('Can\'t connect to controller {} with username: {}, password: {}, ldap_connection: {}').format(
-                        address, username, password, ldap_connection))
+                    _('Can\'t connect to controller {} with username: {}, ldap_connection: {}').format(
+                        address, username, ldap_connection))
 
         if controller_kwargs:
             try:
@@ -203,6 +228,11 @@ class Controller(db.Model):
             except Exception as E:
                 # log.debug(_('Error with controller update: {}').format(E))
                 raise SimpleError(E)
+            msg = _('Successfully update controller {} with address {}.').format(
+                self.verbose_name,
+                self.address)
+            descr = str(controller_kwargs)
+            await log.info(msg, description=descr)
             return True
         return False
 

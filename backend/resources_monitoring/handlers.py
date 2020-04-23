@@ -15,6 +15,7 @@ from resources_monitoring.internal_event_monitor import internal_event_monitor
 
 from languages import lang_init
 from journal.journal import Log as log
+from common.veil_errors import MeaningError
 
 
 _ = lang_init()
@@ -89,42 +90,43 @@ class VdiFrontWsHandler(websocket.WebSocketHandler, AbstractSubscriptionObserver
 
     async def on_message(self, message):
         log.debug(_('Message: {}').format(message))
-        response_dict = {'msg_type': 'control', 'error': False}
+        response = {'msg_type': 'control', 'error': False}
         # determine if message contains subscription command ('delete /domains/' for example)
         try:
             subscription_cmd, subscription_source = message.split(' ')
-            response_dict['msg'] = subscription_cmd
-            response_dict['resource'] = subscription_source
-        except ValueError:
-            response_dict['error'] = True
-            await self.write_msg(response_dict)
+            response['msg'] = subscription_cmd
+            response['resource'] = subscription_source
+        except ValueError as E:
+            raise MeaningError(E)
+            response['error'] = True
+            await self.write_msg(response)
             return
         # check if allowed
         if subscription_source not in VDI_FRONT_ALLOWED_SUBSCRIPTIONS_LIST:
             await log.error(_('Unknown subscription source'))
-            response_dict['error'] = True
-            await self.write_msg(response_dict)
+            response['error'] = True
+            await self.write_msg(response)
             return
         # print('Test Length', len(self._subscriptions))
         # if 'add' cmd and not subscribed  then subscribe
         if subscription_cmd == SubscriptionCmd.add and subscription_source not in self._subscriptions:
             self._subscriptions.append(subscription_source)
-            response_dict['error'] = False
+            response['error'] = False
         # if 'add' cmd and subscribed then do nothing
         elif subscription_cmd == SubscriptionCmd.add and subscription_source in self._subscriptions:
             log.debug(_('already subscribed'))
-            response_dict['error'] = True
+            response['error'] = True
         # if 'delete' cmd and not subscribed  then do nothing
         elif subscription_cmd == SubscriptionCmd.delete and subscription_source not in self._subscriptions:
             log.debug(_('not subscribed'))
-            response_dict['error'] = True
+            response['error'] = True
         # if 'delete' cmd and subscribed then unsubscribe
         elif subscription_cmd == SubscriptionCmd.delete and subscription_source in self._subscriptions:
             self._subscriptions.remove(subscription_source)
-            response_dict['error'] = False
+            response['error'] = False
 
         # send response
-        await self.write_msg(response_dict)
+        await self.write_msg(response)
 
     def on_close(self):
         log.debug(_('WebSocket closed'))

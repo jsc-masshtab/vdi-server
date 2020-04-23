@@ -68,28 +68,28 @@ class ResourcesMonitor(AbstractMonitor):
         """
         controller_id = await Controller.get_controller_id_by_ip(self._controller_ip)
 
-        response_dict = {'ip': self._controller_ip, 'msg_type': 'data', 'event': 'UPDATED',
-                         'resource': CONTROLLERS_SUBSCRIPTION}
+        response = {'ip': self._controller_ip, 'msg_type': 'data', 'event': 'UPDATED',
+                    'resource': CONTROLLERS_SUBSCRIPTION}
         while self._running_flag:
             await asyncio.sleep(4)
             try:
                 # if controller is online then there wil not be any exception
                 resources_http_client = await ResourcesHttpClient.create(self._controller_ip)
                 await resources_http_client.check_controller()
-            except (HTTPClientError, HttpError, OSError, Exception):
+            except (HTTPClientError, HttpError, Exception):
                 # notify only if controller was online before (data changed)
                 if self._is_online:
-                    response_dict['status'] = 'OFFLINE'
+                    response['status'] = 'OFFLINE'
                     await Controller.deactivate(controller_id)
-                    self.notify_observers(CONTROLLERS_SUBSCRIPTION, response_dict)
+                    self.notify_observers(CONTROLLERS_SUBSCRIPTION, response)
 
                 self._is_online = False
             else:
                 # notify only if controller was offline before (data changed)
                 if not self._is_online:
-                    response_dict['status'] = 'ONLINE'
+                    response['status'] = 'ONLINE'
                     await Controller.activate(controller_id)
-                    self.notify_observers(CONTROLLERS_SUBSCRIPTION, response_dict)
+                    self.notify_observers(CONTROLLERS_SUBSCRIPTION, response)
 
                 self._is_online = True
 
@@ -101,7 +101,7 @@ class ResourcesMonitor(AbstractMonitor):
         while self._running_flag:
             is_connected = await self._connect()
 
-            log.debug(_('{} is connected {}').format(__class__.__name__, is_connected))
+            log.debug(_('{} is connected: {}').format(__class__.__name__, is_connected))
             # reconnect if not connected
             if not is_connected:
                 await asyncio.sleep(self.RECONNECT_TIMEOUT)

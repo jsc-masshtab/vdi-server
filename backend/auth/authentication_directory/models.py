@@ -15,6 +15,7 @@ from auth.models import User, Group
 
 from languages import lang_init
 from journal.journal import Log as log
+from common.veil_errors import SimpleError, ValidationError
 
 
 _ = lang_init()
@@ -122,7 +123,7 @@ class AuthenticationDirectory(db.Model, AbstractSortableStatusModel):
            Затем проверяется доступность и происходит смена статуса на ACTIVE."""
         count = await db.func.count(AuthenticationDirectory.id).gino.scalar()
         if count > 0:
-            raise AssertionError(_('More than one authentication directory can not be created.'))
+            raise SimpleError(_('More than one authentication directory can not be created.'))
 
         auth_dir_dict = {'verbose_name': verbose_name,
                          'description': description,
@@ -143,6 +144,7 @@ class AuthenticationDirectory(db.Model, AbstractSortableStatusModel):
 
         # TODO: crypto password
         auth_dir = await AuthenticationDirectory.create(**auth_dir_dict)
+        await log.info(_('Authentication directory {} is created').format(auth_dir_dict.get('verbose_name')))
         connection_ok = await auth_dir.test_connection()
         if connection_ok:
             await auth_dir.update(status=Status.ACTIVE).apply()
@@ -182,15 +184,17 @@ class AuthenticationDirectory(db.Model, AbstractSortableStatusModel):
         if object_kwargs:
             await cls.update.values(**object_kwargs).where(
                 cls.id == id).gino.status()
+        descr = _('Id: {}. Arguments: {}').format(id, object_kwargs)
+        await log.info(_('Values for auth directory is updated'), description=descr)
         return await cls.get(id)
 
-    @classmethod
-    async def soft_delete(cls, id):
+    async def soft_delete(self, id):
         """Все удаления объектов AD необходимо делать тут."""
 
         auth_dir = await AuthenticationDirectory.get(id)
         if auth_dir:
             await auth_dir.delete()
+            await log.info(_('Authentication directory {} is deleted').format(self.verbose_name))
             return True
         return False
 
@@ -205,13 +209,16 @@ class AuthenticationDirectory(db.Model, AbstractSortableStatusModel):
             for group_id in groups:
                 await GroupAuthenticationDirectoryMapping.create(authentication_directory_id=self.id,
                                                                  group_id=group_id, mapping_id=mapping_obj.id)
+                group_name = await Group.get(group_id)
+                descr = _('Arguments: {} of group: {}').format(mapping, group_name.verbose_name)
+                msg = _('Mapping for auth directory {} is created').format(self.verbose_name)
+                await log.info(msg, description=descr)
 
     async def edit_mapping(self, mapping: dict, groups: list):
         """
         :param mapping: Dictionary of Mapping table kwargs.
         :param groups: List of Group.id strings.
         """
-
         async with db.transaction():
             mapping_id = mapping.pop('mapping_id')
             mapping_obj = await Mapping.get(mapping_id)
@@ -222,6 +229,10 @@ class AuthenticationDirectory(db.Model, AbstractSortableStatusModel):
                 for group_id in groups:
                     await GroupAuthenticationDirectoryMapping.create(authentication_directory_id=self.id,
                                                                      group_id=group_id, mapping_id=mapping_id)
+                    group_name = await Group.get(group_id)
+                    descr = _('New arguments: {} of group: {}').format(mapping, group_name.verbose_name)
+                    msg = _('Mapping for auth directory {} is updated').format(self.verbose_name)
+                    await log.info(msg, description=descr)
 
     async def test_connection(self) -> bool:
         """
@@ -239,6 +250,7 @@ class AuthenticationDirectory(db.Model, AbstractSortableStatusModel):
             msg = _('Authentication directory server {} is down.').format(self.directory_url)
             await log.warning(msg, entity_dict=self.entity)
             return False
+        await log.info(_('Authentication directory server {} is connected'). format(self.directory_url))
         return True
 
     @staticmethod
@@ -322,7 +334,7 @@ class AuthenticationDirectory(db.Model, AbstractSortableStatusModel):
         :return: объект пользователя, флаг создания пользователя
         """
         if not isinstance(username, str):
-            raise AssertionError(_('Username must be a string.'))
+            raise ValidationError(_('Username must be a string.'))
 
         username = username.lower()
         user = await User.get_object(extra_field_name='username', extra_field_value=username, include_inactive=True)
@@ -409,7 +421,7 @@ class AuthenticationDirectory(db.Model, AbstractSortableStatusModel):
         if not authentication_directory:
             # Если для доменного имени службы каталогов не создано записей в БД,
             # то авторизоваться невозможно.
-            raise AssertionError(_('No authentication directory controllers.'))
+            raise ValidationError(_('No authentication directory controllers.'))
 
         account_name, domain_name = cls._extract_domain_from_username(username)
         user, created = await cls._get_user(account_name)
@@ -434,14 +446,14 @@ class AuthenticationDirectory(db.Model, AbstractSortableStatusModel):
             success = False
             created = False
             # log.debug(ldap_error)
-            raise AssertionError(_('Invalid credeintials (ldap): {}').format(ldap_error))
+            raise ValidationError(_('Invalid credeintials (ldap): {}').format(ldap_error))
         except ldap.SERVER_DOWN:
             # Если нет связи с сервером службы каталогов, то возвращаем ошибку о недоступности
             # сервера, так как не можем сделать вывод о правильности предоставленных данных.
             # self.server_down = True
             success = False
             created = False
-            raise AssertionError(_('Server down (ldap).'))
+            raise ValidationError(_('Server down (ldap).'))
         finally:
             if not success and created:
                 await user.delete()
@@ -514,6 +526,15 @@ class Mapping(db.Model):
             await Mapping.update.values(**mapping_kwargs).where(
                 Mapping.id == self.id).gino.status()
         return await Mapping.get(self.id)
+
+    async def soft_delete(self, mapping_id, auth_dir):
+        auth_dir = await AuthenticationDirectory.get(auth_dir)
+        mapping = await Mapping.get(mapping_id)
+        if mapping:
+            await mapping.delete()
+            await log.info(_('Mapping {} for auth directory {} is deleted').format(self.verbose_name, auth_dir.verbose_name))
+            return True
+        return False
 
 
 class GroupAuthenticationDirectoryMapping(db.Model):
