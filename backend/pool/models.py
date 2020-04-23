@@ -6,7 +6,7 @@ from sqlalchemy import union_all, case, literal_column, desc, text, Enum as Alch
 from sqlalchemy.dialects.postgresql import UUID, ARRAY
 from asyncpg.exceptions import UniqueViolationError
 
-from common.veil_errors import VmCreationError, PoolCreationError, HttpError, SimpleError
+from common.veil_errors import VmCreationError, PoolCreationError, HttpError, SimpleError, ValidationError
 from common.veil_client import VeilHttpClient
 from auth.license.utils import License
 from settings import VEIL_WS_MAX_TIME_TO_WAIT
@@ -369,6 +369,8 @@ class Pool(db.Model):
                 if not entity:
                     entity = await Entity.create(**self.entity)
                 ero = await EntityRoleOwner.create(entity_id=entity.id, user_id=user_id)
+                user = await User.get(user_id)
+                await log.info(_('User {} has been included to pool {}').format(user.username, self.verbose_name))
         except UniqueViolationError:
             raise SimpleError(_('Pool already has permission.'))
         return ero
@@ -379,6 +381,9 @@ class Pool(db.Model):
         return True
 
     async def remove_users(self, users_list: list):
+        for id in users_list:
+            user = await User.get(id)
+            await log.info(_('Removing user {} from pool {}').format(user.username, self.verbose_name))
         entity = Entity.select('id').where((Entity.entity_type == self.entity_type) & (Entity.entity_uuid == self.id))
         return await EntityRoleOwner.delete.where(
             (EntityRoleOwner.user_id.in_(users_list)) & (EntityRoleOwner.entity_id == entity)).gino.status()
@@ -391,6 +396,8 @@ class Pool(db.Model):
                 if not entity:
                     entity = await Entity.create(**self.entity)
                 ero = await EntityRoleOwner.create(entity_id=entity.id, group_id=group_id)
+                group = await Group.get(group_id)
+                await log.info(_('Group {} has been included to pool {}').format(group.verbose_name, self.verbose_name))
         except UniqueViolationError:
             raise SimpleError(_('Pool already has permission.'))
         return ero
@@ -401,6 +408,9 @@ class Pool(db.Model):
         return True
 
     async def remove_groups(self, groups_list: list):
+        for id in groups_list:
+            group = await Group.get(id)
+            await log.info(_('Removing group {} from pool {}').format(group.verbose_name, self.verbose_name))
         entity = Entity.select('id').where((Entity.entity_type == self.entity_type) & (Entity.entity_uuid == self.id))
         return await EntityRoleOwner.delete.where(
             (EntityRoleOwner.group_id.in_(groups_list)) & (EntityRoleOwner.entity_id == entity)).gino.status()
@@ -413,6 +423,7 @@ class Pool(db.Model):
                 if not entity:
                     entity = await Entity.create(**self.entity)
                 ero = await EntityRoleOwner.create(entity_id=entity.id, role=role)
+                await log.info(_('Role {} has been set to pool {}.').format(role, self.verbose_name))
         except UniqueViolationError:
             raise SimpleError(_('Pool already has role.'))
         return ero
@@ -423,6 +434,8 @@ class Pool(db.Model):
                 await self.add_role(role)
 
     async def remove_roles(self, roles_list: list):
+        role_del = ' '.join(roles_list)
+        await log.info(_('Roles: {} was deleted to pool {}').format(role_del, self.verbose_name))
         entity = Entity.select('id').where((Entity.entity_type == self.entity_type) & (Entity.entity_uuid == self.id))
         return await EntityRoleOwner.delete.where(
             (EntityRoleOwner.role.in_(roles_list)) & (EntityRoleOwner.entity_id == entity)).gino.status()
@@ -447,7 +460,7 @@ class Pool(db.Model):
     async def create(cls, verbose_name, cluster_id, node_id, datapool_id, controller_ip, connection_types):
         controller_id = await Controller.get_controller_id_by_ip(controller_ip)
         if not controller_id:
-            raise AssertionError(_('Controller {} not found.').format(controller_ip))
+            raise ValidationError(_('Controller {} not found.').format(controller_ip))
 
         pool = await super().create(verbose_name=verbose_name, cluster_id=cluster_id, node_id=node_id,
                                     datapool_id=datapool_id,
@@ -464,8 +477,7 @@ class Pool(db.Model):
             raise SimpleError(_('Pool has VMs. Please completely remove.'))
 
         if commit:
-            msg = _('Removal pool of desktops {verbose_name} is done.')
-            msg = msg.format(verbose_name=self.verbose_name)
+            msg = _('Removal pool of desktops {verbose_name} is done.').format(verbose_name=self.verbose_name)
             await self.delete()
             await log.info(msg, entity_dict=self.entity)
         return True
@@ -552,24 +564,75 @@ class StaticPool(db.Model):
     def entity(self):
         return {'entity_type': self.entity_type, 'entity_uuid': self.id}
 
+    @staticmethod
+    async def fetch_veil_vm_data(vm_ids: list):
+        """Получение информации о VM от контроллера."""
+        # TODO: использование кеша ресурсов
+        controller_addresses = await Controller.get_addresses()
+        # create list of all vms on controllers
+        all_vm_veil_data_list = []
+        for controller_address in controller_addresses:
+            vm_http_client = await VmHttpClient.create(controller_address, '')
+            try:
+                single_vm_veil_data_list = await vm_http_client.fetch_vms_list()
+                # add data about controller address
+                for vm_veil_data in single_vm_veil_data_list:
+                    vm_veil_data['controller_address'] = controller_address
+                all_vm_veil_data_list.extend(single_vm_veil_data_list)
+            except (HttpError, OSError) as error_msg:
+                await log.error(_('HttpError: {}').format(error_msg))
+
+        # find vm veil data by id
+        vm_veil_data_list = []
+        for vm_id in vm_ids:
+            try:
+                data = next(veil_vm_data for veil_vm_data in all_vm_veil_data_list if veil_vm_data['id'] == str(vm_id))
+                vm_veil_data_list.append(data)
+            except StopIteration:
+                raise SimpleError(_('VM with id {} not found in any controllers').format(vm_id))
+        return vm_veil_data_list
+
+    @staticmethod
+    def vms_on_same_node(node_id: str, veil_vm_data: list) -> bool:
+        """Проверка, что все VM находятся на одной Veil node."""
+        log.debug(_('StaticPool: Check that all vms are on the same node'))
+        # All VMs are on the same node and cluster, all VMs have the same datapool
+        # so we can take this data from the first item
+
+        return all(vm_data['node']['id'] == node_id for vm_data in veil_vm_data)
+
     @classmethod
-    async def create(cls, verbose_name, controller_ip, cluster_id, node_id, datapool_id, connection_types):
+    async def soft_create(cls, veil_vm_data: list, verbose_name: str,
+                          controller_address: str, cluster_id: str, node_id: str,
+                          datapool_id: str, connection_types: list):
         """Nested transactions are atomic."""
-        log.debug(
-            'Create StaticPool: verbose_name={vn}, controller_ip={ip}, cluster_id={ci}, node_id={ni}, datapool_id={di}.'.format(
-                vn=verbose_name, ip=controller_ip, ci=cluster_id, ni=node_id, di=datapool_id))
+
         async with db.transaction() as tx:  # noqa
-            # Create pool first
-            log.debug(_('Create Pool'))
-            pool = await Pool.create(verbose_name=verbose_name,
-                                     cluster_id=cluster_id,
-                                     node_id=node_id,
-                                     datapool_id=datapool_id,
-                                     controller_ip=controller_ip,
-                                     connection_types=connection_types)
-            # Create static pool
-            log.debug(_('Create StaticPool'))
-            return await super().create(id=pool.id)
+            log.debug(_('StaticPool: Create Pool'))
+            pl = await Pool.create(verbose_name=verbose_name,
+                                   controller_ip=controller_address,
+                                   cluster_id=cluster_id,
+                                   node_id=node_id,
+                                   datapool_id=datapool_id,
+                                   connection_types=connection_types)
+
+            log.debug(_('StaticPool: Create StaticPool'))
+            pool = await super().create(id=pl.id)
+
+            log.debug(_('StaticPool: Create VMs'))
+            for vm_info in veil_vm_data:
+                log.debug(_('VM info {}').format(vm_info))
+                await Vm.create(id=vm_info['id'],
+                                verbose_name=vm_info['verbose_name'],
+                                pool_id=pool.id,
+                                template_id=None,
+                                created_by_vdi=False)
+                log.debug(_('VM {} created.').format(vm_info['verbose_name']))
+
+            await log.info(_('Static pool {} created.').format(verbose_name))
+            await pool.activate()
+
+            return pool
 
     @classmethod
     async def soft_update(cls, pool_id, verbose_name, keep_vms_on, connection_types):
@@ -580,6 +643,9 @@ class StaticPool(db.Model):
                 await Pool.update.values(keep_vms_on=keep_vms_on).where(Pool.id == pool_id).gino.status()
             if connection_types is not None and connection_types:
                 await Pool.update.values(connection_types=connection_types).where(Pool.id == pool_id).gino.status()
+            msg = _('Static pool {} is updated.').format(verbose_name)
+            description = '{} {} {}'.format(verbose_name, keep_vms_on, connection_types)
+            await log.info(msg, description=description)
         return True
 
     async def activate(self):
@@ -664,10 +730,11 @@ class AutomatedPool(db.Model):
         return await Pool.deactivate(self.id)
 
     @classmethod
-    async def create(cls, verbose_name, controller_ip, cluster_id, node_id,
-                     template_id, datapool_id, min_size, max_size, max_vm_amount, increase_step, min_free_vms_amount,
-                     max_amount_of_create_attempts, initial_size, reserve_size, total_size, vm_name_template,
-                     create_thin_clones, connection_types):
+    async def soft_create(cls, verbose_name, controller_ip, cluster_id, node_id,
+                          template_id, datapool_id, min_size, max_size, max_vm_amount, increase_step,
+                          min_free_vms_amount,
+                          max_amount_of_create_attempts, initial_size, reserve_size, total_size, vm_name_template,
+                          create_thin_clones, connection_types):
         """Nested transactions are atomic."""
         async with db.transaction() as tx:  # noqa
             # Create Pool
@@ -694,6 +761,8 @@ class AutomatedPool(db.Model):
                                                   total_size=total_size,
                                                   vm_name_template=vm_name_template,
                                                   create_thin_clones=create_thin_clones)
+
+            await log.info(_('AutomatedPool {} is created').format(verbose_name))
 
             return automated_pool
 
@@ -726,8 +795,13 @@ class AutomatedPool(db.Model):
             if isinstance(create_thin_clones, bool):
                 auto_pool_kwargs['create_thin_clones'] = create_thin_clones
             if auto_pool_kwargs:
-                log.debug(_('Update AutomatedPool values for {}').format(await self.verbose_name))
+                descr = str(auto_pool_kwargs)
+                await log.info(_('Update AutomatedPool values for {}').format(await self.verbose_name), description=descr)
                 await self.update(**auto_pool_kwargs).apply()
+
+        automated_pool = await self.get(self.id)
+        msg = _('Automated pool {name} updated.').format(name=await automated_pool.verbose_name)
+        log.debug(msg)
 
         return True
 
@@ -836,6 +910,9 @@ class AutomatedPool(db.Model):
                             created_by_vdi=True,
                             verbose_name=vm_info['verbose_name'],
                             broken=vm_is_broken)
+
+            await log.info(_('VM {} is added to Automated pool {}').format(vm_info['verbose_name'], self.verbose_name))
+
             return vm_info
 
         raise VmCreationError(

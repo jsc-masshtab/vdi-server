@@ -5,6 +5,7 @@ from tornado.escape import json_decode
 
 from settings import VEIL_REQUEST_TIMEOUT, VEIL_CONNECTION_TIMEOUT, VEIL_MAX_BODY_SIZE, VEIL_MAX_CLIENTS
 from common.veil_errors import NotFound, Unauthorized, ServerError, Forbidden, ControllerNotAccessible, BadRequest
+from common.veil_errors import ValidationError, MeaningError
 from common.veil_decorators import prepare_body
 
 from languages import lang_init
@@ -124,13 +125,14 @@ class VeilHttpClient:
         response_content_type = response_headers.get('Content-Type')
 
         if not isinstance(response_content_type, str):
-            raise AssertionError(_('Can\'t process Content-Type.'))
+            raise ValidationError(_('Can\'t process Content-Type.'))
 
         if response_content_type.lower().find('json') == -1:
             raise NotImplementedError(_('Only \'json\' Content-Type.'))
         try:
             response = json_decode(response.body)
-        except ValueError:
+        except ValueError as E:
+            raise MeaningError(E)
             response = dict()
         return response
 

@@ -6,13 +6,10 @@ from common.veil_decorators import superuser_required
 from common.veil_errors import SimpleError
 
 from database import StatusGraphene
-from auth.utils import crypto
-from controller.client import ControllerClient
 from controller.models import Controller
 from resources_monitoring.resources_monitor_manager import resources_monitor_manager
 
 from languages import lang_init
-from journal.journal import Log as log
 
 
 _ = lang_init()
@@ -69,31 +66,8 @@ class AddControllerMutation(graphene.Mutation):
             if len(verbose_name) < 1:
                 raise SimpleError(_('Controller name cannot be empty.'))
             # check credentials
-            controller_client = ControllerClient(address)
-            auth_info = dict(username=username, password=password, ldap=ldap_connection)
-            token, expires_on = await controller_client.auth(auth_info=auth_info)
-            version = await controller_client.fetch_version()
-
-            controller = await Controller.create(
-                verbose_name=verbose_name,
-                address=address,
-                description=description,
-                version=version,
-                status='ACTIVE',  # TODO: special class for all statuses
-                username=username,
-                password=crypto.encrypt(password),
-                ldap_connection=ldap_connection,
-                token=token,
-                expires_on=expires_on
-            )
-
-            await controller.activate(controller.id)
+            controller = await Controller.soft_create(verbose_name, address, username, password, ldap_connection, description)
             await resources_monitor_manager.add_controller(address)
-
-            msg = _('Successfully added new controller {name} with address {address}.').format(
-                name=controller.verbose_name,
-                address=address)
-            await log.info(msg)
             return AddControllerMutation(ok=True, controller=ControllerType(**controller.__values__))
         except SimpleError as E:
             raise SimpleError(E)
@@ -142,17 +116,12 @@ class UpdateControllerMutation(graphene.Mutation):
         except Exception as E:
             msg = _('Fail to update controller {id}: {error}').format(
                 id=id, error=E)
-            await log.error(msg)
             # При редактировании с контроллером произошла ошибка - нужно остановить монитор ресурсов.
             await resources_monitor_manager.remove_controller(controller.address)
             # И деактивировать контроллер
             await Controller.deactivate(id)
             raise SimpleError(msg)
 
-        msg = _('Successfully update controller {name} with address {address}.').format(
-            name=controller.verbose_name,
-            address=controller.address)
-        await log.info(msg)
         # На случай, если контроллер был не активен - активируем его.
         await Controller.activate(id)
         return UpdateControllerMutation(ok=True, controller=ControllerType(**controller.__values__))

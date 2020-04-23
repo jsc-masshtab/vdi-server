@@ -14,7 +14,28 @@ _ = lang_init()
 
 
 class ValidationError(AssertionError):
-    pass
+    def __init__(self, message, **kwargs):
+        native_loop = asyncio.get_event_loop()
+        self.create_event = native_loop.create_task(self.create_error_event(message, **kwargs))
+
+    @staticmethod
+    async def create_error_event(message, **kwargs):
+        await log.error(message, **kwargs)
+
+
+class AssertError(AssertionError):
+    def __init__(self, message):
+        log.debug(message)
+
+
+class MeaningError(ValueError):
+    def __init__(self, message, **kwargs):
+        native_loop = asyncio.get_event_loop()
+        self.create_event = native_loop.create_task(self.create_error_event(message, **kwargs))
+
+    @staticmethod
+    async def create_error_event(message, **kwargs):
+        await log.error(message, **kwargs)
 
 
 class BackendError(Exception):
@@ -125,7 +146,7 @@ class NotFound(HttpError):
 
 class BadRequest(HttpError):
     def __init__(self, errors):
-        log.debug(errors)
+        log.debug('BadRequest: {}'.format(errors))
         self.errors = errors
 
     def code(self):

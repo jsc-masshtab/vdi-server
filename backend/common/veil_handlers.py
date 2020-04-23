@@ -6,6 +6,8 @@ from graphene_tornado.tornado_graphql_handler import TornadoGraphQLHandler
 
 from auth.utils.veil_jwt import extract_user, jwtauth
 
+from journal.journal import Log as log
+
 # TODO: унифицировать обработку Exception, чтобы не плодить try:ex
 
 
@@ -19,6 +21,13 @@ class BaseHandler(RequestHandler, ABC):
     def get_current_user(self):
         """Overridden tornado method"""
         return extract_user(self.request.headers)
+
+    def log_finish(self, response):
+        if 'data' in response:
+            log.debug('BaseHandler data: {}'.format(response))
+        else:
+            log.debug('BaseHandler error: {}'.format(response))
+        return self.finish(response)
 
     @property
     def remote_ip(self):

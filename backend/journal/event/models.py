@@ -14,10 +14,6 @@ from resources_monitoring.resources_monitoring_data import EVENTS_SUBSCRIPTION
 
 
 class Event(db.Model):
-    TYPE_INFO = 0
-    TYPE_WARNING = 1
-    TYPE_ERROR = 2
-
     __tablename__ = 'event'
     id = db.Column(UUID(), primary_key=True, default=uuid.uuid4)
     event_type = db.Column(db.Integer(), nullable=False)
@@ -99,7 +95,7 @@ class Event(db.Model):
             return True
 
     @classmethod
-    async def create_event(cls, msg, event_type=TYPE_INFO, description=None, user='system', entity_dict=None):
+    async def create_event(cls, msg, event_type=0, description=None, user='system', entity_dict=None):
         from journal.log.logging import Logging
         msg_dict = dict(event_type=event_type,
                         message=msg,
@@ -107,11 +103,11 @@ class Event(db.Model):
                         event='event',
                         resource=EVENTS_SUBSCRIPTION)
         if event_type == 0:
-            Logging.logger_application_info(msg)
+            Logging.logger_application_info(msg, description)
         elif event_type == 1:
-            Logging.logger_application_warning(msg)
+            Logging.logger_application_warning(msg, description)
         elif event_type == 2:
-            Logging.logger_application_error(msg)
+            Logging.logger_application_error(msg, description)
 
         internal_event_monitor.signal_event_2(msg_dict)
         await cls.soft_create(event_type, msg, description, user, entity_dict)

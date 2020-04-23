@@ -4,6 +4,7 @@ from async_generator import async_generator, yield_
 from graphene import Context
 
 from app import start_gino, stop_gino
+from settings import VEIL_WS_MAX_TIME_TO_WAIT
 from database import Role, Status
 from auth.utils.veil_jwt import encode_jwt
 from auth.utils import crypto
@@ -269,7 +270,6 @@ async def fixt_create_static_pool(fixt_db):
         return vm_info
 
     domain_info = await _create_domain()
-    print('domain info: {}'.format(domain_info))
     current_vm_task_id = domain_info['task_id']
 
     def _check_if_vm_created(json_message):
@@ -281,10 +281,9 @@ async def fixt_create_static_pool(fixt_db):
             pass
         return False
 
-    await response_waiter.wait_for_message(_check_if_vm_created, 60)
+    await response_waiter.wait_for_message(_check_if_vm_created, VEIL_WS_MAX_TIME_TO_WAIT)
     resources_monitor_manager.unsubscribe(response_waiter)
     await resources_monitor_manager.stop()
-
     # --- create pool ---
     qu = '''
         mutation {
@@ -297,9 +296,7 @@ async def fixt_create_static_pool(fixt_db):
           }
         }
         ''' % (get_test_pool_name(), domain_info['id'])
-
     pool_create_res = await execute_scheme(pool_schema, qu, context=context)
-
     pool_id = pool_create_res['addStaticPool']['pool']['pool_id']
     await yield_({
         'ok': pool_create_res['addStaticPool']['ok'],
@@ -326,14 +323,12 @@ def fixt_group(request, event_loop):
     group_name = 'test_group_1'
 
     async def setup():
-        print('Creating group: {}'.format(group_name))
         await Group.create(verbose_name=group_name, id="10913d5d-ba7a-4049-88c5-769267a6cbe4")
 
     event_loop.run_until_complete(setup())
 
     def teardown():
         async def a_teardown():
-            print('Deleting group: {}'.format(group_name))
             await Group.delete.where(Group.id == "10913d5d-ba7a-4049-88c5-769267a6cbe4").gino.status()
 
         event_loop.run_until_complete(a_teardown())
@@ -350,14 +345,12 @@ def fixt_user(request, event_loop):
     user_password = 'veil'
 
     async def setup():
-        print('Creating user: {}'.format(user_name))
         await User.soft_create(username=user_name, id=user_id, password=user_password)
 
     event_loop.run_until_complete(setup())
 
     def teardown():
         async def a_teardown():
-            print('Deleting user: {}'.format(user_name))
             await User.delete.where(User.id == user_id).gino.status()
 
         event_loop.run_until_complete(a_teardown())
@@ -435,14 +428,12 @@ def fixt_auth_dir(request, event_loop):
     domain_name = 'bazalt.team'
 
     async def setup():
-        print('Creating auth dir: {}'.format(verbose_name))
         await AuthenticationDirectory.soft_create(id=id, verbose_name=verbose_name, directory_url=directory_url,
                                                   domain_name=domain_name)
     event_loop.run_until_complete(setup())
 
     def teardown():
         async def a_teardown():
-            print('Deleting auth dir: {}'.format(verbose_name))
             await AuthenticationDirectory.delete.where(AuthenticationDirectory.id == id).gino.status()
             # TODO: опасное место
             await User.delete.where(User.username == 'ad120').gino.status()

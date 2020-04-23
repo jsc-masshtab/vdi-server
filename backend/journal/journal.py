@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+# import asyncio
+
 from functools import partialmethod
 
 from journal.log.logging import Logging
@@ -16,7 +18,28 @@ class Log:
     def name(self):
         Logging.logger_name(self)
 
-    # TODO: @e.gareev сомневаюсь, что это работает. create_event это корутина, без await она не выполнится.
+    def general(self):
+        Logging.logger_genaral(self)
+
+    # Не работает с async with!
+    # @staticmethod
+    # def info(message, **kwargs):
+        # TYPE_INFO = 0
+        # native_loop = asyncio.get_event_loop()
+        # native_loop.create_task(Event.create_event(message, event_type=TYPE_INFO, **kwargs))
+
+    # @staticmethod
+    # def warning(message, **kwargs):
+        # TYPE_WARNING = 1
+        # native_loop = asyncio.get_event_loop()
+        # native_loop.create_task(Event.create_event(message, event_type=TYPE_WARNING, **kwargs))
+
+    # @staticmethod
+    # def error(message, **kwargs):
+        # TYPE_ERROR = 2
+        # native_loop = asyncio.get_event_loop()
+        # native_loop.create_task(Event.create_event(message, event_type=TYPE_ERROR, **kwargs))
+
     info = partialmethod(Event.create_event, event_type=TYPE_INFO)
     warning = partialmethod(Event.create_event, event_type=TYPE_WARNING)
     error = partialmethod(Event.create_event, event_type=TYPE_ERROR)

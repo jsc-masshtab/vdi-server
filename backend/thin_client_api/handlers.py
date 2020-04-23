@@ -6,7 +6,7 @@ from tornado import websocket
 
 from common.utils import cancel_async_task
 from common.veil_handlers import BaseHandler
-from common.veil_errors import HttpError
+from common.veil_errors import HttpError, ValidationError
 
 from settings import REDIS_PORT, REDIS_THIN_CLIENT_CHANNEL, REDIS_PASSWORD, REDIS_DB
 from auth.utils.veil_jwt import jwtauth
@@ -51,7 +51,7 @@ class PoolHandler(BaseHandler, ABC):
         user = await User.get_object(extra_field_name='username', extra_field_value=username)
         pools = await user.pools
         response = {"data": pools}
-        return self.finish(response)
+        return self.log_finish(response)
 
 
 @jwtauth
@@ -71,8 +71,8 @@ class PoolGetVm(BaseHandler, ABC):
         user_id = await User.get_id(username)
         pool = await Pool.get(pool_id)
         if not pool:
-            response_dict = {'data': dict(host='', port=0, password='', message=_('Pool not found.'))}
-            return await self.finish(response_dict)
+            response = {'data': dict(host='', port=0, password='', message=_('Pool not found.'))}
+            return await self.log_finish(response)
 
         controller_ip = await Controller.select('address').where(Controller.id == pool.controller).gino.scalar()
         # TODO: отказаться от vm_id
@@ -81,9 +81,9 @@ class PoolGetVm(BaseHandler, ABC):
         assigned_users = await pool.assigned_users
         assigned_users_list = [user.username for user in assigned_users]
         if username not in assigned_users_list:
-            response_dict = {
+            response = {
                 'data': dict(host='', port=0, password='', message=_('User does not have permission to use pool.'))}
-            return await self.finish(response_dict)
+            return await self.log_finish(response)
 
         # Ищем VM закрепленную за пользователем:
         vm_id = await Vm.get_vm_id(pool_id, user_id)
@@ -115,8 +115,8 @@ class PoolGetVm(BaseHandler, ABC):
                     pool_lock.expand_pool_task = native_loop.create_task(pool.expand_pool())
 
         if not vm_id:
-            response_dict = {'data': dict(host='', port=0, password='', message=_('Pool has not free machines'))}
-            return await self.finish(response_dict)
+            response = {'data': dict(host='', port=0, password='', message=_('Pool has not free machines'))}
+            return await self.log_finish(response)
 
         #  Опытным путем было выяснено, что vm info содержит remote_access_port None, пока не врубишь
         # удаленный доступ. Поэтому врубаем его без проверки, чтоб не запрашивать инфу 2 раза
@@ -141,9 +141,9 @@ class PoolGetVm(BaseHandler, ABC):
             try:
                 vm_address = info['guest_utils']['ipv4'][0]
             except (IndexError, KeyError):
-                response_dict = {'data': dict(host='', port=0, password='',
+                response = {'data': dict(host='', port=0, password='',
                                               message=_('VM does not support RDP'))}
-                return await self.finish(response_dict)
+                return await self.log_finish(response)
 
         else:  # spice by default
             vm_address = str(controller_ip)
@@ -154,7 +154,7 @@ class PoolGetVm(BaseHandler, ABC):
                                  vm_verbose_name=info['verbose_name'])
                     }
 
-        return await self.finish(response)
+        return await self.log_finish(response)
 
 
 @jwtauth
@@ -165,14 +165,14 @@ class VmAction(BaseHandler, ABC):
             username = self.get_current_user()
             user_id = await User.get_id(username)
             if not user_id:
-                raise AssertionError(_('User {} not found.').format(username))
+                raise ValidationError(_('User {} not found.').format(username))
             pool = await Pool.get(pool_id)
             if not pool:
-                raise AssertionError(_('There is no pool with id: {}').format(pool_id))
+                raise ValidationError(_('There is no pool with id: {}').format(pool_id))
             # TODO: проверить права доступа пользователя к VM через assigned_users у Pool
             vm_id = await Vm.get_vm_id(pool_id=pool_id, user_id=user_id)
             if not vm_id:
-                raise AssertionError(_('User {} has no VM on pool {}').format(username, pool_id))
+                raise ValidationError(_('User {} has no VM on pool {}').format(username, pool_id))
 
             controller_ip = await Pool.get_controller_ip(pool_id)
             client = await VmHttpClient.create(controller_ip=controller_ip, vm_id=vm_id)
@@ -180,7 +180,7 @@ class VmAction(BaseHandler, ABC):
             response = {'data': 'success'}
         except AssertionError as vm_action_error:
             response = {'errors': [{'message': str(vm_action_error)}]}
-        return self.finish(response)
+        return self.log_finish(response)
 
 
 class ThinClientWsHandler(websocket.WebSocketHandler):  # noqa
