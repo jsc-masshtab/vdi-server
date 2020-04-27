@@ -39,10 +39,11 @@ async def test_create_automated_pool(fixt_db, fixt_controller, fixt_create_autom
 @pytest.mark.asyncio
 async def test_update_automated_pool(fixt_db, fixt_controller, fixt_create_automated_pool, fixt_auth_context):  # noqa
     """Create automated pool, update this pool, remove this pool"""
-    pool_id = fixt_create_automated_pool['id']
 
     # check that pool was successfully created'
     assert fixt_create_automated_pool['is_pool_successfully_created']
+
+    pool_id = fixt_create_automated_pool['id']
 
     new_pool_name = 'test_pool_{}'.format(str(uuid.uuid4())[:7])
     qu = """
