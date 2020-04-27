@@ -1,13 +1,23 @@
 #!/bin/bash
 # debug - bash vdi-deploy.sh 2>error.log
 
-APP_DIR=/opt/veil-vdi
-mkdir $APP_DIR/other
-mkdir $APP_DIR/app
-mkdir $APP_DIR/env
+ROOT_DIR=/opt/veil-vdi
+CONF_DIR=${ROOT_DIR}/devops/deb-config/vdi-backend/root/opt/veil-vdi/other
+BACKEND_DIR=${ROOT_DIR}/app
+FRONTEND_DIR=${ROOT_DIR}/frontend
+WWW_DIR=${ROOT_DIR}/www
+ENV_DIR=${ROOT_DIR}/env
+OTHER_DIR=${ROOT_DIR}/other
+SSL_DIR=${OTHER_DIR}/veil_ssl
+
+mkdir ${OTHER_DIR}
+mkdir ${BACKEND_DIR}
+mkdir ${ENV_DIR}
+mkdir ${SSL_DIR}
+mkdir ${WWW_DIR}
 
 # Переносим backend в app/
-cp -r $APP_DIR/backend/* $APP_DIR/app/
+cp -r ${ROOT_DIR}/backend/* ${BACKEND_DIR}
 
 echo "Install base packages"
 
@@ -29,7 +39,7 @@ systemctl enable redis-server.service
 # Сохраняем исходный конфиг
 cp /etc/redis/redis.conf /etc/redis/redis.default
 # Подкладываем наш из conf
-cp $APP_DIR/devops/conf/vdi.redis /etc/redis/redis.conf
+cp ${CONF_DIR}/vdi.redis /etc/redis/redis.conf
 systemctl restart redis-server
 
 #------------------------------
@@ -38,7 +48,7 @@ echo "Setting up database"
 # Сохраняем исходный конфиг
 cp /etc/postgresql/9.6/main/postgresql.conf /etc/postgresql/9.6/main/postgresql.default
 # Перекладываем наш из conf
-cp $APP_DIR/devops/conf/vdi.postgresql /etc/postgresql/9.6/main/postgresql.conf
+cp ${CONF_DIR}/vdi.postgresql /etc/postgresql/9.6/main/postgresql.conf
 
 # Добавляем возможность подключения с удаленного сервера к БД внутри vagrant
 sed -i 's/peer/trust/g' /etc/postgresql/9.6/main/pg_hba.conf
@@ -54,46 +64,44 @@ sudo su postgres -c "psql -c \"create database vdi encoding 'utf8' lc_collate = 
 
 #------------------------------
 echo "Setting up vdi folder"
-cd $APP_DIR
+cd ${ROOT_DIR}
 
 #------------------------------
 echo "Setting up nginx"
-cp -r $APP_DIR/devops/conf/veil_ssl/ $APP_DIR/other/veil_ssl/
-cp $APP_DIR/devops/conf/vdi.nginx /etc/nginx/conf.d/vdi_nginx.conf
+cp ${CONF_DIR}/veil_ssl/veil_default.crt ${SSL_DIR}/veil_default.crt
+cp ${CONF_DIR}/veil_ssl/veil_default.key ${SSL_DIR}/veil_default.key
+cp ${CONF_DIR}/vdi.nginx /etc/nginx/conf.d/vdi_nginx.conf
 rm /etc/nginx/sites-enabled/*
 systemctl restart nginx
 
 #------------------------------
 echo "Setting up env"
 
-export PYTHONPATH=$APP_DIR/app
-export PIPENV_PIPFILE=$APP_DIR/app/Pipfile
+export PYTHONPATH=${BACKEND_DIR}
+export PIPENV_PIPFILE=${BACKEND_DIR}/Pipfile
 /usr/bin/python3 -m pip install 'virtualenv<20.0.0' --force-reinstall  # На версии 20.0.0 перестал работать pipenv
 /usr/bin/python3 -m pip install pipenv
 /usr/local/bin/pipenv install
 
 # Переносим установленное окружение в /opt/veil-vdi/env
 export PIPENV_VERBOSITY=-1
-cp -r $(/usr/local/bin/pipenv --venv)/* $APP_DIR/env
+cp -r $(/usr/local/bin/pipenv --venv)/* ${ENV_DIR}
 
 #------------------------------
 echo "Apply database migrations"
-cd $APP_DIR/app/
+cd ${BACKEND_DIR}
 /opt/veil-vdi/env/bin/alembic upgrade head
 
 #------------------------------
 echo "Setting up frontend"
 
-cd $APP_DIR/frontend/
+cd ${FRONTEND_DIR}
 rm -rf node_modules/ dist/
 npm install --unsafe-perm
 npm run build -- --prod
-mkdir $APP_DIR/tmp
-cp -r $APP_DIR/frontend/dist/frontend/* $APP_DIR/tmp/
-rm -rf $APP_DIR/frontend
-cp -r $APP_DIR/tmp $APP_DIR/frontend
-rm -rf $APP_DIR/tmp
-echo "Frontend compiled to /opt/veil-vdi/frontend"
+mkdir ${ROOT_DIR}/tmp
+cp -r ${FRONTEND_DIR}/dist/frontend/* ${WWW_DIR}/
+echo "Frontend compiled to /opt/veil-vdi/www"
 
 #------------------------------
 echo "Creating logs directory at /var/log/veil-vdi/"
@@ -101,16 +109,23 @@ mkdir /var/log/veil-vdi/
 
 echo "Deploying configuration files for logrotate"
 
-cp $APP_DIR/devops/conf/tornado.logrotate /etc/logrotate.d/veil-vdi
+cp ${CONF_DIR}/tornado.logrotate /etc/logrotate.d/veil-vdi
 
 echo "Deploying configuration files for supervisor"
 cp /etc/supervisor/supervisord.conf /etc/supervisor/supervisord.default
-cp $APP_DIR/devops/conf/supervisord.conf /etc/supervisor/supervisord.conf
-cp $APP_DIR/devops/conf/tornado.supervisor $APP_DIR/other/tornado.supervisor
+cp ${CONF_DIR}/supervisord.conf /etc/supervisor/supervisord.conf
+cp ${CONF_DIR}/tornado.supervisor ${OTHER_DIR}/tornado.supervisor
 supervisorctl reload
 
 echo "Vdi backend status:"
 supervisorctl status
 
-rm -rf $APP_DIR/devops
-rm -rf $APP_DIR/backend
+rm -rf ${ROOT_DIR}/devops
+rm -rf ${ROOT_DIR}/backend
+rm -rf ${ROOT_DIR}/tmp
+rm -rf ${FRONTEND_DIR}
+
+gpasswd -a www-data vagrant
+chmod g+x www/
+chown vagrant:vagrant ${WWW_DIR}/ -R
+systemctl restart nginx
