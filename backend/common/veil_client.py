@@ -21,6 +21,9 @@ _ = lang_init()
 # TODO: нужно завершать выполнение сущностей клиента и т.п. при изменении статуса сущности (отвалился контроллер).
 # TODO: после окончания переноса кода и написания базовых тестов - протестировать замену property на cached_property
 
+# TODO: убрать переводы для переменных отправляемых на Veil
+# TODO: кеширование ресурсов
+
 AsyncHTTPClient.configure("tornado.simple_httpclient.SimpleAsyncHTTPClient",
                           max_clients=VEIL_MAX_CLIENTS,
                           max_body_size=VEIL_MAX_BODY_SIZE)
