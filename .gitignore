@@ -107,3 +107,6 @@ logfile
 /backend/tests/yandex.tank/ammo
 yandex.tank/*.log
 yandex.tank/*.txt
+
+# serial
+serial.key

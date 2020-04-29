@@ -89,36 +89,42 @@ class PoolTestCase(VdiHttpTestCase):
 
         response_dict = yield self.get_response(body=body, url=url, headers=headers)
 
-        # print('Response dict:')
-        # print(response_dict)
+        print('Response dict:')
+        print(response_dict)
 
-        response_data = response_dict['data']
-        self.assertIsInstance(response_data, dict)
-        self.assertIn('port', response_data)
+        if 'errors' in response_dict:
+            # Исключение на случай отсутствия лицензии
+            response_data = response_dict['errors'][0]
+            response_code = response_data['code']
+            self.assertEqual('001', response_code)
+        else:
+            response_data = response_dict['data']
+            self.assertIsInstance(response_data, dict)
+            self.assertIn('port', response_data)
 
-        # Расширение пула не могло произойти так быстро, поэтому убеждаемся, что нет свободных ВМ.
-        # Авторизуемся под вторым админом, чтобы получить токен
-        body = '{"username": "test_user_admin2","password": "veil"}'
-        response_dict = yield self.get_response(body=body, url='/auth')
-        access_token = response_dict['data']['access_token']
-        self.assertTrue(access_token)
+            # Расширение пула не могло произойти так быстро, поэтому убеждаемся, что нет свободных ВМ.
+            # Авторизуемся под вторым админом, чтобы получить токен
+            body = '{"username": "test_user_admin2","password": "veil"}'
+            response_dict = yield self.get_response(body=body, url='/auth')
+            access_token = response_dict['data']['access_token']
+            self.assertTrue(access_token)
 
-        # Формируем данные для тестируемого параметра
-        headers = {'Content-Type': 'application/json', 'Authorization': 'jwt {}'.format(access_token)}
-        body = '{"remote_protocol": "spice"}'
-        url = '/client/pools/{pool_id}/'.format(pool_id=pool_id)
+            # Формируем данные для тестируемого параметра
+            headers = {'Content-Type': 'application/json', 'Authorization': 'jwt {}'.format(access_token)}
+            body = '{"remote_protocol": "spice"}'
+            url = '/client/pools/{pool_id}/'.format(pool_id=pool_id)
 
-        response_dict = yield self.get_response(body=body, url=url, headers=headers)
-        response_data = response_dict['data']
-        self.assertIsInstance(response_data, dict)
-        response_message = response_data['message']
-        self.assertEqual('В пуле нет свободных машин', response_message)
+            response_dict = yield self.get_response(body=body, url=url, headers=headers)
+            response_data = response_dict['data']
+            self.assertIsInstance(response_data, dict)
+            response_message = response_data['message']
+            self.assertEqual('В пуле нет свободных машин', response_message)
 
-        # Ждем примерно максимальное время ожидания монитора ресурсов + накладки, чтобы убедиться, что пул расширился.
-        yield gen.sleep(VEIL_WS_MAX_TIME_TO_WAIT + 5)
+            # Ждем примерно максимальное время ожидания монитора ресурсов + накладки, чтобы убедиться, что пул расширился.
+            yield gen.sleep(VEIL_WS_MAX_TIME_TO_WAIT + 5)
 
-        vms_amount = yield pool.get_vm_amount()
-        self.assertEqual(2, vms_amount)  # Тут ожидаем, что уже 2
+            vms_amount = yield pool.get_vm_amount()
+            self.assertEqual(2, vms_amount)  # Тут ожидаем, что уже 2
 
 
 # ----------------------------------------------

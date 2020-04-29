@@ -64,7 +64,7 @@ async def test_add_update_remove_controller(fixt_db, fixt_auth_context):  # noqa
   }
 }
     """ % (controller_id, controller_ip)
-    print('\n222222')
+
     executed = await execute_scheme(controller_schema, qu, context=fixt_auth_context)
     assert executed['updateController']['ok']
 
@@ -76,6 +76,6 @@ async def test_add_update_remove_controller(fixt_db, fixt_auth_context):  # noqa
         }
     }
     """ % controller_id
-    print('\n33333333')
+
     executed = await execute_scheme(controller_schema, qu, context=fixt_auth_context)
     assert executed['removeController']['ok']
