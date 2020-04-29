@@ -1,5 +1,5 @@
 #!/bin/bash
-sed -i s#us.#ru.#g /etc/apt/sources.list
+sed -i s#us\\.#ru\\.#g /etc/apt/sources.list
 
 apt update -y
 
