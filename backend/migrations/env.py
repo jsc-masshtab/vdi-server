@@ -4,11 +4,14 @@ from sqlalchemy import pool, engine_from_config
 from logging.config import fileConfig
 from app import make_app  # noqa
 from database import db as target_metadata
+from settings import DB_USER, DB_PASS, DB_NAME, DB_HOST
 
 # TODO: add export of python path
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config
+alchemy_url = 'postgres://{DB_USER}:{DB_PASS}@{DB_HOST}/{DB_NAME}'.format(DB_USER=DB_USER, DB_PASS=DB_PASS, DB_HOST=DB_HOST, DB_NAME=DB_NAME)
+config.set_main_option('sqlalchemy.url', alchemy_url)
 
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.

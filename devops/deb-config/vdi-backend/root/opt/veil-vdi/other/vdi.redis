@@ -1052,4 +1052,4 @@ hz 10
 # in order to commit the file to the disk more incrementally and avoid
 # big latency spikes.
 aof-rewrite-incremental-fsync yes
-requirepass 4NZ7GpHn4IlshPhb
+# required empty string in the end

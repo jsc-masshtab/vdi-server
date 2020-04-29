@@ -60,16 +60,10 @@ LDAP_TIMEOUT = 5
 
 # File system paths
 # -----------------------------
-
-# Относительные пути для локальной разработки
-KEYS_PATH = '../'
-
 SERIAL_KEY_FNAME = 'serial.key'
-PRIVATE_PEM_FNAME = 'broker_private.pem'
-PUBLIC_PEM_FNAME = 'broker_public.pem'
-SERIAL_KEY_FPATH = os.path.join(KEYS_PATH, SERIAL_KEY_FNAME)
-PRIVATE_PEM_FPATH = os.path.join(KEYS_PATH, PRIVATE_PEM_FNAME)
-PUBLIC_PEM_FPATH = os.path.join(KEYS_PATH, PUBLIC_PEM_FNAME)
+PRIVATE_PEM_FNAME = 'veil_vdi.pem'
+SERIAL_KEY_FPATH = os.path.join('../', SERIAL_KEY_FNAME)
+PRIVATE_PEM_FPATH = os.path.join('auth/license', PRIVATE_PEM_FNAME)
 
 # Redis settings
 # -----------------------------
