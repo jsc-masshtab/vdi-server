@@ -81,6 +81,8 @@ export class PoolAddComponent implements OnInit, OnDestroy {
     }
   ];
 
+  public connection_types = ['SPICE', 'RDP', 'NATIVE_RDP'];
+
   public checkValid: boolean = false;
 
   @ViewChild('selectNodeRef') selectNodeRef: ViewContainerRef;
@@ -105,6 +107,7 @@ export class PoolAddComponent implements OnInit, OnDestroy {
 
   private createDinamicPoolInit(): void {
     this.createPoolForm = this.fb.group({
+      connection_types: [[], Validators.required],
       verbose_name: ['', [Validators.required, Validators.pattern(/^[а-яА-ЯёЁa-zA-Z0-9]+[а-яА-ЯёЁa-zA-Z0-9.-_+ ]*$/)]],
       template_id: ['', Validators.required],
       cluster_id: ['', Validators.required],
@@ -125,6 +128,7 @@ export class PoolAddComponent implements OnInit, OnDestroy {
 
   private createStaticPoolInit(): void {
     this.createPoolForm = this.fb.group({
+      connection_types: [[], Validators.required],
       verbose_name: ['', [Validators.required,  Validators.pattern(/^[а-яА-ЯёЁa-zA-Z0-9]+[а-яА-ЯёЁa-zA-Z0-9.-_+ ]*$/)]],
       vm_ids_list: [[], Validators.required]
     });
@@ -202,6 +206,10 @@ export class PoolAddComponent implements OnInit, OnDestroy {
       this.vms = [];
       this.pending.vms = false;
     });
+  }
+
+  public selectConnectionTypes(value: [string]) {
+    this.createPoolForm.get('connection_types').setValue(value['value']);
   }
 
   public selectController(value: ISelectValue): void  {
@@ -300,6 +308,11 @@ export class PoolAddComponent implements OnInit, OnDestroy {
           type: 'string'
         },
         {
+          title: 'Тип подключения',
+          property: 'connection_types',
+          type: 'string'
+        },
+        {
           title: 'Название',
           property: 'verbose_name',
           type: 'string'
@@ -363,6 +376,11 @@ export class PoolAddComponent implements OnInit, OnDestroy {
         {
           title: 'Тип',
           property: 'type',
+          type: 'string'
+        },
+        {
+          title: 'Тип подключения',
+          property: 'connection_types',
           type: 'string'
         },
         {
@@ -455,6 +473,7 @@ export class PoolAddComponent implements OnInit, OnDestroy {
     }
     this.finishPoolView.verbose_name = formValue.verbose_name;
     this.finishPoolView.type = this.chooseTypeForm.value.type;
+    this.finishPoolView.connection_types = formValue.connection_types
 
     this.step = 'finish-see';
     this.steps[1].completed = true;
@@ -466,6 +485,7 @@ export class PoolAddComponent implements OnInit, OnDestroy {
     this.waitService.setWait(true);
     if (this.chooseTypeForm.value.type === 'Автоматический') {
       this.addPoolService.createDinamicPool(
+                              formValue.connection_types,
                               formValue.verbose_name,
                               formValue.template_id,
                               formValue.cluster_id,
@@ -489,6 +509,7 @@ export class PoolAddComponent implements OnInit, OnDestroy {
 
     if (this.chooseTypeForm.value.type === 'Статический') {
       this.addPoolService.createStaticPool(
+                              formValue.connection_types,
                               formValue.verbose_name,
                               formValue.vm_ids_list)
         .subscribe((res) => {

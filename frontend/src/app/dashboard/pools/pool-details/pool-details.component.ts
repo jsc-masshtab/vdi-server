@@ -42,6 +42,12 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
       type: 'string'
     },
     {
+      title: 'Тип подключения пула',
+      property: 'assigned_connection_types',
+      type: 'string',
+      edit: 'changeConnectionType'
+    },
+    {
       title: 'Контроллер',
       property: 'controller',
       property_lv2: 'address'
@@ -83,6 +89,12 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
       title: 'Тип',
       property: 'pool_type',
       type: 'string'
+    },
+    {
+      title: 'Тип подключения пула',
+      property: 'assigned_connection_types',
+      type: 'string',
+      edit: 'changeConnectionType'
     },
     {
       title: 'Контроллер',
@@ -406,6 +418,48 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
             type: 'text',
             fieldName: 'verbose_name',
             fieldValue: this.pool.verbose_name,
+          }]
+        },
+        update: {
+          method: 'getPool',
+          refetch: true,
+          params: [
+            this.idPool,
+            this.typePool
+          ],
+        },
+        updateDepend: {
+          service: this.poolsService,
+          method: 'setUpdate',
+          params: ['update']
+        }
+      }
+    });
+  }
+
+  // @ts-ignore: Unreachable code error
+  private changeConnectionType(): void {
+    this.dialog.open(FormForEditComponent, {
+      width: '500px',
+      data: {
+        post: {
+          service: this.poolService,
+          method: 'updatePool',
+          params: {
+            pool_id: this.idPool,
+            pool_type: this.typePool
+          }
+        },
+        settings: {
+          entity: 'pool-details',
+          header: 'Изменение типа подключения пула',
+          buttonAction: 'Изменить',
+          form: [{
+            tag: 'select',
+            title: 'Выбрать тип подключения', 
+            fieldName: 'connection_types',
+            data: ['SPICE', 'RDP', 'NATIVE_RDP'],
+            fieldValue: this.pool.assigned_connection_types,
           }]
         },
         update: {

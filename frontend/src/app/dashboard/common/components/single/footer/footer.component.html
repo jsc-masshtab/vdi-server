@@ -1,7 +1,7 @@
 <footer>
   <div class="license">
-    <span *ngIf="license.expired" [class.warning]="!license.remaining_days"> Дней до окончания лицензии: {{ license.remaining_days || 0 }}</span>
-    <span *ngIf="license.support_expired" [class.warning]="!license.support_remaining_days"> Дней до окончания сервисной поддержки: {{ license.support_remaining_days || 0 }}</span>
+    <span *ngIf="license.remaining_days < 100" [class.warning]="!license.remaining_days"> Дней до окончания лицензии: {{ license.remaining_days || 0 }}</span>
+    <span *ngIf="license.support_remaining_days < 100" [class.warning]="!license.support_remaining_days"> Дней до окончания сервисной поддержки: {{ license.support_remaining_days || 0 }}</span>
   </div>
 
   <div class="copyright">

@@ -83,6 +83,10 @@ export class FormForEditComponent implements OnInit, OnDestroy {
     this.formGroup.value[fieldName] = event.checked;
   }
 
+  public selectionChange(event, fieldName): void {
+    this.formGroup.value[fieldName] = event.value;
+  }
+
   public send() {
     if (this.data.post && this.data.update) {
       this.waitService.setWait(true);
