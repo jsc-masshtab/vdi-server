@@ -89,7 +89,7 @@ class Vm(db.Model):
 
         return vm
 
-    async def soft_delete(self):
+    async def soft_delete(self, dest):
         if self.created_by_vdi:
             controller_address = await self.controller_address
             if controller_address:
@@ -99,7 +99,18 @@ class Vm(db.Model):
                 except HttpError as http_error:
                     await log.warning(_('Fail to remove VM {} from ECP: ').format(self.verbose_name, http_error))
                 log.debug(_('Vm {} removed from ECP.').format(self.verbose_name))
-        return await self.delete()
+
+        try:
+            await self.delete()
+            msg = _('{} {} had remove.').format(dest, self.verbose_name)
+            if self.entity:
+                await log.info(msg, entity_dict=self.entity)
+            else:
+                await log.info(msg)
+            return True
+        except Exception as ex:
+            log.debug(_('Soft_delete exception: {}').format(ex))
+            return False
 
     # TODO: очевидное дублирование однотипного кода. Переселить это все в универсальный метод
     async def add_user(self, user_id):
@@ -220,9 +231,9 @@ class Vm(db.Model):
         """Remove given vms"""
         for vm_id in vm_ids:
             vm = await Vm.get(vm_id)
-            await vm.soft_delete()
+            status = await vm.soft_delete(dest=_('VM'))
             await log.info(_('Vm {} removed from pool').format(vm.verbose_name))
-        return True
+        return status
 
     @staticmethod
     async def enable_remote_access(controller_address, vm_id):

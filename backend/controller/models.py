@@ -14,8 +14,8 @@ from common.veil_errors import SimpleError, BadRequest, ValidationError
 from languages import lang_init
 from journal.journal import Log as log
 
-
 _ = lang_init()
+
 
 # TODO: validate token by expires_on parameter
 # TODO: validate status
@@ -144,7 +144,7 @@ class Controller(db.Model):
             await log.warning(_('Controller {} check failed.').format(self.verbose_name))
             log.debug(_('Controller check: {}').format(ex))
             return False
-        await log.info(_('Controller {} check passed successfull.').format(self.verbose_name))
+        await log.info(_('Controller {} check passed successful.').format(self.verbose_name))
         return True
 
     @classmethod
@@ -209,7 +209,7 @@ class Controller(db.Model):
             ldap_connection = self.ldap_connection
 
         if (controller_kwargs.get('username') or controller_kwargs.get('password') or controller_kwargs.get(  # noqa
-                    'address') or controller_kwargs.get('ldap_connection')):  # noqa
+                'address') or controller_kwargs.get('ldap_connection')):  # noqa
             try:
                 credentials = await Controller.get_credentials(address, username, password, ldap_connection)
                 controller_kwargs.update(credentials)
@@ -231,22 +231,28 @@ class Controller(db.Model):
             msg = _('Successfully update controller {} with address {}.').format(
                 self.verbose_name,
                 self.address)
-            descr = str(controller_kwargs)
-            await log.info(msg, description=descr)
+            desc = str(controller_kwargs)
+            await log.info(msg, description=desc)
             return True
         return False
 
-    async def soft_delete(self):
+    async def soft_delete(self, dest):
         """Удаление сущности независимо от статуса у которой нет зависимых сущностей"""
-
         controller_has_pools = await self.has_pools
         if controller_has_pools:
             raise SimpleError(_('Controller has pool of virtual machines. Please completely remove.'))
 
-        msg = _('Controller {name} had remove.').format(name=self.verbose_name)
-        await self.delete()
-        await log.info(msg, entity_dict=self.entity)
-        return True
+        try:
+            await self.delete()
+            msg = _('{} {} had remove.').format(dest, self.verbose_name)
+            if self.entity:
+                await log.info(msg, entity_dict=self.entity)
+            else:
+                await log.info(msg)
+            return True
+        except Exception as ex:
+            log.debug(_('Soft_delete exception: {}').format(ex))
+            return False
 
     async def full_delete_pools(self):
         """Полное удаление пулов контроллера"""

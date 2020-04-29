@@ -375,11 +375,11 @@ class DeletePoolMutation(graphene.Mutation, PoolValidator):
     @staticmethod
     async def delete_pool(pool, full=False):
         if full:
-            is_deleted = await pool.full_delete()
+            status = await pool.full_delete()
         else:
-            is_deleted = await pool.soft_delete()
+            status = await pool.soft_delete(dest=_('Pool'))
 
-        return is_deleted
+        return status
 
     @superuser_required
     async def mutate(self, info, pool_id, full=False):

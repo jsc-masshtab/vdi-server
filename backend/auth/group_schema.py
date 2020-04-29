@@ -156,7 +156,7 @@ class DeleteGroupMutation(graphene.Mutation, GroupValidator):
     async def mutate(cls, root, info, **kwargs):
         await cls.validate_agruments(**kwargs)
         group = await Group.get(kwargs['id'])
-        status = await group.soft_delete(id=kwargs['id'])
+        status = await group.soft_delete(dest=_('Group'))
         return DeleteGroupMutation(ok=status)
 
 

@@ -469,18 +469,24 @@ class Pool(db.Model):
                                     connection_types=connection_types)
         return pool
 
-    async def soft_delete(self, commit=True):
+    async def soft_delete(self, dest):
         """Удаление сущности независимо от статуса у которой нет зависимых сущностей"""
 
         pool_has_vms = await self.has_vms
         if pool_has_vms:
             raise SimpleError(_('Pool has VMs. Please completely remove.'))
 
-        if commit:
-            msg = _('Removal pool of desktops {verbose_name} is done.').format(verbose_name=self.verbose_name)
+        try:
             await self.delete()
-            await log.info(msg, entity_dict=self.entity)
-        return True
+            msg = _('{} {} had remove.').format(dest, self.verbose_name)
+            if self.entity:
+                await log.info(msg, entity_dict=self.entity)
+            else:
+                await log.info(msg)
+            return True
+        except Exception as ex:
+            log.debug(_('Soft_delete exception: {}').format(ex))
+            return False
 
     async def full_delete(self, commit=True):
         """Удаление сущности в статусе ACTIVE с удалением зависимых сущностей"""
@@ -762,7 +768,7 @@ class AutomatedPool(db.Model):
                                                   vm_name_template=vm_name_template,
                                                   create_thin_clones=create_thin_clones)
 
-            await log.info(_('AutomatedPool {} is created').format(verbose_name))
+            # await log.info(_('AutomatedPool {} is created').format(verbose_name))
 
             return automated_pool
 
@@ -949,7 +955,7 @@ class AutomatedPool(db.Model):
                 vm_index = vm['domain_index'] + 1
                 vm_list.append(vm)
 
-                msg = _('Automated pool creation. Created {} VMs from {}').format(i + 1, self.initial_size)
+                msg = _('Created {} VMs from {} at the Automated pool {}').format(i + 1, self.initial_size, verbose_name)
                 await log.info(msg, entity_dict=self.entity)
 
                 # notify VDI front about progress(WS)
@@ -972,7 +978,7 @@ class AutomatedPool(db.Model):
         is_creation_successful = (len(vm_list) == self.initial_size)
 
         if is_creation_successful:
-            msg = _('Automated pool successfully created. Initial VM amount {}').format(len(vm_list))
+            msg = _('Initial VM amount {} at the Automated pool {}').format(len(vm_list), verbose_name)
             await log.info(msg, entity_dict=self.entity)
         else:
             msg = _('Automated pool created with errors. VMs created: {}. Required: {}').format(len(vm_list),
@@ -1051,5 +1057,5 @@ class AutomatedPool(db.Model):
         vms = await Vm.query.where(Vm.pool_id == self.id).gino.all()
         for vm in vms:
             log.debug(_('Calling soft delete for vm {}').format(vm.verbose_name))
-            await vm.soft_delete()
-        return True
+            status = await vm.soft_delete(dest=_('VM'))
+        return status

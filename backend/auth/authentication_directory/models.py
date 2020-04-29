@@ -184,19 +184,23 @@ class AuthenticationDirectory(db.Model, AbstractSortableStatusModel):
         if object_kwargs:
             await cls.update.values(**object_kwargs).where(
                 cls.id == id).gino.status()
-        descr = _('Id: {}. Arguments: {}').format(id, object_kwargs)
-        await log.info(_('Values for auth directory is updated'), description=descr)
+        desc = _('Id: {}. Arguments: {}').format(id, object_kwargs)
+        await log.info(_('Values for auth directory is updated'), description=desc)
         return await cls.get(id)
 
-    async def soft_delete(self, id):
+    async def soft_delete(self, dest):
         """Все удаления объектов AD необходимо делать тут."""
-
-        auth_dir = await AuthenticationDirectory.get(id)
-        if auth_dir:
-            await auth_dir.delete()
-            await log.info(_('Authentication directory {} is deleted').format(self.verbose_name))
+        try:
+            await self.delete()
+            msg = _('{} {} had remove.').format(dest, self.verbose_name)
+            if self.entity:
+                await log.info(msg, entity_dict=self.entity)
+            else:
+                await log.info(msg)
             return True
-        return False
+        except Exception as ex:
+            log.debug(_('Soft_delete exception: {}').format(ex))
+            return False
 
     async def add_mapping(self, mapping: dict, groups: list):
         """
@@ -527,14 +531,19 @@ class Mapping(db.Model):
                 Mapping.id == self.id).gino.status()
         return await Mapping.get(self.id)
 
-    async def soft_delete(self, mapping_id, auth_dir):
-        auth_dir = await AuthenticationDirectory.get(auth_dir)
-        mapping = await Mapping.get(mapping_id)
-        if mapping:
-            await mapping.delete()
-            await log.info(_('Mapping {} for auth directory {} is deleted').format(self.verbose_name, auth_dir.verbose_name))
+    async def soft_delete(self, dest):
+        """Все удаления объектов AD необходимо делать тут."""
+        try:
+            await self.delete()
+            msg = _('{} {} had remove.').format(dest, self.verbose_name)
+            if self.entity:
+                await log.info(msg, entity_dict=self.entity)
+            else:
+                await log.info(msg)
             return True
-        return False
+        except Exception as ex:
+            log.debug(_('Soft_delete exception: {}').format(ex))
+            return False
 
 
 class GroupAuthenticationDirectoryMapping(db.Model):
