@@ -214,8 +214,8 @@ class DeleteAuthenticationDirectoryMutation(graphene.Mutation, AuthenticationDir
     async def mutate(cls, root, info, **kwargs):
         await cls.validate_agruments(**kwargs)
         auth_dir = await AuthenticationDirectory.get(kwargs['id'])
-        await auth_dir.soft_delete(id=kwargs['id'])
-        return DeleteAuthenticationDirectoryMutation(ok=True)
+        status = await auth_dir.soft_delete(dest=_('Authentication directory'))
+        return DeleteAuthenticationDirectoryMutation(ok=status)
 
 
 class TestAuthenticationDirectoryMutation(graphene.Mutation, AuthenticationDirectoryValidator):
@@ -317,8 +317,8 @@ class DeleteAuthDirMappingMutation(graphene.Mutation, AuthenticationDirectoryVal
         await cls.validate_agruments(**kwargs)
 
         mapping = await Mapping.get(kwargs['mapping_id'])
-        status = await mapping.soft_delete(mapping_id=kwargs['mapping_id'], auth_dir=kwargs['id'])
         auth_dir = await AuthenticationDirectory.get(kwargs['id'])
+        status = await mapping.soft_delete(dest=_('In authentication directory {} mapping').format(auth_dir.verbose_name))
         return DeleteAuthDirMappingMutation(ok=status, auth_dir=auth_dir)
 
 

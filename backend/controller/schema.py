@@ -143,9 +143,9 @@ class RemoveControllerMutation(graphene.Mutation):
             raise GraphQLError(_('No such controller.'))
 
         if full:
-            ok = await controller.full_delete()
+            status = await controller.full_delete()
         else:
-            ok = await controller.soft_delete()
+            status = await controller.soft_delete(dest=_('Controller'))
 
         # todo:
         #  Есть мысль: прекращать взаимодействие с контроллером по ws перед началом удаления самого контроллера
@@ -153,7 +153,7 @@ class RemoveControllerMutation(graphene.Mutation):
         #  с сущностью, находящейся в удаляемом состоянии.
         await resources_monitor_manager.remove_controller(controller.address)
 
-        return RemoveControllerMutation(ok=ok)
+        return RemoveControllerMutation(ok=status)
 
 
 class TestControllerMutation(graphene.Mutation):

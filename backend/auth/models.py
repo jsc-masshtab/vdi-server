@@ -419,13 +419,19 @@ class Group(AbstractSortableStatusModel, db.Model):
 
         return self
 
-    async def soft_delete(self, id):
-        group = await Group.get(id)
-        if group:
-            await group.delete()
-            await log.info(_('Group {} is deleted').format(self.verbose_name))
+    async def soft_delete(self, dest):
+
+        try:
+            await self.delete()
+            msg = _('{} {} had remove.').format(dest, self.verbose_name)
+            if self.entity:
+                await log.info(msg, entity_dict=self.entity)
+            else:
+                await log.info(msg)
             return True
-        return False
+        except Exception as ex:
+            log.debug(_('Soft_delete exception: {}').format(ex))
+            return False
 
     async def add_user(self, user_id):
         """Add user to group"""
