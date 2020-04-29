@@ -17,9 +17,9 @@ properties([
     ),
     gitLabConnection('gitlab'),
     parameters([
-        string(      name: 'BRANCH',               defaultValue: 'feature_tg_7701',              description: 'branch', trim: false),
+        string(      name: 'BRANCH',               defaultValue: 'dev',              description: 'branch', trim: false),
         string(      name: 'REPO',                 defaultValue: 'vdi',              description: 'repo for uploading', trim: false),
-        string(      name: 'VERSION',              defaultValue: '1.2.3',            description: 'base version',  trim: false),
+        string(      name: 'VERSION',              defaultValue: '2.0.0',            description: 'base version',  trim: false),
         string(      name: 'AGENT',                defaultValue: 'debian9',          description: 'jenkins agent label for running the job', trim: false),
     ])
 ])

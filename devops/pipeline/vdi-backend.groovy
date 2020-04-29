@@ -17,9 +17,9 @@ properties([
     ),
     gitLabConnection('gitlab'),
     parameters([
-        string(      name: 'BRANCH',               defaultValue: 'feature_tg_7701',              description: 'branch', trim: false),
+        string(      name: 'BRANCH',               defaultValue: 'feature_tg_8124',              description: 'branch', trim: false),
         string(      name: 'REPO',                 defaultValue: 'vdi',              description: 'repo for uploading', trim: false),
-        string(      name: 'VERSION',              defaultValue: '1.2.3',            description: 'base version',  trim: false),
+        string(      name: 'VERSION',              defaultValue: '2.0.0',            description: 'base version',  trim: false),
         string(      name: 'AGENT',                defaultValue: 'debian9',          description: 'jenkins agent label for running the job', trim: false),
     ])
 ])
@@ -102,6 +102,10 @@ node("$AGENT") {
                         sudo sed -i 's/peer/trust/g' /etc/postgresql/9.6/main/pg_hba.conf
                         sudo sed -i "s/#listen_addresses = 'localhost'/listen_addresses = '127.0.0.1'/g" /etc/postgresql/9.6/main/postgresql.conf
                         echo 'host  vdi postgres  0.0.0.0/0  trust' | sudo tee -a /etc/postgresql/9.6/main/pg_hba.conf
+                        
+                        #fix locale
+                        sudo localedef -i en_US -f UTF-8 en_US.UTF-8
+                        
                         sudo systemctl restart postgresql
 
                         echo 'postgres:postgres' | sudo chpasswd
