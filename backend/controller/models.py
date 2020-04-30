@@ -43,6 +43,10 @@ class Controller(db.Model):
     expires_on = db.Column(db.DateTime(timezone=True))  # Срок истечения токена.
 
     @property
+    def active(self):
+        return self.status == Status.ACTIVE
+
+    @property
     def entity_type(self):
         return EntityType.CONTROLLER
 
