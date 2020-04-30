@@ -174,6 +174,8 @@ class AssignVmToUser(graphene.Mutation):
             # another vm in the pool may have this user as owner. Remove assignment
             await pool.free_user_vms(user_id)
 
+        # Сейчас за VM может быть только 1 пользователь. Освобождаем от других.
+        await vm.remove_users(users_list=None)
         await vm.add_user(user_id)
         return AssignVmToUser(ok=True, vm=vm)
 
