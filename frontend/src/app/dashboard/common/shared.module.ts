@@ -14,6 +14,7 @@ import { FormForEditComponent } from './forms-dinamic/change-form/form-edit.comp
 import { ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { MatCheckboxModule, MatSelectModule } from '@angular/material';
 import { PaginationComponent } from './components/shared/pagination/pagination.component';
+import { FooterService } from './components/single/footer/footer.service';
 
 
 const COMPONENTS = [
@@ -62,6 +63,9 @@ const FORMS_DINAMIC = [
   ],
   entryComponents: [
     ...FORMS_DINAMIC
+  ],
+  providers: [
+    FooterService
   ]
 })
 
