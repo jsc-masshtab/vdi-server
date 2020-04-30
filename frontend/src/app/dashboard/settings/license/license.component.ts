@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { HttpResponse } from '@angular/common/http';
 import { LicenseService } from './license.service';
 import { ErrorsService } from 'src/app/errors/errors.service';
+import { FooterService } from '../../common/components/single/footer/footer.service';
 
 @Component({
   selector: 'vdi-license',
@@ -47,7 +48,8 @@ export class LicenseComponent implements OnInit {
 
   constructor(
     private service: LicenseService,
-    private errorService: ErrorsService) { }
+    private errorService: ErrorsService,
+    private footer: FooterService) { }
 
   ngOnInit() {
     this.refresh();
@@ -76,6 +78,8 @@ export class LicenseComponent implements OnInit {
           if(event.body.errors) {
             this.errorService.setError(event.body.errors);
           }
+
+          this.footer.reload();
         }
       });
     }
