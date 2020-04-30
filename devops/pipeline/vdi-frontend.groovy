@@ -28,7 +28,7 @@ node("$AGENT") {
 
     env.PRJNAME="vdi-frontend"
     env.NFS_DIR="vdi-deb"
-    env.DEB_ROOT="${WORKSPACE}/devops/deb-config"
+    env.DEB_ROOT="${WORKSPACE}/devops/deb"
     env.DATE="$currentDate"
 
 

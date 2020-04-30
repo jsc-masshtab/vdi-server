@@ -2,7 +2,7 @@
 # debug - bash vdi-deploy.sh 2>error.log
 
 ROOT_DIR=/opt/veil-vdi
-CONF_DIR=${ROOT_DIR}/devops/deb-config/vdi-backend/root/opt/veil-vdi/other
+CONF_DIR=${ROOT_DIR}/devops/deb/vdi-backend/root/opt/veil-vdi/other
 
 BACKEND_DIR=${ROOT_DIR}/app
 FRONTEND_DIR=${ROOT_DIR}/frontend

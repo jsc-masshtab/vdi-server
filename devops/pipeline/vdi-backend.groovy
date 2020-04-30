@@ -28,7 +28,7 @@ node("$AGENT") {
 
     env.PRJNAME="vdi-backend"
     env.NFS_DIR="vdi-deb"
-    env.DEB_ROOT="${WORKSPACE}/devops/deb-config"
+    env.DEB_ROOT="${WORKSPACE}/devops/deb"
     env.DATE="$currentDate"
 
 
@@ -82,7 +82,7 @@ node("$AGENT") {
                         sudo rsync -a --delete ${WORKSPACE}/backend/ /opt/veil-vdi/app
                         rsync -a --delete ${WORKSPACE}/backend/ "${DEB_ROOT}/${PRJNAME}/root/opt/veil-vdi/app"
                         # copy other catalog
-                        sudo rsync -a --delete ${WORKSPACE}/devops/deb-config/vdi-backend/root/opt/veil-vdi/other/ /opt/veil-vdi/other
+                        sudo rsync -a --delete ${WORKSPACE}/devops/deb/vdi-backend/root/opt/veil-vdi/other/ /opt/veil-vdi/other
 
                     '''
                 }
@@ -98,7 +98,7 @@ node("$AGENT") {
 
                         # configure postgres
 
-                        sudo cp ${WORKSPACE}/devops/deb-config/vdi-backend/root/opt/veil-vdi/other/vdi.postgresql /etc/postgresql/9.6/main/postgresql.conf
+                        sudo cp ${WORKSPACE}/devops/deb/vdi-backend/root/opt/veil-vdi/other/vdi.postgresql /etc/postgresql/9.6/main/postgresql.conf
                         sudo sed -i 's/peer/trust/g' /etc/postgresql/9.6/main/pg_hba.conf
                         sudo sed -i "s/#listen_addresses = 'localhost'/listen_addresses = '127.0.0.1'/g" /etc/postgresql/9.6/main/postgresql.conf
                         echo 'host  vdi postgres  0.0.0.0/0  trust' | sudo tee -a /etc/postgresql/9.6/main/pg_hba.conf
@@ -115,7 +115,7 @@ node("$AGENT") {
 
                         # setting up nginx
 
-                        sudo cp ${WORKSPACE}/devops/deb-config/vdi-backend/root/opt/veil-vdi/other/vdi.nginx /etc/nginx/conf.d/vdi_nginx.conf
+                        sudo cp ${WORKSPACE}/devops/deb/vdi-backend/root/opt/veil-vdi/other/vdi.nginx /etc/nginx/conf.d/vdi_nginx.conf
 
                         sudo rm /etc/nginx/sites-enabled/* || true
                         sudo systemctl restart nginx
@@ -153,11 +153,11 @@ node("$AGENT") {
                         sudo mkdir -p /var/log/veil-vdi/
 
                         # deploying configuration files for logrotate
-                        sudo cp ${WORKSPACE}/devops/deb-config/vdi-backend/root/opt/veil-vdi/other/tornado.logrotate /etc/logrotate.d/veil-vdi
+                        sudo cp ${WORKSPACE}/devops/deb/vdi-backend/root/opt/veil-vdi/other/tornado.logrotate /etc/logrotate.d/veil-vdi
 
                         # deploying configuration files for supervisor
                         sudo rm /etc/supervisor/supervisord.conf
-                        sudo cp ${WORKSPACE}/devops/deb-config/vdi-backend/root/opt/veil-vdi/other/supervisord.conf /etc/supervisor/supervisord.conf
+                        sudo cp ${WORKSPACE}/devops/deb/vdi-backend/root/opt/veil-vdi/other/supervisord.conf /etc/supervisor/supervisord.conf
                         sudo supervisorctl reload
 
                         # vdi backend status
