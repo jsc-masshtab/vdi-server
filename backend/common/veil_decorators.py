@@ -125,18 +125,13 @@ def user_passes_test(test_func, exc=Unauthorized(_('Invalid permissions'))):  # 
                         return f(*args, **kwargs)
                 # log.debug(_('IP: . username: {}'))
                 await log.warning(
-                    _('IP: {}. username: {}').format('Authorization error.', cntxt.remote_ip, user.username),
+                    _('IP: {}. username: {}').format(cntxt.remote_ip, user.username),
                     entity_dict={'entity_type': EntityType.SECURITY, 'entity_uuid': None})
                 raise exc
             else:
                 return f(*args, **kwargs)
         return wrapper
     return decorator
-
-
-def is_superuser(roles) -> bool:
-    # TODO: delete
-    return True
 
 
 def is_read_only(roles) -> bool:
@@ -166,8 +161,6 @@ def is_storage_administrator(roles) -> bool:
 def is_vm_operator(roles) -> bool:
     return Role.VM_OPERATOR in roles
 
-
-superuser_required = user_passes_test(lambda roles: is_superuser(roles))  # TODO: delete
 
 readonly_required = user_passes_test(lambda roles: is_read_only(roles))
 administrator_required = user_passes_test(lambda roles: is_administrator(roles))

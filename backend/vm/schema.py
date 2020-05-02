@@ -7,7 +7,7 @@ from graphql import GraphQLError
 from settings import DEFAULT_NAME
 from common.utils import extract_ordering_data
 from common.veil_errors import HttpError, SimpleError
-from common.veil_decorators import superuser_required
+from common.veil_decorators import administrator_required
 from pool.models import Pool
 from vm.models import Vm
 from vm.veil_client import VmHttpClient
@@ -148,7 +148,7 @@ class AssignVmToUser(graphene.Mutation):
     ok = graphene.Boolean()
     vm = graphene.Field(VmType)
 
-    @superuser_required
+    @administrator_required
     async def mutate(self, _info, vm_id, username):
         # find pool the vm belongs to
         vm = await Vm.get(vm_id)
@@ -186,7 +186,7 @@ class FreeVmFromUser(graphene.Mutation):
 
     ok = graphene.Boolean()
 
-    @superuser_required
+    @administrator_required
     async def mutate(self, _info, vm_id):
         vm = await Vm.get(vm_id)
         if vm:
@@ -211,7 +211,7 @@ class VmQuery(graphene.ObjectType):
                         get_vms_in_pools=graphene.Boolean(),
                         ordering=graphene.String())
 
-    @superuser_required
+    @administrator_required
     async def resolve_template(self, _info, id, controller_address):
         log.debug(_('GraphQL: Resolving template info'))
         vm_http_client = await VmHttpClient.create(controller_address, id)
@@ -222,7 +222,7 @@ class VmQuery(graphene.ObjectType):
 
         return VmQuery.veil_template_data_to_graphene_type(veil_info, controller_address)
 
-    @superuser_required
+    @administrator_required
     async def resolve_vm(self, _info, id, controller_address):
         vm_http_client = await VmHttpClient.create(controller_address, id)
         try:
@@ -232,7 +232,7 @@ class VmQuery(graphene.ObjectType):
 
         return VmQuery.veil_vm_data_to_graphene_type(veil_info, controller_address)
 
-    @superuser_required
+    @administrator_required
     async def resolve_templates(self, _info, controller_ip=None, cluster_id=None, node_id=None, ordering=None):
         if controller_ip:
             vm_http_client = await VmHttpClient.create(controller_ip, '')
@@ -280,7 +280,7 @@ class VmQuery(graphene.ObjectType):
 
         return template_type_list
 
-    @superuser_required
+    @administrator_required
     async def resolve_vms(self, _info, controller_ip=None, cluster_id=None, node_id=None, datapool_id=None,
                           get_vms_in_pools=False, ordering=None):
         log.debug(_('GraphQL: Resolving VMs'))

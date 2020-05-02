@@ -7,7 +7,7 @@ from vm.schema import VmType, TemplateType, VmQuery
 
 from common.utils import make_graphene_type, extract_ordering_data
 from common.veil_errors import SimpleError
-from common.veil_decorators import superuser_required
+from common.veil_decorators import administrator_required
 
 from controller_resources.veil_client import ResourcesHttpClient
 from controller.schema import ControllerType
@@ -272,7 +272,7 @@ class ResourcesQuery(graphene.ObjectType):
             graphene_type_type_list.append(obj)
         return graphene_type_type_list
 
-    @superuser_required
+    @administrator_required
     async def resolve_node(self, _info, id, controller_address):
         resources_http_client = await ResourcesHttpClient.create(controller_address)
         node_data = await resources_http_client.fetch_node(id)
@@ -280,7 +280,7 @@ class ResourcesQuery(graphene.ObjectType):
         node_type.controller = ControllerType(address=controller_address)
         return node_type
 
-    @superuser_required
+    @administrator_required
     async def resolve_nodes(self, _info, cluster_id=None, ordering=None):
         controllers_addresses = await Controller.get_addresses()
 
@@ -324,7 +324,7 @@ class ResourcesQuery(graphene.ObjectType):
 
         return list_of_all_node_types
 
-    @superuser_required
+    @administrator_required
     async def resolve_cluster(self, _info, id, controller_address):
         resources_http_client = await ResourcesHttpClient.create(controller_address)
         cluster_data = await resources_http_client.fetch_cluster(id)
@@ -332,7 +332,7 @@ class ResourcesQuery(graphene.ObjectType):
         cluster_type.controller = ControllerType(address=controller_address)
         return cluster_type
 
-    @superuser_required
+    @administrator_required
     async def resolve_clusters(self, _info, controller_ip=None, ordering=None):
 
         if controller_ip:
@@ -376,7 +376,7 @@ class ResourcesQuery(graphene.ObjectType):
 
         return list_of_all_cluster_types
 
-    @superuser_required
+    @administrator_required
     async def resolve_datapool(self, _info, id, controller_address):
         resources_http_client = await ResourcesHttpClient.create(controller_address)
         datapool_data = await resources_http_client.fetch_datapool(id)
@@ -384,7 +384,7 @@ class ResourcesQuery(graphene.ObjectType):
         datapool_type.controller = ControllerType(address=controller_address)
         return datapool_type
 
-    @superuser_required
+    @administrator_required
     async def resolve_datapools(self, _info, node_id=None, take_broken=False, ordering=None):
 
         # form list of datapools
@@ -425,7 +425,7 @@ class ResourcesQuery(graphene.ObjectType):
 
         return list_of_all_datapool_types
 
-    @superuser_required
+    @administrator_required
     async def resolve_requests(self, _info):
         return [
             RequestType(url=None, time=None)

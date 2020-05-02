@@ -11,7 +11,7 @@ from database import StatusGraphene, db, RoleTypeGraphene, Role
 from common.veil_validators import MutationValidation
 from common.veil_errors import SimpleError, HttpError, ValidationError
 from common.utils import make_graphene_type
-from common.veil_decorators import superuser_required
+from common.veil_decorators import administrator_required
 
 from auth.user_schema import UserType
 
@@ -345,7 +345,7 @@ class PoolQuery(graphene.ObjectType):
     pools = graphene.List(PoolType, ordering=graphene.String())
     pool = graphene.Field(PoolType, pool_id=graphene.String())
 
-    @superuser_required
+    @administrator_required
     async def resolve_pools(self, info, ordering=None):
         # Сортировка может быть по полю модели Pool, либо по Pool.EXTRA_ORDER_FIELDS
         pools = await Pool.get_pools(ordering=ordering)
@@ -355,7 +355,7 @@ class PoolQuery(graphene.ObjectType):
         ]
         return objects
 
-    @superuser_required
+    @administrator_required
     async def resolve_pool(self, _info, pool_id):
         pool = await Pool.get_pool(pool_id)
         if not pool:
@@ -381,7 +381,7 @@ class DeletePoolMutation(graphene.Mutation, PoolValidator):
 
         return status
 
-    @superuser_required
+    @administrator_required
     async def mutate(self, info, pool_id, full=False):
         # Нет запуска валидации, т.к. нужна сущность пула далее - нет смысла запускать запрос 2жды.
         pool = await Pool.get(pool_id)
@@ -423,7 +423,7 @@ class CreateStaticPoolMutation(graphene.Mutation, PoolValidator):
     ok = graphene.Boolean()
 
     @classmethod
-    @superuser_required
+    @administrator_required
     async def mutate(cls, root, info, **kwargs):
         """Мутация создания Статического пула виртуальных машин.
 
@@ -494,7 +494,7 @@ class AddVmsToStaticPoolMutation(graphene.Mutation):
 
     ok = graphene.Boolean()
 
-    @superuser_required
+    @administrator_required
     async def mutate(self, _info, pool_id, vm_ids):
         if not vm_ids:
             raise SimpleError(_("List of VM should not be empty"))
@@ -548,7 +548,7 @@ class RemoveVmsFromStaticPoolMutation(graphene.Mutation):
 
     ok = graphene.Boolean()
 
-    @superuser_required
+    @administrator_required
     async def mutate(self, _info, pool_id, vm_ids):
         if not vm_ids:
             raise SimpleError(_("List of VM should not be empty"))
@@ -581,7 +581,7 @@ class UpdateStaticPoolMutation(graphene.Mutation, PoolValidator):
     ok = graphene.Boolean()
 
     @classmethod
-    @superuser_required
+    @administrator_required
     async def mutate(cls, _root, _info, **kwargs):
         await cls.validate_agruments(**kwargs)
         try:
@@ -623,7 +623,7 @@ class CreateAutomatedPoolMutation(graphene.Mutation, PoolValidator):
     ok = graphene.Boolean()
 
     @classmethod
-    @superuser_required
+    @administrator_required
     async def mutate(cls, root, info, **kwargs):
         await cls.validate_agruments(**kwargs)
         try:
@@ -689,7 +689,7 @@ class UpdateAutomatedPoolMutation(graphene.Mutation, PoolValidator):
         return value
 
     @classmethod
-    @superuser_required
+    @administrator_required
     async def mutate(cls, root, info, **kwargs):
         await cls.validate_agruments(**kwargs)
         automated_pool = await AutomatedPool.get(kwargs['pool_id'])
@@ -722,7 +722,7 @@ class PoolUserAddPermissionsMutation(graphene.Mutation):
     ok = graphene.Boolean()
     pool = graphene.Field(PoolType)
 
-    @superuser_required
+    @administrator_required
     async def mutate(self, _info, pool_id, users):
         pool = await Pool.get(pool_id)
         if not pool:
@@ -743,7 +743,7 @@ class PoolUserDropPermissionsMutation(graphene.Mutation):
     ok = graphene.Boolean()
     pool = graphene.Field(PoolType)
 
-    @superuser_required
+    @administrator_required
     async def mutate(self, _info, pool_id, users, free_assigned_vms=True):
         pool = await Pool.get(pool_id)
         if not pool:
@@ -766,7 +766,7 @@ class PoolGroupAddPermissionsMutation(graphene.Mutation):
     ok = graphene.Boolean()
     pool = graphene.Field(PoolType)
 
-    @superuser_required
+    @administrator_required
     async def mutate(self, _info, pool_id, groups):
         pool = await Pool.get(pool_id)
         if not pool:
@@ -786,7 +786,7 @@ class PoolGroupDropPermissionsMutation(graphene.Mutation):
     ok = graphene.Boolean()
     pool = graphene.Field(PoolType)
 
-    @superuser_required
+    @administrator_required
     async def mutate(self, _info, pool_id, groups):
         pool = await Pool.get(pool_id)
         if not pool:
@@ -806,7 +806,7 @@ class PoolRoleAddPermissionsMutation(graphene.Mutation):
     ok = graphene.Boolean()
     pool = graphene.Field(PoolType)
 
-    @superuser_required
+    @administrator_required
     async def mutate(self, _info, pool_id, roles):
         pool = await Pool.get(pool_id)
         if not pool:
@@ -826,7 +826,7 @@ class PoolRoleDropPermissionsMutation(graphene.Mutation):
     ok = graphene.Boolean()
     pool = graphene.Field(PoolType)
 
-    @superuser_required
+    @administrator_required
     async def mutate(self, _info, pool_id, roles):
         pool = await Pool.get(pool_id)
         if not pool:

@@ -45,6 +45,13 @@ class AuthenticationDirectoryValidator(MutationValidation):
         return value
 
     @staticmethod
+    async def validate_domain_name(obj_dict, value):
+        if len(value) > 0:
+            domain_list = value.split('.')
+            if len(domain_list) < 2:
+                raise ValidationError(_('\'domain name\' should be a string split by a dot.'))
+
+    @staticmethod
     async def validate_description(obj_dict, value):
         if len(value) == 0:
             value = None

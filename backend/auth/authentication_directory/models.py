@@ -462,7 +462,7 @@ class AuthenticationDirectory(db.Model, AbstractSortableStatusModel):
             success = False
             created = False
             # log.debug(ldap_error)
-            raise ValidationError(_('Invalid credeintials (ldap): {}').format(ldap_error))
+            raise ValidationError(_('Invalid credentials (ldap): {}').format(ldap_error))
         except ldap.SERVER_DOWN:
             # Если нет связи с сервером службы каталогов, то возвращаем ошибку о недоступности
             # сервера, так как не можем сделать вывод о правильности предоставленных данных.
