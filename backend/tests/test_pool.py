@@ -89,9 +89,6 @@ class PoolTestCase(VdiHttpTestCase):
 
         response_dict = yield self.get_response(body=body, url=url, headers=headers)
 
-        print('Response dict:')
-        print(response_dict)
-
         if 'errors' in response_dict:
             # Исключение на случай отсутствия лицензии
             response_data = response_dict['errors'][0]
@@ -120,7 +117,7 @@ class PoolTestCase(VdiHttpTestCase):
             response_message = response_data['message']
             self.assertEqual('В пуле нет свободных машин', response_message)
 
-            # Ждем примерно максимальное время ожидания монитора ресурсов + накладки, чтобы убедиться, что пул расширился.
+            # Ждем время ожидания монитора ресурсов + накладки, чтобы убедиться, что пул расширился
             yield gen.sleep(VEIL_WS_MAX_TIME_TO_WAIT + 5)
 
             vms_amount = yield pool.get_vm_amount()

@@ -27,8 +27,11 @@ class GroupValidator(MutationValidation):
 
     @staticmethod
     async def validate_verbose_name(obj_dict, value):
-        if len(value) > 0:
+        value_len = len(value)
+        if 0 < value_len <= 128:
             return value
+        if value_len > 128:
+            raise ValidationError(_('verbose name must me <= 128 characters.'))
         raise ValidationError(_('verbose_name is empty.'))
 
     @staticmethod
@@ -41,6 +44,12 @@ class GroupValidator(MutationValidation):
                 raise ValidationError(_('users count not much with db count.'))
             return value
         raise ValidationError(_('users list is empty.'))
+
+    @staticmethod
+    async def validate_description(obj_dict, value):
+        if len(value) > 255:
+            raise ValidationError(_('Last name length must be <= 255 characters.'))
+        return value
 
 
 class GroupType(graphene.ObjectType):

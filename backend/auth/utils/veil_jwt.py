@@ -50,15 +50,15 @@ def jwtauth(handler_class):
     return handler_class
 
 
-def encode_jwt(username):
+def encode_jwt(username, domain: str = None):
     """Get JWT encoded token"""
-
     current_time = datetime.datetime.utcnow()
     expires_on = current_time + datetime.timedelta(seconds=JWT_EXPIRATION_DELTA)
     # Идея хранить в payload user_id признана несостоятельной.
     access_token_payload = {'exp': expires_on,
                             'username': username,
                             'iat': current_time.timestamp(),
+                            'domain': domain
                             }
     access_token = jwt.encode(
         payload=access_token_payload,
@@ -66,7 +66,7 @@ def encode_jwt(username):
         algorithm=JWT_ALGORITHM
     ).decode('utf-8')
     return {'access_token': access_token, 'expires_on': expires_on.strftime("%d.%m.%Y %H:%M:%S UTC"),
-            'username': username}
+            'username': username, 'domain': domain}
 
 
 def decode_jwt(token, decode_options: dict = JWT_OPTIONS, algorithms: list = [JWT_ALGORITHM]):  # noqa
