@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2020-05-02 19:59+0300\n"
+"POT-Creation-Date: 2020-05-02 21:45+0300\n"
 "PO-Revision-Date: 2020-03-16 17:12+0300\n"
 "Last-Translator: Emil <e.gareev@mashtab.org>\n"
 "Language-Team: English\n"
@@ -58,7 +58,7 @@ msgid "License status: {}, expiration time: {}, thin clients limit: {}"
 msgstr "License status: {}, expiration time: {}, thin clients limit: {}"
 
 #: auth/authentication_directory/auth_dir_schema.py:31
-#: auth/authentication_directory/auth_dir_schema.py:163
+#: auth/authentication_directory/auth_dir_schema.py:170
 msgid "No such Authentication Directory."
 msgstr "No such Authentication Directory."
 
@@ -70,27 +70,31 @@ msgstr "Authentication directory URL should start with ldap(s)://."
 msgid "Verbose name should not be empty."
 msgstr "Verbose name should not be empty."
 
-#: auth/authentication_directory/auth_dir_schema.py:60 auth/group_schema.py:44
+#: auth/authentication_directory/auth_dir_schema.py:52
+msgid "'domain name' should be a string split by a dot."
+msgstr ""
+
+#: auth/authentication_directory/auth_dir_schema.py:67 auth/group_schema.py:44
 msgid "users count not much with db count."
 msgstr "users count not much with db count."
 
-#: auth/authentication_directory/auth_dir_schema.py:62
+#: auth/authentication_directory/auth_dir_schema.py:69
 msgid "groups list is empty."
 msgstr "groups list is empty."
 
-#: auth/authentication_directory/auth_dir_schema.py:69
+#: auth/authentication_directory/auth_dir_schema.py:76
 msgid "No such mapping."
 msgstr "No such mapping."
 
-#: auth/authentication_directory/auth_dir_schema.py:159
+#: auth/authentication_directory/auth_dir_schema.py:166
 msgid "Specify id."
 msgstr "Specify id."
 
-#: auth/authentication_directory/auth_dir_schema.py:217
+#: auth/authentication_directory/auth_dir_schema.py:224
 msgid "Authentication directory"
 msgstr "Authentication directory"
 
-#: auth/authentication_directory/auth_dir_schema.py:321
+#: auth/authentication_directory/auth_dir_schema.py:328
 msgid "In authentication directory {} mapping"
 msgstr "In authentication directory {} mapping"
 
@@ -111,13 +115,13 @@ msgid "Values for auth directory is updated"
 msgstr "Values for auth directory is updated"
 
 #: auth/authentication_directory/models.py:195
-#: auth/authentication_directory/models.py:538 auth/models.py:426
+#: auth/authentication_directory/models.py:551 auth/models.py:426
 #: controller/models.py:251 pool/models.py:481 vm/models.py:105
 msgid "{} {} had remove."
 msgstr "{} {} had remove."
 
 #: auth/authentication_directory/models.py:202
-#: auth/authentication_directory/models.py:545 auth/models.py:433
+#: auth/authentication_directory/models.py:558 auth/models.py:433
 #: controller/models.py:258 pool/models.py:488 vm/models.py:112
 msgid "Soft_delete exception: {}"
 msgstr "Soft_delete exception: {}"
@@ -198,15 +202,16 @@ msgstr "User veil groups: {}"
 msgid "Attaching user {} to group: {}"
 msgstr "Attaching user {} to group: {}"
 
-#: auth/authentication_directory/models.py:428 tests/test_auth_v2.py:109
+#: auth/authentication_directory/models.py:427
+#: auth/authentication_directory/models.py:440 tests/test_auth_v2.py:109
 msgid "No authentication directory controllers."
 msgstr "No authentication directory controllers."
 
-#: auth/authentication_directory/models.py:453
-msgid "Invalid credeintials (ldap): {}"
-msgstr "Invalid credeintials (ldap): {}"
+#: auth/authentication_directory/models.py:465
+msgid "Invalid credentials (ldap): {}"
+msgstr "Invalid credentials (ldap): {}"
 
-#: auth/authentication_directory/models.py:460
+#: auth/authentication_directory/models.py:472
 msgid "Server down (ldap)."
 msgstr "Server down (ldap)."
 
@@ -250,30 +255,30 @@ msgstr "Missing username"
 msgid "Missing password"
 msgstr "Missing password"
 
-#: auth/handlers.py:39 tests/test_auth_v2.py:35 tests/test_auth_v2.py:43
+#: auth/handlers.py:42 tests/test_auth_v2.py:35 tests/test_auth_v2.py:43
 msgid "Invalid credentials"
 msgstr "Invalid credentials"
 
-#: auth/handlers.py:46
+#: auth/handlers.py:49
 #, python-brace-format
 msgid "Authentication failed: {err}"
 msgstr "Authentication failed: {err}"
 
-#: auth/handlers.py:48
+#: auth/handlers.py:51
 #, python-brace-format
 msgid " for user {username}"
 msgstr " for user {username}"
 
-#: auth/handlers.py:49
+#: auth/handlers.py:52
 #, python-brace-format
 msgid ". IP: {ip}"
 msgstr ". IP: {ip}"
 
-#: auth/handlers.py:61
+#: auth/handlers.py:64
 msgid "User {} logout with token {}"
 msgstr "User {} logout with token {}"
 
-#: auth/handlers.py:70
+#: auth/handlers.py:73
 msgid "Demo version"
 msgstr "Demo version"
 
@@ -1015,8 +1020,8 @@ msgid "{cls}: resource monitor for controller {ip} removed"
 msgstr "{cls}: resource monitor for controller {ip} removed"
 
 #: tests/test_auth_v2.py:125
-msgid "Invalid credeintials (ldap)"
-msgstr "Invalid credeintials (ldap)"
+msgid "Invalid credentials (ldap)"
+msgstr "Invalid credentials (ldap)"
 
 #: thin_client_api/handlers.py:65
 msgid "Thin client limit exceeded."
@@ -1158,68 +1163,68 @@ msgstr "VMs list could not be retrieved: {}"
 msgid "GraphQL: VM type list:"
 msgstr "GraphQL: VM type list:"
 
-#~ msgid "Group {} is deleted"
-#~ msgstr "Group {} is deleted"
-
-#~ msgid "Can't create VM:"
-#~ msgstr "Can't create VM:"
-
-#~ msgid "Subclasses of BasePasswordHasher must provide a verify() method"
-#~ msgstr "Subclasses of BasePasswordHasher must provide a verify() method"
-
-#~ msgid "Mapping {} for auth directory {} is deleted"
-#~ msgstr "Mapping {} for auth directory {} is deleted"
-
-#~ msgid "Subclasses of BasePasswordHasher must provide an encode() method"
-#~ msgstr "Subclasses of BasePasswordHasher must provide an encode() method"
-
-#~ msgid "Automated pool successfully created. Initial VM amount {}"
-#~ msgstr "Automated pool successfully created. Initial VM amount {}"
-
-#~ msgid "Couldn't load {} algorithm library: {}"
-#~ msgstr "Couldn't load %r algorithm library: %s"
-
-#~ msgid "Subclasses of BasePasswordHasher should provide a harden_runtime() method"
-#~ msgstr "Subclasses of BasePasswordHasher should provide a harden_runtime() method"
-
-#~ msgid "{role} \"{username}\" created."
-#~ msgstr "{role} \"{username}\" created."
-
-#~ msgid "Group {} roles: {}"
-#~ msgstr "Group {} roles: {}"
-
-#~ msgid "Hasher %r doesn't specify a library attribute"
-#~ msgstr "Hasher %r doesn't specify a library attribute"
-
-#~ msgid "License information:"
-#~ msgstr "License information:"
-
-#~ msgid "Authentication directory {} is deleted"
-#~ msgstr "Authentication directory server {} is down."
-
-#~ msgid "Removal pool of desktops {verbose_name} is done."
-#~ msgstr "Removal pool of desktops {verbose_name} is done."
-
-#~ msgid "StaticPool: Objects on VDI DB created."
-#~ msgstr "StaticPool: Objects on VDI DB created."
-
-#~ msgid "Automated pool creation. Created {} VMs from {}"
-#~ msgstr "Automated pool creation. Created {} VMs from {}"
-
-#~ msgid "URL {url} - {http_error}"
-#~ msgstr "URL {url} - {http_error}"
-
-#~ msgid "IP: . username: {}"
-#~ msgstr "IP: . username: {}"
-
-#~ msgid "Create Pool"
-#~ msgstr "Create Pool"
-
-#~ msgid "Error with controller update: {}"
-#~ msgstr "Error with controller update: {}"
+#~ msgid "User name must contain minimum 3 characters. It must contain letters and digits, _, -, +."
+#~ msgstr "User name must contain minimum 3 characters. It must contain letters and digits, _, -, +."
 
 #~ msgid "AutomatedPool {} is created"
 #~ msgstr "AutomatedPool {} is created"
 
-#~ msgid "User name must contain minimum 3 characters. It must contain letters and digits, _, -, +."
-#~ msgstr "User name must contain minimum 3 characters. It must contain letters and digits, _, -, +."
+#~ msgid "Error with controller update: {}"
+#~ msgstr "Error with controller update: {}"
+
+#~ msgid "Create Pool"
+#~ msgstr "Create Pool"
+
+#~ msgid "IP: . username: {}"
+#~ msgstr "IP: . username: {}"
+
+#~ msgid "URL {url} - {http_error}"
+#~ msgstr "URL {url} - {http_error}"
+
+#~ msgid "Automated pool creation. Created {} VMs from {}"
+#~ msgstr "Automated pool creation. Created {} VMs from {}"
+
+#~ msgid "StaticPool: Objects on VDI DB created."
+#~ msgstr "StaticPool: Objects on VDI DB created."
+
+#~ msgid "Removal pool of desktops {verbose_name} is done."
+#~ msgstr "Removal pool of desktops {verbose_name} is done."
+
+#~ msgid "Authentication directory {} is deleted"
+#~ msgstr "Authentication directory server {} is down."
+
+#~ msgid "License information:"
+#~ msgstr "License information:"
+
+#~ msgid "Hasher %r doesn't specify a library attribute"
+#~ msgstr "Hasher %r doesn't specify a library attribute"
+
+#~ msgid "Group {} roles: {}"
+#~ msgstr "Group {} roles: {}"
+
+#~ msgid "{role} \"{username}\" created."
+#~ msgstr "{role} \"{username}\" created."
+
+#~ msgid "Subclasses of BasePasswordHasher should provide a harden_runtime() method"
+#~ msgstr "Subclasses of BasePasswordHasher should provide a harden_runtime() method"
+
+#~ msgid "Couldn't load {} algorithm library: {}"
+#~ msgstr "Couldn't load %r algorithm library: %s"
+
+#~ msgid "Automated pool successfully created. Initial VM amount {}"
+#~ msgstr "Automated pool successfully created. Initial VM amount {}"
+
+#~ msgid "Subclasses of BasePasswordHasher must provide an encode() method"
+#~ msgstr "Subclasses of BasePasswordHasher must provide an encode() method"
+
+#~ msgid "Mapping {} for auth directory {} is deleted"
+#~ msgstr "Mapping {} for auth directory {} is deleted"
+
+#~ msgid "Subclasses of BasePasswordHasher must provide a verify() method"
+#~ msgstr "Subclasses of BasePasswordHasher must provide a verify() method"
+
+#~ msgid "Can't create VM:"
+#~ msgstr "Can't create VM:"
+
+#~ msgid "Group {} is deleted"
+#~ msgstr "Group {} is deleted"
