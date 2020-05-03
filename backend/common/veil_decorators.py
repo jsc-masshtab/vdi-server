@@ -109,7 +109,7 @@ def context(f):
     return decorator
 
 
-def user_passes_test(test_func, exc=Unauthorized(_('Invalid permissions'))):  # noqa
+def user_passes_test(test_func, exc=Unauthorized):  # noqa
     """exc в GraphQl вернется с 200тым кодом.
        https://github.com/graphql-python/graphene/issues/946
     """
@@ -127,7 +127,7 @@ def user_passes_test(test_func, exc=Unauthorized(_('Invalid permissions'))):  # 
                 await log.warning(
                     _('IP: {}. username: {}').format(cntxt.remote_ip, user.username),
                     entity_dict={'entity_type': EntityType.SECURITY, 'entity_uuid': None})
-                raise exc
+                raise exc(_('Invalid permissions'))
             else:
                 return f(*args, **kwargs)
         return wrapper
