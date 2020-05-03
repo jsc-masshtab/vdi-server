@@ -290,8 +290,6 @@ class AuthenticationDirectory(db.Model, AbstractSortableStatusModel):
         user_info, user_groups = ldap_server.search_s(base, ldap.SCOPE_SUBTREE,
                                                       user_info_filter, ['memberOf'])[0]
 
-        log.debug(_('AD user info: {}').format(user_info))
-        log.debug(_('AD user groups: {}').format(user_groups))
         return user_info, user_groups
 
     @staticmethod
@@ -386,9 +384,6 @@ class AuthenticationDirectory(db.Model, AbstractSortableStatusModel):
         user_veil_groups = False
         ad_ou, ad_groups = (self._get_ad_user_ou(user_info),
                             self._get_ad_user_groups(user_groups.get('memberOf', [])))
-
-        log.debug(_('OU: {}').format(ad_ou))
-        log.debug(_('GROUPS: {}').format(ad_groups))
 
         # Производим проверку в порядке уменьшения приоритета.
         # В случае, если совпадение найдено,
