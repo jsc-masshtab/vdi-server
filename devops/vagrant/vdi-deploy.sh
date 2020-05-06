@@ -177,7 +177,7 @@ rm -rf ${TMP_FRONTEND_DIR}
 
 echo "All done. Directory tree:"
 echo "Project root dir: ${ROOT_DIR}"
-echo "backend/application dir: ${APP_DIR}"
+echo "backend/application dir: ${BACKEND_DIR}"
 echo "static fronted dir: ${WWW_DIR}"
 echo "additional dir (ssl, conf): ${OTHER_DIR}"
 echo "env dir: ${ENV_DIR}"
