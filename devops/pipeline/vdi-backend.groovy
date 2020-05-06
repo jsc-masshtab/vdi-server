@@ -128,9 +128,6 @@ node("$AGENT") {
                         echo "requirepass ${REDIS_PASS}" | sudo tee -a /etc/redis/redis.conf
                         systemctl restart redis-server
 
-
-
-
                         # configure postgres
 
                         # сохраняем исходный конфиг
@@ -163,16 +160,17 @@ node("$AGENT") {
 
                         # setting up nginx
 
+                        cp ${WORKSPACE}/devops/deb/vdi-backend/root/opt/veil-vdi/other/veil_ssl/veil_default.crt /opt/veil-vdi/other/veil_ssl/veil_default.crt
+                        cp ${WORKSPACE}/devops/deb/vdi-backend/root/opt/veil-vdi/other/veil_ssl/veil_default.key /opt/veil-vdi/other/veil_ssl/veil_default.key
                         sudo cp ${WORKSPACE}/devops/deb/vdi-backend/root/opt/veil-vdi/other/vdi.nginx /etc/nginx/conf.d/vdi_nginx.conf
-
                         sudo rm /etc/nginx/sites-enabled/* || true
+
                         sudo systemctl restart nginx
 
                     '''
                 }
 
 
-                
                 stage ('additional settings') {
                     sh script: '''
                         # creating logs directory at /var/log/veil-vdi/
@@ -184,6 +182,10 @@ node("$AGENT") {
                         # deploying configuration files for supervisor
                         sudo rm /etc/supervisor/supervisord.conf
                         sudo cp ${WORKSPACE}/devops/deb/vdi-backend/root/opt/veil-vdi/other/supervisord.conf /etc/supervisor/supervisord.conf
+                        sudo cp ${WORKSPACE}/devops/deb/vdi-backend/root/opt/veil-vdi/other/tornado.supervisor /opt/veil-vdi/other/tornado.supervisor
+
+                        sudo chown jenkins: -R /opt/veil-vdi/
+
                         sudo supervisorctl reload
 
                         # vdi backend status
