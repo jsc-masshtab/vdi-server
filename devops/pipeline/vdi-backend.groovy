@@ -114,8 +114,8 @@ node("$AGENT") {
 
 
                         # берем из файла ключи доступа к БД и Redis
-                        DB_PASS="$(grep -r 'DB_PASS' /opt/veil-vdi/app/create_local_settings.py | sed -r "s/DB_PASS = '(.+)'/\\1/g")"
-                        REDIS_PASS="$(grep -r 'REDIS_PASSWORD' /opt/veil-vdi/app/create_local_settings.py | sed -r "s/REDIS_PASSWORD = '(.+)'/\\1/g")"
+                        DB_PASS="$(grep -r 'DB_PASS' /opt/veil-vdi/app/local_settings.py | sed -r "s/DB_PASS = '(.+)'/\\1/g")"
+                        REDIS_PASS="$(grep -r 'REDIS_PASSWORD' /opt/veil-vdi/app/local_settings.py | sed -r "s/REDIS_PASSWORD = '(.+)'/\\1/g")"
 
                         # configure redis
 
