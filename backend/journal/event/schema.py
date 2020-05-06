@@ -4,7 +4,7 @@ from graphql import GraphQLError
 from sqlalchemy import desc, and_, text
 
 from database import db
-from common.veil_decorators import superuser_required
+from common.veil_decorators import administrator_required
 from journal.event.models import Event, EventReadByUser, EventEntity
 from auth.models import Entity
 from auth.user_schema import User, UserType
@@ -86,7 +86,7 @@ class EventQuery(graphene.ObjectType):
         entity_type=graphene.String()
     )
 
-    @superuser_required
+    @administrator_required
     async def resolve_count(self, _info, event_type=None, start_date=None,
                             end_date=None, user=None, read_by=None, entity_type=None):
         filters = build_filters(event_type, start_date, end_date, user, read_by, entity_type)
@@ -95,7 +95,7 @@ class EventQuery(graphene.ObjectType):
         event_count = await db.select([db.func.count()]).select_from(query.alias()).gino.scalar()
         return event_count
 
-    @superuser_required
+    @administrator_required
     async def resolve_entity_types(self, _info, event_type=None, start_date=None,
                                    end_date=None, user=None, read_by=None, entity_type=None):
         # TODO: refactor me
@@ -111,7 +111,7 @@ class EventQuery(graphene.ObjectType):
         entity_types = await query.gino.all()
         return [entity[0] for entity in entity_types]
 
-    @superuser_required
+    @administrator_required
     async def resolve_events(self, _info, limit=100, offset=0, event_type=None,
                              start_date=None, end_date=None, user=None, read_by=None, entity_type=None):
         filters = build_filters(event_type, start_date, end_date, user, read_by, entity_type)
@@ -135,7 +135,7 @@ class EventQuery(graphene.ObjectType):
         ]
         return event_type_list
 
-    @superuser_required
+    @administrator_required
     async def resolve_event(self, _info, id):
         query = Event.outerjoin(EventReadByUser).outerjoin(User).outerjoin(
             EventEntity).outerjoin(Entity).select().where(Event.id == id)
@@ -162,7 +162,7 @@ class MarkEventsReadByMutation(graphene.Mutation):
 
     ok = graphene.Boolean()
 
-    @superuser_required
+    @administrator_required
     async def mutate(self, _info, user, events=None):
         await Event.mark_read_by(user, events)
         return RemoveAllEventsMutation(ok=True)
@@ -175,7 +175,7 @@ class UnmarkEventsReadByMutation(graphene.Mutation):
 
     ok = graphene.Boolean()
 
-    @superuser_required
+    @administrator_required
     async def mutate(self, _info, user, events=None):
         await Event.unmark_read_by(user, events)
         return UnmarkEventsReadByMutation(ok=True)
@@ -187,7 +187,7 @@ class RemoveAllEventsMutation(graphene.Mutation):
 
     ok = graphene.Boolean()
 
-    @superuser_required
+    @administrator_required
     async def mutate(self, _info):
         await Event.delete.gino.status()
         await log.info(_("Journal is clear."))

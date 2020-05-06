@@ -1,6 +1,7 @@
 
 export interface IPool extends ISettingsAutoPool, ISettingsStaticPool  {
   verbose_name: string;
+  assigned_connection_types: [string];
   pool_type: string;
   vms: IPoolVms[];
   controller: {

@@ -12,8 +12,9 @@ import { TableIntoComponent } from './components/shared/table-into-component/tab
 import { TableComponentComponent } from './components/shared/table-component/table-component.component';
 import { FormForEditComponent } from './forms-dinamic/change-form/form-edit.component';
 import { ReactiveFormsModule, FormsModule } from '@angular/forms';
-import { MatCheckboxModule } from '@angular/material';
+import { MatCheckboxModule, MatSelectModule } from '@angular/material';
 import { PaginationComponent } from './components/shared/pagination/pagination.component';
+import { FooterService } from './components/single/footer/footer.service';
 
 
 const COMPONENTS = [
@@ -56,11 +57,15 @@ const FORMS_DINAMIC = [
     MatDialogModule,
     ReactiveFormsModule,
     MatCheckboxModule,
+    MatSelectModule,
     AppRoutingModule,
     FormsModule
   ],
   entryComponents: [
     ...FORMS_DINAMIC
+  ],
+  providers: [
+    FooterService
   ]
 })
 

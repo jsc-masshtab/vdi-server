@@ -290,8 +290,6 @@ class AuthenticationDirectory(db.Model, AbstractSortableStatusModel):
         user_info, user_groups = ldap_server.search_s(base, ldap.SCOPE_SUBTREE,
                                                       user_info_filter, ['memberOf'])[0]
 
-        log.debug(_('AD user info: {}').format(user_info))
-        log.debug(_('AD user groups: {}').format(user_groups))
         return user_info, user_groups
 
     @staticmethod
@@ -387,9 +385,6 @@ class AuthenticationDirectory(db.Model, AbstractSortableStatusModel):
         ad_ou, ad_groups = (self._get_ad_user_ou(user_info),
                             self._get_ad_user_groups(user_groups.get('memberOf', [])))
 
-        log.debug(_('OU: {}').format(ad_ou))
-        log.debug(_('GROUPS: {}').format(ad_groups))
-
         # Производим проверку в порядке уменьшения приоритета.
         # В случае, если совпадение найдено,
         # проверка отображений более низкого приоритета не производится.
@@ -415,6 +410,18 @@ class AuthenticationDirectory(db.Model, AbstractSortableStatusModel):
                     await group.add_user(user.id)
                 return True
         return False
+
+    @classmethod
+    async def get_domain_name(cls, username: str):
+        """Возввращает доменное имя для контроллера AD.
+           Если в username есть доменное имя - вернется оно, если нет - domain_name из записи AD."""
+        _, domain_name = cls._extract_domain_from_username(username)
+        if not domain_name:
+            authentication_directory = await AuthenticationDirectory.get_objects(first=True)
+            if not authentication_directory:
+                raise ValidationError(_('No authentication directory controllers.'))
+            domain_name = authentication_directory.domain_name
+        return domain_name
 
     @classmethod
     async def authenticate(cls, username, password):
@@ -450,7 +457,7 @@ class AuthenticationDirectory(db.Model, AbstractSortableStatusModel):
             success = False
             created = False
             # log.debug(ldap_error)
-            raise ValidationError(_('Invalid credeintials (ldap): {}').format(ldap_error))
+            raise ValidationError(_('Invalid credentials (ldap): {}').format(ldap_error))
         except ldap.SERVER_DOWN:
             # Если нет связи с сервером службы каталогов, то возвращаем ошибку о недоступности
             # сервера, так как не можем сделать вывод о правильности предоставленных данных.
@@ -461,6 +468,7 @@ class AuthenticationDirectory(db.Model, AbstractSortableStatusModel):
         finally:
             if not success and created:
                 await user.delete()
+        return account_name
 
 
 class Mapping(db.Model):

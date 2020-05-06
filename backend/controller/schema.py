@@ -2,7 +2,7 @@
 import graphene
 from graphql import GraphQLError
 
-from common.veil_decorators import superuser_required
+from common.veil_decorators import administrator_required
 from common.veil_errors import SimpleError
 
 from database import StatusGraphene
@@ -59,7 +59,7 @@ class AddControllerMutation(graphene.Mutation):
     ok = graphene.Boolean()
     controller = graphene.Field(lambda: ControllerType)
 
-    @superuser_required
+    @administrator_required
     async def mutate(self, _info, verbose_name, address, username,
                      password, ldap_connection, description=None):
         try:
@@ -90,7 +90,7 @@ class UpdateControllerMutation(graphene.Mutation):
     ok = graphene.Boolean()
     controller = graphene.Field(lambda: ControllerType)
 
-    @superuser_required
+    @administrator_required
     async def mutate(self, _info, id, verbose_name=None, address=None, username=None,
                      password=None, ldap_connection=None, description=None):
 
@@ -134,7 +134,7 @@ class RemoveControllerMutation(graphene.Mutation):
 
     ok = graphene.Boolean()
 
-    @superuser_required
+    @administrator_required
     async def mutate(self, _info, id, full=False):
         # TODO: validate active connected resources
 
@@ -147,11 +147,8 @@ class RemoveControllerMutation(graphene.Mutation):
         else:
             status = await controller.soft_delete(dest=_('Controller'))
 
-        # todo:
-        #  Есть мысль: прекращать взаимодействие с контроллером по ws перед началом удаления самого контроллера
-        #  и возвращать взаимодействие, если контроллер не удалось удалить. Логика в том, чтобы не взаимодействовать
-        #  с сущностью, находящейся в удаляемом состоянии.
-        await resources_monitor_manager.remove_controller(controller.address)
+        if controller.active:
+            await resources_monitor_manager.remove_controller(controller.address)
 
         return RemoveControllerMutation(ok=status)
 
@@ -162,7 +159,7 @@ class TestControllerMutation(graphene.Mutation):
 
     ok = graphene.Boolean()
 
-    @superuser_required
+    @administrator_required
     async def mutate(self, _info, id):
         controller = await Controller.get(id)
         if not controller:
@@ -182,7 +179,7 @@ class ControllerQuery(graphene.ObjectType):
     controllers = graphene.List(lambda: ControllerType)
     controller = graphene.Field(lambda: ControllerType, id=graphene.String())
 
-    @superuser_required
+    @administrator_required
     async def resolve_controllers(self, _info):
         controllers = await Controller.query.gino.all()
         objects = [
@@ -191,7 +188,7 @@ class ControllerQuery(graphene.ObjectType):
         ]
         return objects
 
-    @superuser_required
+    @administrator_required
     async def resolve_controller(self, _info, id):
         controller = await Controller.query.where(Controller.id == id).gino.first()
         if not controller:

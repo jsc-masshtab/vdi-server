@@ -32,14 +32,17 @@ class AuthHandler(BaseHandler, ABC):
                 raise ValidationError(_('Missing password'))
 
             if self.args.get('ldap'):
-                await AuthenticationDirectory.authenticate(self.args['username'], self.args['password'])
+                account_name = await AuthenticationDirectory.authenticate(username, password)
+                domain_name = await AuthenticationDirectory.get_domain_name(self.args['username'])
             else:
-                password_is_valid = await User.check_user(self.args['username'], self.args['password'])
+                password_is_valid = await User.check_user(username, password)
+                account_name = username
+                domain_name = None
                 if not password_is_valid:
                     raise AssertError(_('Invalid credentials'))
 
-            access_token = encode_jwt(self.args['username'])
-            await User.login(username=self.args['username'], token=access_token.get('access_token'), ip=self.remote_ip,
+            access_token = encode_jwt(account_name, domain=domain_name)
+            await User.login(username=account_name, token=access_token.get('access_token'), ip=self.remote_ip,
                              ldap=self.args.get('ldap'), client_type=self.client_type)
             response = {'data': access_token}
         except AssertionError as auth_error:

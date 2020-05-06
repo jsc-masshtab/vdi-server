@@ -149,4 +149,7 @@ rm -rf ${ROOT_DIR}/backend
 rm -rf ${ROOT_DIR}/tmp
 rm -rf ${FRONTEND_DIR}
 
+echo "Permissions for vagrant..."
+chown vagrant ${BACKEND_DIR} -R
+
 echo "All done"

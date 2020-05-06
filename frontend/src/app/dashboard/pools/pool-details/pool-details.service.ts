@@ -82,6 +82,7 @@ export class PoolDetailsService {
                                         id
                                         verbose_name
                                     }
+                                    assigned_connection_types
                                 }
                             }`,
                 variables: {
@@ -133,6 +134,7 @@ export class PoolDetailsService {
                                         id
                                         verbose_name
                                     }
+                                    assigned_connection_types
                                 }
                             }`,
                 variables: {
@@ -275,13 +277,13 @@ export class PoolDetailsService {
         });
     }
 
-    public updatePool({pool_id, pool_type }, {verbose_name, reserve_size, total_size, vm_name_template, create_thin_clones, keep_vms_on}) {
+    public updatePool({pool_id, pool_type }, {connection_types, verbose_name, reserve_size, total_size, vm_name_template, create_thin_clones, keep_vms_on}) {
         if (pool_type === 'static') {
             return this.service.mutate<any>({
                 mutation: gql`
-                                mutation pools($pool_id: UUID!,$verbose_name: String
+                                mutation pools($connection_types: [PoolConnectionTypes!], $pool_id: UUID!,$verbose_name: String
                                      $keep_vms_on: Boolean) {
-                                    updateStaticPool(pool_id: $pool_id, verbose_name: $verbose_name,
+                                    updateStaticPool(connection_types: $connection_types, pool_id: $pool_id, verbose_name: $verbose_name,
                                      keep_vms_on: $keep_vms_on ) {
                                         ok
                                     }
@@ -291,7 +293,8 @@ export class PoolDetailsService {
                     method: 'POST',
                     pool_id,
                     verbose_name,
-                    keep_vms_on
+                    keep_vms_on,
+                    connection_types
                 }
             });
         }
@@ -299,10 +302,10 @@ export class PoolDetailsService {
         if (pool_type === 'automated') {
             return this.service.mutate<any>({
                 mutation: gql`
-                                mutation pools($pool_id: UUID!,$verbose_name: String,
+                                mutation pools($connection_types: [PoolConnectionTypes!], $pool_id: UUID!,$verbose_name: String,
                                     $reserve_size: Int , $total_size: Int , $vm_name_template: String ,
                                      $keep_vms_on: Boolean, $create_thin_clones: Boolean ) {
-                                    updateDynamicPool(pool_id: $pool_id, verbose_name: $verbose_name,
+                                    updateDynamicPool(connection_types: $connection_types, pool_id: $pool_id, verbose_name: $verbose_name,
                                         reserve_size: $reserve_size, total_size: $total_size,
                                         vm_name_template: $vm_name_template, keep_vms_on: $keep_vms_on,
                                          create_thin_clones: $create_thin_clones ) {
@@ -318,7 +321,8 @@ export class PoolDetailsService {
                     total_size,
                     vm_name_template,
                     keep_vms_on,
-                    create_thin_clones
+                    create_thin_clones,
+                    connection_types
                 }
             });
         }

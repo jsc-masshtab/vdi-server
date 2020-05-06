@@ -10,7 +10,6 @@ from common.veil_decorators import security_administrator_required, readonly_req
 
 from languages import lang_init
 
-
 _ = lang_init()
 
 
@@ -26,12 +25,13 @@ class UserValidator(MutationValidation):
 
     @staticmethod
     async def validate_username(obj_dict, value):
-        usernamename_re = re.compile('^[a-zA-Z0-9.-_+ ]{3,128}$')
-        template_name = re.match(usernamename_re, value)
+        user_name_re = re.compile('^[a-zA-Z0-9.-_+]{3,128}$')
+        template_name = re.match(user_name_re, value.strip())
         if template_name:
+            obj_dict['username'] = value
             return value
         raise AssertError(
-            _('User name must contain minimum 3 characters. It must contain letters and digits, _, -, +.'))
+            _('username must contain >= 3 chars (letters, digits, _, -, +) and can\'t contain any spaces'))
 
     @staticmethod
     async def validate_email(obj_dict, value):
@@ -57,6 +57,18 @@ class UserValidator(MutationValidation):
         #     return value
         # raise AssertError(
         #     'Пароль должен быть не меньше 8 символов, содержать буквы, цифры и спец.символы.')
+
+    @staticmethod
+    async def validate_first_name(obj_dict, value):
+        if len(value) > 32:
+            raise AssertError(_('First name length must be <= 32 characters.'))
+        return value
+
+    @staticmethod
+    async def validate_last_name(obj_dict, value):
+        if len(value) > 128:
+            raise AssertError(_('Last name length must be <= 128 characters.'))
+        return value
 
 
 class UserGroupType(graphene.ObjectType):
@@ -172,6 +184,7 @@ class CreateUserMutation(graphene.Mutation, UserValidator):
     @security_administrator_required
     async def mutate(cls, root, info, **kwargs):
         await cls.validate_agruments(**kwargs)
+        kwargs['username'] = kwargs['username'].strip()
         user = await User.soft_create(**kwargs)
         return CreateUserMutation(
             user=UserType(**user.__values__),
@@ -194,6 +207,8 @@ class UpdateUserMutation(graphene.Mutation, UserValidator):
     @security_administrator_required
     async def mutate(cls, root, info, **kwargs):
         await cls.validate_agruments(**kwargs)
+        if kwargs.get('username'):
+            kwargs['username'] = kwargs['username'].strip()
         user = await User.soft_update(kwargs['id'],
                                       kwargs.get('username'), kwargs.get('email'),
                                       kwargs.get('last_name'), kwargs.get('first_name'),

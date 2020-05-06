@@ -17,6 +17,7 @@ export interface ISelectValue {
 
 export interface IFinishPoolView {
     verbose_name: string;
+    connection_types: [string];
     type: string;
     cluster_name: string;
     node_name: string;
@@ -32,6 +33,7 @@ export interface IFinishPoolView {
 }
 
 export interface IFinishPoolForm {
+    connection_types: [string];
     verbose_name: string;
     cluster_id: string;
     node_id: string;
