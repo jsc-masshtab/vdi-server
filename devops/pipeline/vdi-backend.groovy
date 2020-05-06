@@ -105,18 +105,28 @@ node("$AGENT") {
                         rsync -a --delete ${PIPENV_PATH}/ "${DEB_ROOT}/${PRJNAME}/root/opt/veil-vdi/env"
 
                         # генерируем local_settings
-                        /opt/veil-vdi/env/bin/python /opt/veil-vdi/app/create_local_settings.py
+                        sudo /opt/veil-vdi/env/bin/python /opt/veil-vdi/app/create_local_settings.py
                     '''
                 }
 
                 stage ('configure application') {
                     sh script: '''
+
+
+                        # берем из файла ключи доступа к БД и Redis
+                        DB_PASS="$(grep -r 'DB_PASS' /opt/veil-vdi/app/create_local_settings.py | sed -r "s/DB_PASS = '(.+)'/\\1/g")"
+                        REDIS_PASS="$(grep -r 'REDIS_PASSWORD' /opt/veil-vdi/app/create_local_settings.py | sed -r "s/REDIS_PASSWORD = '(.+)'/\\1/g")"
+
                         # configure redis
 
-                        sudo systemctl enable redis-server.service
-                        echo 'requirepass 4NZ7GpHn4IlshPhb' | sudo tee -a /etc/redis/redis.conf
-                        sudo sed -i 's/bind 127.0.0.1/bind 0.0.0.0/g' /etc/redis/redis.conf
-                        sudo systemctl restart redis-server
+                        systemctl enable redis-server.service
+                        # сохраняем исходный конфиг
+                        sudo cp /etc/redis/redis.conf /etc/redis/redis.default
+                        # подкладываем наш из conf
+                        cp ${WORKSPACE}/devops/deb/vdi-backend/root/opt/veil-vdi/other/vdi.redis /etc/redis/redis.conf
+                        # устанавливаем пароль для подключения
+                        echo "requirepass ${REDIS_PASS}" | sudo tee -a /etc/redis/redis.conf
+                        systemctl restart redis-server
 
                         # configure postgres
 
