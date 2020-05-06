@@ -60,7 +60,7 @@ echo "Setting up env"
 # Обновляем pip до последней версии
 /usr/bin/python3 -m pip install -U pip
 # Устанавливаем virtualenv
-/usr/bin/python3 -m pip install 'virtualenv==16.7.10' --force-reinstall
+/usr/bin/python3 -m pip install 'virtualenv==15.1.0' --force-reinstall
 # Создаем виртуальное окружение
 /usr/bin/python3 -m virtualenv ${ENV_DIR}
 # Устанавливаем зависимости
