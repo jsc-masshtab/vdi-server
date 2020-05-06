@@ -120,19 +120,16 @@ node("$AGENT") {
 
                         # configure redis
 
-                        systemctl enable redis-server.service
-                        # сохраняем исходный конфиг
-                        sudo cp /etc/redis/redis.conf /etc/redis/redis.default
-                        # подкладываем наш из conf
-                        cp ${WORKSPACE}/devops/deb/vdi-backend/root/opt/veil-vdi/other/vdi.redis /etc/redis/redis.conf
+                        sudo systemctl enable redis-server.service
+
+                        sudo cp ${WORKSPACE}/devops/deb/vdi-backend/root/opt/veil-vdi/other/vdi.redis /etc/redis/redis.conf
                         # устанавливаем пароль для подключения
                         echo "requirepass ${REDIS_PASS}" | sudo tee -a /etc/redis/redis.conf
-                        systemctl restart redis-server
+
+                        sudo systemctl restart redis-server
 
                         # configure postgres
 
-                        # сохраняем исходный конфиг
-                        cp /etc/postgresql/9.6/main/postgresql.conf /etc/postgresql/9.6/main/postgresql.default
                         # перекладываем наш из conf
                         sudo cp ${WORKSPACE}/devops/deb/vdi-backend/root/opt/veil-vdi/other/vdi.postgresql /etc/postgresql/9.6/main/postgresql.conf
                         
@@ -157,7 +154,7 @@ node("$AGENT") {
 
                         export PYTHONPATH=/opt/veil-vdi/app
                         cd /opt/veil-vdi/app
-                        /opt/veil-vdi/env/bin/python -m /opt/veil-vdi/env/bin/alembic upgrade head
+                        /opt/veil-vdi/env/bin/python /opt/veil-vdi/env/bin/alembic upgrade head
 
                         # setting up nginx
 
