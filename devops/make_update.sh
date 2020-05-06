@@ -1,10 +1,11 @@
 #!/usr/bin/env bash
 
 CURRENT_DATE=$(date +"%Y%m%d%H%M")
-ROOT_DIRECTORY='tmp'$CURRENT_DATE;
-BACKEND_DIR=$ROOT_DIRECTORY/app/
-FRONTEND_DIR=$ROOT_DIRECTORY/frontend/
-CONF_DIR=$ROOT_DIRECTORY/other/
+ROOT_DIRECTORY='tmp'${CURRENT_DATE};
+BACKEND_DIR=${ROOT_DIRECTORY}/app/
+FRONTEND_DIR=${ROOT_DIRECTORY}/www/
+CONF_DIR=${ROOT_DIRECTORY}/other/
+ENV_DIR=${ROOT_DIRECTORY}/env/
 
 
 usage() {
@@ -20,55 +21,52 @@ EOF
 prepare_folders(){
   echo "Setting up folder structure for feature updates..."
 
-  mkdir -p -v "$ROOT_DIRECTORY"
-  mkdir -p -v "$BACKEND_DIR"
-  mkdir -p -v "$FRONTEND_DIR"
-  mkdir -p -v "$CONF_DIR"
+  mkdir -p -v "${ROOT_DIRECTORY}"
+  mkdir -p -v "${BACKEND_DIR}"
+  mkdir -p -v "${FRONTEND_DIR}"
+  mkdir -p -v "${CONF_DIR}"
+  mkdir -p -v "${ENV_DIR}"
 }
 
 get_frontend_dir(){
   echo "Getting frontend staticfiles from Vagrant..."
-  scp -r vagrant@192.168.20.112:/opt/veil-vdi/frontend/* "$FRONTEND_DIR"
+  scp -r vagrant@192.168.20.112:/opt/veil-vdi/www/* "${FRONTEND_DIR}"
 }
 
 get_configurations(){
   echo "Getting configuration files from Vagrant..."
-  rsync -rv --exclude={license,veil_ssl} vagrant@192.168.20.112:/opt/veil-vdi/other/ "$CONF_DIR"
+  rsync -rv --exclude={license} vagrant@192.168.20.112:/opt/veil-vdi/other/ ${CONF_DIR}
 }
 
 get_backend(){
   echo "Getting backend files from Vagrant..."
-  rsync -rv --exclude={*.pyc,.idea,.pytest_cache,__pycache__,.coveragerc,.python-version,tests} vagrant@192.168.20.112:/opt/veil-vdi/app/ "$BACKEND_DIR"
+  rsync -rv --exclude={*.pyc,.idea,.pytest_cache,__pycache__,.coveragerc,.python-version,tests} vagrant@192.168.20.112:/opt/veil-vdi/app/ "${BACKEND_DIR}"
 }
 
-compress_resuls(){
+get_env(){
+  echo "Getting env from Vagrant..."
+  rsync -rv vagrant@192.168.20.112:/opt/veil-vdi/env/ ${ENV_DIR}
+}
+
+compress_results(){
   echo "Compressing results..."
-  tar -cvzf "$ROOT_DIRECTORY$currentDate.tar.gz" "$ROOT_DIRECTORY"
+  tar -cvzf "${ROOT_DIRECTORY}${currentDate}.tar.gz" ${ROOT_DIRECTORY}
 }
 
 remove_tmp(){
-  echo "Removing temprorary directory $ROOT_DIRECTORY"
-  rm -rf "$ROOT_DIRECTORY"
+  echo "Removing temporary directory ${ROOT_DIRECTORY}"
+  rm -rf "${ROOT_DIRECTORY}"
 }
 
-new() {
+run() {
   prepare_folders;
   get_frontend_dir;
   get_configurations;
   get_backend;
-  compress_resuls;
+  get_env;
+  compress_results;
   remove_tmp;
   echo "Done."
 }
 
-
-# parse argv
-while test $# -ne 0; do
-  arg=$1;
-  shift
-  case $arg in
-    -h|--help) usage; exit ;;
-    -n) new; exit ;;
-  esac
-done
-
+run;
