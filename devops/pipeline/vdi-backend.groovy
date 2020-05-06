@@ -105,6 +105,7 @@ node("$AGENT") {
                         rsync -a --delete ${PIPENV_PATH}/ "${DEB_ROOT}/${PRJNAME}/root/opt/veil-vdi/env"
 
                         # генерируем local_settings
+                        cd /opt/veil-vdi/app
                         sudo /opt/veil-vdi/env/bin/python /opt/veil-vdi/app/create_local_settings.py
                     '''
                 }
