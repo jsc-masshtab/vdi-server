@@ -17,7 +17,7 @@ properties([
     ),
     gitLabConnection('gitlab'),
     parameters([
-        string(      name: 'BRANCH',               defaultValue: 'dev',              description: 'branch', trim: false),
+        string(      name: 'BRANCH',               defaultValue: 'feature_tg_8124',              description: 'branch', trim: false),
         string(      name: 'REPO',                 defaultValue: 'vdi',              description: 'repo for uploading', trim: false),
         string(      name: 'VERSION',              defaultValue: '2.0.0',            description: 'base version',  trim: false),
         string(      name: 'AGENT',                defaultValue: 'debian9',          description: 'jenkins agent label for running the job', trim: false),
@@ -28,7 +28,7 @@ node("$AGENT") {
 
     env.PRJNAME="vdi-frontend"
     env.NFS_DIR="vdi-deb"
-    env.DEB_ROOT="${WORKSPACE}/devops/deb-config"
+    env.DEB_ROOT="${WORKSPACE}/devops/deb"
     env.DATE="$currentDate"
 
 
@@ -82,8 +82,9 @@ node("$AGENT") {
                         # frontend compiled ${WORKSPACE}/frontend/dist/frontend
 
                         mkdir -p "${DEB_ROOT}/${PRJNAME}/root/opt/veil-vdi/www"
-                        cp -r ${WORKSPACE}/frontend/dist/frontend/* /opt/veil-vdi/www
+                        sudo mkdir -p /opt/veil-vdi/www
                         cp -r ${WORKSPACE}/frontend/dist/frontend/* "${DEB_ROOT}/${PRJNAME}/root/opt/veil-vdi/www"
+                        sudo cp -r ${WORKSPACE}/frontend/dist/frontend/* /opt/veil-vdi/www
 
                         make -C ${DEB_ROOT}/${PRJNAME}
 
