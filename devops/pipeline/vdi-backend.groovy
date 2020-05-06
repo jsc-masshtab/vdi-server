@@ -90,19 +90,20 @@ node("$AGENT") {
                 stage ('prepare virtual env') {
                     sh script: '''
 
-                        export PYTHONPATH=${WORKSPACE}/backend
-                        export PIPENV_PIPFILE=${WORKSPACE}/backend/Pipfile
-                        # на версии 20.0.0 перестал работать pipenv
-                        python3 -m pip install 'virtualenv<20.0.0' --force-reinstall
-                        python3 -m pip install pipenv
-                        pipenv install
+                        # обновляем pip до последней версии
+                        /usr/bin/python3 -m pip install -U pip
+                        # устанавливаем virtualenv
+                        /usr/bin/python3 -m pip install 'virtualenv==15.1.0' --force-reinstall
+                        # создаем виртуальное окружение
+                        sudo rm -rf /opt/veil-vdi/env
+                        /usr/bin/python3 -m virtualenv /opt/veil-vdi/env
+                        # устанавливаем зависимости
+                        cd /opt/veil-vdi/app
+                        /opt/veil-vdi/env/bin/python -m pip install -r requirements.txt
 
-                        # копируем каталог с файлами фиртуального окружения в пакет
-                        PIPENV_PATH=$(pipenv --venv)
-                        sudo mkdir -p /opt/veil-vdi/env
+                        # копируем каталог с файлами виртуального окружения в пакет
                         mkdir -p "${DEB_ROOT}/${PRJNAME}/root/opt/veil-vdi/env"
-                        sudo rsync -a --delete ${PIPENV_PATH}/ /opt/veil-vdi/env
-                        rsync -a --delete ${PIPENV_PATH}/ "${DEB_ROOT}/${PRJNAME}/root/opt/veil-vdi/env"
+                        rsync -a --delete /opt/veil-vdi/env/ "${DEB_ROOT}/${PRJNAME}/root/opt/veil-vdi/env"
 
                         # генерируем local_settings
                         cd /opt/veil-vdi/app
