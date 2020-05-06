@@ -87,7 +87,29 @@ node("$AGENT") {
                     '''
                 }
 
-                stage ('prepare config') {
+                stage ('prepare virtual env') {
+                    sh script: '''
+
+                        export PYTHONPATH=${WORKSPACE}/backend
+                        export PIPENV_PIPFILE=${WORKSPACE}/backend/Pipfile
+                        # на версии 20.0.0 перестал работать pipenv
+                        python3 -m pip install 'virtualenv<20.0.0' --force-reinstall
+                        python3 -m pip install pipenv
+                        pipenv install
+
+                        # копируем каталог с файлами фиртуального окружения в пакет
+                        PIPENV_PATH=$(pipenv --venv)
+                        sudo mkdir -p /opt/veil-vdi/env
+                        mkdir -p "${DEB_ROOT}/${PRJNAME}/root/opt/veil-vdi/env"
+                        sudo rsync -a --delete ${PIPENV_PATH}/ /opt/veil-vdi/env
+                        rsync -a --delete ${PIPENV_PATH}/ "${DEB_ROOT}/${PRJNAME}/root/opt/veil-vdi/env"
+
+                        # генерируем local_settings
+                        /opt/veil-vdi/env/bin/python /opt/veil-vdi/app/create_local_settings.py
+                    '''
+                }
+
+                stage ('configure application') {
                     sh script: '''
                         # configure redis
 
@@ -113,6 +135,12 @@ node("$AGENT") {
                         # На астре нету бездуховной кодировки en_US.UTF-8. Есть C.UTF-8
                         sudo -u postgres -i psql -c "create database vdi encoding 'utf8' lc_collate = 'en_US.UTF-8' lc_ctype = 'en_US.UTF-8' template template0;" || true
 
+                        # apply database migrations
+
+                        export PYTHONPATH=/opt/veil-vdi/app
+                        cd /opt/veil-vdi/app
+                        /opt/veil-vdi/env/bin/python -m /opt/veil-vdi/env/bin/alembic upgrade head
+
                         # setting up nginx
 
                         sudo cp ${WORKSPACE}/devops/deb/vdi-backend/root/opt/veil-vdi/other/vdi.nginx /etc/nginx/conf.d/vdi_nginx.conf
@@ -123,29 +151,7 @@ node("$AGENT") {
                     '''
                 }
 
-                stage ('prepare virtual env') {
-                    sh script: '''
 
-                        export PYTHONPATH=${WORKSPACE}/backend
-                        export PIPENV_PIPFILE=${WORKSPACE}/backend/Pipfile
-                        # на версии 20.0.0 перестал работать pipenv
-                        python3 -m pip install 'virtualenv<20.0.0' --force-reinstall
-                        python3 -m pip install pipenv
-                        pipenv install
-
-                        # apply database migrations
-
-                        cd ${WORKSPACE}/backend
-                        pipenv run alembic upgrade head
-
-                        #  копируем каталог с файлами фиртуального окружения в пакет
-                        PIPENV_PATH=$(pipenv --venv)
-                        sudo mkdir -p /opt/veil-vdi/env
-                        mkdir -p "${DEB_ROOT}/${PRJNAME}/root/opt/veil-vdi/env"
-                        sudo rsync -a --delete ${PIPENV_PATH}/ /opt/veil-vdi/env
-                        rsync -a --delete ${PIPENV_PATH}/ "${DEB_ROOT}/${PRJNAME}/root/opt/veil-vdi/env"
-                    '''
-                }
                 
                 stage ('additional settings') {
                     sh script: '''
