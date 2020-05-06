@@ -82,7 +82,7 @@ node("$AGENT") {
                         sudo rsync -a --delete ${WORKSPACE}/backend/ /opt/veil-vdi/app
                         rsync -a --delete ${WORKSPACE}/backend/ "${DEB_ROOT}/${PRJNAME}/root/opt/veil-vdi/app"
                         # copy other catalog
-                        sudo rsync -a --delete ${WORKSPACE}/devops/deb/vdi-backend/root/opt/veil-vdi/other/ /opt/veil-vdi/other
+                        sudo rsync -a --delete "${DEB_ROOT}/${PRJNAME}/root/opt/veil-vdi/other/" /opt/veil-vdi/other
 
                     '''
                 }
@@ -123,7 +123,7 @@ node("$AGENT") {
 
                         sudo systemctl enable redis-server.service
 
-                        sudo cp ${WORKSPACE}/devops/deb/vdi-backend/root/opt/veil-vdi/other/vdi.redis /etc/redis/redis.conf
+                        sudo cp "${DEB_ROOT}/${PRJNAME}/root/opt/veil-vdi/other/vdi.redis /etc/redis/redis.conf
                         # устанавливаем пароль для подключения
                         echo "requirepass ${REDIS_PASS}" | sudo tee -a /etc/redis/redis.conf
 
@@ -132,7 +132,7 @@ node("$AGENT") {
                         # configure postgres
 
                         # перекладываем наш из conf
-                        sudo cp ${WORKSPACE}/devops/deb/vdi-backend/root/opt/veil-vdi/other/vdi.postgresql /etc/postgresql/9.6/main/postgresql.conf
+                        sudo cp "${DEB_ROOT}/${PRJNAME}/root/opt/veil-vdi/other/vdi.postgresql /etc/postgresql/9.6/main/postgresql.conf
                         
                         sudo sed -i 's/peer/trust/g' /etc/postgresql/9.6/main/pg_hba.conf
                         sudo sed -i "s/#listen_addresses = 'localhost'/listen_addresses = '127.0.0.1'/g" /etc/postgresql/9.6/main/postgresql.conf
@@ -159,9 +159,9 @@ node("$AGENT") {
 
                         # setting up nginx
 
-                        cp ${WORKSPACE}/devops/deb/vdi-backend/root/opt/veil-vdi/other/veil_ssl/veil_default.crt /opt/veil-vdi/other/veil_ssl/veil_default.crt
-                        cp ${WORKSPACE}/devops/deb/vdi-backend/root/opt/veil-vdi/other/veil_ssl/veil_default.key /opt/veil-vdi/other/veil_ssl/veil_default.key
-                        sudo cp ${WORKSPACE}/devops/deb/vdi-backend/root/opt/veil-vdi/other/vdi.nginx /etc/nginx/conf.d/vdi_nginx.conf
+                        cp "${DEB_ROOT}/${PRJNAME}/root/opt/veil-vdi/other/veil_ssl/veil_default.crt /opt/veil-vdi/other/veil_ssl/veil_default.crt
+                        cp "${DEB_ROOT}/${PRJNAME}/root/opt/veil-vdi/other/veil_ssl/veil_default.key /opt/veil-vdi/other/veil_ssl/veil_default.key
+                        sudo cp "${DEB_ROOT}/${PRJNAME}/root/opt/veil-vdi/other/vdi.nginx /etc/nginx/conf.d/vdi_nginx.conf
                         sudo rm /etc/nginx/sites-enabled/* || true
 
                         sudo systemctl restart nginx
@@ -176,12 +176,12 @@ node("$AGENT") {
                         sudo mkdir -p /var/log/veil-vdi/
 
                         # deploying configuration files for logrotate
-                        sudo cp ${WORKSPACE}/devops/deb/vdi-backend/root/opt/veil-vdi/other/tornado.logrotate /etc/logrotate.d/veil-vdi
+                        sudo cp "${DEB_ROOT}/${PRJNAME}/root/opt/veil-vdi/other/tornado.logrotate /etc/logrotate.d/veil-vdi
 
                         # deploying configuration files for supervisor
                         sudo rm /etc/supervisor/supervisord.conf
-                        sudo cp ${WORKSPACE}/devops/deb/vdi-backend/root/opt/veil-vdi/other/supervisord.conf /etc/supervisor/supervisord.conf
-                        sudo cp ${WORKSPACE}/devops/deb/vdi-backend/root/opt/veil-vdi/other/tornado.supervisor /opt/veil-vdi/other/tornado.supervisor
+                        sudo cp "${DEB_ROOT}/${PRJNAME}/root/opt/veil-vdi/other/supervisord.conf /etc/supervisor/supervisord.conf
+                        sudo cp "${DEB_ROOT}/${PRJNAME}/root/opt/veil-vdi/other/tornado.supervisor /opt/veil-vdi/other/tornado.supervisor
 
                         sudo chown jenkins: -R /opt/veil-vdi/
 
