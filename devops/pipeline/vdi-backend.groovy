@@ -128,9 +128,16 @@ node("$AGENT") {
                         echo "requirepass ${REDIS_PASS}" | sudo tee -a /etc/redis/redis.conf
                         systemctl restart redis-server
 
+
+
+
                         # configure postgres
 
+                        # сохраняем исходный конфиг
+                        cp /etc/postgresql/9.6/main/postgresql.conf /etc/postgresql/9.6/main/postgresql.default
+                        # перекладываем наш из conf
                         sudo cp ${WORKSPACE}/devops/deb/vdi-backend/root/opt/veil-vdi/other/vdi.postgresql /etc/postgresql/9.6/main/postgresql.conf
+                        
                         sudo sed -i 's/peer/trust/g' /etc/postgresql/9.6/main/pg_hba.conf
                         sudo sed -i "s/#listen_addresses = 'localhost'/listen_addresses = '127.0.0.1'/g" /etc/postgresql/9.6/main/postgresql.conf
                         echo 'host  vdi postgres  0.0.0.0/0  trust' | sudo tee -a /etc/postgresql/9.6/main/pg_hba.conf
@@ -140,8 +147,11 @@ node("$AGENT") {
                         
                         sudo systemctl restart postgresql
 
+                        # cоздаем БД
+
                         echo 'postgres:postgres' | sudo chpasswd
-                        sudo -u postgres -i psql -c "ALTER ROLE postgres PASSWORD 'postgres';"
+                        sudo -u postgres -i psql -c "ALTER ROLE postgres PASSWORD '${DB_PASS}';"
+
                         # На астре нету бездуховной кодировки en_US.UTF-8. Есть C.UTF-8
                         sudo -u postgres -i psql -c "create database vdi encoding 'utf8' lc_collate = 'en_US.UTF-8' lc_ctype = 'en_US.UTF-8' template template0;" || true
 
