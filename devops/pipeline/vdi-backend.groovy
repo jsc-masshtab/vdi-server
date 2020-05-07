@@ -76,29 +76,68 @@ node("$AGENT") {
                 stage ('prepare backend app') {
                     sh script: '''
                         sudo rm -rf /opt/veil-vdi/app
+                        sudo rm -rf /opt/veil-vdi/other
+
                         sudo mkdir -p /opt/veil-vdi/app
-                        mkdir -p "${DEB_ROOT}/${PRJNAME}/root/opt/veil-vdi/app"
                         sudo mkdir -p /opt/veil-vdi/other
+
                         sudo rsync -a --delete ${WORKSPACE}/backend/ /opt/veil-vdi/app
+                        sudo rsync -a --delete "${DEB_ROOT}/${PRJNAME}/root/opt/veil-vdi/other/" /opt/veil-vdi/other
+
+                        mkdir -p "${DEB_ROOT}/${PRJNAME}/root/opt/veil-vdi/app"
                         rsync -a --delete ${WORKSPACE}/backend/ "${DEB_ROOT}/${PRJNAME}/root/opt/veil-vdi/app"
-                        # copy other catalog
-                        sudo rsync -a --delete ${WORKSPACE}/devops/deb/vdi-backend/root/opt/veil-vdi/other/ /opt/veil-vdi/other
 
                     '''
                 }
 
-                stage ('prepare config') {
+                stage ('prepare virtual env') {
                     sh script: '''
+
+                        # обновляем pip до последней версии
+                        /usr/bin/python3 -m pip install -U pip
+                        # устанавливаем virtualenv
+                        /usr/bin/python3 -m pip install 'virtualenv==15.1.0' --force-reinstall
+                        # создаем виртуальное окружение
+                        sudo rm -rf /opt/veil-vdi/env
+                        /usr/bin/python3 -m virtualenv /opt/veil-vdi/env
+                        # устанавливаем зависимости
+                        cd /opt/veil-vdi/app
+                        /opt/veil-vdi/env/bin/python -m pip install -r requirements.txt
+
+                        # копируем каталог с файлами виртуального окружения в пакет
+                        mkdir -p "${DEB_ROOT}/${PRJNAME}/root/opt/veil-vdi/env"
+                        rsync -a --delete /opt/veil-vdi/env/ "${DEB_ROOT}/${PRJNAME}/root/opt/veil-vdi/env"
+
+                    '''
+                }
+
+                stage ('configure application') {
+                    sh script: '''
+
+                        # генерируем local_settings только если его не существует
+                        if [ ! -f /opt/veil-vdi/app/local_settings.py ]; then
+                            cd /opt/veil-vdi/app
+                            sudo /opt/veil-vdi/env/bin/python /opt/veil-vdi/app/create_local_settings.py
+                        fi
+
                         # configure redis
 
+                        # берем из файла ключи доступа
+                        REDIS_PASS="$(grep -r 'REDIS_PASSWORD' /opt/veil-vdi/app/local_settings.py | sed -r "s/REDIS_PASSWORD = '(.+)'/\\1/g")"
+
                         sudo systemctl enable redis-server.service
-                        echo 'requirepass 4NZ7GpHn4IlshPhb' | sudo tee -a /etc/redis/redis.conf
-                        sudo sed -i 's/bind 127.0.0.1/bind 0.0.0.0/g' /etc/redis/redis.conf
+
+                        sudo cp "${DEB_ROOT}/${PRJNAME}/root/opt/veil-vdi/other/vdi.redis" /etc/redis/redis.conf
+                        # устанавливаем пароль для подключения
+                        echo "requirepass ${REDIS_PASS}" | sudo tee -a /etc/redis/redis.conf
+
                         sudo systemctl restart redis-server
 
                         # configure postgres
 
-                        sudo cp ${WORKSPACE}/devops/deb/vdi-backend/root/opt/veil-vdi/other/vdi.postgresql /etc/postgresql/9.6/main/postgresql.conf
+                        # перекладываем наш из conf
+                        sudo cp "${DEB_ROOT}/${PRJNAME}/root/opt/veil-vdi/other/vdi.postgresql" /etc/postgresql/9.6/main/postgresql.conf
+                        
                         sudo sed -i 's/peer/trust/g' /etc/postgresql/9.6/main/pg_hba.conf
                         sudo sed -i "s/#listen_addresses = 'localhost'/listen_addresses = '127.0.0.1'/g" /etc/postgresql/9.6/main/postgresql.conf
                         echo 'host  vdi postgres  0.0.0.0/0  trust' | sudo tee -a /etc/postgresql/9.6/main/pg_hba.conf
@@ -108,66 +147,60 @@ node("$AGENT") {
                         
                         sudo systemctl restart postgresql
 
+                        # cоздаем БД
+
+                        # берем из файла ключи доступа
+                        DB_PASS="$(grep -r 'DB_PASS' /opt/veil-vdi/app/local_settings.py | sed -r "s/DB_PASS = '(.+)'/\\1/g")"
+
                         echo 'postgres:postgres' | sudo chpasswd
-                        sudo -u postgres -i psql -c "ALTER ROLE postgres PASSWORD 'postgres';"
+                        sudo -u postgres -i psql -c "ALTER ROLE postgres PASSWORD '${DB_PASS}';"
+
                         # На астре нету бездуховной кодировки en_US.UTF-8. Есть C.UTF-8
                         sudo -u postgres -i psql -c "create database vdi encoding 'utf8' lc_collate = 'en_US.UTF-8' lc_ctype = 'en_US.UTF-8' template template0;" || true
 
+                        # apply database migrations
+
+                        export PYTHONPATH=/opt/veil-vdi/app
+                        cd /opt/veil-vdi/app
+                        /opt/veil-vdi/env/bin/python /opt/veil-vdi/env/bin/alembic upgrade head
+
                         # setting up nginx
 
-                        sudo cp ${WORKSPACE}/devops/deb/vdi-backend/root/opt/veil-vdi/other/vdi.nginx /etc/nginx/conf.d/vdi_nginx.conf
-
+                        cp "${DEB_ROOT}/${PRJNAME}/root/opt/veil-vdi/other/veil_ssl/veil_default.crt" /opt/veil-vdi/other/veil_ssl/veil_default.crt
+                        cp "${DEB_ROOT}/${PRJNAME}/root/opt/veil-vdi/other/veil_ssl/veil_default.key" /opt/veil-vdi/other/veil_ssl/veil_default.key
+                        sudo cp "${DEB_ROOT}/${PRJNAME}/root/opt/veil-vdi/other/vdi.nginx" /etc/nginx/conf.d/vdi_nginx.conf
                         sudo rm /etc/nginx/sites-enabled/* || true
+
                         sudo systemctl restart nginx
 
                     '''
                 }
 
-                stage ('prepare virtual env') {
-                    sh script: '''
 
-                        export PYTHONPATH=${WORKSPACE}/backend
-                        export PIPENV_PIPFILE=${WORKSPACE}/backend/Pipfile
-                        # на версии 20.0.0 перестал работать pipenv
-                        python3 -m pip install 'virtualenv<20.0.0' --force-reinstall
-                        python3 -m pip install pipenv
-                        pipenv install
-
-                        # apply database migrations
-
-                        cd ${WORKSPACE}/backend
-                        pipenv run alembic upgrade head
-
-                        #  копируем каталог с файлами фиртуального окружения в пакет
-                        PIPENV_PATH=$(pipenv --venv)
-                        sudo mkdir -p /opt/veil-vdi/env
-                        mkdir -p "${DEB_ROOT}/${PRJNAME}/root/opt/veil-vdi/env"
-                        sudo rsync -a --delete ${PIPENV_PATH}/ /opt/veil-vdi/env
-                        rsync -a --delete ${PIPENV_PATH}/ "${DEB_ROOT}/${PRJNAME}/root/opt/veil-vdi/env"
-                    '''
-                }
-                
                 stage ('additional settings') {
                     sh script: '''
                         # creating logs directory at /var/log/veil-vdi/
                         sudo mkdir -p /var/log/veil-vdi/
 
                         # deploying configuration files for logrotate
-                        sudo cp ${WORKSPACE}/devops/deb/vdi-backend/root/opt/veil-vdi/other/tornado.logrotate /etc/logrotate.d/veil-vdi
+                        sudo cp "${DEB_ROOT}/${PRJNAME}/root/opt/veil-vdi/other/tornado.logrotate" /etc/logrotate.d/veil-vdi
 
                         # deploying configuration files for supervisor
                         sudo rm /etc/supervisor/supervisord.conf
-                        sudo cp ${WORKSPACE}/devops/deb/vdi-backend/root/opt/veil-vdi/other/supervisord.conf /etc/supervisor/supervisord.conf
+                        sudo cp "${DEB_ROOT}/${PRJNAME}/root/opt/veil-vdi/other/supervisord.conf" /etc/supervisor/supervisord.conf
+
+                        sudo chown jenkins: -R /opt/veil-vdi/
+
                         sudo supervisorctl reload
 
                         # vdi backend status
-                        sudo supervisorctl status
+                        sudo supervisorctl status || true
                     '''
                 }
                 
                 stage ('build app') {
                     sh script: '''
-                        make -C ${DEB_ROOT}/${PRJNAME}
+                        make -C "${DEB_ROOT}/${PRJNAME}"
                     '''
                 }
 
@@ -176,7 +209,7 @@ node("$AGENT") {
                         # upload to nfs
                         mkdir -p /nfs/${NFS_DIR}
                         rm -f /nfs/vdi-deb/${PRJNAME}*.deb
-                        cp ${DEB_ROOT}/${PRJNAME}/*.deb /nfs/${NFS_DIR}/
+                        cp "${DEB_ROOT}/${PRJNAME}"/*.deb /nfs/${NFS_DIR}/
                     '''
                 }
                 
@@ -185,7 +218,7 @@ node("$AGENT") {
                         echo "REPO - $REPO"
                      
                         # upload files to temp repo
-                        DEB=$(ls -1 ${DEB_ROOT}/${PRJNAME}/*.deb)
+                        DEB=$(ls -1 "${DEB_ROOT}/${PRJNAME}"/*.deb)
                         for ITEM in $DEB
                         do
                             echo "Processing packet: $ITEM"
