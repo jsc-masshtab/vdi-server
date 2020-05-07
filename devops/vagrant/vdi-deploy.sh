@@ -76,6 +76,7 @@ ${ENV_DIR}/bin/python -m pip install -r requirements.txt
 
 # Генерируем local_settings
 echo "Executing local_settings.py"
+
 cd ${BACKEND_DIR} && /opt/veil-vdi/env/bin/python create_local_settings.py
 # Берем из файла ключи доступа к БД и Redis
 DB_PASS="$(grep -r 'DB_PASS' local_settings.py | sed -r "s/DB_PASS = '(.+)'/\1/g")"

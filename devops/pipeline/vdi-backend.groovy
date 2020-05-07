@@ -81,11 +81,11 @@ node("$AGENT") {
                         sudo mkdir -p /opt/veil-vdi/app
                         sudo mkdir -p /opt/veil-vdi/other
 
-                        mkdir -p "${DEB_ROOT}/${PRJNAME}/root/opt/veil-vdi/app"
-                        
                         sudo rsync -a --delete ${WORKSPACE}/backend/ /opt/veil-vdi/app
-                        rsync -a --delete ${WORKSPACE}/backend/ "${DEB_ROOT}/${PRJNAME}/root/opt/veil-vdi/app"
                         sudo rsync -a --delete "${DEB_ROOT}/${PRJNAME}/root/opt/veil-vdi/other/" /opt/veil-vdi/other
+
+                        mkdir -p "${DEB_ROOT}/${PRJNAME}/root/opt/veil-vdi/app"
+                        rsync -a --delete ${WORKSPACE}/backend/ "${DEB_ROOT}/${PRJNAME}/root/opt/veil-vdi/app"
 
                     '''
                 }
@@ -123,7 +123,7 @@ node("$AGENT") {
                         # configure redis
 
                         # берем из файла ключи доступа
-                        DB_PASS="$(grep -r 'DB_PASS' /opt/veil-vdi/app/local_settings.py | sed -r "s/DB_PASS = '(.+)'/\\1/g")"
+                        REDIS_PASS="$(grep -r 'REDIS_PASSWORD' /opt/veil-vdi/app/local_settings.py | sed -r "s/REDIS_PASSWORD = '(.+)'/\\1/g")"
 
                         sudo systemctl enable redis-server.service
 
@@ -136,7 +136,7 @@ node("$AGENT") {
                         # configure postgres
 
                         # перекладываем наш из conf
-                        sudo cp "${DEB_ROOT}/${PRJNAME}/root/opt/veil-vdi/other/vdi.postgresql /etc/postgresql/9.6/main/postgresql.conf
+                        sudo cp "${DEB_ROOT}/${PRJNAME}/root/opt/veil-vdi/other/vdi.postgresql" /etc/postgresql/9.6/main/postgresql.conf
                         
                         sudo sed -i 's/peer/trust/g' /etc/postgresql/9.6/main/pg_hba.conf
                         sudo sed -i "s/#listen_addresses = 'localhost'/listen_addresses = '127.0.0.1'/g" /etc/postgresql/9.6/main/postgresql.conf
@@ -150,7 +150,7 @@ node("$AGENT") {
                         # cоздаем БД
 
                         # берем из файла ключи доступа
-                        REDIS_PASS="$(grep -r 'REDIS_PASSWORD' /opt/veil-vdi/app/local_settings.py | sed -r "s/REDIS_PASSWORD = '(.+)'/\\1/g")"
+                        DB_PASS="$(grep -r 'DB_PASS' /opt/veil-vdi/app/local_settings.py | sed -r "s/DB_PASS = '(.+)'/\\1/g")"
 
                         echo 'postgres:postgres' | sudo chpasswd
                         sudo -u postgres -i psql -c "ALTER ROLE postgres PASSWORD '${DB_PASS}';"
@@ -188,14 +188,13 @@ node("$AGENT") {
                         # deploying configuration files for supervisor
                         sudo rm /etc/supervisor/supervisord.conf
                         sudo cp "${DEB_ROOT}/${PRJNAME}/root/opt/veil-vdi/other/supervisord.conf /etc/supervisor/supervisord.conf
-                        sudo cp "${DEB_ROOT}/${PRJNAME}/root/opt/veil-vdi/other/tornado.supervisor /opt/veil-vdi/other/tornado.supervisor
 
                         sudo chown jenkins: -R /opt/veil-vdi/
 
                         sudo supervisorctl reload
 
                         # vdi backend status
-                        sudo supervisorctl status
+                        sudo supervisorctl status || true
                     '''
                 }
                 
