@@ -76,12 +76,15 @@ node("$AGENT") {
                 stage ('prepare backend app') {
                     sh script: '''
                         sudo rm -rf /opt/veil-vdi/app
+                        sudo rm -rf /opt/veil-vdi/other
+
                         sudo mkdir -p /opt/veil-vdi/app
-                        mkdir -p "${DEB_ROOT}/${PRJNAME}/root/opt/veil-vdi/app"
                         sudo mkdir -p /opt/veil-vdi/other
+
+                        mkdir -p "${DEB_ROOT}/${PRJNAME}/root/opt/veil-vdi/app"
+                        
                         sudo rsync -a --delete ${WORKSPACE}/backend/ /opt/veil-vdi/app
                         rsync -a --delete ${WORKSPACE}/backend/ "${DEB_ROOT}/${PRJNAME}/root/opt/veil-vdi/app"
-                        # copy other catalog
                         sudo rsync -a --delete "${DEB_ROOT}/${PRJNAME}/root/opt/veil-vdi/other/" /opt/veil-vdi/other
 
                     '''
@@ -105,21 +108,22 @@ node("$AGENT") {
                         mkdir -p "${DEB_ROOT}/${PRJNAME}/root/opt/veil-vdi/env"
                         rsync -a --delete /opt/veil-vdi/env/ "${DEB_ROOT}/${PRJNAME}/root/opt/veil-vdi/env"
 
-                        # генерируем local_settings
-                        cd /opt/veil-vdi/app
-                        sudo /opt/veil-vdi/env/bin/python /opt/veil-vdi/app/create_local_settings.py
                     '''
                 }
 
                 stage ('configure application') {
                     sh script: '''
 
-
-                        # берем из файла ключи доступа к БД и Redis
-                        DB_PASS="$(grep -r 'DB_PASS' /opt/veil-vdi/app/local_settings.py | sed -r "s/DB_PASS = '(.+)'/\\1/g")"
-                        REDIS_PASS="$(grep -r 'REDIS_PASSWORD' /opt/veil-vdi/app/local_settings.py | sed -r "s/REDIS_PASSWORD = '(.+)'/\\1/g")"
+                        # генерируем local_settings только если его не существует
+                        if [ ! -f /opt/veil-vdi/app/local_settings.py ]; then
+                            cd /opt/veil-vdi/app
+                            sudo /opt/veil-vdi/env/bin/python /opt/veil-vdi/app/create_local_settings.py
+                        fi
 
                         # configure redis
+
+                        # берем из файла ключи доступа
+                        DB_PASS="$(grep -r 'DB_PASS' /opt/veil-vdi/app/local_settings.py | sed -r "s/DB_PASS = '(.+)'/\\1/g")"
 
                         sudo systemctl enable redis-server.service
 
@@ -144,6 +148,9 @@ node("$AGENT") {
                         sudo systemctl restart postgresql
 
                         # cоздаем БД
+
+                        # берем из файла ключи доступа
+                        REDIS_PASS="$(grep -r 'REDIS_PASSWORD' /opt/veil-vdi/app/local_settings.py | sed -r "s/REDIS_PASSWORD = '(.+)'/\\1/g")"
 
                         echo 'postgres:postgres' | sudo chpasswd
                         sudo -u postgres -i psql -c "ALTER ROLE postgres PASSWORD '${DB_PASS}';"
