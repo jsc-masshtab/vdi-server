@@ -127,7 +127,7 @@ node("$AGENT") {
 
                         sudo systemctl enable redis-server.service
 
-                        sudo cp "${DEB_ROOT}/${PRJNAME}/root/opt/veil-vdi/other/vdi.redis /etc/redis/redis.conf
+                        sudo cp "${DEB_ROOT}/${PRJNAME}/root/opt/veil-vdi/other/vdi.redis" /etc/redis/redis.conf
                         # устанавливаем пароль для подключения
                         echo "requirepass ${REDIS_PASS}" | sudo tee -a /etc/redis/redis.conf
 
@@ -166,9 +166,9 @@ node("$AGENT") {
 
                         # setting up nginx
 
-                        cp "${DEB_ROOT}/${PRJNAME}/root/opt/veil-vdi/other/veil_ssl/veil_default.crt /opt/veil-vdi/other/veil_ssl/veil_default.crt
-                        cp "${DEB_ROOT}/${PRJNAME}/root/opt/veil-vdi/other/veil_ssl/veil_default.key /opt/veil-vdi/other/veil_ssl/veil_default.key
-                        sudo cp "${DEB_ROOT}/${PRJNAME}/root/opt/veil-vdi/other/vdi.nginx /etc/nginx/conf.d/vdi_nginx.conf
+                        cp "${DEB_ROOT}/${PRJNAME}/root/opt/veil-vdi/other/veil_ssl/veil_default.crt" /opt/veil-vdi/other/veil_ssl/veil_default.crt
+                        cp "${DEB_ROOT}/${PRJNAME}/root/opt/veil-vdi/other/veil_ssl/veil_default.key" /opt/veil-vdi/other/veil_ssl/veil_default.key
+                        sudo cp "${DEB_ROOT}/${PRJNAME}/root/opt/veil-vdi/other/vdi.nginx" /etc/nginx/conf.d/vdi_nginx.conf
                         sudo rm /etc/nginx/sites-enabled/* || true
 
                         sudo systemctl restart nginx
@@ -183,11 +183,11 @@ node("$AGENT") {
                         sudo mkdir -p /var/log/veil-vdi/
 
                         # deploying configuration files for logrotate
-                        sudo cp "${DEB_ROOT}/${PRJNAME}/root/opt/veil-vdi/other/tornado.logrotate /etc/logrotate.d/veil-vdi
+                        sudo cp "${DEB_ROOT}/${PRJNAME}/root/opt/veil-vdi/other/tornado.logrotate" /etc/logrotate.d/veil-vdi
 
                         # deploying configuration files for supervisor
                         sudo rm /etc/supervisor/supervisord.conf
-                        sudo cp "${DEB_ROOT}/${PRJNAME}/root/opt/veil-vdi/other/supervisord.conf /etc/supervisor/supervisord.conf
+                        sudo cp "${DEB_ROOT}/${PRJNAME}/root/opt/veil-vdi/other/supervisord.conf" /etc/supervisor/supervisord.conf
 
                         sudo chown jenkins: -R /opt/veil-vdi/
 
@@ -200,7 +200,7 @@ node("$AGENT") {
                 
                 stage ('build app') {
                     sh script: '''
-                        make -C ${DEB_ROOT}/${PRJNAME}
+                        make -C "${DEB_ROOT}/${PRJNAME}"
                     '''
                 }
 
@@ -209,7 +209,7 @@ node("$AGENT") {
                         # upload to nfs
                         mkdir -p /nfs/${NFS_DIR}
                         rm -f /nfs/vdi-deb/${PRJNAME}*.deb
-                        cp ${DEB_ROOT}/${PRJNAME}/*.deb /nfs/${NFS_DIR}/
+                        cp "${DEB_ROOT}/${PRJNAME}"/*.deb /nfs/${NFS_DIR}/
                     '''
                 }
                 
@@ -218,7 +218,7 @@ node("$AGENT") {
                         echo "REPO - $REPO"
                      
                         # upload files to temp repo
-                        DEB=$(ls -1 ${DEB_ROOT}/${PRJNAME}/*.deb)
+                        DEB=$(ls -1 "${DEB_ROOT}/${PRJNAME}"/*.deb)
                         for ITEM in $DEB
                         do
                             echo "Processing packet: $ITEM"
