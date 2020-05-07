@@ -12,7 +12,7 @@ properties([
             artifactDaysToKeepStr: '',
             artifactNumToKeepStr: '',
             daysToKeepStr: '60',
-            numToKeepStr: '30'
+            numToKeepStr: '100'
         )
     ),
     gitLabConnection('gitlab'),
