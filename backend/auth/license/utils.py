@@ -26,6 +26,11 @@ from cryptography.hazmat.primitives import serialization, hashes
 from cryptography.hazmat.primitives.asymmetric import padding
 
 from settings import PRIVATE_PEM_FPATH, SERIAL_KEY_FPATH
+from languages import lang_init
+from journal.journal import Log as log
+
+
+_ = lang_init()
 
 
 # TODO: лицензии некорректно обновляются для нескольких инстансов приложения (меняется только в рамках 1 потока).
@@ -202,12 +207,16 @@ class License:
                         decrypted_data = decrypted_data_bytes.decode('utf-8') if decrypted_data_bytes else None
                         # При отсутствии значения в decrypted_data сработает TypeError
                         license_data = json.loads(decrypted_data)
+                        msg = _('Valid license key. {} thin clients available.'.format(license_data['thin_clients_limit']))
+                        log.debug(msg)
             except (TypeError, FileNotFoundError, ValueError):
                 license_data = {
                     "verbose_name": "Unlicensed Veil VDI",
                     "thin_clients_limit": 0,
                     "uuid": str(uuid4())
                 }
+                msg = _('License key did not add. {} thin clients available.'.format(license_data['thin_clients_limit']))
+                log.debug(msg)
             try:
                 self.license_data = LicenseData(**license_data)
             except TypeError:
@@ -217,6 +226,8 @@ class License:
                     "thin_clients_limit": 0,
                     "uuid": str(uuid4())
                 }
+                msg = _('Invalid license key')
+                log.debug(msg)
                 self.license_data = LicenseData(**license_data)
             return self.license_data
 
