@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2020-05-02 21:45+0300\n"
+"POT-Creation-Date: 2020-05-20 12:26+0300\n"
 "PO-Revision-Date: 2020-03-16 17:13+0300\n"
 "Last-Translator: Emil <e.gareev@mashtab.org>\n"
 "Language-Team: Russian\n"
@@ -115,13 +115,13 @@ msgid "Values for auth directory is updated"
 msgstr "Values for auth directory is updated"
 
 #: auth/authentication_directory/models.py:195
-#: auth/authentication_directory/models.py:551 auth/models.py:426
+#: auth/authentication_directory/models.py:546 auth/models.py:426
 #: controller/models.py:251 pool/models.py:481 vm/models.py:105
 msgid "{} {} had remove."
 msgstr "Выполнено удаление: {} {}."
 
 #: auth/authentication_directory/models.py:202
-#: auth/authentication_directory/models.py:558 auth/models.py:433
+#: auth/authentication_directory/models.py:553 auth/models.py:433
 #: controller/models.py:258 pool/models.py:488 vm/models.py:112
 msgid "Soft_delete exception: {}"
 msgstr "Ошибка удаления: {}"
@@ -150,68 +150,52 @@ msgstr "Сервер директории авторизации {} не раб�
 msgid "Authentication directory server {} is connected"
 msgstr "Сервер директории авторизации {} подключен"
 
-#: auth/authentication_directory/models.py:293
-msgid "AD user info: {}"
-msgstr "Информация пользователя AD: {}"
-
-#: auth/authentication_directory/models.py:294
-msgid "AD user groups: {}"
-msgstr "Группы пользователей AD: {}"
-
-#: auth/authentication_directory/models.py:341
+#: auth/authentication_directory/models.py:339
 msgid "Username must be a string."
 msgstr "Имя пользователя должно быть строкой."
 
-#: auth/authentication_directory/models.py:366
+#: auth/authentication_directory/models.py:364
 msgid "Assigning veil groups to {}"
 msgstr "Присвоение групп veil {}"
 
-#: auth/authentication_directory/models.py:379
+#: auth/authentication_directory/models.py:377
 msgid "Mappings: {}"
 msgstr "Отображения: {}"
 
-#: auth/authentication_directory/models.py:383
+#: auth/authentication_directory/models.py:381
 msgid "Role VM_OPERATOR has assigned to user {}."
 msgstr "Пользователю {} назначена роль VM_OPERATOR."
 
-#: auth/authentication_directory/models.py:390
-msgid "OU: {}"
-msgstr "Подразделения: {}"
-
-#: auth/authentication_directory/models.py:391
-msgid "GROUPS: {}"
-msgstr "Группы: {}"
-
-#: auth/authentication_directory/models.py:400
+#: auth/authentication_directory/models.py:395
 msgid "escaped values: {}"
 msgstr "cкрытые значения: {}"
 
-#: auth/authentication_directory/models.py:401
+#: auth/authentication_directory/models.py:396
 msgid "role mapping value type: {}"
 msgstr "nип значений отображения роли: {}"
 
-#: auth/authentication_directory/models.py:410
+#: auth/authentication_directory/models.py:405
 msgid "{}"
 msgstr "{}"
 
-#: auth/authentication_directory/models.py:411
+#: auth/authentication_directory/models.py:406
 msgid "User veil groups: {}"
 msgstr "Группы пользователей veil: {}"
 
-#: auth/authentication_directory/models.py:414
+#: auth/authentication_directory/models.py:409
 msgid "Attaching user {} to group: {}"
 msgstr "Прикрепление пользователя {} к группе {}"
 
-#: auth/authentication_directory/models.py:427
-#: auth/authentication_directory/models.py:440 tests/test_auth_v2.py:109
+#: auth/authentication_directory/models.py:422
+#: auth/authentication_directory/models.py:435 tests/test_auth_v2.py:109
 msgid "No authentication directory controllers."
 msgstr "Переданная запись отсутствует в системе."
 
-#: auth/authentication_directory/models.py:465
+#: auth/authentication_directory/models.py:460
 msgid "Invalid credentials (ldap): {}"
 msgstr "Неверные учетные данные (ldap): {}"
 
-#: auth/authentication_directory/models.py:472
+#: auth/authentication_directory/models.py:467
 msgid "Server down (ldap)."
 msgstr "Сервер не отвечает (ldap)."
 
@@ -282,13 +266,21 @@ msgstr "Пользователь {} вышел из системы с токен
 msgid "Demo version"
 msgstr "Демонстрационная версия"
 
-#: auth/license/handlers.py:39
+#: auth/license/handlers.py:40
 msgid "Bad extension."
 msgstr "Недопустимое расширение."
 
-#: auth/license/handlers.py:47
+#: auth/license/handlers.py:48
 msgid "Fail to open license key file."
 msgstr "Не удалось открыть лицензионный ключ."
+
+#: auth/license/handlers.py:50
+msgid "Try to upload invalid license key"
+msgstr "Неудачная попытка загрузить лицензионный ключ"
+
+#: auth/license/handlers.py:53
+msgid "Valid license key is uploaded"
+msgstr "Лицензионный ключ загружен"
 
 #: auth/models.py:142
 msgid "Role {} is added to user {}"
@@ -502,13 +494,13 @@ msgstr "Параметр {} необходим."
 msgid "Parameter {} value {} is invalid. Valid values are: {}"
 msgstr "Параметр {} значения {} неверный. Допустимые значения: {}"
 
-#: common/veil_decorators.py:112 tests/test_auth_v2.py:75
-msgid "Invalid permissions"
-msgstr "Недостаточно прав."
-
 #: common/veil_decorators.py:128
 msgid "IP: {}. username: {}"
 msgstr "IP: {}. Пользователь: {}."
+
+#: common/veil_decorators.py:130 tests/test_auth_v2.py:75
+msgid "Invalid permissions"
+msgstr "Недостаточно прав"
 
 #: common/veil_errors.py:167
 msgid "Controller is not available."
@@ -615,7 +607,7 @@ msgid "Controller"
 msgstr "Контроллер"
 
 #: controller_resources/schema.py:321 controller_resources/schema.py:374
-#: controller_resources/schema.py:423
+#: controller_resources/schema.py:426
 msgid "The sort parameter is incorrect"
 msgstr "Неверный параметр сортировки"
 
@@ -1163,68 +1155,80 @@ msgstr "Не удалось получить список виртуальных
 msgid "GraphQL: VM type list:"
 msgstr "GraphQL: список типов виртуальных машин:"
 
+#~ msgid "OU: {}"
+#~ msgstr "Подразделения: {}"
+
+#~ msgid "AD user info: {}"
+#~ msgstr "Информация пользователя AD: {}"
+
+#~ msgid "GROUPS: {}"
+#~ msgstr "Группы: {}"
+
+#~ msgid "AD user groups: {}"
+#~ msgstr "Группы пользователей AD: {}"
+
 #~ msgid "User name must contain minimum 3 characters. It must contain letters and digits, _, -, +."
 #~ msgstr "Имя пользователя должно содержать буквы, цифры, _, -, + и быть не короче 3 символов."
 
 #~ msgid "AutomatedPool {} is created"
 #~ msgstr "Автоматический пул {} создан"
 
-#~ msgid "Error with controller update: {}"
-#~ msgstr "Ошибка с обновлением контроллера {}."
-
-#~ msgid "Create Pool"
-#~ msgstr "Создание пула"
-
-#~ msgid "Can't create VM:"
-#~ msgstr "Невозможно создать виртуальную машину:"
-
-#~ msgid "URL {url} - {http_error}"
-#~ msgstr "URL {url} - {http_error}"
-
-#~ msgid "Automated pool creation. Created {} VMs from {}"
-#~ msgstr "Автоматическое создание пула. Создание {} виртуальных машин из {}"
-
-#~ msgid "StaticPool: Objects on VDI DB created."
-#~ msgstr "Статический пул: объекты на VDI DB созданы."
-
-#~ msgid "Removal pool of desktops {verbose_name} is done."
-#~ msgstr "Выполнено удаление пула рабочих столов {verbose_name}."
-
-#~ msgid "Authentication directory {} is deleted"
-#~ msgstr "Сервер директории авторизации {} не работает."
-
-#~ msgid "License information:"
-#~ msgstr "Информация о лицензии:"
-
-#~ msgid "Hasher %r doesn't specify a library attribute"
-#~ msgstr "Hasher %r не указывает атрибут библиотеки"
+#~ msgid "Subclasses of BasePasswordHasher must provide a verify() method"
+#~ msgstr "Подклассы BasePasswordHasher должны предоставлять метод verify()"
 
 #~ msgid "Group {} roles: {}"
 #~ msgstr "Роли группы {}: {}"
 
+#~ msgid "Create Pool"
+#~ msgstr "Создание пула"
+
+#~ msgid "Hasher %r doesn't specify a library attribute"
+#~ msgstr "Hasher %r не указывает атрибут библиотеки"
+
+#~ msgid "Mapping {} for auth directory {} is deleted"
+#~ msgstr "Мэппинг {} для AD {} удален"
+
+#~ msgid "License information:"
+#~ msgstr "Информация о лицензии:"
+
+#~ msgid "Group {} is deleted"
+#~ msgstr "Группа {} удалена"
+
+#~ msgid "Automated pool creation. Created {} VMs from {}"
+#~ msgstr "Автоматическое создание пула. Создание {} виртуальных машин из {}"
+
+#~ msgid "Error with controller update: {}"
+#~ msgstr "Ошибка с обновлением контроллера {}."
+
+#~ msgid "Removal pool of desktops {verbose_name} is done."
+#~ msgstr "Выполнено удаление пула рабочих столов {verbose_name}."
+
+#~ msgid "IP: . username: {}"
+#~ msgstr "IP: . пользователь: {}"
+
+#~ msgid "Can't create VM:"
+#~ msgstr "Невозможно создать виртуальную машину:"
+
+#~ msgid "Couldn't load {} algorithm library: {}"
+#~ msgstr "Не может загрузиться %r библиотека алгоритмов: %s"
+
+#~ msgid "Authentication directory {} is deleted"
+#~ msgstr "Сервер директории авторизации {} не работает."
+
 #~ msgid "{role} \"{username}\" created."
 #~ msgstr "{role} пользователя {username} создана."
+
+#~ msgid "StaticPool: Objects on VDI DB created."
+#~ msgstr "Статический пул: объекты на VDI DB созданы."
 
 #~ msgid "Subclasses of BasePasswordHasher should provide a harden_runtime() method"
 #~ msgstr "Подклассы BasePasswordHasher должны предоставлять метод harden_runtime()"
 
-#~ msgid "Couldn't load {} algorithm library: {}"
-#~ msgstr "Не может загрузиться %r библиотека алгоритмов: %s"
+#~ msgid "URL {url} - {http_error}"
+#~ msgstr "URL {url} - {http_error}"
 
 #~ msgid "Automated pool successfully created. Initial VM amount {}"
 #~ msgstr "Автоматический пул успешно создан. Начальное количество виртуальных машин {}"
 
 #~ msgid "Subclasses of BasePasswordHasher must provide an encode() method"
 #~ msgstr "Подклассы BasePasswordHasher должны предоставлять метод encode()"
-
-#~ msgid "Mapping {} for auth directory {} is deleted"
-#~ msgstr "Мэппинг {} для AD {} удален"
-
-#~ msgid "Subclasses of BasePasswordHasher must provide a verify() method"
-#~ msgstr "Подклассы BasePasswordHasher должны предоставлять метод verify()"
-
-#~ msgid "IP: . username: {}"
-#~ msgstr "IP: . пользователь: {}"
-
-#~ msgid "Group {} is deleted"
-#~ msgstr "Группа {} удалена"

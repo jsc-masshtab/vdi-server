@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2020-05-02 21:45+0300\n"
+"POT-Creation-Date: 2020-05-20 12:26+0300\n"
 "PO-Revision-Date: 2020-03-16 17:12+0300\n"
 "Last-Translator: Emil <e.gareev@mashtab.org>\n"
 "Language-Team: English\n"
@@ -115,13 +115,13 @@ msgid "Values for auth directory is updated"
 msgstr "Values for auth directory is updated"
 
 #: auth/authentication_directory/models.py:195
-#: auth/authentication_directory/models.py:551 auth/models.py:426
+#: auth/authentication_directory/models.py:546 auth/models.py:426
 #: controller/models.py:251 pool/models.py:481 vm/models.py:105
 msgid "{} {} had remove."
 msgstr "{} {} had remove."
 
 #: auth/authentication_directory/models.py:202
-#: auth/authentication_directory/models.py:558 auth/models.py:433
+#: auth/authentication_directory/models.py:553 auth/models.py:433
 #: controller/models.py:258 pool/models.py:488 vm/models.py:112
 msgid "Soft_delete exception: {}"
 msgstr "Soft_delete exception: {}"
@@ -150,68 +150,52 @@ msgstr "Authentication directory server {} is down."
 msgid "Authentication directory server {} is connected"
 msgstr "Authentication directory server {} is connected"
 
-#: auth/authentication_directory/models.py:293
-msgid "AD user info: {}"
-msgstr "AD user info: {}"
-
-#: auth/authentication_directory/models.py:294
-msgid "AD user groups: {}"
-msgstr "AD user groups: {}"
-
-#: auth/authentication_directory/models.py:341
+#: auth/authentication_directory/models.py:339
 msgid "Username must be a string."
 msgstr "Username must be a string."
 
-#: auth/authentication_directory/models.py:366
+#: auth/authentication_directory/models.py:364
 msgid "Assigning veil groups to {}"
 msgstr "Assigning veil groups to {}"
 
-#: auth/authentication_directory/models.py:379
+#: auth/authentication_directory/models.py:377
 msgid "Mappings: {}"
 msgstr "Mappings: {}"
 
-#: auth/authentication_directory/models.py:383
+#: auth/authentication_directory/models.py:381
 msgid "Role VM_OPERATOR has assigned to user {}."
 msgstr "Role VM_OPERATOR is assigned to user {}."
 
-#: auth/authentication_directory/models.py:390
-msgid "OU: {}"
-msgstr "OU: {}"
-
-#: auth/authentication_directory/models.py:391
-msgid "GROUPS: {}"
-msgstr "GROUPS: {}"
-
-#: auth/authentication_directory/models.py:400
+#: auth/authentication_directory/models.py:395
 msgid "escaped values: {}"
 msgstr "escaped values: {}"
 
-#: auth/authentication_directory/models.py:401
+#: auth/authentication_directory/models.py:396
 msgid "role mapping value type: {}"
 msgstr "role mapping value type: {}"
 
-#: auth/authentication_directory/models.py:410
+#: auth/authentication_directory/models.py:405
 msgid "{}"
 msgstr "{}"
 
-#: auth/authentication_directory/models.py:411
+#: auth/authentication_directory/models.py:406
 msgid "User veil groups: {}"
 msgstr "User veil groups: {}"
 
-#: auth/authentication_directory/models.py:414
+#: auth/authentication_directory/models.py:409
 msgid "Attaching user {} to group: {}"
 msgstr "Attaching user {} to group: {}"
 
-#: auth/authentication_directory/models.py:427
-#: auth/authentication_directory/models.py:440 tests/test_auth_v2.py:109
+#: auth/authentication_directory/models.py:422
+#: auth/authentication_directory/models.py:435 tests/test_auth_v2.py:109
 msgid "No authentication directory controllers."
 msgstr "No authentication directory controllers."
 
-#: auth/authentication_directory/models.py:465
+#: auth/authentication_directory/models.py:460
 msgid "Invalid credentials (ldap): {}"
 msgstr "Invalid credentials (ldap): {}"
 
-#: auth/authentication_directory/models.py:472
+#: auth/authentication_directory/models.py:467
 msgid "Server down (ldap)."
 msgstr "Server down (ldap)."
 
@@ -282,13 +266,21 @@ msgstr "User {} logout with token {}"
 msgid "Demo version"
 msgstr "Demo version"
 
-#: auth/license/handlers.py:39
+#: auth/license/handlers.py:40
 msgid "Bad extension."
 msgstr "Bad extension."
 
-#: auth/license/handlers.py:47
+#: auth/license/handlers.py:48
 msgid "Fail to open license key file."
 msgstr "Fail to open license key file."
+
+#: auth/license/handlers.py:50
+msgid "Try to upload invalid license key"
+msgstr "Try to upload invalid license key"
+
+#: auth/license/handlers.py:53
+msgid "Valid license key is uploaded"
+msgstr "Valid license key is uploaded"
 
 #: auth/models.py:142
 msgid "Role {} is added to user {}"
@@ -502,13 +494,13 @@ msgstr "Parameter {} is necessary."
 msgid "Parameter {} value {} is invalid. Valid values are: {}"
 msgstr "Parameter {} value {} is invalid. Valid values are: {}"
 
-#: common/veil_decorators.py:112 tests/test_auth_v2.py:75
-msgid "Invalid permissions"
-msgstr "Invalid permissions"
-
 #: common/veil_decorators.py:128
 msgid "IP: {}. username: {}"
 msgstr "IP: {}. username: {}"
+
+#: common/veil_decorators.py:130 tests/test_auth_v2.py:75
+msgid "Invalid permissions"
+msgstr "Invalid permissions"
 
 #: common/veil_errors.py:167
 msgid "Controller is not available."
@@ -615,7 +607,7 @@ msgid "Controller"
 msgstr "Controller"
 
 #: controller_resources/schema.py:321 controller_resources/schema.py:374
-#: controller_resources/schema.py:423
+#: controller_resources/schema.py:426
 msgid "The sort parameter is incorrect"
 msgstr "The sort parameter is incorrect"
 
@@ -1163,68 +1155,80 @@ msgstr "VMs list could not be retrieved: {}"
 msgid "GraphQL: VM type list:"
 msgstr "GraphQL: VM type list:"
 
+#~ msgid "OU: {}"
+#~ msgstr "OU: {}"
+
+#~ msgid "AD user info: {}"
+#~ msgstr "AD user info: {}"
+
+#~ msgid "GROUPS: {}"
+#~ msgstr "GROUPS: {}"
+
+#~ msgid "AD user groups: {}"
+#~ msgstr "AD user groups: {}"
+
 #~ msgid "User name must contain minimum 3 characters. It must contain letters and digits, _, -, +."
 #~ msgstr "User name must contain minimum 3 characters. It must contain letters and digits, _, -, +."
 
 #~ msgid "AutomatedPool {} is created"
 #~ msgstr "AutomatedPool {} is created"
 
-#~ msgid "Error with controller update: {}"
-#~ msgstr "Error with controller update: {}"
-
-#~ msgid "Create Pool"
-#~ msgstr "Create Pool"
-
-#~ msgid "IP: . username: {}"
-#~ msgstr "IP: . username: {}"
-
-#~ msgid "URL {url} - {http_error}"
-#~ msgstr "URL {url} - {http_error}"
-
-#~ msgid "Automated pool creation. Created {} VMs from {}"
-#~ msgstr "Automated pool creation. Created {} VMs from {}"
-
-#~ msgid "StaticPool: Objects on VDI DB created."
-#~ msgstr "StaticPool: Objects on VDI DB created."
-
-#~ msgid "Removal pool of desktops {verbose_name} is done."
-#~ msgstr "Removal pool of desktops {verbose_name} is done."
-
-#~ msgid "Authentication directory {} is deleted"
-#~ msgstr "Authentication directory server {} is down."
-
-#~ msgid "License information:"
-#~ msgstr "License information:"
-
-#~ msgid "Hasher %r doesn't specify a library attribute"
-#~ msgstr "Hasher %r doesn't specify a library attribute"
+#~ msgid "Subclasses of BasePasswordHasher must provide a verify() method"
+#~ msgstr "Subclasses of BasePasswordHasher must provide a verify() method"
 
 #~ msgid "Group {} roles: {}"
 #~ msgstr "Group {} roles: {}"
 
+#~ msgid "Create Pool"
+#~ msgstr "Create Pool"
+
+#~ msgid "Hasher %r doesn't specify a library attribute"
+#~ msgstr "Hasher %r doesn't specify a library attribute"
+
+#~ msgid "Mapping {} for auth directory {} is deleted"
+#~ msgstr "Mapping {} for auth directory {} is deleted"
+
+#~ msgid "License information:"
+#~ msgstr "License information:"
+
+#~ msgid "Group {} is deleted"
+#~ msgstr "Group {} is deleted"
+
+#~ msgid "Automated pool creation. Created {} VMs from {}"
+#~ msgstr "Automated pool creation. Created {} VMs from {}"
+
+#~ msgid "Error with controller update: {}"
+#~ msgstr "Error with controller update: {}"
+
+#~ msgid "Removal pool of desktops {verbose_name} is done."
+#~ msgstr "Removal pool of desktops {verbose_name} is done."
+
+#~ msgid "Can't create VM:"
+#~ msgstr "Can't create VM:"
+
+#~ msgid "IP: . username: {}"
+#~ msgstr "IP: . username: {}"
+
+#~ msgid "Couldn't load {} algorithm library: {}"
+#~ msgstr "Couldn't load %r algorithm library: %s"
+
+#~ msgid "Authentication directory {} is deleted"
+#~ msgstr "Authentication directory server {} is down."
+
 #~ msgid "{role} \"{username}\" created."
 #~ msgstr "{role} \"{username}\" created."
+
+#~ msgid "StaticPool: Objects on VDI DB created."
+#~ msgstr "StaticPool: Objects on VDI DB created."
 
 #~ msgid "Subclasses of BasePasswordHasher should provide a harden_runtime() method"
 #~ msgstr "Subclasses of BasePasswordHasher should provide a harden_runtime() method"
 
-#~ msgid "Couldn't load {} algorithm library: {}"
-#~ msgstr "Couldn't load %r algorithm library: %s"
+#~ msgid "URL {url} - {http_error}"
+#~ msgstr "URL {url} - {http_error}"
 
 #~ msgid "Automated pool successfully created. Initial VM amount {}"
 #~ msgstr "Automated pool successfully created. Initial VM amount {}"
 
 #~ msgid "Subclasses of BasePasswordHasher must provide an encode() method"
 #~ msgstr "Subclasses of BasePasswordHasher must provide an encode() method"
-
-#~ msgid "Mapping {} for auth directory {} is deleted"
-#~ msgstr "Mapping {} for auth directory {} is deleted"
-
-#~ msgid "Subclasses of BasePasswordHasher must provide a verify() method"
-#~ msgstr "Subclasses of BasePasswordHasher must provide a verify() method"
-
-#~ msgid "Can't create VM:"
-#~ msgstr "Can't create VM:"
-
-#~ msgid "Group {} is deleted"
-#~ msgstr "Group {} is deleted"

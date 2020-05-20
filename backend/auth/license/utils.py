@@ -27,7 +27,6 @@ from cryptography.hazmat.primitives.asymmetric import padding
 
 from settings import PRIVATE_PEM_FPATH, SERIAL_KEY_FPATH
 from languages import lang_init
-from journal.journal import Log as log
 
 
 _ = lang_init()
@@ -184,6 +183,10 @@ class License:
         def remaining_days(self):
             return self.license_data.remaining_days
 
+        @property
+        def take_verbose_name(self):
+            return self.license_data.verbose_name
+
         def get_license_from_file(self):
             """
             Проверяется ключ из файла.
@@ -207,16 +210,12 @@ class License:
                         decrypted_data = decrypted_data_bytes.decode('utf-8') if decrypted_data_bytes else None
                         # При отсутствии значения в decrypted_data сработает TypeError
                         license_data = json.loads(decrypted_data)
-                        msg = _('Valid license key. {} thin clients available.'.format(license_data['thin_clients_limit']))
-                        log.debug(msg)
             except (TypeError, FileNotFoundError, ValueError):
                 license_data = {
                     "verbose_name": "Unlicensed Veil VDI",
                     "thin_clients_limit": 0,
                     "uuid": str(uuid4())
                 }
-                msg = _('License key did not add. {} thin clients available.'.format(license_data['thin_clients_limit']))
-                log.debug(msg)
             try:
                 self.license_data = LicenseData(**license_data)
             except TypeError:
@@ -226,8 +225,6 @@ class License:
                     "thin_clients_limit": 0,
                     "uuid": str(uuid4())
                 }
-                msg = _('Invalid license key')
-                log.debug(msg)
                 self.license_data = LicenseData(**license_data)
             return self.license_data
 
