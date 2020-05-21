@@ -304,7 +304,7 @@ class Pool(db.Model):
     async def possible_groups(self):
         query = Entity.query.where((Entity.entity_type == EntityType.POOL) & (Entity.entity_uuid == self.id)).alias()
         filtered_query = Group.join(EntityRoleOwner.join(query).alias(), isouter=True).select().where(text('anon_1.entity_role_owner_group_id is null'))  # noqa
-        return await filtered_query.gino.load(Group).all()
+        return await filtered_query.order_by(Group.verbose_name).gino.load(Group).all()
 
     @property
     async def assigned_users(self):
@@ -356,7 +356,7 @@ class Pool(db.Model):
                                                                        (User.id == text('anon_6.user_id')),  # noqa
                                                                        isouter=True).select().where((text('anon_1.id is null') & text('anon_3.user_id is null') & text('anon_6.user_id is null')) & (User.is_active))  # noqa
 
-        return await union_query.gino.load(User).all()
+        return await union_query.order_by(User.username).gino.load(User).all()
 
     # ----- ----- ----- ----- ----- ----- -----
     # Setters & etc.
