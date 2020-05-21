@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
 import uuid
 from datetime import datetime
+from socket import error as socket_error
 
+from asyncpg.exceptions import DataError
 from sqlalchemy import Enum as AlchemyEnum
 
 from sqlalchemy.dialects.postgresql import UUID
@@ -148,20 +150,19 @@ class Controller(db.Model):
             await log.warning(_('Controller {} check failed.').format(self.verbose_name))
             log.debug(_('Controller check: {}').format(ex))
             return False
-        await log.info(_('Controller {} check passed successful.').format(self.verbose_name))
         return True
 
     @classmethod
     async def get_credentials(cls, address, username, password, ldap_connection):
-        log.debug(
-            _('Checking controller credentials: address: {}, username: {}, ldap_connection: {}').format(
-                address, username, ldap_connection))
-        controller_client = ControllerClient(address)
-        auth_info = dict(username=username, password=password, ldap=ldap_connection)
-        token, expires_on = await controller_client.auth(auth_info=auth_info)
-        version = await controller_client.fetch_version()
-        log.debug(_('Get controller credentials: Controller\'s {} credentials are good.').format(address))
-        return {'token': token, 'expires_on': expires_on, 'version': version}
+        try:
+            controller_client = ControllerClient(address)
+            auth_info = dict(username=username, password=password, ldap=ldap_connection)
+            token, expires_on = await controller_client.auth(auth_info=auth_info)
+            version = await controller_client.fetch_version()
+            return {'token': token, 'expires_on': expires_on, 'version': version}
+        except BadRequest:
+            await log.error(_('Can\'t login login to controller {}').format(address))
+            return dict()
 
     @classmethod
     async def soft_create(cls, verbose_name, address, username, password, ldap_connection, description=None):
@@ -189,55 +190,115 @@ class Controller(db.Model):
         return controller
 
     async def soft_update(self, verbose_name, address, description, username=None, password=None, ldap_connection=None):
+        # перекрестные импорты
+        from resources_monitoring.resources_monitor_manager import resources_monitor_manager
+
+        # Словарь в котором хранятся параметры, которые нужно записать в контроллер
         controller_kwargs = dict()
-        credentials_valid = True
+
+        # TODO: возможно нужно явно удалять контроллер из монитора ресурсов в каком бы статусе он ни был
+        if self.status == Status.ACTIVE:
+            # Удаляем существующий контроллер из монитора ресурсов
+            log.debug('Удаляем существующий контроллер из монитора ресурсов')
+            await resources_monitor_manager.remove_controller(self.address)
+
+        # TODO: разнести на несколько методов, если логика останется после рефакторинга
+        # Если при редактировании пришли данные авторизации на контроллере проверим их до редактирования
+        if username or password or address or ldap_connection:
+            # Данные для проверки авторизации и редактирования контроллера
+            if address:
+                controller_address = address
+                controller_kwargs['address'] = controller_address
+            else:
+                controller_address = self.address
+
+            if username:
+                controller_username = username
+                controller_kwargs['username'] = controller_username
+            else:
+                controller_username = self.username
+
+            if password:
+                controller_password = password
+                controller_kwargs['password'] = crypto.encrypt(password)
+            else:
+                controller_password = crypto.decrypt(self.password)
+
+            if isinstance(ldap_connection, bool):
+                controller_ldap = ldap_connection
+                controller_kwargs['ldap_connection'] = controller_ldap
+            else:
+                controller_ldap = self.ldap_connection
+
+            # Проверяем данные авторизации
+            try:
+                new_credentials = await Controller.get_credentials(controller_address, controller_username,
+                                                                   controller_password, controller_ldap)
+            except socket_error:
+                # Если произошла ошибка на уровне сети - активируем старые данные и прерываем выполнение
+                if self.status == Status.ACTIVE:
+                    await resources_monitor_manager.add_controller(self.address)
+
+                msg = _('Address is unreachable')
+                raise ValueError(msg)
+
+            # Т.к. на фронте поля редактируются по 1 - нормальная ситуация, что учетные данные не подходят
+
+            if new_credentials:
+                # Добавляем данные авторизации в словарь для редактирования
+                controller_kwargs.update(new_credentials)
+            else:
+                # Деактивируем контроллер с неверными учетными данными
+                Controller.deactivate(self.id)
+
+        # Недостающие параметры для редактирования
         if verbose_name:
             controller_kwargs['verbose_name'] = verbose_name
-        if address:
-            controller_kwargs['address'] = address
-        else:
-            address = self.address
         if description:
             controller_kwargs['description'] = description
-        if username:
-            controller_kwargs['username'] = username
-        else:
-            username = self.username
-        if password:
-            controller_kwargs['password'] = crypto.encrypt(password)
-        else:
-            password = crypto.decrypt(self.password)
-        if isinstance(ldap_connection, bool):
-            controller_kwargs['ldap_connection'] = ldap_connection
-        else:
-            ldap_connection = self.ldap_connection
-
-        if (controller_kwargs.get('username') or controller_kwargs.get('password') or controller_kwargs.get(  # noqa
-                'address') or controller_kwargs.get('ldap_connection')):  # noqa
-            try:
-                credentials = await Controller.get_credentials(address, username, password, ldap_connection)
-                controller_kwargs.update(credentials)
-            except BadRequest:
-                credentials_valid = False
-                await log.warning(
-                    _('Can\'t connect to controller {} with username: {}, ldap_connection: {}').format(
-                        address, username, ldap_connection))
 
         if controller_kwargs:
             try:
-                await Controller.update.values(**controller_kwargs).where(
-                    Controller.id == self.id).gino.status()
-                if not credentials_valid:
-                    raise BadRequest(_('Can\'t login login to controller {}').format(address))
-            except Exception as E:
-                # log.debug(_('Error with controller update: {}').format(E))
-                raise SimpleError(E)
+                # Если будет ошибка БД транзакция откатится
+                async with db.transaction():
+                    await Controller.update.values(**controller_kwargs).where(
+                        Controller.id == self.id).gino.status()
+            except DataError as transaction_error:
+                # Если произошла ошибка на уровне сети - активируем старые данные и прерываем выполнение
+                if self.status == Status.ACTIVE:
+                    await resources_monitor_manager.add_controller(self.address)
+                # Отслеживаем только ошибки в БД
+                log.debug(transaction_error)
+                msg = _('Error with controller update: {}').format(transaction_error)
+                raise ValueError(msg)
+
+            updated_rec = await Controller.get(self.id)
+
+            # Переводим контроллер в активный если есть новые учетные данные и он в другом статусе
+            if updated_rec.status != Status.ACTIVE and controller_kwargs.get('token'):
+                log.debug('Активируем контроллер')
+                await Controller.activate(self.id)
+                # Добавляем обратно в монитор ресурсов
+                log.debug('Добавляем обратно в монитор ресурсов')
+                await resources_monitor_manager.add_controller(updated_rec.address)
+
             msg = _('Successfully update controller {} with address {}.').format(
                 self.verbose_name,
                 self.address)
+
+            if controller_kwargs.get('password'):
+                controller_kwargs['password'] = '*****'
+            if controller_kwargs.get('token'):
+                controller_kwargs.pop('token')
+            if controller_kwargs.get('expires_on'):
+                controller_kwargs.pop('expires_on')
+            if controller_kwargs.get('version'):
+                controller_kwargs.pop('version')
             desc = str(controller_kwargs)
+
             await log.info(msg, description=desc)
             return True
+
         return False
 
     async def soft_delete(self, dest):
