@@ -494,9 +494,8 @@ class Pool(db.Model):
         if commit:
             automated_pool = await AutomatedPool.get(self.id)
             # Если пул не автоматический, то удаления не произойдет.
-            if automated_pool:
+            if automated_pool and self.status == Status.ACTIVE:
                 await automated_pool.remove_vms()
-
             await self.delete()
             msg = _('Complete removal pool of desktops {verbose_name} is done.').format(verbose_name=self.verbose_name)
             await log.info(msg, entity_dict=self.entity)
@@ -843,7 +842,8 @@ class AutomatedPool(db.Model):
                 log.debug(_('Fail to create VM on ECP. Re-run.'))
                 await asyncio.sleep(1)
                 continue
-
+            except VmCreationError:
+                break
             # Мониторим все таски на ECP и ищем там нашу. Такое себе.
 
             log.debug(_('Subscribe to ws messages.'))
@@ -921,8 +921,9 @@ class AutomatedPool(db.Model):
 
             return vm_info
 
+        await self.deactivate()
         raise VmCreationError(
-            _('Error with create VM {} was {} times.').format(verbose_name, self.max_amount_of_create_attempts))
+            _('Error with create VM {}').format(verbose_name))
 
     async def add_initial_vms(self):
         """Create required initial amount of VMs for auto pool
@@ -955,7 +956,8 @@ class AutomatedPool(db.Model):
                 vm_index = vm['domain_index'] + 1
                 vm_list.append(vm)
 
-                msg = _('Created {} VMs from {} at the Automated pool {}').format(i + 1, self.initial_size, verbose_name)
+                msg = _('Created {} VMs from {} at the Automated pool {}').format(i + 1, self.initial_size,
+                                                                                  verbose_name)
                 await log.info(msg, entity_dict=self.entity)
 
                 # notify VDI front about progress(WS)
@@ -972,7 +974,8 @@ class AutomatedPool(db.Model):
 
         except VmCreationError as vm_error:
             # log that we cant create required initial amount of VMs
-            await log.error(msg=_('Can\'t create VM'), description=str(vm_error))
+            await log.error(_('Can\'t create VM'))
+            log.debug(vm_error)
 
         # notify VDI front about pool creation result (WS)
         is_creation_successful = (len(vm_list) == self.initial_size)

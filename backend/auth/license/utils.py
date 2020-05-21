@@ -26,6 +26,10 @@ from cryptography.hazmat.primitives import serialization, hashes
 from cryptography.hazmat.primitives.asymmetric import padding
 
 from settings import PRIVATE_PEM_FPATH, SERIAL_KEY_FPATH
+from languages import lang_init
+
+
+_ = lang_init()
 
 
 # TODO: лицензии некорректно обновляются для нескольких инстансов приложения (меняется только в рамках 1 потока).
@@ -178,6 +182,10 @@ class License:
         @property
         def remaining_days(self):
             return self.license_data.remaining_days
+
+        @property
+        def take_verbose_name(self):
+            return self.license_data.verbose_name
 
         def get_license_from_file(self):
             """
