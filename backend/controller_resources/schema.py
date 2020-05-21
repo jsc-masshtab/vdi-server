@@ -420,7 +420,8 @@ class ResourcesQuery(graphene.ObjectType):
             elif ordering == 'status':
                 def sort_lam(datapool): return datapool.status if datapool.status else DEFAULT_NAME
             elif ordering == 'controller':
-                def sort_lam(datapool): return datapool.controller.address if datapool.controller.address else DEFAULT_NAME
+                def sort_lam(datapool):
+                    return datapool.controller.address if datapool.controller.address else DEFAULT_NAME
             else:
                 raise SimpleError(_('The sort parameter is incorrect'))
             list_of_all_datapool_types = sorted(list_of_all_datapool_types, key=sort_lam, reverse=reverse)
