@@ -390,7 +390,7 @@ class Group(AbstractSortableStatusModel, db.Model):
         possible_users_query = User.join(
             UserGroup.query.where(UserGroup.group_id == self.id).alias(), isouter=True).select().where(
             (text('anon_1.id is null')) & (User.is_active))  # noqa
-        return await possible_users_query.gino.load(User).all()
+        return await possible_users_query.order_by(User.username).gino.load(User).all()
 
     @staticmethod
     async def soft_create(verbose_name, description=None, id=None):
