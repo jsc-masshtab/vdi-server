@@ -223,7 +223,7 @@ class Controller(db.Model):
 
             if isinstance(ldap_connection, bool):
                 controller_ldap = ldap_connection
-                controller_kwargs['ldap'] = controller_ldap
+                controller_kwargs['ldap_connection'] = controller_ldap
             else:
                 controller_ldap = self.ldap_connection
 
