@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import uuid
 from datetime import datetime
+from socket import error as socket_error
 
 from asyncpg.exceptions import DataError
 from sqlalchemy import Enum as AlchemyEnum
@@ -195,9 +196,11 @@ class Controller(db.Model):
         # Словарь в котором хранятся параметры, которые нужно записать в контроллер
         controller_kwargs = dict()
 
-        # Удаляем существующий контроллер из монитора ресурсов
-        log.debug('Удаляем существующий контроллер из монитора ресурсов')
-        await resources_monitor_manager.remove_controller(self.address)
+        # TODO: возможно нужно явно удалять контроллер из монитора ресурсов в каком бы статусе он ни был
+        if self.status == Status.ACTIVE:
+            # Удаляем существующий контроллер из монитора ресурсов
+            log.debug('Удаляем существующий контроллер из монитора ресурсов')
+            await resources_monitor_manager.remove_controller(self.address)
 
         # TODO: разнести на несколько методов, если логика останется после рефакторинга
         # Если при редактировании пришли данные авторизации на контроллере проверим их до редактирования
@@ -228,16 +231,25 @@ class Controller(db.Model):
                 controller_ldap = self.ldap_connection
 
             # Проверяем данные авторизации
-            new_credentials = await Controller.get_credentials(controller_address, controller_username,
-                                                               controller_password, controller_ldap)
-            if not new_credentials:
-                # Если новые данные авторизации не верны - отставить редактирование
-                # Добавляем обратно в монитор ресурсов
-                log.debug('Добавляем обратно в монитор ресурсов')
-                await resources_monitor_manager.add_controller(self.address)
-                raise ValueError()
-            # Добавляем данные авторизации в словарь для редактирования
-            controller_kwargs.update(new_credentials)
+            try:
+                new_credentials = await Controller.get_credentials(controller_address, controller_username,
+                                                                   controller_password, controller_ldap)
+            except socket_error:
+                # Если произошла ошибка на уровне сети - активируем старые данные и прерываем выполнение
+                if self.status == Status.ACTIVE:
+                    await resources_monitor_manager.add_controller(self.address)
+
+                msg = _('Address is unreachable')
+                raise ValueError(msg)
+
+            # Т.к. на фронте поля редактируются по 1 - нормальная ситуация, что учетные данные не подходят
+
+            if new_credentials:
+                # Добавляем данные авторизации в словарь для редактирования
+                controller_kwargs.update(new_credentials)
+            else:
+                # Деактивируем контроллер с неверными учетными данными
+                Controller.deactivate(self.id)
 
         # Недостающие параметры для редактирования
         if verbose_name:
@@ -257,6 +269,16 @@ class Controller(db.Model):
                 msg = _('Error with controller update: {}').format(transaction_error)
                 raise ValueError(msg)
 
+            updated_rec = await Controller.get(self.id)
+
+            # Переводим контроллер в активный если есть новые учетные данные и он в другом статусе
+            if updated_rec.status != Status.ACTIVE and controller_kwargs.get('token'):
+                log.debug('Активируем контроллер')
+                await Controller.activate(self.id)
+                # Добавляем обратно в монитор ресурсов
+                log.debug('Добавляем обратно в монитор ресурсов')
+                await resources_monitor_manager.add_controller(updated_rec.address)
+
             msg = _('Successfully update controller {} with address {}.').format(
                 self.verbose_name,
                 self.address)
@@ -272,17 +294,8 @@ class Controller(db.Model):
             desc = str(controller_kwargs)
 
             await log.info(msg, description=desc)
-
-            updated_rec = await Controller.get(self.id)
-            # Активируем контроллер
-            log.debug('Активируем контроллер')
-            if updated_rec.status != Status.ACTIVE:
-                await Controller.activate(self.id)
-
-            # Добавляем обратно в монитор ресурсов
-            log.debug('Добавляем обратно в монитор ресурсов')
-            await resources_monitor_manager.add_controller(updated_rec.address)
             return True
+
         return False
 
     async def soft_delete(self, dest):
