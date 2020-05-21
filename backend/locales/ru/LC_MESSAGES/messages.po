@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2020-05-02 21:45+0300\n"
+"POT-Creation-Date: 2020-05-20 11:33+0300\n"
 "PO-Revision-Date: 2020-03-16 17:13+0300\n"
 "Last-Translator: Emil <e.gareev@mashtab.org>\n"
 "Language-Team: Russian\n"
@@ -72,7 +72,7 @@ msgstr "Имя verbose не должно быть пустым."
 
 #: auth/authentication_directory/auth_dir_schema.py:52
 msgid "'domain name' should be a string split by a dot."
-msgstr ""
+msgstr "'domain name' должен быть строкой разделенной точкой."
 
 #: auth/authentication_directory/auth_dir_schema.py:67 auth/group_schema.py:44
 msgid "users count not much with db count."
@@ -115,13 +115,13 @@ msgid "Values for auth directory is updated"
 msgstr "Values for auth directory is updated"
 
 #: auth/authentication_directory/models.py:195
-#: auth/authentication_directory/models.py:551 auth/models.py:426
+#: auth/authentication_directory/models.py:546 auth/models.py:426
 #: controller/models.py:251 pool/models.py:481 vm/models.py:105
 msgid "{} {} had remove."
 msgstr "Выполнено удаление: {} {}."
 
 #: auth/authentication_directory/models.py:202
-#: auth/authentication_directory/models.py:558 auth/models.py:433
+#: auth/authentication_directory/models.py:553 auth/models.py:433
 #: controller/models.py:258 pool/models.py:488 vm/models.py:112
 msgid "Soft_delete exception: {}"
 msgstr "Ошибка удаления: {}"
@@ -150,68 +150,52 @@ msgstr "Сервер директории авторизации {} не раб�
 msgid "Authentication directory server {} is connected"
 msgstr "Сервер директории авторизации {} подключен"
 
-#: auth/authentication_directory/models.py:293
-msgid "AD user info: {}"
-msgstr "Информация пользователя AD: {}"
-
-#: auth/authentication_directory/models.py:294
-msgid "AD user groups: {}"
-msgstr "Группы пользователей AD: {}"
-
-#: auth/authentication_directory/models.py:341
+#: auth/authentication_directory/models.py:339
 msgid "Username must be a string."
 msgstr "Имя пользователя должно быть строкой."
 
-#: auth/authentication_directory/models.py:366
+#: auth/authentication_directory/models.py:364
 msgid "Assigning veil groups to {}"
 msgstr "Присвоение групп veil {}"
 
-#: auth/authentication_directory/models.py:379
+#: auth/authentication_directory/models.py:377
 msgid "Mappings: {}"
 msgstr "Отображения: {}"
 
-#: auth/authentication_directory/models.py:383
+#: auth/authentication_directory/models.py:381
 msgid "Role VM_OPERATOR has assigned to user {}."
 msgstr "Пользователю {} назначена роль VM_OPERATOR."
 
-#: auth/authentication_directory/models.py:390
-msgid "OU: {}"
-msgstr "Подразделения: {}"
-
-#: auth/authentication_directory/models.py:391
-msgid "GROUPS: {}"
-msgstr "Группы: {}"
-
-#: auth/authentication_directory/models.py:400
+#: auth/authentication_directory/models.py:395
 msgid "escaped values: {}"
 msgstr "cкрытые значения: {}"
 
-#: auth/authentication_directory/models.py:401
+#: auth/authentication_directory/models.py:396
 msgid "role mapping value type: {}"
 msgstr "nип значений отображения роли: {}"
 
-#: auth/authentication_directory/models.py:410
+#: auth/authentication_directory/models.py:405
 msgid "{}"
 msgstr "{}"
 
-#: auth/authentication_directory/models.py:411
+#: auth/authentication_directory/models.py:406
 msgid "User veil groups: {}"
 msgstr "Группы пользователей veil: {}"
 
-#: auth/authentication_directory/models.py:414
+#: auth/authentication_directory/models.py:409
 msgid "Attaching user {} to group: {}"
 msgstr "Прикрепление пользователя {} к группе {}"
 
-#: auth/authentication_directory/models.py:427
-#: auth/authentication_directory/models.py:440 tests/test_auth_v2.py:109
+#: auth/authentication_directory/models.py:422
+#: auth/authentication_directory/models.py:435 tests/test_auth_v2.py:109
 msgid "No authentication directory controllers."
 msgstr "Переданная запись отсутствует в системе."
 
-#: auth/authentication_directory/models.py:465
+#: auth/authentication_directory/models.py:460
 msgid "Invalid credentials (ldap): {}"
 msgstr "Неверные учетные данные (ldap): {}"
 
-#: auth/authentication_directory/models.py:472
+#: auth/authentication_directory/models.py:467
 msgid "Server down (ldap)."
 msgstr "Сервер не отвечает (ldap)."
 
@@ -502,13 +486,13 @@ msgstr "Параметр {} необходим."
 msgid "Parameter {} value {} is invalid. Valid values are: {}"
 msgstr "Параметр {} значения {} неверный. Допустимые значения: {}"
 
-#: common/veil_decorators.py:112 tests/test_auth_v2.py:75
-msgid "Invalid permissions"
-msgstr "Недостаточно прав."
-
 #: common/veil_decorators.py:128
 msgid "IP: {}. username: {}"
 msgstr "IP: {}. Пользователь: {}."
+
+#: common/veil_decorators.py:130 tests/test_auth_v2.py:75
+msgid "Invalid permissions"
+msgstr "Недостаточно прав."
 
 #: common/veil_errors.py:167
 msgid "Controller is not available."
@@ -615,7 +599,7 @@ msgid "Controller"
 msgstr "Контроллер"
 
 #: controller_resources/schema.py:321 controller_resources/schema.py:374
-#: controller_resources/schema.py:423
+#: controller_resources/schema.py:426
 msgid "The sort parameter is incorrect"
 msgstr "Неверный параметр сортировки"
 
@@ -765,79 +749,79 @@ msgstr "ID задачи создания виртуальной машины: {}
 msgid "Fail to create VM on ECP. Re-run."
 msgstr "Ошибка создания виртуальной машины на ECP. Перезапустите."
 
-#: pool/models.py:849
+#: pool/models.py:850
 msgid "Subscribe to ws messages."
 msgstr "Подпишитесь на сообщения ws."
 
-#: pool/models.py:854
+#: pool/models.py:855
 msgid "Wait for result."
 msgstr "Ожидайте результата."
 
-#: pool/models.py:860
+#: pool/models.py:861
 msgid "Create virtual machine"
 msgstr "Создание виртуальной машины."
 
-#: pool/models.py:893
+#: pool/models.py:894
 msgid "Could not get the response about result of creation VM on ECP by WS. Task status check."
 msgstr "Не удалось получить ответ о результате создания ВМ на ECP по WS. Проверим статус задачи."
 
-#: pool/models.py:897
+#: pool/models.py:898
 msgid "Probably task is not done. Check VM status."
 msgstr "Вероятно, задание не выполнено. Проверьте состояние ВМ."
 
-#: pool/models.py:920
+#: pool/models.py:921
 msgid "VM {} is added to Automated pool {}"
 msgstr "Виртуальная машина добавлена в автоматический пул {}"
 
-#: pool/models.py:925
-msgid "Error with create VM {} was {} times."
-msgstr "Ошибка с созданием виртуальной машины {} была {} раз."
+#: pool/models.py:927
+msgid "Error with create VM {}"
+msgstr "Ошибка с созданием виртуальной машины {}"
 
-#: pool/models.py:937
+#: pool/models.py:939
 msgid "Add {} initial vms for pool {}. Controller address: {}"
 msgstr "Добавление {} начальных виртуальных машин для пула {}. Адрес контроллера: {}."
 
-#: pool/models.py:944
+#: pool/models.py:946
 msgid "Pool {} os type is: {}"
 msgstr "Операционная система пула {}: {}"
 
-#: pool/models.py:947
+#: pool/models.py:949
 msgid "Automated pool creation started"
 msgstr "Автоматическое создание пула началось"
 
-#: pool/models.py:958
+#: pool/models.py:960
 msgid "Created {} VMs from {} at the Automated pool {}"
 msgstr "Создание {} виртуальных машин из {} автоматического пула {}"
 
-#: pool/models.py:975
+#: pool/models.py:977
 msgid "Can't create VM"
 msgstr "Невозможно создать виртуальную машину"
 
-#: pool/models.py:981
+#: pool/models.py:983
 msgid "Initial VM amount {} at the Automated pool {}"
 msgstr "Начальное количество виртуальных машин {} в автоматическом пуле {}"
 
-#: pool/models.py:984
+#: pool/models.py:986
 msgid "Automated pool created with errors. VMs created: {}. Required: {}"
 msgstr "Автоматический пул создан с ошибками. Созданные виртуальные машины: {}. Необходимо: {}."
 
-#: pool/models.py:1001
+#: pool/models.py:1003
 msgid "Could not create the required number of machines."
 msgstr "Не удалось создать необходимое количество машин."
 
-#: pool/models.py:1050
+#: pool/models.py:1052
 msgid "VM creating error:"
 msgstr "Ошибка создания виртуальной машины:"
 
-#: pool/models.py:1056
+#: pool/models.py:1058
 msgid "Delete VMs for AutomatedPool {}"
 msgstr "Удаление виртуальных машин для автоматического пула {}"
 
-#: pool/models.py:1059
+#: pool/models.py:1061
 msgid "Calling soft delete for vm {}"
 msgstr "Вызов мягкого удаления для виртуальной машины {}"
 
-#: pool/models.py:1060 vm/models.py:234
+#: pool/models.py:1062 vm/models.py:236
 msgid "VM"
 msgstr "Виртуальная машина"
 
@@ -1107,19 +1091,27 @@ msgstr "На контроллере отсутствует место для с�
 msgid "Not enough free space on data pool"
 msgstr "Недостаточно свободного места в пуле данных"
 
-#: vm/models.py:212
+#: vm/models.py:210
+msgid "Unknown node {}"
+msgstr "Неизвестный узел {}"
+
+#: vm/models.py:211
+msgid "Controller can\t create VM. Unknown node."
+msgstr "Контроллер не может создать ВМ. Неизвестный узел."
+
+#: vm/models.py:215
 msgid "Possibly blocked by active task on ECP. Wait before next try."
 msgstr "Возможно, заблокировано активным заданием на ECP. Подождите перед следующей попыткой."
 
-#: vm/models.py:215
+#: vm/models.py:218
 msgid "Something went wrong. Interrupt while."
 msgstr "Что-то пошло не так. Прерываем while."
 
-#: vm/models.py:219
+#: vm/models.py:221
 msgid "Wait one more try"
 msgstr "Подождите еще одну попытку."
 
-#: vm/models.py:235
+#: vm/models.py:237
 msgid "Vm {} removed from pool"
 msgstr "ВМ {} удалена из пула"
 
@@ -1162,6 +1154,22 @@ msgstr "Не удалось получить список виртуальных
 #: vm/schema.py:298
 msgid "GraphQL: VM type list:"
 msgstr "GraphQL: список типов виртуальных машин:"
+
+#, fuzzy
+#~ msgid "Pool creation error."
+#~ msgstr "Ошибка создания пула."
+
+#~ msgid "AD user info: {}"
+#~ msgstr "Информация пользователя AD: {}"
+
+#~ msgid "AD user groups: {}"
+#~ msgstr "Группы пользователей AD: {}"
+
+#~ msgid "OU: {}"
+#~ msgstr "Подразделения: {}"
+
+#~ msgid "GROUPS: {}"
+#~ msgstr "Группы: {}"
 
 #~ msgid "User name must contain minimum 3 characters. It must contain letters and digits, _, -, +."
 #~ msgstr "Имя пользователя должно содержать буквы, цифры, _, -, + и быть не короче 3 символов."
@@ -1228,3 +1236,7 @@ msgstr "GraphQL: список типов виртуальных машин:"
 
 #~ msgid "Group {} is deleted"
 #~ msgstr "Группа {} удалена"
+
+#, fuzzy
+#~ msgid "Can't create Pool"
+#~ msgstr "Невозможно создать пул виртуальных машин"

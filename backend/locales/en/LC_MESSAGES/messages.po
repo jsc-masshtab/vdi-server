@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2020-05-02 21:45+0300\n"
+"POT-Creation-Date: 2020-05-20 11:32+0300\n"
 "PO-Revision-Date: 2020-03-16 17:12+0300\n"
 "Last-Translator: Emil <e.gareev@mashtab.org>\n"
 "Language-Team: English\n"
@@ -72,7 +72,7 @@ msgstr "Verbose name should not be empty."
 
 #: auth/authentication_directory/auth_dir_schema.py:52
 msgid "'domain name' should be a string split by a dot."
-msgstr ""
+msgstr "'domain name' should be a string split by a dot."
 
 #: auth/authentication_directory/auth_dir_schema.py:67 auth/group_schema.py:44
 msgid "users count not much with db count."
@@ -115,13 +115,13 @@ msgid "Values for auth directory is updated"
 msgstr "Values for auth directory is updated"
 
 #: auth/authentication_directory/models.py:195
-#: auth/authentication_directory/models.py:551 auth/models.py:426
+#: auth/authentication_directory/models.py:546 auth/models.py:426
 #: controller/models.py:251 pool/models.py:481 vm/models.py:105
 msgid "{} {} had remove."
 msgstr "{} {} had remove."
 
 #: auth/authentication_directory/models.py:202
-#: auth/authentication_directory/models.py:558 auth/models.py:433
+#: auth/authentication_directory/models.py:553 auth/models.py:433
 #: controller/models.py:258 pool/models.py:488 vm/models.py:112
 msgid "Soft_delete exception: {}"
 msgstr "Soft_delete exception: {}"
@@ -150,68 +150,52 @@ msgstr "Authentication directory server {} is down."
 msgid "Authentication directory server {} is connected"
 msgstr "Authentication directory server {} is connected"
 
-#: auth/authentication_directory/models.py:293
-msgid "AD user info: {}"
-msgstr "AD user info: {}"
-
-#: auth/authentication_directory/models.py:294
-msgid "AD user groups: {}"
-msgstr "AD user groups: {}"
-
-#: auth/authentication_directory/models.py:341
+#: auth/authentication_directory/models.py:339
 msgid "Username must be a string."
 msgstr "Username must be a string."
 
-#: auth/authentication_directory/models.py:366
+#: auth/authentication_directory/models.py:364
 msgid "Assigning veil groups to {}"
 msgstr "Assigning veil groups to {}"
 
-#: auth/authentication_directory/models.py:379
+#: auth/authentication_directory/models.py:377
 msgid "Mappings: {}"
 msgstr "Mappings: {}"
 
-#: auth/authentication_directory/models.py:383
+#: auth/authentication_directory/models.py:381
 msgid "Role VM_OPERATOR has assigned to user {}."
 msgstr "Role VM_OPERATOR is assigned to user {}."
 
-#: auth/authentication_directory/models.py:390
-msgid "OU: {}"
-msgstr "OU: {}"
-
-#: auth/authentication_directory/models.py:391
-msgid "GROUPS: {}"
-msgstr "GROUPS: {}"
-
-#: auth/authentication_directory/models.py:400
+#: auth/authentication_directory/models.py:395
 msgid "escaped values: {}"
 msgstr "escaped values: {}"
 
-#: auth/authentication_directory/models.py:401
+#: auth/authentication_directory/models.py:396
 msgid "role mapping value type: {}"
 msgstr "role mapping value type: {}"
 
-#: auth/authentication_directory/models.py:410
+#: auth/authentication_directory/models.py:405
 msgid "{}"
 msgstr "{}"
 
-#: auth/authentication_directory/models.py:411
+#: auth/authentication_directory/models.py:406
 msgid "User veil groups: {}"
 msgstr "User veil groups: {}"
 
-#: auth/authentication_directory/models.py:414
+#: auth/authentication_directory/models.py:409
 msgid "Attaching user {} to group: {}"
 msgstr "Attaching user {} to group: {}"
 
-#: auth/authentication_directory/models.py:427
-#: auth/authentication_directory/models.py:440 tests/test_auth_v2.py:109
+#: auth/authentication_directory/models.py:422
+#: auth/authentication_directory/models.py:435 tests/test_auth_v2.py:109
 msgid "No authentication directory controllers."
 msgstr "No authentication directory controllers."
 
-#: auth/authentication_directory/models.py:465
+#: auth/authentication_directory/models.py:460
 msgid "Invalid credentials (ldap): {}"
 msgstr "Invalid credentials (ldap): {}"
 
-#: auth/authentication_directory/models.py:472
+#: auth/authentication_directory/models.py:467
 msgid "Server down (ldap)."
 msgstr "Server down (ldap)."
 
@@ -502,13 +486,13 @@ msgstr "Parameter {} is necessary."
 msgid "Parameter {} value {} is invalid. Valid values are: {}"
 msgstr "Parameter {} value {} is invalid. Valid values are: {}"
 
-#: common/veil_decorators.py:112 tests/test_auth_v2.py:75
-msgid "Invalid permissions"
-msgstr "Invalid permissions"
-
 #: common/veil_decorators.py:128
 msgid "IP: {}. username: {}"
 msgstr "IP: {}. username: {}"
+
+#: common/veil_decorators.py:130 tests/test_auth_v2.py:75
+msgid "Invalid permissions"
+msgstr "Invalid permissions"
 
 #: common/veil_errors.py:167
 msgid "Controller is not available."
@@ -615,7 +599,7 @@ msgid "Controller"
 msgstr "Controller"
 
 #: controller_resources/schema.py:321 controller_resources/schema.py:374
-#: controller_resources/schema.py:423
+#: controller_resources/schema.py:426
 msgid "The sort parameter is incorrect"
 msgstr "The sort parameter is incorrect"
 
@@ -765,79 +749,79 @@ msgstr "VM creation task id: {}"
 msgid "Fail to create VM on ECP. Re-run."
 msgstr "Fail to create VM on ECP. Re-run."
 
-#: pool/models.py:849
+#: pool/models.py:850
 msgid "Subscribe to ws messages."
 msgstr "Subscribe to ws messages."
 
-#: pool/models.py:854
+#: pool/models.py:855
 msgid "Wait for result."
 msgstr "Wait for result."
 
-#: pool/models.py:860
+#: pool/models.py:861
 msgid "Create virtual machine"
 msgstr "Create virtual machine"
 
-#: pool/models.py:893
+#: pool/models.py:894
 msgid "Could not get the response about result of creation VM on ECP by WS. Task status check."
 msgstr "Could not get the response about result of creation VM on ECP by WS. Task status check."
 
-#: pool/models.py:897
+#: pool/models.py:898
 msgid "Probably task is not done. Check VM status."
 msgstr "Probably task is not done. Check VM status."
 
-#: pool/models.py:920
+#: pool/models.py:921
 msgid "VM {} is added to Automated pool {}"
 msgstr "VM {} is added to Automated pool {}"
 
-#: pool/models.py:925
-msgid "Error with create VM {} was {} times."
-msgstr "Error with create VM {} was {} times."
+#: pool/models.py:927
+msgid "Error with create VM {}"
+msgstr "Error with create VM {}"
 
-#: pool/models.py:937
+#: pool/models.py:939
 msgid "Add {} initial vms for pool {}. Controller address: {}"
 msgstr "Add {} initial vms for pool {}. Controller address: {}"
 
-#: pool/models.py:944
+#: pool/models.py:946
 msgid "Pool {} os type is: {}"
 msgstr "Pool {} os type is: {}"
 
-#: pool/models.py:947
+#: pool/models.py:949
 msgid "Automated pool creation started"
 msgstr "Automated pool creation started"
 
-#: pool/models.py:958
+#: pool/models.py:960
 msgid "Created {} VMs from {} at the Automated pool {}"
 msgstr "Created {} VMs from {} at the Automated pool {}"
 
-#: pool/models.py:975
+#: pool/models.py:977
 msgid "Can't create VM"
 msgstr "Can't create VM"
 
-#: pool/models.py:981
+#: pool/models.py:983
 msgid "Initial VM amount {} at the Automated pool {}"
 msgstr "Initial VM amount {} at the Automated pool {}"
 
-#: pool/models.py:984
+#: pool/models.py:986
 msgid "Automated pool created with errors. VMs created: {}. Required: {}"
 msgstr "Automated pool created with errors. VMs created: {}. Required: {}"
 
-#: pool/models.py:1001
+#: pool/models.py:1003
 msgid "Could not create the required number of machines."
 msgstr "Could not create the required number of machines."
 
-#: pool/models.py:1050
+#: pool/models.py:1052
 msgid "VM creating error:"
 msgstr "VM creating error:"
 
-#: pool/models.py:1056
+#: pool/models.py:1058
 msgid "Delete VMs for AutomatedPool {}"
 msgstr "Delete VMs for AutomatedPool {}"
 
-#: pool/models.py:1059
+#: pool/models.py:1061
 msgid "Calling soft delete for vm {}"
 msgstr "Calling soft delete for vm {}"
 
-#: pool/models.py:1060 vm/models.py:234
+#: pool/models.py:1062 vm/models.py:236
 msgid "VM"
 msgstr "VM"
 
@@ -1107,19 +1091,27 @@ msgstr "Controller has not free space for creating new VM."
 msgid "Not enough free space on data pool"
 msgstr "Not enough free space on data pool"
 
-#: vm/models.py:212
+#: vm/models.py:210
+msgid "Unknown node {}"
+msgstr "Unknown node {}"
+
+#: vm/models.py:211
+msgid "Controller can\t create VM. Unknown node."
+msgstr "Controller can\t create VM. Unknown node"
+
+#: vm/models.py:215
 msgid "Possibly blocked by active task on ECP. Wait before next try."
 msgstr "Possibly blocked by active task on ECP. Wait before next try."
 
-#: vm/models.py:215
+#: vm/models.py:218
 msgid "Something went wrong. Interrupt while."
 msgstr "Something went wrong. Interrupt while."
 
-#: vm/models.py:219
+#: vm/models.py:221
 msgid "Wait one more try"
 msgstr "Wait one more try"
 
-#: vm/models.py:235
+#: vm/models.py:237
 msgid "Vm {} removed from pool"
 msgstr "Vm {} removed from pool"
 
@@ -1162,6 +1154,21 @@ msgstr "VMs list could not be retrieved: {}"
 #: vm/schema.py:298
 msgid "GraphQL: VM type list:"
 msgstr "GraphQL: VM type list:"
+
+#~ msgid "Pool creation error."
+#~ msgstr "Pool creation error."
+
+#~ msgid "AD user info: {}"
+#~ msgstr "AD user info: {}"
+
+#~ msgid "AD user groups: {}"
+#~ msgstr "AD user groups: {}"
+
+#~ msgid "OU: {}"
+#~ msgstr "OU: {}"
+
+#~ msgid "GROUPS: {}"
+#~ msgstr "GROUPS: {}"
 
 #~ msgid "User name must contain minimum 3 characters. It must contain letters and digits, _, -, +."
 #~ msgstr "User name must contain minimum 3 characters. It must contain letters and digits, _, -, +."
@@ -1228,3 +1235,7 @@ msgstr "GraphQL: VM type list:"
 
 #~ msgid "Group {} is deleted"
 #~ msgstr "Group {} is deleted"
+
+#, fuzzy
+#~ msgid "Can't create Pool"
+#~ msgstr "Can't create Pool"
