@@ -264,6 +264,9 @@ class Controller(db.Model):
                     await Controller.update.values(**controller_kwargs).where(
                         Controller.id == self.id).gino.status()
             except DataError as transaction_error:
+                # Если произошла ошибка на уровне сети - активируем старые данные и прерываем выполнение
+                if self.status == Status.ACTIVE:
+                    await resources_monitor_manager.add_controller(self.address)
                 # Отслеживаем только ошибки в БД
                 log.debug(transaction_error)
                 msg = _('Error with controller update: {}').format(transaction_error)
