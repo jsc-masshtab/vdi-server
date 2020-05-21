@@ -196,7 +196,7 @@ class Vm(db.Model):
                 ecp_errors = http_error.errors.get('errors')
                 ecp_detail_l = ecp_errors.get('detail') if ecp_errors else None
                 ecp_detail = ecp_detail_l[0] if isinstance(ecp_detail_l, list) else None
-                log.debug(_('ECP error: {}').format(ecp_errors))
+                await log.warning(_('ECP error: {}').format(ecp_errors))
 
                 if ecp_errors and 'verbose_name' in ecp_errors:
                     await log.warning(_('Bad domain name {}').format(verbose_name))
@@ -204,8 +204,11 @@ class Vm(db.Model):
                     domain_index = domain_index + 1
                     verbose_name = re.sub(r'-{}$'.format(domain_index_old), '-{}'.format(domain_index), verbose_name)
                 elif ecp_errors and ecp_detail and ('Недостаточно свободного места в пуле данных' in ecp_detail or 'not enough free space on data pool' in ecp_detail):
-                    await log.info(_('Controller has not free space for creating new VM.'))
+                    await log.warning(_('Controller has not free space for creating new VM.'))
                     raise VmCreationError(_('Not enough free space on data pool'))
+                elif ecp_errors and ecp_detail and ('passed node is not valid' in ecp_detail or 'Переданный узел не действителен' in ecp_detail):
+                    await log.warning(_('Unknown node {}').format(node_id))
+                    raise VmCreationError(_('Controller can\t create VM. Unknown node.'))
                 elif ecp_errors and ecp_detail and inner_retry_count < 30:
                     # Тут мы предполагаем, что контроллер заблокирован выполнением задачи. Это может быть и не так,
                     # но сейчас нам это не понятно.
@@ -213,7 +216,6 @@ class Vm(db.Model):
                     await asyncio.sleep(10)
                 else:
                     log.debug(_('Something went wrong. Interrupt while.'))
-                    log.debug(ecp_errors)
                     raise BadRequest(http_error)
 
             log.debug(_('Wait one more try'))
@@ -223,7 +225,7 @@ class Vm(db.Model):
                            task_id=response['_task']['id'],
                            verbose_name=verbose_name,
                            domain_index=domain_index)
-        log.debug(copy_result)
+        # log.debug(copy_result)
         return copy_result
 
     @staticmethod
