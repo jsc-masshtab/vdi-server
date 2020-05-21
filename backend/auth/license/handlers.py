@@ -6,6 +6,7 @@ from common.veil_errors import ValidationError
 from auth.utils.veil_jwt import jwtauth
 from auth.license.utils import License
 from languages import lang_init
+from journal.journal import Log as log
 
 
 _ = lang_init()
@@ -45,4 +46,10 @@ class LicenseHandler(BaseHandler, ABC):
             response = License().upload_license(key_file_body)
         except (IndexError, ValidationError, TypeError, AssertionError):
             response = {'errors': [{'message': _('Fail to open license key file.').format(ip=self.remote_ip)}]}
+        if License().take_verbose_name == "Unlicensed Veil VDI":
+            msg = _('Try to upload invalid license key')
+            await log.error(msg)
+        else:
+            msg = _('Valid license key is uploaded')
+            await log.info(msg)
         return self.log_finish(response)
