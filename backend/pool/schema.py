@@ -405,7 +405,6 @@ class DeletePoolMutation(graphene.Mutation, PoolValidator):
             # В случае стат пула удаляем без локов.
             else:
                 is_deleted = await DeletePoolMutation.delete_pool(pool, full)
-
             return DeletePoolMutation(ok=is_deleted)
         except Exception as e:
             raise e
