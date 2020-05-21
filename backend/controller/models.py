@@ -278,9 +278,10 @@ class Controller(db.Model):
             if updated_rec.status != Status.ACTIVE and controller_kwargs.get('token'):
                 log.debug('Активируем контроллер')
                 await Controller.activate(self.id)
-                # Добавляем обратно в монитор ресурсов
-                log.debug('Добавляем обратно в монитор ресурсов')
-                await resources_monitor_manager.add_controller(updated_rec.address)
+
+            # Добавляем обратно в монитор ресурсов
+            log.debug('Добавляем обратно в монитор ресурсов')
+            await resources_monitor_manager.add_controller(updated_rec.address)
 
             msg = _('Successfully update controller {} with address {}.').format(
                 self.verbose_name,
