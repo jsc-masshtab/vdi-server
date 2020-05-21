@@ -11,7 +11,6 @@ from resources_monitoring.resources_monitor_manager import resources_monitor_man
 
 from languages import lang_init
 
-
 _ = lang_init()
 
 # TODO: перенести добавление контроллера в ресурс монитор в методы модели, чтобы сократить дублирование кода.
@@ -93,8 +92,6 @@ class UpdateControllerMutation(graphene.Mutation):
     @administrator_required
     async def mutate(self, _info, id, verbose_name=None, address=None, username=None,
                      password=None, ldap_connection=None, description=None):
-
-        # TODO: это нужно перенести в валидатор
         controller = await Controller.get(id)
         if not controller:
             raise SimpleError(_('No such controller.'))
@@ -106,25 +103,11 @@ class UpdateControllerMutation(graphene.Mutation):
                                          username=username,
                                          password=password,
                                          ldap_connection=ldap_connection)
-
-            # Берем актуальный адрес контроллера, даже если он уже был изменен
-            controller = await Controller.get(id)
-            # Переподключаем монитор ресурсов
-            await resources_monitor_manager.remove_controller(controller.address)
-            await controller.activate(controller.id)
-            await resources_monitor_manager.add_controller(controller.address)
-        except Exception as E:
-            msg = _('Fail to update controller {id}: {error}').format(
-                id=id, error=E)
-            # При редактировании с контроллером произошла ошибка - нужно остановить монитор ресурсов.
-            await resources_monitor_manager.remove_controller(controller.address)
-            # И деактивировать контроллер
-            await Controller.deactivate(id)
+        except ValueError:
+            msg = _('Fail to update controller {}').format(id)
             raise SimpleError(msg)
 
-        # На случай, если контроллер был не активен - активируем его.
-        await Controller.activate(id)
-        return UpdateControllerMutation(ok=True, controller=ControllerType(**controller.__values__))
+        return UpdateControllerMutation(ok=True)
 
 
 class RemoveControllerMutation(graphene.Mutation):
