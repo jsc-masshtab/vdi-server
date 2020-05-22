@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2020-05-21 17:09+0300\n"
+"POT-Creation-Date: 2020-05-22 14:13+0300\n"
 "PO-Revision-Date: 2020-03-16 17:12+0300\n"
 "Last-Translator: Emil <e.gareev@mashtab.org>\n"
 "Language-Team: English\n"
@@ -116,13 +116,13 @@ msgstr "Values for auth directory is updated"
 
 #: auth/authentication_directory/models.py:195
 #: auth/authentication_directory/models.py:546 auth/models.py:426
-#: controller/models.py:312 pool/models.py:481 vm/models.py:105
+#: controller/models.py:313 pool/models.py:481 vm/models.py:105
 msgid "{} {} had remove."
 msgstr "{} {} had remove."
 
 #: auth/authentication_directory/models.py:202
 #: auth/authentication_directory/models.py:553 auth/models.py:433
-#: controller/models.py:319 pool/models.py:488 vm/models.py:112
+#: controller/models.py:320 pool/models.py:488 vm/models.py:112
 msgid "Soft_delete exception: {}"
 msgstr "Soft_delete exception: {}"
 
@@ -550,6 +550,10 @@ msgstr "Can't login login to controller {}"
 msgid "Successfully added new controller {} with address {}."
 msgstr "Successfully added new controller {} with address {}."
 
+#: controller/models.py:202
+msgid "Remove existing controller from resource monitor"
+msgstr "Remove existing controller from resource monitor"
+
 #: controller/models.py:242
 msgid "Address is unreachable"
 msgstr "Address is unreachable"
@@ -558,46 +562,54 @@ msgstr "Address is unreachable"
 msgid "Error with controller update: {}"
 msgstr "Error with controller update: {}"
 
-#: controller/models.py:285
+#: controller/models.py:279
+msgid "Activate the controller"
+msgstr "Activate the controller"
+
+#: controller/models.py:283
+msgid "Add back to the resource monitor"
+msgstr "Add back to the resource monitor"
+
+#: controller/models.py:286
 msgid "Successfully update controller {} with address {}."
 msgstr "Successfully update controller {} with address {}."
 
-#: controller/models.py:308
+#: controller/models.py:309
 msgid "Controller has pool of virtual machines. Please completely remove."
 msgstr "Controller has pool of virtual machines. Please completely remove."
 
-#: controller/models.py:332
+#: controller/models.py:333
 #, python-brace-format
 msgid "Controller {name} had completely remove."
 msgstr "Controller {name} had completely remove."
 
-#: controller/models.py:346
+#: controller/models.py:347
 msgid "Controller {} has been activated."
 msgstr "Controller {} has been activated."
 
-#: controller/models.py:364
+#: controller/models.py:365
 msgid "Controller {} has been deactivated."
 msgstr "Controller {} has been deactivated."
 
-#: controller/schema.py:66
+#: controller/schema.py:67
 msgid "Controller name cannot be empty."
 msgstr "Controller name cannot be empty."
 
-#: controller/schema.py:74
+#: controller/schema.py:75
 #, python-brace-format
 msgid "Add new controller with address {address}: operation failed."
 msgstr "Add new controller with address {address}: operation failed."
 
-#: controller/schema.py:97 controller/schema.py:126 controller/schema.py:149
-#: controller/schema.py:178
+#: controller/schema.py:98 controller/schema.py:127 controller/schema.py:150
+#: controller/schema.py:179
 msgid "No such controller."
 msgstr "No such controller."
 
-#: controller/schema.py:107
+#: controller/schema.py:108
 msgid "Fail to update controller {}"
 msgstr "Fail to update controller {}"
 
-#: controller/schema.py:131
+#: controller/schema.py:132
 msgid "Controller"
 msgstr "Controller"
 
@@ -996,6 +1008,10 @@ msgstr "{cls}: Controller {ip} is already monitored!"
 msgid "{cls}: resource monitor for controller {ip} connected"
 msgstr "{cls}: resource monitor for controller {ip} connected"
 
+#: resources_monitoring/resources_monitor_manager.py:84
+msgid "Delete controller {} from resources monitor."
+msgstr "Delete controller {} from resources monitor."
+
 #: resources_monitoring/resources_monitor_manager.py:94
 #, python-brace-format
 msgid "{cls}: controller {ip} is not monitored!"
@@ -1158,23 +1174,50 @@ msgstr "VMs list could not be retrieved: {}"
 msgid "GraphQL: VM type list:"
 msgstr "GraphQL: VM type list:"
 
-#~ msgid "Subclasses of BasePasswordHasher must provide an encode() method"
-#~ msgstr "Subclasses of BasePasswordHasher must provide an encode() method"
-
-#~ msgid "Automated pool successfully created. Initial VM amount {}"
-#~ msgstr "Automated pool successfully created. Initial VM amount {}"
-
 #~ msgid "URL {url} - {http_error}"
 #~ msgstr "URL {url} - {http_error}"
 
 #~ msgid "Subclasses of BasePasswordHasher should provide a harden_runtime() method"
 #~ msgstr "Subclasses of BasePasswordHasher should provide a harden_runtime() method"
 
-#~ msgid "StaticPool: Objects on VDI DB created."
-#~ msgstr "StaticPool: Objects on VDI DB created."
+#~ msgid "Subclasses of BasePasswordHasher must provide an encode() method"
+#~ msgstr "Subclasses of BasePasswordHasher must provide an encode() method"
+
+#~ msgid "Automated pool successfully created. Initial VM amount {}"
+#~ msgstr "Automated pool successfully created. Initial VM amount {}"
 
 #~ msgid "{role} \"{username}\" created."
 #~ msgstr "{role} \"{username}\" created."
+
+#~ msgid "Controller {} check passed successful."
+#~ msgstr "Controller {} check passed successful."
+
+#~ msgid "Group {} is deleted"
+#~ msgstr "Group {} is deleted"
+
+#~ msgid "AD user info: {}"
+#~ msgstr "AD user info: {}"
+
+#~ msgid "License information:"
+#~ msgstr "License information:"
+
+#~ msgid "AD user groups: {}"
+#~ msgstr "AD user groups: {}"
+
+#~ msgid "User name must contain minimum 3 characters. It must contain letters and digits, _, -, +."
+#~ msgstr "User name must contain minimum 3 characters. It must contain letters and digits, _, -, +."
+
+#~ msgid "Group {} roles: {}"
+#~ msgstr "Group {} roles: {}"
+
+#~ msgid "Hasher %r doesn't specify a library attribute"
+#~ msgstr "Hasher %r doesn't specify a library attribute"
+
+#~ msgid "Mapping {} for auth directory {} is deleted"
+#~ msgstr "Mapping {} for auth directory {} is deleted"
+
+#~ msgid "IP: . username: {}"
+#~ msgstr "IP: . username: {}"
 
 #~ msgid "Authentication directory {} is deleted"
 #~ msgstr "Authentication directory server {} is down."
@@ -1182,62 +1225,35 @@ msgstr "GraphQL: VM type list:"
 #~ msgid "Couldn't load {} algorithm library: {}"
 #~ msgstr "Couldn't load %r algorithm library: %s"
 
-#~ msgid "IP: . username: {}"
-#~ msgstr "IP: . username: {}"
+#~ msgid "Can't connect to controller {} with username: {}, ldap_connection: {}"
+#~ msgstr "Can't connect to controller {} with username: {}, password: {}, ldap_connection: {}"
 
-#~ msgid "Can't create VM:"
-#~ msgstr "Can't create VM:"
-
-#~ msgid "Removal pool of desktops {verbose_name} is done."
-#~ msgstr "Removal pool of desktops {verbose_name} is done."
-
-#~ msgid "Automated pool creation. Created {} VMs from {}"
-#~ msgstr "Automated pool creation. Created {} VMs from {}"
-
-#~ msgid "Group {} is deleted"
-#~ msgstr "Group {} is deleted"
-
-#~ msgid "License information:"
-#~ msgstr "License information:"
-
-#~ msgid "Mapping {} for auth directory {} is deleted"
-#~ msgstr "Mapping {} for auth directory {} is deleted"
-
-#~ msgid "Hasher %r doesn't specify a library attribute"
-#~ msgstr "Hasher %r doesn't specify a library attribute"
-
-#~ msgid "Create Pool"
-#~ msgstr "Create Pool"
-
-#~ msgid "Group {} roles: {}"
-#~ msgstr "Group {} roles: {}"
-
-#~ msgid "Subclasses of BasePasswordHasher must provide a verify() method"
-#~ msgstr "Subclasses of BasePasswordHasher must provide a verify() method"
+#~ msgid "StaticPool: Objects on VDI DB created."
+#~ msgstr "StaticPool: Objects on VDI DB created."
 
 #~ msgid "AutomatedPool {} is created"
 #~ msgstr "AutomatedPool {} is created"
 
-#~ msgid "User name must contain minimum 3 characters. It must contain letters and digits, _, -, +."
-#~ msgstr "User name must contain minimum 3 characters. It must contain letters and digits, _, -, +."
+#~ msgid "OU: {}"
+#~ msgstr "OU: {}"
 
-#~ msgid "AD user groups: {}"
-#~ msgstr "AD user groups: {}"
+#~ msgid "Subclasses of BasePasswordHasher must provide a verify() method"
+#~ msgstr "Subclasses of BasePasswordHasher must provide a verify() method"
+
+#~ msgid "Automated pool creation. Created {} VMs from {}"
+#~ msgstr "Automated pool creation. Created {} VMs from {}"
 
 #~ msgid "GROUPS: {}"
 #~ msgstr "GROUPS: {}"
 
-#~ msgid "AD user info: {}"
-#~ msgstr "AD user info: {}"
+#~ msgid "Removal pool of desktops {verbose_name} is done."
+#~ msgstr "Removal pool of desktops {verbose_name} is done."
 
-#~ msgid "OU: {}"
-#~ msgstr "OU: {}"
+#~ msgid "Create Pool"
+#~ msgstr "Create Pool"
 
-#~ msgid "Can't connect to controller {} with username: {}, ldap_connection: {}"
-#~ msgstr "Can't connect to controller {} with username: {}, password: {}, ldap_connection: {}"
+#~ msgid "Can't create VM:"
+#~ msgstr "Can't create VM:"
 
 #~ msgid "Get controller credentials: Controller's {} credentials are good."
 #~ msgstr "Get controller credentials: Controller's {} credentials are good."
-
-#~ msgid "Controller {} check passed successful."
-#~ msgstr "Controller {} check passed successful."
