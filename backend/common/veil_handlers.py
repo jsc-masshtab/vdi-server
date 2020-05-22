@@ -4,8 +4,7 @@ from tornado.web import RequestHandler
 from tornado.escape import json_decode
 from graphene_tornado.tornado_graphql_handler import TornadoGraphQLHandler
 
-from auth.utils.veil_jwt import extract_user, jwtauth
-
+from auth.utils.veil_jwt import extract_user, jwtauth, extract_user_object
 from journal.journal import Log as log
 
 # TODO: унифицировать обработку Exception, чтобы не плодить try:ex
@@ -39,6 +38,13 @@ class BaseHandler(RequestHandler, ABC):
     def client_type(self):
         client_type = self.request.headers.get('Client-Type')
         return client_type if client_type else 'Unknown'
+
+    @property
+    def headers(self):
+        return self.request.headers
+
+    async def get_user_object(self):
+        return await extract_user_object(self.headers)
 
 
 @jwtauth

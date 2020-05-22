@@ -6,7 +6,7 @@ from graphql.execution.base import ResolveInfo
 from settings import AUTH_ENABLED
 from database import Role, EntityType
 
-from auth.utils.veil_jwt import extraxt_user_object
+from auth.utils.veil_jwt import extract_user_object
 from common.veil_errors import Unauthorized
 from auth.models import User
 
@@ -119,7 +119,7 @@ def user_passes_test(test_func, exc=Unauthorized):  # noqa
         @context(f)
         async def wrapper(cntxt, *args, **kwargs):  # noqa
             if AUTH_ENABLED:
-                user = await extraxt_user_object(cntxt.headers)
+                user = await extract_user_object(cntxt.headers)
                 if user and isinstance(user, User):
                     if test_func(await user.roles):
                         return f(*args, **kwargs)
