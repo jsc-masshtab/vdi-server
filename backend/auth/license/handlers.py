@@ -2,7 +2,8 @@
 from abc import ABC
 
 from common.veil_handlers import BaseHandler
-from common.veil_errors import ValidationError
+from common.veil_errors import ValidationError, Unauthorized
+from common.veil_decorators import is_administrator
 from auth.utils.veil_jwt import jwtauth
 from auth.license.utils import License
 from languages import lang_init
@@ -17,14 +18,23 @@ class LicenseHandler(BaseHandler, ABC):
 
     async def get(self):
         """get license key info"""
-
         license_data = License().license_data.public_attrs_dict
         response = {'data': license_data}
         return self.finish(response)
 
     async def post(self):
         """Upload license key"""
-
+        # проверка наличия роли
+        # TODO: вынести метод в BaseHandler
+        try:
+            user = await self.get_user_object()
+            roles = await user.roles
+            if not is_administrator(roles):
+                raise Unauthorized
+        except (Unauthorized, AttributeError, TypeError):
+            response = {'errors': [{'message': _('Invalid permissions')}]}
+            return self.log_finish(response)
+        # загрузка самого файла
         try:
             key_file_dict = dict()
             for file_name in self.request.files:

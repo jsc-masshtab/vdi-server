@@ -66,7 +66,7 @@ class LogoutHandler(BaseHandler, ABC):
 
 class VersionHandler(BaseHandler, ABC):
     async def get(self):
-        response = {'data': {'version': '2.0',
+        response = {'data': {'version': '2.0.1',
                              'year': '2019-2020',
                              'url': 'https://mashtab.org',
                              'copyright': '©mashtab.org',
