@@ -11,6 +11,7 @@ from resources_monitoring.resources_monitor_manager import resources_monitor_man
 
 from languages import lang_init
 
+
 _ = lang_init()
 
 # TODO: перенести добавление контроллера в ресурс монитор в методы модели, чтобы сократить дублирование кода.

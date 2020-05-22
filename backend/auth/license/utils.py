@@ -26,10 +26,7 @@ from cryptography.hazmat.primitives import serialization, hashes
 from cryptography.hazmat.primitives.asymmetric import padding
 
 from settings import PRIVATE_PEM_FPATH, SERIAL_KEY_FPATH
-from languages import lang_init
-
-
-_ = lang_init()
+from redis_broker import save_license_dict, read_license_dict
 
 
 # TODO: лицензии некорректно обновляются для нескольких инстансов приложения (меняется только в рамках 1 потока).
@@ -187,6 +184,14 @@ class License:
         def take_verbose_name(self):
             return self.license_data.verbose_name
 
+        @property
+        def license_data(self):
+            return LicenseData(**read_license_dict(dict_name='license_dict'))
+
+        @license_data.setter
+        def license_data(self, license_data: LicenseData):
+            return save_license_dict(dict_name='license_dict', data=license_data.new_license_attrs_dict)
+
         def get_license_from_file(self):
             """
             Проверяется ключ из файла.
@@ -219,7 +224,7 @@ class License:
             try:
                 self.license_data = LicenseData(**license_data)
             except TypeError:
-                # Ключ удается расшифровароть, но он не подходит по структуре. Скорее всего это Veil-ключ
+                # Ключ удается расшифровать, но он не подходит по структуре. Скорее всего это Veil-ключ
                 license_data = {
                     "verbose_name": "Unlicensed Veil VDI",
                     "thin_clients_limit": 0,

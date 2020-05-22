@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2020-05-21 17:09+0300\n"
+"POT-Creation-Date: 2020-05-22 14:13+0300\n"
 "PO-Revision-Date: 2020-03-16 17:13+0300\n"
 "Last-Translator: Emil <e.gareev@mashtab.org>\n"
 "Language-Team: Russian\n"
@@ -72,7 +72,7 @@ msgstr "Имя verbose не должно быть пустым."
 
 #: auth/authentication_directory/auth_dir_schema.py:52
 msgid "'domain name' should be a string split by a dot."
-msgstr "'имя домена' должно быть разделено точкой"
+msgstr "'имя домена' должно быть разделено точкой."
 
 #: auth/authentication_directory/auth_dir_schema.py:67 auth/group_schema.py:44
 msgid "users count not much with db count."
@@ -116,13 +116,13 @@ msgstr "Values for auth directory is updated"
 
 #: auth/authentication_directory/models.py:195
 #: auth/authentication_directory/models.py:546 auth/models.py:426
-#: controller/models.py:312 pool/models.py:481 vm/models.py:105
+#: controller/models.py:313 pool/models.py:481 vm/models.py:105
 msgid "{} {} had remove."
 msgstr "Выполнено удаление: {} {}."
 
 #: auth/authentication_directory/models.py:202
 #: auth/authentication_directory/models.py:553 auth/models.py:433
-#: controller/models.py:319 pool/models.py:488 vm/models.py:112
+#: controller/models.py:320 pool/models.py:488 vm/models.py:112
 msgid "Soft_delete exception: {}"
 msgstr "Ошибка удаления: {}"
 
@@ -550,54 +550,66 @@ msgstr "Не получается войти на контроллер {}"
 msgid "Successfully added new controller {} with address {}."
 msgstr "Успешно добавлен новый контроллер {} с адресом {}."
 
+#: controller/models.py:202
+msgid "Remove existing controller from resource monitor"
+msgstr "Удаляем существующий контроллер из монитора ресурсов"
+
 #: controller/models.py:242
 msgid "Address is unreachable"
 msgstr "Адрес недоступен"
 
 #: controller/models.py:272
 msgid "Error with controller update: {}"
-msgstr "Ошибка с обновлением контроллера {}."
+msgstr "Ошибка с обновлением контроллера: {}"
 
-#: controller/models.py:285
+#: controller/models.py:279
+msgid "Activate the controller"
+msgstr "Активируем контроллер"
+
+#: controller/models.py:283
+msgid "Add back to the resource monitor"
+msgstr "Добавляем обратно в монитор ресурсов"
+
+#: controller/models.py:286
 msgid "Successfully update controller {} with address {}."
 msgstr "Успешно обновлен контроллер {} с адресом {}."
 
-#: controller/models.py:308
+#: controller/models.py:309
 msgid "Controller has pool of virtual machines. Please completely remove."
 msgstr "У контроллера есть пулы виртуальных машин. Выполните полное удаление."
 
-#: controller/models.py:332
+#: controller/models.py:333
 #, python-brace-format
 msgid "Controller {name} had completely remove."
 msgstr "Выполнено полное удаление контроллера {name}."
 
-#: controller/models.py:346
+#: controller/models.py:347
 msgid "Controller {} has been activated."
 msgstr "Контроллер {} активирован."
 
-#: controller/models.py:364
+#: controller/models.py:365
 msgid "Controller {} has been deactivated."
 msgstr "Контроллер {} деактивирован."
 
-#: controller/schema.py:66
+#: controller/schema.py:67
 msgid "Controller name cannot be empty."
 msgstr "Имя контроллера не может быть пустым."
 
-#: controller/schema.py:74
+#: controller/schema.py:75
 #, python-brace-format
 msgid "Add new controller with address {address}: operation failed."
 msgstr "Ошибка добавления нового контроллера с адресом {address}."
 
-#: controller/schema.py:97 controller/schema.py:126 controller/schema.py:149
-#: controller/schema.py:178
+#: controller/schema.py:98 controller/schema.py:127 controller/schema.py:150
+#: controller/schema.py:179
 msgid "No such controller."
 msgstr "Нет такого контроллера."
 
-#: controller/schema.py:107
+#: controller/schema.py:108
 msgid "Fail to update controller {}"
 msgstr "Ошибка обновления контроллера {}"
 
-#: controller/schema.py:131
+#: controller/schema.py:132
 msgid "Controller"
 msgstr "Контроллер"
 
@@ -996,6 +1008,10 @@ msgstr "{cls}: Контроллер {ip} уже отслеживается!"
 msgid "{cls}: resource monitor for controller {ip} connected"
 msgstr "{cls}: монитор ресурсов для контроллера {ip} подключен"
 
+#: resources_monitoring/resources_monitor_manager.py:84
+msgid "Delete controller {} from resources monitor."
+msgstr "Удаляем контроллер {} из монитора ресурсов."
+
 #: resources_monitoring/resources_monitor_manager.py:94
 #, python-brace-format
 msgid "{cls}: controller {ip} is not monitored!"
@@ -1158,23 +1174,50 @@ msgstr "Не удалось получить список виртуальных
 msgid "GraphQL: VM type list:"
 msgstr "GraphQL: список типов виртуальных машин:"
 
-#~ msgid "Subclasses of BasePasswordHasher must provide an encode() method"
-#~ msgstr "Подклассы BasePasswordHasher должны предоставлять метод encode()"
-
-#~ msgid "Automated pool successfully created. Initial VM amount {}"
-#~ msgstr "Автоматический пул успешно создан. Начальное количество виртуальных машин {}"
-
 #~ msgid "URL {url} - {http_error}"
 #~ msgstr "URL {url} - {http_error}"
 
 #~ msgid "Subclasses of BasePasswordHasher should provide a harden_runtime() method"
 #~ msgstr "Подклассы BasePasswordHasher должны предоставлять метод harden_runtime()"
 
-#~ msgid "StaticPool: Objects on VDI DB created."
-#~ msgstr "Статический пул: объекты на VDI DB созданы."
+#~ msgid "Subclasses of BasePasswordHasher must provide an encode() method"
+#~ msgstr "Подклассы BasePasswordHasher должны предоставлять метод encode()"
+
+#~ msgid "Automated pool successfully created. Initial VM amount {}"
+#~ msgstr "Автоматический пул успешно создан. Начальное количество виртуальных машин {}"
 
 #~ msgid "{role} \"{username}\" created."
 #~ msgstr "{role} пользователя {username} создана."
+
+#~ msgid "Controller {} check passed successful."
+#~ msgstr "Проверка контроллера {} прошла успешно."
+
+#~ msgid "Group {} is deleted"
+#~ msgstr "Группа {} удалена"
+
+#~ msgid "AD user info: {}"
+#~ msgstr "Информация пользователя AD: {}"
+
+#~ msgid "License information:"
+#~ msgstr "Информация о лицензии:"
+
+#~ msgid "AD user groups: {}"
+#~ msgstr "Группы пользователей AD: {}"
+
+#~ msgid "User name must contain minimum 3 characters. It must contain letters and digits, _, -, +."
+#~ msgstr "Имя пользователя должно содержать буквы, цифры, _, -, + и быть не короче 3 символов."
+
+#~ msgid "Group {} roles: {}"
+#~ msgstr "Роли группы {}: {}"
+
+#~ msgid "Hasher %r doesn't specify a library attribute"
+#~ msgstr "Hasher %r не указывает атрибут библиотеки"
+
+#~ msgid "Mapping {} for auth directory {} is deleted"
+#~ msgstr "Мэппинг {} для AD {} удален"
+
+#~ msgid "Can't create VM:"
+#~ msgstr "Невозможно создать виртуальную машину:"
 
 #~ msgid "Authentication directory {} is deleted"
 #~ msgstr "Сервер директории авторизации {} не работает."
@@ -1182,62 +1225,35 @@ msgstr "GraphQL: список типов виртуальных машин:"
 #~ msgid "Couldn't load {} algorithm library: {}"
 #~ msgstr "Не может загрузиться %r библиотека алгоритмов: %s"
 
-#~ msgid "Can't create VM:"
-#~ msgstr "Невозможно создать виртуальную машину:"
+#~ msgid "Can't connect to controller {} with username: {}, ldap_connection: {}"
+#~ msgstr "Не подключается к контроллеру {} с именем: {}, ldap_connection: {}"
 
-#~ msgid "IP: . username: {}"
-#~ msgstr "IP: . пользователь: {}"
-
-#~ msgid "Removal pool of desktops {verbose_name} is done."
-#~ msgstr "Выполнено удаление пула рабочих столов {verbose_name}."
-
-#~ msgid "Automated pool creation. Created {} VMs from {}"
-#~ msgstr "Автоматическое создание пула. Создание {} виртуальных машин из {}"
-
-#~ msgid "Group {} is deleted"
-#~ msgstr "Группа {} удалена"
-
-#~ msgid "License information:"
-#~ msgstr "Информация о лицензии:"
-
-#~ msgid "Mapping {} for auth directory {} is deleted"
-#~ msgstr "Мэппинг {} для AD {} удален"
-
-#~ msgid "Hasher %r doesn't specify a library attribute"
-#~ msgstr "Hasher %r не указывает атрибут библиотеки"
-
-#~ msgid "Create Pool"
-#~ msgstr "Создание пула"
-
-#~ msgid "Group {} roles: {}"
-#~ msgstr "Роли группы {}: {}"
-
-#~ msgid "Subclasses of BasePasswordHasher must provide a verify() method"
-#~ msgstr "Подклассы BasePasswordHasher должны предоставлять метод verify()"
+#~ msgid "StaticPool: Objects on VDI DB created."
+#~ msgstr "Статический пул: объекты на VDI DB созданы."
 
 #~ msgid "AutomatedPool {} is created"
 #~ msgstr "Автоматический пул {} создан"
 
-#~ msgid "User name must contain minimum 3 characters. It must contain letters and digits, _, -, +."
-#~ msgstr "Имя пользователя должно содержать буквы, цифры, _, -, + и быть не короче 3 символов."
+#~ msgid "OU: {}"
+#~ msgstr "Подразделения: {}"
 
-#~ msgid "AD user groups: {}"
-#~ msgstr "Группы пользователей AD: {}"
+#~ msgid "Subclasses of BasePasswordHasher must provide a verify() method"
+#~ msgstr "Подклассы BasePasswordHasher должны предоставлять метод verify()"
+
+#~ msgid "Automated pool creation. Created {} VMs from {}"
+#~ msgstr "Автоматическое создание пула. Создание {} виртуальных машин из {}"
 
 #~ msgid "GROUPS: {}"
 #~ msgstr "Группы: {}"
 
-#~ msgid "AD user info: {}"
-#~ msgstr "Информация пользователя AD: {}"
+#~ msgid "Removal pool of desktops {verbose_name} is done."
+#~ msgstr "Выполнено удаление пула рабочих столов {verbose_name}."
 
-#~ msgid "OU: {}"
-#~ msgstr "Подразделения: {}"
+#~ msgid "Create Pool"
+#~ msgstr "Создание пула"
 
-#~ msgid "Can't connect to controller {} with username: {}, ldap_connection: {}"
-#~ msgstr "Не подключается к контроллеру {} с именем: {}, ldap_connection: {}"
+#~ msgid "IP: . username: {}"
+#~ msgstr "IP: . пользователь: {}"
 
 #~ msgid "Get controller credentials: Controller's {} credentials are good."
 #~ msgstr "Получение учетных данных контроллера: Хорошие учетные данные контроллера {}."
-
-#~ msgid "Controller {} check passed successful."
-#~ msgstr "Проверка контроллера {} прошла успешно."
