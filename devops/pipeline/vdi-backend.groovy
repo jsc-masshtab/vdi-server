@@ -100,10 +100,10 @@ node("$AGENT") {
                         /usr/bin/python3 -m pip install 'virtualenv==15.1.0' --force-reinstall
                         # создаем виртуальное окружение
                         sudo rm -rf /opt/veil-vdi/env
-                        /usr/bin/python3 -m virtualenv /opt/veil-vdi/env
+                        sudo /usr/bin/python3 -m virtualenv /opt/veil-vdi/env
                         # устанавливаем зависимости
                         cd /opt/veil-vdi/app
-                        /opt/veil-vdi/env/bin/python -m pip install -r requirements.txt
+                        sudo /opt/veil-vdi/env/bin/python -m pip install -r requirements.txt
 
                         # копируем каталог с файлами виртуального окружения в пакет
                         mkdir -p "${DEB_ROOT}/${PRJNAME}/root/opt/veil-vdi/env"
