@@ -323,13 +323,33 @@ def fixt_group(request, event_loop):
     group_name = 'test_group_1'
 
     async def setup():
-        await Group.create(verbose_name=group_name, id="10913d5d-ba7a-4049-88c5-769267a6cbe4")
+        await Group.create(verbose_name=group_name, id="10913d5d-ba7a-4049-88c5-769267a6cbe4",
+                           ad_guid="10913d5d-ba7a-4049-88c5-769267a6cbe5")
 
     event_loop.run_until_complete(setup())
 
     def teardown():
         async def a_teardown():
             await Group.delete.where(Group.id == "10913d5d-ba7a-4049-88c5-769267a6cbe4").gino.status()
+
+        event_loop.run_until_complete(a_teardown())
+
+    request.addfinalizer(teardown)
+    return True
+
+
+@pytest.fixture
+def fixt_local_group(request, event_loop):
+    group_name = 'test_group_2'
+
+    async def setup():
+        await Group.create(verbose_name=group_name, id="10913d5d-ba7a-4049-88c5-769267a6cbe3")
+
+    event_loop.run_until_complete(setup())
+
+    def teardown():
+        async def a_teardown():
+            await Group.delete.where(Group.id == "10913d5d-ba7a-4049-88c5-769267a6cbe3").gino.status()
 
         event_loop.run_until_complete(a_teardown())
 
@@ -430,6 +450,66 @@ def fixt_auth_dir(request, event_loop):
     async def setup():
         await AuthenticationDirectory.soft_create(id=id, verbose_name=verbose_name, directory_url=directory_url,
                                                   domain_name=domain_name)
+    event_loop.run_until_complete(setup())
+
+    def teardown():
+        async def a_teardown():
+            await AuthenticationDirectory.delete.where(AuthenticationDirectory.id == id).gino.status()
+            # TODO: опасное место
+            await User.delete.where(User.username == 'ad120').gino.status()
+
+        event_loop.run_until_complete(a_teardown())
+
+    request.addfinalizer(teardown)
+    return True
+
+
+@pytest.fixture
+def fixt_auth_dir_with_pass(request, event_loop):
+    id = '10913d5d-ba7a-4049-88c5-769267a6cbe5'
+    verbose_name = 'test_auth_dir'
+    directory_url = 'ldap://192.168.11.180'
+    domain_name = 'bazalt.team'
+    encoded_service_password = 'Bazalt1!'
+
+    async def setup():
+        await AuthenticationDirectory.soft_create(id=id,
+                                                  verbose_name=verbose_name,
+                                                  directory_url=directory_url,
+                                                  domain_name=domain_name,
+                                                  service_password=encoded_service_password,
+                                                  service_username='ad120')
+
+    event_loop.run_until_complete(setup())
+
+    def teardown():
+        async def a_teardown():
+            await AuthenticationDirectory.delete.where(AuthenticationDirectory.id == id).gino.status()
+            # TODO: опасное место
+            await User.delete.where(User.username == 'ad120').gino.status()
+
+        event_loop.run_until_complete(a_teardown())
+
+    request.addfinalizer(teardown)
+    return True
+
+
+@pytest.fixture
+def fixt_auth_dir_with_pass_bad(request, event_loop):
+    id = '10913d5d-ba7a-4049-88c5-769267a6cbe6'
+    verbose_name = 'test_auth_dir'
+    directory_url = 'ldap://192.168.11.180'
+    domain_name = 'bazalt.team'
+    encoded_service_password = 'bad'
+
+    async def setup():
+        await AuthenticationDirectory.soft_create(id=id,
+                                                  verbose_name=verbose_name,
+                                                  directory_url=directory_url,
+                                                  domain_name=domain_name,
+                                                  service_password=encoded_service_password,
+                                                  service_username='bad')
+
     event_loop.run_until_complete(setup())
 
     def teardown():

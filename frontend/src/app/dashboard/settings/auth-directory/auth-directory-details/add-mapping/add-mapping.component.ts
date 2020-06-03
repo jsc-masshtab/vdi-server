@@ -1,4 +1,4 @@
-import { takeUntil } from 'rxjs/operators';
+import { takeUntil, map } from 'rxjs/operators';
 import { WaitService } from '../../../../common/components/single/wait/wait.service';
 import { MatDialogRef, MAT_DIALOG_DATA, } from '@angular/material';
 import { Component, OnInit, Inject, OnDestroy, } from '@angular/core';
@@ -56,7 +56,7 @@ export class AddMappingComponent implements OnInit, OnDestroy {
     if (this.form.status === 'VALID') {
       this.waitService.setWait(true);
       this.service.addAuthDirMapping(this.form.value, this.data.id).pipe(takeUntil(this.destroy)).subscribe(() => {
-        this.service.getAuthenticationDirectory(this.data.id).subscribe(() => {
+        this.service.getAuthenticationDirectory(this.data.id).valueChanges.pipe(map(data => data.data)).subscribe(() => {
           this.dialogRef.close();
           this.waitService.setWait(false);
         });

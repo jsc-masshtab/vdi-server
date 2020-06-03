@@ -170,6 +170,13 @@ class Controller(db.Model):
         auth_info = dict(username=username, password=password, ldap=ldap_connection)
         token, expires_on = await controller_client.auth(auth_info=auth_info)
         version = await controller_client.fetch_version()
+        major_version, minor_version, patch_version = version.split('.')
+
+        # Проверяем версию контроллера в пределах допустимой. Предыдущие версии тоже совместимы, но не стабильны.
+        # В версии 4.3 появились изменения в api
+        if major_version != '4' or minor_version != '2':
+            msg = _('Veil ECP version should be 4.2. Current version is incompatible.')
+            raise ValidationError(msg)
 
         controller_dict = {'verbose_name': verbose_name,
                            'address': address,

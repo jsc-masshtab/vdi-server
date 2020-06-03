@@ -40,7 +40,7 @@ get_configurations(){
 
 get_backend(){
   echo "Getting backend files from Vagrant..."
-  rsync -rv --exclude={*.pyc,.idea,.pytest_cache,__pycache__,.coveragerc,.python-version,tests} vagrant@192.168.20.112:/opt/veil-vdi/app/ "${BACKEND_DIR}"
+  rsync -rv --exclude={*.pyc,.idea,.pytest_cache,__pycache__,.coveragerc,.python-version,tests,settings.py,local_settings.py} vagrant@192.168.20.112:/opt/veil-vdi/app/ "${BACKEND_DIR}"
 }
 
 get_env(){

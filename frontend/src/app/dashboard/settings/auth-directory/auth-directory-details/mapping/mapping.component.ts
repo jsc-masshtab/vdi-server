@@ -3,7 +3,7 @@ import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material';
 import { Component, Inject, OnDestroy } from '@angular/core';
 import { AuthenticationDirectoryService } from '../../auth-directory.service';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { takeUntil } from 'rxjs/operators';
+import { takeUntil, map } from 'rxjs/operators';
 import { Subject } from 'rxjs';
 
 
@@ -66,7 +66,7 @@ export class MappingComponent implements OnDestroy {
     if (this.form.status === 'VALID') {
       this.waitService.setWait(true);
       this.service.updateMapping(value, this.data.idDirectory, this.data.id).subscribe(() => {
-        this.service.getAuthenticationDirectory(this.data.idDirectory).pipe(takeUntil(this.destroy)).subscribe(() => {
+        this.service.getAuthenticationDirectory(this.data.idDirectory).valueChanges.pipe(map(data => data.data)).pipe(takeUntil(this.destroy)).subscribe(() => {
           this.dialogRef.close();
           this.waitService.setWait(false);
         });
@@ -77,7 +77,7 @@ export class MappingComponent implements OnDestroy {
   public delete() {
     this.waitService.setWait(true);
     this.service.deleteMapping(this.data.idDirectory, this.data.id).subscribe(() => {
-    this.service.getAuthenticationDirectory(this.data.idDirectory).pipe(takeUntil(this.destroy)).subscribe(() => {
+      this.service.getAuthenticationDirectory(this.data.idDirectory).valueChanges.pipe(map(data => data.data)).pipe(takeUntil(this.destroy)).subscribe(() => {
         this.dialogRef.close();
         this.waitService.setWait(false);
       });

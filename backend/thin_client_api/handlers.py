@@ -6,7 +6,7 @@ from tornado import websocket
 
 from common.utils import cancel_async_task
 from common.veil_handlers import BaseHandler
-from common.veil_errors import HttpError, ValidationError
+from common.veil_errors import HttpError, ValidationError, NotFound
 
 from settings import REDIS_PORT, REDIS_THIN_CLIENT_CHANNEL, REDIS_PASSWORD, REDIS_DB
 from auth.utils.veil_jwt import jwtauth
@@ -58,9 +58,7 @@ class PoolHandler(BaseHandler, ABC):
 class PoolGetVm(BaseHandler, ABC):
 
     async def post(self, pool_id):  # remote_protocol: rdp/spice
-
         # Проверяем лимит виртуальных машин
-
         if Pool.thin_client_limit_exceeded():
             response = {'errors': [{'message': _('Thin client limit exceeded.'), 'code': '001'}]}
             return await self.finish(response)
@@ -87,7 +85,6 @@ class PoolGetVm(BaseHandler, ABC):
 
         # Ищем VM закрепленную за пользователем:
         vm_id = await Vm.get_vm_id(pool_id, user_id)
-
         if not vm_id:
             # TODO: добавить третий метод в VM, который делает это
             # Если у пользователя нет VM в пуле, то нужно попытаться назначить ему свободную VM.
@@ -101,7 +98,6 @@ class PoolGetVm(BaseHandler, ABC):
                 # await vm.attach_to_user(user_id)
 
         # В отдельной корутине запускаем расширение пула
-
         if await pool.pool_type == Pool.PoolTypes.AUTOMATED:
             pool = await AutomatedPool.get(pool_id)
             pool_lock = pool_task_manager.get_pool_lock(pool_id)
@@ -118,6 +114,7 @@ class PoolGetVm(BaseHandler, ABC):
             response = {'data': dict(host='', port=0, password='', message=_('Pool has not free machines'))}
             return await self.log_finish(response)
 
+        # Дальше запросы начинают уходить на veil
         #  Опытным путем было выяснено, что vm info содержит remote_access_port None, пока не врубишь
         # удаленный доступ. Поэтому врубаем его без проверки, чтоб не запрашивать инфу 2 раза
         vm_client = await VmHttpClient.create(controller_ip=str(controller_ip), vm_id=str(vm_id))
@@ -125,10 +122,19 @@ class PoolGetVm(BaseHandler, ABC):
         # Опытным путем установлено: если машина уже включена, то запрос может вернуться с 400.  Поэтому try
         try:
             await vm_client.prepare()
+        except NotFound:
+            response = {
+                'data': dict(host='', port=0, password='', message=_('VM is unreachable on ECP Veil.'))}
+            return await self.log_finish(response)
         except HttpError:
             pass
 
-        info = await vm_client.info()
+        try:
+            info = await vm_client.info()
+        except HttpError:
+            response = {
+                'data': dict(host='', port=0, password='', message=_('VM is unreachable on ECP Veil.'))}
+            return await self.log_finish(response)
 
         # Определяем удаленный протокол. Если данные не были получены, то по умолчанию spice
         try:
@@ -144,7 +150,6 @@ class PoolGetVm(BaseHandler, ABC):
                 response = {'data': dict(host='', port=0, password='',
                                               message=_('VM does not support RDP'))}
                 return await self.log_finish(response)
-
         else:  # spice by default
             vm_address = str(controller_ip)
 

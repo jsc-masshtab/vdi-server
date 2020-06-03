@@ -7,6 +7,9 @@ import { ParamMap, ActivatedRoute, Router } from '@angular/router';
 import { FormForEditComponent } from 'src/app/dashboard/common/forms-dinamic/change-form/form-edit.component';
 import { MatDialog } from '@angular/material';
 import { RemoveAuthenticationDirectoryComponent } from './remove-auth-directory/remove-auth-directory.component';
+import { map } from 'rxjs/operators';
+import { AddGropComponent } from './add-group/add-group.component';
+import { RemoveGroupComponent } from './remove-group/remove-group.component';
 
 @Component({
   selector: 'auth-directory-details',
@@ -63,7 +66,27 @@ export class AuthenticationDirectoryDetailsComponent implements OnInit, OnDestro
       type: 'string',
       edit: 'openEditForm',
       form: {
-        tag: 'textarea',
+        tag: 'input',
+        type: 'text'
+      }
+    },
+    {
+      title: 'Пользователь',
+      property: 'service_username',
+      type: 'string',
+      edit: 'openEditForm',
+      form: {
+        tag: 'input',
+        type: 'text'
+      }
+    },
+    {
+      title: 'Пароль ',
+      property: 'service_password',
+      type: 'string',
+      edit: 'openEditForm',
+      form: {
+        tag: 'input',
         type: 'text'
       }
     }
@@ -80,6 +103,16 @@ export class AuthenticationDirectoryDetailsComponent implements OnInit, OnDestro
       title: 'Статус',
       property: 'status',
       type: 'string'
+    }
+  ];
+
+  public collection_groups: object[] = [
+    {
+      title: 'Название группы',
+      type: 'string',
+      property: 'verbose_name',
+      class: 'name-start',
+      icon: 'users-cog'
     }
   ];
 
@@ -100,9 +133,11 @@ export class AuthenticationDirectoryDetailsComponent implements OnInit, OnDestro
     }
 
     this.getAuthenticationDirectorySub = this.service.getAuthenticationDirectory(this.id)
+      .valueChanges.pipe(map(data => data.data))
       .subscribe((data) => {
         this.host = true;
         this.AuthenticationDirectory = data.auth_dir;
+        console.log(this.AuthenticationDirectory)
       });
   }
 
@@ -144,6 +179,7 @@ export class AuthenticationDirectoryDetailsComponent implements OnInit, OnDestro
           }]
         },
         update: {
+          refetch: true,
           method: 'getAuthenticationDirectory',
           params: [
             this.id
@@ -200,18 +236,35 @@ export class AuthenticationDirectoryDetailsComponent implements OnInit, OnDestro
     data: mapping
   });
  }
+  
+  public addGroup() {
+    this.dialog.open(AddGropComponent, {
+      width: '500px',
+      data: {
+        id: this.id,
+        verbose_name: this.AuthenticationDirectory['verbose_name'],
+        groups: this.AuthenticationDirectory['possible_groups']
+      }
+    });
+  }
+
+  public removeGroup() {
+    this.dialog.open(RemoveGroupComponent, {
+      width: '500px',
+      data: {
+        id: this.id,
+        verbose_name: this.AuthenticationDirectory['verbose_name'],
+        groups: this.AuthenticationDirectory['assigned_ad_groups']
+      }
+    });
+  }
 
   public close() {
     this.router.navigate(['pages/settings/auth-directory']);
   }
 
   public routeTo(route: string): void {
-    if (route === 'info') {
-      this.menuActive = 'info';
-    }
-    if (route === 'match') {
-      this.menuActive = 'match';
-    }
+    this.menuActive = route;
   }
 
   ngOnDestroy() {

@@ -1,0 +1,45 @@
+<div class="form">
+
+  <div class="form-header">
+    <h1>Добавление группы пользователей для службы каталогов {{data?.verbose_name}}</h1>
+    <button [mat-dialog-close]="true" class="form-close"><fa-icon [icon]="['fas','times-circle']"></fa-icon></button>
+  </div>
+
+  <div class="form-fields">
+    <label class="field">
+      <mat-form-field>
+        <mat-label *ngIf="pending">Загрузка ...</mat-label>
+        <mat-label *ngIf="possible_ad_groups?.length && !pending">Выберите  группу</mat-label>
+        <mat-label *ngIf="!possible_ad_groups?.length && !pending">- нет групп -</mat-label>
+        <mat-select 
+          (selectionChange)="select('groups', $event)">
+          <mat-option *ngFor="let group of possible_ad_groups" [value]="group">
+            {{ group.verbose_name }}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+      <div class="error" *ngIf="!valid">Выберите группу</div>
+    </label>
+
+    <label class="field">
+      <mat-form-field>
+        <mat-label *ngIf="pending">Загрузка ...</mat-label>
+        <mat-label *ngIf="group_members?.length && !pending">Выберите пользователей</mat-label>
+        <mat-label *ngIf="!group_members?.length && !pending">Без пользователей</mat-label>
+        <mat-select multiple="true" (selectionChange)="select('members', $event)">
+          <mat-option *ngFor="let member of group_members" [value]="member">
+            {{ member.username }}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+    </label>
+  </div>
+
+  <div class="form-actions">
+    <button (click)="send()" class="form-btn">
+      <fa-icon [icon]="['fas','plus-circle']" size="xs"></fa-icon>
+      <span class="action-name">Добавить</span>
+    </button>
+  </div>
+
+</div>

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2020-05-22 14:13+0300\n"
+"POT-Creation-Date: 2020-06-03 13:19+0300\n"
 "PO-Revision-Date: 2020-03-16 17:12+0300\n"
 "Last-Translator: Emil <e.gareev@mashtab.org>\n"
 "Language-Team: English\n"
@@ -57,147 +57,159 @@ msgstr "The license is expired. Some functions will be blocked. Contact your dea
 msgid "License status: {}, expiration time: {}, thin clients limit: {}"
 msgstr "License status: {}, expiration time: {}, thin clients limit: {}"
 
-#: auth/authentication_directory/auth_dir_schema.py:31
-#: auth/authentication_directory/auth_dir_schema.py:170
+#: auth/authentication_directory/auth_dir_schema.py:32
+#: auth/authentication_directory/auth_dir_schema.py:219
+#: auth/authentication_directory/auth_dir_schema.py:236
+#: auth/authentication_directory/auth_dir_schema.py:283
+#: auth/authentication_directory/auth_dir_schema.py:441
 msgid "No such Authentication Directory."
 msgstr "No such Authentication Directory."
 
-#: auth/authentication_directory/auth_dir_schema.py:37
+#: auth/authentication_directory/auth_dir_schema.py:38
 msgid "Authentication directory URL should start with ldap(s)://."
 msgstr "Authentication directory URL should start with ldap(s)://."
 
-#: auth/authentication_directory/auth_dir_schema.py:44
+#: auth/authentication_directory/auth_dir_schema.py:45
 msgid "Verbose name should not be empty."
 msgstr "Verbose name should not be empty."
 
-#: auth/authentication_directory/auth_dir_schema.py:52
+#: auth/authentication_directory/auth_dir_schema.py:53
 msgid "'domain name' should be a string split by a dot."
 msgstr "'domain name' should be a string split by a dot."
 
-#: auth/authentication_directory/auth_dir_schema.py:67 auth/group_schema.py:44
+#: auth/authentication_directory/auth_dir_schema.py:68 auth/group_schema.py:44
 msgid "users count not much with db count."
 msgstr "users count not much with db count."
 
-#: auth/authentication_directory/auth_dir_schema.py:69
+#: auth/authentication_directory/auth_dir_schema.py:70
 msgid "groups list is empty."
 msgstr "groups list is empty."
 
-#: auth/authentication_directory/auth_dir_schema.py:76
+#: auth/authentication_directory/auth_dir_schema.py:77
 msgid "No such mapping."
 msgstr "No such mapping."
 
-#: auth/authentication_directory/auth_dir_schema.py:166
+#: auth/authentication_directory/auth_dir_schema.py:215
 msgid "Specify id."
 msgstr "Specify id."
 
-#: auth/authentication_directory/auth_dir_schema.py:224
+#: auth/authentication_directory/auth_dir_schema.py:284
 msgid "Authentication directory"
 msgstr "Authentication directory"
 
-#: auth/authentication_directory/auth_dir_schema.py:328
+#: auth/authentication_directory/auth_dir_schema.py:390
 msgid "In authentication directory {} mapping"
 msgstr "In authentication directory {} mapping"
 
-#: auth/authentication_directory/models.py:126 tests/test_auth_dir_v2.py:65
+#: auth/authentication_directory/models.py:131 tests/test_auth_dir.py:120
 msgid "More than one authentication directory can not be created."
 msgstr "More than one authentication directory can not be created."
 
-#: auth/authentication_directory/models.py:147
+#: auth/authentication_directory/models.py:154
 msgid "Authentication directory {} is created"
 msgstr "Authentication directory {} is created"
 
-#: auth/authentication_directory/models.py:187
+#: auth/authentication_directory/models.py:192
 msgid "Id: {}. Arguments: {}"
 msgstr "Id: {}. Arguments: {}"
 
-#: auth/authentication_directory/models.py:188
+#: auth/authentication_directory/models.py:193
 msgid "Values for auth directory is updated"
 msgstr "Values for auth directory is updated"
 
-#: auth/authentication_directory/models.py:195
-#: auth/authentication_directory/models.py:546 auth/models.py:426
-#: controller/models.py:313 pool/models.py:481 vm/models.py:105
+#: auth/authentication_directory/models.py:203
+#: auth/authentication_directory/models.py:739 auth/models.py:428
+#: controller/models.py:321 pool/models.py:481 vm/models.py:105
 msgid "{} {} had remove."
 msgstr "{} {} had remove."
 
-#: auth/authentication_directory/models.py:202
-#: auth/authentication_directory/models.py:553 auth/models.py:433
-#: controller/models.py:320 pool/models.py:488 vm/models.py:112
-msgid "Soft_delete exception: {}"
-msgstr "Soft_delete exception: {}"
-
-#: auth/authentication_directory/models.py:217
+#: auth/authentication_directory/models.py:224
 msgid "Arguments: {} of group: {}"
 msgstr "Arguments: {} of group: {}"
 
-#: auth/authentication_directory/models.py:218
+#: auth/authentication_directory/models.py:225
 msgid "Mapping for auth directory {} is created"
 msgstr "Mapping for auth directory {} is created"
 
-#: auth/authentication_directory/models.py:237
+#: auth/authentication_directory/models.py:244
 msgid "New arguments: {} of group: {}"
 msgstr "New arguments: {} of group: {}"
 
-#: auth/authentication_directory/models.py:238
+#: auth/authentication_directory/models.py:245
 msgid "Mapping for auth directory {} is updated"
 msgstr "Mapping for auth directory {} is updated"
 
-#: auth/authentication_directory/models.py:254
+#: auth/authentication_directory/models.py:266
+#: auth/authentication_directory/models.py:462
 msgid "Authentication directory server {} is down."
 msgstr "Authentication directory server {} is down."
 
-#: auth/authentication_directory/models.py:257
+#: auth/authentication_directory/models.py:273
 msgid "Authentication directory server {} is connected"
 msgstr "Authentication directory server {} is connected"
 
-#: auth/authentication_directory/models.py:339
+#: auth/authentication_directory/models.py:308
 msgid "Username must be a string."
 msgstr "Username must be a string."
 
-#: auth/authentication_directory/models.py:364
+#: auth/authentication_directory/models.py:333
 msgid "Assigning veil groups to {}"
 msgstr "Assigning veil groups to {}"
 
-#: auth/authentication_directory/models.py:377
+#: auth/authentication_directory/models.py:346
 msgid "Mappings: {}"
 msgstr "Mappings: {}"
 
-#: auth/authentication_directory/models.py:381
+#: auth/authentication_directory/models.py:350
 msgid "Role VM_OPERATOR has assigned to user {}."
 msgstr "Role VM_OPERATOR is assigned to user {}."
 
-#: auth/authentication_directory/models.py:395
+#: auth/authentication_directory/models.py:364
 msgid "escaped values: {}"
 msgstr "escaped values: {}"
 
-#: auth/authentication_directory/models.py:396
+#: auth/authentication_directory/models.py:365
 msgid "role mapping value type: {}"
 msgstr "role mapping value type: {}"
 
-#: auth/authentication_directory/models.py:405
+#: auth/authentication_directory/models.py:374
 msgid "{}"
 msgstr "{}"
 
-#: auth/authentication_directory/models.py:406
+#: auth/authentication_directory/models.py:375
 msgid "User veil groups: {}"
 msgstr "User veil groups: {}"
 
-#: auth/authentication_directory/models.py:409
+#: auth/authentication_directory/models.py:378
 msgid "Attaching user {} to group: {}"
 msgstr "Attaching user {} to group: {}"
 
-#: auth/authentication_directory/models.py:422
-#: auth/authentication_directory/models.py:435 tests/test_auth_v2.py:109
+#: auth/authentication_directory/models.py:391
+#: auth/authentication_directory/models.py:404 tests/test_auth_v2.py:109
 msgid "No authentication directory controllers."
 msgstr "No authentication directory controllers."
 
-#: auth/authentication_directory/models.py:460
+#: auth/authentication_directory/models.py:430
 msgid "Invalid credentials (ldap): {}"
 msgstr "Invalid credentials (ldap): {}"
 
-#: auth/authentication_directory/models.py:467
+#: auth/authentication_directory/models.py:437
 msgid "Server down (ldap)."
 msgstr "Server down (ldap)."
+
+#: auth/authentication_directory/models.py:457
+msgid "Authentication directory server {} has bad auth info."
+msgstr "Authentication directory server {} has bad auth info."
+
+#: auth/authentication_directory/models.py:525
+#: auth/authentication_directory/models.py:604
+msgid "Fail to connect to Authentication Directory. Check service information"
+msgstr "Fail to connect to Authentication Directory. Check service information"
+
+#: auth/authentication_directory/models.py:746 auth/models.py:435
+#: controller/models.py:328 pool/models.py:488 vm/models.py:112
+msgid "Soft_delete exception: {}"
+msgstr "Soft_delete exception: {}"
 
 #: auth/group_schema.py:26 auth/group_schema.py:105
 msgid "No such group."
@@ -220,6 +232,18 @@ msgid "Last name length must be <= 255 characters."
 msgstr "Last name length must be <= 255 characters."
 
 #: auth/group_schema.py:168
+msgid "Specify Group.id or Group.ad_guid."
+msgstr "Specify Group.id or Group.ad_guid."
+
+#: auth/group_schema.py:170
+msgid "Specify Group.id or Group.ad_guid. Not both."
+msgstr "Specify Group.id or Group.ad_guid. Not both."
+
+#: auth/group_schema.py:174
+msgid "No such Group."
+msgstr "No such group."
+
+#: auth/group_schema.py:175
 msgid "Group"
 msgstr "Group"
 
@@ -266,19 +290,24 @@ msgstr "User {} logout with token {}"
 msgid "Demo version"
 msgstr "Demo version"
 
-#: auth/license/handlers.py:40
+#: auth/license/handlers.py:35 common/veil_decorators.py:130
+#: tests/test_auth_v2.py:75
+msgid "Invalid permissions"
+msgstr "Invalid permissions"
+
+#: auth/license/handlers.py:50
 msgid "Bad extension."
 msgstr "Bad extension."
 
-#: auth/license/handlers.py:48
+#: auth/license/handlers.py:58
 msgid "Fail to open license key file."
 msgstr "Fail to open license key file."
 
-#: auth/license/handlers.py:50
+#: auth/license/handlers.py:60
 msgid "Try to upload invalid license key"
 msgstr "Try to upload invalid license key"
 
-#: auth/license/handlers.py:53
+#: auth/license/handlers.py:63
 msgid "Valid license key is uploaded"
 msgstr "Valid license key is uploaded"
 
@@ -353,35 +382,35 @@ msgstr "{auth_type}: user {username} has been logged in successfully. IP: {ip}."
 msgid "User {username} has logged out."
 msgstr "User {username} has logged out."
 
-#: auth/models.py:403
+#: auth/models.py:405
 msgid "Group {} is created."
 msgstr "Group {} is created."
 
-#: auth/models.py:418
+#: auth/models.py:420
 msgid "Values of group {} is updated"
 msgstr "Values of group {} is updated"
 
-#: auth/models.py:442
+#: auth/models.py:444
 msgid "User {} has been included to group {}."
 msgstr "User {} has been included to group {}."
 
-#: auth/models.py:446
+#: auth/models.py:448
 msgid "User {} is already in group {}"
 msgstr "User {} is already in group {}"
 
-#: auth/models.py:456
+#: auth/models.py:458
 msgid "Removing user {} from group {}"
 msgstr "Removing user {} from group {}"
 
-#: auth/models.py:463
+#: auth/models.py:465
 msgid "Role {} has been set to group {}."
 msgstr "Role {} has been set to group {}."
 
-#: auth/models.py:467
+#: auth/models.py:469
 msgid "Group {} has already role {}"
 msgstr "Group {} has already role {}"
 
-#: auth/models.py:477
+#: auth/models.py:479
 msgid "Roles: {} was deleted to group {}"
 msgstr "Roles: {} was deleted to group {}"
 
@@ -459,8 +488,8 @@ msgid "Controller {} connection error."
 msgstr "Controller {} connection error."
 
 #: common/veil_client.py:113
-msgid "URL not found"
-msgstr "URL not found"
+msgid "Fail to fetch resource from ECP."
+msgstr "Fail to fetch resource from ECP."
 
 #: common/veil_client.py:131
 msgid "Can't process Content-Type."
@@ -497,10 +526,6 @@ msgstr "Parameter {} value {} is invalid. Valid values are: {}"
 #: common/veil_decorators.py:128
 msgid "IP: {}. username: {}"
 msgstr "IP: {}. username: {}"
-
-#: common/veil_decorators.py:130 tests/test_auth_v2.py:75
-msgid "Invalid permissions"
-msgstr "Invalid permissions"
 
 #: common/veil_errors.py:167
 msgid "Controller is not available."
@@ -546,48 +571,52 @@ msgstr "Controller check: {}"
 msgid "Can't login login to controller {}"
 msgstr "Can't login login to controller {}"
 
-#: controller/models.py:188
+#: controller/models.py:179
+msgid "Veil ECP version should be 4.2. Current version is incompatible."
+msgstr "Veil ECP version should be 4.2. Current version is incompatible."
+
+#: controller/models.py:196
 msgid "Successfully added new controller {} with address {}."
 msgstr "Successfully added new controller {} with address {}."
 
-#: controller/models.py:202
+#: controller/models.py:210
 msgid "Remove existing controller from resource monitor"
 msgstr "Remove existing controller from resource monitor"
 
-#: controller/models.py:242
+#: controller/models.py:250
 msgid "Address is unreachable"
 msgstr "Address is unreachable"
 
-#: controller/models.py:272
+#: controller/models.py:280
 msgid "Error with controller update: {}"
 msgstr "Error with controller update: {}"
 
-#: controller/models.py:279
+#: controller/models.py:287
 msgid "Activate the controller"
 msgstr "Activate the controller"
 
-#: controller/models.py:283
+#: controller/models.py:291
 msgid "Add back to the resource monitor"
 msgstr "Add back to the resource monitor"
 
-#: controller/models.py:286
+#: controller/models.py:294
 msgid "Successfully update controller {} with address {}."
 msgstr "Successfully update controller {} with address {}."
 
-#: controller/models.py:309
+#: controller/models.py:317
 msgid "Controller has pool of virtual machines. Please completely remove."
 msgstr "Controller has pool of virtual machines. Please completely remove."
 
-#: controller/models.py:333
+#: controller/models.py:341
 #, python-brace-format
 msgid "Controller {name} had completely remove."
 msgstr "Controller {name} had completely remove."
 
-#: controller/models.py:347
+#: controller/models.py:355
 msgid "Controller {} has been activated."
 msgstr "Controller {} has been activated."
 
-#: controller/models.py:365
+#: controller/models.py:373
 msgid "Controller {} has been deactivated."
 msgstr "Controller {} has been deactivated."
 
@@ -596,20 +625,19 @@ msgid "Controller name cannot be empty."
 msgstr "Controller name cannot be empty."
 
 #: controller/schema.py:75
-#, python-brace-format
-msgid "Add new controller with address {address}: operation failed."
-msgstr "Add new controller with address {address}: operation failed."
+msgid "Add new controller {}: operation failed."
+msgstr "Add new controller {}: operation failed."
 
-#: controller/schema.py:98 controller/schema.py:127 controller/schema.py:150
-#: controller/schema.py:179
+#: controller/schema.py:102 controller/schema.py:131 controller/schema.py:154
+#: controller/schema.py:183
 msgid "No such controller."
 msgstr "No such controller."
 
-#: controller/schema.py:108
+#: controller/schema.py:112
 msgid "Fail to update controller {}"
 msgstr "Fail to update controller {}"
 
-#: controller/schema.py:132
+#: controller/schema.py:136
 msgid "Controller"
 msgstr "Controller"
 
@@ -1026,35 +1054,39 @@ msgstr "{cls}: resource monitor for controller {ip} removed"
 msgid "Invalid credentials (ldap)"
 msgstr "Invalid credentials (ldap)"
 
-#: thin_client_api/handlers.py:65
+#: thin_client_api/handlers.py:63
 msgid "Thin client limit exceeded."
 msgstr "Thin client limit exceeded."
 
-#: thin_client_api/handlers.py:74
+#: thin_client_api/handlers.py:72
 msgid "Pool not found."
 msgstr "Pool not found."
 
-#: thin_client_api/handlers.py:85
+#: thin_client_api/handlers.py:83
 msgid "User does not have permission to use pool."
 msgstr "User does not have permission to use pool."
 
-#: thin_client_api/handlers.py:118
+#: thin_client_api/handlers.py:114
 msgid "Pool has not free machines"
 msgstr "Pool has not free machines"
 
-#: thin_client_api/handlers.py:145
+#: thin_client_api/handlers.py:127 thin_client_api/handlers.py:136
+msgid "VM is unreachable on ECP Veil."
+msgstr "VM is unreachable on ECP Veil."
+
+#: thin_client_api/handlers.py:151
 msgid "VM does not support RDP"
 msgstr "VM does not support RDP"
 
-#: thin_client_api/handlers.py:168
+#: thin_client_api/handlers.py:173
 msgid "User {} not found."
 msgstr "User {} not found."
 
-#: thin_client_api/handlers.py:171
+#: thin_client_api/handlers.py:176
 msgid "There is no pool with id: {}"
 msgstr "There is no pool with id: {}"
 
-#: thin_client_api/handlers.py:175
+#: thin_client_api/handlers.py:180
 msgid "User {} has no VM on pool {}"
 msgstr "User {} has no VM on pool {}"
 
@@ -1173,6 +1205,9 @@ msgstr "VMs list could not be retrieved: {}"
 #: vm/schema.py:298
 msgid "GraphQL: VM type list:"
 msgstr "GraphQL: VM type list:"
+
+#~ msgid "URL not found"
+#~ msgstr "URL not found"
 
 #~ msgid "URL {url} - {http_error}"
 #~ msgstr "URL {url} - {http_error}"

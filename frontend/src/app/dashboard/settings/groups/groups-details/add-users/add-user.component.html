@@ -12,7 +12,8 @@
         <mat-label *ngIf="data.users?.length && !pending">Выберите пользователей</mat-label>
         <mat-label *ngIf="!data.users?.length && !pending">- нет пользователей -</mat-label>
         <mat-select (selectionChange)="select($event)" multiple="true">
-          <mat-option *ngFor="let user of data.users" [value]="user.id">
+          <input placeholder="Поиск..." (keyup)="search($event.target.value)">
+          <mat-option *ngFor="let user of selected_users" [value]="user.id">
             {{user.username}}
           </mat-option>
         </mat-select>
