@@ -139,3 +139,9 @@ snapshots['TestGroupSchema.test_group_create 1'] = {
         'ok': True
     }
 }
+
+snapshots['TestGroupSchema.test_group_delete_by_guid 1'] = {
+    'deleteGroup': {
+        'ok': True
+    }
+}

@@ -110,7 +110,7 @@ class VeilHttpClient:
             elif http_error.code == 403:
                 raise Forbidden(body)
             elif http_error.code == 404:
-                raise NotFound(_('URL not found'), url)
+                raise NotFound(_('Fail to fetch resource from ECP.'), url)
             elif http_error.code == 408:
                 raise ControllerNotAccessible(body)
             elif http_error.code == 500:

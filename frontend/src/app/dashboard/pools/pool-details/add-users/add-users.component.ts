@@ -26,6 +26,8 @@ export class AddUsersPoolComponent implements OnInit, OnDestroy {
   private destroy: Subject<any> = new Subject<any>();
   public valid: boolean = true;
 
+  public selected_users: string[] = [];
+
   constructor(private waitService: WaitService,
               private poolService: PoolDetailsService,
               private dialogRef: MatDialogRef<AddUsersPoolComponent>,
@@ -35,6 +37,12 @@ export class AddUsersPoolComponent implements OnInit, OnDestroy {
 
   ngOnInit() {
     this.getUsers();
+  }
+
+
+  public search(name) {
+    let filter = String(name).toLowerCase();
+    this.selected_users = this.users.filter((user: any) => user.username.toLowerCase().startsWith(filter) || this.idUsers.some(selected => selected === user.id))
   }
 
   public send() {
@@ -58,6 +66,7 @@ export class AddUsersPoolComponent implements OnInit, OnDestroy {
     this.poolService.getAllUsersNoEntitleToPool(this.data.idPool).pipe(takeUntil(this.destroy))
       .subscribe((data) => {
         this.users = data;
+        this.selected_users = this.users
         this.pendingUsers = false;
       },
       () => {

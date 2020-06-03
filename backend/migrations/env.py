@@ -6,11 +6,10 @@ from app import make_app  # noqa
 from database import db as target_metadata
 from settings import DB_USER, DB_PASS, DB_NAME, DB_HOST
 
-# TODO: add export of python path
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config
-alchemy_url = 'postgres://{DB_USER}:{DB_PASS}@{DB_HOST}/{DB_NAME}'.format(DB_USER=DB_USER, DB_PASS=DB_PASS, DB_HOST=DB_HOST, DB_NAME=DB_NAME)
+alchemy_url = 'postgres://{USER}:{PASS}@{HOST}/{NAME}'.format(USER=DB_USER, PASS=DB_PASS, HOST=DB_HOST, NAME=DB_NAME)
 config.set_main_option('sqlalchemy.url', alchemy_url)
 
 # Interpret the config file for Python logging.

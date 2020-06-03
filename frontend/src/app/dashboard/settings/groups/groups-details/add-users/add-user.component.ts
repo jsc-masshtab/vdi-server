@@ -25,11 +25,22 @@ export class AddUserGroupComponent implements OnDestroy {
   private destroy: Subject<any> = new Subject<any>();
   public valid: boolean = true;
 
+  public selected_users: string[] = [];
+
   constructor(private service: GroupsService,
               private waitService: WaitService,
               private dialogRef: MatDialogRef<AddUserGroupComponent>,
               @Inject(MAT_DIALOG_DATA) public data: IData) { }
 
+  
+  ngOnInit() {
+    this.selected_users = this.data.users
+  }
+
+  public search(name) {
+    let filter = String(name).toLowerCase();
+    this.selected_users = this.data.users.filter((user: any) => user.username.toLowerCase().startsWith(filter) || this.users.some(selected => selected === user.id))
+  }
 
   public select(value: []) {
     this.users = value['value'];

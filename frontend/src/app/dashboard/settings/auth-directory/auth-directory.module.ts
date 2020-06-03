@@ -14,6 +14,8 @@ import { AuthenticationDirectoryService } from './auth-directory.service';
 import { MatCheckboxModule } from '@angular/material';
 import { AuthenticationDirectoryDetailsComponent } from './auth-directory-details/auth-directory-details.component';
 import { RemoveAuthenticationDirectoryComponent } from './auth-directory-details/remove-auth-directory/remove-auth-directory.component';
+import { AddGropComponent } from './auth-directory-details/add-group/add-group.component';
+import { RemoveGroupComponent } from './auth-directory-details/remove-group/remove-group.component';
 
 @NgModule({
    declarations: [
@@ -22,7 +24,9 @@ import { RemoveAuthenticationDirectoryComponent } from './auth-directory-details
       AuthenticationDirectoryDetailsComponent,
       RemoveAuthenticationDirectoryComponent,
       AddMappingComponent,
-      MappingComponent
+      MappingComponent,
+      AddGropComponent,
+      RemoveGroupComponent
    ],
    imports: [
       SharedModule,
@@ -45,7 +49,9 @@ import { RemoveAuthenticationDirectoryComponent } from './auth-directory-details
       AddAuthenticationDirectoryComponent,
       RemoveAuthenticationDirectoryComponent,
       AddMappingComponent,
-      MappingComponent
+      MappingComponent,
+      AddGropComponent,
+      RemoveGroupComponent
    ]
 })
 export class AuthenticationDirectoryModule {}

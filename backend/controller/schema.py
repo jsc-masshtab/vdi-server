@@ -10,7 +10,7 @@ from controller.models import Controller
 from resources_monitoring.resources_monitor_manager import resources_monitor_manager
 
 from languages import lang_init
-
+from journal.journal import Log as log
 
 _ = lang_init()
 
@@ -65,16 +65,20 @@ class AddControllerMutation(graphene.Mutation):
         try:
             if len(verbose_name) < 1:
                 raise SimpleError(_('Controller name cannot be empty.'))
-            # check credentials
-            controller = await Controller.soft_create(verbose_name, address, username, password, ldap_connection, description)
+            controller = await Controller.soft_create(verbose_name, address, username, password, ldap_connection,
+                                                      description)
             await resources_monitor_manager.add_controller(address)
             return AddControllerMutation(ok=True, controller=ControllerType(**controller.__values__))
         except SimpleError as E:
             raise SimpleError(E)
+        except ValueError as err:
+            msg = _('Add new controller {}: operation failed.').format(address)
+            description = str(err)
+            raise SimpleError(msg, description=description)
         except Exception as E:
-            msg = _('Add new controller with address {address}: operation failed.').format(address=address)
-            descr = str(E)
-            raise SimpleError(msg, description=descr)
+            log.debug(E)
+            msg = _('Add new controller {}: operation failed.').format(address)
+            raise SimpleError(msg)
 
 
 class UpdateControllerMutation(graphene.Mutation):
