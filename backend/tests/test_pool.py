@@ -279,3 +279,48 @@ class TestPoolPermissionsSchema:
 
         executed = await execute_scheme(pool_schema, query, context=fixt_auth_context)
         snapshot.assert_match(executed)
+
+
+@pytest.mark.asyncio
+async def test_pools_ordering(fixt_db, fixt_controller, fixt_create_automated_pool, fixt_auth_context):  # noqa
+
+    # list = ["verbose_name", "cluster_id", "node_id", "status", "controller", "controller_address", "users_count",
+    #        "vms_count", "pool_type"]
+    list = ["verbose_name", "controller_address", "users_count", "vm_amount", "pool_type"]
+    for ordering in list:
+        qu = """
+                {
+                  pools(ordering: "%s") {
+                    pool_id
+                    controller {
+                      id
+                      verbose_name
+                      address
+                    }
+                    status
+                    verbose_name
+                    pool_type
+                    cluster_id
+                    node_id
+                    template_id
+                    datapool_id
+                    min_size
+                    initial_size
+                    os_type
+                    assigned_groups {
+                      id
+                      verbose_name
+                    }
+                    possible_groups {
+                      id
+                      verbose_name
+                    }
+                    assigned_roles
+                    possible_roles
+                    assigned_connection_types
+                    possible_connection_types
+                 }
+                }
+            """ % ordering
+
+        executed = await execute_scheme(pool_schema, qu, context=fixt_auth_context)  # noqa

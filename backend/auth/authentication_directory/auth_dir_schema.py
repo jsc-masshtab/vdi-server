@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import graphene
 from graphene import Enum as GrapheneEnum
 import re
@@ -15,7 +16,7 @@ from languages import lang_init
 
 _ = lang_init()
 
-ConntectionTypesGraphene = GrapheneEnum.from_enum(AuthenticationDirectory.ConnectionTypes)
+ConnectionTypesGraphene = GrapheneEnum.from_enum(AuthenticationDirectory.ConnectionTypes)
 DirectoryTypesGraphene = GrapheneEnum.from_enum(AuthenticationDirectory.DirectoryTypes)
 MappingTypesGraphene = GrapheneEnum.from_enum(Mapping.ValueTypes)
 
@@ -105,7 +106,37 @@ class MappingType(graphene.ObjectType):
         return await mapping.possible_groups
 
     async def resolve_status(self, _info):
+        # TODO: NotImplemented
         return Status.ACTIVE
+
+
+class AuthenticationDirectoryGroupType(graphene.ObjectType):
+    ad_guid = graphene.UUID()
+    verbose_name = graphene.String()
+    ad_search_cn = graphene.String()
+
+
+class AuthenticationDirectoryGroupMembersType(graphene.ObjectType):
+    email = graphene.String()
+    last_name = graphene.String()
+    first_name = graphene.String()
+    username = graphene.String()
+
+
+class AuthenticationDirectorySyncGroupMembersType(graphene.InputObjectType):
+    """Вложенная в group_members структура.
+       Описывает поля пользователя Authentication Directory."""
+    username = graphene.String(required=True)
+    email = graphene.String()
+    last_name = graphene.String()
+    first_name = graphene.String()
+
+
+class AuthenticationDirectorySyncGroupType(graphene.InputObjectType):
+    """Тип для мутации синхронизации групп/пользователей из Authentication Directory."""
+    group_ad_guid = graphene.UUID(required=True)
+    group_verbose_name = graphene.String(required=True)
+    group_members = graphene.List(AuthenticationDirectorySyncGroupMembersType)
 
 
 class AuthenticationDirectoryType(graphene.ObjectType):
@@ -127,7 +158,7 @@ class AuthenticationDirectoryType(graphene.ObjectType):
     id = graphene.UUID()
     verbose_name = graphene.String()
     directory_url = graphene.String()
-    connection_type = ConntectionTypesGraphene()
+    connection_type = ConnectionTypesGraphene()
     description = graphene.String()
     directory_type = DirectoryTypesGraphene()
     domain_name = graphene.String()
@@ -143,18 +174,36 @@ class AuthenticationDirectoryType(graphene.ObjectType):
 
     mappings = graphene.List(MappingType)
 
+    assigned_ad_groups = graphene.List(AuthenticationDirectoryGroupType)
+    possible_ad_groups = graphene.List(AuthenticationDirectoryGroupType)
+
     async def resolve_service_password(self, _info):
-        """dummy value for not displayed field"""
-        return '********'
+        """Dummy value for not displayed field."""
+        return '*' * 7
 
     async def resolve_mappings(self, _info):
         auth_dir = await AuthenticationDirectory.get(self.id)
         return await auth_dir.mappings
 
+    async def resolve_assigned_ad_groups(self, _info):
+        """Группы созданные при предыдущих синхронизациях."""
+        auth_dir = await AuthenticationDirectory.get(self.id)
+        return await auth_dir.assigned_ad_groups
+
+    async def resolve_possible_ad_groups(self, _info):
+        """Получить список доступных групп из AuthenticationDirectory."""
+        auth_dir = await AuthenticationDirectory.get(self.id)
+        groups = await auth_dir.get_possible_ad_groups()
+        if groups:
+            return groups
+        return list()
+
 
 class AuthenticationDirectoryQuery(graphene.ObjectType):
     auth_dirs = graphene.List(AuthenticationDirectoryType, ordering=graphene.String())
     auth_dir = graphene.Field(AuthenticationDirectoryType, id=graphene.UUID())
+    group_members = graphene.Field(graphene.List(AuthenticationDirectoryGroupMembersType), auth_dir_id=graphene.UUID(),
+                                   group_cn=graphene.NonNull(graphene.String))
 
     @staticmethod
     def instance_to_type(model_instance):
@@ -179,13 +228,22 @@ class AuthenticationDirectoryQuery(graphene.ObjectType):
         ]
         return objects
 
+    @readonly_required
+    async def resolve_group_members(self, _info, auth_dir_id, group_cn):
+        """Пользователи члены групп в Authentication Directory."""
+        auth_dir = await AuthenticationDirectory.get(auth_dir_id)
+        if not auth_dir:
+            raise SimpleError(_('No such Authentication Directory.'))
+        group_members = await auth_dir.get_members_of_ad_group(group_cn)
+        return group_members
+
 
 class CreateAuthenticationDirectoryMutation(graphene.Mutation, AuthenticationDirectoryValidator):
     class Arguments:
         verbose_name = graphene.String(required=True)
         description = graphene.String()
         directory_url = graphene.String(required=True)
-        connection_type = ConntectionTypesGraphene()
+        connection_type = ConnectionTypesGraphene()
         directory_type = DirectoryTypesGraphene()
         domain_name = graphene.String(required=True)
 
@@ -221,6 +279,8 @@ class DeleteAuthenticationDirectoryMutation(graphene.Mutation, AuthenticationDir
     async def mutate(cls, root, info, **kwargs):
         await cls.validate_agruments(**kwargs)
         auth_dir = await AuthenticationDirectory.get(kwargs['id'])
+        if not auth_dir:
+            raise SimpleError(_('No such Authentication Directory.'))
         status = await auth_dir.soft_delete(dest=_('Authentication directory'))
         return DeleteAuthenticationDirectoryMutation(ok=status)
 
@@ -229,6 +289,7 @@ class TestAuthenticationDirectoryMutation(graphene.Mutation, AuthenticationDirec
     class Arguments:
         id = graphene.UUID(required=True)
 
+    auth_dir = graphene.Field(lambda: AuthenticationDirectoryType)
     ok = graphene.Boolean()
 
     @classmethod
@@ -237,7 +298,8 @@ class TestAuthenticationDirectoryMutation(graphene.Mutation, AuthenticationDirec
         await cls.validate_agruments(**kwargs)
         auth_dir = await AuthenticationDirectory.get_object(kwargs['id'])
         connection_ok = await auth_dir.test_connection()
-        return TestAuthenticationDirectoryMutation(ok=connection_ok)
+        auth_dir = await AuthenticationDirectory.get(auth_dir.id)
+        return TestAuthenticationDirectoryMutation(ok=connection_ok, auth_dir=auth_dir)
 
 
 class UpdateAuthenticationDirectoryMutation(graphene.Mutation, AuthenticationDirectoryValidator):
@@ -245,7 +307,7 @@ class UpdateAuthenticationDirectoryMutation(graphene.Mutation, AuthenticationDir
         id = graphene.UUID(required=True)
         verbose_name = graphene.String()
         directory_url = graphene.String()
-        connection_type = ConntectionTypesGraphene()
+        connection_type = ConnectionTypesGraphene()
         description = graphene.String()
         directory_type = DirectoryTypesGraphene()
         domain_name = graphene.String()
@@ -365,6 +427,22 @@ class EditAuthDirMappingMutation(graphene.Mutation, AuthenticationDirectoryValid
         return EditAuthDirMappingMutation(ok=True, auth_dir=auth_dir)
 
 
+class SyncAuthenticationDirectoryGroupUsers(graphene.Mutation):
+    class Arguments:
+        auth_dir_id = graphene.UUID(required=True)
+        sync_data = AuthenticationDirectorySyncGroupType(required=True)
+
+    ok = graphene.Boolean(default_value=False)
+
+    @security_administrator_required
+    async def mutate(self, _info, auth_dir_id, sync_data):
+        auth_dir = await AuthenticationDirectory.get(auth_dir_id)
+        if not auth_dir:
+            raise SimpleError(_('No such Authentication Directory.'))
+        await auth_dir.synchronize(sync_data)
+        return SyncAuthenticationDirectoryGroupUsers(ok=True)
+
+
 class AuthenticationDirectoryMutations(graphene.ObjectType):
     createAuthDir = CreateAuthenticationDirectoryMutation.Field()
     updateAuthDir = UpdateAuthenticationDirectoryMutation.Field()
@@ -373,6 +451,7 @@ class AuthenticationDirectoryMutations(graphene.ObjectType):
     addAuthDirMapping = AddAuthDirMappingMutation.Field()
     deleteAuthDirMapping = DeleteAuthDirMappingMutation.Field()
     editAuthDirMapping = EditAuthDirMappingMutation.Field()
+    syncAuthDirGroupUsers = SyncAuthenticationDirectoryGroupUsers.Field()
 
 
 auth_dir_schema = graphene.Schema(mutation=AuthenticationDirectoryMutations,

@@ -362,6 +362,8 @@ class Group(AbstractSortableStatusModel, db.Model):
     description = db.Column(db.Unicode(length=255), nullable=True, unique=False)
     date_created = db.Column(db.DateTime(timezone=True), server_default=func.now())
     date_updated = db.Column(db.DateTime(timezone=True), onupdate=func.now())
+    # На тестовых серверах были проблемы с форматом в AuthenticationDirectory.
+    ad_guid = db.Column(db.Unicode(length=36), nullable=True, unique=True)
 
     # ----- ----- ----- ----- ----- ----- -----
     # Properties and getters:
@@ -393,8 +395,8 @@ class Group(AbstractSortableStatusModel, db.Model):
         return await possible_users_query.order_by(User.username).gino.load(User).all()
 
     @staticmethod
-    async def soft_create(verbose_name, description=None, id=None):
-        group_kwargs = {'verbose_name': verbose_name, 'description': description}
+    async def soft_create(verbose_name, description=None, id=None, ad_guid=None):
+        group_kwargs = {'verbose_name': verbose_name, 'description': description, 'ad_guid': str(ad_guid)}
         if id:
             group_kwargs['id'] = id
 
