@@ -170,6 +170,13 @@ class Controller(db.Model):
         auth_info = dict(username=username, password=password, ldap=ldap_connection)
         token, expires_on = await controller_client.auth(auth_info=auth_info)
         version = await controller_client.fetch_version()
+        major_version, minor_version, patch_version = version.split('.')
+
+        # Проверяем версию контроллера в пределах допустимой. Предыдущие версии тоже совместимы, но не стабильны.
+        # В версии 4.3 появились изменения в api
+        if major_version != '4' or minor_version != '2':
+            msg = _('Veil ECP version should be 4.2. Current version is incompatible.')
+            raise ValidationError(msg)
 
         controller_dict = {'verbose_name': verbose_name,
                            'address': address,
@@ -199,7 +206,7 @@ class Controller(db.Model):
         # TODO: возможно нужно явно удалять контроллер из монитора ресурсов в каком бы статусе он ни был
         if self.status == Status.ACTIVE:
             # Удаляем существующий контроллер из монитора ресурсов
-            log.debug('Удаляем существующий контроллер из монитора ресурсов')
+            log.debug(_('Remove existing controller from resource monitor'))
             await resources_monitor_manager.remove_controller(self.address)
 
         # TODO: разнести на несколько методов, если логика останется после рефакторинга
@@ -276,11 +283,11 @@ class Controller(db.Model):
 
             # Переводим контроллер в активный если есть новые учетные данные и он в другом статусе
             if updated_rec.status != Status.ACTIVE and controller_kwargs.get('token'):
-                log.debug('Активируем контроллер')
+                log.debug(_('Activate the controller'))
                 await Controller.activate(self.id)
 
             # Добавляем обратно в монитор ресурсов
-            log.debug('Добавляем обратно в монитор ресурсов')
+            log.debug(_('Add back to the resource monitor'))
             await resources_monitor_manager.add_controller(updated_rec.address)
 
             msg = _('Successfully update controller {} with address {}.').format(

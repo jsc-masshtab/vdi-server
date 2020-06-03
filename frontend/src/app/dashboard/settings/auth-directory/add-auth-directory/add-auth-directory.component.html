@@ -28,6 +28,22 @@
       <ng-container *ngIf="form.hasError('required', 'directory_url') && checkValid"><ng-container *ngTemplateOutlet="errorTemp"></ng-container></ng-container>
     </label>
 
+    <label class="field">
+      <p class="field-name">Пользователь</p>
+      <input type="text" placeholder="..." formControlName="service_username">
+      <ng-container *ngIf="form.hasError('required', 'service_username') && checkValid">
+        <ng-container *ngTemplateOutlet="errorTemp"></ng-container>
+      </ng-container>
+    </label>
+    
+    <label class="field">
+      <p class="field-name">Пароль</p>
+      <input type="text" placeholder="..." formControlName="service_password">
+      <ng-container *ngIf="form.hasError('required', 'service_password') && checkValid">
+        <ng-container *ngTemplateOutlet="errorTemp"></ng-container>
+      </ng-container>
+    </label>
+
    <!--  <label class="field">
       <p class="field-name">Service username</p>
       <input type="password" placeholder="..." formControlName="service_username">

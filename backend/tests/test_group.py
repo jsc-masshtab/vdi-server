@@ -114,6 +114,42 @@ class TestGroupSchema:
         executed = await execute_scheme(group_schema, query, context=fixt_auth_context)
         snapshot.assert_match(executed)
 
+    async def test_group_delete_by_guid(self, snapshot, fixt_auth_context):  # noqa
+        query = """mutation {
+                      deleteGroup(ad_guid: "10913d5d-ba7a-4049-88c5-769267a6cbe5") {
+                        ok
+                      }
+                    }"""
+        executed = await execute_scheme(group_schema, query, context=fixt_auth_context)
+        snapshot.assert_match(executed)
+
+    async def test_group_delete_by_wrong_guid(self, snapshot, fixt_auth_context):  # noqa
+        query = """mutation {
+                      deleteGroup(ad_guid: "10913d5d-ba7a-4049-88c5-769267a6cbe7") {
+                        ok
+                      }
+                    }"""
+        try:
+            await execute_scheme(group_schema, query, context=fixt_auth_context)
+        except ExecError as E:
+            assert "[GraphQLLocatedError('Отсутствует такая группа.',)]" in str(E)
+        else:
+            raise AssertionError()
+
+    async def test_group_delete_by_id_and_guid(self, snapshot, fixt_auth_context):  # noqa
+        query = """mutation {
+                      deleteGroup(ad_guid: "10913d5d-ba7a-4049-88c5-769267a6cbe7",
+                       id: "10913d5d-ba7a-4049-88c5-769267a6cbe7") {
+                        ok
+                      }
+                    }"""
+        try:
+            await execute_scheme(group_schema, query, context=fixt_auth_context)
+        except ExecError as E:
+            assert 'Укажите Group.id или Group.ad_guid. Не оба сразу.' in str(E)
+        else:
+            raise AssertionError()
+
     async def test_group_user_add(self, snapshot, fixt_auth_context):  # noqa
         query = """mutation {
                       addGroupUsers(id: "10913d5d-ba7a-4049-88c5-769267a6cbe4",

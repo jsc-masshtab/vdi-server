@@ -14,6 +14,8 @@ export class StatusPipe implements PipeTransform {
             translateStatus = 'удаляется';
         } else if (status === 'ACTIVE') {
             translateStatus = 'исправно';
+        } else if (status === 'BAD_AUTH') {
+            translateStatus = 'ошибка авторизации';
         } else if (status === 'FAILED') {
             translateStatus = 'произошла ошибка';
         } else if (status === 'FAIL_CREATING') {
@@ -63,6 +65,7 @@ export class StatusIconPipe implements PipeTransform {
             case 'REJECTED':
             case 'PARTIAL':
             case 'TIMEOUT':
+            case 'BAD_AUTH':
             translateStatus = 'exclamation-triangle';
             break;
 

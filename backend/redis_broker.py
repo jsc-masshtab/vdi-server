@@ -30,3 +30,24 @@ def get_thin_clients_count():
         channel_count = 0
 
     return channel_count
+
+
+def save_license_dict(dict_name, data):
+    for value in data:
+        data[value] = str(data[value])
+    return REDIS_CLIENT.hmset(dict_name, data)
+
+
+def read_license_dict(dict_name):
+    data = REDIS_CLIENT.hgetall(dict_name)
+    read_dict = {key.decode('utf-8'): value.decode('utf-8') for (key, value) in data.items()}
+    for value in read_dict:
+        if read_dict[value] == 'None':
+            read_dict[value] = None
+        elif read_dict[value] == 'True':
+            read_dict[value] = True
+        elif read_dict[value] == 'False':
+            read_dict[value] = False
+        elif read_dict[value].isdigit():
+            read_dict[value] = int(read_dict[value])
+    return read_dict

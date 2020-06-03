@@ -30,6 +30,11 @@ export class AuthenticationDirectoryComponent extends DetailsMove implements OnI
       icon: 'address-card',
       type: 'string',
       sort: true
+    },
+    {
+      title: 'Cтатус',
+      property: 'status',
+      sort: true
     }
   ];
 

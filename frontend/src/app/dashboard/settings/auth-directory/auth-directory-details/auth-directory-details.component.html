@@ -43,24 +43,67 @@
         <span class="name">Добавить соответствия</span>
       </button>
     </ng-container>
+
+    <ng-container *ngIf="menuActive === 'groups'">
+      <button class="btn-control" (click)="addGroup()" title="Добавить группу" *ngIf="!(AuthenticationDirectory.status == 'BAD_AUTH' || AuthenticationDirectory.status == 'FAILED')">
+        <fa-icon [icon]="['fas','plus-circle']" size="xs"></fa-icon>
+        <span class="name">Добавить группу</span>
+      </button>
+
+      <button *ngIf="AuthenticationDirectory?.assigned_ad_groups?.length" class="btn-control" (click)="removeGroup()" title="Удалить группу" >
+        <fa-icon [icon]="['fas','trash-alt']" size="xs"></fa-icon>
+        <span class="name">Удалить группу</span>
+      </button>
+    </ng-container>
   </div>
 
   <div class="details-row">
     <ul class="details-menu">
-      <li (click)="routeTo('info')" [class.active]="menuActive === 'info'" title="Информация о службе каталогов"> <fa-icon [icon]="['fas','chart-bar']"></fa-icon><span class="name">Информация</span></li>
-      <li (click)="routeTo('match')" [class.active]="menuActive === 'match'" title="Соответствия"> <fa-icon [icon]="['fas','columns']"></fa-icon><span class="name">Соответствия</span></li>
+      <li (click)="routeTo('info')" [class.active]="menuActive === 'info'" title="Информация о службе каталогов">
+        <fa-icon [icon]="['fas','chart-bar']"></fa-icon>
+        <span class="name">Информация</span>
+      </li>
+
+      <li (click)="routeTo('match')" [class.active]="menuActive === 'match'" title="Соответствия"> 
+        <fa-icon [icon]="['fas','columns']"></fa-icon>
+        <span class="name">Соответствия</span>
+      </li>
+
+      <li (click)="routeTo('groups')" [class.active]="menuActive === 'groups'" title="Группы пользователя">
+        <fa-icon [icon]="['fas','users-cog']"></fa-icon>
+        <span class="name">Группы</span>
+      </li>
     </ul>
 
     <div class="details-slide" *ngIf="host">
       <div class="details-slide-header">
         <ng-container *ngIf="menuActive === 'info'">Информация о службе каталогов</ng-container>
         <ng-container *ngIf="menuActive === 'match'">Соответствия</ng-container>
+        <ng-container *ngIf="menuActive === 'groups'">Группы службы</ng-container>
       </div>
+
       <div class="details-slide-into">
-        <vdi-table-into [item]="AuthenticationDirectory" [collection]="collection"  (edit)="edit($event)" *ngIf="menuActive === 'info'"></vdi-table-into>
-        <vdi-table-component cursor="true" (clickRowData)="openMapping($event)" [data]="AuthenticationDirectory.mappings" [collection]="collection_mapping"   *ngIf="menuActive === 'match'"></vdi-table-component>
+        <vdi-table-into 
+          [item]="AuthenticationDirectory" 
+          [collection]="collection"  
+          (edit)="edit($event)" 
+          *ngIf="menuActive === 'info'">
+        </vdi-table-into>
+
+        <vdi-table-component 
+          cursor="true" 
+          (clickRowData)="openMapping($event)" 
+          [data]="AuthenticationDirectory.mappings" 
+          [collection]="collection_mapping"   
+          *ngIf="menuActive === 'match'">
+        </vdi-table-component>
+
+        <vdi-table-component 
+          *ngIf="menuActive === 'groups'" 
+          [data]="AuthenticationDirectory.assigned_ad_groups" 
+          [collection]="collection_groups">
+        </vdi-table-component>
       </div>
     </div>
   </div>
-
 </div>

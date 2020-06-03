@@ -83,6 +83,14 @@
                 background-color: rgba(#fbe9c7, 0.8);
             }
         }
+
+         &.status-bad {
+            background-color: #b9b9b9;
+
+            &:hover {
+                background-color: rgba(#b9b9b9, 0.8);
+            }
+        }
     }
 
     .table-area-property {

@@ -2,7 +2,6 @@ import { IParams } from '../../../../../types';
 import { Injectable } from '@angular/core';
 import { Apollo, QueryRef } from 'apollo-angular';
 import gql from 'graphql-tag';
-import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 
 @Injectable()
@@ -15,7 +14,7 @@ export class AuthenticationDirectoryService {
 
     constructor(private service: Apollo) { }
 
-    public getAuthenticationDirectory(id: string): Observable<any> {
+    public getAuthenticationDirectory(id: string): QueryRef<any, any> {
         return this.service.watchQuery({
             query: gql` query auth_dirs($id:UUID) {
                             auth_dir(id: $id) {
@@ -31,7 +30,12 @@ export class AuthenticationDirectoryService {
                                 admin_server,
                                 subdomain_name,
                                 kdc_urls,
-                                sso
+                                sso,
+                                status,
+                                assigned_ad_groups {
+                                    ad_guid
+                                    verbose_name
+                                },
                                 mappings {
                                     id
                                     verbose_name
@@ -52,7 +56,46 @@ export class AuthenticationDirectoryService {
                 method: 'GET',
                 id: `${id}`
             }
-        }).valueChanges.pipe(map(data => data.data));
+        });
+    }
+
+    public getAuthenticationDirectoryGroups(id: string): QueryRef<any, any> {
+        return this.service.watchQuery({
+            query: gql` query auth_dirs($id:UUID) {
+                            auth_dir(id: $id) {
+                                id
+                                possible_ad_groups {
+                                    ad_guid
+                                    verbose_name
+                                    ad_search_cn
+                                }
+                            }
+                        }
+                    `,
+            variables: {
+                method: 'GET',
+                id: `${id}`
+            }
+        });
+    }
+
+    public getAuthenticationDirectoryGroupsMember(auth_dir_id: string, group_cn): QueryRef<any, any> {
+        return this.service.watchQuery({
+            query: gql` query auth_dirs($auth_dir_id: UUID, $group_cn: String!) {
+                            group_members(auth_dir_id: $auth_dir_id, group_cn: $group_cn) {
+                                email
+                                last_name
+                                first_name
+                                username
+                            }
+                        }
+                    `,
+            variables: {
+                method: 'GET',
+                auth_dir_id: `${auth_dir_id}`,
+                group_cn: `${group_cn}`
+            }
+        });
     }
 
     public getAllAuthenticationDirectory(): QueryRef<any, any> {
@@ -70,6 +113,7 @@ export class AuthenticationDirectoryService {
                                 service_password,
                                 admin_server,
                                 subdomain_name,
+                                status,
                                 kdc_urls,
                                 sso
                             }
@@ -90,12 +134,16 @@ export class AuthenticationDirectoryService {
                             $verbose_name: String!,
                             $directory_url: String!,
                             $description: String,
+                            $service_username: String,
+                            $service_password: String
                         ){
                             createAuthDir(
                                 domain_name :$domain_name,
                                 verbose_name: $verbose_name,
                                 directory_url :$directory_url,
-                                description :$description
+                                description :$description,
+                                service_username: $service_username,
+                                service_password: $service_password,
                             ){
                                 ok,
                                 auth_dir {
@@ -178,9 +226,9 @@ export class AuthenticationDirectoryService {
                 method: 'GET'
              }
         });
-     }
+    }
 
-     public addAuthDirMapping(props, id: string) {
+    public addAuthDirMapping(props, id: string) {
         return this.service.mutate<any>({
             mutation: gql`
                 mutation auth_dirs($id: UUID!, $description: String,$verbose_name: String!,
@@ -220,24 +268,71 @@ export class AuthenticationDirectoryService {
              mapping_id
           }
       });
-  }
+    }
 
-  public deleteMapping(id: string, mapping_id: string) {
-    return this.service.mutate<any>({
-        mutation: gql`
-            mutation auth_dirs($id: UUID!, $mapping_id: UUID!) {
-                deleteAuthDirMapping(id: $id, mapping_id: $mapping_id) {
-                    ok
+    public deleteMapping(id: string, mapping_id: string) {
+        return this.service.mutate<any>({
+            mutation: gql`
+                mutation auth_dirs($id: UUID!, $mapping_id: UUID!) {
+                    deleteAuthDirMapping(id: $id, mapping_id: $mapping_id) {
+                        ok
+                    }
                 }
+            `,
+            variables: {
+                method: 'POST',
+            id,
+            mapping_id
             }
-        `,
-        variables: {
-            method: 'POST',
-           id,
-           mapping_id
-        }
-    });
-}
+        });
+    }
+
+    public syncAuthDirGroupUsers(data) {
+        return this.service.mutate<any>({
+            mutation: gql`
+                mutation auth_dirs(
+                    $group_members: [AuthenticationDirectorySyncGroupMembersType]
+                    $auth_dir_id: UUID!,
+                    $group_ad_guid: UUID!,
+                    $group_verbose_name: String!){
+
+                    syncAuthDirGroupUsers(
+                        auth_dir_id: $auth_dir_id,
+                        sync_data: {
+                            group_ad_guid: $group_ad_guid
+                            group_verbose_name: $group_verbose_name
+                            group_members: $group_members
+                        }
+                    ) {
+                        ok
+                    }
+                }
+            `,
+            variables: {
+                method: 'POST',
+                ...data
+            }
+        });
+    }
+
+    public removeGroup(ad_guid: string) {
+        return this.service.mutate<any>({
+            mutation: gql`
+                mutation groups(
+                    $ad_guid: UUID!){
+                    deleteGroup(
+                        ad_guid: $ad_guid
+                    ){
+                        ok
+                    }
+                }
+          `,
+            variables: {
+                method: 'POST',
+                ad_guid
+            }
+        });
+    }
 
 }
 
