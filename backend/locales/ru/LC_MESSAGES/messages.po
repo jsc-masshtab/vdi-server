@@ -1067,7 +1067,7 @@ msgid "User does not have permission to use pool."
 msgstr "Пользователь не имеет разрешения на использование пула."
 
 #: thin_client_api/handlers.py:114
-msgid "Pool has not free machines"
+msgid "Pool doesnt have free machines"
 msgstr "В пуле нет свободных машин"
 
 #: thin_client_api/handlers.py:127 thin_client_api/handlers.py:136

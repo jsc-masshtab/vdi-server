@@ -111,7 +111,7 @@ class PoolGetVm(BaseHandler, ABC):
                     pool_lock.expand_pool_task = native_loop.create_task(pool.expand_pool())
 
         if not vm_id:
-            response = {'data': dict(host='', port=0, password='', message=_('Pool has not free machines'))}
+            response = {'data': dict(host='', port=0, password='', message=_('Pool doesnt have free machines'))}
             return await self.log_finish(response)
 
         # Дальше запросы начинают уходить на veil
