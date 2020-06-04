@@ -391,13 +391,15 @@ class DeletePoolMutation(graphene.Mutation, PoolValidator):
         try:
             pool_type = await pool.pool_type
 
-            # В случае автоматическогог пула получаем лок
+            # Авто пул
             if pool_type == Pool.PoolTypes.AUTOMATED:
-                template_id = await pool.template_id
+                # Останавливаем таски связанные с пулом
+                await pool_task_manager.cancel_all_tasks_for_pool(str(pool_id))
+                # Получаем лок
                 pool_lock = pool_task_manager.get_pool_lock(str(pool_id))
+                # Лочим
                 async with pool_lock.lock:
-                    # останавливаем таски связанные с пулом
-                    await pool_task_manager.cancel_all_tasks_for_pool(str(pool_id))
+                    template_id = await pool.template_id
                     # удаляем пул
                     is_deleted = await DeletePoolMutation.delete_pool(pool, full)
                     # убираем из памяти локи
