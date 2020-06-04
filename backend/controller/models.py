@@ -176,7 +176,7 @@ class Controller(db.Model):
         # В версии 4.3 появились изменения в api
         if major_version != '4' or minor_version != '2':
             msg = _('Veil ECP version should be 4.2. Current version is incompatible.')
-            raise ValidationError(msg)
+            raise ValueError(msg)
 
         controller_dict = {'verbose_name': verbose_name,
                            'address': address,

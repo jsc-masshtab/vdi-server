@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2020-06-03 13:19+0300\n"
+"POT-Creation-Date: 2020-06-04 19:55+0300\n"
 "PO-Revision-Date: 2020-03-16 17:13+0300\n"
 "Last-Translator: Emil <e.gareev@mashtab.org>\n"
 "Language-Team: Russian\n"
@@ -491,11 +491,16 @@ msgstr "Ошибка подключения к контроллеру {}."
 msgid "Fail to fetch resource from ECP."
 msgstr "Ошибка доступа к ресурсу из ECP"
 
-#: common/veil_client.py:131
+#: common/veil_client.py:117
+#, fuzzy
+msgid "ECP Veil internal error."
+msgstr "Критическая ошибка контроллера."
+
+#: common/veil_client.py:134
 msgid "Can't process Content-Type."
 msgstr "Не может обработаться Content-Type."
 
-#: common/veil_client.py:134
+#: common/veil_client.py:137
 msgid "Only 'json' Content-Type."
 msgstr "Content-Type только 'json'."
 
@@ -571,10 +576,6 @@ msgstr "Проверка контроллера: {}"
 msgid "Can't login login to controller {}"
 msgstr "Не получается войти на контроллер {}"
 
-#: controller/models.py:179
-msgid "Veil ECP version should be 4.2. Current version is incompatible."
-msgstr "Версия Veil ECP должна быть 4.2. Текущая версия не поддерживается."
-
 #: controller/models.py:196
 msgid "Successfully added new controller {} with address {}."
 msgstr "Успешно добавлен новый контроллер {} с адресом {}."
@@ -624,9 +625,9 @@ msgstr "Контроллер {} деактивирован."
 msgid "Controller name cannot be empty."
 msgstr "Имя контроллера не может быть пустым."
 
-#: controller/schema.py:75
+#: controller/schema.py:75 controller/schema.py:80
 msgid "Add new controller {}: operation failed."
-msgstr "Ошибка добавления нового контроллера {address}."
+msgstr "Ошибка добавления нового контроллера {}."
 
 #: controller/schema.py:102 controller/schema.py:131 controller/schema.py:154
 #: controller/schema.py:183
@@ -896,11 +897,11 @@ msgstr "Начальное число виртуальных машин долж
 msgid "Number of created VM must be in {}-{} interval"
 msgstr "Число создаваемых виртуальных машин должно быть в интервале {}-{}."
 
-#: pool/schema.py:133 pool/schema.py:682
+#: pool/schema.py:133 pool/schema.py:689
 msgid "Maximal number of created VM should be less than initial number of VM"
 msgstr "Максимальное число создаваемых виртуальных машин не должно быть меньше начального числа ВМ"
 
-#: pool/schema.py:135 pool/schema.py:684
+#: pool/schema.py:135 pool/schema.py:691
 msgid "Maximal number of created VM must be in [{} {}] interval"
 msgstr "Максимальное число создаваемых виртуальных машин должно быть в интервале [{} {}]."
 
@@ -908,67 +909,71 @@ msgstr "Максимальное число создаваемых виртуа�
 msgid "Pool"
 msgstr "Пул"
 
-#: pool/schema.py:448
+#: pool/schema.py:450
 msgid "StaticPool: Get additional info from Veil"
 msgstr "Статический пул: получение дополнительной информации о Veil"
 
-#: pool/schema.py:456
+#: pool/schema.py:458
 msgid "All of VM must be at one server"
 msgstr "Все виртуальные машины должны быть на одном сервере"
 
-#: pool/schema.py:458
+#: pool/schema.py:460
 msgid "StaticPool: Determine cluster"
 msgstr "Статический пул: Определение кластера"
 
-#: pool/schema.py:466
+#: pool/schema.py:468
 msgid "VM has no disks."
 msgstr "ВМ не имеет дисков."
 
-#: pool/schema.py:479
+#: pool/schema.py:481
 msgid "Failed to create static pool {}."
 msgstr "Ошибка создания статического пула {}."
 
-#: pool/schema.py:499 pool/schema.py:553
+#: pool/schema.py:488
+msgid "Fail with remote access enable."
+msgstr "Не удалось включить удаленный доступ к виртуальным машинам."
+
+#: pool/schema.py:506 pool/schema.py:560
 msgid "List of VM should not be empty"
 msgstr "Список виртуальных машин не должен быть пустым."
 
-#: pool/schema.py:512
+#: pool/schema.py:519
 msgid "VM ids: {}"
 msgstr "ID виртуальных машин: {}"
 
-#: pool/schema.py:517
+#: pool/schema.py:524
 msgid "VM {} is at server different from pool server now"
 msgstr "ВМ {} находится на сервере отличном от сервера пула."
 
-#: pool/schema.py:520
+#: pool/schema.py:527
 msgid "VM {} is already in one of pools"
 msgstr "Виртуальная машина {} уже в одном из пулов."
 
-#: pool/schema.py:525
+#: pool/schema.py:532
 msgid "All VMs on node: {}"
 msgstr "Все виртуальные машины на узле: {}"
 
-#: pool/schema.py:536
+#: pool/schema.py:543
 msgid "Vm {} is added to pool {}"
 msgstr "Виртуальная машина {} добавлена в пул {}"
 
-#: pool/schema.py:562
+#: pool/schema.py:569
 msgid "VM doesn't belong to specified pool"
 msgstr "Виртуальная машина не принадлежит заданному пулу"
 
-#: pool/schema.py:590
+#: pool/schema.py:597
 msgid "Failed to update static pool {}. Name must be unique."
 msgstr "Ошибка редактирования статического пула {}. Имя должно быть уникальным."
 
-#: pool/schema.py:631
+#: pool/schema.py:638
 msgid "Failed to create automated pool {}. Name must be unique."
 msgstr "Ошибка создания автоматического пула {}. Имя должно быть уникальным."
 
-#: pool/schema.py:687
+#: pool/schema.py:694
 msgid "Maximal number of created VM can not be reduced."
 msgstr "Максимальное количество создаваемых виртуальных машин не может быть уменьшено."
 
-#: pool/schema.py:705
+#: pool/schema.py:712
 msgid "Failed to update automated pool {}. Name must be unique."
 msgstr "Ошибка редактирования автоматического пула {}. Имя должно быть уникальным."
 
@@ -1206,89 +1211,92 @@ msgstr "Не удалось получить список виртуальных
 msgid "GraphQL: VM type list:"
 msgstr "GraphQL: список типов виртуальных машин:"
 
-#~ msgid "Get controller credentials: Controller's {} credentials are good."
-#~ msgstr "Получение учетных данных контроллера: Хорошие учетные данные контроллера {}."
+#~ msgid "Veil ECP version should be 4.2. Current version is incompatible."
+#~ msgstr "Версия Veil ECP должна быть 4.2. Текущая версия не поддерживается."
 
-#~ msgid "IP: . username: {}"
-#~ msgstr "IP: . пользователь: {}"
-
-#~ msgid "Create Pool"
-#~ msgstr "Создание пула"
-
-#~ msgid "Removal pool of desktops {verbose_name} is done."
-#~ msgstr "Выполнено удаление пула рабочих столов {verbose_name}."
-
-#~ msgid "GROUPS: {}"
-#~ msgstr "Группы: {}"
-
-#~ msgid "Automated pool creation. Created {} VMs from {}"
-#~ msgstr "Автоматическое создание пула. Создание {} виртуальных машин из {}"
-
-#~ msgid "Subclasses of BasePasswordHasher must provide a verify() method"
-#~ msgstr "Подклассы BasePasswordHasher должны предоставлять метод verify()"
-
-#~ msgid "OU: {}"
-#~ msgstr "Подразделения: {}"
-
-#~ msgid "AutomatedPool {} is created"
-#~ msgstr "Автоматический пул {} создан"
-
-#~ msgid "StaticPool: Objects on VDI DB created."
-#~ msgstr "Статический пул: объекты на VDI DB созданы."
-
-#~ msgid "Can't connect to controller {} with username: {}, ldap_connection: {}"
-#~ msgstr "Не подключается к контроллеру {} с именем: {}, ldap_connection: {}"
-
-#~ msgid "Couldn't load {} algorithm library: {}"
-#~ msgstr "Не может загрузиться %r библиотека алгоритмов: %s"
-
-#~ msgid "Authentication directory {} is deleted"
-#~ msgstr "Сервер директории авторизации {} не работает."
-
-#~ msgid "Can't create VM:"
-#~ msgstr "Невозможно создать виртуальную машину:"
-
-#~ msgid "Mapping {} for auth directory {} is deleted"
-#~ msgstr "Мэппинг {} для AD {} удален"
-
-#~ msgid "Hasher %r doesn't specify a library attribute"
-#~ msgstr "Hasher %r не указывает атрибут библиотеки"
-
-#~ msgid "Group {} roles: {}"
-#~ msgstr "Роли группы {}: {}"
-
-#~ msgid "User name must contain minimum 3 characters. It must contain letters and digits, _, -, +."
-#~ msgstr "Имя пользователя должно содержать буквы, цифры, _, -, + и быть не короче 3 символов."
-
-#~ msgid "AD user groups: {}"
-#~ msgstr "Группы пользователей AD: {}"
-
-#~ msgid "License information:"
-#~ msgstr "Информация о лицензии:"
-
-#~ msgid "AD user info: {}"
-#~ msgstr "Информация пользователя AD: {}"
-
-#~ msgid "Group {} is deleted"
-#~ msgstr "Группа {} удалена"
-
-#~ msgid "Controller {} check passed successful."
-#~ msgstr "Проверка контроллера {} прошла успешно."
-
-#~ msgid "{role} \"{username}\" created."
-#~ msgstr "{role} пользователя {username} создана."
-
-#~ msgid "Automated pool successfully created. Initial VM amount {}"
-#~ msgstr "Автоматический пул успешно создан. Начальное количество виртуальных машин {}"
-
-#~ msgid "Subclasses of BasePasswordHasher must provide an encode() method"
-#~ msgstr "Подклассы BasePasswordHasher должны предоставлять метод encode()"
-
-#~ msgid "Subclasses of BasePasswordHasher should provide a harden_runtime() method"
-#~ msgstr "Подклассы BasePasswordHasher должны предоставлять метод harden_runtime()"
+#~ msgid "URL not found"
+#~ msgstr "URL не найден"
 
 #~ msgid "URL {url} - {http_error}"
 #~ msgstr "URL {url} - {http_error}"
 
-#~ msgid "URL not found"
-#~ msgstr "URL не найден"
+#~ msgid "Subclasses of BasePasswordHasher should provide a harden_runtime() method"
+#~ msgstr "Подклассы BasePasswordHasher должны предоставлять метод harden_runtime()"
+
+#~ msgid "Subclasses of BasePasswordHasher must provide an encode() method"
+#~ msgstr "Подклассы BasePasswordHasher должны предоставлять метод encode()"
+
+#~ msgid "Automated pool successfully created. Initial VM amount {}"
+#~ msgstr "Автоматический пул успешно создан. Начальное количество виртуальных машин {}"
+
+#~ msgid "{role} \"{username}\" created."
+#~ msgstr "{role} пользователя {username} создана."
+
+#~ msgid "Controller {} check passed successful."
+#~ msgstr "Проверка контроллера {} прошла успешно."
+
+#~ msgid "Group {} is deleted"
+#~ msgstr "Группа {} удалена"
+
+#~ msgid "AD user info: {}"
+#~ msgstr "Информация пользователя AD: {}"
+
+#~ msgid "License information:"
+#~ msgstr "Информация о лицензии:"
+
+#~ msgid "AD user groups: {}"
+#~ msgstr "Группы пользователей AD: {}"
+
+#~ msgid "User name must contain minimum 3 characters. It must contain letters and digits, _, -, +."
+#~ msgstr "Имя пользователя должно содержать буквы, цифры, _, -, + и быть не короче 3 символов."
+
+#~ msgid "Group {} roles: {}"
+#~ msgstr "Роли группы {}: {}"
+
+#~ msgid "Hasher %r doesn't specify a library attribute"
+#~ msgstr "Hasher %r не указывает атрибут библиотеки"
+
+#~ msgid "Mapping {} for auth directory {} is deleted"
+#~ msgstr "Мэппинг {} для AD {} удален"
+
+#~ msgid "Can't create VM:"
+#~ msgstr "Невозможно создать виртуальную машину:"
+
+#~ msgid "Authentication directory {} is deleted"
+#~ msgstr "Сервер директории авторизации {} не работает."
+
+#~ msgid "Couldn't load {} algorithm library: {}"
+#~ msgstr "Не может загрузиться %r библиотека алгоритмов: %s"
+
+#~ msgid "Can't connect to controller {} with username: {}, ldap_connection: {}"
+#~ msgstr "Не подключается к контроллеру {} с именем: {}, ldap_connection: {}"
+
+#~ msgid "StaticPool: Objects on VDI DB created."
+#~ msgstr "Статический пул: объекты на VDI DB созданы."
+
+#~ msgid "AutomatedPool {} is created"
+#~ msgstr "Автоматический пул {} создан"
+
+#~ msgid "OU: {}"
+#~ msgstr "Подразделения: {}"
+
+#~ msgid "Subclasses of BasePasswordHasher must provide a verify() method"
+#~ msgstr "Подклассы BasePasswordHasher должны предоставлять метод verify()"
+
+#~ msgid "Automated pool creation. Created {} VMs from {}"
+#~ msgstr "Автоматическое создание пула. Создание {} виртуальных машин из {}"
+
+#~ msgid "GROUPS: {}"
+#~ msgstr "Группы: {}"
+
+#~ msgid "Removal pool of desktops {verbose_name} is done."
+#~ msgstr "Выполнено удаление пула рабочих столов {verbose_name}."
+
+#~ msgid "Create Pool"
+#~ msgstr "Создание пула"
+
+#~ msgid "IP: . username: {}"
+#~ msgstr "IP: . пользователь: {}"
+
+#~ msgid "Get controller credentials: Controller's {} credentials are good."
+#~ msgstr "Получение учетных данных контроллера: Хорошие учетные данные контроллера {}."

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2020-06-03 13:19+0300\n"
+"POT-Creation-Date: 2020-06-04 19:54+0300\n"
 "PO-Revision-Date: 2020-03-16 17:12+0300\n"
 "Last-Translator: Emil <e.gareev@mashtab.org>\n"
 "Language-Team: English\n"
@@ -491,11 +491,16 @@ msgstr "Controller {} connection error."
 msgid "Fail to fetch resource from ECP."
 msgstr "Fail to fetch resource from ECP."
 
-#: common/veil_client.py:131
+#: common/veil_client.py:117
+#, fuzzy
+msgid "ECP Veil internal error."
+msgstr "Critical controller error."
+
+#: common/veil_client.py:134
 msgid "Can't process Content-Type."
 msgstr "Can't process Content-Type."
 
-#: common/veil_client.py:134
+#: common/veil_client.py:137
 msgid "Only 'json' Content-Type."
 msgstr "Only 'json' Content-Type."
 
@@ -571,10 +576,6 @@ msgstr "Controller check: {}"
 msgid "Can't login login to controller {}"
 msgstr "Can't login login to controller {}"
 
-#: controller/models.py:179
-msgid "Veil ECP version should be 4.2. Current version is incompatible."
-msgstr "Veil ECP version should be 4.2. Current version is incompatible."
-
 #: controller/models.py:196
 msgid "Successfully added new controller {} with address {}."
 msgstr "Successfully added new controller {} with address {}."
@@ -624,7 +625,7 @@ msgstr "Controller {} has been deactivated."
 msgid "Controller name cannot be empty."
 msgstr "Controller name cannot be empty."
 
-#: controller/schema.py:75
+#: controller/schema.py:75 controller/schema.py:80
 msgid "Add new controller {}: operation failed."
 msgstr "Add new controller {}: operation failed."
 
@@ -896,11 +897,11 @@ msgstr "Initial number of VM must be in {}-{} interval"
 msgid "Number of created VM must be in {}-{} interval"
 msgstr "Number of created VM must be in {}-{} interval"
 
-#: pool/schema.py:133 pool/schema.py:682
+#: pool/schema.py:133 pool/schema.py:689
 msgid "Maximal number of created VM should be less than initial number of VM"
 msgstr "Maximal number of created VM should be less than initial number of VM"
 
-#: pool/schema.py:135 pool/schema.py:684
+#: pool/schema.py:135 pool/schema.py:691
 msgid "Maximal number of created VM must be in [{} {}] interval"
 msgstr "Maximal number of created VM must be in [{} {}] interval"
 
@@ -908,67 +909,71 @@ msgstr "Maximal number of created VM must be in [{} {}] interval"
 msgid "Pool"
 msgstr "Pool"
 
-#: pool/schema.py:448
+#: pool/schema.py:450
 msgid "StaticPool: Get additional info from Veil"
 msgstr "StaticPool: Get additional info from Veil"
 
-#: pool/schema.py:456
+#: pool/schema.py:458
 msgid "All of VM must be at one server"
 msgstr "All of VM must be at one server"
 
-#: pool/schema.py:458
+#: pool/schema.py:460
 msgid "StaticPool: Determine cluster"
 msgstr "StaticPool: Determine cluster"
 
-#: pool/schema.py:466
+#: pool/schema.py:468
 msgid "VM has no disks."
 msgstr "VM has no disks."
 
-#: pool/schema.py:479
+#: pool/schema.py:481
 msgid "Failed to create static pool {}."
 msgstr "Failed to create static pool {}."
 
-#: pool/schema.py:499 pool/schema.py:553
+#: pool/schema.py:488
+msgid "Fail with remote access enable."
+msgstr "Fail with remote access enable."
+
+#: pool/schema.py:506 pool/schema.py:560
 msgid "List of VM should not be empty"
 msgstr "List of VM should not be empty"
 
-#: pool/schema.py:512
+#: pool/schema.py:519
 msgid "VM ids: {}"
 msgstr "VM ids: {}"
 
-#: pool/schema.py:517
+#: pool/schema.py:524
 msgid "VM {} is at server different from pool server now"
 msgstr "VM {} is at server different from pool server now"
 
-#: pool/schema.py:520
+#: pool/schema.py:527
 msgid "VM {} is already in one of pools"
 msgstr "VM {} is already in one of pools"
 
-#: pool/schema.py:525
+#: pool/schema.py:532
 msgid "All VMs on node: {}"
 msgstr "All VMs on node: {}"
 
-#: pool/schema.py:536
+#: pool/schema.py:543
 msgid "Vm {} is added to pool {}"
 msgstr "Vm {} is added to pool {}"
 
-#: pool/schema.py:562
+#: pool/schema.py:569
 msgid "VM doesn't belong to specified pool"
 msgstr "VM doesn't belong to specified pool"
 
-#: pool/schema.py:590
+#: pool/schema.py:597
 msgid "Failed to update static pool {}. Name must be unique."
 msgstr "Failed to update static pool {}. Name must be unique."
 
-#: pool/schema.py:631
+#: pool/schema.py:638
 msgid "Failed to create automated pool {}. Name must be unique."
 msgstr "Failed to create automated pool {}. Name must be unique."
 
-#: pool/schema.py:687
+#: pool/schema.py:694
 msgid "Maximal number of created VM can not be reduced."
 msgstr "Maximal number of created VM can not be reduced."
 
-#: pool/schema.py:705
+#: pool/schema.py:712
 msgid "Failed to update automated pool {}. Name must be unique."
 msgstr "Failed to update automated pool {}. Name must be unique."
 
@@ -1206,89 +1211,92 @@ msgstr "VMs list could not be retrieved: {}"
 msgid "GraphQL: VM type list:"
 msgstr "GraphQL: VM type list:"
 
-#~ msgid "URL not found"
-#~ msgstr "URL not found"
+#~ msgid "Veil ECP version should be 4.2. Current version is incompatible."
+#~ msgstr "Veil ECP version should be 4.2. Current version is incompatible."
 
-#~ msgid "URL {url} - {http_error}"
-#~ msgstr "URL {url} - {http_error}"
-
-#~ msgid "Subclasses of BasePasswordHasher should provide a harden_runtime() method"
-#~ msgstr "Subclasses of BasePasswordHasher should provide a harden_runtime() method"
-
-#~ msgid "Subclasses of BasePasswordHasher must provide an encode() method"
-#~ msgstr "Subclasses of BasePasswordHasher must provide an encode() method"
-
-#~ msgid "Automated pool successfully created. Initial VM amount {}"
-#~ msgstr "Automated pool successfully created. Initial VM amount {}"
-
-#~ msgid "{role} \"{username}\" created."
-#~ msgstr "{role} \"{username}\" created."
-
-#~ msgid "Controller {} check passed successful."
-#~ msgstr "Controller {} check passed successful."
-
-#~ msgid "Group {} is deleted"
-#~ msgstr "Group {} is deleted"
-
-#~ msgid "AD user info: {}"
-#~ msgstr "AD user info: {}"
-
-#~ msgid "License information:"
-#~ msgstr "License information:"
-
-#~ msgid "AD user groups: {}"
-#~ msgstr "AD user groups: {}"
-
-#~ msgid "User name must contain minimum 3 characters. It must contain letters and digits, _, -, +."
-#~ msgstr "User name must contain minimum 3 characters. It must contain letters and digits, _, -, +."
-
-#~ msgid "Group {} roles: {}"
-#~ msgstr "Group {} roles: {}"
-
-#~ msgid "Hasher %r doesn't specify a library attribute"
-#~ msgstr "Hasher %r doesn't specify a library attribute"
-
-#~ msgid "Mapping {} for auth directory {} is deleted"
-#~ msgstr "Mapping {} for auth directory {} is deleted"
-
-#~ msgid "IP: . username: {}"
-#~ msgstr "IP: . username: {}"
-
-#~ msgid "Authentication directory {} is deleted"
-#~ msgstr "Authentication directory server {} is down."
-
-#~ msgid "Couldn't load {} algorithm library: {}"
-#~ msgstr "Couldn't load %r algorithm library: %s"
-
-#~ msgid "Can't connect to controller {} with username: {}, ldap_connection: {}"
-#~ msgstr "Can't connect to controller {} with username: {}, password: {}, ldap_connection: {}"
-
-#~ msgid "StaticPool: Objects on VDI DB created."
-#~ msgstr "StaticPool: Objects on VDI DB created."
-
-#~ msgid "AutomatedPool {} is created"
-#~ msgstr "AutomatedPool {} is created"
-
-#~ msgid "OU: {}"
-#~ msgstr "OU: {}"
-
-#~ msgid "Subclasses of BasePasswordHasher must provide a verify() method"
-#~ msgstr "Subclasses of BasePasswordHasher must provide a verify() method"
-
-#~ msgid "Automated pool creation. Created {} VMs from {}"
-#~ msgstr "Automated pool creation. Created {} VMs from {}"
-
-#~ msgid "GROUPS: {}"
-#~ msgstr "GROUPS: {}"
-
-#~ msgid "Removal pool of desktops {verbose_name} is done."
-#~ msgstr "Removal pool of desktops {verbose_name} is done."
-
-#~ msgid "Create Pool"
-#~ msgstr "Create Pool"
+#~ msgid "Get controller credentials: Controller's {} credentials are good."
+#~ msgstr "Get controller credentials: Controller's {} credentials are good."
 
 #~ msgid "Can't create VM:"
 #~ msgstr "Can't create VM:"
 
-#~ msgid "Get controller credentials: Controller's {} credentials are good."
-#~ msgstr "Get controller credentials: Controller's {} credentials are good."
+#~ msgid "Create Pool"
+#~ msgstr "Create Pool"
+
+#~ msgid "Removal pool of desktops {verbose_name} is done."
+#~ msgstr "Removal pool of desktops {verbose_name} is done."
+
+#~ msgid "GROUPS: {}"
+#~ msgstr "GROUPS: {}"
+
+#~ msgid "Automated pool creation. Created {} VMs from {}"
+#~ msgstr "Automated pool creation. Created {} VMs from {}"
+
+#~ msgid "Subclasses of BasePasswordHasher must provide a verify() method"
+#~ msgstr "Subclasses of BasePasswordHasher must provide a verify() method"
+
+#~ msgid "OU: {}"
+#~ msgstr "OU: {}"
+
+#~ msgid "AutomatedPool {} is created"
+#~ msgstr "AutomatedPool {} is created"
+
+#~ msgid "StaticPool: Objects on VDI DB created."
+#~ msgstr "StaticPool: Objects on VDI DB created."
+
+#~ msgid "Can't connect to controller {} with username: {}, ldap_connection: {}"
+#~ msgstr "Can't connect to controller {} with username: {}, password: {}, ldap_connection: {}"
+
+#~ msgid "Couldn't load {} algorithm library: {}"
+#~ msgstr "Couldn't load %r algorithm library: %s"
+
+#~ msgid "Authentication directory {} is deleted"
+#~ msgstr "Authentication directory server {} is down."
+
+#~ msgid "IP: . username: {}"
+#~ msgstr "IP: . username: {}"
+
+#~ msgid "Mapping {} for auth directory {} is deleted"
+#~ msgstr "Mapping {} for auth directory {} is deleted"
+
+#~ msgid "Hasher %r doesn't specify a library attribute"
+#~ msgstr "Hasher %r doesn't specify a library attribute"
+
+#~ msgid "Group {} roles: {}"
+#~ msgstr "Group {} roles: {}"
+
+#~ msgid "User name must contain minimum 3 characters. It must contain letters and digits, _, -, +."
+#~ msgstr "User name must contain minimum 3 characters. It must contain letters and digits, _, -, +."
+
+#~ msgid "AD user groups: {}"
+#~ msgstr "AD user groups: {}"
+
+#~ msgid "License information:"
+#~ msgstr "License information:"
+
+#~ msgid "AD user info: {}"
+#~ msgstr "AD user info: {}"
+
+#~ msgid "Group {} is deleted"
+#~ msgstr "Group {} is deleted"
+
+#~ msgid "Controller {} check passed successful."
+#~ msgstr "Controller {} check passed successful."
+
+#~ msgid "{role} \"{username}\" created."
+#~ msgstr "{role} \"{username}\" created."
+
+#~ msgid "Automated pool successfully created. Initial VM amount {}"
+#~ msgstr "Automated pool successfully created. Initial VM amount {}"
+
+#~ msgid "Subclasses of BasePasswordHasher must provide an encode() method"
+#~ msgstr "Subclasses of BasePasswordHasher must provide an encode() method"
+
+#~ msgid "Subclasses of BasePasswordHasher should provide a harden_runtime() method"
+#~ msgstr "Subclasses of BasePasswordHasher should provide a harden_runtime() method"
+
+#~ msgid "URL {url} - {http_error}"
+#~ msgstr "URL {url} - {http_error}"
+
+#~ msgid "URL not found"
+#~ msgstr "URL not found"
