@@ -114,7 +114,10 @@ class VeilHttpClient:
             elif http_error.code == 408:
                 raise ControllerNotAccessible(body)
             elif http_error.code == 500:
-                raise ServerError(body)
+                msg = _('ECP Veil internal error.')
+                log.debug(msg)
+                log.debug(body)
+                raise ServerError(msg)
             elif http_error.code == 599:
                 raise ServerError(str(http_error))
         return response

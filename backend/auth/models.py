@@ -396,15 +396,14 @@ class Group(AbstractSortableStatusModel, db.Model):
 
     @staticmethod
     async def soft_create(verbose_name, description=None, id=None, ad_guid=None):
-        group_kwargs = {'verbose_name': verbose_name, 'description': description, 'ad_guid': str(ad_guid)}
+        group_kwargs = {'verbose_name': verbose_name, 'description': description}
+        if ad_guid:
+            group_kwargs['ad_guid'] = str(ad_guid)
         if id:
             group_kwargs['id'] = id
-
         group_obj = await Group.create(**group_kwargs)
-
         info_message = _('Group {} is created.').format(verbose_name)
         await log.info(info_message)
-
         return group_obj
 
     async def soft_update(self, verbose_name, description):

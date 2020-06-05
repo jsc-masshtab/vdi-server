@@ -479,9 +479,14 @@ class CreateStaticPoolMutation(graphene.Mutation, PoolValidator):
             # TODO: указать конкретные Exception
             desc = str(E)
             error_msg = _('Failed to create static pool {}.').format(verbose_name)
+            log.debug(desc)
             raise SimpleError(error_msg, description=desc)
         # --- Активация удаленного доступа к VM на Veil
-        await Vm.enable_remote_accesses(first_vm_controller_address, vm_ids)
+        try:
+            await Vm.enable_remote_accesses(first_vm_controller_address, vm_ids)
+        except HttpError:
+            msg = _('Fail with remote access enable.')
+            await log.warning(msg)
         return {
             'pool': PoolType(pool_id=pool.id, verbose_name=verbose_name, vms=vms),
             'ok': True
