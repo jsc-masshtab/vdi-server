@@ -240,7 +240,9 @@ class Vm(db.Model):
     @staticmethod
     async def enable_remote_access(controller_address, vm_id):
         vm_http_client = await VmHttpClient.create(controller_address, vm_id)
-        await vm_http_client.enable_remote_access()
+        remote_access_enabled = await vm_http_client.remote_access_enabled()
+        if not remote_access_enabled:
+            await vm_http_client.enable_remote_access()
 
     @staticmethod
     async def enable_remote_accesses(controller_address, vm_ids):

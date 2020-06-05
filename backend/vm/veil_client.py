@@ -4,6 +4,7 @@ import urllib.parse
 from common.veil_decorators import check_params
 from common.veil_client import VeilHttpClient
 from controller.models import Controller
+from journal.journal import Log as log
 
 
 class VmHttpClient(VeilHttpClient):
@@ -31,6 +32,12 @@ class VmHttpClient(VeilHttpClient):
     def url(self):
         return 'http://{}/api/domains/{}/'.format(self.controller_ip, self.vm_id)
 
+    async def enable_remote_access(self):
+        """Enable remote access on remote VM"""
+        url = self.url + 'remote-access/'
+        log.debug('Enable remote access for {}'.format(self.vm_id))
+        await self.fetch(url=url, method='POST', body=dict(remote_access=True), controller_control=False)
+
     async def prepare(self):
         """Prepare for the first use: enable remote access & power on"""
         await self.send_action(action='start')
@@ -43,10 +50,13 @@ class VmHttpClient(VeilHttpClient):
         url = self.url + action + '/'
         await self.fetch(url=url, method='POST', body=body, controller_control=False)
 
-    async def enable_remote_access(self):
-        """Enable remote access on remote VM"""
-        url = self.url + 'remote-access/'
-        await self.fetch(url=url, method='POST', body=dict(remote_access=True), controller_control=False)
+    async def remote_access_enabled(self):
+        domain_info = await self.info()
+        if isinstance(domain_info.get('remote_access'), bool) and domain_info.get('remote_access') is True:
+            log.debug('Remote access is enabled. Skip.')
+            return True
+        log.debug('Remote access is disabled. Will enable.')
+        return False
 
     async def info(self):
         """Endpoint for receiving information about VMs from a remote controller."""
