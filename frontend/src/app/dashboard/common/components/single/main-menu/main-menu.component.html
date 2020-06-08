@@ -54,8 +54,8 @@
   </a>
 
   <a class="top-menu-item item-tree" [@fadeInOut] *ngIf="toggleSetting" [class.clicked-link]="clickedManage =='license'" (click)="routeTo('settings/license')" (keydown.enter)="routeTo('settings/license')" [class.clicked-link]="clickedManage =='license'"  tabindex="0">
-    <fa-icon title="Лицезирование" [icon]="['fas','id-card']" size="s" [style.color]="'rgb(255, 235, 205)'"></fa-icon>
-    <span>Лицезирование</span>
+    <fa-icon title="Лицензирование" [icon]="['fas','id-card']" size="s" [style.color]="'rgb(255, 235, 205)'"></fa-icon>
+    <span>Лицензирование</span>
   </a>
 
   <a class="top-menu-item item-tree" [@fadeInOut] *ngIf="toggleSetting" [class.clicked-link]="clickedManage =='groups'" (click)="routeTo('settings/groups')" (keydown.enter)="routeTo('settings/groups')" [class.clicked-link]="clickedManage =='groups'"  tabindex="0">
@@ -68,13 +68,13 @@
     <span>Пользователи</span>
   </a>
 
-  <a class="top-menu-item item-tree" 
-    [@fadeInOut] 
-    *ngIf="toggleSetting" 
+  <a class="top-menu-item item-tree"
+    [@fadeInOut]
+    *ngIf="toggleSetting"
     [class.clicked-link]="clickedManage =='auth-directory'"
-    (click)="routeTo('settings/auth-directory')" 
+    (click)="routeTo('settings/auth-directory')"
     (keydown.enter)="routeTo('settings/auth-directory')"
-    [class.clicked-link]="clickedManage =='auth-directory'" 
+    [class.clicked-link]="clickedManage =='auth-directory'"
     tabindex="0">
     <fa-icon [icon]="['fas','address-card']" size="s" [style.color]="'rgb(255, 235, 205)'"></fa-icon>
     <span>Службы каталогов</span>
