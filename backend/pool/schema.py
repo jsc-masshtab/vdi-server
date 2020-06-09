@@ -213,7 +213,7 @@ class PoolType(graphene.ObjectType):
         pool = await Pool.get(self.pool_id)
         assigned_roles = await pool.roles
         all_roles = [role_type for role_type in Role]
-        return [role for role in all_roles if role.value not in assigned_roles]
+        return [role for role in all_roles if role.value not in [assigned_role[0] for assigned_role in assigned_roles]]
 
     async def resolve_assigned_groups(self, info):
         pool = await Pool.get(self.pool_id)

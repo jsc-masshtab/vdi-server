@@ -9,7 +9,7 @@ from sqlalchemy.dialects.postgresql import UUID, ARRAY, JSONB
 from sqlalchemy.sql import text, desc
 
 from settings import LDAP_TIMEOUT
-from database import db, AbstractSortableStatusModel, Status, Role, EntityType
+from database import db, AbstractSortableStatusModel, Status, EntityType
 from auth.utils.crypto import encrypt, decrypt
 from auth.models import User, Group
 from auth.authentication_directory.utils import (unpack_guid, pack_guid, unpack_ad_info,
@@ -346,8 +346,9 @@ class AuthenticationDirectory(db.Model, AbstractSortableStatusModel):
         log.debug(_('Mappings: {}').format(mappings))
 
         if not mappings:
-            await user.add_role(Role.VM_OPERATOR)
-            log.debug(_('Role VM_OPERATOR has assigned to user {}.').format(user.username))
+            # TODO: отключил назначение роли по умолчанию
+            # await user.add_role(Role.OPERATOR)
+            # log.debug(_('Role VM_OPERATOR has assigned to user {}.').format(user.username))
             return True
 
         user_veil_groups = False

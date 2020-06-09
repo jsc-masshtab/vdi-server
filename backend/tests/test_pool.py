@@ -115,7 +115,10 @@ class PoolTestCase(VdiHttpTestCase):
             response_data = response_dict['data']
             self.assertIsInstance(response_data, dict)
             response_message = response_data['message']
-            self.assertEqual('В пуле нет свободных машин', response_message)
+            try:
+                self.assertEqual('В пуле нет свободных машин', response_message)
+            except AssertionError:
+                self.assertEqual('Pool doesnt have free machines', response_message)
 
             # Ждем время ожидания монитора ресурсов + накладки, чтобы убедиться, что пул расширился
             yield gen.sleep(VEIL_WS_MAX_TIME_TO_WAIT + 5)
@@ -260,7 +263,7 @@ class TestPoolPermissionsSchema:
         pool = pools[0]
         query = """mutation{
                             addPoolRole(pool_id: "%s",
-                                        roles: [VM_ADMINISTRATOR, READ_ONLY])
+                                        roles: [ADMINISTRATOR, OPERATOR])
                             {
                                 ok,
                                 pool{assigned_roles, possible_roles}
@@ -271,7 +274,7 @@ class TestPoolPermissionsSchema:
 
         query = """mutation{
                             removePoolRole(pool_id: "%s",
-                                        roles: [READ_ONLY])
+                                        roles: [OPERATOR])
                             {
                                 ok,
                                 pool{assigned_roles, possible_roles}

@@ -47,14 +47,11 @@ class Status(Enum):
 
 
 class Role(Enum):
+    """Перечисление системных и не редактируемых ролей."""
 
-    READ_ONLY = 'READ_ONLY'
-    ADMINISTRATOR = 'ADMINISTRATOR'
     SECURITY_ADMINISTRATOR = 'SECURITY_ADMINISTRATOR'
-    VM_ADMINISTRATOR = 'VM_ADMINISTRATOR'
-    NETWORK_ADMINISTRATOR = 'NETWORK_ADMINISTRATOR'  # использование маловероятно
-    STORAGE_ADMINISTRATOR = 'STORAGE_ADMINISTRATOR'  # использование маловероятно
-    VM_OPERATOR = 'VM_OPERATOR'
+    OPERATOR = 'OPERATOR'
+    ADMINISTRATOR = 'ADMINISTRATOR'
 
 
 class AbstractSortableStatusModel:

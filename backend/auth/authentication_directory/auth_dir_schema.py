@@ -6,7 +6,7 @@ import re
 from database import StatusGraphene, db, Status
 from common.veil_validators import MutationValidation
 from common.veil_errors import SimpleError, ValidationError
-from common.veil_decorators import security_administrator_required, readonly_required
+from common.veil_decorators import security_administrator_required
 
 from auth.authentication_directory.models import AuthenticationDirectory, Mapping
 from auth.models import Group
@@ -209,7 +209,7 @@ class AuthenticationDirectoryQuery(graphene.ObjectType):
     def instance_to_type(model_instance):
         return AuthenticationDirectoryType(**model_instance.__values__)
 
-    @readonly_required
+    @security_administrator_required
     async def resolve_auth_dir(self, info, id=None):
         if not id:
             raise SimpleError(_('Specify id.'))
@@ -219,7 +219,7 @@ class AuthenticationDirectoryQuery(graphene.ObjectType):
             raise SimpleError(_('No such Authentication Directory.'))
         return AuthenticationDirectoryQuery.instance_to_type(auth_dir)
 
-    @readonly_required
+    @security_administrator_required
     async def resolve_auth_dirs(self, info, ordering=None):
         auth_dirs = await AuthenticationDirectory.get_objects(ordering=ordering)
         objects = [
@@ -228,7 +228,7 @@ class AuthenticationDirectoryQuery(graphene.ObjectType):
         ]
         return objects
 
-    @readonly_required
+    @security_administrator_required
     async def resolve_group_members(self, _info, auth_dir_id, group_cn):
         """Пользователи члены групп в Authentication Directory."""
         auth_dir = await AuthenticationDirectory.get(auth_dir_id)

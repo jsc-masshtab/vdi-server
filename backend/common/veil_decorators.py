@@ -134,10 +134,6 @@ def user_passes_test(test_func, exc=Unauthorized):  # noqa
     return decorator
 
 
-def is_read_only(roles) -> bool:
-    return Role.READ_ONLY in roles
-
-
 def is_administrator(roles) -> bool:
     return Role.ADMINISTRATOR in roles
 
@@ -146,26 +142,10 @@ def is_security_administrator(roles) -> bool:
     return Role.SECURITY_ADMINISTRATOR in roles
 
 
-def is_vm_administrator(roles) -> bool:
-    return Role.VM_ADMINISTRATOR in roles
+def is_operator(roles) -> bool:
+    return Role.OPERATOR in roles
 
 
-def is_network_administrator(roles) -> bool:
-    return Role.NETWORK_ADMINISTRATOR in roles
-
-
-def is_storage_administrator(roles) -> bool:
-    return Role.STORAGE_ADMINISTRATOR in roles
-
-
-def is_vm_operator(roles) -> bool:
-    return Role.VM_OPERATOR in roles
-
-
-readonly_required = user_passes_test(lambda roles: is_read_only(roles))
 administrator_required = user_passes_test(lambda roles: is_administrator(roles))
 security_administrator_required = user_passes_test(lambda roles: is_security_administrator(roles))
-vm_administrator_required = user_passes_test(lambda roles: is_vm_administrator(roles))
-network_administrator_required = user_passes_test(lambda roles: is_network_administrator(roles))
-storage_administrator_required = user_passes_test(lambda roles: is_storage_administrator(roles))
-vm_operator_required = user_passes_test(lambda roles: is_vm_operator(roles))
+operator_required = user_passes_test(lambda roles: is_operator(roles))

@@ -6,7 +6,7 @@ from auth.models import User
 from database import RoleTypeGraphene, Role
 from common.veil_validators import MutationValidation
 from common.veil_errors import SimpleError, ValidationError, AssertError
-from common.veil_decorators import security_administrator_required, readonly_required
+from common.veil_decorators import security_administrator_required
 
 from languages import lang_init
 
@@ -148,7 +148,7 @@ class UserQuery(graphene.ObjectType):
     users = graphene.List(UserType, ordering=graphene.String())
     user = graphene.Field(UserType, id=graphene.UUID(), username=graphene.String())
 
-    @readonly_required
+    @security_administrator_required
     async def resolve_user(self, info, id=None, username=None):
         if not id and not username:
             raise SimpleError(_('Scpecify id or username.'))
@@ -158,7 +158,7 @@ class UserQuery(graphene.ObjectType):
             raise SimpleError(_('No such user.'))
         return UserType.instance_to_type(user)
 
-    @readonly_required
+    @security_administrator_required
     async def resolve_users(self, info, ordering=None):
         users = await User.get_objects(ordering=ordering, include_inactive=True)
         objects = [

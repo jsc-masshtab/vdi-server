@@ -93,15 +93,11 @@ snapshots['TestGroupSchema.test_group_role 1'] = {
     'addGroupRole': {
         'group': {
             'assigned_roles': [
-                'NETWORK_ADMINISTRATOR',
-                'VM_OPERATOR'
+                'SECURITY_ADMINISTRATOR',
+                'OPERATOR'
             ],
             'possible_roles': [
-                'READ_ONLY',
                 'ADMINISTRATOR',
-                'SECURITY_ADMINISTRATOR',
-                'VM_ADMINISTRATOR',
-                'STORAGE_ADMINISTRATOR'
             ],
             'verbose_name': 'test_group_1'
         },
@@ -113,15 +109,11 @@ snapshots['TestGroupSchema.test_group_role 2'] = {
     'removeGroupRole': {
         'group': {
             'assigned_roles': [
-                'NETWORK_ADMINISTRATOR'
+                'SECURITY_ADMINISTRATOR'
             ],
             'possible_roles': [
-                'READ_ONLY',
-                'ADMINISTRATOR',
-                'SECURITY_ADMINISTRATOR',
-                'VM_ADMINISTRATOR',
-                'STORAGE_ADMINISTRATOR',
-                'VM_OPERATOR'
+                'OPERATOR',
+                'ADMINISTRATOR'
             ],
             'verbose_name': 'test_group_1'
         },

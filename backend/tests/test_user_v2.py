@@ -176,26 +176,26 @@ class TestUserSchema:
 
     async def test_user_role(self, snapshot, fixt_auth_context, fixt_user):  # noqa
         query = """mutation {
-                      addUserRole(id: "10913d5d-ba7a-4049-88c5-769267a6cbe4", roles: [VM_OPERATOR]){
-                        user{
-                          username,
-                          assigned_roles,
-                          possible_roles
-                        },
-                        ok
-                      }
-                    }"""
+                         addUserRole(id: "10913d5d-ba7a-4049-88c5-769267a6cbe4", roles: [OPERATOR]){
+                           user{
+                             username,
+                             assigned_roles,
+                             possible_roles
+                           },
+                           ok
+                         }
+                       }"""
         executed = await execute_scheme(user_schema, query, context=fixt_auth_context)
         snapshot.assert_match(executed)
         query = """mutation {
-                      removeUserRole(id: "10913d5d-ba7a-4049-88c5-769267a6cbe4", roles: [VM_OPERATOR]){
-                        user{
-                          username,
-                          assigned_roles,
-                          possible_roles
-                        },
-                        ok
-                      }
-                    }"""
+                         removeUserRole(id: "10913d5d-ba7a-4049-88c5-769267a6cbe4", roles: [OPERATOR]){
+                           user{
+                             username,
+                             assigned_roles,
+                             possible_roles
+                           },
+                           ok
+                         }
+                       }"""
         executed = await execute_scheme(user_schema, query, context=fixt_auth_context)
         snapshot.assert_match(executed)

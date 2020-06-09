@@ -5,7 +5,7 @@ from database import db, RoleTypeGraphene, Role
 from auth.models import Group, User
 from common.veil_validators import MutationValidation
 from common.veil_errors import SimpleError, ValidationError
-from common.veil_decorators import security_administrator_required, readonly_required
+from common.veil_decorators import security_administrator_required
 from auth.user_schema import UserType
 
 from languages import lang_init
@@ -98,14 +98,14 @@ class GroupQuery(graphene.ObjectType):
     groups = graphene.List(GroupType, ordering=graphene.String())
     group = graphene.Field(GroupType, id=graphene.UUID())
 
-    @readonly_required
+    @security_administrator_required
     async def resolve_group(self, info, id):  # noqa
         group = await Group.get(id)
         if not group:
             raise SimpleError(_('No such group.'))
         return GroupType.instance_to_type(group)
 
-    @readonly_required
+    @security_administrator_required
     async def resolve_groups(self, info, ordering=None):  # noqa
         groups = await Group.get_objects(ordering=ordering, include_inactive=True)
         objects = [

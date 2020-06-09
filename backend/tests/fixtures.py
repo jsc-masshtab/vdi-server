@@ -563,7 +563,7 @@ def fixt_group_role(request, event_loop):
     async def setup():
         """Подчищать не надо, группа будет удалена и эти записи удалятся каскадом"""
         group = await Group.get(group_id)
-        await group.add_role(Role.READ_ONLY)
+        await group.add_role(Role.SECURITY_ADMINISTRATOR)
     event_loop.run_until_complete(setup())
     return True
 
