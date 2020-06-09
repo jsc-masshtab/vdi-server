@@ -105,7 +105,6 @@ export class EventsComponent implements OnInit {
 
   public refresh(): void {
     this.getEvents();
-    this.getAllUsers();
   }
 
   public clickRow(event): void {
@@ -115,13 +114,6 @@ export class EventsComponent implements OnInit {
   public toPage(message: any): void {
     this.offset = message.offset;
     this.getEvents();
-  }
-
-  public getAllUsers(): void {
-    this.service.getAllUsers().valueChanges.pipe(map(data => data.data))
-      .subscribe((data) => {
-        this.users = [...data.users];
-      });
   }
 
   public getEvents(): void {
@@ -160,6 +152,7 @@ export class EventsComponent implements OnInit {
       .subscribe((data) => {
         this.events = [...data.events];
         this.entity_types = [...data.entity_types];
+        this.users = [...data.users];
         this.count = data.count;
         this.waitService.setWait(false);
       });
