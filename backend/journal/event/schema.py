@@ -39,6 +39,12 @@ class EntityType(graphene.ObjectType):
     entity_type = graphene.String()
 
 
+class UserListType(graphene.ObjectType):
+    """Намеренное дублирование, чтобы сократить доступные поля."""
+    id = graphene.UUID()
+    username = graphene.String()
+
+
 class EventType(graphene.ObjectType):
     id = graphene.UUID()
     event_type = graphene.Int()
@@ -85,6 +91,8 @@ class EventQuery(graphene.ObjectType):
         read_by=graphene.UUID(),
         entity_type=graphene.String()
     )
+
+    users = graphene.List(UserListType)
 
     @operator_required
     async def resolve_count(self, _info, event_type=None, start_date=None,
@@ -153,6 +161,12 @@ class EventQuery(graphene.ObjectType):
             **event.__values__)
 
         return event_type
+
+    @operator_required
+    async def resolve_users(self, _info):
+        """Список всех пользователей системы."""
+        users = await User.query.order_by(desc(User.username)).gino.all()
+        return users
 
 
 class MarkEventsReadByMutation(graphene.Mutation):
