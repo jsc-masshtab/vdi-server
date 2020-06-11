@@ -102,4 +102,4 @@ class PoolTaskManager:
             self._template_lock_dict[template_id] = TemplateLock()
 
 
-pool_task_manager = PoolTaskManager()
+#pool_task_manager = PoolTaskManager()

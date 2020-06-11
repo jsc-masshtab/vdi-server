@@ -6,12 +6,25 @@ from graphene import Enum as GrapheneEnum
 from sqlalchemy.sql import desc
 from sqlalchemy.sql.schema import Column
 
+from settings import DB_NAME, DB_PASS, DB_USER, DB_PORT, DB_HOST
+
 from languages import lang_init
 
 
 _ = lang_init()
 
 db = Gino()
+
+
+async def start_gino():
+    await db.set_bind(
+        'postgresql://{DB_USER}:{DB_PASS}@{DB_HOST}:{DB_PORT}/{DB_NAME}'.format(DB_USER=DB_USER, DB_PASS=DB_PASS,
+                                                                                DB_HOST=DB_HOST, DB_PORT=DB_PORT,
+                                                                                DB_NAME=DB_NAME))
+
+
+async def stop_gino():
+    await db.pop_bind().close()
 
 
 async def get_list_of_values_from_db(db_model, column):

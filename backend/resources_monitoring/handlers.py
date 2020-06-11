@@ -15,28 +15,12 @@ from resources_monitoring.internal_event_monitor import internal_event_monitor
 
 from languages import lang_init
 from journal.journal import Log as log
-from common.veil_errors import MeaningError
+#from common.veil_errors import MeaningError
 
 
 _ = lang_init()
 
 # TODO: auth check?
-
-# class ClientManager:
-#     clients = []
-#
-#     def __init__(self):
-#         pass
-#
-#     async def send_message(self, msg):
-#         for client in self.clients:
-#             await client.write_msg(msg)
-#
-#     def add_client(self, client):
-#         self.clients.append(client)
-#
-#     def remove_client(self, client):
-#         self.clients.remove(client)
 
 
 class AbstractSubscriptionObserver(ABC):
@@ -97,7 +81,7 @@ class VdiFrontWsHandler(websocket.WebSocketHandler, AbstractSubscriptionObserver
             response['msg'] = subscription_cmd
             response['resource'] = subscription_source
         except ValueError as E:
-            raise MeaningError(E)
+            #raise MeaningError(E)  # WTF?
             response['error'] = True
             await self.write_msg(response)
             return

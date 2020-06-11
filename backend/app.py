@@ -8,7 +8,7 @@ import tornado.log
 import tornado.options
 
 from settings import DB_NAME, DB_PASS, DB_USER, DB_PORT, DB_HOST, WS_PING_INTERVAL, WS_PING_TIMEOUT, AUTH_ENABLED
-from database import db
+from database import start_gino, stop_gino
 from redis_broker import REDIS_POOL
 from common.veil_handlers import VdiTornadoGraphQLHandler
 
@@ -82,17 +82,6 @@ def make_app():
                                    websocket_ping_interval=WS_PING_INTERVAL,
                                    websocket_ping_timeout=WS_PING_TIMEOUT,
                                    autoreload=tornado.options.options.autoreload)
-
-
-async def start_gino():
-    await db.set_bind(
-        'postgresql://{DB_USER}:{DB_PASS}@{DB_HOST}:{DB_PORT}/{DB_NAME}'.format(DB_USER=DB_USER, DB_PASS=DB_PASS,
-                                                                                DB_HOST=DB_HOST, DB_PORT=DB_PORT,
-                                                                                DB_NAME=DB_NAME))
-
-
-async def stop_gino():
-    await db.pop_bind().close()
 
 
 def init_gino():

@@ -26,10 +26,11 @@ from controller_resources.veil_client import ResourcesHttpClient
 from controller_resources.schema import ClusterType, NodeType, DatapoolType
 
 from pool.models import AutomatedPool, StaticPool, Pool
-from pool.pool_task_manager import pool_task_manager
 
 from languages import lang_init
 from journal.journal import Log as log
+
+from redis_broker import request_to_execute_pool_task, PoolTaskType
 
 
 _ = lang_init()
@@ -639,12 +640,8 @@ class CreateAutomatedPoolMutation(graphene.Mutation, PoolValidator):
             await log.error(error_msg)
             raise SimpleError(error_msg)
 
-        # add data for protection
-        pool_task_manager.add_new_pool_data(str(automated_pool.id), str(automated_pool.template_id))
-        # start task
-        native_loop = asyncio.get_event_loop()
-        pool_lock = pool_task_manager.get_pool_lock(str(automated_pool.id))
-        pool_lock.create_pool_task = native_loop.create_task(automated_pool.init_pool())
+        # send command to start pool init task
+        request_to_execute_pool_task(automated_pool.id, PoolTaskType.CREATING)
 
         # pool creation task successfully started
         pool = await Pool.get_pool(automated_pool.id)
