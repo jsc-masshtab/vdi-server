@@ -4,16 +4,15 @@ import pytest
 from controller.schema import controller_schema
 from controller.models import Controller
 from tests.utils import execute_scheme
-from tests.fixtures import fixt_db, fixt_controller, fixt_auth_context, fixt_create_automated_pool  # noqa
+from tests.fixtures import fixt_db, fixt_controller, fixt_auth_context  # noqa
 
 
-pytestmark = [pytest.mark.controllers]
+pytestmark = [pytest.mark.asyncio, pytest.mark.controllers]
 
 
-@pytest.mark.asyncio
 async def test_add_update_remove_controller(fixt_db, fixt_auth_context):  # noqa
     """Add, update and remove controller"""
-    controller_ip = '192.168.11.102'
+    controller_ip = '192.168.11.115'
 
     # add controller
     qu = """
@@ -83,7 +82,7 @@ async def test_add_update_remove_controller(fixt_db, fixt_auth_context):  # noqa
 
 
 @pytest.mark.asyncio
-async def test_credentials(fixt_db, snapshot, fixt_controller, fixt_create_automated_pool, fixt_auth_context):  # noqa
+async def test_credentials(fixt_db, snapshot, fixt_controller, fixt_auth_context):  # noqa
 
     controller_id = await Controller.select('id').gino.scalar()
     qu = """

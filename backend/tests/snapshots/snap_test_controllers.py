@@ -16,7 +16,7 @@ snapshots['test_credentials 1'] = {
 snapshots['test_resolve_controllers 1'] = {
     'controllers': [
         {
-            'address': '192.168.11.102',
+            'address': '192.168.11.115',
             'description': None,
             'id': '10913d5d-ba7a-4049-88c5-769267a6cbe4',
             'verbose_name': 'test controller',

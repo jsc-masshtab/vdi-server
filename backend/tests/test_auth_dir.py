@@ -252,7 +252,7 @@ class TestAuthenticationDirectoryEdit:
     async def test_auth_dir_edit_bad_address(self, snapshot, fixt_auth_context, fixt_auth_dir):  # noqa
         query = """mutation {updateAuthDir(
                       id: "10913d5d-ba7a-4049-88c5-769267a6cbe4"
-                      directory_url: "ldap://192.168.10.10"
+                      directory_url: "ldap://127.0.0.1"
                     ) {ok, auth_dir{status}}}"""
         executed = await execute_scheme(auth_dir_schema, query, context=fixt_auth_context)
         snapshot.assert_match(executed)

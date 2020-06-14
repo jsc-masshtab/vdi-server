@@ -8,7 +8,7 @@ from tornado.testing import AsyncHTTPTestCase, gen_test
 from resources_monitoring.handlers import VdiFrontWsHandler
 
 
-pytestmark = [pytest.mark.ws_requests]
+pytestmark = [pytest.mark.asyncio, pytest.mark.ws_requests]
 
 
 class TestWebSockets(AsyncHTTPTestCase):

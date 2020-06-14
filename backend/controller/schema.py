@@ -10,7 +10,6 @@ from controller.models import Controller
 from resources_monitoring.resources_monitor_manager import resources_monitor_manager
 
 from languages import lang_init
-from journal.journal import Log as log
 
 _ = lang_init()
 
@@ -68,17 +67,16 @@ class AddControllerMutation(graphene.Mutation):
             controller = await Controller.soft_create(verbose_name, address, username, password, ldap_connection,
                                                       description)
             await resources_monitor_manager.add_controller(address)
-            return AddControllerMutation(ok=True, controller=ControllerType(**controller.__values__))
         except SimpleError as E:
             raise SimpleError(E)
         except ValueError as err:
             msg = _('Add new controller {}: operation failed.').format(address)
             description = str(err)
             raise SimpleError(msg, description=description)
-        except Exception as E:
-            log.debug(E)
+        except Exception:
             msg = _('Add new controller {}: operation failed.').format(address)
             raise SimpleError(msg)
+        return AddControllerMutation(ok=True, controller=ControllerType(**controller.__values__))
 
 
 class UpdateControllerMutation(graphene.Mutation):

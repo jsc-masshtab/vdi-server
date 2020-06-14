@@ -346,9 +346,6 @@ class AuthenticationDirectory(db.Model, AbstractSortableStatusModel):
         log.debug(_('Mappings: {}').format(mappings))
 
         if not mappings:
-            # TODO: отключил назначение роли по умолчанию
-            # await user.add_role(Role.OPERATOR)
-            # log.debug(_('Role VM_OPERATOR has assigned to user {}.').format(user.username))
             return True
 
         user_veil_groups = False

@@ -86,8 +86,12 @@ class Controller(db.Model):
 
     @staticmethod
     async def get_controller_id_by_ip(ip_address):
-        # controller = await Controller.query.where(Controller.address == ip_address).gino.first()
         return await Controller.select('id').where(Controller.address == ip_address).gino.scalar()
+
+    @staticmethod
+    async def get_controller_version_by_address(address: str):
+        """Возвращает версию контроллера хранящуюся в БД."""
+        return await Controller.select('version').where(Controller.address == address).gino.scalar()
 
     @staticmethod
     async def get_token(ip_address: str):
@@ -173,9 +177,9 @@ class Controller(db.Model):
         major_version, minor_version, patch_version = version.split('.')
 
         # Проверяем версию контроллера в пределах допустимой. Предыдущие версии тоже совместимы, но не стабильны.
-        # В версии 4.3 появились изменения в api
-        if major_version != '4' or minor_version != '2':
-            msg = _('Veil ECP version should be 4.2. Current version is incompatible.')
+        # В версии 4.3 появились изменения в формате ошибок возвращаемых VeiL
+        if major_version != '4' or minor_version not in ('2', '3'):
+            msg = _('Veil ECP version should be 4.2 or 4.3. Current version is incompatible.')
             raise ValueError(msg)
 
         controller_dict = {'verbose_name': verbose_name,

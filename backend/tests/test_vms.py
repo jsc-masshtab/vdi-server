@@ -12,10 +12,9 @@ from pool.models import Pool
 from controller.models import Controller
 
 
-pytestmark = [pytest.mark.vms]
+pytestmark = [pytest.mark.asyncio, pytest.mark.vms]
 
 
-@pytest.mark.asyncio
 async def test_request_vms(fixt_db, fixt_auth_context):  # noqa
     qu = """
     {
@@ -36,7 +35,6 @@ async def test_request_vms(fixt_db, fixt_auth_context):  # noqa
     executed = await execute_scheme(vm_schema, qu, context=fixt_auth_context)  # noqa
 
 
-@pytest.mark.asyncio
 async def test_request_templates(fixt_db, fixt_auth_context):  # noqa
     qu = """
     {
@@ -51,7 +49,6 @@ async def test_request_templates(fixt_db, fixt_auth_context):  # noqa
     executed = await execute_scheme(vm_schema, qu, context=fixt_auth_context)  # noqa
 
 
-@pytest.mark.asyncio
 @pytest.mark.usefixtures('fixt_db', 'fixt_user', 'fixt_vm')
 class TestVmPermissionsSchema:
     # TODO: add group tests
@@ -93,7 +90,6 @@ class TestVmPermissionsSchema:
         assert current_user is None
 
 
-@pytest.mark.asyncio
 @pytest.mark.usefixtures('fixt_db', 'fixt_controller', 'fixt_user_admin', 'fixt_create_static_pool')
 class VmActionTestCase(VdiHttpTestCase):
 
@@ -139,7 +135,6 @@ class VmActionTestCase(VdiHttpTestCase):
         self.assertIn(expected_error, response_error)
 
 
-@pytest.mark.asyncio
 async def test_templates_and_sorting(fixt_db, fixt_controller, fixt_user_admin, fixt_create_automated_pool, fixt_auth_context):  # noqa
 
     # Получаем pool_id из динамической фикстуры пула

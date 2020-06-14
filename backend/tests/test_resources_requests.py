@@ -10,10 +10,9 @@ from pool.models import Pool
 from controller.models import Controller
 
 
-pytestmark = [pytest.mark.resources]
+pytestmark = [pytest.mark.asyncio, pytest.mark.resources]
 
 
-@pytest.mark.asyncio
 async def test_request_clusters(fixt_db, fixt_auth_context):  # noqa
     """Request clusters data"""
     list = ["verbose_name", "cpu_count", "memory_count", "nodes_count", "status", "controller"]
@@ -37,7 +36,6 @@ async def test_request_clusters(fixt_db, fixt_auth_context):  # noqa
         executed = await execute_scheme(resources_schema, qu, context=fixt_auth_context)  # noqa
 
 
-@pytest.mark.asyncio
 async def test_request_nodes(fixt_db, fixt_auth_context):  # noqa
     """Request nodes data"""
     list = ["verbose_name", "cpu_count", "memory_count", "datacenter_name", "status", "controller", "management_ip"]
@@ -83,7 +81,6 @@ async def test_request_nodes(fixt_db, fixt_auth_context):  # noqa
             assert node['verbose_name'] == executed['node']['verbose_name']
 
 
-@pytest.mark.asyncio
 async def test_request_datapools(fixt_db, fixt_auth_context):  # noqa
     """Request datapools data"""
     list = ["verbose_name", "type", "vdisk_count", "iso_count", "file_count", "used_space", "free_space", "status"]
