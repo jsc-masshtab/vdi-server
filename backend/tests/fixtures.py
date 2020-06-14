@@ -171,13 +171,9 @@ async def fixt_auth_context():
 @async_generator
 async def fixt_create_automated_pool():
     """Create an automated pool, yield, remove this pool"""
-    # start resources_monitor to receive info  from controller. autopool creation doesnt work without it
-    await resources_monitor_manager.start()
-
     resources = await get_resources_automated_pool_test()
     if not resources:
-        print('resources not found!')
-
+        raise AssertionError('Ресурсы контроллера не найдены.')
     qu = '''
         mutation {
             addDynamicPool(verbose_name: "%s", controller_ip: "%s",
@@ -233,9 +229,6 @@ async def fixt_create_automated_pool():
     ''' % pool_id
     await execute_scheme(pool_schema, qu, context=context)
 
-    # stop monitor
-    await resources_monitor_manager.stop()
-
 
 @pytest.fixture
 @async_generator
@@ -249,7 +242,6 @@ async def fixt_create_static_pool(fixt_db):
     context = await get_auth_context()
 
     # --- create VM ---
-    await resources_monitor_manager.start()
     response_waiter = WaiterSubscriptionObserver()
     response_waiter.add_subscription_source('/tasks/')
     resources_monitor_manager.subscribe(response_waiter)
@@ -283,7 +275,6 @@ async def fixt_create_static_pool(fixt_db):
 
     await response_waiter.wait_for_message(_check_if_vm_created, VEIL_WS_MAX_TIME_TO_WAIT)
     resources_monitor_manager.unsubscribe(response_waiter)
-    await resources_monitor_manager.stop()
     # --- create pool ---
     qu = '''
         mutation {
@@ -575,7 +566,7 @@ def fixt_controller(request, event_loop):
     verbose_name = 'test controller'
     username = 'test_vdi_user'
     password = 'test_vdi_user'
-    address = '192.168.11.102'
+    address = '192.168.11.115'
 
     async def setup():
         controller_client = ControllerClient(address)

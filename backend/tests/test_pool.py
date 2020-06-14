@@ -13,12 +13,11 @@ from pool.models import Pool
 from tests.fixtures import (fixt_db, fixt_controller, fixt_create_automated_pool, fixt_create_static_pool,  # noqa
                             fixt_auth_context, fixt_group, fixt_user, fixt_user_admin, fixt_user_another_admin)  # noqa
 
-pytestmark = [pytest.mark.pools]
+pytestmark = [pytest.mark.asyncio, pytest.mark.pools]
 
 
 # ----------------------------------------------
 # Automated pool
-@pytest.mark.asyncio
 async def test_create_automated_pool(fixt_db, fixt_controller, fixt_create_automated_pool, fixt_auth_context):  # noqa
     """Create automated pool, make request to check data, remove this pool"""
     pool_id = fixt_create_automated_pool['id']
@@ -36,7 +35,6 @@ async def test_create_automated_pool(fixt_db, fixt_controller, fixt_create_autom
     assert executed['pool']['initial_size'] == 1
 
 
-@pytest.mark.asyncio
 async def test_update_automated_pool(fixt_db, fixt_controller, fixt_create_automated_pool, fixt_auth_context):  # noqa
     """Create automated pool, update this pool, remove this pool"""
 
@@ -61,7 +59,6 @@ async def test_update_automated_pool(fixt_db, fixt_controller, fixt_create_autom
     assert executed['updateDynamicPool']['ok']
 
 
-@pytest.mark.asyncio
 @pytest.mark.usefixtures('fixt_db', 'fixt_controller', 'fixt_user_admin', 'fixt_create_automated_pool', 'fixt_user_another_admin')  # noqa
 class PoolTestCase(VdiHttpTestCase):
 
@@ -115,10 +112,7 @@ class PoolTestCase(VdiHttpTestCase):
             response_data = response_dict['data']
             self.assertIsInstance(response_data, dict)
             response_message = response_data['message']
-            try:
-                self.assertEqual('В пуле нет свободных машин', response_message)
-            except AssertionError:
-                self.assertEqual('Pool doesnt have free machines', response_message)
+            self.assertEqual('В пуле нет свободных машин', response_message)
 
             # Ждем время ожидания монитора ресурсов + накладки, чтобы убедиться, что пул расширился
             yield gen.sleep(VEIL_WS_MAX_TIME_TO_WAIT + 5)
@@ -129,7 +123,6 @@ class PoolTestCase(VdiHttpTestCase):
 
 # ----------------------------------------------
 # Static pool
-@pytest.mark.asyncio
 async def test_create_static_pool(fixt_db, fixt_controller, fixt_create_static_pool, fixt_auth_context):  # noqa
     """Create static pool, make request to check data, remove this pool"""
     pool_id = fixt_create_static_pool['id']
@@ -147,7 +140,6 @@ async def test_create_static_pool(fixt_db, fixt_controller, fixt_create_static_p
     executed = await execute_scheme(pool_schema, qu, context=fixt_auth_context)  # noqa
 
 
-@pytest.mark.asyncio
 async def test_update_static_pool(fixt_db, fixt_controller, fixt_create_static_pool, fixt_auth_context):  # noqa
     """Create static pool, update this pool, remove this pool"""
     pool_id = fixt_create_static_pool['id']
@@ -163,7 +155,6 @@ async def test_update_static_pool(fixt_db, fixt_controller, fixt_create_static_p
     assert executed['updateStaticPool']['ok']
 
 
-@pytest.mark.asyncio
 async def test_remove_and_add_vm_in_static_pool(fixt_db, fixt_controller, fixt_create_static_pool, fixt_auth_context):  # noqa
     """Create automated pool, make request to check data,
     remove a vm from this pool, add the removed vm back to this pool, remove this pool"""
@@ -204,7 +195,6 @@ async def test_remove_and_add_vm_in_static_pool(fixt_db, fixt_controller, fixt_c
     assert executed['addVmsToStaticPool']['ok']
 
 
-@pytest.mark.asyncio
 @pytest.mark.usefixtures('fixt_db', 'fixt_controller', 'fixt_group', 'fixt_user', 'fixt_create_static_pool')
 class TestPoolPermissionsSchema:
 
@@ -284,7 +274,6 @@ class TestPoolPermissionsSchema:
         snapshot.assert_match(executed)
 
 
-@pytest.mark.asyncio
 async def test_pools_ordering(fixt_db, fixt_controller, fixt_create_automated_pool, fixt_auth_context):  # noqa
 
     # list = ["verbose_name", "cluster_id", "node_id", "status", "controller", "controller_address", "users_count",

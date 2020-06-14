@@ -14,8 +14,8 @@ from journal.journal import Log as log
 
 _ = lang_init()
 
+# TODO: в 2.1 планируем отказаться от текущей реализации
 # TODO: добавить обработку исключений
-# TODO: Не tornado.curl_httpclient.CurlAsyncHTTPClient, т.к. не измерен реальный прирост производительности.
 # TODO: нужно менять статус контроллера и прочих сущностей после нескольких неудачных попыток подключения
 # TODO: нужно возвращать контроллеры только в определенном статусе.
 # TODO: нужно завершать выполнение сущностей клиента и т.п. при изменении статуса сущности (отвалился контроллер).
@@ -52,6 +52,41 @@ class VeilHttpClient:
         }
         return headers
 
+    @staticmethod
+    def parse_veil_errors(url, body):
+        """Извлекает ошибки из ответа veil."""
+        if isinstance(body, dict):
+            errors = body.get('errors')
+            if isinstance(errors, list):
+                # VeiL 4.3
+                detail = ';'.join([error['detail'] for error in errors if error.get('detail')])
+            elif isinstance(errors, dict):
+                # VeiL 4.2
+                detail = errors.get('detail')
+            elif errors is None:
+                detail = ';'.join([error[0] if isinstance(error, list) else error for error in body.values()])
+            else:
+                # WtF
+                detail = None
+        elif isinstance(body, str):
+            detail = body
+        else:
+            detail = ''
+        if detail:
+            verbose_detail = '{}: {}'.format(url, detail)
+        else:
+            verbose_detail = url
+        log.debug(verbose_detail)
+        # т.к. message в Event огрничен 256 символами
+        return verbose_detail[:256]
+
+    async def controller_version(self):
+        """Возвращает строку с версией контроллера"""
+        from controller.models import Controller
+        version = await Controller.get_controller_version_by_address(self.controller_ip)
+        major_version, minor_version, patch_version = version.split('.')
+        return major_version, minor_version
+
     @prepare_body
     async def fetch(self, url: str, method: str, headers: dict = None, body: str = '', controller_control: bool = True):
         """
@@ -77,46 +112,27 @@ class VeilHttpClient:
         try:
             response = await self._client.fetch(request)
         except HTTPClientError as http_error:
-
-            async def stop_controller(description: str):
-                # TODO: этому тут не место.
-                from resources_monitoring.resources_monitor_manager import resources_monitor_manager
-                if isinstance(description, list):
-                    description = description[0]
-                if not isinstance(description, str):
-                    description = ''
-                # Информируем систему о проблеме
-                await log.error(_('Controller {} connection error').format(self.controller_ip),
-                                description=description)
-                # Останавливаем монитор ресурсов для контроллера.
-                await resources_monitor_manager.remove_controller(self.controller_ip)
-
             body = self.get_response_body(http_error.response)
-            if isinstance(body, dict):
-                errors = body['errors'] if body.get('errors') else {}
-                detail = errors['detail'] if errors.get('detail') else {}
-            elif isinstance(body, str):
-                detail = _('url: {} - {}').format(url, body)
-            else:
-                detail = ''
+            detail = self.parse_veil_errors(url, body)
+
+            log.debug(detail)
 
             if controller_control:
-                await stop_controller(detail)
+                from resources_monitoring.resources_monitor_manager import resources_monitor_manager
+                await resources_monitor_manager.remove_controller(self.controller_ip)
 
             if http_error.code == 400:
-                raise BadRequest(body)
+                raise BadRequest(_('Controller {} connection error.').format(self.controller_ip))
             elif http_error.code == 401:
                 raise Unauthorized(_('Controller {} connection error.').format(self.controller_ip))
             elif http_error.code == 403:
-                raise Forbidden(body)
+                raise Forbidden(_('Controller {} connection error.').format(self.controller_ip))
             elif http_error.code == 404:
-                raise NotFound(_('Fail to fetch resource from ECP.'), url)
+                raise NotFound(_('Fail to fetch resource from ECP.'))
             elif http_error.code == 408:
-                raise ControllerNotAccessible(body)
+                raise ControllerNotAccessible(_('Controller {} connection error.').format(self.controller_ip))
             elif http_error.code == 500:
                 msg = _('ECP Veil internal error.')
-                log.debug(msg)
-                log.debug(body)
                 raise ServerError(msg)
             elif http_error.code == 599:
                 raise ServerError(str(http_error))
