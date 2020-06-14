@@ -7,10 +7,11 @@ from common.veil_errors import SimpleError
 
 from database import StatusGraphene
 from controller.models import Controller
-from resources_monitoring.resources_monitor_manager import resources_monitor_manager
 
 from languages import lang_init
 from journal.journal import Log as log
+
+from redis_broker import send_cmd_to_ws_monitor, WsMonitorCmd
 
 _ = lang_init()
 
@@ -67,7 +68,8 @@ class AddControllerMutation(graphene.Mutation):
                 raise SimpleError(_('Controller name cannot be empty.'))
             controller = await Controller.soft_create(verbose_name, address, username, password, ldap_connection,
                                                       description)
-            await resources_monitor_manager.add_controller(address)
+            send_cmd_to_ws_monitor(address, WsMonitorCmd.ADD_CONTROLLER)
+
             return AddControllerMutation(ok=True, controller=ControllerType(**controller.__values__))
         except SimpleError as E:
             raise SimpleError(E)
@@ -136,7 +138,7 @@ class RemoveControllerMutation(graphene.Mutation):
             status = await controller.soft_delete(dest=_('Controller'))
 
         if controller.active:
-            await resources_monitor_manager.remove_controller(controller.address)
+            send_cmd_to_ws_monitor(controller.address, WsMonitorCmd.REMOVE_CONTROLLER)
 
         return RemoveControllerMutation(ok=status)
 
@@ -154,12 +156,12 @@ class TestControllerMutation(graphene.Mutation):
             raise GraphQLError(_('No such controller.'))
         connection_ok = await controller.check_credentials()
         if connection_ok:
-            await resources_monitor_manager.remove_controller(controller.address)
+            send_cmd_to_ws_monitor(controller.address, WsMonitorCmd.REMOVE_CONTROLLER)
             await Controller.activate(id)
-            await resources_monitor_manager.add_controller(controller.address)
+            send_cmd_to_ws_monitor(controller.address, WsMonitorCmd.ADD_CONTROLLER)
         else:
             await Controller.deactivate(id)
-            await resources_monitor_manager.remove_controller(controller.address)
+            send_cmd_to_ws_monitor(controller.address, WsMonitorCmd.REMOVE_CONTROLLER)
         return TestControllerMutation(ok=connection_ok)
 
 

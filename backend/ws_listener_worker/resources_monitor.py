@@ -11,10 +11,11 @@ from common.veil_errors import HttpError
 from controller.models import Controller
 from controller_resources.veil_client import ResourcesHttpClient
 
-from resources_monitoring.resources_monitoring_data import CONTROLLER_SUBSCRIPTIONS_LIST, CONTROLLERS_SUBSCRIPTION
-from resources_monitoring.abstract_event_monitor import AbstractMonitor
+from front_ws_api.resources_monitoring_data import CONTROLLER_SUBSCRIPTIONS_LIST, CONTROLLERS_SUBSCRIPTION
 
 from common.utils import cancel_async_task
+
+from redis_broker import REDIS_CLIENT, WS_MONITOR_CHANNEL_OUT
 
 from languages import lang_init
 from journal.journal import Log as log
@@ -23,7 +24,7 @@ from journal.journal import Log as log
 _ = lang_init()
 
 
-class ResourcesMonitor(AbstractMonitor):
+class ResourcesMonitor():
     """
     monitoring of controller events
     """
@@ -81,7 +82,7 @@ class ResourcesMonitor(AbstractMonitor):
                 if self._is_online:
                     response['status'] = 'OFFLINE'
                     await Controller.deactivate(controller_id)
-                    self.notify_observers(CONTROLLERS_SUBSCRIPTION, response)
+                    REDIS_CLIENT.publish(WS_MONITOR_CHANNEL_OUT, json.dumps(response))
 
                 self._is_online = False
             else:
@@ -89,7 +90,7 @@ class ResourcesMonitor(AbstractMonitor):
                 if not self._is_online:
                     response['status'] = 'ONLINE'
                     await Controller.activate(controller_id)
-                    self.notify_observers(CONTROLLERS_SUBSCRIPTION, response)
+                    REDIS_CLIENT.publish(WS_MONITOR_CHANNEL_OUT, json.dumps(response))
 
                 self._is_online = True
 
@@ -151,21 +152,22 @@ class ResourcesMonitor(AbstractMonitor):
 
     async def _on_message_received(self, message):
         # log.debug('msg received from {}: {}'.format(self._controller_ip, message))
-        try:
-            json_data = json.loads(message)
-        except json.JSONDecodeError:
-            return
-        #  notify subscribed observers
-        try:
-            resource_str = json_data['resource']
-        except KeyError:
-            return
-        self.notify_observers(resource_str, json_data)
+        # try:
+        #     json_data = json.loads(message)
+        # except json.JSONDecodeError:
+        #     return
+        # #  notify subscribed observers
+        # try:
+        #     resource_str = json_data['resource']
+        # except KeyError:
+        #     return
+        # #self.notify_observers(resource_str, json_data)
+        REDIS_CLIENT.publish(WS_MONITOR_CHANNEL_OUT, message)
 
     async def _close_connection(self):
         if self._ws_connection:
             log.debug(_('{} Closing ws connection {}').format(__class__.__name__, self._controller_ip))
             try:
                 self._ws_connection.close()
-            except Exception as E:  # todo: вообще конкретное исключение не интересует
+            except Exception as E:
                 await log.error(E)

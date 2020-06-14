@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import asyncio
+import json
 import uuid
 from enum import Enum
 from sqlalchemy import union_all, case, literal_column, desc, text, Enum as AlchemyEnum
@@ -13,13 +14,11 @@ from settings import VEIL_WS_MAX_TIME_TO_WAIT
 from database import db, Status, EntityType
 from redis_broker import get_thin_clients_count
 from controller.models import Controller
-from pool.pool_task_manager import pool_task_manager
 
-from resources_monitoring.handlers import WaiterSubscriptionObserver
-from resources_monitoring.resources_monitor_manager import resources_monitor_manager
 from resources_monitoring.resources_monitoring_data import VDI_TASKS_SUBSCRIPTION
-from resources_monitoring.internal_event_monitor import internal_event_monitor
+from redis_broker import REDIS_CLIENT, INTERNAL_EVENTS_CHANNEL
 
+from redis_broker import a_redis_wait_for_message, WS_MONITOR_CHANNEL_OUT
 
 from auth.models import User, Entity, EntityRoleOwner, Group, UserGroup
 from vm.models import Vm
@@ -501,6 +500,15 @@ class Pool(db.Model):
             await log.info(msg, entity_dict=self.entity)
         return True
 
+    @staticmethod
+    async def delete_pool(pool, full=False):
+        if full:
+            status = await pool.full_delete()
+        else:
+            status = await pool.soft_delete(dest=_('Pool'))
+
+        return status
+
     @classmethod
     async def activate(cls, pool_id):
         pool = await Pool.get(pool_id)
@@ -844,15 +852,8 @@ class AutomatedPool(db.Model):
                 continue
             except VmCreationError:
                 break
+
             # Мониторим все таски на ECP и ищем там нашу. Такое себе.
-
-            log.debug(_('Subscribe to ws messages.'))
-            response_waiter = WaiterSubscriptionObserver()
-            response_waiter.add_subscription_source('/tasks/')
-
-            resources_monitor_manager.subscribe(response_waiter)
-            log.debug(_('Wait for result.'))
-
             def _is_vm_creation_task(name):
                 """
                 Determine domain creation task by name
@@ -883,10 +884,8 @@ class AutomatedPool(db.Model):
                 vm_client = await VmHttpClient.create(controller_address, vm_id)
                 return await vm_client.check_status()
 
-            is_vm_successfully_created = await response_waiter.wait_for_message(
-                _check_if_vm_created, VEIL_WS_MAX_TIME_TO_WAIT)
-
-            resources_monitor_manager.unsubscribe(response_waiter)
+            is_vm_successfully_created = await a_redis_wait_for_message(
+                WS_MONITOR_CHANNEL_OUT, _check_if_vm_created, VEIL_WS_MAX_TIME_TO_WAIT)
 
             if not is_vm_successfully_created:
                 log.debug(
@@ -970,7 +969,7 @@ class AutomatedPool(db.Model):
                                 initial_size=self.initial_size,
                                 resource=VDI_TASKS_SUBSCRIPTION)
 
-                internal_event_monitor.signal_event(msg_dict)
+                REDIS_CLIENT.publish(INTERNAL_EVENTS_CHANNEL, json.dumps(msg_dict))
 
         except VmCreationError as vm_error:
             # log that we cant create required initial amount of VMs
@@ -997,61 +996,11 @@ class AutomatedPool(db.Model):
                         is_successful=is_creation_successful,
                         resource=VDI_TASKS_SUBSCRIPTION)
 
-        internal_event_monitor.signal_event(msg_dict)
+        REDIS_CLIENT.publish(INTERNAL_EVENTS_CHANNEL, json.dumps(msg_dict))
 
         # Пробросить исключение, если споткнулись на создании машин
         if not is_creation_successful:
             raise PoolCreationError(_('Could not create the required number of machines.'))
-
-    async def init_pool(self):
-        """Создание на пуле виртуальных машин по параметрам пула."""
-
-        # locks
-        async with pool_task_manager.get_pool_lock(str(self.id)).lock:
-            async with pool_task_manager.get_template_lock(str(self.template_id)).lock:
-                try:
-                    await self.add_initial_vms()
-                except PoolCreationError as E:
-                    await log.error('{exception}'.format(exception=str(E)))
-                    await self.deactivate()
-                else:
-                    await self.activate()
-
-    async def expand_pool(self):
-        """
-        Корутина расширения автом. пула
-        Check and expand pool if required
-        :return:
-        """
-        async with pool_task_manager.get_pool_lock(str(self.id)).lock:
-            async with pool_task_manager.get_template_lock(str(self.template_id)).lock:
-                # TODO: код перенесен, чтобы работал. Принципиально не перерабатывался.
-                # Check that total_size is not reached
-                pool = await Pool.get(self.id)
-                vm_amount_in_pool = await pool.get_vm_amount()
-
-                # If reached then do nothing
-                if vm_amount_in_pool >= self.total_size:
-                    return
-
-                # Число машин в пуле, неимеющих пользователя
-                free_vm_amount = await pool.get_vm_amount(only_free=True)
-
-                # Если подогретых машин слишком мало, то пробуем добавить еще
-                # Условие расширения изменено. Первое условие было < - тестируем.
-                if free_vm_amount <= self.reserve_size and free_vm_amount <= self.min_free_vms_amount:
-                    # Max possible amount of VMs which we can add to the pool
-                    max_possible_amount_to_add = self.total_size - vm_amount_in_pool
-                    # Real amount that we can add to the pool
-                    real_amount_to_add = min(max_possible_amount_to_add, self.increase_step)
-                    # add VMs.
-                    try:
-                        for i in range(0, real_amount_to_add):
-                            domain_index = vm_amount_in_pool + i
-                            await self.add_vm(domain_index)
-                    except VmCreationError as vm_error:
-                        await log.error(_('VM creating error:'))
-                        log.debug(vm_error)
 
     async def remove_vms(self):
         """Интерфейс для запуска команды HttpClient на удаление виртуалки"""

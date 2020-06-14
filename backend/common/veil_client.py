@@ -11,6 +11,8 @@ from common.veil_decorators import prepare_body
 from languages import lang_init
 from journal.journal import Log as log
 
+from redis_broker import send_cmd_to_ws_monitor, WsMonitorCmd
+
 
 _ = lang_init()
 
@@ -79,8 +81,7 @@ class VeilHttpClient:
         except HTTPClientError as http_error:
 
             async def stop_controller(description: str):
-                # TODO: этому тут не место.
-                from resources_monitoring.resources_monitor_manager import resources_monitor_manager
+
                 if isinstance(description, list):
                     description = description[0]
                 if not isinstance(description, str):
@@ -89,7 +90,7 @@ class VeilHttpClient:
                 await log.error(_('Controller {} connection error').format(self.controller_ip),
                                 description=description)
                 # Останавливаем монитор ресурсов для контроллера.
-                await resources_monitor_manager.remove_controller(self.controller_ip)
+                send_cmd_to_ws_monitor(self.controller_ip, WsMonitorCmd.REMOVE_CONTROLLER)
 
             body = self.get_response_body(http_error.response)
             if isinstance(body, dict):

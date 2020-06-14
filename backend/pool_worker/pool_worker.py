@@ -1,17 +1,11 @@
+# -*- coding: utf-8 -*-
 import asyncio
-import signal
 
-import redis
-from redis import RedisError
-
-import settings
 from database import start_gino, stop_gino
 
 import json
 
 from redis_broker import POOL_TASK_QUEUE, PoolTaskType, REDIS_POOL, a_redis_lpop
-
-from pool.models import AutomatedPool
 
 from languages import lang_init
 from journal.log.logging import Logging
@@ -28,45 +22,38 @@ async def start_work():
     Logging.init_logging(True)
     # Create PoolTaskManager
     pool_task_manager = PoolTaskManager()
+    await pool_task_manager.fill_start_data()
 
     # main loop. Await for work
-    log.general(_('start loop now'))
+    log.general(_('Pool worker: start loop now'))
     while True:
         try:
             # wait for task message
             data = await a_redis_lpop(POOL_TASK_QUEUE)
             queue, value = data
-            json_data_dict = json.loads(value.decode())
+            task_data_dict = json.loads(value.decode())
 
             # get task data
-            pool_id = json_data_dict['pool_id']
-            pool_task_type = json_data_dict['task_type']
+            pool_id = task_data_dict['pool_id']
+            pool_task_type = task_data_dict['task_type']
 
             # task execution
-            native_loop = asyncio.get_event_loop()
-
             if pool_task_type == PoolTaskType.CREATING:
-                automated_pool = await AutomatedPool.get(pool_id)
-                # add data for protection
-                pool_task_manager.add_new_pool_data(str(automated_pool.id), str(automated_pool.template_id))
-                # start task
-                pool_lock = pool_task_manager.get_pool_lock(pool_id)
-                pool_lock.create_pool_task = native_loop.create_task(automated_pool.init_pool())
+                await pool_task_manager.start_pool_initialization(pool_id)
 
             elif pool_task_type == PoolTaskType.EXPANDING:
-                pass
+                await pool_task_manager.start_pool_expanding(pool_id)
 
             elif pool_task_type == PoolTaskType.DELETING:
-                pass
+                full = task_data_dict['deletion_full']
+                await pool_task_manager.start_pool_deleting(pool_id, full)
 
         except Exception as ex:
-            # publish a message about unsuccesfull task if cant start it
             await log.error(ex)
             pass
 
 
-if __name__ == '__main__':
-
+def main():
     loop = asyncio.get_event_loop()
 
     # init gino
@@ -78,6 +65,9 @@ if __name__ == '__main__':
     except KeyboardInterrupt:
         log.general(_("Pool worker interrupted"))
     finally:
-        native_loop = asyncio.get_event_loop()
-        native_loop.run_until_complete(stop_gino())
+        loop.run_until_complete(stop_gino())
         REDIS_POOL.disconnect()
+
+
+if __name__ == '__main__':
+    main()

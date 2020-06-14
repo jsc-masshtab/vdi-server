@@ -23,13 +23,11 @@ from controller.schema import controller_schema
 from controller_resources.schema import resources_schema
 
 from vm.vm_manager import VmManager
-from resources_monitoring.resources_monitor_manager import resources_monitor_manager
-from pool.pool_task_manager import pool_task_manager
 
 from auth.urls import auth_api_urls
 from auth.license.urls import license_api_urls
 from thin_client_api.urls import thin_client_api_urls
-from resources_monitoring.urls import ws_event_monitoring_urls
+from front_ws_api.urls import ws_event_monitoring_urls
 
 from languages import lang_init
 from journal.log.logging import Logging
@@ -66,11 +64,6 @@ def init_signals():
     signal.signal(signal.SIGINT, exit_handler)  # KeyboardInterrupt
 
 
-def init_callbacks():
-    IOLoop.current().add_callback(resources_monitor_manager.start)
-    IOLoop.current().add_callback(pool_task_manager.fill_start_data)
-
-
 def init_tasks():
     vm_manager = VmManager()
     IOLoop.instance().add_timeout(time.time(), vm_manager.start)
@@ -101,9 +94,6 @@ async def shutdown_server():
 
     log.name(_('Stopping redis'))
     REDIS_POOL.disconnect()
-
-    log.name(_('Stopping resources_monitor_manager'))
-    await resources_monitor_manager.stop()
 
     log.name(_('Stopping GINO'))
     await stop_gino()
@@ -141,7 +131,6 @@ def start_server():
     init_gino()
 
     init_tasks()
-    init_callbacks()
     IOLoop.current().start()
 
 

@@ -19,7 +19,9 @@ _ = lang_init()
 
 REDIS_ASYNC_TIMEOUT = 0.02
 
+###########################
 POOL_TASK_QUEUE = 'POOL_TASK_QUEUE'
+
 POOL_TASK_RESULT_CHANNEL = 'POOL_TASK_RESULT_CHANNEL'
 
 
@@ -29,6 +31,26 @@ class PoolTaskType(Enum):
     EXPANDING = 'EXPANDING'
     DELETING = 'DELETING'
     # DECREASING = 'DECREASING'
+
+
+#############################
+
+
+WS_MONITOR_CHANNEL_OUT = 'WS_MONITOR_CHANNEL_OUT'  # по этому каналу сообщения полученные по ws от контроллеров
+WS_MONITOR_CHANNEL_IN = 'WS_MONITOR_CHANNEL_IN'  # по этому каналу команды к ws улиенту (добавить контроллер)
+
+
+class WsMonitorCmd(Enum):
+
+    ADD_CONTROLLER = 'ADD_CONTROLLER'
+    REMOVE_CONTROLLER = 'REMOVE_CONTROLLER'
+
+
+#############################
+
+INTERNAL_EVENTS_CHANNEL = 'INTERNAL_EVENTS_CHANNEL'
+
+#############################
 
 
 REDIS_POOL = redis.ConnectionPool.from_url(
@@ -107,7 +129,7 @@ async def a_redis_lpop(list_name):
         await asyncio.sleep(REDIS_ASYNC_TIMEOUT)
 
 
-async def a_redis_wait_for_message(self, redis_channel, predicate, timeout):
+async def a_redis_wait_for_message(redis_channel, predicate, timeout):
     """
     Asynchronously wait for message until timeout reached.
 
@@ -120,26 +142,37 @@ async def a_redis_wait_for_message(self, redis_channel, predicate, timeout):
     redis_subscriber = REDIS_CLIENT.pubsub()
     redis_subscriber.subscribe(redis_channel)
 
-    while True:
-        # try to receive message
-        redis_message = redis_subscriber.get_message()
+    try:
+        while True:
+            # try to receive message
+            redis_message = redis_subscriber.get_message()
 
-        if redis_message:
-            json_message = redis_message['data'].decode()
-            if predicate(json_message):
-                return True
+            if redis_message:
+                json_message = redis_message['data'].decode()
+                if predicate(json_message):
+                    return True
 
-        # stop if time expired
-        if await_time >= timeout:
-            return False
+            # stop if time expired
+            if await_time >= timeout:
+                return False
 
-        # count time
-        await_time += REDIS_ASYNC_TIMEOUT
-        await asyncio.sleep(REDIS_ASYNC_TIMEOUT)
+            # count time
+            await_time += REDIS_ASYNC_TIMEOUT
+            await asyncio.sleep(REDIS_ASYNC_TIMEOUT)
+
+    except Exception as ex:
+        await log.error(ex)
+        return False
 
 
-def request_to_execute_pool_task(pool_id, pool_task_type):
+def request_to_execute_pool_task(pool_id, pool_task_type, **additional_data):
     """Send request to pool worker to execute a task"""
     uuid_str = str(uuid.uuid4())
-    data = {'task_id': uuid_str, 'task_type': pool_task_type, 'pool_id': pool_id}
+    data = {'task_id': uuid_str, 'task_type': pool_task_type, 'pool_id': pool_id, **additional_data}
     REDIS_CLIENT.rpush(POOL_TASK_QUEUE, json.dumps(data))
+
+
+def send_cmd_to_ws_monitor(controller_address: str, ws_monitor_cmd: WsMonitorCmd):
+    """Send command to ws monitor"""
+    msg_dict = {'controller_address': controller_address, 'command': ws_monitor_cmd}
+    REDIS_CLIENT.publish(WS_MONITOR_CHANNEL_IN, json.dumps(msg_dict))

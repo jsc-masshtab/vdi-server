@@ -13,6 +13,8 @@ from controller.client import ControllerClient
 from database import db, Status, EntityType
 from common.veil_errors import SimpleError, BadRequest, ValidationError
 
+from redis_broker import send_cmd_to_ws_monitor, WsMonitorCmd
+
 from languages import lang_init
 from journal.journal import Log as log
 
@@ -197,8 +199,6 @@ class Controller(db.Model):
         return controller
 
     async def soft_update(self, verbose_name, address, description, username=None, password=None, ldap_connection=None):
-        # перекрестные импорты
-        from resources_monitoring.resources_monitor_manager import resources_monitor_manager
 
         # Словарь в котором хранятся параметры, которые нужно записать в контроллер
         controller_kwargs = dict()
@@ -207,7 +207,7 @@ class Controller(db.Model):
         if self.status == Status.ACTIVE:
             # Удаляем существующий контроллер из монитора ресурсов
             log.debug(_('Remove existing controller from resource monitor'))
-            await resources_monitor_manager.remove_controller(self.address)
+            send_cmd_to_ws_monitor(self.address, WsMonitorCmd.REMOVE_CONTROLLER)
 
         # TODO: разнести на несколько методов, если логика останется после рефакторинга
         # Если при редактировании пришли данные авторизации на контроллере проверим их до редактирования
@@ -244,7 +244,7 @@ class Controller(db.Model):
             except socket_error:
                 # Если произошла ошибка на уровне сети - активируем старые данные и прерываем выполнение
                 if self.status == Status.ACTIVE:
-                    await resources_monitor_manager.add_controller(self.address)
+                    send_cmd_to_ws_monitor(self.address, WsMonitorCmd.ADD_CONTROLLER)
 
                 msg = _('Address is unreachable')
                 raise ValueError(msg)
@@ -256,7 +256,7 @@ class Controller(db.Model):
                 controller_kwargs.update(new_credentials)
             else:
                 # Деактивируем контроллер с неверными учетными данными
-                Controller.deactivate(self.id)
+                await Controller.deactivate(self.id)
 
         # Недостающие параметры для редактирования
         if verbose_name:
@@ -273,7 +273,7 @@ class Controller(db.Model):
             except DataError as transaction_error:
                 # Если произошла ошибка на уровне сети - активируем старые данные и прерываем выполнение
                 if self.status == Status.ACTIVE:
-                    await resources_monitor_manager.add_controller(self.address)
+                    send_cmd_to_ws_monitor(self.address, WsMonitorCmd.ADD_CONTROLLER)
                 # Отслеживаем только ошибки в БД
                 log.debug(transaction_error)
                 msg = _('Error with controller update: {}').format(transaction_error)
@@ -288,7 +288,7 @@ class Controller(db.Model):
 
             # Добавляем обратно в монитор ресурсов
             log.debug(_('Add back to the resource monitor'))
-            await resources_monitor_manager.add_controller(updated_rec.address)
+            send_cmd_to_ws_monitor(updated_rec.address, WsMonitorCmd.ADD_CONTROLLER)
 
             msg = _('Successfully update controller {} with address {}.').format(
                 self.verbose_name,

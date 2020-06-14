@@ -23,9 +23,7 @@ from auth.authentication_directory.models import AuthenticationDirectory, Mappin
 
 from tests.utils import execute_scheme
 
-from resources_monitoring.resources_monitor_manager import resources_monitor_manager
 from resources_monitoring.internal_event_monitor import internal_event_monitor
-from resources_monitoring.handlers import WaiterSubscriptionObserver
 from resources_monitoring.resources_monitoring_data import VDI_TASKS_SUBSCRIPTION
 
 

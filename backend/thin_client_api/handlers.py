@@ -13,10 +13,11 @@ from auth.utils.veil_jwt import jwtauth
 from auth.models import User
 from pool.models import Pool, Vm, AutomatedPool
 from vm.veil_client import VmHttpClient  # TODO: move to VM?
-from pool.pool_task_manager import pool_task_manager
 from controller.models import Controller
 
 from languages import lang_init
+
+from redis_broker import request_to_execute_pool_task, PoolTaskType
 
 
 _ = lang_init()
@@ -97,18 +98,9 @@ class PoolGetVm(BaseHandler, ABC):
                 await vm.add_user(user_id)
                 # await vm.attach_to_user(user_id)
 
-        # В отдельной корутине запускаем расширение пула
+        # Запрос на расширение пула
         if await pool.pool_type == Pool.PoolTypes.AUTOMATED:
-            pool = await AutomatedPool.get(pool_id)
-            pool_lock = pool_task_manager.get_pool_lock(pool_id)
-            template_lock = pool_task_manager.get_template_lock(str(pool.template_id))
-            # Проверяем залочены ли локи. Если залочены, то ничего не делаем, так как любые другие действия с
-            # пулом требующие блокировки - в приоретете.
-            if not pool_lock.lock.locked() and not template_lock.lock.locked():
-                async with pool_lock.lock:
-                    native_loop = asyncio.get_event_loop()
-                    await cancel_async_task(pool_lock.expand_pool_task)
-                    pool_lock.expand_pool_task = native_loop.create_task(pool.expand_pool())
+            request_to_execute_pool_task(pool_id, PoolTaskType.EXPANDING)
 
         if not vm_id:
             response = {'data': dict(host='', port=0, password='', message=_('Pool doesnt have free machines'))}

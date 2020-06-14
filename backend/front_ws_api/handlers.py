@@ -9,13 +9,12 @@ from tornado import httputil
 from tornado import websocket
 from tornado.web import Application
 
-from resources_monitoring.resources_monitoring_data import VDI_FRONT_ALLOWED_SUBSCRIPTIONS_LIST, SubscriptionCmd
-from resources_monitoring.resources_monitor_manager import resources_monitor_manager
-from resources_monitoring.internal_event_monitor import internal_event_monitor
+from front_ws_api.resources_monitoring_data import VDI_FRONT_ALLOWED_SUBSCRIPTIONS_LIST, SubscriptionCmd
 
 from languages import lang_init
 from journal.journal import Log as log
-#from common.veil_errors import MeaningError
+
+from redis_broker import INTERNAL_EVENTS_CHANNEL, WS_MONITOR_CHANNEL_OUT, REDIS_CLIENT
 
 
 _ = lang_init()
@@ -29,18 +28,6 @@ class AbstractSubscriptionObserver(ABC):
         self._subscriptions = []
         self._message_queue = asyncio.Queue(100)  # 100 - max queue size
         self._default_ms_process_timeout = 0.05
-
-    # PUBLIC METHODS
-    def on_notified(self, json_message):
-        """
-        invoked by monitor when message received
-        :param json_message:
-        :return:
-        """
-        try:
-            self._message_queue.put_nowait(json_message)
-        except asyncio.QueueFull:
-            pass
 
     def get_subscriptions(self):
         """
@@ -56,7 +43,7 @@ class VdiFrontWsHandler(websocket.WebSocketHandler, AbstractSubscriptionObserver
         websocket.WebSocketHandler.__init__(self, application, request, **kwargs)
         AbstractSubscriptionObserver.__init__(self)
 
-        self._send_messages_flag = False
+        self._send_messages_task = None
         # log.debug(_('init VdiFrontWsHandler'))
 
     def __del__(self):
@@ -68,9 +55,8 @@ class VdiFrontWsHandler(websocket.WebSocketHandler, AbstractSubscriptionObserver
 
     async def open(self):
         # log.debug(_('WebSocket opened'))
-        self._start_message_sending()
-        resources_monitor_manager.subscribe(self)
-        internal_event_monitor.subscribe(self)
+        loop = asyncio.get_event_loop()
+        self._send_messages_task = loop.create_task( self._send_messages_co())
 
     async def on_message(self, message):
         log.debug(_('Message: {}').format(message))
@@ -114,75 +100,28 @@ class VdiFrontWsHandler(websocket.WebSocketHandler, AbstractSubscriptionObserver
 
     def on_close(self):
         log.debug(_('WebSocket closed'))
-        resources_monitor_manager.unsubscribe(self)
-        internal_event_monitor.unsubscribe(self)
-
-        self._send_messages_flag = False
-        tornado.ioloop.IOLoop.instance().remove_timeout(self._send_messages_task)
-
-    def _start_message_sending(self):
-        """start message sending task"""
-        self._send_messages_task = tornado.ioloop.IOLoop.instance().add_timeout(time.time(), self._send_messages_co)
-
-    # async def _stop_message_sending(self):
-    #     """stop message sending corutine"""
-    #     self._send_messages_flag = False
-    #     if self._send_messages_task:
-    #         await self._send_messages_task
+        try:
+            self._send_messages_task.cancel()
+        except asyncio.CancelledError:
+            pass
 
     async def _send_messages_co(self):
         """wait for message and send it to front client"""
-        self._send_messages_flag = True
-        while self._send_messages_flag:
-            await asyncio.sleep(self._default_ms_process_timeout)
+
+        # subscribe to channels  INTERNAL_EVENTS_CHANNEL and WS_MONITOR_CHANNEL_OUT
+        redis_subscriber = REDIS_CLIENT.pubsub()
+        redis_subscriber.subscribe(INTERNAL_EVENTS_CHANNEL, WS_MONITOR_CHANNEL_OUT)
+
+        while True:
             try:
-                json_message = self._message_queue.get_nowait()
-            except asyncio.QueueEmpty:
-                continue
-            await self.write_msg(json_message)
+                redis_message = redis_subscriber.get_message()
+                await self.write_msg(redis_message)
+
+            except Exception as ex:
+                await log.error(ex)
 
     async def write_msg(self, msg):
         try:
             await self.write_message(msg)
         except tornado.websocket.WebSocketClosedError:
             log.debug(_('Write error'))
-
-
-class WaiterSubscriptionObserver(AbstractSubscriptionObserver):
-
-    def __init__(self):
-        super().__init__()
-
-    def add_subscription_source(self, subscription_source):
-        if subscription_source not in self._subscriptions:
-            self._subscriptions.append(subscription_source)
-
-    # PUBLIC METHODS
-    async def wait_for_message(self, predicate, timeout):
-        """
-        Wait for message until timeout reached.
-
-        :param predicate:  condition to find required message. Signature: def fun(json_message) -> bool
-        :param timeout: time to wait. seconds
-        :return bool: return true if awaited message received. Return false if timeuot expired and
-         awaited message is not received
-        """
-        await_time = 0
-        while True:
-            # stop if time expired
-            if await_time >= timeout:
-                return False
-            # count time
-            await_time += self._default_ms_process_timeout
-
-            await asyncio.sleep(self._default_ms_process_timeout)
-            # try to receive message
-            try:
-                json_message = self._message_queue.get_nowait()
-            except asyncio.QueueEmpty:
-                continue
-            # log.debug('WS message: {}'.format(json_message))
-            if predicate(json_message):
-                return True
-
-        return False

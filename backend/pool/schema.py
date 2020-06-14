@@ -373,15 +373,6 @@ class DeletePoolMutation(graphene.Mutation, PoolValidator):
 
     ok = graphene.Boolean()
 
-    @staticmethod
-    async def delete_pool(pool, full=False):
-        if full:
-            status = await pool.full_delete()
-        else:
-            status = await pool.soft_delete(dest=_('Pool'))
-
-        return status
-
     @administrator_required
     async def mutate(self, info, pool_id, full=False):
         # Нет запуска валидации, т.к. нужна сущность пула далее - нет смысла запускать запрос 2жды.
@@ -394,18 +385,8 @@ class DeletePoolMutation(graphene.Mutation, PoolValidator):
 
             # Авто пул
             if pool_type == Pool.PoolTypes.AUTOMATED:
-                # Останавливаем таски связанные с пулом
-                await pool_task_manager.cancel_all_tasks_for_pool(str(pool_id))
-                # Получаем лок
-                pool_lock = pool_task_manager.get_pool_lock(str(pool_id))
-                # Лочим
-                async with pool_lock.lock:
-                    template_id = await pool.template_id
-                    # удаляем пул
-                    is_deleted = await DeletePoolMutation.delete_pool(pool, full)
-                    # убираем из памяти локи
-                    await pool_task_manager.remove_pool_data(str(pool_id), str(template_id))
-            # В случае стат пула удаляем без локов.
+                request_to_execute_pool_task(pool_id, PoolTaskType.DELETING, deletion_full=full)
+                is_deleted = True # todo: wait for task result?
             else:
                 is_deleted = await DeletePoolMutation.delete_pool(pool, full)
             return DeletePoolMutation(ok=is_deleted)

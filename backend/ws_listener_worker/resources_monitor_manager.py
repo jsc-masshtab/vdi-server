@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from controller.models import Controller
-from resources_monitoring.resources_monitor import ResourcesMonitor
+from resources_monitor import ResourcesMonitor
 
 from languages import lang_init
 from journal.journal import Log as log
@@ -21,7 +21,7 @@ class ResourcesMonitorManager:
         Start monitors
         :return:
         """
-        log.debug('{}: Startup...'.format(__class__.__name__))
+        # log.debug('{}: Startup...'.format(__class__.__name__))
         # get all active controller ips
         controllers_addresses = await Controller.get_addresses()
         msg = _('{cls}: connected controllers -- {controllers}').format(
@@ -43,27 +43,23 @@ class ResourcesMonitorManager:
         for resources_monitor in self._resources_monitors_list:
             await resources_monitor.stop()
 
-    def subscribe(self, observer):
-        """
-        Subscribe observer to all available monitors
-        :param observer:
-        :return:
-        """
-        for resources_monitor in self._resources_monitors_list:
-            resources_monitor.subscribe(observer)
-
-        # self._internal_monitor.subscribe(observer)
-
-    def unsubscribe(self, observer):
-        """
-        Unsubscribe observer from all available monitors
-        :param observer:
-        :return:
-        """
-        for resources_monitor in self._resources_monitors_list:
-            resources_monitor.unsubscribe(observer)
-
-        # self._internal_monitor.unsubscribe(observer)
+    # def subscribe(self, observer):
+    #     """
+    #     Subscribe observer to all available monitors
+    #     :param observer:
+    #     :return:
+    #     """
+    #     for resources_monitor in self._resources_monitors_list:
+    #         resources_monitor.subscribe(observer)
+    #
+    # def unsubscribe(self, observer):
+    #     """
+    #     Unsubscribe observer from all available monitors
+    #     :param observer:
+    #     :return:
+    #     """
+    #     for resources_monitor in self._resources_monitors_list:
+    #         resources_monitor.unsubscribe(observer)
 
     async def add_controller(self, controller_ip):
         # check if controller is already being monitored
@@ -115,4 +111,3 @@ class ResourcesMonitorManager:
         resources_monitor.start(controller_ip)
 
 
-resources_monitor_manager = ResourcesMonitorManager()
