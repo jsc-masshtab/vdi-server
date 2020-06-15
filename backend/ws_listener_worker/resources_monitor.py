@@ -11,7 +11,7 @@ from common.veil_errors import HttpError
 from controller.models import Controller
 from controller_resources.veil_client import ResourcesHttpClient
 
-from front_ws_api.resources_monitoring_data import CONTROLLER_SUBSCRIPTIONS_LIST, CONTROLLERS_SUBSCRIPTION
+from front_ws_api.subscription_sources import CONTROLLER_SUBSCRIPTIONS_LIST, CONTROLLERS_SUBSCRIPTION
 
 from common.utils import cancel_async_task
 
@@ -151,17 +151,6 @@ class ResourcesMonitor():
         return True
 
     async def _on_message_received(self, message):
-        # log.debug('msg received from {}: {}'.format(self._controller_ip, message))
-        # try:
-        #     json_data = json.loads(message)
-        # except json.JSONDecodeError:
-        #     return
-        # #  notify subscribed observers
-        # try:
-        #     resource_str = json_data['resource']
-        # except KeyError:
-        #     return
-        # #self.notify_observers(resource_str, json_data)
         REDIS_CLIENT.publish(WS_MONITOR_CHANNEL_OUT, message)
 
     async def _close_connection(self):

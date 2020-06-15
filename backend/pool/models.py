@@ -15,7 +15,7 @@ from database import db, Status, EntityType
 from redis_broker import get_thin_clients_count
 from controller.models import Controller
 
-from resources_monitoring.resources_monitoring_data import VDI_TASKS_SUBSCRIPTION
+from front_ws_api.subscription_sources import EVENTS_SUBSCRIPTION
 from redis_broker import REDIS_CLIENT, INTERNAL_EVENTS_CHANNEL
 
 from redis_broker import a_redis_wait_for_message, WS_MONITOR_CHANNEL_OUT
@@ -302,7 +302,8 @@ class Pool(db.Model):
     @property
     async def possible_groups(self):
         query = Entity.query.where((Entity.entity_type == EntityType.POOL) & (Entity.entity_uuid == self.id)).alias()
-        filtered_query = Group.join(EntityRoleOwner.join(query).alias(), isouter=True).select().where(text('anon_1.entity_role_owner_group_id is null'))  # noqa
+        filtered_query = Group.join(EntityRoleOwner.join(query).alias(), isouter=True).select().\
+            where(text('anon_1.entity_role_owner_group_id is null'))  # noqa
         return await filtered_query.order_by(Group.verbose_name).gino.load(Group).all()
 
     @property
@@ -839,7 +840,8 @@ class AutomatedPool(db.Model):
         }
 
         for i in range(self.max_amount_of_create_attempts):
-            log.debug(_('add_domain {}, attempt № {}, of {}').format(verbose_name, i, self.max_amount_of_create_attempts))
+            log.debug(_('add_domain {}, attempt № {}, of {}').format(
+                verbose_name, i, self.max_amount_of_create_attempts))
             try:
                 vm_info = await Vm.copy(**params)
                 current_vm_task_id = vm_info['task_id']
@@ -884,6 +886,7 @@ class AutomatedPool(db.Model):
                 vm_client = await VmHttpClient.create(controller_address, vm_id)
                 return await vm_client.check_status()
 
+            # wait for message from redis
             is_vm_successfully_created = await a_redis_wait_for_message(
                 WS_MONITOR_CHANNEL_OUT, _check_if_vm_created, VEIL_WS_MAX_TIME_TO_WAIT)
 
@@ -967,7 +970,7 @@ class AutomatedPool(db.Model):
                                 domain_index=vm_index,
                                 domain_verbose_name=vm['verbose_name'],
                                 initial_size=self.initial_size,
-                                resource=VDI_TASKS_SUBSCRIPTION)
+                                resource=EVENTS_SUBSCRIPTION)
 
                 REDIS_CLIENT.publish(INTERNAL_EVENTS_CHANNEL, json.dumps(msg_dict))
 
@@ -994,7 +997,7 @@ class AutomatedPool(db.Model):
                         amount_of_created_vms=len(vm_list),
                         initial_size=self.initial_size,
                         is_successful=is_creation_successful,
-                        resource=VDI_TASKS_SUBSCRIPTION)
+                        resource=EVENTS_SUBSCRIPTION)
 
         REDIS_CLIENT.publish(INTERNAL_EVENTS_CHANNEL, json.dumps(msg_dict))
 

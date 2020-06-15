@@ -386,7 +386,7 @@ class DeletePoolMutation(graphene.Mutation, PoolValidator):
             # Авто пул
             if pool_type == Pool.PoolTypes.AUTOMATED:
                 request_to_execute_pool_task(pool_id, PoolTaskType.DELETING, deletion_full=full)
-                is_deleted = True # todo: wait for task result?
+                is_deleted = True # todo: wait for task result?  (a_redis_wait_for_message)
             else:
                 is_deleted = await DeletePoolMutation.delete_pool(pool, full)
             return DeletePoolMutation(ok=is_deleted)

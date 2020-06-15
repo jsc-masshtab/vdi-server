@@ -23,8 +23,9 @@ from auth.authentication_directory.models import AuthenticationDirectory, Mappin
 
 from tests.utils import execute_scheme
 
-from resources_monitoring.internal_event_monitor import internal_event_monitor
-from resources_monitoring.resources_monitoring_data import VDI_TASKS_SUBSCRIPTION
+# from front_ws_api.subscription_sources import EVENTS_SUBSCRIPTION
+
+from redis_broker import a_redis_wait_for_message, INTERNAL_EVENTS_CHANNEL, WS_MONITOR_CHANNEL_OUT
 
 
 async def get_resources_static_pool_test():
@@ -170,7 +171,6 @@ async def fixt_auth_context():
 async def fixt_create_automated_pool():
     """Create an automated pool, yield, remove this pool"""
     # start resources_monitor to receive info  from controller. autopool creation doesnt work without it
-    await resources_monitor_manager.start()
 
     resources = await get_resources_automated_pool_test()
     if not resources:
@@ -198,9 +198,9 @@ async def fixt_create_automated_pool():
     pool_id = executed['addDynamicPool']['pool']['pool_id']
 
     # Нужно дождаться внутреннего сообщения о создании пула.
-    pool_creation_waiter = WaiterSubscriptionObserver()
-    pool_creation_waiter.add_subscription_source(VDI_TASKS_SUBSCRIPTION)
-    internal_event_monitor.subscribe(pool_creation_waiter)
+    # pool_creation_waiter = WaiterSubscriptionObserver()
+    # pool_creation_waiter.add_subscription_source(EVENTS_SUBSCRIPTION)
+    # internal_event_monitor.subscribe(pool_creation_waiter)
 
     def _check_if_pool_created(json_message):
         try:
@@ -212,9 +212,8 @@ async def fixt_create_automated_pool():
         return False
 
     POOL_CREATION_TIMEOUT = 80
-    is_pool_successfully_created = await pool_creation_waiter.wait_for_message(
-        _check_if_pool_created, POOL_CREATION_TIMEOUT)
-    internal_event_monitor.unsubscribe(pool_creation_waiter)
+    is_pool_successfully_created = await a_redis_wait_for_message(
+                INTERNAL_EVENTS_CHANNEL, _check_if_pool_created, POOL_CREATION_TIMEOUT)
 
     await yield_({
         'id': pool_id,
@@ -231,9 +230,6 @@ async def fixt_create_automated_pool():
     ''' % pool_id
     await execute_scheme(pool_schema, qu, context=context)
 
-    # stop monitor
-    await resources_monitor_manager.stop()
-
 
 @pytest.fixture
 @async_generator
@@ -247,11 +243,6 @@ async def fixt_create_static_pool(fixt_db):
     context = await get_auth_context()
 
     # --- create VM ---
-    await resources_monitor_manager.start()
-    response_waiter = WaiterSubscriptionObserver()
-    response_waiter.add_subscription_source('/tasks/')
-    resources_monitor_manager.subscribe(response_waiter)
-
     async def _create_domain():
         test_domain_name = 'domain_name_{}'.format(str(uuid.uuid4())[:7])
 
@@ -279,9 +270,7 @@ async def fixt_create_static_pool(fixt_db):
             pass
         return False
 
-    await response_waiter.wait_for_message(_check_if_vm_created, VEIL_WS_MAX_TIME_TO_WAIT)
-    resources_monitor_manager.unsubscribe(response_waiter)
-    await resources_monitor_manager.stop()
+    await a_redis_wait_for_message(WS_MONITOR_CHANNEL_OUT, _check_if_vm_created, VEIL_WS_MAX_TIME_TO_WAIT)
     # --- create pool ---
     qu = '''
         mutation {

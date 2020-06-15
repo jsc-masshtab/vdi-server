@@ -3,14 +3,17 @@
 #  при удалении родительской сущности (нет явной связи, сами не удалятся).
 
 import uuid
+import json
 
 from sqlalchemy import and_
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.sql import func
 
 from database import db
-from resources_monitoring.internal_event_monitor import internal_event_monitor
-from resources_monitoring.resources_monitoring_data import EVENTS_SUBSCRIPTION
+
+from redis_broker import INTERNAL_EVENTS_CHANNEL, REDIS_CLIENT
+
+from front_ws_api.subscription_sources import EVENTS_SUBSCRIPTION
 
 
 class Event(db.Model):
@@ -109,7 +112,7 @@ class Event(db.Model):
         elif event_type == 2:
             Logging.logger_application_error(msg, description)
 
-        internal_event_monitor.signal_event_2(msg_dict)
+        REDIS_CLIENT.publish(INTERNAL_EVENTS_CHANNEL, json.dumps(msg_dict))
         await cls.soft_create(event_type, msg, description, user, entity_dict)
 
 
