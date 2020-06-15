@@ -49,6 +49,7 @@ class VeilHttpClient:
         headers = {
             'Authorization': _('jwt {}').format(self.token),
             'Content-Type': 'application/json',
+            'User-Agent': 'VeiL-api-client/1.0 VDI/2.0'
         }
         return headers
 
@@ -128,9 +129,9 @@ class VeilHttpClient:
             elif http_error.code == 403:
                 raise Forbidden(_('Controller {} connection error.').format(self.controller_ip))
             elif http_error.code == 404:
-                raise NotFound(_('Fail to fetch resource from ECP.'))
+                raise NotFound(_('Fail to fetch resource from ECP.'), url)
             elif http_error.code == 408:
-                raise ControllerNotAccessible(_('Controller {} connection error.').format(self.controller_ip))
+                raise ControllerNotAccessible(ip=self.controller_ip)
             elif http_error.code == 500:
                 msg = _('ECP Veil internal error.')
                 raise ServerError(msg)
