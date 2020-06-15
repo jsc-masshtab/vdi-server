@@ -18,7 +18,7 @@ _ = lang_init()
 
 REDIS_ASYNC_TIMEOUT = 0.02
 
-###########################
+# Pool worker related
 POOL_TASK_QUEUE = 'POOL_TASK_QUEUE'
 
 POOL_TASK_RESULT_CHANNEL = 'POOL_TASK_RESULT_CHANNEL'
@@ -32,9 +32,7 @@ class PoolTaskType(Enum):
     # DECREASING = 'DECREASING'
 
 
-#############################
-
-
+# Ws monitor related
 WS_MONITOR_CHANNEL_OUT = 'WS_MONITOR_CHANNEL_OUT'  # по этому каналу сообщения полученные по ws от контроллеров
 WS_MONITOR_CHANNEL_IN = 'WS_MONITOR_CHANNEL_IN'  # по этому каналу команды к ws клиенту (добавить контроллер)
 
@@ -77,7 +75,7 @@ REDIS_CLIENT.info()
 #         try:
 #             response = func(*args, **kwargs)
 #         except redis.RedisError as error:
-#             log.error(_("Redis error: %(error)s"), {'error': error})
+#             log.general(_("Redis error: %(error)s"), {'error': error})
 #         return response
 #
 #     return wrapped_function

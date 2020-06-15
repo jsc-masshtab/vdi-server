@@ -14,31 +14,38 @@ from journal.journal import Log as log
 _ = lang_init()
 
 
+# cli fast test: PUBLISH WS_MONITOR_CHANNEL_IN '{"command": "ADD_CONTROLLER", "controller_address": "192.168.9.145"}'
 async def listen_for_messages(resources_monitor_manager):
 
     await resources_monitor_manager.start()
+
+    redis_subscriber = REDIS_CLIENT.pubsub()
+    redis_subscriber.subscribe(WS_MONITOR_CHANNEL_IN)
 
     log.general(_('Ws listener worker: start loop now'))
     while True:
         try:
             # wait for message
-            redis_subscriber = REDIS_CLIENT.pubsub()
-            redis_subscriber.subscribe(WS_MONITOR_CHANNEL_IN)
-
             redis_message = await a_redis_get_message(redis_subscriber)
-            print("redis_message", redis_message)
+            log.general(redis_message)
+
+            if not isinstance(redis_message['data'], bytes):
+                continue
+
             # get data from message
-            command = redis_message['command']
-            address = redis_message['controller_address']
+            data_dict = json.loads(redis_message['data'].decode())
+            command = data_dict['command']
+            address = data_dict['controller_address']
+            log.general(command + ' ' + address)
 
             # add or remove controller
-            if command == WsMonitorCmd.ADD_CONTROLLER:
+            if command == WsMonitorCmd.ADD_CONTROLLER.name:
                 await resources_monitor_manager.add_controller(address)
             elif command == WsMonitorCmd.REMOVE_CONTROLLER:
                 await resources_monitor_manager.remove_controller(address)
 
         except Exception as ex:
-            await log.error(str(ex))
+            await log.error('exception:' + str(ex))
 
 
 def main():
