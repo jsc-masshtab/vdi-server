@@ -159,7 +159,7 @@ async def a_redis_wait_for_message(redis_channel, predicate, timeout):
             await_time += REDIS_ASYNC_TIMEOUT
             await asyncio.sleep(REDIS_ASYNC_TIMEOUT)
 
-    except Exception:
+    except Exception:  # noqa
         return False
 
 

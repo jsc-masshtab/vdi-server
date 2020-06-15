@@ -50,7 +50,7 @@ def main():
         loop.create_task(listen_for_messages(resources_monitor_manager))
         loop.run_forever()
     except KeyboardInterrupt:
-        log.general(_("Ws MONITOR worker interrupted"))
+        log.general(_("Ws listener worker interrupted"))
     finally:
         # free resources
         loop.run_until_complete(resources_monitor_manager.stop())
