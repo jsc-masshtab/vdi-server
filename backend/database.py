@@ -152,3 +152,60 @@ class AbstractSortableStatusModel:
 
 StatusGraphene = GrapheneEnum.from_enum(Status)
 RoleTypeGraphene = GrapheneEnum.from_enum(Role)
+
+
+class AbstractClass:
+
+    @property
+    def entity_type(self):
+        return EntityType.SECURITY
+
+    @property
+    def entity(self):
+        return {'entity_type': self.entity_type, 'entity_uuid': self.id}
+
+    @property
+    async def entity_obj(self):
+        from auth.models import Entity
+        return await Entity.query.where(
+            (Entity.entity_type == self.entity_type) & (Entity.entity_uuid == self.id)).gino.first()
+
+    async def soft_delete(self, dest, creator):
+        from journal.journal import Log as log
+        try:
+            await self.delete()
+            msg = _('{} {} had remove.').format(dest, self.verbose_name)
+            if self.entity:
+                await log.info(msg, entity_dict=self.entity, user=creator)
+            else:
+                await log.info(msg, user=creator)
+            return True
+        except Exception as ex:
+            log.debug(_('Soft_delete exception: {}').format(ex))
+            return False
+
+    @classmethod
+    async def soft_update(cls, id=None, **kwargs):
+        creator = kwargs.pop('creator')
+        dict_kwargs = kwargs
+        update_dict = dict()
+        for key, value in dict_kwargs.items():
+            if value is not None:
+                update_dict[key] = value
+        if update_dict:
+            await cls.update.values(**update_dict).where(cls.id == id).gino.status()
+            update_type = await cls.get(id)
+            update_dict['creator'] = creator
+
+        return update_type, update_dict
+
+    async def add_users(self, users_list: list, creator):
+        async with db.transaction():
+            for user_id in users_list:
+                await self.add_user(user_id, creator)
+            return True
+
+    async def add_roles(self, roles_list, creator):
+        async with db.transaction():
+            for role in roles_list:
+                await self.add_role(role, creator)

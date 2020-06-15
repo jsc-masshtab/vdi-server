@@ -363,9 +363,10 @@ def fixt_user(request, event_loop):
     user_name = 'test_user'
     user_id = '10913d5d-ba7a-4049-88c5-769267a6cbe4'
     user_password = 'veil'
+    creator = 'system'
 
     async def setup():
-        await User.soft_create(username=user_name, id=user_id, password=user_password)
+        await User.soft_create(username=user_name, id=user_id, password=user_password, creator=creator)
 
     event_loop.run_until_complete(setup())
 
@@ -384,9 +385,10 @@ def fixt_user_admin(request, event_loop):
     user_name = 'test_user_admin'
     user_id = '10913d5d-ba7a-4049-88c5-769267a6cbe3'
     user_password = 'veil'
+    creator = 'admin'
 
     async def setup():
-        await User.soft_create(username=user_name, id=user_id, password=user_password, is_superuser=True)
+        await User.soft_create(username=user_name, id=user_id, password=user_password, is_superuser=True, creator=creator)
 
     event_loop.run_until_complete(setup())
 
@@ -405,9 +407,10 @@ def fixt_user_another_admin(request, event_loop):
     user_name = 'test_user_admin2'
     user_id = '10913d5d-ba7a-4149-88c5-769267a6cbe3'
     user_password = 'veil'
+    creator = 'system'
 
     async def setup():
-        await User.soft_create(username=user_name, id=user_id, password=user_password, is_superuser=True)
+        await User.soft_create(username=user_name, id=user_id, password=user_password, is_superuser=True, creator=creator)
 
     event_loop.run_until_complete(setup())
 
@@ -426,7 +429,7 @@ def fixt_user_locked(request, event_loop):
     user_id = '10913d5d-ba7a-4049-88c5-769267a6cbe6'
 
     async def setup():
-        await User.soft_create(username='test_user_locked', id=user_id, is_active=False, password="qwe")
+        await User.soft_create(username='test_user_locked', id=user_id, is_active=False, password="qwe", creator='system')
 
     event_loop.run_until_complete(setup())
 
@@ -446,10 +449,11 @@ def fixt_auth_dir(request, event_loop):
     verbose_name = 'test_auth_dir'
     directory_url = 'ldap://192.168.11.180'
     domain_name = 'bazalt.team'
+    creator = 'system'
 
     async def setup():
         await AuthenticationDirectory.soft_create(id=id, verbose_name=verbose_name, directory_url=directory_url,
-                                                  domain_name=domain_name)
+                                                  domain_name=domain_name, creator=creator)
     event_loop.run_until_complete(setup())
 
     def teardown():
@@ -478,7 +482,8 @@ def fixt_auth_dir_with_pass(request, event_loop):
                                                   directory_url=directory_url,
                                                   domain_name=domain_name,
                                                   service_password=encoded_service_password,
-                                                  service_username='ad120')
+                                                  service_username='ad120',
+                                                  creator='system')
 
     event_loop.run_until_complete(setup())
 
@@ -508,7 +513,8 @@ def fixt_auth_dir_with_pass_bad(request, event_loop):
                                                   directory_url=directory_url,
                                                   domain_name=domain_name,
                                                   service_password=encoded_service_password,
-                                                  service_username='bad')
+                                                  service_username='bad',
+                                                  creator='system')
 
     event_loop.run_until_complete(setup())
 
@@ -541,7 +547,7 @@ def fixt_mapping(request, event_loop):
 
     async def setup():
         auth_dir = await AuthenticationDirectory.get(auth_dir_id)
-        await auth_dir.add_mapping(mapping=mapping_dict, groups=groups)
+        await auth_dir.add_mapping(mapping=mapping_dict, groups=groups, creator='system')
     event_loop.run_until_complete(setup())
 
     def teardown():
@@ -563,7 +569,7 @@ def fixt_group_role(request, event_loop):
     async def setup():
         """Подчищать не надо, группа будет удалена и эти записи удалятся каскадом"""
         group = await Group.get(group_id)
-        await group.add_role(Role.READ_ONLY)
+        await group.add_role(Role.READ_ONLY, creator='system')
     event_loop.run_until_complete(setup())
     return True
 

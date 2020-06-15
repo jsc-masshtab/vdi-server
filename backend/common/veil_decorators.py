@@ -120,6 +120,7 @@ def user_passes_test(test_func, exc=Unauthorized):  # noqa
         async def wrapper(cntxt, *args, **kwargs):  # noqa
             if AUTH_ENABLED:
                 user = await extract_user_object(cntxt.headers)
+                kwargs['creator'] = user.username
                 if user and isinstance(user, User):
                     if test_func(await user.roles):
                         return f(*args, **kwargs)

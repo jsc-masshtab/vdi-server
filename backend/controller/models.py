@@ -10,7 +10,7 @@ from sqlalchemy.dialects.postgresql import UUID
 
 from auth.utils import crypto
 from controller.client import ControllerClient
-from database import db, Status, EntityType
+from database import db, Status, EntityType, AbstractClass
 from common.veil_errors import SimpleError, BadRequest, ValidationError
 
 from languages import lang_init
@@ -27,7 +27,7 @@ _ = lang_init()
 #  При активации контроллера нужно брать задачи в очереди.
 
 
-class Controller(db.Model):
+class Controller(db.Model, AbstractClass):
     # TODO: indexes
     __tablename__ = 'controller'
 
@@ -51,10 +51,6 @@ class Controller(db.Model):
     @property
     def entity_type(self):
         return EntityType.CONTROLLER
-
-    @property
-    def entity(self):
-        return {'entity_type': self.entity_type, 'entity_uuid': self.id}
 
     @property
     def pools_query(self):
@@ -161,11 +157,11 @@ class Controller(db.Model):
             version = await controller_client.fetch_version()
             return {'token': token, 'expires_on': expires_on, 'version': version}
         except BadRequest:
-            await log.error(_('Can\'t login login to controller {}').format(address))
+            await log.error(_('Can\'t login to controller {}').format(address))
             return dict()
 
     @classmethod
-    async def soft_create(cls, verbose_name, address, username, password, ldap_connection, description=None):
+    async def soft_create(cls, verbose_name, address, username, password, ldap_connection, description=None, creator='system'):
         controller_client = ControllerClient(address)
         auth_info = dict(username=username, password=password, ldap=ldap_connection)
         token, expires_on = await controller_client.auth(auth_info=auth_info)
@@ -174,9 +170,9 @@ class Controller(db.Model):
 
         # Проверяем версию контроллера в пределах допустимой. Предыдущие версии тоже совместимы, но не стабильны.
         # В версии 4.3 появились изменения в api
-        if major_version != '4' or minor_version != '3':
-            msg = _('Veil ECP version should be 4.3. Current version is incompatible.')
-            raise ValidationError(msg)
+        # if major_version != '4' or minor_version != '3':
+        #     msg = _('Veil ECP version should be 4.3. Current version is incompatible.')
+        #     raise ValidationError(msg)
 
         controller_dict = {'verbose_name': verbose_name,
                            'address': address,
@@ -190,13 +186,13 @@ class Controller(db.Model):
                            'expires_on': expires_on
                            }
 
-        controller = await Controller.create(**controller_dict)
+        controller = await cls.create(**controller_dict)
 
         msg = _('Successfully added new controller {} with address {}.').format(controller.verbose_name, address)
-        await log.info(msg)
+        await log.info(msg, user=creator)
         return controller
 
-    async def soft_update(self, verbose_name, address, description, username=None, password=None, ldap_connection=None):
+    async def soft_update(self, verbose_name, address, description, creator, username=None, password=None, ldap_connection=None):
         # перекрестные импорты
         from resources_monitoring.resources_monitor_manager import resources_monitor_manager
 
@@ -304,43 +300,32 @@ class Controller(db.Model):
                 controller_kwargs.pop('version')
             desc = str(controller_kwargs)
 
-            await log.info(msg, description=desc)
+            await log.info(msg, description=desc, user=creator)
             return True
 
         return False
 
-    async def soft_delete(self, dest):
+    async def soft_delete(self, dest, creator):
         """Удаление сущности независимо от статуса у которой нет зависимых сущностей"""
         controller_has_pools = await self.has_pools
         if controller_has_pools:
-            raise SimpleError(_('Controller has pool of virtual machines. Please completely remove.'))
+            raise SimpleError(_('Controller has pool of virtual machines. Please completely remove.'), user=creator)
+        return super().soft_delete(dest=dest, creator=creator)
 
-        try:
-            await self.delete()
-            msg = _('{} {} had remove.').format(dest, self.verbose_name)
-            if self.entity:
-                await log.info(msg, entity_dict=self.entity)
-            else:
-                await log.info(msg)
-            return True
-        except Exception as ex:
-            log.debug(_('Soft_delete exception: {}').format(ex))
-            return False
-
-    async def full_delete_pools(self):
+    async def full_delete_pools(self, creator):
         """Полное удаление пулов контроллера"""
 
         pools = await self.pools
         for pool in pools:
-            await pool.full_delete(commit=True)
+            await pool.full_delete(commit=True, creator=creator)
 
-    async def full_delete(self):
+    async def full_delete(self, creator):
         """Удаление сущности с удалением зависимых сущностей"""
 
         msg = _('Controller {name} had completely remove.').format(name=self.verbose_name)
-        await self.full_delete_pools()
+        await self.full_delete_pools(creator=creator)
         await self.delete()
-        await log.info(msg, entity_dict=self.entity)
+        await log.info(msg, entity_dict=self.entity, user=creator)
         return True
 
     @classmethod

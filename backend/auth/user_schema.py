@@ -149,7 +149,7 @@ class UserQuery(graphene.ObjectType):
     user = graphene.Field(UserType, id=graphene.UUID(), username=graphene.String())
 
     @readonly_required
-    async def resolve_user(self, info, id=None, username=None):
+    async def resolve_user(self, info, id=None, username=None, **kwargs):
         if not id and not username:
             raise SimpleError(_('Scpecify id or username.'))
 
@@ -159,7 +159,7 @@ class UserQuery(graphene.ObjectType):
         return UserType.instance_to_type(user)
 
     @readonly_required
-    async def resolve_users(self, info, ordering=None):
+    async def resolve_users(self, info, ordering=None, **kwargs):
         users = await User.get_objects(ordering=ordering, include_inactive=True)
         objects = [
             UserType.instance_to_type(user)
@@ -182,10 +182,10 @@ class CreateUserMutation(graphene.Mutation, UserValidator):
 
     @classmethod
     @security_administrator_required
-    async def mutate(cls, root, info, **kwargs):
+    async def mutate(cls, root, info, creator, **kwargs):
         await cls.validate_agruments(**kwargs)
         kwargs['username'] = kwargs['username'].strip()
-        user = await User.soft_create(**kwargs)
+        user = await User.soft_create(creator=creator, **kwargs)
         return CreateUserMutation(
             user=UserType(**user.__values__),
             ok=True)
@@ -205,14 +205,15 @@ class UpdateUserMutation(graphene.Mutation, UserValidator):
 
     @classmethod
     @security_administrator_required
-    async def mutate(cls, root, info, **kwargs):
+    async def mutate(cls, root, info, creator, **kwargs):
         await cls.validate_agruments(**kwargs)
         if kwargs.get('username'):
             kwargs['username'] = kwargs['username'].strip()
         user = await User.soft_update(kwargs['id'],
-                                      kwargs.get('username'), kwargs.get('email'),
-                                      kwargs.get('last_name'), kwargs.get('first_name'),
-                                      kwargs.get('is_superuser'))
+                                      username=kwargs.get('username'), email=kwargs.get('email'),
+                                      last_name=kwargs.get('last_name'), first_name=kwargs.get('first_name'),
+                                      is_superuser=kwargs.get('is_superuser'), creator=creator
+                                      )
         return UpdateUserMutation(
             user=UserType(**user.__values__),
             ok=True)
@@ -227,12 +228,12 @@ class ChangeUserPasswordMutation(graphene.Mutation, UserValidator):
 
     @classmethod
     @security_administrator_required
-    async def mutate(cls, root, info, **kwargs):
+    async def mutate(cls, root, info, creator, **kwargs):
         await cls.validate_agruments(**kwargs)
         # Назначаем новый пароль
         user = await User.get(kwargs['id'])
         if user:
-            await user.set_password(kwargs['password'])
+            await user.set_password(kwargs['password'], creator=creator)
             return ChangeUserPasswordMutation(ok=True)
         return ChangeUserPasswordMutation(ok=False)
 
@@ -245,12 +246,12 @@ class ActivateUserMutation(graphene.Mutation, UserValidator):
 
     @classmethod
     @security_administrator_required
-    async def mutate(cls, root, info, **kwargs):
+    async def mutate(cls, root, info, creator, **kwargs):
         await cls.validate_agruments(**kwargs)
         # Меняем статус пользователя
         user = await User.get(kwargs['id'])
         if user:
-            await user.activate()
+            await user.activate(creator=creator)
             return ActivateUserMutation(ok=True)
         return ActivateUserMutation(ok=False)
 
@@ -263,12 +264,12 @@ class DeactivateUserMutation(graphene.Mutation, UserValidator):
 
     @classmethod
     @security_administrator_required
-    async def mutate(cls, root, info, **kwargs):
+    async def mutate(cls, root, info, creator, **kwargs):
         await cls.validate_agruments(**kwargs)
         # Меняем статус пользователя
         user = await User.get(kwargs['id'])
         if user:
-            await user.deactivate()
+            await user.deactivate(creator=creator)
             return DeactivateUserMutation(ok=True)
         return DeactivateUserMutation(ok=False)
 
@@ -283,10 +284,10 @@ class AddUserRoleMutation(graphene.Mutation, UserValidator):
 
     @classmethod
     @security_administrator_required
-    async def mutate(cls, root, info, **kwargs):
+    async def mutate(cls, root, info, creator, **kwargs):
         await cls.validate_agruments(**kwargs)
         user = await User.get(kwargs['id'])
-        await user.add_roles(kwargs['roles'])
+        await user.add_roles(kwargs['roles'], creator=creator)
         return AddUserRoleMutation(user=UserType(**user.__values__), ok=True)
 
 
@@ -300,10 +301,10 @@ class RemoveUserRoleMutation(graphene.Mutation, UserValidator):
 
     @classmethod
     @security_administrator_required
-    async def mutate(cls, root, info, **kwargs):
+    async def mutate(cls, root, info, creator, **kwargs):
         await cls.validate_agruments(**kwargs)
         user = await User.get(kwargs['id'])
-        await user.remove_roles(kwargs['roles'])
+        await user.remove_roles(kwargs['roles'], creator=creator)
         return RemoveUserRoleMutation(user=UserType(**user.__values__), ok=True)
 
 

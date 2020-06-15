@@ -18,7 +18,6 @@ _ = lang_init()
 
 def build_filters(event_type, start_date, end_date, user, read_by, entity_type):
     filters = []
-
     if event_type is not None:
         filters.append((Event.event_type == event_type))
     if start_date:
@@ -88,7 +87,7 @@ class EventQuery(graphene.ObjectType):
 
     @administrator_required
     async def resolve_count(self, _info, event_type=None, start_date=None,
-                            end_date=None, user=None, read_by=None, entity_type=None):
+                            end_date=None, user=None, read_by=None, entity_type=None, **kwargs):
         filters = build_filters(event_type, start_date, end_date, user, read_by, entity_type)
         query = Event.outerjoin(EventReadByUser).outerjoin(User).outerjoin(
             EventEntity).outerjoin(Entity).select().where(and_(*filters)).where(Entity.entity_type != None)  # noqa
@@ -97,7 +96,7 @@ class EventQuery(graphene.ObjectType):
 
     @administrator_required
     async def resolve_entity_types(self, _info, event_type=None, start_date=None,
-                                   end_date=None, user=None, read_by=None, entity_type=None):
+                                   end_date=None, user=None, read_by=None, entity_type=None, **kwargs):
         # TODO: refactor me
         filters = build_filters(event_type, start_date, end_date, user, read_by, entity_type)
 
@@ -113,7 +112,7 @@ class EventQuery(graphene.ObjectType):
 
     @administrator_required
     async def resolve_events(self, _info, limit=100, offset=0, event_type=None,
-                             start_date=None, end_date=None, user=None, read_by=None, entity_type=None):
+                             start_date=None, end_date=None, user=None, read_by=None, entity_type=None, **kwargs):
         filters = build_filters(event_type, start_date, end_date, user, read_by, entity_type)
 
         query = Event.outerjoin(EventReadByUser).outerjoin(User).outerjoin(
@@ -136,7 +135,7 @@ class EventQuery(graphene.ObjectType):
         return event_type_list
 
     @administrator_required
-    async def resolve_event(self, _info, id):
+    async def resolve_event(self, _info, id, **kwargs):
         query = Event.outerjoin(EventReadByUser).outerjoin(User).outerjoin(
             EventEntity).outerjoin(Entity).select().where(Event.id == id)
 
@@ -163,7 +162,7 @@ class MarkEventsReadByMutation(graphene.Mutation):
     ok = graphene.Boolean()
 
     @administrator_required
-    async def mutate(self, _info, user, events=None):
+    async def mutate(self, _info, user, events=None, **kwargs):
         await Event.mark_read_by(user, events)
         return RemoveAllEventsMutation(ok=True)
 
@@ -176,7 +175,7 @@ class UnmarkEventsReadByMutation(graphene.Mutation):
     ok = graphene.Boolean()
 
     @administrator_required
-    async def mutate(self, _info, user, events=None):
+    async def mutate(self, _info, user, events=None, **kwargs):
         await Event.unmark_read_by(user, events)
         return UnmarkEventsReadByMutation(ok=True)
 
@@ -188,7 +187,7 @@ class RemoveAllEventsMutation(graphene.Mutation):
     ok = graphene.Boolean()
 
     @administrator_required
-    async def mutate(self, _info):
+    async def mutate(self, _info, **kwargs):
         await Event.delete.gino.status()
         await log.info(_("Journal is clear."))
         return RemoveAllEventsMutation(ok=True)
