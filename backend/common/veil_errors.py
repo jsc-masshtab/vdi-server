@@ -14,13 +14,8 @@ _ = lang_init()
 
 
 class ValidationError(AssertionError):
-    def __init__(self, message, **kwargs):
-        native_loop = asyncio.get_event_loop()
-        self.create_event = native_loop.create_task(self.create_error_event(message, **kwargs))
-
-    @staticmethod
-    async def create_error_event(message, **kwargs):
-        await log.error(message, **kwargs)
+    def __init__(self, message):
+        log.debug(message)
 
 
 class AssertError(AssertionError):
@@ -29,13 +24,8 @@ class AssertError(AssertionError):
 
 
 class MeaningError(ValueError):
-    def __init__(self, message, **kwargs):
-        native_loop = asyncio.get_event_loop()
-        self.create_event = native_loop.create_task(self.create_error_event(message, **kwargs))
-
-    @staticmethod
-    async def create_error_event(message, **kwargs):
-        await log.error(message, **kwargs)
+    def __init__(self, message):
+        log.debug(message)
 
 
 class BackendError(Exception):
@@ -105,8 +95,7 @@ class HttpError(BackendError):
     def __init__(self, message=None):
         if message:
             message = str(message)
-            native_loop = asyncio.get_event_loop()
-            self.create_event = native_loop.create_task(self.create_error_event(message))
+            log.debug(message)
             self.message = message
 
     @cached_property
@@ -117,10 +106,6 @@ class HttpError(BackendError):
         return {
             'type': 'HttpError', 'code': self.code, 'message': self.message,
         }
-
-    @staticmethod
-    async def create_error_event(message):
-        await log.error(message)
 
 
 class NotFound(HttpError):

@@ -99,14 +99,14 @@ class GroupQuery(graphene.ObjectType):
     group = graphene.Field(GroupType, id=graphene.UUID())
 
     @readonly_required
-    async def resolve_group(self, info, id):  # noqa
+    async def resolve_group(self, info, id, **kwargs):  # noqa
         group = await Group.get(id)
         if not group:
             raise SimpleError(_('No such group.'))
         return GroupType.instance_to_type(group)
 
     @readonly_required
-    async def resolve_groups(self, info, ordering=None):  # noqa
+    async def resolve_groups(self, info, ordering=None, **kwargs):  # noqa
         groups = await Group.get_objects(ordering=ordering, include_inactive=True)
         objects = [
             GroupType.instance_to_type(group)
@@ -125,9 +125,9 @@ class CreateGroupMutation(graphene.Mutation, GroupValidator):
 
     @classmethod
     @security_administrator_required
-    async def mutate(cls, root, info, **kwargs):
+    async def mutate(cls, root, info, creator, **kwargs):
         await cls.validate_agruments(**kwargs)
-        group = await Group.soft_create(**kwargs)
+        group = await Group.soft_create(creator=creator, **kwargs)
         return CreateGroupMutation(
             group=GroupType.instance_to_type(group),
             ok=True)
@@ -144,10 +144,13 @@ class UpdateGroupMutation(graphene.Mutation, GroupValidator):
 
     @classmethod
     @security_administrator_required
-    async def mutate(cls, root, info, **kwargs):
+    async def mutate(cls, root, info, creator, **kwargs):
         await cls.validate_agruments(**kwargs)
         group = await Group.get(kwargs['id'])
-        await group.soft_update(verbose_name=kwargs.get('verbose_name'), description=kwargs.get('description'))
+        await group.soft_update(verbose_name=kwargs.get('verbose_name'),
+                                description=kwargs.get('description'),
+                                creator=creator
+                                )
 
         return UpdateGroupMutation(
             group=GroupType.instance_to_type(group),
@@ -162,7 +165,7 @@ class DeleteGroupMutation(graphene.Mutation, GroupValidator):
     ok = graphene.Boolean(default_value=False)
 
     @security_administrator_required
-    async def mutate(self, _info, id=None, ad_guid=None):
+    async def mutate(self, _info, creator, id=None, ad_guid=None, ):
         # Если нет ни одного из параметров
         if not id and not ad_guid:
             raise SimpleError(_('Specify Group.id or Group.ad_guid.'))
@@ -172,7 +175,7 @@ class DeleteGroupMutation(graphene.Mutation, GroupValidator):
         group = await Group.get(id) if id else await Group.query.where(Group.ad_guid == str(ad_guid)).gino.first()
         if not group:
             raise SimpleError(_('No such Group.'))
-        status = await group.soft_delete(dest=_('Group'))
+        status = await group.soft_delete(dest=_('Group'), creator=creator)
         return DeleteGroupMutation(ok=status)
 
 
@@ -186,11 +189,11 @@ class AddGroupUsersMutation(graphene.Mutation, GroupValidator):
 
     @classmethod
     @security_administrator_required
-    async def mutate(cls, root, info, **kwargs):
+    async def mutate(cls, root, info, creator, **kwargs):
         await cls.validate_agruments(**kwargs)
 
         group = await Group.get(kwargs['id'])
-        await group.add_users(kwargs['users'])
+        await group.add_users(kwargs['users'], creator=creator)
 
         return AddGroupUsersMutation(
             group=GroupType.instance_to_type(group),
@@ -207,13 +210,13 @@ class RemoveGroupUsersMutation(graphene.Mutation, GroupValidator):
 
     @classmethod
     @security_administrator_required
-    async def mutate(cls, root, info, **kwargs):
+    async def mutate(cls, root, info, creator, **kwargs):
         await cls.validate_agruments(**kwargs)
         group = await Group.get(kwargs['id'])
 
         async with db.transaction():
             users = kwargs['users']
-            status = await group.remove_users(users)
+            status = await group.remove_users(users, creator=creator)
 
         return RemoveGroupUsersMutation(
             group=GroupType.instance_to_type(group),
@@ -230,10 +233,10 @@ class AddGroupRoleMutation(graphene.Mutation, GroupValidator):
 
     @classmethod
     @security_administrator_required
-    async def mutate(cls, root, info, **kwargs):
+    async def mutate(cls, root, info, creator, **kwargs):
         await cls.validate_agruments(**kwargs)
         group = await Group.get(kwargs['id'])
-        await group.add_roles(kwargs['roles'])
+        await group.add_roles(kwargs['roles'], creator=creator)
         return AddGroupRoleMutation(group=GroupType.instance_to_type(group), ok=True)
 
 
@@ -247,10 +250,10 @@ class RemoveGroupRoleMutation(graphene.Mutation, GroupValidator):
 
     @classmethod
     @security_administrator_required
-    async def mutate(cls, root, info, **kwargs):
+    async def mutate(cls, root, info, creator, **kwargs):
         await cls.validate_agruments(**kwargs)
         group = await Group.get(kwargs['id'])
-        await group.remove_roles(kwargs['roles'])
+        await group.remove_roles(kwargs['roles'], creator=creator)
         return RemoveGroupRoleMutation(GroupType.instance_to_type(group), ok=True)
 
 

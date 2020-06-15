@@ -346,7 +346,7 @@ class PoolQuery(graphene.ObjectType):
     pool = graphene.Field(PoolType, pool_id=graphene.String())
 
     @administrator_required
-    async def resolve_pools(self, info, ordering=None):
+    async def resolve_pools(self, info, ordering=None, **kwargs):
         # Сортировка может быть по полю модели Pool, либо по Pool.EXTRA_ORDER_FIELDS
         pools = await Pool.get_pools(ordering=ordering)
         objects = [
@@ -356,7 +356,7 @@ class PoolQuery(graphene.ObjectType):
         return objects
 
     @administrator_required
-    async def resolve_pool(self, _info, pool_id):
+    async def resolve_pool(self, _info, pool_id, **kwargs):
         pool = await Pool.get_pool(pool_id)
         if not pool:
             raise SimpleError(_('No such pool.'))
@@ -373,16 +373,21 @@ class DeletePoolMutation(graphene.Mutation, PoolValidator):
     ok = graphene.Boolean()
 
     @staticmethod
-    async def delete_pool(pool, full=False):
+    async def delete_pool(pool, creator, full=False):
         if full:
-            status = await pool.full_delete()
+            status = await pool.full_delete(creator)
         else:
-            status = await pool.soft_delete(dest=_('Pool'))
+            """Удаление сущности независимо от статуса у которой нет зависимых сущностей"""
+
+            pool_has_vms = await Pool.has_vms
+            if pool_has_vms:
+                raise SimpleError(_('Pool has VMs. Please completely remove.'), user=creator)
+            status = await pool.soft_delete(dest=_('Pool'), creator=creator)
 
         return status
 
     @administrator_required
-    async def mutate(self, info, pool_id, full=False):
+    async def mutate(self, info, pool_id, creator, full=False):
         # Нет запуска валидации, т.к. нужна сущность пула далее - нет смысла запускать запрос 2жды.
         pool = await Pool.get(pool_id)
         if not pool:
@@ -401,12 +406,12 @@ class DeletePoolMutation(graphene.Mutation, PoolValidator):
                 async with pool_lock.lock:
                     template_id = await pool.template_id
                     # удаляем пул
-                    is_deleted = await DeletePoolMutation.delete_pool(pool, full)
+                    is_deleted = await DeletePoolMutation.delete_pool(pool, creator, full)
                     # убираем из памяти локи
                     await pool_task_manager.remove_pool_data(str(pool_id), str(template_id))
             # В случае стат пула удаляем без локов.
             else:
-                is_deleted = await DeletePoolMutation.delete_pool(pool, full)
+                is_deleted = await DeletePoolMutation.delete_pool(pool, creator, full)
             return DeletePoolMutation(ok=is_deleted)
         except Exception as e:
             raise e
@@ -425,7 +430,7 @@ class CreateStaticPoolMutation(graphene.Mutation, PoolValidator):
 
     @classmethod
     @administrator_required
-    async def mutate(cls, root, info, **kwargs):
+    async def mutate(cls, root, info, creator, **kwargs):
         """Мутация создания Статического пула виртуальных машин.
 
         1. Проверка переданных vm_ids
@@ -473,7 +478,7 @@ class CreateStaticPoolMutation(graphene.Mutation, PoolValidator):
             pool = await StaticPool.soft_create(veil_vm_data=veil_vm_data_list, verbose_name=verbose_name,
                                                 cluster_id=cluster_id, datapool_id=datapool_id,
                                                 controller_address=first_vm_controller_address,
-                                                node_id=first_vm_node_id, connection_types=connection_types)
+                                                node_id=first_vm_node_id, connection_types=connection_types, creator=creator)
             vms = [VmType(id=vm_id) for vm_id in vm_ids]
         except Exception as E:  # Возможные исключения: дубликат имени или вм id, сетевой фейл enable_remote_accesses
             # TODO: указать конкретные Exception
@@ -501,7 +506,7 @@ class AddVmsToStaticPoolMutation(graphene.Mutation):
     ok = graphene.Boolean()
 
     @administrator_required
-    async def mutate(self, _info, pool_id, vm_ids):
+    async def mutate(self, _info, pool_id, vm_ids, creator):
         if not vm_ids:
             raise SimpleError(_("List of VM should not be empty"))
 
@@ -540,7 +545,9 @@ class AddVmsToStaticPoolMutation(graphene.Mutation):
                                 created_by_vdi=False,
                                 verbose_name=vm_info['verbose_name'])
                 name = await Pool.get(pool_id)
-                await log.info(_('Vm {} is added to pool {}').format(vm_info['verbose_name'], name.verbose_name))
+                await log.info(_('Vm {} is added to pool {}').format(vm_info['verbose_name'], name.verbose_name),
+                               user=creator
+                               )
 
         return {
             'ok': True
@@ -555,7 +562,7 @@ class RemoveVmsFromStaticPoolMutation(graphene.Mutation):
     ok = graphene.Boolean()
 
     @administrator_required
-    async def mutate(self, _info, pool_id, vm_ids):
+    async def mutate(self, _info, pool_id, vm_ids, creator):
         if not vm_ids:
             raise SimpleError(_("List of VM should not be empty"))
 
@@ -569,7 +576,7 @@ class RemoveVmsFromStaticPoolMutation(graphene.Mutation):
                 raise SimpleError(_('VM doesn\'t belong to specified pool').format(vm_id))
 
         # remove vms from db
-        await Vm.remove_vms(vm_ids)
+        await Vm.remove_vms(vm_ids, creator)
 
         return {
             'ok': True
@@ -588,14 +595,14 @@ class UpdateStaticPoolMutation(graphene.Mutation, PoolValidator):
 
     @classmethod
     @administrator_required
-    async def mutate(cls, _root, _info, **kwargs):
+    async def mutate(cls, _root, _info, creator, **kwargs):
         await cls.validate_agruments(**kwargs)
         try:
             ok = await StaticPool.soft_update(kwargs['pool_id'], kwargs.get('verbose_name'), kwargs.get('keep_vms_on'),
-                                              kwargs.get('connection_types'))
+                                              kwargs.get('connection_types'), creator)
         except UniqueViolationError:
             error_msg = _('Failed to update static pool {}. Name must be unique.').format(kwargs['pool_id'])
-            raise SimpleError(error_msg)
+            raise SimpleError(error_msg, user=creator)
         return UpdateStaticPoolMutation(ok=ok)
 
 
@@ -630,14 +637,14 @@ class CreateAutomatedPoolMutation(graphene.Mutation, PoolValidator):
 
     @classmethod
     @administrator_required
-    async def mutate(cls, root, info, **kwargs):
+    async def mutate(cls, root, info, creator, **kwargs):
         await cls.validate_agruments(**kwargs)
         try:
             automated_pool = await AutomatedPool.soft_create(**kwargs)
         except UniqueViolationError:
             error_msg = _('Failed to create automated pool {}. Name must be unique.').format(kwargs['verbose_name'])
-            await log.error(error_msg)
-            raise SimpleError(error_msg)
+            # await log.error(error_msg, user=creator)
+            raise SimpleError(error_msg, user=creator)
 
         # add data for protection
         pool_task_manager.add_new_pool_data(str(automated_pool.id), str(automated_pool.template_id))
@@ -696,7 +703,7 @@ class UpdateAutomatedPoolMutation(graphene.Mutation, PoolValidator):
 
     @classmethod
     @administrator_required
-    async def mutate(cls, root, info, **kwargs):
+    async def mutate(cls, root, info, creator, **kwargs):
         await cls.validate_agruments(**kwargs)
         automated_pool = await AutomatedPool.get(kwargs['pool_id'])
         if automated_pool:
@@ -707,11 +714,13 @@ class UpdateAutomatedPoolMutation(graphene.Mutation, PoolValidator):
                                                  vm_name_template=kwargs.get('vm_name_template'),
                                                  keep_vms_on=kwargs.get('keep_vms_on'),
                                                  create_thin_clones=kwargs.get('create_thin_clones'),
-                                                 connection_types=kwargs.get('connection_types'))
+                                                 connection_types=kwargs.get('connection_types'),
+                                                 creator=creator
+                                                 )
             except UniqueViolationError:
                 error_msg = _('Failed to update automated pool {}. Name must be unique.').format(kwargs['verbose_name'])
-                await log.error(error_msg)
-                raise SimpleError(error_msg)
+                # await log.error(error_msg, user=creator)
+                raise SimpleError(error_msg, user=creator)
             else:
                 return UpdateAutomatedPoolMutation(ok=True)
         return UpdateAutomatedPoolMutation(ok=False)
@@ -729,12 +738,12 @@ class PoolUserAddPermissionsMutation(graphene.Mutation):
     pool = graphene.Field(PoolType)
 
     @administrator_required
-    async def mutate(self, _info, pool_id, users):
+    async def mutate(self, _info, pool_id, users, creator):
         pool = await Pool.get(pool_id)
         if not pool:
             return {'ok': False}
 
-        await pool.add_users(users)
+        await pool.add_users(users, creator=creator)
         pool_record = await Pool.get_pool(pool.id)
         return PoolUserAddPermissionsMutation(ok=True, pool=pool_obj_to_type(pool_record))
 
@@ -750,13 +759,13 @@ class PoolUserDropPermissionsMutation(graphene.Mutation):
     pool = graphene.Field(PoolType)
 
     @administrator_required
-    async def mutate(self, _info, pool_id, users, free_assigned_vms=True):
+    async def mutate(self, _info, pool_id, users, free_assigned_vms=True, creator='system'):
         pool = await Pool.get(pool_id)
         if not pool:
             return PoolUserDropPermissionsMutation(ok=False)
 
         async with db.transaction():
-            await pool.remove_users(users)
+            await pool.remove_users(creator, users)
             if free_assigned_vms:
                 await pool.free_assigned_vms(users)
 
@@ -773,12 +782,12 @@ class PoolGroupAddPermissionsMutation(graphene.Mutation):
     pool = graphene.Field(PoolType)
 
     @administrator_required
-    async def mutate(self, _info, pool_id, groups):
+    async def mutate(self, _info, pool_id, groups, creator):
         pool = await Pool.get(pool_id)
         if not pool:
             return {'ok': False}
 
-        await pool.add_groups(groups)
+        await pool.add_groups(creator, groups)
 
         pool_record = await Pool.get_pool(pool.id)
         return PoolGroupAddPermissionsMutation(ok=True, pool=pool_obj_to_type(pool_record))
@@ -793,12 +802,12 @@ class PoolGroupDropPermissionsMutation(graphene.Mutation):
     pool = graphene.Field(PoolType)
 
     @administrator_required
-    async def mutate(self, _info, pool_id, groups):
+    async def mutate(self, _info, pool_id, groups, creator):
         pool = await Pool.get(pool_id)
         if not pool:
             return {'ok': False}
 
-        await pool.remove_groups(groups)
+        await pool.remove_groups(creator, groups)
 
         pool_record = await Pool.get_pool(pool.id)
         return PoolGroupDropPermissionsMutation(ok=True, pool=pool_obj_to_type(pool_record))
@@ -813,12 +822,12 @@ class PoolRoleAddPermissionsMutation(graphene.Mutation):
     pool = graphene.Field(PoolType)
 
     @administrator_required
-    async def mutate(self, _info, pool_id, roles):
+    async def mutate(self, _info, pool_id, roles, creator):
         pool = await Pool.get(pool_id)
         if not pool:
             return {'ok': False}
 
-        await pool.add_roles(roles)
+        await pool.add_roles(roles, creator)
 
         pool_record = await Pool.get_pool(pool.id)
         return PoolRoleAddPermissionsMutation(ok=True, pool=pool_obj_to_type(pool_record))
@@ -833,12 +842,12 @@ class PoolRoleDropPermissionsMutation(graphene.Mutation):
     pool = graphene.Field(PoolType)
 
     @administrator_required
-    async def mutate(self, _info, pool_id, roles):
+    async def mutate(self, _info, pool_id, roles, creator):
         pool = await Pool.get(pool_id)
         if not pool:
             return {'ok': False}
 
-        await pool.remove_roles(roles)
+        await pool.remove_roles(creator, roles)
 
         pool_record = await Pool.get_pool(pool.id)
         return PoolRoleAddPermissionsMutation(ok=True, pool=pool_obj_to_type(pool_record))

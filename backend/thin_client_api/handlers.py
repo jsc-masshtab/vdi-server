@@ -94,7 +94,7 @@ class PoolGetVm(BaseHandler, ABC):
             # Если свободная VM найдена, нужно закрепить ее за пользователем.
             if vm:
                 vm_id = vm.id
-                await vm.add_user(user_id)
+                await vm.add_user(user_id, creator='system')
                 # await vm.attach_to_user(user_id)
 
         # В отдельной корутине запускаем расширение пула

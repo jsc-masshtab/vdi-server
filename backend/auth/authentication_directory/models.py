@@ -9,7 +9,7 @@ from sqlalchemy.dialects.postgresql import UUID, ARRAY, JSONB
 from sqlalchemy.sql import text, desc
 
 from settings import LDAP_TIMEOUT
-from database import db, AbstractSortableStatusModel, Status, Role, EntityType
+from database import db, AbstractSortableStatusModel, Status, Role, AbstractClass
 from auth.utils.crypto import encrypt, decrypt
 from auth.models import User, Group
 from auth.authentication_directory.utils import (unpack_guid, pack_guid, unpack_ad_info,
@@ -22,7 +22,7 @@ from common.veil_errors import SimpleError, ValidationError
 _ = lang_init()
 
 
-class AuthenticationDirectory(db.Model, AbstractSortableStatusModel):
+class AuthenticationDirectory(db.Model, AbstractSortableStatusModel, AbstractClass):
     """Модель служб каталогов для авторизации пользователей в системе.
 
     connection_type: тип подключения (поддерживается только LDAP)
@@ -102,14 +102,6 @@ class AuthenticationDirectory(db.Model, AbstractSortableStatusModel):
     status = db.Column(AlchemyEnum(Status), nullable=False, index=True)
 
     @property
-    def entity_type(self):
-        return EntityType.SECURITY
-
-    @property
-    def entity(self):
-        return {'entity_type': self.entity_type, 'entity_uuid': self.id}
-
-    @property
     async def mappings(self):
         query = Mapping.join(
             GroupAuthenticationDirectoryMapping.query.where(
@@ -117,7 +109,7 @@ class AuthenticationDirectory(db.Model, AbstractSortableStatusModel):
         return await query.gino.load(Mapping).all()
 
     @classmethod
-    async def soft_create(cls, verbose_name, directory_url, domain_name,
+    async def soft_create(cls, verbose_name, directory_url, domain_name, creator,
                           service_username=None,
                           service_password=None,
                           description=None, connection_type=ConnectionTypes.LDAP,
@@ -128,7 +120,7 @@ class AuthenticationDirectory(db.Model, AbstractSortableStatusModel):
         # Ограничение на количество записей
         count = await db.func.count(AuthenticationDirectory.id).gino.scalar()
         if count > 0:
-            raise SimpleError(_('More than one authentication directory can not be created.'))
+            raise SimpleError(_('More than one authentication directory can not be created.'), user=creator)
         # Шифруем пароль
         if service_password and isinstance(service_password, str):
             service_password = encrypt(service_password)
@@ -151,65 +143,34 @@ class AuthenticationDirectory(db.Model, AbstractSortableStatusModel):
             auth_dir_dict['id'] = id
         # Создаем запись
         auth_dir = await AuthenticationDirectory.create(**auth_dir_dict)
-        await log.info(_('Authentication directory {} is created').format(auth_dir_dict.get('verbose_name')))
+        await log.info(_('Authentication directory {} is created').format(auth_dir_dict.get('verbose_name')),
+                       user=creator
+                       )
         # Проверяем доступность
         await auth_dir.test_connection()
         return auth_dir
 
     @classmethod
-    async def soft_update(cls, id, verbose_name, directory_url, connection_type, description, directory_type,
-                          domain_name, subdomain_name, service_username, service_password, admin_server, kdc_urls,
-                          sso):
-        object_kwargs = dict()
-        if verbose_name:
-            object_kwargs['verbose_name'] = verbose_name
-        if directory_url:
-            object_kwargs['directory_url'] = directory_url
-        if connection_type:
-            object_kwargs['connection_type'] = connection_type
-        if description:
-            object_kwargs['description'] = description
-        if sso or sso is False:
-            object_kwargs['sso'] = sso
-        if directory_type:
-            object_kwargs['directory_type'] = directory_type
-        if domain_name:
-            object_kwargs['domain_name'] = domain_name
-        if subdomain_name:
-            object_kwargs['subdomain_name'] = subdomain_name
-        if service_username:
-            object_kwargs['service_username'] = service_username
-        if service_password:
-            object_kwargs['service_password'] = encrypt(service_password)
-        if admin_server:
-            object_kwargs['admin_server'] = admin_server
-        if kdc_urls:
-            object_kwargs['kdc_urls'] = kdc_urls
-        # Редактируем запись
-        if object_kwargs:
-            await cls.update.values(**object_kwargs).where(
-                cls.id == id).gino.status()
-            desc = _('Id: {}. Arguments: {}').format(id, object_kwargs)
-            await log.info(_('Values for auth directory is updated'), description=desc)
-        # Получаем отредактированную запись
-        auth_dir = await cls.get(id)
-        # Проверяем соединение
-        await auth_dir.test_connection()
-        return auth_dir
+    async def soft_update(cls, id, **kwargs):
 
-    async def soft_delete(self, dest):
-        """Все удаления объектов AD необходимо делать тут."""
-        await self.delete()
-        msg = _('{} {} had remove.').format(dest, self.verbose_name)
-        if self.entity:
-            await log.info(msg, entity_dict=self.entity)
-        else:
-            await log.info(msg)
+        # TODO: password encryption
+        update_type, update_dict = await super().soft_update(id, **kwargs)
+
+        creator = update_dict.pop('creator')
+        desc = str(update_dict)
+        await log.info(_('Values for auth directory is updated'), description=desc, user=creator)
+
+        await update_type.test_connection()
+        return update_type
+
+    async def soft_delete(self, dest, creator):
+        parent = super().soft_delete(dest, creator)
+
         # Удаляем у существующих групп все ad_guid
         await Group.update.values(ad_guid=None).where(Group.ad_guid.isnot(None)).gino.status()
-        return True
+        return parent
 
-    async def add_mapping(self, mapping: dict, groups: list):
+    async def add_mapping(self, mapping: dict, groups: list, creator):
         """
         :param mapping: Dictionary of Mapping table kwargs.
         :param groups: List of Group.id strings.
@@ -221,11 +182,11 @@ class AuthenticationDirectory(db.Model, AbstractSortableStatusModel):
                 await GroupAuthenticationDirectoryMapping.create(authentication_directory_id=self.id,
                                                                  group_id=group_id, mapping_id=mapping_obj.id)
                 group_name = await Group.get(group_id)
-                descr = _('Arguments: {} of group: {}').format(mapping, group_name.verbose_name)
+                desc = _('Arguments: {} of group: {}').format(mapping, group_name.verbose_name)
                 msg = _('Mapping for auth directory {} is created').format(self.verbose_name)
-                await log.info(msg, description=descr)
+                await log.info(msg, description=desc, user=creator)
 
-    async def edit_mapping(self, mapping: dict, groups: list):
+    async def edit_mapping(self, mapping: dict, groups: list, creator):
         """
         :param mapping: Dictionary of Mapping table kwargs.
         :param groups: List of Group.id strings.
@@ -233,7 +194,10 @@ class AuthenticationDirectory(db.Model, AbstractSortableStatusModel):
         async with db.transaction():
             mapping_id = mapping.pop('mapping_id')
             mapping_obj = await Mapping.get(mapping_id)
-            await mapping_obj.soft_update(**mapping)
+            await mapping_obj.soft_update(mapping_id, verbose_name=mapping.get('verbose_name'), description=mapping.get('description'),
+                                          value_type=mapping.get('value_type'), values=mapping.get('values'),
+                                          priority=mapping.get('priority'), creator=creator
+                                          )
             if groups:
                 await GroupAuthenticationDirectoryMapping.delete.where(
                     GroupAuthenticationDirectoryMapping.mapping_id == mapping_id).gino.status()
@@ -241,9 +205,9 @@ class AuthenticationDirectory(db.Model, AbstractSortableStatusModel):
                     await GroupAuthenticationDirectoryMapping.create(authentication_directory_id=self.id,
                                                                      group_id=group_id, mapping_id=mapping_id)
                     group_name = await Group.get(group_id)
-                    descr = _('New arguments: {} of group: {}').format(mapping, group_name.verbose_name)
+                    desc = _('New arguments: {} of group: {}').format(mapping, group_name.verbose_name)
                     msg = _('Mapping for auth directory {} is updated').format(self.verbose_name)
-                    await log.info(msg, description=descr)
+                    await log.info(msg, description=desc, user=creator)
 
     async def test_connection(self) -> bool:
         """
@@ -310,7 +274,7 @@ class AuthenticationDirectory(db.Model, AbstractSortableStatusModel):
         username = username.lower()
         user = await User.get_object(extra_field_name='username', extra_field_value=username, include_inactive=True)
         if not user:
-            user = await User.soft_create(username)
+            user = await User.soft_create(username, creator='system')
             created = True
         else:
             await user.update(is_active=True).apply()
@@ -346,7 +310,7 @@ class AuthenticationDirectory(db.Model, AbstractSortableStatusModel):
         log.debug(_('Mappings: {}').format(mappings))
 
         if not mappings:
-            await user.add_role(Role.VM_OPERATOR)
+            await user.add_role(Role.VM_OPERATOR, creator='system')
             log.debug(_('Role VM_OPERATOR has assigned to user {}.').format(user.username))
             return True
 
@@ -376,7 +340,7 @@ class AuthenticationDirectory(db.Model, AbstractSortableStatusModel):
             if user_veil_groups:
                 for group in await role_mapping.assigned_groups:
                     log.debug(_('Attaching user {} to group: {}').format(user.username, group.verbose_name))
-                    await group.add_user(user.id)
+                    await group.add_user(user.id, creator='system')
                 return True
         return False
 
@@ -435,6 +399,8 @@ class AuthenticationDirectory(db.Model, AbstractSortableStatusModel):
             success = False
             created = False
             raise ValidationError(_('Server down (ldap).'))
+        except Exception as E:
+            log.debug(E)
         finally:
             if not success and created:
                 await user.delete()
@@ -616,7 +582,7 @@ class AuthenticationDirectory(db.Model, AbstractSortableStatusModel):
             await group.update(ad_guid=str(group_info['ad_guid'])).apply()
             return group
         try:
-            group = await Group.soft_create(**group_info)
+            group = await Group.soft_create(creator='system', **group_info)
         except UniqueViolationError:
             # Если срабатывает этот сценарий - что-то пошло не поплану
             return await Group.query.where(Group.ad_guid == str(group_info['ad_guid'])).gino.first()
@@ -639,7 +605,7 @@ class AuthenticationDirectory(db.Model, AbstractSortableStatusModel):
                     continue
                 # Создаем пользователя
                 user = await User.soft_create(username=username, last_name=last_name, first_name=first_name,
-                                              email=email)
+                                              email=email, creator='system')
                 if user:
                     users_list.append(user.id)
         return users_list
@@ -660,11 +626,11 @@ class AuthenticationDirectory(db.Model, AbstractSortableStatusModel):
             users_list = None
         # Включаем пользователей в группу
         if users_list:
-            await group.add_users(users_list)
+            await group.add_users(users_list, creator='system')
         return True
 
 
-class Mapping(db.Model):
+class Mapping(db.Model, AbstractClass):
     """
     Модель отображения атрибутов пользователя службы каталогов на группы пользователей системы.
     Описание полей:
@@ -691,14 +657,6 @@ class Mapping(db.Model):
     priority = db.Column(db.Integer(), nullable=False, default=0)
 
     @property
-    def entity_type(self):
-        return EntityType.SECURITY
-
-    @property
-    def entity(self):
-        return {'entity_type': self.entity_type, 'entity_uuid': self.id}
-
-    @property
     async def assigned_groups(self):
         query = Group.join(
             GroupAuthenticationDirectoryMapping.query.where(
@@ -714,37 +672,6 @@ class Mapping(db.Model):
             (text('anon_1.id is null'))
         )
         return await possible_groups_query.gino.load(Group).all()
-
-    async def soft_update(self, verbose_name=None, description=None, value_type=None, values=None, priority=None):
-        mapping_kwargs = dict()
-        if verbose_name:
-            mapping_kwargs['verbose_name'] = verbose_name
-        if description:
-            mapping_kwargs['description'] = description
-        if value_type:
-            mapping_kwargs['value_type'] = value_type
-        if values:
-            mapping_kwargs['values'] = values
-        if priority:
-            mapping_kwargs['priority'] = priority
-        if mapping_kwargs:
-            await Mapping.update.values(**mapping_kwargs).where(
-                Mapping.id == self.id).gino.status()
-        return await Mapping.get(self.id)
-
-    async def soft_delete(self, dest):
-        """Удаление мэппингов."""
-        try:
-            await self.delete()
-            msg = _('{} {} had remove.').format(dest, self.verbose_name)
-            if self.entity:
-                await log.info(msg, entity_dict=self.entity)
-            else:
-                await log.info(msg)
-            return True
-        except Exception as ex:
-            log.debug(_('Soft_delete exception: {}').format(ex))
-            return False
 
 
 class GroupAuthenticationDirectoryMapping(db.Model):

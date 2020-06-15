@@ -7,7 +7,7 @@ from sqlalchemy import Index
 from sqlalchemy import Enum as AlchemyEnum
 from asyncpg.exceptions import UniqueViolationError
 
-from database import db, AbstractSortableStatusModel, Role, EntityType
+from database import db, AbstractSortableStatusModel, Role, EntityType, AbstractClass
 from auth.utils import hashers
 from common.veil_errors import SimpleError
 
@@ -42,7 +42,7 @@ class EntityRoleOwner(db.Model):
     group_id = db.Column(UUID(), db.ForeignKey('group.id', ondelete="CASCADE"), nullable=True)
 
 
-class User(AbstractSortableStatusModel, db.Model):
+class User(AbstractSortableStatusModel, db.Model, AbstractClass):
     __tablename__ = 'user'
 
     id = db.Column(UUID(), primary_key=True, default=uuid.uuid4)
@@ -59,14 +59,6 @@ class User(AbstractSortableStatusModel, db.Model):
 
     # ----- ----- ----- ----- ----- ----- -----
     # Properties and getters:
-
-    @property
-    def entity_type(self):
-        return EntityType.SECURITY
-
-    @property
-    def entity(self):
-        return {'entity_type': self.entity_type, 'entity_uuid': self.id}
 
     @property
     async def assigned_groups(self):
@@ -137,28 +129,23 @@ class User(AbstractSortableStatusModel, db.Model):
     # ----- ----- ----- ----- ----- ----- -----
     # Setters & etc.
 
-    async def add_role(self, role):
+    async def add_role(self, role, creator):
         try:
-            await log.info(_('Role {} is added to user {}').format(role, self.username))
+            await log.info(_('Role {} is added to user {}').format(role, self.username), user=creator)
             add = await UserRole.create(user_id=self.id, role=role)
             user = await self.get(self.id)
             assigned_roles = await user.roles
             log.debug(_('User {} roles: {}').format(user.username, assigned_roles))
             return add
         except UniqueViolationError:
-            raise SimpleError(_('Role {} is assigned to user {}').format(role, self.id))
+            raise SimpleError(_('Role {} is assigned to user {}').format(role, self.id), user=creator)
 
-    async def add_roles(self, roles_list):
-        async with db.transaction():
-            for role in roles_list:
-                await self.add_role(role)
-
-    async def remove_roles(self, roles_list=None):
+    async def remove_roles(self, roles_list=None, creator='system'):
         if not roles_list:
             return await UserRole.delete.where(UserRole.user_id == self.id).gino.status()
         if roles_list and isinstance(roles_list, list):
             role_del = ' '.join(roles_list)
-            await log.info(_('Roles: {} was deleted to user {}').format(role_del, self.username))
+            await log.info(_('Roles: {} was deleted to user {}').format(role_del, self.username), user=creator)
             remove = await UserRole.delete.where(
                 (UserRole.role.in_(roles_list)) & (UserRole.user_id == self.id)).gino.status()
             user = await self.get(self.id)
@@ -173,29 +160,29 @@ class User(AbstractSortableStatusModel, db.Model):
             await group.remove_users(users_list)
             await log.info(_('Group {} is removed for user {}').format(group, self.username))
 
-    async def activate(self):
+    async def activate(self, creator):
         query = User.update.values(is_active=True).where(User.id == self.id)
         operation_status = await query.gino.status()
 
         info_message = _('User {username} has been activated.').format(username=self.username)
-        await log.info(info_message, entity_dict=self.entity)
+        await log.info(info_message, entity_dict=self.entity, user=creator)
 
         return operation_status
 
-    async def deactivate(self):
+    async def deactivate(self, creator):
         """Деактивировать всех суперпользователей в системе - нельзя."""
         query = db.select([db.func.count(User.id)]).where(
             (User.id != self.id) & (User.is_superuser == True) & (User.is_active == True))  # noqa
 
         superuser_count = await query.gino.scalar()
         if superuser_count == 0:
-            raise SimpleError(_('There is no more active superuser.'))
+            raise SimpleError(_('There is no more active superuser.'), user=creator)
 
         query = User.update.values(is_active=False).where(User.id == self.id)
         operation_status = await query.gino.status()
 
         info_message = _('User {username} has been deactivated.').format(username=self.username)
-        await log.info(info_message, entity_dict=self.entity)
+        await log.info(info_message, entity_dict=self.entity, user=creator)
 
         return operation_status
 
@@ -217,18 +204,18 @@ class User(AbstractSortableStatusModel, db.Model):
         password = await User.select('password').where(User.username == username).gino.scalar()
         return await hashers.check_password(raw_password, password)
 
-    async def set_password(self, raw_password):
+    async def set_password(self, raw_password, creator):
         encoded_password = hashers.make_password(raw_password)
         user_status = await User.update.values(password=encoded_password).where(
             User.id == self.id).gino.status()
 
         info_message = _('Password of user {username} has been changed.').format(username=self.username)
-        await log.info(info_message, entity_dict=self.entity)
+        await log.info(info_message, entity_dict=self.entity, user=creator)
 
         return user_status
 
-    @staticmethod
-    async def soft_create(username, password=None, email=None, last_name=None, first_name=None, is_superuser=False,
+    @classmethod
+    async def soft_create(cls, username, creator, password=None, email=None, last_name=None, first_name=None, is_superuser=False,
                           id=None, is_active=True):
         """Если password будет None, то make_password вернет unusable password"""
         encoded_password = hashers.make_password(password)
@@ -237,44 +224,35 @@ class User(AbstractSortableStatusModel, db.Model):
         if id:
             user_kwargs['id'] = id
 
-        user_obj = await User.create(**user_kwargs)
+        user_obj = await cls.create(**user_kwargs)
 
         user_role = 'Superuser' if is_superuser else 'User'
         info_message = _('User {} created with role {}.').format(username, user_role)
-        await log.info(info_message, entity_dict=user_obj.entity)
+        await log.info(info_message, entity_dict=user_obj.entity, user=creator)
 
         return user_obj
 
     @classmethod
-    async def soft_update(cls, user_id, username, email, last_name, first_name, is_superuser):
-        user_kwargs = dict()
-        if username:
-            user_kwargs['username'] = username
-        if email:
-            user_kwargs['email'] = email
-        if last_name:
-            user_kwargs['last_name'] = last_name
-        if first_name:
-            user_kwargs['first_name'] = first_name
-        if is_superuser or is_superuser is False:
-            user_kwargs['is_superuser'] = is_superuser
-        if user_kwargs:
-            await User.update.values(**user_kwargs).where(
-                User.id == user_id).gino.status()
-            user = await User.get(user_id)
-            if 'is_superuser' in user_kwargs and is_superuser:
-                assigned_roles = _('Roles: {}'.format(str(await user.roles)))
-                info_message = _('User {username} has become a superuser.').format(username=user.username)
-                await log.info(info_message, entity_dict=user.entity, description=assigned_roles)
-            elif is_superuser is False:
-                assigned_roles = _('Roles: {}'.format(str(await user.roles)))
-                info_message = _('User {username} has left a superuser.').format(username=user.username)
-                await log.info(info_message, entity_dict=user.entity, description=assigned_roles)
+    async def soft_update(cls, id, **kwargs):
+        update_type, update_dict = await super().soft_update(id, **kwargs)
 
-        descr = str(user_kwargs)
-        await log.info(_('Values of user {} is changed').format(user.username), description=descr)
+        creator = update_dict.pop('creator')
+        desc = str(update_dict)
+        await log.info(_('Values of user {} is changed').format(update_type.username),
+                       description=desc,
+                       user=creator
+                       )
 
-        return user
+        if 'is_superuser' in update_dict and update_dict.get('is_superuser'):
+            assigned_roles = _('Roles: {}'.format(str(await update_type.roles)))
+            info_message = _('User {username} has become a superuser.').format(username=update_type.username)
+            await log.info(info_message, entity_dict=update_type.entity, description=assigned_roles, user=creator)
+        elif update_dict.get('is_superuser') is False:
+            assigned_roles = _('Roles: {}'.format(str(await update_type.roles)))
+            info_message = _('User {username} has left a superuser.').format(username=update_type.username)
+            await log.info(info_message, entity_dict=update_type.entity, description=assigned_roles, user=creator)
+
+        return update_type
 
     @classmethod
     async def login(cls, username, token, client_type, ip=None, ldap=False):
@@ -354,7 +332,7 @@ class UserJwtInfo(db.Model):
         return count > 0
 
 
-class Group(AbstractSortableStatusModel, db.Model):
+class Group(AbstractSortableStatusModel, db.Model, AbstractClass):
     __tablename__ = 'group'
 
     id = db.Column(UUID(), primary_key=True, default=uuid.uuid4)
@@ -367,14 +345,6 @@ class Group(AbstractSortableStatusModel, db.Model):
 
     # ----- ----- ----- ----- ----- ----- -----
     # Properties and getters:
-
-    @property
-    def entity_type(self):
-        return EntityType.SECURITY
-
-    @property
-    def entity(self):
-        return {'entity_type': self.entity_type, 'entity_uuid': self.id}
 
     @property
     async def roles(self):
@@ -395,7 +365,7 @@ class Group(AbstractSortableStatusModel, db.Model):
         return await possible_users_query.order_by(User.username).gino.load(User).all()
 
     @staticmethod
-    async def soft_create(verbose_name, description=None, id=None, ad_guid=None):
+    async def soft_create(verbose_name, creator, description=None, id=None, ad_guid=None):
         group_kwargs = {'verbose_name': verbose_name, 'description': description}
         if ad_guid:
             group_kwargs['ad_guid'] = str(ad_guid)
@@ -403,10 +373,11 @@ class Group(AbstractSortableStatusModel, db.Model):
             group_kwargs['id'] = id
         group_obj = await Group.create(**group_kwargs)
         info_message = _('Group {} is created.').format(verbose_name)
-        await log.info(info_message)
+        await log.info(info_message, user=creator)
+
         return group_obj
 
-    async def soft_update(self, verbose_name, description):
+    async def soft_update(self, verbose_name, description, creator):
         group_kwargs = dict()
         if verbose_name:
             group_kwargs['verbose_name'] = verbose_name
@@ -416,66 +387,42 @@ class Group(AbstractSortableStatusModel, db.Model):
         if group_kwargs:
             await self.update(**group_kwargs).apply()
             descr = str(group_kwargs)
-            await log.info(_('Values of group {} is updated').format(self.verbose_name), description=descr)
+            await log.info(_('Values of group {} is updated').format(self.verbose_name), description=descr, user=creator)
 
         return self
 
-    async def soft_delete(self, dest):
-
-        try:
-            await self.delete()
-            msg = _('{} {} had remove.').format(dest, self.verbose_name)
-            if self.entity:
-                await log.info(msg, entity_dict=self.entity)
-            else:
-                await log.info(msg)
-            return True
-        except Exception as ex:
-            log.debug(_('Soft_delete exception: {}').format(ex))
-            return False
-
-    async def add_user(self, user_id):
+    async def add_user(self, user_id, creator):
         """Add user to group"""
         try:
             user_group = await UserGroup.create(user_id=user_id, group_id=self.id)
 
             user = await User.get(user_id)
             info_message = _('User {} has been included to group {}.').format(user.username, self.verbose_name)
-            await log.info(info_message, entity_dict=self.entity)
+            await log.info(info_message, entity_dict=self.entity, user=creator)
             return user_group
         except UniqueViolationError:
-            raise SimpleError(_('User {} is already in group {}').format(user_id, self.id))
+            raise SimpleError(_('User {} is already in group {}').format(user_id, self.id), user=creator)
 
-    async def add_users(self, user_id_list):
-        async with db.transaction():
-            for user in user_id_list:
-                await self.add_user(user)
-
-    async def remove_users(self, user_id_list):
+    async def remove_users(self, user_id_list, creator):
         for id in user_id_list:
             name = await User.get(id)
-            await log.info(_('Removing user {} from group {}').format(name.username, self.verbose_name))
+            await log.info(_('Removing user {} from group {}').format(name.username, self.verbose_name), user=creator)
         return await UserGroup.delete.where(
             (UserGroup.user_id.in_(user_id_list)) & (UserGroup.group_id == self.id)).gino.status()
 
-    async def add_role(self, role):
+    async def add_role(self, role, creator):
         try:
             group_role = await GroupRole.create(group_id=self.id, role=role)
             info_message = _('Role {} has been set to group {}.').format(role, self.verbose_name)
-            await log.info(info_message, entity_dict=self.entity)
+            await log.info(info_message, entity_dict=self.entity, user=creator)
 
         except UniqueViolationError:
-            raise SimpleError(_('Group {} has already role {}').format(self.id, role))
+            raise SimpleError(_('Group {} has already role {}').format(self.id, role), user=creator)
         return group_role
 
-    async def add_roles(self, roles_list):
-        async with db.transaction():
-            for role in roles_list:
-                await self.add_role(role)
-
-    async def remove_roles(self, roles_list):
+    async def remove_roles(self, roles_list, creator):
         role_del = ' '.join(roles_list)
-        await log.info(_('Roles: {} was deleted to group {}').format(role_del, self.verbose_name))
+        await log.info(_('Roles: {} was deleted to group {}').format(role_del, self.verbose_name), user=creator)
         return await GroupRole.delete.where(
             (GroupRole.role.in_(roles_list)) & (GroupRole.group_id == self.id)).gino.status()
 

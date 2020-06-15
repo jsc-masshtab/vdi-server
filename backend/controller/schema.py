@@ -61,16 +61,16 @@ class AddControllerMutation(graphene.Mutation):
 
     @administrator_required
     async def mutate(self, _info, verbose_name, address, username,
-                     password, ldap_connection, description=None):
+                     password, ldap_connection, creator, description=None):
         try:
             if len(verbose_name) < 1:
                 raise SimpleError(_('Controller name cannot be empty.'))
             controller = await Controller.soft_create(verbose_name, address, username, password, ldap_connection,
-                                                      description)
+                                                      description, creator)
             await resources_monitor_manager.add_controller(address)
             return AddControllerMutation(ok=True, controller=ControllerType(**controller.__values__))
-        except SimpleError as E:
-            raise SimpleError(E)
+        # except SimpleError as E:
+        #     raise SimpleError(E)
         except ValueError as err:
             msg = _('Add new controller {}: operation failed.').format(address)
             description = str(err)
@@ -95,7 +95,7 @@ class UpdateControllerMutation(graphene.Mutation):
     controller = graphene.Field(lambda: ControllerType)
 
     @administrator_required
-    async def mutate(self, _info, id, verbose_name=None, address=None, username=None,
+    async def mutate(self, _info, id, creator, verbose_name=None, address=None, username=None,
                      password=None, ldap_connection=None, description=None):
         controller = await Controller.get(id)
         if not controller:
@@ -107,7 +107,9 @@ class UpdateControllerMutation(graphene.Mutation):
                                          description=description,
                                          username=username,
                                          password=password,
-                                         ldap_connection=ldap_connection)
+                                         ldap_connection=ldap_connection,
+                                         creator=creator
+                                         )
         except ValueError:
             msg = _('Fail to update controller {}').format(id)
             raise SimpleError(msg)
@@ -123,7 +125,7 @@ class RemoveControllerMutation(graphene.Mutation):
     ok = graphene.Boolean()
 
     @administrator_required
-    async def mutate(self, _info, id, full=False):
+    async def mutate(self, _info, id, creator, full=False):
         # TODO: validate active connected resources
 
         controller = await Controller.query.where(Controller.id == id).gino.first()
@@ -131,9 +133,9 @@ class RemoveControllerMutation(graphene.Mutation):
             raise GraphQLError(_('No such controller.'))
 
         if full:
-            status = await controller.full_delete()
+            status = await controller.full_delete(creator=creator)
         else:
-            status = await controller.soft_delete(dest=_('Controller'))
+            status = await controller.soft_delete(dest=_('Controller'), creator=creator)
 
         if controller.active:
             await resources_monitor_manager.remove_controller(controller.address)
@@ -148,7 +150,7 @@ class TestControllerMutation(graphene.Mutation):
     ok = graphene.Boolean()
 
     @administrator_required
-    async def mutate(self, _info, id):
+    async def mutate(self, _info, id, creator):
         controller = await Controller.get(id)
         if not controller:
             raise GraphQLError(_('No such controller.'))
@@ -168,7 +170,7 @@ class ControllerQuery(graphene.ObjectType):
     controller = graphene.Field(lambda: ControllerType, id=graphene.String())
 
     @administrator_required
-    async def resolve_controllers(self, _info):
+    async def resolve_controllers(self, _info, **kwargs):
         controllers = await Controller.query.gino.all()
         objects = [
             ControllerType(**controller.__values__)
@@ -177,7 +179,7 @@ class ControllerQuery(graphene.ObjectType):
         return objects
 
     @administrator_required
-    async def resolve_controller(self, _info, id):
+    async def resolve_controller(self, _info, id, **kwargs):
         controller = await Controller.query.where(Controller.id == id).gino.first()
         if not controller:
             raise GraphQLError(_('No such controller.'))

@@ -210,7 +210,7 @@ class AuthenticationDirectoryQuery(graphene.ObjectType):
         return AuthenticationDirectoryType(**model_instance.__values__)
 
     @readonly_required
-    async def resolve_auth_dir(self, info, id=None):
+    async def resolve_auth_dir(self, info, id=None, **kwargs):
         if not id:
             raise SimpleError(_('Specify id.'))
 
@@ -220,7 +220,7 @@ class AuthenticationDirectoryQuery(graphene.ObjectType):
         return AuthenticationDirectoryQuery.instance_to_type(auth_dir)
 
     @readonly_required
-    async def resolve_auth_dirs(self, info, ordering=None):
+    async def resolve_auth_dirs(self, info, ordering=None, **kwargs):
         auth_dirs = await AuthenticationDirectory.get_objects(ordering=ordering)
         objects = [
             AuthenticationDirectoryQuery.instance_to_type(auth_dir)
@@ -229,7 +229,7 @@ class AuthenticationDirectoryQuery(graphene.ObjectType):
         return objects
 
     @readonly_required
-    async def resolve_group_members(self, _info, auth_dir_id, group_cn):
+    async def resolve_group_members(self, _info, auth_dir_id, group_cn, **kwargs):
         """Пользователи члены групп в Authentication Directory."""
         auth_dir = await AuthenticationDirectory.get(auth_dir_id)
         if not auth_dir:
@@ -260,9 +260,9 @@ class CreateAuthenticationDirectoryMutation(graphene.Mutation, AuthenticationDir
 
     @classmethod
     @security_administrator_required
-    async def mutate(cls, root, info, **kwargs):
+    async def mutate(cls, root, info, creator, **kwargs):
         await cls.validate_agruments(**kwargs)
-        auth_dir = await AuthenticationDirectory.soft_create(**kwargs)
+        auth_dir = await AuthenticationDirectory.soft_create(creator=creator, **kwargs)
         return CreateAuthenticationDirectoryMutation(
             auth_dir=AuthenticationDirectoryType(**auth_dir.__values__),
             ok=True)
@@ -276,12 +276,12 @@ class DeleteAuthenticationDirectoryMutation(graphene.Mutation, AuthenticationDir
 
     @classmethod
     @security_administrator_required
-    async def mutate(cls, root, info, **kwargs):
+    async def mutate(cls, root, info, creator, **kwargs):
         await cls.validate_agruments(**kwargs)
         auth_dir = await AuthenticationDirectory.get(kwargs['id'])
         if not auth_dir:
             raise SimpleError(_('No such Authentication Directory.'))
-        status = await auth_dir.soft_delete(dest=_('Authentication directory'))
+        status = await auth_dir.soft_delete(dest=_('Authentication directory'), creator=creator)
         return DeleteAuthenticationDirectoryMutation(ok=status)
 
 
@@ -294,7 +294,7 @@ class TestAuthenticationDirectoryMutation(graphene.Mutation, AuthenticationDirec
 
     @classmethod
     @security_administrator_required
-    async def mutate(cls, root, info, **kwargs):
+    async def mutate(cls, root, info, creator, **kwargs):
         await cls.validate_agruments(**kwargs)
         auth_dir = await AuthenticationDirectory.get_object(kwargs['id'])
         connection_ok = await auth_dir.test_connection()
@@ -323,16 +323,16 @@ class UpdateAuthenticationDirectoryMutation(graphene.Mutation, AuthenticationDir
 
     @classmethod
     @security_administrator_required
-    async def mutate(cls, root, info, **kwargs):
+    async def mutate(cls, root, info, creator, **kwargs):
         await cls.validate_agruments(**kwargs)
         auth_dir = await AuthenticationDirectory.soft_update(kwargs['id'],
-                                                             kwargs.get('verbose_name'), kwargs.get('directory_url'),
-                                                             kwargs.get('connection_type'), kwargs.get('description'),
-                                                             kwargs.get('directory_type'), kwargs.get('domain_name'),
-                                                             kwargs.get('subdomain_name'),
-                                                             kwargs.get('service_username'),
-                                                             kwargs.get('service_password'), kwargs.get('admin_server'),
-                                                             kwargs.get('kdc_urls'), kwargs.get('sso'),
+                                                             verbose_name=kwargs.get('verbose_name'), directory_url=kwargs.get('directory_url'),
+                                                             connection_type=kwargs.get('connection_type'), description=kwargs.get('description'),
+                                                             directory_type=kwargs.get('directory_type'), domain_name=kwargs.get('domain_name'),
+                                                             subdomain_name=kwargs.get('subdomain_name'),
+                                                             service_username=kwargs.get('service_username'),
+                                                             service_password=kwargs.get('service_password'), admin_server=kwargs.get('admin_server'),
+                                                             kdc_urls=kwargs.get('kdc_urls'), sso=kwargs.get('sso'), creator=creator
                                                              )
         return UpdateAuthenticationDirectoryMutation(
             auth_dir=AuthenticationDirectoryType(**auth_dir.__values__),
@@ -357,7 +357,7 @@ class AddAuthDirMappingMutation(graphene.Mutation, AuthenticationDirectoryValida
 
     @classmethod
     @security_administrator_required
-    async def mutate(cls, root, info, **kwargs):
+    async def mutate(cls, root, info, creator, **kwargs):
         await cls.validate_agruments(**kwargs)
         mapping_dict = {
             'verbose_name': kwargs['verbose_name'],
@@ -368,7 +368,9 @@ class AddAuthDirMappingMutation(graphene.Mutation, AuthenticationDirectoryValida
         }
         auth_dir = await AuthenticationDirectory.get(kwargs['id'])
         await auth_dir.add_mapping(mapping=mapping_dict,
-                                   groups=kwargs['groups'])
+                                   groups=kwargs['groups'],
+                                   creator=creator
+                                   )
         return AddAuthDirMappingMutation(ok=True, auth_dir=auth_dir)
 
 
@@ -382,12 +384,14 @@ class DeleteAuthDirMappingMutation(graphene.Mutation, AuthenticationDirectoryVal
 
     @classmethod
     @security_administrator_required
-    async def mutate(cls, root, info, **kwargs):
+    async def mutate(cls, root, info, creator, **kwargs):
         await cls.validate_agruments(**kwargs)
 
         mapping = await Mapping.get(kwargs['mapping_id'])
         auth_dir = await AuthenticationDirectory.get(kwargs['id'])
-        status = await mapping.soft_delete(dest=_('In authentication directory {} mapping').format(auth_dir.verbose_name))
+        status = await mapping.soft_delete(dest=_('In authentication directory {} mapping').format(auth_dir.verbose_name),
+                                           creator=creator
+                                           )
         return DeleteAuthDirMappingMutation(ok=status, auth_dir=auth_dir)
 
 
@@ -408,7 +412,7 @@ class EditAuthDirMappingMutation(graphene.Mutation, AuthenticationDirectoryValid
 
     @classmethod
     @security_administrator_required
-    async def mutate(cls, root, info, **kwargs):
+    async def mutate(cls, root, info, creator, **kwargs):
         await cls.validate_agruments(**kwargs)
 
         mapping_dict = {
@@ -422,7 +426,9 @@ class EditAuthDirMappingMutation(graphene.Mutation, AuthenticationDirectoryValid
 
         auth_dir = await AuthenticationDirectory.get(kwargs['id'])
         await auth_dir.edit_mapping(mapping=mapping_dict,
-                                    groups=kwargs.get('groups'))
+                                    groups=kwargs.get('groups'),
+                                    creator=creator
+                                    )
 
         return EditAuthDirMappingMutation(ok=True, auth_dir=auth_dir)
 
@@ -435,7 +441,7 @@ class SyncAuthenticationDirectoryGroupUsers(graphene.Mutation):
     ok = graphene.Boolean(default_value=False)
 
     @security_administrator_required
-    async def mutate(self, _info, auth_dir_id, sync_data):
+    async def mutate(self, _info, auth_dir_id, sync_data, **kwargs):
         auth_dir = await AuthenticationDirectory.get(auth_dir_id)
         if not auth_dir:
             raise SimpleError(_('No such Authentication Directory.'))

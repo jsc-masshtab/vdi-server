@@ -7,7 +7,7 @@ from sqlalchemy.dialects.postgresql import UUID
 import tornado.gen
 from asyncpg.exceptions import UniqueViolationError
 
-from database import db, get_list_of_values_from_db, EntityType
+from database import db, get_list_of_values_from_db, EntityType, AbstractClass
 from common.veil_errors import BadRequest, HttpError, VmCreationError, SimpleError
 from vm.veil_client import VmHttpClient
 from auth.models import Entity, EntityRoleOwner, User
@@ -19,7 +19,7 @@ from journal.journal import Log as log
 _ = lang_init()
 
 
-class Vm(db.Model):
+class Vm(db.Model, AbstractClass):
     """
     ACTIONS = ('start', 'suspend', 'reset', 'shutdown', 'resume', 'reboot')
     POWER_STATES = ('unknown', 'power off', 'power on and suspended', 'power on')
@@ -40,15 +40,6 @@ class Vm(db.Model):
     @property
     def entity_type(self):
         return EntityType.VM
-
-    @property
-    def entity(self):
-        return {'entity_type': self.entity_type, 'entity_uuid': self.id}
-
-    @property
-    async def entity_obj(self):
-        return await Entity.query.where(
-            (Entity.entity_type == self.entity_type) & (Entity.entity_uuid == self.id)).gino.first()
 
     @property
     def controller_query(self):
@@ -89,7 +80,7 @@ class Vm(db.Model):
 
         return vm
 
-    async def soft_delete(self, dest):
+    async def soft_delete(self, dest, creator):
         if self.created_by_vdi:
             controller_address = await self.controller_address
             if controller_address:
@@ -99,21 +90,11 @@ class Vm(db.Model):
                 except HttpError as http_error:
                     await log.warning(_('Fail to remove VM {} from ECP: ').format(self.verbose_name, http_error))
                 log.debug(_('Vm {} removed from ECP.').format(self.verbose_name))
-
-        try:
-            await self.delete()
-            msg = _('{} {} had remove.').format(dest, self.verbose_name)
-            if self.entity:
-                await log.info(msg, entity_dict=self.entity)
-            else:
-                await log.info(msg)
-            return True
-        except Exception as ex:
-            log.debug(_('Soft_delete exception: {}').format(ex))
-            return False
+        status = await super().soft_delete(dest=dest, creator=creator)
+        return status
 
     # TODO: очевидное дублирование однотипного кода. Переселить это все в универсальный метод
-    async def add_user(self, user_id):
+    async def add_user(self, user_id, creator):
         entity = await self.entity_obj
         try:
             async with db.transaction():
@@ -121,20 +102,17 @@ class Vm(db.Model):
                     entity = await Entity.create(**self.entity)
                 ero = await EntityRoleOwner.create(entity_id=entity.id, user_id=user_id)
                 user = await User.get(user_id)
-                await log.info(_('User {} is added to VM {}').format(user.username, self.verbose_name))
+                await log.info(_('User {} has been included to VM {}').format(user.username, self.verbose_name),
+                               user=creator
+                               )
         except UniqueViolationError:
-            raise SimpleError(_('Vm already has permission.'))
+            raise SimpleError(_('{} already has permission.').format(type(self).__name__), user=creator)
         return ero
 
-    async def add_users(self, users_list: list):
-        for user_id in users_list:
-            await self.add_user(user_id)
-        return True
-
-    async def remove_users(self, users_list: list):
+    async def remove_users(self, creator, users_list: list):
         entity = Entity.select('id').where((Entity.entity_type == self.entity_type) & (Entity.entity_uuid == self.id))
         # TODO: временное решение. Скорее всего потом права отзываться будут на конкретные сущности
-        await log.info(_('VM {} is clear from users').format(self.verbose_name))
+        await log.info(_('VM {} is clear from users').format(self.verbose_name), user=creator)
         if not users_list:
             return await EntityRoleOwner.delete.where(EntityRoleOwner.entity_id == entity).gino.status()
         return await EntityRoleOwner.delete.where(
@@ -229,11 +207,11 @@ class Vm(db.Model):
         return copy_result
 
     @staticmethod
-    async def remove_vms(vm_ids):
+    async def remove_vms(vm_ids, creator):
         """Remove given vms"""
         for vm_id in vm_ids:
             vm = await Vm.get(vm_id)
-            status = await vm.soft_delete(dest=_('VM'))
+            status = await vm.soft_delete(dest=_('VM'), creator=creator)
             await log.info(_('Vm {} removed from pool').format(vm.verbose_name))
         return status
 

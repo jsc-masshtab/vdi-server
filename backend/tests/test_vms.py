@@ -105,7 +105,7 @@ class VmActionTestCase(VdiHttpTestCase):
         vm = await Vm.query.where(pool_id == pool_id).gino.first()
 
         # Закрепляем VM за тестовым пользователем
-        await vm.add_user("10913d5d-ba7a-4049-88c5-769267a6cbe3")
+        await vm.add_user("10913d5d-ba7a-4049-88c5-769267a6cbe3", creator='system')
 
         # Авторизуемся, чтобы получить токен
         body = '{"username": "test_user_admin","password": "veil"}'

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from graphene.types.structures import NonNull
-from common.veil_errors import ValidationError, SimpleError
+from common.veil_errors import ValidationError
 
 from languages import lang_init
 
@@ -29,4 +29,4 @@ class MutationValidation:
                     if value or isinstance(argument, NonNull):
                         await validator(kwargs, value)
                 except ValidationError as E:
-                    raise SimpleError(_('Field \"{}\" - {}').format(argument_name, E))
+                    raise ValidationError(_('Field \"{}\" - {}').format(argument_name, E))
