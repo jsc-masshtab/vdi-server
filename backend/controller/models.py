@@ -99,10 +99,13 @@ class Controller(db.Model):
         token_info = await query.gino.first()
         if token_info:
             token, expires_on = token_info
-            if not token or not expires_on:
+            # Если дата истечения сегодня или позже - токен стоит продлить.
+            token_soon_expired = datetime.today().date() >= expires_on.date()
+
+            if not token or not expires_on or token_soon_expired:
                 token = await Controller.refresh_token(ip_address)
-            elif expires_on < datetime.now(expires_on.tzinfo):
-                token = await Controller.refresh_token(ip_address)
+            # elif expires_on < datetime.now(expires_on.tzinfo):
+            #     token = await Controller.refresh_token(ip_address)
             return token
         else:
             raise ValidationError(_('No such controller'))
