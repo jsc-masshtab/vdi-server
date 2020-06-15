@@ -11,12 +11,13 @@ from redis_broker import REDIS_POOL, WS_MONITOR_CHANNEL_IN, REDIS_CLIENT, WsMoni
 from languages import lang_init
 from journal.journal import Log as log
 
+
 _ = lang_init()
 
 
 # cli fast test: PUBLISH WS_MONITOR_CHANNEL_IN '{"command": "ADD_CONTROLLER", "controller_address": "192.168.9.145"}'
 async def listen_for_messages(resources_monitor_manager):
-
+    """Listen for commands to add/remove controller"""
     await resources_monitor_manager.start()
 
     redis_subscriber = REDIS_CLIENT.pubsub()
