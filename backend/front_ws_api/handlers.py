@@ -9,12 +9,12 @@ from tornado import httputil
 from tornado import websocket
 from tornado.web import Application
 
-from front_ws_api.resources_monitoring_data import VDI_FRONT_ALLOWED_SUBSCRIPTIONS_LIST, SubscriptionCmd
+from front_ws_api.subscription_sources import VDI_FRONT_ALLOWED_SUBSCRIPTIONS_LIST, SubscriptionCmd
 
 from languages import lang_init
 from journal.journal import Log as log
 
-from redis_broker import INTERNAL_EVENTS_CHANNEL, WS_MONITOR_CHANNEL_OUT, REDIS_CLIENT
+from redis_broker import INTERNAL_EVENTS_CHANNEL, WS_MONITOR_CHANNEL_OUT, REDIS_CLIENT, REDIS_ASYNC_TIMEOUT
 
 
 _ = lang_init()
@@ -67,7 +67,6 @@ class VdiFrontWsHandler(websocket.WebSocketHandler, AbstractSubscriptionObserver
             response['msg'] = subscription_cmd
             response['resource'] = subscription_source
         except ValueError as E:
-            #raise MeaningError(E)  # WTF?
             response['error'] = True
             await self.write_msg(response)
             return
@@ -115,7 +114,11 @@ class VdiFrontWsHandler(websocket.WebSocketHandler, AbstractSubscriptionObserver
         while True:
             try:
                 redis_message = redis_subscriber.get_message()
-                await self.write_msg(redis_message)
+                # todo: check if message from desired source (self._subscriptions)
+                if redis_message:
+                    await self.write_msg(redis_message)
+
+                await asyncio.sleep(REDIS_ASYNC_TIMEOUT)
 
             except Exception as ex:
                 await log.error(ex)

@@ -2,6 +2,8 @@
 import asyncio
 import json
 
+from database import start_gino, stop_gino
+
 from resources_monitor_manager import ResourcesMonitorManager
 
 from redis_broker import REDIS_POOL, WS_MONITOR_CHANNEL_IN, a_redis_lpop, WsMonitorCmd
@@ -16,7 +18,7 @@ async def listen_for_messages(resources_monitor_manager):
 
     await resources_monitor_manager.start()
 
-    log.general(_('Pool worker: start loop now'))
+    log.general(_('Ws listener worker: start loop now'))
     while True:
         try:
             # wait for message
@@ -39,6 +41,9 @@ async def listen_for_messages(resources_monitor_manager):
 def main():
     loop = asyncio.get_event_loop()
 
+    # init gino
+    loop.run_until_complete(start_gino())
+
     resources_monitor_manager = ResourcesMonitorManager()
 
     try:
@@ -47,8 +52,9 @@ def main():
     except KeyboardInterrupt:
         log.general(_("Ws MONITOR worker interrupted"))
     finally:
-
+        # free resources
         loop.run_until_complete(resources_monitor_manager.stop())
+        loop.run_until_complete(stop_gino())
         REDIS_POOL.disconnect()
 
 

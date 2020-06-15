@@ -11,7 +11,6 @@ import redis
 import settings
 
 from languages import lang_init
-from journal.journal import Log as log
 
 
 _ = lang_init()
@@ -160,8 +159,7 @@ async def a_redis_wait_for_message(redis_channel, predicate, timeout):
             await_time += REDIS_ASYNC_TIMEOUT
             await asyncio.sleep(REDIS_ASYNC_TIMEOUT)
 
-    except Exception as ex:
-        await log.error(ex)
+    except Exception:
         return False
 
 

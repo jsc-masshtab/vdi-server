@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from resources_monitoring.handlers import VdiFrontWsHandler
+from front_ws_api.handlers import VdiFrontWsHandler
 
 
 ws_event_monitoring_urls = [
