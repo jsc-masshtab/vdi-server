@@ -98,7 +98,7 @@ class PoolTaskManager:
 
     # CREATION
     async def start_pool_initialization(self, pool_id):
-
+        print('start_pool_initialization')
         automated_pool = await AutomatedPool.get(pool_id)
         # add data for protection
         self.add_new_pool_data(str(automated_pool.id), str(automated_pool.template_id))

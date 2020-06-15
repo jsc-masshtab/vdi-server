@@ -5,7 +5,7 @@ import json
 import tornado
 from tornado.testing import AsyncHTTPTestCase, gen_test
 
-from resources_monitoring.handlers import VdiFrontWsHandler
+from front_ws_api.handlers import VdiFrontWsHandler
 
 
 pytestmark = [pytest.mark.ws_requests]

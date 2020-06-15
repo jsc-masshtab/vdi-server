@@ -6,7 +6,7 @@ from database import start_gino, stop_gino
 
 from resources_monitor_manager import ResourcesMonitorManager
 
-from redis_broker import REDIS_POOL, WS_MONITOR_CHANNEL_IN, a_redis_lpop, WsMonitorCmd
+from redis_broker import REDIS_POOL, WS_MONITOR_CHANNEL_IN, REDIS_CLIENT, WsMonitorCmd, a_redis_get_message
 
 from languages import lang_init
 from journal.journal import Log as log
@@ -22,11 +22,14 @@ async def listen_for_messages(resources_monitor_manager):
     while True:
         try:
             # wait for message
-            data = await a_redis_lpop(WS_MONITOR_CHANNEL_IN)
-            queue, value = data
-            cmd_data_dict = json.loads(value.decode())
-            command = cmd_data_dict['command']
-            address = cmd_data_dict['controller_address']
+            redis_subscriber = REDIS_CLIENT.pubsub()
+            redis_subscriber.subscribe(WS_MONITOR_CHANNEL_IN)
+
+            redis_message = await a_redis_get_message(redis_subscriber)
+            print("redis_message", redis_message)
+            # get data from message
+            command = redis_message['command']
+            address = redis_message['controller_address']
 
             # add or remove controller
             if command == WsMonitorCmd.ADD_CONTROLLER:
@@ -35,7 +38,7 @@ async def listen_for_messages(resources_monitor_manager):
                 await resources_monitor_manager.remove_controller(address)
 
         except Exception as ex:
-            await log.error(ex)
+            await log.error(str(ex))
 
 
 def main():
@@ -54,8 +57,8 @@ def main():
     finally:
         # free resources
         loop.run_until_complete(resources_monitor_manager.stop())
-        loop.run_until_complete(stop_gino())
         REDIS_POOL.disconnect()
+        loop.run_until_complete(stop_gino())
 
 
 if __name__ == '__main__':

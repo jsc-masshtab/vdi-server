@@ -36,7 +36,7 @@ class PoolTaskType(Enum):
 
 
 WS_MONITOR_CHANNEL_OUT = 'WS_MONITOR_CHANNEL_OUT'  # по этому каналу сообщения полученные по ws от контроллеров
-WS_MONITOR_CHANNEL_IN = 'WS_MONITOR_CHANNEL_IN'  # по этому каналу команды к ws улиенту (добавить контроллер)
+WS_MONITOR_CHANNEL_IN = 'WS_MONITOR_CHANNEL_IN'  # по этому каналу команды к ws клиенту (добавить контроллер)
 
 
 class WsMonitorCmd(Enum):
@@ -163,6 +163,16 @@ async def a_redis_wait_for_message(redis_channel, predicate, timeout):
         return False
 
 
+async def a_redis_get_message(redis_subscriber):
+    """Asynchronously wait for message from channel"""
+    while True:
+        redis_message = redis_subscriber.get_message()
+        if redis_message:
+            return redis_message
+
+        await asyncio.sleep(REDIS_ASYNC_TIMEOUT)
+
+
 def request_to_execute_pool_task(pool_id, pool_task_type, **additional_data):
     """Send request to pool worker to execute a task"""
     uuid_str = str(uuid.uuid4())
@@ -172,5 +182,5 @@ def request_to_execute_pool_task(pool_id, pool_task_type, **additional_data):
 
 def send_cmd_to_ws_monitor(controller_address: str, ws_monitor_cmd: WsMonitorCmd):
     """Send command to ws monitor"""
-    msg_dict = {'controller_address': controller_address, 'command': ws_monitor_cmd}
+    msg_dict = {'controller_address': controller_address, 'command': str(ws_monitor_cmd)}
     REDIS_CLIENT.publish(WS_MONITOR_CHANNEL_IN, json.dumps(msg_dict))

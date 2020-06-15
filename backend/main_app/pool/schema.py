@@ -622,7 +622,7 @@ class CreateAutomatedPoolMutation(graphene.Mutation, PoolValidator):
             raise SimpleError(error_msg)
 
         # send command to start pool init task
-        request_to_execute_pool_task(automated_pool.id, PoolTaskType.CREATING)
+        request_to_execute_pool_task(str(automated_pool.id), str(PoolTaskType.CREATING))
 
         # pool creation task successfully started
         pool = await Pool.get_pool(automated_pool.id)
