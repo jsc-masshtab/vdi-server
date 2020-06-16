@@ -848,7 +848,7 @@ class AutomatedPool(db.Model):
                 log.debug(_('VM creation task id: {}').format(current_vm_task_id))
             except HttpError as http_error:
                 # Обработка BadRequest происходит в Vm.copy()
-                await log.error(http_error)
+                await log.error(str(http_error))
                 log.debug(_('Fail to create VM on ECP. Re-run.'))
                 await asyncio.sleep(1)
                 continue

@@ -4,7 +4,7 @@ import pytest
 from controller.schema import controller_schema
 from controller.models import Controller
 from tests.utils import execute_scheme
-from tests.fixtures import fixt_db, fixt_controller, fixt_auth_context  # noqa
+from tests.fixtures import fixt_db, fixt_controller, fixt_auth_context, fixt_create_automated_pool  # noqa
 
 
 pytestmark = [pytest.mark.controllers]

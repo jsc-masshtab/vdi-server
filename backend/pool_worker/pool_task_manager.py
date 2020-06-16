@@ -100,6 +100,9 @@ class PoolTaskManager:
     async def start_pool_initialization(self, pool_id):
         log.debug('start_pool_initialization')
         automated_pool = await AutomatedPool.get(pool_id)
+        if not automated_pool:
+            return
+
         # add data for protection
         self.add_new_pool_data(str(automated_pool.id), str(automated_pool.template_id))
         # start task
@@ -124,6 +127,9 @@ class PoolTaskManager:
     async def start_pool_expanding(self, pool_id):
 
         automated_pool = await AutomatedPool.get(pool_id)
+        if not automated_pool:
+            return
+
         pool_lock = self.get_pool_lock(pool_id)
         template_lock = self.get_template_lock(str(automated_pool.template_id))
         # Проверяем залочены ли локи. Если залочены, то ничего не делаем, так как любые другие действия с
@@ -174,6 +180,8 @@ class PoolTaskManager:
     async def start_pool_deleting(self, pool_id, full):
 
         automated_pool = await AutomatedPool.get(pool_id)
+        if not automated_pool:
+            return
 
         pool_lock = self.get_pool_lock(pool_id)
         native_loop = asyncio.get_event_loop()
