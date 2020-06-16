@@ -333,8 +333,8 @@ class AuthenticationDirectory(db.Model, AbstractSortableStatusModel):
         log.debug(_('Assigning veil groups to {}').format(user.username))
 
         # Удаляем пользователя из всех групп.
-        await user.remove_roles()
-        await user.remove_groups()
+        # await user.remove_roles()
+        # await user.remove_groups()
 
         user_info, user_groups = self._get_ad_user_attributes(account_name,
                                                               self.domain_name,
