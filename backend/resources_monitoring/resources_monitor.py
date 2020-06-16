@@ -143,7 +143,7 @@ class ResourcesMonitor(AbstractMonitor):
         # subscribe to events on controller
         try:
             for subscription_name in CONTROLLER_SUBSCRIPTIONS_LIST:
-                await self._ws_connection.write_message(_('add {}').format(subscription_name))
+                await self._ws_connection.write_message('add {}'.format(subscription_name))
         except WebSocketClosedError:
             return False
 
