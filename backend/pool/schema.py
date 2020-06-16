@@ -207,7 +207,7 @@ class PoolType(graphene.ObjectType):
     async def resolve_assigned_roles(self, info):
         pool = await Pool.get(self.pool_id)
         roles = await pool.roles
-        return [role_type.role for role_type in roles]
+        return [role_type.role for role_type in roles if role_type.role]
 
     async def resolve_possible_roles(self, info):
         pool = await Pool.get(self.pool_id)
@@ -394,6 +394,7 @@ class DeletePoolMutation(graphene.Mutation, PoolValidator):
             # Авто пул
             if pool_type == Pool.PoolTypes.AUTOMATED:
                 # Останавливаем таски связанные с пулом
+                log.debug('Pool id: {}'.format(pool_id))
                 await pool_task_manager.cancel_all_tasks_for_pool(str(pool_id))
                 # Получаем лок
                 pool_lock = pool_task_manager.get_pool_lock(str(pool_id))
