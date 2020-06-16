@@ -112,7 +112,10 @@ class Event(db.Model):
         elif event_type == 2:
             Logging.logger_application_error(msg, description)
 
-        REDIS_CLIENT.publish(INTERNAL_EVENTS_CHANNEL, json.dumps(msg_dict))
+        try:
+            REDIS_CLIENT.publish(INTERNAL_EVENTS_CHANNEL, json.dumps(msg_dict))
+        except TypeError: # Cant serialize
+            pass
         await cls.soft_create(event_type, msg, description, user, entity_dict)
 
 
