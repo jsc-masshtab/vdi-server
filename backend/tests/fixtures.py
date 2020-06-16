@@ -562,7 +562,7 @@ def fixt_controller(request, event_loop):
     verbose_name = 'test controller'
     username = 'test_vdi_user'
     password = 'test_vdi_user'
-    address = '192.168.11.102'
+    address = '192.168.9.145'
 
     async def setup():
         controller_client = ControllerClient(address)

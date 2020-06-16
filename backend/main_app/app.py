@@ -7,7 +7,7 @@ import tornado.web
 import tornado.log
 import tornado.options
 
-from settings import DB_NAME, DB_PASS, DB_USER, DB_PORT, DB_HOST, WS_PING_INTERVAL, WS_PING_TIMEOUT, AUTH_ENABLED
+from settings import WS_PING_INTERVAL, WS_PING_TIMEOUT, AUTH_ENABLED
 from database import start_gino, stop_gino
 from redis_broker import REDIS_POOL
 from common.veil_handlers import VdiTornadoGraphQLHandler
@@ -105,6 +105,7 @@ async def shutdown_server():
 
 
 def start_server():
+
     tornado.options.parse_command_line(final=True)
     Logging.init_logging(tornado.options.options.access_to_stdout)
     init_signals()

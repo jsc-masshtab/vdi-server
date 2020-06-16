@@ -144,9 +144,9 @@ async def a_redis_wait_for_message(redis_channel, predicate, timeout):
             # try to receive message
             redis_message = redis_subscriber.get_message()
 
-            if redis_message:
-                json_message = redis_message['data'].decode()
-                if predicate(json_message):
+            if redis_message and redis_message['type'] == 'message':
+                redis_message_data = redis_message['data'].decode()
+                if predicate(redis_message_data):
                     return True
 
             # stop if time expired
@@ -157,8 +157,11 @@ async def a_redis_wait_for_message(redis_channel, predicate, timeout):
             await_time += REDIS_ASYNC_TIMEOUT
             await asyncio.sleep(REDIS_ASYNC_TIMEOUT)
 
-    except Exception:  # noqa
-        return False
+    except Exception as ex:  # noqa
+        print(str(ex))
+        pass
+
+    return False
 
 
 async def a_redis_get_message(redis_subscriber):
@@ -180,5 +183,5 @@ def request_to_execute_pool_task(pool_id, pool_task_type, **additional_data):
 
 def send_cmd_to_ws_monitor(controller_address: str, ws_monitor_cmd: WsMonitorCmd):
     """Send command to ws monitor"""
-    msg_dict = {'controller_address': controller_address, 'command': str(ws_monitor_cmd)}
+    msg_dict = {'controller_address': controller_address, 'command': ws_monitor_cmd.name}
     REDIS_CLIENT.publish(WS_MONITOR_CHANNEL_IN, json.dumps(msg_dict))

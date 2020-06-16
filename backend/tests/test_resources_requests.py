@@ -61,7 +61,7 @@ async def test_request_nodes(fixt_db, fixt_auth_context):  # noqa
 
         # Чекним запрос определенного сервера (первого в списке), если серверы есть
         if executed['nodes']:
-            print('__executed', executed)
+            # print('__executed', executed)
             node = executed['nodes'][0]
 
             qu = """

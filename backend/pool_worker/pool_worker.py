@@ -29,22 +29,22 @@ async def start_work():
     while True:
         try:
             # wait for task message
-            data = await a_redis_lpop(POOL_TASK_QUEUE)
-            queue, value = data
-            task_data_dict = json.loads(value.decode())
+            redis_data = await a_redis_lpop(POOL_TASK_QUEUE)
+            # print('got redis_data: ', redis_data)
+            task_data_dict = json.loads(redis_data.decode())
 
             # get task data
             pool_id = task_data_dict['pool_id']
             pool_task_type = task_data_dict['task_type']
 
             # task execution
-            if pool_task_type == PoolTaskType.CREATING:
+            if pool_task_type == PoolTaskType.CREATING.name:
                 await pool_task_manager.start_pool_initialization(pool_id)
 
-            elif pool_task_type == PoolTaskType.EXPANDING:
+            elif pool_task_type == PoolTaskType.EXPANDING.name:
                 await pool_task_manager.start_pool_expanding(pool_id)
 
-            elif pool_task_type == PoolTaskType.DELETING:
+            elif pool_task_type == PoolTaskType.DELETING.name:
                 full = task_data_dict['deletion_full']
                 await pool_task_manager.start_pool_deleting(pool_id, full)
 

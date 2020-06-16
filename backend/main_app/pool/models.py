@@ -855,26 +855,18 @@ class AutomatedPool(db.Model):
             except VmCreationError:
                 break
 
-            # Мониторим все таски на ECP и ищем там нашу. Такое себе.
-            def _is_vm_creation_task(name):
-                """
-                Determine domain creation task by name
-                """
-                if name.startswith(_('Create virtual machine')):
-                    return True
-                if all(word in name.lower() for word in ['creating', 'virtual', 'machine']):
-                    return True
-                return False
+            def _check_if_vm_created(redis_message_data):
 
-            def _check_if_vm_created(json_message):
                 try:
-                    obj = json_message['object']
+                    #  print('_check_if_vm_created:redis_message ', redis_message_data)
+                    redis_message_data_dict = json.loads(redis_message_data)
+                    obj = redis_message_data_dict['object']
 
-                    if _is_vm_creation_task(obj['name']) and current_vm_task_id == obj['parent']:
-                        if obj['status'] == 'SUCCESS':
-                            return True
-                except KeyError:
-                    pass
+                    if current_vm_task_id == obj['parent'] and obj['status'] == 'SUCCESS':
+                        return True
+                except Exception as ex:  # Нас интересует лишь прошла ли проверка
+                    log.debug(str(ex))
+
                 return False
 
             async def check_task_status(task_id):
@@ -889,7 +881,7 @@ class AutomatedPool(db.Model):
             # wait for message from redis
             is_vm_successfully_created = await a_redis_wait_for_message(
                 WS_MONITOR_CHANNEL_OUT, _check_if_vm_created, VEIL_WS_MAX_TIME_TO_WAIT)
-
+            log.debug('Ws msg vm successfully_created: {}'.format(is_vm_successfully_created))
             if not is_vm_successfully_created:
                 log.debug(
                     _('Could not get the response about result of creation VM on ECP by WS. Task status check.'))
@@ -919,7 +911,8 @@ class AutomatedPool(db.Model):
                             verbose_name=vm_info['verbose_name'],
                             broken=vm_is_broken)
 
-            await log.info(_('VM {} is added to Automated pool {}').format(vm_info['verbose_name'], self.verbose_name))
+            pool = await Pool.get(self.id)
+            await log.info(_('VM {} is added to Automated pool {}').format(vm_info['verbose_name'], pool.verbose_name))
 
             return vm_info
 

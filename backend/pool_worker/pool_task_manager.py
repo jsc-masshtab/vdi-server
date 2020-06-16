@@ -98,7 +98,7 @@ class PoolTaskManager:
 
     # CREATION
     async def start_pool_initialization(self, pool_id):
-        print('start_pool_initialization')
+        log.debug('start_pool_initialization')
         automated_pool = await AutomatedPool.get(pool_id)
         # add data for protection
         self.add_new_pool_data(str(automated_pool.id), str(automated_pool.template_id))
@@ -184,18 +184,21 @@ class PoolTaskManager:
 
         # Останавливаем таски связанные с пулом
         await self.cancel_all_tasks_for_pool(str(automated_pool.id))
+
         # Получаем лок
         pool_lock = self.get_pool_lock(str(automated_pool.id))
+
         # Лочим
         async with pool_lock.lock:
-            template_id = await automated_pool.template_id
+            template_id = automated_pool.template_id
             # удаляем пул
-            pool = Pool.get(automated_pool.id)
+            pool = await Pool.get(automated_pool.id)
             is_deleted = await Pool.delete_pool(pool, full)
+            print('is_deleted: ', is_deleted)
             # убираем из памяти локи
             await self.remove_pool_data(str(automated_pool.id), str(template_id))
 
-            #  publish result?
+            # todo: publish result?
 
     # PRIVATE METHODS
     async def _get_pools_data_from_db(self):

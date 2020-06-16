@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import asyncio
 import json
+from enum import Enum
 
 from tornado.httpclient import HTTPClientError
 from tornado.websocket import WebSocketClosedError
@@ -24,6 +25,12 @@ from journal.journal import Log as log
 _ = lang_init()
 
 
+class ControllerSubscriptionCmd(Enum):
+
+    ADD = 'add'
+    DELETE = 'delete'
+
+
 class ResourcesMonitor():
     """
     monitoring of controller events
@@ -42,6 +49,7 @@ class ResourcesMonitor():
 
     # PUBLIC METHODS
     def start(self, controller_ip):
+
         self._controller_ip = controller_ip
         self._running_flag = True
 
@@ -52,6 +60,7 @@ class ResourcesMonitor():
         self._resources_monitor_task = native_loop.create_task(self._processing_ws_messages())
 
     async def stop(self):
+
         self._running_flag = False
         await self._close_connection()
         # cancel tasks
@@ -144,8 +153,10 @@ class ResourcesMonitor():
         # subscribe to events on controller
         try:
             for subscription_name in CONTROLLER_SUBSCRIPTIONS_LIST:
-                await self._ws_connection.write_message(_('add {}').format(subscription_name))
-        except WebSocketClosedError:
+                await self._ws_connection.write_message(
+                    ControllerSubscriptionCmd.ADD.value + ' ' + format(subscription_name))
+        except WebSocketClosedError as ws_error:
+            await log.error(ws_error)
             return False
 
         return True

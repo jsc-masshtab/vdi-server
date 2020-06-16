@@ -28,10 +28,11 @@ async def listen_for_messages(resources_monitor_manager):
         try:
             # wait for message
             redis_message = await a_redis_get_message(redis_subscriber)
-            log.general(redis_message)
 
             if not isinstance(redis_message['data'], bytes):
                 continue
+
+            log.general('redis_message' + str(redis_message))
 
             # get data from message
             data_dict = json.loads(redis_message['data'].decode())
@@ -42,7 +43,7 @@ async def listen_for_messages(resources_monitor_manager):
             # add or remove controller
             if command == WsMonitorCmd.ADD_CONTROLLER.name:
                 await resources_monitor_manager.add_controller(address)
-            elif command == WsMonitorCmd.REMOVE_CONTROLLER:
+            elif command == WsMonitorCmd.REMOVE_CONTROLLER.name:
                 await resources_monitor_manager.remove_controller(address)
 
         except Exception as ex:
