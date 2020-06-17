@@ -98,6 +98,7 @@ class PoolTaskManager:
 
     # CREATION
     async def start_pool_initialization(self, pool_id):
+
         log.debug('start_pool_initialization')
         automated_pool = await AutomatedPool.get(pool_id)
         if not automated_pool:
@@ -126,6 +127,7 @@ class PoolTaskManager:
     # EXPANDING
     async def start_pool_expanding(self, pool_id):
 
+        log.debug('start_pool_expanding')
         automated_pool = await AutomatedPool.get(pool_id)
         if not automated_pool:
             return
@@ -178,12 +180,13 @@ class PoolTaskManager:
 
     # DELETING
     async def start_pool_deleting(self, pool_id, full):
+
         log.debug('start_pool_deleting' + str(pool_id))
         automated_pool = await AutomatedPool.get(pool_id)
         print('automated_pool', automated_pool)
         if not automated_pool:
             return
-        print('Here')
+
         pool_lock = self.get_pool_lock(pool_id)
         native_loop = asyncio.get_event_loop()
         pool_lock.delete_pool_task = native_loop.create_task(self.deleting_pool_task(automated_pool, full))

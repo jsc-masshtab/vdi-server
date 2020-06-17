@@ -1,6 +1,9 @@
 import pytest
 import uuid
 import json
+from subprocess import Popen
+import sys
+
 
 from async_generator import async_generator, yield_
 from graphene import Context
@@ -140,6 +143,22 @@ def get_test_pool_name():
 
 @pytest.fixture
 @async_generator
+async def fixt_launch_workers():
+
+    ws_listener_worker = Popen([sys.executable, "ws_listener_worker/ws_listener_worker.py"])
+    pool_worker = Popen([sys.executable, "pool_worker/pool_worker.py"])
+
+    await yield_()
+
+    ws_listener_worker.terminate()
+    ws_listener_worker.wait(1)
+
+    pool_worker.terminate()
+    pool_worker.wait(1)
+
+
+@pytest.fixture
+@async_generator
 async def fixt_db():
     """Actual fixture for requests working with db."""
 
@@ -173,7 +192,7 @@ async def fixt_auth_context():
 
 @pytest.fixture
 @async_generator
-async def fixt_create_automated_pool():
+async def fixt_create_automated_pool(fixt_controller):
     """Create an automated pool, yield, remove this pool"""
     # start resources_monitor to receive info  from controller. autopool creation doesnt work without it
 
