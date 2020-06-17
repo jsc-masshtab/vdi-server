@@ -123,18 +123,17 @@ class VeilHttpClient:
                 await resources_monitor_manager.remove_controller(self.controller_ip)
 
             if http_error.code == 400:
-                raise BadRequest(_('Controller {} connection error.').format(self.controller_ip))
+                raise BadRequest(body)
             elif http_error.code == 401:
                 raise Unauthorized(_('Controller {} connection error.').format(self.controller_ip))
             elif http_error.code == 403:
-                raise Forbidden(_('Controller {} connection error.').format(self.controller_ip))
+                raise Forbidden(body)
             elif http_error.code == 404:
                 raise NotFound(_('Fail to fetch resource from ECP.'), url)
             elif http_error.code == 408:
-                raise ControllerNotAccessible(ip=self.controller_ip)
+                raise ControllerNotAccessible(body)
             elif http_error.code == 500:
-                msg = _('ECP Veil internal error.')
-                raise ServerError(msg)
+                raise ServerError(body)
             elif http_error.code == 599:
                 raise ServerError(str(http_error))
         return response
