@@ -24,7 +24,7 @@ class PoolLock:
         self.create_pool_task = None  # корутина в которой пул создается
         self.expand_pool_task = None  # корутина в которой пул расширяется
         self.decrease_pool_task = None  # корутина в которой количество машин в пуле уменьшается
-        self.delete_pool_task = None # удаление пула
+        self.delete_pool_task = None  # удаление пула
 
 
 class TemplateLock:
@@ -74,7 +74,7 @@ class PoolTaskManager:
     async def cancel_all_tasks_for_pool(self, pool_id: str):
         """Завершить все таски, связанные с пулом"""
         if pool_id not in self._pool_lock_dict:
-            print(__class__.__name__, _('Logic error: no such pool'))
+            print(__class__.__name__, _('Logic error: no such pool')) # noqa
             return
 
         cur_pool_lock = self._pool_lock_dict[pool_id]
@@ -178,11 +178,12 @@ class PoolTaskManager:
 
     # DELETING
     async def start_pool_deleting(self, pool_id, full):
-
+        log.debug('start_pool_deleting' + str(pool_id))
         automated_pool = await AutomatedPool.get(pool_id)
+        print('automated_pool', automated_pool)
         if not automated_pool:
             return
-
+        print('Here')
         pool_lock = self.get_pool_lock(pool_id)
         native_loop = asyncio.get_event_loop()
         pool_lock.delete_pool_task = native_loop.create_task(self.deleting_pool_task(automated_pool, full))
@@ -202,7 +203,7 @@ class PoolTaskManager:
             # удаляем пул
             pool = await Pool.get(automated_pool.id)
             is_deleted = await Pool.delete_pool(pool, full)
-            print('is_deleted: ', is_deleted)
+            log.debug('is pool deleted: {}'.format(is_deleted))
             # убираем из памяти локи
             await self.remove_pool_data(str(automated_pool.id), str(template_id))
 
@@ -219,4 +220,3 @@ class PoolTaskManager:
         self._pool_lock_dict[pool_id] = PoolLock()
         if template_id not in self._template_lock_dict:
             self._template_lock_dict[template_id] = TemplateLock()
-

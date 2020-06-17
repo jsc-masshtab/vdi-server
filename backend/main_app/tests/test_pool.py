@@ -16,7 +16,6 @@ from tests.fixtures import (fixt_db, fixt_controller, fixt_create_automated_pool
 pytestmark = [pytest.mark.pools]
 
 
-# ----------------------------------------------
 # Automated pool
 @pytest.mark.asyncio
 async def test_create_automated_pool(fixt_db, fixt_controller, fixt_create_automated_pool, fixt_auth_context):  # noqa
@@ -31,6 +30,7 @@ async def test_create_automated_pool(fixt_db, fixt_controller, fixt_create_autom
         pool_type,
         initial_size
       }
+
     }""" % pool_id
     executed = await execute_scheme(pool_schema, qu, context=fixt_auth_context)
     assert executed['pool']['initial_size'] == 1

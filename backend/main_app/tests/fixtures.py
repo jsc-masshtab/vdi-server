@@ -1,5 +1,7 @@
 import pytest
 import uuid
+import json
+
 from async_generator import async_generator, yield_
 from graphene import Context
 
@@ -25,7 +27,10 @@ from tests.utils import execute_scheme
 
 # from front_ws_api.subscription_sources import EVENTS_SUBSCRIPTION
 
-from redis_broker import a_redis_wait_for_message, INTERNAL_EVENTS_CHANNEL, WS_MONITOR_CHANNEL_OUT
+from redis_broker import a_redis_wait_for_message, INTERNAL_EVENTS_CHANNEL, WS_MONITOR_CHANNEL_OUT, \
+    send_cmd_to_ws_monitor, WsMonitorCmd
+
+from journal.journal import Log as log
 
 
 async def get_resources_static_pool_test():
@@ -202,18 +207,26 @@ async def fixt_create_automated_pool():
     # pool_creation_waiter.add_subscription_source(EVENTS_SUBSCRIPTION)
     # internal_event_monitor.subscribe(pool_creation_waiter)
 
-    def _check_if_pool_created(json_message):
+    def _check_if_pool_created(redis_message):
+        print('redis_message 1: ', redis_message)
         try:
-            if json_message['event'] == 'pool_creation_completed':
-                return json_message['is_successful']
-        except KeyError:
-            pass
+            if redis_message['type'] != 'message':
+                return False
+
+            redis_message_data = redis_message['data'].decode()
+            redis_message_data_dict = json.loads(redis_message_data)
+
+            if redis_message_data_dict['event'] == 'pool_creation_completed':
+                return redis_message_data_dict['is_successful']
+        except Exception as ex:
+            print('_check_if_pool_created ' + str(ex))
 
         return False
 
     POOL_CREATION_TIMEOUT = 80
-    is_pool_successfully_created = await a_redis_wait_for_message(
-                INTERNAL_EVENTS_CHANNEL, _check_if_pool_created, POOL_CREATION_TIMEOUT)
+    print('Before check')
+    is_pool_successfully_created = await a_redis_wait_for_message(INTERNAL_EVENTS_CHANNEL,
+                                                                  _check_if_pool_created, POOL_CREATION_TIMEOUT)
 
     await yield_({
         'id': pool_id,
@@ -261,13 +274,20 @@ async def fixt_create_static_pool(fixt_db):
     domain_info = await _create_domain()
     current_vm_task_id = domain_info['task_id']
 
-    def _check_if_vm_created(json_message):
+    def _check_if_vm_created(redis_message):
         try:
-            obj = json_message['object']
+            if redis_message['type'] != 'message':
+                return False
+
+            redis_message_data = redis_message['data'].decode()
+            print('_check_if_vm_created:redis_message ', redis_message_data)
+            redis_message_data_dict = json.loads(redis_message_data)
+
+            obj = redis_message_data_dict['object']
             if current_vm_task_id == obj['parent'] and obj['status'] == 'SUCCESS':
                 return True
-        except KeyError:
-            pass
+        except Exception as ex:
+            log.debug('_check_if_vm_created ' + str(ex))
         return False
 
     await a_redis_wait_for_message(WS_MONITOR_CHANNEL_OUT, _check_if_vm_created, VEIL_WS_MAX_TIME_TO_WAIT)
@@ -578,11 +598,14 @@ def fixt_controller(request, event_loop):
                                 token=token,
                                 expires_on=expires_on
                                 )
+
+        send_cmd_to_ws_monitor(address, WsMonitorCmd.ADD_CONTROLLER)
     event_loop.run_until_complete(setup())
 
     def teardown():
         async def a_teardown():
             await Controller.delete.where(Controller.id == id).gino.status()
+            send_cmd_to_ws_monitor(address, WsMonitorCmd.REMOVE_CONTROLLER)
 
         event_loop.run_until_complete(a_teardown())
 

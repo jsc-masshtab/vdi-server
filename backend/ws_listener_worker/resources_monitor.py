@@ -111,7 +111,7 @@ class ResourcesMonitor():
         while self._running_flag:
             is_connected = await self._connect()
 
-            log.debug(_('{} is connected: {}').format(__class__.__name__, is_connected))
+            log.debug(_('{} is connected: {}').format(__class__.__name__, is_connected))  # noqa
             # reconnect if not connected
             if not is_connected:
                 await asyncio.sleep(self.RECONNECT_TIMEOUT)
@@ -145,7 +145,7 @@ class ResourcesMonitor():
             self._ws_connection = await websocket_connect(connect_url)
         except (ConnectionRefusedError, WebSocketError):
             msg = _('{cls}: an not connect to {ip}').format(
-                cls=__class__.__name__,
+                cls=__class__.__name__, # noqa
                 ip=self._controller_ip)
             await log.error(msg)
             return False
@@ -162,11 +162,12 @@ class ResourcesMonitor():
         return True
 
     async def _on_message_received(self, message):
+        log.debug('_on_message_received: message ' + message)
         REDIS_CLIENT.publish(WS_MONITOR_CHANNEL_OUT, message)
 
     async def _close_connection(self):
         if self._ws_connection:
-            log.debug(_('{} Closing ws connection {}').format(__class__.__name__, self._controller_ip))
+            log.debug(_('{} Closing ws connection {}').format(__class__.__name__, self._controller_ip)) # noqa
             try:
                 self._ws_connection.close()
             except Exception as E:
