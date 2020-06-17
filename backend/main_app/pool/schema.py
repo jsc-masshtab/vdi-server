@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 import re
-import asyncio
 import uuid
 
 import graphene
@@ -386,9 +385,9 @@ class DeletePoolMutation(graphene.Mutation, PoolValidator):
             # Авто пул
             if pool_type == Pool.PoolTypes.AUTOMATED:
                 request_to_execute_pool_task(str(pool_id), PoolTaskType.DELETING.name, deletion_full=full)
-                is_deleted = True # todo: wait for task result?  (a_redis_wait_for_message POOL_TASK_RESULT_CHANNEL)
+                is_deleted = True  # todo: wait for task result?  (a_redis_wait_for_message POOL_TASK_RESULT_CHANNEL)
             else:
-                is_deleted = await DeletePoolMutation.delete_pool(pool, full)
+                is_deleted = await Pool.delete_pool(pool, full)
             return DeletePoolMutation(ok=is_deleted)
         except Exception as e:
             raise e
@@ -446,7 +445,8 @@ class CreateStaticPoolMutation(graphene.Mutation, PoolValidator):
 
         vm_http_client = await VmHttpClient.create(first_vm_controller_address, first_vm_id)
         disks_list = await vm_http_client.fetch_vdisks_list()
-        if not isinstance(disks_list, list) and len(disks_list) < 1:
+        print('disks_list', disks_list)
+        if len(disks_list) < 1:
             raise SimpleError(_('VM has no disks.'))
         datapool_id = disks_list[0]['datapool']['id']
 

@@ -855,17 +855,21 @@ class AutomatedPool(db.Model):
             except VmCreationError:
                 break
 
-            def _check_if_vm_created(redis_message_data):
+            def _check_if_vm_created(redis_message):
 
                 try:
-                    #  print('_check_if_vm_created:redis_message ', redis_message_data)
+                    if redis_message['type'] != 'message':
+                        return False
+
+                    redis_message_data = redis_message['data'].decode()
+                    print('_check_if_vm_created:redis_message ', redis_message_data)
                     redis_message_data_dict = json.loads(redis_message_data)
                     obj = redis_message_data_dict['object']
 
                     if current_vm_task_id == obj['parent'] and obj['status'] == 'SUCCESS':
                         return True
                 except Exception as ex:  # Нас интересует лишь прошла ли проверка
-                    log.debug(str(ex))
+                    log.debug('_check_if_vm_created ' + str(ex))
 
                 return False
 
@@ -974,7 +978,7 @@ class AutomatedPool(db.Model):
 
         # notify VDI front about pool creation result (WS)
         is_creation_successful = (len(vm_list) == self.initial_size)
-
+        print('is_creation_successful', is_creation_successful)
         if is_creation_successful:
             msg = _('Initial VM amount {} at the Automated pool {}').format(len(vm_list), verbose_name)
             await log.info(msg, entity_dict=self.entity)
@@ -1003,6 +1007,8 @@ class AutomatedPool(db.Model):
 
         log.debug(_('Delete VMs for AutomatedPool {}').format(await self.verbose_name))
         vms = await Vm.query.where(Vm.pool_id == self.id).gino.all()
+
+        status = None
         for vm in vms:
             log.debug(_('Calling soft delete for vm {}').format(vm.verbose_name))
             status = await vm.soft_delete(dest=_('VM'))

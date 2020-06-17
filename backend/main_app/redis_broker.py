@@ -2,7 +2,6 @@
 
 # import aioredis   # TODO: переехать на aioredis
 import asyncio
-from functools import wraps
 from enum import Enum
 import json
 import uuid
@@ -144,10 +143,8 @@ async def a_redis_wait_for_message(redis_channel, predicate, timeout):
             # try to receive message
             redis_message = redis_subscriber.get_message()
 
-            if redis_message and redis_message['type'] == 'message':
-                redis_message_data = redis_message['data'].decode()
-                if predicate(redis_message_data):
-                    return True
+            if redis_message and predicate(redis_message):
+                return True
 
             # stop if time expired
             if await_time >= timeout:
@@ -158,7 +155,7 @@ async def a_redis_wait_for_message(redis_channel, predicate, timeout):
             await asyncio.sleep(REDIS_ASYNC_TIMEOUT)
 
     except Exception as ex:  # noqa
-        print(str(ex))
+        print('a_redis_wait_for_message ', str(ex))
         pass
 
     return False
