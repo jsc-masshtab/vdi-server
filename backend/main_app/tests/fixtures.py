@@ -3,7 +3,7 @@ import uuid
 import json
 from subprocess import Popen
 import sys
-
+import asyncio
 
 from async_generator import async_generator, yield_
 from graphene import Context
@@ -243,7 +243,7 @@ async def fixt_create_automated_pool(fixt_controller):
         return False
 
     POOL_CREATION_TIMEOUT = 80
-    print('Before check')
+
     is_pool_successfully_created = await a_redis_wait_for_message(INTERNAL_EVENTS_CHANNEL,
                                                                   _check_if_pool_created, POOL_CREATION_TIMEOUT)
 
@@ -251,6 +251,10 @@ async def fixt_create_automated_pool(fixt_controller):
         'id': pool_id,
         'is_pool_successfully_created': is_pool_successfully_created
     })
+
+    # Слип  для обхода проблемы вейла: если создать вм и сразу попытаться удалить, то вываливает что-то типа
+    # Entity  (domain) is locked by task  (MultiCreateDomain).']}}
+    await asyncio.sleep(2)
 
     # remove pool
     qu = '''

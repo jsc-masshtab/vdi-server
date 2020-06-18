@@ -20,7 +20,7 @@ pytestmark = [pytest.mark.pools]
 
 # Automated pool
 @pytest.mark.asyncio
-async def test_create_automated_pool(fixt_launch_workers, fixt_db, fixt_controller, fixt_create_automated_pool, # noqa
+async def test_create_automated_pool(fixt_launch_workers, fixt_db, fixt_create_automated_pool, # noqa
                                      fixt_auth_context):  # noqa
     """Create automated pool, make request to check data, remove this pool"""
     pool_id = fixt_create_automated_pool['id']
