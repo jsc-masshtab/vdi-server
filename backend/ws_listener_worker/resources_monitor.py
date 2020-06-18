@@ -3,6 +3,8 @@ import asyncio
 import json
 from enum import Enum
 
+from front_ws_api.subscription_sources import SubscriptionCmd
+
 from tornado.httpclient import HTTPClientError
 from tornado.websocket import WebSocketClosedError
 from tornado.websocket import WebSocketError
@@ -23,12 +25,6 @@ from journal.journal import Log as log
 
 
 _ = lang_init()
-
-
-class ControllerSubscriptionCmd(Enum):
-
-    ADD = 'add'
-    DELETE = 'delete'
 
 
 class ResourcesMonitor():
@@ -154,7 +150,7 @@ class ResourcesMonitor():
         try:
             for subscription_name in CONTROLLER_SUBSCRIPTIONS_LIST:
                 await self._ws_connection.write_message(
-                    ControllerSubscriptionCmd.ADD.value + ' ' + format(subscription_name))
+                    SubscriptionCmd.add + ' ' + format(subscription_name))
         except WebSocketClosedError as ws_error:
             await log.error(ws_error)
             return False
