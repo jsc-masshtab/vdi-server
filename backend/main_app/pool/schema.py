@@ -374,7 +374,7 @@ class DeletePoolMutation(graphene.Mutation, PoolValidator):
     ok = graphene.Boolean()
 
     @administrator_required
-    async def mutate(self, info, pool_id, full=False):
+    async def mutate(self, info, pool_id, creator, full=False):
 
         def _check_if_pool_deleted(redis_message):
 
@@ -399,6 +399,7 @@ class DeletePoolMutation(graphene.Mutation, PoolValidator):
 
             # Авто пул
             if pool_type == Pool.PoolTypes.AUTOMATED:
+                # todo: Передать creator как параметр таски
                 request_to_execute_pool_task(str(pool_id), PoolTaskType.DELETING.name, deletion_full=full)
 
                 # wait for task result to simulate previous behavior

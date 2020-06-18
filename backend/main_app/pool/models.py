@@ -469,11 +469,16 @@ class Pool(db.Model, AbstractClass):
         return True
 
     @staticmethod
-    async def delete_pool(pool, full=False):
+    async def delete_pool(pool, creator, full=False):
         if full:
-            status = await pool.full_delete()
+            status = await pool.full_delete(creator)
         else:
-            status = await pool.soft_delete(dest=_('Pool'))
+            """Удаление сущности независимо от статуса у которой нет зависимых сущностей"""
+
+            pool_has_vms = await Pool.has_vms
+            if pool_has_vms:
+                raise SimpleError(_('Pool has VMs. Please completely remove.'), user=creator)
+            status = await pool.soft_delete(dest=_('Pool'), creator=creator)
 
         return status
 
@@ -969,7 +974,7 @@ class AutomatedPool(db.Model):
         if not is_creation_successful:
             raise PoolCreationError(_('Could not create the required number of machines.'))
 
-    async def remove_vms(self):
+    async def remove_vms(self, creator):
         """Интерфейс для запуска команды HttpClient на удаление виртуалки"""
 
         log.debug(_('Delete VMs for AutomatedPool {}').format(await self.verbose_name))

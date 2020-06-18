@@ -209,7 +209,7 @@ class PoolTaskManager:
             template_id = automated_pool.template_id
             # удаляем пул
             pool = await Pool.get(automated_pool.id)
-            is_deleted = await Pool.delete_pool(pool, full)
+            is_deleted = await Pool.delete_pool(pool, 'system', full)
             log.debug('is pool deleted: {}'.format(is_deleted))
             print('temp is_deleted ', is_deleted)
 
