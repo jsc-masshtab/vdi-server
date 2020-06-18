@@ -7,7 +7,6 @@ CONTROLLERS_SUBSCRIPTION = '/controllers/'
 CONTROLLER_SUBSCRIPTIONS_LIST = ['/clusters/', '/nodes/', '/data-pools/', '/domains/', '/tasks/']
 # subscriptions to data which VDI front can receive from VDI back
 VDI_FRONT_ALLOWED_SUBSCRIPTIONS_LIST = [*CONTROLLER_SUBSCRIPTIONS_LIST,
-                                        EVENTS_SUBSCRIPTION,
                                         CONTROLLERS_SUBSCRIPTION,
                                         EVENTS_SUBSCRIPTION]
 

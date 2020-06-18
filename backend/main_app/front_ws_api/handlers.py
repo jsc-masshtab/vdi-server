@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 from abc import ABC
 import asyncio
-import time
-from typing import Any
+import json
+from typing import Any, Optional, Awaitable
 
 import tornado.ioloop
 from tornado import httputil
@@ -14,7 +14,8 @@ from front_ws_api.subscription_sources import VDI_FRONT_ALLOWED_SUBSCRIPTIONS_LI
 from languages import lang_init
 from journal.journal import Log as log
 
-from redis_broker import INTERNAL_EVENTS_CHANNEL, WS_MONITOR_CHANNEL_OUT, REDIS_CLIENT, REDIS_ASYNC_TIMEOUT
+from redis_broker import INTERNAL_EVENTS_CHANNEL, WS_MONITOR_CHANNEL_OUT, REDIS_CLIENT, REDIS_ASYNC_TIMEOUT, \
+    a_redis_get_message
 
 
 _ = lang_init()
@@ -22,26 +23,13 @@ _ = lang_init()
 # TODO: auth check?
 
 
-class AbstractSubscriptionObserver(ABC):
-
-    def __init__(self):
-        self._subscriptions = []
-        self._message_queue = asyncio.Queue(100)  # 100 - max queue size
-        self._default_ms_process_timeout = 0.05
-
-    def get_subscriptions(self):
-        """
-        List of current subscriptions
-        :return:
-        """
-        return self._subscriptions
-
-
-class VdiFrontWsHandler(websocket.WebSocketHandler, AbstractSubscriptionObserver):  # noqa
+class VdiFrontWsHandler(websocket.WebSocketHandler):  # noqa
 
     def __init__(self, application: Application, request: httputil.HTTPServerRequest, **kwargs: Any):
         websocket.WebSocketHandler.__init__(self, application, request, **kwargs)
-        AbstractSubscriptionObserver.__init__(self)
+
+        # subscription sources
+        self._subscriptions = []
 
         self._send_messages_task = None
         # log.debug(_('init VdiFrontWsHandler'))
@@ -54,7 +42,7 @@ class VdiFrontWsHandler(websocket.WebSocketHandler, AbstractSubscriptionObserver
         return True
 
     async def open(self):
-        # log.debug(_('WebSocket opened'))
+        log.debug(_('WebSocket opened'))
         loop = asyncio.get_event_loop()
         self._send_messages_task = loop.create_task( self._send_messages_co())
 
@@ -66,7 +54,7 @@ class VdiFrontWsHandler(websocket.WebSocketHandler, AbstractSubscriptionObserver
             subscription_cmd, subscription_source = message.split(' ')
             response['msg'] = subscription_cmd
             response['resource'] = subscription_source
-        except ValueError as E:
+        except ValueError:
             response['error'] = True
             await self.write_msg(response)
             return
@@ -113,18 +101,26 @@ class VdiFrontWsHandler(websocket.WebSocketHandler, AbstractSubscriptionObserver
 
         while True:
             try:
-                redis_message = redis_subscriber.get_message()
-                # todo: check if message from desired source (self._subscriptions)
-                if redis_message:
-                    await self.write_msg(redis_message)
+                redis_message = await a_redis_get_message(redis_subscriber)
 
-                await asyncio.sleep(REDIS_ASYNC_TIMEOUT)
+                if redis_message['type'] == 'message':
+                    redis_message_data = redis_message['data'].decode()
+                    redis_message_data_dict = json.loads(redis_message_data)
+
+                    # Шлем только те сообщения, которые хочет фронт
+                    if redis_message_data_dict['resource'] in self._subscriptions:
+                        # print("_send_messages_co: redis_message_data ", redis_message_data)
+                        await self.write_msg(redis_message_data)
 
             except Exception as ex:
-                await log.error(ex)
+                await log.debug(str(ex))
 
     async def write_msg(self, msg):
         try:
             await self.write_message(msg)
-        except tornado.websocket.WebSocketClosedError:
+        except tornado.websocket.WebSocketError:
             log.debug(_('Write error'))
+
+    # unused abstract method implementation
+    def data_received(self, chunk: bytes) -> Optional[Awaitable[None]]:
+        pass
