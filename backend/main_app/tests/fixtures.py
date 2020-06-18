@@ -227,11 +227,9 @@ async def fixt_create_automated_pool(fixt_controller):
     # internal_event_monitor.subscribe(pool_creation_waiter)
 
     def _check_if_pool_created(redis_message):
-        print('redis_message 1: ', redis_message)
-        try:
-            if redis_message['type'] != 'message':
-                return False
 
+        log.debug('_check_if_pool_created: redis_message : ' + str(redis_message))
+        try:
             redis_message_data = redis_message['data'].decode()
             redis_message_data_dict = json.loads(redis_message_data)
 
@@ -299,11 +297,8 @@ async def fixt_create_static_pool(fixt_db):
 
     def _check_if_vm_created(redis_message):
         try:
-            if redis_message['type'] != 'message':
-                return False
-
             redis_message_data = redis_message['data'].decode()
-            print('_check_if_vm_created:redis_message ', redis_message_data)
+            log.debug('_check_if_vm_created:redis_message '+ str(redis_message_data))
             redis_message_data_dict = json.loads(redis_message_data)
 
             obj = redis_message_data_dict['object']

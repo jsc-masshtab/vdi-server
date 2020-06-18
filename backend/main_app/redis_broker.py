@@ -140,7 +140,7 @@ async def a_redis_wait_for_message(redis_channel, predicate, timeout):
             # try to receive message
             redis_message = redis_subscriber.get_message()
 
-            if redis_message and predicate(redis_message):
+            if redis_message and redis_message['type'] == 'message' and predicate(redis_message):
                 return True
 
             # stop if time expired
@@ -169,10 +169,12 @@ async def a_redis_get_message(redis_subscriber):
 
 
 def request_to_execute_pool_task(pool_id, pool_task_type, **additional_data):
-    """Send request to pool worker to execute a task"""
+    """Send request to pool worker to execute a task. Return task string id"""
     uuid_str = str(uuid.uuid4())
     data = {'task_id': uuid_str, 'task_type': pool_task_type, 'pool_id': pool_id, **additional_data}
     REDIS_CLIENT.rpush(POOL_TASK_QUEUE, json.dumps(data))
+
+    return uuid_str
 
 
 def send_cmd_to_ws_monitor(controller_address: str, ws_monitor_cmd: WsMonitorCmd):

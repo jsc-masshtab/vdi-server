@@ -858,11 +858,7 @@ class AutomatedPool(db.Model):
             def _check_if_vm_created(redis_message):
 
                 try:
-                    if redis_message['type'] != 'message':
-                        return False
-
                     redis_message_data = redis_message['data'].decode()
-                    print('_check_if_vm_created:redis_message ', redis_message_data)
                     redis_message_data_dict = json.loads(redis_message_data)
                     obj = redis_message_data_dict['object']
 
@@ -959,7 +955,7 @@ class AutomatedPool(db.Model):
                                                                                   verbose_name)
                 await log.info(msg, entity_dict=self.entity)
 
-                # notify VDI front about progress(WS)
+                # internal message about progress(WS)
                 msg_dict = dict(msg=msg,
                                 mgs_type='data',
                                 event='pool_creation_progress',
@@ -976,7 +972,7 @@ class AutomatedPool(db.Model):
             await log.error(_('Can\'t create VM'))
             log.debug(vm_error)
 
-        # notify VDI front about pool creation result (WS)
+        # internal message about pool creation result (WS)
         is_creation_successful = (len(vm_list) == self.initial_size)
         print('is_creation_successful', is_creation_successful)
         if is_creation_successful:

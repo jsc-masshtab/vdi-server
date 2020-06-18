@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import asyncio
+import json
 
 from database import db
 from common.utils import cancel_async_task
@@ -11,6 +12,9 @@ from common.veil_errors import VmCreationError, PoolCreationError
 from pool.models import AutomatedPool, Pool
 
 from journal.journal import Log as log
+
+from redis_broker import REDIS_CLIENT, INTERNAL_EVENTS_CHANNEL
+from front_ws_api.subscription_sources import EVENTS_SUBSCRIPTION
 
 
 _ = lang_init()
@@ -207,10 +211,20 @@ class PoolTaskManager:
             pool = await Pool.get(automated_pool.id)
             is_deleted = await Pool.delete_pool(pool, full)
             log.debug('is pool deleted: {}'.format(is_deleted))
-            # убираем из памяти локи
-            await self.remove_pool_data(str(automated_pool.id), str(template_id))
+            print('temp is_deleted ', is_deleted)
 
-            # todo: publish result?
+            # убираем из памяти локи, если пул успешно удалился
+            if is_deleted:
+                await self.remove_pool_data(str(automated_pool.id), str(template_id))
+
+        # publish result
+        msg_dict = dict(msg=_('Deleted pool {}').format(automated_pool.id),
+                        mgs_type='data',
+                        event='pool_deleted',
+                        pool_id=str(automated_pool.id),
+                        is_successful=is_deleted,
+                        resource=EVENTS_SUBSCRIPTION)
+        REDIS_CLIENT.publish(INTERNAL_EVENTS_CHANNEL, json.dumps(msg_dict))
 
     # PRIVATE METHODS
     async def _get_pools_data_from_db(self):

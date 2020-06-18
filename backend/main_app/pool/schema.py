@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import re
 import uuid
+import json
 
 import graphene
 from tornado.httpclient import HTTPClientError  # TODO: точно это нужно тут?
@@ -29,7 +30,7 @@ from pool.models import AutomatedPool, StaticPool, Pool
 from languages import lang_init
 from journal.journal import Log as log
 
-from redis_broker import request_to_execute_pool_task, PoolTaskType
+from redis_broker import request_to_execute_pool_task, PoolTaskType, a_redis_wait_for_message, INTERNAL_EVENTS_CHANNEL
 
 
 _ = lang_init()
@@ -374,6 +375,20 @@ class DeletePoolMutation(graphene.Mutation, PoolValidator):
 
     @administrator_required
     async def mutate(self, info, pool_id, full=False):
+
+        def _check_if_pool_deleted(redis_message):
+
+            try:
+                redis_message_data = redis_message['data'].decode()
+                redis_message_data_dict = json.loads(redis_message_data)
+
+                if str(pool_id) == redis_message_data_dict['pool_id'] and redis_message_data_dict['event'] == 'pool_deleted':
+                    return redis_message_data_dict['is_successful']
+            except Exception as ex:  # Нас интересует лишь прошла ли проверка
+                log.debug('__check_if_pool_deleted ' + str(ex))
+
+            return False
+
         # Нет запуска валидации, т.к. нужна сущность пула далее - нет смысла запускать запрос 2жды.
         pool = await Pool.get(pool_id)
         if not pool:
@@ -385,7 +400,10 @@ class DeletePoolMutation(graphene.Mutation, PoolValidator):
             # Авто пул
             if pool_type == Pool.PoolTypes.AUTOMATED:
                 request_to_execute_pool_task(str(pool_id), PoolTaskType.DELETING.name, deletion_full=full)
-                is_deleted = True  # todo: wait for task result?  (a_redis_wait_for_message )
+
+                # wait for task result to simulate previous behavior
+                is_deleted = await a_redis_wait_for_message(INTERNAL_EVENTS_CHANNEL, _check_if_pool_deleted, timeout=20)
+                print('is pool deleted ', is_deleted)
             else:
                 is_deleted = await Pool.delete_pool(pool, full)
             return DeletePoolMutation(ok=is_deleted)
