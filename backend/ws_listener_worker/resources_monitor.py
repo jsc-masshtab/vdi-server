@@ -167,4 +167,4 @@ class ResourcesMonitor():
             try:
                 self._ws_connection.close()
             except Exception as E:
-                await log.error(E)
+                await log.debug(str(E))

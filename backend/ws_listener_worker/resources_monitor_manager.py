@@ -9,7 +9,6 @@ from journal.journal import Log as log
 _ = lang_init()
 
 
-# TODO: выделить функционал подписок
 class ResourcesMonitorManager:
 
     def __init__(self):
@@ -42,24 +41,6 @@ class ResourcesMonitorManager:
         """
         for resources_monitor in self._resources_monitors_list:
             await resources_monitor.stop()
-
-    # def subscribe(self, observer):
-    #     """
-    #     Subscribe observer to all available monitors
-    #     :param observer:
-    #     :return:
-    #     """
-    #     for resources_monitor in self._resources_monitors_list:
-    #         resources_monitor.subscribe(observer)
-    #
-    # def unsubscribe(self, observer):
-    #     """
-    #     Unsubscribe observer from all available monitors
-    #     :param observer:
-    #     :return:
-    #     """
-    #     for resources_monitor in self._resources_monitors_list:
-    #         resources_monitor.unsubscribe(observer)
 
     async def add_controller(self, controller_ip):
         # check if controller is already being monitored

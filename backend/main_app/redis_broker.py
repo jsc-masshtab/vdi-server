@@ -15,10 +15,11 @@ from languages import lang_init
 _ = lang_init()
 
 
-REDIS_ASYNC_TIMEOUT = 0.02
+REDIS_ASYNC_TIMEOUT = 0.01
 
 # Pool worker related
 POOL_TASK_QUEUE = 'POOL_TASK_QUEUE'
+
 
 class PoolTaskType(Enum):
 
