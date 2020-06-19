@@ -44,3 +44,5 @@ class Log:
     info = partialmethod(Event.create_event, event_type=TYPE_INFO)
     warning = partialmethod(Event.create_event, event_type=TYPE_WARNING)
     error = partialmethod(Event.create_event, event_type=TYPE_ERROR)
+
+

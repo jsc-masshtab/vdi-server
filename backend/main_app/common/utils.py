@@ -1,6 +1,7 @@
 # TODO: разобрать модуль. Это код с предыдущей версии Vdi
 import re
 import asyncio
+import signal
 
 
 class Unset:
@@ -114,3 +115,18 @@ def extract_ordering_data(ordering):
     if reverse:
         ordering = ordering[1:]
     return ordering, reverse
+
+
+def init_signals(exit_handler):
+    """Set exit handler"""
+    signal.signal(signal.SIGTERM, exit_handler)
+    signal.signal(signal.SIGINT, exit_handler)  # KeyboardInterrupt
+
+
+def init_exit_handler():
+    """По сигналам завершения процесса останавливаем ивент луп. """
+    def _exit_handler(sig, frame):
+        loop = asyncio.get_event_loop()
+        loop.stop()
+
+    init_signals(_exit_handler)

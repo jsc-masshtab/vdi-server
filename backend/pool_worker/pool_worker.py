@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-
 import asyncio
+import signal
+import sys
+# import time
 
 from database import start_gino, stop_gino
 
@@ -11,6 +14,7 @@ from languages import lang_init
 from journal.log.logging import Logging
 from journal.journal import Log as log
 
+from common.utils import init_exit_handler
 
 from pool_task_manager import PoolTaskManager
 
@@ -18,8 +22,6 @@ _ = lang_init()
 
 
 async def start_work():
-
-    Logging.init_logging(True)
     # Create PoolTaskManager
     pool_task_manager = PoolTaskManager()
     await pool_task_manager.fill_start_data()
@@ -49,24 +51,26 @@ async def start_work():
                 await pool_task_manager.start_pool_deleting(pool_id, full)
 
         except Exception as ex:
-            await log.error(ex)
+            await log.error(str(ex))
             pass
 
 
 def main():
+    Logging.init_logging(True)
+    init_exit_handler()
+
     loop = asyncio.get_event_loop()
 
     # init gino
     loop.run_until_complete(start_gino())
+    loop.create_task(start_work())
 
-    try:
-        loop.create_task(start_work())
-        loop.run_forever()
-    except KeyboardInterrupt:
-        log.general(_("Pool worker interrupted"))
-    finally:
-        loop.run_until_complete(stop_gino())
-        REDIS_POOL.disconnect()
+    loop.run_forever()
+
+    log.general(_("Pool worker stopped"))
+
+    REDIS_POOL.disconnect()
+    loop.run_until_complete(stop_gino())
 
 
 if __name__ == '__main__':

@@ -9,8 +9,10 @@ from resources_monitor_manager import ResourcesMonitorManager
 from redis_broker import REDIS_POOL, WS_MONITOR_CHANNEL_IN, REDIS_CLIENT, WsMonitorCmd, a_redis_get_message
 
 from languages import lang_init
+from journal.log.logging import Logging
 from journal.journal import Log as log
 
+from common.utils import init_exit_handler
 
 _ = lang_init()
 
@@ -51,6 +53,9 @@ async def listen_for_messages(resources_monitor_manager):
 
 
 def main():
+    Logging.init_logging(True)
+    init_exit_handler()
+
     loop = asyncio.get_event_loop()
 
     # init gino
@@ -58,16 +63,15 @@ def main():
 
     resources_monitor_manager = ResourcesMonitorManager()
 
-    try:
-        loop.create_task(listen_for_messages(resources_monitor_manager))
-        loop.run_forever()
-    except KeyboardInterrupt:
-        log.general(_("Ws listener worker interrupted"))
-    finally:
-        # free resources
-        loop.run_until_complete(resources_monitor_manager.stop())
-        REDIS_POOL.disconnect()
-        loop.run_until_complete(stop_gino())
+    loop.create_task(listen_for_messages(resources_monitor_manager))
+
+    loop.run_forever()
+
+    log.general(_("Ws listener worker stopped"))
+    # free resources
+    loop.run_until_complete(resources_monitor_manager.stop())
+    REDIS_POOL.disconnect()
+    loop.run_until_complete(stop_gino())
 
 
 if __name__ == '__main__':

@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 import time
-import signal
 
 from tornado.ioloop import IOLoop
 import tornado.web
@@ -28,6 +27,8 @@ from auth.urls import auth_api_urls
 from auth.license.urls import license_api_urls
 from thin_client_api.urls import thin_client_api_urls
 from front_ws_api.urls import ws_event_monitoring_urls
+
+from common.utils import init_signals
 
 from languages import lang_init
 from journal.log.logging import Logging
@@ -57,11 +58,6 @@ handlers += auth_api_urls
 handlers += thin_client_api_urls
 handlers += ws_event_monitoring_urls
 handlers += license_api_urls
-
-
-def init_signals():
-    signal.signal(signal.SIGTERM, exit_handler)
-    signal.signal(signal.SIGINT, exit_handler)  # KeyboardInterrupt
 
 
 def init_tasks():
@@ -108,7 +104,7 @@ def start_server():
 
     tornado.options.parse_command_line(final=True)
     Logging.init_logging(tornado.options.options.access_to_stdout)
-    init_signals()
+    init_signals(exit_handler)
 
     app = make_app()
     server = tornado.httpserver.HTTPServer(app)
