@@ -380,10 +380,10 @@ class DeletePoolMutation(graphene.Mutation, PoolValidator):
 
             try:
                 redis_message_data = redis_message['data'].decode()
-                redis_message_data_dict = json.loads(redis_message_data)
+                redis_data_dict = json.loads(redis_message_data)
 
-                if str(pool_id) == redis_message_data_dict['pool_id'] and redis_message_data_dict['event'] == 'pool_deleted':
-                    return redis_message_data_dict['is_successful']
+                if str(pool_id) == redis_data_dict['pool_id'] and redis_data_dict['event'] == 'pool_deleted':
+                    return redis_data_dict['is_successful']
             except Exception as ex:  # Нас интересует лишь прошла ли проверка
                 log.debug('__check_if_pool_deleted ' + str(ex))
 

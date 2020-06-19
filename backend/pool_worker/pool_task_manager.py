@@ -52,7 +52,6 @@ class PoolTaskManager:
     def get_template_lock(self, template_id: str):
         return self._template_lock_dict[template_id]
 
-    # PUBLIC METHODS
     async def fill_start_data(self):
         """При старте VDI заполняем pool_object_dict (создаем PoolObject для каждого пула), заполняем
            template_object_dict (создаем TemplateObject для каждого использованного шаблона)."""
@@ -226,7 +225,6 @@ class PoolTaskManager:
                         resource=EVENTS_SUBSCRIPTION)
         REDIS_CLIENT.publish(INTERNAL_EVENTS_CHANNEL, json.dumps(msg_dict))
 
-    # PRIVATE METHODS
     async def _get_pools_data_from_db(self):
         from pool.models import AutomatedPool
         auto_pools_data = await db.select([AutomatedPool.id, AutomatedPool.template_id]).\
