@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 import asyncio
 import json
-
 from database import start_gino, stop_gino
 
 from resources_monitor_manager import ResourcesMonitorManager
@@ -48,6 +47,8 @@ async def listen_for_messages(resources_monitor_manager):
             elif command == WsMonitorCmd.REMOVE_CONTROLLER.name:
                 await resources_monitor_manager.remove_controller(address)
 
+        except asyncio.CancelledError:
+            raise asyncio.CancelledError
         except Exception as ex:
             await log.error('exception:' + str(ex))
 
@@ -65,7 +66,7 @@ def main():
 
     loop.create_task(listen_for_messages(resources_monitor_manager))
 
-    loop.run_forever()
+    loop.run_forever()  # run until event loop stop
 
     log.general(_("Ws listener worker stopped"))
     # free resources

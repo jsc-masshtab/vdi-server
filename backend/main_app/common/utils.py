@@ -2,6 +2,7 @@
 import re
 import asyncio
 import signal
+import functools
 
 
 class Unset:
@@ -124,9 +125,17 @@ def init_signals(exit_handler):
 
 
 def init_exit_handler():
-    """По сигналам завершения процесса останавливаем ивент луп. """
-    def _exit_handler(sig, frame):
-        loop = asyncio.get_event_loop()
+
+    async def _shutdown(sig, loop):
+        print('Caught signal {0}'.format(sig.name))
+        tasks = [task for task in asyncio.Task.all_tasks() if task is not asyncio.tasks.Task.current_task()]
+        list(map(lambda task: task.cancel(), tasks))
+
+        results = await asyncio.gather(*tasks, return_exceptions=True)
+        print('finished awaiting cancelled tasks, results: {0}'.format(results))
         loop.stop()
 
-    init_signals(_exit_handler)
+    # init handlers
+    loop = asyncio.get_event_loop()
+    loop.add_signal_handler(signal.SIGTERM, functools.partial(asyncio.ensure_future, _shutdown(signal.SIGTERM, loop)))
+    loop.add_signal_handler(signal.SIGINT, functools.partial(asyncio.ensure_future, _shutdown(signal.SIGINT, loop)))

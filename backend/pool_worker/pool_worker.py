@@ -17,6 +17,7 @@ from journal.journal import Log as log
 from common.utils import init_exit_handler
 
 from pool_task_manager import PoolTaskManager
+from vm_manager import VmManager
 
 _ = lang_init()
 
@@ -50,9 +51,10 @@ async def start_work():
                 full = task_data_dict['deletion_full']
                 await pool_task_manager.start_pool_deleting(pool_id, full)
 
+        except asyncio.CancelledError:
+            raise asyncio.CancelledError
         except Exception as ex:
-            await log.error(str(ex))
-            pass
+            await log.error('exception:' + str(ex))
 
 
 def main():
@@ -63,9 +65,14 @@ def main():
 
     # init gino
     loop.run_until_complete(start_gino())
+
+    # task request listener
     loop.create_task(start_work())
 
-    loop.run_forever()
+    vm_manager = VmManager()
+    loop.create_task(vm_manager.start())
+
+    loop.run_forever()  # run until event loop stop
 
     log.general(_("Pool worker stopped"))
 

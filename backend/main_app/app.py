@@ -21,7 +21,6 @@ from vm.schema import vm_schema
 from controller.schema import controller_schema
 from controller_resources.schema import resources_schema
 
-from vm.vm_manager import VmManager
 
 from auth.urls import auth_api_urls
 from auth.license.urls import license_api_urls
@@ -58,11 +57,6 @@ handlers += auth_api_urls
 handlers += thin_client_api_urls
 handlers += ws_event_monitoring_urls
 handlers += license_api_urls
-
-
-def init_tasks():
-    vm_manager = VmManager()
-    IOLoop.instance().add_timeout(time.time(), vm_manager.start)
 
 
 def make_app():
@@ -127,7 +121,6 @@ def start_server():
 
     init_gino()
 
-    init_tasks()
     IOLoop.current().start()
 
 
