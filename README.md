@@ -68,5 +68,3 @@
             veil-vdi-tornado -- supervisor configuration for vdi-backend service
         manage.sh -- project control script
     .gitignore
-
-    #test
