@@ -7,9 +7,9 @@ pipeline {
     agent {
         label "${AGENT}"
     }
-    
+
     environment {
-        PRJNAME = "vdi-backend"
+        PRJNAME = "vdi-frontend"
         NFS_DIR = "/nfs/vdi-deb"
         DEB_ROOT = "${WORKSPACE}/devops/deb"
         DATE = "${currentDate}"
@@ -67,44 +67,31 @@ pipeline {
             environment {
                 VER = "${VERSION}-${BUILD_NUMBER}"
             }
-            
+
             steps {
                 sh script: '''
                     rm -rf ${WORKSPACE}/.git ${WORKSPACE}/.gitignore
-                    sed -i "s:%%VER%%:${VER}:g" "${DEB_ROOT}/${PRJNAME}/root/DEBIAN/control"
+                    sed -i "s:%%VER%%:$VER:g" "$DEB_ROOT/$PRJNAME/root/DEBIAN/control"
                 '''
             }
         }
 
-        stage ('prepare backend app') {
+        stage ('build') {
             steps {
                 sh script: '''
-                    mkdir -p "${DEB_ROOT}/${PRJNAME}/root/opt/veil-vdi/app"
-                    rsync -a --delete ${WORKSPACE}/backend/ "${DEB_ROOT}/${PRJNAME}/root/opt/veil-vdi/app"
-                '''
-            }
-        }
+                    # clean npm cache
+                    npm cache clean --force
 
-        stage ('prepare virtual env') {
-            steps {
-                sh script: '''
-                    # обновляем pip до последней версии
-                    /usr/bin/python3 -m pip --no-cache-dir install -U pip
-                    # устанавливаем virtualenv
-                    /usr/bin/python3 -m pip --no-cache-dir install 'virtualenv==15.1.0' --force-reinstall
-                    # создаем виртуальное окружение
-                    sudo /usr/bin/python3 -m virtualenv ${DEB_ROOT}/${PRJNAME}/root/opt/veil-vdi/env
-                    # устанавливаем зависимости
-                    cd ${DEB_ROOT}/${PRJNAME}/root/opt/veil-vdi/app
-                    sudo ${DEB_ROOT}/${PRJNAME}/root/opt/veil-vdi/env/bin/python -m pip --no-cache-dir install -r requirements.txt
-                '''
-            }
-        }
+                    cd ${WORKSPACE}/frontend
+                    npm install --no-cache --unsafe-perm
+                    npm run build -- --prod
 
-        stage ('build app') {
-            steps {
-                sh script: '''
-                    make -C "${DEB_ROOT}/${PRJNAME}"
+                    # frontend compiled on ${WORKSPACE}/frontend/dist/frontend
+
+                    mkdir -p "${DEB_ROOT}/${PRJNAME}/root/opt/veil-vdi/www"
+                    cp -r ${WORKSPACE}/frontend/dist/frontend/* "${DEB_ROOT}/${PRJNAME}/root/opt/veil-vdi/www"
+
+                    make -C ${DEB_ROOT}/${PRJNAME}
                 '''
             }
         }
@@ -115,7 +102,7 @@ pipeline {
                     # upload to nfs
                     mkdir -p ${NFS_DIR}
                     rm -f ${NFS_DIR}/${PRJNAME}*.deb
-                    cp "${DEB_ROOT}/${PRJNAME}"/*.deb ${NFS_DIR}/
+                    cp ${DEB_ROOT}/${PRJNAME}/*.deb ${NFS_DIR}/
                 '''
             }
         }
@@ -126,7 +113,7 @@ pipeline {
                     echo "REPO - ${REPO}"
 
                     # upload files to temp repo
-                    DEB=$(ls -1 "${DEB_ROOT}/${PRJNAME}"/*.deb)
+                    DEB=$(ls -1 ${DEB_ROOT}/${PRJNAME}/*.deb)
                     for ITEM in $DEB
                     do
                         echo "Processing packet: $ITEM"
