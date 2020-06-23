@@ -44,7 +44,7 @@ pipeline {
 
     parameters {
         string(      name: 'BRANCH',               defaultValue: 'dev',              description: 'branch')
-        string(      name: 'REPO',                 defaultValue: 'vdi',              description: 'repo for uploading')
+        string(      name: 'REPO',                 defaultValue: 'vdi-testing',      description: 'repo for uploading')
         string(      name: 'VERSION',              defaultValue: '2.0.0',            description: 'base version')
         string(      name: 'AGENT',                defaultValue: 'debian9',          description: 'jenkins agent label for running the job')
     }
