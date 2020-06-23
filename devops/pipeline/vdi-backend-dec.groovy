@@ -104,6 +104,11 @@ pipeline {
         stage ('build app') {
             steps {
                 sh script: '''
+                    cd backend/
+                    chmod +x compilemessages.sh
+                    ./compilemessages.sh en
+                    ./compilemessages.sh ru
+                    cd ..
                     make -C "${DEB_ROOT}/${PRJNAME}"
                 '''
             }

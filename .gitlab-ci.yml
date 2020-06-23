@@ -1,5 +1,6 @@
 stages:
   - linter
+  - compilemessages
 
 linter:
   image: python:3.5.9-alpine
@@ -9,5 +10,17 @@ linter:
     - python -m pip install --upgrade pip && python -m pip install flake8 flake8-builtins flake8-bugbear
   script:
     - flake8
+  only:
+    - merge_requests
+
+compilemessages:
+  image: python:3.5.9-alpine
+  stage: compilemessages
+  before_script:
+    - apk add bash gettext
+  script:
+    - cd backend/
+    - bash compilemessages.sh en
+    - bash compilemessages.sh ru
   only:
     - merge_requests
