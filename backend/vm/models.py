@@ -8,7 +8,7 @@ import tornado.gen
 from asyncpg.exceptions import UniqueViolationError
 
 from database import db, get_list_of_values_from_db, EntityType
-from common.veil_errors import BadRequest, HttpError, VmCreationError, SimpleError
+from common.veil_errors import BadRequest, HttpError, VmCreationError, SimpleError, ServerError
 from vm.veil_client import VmHttpClient
 from auth.models import Entity, EntityRoleOwner, User
 
@@ -90,6 +90,7 @@ class Vm(db.Model):
         return vm
 
     async def soft_delete(self, dest):
+        log.debug('Calling soft delete for vm {}'.format(self.verbose_name))
         if self.created_by_vdi:
             controller_address = await self.controller_address
             if controller_address:
@@ -172,60 +173,57 @@ class Vm(db.Model):
                    node_id: str, create_thin_clones: bool, domain_index: int):
         """Copy existing VM template for new VM create."""
 
-        log.debug(
-            'VmHttpClient: controller_ip: {}, domain_id: {}, verbose_name: {}'.format(controller_ip,
-                                                                                      domain_id,
-                                                                                      verbose_name))
         client = await VmHttpClient.create(controller_ip, domain_id, verbose_name)
 
         inner_retry_count = 0
         while True:
-            inner_retry_count += 1
-            try:
-                await log.info(_('Trying to create VM on ECP with verbose_name={}').format(verbose_name))
+            log.debug('Сreating VM {}. Try num: {}'.format(verbose_name, inner_retry_count))
 
+            try:
                 response = await client.copy_vm(node_id=node_id,
                                                 datapool_id=datapool_id,
                                                 domain_name=verbose_name,
                                                 create_thin_clones=create_thin_clones)
-                log.debug(_('Request to create VM sent without surprise. Leaving while.'))
                 break
             except BadRequest as http_error:
-                # TODO: Нужны коды ошибок
-
                 ecp_errors = http_error.errors.get('errors')
                 ecp_detail_l = ecp_errors.get('detail') if ecp_errors else None
                 ecp_detail = ecp_detail_l[0] if isinstance(ecp_detail_l, list) else None
-                await log.warning(_('ECP error: {}').format(ecp_errors))
+                log.debug('ECP error: {}'.format(ecp_errors))
 
                 if ecp_errors and 'verbose_name' in ecp_errors:
-                    await log.warning(_('Bad domain name {}').format(verbose_name))
+                    # deprecated in 2.1 - начиная с 4.3 подбор имени делается контроллером.
+                    log.debug('Bad domain name {}'.format(verbose_name))
                     domain_index_old = domain_index
                     domain_index = domain_index + 1
                     verbose_name = re.sub(r'-{}$'.format(domain_index_old), '-{}'.format(domain_index), verbose_name)
-                elif ecp_errors and ecp_detail and ('Недостаточно свободного места в пуле данных' in ecp_detail or 'not enough free space on data pool' in ecp_detail):
-                    await log.warning(_('Controller has not free space for creating new VM.'))
+                elif ecp_detail and 'not enough free space on data pool' in ecp_detail:
+                    # await log.warning(_('Controller has not free space for creating new VM.'))
                     raise VmCreationError(_('Not enough free space on data pool'))
-                elif ecp_errors and ecp_detail and ('passed node is not valid' in ecp_detail or 'Переданный узел не действителен' in ecp_detail):
-                    await log.warning(_('Unknown node {}').format(node_id))
-                    raise VmCreationError(_('Controller can\t create VM. Unknown node.'))
+                elif ecp_detail and 'passed node is not valid' in ecp_detail:
+                    # await log.warning(_('Unknown node {}').format(node_id))
+                    raise VmCreationError(_('Controller can\'t create VM. Unknown node.'))
+                elif ecp_detail and 'copy not zfs disks with snapshots to zfs pool':
+                    raise VmCreationError(
+                        _('Controller can\'t create VM. Copy not zfs disks with snapshot to zfs pool'))
                 elif ecp_errors and ecp_detail and inner_retry_count < 30:
                     # Тут мы предполагаем, что контроллер заблокирован выполнением задачи. Это может быть и не так,
                     # но сейчас нам это не понятно.
-                    log.debug(_('Possibly blocked by active task on ECP. Wait before next try.'))
+                    log.debug('Possibly blocked by active task on ECP. Wait before next try.')
                     await asyncio.sleep(10)
                 else:
-                    log.debug(_('Something went wrong. Interrupt while.'))
                     raise BadRequest(http_error)
+            except ServerError as server_error:
+                log.debug('ECP error: {}'.format(server_error))
+                raise VmCreationError(_('Controller can\'t process request. See VeiL ECP logs.'))
 
-            log.debug(_('Wait one more try'))
+            inner_retry_count += 1
             await asyncio.sleep(1)
 
         copy_result = dict(id=response['entity'],
                            task_id=response['_task']['id'],
                            verbose_name=verbose_name,
                            domain_index=domain_index)
-        # log.debug(copy_result)
         return copy_result
 
     @staticmethod

@@ -15,6 +15,7 @@ _ = lang_init()
 
 class ValidationError(AssertionError):
     def __init__(self, message, **kwargs):
+        message = str(message)
         native_loop = asyncio.get_event_loop()
         self.create_event = native_loop.create_task(self.create_error_event(message, **kwargs))
 
@@ -25,11 +26,13 @@ class ValidationError(AssertionError):
 
 class AssertError(AssertionError):
     def __init__(self, message):
+        message = str(message)
         log.debug(message)
 
 
 class MeaningError(ValueError):
     def __init__(self, message, **kwargs):
+        message = str(message)
         native_loop = asyncio.get_event_loop()
         self.create_event = native_loop.create_task(self.create_error_event(message, **kwargs))
 
@@ -64,6 +67,7 @@ class FieldError(BackendError):
 
 class SimpleError(BackendError):
     def __init__(self, message, **kwargs):
+        message = str(message)
         native_loop = asyncio.get_event_loop()
         self.create_event = native_loop.create_task(self.create_error_event(message, **kwargs))
         self.message = message
@@ -98,16 +102,16 @@ class FetchException(BackendError):
 
 
 class HttpError(BackendError):
-    """
-    Usually used to rethrow the FetchException to be consumed by the client
-    """
+    """Usually used to rethrow the FetchException to be consumed by the client."""
 
     def __init__(self, message=None):
         if message:
             message = str(message)
-            native_loop = asyncio.get_event_loop()
-            self.create_event = native_loop.create_task(self.create_error_event(message))
+            log.debug(message)
             self.message = message
+            # native_loop = asyncio.get_event_loop()
+            # self.create_event = native_loop.create_task(self.create_error_event(message))
+            # self.message = message
 
     @cached_property
     def code(self):

@@ -330,8 +330,6 @@ class AuthenticationDirectory(db.Model, AbstractSortableStatusModel):
         :param account_name: имя пользовательской учетной записи
         :return: результат назначения системной группы пользователю службы каталогов
         """
-        log.debug(_('Assigning veil groups to {}').format(user.username))
-
         # Удаляем пользователя из всех групп.
         # await user.remove_roles()
         # await user.remove_groups()
@@ -343,7 +341,6 @@ class AuthenticationDirectory(db.Model, AbstractSortableStatusModel):
         # Если отображения отсутствуют, то по-умолчанию всем пользователям
         # назначается группа Оператор.
         mappings = await self.mappings
-        log.debug(_('Mappings: {}').format(mappings))
 
         if not mappings:
             return True
@@ -359,9 +356,6 @@ class AuthenticationDirectory(db.Model, AbstractSortableStatusModel):
         # Если есть мэппинги, значит в системе есть группы. Поэтому тут производим пользователю назначение групп.
         for role_mapping in mappings:
             escaped_values = list(map(ldap.dn.escape_dn_chars, role_mapping.values))
-            log.debug(_('escaped values: {}').format(escaped_values))
-            log.debug(_('role mapping value type: {}').format(role_mapping.value_type))
-
             if role_mapping.value_type == Mapping.ValueTypes.USER:
                 user_veil_groups = account_name in escaped_values
             elif role_mapping.value_type == Mapping.ValueTypes.OU:
@@ -369,11 +363,8 @@ class AuthenticationDirectory(db.Model, AbstractSortableStatusModel):
             elif role_mapping.value_type == Mapping.ValueTypes.GROUP:
                 user_veil_groups = any([gr_name in escaped_values for gr_name in ad_groups])
 
-            log.debug(_('{}').format(role_mapping.value_type == Mapping.ValueTypes.GROUP))
-            log.debug(_('User veil groups: {}').format(user_veil_groups))
             if user_veil_groups:
                 for group in await role_mapping.assigned_groups:
-                    log.debug(_('Attaching user {} to group: {}').format(user.username, group.verbose_name))
                     await group.add_user(user.id)
                 return True
         return False

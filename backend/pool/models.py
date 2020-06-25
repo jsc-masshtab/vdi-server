@@ -485,7 +485,7 @@ class Pool(db.Model):
                 await log.info(msg)
             return True
         except Exception as ex:
-            log.debug(_('Soft_delete exception: {}').format(ex))
+            log.debug('Pool soft delete ex: {}'.format(ex))
             return False
 
     async def full_delete(self, commit=True):
@@ -600,7 +600,7 @@ class StaticPool(db.Model):
     @staticmethod
     def vms_on_same_node(node_id: str, veil_vm_data: list) -> bool:
         """Проверка, что все VM находятся на одной Veil node."""
-        log.debug(_('StaticPool: Check that all vms are on the same node'))
+        log.debug('StaticPool: Check that all vms are on the same node')
         # All VMs are on the same node and cluster, all VMs have the same datapool
         # so we can take this data from the first item
 
@@ -836,14 +836,14 @@ class AutomatedPool(db.Model):
                 vm_info = await Vm.copy(**params)
                 current_vm_task_id = vm_info['task_id']
                 log.debug(_('VM creation task id: {}').format(current_vm_task_id))
+            except VmCreationError:
+                break
             except HttpError as http_error:
                 # Обработка BadRequest происходит в Vm.copy()
                 await log.error(str(http_error))
-                log.debug(_('Fail to create VM on ECP. Re-run.'))
+                log.debug('Fail to create VM on ECP. Re-run.')
                 await asyncio.sleep(1)
                 continue
-            except VmCreationError:
-                break
             # Мониторим все таски на ECP и ищем там нашу. Такое себе.
 
             log.debug(_('Subscribe to ws messages.'))
@@ -1012,7 +1012,7 @@ class AutomatedPool(db.Model):
                 try:
                     await self.add_initial_vms()
                 except PoolCreationError as E:
-                    await log.error('{exception}'.format(exception=str(E)))
+                    log.debug('{exception}'.format(exception=str(E)))
                     await self.deactivate()
                 else:
                     await self.activate()
@@ -1059,6 +1059,5 @@ class AutomatedPool(db.Model):
         log.debug(_('Delete VMs for AutomatedPool {}').format(await self.verbose_name))
         vms = await Vm.query.where(Vm.pool_id == self.id).gino.all()
         for vm in vms:
-            log.debug(_('Calling soft delete for vm {}').format(vm.verbose_name))
-            status = await vm.soft_delete(dest=_('VM'))
-        return status
+            await vm.soft_delete(dest=_('VM'))
+        return True

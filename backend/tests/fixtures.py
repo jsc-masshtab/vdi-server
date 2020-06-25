@@ -76,57 +76,30 @@ async def get_resources_static_pool_test():
 
 
 async def get_resources_automated_pool_test():
-    """На контроллере ищутся оптимальные ресурсы для проведения теста
-    """
-    # controller
+    """На контроллере ищутся оптимальные ресурсы для проведения теста."""
+    node_id = '6edf3154-10c3-431d-adbc-234d04301b6f'
+    template_id = '5cffb790-7595-4f59-a1c8-822ef4ffeff4'
+    datapool_id = 'f7c2aa60-390d-4fe6-b4ac-015a9b73a244'
+    cluster_id = '5895ec13-d3d5-4950-892d-1bc358cc7e30'
+
+    # Проверяем что ресурсы в принципе есть
     controllers_addresses = await Controller.get_addresses()
     if not controllers_addresses:
-        raise RuntimeError('Нет контроллеров')
+        raise AssertionError('Нет контроллеров')
 
     controller_ip = controllers_addresses[0]
     resources_http_client = await ResourcesHttpClient.create(controller_ip)
     clusters = await resources_http_client.fetch_cluster_list()
     if not clusters:
-        raise RuntimeError('На контроллере {} нет кластеров'.format(controller_ip))
+        raise AssertionError('На контроллере {} нет кластеров'.format(controller_ip))
+
     vm_http_client = await VmHttpClient.create(controller_ip, '')
     templates = await vm_http_client.fetch_templates_list()
     if not templates:
-        raise RuntimeError('На контроллере {} нет шаблонов'.format(controller_ip))
+        raise AssertionError('На контроллере {} нет шаблонов'.format(controller_ip))
 
-    # select appropriate template_id and node_id
-    # node must be active and has a template
-    for cluster in clusters:
-        resources_http_client = await ResourcesHttpClient.create(controller_ip)
-        nodes = await resources_http_client.fetch_node_list(cluster['id'])
-        if not nodes:
-            continue
-
-        for node in nodes:
-            if node['status'] == 'ACTIVE':
-                # check if node has template
-                try:
-                    template_id = next(template['id'] for template in templates
-                                       if template['node']['id'] == node['id'])
-                except StopIteration:  # node doesnt have template
-                    continue
-                else:  # template found
-                    # find active datapool
-                    resources_http_client = await ResourcesHttpClient.create(controller_ip)
-                    datapools = await resources_http_client.fetch_datapool_list(node_id=node['id'])
-                    # Временное решение для исключения zfs-пулов.
-                    for datapool in datapools[:]:
-                        if datapool.get('zfs_pool'):
-                            datapools.remove(datapool)
-
-                    try:
-                        datapool_id = next(datapool['id'] for datapool in datapools if datapool['status'] == 'ACTIVE')
-                    except StopIteration:  # No active datapools
-                        continue
-
-                    return {'controller_ip': controller_ip, 'cluster_id': cluster['id'],
-                            'node_id': node['id'], 'template_id': template_id, 'datapool_id': datapool_id}
-
-    raise RuntimeError('Подходящие ресурсы не найдены')
+    return {'controller_ip': controller_ip, 'cluster_id': cluster_id,
+            'node_id': node_id, 'template_id': template_id, 'datapool_id': datapool_id}
 
 
 def get_test_pool_name():
@@ -234,6 +207,7 @@ async def fixt_create_automated_pool():
 @async_generator
 async def fixt_create_static_pool(fixt_db):
     """Создается ВМ, создается пул с этой ВМ, пул удаляется, ВМ удаляется."""
+    print('create static pool fixture')
     pool_main_resources = await get_resources_static_pool_test()
     controller_ip = pool_main_resources['controller_ip']
     node_id = pool_main_resources['node_id']

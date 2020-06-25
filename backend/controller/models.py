@@ -4,7 +4,7 @@ from datetime import datetime
 from socket import error as socket_error
 
 from asyncpg.exceptions import DataError
-from sqlalchemy import Enum as AlchemyEnum
+from sqlalchemy import text, Enum as AlchemyEnum
 
 from sqlalchemy.dialects.postgresql import UUID
 
@@ -95,20 +95,22 @@ class Controller(db.Model):
 
     @staticmethod
     async def get_token(ip_address: str):
-        query = Controller.select('token', 'expires_on').where(Controller.address == ip_address)
-        token_info = await query.gino.first()
-        if token_info:
-            token, expires_on = token_info
+        from resources_monitoring.resources_monitor_manager import resources_monitor_manager
+        token_is_expired = await Controller.token_expired(ip_address)
+        if token_is_expired:
+            await resources_monitor_manager.remove_controller(ip_address)
             # Если дата истечения сегодня или позже - токен стоит продлить.
-            token_soon_expired = datetime.today().date() >= expires_on.date()
-
-            if not token or not expires_on or token_soon_expired:
-                token = await Controller.refresh_token(ip_address)
-            # elif expires_on < datetime.now(expires_on.tzinfo):
-            #     token = await Controller.refresh_token(ip_address)
+            token = await Controller.refresh_token(ip_address)
             return token
-        else:
-            raise ValidationError(_('No such controller'))
+        token = await Controller.select('token').where(Controller.address == ip_address).gino.first()
+        if token:
+            return str(token[0])
+
+    @staticmethod
+    async def token_expired(address):
+        """Проверяем истек ли токен на текущий момент."""
+        expired_query = Controller.select('id').where(Controller.address == address).where(text('now() >= expires_on'))
+        return await expired_query.gino.first()
 
     @staticmethod
     async def invalidate_auth(ip_address: str):
@@ -118,44 +120,31 @@ class Controller(db.Model):
         ).where(Controller.address == ip_address).gino.status()
 
     @staticmethod
-    async def refresh_token(ip_address: str):
-        # TODO: error handling
-        # TODO: set controller status to BAD_AUTH
+    async def refresh_token(address: str):
+        from resources_monitoring.resources_monitor_manager import resources_monitor_manager
+        controller = await Controller.query.where(Controller.address == address).gino.first()
 
-        query = Controller.select(
-            'address',
-            'username',
-            'password',
-            'ldap_connection'
-        ).where(Controller.address == ip_address)
-
-        controller = await query.gino.first()
         if controller:
-            address, username, encrypted_password, ldap_connection = controller
-            password = crypto.decrypt(encrypted_password)
-            auth_info = dict(username=username, password=password, ldap=ldap_connection)
+            await resources_monitor_manager.stop()
+            password = crypto.decrypt(controller.password)
+            auth_info = dict(username=controller.username, password=password, ldap=controller.ldap_connection)
             controller_client = ControllerClient(address)
             token, expires_on = await controller_client.auth(auth_info=auth_info)
-            await Controller.update.values(
-                token=token,
-                expires_on=expires_on
-            ).where(Controller.address == ip_address).gino.status()
+            await controller.update(token=token, expires_on=expires_on).apply()
+            await Controller.activate(controller.id)
+            await resources_monitor_manager.start()
             return token
-        else:
-            raise ValidationError(_('No such controller'))
+        raise ValidationError(_('No such controller'))
 
     async def check_credentials(self):
         try:
             encrypted_password = crypto.decrypt(self.password)
-            log.debug(_(
-                'Checking controller credentials: address: {}, username: {}, ldap_connection: {}').format(
-                self.address, self.username, self.ldap_connection))
             controller_client = ControllerClient(self.address)
             auth_info = dict(username=self.username, password=encrypted_password, ldap=self.ldap_connection)
             await controller_client.auth(auth_info=auth_info)
         except Exception as ex:
             await log.warning(_('Controller {} check failed.').format(self.verbose_name))
-            log.debug(_('Controller check: {}').format(ex))
+            log.debug('Controller check exception: {}'.format(ex))
             return False
         return True
 
@@ -213,7 +202,6 @@ class Controller(db.Model):
         # TODO: возможно нужно явно удалять контроллер из монитора ресурсов в каком бы статусе он ни был
         if self.status == Status.ACTIVE:
             # Удаляем существующий контроллер из монитора ресурсов
-            log.debug(_('Remove existing controller from resource monitor'))
             await resources_monitor_manager.remove_controller(self.address)
 
         # TODO: разнести на несколько методов, если логика останется после рефакторинга
@@ -290,11 +278,9 @@ class Controller(db.Model):
 
             # Переводим контроллер в активный если есть новые учетные данные и он в другом статусе
             if updated_rec.status != Status.ACTIVE and controller_kwargs.get('token'):
-                log.debug(_('Activate the controller'))
                 await Controller.activate(self.id)
 
             # Добавляем обратно в монитор ресурсов
-            log.debug(_('Add back to the resource monitor'))
             await resources_monitor_manager.add_controller(updated_rec.address)
 
             msg = _('Successfully update controller {} with address {}.').format(
@@ -331,7 +317,7 @@ class Controller(db.Model):
                 await log.info(msg)
             return True
         except Exception as ex:
-            log.debug(_('Soft_delete exception: {}').format(ex))
+            log.debug('Controller soft delete exception: {}'.format(ex))
             return False
 
     async def full_delete_pools(self):

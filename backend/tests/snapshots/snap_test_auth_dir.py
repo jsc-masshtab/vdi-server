@@ -85,29 +85,6 @@ snapshots['TestAuthenticationDirectoryQuery.test_auth_dir_get_possible_ad_groups
     }
 }
 
-snapshots['TestAuthenticationDirectoryQuery.test_auth_dir_get_group_members 1'] = {
-    'group_members': [
-        {
-            'email': None,
-            'first_name': 'administrator',
-            'last_name': None,
-            'username': 'administrator'
-        },
-        {
-            'email': None,
-            'first_name': 'o.krutov',
-            'last_name': None,
-            'username': 'o.krutov'
-        },
-        {
-            'email': 'r.danilov@mashtab.org',
-            'first_name': 'Roman',
-            'last_name': 'Danilov',
-            'username': 'r.danilov'
-        }
-    ]
-}
-
 snapshots['TestAuthenticationDirectoryQuery.test_auth_dir_get_possible_ad_groups_no_pass 1'] = {
     'auth_dir': {
         'assigned_ad_groups': [
@@ -311,4 +288,39 @@ snapshots['TestAuthenticationDirectoryUtils.test_auth_dir_sync_group_and_users 1
     'syncAuthDirGroupUsers': {
         'ok': True
     }
+}
+
+snapshots['TestAuthenticationDirectoryQuery.test_auth_dir_get_group_members 1'] = {
+    'group_members': [
+        {
+            'email': None,
+            'first_name': 'administrator',
+            'last_name': None,
+            'username': 'administrator'
+        },
+        {
+            'email': None,
+            'first_name': 'o.krutov',
+            'last_name': None,
+            'username': 'o.krutov'
+        },
+        {
+            'email': 'r.danilov@mashtab.org',
+            'first_name': 'Roman',
+            'last_name': 'Danilov',
+            'username': 'r.danilov'
+        },
+        {
+            'email': None,
+            'first_name': 'Denis',
+            'last_name': 'Gubin',
+            'username': 'd.gubin'
+        },
+        {
+            'email': None,
+            'first_name': 'Александр',
+            'last_name': 'Моисеев',
+            'username': 'a.moiseev'
+        }
+    ]
 }

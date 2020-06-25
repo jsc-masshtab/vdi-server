@@ -142,8 +142,7 @@ class User(AbstractSortableStatusModel, db.Model):
             await log.info(_('Role {} is added to user {}').format(role, self.username))
             add = await UserRole.create(user_id=self.id, role=role)
             user = await self.get(self.id)
-            assigned_roles = await user.roles
-            log.debug(_('User {} roles: {}').format(user.username, assigned_roles))
+            await user.roles
             return add
         except UniqueViolationError:
             raise SimpleError(_('Role {} is assigned to user {}').format(role, self.id))
@@ -162,8 +161,7 @@ class User(AbstractSortableStatusModel, db.Model):
             remove = await UserRole.delete.where(
                 (UserRole.role.in_(roles_list)) & (UserRole.user_id == self.id)).gino.status()
             user = await self.get(self.id)
-            assigned_roles = await user.roles
-            log.debug(_('User {} roles: {}').format(user.username, assigned_roles))
+            await user.roles
             return remove
 
     async def remove_groups(self):
@@ -432,7 +430,7 @@ class Group(AbstractSortableStatusModel, db.Model):
                 await log.info(msg)
             return True
         except Exception as ex:
-            log.debug(_('Soft_delete exception: {}').format(ex))
+            log.debug('Group soft delete ex: {}'.format(ex))
             return False
 
     async def add_user(self, user_id):

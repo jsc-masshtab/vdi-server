@@ -101,7 +101,7 @@ class ResourcesMonitor(AbstractMonitor):
         while self._running_flag:
             is_connected = await self._connect()
 
-            log.debug(_('{} is connected: {}').format(__class__.__name__, is_connected))
+            # log.debug(_('{} is connected: {}').format(__class__.__name__, is_connected))
             # reconnect if not connected
             if not is_connected:
                 await asyncio.sleep(self.RECONNECT_TIMEOUT)
@@ -125,7 +125,8 @@ class ResourcesMonitor(AbstractMonitor):
         try:
             token = await Controller.get_token(self._controller_ip)
         except Exception as E:
-            await log.error(E)
+            log.debug(E)
+            # await log.error(E)
             return False
 
         # create ws connection
@@ -168,4 +169,4 @@ class ResourcesMonitor(AbstractMonitor):
             try:
                 self._ws_connection.close()
             except Exception as E:  # todo: вообще конкретное исключение не интересует
-                await log.error(E)
+                log.debug(str(E))
