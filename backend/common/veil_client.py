@@ -49,7 +49,11 @@ class VeilHttpClient:
         headers = {
             'Authorization': _('jwt {}').format(self.token),
             'Content-Type': 'application/json',
-            'User-Agent': 'VeiL-api-client/1.0 VDI/2.0'
+            'User-Agent': 'VeiL-api-client/1.0 VDI/2.0',
+            'Accept-Language': 'en',
+            'Cache-Control': 'max-age=0',
+            'Accept-Charset': 'utf-8',
+            'Connection': 'close'
         }
         return headers
 
@@ -99,10 +103,8 @@ class VeilHttpClient:
         :param controller_control: нужно ли управлять контроллером по результатам исключения
         :return: HttpResponse
         """
-
         if not headers:
             headers = await self.headers
-
         request = HTTPRequest(url=url,
                               method=method,
                               headers=headers,
@@ -146,11 +148,14 @@ class VeilHttpClient:
         response_headers = response.headers
         response_content_type = response_headers.get('Content-Type')
 
+        # log.debug('Response headers: {}'.format(response_headers))
+
         if not isinstance(response_content_type, str):
             raise ValidationError(_('Can\'t process Content-Type.'))
 
         if response_content_type.lower().find('json') == -1:
-            raise NotImplementedError(_('Only \'json\' Content-Type.'))
+            log.debug('Unexpected response content-type.')
+            return dict()
         try:
             response = json_decode(response.body)
         except ValueError as E:

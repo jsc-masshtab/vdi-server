@@ -61,7 +61,6 @@ class LogoutHandler(BaseHandler, ABC):
     async def post(self):
         username, token = extract_user_and_token_with_no_expire_check(self.request.headers)
         await User.logout(username=username, access_token=token)
-        log.debug(_('User {} logout with token {}').format(username, token))
 
 
 class VersionHandler(BaseHandler, ABC):

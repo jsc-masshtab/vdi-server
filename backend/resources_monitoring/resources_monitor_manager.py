@@ -68,20 +68,17 @@ class ResourcesMonitorManager:
     async def add_controller(self, controller_ip):
         # check if controller is already being monitored
         if controller_ip in self._get_monitored_controllers_ips():
-            msg = _('{cls}: Controller {ip} is already monitored!').format(
-                cls=__class__.__name__,
+            msg = _('Controller {ip} is already monitored!').format(
                 ip=controller_ip)
             await log.warning(msg)
             return
         # add monitor
         self._add_monitor_for_controller(controller_ip)
-        msg = _('{cls}: resource monitor for controller {ip} connected').format(
-            cls=__class__.__name__,
+        msg = _('Resource monitor for controller {ip} connected').format(
             ip=controller_ip)
         await log.info(msg)
 
     async def remove_controller(self, controller_ip):
-        log.debug(_('Delete controller {} from resources monitor.').format(controller_ip))
         # Деактивируем контроллер
         controller_id = await Controller.get_controller_id_by_ip(controller_ip)
         await Controller.deactivate(controller_id)
@@ -91,16 +88,13 @@ class ResourcesMonitorManager:
             resources_monitor = next(resources_monitor for resources_monitor in self._resources_monitors_list
                                      if resources_monitor.get_controller_ip() == controller_ip)
         except StopIteration:
-            msg = _('{cls}: controller {ip} is not monitored!').format(
-                cls=__class__.__name__,
-                ip=controller_ip)
+            msg = 'Controller {} is not monitored by resource monitor.'.format(controller_ip)
             log.debug(msg)
             return
         # stop monitoring
         await resources_monitor.stop()
         self._resources_monitors_list.remove(resources_monitor)
-        msg = _('{cls}: resource monitor for controller {ip} removed').format(
-            cls=__class__.__name__,
+        msg = _('Resource monitor for controller {ip} stopped.').format(
             ip=controller_ip)
         await log.warning(msg)
 

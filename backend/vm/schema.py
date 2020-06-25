@@ -356,12 +356,11 @@ class VmQuery(graphene.ObjectType):
                 raise SimpleError(_('Incorrect sort parameter'))
             vm_type_list = sorted(vm_type_list, key=sort_lam, reverse=reverse)
 
-        log.debug('vm_type_list_count {}'.format(len(vm_type_list)))
         return vm_type_list
 
     @staticmethod
     def veil_template_data_to_graphene_type(template_veil_data, controller_address):
-        log.debug('template_veil_data: {}'.format(template_veil_data))
+        # log.debug('template_veil_data: {}'.format(template_veil_data))
         template_type = TemplateType(id=template_veil_data['id'], verbose_name=template_veil_data['verbose_name'],
                                      veil_info=template_veil_data)
         template_type.controller = ControllerType(address=controller_address)

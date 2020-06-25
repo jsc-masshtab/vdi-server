@@ -8,7 +8,7 @@ from common.veil_errors import SimpleError
 from database import StatusGraphene
 from controller.models import Controller
 from resources_monitoring.resources_monitor_manager import resources_monitor_manager
-
+from journal.journal import Log as log
 from languages import lang_init
 
 _ = lang_init()
@@ -73,7 +73,8 @@ class AddControllerMutation(graphene.Mutation):
             msg = _('Add new controller {}: operation failed.').format(address)
             description = str(err)
             raise SimpleError(msg, description=description)
-        except Exception:
+        except Exception as ex_msg:
+            log.debug(ex_msg)
             msg = _('Add new controller {}: operation failed.').format(address)
             raise SimpleError(msg)
         return AddControllerMutation(ok=True, controller=ControllerType(**controller.__values__))
@@ -128,13 +129,13 @@ class RemoveControllerMutation(graphene.Mutation):
         if not controller:
             raise GraphQLError(_('No such controller.'))
 
+        if controller.active:
+            await resources_monitor_manager.remove_controller(controller.address)
+
         if full:
             status = await controller.full_delete()
         else:
             status = await controller.soft_delete(dest=_('Controller'))
-
-        if controller.active:
-            await resources_monitor_manager.remove_controller(controller.address)
 
         return RemoveControllerMutation(ok=status)
 

@@ -517,8 +517,6 @@ class AddVmsToStaticPoolMutation(graphene.Mutation):
         all_vm_ids_on_node = [vmachine['id'] for vmachine in all_vms_on_node]
         used_vm_ids = await Vm.get_all_vms_ids()  # get list of vms which are already in pools
 
-        log.debug(_('VM ids: {}').format(vm_ids))
-
         for vm_id in vm_ids:
             # check if vm exists and it is on the correct node
             if str(vm_id) not in all_vm_ids_on_node:

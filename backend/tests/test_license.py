@@ -54,7 +54,6 @@ class LicenseTestCase(VdiHttpTestCase):
 
         self.assertIn('data', response_dict)
         data = response_dict['data']
-        print(data)
         self.assertIn('password', data)
         self.assertIn('db', data)
         self.assertIn('port', data)
