@@ -166,6 +166,7 @@ class VeilHttpClient:
     async def fetch_with_response(self, url: str, method: str, headers: dict = None, body: str = None,
                                   controller_control: bool = True):
         """Check response headers. Search json in content-type value"""
+        # print('fetch_with_response: url {} method {} headers {} '.format(url, method, headers))
         response = await self.fetch(url=url, method=method, headers=headers, body=body,
                                     controller_control=controller_control)
         response_body = self.get_response_body(response)
