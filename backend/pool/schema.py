@@ -228,7 +228,7 @@ class PoolType(graphene.ObjectType):
         return await pool.assigned_users if entitled else await pool.possible_users
 
     async def resolve_vms(self, _info):
-        await self._build_vms_list()
+        await self.build_vms_list()
         return self.vms
 
     async def resolve_vm_amount(self, _info):
@@ -280,7 +280,7 @@ class PoolType(graphene.ObjectType):
             # либо шаблон изчес с контроллера, либо попытка получить шаблон для статического пула
             return None
 
-    async def _build_vms_list(self):
+    async def build_vms_list(self):
         if not self.vms:
             self.vms = []
 
@@ -309,7 +309,7 @@ class PoolType(graphene.ObjectType):
         return await pool.possible_connection_types
 
 
-def pool_obj_to_type(pool_obj: Pool) -> dict:
+def pool_obj_to_type(pool_obj: Pool) -> PoolType:
     pool_dict = {'pool_id': pool_obj.master_id,
                  'master_id': pool_obj.master_id,
                  'verbose_name': pool_obj.verbose_name,
@@ -360,7 +360,13 @@ class PoolQuery(graphene.ObjectType):
         pool = await Pool.get_pool(pool_id)
         if not pool:
             raise SimpleError(_('No such pool.'))
-        return pool_obj_to_type(pool)
+
+        # Сформировать графен пул тип по данным из бд
+        graphene_pool_type = pool_obj_to_type(pool)
+        #  Одним запросом получить инфу о всех вм пула
+        await graphene_pool_type.build_vms_list()
+
+        return graphene_pool_type
 
 
 # --- --- --- --- ---
