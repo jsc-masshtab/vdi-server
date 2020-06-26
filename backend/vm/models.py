@@ -187,7 +187,8 @@ class Vm(db.Model):
                 break
             except BadRequest as http_error:
                 ecp_errors = http_error.errors.get('errors')
-                ecp_detail_l = ecp_errors.get('detail') if ecp_errors else None
+                ecp_detail_l = ecp_errors.get('detail') if ecp_errors and isinstance(ecp_errors, dict) else None
+                ecp_detail_l = ecp_errors if not ecp_detail_l and isinstance(ecp_errors, list) else ecp_detail_l
                 ecp_detail = ecp_detail_l[0] if isinstance(ecp_detail_l, list) else None
                 log.debug('ECP error: {}'.format(ecp_errors))
 
