@@ -174,7 +174,7 @@ class VeilHttpClient:
 
     async def check_task_status(self, task_id):
         """Проверяет статус выполнения задачи на контроллере"""
-        endpoint_url = '{api_url}tasks/{task_id}'.format(api_url=self.api_url, task_id=task_id)
+        endpoint_url = '{api_url}tasks/{task_id}/'.format(api_url=self.api_url, task_id=task_id)
         response = await self.fetch_with_response(url=endpoint_url, method='GET')
         if response.get('status') == 'SUCCESS':
             return True
