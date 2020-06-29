@@ -126,9 +126,12 @@ class PoolGetVm(BaseHandler, ABC):
             response = {
                 'data': dict(host='', port=0, password='', message=_('VM is unreachable on ECP Veil.'))}
             return await self.log_finish(response)
-        except HttpError:
-            pass
-
+        except HttpError as err_response_body:
+            detail = vm_client.parse_veil_errors('', err_response_body)
+            if (isinstance(detail, tuple) and 're not consolidated vdisks' in detail[0]) or 're not consolidated vdisks' in detail:  # noqa
+                response = {
+                    'data': dict(host='', port=0, password='', message=_('VM is unreachable on ECP Veil.'))}
+                return await self.log_finish(response)
         try:
             info = await vm_client.info()
         except HttpError:
@@ -183,7 +186,7 @@ class VmAction(BaseHandler, ABC):
             client = await VmHttpClient.create(controller_ip=controller_ip, vm_id=vm_id)
             await client.send_action(action=action, body=self.args)
             response = {'data': 'success'}
-        except AssertionError as vm_action_error:
+        except (AssertionError, HttpError) as vm_action_error:
             response = {'errors': [{'message': str(vm_action_error)}]}
         return self.log_finish(response)
 

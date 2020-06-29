@@ -60,6 +60,13 @@ class VeilHttpClient:
     @staticmethod
     def parse_veil_errors(url, body):
         """Извлекает ошибки из ответа veil."""
+        if isinstance(body, BadRequest):
+            try:
+                body = body.errors
+                log.debug(body)
+            except Exception as E:
+                log.debug('Fail to convert: {}.'.format(E))
+
         if isinstance(body, dict):
             errors = body.get('errors')
             if isinstance(errors, list):
