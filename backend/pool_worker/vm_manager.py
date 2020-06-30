@@ -32,7 +32,7 @@ class VmManager:
 
             # get vm info from controllers
             controllers_addresses = await Controller.get_addresses()
-            print('Here 2')
+
             for controller_address in controllers_addresses:
                 vm_http_client = await VmHttpClient.create(controller_address, '')
                 try:
@@ -62,5 +62,5 @@ class VmManager:
                         except (HttpError, OSError):
                             pass
 
-                await asyncio.sleep(self.query_interval)
+            await asyncio.sleep(self.query_interval)
 
