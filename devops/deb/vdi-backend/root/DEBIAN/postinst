@@ -4,9 +4,9 @@ set -e
 configure_secrets()
 {
 	# генерируем local_settings только если его не существует
-	if [ ! -f /opt/veil-vdi/app/local_settings.py ]; then
+	if [ ! -f /opt/veil-vdi/app/main_app/local_settings.py ]; then
 		cd /opt/veil-vdi/app
-		/opt/veil-vdi/env/bin/python /opt/veil-vdi/app/create_local_settings.py
+		/opt/veil-vdi/env/bin/python /opt/veil-vdi/app/main_app/create_local_settings.py
 	fi
 
 	# берем из файла ключи доступа к БД и Redis
