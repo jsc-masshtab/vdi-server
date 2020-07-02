@@ -63,4 +63,3 @@ class VmManager:
                             pass
 
             await asyncio.sleep(self.query_interval)
-

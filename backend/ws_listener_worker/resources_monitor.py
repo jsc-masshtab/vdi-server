@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 import asyncio
 import json
-from enum import Enum
 
 from front_ws_api.subscription_sources import SubscriptionCmd
 

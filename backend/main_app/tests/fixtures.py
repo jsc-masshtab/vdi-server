@@ -298,7 +298,7 @@ async def fixt_create_static_pool(fixt_db):
     def _check_if_vm_created(redis_message):
         try:
             redis_message_data = redis_message['data'].decode()
-            log.debug('_check_if_vm_created:redis_message '+ str(redis_message_data))
+            log.debug('_check_if_vm_created:redis_message ' + str(redis_message_data))
             redis_message_data_dict = json.loads(redis_message_data)
 
             obj = redis_message_data_dict['object']

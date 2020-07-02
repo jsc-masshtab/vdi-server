@@ -1,17 +1,15 @@
 # -*- coding: utf-8 -*-
 from abc import ABC
-import asyncio
 
 from tornado import websocket
 
-from common.utils import cancel_async_task
 from common.veil_handlers import BaseHandler
 from common.veil_errors import HttpError, ValidationError, NotFound
 
 from settings import REDIS_PORT, REDIS_THIN_CLIENT_CHANNEL, REDIS_PASSWORD, REDIS_DB
 from auth.utils.veil_jwt import jwtauth
 from auth.models import User
-from pool.models import Pool, Vm, AutomatedPool
+from pool.models import Pool, Vm
 from vm.veil_client import VmHttpClient  # TODO: move to VM?
 from controller.models import Controller
 

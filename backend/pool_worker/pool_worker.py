@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
 import asyncio
-import signal
-import sys
 # import time
 
 from database import start_gino, stop_gino

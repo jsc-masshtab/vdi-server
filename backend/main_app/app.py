@@ -1,6 +1,4 @@
 # -*- coding: utf-8 -*-
-import time
-
 from tornado.ioloop import IOLoop
 import tornado.web
 import tornado.log
