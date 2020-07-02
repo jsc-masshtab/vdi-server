@@ -114,7 +114,7 @@ class Event(db.Model):
 
         try:
             REDIS_CLIENT.publish(INTERNAL_EVENTS_CHANNEL, json.dumps(msg_dict))
-        except TypeError: # Cant serialize
+        except TypeError:  # Cant serialize
             pass
         await cls.soft_create(event_type, msg, description, user, entity_dict)
 

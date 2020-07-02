@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-from abc import ABC
 import asyncio
 import json
 from typing import Any, Optional, Awaitable
@@ -14,8 +13,7 @@ from front_ws_api.subscription_sources import VDI_FRONT_ALLOWED_SUBSCRIPTIONS_LI
 from languages import lang_init
 from journal.journal import Log as log
 
-from redis_broker import INTERNAL_EVENTS_CHANNEL, WS_MONITOR_CHANNEL_OUT, REDIS_CLIENT, REDIS_ASYNC_TIMEOUT, \
-    a_redis_get_message
+from redis_broker import INTERNAL_EVENTS_CHANNEL, WS_MONITOR_CHANNEL_OUT, REDIS_CLIENT, a_redis_get_message
 
 
 _ = lang_init()
@@ -44,7 +42,7 @@ class VdiFrontWsHandler(websocket.WebSocketHandler):  # noqa
     async def open(self):
         log.debug(_('WebSocket opened'))
         loop = asyncio.get_event_loop()
-        self._send_messages_task = loop.create_task( self._send_messages_co())
+        self._send_messages_task = loop.create_task(self._send_messages_co())
 
     async def on_message(self, message):
         log.debug(_('Message: {}').format(message))

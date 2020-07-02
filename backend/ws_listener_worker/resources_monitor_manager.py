@@ -90,5 +90,3 @@ class ResourcesMonitorManager:
         resources_monitor = ResourcesMonitor()
         self._resources_monitors_list.append(resources_monitor)
         resources_monitor.start(controller_ip)
-
-

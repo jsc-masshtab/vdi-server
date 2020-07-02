@@ -4,7 +4,6 @@ import uuid
 from tests.utils import VdiHttpTestCase
 from tornado.testing import gen_test
 from tornado import gen
-import sys
 
 from settings import VEIL_WS_MAX_TIME_TO_WAIT
 from pool.schema import pool_schema
