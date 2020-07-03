@@ -127,13 +127,17 @@ def init_signals(exit_handler):
 def init_exit_handler():
 
     async def _shutdown(sig, loop):
-        print('Caught signal {0}'.format(sig.name))
-        tasks = [task for task in asyncio.Task.all_tasks() if task is not asyncio.tasks.Task.current_task()]
-        list(map(lambda task: task.cancel(), tasks))
 
-        results = await asyncio.gather(*tasks, return_exceptions=True)
-        print('finished awaiting cancelled tasks, results: {0}'.format(results))
-        loop.stop()
+        try:
+            print('Caught signal {0}'.format(sig.name))
+            tasks = [task for task in asyncio.Task.all_tasks() if task is not asyncio.tasks.Task.current_task()]
+            list(map(lambda task: task.cancel(), tasks))
+
+            results = await asyncio.gather(*tasks, return_exceptions=True)
+            print('finished awaiting cancelled tasks, results: {0}'.format(results))
+
+        finally:
+            loop.stop()
 
     # init handlers
     loop = asyncio.get_event_loop()
