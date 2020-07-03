@@ -118,6 +118,8 @@ class ResourcesMonitor():
                 if msg is None:  # according to doc it means that connection closed
                     break
                 elif 'token error' in msg:
+                    # Если токен эррор, то закрываем соединение и и переходим к попыткам коннекта (начало первого while)
+                    await self._close_connection()
                     await Controller.invalidate_auth(self._controller_ip)
                     break
                 else:
@@ -162,7 +164,7 @@ class ResourcesMonitor():
 
     async def _close_connection(self):
         if self._ws_connection:
-            log.debug(_('{} Closing ws connection {}').format(__class__.__name__, self._controller_ip)) # noqa
+            log.debug(_('{} Closing ws connection {}').format(__class__.__name__, self._controller_ip))  # noqa
             try:
                 self._ws_connection.close()
             except Exception as E:
