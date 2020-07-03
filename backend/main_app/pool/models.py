@@ -15,7 +15,7 @@ from database import db, Status, EntityType, AbstractClass
 from redis_broker import get_thin_clients_count
 from controller.models import Controller
 
-from front_ws_api.subscription_sources import EVENTS_SUBSCRIPTION
+from front_ws_api.subscription_sources import VDI_TASKS_SUBSCRIPTION
 from redis_broker import REDIS_CLIENT, INTERNAL_EVENTS_CHANNEL
 
 from redis_broker import a_redis_wait_for_message, WS_MONITOR_CHANNEL_OUT
@@ -939,7 +939,7 @@ class AutomatedPool(db.Model):
                                 domain_index=vm_index,
                                 domain_verbose_name=vm['verbose_name'],
                                 initial_size=self.initial_size,
-                                resource=EVENTS_SUBSCRIPTION)
+                                resource=VDI_TASKS_SUBSCRIPTION)
 
                 REDIS_CLIENT.publish(INTERNAL_EVENTS_CHANNEL, json.dumps(msg_dict))
 
@@ -966,7 +966,7 @@ class AutomatedPool(db.Model):
                         amount_of_created_vms=len(vm_list),
                         initial_size=self.initial_size,
                         is_successful=is_creation_successful,
-                        resource=EVENTS_SUBSCRIPTION)
+                        resource=VDI_TASKS_SUBSCRIPTION)
 
         REDIS_CLIENT.publish(INTERNAL_EVENTS_CHANNEL, json.dumps(msg_dict))
 
