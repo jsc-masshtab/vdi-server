@@ -179,7 +179,6 @@ class Pool(db.Model):
             AutomatedPool.max_size,
             AutomatedPool.max_vm_amount,
             AutomatedPool.increase_step,
-            AutomatedPool.min_free_vms_amount,
             AutomatedPool.max_amount_of_create_attempts,
             AutomatedPool.initial_size,
             AutomatedPool.reserve_size,
@@ -225,7 +224,6 @@ class Pool(db.Model):
                 AutomatedPool.max_size,
                 AutomatedPool.max_vm_amount,
                 AutomatedPool.increase_step,
-                AutomatedPool.min_free_vms_amount,
                 AutomatedPool.max_amount_of_create_attempts,
                 AutomatedPool.initial_size,
                 AutomatedPool.reserve_size,
@@ -676,7 +674,6 @@ class AutomatedPool(db.Model):
     max_size = db.Column(db.Integer(), nullable=False, default=200)
     max_vm_amount = db.Column(db.Integer(), nullable=False, default=1000)
     increase_step = db.Column(db.Integer(), nullable=False, default=3)
-    min_free_vms_amount = db.Column(db.Integer(), nullable=False, default=3)
     max_amount_of_create_attempts = db.Column(db.Integer(), nullable=False, default=2)
 
     initial_size = db.Column(db.Integer(), nullable=False, default=1)
@@ -737,7 +734,6 @@ class AutomatedPool(db.Model):
     @classmethod
     async def soft_create(cls, verbose_name, controller_ip, cluster_id, node_id,
                           template_id, datapool_id, min_size, max_size, max_vm_amount, increase_step,
-                          min_free_vms_amount,
                           max_amount_of_create_attempts, initial_size, reserve_size, total_size, vm_name_template,
                           create_thin_clones, connection_types):
         """Nested transactions are atomic."""
@@ -759,7 +755,6 @@ class AutomatedPool(db.Model):
                                                   max_size=max_size,
                                                   max_vm_amount=max_vm_amount,
                                                   increase_step=increase_step,
-                                                  min_free_vms_amount=min_free_vms_amount,
                                                   max_amount_of_create_attempts=max_amount_of_create_attempts,
                                                   initial_size=initial_size,
                                                   reserve_size=reserve_size,
@@ -1039,7 +1034,8 @@ class AutomatedPool(db.Model):
 
                 # Если подогретых машин слишком мало, то пробуем добавить еще
                 # Условие расширения изменено. Первое условие было < - тестируем.
-                if free_vm_amount <= self.reserve_size and free_vm_amount <= self.min_free_vms_amount:
+                # self.reserve_size - это по факту порог, число свободных вм, при  котором пул должен расшриться
+                if free_vm_amount <= self.reserve_size:
                     # Max possible amount of VMs which we can add to the pool
                     max_possible_amount_to_add = self.total_size - vm_amount_in_pool
                     # Real amount that we can add to the pool
