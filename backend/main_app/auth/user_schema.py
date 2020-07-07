@@ -159,8 +159,8 @@ class UserQuery(graphene.ObjectType):
         return UserType.instance_to_type(user)
 
     @readonly_required
-    async def resolve_users(self, info, ordering=None, **kwargs):
-        users = await User.get_objects(ordering=ordering, include_inactive=True)
+    async def resolve_users(self, info, limit=100, offset=0, ordering=None, **kwargs):
+        users = await User.get_objects(limit, offset, ordering=ordering, include_inactive=True)
         objects = [
             UserType.instance_to_type(user)
             for user in users

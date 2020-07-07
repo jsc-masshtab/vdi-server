@@ -242,11 +242,11 @@ class Pool(db.Model, AbstractClass):
         return await query.gino.first()
 
     @staticmethod
-    async def get_pools(ordering=None):
+    async def get_pools(limit, offset, ordering=None):
         """Такое построение запроса вызвано желанием иметь только 1 запрос с изначальным построением."""
         # TODO: проверить используется ли. Заменить на Pool.get?
         query = Pool.get_pools_query(ordering=ordering)
-        return await query.gino.all()
+        return await query.limit(limit).offset(offset).gino.all()
 
     @staticmethod
     async def get_controller_ip(pool_id):
@@ -281,14 +281,6 @@ class Pool(db.Model, AbstractClass):
         filtered_query = EntityRoleOwner.join(query).select().alias()
         result_query = db.select([text('anon_1.role')]).select_from(filtered_query).group_by('role')
         return await result_query.gino.all()
-
-    @property
-    async def assigned_groups(self):
-        """Группы назначенные пулу"""
-        # TODO: возможно нужно добавить группы и пользователей обладающих Ролью
-        query = Entity.query.where((Entity.entity_type == EntityType.POOL) & (Entity.entity_uuid == self.id)).alias()
-        filtered_query = Group.join(EntityRoleOwner.join(query).alias()).select()
-        return await filtered_query.gino.load(Group).all()
 
     @property
     async def possible_groups(self):

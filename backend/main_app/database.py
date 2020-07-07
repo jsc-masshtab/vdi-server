@@ -156,11 +156,11 @@ class AbstractSortableStatusModel:
         return await query.gino.first()
 
     @classmethod
-    async def get_objects(cls, ordering=None, first=False, include_inactive=False):
+    async def get_objects(cls, limit, offset, ordering=None, first=False, include_inactive=False):
         query = cls.get_query(ordering=ordering, include_inactive=include_inactive)
         if first:
             return await query.gino.first()
-        return await query.gino.all()
+        return await query.limit(limit).offset(offset).gino.all()
 
 
 StatusGraphene = GrapheneEnum.from_enum(Status)

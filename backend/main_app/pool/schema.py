@@ -11,9 +11,10 @@ from database import StatusGraphene, db, RoleTypeGraphene, Role
 from common.veil_validators import MutationValidation
 from common.veil_errors import SimpleError, HttpError, ValidationError
 from common.utils import make_graphene_type
-from common.veil_decorators import administrator_required
+from common.veil_decorators import administrator_required, readonly_required
 
 from auth.user_schema import UserType
+from auth.models import Group, Entity, EntityRoleOwner, EntityType
 
 from vm.schema import VmType, VmQuery, TemplateType
 from vm.models import Vm
@@ -216,20 +217,25 @@ class PoolType(graphene.ObjectType):
         all_roles = [role_type for role_type in Role]
         return [role for role in all_roles if role.value not in assigned_roles]
 
-    async def resolve_assigned_groups(self, info):
-        pool = await Pool.get(self.pool_id)
-        return await pool.assigned_groups
+    @readonly_required
+    async def resolve_assigned_groups(self, info, limit=100, offset=0, **kwargs):
+        # TODO: возможно нужно добавить группы и пользователей обладающих Ролью
+        query = Entity.query.where((Entity.entity_type == EntityType.POOL) & (Entity.entity_uuid == Pool.id)).alias()
+        filtered_query = Group.join(EntityRoleOwner.join(query).alias()).select()
+        return await filtered_query.limit(limit).offset(offset).gino.load(Group).all()
 
     async def resolve_possible_groups(self, _info):
         pool = await Pool.get(self.pool_id)
         return await pool.possible_groups
 
     async def resolve_users(self, _info, entitled=True):
+        # TODO: добавить пагинацию
         pool = await Pool.get(self.pool_id)
         return await pool.assigned_users if entitled else await pool.possible_users
 
-    async def resolve_vms(self, _info):
-        await self._build_vms_list()
+    @readonly_required
+    async def resolve_vms(self, _info, limit=100, offset=0, **kwargs):
+        await self._build_vms_list(limit, offset)
         return self.vms
 
     async def resolve_vm_amount(self, _info):
@@ -281,7 +287,7 @@ class PoolType(graphene.ObjectType):
             # либо шаблон изчес с контроллера, либо попытка получить шаблон для статического пула
             return None
 
-    async def _build_vms_list(self):
+    async def _build_vms_list(self, limit, offset):
         if not self.vms:
             self.vms = []
 
@@ -289,7 +295,7 @@ class PoolType(graphene.ObjectType):
             vm_http_client = await VmHttpClient.create(controller_address, '')
             vm_veil_data_list = await vm_http_client.fetch_vms_list()
 
-            db_vms_data = await Vm.select("id").where((Vm.pool_id == self.pool_id)).gino.all()
+            db_vms_data = await Vm.select("id").where((Vm.pool_id == self.pool_id)).limit(limit).offset(offset).gino.all()
 
             for (vm_id,) in db_vms_data:
                 try:
@@ -347,9 +353,9 @@ class PoolQuery(graphene.ObjectType):
     pool = graphene.Field(PoolType, pool_id=graphene.String())
 
     @administrator_required
-    async def resolve_pools(self, info, ordering=None, **kwargs):
+    async def resolve_pools(self, info, limit=100, offset=0, ordering=None, **kwargs):
         # Сортировка может быть по полю модели Pool, либо по Pool.EXTRA_ORDER_FIELDS
-        pools = await Pool.get_pools(ordering=ordering)
+        pools = await Pool.get_pools(limit, offset, ordering=ordering)
         objects = [
             pool_obj_to_type(pool)
             for pool in pools

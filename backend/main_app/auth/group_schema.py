@@ -2,7 +2,7 @@
 import graphene
 
 from database import db, RoleTypeGraphene, Role
-from auth.models import Group, User
+from auth.models import Group, User, UserGroup
 from common.veil_validators import MutationValidation
 from common.veil_errors import SimpleError, ValidationError
 from common.veil_decorators import security_administrator_required, readonly_required
@@ -73,9 +73,10 @@ class GroupType(graphene.ObjectType):
                          date_created=model_instance.date_created,
                          date_updated=model_instance.date_updated)
 
-    async def resolve_assigned_users(self, _info):
-        group = await Group.get(self.id)
-        return await group.assigned_users
+    @readonly_required
+    async def resolve_assigned_users(self, _info, limit=100, offset=0, **kwargs):
+        users_query = User.join(UserGroup.query.where(UserGroup.group_id == self.id).alias()).select()
+        return await users_query.limit(limit).offset(offset).gino.load(User).all()
 
     async def resolve_possible_users(self, _info):
         group = await Group.get(self.id)
@@ -106,8 +107,8 @@ class GroupQuery(graphene.ObjectType):
         return GroupType.instance_to_type(group)
 
     @readonly_required
-    async def resolve_groups(self, info, ordering=None, **kwargs):  # noqa
-        groups = await Group.get_objects(ordering=ordering, include_inactive=True)
+    async def resolve_groups(self, info, limit=100, offset=0, ordering=None, **kwargs):  # noqa
+        groups = await Group.get_objects(limit, offset, ordering=ordering, include_inactive=True)
         objects = [
             GroupType.instance_to_type(group)
             for group in groups

@@ -352,11 +352,6 @@ class Group(AbstractSortableStatusModel, db.Model, AbstractClass):
         return await query.gino.all()
 
     @property
-    async def assigned_users(self):
-        users_query = User.join(UserGroup.query.where(UserGroup.group_id == self.id).alias()).select()
-        return await users_query.gino.load(User).all()
-
-    @property
     async def possible_users(self):
         """Берем всех АКТИВНЫХ пользователей и исключаем тех, кому уже назначена группа."""
         possible_users_query = User.join(

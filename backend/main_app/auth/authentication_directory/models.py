@@ -6,7 +6,7 @@ import ldap
 from asyncpg.exceptions import UniqueViolationError
 from sqlalchemy import Index, Enum as AlchemyEnum
 from sqlalchemy.dialects.postgresql import UUID, ARRAY, JSONB
-from sqlalchemy.sql import text, desc
+from sqlalchemy.sql import text
 
 from settings import LDAP_TIMEOUT
 from database import db, AbstractSortableStatusModel, Status, Role, AbstractClass
@@ -100,13 +100,6 @@ class AuthenticationDirectory(db.Model, AbstractSortableStatusModel, AbstractCla
     kdc_urls = db.Column(ARRAY(db.Unicode(length=255)), nullable=True)
     sso = db.Column(db.Boolean(), default=False)
     status = db.Column(AlchemyEnum(Status), nullable=False, index=True)
-
-    @property
-    async def mappings(self):
-        query = Mapping.join(
-            GroupAuthenticationDirectoryMapping.query.where(
-                AuthenticationDirectory.id == self.id).alias()).select().order_by(desc(Mapping.priority))
-        return await query.gino.load(Mapping).all()
 
     @classmethod
     async def soft_create(cls, verbose_name, directory_url, domain_name, creator,

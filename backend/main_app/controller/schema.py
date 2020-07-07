@@ -173,8 +173,8 @@ class ControllerQuery(graphene.ObjectType):
     controller = graphene.Field(lambda: ControllerType, id=graphene.String())
 
     @administrator_required
-    async def resolve_controllers(self, _info, **kwargs):
-        controllers = await Controller.query.gino.all()
+    async def resolve_controllers(self, _info, limit=100, offset=0, **kwargs):
+        controllers = await Controller.get_objects(limit, offset)
         objects = [
             ControllerType(**controller.__values__)
             for controller in controllers

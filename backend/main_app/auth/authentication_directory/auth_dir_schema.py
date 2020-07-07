@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import graphene
 from graphene import Enum as GrapheneEnum
+from sqlalchemy.sql import desc
 import re
 
 from database import StatusGraphene, db, Status
@@ -8,7 +9,7 @@ from common.veil_validators import MutationValidation
 from common.veil_errors import SimpleError, ValidationError
 from common.veil_decorators import security_administrator_required, readonly_required
 
-from auth.authentication_directory.models import AuthenticationDirectory, Mapping
+from auth.authentication_directory.models import AuthenticationDirectory, GroupAuthenticationDirectoryMapping, Mapping
 from auth.models import Group
 
 from languages import lang_init
@@ -181,9 +182,12 @@ class AuthenticationDirectoryType(graphene.ObjectType):
         """Dummy value for not displayed field."""
         return '*' * 7
 
-    async def resolve_mappings(self, _info):
-        auth_dir = await AuthenticationDirectory.get(self.id)
-        return await auth_dir.mappings
+    @readonly_required
+    async def resolve_mappings(self, _info, limit=100, offset=0, **kwargs):
+        query = Mapping.join(
+            GroupAuthenticationDirectoryMapping.query.where(
+                AuthenticationDirectory.id == self.id).alias()).select().order_by(desc(Mapping.priority))
+        return await query.limit(limit).offset(offset).gino.load(Mapping).all()
 
     async def resolve_assigned_ad_groups(self, _info):
         """Группы созданные при предыдущих синхронизациях."""
@@ -220,8 +224,8 @@ class AuthenticationDirectoryQuery(graphene.ObjectType):
         return AuthenticationDirectoryQuery.instance_to_type(auth_dir)
 
     @readonly_required
-    async def resolve_auth_dirs(self, info, ordering=None, **kwargs):
-        auth_dirs = await AuthenticationDirectory.get_objects(ordering=ordering)
+    async def resolve_auth_dirs(self, info, ordering=None, limit=100, offset=0, **kwargs):
+        auth_dirs = await AuthenticationDirectory.get_objects(limit, offset, ordering=ordering)
         objects = [
             AuthenticationDirectoryQuery.instance_to_type(auth_dir)
             for auth_dir in auth_dirs
