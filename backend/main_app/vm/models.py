@@ -13,13 +13,13 @@ from vm.veil_client import VmHttpClient
 from auth.models import Entity, EntityRoleOwner, User
 
 from languages import lang_init
-from journal.journal import Log as log
+from journal.journal import Log
 
 
 _ = lang_init()
 
 
-class Vm(db.Model, AbstractClass):
+class Vm(AbstractClass):
     """
     ACTIONS = ('start', 'suspend', 'reset', 'shutdown', 'resume', 'reboot')
     POWER_STATES = ('unknown', 'power off', 'power on and suspended', 'power on')
@@ -65,7 +65,7 @@ class Vm(db.Model, AbstractClass):
     @classmethod
     async def create(cls, pool_id, template_id, verbose_name, id=None,
                      created_by_vdi=False, broken=False):
-        log.debug(_('Create VM {} on VDI DB.').format(verbose_name))
+        Log.debug(_('Create VM {} on VDI DB.').format(verbose_name))
         try:
             vm = await super().create(id=id,
                                       pool_id=pool_id,
@@ -74,9 +74,9 @@ class Vm(db.Model, AbstractClass):
                                       created_by_vdi=created_by_vdi,
                                       broken=broken)
         except Exception as E:
-            raise VmCreationError(E)
+            raise VmCreationError(str(E))
 
-        await log.info(_('VM {} is created').format(verbose_name))
+        await Log.info(_('VM {} is created').format(verbose_name))
 
         return vm
 
@@ -88,8 +88,8 @@ class Vm(db.Model, AbstractClass):
                 try:
                     await vm_http_client.remove_vm()
                 except HttpError as http_error:
-                    await log.warning(_('Fail to remove VM {} from ECP: ').format(self.verbose_name, http_error))
-                log.debug(_('Vm {} removed from ECP.').format(self.verbose_name))
+                    await Log.warning(_('Fail to remove VM {} from ECP: ').format(self.verbose_name, http_error))
+                Log.debug(_('Vm {} removed from ECP.').format(self.verbose_name))
         status = await super().soft_delete(dest=dest, creator=creator)
         return status
 
@@ -102,7 +102,7 @@ class Vm(db.Model, AbstractClass):
                     entity = await Entity.create(**self.entity)
                 ero = await EntityRoleOwner.create(entity_id=entity.id, user_id=user_id)
                 user = await User.get(user_id)
-                await log.info(_('User {} has been included to VM {}').format(user.username, self.verbose_name),
+                await Log.info(_('User {} has been included to VM {}').format(user.username, self.verbose_name),
                                user=creator
                                )
         except UniqueViolationError:
@@ -112,7 +112,7 @@ class Vm(db.Model, AbstractClass):
     async def remove_users(self, creator, users_list: list):
         entity = Entity.select('id').where((Entity.entity_type == self.entity_type) & (Entity.entity_uuid == self.id))
         # TODO: временное решение. Скорее всего потом права отзываться будут на конкретные сущности
-        await log.info(_('VM {} is clear from users').format(self.verbose_name), user=creator)
+        await Log.info(_('VM {} is clear from users').format(self.verbose_name), user=creator)
         if not users_list:
             return await EntityRoleOwner.delete.where(EntityRoleOwner.entity_id == entity).gino.status()
         return await EntityRoleOwner.delete.where(
@@ -150,7 +150,7 @@ class Vm(db.Model, AbstractClass):
                    node_id: str, create_thin_clones: bool, domain_index: int):
         """Copy existing VM template for new VM create."""
 
-        log.debug(
+        Log.debug(
             'VmHttpClient: controller_ip: {}, domain_id: {}, verbose_name: {}'.format(controller_ip,
                                                                                       domain_id,
                                                                                       verbose_name))
@@ -160,13 +160,13 @@ class Vm(db.Model, AbstractClass):
         while True:
             inner_retry_count += 1
             try:
-                await log.info(_('Trying to create VM on ECP with verbose_name={}').format(verbose_name))
+                await Log.info(_('Trying to create VM on ECP with verbose_name={}').format(verbose_name))
 
                 response = await client.copy_vm(node_id=node_id,
                                                 datapool_id=datapool_id,
                                                 domain_name=verbose_name,
                                                 create_thin_clones=create_thin_clones)
-                log.debug(_('Request to create VM sent without surprise. Leaving while.'))
+                Log.debug(_('Request to create VM sent without surprise. Leaving while.'))
                 break
             except BadRequest as http_error:
                 # TODO: Нужны коды ошибок
@@ -174,45 +174,46 @@ class Vm(db.Model, AbstractClass):
                 ecp_errors = http_error.errors.get('errors')
                 ecp_detail_l = ecp_errors.get('detail') if ecp_errors else None
                 ecp_detail = ecp_detail_l[0] if isinstance(ecp_detail_l, list) else None
-                await log.warning(_('ECP error: {}').format(ecp_errors))
+                await Log.warning(_('ECP error: {}').format(ecp_errors))
 
                 if ecp_errors and 'verbose_name' in ecp_errors:
-                    await log.warning(_('Bad domain name {}').format(verbose_name))
+                    await Log.warning(_('Bad domain name {}').format(verbose_name))
                     domain_index_old = domain_index
                     domain_index = domain_index + 1
                     verbose_name = re.sub(r'-{}$'.format(domain_index_old), '-{}'.format(domain_index), verbose_name)
                 elif ecp_errors and ecp_detail and ('Недостаточно свободного места в пуле данных' in ecp_detail or 'not enough free space on data pool' in ecp_detail):
-                    await log.warning(_('Controller has not free space for creating new VM.'))
+                    await Log.warning(_('Controller has not free space for creating new VM.'))
                     raise VmCreationError(_('Not enough free space on data pool'))
                 elif ecp_errors and ecp_detail and ('passed node is not valid' in ecp_detail or 'Переданный узел не действителен' in ecp_detail):
-                    await log.warning(_('Unknown node {}').format(node_id))
+                    await Log.warning(_('Unknown node {}').format(node_id))
                     raise VmCreationError(_('Controller can\t create VM. Unknown node.'))
                 elif ecp_errors and ecp_detail and inner_retry_count < 30:
                     # Тут мы предполагаем, что контроллер заблокирован выполнением задачи. Это может быть и не так,
                     # но сейчас нам это не понятно.
-                    log.debug(_('Possibly blocked by active task on ECP. Wait before next try.'))
+                    Log.debug(_('Possibly blocked by active task on ECP. Wait before next try.'))
                     await asyncio.sleep(10)
                 else:
-                    log.debug(_('Something went wrong. Interrupt while.'))
+                    Log.debug(_('Something went wrong. Interrupt while.'))
                     raise BadRequest(http_error)
 
-            log.debug(_('Wait one more try'))
+            Log.debug(_('Wait one more try'))
             await asyncio.sleep(1)
 
         copy_result = dict(id=response['entity'],
                            task_id=response['_task']['id'],
                            verbose_name=verbose_name,
                            domain_index=domain_index)
-        # log.debug(copy_result)
+        # Log.debug(copy_result)
         return copy_result
 
     @staticmethod
     async def remove_vms(vm_ids, creator):
         """Remove given vms"""
+        status = None
         for vm_id in vm_ids:
             vm = await Vm.get(vm_id)
             status = await vm.soft_delete(dest=_('VM'), creator=creator)
-            await log.info(_('Vm {} removed from pool').format(vm.verbose_name))
+            await Log.info(_('Vm {} removed from pool').format(vm.verbose_name))
         return status
 
     @staticmethod

@@ -11,7 +11,7 @@ from common.veil_errors import VmCreationError, PoolCreationError
 
 from pool.models import AutomatedPool, Pool
 
-from journal.journal import Log as log
+from journal.journal import Log
 
 from redis_broker import REDIS_CLIENT, INTERNAL_EVENTS_CHANNEL
 from front_ws_api.subscription_sources import EVENTS_SUBSCRIPTION
@@ -102,7 +102,7 @@ class PoolTaskManager:
     # CREATION
     async def start_pool_initialization(self, pool_id):
 
-        log.debug('start_pool_initialization')
+        Log.debug('start_pool_initialization')
         automated_pool = await AutomatedPool.get(pool_id)
         if not automated_pool:
             return
@@ -122,7 +122,7 @@ class PoolTaskManager:
                 try:
                     await automated_pool.add_initial_vms()
                 except PoolCreationError as E:
-                    await log.error('{exception}'.format(exception=str(E)))
+                    await Log.error('{exception}'.format(exception=str(E)))
                     await automated_pool.deactivate()
                 else:
                     await automated_pool.activate()
@@ -130,7 +130,7 @@ class PoolTaskManager:
     # EXPANDING
     async def start_pool_expanding(self, pool_id):
 
-        log.debug('start_pool_expanding')
+        Log.debug('start_pool_expanding')
         automated_pool = await AutomatedPool.get(pool_id)
         if not automated_pool:
             return
@@ -166,8 +166,7 @@ class PoolTaskManager:
 
                 # Если подогретых машин слишком мало, то пробуем добавить еще
                 # Условие расширения изменено. Первое условие было < - тестируем.
-                if free_vm_amount <= automated_pool.reserve_size and \
-                        free_vm_amount <= automated_pool.min_free_vms_amount:
+                if free_vm_amount <= automated_pool.reserve_size:
                     # Max possible amount of VMs which we can add to the pool
                     max_possible_amount_to_add = automated_pool.total_size - vm_amount_in_pool
                     # Real amount that we can add to the pool
@@ -178,13 +177,13 @@ class PoolTaskManager:
                             domain_index = vm_amount_in_pool + i
                             await automated_pool.add_vm(domain_index)
                     except VmCreationError as vm_error:
-                        await log.error(_('VM creating error:'))
-                        log.debug(vm_error)
+                        await Log.error(_('VM creating error:'))
+                        Log.debug(vm_error)
 
     # DELETING
     async def start_pool_deleting(self, pool_id, full):
 
-        log.debug('start_pool_deleting' + str(pool_id))
+        Log.debug('start_pool_deleting' + str(pool_id))
         automated_pool = await AutomatedPool.get(pool_id)
         print('automated_pool', automated_pool)
         if not automated_pool:
@@ -195,7 +194,7 @@ class PoolTaskManager:
         pool_lock.delete_pool_task = native_loop.create_task(self.deleting_pool_task(automated_pool, full))
 
     async def deleting_pool_task(self, automated_pool, full):
-        """Корутина, в котрой пул удаляется"""
+        """Корутина, в которой пул удаляется"""
 
         # Останавливаем таски связанные с пулом
         await self.cancel_all_tasks_for_pool(str(automated_pool.id))
@@ -209,8 +208,7 @@ class PoolTaskManager:
             # удаляем пул
             pool = await Pool.get(automated_pool.id)
             is_deleted = await Pool.delete_pool(pool, 'system', full)
-            log.debug('is pool deleted: {}'.format(is_deleted))
-            print('temp is_deleted ', is_deleted)
+            Log.debug('is pool deleted: {}'.format(is_deleted))
 
             # убираем из памяти локи, если пул успешно удалился
             if is_deleted:

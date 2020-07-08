@@ -7,7 +7,7 @@ from settings import JWT_OPTIONS, SECRET_KEY, JWT_EXPIRATION_DELTA, JWT_AUTH_HEA
 from auth.models import User, UserJwtInfo
 
 from languages import lang_init
-from journal.journal import Log as log
+from journal.journal import Log
 
 
 _ = lang_init()
@@ -25,13 +25,13 @@ def jwtauth(handler_class):
                 if not is_valid:
                     raise AssertionError(_('Token invalid.'))
             except jwt.ExpiredSignature:
-                log.debug(_('jwtauth: jwt.ExpiredSignature'))
+                Log.debug(_('jwtauth: jwt.ExpiredSignature'))
                 handler._transforms = []
                 handler.set_status(401)
                 response = {'errors': [{'message': _('Token expired.')}]}
                 handler.finish(response)
             except AssertionError as error_message:
-                log.debug(_('jwtauth: Assertion error {}').format(error_message))
+                Log.debug(_('jwtauth: Assertion error {}').format(error_message))
                 handler._transforms = []
                 handler.set_status(401)
                 response = {'errors': [{'message': str(error_message)}]}

@@ -20,7 +20,7 @@ from common.utils import cancel_async_task
 from redis_broker import REDIS_CLIENT, WS_MONITOR_CHANNEL_OUT
 
 from languages import lang_init
-from journal.journal import Log as log
+from journal.journal import Log
 
 
 _ = lang_init()
@@ -36,16 +36,16 @@ class ResourcesMonitor():
         super().__init__()
         self._ws_connection = None
         self._running_flag = True
-        self._controller_ip = None
+        self._controller_id = None
         self._is_online = False
 
         self._controller_online_task = None
         self._resources_monitor_task = None
 
     # PUBLIC METHODS
-    def start(self, controller_ip):
+    def start(self, controller_id):
 
-        self._controller_ip = controller_ip
+        self._controller_id = controller_id
         self._running_flag = True
 
         native_loop = asyncio.get_event_loop()
@@ -62,8 +62,8 @@ class ResourcesMonitor():
         await cancel_async_task(self._resources_monitor_task)
         await cancel_async_task(self._controller_online_task)
 
-    def get_controller_ip(self):
-        return self._controller_ip
+    def get_controller_id(self):
+        return self._controller_id
 
     # PRIVATE METHODS
     async def _controller_online_checking(self):
@@ -71,32 +71,37 @@ class ResourcesMonitor():
         Check if controller online
         :return:
         """
-        controller_id = await Controller.get_controller_id_by_ip(self._controller_ip)
-
-        response = {'ip': self._controller_ip, 'msg_type': 'data', 'event': 'UPDATED',
+        controller_address = await Controller.get_controller_address_by_id(self._controller_id)
+        response = {'id': str(self._controller_id), 'msg_type': 'data', 'event': 'UPDATED',
                     'resource': CONTROLLERS_SUBSCRIPTION}
+
+        is_first_check = True
+
         while self._running_flag:
+
             await asyncio.sleep(4)
             try:
                 # if controller is online then there wil not be any exception
-                resources_http_client = await ResourcesHttpClient.create(self._controller_ip)
+                resources_http_client = await ResourcesHttpClient.create(controller_address)
                 await resources_http_client.check_controller()
             except (HTTPClientError, HttpError, Exception):
-                # notify only if controller was online before (data changed)
-                if self._is_online:
+                # notify if controller was online before (data changed)
+                if self._is_online or is_first_check:
                     response['status'] = 'OFFLINE'
-                    await Controller.deactivate(controller_id)
                     REDIS_CLIENT.publish(WS_MONITOR_CHANNEL_OUT, json.dumps(response))
 
-                self._is_online = False
+                    await Controller.deactivate(self._controller_id)
+                    self._is_online = False
             else:
-                # notify only if controller was offline before (data changed)
-                if not self._is_online:
+                # notify if controller was offline before (data changed)
+                if not self._is_online or is_first_check:
                     response['status'] = 'ONLINE'
-                    await Controller.activate(controller_id)
                     REDIS_CLIENT.publish(WS_MONITOR_CHANNEL_OUT, json.dumps(response))
 
-                self._is_online = True
+                    await Controller.activate(self._controller_id)
+                    self._is_online = True
+
+            is_first_check = False
 
     async def _processing_ws_messages(self):
         """
@@ -105,8 +110,7 @@ class ResourcesMonitor():
         """
         while self._running_flag:
             is_connected = await self._connect()
-
-            log.debug(_('{} is connected: {}').format(__class__.__name__, is_connected))  # noqa
+            Log.debug(_('{} is connected: {}').format(__class__.__name__, is_connected))  # noqa
             # reconnect if not connected
             if not is_connected:
                 await asyncio.sleep(self.RECONNECT_TIMEOUT)
@@ -120,7 +124,7 @@ class ResourcesMonitor():
                 elif 'token error' in msg:
                     # Если токен эррор, то закрываем соединение и и переходим к попыткам коннекта (начало первого while)
                     await self._close_connection()
-                    await Controller.invalidate_auth(self._controller_ip)
+                    await Controller.invalidate_auth(self._controller_id)
                     break
                 else:
                     await self._on_message_received(msg)
@@ -128,23 +132,29 @@ class ResourcesMonitor():
             await asyncio.sleep(self.RECONNECT_TIMEOUT)
 
     async def _connect(self):
+        controller = await Controller.get(self._controller_id)
+
+        # check if controller active
+        if not controller.active:
+            return False
+
         # get token
         try:
-            token = await Controller.get_token(self._controller_ip)
+            token = await Controller.get_token(controller.address)
         except Exception as E:
-            await log.error(str(E))
+            await Log.error(str(E))
             return False
 
         # create ws connection
         try:
-            connect_url = 'ws://{}/ws/?token={}'.format(self._controller_ip, token)
-            # log.debug('ws connection url is {}'.format(connect_url))
+            connect_url = 'ws://{}/ws/?token={}'.format(controller.address, token)
+            # Log.debug('ws connection url is {}'.format(connect_url))
             self._ws_connection = await websocket_connect(connect_url)
         except (ConnectionRefusedError, WebSocketError):
-            msg = _('{cls}: an not connect to {ip}').format(
+            msg = _('{cls}: can not connect to {ip}').format(
                 cls=__class__.__name__, # noqa
-                ip=self._controller_ip)
-            await log.error(msg)
+                ip=controller.address)
+            await Log.error(msg)
             return False
 
         # subscribe to events on controller
@@ -153,19 +163,19 @@ class ResourcesMonitor():
                 await self._ws_connection.write_message(
                     SubscriptionCmd.add + ' ' + format(subscription_name))
         except WebSocketClosedError as ws_error:
-            await log.error(ws_error)
+            await Log.error(str(ws_error))
             return False
 
         return True
 
     async def _on_message_received(self, message):
-        log.debug('_on_message_received: message ' + message)
+        #  Log.debug('_on_message_received: message ' + message)
         REDIS_CLIENT.publish(WS_MONITOR_CHANNEL_OUT, message)
 
     async def _close_connection(self):
         if self._ws_connection:
-            log.debug(_('{} Closing ws connection {}').format(__class__.__name__, self._controller_ip))  # noqa
+            Log.debug(_('{} Closing ws connection {}').format(__class__.__name__, self._controller_id))  # noqa
             try:
                 self._ws_connection.close()
             except Exception as E:
-                await log.debug(str(E))
+                await Log.debug(str(E))

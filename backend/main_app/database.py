@@ -167,7 +167,7 @@ StatusGraphene = GrapheneEnum.from_enum(Status)
 RoleTypeGraphene = GrapheneEnum.from_enum(Role)
 
 
-class AbstractClass:
+class AbstractClass(db.Model):
 
     @property
     def entity_type(self):
@@ -184,17 +184,17 @@ class AbstractClass:
             (Entity.entity_type == self.entity_type) & (Entity.entity_uuid == self.id)).gino.first()
 
     async def soft_delete(self, dest, creator):
-        from journal.journal import Log as log
+        from journal.journal import Log
         try:
             await self.delete()
             msg = _('{} {} had remove.').format(dest, self.verbose_name)
             if self.entity:
-                await log.info(msg, entity_dict=self.entity, user=creator)
+                await Log.info(msg, entity_dict=self.entity, user=creator)
             else:
-                await log.info(msg, user=creator)
+                await Log.info(msg, user=creator)
             return True
         except Exception as ex:
-            log.debug(_('Soft_delete exception: {}').format(ex))
+            Log.debug(_('Soft_delete exception: {}').format(ex))
             return False
 
     @classmethod
