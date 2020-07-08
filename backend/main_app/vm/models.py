@@ -19,7 +19,7 @@ from journal.journal import Log as log
 _ = lang_init()
 
 
-class Vm(db.Model, AbstractClass):
+class Vm(AbstractClass):
     """
     ACTIONS = ('start', 'suspend', 'reset', 'shutdown', 'resume', 'reboot')
     POWER_STATES = ('unknown', 'power off', 'power on and suspended', 'power on')

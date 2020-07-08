@@ -29,7 +29,7 @@ _ = lang_init()
 #  При активации контроллера нужно брать задачи в очереди.
 
 
-class Controller(db.Model, AbstractClass):
+class Controller(AbstractClass):
     # TODO: indexes
     __tablename__ = 'controller'
 

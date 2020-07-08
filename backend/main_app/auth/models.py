@@ -42,7 +42,7 @@ class EntityRoleOwner(db.Model):
     group_id = db.Column(UUID(), db.ForeignKey('group.id', ondelete="CASCADE"), nullable=True)
 
 
-class User(AbstractSortableStatusModel, db.Model, AbstractClass):
+class User(AbstractSortableStatusModel, AbstractClass):
     __tablename__ = 'user'
 
     id = db.Column(UUID(), primary_key=True, default=uuid.uuid4)
@@ -332,7 +332,7 @@ class UserJwtInfo(db.Model):
         return count > 0
 
 
-class Group(AbstractSortableStatusModel, db.Model, AbstractClass):
+class Group(AbstractSortableStatusModel, AbstractClass):
     __tablename__ = 'group'
 
     id = db.Column(UUID(), primary_key=True, default=uuid.uuid4)
