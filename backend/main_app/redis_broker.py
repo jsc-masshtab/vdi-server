@@ -38,6 +38,7 @@ class WsMonitorCmd(Enum):
 
     ADD_CONTROLLER = 'ADD_CONTROLLER'
     REMOVE_CONTROLLER = 'REMOVE_CONTROLLER'
+    RESTART_MONITOR = 'RESTART_MONITOR'
 
 
 #############################
@@ -72,7 +73,7 @@ REDIS_CLIENT.info()
 #         try:
 #             response = func(*args, **kwargs)
 #         except redis.RedisError as error:
-#             log.general(_("Redis error: %(error)s"), {'error': error})
+#             Log.general(_("Redis error: %(error)s"), {'error': error})
 #         return response
 #
 #     return wrapped_function
@@ -152,6 +153,8 @@ async def a_redis_wait_for_message(redis_channel, predicate, timeout):
             await_time += REDIS_ASYNC_TIMEOUT
             await asyncio.sleep(REDIS_ASYNC_TIMEOUT)
 
+    except asyncio.CancelledError:  # Проброс необходим, чтобы корутина могла отмениться
+        raise
     except Exception as ex:  # noqa
         print('a_redis_wait_for_message ', str(ex))
         pass
@@ -178,7 +181,7 @@ def request_to_execute_pool_task(pool_id, pool_task_type, **additional_data):
     return uuid_str
 
 
-def send_cmd_to_ws_monitor(controller_address: str, ws_monitor_cmd: WsMonitorCmd):
+def send_cmd_to_ws_monitor(controller_id, ws_monitor_cmd: WsMonitorCmd):
     """Send command to ws monitor"""
-    msg_dict = {'controller_address': controller_address, 'command': ws_monitor_cmd.name}
+    msg_dict = {'controller_id': str(controller_id), 'command': ws_monitor_cmd.name}
     REDIS_CLIENT.publish(WS_MONITOR_CHANNEL_IN, json.dumps(msg_dict))

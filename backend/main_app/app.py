@@ -29,7 +29,7 @@ from common.utils import init_signals
 
 from languages import lang_init
 from journal.log.logging import Logging
-from journal.journal import Log as log
+from journal.journal import Log
 
 
 _ = lang_init()
@@ -78,18 +78,18 @@ def exit_handler(sig, frame):
 
 
 async def shutdown_server():
-    log.name(_('Stopping Tornado VDI'))
+    Log.name(_('Stopping Tornado VDI'))
 
-    log.name(_('Stopping redis'))
+    Log.name(_('Stopping redis'))
     REDIS_POOL.disconnect()
 
-    log.name(_('Stopping GINO'))
+    Log.name(_('Stopping GINO'))
     await stop_gino()
 
-    log.name(_('Stopping IOLoop'))
+    Log.name(_('Stopping IOLoop'))
     IOLoop.current().stop()
 
-    log.name(_('Tornado VDI stopped'))
+    Log.name(_('Tornado VDI stopped'))
 
 
 def start_server():
@@ -103,16 +103,16 @@ def start_server():
     server.listen(tornado.options.options.port)
     server.start(tornado.options.options.workers)
 
-    log.name(_('Tornado VDI started'))
+    Log.name(_('Tornado VDI started'))
 
     if not AUTH_ENABLED:
-        log.general(_('Auth is disabled. Enable on production!'))
+        Log.general(_('Auth is disabled. Enable on production!'))
 
     vdi_license = init_license()
     if vdi_license.expired:
-        log.general(_('The license is expired. Some functions will be blocked. Contact your dealer.'))
+        Log.general(_('The license is expired. Some functions will be blocked. Contact your dealer.'))
 
-    log.name(_('License status: {}, expiration time: {}, thin clients limit: {}').format(
+    Log.name(_('License status: {}, expiration time: {}, thin clients limit: {}').format(
         not vdi_license.expired,
         vdi_license.expiration_date,
         vdi_license.thin_clients_limit))

@@ -7,7 +7,7 @@ from abc import ABC
 from cached_property import cached_property
 
 from languages import lang_init
-from journal.journal import Log as log
+from journal.journal import Log
 
 
 _ = lang_init()
@@ -15,17 +15,17 @@ _ = lang_init()
 
 class ValidationError(AssertionError):
     def __init__(self, message):
-        log.debug(message)
+        Log.debug(message)
 
 
 class AssertError(AssertionError):
     def __init__(self, message):
-        log.debug(message)
+        Log.debug(message)
 
 
 class MeaningError(ValueError):
     def __init__(self, message):
-        log.debug(message)
+        Log.debug(message)
 
 
 class BackendError(Exception):
@@ -63,7 +63,7 @@ class SimpleError(BackendError):
 
     @staticmethod
     async def create_error_event(message, **kwargs):
-        await log.error(message, **kwargs)
+        await Log.error(message, **kwargs)
 
 
 class FetchException(BackendError):
@@ -95,7 +95,7 @@ class HttpError(BackendError):
     def __init__(self, message=None):
         if message:
             message = str(message)
-            log.debug(message)
+            Log.debug(message)
             self.message = message
 
     @cached_property
@@ -126,12 +126,12 @@ class NotFound(HttpError):
 
     @staticmethod
     async def create_error_event(message):
-        await log.error(message)
+        await Log.error(message)
 
 
 class BadRequest(HttpError):
     def __init__(self, errors):
-        log.debug('BadRequest: {}'.format(errors))
+        Log.debug('BadRequest: {}'.format(errors))
         self.errors = errors
 
     def code(self):
@@ -150,7 +150,7 @@ class BadRequest(HttpError):
 class ControllerNotAccessible(HttpError):
     code = 408
     message = _('Controller is not available.')
-    log.debug(message)
+    # Log.debug(message)
 
     def __init__(self, *, ip):
         self.ip = ip
@@ -168,19 +168,19 @@ class AuthError(HttpError, ABC):
 class Forbidden(AuthError):
     code = 403
     message = _("Unable to logon to system using these credentials.")
-    log.debug(message)
+    # Log.debug(message)
 
 
 class Unauthorized(AuthError):
     code = 401
     message = _('401: Unauthorized.')
-    log.debug(message)
+    # Log.debug(message)
 
 
 class ServerError(HttpError):
     code = 500
     message = _("Critical controller error.")
-    log.debug(message)
+    # Log.debug(message)
 
 
 class VmCreationError(Exception):
@@ -192,7 +192,7 @@ class VmCreationError(Exception):
 
     @staticmethod
     async def create_error_event(message):
-        await log.error(message)
+        await Log.error(message)
 
 
 class PoolCreationError(Exception):
@@ -204,4 +204,4 @@ class PoolCreationError(Exception):
 
     @staticmethod
     async def create_error_event(message):
-        await log.error(message)
+        await Log.error(message)

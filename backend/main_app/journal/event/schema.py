@@ -10,7 +10,7 @@ from auth.models import Entity
 from auth.user_schema import User, UserType
 
 from languages import lang_init
-from journal.journal import Log as log
+from journal.journal import Log
 
 
 _ = lang_init()
@@ -189,7 +189,7 @@ class RemoveAllEventsMutation(graphene.Mutation):
     @administrator_required
     async def mutate(self, _info, **kwargs):
         await Event.delete.gino.status()
-        await log.info(_("Journal is clear."))
+        await Log.info(_("Journal is clear."))
         return RemoveAllEventsMutation(ok=True)
 
 

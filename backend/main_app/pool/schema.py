@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 import re
 import uuid
-import json
 
 import graphene
 from tornado.httpclient import HTTPClientError  # TODO: точно это нужно тут?
@@ -28,9 +27,9 @@ from controller_resources.schema import ClusterType, NodeType, DatapoolType
 from pool.models import AutomatedPool, StaticPool, Pool
 
 from languages import lang_init
-from journal.journal import Log as log
+from journal.journal import Log
 
-from redis_broker import request_to_execute_pool_task, PoolTaskType, a_redis_wait_for_message, INTERNAL_EVENTS_CHANNEL
+from redis_broker import request_to_execute_pool_task, PoolTaskType
 
 
 _ = lang_init()
@@ -376,19 +375,6 @@ class DeletePoolMutation(graphene.Mutation, PoolValidator):
     @administrator_required
     async def mutate(self, info, pool_id, creator, full=False):
 
-        def _check_if_pool_deleted(redis_message):
-
-            try:
-                redis_message_data = redis_message['data'].decode()
-                redis_data_dict = json.loads(redis_message_data)
-
-                if str(pool_id) == redis_data_dict['pool_id'] and redis_data_dict['event'] == 'pool_deleted':
-                    return redis_data_dict['is_successful']
-            except Exception as ex:  # Нас интересует лишь прошла ли проверка
-                log.debug('__check_if_pool_deleted ' + str(ex))
-
-            return False
-
         # Нет запуска валидации, т.к. нужна сущность пула далее - нет смысла запускать запрос 2жды.
         pool = await Pool.get(pool_id)
         if not pool:
@@ -399,12 +385,7 @@ class DeletePoolMutation(graphene.Mutation, PoolValidator):
 
             # Авто пул
             if pool_type == Pool.PoolTypes.AUTOMATED:
-                # todo: Передать creator как параметр таски
-                request_to_execute_pool_task(str(pool_id), PoolTaskType.DELETING.name, deletion_full=full)
-
-                # wait for task result to simulate previous behavior
-                is_deleted = await a_redis_wait_for_message(INTERNAL_EVENTS_CHANNEL, _check_if_pool_deleted, timeout=20)
-                print('is pool deleted ', is_deleted)
+                is_deleted = await AutomatedPool.delete_pool(pool, full)
             else:
                 is_deleted = await Pool.delete_pool(pool, creator, full)
             return DeletePoolMutation(ok=is_deleted)
@@ -447,7 +428,7 @@ class CreateStaticPoolMutation(graphene.Mutation, PoolValidator):
             raise SimpleError('VM ids is empty.')
 
         # --- Получение дополнительной информации
-        log.debug(_('StaticPool: Get additional info from Veil'))
+        Log.debug(_('StaticPool: Get additional info from Veil'))
         veil_vm_data_list = await StaticPool.fetch_veil_vm_data(vm_ids)
 
         first_vm_id = veil_vm_data_list[0]['id']
@@ -457,7 +438,7 @@ class CreateStaticPoolMutation(graphene.Mutation, PoolValidator):
         if not StaticPool.vms_on_same_node(node_id=first_vm_node_id, veil_vm_data=veil_vm_data_list):
             raise SimpleError(_("All of VM must be at one server"))
 
-        log.debug(_('StaticPool: Determine cluster'))
+        Log.debug(_('StaticPool: Determine cluster'))
         resources_http_client = await ResourcesHttpClient.create(first_vm_controller_address)
         node_data = await resources_http_client.fetch_node(first_vm_node_id)
         cluster_id = node_data['cluster']
@@ -480,14 +461,14 @@ class CreateStaticPoolMutation(graphene.Mutation, PoolValidator):
             # TODO: указать конкретные Exception
             desc = str(E)
             error_msg = _('Failed to create static pool {}.').format(verbose_name)
-            log.debug(desc)
+            Log.debug(desc)
             raise SimpleError(error_msg, description=desc)
         # --- Активация удаленного доступа к VM на Veil
         try:
             await Vm.enable_remote_accesses(first_vm_controller_address, vm_ids)
         except HttpError:
             msg = _('Fail with remote access enable.')
-            await log.warning(msg)
+            await Log.warning(msg)
         return {
             'pool': PoolType(pool_id=pool.id, verbose_name=verbose_name, vms=vms),
             'ok': True
@@ -517,7 +498,7 @@ class AddVmsToStaticPoolMutation(graphene.Mutation):
         all_vm_ids_on_node = [vmachine['id'] for vmachine in all_vms_on_node]
         used_vm_ids = await Vm.get_all_vms_ids()  # get list of vms which are already in pools
 
-        log.debug(_('VM ids: {}').format(vm_ids))
+        Log.debug(_('VM ids: {}').format(vm_ids))
 
         for vm_id in vm_ids:
             # check if vm exists and it is on the correct node
@@ -530,7 +511,7 @@ class AddVmsToStaticPoolMutation(graphene.Mutation):
         # remote access
         await Vm.enable_remote_accesses(controller_address, vm_ids)
 
-        log.debug(_('All VMs on node: {}').format(all_vms_on_node))
+        Log.debug(_('All VMs on node: {}').format(all_vms_on_node))
 
         # Add VMs to db
         for vm_info in all_vms_on_node:
@@ -541,7 +522,7 @@ class AddVmsToStaticPoolMutation(graphene.Mutation):
                                 created_by_vdi=False,
                                 verbose_name=vm_info['verbose_name'])
                 name = await Pool.get(pool_id)
-                await log.info(_('Vm {} is added to pool {}').format(vm_info['verbose_name'], name.verbose_name),
+                await Log.info(_('Vm {} is added to pool {}').format(vm_info['verbose_name'], name.verbose_name),
                                user=creator
                                )
 
@@ -639,7 +620,7 @@ class CreateAutomatedPoolMutation(graphene.Mutation, PoolValidator):
             automated_pool = await AutomatedPool.soft_create(**kwargs)
         except UniqueViolationError:
             error_msg = _('Failed to create automated pool {}. Name must be unique.').format(kwargs['verbose_name'])
-            # await log.error(error_msg, user=creator)
+            # await Log.error(error_msg, user=creator)
             raise SimpleError(error_msg, user=creator)
 
         # send command to start pool init task
@@ -711,7 +692,7 @@ class UpdateAutomatedPoolMutation(graphene.Mutation, PoolValidator):
                                                  )
             except UniqueViolationError:
                 error_msg = _('Failed to update automated pool {}. Name must be unique.').format(kwargs['verbose_name'])
-                # await log.error(error_msg, user=creator)
+                # await Log.error(error_msg, user=creator)
                 raise SimpleError(error_msg, user=creator)
             else:
                 return UpdateAutomatedPoolMutation(ok=True)

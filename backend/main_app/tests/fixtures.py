@@ -33,7 +33,7 @@ from tests.utils import execute_scheme
 from redis_broker import a_redis_wait_for_message, INTERNAL_EVENTS_CHANNEL, WS_MONITOR_CHANNEL_OUT, \
     send_cmd_to_ws_monitor, WsMonitorCmd
 
-from journal.journal import Log as log
+from journal.journal import Log
 
 
 async def get_resources_static_pool_test():
@@ -228,7 +228,7 @@ async def fixt_create_automated_pool(fixt_controller):
 
     def _check_if_pool_created(redis_message):
 
-        log.debug('_check_if_pool_created: redis_message : ' + str(redis_message))
+        Log.debug('_check_if_pool_created: redis_message : ' + str(redis_message))
         try:
             redis_message_data = redis_message['data'].decode()
             redis_message_data_dict = json.loads(redis_message_data)
@@ -298,14 +298,14 @@ async def fixt_create_static_pool(fixt_db):
     def _check_if_vm_created(redis_message):
         try:
             redis_message_data = redis_message['data'].decode()
-            log.debug('_check_if_vm_created:redis_message ' + str(redis_message_data))
+            Log.debug('_check_if_vm_created:redis_message ' + str(redis_message_data))
             redis_message_data_dict = json.loads(redis_message_data)
 
             obj = redis_message_data_dict['object']
             if current_vm_task_id == obj['parent'] and obj['status'] == 'SUCCESS':
                 return True
         except Exception as ex:
-            log.debug('_check_if_vm_created ' + str(ex))
+            Log.debug('_check_if_vm_created ' + str(ex))
         return False
 
     await a_redis_wait_for_message(WS_MONITOR_CHANNEL_OUT, _check_if_vm_created, VEIL_WS_MAX_TIME_TO_WAIT)
@@ -623,13 +623,13 @@ def fixt_controller(request, event_loop):
                                 expires_on=expires_on
                                 )
 
-        send_cmd_to_ws_monitor(address, WsMonitorCmd.ADD_CONTROLLER)
+        send_cmd_to_ws_monitor(id, WsMonitorCmd.ADD_CONTROLLER)
     event_loop.run_until_complete(setup())
 
     def teardown():
         async def a_teardown():
             await Controller.delete.where(Controller.id == id).gino.status()
-            send_cmd_to_ws_monitor(address, WsMonitorCmd.REMOVE_CONTROLLER)
+            send_cmd_to_ws_monitor(id, WsMonitorCmd.REMOVE_CONTROLLER)
 
         event_loop.run_until_complete(a_teardown())
 
