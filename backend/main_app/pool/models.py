@@ -31,7 +31,7 @@ from journal.journal import Log as log
 _ = lang_init()
 
 
-class Pool(db.Model, AbstractClass):
+class Pool(AbstractClass):
     """На данный момент отсутствует смысловая валидация на уровне таблиц (она в схемах)."""
 
     class PoolTypes:

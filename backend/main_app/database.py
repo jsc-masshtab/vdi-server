@@ -167,7 +167,7 @@ StatusGraphene = GrapheneEnum.from_enum(Status)
 RoleTypeGraphene = GrapheneEnum.from_enum(Role)
 
 
-class AbstractClass:
+class AbstractClass(db.Model):
 
     @property
     def entity_type(self):

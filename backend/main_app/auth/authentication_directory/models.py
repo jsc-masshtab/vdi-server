@@ -22,7 +22,7 @@ from common.veil_errors import SimpleError, ValidationError
 _ = lang_init()
 
 
-class AuthenticationDirectory(db.Model, AbstractSortableStatusModel, AbstractClass):
+class AuthenticationDirectory(AbstractClass, AbstractSortableStatusModel):
     """Модель служб каталогов для авторизации пользователей в системе.
 
     connection_type: тип подключения (поддерживается только LDAP)
@@ -630,7 +630,7 @@ class AuthenticationDirectory(db.Model, AbstractSortableStatusModel, AbstractCla
         return True
 
 
-class Mapping(db.Model, AbstractClass):
+class Mapping(AbstractClass):
     """
     Модель отображения атрибутов пользователя службы каталогов на группы пользователей системы.
     Описание полей:
