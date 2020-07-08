@@ -27,6 +27,8 @@ from vm.veil_client import VmHttpClient
 from languages import lang_init
 from journal.journal import Log as log
 
+from redis_broker import request_to_execute_pool_task, PoolTaskType
+
 
 _ = lang_init()
 
@@ -456,12 +458,12 @@ class Pool(AbstractClass):
         return pool
 
     async def full_delete(self, creator, commit=True):
-        """Удаление сущности в статусе ACTIVE с удалением зависимых сущностей"""
+        """Удаление сущности с удалением зависимых сущностей"""
 
         if commit:
             automated_pool = await AutomatedPool.get(self.id)
-            # Если пул не автоматический, то удаления не произойдет.
-            if automated_pool and self.status == Status.ACTIVE:
+
+            if automated_pool:
                 await automated_pool.remove_vms(creator=creator)
             await self.delete()
             msg = _('Complete removal pool of desktops {verbose_name} is done.').format(verbose_name=self.verbose_name)
@@ -753,6 +755,33 @@ class AutomatedPool(db.Model):
 
             return automated_pool
 
+    @staticmethod
+    async def delete_pool(pool, full, wait_for_result=True, wait_timeout=20):
+        """Удаление автоматического пула. Если wait_for_result == True, то ждем результат"""
+        # removal check predicate
+        def _check_if_pool_deleted(redis_message):
+            try:
+                redis_message_data = redis_message['data'].decode()
+                redis_data_dict = json.loads(redis_message_data)
+
+                if str(pool.id) == redis_data_dict['pool_id'] and redis_data_dict['event'] == 'pool_deleted':
+                    return redis_data_dict['is_successful']
+            except Exception as ex:  # Нас интересует лишь прошла ли проверка
+                log.debug('__check_if_pool_deleted ' + str(ex))
+
+            return False
+
+        # send command to pool worker
+        request_to_execute_pool_task(str(pool.id), PoolTaskType.DELETING.name, deletion_full=full)
+
+        # wait for result
+        if wait_for_result:
+            is_deleted = await a_redis_wait_for_message(INTERNAL_EVENTS_CHANNEL, _check_if_pool_deleted,
+                                                        timeout=wait_timeout)
+            return is_deleted
+        else:
+            return True
+
     async def soft_update(self, creator, verbose_name, reserve_size, total_size, vm_name_template, keep_vms_on: bool,
                           create_thin_clones: bool, connection_types):
         pool_kwargs = dict()
@@ -923,6 +952,7 @@ class AutomatedPool(db.Model):
 
         try:
             for i in range(self.initial_size):
+
                 vm = await self.add_vm(vm_index)
                 vm_index = vm['domain_index'] + 1
                 vm_list.append(vm)

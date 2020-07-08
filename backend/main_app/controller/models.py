@@ -18,6 +18,9 @@ from redis_broker import send_cmd_to_ws_monitor, WsMonitorCmd
 from languages import lang_init
 from journal.journal import Log as log
 
+import tornado.gen
+
+
 _ = lang_init()
 
 
@@ -75,7 +78,7 @@ class Controller(AbstractClass):
 
     @staticmethod
     async def get_addresses(status=Status.ACTIVE):
-        """Возвращает ip-контроллеров находящихся в переданном статусе"""
+        """Возвращает ip-контроллеров находящихся в переданном статусе."""
 
         query = Controller.select('address').where(Controller.status == status)
         addresses = await query.gino.all()
@@ -86,6 +89,10 @@ class Controller(AbstractClass):
     async def get_controller_id_by_ip(ip_address):
         # controller = await Controller.query.where(Controller.address == ip_address).gino.first()
         return await Controller.select('id').where(Controller.address == ip_address).gino.scalar()
+
+    @staticmethod
+    async def get_controller_address_by_id(controller_id):
+        return await Controller.select('address').where(Controller.id == controller_id).gino.scalar()
 
     @staticmethod
     async def get_token(ip_address: str):
@@ -102,11 +109,11 @@ class Controller(AbstractClass):
             raise ValidationError(_('No such controller'))
 
     @staticmethod
-    async def invalidate_auth(ip_address: str):
+    async def invalidate_auth(controller_id):
         return await Controller.update.values(
             token=None,
             expires_on=datetime.utcfromtimestamp(0)
-        ).where(Controller.address == ip_address).gino.status()
+        ).where(Controller.id == controller_id).gino.status()
 
     @staticmethod
     async def refresh_token(ip_address: str):
@@ -203,7 +210,7 @@ class Controller(AbstractClass):
         if self.status == Status.ACTIVE:
             # Удаляем существующий контроллер из монитора ресурсов
             log.debug(_('Remove existing controller from resource monitor'))
-            send_cmd_to_ws_monitor(self.address, WsMonitorCmd.REMOVE_CONTROLLER)
+            send_cmd_to_ws_monitor(self.id, WsMonitorCmd.REMOVE_CONTROLLER)
 
         # TODO: разнести на несколько методов, если логика останется после рефакторинга
         # Если при редактировании пришли данные авторизации на контроллере проверим их до редактирования
@@ -240,7 +247,7 @@ class Controller(AbstractClass):
             except socket_error:
                 # Если произошла ошибка на уровне сети - активируем старые данные и прерываем выполнение
                 if self.status == Status.ACTIVE:
-                    send_cmd_to_ws_monitor(self.address, WsMonitorCmd.ADD_CONTROLLER)
+                    send_cmd_to_ws_monitor(self.id, WsMonitorCmd.ADD_CONTROLLER)
 
                 msg = _('Address is unreachable')
                 raise ValueError(msg)
@@ -269,7 +276,7 @@ class Controller(AbstractClass):
             except DataError as transaction_error:
                 # Если произошла ошибка на уровне сети - активируем старые данные и прерываем выполнение
                 if self.status == Status.ACTIVE:
-                    send_cmd_to_ws_monitor(self.address, WsMonitorCmd.ADD_CONTROLLER)
+                    send_cmd_to_ws_monitor(self.id, WsMonitorCmd.ADD_CONTROLLER)
                 # Отслеживаем только ошибки в БД
                 log.debug(transaction_error)
                 msg = _('Error with controller update: {}').format(transaction_error)
@@ -284,7 +291,7 @@ class Controller(AbstractClass):
 
             # Добавляем обратно в монитор ресурсов
             log.debug(_('Add back to the resource monitor'))
-            send_cmd_to_ws_monitor(updated_rec.address, WsMonitorCmd.ADD_CONTROLLER)
+            send_cmd_to_ws_monitor(self.id, WsMonitorCmd.ADD_CONTROLLER)
 
             msg = _('Successfully update controller {} with address {}.').format(
                 self.verbose_name,
@@ -315,9 +322,22 @@ class Controller(AbstractClass):
     async def full_delete_pools(self, creator):
         """Полное удаление пулов контроллера"""
 
+        from pool.models import Pool, AutomatedPool
+
         pools = await self.pools
+
+        async_tasks = []
+
         for pool in pools:
-            await pool.full_delete(commit=True, creator=creator)
+            # Удаляем пулы в зависимости от типа
+            pool_type = await pool.pool_type
+            # Авто пул
+            if pool_type == Pool.PoolTypes.AUTOMATED:
+                async_tasks.append(AutomatedPool.delete_pool(pool, True, True, 5))
+            else:
+                async_tasks.append(Pool.delete_pool(pool, creator, True))
+        # Паралельно удаляем пулы
+        await tornado.gen.multi(async_tasks)
 
     async def full_delete(self, creator):
         """Удаление сущности с удалением зависимых сущностей"""

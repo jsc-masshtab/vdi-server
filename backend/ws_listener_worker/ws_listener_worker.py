@@ -38,17 +38,19 @@ async def listen_for_messages(resources_monitor_manager):
             # get data from message
             data_dict = json.loads(redis_message['data'].decode())
             command = data_dict['command']
-            address = data_dict['controller_address']
-            log.general(command + ' ' + address)
+            controller_id = data_dict['controller_id']
+            log.general(command + ' ' + controller_id)
 
             # add or remove controller
             if command == WsMonitorCmd.ADD_CONTROLLER.name:
-                await resources_monitor_manager.add_controller(address)
+                await resources_monitor_manager.add_controller(controller_id)
             elif command == WsMonitorCmd.REMOVE_CONTROLLER.name:
-                await resources_monitor_manager.remove_controller(address)
+                await resources_monitor_manager.remove_controller(controller_id)
+            elif command == WsMonitorCmd.RESTART_MONITOR.name:
+                await resources_monitor_manager.restart_existing_monitor(controller_id)
 
         except asyncio.CancelledError:
-            raise asyncio.CancelledError
+            raise
         except Exception as ex:
             await log.error('exception:' + str(ex))
 

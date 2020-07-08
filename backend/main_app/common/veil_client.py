@@ -90,7 +90,10 @@ class VeilHttpClient:
                 await log.error(_('Controller {} connection error').format(self.controller_ip),
                                 description=description)
                 # Останавливаем монитор ресурсов для контроллера.
-                send_cmd_to_ws_monitor(self.controller_ip, WsMonitorCmd.REMOVE_CONTROLLER)
+                from controller.models import Controller
+                controller_id = await Controller.get_controller_id_by_ip(self.controller_ip)
+
+                send_cmd_to_ws_monitor(controller_id, WsMonitorCmd.REMOVE_CONTROLLER)
 
             body = self.get_response_body(http_error.response)
             if isinstance(body, dict):

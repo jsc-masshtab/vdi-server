@@ -150,7 +150,7 @@ class BadRequest(HttpError):
 class ControllerNotAccessible(HttpError):
     code = 408
     message = _('Controller is not available.')
-    log.debug(message)
+    # log.debug(message)
 
     def __init__(self, *, ip):
         self.ip = ip
@@ -168,19 +168,19 @@ class AuthError(HttpError, ABC):
 class Forbidden(AuthError):
     code = 403
     message = _("Unable to logon to system using these credentials.")
-    log.debug(message)
+    # log.debug(message)
 
 
 class Unauthorized(AuthError):
     code = 401
     message = _('401: Unauthorized.')
-    log.debug(message)
+    # log.debug(message)
 
 
 class ServerError(HttpError):
     code = 500
     message = _("Critical controller error.")
-    log.debug(message)
+    # log.debug(message)
 
 
 class VmCreationError(Exception):

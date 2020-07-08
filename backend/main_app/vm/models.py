@@ -209,6 +209,7 @@ class Vm(AbstractClass):
     @staticmethod
     async def remove_vms(vm_ids, creator):
         """Remove given vms"""
+        status = None
         for vm_id in vm_ids:
             vm = await Vm.get(vm_id)
             status = await vm.soft_delete(dest=_('VM'), creator=creator)

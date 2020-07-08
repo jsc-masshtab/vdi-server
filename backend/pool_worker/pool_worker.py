@@ -31,7 +31,7 @@ async def start_work():
         try:
             # wait for task message
             redis_data = await a_redis_lpop(POOL_TASK_QUEUE)
-            # print('got redis_data: ', redis_data)
+            print('PoolWorker start_work redis_data', redis_data)
             task_data_dict = json.loads(redis_data.decode())
 
             # get task data
@@ -50,7 +50,7 @@ async def start_work():
                 await pool_task_manager.start_pool_deleting(pool_id, full)
 
         except asyncio.CancelledError:
-            raise asyncio.CancelledError
+            raise
         except Exception as ex:
             await log.error('exception:' + str(ex))
 

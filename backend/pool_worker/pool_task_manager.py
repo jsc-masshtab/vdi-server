@@ -166,8 +166,7 @@ class PoolTaskManager:
 
                 # Если подогретых машин слишком мало, то пробуем добавить еще
                 # Условие расширения изменено. Первое условие было < - тестируем.
-                if free_vm_amount <= automated_pool.reserve_size and \
-                        free_vm_amount <= automated_pool.min_free_vms_amount:
+                if free_vm_amount <= automated_pool.reserve_size:
                     # Max possible amount of VMs which we can add to the pool
                     max_possible_amount_to_add = automated_pool.total_size - vm_amount_in_pool
                     # Real amount that we can add to the pool
@@ -195,7 +194,7 @@ class PoolTaskManager:
         pool_lock.delete_pool_task = native_loop.create_task(self.deleting_pool_task(automated_pool, full))
 
     async def deleting_pool_task(self, automated_pool, full):
-        """Корутина, в котрой пул удаляется"""
+        """Корутина, в которой пул удаляется"""
 
         # Останавливаем таски связанные с пулом
         await self.cancel_all_tasks_for_pool(str(automated_pool.id))
@@ -210,7 +209,6 @@ class PoolTaskManager:
             pool = await Pool.get(automated_pool.id)
             is_deleted = await Pool.delete_pool(pool, 'system', full)
             log.debug('is pool deleted: {}'.format(is_deleted))
-            print('temp is_deleted ', is_deleted)
 
             # убираем из памяти локи, если пул успешно удалился
             if is_deleted:

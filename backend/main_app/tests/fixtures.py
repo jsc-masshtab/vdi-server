@@ -623,13 +623,13 @@ def fixt_controller(request, event_loop):
                                 expires_on=expires_on
                                 )
 
-        send_cmd_to_ws_monitor(address, WsMonitorCmd.ADD_CONTROLLER)
+        send_cmd_to_ws_monitor(id, WsMonitorCmd.ADD_CONTROLLER)
     event_loop.run_until_complete(setup())
 
     def teardown():
         async def a_teardown():
             await Controller.delete.where(Controller.id == id).gino.status()
-            send_cmd_to_ws_monitor(address, WsMonitorCmd.REMOVE_CONTROLLER)
+            send_cmd_to_ws_monitor(id, WsMonitorCmd.REMOVE_CONTROLLER)
 
         event_loop.run_until_complete(a_teardown())
 

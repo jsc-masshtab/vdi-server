@@ -69,7 +69,7 @@ class AddControllerMutation(graphene.Mutation):
                 raise SimpleError(_('Controller name cannot be empty.'))
             controller = await Controller.soft_create(verbose_name, address, username, password, ldap_connection,
                                                       description, creator)
-            send_cmd_to_ws_monitor(address, WsMonitorCmd.ADD_CONTROLLER)
+            send_cmd_to_ws_monitor(controller.id, WsMonitorCmd.ADD_CONTROLLER)
 
             return AddControllerMutation(ok=True, controller=ControllerType(**controller.__values__))
         # except SimpleError as E:
@@ -141,7 +141,7 @@ class RemoveControllerMutation(graphene.Mutation):
             status = await controller.soft_delete(dest=_('Controller'), creator=creator)
 
         if controller.active:
-            send_cmd_to_ws_monitor(controller.address, WsMonitorCmd.REMOVE_CONTROLLER)
+            send_cmd_to_ws_monitor(id, WsMonitorCmd.REMOVE_CONTROLLER)
 
         return RemoveControllerMutation(ok=status)
 
@@ -159,12 +159,11 @@ class TestControllerMutation(graphene.Mutation):
             raise GraphQLError(_('No such controller.'))
         connection_ok = await controller.check_credentials()
         if connection_ok:
-            send_cmd_to_ws_monitor(controller.address, WsMonitorCmd.REMOVE_CONTROLLER)
             await Controller.activate(id)
-            send_cmd_to_ws_monitor(controller.address, WsMonitorCmd.ADD_CONTROLLER)
+            send_cmd_to_ws_monitor(id, WsMonitorCmd.RESTART_MONITOR)
         else:
             await Controller.deactivate(id)
-            send_cmd_to_ws_monitor(controller.address, WsMonitorCmd.REMOVE_CONTROLLER)
+            send_cmd_to_ws_monitor(id, WsMonitorCmd.REMOVE_CONTROLLER)
         return TestControllerMutation(ok=connection_ok)
 
 
