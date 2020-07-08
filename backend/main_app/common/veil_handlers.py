@@ -5,7 +5,7 @@ from tornado.escape import json_decode
 from graphene_tornado.tornado_graphql_handler import TornadoGraphQLHandler
 
 from auth.utils.veil_jwt import extract_user, jwtauth, extract_user_object
-from journal.journal import Log as log
+from journal.journal import Log
 
 # TODO: унифицировать обработку Exception, чтобы не плодить try:ex
 
@@ -23,9 +23,9 @@ class BaseHandler(RequestHandler, ABC):
 
     def log_finish(self, response):
         if 'data' in response:
-            log.debug('BaseHandler data: {}'.format(response))
+            Log.debug('BaseHandler data: {}'.format(response))
         else:
-            log.debug('BaseHandler error: {}'.format(response))
+            Log.debug('BaseHandler error: {}'.format(response))
         return self.finish(response)
 
     @property

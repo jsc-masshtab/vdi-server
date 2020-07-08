@@ -10,7 +10,7 @@ from redis_broker import POOL_TASK_QUEUE, PoolTaskType, REDIS_POOL, a_redis_lpop
 
 from languages import lang_init
 from journal.log.logging import Logging
-from journal.journal import Log as log
+from journal.journal import Log
 
 from common.utils import init_exit_handler
 
@@ -26,7 +26,7 @@ async def start_work():
     await pool_task_manager.fill_start_data()
 
     # main loop. Await for work
-    log.general(_('Pool worker: start loop now'))
+    Log.general(_('Pool worker: start loop now'))
     while True:
         try:
             # wait for task message
@@ -52,7 +52,7 @@ async def start_work():
         except asyncio.CancelledError:
             raise
         except Exception as ex:
-            await log.error('exception:' + str(ex))
+            await Log.error('exception:' + str(ex))
 
 
 def main():
@@ -72,7 +72,7 @@ def main():
 
     loop.run_forever()  # run until event loop stop
 
-    log.general(_("Pool worker stopped"))
+    Log.general(_("Pool worker stopped"))
 
     REDIS_POOL.disconnect()
     loop.run_until_complete(stop_gino())

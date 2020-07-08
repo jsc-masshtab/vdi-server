@@ -9,7 +9,7 @@ from redis_broker import REDIS_POOL, WS_MONITOR_CHANNEL_IN, REDIS_CLIENT, WsMoni
 
 from languages import lang_init
 from journal.log.logging import Logging
-from journal.journal import Log as log
+from journal.journal import Log
 
 from common.utils import init_exit_handler
 
@@ -24,7 +24,7 @@ async def listen_for_messages(resources_monitor_manager):
     redis_subscriber = REDIS_CLIENT.pubsub()
     redis_subscriber.subscribe(WS_MONITOR_CHANNEL_IN)
 
-    log.general(_('Ws listener worker: start loop now'))
+    Log.general(_('Ws listener worker: start loop now'))
     while True:
         try:
             # wait for message
@@ -33,13 +33,13 @@ async def listen_for_messages(resources_monitor_manager):
             if not isinstance(redis_message['data'], bytes):
                 continue
 
-            log.general('redis_message' + str(redis_message))
+            Log.general('redis_message' + str(redis_message))
 
             # get data from message
             data_dict = json.loads(redis_message['data'].decode())
             command = data_dict['command']
             controller_id = data_dict['controller_id']
-            log.general(command + ' ' + controller_id)
+            Log.general(command + ' ' + controller_id)
 
             # add or remove controller
             if command == WsMonitorCmd.ADD_CONTROLLER.name:
@@ -52,7 +52,7 @@ async def listen_for_messages(resources_monitor_manager):
         except asyncio.CancelledError:
             raise
         except Exception as ex:
-            await log.error('exception:' + str(ex))
+            await Log.error('exception:' + str(ex))
 
 
 def main():
@@ -70,7 +70,7 @@ def main():
 
     loop.run_forever()  # run until event loop stop
 
-    log.general(_("Ws listener worker stopped"))
+    Log.general(_("Ws listener worker stopped"))
     # free resources
     loop.run_until_complete(resources_monitor_manager.stop())
     REDIS_POOL.disconnect()

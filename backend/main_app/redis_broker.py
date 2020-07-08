@@ -73,7 +73,7 @@ REDIS_CLIENT.info()
 #         try:
 #             response = func(*args, **kwargs)
 #         except redis.RedisError as error:
-#             log.general(_("Redis error: %(error)s"), {'error': error})
+#             Log.general(_("Redis error: %(error)s"), {'error': error})
 #         return response
 #
 #     return wrapped_function

@@ -12,7 +12,7 @@ from auth.utils import hashers
 from common.veil_errors import SimpleError
 
 from languages import lang_init
-from journal.journal import Log as log
+from journal.journal import Log
 
 _ = lang_init()
 
@@ -81,23 +81,23 @@ class User(AbstractSortableStatusModel, AbstractClass):
     async def roles(self):
         if self.is_superuser:
             all_roles_set = set(Role)  # noqa
-            # log.debug(_('User: {} full roles: {}').format(self.username, all_roles_set))
+            # Log.debug(_('User: {} full roles: {}').format(self.username, all_roles_set))
             return all_roles_set
 
         user_roles = await UserRole.query.where(UserRole.user_id == self.id).gino.all()
         all_roles_list = [role_type.role for role_type in user_roles]
 
-        # log.debug(_('User {} roles: {}').format(self.username, all_roles_list))
+        # Log.debug(_('User {} roles: {}').format(self.username, all_roles_list))
 
         user_groups = await self.assigned_groups
         for group in user_groups:
             group_roles = await group.roles
-            # log.debug(_('Group {} roles: {}').format(group.verbose_name, group_roles))
+            # Log.debug(_('Group {} roles: {}').format(group.verbose_name, group_roles))
             all_roles_list += [role_type.role for role_type in group_roles]
 
         roles_set = set(all_roles_list)
         # Сейчас роли будет в случайноп порядке.
-        # log.debug(_('User: {} full roles: {}').format(self.username, roles_set))
+        # Log.debug(_('User: {} full roles: {}').format(self.username, roles_set))
         return roles_set
 
     @property
@@ -131,11 +131,11 @@ class User(AbstractSortableStatusModel, AbstractClass):
 
     async def add_role(self, role, creator):
         try:
-            await log.info(_('Role {} is added to user {}').format(role, self.username), user=creator)
+            await Log.info(_('Role {} is added to user {}').format(role, self.username), user=creator)
             add = await UserRole.create(user_id=self.id, role=role)
             user = await self.get(self.id)
             assigned_roles = await user.roles
-            log.debug(_('User {} roles: {}').format(user.username, assigned_roles))
+            Log.debug(_('User {} roles: {}').format(user.username, assigned_roles))
             return add
         except UniqueViolationError:
             raise SimpleError(_('Role {} is assigned to user {}').format(role, self.id), user=creator)
@@ -145,12 +145,12 @@ class User(AbstractSortableStatusModel, AbstractClass):
             return await UserRole.delete.where(UserRole.user_id == self.id).gino.status()
         if roles_list and isinstance(roles_list, list):
             role_del = ' '.join(roles_list)
-            await log.info(_('Roles: {} was deleted to user {}').format(role_del, self.username), user=creator)
+            await Log.info(_('Roles: {} was deleted to user {}').format(role_del, self.username), user=creator)
             remove = await UserRole.delete.where(
                 (UserRole.role.in_(roles_list)) & (UserRole.user_id == self.id)).gino.status()
             user = await self.get(self.id)
             assigned_roles = await user.roles
-            log.debug(_('User {} roles: {}').format(user.username, assigned_roles))
+            Log.debug(_('User {} roles: {}').format(user.username, assigned_roles))
             return remove
 
     async def remove_groups(self):
@@ -158,14 +158,14 @@ class User(AbstractSortableStatusModel, AbstractClass):
         users_list = [self.id]
         for group in groups:
             await group.remove_users(users_list)
-            await log.info(_('Group {} is removed for user {}').format(group, self.username))
+            await Log.info(_('Group {} is removed for user {}').format(group, self.username))
 
     async def activate(self, creator):
         query = User.update.values(is_active=True).where(User.id == self.id)
         operation_status = await query.gino.status()
 
         info_message = _('User {username} has been activated.').format(username=self.username)
-        await log.info(info_message, entity_dict=self.entity, user=creator)
+        await Log.info(info_message, entity_dict=self.entity, user=creator)
 
         return operation_status
 
@@ -182,7 +182,7 @@ class User(AbstractSortableStatusModel, AbstractClass):
         operation_status = await query.gino.status()
 
         info_message = _('User {username} has been deactivated.').format(username=self.username)
-        await log.info(info_message, entity_dict=self.entity, user=creator)
+        await Log.info(info_message, entity_dict=self.entity, user=creator)
 
         return operation_status
 
@@ -210,7 +210,7 @@ class User(AbstractSortableStatusModel, AbstractClass):
             User.id == self.id).gino.status()
 
         info_message = _('Password of user {username} has been changed.').format(username=self.username)
-        await log.info(info_message, entity_dict=self.entity, user=creator)
+        await Log.info(info_message, entity_dict=self.entity, user=creator)
 
         return user_status
 
@@ -228,7 +228,7 @@ class User(AbstractSortableStatusModel, AbstractClass):
 
         user_role = 'Superuser' if is_superuser else 'User'
         info_message = _('User {} created with role {}.').format(username, user_role)
-        await log.info(info_message, entity_dict=user_obj.entity, user=creator)
+        await Log.info(info_message, entity_dict=user_obj.entity, user=creator)
 
         return user_obj
 
@@ -238,7 +238,7 @@ class User(AbstractSortableStatusModel, AbstractClass):
 
         creator = update_dict.pop('creator')
         desc = str(update_dict)
-        await log.info(_('Values of user {} is changed').format(update_type.username),
+        await Log.info(_('Values of user {} is changed').format(update_type.username),
                        description=desc,
                        user=creator
                        )
@@ -246,11 +246,11 @@ class User(AbstractSortableStatusModel, AbstractClass):
         if 'is_superuser' in update_dict and update_dict.get('is_superuser'):
             assigned_roles = _('Roles: {}'.format(str(await update_type.roles)))
             info_message = _('User {username} has become a superuser.').format(username=update_type.username)
-            await log.info(info_message, entity_dict=update_type.entity, description=assigned_roles, user=creator)
+            await Log.info(info_message, entity_dict=update_type.entity, description=assigned_roles, user=creator)
         elif update_dict.get('is_superuser') is False:
             assigned_roles = _('Roles: {}'.format(str(await update_type.roles)))
             info_message = _('User {username} has left a superuser.').format(username=update_type.username)
-            await log.info(info_message, entity_dict=update_type.entity, description=assigned_roles, user=creator)
+            await Log.info(info_message, entity_dict=update_type.entity, description=assigned_roles, user=creator)
 
         return update_type
 
@@ -271,7 +271,7 @@ class User(AbstractSortableStatusModel, AbstractClass):
             username=username,
             ip=ip)
 
-        await log.info(info_message, entity_dict=user.entity)
+        await Log.info(info_message, entity_dict=user.entity)
         return True
 
     @classmethod
@@ -288,7 +288,7 @@ class User(AbstractSortableStatusModel, AbstractClass):
         await UserJwtInfo.delete.where(UserJwtInfo.user_id == user.id).gino.status()
 
         info_message = _('User {username} has logged out.').format(username=username)
-        await log.info(info_message, entity_dict=user.entity)
+        await Log.info(info_message, entity_dict=user.entity)
         return True
 
 
@@ -373,7 +373,7 @@ class Group(AbstractSortableStatusModel, AbstractClass):
             group_kwargs['id'] = id
         group_obj = await Group.create(**group_kwargs)
         info_message = _('Group {} is created.').format(verbose_name)
-        await log.info(info_message, user=creator)
+        await Log.info(info_message, user=creator)
 
         return group_obj
 
@@ -387,7 +387,7 @@ class Group(AbstractSortableStatusModel, AbstractClass):
         if group_kwargs:
             await self.update(**group_kwargs).apply()
             descr = str(group_kwargs)
-            await log.info(_('Values of group {} is updated').format(self.verbose_name), description=descr, user=creator)
+            await Log.info(_('Values of group {} is updated').format(self.verbose_name), description=descr, user=creator)
 
         return self
 
@@ -398,7 +398,7 @@ class Group(AbstractSortableStatusModel, AbstractClass):
 
             user = await User.get(user_id)
             info_message = _('User {} has been included to group {}.').format(user.username, self.verbose_name)
-            await log.info(info_message, entity_dict=self.entity, user=creator)
+            await Log.info(info_message, entity_dict=self.entity, user=creator)
             return user_group
         except UniqueViolationError:
             raise SimpleError(_('User {} is already in group {}').format(user_id, self.id), user=creator)
@@ -406,7 +406,7 @@ class Group(AbstractSortableStatusModel, AbstractClass):
     async def remove_users(self, user_id_list, creator):
         for id in user_id_list:
             name = await User.get(id)
-            await log.info(_('Removing user {} from group {}').format(name.username, self.verbose_name), user=creator)
+            await Log.info(_('Removing user {} from group {}').format(name.username, self.verbose_name), user=creator)
         return await UserGroup.delete.where(
             (UserGroup.user_id.in_(user_id_list)) & (UserGroup.group_id == self.id)).gino.status()
 
@@ -414,7 +414,7 @@ class Group(AbstractSortableStatusModel, AbstractClass):
         try:
             group_role = await GroupRole.create(group_id=self.id, role=role)
             info_message = _('Role {} has been set to group {}.').format(role, self.verbose_name)
-            await log.info(info_message, entity_dict=self.entity, user=creator)
+            await Log.info(info_message, entity_dict=self.entity, user=creator)
 
         except UniqueViolationError:
             raise SimpleError(_('Group {} has already role {}').format(self.id, role), user=creator)
@@ -422,7 +422,7 @@ class Group(AbstractSortableStatusModel, AbstractClass):
 
     async def remove_roles(self, roles_list, creator):
         role_del = ' '.join(roles_list)
-        await log.info(_('Roles: {} was deleted to group {}').format(role_del, self.verbose_name), user=creator)
+        await Log.info(_('Roles: {} was deleted to group {}').format(role_del, self.verbose_name), user=creator)
         return await GroupRole.delete.where(
             (GroupRole.role.in_(roles_list)) & (GroupRole.group_id == self.id)).gino.status()
 
