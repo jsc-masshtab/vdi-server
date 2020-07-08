@@ -9,7 +9,7 @@ from database import StatusGraphene
 from controller.models import Controller
 
 from languages import lang_init
-from journal.journal import Log as log
+from journal.journal import Log
 
 from redis_broker import send_cmd_to_ws_monitor, WsMonitorCmd
 
@@ -73,13 +73,13 @@ class AddControllerMutation(graphene.Mutation):
 
             return AddControllerMutation(ok=True, controller=ControllerType(**controller.__values__))
         # except SimpleError as E:
-        #     raise SimpleError(E)
+        #     raise SimpleError(str(E))
         except ValueError as err:
             msg = _('Add new controller {}: operation failed.').format(address)
             description = str(err)
             raise SimpleError(msg, description=description)
         except Exception as E:
-            log.debug(E)
+            Log.debug(str(E))
             msg = _('Add new controller {}: operation failed.').format(address)
             raise SimpleError(msg)
 

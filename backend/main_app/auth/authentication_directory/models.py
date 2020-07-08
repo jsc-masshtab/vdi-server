@@ -15,7 +15,7 @@ from auth.models import User, Group
 from auth.authentication_directory.utils import (unpack_guid, pack_guid, unpack_ad_info,
                                                  extract_domain_from_username, get_ad_user_ou, get_ad_user_groups)
 from languages import lang_init
-from journal.journal import Log as log
+from journal.journal import Log
 from common.veil_errors import SimpleError, ValidationError
 
 
@@ -143,7 +143,7 @@ class AuthenticationDirectory(AbstractClass, AbstractSortableStatusModel):
             auth_dir_dict['id'] = id
         # Создаем запись
         auth_dir = await AuthenticationDirectory.create(**auth_dir_dict)
-        await log.info(_('Authentication directory {} is created').format(auth_dir_dict.get('verbose_name')),
+        await Log.info(_('Authentication directory {} is created').format(auth_dir_dict.get('verbose_name')),
                        user=creator
                        )
         # Проверяем доступность
@@ -158,7 +158,7 @@ class AuthenticationDirectory(AbstractClass, AbstractSortableStatusModel):
 
         creator = update_dict.pop('creator')
         desc = str(update_dict)
-        await log.info(_('Values for auth directory is updated'), description=desc, user=creator)
+        await Log.info(_('Values for auth directory is updated'), description=desc, user=creator)
 
         await update_type.test_connection()
         return update_type
@@ -184,7 +184,7 @@ class AuthenticationDirectory(AbstractClass, AbstractSortableStatusModel):
                 group_name = await Group.get(group_id)
                 desc = _('Arguments: {} of group: {}').format(mapping, group_name.verbose_name)
                 msg = _('Mapping for auth directory {} is created').format(self.verbose_name)
-                await log.info(msg, description=desc, user=creator)
+                await Log.info(msg, description=desc, user=creator)
 
     async def edit_mapping(self, mapping: dict, groups: list, creator):
         """
@@ -207,7 +207,7 @@ class AuthenticationDirectory(AbstractClass, AbstractSortableStatusModel):
                     group_name = await Group.get(group_id)
                     desc = _('New arguments: {} of group: {}').format(mapping, group_name.verbose_name)
                     msg = _('Mapping for auth directory {} is updated').format(self.verbose_name)
-                    await log.info(msg, description=desc, user=creator)
+                    await Log.info(msg, description=desc, user=creator)
 
     async def test_connection(self) -> bool:
         """
@@ -228,13 +228,13 @@ class AuthenticationDirectory(AbstractClass, AbstractSortableStatusModel):
             await self.update(status=Status.BAD_AUTH).apply()
         except ldap.SERVER_DOWN:
             msg = _('Authentication directory server {} is down.').format(self.directory_url)
-            await log.warning(msg, entity_dict=self.entity)
+            await Log.warning(msg, entity_dict=self.entity)
             await self.update(status=Status.FAILED).apply()
             return False
         else:
             ldap_server.unbind_s()
             await self.update(status=Status.ACTIVE).apply()
-        await log.info(_('Authentication directory server {} is connected').format(self.directory_url))
+        await Log.info(_('Authentication directory server {} is connected').format(self.directory_url))
         return True
 
     # Authentication Directory synchronization methods
@@ -294,7 +294,7 @@ class AuthenticationDirectory(AbstractClass, AbstractSortableStatusModel):
         :param account_name: имя пользовательской учетной записи
         :return: результат назначения системной группы пользователю службы каталогов
         """
-        log.debug(_('Assigning veil groups to {}').format(user.username))
+        Log.debug(_('Assigning veil groups to {}').format(user.username))
 
         # Удаляем пользователя из всех групп.
         await user.remove_roles()
@@ -307,11 +307,11 @@ class AuthenticationDirectory(AbstractClass, AbstractSortableStatusModel):
         # Если отображения отсутствуют, то по-умолчанию всем пользователям
         # назначается группа Оператор.
         mappings = await self.mappings
-        log.debug(_('Mappings: {}').format(mappings))
+        Log.debug(_('Mappings: {}').format(mappings))
 
         if not mappings:
             await user.add_role(Role.VM_OPERATOR, creator='system')
-            log.debug(_('Role VM_OPERATOR has assigned to user {}.').format(user.username))
+            Log.debug(_('Role VM_OPERATOR has assigned to user {}.').format(user.username))
             return True
 
         user_veil_groups = False
@@ -325,8 +325,8 @@ class AuthenticationDirectory(AbstractClass, AbstractSortableStatusModel):
         # Если есть мэппинги, значит в системе есть группы. Поэтому тут производим пользователю назначение групп.
         for role_mapping in mappings:
             escaped_values = list(map(ldap.dn.escape_dn_chars, role_mapping.values))
-            log.debug(_('escaped values: {}').format(escaped_values))
-            log.debug(_('role mapping value type: {}').format(role_mapping.value_type))
+            Log.debug(_('escaped values: {}').format(escaped_values))
+            Log.debug(_('role mapping value type: {}').format(role_mapping.value_type))
 
             if role_mapping.value_type == Mapping.ValueTypes.USER:
                 user_veil_groups = account_name in escaped_values
@@ -335,11 +335,11 @@ class AuthenticationDirectory(AbstractClass, AbstractSortableStatusModel):
             elif role_mapping.value_type == Mapping.ValueTypes.GROUP:
                 user_veil_groups = any([gr_name in escaped_values for gr_name in ad_groups])
 
-            log.debug(_('{}').format(role_mapping.value_type == Mapping.ValueTypes.GROUP))
-            log.debug(_('User veil groups: {}').format(user_veil_groups))
+            Log.debug(_('{}').format(role_mapping.value_type == Mapping.ValueTypes.GROUP))
+            Log.debug(_('User veil groups: {}').format(user_veil_groups))
             if user_veil_groups:
                 for group in await role_mapping.assigned_groups:
-                    log.debug(_('Attaching user {} to group: {}').format(user.username, group.verbose_name))
+                    Log.debug(_('Attaching user {} to group: {}').format(user.username, group.verbose_name))
                     await group.add_user(user.id, creator='system')
                 return True
         return False
@@ -390,7 +390,7 @@ class AuthenticationDirectory(AbstractClass, AbstractSortableStatusModel):
             # сообщением о неуспешности.
             success = False
             created = False
-            # log.debug(ldap_error)
+            # Log.debug(ldap_error)
             raise ValidationError(_('Invalid credentials (ldap): {}').format(ldap_error))
         except ldap.SERVER_DOWN:
             # Если нет связи с сервером службы каталогов, то возвращаем ошибку о недоступности
@@ -400,7 +400,7 @@ class AuthenticationDirectory(AbstractClass, AbstractSortableStatusModel):
             created = False
             raise ValidationError(_('Server down (ldap).'))
         except Exception as E:
-            log.debug(E)
+            Log.debug(E)
         finally:
             if not success and created:
                 await user.delete()
@@ -421,12 +421,12 @@ class AuthenticationDirectory(AbstractClass, AbstractSortableStatusModel):
             ldap_connection.simple_bind_s(full_username, decrypted_password)
         except (ldap.INVALID_CREDENTIALS, TypeError):
             msg = _('Authentication directory server {} has bad auth info.').format(self.directory_url)
-            await log.warning(msg, entity_dict=self.entity)
+            await Log.warning(msg, entity_dict=self.entity)
             await self.update(status=Status.BAD_AUTH).apply()
             return False
         except ldap.SERVER_DOWN:
             msg = _('Authentication directory server {} is down.').format(self.directory_url)
-            await log.warning(msg, entity_dict=self.entity)
+            await Log.warning(msg, entity_dict=self.entity)
             await self.update(status=Status.FAILED).apply()
             return False
         else:
@@ -489,7 +489,7 @@ class AuthenticationDirectory(AbstractClass, AbstractSortableStatusModel):
         except ldap.LDAPError:
             # На случай ошибочности запроса к AD
             msg = _('Fail to connect to Authentication Directory. Check service information')
-            await log.error(msg)
+            await Log.error(msg)
             await self.update(status=Status.FAILED).apply()
             groups_list = list()
         connection.unbind_s()
@@ -568,7 +568,7 @@ class AuthenticationDirectory(AbstractClass, AbstractSortableStatusModel):
                                        'last_name': last_name})
         except ldap.LDAPError:
             msg = _('Fail to connect to Authentication Directory. Check service information')
-            await log.error(msg)
+            await Log.error(msg)
             await self.update(status=Status.FAILED).apply()
             users_list = list()
         connection.unbind_s()

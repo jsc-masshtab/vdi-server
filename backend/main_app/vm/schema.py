@@ -18,7 +18,7 @@ from auth.user_schema import UserType
 from auth.models import User
 
 from languages import lang_init
-from journal.journal import Log as log
+from journal.journal import Log
 
 
 _ = lang_init()
@@ -213,12 +213,12 @@ class VmQuery(graphene.ObjectType):
 
     @administrator_required
     async def resolve_template(self, _info, id, controller_address, **kwargs):
-        log.debug(_('GraphQL: Resolving template info'))
+        Log.debug(_('GraphQL: Resolving template info'))
         vm_http_client = await VmHttpClient.create(controller_address, id)
         try:
             veil_info = await vm_http_client.info()
         except HttpError as e:
-            raise SimpleError(_('Template data could not be retrieved: {}').format(e))
+            raise SimpleError(_('Template data could not be retrieved: {}').format(str(e)))
 
         return VmQuery.veil_template_data_to_graphene_type(veil_info, controller_address)
 
@@ -228,7 +228,7 @@ class VmQuery(graphene.ObjectType):
         try:
             veil_info = await vm_http_client.info()
         except HttpError as e:
-            raise SimpleError(_('VM data could not be retrieved: {}').format(e))
+            raise SimpleError(_('VM data could not be retrieved: {}').format(str(e)))
 
         return VmQuery.veil_vm_data_to_graphene_type(veil_info, controller_address)
 
@@ -239,7 +239,7 @@ class VmQuery(graphene.ObjectType):
             try:
                 template_veil_data_list = await vm_http_client.fetch_templates_list(node_id=node_id)
             except HttpError as e:
-                raise SimpleError(_('Templates list could not be retrieved: {}').format(e))
+                raise SimpleError(_('Templates list could not be retrieved: {}').format(str(e)))
 
             template_veil_data_list = await VmQuery.filter_domains_by_cluster(
                 template_veil_data_list, controller_ip, cluster_id)
@@ -283,19 +283,19 @@ class VmQuery(graphene.ObjectType):
     @administrator_required
     async def resolve_vms(self, _info, controller_ip=None, cluster_id=None, node_id=None, datapool_id=None,
                           get_vms_in_pools=False, ordering=None, **kwargs):
-        log.debug(_('GraphQL: Resolving VMs'))
+        Log.debug(_('GraphQL: Resolving VMs'))
         # get veil vm data list
         if controller_ip:
             vm_http_client = await VmHttpClient.create(controller_ip, '')
             try:
                 vm_veil_data_list = await vm_http_client.fetch_vms_list(node_id=node_id, datapool_id=datapool_id)
             except HttpError as e:
-                raise SimpleError(_('VMs list could not be retrieved: {}').format(e))
+                raise SimpleError(_('VMs list could not be retrieved: {}').format(str(e)))
 
             vm_veil_data_list = await VmQuery.filter_domains_by_cluster(vm_veil_data_list, controller_ip, cluster_id)
 
             vm_type_list = VmQuery.veil_vm_data_to_graphene_type_list(vm_veil_data_list, controller_ip)
-            log.debug(_('GraphQL: VM type list:'))
+            Log.debug(_('GraphQL: VM type list:'))
 
         # if controller address is not provided then take all vms from all controllers
         else:
@@ -356,12 +356,12 @@ class VmQuery(graphene.ObjectType):
                 raise SimpleError(_('Incorrect sort parameter'))
             vm_type_list = sorted(vm_type_list, key=sort_lam, reverse=reverse)
 
-        log.debug('vm_type_list_count {}'.format(len(vm_type_list)))
+        Log.debug('vm_type_list_count {}'.format(len(vm_type_list)))
         return vm_type_list
 
     @staticmethod
     def veil_template_data_to_graphene_type(template_veil_data, controller_address):
-        log.debug('template_veil_data: {}'.format(template_veil_data))
+        Log.debug('template_veil_data: {}'.format(template_veil_data))
         template_type = TemplateType(id=template_veil_data['id'], verbose_name=template_veil_data['verbose_name'],
                                      veil_info=template_veil_data)
         template_type.controller = ControllerType(address=controller_address)

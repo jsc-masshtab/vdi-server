@@ -16,7 +16,7 @@ from common.veil_errors import SimpleError, BadRequest, ValidationError
 from redis_broker import send_cmd_to_ws_monitor, WsMonitorCmd
 
 from languages import lang_init
-from journal.journal import Log as log
+from journal.journal import Log
 
 import tornado.gen
 
@@ -145,15 +145,15 @@ class Controller(AbstractClass):
     async def check_credentials(self):
         try:
             encrypted_password = crypto.decrypt(self.password)
-            log.debug(_(
+            Log.debug(_(
                 'Checking controller credentials: address: {}, username: {}, ldap_connection: {}').format(
                 self.address, self.username, self.ldap_connection))
             controller_client = ControllerClient(self.address)
             auth_info = dict(username=self.username, password=encrypted_password, ldap=self.ldap_connection)
             await controller_client.auth(auth_info=auth_info)
         except Exception as ex:
-            await log.warning(_('Controller {} check failed.').format(self.verbose_name))
-            log.debug(_('Controller check: {}').format(ex))
+            await Log.warning(_('Controller {} check failed.').format(self.verbose_name))
+            Log.debug(_('Controller check: {}').format(ex))
             return False
         return True
 
@@ -166,7 +166,7 @@ class Controller(AbstractClass):
             version = await controller_client.fetch_version()
             return {'token': token, 'expires_on': expires_on, 'version': version}
         except BadRequest:
-            await log.error(_('Can\'t login to controller {}').format(address))
+            await Log.error(_('Can\'t login to controller {}').format(address))
             return dict()
 
     @classmethod
@@ -198,7 +198,7 @@ class Controller(AbstractClass):
         controller = await cls.create(**controller_dict)
 
         msg = _('Successfully added new controller {} with address {}.').format(controller.verbose_name, address)
-        await log.info(msg, user=creator)
+        await Log.info(msg, user=creator)
         return controller
 
     async def soft_update(self, verbose_name, address, description, creator, username=None, password=None, ldap_connection=None):
@@ -209,7 +209,7 @@ class Controller(AbstractClass):
         # TODO: возможно нужно явно удалять контроллер из монитора ресурсов в каком бы статусе он ни был
         if self.status == Status.ACTIVE:
             # Удаляем существующий контроллер из монитора ресурсов
-            log.debug(_('Remove existing controller from resource monitor'))
+            Log.debug(_('Remove existing controller from resource monitor'))
             send_cmd_to_ws_monitor(self.id, WsMonitorCmd.REMOVE_CONTROLLER)
 
         # TODO: разнести на несколько методов, если логика останется после рефакторинга
@@ -278,7 +278,7 @@ class Controller(AbstractClass):
                 if self.status == Status.ACTIVE:
                     send_cmd_to_ws_monitor(self.id, WsMonitorCmd.ADD_CONTROLLER)
                 # Отслеживаем только ошибки в БД
-                log.debug(transaction_error)
+                Log.debug(transaction_error)
                 msg = _('Error with controller update: {}').format(transaction_error)
                 raise ValueError(msg)
 
@@ -286,11 +286,11 @@ class Controller(AbstractClass):
 
             # Переводим контроллер в активный если есть новые учетные данные и он в другом статусе
             if updated_rec.status != Status.ACTIVE and controller_kwargs.get('token'):
-                log.debug(_('Activate the controller'))
+                Log.debug(_('Activate the controller'))
                 await Controller.activate(self.id)
 
             # Добавляем обратно в монитор ресурсов
-            log.debug(_('Add back to the resource monitor'))
+            Log.debug(_('Add back to the resource monitor'))
             send_cmd_to_ws_monitor(self.id, WsMonitorCmd.ADD_CONTROLLER)
 
             msg = _('Successfully update controller {} with address {}.').format(
@@ -307,7 +307,7 @@ class Controller(AbstractClass):
                 controller_kwargs.pop('version')
             desc = str(controller_kwargs)
 
-            await log.info(msg, description=desc, user=creator)
+            await Log.info(msg, description=desc, user=creator)
             return True
 
         return False
@@ -345,7 +345,7 @@ class Controller(AbstractClass):
         msg = _('Controller {name} had completely remove.').format(name=self.verbose_name)
         await self.full_delete_pools(creator=creator)
         await self.delete()
-        await log.info(msg, entity_dict=self.entity, user=creator)
+        await Log.info(msg, entity_dict=self.entity, user=creator)
         return True
 
     @classmethod
@@ -356,7 +356,7 @@ class Controller(AbstractClass):
 
         if controller.status != Status.ACTIVE:
             await controller.update(status=Status.ACTIVE).apply()
-            await log.info(_('Controller {} has been activated.').format(controller.verbose_name))
+            await Log.info(_('Controller {} has been activated.').format(controller.verbose_name))
 
             # Активируем пулы
             pools = await controller.pools
@@ -374,7 +374,7 @@ class Controller(AbstractClass):
 
         if controller.status != Status.FAILED:
             await controller.update(status=Status.FAILED).apply()
-            await log.info(_('Controller {} has been deactivated.').format(controller.verbose_name))
+            await Log.info(_('Controller {} has been deactivated.').format(controller.verbose_name))
 
             # Деактивируем пулы
             pools = await controller.pools

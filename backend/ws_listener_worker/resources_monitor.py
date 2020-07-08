@@ -20,7 +20,7 @@ from common.utils import cancel_async_task
 from redis_broker import REDIS_CLIENT, WS_MONITOR_CHANNEL_OUT
 
 from languages import lang_init
-from journal.journal import Log as log
+from journal.journal import Log
 
 
 _ = lang_init()
@@ -110,7 +110,7 @@ class ResourcesMonitor():
         """
         while self._running_flag:
             is_connected = await self._connect()
-            log.debug(_('{} is connected: {}').format(__class__.__name__, is_connected))  # noqa
+            Log.debug(_('{} is connected: {}').format(__class__.__name__, is_connected))  # noqa
             # reconnect if not connected
             if not is_connected:
                 await asyncio.sleep(self.RECONNECT_TIMEOUT)
@@ -142,19 +142,19 @@ class ResourcesMonitor():
         try:
             token = await Controller.get_token(controller.address)
         except Exception as E:
-            await log.error(str(E))
+            await Log.error(str(E))
             return False
 
         # create ws connection
         try:
             connect_url = 'ws://{}/ws/?token={}'.format(controller.address, token)
-            # log.debug('ws connection url is {}'.format(connect_url))
+            # Log.debug('ws connection url is {}'.format(connect_url))
             self._ws_connection = await websocket_connect(connect_url)
         except (ConnectionRefusedError, WebSocketError):
             msg = _('{cls}: can not connect to {ip}').format(
                 cls=__class__.__name__, # noqa
                 ip=controller.address)
-            await log.error(msg)
+            await Log.error(msg)
             return False
 
         # subscribe to events on controller
@@ -163,19 +163,19 @@ class ResourcesMonitor():
                 await self._ws_connection.write_message(
                     SubscriptionCmd.add + ' ' + format(subscription_name))
         except WebSocketClosedError as ws_error:
-            await log.error(ws_error)
+            await Log.error(str(ws_error))
             return False
 
         return True
 
     async def _on_message_received(self, message):
-        #  log.debug('_on_message_received: message ' + message)
+        #  Log.debug('_on_message_received: message ' + message)
         REDIS_CLIENT.publish(WS_MONITOR_CHANNEL_OUT, message)
 
     async def _close_connection(self):
         if self._ws_connection:
-            log.debug(_('{} Closing ws connection {}').format(__class__.__name__, self._controller_id))  # noqa
+            Log.debug(_('{} Closing ws connection {}').format(__class__.__name__, self._controller_id))  # noqa
             try:
                 self._ws_connection.close()
             except Exception as E:
-                await log.debug(str(E))
+                await Log.debug(str(E))

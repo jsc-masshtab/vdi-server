@@ -9,7 +9,7 @@ from common.veil_errors import ValidationError, MeaningError
 from common.veil_decorators import prepare_body
 
 from languages import lang_init
-from journal.journal import Log as log
+from journal.journal import Log
 
 from redis_broker import send_cmd_to_ws_monitor, WsMonitorCmd
 
@@ -87,7 +87,7 @@ class VeilHttpClient:
                 if not isinstance(description, str):
                     description = ''
                 # Информируем систему о проблеме
-                await log.error(_('Controller {} connection error').format(self.controller_ip),
+                await Log.error(_('Controller {} connection error').format(self.controller_ip),
                                 description=description)
                 # Останавливаем монитор ресурсов для контроллера.
                 from controller.models import Controller
@@ -119,8 +119,8 @@ class VeilHttpClient:
                 raise ControllerNotAccessible(body)
             elif http_error.code == 500:
                 msg = _('ECP Veil internal error.')
-                log.debug(msg)
-                log.debug(body)
+                Log.debug(msg)
+                Log.debug(body)
                 raise ServerError(msg)
             elif http_error.code == 599:
                 raise ServerError(str(http_error))
@@ -142,7 +142,7 @@ class VeilHttpClient:
         try:
             response = json_decode(response.body)
         except ValueError as E:
-            raise MeaningError(E)
+            raise MeaningError(str(E))
             response = dict()
         return response
 

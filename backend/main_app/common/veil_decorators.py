@@ -11,7 +11,7 @@ from common.veil_errors import Unauthorized
 from auth.models import User
 
 from languages import lang_init
-from journal.journal import Log as log
+from journal.journal import Log
 
 
 _ = lang_init()
@@ -124,8 +124,8 @@ def user_passes_test(test_func, exc=Unauthorized):  # noqa
                 if user and isinstance(user, User):
                     if test_func(await user.roles):
                         return f(*args, **kwargs)
-                # log.debug(_('IP: . username: {}'))
-                await log.warning(
+                # Log.debug(_('IP: . username: {}'))
+                await Log.warning(
                     _('IP: {}. username: {}').format(cntxt.remote_ip, user.username),
                     entity_dict={'entity_type': EntityType.SECURITY, 'entity_uuid': None})
                 raise exc(_('Invalid permissions'))
