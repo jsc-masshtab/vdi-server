@@ -217,11 +217,11 @@ class PoolType(graphene.ObjectType):
         return [role for role in all_roles if role.value not in assigned_roles]
 
     @readonly_required
-    async def resolve_assigned_groups(self, info, limit=100, offset=0, **kwargs):
+    async def resolve_assigned_groups(self, info, **kwargs):
         # TODO: возможно нужно добавить группы и пользователей обладающих Ролью
         query = Entity.query.where((Entity.entity_type == EntityType.POOL) & (Entity.entity_uuid == Pool.id)).alias()
         filtered_query = Group.join(EntityRoleOwner.join(query).alias()).select()
-        return await filtered_query.limit(limit).offset(offset).gino.load(Group).all()
+        return await filtered_query.gino.load(Group).all()
 
     async def resolve_possible_groups(self, _info):
         pool = await Pool.get(self.pool_id)
@@ -233,8 +233,8 @@ class PoolType(graphene.ObjectType):
         return await pool.assigned_users if entitled else await pool.possible_users
 
     @readonly_required
-    async def resolve_vms(self, _info, limit=100, offset=0, **kwargs):
-        await self._build_vms_list(limit, offset)
+    async def resolve_vms(self, _info, **kwargs):
+        await self._build_vms_list()
         return self.vms
 
     async def resolve_vm_amount(self, _info):
@@ -286,7 +286,7 @@ class PoolType(graphene.ObjectType):
             # либо шаблон изчес с контроллера, либо попытка получить шаблон для статического пула
             return None
 
-    async def _build_vms_list(self, limit, offset):
+    async def _build_vms_list(self):
         if not self.vms:
             self.vms = []
 
@@ -294,7 +294,7 @@ class PoolType(graphene.ObjectType):
             vm_http_client = await VmHttpClient.create(controller_address, '')
             vm_veil_data_list = await vm_http_client.fetch_vms_list()
 
-            db_vms_data = await Vm.select("id").where((Vm.pool_id == self.pool_id)).limit(limit).offset(offset).gino.all()
+            db_vms_data = await Vm.select("id").where((Vm.pool_id == self.pool_id)).gino.all()
 
             for (vm_id,) in db_vms_data:
                 try:
@@ -348,7 +348,7 @@ def pool_obj_to_type(pool_obj: Pool) -> dict:
 
 class PoolQuery(graphene.ObjectType):
 
-    pools = graphene.List(PoolType, ordering=graphene.String())
+    pools = graphene.List(PoolType, limit=graphene.Int(), offset=graphene.Int(), ordering=graphene.String())
     pool = graphene.Field(PoolType, pool_id=graphene.String())
 
     @administrator_required

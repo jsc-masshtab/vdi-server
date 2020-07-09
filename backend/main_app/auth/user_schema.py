@@ -145,7 +145,7 @@ class UserType(graphene.ObjectType):
 
 
 class UserQuery(graphene.ObjectType):
-    users = graphene.List(UserType, ordering=graphene.String())
+    users = graphene.List(UserType, limit=graphene.Int(), offset=graphene.Int(), ordering=graphene.String())
     user = graphene.Field(UserType, id=graphene.UUID(), username=graphene.String())
 
     @readonly_required

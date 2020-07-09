@@ -74,9 +74,9 @@ class GroupType(graphene.ObjectType):
                          date_updated=model_instance.date_updated)
 
     @readonly_required
-    async def resolve_assigned_users(self, _info, limit=100, offset=0, **kwargs):
+    async def resolve_assigned_users(self, _info, **kwargs):
         users_query = User.join(UserGroup.query.where(UserGroup.group_id == self.id).alias()).select()
-        return await users_query.limit(limit).offset(offset).gino.load(User).all()
+        return await users_query.gino.load(User).all()
 
     async def resolve_possible_users(self, _info):
         group = await Group.get(self.id)
@@ -96,7 +96,7 @@ class GroupType(graphene.ObjectType):
 
 
 class GroupQuery(graphene.ObjectType):
-    groups = graphene.List(GroupType, ordering=graphene.String())
+    groups = graphene.List(GroupType, limit=graphene.Int(), offset=graphene.Int(), ordering=graphene.String())
     group = graphene.Field(GroupType, id=graphene.UUID())
 
     @readonly_required

@@ -173,7 +173,7 @@ class AuthenticationDirectoryType(graphene.ObjectType):
     status = StatusGraphene()
     sso = graphene.Boolean(default_value=False)
 
-    mappings = graphene.List(MappingType)
+    mappings = graphene.List(MappingType, limit=graphene.Int(), offset=graphene.Int())
 
     assigned_ad_groups = graphene.List(AuthenticationDirectoryGroupType)
     possible_ad_groups = graphene.List(AuthenticationDirectoryGroupType)
@@ -204,7 +204,8 @@ class AuthenticationDirectoryType(graphene.ObjectType):
 
 
 class AuthenticationDirectoryQuery(graphene.ObjectType):
-    auth_dirs = graphene.List(AuthenticationDirectoryType, ordering=graphene.String())
+    auth_dirs = graphene.List(AuthenticationDirectoryType, limit=graphene.Int(), offset=graphene.Int(),
+                              ordering=graphene.String())
     auth_dir = graphene.Field(AuthenticationDirectoryType, id=graphene.UUID())
     group_members = graphene.Field(graphene.List(AuthenticationDirectoryGroupMembersType), auth_dir_id=graphene.UUID(),
                                    group_cn=graphene.NonNull(graphene.String))

@@ -168,7 +168,7 @@ class TestControllerMutation(graphene.Mutation):
 
 
 class ControllerQuery(graphene.ObjectType):
-    controllers = graphene.List(lambda: ControllerType)
+    controllers = graphene.List(lambda: ControllerType, limit=graphene.Int(), offset=graphene.Int())
     controller = graphene.Field(lambda: ControllerType, id=graphene.String())
 
     @administrator_required
