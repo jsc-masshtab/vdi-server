@@ -20,7 +20,7 @@ class ResourcesMonitorManager:
         Start monitors
         :return:
         """
-        # log.debug('{}: Startup...'.format(__class__.__name__))
+        # Log.debug('{}: Startup...'.format(__class__.__name__))
         # get all controllers
         controllers = await Controller.query.gino.all()
 

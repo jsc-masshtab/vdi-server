@@ -772,7 +772,7 @@ class AutomatedPool(db.Model):
             return False
 
         # send command to pool worker
-        request_to_execute_pool_task(str(pool.id), PoolTaskType.DELETING.name, deletion_full=full)
+        await request_to_execute_pool_task(str(pool.id), PoolTaskType.DELETING.name, deletion_full=full)
 
         # wait for result
         if wait_for_result:
@@ -860,41 +860,59 @@ class AutomatedPool(db.Model):
             except VmCreationError:
                 break
 
-            def _check_if_vm_created(redis_message):
+            # Check if vm created
+            try:
+                # 1) wait for message from redis (ws check)
+                def _check_if_vm_created(redis_message):
+                    try:
+                        redis_message_data = redis_message['data'].decode()
+                        redis_message_data_dict = json.loads(redis_message_data)
+                        obj = redis_message_data_dict['object']
 
+                        if current_vm_task_id == obj['parent'] and obj['status'] == 'SUCCESS':
+                            return True
+                    except Exception as ex:  # Нас интересует лишь прошла ли проверка
+                        Log.debug('_check_if_vm_created ' + str(ex))
+
+                    return False
+
+                is_vm_successfully_created = await a_redis_wait_for_message(
+                    WS_MONITOR_CHANNEL_OUT, _check_if_vm_created, VEIL_WS_MAX_TIME_TO_WAIT)
+                Log.debug('Ws msg vm successfully_created: {}'.format(is_vm_successfully_created))
+
+                # 2) determine if vm created by task status
+                if not is_vm_successfully_created:
+                    Log.debug(
+                        _('Could not get the response about result of creation VM on ECP by WS. Task status check.'))
+                    try:
+                        token = await Controller.get_token(controller_address)
+                        veil_client = VeilHttpClient(controller_address, token=token)
+                        is_vm_successfully_created = await veil_client.check_task_status(current_vm_task_id)
+                    except asyncio.CancelledError:
+                        raise
+                    except Exception as ex:  # Возможно множество исключений, но нас интнесует лишь их отсутствие
+                        await Log.error('Exception during task status checking: {}'.format(str(ex)))
+
+                # 3) determine if vm created by vm status
+                if not is_vm_successfully_created:
+                    Log.debug(_('Probably task is not done. Check VM status.'))
+                    try:
+                        vm_client = await VmHttpClient.create(controller_address, vm_info['id'])
+                        is_vm_successfully_created = await vm_client.check_status()
+                    except asyncio.CancelledError:
+                        raise
+                    except Exception as ex:  # Возможно множество исключений, но нас интнесует лишь их отсутствие
+                        await Log.error('Exception during vm status checking: {}'.format(str(ex)))
+            except asyncio.CancelledError:
+                #  Если получили CancelledError, то отменяем на контроллере таску создания вм.
                 try:
-                    redis_message_data = redis_message['data'].decode()
-                    redis_message_data_dict = json.loads(redis_message_data)
-                    obj = redis_message_data_dict['object']
+                    token = await Controller.get_token(controller_address)
+                    veil_client = VeilHttpClient(controller_address, token=token)
+                    await veil_client.cancel_task(current_vm_task_id)
+                except Exception as ex:
+                    await Log.error('Exception during vm creation task cancelling: {}'.format(str(ex)))
 
-                    if current_vm_task_id == obj['parent'] and obj['status'] == 'SUCCESS':
-                        return True
-                except Exception as ex:  # Нас интересует лишь прошла ли проверка
-                    Log.debug('_check_if_vm_created ' + str(ex))
-
-                return False
-
-            async def check_task_status(task_id):
-                token = await Controller.get_token(controller_address)
-                veil_client = VeilHttpClient(controller_address, token=token)
-                return await veil_client.check_task_status(task_id)
-
-            async def check_vm_status(vm_id):
-                vm_client = await VmHttpClient.create(controller_address, vm_id)
-                return await vm_client.check_status()
-
-            # wait for message from redis
-            is_vm_successfully_created = await a_redis_wait_for_message(
-                WS_MONITOR_CHANNEL_OUT, _check_if_vm_created, VEIL_WS_MAX_TIME_TO_WAIT)
-            Log.debug('Ws msg vm successfully_created: {}'.format(is_vm_successfully_created))
-            if not is_vm_successfully_created:
-                Log.debug(
-                    _('Could not get the response about result of creation VM on ECP by WS. Task status check.'))
-                is_vm_successfully_created = await check_task_status(task_id=current_vm_task_id)
-
-            if not is_vm_successfully_created:
-                Log.debug(_('Probably task is not done. Check VM status.'))
-                is_vm_successfully_created = await check_vm_status(vm_info['id'])
+                raise
 
             # Эксперементальная обнова. VM создается в любом случае, но если что-то пошло не так, то мы создаем ее в БД.
             # if is_vm_successfully_created:
@@ -947,15 +965,16 @@ class AutomatedPool(db.Model):
 
         await Log.info(_('Automated pool creation started'), entity_dict=self.entity)
 
-        vm_list = list()
-        vm_index = 1
+        pool = await Pool.get(self.id)
+        vm_amount_in_pool = await pool.get_vm_amount()  # В пуле уже могут быть машины, например, если
+        # инициализация пула была прервана из-за завершения приложения.
+        vm_index = vm_amount_in_pool + 1
 
         try:
-            for i in range(self.initial_size):
+            for i in range(vm_amount_in_pool, self.initial_size):
 
                 vm = await self.add_vm(vm_index)
                 vm_index = vm['domain_index'] + 1
-                vm_list.append(vm)
 
                 msg = _('Created {} VMs from {} at the Automated pool {}').format(i + 1, self.initial_size,
                                                                                   verbose_name)
@@ -978,14 +997,16 @@ class AutomatedPool(db.Model):
             await Log.error(_('Can\'t create VM'))
             Log.debug(vm_error)
 
+        vm_amount_in_pool = await pool.get_vm_amount()  # Текущее число машин в пуле
+
         # internal message about pool creation result (WS)
-        is_creation_successful = (len(vm_list) == self.initial_size)
+        is_creation_successful = (vm_amount_in_pool >= self.initial_size)
         print('is_creation_successful', is_creation_successful)
         if is_creation_successful:
-            msg = _('Initial VM amount {} at the Automated pool {}').format(len(vm_list), verbose_name)
+            msg = _('Initial VM amount {} at the Automated pool {}').format(vm_amount_in_pool, verbose_name)
             await Log.info(msg, entity_dict=self.entity)
         else:
-            msg = _('Automated pool created with errors. VMs created: {}. Required: {}').format(len(vm_list),
+            msg = _('Automated pool created with errors. VMs created: {}. Required: {}').format(vm_amount_in_pool,
                                                                                                 self.initial_size)
             await Log.error(msg, entity_dict=self.entity)
 
@@ -993,7 +1014,7 @@ class AutomatedPool(db.Model):
                         msg_type='data',
                         event='pool_creation_completed',
                         pool_id=str(self.id),
-                        amount_of_created_vms=len(vm_list),
+                        amount_of_created_vms=vm_amount_in_pool,
                         initial_size=self.initial_size,
                         is_successful=is_creation_successful,
                         resource=VDI_TASKS_SUBSCRIPTION)

@@ -98,7 +98,7 @@ class PoolGetVm(BaseHandler, ABC):
 
         # Запрос на расширение пула
         if await pool.pool_type == Pool.PoolTypes.AUTOMATED:
-            request_to_execute_pool_task(str(pool_id), PoolTaskType.EXPANDING.name)
+            await request_to_execute_pool_task(str(pool_id), PoolTaskType.EXPANDING.name)
 
         if not vm_id:
             response = {'data': dict(host='', port=0, password='', message=_('Pool doesnt have free machines'))}

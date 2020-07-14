@@ -4,7 +4,8 @@
 import asyncio
 from enum import Enum
 import json
-import uuid
+
+from tasks.models import TaskModel
 
 import redis
 import settings
@@ -172,13 +173,17 @@ async def a_redis_get_message(redis_subscriber):
         await asyncio.sleep(REDIS_ASYNC_TIMEOUT)
 
 
-def request_to_execute_pool_task(pool_id, pool_task_type, **additional_data):
+async def request_to_execute_pool_task(pool_id, pool_task_type, **additional_data):
     """Send request to pool worker to execute a task. Return task string id"""
-    uuid_str = str(uuid.uuid4())
-    data = {'task_id': uuid_str, 'task_type': pool_task_type, 'pool_id': pool_id, **additional_data}
+
+    task = await TaskModel.create(entity_id=pool_id, task_type=pool_task_type)
+
+    task_id = str(task.id)
+    data = {'task_id': task_id, 'task_type': pool_task_type, **additional_data}
     REDIS_CLIENT.rpush(POOL_TASK_QUEUE, json.dumps(data))
 
-    return uuid_str
+    print('request_to_execute_pool_task task_id: {}'.format(task_id))
+    return task_id
 
 
 def send_cmd_to_ws_monitor(controller_id, ws_monitor_cmd: WsMonitorCmd):

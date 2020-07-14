@@ -90,7 +90,8 @@ class ResourcesMonitor():
                     response['status'] = 'OFFLINE'
                     REDIS_CLIENT.publish(WS_MONITOR_CHANNEL_OUT, json.dumps(response))
 
-                    await Controller.deactivate(self._controller_id)
+                    # await Controller.deactivate(self._controller_id)  # Под вопросом нужно ли менять какие-либо
+                    # данные в бд либо мы лишь наблюдаем.
                     self._is_online = False
             else:
                 # notify if controller was offline before (data changed)
@@ -98,7 +99,7 @@ class ResourcesMonitor():
                     response['status'] = 'ONLINE'
                     REDIS_CLIENT.publish(WS_MONITOR_CHANNEL_OUT, json.dumps(response))
 
-                    await Controller.activate(self._controller_id)
+                    # await Controller.activate(self._controller_id)  # Под вопросом нужно ли менять какие-либо данные
                     self._is_online = True
 
             is_first_check = False
@@ -124,7 +125,7 @@ class ResourcesMonitor():
                 elif 'token error' in msg:
                     # Если токен эррор, то закрываем соединение и и переходим к попыткам коннекта (начало первого while)
                     await self._close_connection()
-                    await Controller.invalidate_auth(self._controller_id)
+                    # await Controller.invalidate_auth(self._controller_id)
                     break
                 else:
                     await self._on_message_received(msg)

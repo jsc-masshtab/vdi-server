@@ -6,7 +6,7 @@ from database import start_gino, stop_gino
 
 import json
 
-from redis_broker import POOL_TASK_QUEUE, PoolTaskType, REDIS_POOL, a_redis_lpop
+from redis_broker import POOL_TASK_QUEUE, REDIS_POOL, a_redis_lpop
 
 from languages import lang_init
 from journal.log.logging import Logging
@@ -23,7 +23,7 @@ _ = lang_init()
 async def start_work():
     # Create PoolTaskManager
     pool_task_manager = PoolTaskManager()
-    await pool_task_manager.fill_start_data()
+    await pool_task_manager.start()
 
     # main loop. Await for work
     Log.general(_('Pool worker: start loop now'))
@@ -31,23 +31,10 @@ async def start_work():
         try:
             # wait for task message
             redis_data = await a_redis_lpop(POOL_TASK_QUEUE)
-            print('PoolWorker start_work redis_data', redis_data)
+            Log.debug('PoolWorker start_work redis_data {}'.format(redis_data))
             task_data_dict = json.loads(redis_data.decode())
 
-            # get task data
-            pool_id = task_data_dict['pool_id']
-            pool_task_type = task_data_dict['task_type']
-
-            # task execution
-            if pool_task_type == PoolTaskType.CREATING.name:
-                await pool_task_manager.start_pool_initialization(pool_id)
-
-            elif pool_task_type == PoolTaskType.EXPANDING.name:
-                await pool_task_manager.start_pool_expanding(pool_id)
-
-            elif pool_task_type == PoolTaskType.DELETING.name:
-                full = task_data_dict['deletion_full']
-                await pool_task_manager.start_pool_deleting(pool_id, full)
+            await pool_task_manager.launch_task(task_data_dict)
 
         except asyncio.CancelledError:
             raise
