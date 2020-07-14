@@ -382,6 +382,7 @@ class DeletePoolMutation(graphene.Mutation, PoolValidator):
     async def mutate(self, info, pool_id, creator, full=False):
 
         # Нет запуска валидации, т.к. нужна сущность пула далее - нет смысла запускать запрос 2жды.
+        # print('pool_id', pool_id)
         pool = await Pool.get(pool_id)
         if not pool:
             raise SimpleError(_('No such pool.'))
@@ -630,7 +631,7 @@ class CreateAutomatedPoolMutation(graphene.Mutation, PoolValidator):
             raise SimpleError(error_msg, user=creator)
 
         # send command to start pool init task
-        request_to_execute_pool_task(str(automated_pool.id), PoolTaskType.CREATING.name)
+        await request_to_execute_pool_task(str(automated_pool.id), PoolTaskType.CREATING.name)
 
         # pool creation task successfully started
         pool = await Pool.get_pool(automated_pool.id)

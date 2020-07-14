@@ -161,3 +161,8 @@ class VeilHttpClient:
         if response.get('status') == 'SUCCESS':
             return True
         return False
+
+    async def cancel_task(self, task_id):
+        """Отменяет задачу на контроллере"""
+        endpoint_url = '{api_url}tasks/{task_id}/cancel​'.format(api_url=self.api_url, task_id=task_id)
+        await self.fetch(url=endpoint_url, method='PUT')

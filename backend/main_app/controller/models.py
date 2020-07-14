@@ -333,7 +333,7 @@ class Controller(AbstractSortableStatusModel, AbstractClass):
             pool_type = await pool.pool_type
             # Авто пул
             if pool_type == Pool.PoolTypes.AUTOMATED:
-                async_tasks.append(AutomatedPool.delete_pool(pool, True, True, 5))
+                async_tasks.append(AutomatedPool.delete_pool(pool, True, True, 15))
             else:
                 async_tasks.append(Pool.delete_pool(pool, creator, True))
         # Паралельно удаляем пулы

@@ -33,7 +33,7 @@ async def listen_for_messages(resources_monitor_manager):
             if not isinstance(redis_message['data'], bytes):
                 continue
 
-            Log.general('redis_message' + str(redis_message))
+            Log.general('redis_message: {}'.format(str(redis_message)))
 
             # get data from message
             data_dict = json.loads(redis_message['data'].decode())
