@@ -32,7 +32,7 @@ echo "Permissions for vagrant..."
 chown vagrant ${BACKEND_DIR} -R
 
 # Экспорт переменной окружения для работы alembic
-export PYTHONPATH=${BACKEND_DIR}
+export PYTHONPATH=${BACKEND_DIR}/main_app
 
 # Переходим в корень проекта
 cd ${ROOT_DIR}
@@ -77,10 +77,11 @@ ${ENV_DIR}/bin/python -m pip install -r requirements.txt
 # Генерируем local_settings
 echo "Executing local_settings.py"
 
-cd ${BACKEND_DIR} && /opt/veil-vdi/env/bin/python create_local_settings.py
+cd ${BACKEND_DIR}/main_app && /opt/veil-vdi/env/bin/python create_local_settings.py
 # Берем из файла ключи доступа к БД и Redis
 DB_PASS="$(grep -r 'DB_PASS' local_settings.py | sed -r "s/DB_PASS = '(.+)'/\1/g")"
 REDIS_PASS="$(grep -r 'REDIS_PASSWORD' local_settings.py | sed -r "s/REDIS_PASSWORD = '(.+)'/\1/g")"
+cd ${BACKEND_DIR}
 
 # Настройка redis-server
 echo "Setting up redis"
