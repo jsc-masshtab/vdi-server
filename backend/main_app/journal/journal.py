@@ -13,7 +13,7 @@ class Log:
     TYPE_ERROR = 2
 
     def debug(self):
-        # print(self)
+        print(self)
         Logging.logger_application_debug(self)
 
     def name(self):

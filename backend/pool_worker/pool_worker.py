@@ -54,6 +54,8 @@ def main():
     # task request listener
     loop.create_task(start_work())
 
+    # todo: Ввести команды отменить задачи/возобновить задачи и слушать эти команды.
+
     vm_manager = VmManager()
     loop.create_task(vm_manager.start())
 
