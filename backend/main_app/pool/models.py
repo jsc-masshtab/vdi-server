@@ -241,13 +241,13 @@ class Pool(AbstractClass):
         return await query.gino.first()
 
     @staticmethod
-    async def get_pools(filters=None, ordering=None):
+    async def get_pools(limit, offset, filters=None, ordering=None):
         """Такое построение запроса вызвано желанием иметь только 1 запрос с изначальным построением."""
         # TODO: проверить используется ли. Заменить на Pool.get?
         query = Pool.get_pools_query(ordering=ordering)
         if filters:
             query = query.where(and_(*filters))
-        return await query.gino.all()
+        return await query.limit(limit).offset(offset).gino.all()
 
     @staticmethod
     async def get_controller_ip(pool_id):
@@ -284,12 +284,18 @@ class Pool(AbstractClass):
         return await result_query.gino.all()
 
     @property
-    async def assigned_groups(self):
+    def assigned_groups_query(self):
         """Группы назначенные пулу"""
         # TODO: возможно нужно добавить группы и пользователей обладающих Ролью
         query = Entity.query.where((Entity.entity_type == EntityType.POOL) & (Entity.entity_uuid == self.id)).alias()
-        filtered_query = Group.join(EntityRoleOwner.join(query).alias()).select()
-        return await filtered_query.gino.load(Group).all()
+        return Group.join(EntityRoleOwner.join(query).alias()).select()
+
+    @property
+    async def assigned_groups(self):
+        return await self.assigned_groups_query.gino.load(Group).all()
+
+    async def assigned_groups_paginator(self, limit, offset):
+        return await self.assigned_groups_query.limit(limit).offset(offset).gino.load(Group).all()
 
     @property
     async def possible_groups(self):

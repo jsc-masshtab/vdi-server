@@ -187,7 +187,8 @@ class PoolType(graphene.ObjectType):
     users = graphene.List(UserType, entitled=graphene.Boolean())
     assigned_roles = graphene.List(RoleTypeGraphene)
     possible_roles = graphene.List(RoleTypeGraphene)
-    assigned_groups = graphene.List(PoolGroupType)
+    assigned_groups = graphene.List(PoolGroupType, limit=graphene.Int(default_value=100),
+                                    offset=graphene.Int(default_value=0))
     possible_groups = graphene.List(PoolGroupType)
 
     node = graphene.Field(NodeType)
@@ -215,15 +216,16 @@ class PoolType(graphene.ObjectType):
         all_roles = [role_type for role_type in Role]
         return [role for role in all_roles if role.value not in assigned_roles]
 
-    async def resolve_assigned_groups(self, info):
+    async def resolve_assigned_groups(self, info, limit, offset):
         pool = await Pool.get(self.pool_id)
-        return await pool.assigned_groups
+        return await pool.assigned_groups_paginator(limit=limit, offset=offset)
 
     async def resolve_possible_groups(self, _info):
         pool = await Pool.get(self.pool_id)
         return await pool.possible_groups
 
     async def resolve_users(self, _info, entitled=True):
+        # TODO: добавить пагинацию
         pool = await Pool.get(self.pool_id)
         return await pool.assigned_users if entitled else await pool.possible_users
 
@@ -341,8 +343,9 @@ def pool_obj_to_type(pool_obj: Pool) -> dict:
 
 
 class PoolQuery(graphene.ObjectType):
-
-    pools = graphene.List(PoolType, status=StatusGraphene(), ordering=graphene.String())
+    pools = graphene.List(PoolType, status=StatusGraphene(), limit=graphene.Int(default_value=100),
+                          offset=graphene.Int(default_value=0),
+                          ordering=graphene.String())
     pool = graphene.Field(PoolType, pool_id=graphene.String())
 
     @staticmethod
@@ -354,11 +357,11 @@ class PoolQuery(graphene.ObjectType):
         return filters
 
     @administrator_required
-    async def resolve_pools(self, info, status=None, ordering=None, **kwargs):
+    async def resolve_pools(self, info, limit, offset, status=None, ordering=None, **kwargs):
         filters = PoolQuery.build_filters(status)
 
         # Сортировка может быть по полю модели Pool, либо по Pool.EXTRA_ORDER_FIELDS
-        pools = await Pool.get_pools(filters=filters, ordering=ordering)
+        pools = await Pool.get_pools(limit, offset, filters=filters, ordering=ordering)
         objects = [
             pool_obj_to_type(pool)
             for pool in pools

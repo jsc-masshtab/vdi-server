@@ -65,8 +65,8 @@ class EventQuery(graphene.ObjectType):
 
     events = graphene.List(
         lambda: EventType,
-        limit=graphene.Int(),
-        offset=graphene.Int(),
+        limit=graphene.Int(default_value=100),
+        offset=graphene.Int(default_value=0),
         event_type=graphene.Int(),
         start_date=graphene.DateTime(),
         end_date=graphene.DateTime(),
@@ -116,8 +116,9 @@ class EventQuery(graphene.ObjectType):
         return [entity[0] for entity in entity_types]
 
     @administrator_required
-    async def resolve_events(self, _info, limit=100, offset=0, event_type=None, start_date=None, end_date=None,
-                             user=None, read_by=None, entity_type=None, ordering=None, **kwargs):
+    async def resolve_events(self, _info, limit, offset, event_type=None,
+                             start_date=None, end_date=None, user=None,
+                             read_by=None, entity_type=None, ordering=None, **kwargs):
         filters = build_filters(event_type, start_date, end_date, user, read_by, entity_type)
 
         query = Event.outerjoin(EventReadByUser).outerjoin(User).outerjoin(

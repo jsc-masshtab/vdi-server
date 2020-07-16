@@ -172,7 +172,7 @@ class AuthenticationDirectoryType(graphene.ObjectType):
     status = StatusGraphene()
     sso = graphene.Boolean(default_value=False)
 
-    mappings = graphene.List(MappingType)
+    mappings = graphene.List(MappingType, limit=graphene.Int(default_value=100), offset=graphene.Int(default_value=0))
 
     assigned_ad_groups = graphene.List(AuthenticationDirectoryGroupType)
     possible_ad_groups = graphene.List(AuthenticationDirectoryGroupType)
@@ -181,9 +181,9 @@ class AuthenticationDirectoryType(graphene.ObjectType):
         """Dummy value for not displayed field."""
         return '*' * 7
 
-    async def resolve_mappings(self, _info):
+    async def resolve_mappings(self, _info, limit, offset):
         auth_dir = await AuthenticationDirectory.get(self.id)
-        return await auth_dir.mappings
+        return await auth_dir.mappings_paginator(limit=limit, offset=offset)
 
     async def resolve_assigned_ad_groups(self, _info):
         """Группы созданные при предыдущих синхронизациях."""
@@ -200,7 +200,9 @@ class AuthenticationDirectoryType(graphene.ObjectType):
 
 
 class AuthenticationDirectoryQuery(graphene.ObjectType):
-    auth_dirs = graphene.List(AuthenticationDirectoryType, ordering=graphene.String())
+    auth_dirs = graphene.List(AuthenticationDirectoryType, limit=graphene.Int(default_value=100),
+                              offset=graphene.Int(default_value=0),
+                              ordering=graphene.String())
     auth_dir = graphene.Field(AuthenticationDirectoryType, id=graphene.UUID())
     group_members = graphene.Field(graphene.List(AuthenticationDirectoryGroupMembersType), auth_dir_id=graphene.UUID(),
                                    group_cn=graphene.NonNull(graphene.String))
@@ -220,8 +222,8 @@ class AuthenticationDirectoryQuery(graphene.ObjectType):
         return AuthenticationDirectoryQuery.instance_to_type(auth_dir)
 
     @readonly_required
-    async def resolve_auth_dirs(self, info, ordering=None, **kwargs):
-        auth_dirs = await AuthenticationDirectory.get_objects(ordering=ordering)
+    async def resolve_auth_dirs(self, info, limit, offset, ordering=None, **kwargs):
+        auth_dirs = await AuthenticationDirectory.get_objects(limit, offset, ordering=ordering)
         objects = [
             AuthenticationDirectoryQuery.instance_to_type(auth_dir)
             for auth_dir in auth_dirs

@@ -59,7 +59,8 @@ class GroupType(graphene.ObjectType):
     date_created = graphene.DateTime()
     date_updated = graphene.DateTime()
 
-    assigned_users = graphene.List(UserType)
+    assigned_users = graphene.List(UserType, limit=graphene.Int(default_value=100),
+                                   offset=graphene.Int(default_value=0))
     possible_users = graphene.List(UserType)
 
     assigned_roles = graphene.List(RoleTypeGraphene)
@@ -73,9 +74,9 @@ class GroupType(graphene.ObjectType):
                          date_created=model_instance.date_created,
                          date_updated=model_instance.date_updated)
 
-    async def resolve_assigned_users(self, _info):
+    async def resolve_assigned_users(self, _info, limit, offset):
         group = await Group.get(self.id)
-        return await group.assigned_users
+        return await group.assigned_users_paginator(limit=limit, offset=offset)
 
     async def resolve_possible_users(self, _info):
         group = await Group.get(self.id)
@@ -95,7 +96,8 @@ class GroupType(graphene.ObjectType):
 
 
 class GroupQuery(graphene.ObjectType):
-    groups = graphene.List(GroupType, ordering=graphene.String())
+    groups = graphene.List(GroupType, limit=graphene.Int(default_value=100), offset=graphene.Int(default_value=0),
+                           ordering=graphene.String())
     group = graphene.Field(GroupType, id=graphene.UUID())
 
     @readonly_required
@@ -106,8 +108,8 @@ class GroupQuery(graphene.ObjectType):
         return GroupType.instance_to_type(group)
 
     @readonly_required
-    async def resolve_groups(self, info, ordering=None, **kwargs):  # noqa
-        groups = await Group.get_objects(ordering=ordering, include_inactive=True)
+    async def resolve_groups(self, info, limit, offset, ordering=None, **kwargs):  # noqa
+        groups = await Group.get_objects(limit, offset, ordering=ordering, include_inactive=True)
         objects = [
             GroupType.instance_to_type(group)
             for group in groups

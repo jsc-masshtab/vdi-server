@@ -102,11 +102,16 @@ class AuthenticationDirectory(AbstractClass, AbstractSortableStatusModel):
     status = db.Column(AlchemyEnum(Status), nullable=False, index=True)
 
     @property
+    def mappings_query(self):
+        return Mapping.join(GroupAuthenticationDirectoryMapping.query.where(
+            AuthenticationDirectory.id == self.id).alias()).select().order_by(desc(Mapping.priority))
+
+    @property
     async def mappings(self):
-        query = Mapping.join(
-            GroupAuthenticationDirectoryMapping.query.where(
-                AuthenticationDirectory.id == self.id).alias()).select().order_by(desc(Mapping.priority))
-        return await query.gino.load(Mapping).all()
+        return await self.mappings_query.gino.load(Mapping).all()
+
+    async def mappings_paginator(self, limit, offset):
+        return await self.mappings_query.limit(limit).offset(offset).gino.load(Mapping).all()
 
     @classmethod
     async def soft_create(cls, verbose_name, directory_url, domain_name, creator,
