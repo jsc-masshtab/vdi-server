@@ -3,7 +3,7 @@ from enum import Enum
 
 from gino.ext.tornado import Gino
 from graphene import Enum as GrapheneEnum
-from sqlalchemy.sql import desc
+from sqlalchemy.sql import and_, desc
 from sqlalchemy.sql.schema import Column
 
 from settings import DB_NAME, DB_PASS, DB_USER, DB_PORT, DB_HOST
@@ -156,8 +156,11 @@ class AbstractSortableStatusModel:
         return await query.gino.first()
 
     @classmethod
-    async def get_objects(cls, limit, offset, ordering=None, first=False, include_inactive=False):
+    async def get_objects(cls, limit, offset, filters=None, ordering=None, first=False, include_inactive=False):
         query = cls.get_query(ordering=ordering, include_inactive=include_inactive)
+        if filters:
+            query = query.where(and_(*filters))
+
         if first:
             return await query.gino.first()
         return await query.limit(limit).offset(offset).gino.all()

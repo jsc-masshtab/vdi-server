@@ -58,7 +58,7 @@ pipeline {
                     doGenerateSubmoduleConfigurations: false,
                     extensions: [], submoduleCfg: [],
                     userRemoteConfigs: [[credentialsId: '952e22ff-a42d-442c-83bd-76240a6ee793',
-                    url: 'git@gitlab.bazalt.team:vdi/vdiserver.git']]
+                    url: 'git@gitlab.bazalt.team:vdi/vdi-server.git']]
                 ])
             }
         }
