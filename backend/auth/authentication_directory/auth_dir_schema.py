@@ -136,6 +136,7 @@ class AuthenticationDirectorySyncGroupType(graphene.InputObjectType):
     """Тип для мутации синхронизации групп/пользователей из Authentication Directory."""
     group_ad_guid = graphene.UUID(required=True)
     group_verbose_name = graphene.String(required=True)
+    group_ad_cn = graphene.String(required=True)
     group_members = graphene.List(AuthenticationDirectorySyncGroupMembersType)
 
 
@@ -443,6 +444,24 @@ class SyncAuthenticationDirectoryGroupUsers(graphene.Mutation):
         return SyncAuthenticationDirectoryGroupUsers(ok=True)
 
 
+class SyncExistingAuthenticationDirectoryGroupUsers(graphene.Mutation):
+    """Синхронизация существующей группы (ранее синхронизированной)."""
+
+    class Arguments:
+        auth_dir_id = graphene.UUID(required=True)
+        group_id = graphene.UUID(required=True)
+
+    ok = graphene.Boolean(default_value=False)
+
+    @security_administrator_required
+    async def mutate(self, info, auth_dir_id, group_id):
+        auth_dir = await AuthenticationDirectory.get(auth_dir_id)
+        if not auth_dir:
+            raise SimpleError(_('No such Authentication Directory.'))
+        await auth_dir.synchronize_group(group_id)
+        return SyncAuthenticationDirectoryGroupUsers(ok=True)
+
+
 class AuthenticationDirectoryMutations(graphene.ObjectType):
     createAuthDir = CreateAuthenticationDirectoryMutation.Field()
     updateAuthDir = UpdateAuthenticationDirectoryMutation.Field()
@@ -452,6 +471,7 @@ class AuthenticationDirectoryMutations(graphene.ObjectType):
     deleteAuthDirMapping = DeleteAuthDirMappingMutation.Field()
     editAuthDirMapping = EditAuthDirMappingMutation.Field()
     syncAuthDirGroupUsers = SyncAuthenticationDirectoryGroupUsers.Field()
+    syncExistAuthDirGroupUsers = SyncExistingAuthenticationDirectoryGroupUsers.Field()
 
 
 auth_dir_schema = graphene.Schema(mutation=AuthenticationDirectoryMutations,

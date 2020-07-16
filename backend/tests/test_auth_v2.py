@@ -71,6 +71,7 @@ class AuthLocalTestCase(VdiHttpTestCase):
         headers = {'Content-Type': 'application/json', 'Authorization': 'jwt {}'.format(access_token)}
         body = '{"query":"query {users {username, is_superuser, is_active}}"}'
         response_dict = yield self.get_response(body=body, url='/users', headers=headers)
+        print(response_dict)
         error_message = response_dict['errors'][0]['message']
         self.assertIn(_('Invalid permissions'), error_message)
 

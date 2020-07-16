@@ -380,6 +380,7 @@ class TestAuthenticationDirectoryUtils:
                     sync_data:
                         {group_ad_guid: "df4745bd-6a47-47bf-b5c7-43cf7e266068",
                          group_verbose_name: "veil-admins",
+                         group_ad_cn: "CN=veil-admins,CN=Users,DC=bazalt,DC=team",
                          group_members: []})
                     {ok}}"""
         executed = await execute_scheme(auth_dir_schema, query, context=fixt_auth_context)
@@ -395,6 +396,7 @@ class TestAuthenticationDirectoryUtils:
                     sync_data:
                         {group_ad_guid: "df4745bd-6a47-47bf-b5c7-43cf7e266067",
                          group_verbose_name: "test_group_2",
+                         group_ad_cn: "CN=veil-admins,CN=Users,DC=bazalt,DC=team",
                          group_members: []})
                     {ok}}"""
         executed = await execute_scheme(auth_dir_schema, query, context=fixt_auth_context)
@@ -409,6 +411,7 @@ class TestAuthenticationDirectoryUtils:
                            auth_dir_id: "10913d5d-ba7a-4049-88c5-769267a6cbe5",
                            sync_data:
                                {group_ad_guid: "df4745bd-6a47-47bf-b5c7-43cf7e266068",
+                               group_ad_cn: "CN=veil-admins,CN=Users,DC=bazalt,DC=team",
                                 group_verbose_name: "veil-admins",
                                 group_members: [{username: "administrator"}]})
                            {ok}}"""

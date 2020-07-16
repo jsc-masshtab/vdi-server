@@ -362,6 +362,7 @@ class Group(AbstractSortableStatusModel, db.Model):
     date_updated = db.Column(db.DateTime(timezone=True), onupdate=func.now())
     # На тестовых серверах были проблемы с форматом в AuthenticationDirectory.
     ad_guid = db.Column(db.Unicode(length=36), nullable=True, unique=True)
+    ad_cn = db.Column(db.Unicode(length=1000), nullable=True, unique=True)
 
     # ----- ----- ----- ----- ----- ----- -----
     # Properties and getters:
@@ -393,10 +394,12 @@ class Group(AbstractSortableStatusModel, db.Model):
         return await possible_users_query.order_by(User.username).gino.load(User).all()
 
     @staticmethod
-    async def soft_create(verbose_name, description=None, id=None, ad_guid=None):
+    async def soft_create(verbose_name, description=None, id=None, ad_guid=None, ad_cn=None):
         group_kwargs = {'verbose_name': verbose_name, 'description': description}
         if ad_guid:
             group_kwargs['ad_guid'] = str(ad_guid)
+        if ad_cn:
+            group_kwargs['ad_cn'] = ad_cn
         if id:
             group_kwargs['id'] = id
         group_obj = await Group.create(**group_kwargs)
@@ -436,13 +439,17 @@ class Group(AbstractSortableStatusModel, db.Model):
     async def add_user(self, user_id):
         """Add user to group"""
         try:
+            user_in_group = await db.scalar(db.exists(
+                UserGroup.query.where(UserGroup.user_id == user_id).where(UserGroup.group_id == self.id)).select())
+            if user_in_group:
+                return
             user_group = await UserGroup.create(user_id=user_id, group_id=self.id)
-
             user = await User.get(user_id)
             info_message = _('User {} has been included to group {}.').format(user.username, self.verbose_name)
             await log.info(info_message, entity_dict=self.entity)
             return user_group
         except UniqueViolationError:
+            log.debug(_('User {} is already in group {}').format(user_id, self.id))
             raise SimpleError(_('User {} is already in group {}').format(user_id, self.id))
 
     async def add_users(self, user_id_list):

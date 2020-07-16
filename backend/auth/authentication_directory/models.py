@@ -540,7 +540,7 @@ class AuthenticationDirectory(db.Model, AbstractSortableStatusModel):
         final_filter = ''.join([base_filter, locked_account_filter, persons_filter, member_of_filter, ')'])
         return final_filter
 
-    async def get_members_of_ad_group(self, group_cn: str):
+    async def get_members_of_ad_group(self, group_cn: str = None):
         """Пользователи члены группы в Authentication Directory."""
         connection = await self.get_connection()
         if not connection:
@@ -638,7 +638,8 @@ class AuthenticationDirectory(db.Model, AbstractSortableStatusModel):
         # Создаем группу
         group_info = {
             'ad_guid': data['group_ad_guid'],
-            'verbose_name': data['group_verbose_name']
+            'verbose_name': data['group_verbose_name'],
+            'ad_cn': data['group_ad_cn']
         }
         group = await self.sync_group(group_info)
         # Создаем пользователей
@@ -650,6 +651,29 @@ class AuthenticationDirectory(db.Model, AbstractSortableStatusModel):
         # Включаем пользователей в группу
         if users_list:
             await group.add_users(users_list)
+        return True
+
+    async def synchronize_group(self, group_id):
+        """Синхронизирует ранее синхронизированную группу и пользователей из Authentication Directory на VDI."""
+        group = await Group.get(group_id)
+        if not group:
+            raise SimpleError(_('No such Group.'))
+        if not group.ad_guid:
+            raise SimpleError(_('Group {} is not synchronized by AD.'.format(group.verbose_name)))
+        # Поиск по ID наладить не удалось, поэтому ищем по имени группы.
+        ad_group_members = await self.get_members_of_ad_group(group.ad_cn)
+        # Определяем кого нужно исключить
+        vdi_group_members = await group.assigned_users
+        exclude_user_list = list()
+        for vdi_user in vdi_group_members:
+            if vdi_user.username not in [ad_user['username'] for ad_user in ad_group_members]:
+                exclude_user_list.append(vdi_user.id)
+        # Исключаем лишних пользователей
+        await group.remove_users(exclude_user_list)
+        # Синхронизируем новых пользователей
+        sync_data = {'group_ad_guid': group.ad_guid, 'group_verbose_name': group.verbose_name,
+                     'group_members': ad_group_members, 'group_ad_cn': group.ad_cn}
+        await self.synchronize(sync_data)
         return True
 
 
