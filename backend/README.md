@@ -1,8 +1,8 @@
 ### Alembic
 ```shell script
-cd ~/PycharmProjects/vdiserver/backend
+cd ~/PycharmProjects/vdi-server/backend
 
-export PYTHONPATH=~/PycharmProjects/vdiserver/backend/main_app
+export PYTHONPATH=~/PycharmProjects/vdi-server/backend/main_app
 
 alembic revision --autogenerate -m "Controller credentials"
 
