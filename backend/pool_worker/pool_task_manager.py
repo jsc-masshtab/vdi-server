@@ -1,6 +1,12 @@
 # -*- coding: utf-8 -*-
 import sys
 
+import json
+
+import asyncio
+
+from redis_broker import POOL_TASK_QUEUE, a_redis_lpop
+
 from languages import lang_init
 
 from pool_tasks import InitPoolTask, ExpandPoolTask, DeletePoolTask
@@ -27,13 +33,36 @@ class PoolTaskManager:
 
     async def start(self):
         """Действия при старте менеджера"""
+
+        Log.general(_('Pool worker: start loop now'))
+
         # init locks
         await self.pool_locks.fill_start_data()
 
+        # resume tasks
         if '-do-not-resume-tasks' not in sys.argv:
             await self.resume_tasks()
 
-        # print('Argument List:', str(sys.argv))
+        loop = asyncio.get_event_loop()
+        # listening for tasks
+        loop.create_task(self.listen_for_work())
+
+    async def listen_for_work(self):
+
+        # main loop. Await for work
+        while True:
+            try:
+                # wait for task message
+                redis_data = await a_redis_lpop(POOL_TASK_QUEUE)
+                Log.debug('PoolWorker listen_for_work: {}'.format(redis_data))
+                task_data_dict = json.loads(redis_data.decode())
+
+                await self.launch_task(task_data_dict)
+
+            except asyncio.CancelledError:
+                raise
+            except Exception as ex:
+                await Log.error('exception:' + str(ex))
 
     async def resume_tasks(self):
         """

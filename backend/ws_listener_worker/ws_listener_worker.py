@@ -30,7 +30,7 @@ async def listen_for_messages(resources_monitor_manager):
             # wait for message
             redis_message = await a_redis_get_message(redis_subscriber)
 
-            if not isinstance(redis_message['data'], bytes):
+            if redis_message['type'] != 'message':
                 continue
 
             Log.general('redis_message: {}'.format(str(redis_message)))
