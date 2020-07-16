@@ -168,12 +168,25 @@ class TestControllerMutation(graphene.Mutation):
 
 
 class ControllerQuery(graphene.ObjectType):
-    controllers = graphene.List(lambda: ControllerType)
+    controllers = graphene.List(lambda: ControllerType, ordering=graphene.String(), status=StatusGraphene(),
+                                username=graphene.String())
     controller = graphene.Field(lambda: ControllerType, id=graphene.String())
 
+    @staticmethod
+    def build_filters(username, status):
+        filters = []
+        if username is not None:
+            filters.append((Controller.username == username))
+        if status is not None:
+            filters.append((Controller.status == status))
+
+        return filters
+
     @administrator_required
-    async def resolve_controllers(self, _info, **kwargs):
-        controllers = await Controller.query.gino.all()
+    async def resolve_controllers(self, _info, username=None, status=None, ordering=None, **kwargs):
+        filters = ControllerQuery.build_filters(username, status)
+
+        controllers = await Controller.get_objects(filters=filters, ordering=ordering, include_inactive=True)
         objects = [
             ControllerType(**controller.__values__)
             for controller in controllers

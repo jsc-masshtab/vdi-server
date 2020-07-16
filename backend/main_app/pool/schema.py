@@ -342,13 +342,23 @@ def pool_obj_to_type(pool_obj: Pool) -> dict:
 
 class PoolQuery(graphene.ObjectType):
 
-    pools = graphene.List(PoolType, ordering=graphene.String())
+    pools = graphene.List(PoolType, status=StatusGraphene(), ordering=graphene.String())
     pool = graphene.Field(PoolType, pool_id=graphene.String())
 
+    @staticmethod
+    def build_filters(status):
+        filters = []
+        if status is not None:
+            filters.append((Pool.status == status))
+
+        return filters
+
     @administrator_required
-    async def resolve_pools(self, info, ordering=None, **kwargs):
+    async def resolve_pools(self, info, status=None, ordering=None, **kwargs):
+        filters = PoolQuery.build_filters(status)
+
         # Сортировка может быть по полю модели Pool, либо по Pool.EXTRA_ORDER_FIELDS
-        pools = await Pool.get_pools(ordering=ordering)
+        pools = await Pool.get_pools(filters=filters, ordering=ordering)
         objects = [
             pool_obj_to_type(pool)
             for pool in pools

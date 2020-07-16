@@ -37,6 +37,9 @@ class TemplateType(graphene.ObjectType):
     veil_info = graphene.String()
     veil_info_json = graphene.String()
     controller = graphene.Field(ControllerType)
+    node = graphene.String()
+    memory_count = graphene.Int()
+    status = graphene.String()
 
     async def resolve_veil_info_json(self, _info):
         return json.dumps(self.veil_info)
@@ -274,6 +277,15 @@ class VmQuery(graphene.ObjectType):
             elif ordering == 'controller':
                 def sort_lam(template_type):
                     return template_type.controller.address if template_type.controller.address else DEFAULT_NAME
+            elif ordering == 'memory_count':
+                def sort_lam(template_type):
+                    return template_type.memory_count if template_type.memory_count else 0
+            elif ordering == 'status':
+                def sort_lam(template_type):
+                    return template_type.status if template_type.status else DEFAULT_NAME
+            elif ordering == 'node':
+                def sort_lam(template_type):
+                    return template_type.node if template_type.node else DEFAULT_NAME
             else:
                 raise SimpleError(_('Incorrect sort parameter'))
             template_type_list = sorted(template_type_list, key=sort_lam, reverse=reverse)
@@ -352,6 +364,9 @@ class VmQuery(graphene.ObjectType):
 
                 def sort_lam(vm_type):
                     return vm_type.status if vm_type and vm_type.status else DEFAULT_NAME
+            elif ordering == 'controller':
+                def sort_lam(vm_type):
+                    return vm_type.controller.address if vm_type.controller.address else DEFAULT_NAME
             else:
                 raise SimpleError(_('Incorrect sort parameter'))
             vm_type_list = sorted(vm_type_list, key=sort_lam, reverse=reverse)
@@ -363,7 +378,9 @@ class VmQuery(graphene.ObjectType):
     def veil_template_data_to_graphene_type(template_veil_data, controller_address):
         Log.debug('template_veil_data: {}'.format(template_veil_data))
         template_type = TemplateType(id=template_veil_data['id'], verbose_name=template_veil_data['verbose_name'],
-                                     veil_info=template_veil_data)
+                                     veil_info=template_veil_data, memory_count=template_veil_data['memory_count'],
+                                     status=template_veil_data['status'],
+                                     node=template_veil_data['node']['verbose_name'])
         template_type.controller = ControllerType(address=controller_address)
         return template_type
 

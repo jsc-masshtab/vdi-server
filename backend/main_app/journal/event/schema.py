@@ -5,9 +5,13 @@ from sqlalchemy import desc, and_, text
 
 from database import db
 from common.veil_decorators import administrator_required
+from common.utils import extract_ordering_data
+from common.veil_errors import SimpleError
 from journal.event.models import Event, EventReadByUser, EventEntity
 from auth.models import Entity
 from auth.user_schema import User, UserType
+
+from settings import DEFAULT_NAME
 
 from languages import lang_init
 from journal.journal import Log
@@ -69,7 +73,8 @@ class EventQuery(graphene.ObjectType):
         user=graphene.String(),
         read_by=graphene.UUID(),
         entity=graphene.UUID(),
-        entity_type=graphene.String())
+        entity_type=graphene.String(),
+        ordering=graphene.String())
 
     event = graphene.Field(
         lambda: EventType,
@@ -111,8 +116,8 @@ class EventQuery(graphene.ObjectType):
         return [entity[0] for entity in entity_types]
 
     @administrator_required
-    async def resolve_events(self, _info, limit=100, offset=0, event_type=None,
-                             start_date=None, end_date=None, user=None, read_by=None, entity_type=None, **kwargs):
+    async def resolve_events(self, _info, limit=100, offset=0, event_type=None, start_date=None, end_date=None,
+                             user=None, read_by=None, entity_type=None, ordering=None, **kwargs):
         filters = build_filters(event_type, start_date, end_date, user, read_by, entity_type)
 
         query = Event.outerjoin(EventReadByUser).outerjoin(User).outerjoin(
@@ -132,6 +137,20 @@ class EventQuery(graphene.ObjectType):
                 **event.__values__)
             for event in events
         ]
+
+        if ordering:
+            (ordering, reverse) = extract_ordering_data(ordering)
+
+            if ordering == 'user':
+                def sort_lam(event): return event.user if event.user else DEFAULT_NAME
+            # elif ordering == 'message':
+            #     def sort_lam(event): return event.message if event.message else DEFAULT_NAME
+            elif ordering == 'created':
+                def sort_lam(event): return event.created if event.created else "2000-01-01T00:00:01Z"
+            else:
+                raise SimpleError(_('The sort parameter is incorrect'))
+            event_type_list = sorted(event_type_list, key=sort_lam, reverse=reverse)
+
         return event_type_list
 
     @administrator_required

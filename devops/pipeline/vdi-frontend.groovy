@@ -1,7 +1,7 @@
 def currentDate = new Date().format('yyyyMMddHHmmss')
 def slackNotify = false
 
-// git@192.168.10.145:vdi/vdiserver.git
+// git@192.168.10.145:vdi/vdi-server.git
 // $BRANCH
 // devops/pipeline/vdi-frontend.groovy
 
@@ -44,7 +44,7 @@ node("$AGENT") {
                         branches: [[name: '$BRANCH']],
                         doGenerateSubmoduleConfigurations: false,
                         extensions: [], submoduleCfg: [],
-                        userRemoteConfigs: [[credentialsId: '', url: 'git@gitlab.bazalt.team:vdi/vdiserver.git']]
+                        userRemoteConfigs: [[credentialsId: '', url: 'git@gitlab.bazalt.team:vdi/vdi-server.git']]
                     ])
                     
                     println "env.DATE - $env.DATE"

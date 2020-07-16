@@ -3,12 +3,13 @@ import asyncio
 import json
 import uuid
 from enum import Enum
-from sqlalchemy import union_all, case, literal_column, desc, text, Enum as AlchemyEnum
+from sqlalchemy import and_, union_all, case, literal_column, desc, text, Enum as AlchemyEnum
 from sqlalchemy.dialects.postgresql import UUID, ARRAY
 from asyncpg.exceptions import UniqueViolationError
 
 from common.veil_errors import VmCreationError, PoolCreationError, HttpError, SimpleError, ValidationError
 from common.veil_client import VeilHttpClient
+from common.utils import extract_ordering_data
 from auth.license.utils import License
 from settings import VEIL_WS_MAX_TIME_TO_WAIT
 from database import db, Status, EntityType, AbstractClass
@@ -120,11 +121,7 @@ class Pool(AbstractClass):
             return query
 
         # Определяем порядок сортировки по наличию "-" вначале строки
-        if ordering.find('-', 0, 1) == 0:
-            reversed_order = True
-            ordering = ordering[1:]
-        else:
-            reversed_order = False
+        (ordering, reversed_order) = extract_ordering_data(ordering)
 
         # TODO: если сделать валидацию переданных полей на сортировку - try не нужен
         try:
@@ -244,10 +241,12 @@ class Pool(AbstractClass):
         return await query.gino.first()
 
     @staticmethod
-    async def get_pools(ordering=None):
+    async def get_pools(filters=None, ordering=None):
         """Такое построение запроса вызвано желанием иметь только 1 запрос с изначальным построением."""
         # TODO: проверить используется ли. Заменить на Pool.get?
         query = Pool.get_pools_query(ordering=ordering)
+        if filters:
+            query = query.where(and_(*filters))
         return await query.gino.all()
 
     @staticmethod
