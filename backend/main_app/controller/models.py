@@ -10,7 +10,7 @@ from sqlalchemy.dialects.postgresql import UUID
 
 from auth.utils import crypto
 from controller.client import ControllerClient
-from database import db, Status, EntityType, AbstractClass
+from database import db, Status, EntityType, AbstractClass, AbstractSortableStatusModel
 from common.veil_errors import SimpleError, BadRequest, ValidationError
 
 from redis_broker import send_cmd_to_ws_monitor, WsMonitorCmd
@@ -32,7 +32,7 @@ _ = lang_init()
 #  При активации контроллера нужно брать задачи в очереди.
 
 
-class Controller(AbstractClass):
+class Controller(AbstractSortableStatusModel, AbstractClass):
     # TODO: indexes
     __tablename__ = 'controller'
 
