@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import sys
 
 from languages import lang_init
 
@@ -29,11 +30,21 @@ class PoolTaskManager:
         # init locks
         await self.pool_locks.fill_start_data()
 
-        # Анализируем таблицу тасок в бд.
-        # Продолжить таски в статусе IN_PROGRESS и CANCELLED при соблюдении условий:
-        # - У таски должен быть поднят флаг resume_on_app_startup.
-        # - Если внезапно присутствуют несколько тасок, работающих над одним пулом, то возобновляем только одну из них
-        # в следующем приоритете: DELETING > CREATING > EXPANDING.
+        if '-do-not-resume-tasks' not in sys.argv:
+            await self.resume_tasks()
+
+        # print('Argument List:', str(sys.argv))
+
+    async def resume_tasks(self):
+        """
+        Анализируем таблицу тасок в бд.
+        Продолжить таски в статусе IN_PROGRESS и CANCELLED при соблюдении условий:
+        - У таски должен быть поднят флаг resume_on_app_startup.
+        - Если внезапно присутствуют несколько тасок, работающих над одним пулом, то возобновляем только одну из них
+        в следующем приоритете: DELETING > CREATING > EXPANDING.
+        """
+
+        Log.general('Resuming tasks')
 
         pools = await AutomatedPool.query.gino.all()
         # print('cur auto pools ', pools)
@@ -57,6 +68,14 @@ class PoolTaskManager:
         task_ids_to_launch = [task.id for task in tasks_to_launch]
         st = await TaskModel.delete.where(TaskModel.id.notin_(task_ids_to_launch)).gino.status()
         Log.debug('Deleted from db tasks: {}'.format(st))
+
+        # # Остальным задачам выставить флаг resume_on_app_startup = False
+        # task_ids_to_launch = [task.id for task in tasks_to_launch]
+        # st = await TaskModel.update.values(resume_on_app_startup=False).where(
+        #     TaskModel.id.notin_(task_ids_to_launch)).gino.status()
+        # Log.debug('Other tasks: {}'.format(st))
+        # # Возможно стоит ввнести таске столбец дата создания и удалять все таски
+        # # кроме последних 100 (Для лога и отладки), чтоб не копить их вечно.
 
         # Resume tasks
         for task in tasks_to_launch:

@@ -133,8 +133,11 @@ def init_exit_handler():
             tasks = [task for task in asyncio.Task.all_tasks() if task is not asyncio.tasks.Task.current_task()]
             list(map(lambda task: task.cancel(), tasks))
 
-            results = await asyncio.gather(*tasks, return_exceptions=True)
-            print('finished awaiting cancelled tasks, results: {0}'.format(results))
+            results_future = asyncio.gather(*tasks, return_exceptions=True)
+            # Был случай, что вернулось не future, поэтому проверяем.
+            if asyncio.isfuture(results_future):
+                results = await results_future
+                print('finished awaiting cancelled tasks, results: {0}'.format(results))
 
         finally:
             loop.stop()

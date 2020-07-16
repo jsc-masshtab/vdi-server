@@ -1,7 +1,7 @@
 import pytest
 import uuid
 import json
-from subprocess import Popen
+from subprocess import Popen, TimeoutExpired
 import sys
 import asyncio
 
@@ -146,15 +146,20 @@ def get_test_pool_name():
 async def fixt_launch_workers():
 
     ws_listener_worker = Popen([sys.executable, "ws_listener_worker/ws_listener_worker.py"])
-    pool_worker = Popen([sys.executable, "pool_worker/pool_worker.py"])
+    pool_worker = Popen([sys.executable, "pool_worker/pool_worker.py", "-do-not-resume-tasks"])
 
     await yield_()
 
-    ws_listener_worker.terminate()
-    ws_listener_worker.wait(1)
+    def stop_worker(worker):
+        worker.terminate()
+        try:
+            worker.wait(1)
+        except TimeoutExpired:
+            pass
+        worker.kill()
 
-    pool_worker.terminate()
-    pool_worker.wait(1)
+    stop_worker(ws_listener_worker)
+    stop_worker(pool_worker)
 
 
 @pytest.fixture
@@ -240,7 +245,7 @@ async def fixt_create_automated_pool(fixt_controller):
 
         return False
 
-    POOL_CREATION_TIMEOUT = 80
+    POOL_CREATION_TIMEOUT = 60
 
     is_pool_successfully_created = await a_redis_wait_for_message(INTERNAL_EVENTS_CHANNEL,
                                                                   _check_if_pool_created, POOL_CREATION_TIMEOUT)
