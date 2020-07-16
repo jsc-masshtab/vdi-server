@@ -123,7 +123,7 @@ export class AddPoolService {
     public createDinamicPool(connection_types: [string], verbose_name: string, template_id: string, cluster_id: string,
                              node_id: string, datapool_id: string, initial_size: number,
                              reserve_size: number, total_size: number, vm_name_template: string, controller_ip: string,
-                             create_thin_clones: boolean, min_free_vms_amount: number) {
+                             create_thin_clones: boolean, increase_step: number) {
 
         return this.service.mutate<any>({
             mutation: gql`
@@ -132,7 +132,7 @@ export class AddPoolService {
                                         $datapool_id: UUID!,$initial_size: Int,
                                         $reserve_size: Int,$total_size: Int,
                                         $vm_name_template: String,
-                                        $controller_ip: String!,$create_thin_clones: Boolean, $min_free_vms_amount: Int)
+                                        $controller_ip: String!,$create_thin_clones: Boolean, $increase_step: Int)
                                 {
                                 addDynamicPool(connection_types: $connection_types, verbose_name: $verbose_name, template_id: $template_id,
                                         cluster_id: $cluster_id,node_id: $node_id,
@@ -140,7 +140,7 @@ export class AddPoolService {
                                         reserve_size: $reserve_size,total_size:$total_size,
                                         vm_name_template: $vm_name_template,
                                         controller_ip: $controller_ip,create_thin_clones:$create_thin_clones,
-                                        min_free_vms_amount: $min_free_vms_amount
+                                        increase_step: $increase_step
                                         )
                                         {
                                             ok
@@ -161,7 +161,7 @@ export class AddPoolService {
                 vm_name_template,
                 controller_ip,
                 create_thin_clones,
-                min_free_vms_amount
+                increase_step
             }
         });
     }
