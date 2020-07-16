@@ -9,6 +9,7 @@ from asyncpg.exceptions import UniqueViolationError
 
 from common.veil_errors import VmCreationError, PoolCreationError, HttpError, SimpleError, ValidationError
 from common.veil_client import VeilHttpClient
+from common.utils import extract_ordering_data
 from auth.license.utils import License
 from settings import VEIL_WS_MAX_TIME_TO_WAIT
 from database import db, Status, EntityType, AbstractClass
@@ -120,11 +121,7 @@ class Pool(AbstractClass):
             return query
 
         # Определяем порядок сортировки по наличию "-" вначале строки
-        if ordering.find('-', 0, 1) == 0:
-            reversed_order = True
-            ordering = ordering[1:]
-        else:
-            reversed_order = False
+        (ordering, reversed_order) = extract_ordering_data(ordering)
 
         # TODO: если сделать валидацию переданных полей на сортировку - try не нужен
         try:

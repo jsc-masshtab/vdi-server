@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 import graphene
 from graphql import GraphQLError
-from sqlalchemy.sql import and_
 
 from common.veil_decorators import administrator_required
 from common.veil_errors import SimpleError
@@ -169,7 +168,8 @@ class TestControllerMutation(graphene.Mutation):
 
 
 class ControllerQuery(graphene.ObjectType):
-    controllers = graphene.List(lambda: ControllerType, status=StatusGraphene(), username=graphene.String())
+    controllers = graphene.List(lambda: ControllerType, ordering=graphene.String(), status=StatusGraphene(),
+                                username=graphene.String())
     controller = graphene.Field(lambda: ControllerType, id=graphene.String())
 
     @staticmethod
@@ -183,10 +183,10 @@ class ControllerQuery(graphene.ObjectType):
         return filters
 
     @administrator_required
-    async def resolve_controllers(self, _info, username=None, status=None, **kwargs):
+    async def resolve_controllers(self, _info, username=None, status=None, ordering=None, **kwargs):
         filters = ControllerQuery.build_filters(username, status)
 
-        controllers = await Controller.query.where(and_(*filters)).gino.all()
+        controllers = await Controller.get_objects(filters=filters, ordering=ordering, include_inactive=True)
         objects = [
             ControllerType(**controller.__values__)
             for controller in controllers
