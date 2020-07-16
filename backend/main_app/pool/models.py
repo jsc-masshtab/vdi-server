@@ -3,7 +3,7 @@ import asyncio
 import json
 import uuid
 from enum import Enum
-from sqlalchemy import union_all, case, literal_column, desc, text, Enum as AlchemyEnum
+from sqlalchemy import and_, union_all, case, literal_column, desc, text, Enum as AlchemyEnum
 from sqlalchemy.dialects.postgresql import UUID, ARRAY
 from asyncpg.exceptions import UniqueViolationError
 
@@ -244,10 +244,12 @@ class Pool(AbstractClass):
         return await query.gino.first()
 
     @staticmethod
-    async def get_pools(ordering=None):
+    async def get_pools(filters=None, ordering=None):
         """Такое построение запроса вызвано желанием иметь только 1 запрос с изначальным построением."""
         # TODO: проверить используется ли. Заменить на Pool.get?
         query = Pool.get_pools_query(ordering=ordering)
+        if filters:
+            query = query.where(and_(*filters))
         return await query.gino.all()
 
     @staticmethod
