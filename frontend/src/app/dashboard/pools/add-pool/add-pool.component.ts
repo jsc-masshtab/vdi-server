@@ -118,7 +118,7 @@ export class PoolAddComponent implements OnInit, OnDestroy {
       size: this.fb.group({
         initial_size: ['', [Validators.required, Validators.max(200), Validators.min(1)]],
         total_size: ['', [Validators.required, Validators.max(1000), Validators.min(1)]],
-        min_free_vms_amount: ['', [Validators.required, Validators.min(1)]],
+        increase_step: ['', [Validators.required, Validators.min(1)]],
         reserve_size: ['', [Validators.required, Validators.max(200), Validators.min(1)]],
       }, {validators: this.totalSizeValidator()}),
       create_thin_clones: true });
@@ -362,7 +362,7 @@ export class PoolAddComponent implements OnInit, OnDestroy {
         },
         {
           title: 'Пороговое количество свободных ВМ',
-          property: 'min_free_vms_amount',
+          property: 'increase_step',
           type: 'string'
         },
         {
@@ -412,7 +412,7 @@ export class PoolAddComponent implements OnInit, OnDestroy {
       if (group.controls['total_size'].value < group.controls['initial_size'].value) {
         return {maxLessInitial: true};
       }
-      if (group.controls['min_free_vms_amount'].value > group.controls['reserve_size'].value) {
+      if (group.controls['increase_step'].value > group.controls['reserve_size'].value) {
         return {freeVmsMoreReserve: true};
       }
     };
@@ -469,7 +469,7 @@ export class PoolAddComponent implements OnInit, OnDestroy {
       this.finishPoolView.total_size = formValue.size.total_size;
       this.finishPoolView.vm_name_template = formValue.vm_name_template;
       this.finishPoolView.create_thin_clones = formValue.create_thin_clones;
-      this.finishPoolView.min_free_vms_amount = formValue.size.min_free_vms_amount;
+      this.finishPoolView.increase_step = formValue.size.increase_step;
     }
     this.finishPoolView.verbose_name = formValue.verbose_name;
     this.finishPoolView.type = this.chooseTypeForm.value.type;
@@ -497,7 +497,7 @@ export class PoolAddComponent implements OnInit, OnDestroy {
                               formValue.vm_name_template,
                               formValue.controller_ip,
                               formValue.create_thin_clones,
-                              formValue.size.min_free_vms_amount)
+                              formValue.size.increase_step)
         .subscribe((res) => {
           if (res) {
             this.dialogRef.close();
