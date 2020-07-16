@@ -96,7 +96,8 @@ class GroupType(graphene.ObjectType):
 
 
 class GroupQuery(graphene.ObjectType):
-    groups = graphene.List(GroupType, limit=graphene.Int(), offset=graphene.Int(), ordering=graphene.String())
+    groups = graphene.List(GroupType, limit=graphene.Int(default_value=100), offset=graphene.Int(default_value=0),
+                           ordering=graphene.String())
     group = graphene.Field(GroupType, id=graphene.UUID())
 
     @readonly_required
@@ -107,7 +108,7 @@ class GroupQuery(graphene.ObjectType):
         return GroupType.instance_to_type(group)
 
     @readonly_required
-    async def resolve_groups(self, info, limit=100, offset=0, ordering=None, **kwargs):  # noqa
+    async def resolve_groups(self, info, limit, offset, ordering=None, **kwargs):  # noqa
         groups = await Group.get_objects(limit, offset, ordering=ordering, include_inactive=True)
         objects = [
             GroupType.instance_to_type(group)

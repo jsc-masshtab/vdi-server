@@ -168,11 +168,12 @@ class TestControllerMutation(graphene.Mutation):
 
 
 class ControllerQuery(graphene.ObjectType):
-    controllers = graphene.List(lambda: ControllerType, limit=graphene.Int(), offset=graphene.Int())
+    controllers = graphene.List(lambda: ControllerType, limit=graphene.Int(default_value=100),
+                                offset=graphene.Int(default_value=0))
     controller = graphene.Field(lambda: ControllerType, id=graphene.String())
 
     @administrator_required
-    async def resolve_controllers(self, _info, limit=100, offset=0, **kwargs):
+    async def resolve_controllers(self, _info, limit, offset, **kwargs):
         controllers = await Controller.get_objects(limit, offset)
         objects = [
             ControllerType(**controller.__values__)

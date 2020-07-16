@@ -347,12 +347,12 @@ def pool_obj_to_type(pool_obj: Pool) -> dict:
 
 
 class PoolQuery(graphene.ObjectType):
-
-    pools = graphene.List(PoolType, limit=graphene.Int(), offset=graphene.Int(), ordering=graphene.String())
+    pools = graphene.List(PoolType, limit=graphene.Int(default_value=100), offset=graphene.Int(default_value=0),
+                          ordering=graphene.String())
     pool = graphene.Field(PoolType, pool_id=graphene.String())
 
     @administrator_required
-    async def resolve_pools(self, info, limit=100, offset=0, ordering=None, **kwargs):
+    async def resolve_pools(self, info, limit, offset, ordering=None, **kwargs):
         # Сортировка может быть по полю модели Pool, либо по Pool.EXTRA_ORDER_FIELDS
         pools = await Pool.get_pools(limit, offset, ordering=ordering)
         objects = [

@@ -173,7 +173,7 @@ class AuthenticationDirectoryType(graphene.ObjectType):
     status = StatusGraphene()
     sso = graphene.Boolean(default_value=False)
 
-    mappings = graphene.List(MappingType, limit=graphene.Int(), offset=graphene.Int())
+    mappings = graphene.List(MappingType, limit=graphene.Int(default_value=100), offset=graphene.Int(default_value=0))
 
     assigned_ad_groups = graphene.List(AuthenticationDirectoryGroupType)
     possible_ad_groups = graphene.List(AuthenticationDirectoryGroupType)
@@ -183,7 +183,7 @@ class AuthenticationDirectoryType(graphene.ObjectType):
         return '*' * 7
 
     @readonly_required
-    async def resolve_mappings(self, _info, limit=100, offset=0, **kwargs):
+    async def resolve_mappings(self, _info, limit, offset, **kwargs):
         query = Mapping.join(
             GroupAuthenticationDirectoryMapping.query.where(
                 AuthenticationDirectory.id == self.id).alias()).select().order_by(desc(Mapping.priority))
@@ -204,7 +204,8 @@ class AuthenticationDirectoryType(graphene.ObjectType):
 
 
 class AuthenticationDirectoryQuery(graphene.ObjectType):
-    auth_dirs = graphene.List(AuthenticationDirectoryType, limit=graphene.Int(), offset=graphene.Int(),
+    auth_dirs = graphene.List(AuthenticationDirectoryType, limit=graphene.Int(default_value=100),
+                              offset=graphene.Int(default_value=0),
                               ordering=graphene.String())
     auth_dir = graphene.Field(AuthenticationDirectoryType, id=graphene.UUID())
     group_members = graphene.Field(graphene.List(AuthenticationDirectoryGroupMembersType), auth_dir_id=graphene.UUID(),
@@ -225,7 +226,7 @@ class AuthenticationDirectoryQuery(graphene.ObjectType):
         return AuthenticationDirectoryQuery.instance_to_type(auth_dir)
 
     @readonly_required
-    async def resolve_auth_dirs(self, info, ordering=None, limit=100, offset=0, **kwargs):
+    async def resolve_auth_dirs(self, info, limit, offset, ordering=None, **kwargs):
         auth_dirs = await AuthenticationDirectory.get_objects(limit, offset, ordering=ordering)
         objects = [
             AuthenticationDirectoryQuery.instance_to_type(auth_dir)

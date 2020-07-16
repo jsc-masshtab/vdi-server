@@ -111,7 +111,7 @@ class VdiFrontWsHandler(websocket.WebSocketHandler):  # noqa
                         await self.write_msg(redis_message_data)
 
             except Exception as ex:
-                await Log.debug(str(ex))
+                Log.debug(str(ex))
 
     async def write_msg(self, msg):
         try:

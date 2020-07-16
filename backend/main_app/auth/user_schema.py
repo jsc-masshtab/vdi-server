@@ -145,7 +145,8 @@ class UserType(graphene.ObjectType):
 
 
 class UserQuery(graphene.ObjectType):
-    users = graphene.List(UserType, limit=graphene.Int(), offset=graphene.Int(), ordering=graphene.String())
+    users = graphene.List(UserType, limit=graphene.Int(default_value=100), offset=graphene.Int(default_value=0),
+                          ordering=graphene.String())
     user = graphene.Field(UserType, id=graphene.UUID(), username=graphene.String())
 
     @readonly_required
@@ -159,7 +160,7 @@ class UserQuery(graphene.ObjectType):
         return UserType.instance_to_type(user)
 
     @readonly_required
-    async def resolve_users(self, info, limit=100, offset=0, ordering=None, **kwargs):
+    async def resolve_users(self, info, limit, offset, ordering=None, **kwargs):
         users = await User.get_objects(limit, offset, ordering=ordering, include_inactive=True)
         objects = [
             UserType.instance_to_type(user)
