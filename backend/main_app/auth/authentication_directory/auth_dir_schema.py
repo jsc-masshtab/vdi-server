@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 import graphene
 from graphene import Enum as GrapheneEnum
-from sqlalchemy.sql import desc
 import re
 
 from database import StatusGraphene, db, Status
@@ -9,7 +8,7 @@ from common.veil_validators import MutationValidation
 from common.veil_errors import SimpleError, ValidationError
 from common.veil_decorators import security_administrator_required, readonly_required
 
-from auth.authentication_directory.models import AuthenticationDirectory, GroupAuthenticationDirectoryMapping, Mapping
+from auth.authentication_directory.models import AuthenticationDirectory, Mapping
 from auth.models import Group
 
 from languages import lang_init
@@ -182,12 +181,9 @@ class AuthenticationDirectoryType(graphene.ObjectType):
         """Dummy value for not displayed field."""
         return '*' * 7
 
-    @readonly_required
-    async def resolve_mappings(self, _info, limit, offset, **kwargs):
-        query = Mapping.join(
-            GroupAuthenticationDirectoryMapping.query.where(
-                AuthenticationDirectory.id == self.id).alias()).select().order_by(desc(Mapping.priority))
-        return await query.limit(limit).offset(offset).gino.load(Mapping).all()
+    async def resolve_mappings(self, _info, limit, offset):
+        auth_dir = await AuthenticationDirectory.get(self.id)
+        return await auth_dir.mappings_paginator(limit=limit, offset=offset)
 
     async def resolve_assigned_ad_groups(self, _info):
         """Группы созданные при предыдущих синхронизациях."""

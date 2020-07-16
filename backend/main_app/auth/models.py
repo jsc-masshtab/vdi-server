@@ -359,6 +359,17 @@ class Group(AbstractSortableStatusModel, AbstractClass):
             (text('anon_1.id is null')) & (User.is_active))  # noqa
         return await possible_users_query.order_by(User.username).gino.load(User).all()
 
+    @property
+    def assigned_users_query(self):
+        return User.join(UserGroup.query.where(UserGroup.group_id == self.id).alias()).select()
+
+    @property
+    async def assigned_users(self):
+        return await self.assigned_users_query.gino.load(User).all()
+
+    async def assigned_users_paginator(self, limit, offset):
+        return await self.assigned_users_query.limit(limit).offset(offset).gino.load(User).all()
+
     @staticmethod
     async def soft_create(verbose_name, creator, description=None, id=None, ad_guid=None):
         group_kwargs = {'verbose_name': verbose_name, 'description': description}

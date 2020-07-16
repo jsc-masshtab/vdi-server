@@ -2,7 +2,7 @@
 import graphene
 
 from database import db, RoleTypeGraphene, Role
-from auth.models import Group, User, UserGroup
+from auth.models import Group, User
 from common.veil_validators import MutationValidation
 from common.veil_errors import SimpleError, ValidationError
 from common.veil_decorators import security_administrator_required, readonly_required
@@ -59,7 +59,8 @@ class GroupType(graphene.ObjectType):
     date_created = graphene.DateTime()
     date_updated = graphene.DateTime()
 
-    assigned_users = graphene.List(UserType)
+    assigned_users = graphene.List(UserType, limit=graphene.Int(default_value=100),
+                                   offset=graphene.Int(default_value=0))
     possible_users = graphene.List(UserType)
 
     assigned_roles = graphene.List(RoleTypeGraphene)
@@ -73,10 +74,9 @@ class GroupType(graphene.ObjectType):
                          date_created=model_instance.date_created,
                          date_updated=model_instance.date_updated)
 
-    @readonly_required
-    async def resolve_assigned_users(self, _info, **kwargs):
-        users_query = User.join(UserGroup.query.where(UserGroup.group_id == self.id).alias()).select()
-        return await users_query.gino.load(User).all()
+    async def resolve_assigned_users(self, _info, limit, offset):
+        group = await Group.get(self.id)
+        return await group.assigned_users_paginator(limit=limit, offset=offset)
 
     async def resolve_possible_users(self, _info):
         group = await Group.get(self.id)
