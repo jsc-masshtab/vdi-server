@@ -204,7 +204,7 @@ class Vm(db.Model):
                 elif ecp_detail and 'passed node is not valid' in ecp_detail:
                     # await log.warning(_('Unknown node {}').format(node_id))
                     raise VmCreationError(_('Controller can\'t create VM. Unknown node.'))
-                elif ecp_detail and 'copy not zfs disks with snapshots to zfs pool':
+                elif ecp_detail and 'copy not zfs disks with snapshots to zfs pool' in ecp_detail:
                     raise VmCreationError(
                         _('Controller can\'t create VM. Copy not zfs disks with snapshot to zfs pool'))
                 elif ecp_errors and ecp_detail and inner_retry_count < 30:
