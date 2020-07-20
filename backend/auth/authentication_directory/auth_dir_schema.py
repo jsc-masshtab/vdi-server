@@ -113,7 +113,7 @@ class MappingType(graphene.ObjectType):
 class AuthenticationDirectoryGroupType(graphene.ObjectType):
     ad_guid = graphene.UUID()
     verbose_name = graphene.String()
-    ad_search_cn = graphene.String()
+    ad_cn = graphene.String()
 
 
 class AuthenticationDirectoryGroupMembersType(graphene.ObjectType):
@@ -137,7 +137,7 @@ class AuthenticationDirectorySyncGroupType(graphene.InputObjectType):
     group_ad_guid = graphene.UUID(required=True)
     group_verbose_name = graphene.String(required=True)
     group_ad_cn = graphene.String(required=True)
-    group_members = graphene.List(AuthenticationDirectorySyncGroupMembersType)
+    # group_members = graphene.List(AuthenticationDirectorySyncGroupMembersType)
 
 
 class AuthenticationDirectoryType(graphene.ObjectType):
@@ -203,8 +203,8 @@ class AuthenticationDirectoryType(graphene.ObjectType):
 class AuthenticationDirectoryQuery(graphene.ObjectType):
     auth_dirs = graphene.List(AuthenticationDirectoryType, ordering=graphene.String())
     auth_dir = graphene.Field(AuthenticationDirectoryType, id=graphene.UUID())
-    group_members = graphene.Field(graphene.List(AuthenticationDirectoryGroupMembersType), auth_dir_id=graphene.UUID(),
-                                   group_cn=graphene.NonNull(graphene.String))
+    # group_members = graphene.Field(graphene.List(AuthenticationDirectoryGroupMembersType), auth_dir_id=graphene.UUID(),
+    #                                group_cn=graphene.NonNull(graphene.String))
 
     @staticmethod
     def instance_to_type(model_instance):
@@ -229,14 +229,14 @@ class AuthenticationDirectoryQuery(graphene.ObjectType):
         ]
         return objects
 
-    @security_administrator_required
-    async def resolve_group_members(self, _info, auth_dir_id, group_cn):
-        """Пользователи члены групп в Authentication Directory."""
-        auth_dir = await AuthenticationDirectory.get(auth_dir_id)
-        if not auth_dir:
-            raise SimpleError(_('No such Authentication Directory.'))
-        group_members = await auth_dir.get_members_of_ad_group(group_cn)
-        return group_members
+    # @security_administrator_required
+    # async def resolve_group_members(self, _info, auth_dir_id, group_cn):
+    #     """Пользователи члены групп в Authentication Directory."""
+    #     auth_dir = await AuthenticationDirectory.get(auth_dir_id)
+    #     if not auth_dir:
+    #         raise SimpleError(_('No such Authentication Directory.'))
+    #     group_members = await auth_dir.get_members_of_ad_group(group_cn)
+    #     return group_members
 
 
 class CreateAuthenticationDirectoryMutation(graphene.Mutation, AuthenticationDirectoryValidator):

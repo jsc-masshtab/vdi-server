@@ -508,7 +508,7 @@ class AuthenticationDirectory(db.Model, AbstractSortableStatusModel):
                     object_guid = unpack_guid(object_guid)
                 # Нужно оба параметра
                 if object_guid and cn:
-                    groups_list.append({'ad_guid': object_guid, 'verbose_name': cn, 'ad_search_cn': ad_search_cn})
+                    groups_list.append({'ad_guid': object_guid, 'verbose_name': cn, 'ad_cn': ad_search_cn})
         except ldap.LDAPError:
             # На случай ошибочности запроса к AD
             msg = _('Fail to connect to Authentication Directory. Check service information')
@@ -616,6 +616,7 @@ class AuthenticationDirectory(db.Model, AbstractSortableStatusModel):
         """При необходимости создает пользователей из Authentication Directory на VDI."""
         users_list = list()
         async with db.transaction():
+            new_users_count = 0
             for user_info in users_info:
                 username = user_info['username']
                 last_name = user_info.get('last_name')
@@ -631,27 +632,9 @@ class AuthenticationDirectory(db.Model, AbstractSortableStatusModel):
                                               email=email)
                 if user:
                     users_list.append(user.id)
+                    new_users_count += 1
+        await log.info(_('{} new users synced from Authentication Directory.').format(new_users_count))
         return users_list
-
-    async def synchronize(self, data):
-        """Синхронизирует переданные группы и пользователи из Authentication Directory на VDI."""
-        # Создаем группу
-        group_info = {
-            'ad_guid': data['group_ad_guid'],
-            'verbose_name': data['group_verbose_name'],
-            'ad_cn': data['group_ad_cn']
-        }
-        group = await self.sync_group(group_info)
-        # Создаем пользователей
-        users_info = data.get('group_members')
-        if users_info and isinstance(users_info, list):
-            users_list = await self.sync_users(users_info)
-        else:
-            users_list = None
-        # Включаем пользователей в группу
-        if users_list:
-            await group.add_users(users_list)
-        return True
 
     async def synchronize_group(self, group_id):
         """Синхронизирует ранее синхронизированную группу и пользователей из Authentication Directory на VDI."""
@@ -670,10 +653,21 @@ class AuthenticationDirectory(db.Model, AbstractSortableStatusModel):
                 exclude_user_list.append(vdi_user.id)
         # Исключаем лишних пользователей
         await group.remove_users(exclude_user_list)
-        # Синхронизируем новых пользователей
-        sync_data = {'group_ad_guid': group.ad_guid, 'group_verbose_name': group.verbose_name,
-                     'group_members': ad_group_members, 'group_ad_cn': group.ad_cn}
-        await self.synchronize(sync_data)
+        # Синхронизируем пользователей
+        await self.sync_users(ad_group_members)
+        return True
+
+    async def synchronize(self, data):
+        """Синхронизирует переданные группы и пользователи из Authentication Directory на VDI."""
+        # Создаем группу
+        group_info = {
+            'ad_guid': data['group_ad_guid'],
+            'verbose_name': data['group_verbose_name'],
+            'ad_cn': data['group_ad_cn']
+        }
+        group = await self.sync_group(group_info)
+        # Синхронизируем пользователей
+        await self.synchronize_group(group.id)
         return True
 
 
