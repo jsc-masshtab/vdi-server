@@ -287,7 +287,7 @@ class AuthenticationDirectory(db.Model, AbstractSortableStatusModel):
         :param ldap_server: объект сервера службы каталогов
         :return: атрибуты пользователя службы каталогов
         """
-        base = 'dc={},dc={}'.format(*domain_name.split('.'))
+        base = ','.join(['dc={}'.format(dc) for dc in domain_name.split('.')])
         user_info_filter = '(&(objectClass=user)(sAMAccountName={}))'.format(account_name)
         user_info, user_groups = ldap_server.search_s(base, ldap.SCOPE_SUBTREE,
                                                       user_info_filter, ['memberOf'])[0]
@@ -483,7 +483,7 @@ class AuthenticationDirectory(db.Model, AbstractSortableStatusModel):
         if not connection:
             return list()
         try:
-            dc_filter = 'dc={},dc={}'.format(*self.domain_name.split('.'))
+            dc_filter = ','.join(['dc={}'.format(dc) for dc in self.domain_name.split('.')])
             groups_filter = await self.build_group_filter()
             # groups: [('CN=Users, DC=team', {'objectGUID': [b'~\xecIO\xa3\x88vE\xbb0\x86\xfe\xa0\x0fA+']}), ]
             groups = connection.search_s(dc_filter, ldap.SCOPE_SUBTREE, groups_filter)
@@ -546,7 +546,7 @@ class AuthenticationDirectory(db.Model, AbstractSortableStatusModel):
         if not connection:
             return list()
         try:
-            dc_filter = 'dc={},dc={}'.format(*self.domain_name.split('.'))
+            dc_filter = ','.join(['dc={}'.format(dc) for dc in self.domain_name.split('.')])
             users_filter = self.build_group_user_filter(group_cn)
             users = connection.search_s(dc_filter, ldap.SCOPE_SUBTREE, users_filter)
 
