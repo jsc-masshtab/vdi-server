@@ -121,10 +121,10 @@ class ResourcesMonitor():
             while self._running_flag:
                 msg = await self._ws_connection.read_message()
                 if msg is None:  # according to doc it means that connection closed
-                    Log.debug('{} Probably connection is closed by server.').format(__class__.__name__)  # noqa
+                    Log.debug('{} Probably connection is closed by server.'.format(__class__.__name__))  # noqa
                     break
                 elif 'token error' in msg:
-                    Log.debug('{} token error. Closing connection.').format(__class__.__name__)  # noqa
+                    Log.debug('{} token error. Closing connection.'.format(__class__.__name__))  # noqa
                     # Если токен эррор, то закрываем соединение и и переходим к попыткам коннекта (начало первого while)
                     await self._close_connection()
                     # await Controller.invalidate_auth(self._controller_id)
@@ -181,4 +181,4 @@ class ResourcesMonitor():
             try:
                 self._ws_connection.close()
             except Exception as E:
-                await Log.debug(str(E))
+                Log.debug(str(E))
