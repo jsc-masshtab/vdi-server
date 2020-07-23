@@ -111,6 +111,7 @@ class MappingType(graphene.ObjectType):
 
 
 class AuthenticationDirectoryGroupType(graphene.ObjectType):
+    id = graphene.UUID()
     ad_guid = graphene.UUID()
     verbose_name = graphene.String()
     ad_cn = graphene.String()
