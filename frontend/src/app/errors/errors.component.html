@@ -2,6 +2,5 @@
 	<div class="message" *ngFor="let error of errors; let i = index" [@animForm]>
 		<button class="message-close" type="button" (click)="closeMessage(i)"><fa-icon [icon]="['fas','times-circle']"></fa-icon></button>
 		<span *ngIf="error !== ''">{{ error.message || error || 'фронтенд не знает такого формата ошибки' }}</span>
-		<span *ngIf="error === ''">С бэка пришла Пустая строка ошибки</span>
 	</div>
 </div>

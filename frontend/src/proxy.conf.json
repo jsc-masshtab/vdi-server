@@ -1,6 +1,10 @@
 {
   "/api": {
-    "target": "http://192.168.6.0",
+    "target": "http://192.168.5.201/",
     "secure": false
+  },
+  "/subscriptions": {
+    "target": "ws://192.168.5.201:8888/",
+    "ws": true
   }
 }
