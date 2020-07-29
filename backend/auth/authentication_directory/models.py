@@ -365,7 +365,9 @@ class AuthenticationDirectory(db.Model, AbstractSortableStatusModel):
 
             if user_veil_groups:
                 for group in await role_mapping.assigned_groups:
-                    await group.add_user(user.id)
+                    user_groups = await user.assigned_groups_ids
+                    if group.id not in user_groups:
+                        await group.add_user(user.id)
                 return True
         return False
 
@@ -394,7 +396,6 @@ class AuthenticationDirectory(db.Model, AbstractSortableStatusModel):
 
         account_name, domain_name = extract_domain_from_username(username)
         user, created = await cls._get_user(account_name)
-
         if not domain_name:
             domain_name = authentication_directory.domain_name
             username = '@'.join([username, domain_name])
@@ -425,8 +426,11 @@ class AuthenticationDirectory(db.Model, AbstractSortableStatusModel):
             created = False
             raise ValidationError(_('Server down (ldap).'))
         finally:
-            if not success and created:
-                await user.delete()
+            try:
+                if not success and created:
+                    await user.delete()
+            except:  # noqa
+                pass
         return account_name
 
     async def get_connection(self, username: str = None, password: str = None):
