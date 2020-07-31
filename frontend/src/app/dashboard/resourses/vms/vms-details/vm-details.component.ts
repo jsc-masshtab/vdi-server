@@ -27,21 +27,6 @@ export class VmDetailsComponent implements OnInit, OnDestroy {
       class: 'name-start',
       icon: 'desktop',
       type: 'string'
-    },
-    {
-      title: 'Шаблон',
-      property: 'template',
-      property_lv2: 'verbose_name'
-    },
-    {
-      title: 'Контроллер',
-      property: 'controller',
-      property_lv2: 'address'
-    },
-    {
-      title: 'Пользователь',
-      property: 'user',
-      property_lv2: 'username'
     }
   ];
 

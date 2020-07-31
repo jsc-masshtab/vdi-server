@@ -5,6 +5,7 @@ import { WaitService } from '../../../common/components/single/wait/wait.service
 import { Router } from '@angular/router';
 import { DetailsMove } from 'src/app/dashboard/common/classes/details-move';
 import { Subscription } from 'rxjs';
+import { IParams } from 'types';
 
 @Component({
   selector: 'vdi-vms',
@@ -22,21 +23,26 @@ export class VmsComponent extends DetailsMove  implements OnInit, OnDestroy {
       property: 'verbose_name',
       class: 'name-start',
       icon: 'desktop',
-      type: 'string'
+      type: 'string',
+      sort: true
     },
     {
       title: 'Шаблон',
       property: 'template',
-      property_lv2: 'verbose_name'
+      type: {
+        typeDepend: 'boolean',
+        propertyDepend: ['Да', 'Нет']
+      }
     },
     {
       title: 'Контроллер',
       property: 'controller',
-      property_lv2: 'address'
+      property_lv2: 'verbose_name'
     },
     {
       title: 'Статус',
-      property: 'status'
+      property: 'status',
+      sort: true
     }
   ];
 
@@ -76,7 +82,13 @@ export class VmsComponent extends DetailsMove  implements OnInit, OnDestroy {
   }
 
   public routeTo(event): void {
-    this.router.navigate([`pages/resourses/vms/${event.controller.address}/${event.id}`]);
+    this.router.navigate([`pages/resourses/vms/${event.controller.id}/${event.id}`]);
+  }
+
+  public sortList(param: IParams): void {
+    this.service.params.spin = param.spin;
+    this.service.params.nameSort = param.nameSort;
+    this.getAllVms();
   }
 
   ngOnDestroy() {

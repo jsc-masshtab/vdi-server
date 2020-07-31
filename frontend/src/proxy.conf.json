@@ -1,6 +1,12 @@
 {
   "/api": {
-    "target": "http://192.168.9.53",
-    "secure": false
+    "target": "http://127.0.0.1:8888/",
+    "secure": false,
+    "pathRewrite": {"^/api" : ""}
+  },
+  "/subscriptions": {
+    "target": "http://127.0.0.1:8888/",
+    "secure": false,
+    "ws": true
   }
 }

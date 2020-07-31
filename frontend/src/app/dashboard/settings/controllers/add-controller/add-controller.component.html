@@ -21,18 +21,11 @@
       <ng-container *ngIf="createForm.hasError('required', 'verbose_name') && checkValid"><ng-container *ngTemplateOutlet="errorTemp"></ng-container></ng-container>
     </label>
     <label class="field">
-      <p class="field-name">Имя пользователя</p>
-      <input type="text" formControlName="username">
-      <ng-container *ngIf="createForm.hasError('required', 'username') && checkValid"><ng-container *ngTemplateOutlet="errorTemp"></ng-container></ng-container>
-    </label>
-    <label class="field">
-      <p class="field-name">Пароль</p>
-      <input type="password" formControlName="password">
-      <ng-container *ngIf="createForm.hasError('required', 'password') && checkValid"><ng-container *ngTemplateOutlet="errorTemp"></ng-container></ng-container>
-    </label>
-    <label class="field-inline">
-      <mat-checkbox [color]="'warn'" formControlName="ldap_connection"></mat-checkbox>
-      <p class="description">Использовать LDAP подключение</p>
+      <p class="field-name">Токен</p>
+      <input type="text" formControlName="token">
+      <ng-container *ngIf="createForm.hasError('required', 'token') && checkValid">
+        <ng-container *ngTemplateOutlet="errorTemp"></ng-container>
+      </ng-container>
     </label>
     <label class="field">
       <p class="field-name">Описание</p>

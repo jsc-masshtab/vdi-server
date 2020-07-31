@@ -14,7 +14,7 @@
 
 <div class="components-info" #view>
     <div class="component-list"  [class.page-wrap]="pageRollup" [class.page-rollup]="pageRollup" [style.height]="pageHeight">
-        <vdi-table-component [data]="templates" [collection]="collection" (clickRowData)="routeTo($event)" cursor="true"></vdi-table-component>
+        <vdi-table-component [data]="templates" [collection]="collection" (clickRowData)="routeTo($event)" (sortListNow)="sortList($event)" cursor="true"></vdi-table-component>
     </div>
     <div class="component-details" [class.page-height-min]="pageHeight==pageHeightMin" [class.page-height-max]="pageRollup">
         <router-outlet (activate)="componentActivate()" (deactivate)="componentDeactivate()"></router-outlet>

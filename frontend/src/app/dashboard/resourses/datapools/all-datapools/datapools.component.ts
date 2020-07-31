@@ -49,7 +49,7 @@ export class DatapoolsComponent extends DetailsMove implements OnInit, OnDestroy
     {
       title: 'Контроллер',
       property: 'controller',
-      property_lv2: 'address',
+      property_lv2: 'verbose_name',
       type: 'string',
       sort: true
     },
@@ -86,7 +86,7 @@ export class DatapoolsComponent extends DetailsMove implements OnInit, OnDestroy
   }
 
   public routeTo(event): void {
-    this.router.navigate([`pages/resourses/datapools/${event.controller.address}/${event.id}`]);
+    this.router.navigate([`pages/resourses/datapools/${event.controller.id}/${event.id}`]);
   }
 
   public onResize(): void {

@@ -110,3 +110,6 @@ yandex.tank/*.txt
 
 # serial
 serial.key
+
+# docker extensions
+devops/docker/run.sh

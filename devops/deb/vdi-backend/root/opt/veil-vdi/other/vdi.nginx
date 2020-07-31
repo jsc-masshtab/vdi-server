@@ -55,7 +55,7 @@ server {
     proxy_pass  http://127.0.0.1:8888/;
   }
 
-  # pass ws requests directrly to tornado
+  # pass ws requests directly to tornado
   location /ws/client/vdi_server_check/ {
     proxy_pass  http://127.0.0.1:8888/ws/client/vdi_server_check/;
     # WebSockets magic
@@ -72,7 +72,7 @@ server {
   location / {
     root /opt/veil-vdi/www;
     try_files $uri$args $uri$args/ /index.html;
-    # expires 7d; temporary disabled
+    expires 7d; temporary disabled
   }
 
 }

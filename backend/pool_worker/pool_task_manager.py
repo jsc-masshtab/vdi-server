@@ -5,21 +5,20 @@ import json
 
 import asyncio
 
-from redis_broker import POOL_TASK_QUEUE, a_redis_lpop
+from common.veil.veil_redis import POOL_TASK_QUEUE, a_redis_lpop
+from common.languages import lang_init
 
-from languages import lang_init
+from pool_worker.pool_tasks import InitPoolTask, ExpandPoolTask, DeletePoolTask
 
-from pool_tasks import InitPoolTask, ExpandPoolTask, DeletePoolTask
+from pool_worker.pool_locks import PoolLocks
 
-from pool_locks import PoolLocks
-
-from pool.models import AutomatedPool
-from tasks.models import TaskModel, TaskStatus
+from common.models.pool import AutomatedPool
+from common.models.tasks import TaskModel, TaskStatus
 from sqlalchemy.sql import desc
 
-from redis_broker import PoolTaskType
+from common.veil.veil_redis import PoolTaskType
 
-from journal.journal import Log
+from common.log.journal import system_logger
 
 _ = lang_init()
 
@@ -34,7 +33,7 @@ class PoolTaskManager:
     async def start(self):
         """Действия при старте менеджера"""
 
-        Log.general(_('Pool worker: start loop now'))
+        await system_logger.warning(_('Pool worker: start loop now'))
 
         # init locks
         await self.pool_locks.fill_start_data()
@@ -54,7 +53,7 @@ class PoolTaskManager:
             try:
                 # wait for task message
                 redis_data = await a_redis_lpop(POOL_TASK_QUEUE)
-                Log.debug('PoolWorker listen_for_work: {}'.format(redis_data))
+                await system_logger.debug('PoolWorker listen_for_work: {}'.format(redis_data))
                 task_data_dict = json.loads(redis_data.decode())
 
                 await self.launch_task(task_data_dict)
@@ -62,7 +61,7 @@ class PoolTaskManager:
             except asyncio.CancelledError:
                 raise
             except Exception as ex:
-                await Log.error('exception:' + str(ex))
+                await system_logger.error('exception:' + str(ex))
 
     async def resume_tasks(self):
         """
@@ -73,13 +72,13 @@ class PoolTaskManager:
         в следующем приоритете: DELETING > CREATING > EXPANDING.
         """
 
-        Log.general('Resuming tasks')
+        await system_logger.warning('Resuming tasks')
 
         pools = await AutomatedPool.query.gino.all()
         # print('cur auto pools ', pools)
         # Traverse pools and find tasks to launch
         tasks_to_launch = []
-
+        # TODO: имена ВМ перебирает сам VeiL
         for pool in pools:
             # Find a task with the highest priority
             pool_task = await TaskModel.query.where(
@@ -88,7 +87,7 @@ class PoolTaskManager:
                 ((TaskModel.status == TaskStatus.IN_PROGRESS) | (TaskModel.status == TaskStatus.CANCELLED))).\
                 order_by(desc(TaskModel.priority)).gino.first()
 
-            Log.debug('pool_task {}'.format(pool_task))
+            await system_logger.debug('pool_task {}'.format(pool_task))
             if pool_task:
                 # print('pool_task priority', pool_task.priority)
                 tasks_to_launch.append(pool_task)
@@ -96,13 +95,13 @@ class PoolTaskManager:
         #  Remove all other tasks (либо как вариант выставить им всем флаг resume_on_app_startup = False)
         task_ids_to_launch = [task.id for task in tasks_to_launch]
         st = await TaskModel.delete.where(TaskModel.id.notin_(task_ids_to_launch)).gino.status()
-        Log.debug('Deleted from db tasks: {}'.format(st))
+        await system_logger.debug('Deleted from db tasks: {}'.format(st))
 
         # # Остальным задачам выставить флаг resume_on_app_startup = False
         # task_ids_to_launch = [task.id for task in tasks_to_launch]
         # st = await TaskModel.update.values(resume_on_app_startup=False).where(
         #     TaskModel.id.notin_(task_ids_to_launch)).gino.status()
-        # Log.debug('Other tasks: {}'.format(st))
+        # await system_logger.debug('Other tasks: {}'.format(st))
         # # Возможно стоит ввнести таске столбец дата создания и удалять все таски
         # # кроме последних 100 (Для лога и отладки), чтоб не копить их вечно.
 
@@ -112,7 +111,7 @@ class PoolTaskManager:
             try:
                 await self.launch_task(task_data_dict)
             except Exception as ex:
-                await Log.error('PoolTaskManager: Cant resume task {} : {}'.format(task, str(ex)))
+                await system_logger.error('PoolTaskManager: Cant resume task {} : {}'.format(task, str(ex)))
 
     async def launch_task(self, task_data_dict):
 

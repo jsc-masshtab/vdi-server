@@ -30,8 +30,8 @@ export class NodeDetailsComponent implements OnInit, OnDestroy {
     },
     {
       title: 'Кластер',
-      property: 'cluster',
-      property_lv2: 'verbose_name'
+      property: 'cluster_name',
+      type: 'string'
     },
     {
       title: 'IP-адрес',
@@ -51,7 +51,7 @@ export class NodeDetailsComponent implements OnInit, OnDestroy {
     {
       title: 'Статус',
       property: 'status'
-    },
+    }/* ,
     {
       title: 'Пулы данных',
       property: 'datapools',
@@ -66,7 +66,7 @@ export class NodeDetailsComponent implements OnInit, OnDestroy {
       title: 'ВМ',
       property: 'vms',
       type: 'array-length'
-    }
+    } */
   ];
   public collection_datapools = [
     {

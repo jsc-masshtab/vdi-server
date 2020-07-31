@@ -42,6 +42,7 @@ export class WebsocketService  {
 
   private onListenError(event: Event): void {
     console.log(event, 'error ws');
+    this.init()
   }
 
   public close() {

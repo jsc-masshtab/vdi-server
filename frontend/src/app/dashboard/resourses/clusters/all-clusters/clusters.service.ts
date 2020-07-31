@@ -17,20 +17,23 @@ export class ClustersService  {
     public getAllClusters(): QueryRef<any, any> {
 
         return  this.service.watchQuery({
-            query:  gql` query resources($ordering:String) {
-                            clusters(ordering: $ordering) {
-                                id
-                                verbose_name
-                                nodes_count
-                                status
-                                cpu_count
-                                memory_count
-                                controller {
-                                    address
-                                }
-                            }
+            query: gql` 
+                query resources($ordering:String) {
+                    clusters(ordering: $ordering) {
+                        id
+                        verbose_name
+                        nodes_count
+                        status
+                        cpu_count
+                        memory_count
+                        controller {
+                            id
+                            verbose_name
                         }
-                    `,
+                        
+                    }
+                }
+            `,
             variables: {
                 method: 'GET',
                 ordering: this.paramsForGetClusters.nameSort
@@ -40,8 +43,8 @@ export class ClustersService  {
 
     public getCluster(id: string, controller_address: string): QueryRef<any, any> {
         return  this.service.watchQuery({
-            query:  gql` query resources($id: String, $controller_address: String) {
-                            cluster(id: $id, controller_address: $controller_address) {
+            query: gql` query resources($id: UUID, $controller_address: UUID) {
+                            cluster(cluster_id: $id, controller_id: $controller_address) {
                                 id
                                 verbose_name
                                 nodes_count
@@ -51,27 +54,7 @@ export class ClustersService  {
                                 nodes {
                                     verbose_name
                                     status
-                                    cpu_count
-                                    memory_count
-                                    management_ip
-                                }
-                                datapools {
-                                    used_space
-                                    free_space
-                                    size
-                                    status
-                                    type
-                                    verbose_name
-                                }
-                                templates {
-                                    verbose_name
-                                }
-                                vms {
-                                    verbose_name
-                                    template {
-                                        verbose_name
-                                    }
-                                }
+                                }   
                             }
                         }
                     `,

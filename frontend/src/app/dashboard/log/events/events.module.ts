@@ -7,7 +7,7 @@ import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { InfoEventComponent } from './info-event/info-event.component';
 import { MatDatepickerModule } from '@angular/material/datepicker';
-import { MatNativeDateModule, MatSelectModule, MatCheckboxModule } from '@angular/material';
+import { MatNativeDateModule, MatSelectModule, MatCheckboxModule, MatDialogModule } from '@angular/material';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 
 import { library } from '@fortawesome/fontawesome-svg-core';
@@ -27,6 +27,7 @@ import { faTimesCircle } from '@fortawesome/free-solid-svg-icons';
     MatNativeDateModule,
     FormsModule,
     ReactiveFormsModule,
+    MatDialogModule,
     MatSelectModule,
     MatCheckboxModule
   ],

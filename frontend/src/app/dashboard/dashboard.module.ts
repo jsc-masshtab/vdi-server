@@ -86,36 +86,7 @@ export class DashboardModule {
     const url = environment.url;
 
     const link = this.httpLink.create( { uri(operation) {
-      let urlKnock: string = '';
-      switch (operation.operationName) {
-        case 'controllers':
-          urlKnock = `${url + 'controllers'}`;
-          break;
-        case 'pools':
-          urlKnock = `${url + 'pools'}`;
-          break;
-        case 'resources':
-          urlKnock = `${url + 'resources'}`;
-          break;
-        case 'vms':
-          urlKnock = `${url + 'vms'}`;
-          break;
-        case 'users':
-          urlKnock = `${url + 'users'}`;
-          break;
-        case 'auth_dirs':
-          urlKnock = `${url + 'auth_dirs'}`;
-          break;
-        case 'groups':
-          urlKnock = `${url + 'groups'}`;
-          break;
-        case 'events':
-          urlKnock = `${url + 'events'}`;
-          break;
-        default:
-          urlKnock = `${url}`;
-      }
-      return urlKnock;
+      return url + operation.operationName;
     }, includeQuery: true, includeExtensions: false } );
 
     const authMiddleware = new ApolloLink((operation, forward) => {
@@ -131,12 +102,17 @@ export class DashboardModule {
         this.waitService.setWait(false);
         graphQLErrors.map(({ message, locations, path }) => {
           this.errorService.setError(message);
-          console.log(`[GraphQL error]: Message: ${message}, Location: ${locations}, Path: ${path}`, locations);
+          console.error(`[GraphQL error]: Message: ${message}, Location: ${locations}, Path: ${path}`, locations);
         });
       }
 
       if (networkError) {
-        console.log(networkError, 'networkError');
+        console.error(networkError, 'networkError');
+        if (networkError['error'] && networkError['error']['errors']) {
+          networkError['error']['errors'].forEach(er => {
+            console.warn(er.message)
+          });
+        }
         this.waitService.setWait(false);
         if (networkError['status'] === 401) {
           if (networkError['error'] && networkError['error']['errors']) {
