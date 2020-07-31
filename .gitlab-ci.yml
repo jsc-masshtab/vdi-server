@@ -19,7 +19,7 @@ compilemessages:
   before_script:
     - apk add bash gettext
   script:
-    - cd backend/
+    - cd backend/common/
     - bash compilemessages.sh en
     - bash compilemessages.sh ru
   only:

@@ -45,7 +45,7 @@ export class ClusterDetailsComponent implements OnInit, OnDestroy {
       title: 'Серверы',
       property: 'nodes',
       type: 'array-length'
-    },
+    }/* ,
     {
       title: 'Пулы данных',
       property: 'datapools',
@@ -60,7 +60,7 @@ export class ClusterDetailsComponent implements OnInit, OnDestroy {
       title: 'ВМ',
       property: 'vms',
       type: 'array-length'
-    }
+    } */
   ];
   public collectionNodes = [
     {
@@ -70,7 +70,7 @@ export class ClusterDetailsComponent implements OnInit, OnDestroy {
       type: 'string',
       icon: 'server'
     },
-    {
+    /* {
       title: 'IP-адрес',
       property: 'management_ip',
       type: 'string'
@@ -84,7 +84,7 @@ export class ClusterDetailsComponent implements OnInit, OnDestroy {
       title: 'RAM',
       property: 'memory_count',
       type: 'string'
-    },
+    }, */
     {
       title: 'Статус',
       property: 'status'

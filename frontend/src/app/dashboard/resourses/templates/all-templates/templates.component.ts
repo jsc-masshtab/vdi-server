@@ -5,6 +5,7 @@ import { map } from 'rxjs/operators';
 import { Router } from '@angular/router';
 import { DetailsMove } from 'src/app/dashboard/common/classes/details-move';
 import { Subscription } from 'rxjs';
+import { IParams } from 'types';
 
 
 @Component({
@@ -23,26 +24,13 @@ export class TemplatesComponent extends DetailsMove implements OnInit, OnDestroy
       property: 'verbose_name',
       class: 'name-start',
       type: 'string',
-      icon: 'tv'
-    },
-    {
-      title: 'Cервер',
-      property: 'node',
-      property_lv2: 'verbose_name'
-    },
-    {
-      title: 'Оперативная память (MБ)',
-      property: 'memory_count',
-      type: 'string'
-    },
-    {
-      title: 'Контроллер',
-      property: 'address',
-      type: 'string'
+      icon: 'tv',
+      sort: true
     },
     {
       title: 'Статус',
-      property: 'status'
+      property: 'status',
+      sort: true
     }
   ];
 
@@ -64,13 +52,13 @@ export class TemplatesComponent extends DetailsMove implements OnInit, OnDestroy
     }
     this.waitService.setWait(true);
     this.sub = this.service.getAllTemplates().valueChanges.pipe(map(data => data.data.templates)).subscribe((data) => {
-      this.templates = data.map(tmp => Object.assign({}, JSON.parse(tmp.veil_info_json), tmp.controller));
+      this.templates = data;
       this.waitService.setWait(false);
     });
   }
 
   public routeTo(event): void {
-    this.router.navigate([`pages/resourses/templates/${event.address}/${event.id}`]);
+    this.router.navigate([`pages/resourses/templates/${event.controller.id}/${event.id}`]);
   }
 
   public onResize(): void {
@@ -83,6 +71,12 @@ export class TemplatesComponent extends DetailsMove implements OnInit, OnDestroy
 
   public componentDeactivate(): void {
     super.componentDeactivate();
+  }
+
+  public sortList(param: IParams): void {
+    this.service.params.spin = param.spin;
+    this.service.params.nameSort = param.nameSort;
+    this.getTemplates();
   }
 
   ngOnDestroy() {

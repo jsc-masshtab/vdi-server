@@ -30,11 +30,9 @@ export class AddControllerComponent implements OnInit, OnDestroy {
   private createFormAddPool(): void {
     this.createForm = this.fb.group({
       address: ['', Validators.required],
-      username:  ['', Validators.required],
       verbose_name: ['', Validators.required],
-      password: ['', Validators.required],
       description: '',
-      ldap_connection: false
+      token: ''
     });
   }
 
@@ -49,6 +47,8 @@ export class AddControllerComponent implements OnInit, OnDestroy {
             this.dialogRef.close();
           });
         }
+      }, er => {
+          console.log(er)
       });
     }
   }

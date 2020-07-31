@@ -2,25 +2,25 @@
 import asyncio
 import json
 
-from front_ws_api.subscription_sources import SubscriptionCmd
+from web_app.front_ws_api.subscription_sources import SubscriptionCmd
 
 from tornado.httpclient import HTTPClientError
 from tornado.websocket import WebSocketClosedError
 from tornado.websocket import WebSocketError
 from tornado.websocket import websocket_connect
 
-from common.veil_errors import HttpError
-from controller.models import Controller
-from controller_resources.veil_client import ResourcesHttpClient
+from common.veil.veil_errors import HttpError
+from common.models.controller import Controller
+# from controller_resources.veil_client import ResourcesHttpClient
 
-from front_ws_api.subscription_sources import CONTROLLER_SUBSCRIPTIONS_LIST, CONTROLLERS_SUBSCRIPTION
+from web_app.front_ws_api.subscription_sources import CONTROLLER_SUBSCRIPTIONS_LIST, CONTROLLERS_SUBSCRIPTION
 
 from common.utils import cancel_async_task
 
-from redis_broker import REDIS_CLIENT, WS_MONITOR_CHANNEL_OUT
+from common.veil.veil_redis import REDIS_CLIENT, WS_MONITOR_CHANNEL_OUT
 
-from languages import lang_init
-from journal.journal import Log
+from common.languages import lang_init
+from common.log.journal import system_logger
 
 
 _ = lang_init()
@@ -71,7 +71,8 @@ class ResourcesMonitor():
         Check if controller online
         :return:
         """
-        controller_address = await Controller.get_controller_address_by_id(self._controller_id)
+        # TODO: fix
+        # controller_address = await Controller.get_controller_address_by_id(self._controller_id)
         response = {'id': str(self._controller_id), 'msg_type': 'data', 'event': 'UPDATED',
                     'resource': CONTROLLERS_SUBSCRIPTION}
 
@@ -82,8 +83,10 @@ class ResourcesMonitor():
             await asyncio.sleep(4)
             try:
                 # if controller is online then there wil not be any exception
-                resources_http_client = await ResourcesHttpClient.create(controller_address)
-                await resources_http_client.check_controller()
+                # TODO:точно это исправлял. мердж все сломал
+                # resources_http_client = await ResourcesHttpClient.create(controller_address)
+                # await resources_http_client.check_controller()
+                pass
             except (HTTPClientError, HttpError, Exception):
                 # notify if controller was online before (data changed)
                 if self._is_online or is_first_check:
@@ -111,7 +114,7 @@ class ResourcesMonitor():
         """
         while self._running_flag:
             is_connected = await self._connect()
-            Log.debug(_('{} is connected: {}').format(__class__.__name__, is_connected))  # noqa
+            await system_logger.debug(_('{} is connected: {}').format(__class__.__name__, is_connected))  # noqa
             # reconnect if not connected
             if not is_connected:
                 await asyncio.sleep(self.RECONNECT_TIMEOUT)
@@ -121,10 +124,10 @@ class ResourcesMonitor():
             while self._running_flag:
                 msg = await self._ws_connection.read_message()
                 if msg is None:  # according to doc it means that connection closed
-                    Log.debug('{} Probably connection is closed by server.'.format(__class__.__name__))  # noqa
+                    await system_logger.debug('{} Probably connection is closed by server.'.format(__class__.__name__))  # noqa
                     break
                 elif 'token error' in msg:
-                    Log.debug('{} token error. Closing connection.'.format(__class__.__name__))  # noqa
+                    await system_logger.debug('{} token error. Closing connection.'.format(__class__.__name__))  # noqa
                     # Если токен эррор, то закрываем соединение и и переходим к попыткам коннекта (начало первого while)
                     await self._close_connection()
                     # await Controller.invalidate_auth(self._controller_id)
@@ -141,23 +144,16 @@ class ResourcesMonitor():
         if not controller.active:
             return False
 
-        # get token
-        try:
-            token = await Controller.get_token(controller.address)
-        except Exception as E:
-            await Log.error(str(E))
-            return False
-
         # create ws connection
         try:
-            connect_url = 'ws://{}/ws/?token={}'.format(controller.address, token)
-            # Log.debug('ws connection url is {}'.format(connect_url))
+            connect_url = 'ws://{}/ws/?token={}'.format(controller.address, controller.token)
+            # await system_logger.debug('ws connection url is {}'.format(connect_url))
             self._ws_connection = await websocket_connect(connect_url)
         except (ConnectionRefusedError, WebSocketError):
             msg = _('{cls}: can not connect to {ip}').format(
                 cls=__class__.__name__, # noqa
                 ip=controller.address)
-            await Log.error(msg)
+            await system_logger.error(msg)
             return False
 
         # subscribe to events on controller
@@ -166,19 +162,19 @@ class ResourcesMonitor():
                 await self._ws_connection.write_message(
                     SubscriptionCmd.add + ' ' + format(subscription_name))
         except WebSocketClosedError as ws_error:
-            await Log.error(str(ws_error))
+            await system_logger.error(ws_error)
             return False
 
         return True
 
     async def _on_message_received(self, message):
-        #  Log.debug('_on_message_received: message ' + message)
+        await system_logger.debug('_on_message_received: message ' + message)
         REDIS_CLIENT.publish(WS_MONITOR_CHANNEL_OUT, message)
 
     async def _close_connection(self):
         if self._ws_connection:
-            Log.debug(_('{} Closing ws connection {}').format(__class__.__name__, self._controller_id))  # noqa
+            await system_logger.debug(_('{} Closing ws connection {}').format(__class__.__name__, self._controller_ip)) # noqa
             try:
                 self._ws_connection.close()
             except Exception as E:
-                Log.debug(str(E))
+                await system_logger.debug(str(E))

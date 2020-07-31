@@ -1,9 +1,8 @@
 # -*- coding: utf-8 -*-
 import asyncio
 
-from database import db
-
-from languages import lang_init
+from common.database import db
+from common.languages import lang_init
 
 
 _ = lang_init()
@@ -60,7 +59,7 @@ class PoolLocks:
             del self._template_lock_dict[template_id]
 
     async def _get_pools_data_from_db(self):
-        from pool.models import AutomatedPool
+        from common.models.pool import AutomatedPool
         auto_pools_data = await db.select([AutomatedPool.id, AutomatedPool.template_id]).\
             select_from(AutomatedPool).gino.all()
         return auto_pools_data

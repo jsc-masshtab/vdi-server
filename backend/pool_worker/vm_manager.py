@@ -1,14 +1,14 @@
 # -*- coding: utf-8 -*-
 import asyncio
 
-from database import db
-from common.veil_errors import HttpError
-from vm.models import Vm
-from vm.schema import VmState
-from vm.veil_client import VmHttpClient
-from pool.models import Pool
-from auth.models import Entity, EntityRoleOwner, EntityType
-from controller.models import Controller
+from common.database import db
+from common.veil.veil_errors import HttpError
+from common.models.vm import Vm
+# from common.veil.veil_graphene import VmState
+# from vm.veil_client import VmHttpClient
+from common.models.pool import Pool
+from common.models.auth import Entity, EntityRoleOwner, EntityType
+from common.models.controller import Controller
 
 
 class VmManager:
@@ -33,10 +33,12 @@ class VmManager:
             # get vm info from controllers
             controllers_addresses = await Controller.get_addresses()
 
-            for controller_address in controllers_addresses:
-                vm_http_client = await VmHttpClient.create(controller_address, '')
+            for controller_address in controllers_addresses:  # noqa
+                # TODO: fetch vm list
+                # vm_http_client = await VmHttpClient.create(controller_address, '')
                 try:
-                    veil_vm_data_list = await vm_http_client.fetch_vms_list()
+                    pass
+                    # veil_vm_data_list = await vm_http_client.fetch_vms_list()
                 except (HttpError, OSError):
                     continue
 
@@ -50,16 +52,18 @@ class VmManager:
 
                     # find remote vm data
                     try:
-                        remote_vm_data = next(data for data in veil_vm_data_list if data['id'] == str(vm_id))
+                        pass
+                        # remote_vm_data = next(data for data in veil_vm_data_list if data['id'] == str(vm_id))
                     except StopIteration:
                         continue
 
                     # check if vm is turned off and turn it on
-                    if remote_vm_data['user_power_state'] == VmState.OFF:
-                        vm_http_client = await VmHttpClient.create(controller_address, vm_id)
-                        try:
-                            await vm_http_client.send_action(action='start')
-                        except (HttpError, OSError):
-                            pass
+                    # TODO: fix
+                    # if remote_vm_data['user_power_state'] == VmState.OFF:
+                        # vm_http_client = await VmHttpClient.create(controller_address, vm_id)
+                        # try:
+                        #     await vm_http_client.send_action(action='start')
+                        # except (HttpError, OSError):
+                        #     pass
 
             await asyncio.sleep(self.query_interval)

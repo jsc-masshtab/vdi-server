@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
-from controller.models import Controller
-from resources_monitor import ResourcesMonitor
+from common.models.controller import Controller
+from ws_listener_worker.resources_monitor import ResourcesMonitor
 
-from languages import lang_init
-from journal.journal import Log
+from common.languages import lang_init
+from common.log.journal import system_logger
 
 
 _ = lang_init()
@@ -20,7 +20,7 @@ class ResourcesMonitorManager:
         Start monitors
         :return:
         """
-        # Log.debug('{}: Startup...'.format(__class__.__name__))
+        # system_logger.debug('{}: Startup...'.format(__class__.__name__))
         # get all controllers
         controllers = await Controller.query.gino.all()
 
@@ -28,15 +28,14 @@ class ResourcesMonitorManager:
         msg = _('{cls}: connected controllers -- {controllers}').format(
             cls=__class__.__name__,
             controllers=controllers_addresses)
-        Log.debug(msg)
-
+        await system_logger.debug(msg)
         if not controllers:
             return
 
         # start resources monitors
         for controller in controllers:
             self._add_monitor_for_controller(controller.id)
-        await Log.info(_('{}: Started').format(__class__.__name__))
+        await system_logger.info(_('{}: Started').format(__class__.__name__))
 
     async def stop(self):
         """
@@ -52,17 +51,17 @@ class ResourcesMonitorManager:
             msg = _('{cls}: Controller {id} is already monitored!').format(
                 cls=__class__.__name__,
                 id=controller_id)
-            await Log.warning(msg)
+            await system_logger.warning(msg)
             return
         # add monitor
         self._add_monitor_for_controller(controller_id)
         msg = _('{cls}: resource monitor for controller {id} connected').format(
             cls=__class__.__name__,
             id=controller_id)
-        await Log.info(msg)
+        await system_logger.info(msg)
 
     async def remove_controller(self, controller_id):
-        Log.debug(_('Delete controller {} from resources monitor.').format(controller_id))
+        await system_logger.debug(_('Delete controller {} from resources monitor.').format(controller_id))
 
         # find resources monitor by controller ip
         resources_monitor = self._find_monitor_by_controller(controller_id)
@@ -76,7 +75,7 @@ class ResourcesMonitorManager:
         msg = _('{cls}: resource monitor for controller {id} removed').format(
             cls=__class__.__name__,
             id=controller_id)
-        await Log.warning(msg)
+        await system_logger.warning(msg)
 
     async def restart_existing_monitor(self, controller_id):
 
@@ -98,7 +97,7 @@ class ResourcesMonitorManager:
             msg = _('{cls}: controller {id} is not monitored!').format(
                 cls=__class__.__name__,
                 id=controller_id)
-            Log.debug(msg)
+            system_logger._debug(msg)
             return None
 
     def _get_monitored_controllers_ids(self):

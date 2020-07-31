@@ -2,22 +2,22 @@
 import asyncio
 import json
 
-from common.veil_errors import PoolCreationError
+from common.veil.veil_errors import PoolCreationError
 
-from journal.journal import Log
+from common.log.journal import system_logger
 
-from pool.models import AutomatedPool, Pool
+from common.models.pool import AutomatedPool, Pool
 
-from common.veil_errors import VmCreationError, SimpleError
+from common.veil.veil_errors import VmCreationError, SimpleError
 
-from redis_broker import REDIS_CLIENT, INTERNAL_EVENTS_CHANNEL
-from front_ws_api.subscription_sources import VDI_TASKS_SUBSCRIPTION
+from common.veil.veil_redis import REDIS_CLIENT, INTERNAL_EVENTS_CHANNEL
+from web_app.front_ws_api.subscription_sources import VDI_TASKS_SUBSCRIPTION
 
 from common.utils import cancel_async_task
 
-from languages import lang_init
+from common.languages import lang_init
 
-from tasks.models import TaskStatus, TaskModel
+from common.models.tasks import TaskStatus, TaskModel
 
 
 _ = lang_init()
@@ -46,7 +46,7 @@ class AbstractTask:  # унаследовать от db.Mode
         if self.task_model:
             await self.task_model.update(resume_on_app_startup=resume_on_app_startup).apply()
 
-        Log.debug('cancel self.coroutine {}'.format(self._coroutine))
+        await system_logger.debug('cancel self.coroutine {}'.format(self._coroutine))
         await cancel_async_task(self._coroutine)
         self._coroutine = None
 
@@ -70,10 +70,10 @@ class AbstractTask:  # унаследовать от db.Mode
         """Выполнить корутину do_task"""
 
         if not self.task_model:
-            await Log.error('AbstractTask.execute: logical error. No such task')
+            await system_logger.error('AbstractTask.execute: logical error. No such task')
             return
 
-        Log.debug('Start task execution: {}'.format(self.task_model.task_type))
+        await system_logger.debug('Start task execution: {}'.format(self.task_model.task_type))
 
         # Добавить себя в список выполняющихся задач
         self._ref_to_task_list.append(self)
@@ -86,13 +86,13 @@ class AbstractTask:  # унаследовать от db.Mode
 
         except asyncio.CancelledError:
             await self.task_model.set_status(TaskStatus.CANCELLED)
-            Log.general('Task cancelled. id: {}'.format(self.task_model.id))
+            await system_logger.warning('Task cancelled. id: {}'.format(self.task_model.id))
 
             await self.do_on_cancel()
 
         except Exception as ex:  # noqa
             await self.task_model.set_status(TaskStatus.FAILED)
-            Log.general('Exception during task execution. id: {} exceptin: {} '.format(self.task_model.id, str(ex)))
+            await system_logger.warning('Exception during task execution. id: {} exceptin: {} '.format(self.task_model.id, str(ex)))
 
             await self.do_on_fail()
 
@@ -116,7 +116,7 @@ class InitPoolTask(AbstractTask):
         self._task_priority = 2
 
     def __del__(self):
-        Log.debug('In destructor InitPoolTask')
+        system_logger._debug('In destructor InitPoolTask')
 
     async def do_task(self):
 
@@ -140,13 +140,13 @@ class InitPoolTask(AbstractTask):
                 try:
                     await automated_pool.add_initial_vms()
                 except PoolCreationError as E:
-                    await Log.error('Failed to create pool {exception}'.format(exception=str(E)))
+                    await system_logger.error('Failed to create pool {exception}'.format(exception=str(E)))
                     await automated_pool.deactivate()
                 except asyncio.CancelledError:
                     await automated_pool.deactivate()
                     raise
                 except Exception as E:
-                    await Log.error('Failed to create pool.  {exception}'.format(exception=str(E)))
+                    await system_logger.error('Failed to create pool.  {exception}'.format(exception=str(E)))
                     await automated_pool.deactivate()
                 else:
                     await automated_pool.activate()
@@ -164,7 +164,7 @@ class ExpandPoolTask(AbstractTask):
 
     async def do_task(self):
 
-        Log.debug('start_pool_expanding')
+        await system_logger.debug('start_pool_expanding')
         automated_pool = await AutomatedPool.get(self.task_model.entity_id)
         if not automated_pool:
             return
@@ -203,8 +203,8 @@ class ExpandPoolTask(AbstractTask):
                             domain_index = vm_amount_in_pool + i
                             await automated_pool.add_vm(domain_index)
                     except VmCreationError as vm_error:
-                        await Log.error(_('VM creating error:'))
-                        Log.debug(vm_error)
+                        await system_logger.error(_('VM creating error:'))
+                        await system_logger.debug(vm_error)
 
 
 class DeletePoolTask(AbstractTask):
@@ -217,11 +217,11 @@ class DeletePoolTask(AbstractTask):
         self._task_priority = 3
 
     def __del__(self):
-        Log.debug('In destructor DeletePoolTask')
+        system_logger._debug('In destructor DeletePoolTask')
 
     async def do_task(self):
 
-        Log.debug('start_pool_deleting')
+        await system_logger.debug('start_pool_deleting')
         automated_pool = await AutomatedPool.get(self.task_model.entity_id)
         if not automated_pool:
             return
@@ -249,9 +249,9 @@ class DeletePoolTask(AbstractTask):
                 is_deleted = await Pool.delete_pool(pool, 'system', self.full_deletion)
             except SimpleError as ex:
                 is_deleted = False
-                Log.debug(str(ex))
+                await system_logger.debug(str(ex))
 
-            Log.debug('is pool deleted: {}'.format(is_deleted))
+            await system_logger.debug('is pool deleted: {}'.format(is_deleted))
 
             # убираем из памяти локи, если пул успешно удалился
             if is_deleted:

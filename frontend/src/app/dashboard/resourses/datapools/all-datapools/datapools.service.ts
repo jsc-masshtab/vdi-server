@@ -16,8 +16,8 @@ export class DatapoolsService {
 
     public getAllDatapools(): QueryRef<any, any> {
         return  this.service.watchQuery({
-            query:  gql` query resources($ordering:String, $take_broken: Boolean) {
-                            datapools(ordering: $ordering, take_broken: $take_broken) {
+            query:  gql` query resources($ordering:String) {
+                            datapools(ordering: $ordering) {
                                 id
                                 used_space
                                 free_space
@@ -25,23 +25,23 @@ export class DatapoolsService {
                                 type
                                 verbose_name
                                 controller {
-                                    address
+                                    id
+                                    verbose_name
                                 }
                             }
                         }
                     `,
             variables: {
                 method: 'GET',
-                ordering: this.paramsForGetDatapools.nameSort,
-                take_broken: true
+                ordering: this.paramsForGetDatapools.nameSort
             }
         });
     }
 
     public getDatapool(id: string, controller_address: string): QueryRef<any, any> {
         return  this.service.watchQuery({
-            query:  gql` query resources($id: String, $controller_address: String) {
-                            datapool(id: $id, controller_address: $controller_address) {
+            query: gql` query resources($id: UUID, $controller_address: UUID) {
+                            datapool(datapool_id: $id, controller_id: $controller_address) {
                                 used_space
                                 free_space
                                 size

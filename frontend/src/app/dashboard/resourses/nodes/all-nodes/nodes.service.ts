@@ -27,11 +27,9 @@ export class NodesService {
                                 cpu_count
                                 memory_count
                                 management_ip
-                                cluster {
-                                    verbose_name
-                                }
                                 controller {
-                                    address
+                                    id
+                                    verbose_name
                                 }
                             }
                         }
@@ -45,33 +43,14 @@ export class NodesService {
 
     public getNode(id: string, controller_address: string): QueryRef<any, any> {
         return  this.service.watchQuery({
-            query:  gql` query resources($id: String, $controller_address: String) {
-                            node(id: $id, controller_address: $controller_address) {
+            query: gql` query resources($id: UUID, $controller_address: UUID) {
+                            node(node_id: $id, controller_id: $controller_address) {
                                 verbose_name
                                 status
                                 cpu_count
                                 memory_count
                                 management_ip
-                                cluster {
-                                    verbose_name
-                                }
-                                datapools {
-                                    used_space
-                                    free_space
-                                    size
-                                    status
-                                    type
-                                    verbose_name
-                                }
-                                templates {
-                                    verbose_name
-                                }
-                                vms {
-                                    verbose_name
-                                    template {
-                                        verbose_name
-                                    }
-                                }
+                                cluster_name
                             }
                         }
                     `,

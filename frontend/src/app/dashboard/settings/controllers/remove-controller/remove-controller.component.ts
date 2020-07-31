@@ -19,7 +19,6 @@ interface IData {
 export class RemoveControllerComponent implements OnDestroy {
 
   private destroy: Subject<any> = new Subject<any>();
-  public full: boolean = true;
 
   constructor(private controllerService: ControllersService,
               private waitService: WaitService,
@@ -30,7 +29,7 @@ export class RemoveControllerComponent implements OnDestroy {
 
   public send() {
     this.waitService.setWait(true);
-    this.controllerService.removeController(this.data.id, this.full).subscribe((res) => {
+    this.controllerService.removeController(this.data.id).subscribe((res) => {
       if (res) {
         this.controllerService.getAllControllers().valueChanges.pipe(takeUntil(this.destroy)).subscribe(() => {
           this.waitService.setWait(false);

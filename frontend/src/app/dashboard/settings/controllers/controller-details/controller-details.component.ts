@@ -72,50 +72,7 @@ export class ControllerDetailsComponent implements OnInit, OnDestroy {
       title: 'Версия',
       property: 'version',
       type: 'string'
-    },
-    {
-      title: 'Логин для подключения',
-      property: 'username',
-      type: 'string',
-      formEdit: [{
-        header: 'Изменение логина контроллера',
-        tag: 'input',
-        type: 'text',
-        fieldName: 'username',
-        fieldValue: this.controller['username']
-      }],
-      edit: 'openEditForm',
-    },
-    {
-      title: 'Пароль для подключения',
-      property: 'password',
-      type: 'string',
-      formEdit: [{
-        header: 'Изменение пароля контроллера',
-        tag: 'input',
-        type: 'text',
-        fieldName: 'password',
-        fieldValue: this.controller['password']
-      }],
-      edit: 'openEditForm',
-    },
-    {
-      title: 'Использовать ldap подключение',
-      property: 'ldap_connection',
-      type: {
-        typeDepend: 'boolean',
-        propertyDepend: ['Да', 'Нет']
-      },
-      formEdit: [{
-        header: 'Изменение ldap',
-        tag: 'input',
-        type: 'checkbox',
-        fieldName: 'ldap_connection',
-        fieldValue: this.controller['ldap_connection'],
-        description: 'Использовать ldap подключение'
-      }],
-      edit: 'openEditForm',
-    },
+    }
   ];
 
   constructor(private activatedRoute: ActivatedRoute,
@@ -149,7 +106,7 @@ export class ControllerDetailsComponent implements OnInit, OnDestroy {
   public test(): void {
     this.testing = true;
     this.controllerService.testController(
-        this.idController,
+        this.idController
       )
       .subscribe((data) => {
         if (data) {

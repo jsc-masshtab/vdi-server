@@ -28,16 +28,6 @@ export class TemplateDetailsComponent implements OnInit, OnDestroy {
       class: 'name-start',
       type: 'string',
       icon: 'tv'
-    },
-    {
-      title: 'Cервер',
-      property: 'node',
-      property_lv2: 'verbose_name'
-    },
-    {
-      title: 'Оперативная память (MБ)',
-      property: 'memory_count',
-      type: 'string'
     }
   ];
 
@@ -66,7 +56,7 @@ export class TemplateDetailsComponent implements OnInit, OnDestroy {
     this.host = false;
     this.sub = this.service.getTemplate(this.idTemplate, this.address).valueChanges.pipe(map(data => data.data.template))
       .subscribe((data) => {
-        this.template = JSON.parse(data['veil_info_json']);
+        this.template = data
         this.host = true;
       },
       () => {
