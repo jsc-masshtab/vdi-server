@@ -2,6 +2,7 @@
 import uuid
 from sqlalchemy import Enum as AlchemyEnum
 from sqlalchemy.dialects.postgresql import UUID
+from veil_api_client import VeilClient
 
 from common.database import db
 from common.veil.veil_api import get_veil_client
@@ -53,7 +54,7 @@ class Controller(AbstractSortableStatusModel, VeilModel):
         return str(self.id)
 
     @property
-    def veil_client(self):
+    def veil_client(self) -> 'VeilClient':
         """Возвращает инстанс сущности Контроллер у veil api client.
 
         На данный отсутствует вменяемый способ выяснить id контроллера на VeiL и нет

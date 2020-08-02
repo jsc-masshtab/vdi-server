@@ -8,7 +8,7 @@ from common.settings import VEIL_REQUEST_TIMEOUT
 veil_client = VeilClientSingleton(timeout=VEIL_REQUEST_TIMEOUT)
 
 
-def get_veil_client():
+def get_veil_client() -> 'VeilClientSingleton':
     return veil_client
 
 
