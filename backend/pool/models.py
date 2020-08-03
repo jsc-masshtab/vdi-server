@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import asyncio
 import uuid
+# import re
 from enum import Enum
 from sqlalchemy import union_all, case, literal_column, desc, text, Enum as AlchemyEnum
 from sqlalchemy.dialects.postgresql import UUID, ARRAY
@@ -812,8 +813,22 @@ class AutomatedPool(db.Model):
         :return:
         """
 
-        vm_name_template = self.vm_name_template or await self.verbose_name
+        pool_verbose_name = await self.verbose_name
+        vm_name_template = self.vm_name_template or pool_verbose_name
+        log.debug('Vm name template: {}'.format(vm_name_template))
+
         verbose_name = '{}-{}'.format(vm_name_template, domain_index)
+        # try:
+        #     digit_pattern = re.compile(r'([0-9]+)$')
+        #     splitted_tup = re.split(digit_pattern, last_verbose_name)
+        #     name = splitted_tup[0]
+        #     index = int(splitted_tup[1]) + 1
+        #     verbose_name = '{}{}'.format(name, index)
+        # except (ValueError, IndexError, TypeError):
+        #     verbose_name = '{}-{}'.format(self.vm_name_template, domain_index)
+
+        log.debug('Verbose name of new VM:{}'.format(verbose_name))
+
         controller_address = await self.controller_ip
         params = {
             'verbose_name': verbose_name,
@@ -1024,14 +1039,14 @@ class AutomatedPool(db.Model):
                 # Check that total_size is not reached
                 pool = await Pool.get(self.id)
                 vm_amount_in_pool = await pool.get_vm_amount()
-
                 # If reached then do nothing
                 if vm_amount_in_pool >= self.total_size:
+                    log.debug('Pool reached maximum size. Can`t expand.')
                     return
 
-                # Число машин в пуле, неимеющих пользователя
+                # Число машин в пуле, не имеющих пользователя
                 free_vm_amount = await pool.get_vm_amount(only_free=True)
-
+                log.debug('Free vm amount: {}'.format(free_vm_amount))
                 # Если подогретых машин слишком мало, то пробуем добавить еще
                 # Условие расширения изменено. Первое условие было < - тестируем.
                 # self.reserve_size - это по факту порог, число свободных вм, при  котором пул должен расшриться
@@ -1043,7 +1058,8 @@ class AutomatedPool(db.Model):
                     # add VMs.
                     try:
                         for i in range(0, real_amount_to_add):
-                            domain_index = vm_amount_in_pool + i
+                            domain_index = vm_amount_in_pool + i + 1
+                            log.debug('Domain index for expand {}'.format(domain_index))
                             await self.add_vm(domain_index)
                     except VmCreationError as vm_error:
                         await log.error(_('VM creating error:'))

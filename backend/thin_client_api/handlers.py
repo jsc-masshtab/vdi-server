@@ -15,7 +15,7 @@ from pool.models import Pool, Vm, AutomatedPool
 from vm.veil_client import VmHttpClient  # TODO: move to VM?
 from pool.pool_task_manager import pool_task_manager
 from controller.models import Controller
-
+from journal.journal import Log as log
 from languages import lang_init
 
 
@@ -99,6 +99,7 @@ class PoolGetVm(BaseHandler, ABC):
 
         # В отдельной корутине запускаем расширение пула
         if await pool.pool_type == Pool.PoolTypes.AUTOMATED:
+            log.debug('Expand automated pool.')
             pool = await AutomatedPool.get(pool_id)
             pool_lock = pool_task_manager.get_pool_lock(pool_id)
             template_lock = pool_task_manager.get_template_lock(str(pool.template_id))

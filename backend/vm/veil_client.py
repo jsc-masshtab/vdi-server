@@ -4,6 +4,7 @@ import urllib.parse
 from common.veil_decorators import check_params
 from common.veil_client import VeilHttpClient
 from controller.models import Controller
+from journal.journal import Log as log
 
 
 class VmHttpClient(VeilHttpClient):
@@ -67,6 +68,9 @@ class VmHttpClient(VeilHttpClient):
 
     async def copy_vm(self, node_id: str, datapool_id: str, domain_name: str, create_thin_clones: bool):
         url = 'http://{}/api/domains/multi-create-domain/?async=1'.format(self.controller_ip)
+        log.debug(
+            'Attempt of VM creation. node={},datapool={},parent={},thin={}'.format(node_id, datapool_id, self.vm_id,
+                                                                                   create_thin_clones))
         body = dict(verbose_name=domain_name,
                     node=node_id,
                     datapool=datapool_id,
@@ -99,9 +103,14 @@ class VmHttpClient(VeilHttpClient):
         url_vars['template'] = is_template
 
         url = url + urllib.parse.urlencode(url_vars)
-        # request
-        resources_list_data = await self.fetch_with_response(url=url, method='GET', controller_control=False)
-        all_vms_list = resources_list_data['results']
+        try:
+            # request
+            resources_list_data = await self.fetch_with_response(url=url, method='GET', controller_control=False)
+            all_vms_list = resources_list_data['results']
+        except (IndexError, KeyError, TypeError):
+            log.debug('Failt to fetch vms list:')
+            log.debug(resources_list_data)
+            all_vms_list = list()
 
         # # filter bu cluster
         # if cluster_id:
