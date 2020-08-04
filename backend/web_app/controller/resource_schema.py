@@ -228,7 +228,7 @@ class ResourcesQuery(graphene.ObjectType, ControllerFetcher):
                     return cluster.memory_count if cluster.memory_count else 0
             elif ordering == 'controller':
                 def sort_lam(cluster):
-                    return cluster.controller.get('verbose_name') if cluster.controller.get('verbose_name') else DEFAULT_NAME
+                    return cluster.controller.get('verbose_name') if cluster.controller else DEFAULT_NAME
             elif ordering == 'status':
                 def sort_lam(cluster):
                     return cluster.status if cluster.status else DEFAULT_NAME
@@ -284,7 +284,7 @@ class ResourcesQuery(graphene.ObjectType, ControllerFetcher):
                     return node.memory_count if node.memory_count else 0
             elif ordering == 'controller':
                 def sort_lam(node):
-                    return node.controller.get('verbose_name') if node.controller.get('verbose_name') else DEFAULT_NAME
+                    return node.controller.get('verbose_name') if node.controller else DEFAULT_NAME
             elif ordering == 'status':
                 def sort_lam(node):
                     return node.status if node.status else DEFAULT_NAME
@@ -337,7 +337,7 @@ class ResourcesQuery(graphene.ObjectType, ControllerFetcher):
                     return datapool.free_space if datapool.free_space else 0
             elif ordering == 'controller':
                 def sort_lam(datapool):
-                    return datapool.controller.get('verbose_name') if datapool.controller.get('verbose_name') else DEFAULT_NAME
+                    return datapool.controller.get('verbose_name') if datapool.controller else DEFAULT_NAME
             elif ordering == 'status':
                 def sort_lam(datapool):
                     return datapool.status if datapool.status else DEFAULT_NAME
@@ -401,9 +401,12 @@ class ResourcesQuery(graphene.ObjectType, ControllerFetcher):
             if ordering == 'verbose_name':
                 def sort_lam(vm_type):
                     return vm_type.verbose_name if vm_type.verbose_name else DEFAULT_NAME
+            elif ordering == 'template':
+                def sort_lam(vm_type):
+                    return vm_type.parent.get('verbose_name') if vm_type.parent else DEFAULT_NAME
             elif ordering == 'controller':
                 def sort_lam(vm_type):
-                    return vm_type.controller.get('verbose_name') if vm_type.controller.get('verbose_name') else DEFAULT_NAME
+                    return vm_type.controller.get('verbose_name') if vm_type.controller else DEFAULT_NAME
             elif ordering == 'status':
                 def sort_lam(vm_type):
                     return vm_type.status if vm_type and vm_type.status else DEFAULT_NAME
