@@ -373,17 +373,17 @@ class ResourcesQuery(graphene.ObjectType, ControllerFetcher):
         return await cls.domain_info(domain_id=template_id, controller_id=controller_id)
 
     @classmethod
-    async def domain_list(cls, template: bool, ordering: str = None):
+    async def domain_list(cls, template: bool):
         """Все ВМ + шаблоны на подключенных ECP VeiL."""
         controllers = await cls.fetch_all()
-        veil_templates_list = list()
+        domain_list = list()
         for controller in controllers:
             veil_response = await controller.veil_client.domain(template=template).list()
             for resource_data in veil_response.paginator_results:
                 # Добавляем параметры контроллера на VDI
                 resource_data['controller'] = {'id': controller.id, 'verbose_name': controller.verbose_name}
-                veil_templates_list.append(ResourceVmType(**resource_data))
-        return veil_templates_list
+                domain_list.append(ResourceVmType(**resource_data))
+        return domain_list
 
     @classmethod
     @administrator_required
@@ -392,7 +392,7 @@ class ResourcesQuery(graphene.ObjectType, ControllerFetcher):
         # TODO: вернуть сортировку
         # TODO: пагинация
         # Для каждого контроллера получаем список всех ВМ за вычетом шаблонов.
-        vm_type_list = await cls.domain_list(template=0, ordering=ordering)
+        vm_type_list = await cls.domain_list(template=0)
 
         # sorting
         if ordering:
@@ -423,7 +423,7 @@ class ResourcesQuery(graphene.ObjectType, ControllerFetcher):
         # TODO: вернуть сортировку
         # TODO: пагинация
         # Для каждого контроллера получаем список всех ВМ за вычетом шаблонов.
-        template_type_list = await cls.domain_list(template=1, ordering=ordering)
+        template_type_list = await cls.domain_list(template=1)
 
         if ordering:
             (ordering, reverse) = extract_ordering_data(ordering)
