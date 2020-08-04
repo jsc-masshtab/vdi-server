@@ -157,6 +157,7 @@ class ResourceVmType(VeilResourceType):
     os_version = graphene.String()
     spice_stream = graphene.Boolean()
     tablet = graphene.Boolean()
+    parent = graphene.Field(VeilShortEntityType)
 
 
 # Query
