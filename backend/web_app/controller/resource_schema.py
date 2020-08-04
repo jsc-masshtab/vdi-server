@@ -8,7 +8,10 @@
 import graphene
 
 # from common.veil_errors import SimpleError
+from common.settings import DEFAULT_NAME
+from common.utils import extract_ordering_data
 from common.veil.veil_decorators import administrator_required
+from common.veil.veil_errors import SimpleError
 from common.veil.veil_graphene import VeilResourceType, VmState
 from common.veil.veil_gino import StatusGraphene
 from web_app.controller.schema import ControllerFetcher
@@ -206,6 +209,32 @@ class ResourcesQuery(graphene.ObjectType, ControllerFetcher):
                 # Добавляем параметры контроллера на VDI
                 resource_data['controller'] = {'id': controller.id, 'verbose_name': controller.verbose_name}
                 veil_clusters_list.append(ResourceClusterType(**resource_data))
+
+        if ordering:
+            (ordering, reverse) = extract_ordering_data(ordering)
+
+            if ordering == 'verbose_name':
+                def sort_lam(cluster):
+                    return cluster.verbose_name if cluster.verbose_name else DEFAULT_NAME
+            elif ordering == 'nodes_count':
+                def sort_lam(cluster):
+                    return cluster.nodes_count if cluster.nodes_count else 0
+            elif ordering == 'cpu_count':
+                def sort_lam(cluster):
+                    return cluster.cpu_count if cluster.cpu_count else 0
+            elif ordering == 'memory_count':
+                def sort_lam(cluster):
+                    return cluster.memory_count if cluster.memory_count else 0
+            elif ordering == 'controller':
+                def sort_lam(cluster):
+                    return cluster.controller.get('verbose_name') if cluster.controller.get('verbose_name') else DEFAULT_NAME
+            elif ordering == 'status':
+                def sort_lam(cluster):
+                    return cluster.status if cluster.status else DEFAULT_NAME
+            else:
+                raise SimpleError(_('The sort parameter is incorrect'))
+            veil_clusters_list = sorted(veil_clusters_list, key=sort_lam, reverse=reverse)
+
         return veil_clusters_list
 
     # Ноды
@@ -233,6 +262,35 @@ class ResourcesQuery(graphene.ObjectType, ControllerFetcher):
                 # Добавляем параметры контроллера на VDI
                 resource_data['controller'] = {'id': controller.id, 'verbose_name': controller.verbose_name}
                 veil_nodes_list.append(ResourceNodeType(**resource_data))
+
+        if ordering:
+            (ordering, reverse) = extract_ordering_data(ordering)
+
+            if ordering == 'verbose_name':
+                def sort_lam(node):
+                    return node.verbose_name if node.verbose_name else DEFAULT_NAME
+            elif ordering == 'datacenter_name':
+                def sort_lam(node):
+                    return node.datacenter_name if node.datacenter_name else DEFAULT_NAME
+            elif ordering == 'management_ip':
+                def sort_lam(node):
+                    return node.management_ip if node.management_ip else DEFAULT_NAME
+            elif ordering == 'cpu_count':
+                def sort_lam(node):
+                    return node.cpu_count if node.cpu_count else 0
+            elif ordering == 'memory_count':
+                def sort_lam(node):
+                    return node.memory_count if node.memory_count else 0
+            elif ordering == 'controller':
+                def sort_lam(node):
+                    return node.controller.get('verbose_name') if node.controller.get('verbose_name') else DEFAULT_NAME
+            elif ordering == 'status':
+                def sort_lam(node):
+                    return node.status if node.status else DEFAULT_NAME
+            else:
+                raise SimpleError(_('The sort parameter is incorrect'))
+            veil_nodes_list = sorted(veil_nodes_list, key=sort_lam, reverse=reverse)
+
         return veil_nodes_list
 
     # Пулы данных
@@ -260,6 +318,32 @@ class ResourcesQuery(graphene.ObjectType, ControllerFetcher):
                 # Добавляем параметры контроллера на VDI
                 resource_data['controller'] = {'id': controller.id, 'verbose_name': controller.verbose_name}
                 veil_datapools_list.append(ResourceDataPoolType(**resource_data))
+
+        if ordering:
+            (ordering, reverse) = extract_ordering_data(ordering)
+
+            if ordering == 'verbose_name':
+                def sort_lam(datapool):
+                    return datapool.verbose_name if datapool.verbose_name else DEFAULT_NAME
+            elif ordering == 'type':
+                def sort_lam(datapool):
+                    return datapool.type if datapool.type else DEFAULT_NAME
+            elif ordering == 'used_space':
+                def sort_lam(datapool):
+                    return datapool.used_space if datapool.used_space else 0
+            elif ordering == 'free_space':
+                def sort_lam(datapool):
+                    return datapool.free_space if datapool.free_space else 0
+            elif ordering == 'controller':
+                def sort_lam(datapool):
+                    return datapool.controller.get('verbose_name') if datapool.controller.get('verbose_name') else DEFAULT_NAME
+            elif ordering == 'status':
+                def sort_lam(datapool):
+                    return datapool.status if datapool.status else DEFAULT_NAME
+            else:
+                raise SimpleError(_('The sort parameter is incorrect'))
+            veil_datapools_list = sorted(veil_datapools_list, key=sort_lam, reverse=reverse)
+
         return veil_datapools_list
 
     # Виртуальные машины и шаблоны
@@ -307,7 +391,26 @@ class ResourcesQuery(graphene.ObjectType, ControllerFetcher):
         # TODO: вернуть сортировку
         # TODO: пагинация
         # Для каждого контроллера получаем список всех ВМ за вычетом шаблонов.
-        return await cls.domain_list(template=0, ordering=ordering)
+        vm_type_list = await cls.domain_list(template=0, ordering=ordering)
+
+        # sorting
+        if ordering:
+            (ordering, reverse) = extract_ordering_data(ordering)
+
+            if ordering == 'verbose_name':
+                def sort_lam(vm_type):
+                    return vm_type.verbose_name if vm_type.verbose_name else DEFAULT_NAME
+            elif ordering == 'controller':
+                def sort_lam(vm_type):
+                    return vm_type.controller.get('verbose_name') if vm_type.controller.get('verbose_name') else DEFAULT_NAME
+            elif ordering == 'status':
+                def sort_lam(vm_type):
+                    return vm_type.status if vm_type and vm_type.status else DEFAULT_NAME
+            else:
+                raise SimpleError(_('Incorrect sort parameter'))
+            vm_type_list = sorted(vm_type_list, key=sort_lam, reverse=reverse)
+
+        return vm_type_list
 
     @classmethod
     @administrator_required
@@ -316,7 +419,22 @@ class ResourcesQuery(graphene.ObjectType, ControllerFetcher):
         # TODO: вернуть сортировку
         # TODO: пагинация
         # Для каждого контроллера получаем список всех ВМ за вычетом шаблонов.
-        return await cls.domain_list(template=1, ordering=ordering)
+        template_type_list = await cls.domain_list(template=1, ordering=ordering)
+
+        if ordering:
+            (ordering, reverse) = extract_ordering_data(ordering)
+
+            if ordering == 'verbose_name':
+                def sort_lam(template_type):
+                    return template_type.verbose_name if template_type.verbose_name else DEFAULT_NAME
+            elif ordering == 'status':
+                def sort_lam(template_type):
+                    return template_type.status if template_type.status else DEFAULT_NAME
+            else:
+                raise SimpleError(_('Incorrect sort parameter'))
+            template_type_list = sorted(template_type_list, key=sort_lam, reverse=reverse)
+
+        return template_type_list
 
 
 resources_schema = graphene.Schema(query=ResourcesQuery, auto_camelcase=False)
