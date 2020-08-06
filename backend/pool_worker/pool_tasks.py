@@ -146,7 +146,7 @@ class InitPoolTask(AbstractTask):
                     await automated_pool.deactivate()
                     raise
                 except Exception as E:
-                    await system_logger.error('Failed to create pool.  {exception}'.format(exception=str(E)))
+                    await system_logger.error('Failed to create pool. {exception}'.format(exception=str(E)))
                     await automated_pool.deactivate()
                 else:
                     await automated_pool.activate()
@@ -199,9 +199,10 @@ class ExpandPoolTask(AbstractTask):
                     real_amount_to_add = min(max_possible_amount_to_add, automated_pool.increase_step)
                     # add VMs.
                     try:
-                        for i in range(0, real_amount_to_add):
-                            domain_index = vm_amount_in_pool + i
-                            await automated_pool.add_vm(domain_index)
+                        for i in range(0, real_amount_to_add):  # noqa
+                            # domain_index = vm_amount_in_pool + i
+                            # await automated_pool.add_vm(domain_index)
+                            await automated_pool.add_vm()
                     except VmCreationError as vm_error:
                         await system_logger.error(_('VM creating error:'))
                         await system_logger.debug(vm_error)
