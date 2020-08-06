@@ -8,6 +8,9 @@
 # docker container rm vdi-tornado -v
 # запустить и войти в шелл конкретного контейнера
 # docker run -it docker_tornado sh
+# пересобрать конкретные контейнеры
+# docker rm vdi-tornado && docker rm vdi-postgres
+# docker-compose up -V
 
 version: '3.7'
 services:

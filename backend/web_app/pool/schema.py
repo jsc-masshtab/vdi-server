@@ -2,36 +2,24 @@
 import re
 
 import graphene
-# from tornado.httpclient import HTTPClientError  # TODO: точно это нужно тут?
 from asyncpg.exceptions import UniqueViolationError
 
 from common.database import db
 from common.veil.veil_gino import RoleTypeGraphene, Role, StatusGraphene, Status
 from common.veil.veil_validators import MutationValidation
 from common.veil.veil_errors import SimpleError, HttpError, ValidationError
-# from common.utils import make_graphene_type
 from common.veil.veil_decorators import administrator_required
-from common.veil.veil_graphene import VmState
+from common.veil.veil_graphene import VmState, VeilShortEntityType
 from common.models.auth import User
-from web_app.auth.user_schema import UserType
-
-# from vm.schema import VmType, VmQuery, TemplateType
 from common.models.vm import Vm
-# from vm.veil_client import VmHttpClient
-
-from web_app.controller.schema import ControllerType
 from common.models.controller import Controller
-
-# from controller_resources.veil_client import ResourcesHttpClient
-# from controller_resources.schema import ClusterType, NodeType, DatapoolType
-
 from common.models.pool import AutomatedPool, StaticPool, Pool
-
 from common.languages import lang_init
 from common.log.journal import system_logger
-
 from common.veil.veil_redis import request_to_execute_pool_task, PoolTaskType
 
+from web_app.auth.user_schema import UserType
+from web_app.controller.schema import ControllerType
 
 _ = lang_init()
 
@@ -70,7 +58,7 @@ class VmType(graphene.ObjectType):
     user = graphene.Field(UserType)
     state = graphene.Field(VmState)
     status = graphene.String()
-    controller = graphene.Field(ControllerType)
+    # controller = graphene.Field(ControllerType)
 
 
 class VmInput(graphene.InputObjectType):
@@ -188,7 +176,6 @@ class PoolType(graphene.ObjectType):
     cluster_id = graphene.UUID()
     node_id = graphene.UUID()
     controller = graphene.Field(ControllerType)
-    # vms = graphene.List(VmType)
     vm_amount = graphene.Int()
 
     # StaticPool fields
@@ -202,12 +189,11 @@ class PoolType(graphene.ObjectType):
     max_size = graphene.Int()
     max_vm_amount = graphene.Int()
     increase_step = graphene.Int()
-    # min_free_vms_amount = graphene.Int()
     max_amount_of_create_attempts = graphene.Int()
     initial_size = graphene.Int()
     reserve_size = graphene.Int()
     total_size = graphene.Int()
-    vm_name_template = graphene.String()
+    vm_name_template = graphene.String(required=True)
     os_type = graphene.String()
 
     users = graphene.List(UserType, entitled=graphene.Boolean())
@@ -217,15 +203,17 @@ class PoolType(graphene.ObjectType):
                                     offset=graphene.Int(default_value=0))
     possible_groups = graphene.List(PoolGroupType)
 
-    # node = graphene.Field(NodeType)
-    # cluster = graphene.Field(ClusterType)
-    # datapool = graphene.Field(DatapoolType)
-    # template = graphene.Field(TemplateType)
-
     keep_vms_on = graphene.Boolean()
     create_thin_clones = graphene.Boolean()
     assigned_connection_types = graphene.List(ConnectionTypesGraphene)
     possible_connection_types = graphene.List(ConnectionTypesGraphene)
+
+    # Затрагивает запрос ресурсов на VeiL ECP.
+    template = graphene.Field(VeilShortEntityType)
+    node = graphene.Field(VeilShortEntityType)
+    cluster = graphene.Field(VeilShortEntityType)
+    datapool = graphene.Field(VeilShortEntityType)
+    vms = graphene.List(VmType)
 
     async def resolve_controller(self, info):
         controller_obj = await Controller.get(self.controller)
@@ -256,77 +244,53 @@ class PoolType(graphene.ObjectType):
         return await pool.assigned_users if entitled else await pool.possible_users
 
     async def resolve_vms(self, _info):
-        await self._build_vms_list()
-        return self.vms
+        # TODO: добавить пагинацию
+        pool = await Pool.get(self.pool_id)
+        vms = await pool.vms
+        # TODO: добавить информацию о пользователе
+        # TODO: добавить статус
+        print(vms)
+        return vms
 
     async def resolve_vm_amount(self, _info):
         return await (db.select([db.func.count(Vm.id)]).where(Vm.pool_id == self.pool_id)).gino.scalar()
 
-    # async def resolve_node(self, _info):
-    #     controller_address = await Pool.get_controller_ip(self.pool_id)
-    #     resources_http_client = await ResourcesHttpClient.create(controller_address)
-    #     node_id = await Pool.select('node_id').where(Pool.id == self.pool_id).gino.scalar()
-    #
-    #     node_data = await resources_http_client.fetch_node(node_id)
-    #     node_type = make_graphene_type(NodeType, node_data)
-    #     node_type.controller = ControllerType(address=controller_address)
-    #     return node_type
+    async def resolve_template(self, _info):
+        pool = await Pool.get(self.pool_id)
+        pool_controller = await pool.controller_obj
+        template_id = await pool.template_id
+        veil_domain = pool_controller.veil_client.domain(str(template_id))
+        await veil_domain.info()
+        # попытка не использовать id
+        veil_domain.id = veil_domain.api_object_id
+        return veil_domain
 
-    # async def resolve_cluster(self, _info):
-    #     controller_address = await Pool.get_controller_ip(self.pool_id)
-    #     resources_http_client = await ResourcesHttpClient.create(controller_address)
-    #     cluster_id = await Pool.select('cluster_id').where(Pool.id == self.pool_id).gino.scalar()
-    #
-    #     cluster_data = await resources_http_client.fetch_cluster(cluster_id)
-    #     cluster_type = make_graphene_type(ClusterType, cluster_data)
-    #     cluster_type.controller = ControllerType(address=controller_address)
-    #     return cluster_type
+    async def resolve_node(self, _info):
+        pool = await Pool.get(self.pool_id)
+        pool_controller = await pool.controller_obj
+        veil_node = pool_controller.veil_client.node(str(pool.node_id))
+        await veil_node.info()
+        # попытка не использовать id
+        veil_node.id = veil_node.api_object_id
+        return veil_node
 
-    # async def resolve_datapool(self, _info):
-    #     pool = await Pool.get(self.pool_id)
-    #     controller_address = await Pool.get_controller_ip(self.pool_id)
-    #     resources_http_client = await ResourcesHttpClient.create(controller_address)
-    #     datapool_id = pool.datapool_id
-    #     try:
-    #         datapool_data = await resources_http_client.fetch_datapool(datapool_id)
-    #         datapool_type = make_graphene_type(DatapoolType, datapool_data)
-    #         datapool_type.controller = ControllerType(address=controller_address)
-    #         return datapool_type
-    #     except (HTTPClientError, HttpError):
-    #         return None
+    async def resolve_datapool(self, _info):
+        pool = await Pool.get(self.pool_id)
+        pool_controller = await pool.controller_obj
+        veil_datapool = pool_controller.veil_client.data_pool(str(pool.datapool_id))
+        await veil_datapool.info()
+        # попытка не использовать id
+        veil_datapool.id = veil_datapool.api_object_id
+        return veil_datapool
 
-    # async def resolve_template(self, _info):
-    #     controller_address = await Pool.get_controller_ip(self.pool_id)
-    #     template_id = await AutomatedPool.select('template_id').where(
-    #         AutomatedPool.id == self.pool_id).gino.scalar()
-    #     vm_http_client = await VmHttpClient.create(controller_address, template_id)
-    #
-    #     try:
-    #         veil_info = await vm_http_client.info()
-    #         return VmQuery.veil_template_data_to_graphene_type(veil_info, controller_address)
-    #     except (HTTPClientError, HttpError):
-    #         # либо шаблон изчес с контроллера, либо попытка получить шаблон для статического пула
-    #         return None
-
-    # async def _build_vms_list(self):
-    #     if not self.vms:
-    #         self.vms = []
-    #
-    #         controller_address = await Pool.get_controller_ip(self.pool_id)
-    #         vm_http_client = await VmHttpClient.create(controller_address, '')
-    #         vm_veil_data_list = await vm_http_client.fetch_vms_list()
-    #
-    #         db_vms_data = await Vm.select("id").where((Vm.pool_id == self.pool_id)).gino.all()
-    #
-    #         for (vm_id,) in db_vms_data:
-    #             try:
-    #                 remote_vm_data = next(data for data in vm_veil_data_list if data['id'] == str(vm_id))
-    #                 vm_type = VmQuery.veil_vm_data_to_graphene_type(remote_vm_data, controller_address)
-    #             except StopIteration:
-    #                 vm_type = VmType(id=vm_id, controller=ControllerType(address=controller_address))
-    #                 vm_type.veil_info = None
-    #
-    #             self.vms.append(vm_type)
+    async def resolve_cluster(self, _info):
+        pool = await Pool.get(self.pool_id)
+        pool_controller = await pool.controller_obj
+        veil_cluster = pool_controller.veil_client.cluster(str(pool.cluster_id))
+        await veil_cluster.info()
+        # попытка не использовать id
+        veil_cluster.id = veil_cluster.api_object_id
+        return veil_cluster
 
     async def resolve_assigned_connection_types(self, _info):
         pool = await Pool.get(self.pool_id)
