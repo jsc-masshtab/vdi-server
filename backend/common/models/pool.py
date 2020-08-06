@@ -249,12 +249,13 @@ class Pool(VeilModel):
             query = query.where(and_(*filters))
         return await query.limit(limit).offset(offset).gino.all()
 
-    # @staticmethod
-    # async def get_controller_ip(pool_id):
-    #     # TODO: заменить на property controller_address
-    #     query = db.select([ControllerModel.address]).select_from(ControllerModel.join(Pool)).where(
-    #         Pool.id == pool_id)
-    #     return await query.gino.scalar()
+    @staticmethod
+    async def get_controller_ip(pool_id):
+        # TODO: заменить на property controller_address
+        from common.models.controller import Controller as ControllerModel
+        query = db.select([ControllerModel.address]).select_from(ControllerModel.join(Pool)).where(
+            Pool.id == pool_id)
+        return await query.gino.scalar()
 
     async def get_vm_amount(self, only_free=False):
         """
@@ -734,10 +735,9 @@ class AutomatedPool(db.Model):
         if pool:
             return pool.datapool_id
 
-    # @property
-    # async def controller_ip(self):
-    #     controller = self.controller
-    #     return await Pool.get_controller_ip(self.id)
+    @property
+    async def controller_ip(self):
+        return await Pool.get_controller_ip(self.id)
 
     @property
     async def keep_vms_on(self):
@@ -756,7 +756,6 @@ class AutomatedPool(db.Model):
     @classmethod
     async def soft_create(cls, verbose_name, controller_ip, cluster_id, node_id,
                           template_id, datapool_id, min_size, max_size, max_vm_amount, increase_step,
-                          # min_free_vms_amount,
                           max_amount_of_create_attempts, initial_size, reserve_size, total_size, vm_name_template,
                           create_thin_clones, connection_types):
         """Nested transactions are atomic."""
@@ -864,13 +863,13 @@ class AutomatedPool(db.Model):
         # from common.models import VmModel
         vm_name_template = self.vm_name_template or await self.verbose_name
         verbose_name = '{}'.format(vm_name_template)
-        pool_controller = await self.controller
+        pool_controller = await self.controller_obj
         # controller_address = await self.controller_ip
         params = {
             'verbose_name': verbose_name,
             'domain_id': str(self.template_id),
             'datapool_id': str(await self.datapool_id),
-            'controller_ip': pool_controller.address,
+            'controller_id': pool_controller.id,
             'node_id': str(await self.node_id),
             'create_thin_clones': self.create_thin_clones,
         }
@@ -889,7 +888,7 @@ class AutomatedPool(db.Model):
                 system_logger._debug('Fail to create VM on ECP. Re-run.')
                 await asyncio.sleep(1)
                 continue
-            except VmModel.reationError:
+            except VmCreationError:
                 break
 
             async def _check_if_vm_created(redis_message):
@@ -904,41 +903,41 @@ class AutomatedPool(db.Model):
 
                 return False
 
-                is_vm_successfully_created = await a_redis_wait_for_message(
-                    WS_MONITOR_CHANNEL_OUT, _check_if_vm_created, VEIL_WS_MAX_TIME_TO_WAIT)
-                await system_logger.debug('Ws msg vm successfully_created: {}'.format(is_vm_successfully_created))
+            is_vm_successfully_created = await a_redis_wait_for_message(
+                WS_MONITOR_CHANNEL_OUT, _check_if_vm_created, VEIL_WS_MAX_TIME_TO_WAIT)
+            await system_logger.debug('Ws msg vm successfully_created: {}'.format(is_vm_successfully_created))
 
-                # 2) determine if vm created by task status
-                if not is_vm_successfully_created:
-                    await system_logger.debug('Could not get the response about result of creation VM on ECP by WS. Task status check.')
-                    try:
-                        # TODO: сломалось при мердже - починить на новый клиент
-                        # token = await controller_module.ControllerModel.get_token(controller_address)
-                        # veil_client = VeilHttpClient(controller_address, token=token)
-                        # is_vm_successfully_created = await veil_client.check_task_status(current_vm_task_id)
-                        raise NotImplementedError()
-                    except asyncio.CancelledError:
-                        raise
-                    except Exception as ex:  # Возможно множество исключений, но нас интнесует лишь их отсутствие
-                        await system_logger.error('Exception during task status checking: {}'.format(str(ex)))
+            # 2) determine if vm created by task status
+            if not is_vm_successfully_created:
+                await system_logger.debug('Could not get the response about result of creation VM on ECP by WS. Task status check.')
+                try:
+                    # TODO: сломалось при мердже - починить на новый клиент
+                    # token = await controller_module.ControllerModel.get_token(controller_address)
+                    # veil_client = VeilHttpClient(controller_address, token=token)
+                    # is_vm_successfully_created = await veil_client.check_task_status(current_vm_task_id)
+                    raise NotImplementedError()
+                except asyncio.CancelledError:
+                    raise
+                except Exception as ex:  # Возможно множество исключений, но нас интнесует лишь их отсутствие
+                    await system_logger.error('Exception during task status checking: {}'.format(str(ex)))
 
-                # 3) determine if vm created by vm status
-                if not is_vm_successfully_created:
-                    await system_logger.debug('Probably task is not done. Check VM status.')
-                    domain_client = pool_controller.veil_client.domain(domain_id=vm_info['id'])
+            # 3) determine if vm created by vm status
+            if not is_vm_successfully_created:
+                await system_logger.debug('Probably task is not done. Check VM status.')
+                domain_client = pool_controller.veil_client.domain(domain_id=vm_info['id'])
+                try:
+                    await domain_client.info()
+                    is_vm_successfully_created = domain_client.active
+                except asyncio.CancelledError:
+                    #  Если получили CancelledError, то отменяем на контроллере таску создания вм.
                     try:
-                        vm_response = await domain_client.info()
-                        is_vm_successfully_created = vm_response.active
-                    except asyncio.CancelledError:
-                        #  Если получили CancelledError, то отменяем на контроллере таску создания вм.
-                        try:
-                            task_client = pool_controller.veil_client.task(task_id=current_vm_task_id)
-                            await task_client.cancel()
-                        except Exception as ex:
-                            await system_logger.error('Exception during vm creation task cancelling: {}'.format(str(ex)))
-                        raise
-                    except Exception as ex:  # Возможно множество исключений, но нас интнесует лишь их отсутствие
-                        await system_logger.error('Exception during vm status checking: {}'.format(str(ex)))
+                        task_client = pool_controller.veil_client.task(task_id=current_vm_task_id)
+                        await task_client.cancel()
+                    except Exception as ex:
+                        await system_logger.error('Exception during vm creation task cancelling: {}'.format(str(ex)))
+                    raise
+                except Exception as ex:  # Возможно множество исключений, но нас интнесует лишь их отсутствие
+                    await system_logger.error('Exception during vm status checking: {}'.format(str(ex)))
 
             # Эксперементальная обнова. VM создается в любом случае, но если что-то пошло не так, то мы создаем ее в БД.
             # if is_vm_successfully_created:
@@ -970,6 +969,14 @@ class AutomatedPool(db.Model):
         raise VmModel.reationError(
             _('Error with create VM {}').format(verbose_name))
 
+    @property
+    async def template_os_type(self):
+        """Получает инфорацию об ОС шаблона от VeiL ECP."""
+        pool_controller = await self.controller_obj
+        veil_template = pool_controller.veil_client.domain(domain_id=str(self.template_id))
+        await veil_template.info()
+        return veil_template.os_type
+
     async def add_initial_vms(self):
         """Create required initial amount of VMs for auto pool
            Основная логика сохранена со старой схемы. На рефакторинг внутреннего кода нет времени.
@@ -984,8 +991,7 @@ class AutomatedPool(db.Model):
                                                                                                   verbose_name,
                                                                                                   controller_address))
 
-        pool_os_type = await VmModel.get_template_os_type(controller_address=controller_address,
-                                                          template_id=self.template_id)
+        pool_os_type = await self.template_os_type
 
         await system_logger.debug(_('Pool {} os type is: {}').format(verbose_name, pool_os_type))
         await self.update(os_type=pool_os_type).apply()
@@ -993,13 +999,13 @@ class AutomatedPool(db.Model):
         await system_logger.info(_('Automated pool creation started'), entity=self.entity)
 
         vm_list = list()
-        vm_index = 1
-
+        # vm_index = 1
+        print('ABC1')
         try:
             for i in range(self.initial_size):
-                vm = await self.add_vm(vm_index)
+                # vm = await self.add_vm(vm_index)
+                vm = await self.add_vm()
                 vm_list.append(vm)
-
                 msg = _('Created {} VMs from {} at the Automated pool {}').format(i + 1, self.initial_size,
                                                                                   verbose_name)
                 await system_logger.info(msg, entity=self.entity)

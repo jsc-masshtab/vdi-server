@@ -187,7 +187,7 @@ class Vm(VeilModel):
 
         # client = await VmHttpClient.create(controller_ip, domain_id, verbose_name)
         vm_controller = await ControllerModel.get(controller_id)
-        vm_client = await vm_controller.veil_client.domain()
+        vm_client = vm_controller.veil_client.domain()
         inner_retry_count = 0
         while True:
             inner_retry_count += 1
@@ -276,7 +276,6 @@ class Vm(VeilModel):
 
     # @staticmethod
     # async def get_template_os_type(controller_address, template_id):
-    # TODO: заменить через инфо
     #     vm_http_client = await VmHttpClient.create(controller_address, template_id)
     #     domain_info = await vm_http_client.info()
     #     return domain_info['os_type'] if domain_info else None
