@@ -273,7 +273,7 @@ class DeleteAuthenticationDirectoryMutation(graphene.Mutation, AuthenticationDir
         auth_dir = await AuthenticationDirectory.get(kwargs['id'])
         if not auth_dir:
             raise SimpleError(_('No such Authentication Directory.'))
-        status = await auth_dir.soft_delete(dest=_('Authentication directory'), creator=creator)
+        status = await auth_dir.soft_delete(creator=creator)
         return DeleteAuthenticationDirectoryMutation(ok=status)
 
 
@@ -381,9 +381,7 @@ class DeleteAuthDirMappingMutation(graphene.Mutation, AuthenticationDirectoryVal
 
         mapping = await Mapping.get(kwargs['mapping_id'])
         auth_dir = await AuthenticationDirectory.get(kwargs['id'])
-        status = await mapping.soft_delete(dest=_('In authentication directory {} mapping').format(auth_dir.verbose_name),
-                                           creator=creator
-                                           )
+        status = await mapping.soft_delete(creator=creator)
         return DeleteAuthDirMappingMutation(ok=status, auth_dir=auth_dir)
 
 

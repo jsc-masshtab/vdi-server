@@ -177,8 +177,8 @@ class AuthenticationDirectory(VeilModel, AbstractSortableStatusModel):
         await update_type.test_connection()
         return update_type
 
-    async def soft_delete(self, dest, creator):
-        parent = super().soft_delete(dest, creator)
+    async def soft_delete(self, creator):
+        parent = super().soft_delete(creator)
 
         # Удаляем у существующих групп все ad_guid
         await GroupModel.update.values(ad_guid=None).where(GroupModel.ad_guid.isnot(None)).gino.status()

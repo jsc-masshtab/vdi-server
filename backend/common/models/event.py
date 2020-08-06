@@ -97,20 +97,12 @@ class Event(db.Model):
 
     @classmethod
     async def create_event(cls, msg, event_type=0, description=None, user='system', entity_dict=None):
-        # TODO: user стройкой - выглядит странно.нужен id
-        # from common.log.logging import Logging
+        # TODO: user строкой - выглядит странно.нужен id
         msg_dict = dict(event_type=event_type,
                         message=msg,
                         user=user,
                         event='event',
                         resource=EVENTS_SUBSCRIPTION)
-        # if event_type == 0:
-        #     Logging.logger_application_info(msg, description)
-        # elif event_type == 1:
-        #     Logging.logger_application_warning(msg, description)
-        # elif event_type == 2:
-        #     Logging.logger_application_error(msg, description)
-
         try:
             REDIS_CLIENT.publish(INTERNAL_EVENTS_CHANNEL, json.dumps(msg_dict))
         except TypeError:  # Can`t serialize

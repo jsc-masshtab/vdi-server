@@ -21,6 +21,7 @@ class Entity(db.Model):
     """
     entity_type: тип сущности из Enum
     entity_uuid: UUID сущности, если в качестве EntityType указано название таблицы  # TODO: rename to object_uuid
+    entity_name: имя сущности
     """
     __tablename__ = 'entity'
 

@@ -178,7 +178,7 @@ class DeleteGroupMutation(graphene.Mutation, GroupValidator):
         group = await Group.get(id) if id else await Group.query.where(Group.ad_guid == str(ad_guid)).gino.first()
         if not group:
             raise SimpleError(_('No such Group.'))
-        status = await group.soft_delete(dest=_('Group'), creator=creator)
+        status = await group.soft_delete(creator=creator)
         return DeleteGroupMutation(ok=status)
 
 

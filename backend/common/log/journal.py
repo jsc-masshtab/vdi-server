@@ -6,8 +6,6 @@ import inspect
 from common.settings import DEBUG
 from common.models.event import Event
 
-# TODO: переключить весь код на новое использование
-
 
 def singleton(cls):
     """Декоратор превращающий класс в классический синглтон."""

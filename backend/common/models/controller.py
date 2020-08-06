@@ -232,8 +232,7 @@ class Controller(AbstractSortableStatusModel, VeilModel):
         # Удаляем зависимые пулы
         await self.full_delete_pools(creator=creator)
         # Удаляем запись
-        # TODO: исправить вызов после исключения dest из soft_delete
-        status = await super().soft_delete(creator=creator, dest=None)
+        status = await super().soft_delete(creator=creator)
         return status
 
     async def activate(self):
@@ -243,7 +242,7 @@ class Controller(AbstractSortableStatusModel, VeilModel):
             await self.update(status=Status.ACTIVE).apply()
             await system_logger.info(_('Controller {} has been activated.').format(self.verbose_name))
             # Активируем пулы
-            # TODO: переработать деактивацию пулов - нужен методв пулах, который бы активировал ВМ.
+            # TODO: переработать активацию пулов - нужен метод в пулах, который бы активировал ВМ.
             pools = await self.pools
             for pool_obj in pools:
                 await pool_obj.enable(pool_obj.id)
@@ -258,7 +257,7 @@ class Controller(AbstractSortableStatusModel, VeilModel):
             await self.update(status=Status.FAILED).apply()
             await system_logger.info(_('Controller {} has been deactivated.').format(self.verbose_name))
             # Деактивируем пулы
-            # TODO: переработать деактивацию пулов - нужен методв пулах, который бы деактивировал ВМ.
+            # TODO: переработать деактивацию пулов - нужен метод в пулах, который бы деактивировал ВМ.
             pools = await self.pools
             for pool_obj in pools:
                 await pool_obj.disable(pool_obj.id)

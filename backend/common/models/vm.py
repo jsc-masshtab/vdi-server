@@ -100,7 +100,7 @@ class Vm(VeilModel):
 
         return vm
 
-    async def soft_delete(self, dest, creator):
+    async def soft_delete(self, creator):
         if self.created_by_vdi:
             domain_client = await self.vm_client
             result = await domain_client.remove(full=True, force=True)
@@ -113,7 +113,7 @@ class Vm(VeilModel):
             #     except HttpError as http_error:
             #         await system_logger.warning(_('Fail to remove VM {} from ECP: ').format(self.verbose_name, http_error))
             await system_logger.debug(_('Vm {} removed from ECP.').format(self.verbose_name))
-        status = await super().soft_delete(dest=dest, creator=creator)
+        status = await super().soft_delete(creator=creator)
         return status
 
     # TODO: очевидное дублирование однотипного кода. Переселить это все в универсальный метод
@@ -253,7 +253,7 @@ class Vm(VeilModel):
         status = None
         for vm_id in vm_ids:
             vm = await Vm.get(vm_id)
-            status = await vm.soft_delete(dest=_('VM'), creator=creator)
+            status = await vm.soft_delete(creator=creator)
             await system_logger.info(_('Vm {} removed from pool').format(vm.verbose_name))
         return status
 

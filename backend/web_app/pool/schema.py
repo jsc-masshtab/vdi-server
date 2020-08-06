@@ -672,7 +672,7 @@ class CreateAutomatedPoolMutation(graphene.Mutation, ControllerFetcher):
         except Exception as E:  # Возможные исключения: дубликат имени или вм id, сетевой фейл enable_remote_accesses
             # TODO: указать конкретные Exception
             desc = str(E)
-            error_msg = _('Failed to create static pool {}.').format(verbose_name)
+            error_msg = _('Failed to create automated pool {}.').format(verbose_name)
             await system_logger.debug(desc)
             raise SimpleError(error_msg, description=desc)
 

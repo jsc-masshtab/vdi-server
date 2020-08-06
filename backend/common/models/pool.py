@@ -503,7 +503,7 @@ class Pool(VeilModel):
     #         pool_has_vms = await Pool.has_vms
     #         if pool_has_vms:
     #             raise SimpleError(_('Pool has VMs. Please completely remove.'), user=creator)
-    #         status = await pool.soft_delete(dest=_('Pool'), creator=creator)
+    #         status = await pool.soft_delete(creator=creator)
     #
     #     return status
 
@@ -1055,5 +1055,5 @@ class AutomatedPool(db.Model):
         status = None
         for vm in vms:
             await system_logger.debug(_('Calling soft delete for vm {}').format(vm.verbose_name))
-            status = await vm.soft_delete(dest=_('VM'), creator=creator)
+            status = await vm.soft_delete(creator=creator)
         return status
