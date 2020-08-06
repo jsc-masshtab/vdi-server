@@ -93,18 +93,6 @@ class PoolValidator(MutationValidation):
         raise ValidationError(_('No such pool.'))
 
     @staticmethod
-    async def validate_controller_ip(obj_dict, value):
-        if not value:
-            return
-        ip_re = re.compile(
-            r'^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$'
-        )
-        ip = re.fullmatch(ip_re, value)
-        if ip:
-            return value
-        raise ValidationError(_('ip-address probably invalid.'))
-
-    @staticmethod
     async def validate_verbose_name(obj_dict, value):
         if not value:
             return
@@ -626,20 +614,19 @@ class UpdateStaticPoolMutation(graphene.Mutation, PoolValidator):
 
 # --- --- --- --- ---
 # Automated (Dynamic) pool mutations
-class CreateAutomatedPoolMutation(graphene.Mutation, PoolValidator):
+class CreateAutomatedPoolMutation(graphene.Mutation, ControllerFetcher):
     class Arguments:
-        verbose_name = graphene.String(required=True)
-        controller_ip = graphene.String(required=True)
+        controller_id = graphene.UUID(required=True)
         cluster_id = graphene.UUID(required=True)
         template_id = graphene.UUID(required=True)
         datapool_id = graphene.UUID(required=True)
         node_id = graphene.UUID(required=True)
 
+        verbose_name = graphene.String(required=True)
         min_size = graphene.Int(default_value=1)
         max_size = graphene.Int(default_value=200)
         max_vm_amount = graphene.Int(default_value=1000)
-        increase_step = graphene.Int(default_value=3)
-        # min_free_vms_amount = graphene.Int(default_value=5)
+        increase_step = graphene.Int(default_value=3, description="Шаг расширения пула")
         max_amount_of_create_attempts = graphene.Int(default_value=15)
         initial_size = graphene.Int(default_value=1)
         reserve_size = graphene.Int(default_value=1)
@@ -655,14 +642,39 @@ class CreateAutomatedPoolMutation(graphene.Mutation, PoolValidator):
 
     @classmethod
     @administrator_required
-    async def mutate(cls, root, info, creator, **kwargs):
-        await cls.validate(**kwargs)
+    async def mutate(cls, root, info, creator, controller_id, cluster_id, template_id, datapool_id, node_id,
+                     verbose_name, min_size, max_size, max_vm_amount, increase_step, max_amount_of_create_attempts,
+                     initial_size, reserve_size, total_size, vm_name_template,
+                     create_thin_clones,
+                     connection_types):
+        """Мутация создания Автоматического(Динамического) пула виртуальных машин.
+
+        TODO: описать механизм работы"""
+
+        # Проверяем наличие записи
+        controller = await cls.fetch_by_id(controller_id)
+        # TODO: оживить валидатор
+        # await cls.validate(**kwargs)
+        # --- Создание записей в БД
         try:
-            automated_pool = await AutomatedPool.soft_create(**kwargs)
-        except UniqueViolationError:
-            error_msg = _('Failed to create automated pool {}. Name must be unique.').format(kwargs['verbose_name'])
-            # await system_logger.error(error_msg, user=creator)
-            raise SimpleError(error_msg, user=creator)
+            automated_pool = await AutomatedPool.soft_create(verbose_name=verbose_name,
+                                                             controller_ip=controller.address, cluster_id=cluster_id,
+                                                             node_id=node_id, template_id=template_id,
+                                                             datapool_id=datapool_id,
+                                                             min_size=min_size, max_size=max_size,
+                                                             max_vm_amount=max_vm_amount, increase_step=increase_step,
+                                                             max_amount_of_create_attempts=max_amount_of_create_attempts,
+                                                             initial_size=initial_size, reserve_size=reserve_size,
+                                                             total_size=total_size,
+                                                             vm_name_template=vm_name_template,
+                                                             create_thin_clones=create_thin_clones,
+                                                             connection_types=connection_types)
+        except Exception as E:  # Возможные исключения: дубликат имени или вм id, сетевой фейл enable_remote_accesses
+            # TODO: указать конкретные Exception
+            desc = str(E)
+            error_msg = _('Failed to create static pool {}.').format(verbose_name)
+            await system_logger.debug(desc)
+            raise SimpleError(error_msg, description=desc)
 
         # send command to start pool init task
         await request_to_execute_pool_task(str(automated_pool.id), PoolTaskType.CREATING.name)
