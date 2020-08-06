@@ -153,6 +153,7 @@ export class AuthenticationDirectoryDetailsComponent implements OnInit, OnDestro
     }
 
     this.dialog.open(FormForEditComponent, {
+ 			disableClose: true, 
       width: '500px',
       data: {
         post: {
@@ -212,6 +213,7 @@ export class AuthenticationDirectoryDetailsComponent implements OnInit, OnDestro
 
   public remove(): void {
     this.dialog.open(RemoveAuthenticationDirectoryComponent, {
+ 			disableClose: true, 
       width: '500px',
       data: {
         id: this.id,
@@ -222,6 +224,7 @@ export class AuthenticationDirectoryDetailsComponent implements OnInit, OnDestro
 
   public addMatch() {
     this.dialog.open(AddMappingComponent, {
+ 			disableClose: true, 
       width: '500px',
       data: {
         id: this.id
@@ -232,6 +235,7 @@ export class AuthenticationDirectoryDetailsComponent implements OnInit, OnDestro
  public openMapping(mapping) {
   mapping['idDirectory'] = this.id;
   this.dialog.open(MappingComponent, {
+ 			disableClose: true, 
     width: '500px',
     data: mapping
   });
@@ -239,6 +243,7 @@ export class AuthenticationDirectoryDetailsComponent implements OnInit, OnDestro
   
   public addGroup() {
     this.dialog.open(AddGropComponent, {
+ 			disableClose: true, 
       width: '500px',
       data: {
         id: this.id,
@@ -250,6 +255,7 @@ export class AuthenticationDirectoryDetailsComponent implements OnInit, OnDestro
 
   public removeGroup() {
     this.dialog.open(RemoveGroupComponent, {
+ 			disableClose: true, 
       width: '500px',
       data: {
         id: this.id,

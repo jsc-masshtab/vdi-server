@@ -14,29 +14,46 @@ export class ClustersService  {
 
     constructor(private service: Apollo) {}
 
-    public getAllClusters(): QueryRef<any, any> {
+    public getAllClusters(filter?): QueryRef<any, any> {
 
-        return  this.service.watchQuery({
-            query: gql` 
-                query resources($ordering:String) {
-                    clusters(ordering: $ordering) {
+        let query: string = `query resources($ordering:String) {
+            clusters(ordering: $ordering) {
+                id
+                verbose_name
+                nodes_count
+                status
+                cpu_count
+                memory_count
+                controller {
+                    id
+                    verbose_name
+                }
+                
+            }
+        }`
+
+        if (filter) {
+            query = `query controllers($controller_id:UUID) {
+                controller(id_:$controller_id) {
+                    id
+                    clusters {
                         id
                         verbose_name
-                        nodes_count
                         status
                         cpu_count
                         memory_count
-                        controller {
-                            id
-                            verbose_name
-                        }
-                        
+                        nodes_count
                     }
                 }
-            `,
+            }`
+        }
+
+        return  this.service.watchQuery({
+            query: gql(query),
             variables: {
                 method: 'GET',
-                ordering: this.paramsForGetClusters.nameSort
+                ordering: this.paramsForGetClusters.nameSort,
+                ...filter
             }
         });
     }

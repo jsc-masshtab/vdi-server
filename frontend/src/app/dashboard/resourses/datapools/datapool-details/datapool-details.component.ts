@@ -17,6 +17,8 @@ interface ICollection {
 
 
 export class DatapoolDetailsComponent implements OnInit, OnDestroy {
+  private sub: Subscription;
+  public host: boolean = false;
 
   public datapool: ICollection = {};
 
@@ -46,11 +48,12 @@ export class DatapoolDetailsComponent implements OnInit, OnDestroy {
   ];
 
   public idDatapool: string;
-  public menuActive: string = 'info';
-  public host: boolean = false;
   private address: string;
-  private sub: Subscription;
 
+  public menuActive: string = 'info';
+
+  filter: object
+  
   constructor(private activatedRoute: ActivatedRoute,
               private service: DatapoolsService,
               private router: Router) { }
@@ -60,6 +63,11 @@ export class DatapoolDetailsComponent implements OnInit, OnDestroy {
       this.idDatapool = param.get('id') as string;
       this.address = param.get('address');
       this.getDatapool();
+
+      this.filter = {
+        controller_id: this.address,
+        data_pool_id: this.idDatapool
+      }
     });
   }
 
@@ -67,15 +75,16 @@ export class DatapoolDetailsComponent implements OnInit, OnDestroy {
     if (this.sub) {
       this.sub.unsubscribe();
     }
+
     this.host = false;
     this.sub = this.service.getDatapool(this.idDatapool, this.address).valueChanges.pipe(map(data => data.data.datapool))
       .subscribe((data) => {
         this.datapool = data;
         this.host = true;
       },
-        () => {
-          this.host = true;
-        });
+      () => {
+        this.host = true;
+      });
   }
 
   public close() {
@@ -83,9 +92,7 @@ export class DatapoolDetailsComponent implements OnInit, OnDestroy {
   }
 
   public routeTo(route: string): void {
-    if (route === 'info') {
-      this.menuActive = 'info';
-    }
+    this.menuActive = route
   }
 
   ngOnDestroy() {

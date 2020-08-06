@@ -1,7 +1,7 @@
 import { IParams } from '../../../../../../types';
 
 import { WaitService } from '../../../common/components/single/wait/wait.service';
-import { Component, OnInit, ViewChild, ElementRef, OnDestroy } from '@angular/core';
+import { Component, OnInit, ViewChild, ElementRef, OnDestroy, Input } from '@angular/core';
 import { DatapoolsService } from './datapools.service';
 import { map } from 'rxjs/operators';
 import { Router } from '@angular/router';
@@ -18,6 +18,8 @@ import { Subscription } from 'rxjs';
 
 export class DatapoolsComponent extends DetailsMove implements OnInit, OnDestroy {
 
+  @Input() filter: object
+  
   public datapools: object[] = [];
   public collection: object[] = [
     {
@@ -78,15 +80,34 @@ export class DatapoolsComponent extends DetailsMove implements OnInit, OnDestroy
       this.sub.unsubscribe();
     }
     this.waitService.setWait(true);
-    this.sub = this.service.getAllDatapools().valueChanges.pipe(map(data => data.data.datapools))
+
+    let filtered = (data) => {
+      if (this.filter) {
+        return data.data.controller.data_pools
+      } else {
+        return data.data.datapools
+      }
+    }
+
+    this.sub = this.service.getAllDatapools(this.filter).valueChanges.pipe(map(data => filtered(data)))
       .subscribe( (data) => {
         this.datapools = data;
         this.waitService.setWait(false);
       });
   }
 
-  public routeTo(event): void {
-    this.router.navigate([`pages/resourses/datapools/${event.controller.id}/${event.id}`]);
+  public routeTo(datapool): void {
+
+    let datapool_id = datapool.id
+    let controller_id = ''
+
+    if (this.filter) {
+      controller_id = this.filter['controller_id']
+    } else {
+      controller_id = datapool.controller.id;
+    }
+
+    this.router.navigate([`pages/resourses/datapools/${controller_id}/${datapool_id}`]);
   }
 
   public onResize(): void {

@@ -6,6 +6,9 @@ import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { NodesComponent } from './all-nodes/nodes.component';
 import { NodesService } from './all-nodes/nodes.service';
+import { DatapoolsModule } from '../datapools/datapools.module';
+import { VmsModule } from '../vms/vms.module';
+import { TemplatesModule } from '../templates/templates.module';
 
 
 @NgModule({
@@ -17,7 +20,10 @@ import { NodesService } from './all-nodes/nodes.service';
     SharedModule,
     CommonModule,
     FontAwesomeModule,
-    AppRoutingModule
+    AppRoutingModule,
+    DatapoolsModule,
+    VmsModule,
+    TemplatesModule
   ],
   providers: [NodesService],
   exports: [

@@ -14,26 +14,46 @@ export class DatapoolsService {
 
     constructor(private service: Apollo) {}
 
-    public getAllDatapools(): QueryRef<any, any> {
+    public getAllDatapools(filter?): QueryRef<any, any> {
+
+        let query: string = `query resources($ordering:String) {
+                datapools(ordering: $ordering) {
+                    id
+                    used_space
+                    free_space
+                    status
+                    type
+                    verbose_name
+                    controller {
+                        id
+                        verbose_name
+                    }
+                }
+            }
+        `
+
+        if (filter) {
+            query = `query controllers($controller_id:UUID, $cluster_id: UUID, $node_id: UUID) {
+                controller(id_:$controller_id) {
+                    id
+                    data_pools(cluster_id: $cluster_id, node_id: $node_id) {
+                        id
+                        used_space
+                        free_space
+                        status
+                        type
+                        verbose_name
+                    }
+                }
+            }`
+        }
+
         return  this.service.watchQuery({
-            query:  gql` query resources($ordering:String) {
-                            datapools(ordering: $ordering) {
-                                id
-                                used_space
-                                free_space
-                                status
-                                type
-                                verbose_name
-                                controller {
-                                    id
-                                    verbose_name
-                                }
-                            }
-                        }
-                    `,
+            query: gql(query),
             variables: {
                 method: 'GET',
-                ordering: this.paramsForGetDatapools.nameSort
+                ordering: this.paramsForGetDatapools.nameSort,
+                ...filter
             }
         });
     }

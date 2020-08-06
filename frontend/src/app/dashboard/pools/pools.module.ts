@@ -2,7 +2,7 @@ import { PoolsUpdateService } from './all-pools/pools.update.service';
 import { MatSelectModule } from '@angular/material/select';
 import { MatDialogModule } from '@angular/material/dialog';
 import { AppRoutingModule } from '../../app-routing.module';
-import { ReactiveFormsModule } from '@angular/forms';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { SharedModule } from '../common/shared.module';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { NgModule } from '@angular/core';
@@ -51,6 +51,7 @@ import { AddGropComponent } from './pool-details/add-group/add-group.component';
     SharedModule,
     CommonModule,
     FontAwesomeModule,
+    FormsModule,
     ReactiveFormsModule,
     AppRoutingModule,
     MatDialogModule,

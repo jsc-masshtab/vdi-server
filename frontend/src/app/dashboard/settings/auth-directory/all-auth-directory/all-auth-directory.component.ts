@@ -51,6 +51,7 @@ export class AuthenticationDirectoryComponent extends DetailsMove implements OnI
 
   public addUser() {
     this.dialog.open(AddAuthenticationDirectoryComponent, {
+ 			disableClose: true, 
       width: '500px'
     });
   }

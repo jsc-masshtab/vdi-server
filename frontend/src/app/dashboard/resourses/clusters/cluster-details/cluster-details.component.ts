@@ -18,9 +18,11 @@ interface ICollection {
 
 
 export class ClusterDetailsComponent implements OnInit, OnDestroy {
+  private sub: Subscription;
+
+  public host: boolean = false;
 
   public cluster: ICollection = {};
-  public templates: [] = [];
   public collectionDetails: object[] = [
     {
       title: 'Название',
@@ -62,91 +64,11 @@ export class ClusterDetailsComponent implements OnInit, OnDestroy {
       type: 'array-length'
     } */
   ];
-  public collectionNodes = [
-    {
-      title: 'Название',
-      property: 'verbose_name',
-      class: 'name-start',
-      type: 'string',
-      icon: 'server'
-    },
-    /* {
-      title: 'IP-адрес',
-      property: 'management_ip',
-      type: 'string'
-    },
-    {
-      title: 'CPU',
-      property: 'cpu_count',
-      type: 'string'
-    },
-    {
-      title: 'RAM',
-      property: 'memory_count',
-      type: 'string'
-    }, */
-    {
-      title: 'Статус',
-      property: 'status'
-    }
-  ];
-  public collectionDatapools = [
-    {
-      title: 'Название',
-      property: 'verbose_name',
-      class: 'name-start',
-      type: 'string',
-      icon: 'folder-open'
-    },
-    {
-      title: 'Тип',
-      property: 'type',
-      type: 'string'
-    },
-    {
-      title: 'Свободно (Мб)',
-      property: 'free_space',
-      type: 'string'
-    },
-    {
-      title: 'Занято (Мб)',
-      property: 'used_space',
-      type: 'string'
-    },
-    {
-      title: 'Статус',
-      property: 'status'
-    }
-  ];
-  public collectionTemplates = [
-    {
-      title: 'Название',
-      property: 'verbose_name',
-      class: 'name-start',
-      type: 'string',
-      icon: 'tv'
-    }
-  ];
-  public collectionVms = [
-    {
-      title: 'Название',
-      property: 'verbose_name',
-      class: 'name-start',
-      type: 'string',
-      icon: 'desktop'
-    },
-    {
-      title: 'Шаблон',
-      property: 'template',
-      property_lv2: 'verbose_name'
-    }
-  ];
   public idCluster: string;
   public menuActive: string = 'info';
-  public host: boolean = false;
   private address: string;
 
-  private sub: Subscription;
+  filter: object
 
   constructor(private activatedRoute: ActivatedRoute,
               private service: ClustersService,
@@ -157,6 +79,11 @@ export class ClusterDetailsComponent implements OnInit, OnDestroy {
       this.idCluster = param.get('id');
       this.address = param.get('address');
       this.getCluster();
+
+      this.filter = {
+        controller_id: this.address,
+        cluster_id: this.idCluster
+      }
     });
   }
 
@@ -170,9 +97,9 @@ export class ClusterDetailsComponent implements OnInit, OnDestroy {
         this.cluster = data;
         this.host = true;
       },
-        () => {
-          this.host = true;
-        });
+      () => {
+        this.host = true;
+      });
   }
 
   public close() {
@@ -180,25 +107,7 @@ export class ClusterDetailsComponent implements OnInit, OnDestroy {
   }
 
   public routeTo(route: string): void {
-    if (route === 'info') {
-      this.menuActive = 'info';
-    }
-
-    if (route === 'servers') {
-      this.menuActive = 'servers';
-    }
-
-    if (route === 'datapools') {
-      this.menuActive = 'datapools';
-    }
-
-    if (route === 'templates') {
-      this.menuActive = 'templates';
-    }
-
-    if (route === 'vms') {
-      this.menuActive = 'vms';
-    }
+    this.menuActive = route
   }
 
   ngOnDestroy() {

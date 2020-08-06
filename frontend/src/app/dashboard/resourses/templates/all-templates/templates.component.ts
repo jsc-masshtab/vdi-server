@@ -1,5 +1,5 @@
 import { WaitService } from '../../../common/components/single/wait/wait.service';
-import { Component, OnInit, ViewChild, ElementRef, OnDestroy } from '@angular/core';
+import { Component, OnInit, ViewChild, ElementRef, OnDestroy, Input } from '@angular/core';
 import { TemplatesService } from './templates.service';
 import { map } from 'rxjs/operators';
 import { Router } from '@angular/router';
@@ -16,6 +16,10 @@ import { IParams } from 'types';
 
 
 export class TemplatesComponent extends DetailsMove implements OnInit, OnDestroy {
+
+  @Input() filter: object
+
+  private sub: Subscription;
 
   public templates: object[] = [];
   public collection = [
@@ -34,8 +38,6 @@ export class TemplatesComponent extends DetailsMove implements OnInit, OnDestroy
     }
   ];
 
-  private sub: Subscription;
-
   constructor(private service: TemplatesService, private waitService: WaitService,  private router: Router) {
     super();
   }
@@ -51,14 +53,33 @@ export class TemplatesComponent extends DetailsMove implements OnInit, OnDestroy
       this.sub.unsubscribe();
     }
     this.waitService.setWait(true);
-    this.sub = this.service.getAllTemplates().valueChanges.pipe(map(data => data.data.templates)).subscribe((data) => {
+
+    let filtered = (data) => {
+      if (this.filter) {
+        return data.data.controller.templates
+      } else {
+        return data.data.templates
+      }
+    }
+
+    this.sub = this.service.getAllTemplates(this.filter).valueChanges.pipe(map(data => filtered(data))).subscribe((data) => {
       this.templates = data;
       this.waitService.setWait(false);
     });
   }
 
   public routeTo(event): void {
-    this.router.navigate([`pages/resourses/templates/${event.controller.id}/${event.id}`]);
+
+    let id = event.id
+    let controller_id = ''
+
+    if (this.filter) {
+      controller_id = this.filter['controller_id']
+    } else {
+      controller_id = event.controller.id;
+    }
+
+    this.router.navigate([`pages/resourses/templates/${controller_id}/${id}`]);
   }
 
   public onResize(): void {

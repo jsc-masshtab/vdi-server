@@ -19,9 +19,12 @@ interface type_node {
 
 
 export class NodeDetailsComponent implements OnInit, OnDestroy {
+  private sub: Subscription;
+
+  public host: boolean = false;
 
   public node: type_node = {};
-  public templates: [] = [];
+
   public collection = [
     {
       title: 'Название',
@@ -51,80 +54,14 @@ export class NodeDetailsComponent implements OnInit, OnDestroy {
     {
       title: 'Статус',
       property: 'status'
-    }/* ,
-    {
-      title: 'Пулы данных',
-      property: 'datapools',
-      type: 'array-length'
-    },
-    {
-      title: 'Шаблоны ВМ',
-      property: 'templates',
-      type: 'array-length'
-    },
-    {
-      title: 'ВМ',
-      property: 'vms',
-      type: 'array-length'
-    } */
-  ];
-  public collection_datapools = [
-    {
-      title: 'Название',
-      property: 'verbose_name',
-      class: 'name-start',
-      type: 'string',
-      icon: 'folder-open'
-    },
-    {
-      title: 'Тип',
-      property: 'type',
-      type: 'string'
-    },
-    {
-      title: 'Свободно (Мб)',
-      property: 'free_space',
-      type: 'string',
-    },
-    {
-      title: 'Занято (Мб)',
-      property: 'used_space',
-      type: 'string'
-    },
-    {
-      title: 'Статус',
-      property: 'status'
     }
   ];
-  public collection_templates = [
-    {
-      title: 'Название',
-      property: 'verbose_name',
-      class: 'name-start',
-      type: 'string',
-      icon: 'tv'
-    }
-  ];
-  public collection_vms = [
-    {
-      title: 'Название',
-      property: 'verbose_name',
-      class: 'name-start',
-      type: 'string',
-      icon: 'desktop'
-    },
-    {
-      title: 'Шаблон',
-      property: 'template',
-      property_lv2: 'verbose_name'
-    }
-  ];
+  
   public node_id: string;
   public menuActive: string = 'info';
   private address: string;
 
-  public host: boolean = false;
-  private sub: Subscription;
+  filter: object
 
   constructor(private activatedRoute: ActivatedRoute,
               private service: NodesService,
@@ -135,6 +72,11 @@ export class NodeDetailsComponent implements OnInit, OnDestroy {
       this.node_id = param.get('id');
       this.address = param.get('address');
       this.getNode();
+
+      this.filter = {
+        controller_id: this.address,
+        node_id: this.node_id
+      }
     });
   }
 
@@ -154,21 +96,7 @@ export class NodeDetailsComponent implements OnInit, OnDestroy {
   }
 
   public routeTo(route: string): void {
-    if (route === 'info') {
-      this.menuActive = 'info';
-    }
-
-    if (route === 'datapools') {
-      this.menuActive = 'datapools';
-    }
-
-    if (route === 'templates') {
-      this.menuActive = 'templates';
-    }
-
-    if (route === 'vms') {
-      this.menuActive = 'vms';
-    }
+    this.menuActive = route
   }
 
   public close() {
