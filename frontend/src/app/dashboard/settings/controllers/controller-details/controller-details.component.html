@@ -48,8 +48,8 @@
                 <vdi-clusters [filter]="filter" *ngIf="menuActive === 'clusters'"></vdi-clusters>
                 <vdi-nodes [filter]="filter" *ngIf="menuActive === 'servers'"></vdi-nodes>
                 <vdi-datapools [filter]="filter" *ngIf="menuActive === 'datapools'"></vdi-datapools>
-                <vdi-vms *ngIf="menuActive === 'vms'"></vdi-vms>
-                <vdi-templates *ngIf="menuActive === 'templates'"></vdi-templates>
+                <vdi-vms [filter]="filter" *ngIf="menuActive === 'vms'"></vdi-vms>
+                <vdi-templates [filter]="filter" *ngIf="menuActive === 'templates'"></vdi-templates>
             </div>     
         </div>
     </div>
