@@ -1,7 +1,7 @@
 import { IParams } from '../../../../../../types';
 import { DetailsMove } from '../../../common/classes/details-move';
 import { WaitService } from '../../../common/components/single/wait/wait.service';
-import { Component, OnInit, ViewChild, ElementRef, OnDestroy } from '@angular/core';
+import { Component, OnInit, ViewChild, ElementRef, OnDestroy, Input } from '@angular/core';
 import { ClustersService } from './clusters.service';
 import { map } from 'rxjs/operators';
 import { Router } from '@angular/router';
@@ -15,6 +15,8 @@ import { Subscription } from 'rxjs';
 
 
 export class ClustersComponent extends DetailsMove implements OnInit, OnDestroy {
+
+  @Input() filter: object
 
   public clusters = [];
   public collection: object[] = [
@@ -75,7 +77,16 @@ export class ClustersComponent extends DetailsMove implements OnInit, OnDestroy 
       this.sub.unsubscribe();
     }
     this.waitService.setWait(true);
-    this.sub = this.service.getAllClusters().valueChanges.pipe(map(data => data.data.clusters))
+
+    let filtered = (data) => {
+      if (this.filter) {
+        return data.data.controller.clusters
+      } else {
+        return data.data.clusters
+      }
+    }
+
+    this.sub = this.service.getAllClusters(this.filter).valueChanges.pipe(map(data => filtered(data)))
       .subscribe((data) => {
         this.clusters = data;
         this.waitService.setWait(false);
@@ -95,7 +106,17 @@ export class ClustersComponent extends DetailsMove implements OnInit, OnDestroy 
   }
 
   public routeTo(event): void {
-    this.router.navigate([`pages/resourses/clusters/${event.controller.id}/${event.id}`]);
+
+    let cluster_id = event.id
+    let controller_id = ''
+
+    if (this.filter) {
+      controller_id = this.filter['controller_id']
+    } else {
+      controller_id = event.controller.id;
+    }
+
+    this.router.navigate([`pages/resourses/clusters/${controller_id}/${cluster_id}`]);
   }
 
   public sortList(param: IParams) {

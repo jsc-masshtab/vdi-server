@@ -13,24 +13,40 @@ export class VmsService {
         nameSort: undefined
     };
 
-    public getAllVms(): QueryRef<any, any> {
+    public getAllVms(filter?): QueryRef<any, any> {
+
+        let query: string = `query resources($ordering:String) {
+            vms(ordering: $ordering) {
+                verbose_name
+                status
+                template
+                id
+                controller {
+                    id
+                    verbose_name
+                }
+            }
+        }`
+
+        if (filter) {
+            query = `query controllers($controller_id:UUID, $cluster_id: UUID, $node_id: UUID, $data_pool_id: UUID) {
+                controller(id_:$controller_id) {
+                    id
+                    vms(cluster_id: $cluster_id, node_id: $node_id, data_pool_id: $data_pool_id) {
+                        verbose_name
+                        template
+                        id
+                    }
+                }
+            }`
+        }
+
         return  this.service.watchQuery({
-            query: gql` query resources($ordering:String) {
-                                vms(ordering: $ordering) {
-                                    verbose_name
-                                    status
-                                    template
-                                    id
-                                    controller {
-                                        id
-                                        verbose_name
-                                    }
-                                }
-                            }
-                    `,
+            query: gql(query),
             variables: {
                 method: 'GET',
-                ordering: this.params.nameSort
+                ordering: this.params.nameSort,
+                ...filter
             }
         });
     }

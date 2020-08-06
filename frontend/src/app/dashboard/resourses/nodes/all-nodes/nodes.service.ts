@@ -15,28 +15,46 @@ export class NodesService {
         nameSort: undefined
     };
 
-    public getAllNodes(): QueryRef<any, any> {
+    public getAllNodes(filter?): QueryRef<any, any> {
+
+        let query: string = `query resources($ordering:String) {
+            nodes(ordering: $ordering) {
+                id
+                verbose_name
+                status
+                datacenter_name
+                cpu_count
+                memory_count
+                management_ip
+                controller {
+                    id
+                    verbose_name
+                }
+            }
+        }`
+
+        if (filter) {
+            query = `query controllers($controller_id:UUID, $cluster_id: UUID) {
+                controller(id_:$controller_id) {
+                    id
+                    nodes(cluster_id: $cluster_id) {
+                        id
+                        verbose_name
+                        status
+                        cpu_count
+                        memory_count
+                        management_ip
+                    }
+                }
+            }`
+        }
 
         return  this.service.watchQuery({
-            query:  gql` query resources($ordering:String) {
-                            nodes(ordering: $ordering) {
-                                id
-                                verbose_name
-                                status
-                                datacenter_name
-                                cpu_count
-                                memory_count
-                                management_ip
-                                controller {
-                                    id
-                                    verbose_name
-                                }
-                            }
-                        }
-                    `,
+            query: gql(query),
             variables: {
                 method: 'GET',
-                ordering: this.paramsForGetNodes.nameSort
+                ordering: this.paramsForGetNodes.nameSort,
+                ...filter
             }
         });
     }

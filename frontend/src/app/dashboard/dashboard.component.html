@@ -4,13 +4,17 @@
     <img src="../assets/favicon.png" width="20" height="20">
     <span [style.fontSize]="'18px'">Veil VDI</span>
   </div>
+  
   <vdi-header-user></vdi-header-user>
 </header>
+
 <section class="all-main">
   <vdi-main-menu></vdi-main-menu>
+
   <main>
     <vdi-wait></vdi-wait>
     <router-outlet></router-outlet>
   </main>
 </section>
+
 <vdi-footer></vdi-footer>

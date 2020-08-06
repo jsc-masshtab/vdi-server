@@ -17,6 +17,7 @@ import { IEditFormObj } from 'types';
 
 
 export class ControllerDetailsComponent implements OnInit, OnDestroy {
+  private subController: Subscription;
 
   public host: boolean = false;
   public testing: boolean = false;
@@ -24,10 +25,7 @@ export class ControllerDetailsComponent implements OnInit, OnDestroy {
   public connected: boolean = false;
 
   public controller = {};
-  public  menuActive: string = 'info';
-  private subController: Subscription;
-  private idController: string;
-
+ 
   public collection: any[] = [
     {
       title: 'Название',
@@ -75,16 +73,26 @@ export class ControllerDetailsComponent implements OnInit, OnDestroy {
     }
   ];
 
-  constructor(private activatedRoute: ActivatedRoute,
-              private router: Router,
-              private controllerService: ControllersService,
-              public  dialog: MatDialog
-) {}
+  public menuActive: string = 'info';
+  private idController: string;
+
+  filter: object
+
+  constructor(
+    private activatedRoute: ActivatedRoute,
+    private router: Router,
+    private controllerService: ControllersService,
+    public  dialog: MatDialog
+  ) {}
 
   ngOnInit() {
     this.activatedRoute.paramMap.subscribe((param: ParamMap) => {
       this.idController = param.get('id');
       this.getController();
+
+      this.filter = {
+        controller_id: this.idController
+      }
     });
   }
 
@@ -127,21 +135,7 @@ export class ControllerDetailsComponent implements OnInit, OnDestroy {
   }
 
   public routeTo(route: string): void {
-    if (route === 'info') {
-      this.menuActive = 'info';
-    }
-
-    if (route === 'vms') {
-      this.menuActive = 'vms';
-    }
-
-    if (route === 'users') {
-      this.menuActive = 'users';
-    }
-
-    if (route === 'event-vm') {
-      this.menuActive = 'event-vm';
-    }
+    this.menuActive = route
   }
 
   public edit(line: any) {
@@ -152,6 +146,7 @@ export class ControllerDetailsComponent implements OnInit, OnDestroy {
   private openEditForm(activeObj: IEditFormObj): void  {
     activeObj['formEdit'][0]['fieldValue'] = this.controller[activeObj['property']];
     this.dialog.open(FormForEditComponent, {
+ 			disableClose: true, 
       width: '500px',
       data: {
         post: {
@@ -178,6 +173,7 @@ export class ControllerDetailsComponent implements OnInit, OnDestroy {
 
   public removeController() {
     this.dialog.open(RemoveControllerComponent, {
+ 			disableClose: true, 
       width: '500px',
       data: {
         id: this.idController,
