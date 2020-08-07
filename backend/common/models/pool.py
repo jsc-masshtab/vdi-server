@@ -7,7 +7,8 @@ from sqlalchemy import and_, union_all, case, literal_column, desc, text, Enum a
 from sqlalchemy.dialects.postgresql import UUID, ARRAY
 from asyncpg.exceptions import UniqueViolationError
 
-from common.settings import VEIL_WS_MAX_TIME_TO_WAIT
+from common.settings import (VEIL_WS_MAX_TIME_TO_WAIT,
+                             POOL_MAX_SIZE, POOL_MIN_SIZE, POOL_MAX_CREATE_ATTEMPTS, POOL_MAX_VM_AMOUNT)
 from common.database import db
 from common.veil.veil_gino import Status, EntityType, VeilModel
 from common.veil.veil_errors import VmCreationError, PoolCreationError, HttpError, SimpleError, ValidationError
@@ -760,8 +761,8 @@ class AutomatedPool(db.Model):
 
     @classmethod
     async def soft_create(cls, verbose_name, controller_ip, cluster_id, node_id,
-                          template_id, datapool_id, min_size, max_size, max_vm_amount, increase_step,
-                          max_amount_of_create_attempts, initial_size, reserve_size, total_size, vm_name_template,
+                          template_id, datapool_id, increase_step,
+                          initial_size, reserve_size, total_size, vm_name_template,
                           create_thin_clones, connection_types):
         """Nested transactions are atomic."""
         async with db.transaction() as tx:  # noqa
@@ -778,19 +779,18 @@ class AutomatedPool(db.Model):
             # Create AutomatedPool
             automated_pool = await super().create(id=pool.id,
                                                   template_id=template_id,
-                                                  min_size=min_size,
-                                                  max_size=max_size,
-                                                  max_vm_amount=max_vm_amount,
+                                                  min_size=POOL_MIN_SIZE,
+                                                  max_size=POOL_MAX_SIZE,
+                                                  max_vm_amount=POOL_MAX_VM_AMOUNT,
                                                   increase_step=increase_step,
-                                                  # min_free_vms_amount=min_free_vms_amount,
-                                                  max_amount_of_create_attempts=max_amount_of_create_attempts,
+                                                  max_amount_of_create_attempts=POOL_MAX_CREATE_ATTEMPTS,
                                                   initial_size=initial_size,
                                                   reserve_size=reserve_size,
                                                   total_size=total_size,
                                                   vm_name_template=vm_name_template,
                                                   create_thin_clones=create_thin_clones)
 
-            # await system_logger.info(_('AutomatedPool {} is created').format(verbose_name))
+            await system_logger.info(_('AutomatedPool {} is created').format(verbose_name))
 
             return automated_pool
 
@@ -914,7 +914,7 @@ class AutomatedPool(db.Model):
 
             # 2) determine if vm created by task status
             if not is_vm_successfully_created:
-                await system_logger.debug('Could not get the response about result of creation VM on ECP by WS. Task status check.')
+                await system_logger.debug('Could`t get the response about result of creation VM on ECP by WS.')
                 try:
                     # TODO: сломалось при мердже - починить на новый клиент
                     # token = await controller_module.ControllerModel.get_token(controller_address)
@@ -966,7 +966,8 @@ class AutomatedPool(db.Model):
                                  broken=vm_is_broken)
 
             pool = await Pool.get(self.id)
-            await system_logger.info(_('VM {} is added to Automated pool {}').format(vm_info['verbose_name'], pool.verbose_name))
+            await system_logger.info(
+                _('VM {} is added to Automated pool {}').format(vm_info['verbose_name'], pool.verbose_name))
 
             return vm_info
 

@@ -9,7 +9,7 @@ from common.veil.veil_gino import RoleTypeGraphene, Role, StatusGraphene, Status
 from common.veil.veil_validators import MutationValidation
 from common.veil.veil_errors import SimpleError, HttpError, ValidationError
 from common.veil.veil_decorators import administrator_required
-from common.veil.veil_graphene import VmState, VeilShortEntityType
+from common.veil.veil_graphene import VeilShortEntityType, VeilResourceType
 from common.models.auth import User
 from common.models.vm import Vm
 from common.models.controller import Controller
@@ -49,16 +49,29 @@ class ControllerFetcher:
         return await Controller.query.where(Controller.status == status).gino.all()
 
 
-class VmType(graphene.ObjectType):
+class VmType(VeilResourceType):
     verbose_name = graphene.String()
     id = graphene.String()
     # veil_info = graphene.String()
     # veil_info_json = graphene.String()
     # template = graphene.Field(TemplateType)
     user = graphene.Field(UserType)
-    state = graphene.Field(VmState)
-    status = graphene.String()
+    # state = graphene.Field(VmState)
+    status = StatusGraphene()
     # controller = graphene.Field(ControllerType)
+
+    async def resolve_user(self, _info):
+        vm = await Vm.get(self.id)
+        username = await vm.username if vm else None
+        return UserType(username=username)
+
+    async def resolve_status(self, _info):
+        vm = await Vm.get(self.id)
+        pool = await Pool.get(vm.pool_id)
+        pool_controller = await pool.controller_obj
+        veil_domain = pool_controller.veil_client.domain(str(self.id))
+        await veil_domain.info()
+        return veil_domain.status
 
 
 class VmInput(graphene.InputObjectType):
@@ -247,10 +260,8 @@ class PoolType(graphene.ObjectType):
         # TODO: добавить пагинацию
         pool = await Pool.get(self.pool_id)
         vms = await pool.vms
-        # TODO: добавить информацию о пользователе
-        # TODO: добавить статус
-        print(vms)
-        return vms
+        # TODO: получить список ВМ и статусов
+        return [VmType(**vm.__values__) for vm in vms]
 
     async def resolve_vm_amount(self, _info):
         return await (db.select([db.func.count(Vm.id)]).where(Vm.pool_id == self.pool_id)).gino.scalar()
@@ -436,9 +447,6 @@ class CreateStaticPoolMutation(graphene.Mutation, ControllerFetcher):
 
         # Проверяем наличие записи
         controller = await cls.fetch_by_id(controller_id)
-        # if not vm_ids:
-        #     # graphene.NonNull(graphene.List(graphene.NonNull(graphene.UUID)))
-        #     raise SimpleError('VM ids is empty.')
 
         # --- Создание записей в БД
         try:
@@ -587,11 +595,11 @@ class CreateAutomatedPoolMutation(graphene.Mutation, ControllerFetcher):
         node_id = graphene.UUID(required=True)
 
         verbose_name = graphene.String(required=True)
-        min_size = graphene.Int(default_value=1)
-        max_size = graphene.Int(default_value=200)
-        max_vm_amount = graphene.Int(default_value=1000)
+        # min_size = graphene.Int(default_value=1)
+        # max_size = graphene.Int(default_value=200)
+        # max_vm_amount = graphene.Int(default_value=1000)
         increase_step = graphene.Int(default_value=3, description="Шаг расширения пула")
-        max_amount_of_create_attempts = graphene.Int(default_value=15)
+        # max_amount_of_create_attempts = graphene.Int(default_value=15)
         initial_size = graphene.Int(default_value=1)
         reserve_size = graphene.Int(default_value=1)
         total_size = graphene.Int(default_value=1)
@@ -607,7 +615,7 @@ class CreateAutomatedPoolMutation(graphene.Mutation, ControllerFetcher):
     @classmethod
     @administrator_required
     async def mutate(cls, root, info, creator, controller_id, cluster_id, template_id, datapool_id, node_id,
-                     verbose_name, min_size, max_size, max_vm_amount, increase_step, max_amount_of_create_attempts,
+                     verbose_name, increase_step,
                      initial_size, reserve_size, total_size, vm_name_template,
                      create_thin_clones,
                      connection_types):
@@ -625,9 +633,7 @@ class CreateAutomatedPoolMutation(graphene.Mutation, ControllerFetcher):
                                                              controller_ip=controller.address, cluster_id=cluster_id,
                                                              node_id=node_id, template_id=template_id,
                                                              datapool_id=datapool_id,
-                                                             min_size=min_size, max_size=max_size,
-                                                             max_vm_amount=max_vm_amount, increase_step=increase_step,
-                                                             max_amount_of_create_attempts=max_amount_of_create_attempts,
+                                                             increase_step=increase_step,
                                                              initial_size=initial_size, reserve_size=reserve_size,
                                                              total_size=total_size,
                                                              vm_name_template=vm_name_template,
