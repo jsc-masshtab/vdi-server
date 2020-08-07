@@ -142,18 +142,33 @@
         <span class="action-name">Назад</span>
       </button>
 
-      <button *ngIf="type == 'static'" type="button" class="form-btn" (click)="toStep('done')">
-        <span class="action-name">Создать</span>
-      </button>
-
-      <button *ngIf="type == 'dynamic'" type="button" class="form-btn" (click)="toStep('dynamic')">
-        <span class="action-name">Далее</span>
+      <button type="button" class="form-btn" (click)="toStep('dynamic')">
+        <span *ngIf="type == 'static'" class="action-name">Создать</span>
+        <span *ngIf="type == 'dynamic'" class="action-name">Далее</span>
       </button>
     </div>
   </ng-container>
 
   <ng-container *ngIf="step == 'dynamic'">
     <div class="form-fields" [formGroup]="dynamicPool" *ngIf="type === 'dynamic'">
+
+      <label class="field">
+        <mat-form-field>
+          <mat-label *ngIf="data.templates?.length">Выберите шаблон ВМ</mat-label>
+          <mat-label *ngIf="!data.templates?.length">- нет шаблонов ВМ -</mat-label>
+      
+          <mat-select formControlName="template_id">
+            <mat-option *ngFor="let template of data.templates" [value]="template.id">
+              {{template.verbose_name}}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+      
+        <ng-container *ngIf="staticPool.hasError('required', 'template_id') && checkValid">
+          <ng-container *ngTemplateOutlet="errorTemp"></ng-container>
+        </ng-container>
+      </label>
+
       <label class="field">
         <p class="field-name">Шаблон имени ВМ</p>
         <input type="text" formControlName="vm_name_template">
@@ -162,22 +177,19 @@
           <ng-container *ngTemplateOutlet="errorTemp"></ng-container>
         </ng-container>
 
-        <div class="error" [@animForm]="error" *ngIf="dynamicPool.hasError('pattern', 'vm_name_template')">Имя содержит
-          недопустимые символы</div>
+        <div class="error" [@animForm]="error" *ngIf="dynamicPool.hasError('pattern', 'vm_name_template')">Имя содержит недопустимые символы</div>
       </label>
     
       <label class="field">
         <p class="field-name">Начальное количество ВМ</p>
         <input type="number" formControlName="initial_size" min="0" max="200">
 
-        <ng-container *ngIf="dynamicPool.get('size').hasError('required', 'initial_size') && checkValid">
+        <ng-container *ngIf="dynamicPool.hasError('required', 'initial_size') && checkValid">
           <ng-container *ngTemplateOutlet="errorTemp"></ng-container>
         </ng-container>
 
-        <ng-container
-          *ngIf="dynamicPool.get('size').controls.initial_size.touched && dynamicPool.get('size').controls.initial_size.dirty">
-          <div class="error" [@animForm]="error"
-            *ngIf="dynamicPool.get('size').hasError('max', 'initial_size') || dynamicPool.get('size').hasError('min', 'initial_size')">
+        <ng-container *ngIf="dynamicPool.get('initial_size').touched && dynamicPool.get('initial_size').dirty">
+          <div class="error" [@animForm]="error" *ngIf="dynamicPool.hasError('max', 'initial_size') || dynamicPool.hasError('min', 'initial_size')">
             Начальное количество ВМ должно быть в интервале 1 - 200</div>
         </ng-container>
       </label>
@@ -186,17 +198,16 @@
         <p class="field-name">Максимальное количество создаваемых ВМ</p>
         <input type="number" formControlName="total_size" min="0">
 
-        <ng-container *ngIf="dynamicPool.get('size').hasError('required', 'total_size') && checkValid">
+        <ng-container *ngIf="dynamicPool.hasError('required', 'total_size') && checkValid">
           <ng-container *ngTemplateOutlet="errorTemp"></ng-container>
         </ng-container>
 
-        <ng-container
-          *ngIf="dynamicPool.get('size').controls.total_size.touched && dynamicPool.get('size').controls.total_size.dirty">
-          <div class="error"
-            *ngIf="dynamicPool.get('size').hasError('max', 'total_size') || dynamicPool.get('size').hasError('min', 'total_size')">
+        <ng-container *ngIf="dynamicPool.get('total_size').touched && dynamicPool.get('total_size').dirty">
+          <div class="error" *ngIf="dynamicPool.hasError('max', 'total_size') || dynamicPool.hasError('min', 'total_size')">
             Максимальное количество создаваемых ВМ должно быть в интервале 1-1000</div>
-          <div class="error" *ngIf="dynamicPool.get('size')?.errors?.maxLessInitial">Максимальное количество ВМ не
-            может быть меньше начального количества ВМ</div>
+          <div class="error" *ngIf="dynamicPool?.errors?.maxLessInitial">
+            Максимальное количество ВМ не может быть меньше начального количества ВМ
+          </div>
         </ng-container>
       </label>
   
@@ -204,14 +215,12 @@
         <p class="field-name">Количество создаваемых ВМ</p>
         <input type="number" formControlName="reserve_size" min="0">
 
-        <ng-container *ngIf="dynamicPool.get('size').hasError('required', 'reserve_size') && checkValid">
+        <ng-container *ngIf="dynamicPool.hasError('required', 'reserve_size') && checkValid">
           <ng-container *ngTemplateOutlet="errorTemp"></ng-container>
         </ng-container>
   
-        <ng-container
-          *ngIf="dynamicPool.get('size')?.controls?.reserve_size.touched && dynamicPool.get('size')?.controls?.reserve_size.dirty">
-          <div class="error"
-            *ngIf="(dynamicPool.get('size').hasError('min', 'reserve_size') ||  dynamicPool.get('size').hasError('max', 'reserve_size'))">
+        <ng-container *ngIf="dynamicPool.get('reserve_size').touched && dynamicPool.get('reserve_size').dirty">
+          <div class="error" *ngIf="(dynamicPool.hasError('min', 'reserve_size') ||  dynamicPool.hasError('max', 'reserve_size'))">
             Количество создаваемых ВМ должно быть в интервале 1-200
           </div>
         </ng-container>
@@ -219,16 +228,15 @@
   
       <label class="field">
         <p class="field-name">Пороговое количество свободных ВМ</p>
-        <input type="number" formControlName="min_free_vms_amount" min="1">
+        <input type="number" formControlName="increase_step" min="1">
 
-        <ng-container *ngIf="dynamicPool.get('size').hasError('required', 'min_free_vms_amount') && checkValid">
+        <ng-container *ngIf="dynamicPool.hasError('required', 'increase_step') && checkValid">
           <ng-container *ngTemplateOutlet="errorTemp"></ng-container>
         </ng-container>
   
         <ng-container
-          *ngIf="dynamicPool.get('size').controls.min_free_vms_amount.touched && dynamicPool.get('size').controls.min_free_vms_amount.dirty">
-          <div class="error"
-            *ngIf="(dynamicPool.get('size').hasError('min', 'min_free_vms_amount') || dynamicPool.get('size')?.errors?.freeVmsMoreReserve)">
+          *ngIf="dynamicPool.get('increase_step').touched && dynamicPool.get('increase_step').dirty">
+          <div class="error" *ngIf="(dynamicPool.hasError('min', 'increase_step') || dynamicPool?.errors?.freeVmsMoreReserve)">
             Пороговое количество свободных ВМ должно быть меньше или равно количеству создаваемых ВМ и больше 1
           </div>
         </ng-container>

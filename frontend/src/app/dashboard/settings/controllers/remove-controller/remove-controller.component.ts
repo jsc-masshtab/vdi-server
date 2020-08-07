@@ -34,7 +34,7 @@ export class RemoveControllerComponent implements OnDestroy {
         this.controllerService.getAllControllers().valueChanges.pipe(takeUntil(this.destroy)).subscribe(() => {
           this.waitService.setWait(false);
           this.dialogRef.close();
-          this.router.navigateByUrl('/pages/settings/controllers');
+          this.router.navigateByUrl('/pages/controllers');
         });
       }
     });
