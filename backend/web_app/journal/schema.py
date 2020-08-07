@@ -37,7 +37,6 @@ class EntityType(graphene.ObjectType):
     id = graphene.UUID()
     entity_uuid = graphene.UUID()
     entity_type = graphene.String()
-    entity_name = graphene.String()
 
 
 class EventType(graphene.ObjectType):

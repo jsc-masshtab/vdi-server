@@ -128,7 +128,7 @@ def user_passes_test(test_func, exc=Unauthorized):  # noqa
                 # await system_logger.debug(_('IP: . username: {}'))
                 await system_logger.warning(
                     _('IP: {}. username: {}').format(cntxt.remote_ip, user.username),
-                    entity={'entity_type': EntityType.SECURITY, 'entity_uuid': None, 'entity_name': None})
+                    entity={'entity_type': EntityType.SECURITY, 'entity_uuid': None})
                 raise exc(_('Invalid permissions'))
             else:
                 kwargs['creator'] = 'system'
