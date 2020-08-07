@@ -52,6 +52,17 @@ export class PoolAddComponent {
     this.initForms()
   }
 
+  private totalSizeValidator() {
+    return (group: FormGroup) => {
+      if (group.controls['total_size'].value < group.controls['initial_size'].value) {
+        return { maxLessInitial: true };
+      }
+      if (group.controls['increase_step'].value > group.controls['reserve_size'].value) {
+        return { freeVmsMoreReserve: true };
+      }
+    };
+  }
+
   initForms() {
     this.staticPool = this.fb.group({
       verbose_name: ['', [Validators.required, Validators.pattern(/^[а-яА-ЯёЁa-zA-Z0-9]+[а-яА-ЯёЁa-zA-Z0-9.-_+ ]*$/)]],
@@ -66,21 +77,16 @@ export class PoolAddComponent {
     });
 
     this.dynamicPool = this.fb.group({
-      template_id: 0,
-      increase_step: 0,
+      template_id: ['', Validators.required],
+      vm_name_template: ['', [Validators.required, Validators.pattern(/^[а-яА-ЯёЁa-zA-Z0-9]+[а-яА-ЯёЁa-zA-Z0-9.-_+ ]*$/)]],
 
-      vm_name_template: 0,
-      max_vm_amount: 0,
-      max_amount_of_create_attempts: 0,
-
-      min_size: 0,
-      max_size: 0,
-      reserve_size: 0,
+      increase_step: ['', [Validators.required, Validators.min(1)]],
+      reserve_size: ['', [Validators.required, Validators.max(200), Validators.min(1)]],
       initial_size: [0, [Validators.required, Validators.max(200), Validators.min(1)]],
       total_size: ['', [Validators.required, Validators.max(1000), Validators.min(1)]],
 
       create_thin_clones: false,
-    });
+    }, { validators: this.totalSizeValidator() });
 
     this.toStep('type');
   }
@@ -101,7 +107,8 @@ export class PoolAddComponent {
       clusters: [],
       nodes: [],
       datapools: [],
-      vms: []
+      vms: [],
+      templates: []
     }
   }
 
@@ -125,18 +132,20 @@ export class PoolAddComponent {
 
       case 'create': {
 
+        if (this.staticPool.valid) this.checkValid = false;
+
         /* Запрос на контроллеры */
 
         this.addPoolService.getData('controllers').valueChanges.pipe(map(data => data.data['controllers'])).subscribe((res) => {
           this.data['controllers'] = res
         })
 
-        /* Подписка на изменение полей формы  */
+        /* Подписка на изменение полей формы для отправки запросов на сервер */
 
         this.staticPool.controls['controller_id'].valueChanges.subscribe((value) => {
-          this.staticPool.controls['cluster_id'].reset()           // Очистка поля под текущим
+          this.staticPool.controls['cluster_id'].reset() // Очистка поля под текущим
 
-          if (value) this.getData('clusters', { "id_": value })    // запрос данных для выборки в очищенном поле
+          if (value) this.getData('clusters', { "id_": value }) // запрос данных для выборки в очищенном поле
         })
 
         this.staticPool.controls['cluster_id'].valueChanges.subscribe((value) => {
@@ -167,10 +176,21 @@ export class PoolAddComponent {
             "node_id": this.staticPool.get('node_id').value,
             "data_pool_id": value
           })
+
+          this.dynamicPool.controls['template_id'].reset()
+
+          if (value) this.getData('templates', {
+            "id_": this.staticPool.get('controller_id').value,
+            "cluster_id": this.staticPool.get('cluster_id').value,
+            "node_id": this.staticPool.get('node_id').value,
+            "data_pool_id": value
+          })
         })
       } break;
 
       case 'dynamic': {
+
+        if (this.dynamicPool.valid) this.checkValid = false;
 
         if (!this.staticPool.valid) {
 
@@ -178,6 +198,8 @@ export class PoolAddComponent {
           
           this.checkValid = true
           this.toStep('create')
+        } else if (this.type == 'static') { 
+          this.toStep('done')
         }
 
       } break;
@@ -187,27 +209,37 @@ export class PoolAddComponent {
         /* сборка данных для отправки */
 
         let data: any = { ...this.staticPool.value }
+        let method = 'addStaticPool'
 
-        if (this.staticPool.valid) {
+        if (this.type == 'dynamic') { 
+          if (!this.dynamicPool.valid) { 
 
-          this.waitService.setWait(true);
-          
-          this.addPoolService.addStaticPool(data).subscribe(() => {
-            this.dialogRef.close();
-            this.updatePools.setUpdate('update');
-            this.waitService.setWait(false);
-          }, () => {
-            this.dialogRef.close();
-            this.updatePools.setUpdate('update');
-            this.waitService.setWait(false);
-          })
-        } else {
+            this.checkValid = true
+            this.toStep('dynamic')
 
-          /* вернуть назад, если не пройдена валидация */
+            return
+          } else {
 
-          this.checkValid = true
-          this.toStep('create')
+            /* Динамические пулы содержат практически все поля статического. Объединяем данные и удаляем лишнее */
+            
+            data = { ...data, ...this.dynamicPool.value }
+            method = 'addDynamicPool'
+
+            delete data['vms']
+          }
         }
+
+        this.waitService.setWait(true);
+
+        this.addPoolService[method](data).subscribe(() => {
+          this.dialogRef.close();
+          this.updatePools.setUpdate('update');
+          this.waitService.setWait(false);
+        }, () => {
+          this.dialogRef.close();
+          this.updatePools.setUpdate('update');
+          this.waitService.setWait(false);
+        })
 
       } break;
     }
