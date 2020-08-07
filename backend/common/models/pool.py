@@ -91,6 +91,11 @@ class Pool(VeilModel):
         return True
 
     @property
+    async def vms(self):
+        """Возвращаем виртуальные машины привязанные к пулу."""
+        return await VmModel.query.where(VmModel.pool_id == self.id).gino.all()
+
+    @property
     async def is_automated_pool(self):
         return await db.scalar(db.exists().where(AutomatedPool.id == self.id).select())
 
@@ -951,7 +956,7 @@ class AutomatedPool(db.Model):
             # await system_logger.debug('Fail to create VM on ECP. Re-run.')
             # await asyncio.sleep(1)
             # continue
-            is_vm_successfully_created = False
+            # is_vm_successfully_created = False
             vm_is_broken = False if is_vm_successfully_created else False
             await VmModel.create(id=vm_info['id'],
                                  pool_id=str(self.id),

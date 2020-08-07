@@ -7,8 +7,8 @@ import { SharedModule } from '../../common/shared.module';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
-
-
+import { VmsModule } from '../vms/vms.module';
+import { TemplatesModule } from '../templates/templates.module';
 
 @NgModule({
   declarations: [
@@ -19,7 +19,9 @@ import { CommonModule } from '@angular/common';
     SharedModule,
     CommonModule,
     FontAwesomeModule,
-    AppRoutingModule
+    AppRoutingModule,
+    VmsModule,
+    TemplatesModule
   ],
   providers: [DatapoolsService],
   exports: [

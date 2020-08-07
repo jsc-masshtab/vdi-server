@@ -1,6 +1,6 @@
 import { IParams } from '../../../../../../types';
 import { WaitService } from '../../../common/components/single/wait/wait.service';
-import { Component, OnInit, ViewChild, ElementRef, OnDestroy } from '@angular/core';
+import { Component, OnInit, ViewChild, ElementRef, OnDestroy, Input } from '@angular/core';
 import { NodesService } from './nodes.service';
 import { map } from 'rxjs/operators';
 import { Router } from '@angular/router';
@@ -15,6 +15,8 @@ import { Subscription } from 'rxjs';
 
 
 export class NodesComponent extends DetailsMove implements OnInit, OnDestroy {
+
+  @Input() filter: object
 
   public infoTemplates: [];
   public collection: object[] = [
@@ -81,15 +83,33 @@ export class NodesComponent extends DetailsMove implements OnInit, OnDestroy {
       this.sub.unsubscribe();
     }
     this.waitService.setWait(true);
-    this.sub = this.service.getAllNodes().valueChanges.pipe(map(data => data.data.nodes))
+
+    let filtered = (data) => {
+      if (this.filter) {
+        return data.data.controller.nodes
+      } else {
+        return data.data.nodes
+      }
+    }
+
+    this.sub = this.service.getAllNodes(this.filter).valueChanges.pipe(map(data => filtered(data)))
       .subscribe((data) => {
         this.nodes = data;
         this.waitService.setWait(false);
       });
   }
 
-  public routeTo(event): void {
-    this.router.navigate([`pages/resourses/nodes/${event.controller.id}/${event.id}`]);
+  public routeTo(node): void {
+    let node_id = node.id
+    let controller_id = ''
+
+    if (this.filter) {
+      controller_id = this.filter['controller_id']
+    } else {
+      controller_id = node.controller.id;
+    }
+
+    this.router.navigate([`pages/resourses/nodes/${controller_id}/${node_id}`]);
   }
 
   public onResize(): void {

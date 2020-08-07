@@ -52,7 +52,7 @@ const routes: Routes = [
         ]
       },
       {
-        path: 'settings/controllers',
+        path: 'controllers',
         component: ControllersComponent,
         children: [
           {

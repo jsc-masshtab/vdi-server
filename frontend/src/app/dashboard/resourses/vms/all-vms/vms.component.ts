@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild, ElementRef, OnDestroy } from '@angular/core';
+import { Component, OnInit, ViewChild, ElementRef, OnDestroy, Input } from '@angular/core';
 import { VmsService } from './vms.service';
 import { map } from 'rxjs/operators';
 import { WaitService } from '../../../common/components/single/wait/wait.service';
@@ -14,7 +14,11 @@ import { IParams } from 'types';
 })
 
 
-export class VmsComponent extends DetailsMove  implements OnInit, OnDestroy {
+export class VmsComponent extends DetailsMove implements OnInit, OnDestroy {
+  
+  @Input() filter: object
+
+  private sub: Subscription;
 
   public vms: object[] = [];
   public collection = [
@@ -46,8 +50,6 @@ export class VmsComponent extends DetailsMove  implements OnInit, OnDestroy {
     }
   ];
 
-  private sub: Subscription;
-
   constructor(private service: VmsService, private waitService: WaitService, private router: Router) {
     super();
   }
@@ -63,7 +65,16 @@ export class VmsComponent extends DetailsMove  implements OnInit, OnDestroy {
       this.sub.unsubscribe();
     }
     this.waitService.setWait(true);
-    this.sub = this.service.getAllVms().valueChanges.pipe(map(data => data.data.vms)).subscribe((data) => {
+
+    let filtered = (data) => {
+      if (this.filter) {
+        return data.data.controller.vms
+      } else {
+        return data.data.vms
+      }
+    }
+
+    this.sub = this.service.getAllVms(this.filter).valueChanges.pipe(map(data => filtered(data))).subscribe((data) => {
       this.vms = data;
       this.waitService.setWait(false);
     });
@@ -82,7 +93,16 @@ export class VmsComponent extends DetailsMove  implements OnInit, OnDestroy {
   }
 
   public routeTo(event): void {
-    this.router.navigate([`pages/resourses/vms/${event.controller.id}/${event.id}`]);
+    let id = event.id
+    let controller_id = ''
+
+    if (this.filter) {
+      controller_id = this.filter['controller_id']
+    } else {
+      controller_id = event.controller.id;
+    }
+
+    this.router.navigate([`pages/resourses/vms/${controller_id}/${id}`]);
   }
 
   public sortList(param: IParams): void {

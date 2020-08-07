@@ -13,8 +13,11 @@ import { RemoveControllerComponent } from './remove-controller/remove-controller
 import { ReactiveFormsModule } from '@angular/forms';
 import { MatCheckboxModule } from '@angular/material';
 import { ControllerDetailsComponent } from './controller-details/controller-details.component';
-
-
+import { NodesModule } from '../../resourses/nodes/nodes.module';
+import { DatapoolsModule } from '../../resourses/datapools/datapools.module';
+import { VmsModule } from '../../resourses/vms/vms.module';
+import { TemplatesModule } from '../../resourses/templates/templates.module';
+import { ClustersModule } from '../../resourses/clusters/clusters.module';
 
 @NgModule({
   declarations: [
@@ -31,8 +34,12 @@ import { ControllerDetailsComponent } from './controller-details/controller-deta
     MatDialogModule,
     MatSelectModule,
     ReactiveFormsModule,
-    MatCheckboxModule
-
+    MatCheckboxModule,
+    ClustersModule,
+    NodesModule,
+    DatapoolsModule,
+    VmsModule,
+    TemplatesModule
   ],
   providers: [ControllersService],
   exports: [

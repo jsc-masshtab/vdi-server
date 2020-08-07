@@ -22,7 +22,7 @@ export class ControllersComponent extends DetailsMove implements OnInit, OnDestr
       title: 'Имя контроллера',
       property: 'verbose_name',
       class: 'name-start',
-      icon: 'building',
+      icon: 'server',
       type: 'string',
       sort: true
     },
@@ -71,12 +71,14 @@ export class ControllersComponent extends DetailsMove implements OnInit, OnDestr
 
   public addController() {
     this.dialog.open(AddControllerComponent, {
+ 			disableClose: true, 
       width: '500px'
     });
   }
 
   public removeController() {
     this.dialog.open(RemoveControllerComponent, {
+ 			disableClose: true, 
       width: '500px'
     });
   }
@@ -88,7 +90,7 @@ export class ControllersComponent extends DetailsMove implements OnInit, OnDestr
   }
 
   public routeTo(event): void {
-    this.router.navigate([`pages/settings/controllers/${event['id']}`]);
+    this.router.navigate([`pages/controllers/${event['id']}`]);
   }
 
   public onResize(): void {

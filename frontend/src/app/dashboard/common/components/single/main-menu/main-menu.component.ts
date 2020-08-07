@@ -53,6 +53,11 @@ export class MainMenuComponent {
               this.toggleLog = true;
             }
 
+            if (clickedManage1 === 'controllers') {
+              this.clickedManage = 'controllers';
+              return;
+            }
+
             if (clickedManage1 === 'pools') {
               this.clickedManage = 'pools';
               return;

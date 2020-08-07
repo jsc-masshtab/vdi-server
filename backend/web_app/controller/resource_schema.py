@@ -8,21 +8,13 @@
 import graphene
 
 from common.veil.veil_decorators import administrator_required
-from common.veil.veil_graphene import VeilResourceType, VmState
+from common.veil.veil_graphene import VeilResourceType, VmState, VeilShortEntityType
 from common.veil.veil_gino import StatusGraphene
 from veil_api_client.base.api_object import VeilRestPaginator
 from web_app.controller.schema import ControllerFetcher
 from common.languages import lang_init
 
 _ = lang_init()
-
-
-class VeilShortEntityType(VeilResourceType):
-    """Сокращенное описание структуры вложенной сущности на ECP Veil."""
-
-    id = graphene.UUID()
-    verbose_name = graphene.String()
-    status = StatusGraphene()
 
 
 # Cluster
