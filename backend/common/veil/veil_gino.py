@@ -161,7 +161,7 @@ class VeilModel(db.Model):
 
     @property
     def entity(self):
-        return {'entity_type': self.entity_type, 'entity_uuid': self.id, 'entity_name': self.entity_name}
+        return {'entity_type': self.entity_type, 'entity_uuid': self.id}
 
     @property
     async def entity_obj(self):

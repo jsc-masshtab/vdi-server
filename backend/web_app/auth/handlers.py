@@ -50,7 +50,7 @@ class AuthHandler(BaseHandler, ABC):
             if self.args.get('username'):
                 error_message += _(' for user {username}').format(username=self.args['username'])
             error_message += _('. IP: {ip}').format(ip=self.remote_ip)
-            entity = {'entity_type': EntityType.SECURITY, 'entity_uuid': None, 'entity_name': None}
+            entity = {'entity_type': EntityType.SECURITY, 'entity_uuid': None}
             await system_logger.warning(error_message, entity=entity)
             response = {'errors': [{'message': error_message}]}
             self.set_status(200)

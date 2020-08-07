@@ -21,14 +21,12 @@ class Entity(db.Model):
     """
     entity_type: тип сущности из Enum
     entity_uuid: UUID сущности, если в качестве EntityType указано название таблицы  # TODO: rename to object_uuid
-    entity_name: имя сущности
     """
     __tablename__ = 'entity'
 
     id = db.Column(UUID(), primary_key=True, default=uuid.uuid4)
     entity_type = db.Column(AlchemyEnum(EntityType), nullable=False, index=True, default=EntityType.SYSTEM)
     entity_uuid = db.Column(UUID(), nullable=True, index=True)
-    entity_name = db.Column(db.Unicode(length=64), nullable=True)
 
 
 class EntityRoleOwner(db.Model):
