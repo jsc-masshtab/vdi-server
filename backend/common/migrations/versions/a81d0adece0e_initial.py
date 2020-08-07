@@ -67,7 +67,6 @@ def upgrade():
                               sa.Enum('CONTROLLER', 'SECURITY', 'POOL', 'SYSTEM', 'VM', 'USER', 'GROUP', 'AUTH',
                                       name='entitytype'), nullable=False),
                     sa.Column('entity_uuid', postgresql.UUID(), nullable=True),
-                    sa.Column('entity_name', sa.Unicode(length=64), nullable=True),
                     sa.PrimaryKeyConstraint('id')
                     )
     op.create_index('ix_entity_entity_object_entity_type', 'entity', ['entity_uuid', 'entity_type'], unique=True)
