@@ -500,19 +500,18 @@ class Pool(VeilModel):
             await system_logger.info(msg, entity=self.entity, user=creator)
         return True
 
-    # @staticmethod
-    # async def delete_pool(pool, creator, full=False):
-    #     if full:
-    #         status = await pool.full_delete(creator)
-    #     else:
-    #         """Удаление сущности независимо от статуса у которой нет зависимых сущностей"""
-    #
-    #         pool_has_vms = await Pool.has_vms
-    #         if pool_has_vms:
-    #             raise SimpleError(_('Pool has VMs. Please completely remove.'), user=creator)
-    #         status = await pool.soft_delete(creator=creator)
-    #
-    #     return status
+    @staticmethod
+    async def delete_pool(pool, creator, full=False):
+        if full:
+            status = await pool.full_delete(creator)
+        else:
+            """Удаление сущности независимо от статуса у которой нет зависимых сущностей"""
+            pool_has_vms = await Pool.has_vms
+            if pool_has_vms:
+                raise SimpleError(_('Pool has VMs. Please completely remove.'), user=creator)
+            status = await pool.soft_delete(creator=creator)
+
+        return status
 
     @classmethod
     async def activate(cls, pool_id):
@@ -866,8 +865,7 @@ class AutomatedPool(db.Model):
     async def add_vm(self):
         """Try to add VM to pool."""
         # from common.models import VmModel
-        vm_name_template = self.vm_name_template or await self.verbose_name
-        verbose_name = '{}'.format(vm_name_template)
+        verbose_name = self.vm_name_template
         pool_controller = await self.controller_obj
         # controller_address = await self.controller_ip
         params = {

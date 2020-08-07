@@ -206,7 +206,7 @@ class PoolType(graphene.ObjectType):
     initial_size = graphene.Int()
     reserve_size = graphene.Int()
     total_size = graphene.Int()
-    vm_name_template = graphene.String(required=True)
+    vm_name_template = graphene.String()
     os_type = graphene.String()
 
     users = graphene.List(UserType, entitled=graphene.Boolean())
@@ -270,6 +270,8 @@ class PoolType(graphene.ObjectType):
         pool = await Pool.get(self.pool_id)
         pool_controller = await pool.controller_obj
         template_id = await pool.template_id
+        if not template_id:
+            return
         veil_domain = pool_controller.veil_client.domain(str(template_id))
         await veil_domain.info()
         # попытка не использовать id
@@ -603,7 +605,7 @@ class CreateAutomatedPoolMutation(graphene.Mutation, ControllerFetcher):
         initial_size = graphene.Int(default_value=1)
         reserve_size = graphene.Int(default_value=1)
         total_size = graphene.Int(default_value=1)
-        vm_name_template = graphene.String(default_value='')
+        vm_name_template = graphene.String(required=True)
 
         create_thin_clones = graphene.Boolean(default_value=True)
         connection_types = graphene.List(graphene.NonNull(ConnectionTypesGraphene),
