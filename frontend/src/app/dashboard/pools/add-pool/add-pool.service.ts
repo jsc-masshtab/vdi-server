@@ -146,7 +146,7 @@ export class AddPoolService {
                 $cluster_id: UUID!
                 $template_id: UUID!
 
-                $vm_name_template: String
+                $vm_name_template: String!
 
                 $increase_step: Int
                 $reserve_size: Int
