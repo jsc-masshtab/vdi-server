@@ -19,24 +19,24 @@
     </div>
     
     <div class="form-actions">
-      <button type="button" class="form-btn" (click)="toStep('create')">
+      <button type="button" class="form-btn" (click)="toStep('static')">
         <span class="action-name">Далее</span>
       </button>
     </div>
   </ng-container>
 
-  <ng-container *ngIf="step == 'create'">
-    <div class="form-fields" [formGroup]="staticPool">
+  <ng-container *ngIf="step == 'static'">
+    <div class="form-fields" [formGroup]="sharedData">
 
       <label class="field">
         <p class="field-name">Имя пула</p>
         <input type="text" [focusMe]="true" formControlName="verbose_name">
 
-        <ng-container *ngIf="staticPool.hasError('required', 'verbose_name') && checkValid">
+        <ng-container *ngIf="sharedData.hasError('required', 'verbose_name') && checkValid">
           <ng-container *ngTemplateOutlet="errorTemp"></ng-container>
         </ng-container>
 
-        <div class="error" *ngIf="staticPool.hasError('pattern', 'verbose_name')">Имя содержит недопустимые символы</div>
+        <div class="error" *ngIf="sharedData.hasError('pattern', 'verbose_name')">Имя содержит недопустимые символы</div>
       </label>
 
       <label class="field">
@@ -50,7 +50,7 @@
           </mat-select>
         </mat-form-field>
         
-        <ng-container *ngIf="staticPool.hasError('required', 'connection_types') && checkValid"><ng-container *ngTemplateOutlet="errorTemp"></ng-container></ng-container>
+        <ng-container *ngIf="sharedData.hasError('required', 'connection_types') && checkValid"><ng-container *ngTemplateOutlet="errorTemp"></ng-container></ng-container>
       </label>
 
       <label class="field">
@@ -65,7 +65,7 @@
           </mat-select>
         </mat-form-field>
 
-        <ng-container *ngIf="staticPool.hasError('required', 'controller_id') && checkValid">
+        <ng-container *ngIf="sharedData.hasError('required', 'controller_id') && checkValid">
           <ng-container *ngTemplateOutlet="errorTemp"></ng-container>
         </ng-container>
       </label>
@@ -82,7 +82,7 @@
           </mat-select>
         </mat-form-field>
 
-        <ng-container *ngIf="staticPool.hasError('required', 'cluster_id') && checkValid">
+        <ng-container *ngIf="sharedData.hasError('required', 'cluster_id') && checkValid">
           <ng-container *ngTemplateOutlet="errorTemp"></ng-container>
         </ng-container>
       </label>
@@ -99,7 +99,7 @@
           </mat-select>
         </mat-form-field>
 
-        <ng-container *ngIf="staticPool.hasError('required', 'node_id') && checkValid">
+        <ng-container *ngIf="sharedData.hasError('required', 'node_id') && checkValid">
           <ng-container *ngTemplateOutlet="errorTemp"></ng-container>
         </ng-container>
       </label>
@@ -114,23 +114,25 @@
             </mat-option>
           </mat-select>
         </mat-form-field>
-        <ng-container *ngIf="staticPool.hasError('required', 'datapool_id') && checkValid">
+        <ng-container *ngIf="sharedData.hasError('required', 'datapool_id') && checkValid">
           <ng-container *ngTemplateOutlet="errorTemp"></ng-container>
         </ng-container>
       </label>
+    </div>
 
-      <label class="field">
+    <div class="form-fields" [formGroup]="staticPool">
+      <label class="field" *ngIf="type == 'static'">
         <mat-form-field>
           <mat-label *ngIf="data.vms?.length">Выберите свободные ВМ</mat-label>
           <mat-label *ngIf="!data.vms?.length">- нет виртуальных машин -</mat-label>
-
+      
           <mat-select formControlName="vms" multiple="true">
             <mat-option *ngFor="let vm of data.vms" [value]="vm">
               {{vm.verbose_name}}
             </mat-option>
           </mat-select>
         </mat-form-field>
-
+      
         <ng-container *ngIf="staticPool.hasError('required', 'vms') && checkValid">
           <ng-container *ngTemplateOutlet="errorTemp"></ng-container>
         </ng-container>
@@ -142,7 +144,7 @@
         <span class="action-name">Назад</span>
       </button>
 
-      <button type="button" class="form-btn" (click)="toStep('dynamic')">
+      <button type="button" class="form-btn" (click)="toStep('check_static')">
         <span *ngIf="type == 'static'" class="action-name">Создать</span>
         <span *ngIf="type == 'dynamic'" class="action-name">Далее</span>
       </button>
@@ -164,7 +166,7 @@
           </mat-select>
         </mat-form-field>
       
-        <ng-container *ngIf="staticPool.hasError('required', 'template_id') && checkValid">
+        <ng-container *ngIf="sharedData.hasError('required', 'template_id') && checkValid">
           <ng-container *ngTemplateOutlet="errorTemp"></ng-container>
         </ng-container>
       </label>
@@ -249,11 +251,11 @@
     </div>
 
     <div class="form-actions">
-      <button type="button" class="form-btn" (click)="toStep('create')">
+      <button type="button" class="form-btn" (click)="toStep('static')">
         <span class="action-name">Назад</span>
       </button>
     
-      <button type="button" class="form-btn" (click)="toStep('done')">
+      <button type="button" class="form-btn" (click)="toStep('check_dynamic')">
         <span class="action-name">Создать</span>
       </button>
     </div>
