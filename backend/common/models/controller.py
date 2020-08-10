@@ -72,6 +72,11 @@ class Controller(AbstractSortableStatusModel, VeilModel):
         """
         return self.veil_client.controller()
 
+    async def remove_client(self):
+        """Удаляет клиент из синглтона."""
+        veil_api_singleton = get_veil_client()
+        return await veil_api_singleton.remove_client(self.address)
+
     @property
     def active(self):
         return self.status == Status.ACTIVE
@@ -135,12 +140,14 @@ class Controller(AbstractSortableStatusModel, VeilModel):
         version = controller_client.version
         if not version:
             msg = _('Veil ECP version could not be obtained. Check your token.')
+            await self.remove_client()
             raise ValidationError(msg)
         major_version, minor_version, patch_version = version.split('.')
         await self.update(version=version).apply()
         # Проверяем версию контроллера в пределах допустимой.
         if major_version != '4' or minor_version != '3':
             msg = _('Veil ECP version should be 4.3. Current version is incompatible.')
+            await self.remove_client()
             raise ValidationError(msg)
 
     @classmethod
