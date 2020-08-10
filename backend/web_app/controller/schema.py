@@ -9,6 +9,7 @@ from common.veil.veil_validators import MutationValidation
 from common.veil.veil_gino import StatusGraphene, Status
 from common.veil.veil_graphene import VeilResourceType
 from common.models.controller import Controller
+from common.models.vm import Vm
 from common.languages import lang_init
 
 _ = lang_init()
@@ -173,7 +174,7 @@ class ControllerType(graphene.ObjectType, ControllerFetcher):
                               data_pool_id=graphene.UUID())
     vms = graphene.List(ControllerVmType, cluster_id=graphene.UUID(),
                         node_id=graphene.UUID(),
-                        data_pool_id=graphene.UUID())
+                        data_pool_id=graphene.UUID(), exclude_existed=graphene.Boolean())
 
     async def resolve_pools(self, info):
         """В self прилетает инстанс подели контроллера."""
@@ -213,14 +214,23 @@ class ControllerType(graphene.ObjectType, ControllerFetcher):
                                                             node_id=node_id, data_pool_id=data_pool_id).list()
         return [ControllerNodeType(**resource_data) for resource_data in veil_response.paginator_results]
 
-    async def resolve_vms(self, info, template=None, cluster_id=None, node_id=None, data_pool_id=None):
+    async def resolve_vms(self, info, template=None, cluster_id=None, node_id=None, data_pool_id=None,
+                          exclude_existed=True):
         """В self прилетает инстанс подели контроллера."""
         # TODO: сейчас не используются параметры пагинатора. Когда записей будет много - потребуется
         # TODO: на фронте делать неактивными элементы в плохом статусе?
         controller = await Controller.get(self.id)
+        vms = await Vm.query.gino.all()
         veil_response = await controller.veil_client.domain(template=0, cluster_id=cluster_id,
                                                             node_id=node_id, data_pool_id=data_pool_id).list()
-        return [ControllerNodeType(**resource_data) for resource_data in veil_response.paginator_results]
+        resolves = veil_response.paginator_results
+        if exclude_existed:
+            for vm in vms:
+                for index, data in enumerate(resolves):
+                    if str(data['id']) == str(vm.id):
+                        del resolves[index]
+
+        return [ControllerNodeType(**resource_data) for resource_data in resolves]
 
     @staticmethod
     def obj_to_type(controller_obj: Controller) -> dict:
