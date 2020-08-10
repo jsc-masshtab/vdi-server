@@ -33,10 +33,8 @@ export class VmsComponent extends DetailsMove implements OnInit, OnDestroy {
     {
       title: 'Шаблон',
       property: 'template',
-      type: {
-        typeDepend: 'boolean',
-        propertyDepend: ['Да', 'Нет']
-      }
+      property_lv2: 'verbose_name',
+      type: 'string'
     },
     {
       title: 'Контроллер',

@@ -20,6 +20,7 @@ export class TemplatesService {
             templates(ordering: $ordering) {
                 id
                 verbose_name
+                status
                 controller {
                     id
                     verbose_name
@@ -35,6 +36,7 @@ export class TemplatesService {
                         verbose_name
                         template
                         id
+                        status
                     }
                 }
             }`

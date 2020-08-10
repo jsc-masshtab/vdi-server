@@ -19,7 +19,6 @@ export class VmsService {
             vms(ordering: $ordering) {
                 verbose_name
                 status
-                template
                 id
                 controller {
                     id
@@ -33,9 +32,13 @@ export class VmsService {
                 controller(id_:$controller_id) {
                     id
                     vms(cluster_id: $cluster_id, node_id: $node_id, data_pool_id: $data_pool_id) {
-                        verbose_name
-                        template
                         id
+                        verbose_name
+                        status
+                        template{
+                            id
+                            verbose_name
+                        }
                     }
                 }
             }`

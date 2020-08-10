@@ -1,13 +1,14 @@
 
 <div class="top-menu">
+  <a class="top-menu-item" (click)="routeTo('controllers')" (keydown.enter)="routeTo('controllers')"
+    [class.clicked-link]="clickedManage == 'controllers'" tabindex="0">
+    <fa-icon title="Контроллеры" [icon]="['fas','server']" size="s" [style.color]="'rgb(255, 235, 205)'"></fa-icon>
+    <span>Контроллеры</span>
+  </a>
+
   <a class="top-menu-item" (click)="routeTo('pools')" (keydown.enter)="routeTo('pools')" [class.clicked-link]="clickedManage == 'pools'" tabindex="0">
     <fa-icon [icon]="['fas','desktop']" size="s" [style.color]="'#ea4c38'" title="Пулы"></fa-icon>
     <span>Пулы</span>
-  </a>
-
-  <a class="top-menu-item" (click)="routeTo('controllers')" (keydown.enter)="routeTo('controllers')" [class.clicked-link]="clickedManage == 'controllers'"  tabindex="0">
-    <fa-icon title="Контроллеры" [icon]="['fas','server']" size="s" [style.color]="'rgb(255, 235, 205)'"></fa-icon>
-    <span>Контроллеры</span>
   </a>
 
   <a class="top-menu-item item-hat" (click)="resourseToggle()" (keydown.enter)="resourseToggle()" tabindex="0">
