@@ -36,6 +36,7 @@ export class TableComponentComponent implements OnInit {
   @Output() clickRowData: EventEmitter<object> = new EventEmitter<object>();
   @Output() sortListNow: EventEmitter<object> = new EventEmitter<object>();
 
+  public exist_keys: string[] = []
 
   public titleSort: string;
   public orderingSort: string;
@@ -46,6 +47,10 @@ export class TableComponentComponent implements OnInit {
 
   ngOnInit() {
     this.moment = moment;
+  }
+
+  ngOnChanges() {
+    if(this.data) if (this.data.length) this.exist_keys = Object.keys(this.data[0])
   }
 
   public clickRow(item: object) {
@@ -78,5 +83,7 @@ export class TableComponentComponent implements OnInit {
     this.titleSort = `Нажмите для сортировки по полю ${activeEl.title}`;
   }
 
-
+  isExist(key) {
+    return this.exist_keys.includes(key)
+  }
 }

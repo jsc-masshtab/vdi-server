@@ -5,7 +5,7 @@
 
     <header>
       <ng-container *ngFor="let obj of collection">
-        <div class="table-header-part"  [class.header-start]="obj.class === 'name-start'" [class.name-end]="obj.class == 'name-end'" (click)="sortList(obj)" [title]="titleSort" (mouseenter)="setSortName(obj)" [class.cursorTrue]="obj.sort !== undefined">
+        <div *ngIf="isExist(obj.property)" class="table-header-part"  [class.header-start]="obj.class === 'name-start'" [class.name-end]="obj.class == 'name-end'" (click)="sortList(obj)" [title]="titleSort" (mouseenter)="setSortName(obj)" [class.cursorTrue]="obj.sort !== undefined">
           <span>{{obj.title}}</span>
           <span class="icon-sort" *ngIf="orderingSort === obj.property">
             <fa-icon [icon]="['fas','chevron-circle-up']" size="s" rotate="180" *ngIf="!obj.sort"></fa-icon>
@@ -21,87 +21,89 @@
           [class.status-bad]="item?.status === 'BAD_AUTH'"
           [class.status-fail]="item?.status === 'FAILED' || item?.status === 'FAIL_CREATING' || item?.status === 'FAIL_DELETING' || item?.status === 'ERROR'"
           [class.status-halt]="item?.status === 'HALTING' || item?.status === 'CREATING' || item?.status === 'DELETING' || item?.status === 'HERMIT' || item?.status === 'SERVICE' || item?.status === 'PARTIAL'">   <!--строка-->
-          <div class="table-area-property" *ngFor="let obj of collection" [class.name-start]="obj.class == 'name-start'" [class.name-end]="obj.class == 'name-end'"> <!--столбец-->
 
-  <!-- icons -->
-            <span [class.icon-group]="entity === 'vm' || entity === 'events' || entity === 'users' && item.is_superuser" *ngIf="obj.icon">
-              <fa-icon [icon]="['fas',obj.icon]" size="xs" [class.stateOn]="item.is_active && entity === 'users'" 
-                [class.stateOff]="!item.is_active && entity === 'users'"
-              ></fa-icon>
+          <ng-container *ngFor="let obj of collection">
+            <div *ngIf="isExist(obj.property)" class="table-area-property"  [class.name-start]="obj.class == 'name-start'" [class.name-end]="obj.class == 'name-end'"> <!--столбец-->
 
-              <ng-container *ngIf="entity === 'users' && item.is_superuser"> <!-- подъюзеры -->
-                <fa-icon [icon]="['fas', 'crown']" title="Суперпользователь" class="extra-icon stateOn"></fa-icon>
+    <!-- icons -->
+              <span [class.icon-group]="entity === 'vm' || entity === 'events' || entity === 'users' && item.is_superuser" *ngIf="obj.icon">
+                <fa-icon [icon]="['fas',obj.icon]" size="xs" [class.stateOn]="item.is_active && entity === 'users'" 
+                  [class.stateOff]="!item.is_active && entity === 'users'"
+                ></fa-icon>
+
+                <ng-container *ngIf="entity === 'users' && item.is_superuser"> <!-- подъюзеры -->
+                  <fa-icon [icon]="['fas', 'crown']" title="Суперпользователь" class="extra-icon stateOn"></fa-icon>
+                </ng-container>
+
+                <ng-container *ngIf="entity === 'vm' && item?.state && obj.property === 'verbose_name'"> <!-- статус вм -->
+                  <fa-icon [icon]="['fas', 'play-circle']" *ngIf="item.state === 'ON'" class="extra-icon on" title="Включена"></fa-icon>
+                  <fa-icon [icon]="['fas', 'stop-circle']" *ngIf="item.state === 'OFF'" class="extra-icon off" title="Выключена"></fa-icon>
+                  <fa-icon [icon]="['fas', 'pause-circle']" *ngIf="item.state === 'SUSPENDED'" class="extra-icon suspended" title="Приостановлена"></fa-icon>
+                  <fa-icon [icon]="['fas', 'question-circle']" *ngIf="item.state === 'UNDEFINED'" class="extra-icon undefined" title="Не найдено"></fa-icon>
+                </ng-container>
+
+                <ng-container *ngIf="entity === 'events' && obj.property === 'message'"> <!-- события -->
+                  <fa-icon [icon]="['fas', 'exclamation-triangle']" *ngIf="item.event_type === 1" class="extra-icon" [style.color]="'rgb(231, 186, 8)'" title="Предупреждение"></fa-icon>
+                  <fa-icon [icon]="['fas', 'times-circle']" *ngIf="item.event_type === 2"  class="extra-icon" [style.color]="'rgb(208, 61, 61)'" title="Ошибка"></fa-icon>
+                  <fa-icon [icon]="['fas', 'newspaper']" *ngIf="item.event_type === 0"  class="extra-icon" [style.color]="'write'" title="Инфо"></fa-icon>
+                </ng-container>
+              </span>
+
+    <!-- obj.property === 'status' -->
+              <ng-container *ngIf="obj.property === 'status'">
+                <ng-container *ngIf="item[obj.property]; else nothing">
+                <ng-container [ngSwitch]="true">
+                  <fa-icon [icon]="['fas',item[obj.property] | statusIcon]" [style.fontSize]="'12px'" [style.marginRight]="'5px'" [spin]="true"
+                  *ngSwitchCase="item[obj.property] === 'CREATING' || item[obj.property] === 'DELETING' || item[obj.property] === 'PENDING' || item[obj.property] === 'HERMIT' || item[obj.property] === 'IN_PROGRESS' || item[obj.property] === 'STARTING'"></fa-icon> <!-- протестить -->
+
+                  <fa-icon [icon]="['fas',item[obj.property] | statusIcon]" [style.fontSize]="'12px'" [style.marginRight]="'5px'" [spin]="false"
+                  *ngSwitchDefault></fa-icon>
+                </ng-container>
+                  
+                  <span  class="for-wrap">{{ item[obj.property] | status }}</span>
+                </ng-container>
               </ng-container>
+    <!-- obj.property -> all-types-here-->
+              <ng-container *ngIf="obj.property && obj.property != 'status' && !obj.property_lv2">
+                <ng-container *ngIf="item[obj.property] || item[obj.property] === false && obj.type || obj.type === 'array-type' && obj.property === 'index-array'; else nothing">
+                    <span *ngIf="obj.type === 'string'" [class.name-entity]="obj.class == 'name-start'"  class="for-wrap">{{ item[obj.property] }}</span>
 
-              <ng-container *ngIf="entity === 'vm' && item?.state && obj.property === 'verbose_name'"> <!-- статус вм -->
-                <fa-icon [icon]="['fas', 'play-circle']" *ngIf="item.state === 'ON'" class="extra-icon on" title="Включена"></fa-icon>
-                <fa-icon [icon]="['fas', 'stop-circle']" *ngIf="item.state === 'OFF'" class="extra-icon off" title="Выключена"></fa-icon>
-                <fa-icon [icon]="['fas', 'pause-circle']" *ngIf="item.state === 'SUSPENDED'" class="extra-icon suspended" title="Приостановлена"></fa-icon>
-                <fa-icon [icon]="['fas', 'question-circle']" *ngIf="item.state === 'UNDEFINED'" class="extra-icon undefined" title="Не найдено"></fa-icon>
-              </ng-container>
+                    <span *ngIf="obj.type === 'array-type'" [class.name-entity]="obj.class == 'name-start'"  class="for-wrap">{{ item  }}</span>
 
-              <ng-container *ngIf="entity === 'events' && obj.property === 'message'"> <!-- события -->
-                <fa-icon [icon]="['fas', 'exclamation-triangle']" *ngIf="item.event_type === 1" class="extra-icon" [style.color]="'rgb(231, 186, 8)'" title="Предупреждение"></fa-icon>
-                <fa-icon [icon]="['fas', 'times-circle']" *ngIf="item.event_type === 2"  class="extra-icon" [style.color]="'rgb(208, 61, 61)'" title="Ошибка"></fa-icon>
-                <fa-icon [icon]="['fas', 'newspaper']" *ngIf="item.event_type === 0"  class="extra-icon" [style.color]="'write'" title="Инфо"></fa-icon>
-              </ng-container>
-            </span>
+                    <span *ngIf="obj.type === 'array-length'">{{ item[obj.property]?.length }}</span>
 
-  <!-- obj.property === 'status' -->
-            <ng-container *ngIf="obj.property === 'status'">
-              <ng-container *ngIf="item[obj.property]; else nothing">
-              <ng-container [ngSwitch]="true">
-                <fa-icon [icon]="['fas',item[obj.property] | statusIcon]" [style.fontSize]="'12px'" [style.marginRight]="'5px'" [spin]="true"
-                *ngSwitchCase="item[obj.property] === 'CREATING' || item[obj.property] === 'DELETING' || item[obj.property] === 'PENDING' || item[obj.property] === 'HERMIT' || item[obj.property] === 'IN_PROGRESS' || item[obj.property] === 'STARTING'"></fa-icon> <!-- протестить -->
-
-                <fa-icon [icon]="['fas',item[obj.property] | statusIcon]" [style.fontSize]="'12px'" [style.marginRight]="'5px'" [spin]="false"
-                *ngSwitchDefault></fa-icon>
-              </ng-container>
-                
-                <span  class="for-wrap">{{ item[obj.property] | status }}</span>
-              </ng-container>
-            </ng-container>
-  <!-- obj.property -> all-types-here-->
-            <ng-container *ngIf="obj.property && obj.property != 'status' && !obj.property_lv2">
-              <ng-container *ngIf="item[obj.property] || item[obj.property] === false && obj.type || obj.type === 'array-type' && obj.property === 'index-array'; else nothing">
-                  <span *ngIf="obj.type === 'string'" [class.name-entity]="obj.class == 'name-start'"  class="for-wrap">{{ item[obj.property] }}</span>
-
-                  <span *ngIf="obj.type === 'array-type'" [class.name-entity]="obj.class == 'name-start'"  class="for-wrap">{{ item  }}</span>
-
-                  <span *ngIf="obj.type === 'array-length'">{{ item[obj.property]?.length }}</span>
-
-                  <ng-container *ngIf="obj.type.typeDepend === 'propertyInObjectsInArray'">
-                    <ng-container *ngIf="item[obj.property]?.length; else nothing">
-                      <span class="for-wrap">
-                          <span *ngFor="let objInItem of item[obj.property];let i = index">
-                            {{ objInItem[obj.type.propertyDepend] }}
-                            <ng-container *ngIf="item[obj.property]?.length > 1 && i != item[obj.property]?.length - 1">,</ng-container>
-                          </span>
-                      </span>
+                    <ng-container *ngIf="obj.type.typeDepend === 'propertyInObjectsInArray'">
+                      <ng-container *ngIf="item[obj.property]?.length; else nothing">
+                        <span class="for-wrap">
+                            <span *ngFor="let objInItem of item[obj.property];let i = index">
+                              {{ objInItem[obj.type.propertyDepend] }}
+                              <ng-container *ngIf="item[obj.property]?.length > 1 && i != item[obj.property]?.length - 1">,</ng-container>
+                            </span>
+                        </span>
+                      </ng-container>
                     </ng-container>
-                  </ng-container>
 
-                  <ng-container *ngIf="obj.type.typeDepend === 'boolean'">
-                    <ng-container *ngIf="item[obj.property]"><span>{{ obj.type.propertyDepend[0] }}</span></ng-container>
-                    <ng-container *ngIf="!item[obj.property]"><span>{{ obj.type.propertyDepend[1] }}</span></ng-container>
-                  </ng-container>
+                    <ng-container *ngIf="obj.type.typeDepend === 'boolean'">
+                      <ng-container *ngIf="item[obj.property]"><span>{{ obj.type.propertyDepend[0] }}</span></ng-container>
+                      <ng-container *ngIf="!item[obj.property]"><span>{{ obj.type.propertyDepend[1] }}</span></ng-container>
+                    </ng-container>
 
-                  <ng-container *ngIf="obj.type === 'time'">
-                    <ng-container>{{ moment(item[obj.property]).format('DD.MM.YYYY HH:mm:ss')  }}</ng-container>
-                  </ng-container>
+                    <ng-container *ngIf="obj.type === 'time'">
+                      <ng-container>{{ moment(item[obj.property]).format('DD.MM.YYYY HH:mm:ss')  }}</ng-container>
+                    </ng-container>
 
+                </ng-container>
               </ng-container>
-            </ng-container>
-  <!-- obj.property_lv2 -->
-            <ng-container *ngIf="obj.property_lv2">
-              <ng-container *ngIf="item[obj.property] && item[obj.property][obj.property_lv2]; else nothing">
-                <span  class="for-wrap">{{ item[obj.property][obj.property_lv2] }}</span>
+    <!-- obj.property_lv2 -->
+              <ng-container *ngIf="obj.property_lv2">
+                <ng-container *ngIf="item[obj.property] && item[obj.property][obj.property_lv2]; else nothing">
+                  <span  class="for-wrap">{{ item[obj.property][obj.property_lv2] }}</span>
+                </ng-container>
               </ng-container>
-            </ng-container>
 
-            <ng-template #nothing>--</ng-template>
-
+              <ng-template #nothing>--</ng-template>
           </div> 
+        </ng-container>
       </div>
     </ng-container>
     </div>
