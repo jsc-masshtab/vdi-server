@@ -29,6 +29,12 @@ services:
     container_name: vdi-redis
     network_mode: "host"
     command: redis-server --requirepass 4NZ7GpHn4IlshPhb --bind 0.0.0.0
+  memcached:
+    image: memcached:alpine
+    container_name: vdi-memcached
+    network_mode: "host"
+#    command: -m 64 -p 11211 -l 0.0.0.0
+    command: sh -c "memcached -m 64"
   tornado:
     build:
       context: ../../
