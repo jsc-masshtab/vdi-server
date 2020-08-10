@@ -174,7 +174,7 @@ class ControllerType(graphene.ObjectType, ControllerFetcher):
                               data_pool_id=graphene.UUID())
     vms = graphene.List(ControllerVmType, cluster_id=graphene.UUID(),
                         node_id=graphene.UUID(),
-                        data_pool_id=graphene.UUID(), full=graphene.Boolean())
+                        data_pool_id=graphene.UUID(), exclude_existed=graphene.Boolean())
 
     async def resolve_pools(self, info):
         """В self прилетает инстанс подели контроллера."""
