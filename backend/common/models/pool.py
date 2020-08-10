@@ -708,9 +708,8 @@ class AutomatedPool(db.Model):
     max_size = db.Column(db.Integer(), nullable=False, default=200)
     max_vm_amount = db.Column(db.Integer(), nullable=False, default=1000)
     increase_step = db.Column(db.Integer(), nullable=False, default=3)
-    # increase_step = db.Column(db.Integer(), nullable=False, default=3)
+    # min_free_vms_amount = db.Column(db.Integer(), nullable=False, default=3)
     max_amount_of_create_attempts = db.Column(db.Integer(), nullable=False, default=2)
-
     initial_size = db.Column(db.Integer(), nullable=False, default=1)
     reserve_size = db.Column(db.Integer(), nullable=False, default=0)
     total_size = db.Column(db.Integer(), nullable=False, default=1)  # Размер пула

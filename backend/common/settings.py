@@ -74,7 +74,6 @@ BY_COUNT = False
 COUNT = 100
 PATH = '/tmp/'
 CREATE = '2020-08-01'
-print(PATH)
 
 # Others
 # -----------------------------
