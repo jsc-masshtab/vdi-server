@@ -226,7 +226,7 @@ def upgrade():
                     sa.Column('max_size', sa.Integer(), nullable=False),
                     sa.Column('max_vm_amount', sa.Integer(), nullable=False),
                     sa.Column('increase_step', sa.Integer(), nullable=False),
-                    sa.Column('min_free_vms_amount', sa.Integer(), nullable=False),
+                    sa.Column('increase_step', sa.Integer(), nullable=False),
                     sa.Column('max_amount_of_create_attempts', sa.Integer(), nullable=False),
                     sa.Column('initial_size', sa.Integer(), nullable=False),
                     sa.Column('reserve_size', sa.Integer(), nullable=False),

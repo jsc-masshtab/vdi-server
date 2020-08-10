@@ -68,6 +68,11 @@ export class DatapoolsService {
                                 status
                                 type
                                 verbose_name
+                                nodes_connected {
+                                    id
+                                    verbose_name
+                                    status
+                                }
                             }
                         }
                     `,

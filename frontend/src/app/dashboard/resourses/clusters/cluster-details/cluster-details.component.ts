@@ -30,16 +30,17 @@ export class ClusterDetailsComponent implements OnInit, OnDestroy {
       type: 'string'
     },
     {
-      title: 'Статус',
-      property: 'status'
+      title: 'Описание',
+      property: 'description',
+      type: 'string'
     },
     {
-      title: 'CPU',
+      title: 'Процессоры',
       property: 'cpu_count',
       type: 'string'
     },
     {
-      title: 'RAM',
+      title: 'Оперативная память',
       property: 'memory_count',
       type: 'string'
     },
@@ -47,22 +48,25 @@ export class ClusterDetailsComponent implements OnInit, OnDestroy {
       title: 'Серверы',
       property: 'nodes',
       type: 'array-length'
-    }/* ,
-    {
-      title: 'Пулы данных',
-      property: 'datapools',
-      type: 'array-length'
     },
     {
-      title: 'Шаблоны ВМ',
-      property: 'templates',
-      type: 'array-length'
+      property: 'cluster_fs_configured',
+      title: 'Поддержка кластерных ФС',
+      type: {
+        typeDepend: 'boolean',
+        propertyDepend: ['Да', 'Нет']
+      }
     },
     {
-      title: 'ВМ',
-      property: 'vms',
-      type: 'array-length'
-    } */
+      property: 'cluster_fs_type',
+      title: 'Тип кластерной файловой системы',
+      type: 'string'
+    },
+    {
+      property: 'status',
+      title: 'Статус',
+      type: 'string'
+    }
   ];
   public idCluster: string;
   public menuActive: string = 'info';

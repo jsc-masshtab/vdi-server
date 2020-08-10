@@ -69,6 +69,8 @@ export class NodesService {
                                 memory_count
                                 management_ip
                                 cluster_name
+                                datacenter_name
+                                node_plus_controller_installation
                             }
                         }
                     `,

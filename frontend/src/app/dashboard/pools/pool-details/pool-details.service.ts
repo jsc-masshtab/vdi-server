@@ -38,14 +38,10 @@ export class PoolDetailsService {
                                     vms {
                                         id
                                         verbose_name
-                                        template {
-                                            verbose_name
-                                        }
                                         user {
                                             username
                                         }
                                         status
-                                        state
                                     }
                                     controller {
                                         address
@@ -53,7 +49,7 @@ export class PoolDetailsService {
                                     initial_size
                                     reserve_size
                                     total_size
-                                    min_free_vms_amount
+                                    increase_step
                                     vm_name_template
                                     users {
                                         username
@@ -105,7 +101,6 @@ export class PoolDetailsService {
                                             username
                                         }
                                         status
-                                        state
                                     }
                                     controller {
                                         address
