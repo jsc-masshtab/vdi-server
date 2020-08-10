@@ -1,12 +1,14 @@
 # -*- coding: utf-8 -*-
 import asyncio
 import json
+from common.veil.veil_gino import EntityType
 
 from common.database import start_gino, stop_gino
 from ws_listener_worker.resources_monitor_manager import ResourcesMonitorManager
 from common.veil.veil_redis import REDIS_POOL, WS_MONITOR_CHANNEL_IN, REDIS_CLIENT, WsMonitorCmd, a_redis_get_message
 
 from common.languages import lang_init
+from common.settings import DEBUG
 from common.log.journal import system_logger
 from common.utils import init_exit_handler
 
@@ -21,7 +23,7 @@ async def listen_for_messages(resources_monitor_manager):
     redis_subscriber = REDIS_CLIENT.pubsub()
     redis_subscriber.subscribe(WS_MONITOR_CHANNEL_IN)
 
-    await system_logger.warning(_('Ws listener worker: start loop now'))
+    await system_logger.debug('Ws listener worker: start loop now')
     while True:
         try:
             # wait for message
@@ -29,14 +31,13 @@ async def listen_for_messages(resources_monitor_manager):
 
             if redis_message['type'] != 'message':
                 continue
-
-            await system_logger.warning('redis_message' + str(redis_message))
+            await system_logger.debug('redis_message' + str(redis_message))
 
             # get data from message
             data_dict = json.loads(redis_message['data'].decode())
             command = data_dict['command']
             controller_id = data_dict['controller_id']
-            await system_logger.warning(command + ' ' + controller_id)
+            await system_logger.debug(command + ' ' + controller_id)
 
             # add or remove controller
             if command == WsMonitorCmd.ADD_CONTROLLER.name:
@@ -49,13 +50,15 @@ async def listen_for_messages(resources_monitor_manager):
         except asyncio.CancelledError:
             raise
         except Exception as ex:
-            await system_logger.error('exception:' + str(ex))
+            entity = {'entity_type': EntityType.SECURITY, 'entity_uuid': None}
+            await system_logger.error('exception:' + str(ex), entity=entity)
 
 
 def main():
     init_exit_handler()
 
     loop = asyncio.get_event_loop()
+    loop.set_debug(DEBUG)  # debug mode
 
     # init gino
     loop.run_until_complete(start_gino())

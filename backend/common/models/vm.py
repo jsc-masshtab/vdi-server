@@ -96,7 +96,7 @@ class Vm(VeilModel):
         except Exception as E:
             raise VmCreationError(str(E))
 
-        await system_logger.info(_('VM {} is created').format(verbose_name))
+        await system_logger.info(_('VM {} is created').format(verbose_name), entity=vm.entity)
 
         return vm
 
@@ -127,7 +127,7 @@ class Vm(VeilModel):
                 user = await UserModel.get(user_id)
                 await system_logger.info(
                     _('User {} has been included to VM {}').format(user.username, self.verbose_name),
-                    user=creator)
+                    user=creator, entity=self.entity)
         except UniqueViolationError:
             raise SimpleError(_('{} already has permission.').format(type(self).__name__), user=creator)
         return ero
@@ -135,7 +135,7 @@ class Vm(VeilModel):
     async def remove_users(self, creator, users_list: list):
         entity = EntityModel.select('id').where((EntityModel.entity_type == self.entity_type) & (EntityModel.entity_uuid == self.id))
         # TODO: временное решение. Скорее всего потом права отзываться будут на конкретные сущности
-        await system_logger.info(_('VM {} is clear from users').format(self.verbose_name), user=creator)
+        await system_logger.info(_('VM {} is clear from users').format(self.verbose_name), user=creator, entity=self.entity)
         if not users_list:
             return await EntityRoleOwnerModel.delete.where(EntityRoleOwnerModel.entity_id == entity).gino.status()
         return await EntityRoleOwnerModel.delete.where(
@@ -254,7 +254,7 @@ class Vm(VeilModel):
         for vm_id in vm_ids:
             vm = await Vm.get(vm_id)
             status = await vm.soft_delete(creator=creator)
-            await system_logger.info(_('Vm {} removed from pool').format(vm.verbose_name))
+            await system_logger.info(_('Vm {} removed from pool').format(vm.verbose_name), entity=vm.entity)
         return status
 
     # @staticmethod

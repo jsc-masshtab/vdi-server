@@ -7,12 +7,14 @@ from common.database import db
 from common.veil.veil_decorators import operator_required
 from common.utils import extract_ordering_data
 from common.veil.veil_errors import SimpleError
-from common.models.event import Event, EventReadByUser, EventEntity
+from common.models.event import Event, EventReadByUser
 from common.models.auth import Entity
 from web_app.auth.user_schema import User, UserType
 
 from common.settings import DEFAULT_NAME
 from common.languages import lang_init
+from common.log.journal import system_logger
+
 
 _ = lang_init()
 
@@ -49,6 +51,7 @@ class EventType(graphene.ObjectType):
     read_by = graphene.List(UserType)
     entity = graphene.List(EntityType)
     entity_types = graphene.List(graphene.String)
+    entity_id = graphene.UUID()
 
 
 class EventQuery(graphene.ObjectType):
@@ -91,8 +94,7 @@ class EventQuery(graphene.ObjectType):
     async def resolve_count(self, _info, event_type=None, start_date=None,
                             end_date=None, user=None, read_by=None, entity_type=None, **kwargs):
         filters = build_filters(event_type, start_date, end_date, user, read_by, entity_type)
-        query = Event.outerjoin(EventReadByUser).outerjoin(User).outerjoin(
-            EventEntity).outerjoin(Entity).select().where(and_(*filters)).where(Entity.entity_type != None)  # noqa
+        query = Event.outerjoin(EventReadByUser).outerjoin(User).outerjoin(Entity).select().where(and_(*filters)).where(Entity.entity_type != None)  # noqa
         event_count = await db.select([db.func.count()]).select_from(query.alias()).gino.scalar()
         return event_count
 
@@ -102,8 +104,7 @@ class EventQuery(graphene.ObjectType):
         # TODO: refactor me
         filters = build_filters(event_type, start_date, end_date, user, read_by, entity_type)
 
-        query = Event.outerjoin(EventReadByUser).outerjoin(User).outerjoin(
-            EventEntity).outerjoin(Entity).select().where(
+        query = Event.outerjoin(EventReadByUser).outerjoin(User).outerjoin(Entity).select().where(
             and_(*filters)
         ).where(Entity.entity_type != None)  # noqa
 
@@ -118,8 +119,7 @@ class EventQuery(graphene.ObjectType):
                              read_by=None, entity_type=None, ordering=None, **kwargs):
         filters = build_filters(event_type, start_date, end_date, user, read_by, entity_type)
 
-        query = Event.outerjoin(EventReadByUser).outerjoin(User).outerjoin(
-            EventEntity).outerjoin(Entity).select()
+        query = Event.outerjoin(EventReadByUser).outerjoin(User).outerjoin(Entity).select()
 
         events = await query.where(
             and_(*filters)
@@ -127,7 +127,6 @@ class EventQuery(graphene.ObjectType):
             Event.distinct(Event.id).load(add_read_by=User.distinct(User.id),
                                           add_entity=Entity)
         ).all()
-
         event_type_list = [
             EventType(
                 read_by=[UserType(**user.__values__) for user in event.read_by],
@@ -153,8 +152,7 @@ class EventQuery(graphene.ObjectType):
 
     @operator_required
     async def resolve_event(self, _info, id, **kwargs):
-        query = Event.outerjoin(EventReadByUser).outerjoin(User).outerjoin(
-            EventEntity).outerjoin(Entity).select().where(Event.id == id)
+        query = Event.outerjoin(EventReadByUser).outerjoin(User).outerjoin(Entity).select().where(Event.id == id)
 
         event = await query.gino.load(
             Event.distinct(Event.id).load(add_read_by=User.distinct(User.id), add_entity=Entity)
@@ -206,14 +204,30 @@ class UnmarkEventsReadByMutation(graphene.Mutation):
 #     @administrator_required
 #     async def mutate(self, _info, **kwargs):
 #         await Event.delete.gino.status()
-#         await system_logger.info(_("Journal is clear."))
+#         await system_logger.info(_('Journal is clear.'), entity=self.entity)
 #         return RemoveAllEventsMutation(ok=True)
+
+
+class EventExportMutation(graphene.Mutation):
+    class Arguments:
+        start = graphene.DateTime()
+        finish = graphene.DateTime()
+        path = graphene.String()
+
+    ok = graphene.Boolean()
+
+    @operator_required
+    async def mutate(self, _info, start, finish, path='/tmp/', **kwargs):
+        name = await Event.event_export(start, finish, path)
+        await system_logger.info(_('Journal is exported'), description=name, entity=self.entity)
+        return EventExportMutation(ok=True)
 
 
 class EventMutations(graphene.ObjectType):
     markEventsReadBy = MarkEventsReadByMutation.Field()
     unmarkEventsReadBy = UnmarkEventsReadByMutation.Field()
     # removeAllEvents = RemoveAllEventsMutation.Field()
+    eventExport = EventExportMutation.Field()
 
 
 event_schema = graphene.Schema(query=EventQuery,
