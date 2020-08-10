@@ -1,4 +1,4 @@
-"""delete_min_free_vms_amount_from_automated_pool
+"""delete_increase_step_from_automated_pool
 
 Revision ID: 9277751c9fcb
 Revises: 03c207dae231

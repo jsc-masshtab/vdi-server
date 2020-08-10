@@ -58,7 +58,7 @@ class Log:
         for logger_name in logging.root.manager.loggerDict:
             logging.getLogger(logger_name).propagate = val
         # gino нет в списке логгеров, не стал выяснять почему
-        logging.getLogger('gino').propagate = val
+        logging.getLogger('gino').propagate = False
 
     def __init__(self):
         # Set propagate level for inner loggers.

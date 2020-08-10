@@ -32,6 +32,11 @@ export class NodeDetailsComponent implements OnInit, OnDestroy {
       type: 'string'
     },
     {
+      title: 'Локация',
+      property: 'datacenter_name',
+      type: 'string'
+    },
+    {
       title: 'Кластер',
       property: 'cluster_name',
       type: 'string'
@@ -42,14 +47,22 @@ export class NodeDetailsComponent implements OnInit, OnDestroy {
       type: 'string'
     },
     {
-      title: 'CPU',
+      title: 'Процессоры',
       property: 'cpu_count',
       type: 'string'
     },
     {
-      title: 'RAM',
+      title: 'Оперативная память',
       property: 'memory_count',
       type: 'string'
+    },
+    {
+      property: 'node_plus_controller_installation',
+      title: 'Тип установки',
+      type: {
+        typeDepend: 'boolean',
+        propertyDepend: ['Veil controller + Veil server', 'Veil server']
+      }
     },
     {
       title: 'Статус',

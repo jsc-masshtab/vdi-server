@@ -7,7 +7,7 @@ from common.veil.veil_decorators import administrator_required
 from common.veil.veil_errors import SimpleError, ValidationError
 from common.veil.veil_validators import MutationValidation
 from common.veil.veil_gino import StatusGraphene, Status
-from common.veil.veil_graphene import VeilResourceType
+from common.veil.veil_graphene import VeilResourceType, VeilShortEntityType
 from common.models.controller import Controller
 from common.models.vm import Vm
 from common.languages import lang_init
@@ -151,7 +151,8 @@ class ControllerVmType(VeilResourceType):
 
     id = graphene.UUID()
     verbose_name = graphene.String()
-    template = graphene.Boolean()
+    template = graphene.Field(VeilShortEntityType)
+    status = StatusGraphene()
 
 
 class ControllerType(graphene.ObjectType, ControllerFetcher):
@@ -229,8 +230,9 @@ class ControllerType(graphene.ObjectType, ControllerFetcher):
                 for index, data in enumerate(resolves):
                     if str(data['id']) == str(vm.id):
                         del resolves[index]
-
-        return [ControllerNodeType(**resource_data) for resource_data in resolves]
+        for resource in resolves:
+            resource['template'] = resource['parent']
+        return [ControllerVmType(**resource_data) for resource_data in resolves]
 
     @staticmethod
     def obj_to_type(controller_obj: Controller) -> dict:

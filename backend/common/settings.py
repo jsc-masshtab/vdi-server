@@ -59,6 +59,9 @@ VEIL_MAX_BODY_SIZE = 1000 * 1024 ^ 3
 VEIL_MAX_CLIENTS = 10
 VEIL_SSL_ON = False
 VEIL_WS_MAX_TIME_TO_WAIT = 60
+VEIL_CACHE_TTL = 20
+VEIL_CACHE_TYPE = 'memcached'
+VEIL_CACHE_SERVER = ('localhost', 11211)
 
 # Locale settings
 # -----------------------------
@@ -71,7 +74,6 @@ BY_COUNT = False
 COUNT = 100
 PATH = '/tmp/'
 CREATE = '2020-08-01'
-print(PATH)
 
 # Others
 # -----------------------------

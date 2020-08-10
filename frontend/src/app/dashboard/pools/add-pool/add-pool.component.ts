@@ -9,6 +9,7 @@ import { Validators } from '@angular/forms';
 import { map } from 'rxjs/operators';
 import { trigger, style, animate, transition } from '@angular/animations';
 import { FormBuilder, FormGroup } from '@angular/forms';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'vdi-add-pool',
@@ -29,6 +30,8 @@ import { FormBuilder, FormGroup } from '@angular/forms';
 })
 
 export class PoolAddComponent {
+
+  sub: Subscription
 
   public checkValid: boolean = false;
   public error: boolean = false;
@@ -246,7 +249,11 @@ export class PoolAddComponent {
 
         this.waitService.setWait(true);
 
-        this.addPoolService[method](data).subscribe(() => {
+        if (this.sub) {
+          this.sub.unsubscribe()
+        }
+
+        this.sub = this.addPoolService[method](data).subscribe(() => {
           this.dialogRef.close();
           this.updatePools.setUpdate('update');
           this.waitService.setWait(false);
@@ -257,6 +264,12 @@ export class PoolAddComponent {
         })
 
       } break;
+    }
+  }
+
+  ngOnDestroy() {
+    if (this.sub) {
+      this.sub.unsubscribe()
     }
   }
 }
