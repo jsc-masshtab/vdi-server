@@ -77,8 +77,9 @@ class Vm(VeilModel):
     @property
     async def controller(self):
         """Возвращает объект модели контроллера."""
+        from common.models.controller import Controller as ControllerModel
         vm_pool = await self.pool
-        return await vm_pool.controller
+        return await ControllerModel.get(vm_pool.controller)
 
     # ----- ----- ----- ----- ----- ----- -----
 
