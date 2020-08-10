@@ -5,6 +5,7 @@ import inspect
 
 from common.settings import DEBUG
 from common.models.event import Event
+from common.veil.veil_gino import EntityType
 
 
 def singleton(cls):
@@ -125,22 +126,28 @@ class Log:
             message = str(message)
         self.__log_debug(message)
 
-    async def info(self, message: str, description: str = None, user: str = 'system', entity: dict = None):
+    async def info(self, message: str, entity: dict = None, description: str = None, user: str = 'system'):
         """Запишет сообщение в logging и таблицу Event с уровнем INFO."""
+        if not entity:
+            entity = {'entity_type': EntityType.SECURITY, 'entity_uuid': None}
         if message and not isinstance(message, str):
             message = str(message)
         self.__log_info(message)
         await self.__event_info(message, description, user, entity)
 
-    async def warning(self, message: str, description: str = None, user: str = 'system', entity: dict = None):
+    async def warning(self, message: str, entity: dict = None, description: str = None, user: str = 'system'):
         """Запишет сообщение в logging и таблицу Event с уровнем WARNING."""
+        if not entity:
+            entity = {'entity_type': EntityType.SECURITY, 'entity_uuid': None}
         if message and not isinstance(message, str):
             message = str(message)
         self.__log_warning(message)
         await self.__event_warning(message, description, user, entity)
 
-    async def error(self, message: str, description: str = None, user: str = 'system', entity: dict = None):
+    async def error(self, message: str, entity: dict = None, description: str = None, user: str = 'system'):
         """Запишет сообщение в logging и таблицу Event с уровнем ERROR."""
+        if not entity:
+            entity = {'entity_type': EntityType.SECURITY, 'entity_uuid': None}
         if message and not isinstance(message, str):
             message = str(message)
         self.__log_error(message)

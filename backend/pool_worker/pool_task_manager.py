@@ -33,7 +33,7 @@ class PoolTaskManager:
     async def start(self):
         """Действия при старте менеджера"""
 
-        await system_logger.warning(_('Pool worker: start loop now'))
+        await system_logger.debug('Pool worker: start loop now')
 
         # init locks
         await self.pool_locks.fill_start_data()
@@ -71,8 +71,7 @@ class PoolTaskManager:
         - Если внезапно присутствуют несколько тасок, работающих над одним пулом, то возобновляем только одну из них
         в следующем приоритете: DELETING > CREATING > EXPANDING.
         """
-
-        await system_logger.warning('Resuming tasks')
+        await system_logger.debug('Resuming tasks')
 
         pools = await AutomatedPool.query.gino.all()
         # print('cur auto pools ', pools)

@@ -5,7 +5,7 @@ import graphene
 from asyncpg.exceptions import UniqueViolationError
 
 from common.database import db
-from common.veil.veil_gino import RoleTypeGraphene, Role, StatusGraphene, Status
+from common.veil.veil_gino import RoleTypeGraphene, Role, StatusGraphene, Status, EntityType
 from common.veil.veil_validators import MutationValidation
 from common.veil.veil_errors import SimpleError, HttpError, ValidationError
 from common.veil.veil_decorators import administrator_required
@@ -374,7 +374,8 @@ class PoolQuery(graphene.ObjectType):
     async def resolve_pool(self, _info, pool_id, **kwargs):
         pool = await Pool.get_pool(pool_id)
         if not pool:
-            raise SimpleError(_('No such pool.'))
+            entity = {'entity_type': EntityType.POOL, 'entity_uuid': None}
+            raise SimpleError(_('No such pool.'), entity=entity)
         return pool_obj_to_type(pool)
 
 
@@ -394,7 +395,8 @@ class DeletePoolMutation(graphene.Mutation, PoolValidator):
         # print('pool_id', pool_id)
         pool = await Pool.get(pool_id)
         if not pool:
-            raise SimpleError(_('No such pool.'))
+            entity = {'entity_type': EntityType.POOL, 'entity_uuid': None}
+            raise SimpleError(_('No such pool.'), entity=entity)
 
         try:
             pool_type = await pool.pool_type
@@ -466,13 +468,15 @@ class CreateStaticPoolMutation(graphene.Mutation, ControllerFetcher):
             desc = str(E)
             error_msg = _('Failed to create static pool {}.').format(verbose_name)
             await system_logger.debug(desc)
-            raise SimpleError(error_msg, description=desc)
+            entity = {'entity_type': EntityType.POOL, 'entity_uuid': None}
+            raise SimpleError(error_msg, description=desc, entity=entity)
         # --- Активация удаленного доступа к VM на Veil
         try:
             await Vm.enable_remote_accesses(controller.address, vms)
         except HttpError:
             msg = _('Fail with remote access enable.')
-            await system_logger.warning(msg)
+            entity = {'entity_type': EntityType.POOL, 'entity_uuid': None}
+            await system_logger.warning(msg, entity=entity)
         return {
             'pool': PoolType(pool_id=pool.id, verbose_name=verbose_name, vms=vms),
             'ok': True
@@ -509,10 +513,12 @@ class AddVmsToStaticPoolMutation(graphene.Mutation):
         for vm_id in [vm.id for vm in vms]:
             # check if vm exists and it is on the correct node
             # if str(vm_id) not in all_vm_ids_on_node:
-            #     raise SimpleError(_('VM {} is at server different from pool server now').format(vm_id))
+            #     entity = {'entity_type': EntityType.POOL, 'entity_uuid': None}
+            #     raise SimpleError(_('VM {} is at server different from pool server now').format(vm_id), entity=entity)
             # check if vm is free (not in any pool)
             if vm_id in used_vm_ids:
-                raise SimpleError(_('VM {} is already in one of pools').format(vm_id))
+                entity = {'entity_type': EntityType.POOL, 'entity_uuid': None}
+                raise SimpleError(_('VM {} is already in one of pools').format(vm_id), entity=entity)
 
         # remote access
         await Vm.enable_remote_accesses(pool_controller.address, vms)
@@ -528,8 +534,9 @@ class AddVmsToStaticPoolMutation(graphene.Mutation):
                             created_by_vdi=False,
                             verbose_name=vm.verbose_name
                             )
+            entity = {'entity_type': EntityType.POOL, 'entity_uuid': None}
             await system_logger.info(_('Vm {} is added to pool {}').format(vm.verbose_name, pool.verbose_name),
-                                     user=creator)
+                                     user=creator, entity=entity)
 
         return {'ok': True}
 
@@ -544,7 +551,8 @@ class RemoveVmsFromStaticPoolMutation(graphene.Mutation):
     @administrator_required
     async def mutate(self, _info, pool_id, vm_ids, creator):
         if not vm_ids:
-            raise SimpleError(_("List of VM should not be empty"))
+            entity = {'entity_type': EntityType.POOL, 'entity_uuid': None}
+            raise SimpleError(_("List of VM should not be empty"), entity=entity)
 
         # vms check
         # get list of vms ids which are in pool_id
@@ -553,7 +561,8 @@ class RemoveVmsFromStaticPoolMutation(graphene.Mutation):
         # check if given vm_ids in vms_ids_in_pool
         for vm_id in vm_ids:
             if vm_id not in vms_ids_in_pool:
-                raise SimpleError(_('VM doesn\'t belong to specified pool').format(vm_id))
+                entity = {'entity_type': EntityType.POOL, 'entity_uuid': None}
+                raise SimpleError(_('VM doesn\'t belong to specified pool').format(vm_id), entity=entity)
 
         # remove vms from db
         await Vm.remove_vms(vm_ids, creator)
@@ -582,7 +591,8 @@ class UpdateStaticPoolMutation(graphene.Mutation, PoolValidator):
                                               kwargs.get('connection_types'), creator)
         except UniqueViolationError:
             error_msg = _('Failed to update static pool {}. Name must be unique.').format(kwargs['pool_id'])
-            raise SimpleError(error_msg, user=creator)
+            entity = {'entity_type': EntityType.POOL, 'entity_uuid': None}
+            raise SimpleError(error_msg, user=creator, entity=entity)
         return UpdateStaticPoolMutation(ok=ok)
 
 
@@ -642,11 +652,11 @@ class CreateAutomatedPoolMutation(graphene.Mutation, ControllerFetcher):
                                                              create_thin_clones=create_thin_clones,
                                                              connection_types=connection_types)
         except Exception as E:  # Возможные исключения: дубликат имени или вм id, сетевой фейл enable_remote_accesses
-            # TODO: указать конкретные Exception
             desc = str(E)
             error_msg = _('Failed to create automated pool {}.').format(verbose_name)
+            entity = {'entity_type': EntityType.POOL, 'entity_uuid': None}
             await system_logger.debug(desc)
-            raise SimpleError(error_msg, description=desc)
+            raise SimpleError(error_msg, description=desc, user=creator, entity=entity)
 
         # send command to start pool init task
         await request_to_execute_pool_task(str(automated_pool.id), PoolTaskType.CREATING.name)
@@ -717,8 +727,8 @@ class UpdateAutomatedPoolMutation(graphene.Mutation, PoolValidator):
                                                  )
             except UniqueViolationError:
                 error_msg = _('Failed to update automated pool {}. Name must be unique.').format(kwargs['verbose_name'])
-                # await system_logger.error(error_msg, user=creator)
-                raise SimpleError(error_msg, user=creator)
+                entity = {'entity_type': EntityType.POOL, 'entity_uuid': None}
+                raise SimpleError(error_msg, user=creator, entity=entity)
             else:
                 return UpdateAutomatedPoolMutation(ok=True)
         return UpdateAutomatedPoolMutation(ok=False)

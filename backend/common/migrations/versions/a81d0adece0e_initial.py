@@ -79,7 +79,9 @@ def upgrade():
                     sa.Column('description', sa.Unicode(), nullable=True),
                     sa.Column('created', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=True),
                     sa.Column('user', sa.Unicode(length=128), nullable=True),
-                    sa.PrimaryKeyConstraint('id')
+                    sa.Column('entity_id', postgresql.UUID(), nullable=True),
+                    sa.PrimaryKeyConstraint('id'),
+                    sa.ForeignKeyConstraint(['entity_id'], ['entity.id'], ),
                     )
     op.create_table('group',
                     sa.Column('id', postgresql.UUID(), nullable=False),
@@ -254,6 +256,7 @@ def upgrade():
                     sa.ForeignKeyConstraint(['pool_id'], ['pool.id'], ondelete='CASCADE'),
                     sa.PrimaryKeyConstraint('id')
                     )
+
     # ### end Alembic commands ###
 
 

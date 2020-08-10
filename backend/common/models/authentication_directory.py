@@ -158,7 +158,8 @@ class AuthenticationDirectory(VeilModel, AbstractSortableStatusModel):
         # Создаем запись
         auth_dir = await AuthenticationDirectory.create(**auth_dir_dict)
         await system_logger.info(_('Authentication directory {} is created').format(auth_dir_dict.get('verbose_name')),
-                                 user=creator
+                                 user=creator,
+                                 entity=auth_dir.entity
                                  )
         # Проверяем доступность
         await auth_dir.test_connection()
@@ -172,7 +173,7 @@ class AuthenticationDirectory(VeilModel, AbstractSortableStatusModel):
 
         creator = update_dict.pop('creator')
         desc = str(update_dict)
-        await system_logger.info(_('Values for auth directory is updated'), description=desc, user=creator)
+        await system_logger.info(_('Values for auth directory is updated'), entity=update_type.entity, description=desc, user=creator)
 
         await update_type.test_connection()
         return update_type
@@ -198,7 +199,7 @@ class AuthenticationDirectory(VeilModel, AbstractSortableStatusModel):
                 group_name = await GroupModel.get(group_id)
                 desc = _('Arguments: {} of group: {}').format(mapping, group_name.verbose_name)
                 msg = _('Mapping for auth directory {} is created').format(self.verbose_name)
-                await system_logger.info(msg, description=desc, user=creator)
+                await system_logger.info(msg, entity=mapping_obj.entity, description=desc, user=creator)
 
     async def edit_mapping(self, mapping: dict, groups: list, creator):
         """
@@ -222,7 +223,7 @@ class AuthenticationDirectory(VeilModel, AbstractSortableStatusModel):
                     group_name = await GroupModel.get(group_id)
                     desc = _('New arguments: {} of group: {}').format(mapping, group_name.verbose_name)
                     msg = _('Mapping for auth directory {} is updated').format(self.verbose_name)
-                    await system_logger.info(msg, description=desc, user=creator)
+                    await system_logger.info(msg, entity=self.entity, description=desc, user=creator)
 
     async def test_connection(self) -> bool:
         """
@@ -249,7 +250,8 @@ class AuthenticationDirectory(VeilModel, AbstractSortableStatusModel):
         else:
             ldap_server.unbind_s()
             await self.update(status=Status.ACTIVE).apply()
-        await system_logger.info(_('Authentication directory server {} is connected').format(self.directory_url))
+        await system_logger.info(_('Authentication directory server {} is connected').format(self.directory_url),
+                                 entity=self.entity)
         return True
 
     # Authentication Directory synchronization methods
@@ -505,7 +507,7 @@ class AuthenticationDirectory(VeilModel, AbstractSortableStatusModel):
         except ldap.LDAPError:
             # На случай ошибочности запроса к AD
             msg = _('Fail to connect to Authentication Directory. Check service information')
-            await system_logger.error(msg)
+            await system_logger.error(msg, entity=self.entity)
             await self.update(status=Status.FAILED).apply()
             groups_list = list()
         connection.unbind_s()
@@ -584,7 +586,7 @@ class AuthenticationDirectory(VeilModel, AbstractSortableStatusModel):
                                        'last_name': last_name})
         except ldap.LDAPError:
             msg = _('Fail to connect to Authentication Directory. Check service information')
-            await system_logger.error(msg)
+            await system_logger.error(msg, entity=self.entity)
             await self.update(status=Status.FAILED).apply()
             users_list = list()
         connection.unbind_s()
@@ -626,7 +628,9 @@ class AuthenticationDirectory(VeilModel, AbstractSortableStatusModel):
                 if user:
                     users_list.append(user.id)
                     new_users_count += 1
-        await system_logger.info(_('{} new users synced from Authentication Directory.').format(new_users_count))
+        entity = {'entity_type': EntityType.AUTH, 'entity_uuid': None}
+        await system_logger.info(_('{} new users synced from Authentication Directory.').format(new_users_count),
+                                 entity=entity)
         return users_list
 
     async def synchronize_group(self, group_id):

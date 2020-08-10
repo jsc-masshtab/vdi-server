@@ -150,7 +150,8 @@ class Pool(VeilModel):
                 query = query.order_by(desc(getattr(Pool, ordering))) if reversed_order else query.order_by(
                     getattr(Pool, ordering))
         except AttributeError:
-            raise SimpleError(_('Incorrect sorting option {}.').format(ordering))
+            entity = {'entity_type': EntityType.POOL, 'entity_uuid': None}
+            raise SimpleError(_('Incorrect sorting option {}.').format(ordering), entity=entity)
         return query
 
     @staticmethod
@@ -391,16 +392,18 @@ class Pool(VeilModel):
                 user = await UserModel.get(user_id)
                 await system_logger.info(
                     _('User {} has been included to pool {}').format(user.username, self.verbose_name),
-                    user=creator
-                    )  # noqa
+                    user=creator,
+                    entity=self.entity)
         except UniqueViolationError:
-            raise SimpleError(_('{} already has permission.').format(type(self).__name__), user=creator)
+            raise SimpleError(_('{} already has permission.').format(type(self).__name__), user=creator, entity=self.entity)
         return ero
 
     async def remove_users(self, creator, users_list: list):
         for user_id in users_list:
             user = await UserModel.get(user_id)
-            await system_logger.info(_('Removing user {} from pool {}').format(user.username, self.verbose_name), user=creator)
+            await system_logger.info(_('Removing user {} from pool {}').format(user.username, self.verbose_name),
+                                     user=creator,
+                                     entity=self.entity)
         entity = EntityModel.select('id').where((EntityModel.entity_type == self.entity_type) & (EntityModel.entity_uuid == self.id))
         return await EntityRoleOwnerModel.delete.where(
             (EntityRoleOwnerModel.user_id.in_(users_list)) & (EntityRoleOwnerModel.entity_id == entity)).gino.status()
@@ -416,10 +419,10 @@ class Pool(VeilModel):
                 group = await GroupModel.get(group_id)
                 await system_logger.info(
                     _('Group {} has been included to pool {}').format(group.verbose_name, self.verbose_name),
-                    user=creator
-                    )  # noqa
+                    user=creator,
+                    entity=self.entity)
         except UniqueViolationError:
-            raise SimpleError(_('Pool already has permission.'), user=creator)
+            raise SimpleError(_('Pool already has permission.'), user=creator, entity=self.entity)
         return ero
 
     async def add_groups(self, creator, groups_list: list):
@@ -431,7 +434,8 @@ class Pool(VeilModel):
         for group_id in groups_list:
             group = await GroupModel.get(group_id)
             await system_logger.info(_('Removing group {} from pool {}').format(group.verbose_name, self.verbose_name),
-                                     user=creator
+                                     user=creator,
+                                     entity=self.entity
                                      )
         entity = EntityModel.select('id').where((EntityModel.entity_type == self.entity_type) & (EntityModel.entity_uuid == self.id))
         return await EntityRoleOwnerModel.delete.where(
@@ -445,15 +449,20 @@ class Pool(VeilModel):
                 if not entity:
                     entity = await EntityModel.create(**self.entity)
                 ero = await EntityRoleOwnerModel.create(entity_id=entity.id, role=role)
-                await system_logger.info(_('Role {} has been set to pool {}.').format(role, self.verbose_name), user=creator)
+                await system_logger.info(_('Role {} has been set to pool {}.').format(role, self.verbose_name),
+                                         user=creator,
+                                         entity=self.entity)
         except UniqueViolationError:
-            raise SimpleError(_('Pool already has role.'), user=creator)
+            raise SimpleError(_('Pool already has role.'), user=creator, entity=self.entity)
         return ero
 
     async def remove_roles(self, creator, roles_list: list):
         role_del = ' '.join(roles_list)
-        await system_logger.info(_('Roles: {} was deleted to pool {}').format(role_del, self.verbose_name), user=creator)
-        entity = EntityModel.select('id').where((EntityModel.entity_type == self.entity_type) & (EntityModel.entity_uuid == self.id))
+        await system_logger.info(_('Roles: {} was deleted to pool {}').format(role_del, self.verbose_name),
+                                 user=creator,
+                                 entity=self.entity)
+        entity = EntityModel.select('id').where(
+            (EntityModel.entity_type == self.entity_type) & (EntityModel.entity_uuid == self.id))
         return await EntityRoleOwnerModel.delete.where(
             (EntityRoleOwnerModel.role.in_(roles_list)) & (EntityRoleOwnerModel.entity_id == entity)).gino.status()
 
@@ -517,14 +526,16 @@ class Pool(VeilModel):
     async def activate(cls, pool_id):
         pool = await Pool.get(pool_id)
         await pool.update(status=Status.ACTIVE).apply()
-        await system_logger.info(_('Pool {} has been activated.').format(pool.verbose_name))
+        entity = {'entity_type': EntityType.POOL, 'entity_uuid': None}
+        await system_logger.info(_('Pool {} has been activated.').format(pool.verbose_name), entity=entity)
         return True
 
     @classmethod
     async def deactivate(cls, pool_id):
         pool = await Pool.get(pool_id)
         await pool.update(status=Status.FAILED).apply()
-        await system_logger.info(_('Pool {} has been deactivated.').format(pool.verbose_name))
+        entity = {'entity_type': EntityType.POOL, 'entity_uuid': None}
+        await system_logger.info(_('Pool {} has been deactivated.').format(pool.verbose_name), entity=entity)
         return True
 
     @classmethod
@@ -603,7 +614,8 @@ class StaticPool(db.Model):
     #                 vm_veil_data['controller_address'] = controller_address
     #             all_vm_veil_data_list.extend(single_vm_veil_data_list)
     #         except (HttpError, OSError) as error_msg:
-    #             await system_logger.error(_('HttpError: {}').format(error_msg))
+    #             entity = {'entity_type': EntityType.POOL, 'entity_uuid': None}
+    #             await system_logger.error(_('HttpError: {}').format(error_msg), entity=entity)
     #
     #     # find vm veil data by id
     #     vm_veil_data_list = []
@@ -612,7 +624,8 @@ class StaticPool(db.Model):
     #             data = next(veil_vm_data for veil_vm_data in all_vm_veil_data_list if veil_vm_data['id'] == str(vm_id))
     #             vm_veil_data_list.append(data)
     #         except StopIteration:
-    #             raise SimpleError(_('VM with id {} not found in any controllers').format(vm_id))
+    #             entity = {'entity_type': EntityType.POOL, 'entity_uuid': None}
+    #             raise SimpleError(_('VM with id {} not found in any controllers').format(vm_id), entity=entity)
     #     return vm_veil_data_list
 
     @staticmethod
@@ -652,7 +665,7 @@ class StaticPool(db.Model):
                                      created_by_vdi=False)
                 await system_logger.debug(_('VM {} created.').format(vm_type.verbose_name))
 
-            await system_logger.info(_('Static pool {} created.').format(verbose_name), user=creator)
+            await system_logger.info(_('Static pool {} created.').format(verbose_name), user=creator, entity=pool.entity)
             await pool.activate()
         return pool
 
@@ -668,7 +681,7 @@ class StaticPool(db.Model):
             msg = _('Static pool {} is updated.').format(update_type.verbose_name)
             creator = update_dict.pop('creator')
             desc = str(update_dict)
-            await system_logger.info(msg, description=desc, user=creator)
+            await system_logger.info(msg, description=desc, user=creator, entity=update_type.entity)
         return True
 
     async def activate(self):
@@ -789,7 +802,7 @@ class AutomatedPool(db.Model):
                                                   vm_name_template=vm_name_template,
                                                   create_thin_clones=create_thin_clones)
 
-            await system_logger.info(_('AutomatedPool {} is created').format(verbose_name))
+            await system_logger.info(_('AutomatedPool {} is created').format(verbose_name), entity=pool.entity)
 
             return automated_pool
 
@@ -852,13 +865,15 @@ class AutomatedPool(db.Model):
                 desc = str(auto_pool_kwargs)
                 await system_logger.info(_('Update AutomatedPool values for {}').format(await self.verbose_name),
                                          description=desc,
-                                         user=creator)
+                                         user=creator,
+                                         entity=self.entity
+                                         )
                 await self.update(**auto_pool_kwargs).apply()
 
         desc = str(pool_kwargs)
         automated_pool = await self.get(self.id)
         msg = _('Automated pool {name} updated.').format(name=await automated_pool.verbose_name)
-        await system_logger.info(msg, description=desc, user=creator)
+        await system_logger.info(msg, description=desc, user=creator, entity=self.entity)
 
         return True
 
@@ -887,7 +902,8 @@ class AutomatedPool(db.Model):
                 # TODO: обработать актуальные ошибки
             except HttpError as http_error:
                 # Обработка BadRequest происходит в VmModel.copy()
-                await system_logger.error(str(http_error))
+                entity = {'entity_type': EntityType.POOL, 'entity_uuid': None}
+                await system_logger.error(str(http_error), entity=entity)
                 system_logger._debug('Fail to create VM on ECP. Re-run.')
                 await asyncio.sleep(1)
                 continue
@@ -965,13 +981,15 @@ class AutomatedPool(db.Model):
 
             pool = await Pool.get(self.id)
             await system_logger.info(
-                _('VM {} is added to Automated pool {}').format(vm_info['verbose_name'], pool.verbose_name))
+                _('VM {} is added to Automated pool {}').format(vm_info['verbose_name'], pool.verbose_name),
+                entity=self.entity)
 
             return vm_info
 
         await self.deactivate()
+        entity = {'entity_type': EntityType.POOL, 'entity_uuid': None}
         raise VmModel.reationError(
-            _('Error with create VM {}').format(verbose_name))
+            _('Error with create VM {}').format(verbose_name), entity=entity)
 
     @property
     async def template_os_type(self):
@@ -1027,7 +1045,7 @@ class AutomatedPool(db.Model):
 
         except VmCreationError as vm_error:
             # log that we cant create required initial amount of VMs
-            await system_logger.error(_('Can`t create VM'))
+            await system_logger.error(_('Can`t create VM'), entity=self.entity)
             await system_logger.debug(vm_error)
 
         # internal message about pool creation result (WS)
@@ -1054,7 +1072,8 @@ class AutomatedPool(db.Model):
 
         # Пробросить исключение, если споткнулись на создании машин
         if not is_creation_successful:
-            raise PoolCreationError(_('Could not create the required number of machines.'))
+            entity = {'entity_type': EntityType.POOL, 'entity_uuid': None}
+            raise PoolCreationError(_('Could not create the required number of machines.'), entity=entity)
 
     async def remove_vms(self, creator):
         """Интерфейс для запуска команды HttpClient на удаление виртуалки"""

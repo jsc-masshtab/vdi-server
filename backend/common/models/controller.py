@@ -159,7 +159,7 @@ class Controller(AbstractSortableStatusModel, VeilModel):
             controller_is_ok = await controller.check_controller()
             # Логгируем результат операции
             msg = _('Adding controller {}: {}.').format(verbose_name, controller_is_ok)
-            await system_logger.info(msg, user=creator)
+            await system_logger.info(msg, user=creator, entity=controller.entity)
             # Возвращаем инстанс созданного контроллера
             return controller
 
@@ -199,7 +199,7 @@ class Controller(AbstractSortableStatusModel, VeilModel):
         msg = _('Update controller {}: {}.').format(
             updated_controller.verbose_name,
             controller_is_ok)
-        await system_logger.info(msg, description=str(controller_kwargs), user=creator)
+        await system_logger.info(msg, description=str(controller_kwargs), user=creator, entity=self.entity)
         return updated_controller
 
     async def full_delete_pools(self, creator):
@@ -240,7 +240,7 @@ class Controller(AbstractSortableStatusModel, VeilModel):
         if not self.active:
             # Активируем контроллер
             await self.update(status=Status.ACTIVE).apply()
-            await system_logger.info(_('Controller {} has been activated.').format(self.verbose_name))
+            await system_logger.info(_('Controller {} has been activated.').format(self.verbose_name), entity=self.entity)
             # Активируем пулы
             # TODO: переработать активацию пулов - нужен метод в пулах, который бы активировал ВМ.
             pools = await self.pools
@@ -255,7 +255,7 @@ class Controller(AbstractSortableStatusModel, VeilModel):
         if not self.failed:
             # Деактивируем контроллер
             await self.update(status=Status.FAILED).apply()
-            await system_logger.info(_('Controller {} has been deactivated.').format(self.verbose_name))
+            await system_logger.info(_('Controller {} has been deactivated.').format(self.verbose_name), entity=self.entity)
             # Деактивируем пулы
             # TODO: переработать деактивацию пулов - нужен метод в пулах, который бы деактивировал ВМ.
             pools = await self.pools

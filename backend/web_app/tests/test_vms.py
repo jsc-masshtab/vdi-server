@@ -74,7 +74,7 @@ class TestVmPermissionsSchema:
                          assignVmToUser(vm_id: "10913d5d-ba7a-4049-88c5-769267a6cbe4", username: "test_user")
                          {ok, vm{user{username}}}}"""
 
-        executed = await execute_scheme(vm_schema, query, context=fixt_auth_context)
+        executed = await execute_scheme(vm_schema, query, context=fixt_auth_context)  # noqa
         snapshot.assert_match(executed)
 
         # Дополнительная проверка пользователя в БД.
@@ -85,7 +85,7 @@ class TestVmPermissionsSchema:
         query = """mutation{
                          freeVmFromUser(vm_id: "10913d5d-ba7a-4049-88c5-769267a6cbe4"){ok}}"""
 
-        executed = await execute_scheme(vm_schema, query, context=fixt_auth_context)
+        executed = await execute_scheme(vm_schema, query, context=fixt_auth_context)  # noqa
         snapshot.assert_match(executed)
 
         # Проверяем, исходное количество пользователей на фикстурной VM

@@ -11,6 +11,7 @@ from common.models.pool import AutomatedPool, Pool
 from common.veil.veil_errors import VmCreationError, SimpleError
 
 from common.veil.veil_redis import REDIS_CLIENT, INTERNAL_EVENTS_CHANNEL
+from common.veil.veil_gino import EntityType
 from web_app.front_ws_api.subscription_sources import VDI_TASKS_SUBSCRIPTION
 
 from common.utils import cancel_async_task
@@ -92,7 +93,10 @@ class AbstractTask:  # унаследовать от db.Mode
 
         except Exception as ex:  # noqa
             await self.task_model.set_status(TaskStatus.FAILED)
-            await system_logger.warning('Exception during task execution. id: {} exceptin: {} '.format(self.task_model.id, str(ex)))
+            entity = {'entity_type': EntityType.POOL, 'entity_uuid': None}
+            await system_logger.warning(
+                'Exception during task execution. id: {} exception: {} '.format(self.task_model.id, str(ex)),
+                entity=entity)
 
             await self.do_on_fail()
 

@@ -15,7 +15,7 @@ po_file="${locales_dir}/${domain}.po"
 # create folders if not exists
 mkdir -p $locales_dir
 # create .pot file
-find . -iname "*.html" -o -iname "*.py" | xargs \
+find ../ -iname "*.html" -o -iname "*.py" | xargs \
     xgettext --output=${pot_file} --language=Python --from-code=UTF-8 \
     --sort-by-file --keyword=_ --keyword=_:1,2 --no-wrap
 # init .po file, if it doesn't exist yet

@@ -64,6 +64,15 @@ VEIL_WS_MAX_TIME_TO_WAIT = 60
 # -----------------------------
 LANGUAGE = 'ru'
 
+# Partition settings
+# -----------------------------
+PARTITION = 2
+BY_COUNT = False
+COUNT = 100
+PATH = '/tmp/'
+CREATE = '2020-08-01'
+print(PATH)
+
 # Others
 # -----------------------------
 DEFAULT_NAME = '-'

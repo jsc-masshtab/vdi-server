@@ -6,7 +6,6 @@ from sqlalchemy.sql.schema import Column
 from asyncpg import DataError
 
 from common.database import db
-from common.log.journal import system_logger
 from common.languages import lang_init
 
 _ = lang_init()
@@ -170,6 +169,7 @@ class VeilModel(db.Model):
             (Entity.entity_type == self.entity_type) & (Entity.entity_uuid == self.id)).gino.first()
 
     async def soft_delete(self, creator):
+        from common.log.journal import system_logger
         try:
             await self.delete()
         except DataError as db_error:

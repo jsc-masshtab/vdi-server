@@ -4,8 +4,10 @@
 
 import uuid
 import json
+import csv
 
-from sqlalchemy import and_
+from datetime import datetime
+from sqlalchemy import and_, between
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.sql import func
 
@@ -22,6 +24,7 @@ class Event(db.Model):
     description = db.Column(db.Unicode())
     created = db.Column(db.DateTime(timezone=True), server_default=func.now())
     user = db.Column(db.Unicode(length=128), default='system')
+    entity_id = db.Column(UUID(), db.ForeignKey('entity.id'), default=uuid.uuid4)
 
     def __init__(self, **kw):
         super().__init__(**kw)
@@ -43,6 +46,30 @@ class Event(db.Model):
     @entity.setter
     def add_entity(self, entity):
         self._entity.add(entity)
+
+    @staticmethod
+    async def event_export(start, finish, path):
+        """Экспорт журнала по заданному временному периоду
+        :param start: начало периода ('2020-07-01T00:00:00.000001Z')
+        :param finish: окончание периода ('2020-07-31T23:59:59.000001Z')
+        :param path: путь для экспорта ('/tmp/')
+        """
+        start_date = datetime.date(start)
+        finish_date = datetime.date(finish)
+
+        query = await Event.query.where(between(Event.created, start, finish)).gino.all()
+
+        export = []
+        for event in query:
+            export.append(event.__values__)
+
+        name = '{}events_{}-{}.csv'.format(path, start_date, finish_date)
+        with open('{}'.format(name), 'w') as f:
+            writer = csv.DictWriter(f, fieldnames=export[0])
+            writer.writeheader()
+            for row in export:
+                writer.writerow(row)
+        return name
 
     @staticmethod
     async def mark_read_by(user_id, events_id_list):
@@ -76,14 +103,7 @@ class Event(db.Model):
     async def soft_create(cls, event_type, msg, description, user, entity_dict: dict):
         from common.models.auth import Entity
         async with db.transaction():  # noqa
-            # 1. Создаем сам Евент
-            event = await Event.create(
-                event_type=event_type,
-                message=msg,
-                description=description,
-                user=user
-            )
-            # 2. Создаем запись сущности
+            # 1. Создаем запись сущности
             if entity_dict and isinstance(entity_dict, dict):
                 entity = await Entity.query.where(  # noqa
                     (Entity.entity_type == entity_dict['entity_type']) &  # noqa
@@ -91,18 +111,27 @@ class Event(db.Model):
                 ).gino.first()  # noqa
                 if not entity:
                     entity = await Entity.create(**entity_dict)
+                # 2. Создаем Евент
+                event = await Event.create(  # noqa
+                    event_type=event_type,
+                    message=msg,
+                    description=description,
+                    user=user,
+                    entity_id=entity.id
+                )
                 # 3. Создаем связь
-                await EventEntity.create(entity_id=entity.id, event_id=event.id)
+                # await EventEntity.create(entity_id=entity.id, event_id=event.id)
             return True
 
     @classmethod
-    async def create_event(cls, msg, event_type=0, description=None, user='system', entity_dict=None):
+    async def create_event(cls, msg, event_type, description, user, entity_dict):  # noqa
         # TODO: user строкой - выглядит странно.нужен id
         msg_dict = dict(event_type=event_type,
                         message=msg,
                         user=user,
                         event='event',
                         resource=EVENTS_SUBSCRIPTION)
+
         try:
             REDIS_CLIENT.publish(INTERNAL_EVENTS_CHANNEL, json.dumps(msg_dict))
         except TypeError:  # Can`t serialize
@@ -110,11 +139,11 @@ class Event(db.Model):
         await cls.soft_create(event_type, msg, description, user, entity_dict)
 
 
-class EventEntity(db.Model):
-    """Связывающая сущность"""
-    __tablename__ = 'event_entities'
-    event_id = db.Column(UUID(), db.ForeignKey('event.id'), nullable=False)
-    entity_id = db.Column(UUID(), db.ForeignKey('entity.id'), nullable=False)
+# class EventEntity(db.Model):
+#     """Связывающая сущность"""
+#     __tablename__ = 'event_entities'
+#     event_id = db.Column(UUID(), db.ForeignKey('event.id'), nullable=False)
+#     entity_id = db.Column(UUID(), db.ForeignKey('entity.id'), nullable=False)
 
 
 class EventReadByUser(db.Model):

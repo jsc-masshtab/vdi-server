@@ -6,6 +6,7 @@ from common.database import start_gino, stop_gino
 from common.veil.veil_redis import REDIS_POOL
 
 from common.languages import lang_init
+from common.settings import DEBUG
 from common.log.journal import system_logger
 from common.utils import init_exit_handler
 
@@ -19,6 +20,7 @@ def main():
     init_exit_handler()
 
     loop = asyncio.get_event_loop()
+    loop.set_debug(DEBUG)  # debug mode
 
     # init gino
     loop.run_until_complete(start_gino())

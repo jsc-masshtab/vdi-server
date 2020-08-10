@@ -35,7 +35,7 @@ class ResourcesMonitorManager:
         # start resources monitors
         for controller in controllers:
             self._add_monitor_for_controller(controller.id)
-        await system_logger.info(_('{}: Started').format(__class__.__name__))
+            await system_logger.info(_('{}: Started').format(__class__.__name__), entity=controller.entity)
 
     async def stop(self):
         """
@@ -47,18 +47,19 @@ class ResourcesMonitorManager:
 
     async def add_controller(self, controller_id):
         # check if controller is already being monitored
+        controller = await Controller.get(controller_id)
         if controller_id in self._get_monitored_controllers_ids():
-            msg = _('{cls}: Controller {id} is already monitored!').format(
+            msg = _('{cls}: Controller {name} is already monitored!').format(
                 cls=__class__.__name__,
-                id=controller_id)
-            await system_logger.warning(msg)
+                name=controller.verbose_name)
+            await system_logger.warning(msg, entity=controller.entity)
             return
         # add monitor
         self._add_monitor_for_controller(controller_id)
-        msg = _('{cls}: resource monitor for controller {id} connected').format(
+        msg = _('{cls}: resource monitor for controller {name} connected').format(
             cls=__class__.__name__,
-            id=controller_id)
-        await system_logger.info(msg)
+            name=controller.verbose_name)
+        await system_logger.info(msg, entity=controller.entity)
 
     async def remove_controller(self, controller_id):
         await system_logger.debug(_('Delete controller {} from resources monitor.').format(controller_id))
