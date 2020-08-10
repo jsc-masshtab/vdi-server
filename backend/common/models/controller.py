@@ -238,6 +238,9 @@ class Controller(AbstractSortableStatusModel, VeilModel):
         await self.update(status=Status.DELETING).apply()
         # Удаляем зависимые пулы
         await self.full_delete_pools(creator=creator)
+        # Удаляем клиент по контроллеру
+        client = get_veil_client()
+        await client.remove_client(self.address)
         # Удаляем запись
         status = await super().soft_delete(creator=creator)
         return status
