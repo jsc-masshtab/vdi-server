@@ -68,6 +68,8 @@ export class ClustersService  {
                                 status
                                 cpu_count
                                 memory_count
+                                cluster_fs_configured
+                                cluster_fs_type
                                 nodes {
                                     verbose_name
                                     status

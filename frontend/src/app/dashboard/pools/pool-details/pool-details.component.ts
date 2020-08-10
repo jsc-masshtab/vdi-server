@@ -155,7 +155,7 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
     },
     {
       title: 'Пороговое количество свободных ВМ',
-      property: 'min_free_vms_amount',
+      property: 'increase_step',
       type: 'string'
     },
     {

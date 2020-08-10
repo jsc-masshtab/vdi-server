@@ -44,6 +44,11 @@ export class DatapoolDetailsComponent implements OnInit, OnDestroy {
       title: 'Занято (Мб)',
       property: 'used_space',
       type: 'string'
+    },
+    {
+      title: 'Серверы',
+      property: 'nodes_connected',
+      type: 'array-length'
     }
   ];
 

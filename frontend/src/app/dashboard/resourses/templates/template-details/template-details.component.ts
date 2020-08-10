@@ -26,8 +26,120 @@ export class TemplateDetailsComponent implements OnInit, OnDestroy {
       title: 'Название',
       property: 'verbose_name',
       class: 'name-start',
-      type: 'string',
-      icon: 'tv'
+      icon: 'desktop',
+      type: 'string'
+    },
+    {
+      title: 'Описание',
+      property: 'description',
+      type: 'string'
+    },
+    {
+      title: 'Процессоры',
+      property: 'cpu_count',
+      type: 'string'
+    },
+    {
+      title: 'Оперативная память',
+      property: 'memory_count',
+      type: 'string'
+    },
+    {
+      title: 'Операционная система',
+      property: 'os_type',
+      type: 'string'
+    },
+    {
+      title: 'Версия операционной системы',
+      property: 'os_version',
+      type: 'string'
+    },
+    {
+      title: 'Сервер',
+      property: 'node',
+      property_lv2: 'verbose_name',
+      type: 'string'
+    },
+    {
+      title: 'Количество вирт. дисков',
+      property: 'vdisks_count',
+      type: 'string'
+    },
+    {
+      title: 'Количество LUN',
+      property: 'luns_count',
+      type: 'string'
+    },
+    {
+      title: 'Количество вирт. интерфейсов',
+      property: 'vmachine_infs_count',
+      type: 'string'
+    },
+    {
+      title: 'Количество вирт. функций',
+      property: 'vfunctions_count',
+      type: 'string'
+    },
+    {
+      property: 'tablet',
+      title: 'Режим планшета',
+      type: {
+        typeDepend: 'boolean',
+        propertyDepend: ['Включено', 'Выключено']
+      }
+    },
+    {
+      property: 'spice_stream',
+      title: 'SPICE потоки',
+      type: {
+        typeDepend: 'boolean',
+        propertyDepend: ['Включено', 'Выключено']
+      }
+    },
+    {
+      property: 'ha_enabled',
+      title: 'Высокая доступность',
+      type: {
+        typeDepend: 'boolean',
+        propertyDepend: ['Включено', 'Выключено']
+      }
+    },
+    {
+      property: 'disastery_enabled',
+      title: 'Катастрофоустойчивость',
+      type: {
+        typeDepend: 'boolean',
+        propertyDepend: ['Включено', 'Выключено']
+      }
+    },
+    {
+      property: 'guest_agent',
+      title: 'Гостевой агент',
+      type: {
+        typeDepend: 'boolean',
+        propertyDepend: ['Включено', 'Выключено']
+      }
+    },
+    {
+      property: 'remote_access',
+      title: 'Удаленный доступ',
+      type: {
+        typeDepend: 'boolean',
+        propertyDepend: ['Включено', 'Выключено']
+      }
+    },
+    {
+      property: 'start_on_boot',
+      title: 'Автоматический запуск ВМ',
+      type: {
+        typeDepend: 'boolean',
+        propertyDepend: ['Включено', 'Выключено']
+      }
+    },
+    {
+      title: 'Тип загрузочного меню',
+      property: 'boot_type',
+      type: 'string'
     }
   ];
 

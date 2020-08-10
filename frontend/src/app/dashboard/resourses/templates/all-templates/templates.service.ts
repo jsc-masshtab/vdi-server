@@ -55,6 +55,28 @@ export class TemplatesService {
             query: gql` query resources($id: UUID, $controller_address: UUID) {
                             template(template_id: $id, controller_id: $controller_address) {
                                 verbose_name
+                                description
+                                os_type
+                                os_version
+                                cpu_count
+                                memory_count
+                                tablet
+                                ha_enabled
+                                disastery_enabled
+                                guest_agent
+                                remote_access
+                                spice_stream
+                                vmachine_infs_count
+                                vdisks_count
+                                luns_count
+                                vfunctions_count
+                                user_power_state
+                                boot_type
+                                start_on_boot
+                                node {
+                                    id
+                                    verbose_name
+                                }
                             }
                         }
                     `,

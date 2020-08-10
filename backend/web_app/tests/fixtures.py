@@ -208,7 +208,7 @@ async def fixt_create_automated_pool(fixt_controller):
         mutation {
             addDynamicPool(verbose_name: "%s", controller_ip: "%s",
                            cluster_id: "%s", node_id: "%s", datapool_id: "%s", template_id: "%s",
-                           max_size: 4, max_vm_amount: 4, increase_step: 1, min_free_vms_amount: 1,
+                           max_size: 4, max_vm_amount: 4, increase_step: 1, increase_step: 1,
                            initial_size: 1, total_size: 2, max_amount_of_create_attempts: 10,
                            create_thin_clones: true){
                     ok
