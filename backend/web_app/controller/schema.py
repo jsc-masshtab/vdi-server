@@ -11,6 +11,7 @@ from common.veil.veil_graphene import VeilResourceType, VeilShortEntityType
 from common.models.controller import Controller
 from common.models.vm import Vm
 from common.languages import lang_init
+from veil_api_client.base.api_object import VeilRestPaginator
 
 _ = lang_init()
 
@@ -167,63 +168,67 @@ class ControllerType(graphene.ObjectType, ControllerFetcher):
     token = graphene.String()
     # Новые поля
     pools = graphene.List(ControllerPoolType)
-    clusters = graphene.List(ControllerClusterType)
-    nodes = graphene.List(ControllerNodeType, cluster_id=graphene.UUID())
-    data_pools = graphene.List(ControllerDataPoolType, cluster_id=graphene.UUID(), node_id=graphene.UUID())
-    templates = graphene.List(ControllerVmType, cluster_id=graphene.UUID(),
-                              node_id=graphene.UUID(),
-                              data_pool_id=graphene.UUID())
-    vms = graphene.List(ControllerVmType, cluster_id=graphene.UUID(),
-                        node_id=graphene.UUID(),
-                        data_pool_id=graphene.UUID(), exclude_existed=graphene.Boolean())
+    clusters = graphene.List(ControllerClusterType, ordering=graphene.String(), limit=graphene.Int(default_value=100),
+                             offset=graphene.Int(default_value=0))
+    nodes = graphene.List(ControllerNodeType, cluster_id=graphene.UUID(), ordering=graphene.String(),
+                          limit=graphene.Int(default_value=100), offset=graphene.Int(default_value=0))
+    data_pools = graphene.List(ControllerDataPoolType, cluster_id=graphene.UUID(), node_id=graphene.UUID(),
+                               ordering=graphene.String(), limit=graphene.Int(default_value=100),
+                               offset=graphene.Int(default_value=0))
+    templates = graphene.List(ControllerVmType, cluster_id=graphene.UUID(), node_id=graphene.UUID(),
+                              data_pool_id=graphene.UUID(), ordering=graphene.String(),
+                              limit=graphene.Int(default_value=100), offset=graphene.Int(default_value=0))
+    vms = graphene.List(ControllerVmType, cluster_id=graphene.UUID(), node_id=graphene.UUID(),
+                        data_pool_id=graphene.UUID(), exclude_existed=graphene.Boolean(), ordering=graphene.String(),
+                        limit=graphene.Int(default_value=100), offset=graphene.Int(default_value=0))
 
     async def resolve_pools(self, info):
         """В self прилетает инстанс подели контроллера."""
         controller = await Controller.get(self.id)
         return await controller.pools
 
-    async def resolve_clusters(self, info):
+    async def resolve_clusters(self, info, limit, offset, ordering: str = None):
         """В self прилетает инстанс подели контроллера."""
-        # TODO: сейчас не используются параметры пагинатора. Когда записей будет много - потребуется
         # TODO: на фронте делать неактивными элементы в плохом статусе?
         controller = await Controller.get(self.id)
-        veil_response = await controller.veil_client.cluster().list()
+        paginator = VeilRestPaginator(ordering=ordering, limit=limit, offset=offset)
+        veil_response = await controller.veil_client.cluster().list(paginator=paginator)
         return [ControllerClusterType(**resource_data) for resource_data in veil_response.paginator_results]
 
-    async def resolve_nodes(self, info, cluster_id=None):
+    async def resolve_nodes(self, info, limit, offset, cluster_id=None, ordering: str = None):
         """В self прилетает инстанс подели контроллера."""
-        # TODO: сейчас не используются параметры пагинатора. Когда записей будет много - потребуется
         # TODO: на фронте делать неактивными элементы в плохом статусе?
         controller = await Controller.get(self.id)
-        veil_response = await controller.veil_client.node(cluster_id=cluster_id).list()
+        paginator = VeilRestPaginator(ordering=ordering, limit=limit, offset=offset)
+        veil_response = await controller.veil_client.node(cluster_id=cluster_id).list(paginator=paginator)
         return [ControllerNodeType(**resource_data) for resource_data in veil_response.paginator_results]
 
-    async def resolve_data_pools(self, info, cluster_id=None, node_id=None):
+    async def resolve_data_pools(self, info, limit, offset, cluster_id=None, node_id=None, ordering: str = None):
         """Сокращенная информация о контроллере."""
-        # TODO: сейчас не используются параметры пагинатора. Когда записей будет много - потребуется
         # TODO: на фронте делать неактивными элементы в плохом статусе?
         controller = await Controller.get(self.id)
-        veil_response = await controller.veil_client.data_pool(node_id=node_id, cluster_id=cluster_id).list()
+        paginator = VeilRestPaginator(ordering=ordering, limit=limit, offset=offset)
+        veil_response = await controller.veil_client.data_pool(node_id=node_id, cluster_id=cluster_id).list(paginator=paginator)
         return [ControllerDataPoolType(**resource_data) for resource_data in veil_response.paginator_results]
 
-    async def resolve_templates(self, info, cluster_id=None, node_id=None, data_pool_id=None):
+    async def resolve_templates(self, info, limit, offset, cluster_id=None, node_id=None, data_pool_id=None, ordering: str = None):
         """В self прилетает инстанс подели контроллера."""
-        # TODO: сейчас не используются параметры пагинатора. Когда записей будет много - потребуется
         # TODO: на фронте делать неактивными элементы в плохом статусе?
         controller = await Controller.get(self.id)
+        paginator = VeilRestPaginator(ordering=ordering, limit=limit, offset=offset)
         veil_response = await controller.veil_client.domain(template=1, cluster_id=cluster_id,
-                                                            node_id=node_id, data_pool_id=data_pool_id).list()
+                                                            node_id=node_id, data_pool_id=data_pool_id).list(paginator=paginator)
         return [ControllerNodeType(**resource_data) for resource_data in veil_response.paginator_results]
 
-    async def resolve_vms(self, info, template=None, cluster_id=None, node_id=None, data_pool_id=None,
-                          exclude_existed=True):
+    async def resolve_vms(self, info, limit, offset, template=None, cluster_id=None, node_id=None, data_pool_id=None,
+                          exclude_existed=True, ordering: str = None):
         """В self прилетает инстанс подели контроллера."""
-        # TODO: сейчас не используются параметры пагинатора. Когда записей будет много - потребуется
         # TODO: на фронте делать неактивными элементы в плохом статусе?
         controller = await Controller.get(self.id)
+        paginator = VeilRestPaginator(ordering=ordering, limit=limit, offset=offset)
         vms = await Vm.query.gino.all()
         veil_response = await controller.veil_client.domain(template=0, cluster_id=cluster_id,
-                                                            node_id=node_id, data_pool_id=data_pool_id).list()
+                                                            node_id=node_id, data_pool_id=data_pool_id).list(paginator=paginator)
         resolves = veil_response.paginator_results
         if exclude_existed:
             for vm in vms:
