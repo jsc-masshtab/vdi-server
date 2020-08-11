@@ -104,7 +104,7 @@ pipeline {
         stage ('build app') {
             steps {
                 sh script: '''
-                    cd backend/
+                    cd backend/common
                     chmod +x compilemessages.sh
                     ./compilemessages.sh en
                     ./compilemessages.sh ru
