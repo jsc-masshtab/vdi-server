@@ -4,14 +4,27 @@ set -e
 configure_secrets()
 {
 	# генерируем local_settings только если его не существует
-	if [ ! -f /opt/veil-vdi/app/main_app/local_settings.py ]; then
+	if [ ! -f /opt/veil-vdi/app/common/local_settings.py ]; then
+		export PYTHONPATH=/opt/veil-vdi/app
 		cd /opt/veil-vdi/app
-		/opt/veil-vdi/env/bin/python /opt/veil-vdi/app/main_app/create_local_settings.py
+		/opt/veil-vdi/env/bin/python /opt/veil-vdi/app/common/create_local_settings.py -f /opt/veil-vdi/app/common/local_settings.py
+
+		# подключаем файл с переменными только если он существует
+		if [ -f /tmp/vdi-install-vars ]; then
+		    source /tmp/vdi-install-vars
+		fi
+
+		# вставляем переменные (если они объявлены) в /opt/veil-vdi/app/common/local_settings.py
+		[ -n "$PARTITION" ] && sed -i 's@^PARTITION = .*$@PARTITION = '"$PARTITION"'@' /opt/veil-vdi/app/common/local_settings.py
+		[ -n "$BY_COUNT" ] && sed -i 's@^BY_COUNT = .*$@BY_COUNT = '"$BY_COUNT"'@' /opt/veil-vdi/app/common/local_settings.py
+		[ -n "$COUNT" ] && sed -i 's@^COUNT = .*$@COUNT = '"$COUNT"'@' /opt/veil-vdi/app/common/local_settings.py
+		[ -n "$PATH1" ] && sed -i 's@^PATH = .*$@PATH = '"'$PATH1'"'@' /opt/veil-vdi/app/common/local_settings.py
+		[ -n "$CREATE" ] && sed -i 's@^CREATE = .*$@CREATE = '"'$CREATE'"'@' /opt/veil-vdi/app/common/local_settings.py
 	fi
 
 	# берем из файла ключи доступа к БД и Redis
-	DB_PASS="$(grep -r 'DB_PASS' /opt/veil-vdi/app/local_settings.py | sed -r "s/DB_PASS = '(.+)'/\1/g")"
-	REDIS_PASS="$(grep -r 'REDIS_PASSWORD' /opt/veil-vdi/app/local_settings.py | sed -r "s/REDIS_PASSWORD = '(.+)'/\1/g")"
+	DB_PASS="$(grep -r 'DB_PASS' /opt/veil-vdi/app/common/local_settings.py | sed -r "s/DB_PASS = '(.+)'/\1/g")"
+	REDIS_PASS="$(grep -r 'REDIS_PASSWORD' /opt/veil-vdi/app/common/local_settings.py | sed -r "s/REDIS_PASSWORD = '(.+)'/\1/g")"
 
 }
 configure_redis()
@@ -43,7 +56,7 @@ configure_postgres()
 	# apply database migrations
 
 	export PYTHONPATH=/opt/veil-vdi/app
-	cd /opt/veil-vdi/app
+	cd /opt/veil-vdi/app/common/migrations
 	/opt/veil-vdi/env/bin/python /opt/veil-vdi/env/bin/alembic upgrade head
 }
 

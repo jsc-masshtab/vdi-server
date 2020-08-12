@@ -24,6 +24,8 @@ def local_settings_data():
     secret_pattern_s = "{} = '{}'"
     secret_pattern_b = "{} = {}"
     secret_list = list()
+    # TODO: rename settings
+    partition_strings = ["PARTITION = 2", "BY_COUNT = False", "COUNT = 100", "PATH = /tmp/", "CREATE = '2020-08-01'"]
 
     for arg in SECRET_ARGS:
         if 'FERNET' in arg:
@@ -33,7 +35,8 @@ def local_settings_data():
         else:
             secret_str = secret_pattern_s.format(arg, get_secret_value(20))
         secret_list.append(secret_str)
-    return secret_list
+
+    return secret_list + partition_strings
 
 
 def write_local_settings(txt_data: list, file_name: str = 'local_settings.py'):
@@ -58,15 +61,15 @@ def parse_args():
     """
     parser = argparse.ArgumentParser()
     parser.add_argument('-f', '--file_name',
-                        default='local_settings.py', type=str,
+                        default='common/local_settings.py', type=str,
                         help='full path to new file')
     return parser.parse_args()
 
 
 def main():
     args = parse_args()
-    secrets = local_settings_data()
-    write_local_settings(secrets, file_name=args.file_name)
+    options = local_settings_data()
+    write_local_settings(options, file_name=args.file_name)
 
 
 if __name__ == '__main__':
