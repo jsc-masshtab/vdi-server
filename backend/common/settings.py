@@ -76,7 +76,7 @@ LANGUAGE = 'ru'
 # CREATE - Дата установки, для дальнейшего отсчета 3 лет хранения таблиц
 PARTITION = 2
 BY_COUNT = False
-COUNT = 100
+COUNT = 1000
 PATH = '/tmp/'
 CREATE = '2020-08-01'
 
