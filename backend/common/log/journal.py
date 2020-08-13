@@ -20,8 +20,8 @@ def singleton(cls):
     return get_instance
 
 
-# Декоратор, который обрезает хвост сообщения
 def cut_message(func):
+    """Декоратор, который обрезает хвост сообщения."""
     def wrapper(self, message, *args, **kwargs):
         message = message[:255]
         return func(self, message, *args, **kwargs)
