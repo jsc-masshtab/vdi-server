@@ -297,4 +297,10 @@ class Vm(VeilModel):
         # TODO: 3. Ждать активации гостевого агента и появления ip, если на машине RDP?
         # TODO: 4. задание hostname
         # TODO: явная проблема такой логики, что это все заблокирует.
+
+        # TODO: включить ВМ
+        # TODO: удаленный доступ
+        # TODO: hostname
+        # TODO: введение в домен
+
         raise NotImplementedError()
