@@ -104,15 +104,8 @@ class Vm(VeilModel):
     async def soft_delete(self, creator):
         if self.created_by_vdi:
             domain_client = await self.vm_client
-            result = await domain_client.remove(full=True, force=True)
-            await system_logger.debug(result)
-            # controller_address = await self.controller_address
-            # if controller_address:
-            #     vm_http_client = await VmHttpClient.create(controller_address, self.id)
-            #     try:
-            #         await vm_http_client.remove_vm()
-            #     except HttpError as http_error:
-            #         await system_logger.warning(_('Fail to remove VM {} from ECP: ').format(self.verbose_name, http_error))
+            await domain_client.remove(full=True)
+
             await system_logger.debug(_('Vm {} removed from ECP.').format(self.verbose_name))
         status = await super().soft_delete(creator=creator)
         return status
