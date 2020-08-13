@@ -116,12 +116,14 @@ class Log:
 
     def _debug(self, message: str):
         """Синхронно запишет сообщение в logging с уровнем DEBUG."""
+        # print(message)
         if message and not isinstance(message, str):
             message = str(message)
         self.__log_debug(message)
 
     async def debug(self, message: str):
         """Запишет сообщение в logging с уровнем DEBUG."""
+        # print(message)
         if message and not isinstance(message, str):
             message = str(message)
         self.__log_debug(message)

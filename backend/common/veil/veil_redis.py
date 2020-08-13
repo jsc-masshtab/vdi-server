@@ -127,7 +127,7 @@ async def a_redis_wait_for_message(redis_channel, predicate, timeout):
     """
     Asynchronously wait for message until timeout reached.
 
-    :param predicate:  condition to find required message. Signature: def fun(json_message) -> bool
+    :param predicate:  condition to find required message. Signature: def fun(redis_message) -> bool
     :param timeout: time to wait. seconds
     :return bool: return true if awaited message received. Return false if timeuot expired and
      awaited message is not received
@@ -140,7 +140,8 @@ async def a_redis_wait_for_message(redis_channel, predicate, timeout):
         while True:
             # try to receive message
             redis_message = redis_subscriber.get_message()
-
+            # if redis_message:
+            #    print('redis_message ', redis_message)
             if redis_message and redis_message['type'] == 'message' and predicate(redis_message):
                 return True
 

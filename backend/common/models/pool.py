@@ -900,7 +900,7 @@ class AutomatedPool(db.Model):
             except VmCreationError:
                 break
 
-            async def _check_if_vm_created(redis_message):
+            def _check_if_vm_created(redis_message):
                 try:
                     redis_message_data = redis_message['data'].decode()
                     redis_message_data_dict = json.loads(redis_message_data)
@@ -948,7 +948,8 @@ class AutomatedPool(db.Model):
 
             except asyncio.CancelledError:
                 # Если получили CancelledError в ходе ожидания создания вм,
-                # то отменяем на контроллере таску создания вм.
+                # то отменяем на контроллере таску создания вм. (CancelledError бросится например при мягком завршении
+                # процесса воркера)
                 try:
                     task_client = pool_controller.veil_client.task(task_id=current_vm_task_id)
                     await task_client.cancel()
