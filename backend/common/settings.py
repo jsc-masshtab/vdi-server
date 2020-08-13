@@ -79,6 +79,8 @@ BY_COUNT = False
 COUNT = 1000
 PATH = '/tmp/'
 CREATE = '2020-08-01'
+# TODO: посмотреть скрипт archive_csv_journal
+print(PATH)
 
 # Others
 # -----------------------------

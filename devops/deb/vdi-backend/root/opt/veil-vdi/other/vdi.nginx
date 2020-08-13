@@ -72,7 +72,7 @@ server {
   location / {
     root /opt/veil-vdi/www;
     try_files $uri$args $uri$args/ /index.html;
-    expires 7d; temporary disabled
+    expires 7d;
   }
 
 }

@@ -5,6 +5,7 @@ Revises: 3bdd27d82159
 Create Date: 2020-06-22 13:41:06.888232
 
 """
+import os.path
 from alembic import op
 
 from common.settings import BY_COUNT, COUNT, CREATE, PARTITION, PATH
@@ -48,6 +49,11 @@ def upgrade():
     msg_str = _('Add new journal archive.')
     name_str = _('Archive name:')
     path_str = _('path:')
+
+    if os.path.isdir(PATH):
+        path = os.path.join(PATH, '')
+    else:
+        raise NotADirectoryError(PATH)
 
     if BY_COUNT:
         op.execute("""CREATE OR REPLACE FUNCTION insert_row()
@@ -106,7 +112,7 @@ def upgrade():
                           EXECUTE sql;
                         END;
                         $BODY$
-                        LANGUAGE plpgsql;""".format(dir=PATH, count=COUNT, message=msg_str,
+                        LANGUAGE plpgsql;""".format(dir=path, count=COUNT, message=msg_str,
                                                     name_str=name_str, path_str=path_str))
     else:
         op.execute("""CREATE OR REPLACE FUNCTION insert_row()
@@ -168,7 +174,7 @@ def upgrade():
                           END IF;
                         END;
                         $BODY$
-                        LANGUAGE plpgsql;""".format(intrvl=intrvl, form=form, dir=PATH, message=msg_str,
+                        LANGUAGE plpgsql;""".format(intrvl=intrvl, form=form, dir=path, message=msg_str,
                                                     name_str=name_str, path_str=path_str))
 
     op.execute("""CREATE OR REPLACE FUNCTION create_new_partition(partition_date timestamp, partition_name text)
