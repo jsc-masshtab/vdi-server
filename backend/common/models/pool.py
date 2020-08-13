@@ -15,8 +15,7 @@ from common.veil.veil_errors import VmCreationError, PoolCreationError, SimpleEr
 from common.utils import extract_ordering_data
 from web_app.auth.license.utils import License
 from common.veil.veil_redis import (get_thin_clients_count, REDIS_CLIENT, INTERNAL_EVENTS_CHANNEL,
-                                    a_redis_wait_for_message, WS_MONITOR_CHANNEL_OUT, request_to_execute_pool_task,
-                                    PoolTaskType)
+                                    a_redis_wait_for_message, WS_MONITOR_CHANNEL_OUT)
 from web_app.front_ws_api.subscription_sources import VDI_TASKS_SUBSCRIPTION
 
 from common.models.auth import (User as UserModel, Entity as EntityModel, EntityRoleOwner as EntityRoleOwnerModel,
@@ -804,33 +803,6 @@ class AutomatedPool(db.Model):
             await system_logger.info(_('AutomatedPool {} is created').format(verbose_name), entity=pool.entity)
 
             return automated_pool
-
-    @staticmethod
-    async def delete_pool(pool, full, wait_for_result=True, wait_timeout=20):
-        """Удаление автоматического пула. Если wait_for_result == True, то ждем результат"""
-        # removal check predicate
-        def _check_if_pool_deleted(redis_message):
-            try:
-                redis_message_data = redis_message['data'].decode()
-                redis_data_dict = json.loads(redis_message_data)
-
-                if str(pool.id) == redis_data_dict['pool_id'] and redis_data_dict['event'] == 'pool_deleted':
-                    return redis_data_dict['is_successful']
-            except Exception as ex:  # Нас интересует лишь прошла ли проверка
-                system_logger._debug('__check_if_pool_deleted ' + str(ex))
-
-            return False
-
-        # send command to pool worker
-        await request_to_execute_pool_task(str(pool.id), PoolTaskType.DELETING.name, deletion_full=full)
-
-        # wait for result
-        if wait_for_result:
-            is_deleted = await a_redis_wait_for_message(INTERNAL_EVENTS_CHANNEL, _check_if_pool_deleted,
-                                                        timeout=wait_timeout)
-            return is_deleted
-        else:
-            return True
 
     async def soft_update(self, creator, verbose_name, reserve_size, total_size, vm_name_template, keep_vms_on: bool,
                           create_thin_clones: bool, connection_types):

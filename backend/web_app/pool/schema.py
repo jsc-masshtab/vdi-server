@@ -16,7 +16,7 @@ from common.models.controller import Controller
 from common.models.pool import AutomatedPool, StaticPool, Pool
 from common.languages import lang_init
 from common.log.journal import system_logger
-from common.veil.veil_redis import request_to_execute_pool_task, PoolTaskType
+from common.veil.veil_redis import request_to_execute_pool_task, execute_delete_pool_task, PoolTaskType
 
 from web_app.auth.user_schema import UserType
 from web_app.controller.schema import ControllerType
@@ -403,7 +403,7 @@ class DeletePoolMutation(graphene.Mutation, PoolValidator):
 
             # Авто пул
             if pool_type == Pool.PoolTypes.AUTOMATED:
-                is_deleted = await AutomatedPool.delete_pool(pool, full)
+                is_deleted = await execute_delete_pool_task(str(pool.id), full)
             else:
                 is_deleted = await Pool.delete_pool(pool, creator, full)
             return DeletePoolMutation(ok=is_deleted)
