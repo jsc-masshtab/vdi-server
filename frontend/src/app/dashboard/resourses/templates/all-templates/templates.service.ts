@@ -34,7 +34,10 @@ export class TemplatesService {
                     id
                     templates(cluster_id: $cluster_id, node_id: $node_id, data_pool_id: $data_pool_id) {
                         verbose_name
-                        template
+                        template {
+                            id
+                            verbose_name
+                        }
                         id
                         status
                     }
