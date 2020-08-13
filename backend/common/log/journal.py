@@ -20,6 +20,14 @@ def singleton(cls):
     return get_instance
 
 
+# Декоратор, который обрезает хвост сообщения
+def cut_message(func):
+    def wrapper(self, message, *args, **kwargs):
+        message = message[:255]
+        return func(self, message, *args, **kwargs)
+    return wrapper
+
+
 @singleton
 class Log:
     """Системный журнал.
@@ -102,14 +110,17 @@ class Log:
             message = ' '.join([call_info, message])
         self.__logger.error(message)
 
+    @cut_message
     async def __event_info(self, message: str, description: str = None, user: str = 'system', entity: dict = None):
         await Event.create_event(event_type=self.__TYPE_INFO, msg=message, description=description, user=user,
                                  entity_dict=entity)
 
+    @cut_message
     async def __event_warning(self, message: str, description: str = None, user: str = 'system', entity: dict = None):
         await Event.create_event(event_type=self.__TYPE_WARNING, msg=message, description=description, user=user,
                                  entity_dict=entity)
 
+    @cut_message
     async def __event_error(self, message: str, description: str = None, user: str = 'system', entity: dict = None):
         await Event.create_event(event_type=self.__TYPE_ERROR, msg=message, description=description, user=user,
                                  entity_dict=entity)
