@@ -86,9 +86,8 @@ class PoolTaskManager:
                 ((TaskModel.status == TaskStatus.IN_PROGRESS) | (TaskModel.status == TaskStatus.CANCELLED))).\
                 order_by(desc(TaskModel.priority)).gino.first()
 
-            await system_logger.debug('pool_task {}'.format(pool_task))
             if pool_task:
-                # print('pool_task priority', pool_task.priority)
+                await system_logger.debug('pool_task {}'.format(pool_task))
                 tasks_to_launch.append(pool_task)
 
         #  Remove all other tasks (либо как вариант выставить им всем флаг resume_on_app_startup = False)

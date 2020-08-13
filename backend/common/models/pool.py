@@ -11,7 +11,7 @@ from common.settings import (VEIL_WS_MAX_TIME_TO_WAIT,
                              POOL_MAX_SIZE, POOL_MIN_SIZE, POOL_MAX_CREATE_ATTEMPTS, POOL_MAX_VM_AMOUNT)
 from common.database import db
 from common.veil.veil_gino import Status, EntityType, VeilModel
-from common.veil.veil_errors import VmCreationError, PoolCreationError, HttpError, SimpleError, ValidationError
+from common.veil.veil_errors import VmCreationError, PoolCreationError, SimpleError, ValidationError
 from common.utils import extract_ordering_data
 from web_app.auth.license.utils import License
 from common.veil.veil_redis import (get_thin_clients_count, REDIS_CLIENT, INTERNAL_EVENTS_CHANNEL,
@@ -878,10 +878,9 @@ class AutomatedPool(db.Model):
 
     async def add_vm(self):
         """Try to add VM to pool."""
-        # from common.models import VmModel
-        verbose_name = self.vm_name_template
+        verbose_name = self.vm_name_template or await self.verbose_name  # temp???
         pool_controller = await self.controller_obj
-        # controller_address = await self.controller_ip
+
         params = {
             'verbose_name': verbose_name,
             'domain_id': str(self.template_id),
@@ -898,14 +897,6 @@ class AutomatedPool(db.Model):
                 vm_info = await VmModel.copy(**params)
                 current_vm_task_id = vm_info['task_id']
                 await system_logger.debug('VM creation task id: {}'.format(current_vm_task_id))
-                # TODO: обработать актуальные ошибки
-            except HttpError as http_error:
-                # Обработка BadRequest происходит в VmModel.copy()
-                entity = {'entity_type': EntityType.POOL, 'entity_uuid': None}
-                await system_logger.error(str(http_error), entity=entity)
-                system_logger._debug('Fail to create VM on ECP. Re-run.')
-                await asyncio.sleep(1)
-                continue
             except VmCreationError:
                 break
 
@@ -916,60 +907,56 @@ class AutomatedPool(db.Model):
                     obj = redis_message_data_dict['object']
                     if current_vm_task_id == obj['parent'] and obj['status'] == 'SUCCESS':
                         return True
+                except asyncio.CancelledError:
+                    raise
                 except Exception as ex:  # Нас интересует лишь прошла ли проверка
                     system_logger._debug('_check_if_vm_created ' + str(ex))
 
                 return False
 
-            is_vm_successfully_created = await a_redis_wait_for_message(
-                WS_MONITOR_CHANNEL_OUT, _check_if_vm_created, VEIL_WS_MAX_TIME_TO_WAIT)
-            await system_logger.debug('Ws msg vm successfully_created: {}'.format(is_vm_successfully_created))
+            try:
+                is_vm_successfully_created = await a_redis_wait_for_message(
+                    WS_MONITOR_CHANNEL_OUT, _check_if_vm_created, VEIL_WS_MAX_TIME_TO_WAIT)
+                await system_logger.debug('Ws msg vm successfully_created: {}'.format(is_vm_successfully_created))
 
-            # 2) determine if vm created by task status
-            if not is_vm_successfully_created:
-                await system_logger.debug('Could`t get the response about result of creation VM on ECP by WS.')
-                try:
-                    # TODO: сломалось при мердже - починить на новый клиент
-                    # token = await controller_module.ControllerModel.get_token(controller_address)
-                    # veil_client = VeilHttpClient(controller_address, token=token)
-                    # is_vm_successfully_created = await veil_client.check_task_status(current_vm_task_id)
-                    raise NotImplementedError()
-                except asyncio.CancelledError:
-                    raise
-                except Exception as ex:  # Возможно множество исключений, но нас интнесует лишь их отсутствие
-                    await system_logger.error('Exception during task status checking: {}'.format(str(ex)))
+                # 2) determine if vm created by task status
+                # if not is_vm_successfully_created:
+                #    await system_logger.debug('Could`t get the response about result of creation VM on ECP by WS.')
+                #    try:
+                #        # TODO: сломалось при мердже - починить на новый клиент. Мб ваще выкинуть? Проверки по статусу
+                #         вм достаточно
+                #        # token = await controller_module.ControllerModel.get_token(controller_address)
+                #        # veil_client = VeilHttpClient(controller_address, token=token)
+                #        # is_vm_successfully_created = await veil_client.check_task_status(current_vm_task_id)
+                #        raise NotImplementedError()
+                #    except asyncio.CancelledError:
+                #        raise
+                #    except Exception as ex:  # Возможно множество исключений, но нас интнесует лишь их отсутствие
+                #        await system_logger.error('Exception during task status checking: {}'.format(str(ex)))
 
-            # 3) determine if vm created by vm status
-            if not is_vm_successfully_created:
-                await system_logger.debug('Probably task is not done. Check VM status.')
-                domain_client = pool_controller.veil_client.domain(domain_id=vm_info['id'])
-                try:
-                    await domain_client.info()
-                    is_vm_successfully_created = domain_client.active
-                except asyncio.CancelledError:
-                    #  Если получили CancelledError, то отменяем на контроллере таску создания вм.
+                # 3) determine if vm created by vm status
+                if not is_vm_successfully_created:
+                    await system_logger.debug('Probably task is not done. Check VM status.')
+                    domain_client = pool_controller.veil_client.domain(domain_id=vm_info['id'])
                     try:
-                        task_client = pool_controller.veil_client.task(task_id=current_vm_task_id)
-                        await task_client.cancel()
-                    except Exception as ex:
-                        await system_logger.error('Exception during vm creation task cancelling: {}'.format(str(ex)))
-                    raise
-                except Exception as ex:  # Возможно множество исключений, но нас интнесует лишь их отсутствие
-                    await system_logger.error('Exception during vm status checking: {}'.format(str(ex)))
+                        await domain_client.info()
+                        is_vm_successfully_created = domain_client.active
+                    except asyncio.CancelledError:
+                        raise
+                    except Exception as ex:  # Возможно множество исключений, но нас интнесует лишь их отсутствие
+                        await system_logger.error('Exception during vm status checking: {}'.format(str(ex)))
 
-            # Эксперементальная обнова. VM создается в любом случае, но если что-то пошло не так, то мы создаем ее в БД.
-            # if is_vm_successfully_created:
-            #     await VmModel.create(id=vm_info['id'],
-            #                     pool_id=str(self.id),
-            #                     template_id=str(self.template_id),
-            #                     created_by_vdi=True,
-            #                     verbose_name=vm_info['verbose_name'])
-            #     return vm_info
-            #
-            # await system_logger.debug('Fail to create VM on ECP. Re-run.')
-            # await asyncio.sleep(1)
-            # continue
-            # is_vm_successfully_created = False
+            except asyncio.CancelledError:
+                # Если получили CancelledError в ходе ожидания создания вм,
+                # то отменяем на контроллере таску создания вм.
+                try:
+                    task_client = pool_controller.veil_client.task(task_id=current_vm_task_id)
+                    await task_client.cancel()
+                except Exception as ex:
+                    await system_logger.error('Exception during vm creation task cancelling: {}'.format(str(ex)))
+                raise
+
+            # VM создается в любом случае, но если что-то пошло не так, то мы создаем ее в БД.
             vm_is_broken = False if is_vm_successfully_created else False
             await VmModel.create(id=vm_info['id'],
                                  pool_id=str(self.id),
@@ -986,9 +973,7 @@ class AutomatedPool(db.Model):
             return vm_info
 
         await self.deactivate()
-        entity = {'entity_type': EntityType.POOL, 'entity_uuid': None}
-        raise VmModel.reationError(
-            _('Error with create VM {}').format(verbose_name), entity=entity)
+        raise VmCreationError(_('Error with create VM {}').format(verbose_name))
 
     @property
     async def template_os_type(self):
@@ -1021,10 +1006,9 @@ class AutomatedPool(db.Model):
 
         vm_list = list()
         # vm_index = 1
-        print('ABC1')
+
         try:
             for i in range(self.initial_size):
-                # vm = await self.add_vm(vm_index)
                 vm = await self.add_vm()
                 vm_list.append(vm)
                 msg = _('Created {} VMs from {} at the Automated pool {}').format(i + 1, self.initial_size,
@@ -1049,7 +1033,7 @@ class AutomatedPool(db.Model):
 
         # internal message about pool creation result (WS)
         is_creation_successful = (len(vm_list) == self.initial_size)
-        print('is_creation_successful', is_creation_successful)
+        await system_logger.debug('is_creation_successful {}'.format(is_creation_successful))
         if is_creation_successful:
             msg = _('Initial VM amount {} at the Automated pool {}').format(len(vm_list), verbose_name)
             await system_logger.info(msg, entity=self.entity)
@@ -1071,8 +1055,7 @@ class AutomatedPool(db.Model):
 
         # Пробросить исключение, если споткнулись на создании машин
         if not is_creation_successful:
-            entity = {'entity_type': EntityType.POOL, 'entity_uuid': None}
-            raise PoolCreationError(_('Could not create the required number of machines.'), entity=entity)
+            raise PoolCreationError(_('Could not create the required number of machines.'))
 
     async def remove_vms(self, creator):
         """Интерфейс для запуска команды HttpClient на удаление виртуалки"""

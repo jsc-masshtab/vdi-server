@@ -18,7 +18,6 @@ _ = lang_init()
 
 def main():
     init_exit_handler()
-
     loop = asyncio.get_event_loop()
     loop.set_debug(DEBUG)  # debug mode
 

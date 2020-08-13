@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import asyncio
 import json
+import traceback
 
 from common.veil.veil_errors import PoolCreationError
 
@@ -24,7 +25,7 @@ from common.models.tasks import TaskStatus, TaskModel
 _ = lang_init()
 
 
-class AbstractTask:  # унаследовать от db.Mode
+class AbstractTask:
     """Выполняет задачу do_task"""
 
     def __init__(self):
@@ -143,14 +144,16 @@ class InitPoolTask(AbstractTask):
                 # Добавляем машины
                 try:
                     await automated_pool.add_initial_vms()
-                except PoolCreationError as E:
-                    await system_logger.error('Failed to create pool {exception}'.format(exception=str(E)))
+                except PoolCreationError:
+                    await system_logger.debug('Pool Creation cancelled')
                     await automated_pool.deactivate()
                 except asyncio.CancelledError:
                     await automated_pool.deactivate()
                     raise
                 except Exception as E:
-                    await system_logger.error('Failed to create pool. {exception}'.format(exception=str(E)))
+                    await system_logger.error('Failed to create pool. {exception} {name}'.format(
+                        exception=str(E), name=E.__class__.__name__))
+                    print('BT {bt}'.format(bt=traceback.format_exc()))
                     await automated_pool.deactivate()
                 else:
                     await automated_pool.activate()
@@ -204,8 +207,6 @@ class ExpandPoolTask(AbstractTask):
                     # add VMs.
                     try:
                         for i in range(0, real_amount_to_add):  # noqa
-                            # domain_index = vm_amount_in_pool + i
-                            # await automated_pool.add_vm(domain_index)
                             await automated_pool.add_vm()
                     except VmCreationError as vm_error:
                         await system_logger.error(_('VM creating error:'))
