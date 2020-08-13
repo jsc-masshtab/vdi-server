@@ -144,9 +144,16 @@ class ResourcesMonitor():
         if not controller.active:
             return False
 
+        # get token from db
+        try:
+            token = controller.token.split()[1]
+        except IndexError:
+            await system_logger.debug('{} Cant get token for controller').format(__class__.__name__)
+            return False
+
         # create ws connection
         try:
-            connect_url = 'ws://{}/ws/?token={}'.format(controller.address, controller.token)
+            connect_url = 'ws://{}/ws/?token={}'.format(controller.address, token)
             # await system_logger.debug('ws connection url is {}'.format(connect_url))
             self._ws_connection = await websocket_connect(connect_url)
         except (ConnectionRefusedError, WebSocketError):
@@ -168,6 +175,7 @@ class ResourcesMonitor():
         return True
 
     async def _on_message_received(self, message):
+        # print('_on_message_received: message ' + message)
         await system_logger.debug('_on_message_received: message ' + message)
         REDIS_CLIENT.publish(WS_MONITOR_CHANNEL_OUT, message)
 

@@ -127,7 +127,7 @@ async def a_redis_wait_for_message(redis_channel, predicate, timeout):
     """
     Asynchronously wait for message until timeout reached.
 
-    :param predicate:  condition to find required message. Signature: def fun(json_message) -> bool
+    :param predicate:  condition to find required message. Signature: def fun(redis_message) -> bool
     :param timeout: time to wait. seconds
     :return bool: return true if awaited message received. Return false if timeuot expired and
      awaited message is not received
@@ -140,7 +140,8 @@ async def a_redis_wait_for_message(redis_channel, predicate, timeout):
         while True:
             # try to receive message
             redis_message = redis_subscriber.get_message()
-
+            # if redis_message:
+            #    print('redis_message ', redis_message)
             if redis_message and redis_message['type'] == 'message' and predicate(redis_message):
                 return True
 
@@ -181,10 +182,38 @@ async def request_to_execute_pool_task(pool_id, pool_task_type, **additional_dat
     task_id = str(task.id)
     data = {'task_id': task_id, 'task_type': pool_task_type, **additional_data}
     REDIS_CLIENT.rpush(POOL_TASK_QUEUE, json.dumps(data))
-    # TODO: не надо использовать print там, где уже прошел коммит. Давайте сделаем наш логгинг удобным,
-    #  если он сейчас не удобен.
-    print('request_to_execute_pool_task task_id: {}'.format(task_id))
+    # print('request_to_execute_pool_task task_id: {}'.format(task_id))
     return task_id
+
+
+async def execute_delete_pool_task(pool_id: str, full, wait_for_result=True, wait_timeout=20):
+    """Удаление автоматического пула. Если wait_for_result == True, то ждем результат"""
+    # removal check predicate
+    def _check_if_pool_deleted(redis_message):
+        try:
+            redis_message_data = redis_message['data'].decode()
+            redis_data_dict = json.loads(redis_message_data)
+
+            if pool_id == redis_data_dict['pool_id'] and redis_data_dict['event'] == 'pool_deleted':
+                return redis_data_dict['is_successful']
+        except asyncio.CancelledError:
+            raise
+        except Exception:  # noqa
+            # system_logger._debug('__check_if_pool_deleted ' + str(ex))
+            pass
+
+        return False
+
+    # send command to pool worker
+    await request_to_execute_pool_task(pool_id, PoolTaskType.DELETING.name, deletion_full=full)
+
+    # wait for result
+    if wait_for_result:
+        is_deleted = await a_redis_wait_for_message(INTERNAL_EVENTS_CHANNEL, _check_if_pool_deleted,
+                                                    timeout=wait_timeout)
+        return is_deleted
+    else:
+        return True
 
 
 def send_cmd_to_ws_monitor(controller_id, ws_monitor_cmd: WsMonitorCmd):

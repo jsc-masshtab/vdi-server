@@ -8,7 +8,7 @@ from veil_api_client import DomainConfiguration
 
 from common.database import db
 from common.veil.veil_gino import get_list_of_values_from_db, EntityType, VeilModel
-from common.veil.veil_errors import BadRequest, VmCreationError, SimpleError
+from common.veil.veil_errors import VmCreationError, SimpleError
 from common.languages import lang_init
 from common.log.journal import system_logger
 
@@ -184,68 +184,57 @@ class Vm(VeilModel):
                    node_id: str, create_thin_clones: bool):
         """Copy existing VM template for new VM create."""
         from common.models.controller import Controller as ControllerModel
-        # TODO: мердж сломал перевод на новый клиент
 
-        # client = await VmHttpClient.create(controller_ip, domain_id, verbose_name)
         vm_controller = await ControllerModel.get(controller_id)
         vm_client = vm_controller.veil_client.domain()
         inner_retry_count = 0
         while True:
             inner_retry_count += 1
-            try:
-                await system_logger.debug(_('Trying to create VM on ECP with verbose_name={}').format(verbose_name))
+            await system_logger.debug(_('Trying to create VM on ECP with verbose_name={}').format(verbose_name))
 
-                # async def copy_vm(self, node_id: str, datapool_id: str, domain_name: str, create_thin_clones: bool):
-                #     url = 'http://{}/api/domains/multi-create-domain/?async=1'.format(self.controller_ip)
-                #     body = dict(verbose_name=domain_name,
-                #                 node=node_id,
-                #                 datapool=datapool_id,
-                #                 parent=self.vm_id,
-                #                 thin=create_thin_clones)
-                #     return await self.fetch_with_response(url=url, method='POST', body=body, controller_control=False)
-                vm_configuration = DomainConfiguration(verbose_name=verbose_name, node=node_id, datapool=datapool_id,
-                                                       parent=domain_id, thin=create_thin_clones)
-                response = await vm_client.create(domain_configuration=vm_configuration)
-                # response = await client.copy_vm(node_id=node_id,
-                #                                 datapool_id=datapool_id,
-                #                                 domain_name=verbose_name,
-                #                                 create_thin_clones=create_thin_clones)
+            # Send request to create vm
+            vm_configuration = DomainConfiguration(verbose_name=verbose_name, node=node_id, datapool=datapool_id,
+                                                   parent=domain_id, thin=create_thin_clones)
+            response = await vm_client.create(domain_configuration=vm_configuration)
+
+            # Check response
+            await system_logger.debug('is vm success {}'.format(response.success))
+            if response.success:
                 await system_logger.debug(_('Request to create VM sent without surprise. Leaving while.'))
                 break
-            # TODO: задействовать коды ошибок
-            # TODO: новые исключения
-            # TODO: если брать текст - только англ
-            except BadRequest as http_error:
-                # TODO: Нужны коды ошибок
+            else:
+                ecp_errors_list = response.data.get('errors')
+                first_error_dict = ecp_errors_list[0] if (isinstance(ecp_errors_list, list) and len(ecp_errors_list)) \
+                    else None
+                ecp_detail = first_error_dict.get('detail') if first_error_dict else None
+                await system_logger.warning(_('ECP error: {}').format(ecp_detail))
 
-                ecp_errors = http_error.errors.get('errors')
-                ecp_detail_l = ecp_errors.get('detail') if ecp_errors else None
-                ecp_detail = ecp_detail_l[0] if isinstance(ecp_detail_l, list) else None
-                await system_logger.warning(_('ECP error: {}').format(ecp_errors))
-
-                if ecp_errors and ecp_detail and ('Недостаточно свободного места в пуле данных' in ecp_detail or 'not enough free space on data pool' in ecp_detail):
+                if ecp_detail and ('Недостаточно свободного места в пуле данных' in ecp_detail or 'not enough free space on data pool' in ecp_detail):
                     await system_logger.warning(_('Controller has not free space for creating new VM.'))
                     raise VmCreationError(_('Not enough free space on data pool'))
-                elif ecp_errors and ecp_detail and ('passed node is not valid' in ecp_detail or 'Переданный узел не действителен' in ecp_detail):
+
+                elif ecp_detail and ('passed node is not valid' in ecp_detail or 'Переданный узел не действителен' in ecp_detail):
                     await system_logger.warning(_('Unknown node {}').format(node_id))
                     raise VmCreationError(_('Controller can\t create VM. Unknown node.'))
-                elif ecp_errors and ecp_detail and inner_retry_count < 30:
+
+                elif ecp_detail and inner_retry_count < 10:
                     # Тут мы предполагаем, что контроллер заблокирован выполнением задачи. Это может быть и не так,
                     # но сейчас нам это не понятно.
                     await system_logger.debug(_('Possibly blocked by active task on ECP. Wait before next try.'))
                     await asyncio.sleep(10)
                 else:
                     await system_logger.debug(_('Something went wrong. Interrupt while.'))
-                    raise BadRequest(http_error)
+                    raise VmCreationError('Cant create vm')
 
-            await system_logger.debug(_('Wait one more try'))
-            await asyncio.sleep(1)
+                await system_logger.debug(_('Wait one more try'))
+                await asyncio.sleep(1)
 
         response = response.data
+
         copy_result = dict(id=response['entity'],
                            task_id=response['_task']['id'],
                            verbose_name=verbose_name)
-        # await system_logger.debug(copy_result)
+
         return copy_result
 
     @staticmethod

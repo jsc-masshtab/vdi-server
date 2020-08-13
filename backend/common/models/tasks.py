@@ -1,8 +1,5 @@
 # -*- coding: utf-8 -*-
-# todo: Этот файл определенно будет помещен в папку общих модулей, так как он используется
-# как минимум в двух процессах: main_app и pool_worker
 import uuid
-# import asyncio
 
 from enum import Enum
 from sqlalchemy import Enum as AlchemyEnum
