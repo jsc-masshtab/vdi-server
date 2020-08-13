@@ -1,4 +1,3 @@
-import { environment } from 'src/environments/environment';
 import { Observable, ReplaySubject } from 'rxjs';
 import { Injectable } from '@angular/core';
 
@@ -15,7 +14,9 @@ export class WebsocketService  {
   constructor() {}
 
   public init(): void {
-    let url = `ws://${environment.ws}:8888/subscriptions`;
+    const host = window.location.host;
+
+    let url = `ws://${host}/subscriptions`;
 
     this.ws = new WebSocket(url);
     if (this.ws) {

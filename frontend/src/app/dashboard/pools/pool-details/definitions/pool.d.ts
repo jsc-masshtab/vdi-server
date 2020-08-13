@@ -5,6 +5,7 @@ export interface IPool extends ISettingsAutoPool, ISettingsStaticPool  {
   pool_type: string;
   vms: IPoolVms[];
   controller: {
+    id: string;
     address: string;
   };
   users: {
