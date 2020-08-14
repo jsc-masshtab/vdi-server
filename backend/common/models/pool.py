@@ -502,7 +502,11 @@ class Pool(VeilModel):
             automated_pool = await AutomatedPool.get(self.id)
 
             if automated_pool:
-                await automated_pool.remove_vms(creator=creator)
+                await system_logger.debug(_('Delete VMs for AutomatedPool {}').format(self.verbose_name))
+                vm_ids = await VmModel.get_vms_ids_in_pool(self.id)
+                await system_logger.error(vm_ids)
+                await VmModel.remove_vms(vm_ids, creator, True)
+
             await self.delete()
             msg = _('Complete removal pool of desktops {verbose_name} is done.').format(verbose_name=self.verbose_name)
             await system_logger.info(msg, entity=self.entity, user=creator)
@@ -1030,14 +1034,3 @@ class AutomatedPool(db.Model):
         if not is_creation_successful:
             raise PoolCreationError(_('Could not create the required number of machines.'))
 
-    async def remove_vms(self, creator):
-        """Интерфейс для запуска команды HttpClient на удаление виртуалки"""
-
-        await system_logger.debug(_('Delete VMs for AutomatedPool {}').format(await self.verbose_name))
-        vms = await VmModel.query.where(VmModel.pool_id == self.id).gino.all()
-
-        status = None
-        for vm in vms:
-            await system_logger.debug(_('Calling soft delete for vm {}').format(vm.verbose_name))
-            status = await vm.soft_delete(creator=creator)
-        return status
