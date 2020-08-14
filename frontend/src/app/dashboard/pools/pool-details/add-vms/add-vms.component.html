@@ -12,7 +12,7 @@
         <mat-label *ngIf="vms?.length && !pendingVms">Выберите свободные ВМ</mat-label>
         <mat-label *ngIf="!vms?.length && !pendingVms">- нет виртуальных машин -</mat-label>
         <mat-select (selectionChange)="selectVm($event)" multiple="true">
-          <mat-option *ngFor="let vm of vms" [value]="vm.id">
+          <mat-option *ngFor="let vm of vms" [value]="vm">
             {{vm.verbose_name}}
           </mat-option>
         </mat-select>

@@ -84,6 +84,7 @@ export class TableComponentComponent implements OnInit {
   }
 
   isExist(key) {
+    if (key == 'index-array') return true
     return this.exist_keys.includes(key)
   }
 }
