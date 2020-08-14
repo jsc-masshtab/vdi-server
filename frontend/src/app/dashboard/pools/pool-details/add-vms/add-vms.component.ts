@@ -11,6 +11,7 @@ interface IData {
   idPool: number;
   namePool: string;
   idCluster: string;
+  idController: string;
   idNode: string;
   typePool: string;
 }
@@ -24,7 +25,7 @@ export class AddVMStaticPoolComponent implements OnInit, OnDestroy {
 
   public pendingVms: boolean = false;
   public vms: [] = [];
-  private idVms: [] = [];
+  private vmsInput: [] = [];
   private destroy: Subject<any> = new Subject<any>();
 
   constructor(private poolService: PoolDetailsService,
@@ -39,7 +40,7 @@ export class AddVMStaticPoolComponent implements OnInit, OnDestroy {
 
   public send() {
     this.waitService.setWait(true);
-    this.poolService.addVMStaticPool(this.data.idPool, this.idVms).pipe(takeUntil(this.destroy)).subscribe((res) => {
+    this.poolService.addVMStaticPool(this.data.idPool, this.vmsInput).pipe(takeUntil(this.destroy)).subscribe((res) => {
       if (res) {
         this.poolService.getPool(this.data.idPool, this.data.typePool).refetch()
         this.waitService.setWait(false);
@@ -51,7 +52,7 @@ export class AddVMStaticPoolComponent implements OnInit, OnDestroy {
 
   private getVms() {
     this.pendingVms = true;
-    this.poolService.getAllVms(this.data.idCluster, this.data.idNode).pipe(takeUntil(this.destroy))
+    this.poolService.getAllVms(this.data.idController, this.data.idCluster, this.data.idNode).pipe(takeUntil(this.destroy))
       .subscribe((data) => {
         this.vms = data;
         this.pendingVms = false;
@@ -63,7 +64,12 @@ export class AddVMStaticPoolComponent implements OnInit, OnDestroy {
   }
 
   public selectVm(value: []) {
-    this.idVms = value['value'];
+    this.vmsInput = value['value'].map((vm) => {
+      return {
+        id: vm.id,
+        verbose_name: vm.verbose_name
+      }
+    });
   }
 
   ngOnDestroy() {

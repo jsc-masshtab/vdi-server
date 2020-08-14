@@ -44,6 +44,7 @@ export class PoolDetailsService {
                                         status
                                     }
                                     controller {
+                                        id
                                         address
                                     }
                                     initial_size
@@ -103,6 +104,7 @@ export class PoolDetailsService {
                                         status
                                     }
                                     controller {
+                                        id
                                         address
                                     }
                                     cluster_id
@@ -142,19 +144,19 @@ export class PoolDetailsService {
 
     // +,-,get вм в стат. пуле
 
-    public addVMStaticPool(pool_id: number, vm_ids: []): Observable<any> {
+    public addVMStaticPool(pool_id: number, vms: []): Observable<any> {
         return this.service.mutate<any>({
             mutation: gql`
-                            mutation pools($pool_id: ID!,$vm_ids: [UUID]!) {
-                                addVmsToStaticPool(pool_id: $pool_id, vm_ids: $vm_ids) {
-                                    ok
-                                }
-                            }
+                mutation pools($pool_id: ID!,$vms: [VmInput!]!) {
+                    addVmsToStaticPool(pool_id: $pool_id, vms: $vms) {
+                        ok
+                    }
+                }
             `,
             variables: {
                 method: 'POST',
                 pool_id,
-                vm_ids
+                vms
             }
         });
     }
@@ -162,11 +164,11 @@ export class PoolDetailsService {
     public removeVMStaticPool(pool_id: number, vm_ids: []) {
         return this.service.mutate<any>({
             mutation: gql`
-                            mutation pools($pool_id: ID!,$vm_ids: [ID]!) {
-                                removeVmsFromStaticPool(pool_id: $pool_id,vm_ids: $vm_ids) {
-                                    ok
-                                }
-                            }
+                mutation pools($pool_id: ID!,$vm_ids: [ID]!) {
+                    removeVmsFromStaticPool(pool_id: $pool_id,vm_ids: $vm_ids) {
+                        ok
+                    }
+                }
             `,
             variables: {
                 method: 'POST',
@@ -176,22 +178,25 @@ export class PoolDetailsService {
         });
     }
 
-    public getAllVms(cluster_id: string, node_id: string): Observable<any>  {
+    public getAllVms(controller_id: string, cluster_id: string, node_id: string): Observable<any>  {
         return  this.service.watchQuery({
-            query:  gql` query vms($cluster_id: String,$node_id:String) {
-                                    vms(cluster_id: $cluster_id,node_id: $node_id) {
-                                        id
-                                        verbose_name
-                                    }
-                                }
-                    `,
+            query: gql` query controllers($controller_id: UUID, $cluster_id: UUID, $node_id: UUID) {
+                controller(id_: $controller_id) {
+                    vms(cluster_id: $cluster_id,node_id: $node_id) {
+                            id
+                            verbose_name
+                        }
+                    }
+                }
+            `,
             variables: {
                 method: 'GET',
+                controller_id,
                 cluster_id,
                 node_id,
                 get_vms_in_pools: false
             }
-        }).valueChanges.pipe(map(data => data.data['vms']));
+        }).valueChanges.pipe(map((data: any) => data.data.controller['vms']));
     }
 
 
@@ -199,15 +204,15 @@ export class PoolDetailsService {
 
     public getAllUsersNoEntitleToPool(pool_id: string): Observable<any>  {
         return  this.service.watchQuery({
-             query:  gql` query pools($pool_id: String, $entitled: Boolean) {
-                            pool(pool_id: $pool_id) {
-                                users(entitled: $entitled) {
-                                    username
-                                    id
-                                }
-                            }
-                        }
-                     `,
+            query: gql` query pools($pool_id: String, $entitled: Boolean) {
+                pool(pool_id: $pool_id) {
+                    users(entitled: $entitled) {
+                        username
+                        id
+                    }
+                }
+            }
+            `,
             variables: {
                 method: 'GET',
                 entitled: false,
@@ -328,7 +333,7 @@ export class PoolDetailsService {
     public assignVmToUser(vm_id: string, username: string) {
         return this.service.mutate<any>({
             mutation: gql`
-                            mutation vms($vm_id: ID!,$username: String!) {
+                            mutation pools($vm_id: ID!,$username: String!) {
                                 assignVmToUser(vm_id: $vm_id,username: $username) {
                                     ok
                                 }
@@ -347,7 +352,7 @@ export class PoolDetailsService {
     public freeVmFromUser(vm_id: string) {
         return this.service.mutate<any>({
             mutation: gql`
-                            mutation vms($vm_id: ID!) {
+                            mutation pools($vm_id: ID!) {
                                 freeVmFromUser(vm_id: $vm_id) {
                                     ok
                                 }
