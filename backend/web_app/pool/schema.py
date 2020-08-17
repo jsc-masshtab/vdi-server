@@ -550,7 +550,7 @@ class AddVmsToStaticPoolMutation(graphene.Mutation):
 class RemoveVmsFromStaticPoolMutation(graphene.Mutation):
     class Arguments:
         pool_id = graphene.ID(required=True)
-        vm_ids = graphene.List(graphene.ID, required=True)
+        vm_ids = graphene.List(graphene.UUID, required=True)
 
     ok = graphene.Boolean()
 
@@ -738,6 +738,37 @@ class UpdateAutomatedPoolMutation(graphene.Mutation, PoolValidator):
             else:
                 return UpdateAutomatedPoolMutation(ok=True)
         return UpdateAutomatedPoolMutation(ok=False)
+
+
+class RemoveVmsFromAutomatedPoolMutation(graphene.Mutation):
+    class Arguments:
+        pool_id = graphene.ID(required=True)
+        vm_ids = graphene.List(graphene.UUID, required=True)
+
+    ok = graphene.Boolean()
+
+    @administrator_required
+    async def mutate(self, _info, pool_id, vm_ids, creator):
+        if not vm_ids:
+            entity = {'entity_type': EntityType.POOL, 'entity_uuid': None}
+            raise SimpleError(_("List of VM should not be empty"), entity=entity)
+
+        # vms check
+        # get list of vms ids which are in pool_id
+        vms_ids_in_pool = await Vm.get_vms_ids_in_pool(pool_id)
+
+        # check if given vm_ids in vms_ids_in_pool
+        for vm_id in vm_ids:
+            if vm_id not in vms_ids_in_pool:
+                entity = {'entity_type': EntityType.POOL, 'entity_uuid': None}
+                raise SimpleError(_('VM doesn\'t belong to specified pool').format(vm_id), entity=entity)
+
+        # remove vms from db
+        await Vm.remove_vms(vm_ids, creator)
+
+        return {
+            'ok': True
+        }
 
 
 # --- --- --- --- ---
@@ -931,6 +962,7 @@ class PoolMutations(graphene.ObjectType):
     addStaticPool = CreateStaticPoolMutation.Field()
     addVmsToStaticPool = AddVmsToStaticPoolMutation.Field()
     removeVmsFromStaticPool = RemoveVmsFromStaticPoolMutation.Field()
+    removeVmsFromDynamicPool = RemoveVmsFromAutomatedPoolMutation.Field()
     removePool = DeletePoolMutation.Field()
     updateDynamicPool = UpdateAutomatedPoolMutation.Field()
     updateStaticPool = UpdateStaticPoolMutation.Field()
