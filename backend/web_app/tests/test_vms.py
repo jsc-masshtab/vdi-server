@@ -9,46 +9,46 @@ from web_app.tests.fixtures import fixt_db, fixt_auth_context, fixt_user, fixt_u
 # from vm.schema import vm_schema
 from common.models.vm import Vm
 from common.models.pool import Pool
-from common.models.controller import Controller
+# from common.models.controller import Controller
 
 
 pytestmark = [pytest.mark.vms]
 
 
-@pytest.mark.asyncio
-async def test_request_vms(fixt_db, fixt_auth_context):  # noqa
-    qu = """
-    {
-        vms(ordering: "verbose_name"){
-        verbose_name
-        id
-        template{
-          verbose_name
-        }
-        management_ip
-        status
-        controller {
-          address
-        }
-    }
-    }
-    """
-    executed = await execute_scheme(vm_schema, qu, context=fixt_auth_context)  # noqa
+# @pytest.mark.asyncio
+# async def test_request_vms(fixt_db, fixt_auth_context):  # noqa
+#     qu = """
+#     {
+#         vms(ordering: "verbose_name"){
+#         verbose_name
+#         id
+#         template{
+#           verbose_name
+#         }
+#         management_ip
+#         status
+#         controller {
+#           address
+#         }
+#     }
+#     }
+#     """
+#     executed = await execute_scheme(vm_schema, qu, context=fixt_auth_context)  # noqa
 
 
-@pytest.mark.asyncio
-async def test_request_templates(fixt_db, fixt_auth_context):  # noqa
-    qu = """
-    {
-        templates{
-            verbose_name
-            controller{
-              address
-            }
-        }
-    }
-    """
-    executed = await execute_scheme(vm_schema, qu, context=fixt_auth_context)  # noqa
+# @pytest.mark.asyncio
+# async def test_request_templates(fixt_db, fixt_auth_context):  # noqa
+#     qu = """
+#     {
+#         templates{
+#             verbose_name
+#             controller{
+#               address
+#             }
+#         }
+#     }
+#     """
+#     executed = await execute_scheme(vm_schema, qu, context=fixt_auth_context)  # noqa
 
 
 @pytest.mark.asyncio
@@ -139,61 +139,61 @@ class VmActionTestCase(VdiHttpTestCase):
         self.assertIn(expected_error, response_error)
 
 
-@pytest.mark.asyncio
-async def test_templates_and_sorting(fixt_db, fixt_controller, fixt_user_admin, fixt_create_automated_pool, fixt_auth_context):  # noqa
-
-    # Получаем pool_id из динамической фикстуры пула
-    pool_id = await Pool.select('id').gino.scalar()
-    pool = await Pool.get(pool_id)
-
-    # Получаем виртуальную машину из динамической фикстуры пула
-    vm = await Vm.query.where(pool_id == pool_id).gino.first()
-
-    # Получаем контроллер
-    controller_id = await Controller.select('id').gino.scalar()
-    controller = await Controller.get(controller_id)
-
-    # Закрепляем VM за суперпользователем
-    query = """mutation{
-                     assignVmToUser(vm_id: "%s", username: "test_user_admin")
-                     {ok, vm{user{username}}}}""" % vm.id
-    executed = await execute_scheme(vm_schema, query, context=fixt_auth_context)  # noqa
-
-    query = """{
-                  templates(node_id: "%s", ordering: "verbose_name"){
-                    verbose_name
-                  }
-                }""" % pool.node_id
-    executed = await execute_scheme(vm_schema, query, context=fixt_auth_context)  # noqa
-
-    query = """{
-                  templates(controller_ip: "%s", ordering: "verbose_name"){
-                    verbose_name
-                  }
-                }""" % controller.address
-    executed = await execute_scheme(vm_schema, query, context=fixt_auth_context)  # noqa
-
-    query = """{
-                  templates(controller_ip: "%s", ordering: "controller"){
-                    verbose_name
-                  }
-                }""" % controller.address
-    executed = await execute_scheme(vm_schema, query, context=fixt_auth_context)  # noqa
-
-    list = ["node", "template", "status"]
-    for ordering in list:
-        query = """{
-                      vms(controller_ip: "%s", node_id: "%s",
-                            get_vms_in_pools: false, ordering: "%s"){
-                        verbose_name
-                        id
-                        template{
-                          verbose_name
-                        }
-                        status
-                        controller {
-                          address
-                        }
-                    }
-                    }""" % (controller.address, pool.node_id, ordering)
-        executed = await execute_scheme(vm_schema, query, context=fixt_auth_context)  # noqa
+# @pytest.mark.asyncio
+# async def test_templates_and_sorting(fixt_db, fixt_controller, fixt_user_admin, fixt_create_automated_pool, fixt_auth_context):  # noqa
+#
+#     # Получаем pool_id из динамической фикстуры пула
+#     pool_id = await Pool.select('id').gino.scalar()
+#     pool = await Pool.get(pool_id)
+#
+#     # Получаем виртуальную машину из динамической фикстуры пула
+#     vm = await Vm.query.where(pool_id == pool_id).gino.first()
+#
+#     # Получаем контроллер
+#     controller_id = await Controller.select('id').gino.scalar()
+#     controller = await Controller.get(controller_id)
+#
+#     # Закрепляем VM за суперпользователем
+#     query = """mutation{
+#                      assignVmToUser(vm_id: "%s", username: "test_user_admin")
+#                      {ok, vm{user{username}}}}""" % vm.id
+#     executed = await execute_scheme(vm_schema, query, context=fixt_auth_context)  # noqa
+#
+#     query = """{
+#                   templates(node_id: "%s", ordering: "verbose_name"){
+#                     verbose_name
+#                   }
+#                 }""" % pool.node_id
+#     executed = await execute_scheme(vm_schema, query, context=fixt_auth_context)  # noqa
+#
+#     query = """{
+#                   templates(controller_ip: "%s", ordering: "verbose_name"){
+#                     verbose_name
+#                   }
+#                 }""" % controller.address
+#     executed = await execute_scheme(vm_schema, query, context=fixt_auth_context)  # noqa
+#
+#     query = """{
+#                   templates(controller_ip: "%s", ordering: "controller"){
+#                     verbose_name
+#                   }
+#                 }""" % controller.address
+#     executed = await execute_scheme(vm_schema, query, context=fixt_auth_context)  # noqa
+#
+#     list = ["node", "template", "status"]
+#     for ordering in list:
+#         query = """{
+#                       vms(controller_ip: "%s", node_id: "%s",
+#                             get_vms_in_pools: false, ordering: "%s"){
+#                         verbose_name
+#                         id
+#                         template{
+#                           verbose_name
+#                         }
+#                         status
+#                         controller {
+#                           address
+#                         }
+#                     }
+#                     }""" % (controller.address, pool.node_id, ordering)
+#         executed = await execute_scheme(vm_schema, query, context=fixt_auth_context)  # noqa

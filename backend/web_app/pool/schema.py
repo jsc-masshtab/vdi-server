@@ -7,7 +7,7 @@ from asyncpg.exceptions import UniqueViolationError
 from common.database import db
 from common.veil.veil_gino import RoleTypeGraphene, Role, StatusGraphene, Status, EntityType
 from common.veil.veil_validators import MutationValidation
-from common.veil.veil_errors import SimpleError, HttpError, ValidationError
+from common.veil.veil_errors import SimpleError, ValidationError
 from common.veil.veil_decorators import administrator_required
 from common.veil.veil_graphene import VeilShortEntityType, VeilResourceType
 from common.models.auth import User
@@ -471,12 +471,13 @@ class CreateStaticPoolMutation(graphene.Mutation, ControllerFetcher):
             entity = {'entity_type': EntityType.POOL, 'entity_uuid': None}
             raise SimpleError(error_msg, description=desc, entity=entity)
         # --- Активация удаленного доступа к VM на Veil
-        try:
-            await Vm.enable_remote_accesses(controller.address, vms)
-        except HttpError:
-            msg = _('Fail with remote access enable.')
-            entity = {'entity_type': EntityType.POOL, 'entity_uuid': None}
-            await system_logger.warning(msg, entity=entity)
+        # TODO: не работает Vm.enable_remote_accesses
+        # try:
+        #     await Vm.enable_remote_accesses(controller.address, vms)
+        # except HttpError:
+        #     msg = _('Fail with remote access enable.')
+        #     entity = {'entity_type': EntityType.POOL, 'entity_uuid': None}
+        #     await system_logger.warning(msg, entity=entity)
         return {
             'pool': PoolType(pool_id=pool.id, verbose_name=verbose_name, vms=vms),
             'ok': True
@@ -494,7 +495,7 @@ class AddVmsToStaticPoolMutation(graphene.Mutation):
     @administrator_required
     async def mutate(self, _info, pool_id, vms, creator):
         pool = await Pool.get(pool_id)
-        pool_controller = await pool.controller
+        # pool_controller = await Controller.get(pool.controller)
         # pool_data = await Pool.select('controller', 'node_id').where(Pool.id == pool_id).gino.first()
         # (controller_id, node_id) = pool_data
         # controller_address = await Controller.select('address').where(Controller.id == controller_id).gino.scalar()
@@ -521,7 +522,8 @@ class AddVmsToStaticPoolMutation(graphene.Mutation):
                 raise SimpleError(_('VM {} is already in one of pools').format(vm_id), entity=entity)
 
         # remote access
-        await Vm.enable_remote_accesses(pool_controller.address, vms)
+        # TODO: Вернуть, как будет готово + выше раскомментировать pool_controller
+        # await Vm.enable_remote_accesses(pool_controller.address, vms)
 
         # await system_logger.debug(_('All VMs on node: {}').format(all_vms_on_node))
 

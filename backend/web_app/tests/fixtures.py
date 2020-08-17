@@ -8,7 +8,7 @@ import asyncio
 from async_generator import async_generator, yield_
 from graphene import Context
 
-from web_app.app import start_gino, stop_gino
+from common.database import start_gino, stop_gino
 from common.settings import VEIL_WS_MAX_TIME_TO_WAIT
 from common.veil.veil_gino import Role, Status
 from common.veil.auth.veil_jwt import encode_jwt
@@ -43,40 +43,44 @@ async def get_resources_static_pool_test():
     2)На контроллере при каждом тесте создавать/удалять требуемые ресурсы (это может увеличить время тестов)
     """
     # controller
-    controllers_addresses = await Controller.get_addresses()
-    if not controllers_addresses:
+    controllers = await Controller.get_objects()
+    if not controllers:
         raise RuntimeError('Нет контроллеров')
 
-    controller_ip = controllers_addresses[0]
-    resources_http_client = await ResourcesHttpClient.create(controller_ip)  # noqa
-    clusters = await resources_http_client.fetch_cluster_list()
+    controller = await Controller.get(controllers[0].id)
+    veil_response_clusters = await controller.veil_client.cluster().list()
+    clusters = veil_response_clusters.paginator_results
     if not clusters:
-        raise RuntimeError('На контроллере {} нет кластеров'.format(controller_ip))
+        raise RuntimeError('На контроллере {} нет кластеров'.format(controller.address))
+    for cluster in clusters:
+        if cluster['verbose_name'] == "cluster_115":
+            cluster_id = cluster['id']
+            break
 
-    vm_http_client = await VmHttpClient.create(controller_ip, '')  # noqa
-    templates = await vm_http_client.fetch_templates_list()
+    veil_response_datapools = await controller.veil_client.data_pool(cluster_id=cluster_id).list()
+    datapools = veil_response_datapools.paginator_results
+    for datapool in datapools:
+        if datapool['verbose_name'] == "Базовый локальный пул данных узла 192.168.11.115":
+            datapool_id = datapool['id']
+            break
+
+    veil_response_vms = await controller.veil_client.domain(template=0).list()
+    vms = veil_response_vms.paginator_results
+    for vm in vms:
+        if vm['verbose_name'] == 'test_2':
+            vm_id = vm['id']
+            break
+
+    veil_response_teplates = await controller.veil_client.domain(template=1).list()
+    templates = veil_response_teplates.paginator_results
     if not templates:
-        raise RuntimeError('На контроллере {} нет шаблонов'.format(controller_ip))
+        raise RuntimeError('На контроллере {} нет шаблонов'.format(controller.address))
 
     for template in templates:
-        # check if template has a disk
-        vm_http_client = await VmHttpClient.create(controller_ip, template['id'])  # noqa
-        disks_list = await vm_http_client.fetch_vdisks_list()
-        if not disks_list:
-            continue
 
-        # check if node active
-        node_info = await resources_http_client.fetch_node(template['node']['id'])
-        if node_info['status'] != 'ACTIVE':
-            continue
-
-        # determine cluster
-        vm_http_client = await VmHttpClient.create(controller_ip, template['id'])  # noqa
-        template_info = await vm_http_client.info()
-
-        return {'controller_ip': controller_ip, 'cluster_id': template_info['cluster'],
-                'node_id': template['node']['id'], 'template_id': template['id'],
-                'datapool_id': disks_list[0]['datapool']['id']}
+        return {'controller_id': controller.id, 'cluster_id': cluster_id,
+                'node_id': template['node']['id'], 'vm_id': vm_id, 'template_id': template['id'],
+                'datapool_id': datapool_id}
 
     raise RuntimeError('Подходящие ресурсы не найдены.')
 
@@ -85,25 +89,26 @@ async def get_resources_automated_pool_test():
     """На контроллере ищутся оптимальные ресурсы для проведения теста
     """
     # controller
-    controllers_addresses = await Controller.get_addresses()
-    if not controllers_addresses:
+    controllers = await Controller.get_objects()
+    if not controllers:
         raise RuntimeError('Нет контроллеров')
 
-    controller_ip = controllers_addresses[0]
-    resources_http_client = await ResourcesHttpClient.create(controller_ip)  # noqa
-    clusters = await resources_http_client.fetch_cluster_list()
+    controller = await Controller.get(controllers[0].id)
+    veil_response_clusters = await controller.veil_client.cluster().list()
+    clusters = veil_response_clusters.paginator_results
     if not clusters:
-        raise RuntimeError('На контроллере {} нет кластеров'.format(controller_ip))
-    vm_http_client = await VmHttpClient.create(controller_ip, '')  # noqa
-    templates = await vm_http_client.fetch_templates_list()
+        raise RuntimeError('На контроллере {} нет кластеров'.format(controller.address))
+
+    veil_response_teplates = await controller.veil_client.domain(template=1).list()
+    templates = veil_response_teplates.paginator_results
     if not templates:
-        raise RuntimeError('На контроллере {} нет шаблонов'.format(controller_ip))
+        raise RuntimeError('На контроллере {} нет шаблонов'.format(controller.address))
 
     # select appropriate template_id and node_id
     # node must be active and has a template
     for cluster in clusters:
-        resources_http_client = await ResourcesHttpClient.create(controller_ip)  # noqa
-        nodes = await resources_http_client.fetch_node_list(cluster['id'])
+        veil_response_nodes = await controller.veil_client.node(cluster_id=cluster['id']).list()
+        nodes = veil_response_nodes.paginator_results
         if not nodes:
             continue
 
@@ -117,8 +122,8 @@ async def get_resources_automated_pool_test():
                     continue
                 else:  # template found
                     # find active datapool
-                    resources_http_client = await ResourcesHttpClient.create(controller_ip)  # noqa
-                    datapools = await resources_http_client.fetch_datapool_list(node_id=node['id'])
+                    veil_response_datapools = await controller.veil_client.data_pool(node_id=node['id']).list()
+                    datapools = veil_response_datapools.paginator_results
                     # Временное решение для исключения zfs-пулов.
                     for datapool in datapools[:]:
                         if datapool.get('zfs_pool'):
@@ -129,7 +134,7 @@ async def get_resources_automated_pool_test():
                     except StopIteration:  # No active datapools
                         continue
 
-                    return {'controller_ip': controller_ip, 'cluster_id': cluster['id'],
+                    return {'controller_id': controller.id, 'cluster_id': cluster['id'],
                             'node_id': node['id'], 'template_id': template_id, 'datapool_id': datapool_id}
 
     raise RuntimeError('Подходящие ресурсы не найдены')
@@ -144,8 +149,8 @@ def get_test_pool_name():
 @async_generator
 async def fixt_launch_workers():
 
-    ws_listener_worker = Popen([sys.executable, "ws_listener_worker/ws_listener_worker.py"])
-    pool_worker = Popen([sys.executable, "pool_worker/pool_worker.py", "-do-not-resume-tasks"])
+    ws_listener_worker = Popen([sys.executable, "ws_listener_worker/app.py"])
+    pool_worker = Popen([sys.executable, "pool_worker/app.py", "-do-not-resume-tasks"])
 
     await yield_()
 
@@ -205,21 +210,34 @@ async def fixt_create_automated_pool(fixt_controller):
         print('resources not found!')
 
     qu = '''
-        mutation {
-            addDynamicPool(verbose_name: "%s", controller_ip: "%s",
-                           cluster_id: "%s", node_id: "%s", datapool_id: "%s", template_id: "%s",
-                           max_size: 4, max_vm_amount: 4, increase_step: 1, min_free_vms_amount: 1,
-                           initial_size: 1, total_size: 2, max_amount_of_create_attempts: 10,
-                           create_thin_clones: true){
-                    ok
-                    pool{
-                        pool_id
-                        pool_type
-                    }
-            }
-        }
-        ''' % (get_test_pool_name(), resources['controller_ip'], resources['cluster_id'], resources['node_id'],
-               resources['datapool_id'], resources['template_id'])
+            mutation {
+                      addDynamicPool(
+                        connection_types: [SPICE, RDP],
+                        verbose_name: "%s",
+                        controller_id: "%s",
+                        cluster_id: "%s",
+                        node_id: "%s",
+                        datapool_id: "%s",
+                        template_id: "%s",
+                        initial_size: 1,
+                        reserve_size: 1,
+                        increase_step: 1,
+                        total_size: 1,
+                        vm_name_template: "vdi-test"), {
+                        pool {
+                          pool_id,
+                          controller{
+                            id,
+                            verbose_name,
+                            address
+                          },
+                        pool_type,
+                        status
+                        },
+                        ok
+                      }
+                    }''' % (get_test_pool_name(), resources['controller_id'], resources['cluster_id'],
+                            resources['node_id'], resources['datapool_id'], resources['template_id'])
     context = await get_auth_context()
     executed = await execute_scheme(pool_schema, qu, context=context)
 
@@ -274,10 +292,12 @@ async def fixt_create_automated_pool(fixt_controller):
 async def fixt_create_static_pool(fixt_db):
     """Создается ВМ, создается пул с этой ВМ, пул удаляется, ВМ удаляется."""
     pool_main_resources = await get_resources_static_pool_test()
-    controller_ip = pool_main_resources['controller_ip']
+    controller_id = pool_main_resources['controller_id']
+    cluster_id = pool_main_resources['cluster_id']
     node_id = pool_main_resources['node_id']
     datapool_id = pool_main_resources['datapool_id']
     template_id = pool_main_resources['template_id']
+    vm_id = pool_main_resources['vm_id']
     context = await get_auth_context()
 
     # --- create VM ---
@@ -288,10 +308,9 @@ async def fixt_create_static_pool(fixt_db):
             'verbose_name': test_domain_name,
             'domain_id': template_id,
             'datapool_id': datapool_id,
-            'controller_ip': controller_ip,
+            'controller_id': controller_id,
             'node_id': node_id,
             'create_thin_clones': True,
-            'domain_index': 666
         }
         vm_info = await Vm.copy(**params)
         return vm_info
@@ -315,16 +334,27 @@ async def fixt_create_static_pool(fixt_db):
     await a_redis_wait_for_message(WS_MONITOR_CHANNEL_OUT, _check_if_vm_created, VEIL_WS_MAX_TIME_TO_WAIT)
     # --- create pool ---
     qu = '''
-        mutation {
-          addStaticPool(verbose_name: "%s", vm_ids: ["%s"]) {
-            ok
-            pool{
+            mutation{addStaticPool(
+              verbose_name: "%s",
+              controller_id: "%s",
+              cluster_id: "%s",
+              node_id: "%s",
+              datapool_id: "%s",
+              vms:[
+                {id: "%s",
+                  verbose_name: "test_2"}
+              ],
+              connection_types: [SPICE, RDP],
+            ){
+              pool {
                 pool_id
-                pool_type
+                node {
+                  id
+                }
+              }
+              ok
             }
-          }
-        }
-        ''' % (get_test_pool_name(), domain_info['id'])
+            }''' % (get_test_pool_name(), controller_id, cluster_id, node_id, datapool_id, vm_id)
     pool_create_res = await execute_scheme(pool_schema, qu, context=context)
     pool_id = pool_create_res['addStaticPool']['pool']['pool_id']
     await yield_({
@@ -341,10 +371,6 @@ async def fixt_create_static_pool(fixt_db):
     }
     ''' % pool_id
     await execute_scheme(pool_schema, qu, context=context)
-
-    # --- remove test VM ---
-    vm_http_client = await VmHttpClient.create(controller_ip, domain_info['id'])  # noqa
-    await vm_http_client.remove_vm()
 
 
 @pytest.fixture
@@ -598,7 +624,7 @@ def fixt_group_role(request, event_loop):
     async def setup():
         """Подчищать не надо, группа будет удалена и эти записи удалятся каскадом"""
         group = await Group.get(group_id)
-        await group.add_role(Role.READ_ONLY, creator='system')
+        await group.add_role(Role.OPERATOR, creator='system')
     event_loop.run_until_complete(setup())
     return True
 

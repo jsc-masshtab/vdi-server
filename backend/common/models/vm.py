@@ -7,7 +7,6 @@ from asyncpg.exceptions import UniqueViolationError
 from veil_api_client import DomainConfiguration
 
 from common.database import db
-from common.veil.veil_api import get_veil_client
 from common.veil.veil_gino import get_list_of_values_from_db, EntityType, VeilModel
 from common.veil.veil_errors import VmCreationError, SimpleError
 from common.languages import lang_init
