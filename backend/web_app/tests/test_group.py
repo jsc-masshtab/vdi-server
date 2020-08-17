@@ -191,7 +191,7 @@ class TestGroupSchema:
     async def test_group_role(self, snapshot, fixt_auth_context):  # noqa
         query = """mutation {
                     addGroupRole(id: "10913d5d-ba7a-4049-88c5-769267a6cbe4",
-                    roles: [NETWORK_ADMINISTRATOR, VM_OPERATOR]) {
+                    roles: [ADMINISTRATOR, OPERATOR]) {
                     ok,
                     group {
                         verbose_name
@@ -204,7 +204,7 @@ class TestGroupSchema:
         snapshot.assert_match(executed)
         query = """mutation {
                             removeGroupRole(id: "10913d5d-ba7a-4049-88c5-769267a6cbe4",
-                            roles: [VM_OPERATOR]) {
+                            roles: [OPERATOR]) {
                             ok,
                             group {
                                 verbose_name

@@ -89,46 +89,6 @@ snapshots['TestGroupSchema.test_group_user_remove 1'] = {
     }
 }
 
-snapshots['TestGroupSchema.test_group_role 1'] = {
-    'addGroupRole': {
-        'group': {
-            'assigned_roles': [
-                'NETWORK_ADMINISTRATOR',
-                'VM_OPERATOR'
-            ],
-            'possible_roles': [
-                'READ_ONLY',
-                'ADMINISTRATOR',
-                'SECURITY_ADMINISTRATOR',
-                'VM_ADMINISTRATOR',
-                'STORAGE_ADMINISTRATOR'
-            ],
-            'verbose_name': 'test_group_1'
-        },
-        'ok': True
-    }
-}
-
-snapshots['TestGroupSchema.test_group_role 2'] = {
-    'removeGroupRole': {
-        'group': {
-            'assigned_roles': [
-                'NETWORK_ADMINISTRATOR'
-            ],
-            'possible_roles': [
-                'READ_ONLY',
-                'ADMINISTRATOR',
-                'SECURITY_ADMINISTRATOR',
-                'VM_ADMINISTRATOR',
-                'STORAGE_ADMINISTRATOR',
-                'VM_OPERATOR'
-            ],
-            'verbose_name': 'test_group_1'
-        },
-        'ok': True
-    }
-}
-
 snapshots['TestGroupSchema.test_group_create 1'] = {
     'createGroup': {
         'group': {
@@ -142,6 +102,38 @@ snapshots['TestGroupSchema.test_group_create 1'] = {
 
 snapshots['TestGroupSchema.test_group_delete_by_guid 1'] = {
     'deleteGroup': {
+        'ok': True
+    }
+}
+
+snapshots['TestGroupSchema.test_group_role 1'] = {
+    'addGroupRole': {
+        'group': {
+            'assigned_roles': [
+                'ADMINISTRATOR',
+                'OPERATOR'
+            ],
+            'possible_roles': [
+                'SECURITY_ADMINISTRATOR'
+            ],
+            'verbose_name': 'test_group_1'
+        },
+        'ok': True
+    }
+}
+
+snapshots['TestGroupSchema.test_group_role 2'] = {
+    'removeGroupRole': {
+        'group': {
+            'assigned_roles': [
+                'ADMINISTRATOR'
+            ],
+            'possible_roles': [
+                'SECURITY_ADMINISTRATOR',
+                'OPERATOR'
+            ],
+            'verbose_name': 'test_group_1'
+        },
         'ok': True
     }
 }

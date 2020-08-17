@@ -1033,4 +1033,3 @@ class AutomatedPool(db.Model):
         # Пробросить исключение, если споткнулись на создании машин
         if not is_creation_successful:
             raise PoolCreationError(_('Could not create the required number of machines.'))
-
