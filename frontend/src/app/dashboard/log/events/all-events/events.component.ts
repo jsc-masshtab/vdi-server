@@ -160,6 +160,7 @@ export class EventsComponent implements OnInit {
 
   public openEventDetails(event: Event): void {
     this.dialog.open(InfoEventComponent, {
+			disableClose: true,
       width: '700px',
       data: {
         event

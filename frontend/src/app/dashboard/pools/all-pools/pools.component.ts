@@ -89,6 +89,7 @@ export class PoolsComponent extends DetailsMove implements OnInit, OnDestroy {
 
   public openCreatePool(): void {
     this.dialog.open(PoolAddComponent, {
+			disableClose: true,
       width: '500px'
     });
   }

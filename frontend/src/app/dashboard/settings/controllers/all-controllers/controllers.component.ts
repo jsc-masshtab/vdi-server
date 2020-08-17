@@ -71,12 +71,14 @@ export class ControllersComponent extends DetailsMove implements OnInit, OnDestr
 
   public addController() {
     this.dialog.open(AddControllerComponent, {
+			disableClose: true,
       width: '500px'
     });
   }
 
   public removeController() {
     this.dialog.open(RemoveControllerComponent, {
+			disableClose: true,
       width: '500px'
     });
   }
