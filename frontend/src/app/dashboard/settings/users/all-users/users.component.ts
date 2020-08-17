@@ -77,6 +77,7 @@ export class UsersComponent extends DetailsMove implements OnInit, OnDestroy {
 
   public addUser() {
     this.dialog.open(AddUserComponent, {
+			disableClose: true,
       width: '500px'
     });
   }

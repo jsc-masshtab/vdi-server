@@ -66,6 +66,7 @@ export class VmDetalsPopupComponent {
 
   public addUser() {
     this.dialog.open(AddUserVmComponent, {
+			disableClose: true,
       width: '500px',
       data: this.data
     });
@@ -73,6 +74,7 @@ export class VmDetalsPopupComponent {
 
   public removeUser() {
     this.dialog.open(RemoveUserVmComponent, {
+			disableClose: true,
       width: '500px',
       data: this.data
     });

@@ -179,6 +179,7 @@ export class UserDetailsComponent implements OnInit, OnDestroy {
     }
 
     this.dialog.open(FormForEditComponent, {
+			disableClose: true,
       width: '500px',
       data: {
         post: {
@@ -217,6 +218,7 @@ export class UserDetailsComponent implements OnInit, OnDestroy {
 
   public deactivateUser(): void {
     this.dialog.open(MutateUserComponent, {
+			disableClose: true,
       width: '500px',
       data: {
         id: this.id,
@@ -240,6 +242,7 @@ export class UserDetailsComponent implements OnInit, OnDestroy {
 
   public activateUser(): void {
     this.dialog.open(MutateUserComponent, {
+			disableClose: true,
       width: '500px',
       data: {
         id: this.id,
@@ -267,6 +270,7 @@ export class UserDetailsComponent implements OnInit, OnDestroy {
 
   public addGroup() {
     this.dialog.open(AddGropComponent, {
+			disableClose: true,
       width: '500px',
       data: {
         id: this.id,
@@ -278,6 +282,7 @@ export class UserDetailsComponent implements OnInit, OnDestroy {
 
   public removeGroup() {
     this.dialog.open(RemoveRoleComponent, {
+			disableClose: true,
       width: '500px',
       data: {
         id: this.id,
@@ -289,6 +294,7 @@ export class UserDetailsComponent implements OnInit, OnDestroy {
 
   public addRole() {
     this.dialog.open(AddRoleComponent, {
+			disableClose: true,
       width: '500px',
       data: {
         id: this.id,
@@ -300,6 +306,7 @@ export class UserDetailsComponent implements OnInit, OnDestroy {
 
   public removeRole() {
     this.dialog.open(RemoveRoleComponent, {
+			disableClose: true,
       width: '500px',
       data: {
         id: this.id,

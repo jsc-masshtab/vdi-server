@@ -195,6 +195,7 @@ export class ControllerDetailsComponent implements OnInit, OnDestroy {
   private openEditForm(activeObj: IEditFormObj): void  {
     activeObj['formEdit'][0]['fieldValue'] = this.controller[activeObj['property']];
     this.dialog.open(FormForEditComponent, {
+			disableClose: true,
       width: '500px',
       data: {
         post: {
@@ -221,6 +222,7 @@ export class ControllerDetailsComponent implements OnInit, OnDestroy {
 
   public removeController() {
     this.dialog.open(RemoveControllerComponent, {
+			disableClose: true,
       width: '500px',
       data: {
         id: this.idController,
