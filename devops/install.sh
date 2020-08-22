@@ -2,7 +2,7 @@
 
 echo "Welcome to VDI server installer!"
 
-echo "Select archivation type:"
+echo "Select archiving type:"
 echo "
     1. Periodic
     2. By count

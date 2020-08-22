@@ -11,6 +11,8 @@
 # пересобрать конкретные контейнеры
 # docker rm vdi-tornado && docker rm vdi-postgres
 # docker-compose up -V
+# скопировать файл из контейнера на хост
+# docker cp vdi-angular:/package-lock.json ~/.
 
 version: '3.7'
 services:
@@ -33,7 +35,6 @@ services:
     image: memcached:alpine
     container_name: vdi-memcached
     network_mode: "host"
-#    command: -m 64 -p 11211 -l 0.0.0.0
     command: sh -c "memcached -m 64"
   tornado:
     build:
