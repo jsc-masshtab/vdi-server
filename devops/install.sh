@@ -46,8 +46,9 @@ esac
 
 echo "Select path (for example: /tmp/):"
 read PATH1
+mkdir -p $PATH1
 echo "PATH1=$PATH1" >> /tmp/vdi-install-vars
 
 echo "CREATE=$(date +"%Y-%m-%d")" >> /tmp/vdi-install-vars
 
-sudo apt install ./vdi-*.deb -y
+apt-get install ./vdi-*.deb -y
