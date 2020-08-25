@@ -566,7 +566,7 @@ class RemoveVmsFromStaticPoolMutation(graphene.Mutation):
 
         # check if given vm_ids in vms_ids_in_pool
         for vm_id in vm_ids:
-            if vm_id not in vms_ids_in_pool:
+            if str(vm_id) not in vms_ids_in_pool:
                 entity = {'entity_type': EntityType.POOL, 'entity_uuid': None}
                 raise SimpleError(_('VM doesn\'t belong to specified pool').format(vm_id), entity=entity)
 
@@ -759,7 +759,7 @@ class RemoveVmsFromAutomatedPoolMutation(graphene.Mutation):
 
         # check if given vm_ids in vms_ids_in_pool
         for vm_id in vm_ids:
-            if vm_id not in vms_ids_in_pool:
+            if str(vm_id) not in vms_ids_in_pool:
                 entity = {'entity_type': EntityType.POOL, 'entity_uuid': None}
                 raise SimpleError(_('VM doesn\'t belong to specified pool').format(vm_id), entity=entity)
 
