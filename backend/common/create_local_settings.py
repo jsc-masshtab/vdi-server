@@ -25,7 +25,7 @@ def local_settings_data():
     secret_pattern_b = "{} = {}"
     secret_list = list()
     # TODO: rename settings
-    partition_strings = ["PARTITION = 2", "BY_COUNT = False", "COUNT = 100", "PATH = /tmp/", "CREATE = '2020-08-01'"]
+    partition_strings = ["PARTITION = 2", "BY_COUNT = False", "COUNT = 100", "PATH = '/tmp/'", "CREATE = '2020-08-01'"]
 
     for arg in SECRET_ARGS:
         if 'FERNET' in arg:
