@@ -504,7 +504,6 @@ class Pool(VeilModel):
             if automated_pool:
                 await system_logger.debug(_('Delete VMs for AutomatedPool {}').format(self.verbose_name))
                 vm_ids = await VmModel.get_vms_ids_in_pool(self.id)
-                await system_logger.error(vm_ids)
                 await VmModel.remove_vms(vm_ids, creator, True)
 
             await self.delete()
