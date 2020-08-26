@@ -149,8 +149,8 @@ def get_test_pool_name():
 @async_generator
 async def fixt_launch_workers():
 
-    ws_listener_worker = Popen([sys.executable, "ws_listener_worker/app.py"])
-    pool_worker = Popen([sys.executable, "pool_worker/app.py", "-do-not-resume-tasks"])
+    ws_listener_worker = Popen([sys.executable, "../ws_listener_worker/app.py"])
+    pool_worker = Popen([sys.executable, "../pool_worker/app.py", "-do-not-resume-tasks"])
 
     await yield_()
 
@@ -635,7 +635,7 @@ def fixt_controller(request, event_loop):
     id_ = '10913d5d-ba7a-4049-88c5-769267a6cbe4'
     verbose_name = 'test controller'
     address = '192.168.11.115'
-    token = 'jwt eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjoxNjUsInVzZXJuYW1lIjoiYXBpLWNsaSIsImV4cCI6MTkwODI2MjI1Niwic3NvIjpmYWxzZSwib3JpZ19pYXQiOjE1OTM3NjYyNTZ9._41CVXezP1vDHoZyQ71UcadqPdti7-tmy_teEjfBgio'
+    token = 'jwt eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjoxLCJ1c2VybmFtZSI6ImFkbWluIiwiZXhwIjoxOTEyOTM3NjExLCJzc28iOmZhbHNlLCJvcmlnX2lhdCI6MTU5ODQ0MTYxMX0.OSRio0EoWA8ZDtvzl3YlaBmdfbI0DQz1RiGAIMCgoX0'
 
     async def setup():
         await Controller.create(id=id_,
