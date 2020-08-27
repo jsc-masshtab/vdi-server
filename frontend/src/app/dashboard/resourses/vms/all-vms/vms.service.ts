@@ -31,7 +31,7 @@ export class VmsService {
             query = `query controllers($controller_id:UUID, $cluster_id: UUID, $node_id: UUID, $data_pool_id: UUID) {
                 controller(id_:$controller_id) {
                     id
-                    vms(cluster_id: $cluster_id, node_id: $node_id, data_pool_id: $data_pool_id) {
+                    vms(cluster_id: $cluster_id, node_id: $node_id, data_pool_id: $data_pool_id, exclude_existed: false) {
                         id
                         verbose_name
                         status

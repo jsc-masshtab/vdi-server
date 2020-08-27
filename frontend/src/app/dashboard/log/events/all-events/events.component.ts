@@ -5,6 +5,7 @@ import { map } from 'rxjs/operators';
 import { MatDialog } from '@angular/material';
 import { InfoEventComponent } from '../info-event/info-event.component';
 import { FormControl } from '@angular/forms';
+import { IParams } from 'types';
 
 interface Event {
   event: {
@@ -50,13 +51,15 @@ export class EventsComponent implements OnInit {
       title: 'Cоздатель',
       property: 'user',
       type: 'string',
-      class: 'name-end'
+      class: 'name-end',
+      sort: true
     },
     {
       title: 'Дата создания',
       property: 'created',
       type: 'time',
-      class: 'name-end'
+      class: 'name-end',
+      sort: true
     }
   ];
 
@@ -114,6 +117,12 @@ export class EventsComponent implements OnInit {
 
   public toPage(message: any): void {
     this.offset = message.offset;
+    this.getEvents();
+  }
+
+  public sortList(param: IParams): void {
+    this.service.paramsForGetEvents.spin = param.spin;
+    this.service.paramsForGetEvents.nameSort = param.nameSort;
     this.getEvents();
   }
 

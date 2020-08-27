@@ -214,7 +214,7 @@ export class PoolAddComponent {
       } break;
 
       case 'dynamic': {
-        /* операций не требуется */
+        this.dynamicPool.get('create_thin_clones').setValue(true)
       } break;
 
       case 'check_dynamic': {

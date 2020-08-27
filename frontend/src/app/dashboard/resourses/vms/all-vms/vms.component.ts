@@ -39,7 +39,8 @@ export class VmsComponent extends DetailsMove implements OnInit, OnDestroy {
     {
       title: 'Контроллер',
       property: 'controller',
-      property_lv2: 'verbose_name'
+      property_lv2: 'verbose_name',
+      sort: true
     },
     {
       title: 'Статус',
