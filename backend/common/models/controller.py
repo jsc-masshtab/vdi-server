@@ -111,6 +111,7 @@ class Controller(AbstractSortableStatusModel, VeilModel):
         """Проверяем доступность контроллера и меняем его статус."""
         send_cmd_to_ws_monitor(self.id, WsMonitorCmd.REMOVE_CONTROLLER)
         connection_is_ok = await self.ok
+        # print('connection_is_ok', connection_is_ok)
         if connection_is_ok:
             await self.activate()
             send_cmd_to_ws_monitor(self.id, WsMonitorCmd.ADD_CONTROLLER)
@@ -162,13 +163,22 @@ class Controller(AbstractSortableStatusModel, VeilModel):
                                           token=token)
             # Получаем, сохраняем и проверяем допустимость версии
             await controller.get_version()
-            # Проверяем состояние контроллера, меняем статус, добавляем в монитор
-            controller_is_ok = await controller.check_controller()
-            # Логгируем результат операции
-            msg = _('Adding controller {}: {}.').format(verbose_name, controller_is_ok)
-            await system_logger.info(msg, user=creator, entity=controller.entity)
-            # Возвращаем инстанс созданного контроллера
-            return controller
+
+            connection_is_ok = await controller.ok
+            if connection_is_ok:
+                await controller.activate()
+
+        # Отправляем команду на добавляление контроллера в монитор (После завершения транзакции
+        # чтоб запись точно была в бд)
+        if connection_is_ok:
+            send_cmd_to_ws_monitor(controller.id, WsMonitorCmd.ADD_CONTROLLER)
+
+        # Логгируем результат операции
+        msg = _('Adding controller {}: {}.').format(verbose_name, connection_is_ok)
+        await system_logger.info(msg, user=creator, entity=controller.entity)
+
+        # Возвращаем инстанс созданного контроллера
+        return controller
 
     async def soft_update(self, creator, verbose_name=None, address=None, description=None, token=None):
         """Редактирование сущности Controller.

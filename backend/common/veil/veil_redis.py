@@ -22,7 +22,8 @@ REDIS_ASYNC_TIMEOUT = 0.01
 POOL_TASK_QUEUE = 'POOL_TASK_QUEUE'
 # Ws monitor related
 WS_MONITOR_CHANNEL_OUT = 'WS_MONITOR_CHANNEL_OUT'  # по этому каналу сообщения полученные по ws от контроллеров
-WS_MONITOR_CHANNEL_IN = 'WS_MONITOR_CHANNEL_IN'  # по этому каналу команды к ws клиенту (добавить контроллер)
+WS_MONITOR_CMD_QUEUE = 'WS_MONITOR_CMD_QUEUE'  # Очередь для команд, которые принимаются монитором ws. Переходим на
+# очередь, чтобы гарантировать порядок команд
 
 
 class PoolTaskType(Enum):
@@ -218,5 +219,5 @@ async def execute_delete_pool_task(pool_id: str, full, wait_for_result=True, wai
 
 def send_cmd_to_ws_monitor(controller_id, ws_monitor_cmd: WsMonitorCmd):
     """Send command to ws monitor"""
-    msg_dict = {'controller_id': str(controller_id), 'command': ws_monitor_cmd.name}
-    REDIS_CLIENT.publish(WS_MONITOR_CHANNEL_IN, json.dumps(msg_dict))
+    cmd_dict = {'controller_id': str(controller_id), 'command': ws_monitor_cmd.name}
+    REDIS_CLIENT.rpush(WS_MONITOR_CMD_QUEUE, json.dumps(cmd_dict))
