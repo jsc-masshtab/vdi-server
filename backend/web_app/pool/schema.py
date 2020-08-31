@@ -466,7 +466,6 @@ class CreateStaticPoolMutation(graphene.Mutation, ControllerFetcher):
                                                 node_id=node_id,
                                                 connection_types=connection_types,
                                                 creator=creator)
-            # vms = [VmType(id=vm_id) for vm_id in vm_ids]
         except Exception as E:  # Возможные исключения: дубликат имени или вм id, сетевой фейл enable_remote_accesses
             # TODO: указать конкретные Exception
             desc = str(E)
@@ -474,14 +473,7 @@ class CreateStaticPoolMutation(graphene.Mutation, ControllerFetcher):
             await system_logger.debug(desc)
             entity = {'entity_type': EntityType.POOL, 'entity_uuid': None}
             raise SimpleError(error_msg, description=desc, entity=entity)
-        # --- Активация удаленного доступа к VM на Veil
-        # TODO: не работает Vm.enable_remote_accesses
-        # try:
-        #     await Vm.enable_remote_accesses(controller.address, vms)
-        # except HttpError:
-        #     msg = _('Fail with remote access enable.')
-        #     entity = {'entity_type': EntityType.POOL, 'entity_uuid': None}
-        #     await system_logger.warning(msg, entity=entity)
+        # Активация удаленного доступа к VM на Veil будет выполнена в момент подключения
         return {
             'pool': PoolType(pool_id=pool.id, verbose_name=verbose_name, vms=vms),
             'ok': True
@@ -526,11 +518,6 @@ class AddVmsToStaticPoolMutation(graphene.Mutation):
                 raise SimpleError(_('VM {} is already in one of pools').format(vm_id), entity=entity)
 
         # remote access
-        # TODO: Вернуть, как будет готово + выше раскомментировать pool_controller
-        # await Vm.enable_remote_accesses(pool_controller.address, vms)
-
-        # await system_logger.debug(_('All VMs on node: {}').format(all_vms_on_node))
-
         # TODO: использовать нормальный набор данных с verbose_name и id
         # Add VMs to db
         for vm in vms:
