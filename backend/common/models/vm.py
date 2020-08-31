@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import uuid
 import asyncio
+from enum import IntEnum
 
 from sqlalchemy.dialects.postgresql import UUID
 from asyncpg.exceptions import UniqueViolationError
@@ -16,6 +17,15 @@ from common.models.auth import Entity as EntityModel, EntityRoleOwner as EntityR
 
 
 _ = lang_init()
+
+
+class VmPowerState(IntEnum):
+    """Veil domain power states."""
+
+    UNDEFINED = 0
+    OFF = 1
+    SUSPENDED = 2
+    ON = 3
 
 
 class Vm(VeilModel):
@@ -253,13 +263,8 @@ class Vm(VeilModel):
 
     @staticmethod
     async def enable_remote_accesses(controller_address, vm_ids):
-        # TODO: доделать
-        # async_tasks = [
-        #     Vm.enable_remote_access(controller_address=controller_address, vm_id=vm_id)
-        #     for vm_id in vm_ids
-        # ]
-        # await tornado.gen.multi(async_tasks)
-        raise NotImplementedError()
+        # Функционал внутри prepare
+        raise DeprecationWarning()
 
     # @staticmethod
     # async def get_template_os_type(controller_address, template_id):
@@ -291,20 +296,78 @@ class Vm(VeilModel):
     # TODO: reset
     # TODO: shutdown
     # TODO: resume
-    # TODO: enable_remote_accesses
-    # TODO: disable_remote_access
 
-    async def prepare(self):
-        """Check that domain remote-access is enabled and domain is powered on."""
-        # TODO: 1. Проверить параметры удаленного доступа, если не разрешен - включить и ждать
-        # TODO: 2. Послать команду включения и ждать
-        # TODO: 3. Ждать активации гостевого агента и появления ip, если на машине RDP?
-        # TODO: 4. задание hostname
-        # TODO: явная проблема такой логики, что это все заблокирует.
+    async def prepare(self, rdp: bool = False):
+        """Check that domain remote-access is enabled and domain is powered on.
 
-        # TODO: включить ВМ
-        # TODO: удаленный доступ
-        # TODO: hostname
-        # TODO: введение в домен
+        Вся процедура должна продолжаться не более 10 минут для 1 ВМ.
+        """
+        # TODO: вся задача должна крутиться в таске, чтобы ее можно было отменить
+        # TODO: там где для списка ВМ вызывакется задача нужно использовать asyncio.gather()
+        # TODO: обработка ошибок ответов VeiL
 
-        raise NotImplementedError()
+        domain_client = await self.vm_client
+        # Получаем состояние параметров ВМ
+        domain_response = await domain_client.info()
+        if not domain_response.success:
+            # Вернуть исключение?
+            raise NotImplementedError()
+        # Получаем сущность ВМ из ответа
+        domain_entity = domain_response.response[0]
+        # Проверяем настройки удаленного доступа
+        if not domain_entity.remote_access:
+            # Удаленный доступ выключен, нужно включить и ждать
+            action_response = await domain_client.enable_remote_access()
+            if not action_response.success:
+                # Вернуть исключение?
+                raise NotImplementedError()
+            if action_response.status_code == 200:
+                # Задача не встала в очередь, а выполнилась немедленно. Такого не должно быть.
+                raise NotImplementedError('Task has`t been created.')
+            if action_response.status_code == 202:
+                # Была установлена задача. Необходимо дождаться ее выполнения.
+                action_task = action_response.task
+                task_completed = False
+                while not task_completed:
+                    await asyncio.sleep(5)
+                    task_completed = await action_task.completed
+                    await system_logger.debug(
+                        'Domain {} remote access enabling task is not completed. Waiting.'.format(self.verbose_name))
+                # Обновляем параметры ВМ
+                await domain_entity.info()
+        # Проверяем состояние виртуальной машины
+        if not domain_entity.power_state == VmPowerState.ON:
+            # ВМ выключена. Необходимо включить и подождать
+            action_response = await domain_entity.start()
+            action_task = action_response.task
+            task_completed = False
+            while not task_completed:
+                await asyncio.sleep(5)
+                task_completed = await action_task.completed
+                await system_logger.debug(
+                    'Domain {} start task is not completed. Waiting.'.format(self.verbose_name))
+        # Ждем активацию гостевого агента и появления ip (если это rdp)
+        while not domain_entity.guest_agent.qemu_state:
+            await asyncio.sleep(5)
+            await domain_entity.info()
+            await system_logger.debug(
+                'Domain {} guest agent not available. Waiting.'.format(self.verbose_name))
+
+        # Для подключения по rdp ВМ нужен как минимум 1 ip-адрес
+        while rdp and not domain_entity.guest_agent.first_ipv4_ip:
+            await asyncio.sleep(10)
+            await domain_entity.info()
+
+        # Задание hostname
+        action_response = await domain_entity.set_hostname()
+        action_task = action_response.task
+        task_completed = False
+        while not task_completed:
+            await asyncio.sleep(5)
+            task_completed = await action_task.completed
+            await system_logger.debug(
+                'Domain {} hostname setting task is not completed. Waiting.'.format(self.verbose_name))
+
+        # TODO: 5. Заведение в домен - только для windows?
+        # raise NotImplementedError()
+        return
