@@ -101,8 +101,8 @@ class Vm(VeilModel):
 
         return vm
 
-    async def soft_delete(self, creator):
-        if self.created_by_vdi:
+    async def soft_delete(self, creator, remove_on_controller=True):
+        if remove_on_controller and self.created_by_vdi:
             domain_client = await self.vm_client
             await domain_client.remove(full=True)
 
@@ -231,21 +231,25 @@ class Vm(VeilModel):
         return copy_result
 
     @staticmethod
-    async def remove_vms(vm_ids, creator):
+    async def remove_vms(vm_ids, creator, remove_vms_on_controller=False):
         """Remove given vms"""
+
+        if not vm_ids:
+            return False
+
+        # Удаляем на контроллере
+        if remove_vms_on_controller:
+            vm_obj = await Vm.get(vm_ids[0])
+            http_veil_client = await vm_obj.vm_client
+            await http_veil_client.multi_remove(vm_ids)
+
+        # Решили оставить удаление по одной вм из бд. (ради логирования?)
         status = None
         for vm_id in vm_ids:
             vm = await Vm.get(vm_id)
-            status = await vm.soft_delete(creator=creator)
+            status = await vm.soft_delete(creator=creator, remove_on_controller=False)
             await system_logger.info(_('Vm {} removed from pool').format(vm.verbose_name), entity=vm.entity)
         return status
-
-    # @staticmethod
-    # async def enable_remote_access(controller_address, vm_id):
-    #     vm_http_client = await VmHttpClient.create(controller_address, vm_id)
-    #     remote_access_enabled = await vm_http_client.remote_access_enabled()
-    #     if not remote_access_enabled:
-    #         await vm_http_client.enable_remote_access()
 
     @staticmethod
     async def enable_remote_accesses(controller_address, vm_ids):

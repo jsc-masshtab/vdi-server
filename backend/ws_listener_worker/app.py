@@ -5,7 +5,7 @@ from common.veil.veil_gino import EntityType
 
 from common.database import start_gino, stop_gino
 from ws_listener_worker.resources_monitor_manager import ResourcesMonitorManager
-from common.veil.veil_redis import REDIS_POOL, WS_MONITOR_CHANNEL_IN, REDIS_CLIENT, WsMonitorCmd, a_redis_get_message
+from common.veil.veil_redis import REDIS_POOL, WS_MONITOR_CMD_QUEUE, WsMonitorCmd, a_redis_lpop
 
 from common.languages import lang_init
 from common.settings import DEBUG
@@ -15,26 +15,18 @@ from common.utils import init_exit_handler
 _ = lang_init()
 
 
-# cli fast test: PUBLISH WS_MONITOR_CHANNEL_IN '{"command": "ADD_CONTROLLER", "controller_address": "192.168.9.145"}'
 async def listen_for_messages(resources_monitor_manager):
     """Listen for commands to add/remove controller"""
     await resources_monitor_manager.start()
-
-    redis_subscriber = REDIS_CLIENT.pubsub()
-    redis_subscriber.subscribe(WS_MONITOR_CHANNEL_IN)
 
     await system_logger.debug('Ws listener worker: start loop now')
     while True:
         try:
             # wait for message
-            redis_message = await a_redis_get_message(redis_subscriber)
-
-            if redis_message['type'] != 'message':
-                continue
-            await system_logger.debug('redis_message' + str(redis_message))
+            redis_data = await a_redis_lpop(WS_MONITOR_CMD_QUEUE)
 
             # get data from message
-            data_dict = json.loads(redis_message['data'].decode())
+            data_dict = json.loads(redis_data.decode())
             command = data_dict['command']
             controller_id = data_dict['controller_id']
             await system_logger.debug(command + ' ' + controller_id)

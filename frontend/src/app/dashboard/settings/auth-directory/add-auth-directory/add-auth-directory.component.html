@@ -38,7 +38,7 @@
     
     <label class="field">
       <p class="field-name">Пароль</p>
-      <input type="text" placeholder="..." formControlName="service_password">
+      <input type="password" placeholder="..." formControlName="service_password">
       <ng-container *ngIf="form.hasError('required', 'service_password') && checkValid">
         <ng-container *ngTemplateOutlet="errorTemp"></ng-container>
       </ng-container>

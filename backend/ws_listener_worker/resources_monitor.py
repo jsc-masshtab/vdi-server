@@ -141,7 +141,7 @@ class ResourcesMonitor():
         controller = await Controller.get(self._controller_id)
 
         # check if controller active
-        if not controller.active:
+        if not controller or not controller.active:
             return False
 
         # get token from db
@@ -181,7 +181,7 @@ class ResourcesMonitor():
 
     async def _close_connection(self):
         if self._ws_connection:
-            await system_logger.debug(_('{} Closing ws connection {}').format(__class__.__name__, self._controller_ip)) # noqa
+            await system_logger.debug(_('{} Closing ws connection {}').format(__class__.__name__, self._controller_id)) # noqa
             try:
                 self._ws_connection.close()
             except Exception as E:

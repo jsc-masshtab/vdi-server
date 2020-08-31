@@ -33,7 +33,7 @@ class AbstractTask:
         self.task_model = None
         self._coroutine = None
         self._ref_to_task_list = None  # Сссылка на список обьектов задач. Сам список живет в классе PoolTaskManager
-        # Введено из-за нежелания создавать глобальную переменную task_list.
+        # Введено из-за нежелания создавать глобальную переменную task_list. todo: made it weakref!
         self._task_priority = 1
 
     async def init(self, task_id, task_list):
@@ -98,6 +98,7 @@ class AbstractTask:
             await system_logger.warning(
                 'Exception during task execution. id: {} exception: {} '.format(self.task_model.id, str(ex)),
                 entity=entity)
+            print('BT {bt}'.format(bt=traceback.format_exc()))
 
             await self.do_on_fail()
 
@@ -153,8 +154,8 @@ class InitPoolTask(AbstractTask):
                 except Exception as E:
                     await system_logger.error('Failed to create pool. {exception} {name}'.format(
                         exception=str(E), name=E.__class__.__name__))
-                    print('BT {bt}'.format(bt=traceback.format_exc()))
                     await automated_pool.deactivate()
+                    raise E
                 else:
                     await automated_pool.activate()
 

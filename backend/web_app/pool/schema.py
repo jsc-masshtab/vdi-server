@@ -7,7 +7,7 @@ from asyncpg.exceptions import UniqueViolationError
 from common.database import db
 from common.veil.veil_gino import RoleTypeGraphene, Role, StatusGraphene, Status, EntityType
 from common.veil.veil_validators import MutationValidation
-from common.veil.veil_errors import SimpleError, HttpError, ValidationError
+from common.veil.veil_errors import SimpleError, ValidationError
 from common.veil.veil_decorators import administrator_required
 from common.veil.veil_graphene import VeilShortEntityType, VeilResourceType
 from common.models.auth import User
@@ -235,13 +235,17 @@ class PoolType(graphene.ObjectType):
     async def resolve_assigned_roles(self, info):
         pool = await Pool.get(self.pool_id)
         roles = await pool.roles
+        for index, role in enumerate(roles):
+            if not all(role):
+                del roles[index]
+
         return [role_type.role for role_type in roles]
 
     async def resolve_possible_roles(self, info):
-        pool = await Pool.get(self.pool_id)
-        assigned_roles = await pool.roles
-        all_roles = [role_type for role_type in Role]
-        return [role for role in all_roles if role.value not in assigned_roles]
+        assigned_roles = await self.resolve_assigned_roles(info=info)
+        all_roles = [role_type.value for role_type in Role]
+        possible_roles = [role for role in all_roles if role not in assigned_roles]
+        return possible_roles
 
     async def resolve_assigned_groups(self, info, limit, offset):
         pool = await Pool.get(self.pool_id)
@@ -471,12 +475,13 @@ class CreateStaticPoolMutation(graphene.Mutation, ControllerFetcher):
             entity = {'entity_type': EntityType.POOL, 'entity_uuid': None}
             raise SimpleError(error_msg, description=desc, entity=entity)
         # --- Активация удаленного доступа к VM на Veil
-        try:
-            await Vm.enable_remote_accesses(controller.address, vms)
-        except HttpError:
-            msg = _('Fail with remote access enable.')
-            entity = {'entity_type': EntityType.POOL, 'entity_uuid': None}
-            await system_logger.warning(msg, entity=entity)
+        # TODO: не работает Vm.enable_remote_accesses
+        # try:
+        #     await Vm.enable_remote_accesses(controller.address, vms)
+        # except HttpError:
+        #     msg = _('Fail with remote access enable.')
+        #     entity = {'entity_type': EntityType.POOL, 'entity_uuid': None}
+        #     await system_logger.warning(msg, entity=entity)
         return {
             'pool': PoolType(pool_id=pool.id, verbose_name=verbose_name, vms=vms),
             'ok': True
@@ -494,7 +499,7 @@ class AddVmsToStaticPoolMutation(graphene.Mutation):
     @administrator_required
     async def mutate(self, _info, pool_id, vms, creator):
         pool = await Pool.get(pool_id)
-        pool_controller = await pool.controller
+        # pool_controller = await Controller.get(pool.controller)
         # pool_data = await Pool.select('controller', 'node_id').where(Pool.id == pool_id).gino.first()
         # (controller_id, node_id) = pool_data
         # controller_address = await Controller.select('address').where(Controller.id == controller_id).gino.scalar()
@@ -521,7 +526,8 @@ class AddVmsToStaticPoolMutation(graphene.Mutation):
                 raise SimpleError(_('VM {} is already in one of pools').format(vm_id), entity=entity)
 
         # remote access
-        await Vm.enable_remote_accesses(pool_controller.address, vms)
+        # TODO: Вернуть, как будет готово + выше раскомментировать pool_controller
+        # await Vm.enable_remote_accesses(pool_controller.address, vms)
 
         # await system_logger.debug(_('All VMs on node: {}').format(all_vms_on_node))
 
@@ -544,7 +550,7 @@ class AddVmsToStaticPoolMutation(graphene.Mutation):
 class RemoveVmsFromStaticPoolMutation(graphene.Mutation):
     class Arguments:
         pool_id = graphene.ID(required=True)
-        vm_ids = graphene.List(graphene.ID, required=True)
+        vm_ids = graphene.List(graphene.UUID, required=True)
 
     ok = graphene.Boolean()
 
@@ -560,7 +566,7 @@ class RemoveVmsFromStaticPoolMutation(graphene.Mutation):
 
         # check if given vm_ids in vms_ids_in_pool
         for vm_id in vm_ids:
-            if vm_id not in vms_ids_in_pool:
+            if str(vm_id) not in vms_ids_in_pool:
                 entity = {'entity_type': EntityType.POOL, 'entity_uuid': None}
                 raise SimpleError(_('VM doesn\'t belong to specified pool').format(vm_id), entity=entity)
 
@@ -732,6 +738,37 @@ class UpdateAutomatedPoolMutation(graphene.Mutation, PoolValidator):
             else:
                 return UpdateAutomatedPoolMutation(ok=True)
         return UpdateAutomatedPoolMutation(ok=False)
+
+
+class RemoveVmsFromAutomatedPoolMutation(graphene.Mutation):
+    class Arguments:
+        pool_id = graphene.ID(required=True)
+        vm_ids = graphene.List(graphene.UUID, required=True)
+
+    ok = graphene.Boolean()
+
+    @administrator_required
+    async def mutate(self, _info, pool_id, vm_ids, creator):
+        if not vm_ids:
+            entity = {'entity_type': EntityType.POOL, 'entity_uuid': None}
+            raise SimpleError(_("List of VM should not be empty"), entity=entity)
+
+        # vms check
+        # get list of vms ids which are in pool_id
+        vms_ids_in_pool = await Vm.get_vms_ids_in_pool(pool_id)
+
+        # check if given vm_ids in vms_ids_in_pool
+        for vm_id in vm_ids:
+            if str(vm_id) not in vms_ids_in_pool:
+                entity = {'entity_type': EntityType.POOL, 'entity_uuid': None}
+                raise SimpleError(_('VM doesn\'t belong to specified pool').format(vm_id), entity=entity)
+
+        # remove vms from db
+        await Vm.remove_vms(vm_ids, creator)
+
+        return {
+            'ok': True
+        }
 
 
 # --- --- --- --- ---
@@ -925,6 +962,7 @@ class PoolMutations(graphene.ObjectType):
     addStaticPool = CreateStaticPoolMutation.Field()
     addVmsToStaticPool = AddVmsToStaticPoolMutation.Field()
     removeVmsFromStaticPool = RemoveVmsFromStaticPoolMutation.Field()
+    removeVmsFromDynamicPool = RemoveVmsFromAutomatedPoolMutation.Field()
     removePool = DeletePoolMutation.Field()
     updateDynamicPool = UpdateAutomatedPoolMutation.Field()
     updateStaticPool = UpdateStaticPoolMutation.Field()

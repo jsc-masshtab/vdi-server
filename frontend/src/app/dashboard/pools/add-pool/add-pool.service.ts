@@ -69,7 +69,7 @@ export class AddPoolService {
                 controllers($id_: UUID, $cluster_id: UUID, $node_id: UUID, $data_pool_id: UUID) {
                     controller(id_: $id_) {
                         id
-                        vms(cluster_id: $cluster_id, node_id: $node_id, data_pool_id: $data_pool_id) {
+                        vms(cluster_id: $cluster_id, node_id: $node_id, data_pool_id: $data_pool_id, exclude_existed: true) {
                             id
                             verbose_name
                         }

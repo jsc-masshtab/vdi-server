@@ -6,200 +6,176 @@ from web_app.tests.utils import execute_scheme
 from web_app.tests.fixtures import fixt_db, fixt_controller, fixt_user_admin, fixt_create_automated_pool, fixt_auth_context  # noqa
 
 from web_app.controller.resource_schema import resources_schema
-from common.models.pool import Pool
-from common.models.controller import Controller
 
 
 pytestmark = [pytest.mark.asyncio, pytest.mark.resources]
 
 
-async def test_request_clusters(fixt_db, fixt_controller, fixt_user_admin, fixt_create_automated_pool, fixt_auth_context):  # noqa
-    # Получаем pool_id из динамической фикстуры пула
-    pool_id = await Pool.select('id').gino.scalar()
-    pool = await Pool.get(pool_id)
-
-    controller_id = await Controller.select('id').gino.scalar()
-    controller = await Controller.get(controller_id)
+async def test_request_clusters(fixt_db, snapshot, fixt_controller, fixt_auth_context):  # noqa
 
     """Request clusters data"""
-    list = ["verbose_name", "cpu_count", "memory_count", "nodes_count", "status", "controller"]
-    for ordering in list:
-        qu = """
-            {
-                clusters (ordering: "%s"){
+    examples = ["verbose_name", "-cpu_count"]
+    for ordering in examples:
+        qu = """{
+                  clusters(ordering: "%s"){
                     verbose_name
                     id
                     nodes_count
-                    datapools{
-                        verbose_name
-                    }
-                    nodes{
-                        verbose_name
-                    }
-                }
-            }
-            """ % ordering
-
-        executed = await execute_scheme(resources_schema, qu, context=fixt_auth_context)  # noqa
-
-    qu = """{
-                    cluster(id: "%s", controller_address: "%s"){
-                      verbose_name
+                    controller{
+                        id
                         }
                     }
-                """ % (pool.cluster_id, controller.address)
+                }""" % ordering
 
-
-    executed = await execute_scheme(resources_schema, qu, context=fixt_auth_context)  # noqa
-
-
-@pytest.mark.asyncio
-async def test_request_nodes(fixt_db, fixt_auth_context):  # noqa
-    """Request nodes data"""
-    list = ["verbose_name", "cpu_count", "memory_count", "datacenter_name", "status", "controller", "management_ip"]
-    for ordering in list:
-        qu = """
-        {
-            nodes (ordering: "%s"){
-            id
-            cpu_count
-            verbose_name
-            cluster{
-                verbose_name
-            }
-            controller {
-                address
-            }
-        }
-        }
-        """ % ordering
-        executed = await execute_scheme(resources_schema, qu, context=fixt_auth_context)
-
-        # Чекним запрос определенного сервера (первого в списке), если серверы есть
-        if executed['nodes']:
-            # print('__executed', executed)
-            node = executed['nodes'][0]
-
-            qu = """
-            {
-            node(id: "%s", controller_address: "%s"){
-            verbose_name
-            status
-            datacenter {
-                id
-            }
-            cpu_count
-            memory_count
-            management_ip
-            }
-            }
-            """ % (node['id'], node['controller']['address'])
-
-
-async def test_request_datapools(fixt_db, fixt_controller, fixt_user_admin, fixt_create_automated_pool, fixt_auth_context):  # noqa
-    # Получаем pool_id из динамической фикстуры пула
-    pool_id = await Pool.select('id').gino.scalar()
-    pool = await Pool.get(pool_id)
-
-    controller_id = await Controller.select('id').gino.scalar()
-    controller = await Controller.get(controller_id)
-
-    """Request datapools data"""
-    list = ["verbose_name", "type", "vdisk_count", "iso_count", "file_count", "used_space", "free_space", "status"]
-    for ordering in list:
-        qu = """
-            {
-                datapools (ordering: "%s"){
-                    used_space,
-                    free_space,
-                    size,
-                    status,
-                    type,
-                    vdisk_count,
-                    file_count,
-                    iso_count,
-                    verbose_name,
-                }
-            }
-            """ % ordering
         executed = await execute_scheme(resources_schema, qu, context=fixt_auth_context)  # noqa
+        snapshot.assert_match(executed)
+
+    cluster = executed['clusters'][0]
 
     qu = """{
-                    datapool(id: "%s", controller_address: "%s"){
-                      verbose_name
-                      size
-                          status
-                          type
-                          free_space
-                        }
-                    }
-                """ % (pool.datapool_id, controller.address)
-
-    executed = await execute_scheme(resources_schema, qu, context=fixt_auth_context)  # noqa
-
-async def test_request_nodes(fixt_db, fixt_controller, fixt_user_admin, fixt_create_automated_pool, fixt_auth_context):  # noqa
-    # Получаем pool_id из динамической фикстуры пула
-    pool_id = await Pool.select('id').gino.scalar()
-    pool = await Pool.get(pool_id)
-
-    controller_id = await Controller.select('id').gino.scalar()
-    controller = await Controller.get(controller_id)
-
-    """Request nodes data"""
-    list = ["verbose_name", "cpu_count", "memory_count", "datacenter_name", "status", "controller", "management_ip"]
-    for ordering in list:
-        qu = """
-            {
-                nodes (ordering: "%s"){
-                id
-                cpu_count
-                verbose_name
-                cluster{
+                cluster(cluster_id: "%s", controller_id: "%s"){
                     verbose_name
                 }
-                controller {
-                    address
-                }
-            }
-            }
-            """ % ordering
+            }""" % (cluster['id'], cluster['controller']['id'])
+
+    executed = await execute_scheme(resources_schema, qu, context=fixt_auth_context)  # noqa
+    snapshot.assert_match(executed)
+
+
+async def test_request_nodes(fixt_db, fixt_controller, snapshot, fixt_auth_context):  # noqa
+
+    """Request nodes data"""
+    examples = ["verbose_name", "-cpu_count"]
+    for ordering in examples:
+        qu = """{
+                  nodes(ordering: "%s"){
+                    id
+                    cpu_count
+                    verbose_name
+                    controller{
+                        id
+                        }
+                    }
+                }""" % ordering
+
         executed = await execute_scheme(resources_schema, qu, context=fixt_auth_context)
+        snapshot.assert_match(executed)
 
-        # Чекнем запрос определенного сервера (первого в списке), если серверы есть
-        if executed['nodes']:
-            print('__executed', executed)
-            node = executed['nodes'][0]
+    node = executed['nodes'][0]
 
-            qu = """
-                {
-                node(id: "%s", controller_address: "%s"){
+    qu = """{
+              node(node_id: "%s", controller_id: "%s"){
                 verbose_name
                 status
-                datacenter {
-                    id
-                }
                 cpu_count
                 memory_count
                 management_ip
-                }
-                }
-                """ % (node['id'], node['controller']['address'])
-
-            executed = await execute_scheme(resources_schema, qu, context=fixt_auth_context)
-            assert node['verbose_name'] == executed['node']['verbose_name']
-
-    qu = """{
-            node(id: "%s", controller_address: "%s"){
-                  verbose_name
-                  status
-                  datacenter {
-                    id
-                  }
-                      cpu_count
-                      memory_count
-                      management_ip
-                }
-            }
-        """ % (pool.node_id, controller.address)
+              }
+            }""" % (node['id'], node['controller']['id'])
 
     executed = await execute_scheme(resources_schema, qu, context=fixt_auth_context)  # noqa
+    snapshot.assert_match(executed)
+
+
+async def test_request_datapools(fixt_db, fixt_controller, snapshot, fixt_auth_context):  # noqa
+
+    """Request datapools data"""
+    examples = ["verbose_name", "-type"]
+    for ordering in examples:
+        qu = """{
+                  datapools(ordering: "%s"){
+                    id
+                    verbose_name
+                    controller{
+                        id
+                        }
+                  }
+                }""" % ordering
+
+        executed = await execute_scheme(resources_schema, qu, context=fixt_auth_context)  # noqa
+        snapshot.assert_match(executed)
+
+    datapool = executed['datapools'][0]
+
+    qu = """{
+              datapool(datapool_id: "%s", controller_id: "%s"){
+                verbose_name
+                size
+                status
+                type
+                free_space
+              }
+            }""" % (datapool['id'], datapool['controller']['id'])
+
+    executed = await execute_scheme(resources_schema, qu, context=fixt_auth_context)  # noqa
+    snapshot.assert_match(executed)
+
+
+async def test_request_vms(fixt_db, fixt_controller, snapshot, fixt_auth_context):  # noqa
+
+    """Request vms data"""
+    examples = ["verbose_name", "-status"]
+    for ordering in examples:
+        qu = """{
+                  vms(ordering: "%s", limit: 5, offset: 0){
+                    verbose_name
+                    id
+                    status
+                    memory_count
+                    cpu_count
+                    controller{
+                        id
+                        }
+                  }
+                }""" % ordering
+
+        executed = await execute_scheme(resources_schema, qu, context=fixt_auth_context)  # noqa
+        snapshot.assert_match(executed)
+
+    vm = executed['vms'][0]
+
+    qu = """{
+              vm(vm_id: "%s", controller_id: "%s"){
+                verbose_name
+                id
+                status
+                memory_count
+                cpu_count
+              }
+            }""" % (vm['id'], vm['controller']['id'])
+
+    executed = await execute_scheme(resources_schema, qu, context=fixt_auth_context)  # noqa
+    snapshot.assert_match(executed)
+
+
+async def test_request_templates(fixt_db, fixt_controller, snapshot, fixt_auth_context):  # noqa
+
+    """Request templates data"""
+    examples = ["verbose_name", "-status"]
+    for ordering in examples:
+        qu = """{
+                  templates(ordering: "%s", limit: 5, offset: 0){
+                    id
+                    verbose_name
+                    controller {
+                      id
+                      verbose_name
+                    }
+                    status
+                  }
+                }""" % ordering
+
+        executed = await execute_scheme(resources_schema, qu, context=fixt_auth_context)  # noqa
+        snapshot.assert_match(executed)
+
+    template = executed['templates'][0]
+
+    qu = """{
+              template(template_id: "%s", controller_id: "%s"){
+                verbose_name
+                status
+              }
+            }""" % (template['id'], template['controller']['id'])
+
+    executed = await execute_scheme(resources_schema, qu, context=fixt_auth_context)  # noqa
+    snapshot.assert_match(executed)

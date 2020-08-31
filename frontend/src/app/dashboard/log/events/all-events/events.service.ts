@@ -2,10 +2,16 @@
 import {Injectable} from '@angular/core';
 import { Apollo, QueryRef } from 'apollo-angular';
 import gql from 'graphql-tag';
+import { IParams } from 'types';
 
 
 @Injectable()
 export class EventsService {
+
+    public paramsForGetEvents: IParams = { // для несбрасывания параметров сортировки при всех обновлениях
+        spin: true,
+        nameSort: undefined
+    };
 
     constructor(private service: Apollo) { }
 
@@ -34,7 +40,8 @@ export class EventsService {
                                         $event_type: Int,
                                         $entity_type: String,
                                         $user: String,
-                                        $read_by: UUID) {
+                                        $read_by: UUID
+                                        $ordering:String) {
                                 count(  start_date: $start_date,
                                         end_date: $end_date,
                                         event_type: $event_type,
@@ -49,7 +56,8 @@ export class EventsService {
                                         event_type: $event_type,
                                         entity_type: $entity_type,
                                         user: $user,
-                                        read_by: $read_by) {
+                                        read_by: $read_by,
+                                        ordering: $ordering) {
                                     event_type
                                     description
                                     message
@@ -60,6 +68,7 @@ export class EventsService {
                     `,
             variables: {
                 method: 'GET',
+                ordering: this.paramsForGetEvents.nameSort,
                 ...props
             }
         });

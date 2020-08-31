@@ -90,15 +90,11 @@ snapshots['TestUserSchema.test_user_role 1'] = {
         'ok': True,
         'user': {
             'assigned_roles': [
-                'VM_OPERATOR'
+                'OPERATOR'
             ],
             'possible_roles': [
-                'READ_ONLY',
-                'ADMINISTRATOR',
                 'SECURITY_ADMINISTRATOR',
-                'VM_ADMINISTRATOR',
-                'NETWORK_ADMINISTRATOR',
-                'STORAGE_ADMINISTRATOR'
+                'ADMINISTRATOR'
             ],
             'username': 'test_user'
         }
@@ -112,13 +108,9 @@ snapshots['TestUserSchema.test_user_role 2'] = {
             'assigned_roles': [
             ],
             'possible_roles': [
-                'READ_ONLY',
-                'ADMINISTRATOR',
                 'SECURITY_ADMINISTRATOR',
-                'VM_ADMINISTRATOR',
-                'NETWORK_ADMINISTRATOR',
-                'STORAGE_ADMINISTRATOR',
-                'VM_OPERATOR'
+                'OPERATOR',
+                'ADMINISTRATOR'
             ],
             'username': 'test_user'
         }

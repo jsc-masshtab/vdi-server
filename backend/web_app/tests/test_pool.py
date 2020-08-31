@@ -39,7 +39,7 @@ async def test_create_automated_pool(fixt_launch_workers, fixt_db, fixt_create_a
 
 
 @pytest.mark.asyncio
-async def test_update_automated_pool(fixt_launch_workers, fixt_db, fixt_controller, fixt_create_automated_pool,  # noqa
+async def test_update_automated_pool(fixt_launch_workers, fixt_db, fixt_create_automated_pool,  # noqa
                                      fixt_auth_context):  # noqa
     """Create automated pool, update this pool, remove this pool"""
 
@@ -65,7 +65,7 @@ async def test_update_automated_pool(fixt_launch_workers, fixt_db, fixt_controll
 
 
 @pytest.mark.asyncio
-@pytest.mark.usefixtures('fixt_launch_workers', 'fixt_db', 'fixt_controller', 'fixt_user_admin', # noqa
+@pytest.mark.usefixtures('fixt_launch_workers', 'fixt_db', 'fixt_user_admin', # noqa
                          'fixt_create_automated_pool', 'fixt_user_another_admin')  # noqa
 class PoolTestCase(VdiHttpTestCase):
 
@@ -181,15 +181,18 @@ async def test_remove_and_add_vm_in_static_pool(fixt_launch_workers, fixt_db, fi
         pool_type
           vms{
             id
+            verbose_name
         }
       }
     }""" % pool_id
     executed = await execute_scheme(pool_schema, qu, context=fixt_auth_context)
+
     vms_in_pool_list = executed['pool']['vms']
     assert len(vms_in_pool_list) == 1
 
     # remove first vm from pool
     vm_id = vms_in_pool_list[0]['id']
+    vm_verbose_name = vms_in_pool_list[0]['verbose_name']
     qu = '''
       mutation {
         removeVmsFromStaticPool(pool_id: "%s", vm_ids: ["%s"]){
@@ -197,15 +200,16 @@ async def test_remove_and_add_vm_in_static_pool(fixt_launch_workers, fixt_db, fi
         }
       }''' % (pool_id, vm_id)
     executed = await execute_scheme(pool_schema, qu, context=fixt_auth_context)
+
     assert executed['removeVmsFromStaticPool']['ok']
 
     # add removed machine back to pool
     qu = '''
       mutation {
-        addVmsToStaticPool(pool_id: "%s", vm_ids: ["%s"]){
-          ok
-        }
-      }''' % (pool_id, vm_id)
+                addVmsToStaticPool(pool_id: "%s", vms: [{id: "%s", verbose_name: "%s"}]){
+                    ok
+                  }
+                }''' % (pool_id, vm_id, vm_verbose_name)
     executed = await execute_scheme(pool_schema, qu, context=fixt_auth_context)
     assert executed['addVmsToStaticPool']['ok']
 

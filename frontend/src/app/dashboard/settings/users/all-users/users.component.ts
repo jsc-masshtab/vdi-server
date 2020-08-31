@@ -33,17 +33,20 @@ export class UsersComponent extends DetailsMove implements OnInit, OnDestroy {
     {
       title: 'Имя',
       property: 'first_name',
-      type: 'string'
+      type: 'string',
+      sort: true
     },
     {
       title: 'Фамилия',
       property: 'last_name',
-      type: 'string'
+      type: 'string',
+      sort: true
     },
     {
       title: 'E-mail',
       property: 'email',
-      type: 'string'
+      type: 'string',
+      sort: true
     },
     {
       title: 'Суперпользователь',
@@ -51,7 +54,8 @@ export class UsersComponent extends DetailsMove implements OnInit, OnDestroy {
       type: {
         typeDepend: 'boolean',
         propertyDepend: ['Да', 'Нет']
-      }
+      },
+      sort: true
     },
     {
       title: 'Состояние',
@@ -59,7 +63,8 @@ export class UsersComponent extends DetailsMove implements OnInit, OnDestroy {
       type: {
         typeDepend: 'boolean',
         propertyDepend: ['Активен', 'Не активен']
-      }
+      },
+      sort: true
     }
   ];
 
