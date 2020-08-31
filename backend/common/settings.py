@@ -62,6 +62,7 @@ VEIL_WS_MAX_TIME_TO_WAIT = 60
 VEIL_CACHE_TTL = 1
 VEIL_CACHE_TYPE = 'memcached'
 VEIL_CACHE_SERVER = ('localhost', 11211)
+VEIL_VM_PREPARE_TIMEOUT = 600
 
 # Locale settings
 # -----------------------------
