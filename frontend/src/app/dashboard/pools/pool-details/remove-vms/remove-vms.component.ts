@@ -32,7 +32,10 @@ export class RemoveVMStaticPoolComponent implements OnDestroy {
 
   public send() {
     this.waitService.setWait(true);
-    this.poolService.removeVMStaticPool(this.data.idPool, this.idVms).pipe(takeUntil(this.destroy)).subscribe((res) => {
+
+    const method = this.data.typePool == 'static' ? 'removeVMStaticPool' : 'removeVmsDynamicPool'
+
+    this.poolService[method](this.data.idPool, this.idVms).pipe(takeUntil(this.destroy)).subscribe((res) => {
       if (res) {
         this.poolService.getPool(this.data.idPool, this.data.typePool).refetch()
         this.waitService.setWait(false);

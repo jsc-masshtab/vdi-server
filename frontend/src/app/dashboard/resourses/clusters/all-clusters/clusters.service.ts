@@ -33,10 +33,10 @@ export class ClustersService  {
         }`
 
         if (filter) {
-            query = `query controllers($controller_id:UUID) {
+            query = `query controllers($controller_id:UUID, $ordering:String) {
                 controller(id_:$controller_id) {
                     id
-                    clusters {
+                    clusters(ordering: $ordering) {
                         id
                         verbose_name
                         status
