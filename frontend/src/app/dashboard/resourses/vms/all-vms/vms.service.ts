@@ -28,10 +28,10 @@ export class VmsService {
         }`
 
         if (filter) {
-            query = `query controllers($controller_id:UUID, $cluster_id: UUID, $node_id: UUID, $data_pool_id: UUID) {
+            query = `query controllers($controller_id:UUID, $cluster_id: UUID, $node_id: UUID, $data_pool_id: UUID, $ordering:String) {
                 controller(id_:$controller_id) {
                     id
-                    vms(cluster_id: $cluster_id, node_id: $node_id, data_pool_id: $data_pool_id, exclude_existed: false) {
+                    vms(cluster_id: $cluster_id, node_id: $node_id, data_pool_id: $data_pool_id, exclude_existed: false, ordering: $ordering) {
                         id
                         verbose_name
                         status

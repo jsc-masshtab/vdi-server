@@ -14,8 +14,8 @@
         <button (click)="getPool()" class="btn-refresh" title="Обновить"><fa-icon [icon]="['fas','sync-alt']"></fa-icon></button>
         <button (click)="removePool()" *ngIf="menuActive === 'info' && pool" title="Удалить пул" class="btn-control"><fa-icon [icon]="['fas','trash-alt']" size="xs"></fa-icon><span class="name">Удалить пул</span></button>
 
-        <ng-container *ngIf="menuActive === 'vms' && typePool === 'static' && pool">
-            <button (click)="addVM()" title="Добавить ВМ в пул" class="btn-control"><fa-icon [icon]="['fas','plus-circle']" size="xs"></fa-icon><span class="name">Добавить ВМ</span></button>
+        <ng-container *ngIf="menuActive === 'vms' && pool">
+            <button *ngIf="typePool === 'static'" (click)="addVM()" title="Добавить ВМ в пул" class="btn-control"><fa-icon [icon]="['fas','plus-circle']" size="xs"></fa-icon><span class="name">Добавить ВМ</span></button>
             <button (click)="removeVM()" title="Удалить ВМ из пула" class="btn-control"><fa-icon [icon]="['fas','trash-alt']" size="xs"></fa-icon><span class="name">Удалить ВМ</span></button>
         </ng-container>
 
