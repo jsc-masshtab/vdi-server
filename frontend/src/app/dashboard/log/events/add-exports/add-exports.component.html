@@ -11,7 +11,7 @@
 
   <div class="form-fields" [formGroup]="form">
     <label class="field">
-      <p class="field-name">Имя пользователя</p>
+      <p class="field-name">Начальная дата</p>
       
       <input [matDatepicker]="start_picker" formControlName="start">
       <mat-datepicker-toggle [for]="start_picker"></mat-datepicker-toggle>
@@ -21,7 +21,7 @@
     </label>
 
     <label class="field">
-      <p class="field-name">Пароль</p>
+      <p class="field-name">Конечная дата</p>
       
       <input [matDatepicker]="end_picker" formControlName="finish">
       <mat-datepicker-toggle [for]="end_picker"></mat-datepicker-toggle>
