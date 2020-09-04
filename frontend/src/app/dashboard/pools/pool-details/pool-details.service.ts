@@ -199,6 +199,7 @@ export class PoolDetailsService {
         return  this.service.watchQuery({
             query: gql` query controllers($controller_id: UUID, $cluster_id: UUID, $node_id: UUID) {
                 controller(id_: $controller_id) {
+                    id
                     vms(cluster_id: $cluster_id,node_id: $node_id) {
                             id
                             verbose_name
