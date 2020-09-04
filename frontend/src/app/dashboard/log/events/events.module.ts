@@ -12,11 +12,13 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 
 import { library } from '@fortawesome/fontawesome-svg-core';
 import { faTimesCircle } from '@fortawesome/free-solid-svg-icons';
+import { AddExportComponent } from './add-exports/add-exports.component';
 
 @NgModule({
   declarations: [
     EventsComponent,
-    InfoEventComponent
+    InfoEventComponent,
+    AddExportComponent
   ],
   imports: [
     SharedModule,
@@ -33,7 +35,8 @@ import { faTimesCircle } from '@fortawesome/free-solid-svg-icons';
   ],
   providers: [EventsService],
   entryComponents: [
-    InfoEventComponent
+    InfoEventComponent,
+    AddExportComponent
   ],
   exports: [
     EventsComponent

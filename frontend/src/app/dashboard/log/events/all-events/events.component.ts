@@ -6,6 +6,7 @@ import { MatDialog } from '@angular/material';
 import { InfoEventComponent } from '../info-event/info-event.component';
 import { FormControl } from '@angular/forms';
 import { IParams } from 'types';
+import { AddExportComponent } from '../add-exports/add-exports.component';
 
 interface Event {
   event: {
@@ -64,6 +65,8 @@ export class EventsComponent implements OnInit {
   ];
 
   public events: object[] = [];
+
+  public queryset: any
 
   constructor(
     private service: EventsService,
@@ -164,6 +167,8 @@ export class EventsComponent implements OnInit {
       delete queryset['entity_type'];
     }
 
+    this.queryset = queryset
+
     this.waitService.setWait(true);
     this.service.getAllEvents(queryset).valueChanges.pipe(map(data => data.data))
       .subscribe((data) => {
@@ -180,6 +185,16 @@ export class EventsComponent implements OnInit {
       width: '700px',
       data: {
         event
+      }
+    });
+  }
+
+  public openExports(): void {
+    this.dialog.open(AddExportComponent, {
+      disableClose: true,
+      width: '700px',
+      data: {
+        queryset: this.queryset
       }
     });
   }

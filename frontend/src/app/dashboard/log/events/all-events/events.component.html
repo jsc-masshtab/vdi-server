@@ -11,6 +11,13 @@
         <fa-icon [icon]="['fas','sync-alt']"></fa-icon>
     </button>
 
+    <div class="control-btns" [style.height]="'unset'">
+        <button type="button" class="ctrl-btn" (click)="openExports()">
+            <fa-icon [icon]="['fas','plus-circle']"></fa-icon>
+            <span class="btn-name">Создать выгрузку</span>
+        </button>
+    </div>
+
     <span><pre>Диапазон с  </pre></span> 
     <input [matDatepicker]="start_picker" [formControl]="start_date">
     <mat-datepicker-toggle [for]="start_picker"></mat-datepicker-toggle>
