@@ -5,6 +5,7 @@
 import uuid
 import json
 import csv
+import os
 
 from datetime import datetime
 from sqlalchemy import and_, between
@@ -56,6 +57,7 @@ class Event(db.Model):
         """
         start_date = datetime.date(start)
         finish_date = datetime.date(finish)
+        path = os.path.join(path, '')
 
         query = await Event.query.where(between(Event.created, start, finish)).gino.all()
 
