@@ -219,7 +219,8 @@ class EventExportMutation(graphene.Mutation):
     @operator_required
     async def mutate(self, _info, start, finish, path='/tmp/', **kwargs):
         name = await Event.event_export(start, finish, path)
-        await system_logger.info(_('Journal is exported'), description=name, entity=self.entity)
+        entity = {'entity_type': 'SECURITY', 'entity_uuid': None}
+        await system_logger.info(_('Journal is exported'), description=name, entity=entity)
         return EventExportMutation(ok=True)
 
 

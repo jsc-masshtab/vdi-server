@@ -29,10 +29,10 @@ export class TemplatesService {
         }`
 
         if (filter) {
-            query = `query controllers($controller_id:UUID, $cluster_id: UUID, $node_id: UUID, $data_pool_id: UUID) {
+            query = `query controllers($controller_id:UUID, $cluster_id: UUID, $node_id: UUID, $data_pool_id: UUID, $ordering:String) {
                 controller(id_:$controller_id) {
                     id
-                    templates(cluster_id: $cluster_id, node_id: $node_id, data_pool_id: $data_pool_id) {
+                    templates(cluster_id: $cluster_id, node_id: $node_id, data_pool_id: $data_pool_id, ordering: $ordering) {
                         verbose_name
                         template {
                             id

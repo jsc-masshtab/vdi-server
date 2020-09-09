@@ -43,6 +43,7 @@ class Log:
     __TYPE_INFO = 0
     __TYPE_WARNING = 1
     __TYPE_ERROR = 2
+    __TYPE_DEBUG = 3
 
     @staticmethod
     def __get_call_info():
@@ -125,6 +126,11 @@ class Log:
         await Event.create_event(event_type=self.__TYPE_ERROR, msg=message, description=description, user=user,
                                  entity_dict=entity)
 
+    @cut_message
+    async def __event_debug(self, message: str, entity: dict, description: str = None, user: str = 'system'):
+        await Event.create_event(event_type=self.__TYPE_DEBUG, msg=message, description=description, user=user,
+                                 entity_dict=entity)
+
     def _debug(self, message: str):
         """Синхронно запишет сообщение в logging с уровнем DEBUG."""
         # print(message)
@@ -132,12 +138,21 @@ class Log:
             message = str(message)
         self.__log_debug(message)
 
-    async def debug(self, message: str):
-        """Запишет сообщение в logging с уровнем DEBUG."""
-        # print(message)
+    # async def debug(self, message: str):
+    #     """Запишет сообщение в logging с уровнем DEBUG."""
+    #     if message and not isinstance(message, str):
+    #         message = str(message)
+    #     self.__log_debug(message)
+
+    async def debug(self, message: str, entity: dict = None):
+        """Запишет сообщение в logging и таблицу Event с уровнем DEBUG."""
         if message and not isinstance(message, str):
             message = str(message)
         self.__log_debug(message)
+        if DEBUG:
+            if not entity:
+                entity = {'entity_type': EntityType.SECURITY, 'entity_uuid': None}
+            await self.__event_debug(message, entity)
 
     async def info(self, message: str, entity: dict = None, description: str = None, user: str = 'system'):
         """Запишет сообщение в logging и таблицу Event с уровнем INFO."""

@@ -33,10 +33,10 @@ export class DatapoolsService {
         `
 
         if (filter) {
-            query = `query controllers($controller_id:UUID, $cluster_id: UUID, $node_id: UUID) {
+            query = `query controllers($controller_id:UUID, $cluster_id: UUID, $node_id: UUID, $ordering:String) {
                 controller(id_:$controller_id) {
                     id
-                    data_pools(cluster_id: $cluster_id, node_id: $node_id) {
+                    data_pools(cluster_id: $cluster_id, node_id: $node_id, ordering: $ordering) {
                         id
                         used_space
                         free_space

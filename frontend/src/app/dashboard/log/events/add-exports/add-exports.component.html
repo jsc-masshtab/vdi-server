@@ -1,0 +1,48 @@
+<div class="form">
+
+  <div class="form-header">
+    <h1>Добавление пользователя</h1>
+    <button [mat-dialog-close]="true" class="form-close"><fa-icon [icon]="['fas','times-circle']"></fa-icon></button>
+  </div>
+
+  <ng-template #errorTemp>
+    <div class="error">Поле обязательно для заполения</div>
+  </ng-template>
+
+  <div class="form-fields" [formGroup]="form">
+    <label class="field">
+      <p class="field-name">Начальная дата</p>
+      
+      <input [matDatepicker]="start_picker" formControlName="start">
+      <mat-datepicker-toggle [for]="start_picker"></mat-datepicker-toggle>
+      <mat-datepicker #start_picker></mat-datepicker>
+
+      <ng-container *ngIf="form.hasError('required', 'username') && checkValid"><ng-container *ngTemplateOutlet="errorTemp"></ng-container></ng-container>
+    </label>
+
+    <label class="field">
+      <p class="field-name">Конечная дата</p>
+      
+      <input [matDatepicker]="end_picker" formControlName="finish">
+      <mat-datepicker-toggle [for]="end_picker"></mat-datepicker-toggle>
+      <mat-datepicker #end_picker></mat-datepicker>
+
+      <ng-container *ngIf="form.hasError('required', 'password') && checkValid"><ng-container *ngTemplateOutlet="errorTemp"></ng-container></ng-container>
+    </label>
+
+    <label class="field">
+      <p class="field-name">Путь</p>
+      <input type="text" placeholder="..." formControlName="path">
+
+      <ng-container *ngIf="form.hasError('required', 'path') && checkValid">
+        <ng-container *ngTemplateOutlet="errorTemp"></ng-container>
+      </ng-container>
+    </label>
+
+  </div>
+
+  <div class="form-actions">
+    <button (click)="send()" class="form-btn"><fa-icon [icon]="['fas','plus-circle']" size="xs"></fa-icon><span class="action-name">Добавить</span></button>
+  </div>
+
+</div>

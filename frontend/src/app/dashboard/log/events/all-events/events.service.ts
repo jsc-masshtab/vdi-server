@@ -73,5 +73,29 @@ export class EventsService {
             }
         });
     }
+
+    public createExport(data) {
+        return this.service.mutate<any>({
+            mutation: gql`
+                mutation events(
+                    $start: DateTime,
+                    $finish: DateTime,
+                    $path: String
+                ){
+                    eventExport(
+                        start: $start,
+                        finish: $finish,
+                        path: $path
+                    ){
+                        ok
+                    }
+                }
+            `,
+            variables: {
+                method: 'POST',
+                ...data
+            }
+        });
+    }
 }
 

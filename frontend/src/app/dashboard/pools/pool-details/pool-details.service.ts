@@ -164,8 +164,25 @@ export class PoolDetailsService {
     public removeVMStaticPool(pool_id: number, vm_ids: []) {
         return this.service.mutate<any>({
             mutation: gql`
-                mutation pools($pool_id: ID!,$vm_ids: [ID]!) {
+                mutation pools($pool_id: ID!,$vm_ids: [UUID]!) {
                     removeVmsFromStaticPool(pool_id: $pool_id,vm_ids: $vm_ids) {
+                        ok
+                    }
+                }
+            `,
+            variables: {
+                method: 'POST',
+                pool_id,
+                vm_ids
+            }
+        });
+    }
+
+    public removeVmsDynamicPool(pool_id: number, vm_ids: []) {
+        return this.service.mutate<any>({
+            mutation: gql`
+                mutation pools($pool_id: ID!,$vm_ids: [UUID]!) {
+                    removeVmsFromDynamicPool(pool_id: $pool_id,vm_ids: $vm_ids) {
                         ok
                     }
                 }
@@ -182,6 +199,7 @@ export class PoolDetailsService {
         return  this.service.watchQuery({
             query: gql` query controllers($controller_id: UUID, $cluster_id: UUID, $node_id: UUID) {
                 controller(id_: $controller_id) {
+                    id
                     vms(cluster_id: $cluster_id,node_id: $node_id) {
                             id
                             verbose_name
