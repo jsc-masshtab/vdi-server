@@ -10,11 +10,26 @@ from common.veil.veil_handlers import BaseHandler
 from common.veil.veil_errors import ValidationError
 from common.veil.auth.veil_jwt import jwtauth
 from common.models.pool import Pool as PoolModel
+from veil_api_client import DomainTcpUsb
+#from veil_api_client.base.api_objects.domain import DomainTcpUsb
 
 # from common.log.journal import system_logger
 from common.languages import lang_init
 
 _ = lang_init()
+
+
+async def validate_and_get_vm(user, pool_id):
+    if not user:
+        raise ValidationError(_('User {} not found.').format(user.username))
+    pool = await PoolModel.get(pool_id)
+    if not pool:
+        raise ValidationError(_('There is no pool with id: {}').format(pool_id))
+    vm = await pool.get_vm(user_id=user.id)
+    if not vm:
+        raise ValidationError(_('User {} has no VM on pool {}').format(user.username, pool.id))
+
+    return vm
 
 
 @jwtauth
@@ -137,19 +152,61 @@ class VmAction(BaseHandler, ABC):
         try:
             force = self.args.get('force', False)
             user = await self.get_user_model_instance()
-            if not user:
-                raise ValidationError(_('User {} not found.').format(user.username))
-            pool = await PoolModel.get(pool_id)
-            if not pool:
-                raise ValidationError(_('There is no pool with id: {}').format(pool_id))
-            vm = await pool.get_vm(user_id=user.id)
-            if not vm:
-                raise ValidationError(_('User {} has no VM on pool {}').format(user.username, pool.id))
+            vm = await validate_and_get_vm(user, pool_id)
             # Все возможные проверки закончились - приступаем.
             await vm.action(action_name=action, force=force)
             response = {'data': 'success'}
         except AssertionError as vm_action_error:
             response = {'errors': [{'message': str(vm_action_error)}]}
+        return await self.log_finish(response)
+
+
+@jwtauth
+class AttachUsb(BaseHandler, ABC):
+    """Добавить usb tcp редирект девайс"""
+
+    async def post(self, pool_id):
+
+        host_address = self.validate_and_get_parameter('host_address')
+        host_port = self.validate_and_get_parameter('host_port')
+
+        user = await self.get_user_model_instance()
+        vm = await validate_and_get_vm(user, pool_id)
+
+        # attach request
+        try:
+            veil_client = await vm.vm_client
+            domain_tcp_usb_params = DomainTcpUsb(host=host_address, service=host_port)
+            controller_response = await veil_client.attach_usb(action_type='tcp_usb_device',
+                                                               tcp_usb=domain_tcp_usb_params, no_task=True)
+            return await self.log_finish(controller_response.data)
+
+        except AssertionError as error:
+            response = {'errors': [{'message': str(error)}]}
+        return await self.log_finish(response)
+
+
+@jwtauth
+class DetachhUsb(BaseHandler, ABC):
+    """Убрать usb tcp редирект девайс"""
+
+    async def post(self, pool_id):
+
+        usb_uuid = self.args.get('usb_uuid')
+        remove_all = self.args.get('remove_all', False)
+
+        user = await self.get_user_model_instance()
+        vm = await validate_and_get_vm(user, pool_id)
+
+        # detach request
+        try:
+            veil_client = await vm.vm_client
+            controller_response = await veil_client.detach_usb(action_type='tcp_usb_device',
+                                                               usb=usb_uuid, remove_all=remove_all)
+            return await self.log_finish(controller_response.data)
+
+        except AssertionError as error:
+            response = {'errors': [{'message': str(error)}]}
         return await self.log_finish(response)
 
 
