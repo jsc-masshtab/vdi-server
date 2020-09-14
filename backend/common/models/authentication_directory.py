@@ -119,6 +119,11 @@ class AuthenticationDirectory(VeilModel, AbstractSortableStatusModel):
     async def mappings(self):
         return await self.mappings_query.gino.load(Mapping).all()
 
+    @property
+    def password(self):
+        """Дешифрованный пароль."""
+        return decrypt(self.service_password)
+
     async def mappings_paginator(self, limit, offset):
         return await self.mappings_query.limit(limit).offset(offset).gino.load(Mapping).all()
 

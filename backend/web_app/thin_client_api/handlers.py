@@ -3,20 +3,15 @@ from abc import ABC
 
 from tornado import websocket
 from aiohttp import client_exceptions
-from async_timeout import timeout
 
-from common.settings import REDIS_PORT, REDIS_THIN_CLIENT_CHANNEL, REDIS_PASSWORD, REDIS_DB, VEIL_VM_PREPARE_TIMEOUT
+from common.settings import REDIS_PORT, REDIS_THIN_CLIENT_CHANNEL, REDIS_PASSWORD, REDIS_DB
 from common.veil.veil_redis import request_to_execute_pool_task, PoolTaskType
 from common.veil.veil_handlers import BaseHandler
 from common.veil.veil_errors import ValidationError
 from common.veil.auth.veil_jwt import jwtauth
 from common.models.pool import Pool as PoolModel
 
-# from auth.models import User
-# from vm import VmModel
-# from pool.models import Pool, Vm
-# from controller.models import Controller
-
+# from common.log.journal import system_logger
 from common.languages import lang_init
 
 _ = lang_init()
@@ -59,10 +54,11 @@ class PoolHandler(BaseHandler, ABC):
 class PoolGetVm(BaseHandler, ABC):
     """Получает конкретную ВМ пользователя."""
 
-    async def post(self, pool_id):  # remote_protocol: rdp/spice
+    async def post(self, pool_id):
         # Определяем удаленный протокол. Если данные не были получены, то по умолчанию spice
         remote_protocol = self.args.get('remote_protocol', 'spice')
-        rdp_connection = remote_protocol == 'rdp'
+        # В теории - к моменту подключения ТК ВМ уже готова, поэтому мы ее только включаем.
+        # rdp_connection = remote_protocol == 'rdp'
         # Проверяем лимит виртуальных машин
         if PoolModel.thin_client_limit_exceeded():
             response = {'errors': [{'message': _('Thin client limit exceeded.'), 'code': '001'}]}
@@ -75,9 +71,11 @@ class PoolGetVm(BaseHandler, ABC):
         if not pool:
             response = {'data': dict(host='', port=0, password='', message=_('Pool not found.'))}
             return await self.log_finish(response)
+        pool_extended = False
         # Запрос на расширение пула
         if await pool.pool_type == PoolModel.PoolTypes.AUTOMATED:
-            request_to_execute_pool_task(pool.id_str, PoolTaskType.EXPANDING.name)
+            await request_to_execute_pool_task(pool.id_str, PoolTaskType.EXPANDING.name)
+            pool_extended = True
         vm = await pool.get_vm(user_id=user.id)
         if not vm:
             # TODO: добавить третий метод в VM, который делает это
@@ -86,36 +84,30 @@ class PoolGetVm(BaseHandler, ABC):
             # Если свободная VM найдена, нужно закрепить ее за пользователем.
             if vm:
                 await vm.add_user(user.id, creator='system')
+            elif pool_extended:
+                response = {'data': dict(host='', port=0, password='',
+                                         message=_('Pool extension has been started. Try again after 5 minutes.'))}
+                return await self.log_finish(response)
             else:
                 response = {'data': dict(host='', port=0, password='', message=_('Pool doesnt have free machines'))}
                 return await self.log_finish(response)
 
         # Дальше запросы начинают уходить на veil
         veil_domain = await vm.vm_client
-        # Опытным путем установлено: если машина уже включена, то запрос может вернуться с 400.  Поэтому try
+
         # TODO: обработка новых исключений
+        # Подготовка ВМ теперь происходит при создании и расширении пула. Тут только влючение ВМ.
         try:
-            # Подготавливаем ВМ к подключению (выполняется без таски, т.к. мы хотим дождаться результата).
-            # TODO: есть ощущение, что подготовку ВМ хорошо бы делать после создания пула, а потом гасить ВМ.
-            async with timeout(VEIL_VM_PREPARE_TIMEOUT) as cm:
-                await vm.prepare(rdp_connection)
-            if cm.expired:
-                raise TimeoutError()
-            # Актуализируем данные для подключения
             await veil_domain.info()
-            # info_response = await veil_domain.info()
-            # info = info_response.value
+            if not veil_domain.powered:
+                await vm.start()
         except client_exceptions.ServerDisconnectedError:
             response = {
                 'data': dict(host='', port=0, password='', message=_('VM is unreachable on ECP Veil.'))}
             return await self.log_finish(response)
-        except TimeoutError:
-            response = {
-                'data': dict(host='', port=0, password='', message=_('VM prepare failed on ECP Veil.'))}
-            return await self.log_finish(response)
-
-        # В зависимости от протокола определяем адрес машины
-        # TODO: использовать hostname вместо IP. Сейчас задачется внутри vm.prepare
+        # Актуализируем данные для подключения
+        await veil_domain.info()
+        # TODO: использовать veil_domain.hostname вместо IP
         if remote_protocol == 'rdp':
             try:
                 vm_address = veil_domain.guest_agent.first_ipv4_ip
