@@ -7,19 +7,18 @@ from sqlalchemy import and_, union_all, case, literal_column, desc, text, Enum a
 from sqlalchemy.dialects.postgresql import UUID, ARRAY
 from asyncpg.exceptions import UniqueViolationError
 
-from common.settings import (VEIL_WS_MAX_TIME_TO_WAIT,
-                             POOL_MAX_SIZE, POOL_MIN_SIZE, POOL_MAX_CREATE_ATTEMPTS, POOL_MAX_VM_AMOUNT)
+from common.settings import POOL_MAX_SIZE, POOL_MIN_SIZE, POOL_MAX_CREATE_ATTEMPTS, POOL_MAX_VM_AMOUNT
 from common.database import db
 from common.veil.veil_gino import Status, EntityType, VeilModel
 from common.veil.veil_errors import VmCreationError, PoolCreationError, SimpleError, ValidationError
 from common.utils import extract_ordering_data
 from web_app.auth.license.utils import License
-from common.veil.veil_redis import (get_thin_clients_count, REDIS_CLIENT, INTERNAL_EVENTS_CHANNEL,
-                                    a_redis_wait_for_message, WS_MONITOR_CHANNEL_OUT)
+from common.veil.veil_redis import get_thin_clients_count, REDIS_CLIENT, INTERNAL_EVENTS_CHANNEL
 from web_app.front_ws_api.subscription_sources import VDI_TASKS_SUBSCRIPTION
 
 from common.models.auth import (User as UserModel, Entity as EntityModel, EntityRoleOwner as EntityRoleOwnerModel,
                                 Group as GroupModel, UserGroup as UserGroupModel)
+from common.models.authentication_directory import AuthenticationDirectory
 from common.models.vm import Vm as VmModel
 
 from common.languages import lang_init
@@ -717,8 +716,9 @@ class AutomatedPool(db.Model):
     total_size = db.Column(db.Integer(), nullable=False, default=1)  # Размер пула
     vm_name_template = db.Column(db.Unicode(length=100), nullable=True)
     os_type = db.Column(db.Unicode(length=100), nullable=True)
-
     create_thin_clones = db.Column(db.Boolean(), nullable=False, default=True)
+    # Группы/Контейнеры в Active Directory для назначения виртуальным машинам пула
+    ad_cn_pattern = db.Column(db.Unicode(length=1000), nullable=True)
 
     # ----- ----- ----- ----- ----- ----- -----
     # Properties:
@@ -776,7 +776,7 @@ class AutomatedPool(db.Model):
     async def soft_create(cls, verbose_name, controller_ip, cluster_id, node_id,
                           template_id, datapool_id, increase_step,
                           initial_size, reserve_size, total_size, vm_name_template,
-                          create_thin_clones, connection_types):
+                          create_thin_clones, connection_types, ad_cn_pattern: str = None):
         """Nested transactions are atomic."""
         async with db.transaction() as tx:  # noqa
             # Create Pool
@@ -801,7 +801,8 @@ class AutomatedPool(db.Model):
                                                   reserve_size=reserve_size,
                                                   total_size=total_size,
                                                   vm_name_template=vm_name_template,
-                                                  create_thin_clones=create_thin_clones)
+                                                  create_thin_clones=create_thin_clones,
+                                                  ad_cn_pattern=ad_cn_pattern)
 
             await system_logger.info(_('AutomatedPool {} is created').format(verbose_name), entity=pool.entity)
 
@@ -856,8 +857,10 @@ class AutomatedPool(db.Model):
         verbose_name = self.vm_name_template or await self.verbose_name  # temp???
         pool_controller = await self.controller_obj
 
+        # Маленький хак для корректного перебора имени контроллером
+
         params = {
-            'verbose_name': verbose_name,
+            'verbose_name': verbose_name + '-1',
             'domain_id': str(self.template_id),
             'datapool_id': str(await self.datapool_id),
             'controller_id': pool_controller.id,
@@ -875,52 +878,13 @@ class AutomatedPool(db.Model):
             except VmCreationError:
                 break
 
-            def _check_if_vm_created(redis_message):
-                try:
-                    redis_message_data = redis_message['data'].decode()
-                    redis_message_data_dict = json.loads(redis_message_data)
-                    obj = redis_message_data_dict['object']
-                    if current_vm_task_id == obj['parent'] and obj['status'] == 'SUCCESS':
-                        return True
-                except asyncio.CancelledError:
-                    raise
-                except Exception as ex:  # Нас интересует лишь прошла ли проверка
-                    system_logger._debug('_check_if_vm_created ' + str(ex))
-
-                return False
-
+            # Ожидаем завершения создания ВМ
             try:
-                is_vm_successfully_created = await a_redis_wait_for_message(
-                    WS_MONITOR_CHANNEL_OUT, _check_if_vm_created, VEIL_WS_MAX_TIME_TO_WAIT)
-                await system_logger.debug('Ws msg vm successfully_created: {}'.format(is_vm_successfully_created))
-
-                # 2) determine if vm created by task status
-                # if not is_vm_successfully_created:
-                #    await system_logger.debug('Could`t get the response about result of creation VM on ECP by WS.')
-                #    try:
-                #        # TODO: сломалось при мердже - починить на новый клиент. Мб ваще выкинуть? Проверки по статусу
-                #         вм достаточно
-                #        # token = await controller_module.ControllerModel.get_token(controller_address)
-                #        # veil_client = VeilHttpClient(controller_address, token=token)
-                #        # is_vm_successfully_created = await veil_client.check_task_status(current_vm_task_id)
-                #        raise NotImplementedError()
-                #    except asyncio.CancelledError:
-                #        raise
-                #    except Exception as ex:  # Возможно множество исключений, но нас интнесует лишь их отсутствие
-                #        await system_logger.error('Exception during task status checking: {}'.format(str(ex)))
-
-                # 3) determine if vm created by vm status
-                if not is_vm_successfully_created:
-                    await system_logger.debug('Probably task is not done. Check VM status.')
-                    domain_client = pool_controller.veil_client.domain(domain_id=vm_info['id'])
-                    try:
-                        await domain_client.info()
-                        is_vm_successfully_created = domain_client.active
-                    except asyncio.CancelledError:
-                        raise
-                    except Exception as ex:  # Возможно множество исключений, но нас интнесует лишь их отсутствие
-                        await system_logger.error('Exception during vm status checking: {}'.format(str(ex)))
-
+                task_completed = False
+                task_client = pool_controller.veil_client.task(task_id=current_vm_task_id)
+                while not task_completed:
+                    await asyncio.sleep(5)
+                    task_completed = await task_client.finished
             except asyncio.CancelledError:
                 # Если получили CancelledError в ходе ожидания создания вм,
                 # то отменяем на контроллере таску создания вм. (CancelledError бросится например при мягком завршении
@@ -932,21 +896,22 @@ class AutomatedPool(db.Model):
                     await system_logger.error('Exception during vm creation task cancelling: {}'.format(str(ex)))
                 raise
 
-            # VM создается в любом случае, но если что-то пошло не так, то мы создаем ее в БД.
-            vm_is_broken = False if is_vm_successfully_created else False
-            await VmModel.create(id=vm_info['id'],
-                                 pool_id=str(self.id),
-                                 template_id=str(self.template_id),
-                                 created_by_vdi=True,
-                                 verbose_name=vm_info['verbose_name'],
-                                 broken=vm_is_broken)
+            # Получаем актуальное имя виртуальной машины присвоенное контроллером
+            veil_domain = pool_controller.veil_client.domain(vm_info['id'])
+            await veil_domain.info()
+            # создаем запись в БД
+            vm_object = await VmModel.create(id=vm_info['id'],
+                                             pool_id=str(self.id),
+                                             template_id=str(self.template_id),
+                                             created_by_vdi=True,
+                                             verbose_name=veil_domain.verbose_name)
 
             pool = await Pool.get(self.id)
             await system_logger.info(
                 _('VM {} is added to Automated pool {}').format(vm_info['verbose_name'], pool.verbose_name),
                 entity=self.entity)
-
-            return vm_info
+            # Раньше возвращали vm_info, но для упрощения вызова подготовки ВМ заменили на объект модели
+            return vm_object
 
         await self.deactivate()
         raise VmCreationError(_('Error with create VM {}').format(verbose_name))
@@ -964,7 +929,6 @@ class AutomatedPool(db.Model):
            Основная логика сохранена со старой схемы. На рефакторинг внутреннего кода нет времени.
            Главное, что бы хотелось тут и в других местах создания виртуалок - отправлять диапазоны виртуалок
         """
-
         # Fetching template info from controller.
         controller_address = await self.controller_ip
         verbose_name = await self.verbose_name
@@ -981,12 +945,10 @@ class AutomatedPool(db.Model):
         await system_logger.info(_('Automated pool creation started'), entity=self.entity)
 
         vm_list = list()
-        # vm_index = 1
-
         try:
             for i in range(self.initial_size):
-                vm = await self.add_vm()
-                vm_list.append(vm)
+                vm_object = await self.add_vm()
+                vm_list.append(vm_object)
                 msg = _('Created {} VMs from {} at the Automated pool {}').format(i + 1, self.initial_size,
                                                                                   verbose_name)
                 await system_logger.info(msg, entity=self.entity)
@@ -996,7 +958,7 @@ class AutomatedPool(db.Model):
                                 mgs_type='data',
                                 event='pool_creation_progress',
                                 pool_id=str(self.id),
-                                domain_verbose_name=vm['verbose_name'],
+                                domain_verbose_name=vm_object.verbose_name,
                                 initial_size=self.initial_size,
                                 resource=VDI_TASKS_SUBSCRIPTION)
 
@@ -1032,3 +994,12 @@ class AutomatedPool(db.Model):
         # Пробросить исключение, если споткнулись на создании машин
         if not is_creation_successful:
             raise PoolCreationError(_('Could not create the required number of machines.'))
+
+    async def prepare_initial_vms(self):
+        """Подготавливает ВМ для дальнейшего использования тонким клиентом."""
+        vm_objects = await VmModel.query.where(VmModel.pool_id == self.id).gino.all()
+        if not vm_objects:
+            return
+        active_directory_object = await AuthenticationDirectory.query.where(
+            AuthenticationDirectory.status == Status.ACTIVE).gino.first()
+        await asyncio.gather(*[vm_object.prepare_with_timeout(active_directory_object, self.ad_cn_pattern) for vm_object in vm_objects])

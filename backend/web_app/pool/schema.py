@@ -613,6 +613,7 @@ class CreateAutomatedPoolMutation(graphene.Mutation, ControllerFetcher):
         create_thin_clones = graphene.Boolean(default_value=True)
         connection_types = graphene.List(graphene.NonNull(ConnectionTypesGraphene),
                                          default_value=[Pool.PoolConnectionTypes.SPICE.value])
+        ad_cn_pattern = graphene.String(description="Наименование групп для добавления ВМ в AD")
 
     pool = graphene.Field(lambda: PoolType)
     ok = graphene.Boolean()
@@ -623,7 +624,7 @@ class CreateAutomatedPoolMutation(graphene.Mutation, ControllerFetcher):
                      verbose_name, increase_step,
                      initial_size, reserve_size, total_size, vm_name_template,
                      create_thin_clones,
-                     connection_types):
+                     connection_types, ad_cn_pattern: str = None):
         """Мутация создания Автоматического(Динамического) пула виртуальных машин.
 
         TODO: описать механизм работы"""
@@ -643,7 +644,8 @@ class CreateAutomatedPoolMutation(graphene.Mutation, ControllerFetcher):
                                                              total_size=total_size,
                                                              vm_name_template=vm_name_template,
                                                              create_thin_clones=create_thin_clones,
-                                                             connection_types=connection_types)
+                                                             connection_types=connection_types,
+                                                             ad_cn_pattern=ad_cn_pattern)
         except Exception as E:  # Возможные исключения: дубликат имени или вм id, сетевой фейл enable_remote_accesses
             desc = str(E)
             error_msg = _('Failed to create automated pool {}.').format(verbose_name)

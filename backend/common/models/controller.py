@@ -19,8 +19,6 @@ from common.models.pool import Pool as PoolModel
 _ = lang_init()
 
 
-# TODO: Сейчас при деактивации контроллера задачи создания пула не прекращаются - уточнить у Соломина,
-#  возможно уже готово.
 #  Нужно сделать, чтобы деактивация контроллера останавливала создание пула и скидывала задачу в очередь.
 #  При активации контроллера нужно брать задачи в очереди.
 
@@ -101,11 +99,11 @@ class Controller(AbstractSortableStatusModel, VeilModel):
         client = self.controller_client
         return await client.ok
 
-    async def check_task_status(self, task_id: str):
-        """Проверяем выполнилась ли задача на ECP VeiL."""
-        client = self.veil_client
-        task_client = client.task(task_id)
-        return await task_client.completed()
+    # async def check_task_status(self, task_id: str):
+    #     """Проверяем выполнилась ли задача на ECP VeiL."""
+    #     client = self.veil_client
+    #     task_client = client.task(task_id)
+    #     return await task_client.finished
 
     async def check_controller(self):
         """Проверяем доступность контроллера и меняем его статус."""
@@ -146,8 +144,8 @@ class Controller(AbstractSortableStatusModel, VeilModel):
         major_version, minor_version, patch_version = version.split('.')
         await self.update(version=version).apply()
         # Проверяем версию контроллера в пределах допустимой.
-        if major_version != '4' or minor_version < '3':
-            msg = _('Veil ECP version should be 4.3. Current version is incompatible.')
+        if major_version != '4' or int(minor_version) < 3:
+            msg = _('Veil ECP version should be 4.3 or higher. Current version is incompatible.')
             await self.remove_client()
             raise ValidationError(msg)
 
@@ -275,7 +273,8 @@ class Controller(AbstractSortableStatusModel, VeilModel):
         if not self.failed:
             # Деактивируем контроллер
             await self.update(status=Status.FAILED).apply()
-            await system_logger.info(_('Controller {} has been deactivated.').format(self.verbose_name), entity=self.entity)
+            await system_logger.info(_('Controller {} has been deactivated.').format(self.verbose_name),
+                                     entity=self.entity)
             # Деактивируем пулы
             # TODO: переработать деактивацию пулов - нужен метод в пулах, который бы деактивировал ВМ.
             pools = await self.pools
