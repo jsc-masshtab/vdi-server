@@ -80,11 +80,11 @@ class PoolGetVm(BaseHandler, ABC):
             return await self.finish(response)
         user = await self.get_user_model_instance()
         if not user:
-            response = {'data': dict(host='', port=0, password='', message=_('User {} not found.'))}
+            response = {'errors': [{'message': _('User {} not found.')}]}
             return await self.log_finish(response)
         pool = await PoolModel.get(pool_id)
         if not pool:
-            response = {'data': dict(host='', port=0, password='', message=_('Pool not found.'))}
+            response = {'errors': [{'message': _('Pool not found.')}]}
             return await self.log_finish(response)
         pool_extended = False
         # Запрос на расширение пула
@@ -100,11 +100,10 @@ class PoolGetVm(BaseHandler, ABC):
             if vm:
                 await vm.add_user(user.id, creator='system')
             elif pool_extended:
-                response = {'data': dict(host='', port=0, password='',
-                                         message=_('Pool extension has been started. Try again after 5 minutes.'))}
+                response = {'errors': [{'message': _('Pool extension has been started. Try again after 5 minutes.')}]}
                 return await self.log_finish(response)
             else:
-                response = {'data': dict(host='', port=0, password='', message=_('Pool doesnt have free machines'))}
+                response = {'errors': [{'message': _('Pool doesnt have free machines.')}]}
                 return await self.log_finish(response)
 
         # Дальше запросы начинают уходить на veil
@@ -117,28 +116,28 @@ class PoolGetVm(BaseHandler, ABC):
             if not veil_domain.powered:
                 await vm.start()
         except client_exceptions.ServerDisconnectedError:
-            response = {
-                'data': dict(host='', port=0, password='', message=_('VM is unreachable on ECP Veil.'))}
+            response = {'errors': [{'message': _('VM is unreachable on ECP Veil.')}]}
             return await self.log_finish(response)
         # Актуализируем данные для подключения
         await veil_domain.info()
         # TODO: использовать veil_domain.hostname вместо IP
+
+        vm_controller = await vm.controller
         if remote_protocol == 'rdp':
             try:
                 vm_address = veil_domain.guest_agent.first_ipv4_ip
             except (IndexError, KeyError):
-                response = {'data': dict(host='', port=0, password='',
-                                              message=_('VM does not support RDP'))}
+                response = {'errors': [{'message': _('VM does not support RDP.')}]}
                 return await self.log_finish(response)
         else:
             # spice by default
-            vm_controller = await vm.controller
             vm_address = vm_controller.address
 
         response = {'data': dict(host=vm_address,
                                  port=veil_domain.remote_access_port,
                                  password=veil_domain.graphics_password,
-                                 vm_verbose_name=veil_domain.verbose_name)
+                                 vm_verbose_name=veil_domain.verbose_name,
+                                 vm_controller_address=vm_controller.address)
                     }
 
         return await self.log_finish(response)
