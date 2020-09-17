@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import asyncio
 import re
 
 import graphene
@@ -11,6 +12,7 @@ from common.veil.veil_errors import SimpleError, ValidationError
 from common.veil.veil_decorators import administrator_required
 from common.veil.veil_graphene import VeilShortEntityType, VeilResourceType
 from common.models.auth import User
+from common.models.authentication_directory import AuthenticationDirectory
 from common.models.vm import Vm
 from common.models.controller import Controller
 from common.models.pool import AutomatedPool, StaticPool, Pool
@@ -944,6 +946,32 @@ class FreeVmFromUser(graphene.Mutation):
         return FreeVmFromUser(ok=False)
 
 
+class PrepareVm(graphene.Mutation):
+    class Arguments:
+        vm_id = graphene.ID(required=True)
+
+    ok = graphene.Boolean()
+
+    @administrator_required
+    async def mutate(self, _info, vm_id, **kwargs):
+        vm = await Vm.get(vm_id)
+        if vm:
+            active_directory_object = None
+            ad_cn_pattern = None
+
+            pool = await Pool.get(vm.pool_id)
+
+            pool_type = await pool.pool_type
+            if pool_type == Pool.PoolTypes.AUTOMATED:
+                auto_pool = await AutomatedPool.get(pool.id)
+                active_directory_object = await AuthenticationDirectory.query.where(
+                    AuthenticationDirectory.status == Status.ACTIVE).gino.first()
+                ad_cn_pattern = auto_pool.ad_cn_pattern
+            asyncio.ensure_future(vm.prepare_with_timeout(active_directory_object, ad_cn_pattern))
+            return PrepareVm(ok=True)
+        return PrepareVm(ok=False)
+
+
 # --- --- --- --- ---
 # Schema concatenation
 class PoolMutations(graphene.ObjectType):
@@ -966,6 +994,7 @@ class PoolMutations(graphene.ObjectType):
     # Vm mutations
     assignVmToUser = AssignVmToUser.Field()
     freeVmFromUser = FreeVmFromUser.Field()
+    prepareVm = PrepareVm.Field()
 
 
 pool_schema = graphene.Schema(query=PoolQuery,
