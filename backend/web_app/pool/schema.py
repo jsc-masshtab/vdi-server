@@ -968,6 +968,9 @@ class PrepareVm(graphene.Mutation):
                     AuthenticationDirectory.status == Status.ACTIVE).gino.first()
                 ad_cn_pattern = auto_pool.ad_cn_pattern
             asyncio.ensure_future(vm.prepare_with_timeout(active_directory_object, ad_cn_pattern))
+            # future = asyncio.ensure_future(vm.prepare_with_timeout(active_directory_object, ad_cn_pattern))
+            # future.add_done_callback(lambda f: print('FINISH'))  # делаем что-то после окончания
+            # выполняем любой код ниже
             return PrepareVm(ok=True)
         return PrepareVm(ok=False)
 
