@@ -753,7 +753,7 @@ class RemoveVmsFromAutomatedPoolMutation(graphene.Mutation):
                 raise SimpleError(_('VM doesn\'t belong to specified pool').format(vm_id), entity=entity)
 
         # remove vms from db
-        await Vm.remove_vms(vm_ids, creator)
+        await Vm.remove_vms(vm_ids, creator, True)
 
         return {
             'ok': True
