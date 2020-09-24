@@ -9,10 +9,10 @@ thin_client_api_urls = [
      PoolGetVm),
 
     (r'/client/pools/(?P<pool_id>[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})/attach-usb/?',
-    AttachUsb),
+     AttachUsb),
     (r'/client/pools/(?P<pool_id>[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})/detach-usb/?',
-    DetachhUsb),
-    
+     DetachhUsb),
+
     (r'/client/pools/(?P<pool_id>[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})/(?P<action>[a-z]+)/?',
      VmAction),
 
