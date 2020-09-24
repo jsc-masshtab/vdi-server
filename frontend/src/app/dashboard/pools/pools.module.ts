@@ -28,6 +28,7 @@ import { RemoveRoleComponent } from './pool-details/remove-role/remove-role.comp
 import { RemoveGroupComponent } from './pool-details/remove-group/remove-group.component';
 import { AddRoleComponent } from './pool-details/add-role/add-role.component';
 import { AddGropComponent } from './pool-details/add-group/add-group.component';
+import { PrepareVmPoolComponent } from './pool-details/prepare-vm/prepare-vm.component';
 
 @NgModule({
   declarations: [
@@ -37,6 +38,7 @@ import { AddGropComponent } from './pool-details/add-group/add-group.component';
     AddUsersPoolComponent,
     RemoveUsersPoolComponent,
     AddVMStaticPoolComponent,
+    PrepareVmPoolComponent,
     RemoveVMStaticPoolComponent,
     RemovePoolComponent,
     VmDetalsPopupComponent,
@@ -70,6 +72,7 @@ import { AddGropComponent } from './pool-details/add-group/add-group.component';
     AddUsersPoolComponent,
     RemoveUsersPoolComponent,
     AddVMStaticPoolComponent,
+    PrepareVmPoolComponent,
     RemoveVMStaticPoolComponent,
     RemovePoolComponent,
     VmDetalsPopupComponent,

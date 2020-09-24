@@ -18,6 +18,7 @@ import { RemoveRoleComponent } from './remove-role/remove-role.component';
 import { AddRoleComponent } from './add-role/add-role.component';
 import { RemoveGroupComponent } from './remove-group/remove-group.component';
 import { AddGropComponent } from './add-group/add-group.component';
+import { PrepareVmPoolComponent } from './prepare-vm/prepare-vm.component';
 
 @Component({
   selector: 'vdi-pool-details',
@@ -361,6 +362,21 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
   public addVM(): void {
     this.dialog.open(AddVMStaticPoolComponent, {
  			disableClose: true, 
+      width: '500px',
+      data: {
+        idPool: this.idPool,
+        namePool: this.pool.verbose_name,
+        idCluster: this.pool.cluster_id,
+        idNode: this.pool.node_id,
+        idController: this.pool.controller.id,
+        typePool: this.typePool
+      }
+    });
+  }
+
+  public prepareVM(): void {
+    this.dialog.open(PrepareVmPoolComponent, {
+      disableClose: true,
       width: '500px',
       data: {
         idPool: this.idPool,
