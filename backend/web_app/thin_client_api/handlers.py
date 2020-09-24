@@ -11,7 +11,7 @@ from common.veil.veil_errors import ValidationError
 from common.veil.auth.veil_jwt import jwtauth
 from common.models.pool import Pool as PoolModel
 from veil_api_client import DomainTcpUsb
-#from veil_api_client.base.api_objects.domain import DomainTcpUsb
+# from veil_api_client.base.api_objects.domain import DomainTcpUsb
 
 # from common.log.journal import system_logger
 from common.languages import lang_init
