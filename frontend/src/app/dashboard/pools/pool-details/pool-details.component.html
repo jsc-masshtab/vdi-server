@@ -26,7 +26,7 @@
                 <span class="name">Добавить ВМ</span>
             </button>
 
-            <button *ngIf="typePool === 'static'" (click)="prepareVM()" title="Подготовить ВМ" class="btn-control">
+            <button *ngIf="typePool === 'automated'" (click)="prepareVM()" title="Подготовить ВМ" class="btn-control">
                 <fa-icon [icon]="['fas','suitcase']" size="xs"></fa-icon>
                 <span class="name">Подготовить ВМ</span>
             </button>
