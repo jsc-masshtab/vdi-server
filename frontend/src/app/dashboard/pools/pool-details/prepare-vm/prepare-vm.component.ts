@@ -14,6 +14,7 @@ interface IData {
   idController: string;
   idNode: string;
   typePool: string;
+  vms: [];
 }
 
 @Component({
@@ -51,16 +52,7 @@ export class PrepareVmPoolComponent implements OnInit, OnDestroy {
   }
 
   private getVms() {
-    this.pendingVms = true;
-    this.poolService.getAllVms(this.data.idController, this.data.idCluster, this.data.idNode).pipe(takeUntil(this.destroy))
-      .subscribe((data) => {
-        this.vms = data;
-        this.pendingVms = false;
-      },
-      () => {
-        this.vms = [];
-        this.pendingVms = false;
-      });
+    this.vms = this.data.vms;
   }
 
   public selectVm(value: any) {

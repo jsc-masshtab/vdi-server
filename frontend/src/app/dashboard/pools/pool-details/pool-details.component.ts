@@ -384,6 +384,7 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
         idCluster: this.pool.cluster_id,
         idNode: this.pool.node_id,
         idController: this.pool.controller.id,
+        vms: this.pool.vms,
         typePool: this.typePool
       }
     });
