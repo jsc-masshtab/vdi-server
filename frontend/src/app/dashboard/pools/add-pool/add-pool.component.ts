@@ -86,7 +86,7 @@ export class PoolAddComponent {
     this.dynamicPool = this.fb.group({
       template_id: ['', Validators.required],
       vm_name_template: ['', [Validators.required, Validators.pattern(/^[а-яА-ЯёЁa-zA-Z0-9]+[а-яА-ЯёЁa-zA-Z0-9.-_+ ]*$/)]],
-
+      ad_cn_pattern: [''],
       increase_step: ['', [Validators.required, Validators.min(1)]],
       reserve_size: ['', [Validators.required, Validators.max(200), Validators.min(1)]],
       initial_size: [0, [Validators.required, Validators.max(200), Validators.min(1)]],
