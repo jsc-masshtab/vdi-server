@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2020-09-10 16:39+0300\n"
+"POT-Creation-Date: 2020-10-01 11:59+0300\n"
 "PO-Revision-Date: 2020-07-30 11:25+0300\n"
 "Last-Translator: Emil <emil@emil-pc>\n"
 "Language-Team: Russian\n"
@@ -509,15 +509,15 @@ msgstr "Ошибка включения ВМ {} в домен."
 msgid "Adding computer {} to domain container(s) {}"
 msgstr "Добавляем компьютер {} в доменную группу  {}"
 
-#: ../common/models/vm.py:441
+#: ../common/models/vm.py:442
 msgid "Vm {} has been added to {}"
 msgstr "Виртуальная машина {} добавлена в {}"
 
-#: ../common/models/vm.py:445
+#: ../common/models/vm.py:446
 msgid "Vm {} has been prepared"
 msgstr "ВМ {} была подготовлена"
 
-#: ../common/models/vm.py:452
+#: ../common/models/vm.py:453
 msgid "{} preparation cancelled by timeout."
 msgstr "подготовка {} отменена по таймауту."
 
@@ -620,15 +620,15 @@ msgstr "Создание пула отменено"
 msgid "Failed to create pool. {exception} {name}"
 msgstr "Ошибка создания пула. {exception} {name}"
 
-#: ../pool_worker/pool_tasks.py:164 ../pool_worker/pool_tasks.py:229
+#: ../pool_worker/pool_tasks.py:164 ../pool_worker/pool_tasks.py:228
 msgid "VM preparation error"
 msgstr "Ошибка подготовки виртуальной машины"
 
-#: ../pool_worker/pool_tasks.py:219
+#: ../pool_worker/pool_tasks.py:218
 msgid "VM creating error:"
 msgstr "Ошибка создания виртуальной машины:"
 
-#: ../pool_worker/pool_tasks.py:283
+#: ../pool_worker/pool_tasks.py:282
 msgid "Deleted pool {}"
 msgstr "Удаленный пул {}"
 
@@ -813,7 +813,7 @@ msgstr "адресс `{}` уже используется."
 msgid "token can`t be empty."
 msgstr "токен не может быть пустым."
 
-#: ../web_app/controller/schema.py:66 ../web_app/pool/schema.py:43
+#: ../web_app/controller/schema.py:66 ../web_app/pool/schema.py:45
 msgid "No such controller."
 msgstr "Нет такого контроллера."
 
@@ -865,76 +865,76 @@ msgstr "Нет такого события."
 msgid "Journal is exported"
 msgstr "Экспорт журнала."
 
-#: ../web_app/pool/schema.py:94 ../web_app/pool/schema.py:382
-#: ../web_app/pool/schema.py:403
+#: ../web_app/pool/schema.py:96 ../web_app/pool/schema.py:384
+#: ../web_app/pool/schema.py:405
 msgid "No such pool."
 msgstr "Нет такого пула."
 
-#: ../web_app/pool/schema.py:104
+#: ../web_app/pool/schema.py:106
 msgid "Pool name must contain only characters, digits, _, -"
 msgstr "Имя пула должно содержать только буквы, цифры, _, -"
 
-#: ../web_app/pool/schema.py:115
+#: ../web_app/pool/schema.py:117
 msgid "Template name of VM must contain only characters, digits, _, -"
 msgstr "Шаблонное имя вм должно содержать только буквы, цифры, _, -"
 
-#: ../web_app/pool/schema.py:123
+#: ../web_app/pool/schema.py:125
 msgid "Initial number of VM must be in {}-{} interval"
 msgstr "Начальное число виртуальных машин должно быть в интервале {}-{}."
 
-#: ../web_app/pool/schema.py:139
+#: ../web_app/pool/schema.py:141
 msgid "Number of created VM must be in {}-{} interval"
 msgstr "Число создаваемых виртуальных машин должно быть в интервале {}-{}."
 
-#: ../web_app/pool/schema.py:160 ../web_app/pool/schema.py:699
+#: ../web_app/pool/schema.py:162 ../web_app/pool/schema.py:701
 msgid "Maximal number of created VM should be less than initial number of VM"
 msgstr "Максимальное число создаваемых виртуальных машин не должно быть меньше начального числа ВМ"
 
-#: ../web_app/pool/schema.py:162 ../web_app/pool/schema.py:701
+#: ../web_app/pool/schema.py:164 ../web_app/pool/schema.py:703
 msgid "Maximal number of created VM must be in [{} {}] interval"
 msgstr "Максимальное число создаваемых виртуальных машин не должно быть меньше начального числа ВМ"
 
-#: ../web_app/pool/schema.py:472
+#: ../web_app/pool/schema.py:474
 msgid "Failed to create static pool {}."
 msgstr "Ошибка создания статического пула {}."
 
-#: ../web_app/pool/schema.py:518
+#: ../web_app/pool/schema.py:520
 msgid "VM {} is already in one of pools"
 msgstr "Виртуальная машина {} уже в одном из пулов."
 
-#: ../web_app/pool/schema.py:531
+#: ../web_app/pool/schema.py:533
 msgid "Vm {} is added to pool {}"
 msgstr "Виртуальная машина {} добавлена в пул {}"
 
-#: ../web_app/pool/schema.py:548 ../web_app/pool/schema.py:743
+#: ../web_app/pool/schema.py:550 ../web_app/pool/schema.py:745
 msgid "List of VM should not be empty"
 msgstr "Список виртуальных машин не должен быть пустым."
 
-#: ../web_app/pool/schema.py:558 ../web_app/pool/schema.py:753
+#: ../web_app/pool/schema.py:560 ../web_app/pool/schema.py:755
 msgid "VM doesn't belong to specified pool"
 msgstr "Виртуальная машина не принадлежит заданному пулу"
 
-#: ../web_app/pool/schema.py:586
+#: ../web_app/pool/schema.py:588
 msgid "Failed to update static pool {}. Name must be unique."
 msgstr "Ошибка редактирования статического пула {}. Имя должно быть уникальным."
 
-#: ../web_app/pool/schema.py:651
+#: ../web_app/pool/schema.py:653
 msgid "Failed to create automated pool {}."
 msgstr "Ошибка создания автоматического пула {}."
 
-#: ../web_app/pool/schema.py:704
+#: ../web_app/pool/schema.py:706
 msgid "Maximal number of created VM can not be reduced."
 msgstr "Максимальное количество создаваемых виртуальных машин не может быть уменьшено."
 
-#: ../web_app/pool/schema.py:724
+#: ../web_app/pool/schema.py:726
 msgid "Failed to update automated pool {}. Name must be unique."
 msgstr "Ошибка редактирования автоматического пула {}. Имя должно быть уникальным."
 
-#: ../web_app/pool/schema.py:903
+#: ../web_app/pool/schema.py:905
 msgid "There is no VM {}"
 msgstr "Нет ВМ {}."
 
-#: ../web_app/pool/schema.py:920
+#: ../web_app/pool/schema.py:922
 msgid "User does not have the right to use pool, which has VM."
 msgstr "У пользователя нет прав на использование пула, которому принадлежит ВМ."
 
@@ -942,43 +942,43 @@ msgstr "У пользователя нет прав на использован�
 msgid "Invalid credentials (ldap)"
 msgstr "Неверные учетные данные (ldap)"
 
-#: ../web_app/thin_client_api/handlers.py:47
-#: ../web_app/thin_client_api/handlers.py:68
-#: ../web_app/thin_client_api/handlers.py:141
+#: ../web_app/thin_client_api/handlers.py:24
+#: ../web_app/thin_client_api/handlers.py:62
+#: ../web_app/thin_client_api/handlers.py:83
 msgid "User {} not found."
 msgstr "Пользователь {} не найден."
 
-#: ../web_app/thin_client_api/handlers.py:64
-msgid "Thin client limit exceeded."
-msgstr "Превышен лимит тонких клиентов."
-
-#: ../web_app/thin_client_api/handlers.py:72
-msgid "Pool not found."
-msgstr "Пул не найден."
-
-#: ../web_app/thin_client_api/handlers.py:89
-msgid "Pool extension has been started. Try again after 5 minutes."
-msgstr "Запущено расширение пула. Повторите попытку через 5 минут."
-
-#: ../web_app/thin_client_api/handlers.py:92
-msgid "Pool doesnt have free machines"
-msgstr "В пуле нет свободных машин"
-
-#: ../web_app/thin_client_api/handlers.py:106
-msgid "VM is unreachable on ECP Veil."
-msgstr "ВМ недоступна на ECP Veil."
-
-#: ../web_app/thin_client_api/handlers.py:116
-msgid "VM does not support RDP"
-msgstr "Виртуальная машина не поддерживает RDP"
-
-#: ../web_app/thin_client_api/handlers.py:144
+#: ../web_app/thin_client_api/handlers.py:27
 msgid "There is no pool with id: {}"
 msgstr "Отсутствует пул с ID: {}."
 
-#: ../web_app/thin_client_api/handlers.py:147
+#: ../web_app/thin_client_api/handlers.py:30
 msgid "User {} has no VM on pool {}"
 msgstr "У пользователя {} нет виртуальной машины в пуле {}"
+
+#: ../web_app/thin_client_api/handlers.py:79
+msgid "Thin client limit exceeded."
+msgstr "Превышен лимит тонких клиентов."
+
+#: ../web_app/thin_client_api/handlers.py:87
+msgid "Pool not found."
+msgstr "Пул не найден."
+
+#: ../web_app/thin_client_api/handlers.py:104
+msgid "The pool doesn`t have free machines. Try again after 5 minutes."
+msgstr "В пуле нет свободных машин. Повторите попытку через 5 минут."
+
+#: ../web_app/thin_client_api/handlers.py:107
+msgid "The pool doesn`t have free machines."
+msgstr "В пуле нет свободных машин"
+
+#: ../web_app/thin_client_api/handlers.py:120
+msgid "VM is unreachable on ECP Veil."
+msgstr "ВМ недоступна на ECP Veil."
+
+#: ../web_app/thin_client_api/handlers.py:131
+msgid "VM does not support RDP."
+msgstr "Виртуальная машина не поддерживает RDP"
 
 #: ../ws_listener_worker/resources_monitor.py:117
 msgid "{} is connected: {}"
@@ -1026,41 +1026,41 @@ msgstr "{cls}: удален монитор ресурсов для контро�
 msgid "{cls}: controller {id} is not monitored!"
 msgstr "{cls}: контроллер {id} не отслеживается!"
 
-#~ msgid "Trying to create VM on ECP with verbose_name={}"
-#~ msgstr "Попытка создать виртуальную машину на ECP с именем = {}"
-
-#~ msgid "Request to create VM sent without surprise. Leaving while."
-#~ msgstr "Запрос на создание ВМ отправлен без неожиданностей. Покидаем while."
-
-#~ msgid "Wait one more try"
-#~ msgstr "Подождите еще одну попытку."
-
-#~ msgid "Ws listener worker: start loop now"
-#~ msgstr "Ws listener worker: запущен"
-
-#~ msgid "Pool worker: start loop now"
-#~ msgstr "Pool worker: запущен"
-
-#~ msgid "Role VM_OPERATOR has assigned to user {}."
-#~ msgstr "Пользователю {} назначена роль VM_OPERATOR."
-
-#~ msgid "Failed to create automated pool {}. Name must be unique."
-#~ msgstr "Ошибка создания автоматического пула {}. Имя должно быть уникальным."
-
-#~ msgid "ip-address probably invalid."
-#~ msgstr "Возможно, неверный IP адрес."
-
-#~ msgid "Group"
-#~ msgstr "Группа"
-
-#~ msgid "In authentication directory {} mapping"
-#~ msgstr "В директории авторизации {} отображение"
-
-#~ msgid "Authentication directory"
-#~ msgstr "Директория авторизации"
+#~ msgid "Calling soft delete for vm {}"
+#~ msgstr "Вызов мягкого удаления для виртуальной машины {}"
 
 #~ msgid "VM"
 #~ msgstr "Виртуальная машина"
 
-#~ msgid "Calling soft delete for vm {}"
-#~ msgstr "Вызов мягкого удаления для виртуальной машины {}"
+#~ msgid "Authentication directory"
+#~ msgstr "Директория авторизации"
+
+#~ msgid "In authentication directory {} mapping"
+#~ msgstr "В директории авторизации {} отображение"
+
+#~ msgid "Group"
+#~ msgstr "Группа"
+
+#~ msgid "ip-address probably invalid."
+#~ msgstr "Возможно, неверный IP адрес."
+
+#~ msgid "Failed to create automated pool {}. Name must be unique."
+#~ msgstr "Ошибка создания автоматического пула {}. Имя должно быть уникальным."
+
+#~ msgid "Role VM_OPERATOR has assigned to user {}."
+#~ msgstr "Пользователю {} назначена роль VM_OPERATOR."
+
+#~ msgid "Pool worker: start loop now"
+#~ msgstr "Pool worker: запущен"
+
+#~ msgid "Ws listener worker: start loop now"
+#~ msgstr "Ws listener worker: запущен"
+
+#~ msgid "Wait one more try"
+#~ msgstr "Подождите еще одну попытку."
+
+#~ msgid "Request to create VM sent without surprise. Leaving while."
+#~ msgstr "Запрос на создание ВМ отправлен без неожиданностей. Покидаем while."
+
+#~ msgid "Trying to create VM on ECP with verbose_name={}"
+#~ msgstr "Попытка создать виртуальную машину на ECP с именем = {}"
