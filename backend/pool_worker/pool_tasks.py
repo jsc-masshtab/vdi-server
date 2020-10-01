@@ -172,7 +172,6 @@ class ExpandPoolTask(AbstractTask):
 
     async def do_task(self):
 
-        await system_logger.debug('start_pool_expanding')
         automated_pool = await AutomatedPool.get(self.task_model.entity_id)
         if not automated_pool:
             return
