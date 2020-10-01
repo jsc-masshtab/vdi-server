@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2020-09-10 16:39+0300\n"
+"POT-Creation-Date: 2020-10-01 11:59+0300\n"
 "PO-Revision-Date: 2020-07-30 11:25+0300\n"
 "Last-Translator: Emil <emil@emil-pc>\n"
 "Language-Team: English\n"
@@ -509,15 +509,15 @@ msgstr "Vm {} domain including task failed."
 msgid "Adding computer {} to domain container(s) {}"
 msgstr "Adding computer {} to domain container(s) {}"
 
-#: ../common/models/vm.py:441
+#: ../common/models/vm.py:442
 msgid "Vm {} has been added to {}"
 msgstr "Vm {} has been added to {}"
 
-#: ../common/models/vm.py:445
+#: ../common/models/vm.py:446
 msgid "Vm {} has been prepared"
 msgstr "Vm {} has been prepared"
 
-#: ../common/models/vm.py:452
+#: ../common/models/vm.py:453
 msgid "{} preparation cancelled by timeout."
 msgstr "{} preparation cancelled by timeout."
 
@@ -620,15 +620,15 @@ msgstr "Pool Creation cancelled"
 msgid "Failed to create pool. {exception} {name}"
 msgstr "Failed to create pool. {exception} {name}"
 
-#: ../pool_worker/pool_tasks.py:164 ../pool_worker/pool_tasks.py:229
+#: ../pool_worker/pool_tasks.py:164 ../pool_worker/pool_tasks.py:228
 msgid "VM preparation error"
 msgstr "VM preparation error"
 
-#: ../pool_worker/pool_tasks.py:219
+#: ../pool_worker/pool_tasks.py:218
 msgid "VM creating error:"
 msgstr "VM creating error:"
 
-#: ../pool_worker/pool_tasks.py:283
+#: ../pool_worker/pool_tasks.py:282
 msgid "Deleted pool {}"
 msgstr "Deleted pool {}"
 
@@ -813,7 +813,7 @@ msgstr "address `{}` is busy."
 msgid "token can`t be empty."
 msgstr "token can`t be empty."
 
-#: ../web_app/controller/schema.py:66 ../web_app/pool/schema.py:43
+#: ../web_app/controller/schema.py:66 ../web_app/pool/schema.py:45
 msgid "No such controller."
 msgstr "No such controller."
 
@@ -865,76 +865,76 @@ msgstr "No such event."
 msgid "Journal is exported"
 msgstr "Journal is exported"
 
-#: ../web_app/pool/schema.py:94 ../web_app/pool/schema.py:382
-#: ../web_app/pool/schema.py:403
+#: ../web_app/pool/schema.py:96 ../web_app/pool/schema.py:384
+#: ../web_app/pool/schema.py:405
 msgid "No such pool."
 msgstr "No such pool."
 
-#: ../web_app/pool/schema.py:104
+#: ../web_app/pool/schema.py:106
 msgid "Pool name must contain only characters, digits, _, -"
 msgstr "Pool name must contain only characters, digits, _, -"
 
-#: ../web_app/pool/schema.py:115
+#: ../web_app/pool/schema.py:117
 msgid "Template name of VM must contain only characters, digits, _, -"
 msgstr "Template name of VM must contain only characters, digits, _, -"
 
-#: ../web_app/pool/schema.py:123
+#: ../web_app/pool/schema.py:125
 msgid "Initial number of VM must be in {}-{} interval"
 msgstr "Initial number of VM must be in {}-{} interval"
 
-#: ../web_app/pool/schema.py:139
+#: ../web_app/pool/schema.py:141
 msgid "Number of created VM must be in {}-{} interval"
 msgstr "Number of created VM must be in {}-{} interval"
 
-#: ../web_app/pool/schema.py:160 ../web_app/pool/schema.py:699
+#: ../web_app/pool/schema.py:162 ../web_app/pool/schema.py:701
 msgid "Maximal number of created VM should be less than initial number of VM"
 msgstr "Maximal number of created VM should be less than initial number of VM"
 
-#: ../web_app/pool/schema.py:162 ../web_app/pool/schema.py:701
+#: ../web_app/pool/schema.py:164 ../web_app/pool/schema.py:703
 msgid "Maximal number of created VM must be in [{} {}] interval"
 msgstr "Maximal number of created VM must be in [{} {}] interval"
 
-#: ../web_app/pool/schema.py:472
+#: ../web_app/pool/schema.py:474
 msgid "Failed to create static pool {}."
 msgstr "Failed to create static pool {}."
 
-#: ../web_app/pool/schema.py:518
+#: ../web_app/pool/schema.py:520
 msgid "VM {} is already in one of pools"
 msgstr "VM {} is already in one of pools"
 
-#: ../web_app/pool/schema.py:531
+#: ../web_app/pool/schema.py:533
 msgid "Vm {} is added to pool {}"
 msgstr "Vm {} is added to pool {}"
 
-#: ../web_app/pool/schema.py:548 ../web_app/pool/schema.py:743
+#: ../web_app/pool/schema.py:550 ../web_app/pool/schema.py:745
 msgid "List of VM should not be empty"
 msgstr "List of VM should not be empty"
 
-#: ../web_app/pool/schema.py:558 ../web_app/pool/schema.py:753
+#: ../web_app/pool/schema.py:560 ../web_app/pool/schema.py:755
 msgid "VM doesn't belong to specified pool"
 msgstr "VM doesn't belong to specified pool"
 
-#: ../web_app/pool/schema.py:586
+#: ../web_app/pool/schema.py:588
 msgid "Failed to update static pool {}. Name must be unique."
 msgstr "Failed to update static pool {}. Name must be unique."
 
-#: ../web_app/pool/schema.py:651
+#: ../web_app/pool/schema.py:653
 msgid "Failed to create automated pool {}."
 msgstr "Failed to create automated pool {}."
 
-#: ../web_app/pool/schema.py:704
+#: ../web_app/pool/schema.py:706
 msgid "Maximal number of created VM can not be reduced."
 msgstr "Maximal number of created VM can not be reduced."
 
-#: ../web_app/pool/schema.py:724
+#: ../web_app/pool/schema.py:726
 msgid "Failed to update automated pool {}. Name must be unique."
 msgstr "Failed to update automated pool {}. Name must be unique."
 
-#: ../web_app/pool/schema.py:903
+#: ../web_app/pool/schema.py:905
 msgid "There is no VM {}"
 msgstr "There is no VM {}"
 
-#: ../web_app/pool/schema.py:920
+#: ../web_app/pool/schema.py:922
 msgid "User does not have the right to use pool, which has VM."
 msgstr "User does not have the right to use pool, which has VM."
 
@@ -942,43 +942,43 @@ msgstr "User does not have the right to use pool, which has VM."
 msgid "Invalid credentials (ldap)"
 msgstr "Invalid credentials (ldap)"
 
-#: ../web_app/thin_client_api/handlers.py:47
-#: ../web_app/thin_client_api/handlers.py:68
-#: ../web_app/thin_client_api/handlers.py:141
+#: ../web_app/thin_client_api/handlers.py:24
+#: ../web_app/thin_client_api/handlers.py:62
+#: ../web_app/thin_client_api/handlers.py:83
 msgid "User {} not found."
 msgstr "User {} not found."
 
-#: ../web_app/thin_client_api/handlers.py:64
-msgid "Thin client limit exceeded."
-msgstr "Thin client limit exceeded."
-
-#: ../web_app/thin_client_api/handlers.py:72
-msgid "Pool not found."
-msgstr "Pool not found."
-
-#: ../web_app/thin_client_api/handlers.py:89
-msgid "Pool extension has been started. Try again after 5 minutes."
-msgstr "Pool extension has been started. Try again after 5 minutes."
-
-#: ../web_app/thin_client_api/handlers.py:92
-msgid "Pool doesnt have free machines"
-msgstr "Pool doesnt have free machines"
-
-#: ../web_app/thin_client_api/handlers.py:106
-msgid "VM is unreachable on ECP Veil."
-msgstr "VM is unreachable on ECP Veil."
-
-#: ../web_app/thin_client_api/handlers.py:116
-msgid "VM does not support RDP"
-msgstr "VM does not support RDP"
-
-#: ../web_app/thin_client_api/handlers.py:144
+#: ../web_app/thin_client_api/handlers.py:27
 msgid "There is no pool with id: {}"
 msgstr "There is no pool with id: {}"
 
-#: ../web_app/thin_client_api/handlers.py:147
+#: ../web_app/thin_client_api/handlers.py:30
 msgid "User {} has no VM on pool {}"
 msgstr "User {} has no VM on pool {}"
+
+#: ../web_app/thin_client_api/handlers.py:79
+msgid "Thin client limit exceeded."
+msgstr "Thin client limit exceeded."
+
+#: ../web_app/thin_client_api/handlers.py:87
+msgid "Pool not found."
+msgstr "Pool not found."
+
+#: ../web_app/thin_client_api/handlers.py:104
+msgid "The pool doesn`t have free machines. Try again after 5 minutes."
+msgstr "The pool doesn`t have free machines. Try again after 5 minutes."
+
+#: ../web_app/thin_client_api/handlers.py:107
+msgid "The pool doesn`t have free machines."
+msgstr "The pool doesn`t have free machines."
+
+#: ../web_app/thin_client_api/handlers.py:120
+msgid "VM is unreachable on ECP Veil."
+msgstr "VM is unreachable on ECP Veil."
+
+#: ../web_app/thin_client_api/handlers.py:131
+msgid "VM does not support RDP."
+msgstr "VM does not support RDP."
 
 #: ../ws_listener_worker/resources_monitor.py:117
 msgid "{} is connected: {}"
@@ -1026,41 +1026,41 @@ msgstr "{cls}: resource monitor for controller {name} removed"
 msgid "{cls}: controller {id} is not monitored!"
 msgstr "{cls}: controller {id} is not monitored!"
 
-#~ msgid "Trying to create VM on ECP with verbose_name={}"
-#~ msgstr "Trying to create VM on ECP with verbose_name={}"
-
-#~ msgid "Request to create VM sent without surprise. Leaving while."
-#~ msgstr "Request to create VM sent without surprise. Leaving while."
-
-#~ msgid "Wait one more try"
-#~ msgstr "Wait one more try"
-
-#~ msgid "Ws listener worker: start loop now"
-#~ msgstr "Ws listener worker: start loop now"
-
-#~ msgid "Pool worker: start loop now"
-#~ msgstr "Pool worker: start loop now"
-
-#~ msgid "Role VM_OPERATOR has assigned to user {}."
-#~ msgstr "Role VM_OPERATOR has assigned to user {}."
-
-#~ msgid "Failed to create automated pool {}. Name must be unique."
-#~ msgstr "Failed to create automated pool {}. Name must be unique."
-
-#~ msgid "ip-address probably invalid."
-#~ msgstr "ip-address probably invalid."
-
-#~ msgid "Group"
-#~ msgstr "Group"
-
-#~ msgid "In authentication directory {} mapping"
-#~ msgstr "In authentication directory {} mapping"
-
-#~ msgid "Authentication directory"
-#~ msgstr "Authentication directory"
+#~ msgid "Calling soft delete for vm {}"
+#~ msgstr "Calling soft delete for vm {}"
 
 #~ msgid "VM"
 #~ msgstr "VM"
 
-#~ msgid "Calling soft delete for vm {}"
-#~ msgstr "Calling soft delete for vm {}"
+#~ msgid "Authentication directory"
+#~ msgstr "Authentication directory"
+
+#~ msgid "In authentication directory {} mapping"
+#~ msgstr "In authentication directory {} mapping"
+
+#~ msgid "Group"
+#~ msgstr "Group"
+
+#~ msgid "ip-address probably invalid."
+#~ msgstr "ip-address probably invalid."
+
+#~ msgid "Failed to create automated pool {}. Name must be unique."
+#~ msgstr "Failed to create automated pool {}. Name must be unique."
+
+#~ msgid "Role VM_OPERATOR has assigned to user {}."
+#~ msgstr "Role VM_OPERATOR has assigned to user {}."
+
+#~ msgid "Pool worker: start loop now"
+#~ msgstr "Pool worker: start loop now"
+
+#~ msgid "Ws listener worker: start loop now"
+#~ msgstr "Ws listener worker: start loop now"
+
+#~ msgid "Wait one more try"
+#~ msgstr "Wait one more try"
+
+#~ msgid "Request to create VM sent without surprise. Leaving while."
+#~ msgstr "Request to create VM sent without surprise. Leaving while."
+
+#~ msgid "Trying to create VM on ECP with verbose_name={}"
+#~ msgstr "Trying to create VM on ECP with verbose_name={}"

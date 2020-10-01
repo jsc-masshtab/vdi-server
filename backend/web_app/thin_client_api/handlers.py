@@ -100,10 +100,11 @@ class PoolGetVm(BaseHandler, ABC):
             if vm:
                 await vm.add_user(user.id, creator='system')
             elif pool_extended:
-                response = {'errors': [{'message': _('Pool extension has been started. Try again after 5 minutes.')}]}
+                response = {
+                    'errors': [{'message': _('The pool doesn`t have free machines. Try again after 5 minutes.')}]}
                 return await self.log_finish(response)
             else:
-                response = {'errors': [{'message': _('Pool doesnt have free machines.')}]}
+                response = {'errors': [{'message': _('The pool doesn`t have free machines.')}]}
                 return await self.log_finish(response)
 
         # Дальше запросы начинают уходить на veil
