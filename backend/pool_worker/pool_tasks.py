@@ -6,20 +6,19 @@ import traceback
 from common.veil.veil_errors import PoolCreationError
 
 from common.log.journal import system_logger
-
-from common.models.pool import AutomatedPool, Pool
-
 from common.veil.veil_errors import VmCreationError, SimpleError
 
 from common.veil.veil_redis import REDIS_CLIENT, INTERNAL_EVENTS_CHANNEL
-from common.veil.veil_gino import EntityType
+from common.veil.veil_gino import EntityType, Status
 from web_app.front_ws_api.subscription_sources import VDI_TASKS_SUBSCRIPTION
 
 from common.utils import cancel_async_task
 
 from common.languages import lang_init
 
+from common.models.pool import AutomatedPool, Pool
 from common.models.tasks import TaskStatus, TaskModel
+from common.models.authentication_directory import AuthenticationDirectory
 
 
 _ = lang_init()
@@ -146,18 +145,23 @@ class InitPoolTask(AbstractTask):
                 try:
                     await automated_pool.add_initial_vms()
                 except PoolCreationError:
-                    await system_logger.debug('Pool Creation cancelled')
+                    await system_logger.debug(_('Pool Creation cancelled'))
                     await automated_pool.deactivate()
                 except asyncio.CancelledError:
                     await automated_pool.deactivate()
                     raise
                 except Exception as E:
-                    await system_logger.error('Failed to create pool. {exception} {name}'.format(
+                    await system_logger.error(_('Failed to create pool. {exception} {name}').format(
                         exception=str(E), name=E.__class__.__name__))
                     await automated_pool.deactivate()
                     raise E
-                else:
-                    await automated_pool.activate()
+                # Активируем пул
+                await automated_pool.activate()
+                # Подготавливаем машины
+                try:
+                    await automated_pool.prepare_initial_vms()
+                except Exception as E:
+                    await system_logger.error(message=_('VM preparation error'), description=str(E))
 
 
 class ExpandPoolTask(AbstractTask):
@@ -206,11 +210,22 @@ class ExpandPoolTask(AbstractTask):
                     real_amount_to_add = min(max_possible_amount_to_add, automated_pool.increase_step)
                     # add VMs.
                     try:
+                        vm_list = list()
                         for i in range(0, real_amount_to_add):  # noqa
-                            await automated_pool.add_vm()
+                            vm_object = await automated_pool.add_vm()
+                            vm_list.append(vm_object)
                     except VmCreationError as vm_error:
                         await system_logger.error(_('VM creating error:'))
                         await system_logger.debug(vm_error)
+                    # Подготовка ВМ для подключения к ТК
+                    try:
+                        active_directory_object = await AuthenticationDirectory.query.where(
+                            AuthenticationDirectory.status == Status.ACTIVE).gino.first()
+                        await asyncio.gather(
+                            *[vm_object.prepare_with_timeout(active_directory_object, automated_pool.ad_cn_pattern) for
+                              vm_object in vm_list])
+                    except Exception as E:
+                        await system_logger.error(message=_('VM preparation error'), description=str(E))
 
 
 class DeletePoolTask(AbstractTask):

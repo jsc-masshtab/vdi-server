@@ -5,8 +5,10 @@ from tornado.escape import json_decode
 from graphene_tornado.tornado_graphql_handler import TornadoGraphQLHandler
 
 from common.veil.auth.veil_jwt import extract_user, jwtauth, extract_user_object
+from common.veil.veil_errors import ValidationError
 from common.models.auth import User
 from common.log.journal import system_logger
+
 
 # TODO: унифицировать обработку Exception, чтобы не плодить try:ex
 
@@ -54,6 +56,14 @@ class BaseHandler(RequestHandler, ABC):
 
     async def get_user_object(self):
         return await extract_user_object(self.headers)
+
+    def validate_and_get_parameter(self, parameter_name: str, default_value=None):
+
+        parameter_value = self.args.get(parameter_name, default_value)
+        if parameter_value is None:
+            raise ValidationError('Parameter {} required'.format(parameter_name))
+
+        return parameter_value
 
 
 @jwtauth

@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import asyncio
 import re
 
 import graphene
@@ -11,6 +12,7 @@ from common.veil.veil_errors import SimpleError, ValidationError
 from common.veil.veil_decorators import administrator_required
 from common.veil.veil_graphene import VeilShortEntityType, VeilResourceType
 from common.models.auth import User
+from common.models.authentication_directory import AuthenticationDirectory
 from common.models.vm import Vm
 from common.models.controller import Controller
 from common.models.pool import AutomatedPool, StaticPool, Pool
@@ -613,6 +615,7 @@ class CreateAutomatedPoolMutation(graphene.Mutation, ControllerFetcher):
         create_thin_clones = graphene.Boolean(default_value=True)
         connection_types = graphene.List(graphene.NonNull(ConnectionTypesGraphene),
                                          default_value=[Pool.PoolConnectionTypes.SPICE.value])
+        ad_cn_pattern = graphene.String(description="Наименование групп для добавления ВМ в AD")
 
     pool = graphene.Field(lambda: PoolType)
     ok = graphene.Boolean()
@@ -623,7 +626,7 @@ class CreateAutomatedPoolMutation(graphene.Mutation, ControllerFetcher):
                      verbose_name, increase_step,
                      initial_size, reserve_size, total_size, vm_name_template,
                      create_thin_clones,
-                     connection_types):
+                     connection_types, ad_cn_pattern: str = None):
         """Мутация создания Автоматического(Динамического) пула виртуальных машин.
 
         TODO: описать механизм работы"""
@@ -643,7 +646,8 @@ class CreateAutomatedPoolMutation(graphene.Mutation, ControllerFetcher):
                                                              total_size=total_size,
                                                              vm_name_template=vm_name_template,
                                                              create_thin_clones=create_thin_clones,
-                                                             connection_types=connection_types)
+                                                             connection_types=connection_types,
+                                                             ad_cn_pattern=ad_cn_pattern)
         except Exception as E:  # Возможные исключения: дубликат имени или вм id, сетевой фейл enable_remote_accesses
             desc = str(E)
             error_msg = _('Failed to create automated pool {}.').format(verbose_name)
@@ -751,7 +755,7 @@ class RemoveVmsFromAutomatedPoolMutation(graphene.Mutation):
                 raise SimpleError(_('VM doesn\'t belong to specified pool').format(vm_id), entity=entity)
 
         # remove vms from db
-        await Vm.remove_vms(vm_ids, creator)
+        await Vm.remove_vms(vm_ids, creator, True)
 
         return {
             'ok': True
@@ -942,6 +946,35 @@ class FreeVmFromUser(graphene.Mutation):
         return FreeVmFromUser(ok=False)
 
 
+class PrepareVm(graphene.Mutation):
+    class Arguments:
+        vm_id = graphene.ID(required=True)
+
+    ok = graphene.Boolean()
+
+    @administrator_required
+    async def mutate(self, _info, vm_id, **kwargs):
+        vm = await Vm.get(vm_id)
+        if vm:
+            active_directory_object = None
+            ad_cn_pattern = None
+
+            pool = await Pool.get(vm.pool_id)
+
+            pool_type = await pool.pool_type
+            if pool_type == Pool.PoolTypes.AUTOMATED:
+                auto_pool = await AutomatedPool.get(pool.id)
+                active_directory_object = await AuthenticationDirectory.query.where(
+                    AuthenticationDirectory.status == Status.ACTIVE).gino.first()
+                ad_cn_pattern = auto_pool.ad_cn_pattern
+            asyncio.ensure_future(vm.prepare_with_timeout(active_directory_object, ad_cn_pattern))
+            # future = asyncio.ensure_future(vm.prepare_with_timeout(active_directory_object, ad_cn_pattern))
+            # future.add_done_callback(lambda f: print('FINISH'))  # делаем что-то после окончания
+            # выполняем любой код ниже
+            return PrepareVm(ok=True)
+        return PrepareVm(ok=False)
+
+
 # --- --- --- --- ---
 # Schema concatenation
 class PoolMutations(graphene.ObjectType):
@@ -964,6 +997,7 @@ class PoolMutations(graphene.ObjectType):
     # Vm mutations
     assignVmToUser = AssignVmToUser.Field()
     freeVmFromUser = FreeVmFromUser.Field()
+    prepareVm = PrepareVm.Field()
 
 
 pool_schema = graphene.Schema(query=PoolQuery,

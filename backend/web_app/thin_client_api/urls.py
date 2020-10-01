@@ -1,13 +1,21 @@
 # -*- coding: utf-8 -*-
-from web_app.thin_client_api.handlers import PoolHandler, PoolGetVm, VmAction, ThinClientWsHandler, RedisInfoHandler
+from web_app.thin_client_api.handlers import PoolHandler, PoolGetVm, VmAction, ThinClientWsHandler, RedisInfoHandler, \
+    AttachUsb, DetachhUsb
 
 
 thin_client_api_urls = [
     (r'/client/pools/?', PoolHandler),
     (r'/client/pools/(?P<pool_id>[0-9a-fA-F]{8}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{12})/?',
      PoolGetVm),
+
+    (r'/client/pools/(?P<pool_id>[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})/attach-usb/?',
+     AttachUsb),
+    (r'/client/pools/(?P<pool_id>[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})/detach-usb/?',
+     DetachhUsb),
+
     (r'/client/pools/(?P<pool_id>[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})/(?P<action>[a-z]+)/?',
      VmAction),
+
     (r'/ws/client/vdi_server_check/?', ThinClientWsHandler),
     (r'/client/message_broker/?', RedisInfoHandler)
 ]

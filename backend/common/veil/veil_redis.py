@@ -9,7 +9,6 @@ import redis
 
 import common.settings
 from common.languages import lang_init
-
 # import common.models as models
 
 _ = lang_init()
@@ -179,7 +178,6 @@ async def request_to_execute_pool_task(pool_id, pool_task_type, **additional_dat
     """Send request to pool worker to execute a task. Return task string id"""
     from common.models.tasks import TaskModel
     task = await TaskModel.create(entity_id=pool_id, task_type=pool_task_type)
-
     task_id = str(task.id)
     data = {'task_id': task_id, 'task_type': pool_task_type, **additional_data}
     REDIS_CLIENT.rpush(POOL_TASK_QUEUE, json.dumps(data))

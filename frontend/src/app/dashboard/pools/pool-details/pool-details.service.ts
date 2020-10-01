@@ -161,6 +161,22 @@ export class PoolDetailsService {
         });
     }
 
+    public prepareVm(vm: string): Observable<any> {
+        return this.service.mutate<any>({
+            mutation: gql`
+                mutation pools($vm: ID!) {
+                     prepareVm(vm_id: $vm) {
+                        ok
+                    }
+                }
+            `,
+            variables: {
+                method: 'POST',
+                vm
+            }
+        });
+    }
+
     public removeVMStaticPool(pool_id: number, vm_ids: []) {
         return this.service.mutate<any>({
             mutation: gql`
