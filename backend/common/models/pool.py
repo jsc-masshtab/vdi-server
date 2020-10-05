@@ -945,8 +945,12 @@ class AutomatedPool(db.Model):
         await system_logger.info(_('Automated pool creation started'), entity=self.entity)
 
         vm_list = list()
+        pool = await Pool.get(self.id)
+        vm_amount_in_pool = await pool.get_vm_amount()  # В пуле уже могут быть машины, например, если
+        # инициализация пула была прервана из-за завершения приложения.
+
         try:
-            for i in range(self.initial_size):
+            for i in range(vm_amount_in_pool, self.initial_size):
                 vm_object = await self.add_vm()
                 vm_list.append(vm_object)
                 msg = _('Created {} VMs from {} at the Automated pool {}').format(i + 1, self.initial_size,
