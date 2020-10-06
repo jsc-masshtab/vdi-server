@@ -46,6 +46,7 @@ class Vm(VeilModel):
     template_id = db.Column(db.Unicode(length=100), nullable=True)
     created_by_vdi = db.Column(db.Boolean(), nullable=False, default=False)
     broken = db.Column(db.Boolean(), nullable=False, default=False)
+    assigned_to_user = db.Column(db.Boolean(), nullable=False, default=False)
 
     @property
     def id_str(self):
@@ -96,7 +97,7 @@ class Vm(VeilModel):
 
     @classmethod
     async def create(cls, pool_id, template_id, verbose_name, id=None,
-                     created_by_vdi=False, broken=False):
+                     created_by_vdi=False, broken=False, assigned_to_user=False):
         await system_logger.debug(_('Create VM {} on VDI DB.').format(verbose_name))
         try:
             vm = await super().create(id=id,
@@ -104,7 +105,8 @@ class Vm(VeilModel):
                                       template_id=template_id,
                                       verbose_name=verbose_name,
                                       created_by_vdi=created_by_vdi,
-                                      broken=broken)
+                                      broken=broken,
+                                      assigned_to_user=assigned_to_user)
         except Exception as E:
             raise VmCreationError(str(E))
 
@@ -149,6 +151,7 @@ class Vm(VeilModel):
                     entity = await EntityModel.create(**self.entity)
                 ero = await EntityRoleOwnerModel.create(entity_id=entity.id, user_id=user_id)
                 user = await UserModel.get(user_id)
+                await self.soft_update(id=self.id, creator=creator, assigned_to_user=True)
                 await system_logger.info(
                     _('User {} has been included to VM {}').format(user.username, self.verbose_name),
                     user=creator, entity=self.entity)

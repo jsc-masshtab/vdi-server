@@ -566,7 +566,9 @@ class Pool(VeilModel):
         # return await free_vm_query.gino.load(VmModel..first()
         entity_query = EntityModel.select('entity_uuid').where(
             (EntityModel.entity_type == EntityType.VM) & (EntityModel.id.in_(EntityRoleOwnerModel.select('entity_id'))))
-        vm_query = VmModel.query.where((VmModel.pool_id == self.id) & (VmModel.broken == False) & (VmModel.id.notin_(entity_query)))  # noqa
+        vm_query = VmModel.query.where(
+            (VmModel.pool_id == self.id) & (VmModel.broken == False) & (VmModel.id.notin_(entity_query)) & (  # noqa
+                        VmModel.assigned_to_user == False))  # noqa
         return await vm_query.gino.first()
 
     async def free_user_vms(self, user_id):
