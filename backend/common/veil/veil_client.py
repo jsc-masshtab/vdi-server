@@ -1,6 +1,5 @@
 raise DeprecationWarning('deprecated')
 # # -*- coding: utf-8 -*-
-# from cached_property import cached_property
 # from tornado.httpclient import AsyncHTTPClient, HTTPRequest, HTTPClientError
 # from tornado.escape import json_decode
 #
