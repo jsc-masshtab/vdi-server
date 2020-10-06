@@ -262,6 +262,22 @@ class Vm(VeilModel):
         return copy_result
 
     @staticmethod
+    async def remove_vm(vm_id, creator, remove_vms_on_controller):
+        vm = await Vm.get(vm_id)
+        await vm.soft_delete(creator=creator, remove_on_controller=remove_vms_on_controller)
+        await system_logger.info(_('Vm {} removed from pool').format(vm.verbose_name), entity=vm.entity)
+
+    @staticmethod
+    async def remove_vm_with_timeout(vm_id, creator, remove_vms_on_controller):
+        try:
+            await asyncio.wait_for(Vm.remove_vm(vm_id, creator, remove_vms_on_controller), VEIL_VM_PREPARE_TIMEOUT)
+        except asyncio.TimeoutError:
+            vm = await Vm.get(vm_id)
+            await system_logger.error(message=_('VM {} deleting cancelled by timeout.').format(vm.verbose_name))
+        except ValueError as err_msg:
+            await system_logger.error(message=str(err_msg))
+
+    @staticmethod
     async def remove_vms(vm_ids, creator, remove_vms_on_controller=False):
         """Remove given vms"""
 
@@ -276,12 +292,9 @@ class Vm(VeilModel):
         #     await http_veil_client.multi_remove(vm_ids)
 
         # Решили оставить удаление по одной вм из бд. (ради логирования?)
-        status = None
-        for vm_id in vm_ids:
-            vm = await Vm.get(vm_id)
-            status = await vm.soft_delete(creator=creator, remove_on_controller=remove_vms_on_controller)
-            await system_logger.info(_('Vm {} removed from pool').format(vm.verbose_name), entity=vm.entity)
-        return status
+        await asyncio.gather(*[Vm.remove_vm_with_timeout(vm_id, creator, remove_vms_on_controller) for vm_id in vm_ids])
+
+        return True
 
     @staticmethod
     async def enable_remote_accesses(controller_address, vm_ids):
