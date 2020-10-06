@@ -4,8 +4,6 @@ import asyncio
 
 from abc import ABC
 
-from cached_property import cached_property
-
 from common.languages import lang_init
 from common.log.journal import system_logger
 
@@ -32,7 +30,7 @@ class BackendError(Exception):
     def __init__(self, **kwargs):
         self.__dict__.update(kwargs)
 
-    @cached_property
+    @property
     def type_info(self):
         return {'type': self.__class__.__name__}
 
@@ -71,7 +69,7 @@ class FetchException(BackendError):
     url = ''
     data = dict()
 
-    @cached_property
+    @property
     def code(self):
         return self.http_error.code
 
@@ -98,7 +96,7 @@ class HttpError(BackendError):
             system_logger._debug(message)
             self.message = message
 
-    @cached_property
+    @property
     def code(self):
         raise NotImplementedError
 
