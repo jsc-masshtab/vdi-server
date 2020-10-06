@@ -139,8 +139,14 @@ class AbstractSortableStatusModel:
         return obj
 
     @classmethod
-    async def get_objects(cls, limit=100, offset=0, filters=None, ordering=None, first=False, include_inactive=False):
+    async def get_objects(cls, limit=100, offset=0, name=None, filters=None, ordering=None, first=False,
+                          include_inactive=False):
         query = cls.get_query(ordering=ordering, include_inactive=include_inactive)
+        if name:
+            if cls.__name__ == 'User':
+                query = query.where(cls.username.ilike('%{}%'.format(name)))
+            else:
+                query = query.where(cls.verbose_name.ilike('%{}%'.format(name)))
         if filters:
             query = query.where(and_(*filters))
         if first:
