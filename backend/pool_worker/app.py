@@ -30,7 +30,7 @@ def main():
     vm_manager = VmManager()
     loop.create_task(vm_manager.start())
 
-    loop.run_forever()  # run until event loop stop
+    loop.run_forever()  # run until event loop stops
 
     system_logger._debug("Pool worker stopped")
 

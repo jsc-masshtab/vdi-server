@@ -12,6 +12,7 @@ from common.veil.veil_api import get_veil_client, stop_veil_client
 from common.veil.veil_redis import REDIS_POOL
 from common.veil.veil_handlers import VdiTornadoGraphQLHandler
 
+from web_app.task.schema import task_schema
 from web_app.journal.schema import event_schema
 from web_app.auth.license.utils import License
 from web_app.auth.user_schema import user_schema
@@ -43,6 +44,7 @@ handlers = [
     (r'/auth_dirs', VdiTornadoGraphQLHandler, dict(graphiql=True, schema=auth_dir_schema)),
     (r'/pools', VdiTornadoGraphQLHandler, dict(graphiql=True, schema=pool_schema)),
     (r'/events', VdiTornadoGraphQLHandler, dict(graphiql=True, schema=event_schema)),
+    (r'/tasks', VdiTornadoGraphQLHandler, dict(graphiql=True, schema=task_schema)),
 ]
 
 handlers += auth_api_urls

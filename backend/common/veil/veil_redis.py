@@ -4,12 +4,16 @@
 import asyncio
 from enum import Enum
 import json
+import time
+from functools import wraps
 
 import redis
 
 import common.settings
 from common.languages import lang_init
 # import common.models as models
+from common.models.task import PoolTaskType
+
 
 _ = lang_init()
 
@@ -18,19 +22,20 @@ _ = lang_init()
 REDIS_ASYNC_TIMEOUT = 0.01
 
 # Pool worker related
-POOL_TASK_QUEUE = 'POOL_TASK_QUEUE'
+POOL_TASK_QUEUE = 'POOL_TASK_QUEUE'  # Очередь задач пул воркера
+POOL_WORKER_CMD_QUEUE = 'POOL_WORKER_CMD_QUEUE'  # Очередь для команд, которые принимаются пул воркером (Например,
+# команда на отмену задачи)
+
+
+class PoolWorkerCmd(Enum):
+
+    CANCEL_TASK = 'CANCEL_TASK'
+
+
 # Ws monitor related
 WS_MONITOR_CHANNEL_OUT = 'WS_MONITOR_CHANNEL_OUT'  # по этому каналу сообщения полученные по ws от контроллеров
 WS_MONITOR_CMD_QUEUE = 'WS_MONITOR_CMD_QUEUE'  # Очередь для команд, которые принимаются монитором ws. Переходим на
 # очередь, чтобы гарантировать порядок команд
-
-
-class PoolTaskType(Enum):
-
-    CREATING = 'CREATING'
-    EXPANDING = 'EXPANDING'
-    DELETING = 'DELETING'
-    # DECREASING = 'DECREASING'
 
 
 class WsMonitorCmd(Enum):
@@ -40,11 +45,8 @@ class WsMonitorCmd(Enum):
     RESTART_MONITOR = 'RESTART_MONITOR'
 
 
-#############################
-
-INTERNAL_EVENTS_CHANNEL = 'INTERNAL_EVENTS_CHANNEL'
-
-#############################
+#
+INTERNAL_EVENTS_CHANNEL = 'INTERNAL_EVENTS_CHANNEL'  # Канал для внутренних событий vdi
 
 
 REDIS_POOL = redis.ConnectionPool.from_url(
@@ -59,23 +61,24 @@ REDIS_CLIENT.info()
 #     raise
 
 
-# def redis_error_handle(func):
-#     """
-#     Декоратор обеспечивает перехват исключений,
-#     вызванных при взаимодействии с Redis.
-#     """
-#
-#     @wraps(func)
-#     def wrapped_function(*args, **kwargs):
-#         """Декорируемая функция"""
-#         response = None
-#         try:
-#             response = func(*args, **kwargs)
-#         except redis.RedisError as error:
-#             log.general(_("Redis error: %(error)s"), {'error': error})
-#         return response
-#
-#     return wrapped_function
+def redis_error_handle(func):
+    """
+    Декоратор обеспечивает перехват исключений,
+    вызванных при взаимодействии с Redis.
+    """
+
+    @wraps(func)
+    def wrapped_function(*args, **kwargs):
+        """Декорируемая функция"""
+        response = None
+        try:
+            response = func(*args, **kwargs)
+        except redis.RedisError as error:
+            pass
+            # log.general(_("Redis error: %(error)s"), {'error': error})
+        return response
+
+    return wrapped_function
 
 
 def get_thin_clients_count():
@@ -137,6 +140,7 @@ async def a_redis_wait_for_message(redis_channel, predicate, timeout):
     redis_subscriber.subscribe(redis_channel)
 
     try:
+        start_time = time.time()  # sec from epoch
         while True:
             # try to receive message
             redis_message = redis_subscriber.get_message()
@@ -146,11 +150,10 @@ async def a_redis_wait_for_message(redis_channel, predicate, timeout):
                 return True
 
             # stop if time expired
-            if await_time >= timeout:
+            cur_time = time.time()
+            if (cur_time - start_time) >= timeout:
                 return False
 
-            # count time
-            await_time += REDIS_ASYNC_TIMEOUT
             await asyncio.sleep(REDIS_ASYNC_TIMEOUT)
 
     except asyncio.CancelledError:  # Проброс необходим, чтобы корутина могла отмениться
@@ -176,10 +179,10 @@ async def a_redis_get_message(redis_subscriber):
 
 async def request_to_execute_pool_task(pool_id, pool_task_type, **additional_data):
     """Send request to pool worker to execute a task. Return task string id"""
-    from common.models.tasks import TaskModel
-    task = await TaskModel.create(entity_id=pool_id, task_type=pool_task_type)
+    from common.models.task import Task
+    task = await Task.create(entity_id=pool_id, task_type=pool_task_type)
     task_id = str(task.id)
-    data = {'task_id': task_id, 'task_type': pool_task_type, **additional_data}
+    data = {'task_id': task_id, 'task_type': pool_task_type.name, **additional_data}
     REDIS_CLIENT.rpush(POOL_TASK_QUEUE, json.dumps(data))
     # print('request_to_execute_pool_task task_id: {}'.format(task_id))
     return task_id
@@ -204,7 +207,7 @@ async def execute_delete_pool_task(pool_id: str, full, wait_for_result=True, wai
         return False
 
     # send command to pool worker
-    await request_to_execute_pool_task(pool_id, PoolTaskType.DELETING.name, deletion_full=full)
+    await request_to_execute_pool_task(pool_id, PoolTaskType.DELETING_POOL, deletion_full=full)
 
     # wait for result
     if wait_for_result:
@@ -213,6 +216,12 @@ async def execute_delete_pool_task(pool_id: str, full, wait_for_result=True, wai
         return is_deleted
     else:
         return True
+
+
+def send_cmd_to_cancel_tasks(task_ids: list, cancel_all=False):
+    """Send command CANCEL_TASK to pool worker"""
+    cmd_dict = {'command': PoolWorkerCmd.CANCEL_TASK.name, 'task_ids': task_ids, 'cancel_all': cancel_all}
+    REDIS_CLIENT.rpush(POOL_WORKER_CMD_QUEUE, json.dumps(cmd_dict))
 
 
 def send_cmd_to_ws_monitor(controller_id, ws_monitor_cmd: WsMonitorCmd):

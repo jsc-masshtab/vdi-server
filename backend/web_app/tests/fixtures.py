@@ -244,10 +244,6 @@ async def fixt_create_automated_pool(fixt_controller):
     pool_id = executed['addDynamicPool']['pool']['pool_id']
 
     # Нужно дождаться внутреннего сообщения о создании пула.
-    # pool_creation_waiter = WaiterSubscriptionObserver()
-    # pool_creation_waiter.add_subscription_source(EVENTS_SUBSCRIPTION)
-    # internal_event_monitor.subscribe(pool_creation_waiter)
-
     def _check_if_pool_created(redis_message):
 
         system_logger._debug('_check_if_pool_created: redis_message : ' + str(redis_message))

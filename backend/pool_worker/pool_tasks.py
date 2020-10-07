@@ -8,7 +8,7 @@ from common.veil.veil_errors import PoolCreationError
 from common.log.journal import system_logger
 from common.veil.veil_errors import VmCreationError, SimpleError
 
-from common.veil.veil_redis import REDIS_CLIENT, INTERNAL_EVENTS_CHANNEL
+from common.veil.veil_redis import REDIS_CLIENT, INTERNAL_EVENTS_CHANNEL, redis_error_handle
 from common.veil.veil_gino import EntityType, Status
 from web_app.front_ws_api.subscription_sources import VDI_TASKS_SUBSCRIPTION
 
@@ -17,7 +17,7 @@ from common.utils import cancel_async_task
 from common.languages import lang_init
 
 from common.models.pool import AutomatedPool, Pool
-from common.models.tasks import TaskStatus, TaskModel
+from common.models.task import PoolTaskType, TaskStatus, Task
 from common.models.authentication_directory import AuthenticationDirectory
 
 
@@ -32,12 +32,12 @@ class AbstractTask:
         self.task_model = None
         self._coroutine = None
         self._ref_to_task_list = None  # Сссылка на список обьектов задач. Сам список живет в классе PoolTaskManager
-        # Введено из-за нежелания создавать глобальную переменную task_list. todo: made it weakref!
+        # Введено из-за нежелания создавать глобальную переменную task_list.
         self._task_priority = 1
 
     async def init(self, task_id, task_list):
         self._ref_to_task_list = task_list
-        self.task_model = await TaskModel.get(task_id)
+        self.task_model = await Task.get(task_id)
 
         if self.task_model:
             await self.task_model.update(priority=self._task_priority).apply()
@@ -63,10 +63,6 @@ class AbstractTask:
         """Действия при фэйле корутины do_task"""
         pass
 
-    async def do_on_finish(self):
-        """Действия после завершения корутины do_task"""
-        pass
-
     async def execute(self):
         """Выполнить корутину do_task"""
 
@@ -74,42 +70,66 @@ class AbstractTask:
             await system_logger.error('AbstractTask.execute: logical error. No such task')
             return
 
-        await system_logger.debug('Start task execution: {}'.format(self.task_model.task_type))
+        await system_logger.debug('Start task execution: {}'.format(self.task_model.task_type.name))
 
         # Добавить себя в список выполняющихся задач
         self._ref_to_task_list.append(self)
-
-        await self.task_model.set_status(TaskStatus.IN_PROGRESS)
+        # set task status
+        await self.set_task_status(TaskStatus.IN_PROGRESS)
 
         try:
             await self.do_task()
-            await self.task_model.set_status(TaskStatus.FINISHED)
+            await self.set_task_status(TaskStatus.FINISHED)
 
         except asyncio.CancelledError:
-            await self.task_model.set_status(TaskStatus.CANCELLED)
+            await self.set_task_status(TaskStatus.CANCELLED)
             await system_logger.warning('Task cancelled. id: {}'.format(self.task_model.id))
 
             await self.do_on_cancel()
 
         except Exception as ex:  # noqa
-            await self.task_model.set_status(TaskStatus.FAILED)
+            message = 'Exception during task execution. id: {} exception: {} '.format(self.task_model.id, str(ex))
+            await self.set_task_status(TaskStatus.FAILED, message)
+
             entity = {'entity_type': EntityType.POOL, 'entity_uuid': None}
-            await system_logger.warning(
-                'Exception during task execution. id: {} exception: {} '.format(self.task_model.id, str(ex)),
-                entity=entity)
+            await system_logger.warning(message, entity=entity)
             print('BT {bt}'.format(bt=traceback.format_exc()))
 
             await self.do_on_fail()
 
         finally:
-            await self.do_on_finish()
-
             # Удалить себя из списка выполняющихся задач
             self._ref_to_task_list.remove(self)
 
     def execute_in_async_task(self):
         """Запустить корутину асинхронно"""
         self._coroutine = asyncio.get_event_loop().create_task(self.execute())
+
+    @redis_error_handle
+    async def set_task_status(self, task_status: TaskStatus, message: str = None):
+
+        if task_status == self.task_model.status:
+            return
+
+        await self.task_model.set_status(task_status)
+
+        # publish task event
+        task_id_str = str(self.task_model.id)
+        if message is None:
+            message = 'Status of task {} {} changed to {}'.format(
+                self.task_model.task_type.name, task_id_str, self.task_model.status.name)
+
+        msg_dict = dict(
+            resource=VDI_TASKS_SUBSCRIPTION,
+            mgs_type='task_data',
+            task_id=task_id_str,
+            entity_id=str(self.task_model.entity_id),
+            task_type=self.task_model.task_type.name,
+            task_status=task_status.name,
+            created=str(self.task_model.created),
+            message=message
+        )
+        REDIS_CLIENT.publish(INTERNAL_EVENTS_CHANNEL, json.dumps(msg_dict))
 
 
 class InitPoolTask(AbstractTask):
@@ -156,12 +176,15 @@ class InitPoolTask(AbstractTask):
                     await automated_pool.deactivate()
                     raise E
                 # Активируем пул
-                await automated_pool.activate()
-                # Подготавливаем машины
-                try:
-                    await automated_pool.prepare_initial_vms()
-                except Exception as E:
-                    await system_logger.error(message=_('VM preparation error'), description=str(E))
+        await automated_pool.activate()
+
+        # Подготавливаем машины
+        try:
+            await automated_pool.prepare_initial_vms()
+        except asyncio.CancelledError:
+            raise
+        except Exception as E:
+            await system_logger.error(message=_('VM preparation error'), description=str(E))
 
 
 class ExpandPoolTask(AbstractTask):
@@ -217,15 +240,18 @@ class ExpandPoolTask(AbstractTask):
                     except VmCreationError as vm_error:
                         await system_logger.error(_('VM creating error:'))
                         await system_logger.debug(vm_error)
-                    # Подготовка ВМ для подключения к ТК
-                    try:
-                        active_directory_object = await AuthenticationDirectory.query.where(
-                            AuthenticationDirectory.status == Status.ACTIVE).gino.first()
-                        await asyncio.gather(
-                            *[vm_object.prepare_with_timeout(active_directory_object, automated_pool.ad_cn_pattern) for
-                              vm_object in vm_list])
-                    except Exception as E:
-                        await system_logger.error(message=_('VM preparation error'), description=str(E))
+
+        # Подготовка ВМ для подключения к ТК
+        try:
+            active_directory_object = await AuthenticationDirectory.query.where(
+                AuthenticationDirectory.status == Status.ACTIVE).gino.first()
+            await asyncio.gather(
+                *[vm_object.prepare_with_timeout(active_directory_object, automated_pool.ad_cn_pattern) for
+                  vm_object in vm_list])
+        except asyncio.CancelledError:
+            raise
+        except Exception as E:
+            await system_logger.error(message=_('VM preparation error'), description=str(E))
 
 
 class DeletePoolTask(AbstractTask):
