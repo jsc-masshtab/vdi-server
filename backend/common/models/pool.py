@@ -20,6 +20,7 @@ from common.models.auth import (User as UserModel, Entity as EntityModel, Entity
                                 Group as GroupModel, UserGroup as UserGroupModel)
 from common.models.authentication_directory import AuthenticationDirectory
 from common.models.vm import Vm as VmModel
+from common.models.task import Task
 
 from common.languages import lang_init
 from common.log.journal import system_logger
@@ -959,16 +960,9 @@ class AutomatedPool(db.Model):
                                                                                   verbose_name)
                 await system_logger.info(msg, entity=self.entity)
 
-                # internal message about progress(WS)
-                msg_dict = dict(msg=msg,
-                                mgs_type='data',
-                                event='pool_creation_progress',
-                                pool_id=str(self.id),
-                                domain_verbose_name=vm_object.verbose_name,
-                                initial_size=self.initial_size,
-                                resource=VDI_TASKS_SUBSCRIPTION)
-
-                REDIS_CLIENT.publish(INTERNAL_EVENTS_CHANNEL, json.dumps(msg_dict))
+                # update progress of associated task
+                progress = ((i + 1) / self.initial_size) * 100  # from 0 to 100
+                await Task.set_progress_to_task_associated_with_entity(self.id, progress)
 
         except VmCreationError as vm_error:
             # log that we cant create required initial amount of VMs
@@ -986,6 +980,7 @@ class AutomatedPool(db.Model):
                                                                                                 self.initial_size)
             await system_logger.error(msg, entity=self.entity)
 
+        # todo: deprecated Удалить позже, так как ws сообщение отпрвляется при изменении статуса каждой таски
         msg_dict = dict(msg=msg,
                         msg_type='data',
                         event='pool_creation_completed',

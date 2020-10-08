@@ -59,7 +59,7 @@ def main():
 
     loop.create_task(listen_for_messages(resources_monitor_manager))
 
-    loop.run_forever()  # run until event loop stop
+    loop.run_forever()  # run until event loop stops
 
     system_logger._debug("Ws listener worker stopped")
     # free resources

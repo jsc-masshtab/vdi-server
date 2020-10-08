@@ -11,14 +11,17 @@ from common.veil.veil_validators import MutationValidation
 from common.veil.veil_errors import SimpleError, ValidationError
 from common.veil.veil_decorators import administrator_required
 from common.veil.veil_graphene import VeilShortEntityType, VeilResourceType
+
 from common.models.auth import User
 from common.models.authentication_directory import AuthenticationDirectory
 from common.models.vm import Vm
 from common.models.controller import Controller
 from common.models.pool import AutomatedPool, StaticPool, Pool
+from common.models.task import PoolTaskType
+
 from common.languages import lang_init
 from common.log.journal import system_logger
-from common.veil.veil_redis import request_to_execute_pool_task, execute_delete_pool_task, PoolTaskType
+from common.veil.veil_redis import request_to_execute_pool_task, execute_delete_pool_task
 
 from web_app.auth.user_schema import UserType
 from web_app.controller.schema import ControllerType
@@ -656,7 +659,7 @@ class CreateAutomatedPoolMutation(graphene.Mutation, ControllerFetcher):
             raise SimpleError(error_msg, description=desc, user=creator, entity=entity)
 
         # send command to start pool init task
-        await request_to_execute_pool_task(str(automated_pool.id), PoolTaskType.CREATING.name)
+        await request_to_execute_pool_task(str(automated_pool.id), PoolTaskType.CREATING_POOL)
 
         # pool creation task successfully started
         pool = await Pool.get_pool(automated_pool.id)

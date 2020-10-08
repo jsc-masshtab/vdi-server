@@ -110,6 +110,8 @@ class VdiFrontWsHandler(websocket.WebSocketHandler):  # noqa
                         # print("_send_messages_co: redis_message_data ", redis_message_data)
                         await self.write_msg(redis_message_data)
 
+            except asyncio.CancelledError:
+                break
             except Exception as ex:
                 await system_logger.debug(str(ex))
 
