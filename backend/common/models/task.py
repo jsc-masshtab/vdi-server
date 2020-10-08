@@ -1,0 +1,119 @@
+# -*- coding: utf-8 -*-
+import uuid
+import json
+
+from enum import Enum
+
+from sqlalchemy import Enum as AlchemyEnum
+from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.sql import func
+
+
+from web_app.front_ws_api.subscription_sources import VDI_TASKS_SUBSCRIPTION
+
+from common.database import db
+from common.veil.veil_redis import REDIS_CLIENT, INTERNAL_EVENTS_CHANNEL, redis_error_handle
+from common.veil.veil_gino import AbstractSortableStatusModel
+
+
+class PoolTaskType(Enum):
+
+    CREATING_POOL = 'CREATING_POOL'
+    EXPANDING_POOL = 'EXPANDING_POOL'
+    DELETING_POOL = 'DELETING_POOL'
+    # DECREASING_POOL = 'DECREASING_POOL'
+
+
+class TaskStatus(Enum):
+
+    INITIAL = 'INITIAL'  # Статус в  момент создания таски перед ее запуском
+    IN_PROGRESS = 'IN_PROGRESS'  # Задача выполняется.
+    FAILED = 'FAILED'  # Было необработанное исключения во время выполнения соответствующей корутины.
+    CANCELLED = 'CANCELLED'  # Задача отменена.
+    FINISHED = 'FINISHED'  # Задача завершилась.
+
+
+class Task(db.Model, AbstractSortableStatusModel):
+
+    __tablename__ = 'task'
+
+    id = db.Column(UUID(), primary_key=True, default=uuid.uuid4)
+    entity_id = db.Column(UUID(), unique=False)  # id сущности, с которой связана задача
+    status = db.Column(AlchemyEnum(TaskStatus), nullable=False, index=True, default=TaskStatus.INITIAL)
+    task_type = db.Column(AlchemyEnum(PoolTaskType), nullable=False, index=True)
+    created = db.Column(db.DateTime(timezone=True), server_default=func.now())
+
+    # Нужно ли возобновлять при старте приложения отмененную таску.
+    # Этот флаг нужен, так как есть 2 ситуации, когда таска была отменена:
+    # 1) Мы отменили таску намерено во время работы приложения.
+    # 2) Таска была отменена при мягком завершении приложения, но тем не менее мы хотим ее продолжения после
+    # повторного старта приложения.
+    resume_on_app_startup = db.Column(db.Boolean(), nullable=False, default=True)
+
+    priority = db.Column(db.Integer(), nullable=False, default=1)  # Приоритет задачи
+
+    progress = db.Column(db.Integer(), nullable=False, default=0)
+
+    def to_json_serializable_dict(self):
+        return dict(
+            task_id=str(self.id),
+            entity_id=str(self.entity_id),
+            task_type=self.task_type.name,
+            task_status=self.status.name,
+            created=str(self.created),
+            progress=self.progress,
+        )
+
+    @redis_error_handle
+    async def set_status(self, status: TaskStatus, message: str = None):
+
+        if status == self.status:
+            return
+
+        await self.update(status=status).apply()
+
+        # publish task event
+        task_id_str = str(self.id)
+        if message is None:
+            message = 'Status of task {} {} changed to {}'.format(
+                self.task_type.name, task_id_str, self.status.name)
+
+        msg_dict = dict(
+            resource=VDI_TASKS_SUBSCRIPTION,
+            mgs_type='task_data',
+            event='status_changed',
+            message=message,
+        )
+        msg_dict.update(self.to_json_serializable_dict())
+        REDIS_CLIENT.publish(INTERNAL_EVENTS_CHANNEL, json.dumps(msg_dict))
+
+    @redis_error_handle
+    async def set_progress(self, progress: int, message: str = None):
+
+        if progress == self.progress:
+            return
+
+        await self.update(progress=progress).apply()
+
+        # publish task event
+        task_id_str = str(self.id)
+        if message is None:
+            message = 'Progress of task {} {} changed to {}'.format(
+                self.task_type.name, task_id_str, progress)
+
+        msg_dict = dict(
+            resource=VDI_TASKS_SUBSCRIPTION,
+            mgs_type='task_data',
+            event='progress_changed',
+            message=message
+        )
+        msg_dict.update(self.to_json_serializable_dict())
+        REDIS_CLIENT.publish(INTERNAL_EVENTS_CHANNEL, json.dumps(msg_dict))
+
+    @staticmethod
+    async def set_progress_to_task_associated_with_entity(entity_id, progress):
+        """Изменить статус задачи связанной с сущностью entity_id"""
+
+        task_model = await Task.query.where(Task.entity_id == entity_id).gino.first()
+        if task_model:
+            await task_model.set_progress(progress)

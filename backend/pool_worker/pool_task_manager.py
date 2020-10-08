@@ -5,28 +5,29 @@ import json
 
 import asyncio
 
-from common.veil.veil_redis import POOL_TASK_QUEUE, a_redis_lpop
+from common.veil.veil_redis import POOL_TASK_QUEUE, POOL_WORKER_CMD_QUEUE, PoolWorkerCmd, a_redis_lpop
 from common.languages import lang_init
 
 from pool_worker.pool_tasks import InitPoolTask, ExpandPoolTask, DeletePoolTask
 
 from pool_worker.pool_locks import PoolLocks
 
+from common.veil.veil_gino import EntityType
 from common.models.pool import AutomatedPool
-from common.models.tasks import TaskModel, TaskStatus
+from common.models.task import Task, TaskStatus, PoolTaskType
 from sqlalchemy.sql import desc
 
-from common.veil.veil_redis import PoolTaskType
-
 from common.log.journal import system_logger
+
 
 _ = lang_init()
 
 
 class PoolTaskManager:
+
     """Реализует управление задачами"""
     def __init__(self):
-        self.pool_locks = PoolLocks()  # todo: можно ли синхронизировать работу над пулом по информации из таблицы task?
+        self.pool_locks = PoolLocks()
 
         self.task_list = []  # Список, в котором держим объекты выполняемым в данный момент таскок
 
@@ -45,6 +46,8 @@ class PoolTaskManager:
         loop = asyncio.get_event_loop()
         # listening for tasks
         loop.create_task(self.listen_for_work())
+        # listening for commands
+        loop.create_task(self.listen_for_commands())
 
     async def listen_for_work(self):
 
@@ -63,6 +66,30 @@ class PoolTaskManager:
             except Exception as ex:
                 await system_logger.error('exception:' + str(ex))
 
+    async def listen_for_commands(self):
+        while True:
+            try:
+                # wait for message
+                redis_data = await a_redis_lpop(POOL_WORKER_CMD_QUEUE)
+
+                # get data from message
+                data_dict = json.loads(redis_data.decode())
+                command = data_dict['command']
+
+                await system_logger.debug('listen_for_commands: ' + command)
+
+                # cancel_tasks
+                if command == PoolWorkerCmd.CANCEL_TASK.name:
+                    task_ids = data_dict['task_ids']  # list od id strings
+                    cancel_all = data_dict['cancel_all']
+                    await self.cancel_tasks(task_ids, cancel_all)
+
+            except asyncio.CancelledError:
+                raise
+            except Exception as ex:
+                entity = {'entity_type': EntityType.SECURITY, 'entity_uuid': None}
+                await system_logger.error('listen_for_commands exception:' + str(ex), entity=entity)
+
     async def resume_tasks(self):
         """
         Анализируем таблицу тасок в бд.
@@ -77,14 +104,14 @@ class PoolTaskManager:
         # print('cur auto pools ', pools)
         # Traverse pools and find tasks to launch
         tasks_to_launch = []
-        # TODO: имена ВМ перебирает сам VeiL
+
         for pool in pools:
             # Find a task with the highest priority
-            pool_task = await TaskModel.query.where(
-                (TaskModel.entity_id == pool.id) &  # noqa
-                TaskModel.resume_on_app_startup &  # noqa
-                ((TaskModel.status == TaskStatus.IN_PROGRESS) | (TaskModel.status == TaskStatus.CANCELLED))).\
-                order_by(desc(TaskModel.priority)).gino.first()
+            pool_task = await Task.query.where(
+                (Task.entity_id == pool.id) &  # noqa
+                Task.resume_on_app_startup &  # noqa
+                ((Task.status == TaskStatus.IN_PROGRESS) | (Task.status == TaskStatus.CANCELLED))).\
+                order_by(desc(Task.priority)).gino.first()
 
             if pool_task:
                 await system_logger.debug('pool_task {}'.format(pool_task))
@@ -92,13 +119,13 @@ class PoolTaskManager:
 
         #  Remove all other tasks (либо как вариант выставить им всем флаг resume_on_app_startup = False)
         task_ids_to_launch = [task.id for task in tasks_to_launch]
-        st = await TaskModel.delete.where(TaskModel.id.notin_(task_ids_to_launch)).gino.status()
+        st = await Task.delete.where(Task.id.notin_(task_ids_to_launch)).gino.status()
         await system_logger.debug('Deleted from db tasks: {}'.format(st))
 
         # # Остальным задачам выставить флаг resume_on_app_startup = False
         # task_ids_to_launch = [task.id for task in tasks_to_launch]
-        # st = await TaskModel.update.values(resume_on_app_startup=False).where(
-        #     TaskModel.id.notin_(task_ids_to_launch)).gino.status()
+        # st = await Task.update.values(resume_on_app_startup=False).where(
+        #     Task.id.notin_(task_ids_to_launch)).gino.status()
         # await system_logger.debug('Other tasks: {}'.format(st))
         # # Возможно стоит ввнести таске столбец дата создания и удалять все таски
         # # кроме последних 100 (Для лога и отладки), чтоб не копить их вечно.
@@ -118,17 +145,17 @@ class PoolTaskManager:
         pool_task_type = task_data_dict['task_type']
 
         # task execution
-        if pool_task_type == PoolTaskType.CREATING.name:
+        if pool_task_type == PoolTaskType.CREATING_POOL.name:
             task = InitPoolTask(self.pool_locks)
             await task.init(task_id, self.task_list)
             task.execute_in_async_task()
 
-        elif pool_task_type == PoolTaskType.EXPANDING.name:
+        elif pool_task_type == PoolTaskType.EXPANDING_POOL.name:
             task = ExpandPoolTask(self.pool_locks)
             await task.init(task_id, self.task_list)
             task.execute_in_async_task()
 
-        elif pool_task_type == PoolTaskType.DELETING.name:
+        elif pool_task_type == PoolTaskType.DELETING_POOL.name:
             try:
                 full = task_data_dict['deletion_full']
             except KeyError:
@@ -136,3 +163,9 @@ class PoolTaskManager:
             task = DeletePoolTask(full, self.pool_locks)
             await task.init(task_id, self.task_list)
             task.execute_in_async_task()
+
+    async def cancel_tasks(self, task_ids, cancel_all=False):
+        # print('!!!cancel_tasks task_ids: ', str(task_ids), flush=True)
+        for task in self.task_list:
+            if cancel_all or (str(task.task_model.id) in task_ids):
+                await task.cancel()

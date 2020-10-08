@@ -17,7 +17,7 @@ from common.utils import cancel_async_task
 from common.languages import lang_init
 
 from common.models.pool import AutomatedPool, Pool
-from common.models.tasks import TaskStatus, TaskModel
+from common.models.task import TaskStatus, Task
 from common.models.authentication_directory import AuthenticationDirectory
 
 
@@ -32,12 +32,12 @@ class AbstractTask:
         self.task_model = None
         self._coroutine = None
         self._ref_to_task_list = None  # Сссылка на список обьектов задач. Сам список живет в классе PoolTaskManager
-        # Введено из-за нежелания создавать глобальную переменную task_list. todo: made it weakref!
+        # Введено из-за нежелания создавать глобальную переменную task_list.
         self._task_priority = 1
 
     async def init(self, task_id, task_list):
         self._ref_to_task_list = task_list
-        self.task_model = await TaskModel.get(task_id)
+        self.task_model = await Task.get(task_id)
 
         if self.task_model:
             await self.task_model.update(priority=self._task_priority).apply()
@@ -63,10 +63,6 @@ class AbstractTask:
         """Действия при фэйле корутины do_task"""
         pass
 
-    async def do_on_finish(self):
-        """Действия после завершения корутины do_task"""
-        pass
-
     async def execute(self):
         """Выполнить корутину do_task"""
 
@@ -74,11 +70,11 @@ class AbstractTask:
             await system_logger.error('AbstractTask.execute: logical error. No such task')
             return
 
-        await system_logger.debug('Start task execution: {}'.format(self.task_model.task_type))
+        await system_logger.debug('Start task execution: {}'.format(self.task_model.task_type.name))
 
         # Добавить себя в список выполняющихся задач
         self._ref_to_task_list.append(self)
-
+        # set task status
         await self.task_model.set_status(TaskStatus.IN_PROGRESS)
 
         try:
@@ -92,18 +88,16 @@ class AbstractTask:
             await self.do_on_cancel()
 
         except Exception as ex:  # noqa
-            await self.task_model.set_status(TaskStatus.FAILED)
+            message = 'Exception during task execution. id: {} exception: {} '.format(self.task_model.id, str(ex))
+            await self.task_model.set_status(TaskStatus.FAILED, message)
+
             entity = {'entity_type': EntityType.POOL, 'entity_uuid': None}
-            await system_logger.warning(
-                'Exception during task execution. id: {} exception: {} '.format(self.task_model.id, str(ex)),
-                entity=entity)
+            await system_logger.warning(message, entity=entity)
             print('BT {bt}'.format(bt=traceback.format_exc()))
 
             await self.do_on_fail()
 
         finally:
-            await self.do_on_finish()
-
             # Удалить себя из списка выполняющихся задач
             self._ref_to_task_list.remove(self)
 
@@ -145,9 +139,10 @@ class InitPoolTask(AbstractTask):
                 try:
                     await automated_pool.add_initial_vms()
                 except PoolCreationError:
-                    await system_logger.debug(_('Pool Creation cancelled'))
                     await automated_pool.deactivate()
+                    raise  # Чтобы проблема была передана внешнему обработчику в AbstractTask
                 except asyncio.CancelledError:
+                    await system_logger.debug(_('Pool Creation cancelled'))
                     await automated_pool.deactivate()
                     raise
                 except Exception as E:
@@ -156,12 +151,15 @@ class InitPoolTask(AbstractTask):
                     await automated_pool.deactivate()
                     raise E
                 # Активируем пул
-                await automated_pool.activate()
-                # Подготавливаем машины
-                try:
-                    await automated_pool.prepare_initial_vms()
-                except Exception as E:
-                    await system_logger.error(message=_('VM preparation error'), description=str(E))
+        await automated_pool.activate()
+
+        # Подготавливаем машины
+        try:
+            await automated_pool.prepare_initial_vms()
+        except asyncio.CancelledError:
+            raise
+        except Exception as E:
+            await system_logger.error(message=_('VM preparation error'), description=str(E))
 
 
 class ExpandPoolTask(AbstractTask):
@@ -217,15 +215,18 @@ class ExpandPoolTask(AbstractTask):
                     except VmCreationError as vm_error:
                         await system_logger.error(_('VM creating error:'))
                         await system_logger.debug(vm_error)
-                    # Подготовка ВМ для подключения к ТК
-                    try:
-                        active_directory_object = await AuthenticationDirectory.query.where(
-                            AuthenticationDirectory.status == Status.ACTIVE).gino.first()
-                        await asyncio.gather(
-                            *[vm_object.prepare_with_timeout(active_directory_object, automated_pool.ad_cn_pattern) for
-                              vm_object in vm_list])
-                    except Exception as E:
-                        await system_logger.error(message=_('VM preparation error'), description=str(E))
+
+        # Подготовка ВМ для подключения к ТК
+        try:
+            active_directory_object = await AuthenticationDirectory.query.where(
+                AuthenticationDirectory.status == Status.ACTIVE).gino.first()
+            await asyncio.gather(
+                *[vm_object.prepare_with_timeout(active_directory_object, automated_pool.ad_cn_pattern) for
+                  vm_object in vm_list])
+        except asyncio.CancelledError:
+            raise
+        except Exception as E:
+            await system_logger.error(message=_('VM preparation error'), description=str(E))
 
 
 class DeletePoolTask(AbstractTask):
@@ -278,7 +279,7 @@ class DeletePoolTask(AbstractTask):
             if is_deleted:
                 await self._pool_locks.remove_pool_data(str(automated_pool.id), str(template_id))
 
-        # publish result
+        # publish result # todo: deprecated Удалить позже, так как ws сообщение отпрвляется при изменении статуса таски
         msg_dict = dict(msg=_('Deleted pool {}').format(automated_pool.id),
                         mgs_type='data',
                         event='pool_deleted',

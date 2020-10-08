@@ -5,12 +5,14 @@ from tornado import websocket
 from aiohttp import client_exceptions
 
 from common.settings import REDIS_PORT, REDIS_THIN_CLIENT_CHANNEL, REDIS_PASSWORD, REDIS_DB
-from common.veil.veil_redis import request_to_execute_pool_task, PoolTaskType
+from common.veil.veil_redis import request_to_execute_pool_task
 from common.veil.veil_handlers import BaseHandler
 from common.veil.veil_errors import ValidationError
 from common.veil.auth.veil_jwt import jwtauth
 from common.models.pool import Pool as PoolModel
+from common.models.task import PoolTaskType
 from veil_api_client import DomainTcpUsb
+
 # from veil_api_client.base.api_objects.domain import DomainTcpUsb
 
 # from common.log.journal import system_logger
@@ -89,6 +91,7 @@ class PoolGetVm(BaseHandler, ABC):
         pool_extended = False
         # Запрос на расширение пула
         if await pool.pool_type == PoolModel.PoolTypes.AUTOMATED:
+            await request_to_execute_pool_task(pool.id_str, PoolTaskType.EXPANDING_POOL)
             pool_extended = True
         vm = await pool.get_vm(user_id=user.id)
         if not vm:
