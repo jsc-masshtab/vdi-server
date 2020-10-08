@@ -12,7 +12,6 @@ import redis
 import common.settings
 from common.languages import lang_init
 # import common.models as models
-from common.models.task import PoolTaskType
 
 
 _ = lang_init()
@@ -207,6 +206,7 @@ async def execute_delete_pool_task(pool_id: str, full, wait_for_result=True, wai
         return False
 
     # send command to pool worker
+    from common.models.task import PoolTaskType  # для избежания цикл ссылки
     await request_to_execute_pool_task(pool_id, PoolTaskType.DELETING_POOL, deletion_full=full)
 
     # wait for result

@@ -98,12 +98,12 @@ class CancelTaskMutation(graphene.Mutation):
     """Отменяем либо все задачи либо заданые в списке"""
     class Arguments:
         task = graphene.UUID()
-        cancel_all = graphene.Boolean()
+        # cancel_all = graphene.Boolean()
 
     ok = graphene.Boolean()
 
     @administrator_required
-    async def mutate(self, _info, task, cancel_all=False, **kwargs):
+    async def mutate(self, _info, task, **kwargs):
 
         # Check if task exists and has status IN_PROGRESS
         progressing_task_id = await Task.select('id').where(Task.status == TaskStatus.IN_PROGRESS).gino.scalar()
@@ -112,10 +112,10 @@ class CancelTaskMutation(graphene.Mutation):
             entity = {'entity_type': EntityType.SYSTEM, 'entity_uuid': None}
             raise SimpleError(_('No such task or status of task {} is not {} '.format(
                 task, TaskStatus.IN_PROGRESS.name)), entity=entity)
-
+        
         # # send cmd
         task_id_str_list = [str(task)]
-        send_cmd_to_cancel_tasks(task_id_str_list, cancel_all)
+        send_cmd_to_cancel_tasks(task_id_str_list)
         return CancelTaskMutation(ok=True)
 
 

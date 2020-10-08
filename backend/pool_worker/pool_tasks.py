@@ -8,7 +8,7 @@ from common.veil.veil_errors import PoolCreationError
 from common.log.journal import system_logger
 from common.veil.veil_errors import VmCreationError, SimpleError
 
-from common.veil.veil_redis import REDIS_CLIENT, INTERNAL_EVENTS_CHANNEL, redis_error_handle
+from common.veil.veil_redis import REDIS_CLIENT, INTERNAL_EVENTS_CHANNEL
 from common.veil.veil_gino import EntityType, Status
 from web_app.front_ws_api.subscription_sources import VDI_TASKS_SUBSCRIPTION
 
@@ -75,21 +75,21 @@ class AbstractTask:
         # Добавить себя в список выполняющихся задач
         self._ref_to_task_list.append(self)
         # set task status
-        await self.set_task_status(TaskStatus.IN_PROGRESS)
+        await self.task_model.set_status(TaskStatus.IN_PROGRESS)
 
         try:
             await self.do_task()
-            await self.set_task_status(TaskStatus.FINISHED)
+            await self.task_model.set_status(TaskStatus.FINISHED)
 
         except asyncio.CancelledError:
-            await self.set_task_status(TaskStatus.CANCELLED)
+            await self.task_model.set_status(TaskStatus.CANCELLED)
             await system_logger.warning('Task cancelled. id: {}'.format(self.task_model.id))
 
             await self.do_on_cancel()
 
         except Exception as ex:  # noqa
             message = 'Exception during task execution. id: {} exception: {} '.format(self.task_model.id, str(ex))
-            await self.set_task_status(TaskStatus.FAILED, message)
+            await self.task_model.set_status(TaskStatus.FAILED, message)
 
             entity = {'entity_type': EntityType.POOL, 'entity_uuid': None}
             await system_logger.warning(message, entity=entity)
@@ -104,32 +104,6 @@ class AbstractTask:
     def execute_in_async_task(self):
         """Запустить корутину асинхронно"""
         self._coroutine = asyncio.get_event_loop().create_task(self.execute())
-
-    @redis_error_handle
-    async def set_task_status(self, task_status: TaskStatus, message: str = None):
-
-        if task_status == self.task_model.status:
-            return
-
-        await self.task_model.set_status(task_status)
-
-        # publish task event
-        task_id_str = str(self.task_model.id)
-        if message is None:
-            message = 'Status of task {} {} changed to {}'.format(
-                self.task_model.task_type.name, task_id_str, self.task_model.status.name)
-
-        msg_dict = dict(
-            resource=VDI_TASKS_SUBSCRIPTION,
-            mgs_type='task_data',
-            task_id=task_id_str,
-            entity_id=str(self.task_model.entity_id),
-            task_type=self.task_model.task_type.name,
-            task_status=task_status.name,
-            created=str(self.task_model.created),
-            message=message
-        )
-        REDIS_CLIENT.publish(INTERNAL_EVENTS_CHANNEL, json.dumps(msg_dict))
 
 
 class InitPoolTask(AbstractTask):
@@ -165,9 +139,10 @@ class InitPoolTask(AbstractTask):
                 try:
                     await automated_pool.add_initial_vms()
                 except PoolCreationError:
-                    await system_logger.debug(_('Pool Creation cancelled'))
                     await automated_pool.deactivate()
+                    raise  # Чтобы проблема была передана внешнему обработчику в AbstractTask
                 except asyncio.CancelledError:
+                    await system_logger.debug(_('Pool Creation cancelled'))
                     await automated_pool.deactivate()
                     raise
                 except Exception as E:
@@ -304,7 +279,7 @@ class DeletePoolTask(AbstractTask):
             if is_deleted:
                 await self._pool_locks.remove_pool_data(str(automated_pool.id), str(template_id))
 
-        # publish result
+        # publish result # todo: deprecated Удалить позже, так как ws сообщение отпрвляется при изменении статуса таски
         msg_dict = dict(msg=_('Deleted pool {}').format(automated_pool.id),
                         mgs_type='data',
                         event='pool_deleted',
