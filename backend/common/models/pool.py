@@ -268,14 +268,14 @@ class Pool(VeilModel):
         :param only_free: учитываем только свободные VM
         :return: int
         """
-        # from common.models import VmModel
         if only_free:
-            entity_query = EntityModel.select('entity_uuid').where(
-                (EntityModel.entity_type == EntityType.VM) & (
-                    EntityModel.id.in_(EntityRoleOwnerModel.select('id').where(EntityRoleOwnerModel.user_id != None))))  # noqa
+            ero_query = EntityRoleOwnerModel.select('entity_id').where(EntityRoleOwnerModel.user_id != None)  # noqa
 
-            vm_query = db.select([db.func.count(VmModel.id)]).where(
-                (VmModel.pool_id == self.id) & (VmModel.id.notin_(entity_query))).group_by(VmModel.id)
+            entity_query = EntityModel.select('entity_uuid').where(
+                (EntityModel.entity_type == EntityType.VM) & (EntityModel.id.in_(ero_query)))
+
+            vm_query = db.select([db.func.count()]).where(
+                (VmModel.pool_id == self.id) & (VmModel.id.notin_(entity_query)) & (VmModel.assigned_to_user == False))  # noqa
 
             return await vm_query.gino.scalar()
 

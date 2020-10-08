@@ -89,7 +89,6 @@ class PoolGetVm(BaseHandler, ABC):
         pool_extended = False
         # Запрос на расширение пула
         if await pool.pool_type == PoolModel.PoolTypes.AUTOMATED:
-            await request_to_execute_pool_task(pool.id_str, PoolTaskType.EXPANDING.name)
             pool_extended = True
         vm = await pool.get_vm(user_id=user.id)
         if not vm:
@@ -99,9 +98,12 @@ class PoolGetVm(BaseHandler, ABC):
             # Если свободная VM найдена, нужно закрепить ее за пользователем.
             if vm:
                 await vm.add_user(user.id, creator='system')
+                if await pool.pool_type == PoolModel.PoolTypes.AUTOMATED:
+                    await request_to_execute_pool_task(pool.id_str, PoolTaskType.EXPANDING.name)
             elif pool_extended:
                 response = {
                     'errors': [{'message': _('The pool doesn`t have free machines. Try again after 5 minutes.')}]}
+                await request_to_execute_pool_task(pool.id_str, PoolTaskType.EXPANDING.name)
                 return await self.log_finish(response)
             else:
                 response = {'errors': [{'message': _('The pool doesn`t have free machines.')}]}
