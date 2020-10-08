@@ -105,9 +105,10 @@ class CancelTaskMutation(graphene.Mutation):
     async def mutate(self, _info, task, **kwargs):
 
         # Check if task exists and has status IN_PROGRESS
-        progressing_task_id = await Task.select('id').where(Task.status == TaskStatus.IN_PROGRESS).gino.scalar()
-        print("progressing_task_id ", progressing_task_id, flush=True)
-        if progressing_task_id != task:
+        progressing_task_id = await Task.query.where(
+            (Task.id == task) & (Task.status == TaskStatus.IN_PROGRESS)).gino.scalar()
+        # print("progressing_task_id ", progressing_task_id, flush=True)
+        if not progressing_task_id:
             entity = {'entity_type': EntityType.SYSTEM, 'entity_uuid': None}
             raise SimpleError(_('No such task or status of task {} is not {} '.format(
                 task, TaskStatus.IN_PROGRESS.name)), entity=entity)
