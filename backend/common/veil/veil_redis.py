@@ -12,6 +12,7 @@ import redis
 import common.settings
 from common.languages import lang_init
 # import common.models as models
+from web_app.front_ws_api.subscription_sources import VDI_TASKS_SUBSCRIPTION
 
 
 _ = lang_init()
@@ -188,14 +189,21 @@ async def request_to_execute_pool_task(pool_id, pool_task_type, **additional_dat
 
 async def execute_delete_pool_task(pool_id: str, full, wait_for_result=True, wait_timeout=20):
     """Удаление автоматического пула. Если wait_for_result == True, то ждем результат"""
+
+    from common.models.task import PoolTaskType, TaskStatus  # для избежания цикл ссылки
+
     # removal check predicate
     def _check_if_pool_deleted(redis_message):
         try:
             redis_message_data = redis_message['data'].decode()
             redis_data_dict = json.loads(redis_message_data)
 
-            if pool_id == redis_data_dict['pool_id'] and redis_data_dict['event'] == 'pool_deleted':
-                return redis_data_dict['is_successful']
+            if redis_data_dict['resource'] == VDI_TASKS_SUBSCRIPTION and \
+                    redis_data_dict['task_type'] == PoolTaskType.DELETING_POOL.name and \
+                    redis_data_dict['event'] == 'status_changed' and \
+                    pool_id == redis_data_dict['entity_id']:
+                # Если таска завершилась со статусом FINISHED значит все хорошо
+                return redis_data_dict['task_status'] == TaskStatus.FINISHED.name
         except asyncio.CancelledError:
             raise
         except Exception:  # noqa
@@ -205,7 +213,6 @@ async def execute_delete_pool_task(pool_id: str, full, wait_for_result=True, wai
         return False
 
     # send command to pool worker
-    from common.models.task import PoolTaskType  # для избежания цикл ссылки
     await request_to_execute_pool_task(pool_id, PoolTaskType.DELETING_POOL, deletion_full=full)
 
     # wait for result
@@ -218,8 +225,14 @@ async def execute_delete_pool_task(pool_id: str, full, wait_for_result=True, wai
 
 
 def send_cmd_to_cancel_tasks(task_ids: list, cancel_all=False):
-    """Send command CANCEL_TASK to pool worker"""
+    """Send command CANCEL_TASK to pool worker. Чтобы отменить все таски послать пустой список и cancel_all=True"""
     cmd_dict = {'command': PoolWorkerCmd.CANCEL_TASK.name, 'task_ids': task_ids, 'cancel_all': cancel_all}
+    REDIS_CLIENT.rpush(POOL_WORKER_CMD_QUEUE, json.dumps(cmd_dict))
+
+
+def send_cmd_to_cancel_tasks_associated_with_controller(controller_id):
+    """Send command CANCEL_TASK to pool worker. It will cancel all tasks associated with controller"""
+    cmd_dict = {'command': PoolWorkerCmd.CANCEL_TASK.name, 'controller_id': str(controller_id)}
     REDIS_CLIENT.rpush(POOL_WORKER_CMD_QUEUE, json.dumps(cmd_dict))
 
 

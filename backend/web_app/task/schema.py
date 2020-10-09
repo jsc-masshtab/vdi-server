@@ -11,7 +11,7 @@ from common.models.task import Task
 
 from common.veil.veil_errors import SimpleError
 from common.veil.veil_decorators import administrator_required
-from common.veil.veil_redis import send_cmd_to_cancel_tasks
+from common.veil.veil_redis import send_cmd_to_cancel_tasks, send_cmd_to_cancel_tasks_associated_with_controller
 from common.veil.veil_gino import EntityType
 
 from common.models.task import TaskStatus
@@ -97,7 +97,6 @@ class CancelTaskMutation(graphene.Mutation):
     """Отменяем либо все задачи либо заданые в списке"""
     class Arguments:
         task = graphene.UUID()
-        # cancel_all = graphene.Boolean()
 
     ok = graphene.Boolean()
 
@@ -119,8 +118,22 @@ class CancelTaskMutation(graphene.Mutation):
         return CancelTaskMutation(ok=True)
 
 
+class CancelTaskAssocWithContMutation(graphene.Mutation):
+
+    class Arguments:
+        controller = graphene.UUID()
+
+    ok = graphene.Boolean()
+
+    @administrator_required
+    async def mutate(self, _info, controller, **kwargs):
+        send_cmd_to_cancel_tasks_associated_with_controller(controller)
+        return CancelTaskAssocWithContMutation(ok=True)
+
+
 class TaskMutations(graphene.ObjectType):
     cancelTask = CancelTaskMutation.Field()
+    cancelTaskAssocWithContMutation = CancelTaskAssocWithContMutation.Field()
 
 
 task_schema = graphene.Schema(query=TaskQuery, mutation=TaskMutations, auto_camelcase=False)

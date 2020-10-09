@@ -5,15 +5,15 @@ import json
 
 import asyncio
 
-from common.veil.veil_redis import POOL_TASK_QUEUE, POOL_WORKER_CMD_QUEUE, PoolWorkerCmd, a_redis_lpop
-from common.languages import lang_init
-
 from pool_worker.pool_tasks import InitPoolTask, ExpandPoolTask, DeletePoolTask
-
 from pool_worker.pool_locks import PoolLocks
 
+from common.veil.veil_redis import POOL_TASK_QUEUE, POOL_WORKER_CMD_QUEUE, PoolWorkerCmd, a_redis_lpop
+from common.languages import lang_init
+from common.database import db
+
 from common.veil.veil_gino import EntityType
-from common.models.pool import AutomatedPool
+from common.models.pool import AutomatedPool, Pool
 from common.models.task import Task, TaskStatus, PoolTaskType
 from sqlalchemy.sql import desc
 
@@ -80,9 +80,15 @@ class PoolTaskManager:
 
                 # cancel_tasks
                 if command == PoolWorkerCmd.CANCEL_TASK.name:
-                    task_ids = data_dict['task_ids']  # list od id strings
-                    cancel_all = data_dict['cancel_all']
-                    await self.cancel_tasks(task_ids, cancel_all)
+                    if 'task_ids' in data_dict and 'cancel_all' in data_dict:
+                        task_ids = data_dict['task_ids']  # list od id strings
+                        cancel_all = data_dict['cancel_all']
+                        await self.cancel_tasks(task_ids, cancel_all)
+
+                    elif 'controller_id' in data_dict:
+                        print('controller_id in data_dict', flush=True)
+                        controller_id = data_dict['controller_id']
+                        await self.cancel_tasks_associated_with_controller(controller_id)
 
             except asyncio.CancelledError:
                 raise
@@ -127,8 +133,6 @@ class PoolTaskManager:
         # st = await Task.update.values(resume_on_app_startup=False).where(
         #     Task.id.notin_(task_ids_to_launch)).gino.status()
         # await system_logger.debug('Other tasks: {}'.format(st))
-        # # Возможно стоит ввнести таске столбец дата создания и удалять все таски
-        # # кроме последних 100 (Для лога и отладки), чтоб не копить их вечно.
 
         # Resume tasks
         for task in tasks_to_launch:
@@ -165,7 +169,23 @@ class PoolTaskManager:
             task.execute_in_async_task()
 
     async def cancel_tasks(self, task_ids, cancel_all=False):
-        # print('!!!cancel_tasks task_ids: ', str(task_ids), flush=True)
-        for task in self.task_list:
+        """cancel_tasks in list or all tasks"""
+
+        task_list = list(self.task_list)  # делаем shallow copy так как список self.task_list будет уменьшатся в
+        #  других корутинах пока мы итерируем
+        for task in task_list:
             if cancel_all or (str(task.task_model.id) in task_ids):
+                await task.cancel()
+
+    async def cancel_tasks_associated_with_controller(self, controller_id):
+        """cancel_tasks_associated_with_controller"""
+        # find tasks
+        tasks_to_cancel = await db.select([Task.id]).select_from(Task.join(Pool, Task.entity_id == Pool.id)).where(
+            Pool.controller == controller_id).gino.all()
+        tasks_to_cancel = [task_to_cancel[0] for task_to_cancel in tasks_to_cancel]
+
+        # cancel
+        task_list = list(self.task_list)  # shallow copy
+        for task in task_list:
+            if task.task_model.id in tasks_to_cancel:
                 await task.cancel()
