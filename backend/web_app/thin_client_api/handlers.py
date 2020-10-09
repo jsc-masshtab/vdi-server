@@ -15,7 +15,7 @@ from veil_api_client import DomainTcpUsb
 
 # from veil_api_client.base.api_objects.domain import DomainTcpUsb
 
-# from common.log.journal import system_logger
+from common.log.journal import system_logger
 from common.languages import lang_init
 
 _ = lang_init()
@@ -126,6 +126,10 @@ class PoolGetVm(BaseHandler, ABC):
             return await self.log_finish(response)
         # Актуализируем данные для подключения
         await veil_domain.info()
+        await system_logger.info(_('User {} connected to pool {}.').format(user.username, pool.verbose_name),
+                                 entity=pool.entity, user=user.username)
+        await system_logger.info(_('User {} connected to VM {}.').format(user.username, vm.verbose_name),
+                                 entity=vm.entity, user=user.username)
         # TODO: использовать veil_domain.hostname вместо IP
 
         vm_controller = await vm.controller
