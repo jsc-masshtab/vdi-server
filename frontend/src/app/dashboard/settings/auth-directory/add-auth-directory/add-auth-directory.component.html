@@ -26,6 +26,7 @@
       <p class="field-name">Directory url</p>
       <input type="text" placeholder="..." formControlName="directory_url">
       <ng-container *ngIf="form.hasError('required', 'directory_url') && checkValid"><ng-container *ngTemplateOutlet="errorTemp"></ng-container></ng-container>
+      <div class="error" *ngIf="form.hasError('pattern', 'directory_url') && checkValid">Поле введено некорректно</div>
     </label>
 
     <label class="field">
