@@ -117,3 +117,13 @@ class Task(db.Model, AbstractSortableStatusModel):
         task_model = await Task.query.where(Task.entity_id == entity_id).gino.first()
         if task_model:
             await task_model.set_progress(progress)
+
+    @staticmethod
+    async def get_ids_of_tasks_associated_with_controller(controller_id):
+
+        from common.models.pool import Pool
+        tasks = await db.select([Task.id]).select_from(Task.join(Pool, Task.entity_id == Pool.id)).where(
+            Pool.controller == controller_id).gino.all()
+        tasks = [task_to_cancel[0] for task_to_cancel in tasks]
+
+        return tasks

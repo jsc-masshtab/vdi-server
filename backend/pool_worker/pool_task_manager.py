@@ -10,10 +10,9 @@ from pool_worker.pool_locks import PoolLocks
 
 from common.veil.veil_redis import POOL_TASK_QUEUE, POOL_WORKER_CMD_QUEUE, PoolWorkerCmd, a_redis_lpop
 from common.languages import lang_init
-from common.database import db
 
 from common.veil.veil_gino import EntityType
-from common.models.pool import AutomatedPool, Pool
+from common.models.pool import AutomatedPool
 from common.models.task import Task, TaskStatus, PoolTaskType
 from sqlalchemy.sql import desc
 
@@ -96,13 +95,15 @@ class PoolTaskManager:
                 entity = {'entity_type': EntityType.SECURITY, 'entity_uuid': None}
                 await system_logger.error('listen_for_commands exception:' + str(ex), entity=entity)
 
-    async def resume_tasks(self):
+    async def resume_tasks(self):  # remove_unresumable_tasks
         """
         Анализируем таблицу тасок в бд.
         Продолжить таски в статусе IN_PROGRESS и CANCELLED при соблюдении условий:
         - У таски должен быть поднят флаг resume_on_app_startup.
         - Если внезапно присутствуют несколько тасок, работающих над одним пулом, то возобновляем только одну из них
         в следующем приоритете: DELETING > CREATING > EXPANDING.
+
+        remove_unresumable_tasks - удалять ли из бд задачи, которые не могут быть возобновлены.
         """
         await system_logger.debug('Resuming tasks')
 
@@ -180,12 +181,10 @@ class PoolTaskManager:
     async def cancel_tasks_associated_with_controller(self, controller_id):
         """cancel_tasks_associated_with_controller"""
         # find tasks
-        tasks_to_cancel = await db.select([Task.id]).select_from(Task.join(Pool, Task.entity_id == Pool.id)).where(
-            Pool.controller == controller_id).gino.all()
-        tasks_to_cancel = [task_to_cancel[0] for task_to_cancel in tasks_to_cancel]
-
+        tasks_to_cancel = await Task.get_ids_of_tasks_associated_with_controller(controller_id)
         # cancel
         task_list = list(self.task_list)  # shallow copy
         for task in task_list:
             if task.task_model.id in tasks_to_cancel:
                 await task.cancel()
+    # todo: либо надо отменять таски паралелльно, либо не ждать результата после отмены

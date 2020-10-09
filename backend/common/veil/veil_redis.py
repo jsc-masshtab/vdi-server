@@ -30,6 +30,7 @@ POOL_WORKER_CMD_QUEUE = 'POOL_WORKER_CMD_QUEUE'  # Очередь для ком�
 class PoolWorkerCmd(Enum):
 
     CANCEL_TASK = 'CANCEL_TASK'
+    # RESUME_TASK = 'RESUME_TASK'
 
 
 # Ws monitor related
@@ -158,9 +159,6 @@ async def a_redis_wait_for_message(redis_channel, predicate, timeout):
     except asyncio.CancelledError:  # Проброс необходим, чтобы корутина могла отмениться
         raise
     except Exception as ex:  # noqa
-        # TODO: не надо использовать print там, где уже прошел коммит. Давайте сделаем наш логгинг удобным,
-        #  если он сейчас не удобен.
-        print('a_redis_wait_for_message ', str(ex))
         pass
 
     return False
@@ -176,6 +174,45 @@ async def a_redis_get_message(redis_subscriber):
         await asyncio.sleep(REDIS_ASYNC_TIMEOUT)
 
 
+async def a_redis_wait_for_task_completion(task_id):
+    """Ждем завершения таски и возвращаем статус с которым она завершилась
+    Считаем что задача завершилась если ее статус сменился на CANCELLED/FAILED/FINISHED
+    Ожидание потенциально бесконечно. Использовть только с asyncio.wait_for"""
+
+    from common.models.task import TaskStatus
+
+    redis_subscriber = REDIS_CLIENT.pubsub()
+    redis_subscriber.subscribe(INTERNAL_EVENTS_CHANNEL)
+
+    try:
+        while True:
+            # try to receive message
+            redis_message = redis_subscriber.get_message()
+            if redis_message and redis_message['type'] == 'message':
+
+                redis_message_data = redis_message['data'].decode()
+                redis_data_dict = json.loads(redis_message_data)
+
+                if redis_data_dict['resource'] == VDI_TASKS_SUBSCRIPTION and \
+                        redis_data_dict['event'] == 'status_changed' and \
+                        redis_data_dict['task_id'] == task_id and \
+                        (redis_data_dict['task_status'] == TaskStatus.CANCELLED.name or  # noqa
+                         redis_data_dict['task_status'] == TaskStatus.FAILED.name or  # noqa
+                         redis_data_dict['task_status'] == TaskStatus.FINISHED.name):
+
+                    return redis_data_dict['task_status']
+
+            await asyncio.sleep(REDIS_ASYNC_TIMEOUT)
+
+    except asyncio.TimeoutError:
+        raise
+    except asyncio.CancelledError:
+        raise
+    except Exception as ex:  # noqa
+        print('EXCEPTION in a_redis_wait_for_task_completion ', str(ex), flush=True)  # temp
+        pass
+
+
 async def request_to_execute_pool_task(pool_id, pool_task_type, **additional_data):
     """Send request to pool worker to execute a task. Return task string id"""
     from common.models.task import Task
@@ -188,38 +225,21 @@ async def request_to_execute_pool_task(pool_id, pool_task_type, **additional_dat
 
 
 async def execute_delete_pool_task(pool_id: str, full, wait_for_result=True, wait_timeout=20):
-    """Удаление автоматического пула. Если wait_for_result == True, то ждем результат"""
+    """Удаление автоматического пула. Если wait_for_result == True, то ждем результат
+    Возврщаем bool успешно или нет прошло удаление"""
 
     from common.models.task import PoolTaskType, TaskStatus  # для избежания цикл ссылки
 
-    # removal check predicate
-    def _check_if_pool_deleted(redis_message):
-        try:
-            redis_message_data = redis_message['data'].decode()
-            redis_data_dict = json.loads(redis_message_data)
-
-            if redis_data_dict['resource'] == VDI_TASKS_SUBSCRIPTION and \
-                    redis_data_dict['task_type'] == PoolTaskType.DELETING_POOL.name and \
-                    redis_data_dict['event'] == 'status_changed' and \
-                    pool_id == redis_data_dict['entity_id']:
-                # Если таска завершилась со статусом FINISHED значит все хорошо
-                return redis_data_dict['task_status'] == TaskStatus.FINISHED.name
-        except asyncio.CancelledError:
-            raise
-        except Exception:  # noqa
-            # system_logger._debug('__check_if_pool_deleted ' + str(ex))
-            pass
-
-        return False
-
     # send command to pool worker
-    await request_to_execute_pool_task(pool_id, PoolTaskType.DELETING_POOL, deletion_full=full)
+    task_id = await request_to_execute_pool_task(pool_id, PoolTaskType.DELETING_POOL, deletion_full=full)
 
     # wait for result
     if wait_for_result:
-        is_deleted = await a_redis_wait_for_message(INTERNAL_EVENTS_CHANNEL, _check_if_pool_deleted,
-                                                    timeout=wait_timeout)
-        return is_deleted
+        try:
+            task_status = await asyncio.wait_for(a_redis_wait_for_task_completion(task_id), wait_timeout)
+            return task_status == TaskStatus.FINISHED.name
+        except asyncio.TimeoutError:  # Если не дождались сообщения о завершении таски
+            return False
     else:
         return True
 
@@ -230,10 +250,27 @@ def send_cmd_to_cancel_tasks(task_ids: list, cancel_all=False):
     REDIS_CLIENT.rpush(POOL_WORKER_CMD_QUEUE, json.dumps(cmd_dict))
 
 
-def send_cmd_to_cancel_tasks_associated_with_controller(controller_id):
-    """Send command CANCEL_TASK to pool worker. It will cancel all tasks associated with controller"""
+async def send_cmd_to_cancel_tasks_associated_with_controller(controller_id, wait_for_result=False, wait_timeout=10):
+    """Send command CANCEL_TASK to pool worker. It will cancel all tasks associated with controller
+    and will wait cancellation if wait_for_result==True"""
+
+    #  Send cmd
     cmd_dict = {'command': PoolWorkerCmd.CANCEL_TASK.name, 'controller_id': str(controller_id)}
     REDIS_CLIENT.rpush(POOL_WORKER_CMD_QUEUE, json.dumps(cmd_dict))
+
+    #  Wait for result
+    if wait_for_result:
+        from common.models.task import Task, TaskStatus
+
+        async def _wait_for_task_result(task_id):
+            try:
+                task_status = await asyncio.wait_for(a_redis_wait_for_task_completion(task_id), wait_timeout)
+                return task_status == TaskStatus.FINISHED.name
+            except asyncio.TimeoutError:  # Если не дождались сообщения
+                return False
+
+        tasks_to_cancel = await Task.get_ids_of_tasks_associated_with_controller(controller_id)
+        await asyncio.gather(*[_wait_for_task_result(task) for task in tasks_to_cancel])
 
 
 def send_cmd_to_ws_monitor(controller_id, ws_monitor_cmd: WsMonitorCmd):

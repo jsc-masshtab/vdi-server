@@ -5,7 +5,7 @@ import traceback
 from common.veil.veil_errors import PoolCreationError
 
 from common.log.journal import system_logger
-from common.veil.veil_errors import VmCreationError, SimpleError
+from common.veil.veil_errors import VmCreationError
 
 from common.veil.veil_gino import EntityType, Status
 
@@ -263,13 +263,8 @@ class DeletePoolTask(AbstractTask):
             template_id = automated_pool.template_id
             # удаляем пул
             pool = await Pool.get(automated_pool.id)
-            # print('pool = await Pool.get(automated_pool.id)', pool)
-            try:
-                is_deleted = await Pool.delete_pool(pool, 'system', self.full_deletion)
-            except SimpleError as ex:
-                is_deleted = False
-                await system_logger.debug(str(ex))
 
+            is_deleted = await Pool.delete_pool(pool, 'system', self.full_deletion)
             await system_logger.debug('is pool deleted: {}'.format(is_deleted))
 
             # убираем из памяти локи, если пул успешно удалился
