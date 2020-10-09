@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 import asyncio
-import json
 import uuid
 from enum import Enum
 from sqlalchemy import and_, union_all, case, literal_column, desc, text, Enum as AlchemyEnum
@@ -13,8 +12,7 @@ from common.veil.veil_gino import Status, EntityType, VeilModel
 from common.veil.veil_errors import VmCreationError, PoolCreationError, SimpleError, ValidationError
 from common.utils import extract_ordering_data
 from web_app.auth.license.utils import License
-from common.veil.veil_redis import get_thin_clients_count, REDIS_CLIENT, INTERNAL_EVENTS_CHANNEL
-from web_app.front_ws_api.subscription_sources import VDI_TASKS_SUBSCRIPTION
+from common.veil.veil_redis import get_thin_clients_count
 
 from common.models.auth import (User as UserModel, Entity as EntityModel, EntityRoleOwner as EntityRoleOwnerModel,
                                 Group as GroupModel, UserGroup as UserGroupModel)
@@ -980,18 +978,6 @@ class AutomatedPool(db.Model):
             msg = _('Automated pool created with errors. VMs created: {}. Required: {}').format(len(vm_list),
                                                                                                 self.initial_size)
             await system_logger.error(msg, entity=self.entity)
-
-        # todo: deprecated Удалить позже, так как ws сообщение отпрвляется при изменении статуса каждой таски
-        msg_dict = dict(msg=msg,
-                        msg_type='data',
-                        event='pool_creation_completed',
-                        pool_id=str(self.id),
-                        amount_of_created_vms=len(vm_list),
-                        initial_size=self.initial_size,
-                        is_successful=is_creation_successful,
-                        resource=VDI_TASKS_SUBSCRIPTION)
-
-        REDIS_CLIENT.publish(INTERNAL_EVENTS_CHANNEL, json.dumps(msg_dict))
 
         # Пробросить исключение, если споткнулись на создании машин
         if not is_creation_successful:
