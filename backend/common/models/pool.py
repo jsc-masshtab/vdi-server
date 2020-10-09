@@ -776,7 +776,7 @@ class AutomatedPool(db.Model):
         return await Pool.deactivate(self.id)
 
     @classmethod
-    async def soft_create(cls, verbose_name, controller_ip, cluster_id, node_id,
+    async def soft_create(cls, creator, verbose_name, controller_ip, cluster_id, node_id,
                           template_id, datapool_id, increase_step,
                           initial_size, reserve_size, total_size, vm_name_template,
                           create_thin_clones, connection_types, ad_cn_pattern: str = None):
@@ -807,7 +807,8 @@ class AutomatedPool(db.Model):
                                                   create_thin_clones=create_thin_clones,
                                                   ad_cn_pattern=ad_cn_pattern)
 
-            await system_logger.info(_('AutomatedPool {} is created').format(verbose_name), entity=pool.entity)
+            await system_logger.info(_('AutomatedPool {} is created').format(verbose_name), user=creator,
+                                     entity=pool.entity)
 
             return automated_pool
 
@@ -945,7 +946,7 @@ class AutomatedPool(db.Model):
         await system_logger.debug(_('Pool {} os type is: {}').format(verbose_name, pool_os_type))
         await self.update(os_type=pool_os_type).apply()
 
-        await system_logger.info(_('Automated pool creation started'), entity=self.entity)
+        await system_logger.debug(_('Automated pool creation started'), entity=self.entity)
 
         vm_list = list()
         pool = await Pool.get(self.id)

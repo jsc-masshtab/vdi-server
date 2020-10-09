@@ -640,7 +640,7 @@ class CreateAutomatedPoolMutation(graphene.Mutation, ControllerFetcher):
         # await cls.validate(**kwargs)
         # --- Создание записей в БД
         try:
-            automated_pool = await AutomatedPool.soft_create(verbose_name=verbose_name,
+            automated_pool = await AutomatedPool.soft_create(creator=creator, verbose_name=verbose_name,
                                                              controller_ip=controller.address, cluster_id=cluster_id,
                                                              node_id=node_id, template_id=template_id,
                                                              datapool_id=datapool_id,
