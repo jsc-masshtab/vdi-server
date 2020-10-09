@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2020-10-01 11:59+0300\n"
+"POT-Creation-Date: 2020-10-05 16:14+0300\n"
 "PO-Revision-Date: 2020-07-30 11:25+0300\n"
 "Last-Translator: Emil <emil@emil-pc>\n"
 "Language-Team: English\n"
@@ -396,23 +396,23 @@ msgstr "Pool {} os type is: {}"
 msgid "Automated pool creation started"
 msgstr "Automated pool creation started"
 
-#: ../common/models/pool.py:952
+#: ../common/models/pool.py:956
 msgid "Created {} VMs from {} at the Automated pool {}"
 msgstr "Created {} VMs from {} at the Automated pool {}"
 
-#: ../common/models/pool.py:969
+#: ../common/models/pool.py:973
 msgid "Can`t create VM"
 msgstr "Can`t create VM"
 
-#: ../common/models/pool.py:976
+#: ../common/models/pool.py:980
 msgid "Initial VM amount {} at the Automated pool {}"
 msgstr "Initial VM amount {} at the Automated pool {}"
 
-#: ../common/models/pool.py:979
+#: ../common/models/pool.py:983
 msgid "Automated pool created with errors. VMs created: {}. Required: {}"
 msgstr "Automated pool created with errors. VMs created: {}. Required: {}"
 
-#: ../common/models/pool.py:996
+#: ../common/models/pool.py:1000
 msgid "Could not create the required number of machines."
 msgstr "Could not create the required number of machines."
 
@@ -976,7 +976,15 @@ msgstr "The pool doesn`t have free machines."
 msgid "VM is unreachable on ECP Veil."
 msgstr "VM is unreachable on ECP Veil."
 
-#: ../web_app/thin_client_api/handlers.py:131
+#: ../web_app/thin_client_api/handlers.py:124
+msgid "User {} connected to pool {}."
+msgstr "User {} connected to pool {}."
+
+#: ../web_app/thin_client_api/handlers.py:126
+msgid "User {} connected to VM {}."
+msgstr "User {} connected to VM {}."
+
+#: ../web_app/thin_client_api/handlers.py:135
 msgid "VM does not support RDP."
 msgstr "VM does not support RDP."
 
@@ -1026,41 +1034,41 @@ msgstr "{cls}: resource monitor for controller {name} removed"
 msgid "{cls}: controller {id} is not monitored!"
 msgstr "{cls}: controller {id} is not monitored!"
 
-#~ msgid "Calling soft delete for vm {}"
-#~ msgstr "Calling soft delete for vm {}"
-
-#~ msgid "VM"
-#~ msgstr "VM"
-
-#~ msgid "Authentication directory"
-#~ msgstr "Authentication directory"
-
-#~ msgid "In authentication directory {} mapping"
-#~ msgstr "In authentication directory {} mapping"
-
-#~ msgid "Group"
-#~ msgstr "Group"
-
-#~ msgid "ip-address probably invalid."
-#~ msgstr "ip-address probably invalid."
-
-#~ msgid "Failed to create automated pool {}. Name must be unique."
-#~ msgstr "Failed to create automated pool {}. Name must be unique."
-
-#~ msgid "Role VM_OPERATOR has assigned to user {}."
-#~ msgstr "Role VM_OPERATOR has assigned to user {}."
-
-#~ msgid "Pool worker: start loop now"
-#~ msgstr "Pool worker: start loop now"
-
-#~ msgid "Ws listener worker: start loop now"
-#~ msgstr "Ws listener worker: start loop now"
-
-#~ msgid "Wait one more try"
-#~ msgstr "Wait one more try"
+#~ msgid "Trying to create VM on ECP with verbose_name={}"
+#~ msgstr "Trying to create VM on ECP with verbose_name={}"
 
 #~ msgid "Request to create VM sent without surprise. Leaving while."
 #~ msgstr "Request to create VM sent without surprise. Leaving while."
 
-#~ msgid "Trying to create VM on ECP with verbose_name={}"
-#~ msgstr "Trying to create VM on ECP with verbose_name={}"
+#~ msgid "Wait one more try"
+#~ msgstr "Wait one more try"
+
+#~ msgid "Ws listener worker: start loop now"
+#~ msgstr "Ws listener worker: start loop now"
+
+#~ msgid "Pool worker: start loop now"
+#~ msgstr "Pool worker: start loop now"
+
+#~ msgid "Role VM_OPERATOR has assigned to user {}."
+#~ msgstr "Role VM_OPERATOR has assigned to user {}."
+
+#~ msgid "Failed to create automated pool {}. Name must be unique."
+#~ msgstr "Failed to create automated pool {}. Name must be unique."
+
+#~ msgid "ip-address probably invalid."
+#~ msgstr "ip-address probably invalid."
+
+#~ msgid "Group"
+#~ msgstr "Group"
+
+#~ msgid "In authentication directory {} mapping"
+#~ msgstr "In authentication directory {} mapping"
+
+#~ msgid "Authentication directory"
+#~ msgstr "Authentication directory"
+
+#~ msgid "VM"
+#~ msgstr "VM"
+
+#~ msgid "Calling soft delete for vm {}"
+#~ msgstr "Calling soft delete for vm {}"

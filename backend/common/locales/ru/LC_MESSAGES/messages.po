@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2020-10-01 11:59+0300\n"
+"POT-Creation-Date: 2020-10-05 16:14+0300\n"
 "PO-Revision-Date: 2020-07-30 11:25+0300\n"
 "Last-Translator: Emil <emil@emil-pc>\n"
 "Language-Team: Russian\n"
@@ -396,23 +396,23 @@ msgstr "Операционная система пула {}: {}"
 msgid "Automated pool creation started"
 msgstr "Автоматическое создание пула началось"
 
-#: ../common/models/pool.py:952
+#: ../common/models/pool.py:956
 msgid "Created {} VMs from {} at the Automated pool {}"
 msgstr "Создание {} виртуальных машин из {} автоматического пула {}"
 
-#: ../common/models/pool.py:969
+#: ../common/models/pool.py:973
 msgid "Can`t create VM"
 msgstr "Невозможно создать виртуальную машину"
 
-#: ../common/models/pool.py:976
+#: ../common/models/pool.py:980
 msgid "Initial VM amount {} at the Automated pool {}"
 msgstr "Начальное количество виртуальных машин {} в автоматическом пуле {}"
 
-#: ../common/models/pool.py:979
+#: ../common/models/pool.py:983
 msgid "Automated pool created with errors. VMs created: {}. Required: {}"
 msgstr "Автоматический пул создан с ошибками. Созданные виртуальные машины: {}. Необходимо: {}."
 
-#: ../common/models/pool.py:996
+#: ../common/models/pool.py:1000
 msgid "Could not create the required number of machines."
 msgstr "Не удалось создать необходимое количество машин."
 
@@ -976,7 +976,15 @@ msgstr "В пуле нет свободных машин"
 msgid "VM is unreachable on ECP Veil."
 msgstr "ВМ недоступна на ECP Veil."
 
-#: ../web_app/thin_client_api/handlers.py:131
+#: ../web_app/thin_client_api/handlers.py:124
+msgid "User {} connected to pool {}."
+msgstr "Пользователь {} подключился к пулу {}."
+
+#: ../web_app/thin_client_api/handlers.py:126
+msgid "User {} connected to VM {}."
+msgstr "Пользователь {} подключился к ВМ {}."
+
+#: ../web_app/thin_client_api/handlers.py:135
 msgid "VM does not support RDP."
 msgstr "Виртуальная машина не поддерживает RDP"
 
@@ -1026,41 +1034,41 @@ msgstr "{cls}: удален монитор ресурсов для контро�
 msgid "{cls}: controller {id} is not monitored!"
 msgstr "{cls}: контроллер {id} не отслеживается!"
 
-#~ msgid "Calling soft delete for vm {}"
-#~ msgstr "Вызов мягкого удаления для виртуальной машины {}"
-
-#~ msgid "VM"
-#~ msgstr "Виртуальная машина"
-
-#~ msgid "Authentication directory"
-#~ msgstr "Директория авторизации"
-
-#~ msgid "In authentication directory {} mapping"
-#~ msgstr "В директории авторизации {} отображение"
-
-#~ msgid "Group"
-#~ msgstr "Группа"
-
-#~ msgid "ip-address probably invalid."
-#~ msgstr "Возможно, неверный IP адрес."
-
-#~ msgid "Failed to create automated pool {}. Name must be unique."
-#~ msgstr "Ошибка создания автоматического пула {}. Имя должно быть уникальным."
-
-#~ msgid "Role VM_OPERATOR has assigned to user {}."
-#~ msgstr "Пользователю {} назначена роль VM_OPERATOR."
-
-#~ msgid "Pool worker: start loop now"
-#~ msgstr "Pool worker: запущен"
-
-#~ msgid "Ws listener worker: start loop now"
-#~ msgstr "Ws listener worker: запущен"
-
-#~ msgid "Wait one more try"
-#~ msgstr "Подождите еще одну попытку."
+#~ msgid "Trying to create VM on ECP with verbose_name={}"
+#~ msgstr "Попытка создать виртуальную машину на ECP с именем = {}"
 
 #~ msgid "Request to create VM sent without surprise. Leaving while."
 #~ msgstr "Запрос на создание ВМ отправлен без неожиданностей. Покидаем while."
 
-#~ msgid "Trying to create VM on ECP with verbose_name={}"
-#~ msgstr "Попытка создать виртуальную машину на ECP с именем = {}"
+#~ msgid "Wait one more try"
+#~ msgstr "Подождите еще одну попытку."
+
+#~ msgid "Ws listener worker: start loop now"
+#~ msgstr "Ws listener worker: запущен"
+
+#~ msgid "Pool worker: start loop now"
+#~ msgstr "Pool worker: запущен"
+
+#~ msgid "Role VM_OPERATOR has assigned to user {}."
+#~ msgstr "Пользователю {} назначена роль VM_OPERATOR."
+
+#~ msgid "Failed to create automated pool {}. Name must be unique."
+#~ msgstr "Ошибка создания автоматического пула {}. Имя должно быть уникальным."
+
+#~ msgid "ip-address probably invalid."
+#~ msgstr "Возможно, неверный IP адрес."
+
+#~ msgid "Group"
+#~ msgstr "Группа"
+
+#~ msgid "In authentication directory {} mapping"
+#~ msgstr "В директории авторизации {} отображение"
+
+#~ msgid "Authentication directory"
+#~ msgstr "Директория авторизации"
+
+#~ msgid "VM"
+#~ msgstr "Виртуальная машина"
+
+#~ msgid "Calling soft delete for vm {}"
+#~ msgstr "Вызов мягкого удаления для виртуальной машины {}"
