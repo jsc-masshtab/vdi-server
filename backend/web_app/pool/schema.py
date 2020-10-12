@@ -113,11 +113,11 @@ class PoolValidator(MutationValidation):
         if not value:
             return
 
-        name_re = re.compile('^[а-яА-ЯёЁa-zA-Z0-9]+[а-яА-ЯёЁa-zA-Z0-9.-_+ ]*$')
+        name_re = re.compile('^[a-zA-Z]+[a-zA-Z0-9-]{2,63}$')
         template_name = re.match(name_re, value)
         if template_name:
             return value
-        raise ValidationError(_('Template name of VM must contain only characters, digits, _, -'))
+        raise ValidationError(_('Template name of VM must contain only characters, digits, -'))
 
     @staticmethod
     async def validate_initial_size(obj_dict, value):
@@ -398,7 +398,7 @@ class DeletePoolMutation(graphene.Mutation, PoolValidator):
     ok = graphene.Boolean()
 
     @administrator_required
-    async def mutate(self, info, pool_id, creator, full=False):
+    async def mutate(self, info, pool_id, creator, full=True):
 
         # Нет запуска валидации, т.к. нужна сущность пула далее - нет смысла запускать запрос 2жды.
         # print('pool_id', pool_id)

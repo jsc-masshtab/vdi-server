@@ -1,0 +1,48 @@
+<IfModule mod_ssl.c>
+    <VirtualHost *:443>
+        # SSL Engine Switch:
+        SSLEngine on
+        SSLCertificateFile /opt/veil-vdi/other/veil_ssl/veil_default.crt
+        SSLCertificateKeyFile /opt/veil-vdi/other/veil_ssl/veil_default.key
+        # enable HTTP/2, if available
+        Protocols h2 http/1.1
+        # HTTP Strict Transport Security (mod_headers is required) (63072000 seconds)
+        Header always set Strict-Transport-Security "max-age=63072000"
+
+        # ServerName
+        # ServerAlias
+        # ServerAdmin
+        DocumentRoot /opt/veil-vdi/www
+
+        CustomLog ${APACHE_LOG_DIR}/vdi.access.log combined
+        ErrorLog ${APACHE_LOG_DIR}/vdi.error.log
+
+        <Directory /opt/veil-vdi/www>
+            Options Indexes FollowSymLinks MultiViews
+            AllowOverride All
+            Order allow,deny
+            allow from all
+            LimitRequestBody 1048576
+            AddDefaultCharset UTF-8
+        </Directory>
+
+        ProxyPreserveHost On
+
+        ProxyPass /auth http://127.0.0.1:8888/auth/
+        ProxyPass /logout http://127.0.0.1:8888/logout/
+        ProxyPass /version http://127.0.0.1:8888/version/
+
+        # pass thin client requests directly to tornado
+        ProxyPass /client/ http://127.0.0.1:8888/client/
+        # pass requests for dynamic content to tornado
+        ProxyPass /api/ http://127.0.0.1:8888/
+
+        # pass ws requests directly to tornado
+        <Location /ws/client/vdi_server_check>
+            RewriteCond ${HTTP:Upgrade} websocket [NC]
+            RewriteCond ${HTTP:Connection} upgrade [NC]
+            RewriteRule .* "wss:/127.0.0.1:8888/$1" [P,L]
+            ProxyPass  http://127.0.0.1:8888/ws/client/vdi_server_check/
+        </Location>
+    </VirtualHost>
+</IfModule>
