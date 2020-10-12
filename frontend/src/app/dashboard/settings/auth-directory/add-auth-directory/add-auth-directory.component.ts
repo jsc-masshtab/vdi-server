@@ -19,7 +19,7 @@ export class AddAuthenticationDirectoryComponent {
     this.form = this.fb.group({
       domain_name: ['', Validators.required],
       verbose_name: ['', Validators.required],
-      directory_url: ['ldap://', Validators.required],
+      directory_url: ['ldap://', [Validators.required, Validators.pattern(/^ldap[s]?:\/\/[a-zA-Z0-9.-_+ ]+$/)]],
       description: '',
       service_username: '',
       service_password: '',
@@ -43,6 +43,8 @@ export class AddAuthenticationDirectoryComponent {
     this.checkValid = true;
     if (this.form.status === 'VALID') {
       this.waitService.setWait(true);
+
+      console.log(this.form.value)
       this.service.createAuthDir({ ...this.form.value }).subscribe(() => {
         this.service.getAllAuthenticationDirectory().refetch();
         this.dialogRef.close();
