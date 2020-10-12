@@ -46,8 +46,11 @@ def downgrade():
     op.add_column('controller', sa.Column('username', sa.VARCHAR(length=128), autoincrement=False, nullable=False))
     op.add_column('controller', sa.Column('password', sa.VARCHAR(length=128), autoincrement=False, nullable=False))
     op.add_column('controller', sa.Column('ldap_connection', sa.BOOLEAN(), autoincrement=False, nullable=False))
-    op.add_column('controller', sa.Column('expires_on', postgresql.TIMESTAMP(timezone=True), autoincrement=False, nullable=True))
+    op.add_column('controller',
+                  sa.Column('expires_on', postgresql.TIMESTAMP(timezone=True), autoincrement=False, nullable=True))
     op.alter_column('controller', 'token',
                     existing_type=sa.VARCHAR(length=1024),
                     nullable=True)
-    op.drop_constraint(None, 'automated_pool', type_='unique')
+    op.drop_constraint('automated_pool_id_key', 'automated_pool', type_='unique')
+    op.drop_constraint('pool_id_key', 'pool', type_='unique')
+    op.drop_constraint('static_pool_id_key', 'static_pool', type_='unique')
