@@ -116,7 +116,7 @@ class PoolTaskManager:
         await system_logger.debug('Resuming tasks')
 
         # Get tasks to launch
-        where_conditions = [Task.resume_on_app_startup,
+        where_conditions = [Task.resumable,
                             ((Task.status == TaskStatus.IN_PROGRESS) | (Task.status == TaskStatus.CANCELLED))]
         if controller_id:
             where_conditions.append(Pool.controller == controller_id)

@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import uuid
 import json
+import textwrap
 
 from enum import Enum
 
@@ -44,11 +45,13 @@ class Task(db.Model, AbstractSortableStatusModel):
     created = db.Column(db.DateTime(timezone=True), server_default=func.now())
 
     # Нужно ли возобновлять отмененную таску.
-    resume_on_app_startup = db.Column(db.Boolean(), nullable=False, default=True)  # todo: rename to resumable
+    resumable = db.Column(db.Boolean(), nullable=False, default=True)
 
     priority = db.Column(db.Integer(), nullable=False, default=1)  # Приоритет задачи
 
     progress = db.Column(db.Integer(), nullable=False, default=0)
+
+    message = db.Column(db.Unicode(length=256), nullable=True)
 
     def to_json_serializable_dict(self):
         return dict(
@@ -68,19 +71,23 @@ class Task(db.Model, AbstractSortableStatusModel):
 
         await self.update(status=status).apply()
         if status == TaskStatus.FINISHED or status == TaskStatus.FAILED:
-            await self.update(resume_on_app_startup=False).apply()
+            await self.update(resumable=False).apply()
 
-        # publish task event
         task_id_str = str(self.id)
         if message is None:
             message = 'Status of task {} {} changed to {}'.format(
                 self.task_type.name, task_id_str, self.status.name)
 
+        # msg
+        shorten_msg = textwrap.shorten(message, width=256)
+        await self.update(message=shorten_msg).apply()
+
+        # publish task event
         msg_dict = dict(
             resource=VDI_TASKS_SUBSCRIPTION,
             mgs_type='task_data',
             event='status_changed',
-            message=message,
+            message=shorten_msg,
         )
         msg_dict.update(self.to_json_serializable_dict())
         REDIS_CLIENT.publish(INTERNAL_EVENTS_CHANNEL, json.dumps(msg_dict))
