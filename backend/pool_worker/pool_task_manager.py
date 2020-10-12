@@ -133,7 +133,7 @@ class PoolTaskManager:
         # Resume tasks
         for task in tasks_to_launch:
             (task_id, task_type) = task
-            task_data_dict = {'task_id': task_id, 'task_type': task_type}
+            task_data_dict = {'task_id': task_id, 'task_type': task_type.name}
             try:
                 await self.launch_task(task_data_dict)
             except Exception as ex:
@@ -176,6 +176,7 @@ class PoolTaskManager:
 
     async def cancel_tasks_associated_with_controller(self, controller_id):
         """cancel_tasks_associated_with_controller"""
+        await system_logger.debug('cancel_tasks_associated_with_controller')
         # find tasks
         tasks_to_cancel = await Task.get_ids_of_tasks_associated_with_controller(controller_id)
         # cancel

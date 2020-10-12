@@ -46,6 +46,7 @@ class ResourcesMonitorManager:
             await resources_monitor.stop()
 
     async def add_controller(self, controller_id):
+
         # check if controller is already being monitored
         controller = await Controller.get(controller_id)
         if controller_id in self._get_monitored_controllers_ids():

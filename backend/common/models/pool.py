@@ -946,21 +946,21 @@ class AutomatedPool(db.Model):
 
         await system_logger.debug(_('Automated pool creation started'), entity=self.entity)
 
-        vm_list = list()
+        num_of_added_vms = 0
         pool = await Pool.get(self.id)
-        vm_amount_in_pool = await pool.get_vm_amount()  # В пуле уже могут быть машины, например, если
+        start_vm_amount_in_pool = await pool.get_vm_amount()  # В пуле уже могут быть машины, например, если
         # инициализация пула была прервана из-за завершения приложения.
 
         try:
-            for i in range(vm_amount_in_pool, self.initial_size):
-                vm_object = await self.add_vm()
-                vm_list.append(vm_object)
+            for i in range(start_vm_amount_in_pool, self.initial_size):
+                await self.add_vm()
+                num_of_added_vms += 1
                 msg = _('Created {} VMs from {} at the Automated pool {}').format(i + 1, self.initial_size,
                                                                                   verbose_name)
                 await system_logger.info(msg, entity=self.entity)
 
                 # update progress of associated task
-                progress = ((i + 1) / self.initial_size) * 100  # from 0 to 100
+                progress = (num_of_added_vms / self.initial_size) * 100  # from 0 to 100
                 await Task.set_progress_to_task_associated_with_entity(self.id, progress)
 
         except VmCreationError as vm_error:
@@ -968,14 +968,14 @@ class AutomatedPool(db.Model):
             await system_logger.error(_('Can`t create VM'), entity=self.entity)
             await system_logger.debug(vm_error)
 
-        # internal message about pool creation result (WS)
-        is_creation_successful = (len(vm_list) == self.initial_size)
+        is_creation_successful = (num_of_added_vms == (self.initial_size - start_vm_amount_in_pool))
+        # logging
         await system_logger.debug('is_creation_successful {}'.format(is_creation_successful))
         if is_creation_successful:
-            msg = _('Initial VM amount {} at the Automated pool {}').format(len(vm_list), verbose_name)
+            msg = _('Initial VM amount {} at the Automated pool {}').format(num_of_added_vms, verbose_name)
             await system_logger.info(msg, entity=self.entity)
         else:
-            msg = _('Automated pool created with errors. VMs created: {}. Required: {}').format(len(vm_list),
+            msg = _('Automated pool created with errors. VMs created: {}. Required: {}').format(num_of_added_vms,
                                                                                                 self.initial_size)
             await system_logger.error(msg, entity=self.entity)
 

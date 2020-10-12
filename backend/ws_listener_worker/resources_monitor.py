@@ -176,7 +176,7 @@ class ResourcesMonitor():
 
     async def _on_message_received(self, message):
         # print('_on_message_received: message ' + message)
-        await system_logger.debug('_on_message_received: message ' + message)
+        # await system_logger.debug('_on_message_received: message ' + message)
         REDIS_CLIENT.publish(WS_MONITOR_CHANNEL_OUT, message)
 
     async def _close_connection(self):
