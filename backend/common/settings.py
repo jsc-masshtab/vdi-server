@@ -26,7 +26,7 @@ POOL_MAX_VM_AMOUNT = 1000
 POOL_MAX_CREATE_ATTEMPTS = 15
 
 # Journal settings
-DEBUG = True
+DEBUG = False
 
 # Auth settings
 # -----------------------------

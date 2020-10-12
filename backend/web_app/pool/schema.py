@@ -398,7 +398,7 @@ class DeletePoolMutation(graphene.Mutation, PoolValidator):
     ok = graphene.Boolean()
 
     @administrator_required
-    async def mutate(self, info, pool_id, creator, full=False):
+    async def mutate(self, info, pool_id, creator, full=True):
 
         # Нет запуска валидации, т.к. нужна сущность пула далее - нет смысла запускать запрос 2жды.
         # print('pool_id', pool_id)

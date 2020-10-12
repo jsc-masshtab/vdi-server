@@ -123,7 +123,7 @@ class Vm(VeilModel):
                 active_directory_object = await AuthenticationDirectory.query.where(
                     AuthenticationDirectory.status == Status.ACTIVE).gino.first()
                 already_in_domain = await domain_entity.in_ad
-                if already_in_domain and domain_entity.os_windows:
+                if domain_entity.os_windows and already_in_domain:
                     await system_logger.info(_('Removing {} from domain.').format(self.verbose_name),
                                              entity=self.entity)
                     action_response = await domain_entity.rm_from_ad(login=active_directory_object.service_username,
