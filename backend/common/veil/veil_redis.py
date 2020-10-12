@@ -30,7 +30,7 @@ POOL_WORKER_CMD_QUEUE = 'POOL_WORKER_CMD_QUEUE'  # Очередь для ком�
 class PoolWorkerCmd(Enum):
 
     CANCEL_TASK = 'CANCEL_TASK'
-    # RESUME_TASK = 'RESUME_TASK'
+    RESUME_TASK = 'RESUME_TASK'
 
 
 # Ws monitor related
@@ -250,9 +250,9 @@ def send_cmd_to_cancel_tasks(task_ids: list, cancel_all=False):
     REDIS_CLIENT.rpush(POOL_WORKER_CMD_QUEUE, json.dumps(cmd_dict))
 
 
-async def send_cmd_to_cancel_tasks_associated_with_controller(controller_id, wait_for_result=False, wait_timeout=10):
+async def send_cmd_to_cancel_tasks_associated_with_controller(controller_id, wait_for_result=False, wait_timeout=3):
     """Send command CANCEL_TASK to pool worker. It will cancel all tasks associated with controller
-    and will wait cancellation if wait_for_result==True"""
+    and will wait for cancellation if wait_for_result==True"""
 
     #  Send cmd
     cmd_dict = {'command': PoolWorkerCmd.CANCEL_TASK.name, 'controller_id': str(controller_id)}
@@ -260,14 +260,13 @@ async def send_cmd_to_cancel_tasks_associated_with_controller(controller_id, wai
 
     #  Wait for result
     if wait_for_result:
-        from common.models.task import Task, TaskStatus
+        from common.models.task import Task
 
         async def _wait_for_task_result(task_id):
             try:
-                task_status = await asyncio.wait_for(a_redis_wait_for_task_completion(task_id), wait_timeout)
-                return task_status == TaskStatus.FINISHED.name
+                await asyncio.wait_for(a_redis_wait_for_task_completion(task_id), wait_timeout)
             except asyncio.TimeoutError:  # Если не дождались сообщения
-                return False
+                pass
 
         tasks_to_cancel = await Task.get_ids_of_tasks_associated_with_controller(controller_id)
         await asyncio.gather(*[_wait_for_task_result(task) for task in tasks_to_cancel])

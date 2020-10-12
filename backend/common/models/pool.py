@@ -547,14 +547,14 @@ class Pool(VeilModel):
             return await pool.activate(pool.id)
         return False
 
-    @classmethod
-    async def disable(cls, pool_id):
-        """Отличается от deactivate тем, что проверяет предыдущий статус."""
-        pool = await Pool.get(pool_id)
-        # Т.к. сейчас нет возможности остановить создание пула - не трогаем не активные
-        if pool.status == Status.ACTIVE:
-            return await pool.deactivate(pool.id)
-        return False
+    # @classmethod
+    # async def disable(cls, pool_id):
+    #     """Отличается от deactivate тем, что проверяет предыдущий статус."""
+    #     pool = await Pool.get(pool_id)
+    #     # Т.к. сейчас нет возможности остановить создание пула - не трогаем не активные
+    #     if pool.status == Status.ACTIVE:
+    #         return await pool.deactivate(pool.id)
+    #     return False
 
     async def get_free_vm(self):
         """Логика такая, что если сущность отсутствует в таблице разрешений - значит никто ей не владеет.

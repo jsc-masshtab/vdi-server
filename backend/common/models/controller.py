@@ -6,7 +6,8 @@ from veil_api_client import VeilClient
 
 from common.database import db
 from common.veil.veil_api import get_veil_client
-from common.veil.veil_redis import send_cmd_to_ws_monitor, WsMonitorCmd
+from common.veil.veil_redis import send_cmd_to_ws_monitor, send_cmd_to_cancel_tasks_associated_with_controller, \
+    WsMonitorCmd
 from common.veil.veil_gino import Status, EntityType, VeilModel, AbstractSortableStatusModel
 from common.veil.veil_errors import ValidationError
 
@@ -271,6 +272,9 @@ class Controller(AbstractSortableStatusModel, VeilModel):
     async def deactivate(self):
         """Деактивируем контроллер и его пулы."""
         if not self.failed:
+            # Останавлием задачи связанные с контроллером
+            await send_cmd_to_cancel_tasks_associated_with_controller(controller_id=self.id, wait_for_result=True)
+
             # Деактивируем контроллер
             await self.update(status=Status.FAILED).apply()
             await system_logger.info(_('Controller {} has been deactivated.').format(self.verbose_name),
@@ -279,7 +283,7 @@ class Controller(AbstractSortableStatusModel, VeilModel):
             # TODO: переработать деактивацию пулов - нужен метод в пулах, который бы деактивировал ВМ.
             pools = await self.pools
             for pool_obj in pools:
-                await pool_obj.disable(pool_obj.id)
+                await pool_obj.deactivate(pool_obj.id)
                 # Деактивация ВМ происходит внутри пулов.
             return True
         return False

@@ -9,12 +9,15 @@ from pool_worker.pool_tasks import InitPoolTask, ExpandPoolTask, DeletePoolTask
 from pool_worker.pool_locks import PoolLocks
 
 from common.veil.veil_redis import POOL_TASK_QUEUE, POOL_WORKER_CMD_QUEUE, PoolWorkerCmd, a_redis_lpop
+from common.veil.veil_gino import EntityType
+
 from common.languages import lang_init
 
-from common.veil.veil_gino import EntityType
-from common.models.pool import AutomatedPool
+from common.models.pool import Pool
 from common.models.task import Task, TaskStatus, PoolTaskType
-from sqlalchemy.sql import desc
+from common.database import db
+
+from sqlalchemy import and_
 
 from common.log.journal import system_logger
 
@@ -85,7 +88,7 @@ class PoolTaskManager:
                         await self.cancel_tasks(task_ids, cancel_all)
 
                     elif 'controller_id' in data_dict:
-                        print('controller_id in data_dict', flush=True)
+                        # print('controller_id in data_dict', flush=True)
                         controller_id = data_dict['controller_id']
                         await self.cancel_tasks_associated_with_controller(controller_id)
 
@@ -95,56 +98,43 @@ class PoolTaskManager:
                 entity = {'entity_type': EntityType.SECURITY, 'entity_uuid': None}
                 await system_logger.error('listen_for_commands exception:' + str(ex), entity=entity)
 
-    async def resume_tasks(self):  # remove_unresumable_tasks
+    async def resume_tasks(self, controller_id=None, remove_unresumable_tasks=True):
         """
         Анализируем таблицу тасок в бд.
-        Продолжить таски в статусе IN_PROGRESS и CANCELLED при соблюдении условий:
+        Продолжить таски  при соблюдении условий:
         - У таски должен быть поднят флаг resume_on_app_startup.
-        - Если внезапно присутствуют несколько тасок, работающих над одним пулом, то возобновляем только одну из них
-        в следующем приоритете: DELETING > CREATING > EXPANDING.
-
+        - статус IN_PROGRESS иили CANCELLED.
         remove_unresumable_tasks - удалять ли из бд задачи, которые не могут быть возобновлены.
         """
         await system_logger.debug('Resuming tasks')
 
-        pools = await AutomatedPool.query.gino.all()
-        # print('cur auto pools ', pools)
-        # Traverse pools and find tasks to launch
-        tasks_to_launch = []
+        # Get tasks to launch
+        where_conditions = [Task.resume_on_app_startup,
+                            ((Task.status == TaskStatus.IN_PROGRESS) | (Task.status == TaskStatus.CANCELLED))]
+        if controller_id:
+            where_conditions.append(Pool.controller == controller_id)
 
-        for pool in pools:
-            # Find a task with the highest priority
-            pool_task = await Task.query.where(
-                (Task.entity_id == pool.id) &  # noqa
-                Task.resume_on_app_startup &  # noqa
-                ((Task.status == TaskStatus.IN_PROGRESS) | (Task.status == TaskStatus.CANCELLED))).\
-                order_by(desc(Task.priority)).gino.first()
-
-            if pool_task:
-                await system_logger.debug('pool_task {}'.format(pool_task))
-                tasks_to_launch.append(pool_task)
+        tasks_to_launch = await db.select([Task.id, Task.task_type]).select_from(
+            Task.join(Pool, Task.entity_id == Pool.id)).where(and_(*where_conditions)).gino.all()
+        # print('!!!tasks_to_launch ', tasks_to_launch, flush=True)  # temp
 
         #  Remove all other tasks (либо как вариант выставить им всем флаг resume_on_app_startup = False)
-        task_ids_to_launch = [task.id for task in tasks_to_launch]
-        st = await Task.delete.where(Task.id.notin_(task_ids_to_launch)).gino.status()
-        await system_logger.debug('Deleted from db tasks: {}'.format(st))
-
-        # # Остальным задачам выставить флаг resume_on_app_startup = False
-        # task_ids_to_launch = [task.id for task in tasks_to_launch]
-        # st = await Task.update.values(resume_on_app_startup=False).where(
-        #     Task.id.notin_(task_ids_to_launch)).gino.status()
-        # await system_logger.debug('Other tasks: {}'.format(st))
+        if remove_unresumable_tasks:
+            task_ids_to_launch = [task_id for (task_id, _) in tasks_to_launch]
+            st = await Task.delete.where(Task.id.notin_(task_ids_to_launch)).gino.status()
+            await system_logger.debug('Deleted from db tasks: {}'.format(st))
 
         # Resume tasks
         for task in tasks_to_launch:
-            task_data_dict = {'task_id': task.id, 'task_type': task.task_type}
+            (task_id, task_type) = task
+            task_data_dict = {'task_id': task_id, 'task_type': task_type}
             try:
                 await self.launch_task(task_data_dict)
             except Exception as ex:
                 await system_logger.error('PoolTaskManager: Cant resume task {} : {}'.format(task, str(ex)))
 
     async def launch_task(self, task_data_dict):
-
+        # print('launch_task ', task_data_dict, flush=True)
         # get task data
         task_id = task_data_dict['task_id']
         pool_task_type = task_data_dict['task_type']
@@ -176,7 +166,7 @@ class PoolTaskManager:
         #  других корутинах пока мы итерируем
         for task in task_list:
             if cancel_all or (str(task.task_model.id) in task_ids):
-                await task.cancel()
+                await task.cancel(wait_for_result=False)
 
     async def cancel_tasks_associated_with_controller(self, controller_id):
         """cancel_tasks_associated_with_controller"""
@@ -186,5 +176,4 @@ class PoolTaskManager:
         task_list = list(self.task_list)  # shallow copy
         for task in task_list:
             if task.task_model.id in tasks_to_cancel:
-                await task.cancel()
-    # todo: либо надо отменять таски паралелльно, либо не ждать результата после отмены
+                await task.cancel(wait_for_result=False)
