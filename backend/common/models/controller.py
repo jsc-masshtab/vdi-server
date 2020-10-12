@@ -7,7 +7,7 @@ from veil_api_client import VeilClient
 from common.database import db
 from common.veil.veil_api import get_veil_client
 from common.veil.veil_redis import send_cmd_to_ws_monitor, send_cmd_to_cancel_tasks_associated_with_controller, \
-    WsMonitorCmd
+    send_cmd_to_resume_tasks_associated_with_controller, WsMonitorCmd
 from common.veil.veil_gino import Status, EntityType, VeilModel, AbstractSortableStatusModel
 from common.veil.veil_errors import ValidationError
 
@@ -241,6 +241,8 @@ class Controller(AbstractSortableStatusModel, VeilModel):
     async def full_delete(self, creator):
         """Удаление сущности с удалением зависимых сущностей."""
         # soft_delete явно не вызывается
+        # Останавлием задачи связанные с контроллером
+        await send_cmd_to_cancel_tasks_associated_with_controller(controller_id=self.id, wait_for_result=True)
         # Удаляем контроллер из монитора
         send_cmd_to_ws_monitor(self.id, WsMonitorCmd.REMOVE_CONTROLLER)
         # Переключаем статус
@@ -266,6 +268,9 @@ class Controller(AbstractSortableStatusModel, VeilModel):
             for pool_obj in pools:
                 await pool_obj.enable(pool_obj.id)
             # Активация ВМ происходит внутри пулов.
+
+            # Возобновляем задачи связанные с контроллером
+            send_cmd_to_resume_tasks_associated_with_controller(self.id)
             return True
         return False
 

@@ -272,6 +272,11 @@ async def send_cmd_to_cancel_tasks_associated_with_controller(controller_id, wai
         await asyncio.gather(*[_wait_for_task_result(task) for task in tasks_to_cancel])
 
 
+def send_cmd_to_resume_tasks_associated_with_controller(controller_id):
+    cmd_dict = {'command': PoolWorkerCmd.RESUME_TASK.name, 'controller_id': str(controller_id)}
+    REDIS_CLIENT.rpush(POOL_WORKER_CMD_QUEUE, json.dumps(cmd_dict))
+
+
 def send_cmd_to_ws_monitor(controller_id, ws_monitor_cmd: WsMonitorCmd):
     """Send command to ws monitor"""
     cmd_dict = {'controller_id': str(controller_id), 'command': ws_monitor_cmd.name}

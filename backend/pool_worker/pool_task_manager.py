@@ -83,14 +83,20 @@ class PoolTaskManager:
                 # cancel_tasks
                 if command == PoolWorkerCmd.CANCEL_TASK.name:
                     if 'task_ids' in data_dict and 'cancel_all' in data_dict:
-                        task_ids = data_dict['task_ids']  # list od id strings
+                        task_ids = data_dict['task_ids']  # list of id strings
                         cancel_all = data_dict['cancel_all']
                         await self.cancel_tasks(task_ids, cancel_all)
 
                     elif 'controller_id' in data_dict:
-                        # print('controller_id in data_dict', flush=True)
                         controller_id = data_dict['controller_id']
                         await self.cancel_tasks_associated_with_controller(controller_id)
+
+                elif command == PoolWorkerCmd.RESUME_TASK.name:
+                    try:
+                        controller_id = data_dict['controller_id']
+                        await self.resume_tasks(controller_id=controller_id, remove_unresumable_tasks=False)
+                    except KeyError:
+                        await system_logger.error('Cant resume tasks')
 
             except asyncio.CancelledError:
                 raise
