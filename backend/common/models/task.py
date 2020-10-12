@@ -43,12 +43,8 @@ class Task(db.Model, AbstractSortableStatusModel):
     task_type = db.Column(AlchemyEnum(PoolTaskType), nullable=False, index=True)
     created = db.Column(db.DateTime(timezone=True), server_default=func.now())
 
-    # Нужно ли возобновлять при старте приложения отмененную таску.
-    # Этот флаг нужен, так как есть 2 ситуации, когда таска была отменена:
-    # 1) Мы отменили таску намерено во время работы приложения.
-    # 2) Таска была отменена при мягком завершении приложения, но тем не менее мы хотим ее продолжения после
-    # повторного старта приложения.
-    resume_on_app_startup = db.Column(db.Boolean(), nullable=False, default=True)
+    # Нужно ли возобновлять отмененную таску.
+    resume_on_app_startup = db.Column(db.Boolean(), nullable=False, default=True)  # todo: rename to resumable
 
     priority = db.Column(db.Integer(), nullable=False, default=1)  # Приоритет задачи
 
@@ -71,6 +67,8 @@ class Task(db.Model, AbstractSortableStatusModel):
             return
 
         await self.update(status=status).apply()
+        if status == TaskStatus.FINISHED or status == TaskStatus.FAILED:
+            await self.update(resume_on_app_startup=False).apply()
 
         # publish task event
         task_id_str = str(self.id)

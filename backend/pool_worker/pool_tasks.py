@@ -39,10 +39,10 @@ class AbstractTask:
         if self.task_model:
             await self.task_model.update(priority=self._task_priority).apply()
 
-    async def cancel(self, resume_on_app_startup=False, wait_for_result=True):
+    async def cancel(self, resumable=False, wait_for_result=True):
         """Отменить таску"""
         if self.task_model:
-            await self.task_model.update(resume_on_app_startup=resume_on_app_startup).apply()
+            await self.task_model.update(resume_on_app_startup=resumable).apply()
 
         await system_logger.debug('cancel self.coroutine {}'.format(self._coroutine))
         await cancel_async_task(self._coroutine, wait_for_result)

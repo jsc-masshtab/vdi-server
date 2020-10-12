@@ -89,7 +89,8 @@ class PoolTaskManager:
 
                     elif 'controller_id' in data_dict:
                         controller_id = data_dict['controller_id']
-                        await self.cancel_tasks_associated_with_controller(controller_id)
+                        resumable = data_dict['resumable']
+                        await self.cancel_tasks_associated_with_controller(controller_id, resumable)
 
                 elif command == PoolWorkerCmd.RESUME_TASK.name:
                     try:
@@ -108,7 +109,7 @@ class PoolTaskManager:
         """
         Анализируем таблицу тасок в бд.
         Продолжить таски  при соблюдении условий:
-        - У таски должен быть поднят флаг resume_on_app_startup.
+        - У таски должен быть поднят флаг resumable.
         - статус IN_PROGRESS иили CANCELLED.
         remove_unresumable_tasks - удалять ли из бд задачи, которые не могут быть возобновлены.
         """
@@ -122,9 +123,8 @@ class PoolTaskManager:
 
         tasks_to_launch = await db.select([Task.id, Task.task_type]).select_from(
             Task.join(Pool, Task.entity_id == Pool.id)).where(and_(*where_conditions)).gino.all()
-        # print('!!!tasks_to_launch ', tasks_to_launch, flush=True)  # temp
 
-        #  Remove all other tasks (либо как вариант выставить им всем флаг resume_on_app_startup = False)
+        #  Remove all other tasks (либо как вариант выставить им всем флаг resumable = False)
         if remove_unresumable_tasks:
             task_ids_to_launch = [task_id for (task_id, _) in tasks_to_launch]
             st = await Task.delete.where(Task.id.notin_(task_ids_to_launch)).gino.status()
@@ -174,13 +174,14 @@ class PoolTaskManager:
             if cancel_all or (str(task.task_model.id) in task_ids):
                 await task.cancel(wait_for_result=False)
 
-    async def cancel_tasks_associated_with_controller(self, controller_id):
+    async def cancel_tasks_associated_with_controller(self, controller_id, resumable=False):
         """cancel_tasks_associated_with_controller"""
         await system_logger.debug('cancel_tasks_associated_with_controller')
+
         # find tasks
         tasks_to_cancel = await Task.get_ids_of_tasks_associated_with_controller(controller_id)
         # cancel
         task_list = list(self.task_list)  # shallow copy
         for task in task_list:
             if task.task_model.id in tasks_to_cancel:
-                await task.cancel(wait_for_result=False)
+                await task.cancel(resumable=resumable, wait_for_result=False)
