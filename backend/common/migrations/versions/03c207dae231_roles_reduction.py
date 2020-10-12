@@ -30,5 +30,12 @@ def upgrade():
 
 
 def downgrade():
-    # TODO: обратная миграция?
+    op.execute("CREATE TYPE role AS ENUM ('READ_ONLY', 'ADMINISTRATOR', 'SECURITY_ADMINISTRATOR', 'VM_ADMINISTRATOR', 'NETWORK_ADMINISTRATOR', 'STORAGE_ADMINISTRATOR', 'VM_OPERATOR')")  # noqa
+    op.execute("UPDATE public.user_role SET role = 'ADMINISTRATOR' WHERE role IN ('OPERATOR')")
+    op.execute("ALTER TABLE public.user_role ALTER COLUMN role TYPE role USING (role::text::role)")
+    op.execute("UPDATE public.group_role SET role = 'ADMINISTRATOR' WHERE role IN ('OPERATOR')")
+    op.execute("ALTER TABLE public.group_role ALTER COLUMN role TYPE role USING (role::text::role)")
+    op.execute("UPDATE public.entity_role_owner SET role = 'ADMINISTRATOR' WHERE role IN ('OPERATOR')")
+    op.execute("ALTER TABLE public.entity_role_owner ALTER COLUMN role TYPE role USING (role::text::role)")
+    op.execute("DROP TYPE IF EXISTS role_types CASCADE")
     pass
