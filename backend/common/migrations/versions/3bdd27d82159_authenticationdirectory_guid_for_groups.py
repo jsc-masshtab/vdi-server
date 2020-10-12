@@ -26,9 +26,8 @@ def upgrade():
 
 
 def downgrade():
-    op.drop_constraint(None, 'group', type_='unique')
+    op.drop_constraint('group_ad_guid_key', 'group', type_='unique')
     op.drop_column('group', 'ad_guid')
-    op.drop_constraint(None, 'automated_pool', type_='unique')
     op.alter_column('authentication_directory', 'service_password',
                     existing_type=sa.Unicode(length=1000),
                     type_=sa.VARCHAR(length=128),

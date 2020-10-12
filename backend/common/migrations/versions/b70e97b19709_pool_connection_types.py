@@ -25,5 +25,5 @@ def upgrade():
 
 def downgrade():
     op.execute("ALTER TABLE pool DROP COLUMN connection_types;")
-    op.execute("DROP TYPE pool_connection_types;")
-    op.drop_index(op.f('ix_pool_connection_types'), table_name='pool')
+    op.execute("DROP TYPE pool_connection_types")
+    # op.drop_index(op.f('ix_pool_connection_types'), table_name='pool')
