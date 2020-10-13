@@ -103,11 +103,12 @@ def get_attributes_str(python_object):
     return attributes_str
 
 
-async def cancel_async_task(async_task):
+async def cancel_async_task(async_task, wait_for_result=True):
     if async_task:
         try:
             async_task.cancel()
-            await async_task
+            if wait_for_result:
+                await async_task
         except asyncio.CancelledError:
             pass
 

@@ -1,16 +1,13 @@
 # -*- coding: utf-8 -*-
 import asyncio
-import json
 import traceback
 
 from common.veil.veil_errors import PoolCreationError
 
 from common.log.journal import system_logger
-from common.veil.veil_errors import VmCreationError, SimpleError
+from common.veil.veil_errors import VmCreationError
 
-from common.veil.veil_redis import REDIS_CLIENT, INTERNAL_EVENTS_CHANNEL
 from common.veil.veil_gino import EntityType, Status
-from web_app.front_ws_api.subscription_sources import VDI_TASKS_SUBSCRIPTION
 
 from common.utils import cancel_async_task
 
@@ -42,13 +39,13 @@ class AbstractTask:
         if self.task_model:
             await self.task_model.update(priority=self._task_priority).apply()
 
-    async def cancel(self, resume_on_app_startup=False):
+    async def cancel(self, resumable=False, wait_for_result=True):
         """Отменить таску"""
         if self.task_model:
-            await self.task_model.update(resume_on_app_startup=resume_on_app_startup).apply()
+            await self.task_model.update(resumable=resumable).apply()
 
         await system_logger.debug('cancel self.coroutine {}'.format(self._coroutine))
-        await cancel_async_task(self._coroutine)
+        await cancel_async_task(self._coroutine, wait_for_result)
         self._coroutine = None
 
     async def do_task(self):
@@ -266,24 +263,10 @@ class DeletePoolTask(AbstractTask):
             template_id = automated_pool.template_id
             # удаляем пул
             pool = await Pool.get(automated_pool.id)
-            # print('pool = await Pool.get(automated_pool.id)', pool)
-            try:
-                is_deleted = await Pool.delete_pool(pool, 'system', self.full_deletion)
-            except SimpleError as ex:
-                is_deleted = False
-                await system_logger.debug(str(ex))
 
+            is_deleted = await Pool.delete_pool(pool, 'system', self.full_deletion)
             await system_logger.debug('is pool deleted: {}'.format(is_deleted))
 
             # убираем из памяти локи, если пул успешно удалился
             if is_deleted:
                 await self._pool_locks.remove_pool_data(str(automated_pool.id), str(template_id))
-
-        # publish result # todo: deprecated Удалить позже, так как ws сообщение отпрвляется при изменении статуса таски
-        msg_dict = dict(msg=_('Deleted pool {}').format(automated_pool.id),
-                        mgs_type='data',
-                        event='pool_deleted',
-                        pool_id=str(automated_pool.id),
-                        is_successful=is_deleted,
-                        resource=VDI_TASKS_SUBSCRIPTION)
-        REDIS_CLIENT.publish(INTERNAL_EVENTS_CHANNEL, json.dumps(msg_dict))

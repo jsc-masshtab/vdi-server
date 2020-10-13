@@ -113,11 +113,11 @@ class PoolValidator(MutationValidation):
         if not value:
             return
 
-        name_re = re.compile('^[а-яА-ЯёЁa-zA-Z0-9]+[а-яА-ЯёЁa-zA-Z0-9.-_+ ]*$')
+        name_re = re.compile('^[a-zA-Z]+[a-zA-Z0-9-]{2,63}$')
         template_name = re.match(name_re, value)
         if template_name:
             return value
-        raise ValidationError(_('Template name of VM must contain only characters, digits, _, -'))
+        raise ValidationError(_('Template name of VM must contain only characters, digits, -'))
 
     @staticmethod
     async def validate_initial_size(obj_dict, value):
@@ -412,7 +412,7 @@ class DeletePoolMutation(graphene.Mutation, PoolValidator):
 
             # Авто пул
             if pool_type == Pool.PoolTypes.AUTOMATED:
-                is_deleted = await execute_delete_pool_task(str(pool.id), full)
+                is_deleted = await execute_delete_pool_task(str(pool.id), full=full, wait_for_result=False)
             else:
                 is_deleted = await Pool.delete_pool(pool, creator, full)
             return DeletePoolMutation(ok=is_deleted)
