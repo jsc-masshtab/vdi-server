@@ -1,0 +1,21 @@
+[Unit]
+Description=vdi-web
+After=syslog.target
+After=network.target
+After=postgresql.service
+After=redis.service
+Requires=postgresql.service
+Requires=redis.service
+
+[Service]
+WorkingDirectory=/opt/veil-vdi/app
+User=uservdi
+Environment=PYTHONPATH=/opt/veil-vdi/app
+OOMScoreAdjust=-1000
+ExecStart=/opt/veil-vdi/env/bin/python /opt/veil-vdi/app/web_app/app.py --workers=1 --logging=INFO --log_file_prefix=/var/log/veil-vdi/vdi_tornado.log
+TimeoutSec=30
+Restart=on-failure
+KillMode=process
+
+[Install]
+WantedBy=multi-user.target
