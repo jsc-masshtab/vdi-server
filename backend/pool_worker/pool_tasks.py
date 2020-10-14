@@ -118,7 +118,7 @@ class InitPoolTask(AbstractTask):
 
         automated_pool = await AutomatedPool.get(self.task_model.entity_id)
         if not automated_pool:
-            return
+            raise RuntimeError('InitPoolTask: AutomatedPool doesnt exist')
 
         # Создать локи (Над пулом единовременно может работать только одна таска.)
         self._pool_locks.add_new_pool_data(str(automated_pool.id), str(automated_pool.template_id))
@@ -173,7 +173,7 @@ class ExpandPoolTask(AbstractTask):
 
         automated_pool = await AutomatedPool.get(self.task_model.entity_id)
         if not automated_pool:
-            return
+            raise RuntimeError('ExpandPoolTask: AutomatedPool doesnt exist')
 
         pool_lock = self._pool_locks.get_pool_lock(str(automated_pool.id))
         template_lock = self._pool_locks.get_template_lock(str(automated_pool.template_id))
@@ -181,7 +181,7 @@ class ExpandPoolTask(AbstractTask):
         # Проверяем залочены ли локи. Если залочены, то ничего не делаем, так как любые другие действия с
         # пулом требующие блокировки - в приоретете.
         if pool_lock.locked() or template_lock.locked():
-            return
+            raise RuntimeError('ExpandPoolTask: Another task works on this pool or vm template is busy')
 
         async with pool_lock:
             async with template_lock:
@@ -243,7 +243,7 @@ class DeletePoolTask(AbstractTask):
         await system_logger.debug('start_pool_deleting')
         automated_pool = await AutomatedPool.get(self.task_model.entity_id)
         if not automated_pool:
-            return
+            raise RuntimeError('DeletePoolTask: AutomatedPool doesnt exist')
 
         pool_lock = self._pool_locks.get_pool_lock(str(automated_pool.id))
 

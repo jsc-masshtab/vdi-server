@@ -39,6 +39,7 @@ class Pool(VeilModel):
         """Типы подключений к VM доступные пулу."""
 
         SPICE = 'SPICE'
+        SPICE_DIRECT = 'SPICE_DIRECT'
         RDP = 'RDP'
         NATIVE_RDP = 'NATIVE_RDP'
 
@@ -954,8 +955,8 @@ class AutomatedPool(db.Model):
         try:
             for i in range(start_vm_amount_in_pool, self.initial_size):
                 await self.add_vm()
-                num_of_added_vms += 1
-                msg = _('Created {} VMs from {} at the Automated pool {}').format(i + 1, self.initial_size,
+                num_of_added_vms = i + 1
+                msg = _('Created {} VMs from {} at the Automated pool {}').format(num_of_added_vms, self.initial_size,
                                                                                   verbose_name)
                 await system_logger.info(msg, entity=self.entity)
 
@@ -968,20 +969,17 @@ class AutomatedPool(db.Model):
             await system_logger.error(_('Can`t create VM'), entity=self.entity)
             await system_logger.debug(vm_error)
 
-        is_creation_successful = (num_of_added_vms == (self.initial_size - start_vm_amount_in_pool))
+        is_creation_successful = (self.initial_size == num_of_added_vms)
         # logging
         await system_logger.debug('is_creation_successful {}'.format(is_creation_successful))
         if is_creation_successful:
-            msg = _('Initial VM amount {} at the Automated pool {}').format(num_of_added_vms, verbose_name)
+            msg = _('Initial VM amount {} at the Automated pool {}').format(self.initial_size, verbose_name)
             await system_logger.info(msg, entity=self.entity)
         else:
             msg = _('Automated pool created with errors. VMs created: {}. Required: {}').format(num_of_added_vms,
                                                                                                 self.initial_size)
             await system_logger.error(msg, entity=self.entity)
-
-        # Пробросить исключение, если споткнулись на создании машин
-        if not is_creation_successful:
-            raise PoolCreationError(_('Could not create the required number of machines.'))
+            raise PoolCreationError(msg)  # Пробросить исключение, если споткнулись на создании машин
 
     async def prepare_initial_vms(self):
         """Подготавливает ВМ для дальнейшего использования тонким клиентом."""

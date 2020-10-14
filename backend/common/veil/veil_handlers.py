@@ -1,16 +1,21 @@
 # -*- coding: utf-8 -*-
 from abc import ABC
+import textwrap
+
 from tornado.web import RequestHandler
 from tornado.escape import json_decode
 from graphene_tornado.tornado_graphql_handler import TornadoGraphQLHandler
 
 from common.veil.auth.veil_jwt import extract_user, jwtauth, extract_user_object
 from common.veil.veil_errors import ValidationError
+
 from common.models.auth import User
+from common.models.pool import Pool
+
 from common.log.journal import system_logger
+from common.languages import lang_init
 
-
-# TODO: унифицировать обработку Exception, чтобы не плодить try:ex
+_ = lang_init()
 
 
 class BaseHandler(RequestHandler, ABC):
@@ -64,6 +69,33 @@ class BaseHandler(RequestHandler, ABC):
             raise ValidationError('Parameter {} required'.format(parameter_name))
 
         return parameter_value
+
+    @staticmethod
+    async def validate_and_get_vm(user, pool_id):
+        if not user:
+            raise ValidationError(_('User {} not found.').format(user.username))
+
+        pool = await Pool.get(pool_id)
+        if not pool:
+            raise ValidationError(_('There is no pool with id: {}').format(pool_id))
+        vm = await pool.get_vm(user_id=user.id)
+        if not vm:
+            raise ValidationError(_('User {} has no VM on pool {}').format(user.username, pool.id))
+
+        return vm
+
+    def write_error(self, status_code, **kwargs):
+        """Согласно доке вызывается если возникло неотработанное исключение при обработка запроса"""
+        try:
+            exc_info = kwargs["exc_info"]
+            (_, exc, _) = exc_info
+            message = 'Server error: ' + str(exc)
+        except Exception:  # noqa
+            message = 'Uncaught exception'
+        finally:
+            shorten_msg = textwrap.shorten(message, width=80)
+            response = {'errors': [{'message': shorten_msg}]}
+            self.write(response)
 
 
 @jwtauth

@@ -21,19 +21,6 @@ from common.languages import lang_init
 _ = lang_init()
 
 
-async def validate_and_get_vm(user, pool_id):
-    if not user:
-        raise ValidationError(_('User {} not found.').format(user.username))
-    pool = await PoolModel.get(pool_id)
-    if not pool:
-        raise ValidationError(_('There is no pool with id: {}').format(pool_id))
-    vm = await pool.get_vm(user_id=user.id)
-    if not vm:
-        raise ValidationError(_('User {} has no VM on pool {}').format(user.username, pool.id))
-
-    return vm
-
-
 @jwtauth
 class RedisInfoHandler(BaseHandler, ABC):
     """Данные для подключения тонких клиентов к Redis."""
@@ -73,9 +60,13 @@ class PoolGetVm(BaseHandler, ABC):
 
     async def post(self, pool_id):
         # Определяем удаленный протокол. Если данные не были получены, то по умолчанию spice
-        remote_protocol = self.args.get('remote_protocol', 'spice')
+        remote_protocol = self.args.get('remote_protocol', PoolModel.PoolConnectionTypes.SPICE.name)
+        remote_protocol = remote_protocol.upper()  # ТК присылвет в нижнем регистре для совместимости со
+        # старыми версиями vdi сервера
+        print('!!!remote_protocol ', remote_protocol, flush=True)
+
         # В теории - к моменту подключения ТК ВМ уже готова, поэтому мы ее только включаем.
-        # rdp_connection = remote_protocol == 'rdp'
+        # rdp_connection = remote_protocol == 'RDP'
         # Проверяем лимит виртуальных машин
         if PoolModel.thin_client_limit_exceeded():
             response = {'errors': [{'message': _('Thin client limit exceeded.'), 'code': '001'}]}
@@ -89,6 +80,7 @@ class PoolGetVm(BaseHandler, ABC):
             response = {'errors': [{'message': _('Pool not found.')}]}
             return await self.log_finish(response)
         pool_extended = False
+
         # Запрос на расширение пула
         if await pool.pool_type == PoolModel.PoolTypes.AUTOMATED:
             await request_to_execute_pool_task(pool.id_str, PoolTaskType.EXPANDING_POOL)
@@ -102,11 +94,11 @@ class PoolGetVm(BaseHandler, ABC):
             if vm:
                 await vm.add_user(user.id, creator='system')
                 if await pool.pool_type == PoolModel.PoolTypes.AUTOMATED:
-                    await request_to_execute_pool_task(pool.id_str, PoolTaskType.EXPANDING.name)
+                    await request_to_execute_pool_task(pool.id_str, PoolTaskType.EXPANDING_POOL.name)
             elif pool_extended:
                 response = {
                     'errors': [{'message': _('The pool doesn`t have free machines. Try again after 5 minutes.')}]}
-                await request_to_execute_pool_task(pool.id_str, PoolTaskType.EXPANDING.name)
+                await request_to_execute_pool_task(pool.id_str, PoolTaskType.EXPANDING_POOL.name)
                 return await self.log_finish(response)
             else:
                 response = {'errors': [{'message': _('The pool doesn`t have free machines.')}]}
@@ -125,26 +117,41 @@ class PoolGetVm(BaseHandler, ABC):
             response = {'errors': [{'message': _('VM is unreachable on ECP Veil.')}]}
             return await self.log_finish(response)
         # Актуализируем данные для подключения
-        await veil_domain.info()
+        info = await veil_domain.info()
+
         await system_logger.info(_('User {} connected to pool {}.').format(user.username, pool.verbose_name),
                                  entity=pool.entity, user=user.username)
         await system_logger.info(_('User {} connected to VM {}.').format(user.username, vm.verbose_name),
                                  entity=vm.entity, user=user.username)
         # TODO: использовать veil_domain.hostname вместо IP
 
+        # Определяем адресс и порт в зависимости от протокола
         vm_controller = await vm.controller
-        if remote_protocol == 'rdp':
+
+        if remote_protocol == PoolModel.PoolConnectionTypes.RDP.name or \
+                remote_protocol == PoolModel.PoolConnectionTypes.NATIVE_RDP.name:
             try:
                 vm_address = veil_domain.guest_agent.first_ipv4_ip
-            except (IndexError, KeyError):
+                if vm_address is None:
+                    raise RuntimeError
+                vm_port = veil_domain.remote_access_port
+            except (RuntimeError, IndexError, KeyError):
                 response = {'errors': [{'message': _('VM does not support RDP.')}]}
                 return await self.log_finish(response)
+
+        elif remote_protocol == PoolModel.PoolConnectionTypes.SPICE_DIRECT.name:
+            # Нужен адрес сервера поэтому делаем запрос
+            node_id = str(veil_domain.node['id'])
+            node_info = await vm_controller.veil_client.node(node_id=node_id).info()
+            vm_address = node_info.response[0].management_ip
+            vm_port = info.data['real_remote_access_port']
+        # PoolModel.PoolConnectionTypes.SPICE.name by default
         else:
-            # spice by default
             vm_address = vm_controller.address
+            vm_port = veil_domain.remote_access_port
 
         response = {'data': dict(host=vm_address,
-                                 port=veil_domain.remote_access_port,
+                                 port=vm_port,
                                  password=veil_domain.graphics_password,
                                  vm_verbose_name=veil_domain.verbose_name,
                                  vm_controller_address=vm_controller.address)
@@ -161,7 +168,7 @@ class VmAction(BaseHandler, ABC):
         try:
             force = self.args.get('force', False)
             user = await self.get_user_model_instance()
-            vm = await validate_and_get_vm(user, pool_id)
+            vm = await BaseHandler.validate_and_get_vm(user, pool_id)
             # Все возможные проверки закончились - приступаем.
             await vm.action(action_name=action, force=force)
             response = {'data': 'success'}
@@ -180,7 +187,7 @@ class AttachUsb(BaseHandler, ABC):
         host_port = self.validate_and_get_parameter('host_port')
 
         user = await self.get_user_model_instance()
-        vm = await validate_and_get_vm(user, pool_id)
+        vm = await BaseHandler.validate_and_get_vm(user, pool_id)
 
         # attach request
         try:
@@ -205,7 +212,7 @@ class DetachhUsb(BaseHandler, ABC):
         remove_all = self.args.get('remove_all', False)
 
         user = await self.get_user_model_instance()
-        vm = await validate_and_get_vm(user, pool_id)
+        vm = await BaseHandler.validate_and_get_vm(user, pool_id)
 
         # detach request
         try:

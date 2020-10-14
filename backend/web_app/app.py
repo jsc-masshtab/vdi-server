@@ -127,4 +127,6 @@ def start_server():
 
 
 if __name__ == '__main__':
+    from common.models.pool import Pool
+    print('Pool.PoolConnectionTypes.SPICE: ', Pool.PoolConnectionTypes.SPICE)
     start_server()

@@ -165,6 +165,7 @@ async def a_redis_wait_for_message(redis_channel, predicate, timeout):
     return False
 
 
+@redis_error_handle
 async def a_redis_get_message(redis_subscriber):
     """Asynchronously wait for message from channel"""
     while True:
@@ -175,6 +176,7 @@ async def a_redis_get_message(redis_subscriber):
         await asyncio.sleep(REDIS_ASYNC_TIMEOUT)
 
 
+@redis_error_handle
 async def a_redis_wait_for_task_completion(task_id):
     """Ждем завершения таски и возвращаем статус с которым она завершилась
     Считаем что задача завершилась если ее статус сменился на CANCELLED/FAILED/FINISHED
@@ -214,6 +216,7 @@ async def a_redis_wait_for_task_completion(task_id):
         await system_logger.error(message=_('a_redis_wait_for_task_completion Exception'), description=str(ex))
 
 
+@redis_error_handle
 async def request_to_execute_pool_task(pool_id, pool_task_type, **additional_data):
     """Send request to pool worker to execute a task. Return task string id"""
     from common.models.task import Task
@@ -245,12 +248,14 @@ async def execute_delete_pool_task(pool_id: str, full, wait_for_result=True, wai
         return True
 
 
+@redis_error_handle
 def send_cmd_to_cancel_tasks(task_ids: list, cancel_all=False):
     """Send command CANCEL_TASK to pool worker. Чтобы отменить все таски послать пустой список и cancel_all=True"""
     cmd_dict = {'command': PoolWorkerCmd.CANCEL_TASK.name, 'task_ids': task_ids, 'cancel_all': cancel_all}
     REDIS_CLIENT.rpush(POOL_WORKER_CMD_QUEUE, json.dumps(cmd_dict))
 
 
+@redis_error_handle
 async def send_cmd_to_cancel_tasks_associated_with_controller(controller_id, wait_for_result=False, wait_timeout=2):
     """Send command CANCEL_TASK to pool worker. It will cancel all tasks associated with controller
     and will wait for cancellation if wait_for_result==True"""
@@ -274,12 +279,14 @@ async def send_cmd_to_cancel_tasks_associated_with_controller(controller_id, wai
         await asyncio.gather(*[_wait_for_task_result(task) for task in tasks_to_cancel])
 
 
+@redis_error_handle
 def send_cmd_to_resume_tasks_associated_with_controller(controller_id):
     """Command to pool worker to resume tasks"""
     cmd_dict = {'command': PoolWorkerCmd.RESUME_TASK.name, 'controller_id': str(controller_id)}
     REDIS_CLIENT.rpush(POOL_WORKER_CMD_QUEUE, json.dumps(cmd_dict))
 
 
+@redis_error_handle
 def send_cmd_to_ws_monitor(controller_id, ws_monitor_cmd: WsMonitorCmd):
     """Send command to ws monitor"""
     cmd_dict = {'controller_id': str(controller_id), 'command': ws_monitor_cmd.name}

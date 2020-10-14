@@ -127,13 +127,13 @@ class CancelTaskAssocWithContMutation(graphene.Mutation):
 
     @administrator_required
     async def mutate(self, _info, controller, **kwargs):
-        send_cmd_to_cancel_tasks_associated_with_controller(controller)
+        await send_cmd_to_cancel_tasks_associated_with_controller(controller)
         return CancelTaskAssocWithContMutation(ok=True)
 
 
 class TaskMutations(graphene.ObjectType):
     cancelTask = CancelTaskMutation.Field()
-    cancelTaskAssocWithContMutation = CancelTaskAssocWithContMutation.Field()
+    cancelTaskAssocWith = CancelTaskAssocWithContMutation.Field()
 
 
 task_schema = graphene.Schema(query=TaskQuery, mutation=TaskMutations, auto_camelcase=False)
