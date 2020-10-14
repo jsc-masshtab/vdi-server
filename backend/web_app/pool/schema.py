@@ -596,7 +596,7 @@ class UpdateStaticPoolMutation(graphene.Mutation, PoolValidator):
 
 # --- --- --- --- ---
 # Automated (Dynamic) pool mutations
-class CreateAutomatedPoolMutation(graphene.Mutation, ControllerFetcher):
+class CreateAutomatedPoolMutation(graphene.Mutation, PoolValidator, ControllerFetcher):
     class Arguments:
         controller_id = graphene.UUID(required=True)
         cluster_id = graphene.UUID(required=True)
@@ -636,8 +636,9 @@ class CreateAutomatedPoolMutation(graphene.Mutation, ControllerFetcher):
 
         # Проверяем наличие записи
         controller = await cls.fetch_by_id(controller_id)
-        # TODO: оживить валидатор
-        # await cls.validate(**kwargs)
+        # TODO: дооживить валидатор
+        await cls.validate(vm_name_template=vm_name_template,
+                           verbose_name=verbose_name)
         # --- Создание записей в БД
         try:
             automated_pool = await AutomatedPool.soft_create(creator=creator, verbose_name=verbose_name,
