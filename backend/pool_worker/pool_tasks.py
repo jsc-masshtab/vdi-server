@@ -161,10 +161,11 @@ class InitPoolTask(AbstractTask):
 
 class ExpandPoolTask(AbstractTask):
 
-    def __init__(self, pool_locks):
+    def __init__(self, pool_locks, ignore_reserve_size=False):
         super().__init__()
 
         self._pool_locks = pool_locks
+        self.ignore_reserve_size = ignore_reserve_size  # расширение не смотря на достаточный резерв
 
     def __del__(self):
         print('In destructor ExpandPoolTask')  # Temp
@@ -199,8 +200,8 @@ class ExpandPoolTask(AbstractTask):
                 # print('!!!automated_pool.increase_step: ', automated_pool.increase_step, flush=True)
 
                 # Если подогретых машин слишком мало, то пробуем добавить еще
-                # Условие расширения изменено. Первое условие было < - тестируем.
-                if free_vm_amount <= automated_pool.reserve_size:
+                #  Если self.ignore_reserve_size==True то пытаемся расширится безусловно
+                if self.ignore_reserve_size or (free_vm_amount <= automated_pool.reserve_size):
                     # Max possible amount of VMs which we can add to the pool
                     max_possible_amount_to_add = automated_pool.total_size - vm_amount_in_pool
                     # Real amount that we can add to the pool
@@ -230,7 +231,7 @@ class ExpandPoolTask(AbstractTask):
 
 class DeletePoolTask(AbstractTask):
 
-    def __init__(self, full_deletion, pool_locks):
+    def __init__(self, pool_locks, full_deletion):
         super().__init__()
 
         self.full_deletion = full_deletion

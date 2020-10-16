@@ -629,7 +629,7 @@ class ExpandPoolMutation(graphene.Mutation, PoolValidator):
 
         await cls.validate_pool_id(dict(), pool_id)
 
-        task_id = await request_to_execute_pool_task(pool_id, PoolTaskType.EXPANDING_POOL)
+        task_id = await request_to_execute_pool_task(pool_id, PoolTaskType.EXPANDING_POOL, ignore_reserve_size=True)
         return {
             'ok': True,
             'task_id': task_id,

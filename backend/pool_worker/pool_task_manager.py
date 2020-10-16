@@ -152,7 +152,11 @@ class PoolTaskManager:
             task.execute_in_async_task()
 
         elif pool_task_type == PoolTaskType.EXPANDING_POOL.name:
-            task = ExpandPoolTask(self.pool_locks)
+            try:
+                ignore_reserve_size = task_data_dict['ignore_reserve_size']
+            except KeyError:
+                ignore_reserve_size = False
+            task = ExpandPoolTask(self.pool_locks, ignore_reserve_size)
             await task.init(task_id, self.task_list)
             task.execute_in_async_task()
 
@@ -161,7 +165,7 @@ class PoolTaskManager:
                 full = task_data_dict['deletion_full']
             except KeyError:
                 full = True
-            task = DeletePoolTask(full, self.pool_locks)
+            task = DeletePoolTask(self.pool_locks, full)
             await task.init(task_id, self.task_list)
             task.execute_in_async_task()
 
