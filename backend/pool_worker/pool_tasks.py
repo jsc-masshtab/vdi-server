@@ -195,6 +195,8 @@ class ExpandPoolTask(AbstractTask):
 
                 # Число машин в пуле, неимеющих пользователя
                 free_vm_amount = await pool.get_vm_amount(only_free=True)
+                # print('!!!free_vm_amount: ', free_vm_amount, flush=True)
+                # print('!!!automated_pool.increase_step: ', automated_pool.increase_step, flush=True)
 
                 # Если подогретых машин слишком мало, то пробуем добавить еще
                 # Условие расширения изменено. Первое условие было < - тестируем.

@@ -811,8 +811,8 @@ class AutomatedPool(db.Model):
 
             return automated_pool
 
-    async def soft_update(self, creator, verbose_name, reserve_size, total_size, vm_name_template, keep_vms_on: bool,
-                          create_thin_clones: bool, connection_types):
+    async def soft_update(self, creator, verbose_name, reserve_size, total_size, increase_step, vm_name_template,
+                          keep_vms_on: bool, create_thin_clones: bool, connection_types):
         pool_kwargs = dict()
         auto_pool_kwargs = dict()
 
@@ -835,6 +835,8 @@ class AutomatedPool(db.Model):
                 auto_pool_kwargs['reserve_size'] = reserve_size
             if total_size:
                 auto_pool_kwargs['total_size'] = total_size
+            if increase_step:
+                auto_pool_kwargs['increase_step'] = increase_step
             if vm_name_template:
                 auto_pool_kwargs['vm_name_template'] = vm_name_template
             if isinstance(create_thin_clones, bool):

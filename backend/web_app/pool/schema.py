@@ -121,7 +121,7 @@ class PoolValidator(MutationValidation):
 
     @staticmethod
     async def validate_initial_size(obj_dict, value):
-        if not value:
+        if value is None:
             return
         if value < obj_dict['min_size'] or value > obj_dict['max_size']:
             raise ValidationError(
@@ -130,7 +130,7 @@ class PoolValidator(MutationValidation):
 
     @staticmethod
     async def validate_reserve_size(obj_dict, value):
-        if not value:
+        if value is None:
             return
         pool_id = obj_dict.get('pool_id')
         if pool_id:
@@ -147,7 +147,7 @@ class PoolValidator(MutationValidation):
 
     @staticmethod
     async def validate_total_size(obj_dict, value):
-        if not value:
+        if value is None:
             return
 
         pool_id = obj_dict.get('pool_id')
@@ -156,16 +156,37 @@ class PoolValidator(MutationValidation):
             initial_size = obj_dict['initial_size'] if obj_dict.get('initial_size') else pool_obj.initial_size
             min_size = obj_dict['min_size'] if obj_dict.get('min_size') else pool_obj.min_size
             max_vm_amount = obj_dict['max_vm_amount'] if obj_dict.get('max_vm_amount') else pool_obj.max_vm_amount
+            total_size = pool_obj.total_size
         else:
             initial_size = obj_dict['initial_size']
             min_size = obj_dict['min_size']
             max_vm_amount = obj_dict['max_vm_amount']
+            total_size = None
 
         if value < initial_size:
             raise ValidationError(_('Maximal number of created VM should be less than initial number of VM'))
         if value < min_size or value > max_vm_amount:
             raise ValidationError(_('Maximal number of created VM must be in [{} {}] interval').
                                   format(min_size, max_vm_amount))
+        if total_size and value < total_size:
+            raise ValidationError(_('Maximal number of created VM can not be reduced.'))
+        return value
+
+    @staticmethod
+    async def validate_increase_step(obj_dict, value):
+        if value is None:
+            return
+
+        total_size = obj_dict['total_size'] if obj_dict.get('total_size') else None
+        if total_size is None:
+            pool_id = obj_dict.get('pool_id')
+            automated_pool = await AutomatedPool.get(pool_id)
+            if automated_pool:
+                total_size = automated_pool.total_size
+        print('!!!total_size ', total_size)
+        if value < 1 or value > total_size:
+            raise ValidationError(_('Increase step must be positive and less or equal to total_size').
+                                  format(total_size))
         return value
 
 
@@ -697,39 +718,13 @@ class UpdateAutomatedPoolMutation(graphene.Mutation, PoolValidator):
         verbose_name = graphene.String()
         reserve_size = graphene.Int()
         total_size = graphene.Int()
+        increase_step = graphene.Int()
         vm_name_template = graphene.String()
         keep_vms_on = graphene.Boolean()
         create_thin_clones = graphene.Boolean()
         connection_types = graphene.List(graphene.NonNull(ConnectionTypesGraphene))
 
     ok = graphene.Boolean()
-
-    @staticmethod
-    async def validate_total_size(obj_dict, value):
-        if not value:
-            return
-
-        pool_id = obj_dict.get('pool_id')
-        if pool_id:
-            pool_obj = await Pool.get_pool(pool_id)
-            initial_size = obj_dict['initial_size'] if obj_dict.get('initial_size') else pool_obj.initial_size
-            min_size = obj_dict['min_size'] if obj_dict.get('min_size') else pool_obj.min_size
-            max_vm_amount = obj_dict['max_vm_amount'] if obj_dict.get('max_vm_amount') else pool_obj.max_vm_amount
-            total_size = pool_obj.total_size
-        else:
-            initial_size = obj_dict['initial_size']
-            min_size = obj_dict['min_size']
-            max_vm_amount = obj_dict['max_vm_amount']
-            total_size = None
-
-        if value < initial_size:
-            raise ValidationError(_('Maximal number of created VM should be less than initial number of VM'))
-        if value < min_size or value > max_vm_amount:
-            raise ValidationError(_('Maximal number of created VM must be in [{} {}] interval').
-                                  format(min_size, max_vm_amount))
-        if total_size and value <= total_size:
-            raise ValidationError(_('Maximal number of created VM can not be reduced.'))
-        return value
 
     @classmethod
     @administrator_required
@@ -741,6 +736,7 @@ class UpdateAutomatedPoolMutation(graphene.Mutation, PoolValidator):
                 await automated_pool.soft_update(verbose_name=kwargs.get('verbose_name'),
                                                  reserve_size=kwargs.get('reserve_size'),
                                                  total_size=kwargs.get('total_size'),
+                                                 increase_step=kwargs.get('increase_step'),
                                                  vm_name_template=kwargs.get('vm_name_template'),
                                                  keep_vms_on=kwargs.get('keep_vms_on'),
                                                  create_thin_clones=kwargs.get('create_thin_clones'),
