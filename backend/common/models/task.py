@@ -13,7 +13,7 @@ from sqlalchemy.sql import func
 from web_app.front_ws_api.subscription_sources import VDI_TASKS_SUBSCRIPTION
 
 from common.database import db
-from common.veil.veil_redis import REDIS_CLIENT, INTERNAL_EVENTS_CHANNEL, redis_error_handle
+from common.veil.veil_redis import REDIS_CLIENT, INTERNAL_EVENTS_CHANNEL
 from common.veil.veil_gino import AbstractSortableStatusModel
 
 
@@ -63,7 +63,6 @@ class Task(db.Model, AbstractSortableStatusModel):
             progress=self.progress,
         )
 
-    @redis_error_handle
     async def set_status(self, status: TaskStatus, message: str = None):
 
         if status == self.status:
@@ -92,7 +91,6 @@ class Task(db.Model, AbstractSortableStatusModel):
         msg_dict.update(self.to_json_serializable_dict())
         REDIS_CLIENT.publish(INTERNAL_EVENTS_CHANNEL, json.dumps(msg_dict))
 
-    @redis_error_handle
     async def set_progress(self, progress: int, message: str = None):
 
         if progress == self.progress:

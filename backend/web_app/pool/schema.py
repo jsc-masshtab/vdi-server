@@ -594,6 +594,27 @@ class UpdateStaticPoolMutation(graphene.Mutation, PoolValidator):
         return UpdateStaticPoolMutation(ok=ok)
 
 
+class ExpandPoolMutation(graphene.Mutation, PoolValidator):
+    """Запускает задачу на расширение пула"""
+    class Arguments:
+        pool_id = graphene.UUID(required=True)
+
+    ok = graphene.Boolean()
+    task_id = graphene.UUID()
+
+    @classmethod
+    @administrator_required
+    async def mutate(cls, _root, _info, creator, pool_id):
+
+        await cls.validate_pool_id(dict(), pool_id)
+
+        task_id = await request_to_execute_pool_task(pool_id, PoolTaskType.EXPANDING_POOL)
+        return {
+            'ok': True,
+            'task_id': task_id,
+        }
+
+
 # --- --- --- --- ---
 # Automated (Dynamic) pool mutations
 class CreateAutomatedPoolMutation(graphene.Mutation, PoolValidator, ControllerFetcher):
@@ -990,6 +1011,7 @@ class PoolMutations(graphene.ObjectType):
     removePool = DeletePoolMutation.Field()
     updateDynamicPool = UpdateAutomatedPoolMutation.Field()
     updateStaticPool = UpdateStaticPoolMutation.Field()
+    expandPool = ExpandPoolMutation.Field()
 
     entitleUsersToPool = PoolUserAddPermissionsMutation.Field()
     removeUserEntitlementsFromPool = PoolUserDropPermissionsMutation.Field()

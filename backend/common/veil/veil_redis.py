@@ -165,7 +165,6 @@ async def a_redis_wait_for_message(redis_channel, predicate, timeout):
     return False
 
 
-@redis_error_handle
 async def a_redis_get_message(redis_subscriber):
     """Asynchronously wait for message from channel"""
     while True:
@@ -176,7 +175,6 @@ async def a_redis_get_message(redis_subscriber):
         await asyncio.sleep(REDIS_ASYNC_TIMEOUT)
 
 
-@redis_error_handle
 async def a_redis_wait_for_task_completion(task_id):
     """Ждем завершения таски и возвращаем статус с которым она завершилась
     Считаем что задача завершилась если ее статус сменился на CANCELLED/FAILED/FINISHED
@@ -198,7 +196,7 @@ async def a_redis_wait_for_task_completion(task_id):
 
                 if redis_data_dict['resource'] == VDI_TASKS_SUBSCRIPTION and \
                         redis_data_dict['event'] == 'status_changed' and \
-                        redis_data_dict['task_id'] == task_id and \
+                        redis_data_dict['task_id'] == str(task_id) and \
                         (redis_data_dict['task_status'] == TaskStatus.CANCELLED.name or  # noqa
                          redis_data_dict['task_status'] == TaskStatus.FAILED.name or  # noqa
                          redis_data_dict['task_status'] == TaskStatus.FINISHED.name):
@@ -216,16 +214,15 @@ async def a_redis_wait_for_task_completion(task_id):
         await system_logger.error(message=_('a_redis_wait_for_task_completion Exception'), description=str(ex))
 
 
-@redis_error_handle
 async def request_to_execute_pool_task(pool_id, pool_task_type, **additional_data):
-    """Send request to pool worker to execute a task. Return task string id"""
+    """Send request to pool worker to execute a task. Return task id"""
     from common.models.task import Task
     task = await Task.create(entity_id=pool_id, task_type=pool_task_type)
     task_id = str(task.id)
     data = {'task_id': task_id, 'task_type': pool_task_type.name, **additional_data}
     REDIS_CLIENT.rpush(POOL_TASK_QUEUE, json.dumps(data))
     # print('request_to_execute_pool_task task_id: {}'.format(task_id))
-    return task_id
+    return task.id
 
 
 async def execute_delete_pool_task(pool_id: str, full, wait_for_result=True, wait_timeout=20):
@@ -255,7 +252,6 @@ def send_cmd_to_cancel_tasks(task_ids: list, cancel_all=False):
     REDIS_CLIENT.rpush(POOL_WORKER_CMD_QUEUE, json.dumps(cmd_dict))
 
 
-@redis_error_handle
 async def send_cmd_to_cancel_tasks_associated_with_controller(controller_id, wait_for_result=False, wait_timeout=2):
     """Send command CANCEL_TASK to pool worker. It will cancel all tasks associated with controller
     and will wait for cancellation if wait_for_result==True"""

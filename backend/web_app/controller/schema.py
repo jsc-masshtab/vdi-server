@@ -341,6 +341,7 @@ class TestControllerMutation(graphene.Mutation, ControllerFetcher):
     async def mutate(cls, root, info, id_, creator):
         controller = await cls.fetch_by_id(id_)
         ok = await controller.check_controller()
+
         return TestControllerMutation(ok=ok)
 
 

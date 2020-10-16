@@ -63,7 +63,6 @@ class PoolGetVm(BaseHandler, ABC):
         remote_protocol = self.args.get('remote_protocol', PoolModel.PoolConnectionTypes.SPICE.name)
         remote_protocol = remote_protocol.upper()  # ТК присылвет в нижнем регистре для совместимости со
         # старыми версиями vdi сервера
-        print('!!!remote_protocol ', remote_protocol, flush=True)
 
         # В теории - к моменту подключения ТК ВМ уже готова, поэтому мы ее только включаем.
         # rdp_connection = remote_protocol == 'RDP'
@@ -94,11 +93,11 @@ class PoolGetVm(BaseHandler, ABC):
             if vm:
                 await vm.add_user(user.id, creator='system')
                 if await pool.pool_type == PoolModel.PoolTypes.AUTOMATED:
-                    await request_to_execute_pool_task(pool.id_str, PoolTaskType.EXPANDING_POOL.name)
+                    await request_to_execute_pool_task(pool.id_str, PoolTaskType.EXPANDING_POOL)
             elif pool_extended:
                 response = {
                     'errors': [{'message': _('The pool doesn`t have free machines. Try again after 5 minutes.')}]}
-                await request_to_execute_pool_task(pool.id_str, PoolTaskType.EXPANDING_POOL.name)
+                await request_to_execute_pool_task(pool.id_str, PoolTaskType.EXPANDING_POOL)
                 return await self.log_finish(response)
             else:
                 response = {'errors': [{'message': _('The pool doesn`t have free machines.')}]}
@@ -134,7 +133,8 @@ class PoolGetVm(BaseHandler, ABC):
                 vm_address = veil_domain.guest_agent.first_ipv4_ip
                 if vm_address is None:
                     raise RuntimeError
-                vm_port = veil_domain.remote_access_port
+                vm_port = 3389  # default rdp port
+
             except (RuntimeError, IndexError, KeyError):
                 response = {'errors': [{'message': _('VM does not support RDP.')}]}
                 return await self.log_finish(response)
