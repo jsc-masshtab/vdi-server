@@ -979,6 +979,59 @@ class PrepareVm(graphene.Mutation):
         return PrepareVm(ok=False)
 
 
+class VmStart(graphene.Mutation):
+    class Arguments:
+        vm_id = graphene.UUID(required=True)
+
+    ok = graphene.Boolean()
+
+    @administrator_required
+    async def mutate(self, _info, vm_id, creator, **kwargs):
+        vm = await Vm.get(vm_id)
+        if vm:
+            domain_entity = await vm.vm_client
+            await domain_entity.info()
+            asyncio.ensure_future(vm.start(creator=creator))
+            return VmStart(ok=True)
+        return VmStart(ok=False)
+
+
+class VmShutdown(graphene.Mutation):
+    class Arguments:
+        vm_id = graphene.UUID(required=True)
+        force = graphene.Boolean(default_value=False)
+
+    ok = graphene.Boolean()
+
+    @administrator_required
+    async def mutate(self, _info, vm_id, force, creator, **kwargs):
+        vm = await Vm.get(vm_id)
+        if vm:
+            domain_entity = await vm.vm_client
+            await domain_entity.info()
+            asyncio.ensure_future(vm.shutdown(creator=creator, force=force))
+            return VmShutdown(ok=True)
+        return VmShutdown(ok=False)
+
+
+class VmReboot(graphene.Mutation):
+    class Arguments:
+        vm_id = graphene.UUID(required=True)
+        force = graphene.Boolean(default_value=False)
+
+    ok = graphene.Boolean()
+
+    @administrator_required
+    async def mutate(self, _info, vm_id, force, creator, **kwargs):
+        vm = await Vm.get(vm_id)
+        if vm:
+            domain_entity = await vm.vm_client
+            await domain_entity.info()
+            asyncio.ensure_future(vm.reboot(creator=creator, force=force))
+            return VmReboot(ok=True)
+        return VmReboot(ok=False)
+
+
 # --- --- --- --- ---
 # Schema concatenation
 class PoolMutations(graphene.ObjectType):
@@ -1002,6 +1055,9 @@ class PoolMutations(graphene.ObjectType):
     assignVmToUser = AssignVmToUser.Field()
     freeVmFromUser = FreeVmFromUser.Field()
     prepareVm = PrepareVm.Field()
+    startVm = VmStart.Field()
+    shutdownVm = VmShutdown.Field()
+    rebootVm = VmReboot.Field()
 
 
 pool_schema = graphene.Schema(query=PoolQuery,
