@@ -174,6 +174,23 @@ class VeilModel(db.Model):
         return await Entity.query.where(
             (Entity.entity_type == self.entity_type) & (Entity.entity_uuid == self.id)).gino.first()
 
+    @property
+    def active(self):
+        return self.status == Status.ACTIVE
+
+    @property
+    def failed(self):
+        return self.status == Status.FAILED
+
+    async def make_failed(self):
+        """Переключает в статус FAILED."""
+        from common.log.journal import system_logger
+        await self.update(status=Status.FAILED).apply()
+        msg = _('{} {} has been disabled.').format(self.entity_name, self.verbose_name)
+        description = _('{} {} has`t been found in VeiL. Switched to FAILED.').format(self.entity_name,
+                                                                                      self.verbose_name)
+        await system_logger.info(message=msg, description=description, entity=self.entity, user='system')
+
     async def soft_delete(self, creator):
         from common.log.journal import system_logger
         try:
