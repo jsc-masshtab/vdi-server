@@ -4,6 +4,7 @@ import asyncio
 from enum import IntEnum
 
 from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy import Enum as AlchemyEnum
 from asyncpg.exceptions import UniqueViolationError
 from veil_api_client import DomainConfiguration
 
@@ -30,17 +31,10 @@ class VmPowerState(IntEnum):
 
 
 class Vm(VeilModel):
-    """
-    ACTIONS = ('start', 'suspend', 'reset', 'shutdown', 'resume', 'reboot')
-    POWER_STATES = ('unknown', 'power off', 'power on and suspended', 'power on')
+    """Vm однажды включенные в пулы.
 
-    assigned_to_user: устанавливается true при первом назначении пользователя ВМ.
-    Не позволяет автоматически выдавать ВМ пользователю, если эта ВМ уже была однажды выдана.
-    При освобождении ВМ от пользователя остается в значении true. Переназначить пользователя можно только вручную.
+    assigned_to_user: Не позволяет автоматически выдавать ВМ пользователю, если эта ВМ уже была однажды выдана.
     """
-    # TODO: положить в таблицу данные о удаленном подключении из ECP
-    # TODO: ip address of domain?
-    # TODO: port of domain?
 
     __tablename__ = 'vm'
 
@@ -49,7 +43,7 @@ class Vm(VeilModel):
     pool_id = db.Column(UUID(), db.ForeignKey('pool.id', ondelete="CASCADE"), unique=False)
     template_id = db.Column(db.Unicode(length=100), nullable=True)
     created_by_vdi = db.Column(db.Boolean(), nullable=False, default=False)
-    broken = db.Column(db.Boolean(), nullable=False, default=False)
+    status = db.Column(AlchemyEnum(Status), nullable=False, index=True)
     assigned_to_user = db.Column(db.Boolean(), nullable=False, default=False)
 
     @property
@@ -101,7 +95,7 @@ class Vm(VeilModel):
 
     @classmethod
     async def create(cls, pool_id, template_id, verbose_name, id=None,
-                     created_by_vdi=False, broken=False, assigned_to_user=False):
+                     created_by_vdi=False, status=Status.ACTIVE, assigned_to_user=False):
         await system_logger.debug(_('Create VM {} on VDI DB.').format(verbose_name))
         try:
             vm = await super().create(id=id,
@@ -109,7 +103,7 @@ class Vm(VeilModel):
                                       template_id=template_id,
                                       verbose_name=verbose_name,
                                       created_by_vdi=created_by_vdi,
-                                      broken=broken,
+                                      status=status,
                                       assigned_to_user=assigned_to_user)
         except Exception as E:
             raise VmCreationError(str(E))
@@ -323,7 +317,6 @@ class Vm(VeilModel):
         domain_action = getattr(veil_domain, action_name)
         action_response = await domain_action(force=force)
         if not action_response.success:
-            # Вернуть исключение?
             raise ValueError(_('VeiL domain request error.'))
         # TODO: метод ожидания задачи
         action_task = action_response.task

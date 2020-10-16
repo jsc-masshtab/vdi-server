@@ -77,14 +77,6 @@ class Controller(AbstractSortableStatusModel, VeilModel):
         return await veil_api_singleton.remove_client(self.address)
 
     @property
-    def active(self):
-        return self.status == Status.ACTIVE
-
-    @property
-    def failed(self):
-        return self.status == Status.FAILED
-
-    @property
     def entity_type(self):
         return EntityType.CONTROLLER
 

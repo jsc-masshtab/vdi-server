@@ -213,7 +213,7 @@ class ExpandPoolTask(AbstractTask):
                             vm_object = await automated_pool.add_vm()
                             vm_list.append(vm_object)
                     except VmCreationError as vm_error:
-                        await system_logger.error(_('VM creating error:'))
+                        await system_logger.error(_('VM creating error'))
                         await system_logger.debug(vm_error)
 
         # Подготовка ВМ для подключения к ТК

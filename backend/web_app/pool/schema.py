@@ -57,26 +57,22 @@ class ControllerFetcher:
 class VmType(VeilResourceType):
     verbose_name = graphene.String()
     id = graphene.String()
-    # veil_info = graphene.String()
-    # veil_info_json = graphene.String()
-    # template = graphene.Field(TemplateType)
     user = graphene.Field(UserType)
-    # state = graphene.Field(VmState)
     status = StatusGraphene()
-    # controller = graphene.Field(ControllerType)
 
     async def resolve_user(self, _info):
         vm = await Vm.get(self.id)
         username = await vm.username if vm else None
         return UserType(username=username)
 
-    async def resolve_status(self, _info):
-        vm = await Vm.get(self.id)
-        pool = await Pool.get(vm.pool_id)
-        pool_controller = await pool.controller_obj
-        veil_domain = pool_controller.veil_client.domain(str(self.id))
-        await veil_domain.info()
-        return veil_domain.status
+    # TODO: перевел на показ статуса ВМ. Удалить после тестирования
+    # async def resolve_status(self, _info):
+    #     vm = await Vm.get(self.id)
+    #     pool = await Pool.get(vm.pool_id)
+    #     pool_controller = await pool.controller_obj
+    #     veil_domain = pool_controller.veil_client.domain(str(self.id))
+    #     await veil_domain.info()
+    #     return veil_domain.status
 
 
 class VmInput(graphene.InputObjectType):
