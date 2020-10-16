@@ -33,6 +33,10 @@ class Vm(VeilModel):
     """
     ACTIONS = ('start', 'suspend', 'reset', 'shutdown', 'resume', 'reboot')
     POWER_STATES = ('unknown', 'power off', 'power on and suspended', 'power on')
+
+    assigned_to_user: устанавливается true при первом назначении пользователя ВМ.
+    Не позволяет автоматически выдавать ВМ пользователю, если эта ВМ уже была однажды выдана.
+    При освобождении ВМ от пользователя остается в значении true. Переназначить пользователя можно только вручную.
     """
     # TODO: положить в таблицу данные о удаленном подключении из ECP
     # TODO: ip address of domain?
@@ -317,7 +321,18 @@ class Vm(VeilModel):
         vm_controller = await self.controller
         veil_domain = vm_controller.veil_client.domain(domain_id=self.id_str)
         domain_action = getattr(veil_domain, action_name)
-        return await domain_action(force=force)
+        action_response = await domain_action(force=force)
+        if not action_response.success:
+            # Вернуть исключение?
+            raise ValueError(_('VeiL domain request error.'))
+        # TODO: метод ожидания задачи
+        action_task = action_response.task
+        task_completed = False
+        while not task_completed:
+            await asyncio.sleep(VEIL_OPERATION_WAITING)
+            task_completed = await action_task.finished
+        task_success = await action_task.success
+        return task_success
 
     @property
     async def vm_client(self):
@@ -325,15 +340,67 @@ class Vm(VeilModel):
         vm_controller = await self.controller
         return vm_controller.veil_client.domain(domain_id=self.id_str)
 
-    async def start(self):
-        """Пересылает start для ВМ на ECP VeiL."""
-        return await self.action('start')
-
-    # TODO: reboot
     # TODO: suspend
     # TODO: reset
-    # TODO: shutdown
     # TODO: resume
+
+    async def start(self, creator='system'):
+        """Включает ВМ - Пересылает start для ВМ на ECP VeiL."""
+        domain_entity = await self.vm_client
+        domain_response = await domain_entity.info()
+        if not domain_response.success:
+            raise ValueError(_('VeiL domain request error.'))
+
+        if not domain_entity.powered:
+            # await system_logger.info(_('Powering on {}').format(self.verbose_name), entity=self.entity)
+            task_success = await self.action('start')
+
+        await system_logger.info(_('VM {} is powered').format(self.verbose_name), user=creator, entity=self.entity)
+        return task_success
+
+    async def shutdown(self, creator='system', force=False):
+        """Выключает ВМ - Пересылает shutdown для ВМ на ECP VeiL."""
+        domain_entity = await self.vm_client
+        domain_response = await domain_entity.info()
+        if not domain_response.success:
+            raise ValueError(_('VeiL domain request error.'))
+
+        if domain_entity.power_state == VmPowerState.OFF:
+            await system_logger.info(_('VM {} already shutdown').format(self.verbose_name), user=creator,
+                                     entity=self.entity)
+        else:
+            # await system_logger.info(_('Powering off {}').format(self.verbose_name), entity=self.entity)
+            task_success = await self.action('shutdown', force=force)
+
+            if force:
+                await system_logger.info(_('VM {} is force shutdown').format(self.verbose_name), user=creator,
+                                         entity=self.entity)
+            else:
+                await system_logger.info(_('VM {} is shutdown').format(self.verbose_name), user=creator,
+                                         entity=self.entity)
+        return task_success
+
+    async def reboot(self, creator='system', force=False):
+        """Перезагружает ВМ - Пересылает reboot для ВМ на ECP VeiL."""
+        domain_entity = await self.vm_client
+        domain_response = await domain_entity.info()
+        if not domain_response.success:
+            raise ValueError(_('VeiL domain request error.'))
+
+        if domain_entity.power_state == VmPowerState.OFF:
+            raise SimpleError(_('VM {} is shutdown. Please power this.').format(self.verbose_name), user=creator,
+                              entity=self.entity)
+        else:
+            # await system_logger.info(_('Rebooting {}').format(self.verbose_name), entity=self.entity)
+            task_success = await self.action('reboot', force=force)
+
+            if force:
+                await system_logger.info(_('VM {} was force reboot').format(self.verbose_name), user=creator,
+                                         entity=self.entity)
+            else:
+                await system_logger.info(_('VM {} was reboot').format(self.verbose_name), user=creator,
+                                         entity=self.entity)
+        return task_success
 
     async def prepare(self, active_directory_obj: AuthenticationDirectory = None, ad_cn_pattern: str = None):
         """Check that domain remote-access is enabled and domain is powered on.
@@ -372,21 +439,8 @@ class Vm(VeilModel):
                 # Обновляем параметры ВМ
                 await domain_entity.info()
 
-        # Проверяем состояние виртуальной машины
-        if domain_entity.power_state != VmPowerState.ON:
-            await system_logger.info(_('Powering on {}').format(self.verbose_name), entity=self.entity)
-            action_response = await domain_entity.start()
-            if not action_response.success:
-                # Вернуть исключение?
-                raise ValueError(_('VeiL domain request error.'))
-            # TODO: метод ожидания задачи
-            action_task = action_response.task
-            task_completed = False
-            while not task_completed:
-                await asyncio.sleep(VEIL_OPERATION_WAITING)
-                task_completed = await action_task.finished
-            # Обновляем параметры ВМ
-            await domain_entity.info()
+        # Включаем виртуальную машину
+        domain_entity = await self.power_on(domain_entity)
 
         # TODO: метод ожидания задачи
         # Ждем активацию гостевого агента
