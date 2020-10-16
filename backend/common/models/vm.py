@@ -33,6 +33,10 @@ class Vm(VeilModel):
     """
     ACTIONS = ('start', 'suspend', 'reset', 'shutdown', 'resume', 'reboot')
     POWER_STATES = ('unknown', 'power off', 'power on and suspended', 'power on')
+
+    assigned_to_user: устанавливается true при первом назначении пользователя ВМ.
+    Не позволяет автоматически выдавать ВМ пользователю, если эта ВМ уже была однажды выдана.
+    При освобождении ВМ от пользователя остается в значении true. Переназначить пользователя можно только вручную.
     """
     # TODO: положить в таблицу данные о удаленном подключении из ECP
     # TODO: ip address of domain?
