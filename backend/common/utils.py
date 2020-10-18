@@ -120,10 +120,10 @@ def extract_ordering_data(ordering):
     return ordering, reverse
 
 
-def init_signals(exit_handler):
+def init_signals(sig_handler):
     """Set exit handler"""
-    signal.signal(signal.SIGTERM, exit_handler)
-    signal.signal(signal.SIGINT, exit_handler)  # KeyboardInterrupt
+    signal.signal(signal.SIGTERM, sig_handler)
+    signal.signal(signal.SIGINT, sig_handler)
 
 
 def init_exit_handler():
