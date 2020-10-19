@@ -10,7 +10,7 @@ from common.veil.veil_gino import RoleTypeGraphene, Role, StatusGraphene, Status
 from common.veil.veil_validators import MutationValidation
 from common.veil.veil_errors import SimpleError, ValidationError
 from common.veil.veil_decorators import administrator_required
-from common.veil.veil_graphene import VeilShortEntityType, VeilResourceType
+from common.veil.veil_graphene import VeilShortEntityType, VeilResourceType, VmState
 
 from common.models.auth import User
 from common.models.authentication_directory import AuthenticationDirectory
@@ -59,6 +59,9 @@ class VmType(VeilResourceType):
     id = graphene.String()
     user = graphene.Field(UserType)
     status = StatusGraphene()
+    # controller = graphene.Field(ControllerType)
+    power_state = VmState()
+    in_domain = graphene.Boolean(default_value=False)
 
     async def resolve_user(self, _info):
         vm = await Vm.get(self.id)
@@ -286,8 +289,16 @@ class PoolType(graphene.ObjectType):
         # TODO: добавить пагинацию
         pool = await Pool.get(self.pool_id)
         vms = await pool.vms
+        vms_list = []
+        for vm in vms:
+            domain_entity = await vm.vm_client
+            await domain_entity.info()
+            vms_list.append(
+                VmType(power_state=domain_entity.power_state,
+                       in_domain=await domain_entity.in_ad,
+                       **vm.__values__))
         # TODO: получить список ВМ и статусов
-        return [VmType(**vm.__values__) for vm in vms]
+        return vms_list
 
     async def resolve_vm_amount(self, _info):
         return await (db.select([db.func.count(Vm.id)]).where(Vm.pool_id == self.pool_id)).gino.scalar()
