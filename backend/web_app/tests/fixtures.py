@@ -12,22 +12,15 @@ from common.database import start_gino, stop_gino
 from common.settings import VEIL_WS_MAX_TIME_TO_WAIT
 from common.veil.veil_gino import Role, Status
 from common.veil.auth.veil_jwt import encode_jwt
-# from common.veil.auth import fernet_crypto
 
 from common.models.controller import Controller
-# from controller_resources.veil_client import ResourcesHttpClient
-
-# from web_app.vm.veil_client import VmHttpClient
 from common.models.vm import Vm
-
-from web_app.pool.schema import pool_schema
-
 from common.models.auth import Group, User
 from common.models.authentication_directory import AuthenticationDirectory, Mapping
 
-from web_app.tests.utils import execute_scheme
 
-# from front_ws_api.subscription_sources import EVENTS_SUBSCRIPTION
+from web_app.pool.schema import pool_schema
+from web_app.tests.utils import execute_scheme
 
 from common.veil.veil_redis import a_redis_wait_for_message, INTERNAL_EVENTS_CHANNEL, WS_MONITOR_CHANNEL_OUT, \
     send_cmd_to_ws_monitor, WsMonitorCmd

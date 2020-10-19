@@ -139,16 +139,15 @@ class InitPoolTask(AbstractTask):
                     await automated_pool.deactivate()
                     raise  # Чтобы проблема была передана внешнему обработчику в AbstractTask
                 except asyncio.CancelledError:
-                    await system_logger.debug(_('Pool Creation cancelled'))
+                    await system_logger.debug(_('Pool Creation cancelled.'))
                     await automated_pool.deactivate()
                     raise
                 except Exception as E:
+                    # TODO: НОРМАЛЬНО записать ошибку в журнал
                     await system_logger.error(_('Failed to create pool. {exception} {name}').format(
                         exception=str(E), name=E.__class__.__name__))
                     await automated_pool.deactivate()
                     raise E
-                # Активируем пул
-        await automated_pool.activate()
 
         # Подготавливаем машины
         try:
@@ -156,7 +155,10 @@ class InitPoolTask(AbstractTask):
         except asyncio.CancelledError:
             raise
         except Exception as E:
-            await system_logger.error(message=_('VM preparation error'), description=str(E))
+            await system_logger.error(message=_('Virtual machine(s) preparation error.'), description=str(E))
+
+        # Активируем пул
+        await automated_pool.activate()
 
 
 class ExpandPoolTask(AbstractTask):
@@ -213,7 +215,7 @@ class ExpandPoolTask(AbstractTask):
                             vm_object = await automated_pool.add_vm()
                             vm_list.append(vm_object)
                     except VmCreationError as vm_error:
-                        await system_logger.error(_('VM creating error'))
+                        await system_logger.error(_('VM creating error.'))
                         await system_logger.debug(vm_error)
 
         # Подготовка ВМ для подключения к ТК
@@ -226,7 +228,7 @@ class ExpandPoolTask(AbstractTask):
         except asyncio.CancelledError:
             raise
         except Exception as E:
-            await system_logger.error(message=_('VM preparation error'), description=str(E))
+            await system_logger.error(message=_('VM preparation error.'), description=str(E))
 
 
 class DeletePoolTask(AbstractTask):

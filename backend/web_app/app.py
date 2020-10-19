@@ -32,7 +32,7 @@ from web_app.front_ws_api.urls import ws_event_monitoring_urls
 
 from common.utils import init_signals
 
-localize = lang_init()
+_ = lang_init()
 
 define("port", default=8888, help="port to listen on")
 define("autoreload", default=True, help="autoreload application")
@@ -81,6 +81,7 @@ def exit_handler(sig, frame):  # noqa
     async def shutdown():
         REDIS_POOL.disconnect()
         await stop_veil_client()
+        await system_logger.info(_('VDI broker stopped.'))
         await stop_gino()
         io_loop.stop()
 
@@ -90,15 +91,15 @@ def exit_handler(sig, frame):  # noqa
 async def startup_alerts(vdi_license):
     """Выводим сообщения только в первом процессе. Если task_id None, значит процесс 1, если > 0, значит больше 1."""
     if not task_id():
-        await system_logger.info(localize('VDI broker started with {} worker(s).').format(options.workers))
+        await system_logger.info(_('VDI broker started with {} worker(s).').format(options.workers))
         # Проверка настроек
         if not AUTH_ENABLED:
-            await system_logger.warning(localize('Authentication system is disabled.'))
+            await system_logger.warning(_('Authentication system is disabled.'))
         if vdi_license.expired:
             await system_logger.warning(
-                localize('The license is expired. Some functions will be blocked. Contact your dealer.'))
+                _('The license is expired. Some functions will be blocked. Contact your dealer.'))
         if DEBUG:
-            await system_logger.warning(localize('DEBUG mode is enabled.'))
+            await system_logger.warning(_('DEBUG mode is enabled.'))
 
 
 async def startup_server():

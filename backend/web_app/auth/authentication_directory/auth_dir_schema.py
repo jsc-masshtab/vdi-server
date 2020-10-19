@@ -49,7 +49,7 @@ class AuthenticationDirectoryValidator(MutationValidation):
     @staticmethod
     async def validate_domain_name(obj_dict, value):
         if not re.match(r'^[a-zA-Z0-9\-_\.]{1,63}$', value):
-            raise ValidationError(_('value should be 1-63 latin characters, -, . or _.'))
+            raise ValidationError(_('Value should be 1-63 latin characters, -, . or _.'))
         return value
 
     @staticmethod
