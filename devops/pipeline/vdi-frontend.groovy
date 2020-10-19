@@ -9,6 +9,7 @@ pipeline {
     }
 
     environment {
+        APT_SRV = "192.168.11.118"
         PRJNAME = "vdi-frontend"
         NFS_DIR = "/nfs/vdi-deb"
         DEB_ROOT = "${WORKSPACE}/devops/deb"
@@ -110,32 +111,31 @@ pipeline {
         stage ('publish to repo') {
             steps {
                 sh script: '''
-                    echo "REPO - ${REPO}"
-
-                    # upload files to temp repo
-                    DEB=$(ls -1 ${DEB_ROOT}/${PRJNAME}/*.deb)
+                    echo "Repo is - ${REPO}"
+                        
+                    #upload files
+                    DEB=$(ls -1 "${DEB_ROOT}/${PRJNAME}"/*.deb)
                     for ITEM in $DEB
                     do
-                        echo "Processing packet: $ITEM"
-                        curl -sS -X POST -F file=@$ITEM http://qa2:8008/api/files/veil-${REPO}
-                        echo ""
+                        echo "Processing $ITEM packet:"
+                        echo "$ITEM"
+                        curl -sS -X POST -F file=@$ITEM http://$APT_SRV:8008/api/files/veil-${REPO}; echo ""
                     done
 
+                    TIME=$(date +"%Y%m%d%H%M%S")
+                    JSON1="{\\"Name\\":\\"veil-${REPO}-${TIME}\\"}"
+                    echo ${JSON1}
+                    JSON2="{\\"Snapshots\\":[{\\"Component\\":\\"main\\",\\"Name\\":\\"veil-${REPO}-\${TIME}\\"}]}"
+                    echo ${JSON2}
+                        
                     # upload folder
-                    curl -sS -X POST http://qa2:8008/api/repos/veil-${REPO}/file/veil-${REPO}
-                    echo ""
+                    curl -sS -X POST http://$APT_SRV:8008/api/repos/veil-${REPO}/file/veil-${REPO}
 
                     # make snapshot repo
-                    JSON1="{\\"Name\\":\\"veil-${REPO}-${DATE}\\"}"
-                    echo "JSON1 - $JSON1"
-                    curl -sS -X POST -H 'Content-Type: application/json' -d $JSON1 http://qa2:8008/api/repos/veil-${REPO}/snapshots
-                    echo ""
+                    curl -sS -X POST -H 'Content-Type: application/json' -d ${JSON1} http://$APT_SRV:8008/api/repos/veil-${REPO}/snapshots
 
                     # switch publish repo - aptly publish switch veil test veil-test-20180906161745
-                    JSON2="{\\"Snapshots\\":[{\\"Component\\":\\"main\\",\\"Name\\":\\"veil-${REPO}-${DATE}\\"}]}"
-                    echo "JSON2 - $JSON2"
-                    curl -sS -X PUT -H 'Content-Type: application/json' -d $JSON2 http://qa2:8008/api/publish/${REPO}/veil
-                    echo ""
+                    curl -sS -X PUT -H 'Content-Type: application/json' -d ${JSON2} http://$APT_SRV:8008/api/publish/${REPO}/veil 
                 '''
             }
         }
