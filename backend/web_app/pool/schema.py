@@ -710,12 +710,24 @@ class UpdateAutomatedPoolMutation(graphene.Mutation, PoolValidator):
     @administrator_required
     async def mutate(cls, root, info, creator, **kwargs):
         await cls.validate(**kwargs)
+
         automated_pool = await AutomatedPool.get(kwargs['pool_id'])
         if automated_pool:
+            # Special treatment for total_size
+            # total_size опасно уменьшать, так как в это время может выполняться задача расширения пула, что может
+            # привести к тому, что в пуле будет больше машин, чем total_size (максимальное число машин)
+            # Поэтому передаем задачу пул воркеру, который уменьшит total_size, только если получит соответствующий
+            # пулу лок
+            if kwargs.get('total_size') and kwargs.get('total_size') >= automated_pool.total_size:
+                new_total_size = kwargs.get('total_size')
+            else:
+                new_total_size = None
+
+            # other params
             try:
                 await automated_pool.soft_update(verbose_name=kwargs.get('verbose_name'),
                                                  reserve_size=kwargs.get('reserve_size'),
-                                                 total_size=kwargs.get('total_size'),
+                                                 total_size=new_total_size,
                                                  increase_step=kwargs.get('increase_step'),
                                                  vm_name_template=kwargs.get('vm_name_template'),
                                                  keep_vms_on=kwargs.get('keep_vms_on'),
