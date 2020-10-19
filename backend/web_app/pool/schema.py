@@ -152,20 +152,21 @@ class PoolValidator(MutationValidation):
             initial_size = obj_dict['initial_size'] if obj_dict.get('initial_size') else pool_obj.initial_size
             min_size = obj_dict['min_size'] if obj_dict.get('min_size') else pool_obj.min_size
             max_vm_amount = obj_dict['max_vm_amount'] if obj_dict.get('max_vm_amount') else pool_obj.max_vm_amount
-            total_size = pool_obj.total_size
+            vm_amount_in_pool = await pool_obj.get_vm_amount()
         else:
             initial_size = obj_dict['initial_size']
             min_size = obj_dict['min_size']
             max_vm_amount = obj_dict['max_vm_amount']
-            total_size = None
+
+            vm_amount_in_pool = None
 
         if value < initial_size:
             raise ValidationError(_('Maximal number of created VM should be less than initial number of VM'))
         if value < min_size or value > max_vm_amount:
             raise ValidationError(_('Maximal number of created VM must be in [{} {}] interval').
                                   format(min_size, max_vm_amount))
-        if total_size and value < total_size:
-            raise ValidationError(_('Maximal number of created VM can not be reduced.'))
+        if vm_amount_in_pool and value < vm_amount_in_pool:
+            raise ValidationError(_('Maximal number of created VMs can not be less than current amount of Vms.'))
         return value
 
     @staticmethod

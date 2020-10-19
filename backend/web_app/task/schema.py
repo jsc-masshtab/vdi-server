@@ -94,7 +94,7 @@ class TaskQuery(graphene.ObjectType):
 
 
 class CancelTaskMutation(graphene.Mutation):
-    """Отменяем либо все задачи либо заданые в списке"""
+    """Отменяем задачу"""
     class Arguments:
         task = graphene.UUID()
 
