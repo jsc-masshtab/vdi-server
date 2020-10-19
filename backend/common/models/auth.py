@@ -257,7 +257,7 @@ class User(AbstractSortableStatusModel, VeilModel):
             await system_logger.info(info_message, entity=update_type.entity, description=assigned_roles, user=creator)
         elif update_dict.get('is_superuser') is False:
             assigned_roles = _('Roles: {}'.format(str(await update_type.roles)))
-            info_message = _('User {username} has left a superuser.').format(username=update_type.username)
+            info_message = _('User {username} is no longer a superuser.').format(username=update_type.username)
             await system_logger.info(info_message, entity=update_type.entity, description=assigned_roles, user=creator)
 
         return update_type
@@ -274,12 +274,9 @@ class User(AbstractSortableStatusModel, VeilModel):
 
         # Login event
         auth_type = 'Ldap' if ldap else 'Local'
-        info_message = _('{auth_type}: user {username} has been logged in successfully. IP: {ip}.').format(
-            auth_type=auth_type,
-            username=username,
-            ip=ip)
-
-        await system_logger.info(info_message, entity=user.entity)
+        info_message = _('User {username} has been logged in.').format(username=username)
+        description = _('Auth type: {}, IP: {}.').format(auth_type, ip)
+        await system_logger.info(info_message, entity=user.entity, description=description)
         return True
 
     @classmethod
@@ -295,7 +292,7 @@ class User(AbstractSortableStatusModel, VeilModel):
         # Запрещаем все выданные пользователю токены (Может быть только 1)
         await UserJwtInfo.delete.where(UserJwtInfo.user_id == user.id).gino.status()
 
-        info_message = _('User {username} has logged out.').format(username=username)
+        info_message = _('User {username} has been logged out.').format(username=username)
         await system_logger.info(info_message, entity=user.entity)
         return True
 

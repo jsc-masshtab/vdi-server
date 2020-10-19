@@ -91,15 +91,15 @@ def extract_access_token(headers: dict) -> str:
     if auth:
         parts = auth.split()
         if parts[0].upper() != JWT_AUTH_HEADER_PREFIX:
-            raise AssertionError(_("invalid header authorization"))
+            raise AssertionError(_("Invalid authorization header."))
         elif len(parts) == 1:
-            raise AssertionError(_("invalid header authorization"))
+            raise AssertionError(_("Invalid authorization header."))
         elif len(parts) > 2:
-            raise AssertionError(_("invalid header authorization"))
+            raise AssertionError(_("Invalid authorization header."))
         access_token = parts[1]
         return access_token
     else:
-        raise AssertionError(_("Missing Authorization header"))
+        raise AssertionError(_("Missing authorization header."))
 
 
 def extract_user(headers: dict) -> str:

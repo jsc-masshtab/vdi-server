@@ -107,9 +107,6 @@ class Vm(VeilModel):
                                       assigned_to_user=assigned_to_user)
         except Exception as E:
             raise VmCreationError(str(E))
-
-        await system_logger.info(_('VM {} is created').format(verbose_name), entity=vm.entity)
-
         return vm
 
     async def soft_delete(self, creator, remove_on_controller=True):
@@ -133,7 +130,7 @@ class Vm(VeilModel):
                         await asyncio.sleep(VEIL_OPERATION_WAITING)
                         task_completed = await action_task.finished
                 await domain_entity.remove(full=True)
-                await system_logger.info(_('Vm {} removed from ECP.').format(self.verbose_name), entity=self.entity)
+                await system_logger.debug(_('VM {} removed from ECP.').format(self.verbose_name), entity=self.entity)
             except Exception:  # noqa
                 # Сейчас нас не заботит что пошло не так при удалении на ECP.
                 pass
@@ -165,23 +162,6 @@ class Vm(VeilModel):
             return await EntityRoleOwnerModel.delete.where(EntityRoleOwnerModel.entity_id == entity).gino.status()
         return await EntityRoleOwnerModel.delete.where(
             (EntityRoleOwnerModel.user_id.in_(users_list)) & (EntityRoleOwnerModel.entity_id == entity)).gino.status()
-
-    # @staticmethod
-    # async def get_vm_id(pool_id, user_id):
-    #     # TODO: deprecated
-    #     entity_query = EntityModel.select('entity_uuid').where(
-    #         (EntityModel.entity_type == EntityType.VM) & (
-    #             EntityModel.id.in_(EntityRoleOwnerModel.select('entity_id').where(EntityRoleOwnerModel.user_id == user_id))))
-    #     vm_query = Vm.select('id').where((Vm.id.in_(entity_query)) & (Vm.pool_id == pool_id))
-    #     return await vm_query.gino.scalar()
-
-    # @staticmethod
-    # async def get_vm(pool_id, user_id):
-    #     entity_query = EntityModel.select('entity_uuid').where(
-    #         (EntityModel.entity_type == EntityType.VM) & (
-    #             EntityModel.id.in_(EntityRoleOwnerModel.select('entity_id').where(EntityRoleOwnerModel.user_id == user_id))))
-    #     vm_query = Vm.query.where((Vm.id.in_(entity_query)) & (Vm.pool_id == pool_id))
-    #     return await vm_query.gino.first()
 
     @staticmethod
     async def get_all_vms_ids():
@@ -232,17 +212,19 @@ class Vm(VeilModel):
                 first_error_dict = dict()
 
             ecp_detail = first_error_dict.get('detail')
-            await system_logger.warning(_('ECP error: {}').format(ecp_detail))
+            msg = _('ECP VeiL controller {} error.').format(vm_controller.verbose_name)
+            entity = {'entity_type': EntityType.CONTROLLER, 'entity_uuid': None}
+            await system_logger.debug(message=msg, description=ecp_detail, entity=entity)
 
             # TODO: задействовать новые коды ошибок VeiL
             # Сейчас только англ, т.к. veil-api-client хардкодит английский язык при обмене
             if ecp_detail and 'not enough free space on data pool' in ecp_detail:
-                await system_logger.warning(_('Controller has not free space for creating new VM.'))
-                raise VmCreationError(_('Not enough free space on data pool'))
+                await system_logger.debug(_('Controller has not free space for creating new VM.'))
+                raise VmCreationError(_('Not enough free space on data pool.'))
 
             elif ecp_detail and 'passed node is not valid' in ecp_detail:
-                await system_logger.warning(_('Unknown node {}').format(node_id))
-                raise VmCreationError(_('Controller can\t create VM. Unknown node.'))
+                await system_logger.debug(_('Unknown node {}.').format(node_id))
+                raise VmCreationError(_('Controller can`t create VM. Unknown node.'))
 
             elif ecp_detail and inner_retry_count < 10:
                 # Тут мы предполагаем, что контроллер заблокирован выполнением задачи. Это может быть и не так,
@@ -251,7 +233,7 @@ class Vm(VeilModel):
                 await asyncio.sleep(10)
             else:
                 await system_logger.debug(_('Something went wrong. Interrupt while.'))
-                raise VmCreationError('Can`t create vm')
+                raise VmCreationError('Can`t create VM')
 
             await system_logger.debug('One more try')
             await asyncio.sleep(1)
@@ -266,7 +248,7 @@ class Vm(VeilModel):
     async def remove_vm(vm_id, creator, remove_vms_on_controller):
         vm = await Vm.get(vm_id)
         await vm.soft_delete(creator=creator, remove_on_controller=remove_vms_on_controller)
-        await system_logger.info(_('Vm {} removed from pool').format(vm.verbose_name), entity=vm.entity)
+        await system_logger.info(_('VM {} has been removed from the pool.').format(vm.verbose_name), entity=vm.entity)
 
     @staticmethod
     async def remove_vm_with_timeout(vm_id, creator, remove_vms_on_controller):
@@ -281,32 +263,16 @@ class Vm(VeilModel):
     @staticmethod
     async def remove_vms(vm_ids, creator, remove_vms_on_controller=False):
         """Remove given vms"""
-
         if not vm_ids:
             return False
-
-        # Удаляем на контроллере
-        # групповое удаление не подошло
-        # if remove_vms_on_controller:
-        #     vm_obj = await Vm.get(vm_ids[0])
-        #     http_veil_client = await vm_obj.vm_client
-        #     await http_veil_client.multi_remove(vm_ids)
-
-        # Решили оставить удаление по одной вм из бд. (ради логирования?)
+        # Ради логгирования и вывода из домена удаление делается по 1 ВМ.
         await asyncio.gather(*[Vm.remove_vm_with_timeout(vm_id, creator, remove_vms_on_controller) for vm_id in vm_ids])
-
         return True
 
     @staticmethod
     async def enable_remote_accesses(controller_address, vm_ids):
         # Функционал внутри prepare
         raise DeprecationWarning()
-
-    # @staticmethod
-    # async def get_template_os_type(controller_address, template_id):
-    #     vm_http_client = await VmHttpClient.create(controller_address, template_id)
-    #     domain_info = await vm_http_client.info()
-    #     return domain_info['os_type'] if domain_info else None
 
     # Удаленные действия над ВМ - новый код
     async def action(self, action_name: str, force: bool = False):
@@ -348,7 +314,7 @@ class Vm(VeilModel):
             # await system_logger.info(_('Powering on {}').format(self.verbose_name), entity=self.entity)
             task_success = await self.action('start')
 
-        await system_logger.info(_('VM {} is powered').format(self.verbose_name), user=creator, entity=self.entity)
+        await system_logger.info(_('VM {} is powered.').format(self.verbose_name), user=creator, entity=self.entity)
         return task_success
 
     async def shutdown(self, creator='system', force=False):
@@ -359,17 +325,17 @@ class Vm(VeilModel):
             raise ValueError(_('VeiL domain request error.'))
 
         if domain_entity.power_state == VmPowerState.OFF:
-            await system_logger.info(_('VM {} already shutdown').format(self.verbose_name), user=creator,
+            await system_logger.info(_('VM {} already shutdown.').format(self.verbose_name), user=creator,
                                      entity=self.entity)
         else:
             # await system_logger.info(_('Powering off {}').format(self.verbose_name), entity=self.entity)
             task_success = await self.action('shutdown', force=force)
 
             if force:
-                await system_logger.info(_('VM {} is force shutdown').format(self.verbose_name), user=creator,
+                await system_logger.info(_('VM {} is force shutdown.').format(self.verbose_name), user=creator,
                                          entity=self.entity)
             else:
-                await system_logger.info(_('VM {} is shutdown').format(self.verbose_name), user=creator,
+                await system_logger.info(_('VM {} is shutdown.').format(self.verbose_name), user=creator,
                                          entity=self.entity)
         return task_success
 
@@ -388,10 +354,10 @@ class Vm(VeilModel):
             task_success = await self.action('reboot', force=force)
 
             if force:
-                await system_logger.info(_('VM {} was force reboot').format(self.verbose_name), user=creator,
+                await system_logger.info(_('VM {} was force reboot.').format(self.verbose_name), user=creator,
                                          entity=self.entity)
             else:
-                await system_logger.info(_('VM {} was reboot').format(self.verbose_name), user=creator,
+                await system_logger.info(_('VM {} was reboot.').format(self.verbose_name), user=creator,
                                          entity=self.entity)
         return task_success
 
@@ -403,7 +369,8 @@ class Vm(VeilModel):
         # TODO: обработка ошибок ответов VeiL
         # TODO: задача может завершиться с ошибкой
         # TODO: записать назначенный hostname в БД, если он успешно назначен?
-
+        # По ходу выполнения операций в список будут дописываться значения из которых соберется итоговый комментарий
+        description_list = list()
         domain_entity = await self.vm_client
         # Получаем состояние параметров ВМ
         domain_response = await domain_entity.info()
@@ -414,7 +381,7 @@ class Vm(VeilModel):
         if not domain_entity.remote_access:
             # Удаленный доступ выключен, нужно включить и ждать
             action_response = await domain_entity.enable_remote_access()
-            await system_logger.info(_('Enabling remote access for {}').format(self.verbose_name), entity=self.entity)
+            await system_logger.debug(_('Enabling remote access for {}.').format(self.verbose_name), entity=self.entity)
             if not action_response.success:
                 # Вернуть исключение?
                 raise ValueError(_('VeiL domain request error.'))
@@ -431,22 +398,24 @@ class Vm(VeilModel):
                     task_completed = await action_task.finished
                 # Обновляем параметры ВМ
                 await domain_entity.info()
+            description_list.append(_('Remote access enabled'))
 
-        # Включаем виртуальную машину
-        domain_entity = await self.power_on(domain_entity)
+        # Включаем виртуальную машину. Если машина не включится - не активируется гостевой агент
+        await self.start()
+        await domain_entity.info()
 
         # TODO: метод ожидания задачи
         # Ждем активацию гостевого агента
         while not domain_entity.guest_agent.qemu_state:
-            await system_logger.info(_('Waiting guest agent activation for {}').format(self.verbose_name),
-                                     entity=self.entity)
+            await system_logger.debug(_('Waiting guest agent activation for {}.').format(self.verbose_name),
+                                      entity=self.entity)
             await asyncio.sleep(VEIL_OPERATION_WAITING)
             # Обновляем параметры ВМ
             await domain_entity.info()
 
         # Задание hostname
         if domain_entity.hostname != self.verbose_name:
-            await system_logger.info(_('Setting hostname for {}').format(self.verbose_name), entity=self.entity)
+            await system_logger.debug(_('Setting hostname for {}.').format(self.verbose_name), entity=self.entity)
             action_response = await domain_entity.set_hostname(hostname=self.verbose_name)
             # TODO: если задача выполнена успешно записать значение hostname в локальную БД?
             # TODO: метод ожидания задачи
@@ -457,11 +426,12 @@ class Vm(VeilModel):
                 task_completed = await action_task.finished
             # Обновляем параметры ВМ
             await domain_entity.info()
+            description_list.append(_('Hostname {} has been set.').format(self.verbose_name))
 
         # Ждем активацию гостевого агента
         while not domain_entity.guest_agent.qemu_state:
-            await system_logger.info(_('Waiting guest agent activation for {}').format(self.verbose_name),
-                                     entity=self.entity)
+            await system_logger.debug(_('Waiting guest agent activation for {}.').format(self.verbose_name),
+                                      entity=self.entity)
             await asyncio.sleep(VEIL_OPERATION_WAITING)
             # Обновляем параметры ВМ
             await domain_entity.info()
@@ -469,7 +439,7 @@ class Vm(VeilModel):
         # Заведение в домен
         already_in_domain = await domain_entity.in_ad
         if active_directory_obj and domain_entity.os_windows and not already_in_domain:
-            await system_logger.info(_('Adding {} to domain.').format(self.verbose_name), entity=self.entity)
+            await system_logger.debug(_('Adding {} to domain.').format(self.verbose_name), entity=self.entity)
             action_response = await domain_entity.add_to_ad(domain_name=active_directory_obj.domain_name,
                                                             login=active_directory_obj.service_username,
                                                             password=active_directory_obj.password)
@@ -482,7 +452,7 @@ class Vm(VeilModel):
 
             task_failed = await action_task.failed
             if task_failed:
-                await system_logger.error(_('Vm {} domain including task failed.').format(self.verbose_name),
+                await system_logger.error(_('VM {} domain including task failed.').format(self.verbose_name),
                                           description=action_task.error_message)
             await domain_entity.info()
 
@@ -490,6 +460,9 @@ class Vm(VeilModel):
             while not domain_entity.guest_agent.qemu_state:
                 await asyncio.sleep(VEIL_OPERATION_WAITING)
                 await domain_entity.info()
+
+            description_list.append(
+                _('VM has been added to Windows domain {}.').format(active_directory_obj.domain_name))
 
             # Заводим в контейнер в Active Directory
             if ad_cn_pattern:
@@ -502,11 +475,14 @@ class Vm(VeilModel):
                                                                       ad_cn_pattern)
                 await system_logger.debug(action_response.data, entity=self.entity)
                 if action_response.success:
-                    debug_msg = _('Vm {} has been added to {}').format(self.verbose_name,
-                                                                       ad_cn_pattern)
+                    debug_msg = _('VM {} has been added to {}.').format(self.verbose_name,
+                                                                        ad_cn_pattern)
                     await system_logger.debug(debug_msg, entity=self.entity)
-
-        await system_logger.info(_('Vm {} has been prepared').format(self.verbose_name))
+                description_list.append(
+                    _('VM has been added to Windows domain container(s) {}.').format(ad_cn_pattern))
+        msg = _('VM {} has been prepared.').format(self.verbose_name)
+        description = ', '.join(description_list)
+        await system_logger.info(message=msg, entity=self.entity, description=description)
 
     async def prepare_with_timeout(self, active_directory_obj: AuthenticationDirectory = None, ad_cn_pattern: str = None):
         """Подготовка ВМ с ограничением по времени."""

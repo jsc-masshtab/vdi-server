@@ -165,7 +165,7 @@ class Controller(AbstractSortableStatusModel, VeilModel):
             send_cmd_to_ws_monitor(controller.id, WsMonitorCmd.ADD_CONTROLLER)
 
         # Логгируем результат операции
-        msg = _('Adding controller {}: {}.').format(verbose_name, connection_is_ok)
+        msg = _('Controller {} added.').format(verbose_name)
         await system_logger.info(msg, user=creator, entity=controller.entity)
 
         # Возвращаем инстанс созданного контроллера
@@ -213,20 +213,6 @@ class Controller(AbstractSortableStatusModel, VeilModel):
     async def full_delete_pools(self, creator):
         """Полное удаление пулов контроллера"""
         pools = await self.pools
-
-        # async_tasks = []
-        #
-        # for pool in pools:
-        #     # Удаляем пулы в зависимости от типа
-        #     pool_type = await pool.pool_type
-        #     # Авто пул
-        #     if pool_type == Pool.PoolTypes.AUTOMATED:
-        #         async_tasks.append(execute_delete_pool_task(str(pool.id), True, True, 15))
-        #     else:
-        #         async_tasks.append(Pool.delete_pool(pool, creator, True))
-        # # Паралельно удаляем пулы
-        # await tornado.gen.multi(async_tasks)
-
         for pool_obj in pools:
             await pool_obj.full_delete(commit=True, creator=creator)
 
@@ -246,6 +232,8 @@ class Controller(AbstractSortableStatusModel, VeilModel):
         await client.remove_client(self.address)
         # Удаляем запись
         status = await super().soft_delete(creator=creator)
+        await system_logger.info(message=_('Controller {} has been removed.').format(self.verbose_name), user=creator,
+                                 entity=self.entity)
         return status
 
     async def activate(self):
@@ -253,7 +241,7 @@ class Controller(AbstractSortableStatusModel, VeilModel):
         if not self.active:
             # Активируем контроллер
             await self.update(status=Status.ACTIVE).apply()
-            await system_logger.info(_('Controller {} has been activated.').format(self.verbose_name), entity=self.entity)
+            await system_logger.debug(_('Controller {} has been activated.').format(self.verbose_name), entity=self.entity)
             # Активируем пулы
             # TODO: переработать активацию пулов - нужен метод в пулах, который бы активировал ВМ.
             pools = await self.pools

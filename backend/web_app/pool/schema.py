@@ -68,15 +68,6 @@ class VmType(VeilResourceType):
         username = await vm.username if vm else None
         return UserType(username=username)
 
-    # TODO: перевел на показ статуса ВМ. Удалить после тестирования
-    # async def resolve_status(self, _info):
-    #     vm = await Vm.get(self.id)
-    #     pool = await Pool.get(vm.pool_id)
-    #     pool_controller = await pool.controller_obj
-    #     veil_domain = pool_controller.veil_client.domain(str(self.id))
-    #     await veil_domain.info()
-    #     return veil_domain.status
-
 
 class VmInput(graphene.InputObjectType):
     """Инпут для ввода ВМ."""
@@ -184,7 +175,7 @@ class PoolValidator(MutationValidation):
                 total_size = automated_pool.total_size
         print('!!!total_size ', total_size)
         if value < 1 or value > total_size:
-            raise ValidationError(_('Increase step must be positive and less or equal to total_size').
+            raise ValidationError(_('Increase step must be positive and less or equal to total_size.').
                                   format(total_size))
         return value
 
@@ -442,7 +433,7 @@ class DeletePoolMutation(graphene.Mutation, PoolValidator):
             if pool_type == Pool.PoolTypes.AUTOMATED:
                 is_deleted = await execute_delete_pool_task(str(pool.id), full=full, wait_for_result=False)
             else:
-                is_deleted = await Pool.delete_pool(pool, creator, full)
+                is_deleted = await Pool.delete_pool(pool, creator)
             return DeletePoolMutation(ok=is_deleted)
         except Exception as e:
             raise e
@@ -524,28 +515,11 @@ class AddVmsToStaticPoolMutation(graphene.Mutation):
     @administrator_required
     async def mutate(self, _info, pool_id, vms, creator):
         pool = await Pool.get(pool_id)
-        # pool_controller = await Controller.get(pool.controller)
-        # pool_data = await Pool.select('controller', 'node_id').where(Pool.id == pool_id).gino.first()
-        # (controller_id, node_id) = pool_data
-        # controller_address = await Controller.select('address').where(Controller.id == controller_id).gino.scalar()
-
-        # TODO: есть сомнения в целесообразности этой проверки, ведь если это
-        #   недопустимая операция - ее отклонит VeiL.
-        # vm checks
-        # vm_http_client = await VmHttpClient.create(controller_address, '')
-        # all_vms_on_node = await vm_http_client.fetch_vms_list(node_id=node_id)
-
-        # all_vm_ids_on_node = [vmachine['id'] for vmachine in all_vms_on_node]
         used_vm_ids = await Vm.get_all_vms_ids()  # get list of vms which are already in pools
 
         # await system_logger.debug(_('VM ids: {}').format(vm_ids))
 
         for vm_id in [vm.id for vm in vms]:
-            # check if vm exists and it is on the correct node
-            # if str(vm_id) not in all_vm_ids_on_node:
-            #     entity = {'entity_type': EntityType.POOL, 'entity_uuid': None}
-            #     raise SimpleError(_('VM {} is at server different from pool server now').format(vm_id), entity=entity)
-            # check if vm is free (not in any pool)
             if vm_id in used_vm_ids:
                 entity = {'entity_type': EntityType.POOL, 'entity_uuid': None}
                 raise SimpleError(_('VM {} is already in one of pools').format(vm_id), entity=entity)
@@ -561,8 +535,9 @@ class AddVmsToStaticPoolMutation(graphene.Mutation):
                             verbose_name=vm.verbose_name
                             )
             entity = {'entity_type': EntityType.POOL, 'entity_uuid': None}
-            await system_logger.info(_('Vm {} is added to pool {}').format(vm.verbose_name, pool.verbose_name),
-                                     user=creator, entity=entity)
+            await system_logger.info(
+                _('VM {} has been added to the pool {}.').format(vm.verbose_name, pool.verbose_name),
+                user=creator, entity=entity)
 
         return {'ok': True}
 
@@ -679,16 +654,12 @@ class CreateAutomatedPoolMutation(graphene.Mutation, PoolValidator, ControllerFe
                      initial_size, reserve_size, total_size, vm_name_template,
                      create_thin_clones,
                      connection_types, ad_cn_pattern: str = None):
-        """Мутация создания Автоматического(Динамического) пула виртуальных машин.
-
-        TODO: описать механизм работы"""
-
-        # Проверяем наличие записи
+        """Мутация создания Автоматического(Динамического) пула виртуальных машин."""
         controller = await cls.fetch_by_id(controller_id)
         # TODO: дооживить валидатор
         await cls.validate(vm_name_template=vm_name_template,
                            verbose_name=verbose_name)
-        # --- Создание записей в БД
+        # Создание записей в БД
         try:
             automated_pool = await AutomatedPool.soft_create(creator=creator, verbose_name=verbose_name,
                                                              controller_ip=controller.address, cluster_id=cluster_id,
@@ -705,7 +676,6 @@ class CreateAutomatedPoolMutation(graphene.Mutation, PoolValidator, ControllerFe
             desc = str(E)
             error_msg = _('Failed to create automated pool {}.').format(verbose_name)
             entity = {'entity_type': EntityType.POOL, 'entity_uuid': None}
-            await system_logger.debug(desc)
             raise SimpleError(error_msg, description=desc, user=creator, entity=entity)
 
         # send command to start pool init task

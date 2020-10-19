@@ -201,10 +201,10 @@ class VeilModel(db.Model):
         else:
             if self.entity:
                 msg = _('{} {} has been removed.').format(self.entity_name, self.verbose_name)
-                await system_logger.info(msg, entity=self.entity, user=creator)
+                await system_logger.debug(msg, entity=self.entity, user=creator)
             else:
                 msg = _('{} has been removed.').format(self.verbose_name)
-                await system_logger.info(msg, user=creator)
+                await system_logger.debug(msg, user=creator)
         return True
 
     @classmethod

@@ -35,7 +35,7 @@ class ResourcesMonitorManager:
         # start resources monitors
         for controller in controllers:
             self._add_monitor_for_controller(controller.id)
-            await system_logger.info(_('{}: Started').format(__class__.__name__), entity=controller.entity)
+            await system_logger.debug(_('{}: Started').format(__class__.__name__), entity=controller.entity)
 
     async def stop(self):
         """
@@ -53,18 +53,18 @@ class ResourcesMonitorManager:
             msg = _('{cls}: Controller {name} is already monitored!').format(
                 cls=__class__.__name__,
                 name=controller.verbose_name)
-            await system_logger.warning(msg, entity=controller.entity)
+            await system_logger.debug(msg, entity=controller.entity)
             return
         # add monitor
         self._add_monitor_for_controller(controller_id)
         msg = _('{cls}: resource monitor for controller {name} connected').format(
             cls=__class__.__name__,
             name=controller.verbose_name)
-        await system_logger.info(msg, entity=controller.entity)
+        await system_logger.debug(msg, entity=controller.entity)
 
     async def remove_controller(self, controller_id):
-        controller = await Controller.get(controller_id)
-        await system_logger.debug(_('Delete controller {} from resources monitor.').format(controller_id))
+        # controller = await Controller.get(controller_id)
+        # await system_logger.debug(_('Delete controller {} from resources monitor.').format(controller_id))
 
         # find resources monitor by controller ip
         resources_monitor = self._find_monitor_by_controller(controller_id)
@@ -75,10 +75,10 @@ class ResourcesMonitorManager:
         await resources_monitor.stop()
         self._resources_monitors_list.remove(resources_monitor)
 
-        msg = _('{cls}: resource monitor for controller {name} removed').format(
-            cls=__class__.__name__,
-            name=controller.verbose_name)
-        await system_logger.warning(msg)
+        # msg = _('{cls}: resource monitor for controller {name} removed').format(
+        #     cls=__class__.__name__,
+        #     name=controller.verbose_name)
+        # await system_logger.debug(msg)
 
     async def restart_existing_monitor(self, controller_id):
 
