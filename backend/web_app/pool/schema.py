@@ -26,6 +26,8 @@ from common.veil.veil_redis import request_to_execute_pool_task, execute_delete_
 from web_app.auth.user_schema import UserType
 from web_app.controller.schema import ControllerType
 
+from common.settings import POOL_MAX_SIZE, POOL_MIN_SIZE
+
 _ = lang_init()
 
 # TODO: отсутствует валидация входящих ресурсов вроде node_uid, cluster_uid и т.п. Ранее шла речь,
@@ -119,26 +121,19 @@ class PoolValidator(MutationValidation):
     async def validate_initial_size(obj_dict, value):
         if value is None:
             return
-        if value < obj_dict['min_size'] or value > obj_dict['max_size']:
+        if value < POOL_MIN_SIZE or value > POOL_MAX_SIZE:
             raise ValidationError(
-                _('Initial number of VM must be in {}-{} interval').format(obj_dict['min_size'], obj_dict['max_size']))
+                _('Initial number of VM must be in {}-{} interval').format(POOL_MIN_SIZE, POOL_MAX_SIZE))
         return value
 
     @staticmethod
     async def validate_reserve_size(obj_dict, value):
         if value is None:
             return
-        pool_id = obj_dict.get('pool_id')
-        if pool_id:
-            pool_obj = await Pool.get_pool(pool_id)
-            min_size = obj_dict['min_size'] if obj_dict.get('min_size') else pool_obj.min_size
-            max_size = obj_dict['max_size'] if obj_dict.get('max_size') else pool_obj.max_size
-        else:
-            min_size = obj_dict['min_size']
-            max_size = obj_dict['max_size']
-        if value < min_size or value > max_size:
+
+        if value < POOL_MIN_SIZE or value > POOL_MAX_SIZE:
             raise ValidationError(_('Number of created VM must be in {}-{} interval').
-                                  format(min_size, max_size))
+                                  format(POOL_MIN_SIZE, POOL_MAX_SIZE))
         return value
 
     @staticmethod
@@ -150,21 +145,18 @@ class PoolValidator(MutationValidation):
         if pool_id:
             pool_obj = await Pool.get_pool(pool_id)
             initial_size = obj_dict['initial_size'] if obj_dict.get('initial_size') else pool_obj.initial_size
-            min_size = obj_dict['min_size'] if obj_dict.get('min_size') else pool_obj.min_size
-            max_vm_amount = obj_dict['max_vm_amount'] if obj_dict.get('max_vm_amount') else pool_obj.max_vm_amount
-            vm_amount_in_pool = await pool_obj.get_vm_amount()
+
+            pool_model = await Pool.get(pool_id)
+            vm_amount_in_pool = await pool_model.get_vm_amount()
         else:
             initial_size = obj_dict['initial_size']
-            min_size = obj_dict['min_size']
-            max_vm_amount = obj_dict['max_vm_amount']
-
             vm_amount_in_pool = None
 
         if value < initial_size:
-            raise ValidationError(_('Maximal number of created VM should be less than initial number of VM'))
-        if value < min_size or value > max_vm_amount:
-            raise ValidationError(_('Maximal number of created VM must be in [{} {}] interval').
-                                  format(min_size, max_vm_amount))
+            raise ValidationError(_('Maximal number of created VMs can not be less than initial number of VM'))
+        if value < POOL_MIN_SIZE or value > POOL_MAX_SIZE:
+            raise ValidationError(_('Maximal number of created VMs must be in [{} {}] interval').
+                                  format(POOL_MIN_SIZE, POOL_MAX_SIZE))
         if vm_amount_in_pool and value < vm_amount_in_pool:
             raise ValidationError(_('Maximal number of created VMs can not be less than current amount of Vms.'))
         return value
@@ -221,9 +213,6 @@ class PoolType(graphene.ObjectType):
     automated_pool_id = graphene.UUID()
     template_id = graphene.UUID()
     datapool_id = graphene.UUID()
-    min_size = graphene.Int()
-    max_size = graphene.Int()
-    max_vm_amount = graphene.Int()
     increase_step = graphene.Int()
     max_amount_of_create_attempts = graphene.Int()
     initial_size = graphene.Int()
@@ -352,9 +341,6 @@ def pool_obj_to_type(pool_obj: Pool) -> dict:
                  'automated_pool_id': pool_obj.master_id,
                  'template_id': pool_obj.template_id,
                  'datapool_id': pool_obj.datapool_id,
-                 'min_size': pool_obj.min_size,
-                 'max_size': pool_obj.max_size,
-                 'max_vm_amount': pool_obj.max_vm_amount,
                  'increase_step': pool_obj.increase_step,
                  'max_amount_of_create_attempts': pool_obj.max_amount_of_create_attempts,
                  'initial_size': pool_obj.initial_size,
@@ -644,11 +630,8 @@ class CreateAutomatedPoolMutation(graphene.Mutation, PoolValidator, ControllerFe
         node_id = graphene.UUID(required=True)
 
         verbose_name = graphene.String(required=True)
-        # min_size = graphene.Int(default_value=1)
-        # max_size = graphene.Int(default_value=200)
-        # max_vm_amount = graphene.Int(default_value=1000)
         increase_step = graphene.Int(default_value=3, description="Шаг расширения пула")
-        # max_amount_of_create_attempts = graphene.Int(default_value=15)
+
         initial_size = graphene.Int(default_value=1)
         reserve_size = graphene.Int(default_value=1)
         total_size = graphene.Int(default_value=1)
