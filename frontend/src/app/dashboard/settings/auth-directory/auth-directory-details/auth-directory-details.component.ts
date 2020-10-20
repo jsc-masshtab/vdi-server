@@ -10,6 +10,7 @@ import { RemoveAuthenticationDirectoryComponent } from './remove-auth-directory/
 import { map } from 'rxjs/operators';
 import { AddGropComponent } from './add-group/add-group.component';
 import { RemoveGroupComponent } from './remove-group/remove-group.component';
+import { SyncGropComponent } from './sync-group/sync-group.component';
 
 @Component({
   selector: 'auth-directory-details',
@@ -137,7 +138,6 @@ export class AuthenticationDirectoryDetailsComponent implements OnInit, OnDestro
       .subscribe((data) => {
         this.host = true;
         this.AuthenticationDirectory = data.auth_dir;
-        console.log(this.AuthenticationDirectory)
       });
   }
 
@@ -264,6 +264,18 @@ export class AuthenticationDirectoryDetailsComponent implements OnInit, OnDestro
       }
     });
   }
+
+  public syncExistAuthDirGroupUsers() {
+    this.dialog.open(SyncGropComponent, {
+      width: '500px',
+      data: {
+        id: this.id,
+        verbose_name: this.AuthenticationDirectory['verbose_name'],
+        groups: this.AuthenticationDirectory['assigned_ad_groups']
+      }
+    })
+  }
+
 
   public close() {
     this.router.navigate(['pages/settings/auth-directory']);

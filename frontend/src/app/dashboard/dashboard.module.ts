@@ -39,6 +39,7 @@ import { onError } from 'apollo-link-error';
 import { InMemoryCache } from 'apollo-cache-inmemory';
 import { environment } from 'src/environments/environment';
 import { LicenseModule } from './settings/license/license.module';
+import { throwError } from 'rxjs';
 
 @NgModule({
   declarations: [
@@ -97,7 +98,7 @@ export class DashboardModule {
       return forward(operation);
     });
 
-    const errorLink = onError(({ graphQLErrors, networkError, operation, forward}) => {
+    const errorLink = onError(({ graphQLErrors, networkError, operation, forward}): any => {
       if (graphQLErrors) {
         this.waitService.setWait(false);
         graphQLErrors.map(({ message, locations, path }) => {
@@ -117,15 +118,23 @@ export class DashboardModule {
         if (networkError['status'] === 401) {
           if (networkError['error'] && networkError['error']['errors']) {
             this.errorService.setError(networkError['error']['errors']);
-            return;
           }
         }
         this.errorService.setError(networkError['message']);
       }
 
       if (operation.variables.method === 'POST') {
-        return forward(operation).filter(item => item.errors === undefined);
+        
+        const context = operation.getContext()
+        const body = context.response.body
+
+        if (body.errors) {
+          return throwError({ message: 'Bad response' }); 
+        } else {
+          return forward(operation)
+        }
       }
+      
     });
 
 
