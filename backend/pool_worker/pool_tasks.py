@@ -229,6 +229,34 @@ class ExpandPoolTask(AbstractTask):
             await system_logger.error(message=_('VM preparation error'), description=str(E))
 
 
+class DecreasePoolTask(AbstractTask):
+
+    def __init__(self, pool_locks, new_total_size):
+        super().__init__()
+
+        self._pool_locks = pool_locks
+        self.new_total_size = new_total_size
+
+    async def do_task(self):
+
+        automated_pool = await AutomatedPool.get(self.task_model.entity_id)
+        if not automated_pool:
+            raise RuntimeError('AutomatedPool doesnt exist')
+
+        pool_lock = self._pool_locks.get_pool_lock(str(automated_pool.id))
+        if pool_lock.locked():
+            raise RuntimeError('Another task works on this pool')
+
+        # decrease total_size
+        async with pool_lock:
+            pool = await Pool.get(automated_pool.id)
+            vm_amount = await pool.get_vm_amount()
+            if self.new_total_size < vm_amount:
+                raise RuntimeError('Total size can not be less than current amount of VMs')
+
+            await automated_pool.update(total_size=self.new_total_size).apply()
+
+
 class DeletePoolTask(AbstractTask):
 
     def __init__(self, pool_locks, full_deletion):

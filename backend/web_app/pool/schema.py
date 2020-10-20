@@ -17,11 +17,11 @@ from common.models.authentication_directory import AuthenticationDirectory
 from common.models.vm import Vm
 from common.models.controller import Controller
 from common.models.pool import AutomatedPool, StaticPool, Pool
-from common.models.task import PoolTaskType
+from common.models.task import PoolTaskType, TaskStatus
 
 from common.languages import lang_init
 from common.log.journal import system_logger
-from common.veil.veil_redis import request_to_execute_pool_task, execute_delete_pool_task
+from common.veil.veil_redis import request_to_execute_pool_task, execute_delete_pool_task, wait_for_task_result
 
 from web_app.auth.user_schema import UserType
 from web_app.controller.schema import ControllerType
@@ -153,9 +153,9 @@ class PoolValidator(MutationValidation):
             vm_amount_in_pool = None
 
         if value < initial_size:
-            raise ValidationError(_('Maximal number of created VMs can not be less than initial number of VM'))
+            raise ValidationError(_('Maximal number of created VM can not be less than initial number of VM'))
         if value < POOL_MIN_SIZE or value > POOL_MAX_SIZE:
-            raise ValidationError(_('Maximal number of created VMs must be in [{} {}] interval').
+            raise ValidationError(_('Maximal number of created VM must be in [{} {}] interval').
                                   format(POOL_MIN_SIZE, POOL_MAX_SIZE))
         if vm_amount_in_pool and value < vm_amount_in_pool:
             raise ValidationError(_('Maximal number of created VMs can not be less than current amount of Vms.'))
@@ -505,22 +505,11 @@ class AddVmsToStaticPoolMutation(graphene.Mutation):
         # (controller_id, node_id) = pool_data
         # controller_address = await Controller.select('address').where(Controller.id == controller_id).gino.scalar()
 
-        # TODO: есть сомнения в целесообразности этой проверки, ведь если это
-        #   недопустимая операция - ее отклонит VeiL.
-        # vm checks
-        # vm_http_client = await VmHttpClient.create(controller_address, '')
-        # all_vms_on_node = await vm_http_client.fetch_vms_list(node_id=node_id)
-
-        # all_vm_ids_on_node = [vmachine['id'] for vmachine in all_vms_on_node]
         used_vm_ids = await Vm.get_all_vms_ids()  # get list of vms which are already in pools
 
         # await system_logger.debug(_('VM ids: {}').format(vm_ids))
 
         for vm_id in [vm.id for vm in vms]:
-            # check if vm exists and it is on the correct node
-            # if str(vm_id) not in all_vm_ids_on_node:
-            #     entity = {'entity_type': EntityType.POOL, 'entity_uuid': None}
-            #     raise SimpleError(_('VM {} is at server different from pool server now').format(vm_id), entity=entity)
             # check if vm is free (not in any pool)
             if vm_id in used_vm_ids:
                 entity = {'entity_type': EntityType.POOL, 'entity_uuid': None}
@@ -718,9 +707,17 @@ class UpdateAutomatedPoolMutation(graphene.Mutation, PoolValidator):
             # привести к тому, что в пуле будет больше машин, чем total_size (максимальное число машин)
             # Поэтому передаем задачу пул воркеру, который уменьшит total_size, только если получит соответствующий
             # пулу лок
-            if kwargs.get('total_size') and kwargs.get('total_size') >= automated_pool.total_size:
-                new_total_size = kwargs.get('total_size')
-            else:
+            new_total_size = kwargs.get('total_size')
+            if new_total_size and new_total_size < automated_pool.total_size:
+                task_id = await request_to_execute_pool_task(kwargs['pool_id'], PoolTaskType.DECREASING_POOL,
+                                                             new_total_size=new_total_size)
+                status = await wait_for_task_result(task_id, wait_timeout=3)
+
+                if status is None or status != TaskStatus.FINISHED.name:
+                    error_msg = 'Failed to update total_size'
+                    entity = {'entity_type': EntityType.POOL, 'entity_uuid': None}
+                    raise SimpleError(error_msg, user=creator, entity=entity)
+
                 new_total_size = None
 
             # other params

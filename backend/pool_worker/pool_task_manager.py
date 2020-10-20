@@ -5,7 +5,7 @@ import json
 
 import asyncio
 
-from pool_worker.pool_tasks import InitPoolTask, ExpandPoolTask, DeletePoolTask
+from pool_worker.pool_tasks import InitPoolTask, ExpandPoolTask, DecreasePoolTask, DeletePoolTask
 from pool_worker.pool_locks import PoolLocks
 
 from common.veil.veil_redis import POOL_TASK_QUEUE, POOL_WORKER_CMD_QUEUE, PoolWorkerCmd, a_redis_lpop
@@ -157,6 +157,15 @@ class PoolTaskManager:
             except KeyError:
                 ignore_reserve_size = False
             task = ExpandPoolTask(self.pool_locks, ignore_reserve_size)
+            await task.init(task_id, self.task_list)
+            task.execute_in_async_task()
+
+        elif pool_task_type == PoolTaskType.DECREASING_POOL.name:
+            try:
+                new_total_size = task_data_dict['new_total_size']
+            except KeyError:
+                return
+            task = DecreasePoolTask(self.pool_locks, new_total_size)
             await task.init(task_id, self.task_list)
             task.execute_in_async_task()
 
