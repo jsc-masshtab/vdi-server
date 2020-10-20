@@ -4,14 +4,11 @@ import json
 
 from web_app.front_ws_api.subscription_sources import SubscriptionCmd
 
-from tornado.httpclient import HTTPClientError
 from tornado.websocket import WebSocketClosedError
 from tornado.websocket import WebSocketError
 from tornado.websocket import websocket_connect
 
-from common.veil.veil_errors import HttpError
 from common.models.controller import Controller
-# from controller_resources.veil_client import ResourcesHttpClient
 
 from web_app.front_ws_api.subscription_sources import CONTROLLER_SUBSCRIPTIONS_LIST, CONTROLLERS_SUBSCRIPTION
 
@@ -37,7 +34,7 @@ class ResourcesMonitor():
         self._ws_connection = None
         self._running_flag = True
         self._controller_id = None
-        self._is_online = False
+        self._is_online = None
 
         self._controller_online_task = None
         self._resources_monitor_task = None
@@ -68,44 +65,29 @@ class ResourcesMonitor():
     # PRIVATE METHODS
     async def _controller_online_checking(self):
         """
-        Check if controller online
-        :return:
+        Проверяет онлайн ли контроллер и пихает сообщение в redis канал
         """
-        # TODO: fix
-        # controller_address = await Controller.get_controller_address_by_id(self._controller_id)
         response = {'id': str(self._controller_id), 'msg_type': 'data', 'event': 'UPDATED',
                     'resource': CONTROLLERS_SUBSCRIPTION}
 
-        is_first_check = True
-
         while self._running_flag:
 
-            await asyncio.sleep(4)
+            await asyncio.sleep(10)
             try:
-                # if controller is online then there wil not be any exception
-                # TODO:точно это исправлял. мердж все сломал
-                # resources_http_client = await ResourcesHttpClient.create(controller_address)
-                # await resources_http_client.check_controller()
-                pass
-            except (HTTPClientError, HttpError, Exception):
-                # notify if controller was online before (data changed)
-                if self._is_online or is_first_check:
-                    response['status'] = 'OFFLINE'
-                    REDIS_CLIENT.publish(WS_MONITOR_CHANNEL_OUT, json.dumps(response))
+                controller = await Controller.get(self._controller_id)
+                connection_is_ok = await controller.ok
+            except asyncio.CancelledError:
+                raise
+            except Exception:  # noqa
+                # Если возникло какое-либо исключение, то считаем проверка не пройдена. Вот...
+                connection_is_ok = False
 
-                    # await Controller.deactivate(self._controller_id)  # Под вопросом нужно ли менять какие-либо
-                    # данные в бд либо мы лишь наблюдаем.
-                    self._is_online = False
-            else:
-                # notify if controller was offline before (data changed)
-                if not self._is_online or is_first_check:
-                    response['status'] = 'ONLINE'
-                    REDIS_CLIENT.publish(WS_MONITOR_CHANNEL_OUT, json.dumps(response))
+            # notify if data changed or on first check
+            if self._is_online is None or (connection_is_ok != self._is_online):
+                response['status'] = 'ONLINE' if connection_is_ok else 'OFFLINE'
+                REDIS_CLIENT.publish(WS_MONITOR_CHANNEL_OUT, json.dumps(response))
 
-                    # await Controller.activate(self._controller_id)  # Под вопросом нужно ли менять какие-либо данные
-                    self._is_online = True
-
-            is_first_check = False
+            self._is_online = connection_is_ok
 
     async def _processing_ws_messages(self):
         """
@@ -130,7 +112,6 @@ class ResourcesMonitor():
                     await system_logger.debug('{} token error. Closing connection.'.format(__class__.__name__))  # noqa
                     # Если токен эррор, то закрываем соединение и и переходим к попыткам коннекта (начало первого while)
                     await self._close_connection()
-                    # await Controller.invalidate_auth(self._controller_id)
                     break
                 else:
                     await self._on_message_received(msg)

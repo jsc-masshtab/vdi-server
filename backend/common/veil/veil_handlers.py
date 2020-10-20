@@ -86,12 +86,13 @@ class BaseHandler(RequestHandler, ABC):
 
     def write_error(self, status_code, **kwargs):
         """Согласно доке вызывается если возникло неотработанное исключение при обработка запроса"""
+        message = 'Uncaught exception'
         try:
             exc_info = kwargs["exc_info"]
             (_, exc, _) = exc_info
             message = 'Server error: ' + str(exc)
         except Exception:  # noqa
-            message = 'Uncaught exception'
+            pass
         finally:
             shorten_msg = textwrap.shorten(message, width=80)
             response = {'errors': [{'message': shorten_msg}]}
