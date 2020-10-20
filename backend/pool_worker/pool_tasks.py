@@ -297,7 +297,7 @@ class DeletePoolTask(AbstractTask):
             # удаляем пул
             pool = await Pool.get(automated_pool.id)
 
-            is_deleted = await Pool.delete_pool(pool, 'system', self.full_deletion)
+            is_deleted = await Pool.delete_pool(pool, 'system')
             await system_logger.debug('is pool deleted: {}'.format(is_deleted))
 
             # убираем из памяти локи, если пул успешно удалился
