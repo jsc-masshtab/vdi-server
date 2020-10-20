@@ -40,7 +40,7 @@ export class InfoEventComponent {
       type: 'string'
     },
     {
-      title: 'Создан',
+      title: 'Дата создания',
       property: 'created',
       type: 'time'
     }
