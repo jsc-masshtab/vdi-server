@@ -33,6 +33,7 @@ export class AuthenticationDirectoryService {
                                 sso,
                                 status,
                                 assigned_ad_groups {
+                                    id
                                     ad_guid
                                     verbose_name
                                 },
@@ -67,7 +68,7 @@ export class AuthenticationDirectoryService {
                                 possible_ad_groups {
                                     ad_guid
                                     verbose_name
-                                    ad_search_cn
+                                    ad_cn
                                 }
                             }
                         }
@@ -291,7 +292,7 @@ export class AuthenticationDirectoryService {
         return this.service.mutate<any>({
             mutation: gql`
                 mutation auth_dirs(
-                    $group_members: [AuthenticationDirectorySyncGroupMembersType]
+                    $group_ad_cn: String!,
                     $auth_dir_id: UUID!,
                     $group_ad_guid: UUID!,
                     $group_verbose_name: String!){
@@ -301,7 +302,7 @@ export class AuthenticationDirectoryService {
                         sync_data: {
                             group_ad_guid: $group_ad_guid
                             group_verbose_name: $group_verbose_name
-                            group_members: $group_members
+                            group_ad_cn: $group_ad_cn
                         }
                     ) {
                         ok
@@ -314,6 +315,29 @@ export class AuthenticationDirectoryService {
             }
         });
     }
+
+    public syncExistAuthDirGroupUsers(data) {
+        return this.service.mutate<any>({
+            mutation: gql`
+                mutation auth_dirs(
+                    $auth_dir_id: UUID!,
+                    $group_id: UUID!){
+
+                    syncExistAuthDirGroupUsers(
+                        auth_dir_id: $auth_dir_id,
+                        group_id: $group_id
+                    ) {
+                        ok
+                    }
+                }
+            `,
+            variables: {
+                method: 'POST',
+                ...data
+            }
+        });
+    }
+
 
     public removeGroup(ad_guid: string) {
         return this.service.mutate<any>({

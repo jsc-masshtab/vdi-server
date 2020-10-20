@@ -50,6 +50,12 @@
         <span class="name">Добавить группу</span>
       </button>
 
+      <button *ngIf="AuthenticationDirectory?.assigned_ad_groups?.length" class="btn-control"
+        (click)="syncExistAuthDirGroupUsers()" title="Синхронизировать группу">
+        <fa-icon [icon]="['fas','rss']" size="xs"></fa-icon>
+        <span class="name">Синхронизировать группу</span>
+      </button>
+
       <button *ngIf="AuthenticationDirectory?.assigned_ad_groups?.length" class="btn-control" (click)="removeGroup()" title="Удалить группу" >
         <fa-icon [icon]="['fas','trash-alt']" size="xs"></fa-icon>
         <span class="name">Удалить группу</span>

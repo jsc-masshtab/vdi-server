@@ -38,6 +38,7 @@ export class PoolAddComponent {
 
   public type: string = 'static';
   public step: string;
+  public last: string;
 
   public data: any;
   
@@ -85,7 +86,7 @@ export class PoolAddComponent {
 
     this.dynamicPool = this.fb.group({
       template_id: ['', Validators.required],
-      vm_name_template: ['', [Validators.required, Validators.pattern(/^[а-яА-ЯёЁa-zA-Z0-9]+[а-яА-ЯёЁa-zA-Z0-9.-_+ ]*$/)]],
+      vm_name_template: ['', [Validators.required, Validators.pattern(/^([a-zA-Z]+[a-zA-Z0-9-]*){0,63}$/)]],
       ad_cn_pattern: [''],
       increase_step: ['', [Validators.required, Validators.min(1)]],
       reserve_size: ['', [Validators.required, Validators.max(200), Validators.min(1)]],
@@ -120,7 +121,7 @@ export class PoolAddComponent {
   }
 
   public toStep(step: string) {
-
+    this.last = this.step
     this.step = step
 
     /* Обработка каждого шага */
@@ -139,11 +140,16 @@ export class PoolAddComponent {
       } break;
 
       case 'static': {
+        /* Выбор первого типа */
+        
+        if (!this.sharedData.get('connection_types').value) this.sharedData.get('connection_types').setValue([this.data['connection_types'][0]])
 
         /* Запрос на контроллеры */
 
         this.addPoolService.getData('controllers').valueChanges.pipe(map(data => data.data['controllers'])).subscribe((res) => {
           this.data['controllers'] = res
+
+          if (!this.sharedData.get('controller_id').value) this.sharedData.get('controller_id').setValue(this.data['controllers'][0]['id'])
         })
 
         /* Подписка на изменение полей формы для отправки запросов на сервер */
@@ -258,9 +264,7 @@ export class PoolAddComponent {
           this.updatePools.setUpdate('update');
           this.waitService.setWait(false);
         }, () => {
-          this.dialogRef.close();
-          this.updatePools.setUpdate('update');
-          this.waitService.setWait(false);
+          this.toStep(this.last)
         })
 
       } break;

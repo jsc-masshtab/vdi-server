@@ -44,7 +44,6 @@ export class AddAuthenticationDirectoryComponent {
     if (this.form.status === 'VALID') {
       this.waitService.setWait(true);
 
-      console.log(this.form.value)
       this.service.createAuthDir({ ...this.form.value }).subscribe(() => {
         this.service.getAllAuthenticationDirectory().refetch();
         this.dialogRef.close();
