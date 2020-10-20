@@ -21,8 +21,7 @@ DB_PASS = 'postgres'
 
 # Pool settings
 POOL_MIN_SIZE = 1
-POOL_MAX_SIZE = 200
-POOL_MAX_VM_AMOUNT = 1000
+POOL_MAX_SIZE = 10000
 POOL_MAX_CREATE_ATTEMPTS = 15
 
 # Journal settings

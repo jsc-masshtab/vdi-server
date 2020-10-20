@@ -214,6 +214,15 @@ async def a_redis_wait_for_task_completion(task_id):
         await system_logger.error(message=_('a_redis_wait_for_task_completion Exception'), description=str(ex))
 
 
+async def wait_for_task_result(task_id, wait_timeout):
+    """Ждем результат задачи и возвращаем ее статус либо None если не дождплись"""
+    try:
+        task_status = await asyncio.wait_for(a_redis_wait_for_task_completion(task_id), wait_timeout)
+        return task_status
+    except asyncio.TimeoutError:
+        return None
+
+
 async def request_to_execute_pool_task(pool_id, pool_task_type, **additional_data):
     """Send request to pool worker to execute a task. Return task id"""
     from common.models.task import Task
@@ -236,13 +245,8 @@ async def execute_delete_pool_task(pool_id: str, full, wait_for_result=True, wai
 
     # wait for result
     if wait_for_result:
-        try:
-            task_status = await asyncio.wait_for(a_redis_wait_for_task_completion(task_id), wait_timeout)
-            return task_status == TaskStatus.FINISHED.name
-        except asyncio.TimeoutError:  # Если не дождались сообщения о завершении таски
-            return False
-    else:
-        return True
+        status = await wait_for_task_result(task_id, wait_timeout)
+        return status and (status == TaskStatus.FINISHED.name)
 
 
 @redis_error_handle
@@ -264,15 +268,8 @@ async def send_cmd_to_cancel_tasks_associated_with_controller(controller_id, wai
     #  Wait for result
     if wait_for_result:
         from common.models.task import Task
-
-        async def _wait_for_task_result(task_id):
-            try:
-                await asyncio.wait_for(a_redis_wait_for_task_completion(task_id), wait_timeout)
-            except asyncio.TimeoutError:  # Если не дождались сообщения
-                pass
-
         tasks_to_cancel = await Task.get_ids_of_tasks_associated_with_controller(controller_id)
-        await asyncio.gather(*[_wait_for_task_result(task) for task in tasks_to_cancel])
+        await asyncio.gather(*[wait_for_task_result(task, wait_timeout) for task in tasks_to_cancel])
 
 
 @redis_error_handle

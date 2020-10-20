@@ -17,14 +17,16 @@ from common.models.authentication_directory import AuthenticationDirectory
 from common.models.vm import Vm
 from common.models.controller import Controller
 from common.models.pool import AutomatedPool, StaticPool, Pool
-from common.models.task import PoolTaskType
+from common.models.task import PoolTaskType, TaskStatus
 
 from common.languages import lang_init
 from common.log.journal import system_logger
-from common.veil.veil_redis import request_to_execute_pool_task, execute_delete_pool_task
+from common.veil.veil_redis import request_to_execute_pool_task, execute_delete_pool_task, wait_for_task_result
 
 from web_app.auth.user_schema import UserType
 from web_app.controller.schema import ControllerType
+
+from common.settings import POOL_MAX_SIZE, POOL_MIN_SIZE
 
 _ = lang_init()
 
@@ -67,6 +69,15 @@ class VmType(VeilResourceType):
         vm = await Vm.get(self.id)
         username = await vm.username if vm else None
         return UserType(username=username)
+
+    # TODO: перевел на показ статуса ВМ. Удалить после тестирования
+    # async def resolve_status(self, _info):
+    #     vm = await Vm.get(self.id)
+    #     pool = await Pool.get(vm.pool_id)
+    #     pool_controller = await pool.controller_obj
+    #     veil_domain = pool_controller.veil_client.domain(str(self.id))
+    #     await veil_domain.info()
+    #     return veil_domain.status
 
 
 class VmInput(graphene.InputObjectType):
@@ -113,26 +124,19 @@ class PoolValidator(MutationValidation):
     async def validate_initial_size(obj_dict, value):
         if value is None:
             return
-        if value < obj_dict['min_size'] or value > obj_dict['max_size']:
+        if value < POOL_MIN_SIZE or value > POOL_MAX_SIZE:
             raise ValidationError(
-                _('Initial number of VM must be in {}-{} interval').format(obj_dict['min_size'], obj_dict['max_size']))
+                _('Initial number of VM must be in {}-{} interval').format(POOL_MIN_SIZE, POOL_MAX_SIZE))
         return value
 
     @staticmethod
     async def validate_reserve_size(obj_dict, value):
         if value is None:
             return
-        pool_id = obj_dict.get('pool_id')
-        if pool_id:
-            pool_obj = await Pool.get_pool(pool_id)
-            min_size = obj_dict['min_size'] if obj_dict.get('min_size') else pool_obj.min_size
-            max_size = obj_dict['max_size'] if obj_dict.get('max_size') else pool_obj.max_size
-        else:
-            min_size = obj_dict['min_size']
-            max_size = obj_dict['max_size']
-        if value < min_size or value > max_size:
+
+        if value < POOL_MIN_SIZE or value > POOL_MAX_SIZE:
             raise ValidationError(_('Number of created VM must be in {}-{} interval').
-                                  format(min_size, max_size))
+                                  format(POOL_MIN_SIZE, POOL_MAX_SIZE))
         return value
 
     @staticmethod
@@ -144,22 +148,20 @@ class PoolValidator(MutationValidation):
         if pool_id:
             pool_obj = await Pool.get_pool(pool_id)
             initial_size = obj_dict['initial_size'] if obj_dict.get('initial_size') else pool_obj.initial_size
-            min_size = obj_dict['min_size'] if obj_dict.get('min_size') else pool_obj.min_size
-            max_vm_amount = obj_dict['max_vm_amount'] if obj_dict.get('max_vm_amount') else pool_obj.max_vm_amount
-            total_size = pool_obj.total_size
+
+            pool_model = await Pool.get(pool_id)
+            vm_amount_in_pool = await pool_model.get_vm_amount()
         else:
             initial_size = obj_dict['initial_size']
-            min_size = obj_dict['min_size']
-            max_vm_amount = obj_dict['max_vm_amount']
-            total_size = None
+            vm_amount_in_pool = None
 
         if value < initial_size:
-            raise ValidationError(_('Maximal number of created VM should be less than initial number of VM'))
-        if value < min_size or value > max_vm_amount:
+            raise ValidationError(_('Maximal number of created VM can not be less than initial number of VM'))
+        if value < POOL_MIN_SIZE or value > POOL_MAX_SIZE:
             raise ValidationError(_('Maximal number of created VM must be in [{} {}] interval').
-                                  format(min_size, max_vm_amount))
-        if total_size and value < total_size:
-            raise ValidationError(_('Maximal number of created VM can not be reduced.'))
+                                  format(POOL_MIN_SIZE, POOL_MAX_SIZE))
+        if vm_amount_in_pool and value < vm_amount_in_pool:
+            raise ValidationError(_('Maximal number of created VMs can not be less than current amount of Vms.'))
         return value
 
     @staticmethod
@@ -175,7 +177,7 @@ class PoolValidator(MutationValidation):
                 total_size = automated_pool.total_size
         print('!!!total_size ', total_size)
         if value < 1 or value > total_size:
-            raise ValidationError(_('Increase step must be positive and less or equal to total_size.').
+            raise ValidationError(_('Increase step must be positive and less or equal to total_size').
                                   format(total_size))
         return value
 
@@ -214,9 +216,6 @@ class PoolType(graphene.ObjectType):
     automated_pool_id = graphene.UUID()
     template_id = graphene.UUID()
     datapool_id = graphene.UUID()
-    min_size = graphene.Int()
-    max_size = graphene.Int()
-    max_vm_amount = graphene.Int()
     increase_step = graphene.Int()
     max_amount_of_create_attempts = graphene.Int()
     initial_size = graphene.Int()
@@ -353,9 +352,6 @@ def pool_obj_to_type(pool_obj: Pool) -> dict:
                  'automated_pool_id': pool_obj.master_id,
                  'template_id': pool_obj.template_id,
                  'datapool_id': pool_obj.datapool_id,
-                 'min_size': pool_obj.min_size,
-                 'max_size': pool_obj.max_size,
-                 'max_vm_amount': pool_obj.max_vm_amount,
                  'increase_step': pool_obj.increase_step,
                  'max_amount_of_create_attempts': pool_obj.max_amount_of_create_attempts,
                  'initial_size': pool_obj.initial_size,
@@ -515,11 +511,28 @@ class AddVmsToStaticPoolMutation(graphene.Mutation):
     @administrator_required
     async def mutate(self, _info, pool_id, vms, creator):
         pool = await Pool.get(pool_id)
+        # pool_controller = await Controller.get(pool.controller)
+        # pool_data = await Pool.select('controller', 'node_id').where(Pool.id == pool_id).gino.first()
+        # (controller_id, node_id) = pool_data
+        # controller_address = await Controller.select('address').where(Controller.id == controller_id).gino.scalar()
+
+        # TODO: есть сомнения в целесообразности этой проверки, ведь если это
+        #   недопустимая операция - ее отклонит VeiL.
+        # vm checks
+        # vm_http_client = await VmHttpClient.create(controller_address, '')
+        # all_vms_on_node = await vm_http_client.fetch_vms_list(node_id=node_id)
+
+        # all_vm_ids_on_node = [vmachine['id'] for vmachine in all_vms_on_node]
         used_vm_ids = await Vm.get_all_vms_ids()  # get list of vms which are already in pools
 
         # await system_logger.debug(_('VM ids: {}').format(vm_ids))
 
         for vm_id in [vm.id for vm in vms]:
+            # check if vm exists and it is on the correct node
+            # if str(vm_id) not in all_vm_ids_on_node:
+            #     entity = {'entity_type': EntityType.POOL, 'entity_uuid': None}
+            #     raise SimpleError(_('VM {} is at server different from pool server now').format(vm_id), entity=entity)
+            # check if vm is free (not in any pool)
             if vm_id in used_vm_ids:
                 entity = {'entity_type': EntityType.POOL, 'entity_uuid': None}
                 raise SimpleError(_('VM {} is already in one of pools').format(vm_id), entity=entity)
@@ -629,11 +642,7 @@ class CreateAutomatedPoolMutation(graphene.Mutation, PoolValidator, ControllerFe
         node_id = graphene.UUID(required=True)
 
         verbose_name = graphene.String(required=True)
-        # min_size = graphene.Int(default_value=1)
-        # max_size = graphene.Int(default_value=200)
-        # max_vm_amount = graphene.Int(default_value=1000)
         increase_step = graphene.Int(default_value=3, description="Шаг расширения пула")
-        # max_amount_of_create_attempts = graphene.Int(default_value=15)
         initial_size = graphene.Int(default_value=1)
         reserve_size = graphene.Int(default_value=1)
         total_size = graphene.Int(default_value=1)
@@ -654,12 +663,16 @@ class CreateAutomatedPoolMutation(graphene.Mutation, PoolValidator, ControllerFe
                      initial_size, reserve_size, total_size, vm_name_template,
                      create_thin_clones,
                      connection_types, ad_cn_pattern: str = None):
-        """Мутация создания Автоматического(Динамического) пула виртуальных машин."""
+        """Мутация создания Автоматического(Динамического) пула виртуальных машин.
+
+        TODO: описать механизм работы"""
+
+        # Проверяем наличие записи
         controller = await cls.fetch_by_id(controller_id)
         # TODO: дооживить валидатор
         await cls.validate(vm_name_template=vm_name_template,
                            verbose_name=verbose_name)
-        # Создание записей в БД
+        # --- Создание записей в БД
         try:
             automated_pool = await AutomatedPool.soft_create(creator=creator, verbose_name=verbose_name,
                                                              controller_ip=controller.address, cluster_id=cluster_id,
@@ -676,6 +689,7 @@ class CreateAutomatedPoolMutation(graphene.Mutation, PoolValidator, ControllerFe
             desc = str(E)
             error_msg = _('Failed to create automated pool {}.').format(verbose_name)
             entity = {'entity_type': EntityType.POOL, 'entity_uuid': None}
+            await system_logger.debug(desc)
             raise SimpleError(error_msg, description=desc, user=creator, entity=entity)
 
         # send command to start pool init task
@@ -707,12 +721,32 @@ class UpdateAutomatedPoolMutation(graphene.Mutation, PoolValidator):
     @administrator_required
     async def mutate(cls, root, info, creator, **kwargs):
         await cls.validate(**kwargs)
+
         automated_pool = await AutomatedPool.get(kwargs['pool_id'])
         if automated_pool:
+            # Special treatment for total_size
+            # total_size опасно уменьшать, так как в это время может выполняться задача расширения пула, что может
+            # привести к тому, что в пуле будет больше машин, чем total_size (максимальное число машин)
+            # Поэтому передаем задачу пул воркеру, который уменьшит total_size, только если получит соответствующий
+            # пулу лок
+            new_total_size = kwargs.get('total_size')
+            if new_total_size and new_total_size < automated_pool.total_size:
+                task_id = await request_to_execute_pool_task(kwargs['pool_id'], PoolTaskType.DECREASING_POOL,
+                                                             new_total_size=new_total_size)
+                status = await wait_for_task_result(task_id, wait_timeout=3)
+
+                if status is None or status != TaskStatus.FINISHED.name:
+                    error_msg = 'Failed to update total_size'
+                    entity = {'entity_type': EntityType.POOL, 'entity_uuid': None}
+                    raise SimpleError(error_msg, user=creator, entity=entity)
+
+                new_total_size = None
+
+            # other params
             try:
                 await automated_pool.soft_update(verbose_name=kwargs.get('verbose_name'),
                                                  reserve_size=kwargs.get('reserve_size'),
-                                                 total_size=kwargs.get('total_size'),
+                                                 total_size=new_total_size,
                                                  increase_step=kwargs.get('increase_step'),
                                                  vm_name_template=kwargs.get('vm_name_template'),
                                                  keep_vms_on=kwargs.get('keep_vms_on'),

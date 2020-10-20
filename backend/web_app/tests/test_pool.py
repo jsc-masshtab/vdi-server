@@ -319,7 +319,6 @@ async def test_pools_ordering(fixt_launch_workers,  fixt_db, fixt_controller, fi
                     node_id
                     template_id
                     datapool_id
-                    min_size
                     initial_size
                     os_type
                     assigned_groups {

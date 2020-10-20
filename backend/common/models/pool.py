@@ -6,7 +6,7 @@ from sqlalchemy import and_, union_all, case, literal_column, desc, text, Enum a
 from sqlalchemy.dialects.postgresql import UUID, ARRAY
 from asyncpg.exceptions import UniqueViolationError
 
-from common.settings import POOL_MAX_SIZE, POOL_MIN_SIZE, POOL_MAX_CREATE_ATTEMPTS, POOL_MAX_VM_AMOUNT
+from common.settings import POOL_MAX_CREATE_ATTEMPTS
 from common.database import db
 from common.veil.veil_gino import Status, EntityType, VeilModel
 from common.veil.veil_errors import VmCreationError, SimpleError, ValidationError
@@ -170,9 +170,6 @@ class Pool(VeilModel):
             Pool.controller,
             Pool.keep_vms_on,
             AutomatedPool.template_id,
-            AutomatedPool.min_size,
-            AutomatedPool.max_size,
-            AutomatedPool.max_vm_amount,
             AutomatedPool.increase_step,
             AutomatedPool.max_amount_of_create_attempts,
             AutomatedPool.initial_size,
@@ -215,9 +212,6 @@ class Pool(VeilModel):
                 Pool.keep_vms_on,
                 AutomatedPool.id,
                 AutomatedPool.template_id,
-                AutomatedPool.min_size,
-                AutomatedPool.max_size,
-                AutomatedPool.max_vm_amount,
                 AutomatedPool.increase_step,
                 AutomatedPool.max_amount_of_create_attempts,
                 AutomatedPool.initial_size,
@@ -658,9 +652,6 @@ class AutomatedPool(db.Model):
     template_id = db.Column(UUID(), nullable=False)
 
     # Pool size settings
-    min_size = db.Column(db.Integer(), nullable=False, default=1)
-    max_size = db.Column(db.Integer(), nullable=False, default=200)
-    max_vm_amount = db.Column(db.Integer(), nullable=False, default=1000)
     increase_step = db.Column(db.Integer(), nullable=False, default=3)
     # min_free_vms_amount = db.Column(db.Integer(), nullable=False, default=3)
     max_amount_of_create_attempts = db.Column(db.Integer(), nullable=False, default=2)
@@ -742,9 +733,6 @@ class AutomatedPool(db.Model):
             # Создаем AutomatedPool
             automated_pool = await super().create(id=pool.id,
                                                   template_id=template_id,
-                                                  min_size=POOL_MIN_SIZE,
-                                                  max_size=POOL_MAX_SIZE,
-                                                  max_vm_amount=POOL_MAX_VM_AMOUNT,
                                                   increase_step=increase_step,
                                                   max_amount_of_create_attempts=POOL_MAX_CREATE_ATTEMPTS,
                                                   initial_size=initial_size,

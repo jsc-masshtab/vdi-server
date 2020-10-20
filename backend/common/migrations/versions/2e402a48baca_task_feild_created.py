@@ -31,5 +31,6 @@ def upgrade():
 def downgrade():
     op.drop_column('task', 'created')
 
-    op.drop_column('task', 'task_type')
+    op.execute("DROP TYPE task_type CASCADE;")
+
     op.add_column('task', sa.Column('task_type', sa.VARCHAR(length=128), autoincrement=False, nullable=False))
