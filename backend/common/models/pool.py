@@ -8,8 +8,9 @@ from asyncpg.exceptions import UniqueViolationError
 
 from common.settings import POOL_MAX_CREATE_ATTEMPTS
 from common.database import db
+
 from common.veil.veil_gino import Status, EntityType, VeilModel
-from common.veil.veil_errors import VmCreationError, SimpleError, ValidationError
+from common.veil.veil_errors import VmCreationError, SimpleError, ValidationError, PoolCreationError
 from common.utils import extract_ordering_data
 from web_app.auth.license.utils import License
 from common.veil.veil_redis import get_thin_clients_count
@@ -870,31 +871,30 @@ class AutomatedPool(db.Model):
         pool_os_type = await self.template_os_type
         await self.update(os_type=pool_os_type).apply()
 
-        num_of_added_vms = 0
         pool = await Pool.get(self.id)
         # В пуле уже могут быть машины, например, если инициализация пула была прервана из-за завершения приложения.
-        start_vm_amount_in_pool = await pool.get_vm_amount()
+        num_of_vms_in_pool = await pool.get_vm_amount()
         try:
-            for i in range(start_vm_amount_in_pool, self.initial_size):
+            for _i in range(num_of_vms_in_pool, self.initial_size):
                 await self.add_vm()
-                num_of_added_vms = i + 1
+                num_of_vms_in_pool += 1
                 # update progress of associated task
-                progress = (num_of_added_vms / self.initial_size) * 100  # from 0 to 100
+                progress = (num_of_vms_in_pool / self.initial_size) * 100  # from 0 to 100
                 await Task.set_progress_to_task_associated_with_entity(self.id, progress)
         except VmCreationError as vm_error:
             # log that we can`t create required initial amount of VMs
             await system_logger.error(_('VM creation error.'), entity=self.entity, description=str(vm_error))
 
-        creation_successful = (self.initial_size == num_of_added_vms)
+        creation_successful = (self.initial_size <= num_of_vms_in_pool)
         if creation_successful:
             msg = _('{} vm(s) are successfully added in the {} pool.').format(self.initial_size, verbose_name)
             await system_logger.info(msg, entity=self.entity)
-            return True
-        msg = _('Adding VM to the pool {} finished with errors.').format(verbose_name)
-        description = _('Required: {}, created: {}').format(num_of_added_vms, self.initial_size)
-        await system_logger.error(message=msg, entity=self.entity, description=description)
-        # TODO: похоже исключение тут лишнее
-        # raise PoolCreationError(msg)  # Пробросить исключение, если споткнулись на создании машин
+        else:
+            msg = _('Adding VM to the pool {} finished with errors.').format(verbose_name)
+            description = _('Required: {}, created: {}').format(self.initial_size, num_of_vms_in_pool)
+            await system_logger.error(message=msg, entity=self.entity, description=description)
+            #  исключение не лишнее, без него таска завершится с FINISHED а не FAILED Перехватится в InitPoolTask
+            raise PoolCreationError(msg)  # Пробросить исключение, если споткнулись на создании машин
 
     async def prepare_initial_vms(self):
         """Подготавливает ВМ для дальнейшего использования тонким клиентом."""
