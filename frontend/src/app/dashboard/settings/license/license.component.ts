@@ -37,12 +37,12 @@ export class LicenseComponent implements OnInit {
     {
       title: 'Дата окончания лицензии',
       property: 'expiration_date',
-      type: 'string'
+      type: 'time'
     },
     {
       title: 'Дата окончания сервисной поддержки',
       property: 'support_expiration_date',
-      type: 'string'
+      type: 'time'
     }
   ];
 

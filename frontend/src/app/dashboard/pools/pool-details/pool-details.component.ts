@@ -19,6 +19,7 @@ import { AddRoleComponent } from './add-role/add-role.component';
 import { RemoveGroupComponent } from './remove-group/remove-group.component';
 import { AddGropComponent } from './add-group/add-group.component';
 import { PrepareVmPoolComponent } from './prepare-vm/prepare-vm.component';
+import { YesNoFormComponent } from '../../common/forms-dinamic/yes-no-form/yes-no-form.component';
 
 @Component({
   selector: 'vdi-pool-details',
@@ -201,6 +202,11 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
       property_lv2: 'username'
     },
     {
+      title: 'Состояние',
+      property: 'power_state',
+      type: 'string'
+    },
+    {
       title: 'Статус',
       property: 'status'
     }
@@ -217,6 +223,11 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
       title: 'Пользователь',
       property: 'user',
       property_lv2: 'username'
+    },
+    {
+      title: 'Состояние',
+      property: 'power_state',
+      type: 'string'
     },
     {
       title: 'Статус',
@@ -418,6 +429,27 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
 
   public actionEdit(method) {
     this[method]();
+  }
+
+  public expandPool(): void {
+    this.dialog.open(YesNoFormComponent, {
+      disableClose: true,
+      width: '500px',
+      data: {
+        form: {
+          header: "Расширение пула",
+          question: "Расширить пул?",
+          button: "Расширить"
+        },
+        request: {
+          service: this.poolService,
+          action: 'expandPool',
+          body: {
+            pool_id: this.idPool
+          }
+        }
+      }
+    })
   }
 
 // @ts-ignore: Unreachable code error

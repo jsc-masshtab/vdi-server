@@ -91,7 +91,7 @@ export class PoolAddComponent {
       increase_step: ['', [Validators.required, Validators.min(1)]],
       reserve_size: ['', [Validators.required, Validators.max(200), Validators.min(1)]],
       initial_size: [0, [Validators.required, Validators.max(200), Validators.min(1)]],
-      total_size: ['', [Validators.required, Validators.max(1000), Validators.min(1)]],
+      total_size: ['', [Validators.required, Validators.max(10000), Validators.min(1)]],
 
       create_thin_clones: true,
     }, { validators: this.totalSizeValidator() });

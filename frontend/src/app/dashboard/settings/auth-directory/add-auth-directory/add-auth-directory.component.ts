@@ -3,6 +3,7 @@ import { MatDialogRef } from '@angular/material';
 import { Component } from '@angular/core';
 import { AuthenticationDirectoryService } from '../auth-directory.service';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { Subscription } from 'rxjs';
 
 
 @Component({
@@ -12,6 +13,8 @@ import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 
 export class AddAuthenticationDirectoryComponent {
 
+  private sub: Subscription;
+
   public form: FormGroup;
   public checkValid: boolean = false;
 
@@ -19,7 +22,7 @@ export class AddAuthenticationDirectoryComponent {
     this.form = this.fb.group({
       domain_name: ['', Validators.required],
       verbose_name: ['', Validators.required],
-      directory_url: ['ldap://', [Validators.required, Validators.pattern(/^ldap[s]?:\/\/[a-zA-Z0-9.-_+ ]+$/)]],
+      directory_url: ['', [Validators.required, Validators.pattern(/^ldap[s]?:\/\/[a-zA-Z0-9.-_+ ]+$/)]],
       description: '',
       service_username: '',
       service_password: '',
@@ -30,6 +33,12 @@ export class AddAuthenticationDirectoryComponent {
       kdc_urls: [[]],
       sso: false, */
     });
+
+    this.sub = this.form.get('directory_url').valueChanges.subscribe((directory_url) => {
+      if (!String(directory_url).match(/^ldap[s]?:\/\//)) {
+        this.form.get('directory_url').setValue(`ldap://${directory_url}`)
+      }
+    })
   }
 
   constructor(private service: AuthenticationDirectoryService,
@@ -50,6 +59,10 @@ export class AddAuthenticationDirectoryComponent {
         this.waitService.setWait(false);
       });
     }
+  }
+
+  ngOnDestroy() {
+    this.sub.unsubscribe()
   }
 }
 

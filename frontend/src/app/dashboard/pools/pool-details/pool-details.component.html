@@ -15,6 +15,11 @@
             <fa-icon [icon]="['fas','sync-alt']"></fa-icon>
         </button>
 
+        <button (click)="expandPool()" *ngIf="menuActive === 'info' && pool?.pool_type == 'AUTOMATED'" title="Расширить пул" class="btn-control">
+            <fa-icon [icon]="['fas','expand']" size="xs"></fa-icon>
+            <span class="name">Расширить пул</span>
+        </button>
+
         <button (click)="removePool()" *ngIf="menuActive === 'info' && pool" title="Удалить пул" class="btn-control">
             <fa-icon [icon]="['fas','trash-alt']" size="xs"></fa-icon>
             <span class="name">Удалить пул</span>
