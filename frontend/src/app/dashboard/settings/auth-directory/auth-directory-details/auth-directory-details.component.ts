@@ -52,7 +52,7 @@ export class AuthenticationDirectoryDetailsComponent implements OnInit, OnDestro
       }
     },
     {
-      title: 'Directory url',
+      title: 'URL',
       property: 'directory_url',
       type: 'string',
       edit: 'openEditForm',

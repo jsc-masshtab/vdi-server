@@ -15,6 +15,7 @@ import { ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { MatCheckboxModule, MatSelectModule } from '@angular/material';
 import { PaginationComponent } from './components/shared/pagination/pagination.component';
 import { FooterService } from './components/single/footer/footer.service';
+import { YesNoFormComponent } from './forms-dinamic/yes-no-form/yes-no-form.component';
 
 
 const COMPONENTS = [
@@ -34,7 +35,8 @@ const PIPES = [
 ];
 
 const FORMS_DINAMIC = [
-  FormForEditComponent
+  FormForEditComponent,
+  YesNoFormComponent
 ];
 
 

@@ -3,23 +3,6 @@ import { Component, Inject } from '@angular/core';
 import { MAT_DIALOG_DATA, MatDialog } from '@angular/material';
 import { RemoveUserVmComponent } from './remove-user/remove-user.component';
 
-interface IData  {
-  vm: {
-    id: string;
-    name: string;
-    state: string;
-    user: {
-      username: string | null;
-    };
-    template?: {
-      name: string;
-    }
-  };
-  typePool: string;
-  usersPool: [{username: string }];
-  idPool: number;
-}
-
 
 @Component({
   selector: 'vdi-details-popup',
@@ -44,7 +27,12 @@ export class VmDetalsPopupComponent {
       title: 'Пользователь',
       property: 'user',
       property_lv2: 'username'
-    }
+    },
+    {
+      title: 'Состояние',
+      property: 'power_state',
+      type: 'string'
+    },
   ];
   public collectionIntoVmStatic: any[] = [
     {
@@ -56,11 +44,16 @@ export class VmDetalsPopupComponent {
       title: 'Пользователь',
       property: 'user',
       property_lv2: 'username'
-    }
+    },
+    {
+      title: 'Состояние',
+      property: 'power_state',
+      type: 'string'
+    },
   ];
 
   constructor(public dialog: MatDialog,
-              @Inject(MAT_DIALOG_DATA) public data: IData
+              @Inject(MAT_DIALOG_DATA) public data: any
              ) {}
 
 

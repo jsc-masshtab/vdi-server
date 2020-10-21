@@ -41,6 +41,7 @@ export class PoolDetailsService {
                                         user {
                                             username
                                         }
+                                        power_state
                                         status
                                     }
                                     controller {
@@ -101,6 +102,7 @@ export class PoolDetailsService {
                                         user {
                                             username
                                         }
+                                        power_state
                                         status
                                     }
                                     controller {
@@ -529,6 +531,24 @@ export class PoolDetailsService {
                 method: 'POST',
                 users,
                 id
+            }
+        });
+    }
+
+    public expandPool(data) {
+        return this.service.mutate<any>({
+            mutation: gql`
+                mutation pools(
+                    $pool_id: UUID!){
+                    expandPool(pool_id: $pool_id){
+                        ok
+                        task_id
+                    }
+                }
+            `,
+            variables: {
+                method: 'POST',
+                ...data
             }
         });
     }
