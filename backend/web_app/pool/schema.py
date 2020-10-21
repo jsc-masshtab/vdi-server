@@ -283,9 +283,13 @@ class PoolType(graphene.ObjectType):
         for vm in vms:
             domain_entity = await vm.vm_client
             await domain_entity.info()
+            if domain_entity.os_windows:
+                in_domain = await domain_entity.in_ad
+            else:
+                in_domain = False
             vms_list.append(
                 VmType(power_state=domain_entity.power_state,
-                       in_domain=await domain_entity.in_ad,
+                       in_domain=in_domain,
                        **vm.__values__))
         # TODO: получить список ВМ и статусов
         return vms_list
