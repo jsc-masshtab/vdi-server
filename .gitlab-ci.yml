@@ -17,10 +17,10 @@ compilemessages:
   image: python:3.5.9-alpine
   stage: compilemessages
   before_script:
-    - apk add bash gettext
+    - apk add gettext
   script:
     - cd backend/common/
-    - bash compilemessages.sh en
-    - bash compilemessages.sh ru
+    - ash compilemessages.sh en
+    - ash compilemessages.sh ru
   only:
     - merge_requests
