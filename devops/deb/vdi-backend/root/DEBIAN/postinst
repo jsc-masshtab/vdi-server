@@ -1,6 +1,12 @@
 #!/bin/bash
 
 set -e
+
+configure_users()
+{
+	useradd uservdi
+	chown -R uservdi:uservdi /opt/veil-vdi
+}
 configure_secrets()
 {
 	# генерируем local_settings только если его не существует
@@ -60,29 +66,21 @@ configure_postgres()
 	/opt/veil-vdi/env/bin/python /opt/veil-vdi/env/bin/alembic upgrade head
 }
 
-configure_nginx()
-{
-	cp /opt/veil-vdi/other/vdi.nginx /etc/nginx/conf.d/vdi_nginx.conf
-	rm /etc/nginx/sites-enabled/* || true
-	systemctl restart nginx
-}
-
 configure_logs()
 {
 	# creating logs directory at /var/log/veil-vdi/
 	mkdir -p /var/log/veil-vdi/ || true
+	chown -R uservdi:uservdi /var/log/veil-vdi
 
 	# deploying configuration files for logrotate
 	cp /opt/veil-vdi/other/tornado.logrotate /etc/logrotate.d/veil-vdi
 }
 
-configure_supervisor()
+configure_systemd()
 {
-	# deploying configuration files for supervisor
-	rm /etc/supervisor/supervisord.conf || true
-	cp /opt/veil-vdi/other/supervisord.conf /etc/supervisor/supervisord.conf
-
-	supervisorctl reload
+	systemctl daemon-reload
+	systemctl enable vdi-web && systemctl enable vdi-pool_worker && systemctl enable vdi-ws_listener
+	systemctl restart vdi-web && systemctl restart vdi-pool_worker && systemctl restart vdi-ws_listener
 }
 
 configure_crontab()
@@ -95,16 +93,16 @@ case "$1" in
 	configure)
 		# действия и при установке и при обновлении
 
-		#configure_supervisor
+		configure_systemd
 
 		# действия только при установке
 		if [ ! -n "$2" ] ; then
+		    configure_users
 			configure_secrets
 			configure_redis
 			configure_postgres
-			configure_nginx
 			configure_logs
-			configure_supervisor
+			configure_systemd
 			configure_crontab
 		fi
 

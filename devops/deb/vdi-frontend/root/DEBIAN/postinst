@@ -1,0 +1,36 @@
+#!/bin/bash
+
+set -e
+
+configure_apache2()
+{
+	a2enmod ssl rewrite proxy proxy_http deflate headers expires remoteip
+
+	cp /opt/veil-vdi/apache2-configs/apache2.conf /etc/apache2
+	cp /opt/veil-vdi/apache2-configs/*default*.conf /etc/apache2/sites-available
+	ln -sf /etc/apache2/sites-available/*.conf /etc/apache2/sites-enabled/
+
+    apachectl configtest
+
+	systemctl restart apache2
+}
+
+case "$1" in
+	configure)
+		# действия и при установке и при обновлении
+
+		# действия только при установке
+		if [ ! -n "$2" ] ; then
+			configure_apache2
+		fi
+
+		exit 0
+		;;
+	abort-upgrade|abort-remove|abort-deconfigure)
+		exit 0
+		;;
+	*)
+		echo "postinst called with unknown argument: $*" >&2
+		exit 1
+		;;
+esac

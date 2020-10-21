@@ -4,6 +4,7 @@ fetch:
 	wget https://vdi-frontend.tar.xz
 
 deb:
+	chmod 775 root/DEBIAN/postinst
 	dpkg-deb -b root .
 
 clean:

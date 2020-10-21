@@ -51,4 +51,6 @@ echo "PATH1=$PATH1" >> /tmp/vdi-install-vars
 
 echo "CREATE=$(date +"%Y-%m-%d")" >> /tmp/vdi-install-vars
 
-apt-get install ./vdi-*.deb -y
+apt-get update
+apt-get install ./vdi-frontend*.deb -y
+apt-get install ./vdi-backend*.deb -y
