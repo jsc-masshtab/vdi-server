@@ -143,9 +143,7 @@ class InitPoolTask(AbstractTask):
                     await automated_pool.deactivate()
                     raise
                 except Exception as E:
-                    # TODO: НОРМАЛЬНО записать ошибку в журнал
-                    await system_logger.error(_('Failed to create pool. {exception} {name}').format(
-                        exception=str(E), name=E.__class__.__name__))
+                    await system_logger.error(_('Failed to create automated  pool.'))
                     await automated_pool.deactivate()
                     raise E
 
@@ -153,6 +151,7 @@ class InitPoolTask(AbstractTask):
         try:
             await automated_pool.prepare_initial_vms()
         except asyncio.CancelledError:
+            await automated_pool.deactivate()
             raise
         except Exception as E:
             await system_logger.error(message=_('Virtual machine(s) preparation error.'), description=str(E))

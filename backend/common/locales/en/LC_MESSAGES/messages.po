@@ -662,8 +662,8 @@ msgstr "Pool Creation cancelled."
 
 #: ../pool_worker/pool_tasks.py:147
 #, python-brace-format
-msgid "Failed to create pool. {exception} {name}"
-msgstr "Failed to create pool. {exception} {name}"
+msgid "Failed to create automated  pool."
+msgstr "Failed to create automated  pool."
 
 #: ../pool_worker/pool_tasks.py:158
 msgid "Virtual machine(s) preparation error."
