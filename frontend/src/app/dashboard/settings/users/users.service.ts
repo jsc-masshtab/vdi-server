@@ -13,7 +13,7 @@ export class UsersService  {
 
     constructor(private service: Apollo) {}
 
-    public getAllUsers(props): QueryRef<any, any> {
+    public getAllUsers(props: any = {}): QueryRef<any, any> {
        return  this.service.watchQuery({
            query: gql`
                 query users(
