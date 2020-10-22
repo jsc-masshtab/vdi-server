@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
 import graphene
 import re
+from sqlalchemy import and_
 
+from common.database import db
 from common.models.auth import User
 from common.veil.veil_gino import RoleTypeGraphene, Role
 from common.veil.veil_validators import MutationValidation
@@ -152,10 +154,11 @@ class UserQuery(graphene.ObjectType):
 
     count = graphene.Int(username=graphene.String(), is_superuser=graphene.Boolean(), is_active=graphene.Boolean())
 
-    async def resolve_count(self, info, username=None, is_superuser=None, is_active=None, **kwargs):
+    async def resolve_count(self, info, is_superuser=None, is_active=None, **kwargs):
         filters = UserQuery.build_filters(is_superuser, is_active)
-        users = await User.get_objects(name=username, filters=filters, include_inactive=True)
-        return len(users)
+        query = User.select('id').where(and_(*filters))
+        users_count = await db.select([db.func.count()]).select_from(query.alias()).gino.scalar()
+        return users_count
 
     @staticmethod
     def build_filters(is_superuser, is_active):
