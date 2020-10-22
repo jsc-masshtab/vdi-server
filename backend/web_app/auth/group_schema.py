@@ -219,7 +219,7 @@ class RemoveGroupUsersMutation(graphene.Mutation, GroupValidator):
 
         async with db.transaction():
             users = kwargs['users']
-            status = await group.remove_users(users, creator=creator)
+            status = await group.remove_users(user_id_list=users, creator=creator)
 
         return RemoveGroupUsersMutation(
             group=GroupType.instance_to_type(group),

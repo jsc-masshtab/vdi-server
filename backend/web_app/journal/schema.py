@@ -145,7 +145,7 @@ class EventQuery(graphene.ObjectType):
             elif ordering == 'created':
                 def sort_lam(event): return event.created if event.created else "2000-01-01T00:00:01Z"
             else:
-                raise SimpleError(_('The sort parameter is incorrect'))
+                raise SimpleError(_('The sort parameter is incorrect.'))
             event_type_list = sorted(event_type_list, key=sort_lam, reverse=reverse)
 
         return event_type_list
@@ -220,7 +220,7 @@ class EventExportMutation(graphene.Mutation):
     async def mutate(self, _info, start, finish, path='/tmp/', **kwargs):
         name = await Event.event_export(start, finish, path)
         entity = {'entity_type': 'SECURITY', 'entity_uuid': None}
-        await system_logger.info(_('Journal is exported'), description=name, entity=entity)
+        await system_logger.info(_('Journal is exported.'), description=name, entity=entity)
         return EventExportMutation(ok=True)
 
 

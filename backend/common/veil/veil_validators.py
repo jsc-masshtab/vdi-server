@@ -29,4 +29,5 @@ class MutationValidation:
                     if value is not None or isinstance(argument, NonNull):
                         await validator(kwargs, value)
                 except ValidationError as E:
-                    raise ValidationError(_('Field \"{}\" - {}').format(argument_name, E))
+                    msg = _('Field \"{}\" - {}.').format(argument_name, E)
+                    raise ValidationError(msg.replace('..', '.'))

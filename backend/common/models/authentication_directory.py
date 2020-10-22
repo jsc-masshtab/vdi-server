@@ -162,7 +162,7 @@ class AuthenticationDirectory(VeilModel, AbstractSortableStatusModel):
             auth_dir_dict['id'] = id
         # Создаем запись
         auth_dir = await AuthenticationDirectory.create(**auth_dir_dict)
-        await system_logger.info(_('Authentication directory {} is created').format(auth_dir_dict.get('verbose_name')),
+        await system_logger.info(_('Authentication directory {} is created.').format(auth_dir_dict.get('verbose_name')),
                                  user=creator,
                                  entity=auth_dir.entity
                                  )
@@ -178,7 +178,7 @@ class AuthenticationDirectory(VeilModel, AbstractSortableStatusModel):
 
         creator = update_dict.pop('creator')
         desc = str(update_dict)
-        await system_logger.info(_('Values for auth directory is updated'), entity=update_type.entity, description=desc, user=creator)
+        await system_logger.info(_('Values for auth directory is updated.'), entity=update_type.entity, description=desc, user=creator)
 
         await update_type.test_connection()
         return update_type
@@ -202,8 +202,8 @@ class AuthenticationDirectory(VeilModel, AbstractSortableStatusModel):
                 await GroupAuthenticationDirectoryMapping.create(authentication_directory_id=self.id,
                                                                  group_id=group_id, mapping_id=mapping_obj.id)
                 group_name = await GroupModel.get(group_id)
-                desc = _('Arguments: {} of group: {}').format(mapping, group_name.verbose_name)
-                msg = _('Mapping for auth directory {} is created').format(self.verbose_name)
+                desc = _('Arguments: {} of group: {}.').format(mapping, group_name.verbose_name)
+                msg = _('Mapping for auth directory {} is created.').format(self.verbose_name)
                 await system_logger.info(msg, entity=mapping_obj.entity, description=desc, user=creator)
 
     async def edit_mapping(self, mapping: dict, groups: list, creator):
@@ -226,8 +226,8 @@ class AuthenticationDirectory(VeilModel, AbstractSortableStatusModel):
                     await GroupAuthenticationDirectoryMapping.create(authentication_directory_id=self.id,
                                                                      group_id=group_id, mapping_id=mapping_id)
                     group_name = await GroupModel.get(group_id)
-                    desc = _('New arguments: {} of group: {}').format(mapping, group_name.verbose_name)
-                    msg = _('Mapping for auth directory {} is updated').format(self.verbose_name)
+                    desc = _('New arguments: {} of group: {}.').format(mapping, group_name.verbose_name)
+                    msg = _('Mapping for auth directory {} is updated.').format(self.verbose_name)
                     await system_logger.info(msg, entity=self.entity, description=desc, user=creator)
 
     async def test_connection(self) -> bool:
@@ -255,7 +255,7 @@ class AuthenticationDirectory(VeilModel, AbstractSortableStatusModel):
         else:
             ldap_server.unbind_s()
             await self.update(status=Status.ACTIVE).apply()
-        await system_logger.info(_('Authentication directory server {} is connected').format(self.directory_url),
+        await system_logger.info(_('Authentication directory server {} is connected.').format(self.directory_url),
                                  entity=self.entity)
         return True
 
@@ -319,7 +319,7 @@ class AuthenticationDirectory(VeilModel, AbstractSortableStatusModel):
         # await user.remove_roles()
         # await user.remove_groups()
 
-        await system_logger.debug(_('Assigning veil groups to {}').format(user.username))
+        await system_logger.debug(_('Assigning veil groups to {}.').format(user.username))
 
         user_info, user_groups = self._get_ad_user_attributes(account_name,
                                                               self.domain_name,
@@ -328,7 +328,7 @@ class AuthenticationDirectory(VeilModel, AbstractSortableStatusModel):
         # Если отображения отсутствуют, то по-умолчанию всем пользователям
         # назначается группа Оператор.
         mappings = await self.mappings
-        await system_logger.debug(_('Mappings: {}').format(mappings))
+        await system_logger.debug(_('Mappings: {}.').format(mappings))
 
         if not mappings:
             return True
@@ -344,8 +344,8 @@ class AuthenticationDirectory(VeilModel, AbstractSortableStatusModel):
         # Если есть мэппинги, значит в системе есть группы. Поэтому тут производим пользователю назначение групп.
         for role_mapping in mappings:
             escaped_values = list(map(ldap.dn.escape_dn_chars, role_mapping.values))
-            await system_logger.debug(_('escaped values: {}').format(escaped_values))
-            await system_logger.debug(_('role mapping value type: {}').format(role_mapping.value_type))
+            await system_logger.debug(_('escaped values: {}.').format(escaped_values))
+            await system_logger.debug(_('role mapping value type: {}.').format(role_mapping.value_type))
 
             if role_mapping.value_type == Mapping.ValueTypes.USER:
                 user_veil_groups = account_name in escaped_values
@@ -354,14 +354,14 @@ class AuthenticationDirectory(VeilModel, AbstractSortableStatusModel):
             elif role_mapping.value_type == Mapping.ValueTypes.GROUP:
                 user_veil_groups = any([gr_name in escaped_values for gr_name in ad_groups])
 
-            await system_logger.debug(_('User veil groups: {}').format(user_veil_groups))
+            await system_logger.debug(_('User veil groups: {}.').format(user_veil_groups))
 
             if user_veil_groups:
                 for group in await role_mapping.assigned_groups:
                     user_groups = await user.assigned_groups_ids
                     if group.id not in user_groups:
                         await system_logger.debug(
-                            _('Attaching user {} to group: {}').format(user.username, group.verbose_name))
+                            _('Attaching user {} to group: {}.').format(user.username, group.verbose_name))
                         await group.add_user(user.id, creator='system')
                 return True
         return False
@@ -411,7 +411,7 @@ class AuthenticationDirectory(VeilModel, AbstractSortableStatusModel):
             success = False
             created = False
             # await system_logger.debug(ldap_error)
-            raise ValidationError(_('Invalid credentials (ldap): {}').format(ldap_error))
+            raise ValidationError(_('Invalid credentials (ldap): {}.').format(ldap_error))
         except ldap.SERVER_DOWN:
             # Если нет связи с сервером службы каталогов, то возвращаем ошибку о недоступности
             # сервера, так как не можем сделать вывод о правильности предоставленных данных.
@@ -510,7 +510,7 @@ class AuthenticationDirectory(VeilModel, AbstractSortableStatusModel):
                     groups_list.append({'ad_guid': object_guid, 'verbose_name': cn, 'ad_search_cn': ad_search_cn})
         except ldap.LDAPError:
             # На случай ошибочности запроса к AD
-            msg = _('Fail to connect to Authentication Directory. Check service information')
+            msg = _('Fail to connect to Authentication Directory. Check service information.')
             await system_logger.error(msg, entity=self.entity)
             await self.update(status=Status.FAILED).apply()
             groups_list = list()
@@ -589,7 +589,7 @@ class AuthenticationDirectory(VeilModel, AbstractSortableStatusModel):
                                        'first_name': first_name,
                                        'last_name': last_name})
         except ldap.LDAPError:
-            msg = _('Fail to connect to Authentication Directory. Check service information')
+            msg = _('Fail to connect to Authentication Directory. Check service information.')
             await system_logger.error(msg, entity=self.entity)
             await self.update(status=Status.FAILED).apply()
             users_list = list()
@@ -637,7 +637,7 @@ class AuthenticationDirectory(VeilModel, AbstractSortableStatusModel):
                                  entity=entity)
         return users_list
 
-    async def synchronize_group(self, group_id):
+    async def synchronize_group(self, group_id, creator='system'):
         """Синхронизирует ранее синхронизированную группу и пользователей из Authentication Directory на VDI."""
         group = await GroupModel.get(group_id)
         if not group:
@@ -653,9 +653,12 @@ class AuthenticationDirectory(VeilModel, AbstractSortableStatusModel):
             if vdi_user.username not in [ad_user['username'] for ad_user in ad_group_members]:
                 exclude_user_list.append(vdi_user.id)
         # Исключаем лишних пользователей
-        await group.remove_users(exclude_user_list)
+        await group.remove_users(user_id_list=exclude_user_list, creator=creator)
         # Синхронизируем пользователей
-        await self.sync_users(ad_group_members)
+        new_users = await self.sync_users(ad_group_members)
+        # Добавлено 22.10.2020
+        # Включаем пользователей в группу
+        await group.add_users(user_id_list=new_users, creator=creator)
         return True
 
     async def synchronize(self, data):

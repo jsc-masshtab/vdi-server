@@ -109,7 +109,7 @@ class CancelTaskMutation(graphene.Mutation):
         # print("progressing_task_id ", progressing_task_id, flush=True)
         if not progressing_task_id:
             entity = {'entity_type': EntityType.SYSTEM, 'entity_uuid': None}
-            raise SimpleError(_('No such task or status of task {} is not {} '.format(
+            raise SimpleError(_('No such task or status of task {} is not {}.'.format(
                 task, TaskStatus.IN_PROGRESS.name)), entity=entity)
 
         # send cmd

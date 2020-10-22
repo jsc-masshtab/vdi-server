@@ -111,9 +111,6 @@ class InitPoolTask(AbstractTask):
         self._pool_locks = pool_locks
         self._task_priority = 2
 
-    def __del__(self):
-        system_logger._debug('In destructor InitPoolTask')
-
     async def do_task(self):
 
         automated_pool = await AutomatedPool.get(self.task_model.entity_id)
@@ -143,7 +140,8 @@ class InitPoolTask(AbstractTask):
                     await automated_pool.deactivate()
                     raise
                 except Exception as E:
-                    await system_logger.error(_('Failed to create automated  pool.'))
+                    await system_logger.error(message=_('Failed to init pool.'),
+                                              desciption=str(E))
                     await automated_pool.deactivate()
                     raise E
 
@@ -156,8 +154,8 @@ class InitPoolTask(AbstractTask):
             except Exception as E:
                 await system_logger.error(message=_('Virtual machine(s) preparation error.'), description=str(E))
 
-            # Активируем пул
-            await automated_pool.activate()
+        # Активируем пул
+        await automated_pool.activate()
 
 
 class ExpandPoolTask(AbstractTask):
@@ -167,9 +165,6 @@ class ExpandPoolTask(AbstractTask):
 
         self._pool_locks = pool_locks
         self.ignore_reserve_size = ignore_reserve_size  # расширение не смотря на достаточный резерв
-
-    def __del__(self):
-        print('In destructor ExpandPoolTask')  # Temp
 
     async def do_task(self):
 
@@ -217,17 +212,17 @@ class ExpandPoolTask(AbstractTask):
                         await system_logger.error(_('VM creating error.'))
                         await system_logger.debug(vm_error)
 
-            # Подготовка ВМ для подключения к ТК
-            try:
-                active_directory_object = await AuthenticationDirectory.query.where(
-                    AuthenticationDirectory.status == Status.ACTIVE).gino.first()
-                await asyncio.gather(
-                    *[vm_object.prepare_with_timeout(active_directory_object, automated_pool.ad_cn_pattern) for
-                      vm_object in vm_list])
-            except asyncio.CancelledError:
-                raise
-            except Exception as E:
-                await system_logger.error(message=_('VM preparation error.'), description=str(E))
+        # Подготовка ВМ для подключения к ТК
+        try:
+            active_directory_object = await AuthenticationDirectory.query.where(
+                AuthenticationDirectory.status == Status.ACTIVE).gino.first()
+            await asyncio.gather(
+                *[vm_object.prepare_with_timeout(active_directory_object, automated_pool.ad_cn_pattern) for
+                  vm_object in vm_list])
+        except asyncio.CancelledError:
+            raise
+        except Exception as E:
+            await system_logger.error(message=_('VM preparation error.'), description=str(E))
 
 
 class DecreasePoolTask(AbstractTask):
@@ -266,9 +261,6 @@ class DeletePoolTask(AbstractTask):
         self.full_deletion = full_deletion
         self._pool_locks = pool_locks
         self._task_priority = 3
-
-    def __del__(self):
-        system_logger._debug('In destructor DeletePoolTask')
 
     async def do_task(self):
 

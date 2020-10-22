@@ -25,7 +25,7 @@ class ResourcesMonitorManager:
         controllers = await Controller.query.gino.all()
 
         controllers_addresses = [controller.address for controller in controllers]
-        msg = _('{cls}: connected controllers -- {controllers}').format(
+        msg = _('{cls}: connected controllers -- {controllers}.').format(
             cls=__class__.__name__,
             controllers=controllers_addresses)
         await system_logger.debug(msg)
@@ -35,7 +35,7 @@ class ResourcesMonitorManager:
         # start resources monitors
         for controller in controllers:
             self._add_monitor_for_controller(controller.id)
-            await system_logger.debug(_('{}: Started').format(__class__.__name__), entity=controller.entity)
+            await system_logger.debug(_('{}: Started.').format(__class__.__name__), entity=controller.entity)
 
     async def stop(self):
         """
@@ -50,14 +50,14 @@ class ResourcesMonitorManager:
         # check if controller is already being monitored
         controller = await Controller.get(controller_id)
         if controller_id in self._get_monitored_controllers_ids():
-            msg = _('{cls}: Controller {name} is already monitored!').format(
+            msg = _('{cls}: Controller {name} is already monitored.').format(
                 cls=__class__.__name__,
                 name=controller.verbose_name)
             await system_logger.debug(msg, entity=controller.entity)
             return
         # add monitor
         self._add_monitor_for_controller(controller_id)
-        msg = _('{cls}: resource monitor for controller {name} connected').format(
+        msg = _('{cls}: resource monitor for controller {name} connected.').format(
             cls=__class__.__name__,
             name=controller.verbose_name)
         await system_logger.debug(msg, entity=controller.entity)
@@ -97,11 +97,7 @@ class ResourcesMonitorManager:
                                      if str(resources_monitor.get_controller_id()) == str(controller_id))
             return resources_monitor
         except StopIteration:
-            msg = _('{cls}: controller {id} is not monitored!').format(
-                cls=__class__.__name__,
-                id=controller_id)
-            system_logger._debug(msg)
-            return None
+            return
 
     def _get_monitored_controllers_ids(self):
         monitored_controllers_ids = [monitor.get_controller_id() for monitor in self._resources_monitors_list]

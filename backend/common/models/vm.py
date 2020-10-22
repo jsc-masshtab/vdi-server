@@ -120,7 +120,7 @@ class Vm(VeilModel):
                 # Если машина уже заведена в АД - пытаемся ее вывести
                 active_directory_object = await AuthenticationDirectory.query.where(
                     AuthenticationDirectory.status == Status.ACTIVE).gino.first()
-                already_in_domain = await domain_entity.in_ad
+                already_in_domain = await domain_entity.in_ad if domain_entity.os_windows else False
                 if domain_entity.os_windows and already_in_domain:
                     await system_logger.info(_('Removing {} from domain.').format(self.verbose_name),
                                              entity=self.entity)
@@ -132,11 +132,24 @@ class Vm(VeilModel):
                     while not task_completed:
                         await asyncio.sleep(VEIL_OPERATION_WAITING)
                         task_completed = await action_task.finished
-                await domain_entity.remove(full=True)
+                # Отправляем задачу удаления ВМ на ECP.
+                delete_response = await domain_entity.remove(full=True)
+                delete_task = delete_response.task
+                task_completed = False
+                while not task_completed:
+                    await asyncio.sleep(VEIL_OPERATION_WAITING)
+                    task_completed = await delete_task.finished
+                # Если задача выполнена с ошибкой прокидываем исключение выше
+                task_success = await delete_task.success
+                if not task_success:
+                    raise AssertionError(
+                        _('VM deletion task {} finished with error.').format(delete_task.api_object_id))
                 await system_logger.debug(_('VM {} removed from ECP.').format(self.verbose_name), entity=self.entity)
-            except Exception:  # noqa
+            except Exception as e:  # noqa
                 # Сейчас нас не заботит что пошло не так при удалении на ECP.
-                pass
+                msg = _('VM {} deletion task finished with error.').format(self.verbose_name)
+                description = str(e)
+                await system_logger.warning(message=msg, description=description, entity=self.entity, user=creator)
         status = await super().soft_delete(creator=creator)
         return status
 
@@ -151,16 +164,18 @@ class Vm(VeilModel):
                 user = await UserModel.get(user_id)
                 await self.soft_update(id=self.id, creator=creator, assigned_to_user=True)
                 await system_logger.info(
-                    _('User {} has been included to VM {}').format(user.username, self.verbose_name),
+                    _('User {} has been included to VM {}.').format(user.username, self.verbose_name),
                     user=creator, entity=self.entity)
         except UniqueViolationError:
             raise SimpleError(_('{} already has permission.').format(type(self).__name__), user=creator)
         return ero
 
-    async def remove_users(self, creator, users_list: list):
-        entity = EntityModel.select('id').where((EntityModel.entity_type == self.entity_type) & (EntityModel.entity_uuid == self.id))
+    async def remove_users(self, creator: str, users_list: list):
+        entity = EntityModel.select('id').where(
+            (EntityModel.entity_type == self.entity_type) & (EntityModel.entity_uuid == self.id))
         # TODO: временное решение. Скорее всего потом права отзываться будут на конкретные сущности
-        await system_logger.info(_('VM {} is clear from users').format(self.verbose_name), user=creator, entity=self.entity)
+        await system_logger.info(_('VM {} is clear from users.').format(self.verbose_name), user=creator,
+                                 entity=self.entity)
         if not users_list:
             return await EntityRoleOwnerModel.delete.where(EntityRoleOwnerModel.entity_id == entity).gino.status()
         return await EntityRoleOwnerModel.delete.where(
@@ -271,11 +286,6 @@ class Vm(VeilModel):
         # Ради логгирования и вывода из домена удаление делается по 1 ВМ.
         await asyncio.gather(*[Vm.remove_vm_with_timeout(vm_id, creator, remove_vms_on_controller) for vm_id in vm_ids])
         return True
-
-    @staticmethod
-    async def enable_remote_accesses(controller_address, vm_ids):
-        # Функционал внутри prepare
-        raise DeprecationWarning()
 
     @staticmethod
     async def event(event_id):
@@ -434,9 +444,16 @@ class Vm(VeilModel):
                 while not task_completed:
                     await asyncio.sleep(VEIL_OPERATION_WAITING)
                     task_completed = await action_task.finished
+
+                # Если задача выполнена с ошибкой - прерываем выполнение
+                task_success = await action_task.success
+                if not task_success:
+                    raise ValueError(
+                        _('VM remote access task {} finished with error.').format(action_task.api_object_id))
+
                 # Обновляем параметры ВМ
                 await domain_entity.info()
-            description_list.append(_('Remote access enabled'))
+            description_list.append(_('Remote access enabled.'))
 
         # Включаем виртуальную машину. Если машина не включится - не активируется гостевой агент
         await self.start()
@@ -455,13 +472,19 @@ class Vm(VeilModel):
         if domain_entity.hostname != self.verbose_name:
             await system_logger.debug(_('Setting hostname for {}.').format(self.verbose_name), entity=self.entity)
             action_response = await domain_entity.set_hostname(hostname=self.verbose_name)
-            # TODO: если задача выполнена успешно записать значение hostname в локальную БД?
             # TODO: метод ожидания задачи
             action_task = action_response.task
             task_completed = False
             while not task_completed:
                 await asyncio.sleep(VEIL_OPERATION_WAITING)
                 task_completed = await action_task.finished
+
+            # Если задача выполнена с ошибкой - прерываем выполнение
+            task_success = await action_task.success
+            if not task_success:
+                raise ValueError(
+                    _('VM hostname setting task {} finished with error.').format(action_task.api_object_id))
+
             # Обновляем параметры ВМ
             await domain_entity.info()
             description_list.append(_('Hostname {} has been set.').format(self.verbose_name))
@@ -475,7 +498,7 @@ class Vm(VeilModel):
             await domain_entity.info()
 
         # Заведение в домен
-        already_in_domain = await domain_entity.in_ad
+        already_in_domain = await domain_entity.in_ad if domain_entity.os_windows else False
         if active_directory_obj and domain_entity.os_windows and not already_in_domain:
             await system_logger.debug(_('Adding {} to domain.').format(self.verbose_name), entity=self.entity)
             action_response = await domain_entity.add_to_ad(domain_name=active_directory_obj.domain_name,
@@ -488,10 +511,15 @@ class Vm(VeilModel):
                 await asyncio.sleep(VEIL_OPERATION_WAITING)
                 task_completed = await action_task.finished
 
-            task_failed = await action_task.failed
-            if task_failed:
+            # Если задача выполнена с ошибкой - прерываем выполнение
+            task_success = await action_task.success
+            if not task_success:
+                # TODO: возможно первая ошибка нас не интересует
                 await system_logger.error(_('VM {} domain including task failed.').format(self.verbose_name),
                                           description=action_task.error_message)
+                raise ValueError(
+                    _('VM domain include task {} finished with error.').format(action_task.api_object_id))
+
             await domain_entity.info()
 
             # Ждем активацию гостевого агента
@@ -504,20 +532,26 @@ class Vm(VeilModel):
 
             # Заводим в контейнер в Active Directory
             if ad_cn_pattern:
-                debug_msg = _('Adding computer {} to domain container(s) {}').format(self.verbose_name,
-                                                                                     ad_cn_pattern)
-                await system_logger.debug(debug_msg, entity=self.entity)
                 action_response = await domain_entity.add_to_ad_group(self.verbose_name,
                                                                       active_directory_obj.service_username,
                                                                       active_directory_obj.password,
                                                                       ad_cn_pattern)
-                await system_logger.debug(action_response.data, entity=self.entity)
-                if action_response.success:
-                    debug_msg = _('VM {} has been added to {}.').format(self.verbose_name,
-                                                                        ad_cn_pattern)
-                    await system_logger.debug(debug_msg, entity=self.entity)
+                # Ожидаем выполнения задачи
+                action_task = action_response.task
+                task_completed = False
+                while not task_completed:
+                    await asyncio.sleep(VEIL_OPERATION_WAITING)
+                    task_completed = await action_task.finished
+
+                # Если задача выполнена с ошибкой - прерываем выполнение
+                task_success = await action_task.success
+                if not task_success:
+                    raise ValueError(
+                        _('VM domain container adding task {} finished with error.').format(action_task.api_object_id))
+                # Добавляем в список отработанных действий
                 description_list.append(
                     _('VM has been added to Windows domain container(s) {}.').format(ad_cn_pattern))
+        # Протоколируем успех
         msg = _('VM {} has been prepared.').format(self.verbose_name)
         description = ', '.join(description_list)
         await system_logger.info(message=msg, entity=self.entity, description=description)

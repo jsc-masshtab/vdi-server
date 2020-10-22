@@ -32,7 +32,7 @@ class LicenseHandler(BaseHandler, ABC):
             if not is_administrator(roles):
                 raise Unauthorized
         except (Unauthorized, AttributeError, TypeError):
-            response = {'errors': [{'message': _('Invalid permissions')}]}
+            response = {'errors': [{'message': _('Invalid permissions.')}]}
             return await self.log_finish(response)
         # загрузка самого файла
         try:
@@ -57,9 +57,9 @@ class LicenseHandler(BaseHandler, ABC):
         except (IndexError, ValidationError, TypeError, AssertionError):
             response = {'errors': [{'message': _('Fail to open license key file.').format(ip=self.remote_ip)}]}
         if License().take_verbose_name == "Unlicensed Veil VDI":
-            msg = _('Try to upload invalid license key')
+            msg = _('Try to upload invalid license key.')
             await system_logger.error(msg)
         else:
-            msg = _('Valid license key is uploaded')
+            msg = _('Valid license key is uploaded.')
             await system_logger.info(msg)
         return await self.log_finish(response)

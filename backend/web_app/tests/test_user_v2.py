@@ -20,11 +20,8 @@ class TestUserSchema:
     async def test_users_list(self, snapshot, fixt_auth_context):  # noqa
         query = """{
           users{
-            email
-            first_name
             is_active
             is_superuser
-            last_name
             username
           }
         }"""
@@ -108,7 +105,7 @@ class TestUserSchema:
         try:
             await execute_scheme(user_schema, query, context=fixt_auth_context)
         except ExecError as E:
-            assert 'Email a.devyatkin@mashtab.org уже используется' in str(E)
+            assert 'Email a.devyatkin@mashtab.org занят.' in str(E)
 
     async def test_user_edit(self, snapshot, fixt_auth_context):  # noqa
         user_obj = await User.get_object(extra_field_name='username', extra_field_value='devyatkin',

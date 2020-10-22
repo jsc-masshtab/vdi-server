@@ -123,13 +123,14 @@ class AuthenticationDirectoryGroupMembersType(graphene.ObjectType):
     username = graphene.String()
 
 
-class AuthenticationDirectorySyncGroupMembersType(graphene.InputObjectType):
-    """Вложенная в group_members структура.
-       Описывает поля пользователя Authentication Directory."""
-    username = graphene.String(required=True)
-    email = graphene.String()
-    last_name = graphene.String()
-    first_name = graphene.String()
+# Deprecated 22.10.2020
+# class AuthenticationDirectorySyncGroupMembersType(graphene.InputObjectType):
+#     """Вложенная в group_members структура.
+#        Описывает поля пользователя Authentication Directory."""
+#     username = graphene.String(required=True)
+#     email = graphene.String()
+#     last_name = graphene.String()
+#     first_name = graphene.String()
 
 
 class AuthenticationDirectorySyncGroupType(graphene.InputObjectType):

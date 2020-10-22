@@ -66,7 +66,7 @@ class BaseHandler(RequestHandler, ABC):
 
         parameter_value = self.args.get(parameter_name, default_value)
         if parameter_value is None:
-            raise ValidationError('Parameter {} required'.format(parameter_name))
+            raise ValidationError('Parameter {} required.'.format(parameter_name))
 
         return parameter_value
 
@@ -77,10 +77,10 @@ class BaseHandler(RequestHandler, ABC):
 
         pool = await Pool.get(pool_id)
         if not pool:
-            raise ValidationError(_('There is no pool with id: {}').format(pool_id))
+            raise ValidationError(_('There is no pool with id: {}.').format(pool_id))
         vm = await pool.get_vm(user_id=user.id)
         if not vm:
-            raise ValidationError(_('User {} has no VM on pool {}').format(user.username, pool.id))
+            raise ValidationError(_('User {} has no VM on pool {}.').format(user.username, pool.id))
 
         return vm
 
