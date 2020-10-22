@@ -10,6 +10,7 @@ from common.veil.veil_gino import StatusGraphene, Status
 from common.veil.veil_graphene import VeilResourceType, VeilShortEntityType
 from common.models.controller import Controller
 from common.models.vm import Vm
+from common.models.pool import Pool
 from common.languages import lang_init
 from veil_api_client.base.api_object import VeilRestPaginator
 
@@ -155,6 +156,9 @@ class ControllerVmType(VeilResourceType):
     template = graphene.Field(VeilShortEntityType)
     status = StatusGraphene()
 
+    # название пула, в котором ВМ из локальной БД
+    pool_name = graphene.String()
+
 
 class ControllerType(graphene.ObjectType, ControllerFetcher):
     """Описание Controller."""
@@ -230,6 +234,7 @@ class ControllerType(graphene.ObjectType, ControllerFetcher):
         veil_response = await controller.veil_client.domain(template=0, cluster_id=cluster_id,
                                                             node_id=node_id, data_pool_id=data_pool_id).list(paginator=paginator)
         resolves = veil_response.paginator_results
+        vms_list = []
         if exclude_existed:
             for vm in vms:
                 for index, data in enumerate(resolves):
@@ -237,7 +242,15 @@ class ControllerType(graphene.ObjectType, ControllerFetcher):
                         del resolves[index]
         for resource in resolves:
             resource['template'] = resource['parent']
-        return [ControllerVmType(**resource_data) for resource_data in resolves]
+            vm = await Vm.get(resource['id'])
+            if vm:
+                pool = await Pool.get(vm.pool_id)
+                pool_name = pool.verbose_name
+            else:
+                pool_name = None
+            vms_list.append(
+                ControllerVmType(pool_name=pool_name, **resource))
+        return vms_list
 
     @staticmethod
     def obj_to_type(controller_obj: Controller) -> dict:

@@ -1,7 +1,7 @@
 import { Component, OnInit, Inject } from '@angular/core';
 import { WaitService } from '../../components/single/wait/wait.service';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material';
-import { Observable, Subject } from 'rxjs';
+/* import { Observable, Subject } from 'rxjs'; */
 
 @Component({
   selector: 'vdi-yes-no-form',
