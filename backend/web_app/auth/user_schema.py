@@ -150,6 +150,13 @@ class UserQuery(graphene.ObjectType):
                           ordering=graphene.String())
     user = graphene.Field(UserType, id=graphene.UUID(), username=graphene.String())
 
+    count = graphene.Int(username=graphene.String(), is_superuser=graphene.Boolean(), is_active=graphene.Boolean())
+
+    async def resolve_count(self, info, username=None, is_superuser=None, is_active=None, **kwargs):
+        filters = UserQuery.build_filters(is_superuser, is_active)
+        users = await User.get_objects(name=username, filters=filters, include_inactive=True)
+        return len(users)
+
     @staticmethod
     def build_filters(is_superuser, is_active):
         filters = []

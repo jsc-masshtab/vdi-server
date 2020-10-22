@@ -13,6 +13,8 @@ from common.veil.veil_gino import StatusGraphene
 from veil_api_client.base.api_object import VeilRestPaginator
 from web_app.controller.schema import ControllerFetcher
 from common.languages import lang_init
+from common.models.vm import Vm
+from common.models.pool import Pool
 
 _ = lang_init()
 
@@ -150,6 +152,9 @@ class ResourceVmType(VeilResourceType):
     spice_stream = graphene.Boolean()
     tablet = graphene.Boolean()
     parent = graphene.Field(VeilShortEntityType)
+
+    # название пула, в котором ВМ из локальной БД
+    pool_name = graphene.String()
 
 
 # Query
@@ -295,7 +300,13 @@ class ResourcesQuery(graphene.ObjectType, ControllerFetcher):
             for resource_data in veil_response.paginator_results:
                 # Добавляем параметры контроллера на VDI
                 resource_data['controller'] = {'id': controller.id, 'verbose_name': controller.verbose_name}
-                domain_list.append(ResourceVmType(**resource_data))
+                vm = await Vm.get(resource_data['id'])
+                if vm:
+                    pool = await Pool.get(vm.pool_id)
+                    pool_name = pool.verbose_name
+                else:
+                    pool_name = None
+                domain_list.append(ResourceVmType(pool_name=pool_name, **resource_data))
         return domain_list
 
     @classmethod

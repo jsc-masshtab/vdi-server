@@ -12,16 +12,13 @@ from web_app.app import make_app
 # access to the values within the .ini file in use.
 config = context.config
 main_option = config.get_main_option('sqlalchemy.url')
-try:
-    if main_option.upper().find('TESTS') == -1:  # В случаях, если это не тестовая база, нужно установить sqlalchemy.url
-        alchemy_url = 'postgres://{USER}:{PASS}@{HOST}/{NAME}'.format(USER=DB_USER, PASS=DB_PASS, HOST=DB_HOST,
-                                                                      NAME=DB_NAME)
-        config.set_main_option('sqlalchemy.url', alchemy_url)
-except AttributeError:  # При первой миграции БД - возвращается None, нужно установить sqlalchemy.url
-    print('First DB installing')
+
+# Если не тестовая БД, то формат из settings
+if main_option is None or main_option.upper().find('TESTS') == -1:
     alchemy_url = 'postgres://{USER}:{PASS}@{HOST}/{NAME}'.format(USER=DB_USER, PASS=DB_PASS, HOST=DB_HOST,
                                                                   NAME=DB_NAME)
     config.set_main_option('sqlalchemy.url', alchemy_url)
+
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.
 fileConfig(config.config_file_name)
