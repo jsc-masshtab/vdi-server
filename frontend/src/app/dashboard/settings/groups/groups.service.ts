@@ -17,7 +17,7 @@ export class GroupsService  {
 
     constructor(private service: Apollo) {}
 
-    public getGroups(queryset): QueryRef<any, any> {
+    public getGroups(queryset: any = {}): QueryRef<any, any> {
        return  this.service.watchQuery({
             query:  gql`
                 query groups(
