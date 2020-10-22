@@ -70,6 +70,18 @@
         }
     }
 
+    .form-description {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        padding: 0 15px;
+        
+        >  p {
+            margin-bottom: 10px;
+        }
+    }
+
     .field {
         margin-bottom: 15px;
         display: block;
@@ -125,13 +137,17 @@
         }
     }
 
- 
     .field-name {
         margin-bottom: 9px;
     }
 
     .description {
         font-size: 13px;
+    }
+
+    .description-danger {
+        font-size: 13px;
+        color: red;
     }
 
     .form-actions {

@@ -10,7 +10,7 @@ import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule } from '@angular/forms';
 import { UsersService } from './users.service';
 import { UserDetailsComponent } from './user-details/user-details.component';
-import { MatCheckboxModule } from '@angular/material';
+import { MatCheckboxModule, MatInputModule } from '@angular/material';
 import { MutateUserComponent } from './user-details/mutate-user/mutate-user.component';
 import { AddGropComponent } from './user-details/add-group/add-group.component';
 import { AddRoleComponent } from './user-details/add-role/add-role.component'; 
@@ -36,7 +36,8 @@ import { RemoveGroupComponent } from './user-details/remove-group/remove-group.c
       MatDialogModule,
       MatSelectModule,
       ReactiveFormsModule,
-      MatCheckboxModule
+      MatCheckboxModule,
+      MatInputModule
    ],
    providers: [
       UsersService

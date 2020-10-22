@@ -8,6 +8,7 @@ import { MatDialog } from '@angular/material';
 import { Subscription } from 'rxjs';
 import { Router } from '@angular/router';
 import { DetailsMove } from '../../../common/classes/details-move';
+import { FormControl } from '@angular/forms';
 
 
 @Component({
@@ -20,6 +21,8 @@ import { DetailsMove } from '../../../common/classes/details-move';
 export class GroupsComponent extends DetailsMove implements OnInit, OnDestroy {
 
   private getGroupsSub: Subscription;
+
+  verbose_name = new FormControl('');
 
   public groups: [];
   public collection: object[] = [
@@ -52,7 +55,12 @@ export class GroupsComponent extends DetailsMove implements OnInit, OnDestroy {
   @ViewChild('view') view: ElementRef;
 
   ngOnInit() {
-    this.getAllGroups();
+    this.refresh();
+
+    this.verbose_name.valueChanges.subscribe(() => {
+      this.getAllGroups();
+    });
+
   }
 
   public addGroup() {
@@ -67,9 +75,17 @@ export class GroupsComponent extends DetailsMove implements OnInit, OnDestroy {
       this.getGroupsSub.unsubscribe();
     }
 
+    const queryset = {
+      verbose_name: this.verbose_name.value
+    };
+
+    if (this.verbose_name.value == '') {
+      delete queryset['verbose_name'];
+    }
+
     this.waitService.setWait(true);
 
-    this.service.getGroups().valueChanges.pipe(map(data => data.data.groups))
+    this.service.getGroups(queryset).valueChanges.pipe(map(data => data.data.groups))
       .subscribe((data) => {
         this.groups = data;
         this.waitService.setWait(false);

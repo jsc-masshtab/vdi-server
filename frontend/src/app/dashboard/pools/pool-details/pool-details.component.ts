@@ -31,6 +31,7 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
   public host: boolean = false;
 
   public pool: IPool;
+
   public collectionDetailsStatic: any[] = [
     {
       title: 'Название',
@@ -80,6 +81,7 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
       type: 'array-length'
     }
   ];
+
   public collectionDetailsAutomated: any[] = [
     {
       title: 'Название',
@@ -197,6 +199,14 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
       property_lv2: 'verbose_name'
     },
     {
+      title: "Принадлежность",
+      property: "in_domain",
+      type: {
+        typeDepend: 'boolean',
+        propertyDepend: ['В домене', 'Не в домене']
+      }
+    },
+    {
       title: 'Пользователь',
       property: 'user',
       property_lv2: 'username'
@@ -211,6 +221,7 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
       property: 'status'
     }
   ];
+
   public collectionVmsStatic: any[] = [
     {
       title: 'Название',
@@ -218,6 +229,14 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
       class: 'name-start',
       icon: 'desktop',
       type: 'string'
+    },
+    {
+      title: "Принадлежность",
+      property: "in_domain",
+      type: {
+        typeDepend: 'boolean',
+        propertyDepend: ['В домене', 'Не в домене']
+      }
     },
     {
       title: 'Пользователь',
@@ -629,6 +648,7 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
           entity: 'pool-details',
           header: 'Изменение шаблона для ВМ',
           buttonAction: 'Изменить',
+          danger: "При изменении шаблона произойдет переименование ВМ, переназначение hostname и перевод в домен!",
           form: [{
             tag: 'input',
             type: 'text',

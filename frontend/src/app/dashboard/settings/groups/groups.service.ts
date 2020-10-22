@@ -17,22 +17,30 @@ export class GroupsService  {
 
     constructor(private service: Apollo) {}
 
-    public getGroups(): QueryRef<any, any> {
+    public getGroups(queryset): QueryRef<any, any> {
        return  this.service.watchQuery({
-            query:  gql` query groups($ordering: String) {
-                                groups(ordering: $ordering) {
-                                    id
-                                    verbose_name
-                                    description
-                                    assigned_users {
-                                      id
-                                    }
-                                }
-                            }
-                    `,
+            query:  gql`
+                query groups(
+                    $ordering: String,
+                    $verbose_name: String
+                ){
+                    groups(
+                        verbose_name: $verbose_name,
+                        ordering: $ordering
+                    ){
+                        id
+                        verbose_name
+                        description
+                        assigned_users {
+                            id
+                        }
+                    }
+                }
+            `,
             variables: {
                 method: 'GET',
-                ordering: this.paramsForGetUsers.nameSort
+                ordering: this.paramsForGetUsers.nameSort,
+                ...queryset
             }
         });
     }

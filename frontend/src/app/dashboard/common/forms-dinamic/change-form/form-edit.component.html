@@ -41,6 +41,10 @@
     </label>
   </div>
 
+  <div class="form-description" *ngIf="data?.settings?.danger">
+    <p class="description-danger">{{ data?.settings?.danger }}</p>
+  </div>
+
   <div class="form-actions">
     <button (click)="send()" class="form-btn">
       <fa-icon [icon]="['fas','plus-circle']" size="xs"></fa-icon><span class="action-name">{{ data?.settings?.buttonAction }}</span>

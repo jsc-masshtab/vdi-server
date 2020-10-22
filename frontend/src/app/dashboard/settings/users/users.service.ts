@@ -13,11 +13,23 @@ export class UsersService  {
 
     constructor(private service: Apollo) {}
 
-    public getAllUsers(): QueryRef<any, any> {
+    public getAllUsers(props): QueryRef<any, any> {
        return  this.service.watchQuery({
            query: gql`
-                query users($ordering:String) {
-                    users(ordering: $ordering) {
+                query users(
+                    $limit: Int,
+                    $offset: Int,
+                    $username: String,
+                    $ordering:String,
+                    $is_superuser: Boolean
+                ){
+                    users(
+                        ordering: $ordering
+                        limit: $limit,
+                        username: $username,
+                        offset: $offset,
+                        is_superuser: $is_superuser
+                    ){
                         id,
                         username,
                         email,
@@ -33,7 +45,8 @@ export class UsersService  {
             `,
             variables: {
                 method: 'GET',
-                ordering: this.paramsForGetUsers.nameSort
+                ordering: this.paramsForGetUsers.nameSort,
+                ...props
             }
         });
     }
