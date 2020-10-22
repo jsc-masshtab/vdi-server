@@ -16,11 +16,25 @@
         </button>
     </div>
 
+    <mat-form-field class="filter-field">
+        <mat-label>Поиск по имени</mat-label>
+        <input matInput [formControl]="username"  placeholder="">
+    </mat-form-field>
+
+    <mat-checkbox class="events-checkbox" [color]="'primary'" [formControl]="is_superuser">
+        Суперпользователи
+    </mat-checkbox>
+
+ <!--    <mat-checkbox class="events-checkbox" [color]="'primary'" [formControl]="is_active">
+        Активный
+    </mat-checkbox> -->
+
 </div>
 
 <div class="components-info" #view>
     <div class="component-list" [class.page-wrap]="pageRollup" [class.page-rollup]="pageRollup" [style.height]="pageHeight">
         <vdi-table-component cursor="true" [data]="users" entity="users" [collection]="collection" (sortListNow)="sortList($event)" (clickRowData)="routeTo($event)"></vdi-table-component>
+        <vdi-pagination [count]="count" [limit]="limit" [offset]="offset" (action)="toPage($event)"></vdi-pagination>
     </div>
 
     <div class="component-details" [class.page-height-min]="pageHeight==pageHeightMin" [class.page-height-max]="pageRollup">

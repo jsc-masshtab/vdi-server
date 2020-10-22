@@ -110,7 +110,7 @@ export class PoolAddComponent {
 
   resetData() {
     this.data = {
-      connection_types: ['SPICE', 'RDP', 'NATIVE_RDP'],
+      connection_types: ['SPICE', 'RDP', 'NATIVE_RDP', 'SPICE_DIRECT'],
       controllers: [],
       clusters: [],
       nodes: [],

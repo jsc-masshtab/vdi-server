@@ -16,6 +16,11 @@
         </button>
     </div>
 
+    <mat-form-field class="filter-field">
+        <mat-label>Поиск по названию</mat-label>
+        <input matInput [formControl]="verbose_name" placeholder="">
+    </mat-form-field>
+
 </div>
 
 <div class="components-info" #view>

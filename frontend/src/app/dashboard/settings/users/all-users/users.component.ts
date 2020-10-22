@@ -8,6 +8,7 @@ import { MatDialog } from '@angular/material';
 import { Subscription } from 'rxjs';
 import { Router } from '@angular/router';
 import { DetailsMove } from '../../../common/classes/details-move';
+import { FormControl } from '@angular/forms';
 
 
 @Component({
@@ -19,6 +20,14 @@ import { DetailsMove } from '../../../common/classes/details-move';
 export class UsersComponent extends DetailsMove implements OnInit, OnDestroy {
 
   private getUsersSub: Subscription;
+
+  public limit = 100;
+  public count = 0;
+  public offset = 0;
+
+  username = new FormControl('');
+  is_active = new FormControl(false);
+  is_superuser = new FormControl(false);
 
   public users: [];
   public collection: object[] = [
@@ -76,7 +85,19 @@ export class UsersComponent extends DetailsMove implements OnInit, OnDestroy {
   @ViewChild('view') view: ElementRef;
 
   ngOnInit() {
-    this.getAllUsers();
+    this.refresh();
+
+    this.username.valueChanges.subscribe(() => {
+      this.getAllUsers();
+    });
+
+    this.is_active.valueChanges.subscribe(() => {
+      this.getAllUsers();
+    });
+
+    this.is_superuser.valueChanges.subscribe(() => {
+      this.getAllUsers();
+    });
   }
 
   public addUser() {
@@ -91,9 +112,29 @@ export class UsersComponent extends DetailsMove implements OnInit, OnDestroy {
       this.getUsersSub.unsubscribe();
     }
 
+    const queryset = {
+      offset: this.offset,
+      limit: this.limit,
+      username: this.username.value,
+      //is_active: this.is_active.value,
+      is_superuser: this.is_superuser.value
+    };
+
+    if (this.username.value == '') {
+      delete queryset['username'];
+    }
+
+    /* if (this.is_active.value == false) {
+      delete queryset['is_active'];
+    } */
+
+    if (this.is_superuser.value == false) {
+      delete queryset['is_superuser'];
+    }
+
     this.waitService.setWait(true);
 
-    this.getUsersSub = this.service.getAllUsers().valueChanges.pipe(map(data => data.data.users))
+    this.getUsersSub = this.service.getAllUsers(queryset).valueChanges.pipe(map(data => data.data.users))
       .subscribe((data) => {
         this.users = data;
         this.waitService.setWait(false);
