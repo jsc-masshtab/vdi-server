@@ -32,7 +32,7 @@ class AuthLocalTestCase(VdiHttpTestCase):
         body = '{"username": "test_user_admin","password": "qwe11"}'
         response_dict = yield self.get_response(body=body)
         error_message = response_dict['errors'][0]['message']
-        self.assertIn(_('Invalid credentials'), error_message)
+        self.assertIn(_('Invalid credentials.'), error_message)
 
     @pytest.mark.usefixtures('fixt_db', 'fixt_user_locked')
     @gen_test
@@ -40,7 +40,7 @@ class AuthLocalTestCase(VdiHttpTestCase):
         body = '{"username": "test_user_locked","password": "qwe"}'
         response_dict = yield self.get_response(body=body)
         error_message = response_dict['errors'][0]['message']
-        self.assertIn(_('Invalid credentials'), error_message)
+        self.assertIn(_('Invalid credentials.'), error_message)
 
     @pytest.mark.usefixtures('fixt_db')
     @gen_test
@@ -48,7 +48,7 @@ class AuthLocalTestCase(VdiHttpTestCase):
         body = '{"username": "test_user_admin","password": ""}'
         response_dict = yield self.get_response(body=body)
         error_message = response_dict['errors'][0]['message']
-        self.assertIn(_('Missing password'), error_message)
+        self.assertIn(_('Missing password.'), error_message)
 
     @pytest.mark.usefixtures('fixt_db', 'fixt_user', 'fixt_user_admin')
     @gen_test
@@ -72,7 +72,7 @@ class AuthLocalTestCase(VdiHttpTestCase):
         body = '{"query":"query {users {username, is_superuser, is_active}}"}'
         response_dict = yield self.get_response(body=body, url='/users', headers=headers)
         error_message = response_dict['errors'][0]['message']
-        self.assertIn(_('Invalid permissions'), error_message)
+        self.assertIn(_('Invalid permissions.'), error_message)
 
     @pytest.mark.usefixtures('fixt_db', 'fixt_user')
     @gen_test
@@ -122,12 +122,12 @@ class AuthLdapTestCase(VdiHttpTestCase):
         body = '{"username": "test_user","password": "veil", "ldap": true}'
         response_dict = yield self.get_response(body=body)
         error_message = response_dict['errors'][0]['message']
-        self.assertIn(_('Invalid credentials (ldap)'), error_message)
+        self.assertIn(_('Ошибка авторизации Неверные учетные данные (ldap):'), error_message)
 
     @pytest.mark.usefixtures('fixt_db', 'fixt_auth_dir', 'fixt_group', 'fixt_mapping', 'fixt_group_role')
     @gen_test
     def test_user_mapping(self):
-        # TODO: проверяем назначена ли пользователю группа после входа
+        """Проверяем назначена ли пользователю группа после входа."""
         body = '{"username": "ad120", "password": "Bazalt1!", "ldap": true}'
         response_dict = yield self.get_response(body=body)
         access_token = response_dict['data']['access_token']

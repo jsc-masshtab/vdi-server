@@ -138,7 +138,7 @@ class PoolValidator(MutationValidation):
         template_name = re.match(name_re, value)
         if template_name:
             return value
-        raise ValidationError(_('Pool name must contain only characters, digits, _, -'))
+        raise ValidationError(_('Pool name must contain only characters, digits, _, -.'))
 
     @staticmethod
     async def validate_vm_name_template(obj_dict, value):
@@ -149,7 +149,7 @@ class PoolValidator(MutationValidation):
         template_name = re.match(name_re, value)
         if template_name:
             return value
-        raise ValidationError(_('Template name of VM must contain only characters, digits, -'))
+        raise ValidationError(_('Template name of VM must contain only characters, digits, -.'))
 
     @staticmethod
     async def validate_initial_size(obj_dict, value):
@@ -157,7 +157,7 @@ class PoolValidator(MutationValidation):
             return
         if value < POOL_MIN_SIZE or value > POOL_MAX_SIZE:
             raise ValidationError(
-                _('Initial number of VM must be in {}-{} interval').format(POOL_MIN_SIZE, POOL_MAX_SIZE))
+                _('Initial number of VM must be in {}-{} interval.').format(POOL_MIN_SIZE, POOL_MAX_SIZE))
         return value
 
     @staticmethod
@@ -166,7 +166,7 @@ class PoolValidator(MutationValidation):
             return
 
         if value < POOL_MIN_SIZE or value > POOL_MAX_SIZE:
-            raise ValidationError(_('Number of created VM must be in {}-{} interval').
+            raise ValidationError(_('Number of created VM must be in {}-{} interval.').
                                   format(POOL_MIN_SIZE, POOL_MAX_SIZE))
         return value
 
@@ -187,9 +187,9 @@ class PoolValidator(MutationValidation):
             vm_amount_in_pool = None
 
         if value < initial_size:
-            raise ValidationError(_('Maximal number of created VM can not be less than initial number of VM'))
+            raise ValidationError(_('Maximal number of created VM can not be less than initial number of VM.'))
         if value < POOL_MIN_SIZE or value > POOL_MAX_SIZE:
-            raise ValidationError(_('Maximal number of created VM must be in [{} {}] interval').
+            raise ValidationError(_('Maximal number of created VM must be in [{} {}] interval.').
                                   format(POOL_MIN_SIZE, POOL_MAX_SIZE))
         if vm_amount_in_pool and value < vm_amount_in_pool:
             raise ValidationError(_('Maximal number of created VMs can not be less than current amount of Vms.'))
@@ -206,9 +206,8 @@ class PoolValidator(MutationValidation):
             automated_pool = await AutomatedPool.get(pool_id)
             if automated_pool:
                 total_size = automated_pool.total_size
-        print('!!!total_size ', total_size)
         if value < 1 or value > total_size:
-            raise ValidationError(_('Increase step must be positive and less or equal to total_size').
+            raise ValidationError(_('Increase step must be positive and less or equal to total_size.').
                                   format(total_size))
         return value
 
@@ -546,31 +545,12 @@ class AddVmsToStaticPoolMutation(graphene.Mutation):
     @administrator_required
     async def mutate(self, _info, pool_id, vms, creator):
         pool = await Pool.get(pool_id)
-        # pool_controller = await Controller.get(pool.controller)
-        # pool_data = await Pool.select('controller', 'node_id').where(Pool.id == pool_id).gino.first()
-        # (controller_id, node_id) = pool_data
-        # controller_address = await Controller.select('address').where(Controller.id == controller_id).gino.scalar()
-
-        # TODO: есть сомнения в целесообразности этой проверки, ведь если это
-        #   недопустимая операция - ее отклонит VeiL.
-        # vm checks
-        # vm_http_client = await VmHttpClient.create(controller_address, '')
-        # all_vms_on_node = await vm_http_client.fetch_vms_list(node_id=node_id)
-
-        # all_vm_ids_on_node = [vmachine['id'] for vmachine in all_vms_on_node]
         used_vm_ids = await Vm.get_all_vms_ids()  # get list of vms which are already in pools
 
-        # await system_logger.debug(_('VM ids: {}').format(vm_ids))
-
         for vm_id in [vm.id for vm in vms]:
-            # check if vm exists and it is on the correct node
-            # if str(vm_id) not in all_vm_ids_on_node:
-            #     entity = {'entity_type': EntityType.POOL, 'entity_uuid': None}
-            #     raise SimpleError(_('VM {} is at server different from pool server now').format(vm_id), entity=entity)
-            # check if vm is free (not in any pool)
             if vm_id in used_vm_ids:
                 entity = {'entity_type': EntityType.POOL, 'entity_uuid': None}
-                raise SimpleError(_('VM {} is already in one of pools').format(vm_id), entity=entity)
+                raise SimpleError(_('VM {} is already in one of pools.').format(vm_id), entity=entity)
 
         # remote access
         # TODO: использовать нормальный набор данных с verbose_name и id
@@ -601,7 +581,7 @@ class RemoveVmsFromStaticPoolMutation(graphene.Mutation):
     async def mutate(self, _info, pool_id, vm_ids, creator):
         if not vm_ids:
             entity = {'entity_type': EntityType.POOL, 'entity_uuid': None}
-            raise SimpleError(_("List of VM should not be empty"), entity=entity)
+            raise SimpleError(_("List of VM should not be empty."), entity=entity)
 
         # vms check
         # get list of vms ids which are in pool_id
@@ -611,7 +591,7 @@ class RemoveVmsFromStaticPoolMutation(graphene.Mutation):
         for vm_id in vm_ids:
             if str(vm_id) not in vms_ids_in_pool:
                 entity = {'entity_type': EntityType.POOL, 'entity_uuid': None}
-                raise SimpleError(_('VM doesn\'t belong to specified pool').format(vm_id), entity=entity)
+                raise SimpleError(_('VM doesn\'t belong to specified pool.').format(vm_id), entity=entity)
 
         # remove vms from db
         await Vm.remove_vms(vm_ids, creator)
@@ -698,16 +678,12 @@ class CreateAutomatedPoolMutation(graphene.Mutation, PoolValidator, ControllerFe
                      initial_size, reserve_size, total_size, vm_name_template,
                      create_thin_clones,
                      connection_types, ad_cn_pattern: str = None):
-        """Мутация создания Автоматического(Динамического) пула виртуальных машин.
-
-        TODO: описать механизм работы"""
-
-        # Проверяем наличие записи
+        """Мутация создания Автоматического(Динамического) пула виртуальных машин."""
         controller = await cls.fetch_by_id(controller_id)
         # TODO: дооживить валидатор
         await cls.validate(vm_name_template=vm_name_template,
                            verbose_name=verbose_name)
-        # --- Создание записей в БД
+        # Создание записей в БД
         try:
             automated_pool = await AutomatedPool.soft_create(creator=creator, verbose_name=verbose_name,
                                                              controller_ip=controller.address, cluster_id=cluster_id,
@@ -724,7 +700,6 @@ class CreateAutomatedPoolMutation(graphene.Mutation, PoolValidator, ControllerFe
             desc = str(E)
             error_msg = _('Failed to create automated pool {}.').format(verbose_name)
             entity = {'entity_type': EntityType.POOL, 'entity_uuid': None}
-            await system_logger.debug(desc)
             raise SimpleError(error_msg, description=desc, user=creator, entity=entity)
 
         # send command to start pool init task
@@ -756,7 +731,6 @@ class UpdateAutomatedPoolMutation(graphene.Mutation, PoolValidator):
     @administrator_required
     async def mutate(cls, root, info, creator, **kwargs):
         await cls.validate(**kwargs)
-
         automated_pool = await AutomatedPool.get(kwargs['pool_id'])
         if automated_pool:
             # Special treatment for total_size
@@ -809,7 +783,7 @@ class RemoveVmsFromAutomatedPoolMutation(graphene.Mutation):
     async def mutate(self, _info, pool_id, vm_ids, creator):
         if not vm_ids:
             entity = {'entity_type': EntityType.POOL, 'entity_uuid': None}
-            raise SimpleError(_("List of VM should not be empty"), entity=entity)
+            raise SimpleError(_("List of VM should not be empty."), entity=entity)
 
         # vms check
         # get list of vms ids which are in pool_id
@@ -819,7 +793,7 @@ class RemoveVmsFromAutomatedPoolMutation(graphene.Mutation):
         for vm_id in vm_ids:
             if str(vm_id) not in vms_ids_in_pool:
                 entity = {'entity_type': EntityType.POOL, 'entity_uuid': None}
-                raise SimpleError(_('VM doesn\'t belong to specified pool').format(vm_id), entity=entity)
+                raise SimpleError(_('VM doesn\'t belong to specified pool.').format(vm_id), entity=entity)
 
         # remove vms from db
         await Vm.remove_vms(vm_ids, creator, True)
@@ -868,7 +842,7 @@ class PoolUserDropPermissionsMutation(graphene.Mutation):
             return PoolUserDropPermissionsMutation(ok=False)
 
         async with db.transaction():
-            await pool.remove_users(creator, users)
+            await pool.remove_users(creator=creator, users=users)
             if free_assigned_vms:
                 await pool.free_assigned_vms(users)
 
@@ -969,7 +943,7 @@ class AssignVmToUser(graphene.Mutation):
         # find pool the vm belongs to
         vm = await Vm.get(vm_id)
         if not vm:
-            raise SimpleError(_('There is no VM {}').format(vm_id))
+            raise SimpleError(_('There is no VM {}.').format(vm_id))
 
         pool_id = vm.pool_id
         # TODO: заменить на user_id
@@ -992,7 +966,7 @@ class AssignVmToUser(graphene.Mutation):
             await pool.free_user_vms(user_id)
 
         # Сейчас за VM может быть только 1 пользователь. Освобождаем от других.
-        await vm.remove_users(creator, users_list=None)
+        await vm.remove_users(creator=creator, users_list=None)
         await vm.add_user(user_id, creator)
         return AssignVmToUser(ok=True, vm=vm)
 
@@ -1008,7 +982,7 @@ class FreeVmFromUser(graphene.Mutation):
         vm = await Vm.get(vm_id)
         if vm:
             # await vm.free_vm()
-            await vm.remove_users(creator, users_list=None)
+            await vm.remove_users(creator=creator, users_list=None)
             return FreeVmFromUser(ok=True)
         return FreeVmFromUser(ok=False)
 

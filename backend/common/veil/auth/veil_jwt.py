@@ -81,7 +81,7 @@ def decode_jwt(token, decode_options: dict = JWT_OPTIONS, algorithms: list = [JW
     except jwt.ExpiredSignatureError:
         raise jwt.ExpiredSignatureError()
     except Exception as E:  # noqa
-        raise AssertionError(_("Error with JWT decode"))
+        raise AssertionError(_("Error with JWT decode."))
     return decoded_jwt
 
 

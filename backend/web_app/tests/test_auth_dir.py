@@ -159,26 +159,19 @@ class TestAuthenticationDirectoryQuery:
 
     async def test_auth_dir_get_possible_ad_groups(self, snapshot, fixt_auth_context, fixt_auth_dir_with_pass):  # noqa
         """Проверяем что работает поиск по id и просмотр доступных для назначения групп."""
-        query = """{auth_dir(id: "10913d5d-ba7a-4049-88c5-769267a6cbe5"){id,
-                    assigned_ad_groups{ad_guid,verbose_name,ad_guid}
-                    possible_ad_groups{ad_guid,verbose_name,ad_guid}
+        query = """{auth_dir(id: "10913d5d-ba7a-4049-88c5-769267a6cbe5")
+        {id,
+                    assigned_ad_groups{ad_guid,verbose_name}
+                    possible_ad_groups{ad_guid,verbose_name}
                     status}}"""
-        executed = await execute_scheme(auth_dir_schema, query, context=fixt_auth_context)
-        snapshot.assert_match(executed)
-
-    async def test_auth_dir_get_group_members(self, snapshot, fixt_auth_context, fixt_auth_dir_with_pass):  # noqa
-        """Проверка получения пользователей из Authentication Directory."""
-        query = """{group_members(group_cn: "CN=veil-admins,CN=Users,DC=bazalt,DC=team",
-                                  auth_dir_id: "10913d5d-ba7a-4049-88c5-769267a6cbe5")
-        {last_name,email,first_name,username}}"""
         executed = await execute_scheme(auth_dir_schema, query, context=fixt_auth_context)
         snapshot.assert_match(executed)
 
     async def test_auth_dir_get_possible_ad_groups_no_pass(self, snapshot, fixt_auth_context, fixt_auth_dir):  # noqa
         """При отсутствующем пароле список групп будет пустой."""
         query = """{auth_dir(id:"10913d5d-ba7a-4049-88c5-769267a6cbe4"){id,
-                    assigned_ad_groups{ad_guid,verbose_name,ad_guid},
-                    possible_ad_groups{ad_guid,verbose_name,ad_guid},
+                    assigned_ad_groups{ad_guid,verbose_name},
+                    possible_ad_groups{ad_guid,verbose_name},
                     status}}"""
         executed = await execute_scheme(auth_dir_schema, query, context=fixt_auth_context)
         snapshot.assert_match(executed)
@@ -186,25 +179,9 @@ class TestAuthenticationDirectoryQuery:
     async def test_auth_dir_get_possible_ad_groups_bad_pass(self, snapshot, fixt_auth_context, fixt_auth_dir_with_pass_bad):  # noqa
         """При неправильном пароле список групп будет пустой."""
         query = """{auth_dir(id:"10913d5d-ba7a-4049-88c5-769267a6cbe6"){id,
-                    assigned_ad_groups{ad_guid,verbose_name,ad_guid},
-                    possible_ad_groups{ad_guid,verbose_name,ad_guid},
+                    assigned_ad_groups{ad_guid,verbose_name},
+                    possible_ad_groups{ad_guid,verbose_name},
                     status}}"""
-        executed = await execute_scheme(auth_dir_schema, query, context=fixt_auth_context)
-        snapshot.assert_match(executed)
-
-    async def test_auth_dir_get_group_members_no_pass(self, snapshot, fixt_auth_context, fixt_auth_dir):  # noqa
-        """При отсутствующем пароле список пользователей будет пустой."""
-        query = """{group_members(group_cn: "CN=veil-admins,CN=Users,DC=bazalt,DC=team",
-                                  auth_dir_id: "10913d5d-ba7a-4049-88c5-769267a6cbe4")
-                    {last_name,email,first_name,username}}"""
-        executed = await execute_scheme(auth_dir_schema, query, context=fixt_auth_context)
-        snapshot.assert_match(executed)
-
-    async def test_auth_dir_get_group_members_no_pass(self, snapshot, fixt_auth_context, fixt_auth_dir_with_pass_bad):  # noqa
-        """При неправильном пароле список пользователей будет пустой."""
-        query = """{group_members(group_cn: "CN=veil-admins,CN=Users,DC=bazalt,DC=team",
-                                  auth_dir_id: "10913d5d-ba7a-4049-88c5-769267a6cbe6")
-                    {last_name,email,first_name,username}}"""
         executed = await execute_scheme(auth_dir_schema, query, context=fixt_auth_context)
         snapshot.assert_match(executed)
 
@@ -395,7 +372,7 @@ class TestAuthenticationDirectoryUtils:
                     sync_data:
                         {group_ad_guid: "df4745bd-6a47-47bf-b5c7-43cf7e266067",
                          group_verbose_name: "test_group_2",
-                         group_members: []})
+                         group_ad_cn: ""})
                     {ok}}"""
         executed = await execute_scheme(auth_dir_schema, query, context=fixt_auth_context)
         snapshot.assert_match(executed)
@@ -404,13 +381,13 @@ class TestAuthenticationDirectoryUtils:
         assert group.verbose_name == 'test_group_2'
 
     async def test_auth_dir_sync_group_and_users(self, snapshot, fixt_auth_context, fixt_auth_dir_with_pass):  # noqa
-        """Должна создаться новая группа и пользователь."""
+        """Должна создаться новая группа и пользователи из AD."""
         query = """mutation{syncAuthDirGroupUsers(
                            auth_dir_id: "10913d5d-ba7a-4049-88c5-769267a6cbe5",
                            sync_data:
                                {group_ad_guid: "df4745bd-6a47-47bf-b5c7-43cf7e266068",
                                 group_verbose_name: "veil-admins",
-                                group_members: [{username: "administrator"}]})
+                                group_ad_cn: "CN=veil-admins,CN=Users,DC=bazalt,DC=team"})
                            {ok}}"""
         executed = await execute_scheme(auth_dir_schema, query, context=fixt_auth_context)
         snapshot.assert_match(executed)
@@ -426,5 +403,5 @@ class TestAuthenticationDirectoryUtils:
         assert isinstance(user_groups, list)
         assert group.id == user_groups[0].id
         # Чистим
-        await user.delete()
+        await User.delete.where(User.username != 'admin').gino.status()
         await group.delete()

@@ -92,12 +92,6 @@ class Controller(AbstractSortableStatusModel, VeilModel):
         client = self.controller_client
         return await client.ok
 
-    # async def check_task_status(self, task_id: str):
-    #     """Проверяем выполнилась ли задача на ECP VeiL."""
-    #     client = self.veil_client
-    #     task_client = client.task(task_id)
-    #     return await task_client.finished
-
     async def check_controller(self):
         """Проверяем доступность контроллера и меняем его статус."""
         send_cmd_to_ws_monitor(self.id, WsMonitorCmd.REMOVE_CONTROLLER)

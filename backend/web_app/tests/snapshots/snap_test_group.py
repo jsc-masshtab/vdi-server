@@ -57,22 +57,6 @@ snapshots['TestGroupSchema.test_group_delete 1'] = {
     }
 }
 
-snapshots['TestGroupSchema.test_group_user_add 1'] = {
-    'addGroupUsers': {
-        'group': {
-            'assigned_users': [
-                {
-                    'email': 'admin@admin.admin'
-                }
-            ],
-            'possible_users': [
-            ],
-            'verbose_name': 'test_group_1'
-        },
-        'ok': True
-    }
-}
-
 snapshots['TestGroupSchema.test_group_user_remove 1'] = {
     'removeGroupUsers': {
         'group': {
@@ -131,6 +115,23 @@ snapshots['TestGroupSchema.test_group_role 2'] = {
             'possible_roles': [
                 'SECURITY_ADMINISTRATOR',
                 'OPERATOR'
+            ],
+            'verbose_name': 'test_group_1'
+        },
+        'ok': True
+    }
+}
+
+snapshots['TestGroupSchema.test_group_user_add 1'] = {
+    'addGroupUsers': {
+        'group': {
+            'assigned_users': [
+                {
+                    'email': 'admin@admin.admin',
+                    'username': 'admin'
+                }
+            ],
+            'possible_users': [
             ],
             'verbose_name': 'test_group_1'
         },

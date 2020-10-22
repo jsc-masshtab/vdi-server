@@ -64,8 +64,6 @@ class PoolGetVm(BaseHandler, ABC):
         remote_protocol = remote_protocol.upper()  # ТК присылвет в нижнем регистре для совместимости со
         # старыми версиями vdi сервера
 
-        # В теории - к моменту подключения ТК ВМ уже готова, поэтому мы ее только включаем.
-        # rdp_connection = remote_protocol == 'RDP'
         # Проверяем лимит виртуальных машин
         if PoolModel.thin_client_limit_exceeded():
             response = {'errors': [{'message': _('Thin client limit exceeded.'), 'code': '001'}]}
@@ -86,9 +84,8 @@ class PoolGetVm(BaseHandler, ABC):
             pool_extended = True
         vm = await pool.get_vm(user_id=user.id)
         if not vm:
-            # TODO: добавить третий метод в VM, который делает это
             # Если у пользователя нет VM в пуле, то нужно попытаться назначить ему свободную VM.
-            vm = await pool.get_free_vm()
+            vm = await pool.get_free_vm_v2()
             # Если свободная VM найдена, нужно закрепить ее за пользователем.
             if vm:
                 await vm.add_user(user.id, creator='system')
@@ -203,7 +200,7 @@ class AttachUsb(BaseHandler, ABC):
 
 
 @jwtauth
-class DetachhUsb(BaseHandler, ABC):
+class DetachUsb(BaseHandler, ABC):
     """Убрать usb tcp редирект девайс"""
 
     async def post(self, pool_id):

@@ -146,7 +146,7 @@ class TestGroupSchema:
         try:
             await execute_scheme(group_schema, query, context=fixt_auth_context)
         except ExecError as E:
-            assert 'Укажите Group.id или Group.ad_guid. Не оба сразу.' in str(E)
+            assert 'Укажите Group.id или Group.ad_guid. Не оба.' in str(E)
         else:
             raise AssertionError()
 
@@ -157,9 +157,11 @@ class TestGroupSchema:
                         group {
                           verbose_name
                           assigned_users {
+                            username
                             email
                           }
                           possible_users {
+                            username
                             email
                           }
                         }

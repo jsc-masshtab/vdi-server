@@ -20,6 +20,6 @@ class AuthTestLocale(VdiHttpTestCase):
         response_dict = yield self.get_response(body=body)
         error_message = response_dict['errors'][0]['message']
         if LANGUAGE == 'en':
-            self.assertIn('Missing password', error_message)
+            self.assertIn('Missing password.', error_message)
         elif LANGUAGE == 'ru':
-            self.assertIn('Отсутствует пароль', error_message)
+            self.assertIn('Отсутствует пароль.', error_message)

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from web_app.thin_client_api.handlers import PoolHandler, PoolGetVm, VmAction, ThinClientWsHandler, RedisInfoHandler, \
-    AttachUsb, DetachhUsb
+    AttachUsb, DetachUsb
 
 
 thin_client_api_urls = [
@@ -11,7 +11,7 @@ thin_client_api_urls = [
     (r'/client/pools/(?P<pool_id>[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})/attach-usb/?',
      AttachUsb),
     (r'/client/pools/(?P<pool_id>[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})/detach-usb/?',
-     DetachhUsb),
+     DetachUsb),
 
     (r'/client/pools/(?P<pool_id>[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})/(?P<action>[a-z]+)/?',
      VmAction),

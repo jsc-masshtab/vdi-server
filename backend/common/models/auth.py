@@ -85,23 +85,18 @@ class User(AbstractSortableStatusModel, VeilModel):
     async def roles(self):
         if self.is_superuser:
             all_roles_set = set(Role)  # noqa
-            # await system_logger.debug(_('User: {} full roles: {}').format(self.username, all_roles_set))
             return all_roles_set
 
         user_roles = await UserRole.query.where(UserRole.user_id == self.id).gino.all()
         all_roles_list = [role_type.role for role_type in user_roles]
 
-        # await system_logger.debug(_('User {} roles: {}').format(self.username, all_roles_list))
-
         user_groups = await self.assigned_groups
         for group in user_groups:
             group_roles = await group.roles
-            # await system_logger.debug(_('Group {} roles: {}').format(group.verbose_name, group_roles))
             all_roles_list += [role_type.role for role_type in group_roles]
 
         roles_set = set(all_roles_list)
         # Сейчас роли будет в случайноп порядке.
-        # await system_logger.debug(_('User: {} full roles: {}').format(self.username, roles_set))
         return roles_set
 
     @property
@@ -135,36 +130,37 @@ class User(AbstractSortableStatusModel, VeilModel):
 
     async def add_role(self, role, creator):
         try:
-            await system_logger.info(_('Role {} is added to user {}').format(role, self.username), user=creator,
+            await system_logger.info(_('Role {} is added to user {}.').format(role, self.username), user=creator,
                                      entity=self.entity)
             add = await UserRole.create(user_id=self.id, role=role)
             user = await self.get(self.id)
             assigned_roles = await user.roles
-            await system_logger.debug(_('User {} roles: {}').format(user.username, assigned_roles))
+            await system_logger.debug(_('User {} roles: {}.').format(user.username, assigned_roles))
             return add
         except UniqueViolationError:
-            raise SimpleError(_('Role {} is assigned to user {}').format(role, self.id), user=creator)
+            raise SimpleError(_('Role {} is assigned to user {}.').format(role, self.id), user=creator)
 
     async def remove_roles(self, roles_list=None, creator='system'):
         if not roles_list:
             return await UserRole.delete.where(UserRole.user_id == self.id).gino.status()
         if roles_list and isinstance(roles_list, list):
             role_del = ' '.join(roles_list)
-            await system_logger.info(_('Roles: {} was deleted to user {}').format(role_del, self.username), user=creator,
+            await system_logger.info(_('Roles: {} was deleted to user {}.').format(role_del, self.username),
+                                     user=creator,
                                      entity=self.entity)
             remove = await UserRole.delete.where(
                 (UserRole.role.in_(roles_list)) & (UserRole.user_id == self.id)).gino.status()
             user = await self.get(self.id)
             assigned_roles = await user.roles
-            await system_logger.debug(_('User {} roles: {}').format(user.username, assigned_roles))
+            await system_logger.debug(_('User {} roles: {}.').format(user.username, assigned_roles))
             return remove
 
-    async def remove_groups(self):
+    async def remove_groups(self, creator='system'):
         groups = await self.assigned_groups
         users_list = [self.id]
         for group in groups:
-            await group.remove_users(users_list)
-            await system_logger.info(_('Group {} is removed for user {}').format(group, self.username),
+            await group.remove_users(creator=creator, user_id_list=users_list)
+            await system_logger.info(_('Group {} is removed for user {}.').format(group, self.username),
                                      entity=self.entity)
 
     async def activate(self, creator):
@@ -245,18 +241,18 @@ class User(AbstractSortableStatusModel, VeilModel):
 
         creator = update_dict.pop('creator')
         desc = str(update_dict)
-        await system_logger.info(_('Values of user {} is changed').format(update_type.username),
+        await system_logger.info(_('Values of user {} is changed.').format(update_type.username),
                                  description=desc,
                                  user=creator,
                                  entity=update_type.entity
                                  )
 
         if 'is_superuser' in update_dict and update_dict.get('is_superuser'):
-            assigned_roles = _('Roles: {}'.format(str(await update_type.roles)))
+            assigned_roles = _('Roles: {}.'.format(str(await update_type.roles)))
             info_message = _('User {username} has become a superuser.').format(username=update_type.username)
             await system_logger.info(info_message, entity=update_type.entity, description=assigned_roles, user=creator)
         elif update_dict.get('is_superuser') is False:
-            assigned_roles = _('Roles: {}'.format(str(await update_type.roles)))
+            assigned_roles = _('Roles: {}.'.format(str(await update_type.roles)))
             info_message = _('User {username} is no longer a superuser.').format(username=update_type.username)
             await system_logger.info(info_message, entity=update_type.entity, description=assigned_roles, user=creator)
 
@@ -381,12 +377,14 @@ class Group(AbstractSortableStatusModel, VeilModel):
         return await self.assigned_users_query.limit(limit).offset(offset).gino.load(User).all()
 
     @staticmethod
-    async def soft_create(verbose_name, creator, description=None, id=None, ad_guid=None):
+    async def soft_create(verbose_name, creator, description=None, id=None, ad_guid=None, ad_cn=None):
         group_kwargs = {'verbose_name': verbose_name, 'description': description}
         if ad_guid:
             group_kwargs['ad_guid'] = str(ad_guid)
         if id:
             group_kwargs['id'] = id
+        if ad_cn:
+            group_kwargs['ad_cn'] = ad_cn
         group_obj = await Group.create(**group_kwargs)
         info_message = _('Group {} is created.').format(verbose_name)
         await system_logger.info(info_message, user=creator, entity=group_obj.entity)
@@ -403,7 +401,7 @@ class Group(AbstractSortableStatusModel, VeilModel):
         if group_kwargs:
             await self.update(**group_kwargs).apply()
             desc = str(group_kwargs)
-            await system_logger.info(_('Values of group {} is updated').format(self.verbose_name), description=desc,
+            await system_logger.info(_('Values of group {} is updated.').format(self.verbose_name), description=desc,
                                      user=creator, entity=self.entity)
 
         return self
@@ -421,18 +419,17 @@ class Group(AbstractSortableStatusModel, VeilModel):
             await system_logger.info(info_message, entity=self.entity, user=creator)
             return user_group
         except UniqueViolationError:
-            await system_logger.debug(_('User {} is already in group {}').format(user_id, self.id))
-            raise SimpleError(_('User {} is already in group {}').format(user_id, self.id))
+            raise SimpleError(_('User {} is already in group {}.').format(user_id, self.id))
 
     async def add_users(self, user_id_list, creator):
         async with db.transaction():
             for user in user_id_list:
                 await self.add_user(user, creator)
 
-    async def remove_users(self, user_id_list, creator):
+    async def remove_users(self, creator: str, user_id_list: list):
         for id in user_id_list:
             name = await User.get(id)
-            await system_logger.info(_('Removing user {} from group {}').format(name.username, self.verbose_name),
+            await system_logger.info(_('Removing user {} from group {}.').format(name.username, self.verbose_name),
                                      user=creator, entity=self.entity)
         return await UserGroup.delete.where(
             (UserGroup.user_id.in_(user_id_list)) & (UserGroup.group_id == self.id)).gino.status()
@@ -444,7 +441,7 @@ class Group(AbstractSortableStatusModel, VeilModel):
             await system_logger.info(info_message, entity=self.entity, user=creator)
 
         except UniqueViolationError:
-            raise SimpleError(_('Group {} has already role {}').format(self.id, role), user=creator)
+            raise SimpleError(_('Group {} has already role {}.').format(self.id, role), user=creator)
         return group_role
 
     async def add_roles(self, roles_list, creator):
@@ -454,7 +451,7 @@ class Group(AbstractSortableStatusModel, VeilModel):
 
     async def remove_roles(self, roles_list, creator):
         role_del = ' '.join(roles_list)
-        await system_logger.info(_('Roles: {} was deleted to group {}').format(role_del, self.verbose_name),
+        await system_logger.info(_('Roles: {} was deleted to group {}.').format(role_del, self.verbose_name),
                                  user=creator, entity=self.entity)
         return await GroupRole.delete.where(
             (GroupRole.role.in_(roles_list)) & (GroupRole.group_id == self.id)).gino.status()

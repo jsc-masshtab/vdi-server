@@ -22,8 +22,10 @@ from common.log.journal import system_logger
 
 _ = lang_init()
 
+# TODO: в событиях журнала задействовать отдельный entity для монитора ресурсов
 
-class ResourcesMonitor():
+
+class ResourcesMonitor:
     """
     monitoring of controller events
     """
@@ -96,7 +98,7 @@ class ResourcesMonitor():
         """
         while self._running_flag:
             is_connected = await self._connect()
-            await system_logger.debug(_('{} is connected: {}').format(__class__.__name__, is_connected))  # noqa
+            await system_logger.debug(_('{} is connected: {}.').format(__class__.__name__, is_connected))  # noqa
             # reconnect if not connected
             if not is_connected:
                 await asyncio.sleep(self.RECONNECT_TIMEOUT)
@@ -129,7 +131,7 @@ class ResourcesMonitor():
         try:
             token = controller.token.split()[1]
         except IndexError:
-            await system_logger.debug('{} Cant get token for controller').format(__class__.__name__)
+            await system_logger.debug('{} Cant get token for controller.').format(__class__.__name__)
             return False
 
         # create ws connection
@@ -138,10 +140,10 @@ class ResourcesMonitor():
             # await system_logger.debug('ws connection url is {}'.format(connect_url))
             self._ws_connection = await websocket_connect(connect_url)
         except (ConnectionRefusedError, WebSocketError):
-            msg = _('{cls}: can not connect to {ip}').format(
-                cls=__class__.__name__, # noqa
-                ip=controller.address)
-            await system_logger.error(msg)
+
+            msg = _('Resource monitor error.')
+            description = _('Can`t connect to {}.').format(controller.address)
+            await system_logger.error(message=msg, description=description)
             return False
 
         # subscribe to events on controller
@@ -156,13 +158,12 @@ class ResourcesMonitor():
         return True
 
     async def _on_message_received(self, message):
-        # print('_on_message_received: message ' + message)
         # await system_logger.debug('_on_message_received: message ' + message)
         REDIS_CLIENT.publish(WS_MONITOR_CHANNEL_OUT, message)
 
     async def _close_connection(self):
         if self._ws_connection:
-            await system_logger.debug(_('{} Closing ws connection {}').format(__class__.__name__, self._controller_id)) # noqa
+            await system_logger.debug(_('Closing ws connection {}.').format(self._controller_id))
             try:
                 self._ws_connection.close()
             except Exception as E:

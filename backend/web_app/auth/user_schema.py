@@ -33,14 +33,14 @@ class UserValidator(MutationValidation):
             obj_dict['username'] = value
             return value
         raise AssertError(
-            _('username must contain >= 3 chars (letters, digits, _, -, +) and can\'t contain any spaces'))
+            _('username must contain >= 3 chars (letters, digits, _, -, +) and can\'t contain any spaces.'))
 
     @staticmethod
     async def validate_email(obj_dict, value):
         # Проверка на уникальность
         email_is_free = await User.check_email(value)
         if not email_is_free:
-            raise ValidationError(_('Email {} is already busy').format(value))
+            raise ValidationError(_('Email {} is already busy.').format(value))
 
         # Проверка на маску
         email_re = re.compile('^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$')  # noqa

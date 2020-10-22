@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import asyncio
+from textwrap import wrap
 import uuid
 from enum import Enum
 from sqlalchemy import and_, union_all, case, literal_column, desc, text, Enum as AlchemyEnum
@@ -275,25 +276,37 @@ class Pool(VeilModel):
 
         return await db.select([db.func.count()]).where(VmModel.pool_id == self.id).gino.scalar()
 
+    def get_user_vms_query(self, user_id):
+        """Формирует запрос всех ВМ пользователя с учетом его прав.
+
+        Сочитание pool id и username уникальное, т.к. пользователь не может иметь больше одной машины в пуле.
+        """
+        # TODO: очень странный блок. По идее self.assigned_users не нужен - протестировать
+        # Deprecated 21.10.2020
+        # assigned_users = await self.assigned_users
+        # if user_id not in [user[0] for user in assigned_users]:
+        #     return
+        # Список всех ВМ пользователя
+        entity_query = EntityModel.select('entity_uuid').where(
+            (EntityModel.entity_type == EntityType.VM) & (
+                EntityModel.id.in_(
+                    EntityRoleOwnerModel.select('entity_id').where(EntityRoleOwnerModel.user_id == user_id))))
+        vm_query = VmModel.query.where((VmModel.id.in_(entity_query)) & (VmModel.pool_id == self.id))
+        return vm_query
+
     async def get_vm(self, user_id):
         """Возвращает ВМ пользователя с учетом его прав.
 
         Сочитание pool id и username уникальное, т.к. пользователь не может иметь больше одной машины в пуле.
         """
-        # from common.models import VmModel
-        assigned_users = await self.assigned_users
-        if user_id not in [user[0] for user in assigned_users]:
-            return
-        entity_query = EntityModel.select('entity_uuid').where(
-            (EntityModel.entity_type == EntityType.VM) & (
-                EntityModel.id.in_(EntityRoleOwnerModel.select('entity_id').where(EntityRoleOwnerModel.user_id == user_id))))
-        vm_query = VmModel.query.where((VmModel.id.in_(entity_query)) & (VmModel.pool_id == self.id))
-        return await vm_query.gino.first()
+        await system_logger.debug('Возвращаем ВМ пользователя')
+        return await self.get_user_vms_query(user_id).gino.first()
 
     @property
     async def roles(self):
         """Уникальные роли назначенные пулу (без учета групп и пользователей)."""
-        query = EntityModel.query.where((EntityModel.entity_type == EntityType.POOL) & (EntityModel.entity_uuid == self.id)).alias()
+        query = EntityModel.query.where(
+            (EntityModel.entity_type == EntityType.POOL) & (EntityModel.entity_uuid == self.id)).alias()
         filtered_query = EntityRoleOwnerModel.join(query).select().alias()
         result_query = db.select([text('anon_1.role')]).select_from(filtered_query).group_by('role')
         return await result_query.gino.all()
@@ -383,17 +396,17 @@ class Pool(VeilModel):
                 ero = await EntityRoleOwnerModel.create(entity_id=entity.id, user_id=user_id)
                 user = await UserModel.get(user_id)
                 await system_logger.info(
-                    _('User {} has been included to pool {}').format(user.username, self.verbose_name),
+                    _('User {} has been included to pool {}.').format(user.username, self.verbose_name),
                     user=creator,
                     entity=self.entity)
         except UniqueViolationError:
             raise SimpleError(_('{} already has permission.').format(type(self).__name__), user=creator, entity=self.entity)
         return ero
 
-    async def remove_users(self, creator, users_list: list):
+    async def remove_users(self, creator: str, users_list: list):
         for user_id in users_list:
             user = await UserModel.get(user_id)
-            await system_logger.info(_('Removing user {} from pool {}').format(user.username, self.verbose_name),
+            await system_logger.info(_('Removing user {} from pool {}.').format(user.username, self.verbose_name),
                                      user=creator,
                                      entity=self.entity)
         entity = EntityModel.select('id').where((EntityModel.entity_type == self.entity_type) & (EntityModel.entity_uuid == self.id))
@@ -410,7 +423,7 @@ class Pool(VeilModel):
                 ero = await EntityRoleOwnerModel.create(entity_id=entity.id, group_id=group_id)
                 group = await GroupModel.get(group_id)
                 await system_logger.info(
-                    _('Group {} has been included to pool {}').format(group.verbose_name, self.verbose_name),
+                    _('Group {} has been included to pool {}.').format(group.verbose_name, self.verbose_name),
                     user=creator,
                     entity=self.entity)
         except UniqueViolationError:
@@ -425,7 +438,7 @@ class Pool(VeilModel):
     async def remove_groups(self, creator, groups_list: list):
         for group_id in groups_list:
             group = await GroupModel.get(group_id)
-            await system_logger.info(_('Removing group {} from pool {}').format(group.verbose_name, self.verbose_name),
+            await system_logger.info(_('Removing group {} from pool {}.').format(group.verbose_name, self.verbose_name),
                                      user=creator,
                                      entity=self.entity
                                      )
@@ -450,7 +463,7 @@ class Pool(VeilModel):
 
     async def remove_roles(self, creator, roles_list: list):
         role_del = ' '.join(roles_list)
-        await system_logger.info(_('Roles: {} was deleted to pool {}').format(role_del, self.verbose_name),
+        await system_logger.info(_('Roles: {} was deleted to pool {}.').format(role_del, self.verbose_name),
                                  user=creator,
                                  entity=self.entity)
         entity = EntityModel.select('id').where(
@@ -495,7 +508,7 @@ class Pool(VeilModel):
             automated_pool = await AutomatedPool.get(self.id)
 
             if automated_pool:
-                await system_logger.debug(_('Delete VMs for AutomatedPool {}').format(self.verbose_name))
+                await system_logger.debug(_('Delete VMs for AutomatedPool {}.').format(self.verbose_name))
                 vm_ids = await VmModel.get_vms_ids_in_pool(self.id)
                 await VmModel.remove_vms(vm_ids, creator, True)
 
@@ -533,24 +546,54 @@ class Pool(VeilModel):
             return await pool.activate(pool.id)
         return False
 
-    # @classmethod
-    # async def disable(cls, pool_id):
-    #     """Отличается от deactivate тем, что проверяет предыдущий статус."""
-    #     pool = await Pool.get(pool_id)
-    #     # Т.к. сейчас нет возможности остановить создание пула - не трогаем не активные
-    #     if pool.status == Status.ACTIVE:
-    #         return await pool.deactivate(pool.id)
-    #     return False
+    # Deprecated 21.10.2020
+    # async def get_free_vm(self):
+    #     """Логика такая, что если сущность отсутствует в таблице разрешений - значит никто ей не владеет.
+    #        Требует расширения после расширения модели владения VM"""
+    #     entity_query = EntityModel.select('entity_uuid').where(
+    #         (EntityModel.entity_type == EntityType.VM) & (EntityModel.id.in_(EntityRoleOwnerModel.select('entity_id'))))
+    #     vm_query = VmModel.query.where(
+    #         (VmModel.pool_id == self.id) & (VmModel.status == Status.ACTIVE) & (VmModel.id.notin_(entity_query)) & (  # noqa
+    #                     VmModel.assigned_to_user == False))  # noqa
+    #     return await vm_query.gino.first()
 
-    async def get_free_vm(self):
-        """Логика такая, что если сущность отсутствует в таблице разрешений - значит никто ей не владеет.
-           Требует расширения после расширения модели владения VM"""
+    async def get_free_vm_v2(self):
+        """Возвращает случайную свободную ВМ.
+        Свободная == не занятая за кем-то конкретном.
+        Приоритетной будет та, что включена."""
+        # Формируем список ВМ
         entity_query = EntityModel.select('entity_uuid').where(
             (EntityModel.entity_type == EntityType.VM) & (EntityModel.id.in_(EntityRoleOwnerModel.select('entity_id'))))
-        vm_query = VmModel.query.where(
-            (VmModel.pool_id == self.id) & (VmModel.status == Status.ACTIVE) & (VmModel.id.notin_(entity_query)) & (  # noqa
+        vm_query = VmModel.select('id').where(
+            (VmModel.pool_id == self.id) & (VmModel.status == Status.ACTIVE) & (VmModel.id.notin_(entity_query)) & (
                         VmModel.assigned_to_user == False))  # noqa
-        return await vm_query.gino.first()
+
+        vm_ids_data = await vm_query.gino.all()
+        if not vm_ids_data:
+            return
+        # Получаем набор уникальных ids ВМ
+        vm_ids = set(str(vm_id) for (vm_id,) in vm_ids_data)
+        # Исключительно для удобства дебага
+        vm_id = None
+        # Запрашиваем на ECP VeiL включенные ВМ из списка
+        ids_str = ','.join(vm_ids)
+        pool_controller = await self.controller_obj
+        # Полученный список может оказаться больше, чем кол-во параметров принимаемых VeiL, поэтому делим его на блоки
+        # Т.к. список формируется выше, мы предполагаем, что 157 id и запятая уложится в 5809 символов
+        max_ids_length = 5809
+        ids_str_list = wrap(ids_str, width=max_ids_length)
+        # теперь получаем данные для каждого блока id
+        for ids_str_section in ids_str_list:
+            domains_list_response = await pool_controller.veil_client.domain().list(fields=['id'],
+                                                                                    params={'power_state': 'ON',
+                                                                                            'ids': ids_str_section})
+            if domains_list_response.success and domains_list_response.paginator_results:
+                # Берем первый идентиифкатор
+                vm_id = domains_list_response.paginator_results[0].get('id')
+                break
+        if not vm_id:
+            vm_id = vm_ids_data[0][0]
+        return await VmModel.get(vm_id)
 
     async def free_user_vms(self, user_id):
         """Т.к. на тонком клиенте нет выбора VM - будут сложности если у пользователя несколько VM в рамках 1 пула."""
@@ -592,7 +635,7 @@ class StaticPool(db.Model):
                           datapool_id: str, connection_types: list):
         """Nested transactions are atomic."""
         async with db.transaction() as tx:  # noqa
-            await system_logger.debug(_('StaticPool: Create Pool'))
+            await system_logger.debug(_('StaticPool: Create Pool.'))
             pl = await Pool.create(verbose_name=verbose_name,
                                    controller_ip=controller_address,
                                    cluster_id=cluster_id,
@@ -600,9 +643,9 @@ class StaticPool(db.Model):
                                    datapool_id=datapool_id,
                                    connection_types=connection_types)
 
-            await system_logger.debug(_('StaticPool: Create StaticPool'))
+            await system_logger.debug(_('StaticPool: Create StaticPool.'))
             pool = await super().create(id=pl.id)
-            await system_logger.debug(_('StaticPool: Create VMs'))
+            await system_logger.debug(_('StaticPool: Create VMs.'))
             # TODO: эксперементальное обновление
             for vm_type in veil_vm_data:
                 await VmModel.create(id=vm_type.id,
@@ -762,7 +805,7 @@ class AutomatedPool(db.Model):
                 pool_kwargs['connection_types'] = connection_types
 
             if pool_kwargs:
-                await system_logger.debug(_('Update Pool values for AutomatedPool {}').format(await self.verbose_name))
+                await system_logger.debug(_('Update Pool values for AutomatedPool {}.').format(await self.verbose_name))
                 pool = await Pool.get(self.id)
                 await pool.update(**pool_kwargs).apply()
 
@@ -820,7 +863,11 @@ class AutomatedPool(db.Model):
                 while not task_completed:
                     await asyncio.sleep(5)
                     task_completed = await task_client.finished
-                # TODO: ошибка выполнения таски?
+                # Если задача выполнена с ошибкой - прерываем выполнение
+                task_success = await task_client.success
+                if not task_success:
+                    raise VmCreationError(
+                        _('VM creation task {} finished with error.').format(task_client.api_object_id))
             except asyncio.CancelledError:
                 # Если получили CancelledError в ходе ожидания создания вм,
                 # то отменяем на контроллере таску создания вм. (CancelledError бросится например при мягком завршении
@@ -891,7 +938,7 @@ class AutomatedPool(db.Model):
             await system_logger.info(msg, entity=self.entity)
         else:
             msg = _('Adding VM to the pool {} finished with errors.').format(verbose_name)
-            description = _('Required: {}, created: {}').format(self.initial_size, num_of_vms_in_pool)
+            description = _('Required: {}, created: {}.').format(self.initial_size, num_of_vms_in_pool)
             await system_logger.error(message=msg, entity=self.entity, description=description)
             #  исключение не лишнее, без него таска завершится с FINISHED а не FAILED Перехватится в InitPoolTask
             raise PoolCreationError(msg)  # Пробросить исключение, если споткнулись на создании машин

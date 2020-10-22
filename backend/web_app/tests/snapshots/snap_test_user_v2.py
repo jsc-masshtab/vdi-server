@@ -7,19 +7,6 @@ from snapshottest import Snapshot
 
 snapshots = Snapshot()
 
-snapshots['TestUserSchema.test_users_list 1'] = {
-    'users': [
-        {
-            'email': 'admin@admin.admin',
-            'first_name': None,
-            'is_active': True,
-            'is_superuser': True,
-            'last_name': None,
-            'username': 'admin'
-        }
-    ]
-}
-
 snapshots['TestUserSchema.test_user_create 1'] = {
     'createUser': {
         'ok': True,
@@ -115,4 +102,14 @@ snapshots['TestUserSchema.test_user_role 2'] = {
             'username': 'test_user'
         }
     }
+}
+
+snapshots['TestUserSchema.test_users_list 1'] = {
+    'users': [
+        {
+            'is_active': True,
+            'is_superuser': True,
+            'username': 'admin'
+        }
+    ]
 }

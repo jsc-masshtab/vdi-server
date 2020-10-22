@@ -32,20 +32,17 @@ class VdiFrontWsHandler(websocket.WebSocketHandler):  # noqa
         self._send_messages_task = None
         # await system_logger.debug(_('init VdiFrontWsHandler'))
 
-    def __del__(self):
-        system_logger._debug(_('destructor VdiFrontWsHandler'))
-
     # todo: security problems. implement proper origin checking
     def check_origin(self, origin):
         return True
 
     async def open(self):
-        await system_logger.debug(_('WebSocket opened'))
+        await system_logger.debug(_('WebSocket opened.'))
         loop = asyncio.get_event_loop()
         self._send_messages_task = loop.create_task(self._send_messages_co())
 
     async def on_message(self, message):
-        await system_logger.debug(_('Message: {}').format(message))
+        await system_logger.debug(_('Message: {}.').format(message))
         response = {'msg_type': 'control', 'error': False}
         # determine if message contains subscription command ('delete /domains/' for example)
         try:
@@ -58,7 +55,9 @@ class VdiFrontWsHandler(websocket.WebSocketHandler):  # noqa
             return
         # check if allowed
         if subscription_source not in VDI_FRONT_ALLOWED_SUBSCRIPTIONS_LIST:
-            await system_logger.error(_('Unknown subscription source'))
+            msg = _('WS listener error.')
+            description = _('Unknown subscription source.')
+            await system_logger.error(message=msg, description=description)
             response['error'] = True
             await self.write_msg(response)
             return
@@ -69,11 +68,11 @@ class VdiFrontWsHandler(websocket.WebSocketHandler):  # noqa
             response['error'] = False
         # if 'add' cmd and subscribed then do nothing
         elif subscription_cmd == SubscriptionCmd.add and subscription_source in self._subscriptions:
-            await system_logger.debug(_('already subscribed'))
+            await system_logger.debug(_('Already subscribed.'))
             response['error'] = True
         # if 'delete' cmd and not subscribed  then do nothing
         elif subscription_cmd == SubscriptionCmd.delete and subscription_source not in self._subscriptions:
-            await system_logger.debug(_('not subscribed'))
+            await system_logger.debug(_('Not subscribed.'))
             response['error'] = True
         # if 'delete' cmd and subscribed then unsubscribe
         elif subscription_cmd == SubscriptionCmd.delete and subscription_source in self._subscriptions:
@@ -84,7 +83,6 @@ class VdiFrontWsHandler(websocket.WebSocketHandler):  # noqa
         await self.write_msg(response)
 
     def on_close(self):
-        system_logger._debug(_('WebSocket closed'))
         try:
             self._send_messages_task.cancel()
         except asyncio.CancelledError:
@@ -119,7 +117,7 @@ class VdiFrontWsHandler(websocket.WebSocketHandler):  # noqa
         try:
             await self.write_message(msg)
         except tornado.websocket.WebSocketError:
-            await system_logger.debug(_('Write error'))
+            await system_logger.debug(_('Write error.'))
 
     # unused abstract method implementation
     def data_received(self, chunk: bytes) -> Optional[Awaitable[None]]:

@@ -160,7 +160,7 @@ async def a_redis_wait_for_message(redis_channel, predicate, timeout):
         raise
     except Exception as ex:  # noqa
         from common.log.journal import system_logger
-        await system_logger.error(message=_('a_redis_wait_for_message Exception'), description=str(ex))
+        await system_logger.error(message=_('Redis waiting exception.'), description=str(ex))
 
     return False
 
@@ -211,7 +211,7 @@ async def a_redis_wait_for_task_completion(task_id):
         raise
     except Exception as ex:  # noqa
         from common.log.journal import system_logger
-        await system_logger.error(message=_('a_redis_wait_for_task_completion Exception'), description=str(ex))
+        await system_logger.error(message=_('Redis task waiting exception.'), description=str(ex))
 
 
 async def wait_for_task_result(task_id, wait_timeout):

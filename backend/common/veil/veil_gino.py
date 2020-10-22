@@ -75,7 +75,7 @@ class AbstractSortableStatusModel:
         field = cls._get_table_field(field_name)
         if field is None:
             # TODO: switch SimpleError to FieldError
-            raise SimpleError(_('Incorrect sort parameter {}').format(field_name))
+            raise SimpleError(_('Incorrect sort parameter {}.').format(field_name))
         return field
 
     @classmethod
@@ -85,7 +85,7 @@ class AbstractSortableStatusModel:
         field = cls._get_table_field(field_name)
         if field is None:
             # TODO: switch SimpleError to FieldError
-            raise SimpleError(_('Incorrect request parameter {}').format(field_name))
+            raise SimpleError(_('Incorrect request parameter {}.').format(field_name))
         return field
 
     @classmethod
@@ -196,7 +196,7 @@ class VeilModel(db.Model):
         try:
             await self.delete()
         except DataError as db_error:
-            await system_logger.debug(_('Soft_delete exception: {}').format(db_error))
+            await system_logger.debug(_('Soft_delete exception: {}.').format(db_error))
             return False
         else:
             if self.entity:

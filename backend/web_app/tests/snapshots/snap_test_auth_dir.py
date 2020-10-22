@@ -54,37 +54,6 @@ snapshots['TestAuthenticationDirectoryQuery.test_auth_dir_get_by_id 1'] = {
     }
 }
 
-snapshots['TestAuthenticationDirectoryQuery.test_auth_dir_get_possible_ad_groups 1'] = {
-    'auth_dir': {
-        'assigned_ad_groups': [
-        ],
-        'id': '10913d5d-ba7a-4049-88c5-769267a6cbe5',
-        'possible_ad_groups': [
-            {
-                'ad_guid': '4f49ec7e-88a3-4576-bb30-86fea00f412b',
-                'verbose_name': 'DnsUpdateProxy'
-            },
-            {
-                'ad_guid': '066e3e56-f12e-4c7e-a2a1-b1a81351e9f4',
-                'verbose_name': 'HorizonViewAdmins'
-            },
-            {
-                'ad_guid': 'df4745bd-6a47-47bf-b5c7-43cf7e266068',
-                'verbose_name': 'veil-admins'
-            },
-            {
-                'ad_guid': '4661fa0b-fb28-48bb-84fe-9b3193a6b571',
-                'verbose_name': 'veil-ad-users'
-            },
-            {
-                'ad_guid': 'e006a986-17e6-4817-b2cc-7e70bcf01222',
-                'verbose_name': 'LINUX'
-            }
-        ],
-        'status': 'ACTIVE'
-    }
-}
-
 snapshots['TestAuthenticationDirectoryQuery.test_auth_dir_get_possible_ad_groups_no_pass 1'] = {
     'auth_dir': {
         'assigned_ad_groups': [
@@ -329,4 +298,39 @@ snapshots['TestAuthenticationDirectoryQuery.test_auth_dir_get_group_members 1'] 
             'username': 'a.devyatkin'
         }
     ]
+}
+
+snapshots['TestAuthenticationDirectoryQuery.test_auth_dir_get_possible_ad_groups 1'] = {
+    'auth_dir': {
+        'assigned_ad_groups': [
+        ],
+        'id': '10913d5d-ba7a-4049-88c5-769267a6cbe5',
+        'possible_ad_groups': [
+            {
+                'ad_guid': '4f49ec7e-88a3-4576-bb30-86fea00f412b',
+                'verbose_name': 'DnsUpdateProxy'
+            },
+            {
+                'ad_guid': '066e3e56-f12e-4c7e-a2a1-b1a81351e9f4',
+                'verbose_name': 'HorizonViewAdmins'
+            },
+            {
+                'ad_guid': 'df4745bd-6a47-47bf-b5c7-43cf7e266068',
+                'verbose_name': 'veil-admins'
+            },
+            {
+                'ad_guid': '4661fa0b-fb28-48bb-84fe-9b3193a6b571',
+                'verbose_name': 'veil-ad-users'
+            },
+            {
+                'ad_guid': 'e006a986-17e6-4817-b2cc-7e70bcf01222',
+                'verbose_name': 'LINUX'
+            },
+            {
+                'ad_guid': 'cff4b40c-cc7f-4854-b3d9-d87dabd75411',
+                'verbose_name': 'vdi-autopool-test'
+            }
+        ],
+        'status': 'ACTIVE'
+    }
 }
