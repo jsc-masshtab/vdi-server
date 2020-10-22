@@ -1,15 +1,13 @@
 # -*- coding: utf-8 -*-
 import os
 
-from configargparse import Namespace
-from typing import Union
 from alembic.config import Config
 from types import SimpleNamespace
 
 path = os.path.dirname(__file__)
 
 
-def make_alembic_config(cmd_opts: Union[Namespace, SimpleNamespace],
+def make_alembic_config(cmd_opts: SimpleNamespace,
                         base_path: str = path) -> Config:
     """
     Создает объект конфигурации alembic на основе аргументов командной строки
