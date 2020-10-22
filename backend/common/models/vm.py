@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 import uuid
 import asyncio
+
+from sqlalchemy import desc
 from enum import IntEnum
 
 from sqlalchemy.dialects.postgresql import UUID
@@ -17,6 +19,7 @@ from common.log.journal import system_logger
 
 from common.models.auth import Entity as EntityModel, EntityRoleOwner as EntityRoleOwnerModel, User as UserModel
 from common.models.authentication_directory import AuthenticationDirectory
+from common.models.event import Event, EventReadByUser
 
 _ = lang_init()
 
@@ -273,6 +276,41 @@ class Vm(VeilModel):
     async def enable_remote_accesses(controller_address, vm_ids):
         # Функционал внутри prepare
         raise DeprecationWarning()
+
+    @staticmethod
+    async def event(event_id):
+        query = Event.outerjoin(EventReadByUser).outerjoin(UserModel).outerjoin(EntityModel).select().where(
+            Event.id == event_id)
+
+        event = await query.gino.load(
+            Event.distinct(Event.id).load(add_read_by=UserModel.distinct(UserModel.id), add_entity=EntityModel)).first()
+
+        if not event:
+            raise SimpleError(_('No such event.'))
+
+        return event
+
+    async def events(self, limit, offset):
+        entity_query = EntityModel.select('id').where(
+            (EntityModel.entity_type == EntityType.VM) & (EntityModel.entity_uuid == self.id))
+
+        query = Event.outerjoin(EventReadByUser).outerjoin(UserModel).outerjoin(EntityModel).select().where(
+            Event.entity_id.in_(entity_query))
+
+        events = await query.order_by(desc(Event.created)).limit(limit).offset(offset).gino.load(
+            Event.distinct(Event.id).load(add_read_by=UserModel.distinct(UserModel.id), add_entity=EntityModel)).all()
+
+        return events
+
+    async def events_count(self):
+        entity_query = EntityModel.select('id').where(
+            (EntityModel.entity_type == EntityType.VM) & (EntityModel.entity_uuid == self.id))
+
+        query = Event.outerjoin(EventReadByUser).outerjoin(UserModel).outerjoin(EntityModel).select().where(
+            Event.entity_id.in_(entity_query))
+
+        events_count = await db.select([db.func.count()]).select_from(query.alias()).gino.scalar()
+        return events_count
 
     # Удаленные действия над ВМ - новый код
     async def action(self, action_name: str, force: bool = False):

@@ -25,6 +25,7 @@ from common.veil.veil_redis import request_to_execute_pool_task, execute_delete_
 
 from web_app.auth.user_schema import UserType
 from web_app.controller.schema import ControllerType
+from web_app.journal.schema import EventType, EntityType as TypeEntity
 
 from common.settings import POOL_MAX_SIZE, POOL_MIN_SIZE
 
@@ -65,10 +66,40 @@ class VmType(VeilResourceType):
     power_state = VmState()
     in_domain = graphene.Boolean(default_value=False)
 
+    # Список событий для отдельной ВМ и отдельное событие внутри пула
+    count = graphene.Int()
+    events = graphene.List(EventType, limit=graphene.Int(default_value=100), offset=graphene.Int(default_value=0))
+    event = graphene.Field(EventType, event_id=graphene.UUID())
+
     async def resolve_user(self, _info):
         vm = await Vm.get(self.id)
         username = await vm.username if vm else None
         return UserType(username=username)
+
+    async def resolve_count(self, _info, **kwargs):
+        vm_obj = await Vm.get(self.id)
+        events_count = await vm_obj.events_count()
+        return events_count
+
+    async def resolve_events(self, _info, limit, offset):
+        vm_obj = await Vm.get(self.id)
+        events = await vm_obj.events(limit=limit, offset=offset)
+        event_type_list = [
+            EventType(
+                read_by=[UserType(**user.__values__) for user in event.read_by],
+                entity=[TypeEntity(**entity.__values__) for entity in event.entity],
+                **event.__values__)
+            for event in events
+        ]
+        return event_type_list
+
+    async def resolve_event(self, _info, event_id):
+        event = await Vm.event(event_id)
+        event_type = EventType(
+            read_by=[UserType(**user.__values__) for user in event.read_by],
+            entity=[entity for entity in event.entity],
+            **event.__values__)
+        return event_type
 
     # TODO: перевел на показ статуса ВМ. Удалить после тестирования
     # async def resolve_status(self, _info):
