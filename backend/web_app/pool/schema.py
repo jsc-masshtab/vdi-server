@@ -314,7 +314,7 @@ class PoolType(graphene.ObjectType):
         for vm in vms:
             domain_entity = await vm.vm_client
             await domain_entity.info()
-            if domain_entity.os_windows and domain_entity.power_state:
+            if domain_entity.os_windows and domain_entity.powered:
                 in_domain = await domain_entity.in_ad
             else:
                 in_domain = False
