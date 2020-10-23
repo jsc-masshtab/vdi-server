@@ -27,6 +27,7 @@ import { AuthenticationDirectoryDetailsComponent } from './settings/auth-directo
 import { UserDetailsComponent } from './settings/users/user-details/user-details.component';
 import { ControllerDetailsComponent } from './settings/controllers/controller-details/controller-details.component';
 import { LicenseComponent } from './settings/license/license.component';
+import { TasksComponent } from './log/tasks/all-tasks/tasks.component';
 
 
 const routes: Routes = [
@@ -98,6 +99,10 @@ const routes: Routes = [
       {
         path: 'log/events',
         component: EventsComponent
+      },
+      {
+        path: 'log/tasks',
+        component: TasksComponent
       },
       {
         path: 'resourses/clusters',

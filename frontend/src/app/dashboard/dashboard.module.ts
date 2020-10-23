@@ -19,6 +19,7 @@ import { ClustersModule } from './resourses/clusters/clusters.module';
 import { PoolsModule } from './pools/pools.module';
 import { VmsModule } from './resourses/vms/vms.module';
 import { EventsModule } from './log/events/events.module';
+import { TasksModule } from './log/tasks/tasks.module';
 
 
 import {  HttpLink } from 'apollo-angular-link-http';
@@ -40,6 +41,7 @@ import { InMemoryCache } from 'apollo-cache-inmemory';
 import { environment } from 'src/environments/environment';
 import { LicenseModule } from './settings/license/license.module';
 import { throwError } from 'rxjs';
+
 
 @NgModule({
   declarations: [
@@ -64,6 +66,7 @@ import { throwError } from 'rxjs';
     UsersModule,
     AuthenticationDirectoryModule,
     EventsModule,
+    TasksModule,
     GroupsModule,
     LicenseModule
   ],

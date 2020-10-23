@@ -1,0 +1,19 @@
+<div class="form">
+  <div class="form-header">
+    <h1>Подробности задачи</h1>
+    <button [mat-dialog-close]="true" class="form-close">
+      <fa-icon [icon]="['fas','times-circle']"></fa-icon>
+    </button>
+  </div>
+
+  <div class="control-panel flexable-height" [style.padding]="0" *ngIf="task.status == 'IN_PROGRESS'">
+    <div class="control-btns">
+      <button type="button" (click)="cancelTask()">
+        <fa-icon [icon]="['fas','times-circle']"></fa-icon>
+        <span class="btn-name">Отменить выполнение</span>
+      </button>
+    </div>
+  </div>
+
+  <vdi-table-into [item]="task" [collection]="collection"></vdi-table-into>
+</div>
