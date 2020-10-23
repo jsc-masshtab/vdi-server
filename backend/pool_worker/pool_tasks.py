@@ -215,17 +215,17 @@ class ExpandPoolTask(AbstractTask):
                         await system_logger.error(_('VM creating error.'))
                         await system_logger.debug(vm_error)
 
-        # Подготовка ВМ для подключения к ТК
-        try:
-            active_directory_object = await AuthenticationDirectory.query.where(
-                AuthenticationDirectory.status == Status.ACTIVE).gino.first()
-            await asyncio.gather(
-                *[vm_object.prepare_with_timeout(active_directory_object, automated_pool.ad_cn_pattern) for
-                  vm_object in vm_list])
-        except asyncio.CancelledError:
-            raise
-        except Exception as E:
-            await system_logger.error(message=_('VM preparation error.'), description=str(E))
+            # Подготовка ВМ для подключения к ТК  (под async with pool_lock)
+            try:
+                active_directory_object = await AuthenticationDirectory.query.where(
+                    AuthenticationDirectory.status == Status.ACTIVE).gino.first()
+                await asyncio.gather(
+                    *[vm_object.prepare_with_timeout(active_directory_object, automated_pool.ad_cn_pattern) for
+                      vm_object in vm_list])
+            except asyncio.CancelledError:
+                raise
+            except Exception as E:
+                await system_logger.error(message=_('VM preparation error.'), description=str(E))
 
 
 class DecreasePoolTask(AbstractTask):
