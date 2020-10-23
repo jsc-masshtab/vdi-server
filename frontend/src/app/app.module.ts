@@ -22,7 +22,10 @@ import {
           faChevronCircleLeft, faChevronCircleRight, faAddressCard, faCheck, faUsersCog, faCrown, faColumns, faUpload, faIdCard, faSuitcase,
           faRss,
           faExpand,
-          faGavel
+          faGavel,
+          faUndo,
+          faPowerOff,
+          faFire
         } from '@fortawesome/free-solid-svg-icons';
 import { AuthInterceptor } from './dashboard/common/classes/auth.Interceptor.http';
 /*  -----------------------------------   icons   --------------------------------------*/
@@ -63,6 +66,7 @@ export class AppModule {
       faFolderOpen, faStar, faTv, faSyncAlt, faBuilding, faTrashAlt, faUsers, faMeh, faChartBar, faUser,
       faStopCircle, faPlayCircle, faPauseCircle, faEdit, faQuestionCircle, faCheckSquare, faExclamationTriangle, faHeartbeat,
       faChevronCircleUp, faComment, faClipboardList, faNewspaper, faUserCircle, faSignOutAlt, faChevronCircleLeft, faChevronCircleRight,
-      faAddressCard, faCheck, faUsersCog, faCrown, faColumns, faUpload, faIdCard, faSuitcase, faRss, faExpand, faGavel);
+      faAddressCard, faCheck, faUsersCog, faCrown, faColumns, faUpload, faIdCard, faSuitcase, faRss, faExpand, faGavel, faStopCircle, faUndo,
+      faPowerOff, faFire);
     }
 }
