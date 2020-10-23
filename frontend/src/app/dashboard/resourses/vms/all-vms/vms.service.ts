@@ -18,6 +18,7 @@ export class VmsService {
         let query: string = `query resources($ordering:String) {
             vms(ordering: $ordering) {
                 verbose_name
+                pool_name
                 status
                 id
                 controller {
@@ -35,6 +36,7 @@ export class VmsService {
                         id
                         verbose_name
                         status
+                        pool_name
                         template{
                             id
                             verbose_name

@@ -134,9 +134,10 @@ export class UsersComponent extends DetailsMove implements OnInit, OnDestroy {
 
     this.waitService.setWait(true);
 
-    this.getUsersSub = this.service.getAllUsers(queryset).valueChanges.pipe(map(data => data.data.users))
+    this.getUsersSub = this.service.getAllUsers(queryset).valueChanges.pipe(map(data => data.data))
       .subscribe((data) => {
-        this.users = data;
+        this.users = data.users;
+        this.count = data.count;
         this.waitService.setWait(false);
     });
   }
@@ -154,6 +155,11 @@ export class UsersComponent extends DetailsMove implements OnInit, OnDestroy {
 
   public routeTo(event): void {
     this.router.navigate([`pages/settings/users/${event.id}`]);
+  }
+
+  public toPage(message: any): void {
+    this.offset = message.offset;
+    this.getAllUsers();
   }
 
   public onResize(): void {
