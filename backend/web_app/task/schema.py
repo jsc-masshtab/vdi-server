@@ -44,6 +44,7 @@ class TaskType(graphene.ObjectType):
     created = graphene.DateTime()
     priority = graphene.Int()
     progress = graphene.Int(default_value=0)
+    message = graphene.String()
 
 
 class TaskQuery(graphene.ObjectType):
