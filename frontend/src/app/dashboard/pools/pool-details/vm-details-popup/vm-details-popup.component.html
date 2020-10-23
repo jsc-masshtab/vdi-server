@@ -5,9 +5,30 @@
         <button [mat-dialog-close]="true" class="btn-close-popup"><fa-icon [icon]="['fas','times-circle']"></fa-icon></button>
       </div>
   </div>
+  
   <div class="details-control-panel"> 
     <button (click)="addUser()" title="Назначить пользователя" class="btn-control"><fa-icon [icon]="['fas','plus-circle']" size="xs"></fa-icon><span class="name">Назначить пользователя</span></button>
     <button (click)="removeUser()" title="Убрать пользователя" class="btn-control"><fa-icon [icon]="['fas','trash-alt']" size="xs"></fa-icon><span class="name">Освободить вм от пользователя</span></button>
+    
+    <button (click)="action('start')" class="btn-refresh" title="Запуск">
+      <fa-icon [icon]="['fas','play-circle']"></fa-icon>
+    </button>
+    
+    <button (click)="action('shutdown')" class="btn-refresh" title="Выключение">
+      <fa-icon [icon]="['fas','stop-circle']"></fa-icon>
+    </button>
+    
+    <button (click)="action('reboot')" class="btn-refresh" title="Перезагрузка">
+      <fa-icon [icon]="['fas','undo']"></fa-icon>
+    </button>
+    
+    <button (click)="action('shutdown-force')" class="btn-refresh" title="Отключение питания">
+      <fa-icon [icon]="['fas','power-off']"></fa-icon>
+    </button>
+    
+    <button (click)="action('reboot-force')" class="btn-refresh" title="Горячая перезагрузка">
+      <fa-icon [icon]="['fas','fire']"></fa-icon>
+    </button>
   </div>
 
   <div class="details-row">

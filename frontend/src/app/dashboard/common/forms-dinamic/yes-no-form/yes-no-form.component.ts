@@ -27,6 +27,13 @@ export class YesNoFormComponent implements OnInit {
     this.waitService.setWait(true);
 
     request.service[request.action](request.body).subscribe(() => {
+      
+      if (this.data.update) {
+        if (this.data.update.refetch) {
+          request.service[this.data.update.method](...this.data.update.params).refetch();
+        }
+      }
+
       this.waitService.setWait(false);
       this.dialogRef.close();
     })

@@ -554,4 +554,66 @@ export class PoolDetailsService {
             }
         });
     }
+
+    public startVm(data) {
+        return this.service.mutate<any>({
+            mutation: gql`
+                mutation pools(
+                    $vm_id: UUID!
+                ){
+                    startVm(
+                        vm_id: $vm_id
+                    ){
+                        ok
+                    }
+                }
+            `,
+            variables: {
+                method: 'POST',
+                ...data
+            }
+        });
+    }
+    public shutdownVm(data) {
+        return this.service.mutate<any>({
+            mutation: gql`
+                mutation pools(
+                    $vm_id: UUID!,
+                    $force: Boolean
+                ){
+                    shutdownVm(
+                        force: $force,
+                        vm_id: $vm_id
+                    ){
+                        ok
+                    }
+                }
+            `,
+            variables: {
+                method: 'POST',
+                ...data
+            }
+        });
+    }
+    public rebootVm(data) {
+        return this.service.mutate<any>({
+            mutation: gql`
+                mutation pools(
+                    $vm_id: UUID!,
+                    $force: Boolean
+                ){
+                    rebootVm(
+                        force: $force,
+                        vm_id: $vm_id
+                    ){
+                        ok
+                    }
+                }
+            `,
+            variables: {
+                method: 'POST',
+                ...data
+            }
+        });
+    }
 }
