@@ -131,6 +131,9 @@ class InitPoolTask(AbstractTask):
             async with template_lock:
                 # Добавляем машины
                 try:
+                    pool = await Pool.get(self.task_model.entity_id)
+                    await pool.update(status=Status.CREATING).apply()
+
                     await automated_pool.add_initial_vms()
                 except PoolCreationError:
                     await automated_pool.deactivate()
