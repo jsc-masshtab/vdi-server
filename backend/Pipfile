@@ -14,21 +14,20 @@ flake8-builtins = "==1.5.2"
 flake8-bugbear = "==19.8.0"
 requests = "==2.23.0"
 sqlalchemy-utils = "==0.36.*"
-# todo: убрать после мерджа с дев
-configargparse = "==1.2.*"
+async_generator = "==1.10"  # classy_async
+#configargparse = "==1.2.*"
 
 [packages]
 pyjwt = "==1.7.1"  # JWTTokens
 tornado = "==6.0.*"
 graphene = "==2.1.8"
 graphene_tornado = "==2.5.1"
-SQLAlchemy = "==1.3.10"  # ORM
+SQLAlchemy = "==1.3.10"
 gino = "==1.0.1"
 gino-tornado = "==0.1.0"
 alembic = "==1.2.1"  # SQL migrations
 psycopg2-binary = "==2.8.4"  # alembic migrations
 python2-secrets = "==1.0.5"  # Django-secrets
-async_generator = "==1.10"  # classy_async
 cryptography = "==2.8"  # controller password encryption
 python-ldap = "==3.3.*"  # ldap integration
 redis = "==3.4.1"  # thin client message broker
