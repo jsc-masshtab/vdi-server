@@ -11,7 +11,7 @@
         <mat-label *ngIf="pending">Загрузка ...</mat-label>
         <mat-label *ngIf="possible_ad_groups?.length && !pending">Выберите  группу</mat-label>
         <mat-label *ngIf="!possible_ad_groups?.length && !pending">- нет групп -</mat-label>
-        <mat-select 
+        <mat-select
           (selectionChange)="select('groups', $event)">
           <mat-option *ngFor="let group of possible_ad_groups" [value]="group">
             {{ group.verbose_name }}
@@ -21,18 +21,6 @@
       <div class="error" *ngIf="!valid">Выберите группу</div>
     </label>
 
-    <label class="field">
-      <mat-form-field>
-        <mat-label *ngIf="pending">Загрузка ...</mat-label>
-        <mat-label *ngIf="group_members?.length && !pending">Выберите пользователей</mat-label>
-        <mat-label *ngIf="!group_members?.length && !pending">Без пользователей</mat-label>
-        <mat-select multiple="true" (selectionChange)="select('members', $event)">
-          <mat-option *ngFor="let member of group_members" [value]="member">
-            {{ member.username }}
-          </mat-option>
-        </mat-select>
-      </mat-form-field>
-    </label>
   </div>
 
   <div class="form-actions">

@@ -188,6 +188,8 @@ class AuthenticationDirectory(VeilModel, AbstractSortableStatusModel):
 
         # Удаляем у существующих групп все ad_guid
         await GroupModel.update.values(ad_guid=None).where(GroupModel.ad_guid.isnot(None)).gino.status()
+        # Удаляем все мэппинги
+        await Mapping.delete.gino.status()
         return parent
 
     async def add_mapping(self, mapping: dict, groups: list, creator):

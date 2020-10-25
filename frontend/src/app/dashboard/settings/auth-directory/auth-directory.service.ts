@@ -34,6 +34,7 @@ export class AuthenticationDirectoryService {
                                 status,
                                 assigned_ad_groups {
                                     id
+                                    ad_search_cn
                                     ad_guid
                                     verbose_name
                                 },
@@ -68,7 +69,7 @@ export class AuthenticationDirectoryService {
                                 possible_ad_groups {
                                     ad_guid
                                     verbose_name
-                                    ad_cn
+                                    ad_search_cn
                                 }
                             }
                         }

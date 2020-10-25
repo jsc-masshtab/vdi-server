@@ -1,7 +1,7 @@
 <div class="form">
 
   <div class="form-header">
-    <h1>Синхронизация группы с службой каталогов службы каталогов {{data?.verbose_name}}</h1>
+    <h1>Синхронизация группы с службой каталогов {{data?.verbose_name}}</h1>
     <button [mat-dialog-close]="true" class="form-close"><fa-icon [icon]="['fas','times-circle']"></fa-icon></button>
   </div>
 
@@ -11,7 +11,7 @@
         <mat-label *ngIf="pending">Загрузка ...</mat-label>
         <mat-label *ngIf="data.groups?.length && !pending">Выберите  группу</mat-label>
         <mat-label *ngIf="!data.groups?.length && !pending">- нет групп -</mat-label>
-        <mat-select 
+        <mat-select
           (selectionChange)="select('groups', $event)">
           <mat-option *ngFor="let group of data.groups" [value]="group">
             {{ group.verbose_name }}

@@ -114,13 +114,15 @@ class AuthenticationDirectoryGroupType(graphene.ObjectType):
     ad_guid = graphene.UUID()
     verbose_name = graphene.String()
     ad_search_cn = graphene.String()
+    id = graphene.UUID()
 
 
-class AuthenticationDirectoryGroupMembersType(graphene.ObjectType):
-    email = graphene.String()
-    last_name = graphene.String()
-    first_name = graphene.String()
-    username = graphene.String()
+# Deprecated 22.10.2020
+# class AuthenticationDirectoryGroupMembersType(graphene.ObjectType):
+#     email = graphene.String()
+#     last_name = graphene.String()
+#     first_name = graphene.String()
+#     username = graphene.String()
 
 
 # Deprecated 22.10.2020
@@ -435,6 +437,9 @@ class SyncAuthenticationDirectoryGroupUsers(graphene.Mutation):
         auth_dir = await AuthenticationDirectory.get(auth_dir_id)
         if not auth_dir:
             raise SimpleError(_('No such Authentication Directory.'))
+        # # TODO: Костыль для фронта
+        # sync_data['group_ad_cn'] = sync_data['ad_search_cn']
+        # sync_data.pop('ad_search_cn')
         await auth_dir.synchronize(sync_data)
         return SyncAuthenticationDirectoryGroupUsers(ok=True)
 
@@ -449,7 +454,7 @@ class SyncExistingAuthenticationDirectoryGroupUsers(graphene.Mutation):
     ok = graphene.Boolean(default_value=False)
 
     @security_administrator_required
-    async def mutate(self, info, auth_dir_id, group_id):
+    async def mutate(self, info, auth_dir_id, group_id, **kwargs):
         auth_dir = await AuthenticationDirectory.get(auth_dir_id)
         if not auth_dir:
             raise SimpleError(_('No such Authentication Directory.'))
