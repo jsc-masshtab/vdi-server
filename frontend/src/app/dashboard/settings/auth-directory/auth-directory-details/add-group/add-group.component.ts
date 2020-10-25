@@ -16,12 +16,10 @@ export class AddGropComponent implements OnDestroy {
 
   public pending: boolean = false;
   public group: any = {};
-  public members: [] = [];
   private destroy: Subject<any> = new Subject<any>();
   public valid: boolean = true;
 
   possible_ad_groups: [] = []
-  group_members: [] = []
 
   constructor(private service: AuthenticationDirectoryService,
               private waitService: WaitService,
@@ -44,7 +42,7 @@ export class AddGropComponent implements OnDestroy {
     if (this.group) {
 
       const data = {
-        group_ad_cn: this.group.ad_cn,
+        group_ad_cn: this.group.ad_search_cn,
         auth_dir_id: this.data.id,
         group_ad_guid: this.group.ad_guid,
         group_verbose_name: this.group.verbose_name
@@ -73,7 +71,7 @@ export class AddGropComponent implements OnDestroy {
       this.valid = true;
 
     }
-    
+
   }
 
   ngOnDestroy() {
