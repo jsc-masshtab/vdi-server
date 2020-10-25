@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2020-10-22 19:52+0300\n"
+"POT-Creation-Date: 2020-10-25 20:28+0300\n"
 "PO-Revision-Date: 2020-07-30 11:25+0300\n"
 "Last-Translator: Emil <emil@emil-pc>\n"
 "Language-Team: English\n"
@@ -466,6 +466,7 @@ msgstr "No such event."
 #: ../common/models/vm.py:334 ../common/models/vm.py:359
 #: ../common/models/vm.py:373 ../common/models/vm.py:395
 #: ../common/models/vm.py:426 ../common/models/vm.py:435
+#: ../web_app/thin_client_api/handlers.py:131
 msgid "VeiL domain request error."
 msgstr "VeiL domain request error."
 
@@ -501,11 +502,11 @@ msgstr "VM {} was reboot."
 msgid "Enabling remote access for {}."
 msgstr "Enabling remote access for {}."
 
-#: ../common/models/vm.py:438
+#: ../common/models/vm.py:438 ../web_app/thin_client_api/handlers.py:134
 msgid "Task has`t been created."
 msgstr "Task has`t been created."
 
-#: ../common/models/vm.py:452
+#: ../common/models/vm.py:452 ../web_app/thin_client_api/handlers.py:148
 msgid "VM remote access task {} finished with error."
 msgstr "VM remote access task {} finished with error."
 
@@ -623,14 +624,6 @@ msgstr "{} {} has`t been found in VeiL. Switched to FAILED."
 msgid "Soft_delete exception: {}."
 msgstr "Soft_delete exception: {}."
 
-#: ../common/veil/veil_gino.py:203
-msgid "{} {} has been removed."
-msgstr "{} {} has been removed."
-
-#: ../common/veil/veil_gino.py:206
-msgid "{} has been removed."
-msgstr "{} has been removed."
-
 #: ../common/veil/veil_handlers.py:76 ../web_app/thin_client_api/handlers.py:51
 #: ../web_app/thin_client_api/handlers.py:73
 msgid "User {} not found."
@@ -656,23 +649,23 @@ msgstr "Redis task waiting exception."
 msgid "Field \"{}\" - {}."
 msgstr "Field \"{}\" - {}."
 
-#: ../pool_worker/pool_tasks.py:139
+#: ../pool_worker/pool_tasks.py:142
 msgid "Pool Creation cancelled."
 msgstr "Pool Creation cancelled."
 
-#: ../pool_worker/pool_tasks.py:143
+#: ../pool_worker/pool_tasks.py:146
 msgid "Failed to init pool."
 msgstr "Failed to init pool."
 
-#: ../pool_worker/pool_tasks.py:155
+#: ../pool_worker/pool_tasks.py:158
 msgid "Virtual machine(s) preparation error."
 msgstr "Virtual machine(s) preparation error."
 
-#: ../pool_worker/pool_tasks.py:212
+#: ../pool_worker/pool_tasks.py:215
 msgid "VM creating error."
 msgstr "VM creating error."
 
-#: ../pool_worker/pool_tasks.py:225
+#: ../pool_worker/pool_tasks.py:228
 msgid "VM preparation error."
 msgstr "VM preparation error."
 
@@ -950,51 +943,51 @@ msgstr "Maximal number of created VMs can not be less than current amount of Vms
 msgid "Increase step must be positive and less or equal to total_size."
 msgstr "Increase step must be positive and less or equal to total_size."
 
-#: ../web_app/pool/schema.py:526
+#: ../web_app/pool/schema.py:527
 msgid "Failed to create static pool {}."
 msgstr "Failed to create static pool {}."
 
-#: ../web_app/pool/schema.py:553
+#: ../web_app/pool/schema.py:554
 msgid "VM {} is already in one of pools."
 msgstr "VM {} is already in one of pools."
 
-#: ../web_app/pool/schema.py:567
+#: ../web_app/pool/schema.py:568
 msgid "VM {} has been added to the pool {}."
 msgstr "VM {} has been added to the pool {}."
 
-#: ../web_app/pool/schema.py:584 ../web_app/pool/schema.py:786
+#: ../web_app/pool/schema.py:585 ../web_app/pool/schema.py:787
 msgid "List of VM should not be empty."
 msgstr "List of VM should not be empty."
 
-#: ../web_app/pool/schema.py:594 ../web_app/pool/schema.py:796
+#: ../web_app/pool/schema.py:595 ../web_app/pool/schema.py:797
 msgid "VM doesn't belong to specified pool."
 msgstr "VM doesn't belong to specified pool."
 
-#: ../web_app/pool/schema.py:622
+#: ../web_app/pool/schema.py:623
 msgid "Failed to update static pool {}. Name must be unique."
 msgstr "Failed to update static pool {}. Name must be unique."
 
-#: ../web_app/pool/schema.py:701
+#: ../web_app/pool/schema.py:702
 msgid "Failed to create automated pool {}."
 msgstr "Failed to create automated pool {}."
 
-#: ../web_app/pool/schema.py:767
+#: ../web_app/pool/schema.py:768
 msgid "Failed to update automated pool {}. Name must be unique."
 msgstr "Failed to update automated pool {}. Name must be unique."
 
-#: ../web_app/pool/schema.py:946
+#: ../web_app/pool/schema.py:947
 msgid "There is no VM {}."
 msgstr "There is no VM {}."
 
-#: ../web_app/pool/schema.py:963
+#: ../web_app/pool/schema.py:964
 msgid "User does not have the right to use pool, which has VM."
 msgstr "User does not have the right to use pool, which has VM."
 
-#: ../web_app/task/schema.py:92
+#: ../web_app/task/schema.py:93
 msgid "No such task."
 msgstr "No such task."
 
-#: ../web_app/task/schema.py:112
+#: ../web_app/task/schema.py:113
 msgid "No such task or status of task {} is not {}."
 msgstr "No such task or status of task {} is not {}."
 
@@ -1030,7 +1023,11 @@ msgstr "User {} connected to pool {}."
 msgid "User {} connected to VM {}."
 msgstr "User {} connected to VM {}."
 
-#: ../web_app/thin_client_api/handlers.py:136
+#: ../web_app/thin_client_api/handlers.py:153
+msgid "Can`t enable remote access. Check VeiL ECP."
+msgstr "Can`t enable remote access. Check VeiL ECP."
+
+#: ../web_app/thin_client_api/handlers.py:168
 msgid "VM does not support RDP."
 msgstr "VM does not support RDP."
 
@@ -1068,3 +1065,9 @@ msgstr "{cls}: Controller {name} is already monitored."
 #, python-brace-format
 msgid "{cls}: resource monitor for controller {name} connected."
 msgstr "{cls}: resource monitor for controller {name} connected."
+
+#~ msgid "{} has been removed."
+#~ msgstr "{} has been removed."
+
+#~ msgid "{} {} has been removed."
+#~ msgstr "{} {} has been removed."
