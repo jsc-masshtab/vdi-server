@@ -230,7 +230,6 @@ async def request_to_execute_pool_task(pool_id, pool_task_type, **additional_dat
     task_id = str(task.id)
     data = {'task_id': task_id, 'task_type': pool_task_type.name, **additional_data}
     REDIS_CLIENT.rpush(POOL_TASK_QUEUE, json.dumps(data))
-    # print('request_to_execute_pool_task task_id: {}'.format(task_id))
     return task.id
 
 

@@ -75,11 +75,6 @@ class ResourcesMonitorManager:
         await resources_monitor.stop()
         self._resources_monitors_list.remove(resources_monitor)
 
-        # msg = _('{cls}: resource monitor for controller {name} removed').format(
-        #     cls=__class__.__name__,
-        #     name=controller.verbose_name)
-        # await system_logger.debug(msg)
-
     async def restart_existing_monitor(self, controller_id):
 
         # find resources monitor by controller ip
