@@ -139,11 +139,16 @@ def get_test_pool_name():
 
 
 @pytest.fixture
+def event_loop():
+    return asyncio.get_event_loop()
+
+
+@pytest.fixture
 @async_generator
 async def fixt_launch_workers():
 
-    ws_listener_worker = Popen([sys.executable, "../ws_listener_worker/app.py"])
-    pool_worker = Popen([sys.executable, "../pool_worker/app.py", "-do-not-resume-tasks"])
+    ws_listener_worker = Popen([sys.executable, "../../ws_listener_worker/app.py"])
+    pool_worker = Popen([sys.executable, "../../pool_worker/app.py", "-do-not-resume-tasks"])
 
     await yield_()
 
@@ -194,11 +199,12 @@ async def fixt_auth_context():
 
 @pytest.fixture
 @async_generator
-async def fixt_create_automated_pool(fixt_controller):
+async def fixt_create_automated_pool():
     """Create an automated pool, yield, remove this pool"""
     # start resources_monitor to receive info  from controller. autopool creation doesnt work without it
 
     resources = await get_resources_automated_pool_test()
+    print('!!!!resources ', resources, flush=True)
     if not resources:
         print('resources not found!')
 
@@ -244,14 +250,14 @@ async def fixt_create_automated_pool(fixt_controller):
             redis_message_data = redis_message['data'].decode()
             redis_message_data_dict = json.loads(redis_message_data)
 
-            if redis_message_data_dict['event'] == 'pool_creation_completed':
-                return redis_message_data_dict['is_successful']
+            if redis_message_data_dict['event'] == 'status_changed':
+                return redis_message_data_dict['task_status'] == 'FINISHED'
         except Exception as ex:
             print('_check_if_pool_created ' + str(ex))
 
         return False
 
-    POOL_CREATION_TIMEOUT = 60
+    POOL_CREATION_TIMEOUT = 10
 
     is_pool_successfully_created = await a_redis_wait_for_message(INTERNAL_EVENTS_CHANNEL,
                                                                   _check_if_pool_created, POOL_CREATION_TIMEOUT)

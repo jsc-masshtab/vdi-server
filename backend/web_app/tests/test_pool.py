@@ -12,30 +12,19 @@ from common.models.pool import Pool
 
 from web_app.tests.fixtures import (fixt_db, fixt_controller, fixt_create_automated_pool, fixt_create_static_pool,  # noqa
                             fixt_auth_context, fixt_group, fixt_user, fixt_user_admin, fixt_user_another_admin, # noqa
-                            fixt_launch_workers)  # noqa
+                            fixt_launch_workers, event_loop)  # noqa
 
 pytestmark = [pytest.mark.pools]
 
 
 # Automated pool
 @pytest.mark.asyncio
-async def test_create_automated_pool(fixt_launch_workers, fixt_db, fixt_create_automated_pool, # noqa
+async def test_create_automated_pool(fixt_launch_workers, fixt_db, fixt_create_automated_pool,  # noqa
                                      fixt_auth_context):  # noqa
-    """Create automated pool, make request to check data, remove this pool"""
-    pool_id = fixt_create_automated_pool['id']
+    """Create and remove automated pool"""
 
     # check that pool was successfully created'
     assert fixt_create_automated_pool['is_pool_successfully_created']
-
-    qu = """{
-      pool(pool_id: "%s") {
-        pool_type,
-        initial_size
-      }
-
-    }""" % pool_id
-    executed = await execute_scheme(pool_schema, qu, context=fixt_auth_context)
-    assert executed['pool']['initial_size'] == 1
 
 
 @pytest.mark.asyncio
