@@ -2,7 +2,7 @@ Package: vdi-frontend
 Version: %%VER%%
 Architecture: amd64
 Maintainer: bazalt team <bazalt_dev@mashtab.org>
-Depends: apache2
+Depends:
 Section: devel
 Priority: extra
 Homepage: http://veil.mashtab.org
