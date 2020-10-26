@@ -173,7 +173,9 @@ class AuthenticationDirectory(VeilModel, AbstractSortableStatusModel):
     @classmethod
     async def soft_update(cls, id, **kwargs):
 
-        # TODO: password encryption
+        if kwargs and isinstance(kwargs, dict) and kwargs.get('service_password'):
+            kwargs['service_password'] = encrypt(kwargs['service_password'])
+
         update_type, update_dict = await super().soft_update(id, **kwargs)
 
         creator = update_dict.pop('creator')
@@ -241,14 +243,16 @@ class AuthenticationDirectory(VeilModel, AbstractSortableStatusModel):
             ldap_server = ldap.initialize(self.directory_url)
             ldap_server.set_option(ldap.OPT_TIMEOUT, LDAP_TIMEOUT)
             # Если у записи есть данные auth - проверяем их
-            if self.service_password or self.service_username:
+            if self.service_password and self.service_username:
                 username = '@'.join([self.service_username, self.domain_name])
                 password = decrypt(self.service_password)
+                await system_logger.debug('username: {}, password: {}'.format(username, password))
                 ldap_server.simple_bind_s(username, password)
             else:
                 ldap_server.simple_bind_s()
         except (ldap.INVALID_CREDENTIALS, TypeError):
             await self.update(status=Status.BAD_AUTH).apply()
+            return False
         except ldap.SERVER_DOWN:
             msg = _('Authentication directory server {} is down.').format(self.directory_url)
             await system_logger.warning(msg, entity=self.entity)
