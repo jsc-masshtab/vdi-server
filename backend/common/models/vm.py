@@ -361,9 +361,8 @@ class Vm(VeilModel):
         if not domain_entity.powered:
             # await system_logger.info(_('Powering on {}').format(self.verbose_name), entity=self.entity)
             task_success = await self.action('start')
-
-        await system_logger.info(_('VM {} is powered.').format(self.verbose_name), user=creator, entity=self.entity)
-        return task_success
+            await system_logger.info(_('VM {} is powered.').format(self.verbose_name), user=creator, entity=self.entity)
+            return task_success
 
     async def shutdown(self, creator='system', force=False):
         """Выключает ВМ - Пересылает shutdown для ВМ на ECP VeiL."""
@@ -385,7 +384,7 @@ class Vm(VeilModel):
             else:
                 await system_logger.info(_('VM {} is shutdown.').format(self.verbose_name), user=creator,
                                          entity=self.entity)
-        return task_success
+            return task_success
 
     async def reboot(self, creator='system', force=False):
         """Перезагружает ВМ - Пересылает reboot для ВМ на ECP VeiL."""
@@ -407,7 +406,7 @@ class Vm(VeilModel):
             else:
                 await system_logger.info(_('VM {} was reboot.').format(self.verbose_name), user=creator,
                                          entity=self.entity)
-        return task_success
+            return task_success
 
     async def prepare(self, active_directory_obj: AuthenticationDirectory = None, ad_cn_pattern: str = None):
         """Check that domain remote-access is enabled and domain is powered on.
@@ -468,6 +467,7 @@ class Vm(VeilModel):
             # Обновляем параметры ВМ
             await domain_entity.info()
 
+        await system_logger.debug('\n\nhostname: {}, verbose_name: {}\n\n'.format(domain_entity.hostname, self.verbose_name))
         # Задание hostname
         if domain_entity.hostname != self.verbose_name:
             await system_logger.debug(_('Setting hostname for {}.').format(self.verbose_name), entity=self.entity)
