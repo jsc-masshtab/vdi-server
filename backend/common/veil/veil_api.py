@@ -41,6 +41,11 @@ class VdiVeilClientSingleton(VeilClientSingleton):
             self.__client_instances[server_address] = instance
         return self.__client_instances[server_address]
 
+    @property
+    def instances(self) -> dict:
+        """Show all instances of VeilClient."""
+        return self.__client_instances
+
 # ---
 
 
