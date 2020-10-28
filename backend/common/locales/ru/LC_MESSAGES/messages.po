@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2020-10-25 20:28+0300\n"
+"POT-Creation-Date: 2020-10-28 13:50+0300\n"
 "PO-Revision-Date: 2020-07-30 11:25+0300\n"
 "Last-Translator: Emil <emil@emil-pc>\n"
 "Language-Team: Russian\n"
@@ -145,96 +145,96 @@ msgstr "Не может быть создано более одной дирек
 msgid "Authentication directory {} is created."
 msgstr "Директория авторизации {} создана."
 
-#: ../common/models/authentication_directory.py:181
+#: ../common/models/authentication_directory.py:183
 msgid "Values for auth directory is updated."
 msgstr "Значения для директории авторизации обновлены."
 
-#: ../common/models/authentication_directory.py:205
+#: ../common/models/authentication_directory.py:209
 msgid "Arguments: {} of group: {}."
 msgstr "Аргументы: {} группы: {}."
 
-#: ../common/models/authentication_directory.py:206
+#: ../common/models/authentication_directory.py:210
 msgid "Mapping for auth directory {} is created."
 msgstr "Отображение для директории авторизации {} создано."
 
-#: ../common/models/authentication_directory.py:229
+#: ../common/models/authentication_directory.py:233
 msgid "New arguments: {} of group: {}."
 msgstr "Новые аргументы: {} группы: {}."
 
-#: ../common/models/authentication_directory.py:230
+#: ../common/models/authentication_directory.py:234
 msgid "Mapping for auth directory {} is updated."
 msgstr "Mapping for auth directory {} is updated."
 
-#: ../common/models/authentication_directory.py:251
-#: ../common/models/authentication_directory.py:451
+#: ../common/models/authentication_directory.py:257
+#: ../common/models/authentication_directory.py:457
 msgid "Authentication directory server {} is down."
 msgstr "Сервер директории авторизации {} не работает."
 
-#: ../common/models/authentication_directory.py:258
+#: ../common/models/authentication_directory.py:264
 msgid "Authentication directory server {} is connected."
 msgstr "Сервер директории авторизации {} подключен."
 
-#: ../common/models/authentication_directory.py:293
+#: ../common/models/authentication_directory.py:299
 msgid "Username must be a string."
 msgstr "Имя пользователя должно быть строкой."
 
-#: ../common/models/authentication_directory.py:322
+#: ../common/models/authentication_directory.py:328
 msgid "Assigning veil groups to {}."
 msgstr "Присвоение групп veil {}."
 
-#: ../common/models/authentication_directory.py:331
+#: ../common/models/authentication_directory.py:337
 msgid "Mappings: {}."
 msgstr "Сопоставления: {}."
 
-#: ../common/models/authentication_directory.py:347
+#: ../common/models/authentication_directory.py:353
 msgid "escaped values: {}."
 msgstr "скрытые значения: {}."
 
-#: ../common/models/authentication_directory.py:348
+#: ../common/models/authentication_directory.py:354
 msgid "role mapping value type: {}."
 msgstr "тип значений отображения роли: {}."
 
-#: ../common/models/authentication_directory.py:357
+#: ../common/models/authentication_directory.py:363
 msgid "User veil groups: {}."
 msgstr "Группы пользователей veil: {}."
 
-#: ../common/models/authentication_directory.py:364
+#: ../common/models/authentication_directory.py:370
 msgid "Attaching user {} to group: {}."
 msgstr "Прикрепление пользователя {} к группе {}."
 
-#: ../common/models/authentication_directory.py:377
-#: ../common/models/authentication_directory.py:388
+#: ../common/models/authentication_directory.py:383
+#: ../common/models/authentication_directory.py:394
 #: ../web_app/tests/test_auth_v2.py:109
 msgid "No authentication directory controllers."
 msgstr "Нет контроллеров директории авторизации."
 
-#: ../common/models/authentication_directory.py:414
+#: ../common/models/authentication_directory.py:420
 msgid "Invalid credentials (ldap): {}."
 msgstr "Неверные учетные данные (ldap): {}."
 
-#: ../common/models/authentication_directory.py:421
+#: ../common/models/authentication_directory.py:427
 msgid "Server down (ldap)."
 msgstr "Сервер не отвечает (ldap)."
 
-#: ../common/models/authentication_directory.py:446
+#: ../common/models/authentication_directory.py:452
 msgid "Authentication directory server {} has bad auth info."
 msgstr "Не удалось подключиться к серверу директории авторизации {}."
 
-#: ../common/models/authentication_directory.py:513
-#: ../common/models/authentication_directory.py:592
+#: ../common/models/authentication_directory.py:519
+#: ../common/models/authentication_directory.py:598
 msgid "Fail to connect to Authentication Directory. Check service information."
 msgstr "Ошибка подключения к директории авторизации."
 
-#: ../common/models/authentication_directory.py:636
+#: ../common/models/authentication_directory.py:642
 msgid "{} new users synced from Authentication Directory."
 msgstr "{} новых пользователей синхронизировано из директории авторизации."
 
-#: ../common/models/authentication_directory.py:644
+#: ../common/models/authentication_directory.py:650
 #: ../web_app/auth/group_schema.py:180
 msgid "No such Group."
 msgstr "Отсутствует такая группа."
 
-#: ../common/models/authentication_directory.py:646
+#: ../common/models/authentication_directory.py:652
 msgid "Group {} is not synchronized by AD."
 msgstr "Группа {} не синхронизированна с директорией авторизации."
 
@@ -464,57 +464,57 @@ msgid "No such event."
 msgstr "Нет такого события."
 
 #: ../common/models/vm.py:334 ../common/models/vm.py:359
-#: ../common/models/vm.py:373 ../common/models/vm.py:395
-#: ../common/models/vm.py:426 ../common/models/vm.py:435
+#: ../common/models/vm.py:372 ../common/models/vm.py:394
+#: ../common/models/vm.py:425 ../common/models/vm.py:434
 #: ../web_app/thin_client_api/handlers.py:131
 msgid "VeiL domain request error."
 msgstr "Ошибка запроса VeiL ВМ."
 
-#: ../common/models/vm.py:365
+#: ../common/models/vm.py:364
 msgid "VM {} is powered."
 msgstr "ВМ {} включена."
 
-#: ../common/models/vm.py:376
+#: ../common/models/vm.py:375
 msgid "VM {} already shutdown."
 msgstr "ВМ {} уже выключена."
 
-#: ../common/models/vm.py:383
+#: ../common/models/vm.py:382
 msgid "VM {} is force shutdown."
 msgstr "ВМ {} принудительно выключена."
 
-#: ../common/models/vm.py:386
+#: ../common/models/vm.py:385
 msgid "VM {} is shutdown."
 msgstr "ВМ {} выключена."
 
-#: ../common/models/vm.py:398
+#: ../common/models/vm.py:397
 msgid "VM {} is shutdown. Please power this."
 msgstr "ВМ {} выключена. Пожалуйста включите её."
 
-#: ../common/models/vm.py:405
+#: ../common/models/vm.py:404
 msgid "VM {} was force reboot."
 msgstr "ВМ {} была принудительно перезагружена."
 
-#: ../common/models/vm.py:408
+#: ../common/models/vm.py:407
 msgid "VM {} was reboot."
 msgstr "ВМ {} была перезагружена."
 
-#: ../common/models/vm.py:432
+#: ../common/models/vm.py:431
 msgid "Enabling remote access for {}."
 msgstr "Включаем удаленный доступ для {}."
 
-#: ../common/models/vm.py:438 ../web_app/thin_client_api/handlers.py:134
+#: ../common/models/vm.py:437 ../web_app/thin_client_api/handlers.py:134
 msgid "Task has`t been created."
 msgstr "Задача не была создана."
 
-#: ../common/models/vm.py:452 ../web_app/thin_client_api/handlers.py:148
+#: ../common/models/vm.py:451 ../web_app/thin_client_api/handlers.py:148
 msgid "VM remote access task {} finished with error."
 msgstr "Задава {} включения удаленного доступа ВМ завершилась с ошибкой."
 
-#: ../common/models/vm.py:456
+#: ../common/models/vm.py:455
 msgid "Remote access enabled."
 msgstr "Удаленный доступ включен."
 
-#: ../common/models/vm.py:465 ../common/models/vm.py:494
+#: ../common/models/vm.py:464 ../common/models/vm.py:494
 msgid "Waiting guest agent activation for {}."
 msgstr "Ожидаем активации гостевого агента для {}."
 
@@ -690,10 +690,10 @@ msgid "DEBUG mode is enabled."
 msgstr "Режим отладки включен."
 
 #: ../web_app/auth/authentication_directory/auth_dir_schema.py:33
-#: ../web_app/auth/authentication_directory/auth_dir_schema.py:220
-#: ../web_app/auth/authentication_directory/auth_dir_schema.py:275
-#: ../web_app/auth/authentication_directory/auth_dir_schema.py:437
-#: ../web_app/auth/authentication_directory/auth_dir_schema.py:455
+#: ../web_app/auth/authentication_directory/auth_dir_schema.py:222
+#: ../web_app/auth/authentication_directory/auth_dir_schema.py:277
+#: ../web_app/auth/authentication_directory/auth_dir_schema.py:439
+#: ../web_app/auth/authentication_directory/auth_dir_schema.py:460
 msgid "No such Authentication Directory."
 msgstr "Такая Authentication Directory отсутствует."
 
@@ -722,7 +722,7 @@ msgstr "Список групп пуст."
 msgid "No such mapping."
 msgstr "Нет такого отображения."
 
-#: ../web_app/auth/authentication_directory/auth_dir_schema.py:216
+#: ../web_app/auth/authentication_directory/auth_dir_schema.py:218
 msgid "Specify id."
 msgstr "Укажите ID."
 
@@ -795,8 +795,8 @@ msgid "User {} logged out."
 msgstr "Пользователь {} вышел из системы."
 
 #: ../web_app/auth/handlers.py:75
-msgid "Demo version"
-msgstr "Демонстрационная версия"
+msgid "Demo version."
+msgstr "Демонстрационная версия."
 
 #: ../web_app/auth/license/handlers.py:50
 msgid "Bad extension."
@@ -1009,7 +1009,7 @@ msgstr "В пуле нет свободных машин. Повторите п�
 
 #: ../web_app/thin_client_api/handlers.py:100
 msgid "The pool doesn`t have free machines."
-msgstr "В пуле нет свободных машин"
+msgstr "В пуле нет свободных машин."
 
 #: ../web_app/thin_client_api/handlers.py:113
 msgid "VM is unreachable on ECP Veil."
@@ -1066,20 +1066,20 @@ msgstr "{cls}: Контроллер {name} уже отслеживается."
 msgid "{cls}: resource monitor for controller {name} connected."
 msgstr "{cls}: монитор ресурсов для контроллера {name} подключен."
 
-#~ msgid "Maximal number of created VM can not be reduced."
-#~ msgstr "Максимальное количество создаваемых виртуальных машин не может быть уменьшено."
-
-#~ msgid "Invalid credentials (ldap)."
-#~ msgstr "Неверные учетные данные (ldap)."
-
-#~ msgid "VM {} has been added to {}."
-#~ msgstr "ВМ {} добавлена в {}."
-
-#~ msgid "Adding computer {} to domain container(s) {}."
-#~ msgstr "Добавляем компьютер {} в доменную группу  {}."
+#~ msgid "{} {} has been removed."
+#~ msgstr "Выполнено удаление: {} {}."
 
 #~ msgid "{} has been removed."
 #~ msgstr "Выполнено удаление: {}."
 
-#~ msgid "{} {} has been removed."
-#~ msgstr "Выполнено удаление: {} {}."
+#~ msgid "Adding computer {} to domain container(s) {}."
+#~ msgstr "Добавляем компьютер {} в доменную группу  {}."
+
+#~ msgid "VM {} has been added to {}."
+#~ msgstr "ВМ {} добавлена в {}."
+
+#~ msgid "Invalid credentials (ldap)."
+#~ msgstr "Неверные учетные данные (ldap)."
+
+#~ msgid "Maximal number of created VM can not be reduced."
+#~ msgstr "Максимальное количество создаваемых виртуальных машин не может быть уменьшено."

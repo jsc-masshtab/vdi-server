@@ -1,24 +1,33 @@
 #!/bin/bash 
 # get arguments and init variables
-if [ "$#" -lt 1 ]; then
-    echo "Usage: $0 <locales> [optional: <domain_name>]"
-    exit 1
-fi
-locales=$1
-domain="messages"
-if [ -n "$2" ]; then
-    domain=$2
-fi
-locales_dir="./locales/${locales}/LC_MESSAGES"
-po_file="${locales_dir}/${domain}.po"
-mo_file="${locales_dir}/${domain}.mo"
-var1=$(grep -c "msgstr \"\"" "${po_file}")
-var2=$(grep -c "fuzzy" "${po_file}")
-if [ "${var1}" -gt 1 ] || [ "${var2}" -gt 0 ]; then
-  echo "Error code 1"
-  exit 1
-fi
+#if [ "$#" -lt 1 ]; then
+#    echo "Usage: $0 <locales> [optional: <domain_name>]"
+#    exit 1
+#fi
 
-# create .mo file from .po
-msgfmt "${po_file}" --output-file="${mo_file}"
-echo "Translation created or updated"
+locales_list=(en ru)
+
+for locale in ${locales_list[*]}
+do
+  locales="$locale"
+  domain="messages"
+  if [ -n "$2" ]; then
+      domain=$2
+  fi
+  locales_dir="./locales/${locales}/LC_MESSAGES"
+  po_file="${locales_dir}/${domain}.po"
+  mo_file="${locales_dir}/${domain}.mo"
+  var1=$(grep -c "msgstr \"\"" "${po_file}")
+  var2=$(grep -c "fuzzy" "${po_file}")
+  var3=$(grep -c "\.\"\|\:\"" "${po_file}")
+  var4=$(grep -c -E "msgstr|msgid" "${po_file}")
+  if [ "${var1}" -gt 1 ] || [ "${var2}" -gt 0 ] || [ "$((${var4} - ${var3}))" -gt 2 ]; then
+    echo "Rows ending without :/. is $((${var4} - ${var3} - 2))"
+    echo "Error code 1"
+    exit 1
+  fi
+
+  # create .mo file from .po
+  msgfmt "${po_file}" --output-file="${mo_file}"
+  echo "Translation created or updated for $locale locale"
+done

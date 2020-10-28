@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2020-10-25 20:28+0300\n"
+"POT-Creation-Date: 2020-10-28 13:50+0300\n"
 "PO-Revision-Date: 2020-07-30 11:25+0300\n"
 "Last-Translator: Emil <emil@emil-pc>\n"
 "Language-Team: English\n"
@@ -145,96 +145,96 @@ msgstr "More than one authentication directory can not be created."
 msgid "Authentication directory {} is created."
 msgstr "Authentication directory {} is created."
 
-#: ../common/models/authentication_directory.py:181
+#: ../common/models/authentication_directory.py:183
 msgid "Values for auth directory is updated."
 msgstr "Values for auth directory is updated."
 
-#: ../common/models/authentication_directory.py:205
+#: ../common/models/authentication_directory.py:209
 msgid "Arguments: {} of group: {}."
 msgstr "Arguments: {} of group: {}."
 
-#: ../common/models/authentication_directory.py:206
+#: ../common/models/authentication_directory.py:210
 msgid "Mapping for auth directory {} is created."
 msgstr "Mapping for auth directory {} is created."
 
-#: ../common/models/authentication_directory.py:229
+#: ../common/models/authentication_directory.py:233
 msgid "New arguments: {} of group: {}."
 msgstr "New arguments: {} of group: {}."
 
-#: ../common/models/authentication_directory.py:230
+#: ../common/models/authentication_directory.py:234
 msgid "Mapping for auth directory {} is updated."
 msgstr "Mapping for auth directory {} is updated."
 
-#: ../common/models/authentication_directory.py:251
-#: ../common/models/authentication_directory.py:451
+#: ../common/models/authentication_directory.py:257
+#: ../common/models/authentication_directory.py:457
 msgid "Authentication directory server {} is down."
 msgstr "Authentication directory server {} is down."
 
-#: ../common/models/authentication_directory.py:258
+#: ../common/models/authentication_directory.py:264
 msgid "Authentication directory server {} is connected."
 msgstr "Authentication directory server {} is connected."
 
-#: ../common/models/authentication_directory.py:293
+#: ../common/models/authentication_directory.py:299
 msgid "Username must be a string."
 msgstr "Username must be a string."
 
-#: ../common/models/authentication_directory.py:322
+#: ../common/models/authentication_directory.py:328
 msgid "Assigning veil groups to {}."
 msgstr "Assigning veil groups to {}."
 
-#: ../common/models/authentication_directory.py:331
+#: ../common/models/authentication_directory.py:337
 msgid "Mappings: {}."
 msgstr "Mappings: {}."
 
-#: ../common/models/authentication_directory.py:347
+#: ../common/models/authentication_directory.py:353
 msgid "escaped values: {}."
 msgstr "escaped values: {}."
 
-#: ../common/models/authentication_directory.py:348
+#: ../common/models/authentication_directory.py:354
 msgid "role mapping value type: {}."
 msgstr "role mapping value type: {}."
 
-#: ../common/models/authentication_directory.py:357
+#: ../common/models/authentication_directory.py:363
 msgid "User veil groups: {}."
 msgstr "User veil groups: {}."
 
-#: ../common/models/authentication_directory.py:364
+#: ../common/models/authentication_directory.py:370
 msgid "Attaching user {} to group: {}."
 msgstr "Attaching user {} to group: {}."
 
-#: ../common/models/authentication_directory.py:377
-#: ../common/models/authentication_directory.py:388
+#: ../common/models/authentication_directory.py:383
+#: ../common/models/authentication_directory.py:394
 #: ../web_app/tests/test_auth_v2.py:109
 msgid "No authentication directory controllers."
 msgstr "No authentication directory controllers."
 
-#: ../common/models/authentication_directory.py:414
+#: ../common/models/authentication_directory.py:420
 msgid "Invalid credentials (ldap): {}."
 msgstr "Invalid credentials (ldap): {}."
 
-#: ../common/models/authentication_directory.py:421
+#: ../common/models/authentication_directory.py:427
 msgid "Server down (ldap)."
 msgstr "Server down (ldap)."
 
-#: ../common/models/authentication_directory.py:446
+#: ../common/models/authentication_directory.py:452
 msgid "Authentication directory server {} has bad auth info."
 msgstr "Authentication directory server {} has bad auth info."
 
-#: ../common/models/authentication_directory.py:513
-#: ../common/models/authentication_directory.py:592
+#: ../common/models/authentication_directory.py:519
+#: ../common/models/authentication_directory.py:598
 msgid "Fail to connect to Authentication Directory. Check service information."
 msgstr "Fail to connect to Authentication Directory. Check service information."
 
-#: ../common/models/authentication_directory.py:636
+#: ../common/models/authentication_directory.py:642
 msgid "{} new users synced from Authentication Directory."
 msgstr "{} new users synced from Authentication Directory."
 
-#: ../common/models/authentication_directory.py:644
+#: ../common/models/authentication_directory.py:650
 #: ../web_app/auth/group_schema.py:180
 msgid "No such Group."
 msgstr "No such Group."
 
-#: ../common/models/authentication_directory.py:646
+#: ../common/models/authentication_directory.py:652
 msgid "Group {} is not synchronized by AD."
 msgstr "Group {} is not synchronized by AD."
 
@@ -464,57 +464,57 @@ msgid "No such event."
 msgstr "No such event."
 
 #: ../common/models/vm.py:334 ../common/models/vm.py:359
-#: ../common/models/vm.py:373 ../common/models/vm.py:395
-#: ../common/models/vm.py:426 ../common/models/vm.py:435
+#: ../common/models/vm.py:372 ../common/models/vm.py:394
+#: ../common/models/vm.py:425 ../common/models/vm.py:434
 #: ../web_app/thin_client_api/handlers.py:131
 msgid "VeiL domain request error."
 msgstr "VeiL domain request error."
 
-#: ../common/models/vm.py:365
+#: ../common/models/vm.py:364
 msgid "VM {} is powered."
 msgstr "VM {} is powered."
 
-#: ../common/models/vm.py:376
+#: ../common/models/vm.py:375
 msgid "VM {} already shutdown."
 msgstr "VM {} already shutdown."
 
-#: ../common/models/vm.py:383
+#: ../common/models/vm.py:382
 msgid "VM {} is force shutdown."
 msgstr "VM {} is force shutdown."
 
-#: ../common/models/vm.py:386
+#: ../common/models/vm.py:385
 msgid "VM {} is shutdown."
 msgstr "VM {} is shutdown."
 
-#: ../common/models/vm.py:398
+#: ../common/models/vm.py:397
 msgid "VM {} is shutdown. Please power this."
 msgstr "VM {} is shutdown. Please power this."
 
-#: ../common/models/vm.py:405
+#: ../common/models/vm.py:404
 msgid "VM {} was force reboot."
 msgstr "VM {} was force reboot."
 
-#: ../common/models/vm.py:408
+#: ../common/models/vm.py:407
 msgid "VM {} was reboot."
 msgstr "VM {} was reboot."
 
-#: ../common/models/vm.py:432
+#: ../common/models/vm.py:431
 msgid "Enabling remote access for {}."
 msgstr "Enabling remote access for {}."
 
-#: ../common/models/vm.py:438 ../web_app/thin_client_api/handlers.py:134
+#: ../common/models/vm.py:437 ../web_app/thin_client_api/handlers.py:134
 msgid "Task has`t been created."
 msgstr "Task has`t been created."
 
-#: ../common/models/vm.py:452 ../web_app/thin_client_api/handlers.py:148
+#: ../common/models/vm.py:451 ../web_app/thin_client_api/handlers.py:148
 msgid "VM remote access task {} finished with error."
 msgstr "VM remote access task {} finished with error."
 
-#: ../common/models/vm.py:456
+#: ../common/models/vm.py:455
 msgid "Remote access enabled."
 msgstr "Remote access enabled."
 
-#: ../common/models/vm.py:465 ../common/models/vm.py:494
+#: ../common/models/vm.py:464 ../common/models/vm.py:494
 msgid "Waiting guest agent activation for {}."
 msgstr "Waiting guest agent activation for {}."
 
@@ -690,10 +690,10 @@ msgid "DEBUG mode is enabled."
 msgstr "DEBUG mode is enabled."
 
 #: ../web_app/auth/authentication_directory/auth_dir_schema.py:33
-#: ../web_app/auth/authentication_directory/auth_dir_schema.py:220
-#: ../web_app/auth/authentication_directory/auth_dir_schema.py:275
-#: ../web_app/auth/authentication_directory/auth_dir_schema.py:437
-#: ../web_app/auth/authentication_directory/auth_dir_schema.py:455
+#: ../web_app/auth/authentication_directory/auth_dir_schema.py:222
+#: ../web_app/auth/authentication_directory/auth_dir_schema.py:277
+#: ../web_app/auth/authentication_directory/auth_dir_schema.py:439
+#: ../web_app/auth/authentication_directory/auth_dir_schema.py:460
 msgid "No such Authentication Directory."
 msgstr "No such Authentication Directory."
 
@@ -722,7 +722,7 @@ msgstr "groups list is empty."
 msgid "No such mapping."
 msgstr "No such mapping."
 
-#: ../web_app/auth/authentication_directory/auth_dir_schema.py:216
+#: ../web_app/auth/authentication_directory/auth_dir_schema.py:218
 msgid "Specify id."
 msgstr "Specify id."
 
@@ -795,8 +795,8 @@ msgid "User {} logged out."
 msgstr "User {} logged out."
 
 #: ../web_app/auth/handlers.py:75
-msgid "Demo version"
-msgstr "Demo version"
+msgid "Demo version."
+msgstr "Demo version."
 
 #: ../web_app/auth/license/handlers.py:50
 msgid "Bad extension."
@@ -1066,8 +1066,8 @@ msgstr "{cls}: Controller {name} is already monitored."
 msgid "{cls}: resource monitor for controller {name} connected."
 msgstr "{cls}: resource monitor for controller {name} connected."
 
-#~ msgid "{} has been removed."
-#~ msgstr "{} has been removed."
-
 #~ msgid "{} {} has been removed."
 #~ msgstr "{} {} has been removed."
+
+#~ msgid "{} has been removed."
+#~ msgstr "{} has been removed."
