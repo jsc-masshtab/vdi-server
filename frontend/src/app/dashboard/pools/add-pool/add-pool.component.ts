@@ -41,7 +41,7 @@ export class PoolAddComponent {
   public last: string;
 
   public data: any;
-  
+
   public sharedData: FormGroup;
   public staticPool: FormGroup;
   public dynamicPool: FormGroup;
@@ -110,7 +110,7 @@ export class PoolAddComponent {
 
   resetData() {
     this.data = {
-      connection_types: ['SPICE', 'RDP', 'NATIVE_RDP', 'SPICE_DIRECT'],
+      connection_types: ['RDP', 'NATIVE_RDP', 'SPICE', 'SPICE_DIRECT'],
       controllers: [],
       clusters: [],
       nodes: [],
@@ -125,7 +125,7 @@ export class PoolAddComponent {
     this.step = step
 
     /* Обработка каждого шага */
-    
+
     switch (step) {
       case 'type': {
 
@@ -141,7 +141,7 @@ export class PoolAddComponent {
 
       case 'static': {
         /* Выбор первого типа */
-        
+
         if (!this.sharedData.get('connection_types').value) this.sharedData.get('connection_types').setValue([this.data['connection_types'][0]])
 
         /* Запрос на контроллеры */
@@ -243,10 +243,10 @@ export class PoolAddComponent {
 
           data = { ...data, ...this.staticPool.value }
           method = 'addStaticPool'
-          
+
         }
 
-        if (this.type == 'dynamic') { 
+        if (this.type == 'dynamic') {
 
           data = { ...data, ...this.dynamicPool.value }
           method = 'addDynamicPool'

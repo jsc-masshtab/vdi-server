@@ -17,7 +17,7 @@
         <p class="radio-text">Автоматический</p>
       </label>
     </div>
-    
+
     <div class="form-actions">
       <button type="button" class="form-btn" (click)="toStep('static')">
         <span class="action-name">Далее</span>
@@ -49,7 +49,7 @@
             </mat-option>
           </mat-select>
         </mat-form-field>
-        
+
         <ng-container *ngIf="sharedData.hasError('required', 'connection_types') && checkValid"><ng-container *ngTemplateOutlet="errorTemp"></ng-container></ng-container>
       </label>
 
@@ -57,7 +57,7 @@
         <mat-form-field>
           <mat-label *ngIf="data.controllers?.length">Выберите контроллер</mat-label>
           <mat-label *ngIf="!data.controllers?.length">- нет контроллера -</mat-label>
-          
+
           <mat-select formControlName="controller_id">
             <mat-option *ngFor="let controller of data.controllers" [value]="controller.id">
               {{controller.verbose_name}}
@@ -125,14 +125,14 @@
         <mat-form-field>
           <mat-label *ngIf="data.vms?.length">Выберите свободные ВМ</mat-label>
           <mat-label *ngIf="!data.vms?.length">- нет виртуальных машин -</mat-label>
-      
+
           <mat-select formControlName="vms" multiple="true">
             <mat-option *ngFor="let vm of data.vms" [value]="vm">
               {{vm.verbose_name}}
             </mat-option>
           </mat-select>
         </mat-form-field>
-      
+
         <ng-container *ngIf="staticPool.hasError('required', 'vms') && checkValid">
           <ng-container *ngTemplateOutlet="errorTemp"></ng-container>
         </ng-container>
@@ -158,14 +158,14 @@
         <mat-form-field>
           <mat-label *ngIf="data.templates?.length">Выберите шаблон ВМ</mat-label>
           <mat-label *ngIf="!data.templates?.length">- нет шаблонов ВМ -</mat-label>
-      
+
           <mat-select formControlName="template_id">
             <mat-option *ngFor="let template of data.templates" [value]="template.id">
               {{template.verbose_name}}
             </mat-option>
           </mat-select>
         </mat-form-field>
-      
+
         <ng-container *ngIf="sharedData.hasError('required', 'template_id') && checkValid">
           <ng-container *ngTemplateOutlet="errorTemp"></ng-container>
         </ng-container>
@@ -179,21 +179,21 @@
           <ng-container *ngTemplateOutlet="errorTemp"></ng-container>
         </ng-container>
 
-        <div class="error" [@animForm]="error" *ngIf="dynamicPool.hasError('pattern', 'vm_name_template')">Имя содержит недопустимые символы</div>
+        <div class="error" [@animForm]="error" *ngIf="dynamicPool.hasError('pattern', 'vm_name_template')">Имя шаблона должно быть не более 63 латинских символа и -.</div>
       </label>
 
       <label class="field">
         <p class="field-name">Наименование групп для добавления ВМ в AD</p>
         <input type="text" formControlName="ad_cn_pattern">
-      
+
         <ng-container *ngIf="dynamicPool.hasError('required', 'ad_cn_pattern') && checkValid">
           <ng-container *ngTemplateOutlet="errorTemp"></ng-container>
         </ng-container>
-      
+
         <div class="error" [@animForm]="error" *ngIf="dynamicPool.hasError('pattern', 'ad_cn_pattern')">Имя содержит
           недопустимые символы</div>
       </label>
-    
+
       <label class="field">
         <p class="field-name">Начальное количество ВМ</p>
         <input type="number" formControlName="initial_size" min="0" max="200">
@@ -207,7 +207,7 @@
             Начальное количество ВМ должно быть в интервале 1 - 200</div>
         </ng-container>
       </label>
-  
+
       <label class="field">
         <p class="field-name">Максимальное количество создаваемых ВМ</p>
         <input type="number" formControlName="total_size" min="0">
@@ -224,7 +224,7 @@
           </div>
         </ng-container>
       </label>
-  
+
       <label class="field">
         <p class="field-name">Количество создаваемых ВМ</p>
         <input type="number" formControlName="reserve_size" min="0">
@@ -232,14 +232,14 @@
         <ng-container *ngIf="dynamicPool.hasError('required', 'reserve_size') && checkValid">
           <ng-container *ngTemplateOutlet="errorTemp"></ng-container>
         </ng-container>
-  
+
         <ng-container *ngIf="dynamicPool.get('reserve_size').touched && dynamicPool.get('reserve_size').dirty">
           <div class="error" *ngIf="(dynamicPool.hasError('min', 'reserve_size') ||  dynamicPool.hasError('max', 'reserve_size'))">
             Количество создаваемых ВМ должно быть в интервале 1-200
           </div>
         </ng-container>
       </label>
-  
+
       <label class="field">
         <p class="field-name">Пороговое количество свободных ВМ</p>
         <input type="number" formControlName="increase_step" min="1">
@@ -247,7 +247,7 @@
         <ng-container *ngIf="dynamicPool.hasError('required', 'increase_step') && checkValid">
           <ng-container *ngTemplateOutlet="errorTemp"></ng-container>
         </ng-container>
-  
+
         <ng-container
           *ngIf="dynamicPool.get('increase_step').touched && dynamicPool.get('increase_step').dirty">
           <div class="error" *ngIf="(dynamicPool.hasError('min', 'increase_step') || dynamicPool?.errors?.freeVmsMoreReserve)">
@@ -255,7 +255,7 @@
           </div>
         </ng-container>
       </label>
-      
+
       <label class="field-inline" [@animForm]>
         <mat-checkbox [color]="'warn'" formControlName="create_thin_clones"></mat-checkbox>
         <p class="description">Создать тонкие клоны</p>
@@ -266,7 +266,7 @@
       <button type="button" class="form-btn" (click)="toStep('static')">
         <span class="action-name">Назад</span>
       </button>
-    
+
       <button type="button" class="form-btn" (click)="toStep('check_dynamic')">
         <span class="action-name">Создать</span>
       </button>

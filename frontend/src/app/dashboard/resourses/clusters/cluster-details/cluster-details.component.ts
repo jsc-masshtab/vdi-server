@@ -49,19 +49,20 @@ export class ClusterDetailsComponent implements OnInit, OnDestroy {
       property: 'nodes',
       type: 'array-length'
     },
-    {
-      property: 'cluster_fs_configured',
-      title: 'Поддержка кластерных ФС',
-      type: {
-        typeDepend: 'boolean',
-        propertyDepend: ['Да', 'Нет']
-      }
-    },
-    {
-      property: 'cluster_fs_type',
-      title: 'Тип кластерной файловой системы',
-      type: 'string'
-    },
+    // удалено по указанию Бурыгина 28.10.2020
+    // {
+    //   property: 'cluster_fs_configured',
+    //   title: 'Поддержка кластерных ФС',
+    //   type: {
+    //     typeDepend: 'boolean',
+    //     propertyDepend: ['Да', 'Нет']
+    //   }
+    // },
+    // {
+    //   property: 'cluster_fs_type',
+    //   title: 'Тип кластерной файловой системы',
+    //   type: 'string'
+    // },
     {
       property: 'status',
       title: 'Статус',

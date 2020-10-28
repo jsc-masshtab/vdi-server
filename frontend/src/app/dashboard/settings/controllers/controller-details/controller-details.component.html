@@ -1,7 +1,7 @@
 
 
 
-      
+
 <div class="details-wrap">
 
     <div class="details-header">
@@ -12,14 +12,14 @@
     </div>
     <div class="details-control-panel">
         <button (click)="getController()" class="btn-refresh" title="Обновить"><fa-icon [icon]="['fas','sync-alt']"></fa-icon></button>
-        <button (click)="removeController()" *ngIf="menuActive === 'info'" title="Удалить контроллер" class="btn-control"><fa-icon [icon]="['fas','trash-alt']" size="xs"></fa-icon><span class="name">Удалить контроллер</span></button>
+        <button (click)="removeController()" title="Удалить контроллер" class="btn-control"><fa-icon [icon]="['fas','trash-alt']" size="xs"></fa-icon><span class="name">Удалить контроллер</span></button>
         <button (click)="test()" title="Проверить соединение" class="btn-control">
             <fa-icon [class.rotation]="testing" [icon]="['fas','sync-alt']" size="xs"></fa-icon>
             <span class="name">Проверка соединения</span>
-            
+
             <fa-icon *ngIf="tested && connected" class="ad-status ad-success" [icon]="['fas','check']" size="xs"></fa-icon>
             <fa-icon *ngIf="tested && !connected" class="ad-status ad-failed" [icon]="['fas','times-circle']" size="xs"></fa-icon>
-      
+
             <span class="ad-status-text" [class.ad-success]="connected" [class.ad-failed]="!connected" *ngIf="tested">{{ connected ? 'Успешно' : 'Нет соединения' }}</span>
           </button>
     </div>
@@ -33,7 +33,7 @@
             <li (click)="routeTo('vms')" [class.active]="menuActive === 'vms'" title="Виртуальные машины"><fa-icon [icon]="['fas','desktop']"></fa-icon><span class="name">Виртуальные машины</span></li>
             <li (click)="routeTo('templates')" [class.active]="menuActive === 'templates'" title="Шаблоны виртуальных машин"><fa-icon [icon]="['fas','tv']"></fa-icon><span class="name">Шаблоны ВМ</span></li>
         </ul>
-        
+
         <div class="details-slide" *ngIf="host">
             <div class="details-slide-header">
                 <ng-container *ngIf="menuActive === 'info'">Информация о контроллере</ng-container>
@@ -50,7 +50,7 @@
                 <vdi-datapools [filter]="filter" *ngIf="menuActive === 'datapools'"></vdi-datapools>
                 <vdi-vms [filter]="filter" *ngIf="menuActive === 'vms'"></vdi-vms>
                 <vdi-templates [filter]="filter" *ngIf="menuActive === 'templates'"></vdi-templates>
-            </div>     
+            </div>
         </div>
     </div>
 

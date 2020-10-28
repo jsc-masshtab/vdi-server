@@ -14,7 +14,7 @@
       <p class="field-name">Имя пользователя</p>
       <input type="text" [focusMe]="true" placeholder="..." formControlName="username">
       <ng-container *ngIf="form.hasError('required', 'username') && checkValid"><ng-container *ngTemplateOutlet="errorTemp"></ng-container></ng-container>
-      <div class="error" *ngIf="form.hasError('pattern', 'username') && checkValid">Имя пользователя содержит недопустимые символы</div>
+      <div class="error" *ngIf="form.hasError('pattern', 'username') && checkValid">Имя пользователя должно быть от 3 до 128 символов и состоять из латинских символов, - и .</div>
     </label>
 
     <label class="field">
