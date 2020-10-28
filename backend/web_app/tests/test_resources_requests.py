@@ -154,7 +154,6 @@ async def test_request_vms(fixt_db, fixt_controller, snapshot, fixt_auth_context
             }""" % (vm['id'], controller_id)
 
     executed = await execute_scheme(resources_schema, qu, context=fixt_auth_context)  # noqa
-    print('!!executed ', executed)
     snapshot.assert_match(executed)
 
 
@@ -168,7 +167,6 @@ async def test_request_templates(fixt_db, fixt_controller, snapshot, fixt_auth_c
                     id
                     verbose_name
                     controller {
-                      id
                       verbose_name
                     }
                     status
@@ -178,6 +176,8 @@ async def test_request_templates(fixt_db, fixt_controller, snapshot, fixt_auth_c
         executed = await execute_scheme(resources_schema, qu, context=fixt_auth_context)  # noqa
         snapshot.assert_match(executed)
 
+    controllers = await Controller.get_objects()
+    controller_id = controllers[0].id
     template = executed['templates'][0]
 
     qu = """{
@@ -185,7 +185,7 @@ async def test_request_templates(fixt_db, fixt_controller, snapshot, fixt_auth_c
                 verbose_name
                 status
               }
-            }""" % (template['id'], template['controller']['id'])
+            }""" % (template['id'], controller_id)
 
     executed = await execute_scheme(resources_schema, qu, context=fixt_auth_context)  # noqa
     snapshot.assert_match(executed)
