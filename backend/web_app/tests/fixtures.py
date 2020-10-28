@@ -10,7 +10,7 @@ from graphene import Context
 
 from common.database import start_gino, stop_gino
 from common.settings import VEIL_WS_MAX_TIME_TO_WAIT
-from common.veil.veil_gino import Role, Status
+from common.veil.veil_gino import Role
 from common.veil.auth.veil_jwt import encode_jwt
 
 from common.models.controller import Controller
@@ -19,11 +19,11 @@ from common.models.auth import Group, User
 from common.models.authentication_directory import AuthenticationDirectory, Mapping
 
 
+from web_app.controller.schema import controller_schema
 from web_app.pool.schema import pool_schema
 from web_app.tests.utils import execute_scheme
 
-from common.veil.veil_redis import a_redis_wait_for_message, INTERNAL_EVENTS_CHANNEL, WS_MONITOR_CHANNEL_OUT, \
-    send_cmd_to_ws_monitor, WsMonitorCmd
+from common.veil.veil_redis import a_redis_wait_for_message, INTERNAL_EVENTS_CHANNEL, WS_MONITOR_CHANNEL_OUT
 
 from common.log.journal import system_logger
 
@@ -87,50 +87,13 @@ async def get_resources_automated_pool_test():
         raise RuntimeError('Нет контроллеров')
 
     controller = await Controller.get(controllers[0].id)
-    veil_response_clusters = await controller.veil_client.cluster().list()
-    clusters = veil_response_clusters.paginator_results
-    if not clusters:
-        raise RuntimeError('На контроллере {} нет кластеров'.format(controller.address))
 
-    veil_response_teplates = await controller.veil_client.domain(template=1).list()
-    templates = veil_response_teplates.paginator_results
-    if not templates:
-        raise RuntimeError('На контроллере {} нет шаблонов'.format(controller.address))
-
-    # select appropriate template_id and node_id
-    # node must be active and has a template
-    for cluster in clusters:
-        veil_response_nodes = await controller.veil_client.node(cluster_id=cluster['id']).list()
-        nodes = veil_response_nodes.paginator_results
-        if not nodes:
-            continue
-
-        for node in nodes:
-            if node['status'] == 'ACTIVE':
-                # check if node has template
-                try:
-                    template_id = next(template['id'] for template in templates
-                                       if template['node']['id'] == node['id'])
-                except StopIteration:  # node doesnt have template
-                    continue
-                else:  # template found
-                    # find active datapool
-                    veil_response_datapools = await controller.veil_client.data_pool(node_id=node['id']).list()
-                    datapools = veil_response_datapools.paginator_results
-                    # Временное решение для исключения zfs-пулов.
-                    for datapool in datapools[:]:
-                        if datapool.get('zfs_pool'):
-                            datapools.remove(datapool)
-
-                    try:
-                        datapool_id = next(datapool['id'] for datapool in datapools if datapool['status'] == 'ACTIVE')
-                    except StopIteration:  # No active datapools
-                        continue
-
-                    return {'controller_id': controller.id, 'cluster_id': cluster['id'],
-                            'node_id': node['id'], 'template_id': template_id, 'datapool_id': datapool_id}
-
-    raise RuntimeError('Подходящие ресурсы не найдены')
+    # ids are random
+    return {'controller_id': controller.id,
+            'cluster_id': '6dd44376-0bf5-46b8-8a23-5a1e6fcfe376',
+            'node_id': '236d318f-d57e-4f1b-9097-93d69f8782dd',
+            'template_id': 'a04ed49b-ea26-4660-8112-833a6b51d0e1',
+            'datapool_id': '37df3326-55b9-4af1-91b3-e54df12f24e7'}
 
 
 def get_test_pool_name():
@@ -199,12 +162,11 @@ async def fixt_auth_context():
 
 @pytest.fixture
 @async_generator
-async def fixt_create_automated_pool():
+async def fixt_create_automated_pool(fixt_controller):
     """Create an automated pool, yield, remove this pool"""
     # start resources_monitor to receive info  from controller. autopool creation doesnt work without it
 
     resources = await get_resources_automated_pool_test()
-    print('!!!!resources ', resources, flush=True)
     if not resources:
         print('resources not found!')
 
@@ -257,8 +219,7 @@ async def fixt_create_automated_pool():
 
         return False
 
-    POOL_CREATION_TIMEOUT = 10
-
+    POOL_CREATION_TIMEOUT = 30
     is_pool_successfully_created = await a_redis_wait_for_message(INTERNAL_EVENTS_CHANNEL,
                                                                   _check_if_pool_created, POOL_CREATION_TIMEOUT)
 
@@ -625,33 +586,48 @@ def fixt_group_role(request, event_loop):
 
 
 @pytest.fixture
-def fixt_controller(request, event_loop):
+@async_generator
+async def fixt_controller():
 
-    id_ = '10913d5d-ba7a-4049-88c5-769267a6cbe4'
-    verbose_name = 'test controller'
-    address = '192.168.11.115'
-    token = 'jwt eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjoxLCJ1c2VybmFtZSI6ImFkbWluIiwiZXhwIjoxOTEyOTM3NjExLCJzc28iOmZhbHNlLCJvcmlnX2lhdCI6MTU5ODQ0MTYxMX0.OSRio0EoWA8ZDtvzl3YlaBmdfbI0DQz1RiGAIMCgoX0'
+    controller_ip = '0.0.0.0'
 
-    async def setup():
-        await Controller.create(id=id_,
-                                verbose_name=verbose_name,
-                                address=address,
-                                status=Status.ACTIVE,
-                                token=token
-                                )
+    # add controller
+    qu = """
+    mutation {
+        addController(
+            verbose_name: "controller_added_during_test",
+            address: "%s",
+            description: "controller_added_during_test",
+            token: "jwt eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjoxLCJ1c2VybmFtZSI6ImFkbWluIiwiZXhwIjoxOTEyOTM3NjExLCJzc28iOmZhbHNlLCJvcmlnX2lhdCI6MTU5ODQ0MTYxMX0.OSRio0EoWA8ZDtvzl3YlaBmdfbI0DQz1RiGAIMCgoX0") {
+                controller
+                {
+                    id
+                    verbose_name
+                    description
+                    address
+                    status
+                }
+            }
+    }
+    """ % controller_ip
 
-        send_cmd_to_ws_monitor(id_, WsMonitorCmd.ADD_CONTROLLER)
-    event_loop.run_until_complete(setup())
+    context = await get_auth_context()
+    executed = await execute_scheme(controller_schema, qu, context=context)
+    controller_id = executed['addController']['controller']['id']
+    print('controller_id ', controller_id, flush=True)
+    await yield_({'controller_id': controller_id})
 
-    def teardown():
-        async def a_teardown():
-            await Controller.delete.where(Controller.id == id_).gino.status()
-            send_cmd_to_ws_monitor(id_, WsMonitorCmd.REMOVE_CONTROLLER)
+    # remove controller
+    qu = """
+    mutation {
+        removeController(id_: "%s") {
+            ok
+        }
+    }
+    """ % controller_id
 
-        event_loop.run_until_complete(a_teardown())
-
-    request.addfinalizer(teardown)
-    return True
+    executed = await execute_scheme(controller_schema, qu, context=context)
+    assert executed['removeController']['ok']
 
 
 @pytest.fixture

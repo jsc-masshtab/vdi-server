@@ -44,9 +44,10 @@ class AbstractTask:
         if self.task_model:
             await self.task_model.update(resumable=resumable).apply()
 
-        await system_logger.debug('cancel self.coroutine {}'.format(self._coroutine))
-        await cancel_async_task(self._coroutine, wait_for_result)
-        self._coroutine = None
+        if self._coroutine:
+            await system_logger.debug('cancel self.coroutine {}'.format(self._coroutine))
+            await cancel_async_task(self._coroutine, wait_for_result)
+            self._coroutine = None
 
     async def do_task(self):
         """Корутина, в которой будет выполняться таска"""
@@ -144,7 +145,7 @@ class InitPoolTask(AbstractTask):
                     raise
                 except Exception as E:
                     await system_logger.error(message=_('Failed to init pool.'),
-                                              desciption=str(E))
+                                              description=str(E))
                     await automated_pool.deactivate()
                     raise E
 
