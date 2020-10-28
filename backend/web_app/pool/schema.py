@@ -843,7 +843,7 @@ class PoolUserDropPermissionsMutation(graphene.Mutation):
             return PoolUserDropPermissionsMutation(ok=False)
 
         async with db.transaction():
-            await pool.remove_users(creator=creator, users=users)
+            await pool.remove_users(creator=creator, users_list=users)
             if free_assigned_vms:
                 await pool.free_assigned_vms(users)
 

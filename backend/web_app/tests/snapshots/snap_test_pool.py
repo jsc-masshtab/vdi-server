@@ -71,17 +71,11 @@ snapshots['TestPoolPermissionsSchema.test_pool_role_permission 1'] = {
         'ok': True,
         'pool': {
             'assigned_roles': [
-                'READ_ONLY',
-                'VM_ADMINISTRATOR'
+                'ADMINISTRATOR'
             ],
             'possible_roles': [
-                'READ_ONLY',
-                'ADMINISTRATOR',
                 'SECURITY_ADMINISTRATOR',
-                'VM_ADMINISTRATOR',
-                'NETWORK_ADMINISTRATOR',
-                'STORAGE_ADMINISTRATOR',
-                'VM_OPERATOR'
+                'OPERATOR'
             ]
         }
     }
@@ -92,16 +86,11 @@ snapshots['TestPoolPermissionsSchema.test_pool_role_permission 2'] = {
         'ok': True,
         'pool': {
             'assigned_roles': [
-                'VM_ADMINISTRATOR'
+                'ADMINISTRATOR'
             ],
             'possible_roles': [
-                'READ_ONLY',
-                'ADMINISTRATOR',
                 'SECURITY_ADMINISTRATOR',
-                'VM_ADMINISTRATOR',
-                'NETWORK_ADMINISTRATOR',
-                'STORAGE_ADMINISTRATOR',
-                'VM_OPERATOR'
+                'OPERATOR'
             ]
         }
     }

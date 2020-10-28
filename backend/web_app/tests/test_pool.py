@@ -264,7 +264,7 @@ class TestPoolPermissionsSchema:
         pool = pools[0]
         query = """mutation{
                             addPoolRole(pool_id: "%s",
-                                        roles: [VM_ADMINISTRATOR, READ_ONLY])
+                                        roles: [ADMINISTRATOR])
                             {
                                 ok,
                                 pool{assigned_roles, possible_roles}
@@ -275,7 +275,7 @@ class TestPoolPermissionsSchema:
 
         query = """mutation{
                             removePoolRole(pool_id: "%s",
-                                        roles: [READ_ONLY])
+                                        roles: [OPERATOR])
                             {
                                 ok,
                                 pool{assigned_roles, possible_roles}
