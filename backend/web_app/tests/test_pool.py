@@ -122,7 +122,7 @@ class PoolTestCase(VdiHttpTestCase):
 # ----------------------------------------------
 # Static pool
 @pytest.mark.asyncio
-async def test_create_static_pool(fixt_launch_workers, fixt_db, fixt_controller, fixt_create_static_pool,  # noqa
+async def test_create_static_pool(fixt_launch_workers, fixt_db, fixt_create_static_pool,  # noqa
                                   fixt_auth_context):  # noqa
     """Create static pool, make request to check data, remove this pool"""
     pool_id = fixt_create_static_pool['id']
@@ -138,10 +138,11 @@ async def test_create_static_pool(fixt_launch_workers, fixt_db, fixt_controller,
       }
     }""" % pool_id
     executed = await execute_scheme(pool_schema, qu, context=fixt_auth_context)  # noqa
+    assert len(executed['pool']['vms']) == 1
 
 
 @pytest.mark.asyncio
-async def test_update_static_pool(fixt_launch_workers, fixt_db, fixt_controller, fixt_create_static_pool,  # noqa
+async def test_update_static_pool(fixt_launch_workers, fixt_db, fixt_create_static_pool,  # noqa
                                   fixt_auth_context):  # noqa
     """Create static pool, update this pool, remove this pool"""
     pool_id = fixt_create_static_pool['id']

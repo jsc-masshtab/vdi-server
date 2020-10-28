@@ -9,7 +9,6 @@ from async_generator import async_generator, yield_
 from graphene import Context
 
 from common.database import start_gino, stop_gino
-from common.settings import VEIL_WS_MAX_TIME_TO_WAIT
 from common.veil.veil_gino import Role
 from common.veil.auth.veil_jwt import encode_jwt
 
@@ -23,62 +22,12 @@ from web_app.controller.schema import controller_schema
 from web_app.pool.schema import pool_schema
 from web_app.tests.utils import execute_scheme
 
-from common.veil.veil_redis import a_redis_wait_for_message, INTERNAL_EVENTS_CHANNEL, WS_MONITOR_CHANNEL_OUT
+from common.veil.veil_redis import a_redis_wait_for_message, INTERNAL_EVENTS_CHANNEL
 
 from common.log.journal import system_logger
 
 
-async def get_resources_static_pool_test():
-    """На контроллере ищутся оптимальные ресурсы для проведения теста
-    Альтернативы:
-    1)Держать приготовленный контроллер специально для тестов,
-    на котором уже гарантировано присутствуют нужные ресурсы
-    2)На контроллере при каждом тесте создавать/удалять требуемые ресурсы (это может увеличить время тестов)
-    """
-    # controller
-    controllers = await Controller.get_objects()
-    if not controllers:
-        raise RuntimeError('Нет контроллеров')
-
-    controller = await Controller.get(controllers[0].id)
-    veil_response_clusters = await controller.veil_client.cluster().list()
-    clusters = veil_response_clusters.paginator_results
-    if not clusters:
-        raise RuntimeError('На контроллере {} нет кластеров'.format(controller.address))
-    for cluster in clusters:
-        if cluster['verbose_name'] == "cluster_115":
-            cluster_id = cluster['id']
-            break
-
-    veil_response_datapools = await controller.veil_client.data_pool(cluster_id=cluster_id).list()
-    datapools = veil_response_datapools.paginator_results
-    for datapool in datapools:
-        if datapool['verbose_name'] == "Базовый локальный пул данных узла 192.168.11.115":
-            datapool_id = datapool['id']
-            break
-
-    veil_response_vms = await controller.veil_client.domain(template=0).list()
-    vms = veil_response_vms.paginator_results
-    for vm in vms:
-        if vm['verbose_name'] == 'test_2':
-            vm_id = vm['id']
-            break
-
-    veil_response_teplates = await controller.veil_client.domain(template=1).list()
-    templates = veil_response_teplates.paginator_results
-    if not templates:
-        raise RuntimeError('На контроллере {} нет шаблонов'.format(controller.address))
-
-    for template in templates:
-
-        return {'controller_id': controller.id, 'cluster_id': cluster_id,
-                'node_id': template['node']['id'], 'vm_id': vm_id, 'template_id': template['id'],
-                'datapool_id': datapool_id}
-
-    raise RuntimeError('Подходящие ресурсы не найдены.')
-
-
-async def get_resources_automated_pool_test():
+async def get_resources_for_pool_test():
     """На контроллере ищутся оптимальные ресурсы для проведения теста
     """
     # controller
@@ -166,7 +115,7 @@ async def fixt_create_automated_pool(fixt_controller):
     """Create an automated pool, yield, remove this pool"""
     # start resources_monitor to receive info  from controller. autopool creation doesnt work without it
 
-    resources = await get_resources_automated_pool_test()
+    resources = await get_resources_for_pool_test()
     if not resources:
         print('resources not found!')
 
@@ -245,49 +194,15 @@ async def fixt_create_automated_pool(fixt_controller):
 
 @pytest.fixture
 @async_generator
-async def fixt_create_static_pool(fixt_db):
-    """Создается ВМ, создается пул с этой ВМ, пул удаляется, ВМ удаляется."""
-    pool_main_resources = await get_resources_static_pool_test()
+async def fixt_create_static_pool(fixt_controller):
+    """оздается пул, пул удаляется"""
+    pool_main_resources = await get_resources_for_pool_test()
     controller_id = pool_main_resources['controller_id']
     cluster_id = pool_main_resources['cluster_id']
     node_id = pool_main_resources['node_id']
     datapool_id = pool_main_resources['datapool_id']
-    template_id = pool_main_resources['template_id']
-    vm_id = pool_main_resources['vm_id']
-    context = await get_auth_context()
+    vm_id = '37df3326-55b9-4af1-91b3-e54df12f24e7'  # random
 
-    # --- create VM ---
-    async def _create_domain():
-        test_domain_name = 'domain_name_{}'.format(str(uuid.uuid4())[:7])
-
-        params = {
-            'verbose_name': test_domain_name,
-            'domain_id': template_id,
-            'datapool_id': datapool_id,
-            'controller_id': controller_id,
-            'node_id': node_id,
-            'create_thin_clones': True,
-        }
-        vm_info = await Vm.copy(**params)
-        return vm_info
-
-    domain_info = await _create_domain()
-    current_vm_task_id = domain_info['task_id']
-
-    def _check_if_vm_created(redis_message):
-        try:
-            redis_message_data = redis_message['data'].decode()
-            system_logger._debug('_check_if_vm_created:redis_message ' + str(redis_message_data))
-            redis_message_data_dict = json.loads(redis_message_data)
-
-            obj = redis_message_data_dict['object']
-            if current_vm_task_id == obj['parent'] and obj['status'] == 'SUCCESS':
-                return True
-        except Exception as ex:
-            system_logger._debug('_check_if_vm_created ' + str(ex))
-        return False
-
-    await a_redis_wait_for_message(WS_MONITOR_CHANNEL_OUT, _check_if_vm_created, VEIL_WS_MAX_TIME_TO_WAIT)
     # --- create pool ---
     qu = '''
             mutation{addStaticPool(
@@ -311,6 +226,8 @@ async def fixt_create_static_pool(fixt_db):
               ok
             }
             }''' % (get_test_pool_name(), controller_id, cluster_id, node_id, datapool_id, vm_id)
+
+    context = await get_auth_context()
     pool_create_res = await execute_scheme(pool_schema, qu, context=context)
     pool_id = pool_create_res['addStaticPool']['pool']['pool_id']
     await yield_({
