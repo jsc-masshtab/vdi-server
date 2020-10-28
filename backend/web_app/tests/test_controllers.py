@@ -58,7 +58,6 @@ async def test_resolve_controllers(fixt_db, snapshot, fixt_controller, fixt_auth
     qu = """
             {
               controllers {
-                id
                 verbose_name
                 description
                 address
@@ -77,7 +76,6 @@ async def test_resolve_controller(fixt_db, snapshot, fixt_controller, fixt_auth_
     qu = """
             {
               controller(id_: "%s") {
-                id
                 verbose_name
                 address
                 description

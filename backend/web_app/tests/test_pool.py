@@ -327,4 +327,4 @@ async def test_pools_ordering(fixt_launch_workers,  fixt_db, fixt_controller, fi
                 }
             """ % ordering
 
-        executed = await execute_scheme(pool_schema, qu, context=fixt_auth_context)  # noqa
+        await execute_scheme(pool_schema, qu, context=fixt_auth_context)  # noqa
