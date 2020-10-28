@@ -13,13 +13,23 @@ class VeilTestServer:
         # handlers
         self.app.add_routes([web.get(self.base_url + 'domains/{domain_id}/', self.get_domain_info)])
         self.app.add_routes([web.post(self.base_url + 'domains/{domain_id}/start/', self.start_vm)])
-
         self.app.add_routes([web.post(self.base_url + 'domains/multi-create-domain/', self.multi_create_domain)])
+        self.app.add_routes([web.get(self.base_url + 'domains/', self.get_domains)])
 
         self.app.add_routes([web.get(self.base_url + 'tasks/{task_id}/', self.get_task_data)])
 
         self.app.add_routes([web.get(self.base_url + 'controllers/check/', self.check_controllers)])
         self.app.add_routes([web.get(self.base_url + 'controllers/base-version/', self.get_base_controller_version)])
+
+        # resources
+        self.app.add_routes([web.get(self.base_url + 'clusters/', self.get_clusters)])
+        self.app.add_routes([web.get(self.base_url + 'clusters/{cluster_id}/', self.get_cluster)])
+
+        self.app.add_routes([web.get(self.base_url + 'nodes/', self.get_nodes)])
+        self.app.add_routes([web.get(self.base_url + 'nodes/{node_id}/', self.get_node)])
+
+        self.app.add_routes([web.get(self.base_url + 'data-pools/', self.get_datapools)])
+        self.app.add_routes([web.get(self.base_url + 'data-pools/{datapool_id}/', self.get_datapool)])
 
         # ssl
         self.ssl_context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
@@ -613,6 +623,26 @@ class VeilTestServer:
 
         return web.Response(text=json.dumps(res_dict), content_type='application/json')
 
+    async def get_domains(self, request):
+        res_dict = {
+            "count": 1,
+            "next": None,
+            "previous": None,
+            "results": [
+                {
+                    "id": "e00219af-f99a-4615-bd3c-85646be3e1d5",
+                    "memory_count": 4096,
+                    "verbose_name": "19_10-thin_child",
+                    "status": "ACTIVE",
+                    "parent": {
+                        "id": "589ea6af-03b6-4224-a286-48f0e038ce12",
+                        "verbose_name": "19_10"
+                    }
+                }
+            ]
+        }
+        return web.Response(text=json.dumps(res_dict), content_type='application/json')
+
     # /api/tasks/{id}/
     async def get_task_data(self, request):
 
@@ -712,6 +742,476 @@ class VeilTestServer:
 
     async def get_base_controller_version(self, request):
         res_dict = {"version": "4.5.0"}
+        return web.Response(body=json.dumps(res_dict), content_type='application/json')
+
+    async def get_clusters(self, request):
+        res_dict = {
+            "count": 1,
+            "next": None,
+            "previous": None,
+            "results": [
+                {
+                    "cpu_count": 12,
+                    "id": "c3f56e1f-9bd1-45e8-a3e6-a5f69256ee5e",
+                    "memory_count": 32065,
+                    "verbose_name": "cluster_115",
+                    "nodes_count": 1,
+                    "status": "ACTIVE",
+                    "datacenter": {
+                        "id": "84828205-1fc4-45de-8a4b-632bdaacf342",
+                        "verbose_name": "Veil default location"
+                    },
+                    "built_in": False,
+                    "hints": 0,
+                    "tags": [
+
+                    ]
+                }
+            ]
+        }
+        return web.Response(body=json.dumps(res_dict), content_type='application/json')
+
+    async def get_cluster(self, request):
+
+        print('get_cluster')
+        res_dict = {
+            "cpu_count": 12,
+            "created": "2020-02-14T13:54:23.670400Z",
+            "datacenter": {
+                "id": "84828205-1fc4-45de-8a4b-632bdaacf342",
+                "verbose_name": "Veil default location"
+            },
+            "description": "",
+            "id": "c3f56e1f-9bd1-45e8-a3e6-a5f69256ee5e",
+            "locked_by": None,
+            "memory_count": 32065,
+            "modified": "2020-10-16T14:51:34.868561Z",
+            "nodes": [
+                {
+                    "id": "cdf10fc6-57f8-436c-a031-78ba3ba1ae40",
+                    "verbose_name": "192.168.11.115"
+                }
+            ],
+            "fencing_type": "",
+            "heartbeat_type": "",
+            "permissions": {
+                "drs": True,
+                "ha": True,
+                "remove": True,
+                "update": True,
+                "vdi": True,
+                "save_fence_settings": True,
+                "tag": True,
+                "shutdown_domains": True,
+                "set_status": True,
+                "quorum": True
+            },
+            "status": "ACTIVE",
+            "verbose_name": "cluster_115",
+            "built_in": False,
+            "hints": 0,
+            "tags": [
+
+            ],
+            "entity_type": "cluster",
+            "quorum": False,
+            "ha_autoselect": False,
+            "ha_enabled": False,
+            "ha_nodepolicy": [
+
+            ],
+            "ha_retrycount": 5,
+            "ha_timeout": 60,
+            "drs_check_timeout": 180,
+            "drs_enabled": False,
+            "drs_metrics_strategy": "MEMORY",
+            "drs_mode": "SOFT",
+            "drs_node_settings": {
+                "cpu_hh_level": 85,
+                "cpu_hi_level": 80,
+                "mem_hh_level": 85,
+                "mem_hi_level": 80
+            },
+            "drs_strategy": "AVERAGE",
+            "drs_deviation_limit": 2.0,
+            "tag_enabled": False,
+            "anti_affinity_enabled": False,
+            "vdi": False
+        }
+        return web.Response(body=json.dumps(res_dict), content_type='application/json')
+
+    async def get_nodes(self, request):
+        res_dict = {
+            "count": 1,
+            "next": None,
+            "previous": None,
+            "results": [
+                {
+                    "cpu_count": 24,
+                    "id": "39d23118-d37a-454d-a74d-899d1bf2065f",
+                    "memory_count": 32021,
+                    "verbose_name": "192.168.11.111",
+                    "status": "ACTIVE",
+                    "management_ip": "192.168.11.111",
+                    "domains_count": 0,
+                    "domains_on_count": 0,
+                    "cluster": {
+                        "id": "22411c11-38f4-484b-b9a6-99eef7a04776",
+                        "verbose_name": "111_cluster"
+                    },
+                    "built_in": False,
+                    "tags": [
+                    ],
+                    "hints": 1,
+                    "datacenter_name": "Veil default location",
+                    "datacenter_id": "84828205-1fc4-45de-8a4b-632bdaacf342",
+                    "resource_pools": [
+                        {
+                            "id": "d6552db1-7db0-4c7b-a5a1-a2dee5346371",
+                            "verbose_name": "shumilov"
+                        },
+                        {
+                            "id": "f34cf715-3e49-4074-863b-f3a255d41446",
+                            "verbose_name": "111_cluster resource pool"
+                        }
+                    ]
+                }
+            ]
+        }
+        return web.Response(body=json.dumps(res_dict), content_type='application/json')
+
+    async def get_node(self, request):
+        res_dict = {
+            "id": "39d23118-d37a-454d-a74d-899d1bf2065f",
+            "verbose_name": "192.168.11.111",
+            "description": "",
+            "locked_by": None,
+            "permissions": {
+                "update": True,
+                "remove": True,
+                "fence": True,
+                "lsblk": True,
+                "discovery": True,
+                "discovery_datapool": True,
+                "discovery_shared_storage": True,
+                "discovery_cluster_storage": True,
+                "discovery_zfs_pool": True,
+                "update_hw_info": True,
+                "save_ipmi_credentials": True,
+                "restart_minion": True,
+                "ipmi_command": True,
+                "set_status": True,
+                "swappiness": True,
+                "iommu": True,
+                "autotest": True,
+                "initiator_name": True,
+                "save_drs_settings": True,
+                "save_fence_settings": True,
+                "transfer": True,
+                "ksm": True,
+                "delete_unknown_domain": True,
+                "migrate_domains": True,
+                "shutdown_domains": True,
+                "start_domains": True,
+                "ballooning": True,
+                "create_mdev": True,
+                "remove_mdev": True,
+                "profile": True,
+                "ssh_handler": True,
+                "service_action": True,
+                "backup_os": True
+            },
+            "status": "ACTIVE",
+            "created": "2020-06-19T06:32:33.240526Z",
+            "modified": "2020-10-28T10:24:40.156064Z",
+            "management_ip": "192.168.11.111",
+            "built_in": False,
+            "memory_count": 32021,
+            "cpu_topology": {
+                "cpu_map": {
+                    "0": {
+                        "cpus": [
+                            0,
+                            1,
+                            2,
+                            3,
+                            4,
+                            5,
+                            12,
+                            13,
+                            14,
+                            15,
+                            16,
+                            17
+                        ],
+                        "free": "13182",
+                        "size": "15916",
+                        "distances": "10,21"
+                    },
+                    "1": {
+                        "cpus": [
+                            6,
+                            7,
+                            8,
+                            9,
+                            10,
+                            11,
+                            18,
+                            19,
+                            20,
+                            21,
+                            22,
+                            23
+                        ],
+                        "free": "10920",
+                        "size": "16105",
+                        "distances": "21,10"
+                    },
+                    "all": {}
+                },
+                "cpu_type": "Intel",
+                "cpu_cores": 6,
+                "cpu_count": 24,
+                "cpu_model": "Haswell-noTSX",
+                "proc_info": [
+                    {
+                        "id": "F2 06 03 00 FF FB EB BF",
+                        "family": "Xeon",
+                        "status": [
+                            "Populated",
+                            "Enabled"
+                        ],
+                        "version": "Intel(R) Xeon(R) CPU E5-2620 v3 @ 2.40GHz",
+                        "max_speed": "4000 MHz",
+                        "manufacturer": "Intel",
+                        "thread_count": 12
+                    },
+                    {
+                        "id": "F2 06 03 00 FF FB EB BF",
+                        "family": "Xeon",
+                        "status": [
+                            "Populated",
+                            "Enabled"
+                        ],
+                        "version": "Intel(R) Xeon(R) CPU E5-2620 v3 @ 2.40GHz",
+                        "max_speed": "4000 MHz",
+                        "manufacturer": "Intel",
+                        "thread_count": 12
+                    }
+                ],
+                "cpu_mhz_all": 96000,
+                "cpu_sockets": 2,
+                "cpu_threads": 2,
+                "cpu_features": [
+                    "abm",
+                    "acpi",
+                    "aes",
+                    "apic",
+                    "arat",
+                    "avx",
+                    "avx2",
+                    "bmi1",
+                    "bmi2",
+                    "clflush",
+                    "cmov",
+                    "cx16",
+                    "cx8",
+                    "dca",
+                    "de",
+                    "ds",
+                    "ds_cpl",
+                    "dtes64",
+                    "erms",
+                    "est",
+                    "f16c",
+                    "fma",
+                    "fpu",
+                    "fsgsbase",
+                    "fxsr",
+                    "ht",
+                    "invpcid",
+                    "invtsc",
+                    "lahf_lm",
+                    "lm",
+                    "mca",
+                    "mce",
+                    "mmx",
+                    "monitor",
+                    "movbe",
+                    "msr",
+                    "mtrr",
+                    "nx",
+                    "osxsave",
+                    "pae",
+                    "pat",
+                    "pbe",
+                    "pcid",
+                    "pclmuldq",
+                    "pdcm",
+                    "pdpe1gb",
+                    "pge",
+                    "pni",
+                    "popcnt",
+                    "pse",
+                    "pse36",
+                    "rdrand",
+                    "rdtscp",
+                    "sep",
+                    "smep",
+                    "smx",
+                    "ss",
+                    "sse",
+                    "sse2",
+                    "sse4.1",
+                    "sse4.2",
+                    "ssse3",
+                    "syscall",
+                    "tm",
+                    "tm2",
+                    "tsc",
+                    "tsc-deadline",
+                    "tsc_adjust",
+                    "vme",
+                    "vmx",
+                    "x2apic",
+                    "xsave",
+                    "xsaveopt",
+                    "xtpr"
+                ],
+                "cpu_numa_nodes": 2,
+                "cpu_architecture": "x86_64"
+            },
+            "domains_cpu_map": {},
+            "ipmi_ip": "192.168.11.152",
+            "ipmi_username": "admin",
+            "fencing_type": "VIRTUAL",
+            "heartbeat_type": "KERNEL",
+            "node_plus_controller_installation": False,
+            "uptime": {
+                "uptime": 175914,
+                "start_time": "2020-10-26T09:38:08.000000Z",
+                "system_time": "2020-10-28T10:30:02.299699Z",
+                "timezone": "Europe/Moscow"
+            },
+            "drs_settings": {
+                "cpu_hh_level": 85,
+                "cpu_hi_level": 80,
+                "mem_hh_level": 85,
+                "mem_hi_level": 80,
+                "net_hh_level": 85,
+                "net_hi_level": 80,
+                "disk_hh_level": 85,
+                "disk_hi_level": 80
+            },
+            "cluster": "22411c11-38f4-484b-b9a6-99eef7a04776",
+            "cluster_name": "111_cluster",
+            "datacenter_name": "Veil default location",
+            "datacenter_id": "84828205-1fc4-45de-8a4b-632bdaacf342",
+            "ksm_enable": 0,
+            "ksm_sleep_time": 20,
+            "ksm_pages_to_scan": 100,
+            "ksm_merge_across_nodes": 1,
+            "hints": 1,
+            "tags": [
+
+            ],
+            "version": "4.4.0",
+            "ballooning": True,
+            "entity_type": "node"
+        }
+        return web.Response(body=json.dumps(res_dict), content_type='application/json')
+
+    async def get_datapools(self, request):
+        res_dict = {
+            "count": 1,
+            "next": None,
+            "previous": None,
+            "results": [
+                {
+                    "id": "ba13e5a5-d405-4ea3-bb74-82c139a0638a",
+                    "status": "ACTIVE",
+                    "verbose_name": "trans",
+                    "built_in": False,
+                    "free_space": 3402402,
+                    "size": 3603492,
+                    "used_space": 201090,
+                    "shared_storage": {
+                        "id": "e7b6266d-eeaf-4728-9946-b6e34b10f2cc",
+                        "verbose_name": "14.1_trans"
+                    },
+                    "cluster_storage": None,
+                    "nodes_connected": [
+                        {
+                            "id": "cdf10fc6-57f8-436c-a031-78ba3ba1ae40",
+                            "verbose_name": "192.168.11.115",
+                            "connection_status": "SUCCESS"
+                        },
+                        {
+                            "id": "85e68238-8bf6-4f5b-a06c-1926f38df05b",
+                            "verbose_name": "192.168.11.110",
+                            "connection_status": "FAILED"
+                        }
+                    ],
+                    "iso_count": 0,
+                    "file_count": 0,
+                    "type": "nfs",
+                    "vdisk_count": 1,
+                    "zfs_pool": None,
+                    "hints": 2,
+                    "tags": [
+
+                    ],
+                    "resource_pools": [
+
+                    ]
+                }
+            ]
+        }
+        return web.Response(body=json.dumps(res_dict), content_type='application/json')
+
+    async def get_datapool(self, request):
+        res_dict = {
+            "id": "ba13e5a5-d405-4ea3-bb74-82c139a0638a",
+            "verbose_name": "trans",
+            "description": "description",
+            "locked_by": None,
+            "built_in": True,
+            "entity_type": "datapool",
+            "status": "ACTIVE",
+            "created": "2020-09-03T04:25:06.624204Z",
+            "modified": "2020-10-28T10:51:46.257530Z",
+            "type": "local",
+            "options": {
+                "path": "/storages/local/default"
+            },
+            "path": "/storages/local/default",
+            "free_space": 3402402,
+            "size": 3603492,
+            "used_space": 201090,
+            "shared_storage": None,
+            "cluster_storage": None,
+            "nodes_connected": [
+                {
+                    "id": "0ca1aa55-b1d8-427e-bbf7-9f8ac57db911",
+                    "verbose_name": "192.168.11.113",
+                    "connection_status": "SUCCESS"
+                }
+            ],
+            "permissions": {
+                "update": True,
+                "remove": False,
+                "unregister": True,
+                "clear": True,
+                "discover_iso": True,
+                "discover_vdisks": True,
+                "discover_files": True
+            },
+            "lun": None,
+            "zfs_pool": None,
+            "hints": 0,
+            "tags": [
+            ]
+        }
         return web.Response(body=json.dumps(res_dict), content_type='application/json')
 
 
