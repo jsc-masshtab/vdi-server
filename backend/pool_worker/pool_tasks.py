@@ -163,11 +163,13 @@ class InitPoolTask(AbstractTask):
 
 class ExpandPoolTask(AbstractTask):
 
-    def __init__(self, pool_locks, ignore_reserve_size=False):
+    def __init__(self, pool_locks, ignore_reserve_size=False, wait_for_lock=False):
         super().__init__()
 
         self._pool_locks = pool_locks
         self.ignore_reserve_size = ignore_reserve_size  # расширение не смотря на достаточный резерв
+        self.wait_for_lock = wait_for_lock  # Если true ждем освобождеия локов. Если false, то бросаем исключение, если
+        # локи заняты
 
     async def do_task(self):
 
@@ -178,9 +180,9 @@ class ExpandPoolTask(AbstractTask):
         pool_lock = self._pool_locks.get_pool_lock(str(automated_pool.id))
         template_lock = self._pool_locks.get_template_lock(str(automated_pool.template_id))
 
-        # Проверяем залочены ли локи. Если залочены, то ничего не делаем, так как любые другие действия с
-        # пулом требующие блокировки - в приоретете.
-        if pool_lock.locked() or template_lock.locked():
+        # Проверяем залочены ли локи. Если залочены, то бросаем исключение.
+        # Экспериментально сделано опциальным (self.wait_for_lock)
+        if not self.wait_for_lock and (pool_lock.locked() or template_lock.locked()):
             raise RuntimeError('ExpandPoolTask: Another task works on this pool or vm template is busy')
 
         async with pool_lock:

@@ -640,7 +640,14 @@ class ExpandPoolMutation(graphene.Mutation, PoolValidator):
 
         await cls.validate_pool_id(dict(), pool_id)
 
-        task_id = await request_to_execute_pool_task(pool_id, PoolTaskType.EXPANDING_POOL, ignore_reserve_size=True)
+        # Check if pool already reached its total_size
+        autopool = await AutomatedPool.get(pool_id)
+        total_size_reached = await autopool.check_if_total_size_reached()
+        if total_size_reached:
+            raise SimpleError(_('Can not expand pool {} because it reached its total_size').format(pool_id))
+
+        task_id = await request_to_execute_pool_task(pool_id, PoolTaskType.EXPANDING_POOL,
+                                                     ignore_reserve_size=True, wait_for_lock=True)
         return {
             'ok': True,
             'task_id': task_id,

@@ -262,6 +262,7 @@ class Pool(VeilModel):
         Нужно дорабатывать - отказаться от in и дублирования кода.
         :param only_free: учитываем только свободные VM
         :return: int
+        Надо бы переделать это в статический метод а то везде приходится делать Pool.get(id)
         """
         if only_free:
             ero_query = EntityRoleOwnerModel.select('entity_id').where(EntityRoleOwnerModel.user_id != None)  # noqa
@@ -952,3 +953,9 @@ class AutomatedPool(db.Model):
             AuthenticationDirectory.status == Status.ACTIVE).gino.first()
         await asyncio.gather(
             *[vm_object.prepare_with_timeout(active_directory_object, self.ad_cn_pattern) for vm_object in vm_objects])
+
+    async def check_if_total_size_reached(self):
+
+        pool = await Pool.get(self.id)
+        vm_amount = await pool.get_vm_amount()
+        return vm_amount >= self.total_size
