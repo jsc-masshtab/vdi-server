@@ -296,263 +296,75 @@ class VeilTestServer:
         return web.Response(text=json.dumps(res_dict), content_type='application/json')
 
     async def start_vm(self, request):
+        print('start_vm')
+
         domain_id = request.match_info['domain_id']
 
         res_dict = {
-            "id": domain_id,
-            "verbose_name": "verbose_name",
-            "description": "",
-            "locked_by": "c8f63c34-e40a-4e10-be6a-a181f3d42c39",
-            "permissions": {
-                "update": True,
-                "remove": True,
-                "spice": True,
-                "update_controllers": True,
-                "update_video_device": True,
-                "update_sound_device": True,
-                "update_boot": True,
-                "update_ha_options": True,
-                "migrate": True,
-                "recover": True,
-                "update_disastery_options": True,
-                "safety": True,
-                "start": True,
-                "shutdown": True,
-                "suspend": True,
-                "reboot": True,
-                "resume": True,
-                "attach_vdisk": True,
-                "detach_vdisk": True,
-                "attach_iso": True,
-                "detach_iso": True,
-                "remote_access": True,
-                "snapshots_tree": True,
-                "snapshots_info": True,
-                "attach_usb": True,
-                "detach_usb": True,
-                "attach_pci": True,
-                "detach_pci": True,
-                "prepare": True,
-                "attach_mdev": True,
-                "detach_mdev": True,
-                "rm_from_ad": True,
-                "attach_lun": True,
-                "detach_lun": True,
-                "set_hostname": True,
-                "set_owners": True,
-                "multi_create_domain": True,
-                "add_to_ad": True,
-                "clone": True,
-                "template": True,
-                "free_domain_name": True,
-                "update_graphics_settings": True,
-                "cloud_init": True,
-                "backup": True,
-                "show_backup": True,
-                "attach_veil_utils_iso": True,
-                "automated_restore": True,
-                "convert_backup": True,
-                "config_restore": True,
-                "guest_command": True,
-                "consoles": True
-            },
-            "status": "ACTIVE",
-            "created": "2020-10-21T10:01:27.921094Z",
-            "modified": "2020-10-27T15:04:36.643284Z",
-            "migrated": None,
-            "user_power_state": 3,
-            "cpu_topology": {
-                "cpu_map": {
-
-                },
-                "cpu_mode": "host-model",
-                "cpu_cores": 1,
-                "cpu_count": 2,
-                "cpu_model": "default",
-                "cpu_shares": 1024,
-                "cpu_sockets": 2,
-                "cpu_threads": 1,
-                "cpu_priority": 10,
-                "cpu_count_max": 2,
-                "cpu_min_guarantee": 0
-            },
-            "cpu_type": "Intel",
-            "memory_count": 4000,
-            "memory_pool": None,
-            "template": False,
-            "os_type": "Linux",
-            "os_version": "Alt Linux 9 (64-bit)",
-            "node": {
-                "id": "5fa241a4-a9f6-46ec-b55e-fe5307f69737",
-                "verbose_name": "192.168.14.155"
-            },
-            "thin": True,
-            "cloud_init": False,
-            "cloud_init_config": {
-
-            },
-            "uptime_on_current_node": {
-                "start_time": 0,
-                "uptime": 0,
-                "system_time": "2020-10-27T15:04:36.872768Z"
-            },
-            "uptime_total": 0,
-            "parent": {
-                "id": "f5b758b0-8b30-455f-b2a3-146bb5debd77",
-                "verbose_name": "win10_155_template"
-            },
-            "resource_pool": {
-                "id": "3761d10d-9bbe-430d-9c1f-aac6da6162ca",
-                "verbose_name": "veil GRID cluster resource pool"
-            },
-            "ha_enabled": False,
-            "ha_autoselect": False,
-            "ha_nodepolicy": [
-
-            ],
-            "ha_boot_order": 2,
-            "ha_retrycount": 5,
-            "ha_timeout": 60,
-            "ha_options_cluster_sync": True,
-            "video": {
-                "type": "virtio",
-                "vram": 16384,
-                "heads": 1
-            },
-            "sound": {
-                "codec": "micro",
-                "model": "ich6"
-            },
-            "graphics_password": "1",
-            "features": [
-
-            ],
-            "machine": "pc",
-            "qemu_args": [
-
-            ],
-            "remote_access_port": 5919,
-            "remote_access_allow_all": True,
-            "tablet": True,
-            "remote_access": True,
-            "remote_access_white_list": [
-
-            ],
-            "spice_stream": False,
-            "clean_count": 1,
-            "clean_type": "zero",
-            "safety": False,
-            "disastery_enabled": False,
-            "bootmenu": False,
-            "bootmenu_timeout": 3,
-            "boot_type": "LegacyMBR",
-            "memory_min_guarantee": 0,
-            "memory_shares": 1024,
-            "memory_limit": 0,
-            "tcp_usb_devices": [
-
-            ],
-            "owners": [
-
-            ],
-            "usb_devices": [
-
-            ],
-            "pci_devices": [
-
-            ],
-            "mdev_devices": [
-
-            ],
-            "os_defaults": {
-                "controllers": {
-                    "vdisk": {
-                        "target_bus": "sata"
-                    },
-                    "vmachineinf": {
-                        "nic_driver": "e1000"
+            "_task": {
+                "id": "0daf02eb-3172-48a8-b50c-a38b751f9b0b",
+                "verbose_name": "Task",
+                "name": "Starting the virtual machine win_test.",
+                "progress": 0,
+                "status": "IN_PROGRESS",
+                "created": "2020-10-29T12:08:18.248553Z",
+                "executed": 0,
+                "finished_time": None,
+                "nodes_user_responses": [
+                    {
+                        "node_id": "cdf10fc6-57f8-436c-a031-78ba3ba1ae40",
+                        "node_response": "None"
                     }
+                ],
+                "events": [
+                    {
+                        "id": "79280435-3b14-4374-990b-6831aea1008c",
+                        "message": "Task created:  Starting the virtual machine win_test.",
+                        "user": "solomin",
+                        "created": "2020-10-29T12:08:18.433958Z",
+                        "task": "0daf02eb-3172-48a8-b50c-a38b751f9b0b",
+                        "readed": [],
+                        "entities": [
+                            {
+                                "entity_uuid": domain_id,
+                                "entity_class": "domain"
+                            },
+                            {
+                                "entity_uuid": "cdf10fc6-57f8-436c-a031-78ba3ba1ae40",
+                                "entity_class": "node"
+                            }
+                        ],
+                        "detail_message": "Task",
+                        "permissions": {
+                            "mark": True
+                        },
+                        "type": "info"
+                    }
+                ],
+                "nodes_list": [
+                    "cdf10fc6-57f8-436c-a031-78ba3ba1ae40"
+                ],
+                "user": {
+                    "id": 204,
+                    "username": "solomin"
                 },
-                "video": {
-                    "type": "cirrus"
+                "error_message": "",
+                "is_cancellable": True,
+                "permissions": {
+                    "cancel": True,
+                    "release_locks": True,
+                    "check": True,
+                    "run": True
                 },
-                "sound": {
-                    "model": "ich6",
-                    "codec": "micro"
-                },
-                "os_version": {
-                    "windowsun": "Unknown Windows"
+                "is_multitask": False,
+                "parent": None,
+                "entities": {
+                    domain_id: "domain",
+                    "cdf10fc6-57f8-436c-a031-78ba3ba1ae40": "node"
                 }
-            },
-            "cluster": "bcae0f80-3cee-465d-976d-674a8bf7bdf1",
-            "controllers": {
-                "ide": [
-                    {
-
-                    }
-                ],
-                "pci": [
-                    {
-                        "model": "pci-root",
-                        "order": 0
-                    },
-                    {
-                        "model": "pci-bridge",
-                        "order": 1
-                    }
-                ],
-                "usb": [
-                    {
-                        "model": "nec-xhci",
-                        "order": 0
-                    }
-                ],
-                "sata": [
-                    {
-
-                    }
-                ],
-                "scsi": [
-
-                ]
-            },
-            "free_slots": {
-                "pci": 54,
-                "ide": 2,
-                "scsi": 0,
-                "sata": 14,
-                "usb": 4
-            },
-            "current_state": "faa1f4fe-d547-4924-8f90-638617abad81",
-            "applied_snapshot": "2afc0ddc-7944-46d6-a1eb-14dc1711eaf7",
-            "hints": 0,
-            "tags": [
-
-            ],
-            "spice_usb_channels": [
-
-            ],
-            "start_on_boot": False,
-            "guest_utils": {
-
-            },
-            "graphics_settings": {
-                "mouse_mode": "client",
-                "streaming_mode": "filter",
-                "jpeg_compression": "auto",
-                "zlib_compression": "auto",
-                "image_compression": "auto_glz",
-                "clipboard_copypaste": "yes",
-                "filetransfer_enable": "yes",
-                "playback_compression": "on"
-            },
-            "entity_type": "domain",
-            "real_remote_access_port": 50010,
-            "consoles": [
-
-            ]
+            }
         }
-        return web.Response(text=json.dumps(res_dict), content_type='application/json')
+        return web.Response(text=json.dumps(res_dict), content_type='application/json', status=202)
 
     async def multi_create_domain(self, request):
 
