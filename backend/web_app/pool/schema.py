@@ -1077,6 +1077,23 @@ class VmReboot(graphene.Mutation):
         return VmReboot(ok=False)
 
 
+class VmSuspend(graphene.Mutation):
+    class Arguments:
+        vm_id = graphene.UUID(required=True)
+
+    ok = graphene.Boolean()
+
+    @administrator_required
+    async def mutate(self, _info, vm_id, creator, **kwargs):
+        vm = await Vm.get(vm_id)
+        if vm:
+            domain_entity = await vm.vm_client
+            await domain_entity.info()
+            asyncio.ensure_future(vm.suspend(creator=creator))
+            return VmSuspend(ok=True)
+        return VmSuspend(ok=False)
+
+
 # --- --- --- --- ---
 # Schema concatenation
 class PoolMutations(graphene.ObjectType):
@@ -1104,6 +1121,7 @@ class PoolMutations(graphene.ObjectType):
     startVm = VmStart.Field()
     shutdownVm = VmShutdown.Field()
     rebootVm = VmReboot.Field()
+    suspendVm = VmSuspend.Field()
 
 
 pool_schema = graphene.Schema(query=PoolQuery,

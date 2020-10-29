@@ -347,7 +347,6 @@ class Vm(VeilModel):
         vm_controller = await self.controller
         return vm_controller.veil_client.domain(domain_id=self.id_str)
 
-    # TODO: suspend
     # TODO: reset
     # TODO: resume
 
@@ -407,6 +406,23 @@ class Vm(VeilModel):
                 await system_logger.info(_('VM {} was reboot.').format(self.verbose_name), user=creator,
                                          entity=self.entity)
             return task_success
+
+    async def suspend(self, creator='system'):
+        """Ставит на паузу ВМ - Пересылает suspend для ВМ на ECP VeiL."""
+        domain_entity = await self.vm_client
+        domain_response = await domain_entity.info()
+        if not domain_response.success:
+            raise ValueError(_('VeiL domain request error.'))
+
+        if domain_entity.powered:
+            # await system_logger.info(_('Suspending {}').format(self.verbose_name), entity=self.entity)
+            task_success = await self.action('suspend')
+            await system_logger.info(_('VM {} is suspended.').format(self.verbose_name), user=creator,
+                                     entity=self.entity)
+            return task_success
+        else:
+            raise SimpleError(_('VM {} is shutdown. Please power this.').format(self.verbose_name), user=creator,
+                              entity=self.entity)
 
     async def prepare(self, active_directory_obj: AuthenticationDirectory = None, ad_cn_pattern: str = None):
         """Check that domain remote-access is enabled and domain is powered on.

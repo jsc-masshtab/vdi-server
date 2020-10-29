@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2020-10-28 13:50+0300\n"
+"POT-Creation-Date: 2020-10-29 10:54+0300\n"
 "PO-Revision-Date: 2020-07-30 11:25+0300\n"
 "Last-Translator: Emil <emil@emil-pc>\n"
 "Language-Team: English\n"
@@ -463,102 +463,106 @@ msgstr "VM {} deleting cancelled by timeout."
 msgid "No such event."
 msgstr "No such event."
 
-#: ../common/models/vm.py:334 ../common/models/vm.py:359
-#: ../common/models/vm.py:372 ../common/models/vm.py:394
-#: ../common/models/vm.py:425 ../common/models/vm.py:434
-#: ../web_app/thin_client_api/handlers.py:131
+#: ../common/models/vm.py:334 ../common/models/vm.py:358
+#: ../common/models/vm.py:371 ../common/models/vm.py:393
+#: ../common/models/vm.py:415 ../common/models/vm.py:441
+#: ../common/models/vm.py:450 ../web_app/thin_client_api/handlers.py:131
 msgid "VeiL domain request error."
 msgstr "VeiL domain request error."
 
-#: ../common/models/vm.py:364
+#: ../common/models/vm.py:363
 msgid "VM {} is powered."
 msgstr "VM {} is powered."
 
-#: ../common/models/vm.py:375
+#: ../common/models/vm.py:374
 msgid "VM {} already shutdown."
 msgstr "VM {} already shutdown."
 
-#: ../common/models/vm.py:382
+#: ../common/models/vm.py:381
 msgid "VM {} is force shutdown."
 msgstr "VM {} is force shutdown."
 
-#: ../common/models/vm.py:385
+#: ../common/models/vm.py:384
 msgid "VM {} is shutdown."
 msgstr "VM {} is shutdown."
 
-#: ../common/models/vm.py:397
+#: ../common/models/vm.py:396 ../common/models/vm.py:424
 msgid "VM {} is shutdown. Please power this."
 msgstr "VM {} is shutdown. Please power this."
 
-#: ../common/models/vm.py:404
+#: ../common/models/vm.py:403
 msgid "VM {} was force reboot."
 msgstr "VM {} was force reboot."
 
-#: ../common/models/vm.py:407
+#: ../common/models/vm.py:406
 msgid "VM {} was reboot."
 msgstr "VM {} was reboot."
 
-#: ../common/models/vm.py:431
+#: ../common/models/vm.py:420
+msgid "VM {} is suspended."
+msgstr "VM {} is suspended."
+
+#: ../common/models/vm.py:447
 msgid "Enabling remote access for {}."
 msgstr "Enabling remote access for {}."
 
-#: ../common/models/vm.py:437 ../web_app/thin_client_api/handlers.py:134
+#: ../common/models/vm.py:453 ../web_app/thin_client_api/handlers.py:134
 msgid "Task has`t been created."
 msgstr "Task has`t been created."
 
-#: ../common/models/vm.py:451 ../web_app/thin_client_api/handlers.py:148
+#: ../common/models/vm.py:467 ../web_app/thin_client_api/handlers.py:148
 msgid "VM remote access task {} finished with error."
 msgstr "VM remote access task {} finished with error."
 
-#: ../common/models/vm.py:455
+#: ../common/models/vm.py:471
 msgid "Remote access enabled."
 msgstr "Remote access enabled."
 
-#: ../common/models/vm.py:464 ../common/models/vm.py:494
+#: ../common/models/vm.py:480 ../common/models/vm.py:510
 msgid "Waiting guest agent activation for {}."
 msgstr "Waiting guest agent activation for {}."
 
-#: ../common/models/vm.py:473
+#: ../common/models/vm.py:489
 msgid "Setting hostname for {}."
 msgstr "Setting hostname for {}."
 
-#: ../common/models/vm.py:486
+#: ../common/models/vm.py:502
 msgid "VM hostname setting task {} finished with error."
 msgstr "VM hostname setting task {} finished with error."
 
-#: ../common/models/vm.py:490
+#: ../common/models/vm.py:506
 msgid "Hostname {} has been set."
 msgstr "Hostname {} has been set."
 
-#: ../common/models/vm.py:503
+#: ../common/models/vm.py:519
 msgid "Adding {} to domain."
 msgstr "Adding {} to domain."
 
-#: ../common/models/vm.py:518
+#: ../common/models/vm.py:534
 msgid "VM {} domain including task failed."
 msgstr "VM {} domain including task failed."
 
-#: ../common/models/vm.py:521
+#: ../common/models/vm.py:537
 msgid "VM domain include task {} finished with error."
 msgstr "VM domain include task {} finished with error."
 
-#: ../common/models/vm.py:531
+#: ../common/models/vm.py:547
 msgid "VM has been added to Windows domain {}."
 msgstr "VM has been added to Windows domain {}."
 
-#: ../common/models/vm.py:550
+#: ../common/models/vm.py:566
 msgid "VM domain container adding task {} finished with error."
 msgstr "VM domain container adding task {} finished with error."
 
-#: ../common/models/vm.py:553
+#: ../common/models/vm.py:569
 msgid "VM has been added to Windows domain container(s) {}."
 msgstr "VM has been added to Windows domain container(s) {}."
 
-#: ../common/models/vm.py:555
+#: ../common/models/vm.py:571
 msgid "VM {} has been prepared."
 msgstr "VM {} has been prepared."
 
-#: ../common/models/vm.py:564
+#: ../common/models/vm.py:580
 msgid "{} preparation cancelled by timeout."
 msgstr "{} preparation cancelled by timeout."
 
@@ -1066,8 +1070,8 @@ msgstr "{cls}: Controller {name} is already monitored."
 msgid "{cls}: resource monitor for controller {name} connected."
 msgstr "{cls}: resource monitor for controller {name} connected."
 
-#~ msgid "{} {} has been removed."
-#~ msgstr "{} {} has been removed."
-
 #~ msgid "{} has been removed."
 #~ msgstr "{} has been removed."
+
+#~ msgid "{} {} has been removed."
+#~ msgstr "{} {} has been removed."
