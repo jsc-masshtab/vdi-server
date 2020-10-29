@@ -665,10 +665,10 @@ class CreateAutomatedPoolMutation(graphene.Mutation, PoolValidator, ControllerFe
         node_id = graphene.UUID(required=True)
 
         verbose_name = graphene.String(required=True)
-        increase_step = graphene.Int(default_value=3, description="Шаг расширения пула")
-        initial_size = graphene.Int(default_value=1)
-        reserve_size = graphene.Int(default_value=1)
-        total_size = graphene.Int(default_value=1)
+        increase_step = graphene.Int(default_value=1, description="Шаг расширения пула")
+        initial_size = graphene.Int(default_value=1, description="Начальное количество ВМ")
+        reserve_size = graphene.Int(default_value=1, description="Пороговое количество свободных ВМ")
+        total_size = graphene.Int(default_value=2, description="Максимальное количество создаваемых ВМ")
         vm_name_template = graphene.String(required=True)
 
         create_thin_clones = graphene.Boolean(default_value=True)

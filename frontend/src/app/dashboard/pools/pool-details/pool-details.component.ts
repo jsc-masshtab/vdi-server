@@ -139,13 +139,13 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
       property_lv2: 'verbose_name'
     },
     {
-      title: 'Начальное количество ВМ',    // всего вм
+      title: 'Начальное количество ВМ',
       property: 'initial_size',
       type: 'string'
     },
     {
-      title: 'Количество создаваемых ВМ',      // сколько свободных осталось
-      property: 'reserve_size',
+      title: 'Количество создаваемых ВМ',
+      property: 'increase_step',
       type: 'string',
       edit: 'changeAutomatedPoolReserveSize'
     },
@@ -159,7 +159,7 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
     },
     {
       title: 'Пороговое количество свободных ВМ',
-      property: 'increase_step',
+      property: 'reserve_size',
       type: 'string'
     },
     {
