@@ -535,7 +535,7 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
             tag: 'select',
             title: 'Выбрать тип подключения',
             fieldName: 'connection_types',
-            data: ['SPICE', 'RDP', 'NATIVE_RDP'],
+            data: ['RDP', 'NATIVE_RDP', 'SPICE', 'SPICE_DIRECT'],
             fieldValue: this.pool.assigned_connection_types,
           }]
         },
