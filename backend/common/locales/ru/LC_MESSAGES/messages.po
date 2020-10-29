@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2020-10-28 13:50+0300\n"
+"POT-Creation-Date: 2020-10-29 10:54+0300\n"
 "PO-Revision-Date: 2020-07-30 11:25+0300\n"
 "Last-Translator: Emil <emil@emil-pc>\n"
 "Language-Team: Russian\n"
@@ -463,102 +463,106 @@ msgstr "Удаление ВМ {} отменено по таймауту."
 msgid "No such event."
 msgstr "Нет такого события."
 
-#: ../common/models/vm.py:334 ../common/models/vm.py:359
-#: ../common/models/vm.py:372 ../common/models/vm.py:394
-#: ../common/models/vm.py:425 ../common/models/vm.py:434
-#: ../web_app/thin_client_api/handlers.py:131
+#: ../common/models/vm.py:334 ../common/models/vm.py:358
+#: ../common/models/vm.py:371 ../common/models/vm.py:393
+#: ../common/models/vm.py:415 ../common/models/vm.py:441
+#: ../common/models/vm.py:450 ../web_app/thin_client_api/handlers.py:131
 msgid "VeiL domain request error."
 msgstr "Ошибка запроса VeiL ВМ."
 
-#: ../common/models/vm.py:364
+#: ../common/models/vm.py:363
 msgid "VM {} is powered."
 msgstr "ВМ {} включена."
 
-#: ../common/models/vm.py:375
+#: ../common/models/vm.py:374
 msgid "VM {} already shutdown."
 msgstr "ВМ {} уже выключена."
 
-#: ../common/models/vm.py:382
+#: ../common/models/vm.py:381
 msgid "VM {} is force shutdown."
 msgstr "ВМ {} принудительно выключена."
 
-#: ../common/models/vm.py:385
+#: ../common/models/vm.py:384
 msgid "VM {} is shutdown."
 msgstr "ВМ {} выключена."
 
-#: ../common/models/vm.py:397
+#: ../common/models/vm.py:396 ../common/models/vm.py:424
 msgid "VM {} is shutdown. Please power this."
 msgstr "ВМ {} выключена. Пожалуйста включите её."
 
-#: ../common/models/vm.py:404
+#: ../common/models/vm.py:403
 msgid "VM {} was force reboot."
 msgstr "ВМ {} принудительно перезагружена."
 
-#: ../common/models/vm.py:407
+#: ../common/models/vm.py:406
 msgid "VM {} was reboot."
 msgstr "ВМ {} перезагружена."
 
-#: ../common/models/vm.py:431
+#: ../common/models/vm.py:420
+msgid "VM {} is suspended."
+msgstr "ВМ {} приостановлена."
+
+#: ../common/models/vm.py:447
 msgid "Enabling remote access for {}."
 msgstr "Включаем удаленный доступ для {}."
 
-#: ../common/models/vm.py:437 ../web_app/thin_client_api/handlers.py:134
+#: ../common/models/vm.py:453 ../web_app/thin_client_api/handlers.py:134
 msgid "Task has`t been created."
 msgstr "Задача не была создана."
 
-#: ../common/models/vm.py:451 ../web_app/thin_client_api/handlers.py:148
+#: ../common/models/vm.py:467 ../web_app/thin_client_api/handlers.py:148
 msgid "VM remote access task {} finished with error."
 msgstr "Задава {} включения удаленного доступа ВМ завершилась с ошибкой."
 
-#: ../common/models/vm.py:455
+#: ../common/models/vm.py:471
 msgid "Remote access enabled."
 msgstr "Удаленный доступ включен."
 
-#: ../common/models/vm.py:464 ../common/models/vm.py:494
+#: ../common/models/vm.py:480 ../common/models/vm.py:510
 msgid "Waiting guest agent activation for {}."
 msgstr "Ожидаем активации гостевого агента для {}."
 
-#: ../common/models/vm.py:473
+#: ../common/models/vm.py:489
 msgid "Setting hostname for {}."
 msgstr "Задаем hostname для {}."
 
-#: ../common/models/vm.py:486
+#: ../common/models/vm.py:502
 msgid "VM hostname setting task {} finished with error."
 msgstr "Задача {} установки hostname ВМ завершилась с ошибкой."
 
-#: ../common/models/vm.py:490
+#: ../common/models/vm.py:506
 msgid "Hostname {} has been set."
 msgstr "Задан hostname {}."
 
-#: ../common/models/vm.py:503
+#: ../common/models/vm.py:519
 msgid "Adding {} to domain."
 msgstr "Вводим {} в домен."
 
-#: ../common/models/vm.py:518
+#: ../common/models/vm.py:534
 msgid "VM {} domain including task failed."
 msgstr "Ошибка включения ВМ {} в домен."
 
-#: ../common/models/vm.py:521
+#: ../common/models/vm.py:537
 msgid "VM domain include task {} finished with error."
 msgstr "Задача {} ввода ВМ в домен завершилась с ошибкой."
 
-#: ../common/models/vm.py:531
+#: ../common/models/vm.py:547
 msgid "VM has been added to Windows domain {}."
 msgstr "ВМ {} заведена в Windows домен {}."
 
-#: ../common/models/vm.py:550
+#: ../common/models/vm.py:566
 msgid "VM domain container adding task {} finished with error."
 msgstr "Задача {} включения ВМ в группы домена завершилась с ошибкой."
 
-#: ../common/models/vm.py:553
+#: ../common/models/vm.py:569
 msgid "VM has been added to Windows domain container(s) {}."
 msgstr "ВМ включена в группы {} Windows домена."
 
-#: ../common/models/vm.py:555
+#: ../common/models/vm.py:571
 msgid "VM {} has been prepared."
 msgstr "ВМ {} подготовлена."
 
-#: ../common/models/vm.py:564
+#: ../common/models/vm.py:580
 msgid "{} preparation cancelled by timeout."
 msgstr "подготовка {} отменена по таймауту."
 
@@ -1066,20 +1070,20 @@ msgstr "{cls}: Контроллер {name} уже отслеживается."
 msgid "{cls}: resource monitor for controller {name} connected."
 msgstr "{cls}: монитор ресурсов для контроллера {name} подключен."
 
-#~ msgid "{} {} has been removed."
-#~ msgstr "Выполнено удаление: {} {}."
-
-#~ msgid "{} has been removed."
-#~ msgstr "Выполнено удаление: {}."
-
-#~ msgid "Adding computer {} to domain container(s) {}."
-#~ msgstr "Добавляем компьютер {} в доменную группу  {}."
-
-#~ msgid "VM {} has been added to {}."
-#~ msgstr "ВМ {} добавлена в {}."
+#~ msgid "Maximal number of created VM can not be reduced."
+#~ msgstr "Максимальное количество создаваемых виртуальных машин не может быть уменьшено."
 
 #~ msgid "Invalid credentials (ldap)."
 #~ msgstr "Неверные учетные данные (ldap)."
 
-#~ msgid "Maximal number of created VM can not be reduced."
-#~ msgstr "Максимальное количество создаваемых виртуальных машин не может быть уменьшено."
+#~ msgid "VM {} has been added to {}."
+#~ msgstr "ВМ {} добавлена в {}."
+
+#~ msgid "Adding computer {} to domain container(s) {}."
+#~ msgstr "Добавляем компьютер {} в доменную группу  {}."
+
+#~ msgid "{} has been removed."
+#~ msgstr "Выполнено удаление: {}."
+
+#~ msgid "{} {} has been removed."
+#~ msgstr "Выполнено удаление: {} {}."
