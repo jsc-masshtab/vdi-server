@@ -5,9 +5,7 @@
 #    exit 1
 #fi
 
-locales_list=(en ru)
-
-for locale in ${locales_list[*]}
+for locale in en ru
 do
   locales="$locale"
   domain="messages"

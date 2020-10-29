@@ -284,7 +284,7 @@ msgstr "Удаление пользователя {} из пула {}."
 
 #: ../common/models/pool.py:426
 msgid "Group {} has been included to pool {}."
-msgstr "Группа {} была включена в пул {}."
+msgstr "Группа {} включена в пул {}."
 
 #: ../common/models/pool.py:430
 msgid "Pool already has permission."
@@ -417,7 +417,7 @@ msgstr "Задача удаления ВМ {} завершилась с ошиб
 
 #: ../common/models/vm.py:167
 msgid "User {} has been included to VM {}."
-msgstr "ВМ {} была закреплена за пользователем {}."
+msgstr "ВМ {} закреплена за пользователем {}."
 
 #: ../common/models/vm.py:177
 msgid "VM {} is clear from users."
@@ -492,11 +492,11 @@ msgstr "ВМ {} выключена. Пожалуйста включите её."
 
 #: ../common/models/vm.py:404
 msgid "VM {} was force reboot."
-msgstr "ВМ {} была принудительно перезагружена."
+msgstr "ВМ {} принудительно перезагружена."
 
 #: ../common/models/vm.py:407
 msgid "VM {} was reboot."
-msgstr "ВМ {} была перезагружена."
+msgstr "ВМ {} перезагружена."
 
 #: ../common/models/vm.py:431
 msgid "Enabling remote access for {}."
@@ -556,7 +556,7 @@ msgstr "ВМ включена в группы {} Windows домена."
 
 #: ../common/models/vm.py:555
 msgid "VM {} has been prepared."
-msgstr "ВМ {} была подготовлена."
+msgstr "ВМ {} подготовлена."
 
 #: ../common/models/vm.py:564
 msgid "{} preparation cancelled by timeout."
@@ -614,7 +614,7 @@ msgstr "Неверный параметр запроса {}."
 
 #: ../common/veil/veil_gino.py:189
 msgid "{} {} has been disabled."
-msgstr "{} {} была деактивирована."
+msgstr "{} {} деактивирована."
 
 #: ../common/veil/veil_gino.py:190
 msgid "{} {} has`t been found in VeiL. Switched to FAILED."

@@ -52,7 +52,7 @@ class ControllerValidator(MutationValidation):
     async def validate_token(obj_dict, value):
         """Валидатор токена интеграции контроллера."""
         if not value:
-            raise SimpleError(_('token can`t be empty.'))
+            raise ValidationError(_('token can`t be empty.'))
         return value
 
 
