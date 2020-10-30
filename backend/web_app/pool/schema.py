@@ -8,7 +8,7 @@ from asyncpg.exceptions import UniqueViolationError
 from common.database import db
 from common.veil.veil_gino import RoleTypeGraphene, Role, StatusGraphene, Status, EntityType
 from common.veil.veil_validators import MutationValidation
-from common.veil.veil_errors import SimpleError, ValidationError
+from common.veil.veil_errors import SimpleError, SilentError, ValidationError
 from common.veil.veil_decorators import administrator_required
 from common.veil.veil_graphene import VeilShortEntityType, VeilResourceType, VmState
 
@@ -644,7 +644,8 @@ class ExpandPoolMutation(graphene.Mutation, PoolValidator):
         autopool = await AutomatedPool.get(pool_id)
         total_size_reached = await autopool.check_if_total_size_reached()
         if total_size_reached:
-            raise SimpleError(_('Can not expand pool {} because it reached its total_size').format(pool_id))
+            pool_name = await Pool.select('verbose_name').where(Pool.id == pool_id).gino.scalar()
+            raise SilentError(_('Can not expand pool {} because it reached its total_size.').format(pool_name))
 
         task_id = await request_to_execute_pool_task(pool_id, PoolTaskType.EXPANDING_POOL,
                                                      ignore_reserve_size=True, wait_for_lock=True)
