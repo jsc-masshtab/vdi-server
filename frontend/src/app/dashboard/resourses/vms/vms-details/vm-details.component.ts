@@ -34,6 +34,16 @@ export class VmDetailsComponent implements OnInit, OnDestroy {
       type: 'string'
     },
     {
+      title: 'Состояние',
+      property: 'user_power_state',
+      type: 'string'
+    },
+    {
+      title: 'IP адрес',
+      property: 'address',
+      type: 'string'
+    },
+    {
       title: 'Процессоры',
       property: 'cpu_count',
       type: 'string'
@@ -51,6 +61,16 @@ export class VmDetailsComponent implements OnInit, OnDestroy {
     {
       title: 'Версия операционной системы',
       property: 'os_version',
+      type: 'string'
+    },
+    {
+      title: 'Шаблон',
+      property: 'parent_name',
+      type: 'string'
+    },
+    {
+      title: 'Имя хоста',
+      property: 'hostname',
       type: 'string'
     },
     {
@@ -135,11 +155,6 @@ export class VmDetailsComponent implements OnInit, OnDestroy {
       property: 'boot_type',
       type: 'string'
     },
-    {
-      title: 'Активность',
-      property: 'user_power_state',
-      type: 'string'
-    }
   ];
 
   public idVm: string;

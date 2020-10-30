@@ -44,6 +44,7 @@ export class PoolDetailsService {
                                         }
                                         power_state
                                         status
+                                        parent_name
                                     }
                                     controller {
                                         id
@@ -106,6 +107,7 @@ export class PoolDetailsService {
                                         }
                                         power_state
                                         status
+                                        parent_name
                                     }
                                     controller {
                                         id
@@ -562,6 +564,25 @@ export class PoolDetailsService {
                     $vm_id: UUID!
                 ){
                     startVm(
+                        vm_id: $vm_id
+                    ){
+                        ok
+                    }
+                }
+            `,
+            variables: {
+                method: 'POST',
+                ...data
+            }
+        });
+    }
+    public suspendVm(data) {
+        return this.service.mutate<any>({
+            mutation: gql`
+                mutation pools(
+                    $vm_id: UUID!
+                ){
+                    suspendVm(
                         vm_id: $vm_id
                     ){
                         ok
