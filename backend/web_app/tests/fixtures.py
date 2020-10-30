@@ -51,11 +51,6 @@ def get_test_pool_name():
 
 
 @pytest.fixture
-def event_loop():
-    return asyncio.get_event_loop()
-
-
-@pytest.fixture
 @async_generator
 async def fixt_launch_workers():
 

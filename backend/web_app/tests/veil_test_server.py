@@ -550,6 +550,7 @@ class VeilTestServer:
         return web.Response(text=json.dumps(res_dict), content_type='application/json')
 
     async def check_controllers(self, request):
+        print('check_controllers')
         return web.Response(body=json.dumps(dict()), content_type='application/json')
 
     async def get_base_controller_version(self, request):
