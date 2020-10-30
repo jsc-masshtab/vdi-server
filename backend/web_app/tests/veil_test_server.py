@@ -276,7 +276,7 @@ class VeilTestServer:
             ],
             "start_on_boot": False,
             "guest_utils": {
-
+                "qemu_state": True
             },
             "graphics_settings": {
                 "mouse_mode": "client",

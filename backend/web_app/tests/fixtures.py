@@ -163,7 +163,8 @@ async def fixt_create_automated_pool(fixt_controller):
 
         return False
 
-    POOL_CREATION_TIMEOUT = 30
+    POOL_CREATION_TIMEOUT = 60  # при подготовке ВМ  несколько раз используются таймауты по 10 секунд,
+    # из-за чего даже с тестовым вейлом создание пула длится долго
     is_pool_successfully_created = await a_redis_wait_for_message(INTERNAL_EVENTS_CHANNEL,
                                                                   _check_if_pool_created, POOL_CREATION_TIMEOUT)
 
