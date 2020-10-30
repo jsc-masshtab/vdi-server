@@ -153,6 +153,9 @@ class ResourceVmType(VeilResourceType):
     spice_stream = graphene.Boolean()
     tablet = graphene.Boolean()
     parent = graphene.Field(VeilShortEntityType)
+    parent_name = graphene.String()
+    hostname = graphene.String()
+    address = graphene.String()
 
     # название пула, в котором ВМ из локальной БД
     pool_name = graphene.String()
@@ -279,6 +282,10 @@ class ResourcesQuery(graphene.ObjectType, ControllerFetcher):
             resource_data = vm_info.value
             resource_data['controller'] = {'id': controller.id, 'verbose_name': controller.verbose_name}
             resource_data['cpu_count'] = veil_domain.cpu_count
+            resource_data['parent_name'] = veil_domain.parent_name
+            if veil_domain.powered:
+                resource_data['hostname'] = veil_domain.hostname
+                resource_data['address'] = veil_domain.first_ipv4
             return ResourceVmType(**resource_data)
         else:
             raise SilentError(_('VM is unreachable on ECP Veil.'))

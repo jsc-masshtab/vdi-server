@@ -22,8 +22,8 @@ export class VmDetalsPopupComponent {
     },
     {
       title: 'Шаблон',
-      property: 'template',
-      property_lv2: 'verbose_name'
+      property: 'parent_name',
+      type: 'string'
     },
     {
       title: 'Пользователь',
@@ -41,6 +41,11 @@ export class VmDetalsPopupComponent {
     {
       title: 'Название',
       property: 'verbose_name',
+      type: 'string'
+    },
+    {
+      title: 'Шаблон',
+      property: 'parent_name',
       type: 'string'
     },
     {
@@ -64,7 +69,7 @@ export class VmDetalsPopupComponent {
 
   public addUser() {
     this.dialog.open(AddUserVmComponent, {
- 			disableClose: true, 
+ 			disableClose: true,
       width: '500px',
       data: this.data
     });
@@ -72,7 +77,7 @@ export class VmDetalsPopupComponent {
 
   public removeUser() {
     this.dialog.open(RemoveUserVmComponent, {
- 			disableClose: true, 
+ 			disableClose: true,
       width: '500px',
       data: this.data
     });
@@ -91,13 +96,34 @@ export class VmDetalsPopupComponent {
         width: '500px',
         data: {
           form: {
-            header: "Включение ВМ",
+            header: "Подтверждение действия",
             question: "Включить ВМ?",
-            button: "Включить"
+            button: "Выполнить"
           },
           request: {
             service: this.service,
             action: 'startVm',
+            body: {
+              vm_id: this.data.vm.id
+            }
+          }
+        }
+      })
+    }
+
+    if (type == 'suspend') {
+      this.dialog.open(YesNoFormComponent, {
+        disableClose: true,
+        width: '500px',
+        data: {
+          form: {
+            header: "Подтверждение действия",
+            question: "Приостановить ВМ?",
+            button: "Выполнить"
+          },
+          request: {
+            service: this.service,
+            action: 'suspendVm',
             body: {
               vm_id: this.data.vm.id
             }
@@ -112,9 +138,9 @@ export class VmDetalsPopupComponent {
         width: '500px',
         data: {
           form: {
-            header: "Выключение ВМ",
+            header: "Подтверждение действия",
             question: "Выключить ВМ?",
-            button: "Выключить"
+            button: "Выполнить"
           },
           request: {
             service: this.service,
@@ -134,9 +160,9 @@ export class VmDetalsPopupComponent {
         width: '500px',
         data: {
           form: {
-            header: "Перезагрузка ВМ",
+            header: "Подтверждение действия",
             question: "Перезагрузить ВМ?",
-            button: "Перезагрузить"
+            button: "Выполнить"
           },
           request: {
             service: this.service,
@@ -156,9 +182,9 @@ export class VmDetalsPopupComponent {
         width: '500px',
         data: {
           form: {
-            header: "Отключение питания ВМ",
+            header: "Подтверждение действия",
             question: "Отключить питание ВМ?",
-            button: "Отключить"
+            button: "Выполнить"
           },
           request: {
             service: this.service,
@@ -178,9 +204,9 @@ export class VmDetalsPopupComponent {
         width: '500px',
         data: {
           form: {
-            header: "Горячая перезагрузка ВМ",
+            header: "Подтверждение действия",
             question: "Перезагрузить ВМ принудительно?",
-            button: "Перезагрузить"
+            button: "Выполнить"
           },
           request: {
             service: this.service,

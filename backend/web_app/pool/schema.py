@@ -65,6 +65,7 @@ class VmType(VeilResourceType):
     # controller = graphene.Field(ControllerType)
     power_state = VmState()
     in_domain = graphene.Boolean(default_value=False)
+    parent_name = graphene.String()
 
     # Список событий для отдельной ВМ и отдельное событие внутри пула
     count = graphene.Int()
@@ -320,6 +321,7 @@ class PoolType(graphene.ObjectType):
             vms_list.append(
                 VmType(power_state=domain_entity.power_state,
                        in_domain=in_domain,
+                       parent_name=domain_entity.parent_name,
                        **vm.__values__))
         # TODO: получить список ВМ и статусов
         return vms_list

@@ -79,6 +79,9 @@ export class VmsService {
                                 user_power_state
                                 boot_type
                                 start_on_boot
+                                address
+                                hostname
+                                parent_name
                                 node {
                                     id
                                     verbose_name
