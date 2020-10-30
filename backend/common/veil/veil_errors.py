@@ -64,6 +64,17 @@ class SimpleError(BackendError):
         await system_logger.error(message, **kwargs)
 
 
+class SilentError(BackendError):
+    def __init__(self, message=None):
+        if message:
+            message = str(message)
+            system_logger._debug(message)
+            self.message = message
+
+    def format_error(self):
+        return self.message
+
+
 class FetchException(BackendError):
     http_error = None   # HTTPClientError
     url = ''
