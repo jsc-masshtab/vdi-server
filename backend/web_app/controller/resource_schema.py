@@ -10,6 +10,7 @@ import graphene
 from common.veil.veil_decorators import administrator_required
 from common.veil.veil_graphene import VeilResourceType, VmState, VeilShortEntityType
 from common.veil.veil_gino import StatusGraphene
+from common.veil.veil_errors import SilentError
 from veil_api_client.base.api_object import VeilRestPaginator
 from web_app.controller.schema import ControllerFetcher
 from common.languages import lang_init
@@ -272,10 +273,15 @@ class ResourcesQuery(graphene.ObjectType, ControllerFetcher):
         Даже если отправить template=True, а с таким ID только ВМ - VeiL вернет данные.
         """
         controller = await cls.fetch_by_id(controller_id)
-        vm_info = await controller.veil_client.domain(domain_id=str(domain_id)).info()
-        resource_data = vm_info.value
-        resource_data['controller'] = {'id': controller.id, 'verbose_name': controller.verbose_name}
-        return ResourceVmType(**resource_data)
+        veil_domain = controller.veil_client.domain(domain_id=str(domain_id))
+        vm_info = await veil_domain.info()
+        if vm_info.success:
+            resource_data = vm_info.value
+            resource_data['controller'] = {'id': controller.id, 'verbose_name': controller.verbose_name}
+            resource_data['cpu_count'] = veil_domain.cpu_count
+            return ResourceVmType(**resource_data)
+        else:
+            raise SilentError(_('VM is unreachable on ECP Veil.'))
 
     @classmethod
     @administrator_required
