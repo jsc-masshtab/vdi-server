@@ -43,6 +43,7 @@ class VmManager:
                 # print('!!!vm_ids_list ', vm_ids_list, flush=True)
 
                 # turn them on
-                await controller.veil_client.domain(template=0).multi_start(entity_ids=vm_ids_list)
+                if len(vm_ids_list) > 0:
+                    await controller.veil_client.domain(template=0).multi_start(entity_ids=vm_ids_list)
 
             await asyncio.sleep(self.query_interval)

@@ -566,6 +566,26 @@ msgstr "ВМ {} подготовлена."
 msgid "{} preparation cancelled by timeout."
 msgstr "подготовка {} отменена по таймауту."
 
+#: ../common/models/task.py:45
+msgid "Creation of pool"
+msgstr "Создание пула"
+
+#: ../common/models/task.py:47
+msgid "Expanding of pool"
+msgstr "Расширение пула"
+
+#: ../common/models/task.py:47
+msgid "Deleting of pool"
+msgstr "Удаление пула"
+
+#: ../common/models/task.py:51
+msgid "Decreasing of pool"
+msgstr "Уменьшение пула"
+
+#: ../common/models/task.py:112
+msgid "  Duration: {}."
+msgstr "  Продолжительность: {}."
+
 #: ../common/veil/auth/veil_jwt.py:26
 msgid "Token invalid."
 msgstr "Недействительный токен."
@@ -1087,3 +1107,4 @@ msgstr "{cls}: монитор ресурсов для контроллера {na
 
 #~ msgid "{} {} has been removed."
 #~ msgstr "Выполнено удаление: {} {}."
+

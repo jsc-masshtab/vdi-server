@@ -185,6 +185,7 @@ class PoolTaskManager:
 
         task_list = list(self.task_list)  # делаем shallow copy так как список self.task_list будет уменьшатся в
         #  других корутинах пока мы итерируем
+
         for task in task_list:
             if cancel_all or (str(task.task_model.id) in task_ids):
                 await task.cancel(wait_for_result=False)

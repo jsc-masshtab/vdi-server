@@ -16,6 +16,11 @@ from common.database import db
 from common.veil.veil_redis import REDIS_CLIENT, INTERNAL_EVENTS_CHANNEL
 from common.veil.veil_gino import AbstractSortableStatusModel
 
+from common.languages import lang_init
+
+
+_ = lang_init()
+
 
 class PoolTaskType(Enum):
 
@@ -29,9 +34,23 @@ class TaskStatus(Enum):
 
     INITIAL = 'INITIAL'  # Статус в  момент создания таски перед ее запуском
     IN_PROGRESS = 'IN_PROGRESS'  # Задача выполняется.
-    FAILED = 'FAILED'  # Было необработанное исключения во время выполнения соответствующей корутины.
+    FAILED = 'FAILED'  # Было исключение во время выполнения соответствующей корутины.
     CANCELLED = 'CANCELLED'  # Задача отменена.
     FINISHED = 'FINISHED'  # Задача завершилась.
+
+
+def vdi_task_type_to_user_friendly_text(task_type: PoolTaskType):
+
+    if task_type == PoolTaskType.CREATING_POOL:
+        return _('Creation of pool')
+    elif task_type == PoolTaskType.EXPANDING_POOL:
+        return _('Expanding of pool')
+    elif task_type == PoolTaskType.DELETING_POOL:
+        return _('Deleting of pool')
+    elif task_type == PoolTaskType.DECREASING_POOL:
+        return _('Decreasing of pool')
+    else:
+        return ''
 
 
 class Task(db.Model, AbstractSortableStatusModel):
@@ -43,6 +62,8 @@ class Task(db.Model, AbstractSortableStatusModel):
     status = db.Column(AlchemyEnum(TaskStatus), nullable=False, index=True, default=TaskStatus.INITIAL)
     task_type = db.Column(AlchemyEnum(PoolTaskType), nullable=False, index=True)
     created = db.Column(db.DateTime(timezone=True), server_default=func.now())
+    started = db.Column(db.DateTime(timezone=True))
+    finished = db.Column(db.DateTime(timezone=True))
 
     # Нужно ли возобновлять отмененную таску.
     resumable = db.Column(db.Boolean(), nullable=False, default=True)
@@ -69,15 +90,27 @@ class Task(db.Model, AbstractSortableStatusModel):
             return
 
         await self.update(status=status).apply()
-        if status == TaskStatus.FINISHED or status == TaskStatus.FAILED:
-            await self.update(resumable=False).apply()
-
-        task_id_str = str(self.id)
-        if message is None:
-            message = 'Status of task {} {} changed to {}'.format(
-                self.task_type.name, task_id_str, self.status.name)
 
         # msg
+        if message is None:
+            from common.models.pool import Pool
+            pool = await Pool.get(self.entity_id)
+            verbose_name = pool.verbose_name if pool else ''
+            message = '{} {}.'.format(vdi_task_type_to_user_friendly_text(self.task_type), verbose_name)
+
+        # datetime data
+        if status == TaskStatus.IN_PROGRESS:
+            # set start time
+            await self.update(started=func.now()).apply()
+
+        if status == TaskStatus.FINISHED or status == TaskStatus.FAILED or status == TaskStatus.CANCELLED:
+            await self.update(resumable=False).apply()
+            # set finish time
+            await self.update(finished=func.now()).apply()
+
+            duration = self.finished - self.started
+            message += _('  Duration: {}.').format(duration)
+
         shorten_msg = textwrap.shorten(message, width=256)
         await self.update(message=shorten_msg).apply()
 
@@ -91,7 +124,7 @@ class Task(db.Model, AbstractSortableStatusModel):
         msg_dict.update(self.to_json_serializable_dict())
         REDIS_CLIENT.publish(INTERNAL_EVENTS_CHANNEL, json.dumps(msg_dict))
 
-    async def set_progress(self, progress: int, message: str = None):
+    async def set_progress(self, progress: int):
 
         if progress == self.progress:
             return
@@ -99,16 +132,11 @@ class Task(db.Model, AbstractSortableStatusModel):
         await self.update(progress=progress).apply()
 
         # publish task event
-        task_id_str = str(self.id)
-        if message is None:
-            message = 'Progress of task {} {} changed to {}'.format(
-                self.task_type.name, task_id_str, progress)
-
         msg_dict = dict(
             resource=VDI_TASKS_SUBSCRIPTION,
             mgs_type='task_data',
             event='progress_changed',
-            message=message
+            message=self.message
         )
         msg_dict.update(self.to_json_serializable_dict())
         REDIS_CLIENT.publish(INTERNAL_EVENTS_CHANNEL, json.dumps(msg_dict))
