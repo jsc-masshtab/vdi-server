@@ -39,20 +39,6 @@ class TaskStatus(Enum):
     FINISHED = 'FINISHED'  # Задача завершилась.
 
 
-def vdi_task_type_to_user_friendly_text(task_type: PoolTaskType):
-
-    if task_type == PoolTaskType.CREATING_POOL:
-        return _('Creation of pool')
-    elif task_type == PoolTaskType.EXPANDING_POOL:
-        return _('Expanding of pool')
-    elif task_type == PoolTaskType.DELETING_POOL:
-        return _('Deleting of pool')
-    elif task_type == PoolTaskType.DECREASING_POOL:
-        return _('Decreasing of pool')
-    else:
-        return ''
-
-
 class Task(db.Model, AbstractSortableStatusModel):
 
     __tablename__ = 'task'
@@ -84,6 +70,19 @@ class Task(db.Model, AbstractSortableStatusModel):
             progress=self.progress,
         )
 
+    def form_user_friendly_text(self, entity_name):
+
+        if self.task_type == PoolTaskType.CREATING_POOL:
+            return _('Creation of pool {}.'.format(entity_name))
+        elif self.task_type == PoolTaskType.EXPANDING_POOL:
+            return _('Expanding of pool {}.'.format(entity_name))
+        elif self.task_type == PoolTaskType.DELETING_POOL:
+            return _('Deleting of pool {}.'.format(entity_name))
+        elif self.task_type == PoolTaskType.DECREASING_POOL:
+            return _('Decreasing of pool {}.'.format(entity_name))
+        else:
+            return ''
+
     async def set_status(self, status: TaskStatus, message: str = None):
 
         if status == self.status:
@@ -93,10 +92,8 @@ class Task(db.Model, AbstractSortableStatusModel):
 
         # msg
         if message is None:
-            from common.models.pool import Pool
-            pool = await Pool.get(self.entity_id)
-            verbose_name = pool.verbose_name if pool else ''
-            message = '{} {}.'.format(vdi_task_type_to_user_friendly_text(self.task_type), verbose_name)
+            entity_name = await self.get_associated_entity_name()
+            message = self.form_user_friendly_text(entity_name)
 
         # datetime data
         if status == TaskStatus.IN_PROGRESS:
@@ -140,6 +137,15 @@ class Task(db.Model, AbstractSortableStatusModel):
         )
         msg_dict.update(self.to_json_serializable_dict())
         REDIS_CLIENT.publish(INTERNAL_EVENTS_CHANNEL, json.dumps(msg_dict))
+
+    async def get_associated_entity_name(self):
+        # Запоминаем имя так как его не будет после удаения пула, например.
+        if not hasattr(self, '_associated_entity_name'):
+            from common.models.pool import Pool
+            pool = await Pool.get(self.entity_id)
+            self._associated_entity_name = pool.verbose_name if pool else ''  # noqa
+
+        return self._associated_entity_name
 
     @staticmethod
     async def set_progress_to_task_associated_with_entity(entity_id, progress):

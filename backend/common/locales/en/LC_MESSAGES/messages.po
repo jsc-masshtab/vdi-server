@@ -567,20 +567,20 @@ msgid "{} preparation cancelled by timeout."
 msgstr "{} preparation cancelled by timeout."
 
 #: ../common/models/task.py:45
-msgid "Creation of pool"
-msgstr "Creation of pool"
+msgid "Creation of pool {}."
+msgstr "Creation of pool {}."
 
 #: ../common/models/task.py:47
-msgid "Expanding of pool"
-msgstr "Expanding of pool"
+msgid "Expanding of pool {}."
+msgstr "Expanding of pool {}."
 
 #: ../common/models/task.py:47
-msgid "Deleting of pool"
-msgstr "Deleting of pool"
+msgid "Deleting of pool {}."
+msgstr "Deleting of pool {}."
 
 #: ../common/models/task.py:51
-msgid "Decreasing of pool"
-msgstr "Decreasing of pool"
+msgid "Decreasing of pool {}."
+msgstr "Decreasing of pool {}."
 
 #: ../common/models/task.py:112
 msgid "  Duration: {}."
