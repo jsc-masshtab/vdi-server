@@ -52,7 +52,7 @@ class ControllerValidator(MutationValidation):
     async def validate_token(obj_dict, value):
         """Валидатор токена интеграции контроллера."""
         if not value:
-            raise SimpleError(_('token can`t be empty.'))
+            raise ValidationError(_('token can`t be empty.'))
         return value
 
 
@@ -193,16 +193,20 @@ class ControllerType(graphene.ObjectType, ControllerFetcher):
 
     async def resolve_clusters(self, info, limit, offset, ordering: str = None):
         """В self прилетает инстанс подели контроллера."""
-        # TODO: на фронте делать неактивными элементы в плохом статусе?
         controller = await Controller.get(self.id)
+        # Прерываем выполнение при отсутствии клиента
+        if not controller.veil_client:
+            return
         paginator = VeilRestPaginator(ordering=ordering, limit=limit, offset=offset)
         veil_response = await controller.veil_client.cluster().list(paginator=paginator)
         return [ControllerClusterType(**resource_data) for resource_data in veil_response.paginator_results]
 
     async def resolve_nodes(self, info, limit, offset, cluster_id=None, ordering: str = None):
         """В self прилетает инстанс подели контроллера."""
-        # TODO: на фронте делать неактивными элементы в плохом статусе?
         controller = await Controller.get(self.id)
+        # Прерываем выполнение при отсутствии клиента
+        if not controller.veil_client:
+            return
         paginator = VeilRestPaginator(ordering=ordering, limit=limit, offset=offset)
         veil_response = await controller.veil_client.node(cluster_id=cluster_id).list(paginator=paginator)
         return [ControllerNodeType(**resource_data) for resource_data in veil_response.paginator_results]
@@ -211,6 +215,9 @@ class ControllerType(graphene.ObjectType, ControllerFetcher):
         """Сокращенная информация о контроллере."""
         # TODO: на фронте делать неактивными элементы в плохом статусе?
         controller = await Controller.get(self.id)
+        # Прерываем выполнение при отсутствии клиента
+        if not controller.veil_client:
+            return
         paginator = VeilRestPaginator(ordering=ordering, limit=limit, offset=offset)
         veil_response = await controller.veil_client.data_pool(node_id=node_id, cluster_id=cluster_id).list(paginator=paginator)
         return [ControllerDataPoolType(**resource_data) for resource_data in veil_response.paginator_results]
@@ -219,9 +226,13 @@ class ControllerType(graphene.ObjectType, ControllerFetcher):
         """В self прилетает инстанс подели контроллера."""
         # TODO: на фронте делать неактивными элементы в плохом статусе?
         controller = await Controller.get(self.id)
+        # Прерываем выполнение при отсутствии клиента
+        if not controller.veil_client:
+            return
         paginator = VeilRestPaginator(ordering=ordering, limit=limit, offset=offset)
         veil_response = await controller.veil_client.domain(template=1, cluster_id=cluster_id,
-                                                            node_id=node_id, data_pool_id=data_pool_id).list(paginator=paginator)
+                                                            node_id=node_id, data_pool_id=data_pool_id).list(
+            paginator=paginator)
         return [ControllerNodeType(**resource_data) for resource_data in veil_response.paginator_results]
 
     async def resolve_vms(self, info, limit, offset, template=None, cluster_id=None, node_id=None, data_pool_id=None,
@@ -231,9 +242,14 @@ class ControllerType(graphene.ObjectType, ControllerFetcher):
         controller = await Controller.get(self.id)
         paginator = VeilRestPaginator(ordering=ordering, limit=limit, offset=offset)
         vms = await Vm.query.gino.all()
-        veil_response = await controller.veil_client.domain(template=0, cluster_id=cluster_id,
-                                                            node_id=node_id, data_pool_id=data_pool_id).list(paginator=paginator)
-        resolves = veil_response.paginator_results
+        # Прерываем выполнение при отсутствии клиента
+        if controller.veil_client:
+            veil_response = await controller.veil_client.domain(template=0, cluster_id=cluster_id,
+                                                                node_id=node_id, data_pool_id=data_pool_id).list(
+                paginator=paginator)
+            resolves = veil_response.paginator_results
+        else:
+            resolves = dict()
         vms_list = []
         if exclude_existed:
             for vm in vms:

@@ -68,6 +68,20 @@ server {
     proxy_read_timeout 900;
   }
 
+  # pass ws requests directly to tornado
+  # because of url in frontend.
+  location /subscriptions {
+    proxy_pass  http://127.0.0.1:8888/subscriptions/;
+    # WebSockets magic
+    proxy_set_header Upgrade $http_upgrade;
+    proxy_set_header Connection "Upgrade";
+    proxy_set_header        X-Forwarded-For   $remote_addr;
+    proxy_set_header        X-Real-IP         $remote_addr;
+    proxy_set_header        Host              $host;
+    proxy_set_header Access-Control-Allow-Origin *;
+    proxy_read_timeout 900;
+  }
+
   # serve static files
   location / {
     root /opt/veil-vdi/www;

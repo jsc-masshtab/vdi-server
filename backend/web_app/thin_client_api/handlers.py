@@ -100,12 +100,13 @@ class PoolGetVm(BaseHandler, ABC):
                 response = {'errors': [{'message': _('The pool doesn`t have free machines.')}]}
                 return await self.log_finish(response)
 
-        # Дальше запросы начинают уходить на veil
-        veil_domain = await vm.vm_client
-
         # TODO: обработка новых исключений
         # Подготовка ВМ теперь происходит при создании и расширении пула. Тут только влючение ВМ.
         try:
+            # Дальше запросы начинают уходить на veil
+            veil_domain = await vm.vm_client
+            if not veil_domain:
+                raise client_exceptions.ServerDisconnectedError()
             await veil_domain.info()
             if not veil_domain.powered:
                 await vm.start()
@@ -155,6 +156,11 @@ class PoolGetVm(BaseHandler, ABC):
 
         # Определяем адресс и порт в зависимости от протокола
         vm_controller = await vm.controller
+        # Проверяем наличие клиента у контроллера
+        veil_client = vm_controller.veil_client
+        if not veil_client:
+            response = {'errors': [{'message': _('The remote controller is unavailable.')}]}
+            return await self.log_finish(response)
 
         if remote_protocol == PoolModel.PoolConnectionTypes.RDP.name or \
                 remote_protocol == PoolModel.PoolConnectionTypes.NATIVE_RDP.name:
@@ -221,6 +227,8 @@ class AttachUsb(BaseHandler, ABC):
         # attach request
         try:
             veil_client = await vm.vm_client
+            if not veil_client:
+                raise AssertionError(_('VM has no api client.'))
             domain_tcp_usb_params = DomainTcpUsb(host=host_address, service=host_port)
             controller_response = await veil_client.attach_usb(action_type='tcp_usb_device',
                                                                tcp_usb=domain_tcp_usb_params, no_task=True)
@@ -246,6 +254,8 @@ class DetachUsb(BaseHandler, ABC):
         # detach request
         try:
             veil_client = await vm.vm_client
+            if not veil_client:
+                raise AssertionError(_('VM has no api client.'))
             controller_response = await veil_client.detach_usb(action_type='tcp_usb_device',
                                                                usb=usb_uuid, remove_all=remove_all)
             return await self.log_finish(controller_response.data)

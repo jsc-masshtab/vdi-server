@@ -154,9 +154,11 @@ class PoolTaskManager:
         elif pool_task_type == PoolTaskType.EXPANDING_POOL.name:
             try:
                 ignore_reserve_size = task_data_dict['ignore_reserve_size']
+                wait_for_lock = task_data_dict['wait_for_lock']
             except KeyError:
                 ignore_reserve_size = False
-            task = ExpandPoolTask(self.pool_locks, ignore_reserve_size)
+                wait_for_lock = False
+            task = ExpandPoolTask(self.pool_locks, ignore_reserve_size=ignore_reserve_size, wait_for_lock=wait_for_lock)
             await task.init(task_id, self.task_list)
             task.execute_in_async_task()
 
@@ -183,6 +185,7 @@ class PoolTaskManager:
 
         task_list = list(self.task_list)  # делаем shallow copy так как список self.task_list будет уменьшатся в
         #  других корутинах пока мы итерируем
+
         for task in task_list:
             if cancel_all or (str(task.task_model.id) in task_ids):
                 await task.cancel(wait_for_result=False)

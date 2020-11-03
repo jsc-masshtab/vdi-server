@@ -61,11 +61,6 @@ export class TemplateDetailsComponent implements OnInit, OnDestroy {
       type: 'string'
     },
     {
-      title: 'Количество вирт. дисков',
-      property: 'vdisks_count',
-      type: 'string'
-    },
-    {
       title: 'Количество LUN',
       property: 'luns_count',
       type: 'string'

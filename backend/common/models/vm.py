@@ -116,6 +116,8 @@ class Vm(VeilModel):
         if remove_on_controller and self.created_by_vdi:
             try:
                 domain_entity = await self.vm_client
+                if not domain_entity:
+                    raise AssertionError(_('VM has no api client.'))
                 await domain_entity.info()
                 # Если машина уже заведена в АД - пытаемся ее вывести
                 active_directory_object = await AuthenticationDirectory.query.where(
@@ -208,6 +210,9 @@ class Vm(VeilModel):
         from common.models.controller import Controller as ControllerModel
 
         vm_controller = await ControllerModel.get(controller_id)
+        # Прерываем выполнение при отсутствии клиента
+        if not vm_controller.veil_client:
+            raise AssertionError(_('There is no client for controller {}.').format(vm_controller.verbose_name))
         vm_client = vm_controller.veil_client.domain()
         inner_retry_count = 0
         while True:
@@ -327,6 +332,9 @@ class Vm(VeilModel):
         """Пересылает команду управления ВМ на ECP VeiL."""
         # TODO: проверить есть ли вообще такое действие в допустимых?
         vm_controller = await self.controller
+        # Прерываем выполнение при отсутствии клиента
+        if not vm_controller.veil_client:
+            raise AssertionError(_('There is no client for controller {}.').format(vm_controller.verbose_name))
         veil_domain = vm_controller.veil_client.domain(domain_id=self.id_str)
         domain_action = getattr(veil_domain, action_name)
         action_response = await domain_action(force=force)
@@ -345,15 +353,18 @@ class Vm(VeilModel):
     async def vm_client(self):
         """Клиент с сущностью domain на ECP VeiL."""
         vm_controller = await self.controller
+        if not vm_controller.veil_client:
+            return
         return vm_controller.veil_client.domain(domain_id=self.id_str)
 
-    # TODO: suspend
     # TODO: reset
     # TODO: resume
 
     async def start(self, creator='system'):
         """Включает ВМ - Пересылает start для ВМ на ECP VeiL."""
         domain_entity = await self.vm_client
+        if not domain_entity:
+            return
         domain_response = await domain_entity.info()
         if not domain_response.success:
             raise ValueError(_('VeiL domain request error.'))
@@ -361,13 +372,14 @@ class Vm(VeilModel):
         if not domain_entity.powered:
             # await system_logger.info(_('Powering on {}').format(self.verbose_name), entity=self.entity)
             task_success = await self.action('start')
-
-        await system_logger.info(_('VM {} is powered.').format(self.verbose_name), user=creator, entity=self.entity)
-        return task_success
+            await system_logger.info(_('VM {} is powered.').format(self.verbose_name), user=creator, entity=self.entity)
+            return task_success
 
     async def shutdown(self, creator='system', force=False):
         """Выключает ВМ - Пересылает shutdown для ВМ на ECP VeiL."""
         domain_entity = await self.vm_client
+        if not domain_entity:
+            return
         domain_response = await domain_entity.info()
         if not domain_response.success:
             raise ValueError(_('VeiL domain request error.'))
@@ -385,11 +397,13 @@ class Vm(VeilModel):
             else:
                 await system_logger.info(_('VM {} is shutdown.').format(self.verbose_name), user=creator,
                                          entity=self.entity)
-        return task_success
+            return task_success
 
     async def reboot(self, creator='system', force=False):
         """Перезагружает ВМ - Пересылает reboot для ВМ на ECP VeiL."""
         domain_entity = await self.vm_client
+        if not domain_entity:
+            return
         domain_response = await domain_entity.info()
         if not domain_response.success:
             raise ValueError(_('VeiL domain request error.'))
@@ -407,7 +421,26 @@ class Vm(VeilModel):
             else:
                 await system_logger.info(_('VM {} was reboot.').format(self.verbose_name), user=creator,
                                          entity=self.entity)
-        return task_success
+            return task_success
+
+    async def suspend(self, creator='system'):
+        """Ставит на паузу ВМ - Пересылает suspend для ВМ на ECP VeiL."""
+        domain_entity = await self.vm_client
+        if not domain_entity:
+            return
+        domain_response = await domain_entity.info()
+        if not domain_response.success:
+            raise ValueError(_('VeiL domain request error.'))
+
+        if domain_entity.powered:
+            # await system_logger.info(_('Suspending {}').format(self.verbose_name), entity=self.entity)
+            task_success = await self.action('suspend')
+            await system_logger.info(_('VM {} is suspended.').format(self.verbose_name), user=creator,
+                                     entity=self.entity)
+            return task_success
+        else:
+            raise SimpleError(_('VM {} is shutdown. Please power this.').format(self.verbose_name), user=creator,
+                              entity=self.entity)
 
     async def prepare(self, active_directory_obj: AuthenticationDirectory = None, ad_cn_pattern: str = None):
         """Check that domain remote-access is enabled and domain is powered on.
@@ -420,6 +453,8 @@ class Vm(VeilModel):
         # По ходу выполнения операций в список будут дописываться значения из которых соберется итоговый комментарий
         description_list = list()
         domain_entity = await self.vm_client
+        if not domain_entity:
+            return
         # Получаем состояние параметров ВМ
         domain_response = await domain_entity.info()
         if not domain_response.success:
@@ -468,6 +503,7 @@ class Vm(VeilModel):
             # Обновляем параметры ВМ
             await domain_entity.info()
 
+        await system_logger.debug('\n\nhostname: {}, verbose_name: {}\n\n'.format(domain_entity.hostname, self.verbose_name))
         # Задание hostname
         if domain_entity.hostname != self.verbose_name:
             await system_logger.debug(_('Setting hostname for {}.').format(self.verbose_name), entity=self.entity)

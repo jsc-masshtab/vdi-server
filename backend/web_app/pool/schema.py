@@ -8,7 +8,7 @@ from asyncpg.exceptions import UniqueViolationError
 from common.database import db
 from common.veil.veil_gino import RoleTypeGraphene, Role, StatusGraphene, Status, EntityType
 from common.veil.veil_validators import MutationValidation
-from common.veil.veil_errors import SimpleError, ValidationError
+from common.veil.veil_errors import SimpleError, SilentError, ValidationError
 from common.veil.veil_decorators import administrator_required
 from common.veil.veil_graphene import VeilShortEntityType, VeilResourceType, VmState
 
@@ -65,6 +65,7 @@ class VmType(VeilResourceType):
     # controller = graphene.Field(ControllerType)
     power_state = VmState()
     in_domain = graphene.Boolean(default_value=False)
+    parent_name = graphene.String()
 
     # Список событий для отдельной ВМ и отдельное событие внутри пула
     count = graphene.Int()
@@ -100,15 +101,6 @@ class VmType(VeilResourceType):
             entity=[entity for entity in event.entity],
             **event.__values__)
         return event_type
-
-    # TODO: перевел на показ статуса ВМ. Удалить после тестирования
-    # async def resolve_status(self, _info):
-    #     vm = await Vm.get(self.id)
-    #     pool = await Pool.get(vm.pool_id)
-    #     pool_controller = await pool.controller_obj
-    #     veil_domain = pool_controller.veil_client.domain(str(self.id))
-    #     await veil_domain.info()
-    #     return veil_domain.status
 
 
 class VmInput(graphene.InputObjectType):
@@ -312,14 +304,20 @@ class PoolType(graphene.ObjectType):
         vms_list = []
         for vm in vms:
             domain_entity = await vm.vm_client
-            await domain_entity.info()
-            if domain_entity.os_windows and domain_entity.powered:
-                in_domain = await domain_entity.in_ad
-            else:
-                in_domain = False
+            in_domain = False
+            power_state = VmState.UNDEFINED
+            parent_name = None
+            if domain_entity:
+                await domain_entity.info()
+                if domain_entity.os_windows and domain_entity.powered:
+                    in_domain = await domain_entity.in_ad
+                power_state = domain_entity.power_state
+                parent_name = domain_entity.parent_name
+
             vms_list.append(
-                VmType(power_state=domain_entity.power_state,
+                VmType(power_state=power_state,
                        in_domain=in_domain,
+                       parent_name=parent_name,
                        **vm.__values__))
         # TODO: получить список ВМ и статусов
         return vms_list
@@ -333,6 +331,9 @@ class PoolType(graphene.ObjectType):
         template_id = await pool.template_id
         if not template_id:
             return
+        # Прерываем выполнение при отсутствии клиента
+        if not pool_controller.veil_client:
+            return
         veil_domain = pool_controller.veil_client.domain(str(template_id))
         await veil_domain.info()
         # попытка не использовать id
@@ -342,6 +343,9 @@ class PoolType(graphene.ObjectType):
     async def resolve_node(self, _info):
         pool = await Pool.get(self.pool_id)
         pool_controller = await pool.controller_obj
+        # Прерываем выполнение при отсутствии клиента
+        if not pool_controller.veil_client:
+            return
         veil_node = pool_controller.veil_client.node(str(pool.node_id))
         await veil_node.info()
         # попытка не использовать id
@@ -351,6 +355,9 @@ class PoolType(graphene.ObjectType):
     async def resolve_datapool(self, _info):
         pool = await Pool.get(self.pool_id)
         pool_controller = await pool.controller_obj
+        # Прерываем выполнение при отсутствии клиента
+        if not pool_controller.veil_client:
+            return
         veil_datapool = pool_controller.veil_client.data_pool(str(pool.datapool_id))
         await veil_datapool.info()
         # попытка не использовать id
@@ -360,6 +367,9 @@ class PoolType(graphene.ObjectType):
     async def resolve_cluster(self, _info):
         pool = await Pool.get(self.pool_id)
         pool_controller = await pool.controller_obj
+        # Прерываем выполнение при отсутствии клиента
+        if not pool_controller.veil_client:
+            return
         veil_cluster = pool_controller.veil_client.cluster(str(pool.cluster_id))
         await veil_cluster.info()
         # попытка не использовать id
@@ -640,7 +650,15 @@ class ExpandPoolMutation(graphene.Mutation, PoolValidator):
 
         await cls.validate_pool_id(dict(), pool_id)
 
-        task_id = await request_to_execute_pool_task(pool_id, PoolTaskType.EXPANDING_POOL, ignore_reserve_size=True)
+        # Check if pool already reached its total_size
+        autopool = await AutomatedPool.get(pool_id)
+        total_size_reached = await autopool.check_if_total_size_reached()
+        if total_size_reached:
+            pool_name = await Pool.select('verbose_name').where(Pool.id == pool_id).gino.scalar()
+            raise SilentError(_('Can not expand pool {} because it reached its total_size.').format(pool_name))
+
+        task_id = await request_to_execute_pool_task(pool_id, PoolTaskType.EXPANDING_POOL,
+                                                     ignore_reserve_size=True, wait_for_lock=True)
         return {
             'ok': True,
             'task_id': task_id,
@@ -658,10 +676,10 @@ class CreateAutomatedPoolMutation(graphene.Mutation, PoolValidator, ControllerFe
         node_id = graphene.UUID(required=True)
 
         verbose_name = graphene.String(required=True)
-        increase_step = graphene.Int(default_value=3, description="Шаг расширения пула")
-        initial_size = graphene.Int(default_value=1)
-        reserve_size = graphene.Int(default_value=1)
-        total_size = graphene.Int(default_value=1)
+        increase_step = graphene.Int(default_value=1, description="Шаг расширения пула")
+        initial_size = graphene.Int(default_value=1, description="Начальное количество ВМ")
+        reserve_size = graphene.Int(default_value=1, description="Пороговое количество свободных ВМ")
+        total_size = graphene.Int(default_value=2, description="Максимальное количество создаваемых ВМ")
         vm_name_template = graphene.String(required=True)
 
         create_thin_clones = graphene.Boolean(default_value=True)
@@ -1028,6 +1046,8 @@ class VmStart(graphene.Mutation):
         vm = await Vm.get(vm_id)
         if vm:
             domain_entity = await vm.vm_client
+            if not domain_entity:
+                return
             await domain_entity.info()
             asyncio.ensure_future(vm.start(creator=creator))
             return VmStart(ok=True)
@@ -1046,6 +1066,8 @@ class VmShutdown(graphene.Mutation):
         vm = await Vm.get(vm_id)
         if vm:
             domain_entity = await vm.vm_client
+            if not domain_entity:
+                return
             await domain_entity.info()
             asyncio.ensure_future(vm.shutdown(creator=creator, force=force))
             return VmShutdown(ok=True)
@@ -1064,10 +1086,31 @@ class VmReboot(graphene.Mutation):
         vm = await Vm.get(vm_id)
         if vm:
             domain_entity = await vm.vm_client
+            if not domain_entity:
+                return
             await domain_entity.info()
             asyncio.ensure_future(vm.reboot(creator=creator, force=force))
             return VmReboot(ok=True)
         return VmReboot(ok=False)
+
+
+class VmSuspend(graphene.Mutation):
+    class Arguments:
+        vm_id = graphene.UUID(required=True)
+
+    ok = graphene.Boolean()
+
+    @administrator_required
+    async def mutate(self, _info, vm_id, creator, **kwargs):
+        vm = await Vm.get(vm_id)
+        if vm:
+            domain_entity = await vm.vm_client
+            if not domain_entity:
+                return
+            await domain_entity.info()
+            asyncio.ensure_future(vm.suspend(creator=creator))
+            return VmSuspend(ok=True)
+        return VmSuspend(ok=False)
 
 
 # --- --- --- --- ---
@@ -1097,6 +1140,7 @@ class PoolMutations(graphene.ObjectType):
     startVm = VmStart.Field()
     shutdownVm = VmShutdown.Field()
     rebootVm = VmReboot.Field()
+    suspendVm = VmSuspend.Field()
 
 
 pool_schema = graphene.Schema(query=PoolQuery,
