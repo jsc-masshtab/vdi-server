@@ -19,8 +19,14 @@ do
   var2=$(grep -c "fuzzy" "${po_file}")
   var3=$(grep -c "\.\"\|\:\"" "${po_file}")
   var4=$(grep -c -E "msgstr|msgid" "${po_file}")
+
   if [ "${var1}" -gt 1 ] || [ "${var2}" -gt 0 ] || [ "$((${var4} - ${var3}))" -gt 2 ]; then
     echo "Rows ending without :/. is $((${var4} - ${var3} - 2))"
+    echo "Locale: ${locale}"
+    echo "Var 1: ${var1}"
+    echo "Var 2: ${var2}"
+    echo "Var 3: ${var3}"
+    echo "Var 4: ${var4}"
     echo "Error code 1"
     exit 1
   fi

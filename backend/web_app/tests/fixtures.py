@@ -41,7 +41,12 @@ async def get_resources_static_pool_test():
         raise RuntimeError('Нет контроллеров')
 
     controller = await Controller.get(controllers[0].id)
-    veil_response_clusters = await controller.veil_client.cluster().list()
+    # Проверяем наличие клиента у контроллера
+    veil_client = controller.veil_client
+    if not veil_client:
+        raise RuntimeError('Контроллер {} не имеет клиента'.format(controller.address))
+
+    veil_response_clusters = await veil_client.cluster().list()
     clusters = veil_response_clusters.paginator_results
     if not clusters:
         raise RuntimeError('На контроллере {} нет кластеров'.format(controller.address))
@@ -50,21 +55,21 @@ async def get_resources_static_pool_test():
             cluster_id = cluster['id']
             break
 
-    veil_response_datapools = await controller.veil_client.data_pool(cluster_id=cluster_id).list()
+    veil_response_datapools = await veil_client.data_pool(cluster_id=cluster_id).list()
     datapools = veil_response_datapools.paginator_results
     for datapool in datapools:
         if datapool['verbose_name'] == "Базовый локальный пул данных узла 192.168.11.115":
             datapool_id = datapool['id']
             break
 
-    veil_response_vms = await controller.veil_client.domain(template=0).list()
+    veil_response_vms = await veil_client.domain(template=0).list()
     vms = veil_response_vms.paginator_results
     for vm in vms:
         if vm['verbose_name'] == 'test_2':
             vm_id = vm['id']
             break
 
-    veil_response_teplates = await controller.veil_client.domain(template=1).list()
+    veil_response_teplates = await veil_client.domain(template=1).list()
     templates = veil_response_teplates.paginator_results
     if not templates:
         raise RuntimeError('На контроллере {} нет шаблонов'.format(controller.address))
@@ -87,16 +92,26 @@ async def get_resources_automated_pool_test():
         raise RuntimeError('Нет контроллеров')
 
     controller = await Controller.get(controllers[0].id)
+    # Проверяем наличие клиента у контроллера
+    veil_client = controller.veil_client
+    if not veil_client:
+        raise RuntimeError('Контроллер {} не имеет клиента'.format(controller.address))
     veil_response_clusters = await controller.veil_client.cluster().list()
     clusters = veil_response_clusters.paginator_results
     if not clusters:
         raise RuntimeError('На контроллере {} нет кластеров'.format(controller.address))
-
+    # Проверяем наличие клиента у контроллера
+    veil_client = controller.veil_client
+    if not veil_client:
+        raise RuntimeError('Контроллер {} не имеет клиента'.format(controller.address))
     veil_response_teplates = await controller.veil_client.domain(template=1).list()
     templates = veil_response_teplates.paginator_results
     if not templates:
         raise RuntimeError('На контроллере {} нет шаблонов'.format(controller.address))
-
+    # Проверяем наличие клиента у контроллера
+    veil_client = controller.veil_client
+    if not veil_client:
+        raise RuntimeError('Контроллер {} не имеет клиента'.format(controller.address))
     # select appropriate template_id and node_id
     # node must be active and has a template
     for cluster in clusters:
