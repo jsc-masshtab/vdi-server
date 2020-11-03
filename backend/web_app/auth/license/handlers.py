@@ -5,6 +5,7 @@ from common.veil.veil_handlers import BaseHandler
 from common.veil.veil_errors import ValidationError, Unauthorized
 from common.veil.veil_decorators import is_administrator
 from common.veil.auth.veil_jwt import jwtauth
+from common.veil.veil_redis import get_thin_clients_count
 from web_app.auth.license.utils import License
 from common.languages import lang_init
 from common.log.journal import system_logger
@@ -19,6 +20,8 @@ class LicenseHandler(BaseHandler, ABC):
     async def get(self):
         """get license key info"""
         license_data = License().license_data.public_attrs_dict
+        # Докидываем информацию о текущем подключении. Убрать после отображения информации о конкретных клиентах.
+        license_data['thin_clients_count'] = str(get_thin_clients_count())
         response = {'data': license_data}
         return self.finish(response)
 
