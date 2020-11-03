@@ -255,6 +255,7 @@ class PoolType(graphene.ObjectType):
 
     keep_vms_on = graphene.Boolean()
     create_thin_clones = graphene.Boolean()
+    prepare_vms = graphene.Boolean()
     assigned_connection_types = graphene.List(ConnectionTypesGraphene)
     possible_connection_types = graphene.List(ConnectionTypesGraphene)
 
@@ -405,6 +406,7 @@ def pool_obj_to_type(pool_obj: Pool) -> dict:
                  'os_type': pool_obj.os_type,
                  'keep_vms_on': pool_obj.keep_vms_on,
                  'create_thin_clones': pool_obj.create_thin_clones,
+                 'prepare_vms': pool_obj.prepare_vms,
                  'controller': pool_obj.controller,
                  'status': pool_obj.status,
                  # 'assigned_connection_types': pool_obj.connection_types
@@ -683,6 +685,7 @@ class CreateAutomatedPoolMutation(graphene.Mutation, PoolValidator, ControllerFe
         vm_name_template = graphene.String(required=True)
 
         create_thin_clones = graphene.Boolean(default_value=True)
+        prepare_vms = graphene.Boolean(default_value=True)
         connection_types = graphene.List(graphene.NonNull(ConnectionTypesGraphene),
                                          default_value=[Pool.PoolConnectionTypes.SPICE.value])
         ad_cn_pattern = graphene.String(description="Наименование групп для добавления ВМ в AD")
@@ -695,7 +698,7 @@ class CreateAutomatedPoolMutation(graphene.Mutation, PoolValidator, ControllerFe
     async def mutate(cls, root, info, creator, controller_id, cluster_id, template_id, datapool_id, node_id,
                      verbose_name, increase_step,
                      initial_size, reserve_size, total_size, vm_name_template,
-                     create_thin_clones,
+                     create_thin_clones, prepare_vms,
                      connection_types, ad_cn_pattern: str = None):
         """Мутация создания Автоматического(Динамического) пула виртуальных машин."""
         controller = await cls.fetch_by_id(controller_id)
@@ -713,6 +716,7 @@ class CreateAutomatedPoolMutation(graphene.Mutation, PoolValidator, ControllerFe
                                                              total_size=total_size,
                                                              vm_name_template=vm_name_template,
                                                              create_thin_clones=create_thin_clones,
+                                                             prepare_vms=prepare_vms,
                                                              connection_types=connection_types,
                                                              ad_cn_pattern=ad_cn_pattern)
         except Exception as E:  # Возможные исключения: дубликат имени или вм id, сетевой фейл enable_remote_accesses
@@ -742,6 +746,7 @@ class UpdateAutomatedPoolMutation(graphene.Mutation, PoolValidator):
         vm_name_template = graphene.String()
         keep_vms_on = graphene.Boolean()
         create_thin_clones = graphene.Boolean()
+        prepare_vms = graphene.Boolean()
         connection_types = graphene.List(graphene.NonNull(ConnectionTypesGraphene))
 
     ok = graphene.Boolean()
@@ -779,6 +784,7 @@ class UpdateAutomatedPoolMutation(graphene.Mutation, PoolValidator):
                                                  vm_name_template=kwargs.get('vm_name_template'),
                                                  keep_vms_on=kwargs.get('keep_vms_on'),
                                                  create_thin_clones=kwargs.get('create_thin_clones'),
+                                                 prepare_vms=kwargs.get('prepare_vms'),
                                                  connection_types=kwargs.get('connection_types'),
                                                  creator=creator
                                                  )

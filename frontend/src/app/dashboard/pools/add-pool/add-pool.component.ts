@@ -94,6 +94,7 @@ export class PoolAddComponent {
       total_size: ['', [Validators.required, Validators.max(10000), Validators.min(1)]],
 
       create_thin_clones: true,
+      prepare_vms: true,
     }, { validators: this.totalSizeValidator() });
 
     this.toStep('type');
@@ -221,6 +222,7 @@ export class PoolAddComponent {
 
       case 'dynamic': {
         this.dynamicPool.get('create_thin_clones').setValue(true)
+        this.dynamicPool.get('prepare_vms').setValue(true)
       } break;
 
       case 'check_dynamic': {

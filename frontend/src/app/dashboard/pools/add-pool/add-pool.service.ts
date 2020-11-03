@@ -12,7 +12,7 @@ export class AddPoolService {
         let query: string = '';
 
         if (type == 'controllers') {
-            query = `query 
+            query = `query
                 controllers {
                     controllers {
                         id
@@ -23,7 +23,7 @@ export class AddPoolService {
         }
 
         if (type == 'clusters') {
-            query = `query 
+            query = `query
                 controllers($id_: UUID) {
                     controller(id_: $id_) {
                         id
@@ -37,7 +37,7 @@ export class AddPoolService {
         }
 
         if (type == 'nodes') {
-            query = `query 
+            query = `query
                 controllers($id_: UUID, $cluster_id: UUID) {
                     controller(id_: $id_) {
                         id
@@ -51,7 +51,7 @@ export class AddPoolService {
         }
 
         if (type == 'data_pools') {
-            query = `query 
+            query = `query
                 controllers($id_: UUID, $cluster_id: UUID, $node_id: UUID) {
                     controller(id_: $id_) {
                         id
@@ -65,7 +65,7 @@ export class AddPoolService {
         }
 
         if (type == 'vms') {
-            query = `query 
+            query = `query
                 controllers($id_: UUID, $cluster_id: UUID, $node_id: UUID, $data_pool_id: UUID) {
                     controller(id_: $id_) {
                         id
@@ -79,7 +79,7 @@ export class AddPoolService {
         }
 
         if (type == 'templates') {
-            query = `query 
+            query = `query
                 controllers($id_: UUID, $cluster_id: UUID, $node_id: UUID, $data_pool_id: UUID) {
                     controller(id_: $id_) {
                         id
@@ -91,7 +91,7 @@ export class AddPoolService {
                 }
             `
         }
-        
+
         return this.service.watchQuery({
             query: gql(query),
             variables: {
@@ -101,8 +101,8 @@ export class AddPoolService {
         });
     }
 
-    addStaticPool(data) { 
-        let query: string = ` mutation 
+    addStaticPool(data) {
+        let query: string = ` mutation
             pools(
                 $connection_types: [PoolConnectionTypes!]
                 $vms: [VmInput!]!
@@ -136,7 +136,7 @@ export class AddPoolService {
     }
 
     addDynamicPool(data) {
-        let query: string = ` mutation 
+        let query: string = ` mutation
             pools(
                 $connection_types: [PoolConnectionTypes!]
                 $node_id: UUID!
@@ -153,6 +153,7 @@ export class AddPoolService {
                 $total_size: Int
                 $initial_size: Int
                 $create_thin_clones: Boolean
+                $prepare_vms: Boolean
             ) {
                 addDynamicPool(
                     connection_types: $connection_types
@@ -170,6 +171,7 @@ export class AddPoolService {
                     total_size: $total_size
                     initial_size: $initial_size
                     create_thin_clones: $create_thin_clones
+                    prepare_vms: $prepare_vms
                 ) {
                     ok
                 }
