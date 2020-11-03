@@ -180,6 +180,7 @@ class Pool(VeilModel):
             AutomatedPool.vm_name_template,
             AutomatedPool.os_type,
             AutomatedPool.create_thin_clones,
+            AutomatedPool.prepare_vms,
             pool_type,
             Pool.connection_types
         ])
@@ -222,6 +223,7 @@ class Pool(VeilModel):
                 AutomatedPool.vm_name_template,
                 AutomatedPool.os_type,
                 AutomatedPool.create_thin_clones,
+                AutomatedPool.prepare_vms,
                 Controller.address)
 
             # Сортировка
@@ -717,6 +719,7 @@ class AutomatedPool(db.Model):
     vm_name_template = db.Column(db.Unicode(length=100), nullable=True)
     os_type = db.Column(db.Unicode(length=100), nullable=True)
     create_thin_clones = db.Column(db.Boolean(), nullable=False, default=True)
+    prepare_vms = db.Column(db.Boolean(), nullable=False, default=True)
     # Группы/Контейнеры в Active Directory для назначения виртуальным машинам пула
     ad_cn_pattern = db.Column(db.Unicode(length=1000), nullable=True)
 
@@ -776,7 +779,7 @@ class AutomatedPool(db.Model):
     async def soft_create(cls, creator, verbose_name, controller_ip, cluster_id, node_id,
                           template_id, datapool_id, increase_step,
                           initial_size, reserve_size, total_size, vm_name_template,
-                          create_thin_clones, connection_types, ad_cn_pattern: str = None):
+                          create_thin_clones, prepare_vms, connection_types, ad_cn_pattern: str = None):
         """Nested transactions are atomic."""
         async with db.transaction() as tx:  # noqa
             # Создаем базовую сущность Pool
@@ -796,6 +799,7 @@ class AutomatedPool(db.Model):
                                                   total_size=total_size,
                                                   vm_name_template=vm_name_template,
                                                   create_thin_clones=create_thin_clones,
+                                                  prepare_vms=prepare_vms,
                                                   ad_cn_pattern=ad_cn_pattern)
             # Записываем событие в журнал
             await system_logger.info(_('AutomatedPool {} is created.').format(verbose_name), user=creator,
@@ -803,7 +807,7 @@ class AutomatedPool(db.Model):
             return automated_pool
 
     async def soft_update(self, creator, verbose_name, reserve_size, total_size, increase_step, vm_name_template,
-                          keep_vms_on: bool, create_thin_clones: bool, connection_types):
+                          keep_vms_on: bool, create_thin_clones: bool, prepare_vms: bool, connection_types):
         pool_kwargs = dict()
         auto_pool_kwargs = dict()
         old_verbose_name = await self.verbose_name
@@ -832,6 +836,8 @@ class AutomatedPool(db.Model):
                 auto_pool_kwargs['vm_name_template'] = vm_name_template
             if isinstance(create_thin_clones, bool):
                 auto_pool_kwargs['create_thin_clones'] = create_thin_clones
+            if isinstance(prepare_vms, bool):
+                auto_pool_kwargs['prepare_vms'] = prepare_vms
             if auto_pool_kwargs:
                 desc = str(auto_pool_kwargs)
                 await system_logger.debug(_('Update AutomatedPool values for {}.').format(await self.verbose_name),
@@ -861,6 +867,7 @@ class AutomatedPool(db.Model):
             'controller_id': pool_controller.id,
             'node_id': str(await self.node_id),
             'create_thin_clones': self.create_thin_clones,
+            'prepare_vms': self.prepare_vms,
         }
 
         for i in range(self.max_amount_of_create_attempts):  # noqa

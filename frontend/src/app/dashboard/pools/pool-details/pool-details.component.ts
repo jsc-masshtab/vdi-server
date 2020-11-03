@@ -115,6 +115,15 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
       edit: 'changeAutomatedPoolCreate_thin_clones'
     },
     {
+      title: 'Подготавливать ВМ',
+      property: 'prepare_vms',
+      type: {
+        typeDepend: 'boolean',
+        propertyDepend: ['Да', 'Нет']
+      },
+      edit: 'changeAutomatedPoolPrepare_vms'
+    },
+    {
       title: 'Держать ВМ с пользователями включенными',
       property: 'keep_vms_on',
       type: {
@@ -693,6 +702,44 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
             fieldName: 'create_thin_clones',
             fieldValue: this.pool.create_thin_clones,
             description: 'Создавать тонкие клоны'
+          }]
+        },
+        update: {
+          method: 'getPool',
+          refetch: true,
+          params: [
+            this.idPool,
+            this.typePool
+          ]
+        }
+      }
+    });
+  }
+
+  // @ts-ignore: Unreachable code error
+  private changeAutomatedPoolPrepare_vms(): void {
+    this.dialog.open(FormForEditComponent, {
+ 			disableClose: true,
+      width: '500px',
+      data: {
+        post: {
+          service: this.poolService,
+          method: 'updatePool',
+          params: {
+            pool_id: this.idPool,
+            pool_type: this.typePool
+          }
+        },
+        settings: {
+          entity: 'pool-details',
+          header: 'Изменение настройки автоматической подготовки ВМ',
+          buttonAction: 'Изменить',
+          form: [{
+            tag: 'input',
+            type: 'checkbox',
+            fieldName: 'prepare_vms',
+            fieldValue: this.pool.prepare_vms,
+            description: 'Подготавливать ВМ'
           }]
         },
         update: {

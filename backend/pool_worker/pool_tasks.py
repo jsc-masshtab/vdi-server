@@ -151,7 +151,8 @@ class InitPoolTask(AbstractTask):
 
             # Подготавливаем машины. Находимся на этом отступе так как нам нужен лок пула но не нужен лок шаблона
             try:
-                await automated_pool.prepare_initial_vms()
+                if automated_pool.prepare_vms:
+                    await automated_pool.prepare_initial_vms()
             except asyncio.CancelledError:
                 await automated_pool.deactivate()
                 raise
@@ -222,9 +223,10 @@ class ExpandPoolTask(AbstractTask):
             try:
                 active_directory_object = await AuthenticationDirectory.query.where(
                     AuthenticationDirectory.status == Status.ACTIVE).gino.first()
-                await asyncio.gather(
-                    *[vm_object.prepare_with_timeout(active_directory_object, automated_pool.ad_cn_pattern) for
-                      vm_object in vm_list])
+                if automated_pool.prepare_vms:
+                    await asyncio.gather(
+                        *[vm_object.prepare_with_timeout(active_directory_object, automated_pool.ad_cn_pattern) for
+                          vm_object in vm_list])
             except asyncio.CancelledError:
                 raise
             except Exception as E:
