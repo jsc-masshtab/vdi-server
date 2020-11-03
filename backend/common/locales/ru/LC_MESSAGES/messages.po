@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2020-11-02 19:07+0300\n"
+"POT-Creation-Date: 2020-11-03 17:23+0300\n"
 "PO-Revision-Date: 2020-07-30 11:25+0300\n"
 "Last-Translator: Emil <emil@emil-pc>\n"
 "Language-Team: Russian\n"
@@ -166,7 +166,7 @@ msgid "Mapping for auth directory {} is updated."
 msgstr "Mapping for auth directory {} is updated."
 
 #: ../common/models/authentication_directory.py:257
-#: ../common/models/authentication_directory.py:457
+#: ../common/models/authentication_directory.py:461
 msgid "Authentication directory server {} is down."
 msgstr "Сервер директории авторизации {} не работает."
 
@@ -216,25 +216,29 @@ msgstr "Неверные учетные данные (ldap): {}."
 msgid "Server down (ldap)."
 msgstr "Сервер не отвечает (ldap)."
 
-#: ../common/models/authentication_directory.py:452
+#: ../common/models/authentication_directory.py:443
+msgid "LDAP username and password can`t be empty."
+msgstr "Имя пользователя и пароль LDAP не могут быть пустыми."
+
+#: ../common/models/authentication_directory.py:456
 msgid "Authentication directory server {} has bad auth info."
 msgstr "Не удалось подключиться к серверу директории авторизации {}."
 
-#: ../common/models/authentication_directory.py:519
-#: ../common/models/authentication_directory.py:598
+#: ../common/models/authentication_directory.py:523
+#: ../common/models/authentication_directory.py:602
 msgid "Fail to connect to Authentication Directory. Check service information."
 msgstr "Ошибка подключения к директории авторизации."
 
-#: ../common/models/authentication_directory.py:642
+#: ../common/models/authentication_directory.py:646
 msgid "{} new users synced from Authentication Directory."
 msgstr "{} новых пользователей синхронизировано из директории авторизации."
 
-#: ../common/models/authentication_directory.py:650
+#: ../common/models/authentication_directory.py:654
 #: ../web_app/auth/group_schema.py:180
 msgid "No such Group."
 msgstr "Отсутствует такая группа."
 
-#: ../common/models/authentication_directory.py:652
+#: ../common/models/authentication_directory.py:656
 msgid "Group {} is not synchronized by AD."
 msgstr "Группа {} не синхронизированна с директорией авторизации."
 
@@ -628,7 +632,7 @@ msgstr "Пропущен заголовок авторизации."
 msgid "IP: {}. username: {}."
 msgstr "IP: {}. Пользователь: {}."
 
-#: ../common/veil/veil_decorators.py:46 ../web_app/auth/license/handlers.py:35
+#: ../common/veil/veil_decorators.py:46 ../web_app/auth/license/handlers.py:38
 #: ../web_app/tests/test_auth_v2.py:75
 msgid "Invalid permissions."
 msgstr "Недостаточно прав."
@@ -839,19 +843,19 @@ msgstr "Пользователь {} вышел из системы."
 msgid "Demo version."
 msgstr "Демонстрационная версия."
 
-#: ../web_app/auth/license/handlers.py:50
+#: ../web_app/auth/license/handlers.py:53
 msgid "Bad extension."
 msgstr "Недопустимое расширение."
 
-#: ../web_app/auth/license/handlers.py:58
+#: ../web_app/auth/license/handlers.py:61
 msgid "Fail to open license key file."
 msgstr "Не удалось открыть лицензионный ключ."
 
-#: ../web_app/auth/license/handlers.py:60
+#: ../web_app/auth/license/handlers.py:63
 msgid "Try to upload invalid license key."
 msgstr "Неудачная попытка загрузить лицензионный ключ."
 
-#: ../web_app/auth/license/handlers.py:63
+#: ../web_app/auth/license/handlers.py:66
 msgid "Valid license key is uploaded."
 msgstr "Лицензионный ключ загружен."
 
