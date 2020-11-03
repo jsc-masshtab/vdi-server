@@ -102,15 +102,6 @@ class VmType(VeilResourceType):
             **event.__values__)
         return event_type
 
-    # TODO: перевел на показ статуса ВМ. Удалить после тестирования
-    # async def resolve_status(self, _info):
-    #     vm = await Vm.get(self.id)
-    #     pool = await Pool.get(vm.pool_id)
-    #     pool_controller = await pool.controller_obj
-    #     veil_domain = pool_controller.veil_client.domain(str(self.id))
-    #     await veil_domain.info()
-    #     return veil_domain.status
-
 
 class VmInput(graphene.InputObjectType):
     """Инпут для ввода ВМ."""
@@ -313,15 +304,20 @@ class PoolType(graphene.ObjectType):
         vms_list = []
         for vm in vms:
             domain_entity = await vm.vm_client
-            await domain_entity.info()
-            if domain_entity.os_windows and domain_entity.powered:
-                in_domain = await domain_entity.in_ad
-            else:
-                in_domain = False
+            in_domain = False
+            power_state = VmState.UNDEFINED
+            parent_name = None
+            if domain_entity:
+                await domain_entity.info()
+                if domain_entity.os_windows and domain_entity.powered:
+                    in_domain = await domain_entity.in_ad
+                power_state = domain_entity.power_state
+                parent_name = domain_entity.parent_name
+
             vms_list.append(
-                VmType(power_state=domain_entity.power_state,
+                VmType(power_state=power_state,
                        in_domain=in_domain,
-                       parent_name=domain_entity.parent_name,
+                       parent_name=parent_name,
                        **vm.__values__))
         # TODO: получить список ВМ и статусов
         return vms_list
@@ -335,6 +331,9 @@ class PoolType(graphene.ObjectType):
         template_id = await pool.template_id
         if not template_id:
             return
+        # Прерываем выполнение при отсутствии клиента
+        if not pool_controller.veil_client:
+            return
         veil_domain = pool_controller.veil_client.domain(str(template_id))
         await veil_domain.info()
         # попытка не использовать id
@@ -344,6 +343,9 @@ class PoolType(graphene.ObjectType):
     async def resolve_node(self, _info):
         pool = await Pool.get(self.pool_id)
         pool_controller = await pool.controller_obj
+        # Прерываем выполнение при отсутствии клиента
+        if not pool_controller.veil_client:
+            return
         veil_node = pool_controller.veil_client.node(str(pool.node_id))
         await veil_node.info()
         # попытка не использовать id
@@ -353,6 +355,9 @@ class PoolType(graphene.ObjectType):
     async def resolve_datapool(self, _info):
         pool = await Pool.get(self.pool_id)
         pool_controller = await pool.controller_obj
+        # Прерываем выполнение при отсутствии клиента
+        if not pool_controller.veil_client:
+            return
         veil_datapool = pool_controller.veil_client.data_pool(str(pool.datapool_id))
         await veil_datapool.info()
         # попытка не использовать id
@@ -362,6 +367,9 @@ class PoolType(graphene.ObjectType):
     async def resolve_cluster(self, _info):
         pool = await Pool.get(self.pool_id)
         pool_controller = await pool.controller_obj
+        # Прерываем выполнение при отсутствии клиента
+        if not pool_controller.veil_client:
+            return
         veil_cluster = pool_controller.veil_client.cluster(str(pool.cluster_id))
         await veil_cluster.info()
         # попытка не использовать id
@@ -1038,6 +1046,8 @@ class VmStart(graphene.Mutation):
         vm = await Vm.get(vm_id)
         if vm:
             domain_entity = await vm.vm_client
+            if not domain_entity:
+                return
             await domain_entity.info()
             asyncio.ensure_future(vm.start(creator=creator))
             return VmStart(ok=True)
@@ -1056,6 +1066,8 @@ class VmShutdown(graphene.Mutation):
         vm = await Vm.get(vm_id)
         if vm:
             domain_entity = await vm.vm_client
+            if not domain_entity:
+                return
             await domain_entity.info()
             asyncio.ensure_future(vm.shutdown(creator=creator, force=force))
             return VmShutdown(ok=True)
@@ -1074,6 +1086,8 @@ class VmReboot(graphene.Mutation):
         vm = await Vm.get(vm_id)
         if vm:
             domain_entity = await vm.vm_client
+            if not domain_entity:
+                return
             await domain_entity.info()
             asyncio.ensure_future(vm.reboot(creator=creator, force=force))
             return VmReboot(ok=True)
@@ -1091,6 +1105,8 @@ class VmSuspend(graphene.Mutation):
         vm = await Vm.get(vm_id)
         if vm:
             domain_entity = await vm.vm_client
+            if not domain_entity:
+                return
             await domain_entity.info()
             asyncio.ensure_future(vm.suspend(creator=creator))
             return VmSuspend(ok=True)

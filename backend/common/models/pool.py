@@ -527,6 +527,10 @@ class Pool(VeilModel):
         pool = await Pool.get(pool_id)
         await pool.update(status=Status.ACTIVE).apply()
         entity = {'entity_type': EntityType.POOL, 'entity_uuid': pool_id}
+        # Активация ВМ. Добавлено 02.11.2020 - не факт, что нужно.
+        vms = await VmModel.query.where(VmModel.pool_id == pool_id).gino.all()
+        for vm in vms:
+            await vm.update(status=Status.ACTIVE).apply()
         await system_logger.info(_('Pool {} has been activated.').format(pool.verbose_name), entity=entity)
         return True
 
@@ -535,7 +539,11 @@ class Pool(VeilModel):
         pool = await Pool.get(pool_id)
         await pool.update(status=Status.FAILED).apply()
         entity = {'entity_type': EntityType.POOL, 'entity_uuid': pool_id}
-        await system_logger.info(_('Pool {} has been deactivated.').format(pool.verbose_name), entity=entity)
+        # Деактивация ВМ. Добавлено 02.11.2020 - не факт, что нужно.
+        vms = await VmModel.query.where(VmModel.pool_id == pool_id).gino.all()
+        for vm in vms:
+            await vm.update(status=Status.FAILED).apply()
+        await system_logger.warning(_('Pool {} has been deactivated.').format(pool.verbose_name), entity=entity)
         return True
 
     @classmethod
@@ -585,9 +593,12 @@ class Pool(VeilModel):
         ids_str_list = wrap(ids_str, width=max_ids_length)
         # теперь получаем данные для каждого блока id
         for ids_str_section in ids_str_list:
-            domains_list_response = await pool_controller.veil_client.domain().list(fields=['id'],
-                                                                                    params={'power_state': 'ON',
-                                                                                            'ids': ids_str_section})
+            controller_client = pool_controller.veil_client
+            if not controller_client:
+                break
+            domains_list_response = await controller_client.domain().list(fields=['id'],
+                                                                          params={'power_state': 'ON',
+                                                                                  'ids': ids_str_section})
             if domains_list_response.success and domains_list_response.paginator_results:
                 # Берем первый идентиифкатор
                 vm_id = domains_list_response.paginator_results[0].get('id')
@@ -838,6 +849,9 @@ class AutomatedPool(db.Model):
         """Try to add VM to pool."""
         verbose_name = self.vm_name_template or await self.verbose_name  # temp???
         pool_controller = await self.controller_obj
+        # Прерываем выполнение при отсутствии клиента
+        if not pool_controller.veil_client:
+            raise AssertionError(_('There is no client for pool {}.').format(self.verbose_name))
 
         # Перебор имени ВМ на контроллере учитывает индекс в имени. Если ВМ-1 будет занята, то произойдет инкремент
         params = {
@@ -908,6 +922,8 @@ class AutomatedPool(db.Model):
     async def template_os_type(self):
         """Получает инфорацию об ОС шаблона от VeiL ECP."""
         pool_controller = await self.controller_obj
+        if not pool_controller.veil_client:
+            return
         veil_template = pool_controller.veil_client.domain(domain_id=str(self.template_id))
         await veil_template.info()
         return veil_template.os_type

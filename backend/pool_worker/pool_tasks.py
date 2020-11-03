@@ -144,7 +144,7 @@ class InitPoolTask(AbstractTask):
                     raise
                 except Exception as E:
                     await system_logger.error(message=_('Failed to init pool.'),
-                                              desciption=str(E))
+                                              description=str(E))
                     await automated_pool.deactivate()
                     raise E
 
