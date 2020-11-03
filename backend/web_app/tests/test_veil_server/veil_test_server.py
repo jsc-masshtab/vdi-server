@@ -33,8 +33,7 @@ class VeilTestServer:
 
         # ssl
         self.ssl_context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
-        self.ssl_context.load_cert_chain('/home/ubuntu/job/ssl/87658490_0.0.0.0.cert',
-                                         '/home/ubuntu/job/ssl/87658490_0.0.0.0.key')
+        self.ssl_context.load_cert_chain('87658490_0.0.0.0.cert', '87658490_0.0.0.0.key')
 
     def start(self):
 

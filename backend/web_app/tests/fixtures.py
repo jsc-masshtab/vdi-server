@@ -11,18 +11,17 @@ from graphene import Context
 from common.database import start_gino, stop_gino
 from common.veil.veil_gino import Role
 from common.veil.auth.veil_jwt import encode_jwt
+from common.veil.veil_api import get_veil_client, stop_veil_client
+from common.veil.veil_redis import a_redis_wait_for_message, INTERNAL_EVENTS_CHANNEL
 
 from common.models.controller import Controller
 from common.models.vm import Vm
 from common.models.auth import Group, User
 from common.models.authentication_directory import AuthenticationDirectory, Mapping
 
-
 from web_app.controller.schema import controller_schema
 from web_app.pool.schema import pool_schema
 from web_app.tests.utils import execute_scheme
-
-from common.veil.veil_redis import a_redis_wait_for_message, INTERNAL_EVENTS_CHANNEL
 
 from common.log.journal import system_logger
 
@@ -240,6 +239,15 @@ async def fixt_create_static_pool(fixt_controller):
     }
     ''' % pool_id
     await execute_scheme(pool_schema, qu, context=context)
+
+
+@pytest.fixture
+@async_generator
+async def fixt_veil_client():
+
+    get_veil_client()
+    await yield_()
+    await stop_veil_client()
 
 
 @pytest.fixture
@@ -500,7 +508,7 @@ def fixt_group_role(request, event_loop):
 
 @pytest.fixture
 @async_generator
-async def fixt_controller():
+async def fixt_controller(fixt_veil_client):
 
     controller_ip = '0.0.0.0'
 

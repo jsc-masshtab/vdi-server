@@ -4,7 +4,7 @@ import pytest
 from tornado.testing import gen_test
 
 from web_app.tests.utils import execute_scheme, VdiHttpTestCase
-from web_app.tests.fixtures import fixt_db, fixt_auth_context, fixt_user, fixt_user_admin, fixt_controller, fixt_create_static_pool, fixt_create_automated_pool, fixt_vm  # noqa
+from web_app.tests.fixtures import fixt_db, fixt_auth_context, fixt_user, fixt_user_admin, fixt_controller, fixt_create_static_pool, fixt_create_automated_pool, fixt_vm, fixt_veil_client  # noqa
 
 from common.models.vm import Vm
 from common.models.pool import Pool
@@ -56,7 +56,7 @@ class TestVmPermissionsSchema:
 
 
 @pytest.mark.asyncio
-@pytest.mark.usefixtures('fixt_db', 'fixt_controller', 'fixt_user_admin', 'fixt_create_static_pool')
+@pytest.mark.usefixtures('fixt_db', 'fixt_controller', 'fixt_user_admin', 'fixt_create_static_pool', 'fixt_veil_client')
 class VmActionTestCase(VdiHttpTestCase):
 
     async def get_moking_dict(self, action):

@@ -158,7 +158,7 @@ snapshots['TestAuthenticationDirectoryEdit.test_auth_dir_edit 1'] = {
 snapshots['TestAuthenticationDirectoryEdit.test_auth_dir_edit_bad_pass 1'] = {
     'updateAuthDir': {
         'auth_dir': {
-            'status': 'BAD_AUTH'
+            'status': 'ACTIVE'
         },
         'ok': True
     }
@@ -243,7 +243,7 @@ snapshots['TestAuthenticationDirectoryUtils.test_auth_dir_with_bad_pass_check 1'
         'auth_dir': {
             'status': 'BAD_AUTH'
         },
-        'ok': True
+        'ok': False
     }
 }
 

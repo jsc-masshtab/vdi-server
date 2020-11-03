@@ -4,7 +4,7 @@ import pytest
 from web_app.controller.schema import controller_schema
 from common.models.controller import Controller
 from web_app.tests.utils import execute_scheme
-from web_app.tests.fixtures import fixt_db, fixt_controller, fixt_auth_context  # noqa
+from web_app.tests.fixtures import fixt_db, fixt_controller, fixt_auth_context, fixt_veil_client  # noqa
 
 
 pytestmark = [pytest.mark.controllers]

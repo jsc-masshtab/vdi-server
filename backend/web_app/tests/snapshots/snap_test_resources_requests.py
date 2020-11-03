@@ -141,7 +141,7 @@ snapshots['test_request_vms 2'] = {
 
 snapshots['test_request_vms 3'] = {
     'vm': {
-        'cpu_count': None,
+        'cpu_count': 2,
         'id': 'e00219af-f99a-4615-bd3c-85646be3e1d5',
         'memory_count': 2000,
         'status': 'ACTIVE',
