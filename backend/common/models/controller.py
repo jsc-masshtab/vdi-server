@@ -261,7 +261,7 @@ class Controller(AbstractSortableStatusModel, VeilModel):
         # Останавлием задачи связанные с контроллером
         await send_cmd_to_cancel_tasks_associated_with_controller(controller_id=self.id, wait_for_result=True)
         # отключаем клиент
-        self.remove_client()
+        await self.remove_client()
         # Деактивируем пулы
         pools = await self.pools
         for pool_obj in pools:
