@@ -867,7 +867,6 @@ class AutomatedPool(db.Model):
             'controller_id': pool_controller.id,
             'node_id': str(await self.node_id),
             'create_thin_clones': self.create_thin_clones,
-            'prepare_vms': self.prepare_vms,
         }
 
         for i in range(self.max_amount_of_create_attempts):  # noqa
