@@ -73,7 +73,7 @@ class Controller(AbstractSortableStatusModel, VeilModel):
     async def remove_client(self):
         """Удаляет клиент из синглтона."""
         veil_api_singleton = get_veil_client()
-        return await veil_api_singleton.remove_client(self.address)
+        await veil_api_singleton.remove_client(self.address)
 
     @property
     def entity_type(self):
@@ -191,14 +191,20 @@ class Controller(AbstractSortableStatusModel, VeilModel):
         # Если параметров нет - прерываем редактирование
         if not controller_kwargs:
             return False
+        # Если передан токен - деактивируем подключение
+        if token or address:
+            await self.deactivate()
         # Редактируем параметры записи в БД
         async with db.transaction():
             await Controller.update.values(**controller_kwargs).where(
                 Controller.id == self.id).gino.status()
             updated_controller = await Controller.get(self.id)
-            # Получаем, сохраняем и проверяем допустимость версии
-            await updated_controller.get_version()
-        controller_is_ok = await updated_controller.check_controller()
+        if token or address:
+            controller_is_ok = await updated_controller.check_controller()
+            if controller_is_ok:
+                await updated_controller.activate()
+                # Получаем, сохраняем и проверяем допустимость версии
+                await updated_controller.get_version()
         # Мы не хотим видеть токен в логе
         if controller_kwargs.get('token'):
             controller_kwargs.pop('token')

@@ -65,12 +65,14 @@ export class ControllersService {
                     $id: UUID!,
                     $verbose_name: String,
                     $description: String,
-                    $address: String) {
+                    $address: String,
+                    $token: String) {
                     updateController(
                         id_: $id,
                         verbose_name: $verbose_name,
                         description: $description,
-                        address: $address) {
+                        address: $address,
+                        token: $token) {
                         controller {
                             id
                             verbose_name

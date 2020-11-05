@@ -277,7 +277,7 @@ class ControllerType(graphene.ObjectType, ControllerFetcher):
                                'description': controller_obj.description,
                                'status': controller_obj.status,
                                'version': controller_obj.version,
-                               'token': controller_obj.token,
+                               'token': '*' * 12,
                                }
             return ControllerType(**controller_dict)
 

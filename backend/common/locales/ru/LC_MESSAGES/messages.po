@@ -818,12 +818,12 @@ msgstr "Отсутствует пароль."
 #: ../web_app/auth/handlers.py:42 ../web_app/tests/test_auth_v2.py:35
 #: ../web_app/tests/test_auth_v2.py:43
 msgid "Invalid credentials."
-msgstr "Неверные полномочия."
+msgstr "Неверные учетные данные."
 
 #: ../web_app/auth/handlers.py:49
 #, python-brace-format
 msgid "Authentication failed: {err}."
-msgstr "Ошибка авторизации {err}."
+msgstr "Ошибка авторизации: {err}."
 
 #: ../web_app/auth/handlers.py:51
 #, python-brace-format

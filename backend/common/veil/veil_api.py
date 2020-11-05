@@ -50,6 +50,12 @@ class VdiVeilClientSingleton(VeilClientSingleton):
             self.__client_instances[server_address] = instance
         return self.__client_instances[server_address]
 
+    async def remove_client(self, server_address: str) -> None:
+        """Remove and close existing VeilClient instance."""
+        if server_address in self.__client_instances:
+            _client = self.__client_instances.pop(server_address)
+            await _client.close()
+
     @property
     def instances(self) -> dict:
         """Show all instances of VeilClient."""
