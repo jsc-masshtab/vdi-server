@@ -35,7 +35,7 @@ services:
     command: redis-server --requirepass 4NZ7GpHn4IlshPhb --bind 0.0.0.0
   memcached:
     image: memcached:alpine
-    container_name: vdi-memcached
+    container_name: vdi-memcached-test
     network_mode: "host"
     command: sh -c "memcached -m 64"
   veil_test_server:
