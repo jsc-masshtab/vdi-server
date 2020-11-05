@@ -50,6 +50,8 @@ services:
     volumes:
       - ../../backend:/opt/veil-vdi/app
     command: sh -c "sleep 5 && cd common/migrations && pipenv run alembic upgrade head && cd ../../ && pipenv run python web_app/app.py --logging=DEBUG --workers=1"
+#    Если хочется локально запустить тесты
+#    command: sh -c "sleep 5 && cd common/migrations && pipenv run alembic upgrade head"
     depends_on:
       - postgres
       - redis
@@ -65,8 +67,8 @@ services:
     volumes:
       - ../../backend:/opt/veil-vdi/app
     command: sh -c "sleep 10 && pipenv run python pool_worker/app.py"
-    depends_on:
-      - tornado
+#    depends_on:
+#      - tornado
   ws_listener_worker:
     build:
       context: ../../
