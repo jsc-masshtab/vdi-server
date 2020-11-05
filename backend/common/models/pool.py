@@ -11,6 +11,7 @@ from common.settings import POOL_MAX_CREATE_ATTEMPTS
 from common.database import db
 
 from common.veil.veil_gino import Status, EntityType, VeilModel
+from common.veil.veil_graphene import VmState
 from common.veil.veil_errors import VmCreationError, SimpleError, ValidationError, PoolCreationError
 from common.utils import extract_ordering_data
 from web_app.auth.license.utils import License
@@ -608,6 +609,61 @@ class Pool(VeilModel):
         if not vm_id:
             vm_id = vm_ids_data[0][0]
         return await VmModel.get(vm_id)
+
+    async def get_vms_info(self):
+        """Возвращает информацию для всех ВМ в пуле."""
+        from web_app.pool.schema import VmType
+        # Получаем список ВМ
+        vms = await self.vms
+
+        if not vms:
+            return
+        # Получаем набор уникальных ids ВМ
+        vm_ids = set(str(vm.id) for vm in vms)
+        ids_str = ','.join(vm_ids)
+        pool_controller = await self.controller_obj
+
+        # Полученный список может оказаться больше, чем кол-во параметров принимаемых VeiL, поэтому делим его на блоки
+        # Т.к. список формируется выше, мы предполагаем, что 157 id и запятая уложится в 5809 символов
+        max_ids_length = 5809
+        ids_str_list = wrap(ids_str, width=max_ids_length)
+
+        # Получаем данные для каждого блока id
+        vms_list = list()
+        for ids_str_section in ids_str_list:
+            # Запрашиваем на ECP VeiL данные
+            fields = ['id', 'user_power_state', 'parent']
+            controller_client = pool_controller.veil_client
+            if not controller_client:
+                break
+            domains_list_response = await controller_client.domain().list(fields=fields,
+                                                                          params={'ids': ids_str_section})
+            vms_list += domains_list_response.paginator_results
+
+        vms_dict = dict()
+        for vm_info in vms_list:
+            vm_info['parent_name'] = None
+            # Получаем имя шаблона
+            if vm_info['parent']:
+                vm_info['parent_name'] = vm_info['parent']['verbose_name']
+            del vm_info['parent']
+            vms_dict[vm_info['id']] = vm_info
+
+        vms_info = list()
+        for vm in vms:
+            # TODO: Добавить принадлежность к домену + на фронте
+            power_state = VmState.UNDEFINED
+            parent_name = None
+            for vm_id in vms_dict.keys():
+                if str(vm_id) == str(vm.id):
+                    power_state = vms_dict[vm_id]['user_power_state']
+                    parent_name = vms_dict[vm_id]['parent_name']
+            # Формируем список с информацией по каждой вм в пуле
+            vms_info.append(
+                VmType(power_state=power_state,
+                       parent_name=parent_name,
+                       **vm.__values__))
+        return vms_info
 
     async def free_user_vms(self, user_id):
         """Т.к. на тонком клиенте нет выбора VM - будут сложности если у пользователя несколько VM в рамках 1 пула."""
