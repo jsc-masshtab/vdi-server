@@ -64,7 +64,6 @@ class VmType(VeilResourceType):
     status = StatusGraphene()
     # controller = graphene.Field(ControllerType)
     power_state = VmState()
-    in_domain = graphene.Boolean(default_value=False)
     parent_name = graphene.String()
 
     # Список событий для отдельной ВМ и отдельное событие внутри пула
@@ -301,27 +300,10 @@ class PoolType(graphene.ObjectType):
     async def resolve_vms(self, _info):
         # TODO: добавить пагинацию
         pool = await Pool.get(self.pool_id)
-        vms = await pool.vms
-        vms_list = []
-        for vm in vms:
-            domain_entity = await vm.vm_client
-            in_domain = False
-            power_state = VmState.UNDEFINED
-            parent_name = None
-            if domain_entity:
-                await domain_entity.info()
-                if domain_entity.os_windows and domain_entity.powered:
-                    in_domain = await domain_entity.in_ad
-                power_state = domain_entity.power_state
-                parent_name = domain_entity.parent_name
+        vms_info = await pool.get_vms_info()
 
-            vms_list.append(
-                VmType(power_state=power_state,
-                       in_domain=in_domain,
-                       parent_name=parent_name,
-                       **vm.__values__))
         # TODO: получить список ВМ и статусов
-        return vms_list
+        return vms_info
 
     async def resolve_vm_amount(self, _info):
         return await (db.select([db.func.count(Vm.id)]).where(Vm.pool_id == self.pool_id)).gino.scalar()

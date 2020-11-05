@@ -207,14 +207,14 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
       property: 'template',
       property_lv2: 'verbose_name'
     },
-    {
-      title: "Принадлежность",
-      property: "in_domain",
-      type: {
-        typeDepend: 'boolean',
-        propertyDepend: ['В домене', 'Не в домене']
-      }
-    },
+    // {
+    //   title: "Принадлежность",
+    //   property: "in_domain",
+    //   type: {
+    //     typeDepend: 'boolean',
+    //     propertyDepend: ['В домене', 'Не в домене']
+    //   }
+    // },
     {
       title: 'Пользователь',
       property: 'user',
@@ -239,14 +239,14 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
       icon: 'desktop',
       type: 'string'
     },
-    {
-      title: "Принадлежность",
-      property: "in_domain",
-      type: {
-        typeDepend: 'boolean',
-        propertyDepend: ['В домене', 'Не в домене']
-      }
-    },
+    // {
+    //   title: "Принадлежность",
+    //   property: "in_domain",
+    //   type: {
+    //     typeDepend: 'boolean',
+    //     propertyDepend: ['В домене', 'Не в домене']
+    //   }
+    // },
     {
       title: 'Пользователь',
       property: 'user',

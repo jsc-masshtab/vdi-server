@@ -38,7 +38,6 @@ export class PoolDetailsService {
                                     vms {
                                         id
                                         verbose_name
-                                        in_domain
                                         user {
                                             username
                                         }
@@ -102,7 +101,6 @@ export class PoolDetailsService {
                                     vms {
                                         verbose_name
                                         id
-                                        in_domain
                                         user {
                                             username
                                         }
