@@ -30,7 +30,7 @@ snapshots['test_resolve_controller 1'] = {
         'description': 'controller_added_during_test',
         'pools': [],
         'status': 'ACTIVE',
-        'token': 'jwt eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjoxLCJ1c2VybmFtZSI6ImFkbWluIiwiZXhwIjoxOTEyOTM3NjExLCJzc28iOmZhbHNlLCJvcmlnX2lhdCI6MTU5ODQ0MTYxMX0.OSRio0EoWA8ZDtvzl3YlaBmdfbI0DQz1RiGAIMCgoX0',
+        'token': '*' * 12,
         'verbose_name': 'controller_added_during_test',
         'version': '4.5.0',
         'clusters': [{'id': 'c3f56e1f-9bd1-45e8-a3e6-a5f69256ee5e',

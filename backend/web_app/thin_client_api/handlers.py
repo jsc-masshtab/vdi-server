@@ -70,11 +70,11 @@ class PoolGetVm(BaseHandler, ABC):
             return await self.finish(response)
         user = await self.get_user_model_instance()
         if not user:
-            response = {'errors': [{'message': _('User {} not found.')}]}
+            response = {'errors': [{'message': _('User {} not found.'), 'code': '401'}]}
             return await self.log_finish(response)
         pool = await PoolModel.get(pool_id)
         if not pool:
-            response = {'errors': [{'message': _('Pool not found.')}]}
+            response = {'errors': [{'message': _('Pool not found.'), 'code': '404'}]}
             return await self.log_finish(response)
         pool_extended = False
 
@@ -93,11 +93,13 @@ class PoolGetVm(BaseHandler, ABC):
                     await request_to_execute_pool_task(pool.id_str, PoolTaskType.EXPANDING_POOL)
             elif pool_extended:
                 response = {
-                    'errors': [{'message': _('The pool doesn`t have free machines. Try again after 5 minutes.')}]}
+                    'errors': [{'message': _('The pool doesn`t have free machines. Try again after 5 minutes.'),
+                                'code': '002'}]}
                 await request_to_execute_pool_task(pool.id_str, PoolTaskType.EXPANDING_POOL)
                 return await self.log_finish(response)
             else:
-                response = {'errors': [{'message': _('The pool doesn`t have free machines.')}]}
+                response = {'errors': [{'message': _('The pool doesn`t have free machines.'),
+                                        'code': '003'}]}
                 return await self.log_finish(response)
 
         # TODO: обработка новых исключений
@@ -111,7 +113,8 @@ class PoolGetVm(BaseHandler, ABC):
             if not veil_domain.powered:
                 await vm.start()
         except client_exceptions.ServerDisconnectedError:
-            response = {'errors': [{'message': _('VM is unreachable on ECP Veil.')}]}
+            response = {'errors': [{'message': _('VM is unreachable on ECP Veil.'),
+                                    'code': '004'}]}
             return await self.log_finish(response)
         # Актуализируем данные для подключения
         info = await veil_domain.info()
