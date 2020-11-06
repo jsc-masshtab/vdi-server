@@ -199,12 +199,11 @@ class Controller(AbstractSortableStatusModel, VeilModel):
             await Controller.update.values(**controller_kwargs).where(
                 Controller.id == self.id).gino.status()
             updated_controller = await Controller.get(self.id)
-        if token or address:
-            controller_is_ok = await updated_controller.check_controller()
-            if controller_is_ok:
-                await updated_controller.activate()
-                # Получаем, сохраняем и проверяем допустимость версии
-                await updated_controller.get_version()
+        controller_is_ok = await updated_controller.check_controller()
+        if controller_is_ok:
+            await updated_controller.activate()
+            # Получаем, сохраняем и проверяем допустимость версии
+            await updated_controller.get_version()
         # Мы не хотим видеть токен в логе
         if controller_kwargs.get('token'):
             controller_kwargs.pop('token')

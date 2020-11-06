@@ -54,17 +54,6 @@ snapshots['TestAuthenticationDirectoryQuery.test_auth_dir_get_by_id 1'] = {
     }
 }
 
-snapshots['TestAuthenticationDirectoryQuery.test_auth_dir_get_possible_ad_groups_no_pass 1'] = {
-    'auth_dir': {
-        'assigned_ad_groups': [
-        ],
-        'id': '10913d5d-ba7a-4049-88c5-769267a6cbe4',
-        'possible_ad_groups': [
-        ],
-        'status': 'ACTIVE'
-    }
-}
-
 snapshots['TestAuthenticationDirectoryQuery.test_auth_dir_get_possible_ad_groups_bad_pass 1'] = {
     'auth_dir': {
         'assigned_ad_groups': [
@@ -73,58 +62,6 @@ snapshots['TestAuthenticationDirectoryQuery.test_auth_dir_get_possible_ad_groups
         'possible_ad_groups': [
         ],
         'status': 'BAD_AUTH'
-    }
-}
-
-snapshots['TestAuthenticationDirectoryQuery.test_auth_dir_get_group_members_no_pass 1'] = {
-    'group_members': [
-    ]
-}
-
-snapshots['TestAuthenticationDirectorySchema.test_add_auth_dir_mapp 1'] = {
-    'addAuthDirMapping': {
-        'auth_dir': {
-            'id': '10913d5d-ba7a-4049-88c5-769267a6cbe4',
-            'mappings': [
-                {
-                    'verbose_name': 'test_mapping2'
-                }
-            ]
-        },
-        'ok': True
-    }
-}
-
-snapshots['TestAuthenticationDirectorySchema.test_edit_auth_dir_mapp 1'] = {
-    'editAuthDirMapping': {
-        'auth_dir': {
-            'id': '10913d5d-ba7a-4049-88c5-769267a6cbe4',
-            'mappings': [
-                {
-                    'assigned_groups': [
-                        {
-                            'id': '10913d5d-ba7a-4049-88c5-769267a6cbe4'
-                        }
-                    ],
-                    'id': '10913d5d-ba7a-4049-88c5-769267a6cbe4',
-                    'possible_groups': [
-                    ],
-                    'verbose_name': 'editted mapping'
-                }
-            ]
-        },
-        'ok': True
-    }
-}
-
-snapshots['TestAuthenticationDirectorySchema.test_del_auth_dir_mapp 1'] = {
-    'deleteAuthDirMapping': {
-        'auth_dir': {
-            'id': '10913d5d-ba7a-4049-88c5-769267a6cbe4',
-            'mappings': [
-            ]
-        },
-        'ok': True
     }
 }
 
@@ -257,47 +194,6 @@ snapshots['TestAuthenticationDirectoryUtils.test_auth_dir_sync_group_and_users 1
     'syncAuthDirGroupUsers': {
         'ok': True
     }
-}
-
-snapshots['TestAuthenticationDirectoryQuery.test_auth_dir_get_group_members 1'] = {
-    'group_members': [
-        {
-            'email': None,
-            'first_name': 'administrator',
-            'last_name': None,
-            'username': 'administrator'
-        },
-        {
-            'email': None,
-            'first_name': 'o.krutov',
-            'last_name': None,
-            'username': 'o.krutov'
-        },
-        {
-            'email': 'r.danilov@mashtab.org',
-            'first_name': 'Roman',
-            'last_name': 'Danilov',
-            'username': 'r.danilov'
-        },
-        {
-            'email': None,
-            'first_name': 'Denis',
-            'last_name': 'Gubin',
-            'username': 'd.gubin'
-        },
-        {
-            'email': None,
-            'first_name': 'Александр',
-            'last_name': 'Моисеев',
-            'username': 'a.moiseev'
-        },
-        {
-            'email': None,
-            'first_name': 'Alex',
-            'last_name': 'Devyatkin',
-            'username': 'a.devyatkin'
-        }
-    ]
 }
 
 snapshots['TestAuthenticationDirectoryQuery.test_auth_dir_get_possible_ad_groups 1'] = {

@@ -134,5 +134,4 @@ async def test_resolve_controller(fixt_db, snapshot, fixt_controller, fixt_auth_
              }
             }""" % controller_id
     executed = await execute_scheme(controller_schema, qu, context=fixt_auth_context)  # noqa
-    print('!!executed ', executed, flush=True)
     snapshot.assert_match(executed)
