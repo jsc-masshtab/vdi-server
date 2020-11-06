@@ -316,7 +316,7 @@ export class PoolDetailsService {
         });
     }
 
-    public updatePool({pool_id, pool_type }, {connection_types, verbose_name, reserve_size, total_size, vm_name_template, create_thin_clones, prepare_vms, keep_vms_on}) {
+    public updatePool({pool_id, pool_type }, {connection_types, verbose_name, increase_step, total_size, vm_name_template, create_thin_clones, prepare_vms, keep_vms_on}) {
         if (pool_type === 'static') {
             return this.service.mutate<any>({
                 mutation: gql`
@@ -342,10 +342,10 @@ export class PoolDetailsService {
             return this.service.mutate<any>({
                 mutation: gql`
                                 mutation pools($connection_types: [PoolConnectionTypes!], $pool_id: UUID!,$verbose_name: String,
-                                    $reserve_size: Int , $total_size: Int , $vm_name_template: String ,
+                                    $increase_step: Int , $total_size: Int , $vm_name_template: String ,
                                      $keep_vms_on: Boolean, $create_thin_clones: Boolean, $prepare_vms: Boolean ) {
                                     updateDynamicPool(connection_types: $connection_types, pool_id: $pool_id, verbose_name: $verbose_name,
-                                        reserve_size: $reserve_size, total_size: $total_size,
+                                        increase_step: $increase_step, total_size: $total_size,
                                         vm_name_template: $vm_name_template, keep_vms_on: $keep_vms_on,
                                          create_thin_clones: $create_thin_clones, prepare_vms: $prepare_vms ) {
                                         ok
@@ -356,7 +356,7 @@ export class PoolDetailsService {
                     method: 'POST',
                     pool_id,
                     verbose_name,
-                    reserve_size,
+                    increase_step,
                     total_size,
                     vm_name_template,
                     keep_vms_on,

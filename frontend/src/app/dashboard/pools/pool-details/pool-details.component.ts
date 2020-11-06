@@ -156,7 +156,7 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
       title: 'Количество создаваемых ВМ',
       property: 'increase_step',
       type: 'string',
-      edit: 'changeAutomatedPoolReserveSize'
+      edit: 'changeAutomatedPoolIncreaseStep'
     },
     {
       title: 'Максимальное количество создаваемых ВМ',
@@ -603,7 +603,7 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
   }
 
   // @ts-ignore: Unreachable code error
-  private changeAutomatedPoolReserveSize(): void {
+  private changeAutomatedPoolIncreaseStep(): void {
     this.dialog.open(FormForEditComponent, {
  			disableClose: true,
       width: '500px',
@@ -623,8 +623,8 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
           form: [{
             tag: 'input',
             type: 'number',
-            fieldName: 'reserve_size',
-            fieldValue: this.pool.reserve_size,
+            fieldName: 'increase_step',
+            fieldValue: this.pool.increase_step,
           }]
         },
         update: {
