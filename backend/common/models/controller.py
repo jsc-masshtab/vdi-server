@@ -54,11 +54,9 @@ class Controller(AbstractSortableStatusModel, VeilModel):
 
     @property
     def veil_client(self) -> 'VeilClient':
-        """Возвращает инстанс сущности Контроллер у veil api client.
-
-        На данный отсутствует вменяемый способ выяснить id контроллера на VeiL и нет
-        ни 1 причины по которой он может потребоваться для VDI.
-        """
+        """Клиент не сломанного контроллера."""
+        if self.failed:
+            return
         veil_client = get_veil_client()
         return veil_client.add_client(server_address=self.address, token=self.token)
 
@@ -69,12 +67,13 @@ class Controller(AbstractSortableStatusModel, VeilModel):
         На данный отсутствует вменяемый способ выяснить id контроллера на VeiL и нет
         ни 1 причины по которой он может потребоваться для VDI.
         """
-        return self.veil_client.controller()
+        if self.veil_client:
+            return self.veil_client.controller()
 
     async def remove_client(self):
         """Удаляет клиент из синглтона."""
         veil_api_singleton = get_veil_client()
-        return await veil_api_singleton.remove_client(self.address)
+        await veil_api_singleton.remove_client(self.address)
 
     @property
     def entity_type(self):
@@ -88,20 +87,25 @@ class Controller(AbstractSortableStatusModel, VeilModel):
 
     @property
     async def ok(self):
-        """Проверяем доступность контроллера и его статус."""
-        client = self.controller_client
-        return await client.ok
+        """Проверяем доступность контроллера независимо от его статуса."""
+        veil_client = get_veil_client()
+        client = veil_client.add_client(server_address=self.address, token=self.token)
+        is_ok = await client.controller().ok
+        if is_ok:
+            return True
+        await self.remove_client()
+        return False
 
     async def check_controller(self):
         """Проверяем доступность контроллера и меняем его статус."""
         send_cmd_to_ws_monitor(self.id, WsMonitorCmd.REMOVE_CONTROLLER)
         connection_is_ok = await self.ok
-        # print('connection_is_ok', connection_is_ok)
         if connection_is_ok:
             await self.activate()
             send_cmd_to_ws_monitor(self.id, WsMonitorCmd.ADD_CONTROLLER)
             return True
-        await self.deactivate()
+        if not self.failed:
+            await self.deactivate()
         return False
 
     @staticmethod
@@ -121,6 +125,8 @@ class Controller(AbstractSortableStatusModel, VeilModel):
         """Проверяем допустимость версии контроллера."""
         # Получаем инстанс клиента
         controller_client = self.controller_client
+        if not controller_client:
+            raise ValidationError(_('Controller {} has no api client.').format(self.verbose_name))
         # Получаем версию контроллера
         await controller_client.base_version()
         version = controller_client.version
@@ -186,14 +192,19 @@ class Controller(AbstractSortableStatusModel, VeilModel):
         # Если параметров нет - прерываем редактирование
         if not controller_kwargs:
             return False
+        # Если передан токен - деактивируем подключение
+        if token or address:
+            await self.deactivate()
         # Редактируем параметры записи в БД
         async with db.transaction():
             await Controller.update.values(**controller_kwargs).where(
                 Controller.id == self.id).gino.status()
             updated_controller = await Controller.get(self.id)
+        controller_is_ok = await updated_controller.check_controller()
+        if controller_is_ok:
+            await updated_controller.activate()
             # Получаем, сохраняем и проверяем допустимость версии
             await updated_controller.get_version()
-        controller_is_ok = await updated_controller.check_controller()
         # Мы не хотим видеть токен в логе
         if controller_kwargs.get('token'):
             controller_kwargs.pop('token')
@@ -212,7 +223,6 @@ class Controller(AbstractSortableStatusModel, VeilModel):
 
     async def full_delete(self, creator):
         """Удаление сущности с удалением зависимых сущностей."""
-        # soft_delete явно не вызывается
         # Останавлием задачи связанные с контроллером
         await send_cmd_to_cancel_tasks_associated_with_controller(controller_id=self.id, wait_for_result=True)
         # Удаляем контроллер из монитора
@@ -222,8 +232,7 @@ class Controller(AbstractSortableStatusModel, VeilModel):
         # Удаляем зависимые пулы
         await self.full_delete_pools(creator=creator)
         # Удаляем клиент по контроллеру
-        client = get_veil_client()
-        await client.remove_client(self.address)
+        await self.remove_client()
         # Удаляем запись
         status = await super().soft_delete(creator=creator)
         await system_logger.info(message=_('Controller {} has been removed.').format(self.verbose_name), user=creator,
@@ -232,37 +241,38 @@ class Controller(AbstractSortableStatusModel, VeilModel):
 
     async def activate(self):
         """Активируем не активный контроллер и его пулы."""
-        if not self.active:
-            # Активируем контроллер
-            await self.update(status=Status.ACTIVE).apply()
-            await system_logger.debug(_('Controller {} has been activated.').format(self.verbose_name), entity=self.entity)
-            # Активируем пулы
-            # TODO: переработать активацию пулов - нужен метод в пулах, который бы активировал ВМ.
-            pools = await self.pools
-            for pool_obj in pools:
-                await pool_obj.enable(pool_obj.id)
-            # Активация ВМ происходит внутри пулов.
+        if self.active:
+            return False
+        # Активируем контроллер
+        await self.update(status=Status.ACTIVE).apply()
+        # Активируем пулы
+        # TODO: переработать активацию пулов - нужен метод в пулах, который бы активировал ВМ.
+        pools = await self.pools
+        for pool_obj in pools:
+            await pool_obj.enable(pool_obj.id)
+        # Активация ВМ происходит внутри пулов.
 
-            # Возобновляем задачи связанные с контроллером
-            send_cmd_to_resume_tasks_associated_with_controller(self.id)
-            return True
-        return False
+        # Возобновляем задачи связанные с контроллером
+        send_cmd_to_resume_tasks_associated_with_controller(self.id)
+        await system_logger.info(_('Controller {} has been activated.').format(self.verbose_name),
+                                 entity=self.entity)
+        return True
 
-    async def deactivate(self):
-        """Деактивируем контроллер и его пулы."""
-        if not self.failed:
-            # Останавлием задачи связанные с контроллером
-            await send_cmd_to_cancel_tasks_associated_with_controller(controller_id=self.id, wait_for_result=True)
-
-            # Деактивируем контроллер
-            await self.update(status=Status.FAILED).apply()
-            await system_logger.info(_('Controller {} has been deactivated.').format(self.verbose_name),
-                                     entity=self.entity)
-            # Деактивируем пулы
-            # TODO: переработать деактивацию пулов - нужен метод в пулах, который бы деактивировал ВМ.
-            pools = await self.pools
-            for pool_obj in pools:
-                await pool_obj.deactivate(pool_obj.id)
-                # Деактивация ВМ происходит внутри пулов.
-            return True
-        return False
+    async def deactivate(self, status=Status.FAILED):
+        """Деактивируем активный контроллер и его пулы."""
+        if self.failed:
+            return False
+        # Деактивируем контроллер
+        await self.update(status=status).apply()
+        # Останавлием задачи связанные с контроллером
+        await send_cmd_to_cancel_tasks_associated_with_controller(controller_id=self.id, wait_for_result=True)
+        # отключаем клиент
+        await self.remove_client()
+        # Деактивируем пулы
+        pools = await self.pools
+        for pool_obj in pools:
+            await pool_obj.deactivate(pool_obj.id)
+        await system_logger.warning(
+            _('Controller {} status has been switched to {}.').format(self.verbose_name, status.name),
+            entity=self.entity)
+        return True

@@ -25,7 +25,7 @@
   <div class="form-actions">
     <button (click)="send()" class="form-btn">
       <fa-icon [icon]="['fas','rss']" size="xs"></fa-icon>
-      <span class="action-name">Синхронизировать</span>
+      <span class="action-name" [class.ad-success]="synced" [class.ad-failed]="!synced">Синхронизировать</span>
     </button>
   </div>
 

@@ -12,7 +12,7 @@ pytestmark = [pytest.mark.tasks]
 
 
 @pytest.mark.asyncio
-async def test_request_tasks(fixt_db, fixt_controller, fixt_auth_context):  # noqa
+async def test_request_tasks(fixt_db, fixt_auth_context):  # noqa
 
     """Request tasks info"""
     qu = """{
@@ -27,14 +27,13 @@ async def test_request_tasks(fixt_db, fixt_controller, fixt_auth_context):  # no
         }"""
     await execute_scheme(task_schema, qu, context=fixt_auth_context)
 
-
-@pytest.mark.asyncio
-async def test_cancel_tasks(fixt_db, fixt_controller, fixt_auth_context):  # noqa
-
-    qu = """mutation{
-                cancelTask(cancel_all: true){
-                    ok
-                }
-        }"""
-    executed = await execute_scheme(task_schema, qu, context=fixt_auth_context)
-    assert executed['cancelTask']['ok']
+#  @pytest.mark.asyncio
+#  async def test_cancel_tasks(fixt_db, fixt_auth_context):  # noqa
+#
+#    qu = """mutation{
+#                cancelTask(cancel_all: true){
+#                    ok
+#                }
+#        }"""
+#    executed = await execute_scheme(task_schema, qu, context=fixt_auth_context)
+#    assert executed['cancelTask']['ok']

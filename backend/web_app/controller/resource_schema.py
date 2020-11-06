@@ -10,6 +10,7 @@ import graphene
 from common.veil.veil_decorators import administrator_required
 from common.veil.veil_graphene import VeilResourceType, VmState, VeilShortEntityType
 from common.veil.veil_gino import StatusGraphene
+from common.veil.veil_errors import SilentError
 from veil_api_client.base.api_object import VeilRestPaginator
 from web_app.controller.schema import ControllerFetcher
 from common.languages import lang_init
@@ -152,6 +153,9 @@ class ResourceVmType(VeilResourceType):
     spice_stream = graphene.Boolean()
     tablet = graphene.Boolean()
     parent = graphene.Field(VeilShortEntityType)
+    parent_name = graphene.String()
+    hostname = graphene.String()
+    address = graphene.String()
 
     # название пула, в котором ВМ из локальной БД
     pool_name = graphene.String()
@@ -189,6 +193,10 @@ class ResourcesQuery(graphene.ObjectType, ControllerFetcher):
     async def resolve_cluster(cls, root, info, creator, cluster_id, controller_id):
         """Получение информации о конкретном кластере на контроллере."""
         controller = await cls.fetch_by_id(controller_id)
+
+        # Прерываем выполнение при отсутствии клиента
+        if not controller.veil_client:
+            return
         cluster_info = await controller.veil_client.cluster(cluster_id=str(cluster_id)).info()
         resource_data = cluster_info.value
         resource_data['controller'] = {'id': controller.id, 'verbose_name': controller.verbose_name}
@@ -202,6 +210,9 @@ class ResourcesQuery(graphene.ObjectType, ControllerFetcher):
         veil_clusters_list = list()
         for controller in controllers:
             paginator = VeilRestPaginator(ordering=ordering, limit=limit, offset=offset)
+            # Прерываем выполнение при отсутствии клиента
+            if not controller.veil_client:
+                continue
             veil_response = await controller.veil_client.cluster().list(paginator=paginator)
             for resource_data in veil_response.paginator_results:
                 # Добавляем параметры контроллера на VDI
@@ -216,6 +227,9 @@ class ResourcesQuery(graphene.ObjectType, ControllerFetcher):
     async def resolve_node(cls, root, info, creator, node_id, controller_id):
         """"Получение информации о конкретной ноде на контроллере."""
         controller = await cls.fetch_by_id(controller_id)
+        # Прерываем выполнение при отсутствии клиента
+        if not controller.veil_client:
+            return
         node_info = await controller.veil_client.node(node_id=str(node_id)).info()
         resource_data = node_info.value
         resource_data['controller'] = {'id': controller.id, 'verbose_name': controller.verbose_name}
@@ -229,6 +243,9 @@ class ResourcesQuery(graphene.ObjectType, ControllerFetcher):
         veil_nodes_list = list()
         for controller in controllers:
             paginator = VeilRestPaginator(ordering=ordering, limit=limit, offset=offset)
+            # Прерываем выполнение при отсутствии клиента
+            if not controller.veil_client:
+                continue
             veil_response = await controller.veil_client.node().list(paginator=paginator)
             for resource_data in veil_response.paginator_results:
                 # Добавляем параметры контроллера на VDI
@@ -243,6 +260,9 @@ class ResourcesQuery(graphene.ObjectType, ControllerFetcher):
     async def resolve_datapool(cls, root, info, creator, datapool_id, controller_id):
         """Получение информации о конкретном пуле данных на контроллере."""
         controller = await cls.fetch_by_id(controller_id)
+        # Прерываем выполнение при отсутствии клиента
+        if not controller.veil_client:
+            return
         datapool_info = await controller.veil_client.data_pool(data_pool_id=str(datapool_id)).info()
         resource_data = datapool_info.value
         resource_data['controller'] = {'id': controller.id, 'verbose_name': controller.verbose_name}
@@ -256,6 +276,9 @@ class ResourcesQuery(graphene.ObjectType, ControllerFetcher):
         veil_datapools_list = list()
         for controller in controllers:
             paginator = VeilRestPaginator(ordering=ordering, limit=limit, offset=offset)
+            # Прерываем выполнение при отсутствии клиента
+            if not controller.veil_client:
+                return
             veil_response = await controller.veil_client.data_pool().list(paginator=paginator)
             for resource_data in veil_response.paginator_results:
                 # Добавляем параметры контроллера на VDI
@@ -272,10 +295,22 @@ class ResourcesQuery(graphene.ObjectType, ControllerFetcher):
         Даже если отправить template=True, а с таким ID только ВМ - VeiL вернет данные.
         """
         controller = await cls.fetch_by_id(controller_id)
-        vm_info = await controller.veil_client.domain(domain_id=str(domain_id)).info()
-        resource_data = vm_info.value
-        resource_data['controller'] = {'id': controller.id, 'verbose_name': controller.verbose_name}
-        return ResourceVmType(**resource_data)
+        # Прерываем выполнение при отсутствии клиента
+        if not controller.veil_client:
+            return
+        veil_domain = controller.veil_client.domain(domain_id=str(domain_id))
+        vm_info = await veil_domain.info()
+        if vm_info.success:
+            resource_data = vm_info.value
+            resource_data['controller'] = {'id': controller.id, 'verbose_name': controller.verbose_name}
+            resource_data['cpu_count'] = veil_domain.cpu_count
+            resource_data['parent_name'] = veil_domain.parent_name
+            if veil_domain.powered:
+                resource_data['hostname'] = veil_domain.hostname
+                resource_data['address'] = veil_domain.first_ipv4
+            return ResourceVmType(**resource_data)
+        else:
+            raise SilentError(_('VM is unreachable on ECP Veil.'))
 
     @classmethod
     @administrator_required
@@ -296,6 +331,9 @@ class ResourcesQuery(graphene.ObjectType, ControllerFetcher):
         domain_list = list()
         for controller in controllers:
             paginator = VeilRestPaginator(ordering=ordering, limit=limit, offset=offset)
+            # Прерываем выполнение при отсутствии клиента
+            if not controller.veil_client:
+                continue
             veil_response = await controller.veil_client.domain(template=template).list(paginator=paginator)
             for resource_data in veil_response.paginator_results:
                 # Добавляем параметры контроллера на VDI

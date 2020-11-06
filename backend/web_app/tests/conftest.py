@@ -5,7 +5,7 @@ import pytest  # noqa
 
 from yarl import URL
 from types import SimpleNamespace
-from sqlalchemy_utils import create_database, drop_database
+from sqlalchemy_utils import create_database, drop_database, database_exists
 from alembic.command import upgrade
 
 # from gino_tornado import Gino
@@ -31,6 +31,9 @@ def postgres(pg_url):
     """
     tmp_name = 'tests'
     tmp_url = str(pg_url.with_path(tmp_name))
+
+    if database_exists(tmp_url):
+        drop_database(tmp_url)
     create_database(tmp_url)
 
     try:

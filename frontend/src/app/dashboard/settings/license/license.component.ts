@@ -35,6 +35,11 @@ export class LicenseComponent implements OnInit {
       type: 'string'
     },
     {
+      title: 'Активных тонких клиентов',
+      property: 'thin_clients_count',
+      type: 'string'
+    },
+    {
       title: 'Дата окончания лицензии',
       property: 'expiration_date',
       type: 'time'
@@ -65,7 +70,7 @@ export class LicenseComponent implements OnInit {
     if (files.length === 0) return;
 
     const formData = new FormData();
-    
+
     for (let file of files) {
 
       formData.append(file.name, file);

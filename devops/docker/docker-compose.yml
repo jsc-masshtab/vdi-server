@@ -1,20 +1,16 @@
+# Набор контейнеров для локальной разработки
 # Удалить все контейнеры и запустить
 # docker system prune -a -f --volumes && docker-compose up
 # Просто запустить
 # docker-compose up
 # список всех контейнеров
 # docker ps -a
-# удалить контейнер по имени и его вольюмы
-# docker container rm vdi-tornado -v
 # запустить и войти в шелл конкретного контейнера
-# docker run -it docker_tornado sh
-# пересобрать конкретные контейнеры
-# docker rm vdi-tornado && docker rm vdi-postgres
-# docker-compose up -V
+# docker run -it tornado sh
 # скопировать файл из контейнера на хост
 # docker cp vdi-angular:/package-lock.json ~/.
 # обновить клиент без пересборки контейнера
-# docker exec -it vdi-tornado /usr/local/bin/pipenv run pip install --force-reinstall veil_api_client-2.0.0-py3-none-any.whl
+# docker exec -it vdi-tornado /usr/local/bin/pipenv run pip install --force-reinstall veil_api_client-2.0.1-py3-none-any.whl
 
 version: '3.7'
 services:

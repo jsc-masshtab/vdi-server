@@ -12,30 +12,19 @@ from common.models.pool import Pool
 
 from web_app.tests.fixtures import (fixt_db, fixt_controller, fixt_create_automated_pool, fixt_create_static_pool,  # noqa
                             fixt_auth_context, fixt_group, fixt_user, fixt_user_admin, fixt_user_another_admin, # noqa
-                            fixt_launch_workers)  # noqa
+                            fixt_launch_workers, fixt_veil_client)  # noqa
 
 pytestmark = [pytest.mark.pools]
 
 
 # Automated pool
 @pytest.mark.asyncio
-async def test_create_automated_pool(fixt_launch_workers, fixt_db, fixt_create_automated_pool, # noqa
+async def test_create_automated_pool(fixt_launch_workers, fixt_db, fixt_create_automated_pool,  # noqa
                                      fixt_auth_context):  # noqa
-    """Create automated pool, make request to check data, remove this pool"""
-    pool_id = fixt_create_automated_pool['id']
+    """Create and remove automated pool"""
 
     # check that pool was successfully created'
     assert fixt_create_automated_pool['is_pool_successfully_created']
-
-    qu = """{
-      pool(pool_id: "%s") {
-        pool_type,
-        initial_size
-      }
-
-    }""" % pool_id
-    executed = await execute_scheme(pool_schema, qu, context=fixt_auth_context)
-    assert executed['pool']['initial_size'] == 1
 
 
 @pytest.mark.asyncio
@@ -97,7 +86,7 @@ class PoolTestCase(VdiHttpTestCase):
             # Исключение на случай отсутствия лицензии
             response_data = response_dict['errors'][0]
             response_code = response_data['code']
-            self.assertEqual('001', response_code)
+            self.assertIn(response_code, ['001', '002'])
         else:
             response_data = response_dict['data']
             self.assertIsInstance(response_data, dict)
@@ -133,7 +122,7 @@ class PoolTestCase(VdiHttpTestCase):
 # ----------------------------------------------
 # Static pool
 @pytest.mark.asyncio
-async def test_create_static_pool(fixt_launch_workers, fixt_db, fixt_controller, fixt_create_static_pool,  # noqa
+async def test_create_static_pool(fixt_launch_workers, fixt_db, fixt_create_static_pool,  # noqa
                                   fixt_auth_context):  # noqa
     """Create static pool, make request to check data, remove this pool"""
     pool_id = fixt_create_static_pool['id']
@@ -149,10 +138,11 @@ async def test_create_static_pool(fixt_launch_workers, fixt_db, fixt_controller,
       }
     }""" % pool_id
     executed = await execute_scheme(pool_schema, qu, context=fixt_auth_context)  # noqa
+    assert len(executed['pool']['vms']) == 1
 
 
 @pytest.mark.asyncio
-async def test_update_static_pool(fixt_launch_workers, fixt_db, fixt_controller, fixt_create_static_pool,  # noqa
+async def test_update_static_pool(fixt_launch_workers, fixt_db, fixt_create_static_pool,  # noqa
                                   fixt_auth_context):  # noqa
     """Create static pool, update this pool, remove this pool"""
     pool_id = fixt_create_static_pool['id']
@@ -274,7 +264,7 @@ class TestPoolPermissionsSchema:
         pool = pools[0]
         query = """mutation{
                             addPoolRole(pool_id: "%s",
-                                        roles: [VM_ADMINISTRATOR, READ_ONLY])
+                                        roles: [ADMINISTRATOR])
                             {
                                 ok,
                                 pool{assigned_roles, possible_roles}
@@ -285,7 +275,7 @@ class TestPoolPermissionsSchema:
 
         query = """mutation{
                             removePoolRole(pool_id: "%s",
-                                        roles: [READ_ONLY])
+                                        roles: [OPERATOR])
                             {
                                 ok,
                                 pool{assigned_roles, possible_roles}
@@ -337,4 +327,4 @@ async def test_pools_ordering(fixt_launch_workers,  fixt_db, fixt_controller, fi
                 }
             """ % ordering
 
-        executed = await execute_scheme(pool_schema, qu, context=fixt_auth_context)  # noqa
+        await execute_scheme(pool_schema, qu, context=fixt_auth_context)  # noqa

@@ -11,6 +11,7 @@ from common.settings import POOL_MAX_CREATE_ATTEMPTS
 from common.database import db
 
 from common.veil.veil_gino import Status, EntityType, VeilModel
+from common.veil.veil_graphene import VmState
 from common.veil.veil_errors import VmCreationError, SimpleError, ValidationError, PoolCreationError
 from common.utils import extract_ordering_data
 from web_app.auth.license.utils import License
@@ -180,6 +181,7 @@ class Pool(VeilModel):
             AutomatedPool.vm_name_template,
             AutomatedPool.os_type,
             AutomatedPool.create_thin_clones,
+            AutomatedPool.prepare_vms,
             pool_type,
             Pool.connection_types
         ])
@@ -222,6 +224,7 @@ class Pool(VeilModel):
                 AutomatedPool.vm_name_template,
                 AutomatedPool.os_type,
                 AutomatedPool.create_thin_clones,
+                AutomatedPool.prepare_vms,
                 Controller.address)
 
             # Сортировка
@@ -262,6 +265,7 @@ class Pool(VeilModel):
         Нужно дорабатывать - отказаться от in и дублирования кода.
         :param only_free: учитываем только свободные VM
         :return: int
+        Надо бы переделать это в статический метод а то везде приходится делать Pool.get(id)
         """
         if only_free:
             ero_query = EntityRoleOwnerModel.select('entity_id').where(EntityRoleOwnerModel.user_id != None)  # noqa
@@ -270,7 +274,7 @@ class Pool(VeilModel):
                 (EntityModel.entity_type == EntityType.VM) & (EntityModel.id.in_(ero_query)))
 
             vm_query = db.select([db.func.count()]).where(
-                (VmModel.pool_id == self.id) & (VmModel.id.notin_(entity_query)) & (VmModel.assigned_to_user == False))  # noqa
+                (VmModel.pool_id == self.id) & (VmModel.id.notin_(entity_query)) & (VmModel.status == Status.ACTIVE))  # noqa
 
             return await vm_query.gino.scalar()
 
@@ -526,6 +530,10 @@ class Pool(VeilModel):
         pool = await Pool.get(pool_id)
         await pool.update(status=Status.ACTIVE).apply()
         entity = {'entity_type': EntityType.POOL, 'entity_uuid': pool_id}
+        # Активация ВМ. Добавлено 02.11.2020 - не факт, что нужно.
+        vms = await VmModel.query.where(VmModel.pool_id == pool_id).gino.all()
+        for vm in vms:
+            await vm.update(status=Status.ACTIVE).apply()
         await system_logger.info(_('Pool {} has been activated.').format(pool.verbose_name), entity=entity)
         return True
 
@@ -534,7 +542,11 @@ class Pool(VeilModel):
         pool = await Pool.get(pool_id)
         await pool.update(status=Status.FAILED).apply()
         entity = {'entity_type': EntityType.POOL, 'entity_uuid': pool_id}
-        await system_logger.info(_('Pool {} has been deactivated.').format(pool.verbose_name), entity=entity)
+        # Деактивация ВМ. Добавлено 02.11.2020 - не факт, что нужно.
+        vms = await VmModel.query.where(VmModel.pool_id == pool_id).gino.all()
+        for vm in vms:
+            await vm.update(status=Status.FAILED).apply()
+        await system_logger.warning(_('Pool {} has been deactivated.').format(pool.verbose_name), entity=entity)
         return True
 
     @classmethod
@@ -553,8 +565,7 @@ class Pool(VeilModel):
     #     entity_query = EntityModel.select('entity_uuid').where(
     #         (EntityModel.entity_type == EntityType.VM) & (EntityModel.id.in_(EntityRoleOwnerModel.select('entity_id'))))
     #     vm_query = VmModel.query.where(
-    #         (VmModel.pool_id == self.id) & (VmModel.status == Status.ACTIVE) & (VmModel.id.notin_(entity_query)) & (  # noqa
-    #                     VmModel.assigned_to_user == False))  # noqa
+    #         (VmModel.pool_id == self.id) & (VmModel.status == Status.ACTIVE) & (VmModel.id.notin_(entity_query)))  # noqa
     #     return await vm_query.gino.first()
 
     async def get_free_vm_v2(self):
@@ -565,8 +576,7 @@ class Pool(VeilModel):
         entity_query = EntityModel.select('entity_uuid').where(
             (EntityModel.entity_type == EntityType.VM) & (EntityModel.id.in_(EntityRoleOwnerModel.select('entity_id'))))
         vm_query = VmModel.select('id').where(
-            (VmModel.pool_id == self.id) & (VmModel.status == Status.ACTIVE) & (VmModel.id.notin_(entity_query)) & (
-                        VmModel.assigned_to_user == False))  # noqa
+            (VmModel.pool_id == self.id) & (VmModel.status == Status.ACTIVE) & (VmModel.id.notin_(entity_query)))
 
         vm_ids_data = await vm_query.gino.all()
         if not vm_ids_data:
@@ -584,9 +594,12 @@ class Pool(VeilModel):
         ids_str_list = wrap(ids_str, width=max_ids_length)
         # теперь получаем данные для каждого блока id
         for ids_str_section in ids_str_list:
-            domains_list_response = await pool_controller.veil_client.domain().list(fields=['id'],
-                                                                                    params={'power_state': 'ON',
-                                                                                            'ids': ids_str_section})
+            controller_client = pool_controller.veil_client
+            if not controller_client:
+                break
+            domains_list_response = await controller_client.domain().list(fields=['id'],
+                                                                          params={'power_state': 'ON',
+                                                                                  'ids': ids_str_section})
             if domains_list_response.success and domains_list_response.paginator_results:
                 # Берем первый идентиифкатор
                 vm_id = domains_list_response.paginator_results[0].get('id')
@@ -595,12 +608,74 @@ class Pool(VeilModel):
             vm_id = vm_ids_data[0][0]
         return await VmModel.get(vm_id)
 
+    async def get_vms_info(self):
+        """Возвращает информацию для всех ВМ в пуле."""
+        from web_app.pool.schema import VmType
+        # Получаем список ВМ
+        vms = await self.vms
+
+        if not vms:
+            return
+        # Получаем набор уникальных ids ВМ
+        vm_ids = set(str(vm.id) for vm in vms)
+        ids_str = ','.join(vm_ids)
+        pool_controller = await self.controller_obj
+
+        # Полученный список может оказаться больше, чем кол-во параметров принимаемых VeiL, поэтому делим его на блоки
+        # Т.к. список формируется выше, мы предполагаем, что 157 id и запятая уложится в 5809 символов
+        max_ids_length = 5809
+        ids_str_list = wrap(ids_str, width=max_ids_length)
+
+        # Получаем данные для каждого блока id
+        vms_list = list()
+        for ids_str_section in ids_str_list:
+            # Запрашиваем на ECP VeiL данные
+            fields = ['id', 'user_power_state', 'parent']
+            controller_client = pool_controller.veil_client
+            if not controller_client:
+                break
+            domains_list_response = await controller_client.domain().list(fields=fields,
+                                                                          params={'ids': ids_str_section})
+            vms_list += domains_list_response.paginator_results
+
+        vms_dict = dict()
+        for vm_info in vms_list:
+            vm_info['parent_name'] = None
+            # Получаем имя шаблона
+            if vm_info['parent']:
+                vm_info['parent_name'] = vm_info['parent']['verbose_name']
+            del vm_info['parent']
+            vms_dict[vm_info['id']] = vm_info
+
+        vms_info = list()
+        for vm in vms:
+            # TODO: Добавить принадлежность к домену + на фронте
+            power_state = VmState.UNDEFINED
+            parent_name = None
+            for vm_id in vms_dict.keys():
+                if str(vm_id) == str(vm.id):
+                    power_state = vms_dict[vm_id]['user_power_state']
+                    parent_name = vms_dict[vm_id]['parent_name']
+            # Формируем список с информацией по каждой вм в пуле
+            vms_info.append(
+                VmType(power_state=power_state,
+                       parent_name=parent_name,
+                       **vm.__values__))
+        return vms_info
+
     async def free_user_vms(self, user_id):
         """Т.к. на тонком клиенте нет выбора VM - будут сложности если у пользователя несколько VM в рамках 1 пула."""
         # from common.models import VmModel
         vms_query = VmModel.select('id').where(VmModel.pool_id == self.id)
         entity_query = EntityModel.select('id').where(
             (EntityModel.entity_type == EntityType.VM) & (EntityModel.entity_uuid.in_(vms_query)))
+        exists_count = await db.select([db.func.count()]).where((EntityRoleOwnerModel.user_id == user_id) & (
+            EntityRoleOwnerModel.entity_id.in_(entity_query))).gino.scalar()
+        if exists_count > 0:
+            role_owner_query = EntityRoleOwnerModel.select('entity_id').where(
+                (EntityRoleOwnerModel.user_id == user_id) & (EntityRoleOwnerModel.entity_id.in_(entity_query)))
+            exists_vm_query = EntityModel.select('entity_uuid').where(EntityModel.id.in_(role_owner_query))
+            await VmModel.update.values(status=Status.SERVICE).where(VmModel.id.in_(exists_vm_query)).gino.status()
         ero_query = EntityRoleOwnerModel.delete.where(
             (EntityRoleOwnerModel.user_id == user_id) & (EntityRoleOwnerModel.entity_id.in_(entity_query)))
 
@@ -705,6 +780,7 @@ class AutomatedPool(db.Model):
     vm_name_template = db.Column(db.Unicode(length=100), nullable=True)
     os_type = db.Column(db.Unicode(length=100), nullable=True)
     create_thin_clones = db.Column(db.Boolean(), nullable=False, default=True)
+    prepare_vms = db.Column(db.Boolean(), nullable=False, default=True)
     # Группы/Контейнеры в Active Directory для назначения виртуальным машинам пула
     ad_cn_pattern = db.Column(db.Unicode(length=1000), nullable=True)
 
@@ -764,7 +840,7 @@ class AutomatedPool(db.Model):
     async def soft_create(cls, creator, verbose_name, controller_ip, cluster_id, node_id,
                           template_id, datapool_id, increase_step,
                           initial_size, reserve_size, total_size, vm_name_template,
-                          create_thin_clones, connection_types, ad_cn_pattern: str = None):
+                          create_thin_clones, prepare_vms, connection_types, ad_cn_pattern: str = None):
         """Nested transactions are atomic."""
         async with db.transaction() as tx:  # noqa
             # Создаем базовую сущность Pool
@@ -784,6 +860,7 @@ class AutomatedPool(db.Model):
                                                   total_size=total_size,
                                                   vm_name_template=vm_name_template,
                                                   create_thin_clones=create_thin_clones,
+                                                  prepare_vms=prepare_vms,
                                                   ad_cn_pattern=ad_cn_pattern)
             # Записываем событие в журнал
             await system_logger.info(_('AutomatedPool {} is created.').format(verbose_name), user=creator,
@@ -791,7 +868,7 @@ class AutomatedPool(db.Model):
             return automated_pool
 
     async def soft_update(self, creator, verbose_name, reserve_size, total_size, increase_step, vm_name_template,
-                          keep_vms_on: bool, create_thin_clones: bool, connection_types):
+                          keep_vms_on: bool, create_thin_clones: bool, prepare_vms: bool, connection_types):
         pool_kwargs = dict()
         auto_pool_kwargs = dict()
         old_verbose_name = await self.verbose_name
@@ -820,6 +897,8 @@ class AutomatedPool(db.Model):
                 auto_pool_kwargs['vm_name_template'] = vm_name_template
             if isinstance(create_thin_clones, bool):
                 auto_pool_kwargs['create_thin_clones'] = create_thin_clones
+            if isinstance(prepare_vms, bool):
+                auto_pool_kwargs['prepare_vms'] = prepare_vms
             if auto_pool_kwargs:
                 desc = str(auto_pool_kwargs)
                 await system_logger.debug(_('Update AutomatedPool values for {}.').format(await self.verbose_name),
@@ -837,6 +916,9 @@ class AutomatedPool(db.Model):
         """Try to add VM to pool."""
         verbose_name = self.vm_name_template or await self.verbose_name  # temp???
         pool_controller = await self.controller_obj
+        # Прерываем выполнение при отсутствии клиента
+        if not pool_controller.veil_client:
+            raise AssertionError(_('There is no client for pool {}.').format(self.verbose_name))
 
         # Перебор имени ВМ на контроллере учитывает индекс в имени. Если ВМ-1 будет занята, то произойдет инкремент
         params = {
@@ -907,6 +989,8 @@ class AutomatedPool(db.Model):
     async def template_os_type(self):
         """Получает инфорацию об ОС шаблона от VeiL ECP."""
         pool_controller = await self.controller_obj
+        if not pool_controller.veil_client:
+            return
         veil_template = pool_controller.veil_client.domain(domain_id=str(self.template_id))
         await veil_template.info()
         return veil_template.os_type
@@ -952,3 +1036,9 @@ class AutomatedPool(db.Model):
             AuthenticationDirectory.status == Status.ACTIVE).gino.first()
         await asyncio.gather(
             *[vm_object.prepare_with_timeout(active_directory_object, self.ad_cn_pattern) for vm_object in vm_objects])
+
+    async def check_if_total_size_reached(self):
+
+        pool = await Pool.get(self.id)
+        vm_amount = await pool.get_vm_amount()
+        return vm_amount >= self.total_size

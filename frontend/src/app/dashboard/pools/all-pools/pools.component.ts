@@ -40,7 +40,7 @@ export class PoolsComponent extends DetailsMove implements OnInit, OnDestroy {
       sort: true
     },
     {
-      title: 'Доступные ВМ',
+      title: 'Количество доступных ВМ',
       property: 'vm_amount',
       type: 'string',
       sort: true
@@ -89,7 +89,7 @@ export class PoolsComponent extends DetailsMove implements OnInit, OnDestroy {
 
   public openCreatePool(): void {
     this.dialog.open(PoolAddComponent, {
- 			disableClose: true, 
+ 			disableClose: true,
       width: '500px'
     });
   }

@@ -115,6 +115,15 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
       edit: 'changeAutomatedPoolCreate_thin_clones'
     },
     {
+      title: 'Подготавливать ВМ',
+      property: 'prepare_vms',
+      type: {
+        typeDepend: 'boolean',
+        propertyDepend: ['Да', 'Нет']
+      },
+      edit: 'changeAutomatedPoolPrepare_vms'
+    },
+    {
       title: 'Держать ВМ с пользователями включенными',
       property: 'keep_vms_on',
       type: {
@@ -139,13 +148,13 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
       property_lv2: 'verbose_name'
     },
     {
-      title: 'Начальное количество ВМ',    // всего вм
+      title: 'Начальное количество ВМ',
       property: 'initial_size',
       type: 'string'
     },
     {
-      title: 'Количество создаваемых ВМ',      // сколько свободных осталось
-      property: 'reserve_size',
+      title: 'Количество создаваемых ВМ',
+      property: 'increase_step',
       type: 'string',
       edit: 'changeAutomatedPoolReserveSize'
     },
@@ -159,11 +168,11 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
     },
     {
       title: 'Пороговое количество свободных ВМ',
-      property: 'increase_step',
+      property: 'reserve_size',
       type: 'string'
     },
     {
-      title: 'Создано ВМ',
+      title: 'Количество доступных ВМ',
       property: 'vms',
       type: 'array-length'
     },
@@ -198,14 +207,14 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
       property: 'template',
       property_lv2: 'verbose_name'
     },
-    {
-      title: "Принадлежность",
-      property: "in_domain",
-      type: {
-        typeDepend: 'boolean',
-        propertyDepend: ['В домене', 'Не в домене']
-      }
-    },
+    // {
+    //   title: "Принадлежность",
+    //   property: "in_domain",
+    //   type: {
+    //     typeDepend: 'boolean',
+    //     propertyDepend: ['В домене', 'Не в домене']
+    //   }
+    // },
     {
       title: 'Пользователь',
       property: 'user',
@@ -230,14 +239,14 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
       icon: 'desktop',
       type: 'string'
     },
-    {
-      title: "Принадлежность",
-      property: "in_domain",
-      type: {
-        typeDepend: 'boolean',
-        propertyDepend: ['В домене', 'Не в домене']
-      }
-    },
+    // {
+    //   title: "Принадлежность",
+    //   property: "in_domain",
+    //   type: {
+    //     typeDepend: 'boolean',
+    //     propertyDepend: ['В домене', 'Не в домене']
+    //   }
+    // },
     {
       title: 'Пользователь',
       property: 'user',
@@ -356,7 +365,7 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
 
   public removePool(): void {
     this.dialog.open(RemovePoolComponent, {
- 			disableClose: true, 
+ 			disableClose: true,
       width: '500px',
       data: {
         idPool: this.idPool,
@@ -367,7 +376,7 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
 
   public addUsers(): void {
     this.dialog.open(AddUsersPoolComponent, {
- 			disableClose: true, 
+ 			disableClose: true,
       width: '500px',
       data: {
         idPool: this.idPool,
@@ -379,7 +388,7 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
 
   public removeUsers(): void {
     this.dialog.open(RemoveUsersPoolComponent, {
- 			disableClose: true, 
+ 			disableClose: true,
       width: '500px',
       data: {
         idPool: this.idPool,
@@ -391,7 +400,7 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
 
   public addVM(): void {
     this.dialog.open(AddVMStaticPoolComponent, {
- 			disableClose: true, 
+ 			disableClose: true,
       width: '500px',
       data: {
         idPool: this.idPool,
@@ -422,7 +431,7 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
 
   public removeVM(): void {
     this.dialog.open(RemoveVMStaticPoolComponent, {
- 			disableClose: true, 
+ 			disableClose: true,
       width: '500px',
       data: {
         idPool: this.idPool,
@@ -435,7 +444,7 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
 
   public clickVm(vmActive: IPoolVms): void  {
     this.dialog.open(VmDetalsPopupComponent, {
- 			disableClose: true, 
+ 			disableClose: true,
       width: '1000px',
       data: {
         vm: vmActive,
@@ -474,7 +483,7 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
 // @ts-ignore: Unreachable code error
   private changeName(): void {
     this.dialog.open(FormForEditComponent, {
- 			disableClose: true, 
+ 			disableClose: true,
       width: '500px',
       data: {
         post: {
@@ -516,7 +525,7 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
   // @ts-ignore: Unreachable code error
   private changeConnectionType(): void {
     this.dialog.open(FormForEditComponent, {
- 			disableClose: true, 
+ 			disableClose: true,
       width: '500px',
       data: {
         post: {
@@ -533,9 +542,9 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
           buttonAction: 'Изменить',
           form: [{
             tag: 'select',
-            title: 'Выбрать тип подключения', 
+            title: 'Выбрать тип подключения',
             fieldName: 'connection_types',
-            data: ['SPICE', 'RDP', 'NATIVE_RDP'],
+            data: ['RDP', 'NATIVE_RDP', 'SPICE', 'SPICE_DIRECT'],
             fieldValue: this.pool.assigned_connection_types,
           }]
         },
@@ -559,7 +568,7 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
   // @ts-ignore: Unreachable code error
   private changeMaxAutomatedPool(): void {
     this.dialog.open(FormForEditComponent, {
- 			disableClose: true, 
+ 			disableClose: true,
       width: '500px',
       data: {
         post: {
@@ -596,7 +605,7 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
   // @ts-ignore: Unreachable code error
   private changeAutomatedPoolReserveSize(): void {
     this.dialog.open(FormForEditComponent, {
- 			disableClose: true, 
+ 			disableClose: true,
       width: '500px',
       data: {
         post: {
@@ -633,7 +642,7 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
   // @ts-ignore: Unreachable code error
   private changeTemplateForVmAutomatedPool(): void {
     this.dialog.open(FormForEditComponent, {
- 			disableClose: true, 
+ 			disableClose: true,
       width: '500px',
       data: {
         post: {
@@ -648,7 +657,8 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
           entity: 'pool-details',
           header: 'Изменение шаблона для ВМ',
           buttonAction: 'Изменить',
-          danger: "При изменении шаблона произойдет переименование ВМ, переназначение hostname и перевод в домен!",
+          // danger: "При изменении шаблона произойдет переименование ВМ, переназначение hostname и перевод в домен!",
+          danger: "Изменение имен произойдет только для НОВЫХ виртуальных машин!",
           form: [{
             tag: 'input',
             type: 'text',
@@ -671,7 +681,7 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
   // @ts-ignore: Unreachable code error
   private changeAutomatedPoolCreate_thin_clones(): void {
     this.dialog.open(FormForEditComponent, {
- 			disableClose: true, 
+ 			disableClose: true,
       width: '500px',
       data: {
         post: {
@@ -707,9 +717,47 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
   }
 
   // @ts-ignore: Unreachable code error
+  private changeAutomatedPoolPrepare_vms(): void {
+    this.dialog.open(FormForEditComponent, {
+ 			disableClose: true,
+      width: '500px',
+      data: {
+        post: {
+          service: this.poolService,
+          method: 'updatePool',
+          params: {
+            pool_id: this.idPool,
+            pool_type: this.typePool
+          }
+        },
+        settings: {
+          entity: 'pool-details',
+          header: 'Изменение настройки автоматической подготовки ВМ',
+          buttonAction: 'Изменить',
+          form: [{
+            tag: 'input',
+            type: 'checkbox',
+            fieldName: 'prepare_vms',
+            fieldValue: this.pool.prepare_vms,
+            description: 'Подготавливать ВМ'
+          }]
+        },
+        update: {
+          method: 'getPool',
+          refetch: true,
+          params: [
+            this.idPool,
+            this.typePool
+          ]
+        }
+      }
+    });
+  }
+
+  // @ts-ignore: Unreachable code error
   private changeAutomatedPoolKeep_vms_on(): void {
     this.dialog.open(FormForEditComponent, {
- 			disableClose: true, 
+ 			disableClose: true,
       width: '500px',
       data: {
         post: {
@@ -754,7 +802,7 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
 
   public addGroup() {
     this.dialog.open(AddGropComponent, {
- 			disableClose: true, 
+ 			disableClose: true,
       width: '500px',
       data: {
         id: this.idPool,
@@ -767,7 +815,7 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
 
   public removeGroup() {
     this.dialog.open(RemoveGroupComponent, {
- 			disableClose: true, 
+ 			disableClose: true,
       width: '500px',
       data: {
         id: this.idPool,
@@ -780,7 +828,7 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
 
   public addRole() {
     this.dialog.open(AddRoleComponent, {
- 			disableClose: true, 
+ 			disableClose: true,
       width: '500px',
       data: {
         id: this.idPool,
@@ -793,7 +841,7 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
 
   public removeRole() {
     this.dialog.open(RemoveRoleComponent, {
- 			disableClose: true, 
+ 			disableClose: true,
       width: '500px',
       data: {
         id: this.idPool,

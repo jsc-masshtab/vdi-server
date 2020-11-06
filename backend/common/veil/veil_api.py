@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 """Обобщенный функционал напрямую связанный с VeiL ECP."""
-from veil_api_client import VeilClient, VeilClientSingleton, VeilCacheOptions, VeilDomain
+from veil_api_client import VeilClient, VeilClientSingleton, VeilCacheOptions, VeilRetryOptions
+from veil_api_client.api_objects.domain import VeilDomain
 
 from common.settings import VEIL_REQUEST_TIMEOUT, VEIL_CACHE_TTL, VEIL_CACHE_TYPE, VEIL_CACHE_SERVER
-from common.models.vm import Vm
 
 
 class VdiVeilClient(VeilClient):
@@ -14,9 +14,18 @@ class VdiVeilClient(VeilClient):
         response = await super().get(api_object=api_object, url=url, extra_params=extra_params)
         if hasattr(response, 'status_code') and hasattr(api_object, 'api_object_id') and api_object.api_object_id:
             if response.status_code == 404 and isinstance(api_object, VeilDomain):
+                from common.models.vm import Vm
                 vm_object = await Vm.get(api_object.api_object_id)
                 if vm_object and vm_object.active:
                     await vm_object.make_failed()
+        if hasattr(response, 'status_code') and response.status_code in {401, 403}:
+            # Переключить и деактивировать контроллер
+            from common.models.controller import Controller as ControllerModel, Status
+            controller_object = await ControllerModel.query.where(
+                ControllerModel.address == self.server_address).gino.first()
+            if controller_object and isinstance(controller_object, ControllerModel):
+                await controller_object.deactivate(status=Status.BAD_AUTH)
+            # Остановка клиента происходит при деактивации контроллера
         return response
 
 
@@ -41,10 +50,23 @@ class VdiVeilClientSingleton(VeilClientSingleton):
             self.__client_instances[server_address] = instance
         return self.__client_instances[server_address]
 
-# ---
+    async def remove_client(self, server_address: str) -> None:
+        """Remove and close existing VeilClient instance."""
+        if server_address in self.__client_instances:
+            _client = self.__client_instances.pop(server_address)
+            await _client.close()
+
+    @property
+    def instances(self) -> dict:
+        """Show all instances of VeilClient."""
+        return self.__client_instances
 
 
-veil_client = VdiVeilClientSingleton()
+veil_client = VdiVeilClientSingleton(retry_opts=VeilRetryOptions(status_codes={401, 403},
+                                                                 timeout=5,
+                                                                 max_timeout=VEIL_REQUEST_TIMEOUT,
+                                                                 timeout_increase_step=1,
+                                                                 num_of_attempts=3))
 
 
 def get_veil_client() -> 'VeilClientSingleton':
