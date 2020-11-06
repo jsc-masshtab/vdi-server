@@ -104,7 +104,8 @@ class Controller(AbstractSortableStatusModel, VeilModel):
             await self.activate()
             send_cmd_to_ws_monitor(self.id, WsMonitorCmd.ADD_CONTROLLER)
             return True
-        await self.deactivate()
+        if not self.failed:
+            await self.deactivate()
         return False
 
     @staticmethod
