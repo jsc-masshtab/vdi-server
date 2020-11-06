@@ -18,6 +18,7 @@ export class SyncGropComponent implements OnDestroy {
   public group: any = {};
   private destroy: Subject<any> = new Subject<any>();
   public valid: boolean = true;
+  public synced: boolean = false;
 
   constructor(private service: AuthenticationDirectoryService,
               private waitService: WaitService,
@@ -42,6 +43,7 @@ export class SyncGropComponent implements OnDestroy {
             this.dialogRef.close();
           }
         });
+    this.synced = true;
     } else {
       this.valid = false;
     }
@@ -49,7 +51,6 @@ export class SyncGropComponent implements OnDestroy {
 
   public select(type, select) {
     if (type == 'groups') {
-
       this.group = select.value['id'];
       this.valid = true;
     }

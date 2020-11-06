@@ -173,8 +173,12 @@ class TestAuthenticationDirectoryQuery:
                     assigned_ad_groups{ad_guid,verbose_name},
                     possible_ad_groups{ad_guid,verbose_name},
                     status}}"""
-        executed = await execute_scheme(auth_dir_schema, query, context=fixt_auth_context)
-        snapshot.assert_match(executed)
+        try:
+            await execute_scheme(auth_dir_schema, query, context=fixt_auth_context)
+        except Exception as E:
+            assert 'Имя пользователя и пароль LDAP не могут быть пустыми' in str(E)
+        else:
+            assert False
 
     async def test_auth_dir_get_possible_ad_groups_bad_pass(self, snapshot, fixt_auth_context, fixt_auth_dir_with_pass_bad):  # noqa
         """При неправильном пароле список групп будет пустой."""

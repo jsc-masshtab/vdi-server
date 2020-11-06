@@ -3,10 +3,11 @@ import pytest
 from graphene.test import Client  # noqa
 
 from web_app.tests.utils import execute_scheme
-from web_app.tests.fixtures import fixt_db, fixt_controller, fixt_user_admin, fixt_create_automated_pool, fixt_auth_context  # noqa
+from web_app.tests.fixtures import fixt_db, fixt_controller, fixt_user_admin, fixt_create_automated_pool, \
+    fixt_auth_context, fixt_veil_client  # noqa
 
 from web_app.controller.resource_schema import resources_schema
-
+from common.models.controller import Controller
 
 pytestmark = [pytest.mark.asyncio, pytest.mark.resources]
 
@@ -22,7 +23,7 @@ async def test_request_clusters(fixt_db, snapshot, fixt_controller, fixt_auth_co
                     id
                     nodes_count
                     controller{
-                        id
+                        verbose_name
                         }
                     }
                 }""" % ordering
@@ -30,13 +31,16 @@ async def test_request_clusters(fixt_db, snapshot, fixt_controller, fixt_auth_co
         executed = await execute_scheme(resources_schema, qu, context=fixt_auth_context)  # noqa
         snapshot.assert_match(executed)
 
+    # 1 cluster request
+    controllers = await Controller.get_objects()
+    controller_id = controllers[0].id
     cluster = executed['clusters'][0]
 
     qu = """{
                 cluster(cluster_id: "%s", controller_id: "%s"){
                     verbose_name
                 }
-            }""" % (cluster['id'], cluster['controller']['id'])
+            }""" % (cluster['id'], controller_id)
 
     executed = await execute_scheme(resources_schema, qu, context=fixt_auth_context)  # noqa
     snapshot.assert_match(executed)
@@ -53,7 +57,7 @@ async def test_request_nodes(fixt_db, fixt_controller, snapshot, fixt_auth_conte
                     cpu_count
                     verbose_name
                     controller{
-                        id
+                        verbose_name
                         }
                     }
                 }""" % ordering
@@ -61,6 +65,8 @@ async def test_request_nodes(fixt_db, fixt_controller, snapshot, fixt_auth_conte
         executed = await execute_scheme(resources_schema, qu, context=fixt_auth_context)
         snapshot.assert_match(executed)
 
+    controllers = await Controller.get_objects()
+    controller_id = controllers[0].id
     node = executed['nodes'][0]
 
     qu = """{
@@ -71,7 +77,7 @@ async def test_request_nodes(fixt_db, fixt_controller, snapshot, fixt_auth_conte
                 memory_count
                 management_ip
               }
-            }""" % (node['id'], node['controller']['id'])
+            }""" % (node['id'], controller_id)
 
     executed = await execute_scheme(resources_schema, qu, context=fixt_auth_context)  # noqa
     snapshot.assert_match(executed)
@@ -87,7 +93,7 @@ async def test_request_datapools(fixt_db, fixt_controller, snapshot, fixt_auth_c
                     id
                     verbose_name
                     controller{
-                        id
+                        verbose_name
                         }
                   }
                 }""" % ordering
@@ -95,6 +101,8 @@ async def test_request_datapools(fixt_db, fixt_controller, snapshot, fixt_auth_c
         executed = await execute_scheme(resources_schema, qu, context=fixt_auth_context)  # noqa
         snapshot.assert_match(executed)
 
+    controllers = await Controller.get_objects()
+    controller_id = controllers[0].id
     datapool = executed['datapools'][0]
 
     qu = """{
@@ -105,7 +113,7 @@ async def test_request_datapools(fixt_db, fixt_controller, snapshot, fixt_auth_c
                 type
                 free_space
               }
-            }""" % (datapool['id'], datapool['controller']['id'])
+            }""" % (datapool['id'], controller_id)
 
     executed = await execute_scheme(resources_schema, qu, context=fixt_auth_context)  # noqa
     snapshot.assert_match(executed)
@@ -124,7 +132,7 @@ async def test_request_vms(fixt_db, fixt_controller, snapshot, fixt_auth_context
                     memory_count
                     cpu_count
                     controller{
-                        id
+                        verbose_name
                         }
                   }
                 }""" % ordering
@@ -132,6 +140,8 @@ async def test_request_vms(fixt_db, fixt_controller, snapshot, fixt_auth_context
         executed = await execute_scheme(resources_schema, qu, context=fixt_auth_context)  # noqa
         snapshot.assert_match(executed)
 
+    controllers = await Controller.get_objects()
+    controller_id = controllers[0].id
     vm = executed['vms'][0]
 
     qu = """{
@@ -142,7 +152,7 @@ async def test_request_vms(fixt_db, fixt_controller, snapshot, fixt_auth_context
                 memory_count
                 cpu_count
               }
-            }""" % (vm['id'], vm['controller']['id'])
+            }""" % (vm['id'], controller_id)
 
     executed = await execute_scheme(resources_schema, qu, context=fixt_auth_context)  # noqa
     snapshot.assert_match(executed)
@@ -158,7 +168,6 @@ async def test_request_templates(fixt_db, fixt_controller, snapshot, fixt_auth_c
                     id
                     verbose_name
                     controller {
-                      id
                       verbose_name
                     }
                     status
@@ -168,6 +177,8 @@ async def test_request_templates(fixt_db, fixt_controller, snapshot, fixt_auth_c
         executed = await execute_scheme(resources_schema, qu, context=fixt_auth_context)  # noqa
         snapshot.assert_match(executed)
 
+    controllers = await Controller.get_objects()
+    controller_id = controllers[0].id
     template = executed['templates'][0]
 
     qu = """{
@@ -175,7 +186,7 @@ async def test_request_templates(fixt_db, fixt_controller, snapshot, fixt_auth_c
                 verbose_name
                 status
               }
-            }""" % (template['id'], template['controller']['id'])
+            }""" % (template['id'], controller_id)
 
     executed = await execute_scheme(resources_schema, qu, context=fixt_auth_context)  # noqa
     snapshot.assert_match(executed)

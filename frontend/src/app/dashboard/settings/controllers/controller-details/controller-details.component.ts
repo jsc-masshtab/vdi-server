@@ -25,7 +25,7 @@ export class ControllerDetailsComponent implements OnInit, OnDestroy {
   public connected: boolean = false;
 
   public controller = {};
- 
+
   public collection: any[] = [
     {
       title: 'Название',
@@ -63,6 +63,19 @@ export class ControllerDetailsComponent implements OnInit, OnDestroy {
         type: 'text',
         fieldName: 'address',
         fieldValue: this.controller['address']
+      }],
+      edit: 'openEditForm',
+    },
+    {
+      title: 'Токен',
+      property: 'token',
+      type: 'string',
+      formEdit: [{
+        header: 'Изменение токена интеграции контроллера',
+        tag: 'input',
+        type: 'text',
+        fieldName: 'token',
+        fieldValue: this.controller['token']
       }],
       edit: 'openEditForm',
     },
@@ -146,7 +159,7 @@ export class ControllerDetailsComponent implements OnInit, OnDestroy {
   private openEditForm(activeObj: IEditFormObj): void  {
     activeObj['formEdit'][0]['fieldValue'] = this.controller[activeObj['property']];
     this.dialog.open(FormForEditComponent, {
- 			disableClose: true, 
+ 			disableClose: true,
       width: '500px',
       data: {
         post: {
@@ -173,7 +186,7 @@ export class ControllerDetailsComponent implements OnInit, OnDestroy {
 
   public removeController() {
     this.dialog.open(RemoveControllerComponent, {
- 			disableClose: true, 
+ 			disableClose: true,
       width: '500px',
       data: {
         id: this.idController,

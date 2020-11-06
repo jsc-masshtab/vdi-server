@@ -438,6 +438,10 @@ class AuthenticationDirectory(VeilModel, AbstractSortableStatusModel):
     async def get_connection(self):
         """Соединение с AuthenticationDirectory для дальнейшей работы."""
         try:
+            # Прерываем выполнение, если не указаны данные подключения
+            if not self.service_username or not self.service_password:
+                raise AssertionError(_('LDAP username and password can`t be empty.'))
+            # Пытаемся подключиться
             ldap.set_option(ldap.OPT_X_TLS_REQUIRE_CERT, ldap.OPT_X_TLS_NEVER)
             ldap_connection = ldap.initialize(self.directory_url)
             ldap_connection.set_option(ldap.OPT_REFERRALS, 0)

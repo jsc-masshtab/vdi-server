@@ -72,5 +72,5 @@ class VersionHandler(BaseHandler, ABC):
                              'year': '2019-2020',
                              'url': 'https://mashtab.org',
                              'copyright': '©mashtab.org',
-                             'comment': _('Demo version')}}
+                             'comment': _('Demo version.')}}
         return self.finish(response)

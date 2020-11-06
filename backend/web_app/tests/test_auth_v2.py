@@ -122,7 +122,7 @@ class AuthLdapTestCase(VdiHttpTestCase):
         body = '{"username": "test_user","password": "veil", "ldap": true}'
         response_dict = yield self.get_response(body=body)
         error_message = response_dict['errors'][0]['message']
-        self.assertIn(_('Ошибка авторизации Неверные учетные данные (ldap):'), error_message)
+        self.assertIn(_('Ошибка авторизации: Неверные учетные данные (ldap):'), error_message)
 
     @pytest.mark.usefixtures('fixt_db', 'fixt_auth_dir', 'fixt_group', 'fixt_mapping', 'fixt_group_role')
     @gen_test

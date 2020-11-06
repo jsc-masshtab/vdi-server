@@ -16,7 +16,7 @@ export class ControllersService {
 
     public getAllControllers(): QueryRef<any, any> {
        return  this.service.watchQuery({
-            query: gql` 
+            query: gql`
                 query controllers {
                     controllers {
                         id
@@ -38,7 +38,7 @@ export class ControllersService {
 
     public getController(id: string) {
         return this.service.watchQuery({
-            query: gql`  
+            query: gql`
                 query controllers($id: UUID) {
                     controller(id_: $id) {
                         id
@@ -64,11 +64,15 @@ export class ControllersService {
                 mutation controllers(
                     $id: UUID!,
                     $verbose_name: String,
-                    $description: String) {
+                    $description: String,
+                    $address: String,
+                    $token: String) {
                     updateController(
-                        id_: $id, 
+                        id_: $id,
                         verbose_name: $verbose_name,
-                        description: $description) {
+                        description: $description,
+                        address: $address,
+                        token: $token) {
                         controller {
                             id
                             verbose_name

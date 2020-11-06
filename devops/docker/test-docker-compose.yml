@@ -1,0 +1,56 @@
+# Набор контейнеров для прогона тестов
+# docker-compose -f test-docker-compose.yml up
+version: '3.4'
+services:
+  test-postgres:
+    image: postgres:9.6
+    container_name: vdi-test-postgres
+    network_mode: "host"
+    environment:
+      - POSTGRES_DB=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    volumes:
+      - ./postgres/:/docker-entrypoint-initdb.d/
+  test-redis:
+    image: redis
+    container_name: vdi-test-redis
+    network_mode: "host"
+    command: redis-server --requirepass 4NZ7GpHn4IlshPhb --bind 0.0.0.0
+  test-memcached:
+    image: memcached:alpine
+    container_name: vdi-test-memcached
+    network_mode: "host"
+    command: sh -c "memcached -m 64"
+  test-veil-server:
+    build:
+      context: ../../
+      dockerfile: ./devops/docker/test-veil-server/Dockerfile
+    container_name: vdi-test-veil-server
+    network_mode: "host"
+    environment:
+      - PYTHONPATH=/opt/veil-vdi/app
+    working_dir: /opt/veil-vdi/app
+    volumes:
+      - ../../test_veil_server:/opt/veil-vdi/app
+    command: pipenv run python veil_test_server.py
+  test-tornado:
+    build:
+      context: ../../
+      dockerfile: ./devops/docker/python/Dockerfile
+    container_name: vdi-test-tornado
+    network_mode: "host"
+    environment:
+      - PYTHONPATH=/opt/veil-vdi/app
+    working_dir: /opt/veil-vdi/app
+    volumes:
+      - ../../backend:/opt/veil-vdi/app
+    command: sh -c "sleep 5 && cd common/migrations && pipenv run alembic upgrade head && cd ../../web_app/tests && pipenv run pytest"
+#    command: sh -c "sleep 5 && cd common/migrations && pipenv run alembic upgrade head"
+    depends_on:
+      - test-postgres
+      - test-redis
+      - test-veil-server
+
+
+

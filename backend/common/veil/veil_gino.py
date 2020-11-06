@@ -180,7 +180,7 @@ class VeilModel(db.Model):
 
     @property
     def failed(self):
-        return self.status == Status.FAILED
+        return self.status == Status.FAILED or self.status == Status.BAD_AUTH
 
     async def make_failed(self):
         """Переключает в статус FAILED."""
@@ -198,13 +198,6 @@ class VeilModel(db.Model):
         except DataError as db_error:
             await system_logger.debug(_('Soft_delete exception: {}.').format(db_error))
             return False
-        # else:
-        #     if self.entity:
-        #         msg = _('{} {} has been removed.').format(self.entity_name, self.verbose_name)
-        #         await system_logger.debug(msg, entity=self.entity, user=creator)
-        #     else:
-        #         msg = _('{} has been removed.').format(self.verbose_name)
-        #         await system_logger.debug(msg, user=creator)
         return True
 
     @classmethod
