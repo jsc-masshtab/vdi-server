@@ -86,7 +86,7 @@ class PoolTestCase(VdiHttpTestCase):
             # Исключение на случай отсутствия лицензии
             response_data = response_dict['errors'][0]
             response_code = response_data['code']
-            self.assertEqual('001', response_code)
+            self.assertIn(response_code, ['001', '002'])
         else:
             response_data = response_dict['data']
             self.assertIsInstance(response_data, dict)
