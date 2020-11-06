@@ -36,7 +36,6 @@ class VmPowerState(IntEnum):
 class Vm(VeilModel):
     """Vm однажды включенные в пулы.
 
-    assigned_to_user: Не позволяет автоматически выдавать ВМ пользователю, если эта ВМ уже была однажды выдана.
     """
 
     __tablename__ = 'vm'
@@ -47,7 +46,6 @@ class Vm(VeilModel):
     template_id = db.Column(db.Unicode(length=100), nullable=True)
     created_by_vdi = db.Column(db.Boolean(), nullable=False, default=False)
     status = db.Column(AlchemyEnum(Status), nullable=False, index=True)
-    assigned_to_user = db.Column(db.Boolean(), nullable=False, default=False)
 
     @property
     def id_str(self):
@@ -98,7 +96,7 @@ class Vm(VeilModel):
 
     @classmethod
     async def create(cls, pool_id, template_id, verbose_name, id=None,
-                     created_by_vdi=False, status=Status.ACTIVE, assigned_to_user=False):
+                     created_by_vdi=False, status=Status.ACTIVE):
         await system_logger.debug(_('Create VM {} on VDI DB.').format(verbose_name))
         try:
             vm = await super().create(id=id,
@@ -106,8 +104,7 @@ class Vm(VeilModel):
                                       template_id=template_id,
                                       verbose_name=verbose_name,
                                       created_by_vdi=created_by_vdi,
-                                      status=status,
-                                      assigned_to_user=assigned_to_user)
+                                      status=status)
         except Exception as E:
             raise VmCreationError(str(E))
         return vm
@@ -164,7 +161,7 @@ class Vm(VeilModel):
                     entity = await EntityModel.create(**self.entity)
                 ero = await EntityRoleOwnerModel.create(entity_id=entity.id, user_id=user_id)
                 user = await UserModel.get(user_id)
-                await self.soft_update(id=self.id, creator=creator, assigned_to_user=True)
+                await self.soft_update(id=self.id, status=Status.ACTIVE, creator=creator)
                 await system_logger.info(
                     _('User {} has been included to VM {}.').format(user.username, self.verbose_name),
                     user=creator, entity=self.entity)
@@ -176,6 +173,7 @@ class Vm(VeilModel):
         entity = EntityModel.select('id').where(
             (EntityModel.entity_type == self.entity_type) & (EntityModel.entity_uuid == self.id))
         # TODO: временное решение. Скорее всего потом права отзываться будут на конкретные сущности
+        await self.soft_update(id=self.id, status=Status.SERVICE, creator=creator)
         await system_logger.info(_('VM {} is clear from users.').format(self.verbose_name), user=creator,
                                  entity=self.entity)
         if not users_list:

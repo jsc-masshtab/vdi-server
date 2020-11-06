@@ -274,7 +274,7 @@ class Pool(VeilModel):
                 (EntityModel.entity_type == EntityType.VM) & (EntityModel.id.in_(ero_query)))
 
             vm_query = db.select([db.func.count()]).where(
-                (VmModel.pool_id == self.id) & (VmModel.id.notin_(entity_query)) & (VmModel.assigned_to_user == False))  # noqa
+                (VmModel.pool_id == self.id) & (VmModel.id.notin_(entity_query)) & (VmModel.status == Status.ACTIVE))  # noqa
 
             return await vm_query.gino.scalar()
 
@@ -565,8 +565,7 @@ class Pool(VeilModel):
     #     entity_query = EntityModel.select('entity_uuid').where(
     #         (EntityModel.entity_type == EntityType.VM) & (EntityModel.id.in_(EntityRoleOwnerModel.select('entity_id'))))
     #     vm_query = VmModel.query.where(
-    #         (VmModel.pool_id == self.id) & (VmModel.status == Status.ACTIVE) & (VmModel.id.notin_(entity_query)) & (  # noqa
-    #                     VmModel.assigned_to_user == False))  # noqa
+    #         (VmModel.pool_id == self.id) & (VmModel.status == Status.ACTIVE) & (VmModel.id.notin_(entity_query)))  # noqa
     #     return await vm_query.gino.first()
 
     async def get_free_vm_v2(self):
@@ -577,8 +576,7 @@ class Pool(VeilModel):
         entity_query = EntityModel.select('entity_uuid').where(
             (EntityModel.entity_type == EntityType.VM) & (EntityModel.id.in_(EntityRoleOwnerModel.select('entity_id'))))
         vm_query = VmModel.select('id').where(
-            (VmModel.pool_id == self.id) & (VmModel.status == Status.ACTIVE) & (VmModel.id.notin_(entity_query)) & (
-                        VmModel.assigned_to_user == False))  # noqa
+            (VmModel.pool_id == self.id) & (VmModel.status == Status.ACTIVE) & (VmModel.id.notin_(entity_query)))
 
         vm_ids_data = await vm_query.gino.all()
         if not vm_ids_data:
@@ -671,6 +669,13 @@ class Pool(VeilModel):
         vms_query = VmModel.select('id').where(VmModel.pool_id == self.id)
         entity_query = EntityModel.select('id').where(
             (EntityModel.entity_type == EntityType.VM) & (EntityModel.entity_uuid.in_(vms_query)))
+        exists_count = await db.select([db.func.count()]).where((EntityRoleOwnerModel.user_id == user_id) & (
+            EntityRoleOwnerModel.entity_id.in_(entity_query))).gino.scalar()
+        if exists_count > 0:
+            role_owner_query = EntityRoleOwnerModel.select('entity_id').where(
+                (EntityRoleOwnerModel.user_id == user_id) & (EntityRoleOwnerModel.entity_id.in_(entity_query)))
+            exists_vm_query = EntityModel.select('entity_uuid').where(EntityModel.id.in_(role_owner_query))
+            await VmModel.update.values(status=Status.SERVICE).where(VmModel.id.in_(exists_vm_query)).gino.status()
         ero_query = EntityRoleOwnerModel.delete.where(
             (EntityRoleOwnerModel.user_id == user_id) & (EntityRoleOwnerModel.entity_id.in_(entity_query)))
 
