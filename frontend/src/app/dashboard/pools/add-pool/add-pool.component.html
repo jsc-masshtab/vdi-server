@@ -204,7 +204,7 @@
 
         <ng-container *ngIf="dynamicPool.get('initial_size').touched && dynamicPool.get('initial_size').dirty">
           <div class="error" [@animForm]="error" *ngIf="dynamicPool.hasError('max', 'initial_size') || dynamicPool.hasError('min', 'initial_size')">
-            Начальное количество ВМ должно быть в интервале 1 - 200</div>
+            Начальное количество ВМ должно быть в интервале 1-200</div>
         </ng-container>
       </label>
 
