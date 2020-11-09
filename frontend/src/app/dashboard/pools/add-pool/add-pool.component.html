@@ -196,7 +196,7 @@
 
       <label class="field">
         <p class="field-name">Начальное количество ВМ</p>
-        <input type="number" formControlName="initial_size" min="0" max="200">
+        <input type="number" formControlName="initial_size" min="1" max="200">
 
         <ng-container *ngIf="dynamicPool.hasError('required', 'initial_size') && checkValid">
           <ng-container *ngTemplateOutlet="errorTemp"></ng-container>
@@ -210,24 +210,23 @@
 
       <label class="field">
         <p class="field-name">Максимальное количество создаваемых ВМ</p>
-        <input type="number" formControlName="total_size" min="1">
+        <input type="number" formControlName="total_size" min="1" max="10000">
 
         <ng-container *ngIf="dynamicPool.hasError('required', 'total_size') && checkValid">
           <ng-container *ngTemplateOutlet="errorTemp"></ng-container>
         </ng-container>
 
         <ng-container *ngIf="dynamicPool.get('total_size').touched && dynamicPool.get('total_size').dirty">
-          <div class="error" *ngIf="dynamicPool.hasError('max', 'total_size') || dynamicPool.hasError('min', 'total_size')">
-            Максимальное количество создаваемых ВМ должно быть в интервале 1-1000</div>
-          <div class="error" *ngIf="dynamicPool?.errors?.maxLessInitial">
-            Максимальное количество ВМ не может быть меньше начального количества ВМ
-          </div>
+          <div class="error" [@animForm]="error" *ngIf="dynamicPool.hasError('max', 'total_size') || dynamicPool.hasError('min', 'total_size')">
+            Максимальное количество создаваемых ВМ должно быть в интервале 1-10000</div>
+          <div class="error" [@animForm]="error" *ngIf="dynamicPool?.errors?.maxLessInitial">
+            Максимальное количество ВМ не может быть меньше начального количества ВМ</div>
         </ng-container>
       </label>
 
       <label class="field">
         <p class="field-name">Количество создаваемых ВМ</p>
-        <input type="number" formControlName="increase_step" min="1">
+        <input type="number" formControlName="increase_step" min="1" max="200">
 
         <ng-container *ngIf="dynamicPool.hasError('required', 'increase_step') && checkValid">
           <ng-container *ngTemplateOutlet="errorTemp"></ng-container>
@@ -235,24 +234,26 @@
 
         <ng-container
           *ngIf="dynamicPool.get('increase_step').touched && dynamicPool.get('increase_step').dirty">
-          <div class="error" *ngIf="(dynamicPool.hasError('min', 'increase_step') || dynamicPool?.errors?.freeVmsMoreReserve)">
-            Количество создаваемых ВМ должно быть в интервале 1-200
-          </div>
+          <div class="error" [@animForm]="error" *ngIf="dynamicPool.hasError('min', 'increase_step') || dynamicPool.hasError('max', 'increase_step')">
+            Количество создаваемых ВМ должно быть в интервале 1-200</div>
+          <div class="error" [@animForm]="error" *ngIf="dynamicPool?.errors?.IncreaseLessMax">
+            Количество создаваемых ВМ не может быть больше максимального количества ВМ</div>
         </ng-container>
       </label>
 
       <label class="field">
         <p class="field-name">Пороговое количество свободных ВМ</p>
-        <input type="number" formControlName="reserve_size" min="1">
+        <input type="number" formControlName="reserve_size" min="1" max="200">
 
         <ng-container *ngIf="dynamicPool.hasError('required', 'reserve_size') && checkValid">
           <ng-container *ngTemplateOutlet="errorTemp"></ng-container>
         </ng-container>
 
         <ng-container *ngIf="dynamicPool.get('reserve_size').touched && dynamicPool.get('reserve_size').dirty">
-          <div class="error" *ngIf="(dynamicPool.hasError('min', 'reserve_size') ||  dynamicPool.hasError('max', 'reserve_size'))">
-            Пороговое количество свободных ВМ должно быть меньше или равно количеству создаваемых ВМ и больше 1
-          </div>
+          <div class="error" [@animForm]="error" *ngIf="dynamicPool.hasError('min', 'reserve_size') ||  dynamicPool.hasError('max', 'reserve_size')">
+            Пороговое количество свободных ВМ должно быть в интервале 1-200</div>
+          <div class="error" [@animForm]="error" *ngIf="dynamicPool?.errors?.ReserveLessMax">
+            Пороговое количество свободных ВМ не может быть больше максимального количества ВМ</div>
         </ng-container>
 
       </label>
