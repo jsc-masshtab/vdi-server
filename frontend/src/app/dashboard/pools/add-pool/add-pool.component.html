@@ -235,7 +235,7 @@
         <ng-container
           *ngIf="dynamicPool.get('increase_step').touched && dynamicPool.get('increase_step').dirty">
           <div class="error" [@animForm]="error" *ngIf="dynamicPool.hasError('min', 'increase_step') || dynamicPool.hasError('max', 'increase_step')">
-            Количество создаваемых ВМ должно быть в интервале 1-200</div>
+            Шаг расширения пула должен быть в интервале 1-200</div>
           <div class="error" [@animForm]="error" *ngIf="dynamicPool?.errors?.IncreaseLessMax">
             Шаг расширения пула не может быть больше максимального количества ВМ</div>
         </ng-container>
