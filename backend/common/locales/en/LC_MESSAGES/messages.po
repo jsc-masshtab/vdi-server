@@ -1085,6 +1085,14 @@ msgstr "The remote controller is unavailable."
 msgid "VM does not support RDP."
 msgstr "VM does not support RDP."
 
+#: ../web_app/thin_client_api/handlers.py:221
+msgid "User {} executed action {} on VM {}."
+msgstr "User {} executed action {} on VM {}."
+
+#: ../web_app/thin_client_api/handlers.py:223
+msgid "User {} failed to execute action {} on VM {}."
+msgstr "User {} failed to execute action {} on VM {}."
+
 #: ../ws_listener_worker/resources_monitor.py:101
 msgid "{} is connected: {}."
 msgstr "{} is connected: {}."
