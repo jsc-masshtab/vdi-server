@@ -7,7 +7,7 @@ from common.veil.veil_decorators import administrator_required
 from common.veil.veil_errors import SimpleError, ValidationError
 from common.veil.veil_validators import MutationValidation
 from common.veil.veil_gino import StatusGraphene, Status
-from common.veil.veil_graphene import VeilResourceType, VeilShortEntityType
+from common.veil.veil_graphene import VeilResourceType, VeilShortEntityType, VmState
 from common.models.controller import Controller
 from common.models.vm import Vm
 from common.models.pool import Pool
@@ -155,7 +155,7 @@ class ControllerVmType(VeilResourceType):
     verbose_name = graphene.String()
     template = graphene.Field(VeilShortEntityType)
     status = StatusGraphene()
-
+    user_power_state = VmState()
     # название пула, в котором ВМ из локальной БД
     pool_name = graphene.String()
 
