@@ -49,7 +49,7 @@ class VdiVeilClientSingleton(VeilClientSingleton):
         if server_address not in self.__client_instances:
             instance = VdiVeilClient(server_address=server_address, token=token,
                                      session_reopen=True, timeout=self.__TIMEOUT, ujson_=True,
-                                     cache_opts=self.__CACHE_OPTS,
+                                     # cache_opts=self.__CACHE_OPTS,
                                      retry_opts=self.__RETRY_OPTS)
             self.__client_instances[server_address] = instance
         return self.__client_instances[server_address]
