@@ -618,7 +618,7 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
         },
         settings: {
           entity: 'pool-details',
-          header: 'Изменение количества создаваемых ВМ',
+          header: 'Изменение шага расширения ВМ',
           buttonAction: 'Изменить',
           form: [{
             tag: 'input',
