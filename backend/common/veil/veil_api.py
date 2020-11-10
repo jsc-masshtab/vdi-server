@@ -12,6 +12,10 @@ class VdiVeilClient(VeilClient):
     async def get(self, api_object, url, extra_params):
         """Переопределен для перехвата окончательного статуса ответов."""
         response = await super().get(api_object=api_object, url=url, extra_params=extra_params)
+        # Добавлено 10.11.2020
+        if not response.success:
+            raise ValueError('VeiL request error.')
+        # Протестировано
         if hasattr(response, 'status_code') and hasattr(api_object, 'api_object_id') and api_object.api_object_id:
             if response.status_code == 404 and isinstance(api_object, VeilDomain):
                 from common.models.vm import Vm
