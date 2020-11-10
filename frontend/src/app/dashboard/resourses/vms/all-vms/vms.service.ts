@@ -20,6 +20,7 @@ export class VmsService {
                 verbose_name
                 pool_name
                 status
+                user_power_state
                 id
                 controller {
                     id
@@ -37,10 +38,7 @@ export class VmsService {
                         verbose_name
                         status
                         pool_name
-                        template{
-                            id
-                            verbose_name
-                        }
+                        user_power_state
                     }
                 }
             }`

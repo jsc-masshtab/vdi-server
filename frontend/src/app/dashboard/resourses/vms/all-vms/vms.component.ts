@@ -15,7 +15,7 @@ import { IParams } from 'types';
 
 
 export class VmsComponent extends DetailsMove implements OnInit, OnDestroy {
-  
+
   @Input() filter: object
 
   private sub: Subscription;
@@ -31,10 +31,10 @@ export class VmsComponent extends DetailsMove implements OnInit, OnDestroy {
       sort: true
     },
     {
-      title: 'Шаблон',
-      property: 'template',
-      property_lv2: 'verbose_name',
-      type: 'string'
+      title: 'Состояние',
+      property: 'user_power_state',
+      type: 'string',
+      sort: true
     },
     {
       title: 'Контроллер',
