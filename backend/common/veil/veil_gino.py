@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from enum import Enum
+import asyncio
 from graphene import Enum as GrapheneEnum
 from sqlalchemy.sql import desc, and_
 from sqlalchemy.sql.schema import Column
@@ -7,6 +8,7 @@ from asyncpg import DataError
 
 from common.database import db
 from common.languages import lang_init
+from common.settings import VEIL_OPERATION_WAITING
 
 _ = lang_init()
 
@@ -225,6 +227,15 @@ class VeilModel(db.Model):
         async with db.transaction():
             for role in roles_list:
                 await self.add_role(role, creator)
+
+    @staticmethod
+    async def task_waiting(task_instance):
+        """Дожидается завершения выполнения задачи."""
+        task_completed = False
+        while not task_completed:
+            await asyncio.sleep(VEIL_OPERATION_WAITING)
+            task_completed = await task_instance.finished
+        return True
 
 
 StatusGraphene = GrapheneEnum.from_enum(Status)

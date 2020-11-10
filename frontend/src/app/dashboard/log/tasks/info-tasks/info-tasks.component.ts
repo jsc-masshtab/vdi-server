@@ -51,9 +51,9 @@ export class InfoTaskComponent {
       width: '500px',
       data: {
         form: {
-          header: "Отмена задачи",
+          header: "Подтверждение действия",
           question: "Отменить задачу?",
-          button: "Отменить"
+          button: "Выполнить"
         },
         request: {
           service: this.service,

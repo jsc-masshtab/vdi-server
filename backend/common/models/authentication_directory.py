@@ -17,7 +17,7 @@ from common.veil.auth.auth_dir_utils import (unpack_guid, pack_guid, unpack_ad_i
                                              extract_domain_from_username, get_ad_user_ou, get_ad_user_groups)
 from common.languages import lang_init
 from common.log.journal import system_logger
-from common.veil.veil_errors import SimpleError, ValidationError
+from common.veil.veil_errors import ValidationError, SilentError
 
 
 _ = lang_init()
@@ -139,7 +139,7 @@ class AuthenticationDirectory(VeilModel, AbstractSortableStatusModel):
         # Ограничение на количество записей
         count = await db.func.count(AuthenticationDirectory.id).gino.scalar()
         if count > 0:
-            raise SimpleError(_('More than one authentication directory can not be created.'), user=creator)
+            raise SilentError(_('More than one authentication directory can not be created.'))
         # Шифруем пароль
         if service_password and isinstance(service_password, str):
             service_password = encrypt(service_password)
@@ -651,9 +651,9 @@ class AuthenticationDirectory(VeilModel, AbstractSortableStatusModel):
         """Синхронизирует ранее синхронизированную группу и пользователей из Authentication Directory на VDI."""
         group = await GroupModel.get(group_id)
         if not group:
-            raise SimpleError(_('No such Group.'))
+            raise SilentError(_('No such Group.'))
         if not group.ad_guid:
-            raise SimpleError(_('Group {} is not synchronized by AD.'.format(group.verbose_name)))
+            raise SilentError(_('Group {} is not synchronized by AD.'.format(group.verbose_name)))
         # Поиск по ID наладить не удалось, поэтому ищем по имени группы.
         ad_group_members = await self.get_members_of_ad_group(group.ad_cn)
         # Определяем кого нужно исключить

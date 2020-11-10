@@ -153,7 +153,7 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
       type: 'string'
     },
     {
-      title: 'Количество создаваемых ВМ',
+      title: 'Шаг расширения пула',
       property: 'increase_step',
       type: 'string',
       edit: 'changeAutomatedPoolIncreaseStep'
@@ -465,9 +465,9 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
       width: '500px',
       data: {
         form: {
-          header: "Расширение пула",
+          header: "Подтверждение действия",
           question: "Расширить пул?",
-          button: "Расширить"
+          button: "Выполнить"
         },
         request: {
           service: this.poolService,
@@ -618,7 +618,7 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
         },
         settings: {
           entity: 'pool-details',
-          header: 'Изменение количества создаваемых ВМ',
+          header: 'Изменение шага расширения пула',
           buttonAction: 'Изменить',
           form: [{
             tag: 'input',

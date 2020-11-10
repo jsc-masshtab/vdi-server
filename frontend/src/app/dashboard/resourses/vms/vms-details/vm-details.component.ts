@@ -41,6 +41,11 @@ export class VmDetailsComponent implements OnInit, OnDestroy {
     {
       title: 'IP адрес',
       property: 'address',
+      type: 'array'
+    },
+    {
+      title: 'Имя хоста',
+      property: 'hostname',
       type: 'string'
     },
     {
@@ -69,29 +74,9 @@ export class VmDetailsComponent implements OnInit, OnDestroy {
       type: 'string'
     },
     {
-      title: 'Имя хоста',
-      property: 'hostname',
-      type: 'string'
-    },
-    {
       title: 'Сервер',
       property: 'node',
       property_lv2: 'verbose_name',
-      type: 'string'
-    },
-    {
-      title: 'Количество LUN',
-      property: 'luns_count',
-      type: 'string'
-    },
-    {
-      title: 'Количество вирт. интерфейсов',
-      property: 'vmachine_infs_count',
-      type: 'string'
-    },
-    {
-      title: 'Количество вирт. функций',
-      property: 'vfunctions_count',
       type: 'string'
     },
     {

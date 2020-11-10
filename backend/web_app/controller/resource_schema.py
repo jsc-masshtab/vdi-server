@@ -123,13 +123,13 @@ class ResourceVmType(VeilResourceType):
     memory_count = graphene.Int()
     cpu_count = graphene.Int()
     template = graphene.Boolean()
-    luns_count = graphene.Int()
-    vfunctions_count = graphene.Int()
+    # luns_count = graphene.Int()
+    # vfunctions_count = graphene.Int()
     tags = graphene.List(graphene.String)
-    vmachine_infs_count = graphene.Int()
+    # vmachine_infs_count = graphene.Int()
     hints = graphene.Int()
     user_power_state = VmState()
-    vdisks_count = graphene.Int()
+    # vdisks_count = graphene.Int()
     cluster = graphene.UUID()
     safety = graphene.Boolean()
     boot_type = graphene.String()
@@ -155,7 +155,7 @@ class ResourceVmType(VeilResourceType):
     parent = graphene.Field(VeilShortEntityType)
     parent_name = graphene.String()
     hostname = graphene.String()
-    address = graphene.String()
+    address = graphene.List(graphene.String)
 
     # название пула, в котором ВМ из локальной БД
     pool_name = graphene.String()
@@ -305,9 +305,10 @@ class ResourcesQuery(graphene.ObjectType, ControllerFetcher):
             resource_data['controller'] = {'id': controller.id, 'verbose_name': controller.verbose_name}
             resource_data['cpu_count'] = veil_domain.cpu_count
             resource_data['parent_name'] = veil_domain.parent_name
+            resource_data['guest_agent'] = veil_domain.guest_agent.qemu_state
             if veil_domain.powered:
                 resource_data['hostname'] = veil_domain.hostname
-                resource_data['address'] = veil_domain.first_ipv4
+                resource_data['address'] = veil_domain.guest_agent.ipv4
             return ResourceVmType(**resource_data)
         else:
             raise SilentError(_('VM is unreachable on ECP Veil.'))

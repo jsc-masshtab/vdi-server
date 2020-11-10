@@ -61,21 +61,6 @@ export class TemplateDetailsComponent implements OnInit, OnDestroy {
       type: 'string'
     },
     {
-      title: 'Количество LUN',
-      property: 'luns_count',
-      type: 'string'
-    },
-    {
-      title: 'Количество вирт. интерфейсов',
-      property: 'vmachine_infs_count',
-      type: 'string'
-    },
-    {
-      title: 'Количество вирт. функций',
-      property: 'vfunctions_count',
-      type: 'string'
-    },
-    {
       property: 'tablet',
       title: 'Режим планшета',
       type: {
@@ -102,14 +87,6 @@ export class TemplateDetailsComponent implements OnInit, OnDestroy {
     {
       property: 'disastery_enabled',
       title: 'Катастрофоустойчивость',
-      type: {
-        typeDepend: 'boolean',
-        propertyDepend: ['Включено', 'Выключено']
-      }
-    },
-    {
-      property: 'guest_agent',
-      title: 'Гостевой агент',
       type: {
         typeDepend: 'boolean',
         propertyDepend: ['Включено', 'Выключено']
