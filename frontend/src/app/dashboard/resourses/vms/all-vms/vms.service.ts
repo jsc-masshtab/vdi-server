@@ -72,10 +72,6 @@ export class VmsService {
                                 guest_agent
                                 remote_access
                                 spice_stream
-                                vmachine_infs_count
-                                vdisks_count
-                                luns_count
-                                vfunctions_count
                                 user_power_state
                                 boot_type
                                 start_on_boot
