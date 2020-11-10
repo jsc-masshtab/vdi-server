@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2020-11-10 16:14+0300\n"
+"POT-Creation-Date: 2020-11-10 20:27+0300\n"
 "PO-Revision-Date: 2020-07-30 11:25+0300\n"
 "Last-Translator: Emil <emil@emil-pc>\n"
 "Language-Team: Russian\n"
@@ -258,19 +258,23 @@ msgstr "Версия Veil ECP должна быть 4.3 или выше. Тек�
 msgid "Controller {} added."
 msgstr "Контроллер {} добавлен."
 
-#: ../common/models/controller.py:212
-msgid "Update controller {}: {}."
-msgstr "Обновление контроллера {}: {}."
+#: ../common/models/controller.py:213
+msgid "Controller {} has been successfully updated."
+msgstr "Контроллер {} успешно обновлен."
 
-#: ../common/models/controller.py:238
+#: ../common/models/controller.py:215
+msgid "Controller {} update failed."
+msgstr "Ошибка обновления контроллера {}."
+
+#: ../common/models/controller.py:239
 msgid "Controller {} has been removed."
 msgstr "Контроллер {} удалён."
 
-#: ../common/models/controller.py:257
+#: ../common/models/controller.py:258
 msgid "Controller {} has been activated."
 msgstr "Контроллер {} активирован."
 
-#: ../common/models/controller.py:276
+#: ../common/models/controller.py:277
 msgid "Controller {} status has been switched to {}."
 msgstr "Статус контроллера {} изменен на {}."
 
@@ -282,7 +286,7 @@ msgstr "Неверный параметр сортировки {}."
 msgid "User {} has been included to pool {}."
 msgstr "Пользователь {} был включен в пул {}."
 
-#: ../common/models/pool.py:407 ../common/models/vm.py:169
+#: ../common/models/pool.py:407 ../common/models/vm.py:177
 msgid "{} already has permission."
 msgstr "{} уже имеет разрешение."
 
@@ -427,183 +431,132 @@ msgstr "Уменьшение пула {}."
 msgid "  Duration: {}."
 msgstr "  Продолжительность: {}."
 
-#: ../common/models/vm.py:100
+#: ../common/models/vm.py:108
 msgid "Create VM {} on VDI DB."
 msgstr "Создание виртуальной машины {} на VDI DB."
 
-#: ../common/models/vm.py:117 ../web_app/thin_client_api/handlers.py:234
-#: ../web_app/thin_client_api/handlers.py:261
+#: ../common/models/vm.py:125 ../web_app/thin_client_api/handlers.py:246
+#: ../web_app/thin_client_api/handlers.py:273
 msgid "VM has no api client."
 msgstr "ВМ не имеет клиента. Проверьте состояние контроллера."
 
-#: ../common/models/vm.py:124
+#: ../common/models/vm.py:132
 msgid "Removing {} from domain."
 msgstr "Выводим {} из домена."
 
-#: ../common/models/vm.py:145
+#: ../common/models/vm.py:153
 msgid "VM deletion task {} finished with error."
 msgstr "Задача {} удаления ВМ завершилась с ошибкой."
 
-#: ../common/models/vm.py:146
+#: ../common/models/vm.py:154
 msgid "VM {} removed from ECP."
 msgstr "ВМ {} удалена из ECP."
 
-#: ../common/models/vm.py:149
+#: ../common/models/vm.py:157
 msgid "VM {} deletion task finished with error."
 msgstr "Задача удаления ВМ {} завершилась с ошибкой."
 
-#: ../common/models/vm.py:166
+#: ../common/models/vm.py:174
 msgid "User {} has been included to VM {}."
 msgstr "ВМ {} закреплена за пользователем {}."
 
-#: ../common/models/vm.py:177
+#: ../common/models/vm.py:185
 msgid "VM {} is clear from users."
 msgstr "ВМ {} освобождена от пользователей."
 
-#: ../common/models/vm.py:213 ../common/models/vm.py:335
+#: ../common/models/vm.py:222 ../common/models/vm.py:354
 msgid "There is no client for controller {}."
 msgstr "Контролер {} не имеет подключения к ECP VeiL."
 
-#: ../common/models/vm.py:236
+#: ../common/models/vm.py:245
 msgid "ECP VeiL controller {} error."
 msgstr "Ошибка контроллера ECP VeiL {}."
 
-#: ../common/models/vm.py:243
+#: ../common/models/vm.py:252
 msgid "Controller has not free space for creating new VM."
 msgstr "На контроллере отсутствует место для создания новой виртуальной машины."
 
-#: ../common/models/vm.py:244
+#: ../common/models/vm.py:253
 msgid "Not enough free space on data pool."
 msgstr "Недостаточно свободного места в пуле данных."
 
-#: ../common/models/vm.py:247
+#: ../common/models/vm.py:256
 msgid "Unknown node {}."
 msgstr "Неизвестный узел {}."
 
-#: ../common/models/vm.py:248
+#: ../common/models/vm.py:257
 msgid "Controller can`t create VM. Unknown node."
 msgstr "Контроллер не может создать ВМ. Неизвестный узел."
 
-#: ../common/models/vm.py:253
+#: ../common/models/vm.py:262
 msgid "Possibly blocked by active task on ECP. Wait before next try."
 msgstr "Возможно, заблокировано активным заданием на ECP. Подождите перед следующей попыткой."
 
-#: ../common/models/vm.py:256
+#: ../common/models/vm.py:265
 msgid "Something went wrong. Interrupt while."
 msgstr "Что-то пошло не так. Прерываем while."
 
-#: ../common/models/vm.py:272
+#: ../common/models/vm.py:281
 msgid "VM {} has been removed from the pool."
 msgstr "ВМ {} удалена из пула."
 
-#: ../common/models/vm.py:280
+#: ../common/models/vm.py:289
 msgid "VM {} deleting cancelled by timeout."
 msgstr "Удаление ВМ {} отменено по таймауту."
 
-#: ../common/models/vm.py:302 ../web_app/journal/schema.py:162
+#: ../common/models/vm.py:311 ../web_app/journal/schema.py:162
 msgid "No such event."
 msgstr "Нет такого события."
 
-#: ../common/models/vm.py:340 ../common/models/vm.py:368
-#: ../common/models/vm.py:383 ../common/models/vm.py:407
-#: ../common/models/vm.py:431 ../common/models/vm.py:459
-#: ../common/models/vm.py:468 ../web_app/thin_client_api/handlers.py:135
-msgid "VeiL domain request error."
-msgstr "Ошибка запроса VeiL ВМ."
-
-#: ../common/models/vm.py:373
+#: ../common/models/vm.py:371
 msgid "VM {} is powered."
 msgstr "ВМ {} включена."
 
-#: ../common/models/vm.py:386
+#: ../common/models/vm.py:378
 msgid "VM {} already shutdown."
 msgstr "ВМ {} уже выключена."
 
-#: ../common/models/vm.py:393
+#: ../common/models/vm.py:384
 msgid "VM {} is force shutdown."
 msgstr "ВМ {} принудительно выключена."
 
-#: ../common/models/vm.py:396
+#: ../common/models/vm.py:387
 msgid "VM {} is shutdown."
 msgstr "ВМ {} выключена."
 
-#: ../common/models/vm.py:410 ../common/models/vm.py:440
+#: ../common/models/vm.py:395 ../common/models/vm.py:419
 msgid "VM {} is shutdown. Please power this."
 msgstr "ВМ {} выключена. Пожалуйста включите её."
 
-#: ../common/models/vm.py:417
+#: ../common/models/vm.py:402
 msgid "VM {} was force reboot."
 msgstr "ВМ {} принудительно перезагружена."
 
-#: ../common/models/vm.py:420
+#: ../common/models/vm.py:405
 msgid "VM {} was reboot."
 msgstr "ВМ {} перезагружена."
 
-#: ../common/models/vm.py:436
+#: ../common/models/vm.py:415
 msgid "VM {} is suspended."
 msgstr "ВМ {} приостановлена."
 
-#: ../common/models/vm.py:465
-msgid "Enabling remote access for {}."
-msgstr "Включаем удаленный доступ для {}."
-
-#: ../common/models/vm.py:471 ../web_app/thin_client_api/handlers.py:138
-msgid "Task has`t been created."
-msgstr "Задача не была создана."
-
-#: ../common/models/vm.py:485 ../web_app/thin_client_api/handlers.py:152
-msgid "VM remote access task {} finished with error."
-msgstr "Задава {} включения удаленного доступа ВМ завершилась с ошибкой."
-
-#: ../common/models/vm.py:489
+#: ../common/models/vm.py:437
 msgid "Remote access enabled."
 msgstr "Удаленный доступ включен."
 
-#: ../common/models/vm.py:498 ../common/models/vm.py:528
-msgid "Waiting guest agent activation for {}."
-msgstr "Ожидаем активации гостевого агента для {}."
+#: ../common/models/vm.py:485
+msgid "VM {} domain container including task failed."
+msgstr "Ошибка включения ВМ {} в группу домена активного каталога."
 
-#: ../common/models/vm.py:507
-msgid "Setting hostname for {}."
-msgstr "Задаем hostname для {}."
-
-#: ../common/models/vm.py:520
-msgid "VM hostname setting task {} finished with error."
-msgstr "Задача {} установки hostname ВМ завершилась с ошибкой."
-
-#: ../common/models/vm.py:524
-msgid "Hostname {} has been set."
-msgstr "Задан hostname {}."
-
-#: ../common/models/vm.py:537
-msgid "Adding {} to domain."
-msgstr "Вводим {} в домен."
-
-#: ../common/models/vm.py:552
+#: ../common/models/vm.py:509
 msgid "VM {} domain including task failed."
 msgstr "Ошибка включения ВМ {} в домен."
 
-#: ../common/models/vm.py:555
-msgid "VM domain include task {} finished with error."
-msgstr "Задача {} ввода ВМ в домен завершилась с ошибкой."
-
-#: ../common/models/vm.py:565
-msgid "VM has been added to Windows domain {}."
-msgstr "ВМ {} заведена в Windows домен {}."
-
-#: ../common/models/vm.py:584
-msgid "VM domain container adding task {} finished with error."
-msgstr "Задача {} включения ВМ в группы домена завершилась с ошибкой."
-
-#: ../common/models/vm.py:587
-msgid "VM has been added to Windows domain container(s) {}."
-msgstr "ВМ включена в группы {} Windows домена."
-
-#: ../common/models/vm.py:589
+#: ../common/models/vm.py:529
 msgid "VM {} has been prepared."
 msgstr "ВМ {} подготовлена."
 
-#: ../common/models/vm.py:598
+#: ../common/models/vm.py:538
 msgid "{} preparation cancelled by timeout."
 msgstr "подготовка {} отменена по таймауту."
 
@@ -649,23 +602,23 @@ msgstr "Ошибка 401: проблема с авторизацией."
 msgid "Critical controller error."
 msgstr "Критическая ошибка контроллера."
 
-#: ../common/veil/veil_gino.py:78
+#: ../common/veil/veil_gino.py:80
 msgid "Incorrect sort parameter {}."
 msgstr "Неверный параметр сортировки {}."
 
-#: ../common/veil/veil_gino.py:88
+#: ../common/veil/veil_gino.py:90
 msgid "Incorrect request parameter {}."
 msgstr "Неверный параметр запроса {}."
 
-#: ../common/veil/veil_gino.py:189
+#: ../common/veil/veil_gino.py:191
 msgid "{} {} has been disabled."
 msgstr "{} {} деактивирована."
 
-#: ../common/veil/veil_gino.py:190
+#: ../common/veil/veil_gino.py:192
 msgid "{} {} has`t been found in VeiL. Switched to FAILED."
 msgstr "{} {} не найдена на VeiL. Переключена в стутус FAILED."
 
-#: ../common/veil/veil_gino.py:199
+#: ../common/veil/veil_gino.py:201
 msgid "Soft_delete exception: {}."
 msgstr "Ошибка удаления: {}."
 
@@ -738,7 +691,7 @@ msgstr "Режим отладки включен."
 #: ../web_app/auth/authentication_directory/auth_dir_schema.py:222
 #: ../web_app/auth/authentication_directory/auth_dir_schema.py:277
 #: ../web_app/auth/authentication_directory/auth_dir_schema.py:439
-#: ../web_app/auth/authentication_directory/auth_dir_schema.py:460
+#: ../web_app/auth/authentication_directory/auth_dir_schema.py:457
 msgid "No such Authentication Directory."
 msgstr "Такая Authentication Directory отсутствует."
 
@@ -1077,6 +1030,18 @@ msgstr "Пользователь {} подключился к пулу {}."
 msgid "User {} connected to VM {}."
 msgstr "Пользователь {} подключился к ВМ {}."
 
+#: ../web_app/thin_client_api/handlers.py:135
+msgid "VeiL domain request error."
+msgstr "Ошибка запроса VeiL ВМ."
+
+#: ../web_app/thin_client_api/handlers.py:138
+msgid "Task has`t been created."
+msgstr "Задача не была создана."
+
+#: ../web_app/thin_client_api/handlers.py:152
+msgid "VM remote access task {} finished with error."
+msgstr "Задава {} включения удаленного доступа ВМ завершилась с ошибкой."
+
 #: ../web_app/thin_client_api/handlers.py:157
 msgid "Can`t enable remote access. Check VeiL ECP."
 msgstr "Не удалось включить удаленный доступ. Проверьте настройки на VeiL ECP."
@@ -1131,3 +1096,36 @@ msgstr "{cls}: Контроллер {name} уже отслеживается."
 #, python-brace-format
 msgid "{cls}: resource monitor for controller {name} connected."
 msgstr "{cls}: монитор ресурсов для контроллера {name} подключен."
+
+#~ msgid "VM has been added to Windows domain container(s) {}."
+#~ msgstr "ВМ включена в группы {} Windows домена."
+
+#~ msgid "VM domain container adding task {} finished with error."
+#~ msgstr "Задача {} включения ВМ в группы домена завершилась с ошибкой."
+
+#~ msgid "VM has been added to Windows domain {}."
+#~ msgstr "ВМ {} заведена в Windows домен {}."
+
+#~ msgid "VM domain include task {} finished with error."
+#~ msgstr "Задача {} ввода ВМ в домен завершилась с ошибкой."
+
+#~ msgid "Adding {} to domain."
+#~ msgstr "Вводим {} в домен."
+
+#~ msgid "Hostname {} has been set."
+#~ msgstr "Задан hostname {}."
+
+#~ msgid "VM hostname setting task {} finished with error."
+#~ msgstr "Задача {} установки hostname ВМ завершилась с ошибкой."
+
+#~ msgid "Setting hostname for {}."
+#~ msgstr "Задаем hostname для {}."
+
+#~ msgid "Waiting guest agent activation for {}."
+#~ msgstr "Ожидаем активации гостевого агента для {}."
+
+#~ msgid "Enabling remote access for {}."
+#~ msgstr "Включаем удаленный доступ для {}."
+
+#~ msgid "Update controller {}: {}."
+#~ msgstr "Обновление контроллера {}: {}."

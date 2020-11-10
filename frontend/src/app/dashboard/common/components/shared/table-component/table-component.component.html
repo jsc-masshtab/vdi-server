@@ -17,7 +17,7 @@
 
     <div class="table-area" >
       <ng-container *ngFor="let item of data;let i = index">
-        <div class="table-area-object" [class.cursorTrue]="cursor" (click)="clickRow(item)" tabindex="-1" 
+        <div class="table-area-object" [class.cursorTrue]="cursor" (click)="clickRow(item)" tabindex="-1"
           [class.status-bad]="item?.status === 'BAD_AUTH'"
           [class.status-fail]="item?.status === 'FAILED' || item?.status === 'FAIL_CREATING' || item?.status === 'FAIL_DELETING' || item?.status === 'ERROR'"
           [class.status-halt]="item?.status === 'HALTING' || item?.status === 'CREATING' || item?.status === 'DELETING' || item?.status === 'HERMIT' || item?.status === 'SERVICE' || item?.status === 'PARTIAL'">   <!--строка-->
@@ -27,12 +27,12 @@
 
     <!-- icons -->
               <span [class.icon-group]="entity === 'vm' || entity === 'events' || entity === 'users' && item.is_superuser" *ngIf="obj.icon">
-                <fa-icon [icon]="['fas',obj.icon]" size="xs" [class.stateOn]="item.is_active && entity === 'users'" 
+                <fa-icon [icon]="['fas',obj.icon]" size="xs" [class.stateOn]="item.is_active && entity === 'users'"
                   [class.stateOff]="!item.is_active && entity === 'users'"
                 ></fa-icon>
 
                 <ng-container *ngIf="entity === 'users' && item.is_superuser"> <!-- подъюзеры -->
-                  <fa-icon [icon]="['fas', 'crown']" title="Суперпользователь" class="extra-icon stateOn"></fa-icon>
+                  <fa-icon [icon]="['fas', 'crown']" title="Администратор" class="extra-icon stateOn"></fa-icon>
                 </ng-container>
 
                 <ng-container *ngIf="entity === 'vm' && item?.state && obj.property === 'verbose_name'"> <!-- статус вм -->
@@ -59,7 +59,7 @@
                   <fa-icon [icon]="['fas',item[obj.property] | statusIcon]" [style.fontSize]="'12px'" [style.marginRight]="'5px'" [spin]="false"
                   *ngSwitchDefault></fa-icon>
                 </ng-container>
-                  
+
                   <span  class="for-wrap">{{ item[obj.property] | status }}</span>
                 </ng-container>
               </ng-container>
@@ -102,7 +102,7 @@
               </ng-container>
 
               <ng-template #nothing>--</ng-template>
-          </div> 
+          </div>
         </ng-container>
       </div>
     </ng-container>
