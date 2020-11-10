@@ -41,7 +41,7 @@ export class ClustersComponent extends DetailsMove implements OnInit, OnDestroy 
       sort: true
     },
     {
-      title: 'RAM',
+      title: 'RAM (MB)',
       property: 'memory_count',
       type: 'string',
       sort: true
