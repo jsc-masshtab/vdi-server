@@ -36,12 +36,12 @@ export class DatapoolDetailsComponent implements OnInit, OnDestroy {
       type: 'string'
     },
     {
-      title: 'Свободно (Мб)',
+      title: 'Свободно (МБ)',
       property: 'free_space',
       type: 'string'
     },
     {
-      title: 'Занято (Мб)',
+      title: 'Занято (МБ)',
       property: 'used_space',
       type: 'string'
     },
@@ -58,7 +58,7 @@ export class DatapoolDetailsComponent implements OnInit, OnDestroy {
   public menuActive: string = 'info';
 
   filter: object
-  
+
   constructor(private activatedRoute: ActivatedRoute,
               private service: DatapoolsService,
               private router: Router) { }

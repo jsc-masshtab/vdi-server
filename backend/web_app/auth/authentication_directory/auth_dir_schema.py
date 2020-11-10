@@ -6,7 +6,7 @@ from graphene import Enum as GrapheneEnum
 from common.database import db
 from common.veil.veil_gino import StatusGraphene, Status
 from common.veil.veil_validators import MutationValidation
-from common.veil.veil_errors import SimpleError, ValidationError
+from common.veil.veil_errors import SilentError, ValidationError
 from common.veil.veil_decorators import security_administrator_required
 
 from common.models.authentication_directory import AuthenticationDirectory, Mapping
@@ -215,11 +215,11 @@ class AuthenticationDirectoryQuery(graphene.ObjectType):
     @security_administrator_required
     async def resolve_auth_dir(self, info, creator, id=None):
         if not id:
-            raise SimpleError(_('Specify id.'))
+            raise SilentError(_('Specify id.'))
 
         auth_dir = await AuthenticationDirectory.get_object(id)
         if not auth_dir:
-            raise SimpleError(_('No such Authentication Directory.'))
+            raise SilentError(_('No such Authentication Directory.'))
         return AuthenticationDirectoryQuery.instance_to_type(auth_dir)
 
     @security_administrator_required
@@ -274,7 +274,7 @@ class DeleteAuthenticationDirectoryMutation(graphene.Mutation, AuthenticationDir
         await cls.validate(**kwargs)
         auth_dir = await AuthenticationDirectory.get(kwargs['id'])
         if not auth_dir:
-            raise SimpleError(_('No such Authentication Directory.'))
+            raise SilentError(_('No such Authentication Directory.'))
         status = await auth_dir.soft_delete(creator=creator)
         return DeleteAuthenticationDirectoryMutation(ok=status)
 
@@ -436,10 +436,7 @@ class SyncAuthenticationDirectoryGroupUsers(graphene.Mutation):
     async def mutate(self, _info, auth_dir_id, sync_data, **kwargs):
         auth_dir = await AuthenticationDirectory.get(auth_dir_id)
         if not auth_dir:
-            raise SimpleError(_('No such Authentication Directory.'))
-        # # TODO: Костыль для фронта
-        # sync_data['group_ad_cn'] = sync_data['ad_search_cn']
-        # sync_data.pop('ad_search_cn')
+            raise SilentError(_('No such Authentication Directory.'))
         await auth_dir.synchronize(sync_data)
         return SyncAuthenticationDirectoryGroupUsers(ok=True)
 
@@ -457,7 +454,7 @@ class SyncExistingAuthenticationDirectoryGroupUsers(graphene.Mutation):
     async def mutate(self, info, auth_dir_id, group_id, **kwargs):
         auth_dir = await AuthenticationDirectory.get(auth_dir_id)
         if not auth_dir:
-            raise SimpleError(_('No such Authentication Directory.'))
+            raise SilentError(_('No such Authentication Directory.'))
         await auth_dir.synchronize_group(group_id)
         return SyncAuthenticationDirectoryGroupUsers(ok=True)
 

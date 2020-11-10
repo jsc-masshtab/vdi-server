@@ -209,9 +209,10 @@ class Controller(AbstractSortableStatusModel, VeilModel):
         if controller_kwargs.get('token'):
             controller_kwargs.pop('token')
         # Протоколируем результат операции
-        msg = _('Update controller {}: {}.').format(
-            updated_controller.verbose_name,
-            controller_is_ok)
+        if controller_is_ok:
+            msg = _('Controller {} has been successfully updated.').format(self.verbose_name)
+        else:
+            msg = _('Controller {} update failed.').format(self.verbose_name)
         await system_logger.info(msg, description=str(controller_kwargs), user=creator, entity=self.entity)
         return updated_controller
 

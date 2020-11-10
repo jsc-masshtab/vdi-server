@@ -62,8 +62,11 @@ export class PoolAddComponent {
       if (group.controls['total_size'].value < group.controls['initial_size'].value) {
         return { maxLessInitial: true };
       }
-      if (group.controls['increase_step'].value > group.controls['reserve_size'].value) {
-        return { freeVmsMoreReserve: true };
+      if (group.controls['total_size'].value < group.controls['increase_step'].value) {
+        return { IncreaseLessMax: true };
+      }
+      if (group.controls['total_size'].value < group.controls['reserve_size'].value) {
+        return { ReserveLessMax: true };
       }
     };
   }
@@ -88,7 +91,7 @@ export class PoolAddComponent {
       template_id: ['', Validators.required],
       vm_name_template: ['', [Validators.required, Validators.pattern(/^([a-zA-Z]+[a-zA-Z0-9-]*){0,63}$/)]],
       ad_cn_pattern: [''],
-      increase_step: ['', [Validators.required, Validators.min(1)]],
+      increase_step: ['', [Validators.required, Validators.max(200), Validators.min(1)]],
       reserve_size: ['', [Validators.required, Validators.max(200), Validators.min(1)]],
       initial_size: [0, [Validators.required, Validators.max(200), Validators.min(1)]],
       total_size: ['', [Validators.required, Validators.max(10000), Validators.min(1)]],

@@ -198,9 +198,13 @@ class PoolValidator(MutationValidation):
             if automated_pool:
                 total_size = automated_pool.total_size
         if value < 1 or value > total_size:
-            raise ValidationError(_('Increase step must be positive and less or equal to total_size.').
-                                  format(total_size))
+            raise ValidationError(_('Increase step must be positive and less or equal to total_size.'))
         return value
+
+    @staticmethod
+    async def validate_connection_types(obj_dict, value):
+        if not value:
+            raise ValidationError(_('Connection type cannot be empty.'))
 
 
 class PoolGroupType(graphene.ObjectType):

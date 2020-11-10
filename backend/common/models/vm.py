@@ -92,6 +92,14 @@ class Vm(VeilModel):
         vm_pool = await self.pool
         return await ControllerModel.get(vm_pool.controller)
 
+    @property
+    async def vm_client(self):
+        """Клиент с сущностью domain на ECP VeiL."""
+        vm_controller = await self.controller
+        if not vm_controller.veil_client:
+            return
+        return vm_controller.veil_client.domain(domain_id=self.id_str)
+
     # ----- ----- ----- ----- ----- ----- -----
 
     @classmethod
@@ -193,13 +201,14 @@ class Vm(VeilModel):
         vm_ids = [str(vm_id) for (vm_id,) in vm_ids_data]
         return vm_ids
 
-    @staticmethod
-    def ready_to_connect(**info) -> bool:
-        """Checks parameters indicating availability for connection."""
-        # TODO: сейчас не используется?
-        power_state = info.get('user_power_state', 0)
-        remote_access = info.get('remote_access', False)
-        return power_state != 3 or not remote_access
+    # Deprecated 10.11.2020
+    # @staticmethod
+    # def ready_to_connect(**info) -> bool:
+    #     """Checks parameters indicating availability for connection."""
+    #     # TODO: сейчас не используется?
+    #     power_state = info.get('user_power_state', 0)
+    #     remote_access = info.get('remote_access', False)
+    #     return power_state != 3 or not remote_access
 
     @staticmethod
     async def copy(verbose_name: str, domain_id: str, datapool_id: str, controller_id,
@@ -326,6 +335,16 @@ class Vm(VeilModel):
         return events_count
 
     # Удаленные действия над ВМ - новый код
+
+    async def get_veil_entity(self):
+        """Возвращает сущность подключения на VeiL ECP."""
+        domain_entity = await self.vm_client
+        # Отсутствующий клиент == проблемы с подключением к ECP VeiL
+        if not domain_entity:
+            raise AssertionError('No active veil client.')
+        await domain_entity.info()
+        return domain_entity
+
     async def action(self, action_name: str, force: bool = False):
         """Пересылает команду управления ВМ на ECP VeiL."""
         # TODO: проверить есть ли вообще такое действие в допустимых?
@@ -336,57 +355,29 @@ class Vm(VeilModel):
         veil_domain = vm_controller.veil_client.domain(domain_id=self.id_str)
         domain_action = getattr(veil_domain, action_name)
         action_response = await domain_action(force=force)
-        if not action_response.success:
-            raise ValueError(_('VeiL domain request error.'))
-        # TODO: метод ожидания задачи
-        action_task = action_response.task
-        task_completed = False
-        while not task_completed:
-            await asyncio.sleep(VEIL_OPERATION_WAITING)
-            task_completed = await action_task.finished
-        task_success = await action_task.success
+        # Была установлена задача. Необходимо дождаться ее выполнения.
+        await self.task_waiting(action_response.task)
+        # Если задача выполнена с ошибкой - прерываем выполнение
+        task_success = await action_response.task.success
+        if not task_success:
+            raise ValueError('Remote task finished with error.')
         return task_success
-
-    @property
-    async def vm_client(self):
-        """Клиент с сущностью domain на ECP VeiL."""
-        vm_controller = await self.controller
-        if not vm_controller.veil_client:
-            return
-        return vm_controller.veil_client.domain(domain_id=self.id_str)
-
-    # TODO: reset
-    # TODO: resume
 
     async def start(self, creator='system'):
         """Включает ВМ - Пересылает start для ВМ на ECP VeiL."""
-        domain_entity = await self.vm_client
-        if not domain_entity:
-            return
-        domain_response = await domain_entity.info()
-        if not domain_response.success:
-            raise ValueError(_('VeiL domain request error.'))
-
+        domain_entity = await self.get_veil_entity()
         if not domain_entity.powered:
-            # await system_logger.info(_('Powering on {}').format(self.verbose_name), entity=self.entity)
             task_success = await self.action('start')
             await system_logger.info(_('VM {} is powered.').format(self.verbose_name), user=creator, entity=self.entity)
             return task_success
 
     async def shutdown(self, creator='system', force=False):
         """Выключает ВМ - Пересылает shutdown для ВМ на ECP VeiL."""
-        domain_entity = await self.vm_client
-        if not domain_entity:
-            return
-        domain_response = await domain_entity.info()
-        if not domain_response.success:
-            raise ValueError(_('VeiL domain request error.'))
-
+        domain_entity = await self.get_veil_entity()
         if domain_entity.power_state == VmPowerState.OFF:
             await system_logger.info(_('VM {} already shutdown.').format(self.verbose_name), user=creator,
                                      entity=self.entity)
         else:
-            # await system_logger.info(_('Powering off {}').format(self.verbose_name), entity=self.entity)
             task_success = await self.action('shutdown', force=force)
 
             if force:
@@ -399,13 +390,7 @@ class Vm(VeilModel):
 
     async def reboot(self, creator='system', force=False):
         """Перезагружает ВМ - Пересылает reboot для ВМ на ECP VeiL."""
-        domain_entity = await self.vm_client
-        if not domain_entity:
-            return
-        domain_response = await domain_entity.info()
-        if not domain_response.success:
-            raise ValueError(_('VeiL domain request error.'))
-
+        domain_entity = await self.get_veil_entity()
         if domain_entity.power_state == VmPowerState.OFF:
             raise SimpleError(_('VM {} is shutdown. Please power this.').format(self.verbose_name), user=creator,
                               entity=self.entity)
@@ -423,13 +408,7 @@ class Vm(VeilModel):
 
     async def suspend(self, creator='system'):
         """Ставит на паузу ВМ - Пересылает suspend для ВМ на ECP VeiL."""
-        domain_entity = await self.vm_client
-        if not domain_entity:
-            return
-        domain_response = await domain_entity.info()
-        if not domain_response.success:
-            raise ValueError(_('VeiL domain request error.'))
-
+        domain_entity = await self.get_veil_entity()
         if domain_entity.powered:
             # await system_logger.info(_('Suspending {}').format(self.verbose_name), entity=self.entity)
             task_success = await self.action('suspend')
@@ -440,155 +419,116 @@ class Vm(VeilModel):
             raise SimpleError(_('VM {} is shutdown. Please power this.').format(self.verbose_name), user=creator,
                               entity=self.entity)
 
+    async def enable_remote_access(self):
+        """Включает удаленный доступ на VM при необходимости."""
+        domain_entity = await self.get_veil_entity()
+        if domain_entity.remote_access:
+            return True
+        # Удаленный доступ выключен, нужно включить и ждать
+        action_response = await domain_entity.enable_remote_access()
+        # Ожидаем выполнения задачи на VeiL
+        if action_response.status_code == 202:
+            # Была установлена задача. Необходимо дождаться ее выполнения.
+            await self.task_waiting(action_response.task)
+            # Если задача выполнена с ошибкой - прерываем выполнение
+            task_success = await action_response.task.success
+            if not task_success:
+                raise ValueError('Remote task finished with error.')
+        await system_logger.info(message=_('Remote access enabled.'), entity=self.entity,
+                                 description='VM {}'.format(self.verbose_name))
+        return True
+
+    async def qemu_guest_agent_waiting(self):
+        """Ожидает активации гостевого агента."""
+        domain_entity = await self.get_veil_entity()
+        while not domain_entity.guest_agent.qemu_state:
+            await asyncio.sleep(VEIL_OPERATION_WAITING)
+            await domain_entity.info()
+        return True
+
+    async def set_hostname(self):
+        """Попытка задать hostname.
+
+        Т.к. определение hostname гостевым агентом работает нестабильно, то игнорируем результат
+        """
+        # Прежде чем проверять hostname нужно дождаться активации гостевого агента
+        await self.qemu_guest_agent_waiting()
+        # Если гостевой агент активировался - задаем имя
+        domain_entity = await self.get_veil_entity()
+        if str(domain_entity.hostname).upper() != str(self.verbose_name).upper():
+            action_response = await domain_entity.set_hostname(hostname=self.verbose_name)
+            # Ожидаем выполнения задачи на VeiL
+            if action_response.status_code == 202:
+                await self.task_waiting(action_response.task)
+        return True
+
+    async def include_in_ad_group(self, active_directory_obj: AuthenticationDirectory, ad_cn_pattern: str):
+        """Включить в 1 или несколько групп (контейнеров) в AD.
+
+        Работает только для предварительно заведенной ВМ при установленных компонентах RSAT.
+        """
+        # Прежде чем заводить в группу мы должны дождаться активации гостевого агента
+        await self.qemu_guest_agent_waiting()
+        # Если дождались - можно заводить
+        domain_entity = await self.get_veil_entity()
+        already_in_domain = await domain_entity.in_ad if domain_entity.os_windows else True
+        if active_directory_obj and domain_entity.os_windows and not already_in_domain:
+            await self.qemu_guest_agent_waiting()
+            action_response = await domain_entity.add_to_ad_group(self.verbose_name,
+                                                                  active_directory_obj.service_username,
+                                                                  active_directory_obj.password,
+                                                                  ad_cn_pattern)
+            await self.task_waiting(action_response.task)
+            # Если задача выполнена с ошибкой - прерываем выполнение
+            task_success = await action_response.task.success
+            if not task_success:
+                await system_logger.error(_('VM {} domain container including task failed.').format(self.verbose_name),
+                                          description=action_response.task.error_message)
+                raise ValueError
+            return True
+        return False
+
+    async def include_in_ad(self, active_directory_obj: AuthenticationDirectory):
+        """Вводит в домен.
+
+        Т.к. гостевой агент некорректно показывает hostname ВМ, то одновременное назначение и заведение не отработает.
+        """
+        # Прежде чем заводить в домен мы должны дождаться активации гостевого агента
+        await self.qemu_guest_agent_waiting()
+        # Если дождались - можно заводить
+        domain_entity = await self.get_veil_entity()
+        already_in_domain = await domain_entity.in_ad if domain_entity.os_windows else True
+        if active_directory_obj and domain_entity.os_windows and not already_in_domain:
+            action_response = await domain_entity.add_to_ad(domain_name=active_directory_obj.domain_name,
+                                                            login=active_directory_obj.service_username,
+                                                            password=active_directory_obj.password)
+            await self.task_waiting(action_response.task)
+            # Если задача выполнена с ошибкой - прерываем выполнение
+            task_success = await action_response.task.success
+            if not task_success:
+                await system_logger.error(_('VM {} domain including task failed.').format(self.verbose_name),
+                                          description=action_response.task.error_message)
+                raise ValueError
+            return True
+        return False
+
     async def prepare(self, active_directory_obj: AuthenticationDirectory = None, ad_cn_pattern: str = None):
         """Check that domain remote-access is enabled and domain is powered on.
 
         Вся процедура должна продолжаться не более 10 минут для 1 ВМ.
         """
-        # TODO: обработка ошибок ответов VeiL
-        # TODO: задача может завершиться с ошибкой
-        # TODO: записать назначенный hostname в БД, если он успешно назначен?
-        # По ходу выполнения операций в список будут дописываться значения из которых соберется итоговый комментарий
-        description_list = list()
-        domain_entity = await self.vm_client
-        if not domain_entity:
-            return
-        # Получаем состояние параметров ВМ
-        domain_response = await domain_entity.info()
-        if not domain_response.success:
-            raise ValueError(_('VeiL domain request error.'))
+        # Ref at 10.11.2020
 
-        # Проверяем настройки удаленного доступа
-        if not domain_entity.remote_access:
-            # Удаленный доступ выключен, нужно включить и ждать
-            action_response = await domain_entity.enable_remote_access()
-            await system_logger.debug(_('Enabling remote access for {}.').format(self.verbose_name), entity=self.entity)
-            if not action_response.success:
-                # Вернуть исключение?
-                raise ValueError(_('VeiL domain request error.'))
-            if action_response.status_code == 200:
-                # Задача не встала в очередь, а выполнилась немедленно. Такого не должно быть.
-                raise ValueError(_('Task has`t been created.'))
-            if action_response.status_code == 202:
-                # Была установлена задача. Необходимо дождаться ее выполнения.
-                # TODO: метод ожидания задачи
-                action_task = action_response.task
-                task_completed = False
-                while not task_completed:
-                    await asyncio.sleep(VEIL_OPERATION_WAITING)
-                    task_completed = await action_task.finished
-
-                # Если задача выполнена с ошибкой - прерываем выполнение
-                task_success = await action_task.success
-                if not task_success:
-                    raise ValueError(
-                        _('VM remote access task {} finished with error.').format(action_task.api_object_id))
-
-                # Обновляем параметры ВМ
-                await domain_entity.info()
-            description_list.append(_('Remote access enabled.'))
-
-        # Включаем виртуальную машину. Если машина не включится - не активируется гостевой агент
+        await self.enable_remote_access()
         await self.start()
-        await domain_entity.info()
+        await self.set_hostname()
+        await self.include_in_ad(active_directory_obj)
+        await self.include_in_ad_group(active_directory_obj, ad_cn_pattern)
 
-        # TODO: метод ожидания задачи
-        # Ждем активацию гостевого агента
-        while not domain_entity.guest_agent.qemu_state:
-            await system_logger.debug(_('Waiting guest agent activation for {}.').format(self.verbose_name),
-                                      entity=self.entity)
-            await asyncio.sleep(VEIL_OPERATION_WAITING)
-            # Обновляем параметры ВМ
-            await domain_entity.info()
-
-        await system_logger.debug('\n\nhostname: {}, verbose_name: {}\n\n'.format(domain_entity.hostname, self.verbose_name))
-        # Задание hostname
-        if domain_entity.hostname != self.verbose_name:
-            await system_logger.debug(_('Setting hostname for {}.').format(self.verbose_name), entity=self.entity)
-            action_response = await domain_entity.set_hostname(hostname=self.verbose_name)
-            # TODO: метод ожидания задачи
-            action_task = action_response.task
-            task_completed = False
-            while not task_completed:
-                await asyncio.sleep(VEIL_OPERATION_WAITING)
-                task_completed = await action_task.finished
-
-            # Если задача выполнена с ошибкой - прерываем выполнение
-            task_success = await action_task.success
-            if not task_success:
-                raise ValueError(
-                    _('VM hostname setting task {} finished with error.').format(action_task.api_object_id))
-
-            # Обновляем параметры ВМ
-            await domain_entity.info()
-            description_list.append(_('Hostname {} has been set.').format(self.verbose_name))
-
-        # Ждем активацию гостевого агента
-        while not domain_entity.guest_agent.qemu_state:
-            await system_logger.debug(_('Waiting guest agent activation for {}.').format(self.verbose_name),
-                                      entity=self.entity)
-            await asyncio.sleep(VEIL_OPERATION_WAITING)
-            # Обновляем параметры ВМ
-            await domain_entity.info()
-
-        # Заведение в домен
-        already_in_domain = await domain_entity.in_ad if domain_entity.os_windows else False
-        if active_directory_obj and domain_entity.os_windows and not already_in_domain:
-            await system_logger.debug(_('Adding {} to domain.').format(self.verbose_name), entity=self.entity)
-            action_response = await domain_entity.add_to_ad(domain_name=active_directory_obj.domain_name,
-                                                            login=active_directory_obj.service_username,
-                                                            password=active_directory_obj.password)
-            # TODO: метод ожидания задачи
-            action_task = action_response.task
-            task_completed = False
-            while not task_completed:
-                await asyncio.sleep(VEIL_OPERATION_WAITING)
-                task_completed = await action_task.finished
-
-            # Если задача выполнена с ошибкой - прерываем выполнение
-            task_success = await action_task.success
-            if not task_success:
-                # TODO: возможно первая ошибка нас не интересует
-                await system_logger.error(_('VM {} domain including task failed.').format(self.verbose_name),
-                                          description=action_task.error_message)
-                raise ValueError(
-                    _('VM domain include task {} finished with error.').format(action_task.api_object_id))
-
-            await domain_entity.info()
-
-            # Ждем активацию гостевого агента
-            while not domain_entity.guest_agent.qemu_state:
-                await asyncio.sleep(VEIL_OPERATION_WAITING)
-                await domain_entity.info()
-
-            description_list.append(
-                _('VM has been added to Windows domain {}.').format(active_directory_obj.domain_name))
-
-            # Заводим в контейнер в Active Directory
-            if ad_cn_pattern:
-                action_response = await domain_entity.add_to_ad_group(self.verbose_name,
-                                                                      active_directory_obj.service_username,
-                                                                      active_directory_obj.password,
-                                                                      ad_cn_pattern)
-                # Ожидаем выполнения задачи
-                action_task = action_response.task
-                task_completed = False
-                while not task_completed:
-                    await asyncio.sleep(VEIL_OPERATION_WAITING)
-                    task_completed = await action_task.finished
-
-                # Если задача выполнена с ошибкой - прерываем выполнение
-                task_success = await action_task.success
-                if not task_success:
-                    raise ValueError(
-                        _('VM domain container adding task {} finished with error.').format(action_task.api_object_id))
-                # Добавляем в список отработанных действий
-                description_list.append(
-                    _('VM has been added to Windows domain container(s) {}.').format(ad_cn_pattern))
         # Протоколируем успех
         msg = _('VM {} has been prepared.').format(self.verbose_name)
-        description = ', '.join(description_list)
-        await system_logger.info(message=msg, entity=self.entity, description=description)
+        await system_logger.info(message=msg, entity=self.entity)
+        return True
 
     async def prepare_with_timeout(self, active_directory_obj: AuthenticationDirectory = None, ad_cn_pattern: str = None):
         """Подготовка ВМ с ограничением по времени."""

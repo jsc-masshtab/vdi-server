@@ -19,7 +19,7 @@ import { Subscription } from 'rxjs';
 export class DatapoolsComponent extends DetailsMove implements OnInit, OnDestroy {
 
   @Input() filter: object
-  
+
   public datapools: object[] = [];
   public collection: object[] = [
     {
@@ -37,13 +37,13 @@ export class DatapoolsComponent extends DetailsMove implements OnInit, OnDestroy
       sort: true
     },
     {
-      title: 'Свободно (Мб)',
+      title: 'Свободно (МБ)',
       property: 'free_space',
       type: 'string',
       sort: true
     },
     {
-      title: 'Занято (Мб)',
+      title: 'Занято (МБ)',
       property: 'used_space',
       type: 'string',
       sort: true
