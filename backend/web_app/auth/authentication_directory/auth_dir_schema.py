@@ -454,7 +454,7 @@ class SyncExistingAuthenticationDirectoryGroupUsers(graphene.Mutation):
     async def mutate(self, info, auth_dir_id, group_id, **kwargs):
         auth_dir = await AuthenticationDirectory.get(auth_dir_id)
         if not auth_dir:
-            raise SimpleError(_('No such Authentication Directory.'))
+            raise SilentError(_('No such Authentication Directory.'))
         await auth_dir.synchronize_group(group_id)
         return SyncAuthenticationDirectoryGroupUsers(ok=True)
 
