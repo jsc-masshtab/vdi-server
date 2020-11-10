@@ -153,7 +153,7 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
       type: 'string'
     },
     {
-      title: 'Количество создаваемых ВМ',
+      title: 'Шаг расширения пула',
       property: 'increase_step',
       type: 'string',
       edit: 'changeAutomatedPoolIncreaseStep'
