@@ -1089,6 +1089,14 @@ msgstr "Контроллер недоступен."
 msgid "VM does not support RDP."
 msgstr "Виртуальная машина не поддерживает RDP."
 
+#: ../web_app/thin_client_api/handlers.py:221
+msgid "User {} executed action {} on VM {}."
+msgstr "Пользователь {} выполнил действие {} над ВМ {}."
+
+#: ../web_app/thin_client_api/handlers.py:223
+msgid "User {} failed to execute action {} on VM {}."
+msgstr "Пользователю {} не удалось выполнить действие {} над ВМ {}."
+
 #: ../ws_listener_worker/resources_monitor.py:101
 msgid "{} is connected: {}."
 msgstr "{} подключен: {}."
