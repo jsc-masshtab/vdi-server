@@ -8,7 +8,7 @@ import { IParams } from 'types';
 export class TemplatesService {
 
     constructor(private service: Apollo) { }
-    
+
     public params: IParams = { // для несбрасывания параметров сортировки при всех обновлениях
         spin: true,
         nameSort: undefined
@@ -68,13 +68,8 @@ export class TemplatesService {
                                 tablet
                                 ha_enabled
                                 disastery_enabled
-                                guest_agent
                                 remote_access
                                 spice_stream
-                                vmachine_infs_count
-                                vdisks_count
-                                luns_count
-                                vfunctions_count
                                 user_power_state
                                 boot_type
                                 start_on_boot

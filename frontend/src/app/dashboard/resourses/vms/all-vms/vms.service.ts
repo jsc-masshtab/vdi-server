@@ -20,6 +20,7 @@ export class VmsService {
                 verbose_name
                 pool_name
                 status
+                user_power_state
                 id
                 controller {
                     id
@@ -37,10 +38,7 @@ export class VmsService {
                         verbose_name
                         status
                         pool_name
-                        template{
-                            id
-                            verbose_name
-                        }
+                        user_power_state
                     }
                 }
             }`
@@ -72,10 +70,6 @@ export class VmsService {
                                 guest_agent
                                 remote_access
                                 spice_stream
-                                vmachine_infs_count
-                                vdisks_count
-                                luns_count
-                                vfunctions_count
                                 user_power_state
                                 boot_type
                                 start_on_boot
