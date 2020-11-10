@@ -203,15 +203,27 @@ class VmAction(BaseHandler, ABC):
     """Пересылка действия над ВМ на ECP VeiL."""
 
     async def post(self, pool_id, action):
+
+        user = await self.get_user_model_instance()
+        vm = await BaseHandler.validate_and_get_vm(user, pool_id)
+
         try:
             force = self.args.get('force', False)
-            user = await self.get_user_model_instance()
-            vm = await BaseHandler.validate_and_get_vm(user, pool_id)
             # Все возможные проверки закончились - приступаем.
-            await vm.action(action_name=action, force=force)
+            is_action_successful = await vm.action(action_name=action, force=force)
             response = {'data': 'success'}
         except AssertionError as vm_action_error:
             response = {'errors': [{'message': str(vm_action_error)}]}
+            is_action_successful = False
+
+        # log action
+        if is_action_successful:
+            msg = _('User {} executed action {} on VM {}.')
+        else:
+            msg = _('User {} failed to execute action {} on VM {}.')
+        await system_logger.info(msg.format(user.username, action, vm.verbose_name),
+                                 entity=vm.entity, user=user.username)
+
         return await self.log_finish(response)
 
 
