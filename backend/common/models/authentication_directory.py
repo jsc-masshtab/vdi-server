@@ -180,7 +180,8 @@ class AuthenticationDirectory(VeilModel, AbstractSortableStatusModel):
 
         creator = update_dict.pop('creator')
         desc = str(update_dict)
-        await system_logger.info(_('Values for auth directory is updated.'), entity=update_type.entity, description=desc, user=creator)
+        await system_logger.info(_('Values for auth directory is updated.'), entity=update_type.entity,
+                                 description=desc, user=creator)
 
         await update_type.test_connection()
         return update_type

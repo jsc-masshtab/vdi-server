@@ -320,13 +320,17 @@ class UpdateAuthenticationDirectoryMutation(graphene.Mutation, AuthenticationDir
     async def mutate(cls, root, info, creator, **kwargs):
         await cls.validate(**kwargs)
         auth_dir = await AuthenticationDirectory.soft_update(kwargs['id'],
-                                                             verbose_name=kwargs.get('verbose_name'), directory_url=kwargs.get('directory_url'),
-                                                             connection_type=kwargs.get('connection_type'), description=kwargs.get('description'),
-                                                             directory_type=kwargs.get('directory_type'), domain_name=kwargs.get('domain_name'),
+                                                             verbose_name=kwargs.get('verbose_name'),
+                                                             directory_url=kwargs.get('directory_url'),
+                                                             connection_type=kwargs.get('connection_type'),
+                                                             description=kwargs.get('description'),
+                                                             directory_type=kwargs.get('directory_type'),
+                                                             domain_name=kwargs.get('domain_name'),
                                                              subdomain_name=kwargs.get('subdomain_name'),
                                                              service_username=kwargs.get('service_username'),
-                                                             service_password=kwargs.get('service_password'), admin_server=kwargs.get('admin_server'),
-                                                             kdc_urls=kwargs.get('kdc_urls'), sso=kwargs.get('sso'), creator=creator
+                                                             service_password=kwargs.get('service_password'),
+                                                             admin_server=kwargs.get('admin_server'),
+                                                             creator=creator
                                                              )
         return UpdateAuthenticationDirectoryMutation(
             auth_dir=AuthenticationDirectoryType(**auth_dir.__values__),
