@@ -9,13 +9,13 @@ from sqlalchemy import Enum as AlchemyEnum
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.sql import func
 
-
 from web_app.front_ws_api.subscription_sources import VDI_TASKS_SUBSCRIPTION
+
+from common.models.auth import Entity
 
 from common.database import db
 from common.veil.veil_redis import REDIS_CLIENT, INTERNAL_EVENTS_CHANNEL
-from common.veil.veil_gino import AbstractSortableStatusModel
-
+from common.veil.veil_gino import AbstractSortableStatusModel, EntityType
 from common.languages import lang_init
 
 
@@ -74,13 +74,15 @@ class Task(db.Model, AbstractSortableStatusModel):
     def form_user_friendly_text(self, entity_name):
 
         if self.task_type == PoolTaskType.CREATING_POOL:
-            return _('Creation of pool {}.'.format(entity_name))
+            return _('Creation of pool {}.').format(entity_name)
         elif self.task_type == PoolTaskType.EXPANDING_POOL:
-            return _('Expanding of pool {}.'.format(entity_name))
+            return _('Expanding of pool {}.').format(entity_name)
         elif self.task_type == PoolTaskType.DELETING_POOL:
-            return _('Deleting of pool {}.'.format(entity_name))
+            return _('Deleting of pool {}.').format(entity_name)
         elif self.task_type == PoolTaskType.DECREASING_POOL:
-            return _('Decreasing of pool {}.'.format(entity_name))
+            return _('Decreasing of pool {}.').format(entity_name)
+        elif self.task_type == PoolTaskType.VM_PREPARE:
+            return _('Preparation of vm {}.').format(entity_name)
         else:
             return ''
 
@@ -95,6 +97,7 @@ class Task(db.Model, AbstractSortableStatusModel):
         if message is None:
             entity_name = await self.get_associated_entity_name()
             message = self.form_user_friendly_text(entity_name)
+            # print('!!!message: ', message, flush=True)
 
         # datetime data
         if status == TaskStatus.IN_PROGRESS:
@@ -142,9 +145,20 @@ class Task(db.Model, AbstractSortableStatusModel):
     async def get_associated_entity_name(self):
         # Запоминаем имя так как его не будет после удаения пула, например.
         if not hasattr(self, '_associated_entity_name'):
-            from common.models.pool import Pool
-            pool = await Pool.get(self.entity_id)
-            self._associated_entity_name = pool.verbose_name if pool else ''  # noqa
+            # В зависимости от типа сущности узнаем verbose_name
+            # get entity_type
+            self._associated_entity_name = ''
+            entity = await Entity.query.where(Entity.entity_uuid == self.entity_id).gino.first()
+            if entity:
+                if entity.entity_type == EntityType.POOL:
+                    from common.models.pool import Pool
+                    pool = await Pool.get(self.entity_id)
+                    self._associated_entity_name = pool.verbose_name if pool else ''
+
+                elif entity.entity_type == EntityType.VM:
+                    from common.models.vm import Vm
+                    vm = await Vm.get(self.entity_id)
+                    self._associated_entity_name = vm.verbose_name if vm else ''
 
         return self._associated_entity_name
 
@@ -159,9 +173,18 @@ class Task(db.Model, AbstractSortableStatusModel):
     @staticmethod
     async def get_ids_of_tasks_associated_with_controller(controller_id):
 
+        # pool tasks
         from common.models.pool import Pool
-        tasks = await db.select([Task.id]).select_from(Task.join(Pool, Task.entity_id == Pool.id)).where(
+        pool_tasks = await db.select([Task.id]).select_from(Task.join(Pool, Task.entity_id == Pool.id)).where(
             Pool.controller == controller_id).gino.all()
-        tasks = [task_to_cancel[0] for task_to_cancel in tasks]
+        pool_tasks_ids = [task_to_cancel[0] for task_to_cancel in pool_tasks]
 
+        # vm tasks
+        from common.models.vm import Vm
+        vm_tasks = await db.select([Task.id]).select_from(
+            Task.join(Vm, Task.entity_id == Vm.id).join(Pool, Vm.pool_id == Pool.id)).\
+            where(Pool.controller == controller_id).gino.all()
+        vm_tasks_ids = [task_to_cancel[0] for task_to_cancel in vm_tasks]
+
+        tasks = [*pool_tasks_ids, *vm_tasks_ids]
         return tasks

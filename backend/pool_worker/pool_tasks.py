@@ -320,6 +320,7 @@ class PrepareVmTask(AbstractTask):
         super().__init__()
 
     async def do_task(self):
+        # print('!!!PrepareVmTask started', flush=True)
         # Проверить выполняется ли уже задача подготовки этой вм. Запускать еще одну нет смысла и даже вредно.
         vm_prepare_tasks = self._get_related_progressing_tasks()
         if len(vm_prepare_tasks) > 0:

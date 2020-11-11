@@ -13,6 +13,7 @@ from common.veil.veil_gino import EntityType
 
 from common.languages import lang_init
 
+from common.models.vm import Vm
 from common.models.pool import Pool
 from common.models.task import Task, TaskStatus, PoolTaskType
 from common.database import db
@@ -108,21 +109,29 @@ class PoolTaskManager:
     async def resume_tasks(self, controller_id=None, remove_unresumable_tasks=False):
         """
         Анализируем таблицу тасок в бд.
-        Продолжить таски  при соблюдении условий:
-        - У таски должен быть поднят флаг resumable.
-        - статус IN_PROGRESS иили CANCELLED.
+        Продолжить таски  в двух случаях:
+        - У таски должен быть поднят флаг resumable и быть статус CANCELLED
+        - статус IN_PROGRESS
         remove_unresumable_tasks - удалять ли из бд задачи, которые не могут быть возобновлены.
         """
         await system_logger.debug('Resuming tasks')
 
-        # Get tasks to launch
-        where_conditions = [Task.resumable,
-                            ((Task.status == TaskStatus.IN_PROGRESS) | (Task.status == TaskStatus.CANCELLED))]
+        where_conditions = \
+            [(Task.status == TaskStatus.IN_PROGRESS) | (Task.resumable & (Task.status == TaskStatus.CANCELLED))]
         if controller_id:
             where_conditions.append(Pool.controller == controller_id)
 
-        tasks_to_launch = await db.select([Task.id, Task.task_type]).select_from(
+        # Get tasks to launch (Pools)
+        pool_tasks_to_launch = await db.select([Task.id, Task.task_type]).select_from(
             Task.join(Pool, Task.entity_id == Pool.id)).where(and_(*where_conditions)).gino.all()
+
+        # Get tasks to launch (Vms)
+        vm_tasks_to_launch = await db.select([Task.id, Task.task_type]).select_from(
+            Task.join(Vm, Task.entity_id == Vm.id).join(Pool, Vm.pool_id == Pool.id)).\
+            where(and_(*where_conditions)).gino.all()
+
+        tasks_to_launch = [*pool_tasks_to_launch, *vm_tasks_to_launch]
+        # print('!!!tasks_to_launch ', tasks_to_launch, flush=True)
 
         #  Remove all other tasks
         if remove_unresumable_tasks:
@@ -201,6 +210,7 @@ class PoolTaskManager:
 
         # find tasks
         tasks_to_cancel = await Task.get_ids_of_tasks_associated_with_controller(controller_id)
+        # print('!!!tasks_to_cancel', tasks_to_cancel, flush=True)
         # cancel
         task_list = list(self.task_list)  # shallow copy
         for task in task_list:
