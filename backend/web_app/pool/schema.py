@@ -16,7 +16,7 @@ from common.models.auth import User
 from common.models.vm import Vm
 from common.models.controller import Controller
 from common.models.pool import AutomatedPool, StaticPool, Pool
-from common.models.task import PoolTaskType, TaskStatus
+from common.models.task import PoolTaskType, TaskStatus, Task
 
 from common.languages import lang_init
 from common.log.journal import system_logger
@@ -639,10 +639,16 @@ class ExpandPoolMutation(graphene.Mutation, PoolValidator):
 
         # Check if pool already reached its total_size
         autopool = await AutomatedPool.get(pool_id)
+        pool_name = await Pool.select('verbose_name').where(Pool.id == pool_id).gino.scalar()
+
         total_size_reached = await autopool.check_if_total_size_reached()
         if total_size_reached:
-            pool_name = await Pool.select('verbose_name').where(Pool.id == pool_id).gino.scalar()
             raise SilentError(_('Can not expand pool {} because it reached its total_size.').format(pool_name))
+
+        # Check if another task works on this pool
+        tasks = await Task.get_tasks_associated_with_entity(pool_id, TaskStatus.IN_PROGRESS)
+        if tasks:
+            raise SilentError(_('Another task works on pool {}.').format(pool_name))
 
         task_id = await request_to_execute_pool_task(pool_id, PoolTaskType.EXPANDING_POOL,
                                                      ignore_reserve_size=True, wait_for_lock=True)
@@ -1006,9 +1012,12 @@ class PrepareVm(graphene.Mutation):
     @administrator_required
     async def mutate(self, _info, vm_id, **kwargs):
 
-        # Проверить есть ли в таблице task таски выполняющиеся над это вм. Если есть то сообщить фронту ч
-        # что подготовка вм невозможна
-        # will be soon...
+        # Проверить есть ли в таблице task таски выполняющиеся над этой вм. Если есть то сообщить фронту ч
+        # что подготовка вм уже идет
+        tasks = await Task.get_tasks_associated_with_entity(vm_id, TaskStatus.IN_PROGRESS)
+        if tasks:
+            vm = await Vm.get(vm_id)
+            raise SilentError(_('Another task works on VM {}.').format(vm.verbose_name))
 
         await request_to_execute_pool_task(vm_id, PoolTaskType.VM_PREPARE)
         return PrepareVm(ok=True)

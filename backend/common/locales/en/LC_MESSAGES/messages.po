@@ -427,6 +427,10 @@ msgstr "Deleting of pool {}."
 msgid "Decreasing of pool {}."
 msgstr "Decreasing of pool {}."
 
+#: ../common/models/task.py:85
+msgid "Preparation of vm {}."
+msgstr "Preparation of vm {}."
+
 #: ../common/models/task.py:110
 msgid "  Duration: {}."
 msgstr "  Duration: {}."
@@ -978,6 +982,10 @@ msgstr "List of VM should not be empty."
 msgid "VM doesn't belong to specified pool."
 msgstr "VM doesn't belong to specified pool."
 
+#: ../web_app/pool/schema.py:1015
+msgid "Another task works on VM {}."
+msgstr "Another task works on VM {}."
+
 #: ../web_app/pool/schema.py:620
 msgid "Failed to update static pool {}. Name must be unique."
 msgstr "Failed to update static pool {}. Name must be unique."
@@ -985,6 +993,10 @@ msgstr "Failed to update static pool {}. Name must be unique."
 #: ../web_app/pool/schema.py:645
 msgid "Can not expand pool {} because it reached its total_size."
 msgstr "Can not expand pool {} because it reached its total_size."
+
+#: ../web_app/pool/schema.py:651
+msgid "Another task works on pool {}."
+msgstr "Another task works on pool {}."
 
 #: ../web_app/pool/schema.py:709
 msgid "Failed to create automated pool {}."

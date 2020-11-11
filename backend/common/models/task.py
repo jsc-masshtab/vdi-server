@@ -188,3 +188,9 @@ class Task(db.Model, AbstractSortableStatusModel):
 
         tasks = [*pool_tasks_ids, *vm_tasks_ids]
         return tasks
+
+    @staticmethod
+    async def get_tasks_associated_with_entity(entity_id, task_status):
+
+        tasks = await Task.query.where((Task.entity_id == entity_id) & (Task.status == task_status)).gino.all()
+        return tasks

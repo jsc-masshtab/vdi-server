@@ -427,6 +427,10 @@ msgstr "Удаление пула {}."
 msgid "Decreasing of pool {}."
 msgstr "Уменьшение пула {}."
 
+#: ../common/models/task.py:85
+msgid "Preparation of vm {}."
+msgstr "Подготовка ВМ {}."
+
 #: ../common/models/task.py:110
 msgid "  Duration: {}."
 msgstr "  Продолжительность: {}."
@@ -977,6 +981,14 @@ msgstr "Список виртуальных машин не должен быт�
 #: ../web_app/pool/schema.py:592 ../web_app/pool/schema.py:806
 msgid "VM doesn't belong to specified pool."
 msgstr "Виртуальная машина не принадлежит заданному пулу."
+
+#: ../web_app/pool/schema.py:651
+msgid "Another task works on pool {}."
+msgstr "Другая задача выполняется над пулом {}."
+
+#: ../web_app/pool/schema.py:1015
+msgid "Another task works on VM {}."
+msgstr "Другая задача выполняется над ВМ {}."
 
 #: ../web_app/pool/schema.py:620
 msgid "Failed to update static pool {}. Name must be unique."
