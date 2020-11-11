@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2020-11-11 12:55+0300\n"
+"POT-Creation-Date: 2020-11-11 13:13+0300\n"
 "PO-Revision-Date: 2020-07-30 11:25+0300\n"
 "Last-Translator: Emil <emil@emil-pc>\n"
 "Language-Team: Russian\n"
@@ -1105,35 +1105,35 @@ msgstr "{cls}: Контроллер {name} уже отслеживается."
 msgid "{cls}: resource monitor for controller {name} connected."
 msgstr "{cls}: монитор ресурсов для контроллера {name} подключен."
 
-#~ msgid "Update controller {}: {}."
-#~ msgstr "Обновление контроллера {}: {}."
-
-#~ msgid "Enabling remote access for {}."
-#~ msgstr "Включаем удаленный доступ для {}."
-
-#~ msgid "Waiting guest agent activation for {}."
-#~ msgstr "Ожидаем активации гостевого агента для {}."
-
-#~ msgid "Setting hostname for {}."
-#~ msgstr "Задаем hostname для {}."
-
-#~ msgid "VM hostname setting task {} finished with error."
-#~ msgstr "Задача {} установки hostname ВМ завершилась с ошибкой."
-
-#~ msgid "Hostname {} has been set."
-#~ msgstr "Задан hostname {}."
-
-#~ msgid "Adding {} to domain."
-#~ msgstr "Вводим {} в домен."
-
-#~ msgid "VM domain include task {} finished with error."
-#~ msgstr "Задача {} ввода ВМ в домен завершилась с ошибкой."
-
-#~ msgid "VM has been added to Windows domain {}."
-#~ msgstr "ВМ {} заведена в Windows домен {}."
+#~ msgid "VM has been added to Windows domain container(s) {}."
+#~ msgstr "ВМ включена в группы {} Windows домена."
 
 #~ msgid "VM domain container adding task {} finished with error."
 #~ msgstr "Задача {} включения ВМ в группы домена завершилась с ошибкой."
 
-#~ msgid "VM has been added to Windows domain container(s) {}."
-#~ msgstr "ВМ включена в группы {} Windows домена."
+#~ msgid "VM has been added to Windows domain {}."
+#~ msgstr "ВМ {} заведена в Windows домен {}."
+
+#~ msgid "VM domain include task {} finished with error."
+#~ msgstr "Задача {} ввода ВМ в домен завершилась с ошибкой."
+
+#~ msgid "Adding {} to domain."
+#~ msgstr "Вводим {} в домен."
+
+#~ msgid "Hostname {} has been set."
+#~ msgstr "Задан hostname {}."
+
+#~ msgid "VM hostname setting task {} finished with error."
+#~ msgstr "Задача {} установки hostname ВМ завершилась с ошибкой."
+
+#~ msgid "Setting hostname for {}."
+#~ msgstr "Задаем hostname для {}."
+
+#~ msgid "Waiting guest agent activation for {}."
+#~ msgstr "Ожидаем активации гостевого агента для {}."
+
+#~ msgid "Enabling remote access for {}."
+#~ msgstr "Включаем удаленный доступ для {}."
+
+#~ msgid "Update controller {}: {}."
+#~ msgstr "Обновление контроллера {}: {}."

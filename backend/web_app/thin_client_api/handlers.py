@@ -168,7 +168,7 @@ class PoolGetVm(BaseHandler, ABC):
         if remote_protocol == PoolModel.PoolConnectionTypes.RDP.name or \
                 remote_protocol == PoolModel.PoolConnectionTypes.NATIVE_RDP.name:
             try:
-                vm_address = veil_domain.guest_agent.first_ipv4_ip
+                vm_address = veil_domain.first_ipv4
                 if vm_address is None:
                     raise RuntimeError
                 vm_port = 3389  # default rdp port
