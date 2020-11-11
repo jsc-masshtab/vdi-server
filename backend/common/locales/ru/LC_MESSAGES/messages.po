@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2020-11-11 11:46+0300\n"
+"POT-Creation-Date: 2020-11-11 12:55+0300\n"
 "PO-Revision-Date: 2020-07-30 11:25+0300\n"
 "Last-Translator: Emil <emil@emil-pc>\n"
 "Language-Team: Russian\n"
@@ -411,23 +411,23 @@ msgstr "Добавление ВМ в пул {} закончилось с оши�
 msgid "Required: {}, created: {}."
 msgstr "Необходимо: {}, создано: {}."
 
-#: ../common/models/task.py:76
+#: ../common/models/task.py:77
 msgid "Creation of pool {}."
 msgstr "Создание пула {}."
 
-#: ../common/models/task.py:78
+#: ../common/models/task.py:79
 msgid "Expanding of pool {}."
 msgstr "Расширение пула {}."
 
-#: ../common/models/task.py:80
+#: ../common/models/task.py:81
 msgid "Deleting of pool {}."
 msgstr "Удаление пула {}."
 
-#: ../common/models/task.py:82
+#: ../common/models/task.py:83
 msgid "Decreasing of pool {}."
 msgstr "Уменьшение пула {}."
 
-#: ../common/models/task.py:109
+#: ../common/models/task.py:110
 msgid "  Duration: {}."
 msgstr "  Продолжительность: {}."
 
@@ -544,7 +544,7 @@ msgstr "ВМ {} приостановлена."
 msgid "Remote access enabled."
 msgstr "Удаленный доступ включен."
 
-#: ../common/models/vm.py:476
+#: ../common/models/vm.py:476 ../common/models/vm.py:507
 msgid "VM {} failed to receive DHCP ip address."
 msgstr "VM {} не удалось получить IP-адрес по DHCP."
 
@@ -552,15 +552,15 @@ msgstr "VM {} не удалось получить IP-адрес по DHCP."
 msgid "VM {} domain container including task failed."
 msgstr "Ошибка включения ВМ {} в группу домена активного каталога."
 
-#: ../common/models/vm.py:514
+#: ../common/models/vm.py:519
 msgid "VM {} domain including task failed."
 msgstr "Ошибка включения ВМ {} в домен."
 
-#: ../common/models/vm.py:534
+#: ../common/models/vm.py:539
 msgid "VM {} has been prepared."
 msgstr "ВМ {} подготовлена."
 
-#: ../common/models/vm.py:543
+#: ../common/models/vm.py:548
 msgid "{} preparation cancelled by timeout."
 msgstr "подготовка {} отменена по таймауту."
 
@@ -651,25 +651,29 @@ msgstr "Ошибка redis-задачи."
 msgid "Field \"{}\" - {}."
 msgstr "Поле \"{}\" - {}."
 
-#: ../pool_worker/pool_tasks.py:143
+#: ../pool_worker/pool_tasks.py:152
 msgid "Pool Creation cancelled."
 msgstr "Создание пула отменено."
 
-#: ../pool_worker/pool_tasks.py:147
+#: ../pool_worker/pool_tasks.py:156
 msgid "Failed to init pool."
 msgstr "Ошибка инициализации пула."
 
-#: ../pool_worker/pool_tasks.py:160
+#: ../pool_worker/pool_tasks.py:169
 msgid "Virtual machine(s) preparation error."
 msgstr "При подготовке виртуальных машин произошла ошибка."
 
-#: ../pool_worker/pool_tasks.py:219
+#: ../pool_worker/pool_tasks.py:230
 msgid "VM creating error."
 msgstr "Ошибка создания ВМ."
 
-#: ../pool_worker/pool_tasks.py:233
+#: ../pool_worker/pool_tasks.py:244
 msgid "VM preparation error."
 msgstr "Ошибка подготовки ВМ."
+
+#: ../pool_worker/pool_tasks.py:326
+msgid "Another task works on this VM."
+msgstr "ВМ заблокирована выполнением другой задачи."
 
 #: ../web_app/app.py:84
 msgid "VDI broker stopped."
@@ -869,7 +873,7 @@ msgstr "адресс `{}` уже используется."
 msgid "token can`t be empty."
 msgstr "токен не может быть пустым."
 
-#: ../web_app/controller/schema.py:67 ../web_app/pool/schema.py:51
+#: ../web_app/controller/schema.py:67 ../web_app/pool/schema.py:50
 msgid "No such controller."
 msgstr "Нет такого контроллера."
 
@@ -913,88 +917,88 @@ msgstr "Неверный параметр сортировки."
 msgid "Journal is exported."
 msgstr "Журнал экспортирован."
 
-#: ../web_app/pool/schema.py:122 ../web_app/pool/schema.py:434
-#: ../web_app/pool/schema.py:455
+#: ../web_app/pool/schema.py:121 ../web_app/pool/schema.py:433
+#: ../web_app/pool/schema.py:454
 msgid "No such pool."
 msgstr "Нет такого пула."
 
-#: ../web_app/pool/schema.py:132
+#: ../web_app/pool/schema.py:131
 msgid "Pool name must contain only characters, digits, _, -."
 msgstr "Имя пула должно содержать только буквы, цифры, _, -."
 
-#: ../web_app/pool/schema.py:143
+#: ../web_app/pool/schema.py:142
 msgid "Template name of VM must contain only characters, digits, -."
 msgstr "Шаблонное имя вм должно содержать только буквы, цифры, -."
 
-#: ../web_app/pool/schema.py:151
+#: ../web_app/pool/schema.py:150
 msgid "Initial number of VM must be in {}-{} interval."
 msgstr "Начальное число виртуальных машин должно быть в интервале {}-{}."
 
-#: ../web_app/pool/schema.py:160
+#: ../web_app/pool/schema.py:159
 msgid "Number of created VM must be in {}-{} interval."
 msgstr "Число создаваемых виртуальных машин должно быть в интервале {}-{}."
 
-#: ../web_app/pool/schema.py:181
+#: ../web_app/pool/schema.py:180
 msgid "Maximal number of created VM can not be less than initial number of VM."
 msgstr "Максимальное число создаваемых виртуальных машин не должно быть меньше начального числа ВМ."
 
-#: ../web_app/pool/schema.py:183
+#: ../web_app/pool/schema.py:182
 msgid "Maximal number of created VM must be in [{} {}] interval."
 msgstr "Максимальное число создаваемых виртуальных машин должно быть в интервале [{} {}]."
 
-#: ../web_app/pool/schema.py:186
+#: ../web_app/pool/schema.py:185
 msgid "Maximal number of created VMs can not be less than current amount of Vms."
 msgstr "Максимальное число создаваемых виртуальных машин не должно быть меньше текущего числа ВМ."
 
-#: ../web_app/pool/schema.py:201
+#: ../web_app/pool/schema.py:200
 msgid "Increase step must be positive and less or equal to total_size."
 msgstr "Шаг увеличения должен быть положительным и меньше или равен общему количеству."
 
-#: ../web_app/pool/schema.py:207
+#: ../web_app/pool/schema.py:206
 msgid "Connection type cannot be empty."
 msgstr "Тип подключения не может быть пустым."
 
-#: ../web_app/pool/schema.py:525
+#: ../web_app/pool/schema.py:524
 msgid "Failed to create static pool {}."
 msgstr "Ошибка создания статического пула {}."
 
-#: ../web_app/pool/schema.py:552
+#: ../web_app/pool/schema.py:551
 msgid "VM {} is already in one of pools."
 msgstr "Виртуальная машина {} уже в одном из пулов."
 
-#: ../web_app/pool/schema.py:566
+#: ../web_app/pool/schema.py:565
 msgid "VM {} has been added to the pool {}."
 msgstr "ВМ {} добавлена в пул {}."
 
-#: ../web_app/pool/schema.py:583 ../web_app/pool/schema.py:797
+#: ../web_app/pool/schema.py:582 ../web_app/pool/schema.py:796
 msgid "List of VM should not be empty."
 msgstr "Список виртуальных машин не должен быть пустым."
 
-#: ../web_app/pool/schema.py:593 ../web_app/pool/schema.py:807
+#: ../web_app/pool/schema.py:592 ../web_app/pool/schema.py:806
 msgid "VM doesn't belong to specified pool."
 msgstr "Виртуальная машина не принадлежит заданному пулу."
 
-#: ../web_app/pool/schema.py:621
+#: ../web_app/pool/schema.py:620
 msgid "Failed to update static pool {}. Name must be unique."
 msgstr "Ошибка редактирования статического пула {}. Имя должно быть уникальным."
 
-#: ../web_app/pool/schema.py:646
+#: ../web_app/pool/schema.py:645
 msgid "Can not expand pool {} because it reached its total_size."
 msgstr "Не удается расширить пул {} т.к. достигнут максимальный размер."
 
-#: ../web_app/pool/schema.py:710
+#: ../web_app/pool/schema.py:709
 msgid "Failed to create automated pool {}."
 msgstr "Ошибка создания автоматического пула {}."
 
-#: ../web_app/pool/schema.py:778
+#: ../web_app/pool/schema.py:777
 msgid "Failed to update automated pool {}. Name must be unique."
 msgstr "Ошибка редактирования автоматического пула {}. Имя должно быть уникальным."
 
-#: ../web_app/pool/schema.py:957
+#: ../web_app/pool/schema.py:956
 msgid "There is no VM {}."
 msgstr "Нет ВМ {}."
 
-#: ../web_app/pool/schema.py:974
+#: ../web_app/pool/schema.py:973
 msgid "User does not have the right to use pool, which has VM."
 msgstr "У пользователя нет прав на использование пула, которому принадлежит ВМ."
 

@@ -323,7 +323,7 @@ class PrepareVmTask(AbstractTask):
         # Проверить выполняется ли уже задача подготовки этой вм. Запускать еще одну нет смысла и даже вредно.
         vm_prepare_tasks = self._get_related_progressing_tasks()
         if len(vm_prepare_tasks) > 0:
-            raise RuntimeError(_('Another task works on this vm'))
+            raise RuntimeError(_('Another task works on this VM.'))
 
         # preparation (код перенесен из pool/schema.py)
         vm = await Vm.get(self.task_model.entity_id)
