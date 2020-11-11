@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2020-11-10 20:27+0300\n"
+"POT-Creation-Date: 2020-11-11 11:46+0300\n"
 "PO-Revision-Date: 2020-07-30 11:25+0300\n"
 "Last-Translator: Emil <emil@emil-pc>\n"
 "Language-Team: Russian\n"
@@ -149,96 +149,96 @@ msgstr "Директория авторизации {} создана."
 msgid "Values for auth directory is updated."
 msgstr "Значения для директории авторизации обновлены."
 
-#: ../common/models/authentication_directory.py:209
+#: ../common/models/authentication_directory.py:210
 msgid "Arguments: {} of group: {}."
 msgstr "Аргументы: {} группы: {}."
 
-#: ../common/models/authentication_directory.py:210
+#: ../common/models/authentication_directory.py:211
 msgid "Mapping for auth directory {} is created."
 msgstr "Отображение для директории авторизации {} создано."
 
-#: ../common/models/authentication_directory.py:233
+#: ../common/models/authentication_directory.py:234
 msgid "New arguments: {} of group: {}."
 msgstr "Новые аргументы: {} группы: {}."
 
-#: ../common/models/authentication_directory.py:234
+#: ../common/models/authentication_directory.py:235
 msgid "Mapping for auth directory {} is updated."
 msgstr "Mapping for auth directory {} is updated."
 
-#: ../common/models/authentication_directory.py:257
-#: ../common/models/authentication_directory.py:461
+#: ../common/models/authentication_directory.py:258
+#: ../common/models/authentication_directory.py:462
 msgid "Authentication directory server {} is down."
 msgstr "Сервер директории авторизации {} не работает."
 
-#: ../common/models/authentication_directory.py:264
+#: ../common/models/authentication_directory.py:265
 msgid "Authentication directory server {} is connected."
 msgstr "Сервер директории авторизации {} подключен."
 
-#: ../common/models/authentication_directory.py:299
+#: ../common/models/authentication_directory.py:300
 msgid "Username must be a string."
 msgstr "Имя пользователя должно быть строкой."
 
-#: ../common/models/authentication_directory.py:328
+#: ../common/models/authentication_directory.py:329
 msgid "Assigning veil groups to {}."
 msgstr "Присвоение групп veil {}."
 
-#: ../common/models/authentication_directory.py:337
+#: ../common/models/authentication_directory.py:338
 msgid "Mappings: {}."
 msgstr "Сопоставления: {}."
 
-#: ../common/models/authentication_directory.py:353
+#: ../common/models/authentication_directory.py:354
 msgid "escaped values: {}."
 msgstr "скрытые значения: {}."
 
-#: ../common/models/authentication_directory.py:354
+#: ../common/models/authentication_directory.py:355
 msgid "role mapping value type: {}."
 msgstr "тип значений отображения роли: {}."
 
-#: ../common/models/authentication_directory.py:363
+#: ../common/models/authentication_directory.py:364
 msgid "User veil groups: {}."
 msgstr "Группы пользователей veil: {}."
 
-#: ../common/models/authentication_directory.py:370
+#: ../common/models/authentication_directory.py:371
 msgid "Attaching user {} to group: {}."
 msgstr "Прикрепление пользователя {} к группе {}."
 
-#: ../common/models/authentication_directory.py:383
-#: ../common/models/authentication_directory.py:394
+#: ../common/models/authentication_directory.py:384
+#: ../common/models/authentication_directory.py:395
 #: ../web_app/tests/test_auth_v2.py:109
 msgid "No authentication directory controllers."
 msgstr "Нет контроллеров директории авторизации."
 
-#: ../common/models/authentication_directory.py:420
+#: ../common/models/authentication_directory.py:421
 msgid "Invalid credentials (ldap): {}."
 msgstr "Неверные учетные данные (ldap): {}."
 
-#: ../common/models/authentication_directory.py:427
+#: ../common/models/authentication_directory.py:428
 msgid "Server down (ldap)."
 msgstr "Сервер не отвечает (ldap)."
 
-#: ../common/models/authentication_directory.py:443
+#: ../common/models/authentication_directory.py:444
 msgid "LDAP username and password can`t be empty."
 msgstr "Имя пользователя и пароль LDAP не могут быть пустыми."
 
-#: ../common/models/authentication_directory.py:456
+#: ../common/models/authentication_directory.py:457
 msgid "Authentication directory server {} has bad auth info."
 msgstr "Не удалось подключиться к серверу директории авторизации {}."
 
-#: ../common/models/authentication_directory.py:523
-#: ../common/models/authentication_directory.py:602
+#: ../common/models/authentication_directory.py:524
+#: ../common/models/authentication_directory.py:603
 msgid "Fail to connect to Authentication Directory. Check service information."
 msgstr "Ошибка подключения к директории авторизации."
 
-#: ../common/models/authentication_directory.py:646
+#: ../common/models/authentication_directory.py:647
 msgid "{} new users synced from Authentication Directory."
 msgstr "{} новых пользователей синхронизировано из директории авторизации."
 
-#: ../common/models/authentication_directory.py:654
+#: ../common/models/authentication_directory.py:655
 #: ../web_app/auth/group_schema.py:180
 msgid "No such Group."
 msgstr "Отсутствует такая группа."
 
-#: ../common/models/authentication_directory.py:656
+#: ../common/models/authentication_directory.py:657
 msgid "Group {} is not synchronized by AD."
 msgstr "Группа {} не синхронизированна с директорией авторизации."
 
@@ -544,19 +544,23 @@ msgstr "ВМ {} приостановлена."
 msgid "Remote access enabled."
 msgstr "Удаленный доступ включен."
 
-#: ../common/models/vm.py:485
+#: ../common/models/vm.py:476
+msgid "VM {} failed to receive DHCP ip address."
+msgstr "VM {} не удалось получить IP-адрес по DHCP."
+
+#: ../common/models/vm.py:490
 msgid "VM {} domain container including task failed."
 msgstr "Ошибка включения ВМ {} в группу домена активного каталога."
 
-#: ../common/models/vm.py:509
+#: ../common/models/vm.py:514
 msgid "VM {} domain including task failed."
 msgstr "Ошибка включения ВМ {} в домен."
 
-#: ../common/models/vm.py:529
+#: ../common/models/vm.py:534
 msgid "VM {} has been prepared."
 msgstr "ВМ {} подготовлена."
 
-#: ../common/models/vm.py:538
+#: ../common/models/vm.py:543
 msgid "{} preparation cancelled by timeout."
 msgstr "подготовка {} отменена по таймауту."
 
@@ -690,8 +694,8 @@ msgstr "Режим отладки включен."
 #: ../web_app/auth/authentication_directory/auth_dir_schema.py:33
 #: ../web_app/auth/authentication_directory/auth_dir_schema.py:222
 #: ../web_app/auth/authentication_directory/auth_dir_schema.py:277
-#: ../web_app/auth/authentication_directory/auth_dir_schema.py:439
-#: ../web_app/auth/authentication_directory/auth_dir_schema.py:457
+#: ../web_app/auth/authentication_directory/auth_dir_schema.py:443
+#: ../web_app/auth/authentication_directory/auth_dir_schema.py:461
 msgid "No such Authentication Directory."
 msgstr "Такая Authentication Directory отсутствует."
 
@@ -1097,35 +1101,35 @@ msgstr "{cls}: Контроллер {name} уже отслеживается."
 msgid "{cls}: resource monitor for controller {name} connected."
 msgstr "{cls}: монитор ресурсов для контроллера {name} подключен."
 
-#~ msgid "VM has been added to Windows domain container(s) {}."
-#~ msgstr "ВМ включена в группы {} Windows домена."
-
-#~ msgid "VM domain container adding task {} finished with error."
-#~ msgstr "Задача {} включения ВМ в группы домена завершилась с ошибкой."
-
-#~ msgid "VM has been added to Windows domain {}."
-#~ msgstr "ВМ {} заведена в Windows домен {}."
-
-#~ msgid "VM domain include task {} finished with error."
-#~ msgstr "Задача {} ввода ВМ в домен завершилась с ошибкой."
-
-#~ msgid "Adding {} to domain."
-#~ msgstr "Вводим {} в домен."
-
-#~ msgid "Hostname {} has been set."
-#~ msgstr "Задан hostname {}."
-
-#~ msgid "VM hostname setting task {} finished with error."
-#~ msgstr "Задача {} установки hostname ВМ завершилась с ошибкой."
-
-#~ msgid "Setting hostname for {}."
-#~ msgstr "Задаем hostname для {}."
-
-#~ msgid "Waiting guest agent activation for {}."
-#~ msgstr "Ожидаем активации гостевого агента для {}."
+#~ msgid "Update controller {}: {}."
+#~ msgstr "Обновление контроллера {}: {}."
 
 #~ msgid "Enabling remote access for {}."
 #~ msgstr "Включаем удаленный доступ для {}."
 
-#~ msgid "Update controller {}: {}."
-#~ msgstr "Обновление контроллера {}: {}."
+#~ msgid "Waiting guest agent activation for {}."
+#~ msgstr "Ожидаем активации гостевого агента для {}."
+
+#~ msgid "Setting hostname for {}."
+#~ msgstr "Задаем hostname для {}."
+
+#~ msgid "VM hostname setting task {} finished with error."
+#~ msgstr "Задача {} установки hostname ВМ завершилась с ошибкой."
+
+#~ msgid "Hostname {} has been set."
+#~ msgstr "Задан hostname {}."
+
+#~ msgid "Adding {} to domain."
+#~ msgstr "Вводим {} в домен."
+
+#~ msgid "VM domain include task {} finished with error."
+#~ msgstr "Задача {} ввода ВМ в домен завершилась с ошибкой."
+
+#~ msgid "VM has been added to Windows domain {}."
+#~ msgstr "ВМ {} заведена в Windows домен {}."
+
+#~ msgid "VM domain container adding task {} finished with error."
+#~ msgstr "Задача {} включения ВМ в группы домена завершилась с ошибкой."
+
+#~ msgid "VM has been added to Windows domain container(s) {}."
+#~ msgstr "ВМ включена в группы {} Windows домена."
