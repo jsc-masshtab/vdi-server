@@ -187,6 +187,8 @@ class ExpandPoolTask(AbstractTask):
         if not self.wait_for_lock and (pool_lock.locked() or template_lock.locked()):
             raise RuntimeError('ExpandPoolTask: Another task works on this pool or vm template is busy')
 
+        vm_list = list()
+
         async with pool_lock:
             async with template_lock:
                 # Check that total_size is not reached
@@ -211,7 +213,7 @@ class ExpandPoolTask(AbstractTask):
                     real_amount_to_add = min(max_possible_amount_to_add, automated_pool.increase_step)
                     # add VMs.
                     try:
-                        vm_list = list()
+
                         for i in range(0, real_amount_to_add):  # noqa
                             vm_object = await automated_pool.add_vm()
                             vm_list.append(vm_object)
