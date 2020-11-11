@@ -22,7 +22,8 @@ def upgrade():
     task_type = postgresql.ENUM('CREATING_POOL', 'EXPANDING_POOL', 'DELETING_POOL', 'DECREASING_POOL', 'VM_PREPARE',
                                 name='task_type')
     task_type.create(op.get_bind())
-
+    # Только в этой версии таблица перестает очищаться, поэтому очищаем ее в последний раз для применения миграции
+    op.execute('truncate table task;')
     op.add_column('task', sa.Column('task_type', sa.Enum('CREATING_POOL', 'EXPANDING_POOL',
                                                          'DELETING_POOL', 'DECREASING_POOL', 'VM_PREPARE',
                                                          name='task_type'), nullable=False))
