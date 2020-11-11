@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2020-11-11 12:55+0300\n"
+"POT-Creation-Date: 2020-11-11 13:13+0300\n"
 "PO-Revision-Date: 2020-07-30 11:25+0300\n"
 "Last-Translator: Emil <emil@emil-pc>\n"
 "Language-Team: English\n"
@@ -1105,35 +1105,35 @@ msgstr "{cls}: Controller {name} is already monitored."
 msgid "{cls}: resource monitor for controller {name} connected."
 msgstr "{cls}: resource monitor for controller {name} connected."
 
-#~ msgid "Update controller {}: {}."
-#~ msgstr "Update controller {}: {}."
-
-#~ msgid "Enabling remote access for {}."
-#~ msgstr "Enabling remote access for {}."
-
-#~ msgid "Waiting guest agent activation for {}."
-#~ msgstr "Waiting guest agent activation for {}."
-
-#~ msgid "Setting hostname for {}."
-#~ msgstr "Setting hostname for {}."
-
-#~ msgid "VM hostname setting task {} finished with error."
-#~ msgstr "VM hostname setting task {} finished with error."
-
-#~ msgid "Hostname {} has been set."
-#~ msgstr "Hostname {} has been set."
-
-#~ msgid "Adding {} to domain."
-#~ msgstr "Adding {} to domain."
-
-#~ msgid "VM domain include task {} finished with error."
-#~ msgstr "VM domain include task {} finished with error."
-
-#~ msgid "VM has been added to Windows domain {}."
-#~ msgstr "VM has been added to Windows domain {}."
+#~ msgid "VM has been added to Windows domain container(s) {}."
+#~ msgstr "VM has been added to Windows domain container(s) {}."
 
 #~ msgid "VM domain container adding task {} finished with error."
 #~ msgstr "VM domain container adding task {} finished with error."
 
-#~ msgid "VM has been added to Windows domain container(s) {}."
-#~ msgstr "VM has been added to Windows domain container(s) {}."
+#~ msgid "VM has been added to Windows domain {}."
+#~ msgstr "VM has been added to Windows domain {}."
+
+#~ msgid "VM domain include task {} finished with error."
+#~ msgstr "VM domain include task {} finished with error."
+
+#~ msgid "Adding {} to domain."
+#~ msgstr "Adding {} to domain."
+
+#~ msgid "Hostname {} has been set."
+#~ msgstr "Hostname {} has been set."
+
+#~ msgid "VM hostname setting task {} finished with error."
+#~ msgstr "VM hostname setting task {} finished with error."
+
+#~ msgid "Setting hostname for {}."
+#~ msgstr "Setting hostname for {}."
+
+#~ msgid "Waiting guest agent activation for {}."
+#~ msgstr "Waiting guest agent activation for {}."
+
+#~ msgid "Enabling remote access for {}."
+#~ msgstr "Enabling remote access for {}."
+
+#~ msgid "Update controller {}: {}."
+#~ msgstr "Update controller {}: {}."
