@@ -16,6 +16,7 @@ from common.languages import lang_init
 from common.models.pool import AutomatedPool, Pool
 from common.models.task import TaskStatus, Task
 from common.models.authentication_directory import AuthenticationDirectory
+from common.models.vm import Vm
 
 
 _ = lang_init()
@@ -102,6 +103,14 @@ class AbstractTask:
     def execute_in_async_task(self):
         """Запустить корутину асинхронно"""
         self._coroutine = asyncio.get_event_loop().create_task(self.execute())
+
+    def _get_related_progressing_tasks(self):
+        """Получить выполняющиеся таски связанные с сущностью исключая текущую таску"""
+        tasks_related_to_cur_pool = [task for task in self._ref_to_task_list
+                                     if task.task_model.entity_id == self.task_model.entity_id  # noqa
+                                     and task.task_model.id != self.task_model.id]  # noqa
+
+        return tasks_related_to_cur_pool
 
 
 class InitPoolTask(AbstractTask):
@@ -225,7 +234,7 @@ class ExpandPoolTask(AbstractTask):
             try:
                 active_directory_object = await AuthenticationDirectory.query.where(
                     AuthenticationDirectory.status == Status.ACTIVE).gino.first()
-                if automated_pool.prepare_vms:
+                if vm_list and automated_pool.prepare_vms:
                     await asyncio.gather(
                         *[vm_object.prepare_with_timeout(active_directory_object, automated_pool.ad_cn_pattern) for
                           vm_object in vm_list])
@@ -284,9 +293,7 @@ class DeletePoolTask(AbstractTask):
         # Нужно остановить таски связанные с пулом
         # print('Before cancelling in pool deletion ', len(self._ref_to_task_list))  # temp
         # Находим таски связанные с текущим пулом (исключая текущую таску)
-        tasks_related_to_cur_pool = [task for task in self._ref_to_task_list
-                                     if task.task_model.entity_id == self.task_model.entity_id  # noqa
-                                     and task.task_model.id != self.task_model.id]  # noqa
+        tasks_related_to_cur_pool = self._get_related_progressing_tasks()
         # Отменяем их
         for task in tasks_related_to_cur_pool:
             await task.cancel()
@@ -304,3 +311,33 @@ class DeletePoolTask(AbstractTask):
             # убираем из памяти локи, если пул успешно удалился
             if is_deleted:
                 await self._pool_locks.remove_pool_data(str(automated_pool.id), str(template_id))
+
+
+class PrepareVmTask(AbstractTask):
+    """Задача подготовки ВМ. При удалении ВМ желательно учесть что эта задача может быть в
+    процессе выполнения и сначала отменить ее"""
+    def __init__(self):
+        super().__init__()
+
+    async def do_task(self):
+        # Проверить выполняется ли уже задача подготовки этой вм. Запускать еще одну нет смысла и даже вредно.
+        vm_prepare_tasks = self._get_related_progressing_tasks()
+        if len(vm_prepare_tasks) > 0:
+            raise RuntimeError(_('Another task works on this VM.'))
+
+        # preparation (код перенесен из pool/schema.py)
+        vm = await Vm.get(self.task_model.entity_id)
+        if vm:
+            active_directory_object = None
+            ad_cn_pattern = None
+
+            pool = await Pool.get(vm.pool_id)
+
+            pool_type = await pool.pool_type
+            if pool_type == Pool.PoolTypes.AUTOMATED:
+                auto_pool = await AutomatedPool.get(pool.id)
+                active_directory_object = await AuthenticationDirectory.query.where(
+                    AuthenticationDirectory.status == Status.ACTIVE).gino.first()
+                ad_cn_pattern = auto_pool.ad_cn_pattern
+
+            await vm.prepare_with_timeout(active_directory_object, ad_cn_pattern)

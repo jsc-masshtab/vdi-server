@@ -28,6 +28,7 @@ class PoolTaskType(Enum):
     EXPANDING_POOL = 'EXPANDING_POOL'
     DELETING_POOL = 'DELETING_POOL'
     DECREASING_POOL = 'DECREASING_POOL'
+    VM_PREPARE = 'VM_PREPARE'
 
 
 class TaskStatus(Enum):

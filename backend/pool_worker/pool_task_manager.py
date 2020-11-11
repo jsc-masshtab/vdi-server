@@ -5,7 +5,7 @@ import json
 
 import asyncio
 
-from pool_worker.pool_tasks import InitPoolTask, ExpandPoolTask, DecreasePoolTask, DeletePoolTask
+from pool_worker.pool_tasks import InitPoolTask, ExpandPoolTask, DecreasePoolTask, DeletePoolTask, PrepareVmTask
 from pool_worker.pool_locks import PoolLocks
 
 from common.veil.veil_redis import POOL_TASK_QUEUE, POOL_WORKER_CMD_QUEUE, PoolWorkerCmd, a_redis_lpop
@@ -105,7 +105,7 @@ class PoolTaskManager:
                 entity = {'entity_type': EntityType.SECURITY, 'entity_uuid': None}
                 await system_logger.error('listen_for_commands exception:' + str(ex), entity=entity)
 
-    async def resume_tasks(self, controller_id=None, remove_unresumable_tasks=True):
+    async def resume_tasks(self, controller_id=None, remove_unresumable_tasks=False):
         """
         Анализируем таблицу тасок в бд.
         Продолжить таски  при соблюдении условий:
@@ -124,7 +124,7 @@ class PoolTaskManager:
         tasks_to_launch = await db.select([Task.id, Task.task_type]).select_from(
             Task.join(Pool, Task.entity_id == Pool.id)).where(and_(*where_conditions)).gino.all()
 
-        #  Remove all other tasks (либо как вариант выставить им всем флаг resumable = False)
+        #  Remove all other tasks
         if remove_unresumable_tasks:
             task_ids_to_launch = [task_id for (task_id, _) in tasks_to_launch]
             st = await Task.delete.where(Task.id.notin_(task_ids_to_launch)).gino.status()
@@ -177,6 +177,11 @@ class PoolTaskManager:
             except KeyError:
                 full = True
             task = DeletePoolTask(self.pool_locks, full)
+            await task.init(task_id, self.task_list)
+            task.execute_in_async_task()
+
+        elif pool_task_type == PoolTaskType.VM_PREPARE.name:
+            task = PrepareVmTask()
             await task.init(task_id, self.task_list)
             task.execute_in_async_task()
 
