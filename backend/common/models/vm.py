@@ -548,4 +548,6 @@ class Vm(VeilModel):
             await system_logger.error(message=_('{} preparation cancelled by timeout.').format(self.verbose_name),
                                       entity=self.entity)
         except ValueError as err_msg:
-            await system_logger.error(message=str(err_msg))
+            err_str = str(err_msg)
+            if err_str:
+                await system_logger.error(message=err_str)
