@@ -472,7 +472,7 @@ class Vm(VeilModel):
         # Если дождались - можно заводить
         domain_entity = await self.get_veil_entity()
         # APIPA (Automatic Private IP Addressing)
-        if domain_entity.first_ipv4_ip and '169.254.' in domain_entity.first_ipv4_ip:
+        if domain_entity.first_ipv4 and '169.254.' in domain_entity.first_ipv4:
             await system_logger.error(_('VM {} failed to receive DHCP ip address.').format(self.verbose_name))
             raise ValueError('APIPA.')
 
@@ -503,7 +503,7 @@ class Vm(VeilModel):
         # Если дождались - можно заводить
         domain_entity = await self.get_veil_entity()
         # APIPA (Automatic Private IP Addressing)
-        if domain_entity.first_ipv4_ip and '169.254.' in domain_entity.first_ipv4_ip:
+        if domain_entity.first_ipv4 and '169.254.' in domain_entity.first_ipv4:
             await system_logger.error(_('VM {} failed to receive DHCP ip address.').format(self.verbose_name))
             raise ValueError('APIPA.')
 
