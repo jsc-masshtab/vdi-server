@@ -46,6 +46,9 @@ esac
 
 echo "Select path (for example: /tmp/):"
 read PATH1
+if [ -z "$PATH1" ];then
+  PATH1="/tmp/"
+fi
 mkdir -p $PATH1
 echo "PATH1=$PATH1" >> /tmp/vdi-install-vars
 
