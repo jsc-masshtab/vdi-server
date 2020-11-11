@@ -234,7 +234,7 @@ class ExpandPoolTask(AbstractTask):
             try:
                 active_directory_object = await AuthenticationDirectory.query.where(
                     AuthenticationDirectory.status == Status.ACTIVE).gino.first()
-                if automated_pool.prepare_vms:
+                if vm_list and automated_pool.prepare_vms:
                     await asyncio.gather(
                         *[vm_object.prepare_with_timeout(active_directory_object, automated_pool.ad_cn_pattern) for
                           vm_object in vm_list])

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2020-11-10 20:27+0300\n"
+"POT-Creation-Date: 2020-11-11 11:46+0300\n"
 "PO-Revision-Date: 2020-07-30 11:25+0300\n"
 "Last-Translator: Emil <emil@emil-pc>\n"
 "Language-Team: English\n"
@@ -149,96 +149,96 @@ msgstr "Authentication directory {} is created."
 msgid "Values for auth directory is updated."
 msgstr "Values for auth directory is updated."
 
-#: ../common/models/authentication_directory.py:209
+#: ../common/models/authentication_directory.py:210
 msgid "Arguments: {} of group: {}."
 msgstr "Arguments: {} of group: {}."
 
-#: ../common/models/authentication_directory.py:210
+#: ../common/models/authentication_directory.py:211
 msgid "Mapping for auth directory {} is created."
 msgstr "Mapping for auth directory {} is created."
 
-#: ../common/models/authentication_directory.py:233
+#: ../common/models/authentication_directory.py:234
 msgid "New arguments: {} of group: {}."
 msgstr "New arguments: {} of group: {}."
 
-#: ../common/models/authentication_directory.py:234
+#: ../common/models/authentication_directory.py:235
 msgid "Mapping for auth directory {} is updated."
 msgstr "Mapping for auth directory {} is updated."
 
-#: ../common/models/authentication_directory.py:257
-#: ../common/models/authentication_directory.py:461
+#: ../common/models/authentication_directory.py:258
+#: ../common/models/authentication_directory.py:462
 msgid "Authentication directory server {} is down."
 msgstr "Authentication directory server {} is down."
 
-#: ../common/models/authentication_directory.py:264
+#: ../common/models/authentication_directory.py:265
 msgid "Authentication directory server {} is connected."
 msgstr "Authentication directory server {} is connected."
 
-#: ../common/models/authentication_directory.py:299
+#: ../common/models/authentication_directory.py:300
 msgid "Username must be a string."
 msgstr "Username must be a string."
 
-#: ../common/models/authentication_directory.py:328
+#: ../common/models/authentication_directory.py:329
 msgid "Assigning veil groups to {}."
 msgstr "Assigning veil groups to {}."
 
-#: ../common/models/authentication_directory.py:337
+#: ../common/models/authentication_directory.py:338
 msgid "Mappings: {}."
 msgstr "Mappings: {}."
 
-#: ../common/models/authentication_directory.py:353
+#: ../common/models/authentication_directory.py:354
 msgid "escaped values: {}."
 msgstr "escaped values: {}."
 
-#: ../common/models/authentication_directory.py:354
+#: ../common/models/authentication_directory.py:355
 msgid "role mapping value type: {}."
 msgstr "role mapping value type: {}."
 
-#: ../common/models/authentication_directory.py:363
+#: ../common/models/authentication_directory.py:364
 msgid "User veil groups: {}."
 msgstr "User veil groups: {}."
 
-#: ../common/models/authentication_directory.py:370
+#: ../common/models/authentication_directory.py:371
 msgid "Attaching user {} to group: {}."
 msgstr "Attaching user {} to group: {}."
 
-#: ../common/models/authentication_directory.py:383
-#: ../common/models/authentication_directory.py:394
+#: ../common/models/authentication_directory.py:384
+#: ../common/models/authentication_directory.py:395
 #: ../web_app/tests/test_auth_v2.py:109
 msgid "No authentication directory controllers."
 msgstr "No authentication directory controllers."
 
-#: ../common/models/authentication_directory.py:420
+#: ../common/models/authentication_directory.py:421
 msgid "Invalid credentials (ldap): {}."
 msgstr "Invalid credentials (ldap): {}."
 
-#: ../common/models/authentication_directory.py:427
+#: ../common/models/authentication_directory.py:428
 msgid "Server down (ldap)."
 msgstr "Server down (ldap)."
 
-#: ../common/models/authentication_directory.py:443
+#: ../common/models/authentication_directory.py:444
 msgid "LDAP username and password can`t be empty."
 msgstr "LDAP username and password can`t be empty."
 
-#: ../common/models/authentication_directory.py:456
+#: ../common/models/authentication_directory.py:457
 msgid "Authentication directory server {} has bad auth info."
 msgstr "Authentication directory server {} has bad auth info."
 
-#: ../common/models/authentication_directory.py:523
-#: ../common/models/authentication_directory.py:602
+#: ../common/models/authentication_directory.py:524
+#: ../common/models/authentication_directory.py:603
 msgid "Fail to connect to Authentication Directory. Check service information."
 msgstr "Fail to connect to Authentication Directory. Check service information."
 
-#: ../common/models/authentication_directory.py:646
+#: ../common/models/authentication_directory.py:647
 msgid "{} new users synced from Authentication Directory."
 msgstr "{} new users synced from Authentication Directory."
 
-#: ../common/models/authentication_directory.py:654
+#: ../common/models/authentication_directory.py:655
 #: ../web_app/auth/group_schema.py:180
 msgid "No such Group."
 msgstr "No such Group."
 
-#: ../common/models/authentication_directory.py:656
+#: ../common/models/authentication_directory.py:657
 msgid "Group {} is not synchronized by AD."
 msgstr "Group {} is not synchronized by AD."
 
@@ -544,19 +544,23 @@ msgstr "VM {} is suspended."
 msgid "Remote access enabled."
 msgstr "Remote access enabled."
 
-#: ../common/models/vm.py:485
+#: ../common/models/vm.py:476
+msgid "VM {} failed to receive DHCP ip address."
+msgstr "VM {} failed to receive DHCP ip address."
+
+#: ../common/models/vm.py:490
 msgid "VM {} domain container including task failed."
 msgstr "VM {} domain container including task failed."
 
-#: ../common/models/vm.py:509
+#: ../common/models/vm.py:514
 msgid "VM {} domain including task failed."
 msgstr "VM {} domain including task failed."
 
-#: ../common/models/vm.py:529
+#: ../common/models/vm.py:534
 msgid "VM {} has been prepared."
 msgstr "VM {} has been prepared."
 
-#: ../common/models/vm.py:538
+#: ../common/models/vm.py:543
 msgid "{} preparation cancelled by timeout."
 msgstr "{} preparation cancelled by timeout."
 
@@ -690,8 +694,8 @@ msgstr "DEBUG mode is enabled."
 #: ../web_app/auth/authentication_directory/auth_dir_schema.py:33
 #: ../web_app/auth/authentication_directory/auth_dir_schema.py:222
 #: ../web_app/auth/authentication_directory/auth_dir_schema.py:277
-#: ../web_app/auth/authentication_directory/auth_dir_schema.py:439
-#: ../web_app/auth/authentication_directory/auth_dir_schema.py:457
+#: ../web_app/auth/authentication_directory/auth_dir_schema.py:443
+#: ../web_app/auth/authentication_directory/auth_dir_schema.py:461
 msgid "No such Authentication Directory."
 msgstr "No such Authentication Directory."
 
@@ -1097,35 +1101,35 @@ msgstr "{cls}: Controller {name} is already monitored."
 msgid "{cls}: resource monitor for controller {name} connected."
 msgstr "{cls}: resource monitor for controller {name} connected."
 
-#~ msgid "VM has been added to Windows domain container(s) {}."
-#~ msgstr "VM has been added to Windows domain container(s) {}."
-
-#~ msgid "VM domain container adding task {} finished with error."
-#~ msgstr "VM domain container adding task {} finished with error."
-
-#~ msgid "VM has been added to Windows domain {}."
-#~ msgstr "VM has been added to Windows domain {}."
-
-#~ msgid "VM domain include task {} finished with error."
-#~ msgstr "VM domain include task {} finished with error."
-
-#~ msgid "Adding {} to domain."
-#~ msgstr "Adding {} to domain."
-
-#~ msgid "Hostname {} has been set."
-#~ msgstr "Hostname {} has been set."
-
-#~ msgid "VM hostname setting task {} finished with error."
-#~ msgstr "VM hostname setting task {} finished with error."
-
-#~ msgid "Setting hostname for {}."
-#~ msgstr "Setting hostname for {}."
-
-#~ msgid "Waiting guest agent activation for {}."
-#~ msgstr "Waiting guest agent activation for {}."
+#~ msgid "Update controller {}: {}."
+#~ msgstr "Update controller {}: {}."
 
 #~ msgid "Enabling remote access for {}."
 #~ msgstr "Enabling remote access for {}."
 
-#~ msgid "Update controller {}: {}."
-#~ msgstr "Update controller {}: {}."
+#~ msgid "Waiting guest agent activation for {}."
+#~ msgstr "Waiting guest agent activation for {}."
+
+#~ msgid "Setting hostname for {}."
+#~ msgstr "Setting hostname for {}."
+
+#~ msgid "VM hostname setting task {} finished with error."
+#~ msgstr "VM hostname setting task {} finished with error."
+
+#~ msgid "Hostname {} has been set."
+#~ msgstr "Hostname {} has been set."
+
+#~ msgid "Adding {} to domain."
+#~ msgstr "Adding {} to domain."
+
+#~ msgid "VM domain include task {} finished with error."
+#~ msgstr "VM domain include task {} finished with error."
+
+#~ msgid "VM has been added to Windows domain {}."
+#~ msgstr "VM has been added to Windows domain {}."
+
+#~ msgid "VM domain container adding task {} finished with error."
+#~ msgstr "VM domain container adding task {} finished with error."
+
+#~ msgid "VM has been added to Windows domain container(s) {}."
+#~ msgstr "VM has been added to Windows domain container(s) {}."
