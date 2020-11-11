@@ -477,7 +477,7 @@ class Vm(VeilModel):
             raise ValueError('APIPA.')
 
         already_in_domain = await domain_entity.in_ad if domain_entity.os_windows else True
-        if active_directory_obj and domain_entity.os_windows and not already_in_domain:
+        if active_directory_obj and domain_entity.os_windows and not already_in_domain and ad_cn_pattern:
             await self.qemu_guest_agent_waiting()
             action_response = await domain_entity.add_to_ad_group(self.verbose_name,
                                                                   active_directory_obj.service_username,
