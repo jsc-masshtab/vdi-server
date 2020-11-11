@@ -68,6 +68,7 @@ class Task(db.Model, AbstractSortableStatusModel):
             task_type=self.task_type.name,
             task_status=self.status.name,
             created=str(self.created),
+            finished=str(self.finished),
             progress=self.progress,
         )
 

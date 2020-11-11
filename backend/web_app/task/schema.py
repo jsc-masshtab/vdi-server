@@ -42,6 +42,7 @@ class TaskType(graphene.ObjectType):
     status = TaskStatusGraphene()
     task_type = TaskTypeGraphene()
     created = graphene.DateTime()
+    finished = graphene.DateTime()
     priority = graphene.Int()
     progress = graphene.Int(default_value=0)
     message = graphene.String()
