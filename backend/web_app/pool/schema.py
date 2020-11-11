@@ -13,7 +13,6 @@ from common.veil.veil_decorators import administrator_required
 from common.veil.veil_graphene import VeilShortEntityType, VeilResourceType, VmState
 
 from common.models.auth import User
-from common.models.authentication_directory import AuthenticationDirectory
 from common.models.vm import Vm
 from common.models.controller import Controller
 from common.models.pool import AutomatedPool, StaticPool, Pool
@@ -1006,25 +1005,13 @@ class PrepareVm(graphene.Mutation):
 
     @administrator_required
     async def mutate(self, _info, vm_id, **kwargs):
-        vm = await Vm.get(vm_id)
-        if vm:
-            active_directory_object = None
-            ad_cn_pattern = None
 
-            pool = await Pool.get(vm.pool_id)
+        # Проверить есть ли в таблице task таски выполняющиеся над это вм. Если есть то сообщить фронту ч
+        # что подготовка вм невозможна
+        # will be soon...
 
-            pool_type = await pool.pool_type
-            if pool_type == Pool.PoolTypes.AUTOMATED:
-                auto_pool = await AutomatedPool.get(pool.id)
-                active_directory_object = await AuthenticationDirectory.query.where(
-                    AuthenticationDirectory.status == Status.ACTIVE).gino.first()
-                ad_cn_pattern = auto_pool.ad_cn_pattern
-            asyncio.ensure_future(vm.prepare_with_timeout(active_directory_object, ad_cn_pattern))
-            # future = asyncio.ensure_future(vm.prepare_with_timeout(active_directory_object, ad_cn_pattern))
-            # future.add_done_callback(lambda f: print('FINISH'))  # делаем что-то после окончания
-            # выполняем любой код ниже
-            return PrepareVm(ok=True)
-        return PrepareVm(ok=False)
+        await request_to_execute_pool_task(vm_id, PoolTaskType.VM_PREPARE)
+        return PrepareVm(ok=True)
 
 
 class VmStart(graphene.Mutation):

@@ -223,10 +223,10 @@ async def wait_for_task_result(task_id, wait_timeout):
         return None
 
 
-async def request_to_execute_pool_task(pool_id, pool_task_type, **additional_data):
+async def request_to_execute_pool_task(entity_id, pool_task_type, **additional_data):
     """Send request to pool worker to execute a task. Return task id"""
     from common.models.task import Task
-    task = await Task.create(entity_id=pool_id, task_type=pool_task_type)
+    task = await Task.create(entity_id=entity_id, task_type=pool_task_type)
     task_id = str(task.id)
     data = {'task_id': task_id, 'task_type': pool_task_type.name, **additional_data}
     REDIS_CLIENT.rpush(POOL_TASK_QUEUE, json.dumps(data))
