@@ -471,6 +471,11 @@ class Vm(VeilModel):
         await self.qemu_guest_agent_waiting()
         # Если дождались - можно заводить
         domain_entity = await self.get_veil_entity()
+        # APIPA (Automatic Private IP Addressing)
+        if domain_entity.first_ipv4_ip and '169.254.' in domain_entity.first_ipv4_ip:
+            await system_logger.error(_('VM {} failed to receive DHCP ip address.').format(self.verbose_name))
+            raise ValueError('APIPA.')
+
         already_in_domain = await domain_entity.in_ad if domain_entity.os_windows else True
         if active_directory_obj and domain_entity.os_windows and not already_in_domain:
             await self.qemu_guest_agent_waiting()
