@@ -110,11 +110,12 @@ class Task(db.Model, AbstractSortableStatusModel):
 
         if status == TaskStatus.FINISHED or status == TaskStatus.FAILED:
             await self.update(resumable=False).apply()
+        if status == TaskStatus.FINISHED or status == TaskStatus.FAILED or status == TaskStatus.CANCELLED:
             # set finish time
             await self.update(finished=func.now()).apply()
 
             duration = self.finished - self.started
-            message += _('  Duration: {}.').format(duration)
+            message += _('  Duration: {}.').format(str(duration)[:-3])
 
         shorten_msg = textwrap.shorten(message, width=256)
         await self.update(message=shorten_msg).apply()
