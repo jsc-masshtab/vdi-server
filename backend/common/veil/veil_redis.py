@@ -215,7 +215,7 @@ async def a_redis_wait_for_task_completion(task_id):
 
 
 async def wait_for_task_result(task_id, wait_timeout):
-    """Ждем результат задачи и возвращаем ее статус либо None если не дождплись"""
+    """Ждем результат задачи и возвращаем ее статус либо None если не дождались"""
     try:
         task_status = await asyncio.wait_for(a_redis_wait_for_task_completion(task_id), wait_timeout)
         return task_status

@@ -1,6 +1,7 @@
 from aiohttp import web
 import json
 import ssl
+import uuid
 
 
 class VeilTestServer:
@@ -367,10 +368,12 @@ class VeilTestServer:
 
     async def multi_create_domain(self, request):
 
+        domain_id = str(uuid.uuid4())
+        task_id = str(uuid.uuid4())
         res_dict = {
-            "entity": "1ee587ec-74f7-46ba-969c-a975b8e7d8dd",
+            "entity": domain_id,
             "_task": {
-                "id": "4abe9150-f1f0-4b88-abe1-c3945b2c8a1c",
+                "id": task_id,
                 "verbose_name": "verbose_name",
                 "name": "name",
                 "progress": 0,
@@ -387,7 +390,7 @@ class VeilTestServer:
                         "message": "test_vm",
                         "user": "user",
                         "created": "2020-10-27T07:23:54.520764Z",
-                        "task": "4abe9150-f1f0-4b88-abe1-c3945b2c8a1c",
+                        "task": task_id,
                         "readed": [
 
                         ],
