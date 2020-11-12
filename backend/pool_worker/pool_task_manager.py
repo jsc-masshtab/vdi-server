@@ -209,7 +209,7 @@ class PoolTaskManager:
         await system_logger.debug('cancel_tasks_associated_with_controller')
 
         # find tasks
-        tasks_to_cancel = await Task.get_ids_of_tasks_associated_with_controller(controller_id)
+        tasks_to_cancel = await Task.get_ids_of_tasks_associated_with_controller(controller_id, TaskStatus.IN_PROGRESS)
         # print('!!!tasks_to_cancel', tasks_to_cancel, flush=True)
         # cancel
         task_list = list(self.task_list)  # shallow copy

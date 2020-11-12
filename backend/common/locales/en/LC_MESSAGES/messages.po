@@ -655,6 +655,22 @@ msgstr "Redis task waiting exception."
 msgid "Field \"{}\" - {}."
 msgstr "Field \"{}\" - {}."
 
+#: ../pool_worker/pool_tasks.py:75
+msgid "Task <{}> started."
+msgstr "Task <{}> started."
+
+#: ../pool_worker/pool_tasks.py:83
+msgid "Task <{}> finished."
+msgstr "Task <{}> finished."
+
+#: ../pool_worker/pool_tasks.py:87
+msgid "Task <{}> cancelled."
+msgstr "Task <{}> cancelled."
+
+#: ../pool_worker/pool_tasks.py:92
+msgid "Exception during task execution. Task: <{}> Exception: {}."
+msgstr "Exception during task execution. Task: <{}> Exception: {}."
+
 #: ../pool_worker/pool_tasks.py:152
 msgid "Pool Creation cancelled."
 msgstr "Pool Creation cancelled."

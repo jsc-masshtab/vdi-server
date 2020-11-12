@@ -69,29 +69,31 @@ class AbstractTask:
             await system_logger.error('AbstractTask.execute: logical error. No such task')
             return
 
-        await system_logger.debug('Start task execution: {}'.format(self.task_model.task_type.name))
+        # set task status
+        await self.task_model.set_status(TaskStatus.IN_PROGRESS)
+        friendly_task_name = await self.task_model.form_user_friendly_text()
+        await system_logger.info(_('Task <{}> started.').format(friendly_task_name))
 
         # Добавить себя в список выполняющихся задач
         self._ref_to_task_list.append(self)
-        # set task status
-        await self.task_model.set_status(TaskStatus.IN_PROGRESS)
 
         try:
             await self.do_task()
             await self.task_model.set_status(TaskStatus.FINISHED)
+            await system_logger.info(_('Task <{}> finished.').format(friendly_task_name))
 
         except asyncio.CancelledError:
             await self.task_model.set_status(TaskStatus.CANCELLED)
-            await system_logger.warning('Task cancelled. id: {}'.format(self.task_model.id))
+            await system_logger.warning(_('Task <{}> cancelled.').format(friendly_task_name))
 
             await self.do_on_cancel()
 
         except Exception as ex:  # noqa
-            message = 'Exception during task execution. id: {} exception: {} '.format(self.task_model.id, str(ex))
+            message = _('Exception during task execution. Task: <{}> Exception: {}.').format(
+                friendly_task_name, str(ex))
             await self.task_model.set_status(TaskStatus.FAILED, message)
 
-            entity = {'entity_type': EntityType.POOL, 'entity_uuid': None}
-            await system_logger.warning(message, entity=entity)
+            await system_logger.warning(message)
             print('BT {bt}'.format(bt=traceback.format_exc()))
 
             await self.do_on_fail()

@@ -266,8 +266,8 @@ async def send_cmd_to_cancel_tasks_associated_with_controller(controller_id, wai
 
     #  Wait for result
     if wait_for_result:
-        from common.models.task import Task
-        tasks_to_cancel = await Task.get_ids_of_tasks_associated_with_controller(controller_id)
+        from common.models.task import Task, TaskStatus
+        tasks_to_cancel = await Task.get_ids_of_tasks_associated_with_controller(controller_id, TaskStatus.IN_PROGRESS)
         await asyncio.gather(*[wait_for_task_result(task, wait_timeout) for task in tasks_to_cancel])
 
 

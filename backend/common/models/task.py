@@ -13,6 +13,8 @@ from web_app.front_ws_api.subscription_sources import VDI_TASKS_SUBSCRIPTION
 
 from common.models.auth import Entity
 
+from sqlalchemy import and_
+
 from common.database import db
 from common.veil.veil_redis import REDIS_CLIENT, INTERNAL_EVENTS_CHANNEL
 from common.veil.veil_gino import AbstractSortableStatusModel, EntityType
@@ -72,7 +74,9 @@ class Task(db.Model, AbstractSortableStatusModel):
             progress=self.progress,
         )
 
-    def form_user_friendly_text(self, entity_name):
+    async def form_user_friendly_text(self):
+
+        entity_name = await self.get_associated_entity_name()
 
         if self.task_type == PoolTaskType.CREATING_POOL:
             return _('Creation of pool {}.').format(entity_name)
@@ -96,8 +100,7 @@ class Task(db.Model, AbstractSortableStatusModel):
 
         # msg
         if message is None:
-            entity_name = await self.get_associated_entity_name()
-            message = self.form_user_friendly_text(entity_name)
+            message = await self.form_user_friendly_text()
             # print('!!!message: ', message, flush=True)
 
         # datetime data
@@ -105,7 +108,7 @@ class Task(db.Model, AbstractSortableStatusModel):
             # set start time
             await self.update(started=func.now()).apply()
 
-        if status == TaskStatus.FINISHED or status == TaskStatus.FAILED or status == TaskStatus.CANCELLED:
+        if status == TaskStatus.FINISHED or status == TaskStatus.FAILED:
             await self.update(resumable=False).apply()
             # set finish time
             await self.update(finished=func.now()).apply()
@@ -154,7 +157,7 @@ class Task(db.Model, AbstractSortableStatusModel):
                 if entity.entity_type == EntityType.POOL:
                     from common.models.pool import Pool
                     pool = await Pool.get(self.entity_id)
-                    self._associated_entity_name = pool.verbose_name if pool else ''
+                    self._associated_entity_name = pool and pool.verbose_name if pool else ''
 
                 elif entity.entity_type == EntityType.VM:
                     from common.models.vm import Vm
@@ -172,19 +175,22 @@ class Task(db.Model, AbstractSortableStatusModel):
             await task_model.set_progress(progress)
 
     @staticmethod
-    async def get_ids_of_tasks_associated_with_controller(controller_id):
+    async def get_ids_of_tasks_associated_with_controller(controller_id, task_status):
+
+        from common.models.pool import Pool
+
+        where_conditions = [Pool.controller == controller_id, Task.status == task_status]
 
         # pool tasks
-        from common.models.pool import Pool
         pool_tasks = await db.select([Task.id]).select_from(Task.join(Pool, Task.entity_id == Pool.id)).where(
-            Pool.controller == controller_id).gino.all()
+            and_(*where_conditions)).gino.all()
         pool_tasks_ids = [task_to_cancel[0] for task_to_cancel in pool_tasks]
 
         # vm tasks
         from common.models.vm import Vm
         vm_tasks = await db.select([Task.id]).select_from(
-            Task.join(Vm, Task.entity_id == Vm.id).join(Pool, Vm.pool_id == Pool.id)).\
-            where(Pool.controller == controller_id).gino.all()
+            Task.join(Vm, Task.entity_id == Vm.id).join(Pool, Vm.pool_id == Pool.id)).where(
+            and_(*where_conditions)).gino.all()
         vm_tasks_ids = [task_to_cancel[0] for task_to_cancel in vm_tasks]
 
         tasks = [*pool_tasks_ids, *vm_tasks_ids]

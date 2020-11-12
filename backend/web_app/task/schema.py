@@ -66,12 +66,12 @@ class TaskQuery(graphene.ObjectType):
         return filters
 
     @administrator_required
-    async def resolve_tasks(self, _info, limit, offset, status=None, task_type=None, ordering=None, **kwargs):
+    async def resolve_tasks(self, _info, limit, offset, status=None, task_type=None, ordering='created', **kwargs):
 
         query = Task.query
-        # sorting
-        if ordering:
-            query = Task.build_ordering(query, ordering)
+
+        query = Task.build_ordering(query, ordering)
+
         # filtering
         filters = TaskQuery.build_filters(status, task_type)
         if filters:

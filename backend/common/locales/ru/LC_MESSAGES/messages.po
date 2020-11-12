@@ -655,6 +655,22 @@ msgstr "Ошибка redis-задачи."
 msgid "Field \"{}\" - {}."
 msgstr "Поле \"{}\" - {}."
 
+#: ../pool_worker/pool_tasks.py:75
+msgid "Task <{}> started."
+msgstr "Задача <{}> начала выполнение."
+
+#: ../pool_worker/pool_tasks.py:83
+msgid "Task <{}> finished."
+msgstr "Задача <{}> завершилась."
+
+#: ../pool_worker/pool_tasks.py:87
+msgid "Task <{}> cancelled."
+msgstr "Задача <{}> отменена."
+
+#: ../pool_worker/pool_tasks.py:92
+msgid "Exception during task execution. Task: <{}> Exception: {}."
+msgstr "Задача <{}> завершилась с ошибками. Исключение: {}."
+
 #: ../pool_worker/pool_tasks.py:152
 msgid "Pool Creation cancelled."
 msgstr "Создание пула отменено."
