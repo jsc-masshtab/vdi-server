@@ -37,6 +37,7 @@ def downgrade():
     task_type = postgresql.ENUM('CREATING_POOL', 'EXPANDING_POOL', 'DELETING_POOL', 'DECREASING_POOL', name='task_type')
     task_type.create(op.get_bind())
 
+    op.execute('truncate table task;')
     op.add_column('task', sa.Column('task_type', sa.Enum('CREATING_POOL', 'EXPANDING_POOL',
                                                          'DELETING_POOL', 'DECREASING_POOL',
                                                          name='task_type'), nullable=False))
