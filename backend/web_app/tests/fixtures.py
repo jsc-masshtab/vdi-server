@@ -1,6 +1,6 @@
 import pytest
 import uuid
-import json
+
 from subprocess import Popen, TimeoutExpired
 import sys
 import asyncio
@@ -12,7 +12,7 @@ from common.database import start_gino, stop_gino
 from common.veil.veil_gino import Role
 from common.veil.auth.veil_jwt import encode_jwt
 from common.veil.veil_api import get_veil_client, stop_veil_client
-from common.veil.veil_redis import wait_for_task_result, a_redis_wait_for_message, INTERNAL_EVENTS_CHANNEL
+from common.veil.veil_redis import wait_for_task_result, REDIS_CLIENT
 
 from common.models.controller import Controller
 from common.models.vm import Vm
@@ -23,8 +23,6 @@ from common.models.task import TaskStatus, Task
 from web_app.controller.schema import controller_schema
 from web_app.pool.schema import pool_schema
 from web_app.tests.utils import execute_scheme
-
-from common.log.journal import system_logger
 
 
 async def get_resources_for_pool_test():
@@ -53,6 +51,9 @@ def get_test_pool_name():
 @pytest.fixture
 @async_generator
 async def fixt_launch_workers():
+
+    REDIS_CLIENT.flushall()  # без этого если остались данные с предыдущих тестов
+    # могут происходить труднообъяснимые вещи
 
     ws_listener_worker = Popen([sys.executable, "../../ws_listener_worker/app.py"])
     pool_worker = Popen([sys.executable, "../../pool_worker/app.py", "-do-not-resume-tasks"])
