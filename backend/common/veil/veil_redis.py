@@ -240,7 +240,7 @@ async def execute_delete_pool_task(pool_id: str, full, wait_for_result=True, wai
     from common.models.task import PoolTaskType, TaskStatus  # для избежания цикл ссылки
 
     # send command to pool worker
-    task_id = await request_to_execute_pool_task(pool_id, PoolTaskType.DELETING_POOL, deletion_full=full)
+    task_id = await request_to_execute_pool_task(pool_id, PoolTaskType.POOL_DELETE, deletion_full=full)
 
     # wait for result
     if wait_for_result:

@@ -650,8 +650,7 @@ class ExpandPoolMutation(graphene.Mutation, PoolValidator):
         if tasks:
             raise SilentError(_('Another task works on pool {}.').format(pool_name))
 
-        task_id = await request_to_execute_pool_task(pool_id, PoolTaskType.EXPANDING_POOL,
-                                                     ignore_reserve_size=True, wait_for_lock=True)
+        task_id = await request_to_execute_pool_task(pool_id, PoolTaskType.POOL_EXPAND, ignore_reserve_size=True)
         return {
             'ok': True,
             'task_id': task_id,
@@ -717,7 +716,7 @@ class CreateAutomatedPoolMutation(graphene.Mutation, PoolValidator, ControllerFe
             raise SimpleError(error_msg, description=desc, user=creator, entity=entity)
 
         # send command to start pool init task
-        await request_to_execute_pool_task(str(automated_pool.id), PoolTaskType.CREATING_POOL)
+        await request_to_execute_pool_task(str(automated_pool.id), PoolTaskType.POOL_CREATE)
 
         # pool creation task successfully started
         pool = await Pool.get_pool(automated_pool.id)
@@ -755,7 +754,7 @@ class UpdateAutomatedPoolMutation(graphene.Mutation, PoolValidator):
             # пулу лок
             new_total_size = kwargs.get('total_size')
             if new_total_size and new_total_size < automated_pool.total_size:
-                task_id = await request_to_execute_pool_task(kwargs['pool_id'], PoolTaskType.DECREASING_POOL,
+                task_id = await request_to_execute_pool_task(kwargs['pool_id'], PoolTaskType.POOL_DECREASE,
                                                              new_total_size=new_total_size)
                 status = await wait_for_task_result(task_id, wait_timeout=3)
 

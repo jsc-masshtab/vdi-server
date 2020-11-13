@@ -26,10 +26,10 @@ _ = lang_init()
 
 class PoolTaskType(Enum):
 
-    CREATING_POOL = 'CREATING_POOL'
-    EXPANDING_POOL = 'EXPANDING_POOL'
-    DELETING_POOL = 'DELETING_POOL'
-    DECREASING_POOL = 'DECREASING_POOL'
+    POOL_CREATE = 'POOL_CREATE'
+    POOL_EXPAND = 'POOL_EXPAND'
+    POOL_DELETE = 'POOL_DELETE'
+    POOL_DECREASE = 'POOL_DECREASE'
     VM_PREPARE = 'VM_PREPARE'
 
 
@@ -78,13 +78,13 @@ class Task(db.Model, AbstractSortableStatusModel):
 
         entity_name = await self.get_associated_entity_name()
 
-        if self.task_type == PoolTaskType.CREATING_POOL:
+        if self.task_type == PoolTaskType.POOL_CREATE:
             return _('Creation of pool {}.').format(entity_name)
-        elif self.task_type == PoolTaskType.EXPANDING_POOL:
+        elif self.task_type == PoolTaskType.POOL_EXPAND:
             return _('Expanding of pool {}.').format(entity_name)
-        elif self.task_type == PoolTaskType.DELETING_POOL:
+        elif self.task_type == PoolTaskType.POOL_DELETE:
             return _('Deleting of pool {}.').format(entity_name)
-        elif self.task_type == PoolTaskType.DECREASING_POOL:
+        elif self.task_type == PoolTaskType.POOL_DECREASE:
             return _('Decreasing of pool {}.').format(entity_name)
         elif self.task_type == PoolTaskType.VM_PREPARE:
             return _('Preparation of vm {}.').format(entity_name)
