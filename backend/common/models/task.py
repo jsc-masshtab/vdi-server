@@ -114,7 +114,7 @@ class Task(db.Model, AbstractSortableStatusModel):
             # set finish time
             await self.update(finished=func.now()).apply()
 
-            duration = self.finished - self.started
+            duration = self.finished - self.started if (self.finished and self.started) else '0000'
             message += _('  Duration: {}.').format(str(duration)[:-3])
 
         shorten_msg = textwrap.shorten(message, width=256)
@@ -158,7 +158,7 @@ class Task(db.Model, AbstractSortableStatusModel):
                 if entity.entity_type == EntityType.POOL:
                     from common.models.pool import Pool
                     pool = await Pool.get(self.entity_id)
-                    self._associated_entity_name = pool and pool.verbose_name if pool else ''
+                    self._associated_entity_name = pool.verbose_name if pool else ''
 
                 elif entity.entity_type == EntityType.VM:
                     from common.models.vm import Vm
