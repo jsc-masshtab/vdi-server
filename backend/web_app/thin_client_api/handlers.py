@@ -70,6 +70,7 @@ class PoolGetVm(BaseHandler, ABC):
         if PoolModel.thin_client_limit_exceeded():
             response = {'errors': [{'message': _('Thin client limit exceeded.'), 'code': '001'}]}
             return await self.finish(response)
+
         user = await self.get_user_model_instance()
         if not user:
             response = {'errors': [{'message': _('User {} not found.'), 'code': '401'}]}
@@ -79,6 +80,12 @@ class PoolGetVm(BaseHandler, ABC):
             response = {'errors': [{'message': _('Pool not found.'), 'code': '404'}]}
             return await self.log_finish(response)
         pool_extended = False
+
+        # Проверяем разрешен ли присланный remote_protocol для данного пула
+        if PoolModel.PoolConnectionTypes[remote_protocol] not in pool.connection_types:
+            response = {'errors': [{'message': _('The pool doesnt support connection type {}.').format(remote_protocol),
+                                    'code': '404'}]}
+            return await self.log_finish(response)
 
         # Запрос на расширение пула
         if await pool.pool_type == PoolModel.PoolTypes.AUTOMATED:
@@ -185,8 +192,8 @@ class PoolGetVm(BaseHandler, ABC):
             node_info = await vm_controller.veil_client.node(node_id=node_id).info()
             vm_address = node_info.response[0].management_ip
             vm_port = info.data['real_remote_access_port']
-        # PoolModel.PoolConnectionTypes.SPICE.name by default
-        else:
+
+        else:  # PoolModel.PoolConnectionTypes.SPICE.name by default
             vm_address = vm_controller.address
             vm_port = veil_domain.remote_access_port
 

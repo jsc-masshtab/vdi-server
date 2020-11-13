@@ -1050,6 +1050,10 @@ msgstr "Превышен лимит тонких клиентов."
 msgid "Pool not found."
 msgstr "Пул не найден."
 
+#: ../web_app/thin_client_api/handlers.py:86
+msgid "The pool doesnt support connection type {}."
+msgstr "Пул не поддерживает тип соединения {}."
+
 #: ../web_app/thin_client_api/handlers.py:96
 msgid "The pool doesn`t have free machines. Try again after 5 minutes."
 msgstr "В пуле нет свободных машин. Повторите попытку через 5 минут."

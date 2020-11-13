@@ -1050,6 +1050,10 @@ msgstr "Thin client limit exceeded."
 msgid "Pool not found."
 msgstr "Pool not found."
 
+#: ../web_app/thin_client_api/handlers.py:86
+msgid "The pool doesnt support connection type {}."
+msgstr "The pool doesnt support connection type {}."
+
 #: ../web_app/thin_client_api/handlers.py:96
 msgid "The pool doesn`t have free machines. Try again after 5 minutes."
 msgstr "The pool doesn`t have free machines. Try again after 5 minutes."
