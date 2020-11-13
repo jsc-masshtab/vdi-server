@@ -163,11 +163,9 @@ class PoolTaskManager:
         elif pool_task_type == PoolTaskType.POOL_EXPAND.name:
             try:
                 ignore_reserve_size = task_data_dict['ignore_reserve_size']
-                wait_for_lock = task_data_dict['wait_for_lock']
             except KeyError:
                 ignore_reserve_size = False
-                wait_for_lock = False
-            task = ExpandPoolTask(self.pool_locks, ignore_reserve_size=ignore_reserve_size, wait_for_lock=wait_for_lock)
+            task = ExpandPoolTask(self.pool_locks, ignore_reserve_size=ignore_reserve_size)
             await task.init(task_id, self.task_list)
             task.execute_in_async_task()
 
