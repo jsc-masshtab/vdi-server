@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import asyncio
 import traceback
+from abc import ABC, abstractmethod
 
 from common.veil.veil_errors import PoolCreationError
 
@@ -22,7 +23,7 @@ from common.models.vm import Vm
 _ = lang_init()
 
 
-class AbstractTask:
+class AbstractTask(ABC):
     """Выполняет задачу do_task"""
 
     def __init__(self):
@@ -50,6 +51,7 @@ class AbstractTask:
             await cancel_async_task(self._coroutine, wait_for_result)
             self._coroutine = None
 
+    @abstractmethod
     async def do_task(self):
         """Корутина, в которой будет выполняться таска"""
         raise NotImplementedError

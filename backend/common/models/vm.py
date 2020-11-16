@@ -14,6 +14,7 @@ from common.database import db
 from common.settings import VEIL_OPERATION_WAITING, VEIL_VM_PREPARE_TIMEOUT
 from common.veil.veil_gino import get_list_of_values_from_db, EntityType, VeilModel, Status
 from common.veil.veil_errors import VmCreationError, SimpleError
+from common.veil.veil_redis import send_cmd_to_cancel_tasks_associated_with_entity
 from common.languages import lang_init
 from common.log.journal import system_logger
 
@@ -276,6 +277,9 @@ class Vm(VeilModel):
 
     @staticmethod
     async def remove_vm(vm_id, creator, remove_vms_on_controller):
+        # Stop tasks associated with entity
+        await send_cmd_to_cancel_tasks_associated_with_entity(vm_id)
+
         vm = await Vm.get(vm_id)
         await vm.soft_delete(creator=creator, remove_on_controller=remove_vms_on_controller)
         await system_logger.info(_('VM {} has been removed from the pool.').format(vm.verbose_name), entity=vm.entity)

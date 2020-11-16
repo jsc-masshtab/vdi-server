@@ -88,17 +88,22 @@ class PoolTaskManager:
                         cancel_all = data_dict['cancel_all']
                         await self.cancel_tasks(task_ids, cancel_all)
 
-                    elif 'controller_id' in data_dict:
+                    elif 'controller_id' in data_dict and 'resumable' in data_dict:
                         controller_id = data_dict['controller_id']
                         resumable = data_dict['resumable']
                         await self.cancel_tasks_associated_with_controller(controller_id, resumable)
 
+                    elif 'entity_id' in data_dict and 'resumable' in data_dict:
+                        entity_id = data_dict['entity_id']
+                        resumable = data_dict['resumable']
+                        await self.cancel_tasks_associated_with_entity(entity_id, resumable)
+
                 elif command == PoolWorkerCmd.RESUME_TASK.name:
                     try:
                         controller_id = data_dict['controller_id']
-                        await self.resume_tasks(controller_id=controller_id, remove_unresumable_tasks=False)
                     except KeyError:
-                        await system_logger.error('Cant resume tasks')
+                        controller_id = None
+                    await self.resume_tasks(controller_id=controller_id, remove_unresumable_tasks=False)
 
             except asyncio.CancelledError:
                 raise
@@ -213,4 +218,12 @@ class PoolTaskManager:
         task_list = list(self.task_list)  # shallow copy
         for task in task_list:
             if task.task_model.id in tasks_to_cancel:
+                await task.cancel(resumable=resumable, wait_for_result=False)
+
+    async def cancel_tasks_associated_with_entity(self, entity_id, resumable=False):
+        """cancel tasks associated with entity"""
+
+        task_list = list(self.task_list)  # shallow copy
+        for task in task_list:
+            if str(task.task_model.entity_id) == entity_id:
                 await task.cancel(resumable=resumable, wait_for_result=False)

@@ -260,8 +260,7 @@ async def send_cmd_to_cancel_tasks_associated_with_controller(controller_id, wai
     and will wait for cancellation if wait_for_result==True"""
 
     #  Send cmd
-    cmd_dict = {'command': PoolWorkerCmd.CANCEL_TASK.name, 'controller_id': str(controller_id),
-                'resumable': True}
+    cmd_dict = {'command': PoolWorkerCmd.CANCEL_TASK.name, 'controller_id': str(controller_id), 'resumable': True}
     REDIS_CLIENT.rpush(POOL_WORKER_CMD_QUEUE, json.dumps(cmd_dict))
 
     #  Wait for result
@@ -269,6 +268,14 @@ async def send_cmd_to_cancel_tasks_associated_with_controller(controller_id, wai
         from common.models.task import Task, TaskStatus
         tasks_to_cancel = await Task.get_ids_of_tasks_associated_with_controller(controller_id, TaskStatus.IN_PROGRESS)
         await asyncio.gather(*[wait_for_task_result(task, wait_timeout) for task in tasks_to_cancel])
+
+
+async def send_cmd_to_cancel_tasks_associated_with_entity(entity_id):
+    """Cancel all tasks associated with entity"""
+
+    #  Send cmd
+    cmd_dict = {'command': PoolWorkerCmd.CANCEL_TASK.name, 'entity_id': str(entity_id), 'resumable': True}
+    REDIS_CLIENT.rpush(POOL_WORKER_CMD_QUEUE, json.dumps(cmd_dict))
 
 
 @redis_error_handle
