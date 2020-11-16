@@ -598,7 +598,7 @@ class Pool(VeilModel):
             if not controller_client:
                 break
             domains_list_response = await controller_client.domain().list(fields=['id'],
-                                                                          params={'power_state': 'ON',
+                                                                          params={'user_power_state': 'ON',
                                                                                   'ids': ids_str_section})
             if domains_list_response.success and domains_list_response.paginator_results:
                 # Берем первый идентиифкатор
@@ -650,15 +650,15 @@ class Pool(VeilModel):
         vms_info = list()
         for vm in vms:
             # TODO: Добавить принадлежность к домену + на фронте
-            power_state = VmState.UNDEFINED
+            user_power_state = VmState.UNDEFINED
             parent_name = None
             for vm_id in vms_dict.keys():
                 if str(vm_id) == str(vm.id):
-                    power_state = vms_dict[vm_id]['user_power_state']
+                    user_power_state = vms_dict[vm_id]['user_power_state']
                     parent_name = vms_dict[vm_id]['parent_name']
             # Формируем список с информацией по каждой вм в пуле
             vms_info.append(
-                VmType(power_state=power_state,
+                VmType(user_power_state=user_power_state,
                        parent_name=parent_name,
                        **vm.__values__))
         return vms_info

@@ -54,6 +54,7 @@ export interface IPoolsVm {
 interface ISettingsAutoPool {
   initial_size: number;
   increase_step: number;
+  reserve_size: number;
   total_size: number;
   vm_name_template: string;
 }

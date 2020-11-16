@@ -43,8 +43,15 @@ export class TasksComponent implements OnInit {
       sort: true
     },
     {
-      title: 'Дата создания',
-      property: 'created',
+      title: 'Время создания',
+      property: 'started',
+      type: 'time',
+      class: 'name-end',
+      sort: true
+    },
+    {
+      title: 'Время завершения',
+      property: 'finished',
       type: 'time',
       class: 'name-end',
       sort: true
@@ -120,7 +127,7 @@ export class TasksComponent implements OnInit {
 
   public openTaskDetails(task: any): void {
     this.dialog.open(InfoTaskComponent, {
- 			disableClose: true, 
+ 			disableClose: true,
       width: '700px',
       data: {
         task: { ...task }

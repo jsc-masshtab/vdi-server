@@ -62,7 +62,7 @@ class VmType(VeilResourceType):
     user = graphene.Field(UserType)
     status = StatusGraphene()
     # controller = graphene.Field(ControllerType)
-    power_state = VmState()
+    user_power_state = VmState()
     parent_name = graphene.String()
 
     # Список событий для отдельной ВМ и отдельное событие внутри пула
@@ -155,8 +155,18 @@ class PoolValidator(MutationValidation):
         if value is None:
             return
 
+        pool_id = obj_dict.get('pool_id')
+        if pool_id:
+            pool_obj = await Pool.get_pool(pool_id)
+            total_size = obj_dict['total_size'] if obj_dict.get('total_size') else pool_obj.total_size
+        else:
+            total_size = obj_dict['total_size']
+
+        if value > total_size:
+            raise ValidationError(_('Reserve size of VMs can not be more than maximal number of Vms.'))
+
         if value < POOL_MIN_SIZE or value > POOL_MAX_SIZE:
-            raise ValidationError(_('Number of created VM must be in {}-{} interval.').
+            raise ValidationError(_('Reserve size of VM must be in {}-{} interval.').
                                   format(POOL_MIN_SIZE, POOL_MAX_SIZE))
         return value
 
@@ -1100,6 +1110,24 @@ class VmSuspend(graphene.Mutation):
         return VmSuspend(ok=False)
 
 
+class VmTestDomain(graphene.Mutation):
+    """Проверка нахождения ВМ в домене."""
+
+    class Arguments:
+        vm_id = graphene.UUID(required=True)
+
+    ok = graphene.Boolean()
+
+    @administrator_required
+    async def mutate(self, _info, vm_id, creator, **kwargs):
+        vm = await Vm.get(vm_id)
+        if vm:
+            domain_entity = await vm.vm_client
+            ok = await domain_entity.in_ad
+
+        return VmTestDomain(ok=ok)
+
+
 # --- --- --- --- ---
 # Schema concatenation
 class PoolMutations(graphene.ObjectType):
@@ -1128,6 +1156,7 @@ class PoolMutations(graphene.ObjectType):
     shutdownVm = VmShutdown.Field()
     rebootVm = VmReboot.Field()
     suspendVm = VmSuspend.Field()
+    testDomainVm = VmTestDomain.Field()
 
 
 pool_schema = graphene.Schema(query=PoolQuery,

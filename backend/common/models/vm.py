@@ -206,9 +206,9 @@ class Vm(VeilModel):
     # def ready_to_connect(**info) -> bool:
     #     """Checks parameters indicating availability for connection."""
     #     # TODO: сейчас не используется?
-    #     power_state = info.get('user_power_state', 0)
+    #     user_power_state = info.get('user_power_state', 0)
     #     remote_access = info.get('remote_access', False)
-    #     return power_state != 3 or not remote_access
+    #     return user_power_state != 3 or not remote_access
 
     @staticmethod
     async def copy(verbose_name: str, domain_id: str, datapool_id: str, controller_id,

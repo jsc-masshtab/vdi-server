@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2020-11-11 13:13+0300\n"
+"POT-Creation-Date: 2020-11-13 17:43+0300\n"
 "PO-Revision-Date: 2020-07-30 11:25+0300\n"
 "Last-Translator: Emil <emil@emil-pc>\n"
 "Language-Team: English\n"
@@ -411,27 +411,27 @@ msgstr "Adding VM to the pool {} finished with errors."
 msgid "Required: {}, created: {}."
 msgstr "Required: {}, created: {}."
 
-#: ../common/models/task.py:77
+#: ../common/models/task.py:82
 msgid "Creation of pool {}."
 msgstr "Creation of pool {}."
 
-#: ../common/models/task.py:79
+#: ../common/models/task.py:84
 msgid "Expanding of pool {}."
 msgstr "Expanding of pool {}."
 
-#: ../common/models/task.py:81
+#: ../common/models/task.py:86
 msgid "Deleting of pool {}."
 msgstr "Deleting of pool {}."
 
-#: ../common/models/task.py:83
+#: ../common/models/task.py:88
 msgid "Decreasing of pool {}."
 msgstr "Decreasing of pool {}."
 
-#: ../common/models/task.py:85
+#: ../common/models/task.py:90
 msgid "Preparation of vm {}."
 msgstr "Preparation of vm {}."
 
-#: ../common/models/task.py:110
+#: ../common/models/task.py:118
 msgid "  Duration: {}."
 msgstr "  Duration: {}."
 
@@ -671,27 +671,27 @@ msgstr "Task <{}> cancelled."
 msgid "Exception during task execution. Task: <{}> Exception: {}."
 msgstr "Exception during task execution. Task: <{}> Exception: {}."
 
-#: ../pool_worker/pool_tasks.py:152
+#: ../pool_worker/pool_tasks.py:154
 msgid "Pool Creation cancelled."
 msgstr "Pool Creation cancelled."
 
-#: ../pool_worker/pool_tasks.py:156
+#: ../pool_worker/pool_tasks.py:158
 msgid "Failed to init pool."
 msgstr "Failed to init pool."
 
-#: ../pool_worker/pool_tasks.py:169
+#: ../pool_worker/pool_tasks.py:171
 msgid "Virtual machine(s) preparation error."
 msgstr "Virtual machine(s) preparation error."
 
-#: ../pool_worker/pool_tasks.py:230
+#: ../pool_worker/pool_tasks.py:232
 msgid "VM creating error."
 msgstr "VM creating error."
 
-#: ../pool_worker/pool_tasks.py:244
+#: ../pool_worker/pool_tasks.py:246
 msgid "VM preparation error."
 msgstr "VM preparation error."
 
-#: ../pool_worker/pool_tasks.py:326
+#: ../pool_worker/pool_tasks.py:329
 msgid "Another task works on this VM."
 msgstr "Another task works on this VM."
 
@@ -937,8 +937,8 @@ msgstr "The sort parameter is incorrect."
 msgid "Journal is exported."
 msgstr "Journal is exported."
 
-#: ../web_app/pool/schema.py:121 ../web_app/pool/schema.py:433
-#: ../web_app/pool/schema.py:454
+#: ../web_app/pool/schema.py:121 ../web_app/pool/schema.py:443
+#: ../web_app/pool/schema.py:464
 msgid "No such pool."
 msgstr "No such pool."
 
@@ -954,93 +954,97 @@ msgstr "Template name of VM must contain only characters, digits, -."
 msgid "Initial number of VM must be in {}-{} interval."
 msgstr "Initial number of VM must be in {}-{} interval."
 
-#: ../web_app/pool/schema.py:159
-msgid "Number of created VM must be in {}-{} interval."
-msgstr "Number of created VM must be in {}-{} interval."
+#: ../web_app/pool/schema.py:166
+msgid "Reserve size of VMs can not be more than maximal number of Vms."
+msgstr "Reserve size of VMs can not be more than maximal number of Vms."
 
-#: ../web_app/pool/schema.py:180
+#: ../web_app/pool/schema.py:169
+msgid "Reserve size of VM must be in {}-{} interval."
+msgstr "Reserve size of VM must be in {}-{} interval."
+
+#: ../web_app/pool/schema.py:190
 msgid "Maximal number of created VM can not be less than initial number of VM."
 msgstr "Maximal number of created VM can not be less than initial number of VM."
 
-#: ../web_app/pool/schema.py:182
+#: ../web_app/pool/schema.py:192
 msgid "Maximal number of created VM must be in [{} {}] interval."
 msgstr "Maximal number of created VM must be in [{} {}] interval."
 
-#: ../web_app/pool/schema.py:185
+#: ../web_app/pool/schema.py:195
 msgid "Maximal number of created VMs can not be less than current amount of Vms."
 msgstr "Maximal number of created VMs can not be less than current amount of Vms."
 
-#: ../web_app/pool/schema.py:200
+#: ../web_app/pool/schema.py:210
 msgid "Increase step must be positive and less or equal to total_size."
 msgstr "Increase step must be positive and less or equal to total_size."
 
-#: ../web_app/pool/schema.py:206
+#: ../web_app/pool/schema.py:216
 msgid "Connection type cannot be empty."
 msgstr "Connection type cannot be empty."
 
-#: ../web_app/pool/schema.py:524
+#: ../web_app/pool/schema.py:534
 msgid "Failed to create static pool {}."
 msgstr "Failed to create static pool {}."
 
-#: ../web_app/pool/schema.py:551
+#: ../web_app/pool/schema.py:561
 msgid "VM {} is already in one of pools."
 msgstr "VM {} is already in one of pools."
 
-#: ../web_app/pool/schema.py:565
+#: ../web_app/pool/schema.py:575
 msgid "VM {} has been added to the pool {}."
 msgstr "VM {} has been added to the pool {}."
 
-#: ../web_app/pool/schema.py:582 ../web_app/pool/schema.py:796
+#: ../web_app/pool/schema.py:592 ../web_app/pool/schema.py:811
 msgid "List of VM should not be empty."
 msgstr "List of VM should not be empty."
 
-#: ../web_app/pool/schema.py:592 ../web_app/pool/schema.py:806
+#: ../web_app/pool/schema.py:602 ../web_app/pool/schema.py:821
 msgid "VM doesn't belong to specified pool."
 msgstr "VM doesn't belong to specified pool."
 
-#: ../web_app/pool/schema.py:1015
-msgid "Another task works on VM {}."
-msgstr "Another task works on VM {}."
-
-#: ../web_app/pool/schema.py:620
+#: ../web_app/pool/schema.py:630
 msgid "Failed to update static pool {}. Name must be unique."
 msgstr "Failed to update static pool {}. Name must be unique."
 
-#: ../web_app/pool/schema.py:645
+#: ../web_app/pool/schema.py:656
 msgid "Can not expand pool {} because it reached its total_size."
 msgstr "Can not expand pool {} because it reached its total_size."
 
-#: ../web_app/pool/schema.py:651
+#: ../web_app/pool/schema.py:661
 msgid "Another task works on pool {}."
 msgstr "Another task works on pool {}."
 
-#: ../web_app/pool/schema.py:709
+#: ../web_app/pool/schema.py:724
 msgid "Failed to create automated pool {}."
 msgstr "Failed to create automated pool {}."
 
-#: ../web_app/pool/schema.py:777
+#: ../web_app/pool/schema.py:792
 msgid "Failed to update automated pool {}. Name must be unique."
 msgstr "Failed to update automated pool {}. Name must be unique."
 
-#: ../web_app/pool/schema.py:956
+#: ../web_app/pool/schema.py:971
 msgid "There is no VM {}."
 msgstr "There is no VM {}."
 
-#: ../web_app/pool/schema.py:973
+#: ../web_app/pool/schema.py:988
 msgid "User does not have the right to use pool, which has VM."
 msgstr "User does not have the right to use pool, which has VM."
 
-#: ../web_app/task/schema.py:93
+#: ../web_app/pool/schema.py:1029
+msgid "Another task works on VM {}."
+msgstr "Another task works on VM {}."
+
+#: ../web_app/task/schema.py:95
 msgid "No such task."
 msgstr "No such task."
 
-#: ../web_app/task/schema.py:113
+#: ../web_app/task/schema.py:115
 msgid "No such task or status of task {} is not {}."
 msgstr "No such task or status of task {} is not {}."
 
 #: ../web_app/tests/test_auth_v2.py:125
-msgid "Ошибка авторизации: Неверные учетные данные (ldap):"
-msgstr "Ошибка авторизации Неверные учетные данные (ldap):"
+msgid "Ошибка авторизации."
+msgstr "Ошибка авторизации."
 
 #: ../web_app/thin_client_api/handlers.py:69
 msgid "Thin client limit exceeded."
@@ -1137,35 +1141,38 @@ msgstr "{cls}: Controller {name} is already monitored."
 msgid "{cls}: resource monitor for controller {name} connected."
 msgstr "{cls}: resource monitor for controller {name} connected."
 
-#~ msgid "VM has been added to Windows domain container(s) {}."
-#~ msgstr "VM has been added to Windows domain container(s) {}."
-
-#~ msgid "VM domain container adding task {} finished with error."
-#~ msgstr "VM domain container adding task {} finished with error."
-
-#~ msgid "VM has been added to Windows domain {}."
-#~ msgstr "VM has been added to Windows domain {}."
-
-#~ msgid "VM domain include task {} finished with error."
-#~ msgstr "VM domain include task {} finished with error."
-
-#~ msgid "Adding {} to domain."
-#~ msgstr "Adding {} to domain."
-
-#~ msgid "Hostname {} has been set."
-#~ msgstr "Hostname {} has been set."
-
-#~ msgid "VM hostname setting task {} finished with error."
-#~ msgstr "VM hostname setting task {} finished with error."
-
-#~ msgid "Setting hostname for {}."
-#~ msgstr "Setting hostname for {}."
-
-#~ msgid "Waiting guest agent activation for {}."
-#~ msgstr "Waiting guest agent activation for {}."
+#~ msgid "Update controller {}: {}."
+#~ msgstr "Update controller {}: {}."
 
 #~ msgid "Enabling remote access for {}."
 #~ msgstr "Enabling remote access for {}."
 
-#~ msgid "Update controller {}: {}."
-#~ msgstr "Update controller {}: {}."
+#~ msgid "Waiting guest agent activation for {}."
+#~ msgstr "Waiting guest agent activation for {}."
+
+#~ msgid "Setting hostname for {}."
+#~ msgstr "Setting hostname for {}."
+
+#~ msgid "VM hostname setting task {} finished with error."
+#~ msgstr "VM hostname setting task {} finished with error."
+
+#~ msgid "Hostname {} has been set."
+#~ msgstr "Hostname {} has been set."
+
+#~ msgid "Adding {} to domain."
+#~ msgstr "Adding {} to domain."
+
+#~ msgid "VM domain include task {} finished with error."
+#~ msgstr "VM domain include task {} finished with error."
+
+#~ msgid "VM has been added to Windows domain {}."
+#~ msgstr "VM has been added to Windows domain {}."
+
+#~ msgid "VM domain container adding task {} finished with error."
+#~ msgstr "VM domain container adding task {} finished with error."
+
+#~ msgid "VM has been added to Windows domain container(s) {}."
+#~ msgstr "VM has been added to Windows domain container(s) {}."
+
+#~ msgid "Ошибка авторизации: Неверные учетные данные (ldap):"
+#~ msgstr "Ошибка авторизации Неверные учетные данные (ldap):"
