@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2020-11-13 17:43+0300\n"
+"POT-Creation-Date: 2020-11-16 20:17+0300\n"
 "PO-Revision-Date: 2020-07-30 11:25+0300\n"
 "Last-Translator: Emil <emil@emil-pc>\n"
 "Language-Team: English\n"
@@ -286,7 +286,7 @@ msgstr "Incorrect sorting option {}."
 msgid "User {} has been included to pool {}."
 msgstr "User {} has been included to pool {}."
 
-#: ../common/models/pool.py:407 ../common/models/vm.py:177
+#: ../common/models/pool.py:407 ../common/models/vm.py:180
 msgid "{} already has permission."
 msgstr "{} already has permission."
 
@@ -435,138 +435,142 @@ msgstr "Preparation of vm {}."
 msgid "  Duration: {}."
 msgstr "  Duration: {}."
 
-#: ../common/models/vm.py:108
+#: ../common/models/vm.py:109
 msgid "Create VM {} on VDI DB."
 msgstr "Create VM {} on VDI DB."
 
-#: ../common/models/vm.py:125 ../web_app/thin_client_api/handlers.py:246
-#: ../web_app/thin_client_api/handlers.py:273
+#: ../common/models/vm.py:126 ../web_app/thin_client_api/handlers.py:272
+#: ../web_app/thin_client_api/handlers.py:299
 msgid "VM has no api client."
 msgstr "VM has no api client."
 
-#: ../common/models/vm.py:132
+#: ../common/models/vm.py:134
 msgid "Removing {} from domain."
 msgstr "Removing {} from domain."
 
-#: ../common/models/vm.py:153
+#: ../common/models/vm.py:156
 msgid "VM deletion task {} finished with error."
 msgstr "VM deletion task {} finished with error."
 
-#: ../common/models/vm.py:154
+#: ../common/models/vm.py:157
 msgid "VM {} removed from ECP."
 msgstr "VM {} removed from ECP."
 
-#: ../common/models/vm.py:157
+#: ../common/models/vm.py:160
 msgid "VM {} deletion task finished with error."
 msgstr "VM {} deletion task finished with error."
 
-#: ../common/models/vm.py:174
+#: ../common/models/vm.py:177
 msgid "User {} has been included to VM {}."
 msgstr "User {} has been included to VM {}."
 
-#: ../common/models/vm.py:185
+#: ../common/models/vm.py:188
 msgid "VM {} is clear from users."
 msgstr "VM {} is clear from users."
 
-#: ../common/models/vm.py:222 ../common/models/vm.py:354
+#: ../common/models/vm.py:225 ../common/models/vm.py:360
 msgid "There is no client for controller {}."
 msgstr "There is no client for controller {}."
 
-#: ../common/models/vm.py:245
+#: ../common/models/vm.py:248
 msgid "ECP VeiL controller {} error."
 msgstr "ECP VeiL controller {} error."
 
-#: ../common/models/vm.py:252
+#: ../common/models/vm.py:255
 msgid "Controller has not free space for creating new VM."
 msgstr "Controller has not free space for creating new VM."
 
-#: ../common/models/vm.py:253
+#: ../common/models/vm.py:256
 msgid "Not enough free space on data pool."
 msgstr "Not enough free space on data pool."
 
-#: ../common/models/vm.py:256
+#: ../common/models/vm.py:259
 msgid "Unknown node {}."
 msgstr "Unknown node {}."
 
-#: ../common/models/vm.py:257
+#: ../common/models/vm.py:260
 msgid "Controller can`t create VM. Unknown node."
 msgstr "Controller can`t create VM. Unknown node."
 
-#: ../common/models/vm.py:262
+#: ../common/models/vm.py:265
 msgid "Possibly blocked by active task on ECP. Wait before next try."
 msgstr "Possibly blocked by active task on ECP. Wait before next try."
 
-#: ../common/models/vm.py:265
+#: ../common/models/vm.py:268
 msgid "Something went wrong. Interrupt while."
 msgstr "Something went wrong. Interrupt while."
 
-#: ../common/models/vm.py:281
+#: ../common/models/vm.py:287
 msgid "VM {} has been removed from the pool."
 msgstr "VM {} has been removed from the pool."
 
-#: ../common/models/vm.py:289
+#: ../common/models/vm.py:295
 msgid "VM {} deleting cancelled by timeout."
 msgstr "VM {} deleting cancelled by timeout."
 
-#: ../common/models/vm.py:311 ../web_app/journal/schema.py:162
+#: ../common/models/vm.py:317 ../web_app/journal/schema.py:162
 msgid "No such event."
 msgstr "No such event."
 
-#: ../common/models/vm.py:371
+#: ../common/models/vm.py:377
 msgid "VM {} is powered."
 msgstr "VM {} is powered."
 
-#: ../common/models/vm.py:378
+#: ../common/models/vm.py:384
 msgid "VM {} already shutdown."
 msgstr "VM {} already shutdown."
 
-#: ../common/models/vm.py:384
+#: ../common/models/vm.py:390
 msgid "VM {} is force shutdown."
 msgstr "VM {} is force shutdown."
 
-#: ../common/models/vm.py:387
+#: ../common/models/vm.py:393
 msgid "VM {} is shutdown."
 msgstr "VM {} is shutdown."
 
-#: ../common/models/vm.py:395 ../common/models/vm.py:419
+#: ../common/models/vm.py:401 ../common/models/vm.py:424
 msgid "VM {} is shutdown. Please power this."
 msgstr "VM {} is shutdown. Please power this."
 
-#: ../common/models/vm.py:402
+#: ../common/models/vm.py:408
 msgid "VM {} was force reboot."
 msgstr "VM {} was force reboot."
 
-#: ../common/models/vm.py:405
+#: ../common/models/vm.py:411
 msgid "VM {} was reboot."
 msgstr "VM {} was reboot."
 
-#: ../common/models/vm.py:415
+#: ../common/models/vm.py:420
 msgid "VM {} is suspended."
 msgstr "VM {} is suspended."
 
-#: ../common/models/vm.py:437
-msgid "Remote access enabled."
-msgstr "Remote access enabled."
+#: ../common/models/vm.py:442
+msgid "VM {} remote access enabled."
+msgstr "VM {} remote access enabled."
 
-#: ../common/models/vm.py:476 ../common/models/vm.py:507
+#: ../common/models/vm.py:484 ../common/models/vm.py:512
 msgid "VM {} failed to receive DHCP ip address."
 msgstr "VM {} failed to receive DHCP ip address."
 
-#: ../common/models/vm.py:490
+#: ../common/models/vm.py:497
 msgid "VM {} domain container including task failed."
 msgstr "VM {} domain container including task failed."
 
-#: ../common/models/vm.py:519
+#: ../common/models/vm.py:523
 msgid "VM {} domain including task failed."
 msgstr "VM {} domain including task failed."
 
-#: ../common/models/vm.py:539
+#: ../common/models/vm.py:540
 msgid "VM {} has been prepared."
 msgstr "VM {} has been prepared."
 
-#: ../common/models/vm.py:548
+#: ../common/models/vm.py:549
 msgid "{} preparation cancelled by timeout."
 msgstr "{} preparation cancelled by timeout."
+
+#: ../common/models/vm.py:554
+msgid "VM {} preparation error."
+msgstr "VM {} preparation error."
 
 #: ../common/veil/auth/veil_jwt.py:26
 msgid "Token invalid."
@@ -630,8 +634,8 @@ msgstr "{} {} has`t been found in VeiL. Switched to FAILED."
 msgid "Soft_delete exception: {}."
 msgstr "Soft_delete exception: {}."
 
-#: ../common/veil/veil_handlers.py:76 ../web_app/thin_client_api/handlers.py:51
-#: ../web_app/thin_client_api/handlers.py:73
+#: ../common/veil/veil_handlers.py:76 ../web_app/thin_client_api/handlers.py:53
+#: ../web_app/thin_client_api/handlers.py:76
 msgid "User {} not found."
 msgstr "User {} not found."
 
@@ -655,43 +659,43 @@ msgstr "Redis task waiting exception."
 msgid "Field \"{}\" - {}."
 msgstr "Field \"{}\" - {}."
 
-#: ../pool_worker/pool_tasks.py:75
+#: ../pool_worker/pool_tasks.py:77
 msgid "Task <{}> started."
 msgstr "Task <{}> started."
 
-#: ../pool_worker/pool_tasks.py:83
+#: ../pool_worker/pool_tasks.py:85
 msgid "Task <{}> finished."
 msgstr "Task <{}> finished."
 
-#: ../pool_worker/pool_tasks.py:87
+#: ../pool_worker/pool_tasks.py:89
 msgid "Task <{}> cancelled."
 msgstr "Task <{}> cancelled."
 
-#: ../pool_worker/pool_tasks.py:92
+#: ../pool_worker/pool_tasks.py:94
 msgid "Exception during task execution. Task: <{}> Exception: {}."
 msgstr "Exception during task execution. Task: <{}> Exception: {}."
 
-#: ../pool_worker/pool_tasks.py:154
+#: ../pool_worker/pool_tasks.py:156
 msgid "Pool Creation cancelled."
 msgstr "Pool Creation cancelled."
 
-#: ../pool_worker/pool_tasks.py:158
+#: ../pool_worker/pool_tasks.py:160
 msgid "Failed to init pool."
 msgstr "Failed to init pool."
 
-#: ../pool_worker/pool_tasks.py:171
-msgid "Virtual machine(s) preparation error."
-msgstr "Virtual machine(s) preparation error."
+#: ../pool_worker/pool_tasks.py:173
+msgid "Pool initialization VM(s) preparation error."
+msgstr "Pool initialization VM(s) preparation error."
 
-#: ../pool_worker/pool_tasks.py:232
+#: ../pool_worker/pool_tasks.py:234
 msgid "VM creating error."
 msgstr "VM creating error."
 
-#: ../pool_worker/pool_tasks.py:246
+#: ../pool_worker/pool_tasks.py:248
 msgid "VM preparation error."
 msgstr "VM preparation error."
 
-#: ../pool_worker/pool_tasks.py:329
+#: ../pool_worker/pool_tasks.py:331
 msgid "Another task works on this VM."
 msgstr "Another task works on this VM."
 
@@ -869,7 +873,7 @@ msgid "Specify id or username."
 msgstr "Specify id or username."
 
 #: ../web_app/controller/resource_schema.py:314
-#: ../web_app/thin_client_api/handlers.py:116
+#: ../web_app/thin_client_api/handlers.py:125
 msgid "VM is unreachable on ECP Veil."
 msgstr "VM is unreachable on ECP Veil."
 
@@ -1042,15 +1046,11 @@ msgstr "No such task."
 msgid "No such task or status of task {} is not {}."
 msgstr "No such task or status of task {} is not {}."
 
-#: ../web_app/tests/test_auth_v2.py:125
-msgid "Ошибка авторизации."
-msgstr "Ошибка авторизации."
-
-#: ../web_app/thin_client_api/handlers.py:69
+#: ../web_app/thin_client_api/handlers.py:71
 msgid "Thin client limit exceeded."
 msgstr "Thin client limit exceeded."
 
-#: ../web_app/thin_client_api/handlers.py:77
+#: ../web_app/thin_client_api/handlers.py:80
 msgid "Pool not found."
 msgstr "Pool not found."
 
@@ -1058,51 +1058,51 @@ msgstr "Pool not found."
 msgid "The pool doesnt support connection type {}."
 msgstr "The pool doesnt support connection type {}."
 
-#: ../web_app/thin_client_api/handlers.py:96
+#: ../web_app/thin_client_api/handlers.py:105
 msgid "The pool doesn`t have free machines. Try again after 5 minutes."
 msgstr "The pool doesn`t have free machines. Try again after 5 minutes."
 
-#: ../web_app/thin_client_api/handlers.py:101
+#: ../web_app/thin_client_api/handlers.py:110
 msgid "The pool doesn`t have free machines."
 msgstr "The pool doesn`t have free machines."
 
-#: ../web_app/thin_client_api/handlers.py:122
+#: ../web_app/thin_client_api/handlers.py:131
 msgid "User {} connected to pool {}."
 msgstr "User {} connected to pool {}."
 
-#: ../web_app/thin_client_api/handlers.py:124
+#: ../web_app/thin_client_api/handlers.py:133
 msgid "User {} connected to VM {}."
 msgstr "User {} connected to VM {}."
 
-#: ../web_app/thin_client_api/handlers.py:135
+#: ../web_app/thin_client_api/handlers.py:144
 msgid "VeiL domain request error."
 msgstr "VeiL domain request error."
 
-#: ../web_app/thin_client_api/handlers.py:138
+#: ../web_app/thin_client_api/handlers.py:147
 msgid "Task has`t been created."
 msgstr "Task has`t been created."
 
-#: ../web_app/thin_client_api/handlers.py:152
+#: ../web_app/thin_client_api/handlers.py:161
 msgid "VM remote access task {} finished with error."
 msgstr "VM remote access task {} finished with error."
 
-#: ../web_app/thin_client_api/handlers.py:157
+#: ../web_app/thin_client_api/handlers.py:166
 msgid "Can`t enable remote access. Check VeiL ECP."
 msgstr "Can`t enable remote access. Check VeiL ECP."
 
-#: ../web_app/thin_client_api/handlers.py:165
+#: ../web_app/thin_client_api/handlers.py:174
 msgid "The remote controller is unavailable."
 msgstr "The remote controller is unavailable."
 
-#: ../web_app/thin_client_api/handlers.py:177
+#: ../web_app/thin_client_api/handlers.py:186
 msgid "VM does not support RDP."
 msgstr "VM does not support RDP."
 
-#: ../web_app/thin_client_api/handlers.py:221
+#: ../web_app/thin_client_api/handlers.py:247
 msgid "User {} executed action {} on VM {}."
 msgstr "User {} executed action {} on VM {}."
 
-#: ../web_app/thin_client_api/handlers.py:223
+#: ../web_app/thin_client_api/handlers.py:249
 msgid "User {} failed to execute action {} on VM {}."
 msgstr "User {} failed to execute action {} on VM {}."
 
@@ -1141,38 +1141,5 @@ msgstr "{cls}: Controller {name} is already monitored."
 msgid "{cls}: resource monitor for controller {name} connected."
 msgstr "{cls}: resource monitor for controller {name} connected."
 
-#~ msgid "Update controller {}: {}."
-#~ msgstr "Update controller {}: {}."
-
-#~ msgid "Enabling remote access for {}."
-#~ msgstr "Enabling remote access for {}."
-
-#~ msgid "Waiting guest agent activation for {}."
-#~ msgstr "Waiting guest agent activation for {}."
-
-#~ msgid "Setting hostname for {}."
-#~ msgstr "Setting hostname for {}."
-
-#~ msgid "VM hostname setting task {} finished with error."
-#~ msgstr "VM hostname setting task {} finished with error."
-
-#~ msgid "Hostname {} has been set."
-#~ msgstr "Hostname {} has been set."
-
-#~ msgid "Adding {} to domain."
-#~ msgstr "Adding {} to domain."
-
-#~ msgid "VM domain include task {} finished with error."
-#~ msgstr "VM domain include task {} finished with error."
-
-#~ msgid "VM has been added to Windows domain {}."
-#~ msgstr "VM has been added to Windows domain {}."
-
-#~ msgid "VM domain container adding task {} finished with error."
-#~ msgstr "VM domain container adding task {} finished with error."
-
-#~ msgid "VM has been added to Windows domain container(s) {}."
-#~ msgstr "VM has been added to Windows domain container(s) {}."
-
-#~ msgid "Ошибка авторизации: Неверные учетные данные (ldap):"
-#~ msgstr "Ошибка авторизации Неверные учетные данные (ldap):"
+#~ msgid "Number of created VM must be in {}-{} interval."
+#~ msgstr "Number of created VM must be in {}-{} interval."

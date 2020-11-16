@@ -170,7 +170,7 @@ class InitPoolTask(AbstractTask):
                 await automated_pool.deactivate()
                 raise
             except Exception as E:
-                await system_logger.error(message=_('Virtual machine(s) preparation error.'), description=str(E))
+                await system_logger.error(message=_('Pool initialization VM(s) preparation error.'), description=str(E))
 
         # Активируем пул
         await automated_pool.activate()
