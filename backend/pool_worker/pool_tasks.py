@@ -7,7 +7,7 @@ from common.veil.veil_errors import PoolCreationError
 from common.log.journal import system_logger
 from common.veil.veil_errors import VmCreationError
 
-from common.veil.veil_gino import EntityType, Status
+from common.veil.veil_gino import Status
 
 from common.utils import cancel_async_task
 
