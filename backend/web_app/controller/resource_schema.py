@@ -336,16 +336,25 @@ class ResourcesQuery(graphene.ObjectType, ControllerFetcher):
             if not controller.veil_client:
                 continue
             veil_response = await controller.veil_client.domain(template=template).list(paginator=paginator)
-            for resource_data in veil_response.paginator_results:
-                # Добавляем параметры контроллера на VDI
+            vms_list = veil_response.paginator_results
+
+            for resource_data in vms_list:
+                # Добавляем параметры контроллера и принадлежность к пулу на VDI
                 resource_data['controller'] = {'id': controller.id, 'verbose_name': controller.verbose_name}
                 vm = await Vm.get(resource_data['id'])
                 if vm:
                     pool = await Pool.get(vm.pool_id)
-                    pool_name = pool.verbose_name
+                    resource_data['pool_name'] = pool.verbose_name
                 else:
-                    pool_name = None
-                domain_list.append(ResourceVmType(pool_name=pool_name, **resource_data))
+                    resource_data['pool_name'] = '--'
+
+            if ordering == 'pool_name':
+                vms_list.sort(key=lambda data: data['pool_name'])
+            elif ordering == '-pool_name':
+                vms_list.sort(key=lambda data: data['pool_name'], reverse=True)
+
+            for resource_data in vms_list:
+                domain_list.append(ResourceVmType(**resource_data))
         return domain_list
 
     @classmethod
