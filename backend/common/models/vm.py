@@ -11,7 +11,7 @@ from asyncpg.exceptions import UniqueViolationError
 from veil_api_client import DomainConfiguration
 
 from common.database import db
-from common.settings import VEIL_OPERATION_WAITING, VEIL_VM_PREPARE_TIMEOUT
+from common.settings import VEIL_OPERATION_WAITING, VEIL_VM_PREPARE_TIMEOUT, VEIL_GUEST_AGENT_EXTRA_WAITING
 from common.veil.veil_gino import get_list_of_values_from_db, EntityType, VeilModel, Status
 from common.veil.veil_errors import VmCreationError, SimpleError
 from common.veil.veil_redis import send_cmd_to_cancel_tasks_associated_with_entity
@@ -124,6 +124,7 @@ class Vm(VeilModel):
                 domain_entity = await self.vm_client
                 if not domain_entity:
                     raise AssertionError(_('VM has no api client.'))
+                await self.qemu_guest_agent_waiting()
                 await domain_entity.info()
                 # Если машина уже заведена в АД - пытаемся ее вывести
                 active_directory_object = await AuthenticationDirectory.query.where(
@@ -141,6 +142,7 @@ class Vm(VeilModel):
                         await asyncio.sleep(VEIL_OPERATION_WAITING)
                         task_completed = await action_task.finished
                 # Отправляем задачу удаления ВМ на ECP.
+                await self.qemu_guest_agent_waiting()
                 delete_response = await domain_entity.remove(full=True)
                 delete_task = delete_response.task
                 task_completed = False
@@ -414,7 +416,6 @@ class Vm(VeilModel):
         """Ставит на паузу ВМ - Пересылает suspend для ВМ на ECP VeiL."""
         domain_entity = await self.get_veil_entity()
         if domain_entity.powered:
-            # await system_logger.info(_('Suspending {}').format(self.verbose_name), entity=self.entity)
             task_success = await self.action('suspend')
             await system_logger.info(_('VM {} is suspended.').format(self.verbose_name), user=creator,
                                      entity=self.entity)
@@ -437,9 +438,9 @@ class Vm(VeilModel):
             # Если задача выполнена с ошибкой - прерываем выполнение
             task_success = await action_response.task.success
             if not task_success:
-                raise ValueError('Remote task finished with error.')
-        await system_logger.info(message=_('Remote access enabled.'), entity=self.entity,
-                                 description='VM {}'.format(self.verbose_name))
+                raise ValueError('Remote access enabling task finished with error.')
+        await system_logger.info(message=_('VM {} remote access enabled.').format(self.verbose_name),
+                                 entity=self.entity)
         return True
 
     async def qemu_guest_agent_waiting(self):
@@ -448,6 +449,9 @@ class Vm(VeilModel):
         while not domain_entity.guest_agent.qemu_state:
             await asyncio.sleep(VEIL_OPERATION_WAITING)
             await domain_entity.info()
+        # Added 16112020
+        # Не верим, что все так просто. Ждем еще.
+        await asyncio.sleep(VEIL_GUEST_AGENT_EXTRA_WAITING)
         return True
 
     async def set_hostname(self):
@@ -477,8 +481,7 @@ class Vm(VeilModel):
         domain_entity = await self.get_veil_entity()
         # APIPA (Automatic Private IP Addressing)
         if domain_entity.guest_agent.first_ipv4_ip and '169.254.' in domain_entity.guest_agent.first_ipv4_ip:
-            await system_logger.error(_('VM {} failed to receive DHCP ip address.').format(self.verbose_name))
-            raise ValueError
+            raise ValueError(_('VM {} failed to receive DHCP ip address.').format(self.verbose_name))
 
         already_in_domain = await domain_entity.in_ad if domain_entity.os_windows else True
         if active_directory_obj and domain_entity.os_windows and not already_in_domain and ad_cn_pattern:
@@ -491,9 +494,7 @@ class Vm(VeilModel):
             # Если задача выполнена с ошибкой - прерываем выполнение
             task_success = await action_response.task.success
             if not task_success:
-                await system_logger.error(_('VM {} domain container including task failed.').format(self.verbose_name),
-                                          description=action_response.task.error_message)
-                raise ValueError
+                raise ValueError(_('VM {} domain container including task failed.').format(self.verbose_name))
             return True
         return False
 
@@ -508,8 +509,7 @@ class Vm(VeilModel):
         domain_entity = await self.get_veil_entity()
         # APIPA (Automatic Private IP Addressing)
         if domain_entity.guest_agent.first_ipv4_ip and '169.254.' in domain_entity.guest_agent.first_ipv4_ip:
-            await system_logger.error(_('VM {} failed to receive DHCP ip address.').format(self.verbose_name))
-            raise ValueError
+            raise ValueError(_('VM {} failed to receive DHCP ip address.').format(self.verbose_name))
 
         already_in_domain = await domain_entity.in_ad if domain_entity.os_windows else True
         if active_directory_obj and domain_entity.os_windows and not already_in_domain:
@@ -520,9 +520,7 @@ class Vm(VeilModel):
             # Если задача выполнена с ошибкой - прерываем выполнение
             task_success = await action_response.task.success
             if not task_success:
-                await system_logger.error(_('VM {} domain including task failed.').format(self.verbose_name),
-                                          description=action_response.task.error_message)
-                raise ValueError
+                raise ValueError(_('VM {} domain including task failed.').format(self.verbose_name))
             return True
         return False
 
@@ -531,8 +529,7 @@ class Vm(VeilModel):
 
         Вся процедура должна продолжаться не более 10 минут для 1 ВМ.
         """
-        # Ref at 10.11.2020
-
+        # Ref at 13.11.2020
         await self.enable_remote_access()
         await self.start()
         await self.set_hostname()
@@ -554,4 +551,5 @@ class Vm(VeilModel):
         except ValueError as err_msg:
             err_str = str(err_msg)
             if err_str:
-                await system_logger.error(message=err_str)
+                await system_logger.error(message=_('VM {} preparation error.').format(self.verbose_name),
+                                          description=err_str, entity=self.entity)

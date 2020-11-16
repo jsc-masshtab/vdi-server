@@ -9,13 +9,11 @@ from common.settings import VEIL_REQUEST_TIMEOUT, VEIL_CACHE_TTL, VEIL_CACHE_TYP
 class VdiVeilClient(VeilClient):
     """Отвечает за сетевое взаимодействие с ECP VeiL."""
 
+    # TODO: request method instead of get, post, put
+
     async def get(self, api_object, url, extra_params):
         """Переопределен для перехвата окончательного статуса ответов."""
         response = await super().get(api_object=api_object, url=url, extra_params=extra_params)
-        # Добавлено 10.11.2020
-        if not response.success:
-            raise ValueError('VeiL request error.')
-        # Протестировано
         if hasattr(response, 'status_code') and hasattr(api_object, 'api_object_id') and api_object.api_object_id:
             if response.status_code == 404 and isinstance(api_object, VeilDomain):
                 from common.models.vm import Vm
@@ -30,6 +28,34 @@ class VdiVeilClient(VeilClient):
             if controller_object and isinstance(controller_object, ControllerModel):
                 await controller_object.deactivate(status=Status.BAD_AUTH)
             # Остановка клиента происходит при деактивации контроллера
+        if not response.success:
+            raise ValueError('VeiL ECP request {} error.'.format(url))
+        return response
+
+    async def post(self, api_object, url: str, json_data: dict = None, extra_params: dict = None):
+        """Переопределен для перехвата окончательного статуса ответов."""
+        response = await super().post(api_object=api_object, url=url, json_data=json_data, extra_params=extra_params)
+        if hasattr(response, 'status_code') and hasattr(api_object, 'api_object_id') and api_object.api_object_id:
+            if response.status_code == 404 and isinstance(api_object, VeilDomain):
+                from common.models.vm import Vm
+                vm_object = await Vm.get(api_object.api_object_id)
+                if vm_object and vm_object.active:
+                    await vm_object.make_failed()
+        if not response.success:
+            raise ValueError('VeiL ECP request {} error.'.format(url))
+        return response
+
+    async def put(self, api_object, url: str, json_data: dict = None, extra_params: dict = None):
+        """Переопределен для перехвата окончательного статуса ответов."""
+        response = await super().put(api_object=api_object, url=url, json_data=json_data, extra_params=extra_params)
+        if hasattr(response, 'status_code') and hasattr(api_object, 'api_object_id') and api_object.api_object_id:
+            if response.status_code == 404 and isinstance(api_object, VeilDomain):
+                from common.models.vm import Vm
+                vm_object = await Vm.get(api_object.api_object_id)
+                if vm_object and vm_object.active:
+                    await vm_object.make_failed()
+        if not response.success:
+            raise ValueError('VeiL ECP request {} error.'.format(url))
         return response
 
 
@@ -66,11 +92,11 @@ class VdiVeilClientSingleton(VeilClientSingleton):
         return self.__client_instances
 
 
-veil_client = VdiVeilClientSingleton(retry_opts=VeilRetryOptions(status_codes={401, 403},
+veil_client = VdiVeilClientSingleton(retry_opts=VeilRetryOptions(status_codes={401, 403, 400},
                                                                  timeout=5,
                                                                  max_timeout=VEIL_REQUEST_TIMEOUT,
                                                                  timeout_increase_step=1,
-                                                                 num_of_attempts=3))
+                                                                 num_of_attempts=10))
 
 
 def get_veil_client() -> 'VeilClientSingleton':
