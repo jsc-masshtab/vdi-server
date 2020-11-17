@@ -506,9 +506,13 @@ class Pool(VeilModel):
                                     connection_types=connection_types)
         return pool
 
-    async def full_delete(self, creator, commit=True):
+    async def full_delete(self, creator):
         """Удаление сущности с удалением зависимых сущностей"""
-        if commit:
+
+        old_status = self.status  # Запомнить теущий статус
+        try:
+            await self.update(status=Status.DELETING).apply()
+
             automated_pool = await AutomatedPool.get(self.id)
 
             if automated_pool:
@@ -519,6 +523,12 @@ class Pool(VeilModel):
             await self.delete()
             msg = _('Complete removal pool of desktops {verbose_name} is done.').format(verbose_name=self.verbose_name)
             await system_logger.info(msg, entity=self.entity, user=creator)
+
+        except Exception:
+            # Если возникло исключение во время удаления то возвращаем пред. статус
+            await self.update(status=old_status).apply()
+            raise
+
         return True
 
     @staticmethod
