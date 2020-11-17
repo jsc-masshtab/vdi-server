@@ -215,8 +215,7 @@ class PoolGetVm(BaseHandler, ABC):
         autopool = await AutomatedPool.get(pool_model.id)
         total_size_reached = await autopool.check_if_total_size_reached()
         # 2) is not enough free vms
-        free_vm_amount = await pool_model.get_vm_amount(only_free=True)
-        is_not_enough_free_vms = (free_vm_amount <= autopool.reserve_size)
+        is_not_enough_free_vms = await autopool.check_if_not_enough_free_vms()
         # 3) other tasks
         tasks = await Task.get_tasks_associated_with_entity(pool_model.id, TaskStatus.IN_PROGRESS)
 

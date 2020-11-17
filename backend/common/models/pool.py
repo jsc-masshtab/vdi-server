@@ -1059,3 +1059,9 @@ class AutomatedPool(db.Model):
         pool = await Pool.get(self.id)
         vm_amount = await pool.get_vm_amount()
         return vm_amount >= self.total_size
+
+    async def check_if_not_enough_free_vms(self):
+
+        pool = await Pool.get(self.id)
+        free_vm_amount = await pool.get_vm_amount(only_free=True)
+        return free_vm_amount <= self.reserve_size

@@ -212,14 +212,10 @@ class ExpandPoolTask(AbstractTask):
                 if vm_amount_in_pool >= automated_pool.total_size:
                     return
 
-                # Число машин в пуле, неимеющих пользователя
-                free_vm_amount = await pool.get_vm_amount(only_free=True)
-                # print('!!!free_vm_amount: ', free_vm_amount, flush=True)
-                # print('!!!automated_pool.increase_step: ', automated_pool.increase_step, flush=True)
-
                 # Если подогретых машин слишком мало, то пробуем добавить еще
                 #  Если self.ignore_reserve_size==True то пытаемся расширится безусловно
-                if self.ignore_reserve_size or (free_vm_amount <= automated_pool.reserve_size):
+                is_not_enough_free_vms = await automated_pool.check_if_not_enough_free_vms()
+                if self.ignore_reserve_size or is_not_enough_free_vms:
                     # Max possible amount of VMs which we can add to the pool
                     max_possible_amount_to_add = automated_pool.total_size - vm_amount_in_pool
                     # Real amount that we can add to the pool
