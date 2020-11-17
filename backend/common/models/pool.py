@@ -630,7 +630,7 @@ class Pool(VeilModel):
         vms_list = list()
         for ids_str_section in ids_str_list:
             # Запрашиваем на ECP VeiL данные
-            fields = ['id', 'user_power_state', 'parent']
+            fields = ['id', 'user_power_state', 'parent', 'status']
             controller_client = pool_controller.veil_client
             if not controller_client:
                 break
@@ -651,11 +651,17 @@ class Pool(VeilModel):
         for vm in vms:
             # TODO: Добавить принадлежность к домену + на фронте
             user_power_state = VmState.UNDEFINED
+            vm_status = Status.FAILED  # Если с вейла не пришла инфа, то вм считается в статусе FAILED
             parent_name = None
             for vm_id in vms_dict.keys():
                 if str(vm_id) == str(vm.id):
                     user_power_state = vms_dict[vm_id]['user_power_state']
                     parent_name = vms_dict[vm_id]['parent_name']
+                    vm_status = Status(vms_dict[vm_id]['status'])
+
+            # update status
+            await vm.update(status=vm_status).apply()
+
             # Формируем список с информацией по каждой вм в пуле
             vms_info.append(
                 VmType(user_power_state=user_power_state,

@@ -12,7 +12,7 @@ from common.veil.veil_errors import SimpleError, SilentError, ValidationError
 from common.veil.veil_decorators import administrator_required
 from common.veil.veil_graphene import VeilShortEntityType, VeilResourceType, VmState
 
-from common.models.auth import User
+from common.models.auth import User, Entity
 from common.models.vm import Vm
 from common.models.controller import Controller
 from common.models.pool import AutomatedPool, StaticPool, Pool
@@ -1028,6 +1028,7 @@ class PrepareVm(graphene.Mutation):
             vm = await Vm.get(vm_id)
             raise SilentError(_('Another task works on VM {}.').format(vm.verbose_name))
 
+        await Entity.create_ignoring_duplicate(vm_id, EntityType.VM)
         await request_to_execute_pool_task(vm_id, PoolTaskType.VM_PREPARE)
         return PrepareVm(ok=True)
 
