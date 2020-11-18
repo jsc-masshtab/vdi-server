@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from enum import Enum
 import asyncio
+import json
 from graphene import Enum as GrapheneEnum
 from sqlalchemy.sql import desc, and_
 from sqlalchemy.sql.schema import Column
@@ -9,6 +10,9 @@ from asyncpg import DataError
 from common.database import db
 from common.languages import lang_init
 from common.settings import VEIL_OPERATION_WAITING
+
+from common.veil.veil_redis import redis_error_handle, INTERNAL_EVENTS_CHANNEL, REDIS_CLIENT
+from common.utils import gino_model_to_json_serializable_dict
 
 _ = lang_init()
 
@@ -187,7 +191,7 @@ class VeilModel(db.Model):
     async def make_failed(self):
         """Переключает в статус FAILED."""
         from common.log.journal import system_logger
-        await self.update(status=Status.FAILED).apply()
+        await self.set_status(Status.FAILED)
         msg = _('{} {} has been disabled.').format(self.entity_name, self.verbose_name)
         description = _('{} {} has`t been found in VeiL. Switched to FAILED.').format(self.entity_name,
                                                                                       self.verbose_name)
@@ -236,6 +240,31 @@ class VeilModel(db.Model):
             await asyncio.sleep(VEIL_OPERATION_WAITING)
             task_completed = await task_instance.finished
         return True
+
+    def get_resource_type(self):
+        """Используется для ws. По типу фронт различает собщения"""
+        return 'UNKNOWN'
+
+    @redis_error_handle
+    def publish_data_in_internal_channel(self, event_type: str):
+        """Publish current data in redis channel INTERNAL_EVENTS_CHANNEL
+        Anybody can get messages from this channel. For example vdi frontend"""
+
+        msg_dict = dict(
+            resource=self.get_resource_type(),
+            mgs_type='data',
+            event=event_type
+        )
+        msg_dict.update(gino_model_to_json_serializable_dict(self))
+        REDIS_CLIENT.publish(INTERNAL_EVENTS_CHANNEL, json.dumps(msg_dict))
+
+    async def set_status(self, status: Status):
+
+        if status == self.status:
+            return
+        await self.update(status=status).apply()
+
+        self.publish_data_in_internal_channel('UPDATED')
 
 
 StatusGraphene = GrapheneEnum.from_enum(Status)

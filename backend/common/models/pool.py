@@ -26,6 +26,9 @@ from common.models.task import Task
 from common.languages import lang_init
 from common.log.journal import system_logger
 
+from web_app.front_ws_api.subscription_sources import POOLS_SUBSCRIPTION
+
+
 _ = lang_init()
 
 
@@ -504,6 +507,10 @@ class Pool(VeilModel):
                                     controller=controller_id,
                                     status=Status.CREATING,
                                     connection_types=connection_types)
+
+        # Оповещаем о создании пула
+        pool.publish_data_in_internal_channel('CREATED')
+
         return pool
 
     async def full_delete(self, creator):
@@ -511,7 +518,7 @@ class Pool(VeilModel):
 
         old_status = self.status  # Запомнить теущий статус
         try:
-            await self.update(status=Status.DELETING).apply()
+            await self.set_status(Status.DELETING)
 
             automated_pool = await AutomatedPool.get(self.id)
 
@@ -526,9 +533,11 @@ class Pool(VeilModel):
 
         except Exception:
             # Если возникло исключение во время удаления то возвращаем пред. статус
-            await self.update(status=old_status).apply()
+            await self.set_status(old_status)
             raise
 
+        # Оповещаем об удалении пула
+        self.publish_data_in_internal_channel('DELETED')
         return True
 
     @staticmethod
@@ -538,7 +547,7 @@ class Pool(VeilModel):
     @classmethod
     async def activate(cls, pool_id):
         pool = await Pool.get(pool_id)
-        await pool.update(status=Status.ACTIVE).apply()
+        await pool.set_status(Status.ACTIVE)
         entity = {'entity_type': EntityType.POOL, 'entity_uuid': pool_id}
         # Активация ВМ. Добавлено 02.11.2020 - не факт, что нужно.
         vms = await VmModel.query.where(VmModel.pool_id == pool_id).gino.all()
@@ -550,7 +559,7 @@ class Pool(VeilModel):
     @classmethod
     async def deactivate(cls, pool_id):
         pool = await Pool.get(pool_id)
-        await pool.update(status=Status.FAILED).apply()
+        await pool.set_status(Status.FAILED)
         entity = {'entity_type': EntityType.POOL, 'entity_uuid': pool_id}
         # Деактивация ВМ. Добавлено 02.11.2020 - не факт, что нужно.
         vms = await VmModel.query.where(VmModel.pool_id == pool_id).gino.all()
@@ -696,6 +705,9 @@ class Pool(VeilModel):
             (EntityRoleOwnerModel.user_id == user_id) & (EntityRoleOwnerModel.entity_id.in_(entity_query)))
 
         return await ero_query.gino.status()
+
+    def get_resource_type(self):
+        return POOLS_SUBSCRIPTION
 
 
 class StaticPool(db.Model):
