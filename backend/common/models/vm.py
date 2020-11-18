@@ -126,21 +126,22 @@ class Vm(VeilModel):
                     raise AssertionError(_('VM has no api client.'))
                 await self.qemu_guest_agent_waiting()
                 await domain_entity.info()
+                # Операция вывода на VeiL деактивирует ВМ, а не удаляет. Отключили на VDI 18112020
                 # Если машина уже заведена в АД - пытаемся ее вывести
-                active_directory_object = await AuthenticationDirectory.query.where(
-                    AuthenticationDirectory.status == Status.ACTIVE).gino.first()
-                already_in_domain = await domain_entity.in_ad if domain_entity.os_windows else False
-                if domain_entity.os_windows and already_in_domain:
-                    await system_logger.info(_('Removing {} from domain.').format(self.verbose_name),
-                                             entity=self.entity)
-                    action_response = await domain_entity.rm_from_ad(login=active_directory_object.service_username,
-                                                                     password=active_directory_object.password,
-                                                                     restart=False)
-                    action_task = action_response.task
-                    task_completed = False
-                    while not task_completed:
-                        await asyncio.sleep(VEIL_OPERATION_WAITING)
-                        task_completed = await action_task.finished
+                # active_directory_object = await AuthenticationDirectory.query.where(
+                #     AuthenticationDirectory.status == Status.ACTIVE).gino.first()
+                # already_in_domain = await domain_entity.in_ad if domain_entity.os_windows else False
+                # if domain_entity.os_windows and already_in_domain:
+                #     await system_logger.info(_('Removing {} from domain.').format(self.verbose_name),
+                #                              entity=self.entity)
+                #     action_response = await domain_entity.rm_from_ad(login=active_directory_object.service_username,
+                #                                                      password=active_directory_object.password,
+                #                                                      restart=False)
+                #     action_task = action_response.task
+                #     task_completed = False
+                #     while not task_completed:
+                #         await asyncio.sleep(VEIL_OPERATION_WAITING)
+                #         task_completed = await action_task.finished
                 # Отправляем задачу удаления ВМ на ECP.
                 await self.qemu_guest_agent_waiting()
                 delete_response = await domain_entity.remove(full=True)
@@ -532,6 +533,8 @@ class Vm(VeilModel):
         # Ref at 13.11.2020
         await self.enable_remote_access()
         await self.start()
+        # 18.11.2020
+        await self.reboot()
         await self.set_hostname()
         await self.include_in_ad(active_directory_obj)
         await self.include_in_ad_group(active_directory_obj, ad_cn_pattern)
