@@ -94,10 +94,12 @@ pipeline {
                     # устанавливаем virtualenv
                     /usr/bin/python3 -m pip --no-cache-dir install 'virtualenv==15.1.0' --force-reinstall
                     # создаем виртуальное окружение
-                    sudo /usr/bin/python3 -m virtualenv ${DEB_ROOT}/${PRJNAME}/root/opt/veil-vdi/env
+                    /usr/bin/python3 -m virtualenv ${DEB_ROOT}/${PRJNAME}/root/opt/veil-vdi/env
                     # устанавливаем зависимости
                     cd ${DEB_ROOT}/${PRJNAME}/root/opt/veil-vdi/app
-                    sudo ${DEB_ROOT}/${PRJNAME}/root/opt/veil-vdi/env/bin/python -m pip --no-cache-dir install -r requirements.txt
+                    ${DEB_ROOT}/${PRJNAME}/root/opt/veil-vdi/env/bin/python -m pip --no-cache-dir install -r requirements.txt
+                    # делаем виртуальное окружение перемещаемым
+                    virtualenv --relocatable ../env
                 '''
             }
         }
