@@ -15,6 +15,8 @@ from common.languages import lang_init
 from common.log.journal import system_logger
 
 from common.models.pool import Pool as PoolModel
+from web_app.front_ws_api.subscription_sources import CONTROLLERS_SUBSCRIPTION
+
 
 # TODO: переименовать _ в _localization_
 _ = lang_init()
@@ -229,7 +231,7 @@ class Controller(AbstractSortableStatusModel, VeilModel):
         # Удаляем контроллер из монитора
         send_cmd_to_ws_monitor(self.id, WsMonitorCmd.REMOVE_CONTROLLER)
         # Переключаем статус
-        await self.update(status=Status.DELETING).apply()
+        await self.set_status(Status.DELETING)
         # Удаляем зависимые пулы
         await self.full_delete_pools(creator=creator)
         # Удаляем клиент по контроллеру
@@ -241,11 +243,12 @@ class Controller(AbstractSortableStatusModel, VeilModel):
         return status
 
     async def activate(self):
+
         """Активируем не активный контроллер и его пулы."""
         if self.active:
             return False
         # Активируем контроллер
-        await self.update(status=Status.ACTIVE).apply()
+        await self.set_status(Status.ACTIVE)
         # Активируем пулы
         # TODO: переработать активацию пулов - нужен метод в пулах, который бы активировал ВМ.
         pools = await self.pools
@@ -264,7 +267,7 @@ class Controller(AbstractSortableStatusModel, VeilModel):
         if self.failed:
             return False
         # Деактивируем контроллер
-        await self.update(status=status).apply()
+        await self.set_status(status)
         # Останавлием задачи связанные с контроллером
         await send_cmd_to_cancel_tasks_associated_with_controller(controller_id=self.id, wait_for_result=True)
         # отключаем клиент
@@ -277,3 +280,6 @@ class Controller(AbstractSortableStatusModel, VeilModel):
             _('Controller {} status has been switched to {}.').format(self.verbose_name, status.name),
             entity=self.entity)
         return True
+
+    def get_resource_type(self):
+        return CONTROLLERS_SUBSCRIPTION

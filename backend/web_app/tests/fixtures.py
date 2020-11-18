@@ -55,7 +55,7 @@ async def fixt_launch_workers():
     REDIS_CLIENT.flushall()  # без этого если остались данные с предыдущих тестов
     # могут происходить труднообъяснимые вещи
 
-    ws_listener_worker = Popen([sys.executable, "../../ws_listener_worker/app.py"])
+    # ws_listener_worker = Popen([sys.executable, "../../ws_listener_worker/app.py"])
     pool_worker = Popen([sys.executable, "../../pool_worker/app.py", "-do-not-resume-tasks"])
 
     await yield_()
@@ -68,7 +68,7 @@ async def fixt_launch_workers():
             pass
         worker.kill()
 
-    stop_worker(ws_listener_worker)
+    # stop_worker(ws_listener_worker)
     stop_worker(pool_worker)
 
 
@@ -153,7 +153,7 @@ async def fixt_create_automated_pool(fixt_controller):
     # при подготовке ВМ  несколько раз используются таймауты по 10 секунд,
     # из-за чего даже с тестовым вейлом создание пула длится долго
     status = await wait_for_task_result(tasks[0].id, 60)
-    is_pool_successfully_created = (status and (status == TaskStatus.FINISHED.name))
+    is_pool_successfully_created = ((status is not None) and (status == TaskStatus.FINISHED.name))
 
     await yield_({
         'id': pool_id,
