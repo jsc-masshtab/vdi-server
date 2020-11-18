@@ -1064,4 +1064,4 @@ class AutomatedPool(db.Model):
 
         pool = await Pool.get(self.id)
         free_vm_amount = await pool.get_vm_amount(only_free=True)
-        return free_vm_amount <= self.reserve_size
+        return free_vm_amount < self.reserve_size
