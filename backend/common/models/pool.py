@@ -106,7 +106,6 @@ class Pool(VeilModel):
     @property
     async def pool_type(self):
         """Возвращает тип пула виртуальных машин"""
-        # TODO: проверить используется ли
         is_automated = await self.is_automated_pool
         return Pool.PoolTypes.AUTOMATED if is_automated else Pool.PoolTypes.STATIC
 
@@ -509,7 +508,7 @@ class Pool(VeilModel):
                                     connection_types=connection_types)
 
         # Оповещаем о создании пула
-        pool.publish_data_in_internal_channel('CREATED')
+        await pool.publish_data_in_internal_channel('CREATED')
 
         return pool
 
@@ -537,7 +536,7 @@ class Pool(VeilModel):
             raise
 
         # Оповещаем об удалении пула
-        self.publish_data_in_internal_channel('DELETED')
+        await self.publish_data_in_internal_channel('DELETED')
         return True
 
     @staticmethod
@@ -706,8 +705,14 @@ class Pool(VeilModel):
 
         return await ero_query.gino.status()
 
+    # override
     def get_resource_type(self):
         return POOLS_SUBSCRIPTION
+
+    # override
+    async def additional_model_to_json_data(self):
+        pool_type = await self.pool_type
+        return dict(pool_type=pool_type)
 
 
 class StaticPool(db.Model):
