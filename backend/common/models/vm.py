@@ -156,6 +156,9 @@ class Vm(VeilModel):
                     raise AssertionError(
                         _('VM deletion task {} finished with error.').format(delete_task.api_object_id))
                 await system_logger.debug(_('VM {} removed from ECP.').format(self.verbose_name), entity=self.entity)
+            except asyncio.CancelledError:
+                # Здесь бы в идеале отменять задачу удаления вм на вейле
+                raise
             except Exception as e:  # noqa
                 # Сейчас нас не заботит что пошло не так при удалении на ECP.
                 msg = _('VM {} deletion task finished with error.').format(self.verbose_name)
