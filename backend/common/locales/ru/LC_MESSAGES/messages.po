@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2020-11-19 15:21+0300\n"
+"POT-Creation-Date: 2020-11-19 15:35+0300\n"
 "PO-Revision-Date: 2020-07-30 11:25+0300\n"
 "Last-Translator: Emil <emil@emil-pc>\n"
 "Language-Team: Russian\n"
@@ -548,27 +548,27 @@ msgstr "ВМ {} приостановлена."
 msgid "VM {} remote access enabled."
 msgstr "Удаленный доступ ВМ {} включен."
 
-#: ../common/models/vm.py:485 ../common/models/vm.py:513
-msgid "VM {} failed to receive DHCP ip address."
-msgstr "VM {} не удалось получить IP-адрес по DHCP."
+#: ../common/models/vm.py:485 ../common/models/vm.py:514
+msgid "VM {} failed to receive DHCP ip address ({})."
+msgstr "VM {} не удалось получить IP-адрес по DHCP ({})."
 
-#: ../common/models/vm.py:498
+#: ../common/models/vm.py:499
 msgid "VM {} domain container including task failed."
 msgstr "Ошибка включения ВМ {} в группу домена активного каталога."
 
-#: ../common/models/vm.py:524
+#: ../common/models/vm.py:526
 msgid "VM {} domain including task failed."
 msgstr "Ошибка включения ВМ {} в домен."
 
-#: ../common/models/vm.py:543
+#: ../common/models/vm.py:545
 msgid "VM {} has been prepared."
 msgstr "ВМ {} подготовлена."
 
-#: ../common/models/vm.py:552
+#: ../common/models/vm.py:554
 msgid "{} preparation cancelled by timeout."
 msgstr "подготовка {} отменена по таймауту."
 
-#: ../common/models/vm.py:558
+#: ../common/models/vm.py:560
 msgid "VM {} preparation error."
 msgstr "Ошибка подготовки ВМ {}."
 
@@ -1134,14 +1134,14 @@ msgstr "{cls}: Контроллер {name} уже отслеживается."
 msgid "{cls}: resource monitor for controller {name} connected."
 msgstr "{cls}: монитор ресурсов для контроллера {name} подключен."
 
-#~ msgid "Number of created VM must be in {}-{} interval."
-#~ msgstr "Число создаваемых виртуальных машин должно быть в интервале {}-{}."
-
-#~ msgid ". IP: {ip}."
-#~ msgstr ". IP: {ip}."
+#~ msgid "Removing {} from domain."
+#~ msgstr "Выводим {} из домена."
 
 #~ msgid " for user {username}."
 #~ msgstr " для пользователя {username}."
 
-#~ msgid "Removing {} from domain."
-#~ msgstr "Выводим {} из домена."
+#~ msgid ". IP: {ip}."
+#~ msgstr ". IP: {ip}."
+
+#~ msgid "Number of created VM must be in {}-{} interval."
+#~ msgstr "Число создаваемых виртуальных машин должно быть в интервале {}-{}."

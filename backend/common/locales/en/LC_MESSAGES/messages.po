@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2020-11-19 15:21+0300\n"
+"POT-Creation-Date: 2020-11-19 15:35+0300\n"
 "PO-Revision-Date: 2020-07-30 11:25+0300\n"
 "Last-Translator: Emil <emil@emil-pc>\n"
 "Language-Team: English\n"
@@ -548,27 +548,27 @@ msgstr "VM {} is suspended."
 msgid "VM {} remote access enabled."
 msgstr "VM {} remote access enabled."
 
-#: ../common/models/vm.py:485 ../common/models/vm.py:513
-msgid "VM {} failed to receive DHCP ip address."
-msgstr "VM {} failed to receive DHCP ip address."
+#: ../common/models/vm.py:485 ../common/models/vm.py:514
+msgid "VM {} failed to receive DHCP ip address ({})."
+msgstr "VM {} failed to receive DHCP ip address ({})."
 
-#: ../common/models/vm.py:498
+#: ../common/models/vm.py:499
 msgid "VM {} domain container including task failed."
 msgstr "VM {} domain container including task failed."
 
-#: ../common/models/vm.py:524
+#: ../common/models/vm.py:526
 msgid "VM {} domain including task failed."
 msgstr "VM {} domain including task failed."
 
-#: ../common/models/vm.py:543
+#: ../common/models/vm.py:545
 msgid "VM {} has been prepared."
 msgstr "VM {} has been prepared."
 
-#: ../common/models/vm.py:552
+#: ../common/models/vm.py:554
 msgid "{} preparation cancelled by timeout."
 msgstr "{} preparation cancelled by timeout."
 
-#: ../common/models/vm.py:558
+#: ../common/models/vm.py:560
 msgid "VM {} preparation error."
 msgstr "VM {} preparation error."
 
@@ -1134,14 +1134,14 @@ msgstr "{cls}: Controller {name} is already monitored."
 msgid "{cls}: resource monitor for controller {name} connected."
 msgstr "{cls}: resource monitor for controller {name} connected."
 
-#~ msgid "Number of created VM must be in {}-{} interval."
-#~ msgstr "Number of created VM must be in {}-{} interval."
-
-#~ msgid ". IP: {ip}."
-#~ msgstr ". IP: {ip}."
+#~ msgid "Removing {} from domain."
+#~ msgstr "Removing {} from domain."
 
 #~ msgid " for user {username}."
 #~ msgstr " for user {username}."
 
-#~ msgid "Removing {} from domain."
-#~ msgstr "Removing {} from domain."
+#~ msgid ". IP: {ip}."
+#~ msgstr ". IP: {ip}."
+
+#~ msgid "Number of created VM must be in {}-{} interval."
+#~ msgstr "Number of created VM must be in {}-{} interval."
