@@ -29,7 +29,7 @@ class VdiVeilClient(VeilClient):
                 await controller_object.deactivate(status=Status.BAD_AUTH)
             # Остановка клиента происходит при деактивации контроллера
         if not response.success:
-            error_description = 'url: {}\nparams: {}\nresponse:{}'.format(url, extra_params, response)
+            error_description = 'url: {}\nparams: {}\nresponse:{}'.format(url, extra_params, response.data)
             raise ValueError(error_description)
         return response
 
@@ -44,7 +44,7 @@ class VdiVeilClient(VeilClient):
                     await vm_object.make_failed()
         if not response.success:
             error_description = 'url: {}\nparams: {}\nbody:{}\nresponse:{}'.format(url, extra_params, json_data,
-                                                                                   response)
+                                                                                   response.data)
             raise ValueError(error_description)
         return response
 
@@ -59,7 +59,7 @@ class VdiVeilClient(VeilClient):
                     await vm_object.make_failed()
         if not response.success:
             error_description = 'url: {}\nparams: {}\nbody:{}\nresponse:{}'.format(url, extra_params, json_data,
-                                                                                   response)
+                                                                                   response.data)
             raise ValueError(error_description)
         return response
 
