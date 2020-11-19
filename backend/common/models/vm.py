@@ -548,9 +548,10 @@ class Vm(VeilModel):
         """Подготовка ВМ с ограничением по времени."""
         try:
             await asyncio.wait_for(self.prepare(active_directory_obj, ad_cn_pattern), VEIL_VM_PREPARE_TIMEOUT)
-        except asyncio.TimeoutError:
+        except asyncio.TimeoutError as err_msg:
             await system_logger.error(message=_('{} preparation cancelled by timeout.').format(self.verbose_name),
-                                      entity=self.entity)
+                                      entity=self.entity,
+                                      description=err_msg)
         except ValueError as err_msg:
             err_str = str(err_msg)
             if err_str:

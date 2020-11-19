@@ -29,7 +29,8 @@ class VdiVeilClient(VeilClient):
                 await controller_object.deactivate(status=Status.BAD_AUTH)
             # Остановка клиента происходит при деактивации контроллера
         if not response.success:
-            raise ValueError('VeiL ECP request {} error.'.format(url))
+            error_description = 'url: {}\nparams: {}\nresponse:{}'.format(url, extra_params, response)
+            raise ValueError(error_description)
         return response
 
     async def post(self, api_object, url: str, json_data: dict = None, extra_params: dict = None):
@@ -42,7 +43,9 @@ class VdiVeilClient(VeilClient):
                 if vm_object and vm_object.active:
                     await vm_object.make_failed()
         if not response.success:
-            raise ValueError('VeiL ECP request {} error.'.format(url))
+            error_description = 'url: {}\nparams: {}\nbody:{}\nresponse:{}'.format(url, extra_params, json_data,
+                                                                                   response)
+            raise ValueError(error_description)
         return response
 
     async def put(self, api_object, url: str, json_data: dict = None, extra_params: dict = None):
@@ -55,7 +58,9 @@ class VdiVeilClient(VeilClient):
                 if vm_object and vm_object.active:
                     await vm_object.make_failed()
         if not response.success:
-            raise ValueError('VeiL ECP request {} error.'.format(url))
+            error_description = 'url: {}\nparams: {}\nbody:{}\nresponse:{}'.format(url, extra_params, json_data,
+                                                                                   response)
+            raise ValueError(error_description)
         return response
 
 
