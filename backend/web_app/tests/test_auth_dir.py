@@ -178,7 +178,7 @@ class TestAuthenticationDirectoryQuery:
         except Exception as E:
             assert 'Имя пользователя и пароль LDAP не могут быть пустыми' in str(E)
         else:
-            assert False
+            raise AssertionError()
 
     async def test_auth_dir_get_possible_ad_groups_bad_pass(self, snapshot, fixt_auth_context, fixt_auth_dir_with_pass_bad):  # noqa
         """При неправильном пароле список групп будет пустой."""
@@ -378,11 +378,12 @@ class TestAuthenticationDirectoryUtils:
                          group_verbose_name: "test_group_2",
                          group_ad_cn: ""})
                     {ok}}"""
-        executed = await execute_scheme(auth_dir_schema, query, context=fixt_auth_context)
-        snapshot.assert_match(executed)
-        group = await Group.query.where(Group.ad_guid == "df4745bd-6a47-47bf-b5c7-43cf7e266067").gino.first()
-        assert group
-        assert group.verbose_name == 'test_group_2'
+        try:
+            await execute_scheme(auth_dir_schema, query, context=fixt_auth_context)
+        except Exception as ex_msg:
+            assert 'В группе не найдены пользователи для синхронизации' in str(ex_msg)
+        else:
+            raise AssertionError()
 
     async def test_auth_dir_sync_group_and_users(self, snapshot, fixt_auth_context, fixt_auth_dir_with_pass):  # noqa
         """Должна создаться новая группа и пользователи из AD."""
