@@ -247,4 +247,26 @@ export class VmDetalsPopupComponent {
     }
   }
 
+  public prepareVM() {
+    if (this.data.typePool == 'automated') {
+      this.dialog.open(YesNoFormComponent, {
+        disableClose: true,
+        width: '500px',
+        data: {
+          form: {
+            header: "Подтверждение действия",
+            question: `Подготовить ВМ ${this.data.vm.verbose_name}?`,
+            button: "Выполнить"
+          },
+          request: {
+            service: this.service,
+            action: 'prepareVm',
+            body: {
+              vm: this.data.vm.id
+            }
+          }
+        }
+      })
+    }
+  }
 }
