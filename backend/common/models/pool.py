@@ -678,7 +678,8 @@ class Pool(VeilModel):
                     vm_status = Status(vms_dict[vm_id]['status'])
 
             # update status
-            await vm.update(status=vm_status).apply()
+            if vm.status != Status.SERVICE:
+                await vm.update(status=vm_status).apply()
 
             # Формируем список с информацией по каждой вм в пуле
             vms_info.append(
