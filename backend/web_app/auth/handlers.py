@@ -50,7 +50,7 @@ class AuthHandler(BaseHandler, ABC):
             error_description = 'IP: {}\n{}'.format(self.remote_ip, auth_error)
             entity = {'entity_type': EntityType.SECURITY, 'entity_uuid': None}
             error_message = _('Authentication failed for user: {}.').format(self.args.get('username', 'unknown'))
-            await system_logger.warning(msg=error_message, entity=entity, description=error_description)
+            await system_logger.warning(message=error_message, entity=entity, description=error_description)
             response = {'errors': [{'message': error_message}]}
             self.set_status(200)
         return await self.log_finish(response)
