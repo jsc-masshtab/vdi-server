@@ -244,7 +244,7 @@ msgstr "Группа {} не синхронизированна с директ�
 
 #: ../common/models/authentication_directory.py:663
 msgid "There is no users to sync."
-msgstr "Не найдены пользователей для синхронизации."
+msgstr "В группе не найдены пользователи для синхронизации."
 
 #: ../common/models/controller.py:131
 msgid "Controller {} has no api client."
