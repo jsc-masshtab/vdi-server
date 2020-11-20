@@ -237,7 +237,7 @@ class ExpandPoolTask(AbstractTask):
                 if vm_list and automated_pool.prepare_vms:
                     await asyncio.gather(
                         *[vm_object.prepare_with_timeout(active_directory_object, automated_pool.ad_cn_pattern) for
-                          vm_object in vm_list])
+                          vm_object in vm_list], return_exceptions=True)
             except asyncio.CancelledError:
                 raise
             except Exception as E:

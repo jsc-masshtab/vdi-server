@@ -665,7 +665,7 @@ msgstr "Задача <{}> начала выполнение."
 
 #: ../pool_worker/pool_tasks.py:85
 msgid "Task <{}> finished."
-msgstr "Задача <{}> завершилась."
+msgstr "Задача <{}> завершилась успешно."
 
 #: ../pool_worker/pool_tasks.py:89
 msgid "Task <{}> cancelled."
