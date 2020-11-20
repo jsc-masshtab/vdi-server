@@ -33,7 +33,7 @@ export class TasksService {
 
     public getAllTasks(props): QueryRef<any, any> {
         return  this.service.watchQuery({
-            query: gql` 
+            query: gql`
                 query tasks(
                     $limit: Int,
                     $offset: Int,
@@ -41,7 +41,7 @@ export class TasksService {
                     $status: TaskStatus,
                     $ordering:String
                 ){
-                    tasks( 
+                    tasks(
                         limit: $limit,
                         offset: $offset,
                         task_type: $task_type,
@@ -53,7 +53,8 @@ export class TasksService {
                         status
                         entity_id
                         priority
-                        created
+                        started
+                        finished
                         progress
                         message
                     },

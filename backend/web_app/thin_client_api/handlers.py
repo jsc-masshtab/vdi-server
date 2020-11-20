@@ -9,8 +9,10 @@ from common.veil.veil_redis import request_to_execute_pool_task
 from common.veil.veil_handlers import BaseHandler
 from common.veil.veil_errors import ValidationError
 from common.veil.auth.veil_jwt import jwtauth
-from common.models.pool import Pool as PoolModel
-from common.models.task import PoolTaskType
+
+from common.models.pool import Pool as PoolModel, AutomatedPool
+from common.models.task import PoolTaskType, TaskStatus, Task
+
 from veil_api_client import DomainTcpUsb
 
 # from veil_api_client.base.api_objects.domain import DomainTcpUsb
@@ -68,6 +70,7 @@ class PoolGetVm(BaseHandler, ABC):
         if PoolModel.thin_client_limit_exceeded():
             response = {'errors': [{'message': _('Thin client limit exceeded.'), 'code': '001'}]}
             return await self.finish(response)
+
         user = await self.get_user_model_instance()
         if not user:
             response = {'errors': [{'message': _('User {} not found.'), 'code': '401'}]}
@@ -78,9 +81,15 @@ class PoolGetVm(BaseHandler, ABC):
             return await self.log_finish(response)
         pool_extended = False
 
+        # Проверяем разрешен ли присланный remote_protocol для данного пула
+        if PoolModel.PoolConnectionTypes[remote_protocol] not in pool.connection_types:
+            response = {'errors': [{'message': _('The pool doesnt support connection type {}.').format(remote_protocol),
+                                    'code': '404'}]}
+            return await self.log_finish(response)
+
         # Запрос на расширение пула
         if await pool.pool_type == PoolModel.PoolTypes.AUTOMATED:
-            await request_to_execute_pool_task(pool.id_str, PoolTaskType.EXPANDING_POOL)
+            await self._send_cmd_to_expand_pool(pool)
             pool_extended = True
         vm = await pool.get_vm(user_id=user.id)
         if not vm:
@@ -90,12 +99,12 @@ class PoolGetVm(BaseHandler, ABC):
             if vm:
                 await vm.add_user(user.id, creator='system')
                 if await pool.pool_type == PoolModel.PoolTypes.AUTOMATED:
-                    await request_to_execute_pool_task(pool.id_str, PoolTaskType.EXPANDING_POOL)
+                    await self._send_cmd_to_expand_pool(pool)
             elif pool_extended:
                 response = {
                     'errors': [{'message': _('The pool doesn`t have free machines. Try again after 5 minutes.'),
                                 'code': '002'}]}
-                await request_to_execute_pool_task(pool.id_str, PoolTaskType.EXPANDING_POOL)
+                await self._send_cmd_to_expand_pool(pool)
                 return await self.log_finish(response)
             else:
                 response = {'errors': [{'message': _('The pool doesn`t have free machines.'),
@@ -183,8 +192,8 @@ class PoolGetVm(BaseHandler, ABC):
             node_info = await vm_controller.veil_client.node(node_id=node_id).info()
             vm_address = node_info.response[0].management_ip
             vm_port = info.data['real_remote_access_port']
-        # PoolModel.PoolConnectionTypes.SPICE.name by default
-        else:
+
+        else:  # PoolModel.PoolConnectionTypes.SPICE.name by default
             vm_address = vm_controller.address
             vm_port = veil_domain.remote_access_port
 
@@ -196,6 +205,22 @@ class PoolGetVm(BaseHandler, ABC):
                     }
 
         return await self.log_finish(response)
+
+    async def _send_cmd_to_expand_pool(self, pool_model):
+        """Запускаем задачу только если расширение возможно и над пулом не выполняютя другие задачи"""
+
+        if not pool_model:
+            return
+        # 1) is max reached
+        autopool = await AutomatedPool.get(pool_model.id)
+        total_size_reached = await autopool.check_if_total_size_reached()
+        # 2) is not enough free vms
+        is_not_enough_free_vms = await autopool.check_if_not_enough_free_vms()
+        # 3) other tasks
+        tasks = await Task.get_tasks_associated_with_entity(pool_model.id, TaskStatus.IN_PROGRESS)
+
+        if not total_size_reached and not tasks and is_not_enough_free_vms:
+            await request_to_execute_pool_task(pool_model.id, PoolTaskType.POOL_EXPAND)
 
 
 @jwtauth

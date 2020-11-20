@@ -12,11 +12,11 @@ from common.veil.veil_errors import SimpleError, SilentError, ValidationError
 from common.veil.veil_decorators import administrator_required
 from common.veil.veil_graphene import VeilShortEntityType, VeilResourceType, VmState
 
-from common.models.auth import User
+from common.models.auth import User, Entity
 from common.models.vm import Vm
 from common.models.controller import Controller
 from common.models.pool import AutomatedPool, StaticPool, Pool
-from common.models.task import PoolTaskType, TaskStatus
+from common.models.task import PoolTaskType, TaskStatus, Task
 
 from common.languages import lang_init
 from common.log.journal import system_logger
@@ -62,7 +62,7 @@ class VmType(VeilResourceType):
     user = graphene.Field(UserType)
     status = StatusGraphene()
     # controller = graphene.Field(ControllerType)
-    power_state = VmState()
+    user_power_state = VmState()
     parent_name = graphene.String()
 
     # Список событий для отдельной ВМ и отдельное событие внутри пула
@@ -155,8 +155,18 @@ class PoolValidator(MutationValidation):
         if value is None:
             return
 
+        pool_id = obj_dict.get('pool_id')
+        if pool_id:
+            pool_obj = await Pool.get_pool(pool_id)
+            total_size = obj_dict['total_size'] if obj_dict.get('total_size') else pool_obj.total_size
+        else:
+            total_size = obj_dict['total_size']
+
+        if value > total_size:
+            raise ValidationError(_('Reserve size of VMs can not be more than maximal number of Vms.'))
+
         if value < POOL_MIN_SIZE or value > POOL_MAX_SIZE:
-            raise ValidationError(_('Number of created VM must be in {}-{} interval.').
+            raise ValidationError(_('Reserve size of VM must be in {}-{} interval.').
                                   format(POOL_MIN_SIZE, POOL_MAX_SIZE))
         return value
 
@@ -639,13 +649,18 @@ class ExpandPoolMutation(graphene.Mutation, PoolValidator):
 
         # Check if pool already reached its total_size
         autopool = await AutomatedPool.get(pool_id)
+        pool_name = await Pool.select('verbose_name').where(Pool.id == pool_id).gino.scalar()
+
         total_size_reached = await autopool.check_if_total_size_reached()
         if total_size_reached:
-            pool_name = await Pool.select('verbose_name').where(Pool.id == pool_id).gino.scalar()
             raise SilentError(_('Can not expand pool {} because it reached its total_size.').format(pool_name))
 
-        task_id = await request_to_execute_pool_task(pool_id, PoolTaskType.EXPANDING_POOL,
-                                                     ignore_reserve_size=True, wait_for_lock=True)
+        # Check if another task works on this pool
+        tasks = await Task.get_tasks_associated_with_entity(pool_id, TaskStatus.IN_PROGRESS)
+        if tasks:
+            raise SilentError(_('Another task works on pool {}.').format(pool_name))
+
+        task_id = await request_to_execute_pool_task(pool_id, PoolTaskType.POOL_EXPAND, ignore_reserve_size=True)
         return {
             'ok': True,
             'task_id': task_id,
@@ -711,7 +726,7 @@ class CreateAutomatedPoolMutation(graphene.Mutation, PoolValidator, ControllerFe
             raise SimpleError(error_msg, description=desc, user=creator, entity=entity)
 
         # send command to start pool init task
-        await request_to_execute_pool_task(str(automated_pool.id), PoolTaskType.CREATING_POOL)
+        await request_to_execute_pool_task(str(automated_pool.id), PoolTaskType.POOL_CREATE)
 
         # pool creation task successfully started
         pool = await Pool.get_pool(automated_pool.id)
@@ -749,7 +764,7 @@ class UpdateAutomatedPoolMutation(graphene.Mutation, PoolValidator):
             # пулу лок
             new_total_size = kwargs.get('total_size')
             if new_total_size and new_total_size < automated_pool.total_size:
-                task_id = await request_to_execute_pool_task(kwargs['pool_id'], PoolTaskType.DECREASING_POOL,
+                task_id = await request_to_execute_pool_task(kwargs['pool_id'], PoolTaskType.POOL_DECREASE,
                                                              new_total_size=new_total_size)
                 status = await wait_for_task_result(task_id, wait_timeout=3)
 
@@ -1006,10 +1021,14 @@ class PrepareVm(graphene.Mutation):
     @administrator_required
     async def mutate(self, _info, vm_id, **kwargs):
 
-        # Проверить есть ли в таблице task таски выполняющиеся над это вм. Если есть то сообщить фронту ч
-        # что подготовка вм невозможна
-        # will be soon...
+        # Проверить есть ли в таблице task таски выполняющиеся над этой вм. Если есть то сообщить фронту ч
+        # что подготовка вм уже идет
+        tasks = await Task.get_tasks_associated_with_entity(vm_id, TaskStatus.IN_PROGRESS)
+        if tasks:
+            vm = await Vm.get(vm_id)
+            raise SilentError(_('Another task works on VM {}.').format(vm.verbose_name))
 
+        await Entity.create_ignoring_duplicate(vm_id, EntityType.VM)
         await request_to_execute_pool_task(vm_id, PoolTaskType.VM_PREPARE)
         return PrepareVm(ok=True)
 
@@ -1092,6 +1111,26 @@ class VmSuspend(graphene.Mutation):
         return VmSuspend(ok=False)
 
 
+class VmTestDomain(graphene.Mutation):
+    """Проверка нахождения ВМ в домене."""
+
+    class Arguments:
+        vm_id = graphene.UUID(required=True)
+
+    ok = graphene.Boolean()
+
+    @administrator_required
+    async def mutate(self, _info, vm_id, creator, **kwargs):
+        vm = await Vm.get(vm_id)
+        if vm:
+            domain_entity = await vm.vm_client
+            await domain_entity.info()
+            if domain_entity.os_windows:
+                ok = await domain_entity.in_ad
+                return VmTestDomain(ok=ok)
+        raise SilentError(_('Only VM with Windows OS can be in domain.'))
+
+
 # --- --- --- --- ---
 # Schema concatenation
 class PoolMutations(graphene.ObjectType):
@@ -1120,6 +1159,7 @@ class PoolMutations(graphene.ObjectType):
     shutdownVm = VmShutdown.Field()
     rebootVm = VmReboot.Field()
     suspendVm = VmSuspend.Field()
+    testDomainVm = VmTestDomain.Field()
 
 
 pool_schema = graphene.Schema(query=PoolQuery,

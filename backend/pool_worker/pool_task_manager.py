@@ -13,6 +13,7 @@ from common.veil.veil_gino import EntityType
 
 from common.languages import lang_init
 
+from common.models.vm import Vm
 from common.models.pool import Pool
 from common.models.task import Task, TaskStatus, PoolTaskType
 from common.database import db
@@ -87,17 +88,22 @@ class PoolTaskManager:
                         cancel_all = data_dict['cancel_all']
                         await self.cancel_tasks(task_ids, cancel_all)
 
-                    elif 'controller_id' in data_dict:
+                    elif 'controller_id' in data_dict and 'resumable' in data_dict:
                         controller_id = data_dict['controller_id']
                         resumable = data_dict['resumable']
                         await self.cancel_tasks_associated_with_controller(controller_id, resumable)
 
+                    elif 'entity_id' in data_dict and 'resumable' in data_dict:
+                        entity_id = data_dict['entity_id']
+                        resumable = data_dict['resumable']
+                        await self.cancel_tasks_associated_with_entity(entity_id, resumable)
+
                 elif command == PoolWorkerCmd.RESUME_TASK.name:
                     try:
                         controller_id = data_dict['controller_id']
-                        await self.resume_tasks(controller_id=controller_id, remove_unresumable_tasks=False)
                     except KeyError:
-                        await system_logger.error('Cant resume tasks')
+                        controller_id = None
+                    await self.resume_tasks(controller_id=controller_id, remove_unresumable_tasks=False)
 
             except asyncio.CancelledError:
                 raise
@@ -108,21 +114,29 @@ class PoolTaskManager:
     async def resume_tasks(self, controller_id=None, remove_unresumable_tasks=False):
         """
         Анализируем таблицу тасок в бд.
-        Продолжить таски  при соблюдении условий:
-        - У таски должен быть поднят флаг resumable.
-        - статус IN_PROGRESS иили CANCELLED.
+        Продолжить таски  в двух случаях:
+        - У таски должен быть поднят флаг resumable и быть статус CANCELLED
+        - статус IN_PROGRESS
         remove_unresumable_tasks - удалять ли из бд задачи, которые не могут быть возобновлены.
         """
         await system_logger.debug('Resuming tasks')
 
-        # Get tasks to launch
-        where_conditions = [Task.resumable,
-                            ((Task.status == TaskStatus.IN_PROGRESS) | (Task.status == TaskStatus.CANCELLED))]
+        where_conditions = \
+            [(Task.status == TaskStatus.IN_PROGRESS) | (Task.resumable & (Task.status == TaskStatus.CANCELLED))]
         if controller_id:
             where_conditions.append(Pool.controller == controller_id)
 
-        tasks_to_launch = await db.select([Task.id, Task.task_type]).select_from(
+        # Get tasks to launch (Pools)
+        pool_tasks_to_launch = await db.select([Task.id, Task.task_type]).select_from(
             Task.join(Pool, Task.entity_id == Pool.id)).where(and_(*where_conditions)).gino.all()
+
+        # Get tasks to launch (Vms)
+        vm_tasks_to_launch = await db.select([Task.id, Task.task_type]).select_from(
+            Task.join(Vm, Task.entity_id == Vm.id).join(Pool, Vm.pool_id == Pool.id)).\
+            where(and_(*where_conditions)).gino.all()
+
+        tasks_to_launch = [*pool_tasks_to_launch, *vm_tasks_to_launch]
+        # print('!!!tasks_to_launch ', tasks_to_launch, flush=True)
 
         #  Remove all other tasks
         if remove_unresumable_tasks:
@@ -146,23 +160,21 @@ class PoolTaskManager:
         pool_task_type = task_data_dict['task_type']
 
         # task execution
-        if pool_task_type == PoolTaskType.CREATING_POOL.name:
+        if pool_task_type == PoolTaskType.POOL_CREATE.name:
             task = InitPoolTask(self.pool_locks)
             await task.init(task_id, self.task_list)
             task.execute_in_async_task()
 
-        elif pool_task_type == PoolTaskType.EXPANDING_POOL.name:
+        elif pool_task_type == PoolTaskType.POOL_EXPAND.name:
             try:
                 ignore_reserve_size = task_data_dict['ignore_reserve_size']
-                wait_for_lock = task_data_dict['wait_for_lock']
             except KeyError:
                 ignore_reserve_size = False
-                wait_for_lock = False
-            task = ExpandPoolTask(self.pool_locks, ignore_reserve_size=ignore_reserve_size, wait_for_lock=wait_for_lock)
+            task = ExpandPoolTask(self.pool_locks, ignore_reserve_size=ignore_reserve_size)
             await task.init(task_id, self.task_list)
             task.execute_in_async_task()
 
-        elif pool_task_type == PoolTaskType.DECREASING_POOL.name:
+        elif pool_task_type == PoolTaskType.POOL_DECREASE.name:
             try:
                 new_total_size = task_data_dict['new_total_size']
             except KeyError:
@@ -171,7 +183,7 @@ class PoolTaskManager:
             await task.init(task_id, self.task_list)
             task.execute_in_async_task()
 
-        elif pool_task_type == PoolTaskType.DELETING_POOL.name:
+        elif pool_task_type == PoolTaskType.POOL_DELETE.name:
             try:
                 full = task_data_dict['deletion_full']
             except KeyError:
@@ -200,9 +212,18 @@ class PoolTaskManager:
         await system_logger.debug('cancel_tasks_associated_with_controller')
 
         # find tasks
-        tasks_to_cancel = await Task.get_ids_of_tasks_associated_with_controller(controller_id)
+        tasks_to_cancel = await Task.get_ids_of_tasks_associated_with_controller(controller_id, TaskStatus.IN_PROGRESS)
+        # print('!!!tasks_to_cancel', tasks_to_cancel, flush=True)
         # cancel
         task_list = list(self.task_list)  # shallow copy
         for task in task_list:
             if task.task_model.id in tasks_to_cancel:
+                await task.cancel(resumable=resumable, wait_for_result=False)
+
+    async def cancel_tasks_associated_with_entity(self, entity_id, resumable=False):
+        """cancel tasks associated with entity"""
+
+        task_list = list(self.task_list)  # shallow copy
+        for task in task_list:
+            if str(task.task_model.entity_id) == entity_id:
                 await task.cancel(resumable=resumable, wait_for_result=False)

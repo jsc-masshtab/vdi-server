@@ -657,6 +657,10 @@ class AuthenticationDirectory(VeilModel, AbstractSortableStatusModel):
             raise SilentError(_('Group {} is not synchronized by AD.'.format(group.verbose_name)))
         # Поиск по ID наладить не удалось, поэтому ищем по имени группы.
         ad_group_members = await self.get_members_of_ad_group(group.ad_cn)
+        # Добавлено 19.11.2020
+        # Если отсутствуют пользователи - покажем ошибку
+        if isinstance(ad_group_members, list) and len(ad_group_members) == 0:
+            raise SilentError(_('There is no users to sync.'))
         # Определяем кого нужно исключить
         vdi_group_members = await group.assigned_users
         exclude_user_list = list()

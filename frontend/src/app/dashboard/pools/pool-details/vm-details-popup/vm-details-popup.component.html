@@ -1,37 +1,50 @@
 <div class="details-popup">
   <div class="details-header">
-    <div class="title"><fa-icon [icon]="['fas','desktop']" size="s" ></fa-icon><span class="name">Виртуальная машина <span>{{data?.vm?.name}}</span></span></div>
+    <div class="title"><fa-icon [icon]="['fas','desktop']" size="s" ></fa-icon><span class="name">Виртуальная машина <span>{{data?.vm?.verbose_name}}</span></span></div>
       <div class="btns-part">
         <button [mat-dialog-close]="true" class="btn-close-popup"><fa-icon [icon]="['fas','times-circle']"></fa-icon></button>
       </div>
   </div>
 
   <div class="details-control-panel">
-    <button (click)="addUser()" title="Назначить пользователя" class="btn-control"><fa-icon [icon]="['fas','plus-circle']" size="xs"></fa-icon><span class="name">Назначить пользователя</span></button>
-    <button (click)="removeUser()" title="Убрать пользователя" class="btn-control"><fa-icon [icon]="['fas','trash-alt']" size="xs"></fa-icon><span class="name">Освободить вм от пользователя</span></button>
+    <button (click)="addUser()" title="Назначить пользователя" class="btn-control"><fa-icon [icon]="['fas','plus-circle']"></fa-icon><fa-icon [icon]="['fas','user']"></fa-icon></button>
+    <button (click)="removeUser()" title="Освободить от пользователя" class="btn-control"><fa-icon [icon]="['fas','trash-alt']"></fa-icon><fa-icon [icon]="['fas','user']"></fa-icon></button>
 
-    <button (click)="action('start')" class="btn-refresh" title="Запуск">
+    <button [mat-dialog-close]="true" *ngIf="data?.typePool === 'automated'" (click)="prepareVM()" title="Подготовить ВМ" class="btn-control">
+      <fa-icon [icon]="['fas','suitcase']"></fa-icon><fa-icon [icon]="['fas','desktop']"></fa-icon>
+    </button>
+
+    <button (click)="action('start')" class="btn-control" title="Запуск">
       <fa-icon [icon]="['fas','play-circle']"></fa-icon>
     </button>
 
-    <button (click)="action('suspend')" class="btn-refresh" title="Приостановить">
+    <button (click)="action('suspend')" class="btn-control" title="Приостановить">
       <fa-icon [icon]="['fas','pause-circle']"></fa-icon>
     </button>
 
-    <button (click)="action('shutdown')" class="btn-refresh" title="Выключение">
+    <button (click)="action('shutdown')" class="btn-control" title="Выключение">
       <fa-icon [icon]="['fas','stop-circle']"></fa-icon>
     </button>
 
-    <button (click)="action('reboot')" class="btn-refresh" title="Перезагрузка">
+    <button (click)="action('reboot')" class="btn-control" title="Перезагрузка">
       <fa-icon [icon]="['fas','undo']"></fa-icon>
     </button>
 
-    <button (click)="action('shutdown-force')" class="btn-refresh" title="Отключение питания">
+    <button (click)="action('shutdown-force')" class="btn-control" title="Отключение питания">
       <fa-icon [icon]="['fas','power-off']"></fa-icon>
     </button>
 
-    <button (click)="action('reboot-force')" class="btn-refresh" title="Горячая перезагрузка">
+    <button (click)="action('reboot-force')" class="btn-control" title="Горячая перезагрузка">
       <fa-icon [icon]="['fas','fire']"></fa-icon>
+    </button>
+
+    <button (click)="test()" title="Проверить нахождение в домене" class="btn-control">
+      <fa-icon [class.rotation]="testing" [icon]="['fas','sync-alt']"></fa-icon><span class="name"> </span><fa-icon [icon]="['fas','folder']"></fa-icon>
+
+      <fa-icon *ngIf="tested && connected" class="ad-status ad-success" [icon]="['fas','check']"></fa-icon>
+      <fa-icon *ngIf="tested && !connected" class="ad-status ad-failed" [icon]="['fas','times-circle']"></fa-icon>
+
+      <span class="ad-status-text" [class.ad-success]="connected" [class.ad-failed]="!connected" *ngIf="tested">{{ connected ? 'В домене' : 'Не в домене' }}</span>
     </button>
   </div>
 

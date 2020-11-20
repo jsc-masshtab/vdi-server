@@ -31,8 +31,13 @@ export class InfoTaskComponent {
       type: 'string',
     },
     {
-      title: 'Дата создания',
-      property: 'created',
+      title: 'Время создания',
+      property: 'started',
+      type: 'time'
+    },
+    {
+      title: 'Время завершения',
+      property: 'finished',
       type: 'time'
     }
   ];

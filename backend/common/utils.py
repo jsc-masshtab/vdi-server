@@ -3,6 +3,8 @@ import asyncio
 import signal
 import functools
 
+from enum import Enum
+
 
 def clamp_value(my_value, min_value, max_value):
     """
@@ -63,3 +65,21 @@ def init_exit_handler():
     loop = asyncio.get_event_loop()
     loop.add_signal_handler(signal.SIGTERM, functools.partial(asyncio.ensure_future, _shutdown(signal.SIGTERM, loop)))
     loop.add_signal_handler(signal.SIGINT, functools.partial(asyncio.ensure_future, _shutdown(signal.SIGINT, loop)))
+
+
+def gino_model_to_json_serializable_dict(model):
+    """Gino модель в словарь для json
+       Возможно по питоновским понятиям лучше создать  mixin и добавить его в модели"""
+    mode_dict = model.to_dict()
+    json_serializable_dict = dict()
+
+    for key, value in mode_dict.items():
+        if isinstance(value, Enum):
+            json_serializable_dict[key] = value.name
+        elif isinstance(value, str):
+            if key != 'token' and key != 'password':
+                json_serializable_dict[key] = value
+        else:
+            json_serializable_dict[key] = str(value)
+
+    return json_serializable_dict

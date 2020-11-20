@@ -1,9 +1,16 @@
+# TODO: sudo a2enmod proxy_wstunnel
 <IfModule mod_ssl.c>
     <VirtualHost *:443>
         # SSL Engine Switch:
         SSLEngine on
+        SSLProxyEngine on
+
+        ProxyPreserveHost On
+        ProxyRequests Off
+
         SSLCertificateFile /opt/veil-vdi/other/veil_ssl/veil_default.crt
         SSLCertificateKeyFile /opt/veil-vdi/other/veil_ssl/veil_default.key
+
         # enable HTTP/2, if available
         Protocols h2 http/1.1
         # HTTP Strict Transport Security (mod_headers is required) (63072000 seconds)
@@ -26,23 +33,25 @@
             AddDefaultCharset UTF-8
         </Directory>
 
-        ProxyPreserveHost On
+        ProxyPass "/api/ws/client/vdi_server_check/" "http://127.0.0.1:8888/ws/client/vdi_server_check/"
+        ProxyPassReverse "/api/ws/client/vdi_server_check/" "http://127.0.0.1:8888/ws/client/vdi_server_check/"
 
-        ProxyPass /auth http://127.0.0.1:8888/auth/
-        ProxyPass /logout http://127.0.0.1:8888/logout/
-        ProxyPass /version http://127.0.0.1:8888/version/
+        ProxyPass /auth/ http://127.0.0.1:8888/auth/
+        ProxyPassReverse /auth/ http://127.0.0.1:8888/auth/
+        ProxyPass /logout/ http://127.0.0.1:8888/logout/
+        ProxyPassReverse /logout/ http://127.0.0.1:8888/logout/
+        ProxyPass /version/ http://127.0.0.1:8888/version/
+        ProxyPassReverse /version/ http://127.0.0.1:8888/version/
 
         # pass thin client requests directly to tornado
         ProxyPass /client/ http://127.0.0.1:8888/client/
+        ProxyPassReverse /client/ http://127.0.0.1:8888/client/
         # pass requests for dynamic content to tornado
         ProxyPass /api/ http://127.0.0.1:8888/
+        ProxyPassReverse /api/ http://127.0.0.1:8888/
 
-        # pass ws requests directly to tornado
-        <Location /ws/client/vdi_server_check>
-            RewriteCond ${HTTP:Upgrade} websocket [NC]
-            RewriteCond ${HTTP:Connection} upgrade [NC]
-            RewriteRule .* "wss:/127.0.0.1:8888/$1" [P,L]
-            ProxyPass  http://127.0.0.1:8888/ws/client/vdi_server_check/
-        </Location>
+        RewriteEngine on
+        RewriteCond %{HTTP:Upgrade} =websocket
+        RewriteRule /api/ws(.*) ws://127.0.0.1:8888/ws$1 [P,L]
     </VirtualHost>
 </IfModule>

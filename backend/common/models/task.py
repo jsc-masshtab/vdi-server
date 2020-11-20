@@ -9,14 +9,17 @@ from sqlalchemy import Enum as AlchemyEnum
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.sql import func
 
-
 from web_app.front_ws_api.subscription_sources import VDI_TASKS_SUBSCRIPTION
 
-from common.database import db
-from common.veil.veil_redis import REDIS_CLIENT, INTERNAL_EVENTS_CHANNEL
-from common.veil.veil_gino import AbstractSortableStatusModel
+from common.models.auth import Entity
 
+from sqlalchemy import and_
+
+from common.database import db
+from common.veil.veil_redis import redis_error_handle, REDIS_CLIENT, INTERNAL_EVENTS_CHANNEL
+from common.veil.veil_gino import AbstractSortableStatusModel, EntityType
 from common.languages import lang_init
+from common.utils import gino_model_to_json_serializable_dict
 
 
 _ = lang_init()
@@ -24,10 +27,10 @@ _ = lang_init()
 
 class PoolTaskType(Enum):
 
-    CREATING_POOL = 'CREATING_POOL'
-    EXPANDING_POOL = 'EXPANDING_POOL'
-    DELETING_POOL = 'DELETING_POOL'
-    DECREASING_POOL = 'DECREASING_POOL'
+    POOL_CREATE = 'POOL_CREATE'
+    POOL_EXPAND = 'POOL_EXPAND'
+    POOL_DELETE = 'POOL_DELETE'
+    POOL_DECREASE = 'POOL_DECREASE'
     VM_PREPARE = 'VM_PREPARE'
 
 
@@ -61,26 +64,31 @@ class Task(db.Model, AbstractSortableStatusModel):
 
     message = db.Column(db.Unicode(length=256), nullable=True)
 
-    def to_json_serializable_dict(self):
-        return dict(
-            task_id=str(self.id),
-            entity_id=str(self.entity_id),
-            task_type=self.task_type.name,
-            task_status=self.status.name,
-            created=str(self.created),
-            progress=self.progress,
+    @redis_error_handle
+    def publish_data_in_internal_channel(self, event_type: str, message: str):
+        msg_dict = dict(
+            resource=VDI_TASKS_SUBSCRIPTION,
+            mgs_type='data',
+            event=event_type,
+            message=message,
         )
+        msg_dict.update(gino_model_to_json_serializable_dict(self))
+        REDIS_CLIENT.publish(INTERNAL_EVENTS_CHANNEL, json.dumps(msg_dict))
 
-    def form_user_friendly_text(self, entity_name):
+    async def form_user_friendly_text(self):
 
-        if self.task_type == PoolTaskType.CREATING_POOL:
-            return _('Creation of pool {}.'.format(entity_name))
-        elif self.task_type == PoolTaskType.EXPANDING_POOL:
-            return _('Expanding of pool {}.'.format(entity_name))
-        elif self.task_type == PoolTaskType.DELETING_POOL:
-            return _('Deleting of pool {}.'.format(entity_name))
-        elif self.task_type == PoolTaskType.DECREASING_POOL:
-            return _('Decreasing of pool {}.'.format(entity_name))
+        entity_name = await self.get_associated_entity_name()
+
+        if self.task_type == PoolTaskType.POOL_CREATE:
+            return _('Creation of pool {}.').format(entity_name)
+        elif self.task_type == PoolTaskType.POOL_EXPAND:
+            return _('Expanding of pool {}.').format(entity_name)
+        elif self.task_type == PoolTaskType.POOL_DELETE:
+            return _('Deleting of pool {}.').format(entity_name)
+        elif self.task_type == PoolTaskType.POOL_DECREASE:
+            return _('Decreasing of pool {}.').format(entity_name)
+        elif self.task_type == PoolTaskType.VM_PREPARE:
+            return _('Preparation of vm {}.').format(entity_name)
         else:
             return ''
 
@@ -93,34 +101,27 @@ class Task(db.Model, AbstractSortableStatusModel):
 
         # msg
         if message is None:
-            entity_name = await self.get_associated_entity_name()
-            message = self.form_user_friendly_text(entity_name)
+            message = await self.form_user_friendly_text()
 
         # datetime data
         if status == TaskStatus.IN_PROGRESS:
             # set start time
             await self.update(started=func.now()).apply()
 
-        if status == TaskStatus.FINISHED or status == TaskStatus.FAILED or status == TaskStatus.CANCELLED:
+        if status == TaskStatus.FINISHED or status == TaskStatus.FAILED:
             await self.update(resumable=False).apply()
+        if status == TaskStatus.FINISHED or status == TaskStatus.FAILED or status == TaskStatus.CANCELLED:
             # set finish time
             await self.update(finished=func.now()).apply()
 
-            duration = self.finished - self.started
-            message += _('  Duration: {}.').format(duration)
+            duration = self.finished - self.started if (self.finished and self.started) else '0000'
+            message += _('  Duration: {}.').format(str(duration)[:-3])
 
         shorten_msg = textwrap.shorten(message, width=256)
         await self.update(message=shorten_msg).apply()
 
         # publish task event
-        msg_dict = dict(
-            resource=VDI_TASKS_SUBSCRIPTION,
-            mgs_type='task_data',
-            event='status_changed',
-            message=shorten_msg,
-        )
-        msg_dict.update(self.to_json_serializable_dict())
-        REDIS_CLIENT.publish(INTERNAL_EVENTS_CHANNEL, json.dumps(msg_dict))
+        self.publish_data_in_internal_channel('UPDATED', shorten_msg)
 
     async def set_progress(self, progress: int):
 
@@ -130,21 +131,25 @@ class Task(db.Model, AbstractSortableStatusModel):
         await self.update(progress=progress).apply()
 
         # publish task event
-        msg_dict = dict(
-            resource=VDI_TASKS_SUBSCRIPTION,
-            mgs_type='task_data',
-            event='progress_changed',
-            message=self.message
-        )
-        msg_dict.update(self.to_json_serializable_dict())
-        REDIS_CLIENT.publish(INTERNAL_EVENTS_CHANNEL, json.dumps(msg_dict))
+        self.publish_data_in_internal_channel('UPDATED', self.message)
 
     async def get_associated_entity_name(self):
         # Запоминаем имя так как его не будет после удаения пула, например.
         if not hasattr(self, '_associated_entity_name'):
-            from common.models.pool import Pool
-            pool = await Pool.get(self.entity_id)
-            self._associated_entity_name = pool.verbose_name if pool else ''  # noqa
+            # В зависимости от типа сущности узнаем verbose_name
+            # get entity_type
+            self._associated_entity_name = ''
+            entity = await Entity.query.where(Entity.entity_uuid == self.entity_id).gino.first()
+            if entity:
+                if entity.entity_type == EntityType.POOL:
+                    from common.models.pool import Pool
+                    pool = await Pool.get(self.entity_id)
+                    self._associated_entity_name = pool.verbose_name if pool else ''
+
+                elif entity.entity_type == EntityType.VM:
+                    from common.models.vm import Vm
+                    vm = await Vm.get(self.entity_id)
+                    self._associated_entity_name = vm.verbose_name if vm else ''
 
         return self._associated_entity_name
 
@@ -157,11 +162,33 @@ class Task(db.Model, AbstractSortableStatusModel):
             await task_model.set_progress(progress)
 
     @staticmethod
-    async def get_ids_of_tasks_associated_with_controller(controller_id):
+    async def get_ids_of_tasks_associated_with_controller(controller_id, task_status):
 
         from common.models.pool import Pool
-        tasks = await db.select([Task.id]).select_from(Task.join(Pool, Task.entity_id == Pool.id)).where(
-            Pool.controller == controller_id).gino.all()
-        tasks = [task_to_cancel[0] for task_to_cancel in tasks]
 
+        where_conditions = [Pool.controller == controller_id, Task.status == task_status]
+
+        # pool tasks
+        pool_tasks = await db.select([Task.id]).select_from(Task.join(Pool, Task.entity_id == Pool.id)).where(
+            and_(*where_conditions)).gino.all()
+        pool_tasks_ids = [task_to_cancel[0] for task_to_cancel in pool_tasks]
+
+        # vm tasks
+        from common.models.vm import Vm
+        vm_tasks = await db.select([Task.id]).select_from(
+            Task.join(Vm, Task.entity_id == Vm.id).join(Pool, Vm.pool_id == Pool.id)).where(
+            and_(*where_conditions)).gino.all()
+        vm_tasks_ids = [task_to_cancel[0] for task_to_cancel in vm_tasks]
+
+        tasks = [*pool_tasks_ids, *vm_tasks_ids]
+        return tasks
+
+    @staticmethod
+    async def get_tasks_associated_with_entity(entity_id, task_status=None):
+
+        where_conditions = [Task.entity_id == entity_id]
+        if task_status:
+            where_conditions.append(Task.status == task_status)
+
+        tasks = await Task.query.where(and_(*where_conditions)).gino.all()
         return tasks

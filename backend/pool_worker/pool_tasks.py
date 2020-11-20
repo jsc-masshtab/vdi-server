@@ -1,13 +1,14 @@
 # -*- coding: utf-8 -*-
 import asyncio
 import traceback
+from abc import ABC, abstractmethod
 
 from common.veil.veil_errors import PoolCreationError
 
 from common.log.journal import system_logger
 from common.veil.veil_errors import VmCreationError
 
-from common.veil.veil_gino import EntityType, Status
+from common.veil.veil_gino import Status
 
 from common.utils import cancel_async_task
 
@@ -22,7 +23,7 @@ from common.models.vm import Vm
 _ = lang_init()
 
 
-class AbstractTask:
+class AbstractTask(ABC):
     """Выполняет задачу do_task"""
 
     def __init__(self):
@@ -50,6 +51,7 @@ class AbstractTask:
             await cancel_async_task(self._coroutine, wait_for_result)
             self._coroutine = None
 
+    @abstractmethod
     async def do_task(self):
         """Корутина, в которой будет выполняться таска"""
         raise NotImplementedError
@@ -69,29 +71,31 @@ class AbstractTask:
             await system_logger.error('AbstractTask.execute: logical error. No such task')
             return
 
-        await system_logger.debug('Start task execution: {}'.format(self.task_model.task_type.name))
+        # set task status
+        await self.task_model.set_status(TaskStatus.IN_PROGRESS)
+        friendly_task_name = await self.task_model.form_user_friendly_text()
+        await system_logger.info(_('Task <{}> started.').format(friendly_task_name))
 
         # Добавить себя в список выполняющихся задач
         self._ref_to_task_list.append(self)
-        # set task status
-        await self.task_model.set_status(TaskStatus.IN_PROGRESS)
 
         try:
             await self.do_task()
             await self.task_model.set_status(TaskStatus.FINISHED)
+            await system_logger.info(_('Task <{}> finished.').format(friendly_task_name))
 
         except asyncio.CancelledError:
             await self.task_model.set_status(TaskStatus.CANCELLED)
-            await system_logger.warning('Task cancelled. id: {}'.format(self.task_model.id))
+            await system_logger.warning(_('Task <{}> cancelled.').format(friendly_task_name))
 
             await self.do_on_cancel()
 
         except Exception as ex:  # noqa
-            message = 'Exception during task execution. id: {} exception: {} '.format(self.task_model.id, str(ex))
+            message = _('Exception during task execution. Task: <{}> Exception: {}.').format(
+                friendly_task_name, str(ex))
             await self.task_model.set_status(TaskStatus.FAILED, message)
 
-            entity = {'entity_type': EntityType.POOL, 'entity_uuid': None}
-            await system_logger.warning(message, entity=entity)
+            await system_logger.warning(message)
             print('BT {bt}'.format(bt=traceback.format_exc()))
 
             await self.do_on_fail()
@@ -166,7 +170,7 @@ class InitPoolTask(AbstractTask):
                 await automated_pool.deactivate()
                 raise
             except Exception as E:
-                await system_logger.error(message=_('Virtual machine(s) preparation error.'), description=str(E))
+                await system_logger.error(message=_('Pool initialization VM(s) preparation error.'), description=str(E))
 
         # Активируем пул
         await automated_pool.activate()
@@ -208,14 +212,10 @@ class ExpandPoolTask(AbstractTask):
                 if vm_amount_in_pool >= automated_pool.total_size:
                     return
 
-                # Число машин в пуле, неимеющих пользователя
-                free_vm_amount = await pool.get_vm_amount(only_free=True)
-                # print('!!!free_vm_amount: ', free_vm_amount, flush=True)
-                # print('!!!automated_pool.increase_step: ', automated_pool.increase_step, flush=True)
-
                 # Если подогретых машин слишком мало, то пробуем добавить еще
                 #  Если self.ignore_reserve_size==True то пытаемся расширится безусловно
-                if self.ignore_reserve_size or (free_vm_amount <= automated_pool.reserve_size):
+                is_not_enough_free_vms = await automated_pool.check_if_not_enough_free_vms()
+                if self.ignore_reserve_size or is_not_enough_free_vms:
                     # Max possible amount of VMs which we can add to the pool
                     max_possible_amount_to_add = automated_pool.total_size - vm_amount_in_pool
                     # Real amount that we can add to the pool
@@ -320,6 +320,7 @@ class PrepareVmTask(AbstractTask):
         super().__init__()
 
     async def do_task(self):
+        # print('!!!PrepareVmTask started', flush=True)
         # Проверить выполняется ли уже задача подготовки этой вм. Запускать еще одну нет смысла и даже вредно.
         vm_prepare_tasks = self._get_related_progressing_tasks()
         if len(vm_prepare_tasks) > 0:

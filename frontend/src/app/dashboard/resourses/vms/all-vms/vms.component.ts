@@ -6,6 +6,7 @@ import { Router } from '@angular/router';
 import { DetailsMove } from 'src/app/dashboard/common/classes/details-move';
 import { Subscription } from 'rxjs';
 import { IParams } from 'types';
+import {FormControl} from "@angular/forms";
 
 @Component({
   selector: 'vdi-vms',
@@ -19,6 +20,7 @@ export class VmsComponent extends DetailsMove implements OnInit, OnDestroy {
   @Input() filter: object
 
   private sub: Subscription;
+  user_power_state = new FormControl('all');
 
   public vms: object[] = [];
   public collection = [
@@ -27,12 +29,6 @@ export class VmsComponent extends DetailsMove implements OnInit, OnDestroy {
       property: 'verbose_name',
       class: 'name-start',
       icon: 'desktop',
-      type: 'string',
-      sort: true
-    },
-    {
-      title: 'Состояние',
-      property: 'user_power_state',
       type: 'string',
       sort: true
     },
@@ -64,12 +60,25 @@ export class VmsComponent extends DetailsMove implements OnInit, OnDestroy {
 
   ngOnInit() {
     this.getAllVms();
-  }
+
+    this.user_power_state.valueChanges.subscribe(() => {
+        this.getAllVms();
+      })
+    }
 
   public getAllVms() {
     if (this.sub) {
       this.sub.unsubscribe();
     }
+
+    const queryset = {
+      user_power_state: this.user_power_state.value
+    };
+
+    if (this.user_power_state.value == false) {
+      delete queryset['user_power_state'];
+    }
+
     this.waitService.setWait(true);
 
     let filtered = (data) => {

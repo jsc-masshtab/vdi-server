@@ -26,6 +26,9 @@ from common.models.task import Task
 from common.languages import lang_init
 from common.log.journal import system_logger
 
+from web_app.front_ws_api.subscription_sources import POOLS_SUBSCRIPTION
+
+
 _ = lang_init()
 
 
@@ -103,7 +106,6 @@ class Pool(VeilModel):
     @property
     async def pool_type(self):
         """Возвращает тип пула виртуальных машин"""
-        # TODO: проверить используется ли
         is_automated = await self.is_automated_pool
         return Pool.PoolTypes.AUTOMATED if is_automated else Pool.PoolTypes.STATIC
 
@@ -504,11 +506,19 @@ class Pool(VeilModel):
                                     controller=controller_id,
                                     status=Status.CREATING,
                                     connection_types=connection_types)
+
+        # Оповещаем о создании пула
+        await pool.publish_data_in_internal_channel('CREATED')
+
         return pool
 
-    async def full_delete(self, creator, commit=True):
+    async def full_delete(self, creator):
         """Удаление сущности с удалением зависимых сущностей"""
-        if commit:
+
+        old_status = self.status  # Запомнить теущий статус
+        try:
+            await self.set_status(Status.DELETING)
+
             automated_pool = await AutomatedPool.get(self.id)
 
             if automated_pool:
@@ -519,6 +529,14 @@ class Pool(VeilModel):
             await self.delete()
             msg = _('Complete removal pool of desktops {verbose_name} is done.').format(verbose_name=self.verbose_name)
             await system_logger.info(msg, entity=self.entity, user=creator)
+
+        except Exception:
+            # Если возникло исключение во время удаления то возвращаем пред. статус
+            await self.set_status(old_status)
+            raise
+
+        # Оповещаем об удалении пула
+        await self.publish_data_in_internal_channel('DELETED')
         return True
 
     @staticmethod
@@ -528,7 +546,7 @@ class Pool(VeilModel):
     @classmethod
     async def activate(cls, pool_id):
         pool = await Pool.get(pool_id)
-        await pool.update(status=Status.ACTIVE).apply()
+        await pool.set_status(Status.ACTIVE)
         entity = {'entity_type': EntityType.POOL, 'entity_uuid': pool_id}
         # Активация ВМ. Добавлено 02.11.2020 - не факт, что нужно.
         vms = await VmModel.query.where(VmModel.pool_id == pool_id).gino.all()
@@ -540,7 +558,7 @@ class Pool(VeilModel):
     @classmethod
     async def deactivate(cls, pool_id):
         pool = await Pool.get(pool_id)
-        await pool.update(status=Status.FAILED).apply()
+        await pool.set_status(Status.FAILED)
         entity = {'entity_type': EntityType.POOL, 'entity_uuid': pool_id}
         # Деактивация ВМ. Добавлено 02.11.2020 - не факт, что нужно.
         vms = await VmModel.query.where(VmModel.pool_id == pool_id).gino.all()
@@ -598,7 +616,7 @@ class Pool(VeilModel):
             if not controller_client:
                 break
             domains_list_response = await controller_client.domain().list(fields=['id'],
-                                                                          params={'power_state': 'ON',
+                                                                          params={'user_power_state': 'ON',
                                                                                   'ids': ids_str_section})
             if domains_list_response.success and domains_list_response.paginator_results:
                 # Берем первый идентиифкатор
@@ -630,7 +648,7 @@ class Pool(VeilModel):
         vms_list = list()
         for ids_str_section in ids_str_list:
             # Запрашиваем на ECP VeiL данные
-            fields = ['id', 'user_power_state', 'parent']
+            fields = ['id', 'user_power_state', 'parent', 'status']
             controller_client = pool_controller.veil_client
             if not controller_client:
                 break
@@ -650,15 +668,22 @@ class Pool(VeilModel):
         vms_info = list()
         for vm in vms:
             # TODO: Добавить принадлежность к домену + на фронте
-            power_state = VmState.UNDEFINED
+            user_power_state = VmState.UNDEFINED
+            vm_status = Status.FAILED  # Если с вейла не пришла инфа, то вм считается в статусе FAILED
             parent_name = None
             for vm_id in vms_dict.keys():
                 if str(vm_id) == str(vm.id):
-                    power_state = vms_dict[vm_id]['user_power_state']
+                    user_power_state = vms_dict[vm_id]['user_power_state']
                     parent_name = vms_dict[vm_id]['parent_name']
+                    vm_status = Status(vms_dict[vm_id]['status'])
+
+            # update status
+            if vm.status != Status.SERVICE:
+                await vm.update(status=vm_status).apply()
+
             # Формируем список с информацией по каждой вм в пуле
             vms_info.append(
-                VmType(power_state=power_state,
+                VmType(user_power_state=user_power_state,
                        parent_name=parent_name,
                        **vm.__values__))
         return vms_info
@@ -680,6 +705,15 @@ class Pool(VeilModel):
             (EntityRoleOwnerModel.user_id == user_id) & (EntityRoleOwnerModel.entity_id.in_(entity_query)))
 
         return await ero_query.gino.status()
+
+    # override
+    def get_resource_type(self):
+        return POOLS_SUBSCRIPTION
+
+    # override
+    async def additional_model_to_json_data(self):
+        pool_type = await self.pool_type
+        return dict(pool_type=pool_type)
 
 
 class StaticPool(db.Model):
@@ -1042,3 +1076,9 @@ class AutomatedPool(db.Model):
         pool = await Pool.get(self.id)
         vm_amount = await pool.get_vm_amount()
         return vm_amount >= self.total_size
+
+    async def check_if_not_enough_free_vms(self):
+
+        pool = await Pool.get(self.id)
+        free_vm_amount = await pool.get_vm_amount(only_free=True)
+        return free_vm_amount < self.reserve_size
