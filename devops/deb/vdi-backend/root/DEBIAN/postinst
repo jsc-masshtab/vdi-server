@@ -1,6 +1,17 @@
 #!/bin/bash
 
 set -e
+
+configure_users()
+{
+	useradd uservdi
+	chown -R uservdi:uservdi /opt/veil-vdi
+
+	# разрешаем вход по ssh только пользователю user
+	echo "AllowUsers user" >> /etc/ssh/sshd_config
+	service ssh restart
+}
+
 configure_secrets()
 {
 	# генерируем local_settings только если его не существует
@@ -25,8 +36,8 @@ configure_secrets()
 	# берем из файла ключи доступа к БД и Redis
 	DB_PASS="$(grep -r 'DB_PASS' /opt/veil-vdi/app/common/local_settings.py | sed -r "s/DB_PASS = '(.+)'/\1/g")"
 	REDIS_PASS="$(grep -r 'REDIS_PASSWORD' /opt/veil-vdi/app/common/local_settings.py | sed -r "s/REDIS_PASSWORD = '(.+)'/\1/g")"
-
 }
+
 configure_redis()
 {
 	systemctl enable redis-server.service
@@ -60,29 +71,21 @@ configure_postgres()
 	/opt/veil-vdi/env/bin/python /opt/veil-vdi/env/bin/alembic upgrade head
 }
 
-configure_nginx()
-{
-	cp /opt/veil-vdi/other/vdi.nginx /etc/nginx/conf.d/vdi_nginx.conf
-	rm /etc/nginx/sites-enabled/* || true
-	systemctl restart nginx
-}
-
 configure_logs()
 {
 	# creating logs directory at /var/log/veil-vdi/
 	mkdir -p /var/log/veil-vdi/ || true
+	chown -R uservdi:uservdi /var/log/veil-vdi
 
 	# deploying configuration files for logrotate
 	cp /opt/veil-vdi/other/tornado.logrotate /etc/logrotate.d/veil-vdi
 }
 
-configure_supervisor()
+configure_systemd()
 {
-	# deploying configuration files for supervisor
-	rm /etc/supervisor/supervisord.conf || true
-	cp /opt/veil-vdi/other/supervisord.conf /etc/supervisor/supervisord.conf
-
-	supervisorctl reload
+	systemctl daemon-reload
+	systemctl enable vdi-web && systemctl enable vdi-pool_worker && systemctl enable vdi-ws_listener
+	systemctl restart vdi-web && systemctl restart vdi-pool_worker && systemctl restart vdi-ws_listener
 }
 
 configure_crontab()
@@ -91,21 +94,42 @@ configure_crontab()
 	echo "$(echo '1 1 * * * /bin/bash /opt/veil-vdi/app/archive_csv_journal.sh' ; crontab -l)" | crontab -
 }
 
+configure_apache2()
+{
+	a2enmod ssl rewrite proxy proxy_http proxy_wstunnel deflate headers expires remoteip
+
+	cp /opt/veil-vdi/apache2-configs/apache2.conf /etc/apache2
+	rm -f /etc/apache2/sites-enabled/*
+	rm -f /etc/apache2/sites-available/*
+	cp /opt/veil-vdi/apache2-configs/vdi*.conf /etc/apache2/sites-available
+	ln -sf /etc/apache2/sites-available/*.conf /etc/apache2/sites-enabled/
+
+	# отключаем режим AstraMode для astra linux
+	if [ -f /etc/astra_version ] ; then
+	    echo "AstraMode off" >> /etc/apache2/apache2.conf
+	fi
+
+    apachectl configtest
+
+	systemctl restart apache2
+}
+
 case "$1" in
 	configure)
 		# действия и при установке и при обновлении
 
-		#configure_supervisor
+		configure_systemd
 
 		# действия только при установке
 		if [ ! -n "$2" ] ; then
+		    configure_users
 			configure_secrets
 			configure_redis
 			configure_postgres
-			configure_nginx
 			configure_logs
-			configure_supervisor
+			configure_systemd
 			configure_crontab
+			configure_apache2
 		fi
 
 		exit 0
