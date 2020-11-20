@@ -195,13 +195,13 @@ async def a_redis_wait_for_task_completion(task_id):
                 redis_data_dict = json.loads(redis_message_data)
 
                 if redis_data_dict['resource'] == VDI_TASKS_SUBSCRIPTION and \
-                        redis_data_dict['event'] == 'status_changed' and \
-                        redis_data_dict['task_id'] == str(task_id) and \
-                        (redis_data_dict['task_status'] == TaskStatus.CANCELLED.name or  # noqa
-                         redis_data_dict['task_status'] == TaskStatus.FAILED.name or  # noqa
-                         redis_data_dict['task_status'] == TaskStatus.FINISHED.name):
+                        redis_data_dict['event'] == 'UPDATED' and \
+                        redis_data_dict['id'] == str(task_id) and \
+                        (redis_data_dict['status'] == TaskStatus.CANCELLED.name or  # noqa
+                         redis_data_dict['status'] == TaskStatus.FAILED.name or  # noqa
+                         redis_data_dict['status'] == TaskStatus.FINISHED.name):
 
-                    return redis_data_dict['task_status']
+                    return redis_data_dict['status']
 
             await asyncio.sleep(REDIS_ASYNC_TIMEOUT)
 

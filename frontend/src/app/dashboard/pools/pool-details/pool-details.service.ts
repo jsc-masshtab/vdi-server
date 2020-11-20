@@ -166,7 +166,7 @@ export class PoolDetailsService {
         });
     }
 
-    public prepareVm(vm: string): Observable<any> {
+    public prepareVm(data): Observable<any> {
         return this.service.mutate<any>({
             mutation: gql`
                 mutation pools($vm: ID!) {
@@ -177,7 +177,7 @@ export class PoolDetailsService {
             `,
             variables: {
                 method: 'POST',
-                vm
+                ...data
             }
         });
     }

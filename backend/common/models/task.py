@@ -16,9 +16,10 @@ from common.models.auth import Entity
 from sqlalchemy import and_
 
 from common.database import db
-from common.veil.veil_redis import REDIS_CLIENT, INTERNAL_EVENTS_CHANNEL
+from common.veil.veil_redis import redis_error_handle, REDIS_CLIENT, INTERNAL_EVENTS_CHANNEL
 from common.veil.veil_gino import AbstractSortableStatusModel, EntityType
 from common.languages import lang_init
+from common.utils import gino_model_to_json_serializable_dict
 
 
 _ = lang_init()
@@ -63,16 +64,16 @@ class Task(db.Model, AbstractSortableStatusModel):
 
     message = db.Column(db.Unicode(length=256), nullable=True)
 
-    def to_json_serializable_dict(self):
-        return dict(
-            task_id=str(self.id),
-            entity_id=str(self.entity_id),
-            task_type=self.task_type.name,
-            task_status=self.status.name,
-            created=str(self.created),
-            finished=str(self.finished),
-            progress=self.progress,
+    @redis_error_handle
+    def publish_data_in_internal_channel(self, event_type: str, message: str):
+        msg_dict = dict(
+            resource=VDI_TASKS_SUBSCRIPTION,
+            mgs_type='data',
+            event=event_type,
+            message=message,
         )
+        msg_dict.update(gino_model_to_json_serializable_dict(self))
+        REDIS_CLIENT.publish(INTERNAL_EVENTS_CHANNEL, json.dumps(msg_dict))
 
     async def form_user_friendly_text(self):
 
@@ -101,7 +102,6 @@ class Task(db.Model, AbstractSortableStatusModel):
         # msg
         if message is None:
             message = await self.form_user_friendly_text()
-            # print('!!!message: ', message, flush=True)
 
         # datetime data
         if status == TaskStatus.IN_PROGRESS:
@@ -121,14 +121,7 @@ class Task(db.Model, AbstractSortableStatusModel):
         await self.update(message=shorten_msg).apply()
 
         # publish task event
-        msg_dict = dict(
-            resource=VDI_TASKS_SUBSCRIPTION,
-            mgs_type='task_data',
-            event='status_changed',
-            message=shorten_msg,
-        )
-        msg_dict.update(self.to_json_serializable_dict())
-        REDIS_CLIENT.publish(INTERNAL_EVENTS_CHANNEL, json.dumps(msg_dict))
+        self.publish_data_in_internal_channel('UPDATED', shorten_msg)
 
     async def set_progress(self, progress: int):
 
@@ -138,14 +131,7 @@ class Task(db.Model, AbstractSortableStatusModel):
         await self.update(progress=progress).apply()
 
         # publish task event
-        msg_dict = dict(
-            resource=VDI_TASKS_SUBSCRIPTION,
-            mgs_type='task_data',
-            event='progress_changed',
-            message=self.message
-        )
-        msg_dict.update(self.to_json_serializable_dict())
-        REDIS_CLIENT.publish(INTERNAL_EVENTS_CHANNEL, json.dumps(msg_dict))
+        self.publish_data_in_internal_channel('UPDATED', self.message)
 
     async def get_associated_entity_name(self):
         # Запоминаем имя так как его не будет после удаения пула, например.

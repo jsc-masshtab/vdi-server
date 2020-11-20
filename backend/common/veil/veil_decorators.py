@@ -41,7 +41,8 @@ def user_passes_test(test_func, exc=Unauthorized):  # noqa
                     if test_func(await user.roles):
                         return f(*args, **kwargs)
                 await system_logger.warning(
-                    _('IP: {}. username: {}.').format(cntxt.remote_ip, user.username),
+                    message=_('Invalid permissions.'),
+                    description=_('IP: {}. username: {}.').format(cntxt.remote_ip, user.username),
                     entity={'entity_type': EntityType.SECURITY, 'entity_uuid': None})
                 raise exc(_('Invalid permissions.'))
             else:
