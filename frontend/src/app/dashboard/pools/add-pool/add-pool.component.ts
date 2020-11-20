@@ -109,6 +109,9 @@ export class PoolAddComponent {
 
     this.addPoolService.getData(type, data).valueChanges.pipe(map(data => data.data.controller[type])).subscribe((res) => {
       this.data[type] = res
+      if(this.data.templates.length!=0) {
+        this.dynamicPool.get('template_id').setValue(this.data['templates'][0]['id'])
+      }
     })
   }
 

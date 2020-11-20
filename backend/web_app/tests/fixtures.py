@@ -1,6 +1,6 @@
 import pytest
 import uuid
-import json
+
 from subprocess import Popen, TimeoutExpired
 import sys
 import asyncio
@@ -12,18 +12,17 @@ from common.database import start_gino, stop_gino
 from common.veil.veil_gino import Role
 from common.veil.auth.veil_jwt import encode_jwt
 from common.veil.veil_api import get_veil_client, stop_veil_client
-from common.veil.veil_redis import a_redis_wait_for_message, INTERNAL_EVENTS_CHANNEL
+from common.veil.veil_redis import wait_for_task_result, REDIS_CLIENT
 
 from common.models.controller import Controller
 from common.models.vm import Vm
 from common.models.auth import Group, User
 from common.models.authentication_directory import AuthenticationDirectory, Mapping
+from common.models.task import TaskStatus, Task
 
 from web_app.controller.schema import controller_schema
 from web_app.pool.schema import pool_schema
 from web_app.tests.utils import execute_scheme
-
-from common.log.journal import system_logger
 
 
 async def get_resources_for_pool_test():
@@ -53,7 +52,10 @@ def get_test_pool_name():
 @async_generator
 async def fixt_launch_workers():
 
-    ws_listener_worker = Popen([sys.executable, "../../ws_listener_worker/app.py"])
+    REDIS_CLIENT.flushall()  # без этого если остались данные с предыдущих тестов
+    # могут происходить труднообъяснимые вещи
+
+    # ws_listener_worker = Popen([sys.executable, "../../ws_listener_worker/app.py"])
     pool_worker = Popen([sys.executable, "../../pool_worker/app.py", "-do-not-resume-tasks"])
 
     await yield_()
@@ -66,7 +68,7 @@ async def fixt_launch_workers():
             pass
         worker.kill()
 
-    stop_worker(ws_listener_worker)
+    # stop_worker(ws_listener_worker)
     stop_worker(pool_worker)
 
 
@@ -104,7 +106,7 @@ async def fixt_auth_context():
 
 
 @pytest.fixture
-@async_generator
+@async_generator  # prepare_vms: false,
 async def fixt_create_automated_pool(fixt_controller):
     """Create an automated pool, yield, remove this pool"""
     # start resources_monitor to receive info  from controller. autopool creation doesnt work without it
@@ -126,7 +128,7 @@ async def fixt_create_automated_pool(fixt_controller):
                         initial_size: 1,
                         reserve_size: 1,
                         increase_step: 1,
-                        total_size: 1,
+                        total_size: 2,
                         vm_name_template: "vdi-test"), {
                         pool {
                           pool_id,
@@ -146,26 +148,12 @@ async def fixt_create_automated_pool(fixt_controller):
     executed = await execute_scheme(pool_schema, qu, context=context)
 
     pool_id = executed['addDynamicPool']['pool']['pool_id']
+    tasks = await Task.get_tasks_associated_with_entity(pool_id)
 
-    # Нужно дождаться внутреннего сообщения о создании пула.
-    def _check_if_pool_created(redis_message):
-
-        system_logger._debug('_check_if_pool_created: redis_message : ' + str(redis_message))
-        try:
-            redis_message_data = redis_message['data'].decode()
-            redis_message_data_dict = json.loads(redis_message_data)
-
-            if redis_message_data_dict['event'] == 'status_changed':
-                return redis_message_data_dict['task_status'] == 'FINISHED'
-        except Exception as ex:
-            print('_check_if_pool_created ' + str(ex))
-
-        return False
-
-    POOL_CREATION_TIMEOUT = 60  # при подготовке ВМ  несколько раз используются таймауты по 10 секунд,
+    # при подготовке ВМ  несколько раз используются таймауты по 10 секунд,
     # из-за чего даже с тестовым вейлом создание пула длится долго
-    is_pool_successfully_created = await a_redis_wait_for_message(INTERNAL_EVENTS_CHANNEL,
-                                                                  _check_if_pool_created, POOL_CREATION_TIMEOUT)
+    status = await wait_for_task_result(tasks[0].id, 60)
+    is_pool_successfully_created = ((status is not None) and (status == TaskStatus.FINISHED.name))
 
     await yield_({
         'id': pool_id,

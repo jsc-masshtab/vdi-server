@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 import asyncio
-import json
 
 from web_app.front_ws_api.subscription_sources import SubscriptionCmd
 
@@ -10,7 +9,7 @@ from tornado.websocket import websocket_connect
 
 from common.models.controller import Controller
 
-from web_app.front_ws_api.subscription_sources import CONTROLLER_SUBSCRIPTIONS_LIST, CONTROLLERS_SUBSCRIPTION
+from web_app.front_ws_api.subscription_sources import CONTROLLER_SUBSCRIPTIONS_LIST
 
 from common.utils import cancel_async_task
 
@@ -36,9 +35,8 @@ class ResourcesMonitor:
         self._ws_connection = None
         self._running_flag = True
         self._controller_id = None
-        self._is_online = None
 
-        self._controller_online_task = None
+        # self._controller_online_task = None
         self._resources_monitor_task = None
 
     # PUBLIC METHODS
@@ -49,7 +47,7 @@ class ResourcesMonitor:
 
         native_loop = asyncio.get_event_loop()
         # controller check
-        self._controller_online_task = native_loop.create_task(self._controller_online_checking())
+        # self._controller_online_task = native_loop.create_task(self._controller_online_checking())
         # ws data
         self._resources_monitor_task = native_loop.create_task(self._processing_ws_messages())
 
@@ -59,37 +57,45 @@ class ResourcesMonitor:
         await self._close_connection()
         # cancel tasks
         await cancel_async_task(self._resources_monitor_task)
-        await cancel_async_task(self._controller_online_task)
+        # await cancel_async_task(self._controller_online_task)
 
     def get_controller_id(self):
         return self._controller_id
 
     # PRIVATE METHODS
-    async def _controller_online_checking(self):
-        """
-        Проверяет онлайн ли контроллер и пихает сообщение в redis канал
-        """
-        response = {'id': str(self._controller_id), 'msg_type': 'data', 'event': 'UPDATED',
-                    'resource': CONTROLLERS_SUBSCRIPTION}
-
-        while self._running_flag:
-
-            await asyncio.sleep(10)
-            try:
-                controller = await Controller.get(self._controller_id)
-                connection_is_ok = await controller.ok
-            except asyncio.CancelledError:
-                raise
-            except Exception:  # noqa
-                # Если возникло какое-либо исключение, то считаем проверка не пройдена. Вот...
-                connection_is_ok = False
-
-            # notify if data changed or on first check
-            if self._is_online is None or (connection_is_ok != self._is_online):
-                response['status'] = 'ONLINE' if connection_is_ok else 'OFFLINE'
-                REDIS_CLIENT.publish(WS_MONITOR_CHANNEL_OUT, json.dumps(response))
-
-            self._is_online = connection_is_ok
+    # async def _controller_online_checking(self):
+    #    """
+    #    Проверяет онлайн ли контроллер и пихает сообщение в redis канал
+    #    """
+    #
+    #    # Чтобы не деактивировать контроллер при первоем фейле запроса (мб кратковременный сетевой сбой),
+    #    # ждем max_fail_request последовательных фейлов
+    #    fail_request_count = 0
+    #    max_fail_request = 3
+    #
+    #    while self._running_flag:
+    #
+    #        await asyncio.sleep(3)
+    #        controller = None
+    #        try:
+    #            controller = await Controller.get(self._controller_id)
+    #            connection_is_ok = await controller.ok
+    #        except asyncio.CancelledError:
+    #            raise
+    #        except Exception:  # noqa
+    #            # Если возникло какое-либо исключение, то считаем проверка не пройдена. Вот...
+    #            connection_is_ok = False
+    #
+    #        # update fail counter
+    #        fail_request_count = 0 if connection_is_ok else (fail_request_count + 1)
+    #
+    #        # activate/deactivate
+    #        if controller:
+    #            if connection_is_ok:
+    #                await controller.activate()
+    #            elif fail_request_count >= max_fail_request:
+    #                await controller.deactivate()
+    #                fail_request_count = 0
 
     async def _processing_ws_messages(self):
         """

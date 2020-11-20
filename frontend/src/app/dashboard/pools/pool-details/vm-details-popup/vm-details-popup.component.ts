@@ -14,6 +14,9 @@ import { PoolDetailsService } from '../pool-details.service';
 export class VmDetalsPopupComponent {
 
   public menuActive: string = 'info';
+  public testing: boolean = false;
+  public tested: boolean = false;
+  public connected: boolean = false;
   public collectionIntoVmAutomated: any[] = [
     {
       title: 'Название',
@@ -32,7 +35,7 @@ export class VmDetalsPopupComponent {
     },
     {
       title: 'Состояние',
-      property: 'power_state',
+      property: 'user_power_state',
       type: 'string'
     },
   ];
@@ -55,7 +58,7 @@ export class VmDetalsPopupComponent {
     },
     {
       title: 'Состояние',
-      property: 'power_state',
+      property: 'user_power_state',
       type: 'string'
     },
   ];
@@ -81,6 +84,29 @@ export class VmDetalsPopupComponent {
       width: '500px',
       data: this.data
     });
+  }
+
+  public test(): void {
+    this.testing = true;
+    this.service.testDomainVm(
+        this.data.vm.id
+      )
+      .subscribe((data) => {
+        if (data) {
+          setTimeout(() => {
+            this.testing = false;
+            this.tested = true;
+            this.connected = data.data.testDomainVm.ok;
+          }, 1000);
+
+          setTimeout(() => {
+            this.tested = false;
+          }, 5000);
+        } else {
+          this.testing = false;
+          this.tested = false;
+        }
+      });
   }
 
   public routeTo(route: string): void {
@@ -221,4 +247,26 @@ export class VmDetalsPopupComponent {
     }
   }
 
+  public prepareVM() {
+    if (this.data.typePool == 'automated') {
+      this.dialog.open(YesNoFormComponent, {
+        disableClose: true,
+        width: '500px',
+        data: {
+          form: {
+            header: "Подтверждение действия",
+            question: `Подготовить ВМ ${this.data.vm.verbose_name}?`,
+            button: "Выполнить"
+          },
+          request: {
+            service: this.service,
+            action: 'prepareVm',
+            body: {
+              vm: this.data.vm.id
+            }
+          }
+        }
+      })
+    }
+  }
 }

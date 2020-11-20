@@ -9,9 +9,13 @@ from common.settings import VEIL_WS_MAX_TIME_TO_WAIT
 from web_app.pool.schema import pool_schema
 from web_app.tests.utils import execute_scheme
 from common.models.pool import Pool
+from common.models.task import TaskStatus
 
-from web_app.tests.fixtures import (fixt_db, fixt_controller, fixt_create_automated_pool, fixt_create_static_pool,  # noqa
-                            fixt_auth_context, fixt_group, fixt_user, fixt_user_admin, fixt_user_another_admin, # noqa
+from common.veil.veil_redis import wait_for_task_result
+
+from web_app.tests.fixtures import (fixt_db, fixt_controller, fixt_create_automated_pool,  # noqa
+                                    fixt_create_static_pool,  fixt_auth_context, fixt_group,  # noqa
+                                    fixt_user, fixt_user_admin, fixt_user_another_admin,  # noqa
                             fixt_launch_workers, fixt_veil_client)  # noqa
 
 pytestmark = [pytest.mark.pools]
@@ -19,12 +23,29 @@ pytestmark = [pytest.mark.pools]
 
 # Automated pool
 @pytest.mark.asyncio
-async def test_create_automated_pool(fixt_launch_workers, fixt_db, fixt_create_automated_pool,  # noqa
+async def test_create_and_expand_automated_pool(fixt_launch_workers, fixt_db, fixt_create_automated_pool,  # noqa
                                      fixt_auth_context):  # noqa
-    """Create and remove automated pool"""
+    """Create, expand and remove automated pool"""
 
     # check that pool was successfully created'
     assert fixt_create_automated_pool['is_pool_successfully_created']
+
+    # launch expand pool task
+    pool_id = fixt_create_automated_pool['id']
+    qu = """
+    mutation {
+        expandPool(pool_id: "%s"){
+            ok
+            task_id
+        }
+    }""" % pool_id
+    executed = await execute_scheme(pool_schema, qu, context=fixt_auth_context)
+    assert executed['expandPool']['ok']
+
+    # wait for expand pool result
+    task_id = executed['expandPool']['task_id']
+    status = await wait_for_task_result(task_id, 60)
+    assert (status and (status == TaskStatus.FINISHED.name))
 
 
 @pytest.mark.asyncio

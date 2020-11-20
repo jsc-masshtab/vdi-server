@@ -18,8 +18,9 @@ import { RemoveRoleComponent } from './remove-role/remove-role.component';
 import { AddRoleComponent } from './add-role/add-role.component';
 import { RemoveGroupComponent } from './remove-group/remove-group.component';
 import { AddGropComponent } from './add-group/add-group.component';
-import { PrepareVmPoolComponent } from './prepare-vm/prepare-vm.component';
+// import { PrepareVmPoolComponent } from './prepare-vm/prepare-vm.component';
 import { YesNoFormComponent } from '../../common/forms-dinamic/yes-no-form/yes-no-form.component';
+import {FormControl} from "@angular/forms";
 
 @Component({
   selector: 'vdi-pool-details',
@@ -29,6 +30,7 @@ import { YesNoFormComponent } from '../../common/forms-dinamic/yes-no-form/yes-n
 export class PoolDetailsComponent implements OnInit, OnDestroy {
 
   public host: boolean = false;
+  user_power_state = new FormControl('all');
 
   public pool: IPool;
 
@@ -169,7 +171,8 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
     {
       title: 'Пороговое количество свободных ВМ',
       property: 'reserve_size',
-      type: 'string'
+      type: 'string',
+      edit: 'changeAutomatedPoolReserveSize'
     },
     {
       title: 'Количество доступных ВМ',
@@ -221,11 +224,6 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
       property_lv2: 'username'
     },
     {
-      title: 'Состояние',
-      property: 'power_state',
-      type: 'string'
-    },
-    {
       title: 'Статус',
       property: 'status'
     }
@@ -251,11 +249,6 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
       title: 'Пользователь',
       property: 'user',
       property_lv2: 'username'
-    },
-    {
-      title: 'Состояние',
-      property: 'power_state',
-      type: 'string'
     },
     {
       title: 'Статус',
@@ -328,6 +321,9 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
       }
       this.getPool();
       // this.getMsgCreatePool();
+      this.user_power_state.valueChanges.subscribe(() => {
+        this.getPool();
+      })
     });
   }
 
@@ -351,6 +347,15 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
     if (this.subPool) {
       this.subPool.unsubscribe();
     }
+
+    const queryset = {
+      user_power_state: this.user_power_state.value
+    };
+
+    if (this.user_power_state.value == false) {
+      delete queryset['user_power_state'];
+    }
+
     this.host = false;
     this.subPool = this.poolService.getPool(this.idPool, this.typePool)
       .valueChanges.pipe(map((data: any) => data.data['pool']))
@@ -413,21 +418,21 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
     });
   }
 
-  public prepareVM(): void {
-    this.dialog.open(PrepareVmPoolComponent, {
-      disableClose: true,
-      width: '500px',
-      data: {
-        idPool: this.idPool,
-        namePool: this.pool.verbose_name,
-        idCluster: this.pool.cluster_id,
-        idNode: this.pool.node_id,
-        idController: this.pool.controller.id,
-        vms: this.pool.vms,
-        typePool: this.typePool
-      }
-    });
-  }
+  // public prepareVM(): void {
+  //   this.dialog.open(PrepareVmPoolComponent, {
+  //     disableClose: true,
+  //     width: '500px',
+  //     data: {
+  //       idPool: this.idPool,
+  //       namePool: this.pool.verbose_name,
+  //       idCluster: this.pool.cluster_id,
+  //       idNode: this.pool.node_id,
+  //       idController: this.pool.controller.id,
+  //       vms: this.pool.vms,
+  //       typePool: this.typePool
+  //     }
+  //   });
+  // }
 
   public removeVM(): void {
     this.dialog.open(RemoveVMStaticPoolComponent, {
@@ -625,6 +630,43 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
             type: 'number',
             fieldName: 'increase_step',
             fieldValue: this.pool.increase_step,
+          }]
+        },
+        update: {
+          method: 'getPool',
+          refetch: true,
+          params: [
+            this.idPool,
+            this.typePool
+          ]
+        }
+      }
+    });
+  }
+
+   // @ts-ignore: Unreachable code error
+  private changeAutomatedPoolReserveSize(): void {
+    this.dialog.open(FormForEditComponent, {
+ 			disableClose: true,
+      width: '500px',
+      data: {
+        post: {
+          service: this.poolService,
+          method: 'updatePool',
+          params: {
+            pool_id: this.idPool,
+            pool_type: this.typePool
+          }
+        },
+        settings: {
+          entity: 'pool-details',
+          header: 'Изменение порогового количества свободных ВМ',
+          buttonAction: 'Изменить',
+          form: [{
+            tag: 'input',
+            type: 'number',
+            fieldName: 'reserve_size',
+            fieldValue: this.pool.reserve_size,
           }]
         },
         update: {

@@ -19,7 +19,5 @@ class AuthTestLocale(VdiHttpTestCase):
         body = '{"username": "test_user","password": "!", "ldap": true}'  # Пропущен пароль!
         response_dict = yield self.get_response(body=body)
         error_message = response_dict['errors'][0]['message']
-        if LANGUAGE == 'en':
-            self.assertIn('Missing password.', error_message)
-        elif LANGUAGE == 'ru':
-            self.assertIn('Отсутствует пароль.', error_message)
+        if LANGUAGE == 'ru':
+            self.assertIn('Ошибка авторизации пользователя: test_user.', error_message)

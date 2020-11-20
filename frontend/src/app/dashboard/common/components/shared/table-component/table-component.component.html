@@ -35,11 +35,11 @@
                   <fa-icon [icon]="['fas', 'crown']" title="Администратор" class="extra-icon stateOn"></fa-icon>
                 </ng-container>
 
-                <ng-container *ngIf="entity === 'vm' && item?.state && obj.property === 'verbose_name'"> <!-- статус вм -->
-                  <fa-icon [icon]="['fas', 'play-circle']" *ngIf="item.state === 'ON'" class="extra-icon on" title="Включена"></fa-icon>
-                  <fa-icon [icon]="['fas', 'stop-circle']" *ngIf="item.state === 'OFF'" class="extra-icon off" title="Выключена"></fa-icon>
-                  <fa-icon [icon]="['fas', 'pause-circle']" *ngIf="item.state === 'SUSPENDED'" class="extra-icon suspended" title="Приостановлена"></fa-icon>
-                  <fa-icon [icon]="['fas', 'question-circle']" *ngIf="item.state === 'UNDEFINED'" class="extra-icon undefined" title="Не найдено"></fa-icon>
+                <ng-container *ngIf="entity === 'vm' && item?.user_power_state && obj.property === 'verbose_name'"> <!-- статус вм -->
+                  <fa-icon [icon]="['fas', 'play-circle']" *ngIf="item.user_power_state === 'ON'" class="extra-icon on" title="Включена"></fa-icon>
+                  <fa-icon [icon]="['fas', 'stop-circle']" *ngIf="item.user_power_state === 'OFF'" class="extra-icon off" title="Выключена"></fa-icon>
+                  <fa-icon [icon]="['fas', 'pause-circle']" *ngIf="item.user_power_state === 'SUSPENDED'" class="extra-icon suspended" title="Приостановлена"></fa-icon>
+                  <fa-icon [icon]="['fas', 'question-circle']" *ngIf="item.user_power_state === 'UNDEFINED'" class="extra-icon undefined" title="Не найдено"></fa-icon>
                 </ng-container>
 
                 <ng-container *ngIf="entity === 'events' && obj.property === 'message'"> <!-- события -->

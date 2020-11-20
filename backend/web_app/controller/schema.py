@@ -261,11 +261,17 @@ class ControllerType(graphene.ObjectType, ControllerFetcher):
             vm = await Vm.get(resource['id'])
             if vm:
                 pool = await Pool.get(vm.pool_id)
-                pool_name = pool.verbose_name
+                resource['pool_name'] = pool.verbose_name
             else:
-                pool_name = None
-            vms_list.append(
-                ControllerVmType(pool_name=pool_name, **resource))
+                resource['pool_name'] = '--'
+
+        if ordering == 'pool_name':
+            resolves.sort(key=lambda data: data['pool_name'])
+        elif ordering == '-pool_name':
+            resolves.sort(key=lambda data: data['pool_name'], reverse=True)
+
+        for resource in resolves:
+            vms_list.append(ControllerVmType(**resource))
         return vms_list
 
     @staticmethod

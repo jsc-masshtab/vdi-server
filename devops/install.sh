@@ -56,3 +56,4 @@ echo "CREATE=$(date +"%Y-%m-%d")" >> /tmp/vdi-install-vars
 
 apt-get update
 apt-get install ./vdi-*.deb -y
+apt-get -f -y install
