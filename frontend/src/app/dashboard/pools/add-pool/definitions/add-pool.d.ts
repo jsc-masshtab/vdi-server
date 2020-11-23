@@ -30,6 +30,7 @@ export interface IFinishPoolView {
     vm_name_template: string; // auto
     create_thin_clones: boolean;//stat
     prepare_vms: boolean;
+    ad_cn_pattern: string; // auto
     increase_step: number;// autos
 }
 
@@ -51,4 +52,5 @@ export interface IFinishPoolForm {
     }
     create_thin_clones: boolean;//stat
     prepare_vms: boolean;
+    ad_cn_pattern: string; // auto
 }

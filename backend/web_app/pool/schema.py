@@ -257,6 +257,7 @@ class PoolType(graphene.ObjectType):
     total_size = graphene.Int()
     vm_name_template = graphene.String()
     os_type = graphene.String()
+    ad_cn_pattern = graphene.String()
 
     users = graphene.List(UserType, entitled=graphene.Boolean())
     assigned_roles = graphene.List(RoleTypeGraphene)
@@ -400,6 +401,7 @@ def pool_obj_to_type(pool_obj: Pool) -> dict:
                  'vm_name_template': pool_obj.vm_name_template,
                  'os_type': pool_obj.os_type,
                  'keep_vms_on': pool_obj.keep_vms_on,
+                 'ad_cn_pattern': pool_obj.ad_cn_pattern,
                  'create_thin_clones': pool_obj.create_thin_clones,
                  'prepare_vms': pool_obj.prepare_vms,
                  'controller': pool_obj.controller,
@@ -752,6 +754,7 @@ class UpdateAutomatedPoolMutation(graphene.Mutation, PoolValidator):
         keep_vms_on = graphene.Boolean()
         create_thin_clones = graphene.Boolean()
         prepare_vms = graphene.Boolean()
+        ad_cn_pattern = graphene.String()
         connection_types = graphene.List(graphene.NonNull(ConnectionTypesGraphene))
 
     ok = graphene.Boolean()
@@ -790,6 +793,7 @@ class UpdateAutomatedPoolMutation(graphene.Mutation, PoolValidator):
                                                  keep_vms_on=kwargs.get('keep_vms_on'),
                                                  create_thin_clones=kwargs.get('create_thin_clones'),
                                                  prepare_vms=kwargs.get('prepare_vms'),
+                                                 ad_cn_pattern=kwargs.get('ad_cn_pattern'),
                                                  connection_types=kwargs.get('connection_types'),
                                                  creator=creator
                                                  )

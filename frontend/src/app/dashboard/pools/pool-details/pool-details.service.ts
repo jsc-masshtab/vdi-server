@@ -54,6 +54,7 @@ export class PoolDetailsService {
                                     total_size
                                     increase_step
                                     vm_name_template
+                                    ad_cn_pattern
                                     users {
                                         username
                                     }
@@ -316,7 +317,7 @@ export class PoolDetailsService {
         });
     }
 
-    public updatePool({pool_id, pool_type }, {connection_types, verbose_name, increase_step, reserve_size, total_size, vm_name_template, create_thin_clones, prepare_vms, keep_vms_on}) {
+    public updatePool({pool_id, pool_type }, {connection_types, verbose_name, increase_step, reserve_size, total_size, vm_name_template, create_thin_clones, prepare_vms, keep_vms_on, ad_cn_pattern}) {
         if (pool_type === 'static') {
             return this.service.mutate<any>({
                 mutation: gql`
@@ -343,11 +344,11 @@ export class PoolDetailsService {
                 mutation: gql`
                                 mutation pools($connection_types: [PoolConnectionTypes!], $pool_id: UUID!,$verbose_name: String,
                                     $increase_step: Int , $reserve_size: Int, $total_size: Int , $vm_name_template: String ,
-                                     $keep_vms_on: Boolean, $create_thin_clones: Boolean, $prepare_vms: Boolean ) {
+                                     $keep_vms_on: Boolean, $create_thin_clones: Boolean, $prepare_vms: Boolean, $ad_cn_pattern: String ) {
                                     updateDynamicPool(connection_types: $connection_types, pool_id: $pool_id, verbose_name: $verbose_name,
                                         increase_step: $increase_step, reserve_size: $reserve_size, total_size: $total_size,
                                         vm_name_template: $vm_name_template, keep_vms_on: $keep_vms_on,
-                                         create_thin_clones: $create_thin_clones, prepare_vms: $prepare_vms ) {
+                                         create_thin_clones: $create_thin_clones, prepare_vms: $prepare_vms, ad_cn_pattern: $ad_cn_pattern ) {
                                         ok
                                     }
                                 }
@@ -363,6 +364,7 @@ export class PoolDetailsService {
                     keep_vms_on,
                     create_thin_clones,
                     prepare_vms,
+                    ad_cn_pattern,
                     connection_types
                 }
             });
