@@ -191,6 +191,12 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
       edit: 'changeTemplateForVmAutomatedPool'
     },
     {
+      title: 'Наименование групп для добавления ВМ в AD',
+      property: 'ad_cn_pattern',
+      type: 'string',
+      edit: 'changeAdCnPatternForGroupAutomatedPool'
+    },
+    {
       title: 'Пользователи',
       property: 'users',
       type: 'array-length'
@@ -820,6 +826,43 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
             fieldName: 'keep_vms_on',
             fieldValue: this.pool.keep_vms_on,
             description: 'Держать ВМ с пользователями включенными'
+          }]
+        },
+        update: {
+          method: 'getPool',
+          refetch: true,
+          params: [
+            this.idPool,
+            this.typePool
+          ]
+        }
+      }
+    });
+  }
+
+    private changeAdCnPatternForGroupAutomatedPool(): void {
+    this.dialog.open(FormForEditComponent, {
+ 			disableClose: true,
+      width: '500px',
+      data: {
+        post: {
+          service: this.poolService,
+          method: 'updatePool',
+          params: {
+            pool_id: this.idPool,
+            pool_type: this.typePool
+          }
+        },
+        settings: {
+          entity: 'pool-details',
+          header: 'Изменение наименования групп для добавления ВМ в AD',
+          buttonAction: 'Изменить',
+          danger: "В НОВУЮ группу добавятся только НОВЫЕ виртуальные машины!",
+          form: [{
+            tag: 'input',
+            type: 'text',
+            fieldName: 'ad_cn_pattern',
+            fieldValue: this.pool.ad_cn_pattern,
           }]
         },
         update: {
