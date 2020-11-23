@@ -319,3 +319,15 @@ class ThinClientWsHandler(websocket.WebSocketHandler):  # noqa
     # todo: security problems. implement proper origin checking
     def check_origin(self, origin):
         return True
+
+    def on_message(self, message):
+        print('on_message', flush=True)
+
+    def on_pong(self, data: bytes) -> None:
+        print('on_pong', flush=True)
+
+    def on_ping(self, data: bytes) -> None:
+        print('on_ping', flush=True)
+
+    def on_close(self):
+        print("WebSocket closed", flush=True)
