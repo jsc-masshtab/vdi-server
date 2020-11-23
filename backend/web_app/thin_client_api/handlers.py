@@ -316,9 +316,8 @@ class ThinClientWsHandler(websocket.WebSocketHandler):  # noqa
     #     websocket.WebSocketHandler.__init__(self, application, request, **kwargs)
     #     print('init')
 
-    # todo: security problems. implement proper origin checking
     def check_origin(self, origin):
-        return True
+        return origin == 'veil_connect_trusted_origin'
 
     def on_message(self, message):
         print('on_message', flush=True)
