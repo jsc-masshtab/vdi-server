@@ -367,6 +367,10 @@ msgstr "Static pool {} created."
 msgid "Pool {} has been updated."
 msgstr "Pool {} has been updated."
 
+#: ../common/models/pool.py:900
+msgid "Initial_size: {}, total_size: {}, increase_step {}, reserve_size {}."
+msgstr "Initial_size: {}, total_size: {}, increase_step {}, reserve_size {}."
+
 #: ../common/models/pool.py:899
 msgid "AutomatedPool {} is created."
 msgstr "Automated pool {} is created."
@@ -639,6 +643,10 @@ msgstr "Soft_delete exception: {}."
 msgid "User {} not found."
 msgstr "User {} not found."
 
+#: ../web_app/thin_client_api/handlers.py:57
+msgid "User {} requested pools data."
+msgstr "User {} requested pools data."
+
 #: ../common/veil/veil_handlers.py:80
 msgid "There is no pool with id: {}."
 msgstr "There is no pool with id: {}."
@@ -664,8 +672,8 @@ msgid "Task <{}> started."
 msgstr "Task <{}> started."
 
 #: ../pool_worker/pool_tasks.py:85
-msgid "Task <{}> finished."
-msgstr "Task <{}> finished."
+msgid "Task <{}> finished successfully."
+msgstr "Task <{}> finished successfully."
 
 #: ../pool_worker/pool_tasks.py:89
 msgid "Task <{}> cancelled."
@@ -1006,6 +1014,14 @@ msgstr "Can not expand pool {} because it reached its total_size."
 #: ../web_app/pool/schema.py:661
 msgid "Another task works on pool {}."
 msgstr "Another task works on pool {}."
+
+#: ../web_app/pool/schema.py:666
+msgid "Increase_step {}."
+msgstr "Increase_step {}."
+
+#: ../web_app/pool/schema.py:666
+msgid "Expansion of pool {} requested."
+msgstr "Expansion of pool {} requested."
 
 #: ../web_app/pool/schema.py:724
 msgid "Failed to create automated pool {}."

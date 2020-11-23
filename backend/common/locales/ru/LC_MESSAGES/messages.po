@@ -367,6 +367,11 @@ msgstr "Статический пул {} создан."
 msgid "Pool {} has been updated."
 msgstr "Пул {} обновлен."
 
+#: ../common/models/pool.py:900
+msgid "Initial_size: {}, total_size: {}, increase_step {}, reserve_size {}."
+msgstr "Начальное количество ВМ: {}, Максимальное количество создаваемых ВМ: {}, \
+Шаг расширения пула {}, Пороговое количество свободных ВМ {}."
+
 #: ../common/models/pool.py:899
 msgid "AutomatedPool {} is created."
 msgstr "Создан автоматический пул {}."
@@ -639,6 +644,10 @@ msgstr "Ошибка удаления: {}."
 msgid "User {} not found."
 msgstr "Пользователь {} не найден."
 
+#: ../web_app/thin_client_api/handlers.py:57
+msgid "User {} requested pools data."
+msgstr "Пользователь {} запросил информацию о пулах."
+
 #: ../common/veil/veil_handlers.py:80
 msgid "There is no pool with id: {}."
 msgstr "Отсутствует пул с ID: {}."
@@ -664,7 +673,7 @@ msgid "Task <{}> started."
 msgstr "Задача <{}> начала выполнение."
 
 #: ../pool_worker/pool_tasks.py:85
-msgid "Task <{}> finished."
+msgid "Task <{}> finished successfully."
 msgstr "Задача <{}> завершилась успешно."
 
 #: ../pool_worker/pool_tasks.py:89
@@ -1006,6 +1015,14 @@ msgstr "Не удается расширить пул {} т.к. достигну
 #: ../web_app/pool/schema.py:661
 msgid "Another task works on pool {}."
 msgstr "Другая задача выполняется над пулом {}."
+
+#: ../web_app/pool/schema.py:666
+msgid "Increase_step {}."
+msgstr "Шаг расширения пула {}."
+
+#: ../web_app/pool/schema.py:666
+msgid "Expansion of pool {} requested."
+msgstr "Запрошено расширение пула {}."
 
 #: ../web_app/pool/schema.py:724
 msgid "Failed to create automated pool {}."

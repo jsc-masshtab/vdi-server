@@ -897,8 +897,10 @@ class AutomatedPool(db.Model):
                                                   prepare_vms=prepare_vms,
                                                   ad_cn_pattern=ad_cn_pattern)
             # Записываем событие в журнал
+            description = _('Initial_size: {}, total_size: {}, increase_step {}, reserve_size {}.').format(
+                initial_size, total_size, increase_step, reserve_size)
             await system_logger.info(_('AutomatedPool {} is created.').format(verbose_name), user=creator,
-                                     entity=pool.entity)
+                                     entity=pool.entity, description=description)
             return automated_pool
 
     async def soft_update(self, creator, verbose_name, reserve_size, total_size, increase_step, vm_name_template,

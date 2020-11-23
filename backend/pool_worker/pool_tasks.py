@@ -82,7 +82,7 @@ class AbstractTask(ABC):
         try:
             await self.do_task()
             await self.task_model.set_status(TaskStatus.FINISHED)
-            await system_logger.info(_('Task <{}> finished.').format(friendly_task_name))
+            await system_logger.info(_('Task <{}> finished successfully.').format(friendly_task_name))
 
         except asyncio.CancelledError:
             await self.task_model.set_status(TaskStatus.CANCELLED)

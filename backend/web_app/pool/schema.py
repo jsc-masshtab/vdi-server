@@ -661,6 +661,11 @@ class ExpandPoolMutation(graphene.Mutation, PoolValidator):
             raise SilentError(_('Another task works on pool {}.').format(pool_name))
 
         task_id = await request_to_execute_pool_task(pool_id, PoolTaskType.POOL_EXPAND, ignore_reserve_size=True)
+
+        verbose_name = await autopool.verbose_name
+        description = _('Increase_step {}.').format(autopool.increase_step)
+        await system_logger.info(_('Expansion of pool {} requested.').format(verbose_name), user=creator,
+                                 entity=autopool.entity, description=description)
         return {
             'ok': True,
             'task_id': task_id,
@@ -719,7 +724,7 @@ class CreateAutomatedPoolMutation(graphene.Mutation, PoolValidator, ControllerFe
                                                              prepare_vms=prepare_vms,
                                                              connection_types=connection_types,
                                                              ad_cn_pattern=ad_cn_pattern)
-        except Exception as E:  # Возможные исключения: дубликат имени или вм id, сетевой фейл enable_remote_accesses
+        except Exception as E:  # Возможные исключения: дубликат имени вм
             desc = str(E)
             error_msg = _('Failed to create automated pool {}.').format(verbose_name)
             entity = {'entity_type': EntityType.POOL, 'entity_uuid': None}

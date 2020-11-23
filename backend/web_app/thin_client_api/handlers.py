@@ -53,6 +53,9 @@ class PoolHandler(BaseHandler, ABC):
             raise ValidationError(_('User {} not found.').format(user.username))
         pools = await user.pools
         response = {"data": pools}
+
+        await system_logger.info(_('User {} requested pools data.').format(user.username),
+                                 entity=user.entity, user=user.username)
         return await self.log_finish(response)
 
 
@@ -69,7 +72,7 @@ class PoolGetVm(BaseHandler, ABC):
         # Проверяем лимит виртуальных машин
         if PoolModel.thin_client_limit_exceeded():
             response = {'errors': [{'message': _('Thin client limit exceeded.'), 'code': '001'}]}
-            return await self.finish(response)
+            return await self.log_finish(response)
 
         user = await self.get_user_model_instance()
         if not user:
@@ -203,7 +206,6 @@ class PoolGetVm(BaseHandler, ABC):
                                  vm_verbose_name=veil_domain.verbose_name,
                                  vm_controller_address=vm_controller.address)
                     }
-
         return await self.log_finish(response)
 
     async def _send_cmd_to_expand_pool(self, pool_model):
