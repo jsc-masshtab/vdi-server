@@ -577,7 +577,7 @@ class Vm(VeilModel):
         except asyncio.TimeoutError as err_msg:
             await system_logger.error(message=_('{} preparation cancelled by timeout.').format(self.verbose_name),
                                       entity=self.entity,
-                                      description=err_msg)
+                                      description=str(err_msg))
             raise
         except ValueError as err_msg:
             err_str = str(err_msg)

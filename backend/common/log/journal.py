@@ -141,6 +141,8 @@ class Log:
         """Запишет сообщение в logging и таблицу Event с уровнем DEBUG."""
         if message and not isinstance(message, str):
             message = str(message)
+        if description and not isinstance(description, str):
+            description = str(description)
         self.__log_debug(message)
         if DEBUG:
             if not entity:
@@ -153,6 +155,8 @@ class Log:
             entity = {'entity_type': EntityType.SECURITY, 'entity_uuid': None}
         if message and not isinstance(message, str):
             message = str(message)
+        if description and not isinstance(description, str):
+            description = str(description)
         self.__log_info(message)
         await self.__event_info(message, description, user, entity)
 
@@ -162,6 +166,8 @@ class Log:
             entity = {'entity_type': EntityType.SECURITY, 'entity_uuid': None}
         if message and not isinstance(message, str):
             message = str(message)
+        if description and not isinstance(description, str):
+            description = str(description)
         self.__log_warning(message)
         await self.__event_warning(message, description, user, entity)
 
@@ -171,6 +177,8 @@ class Log:
             entity = {'entity_type': EntityType.SECURITY, 'entity_uuid': None}
         if message and not isinstance(message, str):
             message = str(message)
+        if description and not isinstance(description, str):
+            description = str(description)
         self.__log_error(message)
         await self.__event_error(message, description, user, entity)
 
