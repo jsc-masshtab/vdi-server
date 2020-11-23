@@ -92,11 +92,14 @@ class Controller(AbstractSortableStatusModel, VeilModel):
         """Проверяем доступность контроллера независимо от его статуса."""
         veil_client = get_veil_client()
         client = veil_client.add_client(server_address=self.address, token=self.token)
-        is_ok = await client.controller().ok
-        if is_ok:
-            return True
-        await self.remove_client()
-        return False
+        # Try/ex added 23.11.2020
+        try:
+            is_ok = await client.controller().ok
+            if is_ok:
+                return True
+        except Exception:
+            await self.remove_client()
+            return False
 
     async def check_controller(self):
         """Проверяем доступность контроллера и меняем его статус."""
@@ -222,7 +225,7 @@ class Controller(AbstractSortableStatusModel, VeilModel):
         """Полное удаление пулов контроллера"""
         pools = await self.pools
         for pool_obj in pools:
-            await pool_obj.full_delete(commit=True, creator=creator)
+            await pool_obj.full_delete(creator=creator)
 
     async def full_delete(self, creator):
         """Удаление сущности с удалением зависимых сущностей."""

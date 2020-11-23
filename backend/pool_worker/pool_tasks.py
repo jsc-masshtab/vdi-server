@@ -91,11 +91,11 @@ class AbstractTask(ABC):
             await self.do_on_cancel()
 
         except Exception as ex:  # noqa
-            message = _('Exception during task execution. Task: <{}> Exception: {}.').format(
+            message = _('Exception during task execution. Task: <{}>.').format(
                 friendly_task_name, str(ex))
             await self.task_model.set_status(TaskStatus.FAILED, message)
 
-            await system_logger.warning(message)
+            await system_logger.warning(message, description=str(ex))
             print('BT {bt}'.format(bt=traceback.format_exc()))
 
             await self.do_on_fail()

@@ -124,9 +124,9 @@ class Vm(VeilModel):
                 domain_entity = await self.vm_client
                 if not domain_entity:
                     raise AssertionError(_('VM has no api client.'))
-                await self.qemu_guest_agent_waiting()
-                await domain_entity.info()
                 # Операция вывода на VeiL деактивирует ВМ, а не удаляет. Отключили на VDI 18112020
+                # await self.qemu_guest_agent_waiting()
+                # await domain_entity.info()
                 # Если машина уже заведена в АД - пытаемся ее вывести
                 # active_directory_object = await AuthenticationDirectory.query.where(
                 #     AuthenticationDirectory.status == Status.ACTIVE).gino.first()
@@ -143,7 +143,7 @@ class Vm(VeilModel):
                 #         await asyncio.sleep(VEIL_OPERATION_WAITING)
                 #         task_completed = await action_task.finished
                 # Отправляем задачу удаления ВМ на ECP.
-                await self.qemu_guest_agent_waiting()
+                # await self.qemu_guest_agent_waiting()
                 delete_response = await domain_entity.remove(full=True)
                 delete_task = delete_response.task
                 task_completed = False
@@ -472,6 +472,15 @@ class Vm(VeilModel):
             # Ожидаем выполнения задачи на VeiL
             if action_response.status_code == 202:
                 await self.task_waiting(action_response.task)
+            # Если задача выполнена с ошибкой - логгируем
+            task_success = await action_response.task.success
+            if not task_success:
+                await system_logger.warning(_('VM {} hostname setting task failed.').format(self.verbose_name),
+                                            entity=self.entity)
+            else:
+                msg = _('VM {} hostname setting success.').format(self.verbose_name)
+                await system_logger.info(message=msg,
+                                         entity=self.entity)
         return True
 
     async def include_in_ad_group(self, active_directory_obj: AuthenticationDirectory, ad_cn_pattern: str):
@@ -489,7 +498,7 @@ class Vm(VeilModel):
                                                                                        domain_entity.guest_agent.ipv4))
 
         already_in_domain = await domain_entity.in_ad if domain_entity.os_windows else True
-        if active_directory_obj and domain_entity.os_windows and not already_in_domain and ad_cn_pattern:
+        if active_directory_obj and domain_entity.os_windows and already_in_domain and ad_cn_pattern:
             await self.qemu_guest_agent_waiting()
             action_response = await domain_entity.add_to_ad_group(self.verbose_name,
                                                                   active_directory_obj.service_username,
@@ -500,7 +509,13 @@ class Vm(VeilModel):
             task_success = await action_response.task.success
             if not task_success:
                 raise ValueError(_('VM {} domain container including task failed.').format(self.verbose_name))
+            msg = _('VM {} AD group inclusion success.').format(self.verbose_name)
+            await system_logger.info(message=msg,
+                                     entity=self.entity)
             return True
+        msg = _('VM {} AD group inclusion skipped.').format(self.verbose_name)
+        await system_logger.warning(message=msg,
+                                    entity=self.entity)
         return False
 
     async def include_in_ad(self, active_directory_obj: AuthenticationDirectory):
@@ -527,7 +542,13 @@ class Vm(VeilModel):
             task_success = await action_response.task.success
             if not task_success:
                 raise ValueError(_('VM {} domain including task failed.').format(self.verbose_name))
+            msg = _('VM {} AD inclusion success.').format(self.verbose_name)
+            await system_logger.info(message=msg,
+                                     entity=self.entity)
             return True
+        msg = _('VM {} AD inclusion skipped.').format(self.verbose_name)
+        await system_logger.warning(message=msg,
+                                    entity=self.entity)
         return False
 
     async def prepare(self, active_directory_obj: AuthenticationDirectory = None, ad_cn_pattern: str = None):
@@ -541,9 +562,9 @@ class Vm(VeilModel):
         # 18.11.2020
         await self.reboot()
         await self.set_hostname()
+        await self.reboot()
         await self.include_in_ad(active_directory_obj)
         await self.include_in_ad_group(active_directory_obj, ad_cn_pattern)
-
         # Протоколируем успех
         msg = _('VM {} has been prepared.').format(self.verbose_name)
         await system_logger.info(message=msg, entity=self.entity)
