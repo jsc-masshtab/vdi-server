@@ -840,7 +840,8 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
     });
   }
 
-    private changeAdCnPatternForGroupAutomatedPool(): void {
+  // @ts-ignore: Unreachable code error
+  private changeAdCnPatternForGroupAutomatedPool(): void {
     this.dialog.open(FormForEditComponent, {
  			disableClose: true,
       width: '500px',
