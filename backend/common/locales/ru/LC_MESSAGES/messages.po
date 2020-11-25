@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2020-11-23 16:18+0300\n"
+"POT-Creation-Date: 2020-11-25 21:58+0300\n"
 "PO-Revision-Date: 2020-07-30 11:25+0300\n"
 "Last-Translator: Emil <emil@emil-pc>\n"
 "Language-Team: Russian\n"
@@ -136,112 +136,108 @@ msgstr "Группе {} уже назначена роль {}."
 msgid "Roles: {} was deleted to group {}."
 msgstr "Роли: {} удалены из группы {}."
 
-#: ../common/models/authentication_directory.py:142
-#: ../web_app/tests/test_auth_dir.py:120
+#: ../common/models/authentication_directory.py:119
+#: ../web_app/tests/test_auth_dir.py:125
 msgid "More than one authentication directory can not be created."
 msgstr "Не может быть создано более одной директории авторизации."
 
-#: ../common/models/authentication_directory.py:165
+#: ../common/models/authentication_directory.py:140
 msgid "Authentication directory {} is created."
 msgstr "Директория авторизации {} создана."
 
-#: ../common/models/authentication_directory.py:183
+#: ../common/models/authentication_directory.py:170
 msgid "Values for auth directory is updated."
 msgstr "Значения для директории авторизации обновлены."
 
-#: ../common/models/authentication_directory.py:210
+#: ../common/models/authentication_directory.py:197
 msgid "Arguments: {} of group: {}."
 msgstr "Аргументы: {} группы: {}."
 
-#: ../common/models/authentication_directory.py:211
+#: ../common/models/authentication_directory.py:198
 msgid "Mapping for auth directory {} is created."
 msgstr "Отображение для директории авторизации {} создано."
 
-#: ../common/models/authentication_directory.py:234
+#: ../common/models/authentication_directory.py:221
 msgid "New arguments: {} of group: {}."
 msgstr "Новые аргументы: {} группы: {}."
 
-#: ../common/models/authentication_directory.py:235
+#: ../common/models/authentication_directory.py:222
 msgid "Mapping for auth directory {} is updated."
 msgstr "Mapping for auth directory {} is updated."
 
-#: ../common/models/authentication_directory.py:258
-#: ../common/models/authentication_directory.py:462
+#: ../common/models/authentication_directory.py:244
+#: ../common/models/authentication_directory.py:429
 msgid "Authentication directory server {} is down."
 msgstr "Сервер директории авторизации {} не работает."
 
-#: ../common/models/authentication_directory.py:265
+#: ../common/models/authentication_directory.py:251
 msgid "Authentication directory server {} is connected."
 msgstr "Сервер директории авторизации {} подключен."
 
-#: ../common/models/authentication_directory.py:300
+#: ../common/models/authentication_directory.py:284
 msgid "Username must be a string."
 msgstr "Имя пользователя должно быть строкой."
 
-#: ../common/models/authentication_directory.py:329
-msgid "Assigning veil groups to {}."
-msgstr "Присвоение групп veil {}."
-
-#: ../common/models/authentication_directory.py:338
+#: ../common/models/authentication_directory.py:313
 msgid "Mappings: {}."
 msgstr "Сопоставления: {}."
 
-#: ../common/models/authentication_directory.py:354
+#: ../common/models/authentication_directory.py:329
 msgid "escaped values: {}."
 msgstr "скрытые значения: {}."
 
-#: ../common/models/authentication_directory.py:355
+#: ../common/models/authentication_directory.py:330
 msgid "role mapping value type: {}."
 msgstr "тип значений отображения роли: {}."
 
-#: ../common/models/authentication_directory.py:364
+#: ../common/models/authentication_directory.py:339
 msgid "User veil groups: {}."
 msgstr "Группы пользователей veil: {}."
 
-#: ../common/models/authentication_directory.py:371
+#: ../common/models/authentication_directory.py:346
 msgid "Attaching user {} to group: {}."
 msgstr "Прикрепление пользователя {} к группе {}."
 
-#: ../common/models/authentication_directory.py:384
-#: ../common/models/authentication_directory.py:395
+#: ../common/models/authentication_directory.py:359
+#: ../common/models/authentication_directory.py:370
 msgid "No authentication directory controllers."
 msgstr "Нет контроллеров директории авторизации."
 
-#: ../common/models/authentication_directory.py:421
+#: ../common/models/authentication_directory.py:393
 msgid "Invalid credentials (ldap): {}."
 msgstr "Неверные учетные данные (ldap): {}."
 
-#: ../common/models/authentication_directory.py:428
+#: ../common/models/authentication_directory.py:400
 msgid "Server down (ldap)."
 msgstr "Сервер не отвечает (ldap)."
 
-#: ../common/models/authentication_directory.py:444
+#: ../common/models/authentication_directory.py:416
 msgid "LDAP username and password can`t be empty."
 msgstr "Имя пользователя и пароль LDAP не могут быть пустыми."
 
-#: ../common/models/authentication_directory.py:457
+#: ../common/models/authentication_directory.py:424
 msgid "Authentication directory server {} has bad auth info."
 msgstr "Не удалось подключиться к серверу директории авторизации {}."
 
-#: ../common/models/authentication_directory.py:524
-#: ../common/models/authentication_directory.py:603
+#: ../common/models/authentication_directory.py:491
+#: ../common/models/authentication_directory.py:570
 msgid "Fail to connect to Authentication Directory. Check service information."
 msgstr "Ошибка подключения к директории авторизации."
 
-#: ../common/models/authentication_directory.py:647
+#: ../common/models/authentication_directory.py:614
 msgid "{} new users synced from Authentication Directory."
 msgstr "{} новых пользователей синхронизировано из директории авторизации."
 
-#: ../common/models/authentication_directory.py:655
+#: ../common/models/authentication_directory.py:622
 #: ../web_app/auth/group_schema.py:180
 msgid "No such Group."
 msgstr "Отсутствует такая группа."
 
-#: ../common/models/authentication_directory.py:657
+#: ../common/models/authentication_directory.py:624
 msgid "Group {} is not synchronized by AD."
 msgstr "Группа {} не синхронизированна с директорией авторизации."
 
-#: ../common/models/authentication_directory.py:663
+#: ../common/models/authentication_directory.py:630
 msgid "There is no users to sync."
 msgstr "В группе не найдены пользователи для синхронизации."
 
@@ -289,7 +285,7 @@ msgstr "Неверный параметр сортировки {}."
 msgid "User {} has been included to pool {}."
 msgstr "Пользователь {} был включен в пул {}."
 
-#: ../common/models/pool.py:411 ../common/models/vm.py:184
+#: ../common/models/pool.py:411 ../common/models/vm.py:186
 msgid "{} already has permission."
 msgstr "{} уже имеет разрешение."
 
@@ -442,160 +438,160 @@ msgstr "Подготовка ВМ {}."
 msgid "  Duration: {}."
 msgstr "  Продолжительность: {}."
 
-#: ../common/models/vm.py:109
+#: ../common/models/vm.py:111
 msgid "Create VM {} on VDI DB."
 msgstr "Создание виртуальной машины {} на VDI DB."
 
-#: ../common/models/vm.py:126 ../web_app/thin_client_api/handlers.py:273
+#: ../common/models/vm.py:128 ../web_app/thin_client_api/handlers.py:273
 #: ../web_app/thin_client_api/handlers.py:300
 msgid "VM has no api client."
 msgstr "ВМ не имеет клиента. Проверьте состояние контроллера."
 
-#: ../common/models/vm.py:157
+#: ../common/models/vm.py:159
 msgid "VM deletion task {} finished with error."
 msgstr "Задача {} удаления ВМ завершилась с ошибкой."
 
-#: ../common/models/vm.py:158
+#: ../common/models/vm.py:160
 msgid "VM {} removed from ECP."
 msgstr "ВМ {} удалена из ECP."
 
-#: ../common/models/vm.py:164
+#: ../common/models/vm.py:166
 msgid "VM {} deletion task finished with error."
 msgstr "Задача удаления ВМ {} завершилась с ошибкой."
 
-#: ../common/models/vm.py:181
+#: ../common/models/vm.py:183
 msgid "User {} has been included to VM {}."
 msgstr "ВМ {} закреплена за пользователем {}."
 
-#: ../common/models/vm.py:192
+#: ../common/models/vm.py:194
 msgid "VM {} is clear from users."
 msgstr "ВМ {} освобождена от пользователей."
 
-#: ../common/models/vm.py:229 ../common/models/vm.py:364
+#: ../common/models/vm.py:231 ../common/models/vm.py:366
 msgid "There is no client for controller {}."
 msgstr "Контролер {} не имеет подключения к ECP VeiL."
 
-#: ../common/models/vm.py:252
+#: ../common/models/vm.py:254
 msgid "ECP VeiL controller {} error."
 msgstr "Ошибка контроллера ECP VeiL {}."
 
-#: ../common/models/vm.py:259
+#: ../common/models/vm.py:261
 msgid "Controller has not free space for creating new VM."
 msgstr "На контроллере отсутствует место для создания новой виртуальной машины."
 
-#: ../common/models/vm.py:260
+#: ../common/models/vm.py:262
 msgid "Not enough free space on data pool."
 msgstr "Недостаточно свободного места в пуле данных."
 
-#: ../common/models/vm.py:263
+#: ../common/models/vm.py:265
 msgid "Unknown node {}."
 msgstr "Неизвестный узел {}."
 
-#: ../common/models/vm.py:264
+#: ../common/models/vm.py:266
 msgid "Controller can`t create VM. Unknown node."
 msgstr "Контроллер не может создать ВМ. Неизвестный узел."
 
-#: ../common/models/vm.py:269
+#: ../common/models/vm.py:271
 msgid "Possibly blocked by active task on ECP. Wait before next try."
 msgstr "Возможно, заблокировано активным заданием на ECP. Подождите перед следующей попыткой."
 
-#: ../common/models/vm.py:272
+#: ../common/models/vm.py:274
 msgid "Something went wrong. Interrupt while."
 msgstr "Что-то пошло не так. Прерываем while."
 
-#: ../common/models/vm.py:291
+#: ../common/models/vm.py:293
 msgid "VM {} has been removed from the pool."
 msgstr "ВМ {} удалена из пула."
 
-#: ../common/models/vm.py:299
+#: ../common/models/vm.py:301
 msgid "VM {} deleting cancelled by timeout."
 msgstr "Удаление ВМ {} отменено по таймауту."
 
-#: ../common/models/vm.py:321 ../web_app/journal/schema.py:162
+#: ../common/models/vm.py:323 ../web_app/journal/schema.py:162
 msgid "No such event."
 msgstr "Нет такого события."
 
-#: ../common/models/vm.py:381
+#: ../common/models/vm.py:383
 msgid "VM {} is powered."
 msgstr "ВМ {} включена."
 
-#: ../common/models/vm.py:388
+#: ../common/models/vm.py:390
 msgid "VM {} already shutdown."
 msgstr "ВМ {} уже выключена."
 
-#: ../common/models/vm.py:394
+#: ../common/models/vm.py:396
 msgid "VM {} is force shutdown."
 msgstr "ВМ {} принудительно выключена."
 
-#: ../common/models/vm.py:397
+#: ../common/models/vm.py:399
 msgid "VM {} is shutdown."
 msgstr "ВМ {} выключена."
 
-#: ../common/models/vm.py:405 ../common/models/vm.py:428
+#: ../common/models/vm.py:407 ../common/models/vm.py:430
 msgid "VM {} is shutdown. Please power this."
 msgstr "ВМ {} выключена. Пожалуйста включите её."
 
-#: ../common/models/vm.py:412
+#: ../common/models/vm.py:414
 msgid "VM {} was force reboot."
 msgstr "ВМ {} принудительно перезагружена."
 
-#: ../common/models/vm.py:415
+#: ../common/models/vm.py:417
 msgid "VM {} was reboot."
 msgstr "ВМ {} перезагружена."
 
-#: ../common/models/vm.py:424
+#: ../common/models/vm.py:426
 msgid "VM {} is suspended."
 msgstr "ВМ {} приостановлена."
 
-#: ../common/models/vm.py:446
+#: ../common/models/vm.py:448
 msgid "VM {} remote access enabled."
 msgstr "Удаленный доступ ВМ {} включен."
 
-#: ../common/models/vm.py:478
+#: ../common/models/vm.py:480
 msgid "VM {} hostname setting task failed."
 msgstr "Ошибка задания hostname ВМ {}."
 
-#: ../common/models/vm.py:481
+#: ../common/models/vm.py:483
 msgid "VM {} hostname setting success."
 msgstr "ВМ {} успешно задан hostname."
 
-#: ../common/models/vm.py:497 ../common/models/vm.py:532
+#: ../common/models/vm.py:493
+msgid "Active directory object has no service username or password. Including skipped."
+msgstr "У директории авторизации не указаны имя пользователя и пароль. Пропускаем."
+
+#: ../common/models/vm.py:512
+msgid "VM {} active directory group including error."
+msgstr "Ошибка ввода ВМ {} в группу AD."
+
+#: ../common/models/vm.py:517
+msgid "VM {} AD group including successful."
+msgstr "ВМ {} успешно заведена в контейнер/группу AD."
+
+#: ../common/models/vm.py:535
 msgid "VM {} failed to receive DHCP ip address ({})."
 msgstr "VM {} не удалось получить IP-адрес по DHCP ({})."
 
-#: ../common/models/vm.py:511
-msgid "VM {} domain container including task failed."
-msgstr "Ошибка включения ВМ {} в группу домена активного каталога."
-
-#: ../common/models/vm.py:512
-msgid "VM {} AD group inclusion success."
-msgstr "ВМ {} успешно заведена в контейнер/группу AD."
-
-#: ../common/models/vm.py:516
-msgid "VM {} AD group inclusion skipped."
-msgstr "Пропущено включение ВМ {} в доменную группу."
-
-#: ../common/models/vm.py:544
+#: ../common/models/vm.py:547
 msgid "VM {} domain including task failed."
 msgstr "Ошибка включения ВМ {} в домен."
 
-#: ../common/models/vm.py:545
+#: ../common/models/vm.py:548
 msgid "VM {} AD inclusion success."
 msgstr "ВМ {} успешно заведена в AD."
 
-#: ../common/models/vm.py:549
+#: ../common/models/vm.py:552
 msgid "VM {} AD inclusion skipped."
 msgstr "Заведение ВМ {} в домен пропущено."
 
-#: ../common/models/vm.py:569
+#: ../common/models/vm.py:570
 msgid "VM {} has been prepared."
 msgstr "ВМ {} подготовлена."
 
-#: ../common/models/vm.py:578
+#: ../common/models/vm.py:579
 msgid "{} preparation cancelled by timeout."
 msgstr "подготовка {} отменена по таймауту."
 
-#: ../common/models/vm.py:585
+#: ../common/models/vm.py:586
 msgid "VM {} preparation error."
 msgstr "Ошибка подготовки ВМ {}."
 
@@ -747,10 +743,10 @@ msgid "DEBUG mode is enabled."
 msgstr "Режим отладки включен."
 
 #: ../web_app/auth/authentication_directory/auth_dir_schema.py:33
-#: ../web_app/auth/authentication_directory/auth_dir_schema.py:222
-#: ../web_app/auth/authentication_directory/auth_dir_schema.py:277
-#: ../web_app/auth/authentication_directory/auth_dir_schema.py:443
-#: ../web_app/auth/authentication_directory/auth_dir_schema.py:461
+#: ../web_app/auth/authentication_directory/auth_dir_schema.py:211
+#: ../web_app/auth/authentication_directory/auth_dir_schema.py:261
+#: ../web_app/auth/authentication_directory/auth_dir_schema.py:423
+#: ../web_app/auth/authentication_directory/auth_dir_schema.py:441
 msgid "No such Authentication Directory."
 msgstr "Такая Authentication Directory отсутствует."
 
@@ -779,7 +775,11 @@ msgstr "Список групп пуст."
 msgid "No such mapping."
 msgstr "Нет такого отображения."
 
-#: ../web_app/auth/authentication_directory/auth_dir_schema.py:218
+#: ../web_app/auth/authentication_directory/auth_dir_schema.py:83
+msgid "DC should not be empty."
+msgstr "Класс объекта домена не должен быть пустым."
+
+#: ../web_app/auth/authentication_directory/auth_dir_schema.py:207
 msgid "Specify id."
 msgstr "Укажите ID."
 
@@ -1172,14 +1172,26 @@ msgstr "{cls}: Контроллер {name} уже отслеживается."
 msgid "{cls}: resource monitor for controller {name} connected."
 msgstr "{cls}: монитор ресурсов для контроллера {name} подключен."
 
-#~ msgid "Number of created VM must be in {}-{} interval."
-#~ msgstr "Число создаваемых виртуальных машин должно быть в интервале {}-{}."
+#~ msgid "Active directory sync successful."
+#~ msgstr "Директория синхронизации успешно синхронизирована."
 
-#~ msgid ". IP: {ip}."
-#~ msgstr ". IP: {ip}."
+#~ msgid "Removing {} from domain."
+#~ msgstr "Выводим {} из домена."
 
 #~ msgid " for user {username}."
 #~ msgstr " для пользователя {username}."
 
-#~ msgid "Removing {} from domain."
-#~ msgstr "Выводим {} из домена."
+#~ msgid ". IP: {ip}."
+#~ msgstr ". IP: {ip}."
+
+#~ msgid "Number of created VM must be in {}-{} interval."
+#~ msgstr "Число создаваемых виртуальных машин должно быть в интервале {}-{}."
+
+#~ msgid "VM {} AD group inclusion skipped."
+#~ msgstr "Пропущено включение ВМ {} в доменную группу."
+
+#~ msgid "VM {} domain container including task failed."
+#~ msgstr "Ошибка включения ВМ {} в группу домена активного каталога."
+
+#~ msgid "Assigning veil groups to {}."
+#~ msgstr "Присвоение групп veil {}."
