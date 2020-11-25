@@ -368,12 +368,13 @@ def fixt_auth_dir(request, event_loop):
     id = '10913d5d-ba7a-4049-88c5-769267a6cbe4'
     verbose_name = 'test_auth_dir'
     directory_url = 'ldap://192.168.11.180'
-    domain_name = 'bazalt.team'
+    domain_name = 'bazalt'
     creator = 'system'
+    dc_str = 'bazalt.team'
 
     async def setup():
         await AuthenticationDirectory.soft_create(id=id, verbose_name=verbose_name, directory_url=directory_url,
-                                                  domain_name=domain_name, creator=creator)
+                                                  domain_name=domain_name, creator=creator, dc_str=dc_str)
     event_loop.run_until_complete(setup())
 
     def teardown():
@@ -393,7 +394,8 @@ def fixt_auth_dir_with_pass(request, event_loop):
     id = '10913d5d-ba7a-4049-88c5-769267a6cbe5'
     verbose_name = 'test_auth_dir'
     directory_url = 'ldap://192.168.11.180'
-    domain_name = 'bazalt.team'
+    domain_name = 'bazalt'
+    dc_str = 'bazalt.team'
     encoded_service_password = 'Bazalt1!'
 
     async def setup():
@@ -403,6 +405,7 @@ def fixt_auth_dir_with_pass(request, event_loop):
                                                   domain_name=domain_name,
                                                   service_password=encoded_service_password,
                                                   service_username='ad120',
+                                                  dc_str=dc_str,
                                                   creator='system')
 
     event_loop.run_until_complete(setup())
@@ -424,7 +427,8 @@ def fixt_auth_dir_with_pass_bad(request, event_loop):
     id = '10913d5d-ba7a-4049-88c5-769267a6cbe6'
     verbose_name = 'test_auth_dir'
     directory_url = 'ldap://192.168.11.180'
-    domain_name = 'bazalt.team'
+    domain_name = 'bazalt'
+    dc_str = 'bazalt.team'
     encoded_service_password = 'bad'
 
     async def setup():
@@ -434,6 +438,7 @@ def fixt_auth_dir_with_pass_bad(request, event_loop):
                                                   domain_name=domain_name,
                                                   service_password=encoded_service_password,
                                                   service_username='bad',
+                                                  dc_str=dc_str,
                                                   creator='system')
 
     event_loop.run_until_complete(setup())

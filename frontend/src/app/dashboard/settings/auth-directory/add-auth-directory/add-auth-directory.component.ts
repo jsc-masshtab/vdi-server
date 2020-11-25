@@ -21,17 +21,12 @@ export class AddAuthenticationDirectoryComponent {
   private initForm(): void {
     this.form = this.fb.group({
       domain_name: ['', Validators.required],
+      dc_str: ['', Validators.required],
       verbose_name: ['', Validators.required],
       directory_url: ['', [Validators.required, Validators.pattern(/^ldap[s]?:\/\/[a-zA-Z0-9.-_+ ]+$/)]],
       description: '',
       service_username: '',
       service_password: '',
-      /* connection_type: 'LDAP',
-      directory_type: 'ActiveDirectory',
-      admin_server: '',
-      subdomain_name: '',
-      kdc_urls: [[]],
-      sso: false, */
     });
 
     this.sub = this.form.get('directory_url').valueChanges.subscribe((directory_url) => {

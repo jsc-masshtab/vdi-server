@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2020-11-23 16:18+0300\n"
+"POT-Creation-Date: 2020-11-25 21:58+0300\n"
 "PO-Revision-Date: 2020-07-30 11:25+0300\n"
 "Last-Translator: Emil <emil@emil-pc>\n"
 "Language-Team: English\n"
@@ -136,112 +136,108 @@ msgstr "Group {} has already role {}."
 msgid "Roles: {} was deleted to group {}."
 msgstr "Roles: {} was deleted to group {}."
 
-#: ../common/models/authentication_directory.py:142
-#: ../web_app/tests/test_auth_dir.py:120
+#: ../common/models/authentication_directory.py:119
+#: ../web_app/tests/test_auth_dir.py:125
 msgid "More than one authentication directory can not be created."
 msgstr "More than one authentication directory can not be created."
 
-#: ../common/models/authentication_directory.py:165
+#: ../common/models/authentication_directory.py:140
 msgid "Authentication directory {} is created."
 msgstr "Authentication directory {} is created."
 
-#: ../common/models/authentication_directory.py:183
+#: ../common/models/authentication_directory.py:170
 msgid "Values for auth directory is updated."
 msgstr "Values for auth directory is updated."
 
-#: ../common/models/authentication_directory.py:210
+#: ../common/models/authentication_directory.py:197
 msgid "Arguments: {} of group: {}."
 msgstr "Arguments: {} of group: {}."
 
-#: ../common/models/authentication_directory.py:211
+#: ../common/models/authentication_directory.py:198
 msgid "Mapping for auth directory {} is created."
 msgstr "Mapping for auth directory {} is created."
 
-#: ../common/models/authentication_directory.py:234
+#: ../common/models/authentication_directory.py:221
 msgid "New arguments: {} of group: {}."
 msgstr "New arguments: {} of group: {}."
 
-#: ../common/models/authentication_directory.py:235
+#: ../common/models/authentication_directory.py:222
 msgid "Mapping for auth directory {} is updated."
 msgstr "Mapping for auth directory {} is updated."
 
-#: ../common/models/authentication_directory.py:258
-#: ../common/models/authentication_directory.py:462
+#: ../common/models/authentication_directory.py:244
+#: ../common/models/authentication_directory.py:429
 msgid "Authentication directory server {} is down."
 msgstr "Authentication directory server {} is down."
 
-#: ../common/models/authentication_directory.py:265
+#: ../common/models/authentication_directory.py:251
 msgid "Authentication directory server {} is connected."
 msgstr "Authentication directory server {} is connected."
 
-#: ../common/models/authentication_directory.py:300
+#: ../common/models/authentication_directory.py:284
 msgid "Username must be a string."
 msgstr "Username must be a string."
 
-#: ../common/models/authentication_directory.py:329
-msgid "Assigning veil groups to {}."
-msgstr "Assigning veil groups to {}."
-
-#: ../common/models/authentication_directory.py:338
+#: ../common/models/authentication_directory.py:313
 msgid "Mappings: {}."
 msgstr "Mappings: {}."
 
-#: ../common/models/authentication_directory.py:354
+#: ../common/models/authentication_directory.py:329
 msgid "escaped values: {}."
 msgstr "escaped values: {}."
 
-#: ../common/models/authentication_directory.py:355
+#: ../common/models/authentication_directory.py:330
 msgid "role mapping value type: {}."
 msgstr "role mapping value type: {}."
 
-#: ../common/models/authentication_directory.py:364
+#: ../common/models/authentication_directory.py:339
 msgid "User veil groups: {}."
 msgstr "User veil groups: {}."
 
-#: ../common/models/authentication_directory.py:371
+#: ../common/models/authentication_directory.py:346
 msgid "Attaching user {} to group: {}."
 msgstr "Attaching user {} to group: {}."
 
-#: ../common/models/authentication_directory.py:384
-#: ../common/models/authentication_directory.py:395
+#: ../common/models/authentication_directory.py:359
+#: ../common/models/authentication_directory.py:370
 msgid "No authentication directory controllers."
 msgstr "No authentication directory controllers."
 
-#: ../common/models/authentication_directory.py:421
+#: ../common/models/authentication_directory.py:393
 msgid "Invalid credentials (ldap): {}."
 msgstr "Invalid credentials (ldap): {}."
 
-#: ../common/models/authentication_directory.py:428
+#: ../common/models/authentication_directory.py:400
 msgid "Server down (ldap)."
 msgstr "Server down (ldap)."
 
-#: ../common/models/authentication_directory.py:444
+#: ../common/models/authentication_directory.py:416
 msgid "LDAP username and password can`t be empty."
 msgstr "LDAP username and password can`t be empty."
 
-#: ../common/models/authentication_directory.py:457
+#: ../common/models/authentication_directory.py:424
 msgid "Authentication directory server {} has bad auth info."
 msgstr "Authentication directory server {} has bad auth info."
 
-#: ../common/models/authentication_directory.py:524
-#: ../common/models/authentication_directory.py:603
+#: ../common/models/authentication_directory.py:491
+#: ../common/models/authentication_directory.py:570
 msgid "Fail to connect to Authentication Directory. Check service information."
 msgstr "Fail to connect to Authentication Directory. Check service information."
 
-#: ../common/models/authentication_directory.py:647
+#: ../common/models/authentication_directory.py:614
 msgid "{} new users synced from Authentication Directory."
 msgstr "{} new users synced from Authentication Directory."
 
-#: ../common/models/authentication_directory.py:655
+#: ../common/models/authentication_directory.py:622
 #: ../web_app/auth/group_schema.py:180
 msgid "No such Group."
 msgstr "No such Group."
 
-#: ../common/models/authentication_directory.py:657
+#: ../common/models/authentication_directory.py:624
 msgid "Group {} is not synchronized by AD."
 msgstr "Group {} is not synchronized by AD."
 
-#: ../common/models/authentication_directory.py:663
+#: ../common/models/authentication_directory.py:630
 msgid "There is no users to sync."
 msgstr "There is no users to sync."
 
@@ -289,7 +285,7 @@ msgstr "Incorrect sorting option {}."
 msgid "User {} has been included to pool {}."
 msgstr "User {} has been included to pool {}."
 
-#: ../common/models/pool.py:411 ../common/models/vm.py:184
+#: ../common/models/pool.py:411 ../common/models/vm.py:186
 msgid "{} already has permission."
 msgstr "{} already has permission."
 
@@ -442,160 +438,160 @@ msgstr "Preparation of vm {}."
 msgid "  Duration: {}."
 msgstr "  Duration: {}."
 
-#: ../common/models/vm.py:109
+#: ../common/models/vm.py:111
 msgid "Create VM {} on VDI DB."
 msgstr "Create VM {} on VDI DB."
 
-#: ../common/models/vm.py:126 ../web_app/thin_client_api/handlers.py:273
+#: ../common/models/vm.py:128 ../web_app/thin_client_api/handlers.py:273
 #: ../web_app/thin_client_api/handlers.py:300
 msgid "VM has no api client."
 msgstr "VM has no api client."
 
-#: ../common/models/vm.py:157
+#: ../common/models/vm.py:159
 msgid "VM deletion task {} finished with error."
 msgstr "VM deletion task {} finished with error."
 
-#: ../common/models/vm.py:158
+#: ../common/models/vm.py:160
 msgid "VM {} removed from ECP."
 msgstr "VM {} removed from ECP."
 
-#: ../common/models/vm.py:164
+#: ../common/models/vm.py:166
 msgid "VM {} deletion task finished with error."
 msgstr "VM {} deletion task finished with error."
 
-#: ../common/models/vm.py:181
+#: ../common/models/vm.py:183
 msgid "User {} has been included to VM {}."
 msgstr "User {} has been included to VM {}."
 
-#: ../common/models/vm.py:192
+#: ../common/models/vm.py:194
 msgid "VM {} is clear from users."
 msgstr "VM {} is clear from users."
 
-#: ../common/models/vm.py:229 ../common/models/vm.py:364
+#: ../common/models/vm.py:231 ../common/models/vm.py:366
 msgid "There is no client for controller {}."
 msgstr "There is no client for controller {}."
 
-#: ../common/models/vm.py:252
+#: ../common/models/vm.py:254
 msgid "ECP VeiL controller {} error."
 msgstr "ECP VeiL controller {} error."
 
-#: ../common/models/vm.py:259
+#: ../common/models/vm.py:261
 msgid "Controller has not free space for creating new VM."
 msgstr "Controller has not free space for creating new VM."
 
-#: ../common/models/vm.py:260
+#: ../common/models/vm.py:262
 msgid "Not enough free space on data pool."
 msgstr "Not enough free space on data pool."
 
-#: ../common/models/vm.py:263
+#: ../common/models/vm.py:265
 msgid "Unknown node {}."
 msgstr "Unknown node {}."
 
-#: ../common/models/vm.py:264
+#: ../common/models/vm.py:266
 msgid "Controller can`t create VM. Unknown node."
 msgstr "Controller can`t create VM. Unknown node."
 
-#: ../common/models/vm.py:269
+#: ../common/models/vm.py:271
 msgid "Possibly blocked by active task on ECP. Wait before next try."
 msgstr "Possibly blocked by active task on ECP. Wait before next try."
 
-#: ../common/models/vm.py:272
+#: ../common/models/vm.py:274
 msgid "Something went wrong. Interrupt while."
 msgstr "Something went wrong. Interrupt while."
 
-#: ../common/models/vm.py:291
+#: ../common/models/vm.py:293
 msgid "VM {} has been removed from the pool."
 msgstr "VM {} has been removed from the pool."
 
-#: ../common/models/vm.py:299
+#: ../common/models/vm.py:301
 msgid "VM {} deleting cancelled by timeout."
 msgstr "VM {} deleting cancelled by timeout."
 
-#: ../common/models/vm.py:321 ../web_app/journal/schema.py:162
+#: ../common/models/vm.py:323 ../web_app/journal/schema.py:162
 msgid "No such event."
 msgstr "No such event."
 
-#: ../common/models/vm.py:381
+#: ../common/models/vm.py:383
 msgid "VM {} is powered."
 msgstr "VM {} is powered."
 
-#: ../common/models/vm.py:388
+#: ../common/models/vm.py:390
 msgid "VM {} already shutdown."
 msgstr "VM {} already shutdown."
 
-#: ../common/models/vm.py:394
+#: ../common/models/vm.py:396
 msgid "VM {} is force shutdown."
 msgstr "VM {} is force shutdown."
 
-#: ../common/models/vm.py:397
+#: ../common/models/vm.py:399
 msgid "VM {} is shutdown."
 msgstr "VM {} is shutdown."
 
-#: ../common/models/vm.py:405 ../common/models/vm.py:428
+#: ../common/models/vm.py:407 ../common/models/vm.py:430
 msgid "VM {} is shutdown. Please power this."
 msgstr "VM {} is shutdown. Please power this."
 
-#: ../common/models/vm.py:412
+#: ../common/models/vm.py:414
 msgid "VM {} was force reboot."
 msgstr "VM {} was force reboot."
 
-#: ../common/models/vm.py:415
+#: ../common/models/vm.py:417
 msgid "VM {} was reboot."
 msgstr "VM {} was reboot."
 
-#: ../common/models/vm.py:424
+#: ../common/models/vm.py:426
 msgid "VM {} is suspended."
 msgstr "VM {} is suspended."
 
-#: ../common/models/vm.py:446
+#: ../common/models/vm.py:448
 msgid "VM {} remote access enabled."
 msgstr "VM {} remote access enabled."
 
-#: ../common/models/vm.py:478
+#: ../common/models/vm.py:480
 msgid "VM {} hostname setting task failed."
 msgstr "VM {} hostname setting task failed."
 
-#: ../common/models/vm.py:481
+#: ../common/models/vm.py:483
 msgid "VM {} hostname setting success."
 msgstr "VM {} hostname setting success."
 
-#: ../common/models/vm.py:497 ../common/models/vm.py:532
+#: ../common/models/vm.py:493
+msgid "Active directory object has no service username or password. Including skipped."
+msgstr "Active directory object has no service username or password. Including skipped."
+
+#: ../common/models/vm.py:512
+msgid "VM {} active directory group including error."
+msgstr "VM {} active directory group including error."
+
+#: ../common/models/vm.py:517
+msgid "VM {} AD group including successful."
+msgstr "VM {} AD group including successful."
+
+#: ../common/models/vm.py:535
 msgid "VM {} failed to receive DHCP ip address ({})."
 msgstr "VM {} failed to receive DHCP ip address ({})."
 
-#: ../common/models/vm.py:511
-msgid "VM {} domain container including task failed."
-msgstr "VM {} domain container including task failed."
-
-#: ../common/models/vm.py:512
-msgid "VM {} AD group inclusion success."
-msgstr "VM {} AD group inclusion success."
-
-#: ../common/models/vm.py:516
-msgid "VM {} AD group inclusion skipped."
-msgstr "VM {} AD group inclusion skipped."
-
-#: ../common/models/vm.py:544
+#: ../common/models/vm.py:547
 msgid "VM {} domain including task failed."
 msgstr "VM {} domain including task failed."
 
-#: ../common/models/vm.py:545
+#: ../common/models/vm.py:548
 msgid "VM {} AD inclusion success."
 msgstr "VM {} AD inclusion success."
 
-#: ../common/models/vm.py:549
+#: ../common/models/vm.py:552
 msgid "VM {} AD inclusion skipped."
 msgstr "VM {} AD inclusion skipped."
 
-#: ../common/models/vm.py:569
+#: ../common/models/vm.py:570
 msgid "VM {} has been prepared."
 msgstr "VM {} has been prepared."
 
-#: ../common/models/vm.py:578
+#: ../common/models/vm.py:579
 msgid "{} preparation cancelled by timeout."
 msgstr "{} preparation cancelled by timeout."
 
-#: ../common/models/vm.py:585
+#: ../common/models/vm.py:586
 msgid "VM {} preparation error."
 msgstr "VM {} preparation error."
 
@@ -747,10 +743,10 @@ msgid "DEBUG mode is enabled."
 msgstr "DEBUG mode is enabled."
 
 #: ../web_app/auth/authentication_directory/auth_dir_schema.py:33
-#: ../web_app/auth/authentication_directory/auth_dir_schema.py:222
-#: ../web_app/auth/authentication_directory/auth_dir_schema.py:277
-#: ../web_app/auth/authentication_directory/auth_dir_schema.py:443
-#: ../web_app/auth/authentication_directory/auth_dir_schema.py:461
+#: ../web_app/auth/authentication_directory/auth_dir_schema.py:211
+#: ../web_app/auth/authentication_directory/auth_dir_schema.py:261
+#: ../web_app/auth/authentication_directory/auth_dir_schema.py:423
+#: ../web_app/auth/authentication_directory/auth_dir_schema.py:441
 msgid "No such Authentication Directory."
 msgstr "No such Authentication Directory."
 
@@ -779,7 +775,11 @@ msgstr "groups list is empty."
 msgid "No such mapping."
 msgstr "No such mapping."
 
-#: ../web_app/auth/authentication_directory/auth_dir_schema.py:218
+#: ../web_app/auth/authentication_directory/auth_dir_schema.py:83
+msgid "DC should not be empty."
+msgstr "DC should not be empty."
+
+#: ../web_app/auth/authentication_directory/auth_dir_schema.py:207
 msgid "Specify id."
 msgstr "Specify id."
 
@@ -1172,14 +1172,26 @@ msgstr "{cls}: Controller {name} is already monitored."
 msgid "{cls}: resource monitor for controller {name} connected."
 msgstr "{cls}: resource monitor for controller {name} connected."
 
-#~ msgid "Number of created VM must be in {}-{} interval."
-#~ msgstr "Number of created VM must be in {}-{} interval."
+#~ msgid "Active directory sync successful."
+#~ msgstr "Active directory sync successful."
 
-#~ msgid ". IP: {ip}."
-#~ msgstr ". IP: {ip}."
+#~ msgid "Removing {} from domain."
+#~ msgstr "Removing {} from domain."
 
 #~ msgid " for user {username}."
 #~ msgstr " for user {username}."
 
-#~ msgid "Removing {} from domain."
-#~ msgstr "Removing {} from domain."
+#~ msgid ". IP: {ip}."
+#~ msgstr ". IP: {ip}."
+
+#~ msgid "Number of created VM must be in {}-{} interval."
+#~ msgstr "Number of created VM must be in {}-{} interval."
+
+#~ msgid "VM {} AD group inclusion skipped."
+#~ msgstr "VM {} AD group inclusion skipped."
+
+#~ msgid "VM {} domain container including task failed."
+#~ msgstr "VM {} domain container including task failed."
+
+#~ msgid "Assigning veil groups to {}."
+#~ msgstr "Assigning veil groups to {}."

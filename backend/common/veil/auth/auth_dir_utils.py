@@ -72,10 +72,16 @@ def extract_domain_from_username(username: str) -> List[str]:
     :return: список, содержащий имя пользователской учетной записи (sAMAccountName)
     и доменное имя контроллера доменов
     """
-    splitted_list = username.split('@')
-    if len(splitted_list) > 1:
-        return splitted_list[:2]
-    return splitted_list[0], None
+    dog_list = username.split('@')
+    if len(dog_list) > 1:
+        return dog_list[0], dog_list[1]
+    slash_list = username.split('\\')
+    if len(slash_list) > 1:
+        return slash_list[1], slash_list[0]
+    backslash_list = username.split('/')
+    if len(backslash_list) > 1:
+        return backslash_list[1], None
+    return username, None
 
 
 def get_ad_user_ou(user_info: str) -> Optional[str]:

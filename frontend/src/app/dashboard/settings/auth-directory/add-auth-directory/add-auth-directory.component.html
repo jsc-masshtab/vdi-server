@@ -23,6 +23,12 @@
     </label>
 
     <label class="field">
+      <p class="field-name">Класс объекта домена (dc)</p>
+      <input type="text" placeholder="..." formControlName="dc_str">
+      <ng-container *ngIf="form.hasError('required', 'dc_str') && checkValid"><ng-container *ngTemplateOutlet="errorTemp"></ng-container></ng-container>
+    </label>
+
+    <label class="field">
       <p class="field-name">URL</p>
       <input type="text" placeholder="..." formControlName="directory_url">
       <ng-container *ngIf="form.hasError('required', 'directory_url') && checkValid"><ng-container *ngTemplateOutlet="errorTemp"></ng-container></ng-container>
@@ -36,7 +42,7 @@
         <ng-container *ngTemplateOutlet="errorTemp"></ng-container>
       </ng-container>
     </label>
-    
+
     <label class="field">
       <p class="field-name">Пароль</p>
       <input type="password" placeholder="..." formControlName="service_password">
@@ -44,35 +50,6 @@
         <ng-container *ngTemplateOutlet="errorTemp"></ng-container>
       </ng-container>
     </label>
-
-   <!--  <label class="field">
-      <p class="field-name">Service username</p>
-      <input type="password" placeholder="..." formControlName="service_username">
-    </label>
-
-    <label class="field">
-      <p class="field-name">Service password</p>
-      <input type="text" placeholder="..." formControlName="service_password">
-    </label>
-
-    <label class="field">
-      <p class="field-name">Admin server</p>
-      <input type="text" placeholder="..." formControlName="admin_server">
-    </label>
-
-    <label class="field">
-      <p class="field-name">Subdomain name</p>
-      <input type="text" placeholder="..." formControlName="subdomain_name">
-    </label>
-
-    <label class="field">
-      <p class="field-name">KDS urls</p>
-      <input type="text" placeholder="..." formControlName="kdc_urls">
-    </label>
-
-    <label class="field-inline">
-      <mat-checkbox [color]="'primary'" formControlName="sso">SSO</mat-checkbox>
-    </label> -->
 
     <label class="field">
       <p class="field-name">Описание</p>
