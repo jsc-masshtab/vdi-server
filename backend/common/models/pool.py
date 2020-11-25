@@ -254,6 +254,8 @@ class Pool(VeilModel):
         query = Pool.get_pools_query(ordering=ordering)
         if filters:
             query = query.where(and_(*filters))
+        if not ordering:
+            query = query.order_by(Pool.verbose_name)
         return await query.limit(limit).offset(offset).gino.all()
 
     @staticmethod

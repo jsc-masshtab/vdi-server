@@ -208,16 +208,28 @@ class ResourcesQuery(graphene.ObjectType, ControllerFetcher):
         """Все кластеры на подключенных ECP VeiL."""
         controllers = await cls.fetch_all()
         veil_clusters_list = list()
+        clusters_list = list()
         for controller in controllers:
             paginator = VeilRestPaginator(ordering=ordering, limit=limit, offset=offset)
             # Прерываем выполнение при отсутствии клиента
             if not controller.veil_client:
                 continue
             veil_response = await controller.veil_client.cluster().list(paginator=paginator)
-            for resource_data in veil_response.paginator_results:
+            for cluster in veil_response.paginator_results:
                 # Добавляем параметры контроллера на VDI
-                resource_data['controller'] = {'id': controller.id, 'verbose_name': controller.verbose_name}
-                veil_clusters_list.append(ResourceClusterType(**resource_data))
+                cluster['controller'] = {'id': controller.id, 'verbose_name': controller.verbose_name}
+                clusters_list.append(cluster)
+
+        if not ordering:
+            clusters_list.sort(key=lambda data: data['verbose_name'], reverse=True)
+
+        if ordering == 'controller':
+            clusters_list.sort(key=lambda data: data['controller']['verbose_name'])
+        elif ordering == '-controller':
+            clusters_list.sort(key=lambda data: data['controller']['verbose_name'], reverse=True)
+
+        for resource_data in clusters_list:
+            veil_clusters_list.append(ResourceClusterType(**resource_data))
 
         return veil_clusters_list
 
@@ -241,16 +253,28 @@ class ResourcesQuery(graphene.ObjectType, ControllerFetcher):
         """Все ноды (серверы) на подключенных ECP VeiL."""
         controllers = await cls.fetch_all()
         veil_nodes_list = list()
+        nodes_list = list()
         for controller in controllers:
             paginator = VeilRestPaginator(ordering=ordering, limit=limit, offset=offset)
             # Прерываем выполнение при отсутствии клиента
             if not controller.veil_client:
                 continue
             veil_response = await controller.veil_client.node().list(paginator=paginator)
-            for resource_data in veil_response.paginator_results:
+            for node in veil_response.paginator_results:
                 # Добавляем параметры контроллера на VDI
-                resource_data['controller'] = {'id': controller.id, 'verbose_name': controller.verbose_name}
-                veil_nodes_list.append(ResourceNodeType(**resource_data))
+                node['controller'] = {'id': controller.id, 'verbose_name': controller.verbose_name}
+                nodes_list.append(node)
+
+        if not ordering:
+            nodes_list.sort(key=lambda data: data['verbose_name'])
+
+        if ordering == 'controller':
+            nodes_list.sort(key=lambda data: data['controller']['verbose_name'])
+        elif ordering == '-controller':
+            nodes_list.sort(key=lambda data: data['controller']['verbose_name'], reverse=True)
+
+        for resource_data in nodes_list:
+            veil_nodes_list.append(ResourceNodeType(**resource_data))
 
         return veil_nodes_list
 
@@ -274,16 +298,28 @@ class ResourcesQuery(graphene.ObjectType, ControllerFetcher):
         """Все пулы данных (datapools) на подключенных ECP VeiL."""
         controllers = await cls.fetch_all()
         veil_datapools_list = list()
+        datapools_list = list()
         for controller in controllers:
             paginator = VeilRestPaginator(ordering=ordering, limit=limit, offset=offset)
             # Прерываем выполнение при отсутствии клиента
             if not controller.veil_client:
                 return
             veil_response = await controller.veil_client.data_pool().list(paginator=paginator)
-            for resource_data in veil_response.paginator_results:
+            for datapool in veil_response.paginator_results:
                 # Добавляем параметры контроллера на VDI
-                resource_data['controller'] = {'id': controller.id, 'verbose_name': controller.verbose_name}
-                veil_datapools_list.append(ResourceDataPoolType(**resource_data))
+                datapool['controller'] = {'id': controller.id, 'verbose_name': controller.verbose_name}
+                datapools_list.append(datapool)
+
+        if not ordering:
+            datapools_list.sort(key=lambda data: data['verbose_name'])
+
+        if ordering == 'controller':
+            datapools_list.sort(key=lambda data: data['controller']['verbose_name'])
+        elif ordering == '-controller':
+            datapools_list.sort(key=lambda data: data['controller']['verbose_name'], reverse=True)
+
+        for resource_data in datapools_list:
+            veil_datapools_list.append(ResourceDataPoolType(**resource_data))
 
         return veil_datapools_list
 
@@ -330,6 +366,7 @@ class ResourcesQuery(graphene.ObjectType, ControllerFetcher):
         """Все ВМ + шаблоны на подключенных ECP VeiL."""
         controllers = await cls.fetch_all()
         domain_list = list()
+        domains = list()
         for controller in controllers:
             paginator = VeilRestPaginator(ordering=ordering, limit=limit, offset=offset)
             # Прерываем выполнение при отсутствии клиента
@@ -347,14 +384,22 @@ class ResourcesQuery(graphene.ObjectType, ControllerFetcher):
                     resource_data['pool_name'] = pool.verbose_name
                 else:
                     resource_data['pool_name'] = '--'
+                domains.append(resource_data)
 
-            if ordering == 'pool_name':
-                vms_list.sort(key=lambda data: data['pool_name'])
-            elif ordering == '-pool_name':
-                vms_list.sort(key=lambda data: data['pool_name'], reverse=True)
+        if not ordering:
+            domains.sort(key=lambda data: data['verbose_name'])
 
-            for resource_data in vms_list:
-                domain_list.append(ResourceVmType(**resource_data))
+        if ordering == 'pool_name':
+            domains.sort(key=lambda data: data['pool_name'])
+        elif ordering == '-pool_name':
+            domains.sort(key=lambda data: data['pool_name'], reverse=True)
+        if ordering == 'controller':
+            domains.sort(key=lambda data: data['controller']['verbose_name'])
+        elif ordering == '-controller':
+            domains.sort(key=lambda data: data['controller']['verbose_name'], reverse=True)
+
+        for resource_data in domains:
+            domain_list.append(ResourceVmType(**resource_data))
         return domain_list
 
     @classmethod
