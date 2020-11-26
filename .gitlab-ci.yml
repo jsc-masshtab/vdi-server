@@ -36,12 +36,6 @@ tests_job:
     - shell
   script:
     - cd devops/docker/
-    - docker-compose -f test-docker-compose.yml up --force-recreate --abort-on-container-exit --exit-code-from test-tornado
+    - docker-compose -f test-docker-compose.yml up --build --force-recreate --abort-on-container-exit --exit-code-from test-tornado
   only:
-    refs:
-      - merge_requests
-    variables:
-      - $CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^release.*$/
-  only:
-    variables:
-      - $BY_SCHEDULE == "true"
+    - $CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^release.*$/ || $BY_SCHEDULE == "true"

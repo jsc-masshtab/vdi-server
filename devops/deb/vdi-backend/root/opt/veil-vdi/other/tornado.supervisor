@@ -1,0 +1,37 @@
+# -*- conf -*-
+
+[program:vdi-ws_listener_worker]
+command=/opt/veil-vdi/env/bin/python ws_listener_worker/app.py
+process_name=%(program_name)s
+directory=/opt/veil-vdi/app
+environment=PYTHONPATH=/opt/veil-vdi/app
+autorestart=unexpected
+autostart=true
+startretries=3
+stopsignal=TERM
+stopasgroup=true
+killasgroup=true
+
+[program:vdi-pool_worker]
+command=/opt/veil-vdi/env/bin/python pool_worker/app.py
+process_name=%(program_name)s
+directory=/opt/veil-vdi/app
+environment=PYTHONPATH=/opt/veil-vdi/app
+autorestart=unexpected
+autostart=true
+startretries=3
+stopsignal=TERM
+stopasgroup=true
+killasgroup=true
+
+[program:vdi-server-8888]
+command=/opt/veil-vdi/env/bin/python web_app/app.py --logging=DEBUG --port=8888 --autoreload=False --log_file_prefix=/var/log/veil-vdi/vdi_tornado.log  --workers=1
+process_name=%(program_name)s
+directory=/opt/veil-vdi/app
+environment=PYTHONPATH=/opt/veil-vdi/app
+autorestart=unexpected
+autostart=true
+startretries=3
+stopsignal=TERM
+stopasgroup=true
+killasgroup=true
