@@ -12,7 +12,7 @@ import { AuthenticationDirectoryService } from '../../auth-directory.service';
   templateUrl: './sync-group.component.html'
 })
 
-export class SyncGropComponent implements OnDestroy {
+export class SyncGroupComponent implements OnDestroy {
 
   public pending: boolean = false;
   public group: any = {};
@@ -22,7 +22,7 @@ export class SyncGropComponent implements OnDestroy {
 
   constructor(private service: AuthenticationDirectoryService,
               private waitService: WaitService,
-              private dialogRef: MatDialogRef<SyncGropComponent>,
+              private dialogRef: MatDialogRef<SyncGroupComponent>,
               @Inject(MAT_DIALOG_DATA) public data: any) { }
 
   public send() {
@@ -40,7 +40,10 @@ export class SyncGropComponent implements OnDestroy {
           if (res) {
             this.service.getAuthenticationDirectory(this.data.id).refetch();
             this.waitService.setWait(false);
+            this.synced = true;
+            setTimeout(() => {
             this.dialogRef.close();
+            }, 1500)
           }
         });
     this.synced = true;

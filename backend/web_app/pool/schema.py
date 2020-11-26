@@ -257,6 +257,7 @@ class PoolType(graphene.ObjectType):
     total_size = graphene.Int()
     vm_name_template = graphene.String()
     os_type = graphene.String()
+    ad_cn_pattern = graphene.String()
 
     users = graphene.List(UserType, entitled=graphene.Boolean())
     assigned_roles = graphene.List(RoleTypeGraphene)
@@ -400,6 +401,7 @@ def pool_obj_to_type(pool_obj: Pool) -> dict:
                  'vm_name_template': pool_obj.vm_name_template,
                  'os_type': pool_obj.os_type,
                  'keep_vms_on': pool_obj.keep_vms_on,
+                 'ad_cn_pattern': pool_obj.ad_cn_pattern,
                  'create_thin_clones': pool_obj.create_thin_clones,
                  'prepare_vms': pool_obj.prepare_vms,
                  'controller': pool_obj.controller,
@@ -661,6 +663,11 @@ class ExpandPoolMutation(graphene.Mutation, PoolValidator):
             raise SilentError(_('Another task works on pool {}.').format(pool_name))
 
         task_id = await request_to_execute_pool_task(pool_id, PoolTaskType.POOL_EXPAND, ignore_reserve_size=True)
+
+        verbose_name = await autopool.verbose_name
+        description = _('Increase_step {}.').format(autopool.increase_step)
+        await system_logger.info(_('Expansion of pool {} requested.').format(verbose_name), user=creator,
+                                 entity=autopool.entity, description=description)
         return {
             'ok': True,
             'task_id': task_id,
@@ -719,7 +726,7 @@ class CreateAutomatedPoolMutation(graphene.Mutation, PoolValidator, ControllerFe
                                                              prepare_vms=prepare_vms,
                                                              connection_types=connection_types,
                                                              ad_cn_pattern=ad_cn_pattern)
-        except Exception as E:  # Возможные исключения: дубликат имени или вм id, сетевой фейл enable_remote_accesses
+        except Exception as E:  # Возможные исключения: дубликат имени вм
             desc = str(E)
             error_msg = _('Failed to create automated pool {}.').format(verbose_name)
             entity = {'entity_type': EntityType.POOL, 'entity_uuid': None}
@@ -747,6 +754,7 @@ class UpdateAutomatedPoolMutation(graphene.Mutation, PoolValidator):
         keep_vms_on = graphene.Boolean()
         create_thin_clones = graphene.Boolean()
         prepare_vms = graphene.Boolean()
+        ad_cn_pattern = graphene.String()
         connection_types = graphene.List(graphene.NonNull(ConnectionTypesGraphene))
 
     ok = graphene.Boolean()
@@ -785,6 +793,7 @@ class UpdateAutomatedPoolMutation(graphene.Mutation, PoolValidator):
                                                  keep_vms_on=kwargs.get('keep_vms_on'),
                                                  create_thin_clones=kwargs.get('create_thin_clones'),
                                                  prepare_vms=kwargs.get('prepare_vms'),
+                                                 ad_cn_pattern=kwargs.get('ad_cn_pattern'),
                                                  connection_types=kwargs.get('connection_types'),
                                                  creator=creator
                                                  )

@@ -27,10 +27,7 @@ export class AuthenticationDirectoryService {
                                 directory_type,
                                 service_username,
                                 service_password,
-                                admin_server,
-                                subdomain_name,
-                                kdc_urls,
-                                sso,
+                                dc_str,
                                 status,
                                 assigned_ad_groups {
                                     id
@@ -81,24 +78,24 @@ export class AuthenticationDirectoryService {
         });
     }
 
-    public getAuthenticationDirectoryGroupsMember(auth_dir_id: string, group_cn): QueryRef<any, any> {
-        return this.service.watchQuery({
-            query: gql` query auth_dirs($auth_dir_id: UUID, $group_cn: String!) {
-                            group_members(auth_dir_id: $auth_dir_id, group_cn: $group_cn) {
-                                email
-                                last_name
-                                first_name
-                                username
-                            }
-                        }
-                    `,
-            variables: {
-                method: 'GET',
-                auth_dir_id: `${auth_dir_id}`,
-                group_cn: `${group_cn}`
-            }
-        });
-    }
+    // public getAuthenticationDirectoryGroupsMember(auth_dir_id: string, group_cn): QueryRef<any, any> {
+    //     return this.service.watchQuery({
+    //         query: gql` query auth_dirs($auth_dir_id: UUID, $group_cn: String!) {
+    //                         group_members(auth_dir_id: $auth_dir_id, group_cn: $group_cn) {
+    //                             email
+    //                             last_name
+    //                             first_name
+    //                             username
+    //                         }
+    //                     }
+    //                 `,
+    //         variables: {
+    //             method: 'GET',
+    //             auth_dir_id: `${auth_dir_id}`,
+    //             group_cn: `${group_cn}`
+    //         }
+    //     });
+    // }
 
     public getAllAuthenticationDirectory(): QueryRef<any, any> {
         return this.service.watchQuery({
@@ -113,11 +110,8 @@ export class AuthenticationDirectoryService {
                                 directory_type,
                                 service_username,
                                 service_password,
-                                admin_server,
-                                subdomain_name,
-                                status,
-                                kdc_urls,
-                                sso
+                                dc_str,
+                                status
                             }
                         }
                     `,
@@ -133,6 +127,7 @@ export class AuthenticationDirectoryService {
             mutation: gql`
                         mutation auth_dirs(
                             $domain_name: String!,
+                            $dc_str: String!,
                             $verbose_name: String!,
                             $directory_url: String!,
                             $description: String,
@@ -141,6 +136,7 @@ export class AuthenticationDirectoryService {
                         ){
                             createAuthDir(
                                 domain_name :$domain_name,
+                                dc_str: $dc_str,
                                 verbose_name: $verbose_name,
                                 directory_url :$directory_url,
                                 description :$description,
@@ -162,10 +158,6 @@ export class AuthenticationDirectoryService {
     }
 
     public updateAuthenticationDirectory(params, fields) {
-
-        if (fields['kdc_urls']) {
-            fields['kdc_urls'] = fields['kdc_urls'].split(',');
-        }
 
         return this.service.mutate<any>({
             mutation: gql`

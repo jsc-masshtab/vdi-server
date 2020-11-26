@@ -154,6 +154,7 @@ export class AddPoolService {
                 $initial_size: Int
                 $create_thin_clones: Boolean
                 $prepare_vms: Boolean
+                $ad_cn_pattern: String
             ) {
                 addDynamicPool(
                     connection_types: $connection_types
@@ -172,6 +173,7 @@ export class AddPoolService {
                     initial_size: $initial_size
                     create_thin_clones: $create_thin_clones
                     prepare_vms: $prepare_vms
+                    ad_cn_pattern: $ad_cn_pattern
                 ) {
                     ok
                 }

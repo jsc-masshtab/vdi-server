@@ -10,7 +10,7 @@ import { RemoveAuthenticationDirectoryComponent } from './remove-auth-directory/
 import { map } from 'rxjs/operators';
 import { AddGropComponent } from './add-group/add-group.component';
 import { RemoveGroupComponent } from './remove-group/remove-group.component';
-import { SyncGropComponent } from './sync-group/sync-group.component';
+import { SyncGroupComponent } from './sync-group/sync-group.component';
 
 @Component({
   selector: 'auth-directory-details',
@@ -42,8 +42,18 @@ export class AuthenticationDirectoryDetailsComponent implements OnInit, OnDestro
       }
     },
     {
-      title: 'Domain name',
+      title: 'Имя домена',
       property: 'domain_name',
+      type: 'string',
+      edit: 'openEditForm',
+      form: {
+        tag: 'input',
+        type: 'text'
+      }
+    },
+    {
+      title: 'Класс объекта домена (dc)',
+      property: 'dc_str',
       type: 'string',
       edit: 'openEditForm',
       form: {
@@ -153,7 +163,7 @@ export class AuthenticationDirectoryDetailsComponent implements OnInit, OnDestro
     }
 
     this.dialog.open(FormForEditComponent, {
- 			disableClose: true, 
+ 			disableClose: true,
       width: '500px',
       data: {
         post: {
@@ -213,7 +223,7 @@ export class AuthenticationDirectoryDetailsComponent implements OnInit, OnDestro
 
   public remove(): void {
     this.dialog.open(RemoveAuthenticationDirectoryComponent, {
- 			disableClose: true, 
+ 			disableClose: true,
       width: '500px',
       data: {
         id: this.id,
@@ -224,7 +234,7 @@ export class AuthenticationDirectoryDetailsComponent implements OnInit, OnDestro
 
   public addMatch() {
     this.dialog.open(AddMappingComponent, {
- 			disableClose: true, 
+ 			disableClose: true,
       width: '500px',
       data: {
         id: this.id
@@ -235,15 +245,15 @@ export class AuthenticationDirectoryDetailsComponent implements OnInit, OnDestro
  public openMapping(mapping) {
   mapping['idDirectory'] = this.id;
   this.dialog.open(MappingComponent, {
- 			disableClose: true, 
+ 			disableClose: true,
     width: '500px',
     data: mapping
   });
  }
-  
+
   public addGroup() {
     this.dialog.open(AddGropComponent, {
- 			disableClose: true, 
+ 			disableClose: true,
       width: '500px',
       data: {
         id: this.id,
@@ -255,7 +265,7 @@ export class AuthenticationDirectoryDetailsComponent implements OnInit, OnDestro
 
   public removeGroup() {
     this.dialog.open(RemoveGroupComponent, {
- 			disableClose: true, 
+ 			disableClose: true,
       width: '500px',
       data: {
         id: this.id,
@@ -266,7 +276,7 @@ export class AuthenticationDirectoryDetailsComponent implements OnInit, OnDestro
   }
 
   public syncExistAuthDirGroupUsers() {
-    this.dialog.open(SyncGropComponent, {
+    this.dialog.open(SyncGroupComponent, {
       width: '500px',
       data: {
         id: this.id,

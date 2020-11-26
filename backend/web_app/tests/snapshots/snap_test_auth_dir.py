@@ -44,10 +44,11 @@ snapshots['TestAuthenticationDirectoryQuery.test_auth_dirs_list 1'] = {
 snapshots['TestAuthenticationDirectoryQuery.test_auth_dir_get_by_id 1'] = {
     'auth_dir': {
         'connection_type': 'LDAP',
+        'dc_str': 'dc=bazalt,dc=team',
         'description': None,
         'directory_type': 'ActiveDirectory',
         'directory_url': 'ldap://192.168.11.180',
-        'domain_name': 'bazalt.team',
+        'domain_name': 'bazalt',
         'mappings': [
         ],
         'verbose_name': 'test_auth_dir'
@@ -225,6 +226,10 @@ snapshots['TestAuthenticationDirectoryQuery.test_auth_dir_get_possible_ad_groups
             {
                 'ad_guid': 'cff4b40c-cc7f-4854-b3d9-d87dabd75411',
                 'verbose_name': 'vdi-autopool-test'
+            },
+            {
+                'ad_guid': 'b0ceec2c-d740-4e35-83c9-ac9c02452582',
+                'verbose_name': 'vdi-ad-test2'
             }
         ],
         'status': 'ACTIVE'

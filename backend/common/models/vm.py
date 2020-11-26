@@ -4,6 +4,8 @@ import asyncio
 
 from sqlalchemy import desc
 from enum import IntEnum
+from ldap3 import Server as ActiveDirectoryServer, Connection as ActiveDirectoryConnection, SAFE_SYNC
+from ldap3.core.exceptions import LDAPException
 
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy import Enum as AlchemyEnum
@@ -124,9 +126,9 @@ class Vm(VeilModel):
                 domain_entity = await self.vm_client
                 if not domain_entity:
                     raise AssertionError(_('VM has no api client.'))
-                await self.qemu_guest_agent_waiting()
-                await domain_entity.info()
                 # Операция вывода на VeiL деактивирует ВМ, а не удаляет. Отключили на VDI 18112020
+                # await self.qemu_guest_agent_waiting()
+                # await domain_entity.info()
                 # Если машина уже заведена в АД - пытаемся ее вывести
                 # active_directory_object = await AuthenticationDirectory.query.where(
                 #     AuthenticationDirectory.status == Status.ACTIVE).gino.first()
@@ -143,7 +145,7 @@ class Vm(VeilModel):
                 #         await asyncio.sleep(VEIL_OPERATION_WAITING)
                 #         task_completed = await action_task.finished
                 # Отправляем задачу удаления ВМ на ECP.
-                await self.qemu_guest_agent_waiting()
+                # await self.qemu_guest_agent_waiting()
                 delete_response = await domain_entity.remove(full=True)
                 delete_task = delete_response.task
                 task_completed = False
@@ -472,36 +474,52 @@ class Vm(VeilModel):
             # Ожидаем выполнения задачи на VeiL
             if action_response.status_code == 202:
                 await self.task_waiting(action_response.task)
+            # Если задача выполнена с ошибкой - логгируем
+            task_success = await action_response.task.success
+            if not task_success:
+                await system_logger.warning(_('VM {} hostname setting task failed.').format(self.verbose_name),
+                                            entity=self.entity)
+            else:
+                msg = _('VM {} hostname setting success.').format(self.verbose_name)
+                await system_logger.info(message=msg,
+                                         entity=self.entity)
         return True
 
     async def include_in_ad_group(self, active_directory_obj: AuthenticationDirectory, ad_cn_pattern: str):
-        """Включить в 1 или несколько групп (контейнеров) в AD.
+        """Domain group including via LDAP."""
+        # Проверим, есть ли данные для подключения к AD
+        if not active_directory_obj.service_username or not active_directory_obj.service_password:
+            await system_logger.warning(
+                _('Active directory object has no service username or password. Including skipped.'),
+                entity=self.entity)
+            return False
+        # Выполним синхронизацию
+        try:
+            ad_connection = None
+            conn_str = active_directory_obj.directory_url.replace('ldap:', '').replace('\\', '').replace('/', '')
+            ad_server = ActiveDirectoryServer(conn_str)
+            ad_connection = ActiveDirectoryConnection(server=ad_server, user=active_directory_obj.connection_username,
+                                                      password=active_directory_obj.password, auto_bind=True,
+                                                      client_strategy=SAFE_SYNC, raise_exceptions=True)
+            ad_connection.extend.microsoft.add_members_to_groups(
+                'cn={host_name},cn=Computers,{dc}'.format(host_name=self.verbose_name, dc=active_directory_obj.dc_str),
+                '{cn},{dc}'.format(cn=ad_cn_pattern, dc=active_directory_obj.dc_str)
+            )
 
-        Работает только для предварительно заведенной ВМ при установленных компонентах RSAT.
-        """
-        # Прежде чем заводить в группу мы должны дождаться активации гостевого агента
-        await self.qemu_guest_agent_waiting()
-        # Если дождались - можно заводить
-        domain_entity = await self.get_veil_entity()
-        # APIPA == Automatic Private IP Addressing
-        if domain_entity.first_ipv4 and domain_entity.apipa_problem:
-            raise ValueError(_('VM {} failed to receive DHCP ip address ({}).').format(self.verbose_name,
-                                                                                       domain_entity.guest_agent.ipv4))
-
-        already_in_domain = await domain_entity.in_ad if domain_entity.os_windows else True
-        if active_directory_obj and domain_entity.os_windows and not already_in_domain and ad_cn_pattern:
-            await self.qemu_guest_agent_waiting()
-            action_response = await domain_entity.add_to_ad_group(self.verbose_name,
-                                                                  active_directory_obj.service_username,
-                                                                  active_directory_obj.password,
-                                                                  ad_cn_pattern)
-            await self.task_waiting(action_response.task)
-            # Если задача выполнена с ошибкой - прерываем выполнение
-            task_success = await action_response.task.success
-            if not task_success:
-                raise ValueError(_('VM {} domain container including task failed.').format(self.verbose_name))
+        except LDAPException as err_msg:
+            err_msg = str(err_msg).replace('\x00', '')
+            await system_logger.error(
+                message=_('VM {} active directory group including error.').format(self.verbose_name),
+                description='{}: {}'.format(conn_str, err_msg),
+                entity=self.entity)
+            return False
+        else:
+            await system_logger.info(message=_('VM {} AD group including successful.').format(self.verbose_name),
+                                     entity=self.entity)
             return True
-        return False
+        finally:
+            if ad_connection:
+                ad_connection.unbind()
 
     async def include_in_ad(self, active_directory_obj: AuthenticationDirectory):
         """Вводит в домен.
@@ -527,7 +545,13 @@ class Vm(VeilModel):
             task_success = await action_response.task.success
             if not task_success:
                 raise ValueError(_('VM {} domain including task failed.').format(self.verbose_name))
+            msg = _('VM {} AD inclusion success.').format(self.verbose_name)
+            await system_logger.info(message=msg,
+                                     entity=self.entity)
             return True
+        msg = _('VM {} AD inclusion skipped.').format(self.verbose_name)
+        await system_logger.warning(message=msg,
+                                    entity=self.entity)
         return False
 
     async def prepare(self, active_directory_obj: AuthenticationDirectory = None, ad_cn_pattern: str = None):
@@ -535,15 +559,13 @@ class Vm(VeilModel):
 
         Вся процедура должна продолжаться не более 10 минут для 1 ВМ.
         """
-        # Ref at 13.11.2020
         await self.enable_remote_access()
         await self.start()
-        # 18.11.2020
         await self.reboot()
         await self.set_hostname()
+        await self.reboot()
         await self.include_in_ad(active_directory_obj)
         await self.include_in_ad_group(active_directory_obj, ad_cn_pattern)
-
         # Протоколируем успех
         msg = _('VM {} has been prepared.').format(self.verbose_name)
         await system_logger.info(message=msg, entity=self.entity)
@@ -556,9 +578,11 @@ class Vm(VeilModel):
         except asyncio.TimeoutError as err_msg:
             await system_logger.error(message=_('{} preparation cancelled by timeout.').format(self.verbose_name),
                                       entity=self.entity,
-                                      description=err_msg)
+                                      description=str(err_msg))
+            raise
         except ValueError as err_msg:
             err_str = str(err_msg)
             if err_str:
                 await system_logger.error(message=_('VM {} preparation error.').format(self.verbose_name),
                                           description=err_str, entity=self.entity)
+            raise

@@ -8,7 +8,8 @@
   <div class="form-message">
     <p>Удалить пул {{ data?.namePool }} ?</p>
 
-    <p class="description">Будут удалены все виртуальные машины пула</p>
+    <p class="description" *ngIf="data?.typePool === 'automated'">Будут удалены все виртуальные машины на VDI и ECP VeiL</p>
+    <p class="description" *ngIf="data?.typePool === 'static'">Будут удалены все виртуальные машины на VDI</p>
   </div>
 
   <div class="form-actions">

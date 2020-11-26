@@ -10,7 +10,7 @@
 # скопировать файл из контейнера на хост
 # docker cp vdi-angular:/package-lock.json ~/.
 # обновить клиент без пересборки контейнера
-# docker exec -it vdi-tornado /usr/local/bin/pipenv run pip install --force-reinstall veil_api_client-2.0.3-py3-none-any.whl
+# docker exec -it vdi-tornado /usr/local/bin/pipenv run pip install --force-reinstall veil_api_client-2.0.4-py3-none-any.whl
 
 version: '3.7'
 services:

@@ -82,7 +82,7 @@ class AbstractTask(ABC):
         try:
             await self.do_task()
             await self.task_model.set_status(TaskStatus.FINISHED)
-            await system_logger.info(_('Task <{}> finished.').format(friendly_task_name))
+            await system_logger.info(_('Task <{}> finished successfully.').format(friendly_task_name))
 
         except asyncio.CancelledError:
             await self.task_model.set_status(TaskStatus.CANCELLED)
@@ -91,11 +91,11 @@ class AbstractTask(ABC):
             await self.do_on_cancel()
 
         except Exception as ex:  # noqa
-            message = _('Exception during task execution. Task: <{}> Exception: {}.').format(
+            message = _('Exception during task execution. Task: <{}>.').format(
                 friendly_task_name, str(ex))
             await self.task_model.set_status(TaskStatus.FAILED, message)
 
-            await system_logger.warning(message)
+            await system_logger.warning(message, description=str(ex))
             print('BT {bt}'.format(bt=traceback.format_exc()))
 
             await self.do_on_fail()
@@ -237,7 +237,7 @@ class ExpandPoolTask(AbstractTask):
                 if vm_list and automated_pool.prepare_vms:
                     await asyncio.gather(
                         *[vm_object.prepare_with_timeout(active_directory_object, automated_pool.ad_cn_pattern) for
-                          vm_object in vm_list])
+                          vm_object in vm_list], return_exceptions=True)
             except asyncio.CancelledError:
                 raise
             except Exception as E:

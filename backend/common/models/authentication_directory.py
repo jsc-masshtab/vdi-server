@@ -5,7 +5,7 @@ from typing import Tuple, Optional
 import ldap
 from asyncpg.exceptions import UniqueViolationError
 from sqlalchemy import Index, Enum as AlchemyEnum
-from sqlalchemy.dialects.postgresql import UUID, ARRAY, JSONB
+from sqlalchemy.dialects.postgresql import UUID, JSONB
 from sqlalchemy.sql import text, desc
 
 from common.settings import LDAP_TIMEOUT
@@ -40,31 +40,6 @@ class AuthenticationDirectory(VeilModel, AbstractSortableStatusModel):
     Не может быть более 1го.
     """
 
-    # @property
-    # def keytab(self) -> Optional['Keytab']:
-    #     # TODO: adapt for vdi
-    #     return self.keytabs.first()
-    #
-    # @property
-    # def sso_domain(self) -> str:
-    #     # TODO: adapt for vdi
-    #     return '.'.join([self.subdomain_name, self.domain_name])
-    #
-    # @classmethod
-    # def has_upload_keytab_permission(cls, request):
-    #     # TODO: adapt for vdi
-    #     return cls.has_configure_sso_permission(request)
-    #
-    # @classmethod
-    # def has_configure_sso_permission(cls, request):
-    #     # TODO: adapt for vdi
-    #     return cls.check_permission(request.user, 'configure_sso')
-    #
-    # @classmethod
-    # def has_test_connection_permission(cls, request):
-    #     # TODO: adapt for vdi
-    #     return cls.check_permission(request.user, 'test_connection')
-
     class ConnectionTypes(Enum):
         """Доступные типы подключения служб каталогов."""
 
@@ -93,13 +68,10 @@ class AuthenticationDirectory(VeilModel, AbstractSortableStatusModel):
     directory_type = db.Column(AlchemyEnum(DirectoryTypes), nullable=False,
                                server_default=DirectoryTypes.ActiveDirectory.value)
     domain_name = db.Column(db.Unicode(length=255), unique=True)
-    subdomain_name = db.Column(db.Unicode(length=255))
+    dc_str = db.Column(db.Unicode(length=255), unique=True)
     service_username = db.Column(db.Unicode(length=150), nullable=True)
     # Из-за шифрования размер строки с паролем сильно увеличивается.
     service_password = db.Column(db.Unicode(length=1000), nullable=True)
-    admin_server = db.Column(db.Unicode(length=255), nullable=True)
-    kdc_urls = db.Column(ARRAY(db.Unicode(length=255)), nullable=True)
-    sso = db.Column(db.Boolean(), default=False)
     status = db.Column(AlchemyEnum(Status), nullable=False, index=True)
 
     @property
@@ -124,16 +96,21 @@ class AuthenticationDirectory(VeilModel, AbstractSortableStatusModel):
         """Дешифрованный пароль."""
         return decrypt(self.service_password)
 
+    @property
+    def connection_username(self):
+        """Логин с доменом."""
+        return '\\'.join(
+            [self.domain_name, self.service_username]) if self.service_username and self.domain_name else False
+
     async def mappings_paginator(self, limit, offset):
         return await self.mappings_query.limit(limit).offset(offset).gino.load(Mapping).all()
 
     @classmethod
-    async def soft_create(cls, verbose_name, directory_url, domain_name, creator,
+    async def soft_create(cls, verbose_name, directory_url, domain_name, creator, dc_str,
                           service_username=None,
                           service_password=None,
                           description=None, connection_type=ConnectionTypes.LDAP,
-                          directory_type=DirectoryTypes.ActiveDirectory, admin_server=None,
-                          subdomain_name=None, kdc_urls=None, sso=False, id=None):
+                          directory_type=DirectoryTypes.ActiveDirectory, id=None):
         """Создает запись Authentication Directory.
         Если не удалось проверить соединение - статус изменится на Failed."""
         # Ограничение на количество записей
@@ -143,6 +120,7 @@ class AuthenticationDirectory(VeilModel, AbstractSortableStatusModel):
         # Шифруем пароль
         if service_password and isinstance(service_password, str):
             service_password = encrypt(service_password)
+        dc_str = cls.convert_dc_str(dc_str) if dc_str and isinstance(dc_str, str) else 'dc={}'.format(domain_name)
 
         auth_dir_dict = {'verbose_name': verbose_name,
                          'description': description,
@@ -152,11 +130,8 @@ class AuthenticationDirectory(VeilModel, AbstractSortableStatusModel):
                          'domain_name': domain_name,
                          'service_username': service_username,
                          'service_password': service_password,
-                         'admin_server': admin_server,
-                         'subdomain_name': subdomain_name,
-                         'kdc_urls': kdc_urls,
-                         'sso': sso,
-                         'status': Status.CREATING
+                         'status': Status.CREATING,
+                         'dc_str': dc_str
                          }
         if id:
             auth_dir_dict['id'] = id
@@ -170,11 +145,23 @@ class AuthenticationDirectory(VeilModel, AbstractSortableStatusModel):
         await auth_dir.test_connection()
         return auth_dir
 
+    @staticmethod
+    def convert_dc_str(dc_by_dot: str):
+        """Если запись формата bazalt.team, то будет конвертировано на dc=bazalt, dc=team."""
+        if dc_by_dot and isinstance(dc_by_dot, str):
+            dc_l = dc_by_dot.split('.')
+            if len(dc_l) > 1:
+                return ','.join(['dc={}'.format(dc) for dc in dc_l])
+        return dc_by_dot
+
     @classmethod
     async def soft_update(cls, id, **kwargs):
 
-        if kwargs and isinstance(kwargs, dict) and kwargs.get('service_password'):
-            kwargs['service_password'] = encrypt(kwargs['service_password'])
+        if kwargs and isinstance(kwargs, dict):
+            if kwargs.get('service_password'):
+                kwargs['service_password'] = encrypt(kwargs['service_password'])
+            if kwargs.get('dc_str'):
+                kwargs['dc_str'] = cls.convert_dc_str(kwargs['dc_str'])
 
         update_type, update_dict = await super().soft_update(id, **kwargs)
 
@@ -245,10 +232,9 @@ class AuthenticationDirectory(VeilModel, AbstractSortableStatusModel):
             ldap_server.set_option(ldap.OPT_TIMEOUT, LDAP_TIMEOUT)
             # Если у записи есть данные auth - проверяем их
             if self.service_password and self.service_username:
-                username = '@'.join([self.service_username, self.domain_name])
-                password = decrypt(self.service_password)
-                await system_logger.debug('username: {}, password: {}'.format(username, password))
-                ldap_server.simple_bind_s(username, password)
+                # username = '@'.join([self.service_username, self.domain_name])
+                # await system_logger.debug('username: {}, password: {}'.format(username, password))
+                ldap_server.simple_bind_s(self.connection_username, self.password)
             else:
                 ldap_server.simple_bind_s()
         except (ldap.INVALID_CREDENTIALS, TypeError):
@@ -268,21 +254,19 @@ class AuthenticationDirectory(VeilModel, AbstractSortableStatusModel):
 
     # Authentication Directory synchronization methods
 
-    @staticmethod
-    def _get_ad_user_attributes(account_name: str,
-                                domain_name: str,
+    def _get_ad_user_attributes(self,
+                                account_name: str,
                                 ldap_server: 'ldap.ldapobject.SimpleLDAPObject'
                                 ) -> Tuple[Optional[str], dict]:
         """Получение информации о текущем пользователе из службы каталогов.
 
         :param account_name: имя пользовательской учетной записи
-        :param domain_name: доменное имя контроллера доменов
         :param ldap_server: объект сервера службы каталогов
         :return: атрибуты пользователя службы каталогов
         """
-        base = ','.join(['dc={}'.format(dc) for dc in domain_name.split('.')])
         user_info_filter = '(&(objectClass=user)(sAMAccountName={}))'.format(account_name)
-        user_info, user_groups = ldap_server.search_s(base, ldap.SCOPE_SUBTREE, user_info_filter, ['memberOf'])[0]
+        user_info, user_groups = ldap_server.search_s(self.dc_str, ldap.SCOPE_SUBTREE, user_info_filter, ['memberOf'])[
+            0]
 
         return user_info, user_groups
 
@@ -322,18 +306,9 @@ class AuthenticationDirectory(VeilModel, AbstractSortableStatusModel):
         :param account_name: имя пользовательской учетной записи
         :return: результат назначения системной группы пользователю службы каталогов
         """
-        # Удаляем пользователя из всех групп.
-        # await user.remove_roles()
-        # await user.remove_groups()
-
-        await system_logger.debug(_('Assigning veil groups to {}.').format(user.username))
-
         user_info, user_groups = self._get_ad_user_attributes(account_name,
-                                                              self.domain_name,
                                                               ldap_server)
 
-        # Если отображения отсутствуют, то по-умолчанию всем пользователям
-        # назначается группа Оператор.
         mappings = await self.mappings
         await system_logger.debug(_('Mappings: {}.').format(mappings))
 
@@ -396,13 +371,10 @@ class AuthenticationDirectory(VeilModel, AbstractSortableStatusModel):
 
         account_name, domain_name = extract_domain_from_username(username)
         user, created = await cls._get_user(account_name)
-
         if not domain_name:
             domain_name = authentication_directory.domain_name
-            username = '@'.join([username, domain_name])
-
+            username = '\\'.join([domain_name, account_name])
         try:
-            # TODO: заменить на self.connection
             ldap.set_option(ldap.OPT_X_TLS_REQUIRE_CERT, ldap.OPT_X_TLS_NEVER)
             ldap_server = ldap.initialize(authentication_directory.directory_url)
             ldap_server.set_option(ldap.OPT_REFERRALS, 0)
@@ -447,12 +419,7 @@ class AuthenticationDirectory(VeilModel, AbstractSortableStatusModel):
             ldap_connection = ldap.initialize(self.directory_url)
             ldap_connection.set_option(ldap.OPT_REFERRALS, 0)
             ldap_connection.set_option(ldap.OPT_NETWORK_TIMEOUT, LDAP_TIMEOUT)
-            # Данные авторизации для подключения
-            decrypted_password = decrypt(self.service_password)
-            full_username = '@'.join([self.service_username, self.domain_name])
-            # Устанавливаем соединение, которое нужно не забыть закрыть
-            # TODO: сделать менеджер контекста, чтобы соединения закрывались
-            ldap_connection.simple_bind_s(full_username, decrypted_password)
+            ldap_connection.simple_bind_s(self.connection_username, self.password)
         except (ldap.INVALID_CREDENTIALS, TypeError):
             msg = _('Authentication directory server {} has bad auth info.').format(self.directory_url)
             await system_logger.warning(msg, entity=self.entity)
@@ -493,10 +460,10 @@ class AuthenticationDirectory(VeilModel, AbstractSortableStatusModel):
         if not connection:
             return list()
         try:
-            dc_filter = ','.join(['dc={}'.format(dc) for dc in self.domain_name.split('.')])
+            # dc_filter = ','.join(['dc={}'.format(dc) for dc in self.domain_name.split('.')])
             groups_filter = await self.build_group_filter()
             # groups: [('CN=Users, DC=team', {'objectGUID': [b'~\xecIO\xa3\x88vE\xbb0\x86\xfe\xa0\x0fA+']}), ]
-            groups = connection.search_s(dc_filter, ldap.SCOPE_SUBTREE, groups_filter)
+            groups = connection.search_s(self.dc_str, ldap.SCOPE_SUBTREE, groups_filter)
 
             groups_list = list()
             for group in groups:
@@ -519,10 +486,10 @@ class AuthenticationDirectory(VeilModel, AbstractSortableStatusModel):
                 # Нужно оба параметра
                 if object_guid and cn:
                     groups_list.append({'ad_guid': object_guid, 'verbose_name': cn, 'ad_search_cn': ad_search_cn})
-        except ldap.LDAPError:
+        except ldap.LDAPError as err_msg:
             # На случай ошибочности запроса к AD
             msg = _('Fail to connect to Authentication Directory. Check service information.')
-            await system_logger.error(msg, entity=self.entity)
+            await system_logger.error(msg, entity=self.entity, description=err_msg)
             await self.update(status=Status.FAILED).apply()
             groups_list = list()
         connection.unbind_s()
@@ -556,9 +523,9 @@ class AuthenticationDirectory(VeilModel, AbstractSortableStatusModel):
         if not connection:
             return list()
         try:
-            dc_filter = ','.join(['dc={}'.format(dc) for dc in self.domain_name.split('.')])
+            # dc_filter = ','.join(['dc={}'.format(dc) for dc in self.domain_name.split('.')])
             users_filter = self.build_group_user_filter(group_cn)
-            users = connection.search_s(dc_filter, ldap.SCOPE_SUBTREE, users_filter)
+            users = connection.search_s(self.dc_str, ldap.SCOPE_SUBTREE, users_filter)
 
             # Парсим ответ от Authentication Directory
             users_list = list()
