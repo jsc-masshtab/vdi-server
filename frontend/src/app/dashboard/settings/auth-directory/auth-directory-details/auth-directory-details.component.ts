@@ -10,7 +10,7 @@ import { RemoveAuthenticationDirectoryComponent } from './remove-auth-directory/
 import { map } from 'rxjs/operators';
 import { AddGropComponent } from './add-group/add-group.component';
 import { RemoveGroupComponent } from './remove-group/remove-group.component';
-import { SyncGropComponent } from './sync-group/sync-group.component';
+import { SyncGroupComponent } from './sync-group/sync-group.component';
 
 @Component({
   selector: 'auth-directory-details',
@@ -276,7 +276,7 @@ export class AuthenticationDirectoryDetailsComponent implements OnInit, OnDestro
   }
 
   public syncExistAuthDirGroupUsers() {
-    this.dialog.open(SyncGropComponent, {
+    this.dialog.open(SyncGroupComponent, {
       width: '500px',
       data: {
         id: this.id,

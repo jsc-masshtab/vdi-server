@@ -60,7 +60,7 @@
         <span class="name">Удалить группу</span>
       </button>
     </ng-container> -->
-    
+
   </div>
 
   <div class="details-row">
@@ -71,9 +71,9 @@
       <li (click)="routeTo('roles')" [class.active]="menuActive === 'roles'" title="Роли пользователя">
         <fa-icon [icon]="['fas','users-cog']"></fa-icon><span class="name">Роли</span>
       </li>
-      <!--  <li (click)="routeTo('groups')" [class.active]="menuActive === 'groups'" title="Группы пользователя">
+      <li (click)="routeTo('groups')" [class.active]="menuActive === 'groups'" title="Группы пользователя">
         <fa-icon [icon]="['fas','users-cog']"></fa-icon><span class="name">Группы</span>
-      </li> -->
+      </li>
     </ul>
 
     <div class="details-slide">
@@ -84,22 +84,22 @@
       </div>
 
       <div class="details-slide-into">
-        <vdi-table-into 
-          *ngIf="menuActive === 'info'" 
-          [item]="entity" 
-          [collection]="collection" 
+        <vdi-table-into
+          *ngIf="menuActive === 'info'"
+          [item]="entity"
+          [collection]="collection"
           (edit)="edit($event)">
         </vdi-table-into>
 
-        <vdi-table-component 
-          *ngIf="menuActive === 'roles'" 
+        <vdi-table-component
+          *ngIf="menuActive === 'roles'"
           [data]="entity.assigned_roles"
           [collection]="collection_roles">
         </vdi-table-component>
 
-        <vdi-table-component 
-          *ngIf="menuActive === 'groups'" 
-          [data]="entity.assigned_groups" 
+        <vdi-table-component
+          *ngIf="menuActive === 'groups'"
+          [data]="entity.assigned_groups"
           [collection]="collection_groups">
         </vdi-table-component>
       </div>
