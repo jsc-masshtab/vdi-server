@@ -380,7 +380,8 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
       width: '500px',
       data: {
         idPool: this.idPool,
-        namePool: this.pool.verbose_name
+        namePool: this.pool.verbose_name,
+        typePool: this.typePool
       }
     });
   }
@@ -461,7 +462,8 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
         vm: vmActive,
         typePool: this.typePool,
         usersPool: this.pool.users,
-        idPool: this.idPool
+        idPool: this.idPool,
+        username: vmActive.user.username
       }
     });
   }

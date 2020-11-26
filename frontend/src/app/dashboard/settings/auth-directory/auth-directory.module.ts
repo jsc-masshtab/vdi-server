@@ -16,7 +16,7 @@ import { AuthenticationDirectoryDetailsComponent } from './auth-directory-detail
 import { RemoveAuthenticationDirectoryComponent } from './auth-directory-details/remove-auth-directory/remove-auth-directory.component';
 import { AddGropComponent } from './auth-directory-details/add-group/add-group.component';
 import { RemoveGroupComponent } from './auth-directory-details/remove-group/remove-group.component';
-import { SyncGropComponent } from './auth-directory-details/sync-group/sync-group.component';
+import { SyncGroupComponent } from './auth-directory-details/sync-group/sync-group.component';
 
 @NgModule({
    declarations: [
@@ -28,7 +28,7 @@ import { SyncGropComponent } from './auth-directory-details/sync-group/sync-grou
       MappingComponent,
       AddGropComponent,
       RemoveGroupComponent,
-      SyncGropComponent
+      SyncGroupComponent
    ],
    imports: [
       SharedModule,
@@ -54,7 +54,7 @@ import { SyncGropComponent } from './auth-directory-details/sync-group/sync-grou
       MappingComponent,
       AddGropComponent,
       RemoveGroupComponent,
-      SyncGropComponent
+      SyncGroupComponent
    ]
 })
 export class AuthenticationDirectoryModule {}
