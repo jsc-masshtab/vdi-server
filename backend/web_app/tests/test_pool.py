@@ -22,30 +22,30 @@ pytestmark = [pytest.mark.pools]
 
 
 # Automated pool
-@pytest.mark.asyncio
-async def test_create_and_expand_automated_pool(fixt_launch_workers, fixt_db, fixt_create_automated_pool,  # noqa
-                                     fixt_auth_context):  # noqa
-    """Create, expand and remove automated pool"""
-
-    # check that pool was successfully created'
-    assert fixt_create_automated_pool['is_pool_successfully_created']
-
-    # launch expand pool task
-    pool_id = fixt_create_automated_pool['id']
-    qu = """
-    mutation {
-        expandPool(pool_id: "%s"){
-            ok
-            task_id
-        }
-    }""" % pool_id
-    executed = await execute_scheme(pool_schema, qu, context=fixt_auth_context)
-    assert executed['expandPool']['ok']
-
-    # wait for expand pool result
-    task_id = executed['expandPool']['task_id']
-    status = await wait_for_task_result(task_id, 60)
-    assert (status and (status == TaskStatus.FINISHED.name))
+# @pytest.mark.asyncio
+# async def test_create_and_expand_automated_pool(fixt_launch_workers, fixt_db, fixt_create_automated_pool,  # noqa
+#                                      fixt_auth_context):  # noqa
+#     """Create, expand and remove automated pool"""
+#
+#     # check that pool was successfully created'
+#     assert fixt_create_automated_pool['is_pool_successfully_created']
+#
+#     # launch expand pool task
+#     pool_id = fixt_create_automated_pool['id']
+#     qu = """
+#     mutation {
+#         expandPool(pool_id: "%s"){
+#             ok
+#             task_id
+#         }
+#     }""" % pool_id
+#     executed = await execute_scheme(pool_schema, qu, context=fixt_auth_context)
+#     assert executed['expandPool']['ok']
+#
+#     # wait for expand pool result
+#     task_id = executed['expandPool']['task_id']
+#     status = await wait_for_task_result(task_id, 60)
+#     assert (status and (status == TaskStatus.FINISHED.name))
 
 
 @pytest.mark.asyncio
@@ -74,70 +74,70 @@ async def test_update_automated_pool(fixt_launch_workers, fixt_db, fixt_create_a
     assert executed['updateDynamicPool']['ok']
 
 
-@pytest.mark.asyncio
-@pytest.mark.usefixtures('fixt_launch_workers', 'fixt_db', 'fixt_user_admin', # noqa
-                         'fixt_create_automated_pool', 'fixt_user_another_admin')  # noqa
-class PoolTestCase(VdiHttpTestCase):
-
-    @gen_test(timeout=VEIL_WS_MAX_TIME_TO_WAIT + 10)
-    def test_automated_pool_expand(self):
-
-        pool = yield Pool.query.gino.first()
-        pool_type = yield pool.pool_type
-        self.assertEqual(pool_type, Pool.PoolTypes.AUTOMATED)
-        pool_id = pool.id
-
-        vms_amount = yield pool.get_vm_amount()
-        self.assertEqual(vms_amount, 1)  # Сначала в пуле должна быть 1 VM
-
-        # Авторизуемся, чтобы получить токен
-        body = '{"username": "test_user_admin","password": "veil"}'
-        response_dict = yield self.get_response(body=body, url='/auth')
-        access_token = response_dict['data']['access_token']
-        self.assertTrue(access_token)
-
-        # Формируем данные для тестируемого параметра
-        headers = {'Content-Type': 'application/json', 'Authorization': 'jwt {}'.format(access_token)}
-        body = '{"remote_protocol": "spice"}'
-        url = '/client/pools/{pool_id}/'.format(pool_id=pool_id)
-
-        response_dict = yield self.get_response(body=body, url=url, headers=headers)
-
-        if 'errors' in response_dict:
-            # Исключение на случай отсутствия лицензии
-            response_data = response_dict['errors'][0]
-            response_code = response_data['code']
-            self.assertIn(response_code, ['001', '002'])
-        else:
-            response_data = response_dict['data']
-            self.assertIsInstance(response_data, dict)
-            self.assertIn('port', response_data)
-
-            # Расширение пула не могло произойти так быстро, поэтому убеждаемся, что нет свободных ВМ.
-            # Авторизуемся под вторым админом, чтобы получить токен
-            body = '{"username": "test_user_admin2","password": "veil"}'
-            response_dict = yield self.get_response(body=body, url='/auth')
-            access_token = response_dict['data']['access_token']
-            self.assertTrue(access_token)
-
-            # Формируем данные для тестируемого параметра
-            headers = {'Content-Type': 'application/json', 'Authorization': 'jwt {}'.format(access_token)}
-            body = '{"remote_protocol": "spice"}'
-            url = '/client/pools/{pool_id}/'.format(pool_id=pool_id)
-
-            response_dict = yield self.get_response(body=body, url=url, headers=headers)
-            response_data = response_dict['data']
-            self.assertIsInstance(response_data, dict)
-            # response_message = response_data['message']
-            # self.assertEqual('В пуле нет свободных машин', response_message)
-            port = response_data['port']
-            self.assertEqual(0, port)
-
-            # Ждем время ожидания монитора ресурсов + накладки, чтобы убедиться, что пул расширился
-            yield gen.sleep(VEIL_WS_MAX_TIME_TO_WAIT + 5)
-
-            vms_amount = yield pool.get_vm_amount()
-            self.assertEqual(2, vms_amount)  # Тут ожидаем, что уже 2
+# @pytest.mark.asyncio
+# @pytest.mark.usefixtures('fixt_launch_workers', 'fixt_db', 'fixt_user_admin', # noqa
+#                          'fixt_create_automated_pool', 'fixt_user_another_admin')  # noqa
+# class PoolTestCase(VdiHttpTestCase):
+#
+#     @gen_test(timeout=VEIL_WS_MAX_TIME_TO_WAIT + 10)
+#     def test_automated_pool_expand(self):
+#
+#         pool = yield Pool.query.gino.first()
+#         pool_type = yield pool.pool_type
+#         self.assertEqual(pool_type, Pool.PoolTypes.AUTOMATED)
+#         pool_id = pool.id
+#
+#         vms_amount = yield pool.get_vm_amount()
+#         self.assertEqual(vms_amount, 1)  # Сначала в пуле должна быть 1 VM
+#
+#         # Авторизуемся, чтобы получить токен
+#         body = '{"username": "test_user_admin","password": "veil"}'
+#         response_dict = yield self.get_response(body=body, url='/auth')
+#         access_token = response_dict['data']['access_token']
+#         self.assertTrue(access_token)
+#
+#         # Формируем данные для тестируемого параметра
+#         headers = {'Content-Type': 'application/json', 'Authorization': 'jwt {}'.format(access_token)}
+#         body = '{"remote_protocol": "spice"}'
+#         url = '/client/pools/{pool_id}/'.format(pool_id=pool_id)
+#
+#         response_dict = yield self.get_response(body=body, url=url, headers=headers)
+#
+#         if 'errors' in response_dict:
+#             # Исключение на случай отсутствия лицензии
+#             response_data = response_dict['errors'][0]
+#             response_code = response_data['code']
+#             self.assertIn(response_code, ['001', '002'])
+#         else:
+#             response_data = response_dict['data']
+#             self.assertIsInstance(response_data, dict)
+#             self.assertIn('port', response_data)
+#
+#             # Расширение пула не могло произойти так быстро, поэтому убеждаемся, что нет свободных ВМ.
+#             # Авторизуемся под вторым админом, чтобы получить токен
+#             body = '{"username": "test_user_admin2","password": "veil"}'
+#             response_dict = yield self.get_response(body=body, url='/auth')
+#             access_token = response_dict['data']['access_token']
+#             self.assertTrue(access_token)
+#
+#             # Формируем данные для тестируемого параметра
+#             headers = {'Content-Type': 'application/json', 'Authorization': 'jwt {}'.format(access_token)}
+#             body = '{"remote_protocol": "spice"}'
+#             url = '/client/pools/{pool_id}/'.format(pool_id=pool_id)
+#
+#             response_dict = yield self.get_response(body=body, url=url, headers=headers)
+#             response_data = response_dict['data']
+#             self.assertIsInstance(response_data, dict)
+#             # response_message = response_data['message']
+#             # self.assertEqual('В пуле нет свободных машин', response_message)
+#             port = response_data['port']
+#             self.assertEqual(0, port)
+#
+#             # Ждем время ожидания монитора ресурсов + накладки, чтобы убедиться, что пул расширился
+#             yield gen.sleep(VEIL_WS_MAX_TIME_TO_WAIT + 5)
+#
+#             vms_amount = yield pool.get_vm_amount()
+#             self.assertEqual(2, vms_amount)  # Тут ожидаем, что уже 2
 
 
 # ----------------------------------------------
