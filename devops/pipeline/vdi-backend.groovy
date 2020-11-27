@@ -89,8 +89,8 @@ pipeline {
         stage ('prepare virtual env') {
             steps {
                 sh script: '''
-                    # обновляем pip до последней версии
-                    /usr/bin/python3 -m pip --no-cache-dir install -U pip
+                    # устанавливаем pip
+                    /usr/bin/python3 -m pip --no-cache-dir install 'pip==20.2.4' --force-reinstall
                     # устанавливаем virtualenv
                     /usr/bin/python3 -m pip --no-cache-dir install 'virtualenv==15.1.0' --force-reinstall
                     # создаем виртуальное окружение
