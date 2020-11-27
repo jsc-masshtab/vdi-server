@@ -9,6 +9,7 @@ import { PoolDetailsService } from '../pool-details.service';
 interface IData {
   idPool: number;
   namePool: string;
+  typePool: string;
 }
 
 @Component({

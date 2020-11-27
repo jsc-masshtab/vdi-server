@@ -57,6 +57,7 @@ interface ISettingsAutoPool {
   reserve_size: number;
   total_size: number;
   vm_name_template: string;
+  ad_cn_pattern: string;
 }
 
 interface ISettingsStaticPool {

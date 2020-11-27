@@ -149,14 +149,19 @@ class AbstractSortableStatusModel:
                           include_inactive=False):
         query = cls.get_query(ordering=ordering, include_inactive=include_inactive)
         if name:
-            if cls.__name__ == 'User':
+            if hasattr(cls, 'username'):
                 query = query.where(cls.username.ilike('%{}%'.format(name)))
-            else:
+            elif hasattr(cls, 'verbose_name'):
                 query = query.where(cls.verbose_name.ilike('%{}%'.format(name)))
         if filters:
             query = query.where(and_(*filters))
         if first:
             return await query.gino.first()
+        if not ordering:
+            if hasattr(cls, 'username'):
+                query = query.order_by(cls.username)
+            elif hasattr(cls, 'verbose_name'):
+                query = query.order_by(cls.verbose_name)
         return await query.limit(limit).offset(offset).gino.all()
 
 

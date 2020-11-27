@@ -70,7 +70,7 @@
         <span class="name">Информация</span>
       </li>
 
-      <li (click)="routeTo('match')" [class.active]="menuActive === 'match'" title="Соответствия"> 
+      <li (click)="routeTo('match')" [class.active]="menuActive === 'match'" title="Соответствия">
         <fa-icon [icon]="['fas','columns']"></fa-icon>
         <span class="name">Соответствия</span>
       </li>
@@ -89,24 +89,24 @@
       </div>
 
       <div class="details-slide-into">
-        <vdi-table-into 
-          [item]="AuthenticationDirectory" 
-          [collection]="collection"  
-          (edit)="edit($event)" 
+        <vdi-table-into
+          [item]="AuthenticationDirectory"
+          [collection]="collection"
+          (edit)="edit($event)"
           *ngIf="menuActive === 'info'">
         </vdi-table-into>
 
-        <vdi-table-component 
-          cursor="true" 
-          (clickRowData)="openMapping($event)" 
-          [data]="AuthenticationDirectory.mappings" 
-          [collection]="collection_mapping"   
+        <vdi-table-component
+          cursor="true"
+          (clickRowData)="openMapping($event)"
+          [data]="AuthenticationDirectory.mappings"
+          [collection]="collection_mapping"
           *ngIf="menuActive === 'match'">
         </vdi-table-component>
 
-        <vdi-table-component 
-          *ngIf="menuActive === 'groups'" 
-          [data]="AuthenticationDirectory.assigned_ad_groups" 
+        <vdi-table-component
+          *ngIf="menuActive === 'groups'"
+          [data]="AuthenticationDirectory.assigned_ad_groups"
           [collection]="collection_groups">
         </vdi-table-component>
       </div>

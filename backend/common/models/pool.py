@@ -184,6 +184,7 @@ class Pool(VeilModel):
             AutomatedPool.os_type,
             AutomatedPool.create_thin_clones,
             AutomatedPool.prepare_vms,
+            AutomatedPool.ad_cn_pattern,
             pool_type,
             Pool.connection_types
         ])
@@ -227,6 +228,7 @@ class Pool(VeilModel):
                 AutomatedPool.os_type,
                 AutomatedPool.create_thin_clones,
                 AutomatedPool.prepare_vms,
+                AutomatedPool.ad_cn_pattern,
                 Controller.address)
 
             # Сортировка
@@ -252,6 +254,8 @@ class Pool(VeilModel):
         query = Pool.get_pools_query(ordering=ordering)
         if filters:
             query = query.where(and_(*filters))
+        if not ordering:
+            query = query.order_by(Pool.verbose_name)
         return await query.limit(limit).offset(offset).gino.all()
 
     @staticmethod
@@ -904,7 +908,7 @@ class AutomatedPool(db.Model):
             return automated_pool
 
     async def soft_update(self, creator, verbose_name, reserve_size, total_size, increase_step, vm_name_template,
-                          keep_vms_on: bool, create_thin_clones: bool, prepare_vms: bool, connection_types):
+                          keep_vms_on: bool, create_thin_clones: bool, prepare_vms: bool, connection_types, ad_cn_pattern):
         pool_kwargs = dict()
         auto_pool_kwargs = dict()
         old_verbose_name = await self.verbose_name
@@ -931,6 +935,8 @@ class AutomatedPool(db.Model):
                 auto_pool_kwargs['increase_step'] = increase_step
             if vm_name_template:
                 auto_pool_kwargs['vm_name_template'] = vm_name_template
+            if ad_cn_pattern:
+                auto_pool_kwargs['ad_cn_pattern'] = ad_cn_pattern
             if isinstance(create_thin_clones, bool):
                 auto_pool_kwargs['create_thin_clones'] = create_thin_clones
             if isinstance(prepare_vms, bool):
