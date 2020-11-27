@@ -47,8 +47,8 @@ JWT_ALGORITHM = 'HS256'
 
 # Websocket settings
 # -----------------------------
-WS_PING_INTERVAL = 6
-WS_PING_TIMEOUT = 300
+WS_PING_INTERVAL = 60
+WS_PING_TIMEOUT = 150
 
 # ECP Veil settings
 # -----------------------------
@@ -105,6 +105,7 @@ REDIS_DB = 0
 REDIS_PASSWORD = '4NZ7GpHn4IlshPhb'
 REDIS_TIMEOUT = 5
 REDIS_THIN_CLIENT_CHANNEL = 'TC_CHANNEL'
+
 
 try:
     from .local_settings import *  # noqa

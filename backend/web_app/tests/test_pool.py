@@ -45,7 +45,7 @@ async def test_create_and_expand_automated_pool(fixt_launch_workers, fixt_db, fi
     # wait for expand pool result
     task_id = executed['expandPool']['task_id']
     status = await wait_for_task_result(task_id, 60)
-    assert (status and (status == TaskStatus.FINISHED.name))
+    assert ((status is not None) and (status == TaskStatus.FINISHED.name))
 
 
 @pytest.mark.asyncio

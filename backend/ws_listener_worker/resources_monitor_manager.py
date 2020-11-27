@@ -1,10 +1,15 @@
 # -*- coding: utf-8 -*-
+import json
+import asyncio
+
 from common.models.controller import Controller
 from ws_listener_worker.resources_monitor import ResourcesMonitor
 
 from common.languages import lang_init
 from common.log.journal import system_logger
 
+from common.veil.veil_redis import WS_MONITOR_CMD_QUEUE, WsMonitorCmd, a_redis_lpop
+from common.veil.veil_gino import EntityType
 
 _ = lang_init()
 
@@ -15,6 +20,36 @@ class ResourcesMonitorManager:
         self._resources_monitors_list = []
 
     # PUBLIC METHODS
+    async def listen_for_messages(self):
+        """Listen for commands to add/remove controller"""
+        await self.start()
+
+        await system_logger.debug('Ws listener worker: start loop now')
+        while True:
+            try:
+                # wait for message
+                redis_data = await a_redis_lpop(WS_MONITOR_CMD_QUEUE)
+
+                # get data from message
+                data_dict = json.loads(redis_data.decode())
+                command = data_dict['command']
+                controller_id = data_dict['controller_id']
+                await system_logger.debug(command + ' ' + controller_id)
+
+                # add or remove controller
+                if command == WsMonitorCmd.ADD_CONTROLLER.name:
+                    await self.add_controller(controller_id)
+                elif command == WsMonitorCmd.REMOVE_CONTROLLER.name:
+                    await self.remove_controller(controller_id)
+                elif command == WsMonitorCmd.RESTART_MONITOR.name:
+                    await self.restart_existing_monitor(controller_id)
+
+            except asyncio.CancelledError:
+                raise
+            except Exception as ex:
+                entity = {'entity_type': EntityType.SECURITY, 'entity_uuid': None}
+                await system_logger.error('exception:' + str(ex), entity=entity)
+
     async def start(self):
         """
         Start monitors

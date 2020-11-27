@@ -1075,7 +1075,7 @@ msgstr "Нет такого задания или статус задания {}
 
 #: ../web_app/thin_client_api/handlers.py:57
 msgid "User {} requested pools data."
-msgstr "Пользователь {} подключился к пулу."
+msgstr "Пользователь {} запросил список пулов."
 
 #: ../web_app/thin_client_api/handlers.py:74
 msgid "Thin client limit exceeded."

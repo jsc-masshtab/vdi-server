@@ -1,11 +1,10 @@
 # -*- coding: utf-8 -*-
 import asyncio
-import json
-from common.veil.veil_gino import EntityType
 
 from common.database import start_gino, stop_gino
 from ws_listener_worker.resources_monitor_manager import ResourcesMonitorManager
-from common.veil.veil_redis import REDIS_POOL, WS_MONITOR_CMD_QUEUE, WsMonitorCmd, a_redis_lpop
+from ws_listener_worker.thin_client_conn_monitor import ThinClientConnMonitor
+from common.veil.veil_redis import REDIS_POOL
 
 from common.languages import lang_init
 from common.settings import DEBUG
@@ -13,37 +12,6 @@ from common.log.journal import system_logger
 from common.utils import init_exit_handler
 
 _ = lang_init()
-
-
-async def listen_for_messages(resources_monitor_manager):
-    """Listen for commands to add/remove controller"""
-    await resources_monitor_manager.start()
-
-    await system_logger.debug('Ws listener worker: start loop now')
-    while True:
-        try:
-            # wait for message
-            redis_data = await a_redis_lpop(WS_MONITOR_CMD_QUEUE)
-
-            # get data from message
-            data_dict = json.loads(redis_data.decode())
-            command = data_dict['command']
-            controller_id = data_dict['controller_id']
-            await system_logger.debug(command + ' ' + controller_id)
-
-            # add or remove controller
-            if command == WsMonitorCmd.ADD_CONTROLLER.name:
-                await resources_monitor_manager.add_controller(controller_id)
-            elif command == WsMonitorCmd.REMOVE_CONTROLLER.name:
-                await resources_monitor_manager.remove_controller(controller_id)
-            elif command == WsMonitorCmd.RESTART_MONITOR.name:
-                await resources_monitor_manager.restart_existing_monitor(controller_id)
-
-        except asyncio.CancelledError:
-            raise
-        except Exception as ex:
-            entity = {'entity_type': EntityType.SECURITY, 'entity_uuid': None}
-            await system_logger.error('exception:' + str(ex), entity=entity)
 
 
 def main():
@@ -56,8 +24,10 @@ def main():
     loop.run_until_complete(start_gino())
 
     resources_monitor_manager = ResourcesMonitorManager()
+    loop.create_task(resources_monitor_manager.listen_for_messages())
 
-    loop.create_task(listen_for_messages(resources_monitor_manager))
+    thin_client_conn_monitor = ThinClientConnMonitor()
+    loop.create_task(thin_client_conn_monitor.check_thin_client_connections())
 
     loop.run_forever()  # run until event loop stops
 

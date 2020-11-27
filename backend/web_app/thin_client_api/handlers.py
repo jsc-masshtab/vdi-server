@@ -1,5 +1,10 @@
 # -*- coding: utf-8 -*-
 from abc import ABC
+from typing import Any
+from tornado.web import Application
+from tornado import httputil
+import json
+from json.decoder import JSONDecodeError
 
 from tornado import websocket
 from aiohttp import client_exceptions
@@ -8,10 +13,14 @@ from common.settings import REDIS_PORT, REDIS_THIN_CLIENT_CHANNEL, REDIS_PASSWOR
 from common.veil.veil_redis import request_to_execute_pool_task
 from common.veil.veil_handlers import BaseHandler
 from common.veil.veil_errors import ValidationError
-from common.veil.auth.veil_jwt import jwtauth
+from common.veil.auth.veil_jwt import jwtauth, decode_jwt
 
+from sqlalchemy.sql import func
 from common.models.pool import Pool as PoolModel, AutomatedPool
 from common.models.task import PoolTaskType, TaskStatus, Task
+from common.models.auth import UserJwtInfo
+from common.models.active_tk_connection import ActiveTkConnection
+from common.models.auth import User
 
 from veil_api_client import DomainTcpUsb
 
@@ -19,6 +28,9 @@ from veil_api_client import DomainTcpUsb
 
 from common.log.journal import system_logger
 from common.languages import lang_init
+
+from common.settings import JWT_OPTIONS
+
 
 _ = lang_init()
 
@@ -204,7 +216,8 @@ class PoolGetVm(BaseHandler, ABC):
                                  port=vm_port,
                                  password=veil_domain.graphics_password,
                                  vm_verbose_name=veil_domain.verbose_name,
-                                 vm_controller_address=vm_controller.address)
+                                 vm_controller_address=vm_controller.address,
+                                 vm_id=str(vm.id))
                     }
         return await self.log_finish(response)
 
@@ -307,6 +320,12 @@ class DetachUsb(BaseHandler, ABC):
         return await self.log_finish(response)
 
 
+# self.write_message(u"You said: " + message)
+# vdi-tornado           | !!!message:  {"msg_type": "AUTH", "token": "eyJ",
+# "veil_connect_version": "1.3.4", "vm_name": null, "tk_os": unknown}
+# vdi-tornado           | !!!message:  {"msg_type": "UPDATED", "vm_name": "solominpool-1"}
+# vdi-tornado           | !!!message:  {"msg_type": "UPDATED", "vm_name": null}
+
 class ThinClientWsHandler(websocket.WebSocketHandler):  # noqa
     # TODO: 1 модуль для вебсокетов
     # сделать модуль ws_api, где бы все связанное с вебсокетами хранилось
@@ -316,17 +335,88 @@ class ThinClientWsHandler(websocket.WebSocketHandler):  # noqa
     #     websocket.WebSocketHandler.__init__(self, application, request, **kwargs)
     #     print('init')
 
+    def __init__(self, application: Application, request: httputil.HTTPServerRequest, **kwargs: Any):
+        websocket.WebSocketHandler.__init__(self, application, request, **kwargs)
+
+        self.user_id = None
+        self.is_verified = False
+
     def check_origin(self, origin):
         return origin == 'veil_connect_trusted_origin'
 
-    def on_message(self, message):
-        print('on_message', flush=True)
+    async def open(self):
+        # print('on open ', self.request.remote_ip, flush=True)
+        pass
 
-    def on_pong(self, data: bytes) -> None:
-        print('on_pong', flush=True)
+    async def on_message(self, message):
+        # print('!!!message: ', message, flush=True)
 
-    def on_ping(self, data: bytes) -> None:
-        print('on_ping', flush=True)
+        # parse msg
+        try:
+            recv_data_dict = json.loads(message)
+            msg_type = recv_data_dict['msg_type']
+        except (KeyError, JSONDecodeError) as ex:
+            await self.write_message('Wrong msg format ' + str(ex))
+            return
+
+        # Сообщение AUTH. собщение авторизации со стартовой инфой с ТК
+        if msg_type == 'AUTH':
+            try:
+                # Проверяем токен. Рвем соединение если токен левый
+                token = recv_data_dict['token']
+                jwt_info = await UserJwtInfo.query.where(UserJwtInfo.token == token).gino.first()
+                if not jwt_info:
+                    raise AssertionError("Auth failed")
+
+                # Извлекаем инфу из токена
+                JWT_OPTIONS['verify_exp'] = False
+                payload = decode_jwt(token, JWT_OPTIONS)
+                user_name = payload['username']
+
+                # Фиксируем  данные известные на стороне сервера
+                self.user_id = await User.get_id(user_name)
+
+                # Сохраняем юзера с инфой (редис)
+                await ActiveTkConnection.soft_create(user_id=self.user_id,
+                                                     veil_connect_version=recv_data_dict['veil_connect_version'],
+                                                     vm_id=recv_data_dict['vm_id'],
+                                                     tk_ip=self.request.remote_ip,
+                                                     tk_os=recv_data_dict['tk_os'])
+
+                self.is_verified = True
+
+            except (KeyError, TypeError, JSONDecodeError, AssertionError) as ex:
+                await self.write_message(str(ex))
+                self.close()
+
+        # Сообщения UPDATED
+        elif msg_type == 'UPDATED':
+            if not self.is_verified:
+                await self.write_message('Auth required')
+                self.close()
+
+            try:
+                await ActiveTkConnection.update.values(vm_id=recv_data_dict['vm_id'], data_received=func.now()).where(
+                    ActiveTkConnection.user_id == self.user_id).gino.status()
+            except KeyError:
+                pass
 
     def on_close(self):
-        print("WebSocket closed", flush=True)
+        # print("!!!WebSocket closed", flush=True)
+        # Удаляем юзера из списка подключенных
+        loop = asyncio.get_event_loop()
+        delete_cor = ActiveTkConnection.delete.where(ActiveTkConnection.user_id == self.user_id).gino.status()
+        loop.create_task(delete_cor)
+
+    async def on_pong(self, data: bytes) -> None:
+        # print("WebSocket on_pong", flush=True)
+
+        if not self.is_verified:
+            await self.write_message('Auth required')
+            self.close()
+
+        # Обновляем дату последнего сообщения от ТК
+        loop = asyncio.get_event_loop()
+        update_cor = ActiveTkConnection.update.values(data_received=func.now()).where(
+            ActiveTkConnection.user_id == self.user_id).gino.status()
+        loop.create_task(update_cor)
