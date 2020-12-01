@@ -1,22 +1,17 @@
+# web_app/tests/.coveragerc
 # -*- coding: utf-8 -*-
 # https://coverage.readthedocs.io/en/latest/config.html#run
 # .coveragerc to control coverage.py
 
 [report]
-# Regexes for lines to exclude from consideration
-include =
-    auth/*
-    controller/*
-    controller_resources/*
-    event/*
-    pool/*
-    resources_monitoring/*
-    thin_client_api/*
-    vm/*
-
 omit =
     */__init__.py
     */urls.py
+    tests/*
+    snapshots/*
+    test_*
+    fixtures.py
+    conftest.py
 
 exclude_lines =
     # Have to re-enable the standard pragma
@@ -26,7 +21,5 @@ exclude_lines =
     raise AssertionError
     raise NotImplementedError
 
-ignore_errors = True
-
-[html]
-directory = tests/htmlcov
+ignore_errors = False
+fail_under = 75
