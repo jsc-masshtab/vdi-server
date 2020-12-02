@@ -15,8 +15,8 @@ class ExecError(Exception):
 
 
 async def execute_scheme(_schema, query, variables=None, context=None):
-    r = await graphql(_schema, query, variables=variables, executor=AsyncioExecutor(), return_promise=True,
-                      context=context)
+    r = await graphql(_schema, query, variable_values=variables, executor=AsyncioExecutor(), return_promise=True,
+                      context_value=context)
     if r.errors:
         raise ExecError(repr(r.errors))
     return r.data
