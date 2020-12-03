@@ -23,3 +23,48 @@ snapshots['TestVmPermissionsSchema.test_vm_user_permission 2'] = {
         'ok': True
     }
 }
+
+snapshots['TestVmStatus.test_service_status 1'] = {
+    'pools': [
+        {
+            'vms': [
+                {
+                    'status': 'ACTIVE',
+                    'user': {
+                        'username': 'admin'
+                    }
+                }
+            ]
+        }
+    ]
+}
+
+snapshots['TestVmStatus.test_service_status 2'] = {
+    'pools': [
+        {
+            'vms': [
+                {
+                    'status': 'SERVICE',
+                    'user': {
+                        'username': None
+                    }
+                }
+            ]
+        }
+    ]
+}
+
+snapshots['TestVmStatus.test_service_status 3'] = {
+    'pools': [
+        {
+            'vms': [
+                {
+                    'status': 'ACTIVE',
+                    'user': {
+                        'username': 'admin'
+                    }
+                }
+            ]
+        }
+    ]
+}
