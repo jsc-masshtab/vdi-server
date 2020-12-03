@@ -53,7 +53,7 @@ async def test_create_and_expand_automated_pool(fixt_launch_workers, fixt_db, fi
 
 
 @pytest.mark.asyncio
-async def test_update_automated_pool(fixt_launch_workers, fixt_db, fixt_create_automated_pool,  # noqa
+async def test_update_automated_pool(snapshot, fixt_launch_workers, fixt_db, fixt_create_automated_pool,  # noqa
                                      fixt_auth_context):  # noqa
     """Create automated pool, update this pool, remove this pool"""
 
@@ -71,6 +71,7 @@ async def test_update_automated_pool(fixt_launch_workers, fixt_db, fixt_create_a
             verbose_name: "%s",
             reserve_size: 1,
             total_size: 4,
+            increase_step: 2,
             keep_vms_on: true){
             ok
         }
