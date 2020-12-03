@@ -379,6 +379,9 @@ class Vm(VeilModel):
         """Включает ВМ - Пересылает start для ВМ на ECP VeiL."""
         domain_entity = await self.get_veil_entity()
         if not domain_entity.powered:
+            # При старте ВМ если есть по какой-либо причине tcp usb каналы в режиме connect, то вм не запуститься, если
+            # нет соответствующего сервера раздающего usb (а его не будет с больш вероятностью). Так что detach all
+            await domain_entity.detach_usb(action_type='tcp_usb_device', remove_all=True)
             task_success = await self.action('start')
             await system_logger.info(_('VM {} is powered.').format(self.verbose_name), user=creator, entity=self.entity)
             return task_success

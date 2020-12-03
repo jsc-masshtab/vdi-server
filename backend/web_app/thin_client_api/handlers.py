@@ -9,7 +9,7 @@ from json.decoder import JSONDecodeError
 from tornado import websocket
 from aiohttp import client_exceptions
 import asyncio
-from common.settings import REDIS_PORT, REDIS_THIN_CLIENT_CHANNEL, REDIS_PASSWORD, REDIS_DB, VEIL_OPERATION_WAITING
+from common.settings import REDIS_PORT, REDIS_THIN_CLIENT_CHANNEL, REDIS_PASSWORD, REDIS_DB
 from common.veil.veil_redis import request_to_execute_pool_task
 from common.veil.veil_handlers import BaseHandler
 from common.veil.veil_errors import ValidationError
@@ -136,6 +136,7 @@ class PoolGetVm(BaseHandler, ABC):
             await veil_domain.info()
             if not veil_domain.powered:
                 await vm.start()
+
         except client_exceptions.ServerDisconnectedError:
             response = {'errors': [{'message': _('VM is unreachable on ECP Veil.'),
                                     'code': '004'}]}
@@ -148,38 +149,6 @@ class PoolGetVm(BaseHandler, ABC):
         await system_logger.info(_('User {} connected to VM {}.').format(user.username, vm.verbose_name),
                                  entity=vm.entity, user=user.username)
         # TODO: использовать veil_domain.hostname вместо IP
-
-        try:
-            # В данный момент подготовка есть только у автоматического пула, поэтому нужно включить удаленный доступ
-            if await pool.pool_type == PoolModel.PoolTypes.STATIC and not veil_domain.remote_access:
-                # Удаленный доступ выключен, нужно включить и ждать
-                action_response = await veil_domain.enable_remote_access()
-                if not action_response.success:
-                    # Вернуть исключение?
-                    raise ValueError(_('VeiL domain request error.'))
-                if action_response.status_code == 200:
-                    # Задача не встала в очередь, а выполнилась немедленно. Такого не должно быть.
-                    raise ValueError(_('Task has`t been created.'))
-                if action_response.status_code == 202:
-                    # Была установлена задача. Необходимо дождаться ее выполнения.
-                    # TODO: метод ожидания задачи
-                    action_task = action_response.task
-                    task_completed = False
-                    while not task_completed:
-                        await asyncio.sleep(VEIL_OPERATION_WAITING)
-                        task_completed = await action_task.finished
-
-                    # Если задача выполнена с ошибкой - прерываем выполнение
-                    task_success = await action_task.success
-                    if not task_success:
-                        raise ValueError(
-                            _('VM remote access task {} finished with error.').format(action_task.api_object_id))
-
-                    # Обновляем параметры ВМ
-                    await veil_domain.info()
-        except ValueError:
-            response = {'errors': [{'message': _('Can`t enable remote access. Check VeiL ECP.')}]}
-            return await self.log_finish(response)
 
         # Определяем адресс и порт в зависимости от протокола
         vm_controller = await vm.controller
@@ -198,7 +167,7 @@ class PoolGetVm(BaseHandler, ABC):
                 vm_port = 3389  # default rdp port
 
             except (RuntimeError, IndexError, KeyError):
-                response = {'errors': [{'message': _('VM does not support RDP.')}]}
+                response = {'errors': [{'message': _('VM does not support RDP. Controller didnt provide vm address')}]}
                 return await self.log_finish(response)
 
         elif remote_protocol == PoolModel.PoolConnectionTypes.SPICE_DIRECT.name:
@@ -376,7 +345,7 @@ class ThinClientWsHandler(websocket.WebSocketHandler):  # noqa
                 # Фиксируем  данные известные на стороне сервера
                 self.user_id = await User.get_id(user_name)
 
-                # Сохраняем юзера с инфой (редис)
+                # Сохраняем юзера с инфой
                 await ActiveTkConnection.soft_create(user_id=self.user_id,
                                                      veil_connect_version=recv_data_dict['veil_connect_version'],
                                                      vm_id=recv_data_dict['vm_id'],
@@ -384,6 +353,7 @@ class ThinClientWsHandler(websocket.WebSocketHandler):  # noqa
                                                      tk_os=recv_data_dict['tk_os'])
 
                 self.is_verified = True
+                await self.write_message('Auth success')
 
             except (KeyError, TypeError, JSONDecodeError, AssertionError) as ex:
                 await self.write_message(str(ex))
@@ -416,7 +386,5 @@ class ThinClientWsHandler(websocket.WebSocketHandler):  # noqa
             self.close()
 
         # Обновляем дату последнего сообщения от ТК
-        loop = asyncio.get_event_loop()
-        update_cor = ActiveTkConnection.update.values(data_received=func.now()).where(
+        await ActiveTkConnection.update.values(data_received=func.now()).where(
             ActiveTkConnection.user_id == self.user_id).gino.status()
-        loop.create_task(update_cor)

@@ -13,9 +13,11 @@ class VeilTestServer:
 
         # handlers
         self.app.add_routes([web.get(self.base_url + 'domains/{domain_id}/', self.get_domain_info)])
+        self.app.add_routes([web.get(self.base_url + 'domains/', self.get_domains)])
+
         self.app.add_routes([web.post(self.base_url + 'domains/{domain_id}/start/', self.start_vm)])
         self.app.add_routes([web.post(self.base_url + 'domains/multi-create-domain/', self.multi_create_domain)])
-        self.app.add_routes([web.get(self.base_url + 'domains/', self.get_domains)])
+        self.app.add_routes([web.post(self.base_url + 'domains/{domain_id}/remote-access/', self.remote_access)])
 
         self.app.add_routes([web.get(self.base_url + 'tasks/{task_id}/', self.get_task_data)])
 
@@ -105,7 +107,7 @@ class VeilTestServer:
             "created": "2020-10-13T05:05:27.373701Z",
             "modified": "2020-10-26T06:13:38.418647Z",
             "migrated": None,
-            "user_power_state": 1,
+            "user_power_state": 3,
             "cpu_topology": {
                 "cpu_map": {
 
@@ -299,72 +301,370 @@ class VeilTestServer:
         print('start_vm')
 
         domain_id = request.match_info['domain_id']
+        try:
+            is_async = request.rel_url.query['async']
+        except KeyError:
+            is_async = 0
+        print('is_async ', is_async, flush=True)
 
-        res_dict = {
-            "_task": {
-                "id": "0daf02eb-3172-48a8-b50c-a38b751f9b0b",
-                "verbose_name": "Task",
-                "name": "Starting the virtual machine win_test.",
-                "progress": 0,
-                "status": "IN_PROGRESS",
-                "created": "2020-10-29T12:08:18.248553Z",
-                "executed": 0,
-                "finished_time": None,
-                "nodes_user_responses": [
-                    {
-                        "node_id": "cdf10fc6-57f8-436c-a031-78ba3ba1ae40",
-                        "node_response": "None"
-                    }
-                ],
-                "events": [
-                    {
-                        "id": "79280435-3b14-4374-990b-6831aea1008c",
-                        "message": "Task created:  Starting the virtual machine win_test.",
-                        "user": "solomin",
-                        "created": "2020-10-29T12:08:18.433958Z",
-                        "task": "0daf02eb-3172-48a8-b50c-a38b751f9b0b",
-                        "readed": [],
-                        "entities": [
-                            {
-                                "entity_uuid": domain_id,
-                                "entity_class": "domain"
+        if is_async:
+            res_dict = {
+                "_task": {
+                    "id": "0daf02eb-3172-48a8-b50c-a38b751f9b0b",
+                    "verbose_name": "Task",
+                    "name": "Starting the virtual machine win_test.",
+                    "progress": 0,
+                    "status": "IN_PROGRESS",
+                    "created": "2020-10-29T12:08:18.248553Z",
+                    "executed": 0,
+                    "finished_time": None,
+                    "nodes_user_responses": [
+                        {
+                            "node_id": "cdf10fc6-57f8-436c-a031-78ba3ba1ae40",
+                            "node_response": "None"
+                        }
+                    ],
+                    "events": [
+                        {
+                            "id": "79280435-3b14-4374-990b-6831aea1008c",
+                            "message": "Task created:  Starting the virtual machine win_test.",
+                            "user": "solomin",
+                            "created": "2020-10-29T12:08:18.433958Z",
+                            "task": "0daf02eb-3172-48a8-b50c-a38b751f9b0b",
+                            "readed": [],
+                            "entities": [
+                                {
+                                    "entity_uuid": domain_id,
+                                    "entity_class": "domain"
+                                },
+                                {
+                                    "entity_uuid": "cdf10fc6-57f8-436c-a031-78ba3ba1ae40",
+                                    "entity_class": "node"
+                                }
+                            ],
+                            "detail_message": "Task",
+                            "permissions": {
+                                "mark": True
                             },
-                            {
-                                "entity_uuid": "cdf10fc6-57f8-436c-a031-78ba3ba1ae40",
-                                "entity_class": "node"
-                            }
-                        ],
-                        "detail_message": "Task",
-                        "permissions": {
-                            "mark": True
-                        },
-                        "type": "info"
+                            "type": "info"
+                        }
+                    ],
+                    "nodes_list": [
+                        "cdf10fc6-57f8-436c-a031-78ba3ba1ae40"
+                    ],
+                    "user": {
+                        "id": 204,
+                        "username": "solomin"
+                    },
+                    "error_message": "",
+                    "is_cancellable": True,
+                    "permissions": {
+                        "cancel": True,
+                        "release_locks": True,
+                        "check": True,
+                        "run": True
+                    },
+                    "is_multitask": False,
+                    "parent": None,
+                    "entities": {
+                        domain_id: "domain",
+                        "cdf10fc6-57f8-436c-a031-78ba3ba1ae40": "node"
                     }
-                ],
-                "nodes_list": [
-                    "cdf10fc6-57f8-436c-a031-78ba3ba1ae40"
-                ],
-                "user": {
-                    "id": 204,
-                    "username": "solomin"
-                },
-                "error_message": "",
-                "is_cancellable": True,
-                "permissions": {
-                    "cancel": True,
-                    "release_locks": True,
-                    "check": True,
-                    "run": True
-                },
-                "is_multitask": False,
-                "parent": None,
-                "entities": {
-                    domain_id: "domain",
-                    "cdf10fc6-57f8-436c-a031-78ba3ba1ae40": "node"
                 }
             }
-        }
-        return web.Response(text=json.dumps(res_dict), content_type='application/json', status=202)
+            print('web.Response', flush=True)
+            return web.Response(text=json.dumps(res_dict), content_type='application/json', status=202)
+
+        else:
+            res_dict = {
+                "id": domain_id,
+                "verbose_name": "solo-static-1",
+                "description": "",
+                "locked_by": "0a5271bd-0984-4ef2-bfbe-59df6fbefa6e",
+                "permissions": [
+                    "add_to_ad",
+                    "attach_iso",
+                    "attach_lun",
+                    "attach_mdev",
+                    "attach_pci",
+                    "attach_usb",
+                    "attach_vdisk",
+                    "attach_veil_utils_iso",
+                    "automated_restore",
+                    "available_guest_cmds",
+                    "backup",
+                    "boot",
+                    "boot_free",
+                    "change_template",
+                    "check_recover",
+                    "check_verbose_name",
+                    "clone",
+                    "cloud_init",
+                    "config_restore",
+                    "consoles",
+                    "controllers",
+                    "convert_backup",
+                    "convert_from_xml",
+                    "cpu_models",
+                    "create",
+                    "detach_iso",
+                    "detach_lun",
+                    "detach_mdev",
+                    "detach_pci",
+                    "detach_usb",
+                    "detach_vdisk",
+                    "detail_size",
+                    "domain_template",
+                    "drs_stats",
+                    "free_domain_name",
+                    "get_choices",
+                    "guest_command",
+                    "list",
+                    "migrate",
+                    "migrate_available_nodes",
+                    "migrate_available_nodes_several",
+                    "migrate_unavailable_nodes",
+                    "multi_create_domain",
+                    "multi_manager",
+                    "os_defaults",
+                    "os_types",
+                    "os_versions",
+                    "prepare",
+                    "reboot",
+                    "recover",
+                    "recover_ready_nodes",
+                    "remote_access",
+                    "remote_access_white_list",
+                    "remove",
+                    "resource_limits",
+                    "resources",
+                    "restore_from_xml",
+                    "resume",
+                    "retrieve",
+                    "rm_from_ad",
+                    "safety",
+                    "set_active",
+                    "set_hostname",
+                    "set_mtu",
+                    "set_owners",
+                    "show_backup",
+                    "show_vm_from_xml",
+                    "shutdown",
+                    "snapshots_info",
+                    "snapshots_tree",
+                    "sound",
+                    "spice",
+                    "start",
+                    "stats_v2",
+                    "suspend",
+                    "template",
+                    "total_size_domains",
+                    "update",
+                    "update_actual_size",
+                    "update_boot",
+                    "update_disastery_options",
+                    "update_graphics_password",
+                    "update_graphics_settings",
+                    "update_ha_options",
+                    "video"
+                ],
+                "status": "ACTIVE",
+                "created": "2020-12-02T09:43:42.883639Z",
+                "modified": "2020-12-02T13:23:41.304883Z",
+                "migrated": None,
+                "user_power_state": 3,
+                "cpu_topology": {
+                    "cpu_map": {
+
+                    },
+                    "cpu_mode": "default",
+                    "cpu_cores": 1,
+                    "cpu_count": 2,
+                    "cpu_model": "default",
+                    "cpu_shares": 1024,
+                    "cpu_sockets": 2,
+                    "cpu_threads": 1,
+                    "cpu_priority": 1,
+                    "cpu_count_max": 2,
+                    "cpu_min_guarantee": 0
+                },
+                "cpu_type": "Other",
+                "memory_count": 2048,
+                "memory_pool": None,
+                "template": False,
+                "os_type": "Windows",
+                "os_version": "Microsoft Windows 10 (64-bit)",
+                "node": {
+                    "id": "73bb1a4b-c7c3-4e1a-a890-bf0763c928f4",
+                    "verbose_name": "192.168.11.102"
+                },
+                "thin": True,
+                "cloud_init": False,
+                "cloud_init_config": {
+
+                },
+                "uptime_on_current_node": {
+                    "start_time": 0,
+                    "uptime": 0,
+                    "system_time": "2020-12-02T13:23:41.327858Z"
+                },
+                "uptime_total": 0,
+                "parent": {
+                    "id": "c291f72d-9f06-4789-8ef7-57d24783d7c8",
+                    "verbose_name": "win10"
+                },
+                "resource_pool": {
+                    "id": "aecd7f29-df81-4c4e-8d35-c97af0f57d18",
+                    "verbose_name": "Veil default cluster resource pool"
+                },
+                "ha_enabled": False,
+                "ha_autoselect": False,
+                "ha_nodepolicy": [
+
+                ],
+                "ha_boot_order": 1,
+                "ha_retrycount": 5,
+                "ha_timeout": 60,
+                "ha_options_cluster_sync": True,
+                "video": {
+                    "type": "cirrus",
+                    "vram": 16384,
+                    "heads": 1
+                },
+                "sound": {
+                    "codec": "micro",
+                    "model": "ich6"
+                },
+                "graphics_password": "jkgOvOBjeGwlHSa9",
+                "features": [
+
+                ],
+                "machine": "pc",
+                "qemu_args": [
+
+                ],
+                "remote_access_port": 5908,
+                "remote_access_allow_all": True,
+                "tablet": False,
+                "remote_access": True,
+                "remote_access_white_list": [
+
+                ],
+                "spice_stream": False,
+                "clean_count": 1,
+                "clean_type": "zero",
+                "safety": False,
+                "disastery_enabled": False,
+                "bootmenu": False,
+                "bootmenu_timeout": 3,
+                "boot_type": "LegacyMBR",
+                "memory_min_guarantee": 0,
+                "memory_shares": 1024,
+                "memory_limit": 0,
+                "tcp_usb_devices": [
+
+                ],
+                "owners": [
+
+                ],
+                "usb_devices": [
+
+                ],
+                "pci_devices": [
+
+                ],
+                "mdev_devices": [
+
+                ],
+                "os_defaults": {
+                    "controllers": {
+                        "vdisk": {
+                            "target_bus": "sata"
+                        },
+                        "vmachineinf": {
+                            "nic_driver": "e1000"
+                        }
+                    },
+                    "video": {
+                        "type": "cirrus"
+                    },
+                    "sound": {
+                        "model": "ich6",
+                        "codec": "micro"
+                    },
+                    "os_version": {
+                        "windowsun": "Unknown Windows"
+                    }
+                },
+                "cluster": "396037a5-b222-41b1-b782-bc0584665a21",
+                "controllers": {
+                    "ide": [
+                        {
+
+                        }
+                    ],
+                    "pci": [
+                        {
+                            "model": "pci-root",
+                            "order": 0
+                        },
+                        {
+                            "model": "pci-bridge",
+                            "order": 1
+                        }
+                    ],
+                    "usb": [
+                        {
+                            "model": "nec-xhci",
+                            "order": 0
+                        }
+                    ],
+                    "sata": [
+                        {
+
+                        }
+                    ],
+                    "scsi": [
+
+                    ]
+                },
+                "free_slots": {
+                    "pci": 54,
+                    "ide": 3,
+                    "scsi": 0,
+                    "sata": 13,
+                    "usb": 4
+                },
+                "current_state": "45868178-7162-45b8-9a7e-c4792d89556d",
+                "applied_snapshot": "0b062cd0-6461-4044-8c41-9f551ce85630",
+                "hints": 0,
+                "tags": [
+
+                ],
+                "spice_usb_channels": [
+
+                ],
+                "start_on_boot": False,
+                "guest_utils": {
+
+                },
+                "graphics_settings": {
+                    "mouse_mode": "client",
+                    "streaming_mode": "filter",
+                    "jpeg_compression": "auto",
+                    "zlib_compression": "auto",
+                    "image_compression": "auto_glz",
+                    "clipboard_copypaste": "yes",
+                    "filetransfer_enable": "yes",
+                    "playback_compression": "on"
+                },
+                "entity_type": "domain",
+                "real_remote_access_port": 50013,
+                "consoles": [
+
+                ]
+            }
+            return web.Response(text=json.dumps(res_dict), content_type='application/json', status=200)
 
     async def multi_create_domain(self, request):
 
@@ -435,25 +735,111 @@ class VeilTestServer:
             }
         }
 
-        return web.Response(text=json.dumps(res_dict), content_type='application/json')
+        return web.Response(text=json.dumps(res_dict), content_type='application/json', status=202)
+
+    async def remote_access(self, request):
+        domain_id = str(uuid.uuid4())
+        task_id = str(uuid.uuid4())
+        res_dict = {
+            "_task": {
+                "id": task_id,
+                "verbose_name": "Task",
+                "name": "remote_access",
+                "progress": 0,
+                "status": "IN_PROGRESS",
+                "created": "2020-10-29T12:08:18.248553Z",
+                "executed": 0,
+                "finished_time": None,
+                "entities": {
+                    "cdf10fc6-57f8-436c-a031-78ba3ba1ae40": "node",
+                    domain_id: "domain"
+                }
+            }
+        }
+        return web.Response(text=json.dumps(res_dict), content_type='application/json', status=202)
 
     async def get_domains(self, request):
-        res_dict = {
-            "count": 1,
-            "next": None,
-            "previous": None,
-            "results": [
-                {
-                    "id": "e00219af-f99a-4615-bd3c-85646be3e1d5",
+
+        try:
+            vm_ids_string = request.rel_url.query['ids']
+        except KeyError:
+            vm_ids_string = None
+        # print('!!!vm_ids_string ', vm_ids_string, flush=True)
+
+        results_list = list()
+        if vm_ids_string:
+            vm_ids = vm_ids_string.split(",")
+            for vm_id in vm_ids:
+                results_list.append({
+                    "id": vm_id,
                     "memory_count": 4096,
                     "verbose_name": "19_10-thin_child",
                     "status": "ACTIVE",
+                    "cpu_count": 1,
+                    "vmachine_infs_count": 0,
+                    "vdisks_count": 0,
+                    "vfunctions_count": 0,
+                    "luns_count": 0,
+                    "user_power_state": 3,
+                    "memory_pool": None,
+                    "node": {
+                        "id": "73bb1a4b-c7c3-4e1a-a890-bf0763c928f4",
+                        "verbose_name": "192.168.11.102"
+                    },
+                    "template": False,
+                    "tags": [
+
+                    ],
+                    "hints": 0,
+                    "resource_pool": {
+                        "id": "aecd7f29-df81-4c4e-8d35-c97af0f57d18",
+                        "verbose_name": "Veil default cluster resource pool"
+                    },
                     "parent": {
                         "id": "589ea6af-03b6-4224-a286-48f0e038ce12",
                         "verbose_name": "19_10"
                     }
                 }
-            ]
+                )
+
+        results_list.append(
+            {
+                "id": "e00219af-f99a-4615-bd3c-85646be3e1d5",
+                "memory_count": 4096,
+                "verbose_name": "19_10-thin_child",
+                "status": "ACTIVE",
+                "cpu_count": 1,
+                "vmachine_infs_count": 0,
+                "vdisks_count": 0,
+                "vfunctions_count": 0,
+                "luns_count": 0,
+                "user_power_state": 3,
+                "memory_pool": None,
+                "node": {
+                    "id": "73bb1a4b-c7c3-4e1a-a890-bf0763c928f4",
+                    "verbose_name": "192.168.11.102"
+                },
+                "template": False,
+                "tags": [
+
+                ],
+                "hints": 0,
+                "resource_pool": {
+                    "id": "aecd7f29-df81-4c4e-8d35-c97af0f57d18",
+                    "verbose_name": "Veil default cluster resource pool"
+                },
+                "parent": {
+                    "id": "589ea6af-03b6-4224-a286-48f0e038ce12",
+                    "verbose_name": "19_10"
+                }
+            }
+        )
+
+        res_dict = {
+            "count": len(results_list),
+            "next": None,
+            "previous": None,
+            "results": results_list
         }
         return web.Response(text=json.dumps(res_dict), content_type='application/json')
 

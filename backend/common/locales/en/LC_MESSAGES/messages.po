@@ -1126,8 +1126,8 @@ msgid "The remote controller is unavailable."
 msgstr "The remote controller is unavailable."
 
 #: ../web_app/thin_client_api/handlers.py:189
-msgid "VM does not support RDP."
-msgstr "VM does not support RDP."
+msgid "VM does not support RDP. Controller didnt provide vm address."
+msgstr "VM does not support RDP. Controller didnt provide vm address."
 
 #: ../web_app/thin_client_api/handlers.py:248
 msgid "User {} executed action {} on VM {}."
