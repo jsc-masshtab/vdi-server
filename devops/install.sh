@@ -1,5 +1,7 @@
 #!/bin/bash
 
+rm -f /tmp/vdi-install-vars
+
 echo "Welcome to VDI server installer!"
 
 echo "Select archiving type:"
@@ -37,6 +39,12 @@ case $TYPE in
 
         echo "Count is (>0):"
         read COUNT
+        if ! [[ $COUNT =~ ^[0-9]+$ ]]; then
+            echo "Error: Count must be a number" && exit 1
+        fi
+        if [ $COUNT -le 0 ]; then
+            echo "Error: Count must be a positive number" && exit 1
+        fi
 
         echo "COUNT=$COUNT" >> /tmp/vdi-install-vars
         ;;
