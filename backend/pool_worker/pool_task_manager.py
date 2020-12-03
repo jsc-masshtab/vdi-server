@@ -193,7 +193,11 @@ class PoolTaskManager:
             task.execute_in_async_task()
 
         elif pool_task_type == PoolTaskType.VM_PREPARE.name:
-            task = PrepareVmTask()
+            try:
+                full = task_data_dict['full']
+            except KeyError:
+                full = True
+            task = PrepareVmTask(full)
             await task.init(task_id, self.task_list)
             task.execute_in_async_task()
 

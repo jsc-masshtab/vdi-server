@@ -9,9 +9,13 @@ from common.settings import VEIL_WS_MAX_TIME_TO_WAIT
 from web_app.pool.schema import pool_schema
 from web_app.tests.utils import execute_scheme
 from common.models.pool import Pool
-from common.models.task import TaskStatus
+from common.models.task import TaskStatus, Task
 
 from common.veil.veil_redis import wait_for_task_result
+
+from common.models.vm import Vm
+
+from web_app.auth.license.utils import License, LicenseData
 
 from web_app.tests.fixtures import (fixt_db, fixt_controller, fixt_create_automated_pool,  # noqa
                                     fixt_create_static_pool,  fixt_auth_context, fixt_group,  # noqa
@@ -58,6 +62,7 @@ async def test_update_automated_pool(fixt_launch_workers, fixt_db, fixt_create_a
 
     pool_id = fixt_create_automated_pool['id']
 
+    # update some params
     new_pool_name = 'test_pool_{}'.format(str(uuid.uuid4())[:7])
     qu = """
     mutation {
@@ -73,14 +78,35 @@ async def test_update_automated_pool(fixt_launch_workers, fixt_db, fixt_create_a
     executed = await execute_scheme(pool_schema, qu, context=fixt_auth_context)
     assert executed['updateDynamicPool']['ok']
 
+    # decrease total_size (Это особый случай и запустит задачу в воркере)
+    qu = """
+    mutation {
+        updateDynamicPool(
+            pool_id: "%s"
+            total_size: 3){
+            ok
+        }
+    }""" % pool_id
+    executed = await execute_scheme(pool_schema, qu, context=fixt_auth_context)
+    assert executed['updateDynamicPool']['ok']
+
 
 @pytest.mark.asyncio
 @pytest.mark.usefixtures('fixt_launch_workers', 'fixt_db', 'fixt_user_admin', # noqa
-                         'fixt_create_automated_pool', 'fixt_user_another_admin')  # noqa
+                        'fixt_create_automated_pool', 'fixt_user_another_admin')  # noqa
 class PoolTestCase(VdiHttpTestCase):
 
     @gen_test(timeout=VEIL_WS_MAX_TIME_TO_WAIT + 10)
     def test_automated_pool_expand(self):
+
+        # На случай отсутствия лицензии
+        current_license = License()
+        license_data = {
+            "verbose_name": "Fake license",
+            "thin_clients_limit": 1,
+            "uuid": str(uuid.uuid4())
+        }
+        current_license.license_data = LicenseData(**license_data)
 
         pool = yield Pool.query.gino.first()
         pool_type = yield pool.pool_type
@@ -126,21 +152,19 @@ class PoolTestCase(VdiHttpTestCase):
             url = '/client/pools/{pool_id}/'.format(pool_id=pool_id)
 
             response_dict = yield self.get_response(body=body, url=url, headers=headers)
-            response_data = response_dict['data']
-            self.assertIsInstance(response_data, dict)
-            # response_message = response_data['message']
-            # self.assertEqual('В пуле нет свободных машин', response_message)
+            self.assertIsInstance(response_dict, dict)
             port = response_data['port']
-            self.assertEqual(0, port)
+            self.assertEqual(5900, port)
 
             # Ждем время ожидания монитора ресурсов + накладки, чтобы убедиться, что пул расширился
-            yield gen.sleep(VEIL_WS_MAX_TIME_TO_WAIT + 5)
+            yield gen.sleep(5)
 
             vms_amount = yield pool.get_vm_amount()
             self.assertEqual(2, vms_amount)  # Тут ожидаем, что уже 2
 
-
 # ----------------------------------------------
+
+
 # Static pool
 @pytest.mark.asyncio
 async def test_create_static_pool(fixt_launch_workers, fixt_db, fixt_create_static_pool,  # noqa
@@ -148,6 +172,14 @@ async def test_create_static_pool(fixt_launch_workers, fixt_db, fixt_create_stat
     """Create static pool, make request to check data, remove this pool"""
     pool_id = fixt_create_static_pool['id']
     assert fixt_create_static_pool['ok']
+
+    # Ждем окончания подготовки вм, что была включена в пул
+    vm_ids = await Vm.get_vms_ids_in_pool(pool_id)
+    assert len(vm_ids) == 1
+    tasks = await Task.get_tasks_associated_with_entity(vm_ids[0])
+    status = await wait_for_task_result(tasks[0].id, 20)
+    is_vm_successfully_prepared = ((status is not None) and (status == TaskStatus.FINISHED.name))
+    assert is_vm_successfully_prepared
 
     # get pool info
     qu = """{

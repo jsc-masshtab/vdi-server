@@ -27,14 +27,20 @@ class TestWebSockets(AsyncHTTPTestCase):
 
         ws_client = yield tornado.websocket.websocket_connect(ws_url)
 
-        # subscribe
+        # valid subscribe
         ws_client.write_message('add /domains/')
         response = yield ws_client.read_message()
         data = json.loads(response)
         self.assertEqual(data['error'], False)
 
-        # unsubscribe
+        # valid unsubscribe
         ws_client.write_message('delete /domains/')
         response = yield ws_client.read_message()
         data = json.loads(response)
         self.assertEqual(data['error'], False)
+
+        # invalid subscribe
+        # ws_client.write_message('add /wrong_resource/')
+        # response = yield ws_client.read_message()
+        # data = json.loads(response)
+        # self.assertEqual(data['error'], True)

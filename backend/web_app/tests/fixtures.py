@@ -184,7 +184,7 @@ async def fixt_create_static_pool(fixt_controller):
     cluster_id = pool_main_resources['cluster_id']
     node_id = pool_main_resources['node_id']
     datapool_id = pool_main_resources['datapool_id']
-    vm_id = '37df3326-55b9-4af1-91b3-e54df12f24e7'  # random
+    vm_id = uuid.uuid4()  # random
 
     # --- create pool ---
     qu = '''

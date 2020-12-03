@@ -115,7 +115,7 @@ snapshots['test_request_vms 1'] = {
             'controller': {
                 'verbose_name': 'controller_added_during_test'
             },
-            'cpu_count': None,
+            'cpu_count': 1,
             'id': 'e00219af-f99a-4615-bd3c-85646be3e1d5',
             'memory_count': 4096,
             'status': 'ACTIVE',
@@ -130,7 +130,7 @@ snapshots['test_request_vms 2'] = {
             'controller': {
                 'verbose_name': 'controller_added_during_test'
             },
-            'cpu_count': None,
+            'cpu_count': 1,
             'id': 'e00219af-f99a-4615-bd3c-85646be3e1d5',
             'memory_count': 4096,
             'status': 'ACTIVE',

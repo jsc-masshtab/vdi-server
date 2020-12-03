@@ -537,7 +537,11 @@ class CreateStaticPoolMutation(graphene.Mutation, ControllerFetcher):
             await system_logger.debug(desc)
             entity = {'entity_type': EntityType.POOL, 'entity_uuid': None}
             raise SimpleError(error_msg, description=desc, entity=entity)
-        # Активация удаленного доступа к VM на Veil будет выполнена в момент подключения
+
+        # Запустить задачи подготовки машин
+        for vm_data in vms:
+            await request_to_execute_pool_task(vm_data.id, PoolTaskType.VM_PREPARE, full=False)
+
         return {
             'pool': PoolType(pool_id=pool.id, verbose_name=verbose_name, vms=vms),
             'ok': True
@@ -562,7 +566,6 @@ class AddVmsToStaticPoolMutation(graphene.Mutation):
                 entity = {'entity_type': EntityType.POOL, 'entity_uuid': None}
                 raise SimpleError(_('VM {} is already in one of pools.').format(vm_id), entity=entity)
 
-        # remote access
         # TODO: использовать нормальный набор данных с verbose_name и id
         # Add VMs to db
         for vm in vms:
@@ -576,6 +579,9 @@ class AddVmsToStaticPoolMutation(graphene.Mutation):
             await system_logger.info(
                 _('VM {} has been added to the pool {}.').format(vm.verbose_name, pool.verbose_name),
                 user=creator, entity=entity)
+
+            # Запустить задачи подготовки машин
+            await request_to_execute_pool_task(vm.id, PoolTaskType.VM_PREPARE, full=False)
 
         return {'ok': True}
 

@@ -628,6 +628,7 @@ class Pool(VeilModel):
                 break
         if not vm_id:
             vm_id = vm_ids_data[0][0]
+
         return await VmModel.get(vm_id)
 
     async def get_vms_info(self):

@@ -19,6 +19,8 @@ from common.models.task import TaskStatus, Task
 from common.models.authentication_directory import AuthenticationDirectory
 from common.models.vm import Vm
 
+# from common.settings import VEIL_OPERATION_WAITING
+
 
 _ = lang_init()
 
@@ -316,8 +318,11 @@ class DeletePoolTask(AbstractTask):
 class PrepareVmTask(AbstractTask):
     """Задача подготовки ВМ. При удалении ВМ желательно учесть что эта задача может быть в
     процессе выполнения и сначала отменить ее"""
-    def __init__(self):
+    def __init__(self, full_preparation=True):
         super().__init__()
+
+        self._full_preparation = full_preparation  # полная подготовка. Используется для машин динамического пула
+        # В случае неполной подготовки только включвем удаленный доступ (для машин статик пула)
 
     async def do_task(self):
         # print('!!!PrepareVmTask started', flush=True)
@@ -329,16 +334,56 @@ class PrepareVmTask(AbstractTask):
         # preparation (код перенесен из pool/schema.py)
         vm = await Vm.get(self.task_model.entity_id)
         if vm:
-            active_directory_object = None
-            ad_cn_pattern = None
+            if self._full_preparation:
+                await self._do_full_preparation(vm)
+            else:
+                await self._do_light_preparation(vm)
 
-            pool = await Pool.get(vm.pool_id)
+    async def _do_full_preparation(self, vm):
+        """Full preparation"""
+        active_directory_object = None
+        ad_cn_pattern = None
 
-            pool_type = await pool.pool_type
-            if pool_type == Pool.PoolTypes.AUTOMATED:
-                auto_pool = await AutomatedPool.get(pool.id)
-                active_directory_object = await AuthenticationDirectory.query.where(
-                    AuthenticationDirectory.status == Status.ACTIVE).gino.first()
-                ad_cn_pattern = auto_pool.ad_cn_pattern
+        pool = await Pool.get(vm.pool_id)
 
-            await vm.prepare_with_timeout(active_directory_object, ad_cn_pattern)
+        pool_type = await pool.pool_type
+        if pool_type == Pool.PoolTypes.AUTOMATED:
+            auto_pool = await AutomatedPool.get(pool.id)
+            active_directory_object = await AuthenticationDirectory.query.where(
+                AuthenticationDirectory.status == Status.ACTIVE).gino.first()
+            ad_cn_pattern = auto_pool.ad_cn_pattern
+
+        await vm.prepare_with_timeout(active_directory_object, ad_cn_pattern)
+
+    async def _do_light_preparation(self, vm):
+        """Only remote access"""
+        # print('_do_light_preparation ', 'vm.id ', vm.id, flush=True)
+        veil_domain = await vm.vm_client
+
+        await veil_domain.info()
+
+        if not veil_domain.remote_access:
+            # Удаленный доступ выключен, нужно включить и ждать
+            action_response = await veil_domain.enable_remote_access()
+            # print('!!!action_response.success ', action_response.success, flush=True)
+            if not action_response.success:
+                # Вернуть исключение?
+                raise ValueError(_('VeiL domain request error.'))
+            if action_response.status_code == 200:
+                # Задача не встала в очередь, а выполнилась немедленно. Такого не должно быть.
+                raise ValueError(_('Task has`t been created.'))
+            if action_response.status_code == 202:
+                # Была установлена задача. Необходимо дождаться ее выполнения.
+                # TODO: метод ожидания задачи
+                action_task = action_response.task
+                task_completed = False
+                while not task_completed:  # есть ли смысл ждать 20 сек? По идее это выполняется намного быстрее
+                    await asyncio.sleep(5)  # VEIL_OPERATION_WAITING
+                    task_completed = await action_task.finished
+
+                # Если задача выполнена с ошибкой - прерываем выполнение
+                task_success = await action_task.success
+                # print('!!!task_success', task_success, flush=True)
+                if not task_success:
+                    raise ValueError(_('VM remote access task {} finished with error.').format(
+                        action_task.api_object_id))
