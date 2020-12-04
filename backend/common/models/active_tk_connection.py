@@ -30,3 +30,8 @@ class ActiveTkConnection(db.Model, AbstractSortableStatusModel):
                                         vm_id=vm_id,
                                         tk_ip=tk_ip,
                                         tk_os=tk_os)
+
+    @staticmethod
+    async def get_active_thin_clients_count():
+        conn_count = await db.select([db.func.count()]).select_from(ActiveTkConnection).gino.scalar()
+        return conn_count

@@ -51,8 +51,8 @@ class ThinClientQuery(graphene.ObjectType):
 
     @administrator_required
     async def resolve_thin_clients_count(self, _info, **kwargs):
-        users_count = await db.select([db.func.count()]).select_from(ActiveTkConnection).gino.scalar()
-        return users_count
+        conn_count = await ActiveTkConnection.get_active_thin_clients_count()
+        return conn_count
 
     @administrator_required
     async def resolve_thin_clients(self, _info, limit, offset, ordering, **kwargs):
