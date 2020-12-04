@@ -103,11 +103,9 @@ class Controller(AbstractSortableStatusModel, VeilModel):
 
     async def check_controller(self):
         """Проверяем доступность контроллера и меняем его статус."""
-        send_cmd_to_ws_monitor(self.id, WsMonitorCmd.REMOVE_CONTROLLER)
         connection_is_ok = await self.ok
         if connection_is_ok:
             await self.activate()
-            send_cmd_to_ws_monitor(self.id, WsMonitorCmd.ADD_CONTROLLER)
             return True
         if not self.failed:
             await self.deactivate()
@@ -182,7 +180,6 @@ class Controller(AbstractSortableStatusModel, VeilModel):
         1. Собираются параметры для редактирования
         2. Редактируются параметры контроллера
         3. Проверяется доступность
-        Удаление и добавление в монитор ресурсов происходит в check_controller.
         """
         # Параметры, которые нужно записать в контроллер
         controller_kwargs = dict()
@@ -206,6 +203,7 @@ class Controller(AbstractSortableStatusModel, VeilModel):
                 Controller.id == self.id).gino.status()
             updated_controller = await Controller.get(self.id)
         controller_is_ok = await updated_controller.check_controller()
+        send_cmd_to_ws_monitor(self.id, WsMonitorCmd.RESTART_MONITOR)  # на случай смены токены
         if controller_is_ok:
             await updated_controller.activate()
             # Получаем, сохраняем и проверяем допустимость версии

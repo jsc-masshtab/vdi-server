@@ -120,6 +120,8 @@ class ResourcesMonitorManager:
         await resources_monitor.stop()
         resources_monitor.start(controller_id)
 
+        await system_logger.debug('Resource monitor for controller {} restarted'.format(controller_id))
+
     # PRIVATE METHODS
     def _find_monitor_by_controller(self, controller_id):
         try:

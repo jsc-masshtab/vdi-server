@@ -14,6 +14,7 @@ from web_app.front_ws_api.subscription_sources import CONTROLLER_SUBSCRIPTIONS_L
 from common.utils import cancel_async_task
 
 from common.veil.veil_redis import REDIS_CLIENT, WS_MONITOR_CHANNEL_OUT
+from common.veil.veil_gino import Status
 
 from common.languages import lang_init
 from common.log.journal import system_logger
@@ -28,7 +29,8 @@ class ResourcesMonitor:
     """
     monitoring of controller events
     """
-    RECONNECT_TIMEOUT = 8
+    RECONNECT_TIMEOUT = 15
+    CONTROLLER_CHECK_TIMEOUT = 15
 
     def __init__(self):
         super().__init__()
@@ -36,7 +38,7 @@ class ResourcesMonitor:
         self._running_flag = True
         self._controller_id = None
 
-        # self._controller_online_task = None
+        self._controller_online_task = None
         self._resources_monitor_task = None
 
     # PUBLIC METHODS
@@ -47,7 +49,7 @@ class ResourcesMonitor:
 
         native_loop = asyncio.get_event_loop()
         # controller check
-        # self._controller_online_task = native_loop.create_task(self._controller_online_checking())
+        self._controller_online_task = native_loop.create_task(self._controller_online_checking())
         # ws data
         self._resources_monitor_task = native_loop.create_task(self._processing_ws_messages())
 
@@ -57,45 +59,41 @@ class ResourcesMonitor:
         await self._close_connection()
         # cancel tasks
         await cancel_async_task(self._resources_monitor_task)
-        # await cancel_async_task(self._controller_online_task)
+        await cancel_async_task(self._controller_online_task)
 
     def get_controller_id(self):
         return self._controller_id
 
     # PRIVATE METHODS
-    # async def _controller_online_checking(self):
-    #    """
-    #    Проверяет онлайн ли контроллер и пихает сообщение в redis канал
-    #    """
-    #
-    #    # Чтобы не деактивировать контроллер при первоем фейле запроса (мб кратковременный сетевой сбой),
-    #    # ждем max_fail_request последовательных фейлов
-    #    fail_request_count = 0
-    #    max_fail_request = 3
-    #
-    #    while self._running_flag:
-    #
-    #        await asyncio.sleep(3)
-    #        controller = None
-    #        try:
-    #            controller = await Controller.get(self._controller_id)
-    #            connection_is_ok = await controller.ok
-    #        except asyncio.CancelledError:
-    #            raise
-    #        except Exception:  # noqa
-    #            # Если возникло какое-либо исключение, то считаем проверка не пройдена. Вот...
-    #            connection_is_ok = False
-    #
-    #        # update fail counter
-    #        fail_request_count = 0 if connection_is_ok else (fail_request_count + 1)
-    #
-    #        # activate/deactivate
-    #        if controller:
-    #            if connection_is_ok:
-    #                await controller.activate()
-    #            elif fail_request_count >= max_fail_request:
-    #                await controller.deactivate()
-    #                fail_request_count = 0
+    async def _controller_online_checking(self):
+        """
+        Смотрим статус контроллера. Если контроллер деактивирован, то проверяем его доступность.
+        Если все хорошо, то активируем.
+        """
+
+        while self._running_flag:
+
+            await asyncio.sleep(self.CONTROLLER_CHECK_TIMEOUT)
+
+            controller = None
+            connection_is_ok = None
+            try:
+                controller = await Controller.get(self._controller_id)
+                # Если контроллер деактивирован (FAILED), то проверяем его доступность.
+                # Если статус BAD_AUTH, то ничего не делаем. Эту проблему может решить только юзер
+                if controller and controller.status == Status.FAILED:
+                    connection_is_ok = await controller.ok
+            except asyncio.CancelledError:
+                raise
+            except Exception:  # noqa
+                # Если возникло какое-либо исключение, то считаем проверка не пройдена.
+                connection_is_ok = False
+
+            # activate
+            # Если контроллер есть в бд, если проверка состоялась и если проверка показала,
+            # что контроллер доступен, то активируем
+            if controller and connection_is_ok:
+                await controller.activate()
 
     async def _processing_ws_messages(self):
         """
