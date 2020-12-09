@@ -6,6 +6,7 @@ from web_app.front_ws_api.subscription_sources import SubscriptionCmd
 from tornado.websocket import WebSocketClosedError
 from tornado.websocket import WebSocketError
 from tornado.websocket import websocket_connect
+from common.settings import WS_PING_INTERVAL, WS_PING_TIMEOUT
 
 from common.models.controller import Controller
 
@@ -142,7 +143,9 @@ class ResourcesMonitor:
         try:
             connect_url = 'ws://{}/ws/?token={}'.format(controller.address, token)
             # await system_logger.debug('ws connection url is {}'.format(connect_url))
-            self._ws_connection = await websocket_connect(connect_url)
+            self._ws_connection = await websocket_connect(url=connect_url,
+                                                          ping_interval=WS_PING_INTERVAL,
+                                                          ping_timeout=WS_PING_TIMEOUT)
         except (ConnectionRefusedError, WebSocketError):
 
             msg = _('Resource monitor error.')

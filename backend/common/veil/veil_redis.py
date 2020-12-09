@@ -33,7 +33,6 @@ class PoolWorkerCmd(Enum):
     RESUME_TASK = 'RESUME_TASK'
 
 
-# Ws monitor related
 WS_MONITOR_CHANNEL_OUT = 'WS_MONITOR_CHANNEL_OUT'  # по этому каналу сообщения полученные по ws от контроллеров
 WS_MONITOR_CMD_QUEUE = 'WS_MONITOR_CMD_QUEUE'  # Очередь для команд, которые принимаются монитором ws. Переходим на
 # очередь, чтобы гарантировать порядок команд
@@ -44,6 +43,10 @@ class WsMonitorCmd(Enum):
     ADD_CONTROLLER = 'ADD_CONTROLLER'
     REMOVE_CONTROLLER = 'REMOVE_CONTROLLER'
     RESTART_MONITOR = 'RESTART_MONITOR'
+
+
+class ThinClientCmd(Enum):
+    DISCONNECT = 'DISCONNECT'
 
 
 #
