@@ -34,8 +34,8 @@ class TestTk(VdiHttpTestCase):
 
     @pytest.mark.usefixtures('fixt_db', 'fixt_user_admin')
     @gen_test
-    async def test_ws_connect_and_update_ok(self):
-        """Check ws subscription mechanism"""
+    async def test_ws_connect_update_disconnect_ok(self):
+        """Check ws communication"""
         # login
         (user_name, access_token) = await self.do_login()
 
@@ -43,53 +43,70 @@ class TestTk(VdiHttpTestCase):
         ws_url = "ws://localhost:" + str(self.get_http_port()) + "/ws/client/vdi_server_check"
         ws_client = await tornado.websocket.websocket_connect(ws_url)
 
-        # auth
-        auth_data_dict = {"msg_type": "AUTH", "token": access_token, "veil_connect_version": "1.3.4",
-                          "vm_name": None, "tk_os": 'Linux', 'vm_id': None}
-        ws_client.write_message(json.dumps(auth_data_dict))
+        try:
+            # auth
+            auth_data_dict = {"msg_type": "AUTH", "token": access_token, "veil_connect_version": "1.3.4",
+                              "vm_name": None, "tk_os": 'Linux', 'vm_id': None}
+            ws_client.write_message(json.dumps(auth_data_dict))
 
-        # check success
-        response = await ws_client.read_message()
-        self.assertEqual(response, 'Auth success')
+            # check success
+            response = await ws_client.read_message()
+            res_data_dict = json.loads(response)
+            self.assertEqual(res_data_dict['msg'], 'Auth success')
 
-        # update
-        vm_id = "201d318f-d57e-4f1b-9097-93d69f8782dd"
-        update_data_dict = {"msg_type": "UPDATED", "vm_id": vm_id}
-        ws_client.write_message(json.dumps(update_data_dict))
-        await asyncio.sleep(0.2)  # Подождем так как на update ответов не присылается
+            # update
+            vm_id = "201d318f-d57e-4f1b-9097-93d69f8782dd"
+            update_data_dict = {"msg_type": "UPDATED", "vm_id": vm_id}
+            ws_client.write_message(json.dumps(update_data_dict))
+            await asyncio.sleep(0.2)  # Подождем так как на update ответов не присылается
 
-        user_id = await User.get_id(user_name)
-        real_vm_id = await ActiveTkConnection.select('vm_id').where(ActiveTkConnection.user_id == user_id).\
-            gino.scalar()
-        self.assertEqual(vm_id, str(real_vm_id))
+            user_id = await User.get_id(user_name)
+            real_vm_id = await ActiveTkConnection.select('vm_id').where(ActiveTkConnection.user_id == user_id).\
+                gino.scalar()
+            self.assertEqual(vm_id, str(real_vm_id))
 
-        # test current data
-        qu = """{
-                thin_clients_count
-            }"""
-        auth_context = await get_auth_context()
-        executed = await execute_scheme(thin_client_schema, qu, context=auth_context)
-        assert executed['thin_clients_count'] == 1
-        #
-        qu = """{
-                    thin_clients(offset:0, limit: 100, ordering: "user_name"){
-                      user_name
-                      veil_connect_version
-                      vm_name
-                      tk_ip
-                      tk_os
-                      connected
-                      data_received
-                  }
-              }"""
-        auth_context = await get_auth_context()
-        executed = await execute_scheme(thin_client_schema, qu, context=auth_context)
-        assert len(executed['thin_clients']) == 1
-        assert executed['thin_clients'][0]['user_name'] == user_name
+            # test current data
+            qu = """{
+                    thin_clients_count
+                }"""
+            auth_context = await get_auth_context()
+            executed = await execute_scheme(thin_client_schema, qu, context=auth_context)
+            assert executed['thin_clients_count'] == 1
+            #
+            qu = """{
+                        thin_clients(offset:0, limit: 100, ordering: "user_name"){
+                          conn_id
+                          user_name
+                          veil_connect_version
+                          vm_name
+                          tk_ip
+                          tk_os
+                          connected
+                          data_received
+                      }
+                  }"""
+            auth_context = await get_auth_context()
+            executed = await execute_scheme(thin_client_schema, qu, context=auth_context)
+            assert len(executed['thin_clients']) == 1
+            assert executed['thin_clients'][0]['user_name'] == user_name
 
-        # disconnect
-        ws_client.close()
-        await asyncio.sleep(0.1)
+            # disconnect request
+            conn_id = executed['thin_clients'][0]['conn_id']
+            qu = """
+                mutation{
+                    disconnectThinClient(conn_id: "%s"){
+                        ok
+                    }
+                }""" % conn_id
+            executed = await execute_scheme(thin_client_schema, qu, context=auth_context)
+            assert executed['disconnectThinClient']['ok']
+
+        except Exception:
+            raise
+        finally:
+            # disconnect
+            ws_client.close()
+            await asyncio.sleep(0.1)
 
     @pytest.mark.usefixtures('fixt_db', 'fixt_user_admin', 'fixt_create_static_pool')
     @gen_test

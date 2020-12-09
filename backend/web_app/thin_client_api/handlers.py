@@ -9,8 +9,9 @@ from json.decoder import JSONDecodeError
 from tornado import websocket
 from aiohttp import client_exceptions
 import asyncio
-from common.settings import REDIS_PORT, REDIS_THIN_CLIENT_CHANNEL, REDIS_PASSWORD, REDIS_DB
-from common.veil.veil_redis import request_to_execute_pool_task
+from common.settings import REDIS_PORT, REDIS_THIN_CLIENT_CHANNEL, REDIS_PASSWORD, REDIS_DB,\
+    REDIS_THIN_CLIENT_CMD_CHANNEL
+from common.veil.veil_redis import request_to_execute_pool_task, ThinClientCmd
 from common.veil.veil_handlers import BaseHandler
 from common.veil.veil_errors import ValidationError
 from common.veil.auth.veil_jwt import jwtauth, decode_jwt
@@ -29,7 +30,10 @@ from veil_api_client import DomainTcpUsb
 from common.log.journal import system_logger
 from common.languages import lang_init
 
+
 from common.settings import JWT_OPTIONS
+
+from common.veil.veil_redis import WS_MONITOR_CHANNEL_OUT, REDIS_CLIENT, a_redis_get_message
 
 
 _ = lang_init()
@@ -289,12 +293,6 @@ class DetachUsb(BaseHandler, ABC):
         return await self.log_finish(response)
 
 
-# self.write_message(u"You said: " + message)
-# vdi-tornado           | !!!message:  {"msg_type": "AUTH", "token": "eyJ",
-# "veil_connect_version": "1.3.4", "vm_name": null, "tk_os": unknown}
-# vdi-tornado           | !!!message:  {"msg_type": "UPDATED", "vm_name": "solominpool-1"}
-# vdi-tornado           | !!!message:  {"msg_type": "UPDATED", "vm_name": null}
-
 class ThinClientWsHandler(websocket.WebSocketHandler):  # noqa
     # TODO: 1 модуль для вебсокетов
     # сделать модуль ws_api, где бы все связанное с вебсокетами хранилось
@@ -307,15 +305,18 @@ class ThinClientWsHandler(websocket.WebSocketHandler):  # noqa
     def __init__(self, application: Application, request: httputil.HTTPServerRequest, **kwargs: Any):
         websocket.WebSocketHandler.__init__(self, application, request, **kwargs)
 
-        self.user_id = None
-        self.is_verified = False
+        self.conn_id = None
+        self._send_messages_task = None
+        self._listen_for_cmd_task = None
 
     def check_origin(self, origin):
         return origin == 'veil_connect_trusted_origin'
 
     async def open(self):
         # print('on open ', self.request.remote_ip, flush=True)
-        pass
+        loop = asyncio.get_event_loop()
+        self._send_messages_task = loop.create_task(self._send_messages_co())
+        self._listen_for_cmd_task = loop.create_task(self._listen_for_cmd())
 
     async def on_message(self, message):
         # print('!!!message: ', message, flush=True)
@@ -325,7 +326,8 @@ class ThinClientWsHandler(websocket.WebSocketHandler):  # noqa
             recv_data_dict = json.loads(message)
             msg_type = recv_data_dict['msg_type']
         except (KeyError, JSONDecodeError) as ex:
-            await self.write_message('Wrong msg format ' + str(ex))
+            response = {'msg_type': 'control', 'error': True, 'msg': 'Wrong msg format ' + str(ex)}
+            await self.write_message(json.dumps(response))
             return
 
         # Сообщение AUTH. собщение авторизации со стартовой инфой с ТК
@@ -343,48 +345,122 @@ class ThinClientWsHandler(websocket.WebSocketHandler):  # noqa
                 user_name = payload['username']
 
                 # Фиксируем  данные известные на стороне сервера
-                self.user_id = await User.get_id(user_name)
+                user_id = await User.get_id(user_name)
 
                 # Сохраняем юзера с инфой
-                await ActiveTkConnection.soft_create(user_id=self.user_id,
-                                                     veil_connect_version=recv_data_dict['veil_connect_version'],
-                                                     vm_id=recv_data_dict['vm_id'],
-                                                     tk_ip=self.request.remote_ip,
-                                                     tk_os=recv_data_dict['tk_os'])
+                self.conn_id = await ActiveTkConnection.soft_create(
+                    conn_id=self.conn_id, user_id=user_id,
+                    veil_connect_version=recv_data_dict['veil_connect_version'],
+                    vm_id=recv_data_dict['vm_id'],
+                    tk_ip=self.request.remote_ip,
+                    tk_os=recv_data_dict['tk_os'])
 
-                self.is_verified = True
-                await self.write_message('Auth success')
+                response = {'msg_type': 'control', 'error': False, 'msg': 'Auth success'}
+                await self._write_msg(json.dumps(response))
 
             except (KeyError, TypeError, JSONDecodeError, AssertionError) as ex:
-                await self.write_message(str(ex))
+                response = {'msg_type': 'control', 'error': True, 'msg': str(ex)}
+                await self._write_msg(json.dumps(response))
                 self.close()
 
         # Сообщения UPDATED
         elif msg_type == 'UPDATED':
-            if not self.is_verified:
-                await self.write_message('Auth required')
-                self.close()
+            await self._close_if_not_verified()
 
             try:
-                await ActiveTkConnection.update.values(vm_id=recv_data_dict['vm_id'], data_received=func.now()).where(
-                    ActiveTkConnection.user_id == self.user_id).gino.status()
+                event_type = recv_data_dict['event']
+
+                if event_type == 'vm_changed':  # юзер подключился/отключился от машины
+                    await ActiveTkConnection.update.values(vm_id=recv_data_dict['vm_id'], data_received=func.now()).\
+                        where(ActiveTkConnection.id == self.conn_id).gino.status()
+                elif event_type == 'user_gui':  # юзер нажал кнопку/кликнул
+                    await ActiveTkConnection.update.values(data_received=func.now(), last_interaction=func.now()). \
+                        where(ActiveTkConnection.id == self.conn_id).gino.status()
             except KeyError:
                 pass
 
     def on_close(self):
         # print("!!!WebSocket closed", flush=True)
+        # stop tasks
+        self._send_messages_task.cancel()
+        self._listen_for_cmd_task.cancel()
+
         # Удаляем юзера из списка подключенных
         loop = asyncio.get_event_loop()
-        delete_cor = ActiveTkConnection.delete.where(ActiveTkConnection.user_id == self.user_id).gino.status()
+        delete_cor = ActiveTkConnection.delete.where(ActiveTkConnection.id == self.conn_id).gino.status()
         loop.create_task(delete_cor)
 
     async def on_pong(self, data: bytes) -> None:
         # print("WebSocket on_pong", flush=True)
 
-        if not self.is_verified:
-            await self.write_message('Auth required')
-            self.close()
+        await self._close_if_not_verified()
 
         # Обновляем дату последнего сообщения от ТК
         await ActiveTkConnection.update.values(data_received=func.now()).where(
-            ActiveTkConnection.user_id == self.user_id).gino.status()
+            ActiveTkConnection.id == self.conn_id).gino.status()
+
+    async def _close_if_not_verified(self):
+        if self.conn_id is None:
+            response = {'msg_type': 'control', 'error': False, 'msg': 'Auth required'}
+            await self._write_msg(json.dumps(response))
+            self.close()
+
+    async def _send_messages_co(self):
+        """Пересылвем сообщения об аптейте ВМ"""
+
+        redis_subscriber = REDIS_CLIENT.pubsub()
+        redis_subscriber.subscribe(WS_MONITOR_CHANNEL_OUT)
+
+        while True:
+            try:
+                redis_message = await a_redis_get_message(redis_subscriber)
+
+                if redis_message['type'] == 'message':
+                    redis_message_data = redis_message['data'].decode()
+                    redis_message_data_dict = json.loads(redis_message_data)
+
+                    if redis_message_data_dict['resource'] == '/domains/':
+
+                        vm_id = await ActiveTkConnection.get_vm_id(self.conn_id)
+                        if redis_message_data_dict['id'] == str(vm_id):
+                            await self._write_msg(redis_message_data)
+
+            except asyncio.CancelledError:
+                break
+            except Exception as ex:
+                await system_logger.debug(str(ex))
+
+    async def _listen_for_cmd(self):
+        """Команды от админа"""
+        redis_subscriber = REDIS_CLIENT.pubsub()
+        redis_subscriber.subscribe(REDIS_THIN_CLIENT_CMD_CHANNEL)
+
+        while True:
+            try:
+                redis_message = await a_redis_get_message(redis_subscriber)
+
+                if redis_message['type'] == 'message':
+                    redis_message_data = redis_message['data'].decode()
+                    redis_message_data_dict = json.loads(redis_message_data)
+
+                    if redis_message_data_dict['command'] == ThinClientCmd.DISCONNECT.name:
+                        conn_id = redis_message_data_dict['conn_id']
+
+                        # От админа приходит команда с id соединения, которое надо закрыть
+                        if self.conn_id and conn_id == str(self.conn_id):
+                            # Отсылаем клиенту команду. По ней он отключится от машины
+                            response = {'msg_type': 'control', 'cmd': ThinClientCmd.DISCONNECT.name,
+                                        'error': False, 'msg': 'Disconnect requested'}
+                            await self._write_msg(json.dumps(response))
+                            self.close()
+
+            except asyncio.CancelledError:
+                break
+            except Exception as ex:
+                await system_logger.debug(str(ex))
+
+    async def _write_msg(self, msg):
+        try:
+            await self.write_message(msg)
+        except websocket.WebSocketError:
+            await system_logger.debug(_('Write error.'))
