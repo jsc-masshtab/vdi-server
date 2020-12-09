@@ -56,9 +56,9 @@ class TestTk(VdiHttpTestCase):
 
             # update
             vm_id = "201d318f-d57e-4f1b-9097-93d69f8782dd"
-            update_data_dict = {"msg_type": "UPDATED", "vm_id": vm_id}
+            update_data_dict = {"msg_type": "UPDATED", "vm_id": vm_id, "event": "vm_changed"}
             ws_client.write_message(json.dumps(update_data_dict))
-            await asyncio.sleep(0.2)  # Подождем так как на update ответов не присылается
+            await asyncio.sleep(1)  # Подождем так как на update ответов не присылается
 
             user_id = await User.get_id(user_name)
             real_vm_id = await ActiveTkConnection.select('vm_id').where(ActiveTkConnection.user_id == user_id).\
