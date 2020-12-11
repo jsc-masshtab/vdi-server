@@ -65,16 +65,16 @@ class TestTk(VdiHttpTestCase):
                 gino.scalar()
             self.assertEqual(vm_id, str(real_vm_id))
 
-            # test current data
+            # test current connection data
             qu = """{
                     thin_clients_count
                 }"""
             auth_context = await get_auth_context()
             executed = await execute_scheme(thin_client_schema, qu, context=auth_context)
             assert executed['thin_clients_count'] == 1
-            #
+            # Получаем последнее подключение для юзера user_id
             qu = """{
-                        thin_clients(offset:0, limit: 100, ordering: "user_name"){
+                        thin_clients(offset:0, limit: 1, ordering: "connected", user_id: "%s"){
                           conn_id
                           user_name
                           veil_connect_version
@@ -84,14 +84,15 @@ class TestTk(VdiHttpTestCase):
                           connected
                           data_received
                       }
-                  }"""
+                  }""" % user_id
             auth_context = await get_auth_context()
             executed = await execute_scheme(thin_client_schema, qu, context=auth_context)
             assert len(executed['thin_clients']) == 1
             assert executed['thin_clients'][0]['user_name'] == user_name
 
-            # disconnect request
             conn_id = executed['thin_clients'][0]['conn_id']
+
+            # disconnect request
             qu = """
                 mutation{
                     disconnectThinClient(conn_id: "%s"){
@@ -100,6 +101,20 @@ class TestTk(VdiHttpTestCase):
                 }""" % conn_id
             executed = await execute_scheme(thin_client_schema, qu, context=auth_context)
             assert executed['disconnectThinClient']['ok']
+
+            # check tk statistics
+            qu = """{
+                         thin_clients_statistics(limit:100, conn_id: "%s"){
+                           id
+                           conn_id
+                           message
+                           created
+                         }
+                    }""" % conn_id
+            executed = await execute_scheme(thin_client_schema, qu, context=auth_context)
+            # Первое событие должно быть Login, второе - подключение к ВМ
+            assert executed['thin_clients_statistics'][0]['message'] == 'Login'
+            assert executed['thin_clients_statistics'][1]['message'] == 'Connected to VM '
 
         except Exception:
             raise

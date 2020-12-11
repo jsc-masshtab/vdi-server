@@ -1142,8 +1142,8 @@ msgid "{} is connected: {}."
 msgstr "{} is connected: {}."
 
 #: ../ws_listener_worker/resources_monitor.py:150
-msgid "Resource monitor error."
-msgstr "Critical controller error."
+msgid "Resource monitor can`t connect to controller."
+msgstr "Resource monitor can`t connect to controller."
 
 #: ../ws_listener_worker/resources_monitor.py:151
 msgid "Can`t connect to {}."

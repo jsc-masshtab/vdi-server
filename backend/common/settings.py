@@ -47,8 +47,8 @@ JWT_ALGORITHM = 'HS256'
 
 # Websocket settings
 # -----------------------------
-WS_PING_INTERVAL = 60
-WS_PING_TIMEOUT = 150
+WS_PING_INTERVAL = 10
+WS_PING_TIMEOUT = 25
 
 # ECP Veil settings
 # -----------------------------
