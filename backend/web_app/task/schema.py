@@ -7,33 +7,20 @@ from graphene import Enum as GrapheneEnum
 
 from sqlalchemy import and_
 
-from common.models.task import Task
-
 from common.veil.veil_errors import SimpleError
 from common.veil.veil_decorators import administrator_required
 from common.veil.veil_redis import send_cmd_to_cancel_tasks, send_cmd_to_cancel_tasks_associated_with_controller
 from common.veil.veil_gino import EntityType
+from common.utils import convert_gino_model_to_graphene_type
 
-from common.models.task import TaskStatus
+from common.models.task import Task, TaskStatus, PoolTaskType
 
 from common.languages import lang_init
-from common.models.task import PoolTaskType
 
 
 _ = lang_init()
 TaskStatusGraphene = GrapheneEnum.from_enum(TaskStatus)
 TaskTypeGraphene = GrapheneEnum.from_enum(PoolTaskType)
-
-
-def convert_task_model_to_graphene_type(task_model):
-    """Create TaskType and fill it with corresponding attributes of task db model"""
-    data_dict = dict()
-    for task_model_atr_key in task_model.__dict__['__values__']:
-        if task_model_atr_key in TaskType.__dict__.keys():
-            val = getattr(task_model, task_model_atr_key)
-            data_dict[task_model_atr_key] = val
-
-    return TaskType(**data_dict)
 
 
 class TaskType(graphene.ObjectType):
@@ -81,7 +68,7 @@ class TaskQuery(graphene.ObjectType):
         task_models = await query.limit(limit).offset(offset).gino.all()
         # conversion
         task_graphene_types = [
-            convert_task_model_to_graphene_type(task_model)
+            convert_gino_model_to_graphene_type(task_model, TaskType)
             for task_model in task_models
         ]
         return task_graphene_types
@@ -93,7 +80,7 @@ class TaskQuery(graphene.ObjectType):
         if not task_model:
             entity = {'entity_type': EntityType.SYSTEM, 'entity_uuid': None}
             raise SimpleError(_('No such task.'), entity=entity)
-        return convert_task_model_to_graphene_type(task_model)
+        return convert_gino_model_to_graphene_type(task_model, TaskType)
 
 
 class CancelTaskMutation(graphene.Mutation):

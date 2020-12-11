@@ -371,24 +371,25 @@ class ThinClientWsHandler(websocket.WebSocketHandler):  # noqa
                 event_type = recv_data_dict['event']
 
                 if event_type == 'vm_changed':  # юзер подключился/отключился от машины
-                    await ActiveTkConnection.update.values(vm_id=recv_data_dict['vm_id'], data_received=func.now()).\
-                        where(ActiveTkConnection.id == self.conn_id).gino.status()
+                    await ActiveTkConnection.update_vm_id(self.conn_id, recv_data_dict['vm_id'])
                 elif event_type == 'user_gui':  # юзер нажал кнопку/кликнул
-                    await ActiveTkConnection.update.values(data_received=func.now(), last_interaction=func.now()). \
-                        where(ActiveTkConnection.id == self.conn_id).gino.status()
+                    await ActiveTkConnection.update_last_interaction(self.conn_id)
             except KeyError:
                 pass
 
     def on_close(self):
         # print("!!!WebSocket closed", flush=True)
+        loop = asyncio.get_event_loop()
+        loop.create_task(self.on_async_close())
+
         # stop tasks
         self._send_messages_task.cancel()
         self._listen_for_cmd_task.cancel()
 
-        # Удаляем юзера из списка подключенных
-        loop = asyncio.get_event_loop()
-        delete_cor = ActiveTkConnection.delete.where(ActiveTkConnection.id == self.conn_id).gino.status()
-        loop.create_task(delete_cor)
+    async def on_async_close(self):
+        tk_conn = await ActiveTkConnection.get(self.conn_id)
+        if tk_conn:
+            await tk_conn.deactivate()
 
     async def on_pong(self, data: bytes) -> None:
         # print("WebSocket on_pong", flush=True)

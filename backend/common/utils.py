@@ -85,12 +85,12 @@ def gino_model_to_json_serializable_dict(model):
     return json_serializable_dict
 
 
-# def convert_gino_model_to_graphene_type(task_model, gr_type):
-#    """Create TaskType and fill it with corresponding attributes of task db model"""
-#    data_dict = dict()
-#    for task_model_atr_key in task_model.__dict__['__values__']:
-#        if task_model_atr_key in gr_type.__dict__.keys():
-#            val = getattr(task_model, task_model_atr_key)
-#            data_dict[task_model_atr_key] = val
-#
-#    return gr_type(**data_dict)
+def convert_gino_model_to_graphene_type(model, graphene_custom_type):
+    """Тот редкий случай, когда модель и граф ql тип совпадают"""
+    data_dict = dict()
+    for model_atr_key in model.__dict__['__values__']:
+        if model_atr_key in graphene_custom_type.__dict__.keys():
+            val = getattr(model, model_atr_key)
+            data_dict[model_atr_key] = val
+
+    return graphene_custom_type(**data_dict)

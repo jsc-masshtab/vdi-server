@@ -4,7 +4,7 @@ import asyncio
 from web_app.front_ws_api.subscription_sources import SubscriptionCmd
 
 from tornado.websocket import WebSocketClosedError
-from tornado.websocket import WebSocketError
+# from tornado.websocket import WebSocketError
 from tornado.websocket import websocket_connect
 from common.settings import WS_PING_INTERVAL, WS_PING_TIMEOUT
 
@@ -146,9 +146,9 @@ class ResourcesMonitor:
             self._ws_connection = await websocket_connect(url=connect_url,
                                                           ping_interval=WS_PING_INTERVAL,
                                                           ping_timeout=WS_PING_TIMEOUT)
-        except (ConnectionRefusedError, WebSocketError):
-
-            msg = _('Resource monitor error.')
+        except Exception:  # noqa
+            # Причин для исключения может быть множество включая OS specific
+            msg = _('Resource monitor can`t connect to controller.')
             description = _('Can`t connect to {}.').format(controller.address)
             await system_logger.error(message=msg, description=description)
             return False
