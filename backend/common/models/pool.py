@@ -653,7 +653,7 @@ class Pool(VeilModel):
         vms_list = list()
         for ids_str_section in ids_str_list:
             # Запрашиваем на ECP VeiL данные
-            fields = ['id', 'user_power_state', 'parent', 'status']
+            fields = ['id', 'user_power_state', 'parent', 'status', 'guest_utils']
             controller_client = pool_controller.veil_client
             if not controller_client:
                 break
@@ -671,6 +671,8 @@ class Pool(VeilModel):
             vms_dict[vm_info['id']] = vm_info
 
         vms_info = list()
+        guest_utils = None
+        qemu_state = None
         for vm in vms:
             # TODO: Добавить принадлежность к домену + на фронте
             user_power_state = VmState.UNDEFINED
@@ -681,6 +683,8 @@ class Pool(VeilModel):
                     user_power_state = vms_dict[vm_id]['user_power_state']
                     parent_name = vms_dict[vm_id]['parent_name']
                     vm_status = Status(vms_dict[vm_id]['status'])
+                    guest_utils = vms_dict[vm_id].get('guest_utils')
+                    qemu_state = guest_utils.get('qemu_state', False) if guest_utils else False
 
             # update status
             if vm.status != Status.SERVICE:
@@ -690,6 +694,7 @@ class Pool(VeilModel):
             vms_info.append(
                 VmType(user_power_state=user_power_state,
                        parent_name=parent_name,
+                       qemu_state=3 if qemu_state else 1,
                        **vm.__values__))
         return vms_info
 
