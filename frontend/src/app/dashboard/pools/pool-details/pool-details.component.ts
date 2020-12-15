@@ -232,6 +232,11 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
     {
       title: 'Статус',
       property: 'status'
+    },
+    {
+      title: 'Гостевой агент',
+      property: 'qemu_state',
+      type: 'string'
     }
   ];
 
@@ -259,6 +264,11 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
     {
       title: 'Статус',
       property: 'status'
+    },
+    {
+      title: 'Гостевой агент',
+      property: 'qemu_state',
+      type: 'string'
     }
   ];
 

@@ -126,26 +126,6 @@ class Vm(VeilModel):
                 domain_entity = await self.vm_client
                 if not domain_entity:
                     raise AssertionError(_('VM has no api client.'))
-                # Операция вывода на VeiL деактивирует ВМ, а не удаляет. Отключили на VDI 18112020
-                # await self.qemu_guest_agent_waiting()
-                # await domain_entity.info()
-                # Если машина уже заведена в АД - пытаемся ее вывести
-                # active_directory_object = await AuthenticationDirectory.query.where(
-                #     AuthenticationDirectory.status == Status.ACTIVE).gino.first()
-                # already_in_domain = await domain_entity.in_ad if domain_entity.os_windows else False
-                # if domain_entity.os_windows and already_in_domain:
-                #     await system_logger.info(_('Removing {} from domain.').format(self.verbose_name),
-                #                              entity=self.entity)
-                #     action_response = await domain_entity.rm_from_ad(login=active_directory_object.service_username,
-                #                                                      password=active_directory_object.password,
-                #                                                      restart=False)
-                #     action_task = action_response.task
-                #     task_completed = False
-                #     while not task_completed:
-                #         await asyncio.sleep(VEIL_OPERATION_WAITING)
-                #         task_completed = await action_task.finished
-                # Отправляем задачу удаления ВМ на ECP.
-                # await self.qemu_guest_agent_waiting()
                 delete_response = await domain_entity.remove(full=True)
                 delete_task = delete_response.task
                 task_completed = False
@@ -455,7 +435,7 @@ class Vm(VeilModel):
     async def qemu_guest_agent_waiting(self):
         """Ожидает активации гостевого агента."""
         domain_entity = await self.get_veil_entity()
-        while not domain_entity.guest_agent.qemu_state:
+        while not domain_entity.qemu_state:
             await asyncio.sleep(VEIL_OPERATION_WAITING)
             await domain_entity.info()
         # Added 16112020
@@ -490,6 +470,8 @@ class Vm(VeilModel):
 
     async def include_in_ad_group(self, active_directory_obj: AuthenticationDirectory, ad_cn_pattern: str):
         """Domain group including via LDAP."""
+        if not active_directory_obj:
+            return False
         # Проверим, есть ли данные для подключения к AD
         if not active_directory_obj.service_username or not active_directory_obj.service_password:
             await system_logger.warning(
@@ -529,6 +511,8 @@ class Vm(VeilModel):
 
         Т.к. гостевой агент некорректно показывает hostname ВМ, то одновременное назначение и заведение не отработает.
         """
+        if not active_directory_obj:
+            return False
         # Прежде чем заводить в домен мы должны дождаться активации гостевого агента
         await self.qemu_guest_agent_waiting()
         # Если дождались - можно заводить

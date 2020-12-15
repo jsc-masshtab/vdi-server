@@ -62,8 +62,10 @@ class VmType(VeilResourceType):
     user = graphene.Field(UserType)
     status = StatusGraphene()
     # controller = graphene.Field(ControllerType)
-    user_power_state = VmState()
-    parent_name = graphene.String()
+    user_power_state = VmState(description='Питание')
+    parent_name = graphene.String(description='Родительская ВМ')
+    # qemu_state = graphene.Boolean(description='Состояние гостевого агента')
+    qemu_state = VmState(description='Состояние гостевого агента')
 
     # Список событий для отдельной ВМ и отдельное событие внутри пула
     count = graphene.Int()

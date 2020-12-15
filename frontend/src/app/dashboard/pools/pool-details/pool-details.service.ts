@@ -42,6 +42,7 @@ export class PoolDetailsService {
                                             username
                                         }
                                         user_power_state
+                                        qemu_state
                                         status
                                         parent_name
                                     }
@@ -106,6 +107,7 @@ export class PoolDetailsService {
                                             username
                                         }
                                         user_power_state
+                                        qemu_state
                                         status
                                         parent_name
                                     }
