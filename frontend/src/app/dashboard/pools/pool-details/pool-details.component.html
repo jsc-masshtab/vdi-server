@@ -85,8 +85,8 @@
             <li (click)="routeTo('vms')" [class.active]="menuActive === 'vms'" title="Виртуальные машины в пуле"> <fa-icon [icon]="['fas','desktop']"></fa-icon><span class="name">Виртуальные машины</span></li>
             <!-- <li (click)="routeTo('event-vm')" *ngIf="typePool === 'automated'" [class.active]="menuActive === 'event-vm'" title="События создания ВМ в пуле"> <fa-icon [icon]="['fas','comment']"></fa-icon><span class="name">События создания ВМ</span></li> -->
             <li (click)="routeTo('users')" [class.active]="menuActive === 'users'" title="Пользователи пула"> <fa-icon [icon]="['fas','users']"></fa-icon><span class="name">Пользователи</span></li>
-            <li (click)="routeTo('groups')" [class.active]="menuActive === 'groups'" title="Пользователи пула"> <fa-icon [icon]="['fas','users-cog']"></fa-icon><span class="name">Группы</span></li>
-            <li (click)="routeTo('roles')" [class.active]="menuActive === 'roles'" title="Пользователи пула"> <fa-icon [icon]="['fas','users-cog']"></fa-icon><span class="name">Роли</span></li>
+            <li (click)="routeTo('groups')" [class.active]="menuActive === 'groups'" title="Группы пула"> <fa-icon [icon]="['fas','users-cog']"></fa-icon><span class="name">Группы</span></li>
+            <li (click)="routeTo('roles')" [class.active]="menuActive === 'roles'" title="Роли пула"> <fa-icon [icon]="['fas','users-cog']"></fa-icon><span class="name">Роли</span></li>
         </ul>
 
         <div class="details-slide" *ngIf="host">
