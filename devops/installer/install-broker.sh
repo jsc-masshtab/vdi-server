@@ -2,7 +2,7 @@
 
 rm -f /tmp/vdi-install-vars
 
-echo "Welcome to VDI server installer!"
+echo "Welcome to VeiL Broker installer!"
 
 echo "Select archiving type:"
 echo "

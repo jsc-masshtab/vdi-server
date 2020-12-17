@@ -1,0 +1,7 @@
+---
+
+- name: Configure zero_if_notfound (astra smolensk)
+  lineinfile:
+    path: /etc/parsec/mswitch.conf
+    regexp: '^zero_if_notfound'
+    line: "zero_if_notfound: yes"
