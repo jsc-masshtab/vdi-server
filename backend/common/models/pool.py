@@ -410,18 +410,35 @@ class Pool(VeilModel):
                     user=creator,
                     entity=self.entity)
         except UniqueViolationError:
-            raise SimpleError(_('{} already has permission.').format(type(self).__name__), user=creator, entity=self.entity)
+            raise SimpleError(_('{} already has permission.').format(type(self).__name__), user=creator,
+                              entity=self.entity)
         return ero
 
     async def remove_users(self, creator: str, users_list: list):
+        # updated 17.12.2020
+        entity = EntityModel.select('id').where(
+            (EntityModel.entity_type == self.entity_type) & (EntityModel.entity_uuid == self.id))
+
         for user_id in users_list:
+            has_permission = await EntityRoleOwnerModel.query.where(
+                (EntityRoleOwnerModel.user_id == user_id) & (EntityRoleOwnerModel.entity_id == entity)).gino.first()
             user = await UserModel.get(user_id)
-            await system_logger.info(_('Removing user {} from pool {}.').format(user.username, self.verbose_name),
-                                     user=creator,
-                                     entity=self.entity)
-        entity = EntityModel.select('id').where((EntityModel.entity_type == self.entity_type) & (EntityModel.entity_uuid == self.id))
-        return await EntityRoleOwnerModel.delete.where(
+            if has_permission:
+                await system_logger.info(_('Removing user {} from pool {}.').format(user.username, self.verbose_name),
+                                         user=creator,
+                                         entity=self.entity)
+            else:
+                await system_logger.warning(
+                    _('User {} has no direct right to pool {}.').format(user.username, self.verbose_name),
+                    user=creator,
+                    entity=self.entity)
+
+        # entity = EntityModel.select('id').where((EntityModel.entity_type == self.entity_type)
+        # & (EntityModel.entity_uuid == self.id))
+
+        operation_status = await EntityRoleOwnerModel.delete.where(
             (EntityRoleOwnerModel.user_id.in_(users_list)) & (EntityRoleOwnerModel.entity_id == entity)).gino.status()
+        return operation_status
 
     async def add_group(self, group_id, creator):
         entity = await self.entity_obj
