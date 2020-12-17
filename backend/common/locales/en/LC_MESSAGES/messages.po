@@ -966,8 +966,8 @@ msgid "Pool name must contain only characters, digits, _, -."
 msgstr "Pool name must contain only characters, digits, _, -."
 
 #: ../web_app/pool/schema.py:142
-msgid "Template name of VM must contain only characters, digits, -."
-msgstr "Template name of VM must contain only characters, digits, -."
+msgid "Template name of VM must contain only characters, digits, -. Template name length must be in [{} {}] interval."
+msgstr "Template name of VM must contain only characters, digits, -. Template name length must be in [{} {}] interval."
 
 #: ../web_app/pool/schema.py:150
 msgid "Initial number of VM must be in {}-{} interval."

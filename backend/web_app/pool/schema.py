@@ -137,11 +137,14 @@ class PoolValidator(MutationValidation):
         if not value:
             return
 
+        min_len = 2
+        max_len = 63
         name_re = re.compile('^[a-zA-Z]+[a-zA-Z0-9-]{2,63}$')
         template_name = re.match(name_re, value)
         if template_name:
             return value
-        raise ValidationError(_('Template name of VM must contain only characters, digits, -.'))
+        raise ValidationError(_('Template name of VM must contain only characters, digits, -. '
+                                'Template name length must be in [{} {}] interval.').format(min_len, max_len))
 
     @staticmethod
     async def validate_initial_size(obj_dict, value):
@@ -716,6 +719,7 @@ class CreateAutomatedPoolMutation(graphene.Mutation, PoolValidator, ControllerFe
                      create_thin_clones, prepare_vms,
                      connection_types, ad_cn_pattern: str = None):
         """Мутация создания Автоматического(Динамического) пула виртуальных машин."""
+
         controller = await cls.fetch_by_id(controller_id)
         # TODO: дооживить валидатор
         await cls.validate(vm_name_template=vm_name_template,

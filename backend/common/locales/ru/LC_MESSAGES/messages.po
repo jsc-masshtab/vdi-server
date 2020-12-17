@@ -966,8 +966,8 @@ msgid "Pool name must contain only characters, digits, _, -."
 msgstr "Имя пула должно содержать только буквы, цифры, _, -."
 
 #: ../web_app/pool/schema.py:142
-msgid "Template name of VM must contain only characters, digits, -."
-msgstr "Шаблонное имя вм должно содержать только буквы, цифры, -."
+msgid "Template name of VM must contain only characters, digits, -. Template name length must be in [{} {}] interval."
+msgstr "Шаблонное имя вм должно содержать только буквы, цифры, -. Длина шаблдонного имени должна быть в интервале [{} {}]"
 
 #: ../web_app/pool/schema.py:150
 msgid "Initial number of VM must be in {}-{} interval."
