@@ -171,7 +171,7 @@ class PoolGetVm(BaseHandler, ABC):
                 vm_port = 3389  # default rdp port
 
             except (RuntimeError, IndexError, KeyError):
-                response = {'errors': [{'message': _('VM does not support RDP. Controller didnt provide vm address')}]}
+                response = {'errors': [{'message': _('VM does not support RDP. Controller didnt provide vm address.')}]}
                 return await self.log_finish(response)
 
         elif remote_protocol == PoolModel.PoolConnectionTypes.SPICE_DIRECT.name:
