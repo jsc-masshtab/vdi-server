@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2020-12-17 21:10+0300\n"
+"POT-Creation-Date: 2020-12-18 17:33+0300\n"
 "PO-Revision-Date: 2020-07-30 11:25+0300\n"
 "Last-Translator: Emil <emil@emil-pc>\n"
 "Language-Team: Russian\n"
@@ -17,14 +17,20 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
 
+#: ../common/migrations/versions/951435b7a90a_journal_right_archiving.py:56
+#: ../common/migrations/versions/951435b7a90a_journal_right_archiving.py:270
 #: ../common/migrations/versions/ae7bbf17ac03_event.py:51
 msgid "Add new journal archive."
 msgstr "Добавлен новый архив журнала."
 
+#: ../common/migrations/versions/951435b7a90a_journal_right_archiving.py:57
+#: ../common/migrations/versions/951435b7a90a_journal_right_archiving.py:271
 #: ../common/migrations/versions/ae7bbf17ac03_event.py:52
 msgid "Archive name:"
 msgstr "Имя архива:"
 
+#: ../common/migrations/versions/951435b7a90a_journal_right_archiving.py:58
+#: ../common/migrations/versions/951435b7a90a_journal_right_archiving.py:272
 #: ../common/migrations/versions/ae7bbf17ac03_event.py:53
 msgid "path:"
 msgstr "путь:"
@@ -276,6 +282,10 @@ msgstr "Контроллер {} активирован."
 #: ../common/models/controller.py:281
 msgid "Controller {} status has been switched to {}."
 msgstr "Статус контроллера {} изменен на {}."
+
+#: ../common/models/event.py:201
+msgid "Journal settings changed."
+msgstr "Настройки журнала изменены."
 
 #: ../common/models/pool.py:156
 msgid "Incorrect sorting option {}."
@@ -722,19 +732,19 @@ msgstr "Ошибка создания ВМ."
 msgid "VM preparation error."
 msgstr "Ошибка подготовки ВМ."
 
-#: ../pool_worker/pool_tasks.py:332
+#: ../pool_worker/pool_tasks.py:335
 msgid "Another task works on this VM."
 msgstr "ВМ заблокирована выполнением другой задачи."
 
-#: ../pool_worker/pool_tasks.py:371
+#: ../pool_worker/pool_tasks.py:375
 msgid "VeiL domain request error."
 msgstr "Ошибка запроса VeiL ВМ."
 
-#: ../pool_worker/pool_tasks.py:374
+#: ../pool_worker/pool_tasks.py:378
 msgid "Task has`t been created."
 msgstr "Задача не была создана."
 
-#: ../pool_worker/pool_tasks.py:388
+#: ../pool_worker/pool_tasks.py:392
 msgid "VM remote access task {} finished with error."
 msgstr "Задава {} включения удаленного доступа ВМ завершилась с ошибкой."
 
@@ -1127,7 +1137,7 @@ msgid "The remote controller is unavailable."
 msgstr "Контроллер недоступен."
 
 #: ../web_app/thin_client_api/handlers.py:174
-msgid "VM does not support RDP. Controller didnt provide vm address."
+msgid "VM does not support RDP. The controller didn`t provide a VM address."
 msgstr "Виртуальная машина не поддерживает RDP. Контроллер не передал адрес ВМ."
 
 #: ../web_app/thin_client_api/handlers.py:234
