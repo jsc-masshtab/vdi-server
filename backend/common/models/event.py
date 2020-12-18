@@ -15,6 +15,10 @@ from sqlalchemy.sql import func
 from common.database import db
 from common.veil.veil_redis import INTERNAL_EVENTS_CHANNEL, REDIS_CLIENT
 from web_app.front_ws_api.subscription_sources import EVENTS_SUBSCRIPTION
+from common.languages import lang_init
+
+
+_ = lang_init()
 
 
 class Event(db.Model):
@@ -153,3 +157,46 @@ class EventReadByUser(db.Model):
     __tablename__ = 'event_read_by_user'
     event = db.Column(UUID(), db.ForeignKey('event.id'), nullable=False)
     user = db.Column(UUID(), db.ForeignKey('user.id'), nullable=False)
+
+
+class JournalSettings(db.Model):
+    __tablename__ = 'journal_settings'
+    id = db.Column(UUID(), primary_key=True)
+    interval = db.Column(db.Unicode(length=128), nullable=False)
+    period = db.Column(db.Unicode(length=128), nullable=False)
+    form = db.Column(db.Unicode(length=128), nullable=False)
+    duration = db.Column(db.Integer(), nullable=False)
+    by_count = db.Column(db.Boolean(), nullable=False)
+    count = db.Column(db.Integer(), nullable=False)
+    dir_path = db.Column(db.Unicode(length=128), nullable=False)
+    create_date = db.Column(db.DateTime(timezone=True), nullable=False)
+
+    @classmethod
+    async def change_journal_settings(cls, dir_path: str = None,
+                                      interval: str = None,
+                                      period: str = None,
+                                      form: str = None,
+                                      duration: int = None,
+                                      by_count: bool = None,
+                                      count: int = None, **kwargs):
+        from common.log.journal import system_logger
+
+        settings = dict()
+        if dir_path:
+            settings['dir_path'] = dir_path
+        if interval:
+            settings['interval'] = interval
+        if period:
+            settings['period'] = period
+        if form:
+            settings['form'] = form
+        if duration:
+            settings['duration'] = duration
+        if by_count:
+            settings['by_count'] = by_count
+        if count:
+            settings['count'] = count
+        await cls.update.values(**settings).gino.status()
+        entity = {'entity_type': 'SECURITY', 'entity_uuid': None}
+        await system_logger.info(_('Journal settings changed.'), description=settings,
+                                 entity=entity, user=kwargs['creator'])

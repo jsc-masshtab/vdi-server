@@ -7,7 +7,7 @@ from common.database import db
 from common.veil.veil_decorators import operator_required
 from common.utils import extract_ordering_data
 from common.veil.veil_errors import SimpleError
-from common.models.event import Event, EventReadByUser
+from common.models.event import Event, EventReadByUser, JournalSettings
 from common.models.auth import Entity
 from web_app.auth.user_schema import User, UserType
 
@@ -210,9 +210,9 @@ class UnmarkEventsReadByMutation(graphene.Mutation):
 
 class EventExportMutation(graphene.Mutation):
     class Arguments:
-        start = graphene.DateTime()
-        finish = graphene.DateTime()
-        path = graphene.String()
+        start = graphene.DateTime(description='Дата начала периода для экспорта журнала')
+        finish = graphene.DateTime(description='Дата окончания периода для экспорта журнала')
+        path = graphene.String(description='Адрес директории для экспорта журнала')
 
     ok = graphene.Boolean()
 
@@ -224,11 +224,30 @@ class EventExportMutation(graphene.Mutation):
         return EventExportMutation(ok=True)
 
 
+class ChangeJournalSettingsMutation(graphene.Mutation):
+    class Arguments:
+        dir_path = graphene.String(description='Адрес директории для архивации журнала')
+        interval = graphene.String(description='Интервал для архивации по периоду')
+        period = graphene.String(description='Период для архивации')
+        form = graphene.String(description='Форма даты для названия архива')
+        duration = graphene.Int(description='Время до удаления первой секции в базе данных')
+        by_count = graphene.Boolean(description='Принцип архивации')
+        count = graphene.Int(description='Количество записей для архивации')
+
+    ok = graphene.Boolean()
+
+    @operator_required
+    async def mutate(self, _info, **kwargs):
+        await JournalSettings.change_journal_settings(**kwargs)
+        return ChangeJournalSettingsMutation(ok=True)
+
+
 class EventMutations(graphene.ObjectType):
     markEventsReadBy = MarkEventsReadByMutation.Field()
     unmarkEventsReadBy = UnmarkEventsReadByMutation.Field()
     # removeAllEvents = RemoveAllEventsMutation.Field()
     eventExport = EventExportMutation.Field()
+    changeJournalSettings = ChangeJournalSettingsMutation.Field()
 
 
 event_schema = graphene.Schema(query=EventQuery,
