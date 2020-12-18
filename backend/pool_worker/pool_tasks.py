@@ -318,6 +318,9 @@ class DeletePoolTask(AbstractTask):
 class PrepareVmTask(AbstractTask):
     """Задача подготовки ВМ. При удалении ВМ желательно учесть что эта задача может быть в
     процессе выполнения и сначала отменить ее"""
+    # TODO: refactoring
+    # TODO: подключить линтеры
+
     def __init__(self, full_preparation=True):
         super().__init__()
 
@@ -357,6 +360,7 @@ class PrepareVmTask(AbstractTask):
 
     async def _do_light_preparation(self, vm):
         """Only remote access"""
+        # TODO: убрать дублирование кода при подготовке
         # print('_do_light_preparation ', 'vm.id ', vm.id, flush=True)
         veil_domain = await vm.vm_client
 
