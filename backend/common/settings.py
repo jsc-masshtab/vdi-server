@@ -107,6 +107,7 @@ REDIS_TIMEOUT = 5
 REDIS_THIN_CLIENT_CHANNEL = 'TC_CHANNEL'
 REDIS_THIN_CLIENT_CMD_CHANNEL = 'TC_CMD_CHANNEL'  # канал для комманд обработчикам ws тонких клиентов.
 # Команда по ws будет послана ТК
+REDIS_ASYNC_TIMEOUT = 0.01
 
 try:
     from .local_settings import *  # noqa

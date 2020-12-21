@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 import asyncio
+import json
 
 from common.database import db
-
 
 from common.models.vm import Vm
 from common.models.pool import Pool
@@ -11,15 +11,25 @@ from common.models.auth import (Entity as EntityModel, EntityRoleOwner as Entity
 
 from common.veil.veil_gino import EntityType
 
+from common.veil.veil_redis import WS_MONITOR_CHANNEL_OUT, REDIS_CLIENT, a_redis_get_message
+
+from common.log.journal import system_logger
+
 
 class VmManager:
-
+    """Здесь действия над вм, которые выполняются автоматом в ходе выполнения приложения.
+    Возможно, логичнее было бы выделить в именной отдельный процесс"""
     def __init__(self):
         self.query_interval = 30
 
     async def start(self):
 
-        await self._keep_vms_on_task()
+        loop = asyncio.get_event_loop()
+
+        # keeps VMs powered on
+        loop.create_task(self._keep_vms_on_task())
+        # VM verbose names synchronization
+        loop.create_task(self._synchronize_vm_names_task())
 
     async def _keep_vms_on_task(self):
         """Держим машины вкюченными, если машины находятся в пуле с поднятым флагом keep_vms_on и
@@ -47,3 +57,34 @@ class VmManager:
                     await controller.veil_client.domain(template=0).multi_start(entity_ids=vm_ids_list)
 
             await asyncio.sleep(self.query_interval)
+
+    async def _synchronize_vm_names_task(self):
+        """Если на контроллере меняется имя ВМ, то обновляем его на VDI"""
+
+        redis_subscriber = REDIS_CLIENT.pubsub()
+        redis_subscriber.subscribe(WS_MONITOR_CHANNEL_OUT)
+
+        while True:
+            try:
+                redis_message = await a_redis_get_message(redis_subscriber)
+
+                if redis_message['type'] == 'message':
+                    redis_message_data = redis_message['data'].decode()
+                    redis_message_data_dict = json.loads(redis_message_data)
+
+                    if redis_message_data_dict['resource'] == '/domains/' and \
+                            redis_message_data_dict['msg_type'] == 'data':
+                        vm_id = redis_message_data_dict['id']
+                        vm = await Vm.get(vm_id)
+
+                        # Если ВМ найдена и имя изменилось, то делвем апдэйт
+                        if vm:
+                            fresh_name = redis_message_data_dict['object']['verbose_name']
+                            if vm.verbose_name != fresh_name:
+                                # await vm.soft_update(verbose_name=fresh_name, creator='system')
+                                await vm.update(verbose_name=fresh_name).apply()
+
+            except asyncio.CancelledError:
+                break
+            except Exception as ex:
+                await system_logger.debug(str(ex))
