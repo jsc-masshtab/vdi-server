@@ -9,7 +9,7 @@ from functools import wraps
 
 import redis
 
-import common.settings
+import common.settings as settings
 from common.languages import lang_init
 # import common.models as models
 from web_app.front_ws_api.subscription_sources import VDI_TASKS_SUBSCRIPTION
@@ -17,9 +17,6 @@ from web_app.front_ws_api.subscription_sources import VDI_TASKS_SUBSCRIPTION
 
 _ = lang_init()
 
-
-# TODO: перенести в settings
-REDIS_ASYNC_TIMEOUT = 0.01
 
 # Pool worker related
 POOL_TASK_QUEUE = 'POOL_TASK_QUEUE'  # Очередь задач пул воркера
@@ -54,8 +51,8 @@ INTERNAL_EVENTS_CHANNEL = 'INTERNAL_EVENTS_CHANNEL'  # Канал для вну�
 
 
 REDIS_POOL = redis.ConnectionPool.from_url(
-    getattr(common.settings, 'REDIS_URL', 'redis://localhost:6379/0'),
-    socket_connect_timeout=getattr(common.settings, 'REDIS_TIMEOUT', 5))
+    getattr(settings, 'REDIS_URL', 'redis://localhost:6379/0'),
+    socket_connect_timeout=getattr(settings, 'REDIS_TIMEOUT', 5))
 
 REDIS_CLIENT = redis.Redis(connection_pool=REDIS_POOL)
 
@@ -86,7 +83,7 @@ def redis_error_handle(func):
 
 
 def get_thin_clients_count():
-    numsub = REDIS_CLIENT.pubsub_numsub(common.settings.REDIS_THIN_CLIENT_CHANNEL)
+    numsub = REDIS_CLIENT.pubsub_numsub(settings.REDIS_THIN_CLIENT_CHANNEL)
 
     if isinstance(numsub, list):
         channel_count = numsub[0]
@@ -127,7 +124,7 @@ async def a_redis_lpop(list_name):
         data = REDIS_CLIENT.lpop(list_name)
         if data:
             return data
-        await asyncio.sleep(REDIS_ASYNC_TIMEOUT)
+        await asyncio.sleep(settings.REDIS_ASYNC_TIMEOUT)
 
 
 async def a_redis_wait_for_message(redis_channel, predicate, timeout):
@@ -157,7 +154,7 @@ async def a_redis_wait_for_message(redis_channel, predicate, timeout):
             if (cur_time - start_time) >= timeout:
                 return False
 
-            await asyncio.sleep(REDIS_ASYNC_TIMEOUT)
+            await asyncio.sleep(settings.REDIS_ASYNC_TIMEOUT)
 
     except asyncio.CancelledError:  # Проброс необходим, чтобы корутина могла отмениться
         raise
@@ -175,7 +172,7 @@ async def a_redis_get_message(redis_subscriber):
         if redis_message:
             return redis_message
 
-        await asyncio.sleep(REDIS_ASYNC_TIMEOUT)
+        await asyncio.sleep(settings.REDIS_ASYNC_TIMEOUT)
 
 
 async def a_redis_wait_for_task_completion(task_id):
@@ -206,7 +203,7 @@ async def a_redis_wait_for_task_completion(task_id):
 
                     return redis_data_dict['status']
 
-            await asyncio.sleep(REDIS_ASYNC_TIMEOUT)
+            await asyncio.sleep(settings.REDIS_ASYNC_TIMEOUT)
 
     except asyncio.TimeoutError:
         raise
