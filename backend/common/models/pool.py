@@ -17,7 +17,7 @@ from common.utils import extract_ordering_data
 from web_app.auth.license.utils import License
 from common.veil.veil_redis import get_thin_clients_count
 
-from common.models.auth import (User as UserModel, Entity as EntityModel, EntityRoleOwner as EntityRoleOwnerModel,
+from common.models.auth import (User as UserModel, Entity as EntityModel, EntityOwner as EntityOwnerModel,
                                 Group as GroupModel, UserGroup as UserGroupModel)
 from common.models.authentication_directory import AuthenticationDirectory
 from common.models.vm import Vm as VmModel
@@ -139,7 +139,7 @@ class Pool(VeilModel):
                     query = query.order_by(desc(Controller.address)) if reversed_order else query.order_by(
                         Controller.address)
                 elif ordering == 'users_count':
-                    users_count = db.func.count(text('anon_1.entity_role_owner_user_id'))
+                    users_count = db.func.count(text('anon_1.entity_owner_user_id'))
                     query = query.order_by(desc(users_count)) if reversed_order else query.order_by(users_count)
                 elif ordering == 'vm_amount':
                     vms_count = db.func.count(VmModel.id)
@@ -198,12 +198,12 @@ class Pool(VeilModel):
                 if not groups_ids_list or not isinstance(groups_ids_list, list):
                     groups_ids_list = list()
                 permission_outer = False
-                permissions_query = EntityModel.join(EntityRoleOwnerModel.query.where(
-                    (EntityRoleOwnerModel.user_id == user_id) | (EntityRoleOwnerModel.role.in_(role_set)) | (
-                        EntityRoleOwnerModel.group_id.in_(groups_ids_list))).alias())
+                permissions_query = EntityModel.join(EntityOwnerModel.query.where(
+                    (EntityOwnerModel.user_id == user_id) | (
+                        EntityOwnerModel.group_id.in_(groups_ids_list))).alias())
             else:
                 permission_outer = True
-                permissions_query = EntityModel.join(EntityRoleOwnerModel)
+                permissions_query = EntityModel.join(EntityOwnerModel)
 
             query = query.select_from(
                 Pool.join(AutomatedPool, isouter=True).join(Controller, isouter=True).join(VmModel, isouter=True).join(
@@ -274,7 +274,7 @@ class Pool(VeilModel):
         Надо бы переделать это в статический метод а то везде приходится делать Pool.get(id)
         """
         if only_free:
-            ero_query = EntityRoleOwnerModel.select('entity_id').where(EntityRoleOwnerModel.user_id != None)  # noqa
+            ero_query = EntityOwnerModel.select('entity_id').where(EntityOwnerModel.user_id != None)  # noqa
 
             entity_query = EntityModel.select('entity_uuid').where(
                 (EntityModel.entity_type == EntityType.VM) & (EntityModel.id.in_(ero_query)))
@@ -300,7 +300,7 @@ class Pool(VeilModel):
         entity_query = EntityModel.select('entity_uuid').where(
             (EntityModel.entity_type == EntityType.VM) & (
                 EntityModel.id.in_(
-                    EntityRoleOwnerModel.select('entity_id').where(EntityRoleOwnerModel.user_id == user_id))))
+                    EntityOwnerModel.select('entity_id').where(EntityOwnerModel.user_id == user_id))))
         vm_query = VmModel.query.where((VmModel.id.in_(entity_query)) & (VmModel.pool_id == self.id))
         return vm_query
 
@@ -312,21 +312,20 @@ class Pool(VeilModel):
         await system_logger.debug('Возвращаем ВМ пользователя')
         return await self.get_user_vms_query(user_id).gino.first()
 
-    @property
-    async def roles(self):
-        """Уникальные роли назначенные пулу (без учета групп и пользователей)."""
-        query = EntityModel.query.where(
-            (EntityModel.entity_type == EntityType.POOL) & (EntityModel.entity_uuid == self.id)).alias()
-        filtered_query = EntityRoleOwnerModel.join(query).select().alias()
-        result_query = db.select([text('anon_1.role')]).select_from(filtered_query).group_by('role')
-        return await result_query.gino.all()
+    # @property
+    # async def roles(self):
+    #     """Уникальные роли назначенные пулу (без учета групп и пользователей)."""
+    #     query = EntityModel.query.where(
+    #         (EntityModel.entity_type == EntityType.POOL) & (EntityModel.entity_uuid == self.id)).alias()
+    #     filtered_query = EntityOwnerModel.join(query).select().alias()
+    #     result_query = db.select([text('anon_1.role')]).select_from(filtered_query).group_by('role')
+    #     return await result_query.gino.all()
 
     @property
     def assigned_groups_query(self):
-        """Группы назначенные пулу"""
-        # TODO: возможно нужно добавить группы и пользователей обладающих Ролью
+        """Группы назначенные пулу."""
         query = EntityModel.query.where((EntityModel.entity_type == EntityType.POOL) & (EntityModel.entity_uuid == self.id)).alias()
-        return GroupModel.join(EntityRoleOwnerModel.join(query).alias()).select()
+        return GroupModel.join(EntityOwnerModel.join(query).alias()).select()
 
     @property
     async def assigned_groups(self):
@@ -338,7 +337,7 @@ class Pool(VeilModel):
     @property
     async def possible_groups(self):
         query = EntityModel.query.where((EntityModel.entity_type == EntityType.POOL) & (EntityModel.entity_uuid == self.id)).alias()
-        filtered_query = GroupModel.join(EntityRoleOwnerModel.join(query).alias(), isouter=True).select().where(text('anon_1.entity_role_owner_group_id is null'))  # noqa
+        filtered_query = GroupModel.join(EntityOwnerModel.join(query).alias(), isouter=True).select().where(text('anon_1.entity_owner_group_id is null'))  # noqa
         return await filtered_query.order_by(GroupModel.verbose_name).gino.load(GroupModel).all()
 
     @property
@@ -353,11 +352,11 @@ class Pool(VeilModel):
         admins_query_ids = db.select([text('id')]).select_from(admins_query).alias()
 
         # Список явных пользователей
-        users_query = EntityRoleOwnerModel.join(query)
+        users_query = EntityOwnerModel.join(query)
         user_query_ids = db.select([text('user_id')]).select_from(users_query)
 
         # Список пользователей состоящих в группах
-        group_users_query = UserGroupModel.join(GroupModel).join(EntityRoleOwnerModel.join(query))
+        group_users_query = UserGroupModel.join(GroupModel).join(EntityOwnerModel.join(query))
         group_users_ids = db.select([text('user_groups.user_id')]).select_from(group_users_query)
 
         # Список пользователей встречающихся в пересечении
@@ -373,11 +372,11 @@ class Pool(VeilModel):
         query = EntityModel.query.where((EntityModel.entity_type == EntityType.POOL) & (EntityModel.entity_uuid == self.id)).alias()
 
         # Список пользователей состоящих в группах
-        group_users_query = UserGroupModel.join(GroupModel).join(EntityRoleOwnerModel.join(query).alias()).select().alias()
+        group_users_query = UserGroupModel.join(GroupModel).join(EntityOwnerModel.join(query).alias()).select().alias()
         group_users_ids = db.select([text('anon_7.user_id')]).select_from(group_users_query).alias()
 
         # Список явных пользователей
-        users_query = EntityRoleOwnerModel.join(query).select().alias()
+        users_query = EntityOwnerModel.join(query).select().alias()
         user_query_ids = db.select([text('anon_4.user_id')]).select_from(users_query).alias()
 
         # Список администраторов системы
@@ -403,7 +402,7 @@ class Pool(VeilModel):
             async with db.transaction():
                 if not entity:
                     entity = await EntityModel.create(**self.entity)
-                ero = await EntityRoleOwnerModel.create(entity_id=entity.id, user_id=user_id)
+                ero = await EntityOwnerModel.create(entity_id=entity.id, user_id=user_id)
                 user = await UserModel.get(user_id)
                 await system_logger.info(
                     _('User {} has been included to pool {}.').format(user.username, self.verbose_name),
@@ -420,8 +419,8 @@ class Pool(VeilModel):
             (EntityModel.entity_type == self.entity_type) & (EntityModel.entity_uuid == self.id))
 
         for user_id in users_list:
-            has_permission = await EntityRoleOwnerModel.query.where(
-                (EntityRoleOwnerModel.user_id == user_id) & (EntityRoleOwnerModel.entity_id == entity)).gino.first()
+            has_permission = await EntityOwnerModel.query.where(
+                (EntityOwnerModel.user_id == user_id) & (EntityOwnerModel.entity_id == entity)).gino.first()
             user = await UserModel.get(user_id)
             if has_permission:
                 await system_logger.info(_('Removing user {} from pool {}.').format(user.username, self.verbose_name),
@@ -436,8 +435,8 @@ class Pool(VeilModel):
         # entity = EntityModel.select('id').where((EntityModel.entity_type == self.entity_type)
         # & (EntityModel.entity_uuid == self.id))
 
-        operation_status = await EntityRoleOwnerModel.delete.where(
-            (EntityRoleOwnerModel.user_id.in_(users_list)) & (EntityRoleOwnerModel.entity_id == entity)).gino.status()
+        operation_status = await EntityOwnerModel.delete.where(
+            (EntityOwnerModel.user_id.in_(users_list)) & (EntityOwnerModel.entity_id == entity)).gino.status()
         return operation_status
 
     async def add_group(self, group_id, creator):
@@ -447,7 +446,7 @@ class Pool(VeilModel):
             async with db.transaction():
                 if not entity:
                     entity = await EntityModel.create(**self.entity)
-                ero = await EntityRoleOwnerModel.create(entity_id=entity.id, group_id=group_id)
+                ero = await EntityOwnerModel.create(entity_id=entity.id, group_id=group_id)
                 group = await GroupModel.get(group_id)
                 await system_logger.info(
                     _('Group {} has been included to pool {}.').format(group.verbose_name, self.verbose_name),
@@ -470,37 +469,12 @@ class Pool(VeilModel):
                                      entity=self.entity
                                      )
         entity = EntityModel.select('id').where((EntityModel.entity_type == self.entity_type) & (EntityModel.entity_uuid == self.id))
-        return await EntityRoleOwnerModel.delete.where(
-            (EntityRoleOwnerModel.group_id.in_(groups_list)) & (EntityRoleOwnerModel.entity_id == entity)).gino.status()
-
-    async def add_role(self, role, creator):
-        entity = await self.entity_obj
-
-        try:
-            async with db.transaction():
-                if not entity:
-                    entity = await EntityModel.create(**self.entity)
-                ero = await EntityRoleOwnerModel.create(entity_id=entity.id, role=role)
-                await system_logger.info(_('Role {} has been set to pool {}.').format(role, self.verbose_name),
-                                         user=creator,
-                                         entity=self.entity)
-        except UniqueViolationError:
-            raise SimpleError(_('Pool already has role.'), user=creator, entity=self.entity)
-        return ero
-
-    async def remove_roles(self, creator, roles_list: list):
-        role_del = ' '.join(roles_list)
-        await system_logger.info(_('Roles: {} was deleted to pool {}.').format(role_del, self.verbose_name),
-                                 user=creator,
-                                 entity=self.entity)
-        entity = EntityModel.select('id').where(
-            (EntityModel.entity_type == self.entity_type) & (EntityModel.entity_uuid == self.id))
-        return await EntityRoleOwnerModel.delete.where(
-            (EntityRoleOwnerModel.role.in_(roles_list)) & (EntityRoleOwnerModel.entity_id == entity)).gino.status()
+        return await EntityOwnerModel.delete.where(
+            (EntityOwnerModel.group_id.in_(groups_list)) & (EntityOwnerModel.entity_id == entity)).gino.status()
 
     async def free_assigned_vms(self, users_list: list):
         """
-        Будут удалены все записи из EntityRoleOwner соответствующие условию.
+        Будут удалены все записи из EntityOwner соответствующие условию.
         Запрос такой ублюдский, потому что через Join в текущей версии Gino получалось очень много подзапросов.
         :param users_list: uuid пользователей для которых выполняется поиск
         :return: gino.status()
@@ -509,8 +483,8 @@ class Pool(VeilModel):
         entity_query = EntityModel.select('id').where((EntityModel.entity_type == EntityType.VM) & (
             EntityModel.entity_uuid.in_(VmModel.select('id').where(VmModel.pool_id == self.id))))
 
-        ero_query = EntityRoleOwnerModel.delete.where(
-            EntityRoleOwnerModel.entity_id.in_(entity_query) & EntityRoleOwnerModel.user_id.in_(users_list))
+        ero_query = EntityOwnerModel.delete.where(
+            EntityOwnerModel.entity_id.in_(entity_query) & EntityOwnerModel.user_id.in_(users_list))
 
         return await ero_query.gino.status()
 
@@ -597,23 +571,13 @@ class Pool(VeilModel):
             return await pool.activate(pool.id)
         return False
 
-    # Deprecated 21.10.2020
-    # async def get_free_vm(self):
-    #     """Логика такая, что если сущность отсутствует в таблице разрешений - значит никто ей не владеет.
-    #        Требует расширения после расширения модели владения VM"""
-    #     entity_query = EntityModel.select('entity_uuid').where(
-    #         (EntityModel.entity_type == EntityType.VM) & (EntityModel.id.in_(EntityRoleOwnerModel.select('entity_id'))))
-    #     vm_query = VmModel.query.where(
-    #         (VmModel.pool_id == self.id) & (VmModel.status == Status.ACTIVE) & (VmModel.id.notin_(entity_query)))  # noqa
-    #     return await vm_query.gino.first()
-
     async def get_free_vm_v2(self):
         """Возвращает случайную свободную ВМ.
         Свободная == не занятая за кем-то конкретном.
         Приоритетной будет та, что включена."""
         # Формируем список ВМ
         entity_query = EntityModel.select('entity_uuid').where(
-            (EntityModel.entity_type == EntityType.VM) & (EntityModel.id.in_(EntityRoleOwnerModel.select('entity_id'))))
+            (EntityModel.entity_type == EntityType.VM) & (EntityModel.id.in_(EntityOwnerModel.select('entity_id'))))
         vm_query = VmModel.select('id').where(
             (VmModel.pool_id == self.id) & (VmModel.status == Status.ACTIVE) & (VmModel.id.notin_(entity_query)))
 
@@ -721,15 +685,15 @@ class Pool(VeilModel):
         vms_query = VmModel.select('id').where(VmModel.pool_id == self.id)
         entity_query = EntityModel.select('id').where(
             (EntityModel.entity_type == EntityType.VM) & (EntityModel.entity_uuid.in_(vms_query)))
-        exists_count = await db.select([db.func.count()]).where((EntityRoleOwnerModel.user_id == user_id) & (
-            EntityRoleOwnerModel.entity_id.in_(entity_query))).gino.scalar()
+        exists_count = await db.select([db.func.count()]).where((EntityOwnerModel.user_id == user_id) & (
+            EntityOwnerModel.entity_id.in_(entity_query))).gino.scalar()
         if exists_count > 0:
-            role_owner_query = EntityRoleOwnerModel.select('entity_id').where(
-                (EntityRoleOwnerModel.user_id == user_id) & (EntityRoleOwnerModel.entity_id.in_(entity_query)))
+            role_owner_query = EntityOwnerModel.select('entity_id').where(
+                (EntityOwnerModel.user_id == user_id) & (EntityOwnerModel.entity_id.in_(entity_query)))
             exists_vm_query = EntityModel.select('entity_uuid').where(EntityModel.id.in_(role_owner_query))
             await VmModel.update.values(status=Status.SERVICE).where(VmModel.id.in_(exists_vm_query)).gino.status()
-        ero_query = EntityRoleOwnerModel.delete.where(
-            (EntityRoleOwnerModel.user_id == user_id) & (EntityRoleOwnerModel.entity_id.in_(entity_query)))
+        ero_query = EntityOwnerModel.delete.where(
+            (EntityOwnerModel.user_id == user_id) & (EntityOwnerModel.entity_id.in_(entity_query)))
 
         return await ero_query.gino.status()
 

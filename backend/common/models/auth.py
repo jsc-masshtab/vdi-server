@@ -35,15 +35,14 @@ class Entity(db.Model):
             await Entity.create(entity_type=entity_type, entity_uuid=entity_uuid)
 
 
-class EntityRoleOwner(db.Model):
+class EntityOwner(db.Model):
     """Ограничение прав доступа к сущности для конкретного типа роли.
        Если user_id и group_id null, то ограничение доступа к сущности только по Роли
        Если role пустой, то только по пользователю"""
-    __tablename__ = 'entity_role_owner'
+    __tablename__ = 'entity_owner'
 
     id = db.Column(UUID(), primary_key=True, default=uuid.uuid4)
     entity_id = db.Column(UUID(), db.ForeignKey(Entity.id, ondelete="CASCADE"))
-    role = db.Column(AlchemyEnum(Role), nullable=True, index=True)  # TODO: заменить на array?
     user_id = db.Column(UUID(), db.ForeignKey('user.id', ondelete="CASCADE"), nullable=True)
     group_id = db.Column(UUID(), db.ForeignKey('group.id', ondelete="CASCADE"), nullable=True)
 
@@ -496,12 +495,12 @@ Index('ix_user_roles_user_roles',
 Index('ix_group_roles_group_roles',
       GroupRole.role, GroupRole.group_id, unique=True)
 
-Index('ix_entity_role_owner_entity_role_user',
-      EntityRoleOwner.entity_id, EntityRoleOwner.role,
-      EntityRoleOwner.user_id, unique=True)
-Index('ix_entity_role_owner_entity_role_group',
-      EntityRoleOwner.entity_id, EntityRoleOwner.role,
-      EntityRoleOwner.group_id, unique=True)
-Index('ix_entity_role_owner_entity_role_owner',
-      EntityRoleOwner.entity_id, EntityRoleOwner.role,
-      EntityRoleOwner.group_id, EntityRoleOwner.user_id, unique=True)
+Index('ix_entity_owner_entity_user',
+      EntityOwner.entity_id,
+      EntityOwner.user_id, unique=True)
+Index('ix_entity_owner_entity_group',
+      EntityOwner.entity_id,
+      EntityOwner.group_id, unique=True)
+Index('ix_entity_owner_entity_owner',
+      EntityOwner.entity_id,
+      EntityOwner.group_id, EntityOwner.user_id, unique=True)
