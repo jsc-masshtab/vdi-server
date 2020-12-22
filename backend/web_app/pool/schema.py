@@ -387,7 +387,7 @@ class PoolType(graphene.ObjectType):
         return await pool.possible_connection_types
 
 
-def pool_obj_to_type(pool_obj: Pool) -> dict:
+def pool_obj_to_type(pool_obj: Pool) -> PoolType:
     pool_dict = {'pool_id': pool_obj.master_id,
                  'master_id': pool_obj.master_id,
                  'verbose_name': pool_obj.verbose_name,
@@ -936,46 +936,6 @@ class PoolGroupDropPermissionsMutation(graphene.Mutation):
         return PoolGroupDropPermissionsMutation(ok=True, pool=pool_obj_to_type(pool_record))
 
 
-class PoolRoleAddPermissionsMutation(graphene.Mutation):
-    class Arguments:
-        pool_id = graphene.UUID(required=True)
-        roles = graphene.NonNull(graphene.List(graphene.NonNull(RoleTypeGraphene)))
-
-    ok = graphene.Boolean()
-    pool = graphene.Field(PoolType)
-
-    @administrator_required
-    async def mutate(self, _info, pool_id, roles, creator):
-        pool = await Pool.get(pool_id)
-        if not pool:
-            return {'ok': False}
-
-        await pool.add_roles(roles, creator)
-
-        pool_record = await Pool.get_pool(pool.id)
-        return PoolRoleAddPermissionsMutation(ok=True, pool=pool_obj_to_type(pool_record))
-
-
-class PoolRoleDropPermissionsMutation(graphene.Mutation):
-    class Arguments:
-        pool_id = graphene.UUID(required=True)
-        roles = graphene.NonNull(graphene.List(graphene.NonNull(RoleTypeGraphene)))
-
-    ok = graphene.Boolean()
-    pool = graphene.Field(PoolType)
-
-    @administrator_required
-    async def mutate(self, _info, pool_id, roles, creator):
-        pool = await Pool.get(pool_id)
-        if not pool:
-            return {'ok': False}
-
-        await pool.remove_roles(creator, roles)
-
-        pool_record = await Pool.get_pool(pool.id)
-        return PoolRoleAddPermissionsMutation(ok=True, pool=pool_obj_to_type(pool_record))
-
-
 class AssignVmToUser(graphene.Mutation):
     class Arguments:
         vm_id = graphene.ID(required=True)
@@ -1169,8 +1129,6 @@ class PoolMutations(graphene.ObjectType):
     removeUserEntitlementsFromPool = PoolUserDropPermissionsMutation.Field()
     addPoolGroup = PoolGroupAddPermissionsMutation.Field()
     removePoolGroup = PoolGroupDropPermissionsMutation.Field()
-    addPoolRole = PoolRoleAddPermissionsMutation.Field()
-    removePoolRole = PoolRoleDropPermissionsMutation.Field()
 
     # Vm mutations
     assignVmToUser = AssignVmToUser.Field()

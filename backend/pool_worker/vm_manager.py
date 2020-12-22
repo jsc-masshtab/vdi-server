@@ -7,7 +7,7 @@ from common.database import db
 from common.models.vm import Vm
 from common.models.pool import Pool
 from common.models.controller import Controller
-from common.models.auth import (Entity as EntityModel, EntityRoleOwner as EntityRoleOwnerModel)
+from common.models.auth import (Entity as EntityModel, EntityOwner as EntityOwnerModel)
 
 from common.veil.veil_gino import EntityType
 
@@ -42,7 +42,7 @@ class VmManager:
             for controller in controllers:
 
                 # get vms which have users and should be kept on
-                ero_query = EntityRoleOwnerModel.select('entity_id').where(EntityRoleOwnerModel.user_id != None)  # noqa
+                ero_query = EntityOwnerModel.select('entity_id').where(EntityOwnerModel.user_id != None)  # noqa
 
                 entity_query = EntityModel.select('entity_uuid').where(
                     (EntityModel.entity_type == EntityType.VM) & (EntityModel.id.in_(ero_query)))

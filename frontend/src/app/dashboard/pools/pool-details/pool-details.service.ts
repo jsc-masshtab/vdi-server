@@ -74,8 +74,6 @@ export class PoolDetailsService {
                                     create_thin_clones
                                     prepare_vms
                                     keep_vms_on
-                                    assigned_roles
-                                    possible_roles
                                     assigned_groups {
                                         id
                                         verbose_name
@@ -129,8 +127,6 @@ export class PoolDetailsService {
                                     datapool {
                                         verbose_name
                                     }
-                                    assigned_roles
-                                    possible_roles
                                     assigned_groups {
                                         id
                                         verbose_name
@@ -456,50 +452,6 @@ export class PoolDetailsService {
         });
     }
 
-    public addRole(id, roles) {
-        return this.service.mutate<any>({
-            mutation: gql`
-                mutation pools(
-                    $roles: [Role!]!,
-                    $id: UUID!){
-                    addPoolRole(
-                        roles: $roles,
-                        pool_id: $id
-                    ){
-                        ok
-                    }
-                }
-            `,
-            variables: {
-                method: 'POST',
-                roles,
-                id
-            }
-        });
-    }
-
-    public removeRole(id, roles) {
-        return this.service.mutate<any>({
-            mutation: gql`
-                mutation pools(
-                    $roles: [Role!]!,
-                    $id: UUID!){
-                    removePoolRole(
-                        roles: $roles,
-                        pool_id: $id
-                    ){
-                        ok
-                    }
-                }
-            `,
-            variables: {
-                method: 'POST',
-                roles,
-                id
-            }
-        });
-    }
-
     public entitleUsersPools(id, users) {
         return this.service.mutate<any>({
             mutation: gql`
@@ -528,7 +480,7 @@ export class PoolDetailsService {
                 mutation pools(
                     $users: [UUID!]!,
                     $id: UUID!){
-                    removePoolRole(
+                    removeUserEntitlementsPool(
                         users: $users,
                         pool_id: $id
                     ){

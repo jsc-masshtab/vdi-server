@@ -313,40 +313,13 @@ class TestPoolPermissionsSchema:
         executed = await execute_scheme(pool_schema, query, context=fixt_auth_context)
         snapshot.assert_match(executed)
 
-    async def test_pool_role_permission(self, snapshot, fixt_auth_context):  # noqa
-        pools = await Pool.query.gino.all()
-        pool = pools[0]
-        query = """mutation{
-                            addPoolRole(pool_id: "%s",
-                                        roles: [ADMINISTRATOR])
-                            {
-                                ok,
-                                pool{assigned_roles, possible_roles}
-                            }}""" % pool.id
-
-        executed = await execute_scheme(pool_schema, query, context=fixt_auth_context)
-        snapshot.assert_match(executed)
-
-        query = """mutation{
-                            removePoolRole(pool_id: "%s",
-                                        roles: [OPERATOR])
-                            {
-                                ok,
-                                pool{assigned_roles, possible_roles}
-                            }}""" % pool.id
-
-        executed = await execute_scheme(pool_schema, query, context=fixt_auth_context)
-        snapshot.assert_match(executed)
-
 
 @pytest.mark.asyncio
 async def test_pools_ordering(fixt_launch_workers,  fixt_db, fixt_controller, fixt_create_automated_pool,  # noqa
                               fixt_auth_context):  # noqa
 
-    # list = ["verbose_name", "cluster_id", "node_id", "status", "controller", "controller_address", "users_count",
-    #        "vms_count", "pool_type"]
-    list = ["verbose_name", "controller_address", "users_count", "vm_amount", "pool_type"]
-    for ordering in list:
+    ordering_list = ["verbose_name", "controller_address", "users_count", "vm_amount", "pool_type"]
+    for ordering in ordering_list:
         qu = """
                 {
                   pools(ordering: "%s") {
@@ -373,12 +346,10 @@ async def test_pools_ordering(fixt_launch_workers,  fixt_db, fixt_controller, fi
                       id
                       verbose_name
                     }
-                    assigned_roles
-                    possible_roles
                     assigned_connection_types
                     possible_connection_types
                  }
                 }
             """ % ordering
 
-        await execute_scheme(pool_schema, qu, context=fixt_auth_context)  # noqa
+        await execute_scheme(pool_schema, qu, context=fixt_auth_context)
