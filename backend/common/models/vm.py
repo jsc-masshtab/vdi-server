@@ -20,7 +20,7 @@ from common.veil.veil_redis import send_cmd_to_cancel_tasks_associated_with_enti
 from common.languages import lang_init
 from common.log.journal import system_logger
 
-from common.models.auth import Entity as EntityModel, EntityRoleOwner as EntityRoleOwnerModel, User as UserModel
+from common.models.auth import Entity as EntityModel, EntityOwner as EntityOwnerModel, User as UserModel
 from common.models.authentication_directory import AuthenticationDirectory
 from common.models.event import Event, EventReadByUser
 
@@ -77,7 +77,7 @@ class Vm(VeilModel):
     @property
     async def username(self):
         entity_query = EntityModel.select('id').where((EntityModel.entity_type == EntityType.VM) & (EntityModel.entity_uuid == self.id))
-        ero_query = EntityRoleOwnerModel.select('user_id').where(EntityRoleOwnerModel.entity_id == entity_query)
+        ero_query = EntityOwnerModel.select('user_id').where(EntityOwnerModel.entity_id == entity_query)
         user_id = await ero_query.gino.scalar()
         user = await UserModel.get(user_id) if user_id else None
         return user.username if user else None
@@ -156,7 +156,7 @@ class Vm(VeilModel):
             async with db.transaction():
                 if not entity:
                     entity = await EntityModel.create(**self.entity)
-                ero = await EntityRoleOwnerModel.create(entity_id=entity.id, user_id=user_id)
+                ero = await EntityOwnerModel.create(entity_id=entity.id, user_id=user_id)
                 user = await UserModel.get(user_id)
                 await self.soft_update(id=self.id, status=Status.ACTIVE, creator=creator)
                 await system_logger.info(
@@ -174,9 +174,9 @@ class Vm(VeilModel):
         await system_logger.info(_('VM {} is clear from users.').format(self.verbose_name), user=creator,
                                  entity=self.entity)
         if not users_list:
-            return await EntityRoleOwnerModel.delete.where(EntityRoleOwnerModel.entity_id == entity).gino.status()
-        return await EntityRoleOwnerModel.delete.where(
-            (EntityRoleOwnerModel.user_id.in_(users_list)) & (EntityRoleOwnerModel.entity_id == entity)).gino.status()
+            return await EntityOwnerModel.delete.where(EntityOwnerModel.entity_id == entity).gino.status()
+        return await EntityOwnerModel.delete.where(
+            (EntityOwnerModel.user_id.in_(users_list)) & (EntityOwnerModel.entity_id == entity)).gino.status()
 
     @staticmethod
     async def get_all_vms_ids():

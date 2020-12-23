@@ -14,8 +14,6 @@ import { FormForEditComponent } from 'src/app/dashboard/common/forms-dinamic/cha
 import { map } from 'rxjs/operators';
 // import { of } from 'rxjs';
 import { PoolsUpdateService } from '../all-pools/pools.update.service';
-import { RemoveRoleComponent } from './remove-role/remove-role.component';
-import { AddRoleComponent } from './add-role/add-role.component';
 import { RemoveGroupComponent } from './remove-group/remove-group.component';
 import { AddGropComponent } from './add-group/add-group.component';
 // import { PrepareVmPoolComponent } from './prepare-vm/prepare-vm.component';
@@ -289,16 +287,6 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
       class: 'name-start',
       icon: 'comment',
       type: 'string'
-    }
-  ];
-
-  public collectionRoles: object[] = [
-    {
-      title: 'Роли',
-      type: 'array-type',
-      property: 'index-array',
-      class: 'name-start',
-      icon: 'users-cog'
     }
   ];
 
@@ -920,32 +908,6 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
         typePool: this.typePool,
         verbose_name: this.pool['verbose_name'],
         groups: this.pool['assigned_groups']
-      }
-    });
-  }
-
-  public addRole() {
-    this.dialog.open(AddRoleComponent, {
- 			disableClose: true,
-      width: '500px',
-      data: {
-        id: this.idPool,
-        typePool: this.typePool,
-        verbose_name: this.pool['verbose_name'],
-        roles: this.pool['possible_roles']
-      }
-    });
-  }
-
-  public removeRole() {
-    this.dialog.open(RemoveRoleComponent, {
- 			disableClose: true,
-      width: '500px',
-      data: {
-        id: this.idPool,
-        typePool: this.typePool,
-        verbose_name: this.pool['verbose_name'],
-        roles: this.pool['assigned_roles']
       }
     });
   }
