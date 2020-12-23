@@ -4,7 +4,7 @@ from sqlalchemy import pool, engine_from_config
 from logging.config import fileConfig
 
 from common.database import db as target_metadata
-from common.settings import DB_USER, DB_PASS, DB_NAME, DB_HOST
+from common.settings import DB_USER, DB_PASS, DB_NAME, DB_HOST, DB_PORT
 from web_app.app import make_app
 
 
@@ -15,8 +15,8 @@ main_option = config.get_main_option('sqlalchemy.url')
 
 # Если не тестовая БД, то формат из settings
 if main_option is None or main_option.upper().find('TESTS') == -1:
-    alchemy_url = 'postgres://{USER}:{PASS}@{HOST}/{NAME}'.format(USER=DB_USER, PASS=DB_PASS, HOST=DB_HOST,
-                                                                  NAME=DB_NAME)
+    alchemy_url = 'postgres://{USER}:{PASS}@{HOST}:{PORT}/{NAME}'.format(USER=DB_USER, PASS=DB_PASS, HOST=DB_HOST,
+                                                                         PORT=DB_PORT, NAME=DB_NAME)
     config.set_main_option('sqlalchemy.url', alchemy_url)
 
 # Interpret the config file for Python logging.
