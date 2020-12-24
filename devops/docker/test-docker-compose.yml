@@ -1,5 +1,5 @@
 # Набор контейнеров для прогона тестов
-# docker-compose -f test-docker-compose.yml up
+# docker system prune -a -f --volumes && docker-compose -f test-docker-compose.yml up
 version: '3.4'
 services:
   test-postgres:

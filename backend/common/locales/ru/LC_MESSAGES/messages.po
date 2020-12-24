@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2020-12-18 17:33+0300\n"
+"POT-Creation-Date: 2020-12-22 16:41+0300\n"
 "PO-Revision-Date: 2020-07-30 11:25+0300\n"
 "Last-Translator: Emil <emil@emil-pc>\n"
 "Language-Team: Russian\n"
@@ -35,110 +35,110 @@ msgstr "Имя архива:"
 msgid "path:"
 msgstr "путь:"
 
-#: ../common/models/auth.py:139
+#: ../common/models/auth.py:138
 msgid "Role {} is added to user {}."
 msgstr "Роль {} назначена пользователю {}."
 
-#: ../common/models/auth.py:144 ../common/models/auth.py:161
+#: ../common/models/auth.py:143 ../common/models/auth.py:160
 msgid "User {} roles: {}."
 msgstr "Роли пользователя {}: {}."
 
-#: ../common/models/auth.py:147
+#: ../common/models/auth.py:146
 msgid "Role {} is assigned to user {}."
 msgstr "Роль {} назначена пользователю {}."
 
-#: ../common/models/auth.py:154
+#: ../common/models/auth.py:153
 msgid "Roles: {} was deleted to user {}."
 msgstr "Роли: {} удалены у пользователя {}."
 
-#: ../common/models/auth.py:169
+#: ../common/models/auth.py:168
 msgid "Group {} is removed for user {}."
 msgstr "Группа {} удалена у пользователя {}."
 
-#: ../common/models/auth.py:176
+#: ../common/models/auth.py:175
 #, python-brace-format
 msgid "User {username} has been activated."
 msgstr "Пользователь {username} активирован."
 
-#: ../common/models/auth.py:188
+#: ../common/models/auth.py:187
 msgid "There is no more active superuser."
 msgstr "Больше нет активного суперпользователя."
 
-#: ../common/models/auth.py:193
+#: ../common/models/auth.py:192
 #, python-brace-format
 msgid "User {username} has been deactivated."
 msgstr "Пользователь {username} деактивирован."
 
-#: ../common/models/auth.py:221
+#: ../common/models/auth.py:220
 #, python-brace-format
 msgid "Password of user {username} has been changed."
 msgstr "Пароль пользователя {username} изменен."
 
-#: ../common/models/auth.py:239
+#: ../common/models/auth.py:238
 msgid "User {} created with role {}."
 msgstr "Пользователь {} создан с ролью {}."
 
-#: ../common/models/auth.py:250
+#: ../common/models/auth.py:249
 msgid "Values of user {} is changed."
 msgstr "Параметры пользователя {} изменены."
 
-#: ../common/models/auth.py:257 ../common/models/auth.py:261
+#: ../common/models/auth.py:256 ../common/models/auth.py:260
 msgid "Roles: {}."
 msgstr "Роли: {}."
 
-#: ../common/models/auth.py:258
+#: ../common/models/auth.py:257
 #, python-brace-format
 msgid "User {username} has become a superuser."
 msgstr "Пользователь {username} стал суперпользователем."
 
-#: ../common/models/auth.py:262
+#: ../common/models/auth.py:261
 #, python-brace-format
 msgid "User {username} is no longer a superuser."
 msgstr "Пользователь {username} перестал быть суперпользователем."
 
-#: ../common/models/auth.py:279
+#: ../common/models/auth.py:278
 #, python-brace-format
 msgid "User {username} has been logged in."
 msgstr "Пользователь {username} вошел в систему."
 
-#: ../common/models/auth.py:280
+#: ../common/models/auth.py:279
 msgid "Auth type: {}, IP: {}."
 msgstr "Тип авторизации: {}, IP: {}."
 
-#: ../common/models/auth.py:297
+#: ../common/models/auth.py:296
 #, python-brace-format
 msgid "User {username} has been logged out."
 msgstr "Пользователь {username} вышел из системы."
 
-#: ../common/models/auth.py:395
+#: ../common/models/auth.py:394
 msgid "Group {} is created."
 msgstr "Группа {} создана."
 
-#: ../common/models/auth.py:410
+#: ../common/models/auth.py:409
 msgid "Values of group {} is updated."
 msgstr "Параметры группы {} обновлены."
 
-#: ../common/models/auth.py:424
+#: ../common/models/auth.py:423
 msgid "User {} has been included to group {}."
 msgstr "Пользователь {} был включен в группу {}."
 
-#: ../common/models/auth.py:428
+#: ../common/models/auth.py:427
 msgid "User {} is already in group {}."
 msgstr "Пользователь {} уже находится в группе {}."
 
-#: ../common/models/auth.py:438
+#: ../common/models/auth.py:437
 msgid "Removing user {} from group {}."
 msgstr "Удаление пользователя {} из группы {}."
 
-#: ../common/models/auth.py:446
+#: ../common/models/auth.py:445
 msgid "Role {} has been set to group {}."
 msgstr "Роль {} добавлена в группу {}."
 
-#: ../common/models/auth.py:450
+#: ../common/models/auth.py:449
 msgid "Group {} has already role {}."
 msgstr "Группе {} уже назначена роль {}."
 
-#: ../common/models/auth.py:460
+#: ../common/models/auth.py:459
 msgid "Roles: {} was deleted to group {}."
 msgstr "Роли: {} удалены из группы {}."
 
@@ -291,140 +291,128 @@ msgstr "Настройки журнала изменены."
 msgid "Incorrect sorting option {}."
 msgstr "Неверный параметр сортировки {}."
 
-#: ../common/models/pool.py:409
+#: ../common/models/pool.py:408
 msgid "User {} has been included to pool {}."
 msgstr "Пользователь {} был включен в пул {}."
 
-#: ../common/models/pool.py:413 ../common/models/vm.py:166
+#: ../common/models/pool.py:412 ../common/models/vm.py:166
 msgid "{} already has permission."
 msgstr "{} уже имеет разрешение."
 
-#: ../common/models/pool.py:427
+#: ../common/models/pool.py:426
 msgid "Removing user {} from pool {}."
 msgstr "Удаление пользователя {} из пула {}."
 
-#: ../common/models/pool.py:432
+#: ../common/models/pool.py:431
 msgid "User {} has no direct right to pool {}."
 msgstr "У пользователя {} нет прямых прав на пул {}. Пропускаем."
 
-#: ../common/models/pool.py:453
+#: ../common/models/pool.py:452
 msgid "Group {} has been included to pool {}."
 msgstr "Группа {} включена в пул {}."
 
-#: ../common/models/pool.py:457
+#: ../common/models/pool.py:456
 msgid "Pool already has permission."
 msgstr "Пул уже имеет разрешение."
 
-#: ../common/models/pool.py:468
+#: ../common/models/pool.py:467
 msgid "Removing group {} from pool {}."
 msgstr "Удаление группы {} из пула {}."
 
-#: ../common/models/pool.py:484
-msgid "Role {} has been set to pool {}."
-msgstr "Роль {} добавлена в пул {}."
-
-#: ../common/models/pool.py:488
-msgid "Pool already has role."
-msgstr "Пул уже имеет роль."
-
-#: ../common/models/pool.py:493
-msgid "Roles: {} was deleted to pool {}."
-msgstr "Роли: {} удалены в пуле {}."
-
-#: ../common/models/pool.py:523
+#: ../common/models/pool.py:497
 msgid "Controller {} not found."
 msgstr "Контроллер {} не найден."
 
-#: ../common/models/pool.py:546
+#: ../common/models/pool.py:520
 msgid "Delete VMs for AutomatedPool {}."
 msgstr "Удаление виртуальных машин для автоматического пула {}."
 
-#: ../common/models/pool.py:551
+#: ../common/models/pool.py:525
 #, python-brace-format
 msgid "Complete removal pool of desktops {verbose_name} is done."
 msgstr "Выполнено полное удаление пула рабочих столов {verbose_name}."
 
-#: ../common/models/pool.py:576
+#: ../common/models/pool.py:550
 msgid "Pool {} has been activated."
 msgstr "Пул {} активирован."
 
-#: ../common/models/pool.py:588
+#: ../common/models/pool.py:562
 msgid "Pool {} has been deactivated."
 msgstr "Пул {} деактивирован."
 
-#: ../common/models/pool.py:774
+#: ../common/models/pool.py:738
 msgid "StaticPool: Create Pool."
 msgstr "Статический пул: создание пула."
 
-#: ../common/models/pool.py:782
+#: ../common/models/pool.py:746
 msgid "StaticPool: Create StaticPool."
 msgstr "Статический пул: создание статического пула."
 
-#: ../common/models/pool.py:784
+#: ../common/models/pool.py:748
 msgid "StaticPool: Create VMs."
 msgstr "Статический пул: создание виртуальных машин."
 
-#: ../common/models/pool.py:792 ../common/models/pool.py:1042
+#: ../common/models/pool.py:756 ../common/models/pool.py:1006
 msgid "VM {} created."
 msgstr "ВМ {} создана."
 
-#: ../common/models/pool.py:794
+#: ../common/models/pool.py:758
 msgid "Static pool {} created."
 msgstr "Статический пул {} создан."
 
-#: ../common/models/pool.py:809 ../common/models/pool.py:976
+#: ../common/models/pool.py:773 ../common/models/pool.py:940
 msgid "Pool {} has been updated."
 msgstr "Пул {} обновлен."
 
-#: ../common/models/pool.py:927
+#: ../common/models/pool.py:891
 msgid "Initial_size: {}, total_size: {}, increase_step {}, reserve_size {}."
 msgstr "Начальный размер: {}, Максимальный размер: {}, Шаг расширения: {}, Резервный размер: {}."
 
-#: ../common/models/pool.py:929
+#: ../common/models/pool.py:893
 msgid "AutomatedPool {} is created."
 msgstr "Создан автоматический пул {}."
 
-#: ../common/models/pool.py:948
+#: ../common/models/pool.py:912
 msgid "Update Pool values for AutomatedPool {}."
 msgstr "Обновление значений пула для автоматического пула {}."
 
-#: ../common/models/pool.py:969
+#: ../common/models/pool.py:933
 msgid "Update AutomatedPool values for {}."
 msgstr "Обновление значений автоматического пула {}."
 
-#: ../common/models/pool.py:986
+#: ../common/models/pool.py:950
 msgid "There is no client for pool {}."
 msgstr "Пул {} не имеет подключения к ECP VeiL. Проверьте контроллер."
 
-#: ../common/models/pool.py:1017
+#: ../common/models/pool.py:981
 msgid "VM creation task {} finished with error."
 msgstr "Задача {} создания ВМ завершилась с ошибкой."
 
-#: ../common/models/pool.py:1026
+#: ../common/models/pool.py:990
 msgid "Fail to cancel VM creation task."
 msgstr "Ошибка отмены задачи создания ВМ."
 
-#: ../common/models/pool.py:1043
+#: ../common/models/pool.py:1007
 msgid "VM {} created and added to the pool {}."
 msgstr "ВМ {} создана и добавлена в пул {}."
 
-#: ../common/models/pool.py:1051
+#: ../common/models/pool.py:1015
 msgid "Attempts to create VM {} have been exhausted."
 msgstr "Превышен лимит попыток создания ВМ {}."
 
-#: ../common/models/pool.py:1082
+#: ../common/models/pool.py:1046
 msgid "VM creation error."
 msgstr "Ошибка создания ВМ."
 
-#: ../common/models/pool.py:1086
+#: ../common/models/pool.py:1050
 msgid "{} vm(s) are successfully added in the {} pool."
 msgstr "{} ВМ успешно добавлены в пул {}."
 
-#: ../common/models/pool.py:1089
+#: ../common/models/pool.py:1053
 msgid "Adding VM to the pool {} finished with errors."
 msgstr "Добавление ВМ в пул {} закончилось с ошибками."
 
-#: ../common/models/pool.py:1090
+#: ../common/models/pool.py:1054
 msgid "Required: {}, created: {}."
 msgstr "Необходимо: {}, создано: {}."
 
@@ -684,11 +672,11 @@ msgstr "Отсутствует пул с ID: {}."
 msgid "User {} has no VM on pool {}."
 msgstr "У пользователя {} нет виртуальной машины в пуле {}."
 
-#: ../common/veil/veil_redis.py:166
+#: ../common/veil/veil_redis.py:163
 msgid "Redis waiting exception."
 msgstr "Ошибка Redis."
 
-#: ../common/veil/veil_redis.py:217
+#: ../common/veil/veil_redis.py:214
 msgid "Redis task waiting exception."
 msgstr "Ошибка redis-задачи."
 
@@ -853,19 +841,27 @@ msgstr "Отсутствует имя пользователя."
 msgid "Missing password."
 msgstr "Отсутствует пароль."
 
-#: ../web_app/auth/handlers.py:42
+#: ../web_app/auth/handlers.py:39
+msgid "External auth system is disabled. Check broker settings."
+msgstr "Внешняя служба авторизации отключена. Проверьте настройки брокера."
+
+#: ../web_app/auth/handlers.py:45
 msgid "Invalid credentials."
 msgstr "Неверные учетные данные."
 
-#: ../web_app/auth/handlers.py:52
+#: ../web_app/auth/handlers.py:47
+msgid "Local auth system is disabled. Check broker settings."
+msgstr "Локальная служба авторизации отключена. Проверьте настройки брокера."
+
+#: ../web_app/auth/handlers.py:56
 msgid "Authentication failed for user: {}."
 msgstr "Ошибка авторизации пользователя: {}."
 
-#: ../web_app/auth/handlers.py:64
+#: ../web_app/auth/handlers.py:68
 msgid "User {} logged out."
 msgstr "Пользователь {} вышел из системы."
 
-#: ../web_app/auth/handlers.py:74
+#: ../web_app/auth/handlers.py:78
 msgid "Demo version."
 msgstr "Демонстрационная версия."
 
@@ -1076,19 +1072,19 @@ msgstr "Ошибка создания автоматического пула {}
 msgid "Failed to update automated pool {}. Name must be unique."
 msgstr "Ошибка редактирования автоматического пула {}. Имя должно быть уникальным."
 
-#: ../web_app/pool/schema.py:992
+#: ../web_app/pool/schema.py:952
 msgid "There is no VM {}."
 msgstr "Нет ВМ {}."
 
-#: ../web_app/pool/schema.py:1009
+#: ../web_app/pool/schema.py:969
 msgid "User does not have the right to use pool, which has VM."
 msgstr "У пользователя нет прав на использование пула, которому принадлежит ВМ."
 
-#: ../web_app/pool/schema.py:1050
+#: ../web_app/pool/schema.py:1010
 msgid "Another task works on VM {}."
 msgstr "Другая задача выполняется над ВМ {}."
 
-#: ../web_app/pool/schema.py:1152
+#: ../web_app/pool/schema.py:1112
 msgid "Only VM with Windows OS can be in domain."
 msgstr "Только ВМ на ОС Windows могут находиться в домене."
 
@@ -1182,3 +1178,12 @@ msgstr "{cls}: Контроллер {name} уже отслеживается."
 #, python-brace-format
 msgid "{cls}: resource monitor for controller {name} connected."
 msgstr "{cls}: монитор ресурсов для контроллера {name} подключен."
+
+#~ msgid "Roles: {} was deleted to pool {}."
+#~ msgstr "Роли: {} удалены в пуле {}."
+
+#~ msgid "Pool already has role."
+#~ msgstr "Пул уже имеет роль."
+
+#~ msgid "Role {} has been set to pool {}."
+#~ msgstr "Роль {} добавлена в пул {}."

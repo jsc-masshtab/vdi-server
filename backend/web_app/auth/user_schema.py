@@ -220,7 +220,6 @@ class CreateUserMutation(graphene.Mutation, UserValidator):
 class UpdateUserMutation(graphene.Mutation, UserValidator):
     class Arguments:
         id = graphene.UUID(required=True)
-        username = graphene.String()
         email = graphene.String()
         last_name = graphene.String()
         first_name = graphene.String()
@@ -233,13 +232,8 @@ class UpdateUserMutation(graphene.Mutation, UserValidator):
     @security_administrator_required
     async def mutate(cls, root, info, creator, **kwargs):
         await cls.validate(**kwargs)
-        if kwargs.get('username'):
-            kwargs['username'] = kwargs['username'].strip()
-        user = await User.soft_update(kwargs['id'],
-                                      username=kwargs.get('username'), email=kwargs.get('email'),
-                                      last_name=kwargs.get('last_name'), first_name=kwargs.get('first_name'),
-                                      is_superuser=kwargs.get('is_superuser'), creator=creator
-                                      )
+        user = await User.soft_update(creator=creator,
+                                      **kwargs)
         return UpdateUserMutation(
             user=UserType(**user.__values__),
             ok=True)
