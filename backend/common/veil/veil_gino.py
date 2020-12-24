@@ -213,7 +213,7 @@ class VeilModel(db.Model):
 
     @classmethod
     async def soft_update(cls, id=None, **kwargs):
-        creator = kwargs.pop('creator')
+        creator = kwargs.pop('creator', None)
         dict_kwargs = kwargs
         update_dict = dict()
         for key, value in dict_kwargs.items():
@@ -221,9 +221,9 @@ class VeilModel(db.Model):
                 update_dict[key] = value
         if update_dict:
             await cls.update.values(**update_dict).where(cls.id == id).gino.status()
-            update_type = await cls.get(id)
-            update_dict['creator'] = creator
 
+        update_type = await cls.get(id)
+        update_dict['creator'] = creator
         return update_type, update_dict
 
     async def add_users(self, users_list: list, creator):

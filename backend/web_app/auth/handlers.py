@@ -6,7 +6,7 @@ from common.veil.veil_gino import EntityType
 from common.veil.auth.veil_jwt import encode_jwt, extract_user_and_token_with_no_expire_check
 from common.models.auth import User
 from common.models.authentication_directory import AuthenticationDirectory
-
+from common.settings import LOCAL_AUTH, EXTERNAL_AUTH
 from common.languages import lang_init
 from common.log.journal import system_logger
 from common.veil.veil_errors import ValidationError, AssertError
@@ -31,22 +31,26 @@ class AuthHandler(BaseHandler, ABC):
             if not password or len(password) < 2:
                 raise ValidationError(_('Missing password.'))
 
-            if self.args.get('ldap'):
+            # Updated 22.12.2020
+            if self.args.get('ldap') and EXTERNAL_AUTH:
                 account_name = await AuthenticationDirectory.authenticate(username, password)
                 domain_name = await AuthenticationDirectory.get_domain_name(self.args['username'])
-            else:
+            elif self.args.get('ldap') and not EXTERNAL_AUTH:
+                raise ValidationError(_('External auth system is disabled. Check broker settings.'))
+            elif LOCAL_AUTH:
                 password_is_valid = await User.check_user(username, password)
                 account_name = username
                 domain_name = None
                 if not password_is_valid:
                     raise AssertError(_('Invalid credentials.'))
+            else:
+                raise ValidationError(_('Local auth system is disabled. Check broker settings.'))
 
             access_token = encode_jwt(account_name, domain=domain_name)
             await User.login(username=account_name, token=access_token.get('access_token'), ip=self.remote_ip,
                              ldap=self.args.get('ldap'), client_type=self.client_type)
             response = {'data': access_token}
         except AssertionError as auth_error:
-            # Updated 19.11.2020
             error_description = 'IP: {}\n{}'.format(self.remote_ip, auth_error)
             entity = {'entity_type': EntityType.SECURITY, 'entity_uuid': None}
             error_message = _('Authentication failed for user: {}.').format(self.args.get('username', 'unknown'))

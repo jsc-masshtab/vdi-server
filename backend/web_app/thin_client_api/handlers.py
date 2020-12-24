@@ -171,6 +171,7 @@ class PoolGetVm(BaseHandler, ABC):
                 vm_port = 3389  # default rdp port
 
             except (RuntimeError, IndexError, KeyError):
+                # TODO: записать в журнал какой ответ пришел от вейла
                 response = {'errors': [{'message': _('VM does not support RDP. The controller didn`t provide a VM address.')}]}
                 return await self.log_finish(response)
 

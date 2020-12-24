@@ -241,8 +241,11 @@ class User(AbstractSortableStatusModel, VeilModel):
         return user_obj
 
     @classmethod
-    async def soft_update(cls, id, **kwargs):
-        update_type, update_dict = await super().soft_update(id, **kwargs)
+    async def soft_update(cls, id, creator: str, email: str = None, last_name: str = None, first_name: str = None,
+                          is_superuser: str = None):
+        update_type, update_dict = await super().soft_update(id, email=email, last_name=last_name,
+                                                             first_name=first_name, is_superuser=is_superuser,
+                                                             creator=creator)
 
         creator = update_dict.pop('creator')
         desc = str(update_dict)
@@ -265,7 +268,7 @@ class User(AbstractSortableStatusModel, VeilModel):
 
     @classmethod
     async def login(cls, username, token, client_type, ip=None, ldap=False):
-        """Записывает данные с которыми пользователь вошел в систему"""
+        """Записывает данные с которыми пользователь вошел в систему."""
         user = await User.get_object(extra_field_name='username', extra_field_value=username)
         if not user:
             return False
