@@ -14,6 +14,7 @@ pipeline {
         NFS_DIR = "/nfs/vdi-deb"
         DEB_ROOT = "${WORKSPACE}/devops/deb"
         DATE = "${currentDate}"
+        VER = "${VERSION}-${BUILD_NUMBER}"
     }
 
     post {
@@ -47,11 +48,11 @@ pipeline {
         string(      name: 'BRANCH',               defaultValue: 'dev',              description: 'branch')
         string(      name: 'REPO',                 defaultValue: 'vdi-testing',      description: 'repo for uploading')
         string(      name: 'VERSION',              defaultValue: '2.2.1',            description: 'base version')
-        string(      name: 'AGENT',                defaultValue: 'debian9',          description: 'jenkins agent label for running the job')
+        string(      name: 'AGENT',                defaultValue: 'bld-agent-02',     description: 'jenkins build agent')
     }
 
     stages {
-        stage ('create environment') {
+        stage ('checkout') {
             steps {
                 cleanWs()
                 checkout([ $class: 'GitSCM',
@@ -64,35 +65,29 @@ pipeline {
             }
         }
 
-        stage ('prepare build environment') {
-            environment {
-                VER = "${VERSION}-${BUILD_NUMBER}"
+        stage('prepare build image') {
+            steps {
+                sh "docker build -f devops/docker/Dockerfile.vdi . -t vdi-builder:${VERSION}"
             }
-            
+        }
+
+        stage ('build') {
+            agent {
+                docker {
+                    image "vdi-builder:${VERSION}"
+                    args '-u root:root -v /nfs:/nfs'
+                    reuseNode true
+                    label "${AGENT}"
+                }
+            }
+
             steps {
                 sh script: '''
-                    rm -rf ${WORKSPACE}/.git ${WORKSPACE}/.gitignore
                     sed -i "s:%%VER%%:${VER}:g" "${DEB_ROOT}/${PRJNAME}/root/DEBIAN/control"
-                '''
-            }
-        }
 
-        stage ('prepare backend app') {
-            steps {
-                sh script: '''
                     mkdir -p "${DEB_ROOT}/${PRJNAME}/root/opt/veil-vdi/app"
-                    rsync -a --delete ${WORKSPACE}/backend/ "${DEB_ROOT}/${PRJNAME}/root/opt/veil-vdi/app"
-                '''
-            }
-        }
+                    rsync -a ${WORKSPACE}/backend/ "${DEB_ROOT}/${PRJNAME}/root/opt/veil-vdi/app"
 
-        stage ('prepare virtual env') {
-            steps {
-                sh script: '''
-                    # устанавливаем pip
-                    /usr/bin/python3 -m pip --no-cache-dir install 'pip==20.2.4' --force-reinstall
-                    # устанавливаем virtualenv
-                    /usr/bin/python3 -m pip --no-cache-dir install 'virtualenv==15.1.0' --force-reinstall
                     # создаем виртуальное окружение
                     /usr/bin/python3 -m virtualenv ${DEB_ROOT}/${PRJNAME}/root/opt/veil-vdi/env
                     # устанавливаем зависимости
@@ -100,26 +95,14 @@ pipeline {
                     ${DEB_ROOT}/${PRJNAME}/root/opt/veil-vdi/env/bin/python -m pip --no-cache-dir install -r requirements.txt
                     # делаем виртуальное окружение перемещаемым
                     virtualenv --relocatable ../env
-                '''
-            }
-        }
 
-        stage ('build app') {
-            steps {
-                sh script: '''
-                    cd backend/common
+                    cd common
                     chmod +x compilemessages.sh
                     ./compilemessages.sh en
                     ./compilemessages.sh ru
                     cd ..
                     make -C "${DEB_ROOT}/${PRJNAME}"
-                '''
-            }
-        }
 
-        stage ('publish to nfs') {
-            steps {
-                sh script: '''
                     # upload to nfs
                     mkdir -p ${NFS_DIR}
                     rm -f ${NFS_DIR}/${PRJNAME}*.deb

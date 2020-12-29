@@ -14,6 +14,7 @@ pipeline {
         NFS_DIR = "/nfs/vdi-deb"
         DEB_ROOT = "${WORKSPACE}/devops/deb"
         DATE = "${currentDate}"
+        VER = "${VERSION}-${BUILD_NUMBER}"
     }
 
     post {
@@ -47,11 +48,11 @@ pipeline {
         string(      name: 'BRANCH',               defaultValue: 'dev',              description: 'branch')
         string(      name: 'REPO',                 defaultValue: 'vdi-testing',      description: 'repo for uploading')
         string(      name: 'VERSION',              defaultValue: '2.2.1',            description: 'base version')
-        string(      name: 'AGENT',                defaultValue: 'debian9',          description: 'jenkins agent label for running the job')
+        string(      name: 'AGENT',                defaultValue: 'bld-agent-02',     description: 'jenkins build agent')
     }
 
     stages {
-        stage ('create environment') {
+        stage ('checkout') {
             steps {
                 cleanWs()
                 checkout([ $class: 'GitSCM',
@@ -64,22 +65,26 @@ pipeline {
             }
         }
 
-        stage ('prepare build environment') {
-            environment {
-                VER = "${VERSION}-${BUILD_NUMBER}"
-            }
-
+        stage('prepare build image') {
             steps {
-                sh script: '''
-                    rm -rf ${WORKSPACE}/.git ${WORKSPACE}/.gitignore
-                    sed -i "s:%%VER%%:$VER:g" "$DEB_ROOT/$PRJNAME/root/DEBIAN/control"
-                '''
+                sh "docker build -f devops/docker/Dockerfile.vdi . -t vdi-builder:${VERSION}"
             }
         }
 
         stage ('build') {
+            agent {
+                docker {
+                    image "vdi-builder:${VERSION}"
+                    args '-u root:root -v /nfs:/nfs'
+                    reuseNode true
+                    label "${AGENT}"
+                }
+            }
+
             steps {
                 sh script: '''
+                    sed -i "s:%%VER%%:$VER:g" "$DEB_ROOT/$PRJNAME/root/DEBIAN/control"
+
                     # clean npm cache
                     npm cache clean --force
 
@@ -93,13 +98,7 @@ pipeline {
                     cp -r ${WORKSPACE}/frontend/dist/frontend/* "${DEB_ROOT}/${PRJNAME}/root/opt/veil-vdi/www"
 
                     make -C ${DEB_ROOT}/${PRJNAME}
-                '''
-            }
-        }
 
-        stage ('publish to nfs') {
-            steps {
-                sh script: '''
                     # upload to nfs
                     mkdir -p ${NFS_DIR}
                     rm -f ${NFS_DIR}/${PRJNAME}*.deb
