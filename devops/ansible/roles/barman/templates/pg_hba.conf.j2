@@ -1,0 +1,7 @@
+local replication streaming_barman md5
+host replication streaming_barman 127.0.0.1/32 md5
+host replication streaming_barman {{ local_ip }}/32 md5
+
+local postgres barman md5
+host postgres barman 127.0.0.1/32 md5
+host postgres barman {{ local_ip }}/32 md5

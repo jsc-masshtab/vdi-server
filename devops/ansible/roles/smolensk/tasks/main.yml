@@ -1,0 +1,22 @@
+---
+
+- name: Smolensk | Configure zero_if_notfound
+  lineinfile:
+    path: /etc/parsec/mswitch.conf
+    regexp: '^zero_if_notfound'
+    line: "zero_if_notfound: yes"
+
+- name: Smolensk | Remove smolensk cdrom repo
+  file:
+    state: absent
+    path: /etc/apt/sources.list
+
+- name: Smolensk | Unarchive locale
+  command: "gunzip /usr/share/i18n/charmaps/UTF-8.gz"
+  args:
+    creates: /usr/share/i18n/charmaps/UTF-8
+  
+- name: Smolensk | localedef
+  command: "localedef -i /usr/share/i18n/locales/en_US -f /usr/share/i18n/charmaps/UTF-8 /usr/lib/locale/en_US.UTF-8"
+  args:
+    creates: /usr/lib/locale/en_US.UTF-8

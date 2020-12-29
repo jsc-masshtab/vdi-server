@@ -1,0 +1,8 @@
+#COMMON_VARS
+local_ip: "{{ ansible_default_ipv4.address }}"
+
+#ADVANCED VARS
+ovpn_client_host: db1
+ovpn_enabled: yes
+
+pg_enabled: yes

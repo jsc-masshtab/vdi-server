@@ -1,0 +1,7 @@
+---
+
+- include: install.yml
+
+- include: install_cli.yml
+
+- include: setup.yml

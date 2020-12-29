@@ -1,0 +1,11 @@
+---
+
+- name: Barman | install barman-cli
+  apt:
+    deb: "{{ item[0] }}"
+    update_cache: yes
+  with_nested:
+    - ["http://mothership.bazalt.team/vdi_stuff/deb/python3-barman_2.12-1.stretch%2B1_all.deb",
+       "http://mothership.bazalt.team/vdi_stuff/deb/barman-cli_2.12-1.stretch%2B1_all.deb"]
+    - ["{{ db1_host }}", "{{ db2_host }}"]
+  delegate_to: "{{ item[1] }}"

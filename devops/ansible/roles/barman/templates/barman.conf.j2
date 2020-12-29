@@ -1,0 +1,11 @@
+[barman]
+barman_user = barman
+configuration_files_directory = {{ barman_confd_dir }}
+barman_home = {{ barman_home }}
+log_file = /var/log/barman/barman.log
+log_level = INFO
+compression = {{ barman_wal_compress }}
+backup_options = concurrent_backup
+recovery_options = 'get-wal'
+minimum_redundancy = {{ barman_redundancy }}
+retention_policy = {{ barman_retention_policy }}

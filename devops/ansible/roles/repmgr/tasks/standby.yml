@@ -1,0 +1,29 @@
+---
+
+- name: Repmgr | stop postgres
+  service:
+    name: postgresql
+    state: stopped
+
+- name: Repmgr | remove pg data
+  file:
+    path: "{{ pg_data_dir }}/*"
+    state: absent
+
+- name: Repmgr | cloning db
+  command: repmgr -h {{ hostvars[second_db_host].local_ip }} -U repmgr -d repmgr -f {{ repmgr_config }} standby clone -F
+  become: true
+  become_user: postgres
+
+- name: Repmgr | start postgres
+  service:
+    name: postgresql
+    state: started
+
+- name: Repmgr | register standby
+  command: repmgr -f {{ repmgr_config }} standby register --force
+  register: repmgr_log
+  become: true
+  become_user: postgres
+  notify:
+    - save repmgr log

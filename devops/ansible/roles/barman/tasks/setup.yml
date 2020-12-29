@@ -1,0 +1,94 @@
+---
+
+- name: Barman | copy barman config
+  template:
+    src: barman.conf.j2
+    dest: "{{ barman_config }}"
+
+- name: Barman | copy barman backup config
+  template:
+    src: main_backup.conf.j2
+    dest: "{{ barman_confd_dir }}/{{ barman_backup_name }}.conf"
+
+- name: Barman | add barman pgpass
+  template:
+    src: pgpass.j2
+    dest: "~/.pgpass"
+    mode: 0600
+    owner: barman
+  become: true
+  become_user: barman
+
+- include: setup_host.yml
+  vars:
+    - barman_db_host: "{{ db1_host }}"
+
+- include: setup_host.yml
+  vars:
+    - barman_db_host: "{{ db2_host }}"
+
+- name: Barman | create barman role
+  postgresql_user:
+    user: barman
+    password: "{{ barman_db_user_pass }}"
+    role_attr_flags: SUPERUSER
+  delegate_to: "{{ db1_host }}"
+  become: true
+  become_user: postgres
+
+- name: Barman | create barman streaming role
+  postgresql_user:
+    user: streaming_barman
+    password: "{{ barman_db_user_streaming_pass }}"
+    role_attr_flags: replication
+  delegate_to: "{{ db1_host }}"
+  become: true
+  become_user: postgres
+  
+- name: Barman | barman create slot
+  command: barman receive-wal --create-slot {{ barman_backup_name }}
+  ignore_errors: yes
+
+- name: Barman | add barman cron job
+  cron:
+    name: "barman_minute"
+    job: "{{ barman_bin }} cron"
+
+- name: Barman | add barman backup cron job
+  cron:
+    name: "barman_full"
+    minute: "{{ barman_full_backup.minute }}"
+    hour: "{{ barman_full_backup.hour }}"
+    weekday: "{{ barman_full_backup.weekday }}"
+    job: "{{ barman_bin }} backup {{ barman_backup_name }}"
+
+- name: Barman | add pg sudoers
+  template:
+    src: pg_sudoers.j2
+    dest: "{{ sudoersd_dir }}/pg_barman_sudoers"
+
+- name: Barman | modify repmgrd handler script
+  replace:
+    dest: "{{ repmgrd_handler_script }}"
+    regexp: "#psql"
+    replace: "psql"
+
+- name: Barman | modify repmgrd handler script 2
+  replace:
+    dest: "{{ repmgrd_handler_script }}"
+    regexp: "#sudo"
+    replace: "sudo"
+
+- name: Barman | barman cron
+  command: barman cron
+
+- block:
+  - name: Barman | barman switch wal
+    command: barman switch-wal --force --archive {{ barman_backup_name }}
+
+  - name: Barman | barman backup 1
+    command: barman backup {{ barman_backup_name }}
+
+  - name: Barman | barman backup 2
+    command: barman backup {{ barman_backup_name }}
+  ignore_errors: yes

@@ -1,0 +1,19 @@
+---
+
+- name: Postgres | Ensure pg_confd_dir
+  file:
+    path: "{{ pg_confd_dir }}"
+    state: directory
+    owner: postgres
+    group: postgres
+    mode: 0775
+
+- name: Postgres | Configure postgresql.conf
+  lineinfile:
+    path: "{{ postgresql_conf_file }}"
+    insertafter: EOF
+    line: "include_dir = 'conf.d'"
+
+- name: Smolensk | Increase integrity level for user postgres
+  command: pdpl-user -i 63 postgres
+  when: ansible_os_family == "Astra Linux (Smolensk)"

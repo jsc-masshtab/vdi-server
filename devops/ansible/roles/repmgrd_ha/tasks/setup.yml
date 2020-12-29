@@ -1,0 +1,54 @@
+---
+
+- name: Repmgrd_HA | copy iptables chains script
+  template:
+    src: repmgr_iptables_chains.sh.j2
+    dest: "{{ repmgrd_iptables_chains_script }}"
+    mode: 0755
+
+- name: Repmgrd_HA | add chains to cron
+  cron:
+    name: "repmgr custom chains"
+    special_time: reboot
+    job: "{{ repmgrd_iptables_chains_script }}"
+
+- name: Repmgrd_HA | copy iptables script
+  copy:
+    src: repmgr_iptables.sh
+    dest: "{{ repmgrd_iptables_script }}"
+    mode: 0755
+
+- name: Repmgrd_HA | copy iptables handler script
+  template:
+    src: repmgr_handler.sh.j2
+    dest: "{{ repmgrd_handler_script }}"
+    mode: 0755
+
+- name: Repmgrd_HA | add pg sudoers
+  template:
+    src: pg_sudoers.j2
+    dest: "{{ sudoersd_dir }}/pg_sudoers"
+
+- include: setup_host.yml
+  vars:
+    repmgrd_db_host: "{{ db1_host }}"
+
+- include: setup_host.yml
+  vars:
+    repmgrd_db_host: "{{ db2_host }}"
+
+- name: Repmgrd_HA | create iptables chains
+  command: "{{ repmgrd_iptables_chains_script }}"
+
+- name: Repmgrd_HA | redirect from {{ repmgrd_barman_port }}
+  command: "{{ repmgrd_iptables_script }} {{ hostvars[db1_host].local_ip }} {{ local_ip }} {{ pg_port }} {{ repmgrd_barman_port }}"
+
+- name: Repmgrd_HA | redirect from {{ repmgrd_app_port }}
+  command: "{{ repmgrd_iptables_script }} {{ hostvars[db1_host].local_ip }} {{ local_ip }} {{ pg_port }} {{ repmgrd_app_port }} app"
+
+- name: Repmgrd_HA | copy current master id
+  copy:
+    src: repmgr_master
+    dest: "{{ repmgrd_master_file }}"
+    mode: 0644
+    owner: postgres

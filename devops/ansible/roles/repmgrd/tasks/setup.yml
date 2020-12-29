@@ -1,0 +1,46 @@
+---
+
+- name: Repmgrd | install sudo
+  apt:
+    name: sudo
+    state: present
+
+- name: Repmgrd | generate ssh key
+  command: ssh-keygen -b 2048 -t rsa -N "" -C "postgres@{{ local_ip }}" -f {{ repmgrd_ssh_key }}
+  args:
+    creates: "{{ repmgrd_ssh_key }}"
+  become: true
+  become_user: postgres
+
+- name: Repmgrd | pull ssh key
+  fetch:
+    flat: yes
+    src: "{{ repmgrd_pub_key }}"
+    dest: "{{ repmgrd_local_key }}"
+  become: true
+  become_user: postgres
+
+- name: Repmgrd | copy tempfiles config
+  copy:
+    src: tmpfiles.conf
+    dest: "{{ tmpfilesd_dir }}/repmgrd.conf"
+
+- name: Repmgrd | create temp dir
+  command: systemd-tmpfiles --create
+
+- name: Repmgrd | add repmgr pgpass
+  template:
+    src: pgpass.j2
+    dest: "~/.pgpass"
+    mode: 0600
+    owner: postgres
+  become: true
+  become_user: postgres
+
+- include: setup_host.yml
+  vars:
+    repmgrd_db_host: "{{ db1_host }}"
+
+- include: setup_host.yml
+  vars:
+    repmgrd_db_host: "{{ db2_host }}"

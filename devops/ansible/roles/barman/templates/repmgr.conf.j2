@@ -1,0 +1,3 @@
+barman_host='barman@{{ local_ip }}'
+barman_server='{{ barman_backup_name }}'
+restore_command='/usr/bin/barman-wal-restore -U barman {{ local_ip }} {{ barman_backup_name }} %f %p'

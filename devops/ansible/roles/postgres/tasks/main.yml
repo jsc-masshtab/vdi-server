@@ -1,0 +1,5 @@
+---
+
+- include: add_repo.yml
+- include: install.yml
+- include: configure.yml

@@ -1,6 +1,0 @@
----
-
-- name: Apply migrations
-  command: "PYTHONPATH=/opt/veil-vdi/app /opt/veil-vdi/env/bin/python /opt/veil-vdi/env/bin/alembic upgrade head"
-  args:
-    chdir: /opt/veil-vdi/app/common/migrations

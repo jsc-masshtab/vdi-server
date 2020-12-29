@@ -1,0 +1,23 @@
+---
+
+- name: System | set hostname
+  hostname:
+    name: "{{ item }}"
+    use: systemd
+  delegate_to: "{{ item }}"
+  with_items:
+    - "{{ db1_host }}"
+    - "{{ db2_host }}"
+    - "{{ backup_host }}"
+
+- name: System | configure hosts file
+  lineinfile:
+    dest: /etc/hosts
+    regexp: '^127\.0\.1\.1'
+    line: '127.0.1.1 {{ item }}'
+    state: present
+  delegate_to: "{{ item }}"
+  with_items:
+    - "{{ db1_host }}"
+    - "{{ db2_host }}"
+    - "{{ backup_host }}"
