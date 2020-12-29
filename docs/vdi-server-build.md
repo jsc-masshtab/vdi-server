@@ -15,11 +15,12 @@ libssl-dev
 sudo
 curl
 apt-utils
+rsync
 ```
 Выполнить установку этих пакетов:
 ```
 apt update
-apt install -y python3-dev python3-setuptools python-dev gcc python3-pip libsasl2-dev libldap2-dev libssl-dev sudo curl apt-utils
+apt install -y python3-dev python3-setuptools python-dev gcc python3-pip libsasl2-dev libldap2-dev libssl-dev sudo curl apt-utils rsync
 ```
 2. Создать рабочий каталог, в который будут скопированы исходные тексты, с помощью команды:
 ```
