@@ -1,0 +1,13 @@
+#COMMON VARS
+local_ip: "{{ ansible_default_ipv4.address }}"
+
+#ADVANCED_VARS
+second_db_host: db1
+
+ovpn_client_host: backup
+ovpn_enabled: no
+
+pg_enabled: no
+
+repmgr_id: 2
+repmgr_master: False

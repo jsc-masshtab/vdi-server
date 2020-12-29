@@ -1,0 +1,68 @@
+---
+
+- name: Repmgrd | create dir
+  file:
+    dest: "{{ repmgrd_auth_keys | dirname}}"
+    state: directory
+    mode: 0700
+    owner: postgres
+  become: true
+  become_user: postgres
+  delegate_to: "{{ repmgrd_db_host }}"
+
+- name: Repmgrd | add ssh key to db
+  blockinfile:
+    dest: "{{ repmgrd_auth_keys }}"
+    block: "{{ lookup('file', '{{ repmgrd_local_key }}') }}"
+    insertbefore: EOF
+    marker: "# {mark} ANSIBLE MANAGED BLOCK FOR REPMGRD {{ repmgrd_db_host }}"
+    create: yes
+    mode: 0600
+  become: true
+  become_user: postgres
+  delegate_to: "{{ repmgrd_db_host }}"
+
+- name: Repmgrd | create config
+  template:
+    src: repmgrd.conf.j2
+    dest: "{{ repmgrd_config }}"
+
+- name: Repmgrd | update pg hba
+  blockinfile:
+    dest: "{{ pg_hba_file }}"
+    block: "{{ lookup('template', 'pg_hba.conf.j2') }}"
+    insertbefore: BOF
+    marker: "# {mark} ANSIBLE MANAGED BLOCK FOR REPMGRD"
+  delegate_to: "{{ repmgrd_db_host }}"
+
+- name: Repmgrd | restart postgres
+  service:
+    name: postgresql
+    state: restarted
+  delegate_to: "{{ repmgrd_db_host }}"
+
+- name: Repmgrd | copy service file
+  template:
+    src: repmgrd.service.j2
+    dest: "{{ repmgrd_service }}"
+#notify not working with {{ repmgr_db_host }}
+
+- name: Repmgrd | ssh-keyscan
+  shell: "ssh-keyscan -H {{ hostvars[repmgrd_db_host].local_ip }}"
+  register: ssh_fingerprint
+
+- name: Repmgrd | copy fingerprint to known hosts
+  blockinfile:
+    dest: "{{ repmgrd_known_hosts }}"
+    block: "{{ ssh_fingerprint.stdout }}"
+    insertbefore: EOF
+    marker: "# {mark} ANSIBLE MANAGED BLOCK FOR REPMGRD {{ repmgrd_db_host }}"
+    create: yes
+  become: true
+  become_user: postgres
+
+- name: Repmgrd | restart repmgrd
+  service:
+    name: "{{ repmgrd_base }}"
+    state: restarted
+    enabled: yes
