@@ -3,7 +3,7 @@ import { WaitService } from '../../components/single/wait/wait.service';
 import { MatDialogRef } from '@angular/material';
 import { Component, Inject, OnInit, OnDestroy } from '@angular/core';
 import { MAT_DIALOG_DATA } from '@angular/material';
-import { FormBuilder, FormGroup } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 
 
 interface IData {
@@ -52,6 +52,8 @@ export class FormForEditComponent implements OnInit, OnDestroy {
   public init = false;
   private sub: Subscription;
 
+  public checkValid: boolean = false;
+
   constructor(private waitService: WaitService,
               private dialogRef: MatDialogRef<FormForEditComponent>,
               @Inject(MAT_DIALOG_DATA) public data: IData,
@@ -71,7 +73,7 @@ export class FormForEditComponent implements OnInit, OnDestroy {
     }
     if (form.length) {
       for (let i = 0; i < form.length; i++) {
-        this.formGroup.addControl(`${form[i].fieldName}`, this.fb.control(form[i].fieldValue));
+        this.formGroup.addControl(`${form[i].fieldName}`, this.fb.control(form[i].fieldValue, Validators.required));
       }
       this.init = true;
     } else {
@@ -88,28 +90,32 @@ export class FormForEditComponent implements OnInit, OnDestroy {
   }
 
   public send() {
-    if (this.data.post && this.data.update) {
-      this.waitService.setWait(true);
-      this.data.post.service[this.data.post.method](this.data.post.params, this.formGroup.value).subscribe(() => {
-        if (this.data.update.refetch) {
-          this.data.post.service[this.data.update.method](...this.data.update.params).refetch();
-          this.waitService.setWait(false);
-          if (this.data.updateDepend) {
-            this.data.updateDepend.service[this.data.updateDepend.method](...this.data.updateDepend.params);
-          }
-          this.dialogRef.close();
-        } else {
-          this.sub =  this.data.post.service[this.data.update.method](...this.data.update.params).subscribe(() => {
+    if (this.formGroup.valid) {
+      if (this.data.post && this.data.update) {
+        this.waitService.setWait(true);
+        this.data.post.service[this.data.post.method](this.data.post.params, this.formGroup.value).subscribe(() => {
+          if (this.data.update.refetch) {
+            this.data.post.service[this.data.update.method](...this.data.update.params).refetch();
             this.waitService.setWait(false);
             if (this.data.updateDepend) {
               this.data.updateDepend.service[this.data.updateDepend.method](...this.data.updateDepend.params);
             }
             this.dialogRef.close();
-          });
-        }
-      });
+          } else {
+            this.sub = this.data.post.service[this.data.update.method](...this.data.update.params).subscribe(() => {
+              this.waitService.setWait(false);
+              if (this.data.updateDepend) {
+                this.data.updateDepend.service[this.data.updateDepend.method](...this.data.updateDepend.params);
+              }
+              this.dialogRef.close();
+            });
+          }
+        });
+      } else {
+        throw new Error('post || update отсутствует'); // а если я не хочу обновлять?
+      }
     } else {
-      throw new Error('post || update отсутствует'); // а если я не хочу обновлять?
+      this.checkValid = true;
     }
   }
 
