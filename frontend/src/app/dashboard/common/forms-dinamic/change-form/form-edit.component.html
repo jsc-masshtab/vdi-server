@@ -38,6 +38,10 @@
           </mat-select>
         </mat-form-field>
       </ng-container>
+
+      <ng-container *ngIf="formGroup.hasError('required', field.fieldName) && checkValid">
+        <ng-container *ngTemplateOutlet="errorTemp"></ng-container>
+      </ng-container>
     </label>
   </div>
 
@@ -52,3 +56,7 @@
   </div>
 
 </div>
+
+  <ng-template #errorTemp>
+    <div class="error">Поле обязательно для заполения</div>
+  </ng-template>
