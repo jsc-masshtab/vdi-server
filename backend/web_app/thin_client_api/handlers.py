@@ -13,7 +13,6 @@ from common.settings import REDIS_PORT, REDIS_THIN_CLIENT_CHANNEL, REDIS_PASSWOR
     REDIS_THIN_CLIENT_CMD_CHANNEL
 from common.veil.veil_redis import request_to_execute_pool_task, ThinClientCmd
 from common.veil.veil_handlers import BaseHandler
-from common.veil.veil_errors import ValidationError
 from common.veil.auth.veil_jwt import jwtauth, decode_jwt
 
 from sqlalchemy.sql import func
@@ -65,8 +64,6 @@ class PoolHandler(BaseHandler, ABC):
 
     async def get(self):
         user = await self.get_user_model_instance()
-        if not user:
-            raise ValidationError(_('User {} not found.').format(user.username))
         pools = await user.pools
         response = {"data": pools}
 
@@ -91,9 +88,6 @@ class PoolGetVm(BaseHandler, ABC):
             return await self.log_finish(response)
 
         user = await self.get_user_model_instance()
-        if not user:
-            response = {'errors': [{'message': _('User {} not found.'), 'code': '401'}]}
-            return await self.log_finish(response)
         pool = await PoolModel.get(pool_id)
         if not pool:
             response = {'errors': [{'message': _('Pool not found.'), 'code': '404'}]}
@@ -338,7 +332,7 @@ class ThinClientWsHandler(websocket.WebSocketHandler):  # noqa
                 token = recv_data_dict['token']
                 jwt_info = await UserJwtInfo.query.where(UserJwtInfo.token == token).gino.first()
                 if not jwt_info:
-                    raise AssertionError("Auth failed")
+                    raise AssertionError('Auth failed')
 
                 # Извлекаем инфу из токена
                 JWT_OPTIONS['verify_exp'] = False
@@ -347,14 +341,17 @@ class ThinClientWsHandler(websocket.WebSocketHandler):  # noqa
 
                 # Фиксируем  данные известные на стороне сервера
                 user_id = await User.get_id(user_name)
+                if not user_id:
+                    raise AssertionError(_('User {} not found.').format(user_name))
 
                 # Сохраняем юзера с инфой
-                self.conn_id = await ActiveTkConnection.soft_create(
+                tk_conn = await ActiveTkConnection.soft_create(
                     conn_id=self.conn_id, user_id=user_id,
                     veil_connect_version=recv_data_dict['veil_connect_version'],
                     vm_id=recv_data_dict['vm_id'],
                     tk_ip=self.request.remote_ip,
                     tk_os=recv_data_dict['tk_os'])
+                self.conn_id = tk_conn.id
 
                 response = {'msg_type': 'control', 'error': False, 'msg': 'Auth success'}
                 await self._write_msg(json.dumps(response))
