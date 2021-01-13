@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from common.veil.veil_gino import AbstractSortableStatusModel
 from common.database import db
 from sqlalchemy.sql import func
@@ -7,8 +8,7 @@ from sqlalchemy.dialects.postgresql import UUID
 
 
 class ActiveTkConnection(db.Model, AbstractSortableStatusModel):
-    """Таблица активных соединений тк по вебсокетам
-    Неактульные данные удаляются из таблицы автоматом в классе ThinClientConnMonitor"""
+    """Таблица соединений тк по вебсокетам"""
 
     __tablename__ = 'active_tk_connection'
 
@@ -26,29 +26,20 @@ class ActiveTkConnection(db.Model, AbstractSortableStatusModel):
     # пользователь в последний раз тыкал клавиши или кликал мышь
     disconnected = db.Column(db.DateTime(timezone=True))  # Если это поле None, значит соединение активно
 
-    @staticmethod
-    async def soft_create(conn_id, user_id, veil_connect_version, vm_id, tk_ip, tk_os):
+    @classmethod
+    async def soft_create(cls, conn_id, **kwargs):
         """Создает/заменяет запись о соединении. Возвращает id"""
 
-        model = await ActiveTkConnection.get(conn_id) if conn_id else None
+        model = await cls.get(conn_id) if conn_id else None
 
         # update
         if model:
-            await model.update(user_id=user_id,
-                               veil_connect_version=veil_connect_version,
-                               vm_id=vm_id,
-                               tk_ip=tk_ip,
-                               tk_os=tk_os).apply()
-
+            await model.update(**kwargs, data_received=func.now()).apply()
         else:
-            model = await ActiveTkConnection.create(user_id=user_id,
-                                                    veil_connect_version=veil_connect_version,
-                                                    vm_id=vm_id,
-                                                    tk_ip=tk_ip,
-                                                    tk_os=tk_os)
+            model = await cls.create(**kwargs)
 
         await TkConnectionStatistics.create_tk_event(conn_id=model.id, message='Login')
-        return model.id
+        return model
 
     @staticmethod
     async def get_active_thin_clients_count():
@@ -92,7 +83,7 @@ class TkConnectionStatistics(db.Model, AbstractSortableStatusModel):
     В данный момент фиксируется факты подключения/отключения к ВМ за время соединения
     Мб в будущем еще что-то добавим"""
 
-    __tablename__ = 'tk_connection_statistis'
+    __tablename__ = 'tk_connection_statistics'
 
     id = db.Column(UUID(), primary_key=True, default=uuid.uuid4)
     conn_id = db.Column(UUID(), db.ForeignKey('active_tk_connection.id', ondelete="CASCADE"),

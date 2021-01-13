@@ -7,7 +7,7 @@ from tornado.escape import json_decode
 from graphene_tornado.tornado_graphql_handler import TornadoGraphQLHandler
 
 from common.veil.auth.veil_jwt import extract_user, jwtauth, extract_user_object
-from common.veil.veil_errors import ValidationError
+from common.veil.veil_errors import ValidationError, InvalidUserError
 
 from common.models.auth import User
 from common.models.pool import Pool
@@ -16,6 +16,31 @@ from common.log.journal import system_logger
 from common.languages import lang_init
 
 _ = lang_init()
+
+
+# def handle_validation_error(handler_class):
+#    """ Handle Validation Error
+#    Общая обработка для избежания повторения кода"""
+#    def wrap_execute(handler_execute):
+#
+#        async def request_method(self, *args, **kwargs):
+#            try:
+#                return await handler_execute(self, *args, **kwargs)
+#
+#            except InvalidUserError as ex:
+#                response = {'errors': [{'message': str(ex), 'code': '401'}]}
+#                return await self.log_finish(response)
+#            except ValidationError as ex:
+#                response = {'errors': [{'message': str(ex), 'code': '404'}]}
+#                return await self.log_finish(response)
+#
+#        return request_method
+#
+#    handler_class.get = wrap_execute(handler_class.get)
+#    handler_class.put = wrap_execute(handler_class.put)
+#    handler_class.post = wrap_execute(handler_class.post)
+#    handler_class.delete = wrap_execute(handler_class.delete)
+#    return handler_class
 
 
 class BaseHandler(RequestHandler, ABC):
@@ -34,8 +59,12 @@ class BaseHandler(RequestHandler, ABC):
         # Извлекаем username из токена
         username = extract_user(self.request.headers)
         # Формируем запрос
-        query = User.query.where(User.username == username).where(User.is_active)
-        return await query.gino.first()
+        user = await User.query.where(User.username == username).where(User.is_active).gino.first()
+
+        if not user:
+            raise InvalidUserError(_('User {} not found.').format(username))
+
+        return user
 
     async def log_finish(self, response):
         if 'data' in response:
@@ -73,7 +102,7 @@ class BaseHandler(RequestHandler, ABC):
     @staticmethod
     async def validate_and_get_vm(user, pool_id):
         if not user:
-            raise ValidationError(_('User {} not found.').format(user.username))
+            raise InvalidUserError(_('User {} not found.'))
 
         pool = await Pool.get(pool_id)
         if not pool:

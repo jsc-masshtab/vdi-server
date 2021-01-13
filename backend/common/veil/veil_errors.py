@@ -16,6 +16,11 @@ class ValidationError(AssertionError):
         system_logger._debug(message)
 
 
+class InvalidUserError(ValidationError):
+    def __init__(self, message):
+        super().__init__(message)
+
+
 class AssertError(AssertionError):
     def __init__(self, message):
         system_logger._debug(message)
