@@ -1,0 +1,10 @@
+---
+
+- name: Postgres | Install postgresql
+  apt:
+    name: "{{ item }}"
+    state: latest
+    update_cache: yes
+  with_items:
+    - python3-psycopg2
+    - "postgresql-{{ pg_version }}"

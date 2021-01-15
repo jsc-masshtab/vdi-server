@@ -1,0 +1,78 @@
+---
+
+- name: Broker | Create database
+  postgresql_db:
+    name: "{{ broker_db_name }}"
+    encoding: UTF-8
+    lc_collate: en_US.UTF-8
+    lc_ctype: en_US.UTF-8
+    template: template0
+    owner: postgres
+  become: true
+  become_user: postgres
+  delegate_to: "{{ item }}"
+  with_items: "{{ groups['db_master'] }}"
+
+- name: Broker | Update pg_hba
+  blockinfile:
+    dest: "{{ pg_hba_file }}"
+    block: "{{ lookup('template', 'pg_hba.conf.j2') }}"
+    insertbefore: BOF
+    marker: "# {mark} ANSIBLE MANAGED BLOCK FOR BROKER"
+  delegate_to: "{{ item }}"
+  with_items: "{{ groups['databases'] }}"
+
+- name: Broker | Reload postgres
+  service:
+    name: postgresql
+    state: reloaded
+  delegate_to: "{{ item }}"
+  with_items: "{{ groups['databases'] }}"
+
+- name: Broker | Install packages
+  apt:
+    deb: "{{ item }}"
+    update_cache: yes
+  with_items:
+    - "http://qa2.bazalt.team/vdi-testing/pool/main/v/vdi-frontend/vdi-frontend_2.2.1-131_amd64.deb"
+    - "http://qa2.bazalt.team/vdi-testing/pool/main/v/vdi-backend/vdi-backend_2.2.1-165_amd64.deb"
+
+- name: Broker | Register postgres password
+  shell: grep -r 'DB_PASS' /opt/veil-vdi/app/common/local_settings.py | sed -r "s/DB_PASS = '(.+)'/\1/g"
+  no_log: true
+  register: postgres_db_pass
+
+- name: Broker | Set postgres password
+  postgresql_user:
+    user: postgres
+    password: "{{ postgres_db_pass.stdout }}"
+  no_log: true
+  become: true
+  become_user: postgres
+  delegate_to: "{{ item }}"
+  with_items: "{{ groups['db_master'] }}"
+
+- name: Broker | Configure db connection
+  blockinfile:
+    path: /opt/veil-vdi/app/common/local_settings.py
+    block: |
+      DB_HOST = '{{ hostvars[backup_host].ansible_host }}'
+      DB_PORT = {{ repmgrd_app_port }}
+  when: broker_cluster_db
+
+- name: Broker | Apply migrations
+  command: "/opt/veil-vdi/env/bin/python /opt/veil-vdi/env/bin/alembic upgrade head"
+  args:
+    chdir: "/opt/veil-vdi/app/common/migrations"
+  environment:
+    PYTHONPATH: "/opt/veil-vdi/app"
+
+- name: Broker | Restart vdi services
+  service:
+    name: "{{ item }}"
+    daemon_reload: yes
+    state: restarted
+  with_items:
+    - vdi-web
+    - vdi-pool_worker
+    - vdi-ws_listener

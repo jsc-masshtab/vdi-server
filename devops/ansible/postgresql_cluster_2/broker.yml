@@ -1,0 +1,25 @@
+---
+# yamllint disable rule:line-length
+
+- hosts: brokers
+  become: true
+  become_method: sudo
+  any_errors_fatal: true
+  gather_facts: true
+  vars_files:
+    - vars/main.yml
+    - vars/system.yml
+    - vars/broker.yml
+    - "vars/{{ ansible_os_family }}.yml"
+  roles:
+    - role: smolensk
+      when: ansible_os_family == "Astra Linux (Smolensk)"
+
+    - role: resolv_conf
+    - role: sysctl
+    - role: timezone
+    - role: ntp
+
+    - role: broker
+
+...

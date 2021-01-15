@@ -1,0 +1,6 @@
+---
+
+- include: add_repo.yml
+  when: ansible_os_family != "Astra Linux (Smolensk)"
+- include: install.yml
+- include: configure.yml

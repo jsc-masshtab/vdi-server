@@ -1,0 +1,4 @@
+---
+
+postgresql_conf_dir: "/etc/postgresql/{{ postgresql_version }}/{{ postgresql_cluster_name }}"
+postgresql_cluster_name: "main"

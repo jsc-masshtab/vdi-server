@@ -1,0 +1,9 @@
+---
+
+broker_db_name: "vdi"
+broker_db_user: "vdi"
+broker_local_settings: "/opt/veil-vdi/app/common/local_settings.py"
+broker_apt_key_url: "http://qa2.bazalt.team/veil-repo-key.gpg"
+broker_apt_repo: "deb http://qa2.bazalt.team/vdi-testing/ veil main"
+broker_packages_list: ["vdi-frontend", "vdi-backend"]
+broker_services_list: ["vdi-web", "vdi-pool_worker", "vdi-ws_listener"]
