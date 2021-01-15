@@ -85,7 +85,7 @@ configure_systemd()
 {
 	systemctl daemon-reload
 	systemctl enable vdi-web && systemctl enable vdi-pool_worker && systemctl enable vdi-ws_listener
-	systemctl restart vdi-web && systemctl restart vdi-pool_worker && systemctl restart vdi-ws_listener
+#	systemctl restart vdi-web && systemctl restart vdi-pool_worker && systemctl restart vdi-ws_listener
 }
 
 configure_crontab()
@@ -125,7 +125,7 @@ case "$1" in
 		    configure_users
 			configure_secrets
 			configure_redis
-			configure_postgres
+#			configure_postgres
 			configure_logs
 			configure_systemd
 			configure_crontab

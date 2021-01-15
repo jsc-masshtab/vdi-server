@@ -6,5 +6,5 @@ Depends: apache2
 Section: devel
 Priority: extra
 Homepage: http://veil.mashtab.org
-Description: ECP VeiL docs.
-  (c) 2020 Mashtab
+Description: VeiL Broker frontend
+  (c) 2021 Mashtab

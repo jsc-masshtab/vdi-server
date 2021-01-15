@@ -1,0 +1,89 @@
+---
+
+# ANSIBLE VARS
+ansible_user: "user"
+ansible_password: "Bazalt1!"
+ansible_become: yes
+ansible_python_interpreter: "/usr/bin/python3"
+
+# BROKER VARS
+broker_db_name: vdi
+broker_cluster_db: true
+apt_repo_1: "deb http://192.168.10.144/smolensk-apt-repo smolensk contrib main non-free"
+apt_repo_2: "deb http://192.168.10.144/smolensk-devel-apt-repo smolensk contrib main non-free"
+
+# COMMON VARS
+ovpn_port: 1194
+pg_port: 5432
+pg_version: 9.6
+repmgr_db_user_pass: "gfk56mqa"
+repmgrd_barman_port: 54321
+repmgrd_app_port: 54322
+barman_db_user_pass: "mwe25kdl"
+barman_db_user_streaming_pass: "gh673jknb"
+
+# ADVANCED VARS
+db1_host: db1
+db2_host: db2
+backup_host: backup
+broker_host: broker
+
+sudoersd_dir: "/etc/sudoers.d/"
+tmpfilesd_dir: "/usr/lib/tmpfiles.d/"
+
+ovpn_dev: tun
+ovpn_server_conf: /etc/openvpn/server.conf
+ovpn_server_key: /etc/openvpn/server.key
+ovpn_client_conf: /etc/openvpn/client.conf
+ovpn_client_key: /etc/openvpn/client.key
+ovpn_cipher: AES-256-CBC
+ovpn_keepalive: "3 9"
+ovpn_client_keepalive: "3 18"
+ovpn_ansible_keys_dir: "keys/"
+
+pg_apt_key: "https://www.postgresql.org/media/keys/ACCC4CF8.asc"
+pg_apt_repo: "deb http://apt.postgresql.org/pub/repos/apt/ {{ ansible_distribution_release }}-pgdg main"
+pg_hba_file: "/etc/postgresql/{{ pg_version }}/main/pg_hba.conf"
+postgresql_conf_file: "/etc/postgresql/{{ pg_version }}/main/postgresql.conf"
+pg_confd_dir: "/etc/postgresql/{{ pg_version }}/main/conf.d/"
+pg_data_dir: "/var/lib/postgresql/{{ pg_version }}/main"
+pg_bin_dir: "/usr/lib/postgresql/{{ pg_version }}/bin/"
+
+pg_max_wal_senders: 5
+pg_wal_keep_segments: 5
+pg_max_replication_slots: 5
+
+repmgr_init_log: /etc/repmgr_init.log
+repmgr_config: /etc/repmgr.conf
+
+repmgrd_base: "repmgrd_{{ repmgrd_db_host }}"
+repmgrd_config: "/etc/{{ repmgrd_base }}.conf"
+repmgrd_service: "/etc/systemd/system/{{ repmgrd_base }}.service"
+repmgrd_bin: "/usr/lib/postgresql/{{ pg_version }}/bin/repmgrd"
+repmgrd_pid: "/var/run/repmgr/{{ repmgrd_base }}.pid"
+
+repmgrd_ssh_key: "~/.ssh/id_rsa"
+repmgrd_pub_key: "~/.ssh/id_rsa.pub"
+repmgrd_auth_keys: "~/.ssh/authorized_keys"
+repmgrd_known_hosts: "~/.ssh/known_hosts"
+repmgrd_local_key: "keys/repmgrd_{{ inventory_hostname }}.pub"
+repmgrd_iptables_chains_script: "/usr/local/bin/repmgr_iptables_chains.sh"
+repmgrd_iptables_script: "/usr/local/bin/repmgr_iptables.sh"
+repmgrd_handler_script: "/usr/local/bin/repmgr_handler.sh"
+repmgrd_master_file: "/usr/local/bin/repmgr_master"
+
+barman_config: "/etc/barman.conf"
+barman_confd_dir: "/etc/barman.d"
+barman_home: "/var/lib/barman"
+barman_bin: "/usr/bin/barman"
+barman_backup_name: "main_backup"
+barman_wal_compress: pygzip
+barman_redundancy: 2
+barman_retention_policy: "RECOVERY WINDOW OF 2 WEEKS"
+barman_full_backup: { minute: 0, hour: 2, weekday: 1 }
+
+barman_ssh_key: "~/.ssh/id_rsa"
+barman_pub_key: "~/.ssh/id_rsa.pub"
+barman_auth_keys: "~/.ssh/authorized_keys"
+barman_local_key: "keys/barman_{{ barman_db_host }}.pub"
+barman_known_hosts: "~/.ssh/known_hosts"

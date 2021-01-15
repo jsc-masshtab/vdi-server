@@ -2,9 +2,9 @@
 Description=vdi-ws_listener
 After=syslog.target
 After=network.target
-After=postgresql.service
+#After=postgresql.service
 After=redis.service
-Requires=postgresql.service
+#Requires=postgresql.service
 Requires=redis.service
 
 [Service]

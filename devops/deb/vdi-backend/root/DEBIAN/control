@@ -2,9 +2,9 @@ Package: vdi-backend
 Version: %%VER%%
 Architecture: amd64
 Maintainer: bazalt team <bazalt_dev@mashtab.org>
-Depends: vdi-frontend, postgresql-server-dev-9.6, python3-dev, python3-setuptools, python-dev, gcc, python3-pip, postgresql, htop, mc, apache2, libsasl2-dev, libldap2-dev, libssl-dev, sudo, curl, apt-utils, systemd, logrotate, redis-server, memcached, apt-transport-https, qemu-guest-agent
+Depends: vdi-frontend, python3-dev, python3-setuptools, python-dev, gcc, python3-pip, htop, mc, apache2, libsasl2-dev, libldap2-dev, libssl-dev, sudo, curl, apt-utils, systemd, logrotate, redis-server, memcached, apt-transport-https, qemu-guest-agent
 Section: devel
 Priority: extra
 Homepage: http://veil.mashtab.org
-Description: ECP VeiL docs.
-  (c) 2020 Mashtab
+Description: VeiL Broker backend
+  (c) 2021 Mashtab
