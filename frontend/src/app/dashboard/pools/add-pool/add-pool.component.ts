@@ -272,7 +272,12 @@ export class PoolAddComponent {
           this.updatePools.setUpdate('update');
           this.waitService.setWait(false);
         }, () => {
-          this.toStep(this.last)
+            let step = this.last.split('_')
+            if (step.length > 1) {
+              this.toStep(step[1])
+            } else {
+              this.toStep('static')
+            }
         })
 
       } break;

@@ -27,7 +27,10 @@ import {
           faPowerOff,
           faFire,
           faSearch,
-          faFolder
+          faFolder,
+          faLaptop,
+          faCircle,
+          faExchangeAlt
         } from '@fortawesome/free-solid-svg-icons';
 import { AuthInterceptor } from './dashboard/common/classes/auth.Interceptor.http';
 /*  -----------------------------------   icons   --------------------------------------*/
@@ -69,6 +72,6 @@ export class AppModule {
       faStopCircle, faPlayCircle, faPauseCircle, faEdit, faQuestionCircle, faCheckSquare, faExclamationTriangle, faHeartbeat,
       faChevronCircleUp, faComment, faClipboardList, faNewspaper, faUserCircle, faSignOutAlt, faChevronCircleLeft, faChevronCircleRight,
       faAddressCard, faCheck, faUsersCog, faCrown, faColumns, faUpload, faIdCard, faSuitcase, faRss, faExpand, faGavel, faStopCircle, faUndo,
-      faPowerOff, faFire, faSearch, faFolder);
+      faPowerOff, faFire, faSearch, faFolder, faLaptop, faCircle, faExchangeAlt);
     }
 }
