@@ -26,13 +26,18 @@
             <div *ngIf="isExist(obj.property)" class="table-area-property"  [class.name-start]="obj.class == 'name-start'" [class.name-end]="obj.class == 'name-end'"> <!--столбец-->
 
     <!-- icons -->
-              <span [class.icon-group]="entity === 'vm' || entity === 'events' || entity === 'users' && item.is_superuser" *ngIf="obj.icon">
+              <span [class.icon-group]="entity === 'vm' || entity === 'events' || entity === 'users' || entity === 'thin'" *ngIf="obj.icon">
                 <fa-icon [icon]="['fas',obj.icon]" size="xs" [class.stateOn]="item.is_active && entity === 'users'"
                   [class.stateOff]="!item.is_active && entity === 'users'"
                 ></fa-icon>
 
                 <ng-container *ngIf="entity === 'users' && item.is_superuser"> <!-- подъюзеры -->
                   <fa-icon [icon]="['fas', 'crown']" title="Администратор" class="extra-icon stateOn"></fa-icon>
+                </ng-container>
+
+                <ng-container *ngIf="entity === 'thin'">
+                  <fa-icon [icon]="['fas', 'circle']" *ngIf="!item.is_afk" class="extra-icon on"></fa-icon>
+                  <fa-icon [icon]="['fas', 'circle']" *ngIf="item.is_afk" class="extra-icon mid"></fa-icon>
                 </ng-container>
 
                 <ng-container *ngIf="entity === 'vm' && item?.user_power_state && obj.property === 'verbose_name'"> <!-- статус вм -->

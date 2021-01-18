@@ -47,8 +47,12 @@ export class GroupsComponent extends DetailsMove implements OnInit, OnDestroy {
     }
   ];
 
-  constructor(private service: GroupsService, public dialog: MatDialog, private waitService: WaitService,
-              private router: Router) {
+  constructor(
+    private service: GroupsService,
+    public dialog: MatDialog,
+    private waitService: WaitService,
+    private router: Router
+  ){
     super();
   }
 

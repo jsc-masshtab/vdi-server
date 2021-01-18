@@ -11,6 +11,26 @@
     <span>Пулы</span>
   </a>
 
+  <a class="top-menu-item item-hat" (click)="thinToggle()" (keydown.enter)="thinToggle()" tabindex="0">
+    <fa-icon [icon]="['fas','laptop']" size="s" [style.color]="'#00c4ff'" title="Тонкие клиенты"></fa-icon>
+    <span>Тонкие клиенты</span>
+
+    <span class="icon-arrow">
+      <fa-icon [icon]="['fas','chevron-up']" size="xs" *ngIf="toggleThin"></fa-icon>
+      <fa-icon [icon]="['fas','chevron-up']" size="xs" rotate="180" *ngIf="!toggleThin"></fa-icon>
+    </span>
+  </a>
+
+  <a class="top-menu-item item-tree" [@fadeInOut] *ngIf="toggleThin" (click)="routeTo('clients/session')" (keydown.enter)="routeTo('clients/session')" [class.clicked-link]="clickedManage == 'session'" tabindex="0">
+    <fa-icon [icon]="['fas','exchange-alt']" size="s" [style.color]="'#00c4ff'" title="Тонкие клиенты"></fa-icon>
+    <span>Сессии</span>
+  </a>
+
+  <a class="top-menu-item item-tree" [@fadeInOut] *ngIf="toggleThin" (click)="routeTo('clients/statistic')" (keydown.enter)="routeTo('clients/statistic')" [class.clicked-link]="clickedManage == 'statistic'" tabindex="0">
+    <fa-icon [icon]="['fas','comment']" size="s" [style.color]="'#00c4ff'" title="Тонкие клиенты"></fa-icon>
+    <span>Статистика</span>
+  </a>
+
   <a class="top-menu-item item-hat" (click)="resourseToggle()" (keydown.enter)="resourseToggle()" tabindex="0">
     <fa-icon [icon]="['fas','database']" size="s" title="Ресурсы"></fa-icon>
     <span>Ресурсы</span>

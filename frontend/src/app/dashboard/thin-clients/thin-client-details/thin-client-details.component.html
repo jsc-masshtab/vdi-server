@@ -1,0 +1,51 @@
+<div class="details-wrap">
+
+  <div class="details-header">
+    <div class="title">
+      <fa-icon [icon]="['fas','user']" size="s"></fa-icon>
+      <span class="name">
+        Тонкий клиент <span>{{entity?.username}}</span>
+      </span>
+    </div>
+
+    <div class="btns-part">
+      <button class="btn-close" (click)="close()">
+        <fa-icon [icon]="['fas','times-circle']"></fa-icon>
+      </button>
+    </div>
+  </div>
+
+  <div class="details-control-panel">
+    <button (click)="getUser()" class="btn-refresh" title="Обновить">
+      <fa-icon [icon]="['fas','sync-alt']"></fa-icon>
+    </button>
+
+    <button class="btn-control" type="button" (click)="disconnect()">
+      <fa-icon [icon]="['fas','power-off']"></fa-icon>
+      <span class="name">Отключить клиент</span>
+    </button>
+  </div>
+
+  <div class="details-row">
+    <ul class="details-menu">
+      <li (click)="routeTo('info')" [class.active]="menuActive === 'info'" title="Информация">
+        <fa-icon [icon]="['fas','chart-bar']"></fa-icon><span class="name">Информация</span>
+      </li>
+    </ul>
+
+    <div class="details-slide">
+      <div class="details-slide-header">
+        <ng-container *ngIf="menuActive === 'info'">Информация</ng-container>
+      </div>
+
+      <div class="details-slide-into">
+        <vdi-table-into
+          *ngIf="menuActive === 'info'"
+          [item]="entity"
+          [collection]="collection"
+          (edit)="edit($event)">
+        </vdi-table-into>
+      </div>
+    </div>
+  </div>
+</div>
