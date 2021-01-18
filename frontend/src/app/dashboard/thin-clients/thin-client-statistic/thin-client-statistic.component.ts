@@ -1,0 +1,92 @@
+import { Component, OnInit } from '@angular/core';
+import { ThinClientsService } from '../thin-clients.service';
+import { MatDialog } from '@angular/material';
+import { WaitService } from '../../common/components/single/wait/wait.service';
+import { map } from 'rxjs/operators';
+import { IParams } from 'types';
+import { Subscription } from 'rxjs';
+
+@Component({
+  selector: 'vdi-thin-client-statistic',
+  templateUrl: './thin-client-statistic.component.html',
+  styleUrls: ['./thin-client-statistic.component.scss']
+})
+export class ThinClientStatisticComponent implements OnInit {
+
+  private sub: Subscription;
+
+  public limit = 100;
+  public count = 0;
+  public offset = 0;
+
+  public data: [];
+
+  public collection: object[] = [
+    {
+      title: 'Событие',
+      property: 'message',
+      class: 'name-start',
+      icon: 'comment',
+      type: 'string',
+      sort: true
+    },
+    {
+      title: 'Время подключения',
+      property: 'created',
+      type: 'time',
+      class: 'name-end',
+      sort: true
+    }
+  ];
+
+  constructor(
+    private service: ThinClientsService,
+    public dialog: MatDialog,
+    private waitService: WaitService
+  ) { }
+
+  ngOnInit() {
+    this.refresh();
+  }
+
+  public refresh(): void {
+    this.service.params.spin = true;
+    this.getStatictic();
+  }
+
+  public getStatictic() {
+    if (this.sub) {
+      this.sub.unsubscribe();
+    }
+
+    const queryset = {};
+
+    this.waitService.setWait(true);
+
+    this.service.getThinClientStatistic(queryset).valueChanges.pipe(map(data => data.data.thin_clients_statistics))
+      .subscribe((data) => {
+        this.data = data;
+        this.waitService.setWait(false);
+      });
+  }
+
+  public sortList(param: IParams): void {
+    this.service.params.spin = param.spin;
+    this.service.params.nameSort = param.nameSort;
+    this.getStatictic();
+  }
+
+  public toPage(message: any): void {
+    this.offset = message.offset;
+    this.getStatictic();
+  }
+
+  ngOnDestroy() {
+    this.service.params.spin = true;
+    this.service.params.nameSort = undefined;
+
+    if (this.sub) {
+      this.sub.unsubscribe();
+    }
+  }
+}

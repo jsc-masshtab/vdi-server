@@ -41,6 +41,7 @@ import { InMemoryCache } from 'apollo-cache-inmemory';
 import { environment } from 'src/environments/environment';
 import { LicenseModule } from './settings/license/license.module';
 import { throwError } from 'rxjs';
+import { ThinClientsModule } from './thin-clients/thin-clients.module';
 
 
 @NgModule({
@@ -68,7 +69,8 @@ import { throwError } from 'rxjs';
     EventsModule,
     TasksModule,
     GroupsModule,
-    LicenseModule
+    LicenseModule,
+    ThinClientsModule
   ],
   providers:
     [

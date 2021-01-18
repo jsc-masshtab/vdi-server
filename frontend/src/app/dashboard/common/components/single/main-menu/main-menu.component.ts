@@ -23,8 +23,10 @@ import { Router, NavigationEnd} from '@angular/router';
 export class MainMenuComponent {
 
   public toggleResourse: boolean = false;
+  public toggleThin: boolean = false;
   public toggleSetting: boolean = false;
   public toggleLog: boolean = false;
+
   public clickedManage: string = '';
 
   constructor(private router: Router, private dialog: MatDialog) {this.beginRoute(); }
@@ -45,6 +47,11 @@ export class MainMenuComponent {
             if (clickedManage1 === 'resourses') {
               this.toggleResourse = true;
             }
+
+            if (clickedManage1 === 'clients') {
+              this.toggleThin = true;
+            }
+
             if (clickedManage1 === 'settings') {
               this.toggleSetting = true;
             }
@@ -73,6 +80,10 @@ export class MainMenuComponent {
 
   public resourseToggle(): void {
     this.toggleResourse = !this.toggleResourse;
+  }
+
+  public thinToggle(): void {
+    this.toggleThin = !this.toggleThin;
   }
 
   public settingToggle(): void {

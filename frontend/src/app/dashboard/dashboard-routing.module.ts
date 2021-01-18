@@ -28,6 +28,9 @@ import { UserDetailsComponent } from './settings/users/user-details/user-details
 import { ControllerDetailsComponent } from './settings/controllers/controller-details/controller-details.component';
 import { LicenseComponent } from './settings/license/license.component';
 import { TasksComponent } from './log/tasks/all-tasks/tasks.component';
+import { ThinClientsComponent } from './thin-clients/thin-clients.component';
+import { ThinClientDetailsComponent } from './thin-clients/thin-client-details/thin-client-details.component';
+import { ThinClientStatisticComponent } from './thin-clients/thin-client-statistic/thin-client-statistic.component';
 
 
 const routes: Routes = [
@@ -51,6 +54,20 @@ const routes: Routes = [
             component: PoolDetailsComponent
           }
         ]
+      },
+      {
+        path: 'clients/session',
+        component: ThinClientsComponent,
+        children: [
+          {
+            path: ':id',
+            component: ThinClientDetailsComponent
+          }
+        ]
+      },
+      {
+        path: 'clients/statistic',
+        component: ThinClientStatisticComponent
       },
       {
         path: 'controllers',
