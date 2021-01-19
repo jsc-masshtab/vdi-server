@@ -217,3 +217,35 @@ class TestGroupSchema:
                             }"""
         executed = await execute_scheme(group_schema, query, context=fixt_auth_context)
         snapshot.assert_match(executed)
+
+    async def test_group_permission(self, snapshot, fixt_auth_context):  # noqa
+        query = """mutation {
+                    addGroupPermission(id: "10913d5d-ba7a-4049-88c5-769267a6cbe4",
+                    permissions: [USB_REDIR, FOLDERS_REDIR]) {
+                    ok,
+                    group {
+                        verbose_name
+                        assigned_permissions
+                        possible_permissions
+                        }
+                    }
+                    }"""
+        executed = await execute_scheme(group_schema, query, context=fixt_auth_context)
+        assert len(executed['addGroupPermission']['group']['assigned_permissions']) == 2
+
+        snapshot.assert_match(executed)
+        query = """mutation {
+                            removeGroupPermission(id: "10913d5d-ba7a-4049-88c5-769267a6cbe4",
+                            permissions: [USB_REDIR]) {
+                            ok,
+                            group {
+                                verbose_name
+                                assigned_permissions
+                                possible_permissions
+                                }
+                            }
+                            }"""
+        executed = await execute_scheme(group_schema, query, context=fixt_auth_context)
+        snapshot.assert_match(executed)
+        assert len(executed['removeGroupPermission']['group']['assigned_permissions']) == 1
+        assert executed['removeGroupPermission']['group']['assigned_permissions'][0] == 'FOLDERS_REDIR'

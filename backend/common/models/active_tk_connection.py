@@ -1,10 +1,13 @@
 # -*- coding: utf-8 -*-
+import uuid
+
 from common.veil.veil_gino import AbstractSortableStatusModel
 from common.database import db
-from sqlalchemy.sql import func
 
-import uuid
+from sqlalchemy.sql import func
 from sqlalchemy.dialects.postgresql import UUID
+
+from common.models.auth import User
 
 
 class ActiveTkConnection(db.Model, AbstractSortableStatusModel):
@@ -27,7 +30,7 @@ class ActiveTkConnection(db.Model, AbstractSortableStatusModel):
     disconnected = db.Column(db.DateTime(timezone=True))  # Если это поле None, значит соединение активно
 
     @classmethod
-    async def soft_create(cls, conn_id, **kwargs):
+    async def soft_create(cls, conn_id, user_name, **kwargs):
         """Создает/заменяет запись о соединении. Возвращает id"""
 
         model = await cls.get(conn_id) if conn_id else None
@@ -38,7 +41,7 @@ class ActiveTkConnection(db.Model, AbstractSortableStatusModel):
         else:
             model = await cls.create(**kwargs)
 
-        await TkConnectionStatistics.create_tk_event(conn_id=model.id, message='Login')
+        await TkConnectionStatistics.create_tk_event(conn_id=model.id, message='{} connected.'.format(user_name))
         return model
 
     @staticmethod
@@ -52,30 +55,33 @@ class ActiveTkConnection(db.Model, AbstractSortableStatusModel):
         vm_id = await ActiveTkConnection.select('vm_id').where((ActiveTkConnection.id == conn_id)).gino.scalar()
         return vm_id
 
-    @staticmethod
-    async def update_vm_id(conn_id, vm_id):
-        await ActiveTkConnection.update.values(vm_id=vm_id, data_received=func.now()). \
-            where(ActiveTkConnection.id == conn_id).gino.status()
+    async def update_vm_id(self, vm_id):
 
+        user = await User.get(self.user_id)
+        user_name = user.username if user else ''
+
+        from common.models.vm import Vm
         if vm_id:
-            from common.models.vm import Vm
             vm = await Vm.get(vm_id)
             vm_verbose_name = vm.verbose_name if vm else ''
-            message = 'Connected to VM {}'.format(vm_verbose_name)
+            message = '{} connected to VM {}.'.format(user_name, vm_verbose_name)
         else:
-            message = 'Disconnected from VM'
+            vm = await Vm.get(self.vm_id)
+            vm_verbose_name = vm.verbose_name if vm else ''
+            message = '{} disconnected from VM {}.'.format(user_name, vm_verbose_name)
+        await TkConnectionStatistics.create_tk_event(conn_id=self.id, message=message)
 
-        await TkConnectionStatistics.create_tk_event(conn_id=conn_id, message=message)
+        await self.update(vm_id=vm_id, data_received=func.now()).apply()
 
-    @staticmethod
-    async def update_last_interaction(conn_id):
-        await ActiveTkConnection.update.values(last_interaction=func.now(), data_received=func.now()). \
-            where(ActiveTkConnection.id == conn_id).gino.status()
+    async def update_last_interaction(self):
+        await self.update(last_interaction=func.now(), data_received=func.now()).apply()
 
     async def deactivate(self):
         """Соединение неативно, когда у него выставлено время дисконнекта"""
         await self.update(disconnected=func.now()).apply()
-        await TkConnectionStatistics.create_tk_event(conn_id=self.id, message='Logout')
+        user = await User.get(self.user_id)
+        user_name = user.username if user else ''
+        await TkConnectionStatistics.create_tk_event(conn_id=self.id, message='{} disconnected.'.format(user_name))
 
 
 class TkConnectionStatistics(db.Model, AbstractSortableStatusModel):

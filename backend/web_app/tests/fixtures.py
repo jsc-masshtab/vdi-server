@@ -26,8 +26,7 @@ from web_app.tests.utils import execute_scheme
 
 
 async def get_resources_for_pool_test():
-    """На контроллере ищутся оптимальные ресурсы для проведения теста
-    """
+
     # controller
     controllers = await Controller.get_objects()
     if not controllers:

@@ -196,3 +196,35 @@ class TestUserSchema:
                     }"""
         executed = await execute_scheme(user_schema, query, context=fixt_auth_context)
         snapshot.assert_match(executed)
+
+    async def test_user_permission(self, snapshot, fixt_auth_context, fixt_user):  # noqa
+
+        # По умолчанию новые пользователи имеют все права
+        query = """mutation {
+                      removeUserPermission(id: "10913d5d-ba7a-4049-88c5-769267a6cbe4", permissions: [USB_REDIR]){
+                        user{
+                          username,
+                          assigned_permissions,
+                          possible_permissions
+                        },
+                        ok
+                      }
+                    }"""
+        executed = await execute_scheme(user_schema, query, context=fixt_auth_context)
+        snapshot.assert_match(executed)
+        assert len(executed['removeUserPermission']['user']['assigned_permissions']) == 1
+        assert executed['removeUserPermission']['user']['assigned_permissions'][0] == 'FOLDERS_REDIR'
+
+        query = """mutation {
+                      addUserPermission(id: "10913d5d-ba7a-4049-88c5-769267a6cbe4", permissions: [USB_REDIR]){
+                        user{
+                          username,
+                          assigned_permissions,
+                          possible_permissions
+                        },
+                        ok
+                      }
+                    }"""
+        executed = await execute_scheme(user_schema, query, context=fixt_auth_context)
+        snapshot.assert_match(executed)
+        assert len(executed['addUserPermission']['user']['assigned_permissions']) == 2
