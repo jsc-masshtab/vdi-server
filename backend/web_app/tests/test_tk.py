@@ -113,8 +113,8 @@ class TestTk(VdiHttpTestCase):
                     }""" % conn_id
             executed = await execute_scheme(thin_client_schema, qu, context=auth_context)
             # Первое событие должно быть Login, второе - подключение к ВМ
-            assert executed['thin_clients_statistics'][0]['message'] == 'Login'
-            assert executed['thin_clients_statistics'][1]['message'] == 'Connected to VM '
+            assert executed['thin_clients_statistics'][0]['message'] == '{} connected.'.format(user_name)
+            assert executed['thin_clients_statistics'][1]['message'] == '{} connected to VM .'.format(user_name)
 
         except Exception:
             raise

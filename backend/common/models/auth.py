@@ -14,6 +14,8 @@ from common.veil.auth import hashers
 from common.languages import lang_init
 from common.log.journal import system_logger
 
+from common.models.user_tk_permission import TkPermission, UserTkPermission, GroupTkPermission
+
 _ = lang_init()
 
 
@@ -160,6 +162,68 @@ class User(AbstractSortableStatusModel, VeilModel):
             await system_logger.debug(_('User {} roles: {}.').format(user.username, assigned_roles))
             return remove
 
+    # permissions
+    async def get_permissions_from_groups(self):
+        """Возвращает список разрешений полученных от групп, в которых пользователь состоит"""
+        user_groups = await self.assigned_groups
+
+        permissions_from_group = list()
+        # если захотеть можно сделать одним запросом к бд
+        for group in user_groups:
+            permissions_list = await group.get_permissions()
+            permissions_from_group += permissions_list
+        return permissions_from_group
+
+    async def get_permissions(self):
+        if self.is_superuser:
+            all_permissions_set = set(TkPermission)  # noqa
+            return all_permissions_set
+
+        # personal permissions
+        user_permissions = await UserTkPermission.query.order_by(UserTkPermission.permission).\
+            where(UserTkPermission.user_id == self.id).gino.all()
+        all_permissions_list = [permission.permission for permission in user_permissions]
+        # permissions from group
+        permissions_from_group = await self.get_permissions_from_groups()
+        all_permissions_list += permissions_from_group
+
+        permissions_set = set(all_permissions_list)
+        return permissions_set
+
+    async def add_permissions(self, permissions_list, creator):
+
+        async with db.transaction():
+            for permission in permissions_list:
+                try:
+                    await UserTkPermission.create(user_id=self.id, permission=permission)
+                except UniqueViolationError:  # пара user_id и permission уникальна
+                    raise SimpleError(_('User {} already has permission {}.').format(
+                        self.id, permission), user=creator)
+
+        permissions_str = ' '.join(permissions_list)
+        await system_logger.info(_('Permission(s) {} added to user {}.').
+                                 format(permissions_str, self.username), user=creator, entity=self.entity)
+
+    async def remove_permissions(self, permissions_list=None, creator='system'):
+        if not permissions_list:
+            return await UserTkPermission.delete.where(UserTkPermission.user_id == self.id).gino.status()
+
+        if permissions_list and isinstance(permissions_list, list):
+
+            remove = await UserTkPermission.delete.where(
+                (UserTkPermission.permission.in_(permissions_list)) & (UserTkPermission.user_id == self.id)).\
+                gino.status()
+
+            # log
+            permissions_str = ' '.join(permissions_list)
+            await system_logger.info(_('Permission(s) {} removed from user {}.').format(
+                permissions_str, self.username), user=creator, entity=self.entity)
+
+            assigned_permissions = await self.get_permissions()
+            await system_logger.debug(_('User {} permission(s): {}.').format(self.username, assigned_permissions))
+
+            return remove
+
     async def remove_groups(self, creator='system'):
         groups = await self.assigned_groups
         users_list = [self.id]
@@ -237,6 +301,10 @@ class User(AbstractSortableStatusModel, VeilModel):
         user_role = 'Superuser' if is_superuser else 'User'
         info_message = _('User {} created with role {}.').format(username, user_role)
         await system_logger.info(info_message, entity=user_obj.entity, user=creator)
+
+        # По дефолту пользователь получает все права на работу с тк
+        for permission in TkPermission:
+            await UserTkPermission.create(user_id=user_obj.id, permission=permission.value)
 
         return user_obj
 
@@ -398,6 +466,49 @@ class Group(AbstractSortableStatusModel, VeilModel):
         await system_logger.info(info_message, user=creator, entity=group_obj.entity)
 
         return group_obj
+
+    # permissions
+    async def get_permissions(self):
+        query = GroupTkPermission.select('permission').order_by(GroupTkPermission.permission).\
+            where(GroupTkPermission.group_id == self.id)
+        query_res = await query.gino.all()
+        # print('query_res: ', query_res, flush=True)
+        permissions_list = [permission.permission for permission in query_res]
+        return permissions_list
+
+    async def add_permissions(self, permissions_list, creator):
+
+        async with db.transaction():
+            for permission in permissions_list:
+                try:
+                    await GroupTkPermission.create(group_id=self.id, permission=permission)
+                except UniqueViolationError:  # пара group_id и permission уникальна
+                    raise SimpleError(_('Group {} already has permission {}.').format(
+                        self.id, permission), user=creator)
+
+        permissions_str = ' '.join(permissions_list)
+        await system_logger.info(_('Permission(s) {} added to group {}.').
+                                 format(permissions_str, self.verbose_name), user=creator, entity=self.entity)
+
+    async def remove_permissions(self, permissions_list=None, creator='system'):
+        if not permissions_list:
+            return await GroupTkPermission.delete.where(GroupTkPermission.group_id == self.id).gino.status()
+
+        if permissions_list and isinstance(permissions_list, list):
+
+            remove = await GroupTkPermission.delete.where(
+                (GroupTkPermission.permission.in_(permissions_list)) & (GroupTkPermission.group_id == self.id)).\
+                gino.status()
+
+            # log
+            permissions_str = ' '.join(permissions_list)
+            await system_logger.info(_('Permission(s) {} removed from group {}.').format(
+                permissions_str, self.verbose_name), user=creator, entity=self.entity)
+
+            assigned_permissions = await self.get_permissions()
+            await system_logger.debug(_('Group {} permission(s): {}.').format(self.verbose_name, assigned_permissions))
+
+            return remove
 
     async def soft_update(self, verbose_name, description, creator):
         group_kwargs = dict()

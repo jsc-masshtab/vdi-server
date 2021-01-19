@@ -4,10 +4,11 @@ import graphene
 from common.database import db
 from common.veil.veil_gino import RoleTypeGraphene, Role
 from common.models.auth import Group, User
+from common.models.user_tk_permission import TkPermission
 from common.veil.veil_validators import MutationValidation
 from common.veil.veil_errors import SimpleError, ValidationError
 from common.veil.veil_decorators import security_administrator_required
-from web_app.auth.user_schema import UserType
+from web_app.auth.user_schema import UserType, PermissionTypeGraphene
 
 from common.languages import lang_init
 
@@ -67,6 +68,9 @@ class GroupType(graphene.ObjectType):
     assigned_roles = graphene.List(RoleTypeGraphene)
     possible_roles = graphene.List(RoleTypeGraphene)
 
+    assigned_permissions = graphene.List(PermissionTypeGraphene, description='Назначенные разрешения')
+    possible_permissions = graphene.List(PermissionTypeGraphene, description='Разрешения, которые можно назначить')
+
     @staticmethod
     def instance_to_type(model_instance):
         return GroupType(id=model_instance.id,
@@ -94,6 +98,20 @@ class GroupType(graphene.ObjectType):
         # Чтобы порядок всегда был одинаковый
         possible_roles = [role for role in all_roles if role not in assigned_roles]
         return possible_roles
+
+    # permissions
+    async def resolve_assigned_permissions(self, _info):
+        group = await Group.get(self.id)
+        return await group.get_permissions()
+
+    async def resolve_possible_permissions(self, _info):
+        group = await Group.get(self.id)
+
+        assigned_permissions = await group.get_permissions()
+        all_permissions = [permission_type for permission_type in TkPermission]
+
+        possible_permissions = [perm for perm in all_permissions if perm not in assigned_permissions]
+        return possible_permissions
 
 
 class GroupQuery(graphene.ObjectType):
@@ -260,6 +278,41 @@ class RemoveGroupRoleMutation(graphene.Mutation, GroupValidator):
         return RemoveGroupRoleMutation(GroupType.instance_to_type(group), ok=True)
 
 
+# permissions
+class AddGroupPermissionMutation(graphene.Mutation, GroupValidator):
+    class Arguments:
+        id = graphene.UUID(required=True)
+        permissions = graphene.NonNull(graphene.List(graphene.NonNull(PermissionTypeGraphene)))
+
+    group = graphene.Field(GroupType)
+    ok = graphene.Boolean(default_value=False)
+
+    @classmethod
+    @security_administrator_required
+    async def mutate(cls, root, info, creator, **kwargs):
+        await cls.validate(**kwargs)
+        group = await Group.get(kwargs['id'])
+        await group.add_permissions(kwargs['permissions'], creator=creator)
+        return AddGroupPermissionMutation(GroupType.instance_to_type(group), ok=True)
+
+
+class RemoveGroupPermissionMutation(graphene.Mutation, GroupValidator):
+    class Arguments:
+        id = graphene.UUID(required=True)
+        permissions = graphene.NonNull(graphene.List(graphene.NonNull(PermissionTypeGraphene)))
+
+    group = graphene.Field(GroupType)
+    ok = graphene.Boolean(default_value=False)
+
+    @classmethod
+    @security_administrator_required
+    async def mutate(cls, root, info, creator, **kwargs):
+        await cls.validate(**kwargs)
+        group = await Group.get(kwargs['id'])
+        await group.remove_permissions(kwargs['permissions'], creator=creator)
+        return RemoveGroupPermissionMutation(GroupType.instance_to_type(group), ok=True)
+
+
 class GroupMutations(graphene.ObjectType):
     createGroup = CreateGroupMutation.Field()
     updateGroup = UpdateGroupMutation.Field()
@@ -268,6 +321,8 @@ class GroupMutations(graphene.ObjectType):
     removeGroupUsers = RemoveGroupUsersMutation.Field()
     addGroupRole = AddGroupRoleMutation.Field()
     removeGroupRole = RemoveGroupRoleMutation.Field()
+    addGroupPermission = AddGroupPermissionMutation.Field()
+    removeGroupPermission = RemoveGroupPermissionMutation.Field()
 
 
 group_schema = graphene.Schema(query=GroupQuery,

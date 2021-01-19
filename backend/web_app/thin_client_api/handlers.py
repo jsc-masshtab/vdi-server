@@ -180,12 +180,14 @@ class PoolGetVm(BaseHandler, ABC):
             vm_address = vm_controller.address
             vm_port = veil_domain.remote_access_port
 
+        permissions = await user.get_permissions()
         response = {'data': dict(host=vm_address,
                                  port=vm_port,
                                  password=veil_domain.graphics_password,
                                  vm_verbose_name=veil_domain.verbose_name,
                                  vm_controller_address=vm_controller.address,
-                                 vm_id=str(vm.id))
+                                 vm_id=str(vm.id),
+                                 permissions=[permission.value for permission in permissions])
                     }
         return await self.log_finish(response)
 
@@ -346,7 +348,9 @@ class ThinClientWsHandler(websocket.WebSocketHandler):  # noqa
 
                 # Сохраняем юзера с инфой
                 tk_conn = await ActiveTkConnection.soft_create(
-                    conn_id=self.conn_id, user_id=user_id,
+                    conn_id=self.conn_id,
+                    user_name=user_name,
+                    user_id=user_id,
                     veil_connect_version=recv_data_dict['veil_connect_version'],
                     vm_id=recv_data_dict['vm_id'],
                     tk_ip=self.request.remote_ip,
@@ -367,11 +371,12 @@ class ThinClientWsHandler(websocket.WebSocketHandler):  # noqa
 
             try:
                 event_type = recv_data_dict['event']
-
-                if event_type == 'vm_changed':  # юзер подключился/отключился от машины
-                    await ActiveTkConnection.update_vm_id(self.conn_id, recv_data_dict['vm_id'])
-                elif event_type == 'user_gui':  # юзер нажал кнопку/кликнул
-                    await ActiveTkConnection.update_last_interaction(self.conn_id)
+                tk_conn = await ActiveTkConnection.get(self.conn_id)
+                if tk_conn:
+                    if event_type == 'vm_changed':  # юзер подключился/отключился от машины
+                        await tk_conn.update_vm_id(recv_data_dict['vm_id'])
+                    elif event_type == 'user_gui':  # юзер нажал кнопку/кликнул
+                        await tk_conn.update_last_interaction()
             except KeyError:
                 pass
 

@@ -113,3 +113,33 @@ snapshots['TestUserSchema.test_users_list 1'] = {
         }
     ]
 }
+
+snapshots['TestUserSchema.test_user_permission 1'] = {
+    'removeUserPermission': {
+        'ok': True,
+        'user': {
+            'assigned_permissions': [
+                'FOLDERS_REDIR'
+            ],
+            'possible_permissions': [
+                'USB_REDIR'
+            ],
+            'username': 'test_user'
+        }
+    }
+}
+
+snapshots['TestUserSchema.test_user_permission 2'] = {
+    'addUserPermission': {
+        'ok': True,
+        'user': {
+            'assigned_permissions': [
+                'FOLDERS_REDIR',
+                'USB_REDIR'
+            ],
+            'possible_permissions': [
+            ],
+            'username': 'test_user'
+        }
+    }
+}

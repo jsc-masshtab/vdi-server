@@ -138,3 +138,33 @@ snapshots['TestGroupSchema.test_group_user_add 1'] = {
         'ok': True
     }
 }
+
+snapshots['TestGroupSchema.test_group_permission 1'] = {
+    'addGroupPermission': {
+        'group': {
+            'assigned_permissions': [
+                'USB_REDIR',
+                'FOLDERS_REDIR'
+            ],
+            'possible_permissions': [
+            ],
+            'verbose_name': 'test_group_1'
+        },
+        'ok': True
+    }
+}
+
+snapshots['TestGroupSchema.test_group_permission 2'] = {
+    'removeGroupPermission': {
+        'group': {
+            'assigned_permissions': [
+                'FOLDERS_REDIR'
+            ],
+            'possible_permissions': [
+                'USB_REDIR'
+            ],
+            'verbose_name': 'test_group_1'
+        },
+        'ok': True
+    }
+}

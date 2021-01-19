@@ -10,9 +10,15 @@ from common.veil.veil_validators import MutationValidation
 from common.veil.veil_errors import SimpleError, ValidationError, AssertError
 from common.veil.veil_decorators import security_administrator_required
 
+from graphene import Enum as GrapheneEnum
+from common.models.user_tk_permission import TkPermission
+
 from common.languages import lang_init
 
 _ = lang_init()
+
+
+PermissionTypeGraphene = GrapheneEnum.from_enum(TkPermission)
 
 
 class UserValidator(MutationValidation):
@@ -108,6 +114,9 @@ class UserType(graphene.ObjectType):
     assigned_roles = graphene.List(RoleTypeGraphene)
     possible_roles = graphene.List(RoleTypeGraphene)
 
+    assigned_permissions = graphene.List(PermissionTypeGraphene, description='Назначенные разрешения')
+    possible_permissions = graphene.List(PermissionTypeGraphene, description='Разрешения, которые можно назначить')
+
     @staticmethod
     def instance_to_type(model_instance):
         return UserType(id=model_instance.id,
@@ -145,6 +154,19 @@ class UserType(graphene.ObjectType):
         possible_roles = [role for role in all_roles if role not in assigned_roles]
         return possible_roles
 
+    # permissions
+    async def resolve_assigned_permissions(self, _info):
+        user = await User.get(self.id)
+        return await user.get_permissions()
+
+    async def resolve_possible_permissions(self, _info):
+        user = await User.get(self.id)
+        assigned_permissions = await user.get_permissions()
+        all_permissions = [permission_type for permission_type in TkPermission]
+
+        possible_permissions = [perm for perm in all_permissions if perm not in assigned_permissions]
+        return possible_permissions
+
 
 class UserQuery(graphene.ObjectType):
     users = graphene.List(lambda: UserType, limit=graphene.Int(default_value=100), offset=graphene.Int(default_value=0),
@@ -153,6 +175,12 @@ class UserQuery(graphene.ObjectType):
     user = graphene.Field(UserType, id=graphene.UUID(), username=graphene.String())
 
     count = graphene.Int(is_superuser=graphene.Boolean(), is_active=graphene.Boolean())
+
+    existing_permissions = graphene.List(PermissionTypeGraphene, description='Существующие разрешения')
+
+    async def resolve_existing_permissions(self, info, **kwargs):
+        all_existing_permissions = [permission_type for permission_type in TkPermission]
+        return all_existing_permissions
 
     async def resolve_count(self, info, is_superuser=None, is_active=None, **kwargs):
         filters = UserQuery.build_filters(is_superuser, is_active)
@@ -328,6 +356,61 @@ class RemoveUserRoleMutation(graphene.Mutation, UserValidator):
         return RemoveUserRoleMutation(user=UserType(**user.__values__), ok=True)
 
 
+# permissions
+class AddUserPermissionMutation(graphene.Mutation, UserValidator):
+    class Arguments:
+        id = graphene.UUID(required=True)
+        permissions = graphene.NonNull(graphene.List(graphene.NonNull(PermissionTypeGraphene)))
+
+    user = graphene.Field(UserType)
+    ok = graphene.Boolean(default_value=False)
+
+    @classmethod
+    @security_administrator_required
+    async def mutate(cls, root, info, creator, **kwargs):
+        await cls.validate(**kwargs)
+        user = await User.get(kwargs['id'])
+        await user.add_permissions(kwargs['permissions'], creator=creator)
+        return AddUserPermissionMutation(user=UserType(**user.__values__), ok=True)
+
+
+class RemoveUserPermissionMutation(graphene.Mutation, UserValidator):
+    class Arguments:
+        id = graphene.UUID(required=True)
+        permissions = graphene.NonNull(graphene.List(graphene.NonNull(PermissionTypeGraphene)))
+
+    user = graphene.Field(UserType)
+    ok = graphene.Boolean(default_value=False)
+
+    @classmethod
+    @security_administrator_required
+    async def mutate(cls, root, info, creator, **kwargs):
+        await cls.validate(**kwargs)
+
+        user = await User.get(kwargs['id'])
+        await user.remove_permissions(kwargs['permissions'], creator=creator)
+
+        # Посмотреть не содержатся ли разрешения в группах, в которые включен пользователь и
+        # сообщить, что убрать эти разрешения нельзя, пока пользователь в соответствующей группе.
+        # Без этого админу будет неочевидно (если он не держит в голове инфу о группах),
+        # почему у пользователя не убирается разрешение не смотря на положительный ответ.
+        permissions_from_group = await user.get_permissions_from_groups()
+        permissions_from_group = [permission.value for permission in permissions_from_group]
+        # check if two lists have at least one common element
+        arg_permissions_set = set(kwargs['permissions'])
+        # print('arg_permissions_set ', arg_permissions_set, flush=True)
+        permissions_from_group_set = set(permissions_from_group)
+        # print('permissions_from_group_set ', permissions_from_group_set, flush=True)
+        common_permissions = arg_permissions_set & permissions_from_group_set
+
+        if common_permissions:
+            common_permissions_str = ' '.join(common_permissions)
+            raise SimpleError(_('Cant remove permission(s) {} because they are assigned to groups of user {}.').
+                              format(common_permissions_str, user.username), user=creator)
+
+        return RemoveUserPermissionMutation(user=UserType(**user.__values__), ok=True)
+
+
 class UserMutations(graphene.ObjectType):
     createUser = CreateUserMutation.Field()
     activateUser = ActivateUserMutation.Field()
@@ -337,6 +420,9 @@ class UserMutations(graphene.ObjectType):
     addUserRole = AddUserRoleMutation.Field()
     removeUserRole = RemoveUserRoleMutation.Field()
     # TODO: добавление групп пользователю
+
+    addUserPermission = AddUserPermissionMutation.Field()
+    removeUserPermission = RemoveUserPermissionMutation.Field()
 
 
 user_schema = graphene.Schema(mutation=UserMutations,
