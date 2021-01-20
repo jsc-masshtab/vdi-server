@@ -15,13 +15,8 @@ export class WebsocketService  {
 
   public init(): void {
     const host = window.location.host;
-    const prot = window.location.protocol;
 
     let url = `ws://${host}/subscriptions`;
-
-    if (prot == 'https:') {
-      url = `wss://${host}/subscriptions`;
-    }
 
     this.ws = new WebSocket(url);
     if (this.ws) {

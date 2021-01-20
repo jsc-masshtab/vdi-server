@@ -405,7 +405,7 @@ class RemoveUserPermissionMutation(graphene.Mutation, UserValidator):
 
         if common_permissions:
             common_permissions_str = ' '.join(common_permissions)
-            raise SimpleError(_('Cant remove permission(s) {} because they are assigned to groups of user {}.').
+            raise SimpleError(_('Cant remove permission(s) {} because they are granted to groups of user {}.').
                               format(common_permissions_str, user.username), user=creator)
 
         return RemoveUserPermissionMutation(user=UserType(**user.__values__), ok=True)

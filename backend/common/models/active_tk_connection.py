@@ -30,7 +30,7 @@ class ActiveTkConnection(db.Model, AbstractSortableStatusModel):
     disconnected = db.Column(db.DateTime(timezone=True))  # Если это поле None, значит соединение активно
 
     @classmethod
-    async def soft_create(cls, conn_id, user_name, **kwargs):
+    async def soft_create(cls, conn_id, user_name, is_conn_init_by_user, **kwargs):
         """Создает/заменяет запись о соединении. Возвращает id"""
 
         model = await cls.get(conn_id) if conn_id else None
@@ -40,6 +40,9 @@ class ActiveTkConnection(db.Model, AbstractSortableStatusModel):
             await model.update(**kwargs, data_received=func.now()).apply()
         else:
             model = await cls.create(**kwargs)
+
+        if is_conn_init_by_user:  # Флаг чтобы различить инициировано ли соединение ползователем или это авторекконкт
+            await model.update_last_interaction()
 
         await TkConnectionStatistics.create_tk_event(conn_id=model.id, message='{} connected.'.format(user_name))
         return model

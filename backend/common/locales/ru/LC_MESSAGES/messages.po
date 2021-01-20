@@ -69,6 +69,22 @@ msgstr "Больше нет активного суперпользовател�
 msgid "User {username} has been deactivated."
 msgstr "Пользователь {username} деактивирован."
 
+#: ../common/models/auth.py:200
+msgid "User {} already has permission {}."
+msgstr "Пользователь {} уже имеет разрешение."
+
+#: ../common/models/auth.py:204
+msgid "Permission(s) {} added to user {}."
+msgstr "Разрешения {} назначены пользователю {}."
+
+#: ../common/models/auth.py:219
+msgid "Permission(s) {} removed from user {}."
+msgstr "Разрешения {} удалены у пользователя {}."
+
+#: ../common/models/auth.py:223
+msgid "User {} permission(s): {}."
+msgstr "Разрешения пользователя {}: {}."
+
 #: ../common/models/auth.py:220
 #, python-brace-format
 msgid "Password of user {username} has been changed."
@@ -141,6 +157,22 @@ msgstr "Группе {} уже назначена роль {}."
 #: ../common/models/auth.py:459
 msgid "Roles: {} was deleted to group {}."
 msgstr "Роли: {} удалены из группы {}."
+
+#: ../common/models/auth.py:486
+msgid "Group {} already has permission {}."
+msgstr "Группа {} уже имеет разрешение {}."
+
+#: ../common/models/auth.py:490
+msgid "Permission(s) {} added to group {}."
+msgstr "Разрешения: {} добавлены группе {}."
+
+#: ../common/models/auth.py:505
+msgid "Permission(s) {} removed from group {}."
+msgstr "Разрешения {} удалены у группы {}."
+
+#: ../common/models/auth.py:509
+msgid "Group {} permission(s): {}."
+msgstr "Разрешения группы {}: {}."
 
 #: ../common/models/authentication_directory.py:119
 #: ../web_app/tests/test_auth_dir.py:125
@@ -908,6 +940,10 @@ msgstr "Фамилия должна быть <= 128 символам."
 #: ../web_app/auth/user_schema.py:176
 msgid "Specify id or username."
 msgstr "Укажите ID или имя пользователя."
+
+#: ../web_app/auth/user_schema.py:408
+msgid "Cant remove permission(s) {} because they are granted to groups of user {}."
+msgstr "Невозможно удалить разрешения {}, так как они выданы группам, в которых состоит пользователь."
 
 #: ../web_app/controller/resource_schema.py:350
 #: ../web_app/thin_client_api/handlers.py:145
