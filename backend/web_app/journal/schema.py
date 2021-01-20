@@ -4,7 +4,7 @@ from graphql import GraphQLError
 from sqlalchemy import desc, and_, text
 
 from common.database import db
-from common.veil.veil_decorators import operator_required
+from common.veil.veil_decorators import operator_required, administrator_required
 from common.utils import extract_ordering_data
 from common.veil.veil_errors import SimpleError
 from common.models.event import Event, EventReadByUser, JournalSettings
@@ -54,6 +54,18 @@ class EventType(graphene.ObjectType):
     entity_id = graphene.UUID()
 
 
+class JournalSettingsType(graphene.ObjectType):
+    id = graphene.UUID()
+    interval = graphene.String()
+    period = graphene.String()
+    form = graphene.String()
+    duration = graphene.Int()
+    by_count = graphene.Boolean()
+    count = graphene.Int()
+    dir_path = graphene.String()
+    create_date = graphene.DateTime()
+
+
 class EventQuery(graphene.ObjectType):
     count = graphene.Int(
         event_type=graphene.Int(),
@@ -89,6 +101,16 @@ class EventQuery(graphene.ObjectType):
         read_by=graphene.UUID(),
         entity_type=graphene.String()
     )
+
+    journal_settings = graphene.Field(JournalSettingsType)
+
+    @administrator_required
+    async def resolve_journal_settings(self, _info, **kwargs):
+        settings = await JournalSettings.query.gino.all()
+        settings_list = list()
+        for row in settings:
+            settings_list = JournalSettingsType(**row.__values__)
+        return settings_list
 
     @operator_required
     async def resolve_count(self, _info, event_type=None, start_date=None,
@@ -236,7 +258,7 @@ class ChangeJournalSettingsMutation(graphene.Mutation):
 
     ok = graphene.Boolean()
 
-    @operator_required
+    @administrator_required
     async def mutate(self, _info, **kwargs):
         await JournalSettings.change_journal_settings(**kwargs)
         return ChangeJournalSettingsMutation(ok=True)
