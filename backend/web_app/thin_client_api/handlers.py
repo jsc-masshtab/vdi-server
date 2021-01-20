@@ -331,7 +331,7 @@ class ThinClientWsHandler(websocket.WebSocketHandler):  # noqa
         if msg_type == 'AUTH':
             try:
                 # Проверяем токен. Рвем соединение если токен левый
-                token = recv_data_dict['token']
+                token = recv_data_dict.get('token')
                 jwt_info = await UserJwtInfo.query.where(UserJwtInfo.token == token).gino.first()
                 if not jwt_info:
                     raise AssertionError('Auth failed')
@@ -350,11 +350,12 @@ class ThinClientWsHandler(websocket.WebSocketHandler):  # noqa
                 tk_conn = await ActiveTkConnection.soft_create(
                     conn_id=self.conn_id,
                     user_name=user_name,
+                    is_conn_init_by_user=recv_data_dict.get('is_conn_init_by_user'),
                     user_id=user_id,
-                    veil_connect_version=recv_data_dict['veil_connect_version'],
-                    vm_id=recv_data_dict['vm_id'],
+                    veil_connect_version=recv_data_dict.get('veil_connect_version'),
+                    vm_id=recv_data_dict.get('vm_id'),
                     tk_ip=self.request.remote_ip,
-                    tk_os=recv_data_dict['tk_os'])
+                    tk_os=recv_data_dict.get('tk_os'))
                 self.conn_id = tk_conn.id
 
                 response = {'msg_type': 'control', 'error': False, 'msg': 'Auth success'}
