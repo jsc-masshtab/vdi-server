@@ -7,6 +7,10 @@ configure_users()
 	useradd uservdi
 	chown -R uservdi:uservdi /opt/veil-vdi
 
+	groupadd vdi-web
+	groupadd vdi-web-admin
+	useradd -G vdi-web,vdi-web-admin vdiadmin
+
 	# разрешаем вход по ssh только пользователю user
 	echo "AllowUsers user" >> /etc/ssh/sshd_config
 	service ssh restart
