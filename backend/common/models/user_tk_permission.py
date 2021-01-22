@@ -13,6 +13,7 @@ class TkPermission(Enum):
     """Права пользователя ТК"""
     USB_REDIR = 'USB_REDIR'
     FOLDERS_REDIR = 'FOLDERS_REDIR'
+    SHARED_CLIPBOARD = 'SHARED_CLIPBOARD'
 
 
 class UserTkPermission(db.Model, AbstractSortableStatusModel):
