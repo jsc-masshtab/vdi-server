@@ -2,19 +2,18 @@
 <div class="details-wrap">
 
     <div class="details-header">
-        <div class="title"><fa-icon [icon]="['fas','building']" size="s" ></fa-icon><span class="name">{{cluster?.verbose_name}}</span></div>
+        <div class="title"><fa-icon [icon]="['fas','database']" size="s" ></fa-icon><span class="name">{{resource_pool?.verbose_name}}</span></div>
         <div class="btns-part">
             <button class="btn-close" (click)="close()"><fa-icon [icon]="['fas','times-circle']"></fa-icon></button>
         </div>
     </div>
     <div class="details-control-panel">
-        <button (click)="getCluster()" class="btn-refresh" title="Обновить"><fa-icon [icon]="['fas','sync-alt']"></fa-icon></button>
+        <button (click)="getResourcePool()" class="btn-refresh" title="Обновить"><fa-icon [icon]="['fas','sync-alt']"></fa-icon></button>
     </div>
 
     <div class="details-row">
         <ul class="details-menu">
             <li (click)="routeTo('info')" [class.active]="menuActive === 'info'" title="Информация"><fa-icon [icon]="['fas','chart-bar']"></fa-icon><span class="name">Информация</span></li>
-            <li (click)="routeTo('resource_pools')" [class.active]="menuActive === 'resource_pools'" title="Пулы ресурсов"><fa-icon [icon]="['fas','database']"></fa-icon><span class="name">Пулы ресурсов</span></li>
             <li (click)="routeTo('servers')" [class.active]="menuActive === 'servers'" title="Серверы"><fa-icon [icon]="['fas','server']"></fa-icon><span class="name">Серверы</span></li>
             <li (click)="routeTo('datapools')" [class.active]="menuActive === 'datapools'" title="Пулы данных"><fa-icon [icon]="['fas','folder-open']"></fa-icon><span class="name">Пулы данных</span></li>
             <li (click)="routeTo('vms')" [class.active]="menuActive === 'vms'" title="Виртуальные машины"><fa-icon [icon]="['fas','desktop']"></fa-icon><span class="name">Виртуальные машины</span></li>
@@ -23,16 +22,14 @@
 
         <div class="details-slide" *ngIf="host">
             <div class="details-slide-header">
-                <ng-container *ngIf="menuActive === 'info'">Информация о кластере</ng-container>
-                <ng-container *ngIf="menuActive === 'resource_pools'">Пулы ресурсов</ng-container>
-                <ng-container *ngIf="menuActive === 'servers'">Серверы кластера</ng-container>
-                <ng-container *ngIf="menuActive === 'datapools'">Пулы данных кластера</ng-container>
-                <ng-container *ngIf="menuActive === 'templates'">Шаблоны ВМ кластера</ng-container>
-                <ng-container *ngIf="menuActive === 'vms'">ВМ кластера</ng-container>
+                <ng-container *ngIf="menuActive === 'info'">Информация о пуле ресурсов</ng-container>
+                <ng-container *ngIf="menuActive === 'servers'">Серверы пула ресурсов</ng-container>
+                <ng-container *ngIf="menuActive === 'datapools'">Пулы данных пула ресурсов</ng-container>
+                <ng-container *ngIf="menuActive === 'templates'">Шаблоны ВМ пула ресурсов</ng-container>
+                <ng-container *ngIf="menuActive === 'vms'">ВМ пула ресурсов</ng-container>
             </div>
             <div class="details-slide-into">
-                <vdi-table-into [item]="cluster" [collection]="collectionDetails" *ngIf="menuActive === 'info'"></vdi-table-into>
-                <vdi-resource_pools [filter]="filter" *ngIf="menuActive === 'resource_pools'"></vdi-resource_pools>
+                <vdi-table-into [item]="resource_pool" [collection]="collectionDetails" *ngIf="menuActive === 'info'"></vdi-table-into>
                 <vdi-nodes [filter]="filter" *ngIf="menuActive === 'servers'"></vdi-nodes>
                 <vdi-datapools [filter]="filter" *ngIf="menuActive === 'datapools'"></vdi-datapools>
                 <vdi-vms [filter]="filter" *ngIf="menuActive === 'vms'"></vdi-vms>

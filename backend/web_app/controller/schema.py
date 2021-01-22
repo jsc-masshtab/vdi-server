@@ -109,6 +109,19 @@ class ControllerClusterType(VeilResourceType):
     tags = graphene.List(graphene.String)
 
 
+class ControllerResourcePoolType(VeilResourceType):
+    """Сокращенное описание VeiL Resource Pool.
+
+    Вынесен в отдельный тип для явного сокращения возможных полей.
+    """
+    id = graphene.UUID()
+    verbose_name = graphene.String()
+    description = graphene.String()
+    domains_count = graphene.Int()
+    memory_limit = graphene.Int()
+    cpu_limit = graphene.Int()
+
+
 class ControllerNodeType(VeilResourceType):
     """Сокращенное описание VeiL Node.
 
@@ -154,6 +167,7 @@ class ControllerVmType(VeilResourceType):
     id = graphene.UUID()
     verbose_name = graphene.String()
     template = graphene.Field(VeilShortEntityType)
+    resource_pool = graphene.Field(VeilShortEntityType)
     status = StatusGraphene()
     user_power_state = VmState()
     # название пула, в котором ВМ из локальной БД
@@ -174,16 +188,22 @@ class ControllerType(graphene.ObjectType, ControllerFetcher):
     pools = graphene.List(ControllerPoolType)
     clusters = graphene.List(ControllerClusterType, ordering=graphene.String(), limit=graphene.Int(default_value=100),
                              offset=graphene.Int(default_value=0))
-    nodes = graphene.List(ControllerNodeType, cluster_id=graphene.UUID(), ordering=graphene.String(),
-                          limit=graphene.Int(default_value=100), offset=graphene.Int(default_value=0))
+    resource_pools = graphene.List(ControllerResourcePoolType, cluster_id=graphene.UUID(), ordering=graphene.String(),
+                                   limit=graphene.Int(default_value=100),
+                                   offset=graphene.Int(default_value=0))
+    nodes = graphene.List(ControllerNodeType, cluster_id=graphene.UUID(), resource_pool_id=graphene.UUID(),
+                          ordering=graphene.String(), limit=graphene.Int(default_value=100),
+                          offset=graphene.Int(default_value=0))
     data_pools = graphene.List(ControllerDataPoolType, cluster_id=graphene.UUID(), node_id=graphene.UUID(),
-                               ordering=graphene.String(), limit=graphene.Int(default_value=100),
-                               offset=graphene.Int(default_value=0))
-    templates = graphene.List(ControllerVmType, cluster_id=graphene.UUID(), node_id=graphene.UUID(),
-                              data_pool_id=graphene.UUID(), ordering=graphene.String(),
+                               resource_pool_id=graphene.UUID(), ordering=graphene.String(),
+                               limit=graphene.Int(default_value=100), offset=graphene.Int(default_value=0))
+    templates = graphene.List(ControllerVmType, cluster_id=graphene.UUID(),
+                              resource_pool_id=graphene.UUID(), node_id=graphene.UUID(),
+                              ordering=graphene.String(),
                               limit=graphene.Int(default_value=100), offset=graphene.Int(default_value=0))
-    vms = graphene.List(ControllerVmType, cluster_id=graphene.UUID(), node_id=graphene.UUID(),
-                        data_pool_id=graphene.UUID(), exclude_existed=graphene.Boolean(), ordering=graphene.String(),
+    vms = graphene.List(ControllerVmType, cluster_id=graphene.UUID(),
+                        resource_pool_id=graphene.UUID(), node_id=graphene.UUID(),
+                        exclude_existed=graphene.Boolean(), ordering=graphene.String(),
                         limit=graphene.Int(default_value=100), offset=graphene.Int(default_value=0))
 
     async def resolve_pools(self, info):
@@ -192,7 +212,7 @@ class ControllerType(graphene.ObjectType, ControllerFetcher):
         return await controller.pools
 
     async def resolve_clusters(self, info, limit, offset, ordering: str = None):
-        """В self прилетает инстанс подели контроллера."""
+        """В self прилетает инстанс модели контроллера."""
         controller = await Controller.get(self.id)
         # Прерываем выполнение при отсутствии клиента
         if not controller.veil_client:
@@ -201,17 +221,29 @@ class ControllerType(graphene.ObjectType, ControllerFetcher):
         veil_response = await controller.veil_client.cluster().list(paginator=paginator)
         return [ControllerClusterType(**resource_data) for resource_data in veil_response.paginator_results]
 
-    async def resolve_nodes(self, info, limit, offset, cluster_id=None, ordering: str = None):
-        """В self прилетает инстанс подели контроллера."""
+    async def resolve_resource_pools(self, info, limit, offset, cluster_id=None, ordering: str = None):
+        """В self прилетает инстанс модели контроллера."""
         controller = await Controller.get(self.id)
         # Прерываем выполнение при отсутствии клиента
         if not controller.veil_client:
             return
         paginator = VeilRestPaginator(ordering=ordering, limit=limit, offset=offset)
-        veil_response = await controller.veil_client.node(cluster_id=cluster_id).list(paginator=paginator)
+        veil_response = await controller.veil_client.resource_pool(cluster_id=cluster_id).list(paginator=paginator)
+        return [ControllerResourcePoolType(**data) for data in veil_response.paginator_results]
+
+    async def resolve_nodes(self, info, limit, offset, cluster_id=None, resource_pool_id=None, ordering: str = None):
+        """В self прилетает инстанс модели контроллера."""
+        controller = await Controller.get(self.id)
+        # Прерываем выполнение при отсутствии клиента
+        if not controller.veil_client:
+            return
+        paginator = VeilRestPaginator(ordering=ordering, limit=limit, offset=offset)
+        veil_response = await controller.veil_client.node(cluster_id=cluster_id,
+                                                          resource_pool_id=resource_pool_id).list(paginator=paginator)
         return [ControllerNodeType(**resource_data) for resource_data in veil_response.paginator_results]
 
-    async def resolve_data_pools(self, info, limit, offset, cluster_id=None, node_id=None, ordering: str = None):
+    async def resolve_data_pools(self, info, limit, offset, cluster_id=None, node_id=None, resource_pool_id=None,
+                                 ordering: str = None):
         """Сокращенная информация о контроллере."""
         # TODO: на фронте делать неактивными элементы в плохом статусе?
         controller = await Controller.get(self.id)
@@ -219,34 +251,39 @@ class ControllerType(graphene.ObjectType, ControllerFetcher):
         if not controller.veil_client:
             return
         paginator = VeilRestPaginator(ordering=ordering, limit=limit, offset=offset)
-        veil_response = await controller.veil_client.data_pool(node_id=node_id, cluster_id=cluster_id).list(paginator=paginator)
+        veil_response = await controller.veil_client.data_pool(cluster_id=cluster_id,
+                                                               resource_pool_id=resource_pool_id,
+                                                               node_id=node_id).list(paginator=paginator)
         return [ControllerDataPoolType(**resource_data) for resource_data in veil_response.paginator_results]
 
-    async def resolve_templates(self, info, limit, offset, cluster_id=None, node_id=None, data_pool_id=None, ordering: str = None):
-        """В self прилетает инстанс подели контроллера."""
+    async def resolve_templates(self, info, limit, offset, cluster_id=None, resource_pool_id=None,
+                                node_id=None, ordering: str = None):
+        """В self прилетает инстанс модели контроллера."""
         # TODO: на фронте делать неактивными элементы в плохом статусе?
         controller = await Controller.get(self.id)
         # Прерываем выполнение при отсутствии клиента
         if not controller.veil_client:
             return
         paginator = VeilRestPaginator(ordering=ordering, limit=limit, offset=offset)
-        veil_response = await controller.veil_client.domain(template=1, cluster_id=cluster_id,
-                                                            node_id=node_id, data_pool_id=data_pool_id).list(
-            paginator=paginator)
-        return [ControllerNodeType(**resource_data) for resource_data in veil_response.paginator_results]
+        veil_response = await controller.veil_client.domain(template=1,
+                                                            cluster_id=cluster_id,
+                                                            resource_pool=resource_pool_id,
+                                                            node_id=node_id).list(paginator=paginator)
+        return [ControllerVmType(**data) for data in veil_response.paginator_results]
 
-    async def resolve_vms(self, info, limit, offset, template=None, cluster_id=None, node_id=None, data_pool_id=None,
+    async def resolve_vms(self, info, limit, offset, cluster_id=None, resource_pool_id=None, node_id=None,
                           exclude_existed=True, ordering: str = None):
-        """В self прилетает инстанс подели контроллера."""
+        """В self прилетает инстанс модели контроллера."""
         # TODO: на фронте делать неактивными элементы в плохом статусе?
         controller = await Controller.get(self.id)
         paginator = VeilRestPaginator(ordering=ordering, limit=limit, offset=offset)
         vms = await Vm.query.gino.all()
         # Прерываем выполнение при отсутствии клиента
         if controller.veil_client:
-            veil_response = await controller.veil_client.domain(template=0, cluster_id=cluster_id,
-                                                                node_id=node_id, data_pool_id=data_pool_id).list(
-                paginator=paginator)
+            veil_response = await controller.veil_client.domain(template=0,
+                                                                cluster_id=cluster_id,
+                                                                resource_pool=resource_pool_id,
+                                                                node_id=node_id).list(paginator=paginator)
             resolves = veil_response.paginator_results
         else:
             resolves = dict()

@@ -32,7 +32,7 @@ cryptography = "==2.8"  # controller password encryption
 python-ldap = "==3.3.*"  # ldap integration
 ldap3 = "==2.8.*"  # ad group computers including
 redis = "==3.4.1"  # thin client message broker
-veil-api-client = {path = "./veil_api_client-2.1.1-py3-none-any.whl"}
+veil-api-client = {path = "./veil_api_client-2.1.2-py3-none-any.whl"}
 pymemcache = "==3.2.*"
 
 [requires]

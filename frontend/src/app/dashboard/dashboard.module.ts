@@ -16,6 +16,7 @@ import { TemplatesModule } from './resourses/templates/templates.module';
 import { NodesModule } from './resourses/nodes/nodes.module';
 import { DatapoolsModule } from './resourses/datapools/datapools.module';
 import { ClustersModule } from './resourses/clusters/clusters.module';
+import { ResourcePoolsModule } from './resourses/resource_pools/resource_pools.module';
 import { PoolsModule } from './pools/pools.module';
 import { VmsModule } from './resourses/vms/vms.module';
 import { EventsModule } from './log/events/events.module';
@@ -59,6 +60,7 @@ import { ThinClientsModule } from './thin-clients/thin-clients.module';
     HttpClientModule,
     PoolsModule,
     ClustersModule,
+    ResourcePoolsModule,
     DatapoolsModule,
     NodesModule,
     TemplatesModule,
@@ -129,17 +131,17 @@ export class DashboardModule {
       }
 
       if (operation.variables.method === 'POST') {
-        
+
         const context = operation.getContext()
         const body = context.response.body
 
         if (body.errors) {
-          return throwError({ message: 'Bad response' }); 
+          return throwError({ message: 'Bad response' });
         } else {
           return forward(operation)
         }
       }
-      
+
     });
 
 

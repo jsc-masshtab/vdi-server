@@ -45,6 +45,11 @@
     <span>Кластеры</span>
   </a>
 
+  <a class="top-menu-item item-tree" [@fadeInOut] *ngIf="toggleResourse" (click)="routeTo('resourses/resource_pools')" (keydown.enter)="routeTo('resourses/resource_pools')" [class.clicked-link]="clickedManage == 'resource_pools'"  tabindex="0">
+    <fa-icon title="Пулы ресурсов" [icon]="['fas','database']" size="s" [style.color]="'rgb(162, 189, 153)'"></fa-icon>
+    <span>Пулы ресурсов</span>
+  </a>
+
   <a class="top-menu-item item-tree"  [@fadeInOut] *ngIf="toggleResourse" (click)="routeTo('resourses/nodes')" (keydown.enter)="routeTo('resourses/nodes')" [class.clicked-link]="clickedManage == 'nodes'"  tabindex="0">
     <fa-icon  title="Серверы" [icon]="['fas','server']" size="s" [style.color]="'rgb(239, 134, 95)'"></fa-icon>
     <span>Серверы</span>

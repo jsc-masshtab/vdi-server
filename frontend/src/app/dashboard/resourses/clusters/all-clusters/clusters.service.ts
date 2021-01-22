@@ -28,7 +28,7 @@ export class ClustersService  {
                     id
                     verbose_name
                 }
-                
+
             }
         }`
 
@@ -64,7 +64,6 @@ export class ClustersService  {
                             cluster(cluster_id: $id, controller_id: $controller_address) {
                                 id
                                 verbose_name
-                                nodes_count
                                 status
                                 cpu_count
                                 memory_count
@@ -73,7 +72,7 @@ export class ClustersService  {
                                 nodes {
                                     verbose_name
                                     status
-                                }   
+                                }
                             }
                         }
                     `,

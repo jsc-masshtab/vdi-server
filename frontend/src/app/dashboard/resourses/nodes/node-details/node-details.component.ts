@@ -64,7 +64,7 @@ export class NodeDetailsComponent implements OnInit, OnDestroy {
       property: 'status'
     }
   ];
-  
+
   public node_id: string;
   public menuActive: string = 'info';
   private address: string;

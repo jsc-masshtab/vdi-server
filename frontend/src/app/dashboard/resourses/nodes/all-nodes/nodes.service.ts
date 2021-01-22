@@ -34,10 +34,10 @@ export class NodesService {
         }`
 
         if (filter) {
-            query = `query controllers($controller_id:UUID, $cluster_id: UUID, $ordering:String) {
+            query = `query controllers($controller_id:UUID, $cluster_id: UUID, $resource_pool_id: UUID, $ordering:String) {
                 controller(id_:$controller_id) {
                     id
-                    nodes(cluster_id: $cluster_id, ordering: $ordering) {
+                    nodes(cluster_id: $cluster_id, resource_pool_id: $resource_pool_id, ordering: $ordering) {
                         id
                         verbose_name
                         status

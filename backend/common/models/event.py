@@ -7,7 +7,7 @@ import json
 import csv
 import os
 
-from datetime import datetime
+from datetime import datetime, timedelta
 from sqlalchemy import and_, between
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.sql import func
@@ -63,7 +63,7 @@ class Event(db.Model):
         finish_date = datetime.date(finish)
         path = os.path.join(path, '')
 
-        query = await Event.query.where(between(Event.created, start, finish)).gino.all()
+        query = await Event.query.where(between(Event.created, start, finish + timedelta(days=1))).gino.all()
 
         export = []
         for event in query:

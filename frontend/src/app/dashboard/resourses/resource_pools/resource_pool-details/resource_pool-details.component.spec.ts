@@ -1,6 +1,6 @@
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { ResourcePoolDetailsComponent } from './datapool-details.component';
+import { ResourcePoolDetailsComponent } from './resource_pool-details.component';
 
 describe('TemplatesComponent', () => {
   let component: ResourcePoolDetailsComponent;

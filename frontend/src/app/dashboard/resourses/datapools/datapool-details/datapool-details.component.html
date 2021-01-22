@@ -14,21 +14,21 @@
     <div class="details-row">
         <ul class="details-menu">
             <li (click)="routeTo('info')" [class.active]="menuActive === 'info'" title="Информация"><fa-icon [icon]="['fas','chart-bar']"></fa-icon><span class="name">Информация</span></li>
-            <li (click)="routeTo('vms')" [class.active]="menuActive === 'vms'" title="Виртуальные машины"><fa-icon [icon]="['fas','desktop']"></fa-icon><span class="name">Виртуальные машины</span></li>
-            <li (click)="routeTo('templates')" [class.active]="menuActive === 'templates'" title="Шаблоны виртуальных машин"><fa-icon [icon]="['fas','tv']"></fa-icon><span class="name">Шаблоны ВМ</span></li>
+<!--            <li (click)="routeTo('vms')" [class.active]="menuActive === 'vms'" title="Виртуальные машины"><fa-icon [icon]="['fas','desktop']"></fa-icon><span class="name">Виртуальные машины</span></li>-->
+<!--            <li (click)="routeTo('templates')" [class.active]="menuActive === 'templates'" title="Шаблоны виртуальных машин"><fa-icon [icon]="['fas','tv']"></fa-icon><span class="name">Шаблоны ВМ</span></li>-->
         </ul>
-        
+
         <div class="details-slide" *ngIf="host">
             <div class="details-slide-header">
                 <ng-container *ngIf="menuActive === 'info'">Информация о пуле данных</ng-container>
-                <ng-container *ngIf="menuActive === 'templates'">Шаблоны ВМ на пуле данных</ng-container>
-                <ng-container *ngIf="menuActive === 'vms'">ВМ на пуле данных</ng-container>
+<!--                <ng-container *ngIf="menuActive === 'templates'">Шаблоны ВМ на пуле данных</ng-container>-->
+<!--                <ng-container *ngIf="menuActive === 'vms'">ВМ на пуле данных</ng-container>-->
             </div>
             <div class="details-slide-into">
                 <vdi-table-into [item]="datapool" [collection]="collectionDetails" *ngIf="menuActive === 'info'"></vdi-table-into>
-                <vdi-vms [filter]="filter" *ngIf="menuActive === 'vms'"></vdi-vms>
-                <vdi-templates [filter]="filter" *ngIf="menuActive === 'templates'"></vdi-templates>
-            </div>     
+<!--                <vdi-vms [filter]="filter" *ngIf="menuActive === 'vms'"></vdi-vms>-->
+<!--                <vdi-templates [filter]="filter" *ngIf="menuActive === 'templates'"></vdi-templates>-->
+            </div>
         </div>
     </div>
 

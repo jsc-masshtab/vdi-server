@@ -1,20 +1,20 @@
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { ResourcePoolDetailsComponent } from './datapool-details.component';
+import { ResourcePoolsComponent } from './resource_pools.component';
 
 describe('TemplatesComponent', () => {
-  let component: ResourcePoolDetailsComponent;
-  let fixture: ComponentFixture<ResourcePoolDetailsComponent>;
+  let component: ResourcePoolsComponent;
+  let fixture: ComponentFixture<ResourcePoolsComponent>;
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [ ResourcePoolDetailsComponent ]
+      declarations: [ ResourcePoolsComponent ]
     })
     .compileComponents();
   }));
 
   beforeEach(() => {
-    fixture = TestBed.createComponent(ResourcePoolDetailsComponent);
+    fixture = TestBed.createComponent(ResourcePoolsComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

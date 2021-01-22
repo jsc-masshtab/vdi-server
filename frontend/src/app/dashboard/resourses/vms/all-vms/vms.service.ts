@@ -30,10 +30,10 @@ export class VmsService {
         }`
 
         if (filter) {
-            query = `query controllers($controller_id:UUID, $cluster_id: UUID, $node_id: UUID, $data_pool_id: UUID, $ordering:String) {
+            query = `query controllers($controller_id:UUID, $cluster_id: UUID, $resource_pool_id: UUID, $node_id: UUID, $ordering:String) {
                 controller(id_:$controller_id) {
                     id
-                    vms(cluster_id: $cluster_id, node_id: $node_id, data_pool_id: $data_pool_id, exclude_existed: false, ordering: $ordering) {
+                    vms(cluster_id: $cluster_id, resource_pool_id: $resource_pool_id, node_id: $node_id, exclude_existed: false, ordering: $ordering) {
                         id
                         verbose_name
                         status
@@ -76,7 +76,7 @@ export class VmsService {
                                 address
                                 hostname
                                 parent_name
-                                node {
+                                resource_pool {
                                     id
                                     verbose_name
                                 }

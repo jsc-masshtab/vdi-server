@@ -78,9 +78,7 @@ export class PoolAddComponent {
       connection_types: [[], Validators.required],
 
       controller_id: ['', Validators.required],
-      cluster_id: ['', Validators.required],
-      node_id: ['', Validators.required],
-      datapool_id: ['', Validators.required]
+      resource_pool_id: ['', Validators.required]
     });
 
     this.staticPool = this.fb.group({
@@ -119,9 +117,7 @@ export class PoolAddComponent {
     this.data = {
       connection_types: ['RDP', 'NATIVE_RDP', 'SPICE', 'SPICE_DIRECT'],
       controllers: [],
-      clusters: [],
-      nodes: [],
-      datapools: [],
+      resource_pools: [],
       vms: [],
       templates: []
     }
@@ -162,47 +158,24 @@ export class PoolAddComponent {
         /* Подписка на изменение полей формы для отправки запросов на сервер */
 
         this.sharedData.controls['controller_id'].valueChanges.subscribe((value) => {
-          this.sharedData.controls['cluster_id'].reset() // Очистка поля под текущим
+          this.sharedData.controls['resource_pool_id'].reset() // Очистка поля под текущим
 
-          if (value) this.getData('clusters', { "id_": value }) // запрос данных для выборки в очищенном поле
+          if (value) this.getData('resource_pools', { "id_": value }) // запрос данных для выборки в очищенном поле
         })
 
-        this.sharedData.controls['cluster_id'].valueChanges.subscribe((value) => {
-          this.sharedData.controls['node_id'].reset()
-
-          if (value) this.getData('nodes', {
-            "id_": this.sharedData.get('controller_id').value,
-            "cluster_id": value
-          })
-        })
-
-        this.sharedData.controls['node_id'].valueChanges.subscribe((value) => {
-          this.sharedData.controls['datapool_id'].reset()
-
-          if (value) this.getData('data_pools', {
-            "id_": this.sharedData.get('controller_id').value,
-            "cluster_id": this.sharedData.get('cluster_id').value,
-            "node_id": value
-          })
-        })
-
-        this.sharedData.controls['datapool_id'].valueChanges.subscribe((value) => {
+        this.sharedData.controls['resource_pool_id'].valueChanges.subscribe((value) => {
           this.staticPool.controls['vms'].reset()
 
           if (value) this.getData('vms', {
             "id_": this.sharedData.get('controller_id').value,
-            "cluster_id": this.sharedData.get('cluster_id').value,
-            "node_id": this.sharedData.get('node_id').value,
-            "data_pool_id": value
+            "resource_pool_id": this.sharedData.get('resource_pool_id').value
           })
 
           this.dynamicPool.controls['template_id'].reset()
 
           if (value) this.getData('templates', {
             "id_": this.sharedData.get('controller_id').value,
-            "cluster_id": this.sharedData.get('cluster_id').value,
-            "node_id": this.sharedData.get('node_id').value,
-            "data_pool_id": value
+            "resource_pool_id": this.sharedData.get('resource_pool_id').value
           })
         })
       } break;

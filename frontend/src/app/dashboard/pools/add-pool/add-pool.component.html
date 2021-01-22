@@ -72,49 +72,17 @@
 
       <label class="field">
         <mat-form-field>
-          <mat-label *ngIf="data.clusters?.length">Выберите кластер</mat-label>
-          <mat-label *ngIf="!data.clusters?.length">- нет кластеров -</mat-label>
+          <mat-label *ngIf="data.resource_pools?.length">Выберите Пул ресурсов</mat-label>
+          <mat-label *ngIf="!data.resource_pools?.length">- нет пулов ресурсов -</mat-label>
 
-          <mat-select formControlName="cluster_id">
-            <mat-option *ngFor="let cluster of data.clusters" [value]="cluster.id">
-              {{cluster.verbose_name}}
+          <mat-select formControlName="resource_pool_id">
+            <mat-option *ngFor="let resource_pool of data.resource_pools" [value]="resource_pool.id">
+              {{resource_pool.verbose_name}}
             </mat-option>
           </mat-select>
         </mat-form-field>
 
-        <ng-container *ngIf="sharedData.hasError('required', 'cluster_id') && checkValid">
-          <ng-container *ngTemplateOutlet="errorTemp"></ng-container>
-        </ng-container>
-      </label>
-
-      <label class="field">
-        <mat-form-field>
-          <mat-label *ngIf="data.nodes?.length">Выберите сервер</mat-label>
-          <mat-label *ngIf="!data.nodes?.length">- нет серверов -</mat-label>
-
-          <mat-select formControlName="node_id">
-            <mat-option *ngFor="let node of data.nodes" [value]="node.id">
-              {{node.verbose_name}}
-            </mat-option>
-          </mat-select>
-        </mat-form-field>
-
-        <ng-container *ngIf="sharedData.hasError('required', 'node_id') && checkValid">
-          <ng-container *ngTemplateOutlet="errorTemp"></ng-container>
-        </ng-container>
-      </label>
-
-      <label class="field">
-        <mat-form-field>
-          <mat-label *ngIf="data.data_pools?.length">Выберите пул данных</mat-label>
-          <mat-label *ngIf="!data.data_pools?.length">- нет пулов данных -</mat-label>
-          <mat-select formControlName="datapool_id">
-            <mat-option *ngFor="let datapool of data.data_pools" [value]="datapool.id">
-              {{datapool.verbose_name}}
-            </mat-option>
-          </mat-select>
-        </mat-form-field>
-        <ng-container *ngIf="sharedData.hasError('required', 'datapool_id') && checkValid">
+        <ng-container *ngIf="sharedData.hasError('required', 'resource_pool_id') && checkValid">
           <ng-container *ngTemplateOutlet="errorTemp"></ng-container>
         </ng-container>
       </label>

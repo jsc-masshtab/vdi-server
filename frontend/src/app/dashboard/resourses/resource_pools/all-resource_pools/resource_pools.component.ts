@@ -2,59 +2,55 @@ import { IParams } from '../../../../../../types';
 import { DetailsMove } from '../../../common/classes/details-move';
 import { WaitService } from '../../../common/components/single/wait/wait.service';
 import { Component, OnInit, ViewChild, ElementRef, OnDestroy, Input } from '@angular/core';
-import { ClustersService } from './clusters.service';
+import { ResourcePoolsService } from './resource_pools.service';
 import { map } from 'rxjs/operators';
 import { Router } from '@angular/router';
 import { Subscription } from 'rxjs';
 
 @Component({
-  selector: 'vdi-clusters',
-  templateUrl: './clusters.component.html',
-  styleUrls: ['./clusters.component.scss']
+  selector: 'vdi-resource_pools',
+  templateUrl: './resource_pools.component.html',
+  styleUrls: ['./resource_pools.component.scss']
 })
 
 
-export class ClustersComponent extends DetailsMove implements OnInit, OnDestroy {
+export class ResourcePoolsComponent extends DetailsMove implements OnInit, OnDestroy {
 
   @Input() filter: object
 
-  public clusters = [];
+  public resource_pools = [];
   public collection: object[] = [
     {
       title: 'Название',
       property: 'verbose_name',
       class: 'name-start',
       type: 'string',
-      icon: 'building',
-      sort: true
-    },
-    {
-      title: 'Серверы',
-      property: 'nodes_count',
-      type: 'string',
-      sort: true
-    },
-    {
-      title: 'CPU',
-      property: 'cpu_count',
-      type: 'string',
-      sort: true
-    },
-    {
-      title: 'RAM (MB)',
-      property: 'memory_count',
-      type: 'string',
+      icon: 'database',
       sort: true
     },
     {
       title: 'Контроллер',
       property: 'controller',
       property_lv2: 'verbose_name',
+      type: 'string',
       sort: true
     },
     {
-      title: 'Статус',
-      property: 'status',
+      title: 'Количество ВМ',
+      property: 'domains_count',
+      type: 'string',
+      sort: true
+    },
+    {
+      title: 'Ограничение памяти',
+      property: 'memory_limit',
+      type: 'string',
+      sort: true
+    },
+    {
+      title: 'Ограничение CPU',
+      property: 'cpu_limit',
+      type: 'string',
       sort: true
     }
   ];
@@ -62,17 +58,17 @@ export class ClustersComponent extends DetailsMove implements OnInit, OnDestroy 
   private sub: Subscription;
 
 
-  constructor(private service: ClustersService, private router: Router, private waitService: WaitService) {
+  constructor(private service: ResourcePoolsService, private router: Router, private waitService: WaitService) {
     super();
   }
 
   @ViewChild('view') view: ElementRef;
 
   ngOnInit() {
-    this.getAllClusters();
+    this.getResourcePools();
   }
 
-  public getAllClusters(): void {
+  public getResourcePools(): void {
     if (this.sub) {
       this.sub.unsubscribe();
     }
@@ -80,15 +76,15 @@ export class ClustersComponent extends DetailsMove implements OnInit, OnDestroy 
 
     let filtered = (data) => {
       if (this.filter) {
-        return data.data.controller.clusters
+        return data.data.controller.resource_pools
       } else {
-        return data.data.clusters
+        return data.data.resource_pools
       }
     }
 
-    this.sub = this.service.getAllClusters(this.filter).valueChanges.pipe(map(data => filtered(data)))
+    this.sub = this.service.getAllResourcePools(this.filter).valueChanges.pipe(map(data => filtered(data)))
       .subscribe((data) => {
-        this.clusters = data;
+        this.resource_pools = data;
         this.waitService.setWait(false);
       });
   }
@@ -105,29 +101,29 @@ export class ClustersComponent extends DetailsMove implements OnInit, OnDestroy 
     super.componentDeactivate();
   }
 
-  public routeTo(cluster): void {
+  public routeTo(resource_pool): void {
 
-    let cluster_id = cluster.id
+    let resource_pools_id = resource_pool.id
     let controller_id = ''
 
     if (this.filter) {
       controller_id = this.filter['controller_id']
     } else {
-      controller_id = cluster.controller.id;
+      controller_id = resource_pool.controller.id;
     }
 
-    this.router.navigate([`pages/resourses/clusters/${controller_id}/${cluster_id}`]);
+    this.router.navigate([`pages/resourses/resource_pools/${controller_id}/${resource_pools_id}`]);
   }
 
   public sortList(param: IParams) {
-    this.service.paramsForGetClusters.spin = param.spin;
-    this.service.paramsForGetClusters.nameSort = param.nameSort;
-    this.getAllClusters();
+    this.service.paramsForGetResourcePools.spin = param.spin;
+    this.service.paramsForGetResourcePools.nameSort = param.nameSort;
+    this.getResourcePools();
   }
 
   ngOnDestroy() {
-    this.service.paramsForGetClusters.spin = true;
-    this.service.paramsForGetClusters.nameSort = undefined;
+    this.service.paramsForGetResourcePools.spin = true;
+    this.service.paramsForGetResourcePools.nameSort = undefined;
     if (this.sub) {
       this.sub.unsubscribe();
     }

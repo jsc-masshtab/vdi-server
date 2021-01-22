@@ -243,8 +243,7 @@ class PoolType(graphene.ObjectType):
     verbose_name = graphene.String()
     status = StatusGraphene()
     pool_type = graphene.String()
-    cluster_id = graphene.UUID()
-    node_id = graphene.UUID()
+    resource_pool_id = graphene.UUID()
     controller = graphene.Field(ControllerType)
     vm_amount = graphene.Int()
 
@@ -254,7 +253,6 @@ class PoolType(graphene.ObjectType):
     # AutomatedPool fields
     automated_pool_id = graphene.UUID()
     template_id = graphene.UUID()
-    datapool_id = graphene.UUID()
     increase_step = graphene.Int()
     max_amount_of_create_attempts = graphene.Int()
     initial_size = graphene.Int()
@@ -279,9 +277,7 @@ class PoolType(graphene.ObjectType):
 
     # Затрагивает запрос ресурсов на VeiL ECP.
     template = graphene.Field(VeilShortEntityType)
-    node = graphene.Field(VeilShortEntityType)
-    cluster = graphene.Field(VeilShortEntityType)
-    datapool = graphene.Field(VeilShortEntityType)
+    resource_pool = graphene.Field(VeilShortEntityType)
     vms = graphene.List(VmType)
 
     async def resolve_controller(self, info):
@@ -327,6 +323,17 @@ class PoolType(graphene.ObjectType):
     async def resolve_vm_amount(self, _info):
         return await (db.select([db.func.count(Vm.id)]).where(Vm.pool_id == self.pool_id)).gino.scalar()
 
+    async def resolve_resource_pool(self, _info):
+        pool = await Pool.get(self.pool_id)
+        pool_controller = await pool.controller_obj
+        # Прерываем выполнение при отсутствии клиента
+        if not pool_controller.veil_client:
+            return
+        resource_pool_info = await pool_controller.veil_client.resource_pool(
+            resource_pool_id=str(pool.resource_pool_id)).info()
+        data = resource_pool_info.value
+        return VeilShortEntityType(**data)
+
     async def resolve_template(self, _info):
         pool = await Pool.get(self.pool_id)
         pool_controller = await pool.controller_obj
@@ -342,42 +349,6 @@ class PoolType(graphene.ObjectType):
         veil_domain.id = veil_domain.api_object_id
         return veil_domain
 
-    async def resolve_node(self, _info):
-        pool = await Pool.get(self.pool_id)
-        pool_controller = await pool.controller_obj
-        # Прерываем выполнение при отсутствии клиента
-        if not pool_controller.veil_client:
-            return
-        veil_node = pool_controller.veil_client.node(str(pool.node_id))
-        await veil_node.info()
-        # попытка не использовать id
-        veil_node.id = veil_node.api_object_id
-        return veil_node
-
-    async def resolve_datapool(self, _info):
-        pool = await Pool.get(self.pool_id)
-        pool_controller = await pool.controller_obj
-        # Прерываем выполнение при отсутствии клиента
-        if not pool_controller.veil_client:
-            return
-        veil_datapool = pool_controller.veil_client.data_pool(str(pool.datapool_id))
-        await veil_datapool.info()
-        # попытка не использовать id
-        veil_datapool.id = veil_datapool.api_object_id
-        return veil_datapool
-
-    async def resolve_cluster(self, _info):
-        pool = await Pool.get(self.pool_id)
-        pool_controller = await pool.controller_obj
-        # Прерываем выполнение при отсутствии клиента
-        if not pool_controller.veil_client:
-            return
-        veil_cluster = pool_controller.veil_client.cluster(str(pool.cluster_id))
-        await veil_cluster.info()
-        # попытка не использовать id
-        veil_cluster.id = veil_cluster.api_object_id
-        return veil_cluster
-
     async def resolve_assigned_connection_types(self, _info):
         pool = await Pool.get(self.pool_id)
         return pool.connection_types
@@ -392,12 +363,10 @@ def pool_obj_to_type(pool_obj: Pool) -> PoolType:
                  'master_id': pool_obj.master_id,
                  'verbose_name': pool_obj.verbose_name,
                  'pool_type': pool_obj.pool_type,
-                 'cluster_id': pool_obj.cluster_id,
-                 'node_id': pool_obj.node_id,
+                 'resource_pool_id': pool_obj.resource_pool_id,
                  'static_pool_id': pool_obj.master_id,
                  'automated_pool_id': pool_obj.master_id,
                  'template_id': pool_obj.template_id,
-                 'datapool_id': pool_obj.datapool_id,
                  'increase_step': pool_obj.increase_step,
                  'max_amount_of_create_attempts': pool_obj.max_amount_of_create_attempts,
                  'initial_size': pool_obj.initial_size,
@@ -497,9 +466,7 @@ class CreateStaticPoolMutation(graphene.Mutation, ControllerFetcher):
 
     class Arguments:
         controller_id = graphene.UUID(required=True)
-        cluster_id = graphene.UUID(required=True)
-        node_id = graphene.UUID(required=True)
-        datapool_id = graphene.UUID(required=True)
+        resource_pool_id = graphene.UUID(required=True)
         verbose_name = graphene.String(required=True)
         vms = graphene.NonNull(graphene.List(graphene.NonNull(VmInput)))
         connection_types = graphene.List(graphene.NonNull(ConnectionTypesGraphene),
@@ -509,12 +476,11 @@ class CreateStaticPoolMutation(graphene.Mutation, ControllerFetcher):
 
     @classmethod
     @administrator_required
-    async def mutate(cls, root, info, creator, controller_id, cluster_id, node_id, datapool_id, verbose_name, vms,
-                     connection_types):
+    async def mutate(cls, root, info, creator, controller_id, resource_pool_id, verbose_name, vms, connection_types):
         """Мутация создания Статического пула виртуальных машин.
 
         1. Проверка переданных vm_ids
-        2. Получение дополнительной информации (datapool_id, cluster_id, node_id, controller_address
+        2. Получение дополнительной информации (resource_pool_id, controller_address
         3. Создание Pool
         4. Создание StaticPool
         5. Создание не удаляемых VM в локальной таблице VM
@@ -529,10 +495,8 @@ class CreateStaticPoolMutation(graphene.Mutation, ControllerFetcher):
         try:
             pool = await StaticPool.soft_create(veil_vm_data=vms,
                                                 verbose_name=verbose_name,
-                                                cluster_id=cluster_id,
-                                                datapool_id=datapool_id,
+                                                resource_pool_id=resource_pool_id,
                                                 controller_address=controller.address,
-                                                node_id=node_id,
                                                 connection_types=connection_types,
                                                 creator=creator)
         except Exception as E:  # Возможные исключения: дубликат имени или вм id, сетевой фейл enable_remote_accesses
@@ -690,10 +654,8 @@ class ExpandPoolMutation(graphene.Mutation, PoolValidator):
 class CreateAutomatedPoolMutation(graphene.Mutation, PoolValidator, ControllerFetcher):
     class Arguments:
         controller_id = graphene.UUID(required=True)
-        cluster_id = graphene.UUID(required=True)
+        resource_pool_id = graphene.UUID(required=True)
         template_id = graphene.UUID(required=True)
-        datapool_id = graphene.UUID(required=True)
-        node_id = graphene.UUID(required=True)
 
         verbose_name = graphene.String(required=True)
         increase_step = graphene.Int(default_value=1, description="Шаг расширения пула")
@@ -713,7 +675,7 @@ class CreateAutomatedPoolMutation(graphene.Mutation, PoolValidator, ControllerFe
 
     @classmethod
     @administrator_required
-    async def mutate(cls, root, info, creator, controller_id, cluster_id, template_id, datapool_id, node_id,
+    async def mutate(cls, root, info, creator, controller_id, resource_pool_id, template_id,
                      verbose_name, increase_step,
                      initial_size, reserve_size, total_size, vm_name_template,
                      create_thin_clones, prepare_vms,
@@ -727,9 +689,9 @@ class CreateAutomatedPoolMutation(graphene.Mutation, PoolValidator, ControllerFe
         # Создание записей в БД
         try:
             automated_pool = await AutomatedPool.soft_create(creator=creator, verbose_name=verbose_name,
-                                                             controller_ip=controller.address, cluster_id=cluster_id,
-                                                             node_id=node_id, template_id=template_id,
-                                                             datapool_id=datapool_id,
+                                                             controller_ip=controller.address,
+                                                             resource_pool_id=resource_pool_id,
+                                                             template_id=template_id,
                                                              increase_step=increase_step,
                                                              initial_size=initial_size, reserve_size=reserve_size,
                                                              total_size=total_size,
