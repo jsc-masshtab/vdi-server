@@ -56,19 +56,9 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
       property_lv2: 'address'
     },
     {
-      title: 'Кластер',
-      property: 'cluster',
-      property_lv2: 'verbose_name'
-    },
-    {
-      title: 'Сервер',
-      property: 'node',
-      property_lv2: 'verbose_name'
-    },
-    {
-      title: 'Пул данных',
-      property: 'datapool',
-      property_lv2: 'verbose_name'
+      title: 'Пул ресурсов',
+      property: 'resource_pool',
+      property_lv2: 'verbose_name',
     },
     {
       title: 'Всего ВМ',
@@ -133,18 +123,8 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
       edit: 'changeAutomatedPoolKeep_vms_on'
     },
     {
-      title: 'Кластер',
-      property: 'cluster',
-      property_lv2: 'verbose_name'
-    },
-    {
-      title: 'Сервер',
-      property: 'node',
-      property_lv2: 'verbose_name'
-    },
-    {
-      title: 'Пул данных',
-      property: 'datapool',
+      title: 'Пул ресурсов',
+      property: 'resource_pool',
       property_lv2: 'verbose_name'
     },
     {
@@ -415,8 +395,7 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
       data: {
         idPool: this.idPool,
         namePool: this.pool.verbose_name,
-        idCluster: this.pool.cluster_id,
-        idNode: this.pool.node_id,
+        idResourcePool: this.pool.resource_pool_id,
         idController: this.pool.controller.id,
         typePool: this.typePool
       }

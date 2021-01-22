@@ -1,12 +1,11 @@
 import { DashboardRoutingModule } from './../../dashboard-routing.module';
-import { ClustersService } from './all-clusters/clusters.service';
-import { ClustersComponent } from './all-clusters/clusters.component';
+import { ResourcePoolsService } from './all-resource_pools/resource_pools.service';
+import { ResourcePoolsComponent } from './all-resource_pools/resource_pools.component';
 import { SharedModule } from '../../common/shared.module';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ClusterDetailsComponent } from './cluster-details/cluster-details.component';
-import { ResourcePoolsModule} from "../resource_pools/resource_pools.module";
+import { ResourcePoolDetailsComponent } from './resource_pool-details/resource_pool-details.component';
 import { NodesModule } from '../nodes/nodes.module';
 import { DatapoolsModule } from '../datapools/datapools.module';
 import { VmsModule } from '../vms/vms.module';
@@ -15,24 +14,23 @@ import { TemplatesModule } from '../templates/templates.module';
 
 @NgModule({
   declarations: [
-    ClustersComponent,
-    ClusterDetailsComponent
+    ResourcePoolsComponent,
+    ResourcePoolDetailsComponent
   ],
   imports: [
     SharedModule,
     CommonModule,
     FontAwesomeModule,
     DashboardRoutingModule,
-    ResourcePoolsModule,
     NodesModule,
     DatapoolsModule,
     VmsModule,
     TemplatesModule
   ],
-  providers: [ClustersService],
+  providers: [ResourcePoolsService],
   exports: [
-    ClustersComponent,
-    ClusterDetailsComponent
+    ResourcePoolsComponent,
+    ResourcePoolDetailsComponent
   ]
 })
-export class ClustersModule { }
+export class ResourcePoolsModule { }

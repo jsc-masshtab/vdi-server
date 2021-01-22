@@ -12,15 +12,7 @@ export interface IPool extends ISettingsAutoPool, ISettingsStaticPool  {
     username: string;
   };
 
-  cluster: {
-    verbose_name: string;
-  };
-
-  node: {
-    verbose_name: string;
-  };
-
-  datapool: {
+  resource_pool: {
     verbose_name: string;
   };
 
@@ -61,7 +53,6 @@ interface ISettingsAutoPool {
 }
 
 interface ISettingsStaticPool {
-  cluster_id: string;
-  node_id: string;
+  resource_pool_id: string;
 }
 

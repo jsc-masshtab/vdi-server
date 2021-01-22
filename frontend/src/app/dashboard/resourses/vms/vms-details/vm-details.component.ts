@@ -74,8 +74,8 @@ export class VmDetailsComponent implements OnInit, OnDestroy {
       type: 'string'
     },
     {
-      title: 'Сервер',
-      property: 'node',
+      title: 'Пул ресурсов',
+      property: 'resource_pool',
       property_lv2: 'verbose_name',
       type: 'string'
     },

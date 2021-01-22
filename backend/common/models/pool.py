@@ -56,9 +56,7 @@ class Pool(VeilModel):
 
     id = db.Column(UUID(), primary_key=True, default=uuid.uuid4, unique=True)
     verbose_name = db.Column(db.Unicode(length=128), nullable=False, unique=True)
-    cluster_id = db.Column(UUID(), nullable=False)
-    node_id = db.Column(UUID(), nullable=False)
-    datapool_id = db.Column(UUID(), nullable=True)
+    resource_pool_id = db.Column(UUID(), nullable=False)
     status = db.Column(AlchemyEnum(Status), nullable=False, index=True)
     controller = db.Column(UUID(), db.ForeignKey('controller.id', ondelete="CASCADE"), nullable=False)
     keep_vms_on = db.Column(db.Boolean(), nullable=False, default=False)
@@ -168,9 +166,7 @@ class Pool(VeilModel):
         query = db.select([
             Pool.id.label('master_id'),
             Pool.verbose_name,
-            Pool.cluster_id,
-            Pool.node_id,
-            Pool.datapool_id,
+            Pool.resource_pool_id,
             Pool.status,
             Pool.controller,
             Pool.keep_vms_on,
@@ -211,9 +207,7 @@ class Pool(VeilModel):
                     isouter=permission_outer)).group_by(
                 Pool.id,
                 Pool.verbose_name,
-                Pool.cluster_id,
-                Pool.node_id,
-                Pool.datapool_id,
+                Pool.resource_pool_id,
                 Pool.status,
                 Pool.controller,
                 Pool.keep_vms_on,
@@ -489,15 +483,15 @@ class Pool(VeilModel):
         return await ero_query.gino.status()
 
     @classmethod
-    async def create(cls, verbose_name, cluster_id, node_id, datapool_id, controller_ip, connection_types):
+    async def create(cls, verbose_name, resource_pool_id, controller_ip, connection_types):
         # TODO: controller_ip заменить на controller_id
         from common.models.controller import Controller
         controller_id = await Controller.get_controller_id_by_ip(controller_ip)
         if not controller_id:
             raise ValidationError(_('Controller {} not found.').format(controller_ip))
 
-        pool = await super().create(verbose_name=verbose_name, cluster_id=cluster_id, node_id=node_id,
-                                    datapool_id=datapool_id,
+        pool = await super().create(verbose_name=verbose_name,
+                                    resource_pool_id=resource_pool_id,
                                     controller=controller_id,
                                     status=Status.CREATING,
                                     connection_types=connection_types)
@@ -722,6 +716,7 @@ class StaticPool(db.Model):
 
     @staticmethod
     def vms_on_same_node(node_id: str, veil_vm_data: list) -> bool:
+        # TODO: Проверить использование
         """Проверка, что все VM находятся на одной Veil node.
 
         All VMs are on the same node and cluster, all VMs have the same datapool
@@ -731,16 +726,13 @@ class StaticPool(db.Model):
 
     @classmethod
     async def soft_create(cls, creator, veil_vm_data: list, verbose_name: str,
-                          controller_address: str, cluster_id: str, node_id: str,
-                          datapool_id: str, connection_types: list):
+                          controller_address: str, resource_pool_id: str, connection_types: list):
         """Nested transactions are atomic."""
         async with db.transaction() as tx:  # noqa
             await system_logger.debug(_('StaticPool: Create Pool.'))
             pl = await Pool.create(verbose_name=verbose_name,
                                    controller_ip=controller_address,
-                                   cluster_id=cluster_id,
-                                   node_id=node_id,
-                                   datapool_id=datapool_id,
+                                   resource_pool_id=resource_pool_id,
                                    connection_types=connection_types)
 
             await system_logger.debug(_('StaticPool: Create StaticPool.'))
@@ -832,16 +824,10 @@ class AutomatedPool(db.Model):
             return pool.verbose_name
 
     @property
-    async def node_id(self):
+    async def resource_pool_id(self):
         pool = await Pool.get(self.id)
         if pool:
-            return pool.node_id
-
-    @property
-    async def datapool_id(self):
-        pool = await Pool.get(self.id)
-        if pool:
-            return pool.datapool_id
+            return pool.resource_pool_id
 
     @property
     async def controller_ip(self):
@@ -862,17 +848,14 @@ class AutomatedPool(db.Model):
         return await Pool.deactivate(self.id)
 
     @classmethod
-    async def soft_create(cls, creator, verbose_name, controller_ip, cluster_id, node_id,
-                          template_id, datapool_id, increase_step,
-                          initial_size, reserve_size, total_size, vm_name_template,
+    async def soft_create(cls, creator, verbose_name, controller_ip, resource_pool_id,
+                          template_id, increase_step, initial_size, reserve_size, total_size, vm_name_template,
                           create_thin_clones, prepare_vms, connection_types, ad_cn_pattern: str = None):
         """Nested transactions are atomic."""
         async with db.transaction() as tx:  # noqa
             # Создаем базовую сущность Pool
             pool = await Pool.create(verbose_name=verbose_name,
-                                     cluster_id=cluster_id,
-                                     node_id=node_id,
-                                     datapool_id=datapool_id,
+                                     resource_pool_id=resource_pool_id,
                                      controller_ip=controller_ip,
                                      connection_types=connection_types)
             # Создаем AutomatedPool
@@ -953,9 +936,8 @@ class AutomatedPool(db.Model):
         params = {
             'verbose_name': verbose_name + '-1',
             'domain_id': str(self.template_id),
-            'datapool_id': str(await self.datapool_id),
+            'resource_pool_id': str(await self.resource_pool_id),
             'controller_id': pool_controller.id,
-            'node_id': str(await self.node_id),
             'create_thin_clones': self.create_thin_clones,
         }
 

@@ -69,7 +69,7 @@ export class GroupsComponent extends DetailsMove implements OnInit, OnDestroy {
 
   public addGroup() {
     this.dialog.open(AddGroupComponent, {
- 			disableClose: true, 
+ 			disableClose: true,
       width: '500px'
     });
   }

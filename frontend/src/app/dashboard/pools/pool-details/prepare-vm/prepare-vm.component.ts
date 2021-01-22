@@ -10,9 +10,8 @@ import { takeUntil } from 'rxjs/operators';
 interface IData {
   idPool: number;
   namePool: string;
-  idCluster: string;
+  idResourcePool: string;
   idController: string;
-  idNode: string;
   typePool: string;
   vms: [];
 }

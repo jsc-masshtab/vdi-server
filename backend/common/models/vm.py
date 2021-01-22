@@ -200,8 +200,8 @@ class Vm(VeilModel):
     #     return user_power_state != 3 or not remote_access
 
     @staticmethod
-    async def copy(verbose_name: str, domain_id: str, datapool_id: str, controller_id,
-                   node_id: str, create_thin_clones: bool):
+    async def copy(verbose_name: str, domain_id: str, resource_pool_id: str, controller_id,
+                   create_thin_clones: bool):
         """Copy existing VM template for new VM create."""
         from common.models.controller import Controller as ControllerModel
 
@@ -216,7 +216,7 @@ class Vm(VeilModel):
             await system_logger.debug('Trying to create VM on ECP with verbose_name={}'.format(verbose_name))
 
             # Send request to create vm
-            vm_configuration = DomainConfiguration(verbose_name=verbose_name, node=node_id, datapool=datapool_id,
+            vm_configuration = DomainConfiguration(verbose_name=verbose_name, resource_pool=resource_pool_id,
                                                    parent=domain_id, thin=create_thin_clones)
             create_response = await vm_client.create(domain_configuration=vm_configuration)
 
@@ -241,9 +241,9 @@ class Vm(VeilModel):
                 await system_logger.debug(_('Controller has not free space for creating new VM.'))
                 raise VmCreationError(_('Not enough free space on data pool.'))
 
-            elif ecp_detail and 'passed node is not valid' in ecp_detail:
-                await system_logger.debug(_('Unknown node {}.').format(node_id))
-                raise VmCreationError(_('Controller can`t create VM. Unknown node.'))
+            # elif ecp_detail and 'passed node is not valid' in ecp_detail:
+            #     await system_logger.debug(_('Unknown node {}.').format(node_id))
+            #     raise VmCreationError(_('Controller can`t create VM. Unknown node.'))
 
             elif ecp_detail and inner_retry_count < 10:
                 # Тут мы предполагаем, что контроллер заблокирован выполнением задачи. Это может быть и не так,

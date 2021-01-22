@@ -10,9 +10,8 @@ import { takeUntil } from 'rxjs/operators';
 interface IData {
   idPool: number;
   namePool: string;
-  idCluster: string;
+  idResourcePool: string;
   idController: string;
-  idNode: string;
   typePool: string;
 }
 
@@ -52,7 +51,7 @@ export class AddVMStaticPoolComponent implements OnInit, OnDestroy {
 
   private getVms() {
     this.pendingVms = true;
-    this.poolService.getAllVms(this.data.idController, this.data.idCluster, this.data.idNode).pipe(takeUntil(this.destroy))
+    this.poolService.getAllVms(this.data.idController, this.data.idResourcePool).pipe(takeUntil(this.destroy))
       .subscribe((data) => {
         this.vms = data;
         this.pendingVms = false;

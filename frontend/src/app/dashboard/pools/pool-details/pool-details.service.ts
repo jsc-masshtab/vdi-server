@@ -59,13 +59,7 @@ export class PoolDetailsService {
                                     users {
                                         username
                                     }
-                                    cluster {
-                                        verbose_name
-                                    }
-                                    node {
-                                        verbose_name
-                                    }
-                                    datapool {
+                                    resource_pool {
                                         verbose_name
                                     }
                                     template {
@@ -113,18 +107,11 @@ export class PoolDetailsService {
                                         id
                                         address
                                     }
-                                    cluster_id
-                                    node_id
+                                    resource_pool_id
                                     users {
                                         username
                                     }
-                                    cluster {
-                                        verbose_name
-                                    }
-                                    node {
-                                        verbose_name
-                                    }
-                                    datapool {
+                                    resource_pool {
                                         verbose_name
                                     }
                                     assigned_groups {
@@ -215,12 +202,12 @@ export class PoolDetailsService {
         });
     }
 
-    public getAllVms(controller_id: string, cluster_id: string, node_id: string): Observable<any>  {
+    public getAllVms(controller_id: string, resource_pool_id: string): Observable<any>  {
         return  this.service.watchQuery({
-            query: gql` query controllers($controller_id: UUID, $cluster_id: UUID, $node_id: UUID) {
+            query: gql` query controllers($controller_id: UUID, $resource_pool_id: UUID) {
                 controller(id_: $controller_id) {
                     id
-                    vms(cluster_id: $cluster_id,node_id: $node_id) {
+                    vms(resource_pool_id: $resource_pool_id) {
                             id
                             verbose_name
                         }
@@ -230,8 +217,7 @@ export class PoolDetailsService {
             variables: {
                 method: 'GET',
                 controller_id,
-                cluster_id,
-                node_id,
+                resource_pool_id,
                 get_vms_in_pools: false
             }
         }).valueChanges.pipe(map((data: any) => data.data.controller['vms']));

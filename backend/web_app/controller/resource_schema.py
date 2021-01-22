@@ -12,7 +12,7 @@ from common.veil.veil_graphene import VeilResourceType, VmState, VeilShortEntity
 from common.veil.veil_gino import StatusGraphene
 from common.veil.veil_errors import SilentError
 from veil_api_client.base.api_object import VeilRestPaginator
-from web_app.controller.schema import ControllerFetcher
+from web_app.controller.schema import ControllerFetcher, ControllerType
 from common.languages import lang_init
 from common.models.vm import Vm
 from common.models.pool import Pool
@@ -49,6 +49,21 @@ class ResourceClusterType(VeilResourceType):
     ha_retrycount = graphene.Int()
     drs_mode = graphene.String()
     drs_metrics_strategy = graphene.String()
+
+
+# Resource pool
+class ResourcePoolType(VeilResourceType):
+    id = graphene.UUID()
+    verbose_name = graphene.String()
+    description = graphene.String()
+    domains_count = graphene.Int()
+    memory_limit = graphene.Int()
+    cpu_limit = graphene.Int()
+    nodes_cpu_count = graphene.Int()
+    domains_cpu_count = graphene.Int()
+    nodes_memory_count = graphene.Int()
+    domains_memory_count = graphene.Int()
+    controller = graphene.Field(ControllerType)
 
 
 # Node aka Server
@@ -119,7 +134,7 @@ class ResourceVmType(VeilResourceType):
     verbose_name = graphene.String()
     status = StatusGraphene()
     controller = graphene.Field(VeilShortEntityType)
-    node = graphene.Field(VeilShortEntityType)
+    resource_pool = graphene.Field(VeilShortEntityType)
     memory_count = graphene.Int()
     cpu_count = graphene.Int()
     template = graphene.Boolean()
@@ -130,7 +145,6 @@ class ResourceVmType(VeilResourceType):
     hints = graphene.Int()
     user_power_state = VmState()
     # vdisks_count = graphene.Int()
-    cluster = graphene.UUID()
     safety = graphene.Boolean()
     boot_type = graphene.String()
     start_on_boot = graphene.Boolean()
@@ -172,6 +186,10 @@ class ResourcesQuery(graphene.ObjectType, ControllerFetcher):
     cluster = graphene.Field(ResourceClusterType, cluster_id=graphene.UUID(), controller_id=graphene.UUID())
     clusters = graphene.List(ResourceClusterType, ordering=graphene.String(), limit=graphene.Int(default_value=100),
                              offset=graphene.Int(default_value=0))
+
+    resource_pool = graphene.Field(ResourcePoolType, resource_pool_id=graphene.UUID(), controller_id=graphene.UUID())
+    resource_pools = graphene.List(ResourcePoolType, ordering=graphene.String(), limit=graphene.Int(default_value=100),
+                                   offset=graphene.Int(default_value=0))
 
     node = graphene.Field(ResourceNodeType, node_id=graphene.UUID(), controller_id=graphene.UUID())
     nodes = graphene.List(ResourceNodeType, ordering=graphene.String(), limit=graphene.Int(default_value=100),
@@ -232,6 +250,59 @@ class ResourcesQuery(graphene.ObjectType, ControllerFetcher):
             veil_clusters_list.append(ResourceClusterType(**resource_data))
 
         return veil_clusters_list
+
+    # Пулы ресурсов
+    @classmethod
+    @administrator_required
+    async def resolve_resource_pool(cls, root, info, creator, resource_pool_id, controller_id):
+        """"Получение информации о конкретном пуле ресурсов на контроллере."""
+        controller = await cls.fetch_by_id(controller_id)
+        # Прерываем выполнение при отсутствии клиента
+        if not controller.veil_client:
+            return
+        veil_response = await controller.veil_client.resource_pool(resource_pool_id=str(resource_pool_id)).info()
+        for data in veil_response.response:
+            resource_pool = data.public_attrs
+            resource_pool['controller'] = {'id': controller.id,
+                                           'verbose_name': controller.verbose_name,
+                                           'address': controller.address}
+        return ResourcePoolType(**resource_pool)
+
+    @classmethod
+    @administrator_required
+    async def resolve_resource_pools(cls, root, info, creator, limit, offset, ordering: str = None):
+        """Все пулы ресурсов на подключенных ECP VeiL."""
+        controllers = await cls.fetch_all()
+        veil_resource_pools_list = list()
+        resource_pools_list = list()
+        for controller in controllers:
+            paginator = VeilRestPaginator(ordering=ordering, limit=limit, offset=offset)
+            # Прерываем выполнение при отсутствии клиента
+            if not controller.veil_client:
+                continue
+            veil_response = await controller.veil_client.resource_pool().list(paginator=paginator)
+            for data in veil_response.response:
+                resource_pool = data.public_attrs
+                # Добавляем id, так как в response он не присутствует в чистом виде
+                resource_pool['id'] = resource_pool['api_object_id']
+                # Добавляем параметры контроллера на VDI
+                resource_pool['controller'] = {'id': controller.id,
+                                               'verbose_name': controller.verbose_name,
+                                               'address': controller.address}
+                resource_pools_list.append(resource_pool)
+
+        if not ordering:
+            resource_pools_list.sort(key=lambda data: data['verbose_name'])
+
+        if ordering == 'controller':
+            resource_pools_list.sort(key=lambda data: data['controller']['verbose_name'])
+        elif ordering == '-controller':
+            resource_pools_list.sort(key=lambda data: data['controller']['verbose_name'], reverse=True)
+
+        for data in resource_pools_list:
+            veil_resource_pools_list.append(ResourcePoolType(**data))
+
+        return veil_resource_pools_list
 
     # Ноды
     @classmethod
@@ -341,7 +412,8 @@ class ResourcesQuery(graphene.ObjectType, ControllerFetcher):
             resource_data['controller'] = {'id': controller.id, 'verbose_name': controller.verbose_name}
             resource_data['cpu_count'] = veil_domain.cpu_count
             resource_data['parent_name'] = veil_domain.parent_name
-            resource_data['guest_agent'] = veil_domain.guest_agent.qemu_state
+            if veil_domain.guest_agent:
+                resource_data['guest_agent'] = veil_domain.guest_agent.qemu_state
             if veil_domain.powered:
                 resource_data['hostname'] = veil_domain.hostname
                 resource_data['address'] = veil_domain.guest_agent.ipv4
@@ -372,6 +444,7 @@ class ResourcesQuery(graphene.ObjectType, ControllerFetcher):
             # Прерываем выполнение при отсутствии клиента
             if not controller.veil_client:
                 continue
+
             veil_response = await controller.veil_client.domain(template=template).list(paginator=paginator)
             vms_list = veil_response.paginator_results
 

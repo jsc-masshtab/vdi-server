@@ -11,12 +11,14 @@ import { VmsComponent } from './resourses/vms/all-vms/vms.component';
 
 import { NodeDetailsComponent } from './resourses/nodes/node-details/node-details.component';
 import { ClustersComponent } from './resourses/clusters/all-clusters/clusters.component';
+import { ResourcePoolsComponent } from './resourses/resource_pools/all-resource_pools/resource_pools.component';
 import { NgModule } from '@angular/core';
 import { Routes, RouterModule } from '@angular/router';
 import { ControllersComponent } from './settings/controllers/all-controllers/controllers.component';
 import { NodesComponent } from './resourses/nodes/all-nodes/nodes.component';
 import { DatapoolsComponent } from './resourses/datapools/all-datapools/datapools.component';
 import { ClusterDetailsComponent } from './resourses/clusters/cluster-details/cluster-details.component';
+import { ResourcePoolDetailsComponent } from './resourses/resource_pools/resource_pool-details/resource_pool-details.component';
 import { TemplatesComponent } from './resourses/templates/all-templates/templates.component';
 import { UsersComponent } from './settings/users/all-users/users.component';
 import { VmDetailsComponent } from './resourses/vms/vms-details/vm-details.component';
@@ -128,6 +130,16 @@ const routes: Routes = [
           {
             path: ':address/:id',
             component: ClusterDetailsComponent
+          }
+        ]
+      },
+      {
+        path: 'resourses/resource_pools',
+        component: ResourcePoolsComponent,
+        children: [
+          {
+            path: ':address/:id',
+            component: ResourcePoolDetailsComponent
           }
         ]
       },
