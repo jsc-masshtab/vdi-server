@@ -15,10 +15,16 @@ export class WebsocketService  {
 
   public init(): void {
     const host = window.location.host;
+    const prot = window.location.protocol;
 
     let url = `ws://${host}/subscriptions`;
+    
+    if (prot == 'https:') {
+      url = `wss://${host}/subscriptions`;
+    }
 
     this.ws = new WebSocket(url);
+    
     if (this.ws) {
       this.ws.addEventListener<'open'>('open', this.onListenOpen.bind(this));
       this.ws.addEventListener<'message'>('message', this.onListenMessage.bind(this));
