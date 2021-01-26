@@ -6,15 +6,18 @@ import uuid
 import json
 import csv
 import os
+import redis
 
 from datetime import datetime, timedelta
 from sqlalchemy import and_, between
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.sql import func
 
+from web_app.front_ws_api.subscription_sources import EVENTS_SUBSCRIPTION
+
 from common.database import db
 from common.veil.veil_redis import INTERNAL_EVENTS_CHANNEL, REDIS_CLIENT
-from web_app.front_ws_api.subscription_sources import EVENTS_SUBSCRIPTION
+from common.utils import gino_model_to_json_serializable_dict
 from common.languages import lang_init
 
 
@@ -127,22 +130,22 @@ class Event(db.Model):
                 )
                 # 3. Создаем связь
                 # await EventEntity.create(entity_id=entity.id, event_id=event.id)
-            return True
+            return event
 
     @classmethod
     async def create_event(cls, msg, event_type, description, user, entity_dict):  # noqa
-        # TODO: user строкой - выглядит странно.нужен id
+
         msg_dict = dict(event_type=event_type,
-                        message=msg,
-                        user=user,
                         event='event',
                         resource=EVENTS_SUBSCRIPTION)
 
+        event_obj = await cls.soft_create(event_type, msg, description, user, entity_dict)
+        msg_dict.update(gino_model_to_json_serializable_dict(event_obj))
+
         try:
             REDIS_CLIENT.publish(INTERNAL_EVENTS_CHANNEL, json.dumps(msg_dict))
-        except TypeError:  # Can`t serialize
+        except (TypeError, redis.RedisError):  # Can`t serialize
             pass
-        await cls.soft_create(event_type, msg, description, user, entity_dict)
 
 
 # class EventEntity(db.Model):
