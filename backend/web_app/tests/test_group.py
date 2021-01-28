@@ -231,9 +231,10 @@ class TestGroupSchema:
                     }
                     }"""
         executed = await execute_scheme(group_schema, query, context=fixt_auth_context)
-        assert len(executed['addGroupPermission']['group']['assigned_permissions']) == 2
-
-        snapshot.assert_match(executed)
+        assigned_permissions_list = executed['addGroupPermission']['group']['assigned_permissions']
+        assert len(assigned_permissions_list) == 2
+        assert 'FOLDERS_REDIR' in assigned_permissions_list
+        assert 'USB_REDIR' in assigned_permissions_list
         query = """mutation {
                             removeGroupPermission(id: "10913d5d-ba7a-4049-88c5-769267a6cbe4",
                             permissions: [USB_REDIR]) {
@@ -246,6 +247,6 @@ class TestGroupSchema:
                             }
                             }"""
         executed = await execute_scheme(group_schema, query, context=fixt_auth_context)
-        snapshot.assert_match(executed)
-        assert len(executed['removeGroupPermission']['group']['assigned_permissions']) == 1
-        assert executed['removeGroupPermission']['group']['assigned_permissions'][0] == 'FOLDERS_REDIR'
+        assigned_permissions_list = executed['removeGroupPermission']['group']['assigned_permissions']
+        assert len(assigned_permissions_list) == 1
+        assert 'FOLDERS_REDIR' in assigned_permissions_list

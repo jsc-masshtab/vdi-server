@@ -176,7 +176,7 @@ class User(AbstractSortableStatusModel, VeilModel):
 
     async def get_permissions(self):
         if self.is_superuser:
-            all_permissions_set = set(TkPermission)  # noqa
+            all_permissions_set = set(TkPermission)
             return all_permissions_set
 
         # personal permissions

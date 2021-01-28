@@ -119,25 +119,11 @@ snapshots['TestUserSchema.test_user_permission 1'] = {
         'ok': True,
         'user': {
             'assigned_permissions': [
-                'FOLDERS_REDIR'
-            ],
-            'possible_permissions': [
-                'USB_REDIR'
-            ],
-            'username': 'test_user'
-        }
-    }
-}
-
-snapshots['TestUserSchema.test_user_permission 2'] = {
-    'addUserPermission': {
-        'ok': True,
-        'user': {
-            'assigned_permissions': [
+                'SHARED_CLIPBOARD',
                 'FOLDERS_REDIR',
-                'USB_REDIR'
             ],
             'possible_permissions': [
+                'USB_REDIR'
             ],
             'username': 'test_user'
         }

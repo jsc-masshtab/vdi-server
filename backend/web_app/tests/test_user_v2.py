@@ -211,9 +211,11 @@ class TestUserSchema:
                       }
                     }"""
         executed = await execute_scheme(user_schema, query, context=fixt_auth_context)
-        snapshot.assert_match(executed)
-        assert len(executed['removeUserPermission']['user']['assigned_permissions']) == 1
-        assert executed['removeUserPermission']['user']['assigned_permissions'][0] == 'FOLDERS_REDIR'
+        # Permissions are Set. Snapshot would`t work.
+        assigned_permissions_list = executed['removeUserPermission']['user']['assigned_permissions']
+        assert len(assigned_permissions_list) == 2
+        assert 'SHARED_CLIPBOARD' in assigned_permissions_list
+        assert 'FOLDERS_REDIR' in assigned_permissions_list
 
         query = """mutation {
                       addUserPermission(id: "10913d5d-ba7a-4049-88c5-769267a6cbe4", permissions: [USB_REDIR]){
@@ -226,5 +228,9 @@ class TestUserSchema:
                       }
                     }"""
         executed = await execute_scheme(user_schema, query, context=fixt_auth_context)
-        snapshot.assert_match(executed)
-        assert len(executed['addUserPermission']['user']['assigned_permissions']) == 2
+        assigned_permissions_list = executed['addUserPermission']['user']['assigned_permissions']
+        assert len(assigned_permissions_list) == 3
+        # Permissions are Set. Snapshot would`t work.
+        assert 'USB_REDIR' in assigned_permissions_list
+        assert 'SHARED_CLIPBOARD' in assigned_permissions_list
+        assert 'FOLDERS_REDIR' in assigned_permissions_list
