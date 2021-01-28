@@ -5,7 +5,7 @@
 ROOT_DIR=/opt/veil-vdi
 LOG_DIR=/var/log/veil-vdi/
 
-CONF_DIR=${ROOT_DIR}/devops/deb/vdi-backend/root/opt/veil-vdi/other
+CONF_DIR=${ROOT_DIR}/devops/deb/veil-broker-backend/root/opt/veil-vdi/other
 BACKEND_DIR=${ROOT_DIR}/app
 TMP_FRONTEND_DIR=${ROOT_DIR}/frontend
 WWW_DIR=${ROOT_DIR}/www

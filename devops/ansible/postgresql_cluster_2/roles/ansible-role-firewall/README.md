@@ -76,11 +76,11 @@ None.
 
     - hosts: server
       vars_files:
-        - vars/main.yml
+        - vars/pgcluster.yml
       roles:
         - { role: geerlingguy.firewall }
 
-*Inside `vars/main.yml`*:
+*Inside `vars/pgcluster.yml`*:
 
     firewall_allowed_tcp_ports:
       - "22"

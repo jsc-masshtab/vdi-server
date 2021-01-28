@@ -1,2 +1,5 @@
+---
+
+smolensk_add_repo: false
 smolensk_apt_repo_1: "deb http://mothership.bazalt.team/smolensk-apt-repo smolensk contrib main non-free"
 smolensk_apt_repo_2: "deb http://mothership.bazalt.team/smolensk-devel-apt-repo smolensk contrib main non-free"

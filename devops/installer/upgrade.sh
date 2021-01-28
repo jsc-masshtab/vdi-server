@@ -1,21 +1,21 @@
 #!/bin/bash
 
 # check installed packages
-if !(dpkg -s vdi-backend 1> /dev/null 2>&1); then
-    echo "Error: vdi packages is not installed!" && exit 1
+if !(dpkg -s veil-broker-backend 1> /dev/null 2>&1); then
+    echo "Error: veil-broker packages is not installed!" && exit 1
 fi
 
 # set variables
 UPGRADE_DIR="/home/user/upgrade"
 REPO_URL="veil-update.mashtab.org"
-REPO_NAME="vdi"
+REPO_NAME="veil-broker"
 
 echo "VeiL Broker upgrade started"
 
 echo "Select upgrade type:"
 echo "
     1. by apt (access to the $REPO_URL is required)
-    2. local (vdi deb packages in $UPGRADE_DIR is required)
+    2. local (veil-broker deb packages in $UPGRADE_DIR is required)
 "
 echo "Type is:"
 read TYPE
@@ -30,7 +30,7 @@ case $TYPE in
         apt-get update
         ;;
     2)
-        if !(ls $UPGRADE_DIR/vdi*.deb 1> /dev/null 2>&1); then
+        if !(ls $UPGRADE_DIR/veil-broker*.deb 1> /dev/null 2>&1); then
             echo "Error: deb-packages do not exist in $UPGRADE_DIR !" && exit 1
         fi
         ;;
@@ -52,12 +52,12 @@ fi
 # upgrade packages
 case $TYPE in
     1)
-        apt-get install vdi-backend vdi-frontend -y
+        apt-get install veil-broker-backend veil-broker-frontend -y
         apt-get -f -y install
         ;;
     2)
         cd $UPGRADE_DIR
-        apt-get install ./vdi-*.deb -y
+        apt-get install ./veil-broker-*.deb -y
         apt-get -f -y install
         ;;
 esac
