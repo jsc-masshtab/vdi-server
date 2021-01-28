@@ -9,7 +9,7 @@ echo 'deb http://192.168.11.118/vdi veil main' | sudo tee /etc/apt/sources.list.
 
 apt update -y
 
-apt install -y mc vdi-backend
+apt install -y mc veil-broker-backend
 
 # apt install -y gdebi mc
 

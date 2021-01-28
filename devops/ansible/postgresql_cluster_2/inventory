@@ -5,14 +5,14 @@
 # "postgresql_exists='true'" if PostgreSQL is already exists and running on master (for initial deployment only)
 # "hostname=" variable is optional (used to change the server name)
 
-# if dcs_exists: false and dcs_type: "etcd" (in vars/main.yml)
+# if dcs_exists: false and dcs_type: "etcd" (in vars/pgcluster.yml)
 [etcd_cluster]  # recommendation: 3 or 5-7 nodes
 192.168.5.37
 192.168.5.221
 192.168.6.70
 
 
-# if with_haproxy_load_balancing: true (in vars/main.yml)
+# if with_haproxy_load_balancing: true (in vars/pgcluster.yml)
 [balancers]
 192.168.5.37
 192.168.5.221
@@ -32,13 +32,13 @@ master
 replica
 
 [brokers]
-192.168.7.229 hostname=broker broker_exists='false'
+192.168.5.86 hostname=broker broker_exists='false'
 
 # In this example, all components will be installed on PostgreSQL nodes
 # You can deploy the etcd cluster and the haproxy balancers on other dedicated servers. 
 
 
-# if pgbackrest_install: true and "repo_host" is set (in vars/main.yml)
+# if pgbackrest_install: true and "repo_host" is set (in vars/pgcluster.yml)
 [pgbackrest]  # optional (Dedicated Repository Host)
 
 

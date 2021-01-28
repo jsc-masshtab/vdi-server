@@ -9,6 +9,7 @@
   gather_facts: true
   vars_files:
     - vars/main.yml
+    - vars/pgcluster.yml
     - vars/system.yml
     - "vars/{{ ansible_os_family }}.yml"
 
@@ -84,6 +85,7 @@
   any_errors_fatal: true
   vars_files:
     - vars/main.yml
+    - vars/pgcluster.yml
     - "vars/{{ ansible_os_family }}.yml"
   roles:
     - role: pgbackrest
@@ -96,6 +98,7 @@
   any_errors_fatal: true
   vars_files:
     - vars/main.yml
+    - vars/pgcluster.yml
     - vars/system.yml
     - "vars/{{ ansible_os_family }}.yml"
   vars:

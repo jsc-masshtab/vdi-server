@@ -63,5 +63,5 @@ echo "PATH1=$PATH1" >> /tmp/vdi-install-vars
 echo "CREATE=$(date +"%Y-%m-%d")" >> /tmp/vdi-install-vars
 
 apt-get update
-apt-get install ./vdi-*.deb -y
+apt-get install ./veil-broker-*.deb -y
 apt-get -f -y install

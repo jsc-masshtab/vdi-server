@@ -10,6 +10,7 @@
   file:
     state: absent
     path: /etc/apt/sources.list
+  when: smolensk_add_repo
 
 - name: Smolensk | Add repo
   template:
@@ -17,6 +18,7 @@
     dest: "/etc/apt/sources.list"
     mode: 0664
     owner: root
+  when: smolensk_add_repo
 
 - name: Smolensk | Unarchive locale
   command: "gunzip /usr/share/i18n/charmaps/UTF-8.gz"
