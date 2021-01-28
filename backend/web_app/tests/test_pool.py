@@ -332,10 +332,8 @@ async def test_pools_ordering(fixt_launch_workers,  fixt_db, fixt_controller, fi
                     status
                     verbose_name
                     pool_type
-                    cluster_id
-                    node_id
+                    resource_pool_id
                     template_id
-                    datapool_id
                     initial_size
                     os_type
                     assigned_groups {

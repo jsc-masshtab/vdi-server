@@ -43,9 +43,7 @@ async def test_cancel_tasks(fixt_launch_workers, fixt_db, fixt_controller, fixt_
                         connection_types: [SPICE, RDP],
                         verbose_name: "pool_name",
                         controller_id: "%s",
-                        cluster_id: "%s",
-                        node_id: "%s",
-                        datapool_id: "%s",
+                        resource_pool_id: "%s",
                         template_id: "%s",
                         vm_name_template: "vdi-test") {
                           pool {
@@ -53,8 +51,8 @@ async def test_cancel_tasks(fixt_launch_workers, fixt_db, fixt_controller, fixt_
                           },
                           ok
                         }
-                    }''' % (resources['controller_id'], resources['cluster_id'],
-                            resources['node_id'], resources['datapool_id'], resources['template_id'])
+                    }''' % (resources['controller_id'], resources['resource_pool_id'],
+                            resources['template_id'])
     context = await get_auth_context()
     executed = await execute_scheme(pool_schema, qu, context=context)
 

@@ -28,6 +28,9 @@ class VeilTestServer:
         self.app.add_routes([web.get(self.base_url + 'clusters/', self.get_clusters)])
         self.app.add_routes([web.get(self.base_url + 'clusters/{cluster_id}/', self.get_cluster)])
 
+        self.app.add_routes([web.get(self.base_url + 'resource_pools/', self.get_resource_pools)])
+        self.app.add_routes([web.get(self.base_url + 'resource_pools/{resource_pool_id}/', self.get_resource_pool)])
+
         self.app.add_routes([web.get(self.base_url + 'nodes/', self.get_nodes)])
         self.app.add_routes([web.get(self.base_url + 'nodes/{node_id}/', self.get_node)])
 
@@ -514,7 +517,7 @@ class VeilTestServer:
                     "verbose_name": "win10"
                 },
                 "resource_pool": {
-                    "id": "aecd7f29-df81-4c4e-8d35-c97af0f57d18",
+                    "id": "5a55eee9-4687-48b4-9002-b218eefe29e3",
                     "verbose_name": "Veil default cluster resource pool"
                 },
                 "ha_enabled": False,
@@ -792,7 +795,7 @@ class VeilTestServer:
                     ],
                     "hints": 0,
                     "resource_pool": {
-                        "id": "aecd7f29-df81-4c4e-8d35-c97af0f57d18",
+                        "id": "5a55eee9-4687-48b4-9002-b218eefe29e3",
                         "verbose_name": "Veil default cluster resource pool"
                     },
                     "parent": {
@@ -825,7 +828,7 @@ class VeilTestServer:
                 ],
                 "hints": 0,
                 "resource_pool": {
-                    "id": "aecd7f29-df81-4c4e-8d35-c97af0f57d18",
+                    "id": "5a55eee9-4687-48b4-9002-b218eefe29e3",
                     "verbose_name": "Veil default cluster resource pool"
                 },
                 "parent": {
@@ -1038,6 +1041,87 @@ class VeilTestServer:
             "tag_enabled": False,
             "anti_affinity_enabled": False,
             "vdi": False
+        }
+        return web.Response(body=json.dumps(res_dict), content_type='application/json')
+
+    # "id": "5a55eee9-4687-48b4-9002-b218eefe29e3",
+    # "verbose_name": "Veil default cluster resource pool"
+
+    async def get_resource_pools(self, request):
+        res_dict = {
+            "count": 1,
+            "next": None,
+            "previous": None,
+            "results": [
+                {
+                    "id": "5a55eee9-4687-48b4-9002-b218eefe29e3",
+                    "verbose_name": "Veil default cluster resource pool",
+                    "hints": 0,
+                    "tags": [],
+                    "organization": None,
+                    "domains_count": 27,
+                    "cpu_limit": 0,
+                    "memory_limit": 0
+                }
+            ]
+        }
+        return web.Response(body=json.dumps(res_dict), content_type='application/json')
+
+    async def get_resource_pool(self, request):
+
+        print('get_resource_pool')
+        res_dict = {
+            "id": "5a55eee9-4687-48b4-9002-b218eefe29e3",
+            "verbose_name": "Veil default cluster resource pool",
+            "description": "",
+            "locked_by": None,
+            "built_in": True,
+            "entity_type": "resourcepool",
+            "created": "2020-12-09T12:29:33.128609Z",
+            "modified": "2020-12-09T12:29:33.128657Z",
+            "hints": 0,
+            "tags": [],
+            "cluster": {
+                "id": "c3f56e1f-9bd1-45e8-a3e6-a5f69256ee5e",
+                "verbose_name": "cluster_115"
+            },
+            "cpu_shares": 1024,
+            "memory_shares": 1024,
+            "cpu_min_guarantee": 0,
+            "memory_min_guarantee": 0,
+            "cpu_limit": 0,
+            "memory_limit": 0,
+            "cpu_shares_actual": 1024,
+            "memory_shares_actual": 1024,
+            "nodes_cpu_count": 288,
+            "nodes_memory_count": 385868,
+            "domains_cpu_count": 55,
+            "domains_memory_count": 70000,
+            "domains_cpu_free": 0,
+            "domains_memory_free": 0,
+            "cpu_min_guarantee_per_domain": 0,
+            "memory_min_guarantee_per_domain": 0,
+            "cpu_min_guarantee_per_domain_actual": 0,
+            "memory_min_guarantee_per_domain_actual": 0,
+            "size_limit": 0,
+            "permissions": {
+                "add_datapools": True,
+                "apply": True,
+                "attach": True,
+                "check_verbose_name": True,
+                "create": True,
+                "detach": True,
+                "detail_size": True,
+                "list": True,
+                "modify": True,
+                "optimal_node": True,
+                "remove": True,
+                "remove_datapools": True,
+                "retrieve": True,
+                "transfer_domains": True,
+                "update": True,
+                "update_actual_size": True
+            }
         }
         return web.Response(body=json.dumps(res_dict), content_type='application/json')
 

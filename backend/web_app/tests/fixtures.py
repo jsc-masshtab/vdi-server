@@ -36,6 +36,7 @@ async def get_resources_for_pool_test():
 
     # ids are random
     return {'controller_id': controller.id,
+            'resource_pool_id': '5a55eee9-4687-48b4-9002-b218eefe29e3',
             'cluster_id': '6dd44376-0bf5-46b8-8a23-5a1e6fcfe376',
             'node_id': '236d318f-d57e-4f1b-9097-93d69f8782dd',
             'template_id': 'a04ed49b-ea26-4660-8112-833a6b51d0e1',
@@ -120,9 +121,7 @@ async def fixt_create_automated_pool(fixt_controller):
                         connection_types: [SPICE, RDP],
                         verbose_name: "%s",
                         controller_id: "%s",
-                        cluster_id: "%s",
-                        node_id: "%s",
-                        datapool_id: "%s",
+                        resource_pool_id: "%s",
                         template_id: "%s",
                         initial_size: 1,
                         reserve_size: 1,
@@ -141,8 +140,8 @@ async def fixt_create_automated_pool(fixt_controller):
                         },
                         ok
                       }
-                    }''' % (get_test_pool_name(), resources['controller_id'], resources['cluster_id'],
-                            resources['node_id'], resources['datapool_id'], resources['template_id'])
+                    }''' % (get_test_pool_name(), resources['controller_id'], resources['resource_pool_id'],
+                            resources['template_id'])
     context = await get_auth_context()
     executed = await execute_scheme(pool_schema, qu, context=context)
 
@@ -180,9 +179,7 @@ async def fixt_create_static_pool(fixt_controller):
     """оздается пул, пул удаляется"""
     pool_main_resources = await get_resources_for_pool_test()
     controller_id = pool_main_resources['controller_id']
-    cluster_id = pool_main_resources['cluster_id']
-    node_id = pool_main_resources['node_id']
-    datapool_id = pool_main_resources['datapool_id']
+    resource_pool_id = pool_main_resources['resource_pool_id']
     vm_id = uuid.uuid4()  # random
 
     # --- create pool ---
@@ -190,9 +187,7 @@ async def fixt_create_static_pool(fixt_controller):
             mutation{addStaticPool(
               verbose_name: "%s",
               controller_id: "%s",
-              cluster_id: "%s",
-              node_id: "%s",
-              datapool_id: "%s",
+              resource_pool_id: "%s",
               vms:[
                 {id: "%s",
                   verbose_name: "test_2"}
@@ -201,13 +196,10 @@ async def fixt_create_static_pool(fixt_controller):
             ){
               pool {
                 pool_id
-                node {
-                  id
-                }
               }
               ok
             }
-            }''' % (get_test_pool_name(), controller_id, cluster_id, node_id, datapool_id, vm_id)
+            }''' % (get_test_pool_name(), controller_id, resource_pool_id, vm_id)
 
     context = await get_auth_context()
     pool_create_res = await execute_scheme(pool_schema, qu, context=context)
