@@ -9,6 +9,8 @@ import { MatDialog } from '@angular/material';
 import { AddRoleComponent } from './add-role/add-role.component';
 import { RemoveRoleComponent } from './remove-role/remove-role.component';
 import { AddUserGroupComponent } from './add-users/add-user.component';
+import { AddPermissionComponent } from '../add-permission/add-permission.component';
+import { RemovePermissionComponent } from '../remove-permission/remove-permission.component';
 
 
 @Component({
@@ -87,6 +89,16 @@ export class GroupsDetailsComponent implements OnInit, OnDestroy {
       property: 'username',
       class: 'name-start',
       icon: 'user'
+    }
+  ];
+
+  public collection_permissions: object[] = [
+    {
+      title: 'Разрешения',
+      type: 'array-type',
+      property: 'index-array',
+      class: 'name-start',
+      icon: 'cog'
     }
   ];
 
@@ -205,16 +217,32 @@ export class GroupsDetailsComponent implements OnInit, OnDestroy {
     });
   }
 
+  public addPermission() {
+    this.dialog.open(AddPermissionComponent, {
+      disableClose: true,
+      width: '500px',
+      data: {
+        id: this.id,
+        verbose_name: this.entity['verbose_name'],
+        permissions: this.entity['possible_permissions']
+      }
+    });
+  }
+
+  public removePermission() {
+    this.dialog.open(RemovePermissionComponent, {
+      disableClose: true,
+      width: '500px',
+      data: {
+        id: this.id,
+        verbose_name: this.entity['verbose_name'],
+        permissions: this.entity['assigned_permissions']
+      }
+    });
+  }
+
   public routeTo(route: string): void {
-    if (route === 'info') {
-      this.menuActive = 'info';
-    }
-    if (route === 'roles') {
-      this.menuActive = 'roles';
-    }
-    if (route === 'users') {
-      this.menuActive = 'users';
-    }
+    this.menuActive = route;
   }
 
   public close() {

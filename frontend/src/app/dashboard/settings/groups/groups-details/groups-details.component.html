@@ -18,17 +18,34 @@
     <button (click)="getGroup()" class="btn-refresh" title="Обновить">
       <fa-icon [icon]="['fas','sync-alt']"></fa-icon>
     </button>
+
     <button (click)="removeGroup()" *ngIf="menuActive === 'info'" title="Удалить группу" class="btn-control">
       <fa-icon [icon]="['fas','trash-alt']" size="xs"></fa-icon>
       <span class="name">Удалить группу</span>
     </button>
+
     <ng-container *ngIf="menuActive === 'roles'">
       <button class="btn-control" (click)="addRole()" title="Добавить роль"><fa-icon [icon]="['fas','plus-circle']" size="xs"></fa-icon><span class="name">Добавить роль</span></button>
       <button class="btn-control" *ngIf="entity.assigned_roles.length" (click)="removeRole()" title="Удалить роль"><fa-icon [icon]="['fas','trash-alt']" size="xs"></fa-icon><span class="name">Удалить роль</span></button>
     </ng-container>
+
     <ng-container *ngIf="menuActive === 'users'">
       <button class="btn-control" (click)="addUser()" title="Добавить пользователя"><fa-icon [icon]="['fas','plus-circle']" size="xs"></fa-icon><span class="name">Добавить пользователя</span></button>
       <button class="btn-control" *ngIf="entity.assigned_users.length" (click)="removeUser()" title="Удалить пользователя"><fa-icon [icon]="['fas','trash-alt']" size="xs"></fa-icon><span class="name">Удалить пользователя</span></button>
+    </ng-container>
+
+    <ng-container *ngIf="menuActive === 'permissions'">
+      <button *ngIf="entity?.possible_permissions?.length" class="btn-control" (click)="addPermission()"
+        title="Добавить разрешение">
+        <fa-icon [icon]="['fas','plus-circle']" size="xs"></fa-icon>
+        <span class="name">Добавить разрешение</span>
+      </button>
+    
+      <button *ngIf="entity?.assigned_permissions?.length" class="btn-control" (click)="removePermission()"
+        title="Удалить разрешение">
+        <fa-icon [icon]="['fas','trash-alt']" size="xs"></fa-icon>
+        <span class="name">Отключить разрешение</span>
+      </button>
     </ng-container>
   </div>
 
@@ -38,6 +55,10 @@
       <li (click)="routeTo('info')" [class.active]="menuActive === 'info'" title="Информация о группе"> <fa-icon [icon]="['fas','chart-bar']"></fa-icon><span class="name">Информация</span></li>
       <li (click)="routeTo('roles')" [class.active]="menuActive === 'roles'" title="Роли группы"> <fa-icon [icon]="['fas','users-cog']"></fa-icon><span class="name">Роли</span></li>
       <li (click)="routeTo('users')" [class.active]="menuActive === 'users'" title="Пользователи группы"> <fa-icon [icon]="['fas','users']"></fa-icon><span class="name">Пользователи</span></li>
+
+      <li (click)="routeTo('permissions')" [class.active]="menuActive === 'permissions'" title="Разрешения группы">
+        <fa-icon [icon]="['fas','cog']"></fa-icon><span class="name">Разрешения</span>
+      </li>
     </ul>
     <div class="details-slide" *ngIf="host">
       <div class="details-slide-header">
@@ -49,6 +70,12 @@
         <vdi-table-into *ngIf="menuActive === 'info'" [item]="entity" [collection]="collection" (edit)="edit($event)"></vdi-table-into>
         <vdi-table-component *ngIf="menuActive === 'roles'" [data]="entity.assigned_roles" [collection]="collection_roles"></vdi-table-component>
         <vdi-table-component *ngIf="menuActive === 'users'" [data]="entity.assigned_users" entity="users" [collection]="collection_users"></vdi-table-component>
+
+        <vdi-table-component 
+          *ngIf="menuActive === 'permissions'" 
+          [data]="entity.assigned_permissions"
+          [collection]="collection_permissions">
+        </vdi-table-component>
       </div>
     </div>
   </div>

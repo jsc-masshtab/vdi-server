@@ -54,6 +54,8 @@ export class GroupsService  {
                                 description,
                                 date_created,
                                 date_updated,
+                                assigned_permissions,
+                                possible_permissions,
                                 assigned_users {
                                   username
                                   is_active
@@ -202,26 +204,58 @@ export class GroupsService  {
       });
   }
 
-  public removeUsers(users: [], id: string) {
-    return this.service.mutate<any>({
-        mutation: gql`
-                        mutation groups(
-                            $users: [UUID!]!,
-                            $id: UUID!){
-                            removeGroupUsers(
-                                users: $users,
-                                id: $id
-                            ){
-                                ok
+    public removeUsers(users: [], id: string) {
+        return this.service.mutate<any>({
+            mutation: gql`
+                            mutation groups(
+                                $users: [UUID!]!,
+                                $id: UUID!){
+                                removeGroupUsers(
+                                    users: $users,
+                                    id: $id
+                                ){
+                                    ok
+                                }
                             }
-                        }
-        `,
-        variables: {
-            method: 'POST',
-            users,
-            id
-        }
-    });
-}
+            `,
+            variables: {
+                method: 'POST',
+                users,
+                id
+            }
+        });
+    }
+
+    public addPermission(id, permissions) {
+        return this.service.mutate<any>({
+            mutation: gql` 
+            mutation groups($id: UUID!, $permissions: [TkPermission!]!){
+                addGroupPermission(id: $id, permissions: $permissions) {
+                    ok
+                }
+            }`,
+            variables: {
+                method: 'POST',
+                permissions,
+                id
+            }
+        });
+    }
+
+    public removePermission(id, permissions) {
+        return this.service.mutate<any>({
+            mutation: gql` 
+            mutation groups($id: UUID!, $permissions: [TkPermission!]!){
+                removeGroupPermission(id: $id, permissions: $permissions) {
+                    ok
+                }
+            }`,
+            variables: {
+                method: 'POST',
+                permissions,
+                id
+            }
+        });
+    }
 
 }
