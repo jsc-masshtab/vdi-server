@@ -16,6 +16,8 @@ import { AddGropComponent } from './user-details/add-group/add-group.component';
 import { AddRoleComponent } from './user-details/add-role/add-role.component'; 
 import { RemoveRoleComponent } from './user-details/remove-role/remove-role.component';
 import { RemoveGroupComponent } from './user-details/remove-group/remove-group.component';
+import { RemovePermissionComponent } from './user-details/remove-permission/remove-permission.component';
+import { AddPermissionComponent } from './user-details/add-permission/add-permission.component';
 
 @NgModule({
    declarations: [
@@ -23,10 +25,12 @@ import { RemoveGroupComponent } from './user-details/remove-group/remove-group.c
       AddUserComponent,
       AddGropComponent,
       AddRoleComponent,
+      AddPermissionComponent,
       UserDetailsComponent,
       MutateUserComponent,
       RemoveRoleComponent,
-      RemoveGroupComponent
+      RemoveGroupComponent,
+      RemovePermissionComponent
    ],
    imports: [
       SharedModule,
@@ -49,9 +53,11 @@ import { RemoveGroupComponent } from './user-details/remove-group/remove-group.c
       AddUserComponent,
       AddGropComponent,
       AddRoleComponent,
+      AddPermissionComponent,
       MutateUserComponent,
       RemoveRoleComponent,
-      RemoveGroupComponent
+      RemoveGroupComponent,
+      RemovePermissionComponent
    ]
 })
 export class UsersModule { }

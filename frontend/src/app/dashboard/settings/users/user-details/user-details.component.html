@@ -49,18 +49,17 @@
       </button>
     </ng-container>
 
-    <!-- <ng-container *ngIf="menuActive === 'groups'">
-      <button class="btn-control" (click)="addGroup()" title="Добавить группу">
+    <ng-container *ngIf="menuActive === 'permissions'">
+      <button *ngIf="entity?.possible_permissions?.length" class="btn-control" (click)="addPermission()" title="Добавить разрешение">
         <fa-icon [icon]="['fas','plus-circle']" size="xs"></fa-icon>
-        <span class="name">Добавить группу</span>
+        <span class="name">Добавить разрешение</span>
       </button>
 
-      <button *ngIf="entity?.assigned_groups?.length" class="btn-control" (click)="removeGroup()" title="Удалить группу" >
+      <button *ngIf="entity?.assigned_permissions?.length" class="btn-control" (click)="removePermission()" title="Удалить разрешение">
         <fa-icon [icon]="['fas','trash-alt']" size="xs"></fa-icon>
-        <span class="name">Удалить группу</span>
+        <span class="name">Отключить разрешение</span>
       </button>
-    </ng-container> -->
-
+    </ng-container>
   </div>
 
   <div class="details-row">
@@ -74,6 +73,9 @@
       <li (click)="routeTo('groups')" [class.active]="menuActive === 'groups'" title="Группы пользователя">
         <fa-icon [icon]="['fas','users-cog']"></fa-icon><span class="name">Группы</span>
       </li>
+      <li (click)="routeTo('permissions')" [class.active]="menuActive === 'permissions'" title="Разрешения пользователя">
+        <fa-icon [icon]="['fas','cog']"></fa-icon><span class="name">Разрешения</span>
+      </li>
     </ul>
 
     <div class="details-slide">
@@ -81,6 +83,7 @@
         <ng-container *ngIf="menuActive === 'info'">Информация о пользователе</ng-container>
         <ng-container *ngIf="menuActive === 'roles'">Роли пользователя</ng-container>
         <ng-container *ngIf="menuActive === 'groups'">Группы пользователя</ng-container>
+        <ng-container *ngIf="menuActive === 'permissions'">Разрешения пользователя</ng-container>
       </div>
 
       <div class="details-slide-into">
@@ -101,6 +104,12 @@
           *ngIf="menuActive === 'groups'"
           [data]="entity.assigned_groups"
           [collection]="collection_groups">
+        </vdi-table-component>
+
+        <vdi-table-component
+          *ngIf="menuActive === 'permissions'"
+          [data]="entity.assigned_permissions"
+          [collection]="collection_permissions">
         </vdi-table-component>
       </div>
     </div>

@@ -10,6 +10,8 @@ import { AddRoleComponent } from './add-role/add-role.component';
 import { RemoveRoleComponent } from './remove-role/remove-role.component';
 
 import { map } from 'rxjs/operators';
+import { RemovePermissionComponent } from './remove-permission/remove-permission.component';
+import { AddPermissionComponent } from './add-permission/add-permission.component';
 
 @Component({
   selector: 'user-details',
@@ -121,8 +123,22 @@ export class UserDetailsComponent implements OnInit, OnDestroy {
     }
   ];
 
-  constructor(private service: UsersService, private activatedRoute: ActivatedRoute, public dialog: MatDialog,
-              private router: Router) { }
+  public collection_permissions: object[] = [
+    {
+      title: 'Разрешения',
+      type: 'array-type',
+      property: 'index-array',
+      class: 'name-start',
+      icon: 'cog'
+    }
+  ];
+
+  constructor(
+    private service: UsersService, 
+    private activatedRoute: ActivatedRoute, 
+    public dialog: MatDialog,
+    private router: Router
+  ) {}
 
   ngOnInit() {
     this.activatedRoute.paramMap.subscribe((param: ParamMap) => {
@@ -301,12 +317,36 @@ export class UserDetailsComponent implements OnInit, OnDestroy {
 
   public removeRole() {
     this.dialog.open(RemoveRoleComponent, {
- 			disableClose: true,
+      disableClose: true,
       width: '500px',
       data: {
         id: this.id,
         verbose_name: this.entity['verbose_name'],
         roles: this.entity['assigned_roles']
+      }
+    });
+  }
+
+  public addPermission() {
+    this.dialog.open(AddPermissionComponent, {
+      disableClose: true,
+      width: '500px',
+      data: {
+        id: this.id,
+        username: this.entity['username'],
+        permissions: this.entity['possible_permissions']
+      }
+    });
+  }
+
+  public removePermission() {
+    this.dialog.open(RemovePermissionComponent, {
+      disableClose: true,
+      width: '500px',
+      data: {
+        id: this.id,
+        username: this.entity['username'],
+        permissions: this.entity['assigned_permissions']
       }
     });
   }

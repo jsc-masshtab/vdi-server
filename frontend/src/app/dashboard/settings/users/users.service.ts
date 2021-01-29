@@ -69,6 +69,8 @@ export class UsersService  {
                         is_active,
                         assigned_roles,
                         possible_roles,
+                        assigned_permissions,
+                        possible_permissions,
                         assigned_groups {
                             id
                             verbose_name
@@ -247,6 +249,38 @@ export class UsersService  {
             variables: {
                 method: 'POST',
                 roles,
+                id
+            }
+        });
+    }
+
+    public addPermission(id, permissions) {
+        return this.service.mutate<any>({
+            mutation: gql` 
+            mutation users($id: UUID!, $permissions: [TkPermission!]!){
+                addUserPermission(id: $id, permissions: $permissions) {
+                    ok
+                }
+            }`,
+            variables: {
+                method: 'POST',
+                permissions,
+                id
+            }
+        });
+    }
+
+    public removePermission(id, permissions) {
+        return this.service.mutate<any>({
+            mutation: gql` 
+            mutation users($id: UUID!, $permissions: [TkPermission!]!){
+                removeUserPermission(id: $id, permissions: $permissions) {
+                    ok
+                }
+            }`,
+            variables: {
+                method: 'POST',
+                permissions,
                 id
             }
         });
