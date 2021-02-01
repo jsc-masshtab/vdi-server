@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, OnInit } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, HostBinding } from '@angular/core';
 // @ts-ignore: Unreachable code error
 import * as moment from 'moment';
 
@@ -35,6 +35,8 @@ export class TableComponentComponent implements OnInit {
   @Input() cursor: boolean = false;
   @Output() clickRowData: EventEmitter<object> = new EventEmitter<object>();
   @Output() sortListNow: EventEmitter<object> = new EventEmitter<object>();
+
+  @HostBinding('style.height') @Input() height = '100%'
 
   public exist_keys: string[] = []
 
