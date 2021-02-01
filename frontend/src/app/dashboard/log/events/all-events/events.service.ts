@@ -37,6 +37,7 @@ export class EventsService {
                                         $offset: Int,
                                         $start_date: DateTime,
                                         $end_date: DateTime,
+                                        $entity: UUID,
                                         $event_type: Int,
                                         $entity_type: String,
                                         $user: String,
@@ -53,11 +54,13 @@ export class EventsService {
                                         offset: $offset,
                                         start_date: $start_date,
                                         end_date: $end_date,
+                                        entity: $entity,
                                         event_type: $event_type,
                                         entity_type: $entity_type,
                                         user: $user,
                                         read_by: $read_by,
                                         ordering: $ordering) {
+                                    entity_id
                                     event_type
                                     description
                                     message

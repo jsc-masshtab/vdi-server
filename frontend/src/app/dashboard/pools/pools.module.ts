@@ -27,6 +27,7 @@ import {MatCheckboxModule, MAT_CHECKBOX_CLICK_ACTION} from '@angular/material/ch
 import { RemoveGroupComponent } from './pool-details/remove-group/remove-group.component';
 import { AddGropComponent } from './pool-details/add-group/add-group.component';
 import { PrepareVmPoolComponent } from './pool-details/prepare-vm/prepare-vm.component';
+import { EventsModule } from '../log/events/events.module';
 
 @NgModule({
   declarations: [
@@ -48,6 +49,7 @@ import { PrepareVmPoolComponent } from './pool-details/prepare-vm/prepare-vm.com
   imports: [
     SharedModule,
     CommonModule,
+    EventsModule,
     FontAwesomeModule,
     FormsModule,
     ReactiveFormsModule,

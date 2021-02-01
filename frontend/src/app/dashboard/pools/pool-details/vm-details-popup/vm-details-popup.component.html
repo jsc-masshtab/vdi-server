@@ -48,22 +48,27 @@
     </button>
   </div>
 
-  <div class="details-row">
+  <div class="details-row details-static">
     <ul class="details-menu">
       <li (click)="routeTo('info')" [class.active]="menuActive === 'info'" title="Информация"> <fa-icon [icon]="['fas','chart-bar']"></fa-icon><span class="name">Информация</span></li>
+      <li (click)="routeTo('events')" [class.active]="menuActive === 'events'" title="Информация"> <fa-icon [icon]="['fas','comment']"></fa-icon><span class="name">События</span></li>
     </ul>
 
     <div class="details-slide">
       <div class="details-slide-header">
         <ng-container *ngIf="menuActive === 'info'">Информация о вм</ng-container>
+        <ng-container *ngIf="menuActive === 'events'">События вм</ng-container>
       </div>
-      <div class="details-slide-into">
-        <ng-container *ngIf="data?.typePool === 'automated'">
-          <vdi-table-into *ngIf="menuActive === 'info'" [item]="data?.vm" [collection]="collectionIntoVmAutomated"></vdi-table-into>
-        </ng-container>
 
-        <ng-container *ngIf="data?.typePool === 'static'">
-          <vdi-table-into *ngIf="menuActive === 'info'" [item]="data?.vm" [collection]="collectionIntoVmStatic"></vdi-table-into>
+      <div class="details-slide-into">
+        <ng-container *ngIf="menuActive === 'info'">
+            <vdi-table-into *ngIf="data?.typePool === 'automated'" [item]="data?.vm" [collection]="collectionIntoVmAutomated"></vdi-table-into>
+            <vdi-table-into *ngIf="data?.typePool === 'static'" [item]="data?.vm" [collection]="collectionIntoVmStatic"></vdi-table-into>
+        </ng-container>
+        
+        <ng-container *ngIf="menuActive === 'events'">
+          <vdi-table-component class="table-paginator" [height]="'calc(100% - 30px)'" [data]="data?.vm?.events" [collection]="collectionEvents"></vdi-table-component>
+          <vdi-pagination [count]="data?.vm?.count" [offset]="offset" (action)="toPage($event)"></vdi-pagination>
         </ng-container>
       </div>
     </div>

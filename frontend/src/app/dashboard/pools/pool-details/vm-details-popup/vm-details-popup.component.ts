@@ -13,6 +13,8 @@ import { PoolDetailsService } from '../pool-details.service';
 
 export class VmDetalsPopupComponent {
 
+  public offset = 0;
+
   public menuActive: string = 'info';
   public testing: boolean = false;
   public tested: boolean = false;
@@ -63,6 +65,30 @@ export class VmDetalsPopupComponent {
     },
   ];
 
+  public collectionEvents: object[] = [
+    {
+      title: 'Сообщение',
+      property: 'message',
+      class: 'name-start',
+      type: 'string',
+      icon: 'comment'
+    },
+    {
+      title: 'Cоздатель',
+      property: 'user',
+      type: 'string',
+      class: 'name-end',
+      sort: true
+    },
+    {
+      title: 'Дата создания',
+      property: 'created',
+      type: 'time',
+      class: 'name-end',
+      sort: true
+    }
+  ];
+
   constructor(
     public dialog: MatDialog,
     @Inject(MAT_DIALOG_DATA) public data: any,
@@ -110,9 +136,7 @@ export class VmDetalsPopupComponent {
   }
 
   public routeTo(route: string): void {
-    if (route === 'info') {
-      this.menuActive = 'info';
-    }
+    this.menuActive = route;
   }
 
   public action(type) {
@@ -268,5 +292,10 @@ export class VmDetalsPopupComponent {
         }
       })
     }
+  }
+
+  public toPage(message: any): void {
+    this.offset = message.offset;
+    this.service.getPool(this.data.idPool, this.data.typePool, this.offset).refetch();
   }
 }

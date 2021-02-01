@@ -27,10 +27,10 @@ export class PoolDetailsService {
         });
     }
 
-    public getPool(pool_id: string | number, type: string): QueryRef<any, any> {
+    public getPool(pool_id: string | number, type: string, offset = 0): QueryRef<any, any> {
         if (type === 'automated') {
             return this.service.watchQuery({
-                query: gql`  query pools($pool_id: String) {
+                query: gql`  query pools($pool_id: String, $offset: Int) {
                                 pool(pool_id: $pool_id) {
                                     pool_id
                                     verbose_name
@@ -45,6 +45,19 @@ export class PoolDetailsService {
                                         qemu_state
                                         status
                                         parent_name
+                                        count
+                                        events(offset: $offset) {
+                                            id
+                                            event_type
+                                            message
+                                            description
+                                            created
+                                            user
+                                            read_by {
+                                                id
+                                                username
+                                            }
+                                        }
                                     }
                                     controller {
                                         id
@@ -81,7 +94,8 @@ export class PoolDetailsService {
                             }`,
                 variables: {
                     method: 'GET',
-                    pool_id
+                    pool_id,
+                    offset
                 }
             });
         }
