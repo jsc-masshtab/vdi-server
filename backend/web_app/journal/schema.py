@@ -19,7 +19,7 @@ from common.log.journal import system_logger
 _ = lang_init()
 
 
-def build_filters(event_type, start_date, end_date, user, read_by, entity_type):
+def build_filters(event_type, start_date, end_date, user, read_by, entity_type, entity=None):
     filters = []
     if event_type is not None:
         filters.append((Event.event_type == event_type))
@@ -31,6 +31,8 @@ def build_filters(event_type, start_date, end_date, user, read_by, entity_type):
         filters.append((Event.user == user))
     if entity_type:
         filters.append((Entity.entity_type == entity_type))
+    if entity:
+        filters.append((Event.entity_id == entity))
 
     return filters
 
@@ -73,7 +75,8 @@ class EventQuery(graphene.ObjectType):
         end_date=graphene.DateTime(),
         user=graphene.String(),
         read_by=graphene.UUID(),
-        entity_type=graphene.String())
+        entity_type=graphene.String(),
+        entity=graphene.UUID())
 
     events = graphene.List(
         lambda: EventType,
@@ -114,8 +117,8 @@ class EventQuery(graphene.ObjectType):
 
     @operator_required
     async def resolve_count(self, _info, event_type=None, start_date=None,
-                            end_date=None, user=None, read_by=None, entity_type=None, **kwargs):
-        filters = build_filters(event_type, start_date, end_date, user, read_by, entity_type)
+                            end_date=None, user=None, read_by=None, entity_type=None, entity=None, **kwargs):
+        filters = build_filters(event_type, start_date, end_date, user, read_by, entity_type, entity)
         query = Event.outerjoin(EventReadByUser).outerjoin(User).outerjoin(Entity).select().where(and_(*filters)).where(Entity.entity_type != None)  # noqa
         event_count = await db.select([db.func.count()]).select_from(query.alias()).gino.scalar()
         return event_count
@@ -138,8 +141,8 @@ class EventQuery(graphene.ObjectType):
     @operator_required
     async def resolve_events(self, _info, limit, offset, event_type=None,
                              start_date=None, end_date=None, user=None,
-                             read_by=None, entity_type=None, ordering=None, **kwargs):
-        filters = build_filters(event_type, start_date, end_date, user, read_by, entity_type)
+                             read_by=None, entity_type=None, ordering=None, entity=None, **kwargs):
+        filters = build_filters(event_type, start_date, end_date, user, read_by, entity_type, entity)
 
         query = Event.outerjoin(EventReadByUser).outerjoin(User).outerjoin(Entity).select()
 
