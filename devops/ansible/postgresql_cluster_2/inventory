@@ -31,8 +31,8 @@
 master
 replica
 
-[brokers]
-192.168.5.86 hostname=broker broker_exists='false'
+[broker]
+127.0.0.1 hostname=broker broker_exists='false'
 
 # In this example, all components will be installed on PostgreSQL nodes
 # You can deploy the etcd cluster and the haproxy balancers on other dedicated servers. 
@@ -50,6 +50,9 @@ ansible_user='user'
 ansible_ssh_pass='Bazalt1!'  # "sshpass" package is required for use "ansible_ssh_pass"
 # ansible_ssh_private_key_file=
 ansible_python_interpreter='/usr/bin/python3'  # is required for use python3
+
+[broker:vars]
+ansible_connection='local'
 
 [pgbackrest:vars]
 ansible_user='postgres'

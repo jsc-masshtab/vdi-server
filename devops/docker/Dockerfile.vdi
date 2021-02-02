@@ -3,7 +3,7 @@ FROM debian:stretch
 # install build-deps
 RUN apt-get update && \
     apt-get install python3-dev python3-setuptools python-dev gcc python3-pip \
-    libsasl2-dev libldap2-dev libssl-dev sudo curl apt-utils rsync -y -q && \
+    libsasl2-dev libldap2-dev libssl-dev sudo curl apt-utils rsync genisoimage wget -y -q && \
     rm -f /var/cache/apt/archives/*.deb /var/cache/apt/archives/partial/*.deb /var/cache/apt/*.bin || true
 
 # install nodejs
