@@ -18,13 +18,12 @@ from common.veil.auth.veil_jwt import jwtauth, decode_jwt
 from sqlalchemy.sql import func
 from common.models.pool import Pool as PoolModel, AutomatedPool
 from common.models.task import PoolTaskType, TaskStatus, Task
-from common.models.auth import UserJwtInfo
 from common.models.active_tk_connection import ActiveTkConnection
 from common.models.auth import User
 
 from veil_api_client import DomainTcpUsb
 
-# from veil_api_client.base.api_objects.domain import DomainTcpUsb
+from web_app.base_handlers import BaseWsHandler
 
 from common.log.journal import system_logger
 from common.languages import lang_init
@@ -290,14 +289,7 @@ class DetachUsb(BaseHandler, ABC):
         return await self.log_finish(response)
 
 
-class ThinClientWsHandler(websocket.WebSocketHandler):  # noqa
-    # TODO: 1 модуль для вебсокетов
-    # сделать модуль ws_api, где бы все связанное с вебсокетами хранилось
-    # главное короч чтоб для тк внешне ничо не изменилось
-    # url чуть разный, но в список ws урлов можно несколько добавиьт
-    # def __init__(self, application: Application, request: httputil.HTTPServerRequest, **kwargs: Any):
-    #     websocket.WebSocketHandler.__init__(self, application, request, **kwargs)
-    #     print('init')
+class ThinClientWsHandler(BaseWsHandler):  # noqa
 
     def __init__(self, application: Application, request: httputil.HTTPServerRequest, **kwargs: Any):
         websocket.WebSocketHandler.__init__(self, application, request, **kwargs)
@@ -310,66 +302,60 @@ class ThinClientWsHandler(websocket.WebSocketHandler):  # noqa
         return origin == 'veil_connect_trusted_origin'
 
     async def open(self):
-        # print('on open ', self.request.remote_ip, flush=True)
+
+        token = await self._validate_token()
+        if not token:
+            return
+
+        try:
+            # Извлекаем инфу из токена
+            JWT_OPTIONS['verify_exp'] = False
+            payload = decode_jwt(token, JWT_OPTIONS)
+            user_name = payload['username']
+
+            # Фиксируем  данные известные на стороне сервера
+            user_id = await User.get_id(user_name)
+            if not user_id:
+                raise AssertionError(_('User {} not found.').format(user_name))
+
+            # Сохраняем юзера с инфой
+            tk_conn = await ActiveTkConnection.soft_create(
+                conn_id=self.conn_id,
+                user_name=user_name,
+                is_conn_init_by_user=int(self.get_query_argument(name='is_conn_init_by_user')),
+                user_id=user_id,
+                veil_connect_version=self.get_query_argument('veil_connect_version'),
+                vm_id=self.get_query_argument(name='vm_id', default=None),
+                tk_ip=self.request.remote_ip,
+                tk_os=self.get_query_argument('tk_os'))
+            self.conn_id = tk_conn.id
+
+            response = {'msg_type': 'control', 'error': False, 'msg': 'Auth success'}
+            await self._write_msg(json.dumps(response))
+
+        except Exception as ex:  # noqa
+            response = {'msg_type': 'control', 'error': True, 'msg': str(ex)}
+            await self._write_msg(json.dumps(response))
+            self.close()
+
+        # start tasks
         loop = asyncio.get_event_loop()
         self._send_messages_task = loop.create_task(self._send_messages_co())
         self._listen_for_cmd_task = loop.create_task(self._listen_for_cmd())
 
     async def on_message(self, message):
         # print('!!!message: ', message, flush=True)
-
         # parse msg
         try:
             recv_data_dict = json.loads(message)
             msg_type = recv_data_dict['msg_type']
         except (KeyError, JSONDecodeError) as ex:
             response = {'msg_type': 'control', 'error': True, 'msg': 'Wrong msg format ' + str(ex)}
-            await self.write_message(json.dumps(response))
+            await self._write_msg(json.dumps(response))
             return
 
-        # Сообщение AUTH. собщение авторизации со стартовой инфой с ТК
-        if msg_type == 'AUTH':
-            try:
-                # Проверяем токен. Рвем соединение если токен левый
-                token = recv_data_dict.get('token')
-                jwt_info = await UserJwtInfo.query.where(UserJwtInfo.token == token).gino.first()
-                if not jwt_info:
-                    raise AssertionError('Auth failed')
-
-                # Извлекаем инфу из токена
-                JWT_OPTIONS['verify_exp'] = False
-                payload = decode_jwt(token, JWT_OPTIONS)
-                user_name = payload['username']
-
-                # Фиксируем  данные известные на стороне сервера
-                user_id = await User.get_id(user_name)
-                if not user_id:
-                    raise AssertionError(_('User {} not found.').format(user_name))
-
-                # Сохраняем юзера с инфой
-                tk_conn = await ActiveTkConnection.soft_create(
-                    conn_id=self.conn_id,
-                    user_name=user_name,
-                    is_conn_init_by_user=recv_data_dict.get('is_conn_init_by_user'),
-                    user_id=user_id,
-                    veil_connect_version=recv_data_dict.get('veil_connect_version'),
-                    vm_id=recv_data_dict.get('vm_id'),
-                    tk_ip=self.request.remote_ip,
-                    tk_os=recv_data_dict.get('tk_os'))
-                self.conn_id = tk_conn.id
-
-                response = {'msg_type': 'control', 'error': False, 'msg': 'Auth success'}
-                await self._write_msg(json.dumps(response))
-
-            except (KeyError, TypeError, JSONDecodeError, AssertionError) as ex:
-                response = {'msg_type': 'control', 'error': True, 'msg': str(ex)}
-                await self._write_msg(json.dumps(response))
-                self.close()
-
         # Сообщения UPDATED
-        elif msg_type == 'UPDATED':
-            await self._close_if_not_verified()
-
+        if msg_type == 'UPDATED':
             try:
                 event_type = recv_data_dict['event']
                 tk_conn = await ActiveTkConnection.get(self.conn_id)
@@ -387,8 +373,10 @@ class ThinClientWsHandler(websocket.WebSocketHandler):  # noqa
         loop.create_task(self.on_async_close())
 
         # stop tasks
-        self._send_messages_task.cancel()
-        self._listen_for_cmd_task.cancel()
+        if self._send_messages_task:
+            self._send_messages_task.cancel()
+        if self._listen_for_cmd_task:
+            self._listen_for_cmd_task.cancel()
 
     async def on_async_close(self):
         tk_conn = await ActiveTkConnection.get(self.conn_id)
@@ -398,17 +386,9 @@ class ThinClientWsHandler(websocket.WebSocketHandler):  # noqa
     async def on_pong(self, data: bytes) -> None:
         # print("WebSocket on_pong", flush=True)
 
-        await self._close_if_not_verified()
-
         # Обновляем дату последнего сообщения от ТК
         await ActiveTkConnection.update.values(data_received=func.now()).where(
             ActiveTkConnection.id == self.conn_id).gino.status()
-
-    async def _close_if_not_verified(self):
-        if self.conn_id is None:
-            response = {'msg_type': 'control', 'error': False, 'msg': 'Auth required'}
-            await self._write_msg(json.dumps(response))
-            self.close()
 
     async def _send_messages_co(self):
         """Пересылвем сообщения об аптейте ВМ"""
@@ -463,9 +443,3 @@ class ThinClientWsHandler(websocket.WebSocketHandler):  # noqa
                 break
             except Exception as ex:
                 await system_logger.debug(str(ex))
-
-    async def _write_msg(self, msg):
-        try:
-            await self.write_message(msg)
-        except websocket.WebSocketError:
-            await system_logger.debug(_('Write error.'))
