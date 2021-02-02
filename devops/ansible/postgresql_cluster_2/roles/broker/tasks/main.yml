@@ -2,7 +2,7 @@
 
 - name: Broker | Add repo key
   apt_key:
-    url: "{{ broker_apt_key_url }}"
+    data: "{{ lookup('file', 'veil-repo-key.gpg') }}"
     state: present
 
 - name: Broker | Add apt repo
