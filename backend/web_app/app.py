@@ -1,11 +1,12 @@
 # -*- coding: utf-8 -*-
 from tornado.web import Application
 from tornado.httpserver import HTTPServer
+import ssl
 from tornado.ioloop import IOLoop
 from tornado.options import define, options
 from tornado.process import task_id
 
-from common.settings import WS_PING_INTERVAL, WS_PING_TIMEOUT, AUTH_ENABLED, DEBUG
+from common.settings import WS_PING_INTERVAL, WS_PING_TIMEOUT, AUTH_ENABLED, DEBUG, SSL_CRT_FPATH, SSL_KEY_FPATH
 from common.log.journal import system_logger
 from common.languages import lang_init
 
@@ -35,8 +36,10 @@ from common.utils import init_signals
 _ = lang_init()
 
 define("port", default=8888, help="port to listen on")
+define("address", default='127.0.0.1', help="address to listen on")
 define("autoreload", default=True, help="autoreload application")
 define("workers", default=1, help="num of process forks. 0 forks one process per cpu")
+define("ssl", default=False, help="force https")
 
 handlers = [
     (r'/controllers', VdiTornadoGraphQLHandler, dict(graphiql=True, schema=controller_schema)),
@@ -69,6 +72,13 @@ def make_app():
                        websocket_ping_interval=WS_PING_INTERVAL,
                        websocket_ping_timeout=WS_PING_TIMEOUT,
                        autoreload=autoreload)
+
+
+def make_ssl():
+    ssl_ctx = ssl.create_default_context(purpose=ssl.Purpose.CLIENT_AUTH)
+    ssl_ctx.load_cert_chain(SSL_CRT_FPATH, SSL_KEY_FPATH)
+    ssl_ctx.verify_mode = ssl.CERT_OPTIONAL
+    return ssl_ctx
 
 
 def init_license():
@@ -111,8 +121,13 @@ async def startup_server():
     # Инициализация клиента
     get_veil_client()
     # Запуск tornado
-    server = HTTPServer(app)
-    server.listen(options.port)
+    if options.ssl:
+        ssl_options = make_ssl()
+        server = HTTPServer(app, ssl_options=ssl_options)
+    else:
+        server = HTTPServer(app)
+
+    server.listen(port=options.port, address=options.address)
     server.start(options.workers)
     # Инициализация лицензии
     vdi_license = init_license()
@@ -123,6 +138,5 @@ async def startup_server():
 
 
 if __name__ == '__main__':
-    # TODO: проверить запуск тестов
     IOLoop.current().run_sync(startup_server)
     IOLoop.current().start()

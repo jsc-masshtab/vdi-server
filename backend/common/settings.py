@@ -86,7 +86,7 @@ COUNT = 1000
 PATH = '/tmp/'
 CREATE = '2020-08-01'
 # TODO: посмотреть скрипт archive_csv_journal
-# TODO: а это все еще нужно?
+# TODO: убрать для 3.0 - после схлапывание миграций
 print(PATH)
 
 # Others
@@ -102,6 +102,8 @@ SERIAL_KEY_FNAME = 'serial.key'
 PRIVATE_PEM_FNAME = 'veil_vdi.pem'
 PRIVATE_PEM_FPATH = os.path.join(LICENSE_PATH, PRIVATE_PEM_FNAME)
 SERIAL_KEY_FPATH = os.path.join(LICENSE_PATH, SERIAL_KEY_FNAME)
+SSL_KEY_FPATH = os.path.join(SETTINGS_PATH, 'veil_ssl/veil_default.key')
+SSL_CRT_FPATH = os.path.join(SETTINGS_PATH, 'veil_ssl/veil_default.crt')
 
 # Redis settings
 # -----------------------------
