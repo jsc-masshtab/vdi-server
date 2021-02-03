@@ -289,7 +289,7 @@ class DetachUsb(BaseHandler, ABC):
         return await self.log_finish(response)
 
 
-class ThinClientWsHandler(BaseWsHandler):  # noqa
+class ThinClientWsHandler(BaseWsHandler):
 
     def __init__(self, application: Application, request: httputil.HTTPServerRequest, **kwargs: Any):
         websocket.WebSocketHandler.__init__(self, application, request, **kwargs)
@@ -298,11 +298,7 @@ class ThinClientWsHandler(BaseWsHandler):  # noqa
         self._send_messages_task = None
         self._listen_for_cmd_task = None
 
-    def check_origin(self, origin):
-        return origin == 'veil_connect_trusted_origin'
-
     async def open(self):
-
         token = await self._validate_token()
         if not token:
             return
@@ -344,8 +340,6 @@ class ThinClientWsHandler(BaseWsHandler):  # noqa
         self._listen_for_cmd_task = loop.create_task(self._listen_for_cmd())
 
     async def on_message(self, message):
-        # print('!!!message: ', message, flush=True)
-        # parse msg
         try:
             recv_data_dict = json.loads(message)
             msg_type = recv_data_dict['msg_type']
@@ -391,7 +385,7 @@ class ThinClientWsHandler(BaseWsHandler):  # noqa
             ActiveTkConnection.id == self.conn_id).gino.status()
 
     async def _send_messages_co(self):
-        """Пересылвем сообщения об аптейте ВМ"""
+        """Пересылаем сообщения об апдейте ВМ"""
 
         redis_subscriber = REDIS_CLIENT.pubsub()
         redis_subscriber.subscribe(WS_MONITOR_CHANNEL_OUT)

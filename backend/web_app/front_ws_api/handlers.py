@@ -59,7 +59,6 @@ class VdiFrontWsHandler(BaseWsHandler):  # noqa
             response['error'] = True
             await self._write_msg(response)
             return
-        # print('Test Length', len(self._subscriptions))
         # if 'add' cmd and not subscribed  then subscribe
         if subscription_cmd == SubscriptionCmd.add and subscription_source not in self._subscriptions:
             self._subscriptions.append(subscription_source)

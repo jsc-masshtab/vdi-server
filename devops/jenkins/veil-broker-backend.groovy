@@ -47,7 +47,7 @@ pipeline {
     parameters {
         string(      name: 'BRANCH',               defaultValue: 'dev',                   description: 'branch')
         string(      name: 'REPO',                 defaultValue: 'veil-broker-test',      description: 'repo for uploading')
-        string(      name: 'VERSION',              defaultValue: '2.2.1',                 description: 'base version')
+        string(      name: 'VERSION',              defaultValue: '2.2.2',                 description: 'base version')
         string(      name: 'AGENT',                defaultValue: 'bld-agent-02',          description: 'jenkins build agent')
     }
 

@@ -4,8 +4,8 @@
 
 export const environment = {
   production: true,
-  url: 'api/',
-  ws: window.location.host
+  api: 'api/',
+  api_ws: 'api/'
 };
 /*
  * For easier debugging in development mode, you can import the following file

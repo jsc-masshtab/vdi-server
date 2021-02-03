@@ -1,6 +1,9 @@
 import { Observable, ReplaySubject } from 'rxjs';
 import { Injectable } from '@angular/core';
+import { AuthStorageService } from 'src/app/login/authStorage.service';
 
+import { environment } from 'src/environments/environment';
+import { Router } from '@angular/router';
 
 @Injectable({
   providedIn: 'root',
@@ -8,22 +11,34 @@ import { Injectable } from '@angular/core';
 
 export class WebsocketService  {
 
+  timeout: any;
+
   private ws: WebSocket;
   private stream_create_pool$$: ReplaySubject<string> = new ReplaySubject<string>();
 
-  constructor() {}
+  constructor(
+    private authStorageService: AuthStorageService,
+    private router: Router
+  ) {}
 
   public init(): void {
     const host = window.location.host;
     const prot = window.location.protocol;
+    const api_ws = environment.api_ws;
+    const token = this.authStorageService.getItemStorage('token');
 
-    let url = `ws://${host}/subscriptions`;
-    
-    if (prot == 'https:') {
-      url = `wss://${host}/subscriptions`;
+    if (token) {
+      let url = `ws://${host}/${api_ws}ws/subscriptions/?token=jwt ${token}`;
+
+      if (prot == 'https:') {
+        url = `wss://${host}/${api_ws}ws/subscriptions/?token=jwt ${token}`;
+      }
+
+      this.ws = new WebSocket(url);
+    } else {
+      this.ws.close()
+      this.router.navigate(['login']);
     }
-
-    this.ws = new WebSocket(url);
     
     if (this.ws) {
       this.ws.addEventListener<'open'>('open', this.onListenOpen.bind(this));
@@ -49,7 +64,14 @@ export class WebsocketService  {
 
   private onListenError(event: Event): void {
     console.log(event, 'error ws');
-    this.init()
+
+    if (this.timeout) {
+      clearTimeout(this.timeout);
+    }
+
+    this.timeout = setTimeout(() => {
+      this.init()
+    }, 5000)
   }
 
   public close() {

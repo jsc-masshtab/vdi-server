@@ -91,7 +91,7 @@ export class DashboardModule {
               private authStorageService: AuthStorageService
             ) {
 
-    const url = environment.url;
+    const url = environment.api;
 
     const link = this.httpLink.create( { uri(operation) {
       return url + operation.operationName;
