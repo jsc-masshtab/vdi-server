@@ -176,29 +176,45 @@ class JournalSettings(db.Model):
 
     @classmethod
     async def change_journal_settings(cls, dir_path: str = None,
-                                      interval: str = None,
                                       period: str = None,
-                                      form: str = None,
-                                      duration: int = None,
                                       by_count: bool = None,
                                       count: int = None, **kwargs):
         from common.log.journal import system_logger
+        from common.veil.veil_errors import SilentError
 
         settings = dict()
         if dir_path:
             settings['dir_path'] = dir_path
-        if interval:
-            settings['interval'] = interval
-        if period:
-            settings['period'] = period
-        if form:
-            settings['form'] = form
-        if duration:
-            settings['duration'] = duration
-        if by_count:
+        if period and not by_count:
             settings['by_count'] = by_count
-        if count:
-            settings['count'] = count
+            if period == "day":
+                settings['period'] = period
+                settings['interval'] = '1 day'
+                settings['form'] = 'YYYY_MM_DD'
+                settings['duration'] = 1095
+            elif period == "week":
+                settings['period'] = period
+                settings['interval'] = '1 week'
+                settings['form'] = 'YYYY_MM_DD'
+                settings['duration'] = 156
+            elif period == "month":
+                settings['period'] = period
+                settings['interval'] = '1 month'
+                settings['form'] = 'YYYY_MM'
+                settings['duration'] = 36
+            elif period == "year":
+                settings['period'] = period
+                settings['interval'] = '1 year'
+                settings['form'] = 'YYYY'
+                settings['duration'] = 3
+            else:
+                raise SilentError(_('Choose right period.'))
+        if by_count and count:
+            settings['by_count'] = by_count
+            if count > 1:
+                settings['count'] = count
+            else:
+                raise SilentError(_('Count must be more than 1.'))
         await cls.update.values(**settings).gino.status()
         entity = {'entity_type': 'SECURITY', 'entity_uuid': None}
         await system_logger.info(_('Journal settings changed.'), description=settings,

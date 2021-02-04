@@ -252,10 +252,7 @@ class EventExportMutation(graphene.Mutation):
 class ChangeJournalSettingsMutation(graphene.Mutation):
     class Arguments:
         dir_path = graphene.String(description='Адрес директории для архивации журнала')
-        interval = graphene.String(description='Интервал для архивации по периоду')
         period = graphene.String(description='Период для архивации')
-        form = graphene.String(description='Форма даты для названия архива')
-        duration = graphene.Int(description='Время до удаления первой секции в базе данных')
         by_count = graphene.Boolean(description='Принцип архивации')
         count = graphene.Int(description='Количество записей для архивации')
 
