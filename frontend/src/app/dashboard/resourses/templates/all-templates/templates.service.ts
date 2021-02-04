@@ -66,6 +66,7 @@ export class TemplatesService {
                                 cpu_count
                                 memory_count
                                 tablet
+                                domain_tags
                                 ha_enabled
                                 disastery_enabled
                                 remote_access

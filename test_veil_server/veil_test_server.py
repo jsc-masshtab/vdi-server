@@ -41,6 +41,9 @@ class VeilTestServer:
         self.ssl_context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
         self.ssl_context.load_cert_chain('87658490_0.0.0.0.cert', '87658490_0.0.0.0.key')
 
+        # tags
+        self.app.add_routes([web.get(self.base_url + 'tags/', self.get_tags)])
+
     def start(self):
 
         web.run_app(self.app, port=443, ssl_context=self.ssl_context)
@@ -1495,6 +1498,30 @@ class VeilTestServer:
             "zfs_pool": None,
             "hints": 0,
             "tags": [
+            ]
+        }
+        return web.Response(body=json.dumps(res_dict), content_type='application/json')
+
+    async def get_tags(self, request):
+        res_dict = {
+            "count": 2,
+            "next": None,
+            "previous": None,
+            "results": [
+                {
+                    "verbose_name": "tag10",
+                    "id": "71b2543f-cc35-4f80-9238-bec86c08174f",
+                    "slug": "tag10_slug",
+                    "colour": "#c0ffee",
+                    "ui_entities": []
+                },
+                {
+                    "verbose_name": "newname",
+                    "id": "167e50d8-4fbc-4e05-966d-b429e9db9438",
+                    "slug": "tag9_slug",
+                    "colour": "#ff0000",
+                    "ui_entities": []
+                }
             ]
         }
         return web.Response(body=json.dumps(res_dict), content_type='application/json')

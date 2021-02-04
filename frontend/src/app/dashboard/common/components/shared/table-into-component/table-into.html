@@ -49,6 +49,12 @@
               <ng-container *ngIf="!item[obj.property]">{{ obj.type.propertyDepend[1] }}</ng-container>
             </ng-container>
 
+            <ul *ngIf="obj.type.typeDepend === 'tags_array'">
+<!--              <li *ngFor="let item of item[obj.property]"><fa-icon [icon]="['fas', 'circle']" [style.color]="item"></fa-icon></li>-->
+              <li *ngFor="let item of item[obj.property]">{{item}}</li>
+            </ul>
+
+
           </ng-container>
         </ng-container>
 
