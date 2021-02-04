@@ -140,6 +140,13 @@ export class VmDetailsComponent implements OnInit, OnDestroy {
       property: 'boot_type',
       type: 'string'
     },
+    {
+      title: 'Тэги',
+      property: 'domain_tags',
+      type: {
+        typeDepend: 'tags_array'
+      }
+    }
   ];
 
   public idVm: string;

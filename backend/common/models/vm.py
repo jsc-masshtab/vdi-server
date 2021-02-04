@@ -106,8 +106,9 @@ class Vm(VeilModel):
     # ----- ----- ----- ----- ----- ----- -----
 
     @classmethod
-    async def create(cls, pool_id, template_id, verbose_name, id=None,
+    async def create(cls, pool_id, template_id, verbose_name, id=None, pool_tag=None,
                      created_by_vdi=False, status=Status.ACTIVE):
+        from common.models.pool import Pool as PoolModel
         await system_logger.debug(_('Create VM {} on VDI DB.').format(verbose_name))
         try:
             vm = await super().create(id=id,
@@ -118,9 +119,20 @@ class Vm(VeilModel):
                                       status=status)
         except Exception as E:
             raise VmCreationError(str(E))
+
+        if pool_tag:
+            pool = await PoolModel.get(pool_id)
+            await pool.tag_add_entity(tag=pool_tag, entity_id=id, verbose_name=verbose_name)
+
         return vm
 
     async def soft_delete(self, creator, remove_on_controller=True):
+        from common.models.pool import Pool as PoolModel
+        vm_pool = await PoolModel.get(self.pool_id)
+        pool_tag = vm_pool.tag
+        if pool_tag:
+            await vm_pool.tag_remove_entity(tag=pool_tag, entity_id=self.id)
+
         if remove_on_controller and self.created_by_vdi:
             try:
                 domain_entity = await self.vm_client

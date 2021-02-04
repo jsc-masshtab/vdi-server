@@ -493,11 +493,14 @@ class CreateStaticPoolMutation(graphene.Mutation, ControllerFetcher):
 
         # --- Создание записей в БД
         try:
+            tag = await Pool.tag_create(controller=controller, verbose_name=verbose_name, creator=creator)
+
             pool = await StaticPool.soft_create(veil_vm_data=vms,
                                                 verbose_name=verbose_name,
                                                 resource_pool_id=resource_pool_id,
                                                 controller_address=controller.address,
                                                 connection_types=connection_types,
+                                                tag=tag,
                                                 creator=creator)
         except Exception as E:  # Возможные исключения: дубликат имени или вм id, сетевой фейл enable_remote_accesses
             # TODO: указать конкретные Exception
@@ -542,7 +545,8 @@ class AddVmsToStaticPoolMutation(graphene.Mutation):
                             template_id=None,
                             pool_id=pool_id,
                             created_by_vdi=False,
-                            verbose_name=vm.verbose_name
+                            verbose_name=vm.verbose_name,
+                            pool_tag=pool.tag
                             )
             entity = {'entity_type': EntityType.POOL, 'entity_uuid': None}
             await system_logger.info(
@@ -610,6 +614,8 @@ class UpdateStaticPoolMutation(graphene.Mutation, PoolValidator):
         return UpdateStaticPoolMutation(ok=ok)
 
 
+# --- --- --- --- ---
+# Automated (Dynamic) pool mutations
 class ExpandPoolMutation(graphene.Mutation, PoolValidator):
     """Запускает задачу на расширение пула"""
     class Arguments:
@@ -649,8 +655,6 @@ class ExpandPoolMutation(graphene.Mutation, PoolValidator):
         }
 
 
-# --- --- --- --- ---
-# Automated (Dynamic) pool mutations
 class CreateAutomatedPoolMutation(graphene.Mutation, PoolValidator, ControllerFetcher):
     class Arguments:
         controller_id = graphene.UUID(required=True)
@@ -688,6 +692,8 @@ class CreateAutomatedPoolMutation(graphene.Mutation, PoolValidator, ControllerFe
                            verbose_name=verbose_name)
         # Создание записей в БД
         try:
+            tag = await Pool.tag_create(controller=controller, verbose_name=verbose_name, creator=creator)
+
             automated_pool = await AutomatedPool.soft_create(creator=creator, verbose_name=verbose_name,
                                                              controller_ip=controller.address,
                                                              resource_pool_id=resource_pool_id,
@@ -699,7 +705,8 @@ class CreateAutomatedPoolMutation(graphene.Mutation, PoolValidator, ControllerFe
                                                              create_thin_clones=create_thin_clones,
                                                              prepare_vms=prepare_vms,
                                                              connection_types=connection_types,
-                                                             ad_cn_pattern=ad_cn_pattern)
+                                                             ad_cn_pattern=ad_cn_pattern,
+                                                             tag=tag)
         except Exception as E:  # Возможные исключения: дубликат имени вм
             desc = str(E)
             error_msg = _('Failed to create automated pool {}.').format(verbose_name)

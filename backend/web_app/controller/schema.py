@@ -12,7 +12,7 @@ from common.models.controller import Controller
 from common.models.vm import Vm
 from common.models.pool import Pool
 from common.languages import lang_init
-from veil_api_client.base.api_object import VeilRestPaginator
+from veil_api_client import VeilRestPaginator
 
 _ = lang_init()
 

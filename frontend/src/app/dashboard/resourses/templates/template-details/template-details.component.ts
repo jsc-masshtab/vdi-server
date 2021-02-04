@@ -112,6 +112,13 @@ export class TemplateDetailsComponent implements OnInit, OnDestroy {
       title: 'Тип загрузочного меню',
       property: 'boot_type',
       type: 'string'
+    },
+    {
+      title: 'Тэги',
+      property: 'domain_tags',
+      type: {
+        typeDepend: 'tags_array'
+      }
     }
   ];
 

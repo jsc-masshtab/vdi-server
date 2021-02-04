@@ -2,6 +2,7 @@
 import asyncio
 from textwrap import wrap
 import uuid
+import random
 from enum import Enum
 from sqlalchemy import and_, union_all, case, literal_column, desc, text, Enum as AlchemyEnum
 from sqlalchemy.dialects.postgresql import UUID, ARRAY
@@ -9,6 +10,7 @@ from asyncpg.exceptions import UniqueViolationError
 
 from common.settings import POOL_MAX_CREATE_ATTEMPTS
 from common.database import db
+from veil_api_client import TagConfiguration, VeilEntityConfiguration
 
 from common.veil.veil_gino import Status, EntityType, VeilModel
 from common.veil.veil_graphene import VmState
@@ -56,11 +58,12 @@ class Pool(VeilModel):
 
     id = db.Column(UUID(), primary_key=True, default=uuid.uuid4, unique=True)
     verbose_name = db.Column(db.Unicode(length=128), nullable=False, unique=True)
-    resource_pool_id = db.Column(UUID(), nullable=False)
+    resource_pool_id = db.Column(UUID(), nullable=True)
     status = db.Column(AlchemyEnum(Status), nullable=False, index=True)
     controller = db.Column(UUID(), db.ForeignKey('controller.id', ondelete="CASCADE"), nullable=False)
     keep_vms_on = db.Column(db.Boolean(), nullable=False, default=False)
     connection_types = db.Column(ARRAY(AlchemyEnum(PoolConnectionTypes)), nullable=False, index=True)
+    tag = db.Column(UUID(), nullable=True)
 
     # ----- ----- ----- ----- ----- ----- -----
     # Properties and getters:
@@ -113,6 +116,10 @@ class Pool(VeilModel):
         template_id = await AutomatedPool.select('template_id').where(
             AutomatedPool.id == self.id).gino.scalar()
         return template_id
+
+    @staticmethod
+    def pool_tag_colour():
+        return '#%02X%02X%02X' % (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
 
     @classmethod
     def thin_client_limit_exceeded(cls):
@@ -483,7 +490,7 @@ class Pool(VeilModel):
         return await ero_query.gino.status()
 
     @classmethod
-    async def create(cls, verbose_name, resource_pool_id, controller_ip, connection_types):
+    async def create(cls, verbose_name, resource_pool_id, controller_ip, connection_types, tag):
         # TODO: controller_ip заменить на controller_id
         from common.models.controller import Controller
         controller_id = await Controller.get_controller_id_by_ip(controller_ip)
@@ -494,7 +501,8 @@ class Pool(VeilModel):
                                     resource_pool_id=resource_pool_id,
                                     controller=controller_id,
                                     status=Status.CREATING,
-                                    connection_types=connection_types)
+                                    connection_types=connection_types,
+                                    tag=tag)
 
         # Оповещаем о создании пула
         await pool.publish_data_in_internal_channel('CREATED')
@@ -514,6 +522,9 @@ class Pool(VeilModel):
                 await system_logger.debug(_('Delete VMs for AutomatedPool {}.').format(self.verbose_name))
                 vm_ids = await VmModel.get_vms_ids_in_pool(self.id)
                 await VmModel.remove_vms(vm_ids, creator, True)
+
+            if self.tag:
+                await self.tag_remove(self.tag)
 
             await self.delete()
             msg = _('Complete removal pool of desktops {verbose_name} is done.').format(verbose_name=self.verbose_name)
@@ -700,6 +711,72 @@ class Pool(VeilModel):
         pool_type = await self.pool_type
         return dict(pool_type=pool_type)
 
+    async def get_tag(self, tag):
+        controller_obj = await self.controller_obj
+        controller_client = controller_obj.veil_client
+        tag_response = await controller_client.tag(str(tag)).info()
+        return tag_response.response[0]
+
+    @staticmethod
+    async def tag_create(controller, verbose_name, creator):
+        try:
+            pool_tag = TagConfiguration(verbose_name=verbose_name, slug=verbose_name, colour=Pool.pool_tag_colour())
+            controller_client = controller.veil_client
+            tag_response = await controller_client.tag().create(pool_tag)
+            if tag_response.success:
+                task = tag_response.task
+                tag = task.first_entity
+                entity = {'entity_type': EntityType.POOL, 'entity_uuid': None}
+                await system_logger.info(_('Tag {name} created for pool {name}.').format(name=verbose_name),
+                                         user=creator,
+                                         entity=entity)
+                return tag
+            return None
+        except Exception:
+            return None
+
+    async def tag_remove(self, tag):
+        pool_tag = await self.get_tag(tag)
+        remove_response = await pool_tag.remove()
+        if remove_response.success:
+            await system_logger.info(
+                _('Tag {} removed from ECP Veil.').format(pool_tag.verbose_name), user='system', entity=self.entity)
+        return remove_response.success
+
+    async def tag_update(self, tag, verbose_name, creator):
+        pool_tag = await self.get_tag(tag)
+        update_response = await pool_tag.update(verbose_name=verbose_name)
+        if update_response.success:
+            await system_logger.info(
+                _('Tag {name} updated for pool {name} and all vms in pool.').format(name=verbose_name),
+                user=creator, entity=self.entity)
+        return update_response.success
+
+    async def tag_remove_entity(self, tag, entity_id):
+        pool_tag = await self.get_tag(tag)
+        entity = VeilEntityConfiguration(entity_uuid=str(entity_id),
+                                         entity_class='domain')
+        entity_response = await pool_tag.remove_entity(entity_configuration=entity)
+        if entity_response.success:
+            entity = {'entity_type': EntityType.VM, 'entity_uuid': None}
+            await system_logger.info(
+                _('Tag {} removed from VM {}.').format(pool_tag.verbose_name, self.verbose_name),
+                user='system',
+                entity=entity)
+        return entity_response.success
+
+    async def tag_add_entity(self, tag, entity_id, verbose_name):
+        pool_tag = await self.get_tag(tag)
+        entity = VeilEntityConfiguration(entity_uuid=entity_id,
+                                         entity_class='domain')
+        entity_response = await pool_tag.add_entity(entity_configuration=entity)
+        if entity_response.success:
+            entity = {'entity_type': EntityType.VM, 'entity_uuid': None}
+            await system_logger.info(_('Tag {} added to VM {}.').format(pool_tag.verbose_name, verbose_name),
+                                     user='system',
+                                     entity=entity)
+        return entity_response.success
+
 
 class StaticPool(db.Model):
     """На данный момент отсутствует смысловая валидация на уровне таблиц (она в схемах)."""
@@ -725,7 +802,7 @@ class StaticPool(db.Model):
         return all(vm_data['node']['id'] == node_id for vm_data in veil_vm_data)
 
     @classmethod
-    async def soft_create(cls, creator, veil_vm_data: list, verbose_name: str,
+    async def soft_create(cls, creator, veil_vm_data: list, verbose_name: str, tag: str,
                           controller_address: str, resource_pool_id: str, connection_types: list):
         """Nested transactions are atomic."""
         async with db.transaction() as tx:  # noqa
@@ -733,7 +810,8 @@ class StaticPool(db.Model):
             pl = await Pool.create(verbose_name=verbose_name,
                                    controller_ip=controller_address,
                                    resource_pool_id=resource_pool_id,
-                                   connection_types=connection_types)
+                                   connection_types=connection_types,
+                                   tag=tag)
 
             await system_logger.debug(_('StaticPool: Create StaticPool.'))
             pool = await super().create(id=pl.id)
@@ -744,7 +822,8 @@ class StaticPool(db.Model):
                                      verbose_name=vm_type.verbose_name,
                                      pool_id=pool.id,
                                      template_id=None,
-                                     created_by_vdi=False)
+                                     created_by_vdi=False,
+                                     pool_tag=tag)
                 await system_logger.debug(_('VM {} created.').format(vm_type.verbose_name))
 
             await system_logger.info(_('Static pool {} created.').format(verbose_name), user=creator,
@@ -766,6 +845,10 @@ class StaticPool(db.Model):
             creator = update_dict.pop('creator')
             desc = str(update_dict)
             await system_logger.info(msg, description=desc, user=creator, entity=update_type.entity)
+
+            if old_pool_obj.tag:
+                await update_type.tag_update(tag=old_pool_obj.tag, verbose_name=verbose_name, creator=creator)
+
         return True
 
     async def activate(self):
@@ -850,14 +933,15 @@ class AutomatedPool(db.Model):
     @classmethod
     async def soft_create(cls, creator, verbose_name, controller_ip, resource_pool_id,
                           template_id, increase_step, initial_size, reserve_size, total_size, vm_name_template,
-                          create_thin_clones, prepare_vms, connection_types, ad_cn_pattern: str = None):
+                          create_thin_clones, prepare_vms, connection_types, tag, ad_cn_pattern: str = None):
         """Nested transactions are atomic."""
         async with db.transaction() as tx:  # noqa
             # Создаем базовую сущность Pool
             pool = await Pool.create(verbose_name=verbose_name,
                                      resource_pool_id=resource_pool_id,
                                      controller_ip=controller_ip,
-                                     connection_types=connection_types)
+                                     connection_types=connection_types,
+                                     tag=tag)
             # Создаем AutomatedPool
             automated_pool = await super().create(id=pool.id,
                                                   template_id=template_id,
@@ -875,12 +959,14 @@ class AutomatedPool(db.Model):
                 initial_size, total_size, increase_step, reserve_size)
             await system_logger.info(_('AutomatedPool {} is created.').format(verbose_name), user=creator,
                                      entity=pool.entity, description=description)
+
             return automated_pool
 
     async def soft_update(self, creator, verbose_name, reserve_size, total_size, increase_step, vm_name_template,
                           keep_vms_on: bool, create_thin_clones: bool, prepare_vms: bool, connection_types, ad_cn_pattern):
         pool_kwargs = dict()
         auto_pool_kwargs = dict()
+        old_pool_obj = await Pool.get(self.id)
         old_verbose_name = await self.verbose_name
         async with db.transaction() as tx:  # noqa
             # Update Pool values
@@ -922,6 +1008,10 @@ class AutomatedPool(db.Model):
         pool_kwargs.update(auto_pool_kwargs)
         msg = _('Pool {} has been updated.').format(old_verbose_name)
         await system_logger.info(message=msg, description=str(pool_kwargs), user=creator, entity=self.entity)
+
+        if old_pool_obj.tag:
+            pool = await Pool.get(self.id)
+            await pool.tag_update(tag=old_pool_obj.tag, verbose_name=verbose_name, creator=creator)
         return True
 
     async def add_vm(self):
@@ -978,18 +1068,20 @@ class AutomatedPool(db.Model):
             veil_domain = pool_controller.veil_client.domain(vm_info['id'])
             await veil_domain.info()
             # создаем запись в БД
+            pool = await Pool.get(self.id)
             vm_object = await VmModel.create(id=vm_info['id'],
                                              pool_id=str(self.id),
                                              template_id=str(self.template_id),
                                              created_by_vdi=True,
-                                             verbose_name=veil_domain.verbose_name)
+                                             verbose_name=veil_domain.verbose_name,
+                                             pool_tag=pool.tag)
 
-            pool = await Pool.get(self.id)
             msg = _('VM {} created.').format(veil_domain.verbose_name)
             description = _('VM {} created and added to the pool {}.').format(veil_domain.verbose_name,
                                                                               pool.verbose_name)
             await system_logger.info(message=msg, description=description,
                                      entity=self.entity)
+
             # Раньше возвращали vm_info, но для упрощения вызова подготовки ВМ заменили на объект модели
             return vm_object
 
