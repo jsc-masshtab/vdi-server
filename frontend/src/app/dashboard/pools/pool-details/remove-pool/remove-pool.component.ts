@@ -1,4 +1,3 @@
-import { PoolsUpdateService } from './../../all-pools/pools.update.service';
 import { WaitService } from '../../../common/components/single/wait/wait.service';
 import { MatDialogRef } from '@angular/material';
 import { Component, Inject } from '@angular/core';
@@ -20,24 +19,19 @@ interface IData {
 export class RemovePoolComponent  {
 
   constructor(
-              private poolService: PoolDetailsService,
-              private waitService: WaitService,
-              private dialogRef: MatDialogRef<RemovePoolComponent>,
-              private router: Router,
-              @Inject(MAT_DIALOG_DATA) public data: IData,
-              private updatePools: PoolsUpdateService) {}
+    private poolService: PoolDetailsService,
+    private waitService: WaitService,
+    private dialogRef: MatDialogRef<RemovePoolComponent>,
+    private router: Router,
+    @Inject(MAT_DIALOG_DATA) public data: IData
+  ){}
 
   public send() {
     this.waitService.setWait(true);
-    this.poolService.removePool(this.data.idPool, true).subscribe((res) => {
-      if (res) {
-        setTimeout(() => {
-          this.dialogRef.close();
-          this.router.navigate([`pools`]);
-          this.updatePools.setUpdate('update');
-          this.waitService.setWait(false);
-        }, 1000);
-      }
+    this.poolService.removePool(this.data.idPool, true).subscribe(() => {
+      this.dialogRef.close();
+      this.router.navigate([`pools`]);
+      this.waitService.setWait(false);
     });
   }
 }

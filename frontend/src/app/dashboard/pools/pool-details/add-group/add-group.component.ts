@@ -6,7 +6,6 @@ import { MAT_DIALOG_DATA } from '@angular/material';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { WaitService } from 'src/app/dashboard/common/components/single/wait/wait.service';
-import { PoolsUpdateService } from '../../all-pools/pools.update.service';
 
 @Component({
   selector: 'vdi-add-group',
@@ -21,7 +20,6 @@ export class AddGropComponent implements OnDestroy {
   public valid: boolean = true;
 
   constructor(private service: PoolDetailsService,
-              private updatePools: PoolsUpdateService,
               private waitService: WaitService,
               private dialogRef: MatDialogRef<AddGropComponent>,
               @Inject(MAT_DIALOG_DATA) public data: any) { }
@@ -34,7 +32,6 @@ export class AddGropComponent implements OnDestroy {
         .pipe(takeUntil(this.destroy)).subscribe((res) => {
           if (res) {
             this.service.getPool(this.data.id, this.data.typePool).refetch();
-            this.updatePools.setUpdate('update');
             this.waitService.setWait(false);
             this.dialogRef.close();
           }

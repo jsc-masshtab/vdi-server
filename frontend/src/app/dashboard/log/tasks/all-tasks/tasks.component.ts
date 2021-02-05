@@ -6,6 +6,8 @@ import { MatDialog } from '@angular/material';
 import { InfoTaskComponent } from '../info-tasks/info-tasks.component';
 import { FormControl } from '@angular/forms';
 import { IParams } from 'types';
+import { WebsocketService } from 'src/app/dashboard/common/classes/websock.service';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'vdi-tasks',
@@ -14,6 +16,8 @@ import { IParams } from 'types';
 })
 
 export class TasksComponent implements OnInit {
+
+  private socketSub: Subscription;
 
   public limit = 100;
   public count = 0;
@@ -65,9 +69,13 @@ export class TasksComponent implements OnInit {
   constructor(
     private service: TasksService,
     private waitService: WaitService,
-    public dialog: MatDialog) { }
+    public dialog: MatDialog,
+    private ws: WebsocketService
+  ) { }
+  
   ngOnInit() {
     this.refresh();
+    this.listenSockets();
 
     this.task_type.valueChanges.subscribe(() => {
       this.getTasks();
@@ -125,6 +133,16 @@ export class TasksComponent implements OnInit {
       });
   }
 
+  private listenSockets() {
+    if (this.socketSub) {
+      this.socketSub.unsubscribe()
+    }
+
+    this.socketSub = this.ws.stream('/vdi_tasks/').subscribe(() => {
+      this.service.getAllTasks(this.queryset).refetch();
+    })
+  }
+
   public openTaskDetails(task: any): void {
     this.dialog.open(InfoTaskComponent, {
  			disableClose: true,
@@ -133,5 +151,11 @@ export class TasksComponent implements OnInit {
         task: { ...task }
       }
     });
+  }
+
+  ngOnDestroy() {
+    if (this.socketSub) {
+      this.socketSub.unsubscribe();
+    }
   }
 }

@@ -12,11 +12,8 @@ import { RemovePoolComponent } from './remove-pool/remove-pool.component';
 import { PoolDetailsService } from './pool-details.service';
 import { FormForEditComponent } from 'src/app/dashboard/common/forms-dinamic/change-form/form-edit.component';
 import { map } from 'rxjs/operators';
-// import { of } from 'rxjs';
-import { PoolsUpdateService } from '../all-pools/pools.update.service';
 import { RemoveGroupComponent } from './remove-group/remove-group.component';
 import { AddGropComponent } from './add-group/add-group.component';
-// import { PrepareVmPoolComponent } from './prepare-vm/prepare-vm.component';
 import { YesNoFormComponent } from '../../common/forms-dinamic/yes-no-form/yes-no-form.component';
 import {FormControl} from "@angular/forms";
 
@@ -291,7 +288,6 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
   constructor(private activatedRoute: ActivatedRoute,
               private router: Router,
               private poolService: PoolDetailsService,
-              private poolsService: PoolsUpdateService,
               public  dialog: MatDialog) {}
 
   ngOnInit() {
@@ -502,11 +498,6 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
             this.idPool,
             this.typePool
           ],
-        },
-        updateDepend: {
-          service: this.poolsService,
-          method: 'setUpdate',
-          params: ['update']
         }
       }
     });
@@ -545,11 +536,6 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
             this.idPool,
             this.typePool
           ],
-        },
-        updateDepend: {
-          service: this.poolsService,
-          method: 'setUpdate',
-          params: ['update']
         }
       }
     });

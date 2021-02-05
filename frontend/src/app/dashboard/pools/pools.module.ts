@@ -1,4 +1,3 @@
-import { PoolsUpdateService } from './all-pools/pools.update.service';
 import { MatSelectModule } from '@angular/material/select';
 import { MatDialogModule } from '@angular/material/dialog';
 import { AppRoutingModule } from '../../app-routing.module';
@@ -62,8 +61,7 @@ import { EventsModule } from '../log/events/events.module';
     PoolsService,
     PoolDetailsService,
     AddPoolService,
-    {provide: MAT_CHECKBOX_CLICK_ACTION, useValue: 'check'},
-    PoolsUpdateService
+    {provide: MAT_CHECKBOX_CLICK_ACTION, useValue: 'check'}
   ],
   entryComponents: [
     PoolAddComponent,

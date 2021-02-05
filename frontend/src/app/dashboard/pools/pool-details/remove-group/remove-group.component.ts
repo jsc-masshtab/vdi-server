@@ -1,12 +1,10 @@
 import { PoolDetailsService } from '../pool-details.service';
-
 import { MatDialogRef } from '@angular/material';
 import { Component, Inject, OnDestroy } from '@angular/core';
 import { MAT_DIALOG_DATA } from '@angular/material';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { WaitService } from 'src/app/dashboard/common/components/single/wait/wait.service';
-import { PoolsUpdateService } from '../../all-pools/pools.update.service';
 
 @Component({
   selector: 'vdi-remove-group',
@@ -20,13 +18,12 @@ export class RemoveGroupComponent implements OnDestroy {
   private destroy: Subject<any> = new Subject<any>();
   public valid: boolean = true;
 
-  constructor(private service: PoolDetailsService,
-              private updatePools: PoolsUpdateService,
-              private waitService: WaitService,
-              private dialogRef: MatDialogRef<RemoveGroupComponent>,
-              @Inject(MAT_DIALOG_DATA) public data: any) { }
-
-
+  constructor(
+    private service: PoolDetailsService,
+    private waitService: WaitService,
+    private dialogRef: MatDialogRef<RemoveGroupComponent>,
+    @Inject(MAT_DIALOG_DATA) public data: any
+  ) {}
 
   public send() {
     if (this.groups.length) {
@@ -34,7 +31,6 @@ export class RemoveGroupComponent implements OnDestroy {
       this.service.removeGroup(this.data.id, this.groups).pipe(takeUntil(this.destroy)).subscribe((res) => {
         if (res) {
           this.service.getPool(this.data.id, this.data.typePool).refetch();
-          this.updatePools.setUpdate('update');
           this.waitService.setWait(false);
           this.dialogRef.close();
         }

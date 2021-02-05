@@ -5,7 +5,6 @@ import { Component, Inject, OnInit, OnDestroy } from '@angular/core';
 import { MAT_DIALOG_DATA } from '@angular/material';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
-import { PoolsUpdateService } from './../../all-pools/pools.update.service';
 
 interface IData {
   idPool: string;
@@ -26,12 +25,12 @@ export class RemoveUsersPoolComponent  implements OnInit, OnDestroy {
   private destroy: Subject<any> = new Subject<any>();
   public valid: boolean = true;
 
-  constructor(private waitService: WaitService,
-              private poolService: PoolDetailsService,
-              private dialogRef: MatDialogRef<RemoveUsersPoolComponent>,
-              @Inject(MAT_DIALOG_DATA) public data: IData,
-              private updatePools: PoolsUpdateService
-             ) {}
+  constructor(
+    private waitService: WaitService,
+    private poolService: PoolDetailsService,
+    private dialogRef: MatDialogRef<RemoveUsersPoolComponent>,
+    @Inject(MAT_DIALOG_DATA) public data: IData
+  ){}
 
   ngOnInit() {
     this.getUsersToPool();
@@ -43,7 +42,6 @@ export class RemoveUsersPoolComponent  implements OnInit, OnDestroy {
       this.poolService.removeUserEntitlementsFromPool(this.data.idPool, this.idUsers).pipe(takeUntil(this.destroy)).subscribe((res) => {
         if (res) {
           this.poolService.getPool(this.data.idPool, this.data.typePool).refetch();
-          this.updatePools.setUpdate('update');
           this.waitService.setWait(false);
           this.dialogRef.close();
         }
