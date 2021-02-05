@@ -1,4 +1,3 @@
-import { PoolsUpdateService } from './../all-pools/pools.update.service';
 import { WaitService } from '../../common/components/single/wait/wait.service';
 
 import { AddPoolService } from './add-pool.service';
@@ -47,7 +46,6 @@ export class PoolAddComponent {
   public dynamicPool: FormGroup;
 
   constructor(
-    private updatePools: PoolsUpdateService,
     private addPoolService: AddPoolService,
     private dialogRef: MatDialogRef<PoolAddComponent>,
     private fb: FormBuilder,
@@ -242,7 +240,6 @@ export class PoolAddComponent {
 
         this.sub = this.addPoolService[method](data).subscribe(() => {
           this.dialogRef.close();
-          this.updatePools.setUpdate('update');
           this.waitService.setWait(false);
         }, () => {
             let step = this.last.split('_')

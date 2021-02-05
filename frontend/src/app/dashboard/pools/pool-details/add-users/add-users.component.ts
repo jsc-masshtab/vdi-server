@@ -1,4 +1,3 @@
-import { PoolsUpdateService } from './../../all-pools/pools.update.service';
 import { PoolDetailsService } from '../pool-details.service';
 import { WaitService } from '../../../common/components/single/wait/wait.service';
 import { MatDialogRef } from '@angular/material';
@@ -31,8 +30,7 @@ export class AddUsersPoolComponent implements OnInit, OnDestroy {
   constructor(private waitService: WaitService,
               private poolService: PoolDetailsService,
               private dialogRef: MatDialogRef<AddUsersPoolComponent>,
-              @Inject(MAT_DIALOG_DATA) public data: IData,
-              private updatePools: PoolsUpdateService
+              @Inject(MAT_DIALOG_DATA) public data: IData
   ) { }
 
   ngOnInit() {
@@ -51,7 +49,6 @@ export class AddUsersPoolComponent implements OnInit, OnDestroy {
       this.poolService.entitleUsersToPool(this.data.idPool, this.idUsers).pipe(takeUntil(this.destroy)).subscribe((res) => {
         if (res) {
           this.poolService.getPool(this.data.idPool, this.data.typePool).refetch();
-          this.updatePools.setUpdate('update');
           this.waitService.setWait(false);
           this.dialogRef.close();
         }

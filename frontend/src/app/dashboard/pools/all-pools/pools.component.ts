@@ -1,7 +1,5 @@
-import { PoolsUpdateService } from './pools.update.service';
 import { IParams } from '../../../../../types';
 import { PoolAddComponent } from '../add-pool/add-pool.component';
-import { WaitService } from '../../common/components/single/wait/wait.service';
 
 import { Component, OnInit, ViewChild, ElementRef, OnDestroy } from '@angular/core';
 import { PoolsService } from './pools.service';
@@ -10,6 +8,9 @@ import { Router } from '@angular/router';
 import { MatDialog } from '@angular/material';
 import { Subscription } from 'rxjs';
 import { DetailsMove } from 'src/app/dashboard/common/classes/details-move';
+import { map } from 'rxjs/operators';
+import { WaitService } from '../../common/components/single/wait/wait.service';
+import { WebsocketService } from '../../common/classes/websock.service';
 
 
 @Component({
@@ -20,10 +21,11 @@ import { DetailsMove } from 'src/app/dashboard/common/classes/details-move';
 
 export class PoolsComponent extends DetailsMove implements OnInit, OnDestroy {
 
-  public pools: [];
   private getPoolsSub: Subscription;
-  private updateSub: Subscription;
+  private socketSub: Subscription;
 
+  public pools: [];
+  
   public collection: ReadonlyArray<object> = [
     {
       title: 'Название',
@@ -65,26 +67,21 @@ export class PoolsComponent extends DetailsMove implements OnInit, OnDestroy {
   ];
 
 
-  constructor(private service: PoolsService, public dialog: MatDialog,
-              private router: Router, private waitService: WaitService,
-              private update: PoolsUpdateService) {
+  constructor(
+    private service: PoolsService,
+    public dialog: MatDialog,
+    private router: Router,
+    private waitService: WaitService,
+    private ws: WebsocketService
+  ){
     super();
   }
 
   @ViewChild('view') view: ElementRef;
 
   ngOnInit() {
-    this.getAllPools({wait: true});
-    this.updatePools();
-  }
-
-  private updatePools(): void {
-    this.updateSub = this.update.getUpdate().subscribe((param: string) => {
-      if (param === 'update') {
-        this.service.paramsForGetPools.spin = false;
-        this.getAllPools({wait: false});
-      }
-    });
+    this.getAllPools();
+    this.listenSockets();
   }
 
   public openCreatePool(): void {
@@ -94,23 +91,33 @@ export class PoolsComponent extends DetailsMove implements OnInit, OnDestroy {
     });
   }
 
-  public getAllPools(wait: { wait: boolean}): void {
+  public getAllPools(): void {
     if (this.getPoolsSub) {
       this.getPoolsSub.unsubscribe();
     }
-    this.getPoolsSub = this.service.getAllPools()
+
+    this.waitService.setWait(true);
+
+    this.getPoolsSub = this.service.getAllPools().valueChanges.pipe(map(data => data.data['pools']))
       .subscribe((data) => {
         this.pools = data;
-        if (wait.wait) {
-          this.waitService.setWait(false);
-          wait.wait = false; // чтобы не отправлял в waitService при obs$ = timer(0, 60000);
-        }
+        this.waitService.setWait(false);
     });
+  }
+
+  private listenSockets() {
+    if (this.socketSub) {
+      this.socketSub.unsubscribe()
+    }
+
+    this.socketSub = this.ws.stream('/pools/').subscribe((message: any) => {
+      if (message['mgs_type'] == 'data') this.service.getAllPools().refetch();
+    })
   }
 
   public refresh(): void {
     this.service.paramsForGetPools.spin = true;
-    this.getAllPools({wait: true});
+    this.getAllPools();
   }
 
   public routeTo(event): void {
@@ -150,14 +157,16 @@ export class PoolsComponent extends DetailsMove implements OnInit, OnDestroy {
         output_param = param.nameSort;
     }
     this.service.paramsForGetPools.nameSort = output_param;
-    this.getAllPools({wait: true});
+    this.getAllPools();
   }
 
   ngOnDestroy() {
     this.getPoolsSub.unsubscribe();
-    this.updateSub.unsubscribe();
     this.service.paramsForGetPools.spin = true;
     this.service.paramsForGetPools.nameSort = undefined;
-  }
 
+    if (this.socketSub) {
+      this.socketSub.unsubscribe();
+    }
+  }
 }

@@ -1,4 +1,3 @@
-import { PoolsUpdateService } from './../../all-pools/pools.update.service';
 import { PoolDetailsService } from '../pool-details.service';
 import { WaitService } from '../../../common/components/single/wait/wait.service';
 import { MatDialogRef } from '@angular/material';
@@ -27,11 +26,12 @@ export class AddVMStaticPoolComponent implements OnInit, OnDestroy {
   private vmsInput: [] = [];
   private destroy: Subject<any> = new Subject<any>();
 
-  constructor(private poolService: PoolDetailsService,
-              private waitService: WaitService,
-              private dialogRef: MatDialogRef<AddVMStaticPoolComponent>,
-              @Inject(MAT_DIALOG_DATA) public data: IData,
-              private updatePools: PoolsUpdateService) { }
+  constructor(
+    private poolService: PoolDetailsService,
+    private waitService: WaitService,
+    private dialogRef: MatDialogRef<AddVMStaticPoolComponent>,
+    @Inject(MAT_DIALOG_DATA) public data: IData
+  ){}
 
   ngOnInit() {
     this.getVms();
@@ -44,7 +44,6 @@ export class AddVMStaticPoolComponent implements OnInit, OnDestroy {
         this.poolService.getPool(this.data.idPool, this.data.typePool).refetch()
         this.waitService.setWait(false);
         this.dialogRef.close();
-        this.updatePools.setUpdate('update');
       }
     });
   }
@@ -74,5 +73,4 @@ export class AddVMStaticPoolComponent implements OnInit, OnDestroy {
   ngOnDestroy() {
     this.destroy.next(null);
   }
-
 }

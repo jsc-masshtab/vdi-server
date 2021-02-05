@@ -7,6 +7,8 @@ import { InfoEventComponent } from '../info-event/info-event.component';
 import { FormControl } from '@angular/forms';
 import { IParams } from 'types';
 import { AddExportComponent } from '../add-exports/add-exports.component';
+import { Subscription } from 'rxjs';
+import { WebsocketService } from 'src/app/dashboard/common/classes/websock.service';
 
 interface Event {
   event: {
@@ -24,6 +26,8 @@ interface Event {
 })
 
 export class EventsComponent implements OnInit {
+
+  private socketSub: Subscription;
 
   public limit = 100;
   public count = 0;
@@ -71,9 +75,13 @@ export class EventsComponent implements OnInit {
   constructor(
     private service: EventsService,
     private waitService: WaitService,
-    public dialog: MatDialog) { }
+    public dialog: MatDialog,
+    private ws: WebsocketService
+  ) {}
+  
   ngOnInit() {
     this.refresh();
+    this.listenSockets()
 
     this.start_date.valueChanges.subscribe(() => {
       this.getEvents();
@@ -179,6 +187,16 @@ export class EventsComponent implements OnInit {
       });
   }
 
+  private listenSockets() {
+    if (this.socketSub) {
+      this.socketSub.unsubscribe()
+    }
+
+    this.socketSub = this.ws.stream('/events/').subscribe(() => {
+      this.service.getAllEvents(this.queryset).refetch();
+    })
+  }
+
   public openEventDetails(event: Event): void {
     this.dialog.open(InfoEventComponent, {
  			disableClose: true, 
@@ -197,5 +215,11 @@ export class EventsComponent implements OnInit {
         queryset: this.queryset
       }
     });
+  }
+
+  ngOnDestroy() {
+    if (this.socketSub) {
+      this.socketSub.unsubscribe();
+    }
   }
 }
