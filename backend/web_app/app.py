@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import uvloop
 from tornado.web import Application
 from tornado.httpserver import HTTPServer
 import ssl
@@ -138,5 +139,6 @@ async def startup_server():
 
 
 if __name__ == '__main__':
+    uvloop.install()
     IOLoop.current().run_sync(startup_server)
     IOLoop.current().start()

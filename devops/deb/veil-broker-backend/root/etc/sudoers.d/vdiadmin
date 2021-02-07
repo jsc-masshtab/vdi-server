@@ -1,0 +1,9 @@
+Cmnd_Alias VDICMDS = /usr/sbin/vdi_adduser_bi.sh, \
+                     /usr/sbin/vdi_addgroup_bi.sh, \
+                     /usr/sbin/vdi_check_in_group_bi.sh, \
+                     /usr/sbin/vdi_edituser_bi.sh, \
+                     /usr/sbin/vdi_set_pass_bi.sh, \
+                     /usr/sbin/vdi_remove_user_group_bi.sh, \
+                     /usr/sbin/vdi_kill_proc_bi.sh
+
+vdiadmin ALL = (root) NOPASSWD: VDICMDS

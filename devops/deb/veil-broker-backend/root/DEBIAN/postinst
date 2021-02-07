@@ -4,12 +4,13 @@ set -e
 
 configure_users()
 {
-	useradd uservdi
-	chown -R uservdi:uservdi /opt/veil-vdi
+	VDIADMIN="vdiadmin"
+    VDIADMIN_PASS="Bazalt1!"
 
 	groupadd vdi-web
 	groupadd vdi-web-admin
-	useradd -G vdi-web,vdi-web-admin vdiadmin
+	useradd -G vdi-web,vdi-web-admin,shadow $VDIADMIN
+	echo "$VDIADMIN:$VDIADMIN_PASS" | chpasswd
 
 	# разрешаем вход по ssh только пользователю user
 	echo "AllowUsers user" >> /etc/ssh/sshd_config
@@ -23,19 +24,11 @@ configure_secrets()
 		export PYTHONPATH=/opt/veil-vdi/app
 		cd /opt/veil-vdi/app
 		/opt/veil-vdi/env/bin/python /opt/veil-vdi/app/common/create_local_settings.py -f /opt/veil-vdi/app/common/local_settings.py
-
-		# подключаем файл с переменными только если он существует
-		if [ -f /tmp/vdi-install-vars ]; then
-		    source /tmp/vdi-install-vars
-		fi
-
-		# вставляем переменные (если они объявлены) в /opt/veil-vdi/app/common/local_settings.py
-		[ -n "$PARTITION" ] && sed -i 's@^PARTITION = .*$@PARTITION = '"$PARTITION"'@' /opt/veil-vdi/app/common/local_settings.py
-		[ -n "$BY_COUNT" ] && sed -i 's@^BY_COUNT = .*$@BY_COUNT = '"$BY_COUNT"'@' /opt/veil-vdi/app/common/local_settings.py
-		[ -n "$COUNT" ] && sed -i 's@^COUNT = .*$@COUNT = '"$COUNT"'@' /opt/veil-vdi/app/common/local_settings.py
-		[ -n "$PATH1" ] && sed -i 's@^PATH = .*$@PATH = '"'$PATH1'"'@' /opt/veil-vdi/app/common/local_settings.py
-		[ -n "$CREATE" ] && sed -i 's@^CREATE = .*$@CREATE = '"'$CREATE'"'@' /opt/veil-vdi/app/common/local_settings.py
+		chmod 600 /opt/veil-vdi/app/common/local_settings.py
 	fi
+
+	chmod 600 /opt/veil-vdi/app/common/settings.py
+	chown -R $VDIADMIN:$VDIADMIN /opt/veil-vdi
 
 	# берем из файла ключи доступа к БД и Redis
 	DB_PASS="$(grep -r 'DB_PASS' /opt/veil-vdi/app/common/local_settings.py | sed -r "s/DB_PASS = '(.+)'/\1/g")"
@@ -79,7 +72,10 @@ configure_logs()
 {
 	# creating logs directory at /var/log/veil-vdi/
 	mkdir -p /var/log/veil-vdi/ || true
-	chown -R uservdi:uservdi /var/log/veil-vdi
+	chown -R $VDIADMIN:$VDIADMIN /var/log/veil-vdi
+
+	touch /var/log/faillog
+	chmod 666 /var/log/faillog
 
 	# deploying configuration files for logrotate
 	cp /opt/veil-vdi/other/tornado.logrotate /etc/logrotate.d/veil-vdi

@@ -43,6 +43,10 @@
       {% endif %}
       DB_NAME = '{{ broker_db_name }}'
       DB_USER = '{{ broker_db_user }}'
+      {% if ansible_os_family == "Astra Linux (Smolensk)" %}
+      LOCAL_AUTH = False
+      PAM_AUTH = True
+      {% endif %}
 
 - name: Broker | Apply migrations
   command: "/opt/veil-vdi/env/bin/python /opt/veil-vdi/env/bin/alembic upgrade head"

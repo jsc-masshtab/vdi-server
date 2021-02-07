@@ -9,12 +9,13 @@ from web_app.tests.fixtures import (fixt_db, fixt_user_locked, fixt_user, fixt_u
                             fixt_mapping, fixt_group, fixt_group_role)  # noqa
 
 from common.languages import lang_init
-from common.settings import LOCAL_AUTH, EXTERNAL_AUTH
+from common.settings import LOCAL_AUTH, EXTERNAL_AUTH, PAM_AUTH
 
 
 _ = lang_init()
 
-pytestmark = [pytest.mark.asyncio, pytest.mark.auth]
+pytestmark = [pytest.mark.asyncio, pytest.mark.auth,
+              pytest.mark.skipif(PAM_AUTH, reason="not finished yet")]
 
 
 class AuthLocalTestCase(VdiHttpTestCase):

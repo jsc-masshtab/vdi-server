@@ -9,7 +9,7 @@ Requires=redis.service
 
 [Service]
 WorkingDirectory=/opt/veil-vdi/app
-User=uservdi
+User=vdiadmin
 Environment=PYTHONPATH=/opt/veil-vdi/app
 OOMScoreAdjust=-1000
 ExecStart=/opt/veil-vdi/env/bin/python /opt/veil-vdi/app/web_app/app.py --workers=1 --logging=INFO --ssl --address=127.0.0.1 --log_file_prefix=/var/log/veil-vdi/vdi_tornado.log

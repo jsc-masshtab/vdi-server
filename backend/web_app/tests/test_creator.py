@@ -4,12 +4,12 @@ from datetime import datetime, timedelta
 
 from web_app.tests.fixtures import fixt_db, fixt_auth_context  # noqa
 from web_app.tests.utils import execute_scheme
-
 from web_app.journal.schema import event_schema
 from common.models.auth import Group
 from common.models.event import Event
+from common.settings import PAM_AUTH
 
-pytestmark = [pytest.mark.asyncio, pytest.mark.creator]
+pytestmark = [pytest.mark.asyncio, pytest.mark.creator, pytest.mark.skipif(PAM_AUTH, reason="not finished yet")]
 
 
 @pytest.mark.asyncio

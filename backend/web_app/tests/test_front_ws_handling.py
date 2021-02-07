@@ -1,14 +1,13 @@
 # -*- coding: utf-8 -*-
 import pytest
 import json
-
 import tornado
 from tornado.testing import AsyncHTTPTestCase, gen_test
-
 from web_app.front_ws_api.handlers import VdiFrontWsHandler
+from common.settings import PAM_AUTH
 
 
-pytestmark = [pytest.mark.ws_requests]
+pytestmark = [pytest.mark.ws_requests, pytest.mark.skipif(PAM_AUTH, reason="not finished yet")]
 
 
 class TestWebSockets(AsyncHTTPTestCase):

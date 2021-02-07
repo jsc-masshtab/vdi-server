@@ -6,13 +6,17 @@ from sqlalchemy.sql import func, text
 from sqlalchemy import Index
 from sqlalchemy import Enum as AlchemyEnum
 from asyncpg.exceptions import UniqueViolationError
+from veil_aio_au import VeilResult as VeilAuthResult
 
+from common.settings import PAM_AUTH, PAM_USER_GROUP, PAM_SUPERUSER_GROUP, SECRET_KEY
 from common.database import db
 from common.veil.veil_gino import AbstractSortableStatusModel, Role, EntityType, VeilModel
-from common.veil.veil_errors import SimpleError
+from common.veil.veil_errors import SimpleError, PamError
 from common.veil.auth import hashers
 from common.languages import lang_init
 from common.log.journal import system_logger
+from common.veil.auth.veil_pam import veil_auth_class
+
 
 from common.models.user_tk_permission import TkPermission, UserTkPermission, GroupTkPermission
 
@@ -61,7 +65,7 @@ class User(AbstractSortableStatusModel, VeilModel):
     date_joined = db.Column(db.DateTime(timezone=True), server_default=func.now())
     date_updated = db.Column(db.DateTime(timezone=True), onupdate=func.now())
     last_login = db.Column(db.DateTime(timezone=True), server_default=func.now())
-    is_superuser = db.Column(db.Boolean(), default=False)
+    is_superuser = db.Column(db.Boolean(), default=False)  # Атрибут локальной авторизации
     is_active = db.Column(db.Boolean(), default=True)
 
     # ----- ----- ----- ----- ----- ----- -----
@@ -70,6 +74,13 @@ class User(AbstractSortableStatusModel, VeilModel):
     @property
     def entity_type(self):
         return EntityType.USER
+
+    async def superuser(self) -> bool:
+        """Should be used instead of is_superuser attr."""
+        if PAM_AUTH:
+            return await self.pam_user_in_group(PAM_SUPERUSER_GROUP)
+        else:
+            return self.is_superuser
 
     @property
     async def assigned_groups(self):
@@ -90,7 +101,8 @@ class User(AbstractSortableStatusModel, VeilModel):
 
     @property
     async def roles(self):
-        if self.is_superuser:
+        is_superuser = await self.superuser()
+        if is_superuser:
             all_roles_set = set(Role)  # noqa
             return all_roles_set
 
@@ -103,15 +115,15 @@ class User(AbstractSortableStatusModel, VeilModel):
             all_roles_list += [role_type.role for role_type in group_roles]
 
         roles_set = set(all_roles_list)
-        # Сейчас роли будет в случайноп порядке.
+        # Сейчас роли будут в случайном порядке.
         return roles_set
 
     @property
     async def pools(self):
         # Либо размещать staticmethod в пулах, либо импорт тут, либо хардкодить названия полей.
         from common.models.pool import Pool
-
-        if self.is_superuser:
+        is_superuser = await self.superuser()
+        if is_superuser:
             # superuser есть все роли - мы просто выбираем все доступные пулы.
             pools_query = Pool.get_pools_query()
         else:
@@ -175,7 +187,8 @@ class User(AbstractSortableStatusModel, VeilModel):
         return permissions_from_group
 
     async def get_permissions(self):
-        if self.is_superuser:
+        is_superuser = await self.superuser()
+        if is_superuser:
             all_permissions_set = set(TkPermission)
             return all_permissions_set
 
@@ -239,7 +252,21 @@ class User(AbstractSortableStatusModel, VeilModel):
         info_message = _('User {username} has been activated.').format(username=self.username)
         await system_logger.info(info_message, entity=self.entity, user=creator)
 
+        if PAM_AUTH:
+            return await self.pam_unlock(creator=creator)
         return operation_status
+
+    async def pam_unlock(self, creator):
+        """Разблокировать пользователя в ОС."""
+        result = await veil_auth_class.user_unlock(username=self.username)
+        if result.success:
+            # TODO: изменить сообщение
+            info_message = _('User {username} has been activated on Astra.').format(username=self.username)
+            await system_logger.info(info_message, entity=self.entity, user=creator)
+        else:
+            warning_message = result.error_msg
+            await system_logger.warning(warning_message, entity=self.entity, user=creator)
+        return result.success
 
     async def deactivate(self, creator):
         """Деактивировать всех суперпользователей в системе - нельзя."""
@@ -256,7 +283,21 @@ class User(AbstractSortableStatusModel, VeilModel):
         info_message = _('User {username} has been deactivated.').format(username=self.username)
         await system_logger.info(info_message, entity=self.entity, user=creator)
 
+        if PAM_AUTH:
+            return await self.pam_lock(creator=creator)
         return operation_status
+
+    async def pam_lock(self, creator):
+        """Заблокировать пользователя в ОС."""
+        result = await veil_auth_class.user_lock(username=self.username)
+        if result.success:
+            # TODO: изменить сообщение
+            info_message = _('User {username} has been deactivated on Astra.').format(username=self.username)
+            await system_logger.info(info_message, entity=self.entity, user=creator)
+        else:
+            warning_message = result.error_msg
+            await system_logger.warning(warning_message, entity=self.entity, user=creator)
+        return result.success
 
     @staticmethod
     async def check_email(email):
@@ -269,6 +310,8 @@ class User(AbstractSortableStatusModel, VeilModel):
             (User.username == username) & (User.is_active == True)).gino.scalar()  # noqa
         if count == 0:
             return False
+        if PAM_AUTH:
+            return await User.pam_check_user(username, raw_password)
         return await User.check_password(username, raw_password)
 
     @staticmethod
@@ -276,8 +319,40 @@ class User(AbstractSortableStatusModel, VeilModel):
         password = await User.select('password').where(User.username == username).gino.scalar()
         return await hashers.check_password(raw_password, password)
 
+    @staticmethod
+    async def pam_check_user(username: str, password: str) -> VeilAuthResult:
+        """Call linux auth via veil-aio-au."""
+        result = await veil_auth_class.user_authenticate(username=username, password=password)
+        return result.success
+
+    async def pam_set_password(self, raw_password: str, creator):
+        """Задает пароль пользователя в ОС."""
+        result = await veil_auth_class.user_set_password(username=self.username, new_password=raw_password)
+        await system_logger.info(result)
+        if result.success:
+            info_message = _('Password of user {username} has been changed.').format(username=self.username)
+            await system_logger.info(info_message, entity=self.entity, user=creator)
+        return result.success
+
+    async def pam_user_in_group(self, group: str) -> bool:
+        result = await veil_auth_class.user_in_group(self.username, group)
+        return result
+
+    async def pam_user_add_group(self, group: str) -> VeilAuthResult:
+        return await veil_auth_class.user_add_group(username=self.username, group=group)
+
+    async def pam_user_remove_group(self, group: str) -> VeilAuthResult:
+        return await veil_auth_class.user_remove_group(username=self.username, group=group)
+
+    async def pam_user_set_email(self, email: str) -> VeilAuthResult:
+        gecos = ',VDI,,,{}'.format(email)
+        return await veil_auth_class.user_set_gecos(username=self.username, gecos=gecos)
+
     async def set_password(self, raw_password, creator):
-        encoded_password = hashers.make_password(raw_password)
+        if PAM_AUTH:
+            return await self.pam_set_password(raw_password=raw_password, creator=creator)
+
+        encoded_password = hashers.make_password(raw_password, salt=SECRET_KEY)
         user_status = await User.update.values(password=encoded_password).where(
             User.id == self.id).gino.status()
 
@@ -286,17 +361,49 @@ class User(AbstractSortableStatusModel, VeilModel):
 
         return user_status
 
+    async def pam_create_user(self, raw_password: str, superuser: bool = False) -> VeilAuthResult:
+        """Create new user in the OS.
+
+        GECOS: https://en.wikipedia.org/wiki/Gecos_field
+        """
+        # full_name = ' '.join([self.last_name, self.first_name])
+        # gecos = '"{}",VDI,,,{}'.format(full_name, self.email)  # type: str
+        gecos = ',VDI,,,{}'.format(self.email)  # type: str
+        result = await veil_auth_class.user_create_new(username=self.username,
+                                                       password=raw_password,
+                                                       gecos=gecos,
+                                                       group=PAM_USER_GROUP)
+        if result.success and superuser:
+            pam_result = await self.pam_user_add_group(PAM_SUPERUSER_GROUP)
+            if not pam_result.success:
+                return pam_result
+        return result
+
     @classmethod
-    async def soft_create(cls, username, creator, password=None, email=None, last_name=None, first_name=None, is_superuser=False,
+    async def soft_create(cls, username, creator, password=None, email=None,
+                          last_name=None, first_name=None, is_superuser=False,
                           id=None, is_active=True):
         """Если password будет None, то make_password вернет unusable password"""
-        encoded_password = hashers.make_password(password)
+        encoded_password = hashers.make_password(password, salt=SECRET_KEY)
         user_kwargs = {'username': username, 'password': encoded_password, 'email': email, 'last_name': last_name,
                        'first_name': first_name, 'is_superuser': is_superuser, 'is_active': is_active}
         if id:
             user_kwargs['id'] = id
 
-        user_obj = await cls.create(**user_kwargs)
+        try:
+            async with db.transaction():
+                user_obj = await cls.create(**user_kwargs)
+                if PAM_AUTH:
+                    pam_result = await user_obj.pam_create_user(raw_password=password, superuser=is_superuser)
+                    if not pam_result.success:
+                        raise PamError(pam_result)
+        except (PamError, UniqueViolationError) as err_msg:
+            msg = _('User {} creation error.').format(username)
+            await system_logger.error(message=msg,
+                                      entity={'entity_type': EntityType.USER, 'entity_uuid': None},
+                                      user=creator,
+                                      description=err_msg)
+            raise AssertionError(msg)
 
         user_role = 'Superuser' if is_superuser else 'User'
         info_message = _('User {} created with role {}.').format(username, user_role)
@@ -311,9 +418,32 @@ class User(AbstractSortableStatusModel, VeilModel):
     @classmethod
     async def soft_update(cls, id, creator: str, email: str = None, last_name: str = None, first_name: str = None,
                           is_superuser: str = None):
-        update_type, update_dict = await super().soft_update(id, email=email, last_name=last_name,
-                                                             first_name=first_name, is_superuser=is_superuser,
-                                                             creator=creator)
+        try:
+            async with db.transaction():
+                update_type, update_dict = await super().soft_update(id,
+                                                                     email=email,
+                                                                     last_name=last_name,
+                                                                     first_name=first_name,
+                                                                     is_superuser=is_superuser,
+                                                                     creator=creator)
+                if PAM_AUTH:
+                    # Параметры с фронта приходят по 1му, поэтому не страшно
+                    if update_dict.get('is_superuser') is False:
+                        pam_result = await update_type.pam_user_remove_group(PAM_SUPERUSER_GROUP)
+                    elif 'is_superuser' in update_dict and update_dict.get('is_superuser'):
+                        pam_result = await update_type.pam_user_add_group(PAM_SUPERUSER_GROUP)
+                    elif 'email' in update_dict and update_dict.get('email'):
+                        pam_result = await update_type.pam_user_set_email(email=email)
+                    if not pam_result.success:
+                        raise PamError(pam_result)
+
+        except PamError as err_msg:
+            msg = _('User {} update error.').format(update_type.username)
+            await system_logger.error(message=msg,
+                                      entity={'entity_type': EntityType.USER, 'entity_uuid': id},
+                                      user=creator,
+                                      description=err_msg)
+            raise AssertionError(msg)
 
         creator = update_dict.pop('creator')
         desc = str(update_dict)
