@@ -10,4 +10,4 @@ ignore =
     A002,
     # A003 "id" is a python builtin, consider renaming the class attribute
     A003,
-exclude = .git,__pycache__,backend/migrations/versions,local_settings.py,tests
+exclude = .git,__pycache__,backend/migrations/versions,local_settings.py,tests,devops

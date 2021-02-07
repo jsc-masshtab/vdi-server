@@ -35,6 +35,19 @@ AUTH_ENABLED = True
 LOCAL_AUTH = True
 # Авторизация через внешние службы
 EXTERNAL_AUTH = True
+# Авторизация PAM исключает возможность использования LOCAL_AUTH
+PAM_AUTH = not LOCAL_AUTH
+PAM_TASK_TIMEOUT = 5
+PAM_USER_ADD_CMD = '/usr/sbin/vdi_adduser_bi.sh'
+PAM_GROUP_ADD_CMD = '/usr/sbin/vdi_addgroup_bi.sh'
+PAM_USER_EDIT_CMD = '/usr/sbin/vdi_edituser_bi.sh'
+PAM_USER_SET_PASS_CMD = '/usr/sbin/vdi_set_pass_bi.sh'
+PAM_CHECK_IN_GROUP_CMD = '/usr/sbin/vdi_check_in_group_bi.sh'
+PAM_USER_REMOVE_CMD = '/usr/sbin/vdi_remove_user_group_bi.sh'
+PAM_SUDO_CMD = '/usr/bin/sudo'
+PAM_KILL_PROC_CMD = '/usr/sbin/vdi_kill_proc_bi.sh'
+PAM_USER_GROUP = 'vdi-web'
+PAM_SUPERUSER_GROUP = 'vdi-web-admin'
 
 # JWT Options
 # -----------------------------
@@ -80,6 +93,7 @@ LANGUAGE = 'ru'
 # COUNT - Количество записей, которые будут в архиве
 # PATH - Путь до директории с архивами
 # CREATE - Дата установки, для дальнейшего отсчета 3 лет хранения таблиц
+# Для корректного применения предыдущих миграций
 PARTITION = 2
 BY_COUNT = False
 COUNT = 1000

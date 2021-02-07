@@ -598,7 +598,7 @@ class Pool(VeilModel):
         pool_controller = await self.controller_obj
         # Полученный список может оказаться больше, чем кол-во параметров принимаемых VeiL, поэтому делим его на блоки
         # Т.к. список формируется выше, мы предполагаем, что 157 id и запятая уложится в 5809 символов
-        max_ids_length = 5809
+        max_ids_length = 3780
         ids_str_list = wrap(ids_str, width=max_ids_length)
         # теперь получаем данные для каждого блока id
         for ids_str_section in ids_str_list:
@@ -632,7 +632,7 @@ class Pool(VeilModel):
 
         # Полученный список может оказаться больше, чем кол-во параметров принимаемых VeiL, поэтому делим его на блоки
         # Т.к. список формируется выше, мы предполагаем, что 157 id и запятая уложится в 5809 символов
-        max_ids_length = 5809
+        max_ids_length = 3780
         ids_str_list = wrap(ids_str, width=max_ids_length)
 
         # Получаем данные для каждого блока id

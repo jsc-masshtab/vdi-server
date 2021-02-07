@@ -15,7 +15,7 @@ case "$1" in
 
 		# действия только при установке
 		if [ ! -n "$2" ] ; then
-		    exit0
+		    exit 0
 		fi
 
 		exit 0

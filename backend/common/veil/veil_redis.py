@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# import aioredis   # TODO: переехать на aioredis
+# import aioredis   # TODO: переехать на aio-redis
 import asyncio
 from enum import Enum
 import json

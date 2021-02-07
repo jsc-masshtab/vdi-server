@@ -3,13 +3,13 @@ import pytest
 from graphene.test import Client  # noqa
 
 from web_app.tests.utils import execute_scheme
-from web_app.tests.fixtures import fixt_db, fixt_controller, fixt_user_admin, fixt_create_automated_pool, \
-    fixt_auth_context, fixt_veil_client  # noqa
-
+from web_app.tests.fixtures import (fixt_db, fixt_controller, fixt_user_admin,                        # noqa: F401
+                                    fixt_create_automated_pool, fixt_auth_context, fixt_veil_client)  # noqa: F401
 from web_app.controller.resource_schema import resources_schema
 from common.models.controller import Controller
-
-pytestmark = [pytest.mark.asyncio, pytest.mark.resources]
+from common.settings import PAM_AUTH
+pytestmark = [pytest.mark.asyncio, pytest.mark.resources,
+              pytest.mark.skipif(PAM_AUTH, reason="not finished yet")]
 
 
 async def test_request_clusters(fixt_db, snapshot, fixt_controller, fixt_auth_context):  # noqa

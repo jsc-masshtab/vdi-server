@@ -24,8 +24,6 @@ def local_settings_data():
     secret_pattern_s = "{} = '{}'"
     secret_pattern_b = "{} = {}"
     secret_list = list()
-    # TODO: rename settings
-    partition_strings = ["PARTITION = 2", "BY_COUNT = False", "COUNT = 100", "PATH = '/tmp/'", "CREATE = '2020-08-01'"]
 
     for arg in SECRET_ARGS:
         if 'FERNET' in arg:
@@ -36,7 +34,7 @@ def local_settings_data():
             secret_str = secret_pattern_s.format(arg, get_secret_value(20))
         secret_list.append(secret_str)
 
-    return secret_list + partition_strings
+    return secret_list
 
 
 def write_local_settings(txt_data: list, file_name: str = 'local_settings.py'):

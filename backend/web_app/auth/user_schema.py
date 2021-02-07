@@ -127,8 +127,11 @@ class UserType(graphene.ObjectType):
                         date_joined=model_instance.date_joined,
                         date_updated=model_instance.date_updated,
                         last_login=model_instance.last_login,
-                        is_superuser=model_instance.is_superuser,
                         is_active=model_instance.is_active)
+
+    async def resolve_is_superuser(self, _info):
+        user = await User.get(self.id)
+        return await user.superuser()
 
     async def resolve_password(self, _info):
         return '*' * 8  # dummy value for not displayed field

@@ -12,13 +12,15 @@ from common.models.active_tk_connection import ActiveTkConnection
 from common.models.auth import User
 from web_app.tests.utils import execute_scheme
 from web_app.thin_client_api.schema import thin_client_schema
+from common.settings import PAM_AUTH
+from web_app.tests.fixtures import (fixt_db, fixt_user_locked, fixt_user, fixt_user_admin,        # noqa: F401
+                                    fixt_auth_dir, fixt_mapping, fixt_group, fixt_group_role,     # noqa: F401
+                                    fixt_create_static_pool, fixt_controller, fixt_veil_client,   # noqa: F401
+                                    get_auth_context)
 
-from web_app.tests.fixtures import (fixt_db, fixt_user_locked, fixt_user, fixt_user_admin, fixt_auth_dir,  # noqa
-                            fixt_mapping, fixt_group, fixt_group_role, fixt_create_static_pool, # noqa
-                                    fixt_controller, fixt_veil_client, get_auth_context)  # noqa
 
-
-pytestmark = [pytest.mark.asyncio, pytest.mark.ws_requests, pytest.mark.tk]
+pytestmark = [pytest.mark.asyncio, pytest.mark.ws_requests, pytest.mark.tk,
+              pytest.mark.skipif(PAM_AUTH, reason="not finished yet")]
 
 
 class TestTk(VdiHttpTestCase):

@@ -350,7 +350,7 @@ class AuthenticationDirectory(VeilModel, AbstractSortableStatusModel):
 
     @classmethod
     async def get_domain_name(cls, username: str):
-        """Возввращает доменное имя для контроллера AD.
+        """Возвращает доменное имя для контроллера AD.
            Если в username есть доменное имя - вернется оно, если нет - domain_name из записи AD."""
         _, domain_name = extract_domain_from_username(username)
         if not domain_name:
