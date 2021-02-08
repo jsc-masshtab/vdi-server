@@ -1,95 +1,85 @@
-# Набор контейнеров для локальной разработки
-# Удалить все контейнеры и запустить
 # docker system prune -a -f --volumes && docker-compose up
-# Просто запустить
-# docker-compose up
-# список всех контейнеров
-# docker ps -a
-# запустить и войти в шелл конкретного контейнера
-# docker run -it tornado sh
-# скопировать файл из контейнера на хост
-# docker cp vdi-angular:/package-lock.json ~/.
-# обновить клиент без пересборки контейнера
-# docker exec -it vdi-tornado /usr/local/bin/pipenv run pip install --force-reinstall veil_api_client-2.1.1-py3-none-any.whl
 
 version: '3.7'
 services:
-  postgres:
+  vdi-postgres:
     image: postgres:9.6
     container_name: vdi-postgres
-    network_mode: "host"
     environment:
       - POSTGRES_DB=postgres
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
     volumes:
       - ./postgres/:/docker-entrypoint-initdb.d/
-  redis:
+    network_mode: "host"
+  vdi-redis:
     image: redis
     container_name: vdi-redis
-    network_mode: "host"
     command: redis-server --requirepass 4NZ7GpHn4IlshPhb --bind 0.0.0.0
-  memcached:
+    network_mode: "host"
+    depends_on:
+      - vdi-postgres
+  vdi-memcached:
     image: memcached:alpine
     container_name: vdi-memcached
-    network_mode: "host"
     command: sh -c "memcached -m 64"
-  tornado:
+    network_mode: "host"
+    depends_on:
+      - vdi-postgres
+  vdi-tornado:
     build:
       context: ../../
       dockerfile: ./devops/docker/python/Dockerfile
     container_name: vdi-tornado
-    network_mode: "host"
     environment:
       - PYTHONPATH=/opt/veil-vdi/app
     working_dir: /opt/veil-vdi/app
     volumes:
       - ../../backend:/opt/veil-vdi/app
     command: sh -c "sleep 5 && cd common/migrations && pipenv run alembic upgrade head && cd ../../ && pipenv run python web_app/app.py --logging=DEBUG --workers=1"
+    network_mode: "host"
     depends_on:
-      - postgres
-      - redis
-  pool_worker:
+      - vdi-postgres
+      - vdi-redis
+  vdi-pool-worker:
     build:
       context: ../../
       dockerfile: ./devops/docker/python/Dockerfile
-    container_name: vdi-pool_worker
-    network_mode: "host"
+    container_name: vdi-pool-worker
     environment:
       - PYTHONPATH=/opt/veil-vdi/app
     working_dir: /opt/veil-vdi/app
     volumes:
       - ../../backend:/opt/veil-vdi/app
     command: sh -c "sleep 10 && pipenv run python pool_worker/app.py"
+    network_mode: "host"
     depends_on:
-      - tornado
-  ws_listener_worker:
+      - vdi-tornado
+  vdi-ws-listener-worker:
     build:
       context: ../../
       dockerfile: ./devops/docker/python/Dockerfile
-    container_name: vdi-ws_listener_worker
-    network_mode: "host"
+    container_name: vdi-ws-listener-worker
     environment:
       - PYTHONPATH=/opt/veil-vdi/app
     working_dir: /opt/veil-vdi/app
     volumes:
       - ../../backend:/opt/veil-vdi/app
     command: sh -c "sleep 15 && pipenv run python ws_listener_worker/app.py"
+    network_mode: "host"
     depends_on:
-      - tornado
-      - pool_worker
-  node:
+      - vdi-tornado
+      - vdi-pool-worker
+  vdi-angular:
     build:
       context: ../../
       dockerfile: ./devops/docker/angular/Dockerfile
-    network_mode: "host"
     user: "node"
-    environment:
-      - PATH=$PATH:/home/node/app/node_modules/.bin
     container_name: vdi-angular
     working_dir: /home/node/app
     volumes:
       - ../../frontend:/home/node/app/frontend
     command: sh -c "npm start --prefix /home/node/app/frontend/ -- --host=0.0.0.0"
+    network_mode: "host"
     depends_on:
-      - tornado
+      - vdi-tornado

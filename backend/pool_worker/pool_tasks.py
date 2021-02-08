@@ -383,7 +383,7 @@ class PrepareVmTask(AbstractTask):
                 task_completed = False
                 while not task_completed:  # есть ли смысл ждать 20 сек? По идее это выполняется намного быстрее
                     await asyncio.sleep(5)  # VEIL_OPERATION_WAITING
-                    task_completed = await action_task.finished
+                    task_completed = await action_task.is_finished()
 
                 # Если задача выполнена с ошибкой - прерываем выполнение
                 task_success = await action_task.success

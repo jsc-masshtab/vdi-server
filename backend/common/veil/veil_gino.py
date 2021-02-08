@@ -243,7 +243,7 @@ class VeilModel(db.Model):
         task_completed = False
         while not task_completed:
             await asyncio.sleep(VEIL_OPERATION_WAITING)
-            task_completed = await task_instance.finished
+            task_completed = await task_instance.is_finished()
         return True
 
     # virtual

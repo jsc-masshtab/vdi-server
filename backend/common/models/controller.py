@@ -87,29 +87,25 @@ class Controller(AbstractSortableStatusModel, VeilModel):
         query = PoolModel.query.where(PoolModel.controller == self.id)
         return await query.gino.all()
 
-    @property
-    async def ok(self):
+    async def is_ok(self):
         """Проверяем доступность контроллера независимо от его статуса."""
         veil_client = get_veil_client()
         client = veil_client.add_client(server_address=self.address, token=self.token)
-        # Try/ex added 23.11.2020
         try:
-            is_ok = await client.controller().ok
-            if is_ok:
-                return True
+            is_ok = await client.controller(self.id).is_ok()
+            return is_ok
         except Exception:
             await self.remove_client()
-            return False
+        return False
 
     async def check_controller(self):
         """Проверяем доступность контроллера и меняем его статус."""
-        connection_is_ok = await self.ok
+        connection_is_ok = await self.is_ok()
         if connection_is_ok:
             await self.activate()
-            return True
-        if not self.failed:
+        elif not self.failed:
             await self.deactivate()
-        return False
+        return connection_is_ok
 
     @staticmethod
     async def get_addresses(status=Status.ACTIVE):
@@ -158,7 +154,7 @@ class Controller(AbstractSortableStatusModel, VeilModel):
             # Получаем, сохраняем и проверяем допустимость версии
             await controller.get_version()
 
-            connection_is_ok = await controller.ok
+            connection_is_ok = await controller.is_ok()
             if connection_is_ok:
                 await controller.activate()
 

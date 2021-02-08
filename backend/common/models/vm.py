@@ -143,9 +143,9 @@ class Vm(VeilModel):
                 task_completed = False
                 while not task_completed:
                     await asyncio.sleep(VEIL_OPERATION_WAITING)
-                    task_completed = await delete_task.finished
+                    task_completed = await delete_task.is_finished()
                 # Если задача выполнена с ошибкой прокидываем исключение выше
-                task_success = await delete_task.success
+                task_success = await delete_task.is_success()
                 if not task_success:
                     raise AssertionError(
                         _('VM deletion task {} finished with error.').format(delete_task.api_object_id))
@@ -362,7 +362,7 @@ class Vm(VeilModel):
         # Была установлена задача. Необходимо дождаться ее выполнения.
         await self.task_waiting(action_response.task)
         # Если задача выполнена с ошибкой - прерываем выполнение
-        task_success = await action_response.task.success
+        task_success = await action_response.task.is_success()
         if not task_success:
             raise ValueError('Remote task finished with error.')
         return task_success
@@ -437,7 +437,7 @@ class Vm(VeilModel):
             # Была установлена задача. Необходимо дождаться ее выполнения.
             await self.task_waiting(action_response.task)
             # Если задача выполнена с ошибкой - прерываем выполнение
-            task_success = await action_response.task.success
+            task_success = await action_response.task.is_success()
             if not task_success:
                 raise ValueError('Remote access enabling task finished with error.')
         await system_logger.info(message=_('VM {} remote access enabled.').format(self.verbose_name),
@@ -470,7 +470,7 @@ class Vm(VeilModel):
             if action_response.status_code == 202:
                 await self.task_waiting(action_response.task)
             # Если задача выполнена с ошибкой - логгируем
-            task_success = await action_response.task.success
+            task_success = await action_response.task.is_success()
             if not task_success:
                 await system_logger.warning(_('VM {} hostname setting task failed.').format(self.verbose_name),
                                             entity=self.entity)
@@ -534,14 +534,14 @@ class Vm(VeilModel):
             raise ValueError(_('VM {} failed to receive DHCP ip address ({}).').format(self.verbose_name,
                                                                                        domain_entity.guest_agent.ipv4))
 
-        already_in_domain = await domain_entity.in_ad if domain_entity.os_windows else True
+        already_in_domain = await domain_entity.is_in_ad() if domain_entity.os_windows else True
         if active_directory_obj and domain_entity.os_windows and not already_in_domain:
             action_response = await domain_entity.add_to_ad(domain_name=active_directory_obj.domain_name,
                                                             login=active_directory_obj.service_username,
                                                             password=active_directory_obj.password)
             await self.task_waiting(action_response.task)
             # Если задача выполнена с ошибкой - прерываем выполнение
-            task_success = await action_response.task.success
+            task_success = await action_response.task.is_success()
             if not task_success:
                 raise ValueError(_('VM {} domain including task failed.').format(self.verbose_name))
             msg = _('VM {} AD inclusion success.').format(self.verbose_name)
