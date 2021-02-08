@@ -1076,7 +1076,7 @@ class VmTestDomain(graphene.Mutation):
             domain_entity = await vm.vm_client
             await domain_entity.info()
             if domain_entity.os_windows:
-                ok = await domain_entity.in_ad
+                ok = await domain_entity.is_in_ad()
                 return VmTestDomain(ok=ok)
         raise SilentError(_('Only VM with Windows OS can be in domain.'))
 

@@ -81,6 +81,7 @@ VEIL_CACHE_TTL = 1
 VEIL_CACHE_TYPE = 'memcached'
 VEIL_CACHE_SERVER = ('localhost', 11211)
 VEIL_VM_PREPARE_TIMEOUT = 1200.0
+VEIL_MAX_URL_LEN = 6000
 
 # Locale settings
 # -----------------------------
@@ -121,6 +122,7 @@ SSL_CRT_FPATH = os.path.join(SETTINGS_PATH, 'veil_ssl/veil_default.crt')
 
 # Redis settings
 # -----------------------------
+REDIS_HOST = 'localhost'
 REDIS_PORT = 6379
 REDIS_DB = 0
 REDIS_PASSWORD = '4NZ7GpHn4IlshPhb'
@@ -135,4 +137,4 @@ try:
 except ImportError:
     pass
 
-REDIS_URL = 'redis://:{}@localhost:{}/{}'.format(REDIS_PASSWORD, REDIS_PORT, REDIS_DB)
+REDIS_URL = 'redis://:{}@{}:{}/{}'.format(REDIS_PASSWORD, REDIS_HOST, REDIS_PORT, REDIS_DB)

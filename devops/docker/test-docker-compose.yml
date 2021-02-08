@@ -2,7 +2,7 @@
 # docker system prune -a -f --volumes && docker-compose -f test-docker-compose.yml up
 version: '3.4'
 services:
-  test-postgres:
+  vdi-test-postgres:
     image: postgres:9.6
     container_name: vdi-test-postgres
     network_mode: "host"
@@ -12,17 +12,17 @@ services:
       - POSTGRES_PASSWORD=postgres
     volumes:
       - ./postgres/:/docker-entrypoint-initdb.d/
-  test-redis:
+  vdi-test-redis:
     image: redis
     container_name: vdi-test-redis
     network_mode: "host"
     command: redis-server --requirepass 4NZ7GpHn4IlshPhb --bind 0.0.0.0
-  test-memcached:
+  vdi-test-memcached:
     image: memcached:alpine
     container_name: vdi-test-memcached
     network_mode: "host"
     command: sh -c "memcached -m 64"
-  test-veil-server:
+  vdi-test-veil-server:
     build:
       context: ../../
       dockerfile: ./devops/docker/test-veil-server/Dockerfile
@@ -34,7 +34,7 @@ services:
     volumes:
       - ../../test_veil_server:/opt/veil-vdi/app
     command: pipenv run python veil_test_server.py
-  test-tornado:
+  vdi-test-tornado:
     build:
       context: ../../
       dockerfile: ./devops/docker/python/Dockerfile
@@ -47,7 +47,6 @@ services:
       - ../../backend:/opt/veil-vdi/app
     command: sh -c "sleep 5 && cd common/migrations && pipenv run alembic upgrade head && cd ../../web_app/tests && pipenv run pytest --cov=web_app -v"
     depends_on:
-      - test-postgres
-      - test-redis
-      - test-veil-server
-
+      - vdi-test-postgres
+      - vdi-test-redis
+      - vdi-test-veil-server

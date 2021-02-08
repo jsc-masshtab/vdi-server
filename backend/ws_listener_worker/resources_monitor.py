@@ -83,7 +83,7 @@ class ResourcesMonitor:
                 # Если контроллер деактивирован (FAILED), то проверяем его доступность.
                 # Если статус BAD_AUTH, то ничего не делаем. Эту проблему может решить только юзер
                 if controller and controller.status == Status.FAILED:
-                    connection_is_ok = await controller.ok
+                    connection_is_ok = await controller.is_ok()
             except asyncio.CancelledError:
                 raise
             except Exception:  # noqa

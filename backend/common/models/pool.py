@@ -1045,9 +1045,9 @@ class AutomatedPool(db.Model):
                 task_client = pool_controller.veil_client.task(task_id=current_vm_task_id)
                 while not task_completed:
                     await asyncio.sleep(5)
-                    task_completed = await task_client.finished
+                    task_completed = await task_client.is_finished()
                 # Если задача выполнена с ошибкой - прерываем выполнение
-                task_success = await task_client.success
+                task_success = await task_client.is_success()
                 if not task_success:
                     raise VmCreationError(
                         _('VM creation task {} finished with error.').format(task_client.api_object_id))

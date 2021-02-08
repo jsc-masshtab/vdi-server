@@ -43,7 +43,7 @@ export class WebsocketService  {
       this.ws.close()
       this.router.navigate(['login']);
     }
-    
+
     if (this.ws) {
       this.ws.addEventListener<'open'>('open', this.onListenOpen.bind(this));
       this.ws.addEventListener<'message'>('message', this.onListenMessage.bind(this));
@@ -56,7 +56,7 @@ export class WebsocketService  {
 
     this.connect(listener);
 
-    return new Observable(observer => { 
+    return new Observable(observer => {
 
       let sub: Subscription;
 
@@ -65,7 +65,7 @@ export class WebsocketService  {
         .subscribe((message: any) => {
           return observer.next(message);
         });
-        
+
       return () => {
         this.disconnect(listener)
 
