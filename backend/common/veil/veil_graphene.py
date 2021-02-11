@@ -28,3 +28,10 @@ class VeilShortEntityType(VeilResourceType):
     id = graphene.UUID()
     verbose_name = graphene.String()
     status = StatusGraphene()
+
+
+# Tags
+class VeilTagsType(VeilResourceType):
+    verbose_name = graphene.String()
+    colour = graphene.String()
+    slug = graphene.String()

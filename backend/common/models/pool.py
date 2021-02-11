@@ -777,6 +777,17 @@ class Pool(VeilModel):
                                      entity=entity)
         return entity_response.success
 
+    async def backup_vms(self, creator='system'):
+        vms = await self.vms
+
+        backup_response = await asyncio.gather(*[vm_object.backup(creator) for vm_object in vms],
+                                               return_exceptions=True)
+        for response in backup_response:
+            if isinstance(response, ValueError):
+                await system_logger.error(str(response), user='system', entity=self.entity)
+
+        return True
+
 
 class StaticPool(db.Model):
     """На данный момент отсутствует смысловая валидация на уровне таблиц (она в схемах)."""
@@ -972,6 +983,9 @@ class AutomatedPool(db.Model):
             # Update Pool values
             if verbose_name:
                 pool_kwargs['verbose_name'] = verbose_name
+                if old_pool_obj.tag:
+                    pool = await Pool.get(self.id)
+                    await pool.tag_update(tag=old_pool_obj.tag, verbose_name=verbose_name, creator=creator)
             if isinstance(keep_vms_on, bool):
                 pool_kwargs['keep_vms_on'] = keep_vms_on
             if connection_types:
@@ -1009,9 +1023,6 @@ class AutomatedPool(db.Model):
         msg = _('Pool {} has been updated.').format(old_verbose_name)
         await system_logger.info(message=msg, description=str(pool_kwargs), user=creator, entity=self.entity)
 
-        if old_pool_obj.tag:
-            pool = await Pool.get(self.id)
-            await pool.tag_update(tag=old_pool_obj.tag, verbose_name=verbose_name, creator=creator)
         return True
 
     async def add_vm(self):

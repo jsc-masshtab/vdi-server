@@ -49,10 +49,14 @@
               <ng-container *ngIf="!item[obj.property]">{{ obj.type.propertyDepend[1] }}</ng-container>
             </ng-container>
 
-            <ul *ngIf="obj.type.typeDepend === 'tags_array'">
-<!--              <li *ngFor="let item of item[obj.property]"><fa-icon [icon]="['fas', 'circle']" [style.color]="item"></fa-icon></li>-->
-              <li *ngFor="let item of item[obj.property]">{{item}}</li>
-            </ul>
+            <ng-container *ngIf="obj.type.typeDepend === 'tags_array'">
+              <ul *ngFor="let dict of item[obj.property]">
+                <li>
+                  <fa-icon [icon]="['fas', 'circle']" [style.color]="dict['colour']"></fa-icon>
+                  <span> {{ dict['verbose_name'] }}</span>
+              </ul>
+            </ng-container>
+
 
 
           </ng-container>

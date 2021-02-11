@@ -89,6 +89,37 @@ export class VmDetalsPopupComponent {
     }
   ];
 
+  public collectionBackups: object[] = [
+    {
+      title: 'Название',
+      property: 'filename',
+      class: 'name-start',
+      type: 'string',
+      icon: 'file-archive'
+    },
+    {
+      title: 'Пул данных',
+      property: 'datapool',
+      property_lv2: 'verbose_name',
+      type: 'string'
+    },
+    {
+      title: 'Тип',
+      property: 'assignment_type',
+      type: 'string'
+    },
+    {
+      title: 'Размер (Байт)',
+      property: 'size',
+      type: 'string'
+    },
+    {
+      title: 'Статус',
+      property: 'status',
+      type: 'string'
+    },
+  ];
+
   constructor(
     public dialog: MatDialog,
     @Inject(MAT_DIALOG_DATA) public data: any,
@@ -261,6 +292,28 @@ export class VmDetalsPopupComponent {
           request: {
             service: this.service,
             action: 'rebootVm',
+            body: {
+              vm_id: this.data.vm.id,
+              force: true
+            }
+          }
+        }
+      })
+    }
+
+    if (type == 'backup') {
+      this.dialog.open(YesNoFormComponent, {
+        disableClose: true,
+        width: '500px',
+        data: {
+          form: {
+            header: "Подтверждение действия",
+            question: "Создать резервную копию ВМ?",
+            button: "Выполнить"
+          },
+          request: {
+            service: this.service,
+            action: 'backupVm',
             body: {
               vm_id: this.data.vm.id,
               force: true

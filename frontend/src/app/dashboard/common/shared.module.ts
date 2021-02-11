@@ -4,6 +4,7 @@ import { AppRoutingModule } from '../../app-routing.module';
 
 import { MatDialogModule } from '@angular/material/dialog';
 import { StatusPipe, StatusIconPipe } from './pipes/statusEntity.pipes';
+import { AssignmentTypePipe } from './pipes/assignmentType.pipes';
 import { CommonModule } from '@angular/common';
 import { FocusMeDirective } from './directives/focusMe.directive';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
@@ -31,7 +32,8 @@ const DIRECTIVES = [
 
 const PIPES = [
   StatusPipe,
-  StatusIconPipe
+  StatusIconPipe,
+  AssignmentTypePipe
 ];
 
 const FORMS_DINAMIC = [

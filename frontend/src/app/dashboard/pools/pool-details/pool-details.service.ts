@@ -58,6 +58,16 @@ export class PoolDetailsService {
                                                 username
                                             }
                                         }
+                                        backups {
+                                            filename
+                                            datapool {
+                                                id
+                                                verbose_name
+                                            }
+                                            assignment_type
+                                            size
+                                            status
+                                        }
                                     }
                                     controller {
                                         id
@@ -102,7 +112,7 @@ export class PoolDetailsService {
 
         if (type === 'static') {
             return this.service.watchQuery({
-                query: gql`  query pools($pool_id: String) {
+                query: gql`  query pools($pool_id: String, $offset: Int) {
                                 pool(pool_id: $pool_id) {
                                     verbose_name
                                     pool_type
@@ -116,6 +126,28 @@ export class PoolDetailsService {
                                         qemu_state
                                         status
                                         parent_name
+                                        events(offset: $offset) {
+                                            id
+                                            event_type
+                                            message
+                                            description
+                                            created
+                                            user
+                                            read_by {
+                                                id
+                                                username
+                                            }
+                                        }
+                                        backups {
+                                            filename
+                                            datapool {
+                                                id
+                                                verbose_name
+                                            }
+                                            assignment_type
+                                            size
+                                            status
+                                        }
                                     }
                                     controller {
                                         id
@@ -141,7 +173,8 @@ export class PoolDetailsService {
                             }`,
                 variables: {
                     method: 'GET',
-                    pool_id
+                    pool_id,
+                    offset
                 }
             });
         }
@@ -496,6 +529,23 @@ export class PoolDetailsService {
         });
     }
 
+    public backupVms(data) {
+        return this.service.mutate<any>({
+            mutation: gql`
+                mutation pools(
+                    $pool_id: UUID!){
+                    backupVms(pool_id: $pool_id){
+                        ok
+                    }
+                }
+            `,
+            variables: {
+                method: 'POST',
+                ...data
+            }
+        });
+    }
+
     public expandPool(data) {
         return this.service.mutate<any>({
             mutation: gql`
@@ -533,6 +583,7 @@ export class PoolDetailsService {
             }
         });
     }
+
     public suspendVm(data) {
         return this.service.mutate<any>({
             mutation: gql`
@@ -552,6 +603,7 @@ export class PoolDetailsService {
             }
         });
     }
+
     public shutdownVm(data) {
         return this.service.mutate<any>({
             mutation: gql`
@@ -573,6 +625,7 @@ export class PoolDetailsService {
             }
         });
     }
+
     public rebootVm(data) {
         return this.service.mutate<any>({
             mutation: gql`
@@ -582,6 +635,26 @@ export class PoolDetailsService {
                 ){
                     rebootVm(
                         force: $force,
+                        vm_id: $vm_id
+                    ){
+                        ok
+                    }
+                }
+            `,
+            variables: {
+                method: 'POST',
+                ...data
+            }
+        });
+    }
+
+    public backupVm(data) {
+        return this.service.mutate<any>({
+            mutation: gql`
+                mutation pools(
+                    $vm_id: UUID!
+                ){
+                    backupVm(
                         vm_id: $vm_id
                     ){
                         ok
