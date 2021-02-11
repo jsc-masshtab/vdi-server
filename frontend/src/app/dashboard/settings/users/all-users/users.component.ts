@@ -29,6 +29,8 @@ export class UsersComponent extends DetailsMove implements OnInit, OnDestroy {
   is_active = new FormControl(false);
   is_superuser = new FormControl(false);
 
+  queryset: any = {}
+
   public users: [];
   public collection: object[] = [
     {
@@ -103,7 +105,10 @@ export class UsersComponent extends DetailsMove implements OnInit, OnDestroy {
   public addUser() {
     this.dialog.open(AddUserComponent, {
  			disableClose: true,
-      width: '500px'
+      width: '500px',
+      data: {
+        queryset: this.queryset
+      }
     });
   }
 
@@ -134,7 +139,9 @@ export class UsersComponent extends DetailsMove implements OnInit, OnDestroy {
 
     this.waitService.setWait(true);
 
-    this.getUsersSub = this.service.getAllUsers(queryset).valueChanges.pipe(map(data => data.data))
+    this.queryset = queryset
+
+    this.getUsersSub = this.service.getAllUsers(this.queryset).valueChanges.pipe(map(data => data.data))
       .subscribe((data) => {
         this.users = data.users;
         this.count = data.count;

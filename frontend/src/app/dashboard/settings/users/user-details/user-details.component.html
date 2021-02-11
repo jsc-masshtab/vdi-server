@@ -55,7 +55,7 @@
         <span class="name">Добавить разрешение</span>
       </button>
 
-      <button *ngIf="entity?.assigned_permissions?.length" class="btn-control" (click)="removePermission()" title="Удалить разрешение">
+      <button *ngIf="entity?.assigned_permissions?.length && !entity.is_superuser" class="btn-control" (click)="removePermission()" title="Удалить разрешение">
         <fa-icon [icon]="['fas','trash-alt']" size="xs"></fa-icon>
         <span class="name">Отключить разрешение</span>
       </button>

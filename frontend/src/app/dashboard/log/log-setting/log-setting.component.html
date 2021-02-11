@@ -1,0 +1,18 @@
+<div class="control-panel">
+
+  <div class="crumb" [style.marginRight]="'15px'">
+    <fa-icon [icon]="['fas','cog']"></fa-icon>
+    <span class="crumb-name">Настройки журнала</span>
+  </div>
+
+  <div class="control-btns">
+   
+  </div>
+</div>
+
+<div class="components-info">
+  <ng-container *ngIf="item">
+    <vdi-table-into *ngIf="!item.by_count" [item]="item" [collection]="collection_period" (action)="actionEdit($event)"></vdi-table-into>
+    <vdi-table-into *ngIf="item.by_count" [item]="item" [collection]="collection_count" (action)="actionEdit($event)"></vdi-table-into>
+  </ng-container>
+</div>
