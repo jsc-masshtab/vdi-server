@@ -141,7 +141,7 @@ export class UsersComponent extends DetailsMove implements OnInit, OnDestroy {
 
     this.queryset = queryset
 
-    this.getUsersSub = this.service.getAllUsers(this.queryset).valueChanges.pipe(map(data => data.data))
+    this.getUsersSub = this.service.getAllUsers(this.queryset).valueChanges.pipe(map((data: any) => data.data))
       .subscribe((data) => {
         this.users = data.users;
         this.count = data.count;
