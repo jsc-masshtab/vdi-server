@@ -123,4 +123,9 @@
     <fa-icon title="События" [icon]="['fas','gavel']" size="s" [style.color]="'rgb(94, 185, 161)'"></fa-icon>
     <span>Задачи</span>
   </a>
+
+  <a class="top-menu-item item-tree" [@fadeInOut] *ngIf="toggleLog" (click)="routeTo('log/setting')" (keydown.enter)="routeTo('log/setting')" [class.clicked-link]="clickedManage =='setting'"  tabindex="0">
+    <fa-icon title="События" [icon]="['fas','cog']" size="s" [style.color]="'rgb(94, 185, 161)'"></fa-icon>
+    <span>Настройки</span>
+  </a>
 </div>

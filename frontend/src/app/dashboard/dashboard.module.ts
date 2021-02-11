@@ -43,6 +43,7 @@ import { environment } from 'src/environments/environment';
 import { LicenseModule } from './settings/license/license.module';
 import { throwError } from 'rxjs';
 import { ThinClientsModule } from './thin-clients/thin-clients.module';
+import { LogSettingModule } from './log/log-setting/log-setting.module';
 
 
 @NgModule({
@@ -70,6 +71,7 @@ import { ThinClientsModule } from './thin-clients/thin-clients.module';
     AuthenticationDirectoryModule,
     EventsModule,
     TasksModule,
+    LogSettingModule,
     GroupsModule,
     LicenseModule,
     ThinClientsModule

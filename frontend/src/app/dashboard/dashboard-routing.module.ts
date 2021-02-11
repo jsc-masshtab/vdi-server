@@ -33,6 +33,7 @@ import { TasksComponent } from './log/tasks/all-tasks/tasks.component';
 import { ThinClientsComponent } from './thin-clients/thin-clients.component';
 import { ThinClientDetailsComponent } from './thin-clients/thin-client-details/thin-client-details.component';
 import { ThinClientStatisticComponent } from './thin-clients/thin-client-statistic/thin-client-statistic.component';
+import { LogSettingComponent } from './log/log-setting/log-setting.component';
 
 
 const routes: Routes = [
@@ -122,6 +123,10 @@ const routes: Routes = [
       {
         path: 'log/tasks',
         component: TasksComponent
+      },
+      {
+        path: 'log/setting',
+        component: LogSettingComponent
       },
       {
         path: 'resourses/clusters',

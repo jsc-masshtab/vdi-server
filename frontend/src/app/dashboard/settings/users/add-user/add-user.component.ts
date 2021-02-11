@@ -1,6 +1,6 @@
 import { WaitService } from '../../../common/components/single/wait/wait.service';
-import { MatDialogRef } from '@angular/material';
-import { Component } from '@angular/core';
+import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material';
+import { Component, Inject } from '@angular/core';
 import { UsersService } from '../users.service';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 
@@ -26,20 +26,22 @@ export class AddUserComponent {
     });
   }
 
-  constructor(private service: UsersService,
-              private dialogRef: MatDialogRef<AddUserComponent>,
-              private fb: FormBuilder,
-              private waitService: WaitService) {
-                this.initForm();
-              }
-
+  constructor(
+    private service: UsersService,
+    private dialogRef: MatDialogRef<AddUserComponent>,
+    private fb: FormBuilder,
+    private waitService: WaitService,
+    @Inject(MAT_DIALOG_DATA) public data: any
+  ){
+    this.initForm();
+  }
 
   public send() {
     this.checkValid = true;
     if (this.form.status === 'VALID') {
       this.waitService.setWait(true);
       this.service.createUser({ ...this.form.value }).subscribe(() => {
-        this.service.getAllUsers().valueChanges.subscribe();
+        this.service.getAllUsers(this.data.queryset).refetch();
         this.dialogRef.close();
         this.waitService.setWait(false);
       });
