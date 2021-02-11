@@ -427,6 +427,27 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
     });
   }
 
+  public backupVms(): void {
+    this.dialog.open(YesNoFormComponent, {
+      disableClose: true,
+      width: '500px',
+      data: {
+        form: {
+          header: "Подтверждение действия",
+          question: "Создать резервные копии всех виртуальных машин пула?",
+          button: "Выполнить"
+        },
+        request: {
+          service: this.poolService,
+          action: 'backupVms',
+          body: {
+            pool_id: this.idPool
+          }
+        }
+      }
+    })
+  }
+
   public clickVm(vmActive: IPoolVms): void  {
     this.dialog.open(VmDetalsPopupComponent, {
  			disableClose: true,

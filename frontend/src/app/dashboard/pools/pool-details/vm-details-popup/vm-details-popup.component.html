@@ -38,6 +38,10 @@
       <fa-icon [icon]="['fas','fire']"></fa-icon>
     </button>
 
+    <button (click)="action('backup')" class="btn-control" title="Создать резервную копию">
+      <fa-icon [icon]="['fas','clone']"></fa-icon>
+    </button>
+
     <button (click)="test()" title="Проверить нахождение в домене" class="btn-control">
       <fa-icon [class.rotation]="testing" [icon]="['fas','sync-alt']"></fa-icon><span class="name"> </span><fa-icon [icon]="['fas','folder']"></fa-icon>
 
@@ -51,12 +55,14 @@
   <div class="details-row details-static">
     <ul class="details-menu">
       <li (click)="routeTo('info')" [class.active]="menuActive === 'info'" title="Информация"> <fa-icon [icon]="['fas','chart-bar']"></fa-icon><span class="name">Информация</span></li>
-      <li (click)="routeTo('events')" [class.active]="menuActive === 'events'" title="Информация"> <fa-icon [icon]="['fas','comment']"></fa-icon><span class="name">События</span></li>
+      <li (click)="routeTo('backups')" [class.active]="menuActive === 'backups'" title="Резервные копии"> <fa-icon [icon]="['fas','clone']"></fa-icon><span class="name">Резервные копии</span></li>
+      <li (click)="routeTo('events')" [class.active]="menuActive === 'events'" title="События"> <fa-icon [icon]="['fas','comment']"></fa-icon><span class="name">События</span></li>
     </ul>
 
     <div class="details-slide">
       <div class="details-slide-header">
         <ng-container *ngIf="menuActive === 'info'">Информация о вм</ng-container>
+        <ng-container *ngIf="menuActive === 'backups'">Резервные копии вм</ng-container>
         <ng-container *ngIf="menuActive === 'events'">События вм</ng-container>
       </div>
 
@@ -65,7 +71,11 @@
             <vdi-table-into *ngIf="data?.typePool === 'automated'" [item]="data?.vm" [collection]="collectionIntoVmAutomated"></vdi-table-into>
             <vdi-table-into *ngIf="data?.typePool === 'static'" [item]="data?.vm" [collection]="collectionIntoVmStatic"></vdi-table-into>
         </ng-container>
-        
+
+         <ng-container *ngIf="menuActive === 'backups'">
+          <vdi-table-component [data]="data?.vm?.backups" [collection]="collectionBackups"></vdi-table-component>
+        </ng-container>
+
         <ng-container *ngIf="menuActive === 'events'">
           <vdi-table-component class="table-paginator" [height]="'calc(100% - 30px)'" [data]="data?.vm?.events" [collection]="collectionEvents"></vdi-table-component>
           <vdi-pagination [count]="data?.vm?.count" [offset]="offset" (action)="toPage($event)"></vdi-pagination>

@@ -10,7 +10,7 @@ from ldap3.core.exceptions import LDAPException
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy import Enum as AlchemyEnum
 from asyncpg.exceptions import UniqueViolationError
-from veil_api_client import DomainConfiguration
+from veil_api_client import DomainConfiguration, DomainBackupConfiguration
 
 from common.database import db
 from common.settings import VEIL_OPERATION_WAITING, VEIL_VM_PREPARE_TIMEOUT, VEIL_GUEST_AGENT_EXTRA_WAITING
@@ -424,6 +424,26 @@ class Vm(VeilModel):
         else:
             raise SimpleError(_('VM {} is shutdown. Please power this.').format(self.verbose_name), user=creator,
                               entity=self.entity)
+
+    async def backup(self, creator='system'):
+        """Создает бэкап ВМ на Veil"""
+        domain_entity = await self.get_veil_entity()
+        backup_configuration = DomainBackupConfiguration()
+        response = await domain_entity.backup(backup_configuration)
+        if not response.success and response.error_code == 50010:
+            raise ValueError(_('Forbid create backup from a thin clone: {}.').format(self.verbose_name))
+        elif not response.success:
+            raise ValueError(response.error_detail)
+
+        if response.task:
+            await self.task_waiting(response.task)
+            task_success = await response.task.success
+            if not task_success:
+                await system_logger.error(_('Creating backup finished with error.'))
+            else:
+                await system_logger.info(_('Backup for VM {} is created.').format(self.verbose_name), user=creator,
+                                         entity=self.entity)
+            return task_success
 
     async def enable_remote_access(self):
         """Включает удаленный доступ на VM при необходимости."""

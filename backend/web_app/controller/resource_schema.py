@@ -8,7 +8,7 @@
 import graphene
 
 from common.veil.veil_decorators import administrator_required
-from common.veil.veil_graphene import VeilResourceType, VmState, VeilShortEntityType
+from common.veil.veil_graphene import VeilResourceType, VmState, VeilShortEntityType, VeilTagsType
 from common.veil.veil_gino import StatusGraphene
 from common.veil.veil_errors import SilentError
 from veil_api_client import VeilRestPaginator
@@ -170,7 +170,7 @@ class ResourceVmType(VeilResourceType):
     parent_name = graphene.String()
     hostname = graphene.String()
     address = graphene.List(graphene.String)
-    domain_tags = graphene.List(graphene.String)
+    domain_tags = graphene.List(VeilTagsType)
 
     # название пула, в котором ВМ из локальной БД
     pool_name = graphene.String()
@@ -413,7 +413,12 @@ class ResourcesQuery(graphene.ObjectType, ControllerFetcher):
             response = await veil_domain.tags_list()
             resource_data['domain_tags'] = list()
             for tag in response.response:
-                resource_data['domain_tags'].append(tag.verbose_name)
+                resource_data['domain_tags'].append(
+                    {
+                        'colour': tag.colour,
+                        'verbose_name': tag.verbose_name,
+                        'slug': tag.slug
+                    })
             resource_data['controller'] = {'id': controller.id, 'verbose_name': controller.verbose_name}
             resource_data['cpu_count'] = veil_domain.cpu_count
             resource_data['parent_name'] = veil_domain.parent_name

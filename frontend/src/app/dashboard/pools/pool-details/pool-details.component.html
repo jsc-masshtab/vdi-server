@@ -40,6 +40,11 @@
                 <fa-icon [icon]="['fas','trash-alt']" size="xs"></fa-icon>
                 <span class="name">Удалить ВМ</span>
             </button>
+
+            <button (click)="backupVms()" *ngIf="menuActive === 'vms' && pool?.vms?.length" title="Создать резервные копии всех ВМ в пуле" class="btn-control">
+                <fa-icon [icon]="['fas','clone']" size="xs"></fa-icon>
+                <span class="name">Резервное копирование</span>
+            </button>
         </ng-container>
 
         <ng-container *ngIf="menuActive === 'users' && pool">

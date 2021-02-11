@@ -75,7 +75,11 @@ export class VmsService {
                                 start_on_boot
                                 address
                                 hostname
-                                domain_tags
+                                domain_tags {
+                                    colour
+                                    verbose_name
+                                    slug
+                                }
                                 parent_name
                                 resource_pool {
                                     id

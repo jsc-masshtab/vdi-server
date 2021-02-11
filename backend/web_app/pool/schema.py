@@ -24,6 +24,7 @@ from common.veil.veil_redis import request_to_execute_pool_task, execute_delete_
 
 from web_app.auth.user_schema import UserType
 from web_app.controller.schema import ControllerType
+from web_app.controller.resource_schema import ResourceDataPoolType
 from web_app.journal.schema import EventType, EntityType as TypeEntity
 
 from common.settings import POOL_MAX_SIZE, POOL_MIN_SIZE
@@ -56,6 +57,14 @@ class ControllerFetcher:
         return await Controller.query.where(Controller.status == status).gino.all()
 
 
+class VmBackupType(VeilResourceType):
+    filename = graphene.String()
+    size = graphene.Int()
+    assignment_type = graphene.String()
+    datapool = graphene.Field(ResourceDataPoolType)
+    status = StatusGraphene()
+
+
 class VmType(VeilResourceType):
     verbose_name = graphene.String()
     id = graphene.String()
@@ -66,6 +75,7 @@ class VmType(VeilResourceType):
     parent_name = graphene.String(description='Родительская ВМ')
     # qemu_state = graphene.Boolean(description='Состояние гостевого агента')
     qemu_state = VmState(description='Состояние гостевого агента')
+    backups = graphene.List(VmBackupType)
 
     # Список событий для отдельной ВМ и отдельное событие внутри пула
     count = graphene.Int()
@@ -101,6 +111,23 @@ class VmType(VeilResourceType):
             entity=[entity for entity in event.entity],
             **event.__values__)
         return event_type
+
+    async def resolve_backups(self, _info, **kwargs):
+        vm_obj = await Vm.get(self.id)
+        domain_entity = await vm_obj.get_veil_entity()
+        await domain_entity.info()
+        # Список бэкапов ВМ
+        response = await domain_entity.backup_list()
+        veil_backups_list = list()
+        backups_list = list()
+        for data in response.response:
+            backup = data.public_attrs
+            backups_list.append(backup)
+
+        for data in backups_list:
+            veil_backups_list.append(VmBackupType(**data))
+
+        return veil_backups_list
 
 
 class VmInput(graphene.InputObjectType):
@@ -1061,6 +1088,34 @@ class VmSuspend(graphene.Mutation):
         return VmSuspend(ok=False)
 
 
+class VmBackup(graphene.Mutation):
+    class Arguments:
+        vm_id = graphene.UUID(required=True)
+
+    ok = graphene.Boolean()
+
+    @administrator_required
+    async def mutate(self, _info, vm_id, creator, **kwargs):
+        vm = await Vm.get(vm_id)
+        ok = asyncio.ensure_future(vm.backup(creator=creator))
+        return VmBackup(ok=ok)
+
+
+class PoolVmsBackup(graphene.Mutation):
+    class Arguments:
+        pool_id = graphene.UUID(required=True)
+
+    ok = graphene.Boolean()
+
+    @administrator_required
+    async def mutate(self, _info, pool_id, creator, **kwargs):
+
+        pool = await Pool.get(pool_id)
+        ok = await pool.backup_vms(creator=creator)
+
+        return PoolVmsBackup(ok=ok)
+
+
 class VmTestDomain(graphene.Mutation):
     """Проверка нахождения ВМ в домене."""
 
@@ -1107,6 +1162,8 @@ class PoolMutations(graphene.ObjectType):
     shutdownVm = VmShutdown.Field()
     rebootVm = VmReboot.Field()
     suspendVm = VmSuspend.Field()
+    backupVm = VmBackup.Field()
+    backupVms = PoolVmsBackup.Field()
     testDomainVm = VmTestDomain.Field()
 
 
