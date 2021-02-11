@@ -27,7 +27,7 @@ export class ControllerDetailsComponent implements OnInit, OnDestroy {
   public tested: boolean = false;
   public connected: boolean = false;
 
-  public controller = {};
+  public controller: any = {};
 
   public collection: any[] = [
     {
@@ -125,7 +125,7 @@ export class ControllerDetailsComponent implements OnInit, OnDestroy {
       this.subController.unsubscribe();
     }
     this.host = false;
-    this.subController = this.controllerService.getController(this.idController).pipe(map((data) => data.data['controller']))
+    this.subController = this.controllerService.getController(this.idController).pipe(map((data: any) => data.data['controller']))
       .subscribe( (data) => {
         this.controller = data;
         this.host = true;
