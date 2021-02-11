@@ -7,6 +7,7 @@ deb:
 	chown -R root:root root
 	chmod 775 root/DEBIAN/postinst
 	chmod 440 root/etc/sudoers.d/vdiadmin
+	chmod +x root/usr/sbin/vdi_*
 	dpkg-deb -b root .
 
 clean:
