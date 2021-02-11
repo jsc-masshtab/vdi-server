@@ -19,6 +19,15 @@
 
             <span class="ad-status-text" [class.ad-success]="connected" [class.ad-failed]="!connected" *ngIf="tested">{{ connected ? 'Успешно' : 'Нет соединения' }}</span>
           </button>
+
+        <div class="toggle">
+          <label class="switch">
+            <input type="checkbox" [formControl]="is_service" [checked]="controller?.status == 'SERVICE'">
+            <span class="slider"></span>
+            <span class="slider-name" *ngIf="controller?.status != 'SERVICE'">Включить сервисный режим</span>
+            <span class="slider-name" *ngIf="controller?.status == 'SERVICE'">Сервисный режим</span>
+          </label>
+        </div>
     </div>
 
     <div class="details-row">

@@ -57,7 +57,7 @@ class Controller(AbstractSortableStatusModel, VeilModel):
     @property
     def veil_client(self) -> 'VeilClient':
         """Клиент не сломанного контроллера."""
-        if self.failed:
+        if self.stopped:
             return
         veil_client = get_veil_client()
         return veil_client.add_client(server_address=self.address, token=self.token)
@@ -101,9 +101,12 @@ class Controller(AbstractSortableStatusModel, VeilModel):
     async def check_controller(self):
         """Проверяем доступность контроллера и меняем его статус."""
         connection_is_ok = await self.is_ok()
-        if connection_is_ok:
+        if connection_is_ok and self.status != Status.SERVICE:
             await self.activate()
-        elif not self.failed:
+        elif not self.stopped:
+            await self.activate()
+            return True
+        else:
             await self.deactivate()
         return connection_is_ok
 
@@ -239,7 +242,13 @@ class Controller(AbstractSortableStatusModel, VeilModel):
                                  entity=self.entity)
         return status
 
-    async def activate(self):
+    async def enable(self, creator='system'):
+        connection_is_ok = await self.is_ok()
+        if connection_is_ok:
+            return await self.activate(creator=creator)
+        return False
+
+    async def activate(self, creator='system'):
 
         """Активируем не активный контроллер и его пулы."""
         if self.active:
@@ -256,12 +265,12 @@ class Controller(AbstractSortableStatusModel, VeilModel):
         # Возобновляем задачи связанные с контроллером
         send_cmd_to_resume_tasks_associated_with_controller(self.id)
         await system_logger.info(_('Controller {} has been activated.').format(self.verbose_name),
-                                 entity=self.entity)
+                                 entity=self.entity, user=creator)
         return True
 
     async def deactivate(self, status=Status.FAILED):
         """Деактивируем активный контроллер и его пулы."""
-        if self.failed:
+        if self.stopped:
             return False
         # Деактивируем контроллер
         await self.set_status(status)
@@ -276,6 +285,28 @@ class Controller(AbstractSortableStatusModel, VeilModel):
         await system_logger.warning(
             _('Controller {} status has been switched to {}.').format(self.verbose_name, status.name),
             entity=self.entity)
+        return True
+
+    async def service(self, status=Status.SERVICE, creator='system'):
+        """Переводим контроллер и его пулы в статус SERVICE."""
+        # Переводим контроллер в статус сервис
+        await self.set_status(status)
+        # Останавлием задачи связанные с контроллером
+        await send_cmd_to_cancel_tasks_associated_with_controller(controller_id=self.id, wait_for_result=True)
+        # отключаем клиент
+        await self.remove_client()
+        # Переводим пулы в статус сервис
+        pools = await self.pools
+        for pool_obj in pools:
+            await pool_obj.set_status(Status.SERVICE)
+            # Перевод ВМ в статус сервис. Добавлено 08.02.2021 - не факт, что нужно.
+            vms = await pool_obj.vms
+            for vm in vms:
+                if vm.status != Status.RESERVED:
+                    await vm.update(status=Status.SERVICE).apply()
+        await system_logger.info(
+            _('Controller {} status has been switched to {}.').format(self.verbose_name, status.name),
+            entity=self.entity, user=creator)
         return True
 
     def get_resource_type(self):

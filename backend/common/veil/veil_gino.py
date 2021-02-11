@@ -48,6 +48,7 @@ class Status(Enum):
     SERVICE = 'SERVICE'
     PARTIAL = 'PARTIAL'
     BAD_AUTH = 'BAD_AUTH'
+    RESERVED = 'RESERVED'
 
 
 class Role(Enum):
@@ -190,8 +191,8 @@ class VeilModel(db.Model):
         return self.status == Status.ACTIVE
 
     @property
-    def failed(self):
-        return self.status == Status.FAILED or self.status == Status.BAD_AUTH
+    def stopped(self):
+        return self.status == Status.FAILED or self.status == Status.BAD_AUTH or self.status == Status.SERVICE
 
     async def make_failed(self):
         """Переключает в статус FAILED."""

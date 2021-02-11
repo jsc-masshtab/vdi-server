@@ -24,7 +24,7 @@ snapshots['TestVmPermissionsSchema.test_vm_user_permission 2'] = {
     }
 }
 
-snapshots['TestVmStatus.test_service_status 1'] = {
+snapshots['TestVmStatus.test_reserved_status 1'] = {
     'pools': [
         {
             'vms': [
@@ -39,12 +39,12 @@ snapshots['TestVmStatus.test_service_status 1'] = {
     ]
 }
 
-snapshots['TestVmStatus.test_service_status 2'] = {
+snapshots['TestVmStatus.test_reserved_status 2'] = {
     'pools': [
         {
             'vms': [
                 {
-                    'status': 'SERVICE',
+                    'status': 'RESERVED',
                     'user': {
                         'username': None
                     }
@@ -54,7 +54,7 @@ snapshots['TestVmStatus.test_service_status 2'] = {
     ]
 }
 
-snapshots['TestVmStatus.test_service_status 3'] = {
+snapshots['TestVmStatus.test_reserved_status 3'] = {
     'pools': [
         {
             'vms': [

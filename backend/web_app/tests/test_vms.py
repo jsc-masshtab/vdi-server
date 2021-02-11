@@ -58,7 +58,7 @@ class TestVmPermissionsSchema:
 @pytest.mark.usefixtures('fixt_db', 'fixt_user_admin', 'fixt_create_static_pool')
 class TestVmStatus:
 
-    async def test_service_status(self, snapshot, fixt_auth_context):  # noqa
+    async def test_reserved_status(self, snapshot, fixt_auth_context):  # noqa
         # vm = await Vm.get("10913d5d-ba7a-4049-88c5-769267a6cbe4")
         pool_id = await Pool.select('id').gino.scalar()
 
