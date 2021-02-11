@@ -152,4 +152,36 @@ export class ControllersService {
             }
         });
     }
+
+    public serviceController(id: string) {
+        return this.service.mutate<any>({
+            mutation: gql`
+                mutation controllers($id: UUID!) {
+                    serviceController(id_: $id) {
+                        ok
+                    }
+                }
+            `,
+            variables: {
+                method: 'POST',
+                id
+            }
+        });
+    }
+
+    public activateController(id: string) {
+        return this.service.mutate<any>({
+            mutation: gql`
+                mutation controllers($id: UUID!) {
+                    activateController(id_: $id) {
+                        ok
+                    }
+                }
+            `,
+            variables: {
+                method: 'POST',
+                id
+            }
+        });
+    }
 }

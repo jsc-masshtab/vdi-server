@@ -417,6 +417,36 @@ class TestControllerMutation(graphene.Mutation, ControllerFetcher):
         return TestControllerMutation(ok=ok)
 
 
+class ServiceControllerMutation(graphene.Mutation, ControllerFetcher):
+    class Arguments:
+        id_ = graphene.UUID(required=True)
+
+    ok = graphene.Boolean()
+
+    @classmethod
+    @administrator_required
+    async def mutate(cls, root, info, id_, creator):
+        controller = await cls.fetch_by_id(id_)
+        ok = await controller.service(status=Status.SERVICE, creator=creator)
+
+        return ServiceControllerMutation(ok=ok)
+
+
+class ActivateControllerMutation(graphene.Mutation, ControllerFetcher):
+    class Arguments:
+        id_ = graphene.UUID(required=True)
+
+    ok = graphene.Boolean()
+
+    @classmethod
+    @administrator_required
+    async def mutate(cls, root, info, id_, creator):
+        controller = await cls.fetch_by_id(id_)
+        ok = await controller.enable(creator=creator)
+
+        return ActivateControllerMutation(ok=ok)
+
+
 class ControllerQuery(graphene.ObjectType, ControllerFetcher):
     controllers = graphene.List(ControllerType, limit=graphene.Int(default_value=100),
                                 offset=graphene.Int(default_value=0), ordering=graphene.String(),
@@ -450,6 +480,8 @@ class ControllerMutations(graphene.ObjectType):
     updateController = UpdateControllerMutation.Field()
     removeController = RemoveControllerMutation.Field()
     testController = TestControllerMutation.Field()
+    serviceController = ServiceControllerMutation.Field()
+    activateController = ActivateControllerMutation.Field()
 
 
 controller_schema = graphene.Schema(query=ControllerQuery,

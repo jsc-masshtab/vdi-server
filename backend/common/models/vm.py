@@ -182,7 +182,7 @@ class Vm(VeilModel):
         entity = EntityModel.select('id').where(
             (EntityModel.entity_type == self.entity_type) & (EntityModel.entity_uuid == self.id))
         # TODO: временное решение. Скорее всего потом права отзываться будут на конкретные сущности
-        await self.soft_update(id=self.id, status=Status.SERVICE, creator=creator)
+        await self.soft_update(id=self.id, status=Status.RESERVED, creator=creator)
         await system_logger.info(_('VM {} is clear from users.').format(self.verbose_name), user=creator,
                                  entity=self.entity)
         if not users_list:

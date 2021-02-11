@@ -20,7 +20,7 @@
         <div class="table-area-object" [class.cursorTrue]="cursor" (click)="clickRow(item)" tabindex="-1"
           [class.status-bad]="item?.status === 'BAD_AUTH'"
           [class.status-fail]="item?.status === 'FAILED' || item?.status === 'FAIL_CREATING' || item?.status === 'FAIL_DELETING' || item?.status === 'ERROR'"
-          [class.status-halt]="item?.status === 'HALTING' || item?.status === 'CREATING' || item?.status === 'DELETING' || item?.status === 'HERMIT' || item?.status === 'SERVICE' || item?.status === 'PARTIAL'">   <!--строка-->
+          [class.status-halt]="item?.status === 'HALTING' || item?.status === 'CREATING' || item?.status === 'DELETING' || item?.status === 'HERMIT' || item?.status === 'SERVICE' || item?.status === 'PARTIAL' || item?.status === 'RESERVED'">   <!--строка-->
 
           <ng-container *ngFor="let obj of collection">
             <div *ngIf="isExist(obj.property)" class="table-area-property"  [class.name-start]="obj.class == 'name-start'" [class.name-end]="obj.class == 'name-end'"> <!--столбец-->

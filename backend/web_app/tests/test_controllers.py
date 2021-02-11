@@ -6,6 +6,7 @@ from common.models.controller import Controller
 from web_app.tests.utils import execute_scheme
 from web_app.tests.fixtures import fixt_db, fixt_controller, fixt_auth_context, fixt_veil_client  # noqa
 from common.settings import PAM_AUTH
+from common.veil.veil_gino import Status
 
 pytestmark = [pytest.mark.controllers, pytest.mark.skipif(PAM_AUTH, reason="not finished yet")]
 
@@ -135,3 +136,14 @@ async def test_resolve_controller(fixt_db, snapshot, fixt_controller, fixt_auth_
             }""" % controller_id
     executed = await execute_scheme(controller_schema, qu, context=fixt_auth_context)  # noqa
     snapshot.assert_match(executed)
+
+
+@pytest.mark.asyncio
+async def test_service_controller_mode(fixt_db, fixt_controller, fixt_auth_context):  # noqa
+    controller = await Controller.get(fixt_controller['controller_id'])
+
+    await controller.service()
+    assert controller.status == Status.SERVICE
+
+    await controller.activate()
+    assert controller.status == Status.ACTIVE

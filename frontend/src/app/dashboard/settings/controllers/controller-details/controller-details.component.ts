@@ -8,6 +8,7 @@ import { ActivatedRoute, Router, ParamMap } from '@angular/router';
 
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { IEditFormObj } from 'types';
+import {FormControl} from "@angular/forms";
 
 
 @Component({
@@ -18,6 +19,8 @@ import { IEditFormObj } from 'types';
 
 export class ControllerDetailsComponent implements OnInit, OnDestroy {
   private subController: Subscription;
+
+  is_service = new FormControl(false);
 
   public host: boolean = false;
   public testing: boolean = false;
@@ -107,6 +110,14 @@ export class ControllerDetailsComponent implements OnInit, OnDestroy {
         controller_id: this.idController
       }
     });
+
+    this.is_service.valueChanges.subscribe(() => {
+      if (this.is_service.value == false) {
+        this.activateController();
+        } else {
+          this.serviceController();
+        }
+    });
   }
 
   public getController(): void {
@@ -121,6 +132,26 @@ export class ControllerDetailsComponent implements OnInit, OnDestroy {
       },
       () => {
         this.host = true;
+      });
+  }
+
+  public serviceController(): void {
+    if (this.subController) {
+      this.subController.unsubscribe();
+    }
+    this.subController = this.controllerService.serviceController(this.idController).subscribe( (data) => {
+        this.controller = data;
+        this.getController();
+      });
+  }
+
+  public activateController(): void {
+    if (this.subController) {
+      this.subController.unsubscribe();
+    }
+    this.subController = this.controllerService.activateController(this.idController).subscribe( (data) => {
+        this.controller = data;
+        this.getController();
       });
   }
 

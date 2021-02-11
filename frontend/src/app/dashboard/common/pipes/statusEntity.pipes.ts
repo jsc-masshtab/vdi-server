@@ -42,6 +42,8 @@ export class StatusPipe implements PipeTransform {
             translateStatus = 'вышло время';
         } else if (status === 'SERVICE') {
             translateStatus = 'сервисный режим';
+        } else if (status === 'RESERVED') {
+            translateStatus = 'зарезервировано';
         } else if (status === 'UNDEFINED' || status === 'Unknown') {
             translateStatus = 'не найдено';
         } else {
@@ -90,6 +92,10 @@ export class StatusIconPipe implements PipeTransform {
 
             case 'SERVICE':
             translateStatus = 'heartbeat';
+            break;
+
+            case 'RESERVED':
+            translateStatus = 'user';
             break;
 
             default:

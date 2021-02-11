@@ -551,7 +551,8 @@ class Pool(VeilModel):
         # Активация ВМ. Добавлено 02.11.2020 - не факт, что нужно.
         vms = await VmModel.query.where(VmModel.pool_id == pool_id).gino.all()
         for vm in vms:
-            await vm.update(status=Status.ACTIVE).apply()
+            if vm.status != Status.RESERVED:
+                await vm.update(status=Status.ACTIVE).apply()
         await system_logger.info(_('Pool {} has been activated.').format(pool.verbose_name), entity=entity)
         return True
 
@@ -572,7 +573,7 @@ class Pool(VeilModel):
         """Отличается от activate тем, что проверяет предыдущий статус."""
         pool = await Pool.get(pool_id)
         # Т.к. сейчас нет возможности остановить создание пула - не трогаем не активные
-        if pool.status == Status.FAILED:
+        if (pool.status == Status.FAILED) or (pool.status == Status.SERVICE):
             return await pool.activate(pool.id)
         return False
 
@@ -673,7 +674,7 @@ class Pool(VeilModel):
                     qemu_state = guest_utils.get('qemu_state', False) if guest_utils else False
 
             # update status
-            if vm.status != Status.SERVICE:
+            if (vm.status != Status.RESERVED) and (vm.status != Status.SERVICE):
                 await vm.update(status=vm_status).apply()
 
             # Формируем список с информацией по каждой вм в пуле
@@ -696,7 +697,7 @@ class Pool(VeilModel):
             role_owner_query = EntityOwnerModel.select('entity_id').where(
                 (EntityOwnerModel.user_id == user_id) & (EntityOwnerModel.entity_id.in_(entity_query)))
             exists_vm_query = EntityModel.select('entity_uuid').where(EntityModel.id.in_(role_owner_query))
-            await VmModel.update.values(status=Status.SERVICE).where(VmModel.id.in_(exists_vm_query)).gino.status()
+            await VmModel.update.values(status=Status.RESERVED).where(VmModel.id.in_(exists_vm_query)).gino.status()
         ero_query = EntityOwnerModel.delete.where(
             (EntityOwnerModel.user_id == user_id) & (EntityOwnerModel.entity_id.in_(entity_query)))
 
