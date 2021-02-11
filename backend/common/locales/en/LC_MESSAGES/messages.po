@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-02-11 15:02+0300\n"
+"POT-Creation-Date: 2021-02-11 15:40+0300\n"
 "PO-Revision-Date: 2020-07-30 11:25+0300\n"
 "Last-Translator: Emil <emil@emil-pc>\n"
 "Language-Team: English\n"
@@ -101,94 +101,98 @@ msgid "Password of user {username} has been changed."
 msgstr "Password of user {username} has been changed."
 
 #: ../common/models/auth.py:401
+msgid "User {} password setting error."
+msgstr "User {} password setting error."
+
+#: ../common/models/auth.py:408
 msgid "User {} creation error."
 msgstr "User {} creation error."
 
-#: ../common/models/auth.py:409
+#: ../common/models/auth.py:416
 msgid "User {} created with role {}."
 msgstr "User {} created with role {}."
 
-#: ../common/models/auth.py:441
+#: ../common/models/auth.py:448
 msgid "User {} update error."
 msgstr "User {} update error."
 
-#: ../common/models/auth.py:450
+#: ../common/models/auth.py:457
 msgid "Values of user {} is changed."
 msgstr "Values of user {} is changed."
 
-#: ../common/models/auth.py:457 ../common/models/auth.py:461
+#: ../common/models/auth.py:464 ../common/models/auth.py:468
 msgid "Roles: {}."
 msgstr "Roles: {}."
 
-#: ../common/models/auth.py:458
+#: ../common/models/auth.py:465
 #, python-brace-format
 msgid "User {username} has become a superuser."
 msgstr "User {username} has become a superuser."
 
-#: ../common/models/auth.py:462
+#: ../common/models/auth.py:469
 #, python-brace-format
 msgid "User {username} is no longer a superuser."
 msgstr "User {username} is no longer a superuser."
 
-#: ../common/models/auth.py:479
+#: ../common/models/auth.py:486
 #, python-brace-format
 msgid "User {username} has been logged in."
 msgstr "User {username} has been logged in."
 
-#: ../common/models/auth.py:480
+#: ../common/models/auth.py:487
 msgid "Auth type: {}, IP: {}."
 msgstr "Auth type: {}, IP: {}."
 
-#: ../common/models/auth.py:497
+#: ../common/models/auth.py:504
 #, python-brace-format
 msgid "User {username} has been logged out."
 msgstr "User {username} has been logged out."
 
-#: ../common/models/auth.py:595
+#: ../common/models/auth.py:602
 msgid "Group {} is created."
 msgstr "Group {} is created."
 
-#: ../common/models/auth.py:616
+#: ../common/models/auth.py:623
 msgid "Group {} already has permission {}."
 msgstr "Group {} already has permission {}."
 
-#: ../common/models/auth.py:620
+#: ../common/models/auth.py:627
 msgid "Permission(s) {} added to group {}."
 msgstr "Permission(s) {} added to group {}."
 
-#: ../common/models/auth.py:635
+#: ../common/models/auth.py:642
 msgid "Permission(s) {} removed from group {}."
 msgstr "Permission(s) {} removed from group {}."
 
-#: ../common/models/auth.py:639
+#: ../common/models/auth.py:646
 msgid "Group {} permission(s): {}."
 msgstr "Group {} permission(s): {}."
 
-#: ../common/models/auth.py:653
+#: ../common/models/auth.py:660
 msgid "Values of group {} is updated."
 msgstr "Values of group {} is updated."
 
-#: ../common/models/auth.py:667
+#: ../common/models/auth.py:674
 msgid "User {} has been included to group {}."
 msgstr "User {} has been included to group {}."
 
-#: ../common/models/auth.py:671
+#: ../common/models/auth.py:678
 msgid "User {} is already in group {}."
 msgstr "User {} is already in group {}."
 
-#: ../common/models/auth.py:681
+#: ../common/models/auth.py:688
 msgid "Removing user {} from group {}."
 msgstr "Removing user {} from group {}."
 
-#: ../common/models/auth.py:689
+#: ../common/models/auth.py:696
 msgid "Role {} has been set to group {}."
 msgstr "Role {} has been set to group {}."
 
-#: ../common/models/auth.py:693
+#: ../common/models/auth.py:700
 msgid "Group {} has already role {}."
 msgstr "Group {} has already role {}."
 
-#: ../common/models/auth.py:703
+#: ../common/models/auth.py:710
 msgid "Roles: {} was deleted to group {}."
 msgstr "Roles: {} was deleted to group {}."
 
@@ -1270,44 +1274,44 @@ msgstr "{cls}: Controller {name} is already monitored."
 msgid "{cls}: resource monitor for controller {name} connected."
 msgstr "{cls}: resource monitor for controller {name} connected."
 
-#~ msgid "Role {} has been set to pool {}."
-#~ msgstr "Role {} has been set to pool {}."
-
-#~ msgid "Pool already has role."
-#~ msgstr "Pool already has role."
-
-#~ msgid "Roles: {} was deleted to pool {}."
-#~ msgstr "Roles: {} was deleted to pool {}."
-
-#~ msgid "Can`t enable remote access. Check VeiL ECP."
-#~ msgstr "Can`t enable remote access. Check VeiL ECP."
-
-#~ msgid "Active directory sync successful."
-#~ msgstr "Active directory sync successful."
-
-#~ msgid "Removing {} from domain."
-#~ msgstr "Removing {} from domain."
-
-#~ msgid " for user {username}."
-#~ msgstr " for user {username}."
-
-#~ msgid ". IP: {ip}."
-#~ msgstr ". IP: {ip}."
-
-#~ msgid "Number of created VM must be in {}-{} interval."
-#~ msgstr "Number of created VM must be in {}-{} interval."
-
-#~ msgid "VM {} AD group inclusion skipped."
-#~ msgstr "VM {} AD group inclusion skipped."
-
-#~ msgid "VM {} domain container including task failed."
-#~ msgstr "VM {} domain container including task failed."
-
-#~ msgid "Assigning veil groups to {}."
-#~ msgstr "Assigning veil groups to {}."
+#~ msgid "Unknown node {}."
+#~ msgstr "Unknown node {}."
 
 #~ msgid "Controller can`t create VM. Unknown node."
 #~ msgstr "Controller can`t create VM. Unknown node."
 
-#~ msgid "Unknown node {}."
-#~ msgstr "Unknown node {}."
+#~ msgid "Assigning veil groups to {}."
+#~ msgstr "Assigning veil groups to {}."
+
+#~ msgid "VM {} domain container including task failed."
+#~ msgstr "VM {} domain container including task failed."
+
+#~ msgid "VM {} AD group inclusion skipped."
+#~ msgstr "VM {} AD group inclusion skipped."
+
+#~ msgid "Number of created VM must be in {}-{} interval."
+#~ msgstr "Number of created VM must be in {}-{} interval."
+
+#~ msgid ". IP: {ip}."
+#~ msgstr ". IP: {ip}."
+
+#~ msgid " for user {username}."
+#~ msgstr " for user {username}."
+
+#~ msgid "Removing {} from domain."
+#~ msgstr "Removing {} from domain."
+
+#~ msgid "Active directory sync successful."
+#~ msgstr "Active directory sync successful."
+
+#~ msgid "Can`t enable remote access. Check VeiL ECP."
+#~ msgstr "Can`t enable remote access. Check VeiL ECP."
+
+#~ msgid "Roles: {} was deleted to pool {}."
+#~ msgstr "Roles: {} was deleted to pool {}."
+
+#~ msgid "Pool already has role."
+#~ msgstr "Pool already has role."
+
+#~ msgid "Role {} has been set to pool {}."
+#~ msgstr "Role {} has been set to pool {}."
