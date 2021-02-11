@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-02-11 15:02+0300\n"
+"POT-Creation-Date: 2021-02-11 15:40+0300\n"
 "PO-Revision-Date: 2020-07-30 11:25+0300\n"
 "Last-Translator: Emil <emil@emil-pc>\n"
 "Language-Team: Russian\n"
@@ -101,94 +101,98 @@ msgid "Password of user {username} has been changed."
 msgstr "Пароль пользователя {username} изменен."
 
 #: ../common/models/auth.py:401
+msgid "User {} password setting error."
+msgstr "Ошибка задания пароля пользователя {}."
+
+#: ../common/models/auth.py:408
 msgid "User {} creation error."
 msgstr "Ошибка создания пользователя {}."
 
-#: ../common/models/auth.py:409
+#: ../common/models/auth.py:416
 msgid "User {} created with role {}."
 msgstr "Пользователь {} создан с ролью {}."
 
-#: ../common/models/auth.py:441
+#: ../common/models/auth.py:448
 msgid "User {} update error."
 msgstr "Ошибка обновления пользователя {}."
 
-#: ../common/models/auth.py:450
+#: ../common/models/auth.py:457
 msgid "Values of user {} is changed."
 msgstr "Параметры пользователя {} изменены."
 
-#: ../common/models/auth.py:457 ../common/models/auth.py:461
+#: ../common/models/auth.py:464 ../common/models/auth.py:468
 msgid "Roles: {}."
 msgstr "Роли: {}."
 
-#: ../common/models/auth.py:458
+#: ../common/models/auth.py:465
 #, python-brace-format
 msgid "User {username} has become a superuser."
 msgstr "Пользователь {username} стал суперпользователем."
 
-#: ../common/models/auth.py:462
+#: ../common/models/auth.py:469
 #, python-brace-format
 msgid "User {username} is no longer a superuser."
 msgstr "Пользователь {username} перестал быть суперпользователем."
 
-#: ../common/models/auth.py:479
+#: ../common/models/auth.py:486
 #, python-brace-format
 msgid "User {username} has been logged in."
 msgstr "Пользователь {username} вошел в систему."
 
-#: ../common/models/auth.py:480
+#: ../common/models/auth.py:487
 msgid "Auth type: {}, IP: {}."
 msgstr "Тип авторизации: {}, IP: {}."
 
-#: ../common/models/auth.py:497
+#: ../common/models/auth.py:504
 #, python-brace-format
 msgid "User {username} has been logged out."
 msgstr "Пользователь {username} вышел из системы."
 
-#: ../common/models/auth.py:595
+#: ../common/models/auth.py:602
 msgid "Group {} is created."
 msgstr "Группа {} создана."
 
-#: ../common/models/auth.py:616
+#: ../common/models/auth.py:623
 msgid "Group {} already has permission {}."
 msgstr "Группа {} уже имеет разрешение {}."
 
-#: ../common/models/auth.py:620
+#: ../common/models/auth.py:627
 msgid "Permission(s) {} added to group {}."
 msgstr "Разрешения: {} добавлены группе {}."
 
-#: ../common/models/auth.py:635
+#: ../common/models/auth.py:642
 msgid "Permission(s) {} removed from group {}."
 msgstr "Разрешения {} удалены у группы {}."
 
-#: ../common/models/auth.py:639
+#: ../common/models/auth.py:646
 msgid "Group {} permission(s): {}."
 msgstr "Разрешения группы {}: {}."
 
-#: ../common/models/auth.py:653
+#: ../common/models/auth.py:660
 msgid "Values of group {} is updated."
 msgstr "Параметры группы {} обновлены."
 
-#: ../common/models/auth.py:667
+#: ../common/models/auth.py:674
 msgid "User {} has been included to group {}."
 msgstr "Пользователь {} был включен в группу {}."
 
-#: ../common/models/auth.py:671
+#: ../common/models/auth.py:678
 msgid "User {} is already in group {}."
 msgstr "Пользователь {} уже находится в группе {}."
 
-#: ../common/models/auth.py:681
+#: ../common/models/auth.py:688
 msgid "Removing user {} from group {}."
 msgstr "Удаление пользователя {} из группы {}."
 
-#: ../common/models/auth.py:689
+#: ../common/models/auth.py:696
 msgid "Role {} has been set to group {}."
 msgstr "Роль {} добавлена в группу {}."
 
-#: ../common/models/auth.py:693
+#: ../common/models/auth.py:700
 msgid "Group {} has already role {}."
 msgstr "Группе {} уже назначена роль {}."
 
-#: ../common/models/auth.py:703
+#: ../common/models/auth.py:710
 msgid "Roles: {} was deleted to group {}."
 msgstr "Роли: {} удалены из группы {}."
 
@@ -1270,17 +1274,17 @@ msgstr "{cls}: Контроллер {name} уже отслеживается."
 msgid "{cls}: resource monitor for controller {name} connected."
 msgstr "{cls}: монитор ресурсов для контроллера {name} подключен."
 
-#~ msgid "Role {} has been set to pool {}."
-#~ msgstr "Роль {} добавлена в пул {}."
-
-#~ msgid "Pool already has role."
-#~ msgstr "Пул уже имеет роль."
-
-#~ msgid "Roles: {} was deleted to pool {}."
-#~ msgstr "Роли: {} удалены в пуле {}."
+#~ msgid "Unknown node {}."
+#~ msgstr "Неизвестный узел {}."
 
 #~ msgid "Controller can`t create VM. Unknown node."
 #~ msgstr "Контроллер не может создать ВМ. Неизвестный узел."
 
-#~ msgid "Unknown node {}."
-#~ msgstr "Неизвестный узел {}."
+#~ msgid "Roles: {} was deleted to pool {}."
+#~ msgstr "Роли: {} удалены в пуле {}."
+
+#~ msgid "Pool already has role."
+#~ msgstr "Пул уже имеет роль."
+
+#~ msgid "Role {} has been set to pool {}."
+#~ msgstr "Роль {} добавлена в пул {}."

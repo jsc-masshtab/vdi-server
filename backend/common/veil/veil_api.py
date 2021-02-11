@@ -1,9 +1,13 @@
 # -*- coding: utf-8 -*-
 """Обобщенный функционал напрямую связанный с VeiL ECP."""
-from veil_api_client import (VeilClient, VeilClientSingleton, VeilCacheOptions,
-                             VeilRetryConfiguration, VeilDomain, VeilTag)
+from veil_api_client import (VeilClient, VeilClientSingleton,
+                             VeilRetryConfiguration, VeilDomainExt, VeilTag)
 
-from common.settings import VEIL_REQUEST_TIMEOUT, VEIL_CACHE_TTL, VEIL_CACHE_TYPE, VEIL_CACHE_SERVER, VEIL_MAX_URL_LEN
+from common.settings import VEIL_REQUEST_TIMEOUT, VEIL_MAX_URL_LEN
+
+
+class VdiVeilCache:
+    pass
 
 
 class VdiVeilClient(VeilClient):
@@ -20,7 +24,7 @@ class VdiVeilClient(VeilClient):
         api_object = kwargs.get('api_object')
 
         if hasattr(api_object, 'api_object_id') and api_object.api_object_id:
-            if response.status_code == 404 and isinstance(api_object, VeilDomain):
+            if response.status_code == 404 and isinstance(api_object, VeilDomainExt):
                 # TODO: нужно создать событие, что Domain удален на Veil
                 from common.models.vm import Vm
                 vm_object = await Vm.get(api_object.api_object_id)
@@ -42,8 +46,9 @@ class VdiVeilClient(VeilClient):
             # Остановка клиента происходит при деактивации контроллера
 
         if not response.success:
+            from common.log import system_logger
             error_description = 'url: {}\nparams: {}\nresponse:{}'.format(url, params, response.data)
-            raise ValueError(error_description)
+            await system_logger.warning(message='Veil ECP request error.', description=error_description)
 
         return response
 
@@ -56,7 +61,6 @@ class VdiVeilClientSingleton(VeilClientSingleton):
     def __init__(self, retry_opts=None) -> None:
         """Please see help(VeilClientSingleton) for more info."""
         self.__TIMEOUT = VEIL_REQUEST_TIMEOUT
-        self.__CACHE_OPTS = VeilCacheOptions(ttl=VEIL_CACHE_TTL, cache_type=VEIL_CACHE_TYPE, server=VEIL_CACHE_SERVER)
         self.__RETRY_OPTS = retry_opts
 
     def add_client(self, server_address: str, token: str, retry_opts=None) -> 'VeilClient':
