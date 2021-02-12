@@ -328,10 +328,12 @@ class User(AbstractSortableStatusModel, VeilModel):
     async def pam_set_password(self, raw_password: str, creator):
         """Задает пароль пользователя в ОС."""
         result = await veil_auth_class.user_set_password(username=self.username, new_password=raw_password)
-        await system_logger.info(result)
         if result.success:
             info_message = _('Password of user {username} has been changed.').format(username=self.username)
             await system_logger.info(info_message, entity=self.entity, user=creator)
+        else:
+            error_message = _('Password of user {username} has`t been changed.').format(username=self.username)
+            await system_logger.error(error_message, entity=self.entity, user=creator)
         return result.success
 
     async def pam_user_in_group(self, group: str) -> bool:
