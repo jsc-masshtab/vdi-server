@@ -75,6 +75,7 @@ export class TemplatesService {
                                 disastery_enabled
                                 remote_access
                                 spice_stream
+                                status
                                 user_power_state
                                 boot_type
                                 start_on_boot

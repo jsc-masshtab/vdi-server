@@ -40,7 +40,7 @@ export class TemplateDetailsComponent implements OnInit, OnDestroy {
       type: 'string'
     },
     {
-      title: 'Оперативная память',
+      title: 'Оперативная память (Мб)',
       property: 'memory_count',
       type: 'string'
     },
@@ -111,6 +111,11 @@ export class TemplateDetailsComponent implements OnInit, OnDestroy {
     {
       title: 'Тип загрузочного меню',
       property: 'boot_type',
+      type: 'string'
+    },
+    {
+      title: 'Статус',
+      property: 'status',
       type: 'string'
     },
     {

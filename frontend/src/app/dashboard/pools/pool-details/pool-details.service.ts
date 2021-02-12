@@ -72,6 +72,7 @@ export class PoolDetailsService {
                                     controller {
                                         id
                                         address
+                                        verbose_name
                                     }
                                     initial_size
                                     reserve_size
@@ -100,6 +101,7 @@ export class PoolDetailsService {
                                         verbose_name
                                     }
                                     assigned_connection_types
+                                    status
                                 }
                             }`,
                 variables: {
@@ -152,6 +154,7 @@ export class PoolDetailsService {
                                     controller {
                                         id
                                         address
+                                        verbose_name
                                     }
                                     resource_pool_id
                                     users {
@@ -169,6 +172,7 @@ export class PoolDetailsService {
                                         verbose_name
                                     }
                                     assigned_connection_types
+                                    status
                                 }
                             }`,
                 variables: {

@@ -35,12 +35,6 @@ export class ResourcePoolDetailsComponent implements OnInit, OnDestroy {
       type: 'string'
     },
     {
-      title: 'Контроллер',
-      property: 'controller',
-      property_lv2: 'address',
-      type: 'string'
-    },
-    {
       title: 'Ограничение памяти',
       property: 'memory_limit',
       type: 'string'

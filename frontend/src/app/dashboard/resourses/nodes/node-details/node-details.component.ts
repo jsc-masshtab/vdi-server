@@ -47,8 +47,13 @@ export class NodeDetailsComponent implements OnInit, OnDestroy {
       type: 'string'
     },
     {
-      title: 'Оперативная память',
+      title: 'Оперативная память (Мб)',
       property: 'memory_count',
+      type: 'string'
+    },
+    {
+      title: 'CPU',
+      property: 'cpu_count',
       type: 'string'
     },
     {
