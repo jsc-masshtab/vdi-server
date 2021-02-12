@@ -387,8 +387,13 @@ class User(AbstractSortableStatusModel, VeilModel):
                           id=None, is_active=True):
         """Если password будет None, то make_password вернет unusable password"""
         encoded_password = hashers.make_password(password, salt=SECRET_KEY)
-        user_kwargs = {'username': username, 'password': encoded_password, 'email': email, 'last_name': last_name,
-                       'first_name': first_name, 'is_superuser': is_superuser, 'is_active': is_active}
+        user_kwargs = {'username': username, 'password': encoded_password, 'is_active': is_active}
+        if email:
+            user_kwargs['email'] = email
+        if last_name:
+            user_kwargs['last_name'] = last_name
+        if first_name:
+            user_kwargs['first_name'] = first_name
         if id:
             user_kwargs['id'] = id
 

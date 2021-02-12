@@ -34,14 +34,14 @@
     <label class="field">
       <p class="field-name">Имя</p>
       <input type="text" placeholder="..." formControlName="first_name">
-      <ng-container *ngIf="form.hasError('required', 'first_name') && checkValid"><ng-container *ngTemplateOutlet="errorTemp"></ng-container></ng-container>
+<!--      <ng-container *ngIf="form.hasError('required', 'first_name') && checkValid"><ng-container *ngTemplateOutlet="errorTemp"></ng-container></ng-container>-->
       <div class="error" *ngIf="form.hasError('pattern', 'first_name') && checkValid">Имя содержит недопустимые символы</div>
     </label>
 
     <label class="field">
       <p class="field-name">Фамилия</p>
       <input type="text" placeholder="..." formControlName="last_name">
-      <ng-container *ngIf="form.hasError('required', 'last_name') && checkValid"><ng-container *ngTemplateOutlet="errorTemp"></ng-container></ng-container>
+<!--      <ng-container *ngIf="form.hasError('required', 'last_name') && checkValid"><ng-container *ngTemplateOutlet="errorTemp"></ng-container></ng-container>-->
       <div class="error" *ngIf="form.hasError('pattern', 'last_name') && checkValid">Фамилия содержит недопустимые символы</div>
     </label>
 

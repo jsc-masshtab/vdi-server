@@ -32,6 +32,7 @@ export class PoolsService {
                                 vm_amount
                                 pool_type
                                 controller {
+                                    verbose_name
                                     address
                                 }
                                 users {

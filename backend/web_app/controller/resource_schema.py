@@ -317,6 +317,7 @@ class ResourcesQuery(graphene.ObjectType, ControllerFetcher):
         node_info = await controller.veil_client.node(node_id=str(node_id)).info()
         resource_data = node_info.value
         resource_data['controller'] = {'id': controller.id, 'verbose_name': controller.verbose_name}
+        resource_data['cpu_count'] = resource_data['cpu_topology']['cpu_count']
         return ResourceNodeType(**resource_data)
 
     @classmethod

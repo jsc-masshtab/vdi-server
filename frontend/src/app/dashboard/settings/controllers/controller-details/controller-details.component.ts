@@ -86,7 +86,12 @@ export class ControllerDetailsComponent implements OnInit, OnDestroy {
       title: 'Версия',
       property: 'version',
       type: 'string'
-    }
+    },
+    {
+      title: 'Статус',
+      property: 'status',
+      type: 'string'
+    },
   ];
 
   public menuActive: string = 'info';

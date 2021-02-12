@@ -229,9 +229,9 @@ class CreateUserMutation(graphene.Mutation, UserValidator):
     class Arguments:
         username = graphene.String(required=True)
         password = graphene.String(required=True)
-        email = graphene.String(required=True)
-        last_name = graphene.String(required=True)
-        first_name = graphene.String(required=True)
+        email = graphene.String(required=False)
+        last_name = graphene.String(required=False)
+        first_name = graphene.String(required=False)
         is_superuser = graphene.Boolean(default_value=False)
 
     user = graphene.Field(lambda: UserType)

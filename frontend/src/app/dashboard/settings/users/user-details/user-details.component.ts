@@ -134,8 +134,8 @@ export class UserDetailsComponent implements OnInit, OnDestroy {
   ];
 
   constructor(
-    private service: UsersService, 
-    private activatedRoute: ActivatedRoute, 
+    private service: UsersService,
+    private activatedRoute: ActivatedRoute,
     public dialog: MatDialog,
     private router: Router
   ) {}

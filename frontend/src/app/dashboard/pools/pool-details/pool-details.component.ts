@@ -50,6 +50,11 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
     {
       title: 'Контроллер',
       property: 'controller',
+      property_lv2: 'verbose_name'
+    },
+    {
+      title: 'Адрес контроллера',
+      property: 'controller',
       property_lv2: 'address'
     },
     {
@@ -66,6 +71,11 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
       title: 'Пользователи',
       property: 'users',
       type: 'array-length'
+    },
+    {
+      title: 'Статус',
+      property: 'status',
+      type: 'string'
     }
   ];
 
@@ -89,6 +99,11 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
     },
     {
       title: 'Контроллер',
+      property: 'controller',
+      property_lv2: 'verbose_name'
+    },
+    {
+      title: 'Адрес контроллера',
       property: 'controller',
       property_lv2: 'address'
     },
@@ -175,6 +190,11 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
       title: 'Пользователи',
       property: 'users',
       type: 'array-length'
+    },
+    {
+      title: 'Статус',
+      property: 'status',
+      type: 'string'
     }
   ];
 

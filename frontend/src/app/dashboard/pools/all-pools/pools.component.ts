@@ -25,7 +25,7 @@ export class PoolsComponent extends DetailsMove implements OnInit, OnDestroy {
   private socketSub: Subscription;
 
   public pools: [];
-  
+
   public collection: ReadonlyArray<object> = [
     {
       title: 'Название',
@@ -38,7 +38,7 @@ export class PoolsComponent extends DetailsMove implements OnInit, OnDestroy {
     {
       title: 'Контроллер',
       property: 'controller',
-      property_lv2: 'address',
+      property_lv2: 'verbose_name',
       sort: true
     },
     {

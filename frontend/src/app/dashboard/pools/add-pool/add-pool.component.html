@@ -41,7 +41,7 @@
 
       <label class="field">
         <mat-form-field>
-          <mat-label *ngIf="data.connection_types?.length">Выберите тип подключения</mat-label>
+          <mat-label *ngIf="data.connection_types?.length">Выберите типы подключения</mat-label>
 
           <mat-select multiple="true" formControlName="connection_types">
             <mat-option *ngFor="let connection_type of data.connection_types" [value]="connection_type">
@@ -55,7 +55,7 @@
 
       <label class="field">
         <mat-form-field>
-          <mat-label *ngIf="data.controllers?.length">Выберите контроллер</mat-label>
+          <mat-label *ngIf="data.controllers?.length">Выберите Контроллер</mat-label>
           <mat-label *ngIf="!data.controllers?.length">- нет контроллера -</mat-label>
 
           <mat-select formControlName="controller_id">

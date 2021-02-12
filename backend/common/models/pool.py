@@ -858,7 +858,7 @@ class StaticPool(db.Model):
             desc = str(update_dict)
             await system_logger.info(msg, description=desc, user=creator, entity=update_type.entity)
 
-            if old_pool_obj.tag:
+            if old_pool_obj.tag and verbose_name:
                 await update_type.tag_update(tag=old_pool_obj.tag, verbose_name=verbose_name, creator=creator)
 
         return True

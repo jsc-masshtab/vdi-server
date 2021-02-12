@@ -7,6 +7,7 @@ export interface IPool extends ISettingsAutoPool, ISettingsStaticPool  {
   controller: {
     id: string;
     address: string;
+    verbose_name: string;
   };
   users: {
     username: string;

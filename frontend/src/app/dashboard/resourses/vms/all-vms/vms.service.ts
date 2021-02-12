@@ -74,6 +74,7 @@ export class VmsService {
                                 boot_type
                                 start_on_boot
                                 address
+                                status
                                 hostname
                                 domain_tags {
                                     colour

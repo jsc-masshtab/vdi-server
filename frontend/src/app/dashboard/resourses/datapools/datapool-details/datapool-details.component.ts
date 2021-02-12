@@ -49,6 +49,11 @@ export class DatapoolDetailsComponent implements OnInit, OnDestroy {
       title: 'Серверы',
       property: 'nodes_connected',
       type: 'array-length'
+    },
+    {
+      title: 'Статус',
+      property: 'status',
+      type: 'string'
     }
   ];
 
