@@ -51,7 +51,9 @@ class UserValidator(MutationValidation):
         # Проверка на маску
         email_re = re.compile('^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$')  # noqa
         template_name = re.match(email_re, value)
-        if template_name:
+        if len(value) == 0:
+            return None
+        elif template_name:
             return value
         raise AssertError(
             _('Email must contain English characters and/or digits, @ and domain name.'))
