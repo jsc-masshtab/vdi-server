@@ -19,7 +19,7 @@ export class AddUserComponent {
     this.form = this.fb.group({
       username: ['', [Validators.required, Validators.pattern(/^[a-zA-Z0-9-.+]{3,128}$/)]],
       password: ['', [Validators.required, Validators.pattern(/^.+$/)]],
-      email: ['', [Validators.required, Validators.pattern(/^[a-zA-Z0-9.+-]+@[a-zA-Z0-9-]+.[a-zA-Z0-9-.]+$/)]],
+      email: ['', [Validators.pattern(/^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$/)]],
       first_name: ['', [Validators.pattern(/^[a-zA-Zа-яА-ЯёЁ-]{1,32}$/)]],
       last_name: ['', [Validators.pattern(/^[a-zA-Zа-яА-ЯёЁ-]{1,128}$/)]],
       is_superuser: false
