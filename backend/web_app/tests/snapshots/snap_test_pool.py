@@ -17,6 +17,9 @@ snapshots['TestPoolPermissionsSchema.test_pool_user_permission 1'] = {
                 },
                 {
                     'id': 'f9599771-cc95-45e4-9ae5-c8177b796aff'
+                },
+                {
+                    'id': 'f9599771-cc95-45e5-9ae5-c8177b796aff'
                 }
             ]
         }
@@ -30,6 +33,9 @@ snapshots['TestPoolPermissionsSchema.test_pool_user_permission 2'] = {
             'users': [
                 {
                     'id': 'f9599771-cc95-45e4-9ae5-c8177b796aff'
+                },
+                {
+                    'id': 'f9599771-cc95-45e5-9ae5-c8177b796aff'
                 }
             ]
         }
@@ -61,36 +67,6 @@ snapshots['TestPoolPermissionsSchema.test_pool_group_permission 2'] = {
                 {
                     'id': '10913d5d-ba7a-4049-88c5-769267a6cbe4'
                 }
-            ]
-        }
-    }
-}
-
-snapshots['TestPoolPermissionsSchema.test_pool_role_permission 1'] = {
-    'addPoolRole': {
-        'ok': True,
-        'pool': {
-            'assigned_roles': [
-                'ADMINISTRATOR'
-            ],
-            'possible_roles': [
-                'SECURITY_ADMINISTRATOR',
-                'OPERATOR'
-            ]
-        }
-    }
-}
-
-snapshots['TestPoolPermissionsSchema.test_pool_role_permission 2'] = {
-    'removePoolRole': {
-        'ok': True,
-        'pool': {
-            'assigned_roles': [
-                'ADMINISTRATOR'
-            ],
-            'possible_roles': [
-                'SECURITY_ADMINISTRATOR',
-                'OPERATOR'
             ]
         }
     }

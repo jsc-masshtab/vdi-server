@@ -3,13 +3,14 @@ from typing import Optional, Awaitable
 from tornado import websocket
 
 from common.models.auth import UserJwtInfo
+from common.veil.auth.veil_jwt import decode_jwt
+
 from common.log.journal import system_logger
 from common.languages import lang_init
 
 _ = lang_init()
 
 
-# TODO: сделать как работает остальное jwt на проекте.
 class BaseWsHandler(websocket.WebSocketHandler):
 
     def check_origin(self, origin):
@@ -21,14 +22,17 @@ class BaseWsHandler(websocket.WebSocketHandler):
         try:
             token = self.get_query_argument('token')
             if not token:
-                raise RuntimeError('Jwt token must be send as query param')
+                raise AssertionError('Jwt token must be send as query param')
             if token and 'jwt' in token:
                 token = token.replace('jwt', '')
             token = token.replace(' ', '')
 
-            jwt_info = await UserJwtInfo.query.where(UserJwtInfo.token == token).gino.first()
-            if not jwt_info:
-                raise RuntimeError('Auth failed. Wrong jwt token')
+            # token checking
+            payload = decode_jwt(token)
+            payload_user = payload.get('username')
+            is_valid = await UserJwtInfo.check_token(payload_user, token)
+            if not is_valid:
+                raise AssertionError('Auth failed. Wrong jwt token')
 
             return token
 

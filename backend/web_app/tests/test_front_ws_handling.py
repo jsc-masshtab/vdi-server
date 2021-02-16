@@ -2,44 +2,46 @@
 import pytest
 import json
 import tornado
-from tornado.testing import AsyncHTTPTestCase, gen_test
-from web_app.front_ws_api.handlers import VdiFrontWsHandler
+from tornado.testing import gen_test
 from common.settings import PAM_AUTH
 
+from web_app.tests.utils import VdiHttpTestCase
+from web_app.tests.fixtures import (fixt_db, fixt_user_locked, fixt_user, fixt_user_admin,        # noqa: F401
+                                    fixt_auth_dir, fixt_mapping, fixt_group, fixt_group_role,     # noqa: F401
+                                    fixt_create_static_pool, fixt_controller, fixt_veil_client)   # noqa: F401
 
-pytestmark = [pytest.mark.ws_requests, pytest.mark.skipif(PAM_AUTH, reason="not finished yet")]
+
+pytestmark = [pytest.mark.asyncio, pytest.mark.ws_requests, pytest.mark.skipif(PAM_AUTH, reason="not finished yet")]
 
 
-class TestWebSockets(AsyncHTTPTestCase):
+class TestWebSockets(VdiHttpTestCase):
     """Check ws subscription mechanism"""
-    def get_app(self):
-        # dummy application
-        app = tornado.web.Application([
-            (r'/ws/subscriptions/?', VdiFrontWsHandler)
-        ])
-        return app
 
+    @pytest.mark.usefixtures('fixt_db', 'fixt_user_admin')
     @gen_test
-    def test_websocket(self):
-        # self.get_http_port() gives us the port of the running test server.
-        ws_url = "ws://localhost:" + str(self.get_http_port()) + "/ws/subscriptions"
+    async def test_websocket(self):
+        # login
+        (user_name, access_token) = await self.do_login()
 
-        ws_client = yield tornado.websocket.websocket_connect(ws_url)
+        # self.get_http_port() gives us the port of the running test server.
+        ws_url = "ws://localhost:" + str(self.get_http_port()) + "/ws/subscriptions?token={}".format(access_token)
+
+        ws_client = await tornado.websocket.websocket_connect(ws_url)
 
         # valid subscribe
         ws_client.write_message('add /domains/')
-        response = yield ws_client.read_message()
+        response = await ws_client.read_message()
         data = json.loads(response)
         self.assertEqual(data['error'], False)
 
         # valid unsubscribe
         ws_client.write_message('delete /domains/')
-        response = yield ws_client.read_message()
+        response = await ws_client.read_message()
         data = json.loads(response)
         self.assertEqual(data['error'], False)
 
         # invalid subscribe
-        # ws_client.write_message('add /wrong_resource/')
-        # response = yield ws_client.read_message()
-        # data = json.loads(response)
-        # self.assertEqual(data['error'], True)
+        ws_client.write_message('add /wrong_resource/')
+        response = await ws_client.read_message()
+        data = json.loads(response)
+        self.assertEqual(data['error'], True)

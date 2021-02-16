@@ -52,12 +52,12 @@ snapshots['TestUserSchema.test_user_activate 1'] = {
 
 snapshots['TestUserSchema.test_users_get_by_username 1'] = {
     'user': {
-        'email': 'admin@admin.admin',
+        'email': None,
         'first_name': None,
         'is_active': True,
         'is_superuser': True,
         'last_name': None,
-        'username': 'admin'
+        'username': 'vdiadmin'
     }
 }
 
@@ -110,22 +110,11 @@ snapshots['TestUserSchema.test_users_list 1'] = {
             'is_active': True,
             'is_superuser': True,
             'username': 'admin'
+        },
+        {
+            'is_active': True,
+            'is_superuser': True,
+            'username': 'vdiadmin'
         }
     ]
-}
-
-snapshots['TestUserSchema.test_user_permission 1'] = {
-    'removeUserPermission': {
-        'ok': True,
-        'user': {
-            'assigned_permissions': [
-                'SHARED_CLIPBOARD',
-                'FOLDERS_REDIR',
-            ],
-            'possible_permissions': [
-                'USB_REDIR'
-            ],
-            'username': 'test_user'
-        }
-    }
 }
