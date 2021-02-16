@@ -46,7 +46,7 @@ class TestUserSchema:
     async def test_users_get_by_username(self, snapshot, fixt_auth_context):  # noqa
         query = """{
               user (
-                    username: "admin"
+                    username: "vdiadmin"
                     )
                 {
                     username,

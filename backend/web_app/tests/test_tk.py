@@ -25,15 +25,6 @@ pytestmark = [pytest.mark.asyncio, pytest.mark.ws_requests, pytest.mark.tk,
 
 class TestTk(VdiHttpTestCase):
 
-    async def do_login(self):
-        user_name = "test_user_admin"
-        body = {"username": user_name, "password": "veil"}
-        response_dict = await self.get_response(body=json.dumps(body))
-        access_token = response_dict['data']['access_token']
-        self.assertTrue(access_token)
-
-        return user_name, access_token
-
     @pytest.mark.usefixtures('fixt_db', 'fixt_user_admin')
     @gen_test
     async def test_ws_connect_update_disconnect_ok(self):
@@ -42,20 +33,14 @@ class TestTk(VdiHttpTestCase):
         (user_name, access_token) = await self.do_login()
 
         # connect to ws
-        ws_url = "ws://localhost:" + str(self.get_http_port()) + "/ws/client/vdi_server_check"
+        ws_url = "ws://localhost:" + str(self.get_http_port()) + "/ws/client?token={}" \
+                                                                 "&is_conn_init_by_user=0" \
+                                                                 "&veil_connect_version=1.4.1" \
+                                                                 "&tk_os=Linux".format(access_token)
         ws_client = await tornado.websocket.websocket_connect(ws_url)
+        assert ws_client
 
         try:
-            # auth
-            auth_data_dict = {"msg_type": "AUTH", "token": access_token, "veil_connect_version": "1.3.4",
-                              "vm_name": None, "tk_os": 'Linux', 'vm_id': None}
-            ws_client.write_message(json.dumps(auth_data_dict))
-
-            # check success
-            response = await ws_client.read_message()
-            res_data_dict = json.loads(response)
-            self.assertEqual(res_data_dict['msg'], 'Auth success')
-
             # update
             vm_id = "201d318f-d57e-4f1b-9097-93d69f8782dd"
             update_data_dict = {"msg_type": "UPDATED", "vm_id": vm_id, "event": "vm_changed"}

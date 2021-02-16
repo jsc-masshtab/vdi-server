@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from abc import ABC
+import json
 
 from graphql.execution.executors.asyncio import AsyncioExecutor
 from graphql.graphql import graphql
@@ -23,6 +24,15 @@ async def execute_scheme(_schema, query, variables=None, context=None):
 
 
 class VdiHttpTestCase(AsyncHTTPTestCase, ABC):
+
+    async def do_login(self):
+        user_name = "test_user_admin"
+        body = {"username": user_name, "password": "veil"}
+        response_dict = await self.get_response(body=json.dumps(body))
+        access_token = response_dict['data']['access_token']
+        self.assertTrue(access_token)
+
+        return user_name, access_token
 
     def get_app(self):
         return make_app()
