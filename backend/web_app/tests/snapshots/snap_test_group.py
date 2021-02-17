@@ -17,6 +17,10 @@ snapshots['TestGroupSchema.test_group_list 1'] = {
                 {
                     'email': 'admin@admin.admin',
                     'username': 'admin'
+                },
+                {
+                    'email': None,
+                    'username': 'vdiadmin'
                 }
             ],
             'verbose_name': 'test_group_1'
@@ -34,6 +38,10 @@ snapshots['TestGroupSchema.test_group_get_by_id 1'] = {
             {
                 'email': 'admin@admin.admin',
                 'username': 'admin'
+            },
+            {
+                'email': None,
+                'username': 'vdiadmin'
             }
         ],
         'verbose_name': 'test_group_1'
@@ -65,6 +73,9 @@ snapshots['TestGroupSchema.test_group_user_remove 1'] = {
             'possible_users': [
                 {
                     'email': 'admin@admin.admin'
+                },
+                {
+                    'email': None
                 }
             ],
             'verbose_name': 'test_group_1'
@@ -132,36 +143,10 @@ snapshots['TestGroupSchema.test_group_user_add 1'] = {
                 }
             ],
             'possible_users': [
-            ],
-            'verbose_name': 'test_group_1'
-        },
-        'ok': True
-    }
-}
-
-snapshots['TestGroupSchema.test_group_permission 1'] = {
-    'addGroupPermission': {
-        'group': {
-            'assigned_permissions': [
-                'USB_REDIR',
-                'FOLDERS_REDIR'
-            ],
-            'possible_permissions': [
-            ],
-            'verbose_name': 'test_group_1'
-        },
-        'ok': True
-    }
-}
-
-snapshots['TestGroupSchema.test_group_permission 2'] = {
-    'removeGroupPermission': {
-        'group': {
-            'assigned_permissions': [
-                'FOLDERS_REDIR'
-            ],
-            'possible_permissions': [
-                'USB_REDIR'
+                {
+                    'email': None,
+                    'username': 'vdiadmin'
+                }
             ],
             'verbose_name': 'test_group_1'
         },

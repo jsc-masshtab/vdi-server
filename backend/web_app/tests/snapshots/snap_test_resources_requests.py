@@ -67,7 +67,7 @@ snapshots['test_request_nodes 2'] = {
 
 snapshots['test_request_nodes 3'] = {
     'node': {
-        'cpu_count': None,
+        'cpu_count': 24,
         'management_ip': '192.168.11.111',
         'memory_count': 32021,
         'status': 'ACTIVE',

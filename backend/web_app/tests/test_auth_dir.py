@@ -40,7 +40,7 @@ class TestAuthenticationDirectoryCreate:
                       domain_name: "bazalt"
                       dc_str: "bazalt.team"
                       verbose_name: "test"
-                      directory_url: "ldap://192.168.11.180"
+                      directory_url: "ldap://192.168.14.167"
                       connection_type: LDAP
                       directory_type: ActiveDirectory
                     ) {
@@ -59,7 +59,7 @@ class TestAuthenticationDirectoryCreate:
                       domain_name: "bazalt"
                       dc_str: "dc=bazalt,dc=team"
                       verbose_name: "test"
-                      directory_url: "ldap://192.168.11.180"
+                      directory_url: "ldap://192.168.14.167"
                       connection_type: LDAP
                       directory_type: ActiveDirectory
                       service_username: "ad120"
@@ -79,7 +79,7 @@ class TestAuthenticationDirectoryCreate:
                              domain_name: "bazalt"
                              dc_str: "dc=bazalt,dc=team"
                              verbose_name: "test"
-                             directory_url: "ldap://192.168.11.180"
+                             directory_url: "ldap://192.168.14.167"
                              connection_type: LDAP
                              directory_type: ActiveDirectory
                              service_username: "ad120"
@@ -114,7 +114,7 @@ class TestAuthenticationDirectoryCreate:
                       domain_name: "bazalt"
                       dc_str: "bazalt.team"
                       verbose_name: "Bazalt"
-                      directory_url: "ldap://192.168.11.180"
+                      directory_url: "ldap://192.168.14.167"
                       connection_type: LDAP
                       directory_type: ActiveDirectory
                     ) {
