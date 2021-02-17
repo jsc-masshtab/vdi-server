@@ -27,6 +27,7 @@ import { RemoveGroupComponent } from './pool-details/remove-group/remove-group.c
 import { AddGropComponent } from './pool-details/add-group/add-group.component';
 import { PrepareVmPoolComponent } from './pool-details/prepare-vm/prepare-vm.component';
 import { EventsModule } from '../log/events/events.module';
+import { InfoBackupComponent } from "./pool-details/vm-details-popup/info-backup/info-backup.component";
 
 @NgModule({
   declarations: [
@@ -44,6 +45,7 @@ import { EventsModule } from '../log/events/events.module';
     RemoveUserVmComponent,
     RemoveGroupComponent,
     AddGropComponent,
+    InfoBackupComponent,
   ],
   imports: [
     SharedModule,
@@ -76,6 +78,7 @@ import { EventsModule } from '../log/events/events.module';
     RemoveUserVmComponent,
     RemoveGroupComponent,
     AddGropComponent,
+    InfoBackupComponent,
   ],
   exports: [
     PoolsComponent,

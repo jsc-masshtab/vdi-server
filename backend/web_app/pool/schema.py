@@ -58,10 +58,13 @@ class ControllerFetcher:
 
 
 class VmBackupType(VeilResourceType):
+    file_id = graphene.String()
     filename = graphene.String()
     size = graphene.Int()
     assignment_type = graphene.String()
     datapool = graphene.Field(ResourceDataPoolType)
+    node = graphene.Field(VeilShortEntityType)
+    vm_id = graphene.String()
     status = StatusGraphene()
 
 
@@ -75,6 +78,7 @@ class VmType(VeilResourceType):
     parent_name = graphene.String(description='Родительская ВМ')
     # qemu_state = graphene.Boolean(description='Состояние гостевого агента')
     qemu_state = VmState(description='Состояние гостевого агента')
+    node = graphene.Field(VeilShortEntityType)
     backups = graphene.List(VmBackupType)
 
     # Список событий для отдельной ВМ и отдельное событие внутри пула
@@ -122,6 +126,9 @@ class VmType(VeilResourceType):
         backups_list = list()
         for data in response.response:
             backup = data.public_attrs
+            backup['file_id'] = backup['api_object_id']
+            backup['node'] = self.node
+            backup['vm_id'] = self.id
             backups_list.append(backup)
 
         for data in backups_list:
@@ -1136,6 +1143,27 @@ class VmTestDomain(graphene.Mutation):
         raise SilentError(_('Only VM with Windows OS can be in domain.'))
 
 
+class VmRestoreBackup(graphene.Mutation):
+    """Восстановление ВМ из бэкапа."""
+
+    class Arguments:
+        vm_id = graphene.UUID(required=True)
+        file_id = graphene.UUID(required=True)
+        node_id = graphene.UUID(required=True)
+        datapool_id = graphene.UUID()
+
+    ok = graphene.Boolean()
+
+    @administrator_required
+    async def mutate(self, _info, vm_id, file_id, node_id, creator, datapool_id=None, **kwargs):
+        vm = await Vm.get(vm_id)
+        ok = asyncio.ensure_future(vm.restore_backup(file_id=file_id,
+                                                     node_id=node_id,
+                                                     datapool_id=datapool_id,
+                                                     creator=creator))
+        return VmRestoreBackup(ok=ok)
+
+
 # --- --- --- --- ---
 # Schema concatenation
 class PoolMutations(graphene.ObjectType):
@@ -1165,6 +1193,7 @@ class PoolMutations(graphene.ObjectType):
     backupVm = VmBackup.Field()
     backupVms = PoolVmsBackup.Field()
     testDomainVm = VmTestDomain.Field()
+    restoreBackupVm = VmRestoreBackup.Field()
 
 
 pool_schema = graphene.Schema(query=PoolQuery,
