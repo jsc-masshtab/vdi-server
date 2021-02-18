@@ -1,13 +1,87 @@
 # -*- coding: utf-8 -*-
 """Обобщенный функционал напрямую связанный с VeiL ECP."""
-from veil_api_client import (VeilClient, VeilClientSingleton,
-                             VeilRetryConfiguration, VeilDomainExt, VeilTag)
+from typing import Optional
+import json
 
-from common.settings import VEIL_REQUEST_TIMEOUT, VEIL_MAX_URL_LEN
+from pymemcache.client.base import Client as MemcachedClient
+
+from veil_api_client import (VeilClient, VeilClientSingleton,  # noqa: F401
+                             VeilRetryConfiguration, VeilDomainExt, VeilTag,
+                             VeilCacheConfiguration, VeilCacheAbstractClient)
+
+from common.settings import VEIL_REQUEST_TIMEOUT, VEIL_MAX_URL_LEN, VEIL_CACHE_TTL, VEIL_CACHE_SERVER  # noqa: F401
 
 
-class VdiVeilCache:
-    pass
+class DictSerde:
+    """Сериализатор для записи данных ответов в кэш."""
+
+    @staticmethod
+    def serialize(key, value):
+        """Serialize VeilApiResponse to bytes."""
+        if isinstance(value, str):
+            return value.encode('utf-8'), 1
+        elif isinstance(value, dict):
+            return json.dumps(value).encode('utf-8'), 2
+        raise Exception('Unknown serialization format')
+
+    @staticmethod
+    def deserialize(key, value, flags):
+        """Deserialize bytes to dict."""
+        if flags == 1:
+            return value.decode('utf-8')
+        elif flags == 2:
+            return json.loads(value.decode('utf-8'))
+        raise Exception('Unknown serialization format')
+
+
+class VdiCacheClient(VeilCacheAbstractClient):
+    """Реализация пользовательского кэш-клиента."""
+
+    def __init__(self):
+        self.client = MemcachedClient(server=VEIL_CACHE_SERVER, serde=DictSerde())
+
+    async def get_from_cache(self,
+                             veil_api_client_request_cor,
+                             veil_api_client,
+                             method_name,
+                             url: str,
+                             headers: dict,
+                             params: dict,
+                             ssl: bool,
+                             json_data: Optional[dict] = None,
+                             retry_opts: Optional[VeilRetryConfiguration] = None,
+                             ttl: int = 0,
+                             *args, **kwargs):
+        """Метод, который вызовет клиент.
+
+        Внутри себя должен вызывать запись в кэш и чтение из кэша.
+        """
+        # cache key can`t contain spaces
+        # TODO: key must contain params
+        cache_key = url.replace(' ', '')
+        # Получаем данные из кэша
+        cached_result = self.client.get(cache_key)
+        # Если данные есть - возвращаем
+        if cached_result:
+            return cached_result
+        # Если в кэше нет актуальных данных - получаем результат запроса
+        result_dict = await veil_api_client_request_cor(veil_api_client,
+                                                        method_name, url, headers,
+                                                        params, ssl, json_data,
+                                                        retry_opts, *args, **kwargs)
+        # Т.к. ответ преобразуется в VeilApiResponse после вызова этого метода в result_dict будет лежать ответ aiohttp
+        if isinstance(result_dict, dict) and result_dict.get('status_code', 0) in (200, 201, 202, 204):
+            try:
+                # пытаемся сохранить результат в кэш
+                await self.save_to_cache(cache_key, result_dict, ttl)
+            except Exception as ex_msg:
+                print('Failed to save response to cache: {}'.format(ex_msg))
+        # Возвращаем ответ aiohttp
+        return result_dict
+
+    async def save_to_cache(self, key, data, ttl: int):
+        """Сохраняем результат в кэш."""
+        return self.client.set(key, data, expire=ttl)
 
 
 class VdiVeilClient(VeilClient):
@@ -60,6 +134,8 @@ class VdiVeilClientSingleton(VeilClientSingleton):
 
     def __init__(self, retry_opts=None) -> None:
         """Please see help(VeilClientSingleton) for more info."""
+        # TODO: включить после решения проблемы с новым ключом кеширования
+        # self.__CACHE_OPTS = VeilCacheConfiguration(ttl=VEIL_CACHE_TTL, cache_client=VdiCacheClient())
         self.__TIMEOUT = VEIL_REQUEST_TIMEOUT
         self.__RETRY_OPTS = retry_opts
 

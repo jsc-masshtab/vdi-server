@@ -31,7 +31,7 @@ snapshots['TestVmStatus.test_reserved_status 1'] = {
                 {
                     'status': 'ACTIVE',
                     'user': {
-                        'username': 'admin'
+                        'username': 'vdiadmin'
                     }
                 }
             ]
@@ -61,7 +61,7 @@ snapshots['TestVmStatus.test_reserved_status 3'] = {
                 {
                     'status': 'ACTIVE',
                     'user': {
-                        'username': 'admin'
+                        'username': 'vdiadmin'
                     }
                 }
             ]

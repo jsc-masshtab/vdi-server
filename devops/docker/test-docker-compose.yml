@@ -1,5 +1,5 @@
 # Набор контейнеров для прогона тестов
-# docker system prune -a -f --volumes && docker-compose -f test-docker-compose.yml up
+# docker system prune -a -f --volumes && docker-compose -f test-docker-compose.yml up --exit-code-from vdi-test-tornado
 version: '3.4'
 services:
   vdi-test-postgres:
@@ -45,7 +45,7 @@ services:
     working_dir: /opt/veil-vdi/app
     volumes:
       - ../../backend:/opt/veil-vdi/app
-    command: sh -c "sleep 5 && cd common/migrations && pipenv run alembic upgrade head && cd ../../web_app/tests && pipenv run pytest --cov=web_app -v"
+    command: sh -c "sleep 5 && cd common/migrations && pipenv run alembic upgrade head && cd ../../web_app/tests && pipenv run pytest --cov=web_app -vv"
     depends_on:
       - vdi-test-postgres
       - vdi-test-redis

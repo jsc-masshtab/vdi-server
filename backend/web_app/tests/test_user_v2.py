@@ -31,7 +31,7 @@ class TestUserSchema:
 
     async def test_users_get_by_id(self, snapshot, fixt_auth_context):  # noqa
         query = """{
-                user(id: "f9599771-cc95-45e4-9ae5-c8177b796aff"){
+                user(id: "f9599771-cc95-45e5-9ae5-c8177b796aff"){
                     username,
                     email,
                     last_name,
@@ -159,7 +159,7 @@ class TestUserSchema:
 
     async def test_user_activate(self, snapshot, fixt_auth_context):  # noqa
         query = """mutation {
-                        activateUser(id: "f9599771-cc95-45e4-9ae5-c8177b796aff")
+                        activateUser(id: "f9599771-cc95-45e5-9ae5-c8177b796aff")
                         {
                           ok
                         }

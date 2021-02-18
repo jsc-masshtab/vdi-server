@@ -65,7 +65,7 @@ class TestVmStatus:
         vm = await Vm.query.where(pool_id == pool_id).gino.first()
 
         qu = """mutation{
-                assignVmToUser(vm_id: "%s", username: "admin") {ok}}""" % vm.id
+                assignVmToUser(vm_id: "%s", username: "vdiadmin") {ok}}""" % vm.id
 
         executed = await execute_scheme(pool_schema, qu, context=fixt_auth_context)  # noqa
         # snapshot.assert_match(executed)
@@ -89,7 +89,7 @@ class TestVmStatus:
         snapshot.assert_match(executed)
 
         qu = """mutation{
-                assignVmToUser(vm_id: "%s", username: "admin") {ok}}""" % vm.id
+                assignVmToUser(vm_id: "%s", username: "vdiadmin") {ok}}""" % vm.id
 
         executed = await execute_scheme(pool_schema, qu, context=fixt_auth_context)  # noqa
         # snapshot.assert_match(executed)

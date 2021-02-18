@@ -63,12 +63,12 @@ snapshots['TestUserSchema.test_users_get_by_username 1'] = {
 
 snapshots['TestUserSchema.test_users_get_by_id 1'] = {
     'user': {
-        'email': 'admin@admin.admin',
+        'email': None,
         'first_name': None,
         'is_active': True,
         'is_superuser': True,
         'last_name': None,
-        'username': 'admin'
+        'username': 'vdiadmin'
     }
 }
 
@@ -106,11 +106,6 @@ snapshots['TestUserSchema.test_user_role 2'] = {
 
 snapshots['TestUserSchema.test_users_list 1'] = {
     'users': [
-        {
-            'is_active': True,
-            'is_superuser': True,
-            'username': 'admin'
-        },
         {
             'is_active': True,
             'is_superuser': True,

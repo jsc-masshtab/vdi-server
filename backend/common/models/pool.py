@@ -8,7 +8,7 @@ from sqlalchemy import and_, union_all, case, literal_column, desc, text, Enum a
 from sqlalchemy.dialects.postgresql import UUID, ARRAY
 from asyncpg.exceptions import UniqueViolationError
 
-from common.settings import POOL_MAX_CREATE_ATTEMPTS
+from common.settings import POOL_MAX_CREATE_ATTEMPTS, VEIL_MAX_IDS_LEN
 from common.database import db
 from veil_api_client import TagConfiguration, VeilEntityConfiguration
 
@@ -599,8 +599,7 @@ class Pool(VeilModel):
         pool_controller = await self.controller_obj
         # Полученный список может оказаться больше, чем кол-во параметров принимаемых VeiL, поэтому делим его на блоки
         # Т.к. список формируется выше, мы предполагаем, что 157 id и запятая уложится в 5809 символов
-        max_ids_length = 3780
-        ids_str_list = wrap(ids_str, width=max_ids_length)
+        ids_str_list = wrap(ids_str, width=VEIL_MAX_IDS_LEN)
         # теперь получаем данные для каждого блока id
         for ids_str_section in ids_str_list:
             controller_client = pool_controller.veil_client
@@ -610,7 +609,7 @@ class Pool(VeilModel):
                                                                           params={'user_power_state': 'ON',
                                                                                   'ids': ids_str_section})
             if domains_list_response.success and domains_list_response.paginator_results:
-                # Берем первый идентиифкатор
+                # Берем первый идентификатор
                 vm_id = domains_list_response.paginator_results[0].get('id')
                 break
         if not vm_id:
@@ -631,10 +630,7 @@ class Pool(VeilModel):
         ids_str = ','.join(vm_ids)
         pool_controller = await self.controller_obj
 
-        # Полученный список может оказаться больше, чем кол-во параметров принимаемых VeiL, поэтому делим его на блоки
-        # Т.к. список формируется выше, мы предполагаем, что 157 id и запятая уложится в 5809 символов
-        max_ids_length = 3780
-        ids_str_list = wrap(ids_str, width=max_ids_length)
+        ids_str_list = wrap(ids_str, width=VEIL_MAX_IDS_LEN)
 
         # Получаем данные для каждого блока id
         vms_list = list()
@@ -1026,7 +1022,7 @@ class AutomatedPool(db.Model):
 
         return True
 
-    async def add_vm(self):
+    async def add_vm(self, count: int = 1):
         """Try to add VM to pool."""
         verbose_name = self.vm_name_template or await self.verbose_name  # temp???
         pool_controller = await self.controller_obj
@@ -1034,71 +1030,83 @@ class AutomatedPool(db.Model):
         if not pool_controller.veil_client:
             raise AssertionError(_('There is no client for pool {}.').format(self.verbose_name))
 
-        # Перебор имени ВМ на контроллере учитывает индекс в имени. Если ВМ-1 будет занята, то произойдет инкремент
+        # Перебор имени идет на контроле, т.к. мы передаем count - индекс подставит сам вейл
         params = {
-            'verbose_name': verbose_name + '-1',
+            'verbose_name': verbose_name,
             'domain_id': str(self.template_id),
             'resource_pool_id': str(await self.resource_pool_id),
             'controller_id': pool_controller.id,
             'create_thin_clones': self.create_thin_clones,
+            'count': count
         }
 
-        for i in range(self.max_amount_of_create_attempts):  # noqa
-            try:
-                vm_info = await VmModel.copy(**params)
-                current_vm_task_id = vm_info['task_id']
-                await system_logger.debug('VM creation task id: {}'.format(current_vm_task_id))
-            except VmCreationError:
-                break
-
+        try:
+            vm_info = await VmModel.copy(**params)
+            vm_multi_task_id = vm_info['task_id']
+            await system_logger.debug('VM creation task id: {}'.format(vm_multi_task_id))
             # Ожидаем завершения создания ВМ
+            task_completed = False
+            task_client = pool_controller.veil_client.task(task_id=vm_multi_task_id)
+            while not task_completed:
+                await asyncio.sleep(5)
+                task_completed = await task_client.is_finished()
+            # Если задача выполнена с ошибкой - прерываем выполнение
+            task_success = await task_client.is_success()
+            if not task_success:
+                raise VmCreationError(
+                    _('VM creation task {} finished with error.').format(task_client.api_object_id))
+        except VmCreationError:
+            await self.deactivate()
+            raise
+        except asyncio.CancelledError:
+            await self.deactivate()
+            # Если получили CancelledError в ходе ожидания создания вм,
+            # то отменяем на контроллере таску создания вм. (CancelledError бросится например при мягком завершении
+            # процесса воркера)
             try:
-                task_completed = False
-                task_client = pool_controller.veil_client.task(task_id=current_vm_task_id)
-                while not task_completed:
-                    await asyncio.sleep(5)
-                    task_completed = await task_client.is_finished()
-                # Если задача выполнена с ошибкой - прерываем выполнение
-                task_success = await task_client.is_success()
-                if not task_success:
-                    raise VmCreationError(
-                        _('VM creation task {} finished with error.').format(task_client.api_object_id))
-            except asyncio.CancelledError:
-                # Если получили CancelledError в ходе ожидания создания вм,
-                # то отменяем на контроллере таску создания вм. (CancelledError бросится например при мягком завршении
-                # процесса воркера)
-                try:
-                    task_client = pool_controller.veil_client.task(task_id=current_vm_task_id)
-                    await task_client.cancel()
-                except Exception as ex:
-                    msg = _('Fail to cancel VM creation task.')
-                    entity = {'entity_type': EntityType.VM, 'entity_uuid': None}
-                    await system_logger.debug(message=msg, description=str(ex), entity=entity)
-                raise
+                task_client = pool_controller.veil_client.task(task_id=vm_multi_task_id)
+                await task_client.cancel()
+            except Exception as ex:
+                msg = _('Fail to cancel VM creation task.')
+                entity = {'entity_type': EntityType.VM, 'entity_uuid': None}
+                await system_logger.debug(message=msg, description=str(ex), entity=entity)
+            raise
 
-            # Получаем актуальное имя виртуальной машины присвоенное контроллером
-            veil_domain = pool_controller.veil_client.domain(vm_info['id'])
-            await veil_domain.info()
-            # создаем запись в БД
-            pool = await Pool.get(self.id)
-            vm_object = await VmModel.create(id=vm_info['id'],
-                                             pool_id=str(self.id),
-                                             template_id=str(self.template_id),
-                                             created_by_vdi=True,
-                                             verbose_name=veil_domain.verbose_name,
-                                             pool_tag=pool.tag)
+        # Попытки исчерпаны. Создаем ВМ, которые удалось.
+        vm_obj_list = list()
+        # Получаем актуальное имя виртуальной машины присвоенное контроллером
+        domain_connect = pool_controller.veil_client.domain()
 
-            msg = _('VM {} created.').format(veil_domain.verbose_name)
-            description = _('VM {} created and added to the pool {}.').format(veil_domain.verbose_name,
-                                                                              pool.verbose_name)
-            await system_logger.info(message=msg, description=description,
-                                     entity=self.entity)
+        # --
+        ids_str = ','.join(vm_info['ids'])
+        ids_str_list = wrap(ids_str, width=VEIL_MAX_IDS_LEN)
 
-            # Раньше возвращали vm_info, но для упрощения вызова подготовки ВМ заменили на объект модели
-            return vm_object
+        # Получаем данные для каждого блока id
 
-        await self.deactivate()
-        raise VmCreationError(_('Attempts to create VM {} have been exhausted.').format(verbose_name))
+        for ids_str_section in ids_str_list:
+            # Запрашиваем на ECP VeiL данные
+            response = await domain_connect.list(fields=['verbose_name', 'id'],
+                                                 params={'ids': ids_str_section})
+            if response.success:
+                pool = await Pool.get(self.id)
+
+                for domain in response.response:
+                    vm_object = await VmModel.create(id=domain.api_object_id,
+                                                     pool_id=str(self.id),
+                                                     template_id=str(self.template_id),
+                                                     created_by_vdi=True,
+                                                     verbose_name=domain.verbose_name,
+                                                     pool_tag=pool.tag)
+                    vm_obj_list.append(vm_object)
+                    msg = _('VM {} created.').format(domain.verbose_name)
+                    description = _('VM {} created and added to the pool {}.').format(domain.verbose_name,
+                                                                                      pool.verbose_name)
+                    await system_logger.info(message=msg,
+                                             description=description,
+                                             entity=self.entity)
+
+        # Логирование результата созданных ВМ (совпадение количества) происходит выше
+        return vm_obj_list
 
     @property
     async def template_os_type(self):
@@ -1121,12 +1129,10 @@ class AutomatedPool(db.Model):
         # В пуле уже могут быть машины, например, если инициализация пула была прервана из-за завершения приложения.
         num_of_vms_in_pool = await pool.get_vm_amount()
         try:
-            for _i in range(num_of_vms_in_pool, self.initial_size):
-                await self.add_vm()
-                num_of_vms_in_pool += 1
-                # update progress of associated task
-                progress = (num_of_vms_in_pool / self.initial_size) * 100  # from 0 to 100
-                await Task.set_progress_to_task_associated_with_entity(self.id, progress)
+            created_vms = await self.add_vm(count=self.initial_size)
+            num_of_vms_in_pool += len(created_vms)
+            # update progress of associated task
+            await Task.set_progress_to_task_associated_with_entity(self.id, 100)
         except VmCreationError as vm_error:
             # log that we can`t create required initial amount of VMs
             await system_logger.error(_('VM creation error.'), entity=self.entity, description=str(vm_error))

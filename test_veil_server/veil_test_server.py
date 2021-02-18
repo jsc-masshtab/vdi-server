@@ -764,55 +764,25 @@ class VeilTestServer:
         }
         return web.Response(text=json.dumps(res_dict), content_type='application/json', status=202)
 
-    async def get_domains(self, request):
+    @staticmethod
+    async def get_domains(request):
 
         try:
             vm_ids_string = request.rel_url.query['ids']
+            vm_ids = vm_ids_string.split(",")
         except KeyError:
-            vm_ids_string = None
-        # print('!!!vm_ids_string ', vm_ids_string, flush=True)
+            vm_ids = ['e00219af-f99a-4615-bd3c-85646be3e1d5']
 
         results_list = list()
-        if vm_ids_string:
-            vm_ids = vm_ids_string.split(",")
-            for vm_id in vm_ids:
-                results_list.append({
-                    "id": vm_id,
-                    "memory_count": 4096,
-                    "verbose_name": "19_10-thin_child",
-                    "status": "ACTIVE",
-                    "cpu_count": 1,
-                    "vmachine_infs_count": 0,
-                    "vdisks_count": 0,
-                    "vfunctions_count": 0,
-                    "luns_count": 0,
-                    "user_power_state": 3,
-                    "memory_pool": None,
-                    "node": {
-                        "id": "73bb1a4b-c7c3-4e1a-a890-bf0763c928f4",
-                        "verbose_name": "192.168.11.102"
-                    },
-                    "template": False,
-                    "tags": [
 
-                    ],
-                    "hints": 0,
-                    "resource_pool": {
-                        "id": "5a55eee9-4687-48b4-9002-b218eefe29e3",
-                        "verbose_name": "Veil default cluster resource pool"
-                    },
-                    "parent": {
-                        "id": "589ea6af-03b6-4224-a286-48f0e038ce12",
-                        "verbose_name": "19_10"
-                    }
-                }
-                )
+        i = 0
 
-        results_list.append(
-            {
-                "id": "e00219af-f99a-4615-bd3c-85646be3e1d5",
+        for vm_id in vm_ids:
+            i += 1
+            results_list.append({
+                "id": vm_id,
                 "memory_count": 4096,
-                "verbose_name": "19_10-thin_child",
+                "verbose_name": "19_10-thin_child-{}".format(i),
                 "status": "ACTIVE",
                 "cpu_count": 1,
                 "vmachine_infs_count": 0,
@@ -839,7 +809,7 @@ class VeilTestServer:
                     "verbose_name": "19_10"
                 }
             }
-        )
+            )
 
         res_dict = {
             "count": len(results_list),

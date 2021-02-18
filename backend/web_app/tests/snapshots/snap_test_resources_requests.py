@@ -119,7 +119,7 @@ snapshots['test_request_vms 1'] = {
             'id': 'e00219af-f99a-4615-bd3c-85646be3e1d5',
             'memory_count': 4096,
             'status': 'ACTIVE',
-            'verbose_name': '19_10-thin_child'
+            'verbose_name': '19_10-thin_child-1'
         }
     ]
 }
@@ -134,7 +134,7 @@ snapshots['test_request_vms 2'] = {
             'id': 'e00219af-f99a-4615-bd3c-85646be3e1d5',
             'memory_count': 4096,
             'status': 'ACTIVE',
-            'verbose_name': '19_10-thin_child'
+            'verbose_name': '19_10-thin_child-1'
         }
     ]
 }
@@ -157,7 +157,7 @@ snapshots['test_request_templates 1'] = {
             },
             'id': 'e00219af-f99a-4615-bd3c-85646be3e1d5',
             'status': 'ACTIVE',
-            'verbose_name': '19_10-thin_child'
+            'verbose_name': '19_10-thin_child-1'
         }
     ]
 }
@@ -170,7 +170,7 @@ snapshots['test_request_templates 2'] = {
             },
             'id': 'e00219af-f99a-4615-bd3c-85646be3e1d5',
             'status': 'ACTIVE',
-            'verbose_name': '19_10-thin_child'
+            'verbose_name': '19_10-thin_child-1'
         }
     ]
 }
