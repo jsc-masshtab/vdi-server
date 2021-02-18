@@ -32,6 +32,7 @@ class PoolTaskType(Enum):
     POOL_DELETE = 'POOL_DELETE'
     POOL_DECREASE = 'POOL_DECREASE'
     VM_PREPARE = 'VM_PREPARE'
+    VMS_BACKUP = 'VMS_BACKUP'
 
 
 class TaskStatus(Enum):
@@ -65,12 +66,11 @@ class Task(db.Model, AbstractSortableStatusModel):
     message = db.Column(db.Unicode(length=256), nullable=True)
 
     @redis_error_handle
-    def publish_data_in_internal_channel(self, event_type: str, message: str):
+    def publish_data_in_internal_channel(self, event_type: str):
         msg_dict = dict(
             resource=VDI_TASKS_SUBSCRIPTION,
             mgs_type='data',
-            event=event_type,
-            message=message,
+            event=event_type
         )
         msg_dict.update(gino_model_to_json_serializable_dict(self))
         REDIS_CLIENT.publish(INTERNAL_EVENTS_CHANNEL, json.dumps(msg_dict))
@@ -89,6 +89,8 @@ class Task(db.Model, AbstractSortableStatusModel):
             return _('Decreasing of pool {}.').format(entity_name)
         elif self.task_type == PoolTaskType.VM_PREPARE:
             return _('Preparation of vm {}.').format(entity_name)
+        elif self.task_type == PoolTaskType.VMS_BACKUP:
+            return _('Backup of {}.').format(entity_name)
         else:
             return ''
 
@@ -107,21 +109,24 @@ class Task(db.Model, AbstractSortableStatusModel):
         if status == TaskStatus.IN_PROGRESS:
             # set start time
             await self.update(started=func.now()).apply()
-
-        if status == TaskStatus.FINISHED or status == TaskStatus.FAILED:
-            await self.update(resumable=False).apply()
-        if status == TaskStatus.FINISHED or status == TaskStatus.FAILED or status == TaskStatus.CANCELLED:
+        elif status == TaskStatus.FINISHED or status == TaskStatus.FAILED or status == TaskStatus.CANCELLED:
             # set finish time
             await self.update(finished=func.now()).apply()
 
             duration = self.finished - self.started if (self.finished and self.started) else '0000'
             message += _('  Duration: {}.').format(str(duration)[:-3])
 
-        shorten_msg = textwrap.shorten(message, width=256)
+            await self.set_progress(100)
+
+        # resumable
+        if status == TaskStatus.FINISHED or status == TaskStatus.FAILED:
+            await self.update(resumable=False).apply()
+
+        shorten_msg = textwrap.shorten(message, width=356)
         await self.update(message=shorten_msg).apply()
 
         # publish task event
-        self.publish_data_in_internal_channel('UPDATED', shorten_msg)
+        self.publish_data_in_internal_channel('UPDATED')
 
     async def set_progress(self, progress: int):
 
@@ -131,7 +136,7 @@ class Task(db.Model, AbstractSortableStatusModel):
         await self.update(progress=progress).apply()
 
         # publish task event
-        self.publish_data_in_internal_channel('UPDATED', self.message)
+        self.publish_data_in_internal_channel('UPDATED')
 
     async def get_associated_entity_name(self):
         # Запоминаем имя так как его не будет после удаения пула, например.

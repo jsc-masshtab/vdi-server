@@ -5,7 +5,8 @@ import json
 
 import asyncio
 
-from pool_worker.pool_tasks import InitPoolTask, ExpandPoolTask, DecreasePoolTask, DeletePoolTask, PrepareVmTask
+from pool_worker.pool_tasks import InitPoolTask, ExpandPoolTask, DecreasePoolTask, DeletePoolTask, \
+    PrepareVmTask, BackupVmsTask
 from pool_worker.pool_locks import PoolLocks
 
 from common.veil.veil_redis import POOL_TASK_QUEUE, POOL_WORKER_CMD_QUEUE, PoolWorkerCmd, a_redis_lpop
@@ -67,7 +68,7 @@ class PoolTaskManager:
             except asyncio.CancelledError:
                 raise
             except Exception as ex:
-                await system_logger.error('exception:' + str(ex))
+                await system_logger.error(message=_('Can`t launch task.'), description=str(ex))
 
     async def listen_for_commands(self):
         while True:
@@ -157,15 +158,15 @@ class PoolTaskManager:
         # print('launch_task ', task_data_dict, flush=True)
         # get task data
         task_id = task_data_dict['task_id']
-        pool_task_type = task_data_dict['task_type']
+        pool_task = task_data_dict['task_type']
 
         # task execution
-        if pool_task_type == PoolTaskType.POOL_CREATE.name:
+        if pool_task == PoolTaskType.POOL_CREATE.name:
             task = InitPoolTask(self.pool_locks)
             await task.init(task_id, self.task_list)
             task.execute_in_async_task()
 
-        elif pool_task_type == PoolTaskType.POOL_EXPAND.name:
+        elif pool_task == PoolTaskType.POOL_EXPAND.name:
             try:
                 ignore_reserve_size = task_data_dict['ignore_reserve_size']
             except KeyError:
@@ -174,7 +175,7 @@ class PoolTaskManager:
             await task.init(task_id, self.task_list)
             task.execute_in_async_task()
 
-        elif pool_task_type == PoolTaskType.POOL_DECREASE.name:
+        elif pool_task == PoolTaskType.POOL_DECREASE.name:
             try:
                 new_total_size = task_data_dict['new_total_size']
             except KeyError:
@@ -183,7 +184,7 @@ class PoolTaskManager:
             await task.init(task_id, self.task_list)
             task.execute_in_async_task()
 
-        elif pool_task_type == PoolTaskType.POOL_DELETE.name:
+        elif pool_task == PoolTaskType.POOL_DELETE.name:
             try:
                 full = task_data_dict['deletion_full']
             except KeyError:
@@ -192,12 +193,18 @@ class PoolTaskManager:
             await task.init(task_id, self.task_list)
             task.execute_in_async_task()
 
-        elif pool_task_type == PoolTaskType.VM_PREPARE.name:
+        elif pool_task == PoolTaskType.VM_PREPARE.name:
             try:
                 full = task_data_dict['full']
             except KeyError:
                 full = True
             task = PrepareVmTask(full)
+            await task.init(task_id, self.task_list)
+            task.execute_in_async_task()
+
+        elif pool_task == PoolTaskType.VMS_BACKUP.name:
+
+            task = BackupVmsTask(entity_type=task_data_dict['entity_type'], creator=task_data_dict['creator'])
             await task.init(task_id, self.task_list)
             task.execute_in_async_task()
 
