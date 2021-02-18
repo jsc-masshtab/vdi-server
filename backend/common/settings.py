@@ -77,11 +77,14 @@ VEIL_MAX_BODY_SIZE = 1000 * 1024 ^ 3
 VEIL_MAX_CLIENTS = 10
 VEIL_SSL_ON = False
 VEIL_WS_MAX_TIME_TO_WAIT = 60
-VEIL_CACHE_TTL = 1
-VEIL_CACHE_TYPE = 'memcached'
-VEIL_CACHE_SERVER = ('localhost', 11211)
 VEIL_VM_PREPARE_TIMEOUT = 1200.0
 VEIL_MAX_URL_LEN = 6000
+VEIL_MAX_IDS_LEN = 3780
+
+# Cache settings
+# -----------------------------
+VEIL_CACHE_TTL = 1
+VEIL_CACHE_SERVER = ('localhost', 11211)
 
 # Locale settings
 # -----------------------------

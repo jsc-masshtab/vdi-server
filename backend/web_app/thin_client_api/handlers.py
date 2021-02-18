@@ -21,7 +21,7 @@ from common.models.task import PoolTaskType, TaskStatus, Task
 from common.models.active_tk_connection import ActiveTkConnection
 from common.models.auth import User
 
-from veil_api_client import DomainTcpUsb
+from veil_api_client import DomainTcpUsb, VeilRetryConfiguration
 
 from web_app.base_handlers import BaseWsHandler
 
@@ -147,7 +147,7 @@ class PoolGetVm(BaseHandler, ABC):
                                  entity=vm.entity, user=user.username)
         # TODO: использовать veil_domain.hostname вместо IP
 
-        # Определяем адресс и порт в зависимости от протокола
+        # Определяем адрес и порт в зависимости от протокола
         vm_controller = await vm.controller
         # Проверяем наличие клиента у контроллера
         veil_client = vm_controller.veil_client
@@ -164,8 +164,8 @@ class PoolGetVm(BaseHandler, ABC):
                 vm_port = 3389  # default rdp port
 
             except (RuntimeError, IndexError, KeyError):
-                # TODO: записать в журнал какой ответ пришел от вейла
-                response = {'errors': [{'message': _('VM does not support RDP. The controller didn`t provide a VM address.')}]}
+                response = {
+                    'errors': [{'message': _('VM does not support RDP. The controller didn`t provide a VM address.')}]}
                 return await self.log_finish(response)
 
         elif remote_protocol == PoolModel.PoolConnectionTypes.SPICE_DIRECT.name:
@@ -250,7 +250,10 @@ class AttachUsb(BaseHandler, ABC):
 
         # attach request
         try:
-            veil_client = await vm.vm_client
+            vm_controller = await vm.controller
+            veil_client = vm_controller.veil_client.domain(domain_id=vm.id_str,
+                                                           retry_opts=VeilRetryConfiguration(num_of_attempts=0))
+
             if not veil_client:
                 raise AssertionError(_('VM has no api client.'))
             domain_tcp_usb_params = DomainTcpUsb(host=host_address, service=host_port)

@@ -19,17 +19,18 @@ depends_on = None
 def upgrade():
     """Миграция нужна исключительно для заведения пользователя, пока мы не можем это сделать из скрипта установки"""
     # admin - veil
-    sql = """insert
-             into
-             public."user" (id, username, "password", email, is_active, is_superuser)
-             values (
-                'f9599771-cc95-45e4-9ae5-c8177b796aff',
-                'admin',
-                'pbkdf2_sha256$180000$WEBRRFY2i6fIh0IqMVFkfvDcnrEAMBJT7lSJnlBzxwo8RO5CCn$6kR5yASdhj/n6VwXKOaYLfdr2cAXoTedgqrkpngvJhw=',
-                'admin@admin.admin',
-                true,
-                true);"""
-    op.execute(sql)
+    # sql = """insert
+    #          into
+    #          public."user" (id, username, "password", email, is_active, is_superuser)
+    #          values (
+    #             'f9599771-cc95-45e4-9ae5-c8177b796aff',
+    #             'admin',
+    #             'pbkdf2_sha256$180000$WEBRRFY2i6fIh0IqMVFkfvDcnrEAMBJT7lSJnlBzxwo8RO5CCn$6kR5yASdhj/n6VwXKOaYLfdr2cAXoTedgqrkpngvJhw=',
+    #             'admin@admin.admin',
+    #             true,
+    #             true);"""
+    # op.execute(sql)
+    pass
 
 
 def downgrade():

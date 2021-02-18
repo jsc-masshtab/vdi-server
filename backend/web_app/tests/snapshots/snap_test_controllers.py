@@ -58,8 +58,8 @@ snapshots['test_resolve_controller 1'] = {
                         'hints': 2,
                         'file_count': 0,
                         'iso_count': 0}],
-        'vms': [{'id': 'e00219af-f99a-4615-bd3c-85646be3e1d5', 'verbose_name': '19_10-thin_child'}],
-        'templates': [{'id': 'e00219af-f99a-4615-bd3c-85646be3e1d5', 'verbose_name': '19_10-thin_child'}],
+        'vms': [{'id': 'e00219af-f99a-4615-bd3c-85646be3e1d5', 'verbose_name': '19_10-thin_child-1'}],
+        'templates': [{'id': 'e00219af-f99a-4615-bd3c-85646be3e1d5', 'verbose_name': '19_10-thin_child-1'}],
 
     }
 }

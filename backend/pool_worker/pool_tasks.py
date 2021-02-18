@@ -222,10 +222,7 @@ class ExpandPoolTask(AbstractTask):
                     real_amount_to_add = min(max_possible_amount_to_add, automated_pool.increase_step)
                     # add VMs.
                     try:
-
-                        for i in range(0, real_amount_to_add):  # noqa
-                            vm_object = await automated_pool.add_vm()
-                            vm_list.append(vm_object)
+                        vm_list = await automated_pool.add_vm(real_amount_to_add)
                     except VmCreationError as vm_error:
                         await system_logger.error(_('VM creating error.'))
                         await system_logger.debug(vm_error)

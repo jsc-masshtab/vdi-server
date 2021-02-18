@@ -26,7 +26,7 @@ _ = lang_init()
 class Entity(db.Model):
     """
     entity_type: тип сущности из Enum
-    entity_uuid: UUID сущности, если в качестве EntityType указано название таблицы  # TODO: rename to object_uuid
+    entity_uuid: UUID сущности, если в качестве EntityType указано название таблицы
     """
     __tablename__ = 'entity'
 
@@ -260,7 +260,6 @@ class User(AbstractSortableStatusModel, VeilModel):
         """Разблокировать пользователя в ОС."""
         result = await veil_auth_class.user_unlock(username=self.username)
         if result.success:
-            # TODO: изменить сообщение
             info_message = _('User {username} has been activated on Astra.').format(username=self.username)
             await system_logger.info(info_message, entity=self.entity, user=creator)
         else:
@@ -291,7 +290,6 @@ class User(AbstractSortableStatusModel, VeilModel):
         """Заблокировать пользователя в ОС."""
         result = await veil_auth_class.user_lock(username=self.username)
         if result.success:
-            # TODO: изменить сообщение
             info_message = _('User {username} has been deactivated on Astra.').format(username=self.username)
             await system_logger.info(info_message, entity=self.entity, user=creator)
         else:

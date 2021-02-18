@@ -202,18 +202,9 @@ class Vm(VeilModel):
         vm_ids = [str(vm_id) for (vm_id,) in vm_ids_data]
         return vm_ids
 
-    # Deprecated 10.11.2020
-    # @staticmethod
-    # def ready_to_connect(**info) -> bool:
-    #     """Checks parameters indicating availability for connection."""
-    #     # TODO: сейчас не используется?
-    #     user_power_state = info.get('user_power_state', 0)
-    #     remote_access = info.get('remote_access', False)
-    #     return user_power_state != 3 or not remote_access
-
     @staticmethod
     async def copy(verbose_name: str, domain_id: str, resource_pool_id: str, controller_id,
-                   create_thin_clones: bool):
+                   create_thin_clones: bool, count: int = 1):
         """Copy existing VM template for new VM create."""
         from common.models.controller import Controller as ControllerModel
 
@@ -228,8 +219,12 @@ class Vm(VeilModel):
             await system_logger.debug('Trying to create VM on ECP with verbose_name={}'.format(verbose_name))
 
             # Send request to create vm
-            vm_configuration = DomainConfiguration(verbose_name=verbose_name, resource_pool=resource_pool_id,
-                                                   parent=domain_id, thin=create_thin_clones)
+            vm_configuration = DomainConfiguration(verbose_name=verbose_name,
+                                                   resource_pool=resource_pool_id,
+                                                   parent=domain_id,
+                                                   thin=create_thin_clones,
+                                                   count=count)
+
             create_response = await vm_client.create(domain_configuration=vm_configuration)
 
             if create_response.success:
@@ -248,15 +243,9 @@ class Vm(VeilModel):
             await system_logger.debug(message=msg, description=ecp_detail, entity=entity)
 
             # TODO: задействовать новые коды ошибок VeiL
-            # Сейчас только англ, т.к. veil-api-client хардкодит английский язык при обмене
             if ecp_detail and 'not enough free space on data pool' in ecp_detail:
                 await system_logger.debug(_('Controller has not free space for creating new VM.'))
                 raise VmCreationError(_('Not enough free space on data pool.'))
-
-            # elif ecp_detail and 'passed node is not valid' in ecp_detail:
-            #     await system_logger.debug(_('Unknown node {}.').format(node_id))
-            #     raise VmCreationError(_('Controller can`t create VM. Unknown node.'))
-
             elif ecp_detail and inner_retry_count < 10:
                 # Тут мы предполагаем, что контроллер заблокирован выполнением задачи. Это может быть и не так,
                 # но сейчас нам это не понятно.
@@ -270,7 +259,7 @@ class Vm(VeilModel):
             await asyncio.sleep(1)
 
         response_data = create_response.data
-        copy_result = dict(id=response_data.get('entity'),
+        copy_result = dict(ids=vm_configuration.domains_ids,
                            task_id=response_data.get('_task', dict()).get('id'),
                            verbose_name=verbose_name)
         return copy_result
