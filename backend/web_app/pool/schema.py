@@ -1096,24 +1096,34 @@ class VmBackup(graphene.Mutation):
 
     @administrator_required
     async def mutate(self, _info, vm_id, creator, **kwargs):
-        vm = await Vm.get(vm_id)
-        ok = asyncio.ensure_future(vm.backup(creator=creator))
-        return VmBackup(ok=ok)
+
+        await request_to_execute_pool_task(vm_id, PoolTaskType.VMS_BACKUP, entity_type=EntityType.VM.name,
+                                           creator=creator)
+        return VmBackup(ok=True)
 
 
 class PoolVmsBackup(graphene.Mutation):
     class Arguments:
         pool_id = graphene.UUID(required=True)
+        multiple_tasks = graphene.Boolean(default_value=True)
 
     ok = graphene.Boolean()
 
     @administrator_required
-    async def mutate(self, _info, pool_id, creator, **kwargs):
+    async def mutate(self, _info, pool_id, multiple_tasks, creator, **kwargs):
 
-        pool = await Pool.get(pool_id)
-        ok = await pool.backup_vms(creator=creator)
-
-        return PoolVmsBackup(ok=ok)
+        # Launch task for every vm
+        if multiple_tasks:
+            pool = await Pool.get(pool_id)
+            vms = await pool.vms
+            for vm in vms:
+                await request_to_execute_pool_task(vm.id, PoolTaskType.VMS_BACKUP, entity_type=EntityType.VM.name,
+                                                   creator=creator)
+        # one task
+        else:
+            await request_to_execute_pool_task(pool_id, PoolTaskType.VMS_BACKUP, entity_type=EntityType.POOL.name,
+                                               creator=creator)
+        return PoolVmsBackup(ok=True)
 
 
 class VmTestDomain(graphene.Mutation):
