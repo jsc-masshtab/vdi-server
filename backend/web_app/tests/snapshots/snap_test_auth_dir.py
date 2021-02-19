@@ -44,7 +44,7 @@ snapshots['TestAuthenticationDirectoryQuery.test_auth_dirs_list 1'] = {
 snapshots['TestAuthenticationDirectoryQuery.test_auth_dir_get_by_id 1'] = {
     'auth_dir': {
         'connection_type': 'LDAP',
-        'dc_str': 'dc=bazalt,dc=team',
+        'dc_str': 'dc=bazalt,dc=local',
         'description': None,
         'directory_type': 'ActiveDirectory',
         'directory_url': 'ldap://192.168.14.167',
@@ -204,32 +204,32 @@ snapshots['TestAuthenticationDirectoryQuery.test_auth_dir_get_possible_ad_groups
         'id': '10913d5d-ba7a-4049-88c5-769267a6cbe5',
         'possible_ad_groups': [
             {
-                'ad_guid': '4f49ec7e-88a3-4576-bb30-86fea00f412b',
+                'ad_guid': '7ed075e1-770d-486d-9518-c689daf4878a',
                 'verbose_name': 'DnsUpdateProxy'
             },
             {
-                'ad_guid': '066e3e56-f12e-4c7e-a2a1-b1a81351e9f4',
-                'verbose_name': 'HorizonViewAdmins'
-            },
-            {
-                'ad_guid': 'df4745bd-6a47-47bf-b5c7-43cf7e266068',
-                'verbose_name': 'veil-admins'
-            },
-            {
-                'ad_guid': '4661fa0b-fb28-48bb-84fe-9b3193a6b571',
+                'ad_guid': 'ec0efca9-5878-4ab4-bb8f-149af659e115',
                 'verbose_name': 'veil-ad-users'
             },
             {
-                'ad_guid': 'e006a986-17e6-4817-b2cc-7e70bcf01222',
-                'verbose_name': 'LINUX'
-            },
-            {
-                'ad_guid': 'cff4b40c-cc7f-4854-b3d9-d87dabd75411',
+                'ad_guid': '01811ba9-a79e-4728-a181-dbd568572b91',
                 'verbose_name': 'vdi-autopool-test'
             },
             {
-                'ad_guid': 'b0ceec2c-d740-4e35-83c9-ac9c02452582',
-                'verbose_name': 'vdi-ad-test2'
+                'ad_guid': '992e4139-f98f-464c-af70-42e53b0c49ff',
+                'verbose_name': 'VDI_RDP'
+            },
+            {
+                'ad_guid': '166054a6-b8ce-4d01-b025-11b7faef033c',
+                'verbose_name': 'Администраторы безопасности'
+            },
+            {
+                'ad_guid': '7403ee03-a41c-4c45-8be2-9f0604c42cd6',
+                'verbose_name': 'vdi-ou-test2'
+            },
+            {
+                'ad_guid': '097bba0c-a922-407d-ab95-1d0b9c50801b',
+                'verbose_name': 'vdi-autopool-test2'
             }
         ],
         'status': 'ACTIVE'

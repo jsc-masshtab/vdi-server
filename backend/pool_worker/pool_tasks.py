@@ -7,8 +7,7 @@ from common.veil.veil_errors import PoolCreationError
 
 from common.log.journal import system_logger
 from common.veil.veil_errors import VmCreationError
-
-from common.veil.veil_gino import Status
+from common.veil.veil_gino import Status, EntityType
 
 from common.utils import cancel_async_task
 
@@ -93,8 +92,7 @@ class AbstractTask(ABC):
             await self.do_on_cancel()
 
         except Exception as ex:  # noqa
-            message = _('Exception during task execution. Task: <{}>.').format(
-                friendly_task_name, str(ex))
+            message = _('Task: <{}> failed. {}.').format(friendly_task_name, str(ex))
             await self.task_model.set_status(TaskStatus.FAILED, message)
 
             await system_logger.warning(message, description=str(ex))
@@ -224,10 +222,7 @@ class ExpandPoolTask(AbstractTask):
                     real_amount_to_add = min(max_possible_amount_to_add, automated_pool.increase_step)
                     # add VMs.
                     try:
-
-                        for i in range(0, real_amount_to_add):  # noqa
-                            vm_object = await automated_pool.add_vm()
-                            vm_list.append(vm_object)
+                        vm_list = await automated_pool.add_vm(real_amount_to_add)
                     except VmCreationError as vm_error:
                         await system_logger.error(_('VM creating error.'))
                         await system_logger.debug(vm_error)
@@ -252,7 +247,7 @@ class DecreasePoolTask(AbstractTask):
         super().__init__()
 
         self._pool_locks = pool_locks
-        self.new_total_size = new_total_size
+        self._new_total_size = new_total_size
 
     async def do_task(self):
 
@@ -268,10 +263,10 @@ class DecreasePoolTask(AbstractTask):
         async with pool_lock:
             pool = await Pool.get(automated_pool.id)
             vm_amount = await pool.get_vm_amount()
-            if self.new_total_size < vm_amount:
+            if self._new_total_size < vm_amount:
                 raise RuntimeError('Total size can not be less than current amount of VMs')
 
-            await automated_pool.update(total_size=self.new_total_size).apply()
+            await automated_pool.update(total_size=self._new_total_size).apply()
 
 
 class DeletePoolTask(AbstractTask):
@@ -294,7 +289,6 @@ class DeletePoolTask(AbstractTask):
 
         # Нужно остановить таски связанные с пулом
         # print('Before cancelling in pool deletion ', len(self._ref_to_task_list))  # temp
-        # Находим таски связанные с текущим пулом (исключая текущую таску)
         tasks_related_to_cur_pool = self._get_related_progressing_tasks()
         # Отменяем их
         for task in tasks_related_to_cur_pool:
@@ -381,7 +375,7 @@ class PrepareVmTask(AbstractTask):
                 # TODO: метод ожидания задачи
                 action_task = action_response.task
                 task_completed = False
-                while not task_completed:  # есть ли смысл ждать 20 сек? По идее это выполняется намного быстрее
+                while not task_completed:
                     await asyncio.sleep(5)  # VEIL_OPERATION_WAITING
                     task_completed = await action_task.is_finished()
 
@@ -391,3 +385,30 @@ class PrepareVmTask(AbstractTask):
                 if not task_success:
                     raise ValueError(_('VM remote access task {} finished with error.').format(
                         action_task.api_object_id))
+
+
+class BackupVmsTask(AbstractTask):
+
+    def __init__(self, entity_type, creator):
+        super().__init__()
+
+        self._entity_type = entity_type
+        self._creator = creator
+
+    async def do_task(self):
+
+        if self._entity_type == EntityType.VM.name:
+            # print('self._entity_type == EntityType.VM.name:', flush=True)
+            vm = await Vm.get(self.task_model.entity_id)
+            ok = await vm.backup(creator=self._creator)
+
+        elif self._entity_type == EntityType.POOL.name:
+            # print('self._entity_type == EntityType.POOL.name:', flush=True)
+            pool = await Pool.get(self.task_model.entity_id)
+            ok = await pool.backup_vms(creator=self._creator)
+
+        else:
+            raise RuntimeError(_('Wrong entity type'))
+
+        if not ok:
+            raise RuntimeError(_('Creating backup finished with error.'))

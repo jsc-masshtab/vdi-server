@@ -2,7 +2,7 @@
 import uuid
 from sqlalchemy import Enum as AlchemyEnum
 from sqlalchemy.dialects.postgresql import UUID
-from veil_api_client import VeilClient
+from veil_api_client import VeilClient, VeilRetryConfiguration
 
 from common.database import db
 from common.veil.veil_api import get_veil_client
@@ -89,14 +89,15 @@ class Controller(AbstractSortableStatusModel, VeilModel):
 
     async def is_ok(self):
         """Проверяем доступность контроллера независимо от его статуса."""
-        veil_client = get_veil_client()
-        client = veil_client.add_client(server_address=self.address, token=self.token)
         try:
-            is_ok = await client.controller(self.id).is_ok()
-            return is_ok
+            await self.remove_client()
+            veil_client = get_veil_client()
+            client = veil_client.add_client(server_address=self.address, token=self.token)
+            is_ok = await client.controller(self.id, retry_opts=VeilRetryConfiguration(num_of_attempts=0)).is_ok()
         except Exception:
             await self.remove_client()
-        return False
+            is_ok = False
+        return is_ok
 
     async def check_controller(self):
         """Проверяем доступность контроллера и меняем его статус."""

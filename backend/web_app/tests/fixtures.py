@@ -86,7 +86,7 @@ async def get_auth_token():
     """Return JWT token for Admin user.
     Грязный хак в том, что пользователь и пароль при авторизации проверяется раньше.
     Тут напрямую вызывается уже генерация токена."""
-    access_token = 'jwt ' + encode_jwt('admin').get('access_token')
+    access_token = 'jwt ' + encode_jwt('vdiadmin').get('access_token')
     return access_token
 
 
@@ -296,7 +296,7 @@ def fixt_user_admin(request, event_loop):
     user_name = 'test_user_admin'
     user_id = '10913d5d-ba7a-4049-88c5-769267a6cbe3'
     user_password = 'veil'
-    creator = 'admin'
+    creator = 'vdiadmin'
 
     async def setup():
         await User.soft_create(username=user_name, id=user_id, password=user_password, is_superuser=True, creator=creator)
@@ -361,7 +361,7 @@ def fixt_auth_dir(request, event_loop):
     directory_url = 'ldap://192.168.14.167'
     domain_name = 'bazalt'
     creator = 'system'
-    dc_str = 'bazalt.team'
+    dc_str = 'bazalt.local'
 
     async def setup():
         await AuthenticationDirectory.soft_create(id=id, verbose_name=verbose_name, directory_url=directory_url,
@@ -386,7 +386,7 @@ def fixt_auth_dir_with_pass(request, event_loop):
     verbose_name = 'test_auth_dir'
     directory_url = 'ldap://192.168.14.167'
     domain_name = 'bazalt'
-    dc_str = 'bazalt.team'
+    dc_str = 'bazalt.local'
     encoded_service_password = 'Bazalt1!'
 
     async def setup():
@@ -419,7 +419,7 @@ def fixt_auth_dir_with_pass_bad(request, event_loop):
     verbose_name = 'test_auth_dir'
     directory_url = 'ldap://192.168.14.167'
     domain_name = 'bazalt'
-    dc_str = 'bazalt.team'
+    dc_str = 'bazalt.local'
     encoded_service_password = 'bad'
 
     async def setup():

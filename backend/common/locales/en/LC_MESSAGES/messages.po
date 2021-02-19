@@ -806,8 +806,8 @@ msgid "Task <{}> cancelled."
 msgstr "Task <{}> cancelled."
 
 #: ../pool_worker/pool_tasks.py:96
-msgid "Exception during task execution. Task: <{}>."
-msgstr "Exception during task execution. Task: <{}>."
+msgid "Task: <{}> failed. {}."
+msgstr "Task: <{}> failed. {}."
 
 #: ../pool_worker/pool_tasks.py:158
 msgid "Pool Creation cancelled."

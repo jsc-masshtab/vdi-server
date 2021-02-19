@@ -38,7 +38,7 @@ class TestAuthenticationDirectoryCreate:
         """Проверка создания Authentication Directory без auth."""
         query = """mutation {createAuthDir(
                       domain_name: "bazalt"
-                      dc_str: "bazalt.team"
+                      dc_str: "bazalt.local"
                       verbose_name: "test"
                       directory_url: "ldap://192.168.14.167"
                       connection_type: LDAP
@@ -112,7 +112,7 @@ class TestAuthenticationDirectoryCreate:
         """Проверяет, что нельзя создать больше 1 записи Authentication Directory."""
         query = """mutation {createAuthDir(
                       domain_name: "bazalt"
-                      dc_str: "bazalt.team"
+                      dc_str: "bazalt.local"
                       verbose_name: "Bazalt"
                       directory_url: "ldap://192.168.14.167"
                       connection_type: LDAP
@@ -232,7 +232,7 @@ class TestAuthenticationDirectoryEdit:
                       verbose_name: "tst_verbose_name"
                       directory_type: ActiveDirectory
                       domain_name: "bazalt"
-                      dc_str: "bazalt.team"
+                      dc_str: "bazalt.local"
                     ) {ok, auth_dir{status}}}"""
         executed = await execute_scheme(auth_dir_schema, query, context=fixt_auth_context)
         snapshot.assert_match(executed)
@@ -366,13 +366,13 @@ class TestAuthenticationDirectoryUtils:
         query = """mutation{syncAuthDirGroupUsers(
                     auth_dir_id: "10913d5d-ba7a-4049-88c5-769267a6cbe5",
                     sync_data:
-                        {group_ad_guid: "df4745bd-6a47-47bf-b5c7-43cf7e266068",
-                         group_verbose_name: "veil-admins",
+                        {group_ad_guid: "ec0efca9-5878-4ab4-bb8f-149af659e115",
+                         group_verbose_name: "veil-ad-users",
                          group_members: []})
                     {ok}}"""
         executed = await execute_scheme(auth_dir_schema, query, context=fixt_auth_context)
         snapshot.assert_match(executed)
-        group = await Group.query.where(Group.ad_guid == "df4745bd-6a47-47bf-b5c7-43cf7e266068").gino.first()
+        group = await Group.query.where(Group.ad_guid == "ec0efca9-5878-4ab4-bb8f-149af659e115").gino.first()
         assert group
         await group.delete()
 
@@ -397,17 +397,17 @@ class TestAuthenticationDirectoryUtils:
         query = """mutation{syncAuthDirGroupUsers(
                            auth_dir_id: "10913d5d-ba7a-4049-88c5-769267a6cbe5",
                            sync_data:
-                               {group_ad_guid: "df4745bd-6a47-47bf-b5c7-43cf7e266068",
-                                group_verbose_name: "veil-admins",
-                                group_ad_cn: "CN=veil-admins,CN=Users,DC=bazalt,DC=team"})
+                               {group_ad_guid: "ec0efca9-5878-4ab4-bb8f-149af659e115",
+                                group_verbose_name: "veil-ad-users",
+                                group_ad_cn: "CN=veil-ad-users,CN=Users,DC=bazalt,DC=local"})
                            {ok}}"""
         executed = await execute_scheme(auth_dir_schema, query, context=fixt_auth_context)
         snapshot.assert_match(executed)
         # Проверяем что группа создалась
-        group = await Group.query.where(Group.ad_guid == "df4745bd-6a47-47bf-b5c7-43cf7e266068").gino.first()
+        group = await Group.query.where(Group.ad_guid == "ec0efca9-5878-4ab4-bb8f-149af659e115").gino.first()
         assert group
         # Проверяем что пользователь создался
-        user = await User.query.where(User.username == 'administrator').gino.first()
+        user = await User.query.where(User.username == 'ad180').gino.first()
         assert user
         # Проверяем что пользователь в группе
         user_groups = await user.assigned_groups
@@ -415,5 +415,5 @@ class TestAuthenticationDirectoryUtils:
         assert isinstance(user_groups, list)
         assert group.id == user_groups[0].id
         # Чистим
-        await User.delete.where(User.username != 'admin').gino.status()
+        await User.delete.where(User.username != 'vdiadmin').gino.status()
         await group.delete()
