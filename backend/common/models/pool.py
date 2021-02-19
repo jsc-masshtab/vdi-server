@@ -720,6 +720,7 @@ class Pool(VeilModel):
             pool_tag = TagConfiguration(verbose_name=verbose_name, slug=verbose_name, colour=Pool.pool_tag_colour())
             controller_client = controller.veil_client
             tag_response = await controller_client.tag().create(pool_tag)
+            errors = tag_response.errors
             if tag_response.success:
                 task = tag_response.task
                 tag = task.first_entity
@@ -728,9 +729,15 @@ class Pool(VeilModel):
                                          user=creator,
                                          entity=entity)
                 return tag
-            return None
+            elif isinstance(errors, list) and errors[0].get('verbose_name'):
+                response = await controller_client.tag().list(name=verbose_name)
+                existing_name = response.response[0].verbose_name
+                if existing_name == verbose_name:
+                    tag = response.response[0].api_object_id
+                    return tag
         except Exception:
-            return None
+            pass
+        return None
 
     async def tag_remove(self, tag):
         pool_tag = await self.get_tag(tag)
