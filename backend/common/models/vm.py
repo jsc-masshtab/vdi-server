@@ -542,6 +542,23 @@ class Vm(VeilModel):
         await asyncio.sleep(VEIL_GUEST_AGENT_EXTRA_WAITING)
         return True
 
+    async def set_verbose_name(self, verbose_name):
+        """Обновить имя и хостнейм"""
+        # Update on Veil
+        vm_controller = await self.controller
+        veil_domain = vm_controller.veil_client.domain(domain_id=self.id_str)
+        result = await veil_domain.update_verbose_name(verbose_name=verbose_name)
+        if not result.success:
+            await system_logger.error(message=_('Can`t set verbose name.'), description=str(result.error_detail))
+            return
+
+        # Update in db. Имя, которое по факту было назначено
+        domain = result.response[0]
+        await self.update(verbose_name=domain.verbose_name).apply()
+
+        # Update host_name
+        await asyncio.wait_for(self.set_hostname(), VEIL_OPERATION_WAITING * 2)
+
     async def set_hostname(self):
         """Попытка задать hostname.
 
