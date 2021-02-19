@@ -711,8 +711,7 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
           entity: 'pool-details',
           header: 'Изменение шаблона для ВМ',
           buttonAction: 'Изменить',
-          // danger: "При изменении шаблона произойдет переименование ВМ, переназначение hostname и перевод в домен!",
-          danger: "Изменение имен произойдет только для НОВЫХ виртуальных машин!",
+          danger: "Произойдет переименование ВМ и переназначение hostname на Veil ECP!",
           form: [{
             tag: 'input',
             type: 'text',
