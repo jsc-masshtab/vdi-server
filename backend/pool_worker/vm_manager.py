@@ -77,7 +77,7 @@ class VmManager:
                         vm_id = redis_message_data_dict['id']
                         vm = await Vm.get(vm_id)
 
-                        # Если ВМ найдена и имя изменилось, то делвем апдэйт
+                        # Если ВМ найдена и имя изменилось, то делаем апдэйт
                         if vm:
                             fresh_name = redis_message_data_dict['object']['verbose_name']
                             if vm.verbose_name != fresh_name:
