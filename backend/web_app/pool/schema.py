@@ -773,7 +773,6 @@ class UpdateAutomatedPoolMutation(graphene.Mutation, PoolValidator):
         await cls.validate(**kwargs)
         automated_pool = await AutomatedPool.get(kwargs['pool_id'])
         if automated_pool:
-            # Special treatment for total_size
             # total_size опасно уменьшать, так как в это время может выполняться задача расширения пула, что может
             # привести к тому, что в пуле будет больше машин, чем total_size (максимальное число машин)
             # Поэтому передаем задачу пул воркеру, который уменьшит total_size, только если получит соответствующий
@@ -791,13 +790,22 @@ class UpdateAutomatedPoolMutation(graphene.Mutation, PoolValidator):
 
                 new_total_size = None
 
+            # При изменении vm_name_template необходимо изменить имена ВМ и имена хостов ВМ
+            vm_name_template = kwargs.get('vm_name_template')
+            if vm_name_template != automated_pool.vm_name_template:
+
+                pool = await Pool.get(kwargs['pool_id'])
+                vms = await pool.vms
+                await asyncio.gather(*[vm_object.set_verbose_name(vm_name_template) for vm_object in vms],
+                                     return_exceptions=True)
+
             # other params
             try:
                 await automated_pool.soft_update(verbose_name=kwargs.get('verbose_name'),
                                                  reserve_size=kwargs.get('reserve_size'),
                                                  total_size=new_total_size,
                                                  increase_step=kwargs.get('increase_step'),
-                                                 vm_name_template=kwargs.get('vm_name_template'),
+                                                 vm_name_template=vm_name_template,
                                                  keep_vms_on=kwargs.get('keep_vms_on'),
                                                  create_thin_clones=kwargs.get('create_thin_clones'),
                                                  prepare_vms=kwargs.get('prepare_vms'),
