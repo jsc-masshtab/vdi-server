@@ -64,6 +64,7 @@ export class DatapoolsService {
                             datapool(datapool_id: $id, controller_id: $controller_address) {
                                 used_space
                                 free_space
+                                description
                                 size
                                 status
                                 type

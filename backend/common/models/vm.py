@@ -124,6 +124,8 @@ class Vm(VeilModel):
             pool = await PoolModel.get(pool_id)
             await pool.tag_add_entity(tag=pool_tag, entity_id=id, verbose_name=verbose_name)
 
+        await EntityModel.create(entity_uuid=id, entity_type=EntityType.VM)
+
         return vm
 
     async def soft_delete(self, creator, remove_on_controller=True):
